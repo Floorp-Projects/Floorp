@@ -44,9 +44,9 @@
 #include "nsViewsCID.h"
 #include "nsIServiceManager.h"
 #include "nsIView.h"
+#include "nsIScrollableView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxScrollFrame.h"
 #include "nsLayoutAtoms.h"
@@ -58,8 +58,6 @@
 #include "nsIFontMetrics.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocument.h"
-#include "nsIScrollPositionListener.h"
-//#include "nsBoxFrame.h"
 #include "nsIElementFactory.h"
 #include "nsBoxLayoutState.h"
 #include "nsINodeInfo.h"
@@ -73,100 +71,14 @@
 #include "nsGUIEvent.h"
 //----------------------------------------------------------------------
 
-class nsGfxScrollFrameInner : public nsIScrollPositionListener {
-
-  NS_DECL_ISUPPORTS
-
-public:
-
-  nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter);
-  virtual ~nsGfxScrollFrameInner();
-
-  // nsIScrollPositionListener
-
-  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
-  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
-
-  // This gets called when the 'curpos' attribute on one of the scrollbars changes
-  nsresult CurPosAttributeChanged(nsIPresContext* aPresContext,
-                                  nsIContent* aChild,
-                                  PRInt32 aModType);
-
-  PRBool SetAttribute(nsIBox* aBox, nsIAtom* aAtom, nscoord aSize, PRBool aReflow=PR_TRUE);
-  PRInt32 GetIntegerAttribute(nsIBox* aFrame, nsIAtom* atom, PRInt32 defaultValue);
-
-  nsresult Layout(nsBoxLayoutState& aState);
-  nsresult LayoutBox(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
-  
-  // Like ScrollPositionDidChange, but initiated by this frame rather than from the
-  // scrolling view
-  void InternalScrollPositionDidChange(nscoord aX, nscoord aY);
-
-   PRBool AddRemoveScrollbar       (PRBool& aHasScrollbar, 
-                                  nscoord& aXY, 
-                                  nscoord& aSize, 
-                                  nscoord aSbSize, 
-                                  PRBool aOnRightOrBottom, 
-                                  PRBool aAdd);
-
-   PRBool AddRemoveScrollbar(nsBoxLayoutState& aState, 
-                           nsRect& aScrollAreaSize, 
-                           PRBool aOnTop, 
-                           PRBool aHorizontal, 
-                           PRBool aAdd);
-
-   PRBool AddHorizontalScrollbar   (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
-   PRBool AddVerticalScrollbar     (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
-   void RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
-   void RemoveVerticalScrollbar  (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
-
-   nsIScrollableView* GetScrollableView(nsIPresContext* aPresContext);
-
-  void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);
-
-  void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
-
-  NS_IMETHOD GetScrolledSize(nsIPresContext* aPresContext, 
-                         nscoord *aWidth, 
-                         nscoord *aHeight) const;
-  void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, PRBool& aSetBack);
-  void AdjustReflowStateBack(nsBoxLayoutState& aState, PRBool aSetBack);
-
-  nsIBox* mHScrollbarBox;
-  nsIBox* mVScrollbarBox;
-  nsIBox* mScrollAreaBox;
-  nsIBox* mScrollCornerBox;
-  nscoord mOnePixel;
-  nsGfxScrollFrame* mOuter;
-  nscoord mMaxElementWidth;
-
-  // The last dir value we saw in AddHorizontalScrollbar.  Use PRInt16
-  // so we can fit all the possible values of a PRUint8 and have a -1
-  // value that indicates "not set")
-  PRInt16     mLastDir;
-  
-  PRPackedBool mNeverHasVerticalScrollbar;   
-  PRPackedBool mNeverHasHorizontalScrollbar; 
-
-  PRPackedBool mHasVerticalScrollbar;
-  PRPackedBool mHasHorizontalScrollbar;
-  PRPackedBool mFirstPass;
-  PRPackedBool mIsRoot;
-  PRPackedBool mNeverReflowed;
-  PRPackedBool mViewInitiatedScroll;
-  PRPackedBool mFrameInitiatedScroll;
-};
-
-NS_IMPL_ISUPPORTS1(nsGfxScrollFrameInner, nsIScrollPositionListener)
-
 nsresult
-NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIDocument* aDocument, PRBool aIsRoot)
+NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsGfxScrollFrame* it = new (aPresShell) nsGfxScrollFrame(aPresShell, aDocument, aIsRoot);
+  nsGfxScrollFrame* it = new (aPresShell) nsGfxScrollFrame(aPresShell, aIsRoot);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -174,38 +86,11 @@ NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIDocument
   return NS_OK;
 }
 
-nsGfxScrollFrame::nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument, PRBool aIsRoot):nsBoxFrame(aShell, aIsRoot)
+nsGfxScrollFrame::nsGfxScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
+  : nsBoxFrame(aShell, aIsRoot),
+    mInner(this)
 {
-    mInner = new nsGfxScrollFrameInner(this);
-    mInner->AddRef();
-    mPresContext = nsnull;
-    mInner->mIsRoot = PR_FALSE;
-    mInner->mNeverReflowed = PR_TRUE;
-    mInner->mViewInitiatedScroll = PR_FALSE;
-    mInner->mFrameInitiatedScroll = PR_FALSE;
     SetLayoutManager(nsnull);
-}
-
-nsGfxScrollFrame::~nsGfxScrollFrame()
-{
-    mInner->mOuter = nsnull;
-    mInner->Release();
-    mPresContext = nsnull;
-}
-
-/**
-* Set the view that we are scrolling within the scrolling view. 
-*/
-NS_IMETHODIMP
-nsGfxScrollFrame::SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame)
-{
-   NS_ERROR("Not implemented!");
-  /*
-   mFrames.DestroyFrame(aPresContext, mInner->mScrollAreaBox);
-   mInner->mScrollAreaBox = aScrolledFrame;
-   mFrames.InsertFrame(nsnull, nsnull, mInner->mScrollAreaBox);
-   */
-   return NS_OK;
 }
 
 /**
@@ -216,43 +101,29 @@ NS_IMETHODIMP
 nsGfxScrollFrame::GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const
 {
    nsIBox* child = nsnull;
-   mInner->mScrollAreaBox->GetChildBox(&child);
+   mInner.mScrollAreaBox->GetChildBox(&child);
    child->GetFrame(&aScrolledFrame);
-   return NS_OK;
-}
-
-/**
-* Get information about whether the vertical and horizontal scrollbars
-* are currently visible 
-*/
-NS_IMETHODIMP
-nsGfxScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext,
-                                         PRBool *aVerticalVisible,
-                                         PRBool *aHorizontalVisible) const
-{
-   *aVerticalVisible   = mInner->mHasVerticalScrollbar;
-   *aHorizontalVisible = mInner->mHasHorizontalScrollbar;
    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGfxScrollFrame::GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult)
 {
-  *aResult = mInner->GetScrollableView(aContext);
+  *aResult = mInner.GetScrollableView();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGfxScrollFrame::GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const
 {
-   nsIScrollableView* s = mInner->GetScrollableView(aContext);
+   nsIScrollableView* s = mInner.GetScrollableView();
    return s->GetScrollPosition(aX, aY);
 }
 
 NS_IMETHODIMP
 nsGfxScrollFrame::ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags)
 {
-   nsIScrollableView* s = mInner->GetScrollableView(aContext);
+   nsIScrollableView* s = mInner.GetScrollableView();
    return s->ScrollTo(aX, aY, aFlags);
 }
 
@@ -266,29 +137,19 @@ nsGfxScrollFrame::ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRU
 NS_IMETHODIMP
 nsGfxScrollFrame::GetScrollPreference(nsIPresContext* aPresContext, nsScrollPref* aScrollPreference) const
 {
-  ScrollbarStyles styles = GetScrollbarStyles();
-
-  if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL &&
-      styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
-    *aScrollPreference = AlwaysScroll;
-  } else if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
-    *aScrollPreference = AlwaysScrollHorizontal;
-  } else if (styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
-    *aScrollPreference = AlwaysScrollVertical;
-  } else if (styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO ||
-             styles.mVertical == NS_STYLE_OVERFLOW_AUTO) {
-    *aScrollPreference = Auto;
-  } else {
-    *aScrollPreference = NeverScroll;
-  }
-
+  *aScrollPreference = mInner.GetScrollPreference();
   return NS_OK;
+}
+
+nsGfxScrollFrameInner::ScrollbarStyles
+nsGfxScrollFrame::GetScrollbarStyles() const {
+  return mInner.GetScrollbarStylesFromFrame();
 }
 
 nsMargin nsGfxScrollFrame::GetActualScrollbarSizes() const {
   nsRect bounds = GetRect();
   nsRect scrollArea;
-  mInner->mScrollAreaBox->GetBounds(scrollArea);
+  mInner.mScrollAreaBox->GetBounds(scrollArea);
 
   return nsMargin(scrollArea.x, scrollArea.y,
                   bounds.width - scrollArea.XMost(),
@@ -298,9 +159,9 @@ nsMargin nsGfxScrollFrame::GetActualScrollbarSizes() const {
 nsMargin nsGfxScrollFrame::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
   nsMargin result(0, 0, 0, 0);
 
-  if (mInner->mHScrollbarBox) {
+  if (mInner.mHScrollbarBox) {
     nsSize size;
-    mInner->mHScrollbarBox->GetPrefSize(*aState, size);
+    mInner.mHScrollbarBox->GetPrefSize(*aState, size);
 #ifdef IBMBIDI
     if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL)
       result.left = size.width;
@@ -309,9 +170,9 @@ nsMargin nsGfxScrollFrame::GetDesiredScrollbarSizes(nsBoxLayoutState* aState) {
       result.right = size.width;
   }
 
-  if (mInner->mVScrollbarBox) {
+  if (mInner.mVScrollbarBox) {
     nsSize size;
-    mInner->mVScrollbarBox->GetPrefSize(*aState, size);
+    mInner.mVScrollbarBox->GetPrefSize(*aState, size);
     // We don't currently support any scripts that would require a scrollbar
     // at the top. (Are there any?)
     result.bottom = size.height;
@@ -325,15 +186,15 @@ nsGfxScrollFrame::SetScrollbarVisibility(nsIPresContext* aPresContext,
                                     PRBool aVerticalVisible,
                                     PRBool aHorizontalVisible)
 {
-  mInner->mNeverHasVerticalScrollbar = !aVerticalVisible;
-  mInner->mNeverHasHorizontalScrollbar = !aHorizontalVisible;
+  mInner.mNeverHasVerticalScrollbar = !aVerticalVisible;
+  mInner.mNeverHasHorizontalScrollbar = !aHorizontalVisible;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGfxScrollFrame::GetScrollbarBox(PRBool aVertical, nsIBox** aResult)
 {
-  *aResult = aVertical ? mInner->mVScrollbarBox : mInner->mHScrollbarBox;
+  *aResult = aVertical ? mInner.mVScrollbarBox : mInner.mHScrollbarBox;
   return NS_OK;
 }
 
@@ -341,79 +202,7 @@ NS_IMETHODIMP
 nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                          nsISupportsArray& aAnonymousChildren)
 {
-  // Don't create scrollbars if we're printing/print previewing
-  // Get rid of this code when printing moves to its own presentation
-  if (aPresContext->IsPaginated()) {
-    // allow scrollbars if this is the child of the viewport, because
-    // we must be the scrollbars for the print preview window
-    nsIFrame* parent = GetParent();
-    if (!parent || parent->GetType() != nsLayoutAtoms::viewportFrame) {
-      SetScrollbarVisibility(aPresContext, PR_FALSE, PR_FALSE);
-      return NS_OK;
-    }
-  }
-
-  nsIPresShell *shell = aPresContext->GetPresShell();
-  nsCOMPtr<nsIDocument> document;
-  if (shell)
-    shell->GetDocument(getter_AddRefs(document));
-
-  // The anonymous <div> used by <inputs> never gets scrollbars.
-  nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(mParent));
-  if (textFrame) {
-    // Make sure we are not a text area.
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(mParent->GetContent()));
-    if (!textAreaElement) {
-      SetScrollbarVisibility(aPresContext, PR_FALSE, PR_FALSE);
-      return NS_OK;
-    }
-  }
-
-  // create horzontal scrollbar
-  nsresult rv;
-  nsCOMPtr<nsIElementFactory> elementFactory = 
-           do_GetService(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", &rv);
-  if (!elementFactory)
-    return NS_ERROR_FAILURE;
-
-  nsINodeInfoManager *nodeInfoManager = nsnull;
-  if (document)
-    nodeInfoManager = document->GetNodeInfoManager();
-  NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollbar, nsnull,
-                               kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-
-  ScrollbarStyles styles = GetScrollbarStyles();
-  PRBool canHaveHorizontal = styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO
-    || styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL;
-  if (canHaveHorizontal) {
-    nsCOMPtr<nsIContent> content;
-    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
-                     NS_LITERAL_STRING("horizontal"), PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
-  }
-
-  PRBool canHaveVertical = styles.mVertical == NS_STYLE_OVERFLOW_AUTO
-    || styles.mVertical == NS_STYLE_OVERFLOW_SCROLL;
-  if (canHaveVertical) {
-    nsCOMPtr<nsIContent> content;
-    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
-    content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
-                     NS_LITERAL_STRING("vertical"), PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
-  }
-
-  if (canHaveHorizontal && canHaveVertical) {
-    nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollcorner, nsnull,
-                                 kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-    nsCOMPtr<nsIContent> content;
-    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
-    aAnonymousChildren.AppendElement(content);
-  }
-
+  mInner.CreateAnonymousContent(aAnonymousChildren);
   return NS_OK;
 }
 
@@ -421,75 +210,13 @@ NS_IMETHODIMP
 nsGfxScrollFrame::Destroy(nsIPresContext* aPresContext)
 
 {
-  nsIScrollableView *view = mInner->GetScrollableView(aPresContext);
+  nsIScrollableView *view = mInner.GetScrollableView();
   NS_ASSERTION(view, "unexpected null pointer");
   if (view)
-    view->RemoveScrollPositionListener(mInner);
+    view->RemoveScrollPositionListener(&mInner);
   return nsBoxFrame::Destroy(aPresContext);
 }
 
-NS_IMETHODIMP
-nsGfxScrollFrame::Init(nsIPresContext*  aPresContext,
-                    nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsStyleContext*  aStyleContext,
-                    nsIFrame*        aPrevInFlow)
-{
-  mPresContext = aPresContext;
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aStyleContext,
-                                  aPrevInFlow);
-  return rv;
-}
-
-void nsGfxScrollFrame::ReloadChildFrames(nsIPresContext* aPresContext)
-{
-  mInner->mScrollAreaBox = nsnull;
-  mInner->mHScrollbarBox = nsnull;
-  mInner->mVScrollbarBox = nsnull;
-  mInner->mScrollCornerBox = nsnull;
-
-  nsIFrame* frame = GetFirstChild(nsnull);
-  while (frame) {
-    PRBool understood = PR_FALSE;
-
-    nsIBox* box = nsnull;
-    frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
-    if (box) {
-      if (frame->GetType() == nsLayoutAtoms::scrollFrame) {
-        NS_ASSERTION(!mInner->mScrollAreaBox, "Found multiple scroll areas?");
-        mInner->mScrollAreaBox = box;
-        understood = PR_TRUE;
-      } else {
-        nsIContent* content = frame->GetContent();
-        if (content) {
-          nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None,
-                                                            nsXULAtoms::orient, value)) {
-            // probably a scrollbar then
-            if (value.EqualsIgnoreCase("horizontal")) {
-              NS_ASSERTION(!mInner->mHScrollbarBox, "Found multiple horizontal scrollbars?");
-              mInner->mHScrollbarBox = box;
-            } else {
-              NS_ASSERTION(!mInner->mVScrollbarBox, "Found multiple vertical scrollbars?");
-              mInner->mVScrollbarBox = box;
-            }
-            understood = PR_TRUE;
-          } else {
-            // probably a scrollcorner
-            NS_ASSERTION(!mInner->mScrollCornerBox, "Found multiple scrollcorners");
-            mInner->mScrollCornerBox = box;
-            understood = PR_TRUE;
-          }
-        }
-      }
-    }
-
-    NS_ASSERTION(understood, "What is this frame doing here?");
-
-    frame = frame->GetNextSibling();
-  }
-}
-  
 NS_IMETHODIMP
 nsGfxScrollFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                    nsIAtom*        aListName,
@@ -498,10 +225,10 @@ nsGfxScrollFrame::SetInitialChildList(nsIPresContext* aPresContext,
   nsresult  rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName,
                                                            aChildList);
 
-  ReloadChildFrames(aPresContext);
+  mInner.ReloadChildFrames();
 
   // listen for scroll events.
-  mInner->GetScrollableView(aPresContext)->AddScrollPositionListener(mInner);
+  mInner.GetScrollableView()->AddScrollPositionListener(&mInner);
 
   return rv;
 }
@@ -517,7 +244,7 @@ nsGfxScrollFrame::AppendFrames(nsIPresContext* aPresContext,
                                          aPresShell,
                                          aListName,
                                          aFrameList);
-  ReloadChildFrames(aPresContext);
+  mInner.ReloadChildFrames();
   return rv;
 }
 
@@ -533,7 +260,7 @@ nsGfxScrollFrame::InsertFrames(nsIPresContext* aPresContext,
                                          aListName,
                                          aPrevFrame,
                                          aFrameList);
-  ReloadChildFrames(aPresContext);
+  mInner.ReloadChildFrames();
   return rv;
 }
 
@@ -547,7 +274,7 @@ nsGfxScrollFrame::RemoveFrame(nsIPresContext* aPresContext,
                                         aPresShell,
                                         aListName,
                                         aOldFrame);
-  ReloadChildFrames(aPresContext);
+  mInner.ReloadChildFrames();
   return rv;
 }
 
@@ -564,34 +291,15 @@ nsGfxScrollFrame::ReplaceFrame(nsIPresContext* aPresContext,
                                          aListName,
                                          aOldFrame,
                                          aNewFrame);
-  ReloadChildFrames(aPresContext);
+  mInner.ReloadChildFrames();
   return rv;
 }
-
-
-
 
 NS_IMETHODIMP
 nsGfxScrollFrame::GetPadding(nsMargin& aMargin)
 {
    aMargin.SizeTo(0,0,0,0);
    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGfxScrollFrame::Paint(nsIPresContext*   aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect,
-                     nsFramePaintLayer    aWhichLayer,
-                     PRUint32             aFlags)
-{
-nsresult result;
-
-
-  // Paint our children
-  result = nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,aWhichLayer);
-  return result;
-
 }
 
 NS_IMETHODIMP
@@ -602,11 +310,8 @@ nsGfxScrollFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                                 PRInt32&        aContentOffsetEnd,
                                                 PRBool&         aBeginFrameContent)
 {
-  if (! mInner)
-    return NS_ERROR_NULL_POINTER;
-
   nsIFrame* frame = nsnull;
-  mInner->mScrollAreaBox->GetFrame(&frame);
+  mInner.mScrollAreaBox->GetFrame(&frame);
   nsPoint point(aPoint);
   //we need to translate the coordinates to the inner
   nsIView *view = GetClosestView();
@@ -639,7 +344,7 @@ NS_IMETHODIMP
 nsGfxScrollFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 {
   aAscent = 0;
-  nsresult rv = mInner->mScrollAreaBox->GetAscent(aState, aAscent);
+  nsresult rv = mInner.mScrollAreaBox->GetAscent(aState, aAscent);
   nsMargin m(0,0,0,0);
   GetBorderAndPadding(m);
   aAscent += m.top;
@@ -651,58 +356,25 @@ nsGfxScrollFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
   return rv;
 }
 
-nsGfxScrollFrame::ScrollbarStyles
-nsGfxScrollFrame::GetScrollbarStyles() const
-{
-  PRUint8 overflow;
-  if (GetParent() && GetParent()->GetType() == nsLayoutAtoms::viewportFrame &&
-      // Make sure we're actually the root scrollframe
-      GetParent()->GetFirstChild(nsnull) ==
-        NS_STATIC_CAST(const nsIFrame*, this)) {
-    overflow = GetPresContext()->GetViewportOverflowOverride();
-  } else {
-    overflow = GetStyleDisplay()->mOverflow;
-  }
-
-  switch (overflow) {
-  case NS_STYLE_OVERFLOW_SCROLL:
-  case NS_STYLE_OVERFLOW_HIDDEN:
-  case NS_STYLE_OVERFLOW_VISIBLE:
-  case NS_STYLE_OVERFLOW_AUTO:
-    return ScrollbarStyles(overflow, overflow);
-  case NS_STYLE_OVERFLOW_SCROLLBARS_NONE:
-    // This isn't quite right. The scrollframe will still be scrollable using keys.
-    // This can happen when HTML or BODY has propagated this style to the viewport.
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
-  case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_SCROLL);
-  case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN);
-  default:
-    NS_NOTREACHED("invalid overflow value");
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
-  }
-}
-
 NS_IMETHODIMP
 nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   PropagateDebug(aState);
 
-  ScrollbarStyles styles = GetScrollbarStyles();
+  nsGfxScrollFrameInner::ScrollbarStyles styles = GetScrollbarStyles();
 
   nsSize vSize(0,0);
-  if (mInner->mVScrollbarBox &&
+  if (mInner.mVScrollbarBox &&
       styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
-     mInner->mVScrollbarBox->GetPrefSize(aState, vSize);
-     nsBox::AddMargin(mInner->mVScrollbarBox, vSize);
+     mInner.mVScrollbarBox->GetPrefSize(aState, vSize);
+     nsBox::AddMargin(mInner.mVScrollbarBox, vSize);
   }
    
   nsSize hSize(0,0);
-  if (mInner->mHScrollbarBox &&
+  if (mInner.mHScrollbarBox &&
       styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
-     mInner->mHScrollbarBox->GetPrefSize(aState, hSize);
-     nsBox::AddMargin(mInner->mHScrollbarBox, hSize);
+     mInner.mHScrollbarBox->GetPrefSize(aState, hSize);
+     nsBox::AddMargin(mInner.mHScrollbarBox, hSize);
   }
 
   // If one of the width and height is constrained,
@@ -757,7 +429,7 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
     aState.SetScrolledBlockSizeConstraint(nsSize(-1,-1));
   }
 
-  nsresult rv = mInner->mScrollAreaBox->GetPrefSize(aState, aSize);
+  nsresult rv = mInner.mScrollAreaBox->GetPrefSize(aState, aSize);
 
   // Restore old constraint.
   aState.SetScrolledBlockSizeConstraint(oldConstrainedSize);
@@ -767,11 +439,11 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (computedSize.height == NS_INTRINSICSIZE
       && computedMax.width != NS_INTRINSICSIZE
       && aSize.width > computedMax.width
-      && mInner->mHScrollbarBox
+      && mInner.mHScrollbarBox
       && styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO) {
     // Add height of horizontal scrollbar which will be needed
-    mInner->mHScrollbarBox->GetPrefSize(aState, hSize);
-    nsBox::AddMargin(mInner->mHScrollbarBox, hSize);
+    mInner.mHScrollbarBox->GetPrefSize(aState, hSize);
+    nsBox::AddMargin(mInner.mHScrollbarBox, hSize);
   }
 
   // If our width is not constrained, and we will need a vertical
@@ -779,14 +451,14 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (computedSize.width == NS_INTRINSICSIZE
       && computedMax.height != NS_INTRINSICSIZE
       && aSize.height > computedMax.height
-      && mInner->mVScrollbarBox
+      && mInner.mVScrollbarBox
       && styles.mVertical == NS_STYLE_OVERFLOW_AUTO) {
     // Add width of vertical scrollbar which will be needed
-    mInner->mVScrollbarBox->GetPrefSize(aState, vSize);
-    nsBox::AddMargin(mInner->mVScrollbarBox, vSize);
+    mInner.mVScrollbarBox->GetPrefSize(aState, vSize);
+    nsBox::AddMargin(mInner.mVScrollbarBox, vSize);
   }
 
-  nsBox::AddMargin(mInner->mScrollAreaBox, aSize);
+  nsBox::AddMargin(mInner.mScrollAreaBox, aSize);
 
   aSize.width += vSize.width;
   aSize.height += hSize.height;
@@ -803,25 +475,25 @@ nsGfxScrollFrame::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   PropagateDebug(aState);
 
-  nsresult rv = mInner->mScrollAreaBox->GetMinSize(aState, aSize);
+  nsresult rv = mInner.mScrollAreaBox->GetMinSize(aState, aSize);
 
-  ScrollbarStyles styles = GetScrollbarStyles();
+  nsGfxScrollFrameInner::ScrollbarStyles styles = GetScrollbarStyles();
      
-  if (mInner->mVScrollbarBox &&
+  if (mInner.mVScrollbarBox &&
       styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
     nsSize vSize(0,0);
-    mInner->mVScrollbarBox->GetMinSize(aState, vSize);
-     AddMargin(mInner->mVScrollbarBox, vSize);
+    mInner.mVScrollbarBox->GetMinSize(aState, vSize);
+     AddMargin(mInner.mVScrollbarBox, vSize);
      aSize.width += vSize.width;
      if (aSize.height < vSize.height)
         aSize.height = vSize.height;
   }
         
-  if (mInner->mHScrollbarBox &&
+  if (mInner.mHScrollbarBox &&
       styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
      nsSize hSize(0,0);
-     mInner->mHScrollbarBox->GetMinSize(aState, hSize);
-     AddMargin(mInner->mHScrollbarBox, hSize);
+     mInner.mHScrollbarBox->GetMinSize(aState, hSize);
+     AddMargin(mInner.mHScrollbarBox, hSize);
      aSize.height += hSize.height;
      if (aSize.width < hSize.width)
         aSize.width = hSize.width;
@@ -869,9 +541,9 @@ nsGfxScrollFrame::Reflow(nsIPresContext*      aPresContext,
   {
     // if not set then use the cached size. If set then set it.
     if (aDesiredSize.mMaxElementWidth == -1)
-      aDesiredSize.mMaxElementWidth = mInner->mMaxElementWidth;
+      aDesiredSize.mMaxElementWidth = mInner.mMaxElementWidth;
     else 
-      mInner->mMaxElementWidth = aDesiredSize.mMaxElementWidth;
+      mInner.mMaxElementWidth = aDesiredSize.mMaxElementWidth;
   }
   
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -935,8 +607,208 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter)
     mNeverHasHorizontalScrollbar(PR_FALSE),
     mHasVerticalScrollbar(PR_FALSE), 
     mHasHorizontalScrollbar(PR_FALSE),
-    mFirstPass(PR_FALSE)
+    mFirstPass(PR_FALSE),
+    mIsRoot(PR_FALSE),
+    mNeverReflowed(PR_TRUE),
+    mViewInitiatedScroll(PR_FALSE),
+    mFrameInitiatedScroll(PR_FALSE)
 {
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::AddRef(void)
+{
+  return 1;
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsGfxScrollFrameInner::Release(void)
+{
+  return 1;
+}
+
+NS_IMPL_QUERY_INTERFACE1(nsGfxScrollFrameInner, nsIScrollPositionListener);
+
+nsGfxScrollFrameInner::ScrollbarStyles
+nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
+{
+  PRUint8 overflow;
+  nsIFrame* parent = mOuter->GetParent();
+  if (parent && parent->GetType() == nsLayoutAtoms::viewportFrame &&
+      // Make sure we're actually the root scrollframe
+      parent->GetFirstChild(nsnull) ==
+        NS_STATIC_CAST(const nsIFrame*, mOuter)) {
+    overflow = mOuter->GetPresContext()->GetViewportOverflowOverride();
+  } else {
+    overflow = mOuter->GetStyleDisplay()->mOverflow;
+  }
+
+  switch (overflow) {
+  case NS_STYLE_OVERFLOW_SCROLL:
+  case NS_STYLE_OVERFLOW_HIDDEN:
+  case NS_STYLE_OVERFLOW_VISIBLE:
+  case NS_STYLE_OVERFLOW_AUTO:
+    return ScrollbarStyles(overflow, overflow);
+  case NS_STYLE_OVERFLOW_SCROLLBARS_NONE:
+    // This isn't quite right. The scrollframe will still be scrollable using keys.
+    // This can happen when HTML or BODY has propagated this style to the viewport.
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
+  case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_SCROLL);
+  case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN);
+  default:
+    NS_NOTREACHED("invalid overflow value");
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
+  }
+}
+
+nsIScrollableFrame::nsScrollPref
+nsGfxScrollFrameInner::GetScrollPreference() const
+{
+  ScrollbarStyles styles = mOuter->GetScrollbarStyles();
+
+  if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL &&
+      styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
+    return nsIScrollableFrame::AlwaysScroll;
+  } else if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
+    return nsIScrollableFrame::AlwaysScrollHorizontal;
+  } else if (styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
+    return nsIScrollableFrame::AlwaysScrollVertical;
+  } else if (styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO ||
+             styles.mVertical == NS_STYLE_OVERFLOW_AUTO) {
+    return nsIScrollableFrame::Auto;
+  } else {
+    return nsIScrollableFrame::NeverScroll;
+  }
+}
+
+void nsGfxScrollFrameInner::ReloadChildFrames()
+{
+  mScrollAreaBox = nsnull;
+  mHScrollbarBox = nsnull;
+  mVScrollbarBox = nsnull;
+  mScrollCornerBox = nsnull;
+
+  nsIFrame* frame = mOuter->GetFirstChild(nsnull);
+  while (frame) {
+    PRBool understood = PR_FALSE;
+
+    nsIBox* box = nsnull;
+    frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
+    if (box) {
+      if (frame->GetType() == nsLayoutAtoms::scrollFrame) {
+        NS_ASSERTION(!mScrollAreaBox, "Found multiple scroll areas?");
+        mScrollAreaBox = box;
+        understood = PR_TRUE;
+      } else {
+        nsIContent* content = frame->GetContent();
+        if (content) {
+          nsAutoString value;
+          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None,
+                                                            nsXULAtoms::orient, value)) {
+            // probably a scrollbar then
+            if (value.EqualsIgnoreCase("horizontal")) {
+              NS_ASSERTION(!mHScrollbarBox, "Found multiple horizontal scrollbars?");
+              mHScrollbarBox = box;
+            } else {
+              NS_ASSERTION(!mVScrollbarBox, "Found multiple vertical scrollbars?");
+              mVScrollbarBox = box;
+            }
+            understood = PR_TRUE;
+          } else {
+            // probably a scrollcorner
+            NS_ASSERTION(!mScrollCornerBox, "Found multiple scrollcorners");
+            mScrollCornerBox = box;
+            understood = PR_TRUE;
+          }
+        }
+      }
+    }
+
+    NS_ASSERTION(understood, "What is this frame doing here?");
+
+    frame = frame->GetNextSibling();
+  }
+}
+  
+void
+nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+{
+  nsIPresContext* presContext = mOuter->GetPresContext();
+  nsIFrame* parent = mOuter->GetParent();
+
+  // Don't create scrollbars if we're printing/print previewing
+  // Get rid of this code when printing moves to its own presentation
+  if (presContext->IsPaginated()) {
+    // allow scrollbars if this is the child of the viewport, because
+    // we must be the scrollbars for the print preview window
+    if (!parent || parent->GetType() != nsLayoutAtoms::viewportFrame) {
+      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
+      return;
+    }
+  }
+
+  nsIPresShell *shell = presContext->GetPresShell();
+  nsCOMPtr<nsIDocument> document;
+  if (shell)
+    shell->GetDocument(getter_AddRefs(document));
+
+  // The anonymous <div> used by <inputs> never gets scrollbars.
+  nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(parent));
+  if (textFrame) {
+    // Make sure we are not a text area.
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(parent->GetContent()));
+    if (!textAreaElement) {
+      mNeverHasVerticalScrollbar = mNeverHasHorizontalScrollbar = PR_TRUE;
+      return;
+    }
+  }
+
+  // create horzontal scrollbar
+  nsresult rv;
+  nsCOMPtr<nsIElementFactory> elementFactory = 
+           do_GetService(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", &rv);
+  if (!elementFactory)
+    return;
+
+  nsINodeInfoManager *nodeInfoManager = nsnull;
+  if (document)
+    nodeInfoManager = document->GetNodeInfoManager();
+  if (!nodeInfoManager) {
+    return;
+  }
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollbar, nsnull,
+                               kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+
+  ScrollbarStyles styles = mOuter->GetScrollbarStyles();
+  PRBool canHaveHorizontal = styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO
+    || styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL;
+  if (canHaveHorizontal) {
+    nsCOMPtr<nsIContent> content;
+    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
+                     NS_LITERAL_STRING("horizontal"), PR_FALSE);
+    aAnonymousChildren.AppendElement(content);
+  }
+
+  PRBool canHaveVertical = styles.mVertical == NS_STYLE_OVERFLOW_AUTO
+    || styles.mVertical == NS_STYLE_OVERFLOW_SCROLL;
+  if (canHaveVertical) {
+    nsCOMPtr<nsIContent> content;
+    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
+                     NS_LITERAL_STRING("vertical"), PR_FALSE);
+    aAnonymousChildren.AppendElement(content);
+  }
+
+  if (canHaveHorizontal && canHaveVertical) {
+    nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollcorner, nsnull,
+                                 kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+    nsCOMPtr<nsIContent> content;
+    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+    aAnonymousChildren.AppendElement(content);
+  }
 }
 
 NS_IMETHODIMP
@@ -983,7 +855,7 @@ nsGfxScrollFrame::CurPosAttributeChanged(nsIPresContext* aPresContext,
                                          nsIContent* aChild,
                                          PRInt32 aModType)
 {
-  return mInner->CurPosAttributeChanged(aPresContext, aChild, aModType);
+  return mInner.CurPosAttributeChanged(aPresContext, aChild, aModType);
 }
 
 nsresult
@@ -1056,7 +928,7 @@ nsGfxScrollFrameInner::CurPosAttributeChanged(nsIPresContext* aPresContext,
         // thing ScrollbarChanged() does anyway, before deciding to move 
         // the scrollbars. 
         nscoord curPosX=0, curPosY=0;
-        nsIScrollableView* s = GetScrollableView(mOuter->mPresContext);
+        nsIScrollableView* s = GetScrollableView();
         if (s) {
           s->GetScrollPosition(curPosX, curPosY);
           if ((x*mOnePixel) == curPosX && (y*mOnePixel) == curPosY)
@@ -1077,10 +949,10 @@ nsGfxScrollFrameInner::CurPosAttributeChanged(nsIPresContext* aPresContext,
             InternalScrollPositionDidChange(curPosX, curPosY);
             mFrameInitiatedScroll = PR_FALSE;
           }
-          ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
+          ScrollbarChanged(mOuter->GetPresContext(), x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
 
           // Fire the onScroll event now that we have scrolled
-          nsIPresShell *presShell = mOuter->mPresContext->GetPresShell();
+          nsIPresShell *presShell = mOuter->GetPresContext()->GetPresShell();
           if (presShell) {
             nsScrollbarEvent event(NS_SCROLL_EVENT);
             nsEventStatus status = nsEventStatus_eIgnore;
@@ -1100,7 +972,7 @@ nsGfxScrollFrameInner::CurPosAttributeChanged(nsIPresContext* aPresContext,
 }
 
 nsIScrollableView*
-nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
+nsGfxScrollFrameInner::GetScrollableView() const
 {
   nsIFrame* frame = nsnull;
   mScrollAreaBox->GetFrame(&frame);
@@ -1134,7 +1006,7 @@ nsGfxScrollFrameInner::AddHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& 
   if (mLastDir == -1) {
     // Creating the scrollbar the first time
     nscoord curPosX = 0, curPosY = 0;      
-    nsIScrollableView* s = GetScrollableView(mOuter->mPresContext);
+    nsIScrollableView* s = GetScrollableView();
     if (s) {
       s->GetScrollPosition(curPosX, curPosY);
     }
@@ -1262,7 +1134,7 @@ nsGfxScrollFrame::DoLayout(nsBoxLayoutState& aState)
 {
    PRUint32 flags = 0;
    aState.GetLayoutFlags(flags);
-   nsresult rv =  mInner->Layout(aState);
+   nsresult rv =  mInner.Layout(aState);
    aState.SetLayoutFlags(flags);
 
    nsBox::DoLayout(aState);
@@ -1389,7 +1261,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
    (if we're the viewport and we added or removed a scrollbar).
    **************/
 
-  nsGfxScrollFrame::ScrollbarStyles styles = mOuter->GetScrollbarStyles();
+  ScrollbarStyles styles = mOuter->GetScrollbarStyles();
 
   // Look at our style do we always have vertical or horizontal scrollbars?
   if (styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL)
@@ -1576,7 +1448,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   nscoord maxX = scrolledContentSize.width - scrollAreaRect.width;
   nscoord maxY = scrolledContentSize.height - scrollAreaRect.height;
 
-  nsIScrollableView* scrollable = GetScrollableView(presContext);
+  nsIScrollableView* scrollable = GetScrollableView();
   scrollable->SetLineHeight(fontHeight);
 
   if (mVScrollbarBox) {
@@ -1657,7 +1529,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
         // at least one fixed child
         if (parentFrame->GetFirstChild(nsLayoutAtoms::fixedList)) {
           // force a reflow of the fixed children
-          nsFrame::CreateAndPostReflowCommand(mOuter->mPresContext->PresShell(),
+          nsFrame::CreateAndPostReflowCommand(mOuter->GetPresContext()->PresShell(),
             parentFrame,
             eReflowType_UserDefined, nsnull, nsnull, nsLayoutAtoms::fixedList);
         }
@@ -1671,13 +1543,9 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
 void
 nsGfxScrollFrameInner::ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags)
 {
-  nsIScrollableView* scrollable = GetScrollableView(aPresContext);
+  nsIScrollableView* scrollable = GetScrollableView();
   scrollable->ScrollTo(aX, aY, aFlags);
  // printf("scrolling to: %d, %d\n", aX, aY);
-}
-
-nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
-{
 }
 
 /**

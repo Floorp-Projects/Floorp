@@ -434,7 +434,7 @@ nsSelectUpdateTimer::~nsSelectUpdateTimer()
 //---------------------------------------------------------
 nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
   nsIDocument* aDocument)
-  : nsGfxScrollFrame(aShell, aDocument, PR_FALSE)
+  : nsGfxScrollFrame(aShell, PR_FALSE)
 {
   mComboboxFrame      = nsnull;
   mButtonDown         = PR_FALSE;
@@ -1319,14 +1319,17 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-   // Do a second reflow with the adjusted width and height settings
-   // This sets up all of the frames with the correct width and height.
-  secondPassState.mComputedWidth  = visibleWidth;
-  secondPassState.mComputedHeight = visibleHeight;
-  secondPassState.reason = eReflowReason_Resize;
-
   if (mPassId == 0 || mPassId == 2 || visibleHeight != scrolledAreaHeight ||
       visibleWidth != scrolledAreaWidth) {
+    // Do a second reflow with the adjusted width and height settings
+    // This sets up all of the frames with the correct width and height.
+    // Reflow with the same width constraint as for the first reflow. If the width is
+    // unconstrained, then we want to allow the listbox/dropdown to get wider if a vertical
+    // scrollbar is now needed.
+    secondPassState.mComputedWidth = aReflowState.mComputedWidth;
+    secondPassState.mComputedHeight = visibleHeight;
+    secondPassState.reason = eReflowReason_Resize;
+
     nsGfxScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
     if (aReflowState.mComputedHeight == 0) {
       aDesiredSize.ascent  = 0;
@@ -1409,16 +1412,15 @@ nsListControlFrame::GetFormContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-nsListControlFrame::ScrollbarStyles
+nsGfxScrollFrameInner::ScrollbarStyles
 nsListControlFrame::GetScrollbarStyles() const
 {
   // We can't express this in the style system yet; when we can, this can go away
   // and GetScrollbarStyles can be devirtualized
-  if (IsInDropDownMode()) {
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_AUTO);
-  } else {
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_SCROLL);
-  }
+  PRInt32 verticalStyle = IsInDropDownMode() ? NS_STYLE_OVERFLOW_AUTO
+    : NS_STYLE_OVERFLOW_SCROLL;
+  return nsGfxScrollFrameInner::ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
+                                                verticalStyle);
 }
 
 //---------------------------------------------------------
