@@ -35,7 +35,6 @@ var prefs;
 var autoupdateEnabledBaseString   = "security.crl.autoupdate.enable.";
 var autoupdateTimeTypeBaseString  = "security.crl.autoupdate.timingType.";
 var autoupdateTimeBaseString      = "security.crl.autoupdate.nextInstant.";
-var autoupdateURLTypeBaseString   = "security.crl.autoupdate.urlType.";
 var autoupdateURLBaseString       = "security.crl.autoupdate.url.";
 var autoupdateErrCntBaseString    = "security.crl.autoupdate.errCount.";
 var autoupdateErrDetailBaseString = "security.crl.autoupdate.errDetail.";
@@ -50,6 +49,7 @@ function onLoad()
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
   crls = certdb.getCrls();
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var autoupdateEnabledString;
   var autoupdateErrCntString;
 
@@ -62,19 +62,19 @@ function onLoad()
     autoupdateEnabledString    = autoupdateEnabledBaseString + crlEntry.nameInDb;
     autoupdateErrCntString    = autoupdateErrCntBaseString + crlEntry.nameInDb;
     var enabled = false;
-    var enabledStr = "Not Enabled";
+    var enabledStr = bundle.GetStringFromName("crlAutoupdateNotEnabled");
     var status = "";
     try{
       enabled = prefs.GetBoolPref(autoupdateEnabledString)
       if(enabled){
-        enabledStr = "Enabled";
+        enabledStr = bundle.GetStringFromName("crlAutoupdateEnabled");
       }
       var cnt;
       cnt = prefs.GetIntPref(autoupdateErrCntString);
       if(cnt > 0){
-        status = "FAILED";
+        status = bundle.GetStringFromName("crlAutoupdateFailed");
       } else {
-        status = "OK";
+        status = bundle.GetStringFromName("crlAutoupdateOk");
       }
     }catch(exception){}
     
@@ -123,7 +123,6 @@ function DeleteCrlSelected() {
     prefs.ClearUserPref(autoupdateEnabledBaseString + id);
     prefs.ClearUserPref(autoupdateTimeTypeBaseString + id);
     prefs.ClearUserPref(autoupdateTimeBaseString + id);
-    prefs.ClearUserPref(autoupdateURLTypeBaseString + id);
     prefs.ClearUserPref(autoupdateURLBaseString + id);
     prefs.ClearUserPref(autoupdateDayCntString + id);
     prefs.ClearUserPref(autoupdateFreqCntString + id);
