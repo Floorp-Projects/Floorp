@@ -76,7 +76,6 @@ class nsCookie : public nsICookie2
              nsInt64          aExpiry,
              nsInt64          aLastAccessed,
              PRBool           aIsSession,
-             PRBool           aIsDomain,
              PRBool           aIsSecure,
              nsCookieStatus   aStatus,
              nsCookiePolicy   aPolicy);
@@ -92,7 +91,7 @@ class nsCookie : public nsICookie2
     inline nsInt64 Expiry()                 const { NS_ASSERTION(!IsSession(), "can't get expiry time for a session cookie"); return mExpiry; }
     inline nsInt64 LastAccessed()           const { return mLastAccessed; }
     inline PRBool IsSession()               const { return mIsSession; }
-    inline PRBool IsDomain()                const { return mIsDomain; }
+    inline PRBool IsDomain()                const { return *mHost == '.'; }
     inline PRBool IsSecure()                const { return mIsSecure; }
     inline nsCookieStatus Status()          const { return mStatus; }
     inline nsCookiePolicy Policy()          const { return mPolicy; }
@@ -122,7 +121,6 @@ class nsCookie : public nsICookie2
     nsInt64  mLastAccessed;
     PRUint32 mRefCnt    : 16;
     PRUint32 mIsSession : 1;
-    PRUint32 mIsDomain  : 1;
     PRUint32 mIsSecure  : 1;
     PRUint32 mStatus    : 3;
     PRUint32 mPolicy    : 3;

@@ -90,7 +90,6 @@ nsCookie::nsCookie(const nsACString &aName,
                    nsInt64          aExpiry,
                    nsInt64          aLastAccessed,
                    PRBool           aIsSession,
-                   PRBool           aIsDomain,
                    PRBool           aIsSecure,
                    nsCookieStatus   aStatus,
                    nsCookiePolicy   aPolicy)
@@ -99,7 +98,6 @@ nsCookie::nsCookie(const nsACString &aName,
  , mLastAccessed(aLastAccessed)
  , mRefCnt(0)
  , mIsSession(aIsSession != PR_FALSE)
- , mIsDomain(aIsDomain != PR_FALSE)
  , mIsSecure(aIsSecure != PR_FALSE)
  , mStatus(aStatus)
  , mPolicy(aPolicy)

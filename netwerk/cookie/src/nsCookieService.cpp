@@ -137,7 +137,6 @@ struct nsCookieAttributes
   nsInt64 expiryTime;
   PRBool isSession;
   PRBool isSecure;
-  PRBool isDomain;
 };
 
 // stores linked list iteration state, and provides a rudimentary
@@ -931,7 +930,7 @@ nsCookieService::Add(const nsACString &aDomain,
   nsRefPtr<nsCookie> cookie =
     new nsCookie(aName, aValue, aDomain, aPath,
                  nsInt64(aExpires), currentTime,
-                 nsInt64(aExpires) == nsInt64(0), PR_TRUE, aIsSecure,
+                 nsInt64(aExpires) == nsInt64(0), aIsSecure,
                  nsICookie::STATUS_UNKNOWN,
                  nsICookie::POLICY_UNKNOWN);
   if (!cookie) {
@@ -1070,7 +1069,6 @@ nsCookieService::Read()
                    nsInt64(expires),
                    lastAccessedCounter,
                    PR_FALSE,
-                   isDomain,
                    Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).Equals(kTrue),
                    nsICookie::STATUS_UNKNOWN,
                    nsICookie::POLICY_UNKNOWN);
@@ -1248,7 +1246,6 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                  cookieAttributes.expiryTime,
                  currentTime,
                  cookieAttributes.isSession,
-                 cookieAttributes.isDomain,
                  cookieAttributes.isSecure,
                  aStatus,
                  aPolicy);
@@ -1904,6 +1901,7 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
 
   // if a domain is given, check the host has permission
   if (!aCookieAttributes.host.IsEmpty()) {
+    aCookieAttributes.host.Trim(".");
     // switch to lowercase now, to avoid case-insensitive compares everywhere
     ToLowerCase(aCookieAttributes.host);
 
@@ -1913,7 +1911,6 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
     // funkiness (e.g. the alias 127.1 domain-matching 99.54.127.1).
     // bug 105917 originally noted the requirement to deal with IP addresses.
     if (IsIPAddress(aCookieAttributes.host)) {
-      aCookieAttributes.isDomain = PR_FALSE;
       return IsInDomain(aCookieAttributes.host, hostFromURI, PR_FALSE);
     }
 
@@ -1923,7 +1920,6 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
      * that a domain have at least one embedded period to prevent domains of the form
      * ".com" and ".edu"
      */
-    aCookieAttributes.host.Trim(".");
     PRInt32 dot = aCookieAttributes.host.FindChar('.');
     if (dot == kNotFound) {
       // fail dot test
@@ -1931,7 +1927,6 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
     }
 
     // prepend a dot, and check if the host is in the domain
-    aCookieAttributes.isDomain = PR_TRUE;
     aCookieAttributes.host.Insert(NS_LITERAL_CSTRING("."), 0);
     if (!IsInDomain(aCookieAttributes.host, hostFromURI)) {
       return PR_FALSE;
@@ -1959,7 +1954,6 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
 
   // no domain specified, use hostFromURI
   } else {
-    aCookieAttributes.isDomain = PR_FALSE;
     aCookieAttributes.host = hostFromURI;
   }
 
