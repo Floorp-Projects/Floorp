@@ -50,7 +50,6 @@ private:
   PRInt32 mCount;
   PRInt32 mNumProfiles;
   PRInt32 mNumOldProfiles;
-  PRBool mRenameCurrProfile;
   char mOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH];
   char mOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH];
     
@@ -59,18 +58,17 @@ public:
     virtual ~nsProfile();
 
 	// Creates associated user directories on the creation of a new profile
-    void		CreateUserDirectories(const nsFileSpec& profileDir);
+    	nsresult CreateUserDirectories(const nsFileSpec& profileDir);
 
 	// Deletes associated user directories
-	void		DeleteUserDirectories(const nsFileSpec& profileDir);
+	nsresult DeleteUserDirectories(const nsFileSpec& profileDir);
 
 	// Copies all the registry keys from old profile to new profile
-	nsresult	CopyRegKey(const char *oldProfile, const char *newProfile);
+	nsresult CopyRegKey(const char *oldProfile, const char *newProfile);
 
 	// Fills the global array mProfiles by enumerating registry entries
-	void		GetAllProfiles();
+	nsresult GetAllProfiles();
 
-    NS_IMETHOD ProfileExists(const char *profileName);
-	NS_IMETHOD UpdateMozProfileRegistry();
+	nsresult UpdateMozProfileRegistry();
 };
 

@@ -6,15 +6,16 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  title="&title;" width="300" height="120">
+  class="dialog"
+  title="&title;">
 
 <html:div flex="100%">
 
 <html:center>
 <html:div>&intro;</html:div> 
 <html:br />
-<titledbutton value="&delete.yes.label;" class="push" onclick="opener.DeleteProfile('true');window.close();" />
-<titledbutton value="&delete.no.label;" class="push" onclick="opener.DeleteProfile('false');window.close();" />
+<titledbutton value="&delete.yes.label;" class="push" onclick="opener.DeleteProfile(true);window.close();" />
+<titledbutton value="&delete.no.label;" class="push" onclick="opener.DeleteProfile(false);window.close();" />
 <titledbutton value="&cancel.label;" class="push" onclick="window.close();" />
 </html:center>
 
