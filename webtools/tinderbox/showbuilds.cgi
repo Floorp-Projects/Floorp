@@ -42,12 +42,17 @@ else {
   $mindate = $maxdate - ($hours*60*60);
 }
 
-$colormap = {
+%colormap = (
   success    => '00ff00',
   busted     => 'red',
   building   => 'yellow',
   testfailed => 'orange'
-};
+);
+
+%images = (
+  flames    => '1afi003r.gif',
+  star      => 'star.gif'
+);
 
 $tree = $form{tree};
 
@@ -60,16 +65,10 @@ if (exists $form{rebuildguilty} or exists $form{showall}) {
 &do_quickparse,       exit if $form{quickparse};
 &do_express,          exit if $form{express};
 &do_rdf,              exit if $form{rdf};
-&do_flash, &do_panel, exit if $form{static};
+&do_static,           exit if $form{static};
 &do_flash,            exit if $form{flash};
 &do_panel,            exit if $form{panel};
-
-&load_data;
-&print_page_head;
-&print_table_header;
-&print_table_body;
-&print_table_footer;
-exit;
+&do_tinderbox,        exit;
 
 # end of main
 #=====================================================================
@@ -114,6 +113,44 @@ sub show_tree_selector {
   print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
 }
 
+sub do_static {
+  local *OUT;
+
+  $form{nocrap}=1;
+
+  my @pages = ( ['index.html', 'do_tinderbox'],
+                ['flash.rdf',  'do_flash'],
+                ['panel.html', 'do_panel'] );
+  
+  while (($key, $value) = each %images) {
+    $images{$key} = "../$value";
+  }
+
+  my $oldfh = select;
+
+  foreach $pair (@pages) {
+    my ($page, $call) = @{$pair};
+    my $outfile = "$form{tree}/$page";
+
+    open(OUT,">$outfile.$$");
+    select OUT;
+
+    eval "$call";
+
+    close(OUT);
+    system "mv $outfile.$$ $outfile";
+  }
+  select $oldfh;
+}
+
+sub do_tinderbox {
+  &load_data;
+  &print_page_head;
+  &print_table_header;
+  &print_table_body;
+  &print_table_footer;
+}
+
 sub print_page_head {
 
   print "Content-type: text/html",
@@ -151,14 +188,14 @@ sub print_page_head {
             <table cellspacing=0 cellpadding=1 border=0><tr><td align=center>
               <TT>L</TT></td><td>= Show Build Log
             </td></tr><tr><td align=center>
-              <img src="star.gif"></td><td>= Show Log comments
+              <img src="$images{star}"></td><td>= Show Log comments
             </td></tr><tr><td colspan=2>
               <table cellspacing=1 cellpadding=1 border=1>
-                <tr bgcolor="$colormap->{success}"><td>Successful Build
-                <tr bgcolor="$colormap->{building}"><td>Build in Progress
-                <tr bgcolor="$colormap->{testfailed}"><td>Successful Build,
+                <tr bgcolor="$colormap{success}"><td>Successful Build
+                <tr bgcolor="$colormap{building}"><td>Build in Progress
+                <tr bgcolor="$colormap{testfailed}"><td>Successful Build,
                                                           but Tests Failed
-                <tr bgcolor="$colormap->{busted}"><td>Build Failed
+                <tr bgcolor="$colormap{busted}"><td>Build Failed
               </table>
             </td></tr></table>
           </td>
@@ -253,7 +290,7 @@ sub print_table_row {
     $rowspan = $br->{rowspan};
     $rowspan = $mindate_time_count - $tt + 1
       if $tt + $rowspan - 1 > $mindate_time_count;
-    $color = $colormap->{$br->{buildstatus}};
+    $color = $colormap{$br->{buildstatus}};
     $status = $br->{buildstatus};
     print "<td align=center rowspan=$rowspan bgcolor=${color}>\n";
       
@@ -272,7 +309,8 @@ sub print_table_row {
     # 
     if ($hasnote) {
       print "<a href='' onClick=\"return js_what_menu(event,$noteid,$bn,",
-            "'$logfile','$buildtime');\"><img src=star.gif border=0></a>\n";
+            "'$logfile','$buildtime');\">",
+            "<img src='$images{star}' border=0></a>\n";
     }
         
     # Build Log
@@ -339,14 +377,14 @@ sub print_table_header {
     my $last_status = &last_status($ii);
     if ($last_status eq 'busted') {
       if ($form{nocrap}) {
-        print "<th rowspan=2 bgcolor=$colormap->{busted}>$bn</th>";
+        print "<th rowspan=2 bgcolor=$colormap{busted}>$bn</th>";
       } else {
-        print "<td rowspan=2 bgcolor=000000 background=1afi003r.gif>";
+        print "<td rowspan=2 bgcolor=000000 background='$images{flames}>'";
         print "<font color=white>$bn</font></td>";
       }
     }
     else {
-      print "<th rowspan=2 bgcolor=$colormap->{$last_status}>$bn</th>";
+      print "<th rowspan=2 bgcolor=$colormap{$last_status}>$bn</th>";
     }
   }
   print "</tr><tr>\n";
@@ -666,24 +704,18 @@ sub do_express {
   print "&nocrap=1"           if $form{nocrap};
   print ">$tree as of $tm</a></tr><tr>\n";
   foreach my $buildname (@keys) {
-    print "<td bgcolor='$colormap->{$build{$buildname}}'>$buildname</td>";
+    print "<td bgcolor='$colormap{$build{$buildname}}'>$buildname</td>";
   }
   print "</tr></table>\n";
 }
 
 # This is essentially do_express but it outputs a different format
 sub do_panel {
-  local *OUT;
-  my $oldfh;
-  my $outfile = "$form{tree}/panel.html";
+  print "Content-type: text/html\n\n<HTML>\n" unless $form{static};
 
-  if ($form{static}) {
-    open(OUT,">$outfile.$$");
-    $oldfh = select OUT;
-  } else {
-    print "Content-type: text/html\n\n<HTML>\n";
-  }
-
+  my %build, %times;
+  loadquickparseinfo($form{tree}, \%build, \%times);
+  
   print q(
     <head>
       <META HTTP-EQUIV="Refresh" CONTENT="300">
@@ -712,33 +744,15 @@ sub do_panel {
   my $tm = sprintf("%d/%d&nbsp;%d:%02d",$mon+1,$mday,$hour,$minute);
   print " as of $tm</a><br>";
   
-  my %build, %times;
-  loadquickparseinfo($form{tree}, \%build, \%times);
-  
   print "<table border=0 cellpadding=1 cellspacing=1>";
   while (my ($name, $status) = each %build) {
-    print "<tr><td bgcolor='$colormap->{$status}'>$name</td></tr>";
+    print "<tr><td bgcolor='$colormap{$status}'>$name</td></tr>";
   }
   print "</table></body>";
-
-  if ($form{static}) {
-    close(OUT);
-    system "mv $outfile.$$ $outfile";
-    select $oldfh;
-  }
 }
 
 sub do_flash {
-  local *OUT;
-  my $oldfh;
-  my $outfile = "$form{tree}/flash.rdf";
-
-  if ($form{static}) {
-    open(OUT,">$outfile.$$");
-    $oldfh = select OUT;
-  } else {
-    print "Content-type: text/rdf\n\n";
-  }
+  print "Content-type: text/rdf\n\n" unless $form{static};
 
   my %build, %times;
   loadquickparseinfo($form{tree}, \%build, \%times);
@@ -795,28 +809,15 @@ sub do_flash {
       </NC:child>
     };
   }
-
   print q{
     </RDF:Description>
     </RDF:RDF>
   };
-
-  if ($form{static}) {
-    close(OUT);
-    system "mv $outfile.$$ $outfile";
-    select $oldfh;
-  }
 }
 
 sub do_quickparse {
   print "Content-type: text/plain\n\n";
 
-  if ($tree eq '') {
-    foreach my $tt (make_tree_list()) {
-      print "$tt\n";
-    }
-    exit;
-  }
   my @treelist = split /,/, $tree;
   foreach my $t (@treelist) {
     $bonsai_tree = "";
@@ -886,3 +887,4 @@ sub do_rdf {
   }
   print "</rdf:RDF>\n";
 }
+
