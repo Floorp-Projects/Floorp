@@ -2159,9 +2159,10 @@ nsFontGTKNormal::nsFontGTKNormal(nsFontGTK *aFont)
 {
   mAABaseSize = aFont->mSize;
   mFontHolder = aFont->GetGDKFont();
-  if (!mFontHolder)
+  if (!mFontHolder) {
     aFont->LoadFont();
-  mFontHolder = aFont->GetGDKFont();
+    mFontHolder = aFont->GetGDKFont();
+  }
   NS_ASSERTION(mFontHolder, "font to copy not loaded");
   if (mFontHolder)
     ::gdk_font_ref(mFontHolder);
