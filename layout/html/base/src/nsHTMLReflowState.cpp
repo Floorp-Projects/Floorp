@@ -781,6 +781,9 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
                                             nsIFrame*          aAbsoluteContainingBlockFrame,
                                             nsHypotheticalBox& aHypotheticalBox)
 {
+  NS_ASSERTION(mStyleDisplay->mOriginalDisplay != NS_STYLE_DISPLAY_NONE,
+               "mOriginalDisplay has not been properly initialized");
+  
   // If it's a replaced element and it has a 'auto' value for 'width', see if we
   // can get the intrinsic size. This will allow us to exactly determine both the
   // left and right edges
@@ -796,7 +799,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
   // element had been in the flow
   nscoord boxWidth;
   PRBool  knowBoxWidth = PR_FALSE;
-  if ((NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mDisplay) &&
+  if ((NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) &&
       !NS_FRAME_IS_REPLACED(mFrameType)) {
     // For non-replaced inline-level elements the 'width' property doesn't apply,
     // so we don't know what the width would have been without reflowing it
@@ -841,7 +844,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
 
   // How we determine the hypothetical box depends on whether the element
   // would have been inline-level or block-level
-  if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mDisplay) {
+  if (NS_STYLE_DISPLAY_INLINE == mStyleDisplay->mOriginalDisplay) {
     nsPoint placeholderOffset;
 
     // Get the placeholder x-offset and y-offset in the coordinate

@@ -1023,6 +1023,7 @@ nsStyleDisplay::nsStyleDisplay()
 {
   mAppearance = 0;
   mDisplay = NS_STYLE_DISPLAY_INLINE;
+  mOriginalDisplay = NS_STYLE_DISPLAY_NONE;
   mPosition = NS_STYLE_POSITION_NORMAL;
   mFloats = NS_STYLE_FLOAT_NONE;
   mBreakType = NS_STYLE_CLEAR_NONE;
@@ -1037,6 +1038,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
 {
   mAppearance = aSource.mAppearance;
   mDisplay = aSource.mDisplay;
+  mOriginalDisplay = aSource.mOriginalDisplay;
   mBinding = aSource.mBinding;
   mPosition = aSource.mPosition;
   mFloats = aSource.mFloats;

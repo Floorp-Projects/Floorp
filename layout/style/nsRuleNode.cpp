@@ -2884,6 +2884,9 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   // 2) if position is 'absolute' or 'fixed' then display must be 'block and float must be 'none'
   //    XXX - see note for fixup 1) above...
   if (display->IsAbsolutelyPositioned() && display->mDisplay != NS_STYLE_DISPLAY_NONE) {
+    // Backup original display value for calculation of a hypothetical box (CSS2 10.6.4/10.6.5)
+    // See nsHTMLReflowState::CalculateHypotheticalBox
+    display->mOriginalDisplay = display->mDisplay;
     EnsureBlockDisplay(display->mDisplay);
     display->mFloats = NS_STYLE_FLOAT_NONE;
   }
