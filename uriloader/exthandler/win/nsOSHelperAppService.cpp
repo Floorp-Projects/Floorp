@@ -31,90 +31,6 @@
 // we need windows.h to read out registry information...
 #include <windows.h>
 
-// this is a platform specific class that abstracts an application.
-// we treat this object as a cookie when we pass it to an external app handler..
-// the handler will present this cookie back to the helper app service along with a
-// an argument (the temp file).
-class nsExternalApplication : public nsISupports
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  nsExternalApplication();
-  virtual ~nsExternalApplication();
-
-  // the app registry name is the key we got from the registry for the
-  // application. We should be able to just call ::ShellExecute on this name
-  // in order to launch the application.
-  void SetAppRegistryName(const char * aAppRegistryName);
-
-  // we can also launch an application using a local file
-  void SetLocalFile(nsIFile * aApplication);
-
-  // used to launch the application passing in the location of the temp file
-  // to be associated with this app.
-  nsresult LaunchApplication(nsIFile * aTempFile);
-
-protected:
-  nsCString mAppRegistryName;
-  nsCOMPtr<nsIFile> mApplication;
-};
-
-
-NS_IMPL_THREADSAFE_ADDREF(nsExternalApplication)
-NS_IMPL_THREADSAFE_RELEASE(nsExternalApplication)
-
-NS_INTERFACE_MAP_BEGIN(nsExternalApplication)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISupports)
-NS_INTERFACE_MAP_END_THREADSAFE
-
-nsExternalApplication::nsExternalApplication()
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsExternalApplication::~nsExternalApplication()
-{}
-
-void nsExternalApplication::SetAppRegistryName(const char * aAppRegistryName)
-{
-  mAppRegistryName = aAppRegistryName;
-}
-
-void nsExternalApplication::SetLocalFile(nsIFile * aApplicationToUse)
-{
-  mApplication = aApplicationToUse;
-}
-
-nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
-{
-  nsresult rv = NS_OK;
-  
-  nsXPIDLCString path;
-  aTempFile->GetPath(getter_Copies(path));
-
-  // if we were given an application to use then use it....otherwise
-  // make the registry call to launch the app
-  if (mApplication)
-  {
-    const char * strPath = (const char *) path;
-    mApplication->Spawn(&strPath, 1);
-  }
-  else if (!mAppRegistryName.IsEmpty())
-  {   
-    // use the app registry name to launch a shell execute....
-    LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
-    if (r < 32) 
-    {
-			rv = NS_ERROR_FAILURE;
-		}
-		else
-			rv = NS_OK;
-  }
-
-  return rv;
-}
-
 // helper methods: forward declarations...
 BYTE * GetValueBytes( HKEY hKey, const char *pValueName);
 nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFileExtension);
@@ -133,44 +49,31 @@ NS_IMETHODIMP nsOSHelperAppService::CanHandleContent(const char *aMimeContentTyp
   // once we have user over ride stuff working, we need to first call up to our base class
   // and ask the base class if we can handle the content. This will take care of looking for user specified 
   // apps for content types.
-  
-  // for now we only have defaults to worry about...
-  // go look up in the windows registry to see if there is a handler for this mime type...if there is return TRUE...
 
   *aCanHandleContent = PR_FALSE;
+  nsresult rv = nsExternalHelperAppService::CanHandleContent(aMimeContentType, aURI,aCanHandleContent);
+
+  if (NS_FAILED(rv) || *aCanHandleContent == PR_FALSE)
+  {
+
+  }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
-                                                    PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
+nsresult nsOSHelperAppService::FindOSMimeInfoForType(const char * aMimeContentType, nsIURI * aURI, char ** aFileExtension, nsIMIMEInfo ** aMIMEInfo)
 {
   nsresult rv = NS_OK;
-
-  // see if we have user specified information for handling this content type by giving the base class
-  // first crack at it...
-
-  rv = nsExternalHelperAppService::DoContent(aMimeContentType, aURI, aWindowContext, aAbortProcess, aStreamListener);
-  
-  // this is important!! if do content for the base class returned any success code, then assume we are done
-  // and don't even play around with 
-  if (NS_SUCCEEDED(rv)) return NS_OK;
-
-  // okay the base class couldn't do anything so now it's our turn!!!
-
-  // ACK!!! we've done all this work to discover the content type just to find out that windows
-  // registery uses the extension to figure out the right helper app....that's a bummer...
-  // now we need to try to get the extension for the content type...
-
-  *aStreamListener = nsnull;
   nsCAutoString fileExtension;
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  rv = GetMIMEInfoForMimeType(aMimeContentType, getter_AddRefs(mimeInfo));
 
+  // (1) ask the base class if they have a mime info object for this content type...
+  rv = GetMIMEInfoForMimeType(aMimeContentType, getter_AddRefs(mimeInfo));
   if (mimeInfo)
   {
     nsXPIDLCString mimefileExt;
     mimeInfo->FirstExtension(getter_Copies(mimefileExt));
-    fileExtension = mimefileExt;
+    fileExtension = ".";  
+    fileExtension.Append(mimefileExt);
   }
 
   // we don't have a mozilla override extension for this content type....
@@ -195,55 +98,119 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
     }
   } // if we couldn't get extension information from the registry...
 
-                                             
   // look up the content type and get a platform specific handle to the app we want to use for this 
   // download...create a nsExternalAppHandler, bind the application token to it (as a nsIFile??) and return this
   // as the stream listener to use...
 
   if (!fileExtension.IsEmpty())
   {
-     nsCAutoString appName;
      HKEY hKey;
      LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtension, 0, KEY_QUERY_VALUE, &hKey);
      if (err == ERROR_SUCCESS)
      {
-        LPBYTE pBytes = GetValueBytes( hKey, NULL);
-        appName = (char *) pBytes;
+        LPBYTE pBytes = GetValueBytes( hKey, "Content Type");
+
+        // create a new mime info object and initialize it if we don't have one already...
+        if (!mimeInfo)
+        {
+          mimeInfo = do_CreateInstance(NS_MIMEINFO_PROGID);
+          if (mimeInfo)
+          {
+            mimeInfo->SetMIMEType((char *) pBytes);
+            // if the file extension includes the '.' then we don't want to include that when we append
+            // it to the mime info object.
+            const char * ext = fileExtension.GetBuffer();
+            if (ext && *ext == '.' && (ext+1))
+              mimeInfo->AppendExtension(ext+1);
+            else
+              mimeInfo->AppendExtension(fileExtension);
+
+            mimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+          }
+        }
+
         delete [] pBytes;
-
-        // now bind the handler to the application we want to launch when we the handler is done
-        // receiving all the data...
-        // create an application that represents this app name...
-        nsExternalApplication * application = nsnull;
-        NS_NEWXPCOM(application, nsExternalApplication);
-
-        if (application)
-          application->SetAppRegistryName(appName);
-
-        nsCOMPtr<nsISupports> appSupports = do_QueryInterface(application);
-
-        // this code is incomplete and just here to get things started..
-        nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports, fileExtension);
-        handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
 
         // close the key
        ::RegCloseKey(hKey);
 
      } // if we got an entry out of the registry...
+
+     // this is the ONLY code path which leads to success where we should set our return variables...
+     *aMIMEInfo = mimeInfo;
+     NS_IF_ADDREF(*aMIMEInfo);
+
+     *aFileExtension = fileExtension.ToNewCString();
+
   } // if we have a file extension
 
-  return NS_OK;
+  return rv;
 }
 
-NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIFile * aTempFile, nsISupports * aAppCookie)
+NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIURI *aURI, nsISupports *aWindowContext, 
+                                                    PRBool *aAbortProcess, nsIStreamListener ** aStreamListener)
 {
-  if (aAppCookie)
-  { 
-     nsExternalApplication * application = NS_STATIC_CAST(nsExternalApplication *, aAppCookie);
-     return application->LaunchApplication(aTempFile);
+  nsresult rv = NS_OK;
+
+  // see if we have user specified information for handling this content type by giving the base class
+  // first crack at it...
+
+  rv = nsExternalHelperAppService::DoContent(aMimeContentType, aURI, aWindowContext, aAbortProcess, aStreamListener);
+  
+  // this is important!! if do content for the base class returned any success code, then assume we are done
+  // and don't even play around with 
+  if (NS_SUCCEEDED(rv)) return NS_OK;
+
+  // okay the base class couldn't do anything so now it's our turn!!!
+
+  // ACK!!! we've done all this work to discover the content type just to find out that windows
+  // registery uses the extension to figure out the right helper app....that's a bummer...
+  // now we need to try to get the extension for the content type...
+
+  nsCOMPtr<nsIMIMEInfo> mimeInfo;
+  nsXPIDLCString fileExtension;
+  rv = FindOSMimeInfoForType(aMimeContentType, aURI, getter_Copies(fileExtension), getter_AddRefs(mimeInfo));
+
+  *aStreamListener = nsnull;
+  if (NS_SUCCEEDED(rv) && mimeInfo)
+  {
+    // this code is incomplete and just here to get things started..
+    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension);
+    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
   }
-  else
-    return NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInfo, nsIFile * aTempFile)
+{
+  nsresult rv = NS_OK;
+  if (aMIMEInfo)
+  {
+    nsCOMPtr<nsIFile> application;
+    nsXPIDLCString path;
+    aTempFile->GetPath(getter_Copies(path));
+    
+    aMIMEInfo->GetPreferredApplicationHandler(getter_AddRefs(application));
+    if (application)
+    {
+      // if we were given an application to use then use it....otherwise
+      // make the registry call to launch the app
+      const char * strPath = (const char *) path;
+      application->Spawn(&strPath, 1);
+    }    
+    else
+    {
+      // use the app registry name to launch a shell execute....
+      LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
+      if (r < 32) 
+        rv = NS_ERROR_FAILURE;
+			else
+			  rv = NS_OK;
+    }
+  }
+
+  return rv;
 }
 
 // We have a serious problem!! I have this content type and the windows registry only gives me
@@ -362,28 +329,5 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   else
     rv = NS_ERROR_FAILURE;
 
-  return rv;
-}
-
-nsresult nsOSHelperAppService::CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtension, nsIStreamListener ** aStreamListener)
-{
-  nsresult rv = NS_OK;
-  
-  // create an application that represents this app name...
-  nsExternalApplication * application = nsnull;
-  NS_NEWXPCOM(application, nsExternalApplication);
-  NS_IF_ADDREF(application);
-
-  if (application)
-  {
-    application->SetLocalFile(aApplicationToUse);
-    nsCOMPtr<nsISupports> appSupports = do_QueryInterface(application);    
-    // this code is incomplete and just here to get things started..
-    nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports, aFileExtension);
-    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
-  }
-
-  NS_IF_RELEASE(application);
-  
   return rv;
 }
