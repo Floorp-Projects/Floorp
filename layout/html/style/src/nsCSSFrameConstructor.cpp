@@ -4914,12 +4914,8 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
     }
   }
   else {
-    nsIHTMLContent *htmlContent;
-
     // Ignore the tag if it's not HTML content
-    if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent))) {
-      NS_RELEASE(htmlContent);
-      
+    if (aNameSpaceID == kNameSpaceID_HTML) {
       // See if the element is absolute or fixed positioned
       const nsStylePosition* position = (const nsStylePosition*)
         aStyleContext->GetStyleData(eStyleStruct_Position);
@@ -7519,7 +7515,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
       PRInt32 nameSpaceID;
       xblService->ResolveTag(aContent, &nameSpaceID, getter_AddRefs(baseTag));
  
-      if (baseTag.get() != aTag) {
+      if (baseTag.get() != aTag || aNameSpaceID != nameSpaceID) {
         // Construct the frame using the XBL base tag.
         nsresult rv = ConstructFrameInternal( aPresShell, 
                                   aPresContext,
