@@ -101,7 +101,6 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
 // we can use this to look up our mime type to see if there is a preferred extension for the mime type.
 nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& aFileExtension)
 {
-   nsresult rv = NS_OK;
    HKEY hKey;
    nsCAutoString mimeDatabaseKey ("MIME\\Database\\Content Type\\");
 
@@ -122,7 +121,6 @@ nsresult GetExtensionFromWindowsMimeDatabase(const char * aMimeType, nsCString& 
    }
 
    return NS_OK;
-
 }
 
 // We have a serious problem!! I have this content type and the windows registry only gives me
