@@ -97,11 +97,44 @@
     }
   }
 
+  function SetTextProperty(property, attribute, value)
+  {
+    if (appCore) {
+      appCore.setTextProperty(property, attribute, value);
+    }        
+  }
+
   function SetParagraphFormat(paraFormat)
   {
     if (appCore) {
-      dump("Doing SetParagraphFormat...\n");
       appCore.setParagraphFormat(paraFormat);
+    }        
+  }
+
+  function SetFontSize(size)
+  {
+    if (appCore) {
+      appCore.setTextProperty("font", "size", size);
+    }        
+  }
+
+  function SetFontFace(fontFace)
+  {
+    if (appCore) {
+      if( fontFace == "tt") {
+        // The old "teletype" attribute
+        appCore.setTextProperty("tt", "", "");  
+        // Clear existing font face
+        fontFace = "";
+      }
+      appCore.setTextProperty("font", "face", fontFace);
+    }        
+  }
+
+  function SetFontColor(color)
+  {
+    if (appCore) {
+      appCore.setTextProperty("font", "color", color);
     }        
   }
 

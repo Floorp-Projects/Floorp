@@ -18,7 +18,7 @@
       <td>
         <fieldset><legend align="left">Image Information </legend>
           <p class="smallmargin">Enter a remote URL or local file: </p>
-          <input type="file" size="50" length="50" maxlength="255" id="image.Src" />
+          <input type="file" size="50" length="50" maxlength="255" id="image.Src" style="{background-color: #CCCCCC; font-family: Sans-Serif; font-size: 8pt;}" />
           <br/>
           <p class="smallmargin">Alternative Text</p>
           <input type="text" size="30" length="30" maxlength="255" id="image.AltText" />
