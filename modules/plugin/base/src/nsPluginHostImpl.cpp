@@ -2893,6 +2893,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
 
   nsCOMPtr<nsIPluginInstance> instance = do_QueryInterface(pluginInst, &rv);
 
+#ifdef OJI
   if (NS_SUCCEEDED(rv))
   {
     // if this is a Java plugin calling, we need to do a security check
@@ -2901,6 +2902,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
     if (javaInstance)
         rv = DoURLLoadSecurityCheck(instance, url);
   }
+#endif
   
   if (NS_SUCCEEDED(rv))
   {
@@ -2960,6 +2962,7 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
   
   nsCOMPtr<nsIPluginInstance> instance = do_QueryInterface(pluginInst, &rv);
 
+#ifdef OJI
   if (NS_SUCCEEDED(rv))
   {
     // if this is a Java plugin calling, we need to do a security check
@@ -2968,6 +2971,7 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
     if (javaInstance)
         rv = DoURLLoadSecurityCheck(instance, url);
   }
+#endif
 
   if (NS_SUCCEEDED(rv))
   {
@@ -5865,7 +5869,7 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
       // try to get the max cached plugins from a pref or use default
       PRUint32 max_num;
       nsresult rv;
-      nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+      nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
       if (prefs) rv = prefs->GetIntPref(NS_PREF_MAX_NUM_CACHED_PLUGINS,(int *)&max_num);
       if (NS_FAILED(rv)) max_num = DEFAULT_NUMBER_OF_STOPPED_PLUGINS;
 
