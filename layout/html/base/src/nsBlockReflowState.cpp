@@ -55,7 +55,7 @@ void nsBlockBandData::ComputeAvailSpaceRect()
     for (i = 0; i < count; i++) {
       nsBandTrapezoid*  trapezoid = &data[i];
 
-      if (trapezoid->state != nsBandTrapezoid::smAvailable) {
+      if (trapezoid->state != nsBandTrapezoid::Available) {
         nsStyleDisplay* display;
       
         // XXX Handle the case of multiple frames
@@ -71,7 +71,7 @@ void nsBlockBandData::ComputeAvailSpaceRect()
     }
   }
 
-  if (nsBandTrapezoid::smAvailable == trapezoid->state) {
+  if (nsBandTrapezoid::Available == trapezoid->state) {
     // The trapezoid is available
     trapezoid->GetRect(availSpace);
   } else {

@@ -171,7 +171,7 @@ PRInt32 SpaceManager::GetBandAvailableSpace(const BandRect* aBand,
     if (aBand->left > left) {
       // The rect is to the right of our current left coordinate, so we've
       // found some available space
-      trapezoid->state = nsBandTrapezoid::smAvailable;
+      trapezoid->state = nsBandTrapezoid::Available;
       trapezoid->frame = nsnull;
 
       // Assign the trapezoid a rectangular shape. The trapezoid must be in the
@@ -185,11 +185,11 @@ PRInt32 SpaceManager::GetBandAvailableSpace(const BandRect* aBand,
 
     // The rect represents unavailable space, so add another trapezoid
     if (1 == aBand->numFrames) {
-      trapezoid->state = nsBandTrapezoid::smOccupied;
+      trapezoid->state = nsBandTrapezoid::Occupied;
       trapezoid->frame = aBand->frame;
     } else {
       NS_ASSERTION(aBand->numFrames > 1, "unexpected frame count");
-      trapezoid->state = nsBandTrapezoid::smOccupiedMultiple;
+      trapezoid->state = nsBandTrapezoid::OccupiedMultiple;
       trapezoid->frames = aBand->frames;
     }
 
@@ -218,7 +218,7 @@ PRInt32 SpaceManager::GetBandAvailableSpace(const BandRect* aBand,
   // No more rects left in the band. If we haven't yet reached the right edge,
   // then all the remaining space is available
   if (left < rightEdge) {
-    trapezoid->state = nsBandTrapezoid::smAvailable;
+    trapezoid->state = nsBandTrapezoid::Available;
     trapezoid->frame = nsnull;
 
     // Assign the trapezoid a rectangular shape. The trapezoid must be in the
@@ -243,7 +243,7 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
     // All the requested space is available
     aBandData.count = 1;
     aBandData.trapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
-    aBandData.trapezoids[0].state = nsBandTrapezoid::smAvailable;
+    aBandData.trapezoids[0].state = nsBandTrapezoid::Available;
     aBandData.trapezoids[0].frame = nsnull;
   } else {
     // Find the first band that contains the y-offset or is below the y-offset
@@ -258,7 +258,7 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
         aBandData.count = 1;
         aBandData.trapezoids[0] =
           nsRect(0, aYOffset, aMaxSize.width, PR_MIN(band->top - y, aMaxSize.height));
-        aBandData.trapezoids[0].state = nsBandTrapezoid::smAvailable;
+        aBandData.trapezoids[0].state = nsBandTrapezoid::Available;
         aBandData.trapezoids[0].frame = nsnull;
         break;
       } else if (y < band->bottom) {
