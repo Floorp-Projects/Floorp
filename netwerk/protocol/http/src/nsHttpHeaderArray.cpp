@@ -36,7 +36,7 @@ nsHttpHeaderArray::SetHeader(nsHttpAtom header, const char *value)
 
     // If a NULL value is passed in, then delete the header entry...
     index = LookupEntry(header, &entry);
-    if (!value) {
+    if (!value || !*value) {
         if (entry) {
             mHeaders.RemoveElementAt(index);
             delete entry;
