@@ -379,10 +379,10 @@ function stringTrim (s)
 function formatDateOffset (offset, format)
 {
     var seconds = roundTo(offset % 60, 2);
-    var minutes = parseInt(offset / 60);
-    var hours = parseInt(minutes / 60);
+    var minutes = Math.floor(offset / 60);
+    var hours = Math.floor(minutes / 60);
     minutes = minutes % 60;
-    var days = parseInt(hours / 24);
+    var days = Math.floor(hours / 24);
     hours = hours % 24;
 
     if (!format)

@@ -488,7 +488,7 @@ function insertLink (matchText, containerTag)
         if (!("schemes" in client))
         {
             var pfx = "@mozilla.org/network/protocol;1?name=";
-            var len = pfx.length
+            var len = pfx.length;
 
             client.schemes = new Object();
             for (var c in Components.classes)
@@ -497,7 +497,7 @@ function insertLink (matchText, containerTag)
                     client.schemes[c.substr(len)] = true;
             }
         }
-        
+
         if (!(ary[1] in client.schemes))
         {
             insertHyphenatedWord(matchText, containerTag);
@@ -520,7 +520,7 @@ function insertLink (matchText, containerTag)
     containerTag.appendChild (anchor);
     if (trailing)
         insertHyphenatedWord (trailing, containerTag);
-    
+
 }
 
 function insertMailToLink (matchText, containerTag)
