@@ -276,21 +276,10 @@ const char kMsgHeaderBEncoding[] = "B";
 const char kMsgHeaderQEncoding[] = "Q";
 static const char * intl_message_header_encoding(const char* charset)
 {
-  //TODO: make this overridable.
-  if (!nsCRT::strcasecmp(charset, "ISO-2022-JP") || 
-      !nsCRT::strcasecmp(charset, "ISO-2022-KR") ||
-      !nsCRT::strcasecmp(charset, "HZ-GB-2312") ||
-      !nsCRT::strcasecmp(charset, "Shift_JIS") ||
-      !nsCRT::strcasecmp(charset, "EUC-JP") ||
-      !nsCRT::strcasecmp(charset, "Big5") ||
-      !nsCRT::strcasecmp(charset, "GB2312") ||
-      !nsCRT::strcasecmp(charset, "EUC-KR") ||
-      !nsCRT::strcasecmp(charset, "UTF-7") ||
-      !nsCRT::strcasecmp(charset, "UTF-8")) {
+  if (nsMsgI18Nmultibyte_charset(charset))
     return kMsgHeaderBEncoding;
-  }
-
-  return kMsgHeaderQEncoding;
+  else
+    return kMsgHeaderQEncoding;
 }
 
 static PRBool stateful_encoding(const char* charset)
