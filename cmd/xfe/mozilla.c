@@ -1967,7 +1967,9 @@ build_user_agent_string(char *versionLocale)
 #elif defined(SNI)
 	strcat (buf, "SINIX-N");
 #elif defined(DGUX)
-	strcat (buf, "DG/UX");
+        strcat (buf, "DG/UX");
+#elif defined(RHAPSODY)
+        strcat (buf, "Rhapsody");
 #else
 	ERROR!! run "uname -s" and put the result here.
 #endif
