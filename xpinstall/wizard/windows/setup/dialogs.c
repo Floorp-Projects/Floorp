@@ -295,7 +295,6 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
               {
                 AppendBackSlash(szPath, sizeof(szPath));
                 lstrcpy(szPath, szTempPath);
-                break;
               }
               else
               {
@@ -654,7 +653,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           lppidlPath = SHBrowseForFolder(&biBrowseInfo);
 */
 
-          GetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szTempSetupPath, MAX_PATH);
           BrowseForDirectory(hDlg, szTempSetupPath);
 
           /* fix: hack to work around bug with this dlg proc no longer being called
