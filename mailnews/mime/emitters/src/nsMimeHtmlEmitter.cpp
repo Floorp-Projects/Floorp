@@ -236,7 +236,8 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     // we emit it...
     nsXPIDLString unicodeHeaderValue;
     nsAutoString charset ("UTF-8");
-  
+
+    rv = NS_OK;
     if (mUnicodeConverter)
   	  rv = mUnicodeConverter->DecodeMimePartIIStr(name, charset,
                                                   getter_Copies(unicodeHeaderValue));
@@ -246,8 +247,15 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
         nsXPIDLString::Copy(attachmentName.GetUnicode());
     }
 
-    if (NS_SUCCEEDED(rv))
-      headerSink->HandleAttachment(url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);
+    if (NS_FAILED(rv))
+    {
+      nsAutoString attachmentName (name);
+      *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =
+        nsXPIDLString::Copy(attachmentName.GetUnicode());
+    }
+
+    headerSink->HandleAttachment(url /* was escapedUrl */, unicodeHeaderValue, uriString, aNotDownloaded);
+
     nsCRT::free(escapedUrl);
     mSkipAttachment = PR_TRUE;
   }
