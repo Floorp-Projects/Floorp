@@ -20,6 +20,7 @@
 #include "nsWindow.h"
 #include "nsGUIEvent.h"
 #include "plevent.h"
+#include "prinrval.h"
 #include <Gestalt.h>
 #include <Appearance.h>
 
@@ -68,13 +69,16 @@ nsToolkit::~nsToolkit()
  */
 void nsToolkit::SetFocus(nsWindow *aFocusWidget)
 { 
-	nsGUIEvent		guiEvent;
-	
-	guiEvent.eventStructType = NS_GUI_EVENT;
-
 	if (aFocusWidget == mFocusedWidget)
 		return;
 		
+	nsGUIEvent guiEvent;
+	guiEvent.eventStructType = NS_GUI_EVENT;
+	guiEvent.point.x = 0, guiEvent.point.y = 0;
+	guiEvent.time = PR_IntervalNow();
+	guiEvent.widget = nsnull;
+	guiEvent.nativeMsg = nsnull;
+
 	// tell the old widget, it is not focused
 	if (mFocusedWidget)
 	{
