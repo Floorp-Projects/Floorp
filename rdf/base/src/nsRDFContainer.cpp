@@ -136,6 +136,23 @@ RDFContainerImpl::Init(nsIRDFDataSource *aDataSource, nsIRDFResource *aContainer
     if (! aContainer)
         return NS_ERROR_NULL_POINTER;
 
+    nsresult rv;
+    PRBool isContainer;
+    rv = gRDFContainerUtils->IsContainer(aDataSource, aContainer, &isContainer);
+    if (NS_FAILED(rv)) return rv;
+
+    if (! isContainer) {
+#ifdef DEBUG
+        nsCAutoString msg;
+        nsXPIDLCString uri;
+        aContainer->GetValue(getter_Copies(uri));
+        msg += uri;
+        msg += " is not an RDF container";
+        NS_WARNING((const char*) msg);
+#endif
+        return NS_ERROR_UNEXPECTED;
+    }
+
     NS_IF_RELEASE(mDataSource);
     mDataSource = aDataSource;
     NS_ADDREF(mDataSource);
@@ -208,14 +225,6 @@ RDFContainerImpl::AppendElement(nsIRDFNode *aElement)
         return NS_ERROR_NULL_POINTER;
 
     nsresult rv;
-
-    PRBool isContainer;
-    rv = gRDFContainerUtils->IsContainer(mDataSource, mContainer, &isContainer);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_PRECONDITION(isContainer, "not a container");
-    if (! isContainer)
-        return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIRDFResource> nextVal;
     rv = GetNextValue(getter_AddRefs(nextVal));
