@@ -716,6 +716,8 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   win->OnKey(kevent);
   win->Release();
 
+  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_release_event");
+
   return PR_TRUE;
 }
 
@@ -739,6 +741,8 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   win->OnKey(kevent);
   win->Release();
 
+  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
+  
   return PR_TRUE;
 }
 
