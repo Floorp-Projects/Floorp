@@ -210,7 +210,7 @@
 
   <!-- :::/ tab control \ ::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
-  <binding id="tab" extends="chrome://global/content/bindings/tabcontrol.xml#tab">
+  <binding id="tab" extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content orient="horizontal">
       <xul:box class="tab-image-left" orient="vertical">
         <xul:spring class="tab-image-left-top" inherits="selected"/>
@@ -233,7 +233,7 @@
     </content>
   </binding>
   
-  <binding id="tabs" extends="chrome://global/content/bindings/tabcontrol.xml#tabs">
+  <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
       <xul:spring class="tabs-left-cap"/>
   	  <xul:spring class="tabs-left"/>

@@ -150,7 +150,7 @@
     </content>
   </binding>
 
-  <binding id="tab" extends="chrome://global/content/bindings/tabcontrol.xml#tab">
+  <binding id="tab" extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content>
       <xul:spring class="tab-image-left" inherits="selected"/>
       <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected" autostretch="never">
@@ -161,7 +161,7 @@
     </content>
   </binding>
 
-  <binding id="tabs" extends="chrome://global/content/bindings/tabcontrol.xml#tabs">
+  <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
       <xul:spring class="tab-border-top-left-cap"/>
     <xul:spring class="tab-border-top-left"/>

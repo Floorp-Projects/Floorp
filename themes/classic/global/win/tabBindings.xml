@@ -4,7 +4,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="tabs" extends="chrome://global/content/bindings/tabcontrol.xml#tabs">
+  <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
       <xul:box class="tabcontainer">
 	      <children/>
@@ -13,7 +13,7 @@
     </content>
   </binding>
 
-  <binding id="tabpanels" extends="chrome://global/content/bindings/tabcontrol.xml#tabpanels">
+  <binding id="tabpanels" extends="chrome://global/content/bindings/tabbox.xml#tabpanels">
     <content>
   	  <xul:box class="tabpanels-inner-box" flex="1">
         <children/> 

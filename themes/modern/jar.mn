@@ -309,7 +309,7 @@ modern.jar:
   skin/modern/global/scrollbars.css                                (global/scrollbars.css)
   skin/modern/global/scrollbox.css                                 (global/scrollbox.css)
   skin/modern/global/splitter.css                                  (global/splitter.css)
-  skin/modern/global/tabcontrol.css                                (global/tabcontrol.css)
+  skin/modern/global/tabbox.css                                    (global/tabbox.css)
   skin/modern/global/textbox.css                                   (global/textbox.css)
   skin/modern/global/titledbox.css                                 (global/titledbox.css)
   skin/modern/global/toolbar.css                                   (global/toolbar.css)
