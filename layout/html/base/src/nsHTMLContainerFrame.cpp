@@ -168,21 +168,16 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
     // Verify that the current parent view is what we think it is
     nsIView*  parentView;
 
-    // you have to check all the time to see if this 
-    // view has been reparented.. if you try to insert for
-    // a view that has been reparented.. bad things can happen.
-    // I took out the debug check and check all the time now..
-    // this case happens when you print.
-    view->GetParent(parentView);
-    if(parentView != aOldParentView)
-      return NS_OK;
-
     //NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
 
     // Change the parent view.
     PRInt32 zIndex;
     view->GetZIndex(zIndex);
-    aViewManager->RemoveChild(aOldParentView, view);
+    // Remove the view using it's parent instead
+    // of aOldParentView which is wrong.
+    nsIView* vp = nsnull;
+    view->GetParent(vp);
+    aViewManager->RemoveChild(vp, view);
     
     // XXX We need to insert this view in the correct place within its z-order...
     // XXX What should we do about the Z-placeholder-child if this frame is position:fixed?
@@ -204,6 +199,14 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
       ReparentFrameViewTo(aPresContext, childFrame, aViewManager, aNewParentView, aOldParentView);
       childFrame->GetNextSibling(&childFrame);
     }
+
+      // Also check the floater-list
+    aFrame->FirstChild(aPresContext, nsLayoutAtoms::floaterList, &childFrame);
+    while (childFrame) {
+      ReparentFrameViewTo(aPresContext, childFrame, aViewManager, aNewParentView, aOldParentView);
+      childFrame->GetNextSibling(&childFrame);
+    }
+
   }
 
   return NS_OK;
