@@ -127,7 +127,7 @@ nsPop3Sink::GetMailAccountURL(char* *urlString)
 }
 
 nsresult 
-nsPop3Sink::BeginMailDelivery(PRBool* aBool)
+nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
 {
 #ifdef DEBUG
     m_fileCounter++;
@@ -138,13 +138,23 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
     if (!server) return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIFileSpec> mailDirectory;
-    rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
-    if (NS_FAILED(rv)) return rv;
-    
     nsFileSpec fileSpec;
-    mailDirectory->GetFileSpec(&fileSpec);
-    fileSpec += "Inbox";
+    // ### if we're doing a UIDL, then the fileSpec needs to be for the current folder
+    if (uidlDownload)
+    {
+      nsCOMPtr<nsIFileSpec> path;
+      m_folder->GetPath(getter_AddRefs(path));
+	    path->GetFileSpec(&fileSpec);
+    }
+    else
+    {
+      nsCOMPtr<nsIFileSpec> mailDirectory;
+      rv = server->GetLocalPath(getter_AddRefs(mailDirectory));
+      if (NS_FAILED(rv)) return rv;
+    
+      mailDirectory->GetFileSpec(&fileSpec);
+      fileSpec += "Inbox";
+    }
     m_outFileStream = new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
 	if (m_outFileStream)
 		m_outFileStream->seek(fileSpec.GetFileSize());

@@ -259,7 +259,7 @@ public:
     nsresult GetPassword(char ** aPassword, PRBool *okayValue);
 
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg);
-
+  NS_IMETHOD Cancel(nsresult status);
 	// for nsMsgLineBuffer
     virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 

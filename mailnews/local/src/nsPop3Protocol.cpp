@@ -295,15 +295,15 @@ allow deleting of messages that have been kept on a POP3 server due to their siz
 a preference to keep the messages on the server. When "deleting" messages we load
 our state file, mark any messages we have for deletion and then re-save the state file.
 */
-#ifdef OBSOLETE_CODE
-extern char* ReadPopData(char *hostname, char* username, char* maildirectory);
-extern void SavePopData(char *data, char* maildirectory);
+extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec* maildirectory);
+extern void SavePopData(char *data, nsIFileSpec* maildirectory);
 extern void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed);
 extern void KillPopData(char* data);
+static void net_pop3_free_state(Pop3UidlHost* host);
 
 
-char* ReadPopData(char *hostname, 
-                  char* username, 
+char* ReadPopData(const char *hostname, 
+                  const char* username, 
                   nsIFileSpec* mailDirectory)
 {
 	Pop3UidlHost *uidlHost = NULL;
@@ -314,7 +314,7 @@ char* ReadPopData(char *hostname,
 	return (char*) uidlHost;
 }
 
-static void SavePopData(char *data, nsIFileSpec* mailDirectory)
+void SavePopData(char *data, nsIFileSpec* mailDirectory)
 {
 	Pop3UidlHost *host = (Pop3UidlHost*) data;
 
@@ -349,8 +349,6 @@ void KillPopData(char* data)
 		return;
 	net_pop3_free_state((Pop3UidlHost*) data);
 }
-
-#endif 
 
 static void
 net_pop3_free_state(Pop3UidlHost* host) 
@@ -607,6 +605,22 @@ NS_IMETHODIMP nsPop3Protocol::OnStopRequest(nsIChannel * aChannel, nsISupports *
 	CommitState(PR_TRUE);
 	return rv;
 }
+
+NS_IMETHODIMP nsPop3Protocol::Cancel(nsresult status)  // handle stop button
+{
+  CommitState(PR_TRUE);
+
+  if(m_pop3ConData->msg_closure)
+  {
+      m_nsIPop3Sink->IncorporateAbort(m_pop3ConData->msg_closure,
+                                      POP3_MESSAGE_WRITE_ERROR);
+      m_pop3ConData->msg_closure = NULL;
+  }
+  // need this to close the stream on the inbox.
+  m_nsIPop3Sink->AbortMailDelivery();
+	return nsMsgProtocol::Cancel(NS_BINDING_ABORTED);
+}
+
 
 nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 {
@@ -1144,7 +1158,7 @@ nsPop3Protocol::GetStat()
 
 
     if (!m_pop3ConData->only_check_for_new_mail) {
-        m_nsIPop3Sink->BeginMailDelivery(&m_pop3ConData->msg_del_started);
+        m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull, &m_pop3ConData->msg_del_started);
 
         if(!m_pop3ConData->msg_del_started)
         {

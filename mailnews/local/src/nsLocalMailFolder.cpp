@@ -87,6 +87,13 @@ static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
+extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec* mailDirectory);
+extern void SavePopData(char *data, nsIFileSpec* maildirectory);
+extern void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed);
+extern void KillPopData(char* data);
+//static void net_pop3_free_state(Pop3UidlHost* host);
+
+
 //////////////////////////////////////////////////////////////////////////////
 // nsFolderCompactState
 //////////////////////////////////////////////////////////////////////////////
@@ -1708,6 +1715,9 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           nsCOMPtr<nsIMessage> message;
           nsCOMPtr<nsISupports> msgSupport;
           rv = messages->Count(&messageCount);
+
+          DeleteMsgsOnPop3Server(messages);
+
           if (NS_FAILED(rv)) return rv;
           for(PRUint32 i = 0; i < messageCount; i++)
           {
@@ -2626,6 +2636,142 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message,
 
 	return rv;
 }
+
+// A message is being deleted from a POP3 mail file, so check and see if we have the message
+// being deleted in the server. If so, then we need to remove the message from the server as well.
+// We have saved the UIDL of the message in the popstate.dat file and we must match this uidl, so
+// read the message headers and see if we have it, then mark the message for deletion from the server.
+// The next time we look at mail the message will be deleted from the server.
+
+nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages)
+{
+	char		*uidl;
+	char		*header = NULL;
+	PRUint32		offset = 0, size = 0, len = 0, i = 0;
+  nsresult err = NS_OK;
+	nsCOMPtr <nsIMsgDBHdr> hdr;
+	nsMsgKey key = nsMsgKey_None;
+	PRBool leaveOnServer = PR_FALSE;
+	PRBool deleteMailLeftOnServer = PR_FALSE;
+	PRBool changed = PR_FALSE;
+	char *popData = nsnull;
+  nsCOMPtr<nsIPop3IncomingServer> pop3MailServer;
+  nsCOMPtr<nsIFileSpec> localPath;
+  nsCOMPtr<nsIFileSpec> mailboxSpec;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) 
+    return rv;
+  if (!server) 
+    return NS_ERROR_FAILURE;
+
+  server->GetLocalPath(getter_AddRefs(localPath));
+  pop3MailServer = do_QueryInterface(server, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
+  if (!pop3MailServer) 
+    return NS_ERROR_FAILURE;
+	
+  pop3MailServer->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
+	if (!deleteMailLeftOnServer)
+		return NS_OK;
+
+  pop3MailServer->GetLeaveMessagesOnServer(&leaveOnServer);
+  rv = GetPath(getter_AddRefs(mailboxSpec));
+
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  nsInputFileStream *inputFileStream = nsnull;
+
+  inputFileStream = new nsInputFileStream(mailboxSpec);
+  if (!inputFileStream)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  PRUint32 srcCount;
+  messages->Count(&srcCount);
+
+  nsXPIDLCString hostName;
+  nsXPIDLCString userName;
+  
+  server->GetHostName(getter_Copies(hostName));
+  server->GetUsername(getter_Copies(userName));
+
+	header = (char*) PR_MALLOC(512);
+	for (i = 0; header && (i < srcCount); i++)
+	{
+		/* get uidl for this message */
+		uidl = nsnull;
+    nsCOMPtr <nsIMessage> curSourceMessage; 
+    nsCOMPtr<nsISupports> aSupport =
+        getter_AddRefs(messages->ElementAt(i));
+
+    nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(aSupport, &rv));
+    
+    nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+    rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+
+    curSourceMessage = do_QueryInterface(aSupport, &rv);
+    PRUint32 flags = 0;
+
+		if (curSourceMessage && ((curSourceMessage->GetFlags(&flags), flags & MSG_FLAG_PARTIAL) || leaveOnServer))
+		{
+			len = 0;
+      PRUint32 messageOffset;
+
+      msgDBHdr->GetMessageOffset(&messageOffset);
+			/* no return value?!! */ inputFileStream->seek(messageOffset); /* GetMessageKey */
+			msgDBHdr->GetMessageSize(&len);
+			while ((len > 0) && !uidl)
+			{
+				size = len;
+				if (size > 512)
+					size = 512;
+				if (inputFileStream->readline(header, size))
+				{
+					size = strlen(header);
+					if (!size)
+						len = 0;
+					else {
+						len -= size;
+						uidl = PL_strstr(header, X_UIDL);
+					}
+				} else
+					len = 0;
+			}
+			if (uidl)
+			{
+				if (!popData)
+					popData = ReadPopData(hostName, userName, localPath);
+				uidl += X_UIDL_LEN + 2; // skip UIDL: header
+				len = strlen(uidl);
+				
+				// Remove CR or LF at end of line
+				char	*lastChar = uidl + len - 1;
+				
+				while ( (lastChar > uidl) && (*lastChar == LF || *lastChar == CR) ) {
+					*lastChar = '\0';
+					lastChar --;
+				}
+
+				net_pop3_delete_if_in_server(popData, uidl, &changed);
+			}
+		}
+	}
+	PR_FREEIF(header);
+	if (popData)
+	{
+		if (changed)
+			SavePopData(popData, localPath);
+		KillPopData(popData);
+		popData = nsnull;
+	}
+  delete inputFileStream;
+  return rv;
+}
+
+
 
 // TODO:  once we move certain code into the IncomingServer (search for TODO)
 // this method will go away.

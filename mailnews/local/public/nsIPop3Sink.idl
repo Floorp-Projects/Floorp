@@ -35,7 +35,7 @@ interface nsIPop3Sink : nsISupports {
   attribute string messageUri;
   attribute string baseMessageUri;
 
-  boolean BeginMailDelivery();
+  boolean BeginMailDelivery(in boolean uidlDownload);
   void EndMailDelivery();
   void AbortMailDelivery();
 

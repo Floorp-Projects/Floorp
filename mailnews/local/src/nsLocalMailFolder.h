@@ -49,7 +49,7 @@ struct nsLocalMailCopyState
   nsLocalMailCopyState();
   virtual ~nsLocalMailCopyState();
   
-  nsOutputFileStream* m_fileStream;
+  nsOutputFileStream * m_fileStream;
   nsCOMPtr<nsISupports> m_srcSupport;
   nsCOMPtr<nsISupportsArray> m_messages;
   nsCOMPtr<nsMsgTxn> m_undoMsgTxn;
@@ -187,6 +187,7 @@ protected:
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
 
   nsresult setSubfolderFlag(PRUnichar *aFolderName, PRUint32 flags);
+  nsresult DeleteMsgsOnPop3Server(nsISupportsArray *messages);
 };
 
 #endif // nsMsgLocalMailFolder_h__
