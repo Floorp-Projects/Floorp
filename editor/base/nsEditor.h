@@ -604,6 +604,9 @@ public:
   PRBool TagCanContain(const nsString &aParentTag, nsIDOMNode* aChild);
   PRBool TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag);
 
+  /** returns PR_TRUE if aNode is a descendant of our root node */
+  PRBool IsDescendantOfBody(nsIDOMNode *inNode);
+
   /** returns PR_TRUE if aNode is a container */
   PRBool IsContainer(nsIDOMNode *aNode);
 

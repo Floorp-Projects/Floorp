@@ -3454,6 +3454,8 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   nsresult result = NS_OK;
   if (!aParentNode || !aResultNode) { return NS_ERROR_NULL_POINTER; }
   
+  *aResultNode = nsnull;
+  
   // if aParentNode is a text node, use it's location instead
   if (IsTextNode(aParentNode))
   {
@@ -3468,8 +3470,13 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   {
     result = GetLeftmostChild(child, aResultNode);
     if (NS_FAILED(result)) return result;
+    if (!IsDescendantOfBody(*aResultNode))
+    {
+      *aResultNode = nsnull;
+      return result;
+    }
     if (!aEditableNode) return result;
-    if (IsEditable(*aResultNode))  return result;
+    if (IsEditable(*aResultNode)) return result;
     else 
     { 
       // restart the search from the non-editable node we just found
@@ -3506,6 +3513,11 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
   {
     result = GetRightmostChild(prevSibling, aResultNode);
     if (NS_FAILED(result)) { return result; }
+    if (!IsDescendantOfBody(*aResultNode))
+    {
+      *aResultNode = nsnull;
+      return result;
+    }
     if (PR_FALSE==aEditableNode) {
       return result;
     }
@@ -3533,6 +3545,11 @@ nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode,
       {
         result = GetRightmostChild(node, aResultNode);
         if (NS_FAILED(result)) { return result; }
+        if (!IsDescendantOfBody(*aResultNode))
+        {
+          *aResultNode = nsnull;
+          return result;
+        }
         if (PR_FALSE==aEditableNode) {
           return result;
         }
@@ -3566,6 +3583,11 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
   {
     result = GetLeftmostChild(nextSibling, aResultNode);
     if (NS_FAILED(result)) { return result; }
+    if (!IsDescendantOfBody(*aResultNode))
+    {
+      *aResultNode = nsnull;
+      return result;
+    }
     if (PR_FALSE==aEditableNode) {
       return result;
     }
@@ -3594,6 +3616,11 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
       {
         result = GetLeftmostChild(node, aResultNode);
         if (NS_FAILED(result)) { return result; }
+        if (!IsDescendantOfBody(*aResultNode))
+        {
+          *aResultNode = nsnull;
+          return result;
+        }
         if (PR_FALSE==aEditableNode) {
           return result;
         }
@@ -3719,6 +3746,29 @@ nsEditor::TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag
   if (NS_FAILED(res)) return PR_FALSE;
 
   return mDTD->CanContain(parentTagEnum, childTagEnum);
+}
+
+PRBool 
+nsEditor::IsDescendantOfBody(nsIDOMNode *inNode) 
+{
+  if (!inNode) return PR_FALSE;
+  nsCOMPtr<nsIDOMElement> junk;
+  if (!mBodyElement) GetRootElement(getter_AddRefs(junk));
+  if (!mBodyElement) return PR_FALSE;
+  nsCOMPtr<nsIDOMNode> root = do_QueryInterface(mBodyElement);
+  
+  if (inNode == root.get()) return PR_TRUE;
+  
+  nsCOMPtr<nsIDOMNode> parent, node = do_QueryInterface(inNode);
+  
+  do
+  {
+    node->GetParentNode(getter_AddRefs(parent));
+    if (parent == root) return PR_TRUE;
+    node = parent;
+  } while (parent);
+  
+  return PR_FALSE;
 }
 
 PRBool 
@@ -5425,7 +5475,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
     nsCOMPtr<nsIDOMNode> nextNode;
     result = GetNextNode(node, PR_TRUE, getter_AddRefs(nextNode));
     if ((NS_SUCCEEDED(result)) && nextNode)
-    { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
+    { // there is a nextNode, so delete it's first child (if text content, delete the first char.)
       // if it has no children, delete it
       nsCOMPtr<nsIDOMCharacterData> nextNodeAsText;
       nextNodeAsText = do_QueryInterface(nextNode);
