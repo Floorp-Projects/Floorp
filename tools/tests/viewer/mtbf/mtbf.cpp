@@ -19,6 +19,7 @@
 /***************************************************************************************
  * MODULE NOTES -- MTBF -- Mean Time Between Failures
  * @update  gess 01/04/99
+ * @update  cyeh 03/15/99
  *
  *  MTBF is a simple WinNT application that runs our viewer.exe remotely.
  *  After viewer crashes (inevitably) the total elapsed time is recorded, and send 
@@ -63,6 +64,8 @@ char  gReportPath[500]="";
 const char* gURLFilename="urls.txt";
 char  gURLPath[500];
 
+int gLoop = 100;
+
 void ExitWithError(const char* aMsg1,const char* aMsg2){
   cout << endl << "Error: " << aMsg1;
   if(aMsg2)
@@ -100,7 +103,6 @@ void ComputeEXEDirectory(char* aProgramPath,char* anOutputFilename){
  */
 void initializeSettings(int argc,char* argv[]){
   bool theURLFileIsValid=false;
-
   ComputeEXEDirectory(argv[0],gMTBFDirectory);
   sprintf(gReportPath,"%s%s",gMTBFDirectory,gReportFilename);
   sprintf(gURLPath,"%s%s",gMTBFDirectory,gURLFilename);
@@ -125,6 +127,11 @@ void initializeSettings(int argc,char* argv[]){
       //determine email recipient...
       strcpy(gRecipient,argv[i+1]);
       gSendMail=true;
+    }
+    else if(0==strnicmp(argv[i],"-l",2)){
+      gLoop = atoi(argv[i+1]);
+      if ((gLoop > 200) || (gLoop < 0))
+        ExitWithError("Loop must be a positive value and less than 200", 0);
     }
   }
   if(!theURLFileIsValid)
@@ -232,6 +239,7 @@ bool getPath(char* aBuffer,const char* aFilename,int index){
 int main(int argc,char* argv[]) {
 
   int result=0;
+
   //result=system("sendmail -t -messagefile=s:/mtbf/msg.txt ");
 
   if(argc>1) {
@@ -252,7 +260,7 @@ int main(int argc,char* argv[]) {
     time( &startTime ) ;  // Get the current time from the 
 
     char buffer[500];
-    sprintf(buffer,"%s%s -f %s",gDirectory,gProgram,gURLPath);
+    sprintf(buffer,"%s%s -f %s -r %d",gDirectory,gProgram,gURLPath,gLoop);
     result=system(buffer);
 
     time_t endTime;  // C run-time time (defined in <time.h>)
@@ -297,6 +305,7 @@ int main(int argc,char* argv[]) {
     printf("Optional arguments: \n");
     printf("  -f filename containing URL list\n");
     printf("  -r email recipient\n");
+    printf("  -l loop # of times (default is 100, max is 200)\n");
   }
   return 0;
 }
