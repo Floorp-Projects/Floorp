@@ -260,6 +260,11 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             HANDLE_POSSIBLE_NAME_CASE_ERROR(cx, clazz, id);
         }
 
+        // Check up the prototype chain to match JavaScript lookup behavior
+        JSObject* proto = JS_GetPrototype(cx, obj); 
+        if(proto)
+            return OBJ_GET_PROPERTY(cx, proto, id, vp);
+ 
         // XXX silently fail when property not found or call fails?
         *vp = JSVAL_VOID;
         return JS_TRUE;
