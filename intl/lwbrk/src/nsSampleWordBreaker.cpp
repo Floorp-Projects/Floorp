@@ -67,7 +67,7 @@ typedef enum {
   kWbClassKatakanaLetter,
   kWbClassHiraganaLetter,
   kWbClassHWKatakanaLetter,
-  kWbClassThaiLetter,
+  kWbClassThaiLetter
 } wb_class;
 
 #define IS_ASCII(c)            (0 == ( 0xFF80 & (c)))
