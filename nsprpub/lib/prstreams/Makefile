@@ -68,7 +68,7 @@ ifeq ($(OS_ARCH), WINNT)
     else
         DLLBASE=/BASE:0x30000000
         RES=$(OBJDIR)/prstrms.res
-        RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
+        RESNAME=prstrms.rc
         OS_LIBS = user32.lib
         ifeq ($(OS_TARGET), WIN95)
             EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
