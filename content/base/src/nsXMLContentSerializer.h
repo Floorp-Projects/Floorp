@@ -104,8 +104,34 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                      const nsAString& aURI,
                                      nsIDOMElement* aOwner);
   void PopNameSpaceDeclsFor(nsIDOMElement* aOwner);
+
+  /**
+   * The problem that ConfirmPrefix fixes is that anyone can insert nodes
+   * through the DOM that have a namespace URI and a random or empty or
+   * previously existing prefix that's totally unrelated to the prefixes
+   * declared at that point through xmlns attributes.  So what ConfirmPrefix
+   * does is ensure that we can map aPrefix to the namespace URI aURI (for
+   * example, that the prefix is not already mapped to some other namespace).
+   * aPrefix will be adjusted, if necessary, so the value of the prefix
+   * _after_ this call is what should be serialized.
+   * @param aPrefix the prefix that may need adjusting
+   * @param aURI the namespace URI we want aPrefix to point to
+   * @param aElement the element we're working with (needed for proper default
+   *                 namespace handling)
+   * @param aMustHavePrefix PR_TRUE if we the output prefix must be nonempty
+   *                        whenever a new namespace decl is needed.
+   * @return PR_TRUE if we need to push the (prefix, uri) pair on the namespace
+   *                 stack (note that this can happen even if the prefix is
+   *                 empty).
+   */
   PRBool ConfirmPrefix(nsAString& aPrefix,
-                       const nsAString& aURI);
+                       const nsAString& aURI,
+                       nsIDOMElement* aElement,
+                       PRBool aMustHavePrefix);
+  /**
+   * GenerateNewPrefix generates a new prefix and writes it to aPrefix
+   */
+  void GenerateNewPrefix(nsAString& aPrefix);
   void SerializeAttr(const nsAString& aPrefix,
                      const nsAString& aName,
                      const nsAString& aValue,
