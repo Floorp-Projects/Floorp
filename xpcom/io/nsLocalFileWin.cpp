@@ -78,6 +78,11 @@ static nsresult ConvertWinError(DWORD winErr)
         case ERROR_HANDLE_DISK_FULL:
             rv = NS_ERROR_FILE_TOO_BIG;
             break;
+        case ERROR_FILE_EXISTS:
+        case ERROR_ALREADY_EXISTS:
+        case ERROR_CANNOT_MAKE:
+            rv = NS_ERROR_FILE_ALREADY_EXISTS;
+            break;
         case 0:
             rv = NS_OK;
         default:    
@@ -676,8 +681,10 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     {
         *slash = '\0';
 
-        CreateDirectoryA(mResolvedPath, NULL);// todo: pass back the result
-
+        if (!CreateDirectoryA(mResolvedPath, NULL)) {
+            rv = ConvertWinError(GetLastError());
+            if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
+        }
         *slash = '\\';
         ++slash;
         slash = _mbschr(slash, '\\');
@@ -686,15 +693,19 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 
     if (type == NORMAL_FILE_TYPE)
     {
-        PRFileDesc* file = PR_Open(mResolvedPath, PR_RDONLY | PR_CREATE_FILE | PR_APPEND, attributes);
-        if (file) PR_Close(file);
+        PRFileDesc* file = PR_Open(mResolvedPath, PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, attributes);
+        if (!file) return NS_ERROR_FILE_ALREADY_EXISTS;
+
+        PR_Close(file);
         return NS_OK;
     }
 
     if (type == DIRECTORY_TYPE)
     {
-	    CreateDirectoryA(mResolvedPath, NULL); // todo: pass back the result
-        return NS_OK;
+        if (!CreateDirectoryA(mResolvedPath, NULL))
+            return ConvertWinError(GetLastError());
+        else 
+            return NS_OK;
     }
 
     return NS_ERROR_FILE_UNKNOWN_TYPE;

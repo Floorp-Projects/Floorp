@@ -372,13 +372,12 @@ nsresult nsFileSpec::Execute(const nsString& args) const
 
 
 NS_IMETHODIMP
-nsLocalFile::MakeUnique(const char* suggestedName)
+nsLocalFile::CreateUnique(const char* suggestedName, PRUint32 type, PRUint32 attributes)
 {
-    PRBool exists;
-    nsresult rv = Exists(&exists);
+    nsresult rv = Create(type, attributes);
     
-    if (NS_FAILED(rv)) return rv;
-    if (!exists) return NS_OK;
+    if (NS_SUCCEEDED(rv)) return NS_OK;
+    if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
 
     char* leafName; 
     rv = GetLeafName(&leafName);
@@ -386,10 +385,11 @@ nsLocalFile::MakeUnique(const char* suggestedName)
     if (NS_FAILED(rv)) return rv;
 
     char* lastDot = strrchr(leafName, '.');
-    char* suffix = "";
+    char suffix[kMaxFilenameLength + 1] = "";
     if (lastDot)
     {
-        suffix = nsCRT::strdup(lastDot); // include '.'
+        strncpy(suffix, lastDot, kMaxFilenameLength); // include '.'
+        suffix[kMaxFilenameLength] = 0; // make sure it's null terminated
         *lastDot = '\0'; // strip suffix and dot.
     }
 
@@ -399,17 +399,25 @@ nsLocalFile::MakeUnique(const char* suggestedName)
     if ((int)nsCRT::strlen(leafName) > (int)maxRootLength)
         leafName[maxRootLength] = '\0';
 
-    for (short indx = 1; indx < 10000 && exists; indx++)
+    for (short indx = 1; indx < 10000; indx++)
     {
         // start with "Picture-1.jpg" after "Picture.jpg" exists
         char newName[kMaxFilenameLength + 1];
         sprintf(newName, "%s-%d%s", leafName, indx, suffix);
         SetLeafName(newName);
 
-        rv = Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
+        rv = Create(type, attributes);
+    
+        if (NS_SUCCEEDED(rv) || rv != NS_ERROR_FILE_ALREADY_EXISTS) 
+        {
+            nsMemory::Free(leafName);
+            return rv;
+        }
     }
-    return NS_OK;
+ 
+    nsMemory::Free(leafName);
+    // The disk is full, sort of
+    return NS_ERROR_FILE_TOO_BIG;
 }
 
 

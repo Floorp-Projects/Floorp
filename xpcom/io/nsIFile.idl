@@ -77,7 +77,7 @@ interface nsIFile : nsISupports
      *       error (NS_ERROR_FILE_UNKNOWN_TYPE).
      *
      *   @param permissions
-     *       This unix style octal permissions.  This may
+     *       The unix style octal permissions.  This may
      *       be ignored on systems that do not need to do
      *       permissions.
      */
@@ -230,10 +230,32 @@ interface nsIFile : nsISupports
      */
     boolean isSpecial();
 
-    /**
-     * .
+   /**
+     *  createUnique
+     *  
+     *  This function will create a new file or directory in the
+     *  file system. Any nodes that have not been created or
+     *  resolved, will be.  If this file already exists, we try
+     *  variations on the leaf name "suggestedName" until we find
+     *  one that did not already exist.
+     *
+     *  If the search for nonexistent files takes too long
+     *  (thousands of the variants already exist), we give up and
+     *  return NS_ERROR_FILE_TOO_BIG.
+     *
+     *   @param type
+     *       This specifies the type of file system object
+     *       to be made.  The only two types at this time
+     *       are file and directory which are defined above.
+     *       If the type is unrecongnized, we will return an
+     *       error (NS_ERROR_FILE_UNKNOWN_TYPE).
+     *
+     *   @param permissions
+     *       The unix style octal permissions.  This may
+     *       be ignored on systems that do not need to do
+     *       permissions.
      */
-    void makeUnique(in string suggestedName);
+    void createUnique(in string suggestedName, in unsigned long type, in unsigned long permissions);
     
 
     /**
