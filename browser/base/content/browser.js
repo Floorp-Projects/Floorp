@@ -3823,8 +3823,8 @@ function asyncOpenWebPanel(event)
    if (linkNode) {
      if (fieldNormalClicks && event.button == 0 && !event.ctrlKey && !event.shiftKey && 
          !event.altKey && !event.metaKey && 
-         (!linkNode.getAttribute("target") || linkNode.getAttribute("target") == "_content") ||
-          linkNode.getAttribute("target") == "_main") // IE uses _main, SeaMonkey uses _content, we support both
+         (!linkNode.getAttribute("target") || linkNode.getAttribute("target") == "_content" ||
+           linkNode.getAttribute("target") == "_main")) // IE uses _main, SeaMonkey uses _content, we support both
      {
        var url = getShortcutOrURI(linkNode.href);
        if (!url)
