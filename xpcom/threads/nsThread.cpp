@@ -59,27 +59,6 @@ nsThread::nsThread()
 #endif /* PR_LOGGING */
 }
 
-nsresult
-nsThread::Init(nsIRunnable* runnable,
-               PRUint32 stackSize,
-               PRThreadPriority priority,
-               PRThreadScope scope,
-               PRThreadState state)
-{
-    mRunnable = runnable;
-
-    NS_ADDREF_THIS();   // released in nsThread::Exit
-    if (state == PR_JOINABLE_THREAD)
-        NS_ADDREF_THIS();   // released in nsThread::Join
-    mThread = PR_CreateThread(PR_USER_THREAD, Main, this,
-                              priority, scope, state, stackSize);
-    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
-           ("nsIThread %p created\n", this));
-    if (mThread == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
 nsThread::~nsThread()
 {
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
@@ -114,6 +93,16 @@ nsThread::Exit(void* arg)
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p exited\n", self));
     NS_RELEASE(self);
+}
+
+NS_METHOD
+nsThread::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsThread* thread = new nsThread();
+    if (!thread) return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = thread->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) delete thread;
+    return rv;
 }
 
 NS_IMPL_ISUPPORTS1(nsThread, nsIThread)
@@ -193,13 +182,34 @@ nsThread::GetPRThread(PRThread* *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsThread::Init(nsIRunnable* runnable,
+               PRUint32 stackSize,
+               PRThreadPriority priority,
+               PRThreadScope scope,
+               PRThreadState state)
+{
+    mRunnable = runnable;
+
+    NS_ADDREF_THIS();   // released in nsThread::Exit
+    if (state == PR_JOINABLE_THREAD)
+        NS_ADDREF_THIS();   // released in nsThread::Join
+    mThread = PR_CreateThread(PR_USER_THREAD, Main, this,
+                              priority, scope, state, stackSize);
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThread %p created\n", this));
+    if (mThread == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
 NS_COM nsresult
 NS_NewThread(nsIThread* *result, 
              nsIRunnable* runnable,
              PRUint32 stackSize,
+             PRThreadState state,
              PRThreadPriority priority,
-             PRThreadScope scope,
-             PRThreadState state)
+             PRThreadScope scope)
 {
     nsresult rv;
     nsThread* thread = new nsThread();
@@ -213,6 +223,21 @@ NS_NewThread(nsIThread* *result,
         return rv;
     }
 
+    *result = thread;
+    return NS_OK;
+}
+
+NS_COM nsresult
+NS_NewThread(nsIThread* *result, 
+             PRUint32 stackSize,
+             PRThreadState state,
+             PRThreadPriority priority,
+             PRThreadScope scope)
+{
+    nsThread* thread = new nsThread();
+    if (thread == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(thread);
     *result = thread;
     return NS_OK;
 }
@@ -302,51 +327,6 @@ nsThreadPool::nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads)
     NS_INIT_REFCNT();
 }
 
-nsresult
-nsThreadPool::Init(PRUint32 stackSize,
-                   PRThreadPriority priority,
-                   PRThreadScope scope)
-{
-    nsresult rv;
-
-    rv = NS_NewISupportsArray(getter_AddRefs(mThreads));
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = NS_NewISupportsArray(getter_AddRefs(mRequests));
-    if (NS_FAILED(rv)) return rv;
-
-    mRequestMonitor = PR_NewMonitor();
-    if (mRequestMonitor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    
-    PR_CEnterMonitor(this);
-
-    for (PRUint32 i = 0; i < mMinThreads; i++) {
-        nsThreadPoolRunnable* runnable =
-            new nsThreadPoolRunnable(this);
-        if (runnable == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(runnable);
-
-        nsIThread* thread;
-
-        rv = NS_NewThread(&thread, runnable, stackSize, priority, scope, 
-                          PR_JOINABLE_THREAD);  // needed for Shutdown
-        NS_RELEASE(runnable);
-        if (NS_FAILED(rv)) goto exit;
-
-        rv = mThreads->AppendElement(thread) ? NS_OK : NS_ERROR_FAILURE;
-        NS_RELEASE(thread);
-        if (NS_FAILED(rv)) goto exit;
-    }
-    // wait for some worker thread to be ready
-    PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
-
-  exit:
-    PR_CExitMonitor(this);
-    return rv;
-}
-
 nsThreadPool::~nsThreadPool()
 {
     if (mThreads) {
@@ -431,6 +411,16 @@ nsThreadPool::GetRequest()
     return request;
 }
 
+NS_METHOD
+nsThreadPool::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsThreadPool* pool = new nsThreadPool(0, 4);
+    if (!pool) return NS_ERROR_OUT_OF_MEMORY;
+    nsresult rv = pool->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) delete pool;
+    return rv;
+}
+
 NS_IMETHODIMP
 nsThreadPool::ProcessPendingRequests()
 {
@@ -491,6 +481,52 @@ nsThreadPool::Shutdown()
         NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveElementAt failed");
     }
 
+    return rv;
+}
+
+NS_IMETHODIMP
+nsThreadPool::Init(PRUint32 stackSize,
+                   PRThreadPriority priority,
+                   PRThreadScope scope)
+{
+    nsresult rv;
+
+    rv = NS_NewISupportsArray(getter_AddRefs(mThreads));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = NS_NewISupportsArray(getter_AddRefs(mRequests));
+    if (NS_FAILED(rv)) return rv;
+
+    mRequestMonitor = PR_NewMonitor();
+    if (mRequestMonitor == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    PR_CEnterMonitor(this);
+
+    for (PRUint32 i = 0; i < mMinThreads; i++) {
+        nsThreadPoolRunnable* runnable =
+            new nsThreadPoolRunnable(this);
+        if (runnable == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(runnable);
+
+        nsIThread* thread;
+
+        rv = NS_NewThread(&thread, runnable, stackSize, 
+                          PR_JOINABLE_THREAD, /* needed for Shutdown */
+                          priority, scope);
+        NS_RELEASE(runnable);
+        if (NS_FAILED(rv)) goto exit;
+
+        rv = mThreads->AppendElement(thread) ? NS_OK : NS_ERROR_FAILURE;
+        NS_RELEASE(thread);
+        if (NS_FAILED(rv)) goto exit;
+    }
+    // wait for some worker thread to be ready
+    PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
+
+  exit:
+    PR_CExitMonitor(this);
     return rv;
 }
 

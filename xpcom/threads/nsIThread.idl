@@ -17,15 +17,33 @@
  */
 
 #include "nsISupports.idl"
+
 %{C++
 #include "prthread.h"
+
+#define NS_THREAD_CID                                \
+{ /* 85CE5510-7808-11d3-A181-0050041CAF44 */         \
+    0x85ce5510,                                      \
+    0x7808,                                          \
+    0x11d3,                                          \
+    {0xa1, 0x81, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
+}
+
+#define NS_THREAD_PROGID "component://netscape/thread"
+#define NS_THREAD_CLASSNAME "Thread"
+#if 0
+%}
+
+typedef PRUint32 PRThreadPriority;
+typedef PRUint32 PRThreadScope;
+typedef PRUint32 PRThreadState;
+
+%{C++
+#endif
 %}
 
 interface nsIRunnable;
 
-native PRThreadPriority(PRThreadPriority);
-native PRThreadScope(PRThreadScope);
-native PRThreadState(PRThreadState);
 [ptr] native PRThread(PRThread);
 
 [scriptable, uuid(6be5e380-6886-11d3-9382-00104ba0fd40)]
@@ -37,6 +55,11 @@ interface nsIThread : nsISupports
     readonly attribute PRThreadScope Scope;
     readonly attribute PRThreadState State;
     [noscript] PRThread GetPRThread();
+    void Init(in nsIRunnable aRunnable,
+              in unsigned long aStackSize,
+              in PRThreadPriority aPriority,
+              in PRThreadScope    aScope,
+              in PRThreadState    aState);
 
 %{C++
     // returns the nsIThread for the current thread:
@@ -61,7 +84,14 @@ extern NS_COM nsresult
 NS_NewThread(nsIThread* *result, 
              nsIRunnable* runnable,
              PRUint32 stackSize = 0,
+             PRThreadState state = PR_UNJOINABLE_THREAD,
              PRThreadPriority priority = PR_PRIORITY_NORMAL,
-             PRThreadScope scope = PR_GLOBAL_THREAD,
-             PRThreadState state = PR_JOINABLE_THREAD);
+             PRThreadScope scope = PR_GLOBAL_THREAD);
+
+extern NS_COM nsresult
+NS_NewThread(nsIThread* *result, 
+             PRUint32 stackSize = 0,
+             PRThreadState state = PR_UNJOINABLE_THREAD,
+             PRThreadPriority priority = PR_PRIORITY_NORMAL,
+             PRThreadScope scope = PR_GLOBAL_THREAD);
 %}

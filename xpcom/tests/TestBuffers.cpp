@@ -108,7 +108,7 @@ WriteMessages(nsIBuffer* buffer)
     nsIThread* thread;
     Reader* reader = new Reader(buffer);
     NS_ADDREF(reader);
-    rv = NS_NewThread(&thread, reader);
+    rv = NS_NewThread(&thread, reader, 0, PR_JOINABLE_THREAD);
     if (NS_FAILED(rv)) {
         printf("failed to create thread\n");
         return rv;

@@ -104,7 +104,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(receiver);
 
-    rv = NS_NewThread(&thread, receiver);
+    rv = NS_NewThread(&thread, receiver, 0, PR_JOINABLE_THREAD);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 total = 0;
@@ -214,7 +214,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(receiver);
 
-    rv = NS_NewThread(&thread, receiver);
+    rv = NS_NewThread(&thread, receiver, 0, PR_JOINABLE_THREAD);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 total = 0;
@@ -419,7 +419,7 @@ TestChainedPipes()
     if (pump == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(pump);
 
-    rv = NS_NewThread(&thread, pump);
+    rv = NS_NewThread(&thread, pump, 0, PR_JOINABLE_THREAD);
     if (NS_FAILED(rv)) return rv;
 
     nsIThread* receiverThread;
@@ -427,7 +427,7 @@ TestChainedPipes()
     if (receiver == nsnull) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(receiver);
 
-    rv = NS_NewThread(&receiverThread, receiver);
+    rv = NS_NewThread(&receiverThread, receiver, 0, PR_JOINABLE_THREAD);
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 total = 0;

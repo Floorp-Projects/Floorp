@@ -316,8 +316,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
     //                               PR_UNJOINABLE_THREAD, 0);
       nsIThread* workerThread = nsnull;
  
-		nsresult rv = NS_NewThread(&workerThread, this, 0, PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-             PR_UNJOINABLE_THREAD);
+		nsresult rv = NS_NewThread(&workerThread, this);
 		if (NS_FAILED(rv)) 
 		{
 			NS_ASSERTION(workerThread, "Unable to create imap thread.\n");

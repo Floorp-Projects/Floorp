@@ -32,23 +32,12 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIThread methods:
-    NS_IMETHOD Join();
-    NS_IMETHOD GetPriority(PRThreadPriority *result);
-    NS_IMETHOD SetPriority(PRThreadPriority value);
-    NS_IMETHOD Interrupt();
-    NS_IMETHOD GetScope(PRThreadScope *result);
-    NS_IMETHOD GetState(PRThreadState *result);
-    NS_IMETHOD GetPRThread(PRThread* *result);
-
+    NS_DECL_NSITHREAD
+ 
     // nsThread methods:
     nsThread();
     virtual ~nsThread();
 
-    nsresult Init(nsIRunnable* runnable,
-                  PRUint32 stackSize,
-                  PRThreadPriority priority,
-                  PRThreadScope scope,
-                  PRThreadState state);
     nsresult RegisterThreadSelf();
     void SetPRThread(PRThread* thread) { mThread = thread; }
 
@@ -56,6 +45,8 @@ public:
     static void Exit(void* arg);
 
     static PRUintn kIThreadSelfIndex;
+
+	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
 protected:
     PRThread*                   mThread;
@@ -71,18 +62,15 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIThreadPool methods:
-    NS_IMETHOD DispatchRequest(nsIRunnable* runnable);
-    NS_IMETHOD ProcessPendingRequests();
-    NS_IMETHOD Shutdown();
+    NS_DECL_NSITHREADPOOL
 
     // nsThreadPool methods:
     nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads);
     virtual ~nsThreadPool();
 
-    nsresult Init(PRUint32 stackSize,
-                  PRThreadPriority priority,
-                  PRThreadScope scope);
     nsIRunnable* GetRequest();
+
+	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
     
 protected:
     nsCOMPtr<nsISupportsArray>  mThreads;
@@ -101,7 +89,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRunnable methods:
-    NS_IMETHOD Run();
+    NS_DECL_NSIRUNNABLE
 
     // nsThreadPoolRunnable methods:
     nsThreadPoolRunnable(nsThreadPool* pool);

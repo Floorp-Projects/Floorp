@@ -19,6 +19,23 @@
 #include "nsISupports.idl"
 %{C++
 #include "prthread.h"
+
+#define NS_THREADPOOL_CID                            \
+{ /* CC530631-7808-11d3-A181-0050041CAF44 */         \
+    0xcc530631,                                      \
+    0x7808,                                          \
+    0x11d3,                                          \
+    {0xa1, 0x81, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
+}
+
+#define NS_THREADPOOL_PROGID "component://netscape/thread-pool"
+#define NS_THREADPOOL_CLASSNAME "Thread Pool"
+#if 0
+%}
+typedef PRUint32 PRThreadPriority;
+typedef PRUint32 PRThreadScope;
+%{C++
+#endif
 %}
 
 interface nsIRunnable;
@@ -29,6 +46,9 @@ interface nsIThreadPool : nsISupports
     void DispatchRequest(in nsIRunnable runnable);
     void ProcessPendingRequests();
     void Shutdown();
+    void Init(in unsigned long aStackSize,
+              in PRThreadPriority aPriority,
+              in PRThreadScope aScope);
 };
 
 %{C++
