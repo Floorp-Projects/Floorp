@@ -188,10 +188,11 @@ static void readEvalPrint(FILE *in, World &world)
 #ifdef DEBUGGER_FOO
     jsd.attachToContext (&cx);
 #endif
-    global.defineNativeFunction(world.identifiers[widenCString("print")], print);
-    global.defineNativeFunction(world.identifiers[widenCString("dump")], dump);
-    global.defineNativeFunction(world.identifiers[widenCString("load")], load);
-//   global.defineNativeFunction(world.identifiers[widenCString("time")], time);
+    global.defineNativeFunction(world.identifiers["print"], print);
+    global.defineNativeFunction(world.identifiers["dump"], dump);
+    global.defineNativeFunction(world.identifiers["load"], load);
+//   global.defineNativeFunction(world.identifiers["time"], time);
+//   global.defineVariable(
 
     String buffer;
     string line;
@@ -300,8 +301,7 @@ static void testCompile()
 {
     JSScope glob;
     Context cx(world, &glob);
-    StringAtom& printName = world.identifiers[widenCString("print")];
-    glob.defineNativeFunction(printName, print);
+    glob.defineNativeFunction(world.identifiers["print"], print);
 
     for (uint i = 0; i < sizeof(tests) / sizeof(char *); i++) {
         String testScript = widenCString(tests[i]);
