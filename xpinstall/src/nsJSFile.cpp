@@ -73,7 +73,8 @@ InstallFileOpDirCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
@@ -83,26 +84,30 @@ InstallFileOpDirCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+  //  public int DirCreate (nsInstallFolder aNativeFolderPath);
+
+  if ( argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int DirCreate (String aNativeFolderPath);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpDirCreate(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
-  {
-    JS_ReportError(cx, "Function DirCreate requires 1 parameter");
-    return JS_FALSE;
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
 
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
+  }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+  
+  if(!folder || NS_OK != nativeThis->FileOpDirCreate(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = INT_TO_JSVAL(nativeRet);
   return JS_TRUE;
 }
 
@@ -115,8 +120,9 @@ InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   nsFileSpec   nativeRet;
-  nsAutoString b0;
   nsString     nativeRetNSStr;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
   *rval = JSVAL_NULL;
 
@@ -126,26 +132,33 @@ InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+
+  //  public int DirGetParent (nsInstallFolder NativeFolderPath);
+
+  if ( argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int DirGetParent (String NativeFolderPath);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpDirGetParent(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    nativeRetNSStr = nativeRet.GetNativePathCString();
-    *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, nativeRetNSStr.GetUnicode(), nativeRetNSStr.Length()));
+    // error, return NULL
+    return JS_TRUE;
   }
-  else
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
   {
-    JS_ReportError(cx, "Function DirGetParent requires 1 parameter");
-    return JS_FALSE;
+    // error, return NULL
+    return JS_TRUE;
   }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+  
+  if(!folder || NS_OK != nativeThis->FileOpDirGetParent(*folder, &nativeRet))
+  {
+    // error, return NULL
+    return JS_TRUE;
+  }
+
+  nativeRetNSStr = nativeRet.GetNativePathCString();
+  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, nativeRetNSStr.GetUnicode(), nativeRetNSStr.Length()));
 
   return JS_TRUE;
 }
@@ -158,10 +171,11 @@ InstallFileOpDirRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
-  PRBool       b1;
+  PRBool  bRecursive = PR_FALSE;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -169,31 +183,37 @@ InstallFileOpDirRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     return JS_TRUE;
   }
 
-  if(argc >= 2)
-  {
-    //  public int DirRemove (String aNativeFolderPath,
+    //  public int DirRemove (nsInstallFolder aNativeFolderPath,
     //                        Bool   aRecursive);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-    if(!ConvertJSValToBool(&b1, cx, argv[1]))
-    {
-      JS_ReportError(cx, "2nd parameter needs to be a Boolean value");
-      return JS_FALSE;
-    }
-
-    if(NS_OK != nativeThis->FileOpDirRemove(fsB0, b1, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else
+  if ( argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    JS_ReportError(cx, "Function DirRemove requires 2 parameters");
-    return JS_FALSE;
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
+  }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if( argc > 1 && !ConvertJSValToBool(&bRecursive, cx, argv[1]))
+  {
+    JS_ReportError(cx, "2nd parameter needs to be a Boolean value");
+    return JS_TRUE;
+  }
+
+  if(!folder || NS_OK != nativeThis->FileOpDirRemove(*folder, bRecursive, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = INT_TO_JSVAL(nativeRet);
 
   return JS_TRUE;
 }
@@ -206,10 +226,11 @@ InstallFileOpDirRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
   nsAutoString b1;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -222,27 +243,41 @@ InstallFileOpDirRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     //  public int DirRename (String aSourceFolder,
     //                        String aTargetFolder);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-    nsFileSpec fsB0(b0);
 
 // fix: nsFileSpec::Rename() does not accept new name as a
 //      nsFileSpec type.  It only accepts a char* type for the new name
 //      This is a bug with nsFileSpec.  A char* will be used until
 //      nsFileSpec if fixed.
 //    nsFileSpec fsB1(b1);
-
-    if(NS_OK != nativeThis->FileOpDirRename(fsB0, b1, &nativeRet))
+    
+    if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(!folder || NS_OK != nativeThis->FileOpDirRename(*folder, b1, &nativeRet))
+    {
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
- }
+  }
   else
   {
     JS_ReportError(cx, "Function DirRename requires 2 parameters");
-    return JS_FALSE;
+    return JS_TRUE;
   }
 
   return JS_TRUE;
@@ -256,10 +291,10 @@ InstallFileOpFileCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
-  nsAutoString b1;
+  JSObject *jsSrcObj, *jsTargetObj;
+  nsInstallFolder *srcFolder, *targetFolder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -269,17 +304,41 @@ InstallFileOpFileCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   if(argc >= 2)
   {
-    //  public int FileCopy (String aSourceFolder,
-    //                       String aTargetFolder);
+    //  public int FileCopy (nsInstallFolder aSourceFolder,
+    //                       nsInstallFolder aTargetFolder);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
-    ConvertJSValToStr(b1, cx, argv[1]);
-    nsFileSpec fsB0(b0);
-    nsFileSpec fsB1(b1);
-
-    if(NS_OK != nativeThis->FileOpFileCopy(fsB0, fsB1, &nativeRet))
+    if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    if (argv[1] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[1])) //argv[1] MUST be a jsval
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsSrcObj = JSVAL_TO_OBJECT(argv[0]);
+    jsTargetObj = JSVAL_TO_OBJECT(argv[1]);
+
+    if (!JS_InstanceOf(cx, jsSrcObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+    if (!JS_InstanceOf(cx, jsTargetObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    srcFolder = (nsInstallFolder*)JS_GetPrivate(cx, jsSrcObj);
+    targetFolder = (nsInstallFolder*)JS_GetPrivate(cx, jsTargetObj);
+
+    if(!srcFolder || !targetFolder || NS_OK != nativeThis->FileOpFileCopy(*srcFolder, *targetFolder, &nativeRet))
+    {
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -287,7 +346,7 @@ InstallFileOpFileCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   else
   {
     JS_ReportError(cx, "Function FileCopy requires 2 parameters");
-    return JS_FALSE;
+    return JS_TRUE;
   }
 
   return JS_TRUE;
@@ -301,9 +360,10 @@ InstallFileOpFileDelete(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -311,25 +371,30 @@ InstallFileOpFileDelete(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+    //  public int FileDelete (nsInstallFolder aSourceFolder);
+
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int FileDelete (String aSourceFolder);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileDelete(fsB0, PR_FALSE, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
-  else
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
   {
-    JS_ReportError(cx, "Function FileDelete requires 1 parameter");
-    return JS_FALSE;
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileDelete(*folder, PR_FALSE, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = INT_TO_JSVAL(nativeRet);
 
   return JS_TRUE;
 }
@@ -342,9 +407,10 @@ InstallFileOpFileExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -352,25 +418,30 @@ InstallFileOpFileExists(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+  //  public int FileExists (nsInstallFolder NativeFolderPath);
+
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int FileExists (String NativeFolderPath);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileExists(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
-  else
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
   {
-    JS_ReportError(cx, "Function FileExists requires 1 parameter");
-    return JS_FALSE;
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileExists(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = INT_TO_JSVAL(nativeRet);
 
   return JS_TRUE;
 }
@@ -383,10 +454,11 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
   nsAutoString b1;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -396,41 +468,36 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   if(argc >= 2)
   {
-    //  public int FileExecute (String aSourceFolder,
+    //  public int FileExecute (nsInstallFolder aSourceFolder,
     //                          String aParameters);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileExecute(fsB0, b1, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else if(argc == 1)
-  {
-    //  public int FileExecute (String aSourceFolder,
-    //                          String aParameters);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    b1 = "";
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileExecute(fsB0, b1, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
   }
   else
+    b1 = "";
+
+  if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    JS_ReportError(cx, "Function FileExecute requires 1 or 2 parameters");
-    return JS_FALSE;
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
   }
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+  }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(NS_OK != nativeThis->FileOpFileExecute(*folder, b1, &nativeRet))
+  {
+     return JS_TRUE;
+  }
+
+  *rval = INT_TO_JSVAL(nativeRet);
 
   return JS_TRUE;
 }
@@ -443,7 +510,8 @@ InstallFileOpFileGetNativeVersion(JSContext *cx, JSObject *obj, uintN argc, jsva
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   nsAutoString nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
   *rval = JSVAL_NULL;
 
@@ -453,25 +521,30 @@ InstallFileOpFileGetNativeVersion(JSContext *cx, JSObject *obj, uintN argc, jsva
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+  //  public int FileGetNativeVersion (nsInstallFolder NativeFolderPath);
+
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int FileGetNativeVersion (String NativeFolderPath);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileGetNativeVersion(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, nativeRet.GetUnicode(), nativeRet.Length()));
+    *rval = JSVAL_NULL;
+    return JS_TRUE;
   }
-  else
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
   {
-    JS_ReportError(cx, "Function FileGetNativeVersion requires 1 parameter");
-    return JS_FALSE;
+    *rval = JSVAL_NULL;
+    return JS_TRUE;
   }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileGetNativeVersion(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, nativeRet.GetUnicode(), nativeRet.Length()));
 
   return JS_TRUE;
 }
@@ -485,9 +558,10 @@ InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc,
 
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt64     nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -495,27 +569,32 @@ InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
   }
 
-  if(argc >= 1)
-  {
-    //  public int FileGetDiskSpaceAvailable (String NativeFolderPath);
+  //  public int FileGetDiskSpaceAvailable (String NativeFolderPath);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileGetDiskSpaceAvailable(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-    
-    double d;
-    LL_L2D(d, nativeRet);
-    JS_NewDoubleValue( cx, d, rval );
-  }
-  else
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    JS_ReportError(cx, "Function FileGetDiskSpaceAvailable requires 1 parameter");
-    return JS_FALSE;
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
+  }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileGetDiskSpaceAvailable(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+  
+  double d;
+  LL_L2D(d, nativeRet);
+  JS_NewDoubleValue( cx, d, rval );
 
   return JS_TRUE;
 }
@@ -528,9 +607,10 @@ InstallFileOpFileGetModDate(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRUint32     nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);;
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -538,35 +618,40 @@ InstallFileOpFileGetModDate(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+  //  public int FileGetModDate (nsInstallFolder NativeFolderPath);
+
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int FileGetModDate (String NativeFolderPath);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileGetModDate(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    if ( nativeRet <= JSVAL_INT_MAX )
-      *rval = INT_TO_JSVAL(nativeRet);
-    else
-    {
-      JSInt64 l;
-      jsdouble d;
-
-      JSLL_UI2L( l, nativeRet );
-      JSLL_L2D( d, l );
-
-      JS_NewDoubleValue( cx, d, rval );
-    }
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
+  }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileGetModDate(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  if ( nativeRet <= JSVAL_INT_MAX )
+    *rval = INT_TO_JSVAL(nativeRet);
   else
   {
-    JS_ReportError(cx, "Function FileGetModDate requires 1 parameter");
-    return JS_FALSE;
+    JSInt64 l;
+    jsdouble d;
+
+    JSLL_UI2L( l, nativeRet );
+    JSLL_L2D( d, l );
+
+    JS_NewDoubleValue( cx, d, rval );
   }
 
   return JS_TRUE;
@@ -580,9 +665,10 @@ InstallFileOpFileGetSize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRUint32     nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);;
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -590,35 +676,40 @@ InstallFileOpFileGetSize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+  //  public int FileGetSize (String NativeFolderPath);
+
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int FileGetSize (String NativeFolderPath);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileGetSize(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    if ( nativeRet <= JSVAL_INT_MAX )
-      *rval = INT_TO_JSVAL(nativeRet);
-    else
-    {
-      JSInt64 l;
-      jsdouble d;
-
-      JSLL_UI2L( l, nativeRet );
-      JSLL_L2D( d, l );
-
-      JS_NewDoubleValue( cx, d, rval );
-    }
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
   }
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
+  }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileGetSize(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  if ( nativeRet <= JSVAL_INT_MAX )
+    *rval = INT_TO_JSVAL(nativeRet);
   else
   {
-    JS_ReportError(cx, "Function FileGetSize requires 1 parameter");
-    return JS_FALSE;
+    JSInt64 l;
+    jsdouble d;
+
+    JSLL_UI2L( l, nativeRet );
+    JSLL_L2D( d, l );
+
+    JS_NewDoubleValue( cx, d, rval );
   }
 
   return JS_TRUE;
@@ -632,9 +723,10 @@ InstallFileOpFileIsDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -642,25 +734,30 @@ InstallFileOpFileIsDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+  //  public int FileIsDirectory (String NativeFolderPath);
+
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int FileIsDirectory (String NativeFolderPath);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileIsDirectory(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
+    *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+    return JS_TRUE;
   }
-  else
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
   {
-    JS_ReportError(cx, "Function FileIsDirectory requires 1 parameter");
-    return JS_FALSE;
+    *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+    return JS_TRUE;
   }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileIsDirectory(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = BOOLEAN_TO_JSVAL(nativeRet);
 
   return JS_TRUE;
 }
@@ -673,9 +770,10 @@ InstallFileOpFileIsFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+ *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -683,25 +781,30 @@ InstallFileOpFileIsFile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_TRUE;
   }
 
-  if(argc >= 1)
+    //  public int FileIsFile (nsInstallFolder NativeFolderPath);
+
+  if (argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
   {
-    //  public int FileIsFile (String NativeFolderPath);
-
-    ConvertJSValToStr(b0, cx, argv[0]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileIsFile(fsB0, &nativeRet))
-    {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
+    *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+    return JS_TRUE;
   }
-  else
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
   {
-    JS_ReportError(cx, "Function FileIsFile requires 1 parameter");
-    return JS_FALSE;
+    *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+    return JS_TRUE;
   }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+  if(!folder || NS_OK != nativeThis->FileOpFileIsFile(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = BOOLEAN_TO_JSVAL(nativeRet);
 
   return JS_TRUE;
 }
@@ -714,10 +817,11 @@ InstallFileOpFileModDateChanged(JSContext *cx, JSObject *obj, uintN argc, jsval 
 {
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32      nativeRet;
-  nsAutoString b0;
   PRUint32     b1;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -727,24 +831,37 @@ InstallFileOpFileModDateChanged(JSContext *cx, JSObject *obj, uintN argc, jsval 
 
   if(argc >= 2)
   {
-    //  public int FileModDateChanged (String aSourceFolder,
+    //  public int FileModDateChanged (nsInstallFolder aSourceFolder,
     //                                 Number aOldDate);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
     b1 = JSVAL_TO_INT(argv[1]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileModDateChanged(fsB0, b1, &nativeRet))
+    if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
-      return JS_FALSE;
+      *rval =     *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+      return JS_TRUE;
     }
 
-    *rval = INT_TO_JSVAL(nativeRet);
+    jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = BOOLEAN_TO_JSVAL(PR_FALSE);
+      return JS_TRUE;
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(!folder || NS_OK != nativeThis->FileOpFileModDateChanged(*folder, b1, &nativeRet))
+    {
+      return JS_TRUE;
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
   }
   else
   {
     JS_ReportError(cx, "Function FileModDateChanged requires 2 parameters");
-    return JS_FALSE;
+    return JS_TRUE;
   }
 
   return JS_TRUE;
@@ -758,10 +875,10 @@ InstallFileOpFileMove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
-  nsAutoString b1;
+  JSObject *jsSrcObj, *jsTargetObj;
+  nsInstallFolder *srcFolder, *targetFolder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -771,17 +888,40 @@ InstallFileOpFileMove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   if(argc >= 2)
   {
-    //  public int FileMove (String aSourceFolder,
-    //                       String aTargetFolder);
+    //  public int FileMove (nsInstallFolder aSourceFolder,
+    //                       nsInstallFolder aTargetFolder);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
-    ConvertJSValToStr(b1, cx, argv[1]);
-    nsFileSpec fsB0(b0);
-    nsFileSpec fsB1(b1);
-
-    if(NS_OK != nativeThis->FileOpFileMove(fsB0, fsB1, &nativeRet))
+    if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+    if (argv[1] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[1])) //argv[0] MUST be a jsval
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsSrcObj = JSVAL_TO_OBJECT(argv[0]);
+    jsTargetObj = JSVAL_TO_OBJECT(argv[1]);
+
+    if (!JS_InstanceOf(cx, jsSrcObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+    if (!JS_InstanceOf(cx, jsTargetObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    srcFolder = (nsInstallFolder*)JS_GetPrivate(cx, jsSrcObj);
+    targetFolder = (nsInstallFolder*)JS_GetPrivate(cx, jsTargetObj);
+
+    if(!srcFolder || !targetFolder || NS_OK != nativeThis->FileOpFileMove(*srcFolder, *targetFolder, &nativeRet))
+    {
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -789,7 +929,7 @@ InstallFileOpFileMove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   else
   {
     JS_ReportError(cx, "Function FileMove requires 2 parameters");
-    return JS_FALSE;
+    return JS_TRUE;
   }
 
   return JS_TRUE;
@@ -803,10 +943,11 @@ InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
   nsAutoString b1;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
-  *rval = JSVAL_NULL;
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
@@ -816,12 +957,10 @@ InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   if(argc >= 2)
   {
-    //  public int FileRename (String aSourceFolder,
+    //  public int FileRename (nsInstallFolder aSourceFolder,
     //                         String aTargetFolder);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
     ConvertJSValToStr(b1, cx, argv[1]);
-    nsFileSpec fsB0(b0);
 
 // fix: nsFileSpec::Rename() does not accept new name as a
 //      nsFileSpec type.  It only accepts a char* type for the new name
@@ -829,9 +968,25 @@ InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 //      nsFileSpec if fixed.
 //    nsFileSpec fsB1(b1);
 
-    if(NS_OK != nativeThis->FileOpFileRename(fsB0, b1, &nativeRet))
+    if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(!folder || NS_OK != nativeThis->FileOpFileRename(*folder, b1, &nativeRet))
+    {
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -839,7 +994,7 @@ InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   else
   {
     JS_ReportError(cx, "Function FileRename requires 2 parameters");
-    return JS_FALSE;
+    return JS_TRUE;
   }
 
   return JS_TRUE;
@@ -864,6 +1019,9 @@ InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval
   nsFileSpec   nsfsB3;
   nsFileSpec   nsfsB5;
   PRInt32      b6;
+
+  //JSObject *jsObj;
+  //nsInstallFolder *folder;
 
   *rval = JSVAL_NULL;
 
@@ -905,7 +1063,7 @@ InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval
 
     if(NS_OK != nativeThis->FileOpFileWindowsShortcut(nsfsB0, nsfsB1, b2, nsfsB3, b4, nsfsB5, b6, &nativeRet))
     {
-      return JS_FALSE;
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -913,7 +1071,7 @@ InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval
   else
   {
     JS_ReportError(cx, "Function FileWindowsShortcut requires 7 parameters");
-    return JS_FALSE;
+    return JS_TRUE;
   }
 
   return JS_TRUE;
@@ -931,6 +1089,8 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsAutoString b1;
   nsAutoString b2;
   nsAutoString b3;
+  //JSObject *jsObj;
+  //nsInstallFolder *folder;
 
   *rval = JSVAL_NULL;
 
@@ -965,7 +1125,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	
     if(NS_OK != nativeThis->FileOpFileMacAlias(b0, b2, &nativeRet))
     {
-      return JS_FALSE;
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -996,7 +1156,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     
     if(NS_OK != nativeThis->FileOpFileMacAlias(b0, b2, &nativeRet))
     {
-      return JS_FALSE;
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -1017,7 +1177,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     
     if(NS_OK != nativeThis->FileOpFileMacAlias(b0, b1, &nativeRet))
     {
-      return JS_FALSE;
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -1025,7 +1185,7 @@ InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   else
   {
     JS_ReportError(cx, "Function FileMacAlias requires 2 to 4 parameters");
-    return JS_FALSE;
+    return JS_TRUE;
   }
 
   return JS_TRUE;
@@ -1039,8 +1199,10 @@ InstallFileOpFileUnixLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
-  nsAutoString b0;
+  //nsAutoString b0;
   PRInt32      b1;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
 
   *rval = JSVAL_NULL;
 
@@ -1055,13 +1217,26 @@ InstallFileOpFileUnixLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     //  public int FileUnixLinkCreate (String aSourceFolder,
     //                                 Number aFlags);
 
-    ConvertJSValToStr(b0, cx, argv[0]);
     b1 = JSVAL_TO_INT(argv[1]);
-    nsFileSpec fsB0(b0);
-
-    if(NS_OK != nativeThis->FileOpFileUnixLink(fsB0, b1, &nativeRet))
+    if (argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
     {
-      return JS_FALSE;
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+    if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+    {
+      *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+      return JS_TRUE;
+    }
+
+    folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+
+    if(NS_OK != nativeThis->FileOpFileUnixLink(*folder, b1, &nativeRet))
+    {
+      return JS_TRUE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
@@ -1069,7 +1244,7 @@ InstallFileOpFileUnixLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   else
   {
     JS_ReportError(cx, "Function FileUnixLink requires 2 parameters");
-    return JS_FALSE;
+    return JS_TRUE;
   }
 
   return JS_TRUE;
@@ -1103,7 +1278,7 @@ SetFileProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 // class for FileOp operations
 //
 JSClass FileOpClass = {
-  "FileOp", 
+  "File", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
@@ -1115,66 +1290,32 @@ JSClass FileOpClass = {
   JS_FinalizeStub
 };
 
-//
-// File class properties
-//
-static JSPropertySpec FileProperties[] =
-{
-  {0}
-};
-
-
-static JSConstDoubleSpec file_constants[] = 
-{
-    {0}
-};
-
 
 //
 // File class methods
 //
 static JSFunctionSpec FileOpMethods[] = 
 {
-  {"DirCreate",                 InstallFileOpDirCreate,                1},
-  {"DirGetParent",              InstallFileOpDirGetParent,             1},
-  {"DirRemove",                 InstallFileOpDirRemove,                2},
-  {"DirRename",                 InstallFileOpDirRename,                2},
-  {"FileCopy",                  InstallFileOpFileCopy,                 2},
-  {"FileDelete",                InstallFileOpFileDelete,               2},
-  {"FileExists",                InstallFileOpFileExists,               1},
-  {"FileExecute",               InstallFileOpFileExecute,              2},
-  {"FileGetNativeVersion",      InstallFileOpFileGetNativeVersion,     1},
-  {"FileGetDiskSpaceAvailable", InstallFileOpFileGetDiskSpaceAvailable,1},
-  {"FileGetModDate",            InstallFileOpFileGetModDate,           1},
-  {"FileGetSize",               InstallFileOpFileGetSize,              1},
-  {"FileIsDirectory",           InstallFileOpFileIsDirectory,          1},
-  {"FileIsFile",                InstallFileOpFileIsFile,               1},
-  {"FileModDateChanged",        InstallFileOpFileModDateChanged,       2},
-  {"FileMove",                  InstallFileOpFileMove,                 2},
-  {"FileRename",                InstallFileOpFileRename,               2},
-  {"FileWindowsShortcut",       InstallFileOpFileWindowsShortcut,      7},
-  {"FileMacAlias",              InstallFileOpFileMacAlias,             2},
-  {"FileUnixLink",              InstallFileOpFileUnixLink,             2},
   {"dirCreate",                 InstallFileOpDirCreate,                1},
   {"dirGetParent",              InstallFileOpDirGetParent,             1},
   {"dirRemove",                 InstallFileOpDirRemove,                2},
   {"dirRename",                 InstallFileOpDirRename,                2},
-  {"fileCopy",                  InstallFileOpFileCopy,                 2},
-  {"fileDelete",                InstallFileOpFileDelete,               2},
-  {"fileExists",                InstallFileOpFileExists,               1},
-  {"fileExecute",               InstallFileOpFileExecute,              2},
-  {"fileGetNativeVersion",      InstallFileOpFileGetNativeVersion,     1},
-  {"fileGetDiskSpaceAvailable", InstallFileOpFileGetDiskSpaceAvailable,1},
-  {"fileGetModDate",            InstallFileOpFileGetModDate,           1},
-  {"fileGetSize",               InstallFileOpFileGetSize,              1},
-  {"fileIsDirectory",           InstallFileOpFileIsDirectory,          1},
-  {"fileIsFile",                InstallFileOpFileIsFile,               1},
-  {"fileModDateChanged",        InstallFileOpFileModDateChanged,       2},
-  {"fileMove",                  InstallFileOpFileMove,                 2},
-  {"fileRename",                InstallFileOpFileRename,               2},
-  {"fileWindowsShortcut",       InstallFileOpFileWindowsShortcut,      7},
-  {"fileMacAlias",              InstallFileOpFileMacAlias,             2},
-  {"fileUnixLink",              InstallFileOpFileUnixLink,             2},
+  {"copy",                      InstallFileOpFileCopy,                 2},
+  {"delete",                    InstallFileOpFileDelete,               2},
+  {"exists",                    InstallFileOpFileExists,               1},
+  {"execute",                   InstallFileOpFileExecute,              2},
+  {"nativeVersion",             InstallFileOpFileGetNativeVersion,     1},
+  {"diskSpaceAvailable",        InstallFileOpFileGetDiskSpaceAvailable,1},
+  {"modDate",                   InstallFileOpFileGetModDate,           1},
+  {"Size",                      InstallFileOpFileGetSize,              1},
+  {"isDirectory",               InstallFileOpFileIsDirectory,          1},
+  {"isFile",                    InstallFileOpFileIsFile,               1},
+  {"modDateChanged",            InstallFileOpFileModDateChanged,       2},
+  {"move",                      InstallFileOpFileMove,                 2},
+  {"rename",                    InstallFileOpFileRename,               2},
+  {"windowsShortcut",           InstallFileOpFileWindowsShortcut,      7},
+  {"macAlias",                  InstallFileOpFileMacAlias,             2},
+  {"unixLink",                  InstallFileOpFileUnixLink,             2},
   {0}
 };
 
