@@ -51,8 +51,6 @@ public:
     
 protected:
     nsCOMPtr<nsIThreadPool>     mPool;
-    nsCOMPtr<nsISupportsArray>  mOpened;
-    nsCOMPtr<nsISupportsArray>  mSuspended;
 };
 
 #endif /* nsFileTransportService_h___ */

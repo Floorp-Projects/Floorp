@@ -163,37 +163,6 @@ nsFileTransportService::DispatchRequest(nsIRunnable* runnable)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsresult
-nsFileTransportService::Suspend(nsIRunnable* request)
-{
-    nsresult rv;
-    nsAutoCMonitor mon(this);   // protect mSuspended
-    if (mSuspended == nsnull) {
-        rv = NS_NewISupportsArray(getter_AddRefs(mSuspended));
-        if (NS_FAILED(rv)) return rv;
-    }
-    return mSuspended->AppendElement(request) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
-}
-
-nsresult
-nsFileTransportService::Resume(nsIRunnable* request)
-{
-    nsresult rv;
-    nsAutoCMonitor mon(this);   // protect mSuspended
-    if (mSuspended == nsnull)
-        return NS_ERROR_FAILURE;
-    // XXX RemoveElement returns a bool instead of nsresult!
-    PRBool removed = mSuspended->RemoveElement(request);
-    rv = removed ? NS_OK : NS_ERROR_FAILURE;
-    if (NS_FAILED(rv)) return rv;
-
-    // restart the request
-    rv = mPool->DispatchRequest(request);
-    return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 NS_IMETHODIMP
 nsFileTransportService::GetTotalTransportCount    (PRUint32 * o_TransCount)
 {
