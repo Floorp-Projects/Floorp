@@ -60,6 +60,7 @@ class nsIPermission;
 // permission safely. (We allow space for 256 here, since it's faster to
 // deal with bytes than with bits).
 // Note: When changing NUMBER_OF_TYPES, also update PermissionsAreEmpty()
+// and the constructors.
 // This should be a multiple of 4, to make PermissionsAreEmpty() fast
 #define NUMBER_OF_TYPES       (8)
 #define NUMBER_OF_PERMISSIONS (16)
