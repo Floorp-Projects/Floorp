@@ -343,7 +343,7 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
     }
     mMsgCompFields->GetSubject(&aString);
     if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, subject))) {
-      to = subject;
+      subject = aString;
     }
 
     // mail charset is used for the body instead of utf-8
@@ -776,8 +776,8 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     bString += "Re: ";
                     bString += aString;
 					mMsgCompFields->SetSubject(nsAutoCString(bString), NULL);
-                    if (NS_SUCCEEDED(INTL_DecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
-                      if (NS_SUCCEEDED(ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
+                    if (NS_SUCCEEDED(rv = INTL_DecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
+                      if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
                         mMsgCompFields->SetSubject(aCString, NULL);
                         PR_Free(aCString);
                       }
@@ -785,8 +785,8 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     
 					message->GetAuthor(aString);		
 					mMsgCompFields->SetTo(nsAutoCString(aString), NULL);
-                    if (NS_SUCCEEDED(INTL_DecodeMimePartIIStr(aString, encodedCharset, decodedString))) {
-                      if (NS_SUCCEEDED(ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
+                    if (NS_SUCCEEDED(rv = INTL_DecodeMimePartIIStr(aString, encodedCharset, decodedString))) {
+                      if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
                         mMsgCompFields->SetTo(aCString, NULL);
                         PR_Free(aCString);
                       }
@@ -801,8 +801,8 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                             cString = cString + ", ";
                         cString = cString + dString;
 						mMsgCompFields->SetCc(nsAutoCString(cString), NULL);
-                        if (NS_SUCCEEDED(INTL_DecodeMimePartIIStr(cString, encodedCharset, decodedString))) {
-                          if (NS_SUCCEEDED(ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
+                        if (NS_SUCCEEDED(rv = INTL_DecodeMimePartIIStr(cString, encodedCharset, decodedString))) {
+                          if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
                             mMsgCompFields->SetTo(aCString, NULL);
                             PR_Free(aCString);
                           }
@@ -823,8 +823,8 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     bString += "]";
 
 					mMsgCompFields->SetSubject(nsAutoCString(bString), NULL);
-                    if (NS_SUCCEEDED(INTL_DecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
-                      if (NS_SUCCEEDED(ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
+                    if (NS_SUCCEEDED(rv = INTL_DecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
+                      if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
                         mMsgCompFields->SetSubject(aCString, NULL);
                         PR_Free(aCString);
                       }
