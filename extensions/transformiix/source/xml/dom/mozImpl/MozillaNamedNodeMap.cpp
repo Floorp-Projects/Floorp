@@ -51,7 +51,7 @@ NamedNodeMap::~NamedNodeMap()
 /**
  * Wrap a different Mozilla object with this wrapper.
  *
- * @param aNamedNodeMap the nsIDOMNodeList you want to wrap
+ * @param aNamedNodeMap the nsIDOMNamedNodeMap you want to wrap
  */
 void NamedNodeMap::setNSObj(nsIDOMNamedNodeMap* aNamedNodeMap)
 {

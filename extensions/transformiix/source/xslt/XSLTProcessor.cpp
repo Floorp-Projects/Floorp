@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.30 2001/01/22 15:53:06 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.31 2001/01/22 20:23:50 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -53,7 +53,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.30 $ $Date: 2001/01/22 15:53:06 $
+ * @version $Revision: 1.31 $ $Date: 2001/01/22 20:23:50 $
 **/
 
 /**
@@ -1639,10 +1639,7 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
             }
 
             String nameSpaceURI;
-            String prefix;
-            int idx = nodeName.indexOf(':');
-            if (idx >= 0) nodeName.subString(0, idx, prefix);
-            XMLDOMUtils::getNameSpace(prefix, element, nameSpaceURI);
+            ps->getResultNameSpaceURI(nodeName, nameSpaceURI);
             // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
             if (ps->getOutputFormat()->isHTMLOutput()) {
                 nodeName.toLowerCase();
