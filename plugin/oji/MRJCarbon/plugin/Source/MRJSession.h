@@ -49,6 +49,9 @@
 #include <vector>
 #include <stringfwd>
 
+using std::vector;
+using std::string;
+
 class NativeMessage {
 public:
 	NativeMessage() : mNext(NULL) {}
@@ -105,12 +108,13 @@ private:
 	void postMessage(NativeMessage* message);
 	void dispatchMessage();
 	
-	std::string getClassPath();
+	string getClassPath();
+	string getPluginHome();
 	
 private:
 	OSStatus mStatus;
 	
-	typedef std::vector<FSRef> MRJClassPath;
+	typedef vector<FSRef> MRJClassPath;
 	MRJClassPath mClassPath;
 	
 	JNIEnv* mMainEnv;
