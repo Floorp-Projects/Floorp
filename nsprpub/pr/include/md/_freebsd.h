@@ -19,6 +19,8 @@
 #ifndef nspr_freebsd_defs_h___
 #define nspr_freebsd_defs_h___
 
+#include "prthread.h"
+
 #include <sys/syscall.h>
 
 #define PR_LINKER_ARCH	"freebsd"
@@ -116,6 +118,8 @@ struct _MDCPU {
 #define _MD_IOQ_LOCK()
 #define _MD_IOQ_UNLOCK()
 
+extern PRStatus _MD_InitializeThread(PRThread *thread);
+
 #define _MD_INIT_RUNNING_CPU(cpu)       _MD_unix_init_running_cpu(cpu)
 #define _MD_INIT_THREAD                 _MD_InitializeThread
 #define _MD_EXIT_THREAD(thread)
@@ -123,9 +127,24 @@ struct _MDCPU {
 #define _MD_RESUME_THREAD(thread)       _MD_resume_thread
 #define _MD_CLEAN_THREAD(_thread)
 
+extern PRStatus _MD_CREATE_THREAD(
+    PRThread *thread,
+    void (*start) (void *),
+    PRThreadPriority priority,
+    PRThreadScope scope,
+    PRThreadState state,
+    PRUint32 stackSize);
+extern void _MD_SET_PRIORITY(struct _MDThread *thread, PRUintn newPri);
+extern PRStatus _MD_WAIT(PRThread *, PRIntervalTime timeout);
+extern PRStatus _MD_WAKEUP_WAITER(PRThread *);
+extern void _MD_YIELD(void);
+
 #endif /* ! _PR_PTHREADS */
 
-PR_EXTERN(void) _MD_EarlyInit(void);
+extern void _MD_EarlyInit(void);
+extern PRIntervalTime _PR_UNIX_GetInterval(void);
+extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
+
 #define _MD_EARLY_INIT                  _MD_EarlyInit
 #define _MD_FINAL_INIT			_PR_UnixInit
 #define _MD_GET_INTERVAL                  _PR_UNIX_GetInterval
@@ -178,4 +197,7 @@ extern int poll(struct pollfd *, unsigned long, int);
 #define INADDR_LOOPBACK         (u_long)0x7F000001
 #endif
 
-#endif /* nspr_linux_defs_h___ */
+/* For writev() */
+#include <sys/uio.h>
+
+#endif /* nspr_freebsd_defs_h___ */
