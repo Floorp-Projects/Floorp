@@ -10355,6 +10355,23 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   return NS_OK;
 }
 
+inline already_AddRefed<nsIContent>
+parent_of(nsIContent *aContent)
+{
+  nsIContent *parent = nsnull;
+  aContent->GetParent(parent);
+  return parent;
+}
+
+static PRBool
+IsAncestorOf(nsIContent *aAncestor, nsIContent *aDescendant)
+{
+  for (nsCOMPtr<nsIContent> n = aDescendant; n; n = parent_of(n))
+    if (n == aAncestor)
+      return PR_TRUE;
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext, 
                                             nsIContent* aContent1,
@@ -10373,38 +10390,53 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
 
     NS_ASSERTION(styleSet, "couldn't get style set");
     if (styleSet) { // test if any style rules exist which are dependent on content state
+      // Detect if one is the ancestor of the other, and skip if so.
+      if (aContent1 && aContent2) {
+        if (aContent1 == aContent2)
+          aContent2 = nsnull;
+        else if (IsAncestorOf(aContent1, aContent2))
+          aContent2 = nsnull;
+        else if (IsAncestorOf(aContent2, aContent1)) {
+          aContent1 = nsnull;
+        }
+      }
+
       nsIFrame* primaryFrame1 = nsnull;
       nsIFrame* primaryFrame2 = nsnull;
       PRUint8 app1 = 0;
       PRUint8 app2 = 0;
 
-      shell->GetPrimaryFrameFor(aContent1, &primaryFrame1);
-      if (primaryFrame1) {
-        const nsStyleDisplay* disp;
-        primaryFrame1->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)disp);
-        app1 = disp->mAppearance;
-      }
+      if (aContent1) {
+        shell->GetPrimaryFrameFor(aContent1, &primaryFrame1);
+        if (primaryFrame1) {
+          const nsStyleDisplay* disp;
+          ::GetStyleData(primaryFrame1, &disp);
+          app1 = disp->mAppearance;
+        }
 
-      if (!app1) {
-        PRBool depends = PR_FALSE;
-        styleSet->HasStateDependentStyle(aPresContext, aContent1,
-                                         aStateMask, &depends);
-        if (!depends) {
-          primaryFrame1 = nsnull;
-          aContent1 = nsnull;
+        // XXXldb Why check app1 here when you could just do the code
+        // below |if (app1)| above and avoid the extra style reresolution?
+        if (!app1) {
+          PRBool depends = PR_FALSE;
+          styleSet->HasStateDependentStyle(aPresContext, aContent1,
+                                           aStateMask, &depends);
+          if (!depends) {
+            primaryFrame1 = nsnull;
+            aContent1 = nsnull;
+          }
         }
       }
 
-      if (aContent2 == aContent1)
-        aContent2 = nsnull;
-      else if (aContent2) {
+      if (aContent2) {
         shell->GetPrimaryFrameFor(aContent2, &primaryFrame2);
         if (primaryFrame2) {
-          const nsStyleDisplay* disp2;
-          primaryFrame2->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)disp2);
-          app2 = disp2->mAppearance;
+          const nsStyleDisplay* disp;
+          ::GetStyleData(primaryFrame2, &disp);
+          app2 = disp->mAppearance;
         }
 
+        // XXXldb Why check app2 here when you could just do the code
+        // below |if (app2)| above and avoid the extra style reresolution?
         if (!app2) {
           PRBool depends = PR_FALSE;
           styleSet->HasStateDependentStyle(aPresContext, aContent2,
@@ -10416,39 +10448,16 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
         }
       }
 
-      if (primaryFrame1 && primaryFrame2) { // detect if one is parent of other, skip child
-        nsIFrame* parent;
-        primaryFrame1->GetParent(&parent);
-        while (parent) {
-          if (parent == primaryFrame2) {  // frame2 is frame1's parent, skip frame1
-            primaryFrame1 = nsnull;
-            break;
-          }
-          parent->GetParent(&parent);
-        }
-        if (primaryFrame1) {
-          primaryFrame2->GetParent(&parent);
-          while (parent) {
-            if (parent == primaryFrame1) {  // frame1 is frame2's parent, skip frame2
-              primaryFrame2 = nsnull;
-              break;
-            }
-            parent->GetParent(&parent);
-          }
-        }
-      }
-
       nsCOMPtr<nsIFrameManager> frameManager;
       shell->GetFrameManager(getter_AddRefs(frameManager));
 
       if (primaryFrame1) {
-        nsStyleChangeList changeList1;
-        nsStyleChangeList changeList2;
-        nsChangeHint frameChange1 = NS_STYLE_HINT_NONE;
-        nsChangeHint frameChange2 = NS_STYLE_HINT_NONE;
+        nsStyleChangeList changeList;
+        nsChangeHint frameChange = NS_STYLE_HINT_NONE;
         frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame1, 
                                             kNameSpaceID_Unknown, nsnull,
-                                            changeList1, NS_STYLE_HINT_NONE, frameChange1);
+                                            changeList, NS_STYLE_HINT_NONE,
+                                            frameChange);
 
         if (app1) {
           nsCOMPtr<nsITheme> theme;
@@ -10460,51 +10469,23 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
             ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull, nsChangeHint_RepaintFrame);
         }
 
-        if (!(frameChange1 & nsChangeHint_ReconstructDoc) && (primaryFrame2)) {
-          frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame2, 
-                                              kNameSpaceID_Unknown, nsnull,
-                                              changeList2, NS_STYLE_HINT_NONE, frameChange2);
-          if (app2) {
-            nsCOMPtr<nsITheme> theme;
-            aPresContext->GetTheme(getter_AddRefs(theme));
-            PRBool repaint = PR_FALSE;
-            if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame2, app2))
-              theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
-            if (repaint) 
-              ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull, nsChangeHint_RepaintFrame);
-          }
+        if (frameChange & nsChangeHint_ReconstructDoc) {
+          return ReconstructDocElementHierarchy(aPresContext);
+          // No need to worry about anything else.
         }
-
-        if ((frameChange1 & nsChangeHint_ReconstructDoc) || 
-            (frameChange2 & nsChangeHint_ReconstructDoc)) {
-          result = ReconstructDocElementHierarchy(aPresContext);
-        }
-        else {
-          if (frameChange1 & nsChangeHint_ReconstructFrame) {
-            result = RecreateFramesForContent(aPresContext, aContent1);
-            changeList1.Clear();
-          } else {
-            if (frameChange1 & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
-              // let primary frame deal with it
-              result = primaryFrame1->ContentStateChanged(aPresContext, aContent1, frameChange1);
-            }
+        else if (frameChange & nsChangeHint_ReconstructFrame) {
+          result = RecreateFramesForContent(aPresContext, aContent1);
+          changeList.Clear();
+        } else {
+          if (frameChange & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
+            // let primary frame deal with it
+            result = primaryFrame1->ContentStateChanged(aPresContext, aContent1, frameChange);
+          ProcessRestyledFrames(changeList, aPresContext);
           }
-
-          if (frameChange2 & nsChangeHint_ReconstructFrame) {
-              result = RecreateFramesForContent(aPresContext, aContent2);
-              changeList2.Clear();
-          } else {
-            if (frameChange2 & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
-              // let primary frame deal with it
-              result = primaryFrame2->ContentStateChanged(aPresContext, aContent2, frameChange2);
-              // then process any children that need it
-            }
-          }
-          ProcessRestyledFrames(changeList1, aPresContext);
-          ProcessRestyledFrames(changeList2, aPresContext);
         }
       }
-      else if (primaryFrame2) {
+
+      if (primaryFrame2) {
         nsStyleChangeList changeList;
         nsChangeHint frameChange = NS_STYLE_HINT_NONE;
         frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame2, 
@@ -10514,7 +10495,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
           nsCOMPtr<nsITheme> theme;
           aPresContext->GetTheme(getter_AddRefs(theme));
           PRBool repaint = PR_FALSE;
-          if (theme)
+          if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame2, app2))
             theme->WidgetStateChanged(primaryFrame2, app2, nsnull, &repaint);
           if (repaint)
             ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull, nsChangeHint_RepaintFrame);
@@ -10527,20 +10508,22 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
         } else if (frameChange & nsChangeHint_ReconstructFrame) {
           result = RecreateFramesForContent(aPresContext, aContent2);
           changeList.Clear();
-        } else if (frameChange & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
-          // let primary frame deal with it
-          result = primaryFrame2->ContentStateChanged(aPresContext, aContent2, frameChange);
+        } else {
+          if (frameChange & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
+            // let primary frame deal with it
+            result = primaryFrame2->ContentStateChanged(aPresContext, aContent2, frameChange);
+          }
           // then process any children that need it
+          ProcessRestyledFrames(changeList, aPresContext);
         }
-        ProcessRestyledFrames(changeList, aPresContext);
       }
-      else {  // no frames, reconstruct for content
-        if (aContent1) {
-          result = RecreateFramesForContent(aPresContext, aContent1);
-        }
-        if (aContent2) {
-          result = RecreateFramesForContent(aPresContext, aContent2);
-        }
+      
+      // no frames, reconstruct for content
+      if (!primaryFrame1 && aContent1) {
+        result = RecreateFramesForContent(aPresContext, aContent1);
+      }
+      if (!primaryFrame2 && aContent2) {
+        result = RecreateFramesForContent(aPresContext, aContent2);
       }
     }
   }
