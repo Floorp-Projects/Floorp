@@ -917,9 +917,9 @@ sub BuildMailNewsProjects()
 
 	BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",					"MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-#	BuildOneProject(":mozilla:mailnews:imap:macbuild:msgimap.mcp",						"MsgImap$D.shlb", "MsgImap.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:imap:macbuild:msgimap.mcp",						"MsgImap$D.shlb", "MsgImap.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-#	BuildOneProject(":mozilla:mailnews:news:macbuild:msgnews.mcp",						"MsgNews$D.shlb", "MsgNews.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:news:macbuild:msgnews.mcp",						"MsgNews$D.shlb", "MsgNews.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",							"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
