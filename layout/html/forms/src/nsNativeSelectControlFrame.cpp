@@ -969,7 +969,6 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
   PRBool multiple = PR_FALSE;
   GetMultiple(&multiple);
 
-  nsIDOMHTMLOptionElement* option;
   for (PRInt32 i = 0; i < (PRInt32)numOptions; i++) {
     if (NS_SUCCEEDED(GetOptionText(options,i,text))) {
       if (mIsComboBox) {
@@ -995,7 +994,7 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
             PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
         } else {
           PRBool selected = PR_FALSE;
-          option->GetSelected(&selected);
+          GetOptionSelectedCache(i, &selected);
           // Multi-selection list box
           if (selected) 
             PaintOption(PR_TRUE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
