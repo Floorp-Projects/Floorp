@@ -102,6 +102,9 @@ $build{resources} 		= 0;
 $options{transformiix}	= 0;
 $options{mathml}		= 0;
 $options{svg}			= 0;
+$options{mng}			= 0;
+$options{ldap}			= 0;
+$options{xmlextras}		= 0;
 
 # Don't change these (where should they go?)
 $optiondefines{transformiix}{MOZ_XSL}	= 1;
