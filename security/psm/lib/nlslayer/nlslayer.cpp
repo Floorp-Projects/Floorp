@@ -69,11 +69,12 @@ static nsIStringBundle * bundles[4] = {NULL, NULL, NULL, NULL};
 extern "C" PRBool nlsInit()
 {
 	nsICharsetConverterManager *ccm = nsnull;
-	nsAutoString charsetUTF8("UTF-8");
-	nsAutoString charsetASCII("ISO-8859-1");
+	nsAutoString charsetUTF8 = NS_ConvertASCIItoUCS2("UTF-8");
+	nsAutoString charsetASCII = NS_ConvertASCIItoUCS2("ISO-8859-1");
 	PRBool ret = PR_FALSE;
 	nsresult res;
 
+#if !defined(XP_MAC)
 	res = NS_InitXPCOM(NULL, NULL);
 	NS_ASSERTION( NS_SUCCEEDED(res), "NS_InitXPCOM failed" );
 
@@ -83,6 +84,7 @@ extern "C" PRBool nlsInit()
 	if(NS_FAILED(res)) {
 		goto loser;
 	}
+#endif
 
 	// Create the bundles
 	bundles[0] = nlsCreateBundle(TEXT_BUNDLE);
@@ -164,7 +166,7 @@ extern "C" char* nlsGetUTF8StringFromBundle(nsIStringBundle *bundle, const char 
 {
 	nsresult ret;
 
-	nsString key(name);
+	nsString key = NS_ConvertASCIItoUCS2(name);
 	nsString value;
 	PRUnichar * p = NULL;
 	ret = bundle->GetStringFromName(key.GetUnicode(), &p);
@@ -175,8 +177,8 @@ extern "C" char* nlsGetUTF8StringFromBundle(nsIStringBundle *bundle, const char 
 
 	// XXX This is a hack to get cr and lf chars in string. 
 	// See bug# 21418
-	value.ReplaceSubstring("<psm:cr>", "\r");
-	value.ReplaceSubstring("<psm:lf>", "\n");
+	value.ReplaceSubstring(NS_ConvertASCIItoUCS2("<psm:cr>"), NS_ConvertASCIItoUCS2("\r"));
+	value.ReplaceSubstring(NS_ConvertASCIItoUCS2("<psm:lf>"), NS_ConvertASCIItoUCS2("\n"));
 	return value.ToNewUTF8String();
 }
 
