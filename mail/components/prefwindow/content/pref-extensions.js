@@ -98,6 +98,19 @@ function extensionSelect()
   }
 }
 
+function loadAuthorUrl()
+{
+  // XXX FIX ME!!!! total hack to abuse messenger this way..but it is our cheap way of launching a url
+  // the way we want it to. 
+  var authorURL = document.getElementById("extAuthor").getAttribute("link");
+  if (authorURL != "")
+  {
+    var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
+    messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+    messenger.loadURL(window, authorURL);  
+  }
+}
+
 function toggleExtension()
 {
   var list = document.getElementById("extList");

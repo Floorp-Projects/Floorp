@@ -62,7 +62,7 @@
    
   <listbox id="extList" datasources="rdf:chrome" 
            onselect="extensionSelect();"
-           ref="urn:mozilla:package:root" rows="10">
+           ref="urn:mozilla:package:root" rows="9">
     <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
       <rule chrome:extension="true">
         <listitem uri="..."
@@ -85,7 +85,7 @@
 
     <hbox>
       <label id="authorLabel" value="&author.label;" collapsed="true"/>
-      <label id="extAuthor"/>
+      <label id="extAuthor" onclick="loadAuthorUrl();"/>
     </hbox>
 
     <hbox>
