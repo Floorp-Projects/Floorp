@@ -1412,16 +1412,14 @@ wallet_ReadFromFile
     nsAutoString * aItem1;
     if (NS_FAILED(wallet_GetLine(strm, aItem1, obscure))) {
       /* end of file reached */
-      strm.close();
-      return;
+      break;
     }
 
     nsAutoString * aItem2;
     if (NS_FAILED(wallet_GetLine(strm, aItem2, obscure))) {
       /* unexpected end of file reached */
       delete aItem1;
-      strm.close();
-      return;
+      break;
     }
 
     nsAutoString * aItem3;
@@ -1440,20 +1438,40 @@ wallet_ReadFromFile
     } else {
       /* need to create a sublist and put item2 and item3 onto it */
       nsVoidArray * itemList = new nsVoidArray();
+      if (!itemList) {
+        delete aItem1;
+        delete aItem2;
+        delete aItem3;
+        break;
+      }
       wallet_Sublist * sublist;
       sublist = PR_NEW(wallet_Sublist);
       sublist->item = new nsAutoString (*aItem2);
+      if (!(sublist->item)) {
+        delete itemList;
+        delete aItem1;
+        delete aItem2;
+        delete aItem3;
+        break;
+      }
       itemList->AppendElement(sublist);
       delete aItem2;
       sublist = PR_NEW(wallet_Sublist);
       sublist->item = new nsAutoString (*aItem3);
+      if (!(sublist->item)) {
+        delete itemList;
+        delete aItem1;
+        delete aItem3;
+        break;
+      }
       itemList->AppendElement(sublist);
       delete aItem3;
       /* add any following items to sublist up to next blank line */
       nsAutoString * dummy2 = new nsAutoString("");
       if (!dummy2) {
-        strm.close();
-        return;
+        delete itemList;
+        delete aItem1;
+        break;
       }
       for (;;) {
         /* get next item for sublist */
@@ -1471,11 +1489,16 @@ wallet_ReadFromFile
         /* add item to sublist */
         sublist = PR_NEW(wallet_Sublist);
         sublist->item = new nsAutoString (*aItem3);
+        if (!sublist->item) {
+          delete aItem3;
+          break;
+        }
         itemList->AppendElement(sublist);
         delete aItem3;
       }
     }
   }
+  strm.close();
 }
 
 /*
@@ -1512,15 +1535,19 @@ wallet_ReadFromURLFieldToSchemaFile
     nsAutoString * aItem;
     if (NS_FAILED(wallet_GetLine(strm, aItem, PR_FALSE))) {
       /* end of file reached */
-      strm.close();
-      return;
+      break;
     }
 
     nsVoidArray * itemList = new nsVoidArray();
+    if (!itemList) {
+      delete aItem;
+      break;
+    }
     nsAutoString * dummyString = new nsAutoString("");
     if (!dummyString) {
-      strm.close();
-      return;
+      delete aItem;
+      delete itemList;
+      break;
     }
     wallet_WriteToList(*aItem, *dummyString, itemList, list, placement);
 
@@ -1528,6 +1555,7 @@ wallet_ReadFromURLFieldToSchemaFile
       nsAutoString * aItem1;
       if (NS_FAILED(wallet_GetLine(strm, aItem1, PR_FALSE))) {
         /* end of file reached */
+        break;
         strm.close();
         return;
       }
@@ -1541,8 +1569,7 @@ wallet_ReadFromURLFieldToSchemaFile
       if (NS_FAILED(wallet_GetLine(strm, aItem2, PR_FALSE))) {
         /* unexpected end of file reached */
         delete aItem1;
-        strm.close();
-        return;
+        break;
       }
 
       nsVoidArray* dummyList = NULL;
@@ -1557,13 +1584,13 @@ wallet_ReadFromURLFieldToSchemaFile
 
       if (aItem3->Length()!=0) {
         /* invalid file format */
-        strm.close();
         delete aItem3;
-        return;
+        break;
       }
       delete aItem3;
     }
   }
+  strm.close();
 }
 
 /*********************************************************************/
@@ -1723,7 +1750,16 @@ wallet_GetPrefills(
             value = *(((wallet_Sublist *)itemList->ElementAt(0))->item);
           }
           valuePtr = new nsAutoString(value);
+          if (!valuePtr) {
+            NS_RELEASE(inputElement);
+            return -1;
+          }
           schemaPtr = new nsAutoString(schema);
+          if (!schemaPtr) {
+            delete valuePtr;
+            NS_RELEASE(inputElement);
+            return -1;
+          }
           selectElement = nsnull;
           selectIndex = -1;
           return NS_OK;
@@ -1750,7 +1786,16 @@ wallet_GetPrefills(
           if (NS_SUCCEEDED(result)) {
             /* value matched one of the values in the drop-down list */
             valuePtr = new nsAutoString(value);
+            if (!valuePtr) {
+              NS_RELEASE(selectElement);
+              return -1;
+            }
             schemaPtr = new nsAutoString(schema);
+            if (!schemaPtr) {
+              delete valuePtr;
+              NS_RELEASE(selectElement);
+              return -1;
+            }
             inputElement = nsnull;
             return NS_OK;
           }
@@ -1762,7 +1807,16 @@ wallet_GetPrefills(
             if (NS_SUCCEEDED(result)) {
               /* value matched one of the values in the drop-down list */
               valuePtr = new nsAutoString(value);
+              if (!valuePtr) {
+                NS_RELEASE(selectElement);
+                return -1;
+              }
               schemaPtr = new nsAutoString(schema);
+              if (!schemaPtr) {
+                delete valuePtr;
+                NS_RELEASE(selectElement);
+                return -1;
+              }
               inputElement = nsnull;
               return NS_OK;
             }
