@@ -66,6 +66,7 @@ nsRenderingContextMac::nsRenderingContextMac()
 	mGSStack					= new nsVoidArray();
   
 	mChanges					= kEverythingChanged;
+  mLineStyle = nsLineStyle_kSolid;
 }
 
 
@@ -766,7 +767,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetColor(nscolor &aColor) const
 NS_IMETHODIMP nsRenderingContextMac::SetLineStyle(nsLineStyle aLineStyle)
 {
 	// note: the line style must be saved in the nsGraphicState like font, color, etc...
-	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::SetLineStyle");//¥TODO
+  mLineStyle = aLineStyle;
 	return NS_OK;
 }
 
@@ -774,7 +775,7 @@ NS_IMETHODIMP nsRenderingContextMac::SetLineStyle(nsLineStyle aLineStyle)
 
 NS_IMETHODIMP nsRenderingContextMac::GetLineStyle(nsLineStyle &aLineStyle)
 {
-	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::GetLineStyle");//¥TODO
+  aLineStyle = mLineStyle;
 	return NS_OK;
 }
 
