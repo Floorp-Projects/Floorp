@@ -1003,7 +1003,7 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
                 nsAutoString newProfile; newProfile.AssignWithConversion(profileName);
                 rv = profileService->SetCurrentProfile(newProfile.GetUnicode());
             }
-	        EndDialog(hDlg, LOWORD(wParam));
+	        EndDialog(hDlg, IDOK);
         }
 		else if (LOWORD(wParam) == IDCANCEL)
 		{
