@@ -327,16 +327,14 @@ JS_TypeOfValue(JSContext *cx, jsval v)
 	type = JSTYPE_VOID;
     } else if (JSVAL_IS_OBJECT(v)) {
 	obj = JSVAL_TO_OBJECT(v);
-	if (obj &&
-	    (OBJ_GET_CLASS(cx, obj) == &js_FunctionClass
-#if JS_HAS_LEXICAL_CLOSURE
-	     || OBJ_GET_CLASS(cx, obj) == &js_ClosureClass
-#endif
-	     )) {
-	    type = JSTYPE_FUNCTION;
-	} else {
-	    type = JSTYPE_OBJECT;
-	}
+        if (obj &&
+            (OBJ_IS_NATIVE(obj)
+             ? OBJ_GET_CLASS(cx, obj)->call || OBJ_GET_CLASS(cx, obj) == &js_FunctionClass
+             : obj->map->ops->call != 0)) {
+            type = JSTYPE_FUNCTION;
+        } else {
+            type = JSTYPE_OBJECT;
+        }
     } else if (JSVAL_IS_NUMBER(v)) {
 	type = JSTYPE_NUMBER;
     } else if (JSVAL_IS_STRING(v)) {
