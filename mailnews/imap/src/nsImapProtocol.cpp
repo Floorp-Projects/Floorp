@@ -314,6 +314,7 @@ static PRBool gInitialized = PR_FALSE;
 static PRBool gHideUnusedNamespaces = PR_TRUE;
 static PRBool gHideOtherUsersFromList = PR_FALSE;
 static PRBool gUseEnvelopeCmd = PR_FALSE;
+static PRBool gUseLiteralPlus = PR_TRUE;
 
 nsresult nsImapProtocol::GlobalInitialization()
 {
@@ -335,6 +336,7 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefBranch->GetIntPref("mail.imap.noop_check_count", &gPromoteNoopToCheckCount);
     prefBranch->GetBoolPref("mail.imap.use_envelope_cmd",
                             &gUseEnvelopeCmd);
+    prefBranch->GetBoolPref("mail.imap.use_literal_plus", &gUseLiteralPlus);
     nsCOMPtr<nsIPrefLocalizedString> prefString;
     prefBranch->GetComplexValue("intl.accept_languages",
                                 NS_GET_IID(nsIPrefLocalizedString),
@@ -4681,6 +4683,12 @@ void nsImapProtocol::Capability()
     nsresult rv = SendData(command.get());
     if (NS_SUCCEEDED(rv))
         ParseIMAPandCheckForNewMail();
+    if (!gUseLiteralPlus)
+    {
+      PRUint32 capabilityFlag = GetServerStateParser().GetCapabilityFlag();
+      if (capabilityFlag & kLiteralPlusCapability)
+        GetServerStateParser().SetCapabilityFlag(capabilityFlag & ~kLiteralPlusCapability);
+    }
 }
 
 void nsImapProtocol::Language()

@@ -97,6 +97,7 @@ pref("mail.imap.cleanup_inbox_on_exit",     false);
 pref("mail.imap.mime_parts_on_demand",      true);
 pref("mail.imap.mime_parts_on_demand_max_depth", 15);
 pref("mail.imap.mime_parts_on_demand_threshold", 30000);
+pref("mail.imap.use_literal_plus",          true);
 pref("mail.thread_without_re",	            true);
 pref("mail.leave_on_server",                false);
 pref("mail.default_cc",                     "");
