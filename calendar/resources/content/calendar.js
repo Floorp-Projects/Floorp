@@ -960,7 +960,11 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
    if (calendarEventDisplay.event.description)
    {
       var DescriptionHtml = document.createElement( "description" );
-      var DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
+      var Description = calendarEventDisplay.event.description;
+      if( Description.length > 53 )
+         Description = Description.substr( 0, 50 )+"...";
+
+      var DescriptionText = document.createTextNode( "Description: "+Description );
       DescriptionHtml.appendChild( DescriptionText );
       HolderBox.appendChild( DescriptionHtml );
    }
