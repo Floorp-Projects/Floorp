@@ -76,7 +76,6 @@ NS_METHOD nsDataFlavor::Init(const nsString & aMimeType, const nsString & aHuman
   mHumanPresentableName = aHumanPresentableName;
 
   char * str = mMimeType.ToNewCString();
-  // XXXX mNativeClipboardFormat = ::RegisterClipboardFormat(str);
 
   delete[] str;
 
