@@ -76,6 +76,7 @@ private:
 	nsIRDFResource		*kNC_Child;
 	nsIRDFResource		*kNC_loading;
 	nsIRDFLiteral		*kTrueLiteral;
+	nsIRDFLiteral		*kFalseLiteral;
 
 protected:
 	// We grab a reference to the content viewer container (which
@@ -86,9 +87,11 @@ protected:
 
 	nsCOMPtr<nsIRDFDataSource>	mInner;
 	nsCOMPtr<nsISupportsArray>	mConnectionList;
-	nsCOMPtr<nsITimer>		mTimer;
-	nsISupports			*mContainer;	// [WEAK]
-	nsCString			mBaseURL;
+	nsCOMPtr<nsISupportsArray>  mNodeList;
+	nsCOMPtr<nsITimer>		    mTimer;
+	nsISupports			        *mContainer;	// [WEAK]
+	nsCString			        mBaseURL;
+	nsCString                   mEncoding;
 
 			    nsHTTPIndex(nsISupports* aContainer);
 	nsresult	CommonInit(void);
@@ -100,7 +103,6 @@ public:
 			    nsHTTPIndex();
 	virtual		~nsHTTPIndex();
 	nsresult	Init(void);
-	nsCString   mEncoding;
 
 static	nsresult	Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
 

@@ -94,15 +94,16 @@ protected:
   static nsIRDFResource* kHTTPIndex_Loading;
   static nsIRDFResource* kNC_Child;
   static nsIRDFLiteral*  kTrueLiteral;
+  static nsIRDFLiteral*  kFalseLiteral;
 
-  static nsresult ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
-  static nsresult ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
-  static nsresult ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseInt(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
 
   struct Field {
     const char      *mName;
     const char      *mResName;
-    nsresult        (*mParse)(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
+    nsresult        (*mParse)(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
     nsIRDFResource* mProperty;
   };
 
@@ -119,7 +120,7 @@ protected:
 
   nsresult ProcessData(nsISupports *context);
   nsresult ParseFormat(const char* aFormatStr);
-  nsresult ParseData(nsAutoString* values, const char *baseStr, const char *encodingStr, char* aDataStr, nsIRDFResource *parentRes);
+  nsresult ParseData(nsString* values, const char *baseStr, const char *encodingStr, char* aDataStr, nsIRDFResource *parentRes);
 
   nsAutoString mComment;
 
@@ -159,6 +160,7 @@ nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Filetype;
 nsIRDFResource* nsHTTPIndexParser::kHTTPIndex_Loading;
 nsIRDFResource* nsHTTPIndexParser::kNC_Child;
 nsIRDFLiteral*  nsHTTPIndexParser::kTrueLiteral;
+nsIRDFLiteral*  nsHTTPIndexParser::kFalseLiteral;
 
 
 
@@ -228,6 +230,8 @@ nsHTTPIndexParser::Init()
 
     rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
     if (NS_FAILED(rv)) return rv;
+    rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("false").GetUnicode(), &kFalseLiteral);
+    if (NS_FAILED(rv)) return rv;
 
     for (Field* field = gFieldTable; field->mName; ++field) {
       nsCAutoString str(field->mResName);
@@ -250,6 +254,7 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
     NS_IF_RELEASE(kHTTPIndex_Loading);
     NS_IF_RELEASE(kNC_Child);
     NS_IF_RELEASE(kTrueLiteral);
+    NS_IF_RELEASE(kFalseLiteral);
 
     for (Field* field = gFieldTable; field->mName; ++field) {
       NS_IF_RELEASE(field->mProperty);
@@ -401,7 +406,9 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
 
   // Clean up any remaining data
   if (mBuf.Length() > (PRUint32) mLineStart)
+  {
     ProcessData(aContext);
+  }
 
   // free up buffer after processing all the data
   mBuf.Truncate();
@@ -415,8 +422,8 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
   rv = mDataSource->Assert(mDirectory, kHTTPIndex_Comment, comment, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
-  // Remove the 'loading' annotation (ignore errors)
-  mDataSource->Unassert(mDirectory, kHTTPIndex_Loading, kTrueLiteral);
+  // hack: Remove the 'loading' annotation (ignore errors)
+  mHTTPIndex->AddElement(mDirectory, kHTTPIndex_Loading, kTrueLiteral);
 
   return NS_OK;
 }
@@ -470,7 +477,10 @@ nsHTTPIndexParser::ProcessData(nsISupports *context)
 	}
 
     nsCOMPtr<nsIRDFResource>	parentRes = do_QueryInterface(context);
-    if (!parentRes) return(NS_ERROR_UNEXPECTED);
+    if (!parentRes)
+    {
+        return(NS_ERROR_UNEXPECTED);
+    }
 
   // First, we'll iterate through the values and remember each (using
   // an array of autostrings allocated on the stack, if possible). We
@@ -478,20 +488,26 @@ nsHTTPIndexParser::ProcessData(nsISupports *context)
   // which this 201 refers.
 #define MAX_AUTO_VALUES 8
 
-  nsAutoString autovalues[MAX_AUTO_VALUES];
-  nsAutoString* values = autovalues;
+  nsString autovalues[MAX_AUTO_VALUES];
+  nsString* values = autovalues;
 
   if (mFormat.Count() > MAX_AUTO_VALUES) {
     // Yeah, we really -do- want to create nsAutoStrings in the heap
     // here, because most of the fields will be l.t. 32 characters:
     // this avoids an extra allocation for the nsString's buffer.
-    values = new nsAutoString[mFormat.Count()];
+    values = new nsString[mFormat.Count()];
     if (! values)
+    {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
+
+    PRInt32     numItems = 0;
 
 	while(PR_TRUE)
 	{
+	    ++numItems;
+
 		PRInt32		eol = mBuf.FindCharInSet("\n\r", mLineStart);
 		if (eol < 0)	break;
 		mBuf.SetCharAt(PRUnichar('\0'), eol);
@@ -533,13 +549,19 @@ nsHTTPIndexParser::ProcessData(nsISupports *context)
 					{
 						// 200. Define field names
 						rv = ParseFormat(buf + 4);
-						if (NS_FAILED(rv)) return rv;
+						if (NS_FAILED(rv))
+						{
+						    return rv;
+						}
 					}
 					else if (buf[2] == '1' && buf[3] == ':')
 					{
 						// 201. Field data
 						rv = ParseData(values, mURI, encodingStr, ((char *)buf) + 4, parentRes);
-						if (NS_FAILED(rv)) return rv;
+						if (NS_FAILED(rv))
+						{
+						    return rv;
+						}
 					}
 				}
 			}
@@ -635,13 +657,15 @@ nsHTTPIndex::GetEncoding(char **encoding)
 
 
 nsresult
-nsHTTPIndexParser::ParseData(nsAutoString* values, const char *baseStr, const char *encodingStr,
+nsHTTPIndexParser::ParseData(nsString* values, const char *baseStr, const char *encodingStr,
     register char* aDataStr, nsIRDFResource *parentRes)
 {
   // Parse a "201" data line, using the field ordering specified in
   // mFormat.
 
-  if (mFormat.Count() == 0) {
+  PRInt32   numFormats = mFormat.Count();
+
+  if (numFormats == 0) {
     // Ignore if we haven't seen a format yet.
     return NS_OK;
   }
@@ -651,7 +675,7 @@ nsHTTPIndexParser::ParseData(nsAutoString* values, const char *baseStr, const ch
   nsCAutoString	filename;
   PRBool    isDirType = PR_FALSE;
 
-  for (PRInt32 i = 0; i < mFormat.Count(); ++i) {
+  for (PRInt32 i = 0; i < numFormats; ++i) {
     // If we've exhausted the data before we run out of fields, just
     // bail.
     if (! *aDataStr)
@@ -754,8 +778,9 @@ nsHTTPIndexParser::ParseData(nsAutoString* values, const char *baseStr, const ch
   // second pass through the values and add as statements to the RDF
   // datasource.
   if (entry && NS_SUCCEEDED(rv)) {
-    for (PRInt32 indx = 0; indx < mFormat.Count(); ++indx) {
-      Field* field = NS_REINTERPRET_CAST(Field*, mFormat.ElementAt(indx));
+    for (PRInt32 indx = 0; indx < numFormats; ++indx) {
+      Field* field = NS_STATIC_CAST(Field*, mFormat.ElementAt(indx));
+//      Field* field = NS_REINTERPRET_CAST(Field*, mFormat.ElementAt(indx));
       if (! field)
         continue;
 
@@ -768,9 +793,11 @@ nsHTTPIndexParser::ParseData(nsAutoString* values, const char *baseStr, const ch
         if (NS_FAILED(rv)) break;
       }
     }
-
-    rv = mDataSource->Assert(parentRes, kNC_Child, entry, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+//   instead of
+//       rv = mDataSource->Assert(parentRes, kNC_Child, entry, PR_TRUE);
+//       if (NS_FAILED(rv)) return rv;
+//   defer insertion onto a timer so that the UI isn't starved
+    mHTTPIndex->AddElement(parentRes, kNC_Child, entry);
   }
 
   return rv;
@@ -779,34 +806,39 @@ nsHTTPIndexParser::ParseData(nsAutoString* values, const char *baseStr, const ch
 
 
 nsresult
-nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
 {
-  nsresult rv;
+    nsresult                  rv;
+    nsCOMPtr<nsIRDFLiteral>   result;
 
-  if (arc == kHTTPIndex_Filename)
-  {
-	// strip off trailing slash(s) from directory names
-  	PRInt32	len = aValue.Length();
-  	if (len > 0)
-  	{
-  		if (aValue[len - 1] == '/')
-  		{
-  			aValue.SetLength(len - 1);
-  		}
-  	}
-  }
+    if (arc == kHTTPIndex_Filename)
+    {
+        // strip off trailing slash(s) from directory names
+        PRInt32	len = aValue.Length();
+        if (len > 0)
+        {
+            if (aValue[len - 1] == '/')
+            {
+                nsAutoString  temp(aValue);
+                temp.SetLength(len - 1);
+                rv = gRDF->GetLiteral(temp.GetUnicode(), getter_AddRefs(result));
+            }
+        }
+    }
 
-  nsCOMPtr<nsIRDFLiteral> result;
-  rv = gRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
-  if (NS_FAILED(rv)) return rv;
+    if (!result)
+    {
+        rv = gRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
+    }
+    if (NS_FAILED(rv)) return rv;
 
-  return result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aResult);
+    return result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aResult);
 }
 
 
 
 nsresult
-nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
 {
   PRTime tm;
   nsCAutoString avalueC;
@@ -826,7 +858,7 @@ nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode**
 
 
 nsresult
-nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
 {
   PRInt32 err;
   PRInt32 i = aValue.ToInteger(&err);
@@ -879,6 +911,7 @@ nsHTTPIndex::~nsHTTPIndex()
 	NS_IF_RELEASE(kNC_Child);
 	NS_IF_RELEASE(kNC_loading);
 	NS_IF_RELEASE(kTrueLiteral);
+	NS_IF_RELEASE(kFalseLiteral);
 
     	if (mTimer)
     	{
@@ -889,6 +922,7 @@ nsHTTPIndex::~nsHTTPIndex()
     	}
 
         mConnectionList = nsnull;
+        mNodeList = nsnull;
 
 	if (gRDF)
 	{
@@ -927,11 +961,13 @@ nsHTTPIndex::CommonInit()
 	gRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
 	gRDF->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
 
-        rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
-        if (NS_FAILED(rv)) return(rv);
+    rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
+    if (NS_FAILED(rv)) return(rv);
+    rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("false").GetUnicode(), &kFalseLiteral);
+    if (NS_FAILED(rv)) return(rv);
 
-        rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList));
-        if (NS_FAILED(rv)) return(rv);
+    rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList));
+    if (NS_FAILED(rv)) return(rv);
 
 	// note: don't register DS here
 
@@ -1208,7 +1244,7 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBo
                 		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
                 		// Note: don't addref "this" as we'll cancel the
                 		// timer in the httpIndex destructor
-                	}
+            		}
             	}
 	    	}
 		}
@@ -1217,21 +1253,58 @@ nsHTTPIndex::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBo
 	return(rv);
 }
 
+
+
+NS_IMETHODIMP
+nsHTTPIndex::AddElement(nsIRDFResource *parent, nsIRDFResource *prop, nsIRDFNode *child)
+{
+    nsresult    rv;
+
+    if (!mNodeList)
+    {
+        rv = NS_NewISupportsArray(getter_AddRefs(mNodeList));
+        if (NS_FAILED(rv)) return(rv);
+    }
+
+    // order required: parent, prop, then child
+    mNodeList->AppendElement(parent);
+    mNodeList->AppendElement(prop);
+    mNodeList->AppendElement(child);
+
+	if (!mTimer)
+	{
+		mTimer = do_CreateInstance("component://netscape/timer", &rv);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a timer");
+		if (NS_FAILED(rv))  return(rv);
+
+		mTimer->Init(nsHTTPIndex::FireTimer, this, 100,
+		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+		// Note: don't addref "this" as we'll cancel the
+		// timer in the httpIndex destructor
+	}
+
+    return(NS_OK);
+}
+
+
+
 void
 nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
 {
 	nsHTTPIndex *httpIndex = NS_STATIC_CAST(nsHTTPIndex *, aClosure);
 	if (!httpIndex)	return;
 
-    // Note: process ALL outstanding connection requests;
-    // don't return out of this loop as mTimer needs to be cancelled afterwards
+    // don't return out of this loop as mTimer may need to be cancelled afterwards
+    PRBool      refireTimer = PR_FALSE;
+
+    PRUint32    numItems = 0;
+    PRInt32     loop;
     if (httpIndex->mConnectionList)
     {
-        PRUint32    numItems = 0;
-        PRInt32     loop;
         httpIndex->mConnectionList->Count(&numItems);
         if (numItems > 0)
         {
+            // Note: process ALL outstanding connection requests;
             for (loop=((PRInt32)numItems)-1; loop>=0; loop--)
             {
                 nsCOMPtr<nsISupports>   isupports;
@@ -1264,11 +1337,87 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
         		}
             }
         }
+        httpIndex->mConnectionList->Clear();
     }
 
-    // after firing off any/all of the connections
-    // be sure to cancel the timer
-	if (httpIndex->mTimer)
+    if (httpIndex->mNodeList)
+    {
+        httpIndex->mNodeList->Count(&numItems);
+        if (numItems > 0)
+        {
+            // account for order required: src, prop, then target
+            numItems /=3;
+            if (numItems > 10)  numItems = 10;
+            
+            for (loop=0; loop<(PRInt32)numItems; loop++)
+            {
+                nsCOMPtr<nsISupports>   isupports;
+                httpIndex->mNodeList->GetElementAt((PRUint32)0, getter_AddRefs(isupports));
+                httpIndex->mNodeList->RemoveElementAt((PRUint32)0);
+                nsCOMPtr<nsIRDFResource>    src;
+                if (isupports)  src = do_QueryInterface(isupports);
+
+                httpIndex->mNodeList->GetElementAt((PRUint32)0, getter_AddRefs(isupports));
+                httpIndex->mNodeList->RemoveElementAt((PRUint32)0);
+                nsCOMPtr<nsIRDFResource>    prop;
+                if (isupports)  prop = do_QueryInterface(isupports);
+
+                httpIndex->mNodeList->GetElementAt((PRUint32)0, getter_AddRefs(isupports));
+                httpIndex->mNodeList->RemoveElementAt((PRUint32)0);
+                nsCOMPtr<nsIRDFNode>    target;
+                if (isupports)  target = do_QueryInterface(isupports);
+
+                if (src && prop && target)
+                {
+                    if (prop == httpIndex->kNC_loading)
+                    {
+                        httpIndex->Unassert(src, prop, target);
+                    }
+                    else
+                    {
+                        httpIndex->Assert(src, prop, target, PR_TRUE);
+                    }
+                }
+            }                
+        }
+    }
+
+    // check both lists to see if the timer needs to continue firing
+    if (httpIndex->mConnectionList)
+    {
+        httpIndex->mConnectionList->Count(&numItems);
+        if (numItems > 0)
+        {
+            refireTimer = PR_TRUE;
+        }
+        else
+        {
+            httpIndex->mConnectionList->Clear();
+        }
+    }
+    if (httpIndex->mNodeList)
+    {
+        httpIndex->mNodeList->Count(&numItems);
+        if (numItems > 0)
+        {
+            refireTimer = PR_TRUE;
+        }
+        else
+        {
+            httpIndex->mNodeList->Clear();
+        }
+    }
+
+    // after firing off any/all of the connections be sure
+    // to cancel the timer if we don't need to refire it
+	if (refireTimer == PR_TRUE)
+	{
+		httpIndex->mTimer->Init(nsHTTPIndex::FireTimer, httpIndex, 100,
+		    NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
+		// Note: don't addref "this" as we'll cancel the
+		// timer in the httpIndex destructor
+	}
+	else
 	{
 		// be sure to cancel the timer, as it holds a
 		// weak reference back to nsHTTPIndex
