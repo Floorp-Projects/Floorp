@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.46 2002/05/03 20:59:50 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.47 2002/05/07 23:35:22 wtc%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -277,7 +277,7 @@ static const char *dllname =
 static void nss_FindExternalRootPaths(const char *dbpath, const char* secmodprefix,
                               char** retoldpath, char** retnewpath)
 {
-    char *path, *oldpath, *lastsep;
+    char *path, *oldpath = NULL, *lastsep;
     int len, path_len, secmod_len, dll_len;
 
     path_len = PORT_Strlen(dbpath);
@@ -287,28 +287,27 @@ static void nss_FindExternalRootPaths(const char *dbpath, const char* secmodpref
 
     path = PORT_Alloc(len);
     if (path == NULL) return;
-    oldpath = PORT_Alloc(len);
-    if (oldpath == NULL) {
-        PORT_Free(path);
-        return;
-    }
 
     /* back up to the top of the directory */
     PORT_Memcpy(path,dbpath,path_len);
     if (path[path_len-1] != FILE_SEP) {
         path[path_len++] = FILE_SEP;
     }
-    PORT_Memcpy(oldpath,path,path_len);
     PORT_Strcpy(&path[path_len],dllname);
     if (secmodprefix) {
         lastsep = PORT_Strrchr(secmodprefix, FILE_SEP);
         if (lastsep) {
             int secmoddir_len = lastsep-secmodprefix+1; /* FILE_SEP */
+            oldpath = PORT_Alloc(len);
+            if (oldpath == NULL) {
+                PORT_Free(path);
+                return;
+            }
+            PORT_Memcpy(oldpath,path,path_len);
             PORT_Memcpy(&oldpath[path_len],secmodprefix,secmoddir_len);
-            path_len += secmoddir_len;
+            PORT_Strcpy(&oldpath[path_len+secmoddir_len],dllname);
         }
     }
-    PORT_Strcpy(&oldpath[path_len],dllname);
     *retoldpath = oldpath;
     *retnewpath = path;
     return;
@@ -329,6 +328,7 @@ nss_FindExternalRoot(const char *dbpath, const char* secmodprefix)
 {
 	char *path = NULL;
         char *oldpath = NULL;
+        PRBool hasrootcerts = PR_FALSE;
 
         /*
          * 'oldpath' is the external root path in NSS 3.3.x or older.
@@ -338,8 +338,9 @@ nss_FindExternalRoot(const char *dbpath, const char* secmodprefix)
         nss_FindExternalRootPaths(dbpath, secmodprefix, &oldpath, &path);
         if (oldpath) {
             (void) SECMOD_AddNewModule("Root Certs",oldpath, 0, 0);
+            hasrootcerts = SECMOD_HasRootCerts();
         }
-        if (path && !SECMOD_HasRootCerts()) {
+        if (path && !hasrootcerts) {
 	    (void) SECMOD_AddNewModule("Root Certs",path, 0, 0);
         }
         nss_FreeExternalRootPaths(oldpath, path);
