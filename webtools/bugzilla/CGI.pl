@@ -403,7 +403,7 @@ sub PutHeader {
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";
     print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">\n";
 
-    print Param("bannerhtml");
+    print PerformSubsts(Param("bannerhtml"), undef);
 
     print "<TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">\n";
     print " <TR>\n";

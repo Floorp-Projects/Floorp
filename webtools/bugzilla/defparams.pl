@@ -133,7 +133,9 @@ sub check_despotbaseurl {
 
 
 DefParam("bannerhtml",
-         "The html that gets emitted at the head of every Bugzilla page.",
+         "The html that gets emitted at the head of every Bugzilla page. 
+Anything of the form %<i>word</i>% gets replaced by the defintion of that 
+word (as defined on this page).",
          "l",
          q{<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
 <TR><TD><A HREF="http://www.mozilla.org/"><IMG

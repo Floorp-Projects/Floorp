@@ -26,6 +26,9 @@ use Mysql;
 
 use Date::Format;               # For time2str().
 
+# Contains the version string for the current running Bugzilla.
+$::param{'version'} = '1.1';
+
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
 
