@@ -1154,10 +1154,12 @@ function OnLeavingFolder(aFolder)
 {
   try
   {
-    if (gPrefBranch.getBoolPref("mailnews.mark_message_read." + aFolder.server.type))
+    // Mark all messages of aFolder as read:
+    // We can't use the command controller, because it is already tuned in to the
+    // new folder, so we just mimic its behaviour wrt goDoCommand('cmd_markAllRead').
+    if (gDBView && gPrefBranch.getBoolPref("mailnews.mark_message_read." + aFolder.server.type))
     {
-      // mark all messages of aFolder as read
-      goDoCommand('cmd_markAllRead');
+      gDBView.doCommand(nsMsgViewCommandType.markAllRead);
     }
   }
   catch(e){/* ignore */}
