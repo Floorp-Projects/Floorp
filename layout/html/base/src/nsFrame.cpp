@@ -2077,10 +2077,12 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
                     const nsRect&   aDamageRect,
                     PRBool          aImmediate) const
 {
+#ifdef DEBUG
   if (aDamageRect.IsEmpty()) {
     NS_WARNING("empty damage rect: update caller to avoid fcn call overhead");
     return;
   }
+#endif
 
   if (aPresContext) {
     // Don't allow invalidates to do anything when
