@@ -123,106 +123,8 @@ static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 //#define DO_NOISY_REFLOW
 #endif
 
-/**
- * The boxes private implementation
- */
-class nsBoxFrameInner
-{
-public:
-  nsBoxFrameInner(nsIPresShell* aPresShell, nsBoxFrame* aThis)
-  {
-    mOuter = aThis;
-  }
-
-  ~nsBoxFrameInner()
-  {
-  }
-
-  //----- Sibling/Child ----
-
-  nsresult SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
-
-  void Recycle(nsIPresShell* aPresShell);
-
-  // Overloaded new operator. Initializes the memory to 0 and relies on an arena
-  // (which comes from the presShell) to perform the allocation.
-  void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
-
-  // Overridden to prevent the global delete from being called, since the memory
-  // came out of an nsIArena instead of the global delete operator's heap.  
-  // XXX Would like to make this private some day, but our UNIX compilers can't 
-  // deal with it.
-  void operator delete(void* aPtr, size_t sz);
-
-  // helper methods
-
-
-   void TranslateEventCoords(nsIPresContext* aPresContext,
-                                    const nsPoint& aPoint,
-                                    nsPoint& aResult);
-
-    static PRBool AdjustTargetToScope(nsIFrame* aParent, nsIFrame*& aTargetFrame);
-
-
-    PRBool GetInitialDebug(PRBool& aDebug);
-
-    void GetDebugPref(nsIPresContext* aPresContext);
-
-    /*
-    nsresult PaintDebug(nsIBox* aBox, 
-                        nsIPresContext* aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect& aDirtyRect,
-                        nsFramePaintLayer aWhichLayer);
-*/
-
-#ifdef DEBUG_LAYOUT
-    nsresult DisplayDebugInfoFor(nsIBox* aBox, 
-                                 nsIPresContext* aPresContext,
-                                 nsPoint&        aPoint,
-                                 PRInt32&        aCursor);
-#endif
-
-    nsresult GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize);
-
-    void GetDebugBorder(nsMargin& aInset);
-    void GetDebugPadding(nsMargin& aInset);
-    void GetDebugMargin(nsMargin& aInset);
-    void PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels);
-
-#ifdef DEBUG_LAYOUT
-    void GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
-    void GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
-#endif
-    void DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
-    void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
-    void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
-    void UpdateMouseThrough();
-
-    void CacheAttributes();
-
-    nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
-
-    nsBoxFrame::Halignment GetHAlign();
-    nsBoxFrame::Valignment GetVAlign();
-
-    // instance variables.
-    nsBoxFrame* mOuter;
-
-    nsBoxFrame::Valignment mValign;
-    nsBoxFrame::Halignment mHalign;
-
-    PRBool mAttributesCached;
-    
-    nsIPresContext* mPresContext;
-
-    static PRBool gDebug;
-    static nsIBox* mDebugChild;
-
-};
-
-PRBool nsBoxFrameInner::gDebug = PR_FALSE;
-nsIBox* nsBoxFrameInner::mDebugChild = nsnull;
+PRBool nsBoxFrame::gDebug = PR_FALSE;
+nsIBox* nsBoxFrame::mDebugChild = nsnull;
 
 nsresult
 NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
@@ -245,21 +147,15 @@ NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, n
 nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 :nsContainerBox(aPresShell)
 {
-  mInner = new (aPresShell) nsBoxFrameInner(aPresShell, this);
-
-  mInner->mAttributesCached = PR_FALSE;
-
   mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
 
   if (aIsRoot) 
      mState |= NS_STATE_IS_ROOT;
 
-  mInner->mValign = nsBoxFrame::vAlign_Top;
-  mInner->mHalign = nsBoxFrame::hAlign_Left;
+  mValign = vAlign_Top;
+  mHalign = hAlign_Left;
   
-  NeedsRecalc();
-
   // if no layout manager specified us the static sprocket layout
   nsCOMPtr<nsIBoxLayout> layout = aLayoutManager;
 
@@ -270,12 +166,10 @@ nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* a
   SetLayoutManager(layout);
 
   NeedsRecalc();
-
 }
 
 nsBoxFrame::~nsBoxFrame()
 {
-  NS_ASSERTION(mInner == nsnull,"Error Destroy was never called on this Frame!!!");
 }
 
 NS_IMETHODIMP nsBoxFrame::SetParent(const nsIFrame* aParent)
@@ -303,21 +197,21 @@ NS_IMETHODIMP nsBoxFrame::SetParent(const nsIFrame* aParent)
 NS_IMETHODIMP
 nsBoxFrame::GetVAlign(Valignment& aAlign)
 {
-   aAlign = mInner->mValign;
+   aAlign = mValign;
    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBoxFrame::GetHAlign(Halignment& aAlign)
 {
-   aAlign = mInner->mHalign;
+   aAlign = mHalign;
    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                              nsIAtom*        aListName,
-                                              nsIFrame*       aChildList)
+                                nsIAtom*        aListName,
+                                nsIFrame*       aChildList)
 {
   SanityCheck(mFrames);
 
@@ -356,14 +250,14 @@ nsBoxFrame::IsNormalDirection() const
  */
 NS_IMETHODIMP
 nsBoxFrame::Init(nsIPresContext*  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsIStyleContext* aContext,
-              nsIFrame*        aPrevInFlow)
+                 nsIContent*      aContent,
+                 nsIFrame*        aParent,
+                 nsIStyleContext* aContext,
+                 nsIFrame*        aPrevInFlow)
 {
   SetParent(aParent);
 
-  mInner->mPresContext = aPresContext;
+  mPresContext = aPresContext;
 
   nsresult  rv = nsContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
@@ -389,16 +283,16 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
-  mInner->CacheAttributes();
+  CacheAttributes();
 
     // if we are root and this
   if (mState & NS_STATE_IS_ROOT) 
-      mInner->GetDebugPref(aPresContext);
+      GetDebugPref(aPresContext);
 
 
   mMouseThrough = unset;
 
-  mInner->UpdateMouseThrough();
+  UpdateMouseThrough();
 
   // register access key
   rv = RegUnregAccessKey(aPresContext, PR_TRUE);
@@ -406,84 +300,84 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
   return rv;
 }
 
-void nsBoxFrameInner::UpdateMouseThrough()
+void nsBoxFrame::UpdateMouseThrough()
 {
-  if (mOuter->mContent) {
+  if (mContent) {
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mOuter->mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
         if (value.EqualsIgnoreCase("never")) 
-          mOuter->mMouseThrough = mOuter->never;
+          mMouseThrough = never;
         else if (value.EqualsIgnoreCase("always")) 
-          mOuter->mMouseThrough = mOuter->always;
+          mMouseThrough = always;
       
     }
   }
 }
 
 void
-nsBoxFrameInner::CacheAttributes()
+nsBoxFrame::CacheAttributes()
 {
   /*
   printf("Caching: ");
-  mOuter->DumpBox(stdout);
+  DumpBox(stdout);
   printf("\n");
    */
 
-  mValign = nsBoxFrame::vAlign_Top;
-  mHalign = nsBoxFrame::hAlign_Left;
+  mValign = vAlign_Top;
+  mHalign = hAlign_Left;
 
   PRBool orient = PR_FALSE;
-  mOuter->GetInitialOrientation(orient); 
+  GetInitialOrientation(orient); 
   if (orient)
-    mOuter->mState |= NS_STATE_IS_HORIZONTAL;
+    mState |= NS_STATE_IS_HORIZONTAL;
   else
-    mOuter->mState &= ~NS_STATE_IS_HORIZONTAL;
+    mState &= ~NS_STATE_IS_HORIZONTAL;
 
   PRBool normal = PR_TRUE;
-  mOuter->GetInitialDirection(normal); 
+  GetInitialDirection(normal); 
   if (normal)
-    mOuter->mState |= NS_STATE_IS_DIRECTION_NORMAL;
+    mState |= NS_STATE_IS_DIRECTION_NORMAL;
   else
-    mOuter->mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
+    mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
 
-  mOuter->GetInitialVAlignment(mValign);
-  mOuter->GetInitialHAlignment(mHalign);
+  GetInitialVAlignment(mValign);
+  GetInitialHAlignment(mHalign);
   
   PRBool equalSize = PR_FALSE;
-  mOuter->GetInitialEqualSize(equalSize); 
+  GetInitialEqualSize(equalSize); 
   if (equalSize)
-        mOuter->mState |= NS_STATE_EQUAL_SIZE;
+        mState |= NS_STATE_EQUAL_SIZE;
     else
-        mOuter->mState &= ~NS_STATE_EQUAL_SIZE;
+        mState &= ~NS_STATE_EQUAL_SIZE;
 
-  PRBool autostretch = mOuter->mState & NS_STATE_AUTO_STRETCH;
-  mOuter->GetInitialAutoStretch(autostretch);
+  PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
+  GetInitialAutoStretch(autostretch);
   if (autostretch)
-        mOuter->mState |= NS_STATE_AUTO_STRETCH;
+        mState |= NS_STATE_AUTO_STRETCH;
      else
-        mOuter->mState &= ~NS_STATE_AUTO_STRETCH;
+        mState &= ~NS_STATE_AUTO_STRETCH;
 
 
-  PRBool debug = mOuter->mState & NS_STATE_SET_TO_DEBUG;
+  PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
   PRBool debugSet = GetInitialDebug(debug); 
   if (debugSet) {
-        mOuter->mState |= NS_STATE_DEBUG_WAS_SET;
+        mState |= NS_STATE_DEBUG_WAS_SET;
         if (debug)
-            mOuter->mState |= NS_STATE_SET_TO_DEBUG;
+            mState |= NS_STATE_SET_TO_DEBUG;
         else
-            mOuter->mState &= ~NS_STATE_SET_TO_DEBUG;
+            mState &= ~NS_STATE_SET_TO_DEBUG;
   } else {
-        mOuter->mState &= ~NS_STATE_DEBUG_WAS_SET;
+        mState &= ~NS_STATE_DEBUG_WAS_SET;
   }
 }
 
 PRBool
-nsBoxFrameInner::GetInitialDebug(PRBool& aDebug)
+nsBoxFrame::GetInitialDebug(PRBool& aDebug)
 {
   nsAutoString value;
 
   nsCOMPtr<nsIContent> content;
-  mOuter->GetContentOf(getter_AddRefs(content));
+  GetContentOf(getter_AddRefs(content));
 
   if (!content)
     return PR_FALSE;
@@ -1137,14 +1031,6 @@ nsBoxFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
      return NS_OK;
   }
 
-  /*
-    // @@@ hack to fix bug in xbl where it won't set flex -EDV
-  if ((mState & NS_FRAME_FIRST_REFLOW) && !mInner->mAttributesCached) {
-    mInner->CacheAttributes();
-    mInner->mAttributesCached = PR_TRUE;
-  }
-  */
-
   PropagateDebug(aBoxLayoutState);
 
   nsresult rv = NS_OK;
@@ -1184,7 +1070,7 @@ nsBoxFrame::PropagateDebug(nsBoxLayoutState& aState)
       else
           SetDebug(aState, PR_FALSE);
   } else if (mState & NS_STATE_IS_ROOT) {
-    SetDebug(aState, nsBoxFrameInner::gDebug);
+    SetDebug(aState, gDebug);
   }
 }
 
@@ -1213,35 +1099,17 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
   return nsContainerBox::DoLayout(aState);
 }
 
-nsBoxFrame::Valignment
-nsBoxFrameInner::GetVAlign()
-{
-   return mValign;
-}
-
-nsBoxFrame::Halignment
-nsBoxFrameInner::GetHAlign()
-{
-    return mHalign;
-}
-
 NS_IMETHODIMP
 nsBoxFrame::Destroy(nsIPresContext* aPresContext)
 {
 // if we are root remove 1 from the debug count.
   if (mState & NS_STATE_IS_ROOT)
-      mInner->GetDebugPref(aPresContext);
+      GetDebugPref(aPresContext);
 
   // unregister access key
   RegUnregAccessKey(aPresContext, PR_FALSE);
 
   SetLayoutManager(nsnull);
-
-  // recycle the Inner via the shell's arena.
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  mInner->Recycle(shell);
-  mInner = nsnull;
 
   return nsContainerFrame::Destroy(aPresContext);
 } 
@@ -1273,21 +1141,19 @@ nsBoxFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
 NS_IMETHODIMP
 nsBoxFrame::NeedsRecalc()
 {
-  if (mInner) {
-    SizeNeedsRecalc(mPrefSize);
-    SizeNeedsRecalc(mMinSize);
-    SizeNeedsRecalc(mMaxSize);
-    CoordNeedsRecalc(mFlex);
-    CoordNeedsRecalc(mAscent);
-  }
+  SizeNeedsRecalc(mPrefSize);
+  SizeNeedsRecalc(mMinSize);
+  SizeNeedsRecalc(mMaxSize);
+  CoordNeedsRecalc(mFlex);
+  CoordNeedsRecalc(mAscent);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
-                           nsIPresShell& aPresShell,
-                           nsIAtom* aListName,
-                           nsIFrame* aOldFrame)
+                        nsIPresShell&   aPresShell,
+                        nsIAtom*        aListName,
+                        nsIFrame*       aOldFrame)
 {
   SanityCheck(mFrames);
 
@@ -1308,10 +1174,10 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
-                            nsIPresShell& aPresShell,
-                            nsIAtom* aListName,
-                            nsIFrame* aPrevFrame,
-                            nsIFrame* aFrameList)
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aPrevFrame,
+                         nsIFrame*       aFrameList)
 {
    SanityCheck(mFrames);
 
@@ -1346,9 +1212,9 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList)
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aFrameList)
 {
    SanityCheck(mFrames);
 
@@ -1405,8 +1271,8 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsXULAtoms::dir     ||
         aAttribute == nsXULAtoms::debug) {
 
-      mInner->mValign = nsBoxFrame::vAlign_Top;
-      mInner->mHalign = nsBoxFrame::hAlign_Left;
+      mValign = nsBoxFrame::vAlign_Top;
+      mHalign = nsBoxFrame::hAlign_Left;
 
       PRBool orient = PR_TRUE;
       GetInitialOrientation(orient); 
@@ -1422,8 +1288,8 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
       else
         mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
 
-      GetInitialVAlignment(mInner->mValign);
-      GetInitialHAlignment(mInner->mHalign);
+      GetInitialVAlignment(mValign);
+      GetInitialHAlignment(mHalign);
 
       PRBool equalSize = PR_FALSE;
       GetInitialEqualSize(equalSize); 
@@ -1433,7 +1299,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         mState &= ~NS_STATE_EQUAL_SIZE;
 
       PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
-      PRBool debugSet = mInner->GetInitialDebug(debug);
+      PRBool debugSet = GetInitialDebug(debug);
       if (debugSet) {
         mState |= NS_STATE_DEBUG_WAS_SET;
 
@@ -1457,7 +1323,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
       mState &= ~NS_STATE_STACK_NOT_POSITIONED;
     }
     else if (aAttribute == nsXULAtoms::mousethrough) {
-      mInner->UpdateMouseThrough();
+      UpdateMouseThrough();
     }
   }
   else if (aAttribute == nsXULAtoms::ordinal) {
@@ -1498,12 +1364,12 @@ nsBoxFrame::GetInset(nsMargin& margin)
      nsMargin debugMargin(0,0,0,0);
      nsMargin debugBorder(0,0,0,0);
      nsMargin debugPadding(0,0,0,0);
-     mInner->GetDebugBorder(debugBorder);
-     mInner->PixelMarginToTwips(mInner->mPresContext, debugBorder);
-     mInner->GetDebugMargin(debugMargin);
-     mInner->PixelMarginToTwips(mInner->mPresContext, debugMargin);
-     mInner->GetDebugMargin(debugPadding);
-     mInner->PixelMarginToTwips(mInner->mPresContext, debugPadding);
+     GetDebugBorder(debugBorder);
+     PixelMarginToTwips(mPresContext, debugBorder);
+     GetDebugMargin(debugMargin);
+     PixelMarginToTwips(mPresContext, debugMargin);
+     GetDebugMargin(debugPadding);
+     PixelMarginToTwips(mPresContext, debugPadding);
      margin += debugBorder;
      margin += debugMargin;
      margin += debugPadding;
@@ -1570,7 +1436,7 @@ nsBoxFrame::CheckFrameOrder()
 }
 
 void
-nsBoxFrameInner::GetDebugPref(nsIPresContext* aPresContext)
+nsBoxFrame::GetDebugPref(nsIPresContext* aPresContext)
 {
     gDebug = PR_FALSE;
     nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
@@ -1744,14 +1610,14 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
         aPresContext->GetScaledPixelsToTwips(&p2t);
         onePixel = NSIntPixelsToTwips(1, p2t);
 
-        mInner->GetDebugBorder(debugBorder);
-        mInner->PixelMarginToTwips(aPresContext, debugBorder);
+        GetDebugBorder(debugBorder);
+        PixelMarginToTwips(aPresContext, debugBorder);
 
-        mInner->GetDebugMargin(debugMargin);
-        mInner->PixelMarginToTwips(aPresContext, debugMargin);
+        GetDebugMargin(debugMargin);
+        PixelMarginToTwips(aPresContext, debugMargin);
 
-        mInner->GetDebugPadding(debugPadding);
-        mInner->PixelMarginToTwips(aPresContext, debugPadding);
+        GetDebugPadding(debugPadding);
+        PixelMarginToTwips(aPresContext, debugPadding);
 
         GetContentRect(inner);
         inner.Deflate(debugMargin);
@@ -1864,8 +1730,8 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
     GetContentRect(r);
 
     if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-      mInner->GetDebugMargin(debugMargin);
-      mInner->PixelMarginToTwips(aPresContext, debugMargin);
+      GetDebugMargin(debugMargin);
+      PixelMarginToTwips(aPresContext, debugMargin);
       r.Deflate(debugMargin);
     }
 
@@ -1927,7 +1793,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
           else 
               borderSize = cr.height;
         
-          mInner->DrawSpacer(aPresContext, aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
+          DrawSpacer(aPresContext, aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
         }
 
         kid->GetNextBox(&kid);
@@ -1999,10 +1865,10 @@ nsBoxFrame::GetDebug(PRBool& aDebug)
 }
 
 NS_IMETHODIMP  
-nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
-                             const nsPoint& aPoint, 
+nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
+                             const nsPoint&    aPoint, 
                              nsFramePaintLayer aWhichLayer,    
-                             nsIFrame**     aFrame)
+                             nsIFrame**        aFrame)
 {   
 
   if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
@@ -2060,7 +1926,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         // if the kid had a child before see if this child has mouse
         // though. 
         PRBool isAdaptor = PR_FALSE;
-        nsIBox *box = mInner->GetBoxForFrame(hit, isAdaptor);
+        nsIBox *box = GetBoxForFrame(hit, isAdaptor);
         if (box) {
           PRBool mouseThrough = PR_FALSE;
           box->GetMouseThrough(mouseThrough);
@@ -2088,7 +1954,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 nsIBox*
-nsBoxFrameInner::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
+nsBoxFrame::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
 {
   if (aFrame == nsnull)
     return nsnull;
@@ -2147,8 +2013,8 @@ nsBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
 
 NS_IMETHODIMP
 nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
-                           nsPoint&        aPoint,
-                           PRInt32&        aCursor)
+                      nsPoint&        aPoint,
+                      PRInt32&        aCursor)
 {
   /*
     #ifdef NS_DEBUG
@@ -2160,14 +2026,14 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
  */
 
     nsPoint newPoint;
-    mInner->TranslateEventCoords(aPresContext, aPoint, newPoint);
+    TranslateEventCoords(aPresContext, aPoint, newPoint);
     
 #ifdef DEBUG_LAYOUT
     // if we are in debug and we are in the debug area
     // return our own cursor and dump the debug information.
     if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
     {
-          nsresult rv = mInner->DisplayDebugInfoFor(this, aPresContext, newPoint, aCursor);
+          nsresult rv = DisplayDebugInfoFor(this, aPresContext, newPoint, aCursor);
           if (rv == NS_OK)
              return rv;
     }
@@ -2186,9 +2052,9 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
 // view) into a localized pixel coordinate that is relative to the
 // content area of this frame (inside the border+padding).
 void
-nsBoxFrameInner::TranslateEventCoords(nsIPresContext* aPresContext,
-                                      const nsPoint& aPoint,
-                                      nsPoint& aResult)
+nsBoxFrame::TranslateEventCoords(nsIPresContext* aPresContext,
+                                 const nsPoint& aPoint,
+                                 nsPoint& aResult)
 {
   nscoord x = aPoint.x;
   nscoord y = aPoint.y;
@@ -2197,10 +2063,10 @@ nsBoxFrameInner::TranslateEventCoords(nsIPresContext* aPresContext,
   // to this frame; otherwise we have to adjust the coordinates
   // appropriately.
   nsIView* view;
-  mOuter->GetView(aPresContext, &view);
+  GetView(aPresContext, &view);
   if (nsnull == view) {
     nsPoint offset;
-    mOuter->GetOffsetFromView(aPresContext, offset, &view);
+    GetOffsetFromView(aPresContext, offset, &view);
     if (nsnull != view) {
       x -= offset.x;
       y -= offset.y;
@@ -2232,45 +2098,17 @@ nsBoxFrame::GetContentOf(nsIContent** aContent)
     return NS_OK;
 }
 
-
-
-void* 
-nsBoxFrameInner::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
-{
-    return nsBoxLayoutState::Allocate(sz,aPresShell);
-}
-
-void 
-nsBoxFrameInner::Recycle(nsIPresShell* aPresShell)
-{
-  nsBoxLayoutState state(aPresShell);
-  mOuter->ClearChildren(state);
-
-  delete this;
-  nsBoxLayoutState::RecycleFreedMemory(aPresShell, this);
-}
-
-
-// Overridden to prevent the global delete from being called, since the memory
-// came out of an nsIArena instead of the global delete operator's heap.
-void 
-nsBoxFrameInner::operator delete(void* aPtr, size_t sz)
-{
-    nsBoxLayoutState::Free(aPtr, sz);
-}
-
 /*
-
 nsresult
-nsBoxFrameInner::PaintDebug(nsIBox* aBox, 
-                        nsIPresContext* aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect& aDirtyRect,
-                        nsFramePaintLayer aWhichLayer)
+nsBoxFrame::PaintDebug(nsIBox*              aBox, 
+                       nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       const nsRect&        aDirtyRect,
+                       nsFramePaintLayer    aWhichLayer)
 
 {
     
-        PRBool isHorizontal = mOuter->IsHorizontal();
+        PRBool isHorizontal = IsHorizontal();
 
         float p2t;
         aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -2329,9 +2167,9 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
         // if we have dirty children or we are dirty 
         // place a green border around us.
         PRBool dirty = PR_FALSE;
-        mOuter->IsDirty(dirty);
+        IsDirty(dirty);
         PRBool dirtyc = PR_FALSE;
-        mOuter->HasDirtyChildren(dirty);
+        HasDirtyChildren(dirty);
 
         if (dirty || dirtyc) {
            nsRect dirtyr(inner);
@@ -2389,7 +2227,7 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
 */
 
 void
-nsBoxFrameInner::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
+nsBoxFrame::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
 {
     if (aHorizontal)
        aRenderingContext.DrawLine(x1,y1,x2,y2);
@@ -2398,7 +2236,7 @@ nsBoxFrameInner::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizo
 }
 
 void
-nsBoxFrameInner::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
+nsBoxFrame::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
 {
     if (aHorizontal)
        aRenderingContext.FillRect(x,y,width,height);
@@ -2407,7 +2245,7 @@ nsBoxFrameInner::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizo
 }
 
 void 
-nsBoxFrameInner::DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
+nsBoxFrame::DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
 {    
         float p2t;
         aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -2447,31 +2285,31 @@ nsBoxFrameInner::DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& a
 }
 
 void
-nsBoxFrameInner::GetDebugBorder(nsMargin& aInset)
+nsBoxFrame::GetDebugBorder(nsMargin& aInset)
 {
     aInset.SizeTo(2,2,2,2);
 
-    if (mOuter->IsHorizontal()) 
+    if (IsHorizontal()) 
        aInset.top = 10;
     else 
        aInset.left = 10;
 }
 
 void
-nsBoxFrameInner::GetDebugMargin(nsMargin& aInset)
+nsBoxFrame::GetDebugMargin(nsMargin& aInset)
 {
     aInset.SizeTo(2,2,2,2);
 }
 
 void
-nsBoxFrameInner::GetDebugPadding(nsMargin& aPadding)
+nsBoxFrame::GetDebugPadding(nsMargin& aPadding)
 {
     aPadding.SizeTo(2,2,2,2);
 }
 
 
 void 
-nsBoxFrameInner::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels)
+nsBoxFrame::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels)
 {
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -2485,7 +2323,7 @@ nsBoxFrameInner::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMar
 
 #ifdef DEBUG_LAYOUT
 void
-nsBoxFrameInner::GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* ch) 
+nsBoxFrame::GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* ch) 
 {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -2510,7 +2348,7 @@ nsBoxFrameInner::GetValue(nsIPresContext* aPresContext, const nsSize& a, const n
 }
 
 void
-nsBoxFrameInner::GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* ch) 
+nsBoxFrame::GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* ch) 
 {
     if (a == NS_INTRINSICSIZE)
       sprintf(ch, "%d[SET]", b);             
@@ -2519,10 +2357,10 @@ nsBoxFrameInner::GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, ch
 }
 
 nsresult
-nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
-                                     nsIPresContext* aPresContext,
-                                     nsPoint&        aPoint,
-                                     PRInt32&        aCursor)
+nsBoxFrame::DisplayDebugInfoFor(nsIBox*         aBox,
+                                nsIPresContext* aPresContext,
+                                nsPoint&        aPoint,
+                                PRInt32&        aCursor)
 {
     nsBoxLayoutState state(aPresContext);
 
@@ -2539,7 +2377,7 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
     aBox->GetBorderAndPadding(border);
     insideBorder.Deflate(border);
 
-    PRBool isHorizontal = mOuter->IsHorizontal();
+    PRBool isHorizontal = IsHorizontal();
 
     if (!insideBorder.Contains(nsPoint(x,y)))
         return NS_ERROR_FAILURE;
@@ -2583,7 +2421,7 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
 
                             if (content) {                             
                               printf("---------------\n");
-                              mOuter->DumpBox(stdout);
+                              DumpBox(stdout);
                               printf("\n");
                             }
 
@@ -2665,7 +2503,7 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
 #endif
 
 nsresult
-nsBoxFrameInner::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
+nsBoxFrame::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
 {
   nsRect rect(0,0,0,0);
   aBox->GetBounds(rect);
@@ -2681,10 +2519,10 @@ nsBoxFrameInner::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
  * Boxed don't support fixed positionioning of their children.
  */
 nsresult
-nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
-                             nsIFrame* aFrame,
-                             nsIStyleContext* aStyleContext,
-                             PRBool aForce)
+nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
+                               nsIFrame*        aFrame,
+                               nsIStyleContext* aStyleContext,
+                               PRBool           aForce)
 {
   nsIView* view;
   aFrame->GetView(aPresContext, &view);
@@ -2841,8 +2679,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
 // If you make changes to this function, check its counterparts
 // in nsTextBoxFrame and nsAreaFrame
 nsresult
-nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext,
-                              PRBool aDoReg)
+nsBoxFrame::RegUnregAccessKey(nsIPresContext* aPresContext, PRBool aDoReg)
 {
   // if we have no content, we can't do anything
   if (!mContent)
