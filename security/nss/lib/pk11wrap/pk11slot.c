@@ -2901,7 +2901,7 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
     case CKM_DES3_MAC:
     case CKM_DES3_MAC_GENERAL:
     case CKM_DES3_CBC_PAD:
-	return (len == 128) ? CKK_DES2 : CKK_DES3;
+	return (len == 16) ? CKK_DES2 : CKK_DES3;
     case CKM_DES2_KEY_GEN:
     case CKM_PBE_SHA1_DES2_EDE_CBC:
 	return CKK_DES2;
