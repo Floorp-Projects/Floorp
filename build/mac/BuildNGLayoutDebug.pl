@@ -62,14 +62,10 @@ if ($pull{all})
 }
 if ($build{all})
 {
-	$temp = $build{mailnews};
-	
 	foreach $k (keys(%build))
 	{
 		$build{$k} = 1;
 	}
-	$build{mailnews} = $temp;
-	    # don't turn on mailnews until we are sure that everything is ok on tinderbox
 }
 if ($build{most})
 {
