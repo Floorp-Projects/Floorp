@@ -887,6 +887,15 @@ public:
 
     // The execution engine
     JS2Engine *engine;
+
+    // Random number generator state
+    bool      rngInitialized;
+    int64     rngMultiplier;
+    int64     rngAddend;
+    int64     rngMask;
+    int64     rngSeed;
+    float64   rngDscale;
+
     
     // The one and only 'public' namespace
     Namespace *publicNamespace;
@@ -910,6 +919,7 @@ public:
     JS2Class *packageClass;
     JS2Class *dateClass;
     JS2Class *regexpClass;
+    JS2Class *mathClass;
 
     Parser *mParser;                // used for error reporting
 
