@@ -849,7 +849,7 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (nsnull == mEventManager) {
+  if (!mEventManager) {
     nsresult rv = NS_NewEventStateManager(getter_AddRefs(mEventManager));
     if (NS_OK != rv) {
       return rv;
