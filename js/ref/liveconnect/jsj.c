@@ -30,6 +30,7 @@
 #include "prtypes.h"
 #include "prassert.h"
 #include "prprintf.h"
+#include "prosdep.h"
 
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* LiveConnect external API */
@@ -398,6 +399,7 @@ JSJ_Init(JSJCallbacks *callbacks)
  * and, more importantly, will avoid unnecessary network accesses if classes
  * are being loaded over the network.)
  */
+JSBool
 JSJ_InitJSContext(JSContext *cx, JSObject *global_obj,
                   JavaPackageDef *predefined_packages)
 {
