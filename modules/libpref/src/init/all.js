@@ -1109,9 +1109,9 @@ pref("font.name.monospace.ar", "Monaco");
 pref("font.name.cursive.ar", "XXX.cursive");
 pref("font.name.fantasy.ar", "XXX.fantasy");
 
-pref("font.name.serif.el", "Times GR");
-pref("font.name.sans-serif.el", "Helvetica GR");
-pref("font.name.monospace.el", "Courier GR");
+pref("font.name.serif.el", "Lucida Grande");
+pref("font.name.sans-serif.el", "Lucida Grande");
+pref("font.name.monospace.el", "Monaco");
 pref("font.name.cursive.el", "XXX.cursive");
 pref("font.name.fantasy.el", "XXX.fantasy");
 
@@ -1133,47 +1133,47 @@ pref("font.name.monospace.ko", "AppleGothic");
 pref("font.name.cursive.ko", "XXX.cursive");
 pref("font.name.fantasy.ko", "XXX.fantasy");
 
-pref("font.name.serif.th", "Thonburi");
-pref("font.name.sans-serif.th", "Krungthep");
-pref("font.name.monospace.th", "Ayuthaya");
+pref("font.name.serif.th", "Lucida Grande");
+pref("font.name.sans-serif.th", "Lucida Grande");
+pref("font.name.monospace.th", "Monaco");
 pref("font.name.cursive.th", "XXX.cursive");
 pref("font.name.fantasy.th", "XXX.fantasy");
 
 pref("font.name.serif.tr", "Times");
-pref("font.name.sans-serif.tr", "Arial");
-pref("font.name.monospace.tr", "CourierR");
-pref("font.name.cursive.tr", "XXX.cursive");
-pref("font.name.fantasy.tr", "XXX.fantasy");
+pref("font.name.sans-serif.tr", "Helvetica");
+pref("font.name.monospace.tr", "Courier");
+pref("font.name.cursive.tr", "Apple Chancery");
+pref("font.name.fantasy.tr", "Papyrus");
 
-pref("font.name.serif.x-baltic", "Times CE");
-pref("font.name.sans-serif.x-baltic", "Helvetica CE");
-pref("font.name.monospace.x-baltic", "Courier CE");
-pref("font.name.cursive.x-baltic", "XXX.cursive");
-pref("font.name.fantasy.x-baltic", "XXX.fantasy");
+pref("font.name.serif.x-baltic", "Times");
+pref("font.name.sans-serif.x-baltic", "Helvetica");
+pref("font.name.monospace.x-baltic", "Courier");
+pref("font.name.cursive.x-baltic", "Apple Chancery");
+pref("font.name.fantasy.x-baltic", "Papyrus");
 
-pref("font.name.serif.x-central-euro", "Times CE");
-pref("font.name.sans-serif.x-central-euro", "Helvetica CE");
-pref("font.name.monospace.x-central-euro", "Courier CE");
-pref("font.name.cursive.x-central-euro", "XXX.cursive");
-pref("font.name.fantasy.x-central-euro", "XXX.fantasy");
+pref("font.name.serif.x-central-euro", "Times");
+pref("font.name.sans-serif.x-central-euro", "Helvetica");
+pref("font.name.monospace.x-central-euro", "Courier");
+pref("font.name.cursive.x-central-euro", "Apple Chancery");
+pref("font.name.fantasy.x-central-euro", "Papyrus");
 
-pref("font.name.serif.x-cyrillic", "Latinski");
-pref("font.name.sans-serif.x-cyrillic", "Pryamoy Prop");
-pref("font.name.monospace.x-cyrillic", "APC Courier");
-pref("font.name.cursive.x-cyrillic", "XXX.cursive");
-pref("font.name.fantasy.x-cyrillic", "XXX.fantasy");
+pref("font.name.serif.x-cyrillic", "Times CY");
+pref("font.name.sans-serif.x-cyrillic", "Helvetica CY");
+pref("font.name.monospace.x-cyrillic", "Monaco CY");
+pref("font.name.cursive.x-cyrillic", "Geneva CY");
+pref("font.name.fantasy.x-cyrillic", "Charcoal CY");
 
 pref("font.name.serif.x-unicode", "Times");
 pref("font.name.sans-serif.x-unicode", "Helvetica");
 pref("font.name.monospace.x-unicode", "Courier");
-pref("font.name.cursive.x-unicode", "Zapfino");
-pref("font.name.fantasy.x-unicode", "Lucida Grande");
+pref("font.name.cursive.x-unicode", "Apple Chancery");
+pref("font.name.fantasy.x-unicode", "Papyrus");
 
 pref("font.name.serif.x-western", "Times");
 pref("font.name.sans-serif.x-western", "Helvetica");
 pref("font.name.monospace.x-western", "Courier");
-pref("font.name.cursive.x-western", "Zapfino");
-pref("font.name.fantasy.x-western", "Lucida Grande");
+pref("font.name.cursive.x-western", "Apple Chancery");
+pref("font.name.fantasy.x-western", "Papyrus");
 
 pref("font.name.serif.zh-CN", "Song");
 pref("font.name.sans-serif.zh-CN", "Hei");
