@@ -99,7 +99,7 @@ TagList  gInTR={1,{eHTMLTag_tr}};
 TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
 TagList  gInFrameset={1,{eHTMLTag_frameset}};
 TagList  gInNoframes={1,{eHTMLTag_noframes}};
-TagList  gInP={3,{eHTMLTag_address,eHTMLTag_span,eHTMLTag_table}};
+TagList  gInP={4,{eHTMLTag_address,eHTMLTag_span,eHTMLTag_table,eHTMLTag_form}};
 TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
 TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
 TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
@@ -1807,7 +1807,7 @@ PRBool nsHTMLElement::CanContainSelf(void) const {
  */
 PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag) const{
   PRBool result=PR_TRUE;
-  if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)) {
+  if((mTagID>=eHTMLTag_unknown) && (mTagID<=eHTMLTag_userdefined)) {
     TagList* theTagList=gHTMLElements[mTagID].mDontAutocloseEnd;
     if(theTagList) {
       result=!FindTagInSet(aTag,theTagList->mTags,theTagList->mCount);
