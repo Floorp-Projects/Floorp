@@ -1330,9 +1330,14 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
   // If we're requested to update our maximum width, then compute it
   if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
-    // We need to add in for the right border/padding
-    // XXXldb Why right and not left?
-    aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
+    if (!HaveAutoWidth(aReflowState) &&
+        aReflowState.mStylePosition->mWidth.GetUnit() != eStyleUnit_Percent) {
+      aMetrics.mMaximumWidth = aMetrics.width;
+    } else {
+      // We need to add in for the right border/padding
+      // XXXldb Why right and not left?
+      aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
+    }
 #ifdef NOISY_MAXIMUM_WIDTH
     printf("nsBlockFrame::ComputeFinalSize block %p setting aMetrics.mMaximumWidth to %d\n", this, aMetrics.mMaximumWidth);
 #endif
@@ -3167,15 +3172,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // updated value in the line, and update the current maximum width
       if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
         aLine->mMaximumWidth = brc.GetMaximumWidth();
-        // need to add in margin on block's reported max width (see bug 35964)
-        const nsMargin& margin = brc.GetMargin();
-        aLine->mMaximumWidth += margin.left + margin.right;
-#ifdef NOISY_MAXIMUM_WIDTH
-        printf("nsBlockFrame::ReflowBlockFrame parent block %p line %p aLine->mMaximumWidth set to brc.GetMaximumWidth %d, updating aState.mMaximumWidth\n", 
-             this, aLine, aLine->mMaximumWidth);
-#endif
         aState.UpdateMaximumWidth(aLine->mMaximumWidth);
-
       }
       PostPlaceLine(aState, aLine, maxElementWidth);
 

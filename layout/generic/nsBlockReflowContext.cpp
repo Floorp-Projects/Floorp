@@ -739,28 +739,50 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
       nsContainerFrame::FinishReflowChild(mFrame, mPresContext, &aReflowState, mMetrics, x, y, 0);
 
       // Adjust the max-element-size in the metrics to take into
-      // account the margins around the block element. Note that we
-      // use the collapsed top and bottom margin values.
+      // account the margins around the block element.
+      // Do not allow auto margins to impact the max-element size
+      // since they are springy and don't really count!
       if (mMetrics.mComputeMEW) {
-        nsMargin maxElemMargin = mMargin;
+        nsMargin maxElemMargin;
+        const nsStyleSides &styleMargin = mStyleMargin->mMargin;
+        nsStyleCoord coord;
+        if (styleMargin.GetLeftUnit() == eStyleUnit_Coord)
+          maxElemMargin.left = styleMargin.GetLeft(coord).GetCoordValue();
+        else
+          maxElemMargin.left = 0;
+        if (styleMargin.GetRightUnit() == eStyleUnit_Coord)
+          maxElemMargin.right = styleMargin.GetRight(coord).GetCoordValue();
+        else
+          maxElemMargin.right = 0;
 
-        if (NS_SHRINKWRAPWIDTH == mComputedWidth) {
-          nscoord dummyXOffset;
-          // Base the margins on the max-element size
-          ComputeShrinkwrapMargins(mStyleMargin, mMetrics.mMaxElementWidth,
-                                   maxElemMargin, dummyXOffset);
-        }
+        nscoord dummyXOffset;
+        // Base the margins on the max-element size
+        ComputeShrinkwrapMargins(mStyleMargin, mMetrics.mMaxElementWidth,
+                                 maxElemMargin, dummyXOffset);
 
-        // Do not allow auto margins to impact the max-element size
-        // since they are springy and don't really count!
-        if ((eStyleUnit_Auto != mStyleMargin->mMargin.GetLeftUnit()) && 
-            (eStyleUnit_Null != mStyleMargin->mMargin.GetLeftUnit())) {
-          mMetrics.mMaxElementWidth += maxElemMargin.left;
-        }
-        if ((eStyleUnit_Auto != mStyleMargin->mMargin.GetRightUnit()) &&
-            (eStyleUnit_Null != mStyleMargin->mMargin.GetRightUnit())) {
-          mMetrics.mMaxElementWidth += maxElemMargin.right;
-        }
+        mMetrics.mMaxElementWidth += maxElemMargin.left + maxElemMargin.right;
+      }
+
+      // do the same for the maximum width
+      if (mComputeMaximumWidth) {
+        nsMargin maxWidthMargin;
+        const nsStyleSides &styleMargin = mStyleMargin->mMargin;
+        nsStyleCoord coord;
+        if (styleMargin.GetLeftUnit() == eStyleUnit_Coord)
+          maxWidthMargin.left = styleMargin.GetLeft(coord).GetCoordValue();
+        else
+          maxWidthMargin.left = 0;
+        if (styleMargin.GetRightUnit() == eStyleUnit_Coord)
+          maxWidthMargin.right = styleMargin.GetRight(coord).GetCoordValue();
+        else
+          maxWidthMargin.right = 0;
+
+        nscoord dummyXOffset;
+        // Base the margins on the maximum width
+        ComputeShrinkwrapMargins(mStyleMargin, mMetrics.mMaximumWidth,
+                                 maxWidthMargin, dummyXOffset);
+
+        mMetrics.mMaximumWidth += maxWidthMargin.left + maxWidthMargin.right;
       }
     }
     else {
