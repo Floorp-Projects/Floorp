@@ -25,6 +25,8 @@
 #include "nsAppShellCIDs.h"
 #include "nsVoidArray.h"
 #include "nsIWebShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIWebNavigation.h"
 #include "prmem.h"
 #include "nsString.h"
@@ -460,12 +462,14 @@ GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShel
   // the history tree for the children recursively.
 
   PRInt32  cnt = 0;
-  aContainer->GetChildCount(cnt);
+  nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(aContainer));
+  docShellAsNode->GetChildCount(&cnt);
   if (cnt > 0) {
     for (int i=0; i<cnt; i++) {
-      nsCOMPtr<nsIWebShell> childWS;
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(docShellAsItem));
+      nsCOMPtr<nsIWebShell> childWS(do_QueryInterface(docShellAsItem));
       //nsHistoryEntry * hChild = nsnull;
-      aContainer->ChildAt(i, (*getter_AddRefs(childWS))); 
       if (childWS) {
         GenerateTree(aStickyUrl, aStickyContainer, childWS, hEntry, aSHist, aReferrer);
       }
@@ -525,6 +529,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 
    cur = this;
    prev = aPrevEntry;
+   nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(prev));
 
    if (!cur || !prev) {
      return NS_ERROR_NULL_POINTER;
@@ -561,7 +566,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 
             /* Get the child count of the current page and previous page */
             PRInt32  pcount=0, ccount=0;
-            prev->GetChildCount(pcount);
+            docShellAsNode->GetChildCount(&pcount);
             ccount = cur->GetChildCnt();
 
             nsCOMPtr<nsISupports>  historyObject;
@@ -615,7 +620,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    /* Make sure the child windows are in par */
    PRInt32  cnt=0, ccnt=0, pcnt=0;
    ccnt = cur->GetChildCnt();
-   prev->GetChildCount(pcnt);
+   docShellAsNode->GetChildCount(&pcnt);
 
    /* If the current entry to be loaded and the one on page don't have
     * the same # of children, maybe the one on screen is is in the process of
@@ -627,9 +632,10 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
     
    for (i=0; i<cnt; i++){
       nsHistoryEntry *cChild=nsnull;
-      nsCOMPtr<nsIWebShell> pChild;
       cur->GetChildAt(i, cChild);    // historyentry
-      prev->ChildAt(i, (*getter_AddRefs(pChild)));   //webshell
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(docShellAsItem));   //webshell
+      nsCOMPtr<nsIWebShell> pChild(do_QueryInterface(docShellAsItem));
       result = cChild->Load(pChild, PR_FALSE);
       if (result)
          break;
@@ -662,6 +668,7 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 
    cur = this;
    prev = aPrevEntry;
+   nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(prev));
 
 //   NS_ADDREF(aPrevEntry);
 
@@ -702,7 +709,7 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 
    PRInt32  cnt=0, ccnt=0, pcnt=0;
    ccnt = cur->GetChildCnt();
-   prev->GetChildCount(pcnt);
+   docShellAsNode->GetChildCount(&pcnt);
 
    /* If the current entry to be loaded and the one on page don't have
     * the same # of children, maybe the one on screen is is in the process of
@@ -714,9 +721,10 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
     
    for (i=0; i<cnt; i++){
       nsHistoryEntry *cChild=nsnull;
-      nsCOMPtr<nsIWebShell> pChild;
       cur->GetChildAt(i, cChild);    // historyentry
-      prev->ChildAt(i, (*getter_AddRefs(pChild)));   //webshell
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;
+      docShellAsNode->GetChildAt(i, getter_AddRefs(docShellAsItem));   //webshell
+      nsCOMPtr<nsIWebShell> pChild(do_QueryInterface(docShellAsItem));
       result = cChild->Compare(pChild, PR_FALSE);
       if (result)
          break;
@@ -791,13 +799,15 @@ nsSessionHistory::Add(const char * aURL, const char * aReferrer, nsIWebShell * a
 {
   //nsresult  rv = NS_OK;
    nsHistoryEntry * hEntry = nsnull;
-   nsIWebShell * parent = nsnull;
 
    if (!aWebShell) {
       return NS_ERROR_NULL_POINTER;
    }
+   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(aWebShell));
+   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+   docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
 
-   aWebShell->GetParent(parent);
+   nsCOMPtr<nsIWebShell> parent(do_QueryInterface(parentAsItem));
 
    if (!parent) {
      if(mIsLoadingDoc) {
@@ -874,13 +884,10 @@ nsSessionHistory::Add(const char * aURL, const char * aReferrer, nsIWebShell * a
            /*This is a newly created frame. Just add it to the current entry */
 
            // Get a handle to the parent of the new frame WS;
-           nsIWebShell * parentWS = nsnull;
-           aWebShell->GetParent(parentWS);
-
            curEntry = (nsHistoryEntry *) mHistoryEntries.ElementAt(mHistoryCurrentIndex);   
            // Get the history entry corresponding to the parentWS
            if (curEntry)
-              parentEntry = curEntry->GetHistoryForWS(parentWS);
+              parentEntry = curEntry->GetHistoryForWS(parent);
 
            // Create a new HistoryEntry for the frame & init values
            newEntry = new nsHistoryEntry();
@@ -891,8 +898,6 @@ nsSessionHistory::Add(const char * aURL, const char * aReferrer, nsIWebShell * a
            newEntry->Create(aURL, aWebShell, aReferrer, parentEntry, this);
            aWebShell->SetIsInSHist(PR_TRUE);
 
-		       if (parentWS)
-			       NS_RELEASE(parentWS);
          }  // !mIsLoadingDoc
          else {
 
@@ -984,8 +989,6 @@ nsSessionHistory::Add(const char * aURL, const char * aReferrer, nsIWebShell * a
             }  //else  for (!mIsloadingDoc)
       }  // else  for (!InSHist)
    }
-   if (parent)
-	  NS_RELEASE(parent);
    return NS_OK;
 }
 
@@ -1025,12 +1028,14 @@ nsSessionHistory::UpdateStatus(nsIWebShell * aWebShell, PRInt32 aStatus) {
 		   mHistoryEntryInLoad = (nsHistoryEntry *) nsnull;
 		   return NS_OK;
 		}
-        nsIWebShell * parent = nsnull;
-
         if (!aWebShell || !mHistoryEntryInLoad) {
            return NS_ERROR_NULL_POINTER;
 		}
-        aWebShell->GetParent(parent);
+        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(aWebShell));
+        nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
+        docShellAsItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
+
+        nsCOMPtr<nsIWebShell> parent(do_QueryInterface(parentAsItem));
 
         if (!parent) {
           /* Pass the document to Load() to check if the URLs match. 
@@ -1076,8 +1081,6 @@ nsSessionHistory::UpdateStatus(nsIWebShell * aWebShell, PRInt32 aStatus) {
 				 NS_RELEASE(root);            
 		  }  //inSHist
 		} // else for (!parent)
-        if (parent)
-	      NS_RELEASE(parent);
 	} // else for (!mIsLoadingDoc)
 
 return NS_OK;
