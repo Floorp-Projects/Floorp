@@ -460,7 +460,7 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   //aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   if (aDesiredSize.mComputeMEW) {
-    aDesiredSize.mMaxElementWidth = aDesiredSize.width;
+    aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
   }
 
   // Make sure we obey min/max-width and min/max-height

@@ -470,7 +470,7 @@ nsFormControlFrame::GetDesiredSize(nsPresContext*          aPresContext,
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
   if (aDesiredLayoutSize.mComputeMEW) {
-    aDesiredLayoutSize.mMaxElementWidth = aDesiredLayoutSize.width;
+    aDesiredLayoutSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
   }
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;

@@ -315,6 +315,9 @@ NS_IMETHODIMP nsIsIndexFrame::Reflow(nsPresContext*          aPresContext,
   // The Areaframe takes care of all our reflow 
   // (except for when style is used to change its size?)
   nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  if (aDesiredSize.mComputeMEW) {
+    aDesiredSize.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
+  }
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }

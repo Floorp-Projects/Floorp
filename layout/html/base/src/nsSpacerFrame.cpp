@@ -159,7 +159,7 @@ SpacerFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   if (aMetrics.mComputeMEW) {
-    aMetrics.mMaxElementWidth = aMetrics.width;
+    aMetrics.SetMEWToActualWidth(aReflowState.mStylePosition->mWidth.GetUnit());
   }
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
