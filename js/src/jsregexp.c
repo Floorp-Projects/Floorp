@@ -1114,13 +1114,16 @@ nothex:
 }
 
 JSRegExp *
-js_NewRegExp(JSContext *cx, JSString *str, uintN flags)
+js_NewRegExp(JSContext *cx, JSString *str, uintN flags, JSBool flat)
 {
     JSRegExp *re;
     void *mark;
     CompilerState state;
-    RENode *ren, *end;
+    RENode *ren, *ren2, *end;
     size_t resize;
+
+    const jschar *cp;
+    uintN len;
 
     re = NULL;
     mark = JS_ARENA_MARK(&cx->tempPool);
@@ -1132,7 +1135,41 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags)
     state.parenCount = 0;
     state.progLength = 0;
 
-    ren = ParseRegExp(&state);
+    if (flat) {
+        len = str->length;
+        cp = str->chars;
+        ren = NULL;
+        while (len > 0) {
+	    ren2 = NewRENode(&state, 
+                        (len == 1) ? REOP_FLAT1 : REOP_FLAT, (void *)cp);
+	    if (!ren2)
+	        goto out;
+	    ren2->flags = RENODE_NONEMPTY;
+	    if (len > 1) {
+                if (len > REOP_FLATLEN_MAX) {
+                    cp += REOP_FLATLEN_MAX;
+                    len -= REOP_FLATLEN_MAX;
+                }
+                else {
+                    cp += len;
+                    len = 0;
+                }
+	        ren2->u.kid2 = (void *)cp;                
+	    } else {
+	        ren2->flags |= RENODE_SINGLE;
+	        ren2->u.chr = *cp;
+                len = 0;
+            }
+            if (ren) {
+                if (!SetNext(&state, ren, ren2));
+                    goto out;
+            }
+            else
+                ren = ren2;
+        }
+    }
+    else
+        ren = ParseRegExp(&state);
     if (!ren)
 	goto out;
 
@@ -1164,7 +1201,7 @@ out:
 }
 
 JSRegExp *
-js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt)
+js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt, JSBool flat)
 {
     uintN flags;
     jschar *cp;
@@ -1192,7 +1229,7 @@ js_NewRegExpOpt(JSContext *cx, JSString *str, JSString *opt)
 	    }
 	}
     }
-    return js_NewRegExp(cx, str, flags);
+    return js_NewRegExp(cx, str, flags, flat);
 }
 
 static void freeRENtree(JSContext *cx, RENode *ren,  RENode *stop)
@@ -2371,7 +2408,7 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 	*objp = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
 	if (!*objp)
 	    return JS_FALSE;
-	re = js_NewRegExp(xdr->cx, source, flags);
+	re = js_NewRegExp(xdr->cx, source, flags, JS_FALSE);
 	if (!re)
 	    return JS_FALSE;
 	if (!JS_SetPrivate(xdr->cx, *objp, re)) {
@@ -2484,7 +2521,7 @@ regexp_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    argv[1] = STRING_TO_JSVAL(opt);
 	}
     }
-    re = js_NewRegExpOpt(cx, str, opt);
+    re = js_NewRegExpOpt(cx, str, opt, JS_FALSE);
     if (!re) {
 	ok = JS_FALSE;
 	goto out;
@@ -2626,7 +2663,7 @@ js_NewRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
     str = js_NewStringCopyN(cx, chars, length, 0);
     if (!str)
 	return NULL;
-    re = js_NewRegExp(cx, str, flags);
+    re = js_NewRegExp(cx, str, flags, JS_FALSE);
     if (!re)
 	return NULL;
     obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
