@@ -141,7 +141,7 @@ nsSplashScreenPh::Show()
        PtSetArg( &arg[1], Pt_ARG_LABEL_DATA, img, sizeof(PhImage_t) );
        PtCreateWidget( PtLabel, mDialog, 2, arg );
        PtRealizeWidget( mDialog );
-       PgFlush();
+       PtFlush();
    }
    else
    {
