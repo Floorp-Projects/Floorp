@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.56 2002/10/01 00:46:20 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.57 2002/10/05 02:24:25 jpierre%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -51,6 +51,7 @@
 #include "pk11func.h"
 
 #include "pki3hack.h"
+#include "certi.h"
 
 /*
  * On Windows nss3.dll needs to export the symbol 'mktemp' to be

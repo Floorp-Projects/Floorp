@@ -42,6 +42,7 @@ PRIVATE_EXPORTS = \
 	genname.h \
 	xconst.h \
 	certxutl.h \
+	certi.h \
 	$(NULL)
 
 MODULE = nss

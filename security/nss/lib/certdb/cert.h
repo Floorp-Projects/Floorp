@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.24 2002/10/03 04:01:34 wtc%netscape.com Exp $
+ * $Id: cert.h,v 1.25 2002/10/05 02:24:23 jpierre%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -1443,9 +1443,6 @@ CERT_SPKDigestValueForCert(PRArenaPool *arena, CERTCertificate *cert,
  */
 extern SECStatus CERT_GetCertType(CERTCertificate *cert);
 
-
-SECStatus InitCRLCache(void);
-SECStatus ShutdownCRLCache(void);
 
 SECStatus CERT_CheckCRL(CERTCertificate* cert, CERTCertificate* issuer,
                         SECItem* dp, int64 t, void* wincx);
