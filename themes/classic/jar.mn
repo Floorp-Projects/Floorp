@@ -208,6 +208,8 @@ classic.jar:
   skin/classic/messenger/icons/folder-server-open.gif                   (messenger/icons/folder-server-open.gif)
   skin/classic/messenger/icons/folder-share.gif                         (messenger/icons/folder-share.gif)
   skin/classic/messenger/icons/folder-share-open.gif                    (messenger/icons/folder-share-open.gif)
+  skin/classic/messenger/icons/folder-junk.gif                          (messenger/icons/folder-junk.gif)
+  skin/classic/messenger/icons/folder-junk-open.gif                     (messenger/icons/folder-junk-open.gif)
   skin/classic/messenger/icons/folder-template.gif                      (messenger/icons/folder-template.gif)
   skin/classic/messenger/icons/folder-template-open.gif                 (messenger/icons/folder-template-open.gif)
   skin/classic/messenger/icons/folder-template-share.gif                (messenger/icons/folder-template-share.gif)

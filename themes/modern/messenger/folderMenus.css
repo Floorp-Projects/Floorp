@@ -85,6 +85,14 @@
   list-style-image: url("chrome://messenger/skin/icons/folder-template-open.gif");
 }
 
+.folderMenuItem[SpecialFolder="Junk"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
+}
+
+.folderMenuItem[SpecialFolder="Junk"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk-open.gif");
+}
+
 .folderMenuItem[SpecialFolder="Trash"] {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
 }

@@ -88,6 +88,12 @@ treechildren:-moz-tree-image(folderNameCol, specialFolder-Unsent Messages) {
   list-style-image: url("chrome://messenger/skin/icons/folder-outbox.gif");
 }
 
+/* ..... Junk ..... */
+
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Junk) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
+}
+
 /* ..... Trash ..... */
 
 treechildren:-moz-tree-image(folderNameCol, specialFolder-Trash) {

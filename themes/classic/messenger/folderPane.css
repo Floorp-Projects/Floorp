@@ -74,6 +74,12 @@ treechildren:-moz-tree-image(folderNameCol, specialFolder-Templates) {
   list-style-image: url("chrome://messenger/skin/icons/folder-template.gif");
 }
 
+/* ..... Junk ..... */
+
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Junk) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
+}
+
 /* ..... Trash ..... */
 
 treechildren:-moz-tree-image(folderNameCol, specialFolder-Trash) {
