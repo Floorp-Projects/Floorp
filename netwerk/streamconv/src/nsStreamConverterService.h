@@ -33,17 +33,12 @@ public:
 
     /////////////////////////////////////////////////////
     // nsIStreamConverterService methods
-    NS_IMETHOD RegisterConverter(const char *aProgID, nsISupports *aConverter);
-
 
     /////////////////////////////////////////////////////
     // nsIStreamConverter methods
-    NS_IMETHOD Convert(nsIInputStream *aFromStream, const PRUnichar *aFromType, const PRUnichar *aToType, nsIInputStream **_retval)
-    { return NS_ERROR_NOT_IMPLEMENTED;};
-    NS_IMETHOD AsyncConvertStream(nsIInputStream *aFromStream, const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener)
-    { return NS_ERROR_NOT_IMPLEMENTED;};
-    NS_IMETHOD AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener)
-    { return NS_ERROR_NOT_IMPLEMENTED;};
+    NS_IMETHOD Convert(nsIInputStream *aFromStream, const PRUnichar *aFromType, const PRUnichar *aToType, nsIInputStream **_retval);
+    NS_IMETHOD AsyncConvertStream(nsIInputStream *aFromStream, const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener);
+    NS_IMETHOD AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener);
 
 
     /////////////////////////////////////////////////////
@@ -66,10 +61,31 @@ public:
 
 private:
     // Responsible for finding a converter for the given MIME-type.
-    nsresult FindConverter(const char *aProgID, PRBool direct, nsCID *aCID, nsVoidArray **aEdgeList);
+    nsresult FindConverter(const char *aProgID, nsVoidArray **aEdgeList);
+    nsresult BuildGraph(void);
+    nsresult AddAdjacency(const char *aProgID);
 
     // member variables
     nsHashtable              *mAdjacencyList;
 };
+
+///////////////////////////////////////////////////////////////////
+// Breadth-First-Search (BFS) algorithm state classes and types.
+
+// adjacency list and BFS hashtable data class.
+typedef struct _tableData {
+    nsHashKey *key;
+    nsString2 *keyString;
+    void      *data;
+} SCTableData;
+
+// used  to establish discovered vertecies.
+enum BFScolors {white, gray, black};
+
+typedef struct _BFSState {
+    BFScolors   color;
+    PRInt32     distance;
+    nsHashKey  *predecessor;
+} BFSState;
 
 #endif // __nsstreamconverterservice__h___
