@@ -4,7 +4,9 @@ namespace Silverstone.Manticore.Core
   using System;
   using System.Collections;
 
+  using Silverstone.Manticore.App;
   using Silverstone.Manticore.Toolkit;
+  using Silverstone.Manticore.Browser;
 
   // XXX - TODO: need to add logic to quit application when there are 
   //             no more windows

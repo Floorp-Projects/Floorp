@@ -51,8 +51,8 @@ namespace Silverstone.Manticore.Bookmarks
 	/// </summary>
 	public class BookmarksWindow : ManticoreWindow
 	{
-    private System.Windows.Forms.StatusBar statusBar1;
-    private System.Windows.Forms.StatusBarPanel statusBarPanel1;
+    private StatusBar mStatusBar;
+    private StatusBarPanel mStatusBarPanel;
     private BookmarksTreeView mBookmarksTree;
 
     private BaseTreeBuilder mBuilder = null;
@@ -69,11 +69,30 @@ namespace Silverstone.Manticore.Bookmarks
       // Set up UI
       InitializeComponent();
 
-      // 
-      // mBookmarksTree
-      // 
+      base.Init();
+    }
+    
+    #region Windows Form Designer generated code
+		/// <summary>
+		/// Required method for Designer support - do not modify
+		/// the contents of this method with the code editor.
+		/// </summary>
+		private void InitializeComponent()
+		{
+      mStatusBar = new StatusBar();
+      mStatusBarPanel = new StatusBarPanel();
+      ((ISupportInitialize)mStatusBarPanel).BeginInit();
+      SuspendLayout();
+
+      mStatusBar.Name = "statusBar";
+      mStatusBar.Panels.Add(mStatusBarPanel);
+      mStatusBar.TabIndex = 0;
+      mStatusBar.Text = "";
+      mStatusBarPanel.Text = "";
+      Controls.Add(mStatusBar);
+
       mBookmarksTree = new BookmarksTreeView("BookmarksRoot");
-      mBookmarksTree.Dock = System.Windows.Forms.DockStyle.Fill;
+      mBookmarksTree.Dock = DockStyle.Fill;
       mBookmarksTree.ImageIndex = -1;
       mBookmarksTree.Name = "bookmarksTree";
       mBookmarksTree.SelectedImageIndex = -1;
@@ -86,45 +105,13 @@ namespace Silverstone.Manticore.Bookmarks
       Controls.Add(mBookmarksTree);
       mBookmarksTree.Build();
 
-      base.Init();
-    }
-    
-    #region Windows Form Designer generated code
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
-      this.statusBar1 = new System.Windows.Forms.StatusBar();
-      this.statusBarPanel1 = new System.Windows.Forms.StatusBarPanel();
-      ((System.ComponentModel.ISupportInitialize)(this.statusBarPanel1)).BeginInit();
-      this.SuspendLayout();
-      // 
-      // statusBar1
-      // 
-      this.statusBar1.Location = new System.Drawing.Point(0, 409);
-      this.statusBar1.Name = "statusBar1";
-      this.statusBar1.Panels.AddRange(new System.Windows.Forms.StatusBarPanel[] {
-                                                                                  this.statusBarPanel1});
-      this.statusBar1.Size = new System.Drawing.Size(584, 20);
-      this.statusBar1.TabIndex = 0;
-      this.statusBar1.Text = "statusBar1";
-      // 
-      // statusBarPanel1
-      // 
-      this.statusBarPanel1.Text = "statusBarPanel1";
-      // 
-      // BookmarksWindow
-      // 
-      this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-      this.ClientSize = new System.Drawing.Size(584, 429);
-      this.Controls.AddRange(new System.Windows.Forms.Control[] {this.statusBar1});
-      this.Name = "BookmarksWindow";
-      this.Text = "Bookmarks for %USER%";
-      ((System.ComponentModel.ISupportInitialize)(this.statusBarPanel1)).EndInit();
-      this.ResumeLayout(false);
-
+      
+      AutoScaleBaseSize = new System.Drawing.Size(5, 13);
+      ClientSize = new System.Drawing.Size(584, 429);
+      Name = "BookmarksWindow";
+      Text = Environment.UserName + "'s Bookmarks";
+      ((ISupportInitialize)(mStatusBarPanel)).EndInit();
+      ResumeLayout(false);
     }
 		#endregion
 
@@ -133,7 +120,7 @@ namespace Silverstone.Manticore.Bookmarks
       ManticoreTreeNode node = e.Node as ManticoreTreeNode;
       Bookmarks bmks = ServiceManager.Bookmarks;
       String bookmarkURL = bmks.GetBookmarkAttribute(node.Data as String, "url");
-      statusBar1.Text = bookmarkURL;
+      mStatusBar.Text = bookmarkURL;
     }
 
     protected void OnTreeDoubleClick(Object sender, EventArgs e)

@@ -57,11 +57,6 @@ namespace Silverstone.Manticore.Toolkit
     {
     }
 
-    public ManticoreWindow(String aType)
-		{
-      mType = aType;
-    }
-
     protected void Init()
     {
       WindowMediator wm = ServiceManager.WindowMediator;

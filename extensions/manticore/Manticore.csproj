@@ -126,6 +126,11 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "bookmarks\BookmarksTreeView.resx"
+                    DependentUpon = "BookmarksTreeView.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "bookmarks\BookmarksWindow.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
@@ -143,6 +148,16 @@
                 <File
                     RelPath = "bookmarks\FileBookmark.resx"
                     DependentUpon = "FileBookmark.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "bookmarks\Test.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "bookmarks\Test.resx"
+                    DependentUpon = "Test.cs"
                     BuildAction = "EmbeddedResource"
                 />
                 <File

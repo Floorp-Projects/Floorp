@@ -71,13 +71,14 @@ namespace Silverstone.Manticore.Browser
     public BrowserWindow(String aURL)
     {
       mSessionURL = aURL;
-      mType = "BrowserWindow";
 
       Init();
     }
 
     protected void Init()
     {
+      mType = "BrowserWindow";
+
       // Set up UI
       InitializeComponent();
 
