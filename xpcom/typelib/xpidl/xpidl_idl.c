@@ -755,7 +755,12 @@ xpidl_sprint_iid(struct nsID *id, char iidbuf[])
                        (PRUint32) id->m3[2], (PRUint32) id->m3[3],
                        (PRUint32) id->m3[4], (PRUint32) id->m3[5],
                        (PRUint32) id->m3[6], (PRUint32) id->m3[7]);
+
+#ifdef SPRINTF_RETURNS_STRING
+    return (printed && strlen((char *)printed) == 36);
+#else
     return (printed == 36);
+#endif
 }
 
 /* We only parse the {}-less format.  (xpidl_header never has, so we're safe.) */
