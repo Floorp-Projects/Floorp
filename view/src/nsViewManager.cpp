@@ -734,21 +734,21 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIV
 
   if ((nsnull != parent) && (nsnull != child))
   {
-    PRInt32 numkids;
-    parent->GetChildCount(numkids);
-    nsIView *kid = nsnull, *prev = nsnull;
+    nsIView *kid;
+    nsIView *prev = nsnull;
 
     //verify that the sibling exists...
 
-    for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+    parent->GetChild(0, kid);
+    while (nsnull != kid)
     {
-      // XXX This is extremely inefficient...
-      parent->GetChild(cnt, kid);
-
       if (kid == sibling)
         break;
 
+      //get the next sibling view
+
       prev = kid;
+      kid->GetNextSibling(kid);
     }
 
     if (nsnull != kid)
@@ -780,25 +780,24 @@ NS_IMETHODIMP nsViewManager :: InsertChild(nsIView *parent, nsIView *child, PRIn
 
   if ((nsnull != parent) && (nsnull != child))
   {
-    PRInt32 numkids;
-    parent->GetChildCount(numkids);
-    nsIView *kid = nsnull, *prev = nsnull;
+    nsIView *kid;
+    nsIView *prev = nsnull;
 
     //find the right insertion point...
 
-    for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+    parent->GetChild(0, kid);
+    while (nsnull != kid)
     {
       PRInt32 idx;
-    
-      // XXX This is extremely inefficient...
-      parent->GetChild(cnt, kid);
-
       kid->GetZIndex(idx);
 
-      if (zindex < idx)
+      if (zindex <= idx)
         break;
 
+      //get the next sibling view
+
       prev = kid;
+      kid->GetNextSibling(kid);
     }
 
     //in case this hasn't been set yet... maybe we should not do this? MMP
