@@ -104,11 +104,6 @@ nsDll::~nsDll(void)
 
 PRBool nsDll::Load(void)
 {
-#ifdef	XP_MAC
-	char		*macFileName = NULL;
-	int		loop;
-#endif
-
 	if (m_status != DLL_OK)
 	{
 		return (PR_FALSE);
@@ -120,13 +115,18 @@ PRBool nsDll::Load(void)
 	}
 #ifdef	XP_MAC
 	// err = ConvertUnixPathToMacPath(m_fullpath, &macFileName);
-	if ((macFileName = PL_strdup(m_fullpath)) != NULL)
+	char *macFileName = PL_strdup(m_fullpath);
+	if (macFileName != NULL)
 	{
 		if (macFileName[0] == '/')
 		{
-			for (loop=0; loop<PL_strlen(macFileName); loop++)
+			// convert '/' to ':'
+			int c;
+			char* str = macFileName;
+			while ((c = *str++) != 0)
 			{
-				if (macFileName[loop] == '/')	macFileName[loop] = ':';
+				if (c == '/')
+					str[-1] = ':';
 			}
 			m_instance = PR_LoadLibrary(&macFileName[1]);		// skip over initial slash
 		}
