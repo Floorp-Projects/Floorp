@@ -381,6 +381,15 @@ nsFTPChannel::GetContentType(char* *aContentType) {
     return rv;
 }
 
+
+NS_IMETHODIMP
+nsFTPChannel::GetContentLength(PRInt32 *aContentLength)
+{
+    // XXX:  The content length is always unknown?
+    *aContentLength = -1;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsFTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {

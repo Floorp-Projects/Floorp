@@ -725,7 +725,21 @@ nsresult nsHTTPResponseListener::ProcessHeader(nsIAtom* aHeader,
     else {
       mConnection->SetContentType(aValue.GetBuffer());
     }
-  } 
+  }
+  //
+  // When the Content-Length response header is processed, set the
+  // ContentLength in the Channel...
+  //
+  else if (nsHTTPAtoms::Content_Length == aHeader) {
+    PRInt32 length, status;
+
+    length = aValue.ToInteger(&status);
+    rv = (nsresult)status;
+
+    if (NS_SUCCEEDED(rv)) {
+      mConnection->SetContentLength(length);
+    }
+  }
 
   //
   // Set the response header...
