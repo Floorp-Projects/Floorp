@@ -58,6 +58,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIImapService.h"
+#include "nsMsgI18N.h"
 
 #include "nsITimer.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -1350,27 +1351,36 @@ nsImapIncomingServer::FEAlert(const PRUnichar* aString)
 
 NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString)
 {
+
+
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 
-	const char *serverSaid = aString;
-	if (serverSaid)
+	if (aString)
 	{
 		// skip over the first two words, I guess.
-		char *whereRealMessage = PL_strchr(serverSaid, ' ');
+		char *whereRealMessage = PL_strchr(aString, ' ');
 		if (whereRealMessage)
 			whereRealMessage++;
 		if (whereRealMessage)
 			whereRealMessage = PL_strchr(whereRealMessage, ' ');
 		if (whereRealMessage)
 			whereRealMessage++;
+    
+    // the alert string from the server IS UTF-8!!! We must convert it to unicode
+    // correctly before appending it to our error message string...
 
+    nsAutoString unicodeAlertString;
+    nsAutoString charset;
+    charset.AppendWithConversion("UTF-8");
+    ConvertToUnicode(charset, whereRealMessage ? whereRealMessage : aString, unicodeAlertString);
+    
 		PRUnichar *serverSaidPrefix = nsnull;
 		GetImapStringByID(IMAP_SERVER_SAID, &serverSaidPrefix);
 		if (serverSaidPrefix)
 		{
 			nsAutoString message(serverSaidPrefix);
-			message.AppendWithConversion(whereRealMessage ? whereRealMessage : serverSaid);
+			message.Append(unicodeAlertString);
 			rv = dialog->Alert(nsnull, message.GetUnicode());
 
 			PR_Free(serverSaidPrefix);
