@@ -92,7 +92,8 @@ typedef enum _FTP_STATE {
     FTP_S_RETR, FTP_R_RETR,
     FTP_S_STOR, FTP_R_STOR,
     FTP_S_LIST, FTP_R_LIST,
-    FTP_S_PASV, FTP_R_PASV
+    FTP_S_PASV, FTP_R_PASV,
+    FTP_S_PWD,  FTP_R_PWD
 } FTP_STATE;
 
 // higher level ftp actions
@@ -142,7 +143,8 @@ private:
     nsresult        S_rest(); FTP_STATE       R_rest();
     nsresult        S_retr(); FTP_STATE       R_retr();
     nsresult        S_stor(); FTP_STATE       R_stor();
-    nsresult        S_pasv();     FTP_STATE   R_pasv();
+    nsresult        S_pasv(); FTP_STATE       R_pasv();
+    nsresult        S_pwd();  FTP_STATE       R_pwd();
     // END: STATE METHODS
     ///////////////////////////////////
 
@@ -200,6 +202,7 @@ private:
     PRInt32                mPort;       // the port to connect to
     nsAutoString           mFilename;   // url filename (if any)
     nsXPIDLCString         mPath;       // the url's path
+    nsCString              mPwd;        // login Path
 
         // ****** other vars
     PRUint8                mSuspendCount;// number of times we've been suspended.
