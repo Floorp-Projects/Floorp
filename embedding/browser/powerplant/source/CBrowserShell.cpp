@@ -60,6 +60,7 @@
 #include "nsIChannel.h"
 #include "nsIWidget.h"
 #include "nsIWebBrowserPrint.h"
+#include "nsIMacTextInputEventSink.h"
 
 // Local
 #include "ApplIDs.h"
@@ -1489,4 +1490,87 @@ CBrowserShell::DoDragReceive( DragReference inDragRef )
     PRBool dragAccepted = PR_FALSE;
     sDragHelper->Drop ( inDragRef, mEventSink, &dragAccepted );
   }
+}
+
+#pragma mark -
+
+OSStatus CBrowserShell::HandleUpdateActiveInputArea(
+  const nsAString& text, 
+  PRInt16 script,  
+  PRInt16 language, 
+  PRInt32 fixLen, 
+  const TextRangeArray * hiliteRng
+)
+{
+  nsCOMPtr<nsIMacTextInputEventSink> tieSink;
+  tieSink = do_QueryInterface(mEventSink);
+  if (!tieSink)
+    return eventNotHandledErr;
+    
+  OSStatus err = noErr;
+  nsresult res = tieSink->HandleUpdateActiveInputArea( text,
+                                                       script, language, 
+                                                       fixLen, (void*)hiliteRng, 
+                                                       &err);
+  if (noErr != err)
+    return err;
+  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+}
+
+OSStatus CBrowserShell::HandleUnicodeForKeyEvent(
+  const nsAString& text, 
+  PRInt16 script,
+  PRInt16 language, 
+  const EventRecord * keyboardEvent)
+{
+  nsCOMPtr<nsIMacTextInputEventSink> tieSink;
+  tieSink = do_QueryInterface(mEventSink);
+  if (!tieSink)
+    return eventNotHandledErr;
+    
+  OSStatus err = noErr;
+  nsresult res = tieSink->HandleUnicodeForKeyEvent( text,
+                                                    script, language, 
+                                                    (void*)keyboardEvent, 
+                                                    &err);
+  if (noErr != err)
+    return err;
+  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+}
+
+OSStatus CBrowserShell::HandleOffsetToPos(
+  PRInt32 offset, 
+  PRInt16 *pointX, 
+  PRInt16 *pointY)
+{
+  nsCOMPtr<nsIMacTextInputEventSink> tieSink;
+  tieSink = do_QueryInterface(mEventSink);
+  if (!tieSink)
+    return eventNotHandledErr;
+    
+  OSStatus err = noErr;
+  nsresult res = tieSink->HandleOffsetToPos( offset, pointX, pointY, &err);
+  if (noErr != err)
+    return err;
+  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+}
+
+OSStatus CBrowserShell::HandlePosToOffset(
+  PRInt16 currentPointX, 
+  PRInt16 currentPointY, 
+  PRInt32 *offset,
+  PRInt16 *regionClass
+)
+{
+  nsCOMPtr<nsIMacTextInputEventSink> tieSink;
+  tieSink = do_QueryInterface(mEventSink);
+  if (!tieSink)
+    return eventNotHandledErr;
+    
+  OSStatus err = noErr;
+  nsresult res = tieSink->HandlePosToOffset( currentPointX, currentPointY, 
+                                             offset, regionClass, &err);
+  if (noErr != err)
+    return err;
+  return NS_FAILED(res) ? eventNotHandledErr : noErr;
 }

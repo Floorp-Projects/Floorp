@@ -107,6 +107,19 @@ public:
     // LPeriodical
     virtual void                SpendTime(const EventRecord&        inMacEvent);
     
+    // Handle Text Input Event 
+    // hiliteRng should be a 
+    virtual OSStatus HandleUpdateActiveInputArea(const nsAString& text, 
+                                                 PRInt16 script,  PRInt16 language, 
+                                                 PRInt32 fixLen, const TextRangeArray * hiliteRng);
+    virtual OSStatus HandleUnicodeForKeyEvent(const nsAString& text, 
+                                              PRInt16 script, PRInt16 language, 
+                                              const EventRecord* keyboardEvent);
+    virtual OSStatus HandleOffsetToPos(PRInt32 offset, PRInt16 *pointX, PRInt16 *pointY);
+    virtual OSStatus HandlePosToOffset(PRInt16 currentPointX, PRInt16 currentPointY, 
+                                       PRInt32 *offset, PRInt16 *regionClass);
+    
+    
     
     // CBrowserShell
         
