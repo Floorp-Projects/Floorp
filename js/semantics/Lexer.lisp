@@ -213,28 +213,21 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; LEXER-ACTIONS
 
-(defstruct (lexer-action (:constructor make-lexer-action (name number type-expr function-name markup))
+(defstruct (lexer-action (:constructor make-lexer-action (name number type-expr function-name function))
                          (:copier nil)
                          (:predicate lexer-action?))
   (name nil :type identifier :read-only t)             ;The action name to use for this lexer-action
   (number nil :type integer :read-only t)              ;Serial number of this lexer-action
-  (type-expr nil :read-only t)                         ;A type expression that specifies the result type of list function function-name
-  (function-name nil :type identifier :read-only t)    ;A lisp function (char -> value) that performs the lexer-action on a character
-  (markup nil :type list :read-only t))                ;Markup template describing this lexer-action; replace '* with the nonterminal
+  (type-expr nil :read-only t)                         ;A type expression that specifies the result type of function
+  (function-name nil :type (or null identifier) :read-only t) ;Name of external function to use when depicting this lexer-action
+  (function nil :type identifier :read-only t))        ;A lisp function (char -> value) that performs the lexer-action on a character
 
 
 (defun print-lexer-action (lexer-action &optional (stream t))
   (format stream "~@<~A ~@_~:I: ~<<<~;~W~;>>~:> ~_= ~<<~;#'~W~;>~:>~:>"
           (lexer-action-name lexer-action)
           (list (lexer-action-type-expr lexer-action))
-          (list (lexer-action-function-name lexer-action))))
-
-
-(defun depict-lexer-action (markup-stream lexer-action nonterminal)
-  (dolist (markup-item (lexer-action-markup lexer-action))
-    (if (eq markup-item '*)
-      (depict-general-nonterminal markup-stream nonterminal :reference)
-      (depict-group markup-stream markup-item))))
+          (list (lexer-action-function lexer-action))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -426,11 +419,12 @@
 ; lexer-actions-source is a list of lexer-action bindings, each containing:
 ;     a lexer-action name;
 ;     the type of this lexer-action's value;
+;     the name of a primitive to use when depicting this lexer-action's definition;
 ;     the name of a lisp function (char -> value) that performs the lexer-action on a character.
 ; This does not make the lexer's grammar; use make-lexer-and-grammar for that.
 (defun make-lexer (parametrization charclasses-source lexer-actions-source grammar-source)
   (assert-type charclasses-source (list (cons t (cons t (cons (list (tuple identifier identifier)) t)))))
-  (assert-type lexer-actions-source (list (tuple identifier t identifier list)))
+  (assert-type lexer-actions-source (list (tuple identifier t (or null identifier) identifier)))
   (let ((lexer-actions (make-hash-table :test #'eq))
         (charclasses nil)
         (charclasses-hash (make-hash-table :test *grammar-symbol-=*))
@@ -440,12 +434,12 @@
       (dolist (lexer-action-source lexer-actions-source)
         (let ((name (first lexer-action-source))
               (type-expr (second lexer-action-source))
-              (function (third lexer-action-source))
-              (markup (fourth lexer-action-source)))
+              (function-name (third lexer-action-source))
+              (function (fourth lexer-action-source)))
           (when (gethash name lexer-actions)
             (error "Attempt to redefine lexer action ~S" name))
           (setf (gethash name lexer-actions)
-                (make-lexer-action name (incf lexer-action-number) type-expr function markup)))))
+                (make-lexer-action name (incf lexer-action-number) type-expr function-name function)))))
     
     (dolist (charclass-source charclasses-source)
       (let* ((nonterminal (assert-type (grammar-parametrization-intern parametrization (first charclass-source)) nonterminal))
@@ -654,7 +648,7 @@
                 (dolist (action (charclass-actions charclass))
                   (let* ((lexer-action (cdr action))
                          (body (if (characterp partition-name)
-                                 (let* ((lexer-action-function (lexer-action-function-name lexer-action))
+                                 (let* ((lexer-action-function (lexer-action-function lexer-action))
                                         (result (funcall lexer-action-function partition-name)))
                                    (typecase result
                                      (integer result)
@@ -673,7 +667,7 @@
                               (let ((lexer-action-name (lexer-action-name lexer-action)))
                                 (list
                                  (list 'declare-action lexer-action-name partition-name (lexer-action-type-expr lexer-action))
-                                 (list 'terminal-action lexer-action-name partition-name (lexer-action-function-name lexer-action)))))
+                                 (list 'terminal-action lexer-action-name partition-name (lexer-action-function lexer-action)))))
                           (partition-lexer-actions (gethash partition-name (lexer-partitions lexer)))))
               (lexer-partition-names lexer))))
         (values
