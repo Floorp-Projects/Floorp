@@ -78,10 +78,11 @@
   <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewPartialSource.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
   <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
 
-  <command id="cmd_savePage" disabled="true" oncommand="ViewSourceSavePage();"/>
+  <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
   <command id="cmd_print" oncommand="PrintUtils.print();"/>
   <command id="cmd_printpreview" oncommand="PrintUtils.printPreview(onEnterPP, onExitPP);"/>
   <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
