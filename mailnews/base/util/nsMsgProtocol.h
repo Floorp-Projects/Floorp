@@ -109,4 +109,4 @@ protected:
 	PRUint32  m_flags; // used to store flag information
 };
 
-#endif nsMsgProtocol_h__
+#endif /* nsMsgProtocol_h__ */
