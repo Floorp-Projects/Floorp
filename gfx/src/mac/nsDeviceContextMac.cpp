@@ -123,6 +123,13 @@ NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
  */
 NS_IMETHODIMP nsDeviceContextMac :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+    return mAltDC->CreateRenderingContext(aContext);
+  }
+#endif
+
 nsRenderingContextMac *pContext;
 nsresult              rv;
 GrafPtr								thePort;
@@ -476,6 +483,13 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
  */
 NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 & outWidth, PRInt32 & outHeight)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_SURFACE_DIM)) {
+    return mAltDC->GetDeviceSurfaceDimensions(outWidth, outHeight);
+  }
+#endif
+
 	if( mSpec ) {
 	  // we have a printer device
 		outWidth = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
