@@ -119,6 +119,7 @@ static void        _pl_CleanupNativeNotifier(PLEventQueue* self);
 static PRStatus    _pl_NativeNotify(PLEventQueue* self);
 static PRStatus    _pl_AcknowledgeNativeNotify(PLEventQueue* self);
 static void        _md_CreateEventQueue( PLEventQueue *eventQueue );
+static PRInt32     _pl_GetEventCount(PLEventQueue* self);
 
 
 #if defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
@@ -325,15 +326,11 @@ PL_GetEvent(PLEventQueue* self)
 {
     PLEvent* event = NULL;
     PRStatus err = PR_SUCCESS;
-    PRMonitor* mon;
 
     if (self == NULL)
     return NULL;
 
-    mon = self->monitor;
-    if (mon) {
-      PR_EnterMonitor(mon);
-    }
+    PR_EnterMonitor(self->monitor);
 
     if (!PR_CLIST_IS_EMPTY(&self->queue)) {
       if ( self->type == EventQueueIsNative )
@@ -347,9 +344,7 @@ PL_GetEvent(PLEventQueue* self)
     }
 
   done:
-    if (mon) {
-      PR_ExitMonitor(mon);
-    }
+    PR_ExitMonitor(self->monitor);
     return event;
 }
 
@@ -450,17 +445,41 @@ PL_RevokeEvents(PLEventQueue* self, void* owner)
            ("$$$ revoking events for owner %0x", owner));
 }
 
+static PRInt32
+_pl_GetEventCount(PLEventQueue* self)
+{
+    PRCList* node;
+    PRInt32  count = 0;
+
+    PR_EnterMonitor(self->monitor);
+    node = PR_LIST_HEAD(&self->queue);
+    while (node != &self->queue) {
+        count++;
+        node = PR_NEXT_LINK(node);
+    }
+    PR_ExitMonitor(self->monitor);
+
+    return count;
+}
+
 PR_IMPLEMENT(void)
 PL_ProcessPendingEvents(PLEventQueue* self)
 {
+    PRInt32 count;
+    
     if (self == NULL)
     return;
 
   if (PR_FALSE != self->processingEvents) return;
 
     self->processingEvents = PR_TRUE;
-#if !defined(WIN32) && !defined(XP_UNIX)
-    while (PR_TRUE) {
+
+    /* Only process the events that are already in the queue, and
+     * not any new events that get added. Do this by counting the
+     * number of events currently in the queue
+     */
+    count = _pl_GetEventCount(self);
+    while (count-- > 0) {
     PLEvent* event = PL_GetEvent(self);
         if (event == NULL) break;
 
@@ -468,47 +487,6 @@ PL_ProcessPendingEvents(PLEventQueue* self)
     PL_HandleEvent(event);
     PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
     }
-#else
-    /* Only process the events that are already in the queue, and
-     * not any new events that get added. Do this by making a copy of
-     * the queue
-     */
-    PR_EnterMonitor(self->monitor);
-    if (PR_CLIST_IS_EMPTY(&self->queue)) {
-      PR_ExitMonitor(self->monitor);
-    } else {
-      struct PLEventQueue  tmpQueue;
-      /* Copy the events to a temporary queue */
-      memcpy(&tmpQueue, self, sizeof(tmpQueue));
-      tmpQueue.queue.next->prev = &tmpQueue.queue;
-      tmpQueue.queue.prev->next = &tmpQueue.queue;
-#if defined(WIN32) || defined(XP_UNIX)
-      /* don't waste time locking this queue when getting events */
-      tmpQueue.monitor = 0;
-#else
-      /* CONSERVATIVE: go ahead and lock in case the underlying native
-         notification mechanism needs it */
-      tmpQueue.monitor = self->monitor;
-#endif
-
-      /* Make sure we reset the notification count */
-#if defined(XP_UNIX) || defined (VMS_EVENTS_USE_EF)
-      self->notifyCount = 0;
-#endif
-
-      PR_INIT_CLIST(&self->queue);
-      PR_ExitMonitor(self->monitor);
-
-      /* Now process the existing events */
-      while (PR_TRUE) {
-        PLEvent* event = PL_GetEvent(&tmpQueue);
-        if (event == NULL) break;
-        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ tmpQ: processing event"));
-        PL_HandleEvent(event);
-        PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ tmpQ: done processing event"));
-      }
-    }
-#endif
     self->processingEvents = PR_FALSE;
 }
 
