@@ -425,7 +425,6 @@
 
      <menuitem label="Form Manager Samples" oncommand="window._content.location.href='chrome://communicator/locale/wallet/index.html';"/>
 
-     <menuitem label="&domviewer.label;" oncommand="window._content.location.href='chrome://communicator/content/domviewer/DOMDataSourceViewer.xul'"/>
      <menuitem label="&browserbuster.label;" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
      <menuitem label="&editor-test-page.label;" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
      <menuitem label="&flush-memory.label;" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
