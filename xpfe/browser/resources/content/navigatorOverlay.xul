@@ -55,6 +55,8 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<key id="key_paste"/>
 	<key id="key_delete"/>
 	<key id="key_selectAll"/>
+	<key id="key_capture"/>
+	<key id="key_prefill"/>
 	<key id="key_preferences"/>
 
 	<key id="stop" keycode="VK_ESCAPE" onkeypress="BrowserStop();"/>
@@ -101,6 +103,8 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
 	<broadcaster id="cmd_paste"/>
 	<broadcaster id="cmd_delete"/>
 	<broadcaster id="cmd_selectAll"/>
+	<broadcaster id="cmd_capture"/>
+	<broadcaster id="cmd_prefill"/>
 	<broadcaster id="cmd_preferences"/>
 	
 	<!-- View Menu -->
@@ -194,6 +198,9 @@ Contributor(s): Blake Ross <BlakeR1234@aol.com>. -->
       <menuitem id="menu_delete"/>
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
+      <menuseparator /> 
+      <menuitem id="menu_capture" oncommand="capture()"/>
+      <menuitem id="menu_prefill" oncommand="prefill()"/>
       <menuseparator /> 
       <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
     </menupopup>
