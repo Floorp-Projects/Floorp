@@ -40,6 +40,7 @@ DEFAULT_COMPILER = cc
 
 CPU_ARCH   = hppa
 DLL_SUFFIX = sl
+CC         = cc
 CCC        = CC
 OS_CFLAGS  += -Ae $(DSO_CFLAGS) -DHPUX -D$(CPU_ARCH) -D_HPUX_SOURCE
 
