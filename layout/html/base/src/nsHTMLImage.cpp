@@ -636,7 +636,6 @@ nsContentAttr ImagePart::GetAttribute(nsIAtom* aAttribute,
 
 void ImagePart::UnsetAttribute(nsIAtom* aAttribute)
 {
-  nsContentAttr ca = eContentAttr_NotThere;
   if (aAttribute == nsHTMLAtoms::ismap) {
     mIsMap = PR_FALSE;
   }
