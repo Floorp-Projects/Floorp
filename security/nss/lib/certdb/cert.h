@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.46 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: cert.h,v 1.47 2004/07/07 00:48:53 wchang0222%aol.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -705,13 +705,6 @@ extern char *CERT_HTMLCertInfo(CERTCertificate *cert, PRBool showImages,
 ** moved elsewhere?
 */
 extern SECItem *CERT_DecodeAVAValue(const SECItem *derAVAValue);
-
-/*
- * take a DER certificate and decode it into a certificate structure
- */
-CERTCertificate *
-CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
-                         char *nickname);
 
 
 
