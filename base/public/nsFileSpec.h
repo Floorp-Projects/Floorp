@@ -201,7 +201,10 @@ public:
     NS_EXPLICIT                  nsAutoCString(const nsString& other) : mCString(other.ToNewCString()) {}
     virtual                      ~nsAutoCString();    
                                  operator const char*() const { return mCString; }
-                                 operator const char*() { return mCString; }
+
+                                 // operator const char*() { return mCString; }
+                                 //  don't need this, since |operator const char*() const| can
+                                 //  serve for both |const| and non-|const| callers
 protected:
                                  const char* mCString;
 }; // class nsAutoCString
