@@ -958,7 +958,6 @@ loser:
     return PR_FAILURE;
 }
 
-
 /* thread function */
 /* SSL connection is serviced by the data service thread that works on
  * the client data socket and the SSL socket.
@@ -979,8 +978,8 @@ void SSM_SSLDataServiceThread(void* arg)
     int i;
     PRIntn read = 0;
     PRIntn sent = 0;
-    char **outbound = NULL;
-    char **inbound = NULL;
+    char *outbound = NULL;
+    char *inbound = NULL;
     PRIntn oBufSize;
     
     SSM_RegisterNewThread("ssl data", (SSMResource *) arg);
@@ -994,11 +993,11 @@ void SSM_SSLDataServiceThread(void* arg)
     SSMDATACONNECTION(conn)->m_dataServiceThread = PR_GetCurrentThread();
 
 	/* initialize xfer buffers */
-	outbound = (char **) PR_CALLOC(READSSL_CHUNKSIZE+1);
+	outbound = (char *) PR_CALLOC(READSSL_CHUNKSIZE+1);
 	if (outbound == NULL)
 		goto loser;
 
-	inbound = (char **) PR_CALLOC(READSSL_CHUNKSIZE+1);
+	inbound = (char *) PR_CALLOC(READSSL_CHUNKSIZE+1);
 	if (inbound == NULL)
 		goto loser;
 
@@ -1204,6 +1203,9 @@ void SSM_SSLDataServiceThread(void* arg)
                     else {
                         /* Got data, write it to the client socket */
                         SSM_DEBUG("Writing to client socket.\n");
+#ifdef DEBUG_javi
+                        SSM_DumpBuffer(inbound, read);
+#endif
                         sent = PR_Send(SSMDATACONNECTION(conn)->m_clientSocket,
                                        inbound, read, 0, 
                                        PR_INTERVAL_NO_TIMEOUT);

@@ -432,6 +432,7 @@ GenKey(SSMControlConnection * ctrl, int keysize, char *challenge,
      * Convert the signed public key and challenge into base64/ascii.
      */
     keystring = BTOA_DataToAscii(signedItem.data, signedItem.len);
+    SSM_DEBUG("Created following string for KEYGEN:\n%s\n", keystring);
     
  done:
     /*

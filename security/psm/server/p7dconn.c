@@ -294,7 +294,6 @@ void SSMP7DecodeConnection_ServiceThread(void * arg)
         read = LINESIZE;    /* set the read size to the default line size */
         rv = SSMDataConnection_ReadFromSocket(SSMDATACONNECTION(conn),
                                               (PRInt32*)&read, buffer);
-
         if (read > 0) {
             /* there is data, pass it along to PKCS7 */
             SSM_DEBUG("Received %ld bytes of data for decoder.\n", read);
@@ -482,6 +481,7 @@ void SSMP7DecodeConnection_ContentCallback(void *arg,
     SSMStatus rv;
     SSMP7DecodeConnection *conn = (SSMP7DecodeConnection *)arg;
     PRIntn sent = 0;
+    PRInt32 osErr;
 
     SSM_DEBUG("writing data to socket.\n");
     PR_ASSERT(SSMDATACONNECTION(conn)->m_clientSocket != NULL);
@@ -489,7 +489,8 @@ void SSMP7DecodeConnection_ContentCallback(void *arg,
                    (PRIntn)len, 0, PR_INTERVAL_NO_TIMEOUT);
     if (sent != (PRIntn)len) {
         rv = PR_GetError();
-        SSM_DEBUG("error writing data: %d \n", rv);
+        osErr = PR_GetOSError();
+        SSM_DEBUG("error writing data: %d OS error: %d\n", rv, osErr);
     }
 }
 
