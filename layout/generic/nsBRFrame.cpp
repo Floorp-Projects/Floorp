@@ -126,7 +126,7 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
                 nsReflowStatus& aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("BRFrame", aReflowState.reason);
-  DISPLAY_REFLOW(this, aReflowState, aMetrics, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   if (aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = 0;
     aMetrics.maxElementSize->height = 0;

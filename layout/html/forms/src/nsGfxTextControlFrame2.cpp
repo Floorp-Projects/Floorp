@@ -2290,7 +2290,7 @@ nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
                                nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsGfxTextControlFrame2", aReflowState.reason);
-  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   SetInitialValue();
 

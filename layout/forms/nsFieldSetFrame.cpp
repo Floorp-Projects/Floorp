@@ -281,7 +281,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                         nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsFieldSetFrame", aReflowState.reason);
-  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
  
   // Initialize OUT parameter
    aStatus = NS_FRAME_COMPLETE;

@@ -1159,7 +1159,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
                                nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsComboboxControlFrame", aReflowState.reason);
-  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
   aStatus = NS_FRAME_COMPLETE;
 
