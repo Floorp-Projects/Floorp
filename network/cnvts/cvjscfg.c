@@ -57,7 +57,7 @@ PRIVATE void AutoAdminRefreshCallback(void *closure)
 PRIVATE void
 pref_DownloadDone(URL_Struct* URL_s, int status, MWContext* window_id)
 {
-	int32 minutes = 0;
+	PRInt32 minutes = 0;
  
 	/* Might have been cancelled by a timeout */
 	if ( m_GettingConfigFile == FALSE ) {
@@ -205,7 +205,7 @@ jsc_save_config(char* bytes, int32 num_bytes)
 PRIVATE int
 jsc_try_failover(MWContext* w)
 {
-	XP_Bool failover;
+	PRBool failover;
 	char* bytes = NULL;
 	int32 num_bytes;
 	XP_StatStruct st;
