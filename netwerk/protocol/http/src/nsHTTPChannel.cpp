@@ -1849,7 +1849,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
       do_GetServiceFromCategory("http-auth", authType, &rv);
     if (NS_FAILED(rv))
       // XXX report "Authentication-type not supported: %s"
-      return rv;
+      return NS_ERROR_FAILURE;
 
     nsXPIDLString userBuf, passwdBuf;
     // save me, waterson!
@@ -1894,9 +1894,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
             return rv;
     }
 
-    if (!userBuf[0] &&
-        (interactionType == nsIAuthenticator::INTERACTION_STANDARD ||
-         interactionType == nsIAuthenticator::INTERACTION_NONE)) {
+    if (!userBuf && interactionType == nsIAuthenticator::INTERACTION_STANDARD) {
         /* can't proceed without at least a username, can we? */
         return NS_ERROR_FAILURE;
     }
@@ -1915,7 +1913,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     // For security/privacy purposes, a response to an authenticated request is
     // not cached, except perhaps in the memory cache.
     // XXX if we had username and passwd in user-auth, and the interaction
-    // XXX was standard or none, then it's safe to cache, I think (shaver)
+    // XXX was standard, then it's safe to cache, I think (shaver)
     mLoadAttributes |= nsIChannel::INHIBIT_PERSISTENT_CACHING;
 
     // This smells like a clone function... maybe there is a 
