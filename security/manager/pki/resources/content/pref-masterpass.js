@@ -41,7 +41,7 @@ var internal_token;
 
 function onMasterPasswordLoad()
 {
-  tokendb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
+  var tokendb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
   internal_token = tokendb.getInternalKeyToken();
   var askTimes = internal_token.getAskPasswordTimes();
   switch (askTimes) {
