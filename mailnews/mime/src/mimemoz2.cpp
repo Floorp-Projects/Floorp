@@ -287,7 +287,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
       if (NS_SUCCEEDED(rv) && !fileExtension.IsEmpty())
       {
         newAttachName.Append(PRUnichar('.'));
-        newAttachName.AppendWithConversion(fileExtension);
+        AppendUTF8toUTF16(fileExtension, newAttachName);
       }
     }
 
