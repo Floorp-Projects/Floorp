@@ -546,6 +546,7 @@ nsDNSService::InitDNSThread(void)
     mMsgFoundDNS = RegisterWindowMessage("Mozilla:DNSMessage");
 
     // register window class for DNS event receiver window
+    memset(&wc, 0, sizeof(wc));
     wc.style            = 0;
     wc.lpfnWndProc      = nsDNSEventProc;
     wc.cbClsExtra       = 0;
