@@ -264,9 +264,11 @@ NS_IMETHODIMP FileImpl::Open(
      // several files on the Macintosh (you can have several volumes with the
      // same name, see).
     mFileDesc = 0;
-    if (inFile.Error() != noErr)
-        return NS_FILE_RESULT(inFile.Error());
-    OSErr err = noErr;
+    OSErr err = inFile.Error();
+    if (err != noErr)
+    	if (err != fnfErr || !(nsprMode & PR_CREATE_FILE))
+        	return NS_FILE_RESULT(inFile.Error());
+    err = noErr;
 #if DEBUG
     const OSType kCreator = 'CWIE';
 #else
