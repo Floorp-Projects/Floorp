@@ -32,6 +32,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=    nsEventListenerManager.cpp  \
 	    nsEventStateManager.cpp  \
 	    nsDOMEvent.cpp		\
+      nsDOMMutationEvent.cpp \
 	    nsDOMEventsIIDs.cpp		\
 		nsPrivateTextRange.cpp		\
 	    $(NULL)
@@ -39,6 +40,7 @@ CPPSRCS=    nsEventListenerManager.cpp  \
 CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 	    .\$(OBJDIR)\nsEventStateManager.obj  \
 	    .\$(OBJDIR)\nsDOMEvent.obj	    \
+      .\$(OBJDIR)\nsDOMMutationEvent.obj \
 	    .\$(OBJDIR)\nsDOMEventsIIDs.obj	    \
 	    .\$(OBJDIR)\nsPrivateTextRange.obj	    \
 	    $(NULL)

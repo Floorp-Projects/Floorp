@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 
 EXPORTS		= \
+    nsMutationEvent.h \
 		nsIEventListenerManager.h \
 		nsIEventStateManager.h \
 		nsIPrivateDOMEvent.h \

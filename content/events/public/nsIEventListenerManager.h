@@ -142,6 +142,11 @@ public:
   * manager.
   */
   virtual nsresult SetListenerTarget(nsISupports* aTarget) = 0;
+
+  /**
+  * Allows us to quickly determine if we have mutation listeners registered.
+  */
+  virtual nsresult HasMutationListeners(PRBool* aListener) = 0;
 };
 
 extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult);

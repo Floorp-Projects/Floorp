@@ -22,6 +22,7 @@
 #include "nsJSDOMEventListener.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMMutationEvent.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsJSUtils.h"
@@ -79,8 +80,10 @@ NS_IMPL_RELEASE(nsJSDOMEventListener)
 nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   JSObject *eventObj;
-  if (NS_OK != NS_NewScriptKeyEvent(mContext, aEvent, nsnull, (void**)&eventObj))
-    return NS_ERROR_FAILURE;
+  if (NS_OK != NS_NewScriptKeyEvent(mContext, aEvent, nsnull, (void**)&eventObj)) {
+    if (NS_OK != NS_NewScriptMutationEvent(mContext, aEvent, nsnull, (void**)&eventObj))
+      return NS_ERROR_FAILURE;
+  }
 
   jsval argv[1];
   argv[0] = OBJECT_TO_JSVAL(eventObj);

@@ -29,6 +29,7 @@ EXPORTS =			    \
 	nsIPrivateTextEvent.h		\
 	nsIPrivateTextRange.h		\
 	nsIPrivateCompositionEvent.h		\
+  nsMutationEvent.h \
         $(NULL)
 
 MODULE=raptor 

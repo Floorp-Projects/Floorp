@@ -28,6 +28,7 @@ IDLSRCS =  \
 	Event.idl \
 	UIEvent.idl \
 	MouseKeyEvent.idl \
+  MutationEvent.idl \
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\coreEvents
 JSSTUB_DESTDIR=$(DEPTH)\dom\src\events

@@ -61,12 +61,16 @@
 #include "prmem.h"
 #include "nsDOMError.h"
 #include "nsScriptSecurityManager.h"
+#include "nsIDOMMutationEvent.h"
+#include "nsMutationEvent.h"
 
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
+#include "nsPIDOMWindow.h"
+#include "nsEventListenerManager.h"
 
 #include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
@@ -2718,12 +2722,82 @@ nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   return SetAttribute(ni, aValue, aNotify);
 }
 
+static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
+{
+  nsCOMPtr<nsIDocument> doc;
+  aContent->GetDocument(*getter_AddRefs(doc));
+  if (!doc)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  doc->GetScriptGlobalObject(getter_AddRefs(global));
+  if (!global)
+    return PR_FALSE;
+
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(global));
+  if (!window)
+    return PR_FALSE;
+
+  PRBool set;
+  window->HasMutationListeners(aType, &set);
+  if (!set)
+    return PR_FALSE;
+
+  // We know a mutation listener is registered, but it might not
+  // be in our chain.  Check quickly to see.
+  nsCOMPtr<nsIContent> curr = aContent;
+  nsCOMPtr<nsIEventListenerManager> manager;
+
+  while (curr) {
+    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(curr));
+    if (rec) {
+      rec->GetListenerManager(getter_AddRefs(manager));
+      if (manager) {
+        PRBool hasMutationListeners = PR_FALSE;
+        manager->HasMutationListeners(&hasMutationListeners);
+        if (hasMutationListeners)
+          return PR_TRUE;
+      }
+    }
+
+    nsCOMPtr<nsIContent> prev = curr;
+    prev->GetParent(*getter_AddRefs(curr));
+  }
+
+  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
+  if (rec) {
+    rec->GetListenerManager(getter_AddRefs(manager));
+    if (manager) {
+      PRBool hasMutationListeners = PR_FALSE;
+      manager->HasMutationListeners(&hasMutationListeners);
+      if (hasMutationListeners)
+        return PR_TRUE;
+    }
+  }
+  
+  rec = do_QueryInterface(window);
+  if (rec) {
+    rec->GetListenerManager(getter_AddRefs(manager));
+    if (manager) {
+      PRBool hasMutationListeners = PR_FALSE;
+      manager->HasMutationListeners(&hasMutationListeners);
+      if (hasMutationListeners)
+        return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 nsresult 
 nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo, 
                                         const nsAReadableString& aValue,
                                         PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
+
+  PRBool modification = PR_FALSE;
+  nsAutoString oldValue;
 
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
@@ -2742,6 +2816,8 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
   for (index = 0; index < count; index++) {
     attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
     if (attr->mNodeInfo == aNodeInfo) {
+      oldValue = attr->mValue;
+      modification = PR_TRUE;
       attr->mValue = aValue;
       rv = NS_OK;
       break;
@@ -2769,6 +2845,31 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
     bindingManager->GetBinding(mContent, getter_AddRefs(binding));
     if (binding)
       binding->AttributeChanged(name, nameSpaceID, PR_FALSE);
+
+    if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_ATTRMODIFIED;
+      mutation.mTarget = node;
+
+      nsAutoString attrName;
+      name->ToString(attrName);
+      nsCOMPtr<nsIDOMAttr> attrNode;
+      GetAttributeNode(attrName, getter_AddRefs(attrNode));
+      mutation.mRelatedNode = attrNode;
+
+      mutation.mAttrName = name;
+      if (!oldValue.IsEmpty()) 
+        mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValue));
+      if (!aValue.IsEmpty())
+        mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
+      mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION : 
+                                             nsIDOMMutationEvent::ADDITION;
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsCOMPtr<nsIDOMEvent> domEvent;
+      mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+    }
 
     if (aNotify) {
       mDocument->AttributeChanged(mContent, nameSpaceID, name, NS_STYLE_HINT_UNKNOWN);
@@ -2854,6 +2955,30 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
         if (aNotify && (nsnull != mDocument)) {
           mDocument->BeginUpdate();
         }
+                
+        if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+          nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(mContent));
+          nsMutationEvent mutation;
+          mutation.eventStructType = NS_MUTATION_EVENT;
+          mutation.message = NS_MUTATION_ATTRMODIFIED;
+          mutation.mTarget = node;
+
+          nsAutoString attrName;
+          aName->ToString(attrName);
+          nsCOMPtr<nsIDOMAttr> attrNode;
+          GetAttributeNode(attrName, getter_AddRefs(attrNode));
+          mutation.mRelatedNode = attrNode;
+
+          mutation.mAttrName = aName;
+          if (!attr->mValue.IsEmpty()) 
+            mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(attr->mValue));
+          mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsCOMPtr<nsIDOMEvent> domEvent;
+          mContent->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+        }
+
         mAttributes->RemoveElementAt(index);
         delete attr;
         found = PR_TRUE;
@@ -3036,6 +3161,21 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
       if (aNotify) {
         doc->ContentInserted(mContent, aKid, aIndex);
       }
+
+      if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
+        nsMutationEvent mutation;
+        mutation.eventStructType = NS_MUTATION_EVENT;
+        mutation.message = NS_MUTATION_NODEINSERTED;
+        mutation.mTarget = node;
+
+        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+        mutation.mRelatedNode = relNode;
+
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsCOMPtr<nsIDOMEvent> domEvent;
+        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+      }
     }
   }
   if (aNotify && (nsnull != doc)) {
@@ -3094,6 +3234,21 @@ nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
       if (aNotify) {
         doc->ContentAppended(mContent, mChildren.Count() - 1);
       }
+
+      if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+        nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
+        nsMutationEvent mutation;
+        mutation.eventStructType = NS_MUTATION_EVENT;
+        mutation.message = NS_MUTATION_NODEINSERTED;
+        mutation.mTarget = node;
+
+        nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+        mutation.mRelatedNode = relNode;
+
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsCOMPtr<nsIDOMEvent> domEvent;
+        aKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+      }
     }
   }
   if (aNotify && (nsnull != doc)) {
@@ -3111,6 +3266,22 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     if (aNotify && (nsnull != doc)) {
       doc->BeginUpdate();
     }
+
+    if (HasMutationListeners(mContent, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(oldKid));
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_NODEREMOVED;
+      mutation.mTarget = node;
+
+      nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(mContent));
+      mutation.mRelatedNode = relNode;
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsCOMPtr<nsIDOMEvent> domEvent;
+      oldKid->HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+    }
+
     nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
     mChildren.RemoveElementAt(aIndex);
     if (aNotify) {

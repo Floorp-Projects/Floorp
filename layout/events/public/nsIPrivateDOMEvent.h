@@ -58,5 +58,7 @@ extern nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                                  nsIPresContext* aPresContext,
                                  const nsAReadableString& aEventType,
                                  nsEvent *aEvent);
+extern nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsIPresContext* aPresContext, 
+                                       nsEvent* aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

@@ -7,3 +7,4 @@ nsIPrivateDOMEvent.h
 nsIPrivateTextEvent.h
 nsIPrivateTextRange.h
 nsIPrivateCompositionEvent.h
+nsMutationEvent.h

@@ -87,7 +87,14 @@ public:
     eDOMEvents_scroll,
     eDOMEvents_overflow,
     eDOMEvents_underflow,
-    eDOMEvents_overflowchanged
+    eDOMEvents_overflowchanged,
+    eDOMEvents_subtreemodified,
+    eDOMEvents_nodeinserted,
+    eDOMEvents_noderemoved,
+    eDOMEvents_noderemovedfromdocument,
+    eDOMEvents_nodeinsertedintodocument,
+    eDOMEvents_attrmodified,
+    eDOMEvents_characterdatamodified
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAReadableString& aEventType);

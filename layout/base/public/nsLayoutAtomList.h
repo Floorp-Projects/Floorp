@@ -164,6 +164,15 @@ LAYOUT_ATOM(onoverflow, "onoverflow")
 LAYOUT_ATOM(onunderflow, "onunderflow")
 LAYOUT_ATOM(onoverflowchanged, "onoverflowchanged")
 
+// mutation events
+LAYOUT_ATOM(onDOMSubtreeModified, "onDOMSubtreeModified")
+LAYOUT_ATOM(onDOMNodeInserted, "onDOMNodeInserted")
+LAYOUT_ATOM(onDOMNodeRemoved, "onDOMNodeRemoved")
+LAYOUT_ATOM(onDOMNodeRemovedFromDocument, "onDOMNodeRemovedFromDocument")
+LAYOUT_ATOM(onDOMNodeInsertedIntoDocument, "onDOMNodeInsertedIntoDocument")
+LAYOUT_ATOM(onDOMAttrModified, "onDOMAttrModified")
+LAYOUT_ATOM(onDOMCharacterDataModified, "onDOMCharacterDataModified")
+
   // Alphabetical list of languages for lang-specific transforms
 LAYOUT_ATOM(Japanese, "ja")
 LAYOUT_ATOM(Korean, "ko")

@@ -107,6 +107,8 @@ public:
 
   virtual nsresult SetListenerTarget(nsISupports* aTarget);
 
+  virtual nsresult HasMutationListeners(PRBool* aListener) { *aListener = (mMutationListeners != nsnull); return NS_OK; };
+
   static nsresult GetIdentifiersForType(nsIAtom* aType, nsIID& aIID, PRInt32* aSubType);
 
   // nsIDOMEventTarget interface
@@ -151,6 +153,8 @@ protected:
   nsVoidArray* mCompositionListeners;
   nsVoidArray* mMenuListeners;
   nsVoidArray* mScrollListeners;
+  nsVoidArray* mMutationListeners;
+
   nsCOMPtr<nsIPrincipal> mPrincipal;
   PRBool mDestroyed;
 
@@ -241,5 +245,8 @@ protected:
 #define NS_EVENT_BITS_PAINT_PAINT   0x01
 #define NS_EVENT_BITS_PAINT_RESIZE  0x02
 #define NS_EVENT_BITS_PAINT_SCROLL  0x04
+
+//nsIDOMMutationListener
+// These bits are found in nsMutationEvent.h.
 
 #endif // nsEventListenerManager_h__
