@@ -697,6 +697,8 @@ CERT_VerifyCACertForUsage;
 CERT_VerifyCertificate;
 CERT_VerifyCertificateNow;
 CERT_VerifyOCSPResponseSignature;
+PK11_ConvertSessionPrivKeyToTokenPrivKey;
+PK11_ConvertSessionSymKeyToTokenSymKey;
 PK11_GetModInfo;
 PK11_GetPBEIV;
 PK11_ImportCRL;
