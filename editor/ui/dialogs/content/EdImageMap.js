@@ -14,11 +14,12 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 1999-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
  *   Dan Haddix (dan6992@hotmail.com)
+ *   Brian King
  */
 
 
@@ -28,6 +29,7 @@ var imageElement = null;
 var mapName = '';
 var imageMap = null;
 var oldMap = null;
+var noImg = false;
 
 function Startup(){
   if (!InitEditorShell())
@@ -41,8 +43,16 @@ function initDialog(){
   imageElement = editorShell.GetSelectedElement("img");
   if (!imageElement) //If not an image close window
   {
-    window.close();
-    return;
+    imageElementName = window.opener.document.getElementById('srcInput');
+    imageElementName = imageElementName.value;
+    if ( IsValidImage(imageElementName )) {
+      noImg = true;
+    }
+    else {
+      // Need error message here
+      window.close();
+      return;
+    } 
   }
 
   //Set iframe pointer
@@ -68,7 +78,7 @@ function initDialog(){
 
   //Place Image
   var newImg = frameDoc.createElement("img");
-  if ( newImg ) {
+  if ( newImg && noImg == false) {
     newImg.setAttribute("src", imageElement.getAttribute("src"));
     newImg.setAttribute("width", imageElement.offsetWidth);
     newImg.setAttribute("height", imageElement.offsetHeight);
@@ -76,9 +86,13 @@ function initDialog(){
     frameDoc.getElementById("bgDiv").appendChild(newImg);
     frameDoc.getElementById("bgDiv").style.width = imageElement.offsetWidth;
   }
+  else if (newImg) {
+    newImg.setAttribute("src", imageElementName);
+    frameDoc.getElementById("bgDiv").appendChild(newImg);
+  }
 
   //Recreate Image Map if it exists
-  if (imageElement.getAttribute("usemap")){
+  if ( (noImg == false) && (imageElement.getAttribute("usemap")) ) {
     //alert('test');
     recreateMap();
   }
