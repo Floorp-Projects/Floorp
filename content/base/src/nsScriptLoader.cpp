@@ -701,7 +701,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
       if (NS_SUCCEEDED(rv)) {
         typedef nsSharedBufferHandle<PRUnichar>* HandlePtr;
         typedef nsAString* StrPtr;
-        HandlePtr handle = NS_AllocateContiguousHandleWithData(HandlePtr(0), unicodeLength+1, StrPtr(0));
+        HandlePtr handle = NS_AllocateContiguousHandleWithData(HandlePtr(0), NS_STATIC_CAST(PRUint32, unicodeLength+1), StrPtr(0));
         PRUnichar *ustr = (PRUnichar *)handle->DataStart();
         
         rv = unicodeDecoder->Convert(string, (PRInt32 *) &stringLen, ustr,
