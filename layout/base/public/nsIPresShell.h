@@ -146,6 +146,26 @@ public:
 
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle) = 0;
 
+  /** Setup all style rules required to implement preferences
+   * - used for background/text/link colors and link underlining
+   *    may be extended for any prefs that are implemented via style rules
+   * - aForceReflow argument is used to force a full reframe to make the rules show
+   *   (only used when the current page needs to reflect changed pref rules)
+   *
+   * - initially created for bugs 31816, 20760, 22963
+   */
+  NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow) = 0;
+
+  /** Allow client to enable and disable the use of the preference style rules,
+   *  by type. 
+   *  NOTE: type argument is currently ignored, but is in the API for 
+   *        future refinement
+   *
+   *  - initially created for bugs 31816, 20760, 22963
+   */
+  NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF) = 0;
+  NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled) = 0;
+
   /**
    * Gather titles of all selectable (alternate and preferred) style sheets
    * fills void array with nsString* caller must free strings

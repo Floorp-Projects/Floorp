@@ -43,6 +43,8 @@
 #include "nsIDocumentObserver.h"
 #include "nsIStyleSet.h"
 #include "nsICSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
+#include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
+#include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsIStyleContext.h"
 #include "nsIServiceManager.h"
 #include "nsFrame.h"
@@ -136,6 +138,25 @@
 
 // SubShell map
 #include "nsDST.h"
+
+// supporting bugs 31816, 20760, 22963
+// define USE_OVERRIDE to put prefs in as an override stylesheet
+// otherwise they go in as a Backstop stylesheets
+//  - OVERRIDE is better for text and bg colors, but bad for link colors,
+//    so eventually, we should probably have a backstop and an override and 
+//    put the link colors in the backstop and the text and bg colors in the override,
+//    but using the backstop stylesheet with !important rules solves 95% of the 
+//    problem and should suffice for RTM
+//
+// XXX: use backstop stylesheet of link colors and link underline, 
+//      user override stylesheet for forcing background and text colors, post RTM
+//
+// #define PREFS_USE_OVERRIDE
+
+// convert a color value to a string, in the CSS format #RRGGBB
+// *  - initially created for bugs 31816, 20760, 22963
+static void ColorToString(nscolor aColor, nsAutoString &aString);
+
 
 // local management of the style watch:
 //  aCtlValue should be set to all actions desired (bitwise OR'd together)
@@ -755,6 +776,9 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
+  NS_IMETHOD SetPreferenceStyleRules(PRBool aForceRefrlow);
+  NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF);
+  NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled);
 
   NS_IMETHOD SetDisplaySelection(PRInt16 aToggle);
   NS_IMETHOD GetDisplaySelection(PRInt16 *aToggle);
@@ -989,6 +1013,15 @@ protected:
   PRBool mInVerifyReflow;
 #endif
 
+    /**
+    * methods that manage rules that are used to implement the associated preferences
+    *  - initially created for bugs 31816, 20760, 22963
+    */
+  nsresult ClearPreferenceStyleRules(void);
+  nsresult CreatePreferenceStyleSheet(void);
+  nsresult SetPrefColorRules(void);
+  nsresult SetPrefLinkRules(void);
+
   // IMPORTANT: The ownership implicit in the following member variables has been 
   // explicitly checked and set using nsCOMPtr for owning pointers and raw COM interface 
   // pointers for weak (ie, non owning) references. If you add any members to this
@@ -999,6 +1032,8 @@ protected:
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsIPresContext> mPresContext;
   nsCOMPtr<nsIStyleSet> mStyleSet;
+  nsICSSStyleSheet* mPrefStyleSheet; // mStyleSet owns it but we maintaina ref, may be null
+  PRPackedBool mEnablePrefStyleSheet;
   nsIViewManager* mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsILayoutHistoryState* mHistoryState; // [WEAK] session history owns this
   PRUint32 mUpdateCount;
@@ -1189,6 +1224,8 @@ PresShell::PresShell():mStackArena(nsnull),
   mSubShellMap = nsnull;
   mRCCreatedDuringLoad = 0;
   mDummyLayoutRequest = nsnull;
+  mPrefStyleSheet = nsnull;
+  mEnablePrefStyleSheet = PR_TRUE;
 
 #ifdef MOZ_REFLOW_PERF
   mReflowCountMgr = new ReflowCountMgr();
@@ -1247,6 +1284,9 @@ PresShell::~PresShell()
     mReflowCountMgr = nsnull;
   }
 #endif
+
+  // release our pref style sheet, if we have one still
+  ClearPreferenceStyleRules();
 
   // if we allocated any stack memory free it.
   FreeDynamicStack();
@@ -1419,6 +1459,9 @@ PresShell::Init(nsIDocument* aDocument,
 
   // cache the drag service so we can check it during reflows
   mDragService = do_GetService("@mozilla.org/widget/dragservice;1");
+
+  // setup the preference style rules up (no forced reflow)
+  SetPreferenceStyleRules(PR_FALSE);
 
   return NS_OK;
 }
@@ -1607,6 +1650,366 @@ PresShell::ListAlternateStyleSheets(nsStringArray& aTitleList)
     }
   }
   return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+PresShell::EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType/*=0xFF*/)
+{
+  nsresult result = NS_OK;
+
+  // capture change in state
+  PRBool bChanging = (mEnablePrefStyleSheet != aEnable) ? PR_TRUE : PR_FALSE;
+  // set to desired state
+  mEnablePrefStyleSheet = aEnable;
+
+#ifdef NS_DEBUG
+  printf("PrefStyleSheet %s %s\n",
+    mEnablePrefStyleSheet ? "ENABLED" : "DISABLED",
+    bChanging ? "(state toggled)" : "(state unchanged)");
+#endif
+
+  // deal with changing state
+  if(bChanging){
+    switch (mEnablePrefStyleSheet){
+    case PR_TRUE:
+      // was off, now on, so create the rules
+      result = SetPreferenceStyleRules(PR_TRUE);
+      break;
+    default :
+      // was on, now off, so clear the rules
+      result = ClearPreferenceStyleRules();
+      break;
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+PresShell::ArePrefStyleRulesEnabled(PRBool& aEnabled)
+{
+  aEnabled = mEnablePrefStyleSheet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
+{
+  NS_PRECONDITION(mPresContext, "presContext cannot be null");
+  if (mPresContext) {
+    nsresult result = NS_OK;
+
+    // zeroth, make sure this feature is enabled
+    // XXX: may get more granularity later 
+    //      (i.e. each pref may be controlled independently)
+    if (!mEnablePrefStyleSheet) {
+#ifdef NS_DEBUG
+      printf("PrefStyleSheet disabled\n");
+#endif
+      return PR_TRUE;
+    }
+
+    // first, make sure this is not a chrome shell 
+    nsCOMPtr<nsISupports> container;
+    result = mPresContext->GetContainer(getter_AddRefs(container));
+    if (NS_SUCCEEDED(result) && container) {
+      nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
+      if (NS_SUCCEEDED(result) && docShell){
+        PRInt32 docShellType;
+        result = docShell->GetItemType(&docShellType);
+        if (NS_SUCCEEDED(result)){
+          if (nsIDocShellTreeItem::typeChrome == docShellType){
+            return NS_OK;
+          }
+        }      
+      }
+    }
+    if (NS_SUCCEEDED(result)) {
+    
+#ifdef NS_DEBUG
+      printf("Setting Preference Style Rules:\n");
+#endif
+      // if here, we need to create rules for the prefs
+      // - this includes the background-color, the text-color,
+      //   the link color, the visited link color and the link-underlining
+    
+      // first clear any exising rules
+      result = ClearPreferenceStyleRules();
+      
+      // now do the color rules
+      if (NS_SUCCEEDED(result)) {
+        result = SetPrefColorRules();
+      }
+
+      // now the link rules (must come after the color rules, or links will not be correct color!)
+      // XXX - when there is both an override and backstop pref stylesheet this won't matter,
+      //       as the color rules will be overrides and the links rules will be backstop
+      if (NS_SUCCEEDED(result)) {
+        result = SetPrefLinkRules();
+      }
+
+      // update the styleset now that we are done inserting our rules
+      if (NS_SUCCEEDED(result)) {
+        if (mStyleSet) {
+          mStyleSet->NotifyStyleSheetStateChanged(PR_FALSE);
+        }
+      }
+    }
+#ifdef NS_DEBUG
+    printf( "Preference Style Rules set: error=%ld\n", (long)result);
+#endif    
+
+    if (aForceReflow){
+#ifdef NS_DEBUG
+      printf( "*** Forcing reframe! ***\n");
+#endif
+      // this is harsh, but without it the new colors don't appear on the current page
+      // Fortunately, it only happens when the prefs change, a rare event.
+      // XXX - determine why the normal PresContext::RemapStyleAndReflow doesn't cut it
+      ReconstructFrames();
+    }
+
+    return result;
+
+  } else {
+    return NS_ERROR_NULL_POINTER;
+  }
+}
+
+nsresult PresShell::ClearPreferenceStyleRules(void)
+{
+  nsresult result = NS_OK;
+  if (mPrefStyleSheet) {
+    NS_ASSERTION(mStyleSet, "null styleset entirely unexpected!");
+    if (mStyleSet) {
+      // remove the sheet from the styleset: 
+      // - note that we have to check for success by comparing the count before and after...
+#ifdef NS_DEBUG
+ #ifdef PREFS_USE_OVERRIDE
+      PRInt32 numBefore = mStyleSet->GetNumberOfOverrideStyleSheets();
+ #else
+      PRInt32 numBefore = mStyleSet->GetNumberOfBackstopStyleSheets();
+ #endif
+      NS_ASSERTION(numBefore > 0, "no override stylesheets in styleset, but we have one!");
+#endif
+
+ #ifdef PREFS_USE_OVERRIDE
+      mStyleSet->RemoveOverrideStyleSheet(mPrefStyleSheet);
+ #else 
+      mStyleSet->RemoveBackstopStyleSheet(mPrefStyleSheet);
+ #endif
+
+#ifdef NS_DEBUG
+ #ifdef PREFS_USE_OVERRIDE
+      NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfOverrideStyleSheets(),
+                   "Pref stylesheet was not removed");
+ #else
+      NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfBackstopStyleSheets(),
+                   "Pref stylesheet was not removed");
+ #endif
+      printf("PrefStyleSheet removed\n");
+#endif
+      // clear the sheet pointer: it is strictly historical now
+      NS_IF_RELEASE(mPrefStyleSheet);
+    }
+  }
+  return result;
+}
+
+nsresult PresShell::CreatePreferenceStyleSheet(void)
+{
+  NS_ASSERTION(mPrefStyleSheet==nsnull, "prefStyleSheet already exists");
+  nsresult result = NS_OK;
+
+  result = NS_NewCSSStyleSheet(&mPrefStyleSheet);
+  if (NS_SUCCEEDED(result)) {
+    NS_ASSERTION(mPrefStyleSheet, "null but no error");
+    nsCOMPtr<nsIURI> uri;
+    result = NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nsnull);
+    if (NS_SUCCEEDED(result)) {
+      NS_ASSERTION(uri, "null but no error");
+      result = mPrefStyleSheet->Init(uri);
+      if (NS_SUCCEEDED(result)) {
+        mPrefStyleSheet->SetDefaultNameSpaceID(kNameSpaceID_HTML);
+ #ifdef PREFS_USE_OVERRIDE
+        mStyleSet->AppendOverrideStyleSheet(mPrefStyleSheet);
+ #else
+        mStyleSet->AppendBackstopStyleSheet(mPrefStyleSheet);
+ #endif
+      }
+    }
+  } else {
+    result = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+#ifdef NS_DEBUG
+  printf("CreatePrefStyleSheet completed: error=%ld\n",(long)result);
+#endif
+
+  return result;
+}
+
+nsresult PresShell::SetPrefColorRules(void)
+{
+  NS_ASSERTION(mPresContext,"null prescontext not allowed");
+  if (mPresContext) {
+    nsresult result = NS_OK;
+    PRBool useDocColors = PR_TRUE;
+
+    // see if we need to create the rules first
+    if (NS_SUCCEEDED(mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors))) {
+      if (!useDocColors) {
+
+#ifdef NS_DEBUG
+        printf(" - Creating rules for document colors\n");
+#endif
+
+        // OK, not using document colors, so we have to force the user's colors via style rules
+        if (!mPrefStyleSheet) {
+          result = CreatePreferenceStyleSheet();
+        }
+        if (NS_SUCCEEDED(result)) {
+          NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
+
+          nscolor bgColor;
+          nscolor textColor;
+          result = mPresContext->GetDefaultColor(&textColor);
+          if (NS_SUCCEEDED(result)) {
+            result = mPresContext->GetDefaultBackgroundColor(&bgColor);
+          }
+          if (NS_SUCCEEDED(result)) {
+            // get the DOM interface to the stylesheet
+            nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
+            if (NS_SUCCEEDED(result)) {
+              PRUint32 index = 0;
+              nsAutoString strRule,strColor;
+
+              // create a rule for each color and add it to the style sheet
+              // - the rules are !important so they override all but author
+              //   important rules (when put into a backstop stylesheet) and 
+              //   all (even author important) when put into an override stylesheet
+
+              ///////////////////////////////////////////////////////////////
+              // - default color: '* {color:#RRGGBB !important;}'
+              ColorToString(textColor,strColor);
+              strRule.Append(NS_LITERAL_STRING("* {color:"));
+              strRule.Append(strColor);
+              strRule.Append(NS_LITERAL_STRING(" !important;} "));
+
+              ///////////////////////////////////////////////////////////////
+              // - default background color: '* {background-color:#RRGGBB !important;}'
+              ColorToString(bgColor,strColor);
+              strRule.Append(NS_LITERAL_STRING("* {background-color:"));
+              strRule.Append(strColor);
+              strRule.Append(NS_LITERAL_STRING(" !important;} "));
+              
+              // now insert the rule
+              result = sheet->InsertRule(strRule,0,&index);
+            }
+          }
+        }
+      }
+    }
+    return result;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+nsresult PresShell::SetPrefLinkRules(void)
+{
+  NS_ASSERTION(mPresContext,"null prescontext not allowed");
+  if (mPresContext) {
+    nsresult result = NS_OK;
+
+    if (!mPrefStyleSheet) {
+      result = CreatePreferenceStyleSheet();
+    }
+    if (NS_SUCCEEDED(result)) {
+      NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
+
+      // get the DOM interface to the stylesheet
+      nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
+      if (NS_SUCCEEDED(result)) {
+
+#ifdef NS_DEBUG
+        printf(" - Creating rules for link and visited colors\n");
+#endif
+
+        // support default link colors: 
+        //   this means the link colors need to be overridable, 
+        //   which they are if we put them in the backstop stylesheet,
+        //   though if using an override sheet this will cause authors grief still
+        //   In the backstop stylesheet, they are !important to keep the forced-color rules
+        //   from coloring the links too
+        //
+        // XXX: do active links and visited links get another color?
+        //      They were red in the html.css rules
+        
+        nscolor linkColor, visitedColor;
+        result = mPresContext->GetDefaultLinkColor(&linkColor);
+        if (NS_SUCCEEDED(result)) {
+          result = mPresContext->GetDefaultVisitedLinkColor(&visitedColor);
+        }
+        if (NS_SUCCEEDED(result)) {
+          // insert a rule to make links the preferred color
+          PRUint32 index = 0;
+          nsAutoString strRule, strColor;
+
+          ///////////////////////////////////////////////////////////////
+          // - links: '*:link, *:link:active {color: #RRGGBB !important;}'
+          ColorToString(linkColor,strColor);
+          strRule.Append(NS_LITERAL_STRING("*:link, *:link:active {color:"));
+          strRule.Append(strColor);
+          strRule.Append(NS_LITERAL_STRING(" !important;} "));
+ 
+          ///////////////////////////////////////////////////////////////
+          // - visited links '*:visited, *:visited:active {color: #RRGGBB !important;}'
+          ColorToString(visitedColor,strColor);
+          strRule.Append(NS_LITERAL_STRING("*:visited, *:visited:active {color:"));
+          strRule.Append(strColor);
+          strRule.Append(NS_LITERAL_STRING(" !important;} "));
+
+          // insert the rules
+          result = sheet->InsertRule(strRule,0,&index);
+        }
+
+        if (NS_SUCCEEDED(result)) {
+          PRBool underlineLinks = PR_TRUE;
+          result = mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks,underlineLinks);
+          if (NS_SUCCEEDED(result)) {
+            // create a rule for underline: on or off
+            PRUint32 index = 0;
+            nsAutoString strRule;
+            if (underlineLinks) {
+              // create a rule to make underlining happen
+              //  ':link, :visited {text-decoration:[underline|none];}'
+              // no need for important, we want these to be overridable
+              // NOTE: these must go in the backstop stylesheet or they cannot be
+              //       overridden by authors
+  #ifdef NS_DEBUG
+              printf (" - Creating rules for enabling link underlines\n");
+  #endif
+              // make a rule to make text-decoration: underline happen for links
+              strRule.Append(NS_LITERAL_STRING(":link, :visited {text-decoration:underline;}"));
+            } else {
+  #ifdef NS_DEBUG
+              printf (" - Creating rules for disabling link underlines\n");
+  #endif
+              // make a rule to make text-decoration: none happen for links
+              strRule.Append(NS_LITERAL_STRING(":link, :visited {text-decoration:none;}"));
+            }
+
+            // ...now insert the rule
+            result = sheet->InsertRule(strRule,0,&index);          
+          }
+        }
+      }
+    }
+    return result;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
 }
 
 NS_IMETHODIMP
@@ -5942,3 +6345,27 @@ void ReflowCountMgr::DisplayDiffsInTotals(const char * aStr)
 }
 
 #endif // MOZ_REFLOW_PERF
+
+// make a color string like #RRGGBB
+void ColorToString(nscolor aColor, nsAutoString &aString)
+{
+  nsAutoString tmp;
+  aString.SetLength(0);
+
+  // #
+  aString.Append(NS_LITERAL_STRING("#"));
+  // RR
+  tmp.AppendInt((PRInt32)NS_GET_R(aColor), 16);
+  if (tmp.Length() < 2) tmp.AppendInt(0,16);
+  aString.Append(tmp);
+  tmp.SetLength(0);
+  // GG
+  tmp.AppendInt((PRInt32)NS_GET_G(aColor), 16);
+  if (tmp.Length() < 2) tmp.AppendInt(0,16);
+  aString.Append(tmp);
+  tmp.SetLength(0);
+  // BB
+  tmp.AppendInt((PRInt32)NS_GET_B(aColor), 16);
+  if (tmp.Length() < 2) tmp.AppendInt(0,16);
+  aString.Append(tmp);
+}

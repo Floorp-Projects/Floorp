@@ -90,6 +90,11 @@ enum nsLanguageSpecificTransformType {
   eLanguageSpecificTransformType_Korean
 };
 
+// supported values for cached bool types
+const PRUint32 kPresContext_UseDocumentColors = 0x01;
+const PRUint32 kPresContext_UseDocumentFonts = 0x02;
+const PRUint32 kPresContext_UnderlineLinks = 0x03;
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 class nsIPresContext : public nsISupports {
@@ -213,6 +218,13 @@ public:
   NS_IMETHOD SetDefaultFixedFont(const nsFont& aFont) = 0;
   virtual const nsFont& GetDefaultFixedFontDeprecated() = 0;
 
+  /** Get a cached boolean pref, by its type
+       if the type is not supported, then NS_ERROR_FAILURE is returned
+       and the aValue argument is undfined, otherwise aValue is set
+       to the value of the boolean pref */
+  // *  - initially created for bugs 31816, 20760, 22963
+  NS_IMETHOD GetCachedBoolPref(PRUint32 prefType, PRBool &aValue) = 0;
+
   /**
    * Access Nav's magic font scaler value
    */
@@ -220,7 +232,7 @@ public:
   NS_IMETHOD SetFontScaler(PRInt32 aScaler) = 0;
 
   /** 
-   * Get the defualt colors
+   * Get the default colors
    */
   NS_IMETHOD GetDefaultColor(nscolor* aColor) = 0;
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor) = 0;
@@ -228,6 +240,8 @@ public:
   NS_IMETHOD GetDefaultBackgroundImageRepeat(PRUint8* aRepeat) = 0;
   NS_IMETHOD GetDefaultBackgroundImageOffset(nscoord* aX, nscoord* aY) = 0;
   NS_IMETHOD GetDefaultBackgroundImageAttachment(PRUint8* aRepeat) = 0;
+  NS_IMETHOD GetDefaultLinkColor(nscolor* aColor) = 0;
+  NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor) = 0;
 
   NS_IMETHOD SetDefaultColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor) = 0;
@@ -235,6 +249,8 @@ public:
   NS_IMETHOD SetDefaultBackgroundImageRepeat(PRUint8 aRepeat) = 0;
   NS_IMETHOD SetDefaultBackgroundImageOffset(nscoord aX, nscoord aY) = 0;
   NS_IMETHOD SetDefaultBackgroundImageAttachment(PRUint8 aRepeat) = 0;
+  NS_IMETHOD SetDefaultLinkColor(nscolor aColor) = 0;
+  NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor) = 0;
 
   NS_IMETHOD GetImageGroup(nsIImageGroup** aGroupResult) = 0;
 
