@@ -45,6 +45,10 @@
 struct IActiveIMMApp;
 #endif
 
+#ifdef MOZ_UNICODE
+#include "nsWindowAPI.h"
+#endif
+
 struct MethodInfo;
 
 /**
@@ -100,6 +104,21 @@ public:
     // Active Input Method support
     static IActiveIMMApp *gAIMMApp;
     static PRInt32       gAIMMCount;
+#endif
+
+#ifdef MOZ_UNICODE
+    // Ansi API support
+    static NS_DefWindowProc     mDefWindowProc;
+    static NS_CallWindowProc    mCallWindowProc;
+    static NS_SetWindowLong     mSetWindowLong;
+    static NS_SendMessage       mSendMessage;
+    static NS_DispatchMessage   mDispatchMessage;
+    static NS_GetMessage        mGetMessage;
+    static NS_GetOpenFileName   mGetOpenFileName;
+    static NS_GetSaveFileName   mGetSaveFileName;
+    static NS_GetClassName      mGetClassName;
+    static NS_CreateWindowEx    mCreateWindowEx;
+    static NS_RegisterClass     mRegisterClass;
 #endif
 };
 

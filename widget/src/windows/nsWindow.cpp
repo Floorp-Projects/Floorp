@@ -668,7 +668,11 @@ BOOL CALLBACK nsWindow::BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg)
   if (proc == (LONG)&nsWindow::WindowProc) {
     // its one of our windows so go ahead and send a message to it
     WNDPROC winProc = (WNDPROC)GetWindowLong(aWnd, GWL_WNDPROC);
+#ifdef MOZ_UNICODE
+    nsToolkit::mCallWindowProc(winProc, aWnd, aMsg, 0, 0);
+#else
     ::CallWindowProc(winProc, aWnd, aMsg, 0, 0);
+#endif
   }
   // Send message to children of this window
   ::EnumChildWindows(aWnd, nsWindow::BroadcastMsgToChildren, aMsg);
@@ -1276,7 +1280,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
     if (nsnull == someWindow) {
       NS_ASSERTION(someWindow, "someWindow is null, cannot call any CallWindowProc");      
 #ifdef MOZ_UNICODE
-      return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+      return nsToolkit::mDefWindowProc(hWnd, msg, wParam, lParam);
 #else
       return ::DefWindowProc(hWnd, msg, wParam, lParam);
 #endif
@@ -1307,7 +1311,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 
 #if defined(STRICT)
   #ifdef MOZ_UNICODE
-    return ::CallWindowProcW((WNDPROC)someWindow->GetPrevWindowProc(), hWnd, 
+    return nsToolkit::mCallWindowProc((WNDPROC)someWindow->GetPrevWindowProc(), hWnd, 
                             msg, wParam, lParam);
   #else
     return ::CallWindowProc((WNDPROC)someWindow->GetPrevWindowProc(), hWnd, 
@@ -1315,7 +1319,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   #endif
 #else
   #ifdef MOZ_UNICODE
-    return ::CallWindowProcW((FARPROC)someWindow->GetPrevWindowProc(), hWnd, 
+    return nsToolkit::mCallWindowProc((FARPROC)someWindow->GetPrevWindowProc(), hWnd, 
                             msg, wParam, lParam);
   #else
     return ::CallWindowProc((FARPROC)someWindow->GetPrevWindowProc(), hWnd, 
@@ -1337,7 +1341,7 @@ LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam,
       return lResult;
   }
 #ifdef MOZ_UNICODE
-  return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+  return nsToolkit::mDefWindowProc(hWnd, msg, wParam, lParam);
 #else
   return ::DefWindowProc(hWnd, msg, wParam, lParam);
 #endif
@@ -1464,7 +1468,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                                          NULL);
     } else {
 #ifdef MOZ_UNICODE
-      mWnd = ::CreateWindowExW(extendedStyle, 
+      mWnd = nsToolkit::mCreateWindowEx(extendedStyle, 
                               aInitData && aInitData->mDropShadow ? 
                               WindowPopupClassW() : WindowClassW(),
                               L"",
@@ -1511,7 +1515,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     LONG contentType = aInitData? aInitData->mContentType: (parent? ::GetWindowLong(parent, GWL_ID): -1);
     LONG isContent = (contentType == 1 || contentType == 2);
 #ifdef MOZ_UNICODE
-    ::SetWindowLongW(mWnd, GWL_ID, contentType);
+    nsToolkit::mSetWindowLong(mWnd, GWL_ID, contentType);
 #else
     ::SetWindowLong(mWnd, GWL_ID, contentType);
 #endif
@@ -2282,7 +2286,7 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 
     // Draw in the new font
 #ifdef MOZ_UNICODE
-  ::SendMessageW(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0); 
+  nsToolkit::mSendMessage(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0); 
 #else
   ::SendMessage(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0); 
 #endif
@@ -2467,8 +2471,8 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
   }
 
 #ifdef MOZ_UNICODE
-  ::SetWindowLongW(hwnd, GWL_STYLE, style);
-  ::SetWindowLongW(hwnd, GWL_EXSTYLE, exStyle);
+  nsToolkit::mSetWindowLong(hwnd, GWL_STYLE, style);
+  nsToolkit::mSetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
 #else
   ::SetWindowLong(hwnd, GWL_STYLE, style);
   ::SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
@@ -4012,7 +4016,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       case WM_KILLFOCUS:
 #ifdef MOZ_UNICODE
         WCHAR className[19];
-        ::GetClassNameW((HWND)wParam, className, 19);
+        nsToolkit::mGetClassName((HWND)wParam, className, 19);
         if(wcscmp(className, WindowClassW()))
           isMozWindowTakingFocus = PR_FALSE;
 #else
@@ -4123,7 +4127,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 // Deactivate
 #ifdef MOZ_UNICODE
 				WCHAR className[19];
-				::GetClassNameW((HWND)wParam, className, 19);
+				nsToolkit::mGetClassName((HWND)wParam, className, 19);
 				if(wcscmp(className, WindowClassW()))
 				  isMozWindowTakingFocus = PR_FALSE;
 #else
@@ -4514,7 +4518,7 @@ LPCWSTR nsWindow::WindowClassW()
 #ifdef MOZ_AIMM
         wc.lpfnWndProc      = nsWindow::DefaultWindowProc;
 #else
-        wc.lpfnWndProc      = ::DefWindowProcW;
+        wc.lpfnWndProc      = nsToolkit::nsDefWindowProc;
 #endif
         wc.cbClsExtra       = 0;
         wc.cbWndExtra       = 0;
@@ -4525,7 +4529,7 @@ LPCWSTR nsWindow::WindowClassW()
         wc.lpszMenuName     = NULL;
         wc.lpszClassName    = className;
     
-        nsWindow::sIsRegistered = ::RegisterClassW(&wc);
+        nsWindow::sIsRegistered = nsToolkit::mRegisterClass(&wc);
 #ifdef MOZ_AIMM
         // Call FilterClientWindows method since it enables ActiveIME on CJK Windows
         if(nsToolkit::gAIMMApp)
@@ -4546,7 +4550,7 @@ LPCWSTR nsWindow::WindowPopupClassW()
 #ifdef MOZ_AIMM
         wc.lpfnWndProc      = nsWindow::DefaultWindowProc;
 #else
-        wc.lpfnWndProc      = ::DefWindowProcW;
+        wc.lpfnWndProc      = nsToolkit::nsDefWindowProc;
 #endif
         wc.cbClsExtra       = 0;
         wc.cbWndExtra       = 0;
@@ -4557,12 +4561,12 @@ LPCWSTR nsWindow::WindowPopupClassW()
         wc.lpszMenuName     = NULL;
         wc.lpszClassName    = className;
     
-        nsWindow::sIsPopupClassRegistered = ::RegisterClassW(&wc);
+        nsWindow::sIsPopupClassRegistered = nsToolkit::mRegisterClass(&wc);
         if (!nsWindow::sIsPopupClassRegistered) {
           // For older versions of Win32 (i.e., not XP), the registration will
           // fail, so we have to re-register without the CS_XP_DROPSHADOW flag.
           wc.style = CS_DBLCLKS;
-          nsWindow::sIsPopupClassRegistered = ::RegisterClassW(&wc);
+          nsWindow::sIsPopupClassRegistered = nsToolkit::mRegisterClass(&wc);
         }
     }
 
@@ -4765,7 +4769,7 @@ void nsWindow::SubclassWindow(BOOL bState)
     if (bState) {
         // change the nsWindow proc
 #ifdef MOZ_UNICODE
-        mPrevWndProc = (WNDPROC)::SetWindowLongW(mWnd, GWL_WNDPROC, 
+        mPrevWndProc = (WNDPROC)nsToolkit::mSetWindowLong(mWnd, GWL_WNDPROC, 
                                                  (LONG)nsWindow::WindowProc);
 #else
         mPrevWndProc = (WNDPROC)::SetWindowLong(mWnd, GWL_WNDPROC, 
@@ -4777,7 +4781,7 @@ void nsWindow::SubclassWindow(BOOL bState)
     } 
     else {
 #ifdef MOZ_UNICODE
-        ::SetWindowLongW(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
+        nsToolkit::mSetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
 #else
         ::SetWindowLong(mWnd, GWL_WNDPROC, (LONG)mPrevWndProc);
 #endif
@@ -5412,7 +5416,7 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
   char* title = GetACPString(aTitle);
   if (title) {
 #ifdef MOZ_UNICODE
-    ::SendMessageW(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCWSTR)PromiseFlatString(aTitle).get());
+    nsToolkit::mSendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCWSTR)PromiseFlatString(aTitle).get());
 #else
     ::SendMessage(mWnd, WM_SETTEXT, (WPARAM)0, (LPARAM)(LPCTSTR)title);
 #endif
@@ -5490,7 +5494,7 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
   if ( bigIcon ) {
       LRESULT rv = 0;
 #ifdef MOZ_UNICODE
-      rv = ::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM)bigIcon);
+      rv = nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM)bigIcon);
 #else
       rv = ::SendMessage(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM)bigIcon);
 #endif
@@ -5504,7 +5508,7 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
   if ( smallIcon ) {
       LRESULT rv = 0;
 #ifdef MOZ_UNICODE
-      rv = ::SendMessageW(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM)smallIcon);
+      rv = nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM)smallIcon);
 #else
       rv = ::SendMessage(mWnd, WM_SETICON, (WPARAM)ICON_SMALL, (LPARAM)smallIcon);
 #endif
@@ -6491,7 +6495,7 @@ nsWindow::HandleMouseActionOfIME(int aAction)
 
       // send MS_MSIME_MOUSE message to default IME window.
 #ifdef MOZ_UNICODE
-      if (::SendMessageW(mWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1)
+      if (nsToolkit::mSendMessage(mWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1)
 #else
       if (::SendMessage(mWnd, nsWindow::uWM_MSIME_MOUSE, MAKELONG(MAKEWORD(aAction, positioning), offset), (LPARAM) hIMC) == 1)
 #endif

@@ -45,6 +45,23 @@
 #include "aimm.h"
 #endif
 
+#ifdef MOZ_UNICODE
+#include "nsWindowAPI.h"
+
+NS_DefWindowProc    nsToolkit::mDefWindowProc = &DefWindowProcW;
+NS_CallWindowProc   nsToolkit::mCallWindowProc = &CallWindowProcW;
+NS_SetWindowLong    nsToolkit::mSetWindowLong = &SetWindowLongW;
+NS_SendMessage      nsToolkit::mSendMessage = &SendMessageW;
+NS_DispatchMessage  nsToolkit::mDispatchMessage = &DispatchMessageW;
+NS_GetMessage       nsToolkit::mGetMessage = &GetMessageW;
+NS_GetOpenFileName  nsToolkit::mGetOpenFileName = &GetOpenFileNameW;
+NS_GetSaveFileName  nsToolkit::mGetSaveFileName = &GetSaveFileNameW;
+NS_GetClassName     nsToolkit::mGetClassName = &GetClassNameW;
+NS_CreateWindowEx   nsToolkit::mCreateWindowEx = &CreateWindowExW;
+NS_RegisterClass    nsToolkit::mRegisterClass = &RegisterClassW; 
+
+#endif
+
 NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 //
@@ -132,9 +149,9 @@ void RunPump(void* arg)
     // Process messages
     MSG msg;
 #ifdef MOZ_UNICODE
-    while (GetMessageW(&msg, NULL, 0, 0)) {
+    while (nsToolkit::mGetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessageW(&msg);
+        nsToolkit::mDispatchMessage(&msg);
     }
 #else    
     while (GetMessage(&msg, NULL, 0, 0)) {
@@ -143,6 +160,222 @@ void RunPump(void* arg)
     }
 #endif
 }
+
+#ifdef MOZ_UNICODE
+
+#define MAX_CLASS_NAME  128
+#define MAX_MENU_NAME   128
+#define MAX_FILTER_NAME 128
+
+int ConvertAtoW(LPCSTR aStrInA, int aBufferSize, LPWSTR aStrOutW)
+{
+  return MultiByteToWideChar(CP_ACP, 0, aStrInA, -1, aStrOutW, aBufferSize) ;
+}
+
+int ConvertWtoA(LPCWSTR aStrInW, int aBufferSizeOut, LPSTR aStrOutA)
+{
+  int  numCharsConverted;
+  char defaultStr[] = "?";
+
+  if ((!aStrInW) || (!aStrOutA))
+    return 0;
+
+  aStrOutA[0] = '\0';
+
+  numCharsConverted = WideCharToMultiByte(CP_ACP, 0, aStrInW, -1, 
+      aStrOutA, aBufferSizeOut, defaultStr, NULL);
+
+  if (!numCharsConverted)
+    return 0 ;
+
+  if (numCharsConverted < aBufferSizeOut)  {
+    *(aStrOutA+numCharsConverted) = '\0' ; // Null terminate
+    return (numCharsConverted) ; 
+  }
+
+  return 0 ;
+}
+
+BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
+{
+  BOOL rtn;
+  OPENFILENAMEA ofnA;
+  char filterA[MAX_FILTER_NAME+1];
+  char customFilterA[MAX_FILTER_NAME+1];
+  char fileA[MAX_PATH+1];
+  char fileTitleA[MAX_PATH+1];
+  char initDirA[MAX_PATH+1];
+  char titleA[MAX_PATH+1];
+  char defExtA[MAX_PATH+1];
+  char tempNameA[MAX_PATH+1];
+
+  memset(&ofnA, 0, sizeof(OPENFILENAMEA));
+  ofnA.lStructSize = sizeof(OPENFILENAME); 
+  ofnA.hwndOwner = aFileNameW->hwndOwner; 
+  ofnA.hInstance = aFileNameW->hInstance; 
+  if (aFileNameW->lpstrFilter)  {
+    ConvertWtoA(aFileNameW->lpstrFilter, MAX_FILTER_NAME, filterA);
+    ofnA.lpstrFilter = filterA; 
+  }
+  if (aFileNameW->lpstrCustomFilter)  {
+    ConvertWtoA(aFileNameW->lpstrCustomFilter, MAX_FILTER_NAME, customFilterA);
+    ofnA.lpstrCustomFilter = customFilterA; 
+    ofnA.nMaxCustFilter = MAX_FILTER_NAME;  
+  }
+  ofnA.nFilterIndex = aFileNameW->nFilterIndex; // Index of pair of filter strings. Should be ok.
+  if (aFileNameW->lpstrFile)  {
+    ConvertWtoA(aFileNameW->lpstrFile, MAX_PATH, fileA);
+    ofnA.lpstrFile = fileA;
+    ofnA.nMaxFile = MAX_PATH;
+    if (strlen(fileA))  {
+      // find last file offset
+      ofnA.nFileOffset = strrchr(fileA, '\\') - fileA + 1; 
+      // find last file extension offset
+      ofnA.nFileExtension = strrchr(fileA, '.') - fileA + 1; 
+    }
+  }
+  if (aFileNameW->lpstrFileTitle) {
+    ConvertWtoA(aFileNameW->lpstrFileTitle, MAX_PATH, fileTitleA);
+    ofnA.lpstrFileTitle = fileTitleA;
+    ofnA.nMaxFileTitle = MAX_PATH;  
+  }
+  if (aFileNameW->lpstrInitialDir)  {
+    ConvertWtoA(aFileNameW->lpstrInitialDir, MAX_PATH, initDirA);
+    ofnA.lpstrInitialDir = initDirA; 
+  }
+  if (aFileNameW->lpstrTitle) {
+    ConvertWtoA(aFileNameW->lpstrTitle, MAX_PATH, titleA);
+    ofnA.lpstrTitle = titleA; 
+  }
+  ofnA.Flags = aFileNameW->Flags; 
+  if (aFileNameW->lpstrDefExt)  {
+    ConvertWtoA(aFileNameW->lpstrDefExt, MAX_PATH, defExtA);
+    ofnA.lpstrDefExt = defExtA; 
+  }
+  ofnA.lCustData = aFileNameW->lCustData; // Warning:  No WtoA() is done to application-defined data 
+  ofnA.lpfnHook = aFileNameW->lpfnHook;   
+  if (aFileNameW->lpTemplateName) {
+    ConvertWtoA(aFileNameW->lpTemplateName, MAX_PATH, tempNameA);
+    ofnA.lpTemplateName = tempNameA; 
+  }
+  
+  if (aOpen)
+    rtn = GetOpenFileNameA(&ofnA);
+  else
+    rtn = GetSaveFileNameA(&ofnA);
+
+  if (!rtn)
+    return 0;
+
+  if (ofnA.lpstrFile) {
+    ConvertAtoW(ofnA.lpstrFile, MAX_PATH, aFileNameW->lpstrFile);
+  }
+
+  return rtn;
+}
+
+BOOL WINAPI nsGetOpenFileName(LPOPENFILENAMEW aOpenFileNameW)
+{
+  return CallOpenSaveFileNameA(aOpenFileNameW, TRUE);
+}
+
+BOOL WINAPI nsGetSaveFileName(LPOPENFILENAMEW aSaveFileNameW)
+{
+  return CallOpenSaveFileNameA(aSaveFileNameW, FALSE);
+}
+
+int WINAPI nsGetClassName(HWND aWnd, LPWSTR aClassName, int aMaxCount)
+{
+  char classNameA[MAX_CLASS_NAME];
+
+  if (!GetClassNameA(aWnd, classNameA, MAX_CLASS_NAME))
+    return 0;
+
+  aMaxCount = ConvertAtoW(classNameA, MAX_CLASS_NAME, aClassName);
+
+  return aMaxCount;
+}
+
+HWND WINAPI nsCreateWindowEx(DWORD aExStyle,      
+                             LPCWSTR aClassNameW,  
+                             LPCWSTR aWindowNameW, 
+                             DWORD aStyle,        
+                             int aX,                
+                             int aY,                
+                             int aWidth,           
+                             int aHeight,          
+                             HWND aWndParent,      
+                             HMENU aMenu,          
+                             HINSTANCE aInstance,  
+                             LPVOID aParam)
+{
+  char classNameA [MAX_CLASS_NAME];
+  char windowNameA[MAX_CLASS_NAME];
+
+  // Convert class name and Window name from Unicode to ANSI
+  if (aClassNameW)
+      ConvertWtoA(aClassNameW, MAX_CLASS_NAME, classNameA);
+  if (aWindowNameW)
+      ConvertWtoA(aWindowNameW, MAX_CLASS_NAME, windowNameA);
+  
+  // so far only NULL is passed
+  if (aParam != NULL) {
+    NS_ASSERTION(0 , "non-NULL lParam is provided in CreateWindowExA");
+    return NULL;
+  }
+
+  return CreateWindowExA(aExStyle, classNameA, windowNameA,
+      aStyle, aX, aY, aWidth, aHeight, aWndParent, aMenu, aInstance, aParam) ;
+}
+
+LRESULT WINAPI nsSendMessage(HWND aWnd, UINT aMsg, WPARAM awParam, LPARAM alParam)
+{
+  // ************ Developers **********************************************
+  // As far as I am aware, WM_SETTEXT is the only text related message 
+  // we call to SendMessage().  When you need to send other text related message,
+  // please use appropriate converters.
+  NS_ASSERTION((WM_SETTEXT == aMsg || WM_SETICON == aMsg || WM_SETFONT == aMsg), 
+			"Warning. Make sure sending non-Unicode string to ::SendMessage().");
+  if (WM_SETTEXT == aMsg)  {
+    char title[MAX_PATH];
+    if (alParam)
+      ConvertWtoA((LPCWSTR)alParam, MAX_CLASS_NAME, title);
+    return SendMessageA(aWnd, aMsg, awParam, (LPARAM)&title);
+  }
+
+  return SendMessageA(aWnd, aMsg, awParam, alParam);
+}
+
+ATOM WINAPI nsRegisterClass(const WNDCLASSW *aClassW)
+{
+  WNDCLASSA wClass;
+  char classNameA[MAX_CLASS_NAME];
+  char menuNameA[MAX_MENU_NAME];
+
+  // Set up ANSI version of class struct
+  wClass.cbClsExtra   = aClassW->cbClsExtra;
+  wClass.cbWndExtra   = aClassW->cbWndExtra;
+  wClass.hbrBackground= aClassW->hbrBackground;
+  wClass.hCursor      = aClassW->hCursor;
+  wClass.hIcon        = aClassW->hIcon;
+  wClass.hInstance    = aClassW->hInstance;
+  wClass.lpfnWndProc  = aClassW->lpfnWndProc;
+  wClass.style        = aClassW->style;
+
+  if (NULL == aClassW->lpszClassName)
+    return 0 ;
+
+  wClass.lpszClassName = classNameA;
+  if (aClassW->lpszClassName)
+    ConvertWtoA(aClassW->lpszClassName, MAX_CLASS_NAME, classNameA);
+  
+  wClass.lpszMenuName = menuNameA; 
+  if (aClassW->lpszMenuName)
+    ConvertWtoA(aClassW->lpszMenuName, MAX_MENU_NAME, menuNameA);
+
+  return RegisterClassA(&wClass);
+}
+#endif /* MOZ_UNICODE */
 
 //-------------------------------------------------------------------------
 //
@@ -212,26 +445,6 @@ nsToolkit::~nsToolkit()
 void
 nsToolkit::Startup(HMODULE hModule)
 {
-    nsToolkit::mDllInstance = hModule;
-
-    //
-    // register the internal window class
-    //
-    WNDCLASS wc;
-
-    wc.style            = CS_GLOBALCLASS;
-    wc.lpfnWndProc      = nsToolkit::WindowProc;
-    wc.cbClsExtra       = 0;
-    wc.cbWndExtra       = 0;
-    wc.hInstance        = nsToolkit::mDllInstance;
-    wc.hIcon            = NULL;
-    wc.hCursor          = NULL;
-    wc.hbrBackground    = NULL;
-    wc.lpszMenuName     = NULL;
-    wc.lpszClassName    = "nsToolkitClass";
-
-    VERIFY(::RegisterClass(&wc));
-
     //
     // Set flag of nsToolkit::mUseImeApiW due to using Unicode API.
     //
@@ -264,7 +477,51 @@ nsToolkit::Startup(HMODULE hModule)
         }
       }
     }
+#ifdef MOZ_UNICODE
+    else  {
+      // On NT base OS, nsFoo is already pointing to respective W functions
+      // However, in Windows 9x base OS, we need them to point to A functions
+      nsToolkit::mDefWindowProc = &DefWindowProcA;
+      nsToolkit::mCallWindowProc = &CallWindowProcA;
+      nsToolkit::mSetWindowLong = &SetWindowLongA;
+      nsToolkit::mSendMessage = &nsSendMessage;
+      nsToolkit::mDispatchMessage = &DispatchMessageA;
+      nsToolkit::mGetMessage = &GetMessageA;
 
+      nsToolkit::mGetOpenFileName = &nsGetOpenFileName;
+      nsToolkit::mGetSaveFileName = &nsGetSaveFileName;
+      nsToolkit::mGetClassName = &nsGetClassName;
+      nsToolkit::mCreateWindowEx = &nsCreateWindowEx;
+      nsToolkit::mRegisterClass = &nsRegisterClass;
+    }
+#endif /* MOZ_UNICODE */
+    nsToolkit::mDllInstance = hModule;
+
+    //
+    // register the internal window class
+    //
+#ifdef MOZ_UNICODE
+    WNDCLASSW wc;
+#else
+    WNDCLASS wc;
+#endif /* MOZ_UNICODE */
+
+    wc.style            = CS_GLOBALCLASS;
+    wc.lpfnWndProc      = nsToolkit::WindowProc;
+    wc.cbClsExtra       = 0;
+    wc.cbWndExtra       = 0;
+    wc.hInstance        = nsToolkit::mDllInstance;
+    wc.hIcon            = NULL;
+    wc.hCursor          = NULL;
+    wc.hbrBackground    = NULL;
+    wc.lpszMenuName     = NULL;
+#ifdef MOZ_UNICODE
+    wc.lpszClassName    = L"nsToolkitClass";
+    VERIFY(nsToolkit::mRegisterClass(&wc));
+#else
+    wc.lpszClassName    = "nsToolkitClass";
+    VERIFY(::RegisterClass(&wc));
+#endif /* MOZ_UNICODE */
 }
 
 
@@ -403,7 +660,7 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
 #endif
 
 #ifdef MOZ_UNICODE
-    return ::DefWindowProcW(hWnd, msg, wParam, lParam);
+    return nsToolkit::mDefWindowProc(hWnd, msg, wParam, lParam);
 #else
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 #endif
