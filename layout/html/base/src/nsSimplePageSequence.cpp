@@ -372,6 +372,9 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
+  mPageData->mShadowSize  = shadowSize;
+  mPageData->mExtraMargin = extraMargin;
+
   // absolutely ignore all other types of reflows
   // we only want to have done the Initial Reflow
   if (eReflowReason_Resize == aReflowState.reason ||
@@ -498,9 +501,6 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
     for (page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(&page)) {
       pageTot++;
     }
-
-    mPageData->mShadowSize  = shadowSize;
-    mPageData->mExtraMargin = extraMargin;
 
     // Set Page Number Info
     PRInt32 pageNum = 1;
