@@ -540,7 +540,7 @@ nsStringBundleService::~nsStringBundleService()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsStringBundleService, NS_GET_IID(nsIStringBundleService))
+NS_IMPL_THREADSAFE_ISUPPORTS(nsStringBundleService, NS_GET_IID(nsIStringBundleService))
 
 NS_IMETHODIMP
 nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
