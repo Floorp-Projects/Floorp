@@ -78,8 +78,14 @@ ROOTDIR   := $(CWD)
 TOPSRCDIR := $(CWD)/mozilla
 endif
 
-ifeq "$(ROOTDIR)" "/"
-ROOTDIR   := /.
+# on os2, TOPSRCDIR may have two forward slashes in a row, which doesn't
+#  work;  replace first instance with one forward slash
+TOPSRCDIR := $(shell echo $(TOPSRCDIR) | sed s%//%/%)
+
+# if ROOTDIR equals only drive letter (i.e. "C:"), set to "/"
+DIRNAME := $(shell echo $(ROOTDIR) | sed s/^.://)
+ifeq ($(DIRNAME),)
+ROOTDIR := /.
 endif
 
 AUTOCONF := autoconf
@@ -109,6 +115,7 @@ endif
 
 CVSCO = $(strip cvs $(CVS_FLAGS) co $(CVS_CO_FLAGS))
 CVSCO_LOGFILE := $(ROOTDIR)/cvsco.log
+CVSCO_LOGFILE := $(shell echo $(CVSCO_LOGFILE) | sed s%//%/%)
 
 ifdef MOZ_CO_TAG
   CVS_CO_FLAGS :=  -r $(MOZ_CO_TAG)
