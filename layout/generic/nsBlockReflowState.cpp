@@ -620,47 +620,38 @@ BulletFrame::GetListItemText(nsIPresContext& aCX,
   case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
   case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
   {
-    if (0 == ordinal) {
+    if (ordinal <= 0) {
       ordinal = 1;
     }
-    nsAutoString addOn;
-    nsAutoString decStr;
+    nsAutoString addOn, decStr;
     decStr.Append(ordinal, 10);
+    PRIntn len = decStr.Length();
     const PRUnichar* dp = decStr.GetUnicode();
-    const PRUnichar* end = dp + decStr.Length();
-
-    PRIntn           len=decStr.Length();
-    PRIntn           romanPos=len;
-    PRIntn           n;
+    const PRUnichar* end = dp + len;
+    PRIntn romanPos = len;
+    PRIntn n;
 
     const char* achars;
     const char* bchars;
     if (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ROMAN) {
       achars = gLowerRomanCharsA;
       bchars = gLowerRomanCharsB;
-    } else {
+    }
+    else {
       achars = gUpperRomanCharsA;
       bchars = gUpperRomanCharsB;
     }
-    ordinal=(ordinal < 0) ? -ordinal : ordinal;
-    if (ordinal < 0) {
-      // XXX max negative int
-      break;
-    }
-    for (; dp < end; dp++)
-    {
+    for (; dp < end; dp++) {
       romanPos--;
       addOn.SetLength(0);
-      switch(*dp)
-      {
+      switch(*dp) {
       case '3':  addOn.Append(achars[romanPos]);
       case '2':  addOn.Append(achars[romanPos]);
       case '1':  addOn.Append(achars[romanPos]);
         break;
-
       case '4':
         addOn.Append(achars[romanPos]);
-
+        // FALLTHROUGH
       case '5': case '6':
       case '7': case  '8':
         addOn.Append(bchars[romanPos]);
@@ -694,20 +685,18 @@ BulletFrame::GetListItemText(nsIPresContext& aCX,
       ? gLowerAlphaChars : gUpperAlphaChars;
 
     // must be positive here...
-    ordinal = (ordinal < 0) ? -ordinal : ordinal;
-    if (ordinal < 0) {
-      // XXX max negative int
-      break;
+    if (ordinal <= 0) {
+      ordinal = 1;
     }
-    while (next<=ordinal)      // scale up in baseN; exceed current value.
-    {
+    ordinal--;          // a == 0
+
+    // scale up in baseN; exceed current value.
+    while (next<=ordinal) {
       root=next;
       next*=aBase;
       expn++;
     }
-
-    while(0!=(expn--))
-    {
+    while (0!=(expn--)) {
       ndex = ((root<=ordinal) && (0!=root)) ? (ordinal/root): 0;
       ordinal %= root;
       if (root>1)
