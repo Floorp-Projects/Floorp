@@ -605,7 +605,7 @@ REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chr
 
 !if exist($(JAR_MANIFEST))
 
-chrome::
+chrome:: $(CHROME_DEPS)
         $(PERL) $(DEPTH)\config\make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 
 !endif

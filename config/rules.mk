@@ -1142,7 +1142,7 @@ _JAR_FLAT_FILES_ONLY=
 _JAR_REGCHROME_JAR=0
 endif
 
-chrome::
+chrome:: $(CHROME_DEPS)
 	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/../mozilla/config/make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 
 install:: chrome

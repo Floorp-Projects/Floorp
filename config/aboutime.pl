@@ -1,30 +1,12 @@
-open INFILE, "<$ARGV[1]";
-$build = <INFILE>;
-close INFILE;
-chop $build;
-open INFILE, "<$ARGV[0]" || die;
-open OUTFILE, ">$ARGV[0].old" || die;
 
-while (<INFILE>) {
+use strict;
+use mozBDate;
 
-$id = $_;
-   if ($id =~ "Build ID:") {
-     $temp = "Build ID: " . $build;
-     $id =~ s/Build ID:\s\d+/$temp/;
-     print OUTFILE $id;
-   }
-   elsif ($id =~ "NS_BUILD_ID") {
-     $temp = "NS_BUILD_ID " . $build;
-     $id =~ s/NS_BUILD_ID\s\d+/$temp/;
-     print OUTFILE $id;
-   }
-   else {
-      print OUTFILE $_;
-   }
-}
+my $outfile = $ARGV[0];
+my $build_num_file = $ARGV[1];
+my $infile = "";
 
-close INFILE;
-close OUTFILE;
+$infile = $ARGV[2] if ("$ARGV[2]" ne "");
+    
+&mozBDate::SubstituteBuildNumber($outfile, $build_num_file, $infile);
 
-unlink $ARGV[0];
-rename "$ARGV[0].old", "$ARGV[0]";

@@ -33,6 +33,8 @@ Contributor(s): ______________________________________. -->
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
+<!ENTITY % buildDTD SYSTEM "chrome://global/content/build.dtd" >
+%buildDTD;
 <!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
 %navigatorDTD;
 ]>

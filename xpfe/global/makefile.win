@@ -23,8 +23,16 @@ DEPTH=..\..
 
 DIRS= resources
 
+CHROME_DEPS = build.dtd
+GARBAGE = build.dtd
+
 include <$(DEPTH)\config\rules.mak>
 
 chrome::
         $(REGCHROME) content global toolkit.jar
         $(REGCHROME) locale en-US/global en-US.jar
+
+build.dtd: build.dtd.in $(DEPTH)\config\build_number
+	@rm -f $@
+	$(PERL) -I$(DEPTH)\config $(DEPTH)\config\aboutime.pl $@ $(DEPTH)\config\build_number build.dtd.in
+

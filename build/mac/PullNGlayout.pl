@@ -24,9 +24,17 @@
 #
 # nglayout pull script 
 #
+use Cwd;
+
+# Make sure we add the config dir to search
+BEGIN
+{
+  my ($inc_path) = cwd();
+  $inc_path =~ s/:build:mac$/:config:/;
+  push(@INC, $inc_path);
+}
 use Mac::Processes;
 use NGLayoutBuildList;
-use Cwd;
 use Moz;
 
 # configuration variables

@@ -75,24 +75,20 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(INSTALL) -m 444 $(srcdir)/os2/getopt.h  $(DIST)/include
 endif
 
-# Make sure the build_number is 00000000000 unless MOZILLA_OFFICIAL is set 
-build_number: FORCE
+GARBAGE += build_number nsBuildId.h
+
 ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
-	$(PERL) $(srcdir)/bdate.pl > $@
+_BN_OFFICIAL=1
 else
-	@if [ ! -f build_number ]; then \
-		$(RM) -rf $@ ; \
-		echo 0000000000 > $@ ; \
-	else if [ `cat build_number` != "0000000000" ]; then \
-		echo 0000000000 > $@ ; \
-	     fi \
-	fi 
+_BN_OFFICIAL=
 endif
 
-nsBuildID.h: build_number
+build_number: FORCE
+	$(PERL) -I$(srcdir) $(srcdir)/bdate.pl $@ $(_BN_OFFICIAL)
+
+nsBuildID.h: nsBuildID.h.in build_number 
 	$(RM) $@
-	echo "#define NS_BUILD_ID 0000000000" > $@
-	$(PERL) $(srcdir)/aboutime.pl $@ build_number
+	$(PERL) -I$(srcdir) $(srcdir)/aboutime.pl $@ build_number $<
 
 # clear record of installed chrome on complete rebuild
 #install::
