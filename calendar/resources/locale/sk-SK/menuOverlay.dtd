@@ -54,7 +54,8 @@
 <!ENTITY calendar.new.server.accesskey          "l">
 
 <!ENTITY calendar.open.file.label               "Otvoriť Kalendár Súbor…">
-<!ENTITY calendar.open.file.accesskey "O">
+<!ENTITY calendar.open.file.key                 "O">
+<!ENTITY calendar.open.file.accesskey           "O">
 
 <!ENTITY event.edit.event                       "Upraviť…">
 <!ENTITY event.edit.event.key                   "E">
@@ -88,7 +89,6 @@
 <!ENTITY calendar.wizard.accesskey              "i">
 
 <!ENTITY calendar.export.label                  "Exportovať vybrané udalosti...">
-<!ENTITY calendar.export.key                    "O">
 <!ENTITY calendar.export.accesskey              "E">
 
 <!ENTITY calendar.subscribe.label               "Prijať vzdialený kalendár...">

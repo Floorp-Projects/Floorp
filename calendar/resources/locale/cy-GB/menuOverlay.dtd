@@ -54,6 +54,7 @@
 <!ENTITY calendar.new.server.accesskey          "l">
 
 <!ENTITY calendar.open.file.label               "Ffeil Calendr Agor">
+<!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "A">
 
 <!ENTITY event.edit.event                       "Golygu…">
@@ -88,7 +89,6 @@
 <!ENTITY calendar.wizard.accesskey              "C">
 
 <!ENTITY calendar.export.label                  "Allforio...">
-<!ENTITY calendar.export.key                    "O">
 <!ENTITY calendar.export.accesskey              "A">
 
 <!ENTITY calendar.subscribe.label               "Tanysgrifio...">

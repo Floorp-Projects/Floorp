@@ -54,6 +54,7 @@
 <!ENTITY calendar.new.server.accesskey          "v">
 
 <!ENTITY calendar.open.file.label               "Open Calendar File…">
+<!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
 <!ENTITY event.edit.event                       "Düzenle">
@@ -88,7 +89,6 @@
 <!ENTITY calendar.wizard.accesskey              "A">
 
 <!ENTITY calendar.export.label                  "Olayları dışa aktar...">
-<!ENTITY calendar.export.key                    "O">
 <!ENTITY calendar.export.accesskey              "a">
 
 <!ENTITY calendar.subscribe.label               "Uzaktaki takvime kaydol...">

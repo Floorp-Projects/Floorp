@@ -56,6 +56,7 @@
 <!ENTITY calendar.new.server.accesskey          "p">
 
 <!ENTITY calendar.open.file.label               "Megnyitás naptár fajl…">
+<!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "M">
 
 <!ENTITY event.edit.event                       "Szerkesztés…">
@@ -90,7 +91,6 @@
 <!ENTITY calendar.wizard.accesskey              "V">
 
 <!ENTITY calendar.export.label                  "Kiválasztott események exportálása...">
-<!ENTITY calendar.export.key                    "O">
 <!ENTITY calendar.export.accesskey              "x">
 
 <!ENTITY calendar.subscribe.label               "Feliratkozás távoli naptárra...">

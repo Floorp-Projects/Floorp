@@ -54,6 +54,7 @@
 <!ENTITY calendar.new.server.accesskey          "l">
 
 <!ENTITY calendar.open.file.label               "Wočinić protyka dataju…">
+<!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "o">
 
 <!ENTITY event.edit.event                       "Wobdźěłać…">
@@ -88,7 +89,6 @@
 <!ENTITY calendar.wizard.accesskey              "A">
 
 <!ENTITY calendar.export.label                  "Podawki eksportować...">
-<!ENTITY calendar.export.key                    "O">
 <!ENTITY calendar.export.accesskey              "e">
 
 <!ENTITY calendar.subscribe.label               "Nazdalnu protyku abonować...">

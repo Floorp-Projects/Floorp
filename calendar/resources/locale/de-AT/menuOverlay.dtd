@@ -53,6 +53,7 @@
 <!ENTITY calendar.new.server.accesskey          "l">
 
 <!ENTITY calendar.open.file.label               "Öffnen Kalender Datei…">
+<!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey           "O">
 
 <!ENTITY event.edit.event                       "Bearbeiten…">
@@ -87,7 +88,6 @@
 <!ENTITY calendar.wizard.accesskey              "A">
 
 <!ENTITY calendar.export.label                  "Ausgewählte Ereignisse exportieren...">
-<!ENTITY calendar.export.key                    "O">
 <!ENTITY calendar.export.accesskey              "E">
 
 <!ENTITY calendar.subscribe.label               "Entfernten Kalender abonnieren...">

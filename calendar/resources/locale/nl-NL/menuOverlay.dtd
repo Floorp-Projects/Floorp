@@ -54,7 +54,8 @@
 <!ENTITY calendar.new.server.accesskey          "l">
 
 <!ENTITY calendar.open.file.label               "Openen kalenderbestand…">
-<!ENTITY calendar.open.file.accesskey "O">
+<!ENTITY calendar.open.file.key                 "O">
+<!ENTITY calendar.open.file.accesskey           "O">
 
 <!ENTITY event.edit.event                       "Bewerken…">
 <!ENTITY event.edit.event.key                   "E">
@@ -88,7 +89,6 @@
 <!ENTITY calendar.wizard.accesskey              "@">
 
 <!ENTITY calendar.export.label                  "Exporteer geselecteerde gebeurtenissen...">
-<!ENTITY calendar.export.key                    "O">
 <!ENTITY calendar.export.accesskey              "E">
 
 <!ENTITY calendar.subscribe.label               "Aanmelden bij kalender op andere computer...">

@@ -100,39 +100,39 @@
 </commandset>
 
 <keyset>
-  <key id="new_event_key"        key="&event.new.event.key;"             observes="new_command"                modifiers="accel"/>
-  <key id="new_todo_key"         key="&event.new.todo.key;"              observes="new_todo_command"           modifiers="accel"/>
-  <key id="new_calendar_key"     key="&calendar.new.server.key;"         observes="new_local_calendar_command" modifiers="accel"/>
-  <key id="modify_event_key"     key="&event.edit.event.key;"            observes="modify_command"             modifiers="accel"/>
-  <key id="key_close"            key="&calendar.menu.options.close.key;" observes="close_calendar_command"     modifiers="accel"/>
+  <key id="new_event_key"        key="&event.new.event.key;"             observes="new_command"                 modifiers="accel"/>
+  <key id="new_todo_key"         key="&event.new.todo.key;"              observes="new_todo_command"            modifiers="accel"/>
+  <key id="modify_event_key"     key="&event.edit.event.key;"            observes="modify_command"              modifiers="accel"/>
+  <key id="new_calendar_key"     key="&calendar.new.server.key;"         observes="new_local_calendar_command"  modifiers="accel"/>
+  <key id="open_calendar_key"    key="&calendar.open.file.key;"          observes="open_local_calendar_command" modifiers="accel"/>
+  <key id="key_close"            key="&calendar.menu.options.close.key;" observes="close_calendar_command"      modifiers="accel"/>
 #ifdef XP_MACOSX
-  <key id="send_event_key"       key="&event.mail.event.key;"            observes="send_event_command"         modifiers="shift, accel"/>
+  <key id="send_event_key"       key="&event.mail.event.key;"            observes="send_event_command"          modifiers="shift, accel"/>
 #else
-  <key id="send_event_key"       key="&event.mail.event.key;"            observes="send_event_command"         modifiers="accel"/>
+  <key id="send_event_key"       key="&event.mail.event.key;"            observes="send_event_command"          modifiers="accel"/>
 #endif
-  <key id="print_key"            key="&calendar.print.key;"              observes="print_command"              modifiers="accel"/>
+  <key id="print_key"            key="&calendar.print.key;"              observes="print_command"               modifiers="accel"/>
 
-  <key id="key_cut"              key="&calendar.cut.key;"                observes="cut_command"                modifiers="accel"/>
-  <key id="key_copy"             key="&calendar.copy.key;"               observes="copy_command"               modifiers="accel"/>
-  <key id="key_paste"            key="&calendar.paste.key;"              observes="paste_command"              modifiers="accel"/>
+  <key id="key_cut"              key="&calendar.cut.key;"                observes="cut_command"                 modifiers="accel"/>
+  <key id="key_copy"             key="&calendar.copy.key;"               observes="copy_command"                modifiers="accel"/>
+  <key id="key_paste"            key="&calendar.paste.key;"              observes="paste_command"               modifiers="accel"/>
   <key id="delete_key"           keycode="VK_DELETE"                     observes="delete_command_no_confirm"/>
-  <key id="key_selectAll"        key="&calendar.selectall.key;"          observes="select_all_command"         modifiers="accel"/>
+  <key id="key_selectAll"        key="&calendar.selectall.key;"          observes="select_all_command"          modifiers="accel"/>
 
   <key id="view_day_key"         keycode="VK_F1"                         observes="day_view_command"/>
   <key id="view_week_key"        keycode="VK_F2"                         observes="week_view_command"/>
   <key id="view_multiweek_key"   keycode="VK_F3"                         observes="multiweek_view_command"/>
   <key id="view_month_key"       keycode="VK_F4"                         observes="month_view_command"/>
 
-  <key id="go_to_today_key"      keycode="VK_DOWN"                       observes="go_today_command"           modifiers="accel"/>
-  <key id="go_to_date_key"       keycode="VK_UP"                         observes="go_date_command"            modifiers="accel"/>
+  <key id="go_to_today_key"      keycode="VK_DOWN"                       observes="go_today_command"            modifiers="accel"/>
+  <key id="go_to_date_key"       keycode="VK_UP"                         observes="go_date_command"             modifiers="accel"/>
   <key id="go_backward_key"      keycode="VK_PAGE_UP"                    observes="previous_command"/>
   <key id="go_forward_key"       keycode="VK_PAGE_DOWN"                  observes="next_command"/>
 
-  <key id="import_key"           key="&calendar.import.key;"             observes="import_command"             modifiers="accel"/>
-  <key id="export_key"           key="&calendar.export.key;"             observes="export_command"             modifiers="accel"/>
+  <key id="import_key"           key="&calendar.import.key;"             observes="import_command"              modifiers="accel"/>
 
 #ifdef XP_MACOSX
-  <key id="key_minimizeWindow"   key="&minimizeWindow.key;"              command="minimizeWindow"              modifiers="accel"/>
+  <key id="key_minimizeWindow"   key="&minimizeWindow.key;"              command="minimizeWindow"               modifiers="accel"/>
 #endif
 </keyset>
 
