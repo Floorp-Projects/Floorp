@@ -101,6 +101,7 @@ public:
   NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
+  NS_IMETHOD           Validate();
   NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
   NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
@@ -209,8 +210,6 @@ protected:
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkObject *parentWidget);
 
-  PRBool      mVisible;
-  PRBool      mDisplayed;
   PRBool      mIsTooSmall;
 
   // Resize event management

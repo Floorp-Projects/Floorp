@@ -182,8 +182,6 @@ nsWindow::nsWindow()
 {
   mShell = nsnull;
   mResized = PR_FALSE;
-  mVisible = PR_FALSE;
-  mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
   mWindowType = eWindowType_child;
   mBorderStyle = eBorderStyle_default;
@@ -963,6 +961,15 @@ void nsWindow::NativeGrab(PRBool aGrab)
     DropMotionTarget();
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
   }
+}
+
+NS_IMETHODIMP nsWindow::Validate()
+{
+  if (mIsUpdating) {
+    mUpdateArea->SetTo(0, 0, 0, 0);
+    UnqueueDraw();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)

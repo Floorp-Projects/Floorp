@@ -434,7 +434,8 @@ public:
   NS_IMETHOD CreateWidget(const nsIID &aWindowIID,
                           nsWidgetInitData *aWidgetInitData = nsnull,
         					        nsNativeWidget aNative = nsnull,
-                          PRBool aEnableDragDrop = PR_TRUE) = 0;
+                          PRBool aEnableDragDrop = PR_TRUE,
+                          PRBool aResetVisibility = PR_TRUE) = 0;
 
   /**
    * Set the widget associated with this view.

@@ -405,7 +405,8 @@ public:
   NS_IMETHOD  CreateWidget(const nsIID &aWindowIID,
                            nsWidgetInitData *aWidgetInitData = nsnull,
                            nsNativeWidget aNative = nsnull,
-                           PRBool aEnableDragDrop = PR_TRUE)
+                           PRBool aEnableDragDrop = PR_TRUE,
+                           PRBool aResetVisibility = PR_TRUE)
   { NS_ASSERTION(PR_FALSE, "Unimplemented"); return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD  SetWidget(nsIWidget *aWidget)
   { return NS_OK; }
