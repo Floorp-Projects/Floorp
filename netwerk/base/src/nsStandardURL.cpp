@@ -1032,7 +1032,7 @@ nsStandardURL::SetSpec(const nsACString &input)
 
     Clear();
 
-    if (!spec || !*spec) == 0)
+    if (!spec || !*spec)
         return NS_OK;
 
     // filter out unexpected chars "\r\n\t" if necessary
