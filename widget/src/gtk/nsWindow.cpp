@@ -84,7 +84,7 @@ nsWindow::nsWindow()
   mOnDestroyCalled = PR_FALSE;
   mFont = nsnull;
   
-  m_nsIMenuBar = nsnull;
+  mMenuBar = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -102,7 +102,7 @@ nsWindow::~nsWindow()
   if (nsnull != mShell) {
     Destroy();
   }
-  NS_IF_RELEASE(m_nsIMenuBar);
+  NS_IF_RELEASE(mMenuBar);
 }
 
 PRBool nsWindow::IsChild() const
@@ -155,7 +155,7 @@ NS_METHOD nsWindow::Destroy()
   printf("nsWindow::Destroy:%p: isDestroyingWindow=%s widget=%p shell=%p parent=%p\n",
          this, mIsDestroyingWindow ? "yes" : "no", mWidget, mShell, mParent);
 #endif
-  NS_IF_RELEASE(m_nsIMenuBar);
+  NS_IF_RELEASE(mMenuBar);
 
   // Call base class first... we need to ensure that upper management
   // knows about the close so that if this is the main application
@@ -563,24 +563,24 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 {
-  if (m_nsIMenuBar == aMenuBar) {
+  if (mMenuBar == aMenuBar) {
     // Ignore duplicate calls
     return NS_OK;
   }
 
-  if (m_nsIMenuBar) {
+  if (mMenuBar) {
     // Get rid of the old menubar
     GtkWidget* oldMenuBar;
-    m_nsIMenuBar->GetNativeData((void*&) oldMenuBar);
+    mMenuBar->GetNativeData((void*&) oldMenuBar);
     if (oldMenuBar) {
       gtk_container_remove(GTK_CONTAINER(mVBox), oldMenuBar);
     }
-    NS_RELEASE(m_nsIMenuBar);
+    NS_RELEASE(mMenuBar);
   }
 
-  m_nsIMenuBar = aMenuBar;
+  mMenuBar = aMenuBar;
   if (aMenuBar) {
-    NS_ADDREF(m_nsIMenuBar);
+    NS_ADDREF(mMenuBar);
   
     GtkWidget *menubar;
     void *voidData;
@@ -597,14 +597,16 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 
 NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
 {
-  if (!m_nsIMenuBar)
+  if (!mMenuBar)
+    //    return NS_ERROR_FAILURE;
     return NS_OK;
-  
+
   GtkWidget *menubar;
   void *voidData;
-  m_nsIMenuBar->GetNativeData(voidData);
+  mMenuBar->GetNativeData(voidData);
   menubar = GTK_WIDGET(voidData);
-  if (aShow)
+  
+  if (aShow == PR_TRUE)
     gtk_widget_show(menubar);
   else
     gtk_widget_hide(menubar);
@@ -612,15 +614,11 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   return NS_OK;
 }
 
-
 NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
 {
   *aVisible = PR_TRUE;
   return NS_ERROR_FAILURE; // todo: (maybe. method isn't actually used yet.)
 }
-
-//----------------------------------------------------------------------
-
 
 //////////////////////////////////////////////////////////////////////
 //
