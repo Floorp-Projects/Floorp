@@ -914,7 +914,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
     mColPos += 1;
   }
 
-  if (mDoFormat && BreakAfterOpen(tag))
+  if ((mDoFormat && BreakAfterOpen(tag)) || (tag == eHTMLTag_pre))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
@@ -923,8 +923,6 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   if (IndentChildren(tag))
     mIndent++;
 }
-
-
 
 
 void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
