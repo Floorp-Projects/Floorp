@@ -17,7 +17,7 @@
   ]]>
   </script>  
     
-  <box class="box-smallheader" title="&pane.title;" description="&pane.description;"/>
+  <box class="box-smallheader" title="&pane.title;"/>
 
   <titledbox orient="vertical">
     <title><html>&sendMail.label;</html></title>

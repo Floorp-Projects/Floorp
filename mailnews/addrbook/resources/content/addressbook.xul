@@ -18,6 +18,7 @@ Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 --> 
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -217,14 +218,14 @@ Rights Reserved.
 	
 	<!-- toolbar -->
 	<toolbox>
-		<toolbar class="standard" id="abToolbar" persist="collapsed">
+		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed">
 			<box id="toolbar_button_box">
-				<button class="key-toolbar left" orient="vertical" id="button_newcard" value="&newcardButton.label;" onclick="AbNewCard()"/>
-				<button class="key-toolbar left" orient="vertical" id="button_newlist" value="&newlistButton.label;" disabled="true" onclick="AbNewList()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button_newcard" value="&newcardButton.label;" onclick="AbNewCard()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button_newlist" value="&newlistButton.label;" disabled="true" onclick="AbNewList()"/>
             	<toolbarseparator/>
-				<button class="toolbar left" orient="vertical" id="button_editcard" value="&editButton.label;" onclick="AbEditCard()"/>
-				<button class="toolbar left" orient="vertical" id="button_newmessage" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
-				<button class="toolbar left" orient="vertical" id="button_delete" disabled="true" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button_editcard" value="&editButton.label;" onclick="AbEditCard()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button_newmessage" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
+				<button class="button-toolbar-2 top" orient="vertical" id="button_delete" disabled="true" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
 
 				<box align="vertical" flex="100%">
 					<spring flex="1"/> 
@@ -237,11 +238,9 @@ Rights Reserved.
 				<titledbutton id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" onclick="AbSearch()"/-->
 			</box>
 
-			<box id="toolbar_throbber_box" align="vertical">
-				<titledbutton id="Throbber" onclick='goClickThrobber("addressbook.throbber.url")'>
-					<observes element="broadcaster_throbber" attribute="busy"/>
-				</titledbutton>
-			</box>
+      <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")'>
+        <observes element="broadcaster_throbber" attribute="busy"/>
+      </button>
 		</toolbar>
 	</toolbox>
 

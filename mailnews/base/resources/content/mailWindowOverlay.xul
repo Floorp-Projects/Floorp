@@ -500,17 +500,17 @@ Rights Reserved.
 </menubar>
 
 <toolbox id="mailToolbarToolbox">
-	<toolbar id="msgToolbar" class="decorated main-bar chromeclass-toolbar" persist="collapsed">
+	<toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
-			<button class="key-toolbar left" orient="vertical" id="button_getmsg" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
-			<button class="key-toolbar left" orient="vertical" id="button_newmsg" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button_getmsg" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
+			<button class="button-toolbar-2 top" id="button_newmsg" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
 			<toolbarseparator/>
-			<button class="key-toolbar left" orient="vertical" id="button_reply" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
-			<button class="key-toolbar left" orient="vertical" id="button_replyall" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
-			<button class="key-toolbar left" orient="vertical" id="button_forward" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button_reply" value="&replyButton.label;" onclick="MsgReplyMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button_replyall" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button_forward" value="&forwardButton.label;" onclick="MsgForwardMessage(event)"/>
 			<toolbarseparator/>
 			<menu id="FileButtonMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
-				<button class="toolbar left" orient="vertical" id="button_file" value="&fileButton.label;"/>
+				<button class="button-toolbar-2 top" id="button_file" value="&fileButton.label;"/>
 				<template> 
 					<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 						<menupopup>
@@ -558,17 +558,15 @@ Rights Reserved.
 				</template>
 				<menupopup/>
 			</menu>
-			<button class="toolbar left" orient="vertical" id="button_next" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
-			<button class="toolbar left" orient="vertical" id="button_delete" disabled="true" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
-			<button class="toolbar left" orient="vertical" id="button_print" value="&printButton.label;" onclick="PrintEnginePrint()"/>
-			<button class="toolbar left" orient="vertical" id="button_stop" value="&stopButton.label;" onclick="MsgStop();"/>
+			<button class="button-toolbar-2 top" id="button_next" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
+			<button class="button-toolbar-2 top" id="button_delete" disabled="true" value="&deleteButton.label;" onclick="goDoCommand('button_delete')"/>
+			<button class="button-toolbar-2 top" id="button_print" value="&printButton.label;" onclick="PrintEnginePrint()"/>
+			<button class="button-toolbar-2 top" id="button_stop" value="&stopButton.label;" onclick="MsgStop();"/>
 			<spring flex="100%"/>
 		</box>
-		<box id="toolbar_throbber_box" align="vertical">
-			<titledbutton id="Throbber" onclick='goClickThrobber("messenger.throbber.url")'>
-				<observes element="Messenger:Throbber" attribute="busy"/>
-			</titledbutton>
-		</box>
+    <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'>
+      <observes element="Messenger:Throbber" attribute="busy"/>
+    </button>
 	</toolbar>
 </toolbox>
 
