@@ -129,7 +129,16 @@ _XfeMinimumGeometry				(Widget			w,
 								 Dimension *	width_out,
 								 Dimension *	height_out);
 /*----------------------------------------------------------------------*/
-
+extern Boolean
+_XfeMakeGeometryRequest			(Widget			w,
+								 Dimension		width,
+								 Dimension		height);
+/*----------------------------------------------------------------------*/
+extern XtGeometryResult
+_XfeLiberalGeometryManager		(Widget				child,
+								 XtWidgetGeometry *	request,
+								 XtWidgetGeometry *	reply);
+/*----------------------------------------------------------------------*/
 
 #ifdef __cplusplus								/* end C++				*/
 }

@@ -554,3 +554,99 @@ _XfePreferredGeometry(Widget w,Dimension *width_out,Dimension *height_out)
 	}
 }
 /*----------------------------------------------------------------------*/
+
+/*
+ * This function should be really clever and deal with all the 
+ * craziness of Xt geometry management.  This will probably happen
+ * on a case by case basis.  As it stands, it works with the xfe
+ * widgets, but I suspect it will have to be amended for more
+ * sophisticated geometry magic.  
+ *
+ * The basic assumption here is that geometry requests always 
+ * return YES as is in _XfeLiberalGeometryManager().
+ */
+/* extern */ Boolean
+_XfeMakeGeometryRequest(Widget w,Dimension width,Dimension height)
+{
+	XtGeometryResult	request_result;
+	XtWidgetGeometry	request;
+	Boolean				result = False;
+
+	assert( _XfeIsAlive(w) );
+	
+	request.request_mode = 0;
+
+	/* Request a width change */
+	if (width != _XfeWidth(w))
+	{
+		request.width = width;
+		request.request_mode |= CWWidth;
+	}
+
+	/* Request a height change */
+	if (height != _XfeHeight(w))
+	{
+		request.height = height;
+		request.request_mode |= CWHeight;
+	}
+
+	/* WTF */
+	if (request.request_mode == 0)
+	{
+		return False;
+	}
+	
+	/* Make the request. */
+	request_result = _XmMakeGeometryRequest(w,&request);
+	
+	/* Adjust geometry accordingly */
+	if (request_result == XtGeometryYes)
+	{
+		result = True;
+	}
+	else if(request_result == XtGeometryNo)
+	{
+		result = False;
+	}
+	else if(request_result == XtGeometryAlmost)
+	{
+		result = False;
+	}
+
+	return result;
+}
+/*----------------------------------------------------------------------*/
+/* extern */ XtGeometryResult
+_XfeLiberalGeometryManager(Widget				child,
+						   XtWidgetGeometry *	request,
+						   XtWidgetGeometry *	reply)
+{
+	if (request->request_mode & XtCWQueryOnly)
+	{
+		return XtGeometryYes;
+	}
+	
+	if (request->request_mode & CWX)
+	{
+		_XfeX(child) = request->x;
+	}
+	if (request->request_mode & CWY)
+	{
+		_XfeY(child) = request->y;
+	}
+	if (request->request_mode & CWWidth)
+	{
+		_XfeWidth(child) = request->width;
+	}
+	if (request->request_mode & CWHeight)
+	{
+		_XfeHeight(child) = request->height;
+	}
+	if (request->request_mode & CWBorderWidth)
+	{
+		_XfeBorderWidth(child) = request->border_width;
+	}
+	
+	return XtGeometryYes;
+}
+/*----------------------------------------------------------------------*/
