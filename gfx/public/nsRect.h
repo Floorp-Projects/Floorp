@@ -59,10 +59,10 @@ struct NS_GFX nsRect {
   nsRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {x = aX; y = aY;
                                                                    width = aWidth; height = aHeight;}
 
-  // Emptiness. An empty rect is one that has no area, i.e. its width or height
+  // Emptiness. An empty rect is one that has no area, i.e. its height or width
   // is <= 0
   PRBool IsEmpty() const {
-    return (PRBool) ((width <= 0) || (height <= 0));
+    return (PRBool) ((height <= 0) || (width <= 0));
   }
   void   Empty() {width = height = 0;}
 
