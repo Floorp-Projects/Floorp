@@ -2141,7 +2141,9 @@ var urlbarObserver = {
 
       // The URL bar automatically handles inputs with newline characters, 
       // so we can get away with treating text/x-moz-url flavours as text/unicode.
-      if (url)  {
+      if (url) {
+        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
+
         // XXXBlake Workaround caret crash when you try to set the textbox's value on dropping
         setTimeout(function(u) { gURLBar.value = u; handleURLBarCommand(); }, 0, url);
       }
@@ -2470,8 +2472,11 @@ var goButtonObserver = {
     {
       var xferData = aXferData.data.split("\n");
       var uri = xferData[0] ? xferData[0] : xferData[1];
-      if (uri)
+      if (uri) {
+        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, uri);
+
         loadURI(uri, null, null);
+      }
     },
   getSupportedFlavours: function ()
     {
@@ -2505,6 +2510,8 @@ var DownloadsButtonDNDObserver = {
     var split = aXferData.data.split("\n");
     var url = split[0];
     if (url != aXferData.data) {  //do nothing, not a valid URL
+      getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
+
       var name = split[1];
       saveURL(url, name, null, true, true);
     }
@@ -4857,23 +4864,7 @@ var contentAreaDNDObserver = {
           /^\s*(javascript|data):/.test(url))
         return;
 
-      var sourceDoc = aDragSession.sourceDocument;
-
-      if (sourceDoc) {
-        var sourceURI = sourceDoc.documentURI;
-
-        const nsIScriptSecurityManager =
-          Components.interfaces.nsIScriptSecurityManager;
-        var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-          .getService(nsIScriptSecurityManager);
-
-        try {
-          secMan.checkLoadURIStr(sourceURI, url,
-                                 nsIScriptSecurityManager.STANDARD);
-        } catch (e) {
-          throw "Drop of " + url + " denied.";
-        }
-      }
+      getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
 
       switch (document.firstChild.getAttribute('windowtype')) {
         case "navigator:browser":

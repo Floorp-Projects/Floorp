@@ -1384,6 +1384,8 @@
                 /^\s*(javascript|data):/.test(url))
               return;
 
+            this.dragDropSecurityCheck(aEvent, aDragSession, url);
+
             var bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
 
             var tab = null;
@@ -1641,6 +1643,40 @@
           ]]>
         </body>
       </method>
+
+      <method name="dragDropSecurityCheck">
+        <parameter name="aEvent"/>
+        <parameter name="aDragSession"/>
+        <parameter name="aUrl"/>
+        <body>
+          <![CDATA[
+            // Do a security check for drag n' drop. Make sure the
+            // source document can load the dragged link.
+            var sourceDoc = aDragSession.sourceDocument;
+
+            if (sourceDoc) {
+              var sourceURI = sourceDoc.documentURI;
+
+              const nsIScriptSecurityManager =
+                Components.interfaces.nsIScriptSecurityManager;
+              var secMan =
+                Components.classes["@mozilla.org/scriptsecuritymanager;1"]
+                .getService(nsIScriptSecurityManager);
+
+              try {
+                secMan.checkLoadURIStr(sourceURI, aUrl,
+                                       nsIScriptSecurityManager.STANDARD);
+              } catch (e) {
+                // Stop even propagation right here.
+                aEvent.stopPropagation();
+
+                throw "Drop of " + aUrl + " denied.";
+              }
+            }
+          ]]>
+        </body>
+      </method>
+
       <field name="_keyEventHandler" readonly="true">
       <![CDATA[({
         tabbrowser: this,
