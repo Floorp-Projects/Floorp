@@ -143,10 +143,6 @@ protected:
 
   //overrides 
 
-  nscoord GetTopMarginFor(nsIPresContext*   aCX,
-                          RowReflowState&   aState,
-                          const nsMargin&   aKidMargin);
-
   void          PlaceChild( nsIPresContext* aPresContext,
                             RowReflowState& aState,
                             nsIFrame*       aKidFrame,
