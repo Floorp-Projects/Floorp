@@ -34,6 +34,8 @@ class nsITransferable : public nsISupports {
 
   public:
 
+    static const nsIID& GetIID() { static nsIID iid = NS_ITRANSFERABLE_IID; return iid; }
+
   /**
     * Get the list of data flavors that this transferable supports.  
     *
