@@ -65,8 +65,9 @@ function test()
 
 function testProperty(i)
 {
-  // try to assign a property using the given index -
   status = getStatus(i);
+
+  // try to assign a property using the given index -
   obj[i] = value = (propprefix  +  i);   
   
   // try to read the property back via the index (as number) -
