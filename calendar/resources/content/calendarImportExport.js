@@ -124,7 +124,7 @@ function loadEventsFromFile()
       
       var buttonPressed =      
       promptService.confirmEx(window, 
-           "Import", "About to import " + calendarEventArray.length + " event(s). Do you want to open all events to import before importing?", 
+           "Import", "About to import " + calendarEventArray.length + " item(s). Do you want to open all items to import before importing?", 
            (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) + 
            (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1) + 
            (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2), 
@@ -169,28 +169,68 @@ function createUniqueID()
  
 function addEventsToCalendar( calendarEventArray, silent )
 {
+   var defaultServer = gCalendarWindow.calendarManager.calendars[0];
    for(var i = 0; i < calendarEventArray.length; i++)
    {
-      calendarEvent = calendarEventArray[i]
+      if( isEvent( calendarEventArray[i] ) )
+      {
+         var calendarEvent = calendarEventArray[i];
 	       
-      // Check if event with same ID already in Calendar. If so, import event with new ID.
-      if( gICalLib.fetchEvent( calendarEvent.id ) != null ) {
-         calendarEvent.id = createUniqueID( );
+         // Check if event with same ID already in Calendar. If so, import event with new ID.
+         if( gICalLib.fetchEvent( calendarEvent.id ) != null ) {
+            calendarEvent.id = createUniqueID( );
+         }
+
+         // the start time is in zulu time, need to convert to current time
+         if(calendarEvent.allDay != true)
+         convertZuluToLocal( calendarEvent );
+
+         // open the event dialog with the event to add
+         if( silent )
+            gICalLib.addEvent( calendarEvent, defaultServer.path );
+         else
+            editNewEvent( calendarEvent );
+      } 
+      else if( isToDo( calendarEventArray[i] ) )
+      {
+         // 
+         calendarTodo = calendarEventArray[i];
+	       
+         // Check if task with same ID already in Calendar. If so, import task with new ID.
+         if( gICalLib.fetchTodo( calendarTodo.id ) != null ) {
+            calendarTodo.id = createUniqueID( );
+         }
+
+         // open the todo dialog with the task to add
+         if( silent ){alert(defaultServer.path);
+            gICalLib.addTodo( calendarTodo, defaultServer.path );}
+         else
+            gICalLib.addTodo( calendarTodo, defaultServer.path );
+            // XXX TODO: add support to add todo using dialog
+            // editToDo( calendarTodo );
       }
-
-      // the start time is in zulu time, need to convert to current time
-      if(calendarEvent.allDay != true)
-      convertZuluToLocal( calendarEvent );
-
-      // open the event dialog with the event to add
-      if( silent )
-         gICalLib.addEvent( calendarEvent );
-      else
-         editNewEvent( calendarEvent );
    }
 }
 
 const ZULU_OFFSET_MILLIS = new Date().getTimezoneOffset() * 60 * 1000;
+
+function convertToUTC( aLocalTime )
+{
+   if( calendarEvent.start.utc == false )
+   {
+      aLocalTime.setTime( aLocalTime.getTime() + ZULU_OFFSET_MILLIS );
+      aLocalTime.utc = true;
+   }
+}
+
+function convertFromUTC( aUtcTime )
+{
+   if( aUtcTime.utc == true )
+   {
+      aUtcTime.setTime( aUtcTime.getTime()  - ZULU_OFFSET_MILLIS );
+      aUtcTime.utc = false;
+   }
+}
 
 function convertZuluToLocal( calendarEvent )
 {
@@ -278,19 +318,20 @@ function initCalendarEvent( calendarEvent )
  * Parses those events and returns an array of calendarEvents.
  */
  
-function parseIcalData( icalStr )
+function parseIcalData( icalendarString )
 {
    var calendarEventArray =  new Array();
 
    var i,j;
+   var icalStr = icalendarString;
    while( icalStr.indexOf("BEGIN:VEVENT") != -1 )
    { 
       // try to find the begin and end of an event. ParseIcalString does not support VCALENDAR
       i = icalStr.indexOf("BEGIN:VEVENT");
       j = icalStr.indexOf("END:VEVENT") + 10;
-      eventData = icalStr.substring(i, j);
+      var eventData = icalStr.substring(i, j);
 
-      calendarEvent = createEvent();
+      var calendarEvent = createEvent();
 
       // if parsing import iCalendar failed, add date as description
       if ( !calendarEvent.parseIcalString(eventData) )
@@ -306,7 +347,29 @@ function parseIcalData( icalStr )
       // remove the parsed VEVENT from the calendar data to parse
       icalStr = icalStr.substring(j+1);
    }
-   
+
+   icalStr = icalendarString;
+   while( icalStr.indexOf("BEGIN:VTODO") != -1 )
+   { 
+      // try to find the begin and end of an task. ParseIcalString does not support VCALENDAR
+      i = icalStr.indexOf("BEGIN:VTODO");
+      j = icalStr.indexOf("END:VTODO") + 9;
+      var todoData = icalStr.substring(i, j);
+
+      var calendarTodo = createToDo();
+
+      // if parsing import iCalendar failed, add date as description
+      if ( !calendarTodo.parseTodoIcalString(todoData) )
+      {
+         // Save the parsed text as description.
+         calendarTodo.description = icalStr;      
+      }
+
+      calendarEventArray[ calendarEventArray.length ] = calendarTodo;
+      // remove the parsed VTODO from the calendar data to parse
+      icalStr = icalStr.substring(j+1);
+   }
+
    return calendarEventArray;
 }
 
@@ -344,18 +407,18 @@ function readDataFromFile( aFilePath, charset )
    var scriptableInputStream;
    var tmp; // not sure what the use is for this
    
-   LocalFileInstance = Components.classes[LOCALFILE_CTRID].createInstance( nsILocalFile );
-   LocalFileInstance.initWithPath( aFilePath );
+   localFileInstance = Components.classes[LOCALFILE_CTRID].createInstance( nsILocalFile );
+   localFileInstance.initWithPath( aFilePath );
 
    inputStream = Components.classes[FILEIN_CTRID].createInstance( nsIFileInputStream );
    try
    {
-      inputStream.init( LocalFileInstance, MODE_RDONLY, 0444, tmp );
+      inputStream.init( localFileInstance, MODE_RDONLY, 0444, tmp );
       
       scriptableInputStream = Components.classes[SCRIPTSTREAM_CTRID].createInstance( nsIScriptableInputStream);
       scriptableInputStream.init( inputStream );
 
-      aDataStream = scriptableInputStream.read( -1 );
+      var aDataStream = scriptableInputStream.read( -1 );
       scriptableInputStream.close();
       inputStream.close();
       
@@ -473,22 +536,27 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
    var sTextiCalendar = "";
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
-      var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
+      var calendarObject = calendarEventArray[ eventArrayIndex ].clone();
 
       // convert time to represent local to produce correct DTSTART and DTEND
-      if(calendarEvent.allDay != true)
-      convertLocalToZulu( calendarEvent );
+      if( isEvent(calendarObject) && calendarObject.allDay != true )
+        convertLocalToZulu( calendarObject );
      
       // check if all required properties are available
-      if( calendarEvent.method == 0 )
-         calendarEvent.method = calendarEvent.ICAL_METHOD_PUBLISH;
-      if( calendarEvent.stamp.year ==  0 )
-         calendarEvent.stamp.setTime( new Date() );
+      if( calendarObject.method == 0 )
+         calendarObject.method = calendarObject.ICAL_METHOD_PUBLISH;
+      if( calendarObject.stamp.year ==  0 )
+         calendarObject.stamp.setTime( new Date() );
 
-      if ( doPatchForExport )
-        sTextiCalendar += patchICalStringForExport( calendarEvent.getIcalString() );
+      if ( isEvent(calendarObject) && doPatchForExport )
+        sTextiCalendar += patchICalStringForExport( calendarObject.getIcalString() );
       else
-        sTextiCalendar += calendarEvent.getIcalString() ;
+      { 
+         if( isEvent(calendarObject) )
+            sTextiCalendar += calendarObject.getIcalString();
+         else
+            sTextiCalendar += calendarObject.getTodoIcalString();
+      }
    }
 
    return sTextiCalendar;
@@ -525,11 +593,11 @@ function patchICalStringForExport( sTextiCalendar )
 
 function eventArrayToHTML( calendarEventArray )
 {
-   sHTMLHeader = 
+  const sHTMLHeader = 
       "<html>\n" + "<head>\n" + "<title>Mozilla Calendar</title>\n" +
       "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n" +
       "</head>\n"+ "<body bgcolor=\"#FFFFFF\" text=\"#000000\">\n";
-   sHTMLFooter =
+   const sHTMLFooter =
       "\n</body>\n</html>\n";
 
    var sHTMLText = sHTMLHeader;
@@ -639,6 +707,7 @@ function eventArrayToXCS( calendarEventArray )
 
    // XXX MAJOR UGLY HACK!! Serializer doesn't insert XML Declaration
    // http://bugzilla.mozilla.org/show_bug.cgi?id=63558
+   // Fixed in Mozilla 1.2
    var serialDocument = serializer.serializeToString ( xcsDoc );
 
    if( serialDocument.indexOf( "<?xml" ) == -1 )
@@ -661,11 +730,10 @@ function saveDataToFile(aFilePath, aDataStream, charset)
    const nsILocalFile = Components.interfaces.nsILocalFile;
    const nsIFileOutputStream = Components.interfaces.nsIFileOutputStream;
 
-   var localFileInstance;
    var outputStream;
    
-   var LocalFileInstance = Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-   LocalFileInstance.initWithPath(aFilePath);
+   var localFileInstance = Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+   localFileInstance.initWithPath(aFilePath);
 
    outputStream = Components.classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
    try
@@ -673,7 +741,7 @@ function saveDataToFile(aFilePath, aDataStream, charset)
       if(charset)
          aDataStream = convertFromUnicode( charset, aDataStream );
 
-      outputStream.init(LocalFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
+      outputStream.init(localFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
       outputStream.write(aDataStream, aDataStream.length);
       // outputStream.flush();
       outputStream.close();
@@ -1028,6 +1096,14 @@ function makeXmlNode( xmlDocument, calendarEvent )
     addPropertyNode( xmlDocument, eventNode, "UID", calendarEvent.id );
     addPropertyNode( xmlDocument, eventNode, "SUMMARY", checkString( calendarEvent.title ) );
     addPropertyNode( xmlDocument, eventNode, "DTSTAMP", checkDate( calendarEvent.stamp ) );
+
+    if( isToDo( calendarEvent ) )
+    {
+       addPropertyNode( xmlDocument, eventNode, "DUE", checkDate( calendarEvent.due ) );
+       addPropertyNode( xmlDocument, eventNode, "COMPLETED", checkDate( calendarEvent.completed ) );
+       addPropertyNode( xmlDocument, eventNode, "PERCENT-COMPLETE", checkBoolean( calendarEvent.percent ) );    
+    }
+
     if( calendarEvent.allDay )
        addPropertyNode( xmlDocument, eventNode, "DTSTART", checkDate( calendarEvent.start, true ), "DATE" );
     else

@@ -137,7 +137,7 @@ function cutToClipboard( /* calendarEventArray */)
 function copyToClipboard( calendarEventArray )
 {  
    if( !calendarEventArray)
-      var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
+      calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
 
    if(calendarEventArray.length == 0)
       alert("No events selected");
@@ -182,6 +182,7 @@ function copyToClipboard( calendarEventArray )
          return true;         
       }
    }
+   return false;
 }
 
 
@@ -218,9 +219,9 @@ function pasteFromClipboard()
 	 trans.getAnyTransferData(flavour, data, length);
 	 data = data.value.QueryInterface(Components.interfaces.nsISupportsWString).data;
 	 //DEBUG alert("clipboard type: " + flavour.value);
+         var calendarEventArray;
 	 switch (flavour.value) {
 	 case "text/calendar":
-            var calendarEventArray;
             calendarEventArray = parseIcalData( data );
             
             //change the date of all the events to now
@@ -237,7 +238,7 @@ function pasteFromClipboard()
             addEventsToCalendar( calendarEventArray );
             break;
 	 case "text/unicode":
-            if ( data.indexOf("BEGIN:VEVENT") == -1 )
+            if ( data.indexOf("BEGIN:VCALENDAR") == -1 )
             {
                // no iCalendar data, paste clipboard text into description of new event 
                calendarEvent = createEvent();
@@ -247,7 +248,6 @@ function pasteFromClipboard()
             }
             else
             {
-               var calendarEventArray;
                calendarEventArray = parseIcalData( data );
                //change the date of all the events to now
                var startDate = gCalendarWindow.currentView.getNewEventDate();
