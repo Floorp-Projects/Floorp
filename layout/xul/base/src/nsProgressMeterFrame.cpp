@@ -192,7 +192,7 @@ nsProgressMeterFrame :: nsProgressMeterFrame ( )
 	mProgress = float(0.0);
 	mHorizontal = PR_TRUE;
 	mUndetermined = PR_FALSE;
-	mStripeOffset = 0;
+	mStripeOffset = STRIPE_WIDTH;
 }
 
 //
@@ -594,10 +594,10 @@ nsProgressMeterFrame::PaintBarStripped(nsIPresContext& aPresContext, nsIRenderin
 void
 nsProgressMeterFrame::animate()
 {
-    mStripeOffset += ANIMATION_INCREMENT;
+    mStripeOffset -= ANIMATION_INCREMENT;
   // 	printf("animate=%d\n", mStripeOffset);
-	if (mStripeOffset >= STRIPE_WIDTH)
-		mStripeOffset = 0;
+	if (mStripeOffset < 0)
+		mStripeOffset = STRIPE_WIDTH;
 }
 
 
