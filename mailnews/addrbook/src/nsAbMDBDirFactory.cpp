@@ -158,22 +158,26 @@ NS_IMETHODIMP nsAbMDBDirFactory::CreateDirectory(
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsFileSpec* dbPath;
-    abSession->GetUserProfileDirectory(&dbPath);
-
-    const char* fileName = nsnull;
-    const char* uri = URIUTF8.get ();
-    if (PL_strstr(uri, kMDBDirectoryRoot)) // for moz-abmdbdirectory://
-        fileName = &(uri[PL_strlen(kMDBDirectoryRoot)]);
-
-    nsAutoString file;
-    file.AssignWithConversion(fileName);
-    (*dbPath) += file;
-
-    nsCOMPtr<nsIAddrDatabase>  addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = abSession->GetUserProfileDirectory(&dbPath);
 
     nsCOMPtr<nsIAddrDatabase>  listDatabase;  
-    rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(listDatabase), PR_TRUE);
+    if (dbPath)
+    {
+      const char* fileName = nsnull;
+      const char* uri = URIUTF8.get ();
+      if (PL_strstr(uri, kMDBDirectoryRoot)) // for moz-abmdbdirectory://
+          fileName = &(uri[PL_strlen(kMDBDirectoryRoot)]);
+
+      nsAutoString file;
+      file.AssignWithConversion(fileName);
+      (*dbPath) += file;
+
+      nsCOMPtr<nsIAddrDatabase>  addrDBFactory = do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(listDatabase), PR_TRUE);
+      delete dbPath;
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = listDatabase->GetMailingListsFromDB(directory);
