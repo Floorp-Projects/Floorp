@@ -537,22 +537,11 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
     }
 
     /*
-     * Ok, we may be able to optimize name to stack slot.  We must check for
-     * the predefined arguments variable.  It may be overridden by assignment,
-     * in which case the function is heavyweight and the interpreter will look
-     * up 'arguments' in the function's call object.
-     */
-    if (pn->pn_op == JSOP_NAME &&
-        atom == cx->runtime->atomState.argumentsAtom) {
-        pn->pn_op = JSOP_ARGUMENTS;
-        return JS_TRUE;
-    }
-
-    /*
-     * Look for an argument or variable property in the function, or its call
-     * object, not found in any prototype object.  Rewrite pn_op and update pn
-     * accordingly.  NB: We know that JSOP_DELNAME on an argument or variable
-     * must evaluate to false, due to JSPROP_PERMANENT.
+     * Ok, we may be able to optimize name to stack slot. Look for an argument
+     * or variable property in the function, or its call object, not found in
+     * any prototype object.  Rewrite pn_op and update pn accordingly.  NB: We
+     * know that JSOP_DELNAME on an argument or variable must evaluate to
+     * false, due to JSPROP_PERMANENT.
      */
     if (!js_LookupProperty(cx, obj, (jsid)atom, &pobj, (JSProperty **)&sprop))
         return JS_FALSE;
@@ -599,7 +588,19 @@ LookupArgOrVar(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
     }
 
     if (pn->pn_slot < 0) {
-        /* We couldn't optimize it, so it's not an arg or local var name. */
+        /*
+         * We couldn't optimize it, so it's not an arg or local var name.  Now
+         * we must check for the predefined arguments variable.  It may be
+         * overridden by assignment, in which case the function is heavyweight
+         * and the interpreter will look up 'arguments' in the function's call
+         * object.
+         */
+        if (pn->pn_op == JSOP_NAME &&
+            atom == cx->runtime->atomState.argumentsAtom) {
+            pn->pn_op = JSOP_ARGUMENTS;
+            return JS_TRUE;
+        }
+
         tc->flags |= TCF_FUN_USES_NONLOCALS;
     }
     return JS_TRUE;
