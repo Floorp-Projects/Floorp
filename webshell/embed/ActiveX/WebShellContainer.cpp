@@ -263,6 +263,13 @@ CWebShellContainer::ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameN
 	return rv;
 }
 
+NS_IMETHODIMP
+CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& aPopupAlignment)
+{
+  return NS_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver implementation

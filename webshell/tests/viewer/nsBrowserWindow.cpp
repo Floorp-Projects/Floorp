@@ -1786,6 +1786,13 @@ nsBrowserWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNo
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& aPopupAlignment)
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)

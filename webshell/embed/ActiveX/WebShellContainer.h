@@ -55,6 +55,9 @@ public:
 	NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
 	NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 	NS_IMETHOD ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameNode);
+  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& aPopupAlignment);
 
 	// nsIStreamObserver
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);

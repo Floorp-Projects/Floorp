@@ -241,6 +241,9 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
+  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& aPopupAlignment);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
@@ -1911,6 +1914,17 @@ nsWebShell::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
 {
   if (nsnull != mContainer) {
     return mContainer->ContentShellAdded(aChildShell, frameNode);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& aPopupAlignment)
+{
+  if (nsnull != mContainer) {
+    return mContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, aPopupAlignment);
   }
   return NS_OK;
 }

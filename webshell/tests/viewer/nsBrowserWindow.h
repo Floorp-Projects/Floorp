@@ -109,6 +109,9 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
+  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& aPopupAlignment);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 

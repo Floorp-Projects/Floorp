@@ -567,6 +567,14 @@ nsXPBaseWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNod
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPBaseWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& aPopupAlignment)
+{
+  return NS_OK;
+}
+
 //----------------------------------------
 
 // Stream observer implementation
