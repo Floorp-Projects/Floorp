@@ -510,6 +510,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",			"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",				"$distdirectory:layout:");
 	_InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",				"$distdirectory:layout:");
+  _InstallFromManifest(":mozilla:layout:xbl:public:Manifest",				"$distdirectory:layout:");
 
 	#GFX
     _InstallFromManifest(":mozilla:gfx:public:MANIFEST",							"$distdirectory:gfx:");
