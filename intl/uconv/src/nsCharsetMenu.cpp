@@ -177,7 +177,7 @@ private:
   nsresult AddSeparatorToContainer(nsIRDFService * aRDFServ, 
     nsICharsetConverterManager2 * aCCMan, nsIRDFContainer * aContainer);
   nsresult AddCharsetToCache(nsICharsetConverterManager2 * aCCMan, 
-    nsIAtom * aCharset, nsVoidArray * aArray);
+    nsIAtom * aCharset, nsVoidArray * aArray, nsIRDFResource * aRDFResource);
 
   nsresult RemoveFlaggedCharsets(nsISupportsArray * aList, 
     nsICharsetConverterManager2 * aCCMan, nsString * aProp);
@@ -197,6 +197,8 @@ public:
   // Interface nsICurrentCharsetListener [declaration]
 
   NS_IMETHOD SetCurrentCharset(const PRUnichar * aCharset);
+
+  NS_IMETHOD SetCurrentMailCharset(const PRUnichar * aCharset);
 
   //--------------------------------------------------------------------------
   // Interface nsIRDFDataSource [declaration]
@@ -986,7 +988,8 @@ nsresult nsCharsetMenu::AddSeparatorToContainer(
 nsresult nsCharsetMenu::AddCharsetToCache(
                         nsICharsetConverterManager2 * aCCMan, 
                         nsIAtom * aCharset,
-                        nsVoidArray * aArray)
+                        nsVoidArray * aArray,
+                        nsIRDFResource * aRDFResource)
 {
   PRInt32 i;
   nsresult res = NS_OK;
@@ -999,7 +1002,7 @@ nsresult nsCharsetMenu::AddCharsetToCache(
 
   nsCOMPtr<nsIRDFContainer> container;
 
-  res = NewRDFContainer(mInner, kNC_BrowserCharsetMenuRoot, getter_AddRefs(container));
+  res = NewRDFContainer(mInner, aRDFResource, getter_AddRefs(container));
   if (NS_FAILED(res)) return res;
 
   // XXX insert into first cache position, not at the end
@@ -1154,7 +1157,21 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
   res = ccMan->GetCharsetAtom(aCharset, getter_AddRefs(atom));
   if (NS_FAILED(res)) return res;
 
-  return AddCharsetToCache(ccMan, atom, &mBrowserMenu);
+  return AddCharsetToCache(ccMan, atom, &mBrowserMenu, kNC_BrowserCharsetMenuRoot);
+}
+
+NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
+{
+  nsresult res;
+
+  NS_WITH_SERVICE(nsICharsetConverterManager2, ccMan, kCharsetConverterManagerCID, &res);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIAtom> atom;
+  res = ccMan->GetCharsetAtom(aCharset, getter_AddRefs(atom));
+  if (NS_FAILED(res)) return res;
+
+  return AddCharsetToCache(ccMan, atom, &mMailviewMenu, kNC_MailviewCharsetMenuRoot);
 }
 
 //----------------------------------------------------------------------------
