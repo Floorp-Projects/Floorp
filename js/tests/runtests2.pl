@@ -164,11 +164,10 @@ sub execute_tests {
         }
         
         if (!@output) {
-            &report_failure ($test, "Expected exit code " .
-                             "$expected_exit, got $got_exit\n" .
-                             "Testcase terminated with signal $exit_signal\n" .
-                             "Test case produced no output!\n", $bug_line);
-        } elsif ($got_exit != $expected_exit) {
+            @output = ("Testcase produced no output!");
+        }
+
+        if ($got_exit != $expected_exit) {
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
                              "Testcase terminated with signal $exit_signal\n" .
