@@ -72,6 +72,9 @@ public:
   static PRBool IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsPresContext *aPresContext, nsLinkState *aState);
   static PRBool IsSimpleXlink(nsIContent *aContent, nsPresContext *aPresContext, nsLinkState *aState);
 
+ static PRBool DashMatchCompare(const nsAString& aAttributeValue,
+                                const nsAString& aSelectorValue,
+                                const nsStringComparator& aComparator);
 };
 
 

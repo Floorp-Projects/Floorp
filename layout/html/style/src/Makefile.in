@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  js \
 		  xpconnect \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \
