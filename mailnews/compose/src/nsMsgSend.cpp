@@ -2130,7 +2130,7 @@ MSG_DeliverMimeAttachment::PickEncoding (const char *charset)
 			}
 		}
 
-		  m_encoder_data = MIME_UUEncoderInit(tailName ? tailName : "",
+		  m_encoder_data = MIME_UUEncoderInit((char *)(tailName ? tailName : ""),
 	  									  mime_encoder_output_fn,
 										  m_mime_delivery_state);
 	  PR_FREEIF(tailName);

@@ -263,7 +263,7 @@ nsNNTPNewsgroupPost::appendAndAlloc(char *string,
     
     if (!string) return PL_strdup(newSubstring);
     
-    char *separator = withComma ? ", " : " ";
+    char *separator = (char *) (withComma ? ", " : " ");
     char *oldString = string;
     
     string = (char *)PR_Calloc(PL_strlen(oldString) +
