@@ -245,40 +245,48 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindNextMessage(PRInt32 type, nsIDOMXU
 		if(NS_FAILED(rv))
 			return rv;
 
-		originalMessageNode = do_QueryInterface(firstMessage);
-		if(!originalMessageNode)
-			return NS_ERROR_FAILURE;
+		if(firstMessage)
+		{
+			originalMessageNode = do_QueryInterface(firstMessage);
+			if(!originalMessageNode)
+				return NS_ERROR_FAILURE;
 
-		checkStartMessage = PR_TRUE;
+			checkStartMessage = PR_TRUE;
+		}
 	}	
-	
-	navigationInfoPtr info;
-	rv = CreateNavigationInfo(type, tree, originalMessageNode, rdfService, document, wrapAround, isThreaded, checkStartMessage, &info);
-	if(NS_FAILED(rv))
-		return rv;
+
 	*nextMessage = nsnull;
 
-	nsCOMPtr<nsIDOMNode> next;
-	if(!isThreaded)
+	//if there are no messages then originalMessageNode will be null;
+	if(originalMessageNode)
 	{
-		rv = FindNextMessageUnthreaded(info, getter_AddRefs(next));
-	}
-	else
-	{
-		rv = FindNextMessageInThreads(info->originalMessage, info, getter_AddRefs(next));
-	}
-
-	if(next)
-	{
-		rv = next->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**) nextMessage);
+		navigationInfoPtr info;
+		rv = CreateNavigationInfo(type, tree, originalMessageNode, rdfService, document, wrapAround, isThreaded, checkStartMessage, &info);
 		if(NS_FAILED(rv))
-		{
-			delete info;
 			return rv;
-		}
-	}
 
-	delete info;
+		nsCOMPtr<nsIDOMNode> next;
+		if(!isThreaded)
+		{
+			rv = FindNextMessageUnthreaded(info, getter_AddRefs(next));
+		}
+		else
+		{
+			rv = FindNextMessageInThreads(info->originalMessage, info, getter_AddRefs(next));
+		}
+
+		if(next)
+		{
+			rv = next->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**) nextMessage);
+			if(NS_FAILED(rv))
+			{
+				delete info;
+				return rv;
+			}
+		}
+
+		delete info;
+	}
 	return rv;
 }
 
@@ -428,8 +436,11 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindFirstMessage(nsIDOMXULTreeElement 
 			if(NS_FAILED(rv))
 				return rv;
 
-			rv = firstChild->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)firstMessage);
-			return rv;
+			if(firstChild)
+			{
+				rv = firstChild->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)firstMessage);
+				return rv;
+			}
 		}
 
 	}
