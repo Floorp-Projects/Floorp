@@ -186,6 +186,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
     eHTMLTag_userdefined,   eHTMLTag_var,   
     eHTMLTag_whitespace,  //JUST ADDED!
+    eHTMLTag_spacer,
     0};
 
     //tagset2 has 44 members...
@@ -203,6 +204,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
     eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
     eHTMLTag_whitespace,//JUST ADDED!
+    eHTMLTag_spacer,
     0};
 
     //tagset3 has 57 members...
@@ -227,6 +229,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     
     eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined,
     eHTMLTag_var,       eHTMLTag_whitespace,  //JUST ADDED!
+    eHTMLTag_spacer,
     0};
 
     //This hack code is here because we don't yet know what to do
