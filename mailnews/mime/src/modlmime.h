@@ -295,7 +295,6 @@ struct MimeDisplayOptions
   /* A hook by which the user may be prompted for a password by the security
 	 library.  (This is really of type `SECKEYGetPasswordKey'; see sec.h.) */
   void *(*passwd_prompt_fn)(void *arg1, void *arg2);
-  void *passwd_prompt_fn_arg;
 
   /* =======================================================================
 	 Various callbacks; for all of these functions, the `closure' argument

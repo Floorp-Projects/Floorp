@@ -73,7 +73,7 @@ static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /* Arrgh.  Why isn't this in a reasonable header file somewhere???  ###tw */
-extern char * NET_ExplainErrorDetails (int code, ...);
+// RICHIE SHERRYextern char * NET_ExplainErrorDetails (int code, ...);
 
 extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
 
@@ -252,7 +252,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
   PRInt32     i = 0;
   struct      nsMsgAttachmentData  *tmp = data;
 
-  // RICHIE SHERRY - this will go away once we cutover...
+  // RICHIE - this will go away once we cutover...
   nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
   PRBool      mimeXULOutput = PR_TRUE;
   
@@ -275,8 +275,8 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
     mimeEmitterStartAttachment(opt, tmp->real_name, tmp->real_type, spec);
     mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, spec);
 
-    /* RICHIE SHERRY - for now, just leave these here, but they are really
-       not necessary
+    /* rhp - for now, just leave these here, but they are really
+             not necessary
     printf("URL for Part      : %s\n", spec);
     printf("Real Name         : %s\n", tmp->real_name);
 	  printf("Desired Type      : %s\n", tmp->desired_type);
@@ -482,8 +482,7 @@ mime_set_html_state_fn (void *stream_closure,
 {
   int status = 0;
 
-  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
-  
+  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */  
   if (start_p) 
   {
   } 
@@ -540,76 +539,25 @@ mime_display_stream_complete (nsMIMESession *stream)
       }
     }
 
-#ifdef HAVE_MIME_DATA_SLOT
-    if (msd &&
-      msd->context &&
-      msd->context->mime_data &&
-      obj == msd->context->mime_data->last_parsed_object)
+    // Destroy the object now.
+    PR_ASSERT(msd->options == obj->options);
+    mime_free(obj);
+    obj = NULL;
+    if (msd->options)
     {
-      /* do nothing -- we still have another pointer to this object. */
-    }
-    else
-#endif /* HAVE_MIME_DATA_SLOT */
-    {
-      /* Somehow there's no pointer in context->mime_data to this
-         object, so destroy it now.  (This can happen for any number
-         of normal reasons; see comment in mime_output_init_fn().)
-      */
-      PR_ASSERT(msd->options == obj->options);
-      mime_free(obj);
-      obj = NULL;
-      if (msd->options)
-      {
-        PR_FREEIF(msd->options->part_to_load);
-        PR_FREEIF(msd->options->default_charset);
-        PR_FREEIF(msd->options->override_charset);
-        PR_Free(msd->options);
-        msd->options = 0;
-      }
+      PR_FREEIF(msd->options->part_to_load);
+      PR_FREEIF(msd->options->default_charset);
+      PR_FREEIF(msd->options->override_charset);
+      PR_Free(msd->options);
+      msd->options = 0;
     }
   }
-  
-#ifdef LOCK_LAST_CACHED_MESSAGE
-  /* The code in this ifdef is to ensure that the most-recently-loaded news
-  message is locked down in the memory cache.  (There may be more than one
-  message cached, but only the most-recently-loaded is *locked*.)
-  
-    When loading a message, we unlock the previously-locked URL, if any.
-    (This happens in mime_make_output_stream().)
     
-      When we're done loading a news message, we lock it to prevent it from
-      going away (this happens here, in mime_display_stream_complete().  We
-      need to do this at the end instead of the beginning so that the document
-      is *in* the cache at the time we try to lock it.)
-      
-        This implementation probably assumes that news messages go into the
-        memory cache and never go into the disk cache.  (But maybe that's
-        actually not an issue, since if news messages were to go into the
-        disk cache, they would be marked as non-session-persistent anyway?)
-  */
-  if (msd &&
-    msd->context &&
-    msd->context->mime_data &&
-    !msd->context->mime_data->previous_locked_url)
-  {
-    /* Save a copy of this URL so that we can unlock it next time. */
-    // RICHIE_URL msd->context->mime_data->previous_locked_url = PL_strdup(msd->url->address);
-
-    msd->context->mime_data->previous_locked_url = PL_strdup(msd->url_name);
-
-#ifdef RICHIE
-    /* Lock this URL in the cache. */
-    if (msd->context->mime_data->previous_locked_url)
-      NET_ChangeCacheFileLock(msd->url, PR_TRUE);
-#endif
-  }
-#endif /* LOCK_LAST_CACHED_MESSAGE */
-  
   // Release the prefs service
   if ( (obj) && (obj->options) && (obj->options->prefs) )
     nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
 
-  PR_Free(msd);
+  PR_FREEIF(msd);
 }
 
 extern "C" void
@@ -625,104 +573,19 @@ mime_display_stream_abort (nsMIMESession *stream, int status)
     if (!obj->parsed_p)
       obj->clazz->parse_end(obj, PR_TRUE);
     
-#ifdef HAVE_MIME_DATA_SLOT
-    if (msd &&
-      msd->context &&
-      msd->context->mime_data &&
-      obj == msd->context->mime_data->last_parsed_object)
+    // Destroy code....
+    PR_ASSERT(msd->options == obj->options);
+    mime_free(obj);
+    if (msd->options)
     {
-      /* do nothing -- we still have another pointer to this object. */
-    }
-    else
-#endif /* HAVE_MIME_DATA_SLOT */
-    {
-    /* Somehow there's no pointer in context->mime_data to this
-    object, so destroy it now.  (This can happen for any number
-    of normal reasons; see comment in mime_output_init_fn().)
-      */
-      PR_ASSERT(msd->options == obj->options);
-      mime_free(obj);
-      if (msd->options)
-      {
-        PR_FREEIF(msd->options->part_to_load);
-        PR_Free(msd->options);
-        msd->options = 0;
-      }
+      PR_FREEIF(msd->options->part_to_load);
+      PR_FREEIF(msd->options);
+      msd->options = 0;
     }
   }
-  PR_ASSERT(msd); /* Crash was happening here - jrm */
-  
-  if (msd)
-  {
-    // RICHIE - context stuff
-    if (msd->pluginObj2)
-    {
-      if (msd->context && msd->context->mime_data && msd->context->mime_data->last_parsed_object)
-        msd->context->mime_data->last_parsed_object->showAttachmentIcon = PR_FALSE;      
-    }
-    PR_Free(msd);
-  }
-}
 
-#if 0
-static int
-mime_insert_html_put_block(nsMIMESession *stream, const char* str, PRInt32 length)
-{
-  struct mime_stream_data* msd = (struct mime_stream_data*) stream;
-  char* s = (char*) str;
-  char c = s[length];  
-  PR_ASSERT(msd);
-  if (!msd) return -1;
-  if (c) {
-    s[length] = '\0';
-  }
-  /* s is in the outcsid encoding at this point. That was done in
-   * mime_insert_html_convert_charset */
-#ifdef RICHIE
-  EDT_PasteQuoteINTL(msd->context, s, msd->outcsid); 
-#endif
-  if (c) {
-    s[length] = c;
-  }
-  return 0;
+  PR_FREEIF(msd);
 }
-
-static void
-mime_insert_html_complete(nsMIMESession *stream)
-{
-  struct mime_stream_data* msd = (struct mime_stream_data*) stream;  
-  PR_ASSERT(msd);
-  if (!msd) return;
-#ifdef RICHIE
-  EDT_PasteQuote(msd->context, "</BLOCKQUOTE>");
-#endif
-  if (msd->format_out == FO_QUOTE_HTML_MESSAGE) {
-      PRBool eReplyOnTop = PR_TRUE, nReplyWithExtraLines = PR_FALSE;
-      if (msd->prefs)
-      {
-        msd->prefs->GetBoolPref("mailnews.reply_on_top", &eReplyOnTop);
-        msd->prefs->GetBoolPref("mailnews.reply_with_extra_lines", &nReplyWithExtraLines);
-      }
-      if (0 == eReplyOnTop && nReplyWithExtraLines) {
-//        for (; nReplyWithExtraLines > 0; nReplyWithExtraLines--)
-		;
-#ifdef RICHIE
-          EDT_PasteQuote(msd->context, "<BR>");
-#endif
-      }
-
-  }
-#ifdef RICHIE
-  EDT_PasteQuoteEnd(msd->context);
-#endif
-}
-
-static void
-mime_insert_html_abort(nsMIMESession *stream, int status)
-{	
-  mime_insert_html_complete(stream);
-}
-#endif
 
 static int
 mime_insert_html_convert_charset (const PRBool input_autodetect, const char *input_line, 
@@ -734,20 +597,29 @@ mime_insert_html_convert_charset (const PRBool input_autodetect, const char *inp
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
   int                     status;
 
-  INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(msd->context);
-  PRUint16 old_csid = INTL_GetCSIDocCSID(csi);
+  // RICHIE SHERRY - I think this should go away, but I don't want to remove it without
+  // being around for the I18N folks
+  INTL_CharSetInfo csi = nsnull;
+  PRUint16         old_csid = INTL_GetCSIDocCSID(csi);
 
-  if (input_charset) {
+  if (input_charset) 
+  {
     msd->lastcsid = INTL_CharSetNameToID((char*) input_charset);
-  } else {
+  } 
+  else 
+  {
     msd->lastcsid = 0;
   }
-  if (output_charset) {
+  if (output_charset) 
+  {
     msd->outcsid = INTL_CharSetNameToID((char*) output_charset);
-  } else {
+  } 
+  else 
+  {
     msd->outcsid = 0;
   }
   INTL_SetCSIDocCSID(csi, msd->lastcsid);
+
   status = mime_convert_charset (input_autodetect, input_line, input_length,
                                  input_charset, output_charset,
                                  output_ret, output_size_ret,
@@ -772,15 +644,6 @@ mime_output_init_fn (const char *type,
     return -1;
   else
     return 0;
-
-  /* If we've converted to HTML, then we've already done charset conversion,
-     so label this data as "internal/parser" to prevent it from being passed
-     through the charset converters again. */
-#ifdef RICHIE
-  if (msd->options->write_html_p &&
-    !PL_strcasecmp(type, TEXT_HTML))
-    type = INTERNAL_PARSER;
-#endif
 }
 
 static void   *mime_image_begin(const char *image_url, const char *content_type,
@@ -794,7 +657,6 @@ static int    mime_image_write_buffer(char *buf, PRInt32 size, void *image_closu
  */
 struct mime_image_stream_data {
   struct mime_stream_data *msd;
-  // RICHIE_URL URL_Struct *url_struct;
   char                    *url;
   nsMIMESession           *istream;
 };
@@ -812,27 +674,6 @@ mime_image_begin(const char *image_url, const char *content_type,
   memset(mid, 0, sizeof(*mid));
   mid->msd = msd;
 
-  /* Internal-external-reconnect only works when going to the screen.
-     In that case, return the mid, but leave it empty (returning 0
-     here is interpreted as out-of-memory.)
-   */
-/* rhp --> i commented these out...(mscott) */
-#if 0
-  if (msd->format_out != FO_NGLAYOUT &&
-      msd->format_out != FO_CACHE_AND_NGLAYOUT &&
-      msd->format_out != FO_PRINT &&
-      msd->format_out != FO_CACHE_AND_PRINT &&
-      msd->format_out != FO_SAVE_AS_POSTSCRIPT &&
-      msd->format_out != FO_CACHE_AND_SAVE_AS_POSTSCRIPT)
-    return mid;
-#endif
-
-  if ( (msd->context) && (!msd->context->img_cx) )
-      /* If there is no image context, e.g. if this is a Text context or a
-         Mail context on the Mac, then we won't be loading images in the
-         image viewer. */
-      return mid;
-
   mid->url = (char *) PL_strdup(image_url);
   if (!mid->url)
   {
@@ -840,26 +681,9 @@ mime_image_begin(const char *image_url, const char *content_type,
     return 0;
   }
 
-  // RICHIE_URL mid->url_struct = NET_CreateURLStruct (image_url, NET_DONT_RELOAD);
-  // RICHIE_URL if (!mid->url_struct)
-  // RICHIE_URL   {
-  // RICHIE_URL     PR_Free(mid);
-  // RICHIE_URL     return 0;
-  // RICHIE_URL   }
-
-  // RICHIE_URL mid->url_struct->content_encoding = 0;
-  // RICHIE_URL mid->url_struct->content_type = PL_strdup(content_type);
-  // RICHIE_URL if (!mid->url_struct->content_type)
-  // RICHIE_URL   {
-  // RICHIE_URL     NET_FreeURLStruct (mid->url_struct);
-  // RICHIE_URL     PR_Free(mid);
-  // RICHIE_URL     return 0;
-  // RICHIE_URL   }
-
   mid->istream = (nsMIMESession *) msd->pluginObj2;
   return mid;
 }
-
 
 static void
 mime_image_end(void *image_closure, int status)
@@ -868,26 +692,10 @@ mime_image_end(void *image_closure, int status)
     (struct mime_image_stream_data *) image_closure;
   
   PR_ASSERT(mid);
-  if (!mid) return;
-  if (mid->istream)
-  {
-    /*
-      if (status < 0)
-      mid->istream->abort(mid->istream, status);
-      else
-      mid->istream->complete(mid->istream);
-      PR_ASSERT(mid->msd->istream == mid->istream);
-      mid->msd->istream = NULL;
-      PR_Free (mid->istream);
-    */
-  }
-
-  // RICHIE_URL if (mid->url_struct)
-  // RICHIE_URL   NET_FreeURLStruct (mid->url_struct);
-
+  if (!mid) 
+    return;
   PR_FREEIF(mid->url);
-
-  PR_Free(mid);
+  PR_FREEIF(mid);
 }
 
 
@@ -914,12 +722,6 @@ mime_image_make_image_html(void *image_closure)
   if (!mid->istream)
     return PL_strdup("<P><CENTER><IMG SRC=\"resource:/res/network/gopher-image.gif\" ALT=\"[Image]\"></CENTER><P>");
 
-  /* RICHIE_URL
-  url = ((mid->url_struct && mid->url_struct->address)
-         ? mid->url_struct->address
-         : "");
-  *** RICHIE_URL ***/
-
   if ( (!mid->url) || (!(*mid->url)) )
     url = "";
   else
@@ -927,7 +729,8 @@ mime_image_make_image_html(void *image_closure)
 
   buf = (char *) PR_MALLOC (PL_strlen(prefix) + PL_strlen(suffix) +
                            PL_strlen(url) + PL_strlen(makeUniqueHackString) + 20) ;
-  if (!buf) return 0;
+  if (!buf) 
+    return 0;
   *buf = 0;
 
   PL_strcat (buf, prefix);
@@ -936,7 +739,6 @@ mime_image_make_image_html(void *image_closure)
   PL_strcat (buf, suffix);
   return buf;
 }
-
 
 static int
 mime_image_write_buffer(char *buf, PRInt32 size, void *image_closure)
@@ -1112,18 +914,11 @@ extern int MIME_HasAttachments(MWContext *context)
 	return (context->mime_data && context->mime_data->last_parsed_object->showAttachmentIcon);
 }
 
-/**************************************************************
- **************************************************************
- **************************************************************
- **************************************************************
-                 NEW WORK FOR STREAM CONVERSION!
- **************************************************************
- **************************************************************
- **************************************************************
- **************************************************************
- **************************************************************/
+//
+// New Stream Converter Interface
+//
 
-/* Get the connnection to prefs service manager */
+// Get the connnection to prefs service manager 
 nsIPref *
 GetPrefServiceManager(MimeDisplayOptions *opt)
 {
@@ -1148,14 +943,6 @@ mime_bridge_create_display_stream(
   struct mime_stream_data   *msd;
   nsMIMESession             *stream = 0;
   
-  /***
-  * SHERRY - MAKE THESE GO AWAY!
-  ***/
-  MWContext   *context = NULL;
-  /***
-  * SHERRY - MAKE THESE GO AWAY!
-  ***/
-
   if (!uri)
     return nsnull;
 
@@ -1163,20 +950,10 @@ mime_bridge_create_display_stream(
   if (!msd) 
     return NULL;
 
-  /* RICHIE_URL
-  msd->url = PR_NEWZAP( URL_Struct );
-  if (!msd->url)
-  {
-    PR_FREEIF(msd);
-    return NULL;
-  }
-  *****/
-
   // Assign the new mime emitter - will handle output operations
   msd->output_emitter = newEmitter;
-  
-  // RICHIE_URL (msd->url)->address = PL_strdup(urlString);
 
+  // Store the URL string for this decode operation
   char *urlString;
   if (NS_SUCCEEDED(uri->GetSpec(&urlString)))
   {
@@ -1194,11 +971,7 @@ mime_bridge_create_display_stream(
     }
   }
   
-  msd->context = context;           // SHERRY - need to wax this soon
-
-
-
-  msd->format_out = format_out;     // output format
+  msd->format_out = format_out;       // output format
   msd->pluginObj2 = newPluginObj2;    // the plugin object pointer 
   
   msd->options = PR_NEW(MimeDisplayOptions);
@@ -1217,34 +990,6 @@ mime_bridge_create_display_stream(
     return nsnull;
   }
 
-  /* handle the case where extracting attachments from nested messages */
-#ifdef RICHIE
-  if (url->content_modified != IMAP_CONTENT_NOT_MODIFIED)
-    msd->options->missing_parts = PR_TRUE;
-#endif /* RICHIE */
-  
-#ifdef RICHIE
-    /*	fe_data now seems to hold information that is relative to the 
-    XP-COM information		
-  */
-  if ((format_out == FO_NGLAYOUT || format_out == FO_CACHE_AND_NGLAYOUT) &&
-    url->fe_data)
-  {
-  /* If we're going to the screen, and the URL has fe_data, then it is
-  an options structure (that is how the news code hands us its callback
-  functions.)  We copy it and free the passed-in data right away.
-  (If we're not going to the screen, the fe_data might be some random
-  object intended for someone further down the line; for example, it
-  could be the XP_File that FO_SAVE_TO_DISK needs to pass around.)
-    */
-    MimeDisplayOptions *opt2 = (MimeDisplayOptions *) url->fe_data;
-    *msd->options = *opt2;  /* copies */
-    PR_Free (opt2);
-    url->fe_data = 0;
-    msd->options->attachment_icon_layer_id = 0; /* Sigh... */
-  }
-#endif
-   
   //
   // Set the defaults, based on the context, and the output-type.
   //
@@ -1270,9 +1015,11 @@ mime_bridge_create_display_stream(
       break;
   }
 
+  ////////////////////////////////////////////////////////////
+  // Now, get the libmime prefs...
+  ////////////////////////////////////////////////////////////
   msd->options->headers = MimeHeadersAll;
   
-  // Get the libmime prefs...
   MIME_NoInlineAttachments = PR_TRUE;   // false - display as links 
                                         // true - display attachment
 
@@ -1297,7 +1044,6 @@ mime_bridge_create_display_stream(
   
   // We need to have the URL to be able to support the various 
   // arguments
-  // RICHIE_URL status = mime_parse_url_options(msd->url->address, msd->options);
   status = mime_parse_url_options(msd->url_name, msd->options);
   if (status < 0)
   {
@@ -1307,33 +1053,16 @@ mime_bridge_create_display_stream(
     return 0;
   }
  
-  /** RICHIE_URL 
   if (msd->options->headers == MimeHeadersMicro &&
-    (msd->url->address == NULL || (PL_strncmp(msd->url->address, "news:", 5) != 0 &&
-    PL_strncmp(msd->url->address, "snews:", 6) != 0))
-    )
-    **RICHIE_URL **/
-  if (msd->options->headers == MimeHeadersMicro &&
-    (msd->url_name == NULL || (PL_strncmp(msd->url_name, "news:", 5) != 0 &&
-    PL_strncmp(msd->url_name, "snews:", 6) != 0))
-    )
+     (msd->url_name == NULL || (PL_strncmp(msd->url_name, "news:", 5) != 0 &&
+              PL_strncmp(msd->url_name, "snews:", 6) != 0)) )
     msd->options->headers = MimeHeadersMicroPlus;
 
-  // RICHIE_URL msd->options->url                   = msd->url->address;
   msd->options->url = msd->url_name;
   msd->options->write_html_p          = PR_TRUE;
   msd->options->output_init_fn        = mime_output_init_fn;
   
-#ifdef XP_MAC
-  /* If it's a thread context, don't output all the mime stuff (hangs on Macintosh for
-  ** unexpanded threadpane, because HTML is generated that needs images and layers).
-  */
-  if (context->type == MWContextMail)
-    msd->options->output_fn           = compose_only_output_fn;
-  else
-#endif /* XP_MAC */
-    msd->options->output_fn           = mime_output_fn;
-  
+  msd->options->output_fn             = mime_output_fn;
   msd->options->set_html_state_fn     = mime_set_html_state_fn;
 
   //
@@ -1352,7 +1081,6 @@ mime_bridge_create_display_stream(
   msd->options->type_icon_name_fn     = mime_type_icon;
   msd->options->stream_closure        = msd;
   msd->options->passwd_prompt_fn      = 0;
-  msd->options->passwd_prompt_fn_arg  = context;
   
   msd->options->image_begin           = mime_image_begin;
   msd->options->image_end             = mime_image_end;
@@ -1375,8 +1103,9 @@ mime_bridge_create_display_stream(
     msd->options->prefs->GetBoolPref("mail.force_user_charset", &(msd->options->force_user_charset));
   if (msd->options->force_user_charset)
   {
-    /* For now, we are not going to do this, but I am leaving the code here just in case
-       we do want a pref charset override capability.
+    /* rhp:
+        For now, we are not going to do this, but I am leaving the code here just in case
+        we do want a pref charset override capability.
     char    charset[256];
     int     length = sizeof(charset);
 
@@ -1390,9 +1119,7 @@ mime_bridge_create_display_stream(
   if (msd->options->part_to_load)
     msd->options->write_html_p = PR_FALSE;
 
-  obj = mime_new ((MimeObjectClass *)&mimeMessageClass,
-    (MimeHeaders *) NULL,
-    MESSAGE_RFC822);
+  obj = mime_new ((MimeObjectClass *)&mimeMessageClass, (MimeHeaders *) NULL, MESSAGE_RFC822);
   if (!obj)
   {
     PR_FREEIF(msd->options->part_to_load);
@@ -1400,13 +1127,14 @@ mime_bridge_create_display_stream(
     PR_Free(msd);
     return 0;
   }
+
   obj->options = msd->options;
   msd->obj = obj;
   
   /* Both of these better not be true at the same time. */
   PR_ASSERT(! (obj->options->dexlate_p && obj->options->write_html_p));
   
-  stream = PR_NEW (nsMIMESession);
+  stream = PR_NEW(nsMIMESession);
   if (!stream)
   {
     PR_FREEIF(msd->options->part_to_load);
@@ -1415,14 +1143,13 @@ mime_bridge_create_display_stream(
     PR_Free(obj);
     return 0;
   }
-  memset (stream, 0, sizeof (*stream));
   
+  nsCRT::memset (stream, 0, sizeof (*stream));  
   stream->name           = "MIME Conversion Stream";
   stream->complete       = mime_display_stream_complete;
   stream->abort          = mime_display_stream_abort;
   stream->put_block      = mime_display_stream_write;
   stream->data_object    = msd;
-  stream->window_id      = context;
   
   status = obj->clazz->initialize(obj);
   if (status >= 0)

@@ -40,16 +40,15 @@
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 
-extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
-
-extern "C" 
-char *
-MIME_StripContinuations(char *original);
+// Forward declares...
+extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, char *charset);
+extern "C"  char    *MIME_StripContinuations(char *original);
+int MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
 static int
 MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
-							const char *input, PRInt32 input_length,
-							char **output_ret, PRInt32 *output_length_ret);
+							              const char *input, PRInt32 input_length,
+							              char **output_ret, PRInt32 *output_length_ret);
 
 char *
 MimeHeaders_convert_header_value(MimeDisplayOptions *opt, char **value)
@@ -108,6 +107,41 @@ MimeHeaders_free (MimeHeaders *hdrs)
   PR_Free(hdrs);
 }
 
+int
+MimeHeaders_parse_line (const char *buffer, PRInt32 size, MimeHeaders *hdrs)
+{
+  int status = 0;
+  int desired_size;
+
+  PR_ASSERT(hdrs);
+  if (!hdrs) return -1;
+
+  /* Don't try and feed me more data after having fed me a blank line... */
+  PR_ASSERT(!hdrs->done_p);
+  if (hdrs->done_p) return -1;
+
+  if (!buffer || size == 0 || *buffer == CR || *buffer == LF)
+	{
+	  /* If this is a blank line, we're done.
+	   */
+	  hdrs->done_p = PR_TRUE;
+	  return MimeHeaders_build_heads_list(hdrs);
+	}
+
+  /* Tack this data on to the end of our copy.
+   */
+  desired_size = hdrs->all_headers_fp + size + 1;
+  if (desired_size >= hdrs->all_headers_size)
+	{
+	  status = mime_GrowBuffer (desired_size, sizeof(char), 255,
+							   &hdrs->all_headers, &hdrs->all_headers_size);
+	  if (status < 0) return status;
+	}
+  nsCRT::memcpy(hdrs->all_headers+hdrs->all_headers_fp, buffer, size);
+  hdrs->all_headers_fp += size;
+
+  return 0;
+}
 
 MimeHeaders *
 MimeHeaders_copy (MimeHeaders *hdrs)
@@ -154,61 +188,6 @@ MimeHeaders_copy (MimeHeaders *hdrs)
 		}
 	}
   return hdrs2;
-}
-
-/* Discard the buffer, when we probably won't be needing it any more. */
-static void
-MimeHeaders_compact (MimeHeaders *hdrs)
-{
-  PR_ASSERT(hdrs);
-  if (!hdrs) return;
-
-  PR_FREEIF(hdrs->obuffer);
-  hdrs->obuffer_fp = 0;
-  hdrs->obuffer_size = 0;
-
-  /* These really shouldn't have gotten out of whack again. */
-  PR_ASSERT(hdrs->all_headers_fp <= hdrs->all_headers_size &&
-			hdrs->all_headers_fp + 100 > hdrs->all_headers_size);
-}
-
-
-int MimeHeaders_build_heads_list(MimeHeaders *hdrs);
-
-int
-MimeHeaders_parse_line (const char *buffer, PRInt32 size, MimeHeaders *hdrs)
-{
-  int status = 0;
-  int desired_size;
-
-  PR_ASSERT(hdrs);
-  if (!hdrs) return -1;
-
-  /* Don't try and feed me more data after having fed me a blank line... */
-  PR_ASSERT(!hdrs->done_p);
-  if (hdrs->done_p) return -1;
-
-  if (!buffer || size == 0 || *buffer == CR || *buffer == LF)
-	{
-	  /* If this is a blank line, we're done.
-	   */
-	  hdrs->done_p = PR_TRUE;
-	  return MimeHeaders_build_heads_list(hdrs);
-	}
-
-  /* Tack this data on to the end of our copy.
-   */
-  desired_size = hdrs->all_headers_fp + size + 1;
-  if (desired_size >= hdrs->all_headers_size)
-	{
-	  status = mime_GrowBuffer (desired_size, sizeof(char), 255,
-							   &hdrs->all_headers, &hdrs->all_headers_size);
-	  if (status < 0) return status;
-	}
-  nsCRT::memcpy(hdrs->all_headers+hdrs->all_headers_fp, buffer, size);
-  hdrs->all_headers_fp += size;
-
-  return 0;
 }
 
 int
@@ -319,7 +298,6 @@ MimeHeaders_build_heads_list(MimeHeaders *hdrs)
 
   return 0;
 }
-
 
 char *
 MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
@@ -671,11 +649,11 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 
 
 #define MimeHeaders_write(OPT,DATA,LENGTH) \
-	MimeOptions_write((OPT), (DATA), (LENGTH), PR_TRUE);
+  	MimeOptions_write((OPT), (DATA), (LENGTH), PR_TRUE);
 
 static char *
 MimeHeaders_default_news_link_generator (const char *dest, void *closure,
-										 MimeHeaders *headers)
+	                    									 MimeHeaders *headers)
 {
   /* This works as both the generate_news_url_fn and as the
 	 generate_reference_url_fn. */
@@ -864,8 +842,6 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
   return 0;
 }
 
-
-
 static char *
 MimeHeaders_localize_header_name(char *name, MimeDisplayOptions *opt)
 {
@@ -914,969 +890,6 @@ MimeHeaders_localize_header_name(char *name, MimeDisplayOptions *opt)
 
   return NULL;  
 }
-
-
-static int
-MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
-								   char *name, const char *contents,
-								   MimeDisplayOptions *opt,
-								   PRBool subject_p)
-{
-  int status = 0;
-  PRInt32 contents_length;
-  char *out;
-  char *converted = 0;
-  PRInt32 converted_length = 0;
-  char        *cleanName = NULL;  /* To make sure there is no nasty HTML/JavaScript in Headers */
-  char        *orig_name = name;
-
-  PR_ASSERT(hdrs);
-  if (!hdrs) return -1;
-
-  if (!contents && subject_p)
-	contents = "";
-  else if (!contents)
-	return 0;
-
-  /* create a "clean" escaped header name for any embedded 
-     JavaScript (if we have to) */
-  if (name)
-  {
-    cleanName = nsEscapeHTML(name);
-    if (!cleanName)
-      return MIME_OUT_OF_MEMORY;
-    else
-      name = cleanName;
-  }
-
-  name = MimeHeaders_localize_header_name(name, opt);
-
-  contents_length = PL_strlen(contents);
-  status = MimeHeaders_convert_rfc1522(opt, contents, contents_length,
-									   &converted, &converted_length);
-  if (status < 0) 
-  {
-    PR_FREEIF(cleanName);
-    if (orig_name != name)
-      PR_FREEIF(name);
-    return status;
-  }
-  if (converted)
-	{
-	  contents = converted;
-	  contents_length = converted_length;
-	}
-
-  status = MimeHeaders_grow_obuffer (hdrs, PL_strlen (name) + 100 +
-									 (contents_length * 4));
-  if (status < 0)
-	{
-	  PR_FREEIF(converted);
-    PR_FREEIF(cleanName);
-    if (orig_name != name)
-      PR_FREEIF(name);
-	  return status;
-	}
-
-  out = hdrs->obuffer;
-
-  if (subject_p && contents)
-	{
-	  PR_ASSERT(hdrs->munged_subject == NULL);
-	  hdrs->munged_subject = PL_strdup(contents);
-	}
-
-  if (opt->fancy_headers_p)
-	{
-	  PL_strcpy (out, "<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>"); out += PL_strlen (out);
-	  PL_strcpy (out, name); out += PL_strlen (out);
-
-#define HEADER_MIDDLE_JUNK       ": </TH><TD>"
-
-	  PL_strcpy (out, HEADER_MIDDLE_JUNK); out += PL_strlen (out);
-	  if (subject_p)
-		{
-		  PL_strcpy (out, "<B>"); out += PL_strlen (out);
-		}
-
-	  /* Copy `contents' to `out', quoting HTML along the way.
-		 Note: this function does no charset conversion; that has
-		 already been done.
-	   */
-/*RICHIE
-	  status = nsScanForURLs (
-								contents, contents_length, out,
-								hdrs->obuffer_size - (out - hdrs->obuffer) -10,
-								PR_TRUE);
-	  if (status < 0) return status;
-*/
-    nsMimeURLUtils myUtil;
-
-    status = myUtil.ScanForURLs(contents, contents_length, out,
-								              hdrs->obuffer_size - (out - hdrs->obuffer) -10,
-								              PR_TRUE);
-    if (status != NS_OK)
-    {
-      if (orig_name != name)
-        PR_FREEIF(name);
-      return status;
-    }
-
-	  out += PL_strlen(out);
-	  PR_ASSERT(out < (hdrs->obuffer + hdrs->obuffer_size));
-
-	  PL_strcpy (out, "</TD></TR>"); out += PL_strlen (out);
-	}
-  else
-	{
-	  /* The non-fancy version (no tables): for converting to plain text. */
-	  char *s = nsEscapeHTML (contents);
-	  if (s)
-		{
-		  char *start, *end, *data_end;
-		  PL_strcpy (out, "<NOBR><B>"); out += PL_strlen (out);
-		  PL_strcpy (out, name); out += PL_strlen (out);
-		  PL_strcpy (out, ": </B>"); out += PL_strlen (out);
-
-		  data_end = s + PL_strlen (s);
-		  start = s;
-		  end = start;
-		  while (end < data_end)
-			for (end = start; end < data_end; end++)
-			  if (*end == CR || *end == LF)
-				{
-				  nsCRT::memcpy (out, start, end - start); out += (end - start);
-				  PL_strcpy (out, "<BR>&nbsp;&nbsp;&nbsp;&nbsp;");
-				  out += PL_strlen (out);
-				  if (*end == CR && end < data_end && end[1] == LF)
-					end++;
-				  start = end + 1;
-				}
-		  if (start < end)
-			{
-			  nsCRT::memcpy (out, start, end - start); out += (end - start);
-			}
-		  PL_strcpy (out, "</NOBR><BR>"); out += PL_strlen (out);
-		  PR_Free (s);
-		}
-	}
-  *out = 0; 
-
-  status = MimeHeaders_write(opt, hdrs->obuffer, out - hdrs->obuffer);
-  PR_FREEIF(converted);
-  PR_FREEIF(cleanName);
-  if (orig_name != name)
-    PR_FREEIF(name);
-
-  if (status < 0)
-	return status;
-  else
-	return 1;
-}
-
-
-static int
-MimeHeaders_write_random_header (MimeHeaders *hdrs, char *name,
-								 PRBool all_p, MimeDisplayOptions *opt)
-{
-  int status = 0;
-  char *contents = MimeHeaders_get (hdrs, name, PR_FALSE, all_p);
-  if (!contents) return 0;
-  status = MimeHeaders_write_random_header_1(hdrs, name, contents, opt, PR_FALSE);
-  PR_Free(contents);
-  return status;
-}
-
-static int
-MimeHeaders_write_subject_header_1 (MimeHeaders *hdrs, char *name,
-									const char *contents,
-									MimeDisplayOptions *opt)
-{
-  return MimeHeaders_write_random_header_1(hdrs, name, contents, opt, PR_TRUE);
-}
-
-static int
-MimeHeaders_write_subject_header (MimeHeaders *hdrs, char *name,
-								  MimeDisplayOptions *opt)
-{
-  int status = 0;
-  char *contents = MimeHeaders_get (hdrs, name, PR_FALSE, PR_FALSE);
-  status = MimeHeaders_write_subject_header_1 (hdrs, name, contents, opt);
-  PR_FREEIF(contents);
-  return status;
-}
-
-static int
-MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, char *name,
-									const char *contents,
-									MimeDisplayOptions *opt,
-									PRBool mail_header_p)
-{
-  static PRInt32       nHeaderDisplayLen = 15;  /* rhp: for new header wrap functionality */
-  nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
-
-  int status = 0;
-  PRInt32 contents_length;
-  char *converted = 0;
-  const char *orig_name = name;
-  char *out;
-
-  PR_ASSERT(hdrs);
-  if (!hdrs) return -1;
-
-  if (!contents)
-	return 0;
-
-  if (!opt->fancy_headers_p)
-	return MimeHeaders_write_random_header (hdrs, name, PR_TRUE, opt);
-
-  if (name) name = MimeHeaders_localize_header_name(name, opt);
-
-  contents_length = PL_strlen(contents);
-
-  if (mail_header_p)
-	{
-	  PRInt32 converted_length = 0;
-	  status = MimeHeaders_convert_rfc1522(opt, contents, contents_length,
-										   &converted, &converted_length);
-	  if (status < 0) 
-    {
-      if (orig_name != name)
-        PR_FREEIF(name);
-      return status;
-    }
-
-	  if (converted)
-		{
-		  contents = converted;
-		  contents_length = converted_length;
-		}
-	}
-
-  /* grow obuffer with potential XSENDER AUTH string */
-  char  *tString = MimeGetStringByID(MIME_MSG_XSENDER_INTERNAL);
-  status = MimeHeaders_grow_obuffer (hdrs, (name ? PL_strlen (name) : 0)
-									 + 100 + 2 *
-									 PL_strlen(tString) +
-									 (contents_length * 4));
-  PR_FREEIF(tString);
-  if (status < 0) goto FAIL;
-
-  out = hdrs->obuffer;
-  if (name) {
-	  PL_strcpy (out, "<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>"); out += PL_strlen (out);
-	  PL_strcpy (out, name); out += PL_strlen (out);
-	  PL_strcpy (out, ": </TH><TD>"); out += PL_strlen (out);
-  }
-
-  status = MimeHeaders_write(opt, hdrs->obuffer, out - hdrs->obuffer);
-  if (status < 0) goto FAIL;
-
-  // Short header pref
-  if (pref)
-    pref->GetIntPref("mailnews.max_header_display_length", &nHeaderDisplayLen);
-
-  {
-  int        headerCount = 0;
-	const char *data_end = contents + contents_length;
-	const char *last_end = 0;
-	const char *this_start = contents;
-	const char *this_end = this_start;
-  while (this_end < data_end)
-  {
-    PRInt32 paren_depth = 0;
-    
-    /* Skip over whitespace and commas. */
-    while (this_start < data_end &&
-			   (IS_SPACE (*this_start) || *this_start == ','))
-         this_start++;
-    
-    this_end = this_start;
-    
-    /* Skip to the end, or the next comma, taking quoted strings,
-    comments, and backslashes into account. */
-    while (this_end < data_end &&
-			   !(*this_end == ',' && paren_depth <= 0))
-		  {
-      if (*this_end == '\\')
-        this_end++;
-      else if (*this_end == '"')
-      {
-        this_end++;
-        while (this_end < data_end && *this_end != '"')
-        {
-          if (*this_end == '\\')
-            this_end++;
-          this_end++;
-        }
-      }
-      
-      if (*this_end == '(')
-        paren_depth++;
-      else if (*this_end == ')' && paren_depth > 0)
-        paren_depth--;
-      
-      this_end++;
-		  }
-    
-    /* Push out the preceeding comma, whitespace, etc. */
-    if (last_end && last_end != this_start)
-		  {
-      char *s;
-      PL_strcpy (hdrs->obuffer, "</NOBR>");
-      status = MimeHeaders_write(opt, hdrs->obuffer,
-        PL_strlen(hdrs->obuffer));
-      if (status < 0) goto FAIL;
-      
-      nsCRT::memcpy (hdrs->obuffer, last_end, this_start - last_end);
-      hdrs->obuffer [this_start - last_end] = 0;
-      s = nsEscapeHTML (hdrs->obuffer);
-      if (!s)
-      {
-        status = MIME_OUT_OF_MEMORY;
-        goto FAIL;
-      }
-      status = MimeHeaders_write(opt, s, PL_strlen (s));
-      PR_Free (s);
-      if (status < 0) goto FAIL;
-      
-      /* Emit a space, to make sure long newsgroup lines, or any
-      header line with no spaces after the commas, wrap. */   
-      hdrs->obuffer[0] = ' ';
-      hdrs->obuffer[1] = 0;
-      status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen (hdrs->obuffer));
-      if (status < 0) goto FAIL;
-		  }
-    
-    /* Push out this address-or-newsgroup. */
-    if (this_start != this_end)
-		  {
-      char *s;
-      MimeHTMLGeneratorFunction fn = 0;
-      void *arg;
-      char *link, *link2;
-      PRBool mail_p;
-      char *extraAnchorText = NULL;
-      
-      nsCRT::memcpy (hdrs->obuffer, this_start, this_end - this_start);
-      hdrs->obuffer [this_end - this_start] = 0;
-      s = nsEscapeHTML (hdrs->obuffer);
-      if (!s)
-      {
-        status = MIME_OUT_OF_MEMORY;
-        goto FAIL;
-      }
-      mail_p = (mail_header_p || !PL_strcasecmp ("poster", hdrs->obuffer));
-      
-      if (mail_p)
-      {
-        fn = opt->generate_mailto_url_fn;
-        arg = opt->html_closure;
-      }
-      else
-      {
-        fn = opt->generate_news_url_fn;
-        arg = opt->html_closure;
-      }
-      if (! fn)
-      {
-        if (mail_p)
-        {
-          fn = MimeHeaders_default_addbook_link_generator;
-          arg = &extraAnchorText; 
-        }
-        else
-        {
-          fn = MimeHeaders_default_news_link_generator;
-          arg = 0;
-        }
-      }
-      
-      if (*hdrs->obuffer && opt->fancy_links_p)
-        link = fn (hdrs->obuffer, arg, hdrs);
-      else
-        link = 0;
-      
-      link2 = (link ? nsEscapeHTML (link) : 0);
-      PR_FREEIF (link);
-      link = link2;
-      
-      if (link)
-      {
-        status = MimeHeaders_grow_obuffer (hdrs, PL_strlen (link) +
-          /* This used to be 100. Extra 8 bytes counts for " PRIVATE" */
-          PL_strlen (s) + 108);
-        
-        if (status < 0) goto FAIL;
-      }
-      out = hdrs->obuffer;
-      if (link)
-      {
-        PL_strcpy (out, "<A HREF=\""); out += PL_strlen (out);
-        PL_strcpy (out, link); out += PL_strlen (out);
-        PL_strcpy (out, "\""); out += 1;
-        if (extraAnchorText)
-        {
-          PL_strcpy (out, extraAnchorText);
-          out += PL_strlen(out);
-        }
-        PL_strcpy (out, " PRIVATE>"); out += PL_strlen(out);
-      }
-      PL_strcpy (out, "<NOBR>"); out += PL_strlen (out);
-      
-      PL_strcpy (out, s); out += PL_strlen (out);
-      
-      PR_Free (s);
-      if (link)
-      {
-        PL_strcpy (out, "</A>"); out += PL_strlen (out);
-        PR_Free (link);
-      }
-      if (extraAnchorText)
-        PR_Free (extraAnchorText);
-
-      /* Begin hack of out of envelope XSENDER info */
-      if (orig_name && !PL_strcasecmp(orig_name, HEADER_FROM)) { 
-        char * statusLine = MimeHeaders_get (hdrs, HEADER_X_MOZILLA_STATUS, PR_FALSE, PR_FALSE);
-        PRUint16 flags =0;
-        
-#define UNHEX(C) \
-  ((C >= '0' && C <= '9') ? C - '0' : \
-  ((C >= 'A' && C <= 'F') ? C - 'A' + 10 : \
-        ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
-        
-        if (statusLine && PL_strlen(statusLine) == 4) {
-          int i;
-          char *cp = statusLine;
-          for (i=0; i < 4; i++, cp++) {
-            flags = (flags << 4) | UNHEX(*cp);
-          }
-          PR_FREEIF(statusLine);
-        }
-        
-        if (flags & MSG_FLAG_SENDER_AUTHED) {
-          char  *tString1 = MimeGetStringByID(MIME_MSG_XSENDER_INTERNAL);
-          PL_strcpy (out, tString1);
-          PR_FREEIF(tString1);
-          out += PL_strlen (out);
-        }
-      }
-      /* End of XSENDER info */
-      status = MimeHeaders_write(opt, hdrs->obuffer,
-        PL_strlen (hdrs->obuffer));
-      if (status < 0) goto FAIL;
-      }
-      
-      /* now go around again */
-      last_end = this_end;
-      this_start = last_end;
-      
-      ++headerCount;
-      if (this_end >= data_end)
-      {
-        /*  new toggle header functionality */
-        if ((nHeaderDisplayLen > 0) &&
-          (mail_header_p) && 
-          (headerCount > nHeaderDisplayLen) &&
-          ( (orig_name) && 
-          (!PL_strcasecmp(orig_name, HEADER_CC)) || 
-          (!PL_strcasecmp(orig_name, HEADER_BCC)) ||
-          (!PL_strcasecmp(orig_name, HEADER_TO)) 
-          ) 
-          )
-        {
-          /* OK: We have reached the end of the headers! And */
-          /* we will only be in here if we have hit the short header limit */
-          /* If we do get here, then we should keep the short header bucket */
-          /* around and make sure that it gets output to the XML file. */
-          /* So for now, there is no code here since we don't have the buckets */
-          /* implemented */
-        }
-        else
-        {
-          /* We should get rid of a short header bucket since we didn't hit */
-          /* the limit! */
-        }
-        
-        /* We are at the end */ 
-        break;
-      }
-      
-      /* rhp - this is new code for the expandable header display */
-      if ((nHeaderDisplayLen > 0) &&
-        (mail_header_p) && 
-        (headerCount >= nHeaderDisplayLen) &&
-        ( (orig_name) && 
-        (!PL_strcasecmp(orig_name, HEADER_CC)) || 
-        (!PL_strcasecmp(orig_name, HEADER_BCC)) ||
-        (!PL_strcasecmp(orig_name, HEADER_TO)) 
-        ) 
-        )
-      {
-        /* WE ARE STILL PROCESSING HEADERS HERE!!! - BUT OVER SHORT THRESHOLD */
-        /* Now this is the code that we will hit when the output of headers */
-        /* is GREATER than the threshold value that the user has set. In this */
-        /* case, we need to stop outputting to the short header bucket and  */
-        /* keep sending the addresses to the long header bucket...so unlike  */
-        /* before, we need to keep going and just manage the buckets */
-        
-        /* Not sure we need to do anything here except make sure that we don't
-        output anything to the short header bucket! */
-      }
-      else
-      {
-      /* This is where we would have to dump stuff to the short header
-        bucket even if we don't know we are going to keep it around later */
-      }
-      /* rhp - this is new code for the expandable header display */
-    }
-
-  } /* End of while loop - still processing headers */
-
-  out = hdrs->obuffer;
-  PL_strcpy (out, "</NOBR>"); out += PL_strlen (out);
-  if (name) PL_strcpy (out, "</TD></TR>"); out += PL_strlen (out);
-  *out = 0;
-  status = MimeHeaders_write(opt, hdrs->obuffer, out - hdrs->obuffer);
-  if (status < 0) goto FAIL;
-  else status = 1;
-
- FAIL:
-  if (orig_name != name)
-    PR_FREEIF(name);
-  PR_FREEIF(converted);
-  return status;
-}
-
-static int
-MimeHeaders_write_grouped_header (MimeHeaders *hdrs, char *name,
-								  MimeDisplayOptions *opt,
-								  PRBool mail_header_p)
-{
-  int status = 0;
-  char *contents = MimeHeaders_get (hdrs, name, PR_FALSE, PR_TRUE);
-  if (!contents) return 0;
-  status = MimeHeaders_write_grouped_header_1 (hdrs, name, contents, opt,
-											   mail_header_p);
-  PR_Free(contents);
-  return status;
-}
-
-#define MimeHeaders_write_address_header(hdrs,name,opt) \
-	MimeHeaders_write_grouped_header(hdrs,name,opt,PR_TRUE)
-#define MimeHeaders_write_news_header(hdrs,name,opt) \
-	MimeHeaders_write_grouped_header(hdrs,name,opt,PR_FALSE)
-
-#define MimeHeaders_write_address_header_1(hdrs,name,contents,opt) \
-	MimeHeaders_write_grouped_header_1(hdrs,name,contents,opt,PR_TRUE)
-#define MimeHeaders_write_news_header_1(hdrs,name,contents,opt) \
-	MimeHeaders_write_grouped_header_1(hdrs,name,contents,opt,PR_FALSE)
-
-
-static int
-MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, char *name,
-							   const char *contents, PRBool show_ids,
-							   MimeDisplayOptions *opt)
-{
-  int status = 0;
-  PRInt32 contents_length;
-  char *out;
-  const char    *orig_name = name;
-
-  PR_ASSERT(hdrs);
-  if (!hdrs) return -1;
-
-  if (!contents)
-	return 0;
-
-  if (!opt->fancy_headers_p)
-	return MimeHeaders_write_random_header (hdrs, name, PR_TRUE, opt);
-
-  name = MimeHeaders_localize_header_name(name, opt);
-
-  contents_length = PL_strlen(contents);
-  status = MimeHeaders_grow_obuffer (hdrs, PL_strlen (name) + 100 +
-									 (contents_length * 4));
-  if (status < 0) goto FAIL;
-
-  out = hdrs->obuffer;
-  PL_strcpy (out, "<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>"); out += PL_strlen (out);
-  PL_strcpy (out, name); out += PL_strlen (out);
-  PL_strcpy (out, ": </TH><TD>"); out += PL_strlen (out);
-
-  status = MimeHeaders_write(opt, hdrs->obuffer, out - hdrs->obuffer);
-  if (status < 0) goto FAIL;
-
-  {
-	const char *data_end = contents + contents_length;
-	const char *last_end = 0;
-	const char *this_start = contents;
-	const char *this_end = this_start;
-	int id_count = 0;
-	while (this_end < data_end)
-	  {
-		/* Skip over whitespace. */
-		while (this_start < data_end && IS_SPACE (*this_start))
-		  this_start++;
-
-		this_end = this_start;
-
-		/* At this point *this_start should be '<', but if it's not,
-		   there's not a lot we can do about it... */
-
-		/* Skip to the end of the message ID, taking quoted strings and
-		   backslashes into account. */
-		while (this_end < data_end && *this_end != '>')
-		  {
-			if (*this_end == '\\')
-			  this_end++;
-			else if (*this_end == '"')
-			  while (this_end < data_end && *this_end != '"')
-				{
-				  if (*this_end == '\\')
-					this_end++;
-				  this_end++;
-				}
-			this_end++;
-		  }
-
-		if (*this_end == '>')  /* If it's not, that's illegal. */
-		  this_end++;
-
-		/* Push out the preceeding whitespace. */
-		if (last_end && last_end != this_start)
-		  {
-			char *s;
-			nsCRT::memcpy (hdrs->obuffer, last_end, this_start - last_end);
-			hdrs->obuffer [this_start - last_end] = 0;
-			s = nsEscapeHTML (hdrs->obuffer);
-			if (!s)
-			  {
-				status = MIME_OUT_OF_MEMORY;
-				goto FAIL;
-			  }
-			status = MimeHeaders_write(opt, s, PL_strlen (s));
-			PR_Free (s);
-			if (status < 0) goto FAIL;
-		  }
-
-		/* Push out this ID. */
-		if (this_start != this_end)
-		  {
-			char *s;
-			MimeHTMLGeneratorFunction fn = 0;
-			void *arg;
-			char *link;
-
-			fn = opt->generate_reference_url_fn;
-			arg = opt->html_closure;
-			if (! fn)
-			  {
-				fn = MimeHeaders_default_news_link_generator;
-				arg = 0;
-			  }
-
-			{
-			  char *link2 = NULL;
-			  const char *id = this_start;
-			  PRInt32 size = this_end - this_start;
-			  if (*id == '<')
-				id++, size--;
-			  nsCRT::memcpy (hdrs->obuffer, id, size);
-			  hdrs->obuffer [size] = 0;
-			  if (hdrs->obuffer [size-1] == '>')
-				hdrs->obuffer [size-1] = 0;
-
-			  link = fn (hdrs->obuffer, arg, hdrs);
-			  if (link)
-				{
-				  link2 = nsEscapeHTML(link);
-				  PR_Free(link);
-				}
-			  link = link2;
-			}
-
-			if (show_ids)
-			  {
-				nsCRT::memcpy (hdrs->obuffer, this_start, this_end - this_start);
-				hdrs->obuffer [this_end - this_start] = 0;
-				s = nsEscapeHTML (hdrs->obuffer);
-				if (!s)
-				  {
-					status = MIME_OUT_OF_MEMORY;
-					goto FAIL;
-				  }
-			  }
-			else
-			  {
-				char buf[50];
-				PR_snprintf(buf, sizeof(buf), "%d", ++id_count);
-				s = PL_strdup(buf);
-				if (!s)
-				  {
-					status = MIME_OUT_OF_MEMORY;
-					goto FAIL;
-				  }
-			  }
-
-			if (link)
-			  {
-				status = MimeHeaders_grow_obuffer (hdrs, PL_strlen (link) +
-				/* This used to be 100. Extra 8 bytes counts for " PRIVATE" */
-												   PL_strlen (s) + 108);
-				if (status < 0) goto FAIL;
-			  }
-			out = hdrs->obuffer;
-
-			if (!show_ids && id_count > 1)
-			  {
-				PL_strcpy (out, ", "); out += PL_strlen (out);
-			  }
-			  
-			if (link)
-			  {
-				PL_strcpy (out, "<A HREF=\""); out += PL_strlen (out);
-				PL_strcpy (out, link); out += PL_strlen (out);
-				PL_strcpy (out, "\" PRIVATE>"); out += PL_strlen (out);
-			  }
-			PL_strcpy (out, s); out += PL_strlen (out);
-			PR_Free (s);
-			if (link)
-			  {
-				PL_strcpy (out, "</A>"); out += PL_strlen (out);
-				PR_Free (link);
-			  }
-			status = MimeHeaders_write(opt, hdrs->obuffer,
-									   PL_strlen (hdrs->obuffer));
-			if (status < 0) goto FAIL;
-		  }
-
-		/* now go around again */
-		last_end = this_end;
-		this_start = last_end;
-	  }
-  }
-
-  out = hdrs->obuffer;
-  PL_strcpy (out, "</TD></TR>"); out += PL_strlen (out);
-  *out = 0;
-  status = MimeHeaders_write(opt, hdrs->obuffer, out - hdrs->obuffer);
-  if (status < 0) goto FAIL;
-  else status = 1;
-
- FAIL:
-  if (orig_name != name)
-    PR_FREEIF(name);
-  return status;
-}
-
-static int
-MimeHeaders_write_id_header (MimeHeaders *hdrs, char *name,
-							 PRBool show_ids, MimeDisplayOptions *opt)
-{
-  int status = 0;
-  char *contents = NULL;
-  
-  PR_ASSERT(hdrs);
-  if (!hdrs) return -1;
-
-  contents = MimeHeaders_get (hdrs, name, PR_FALSE, PR_TRUE);
-  if (!contents) return 0;
-  status = MimeHeaders_write_id_header_1 (hdrs, name, contents, show_ids, opt);
-  PR_Free(contents);
-  return status;
-}
-
-
-
-int MimeHeaders_write_all_headers (MimeHeaders *, MimeDisplayOptions *, PRBool);
-static int MimeHeaders_write_microscopic_headers (MimeHeaders *,
-												  MimeDisplayOptions *);
-static int MimeHeaders_write_citation_headers (MimeHeaders *,
-											   MimeDisplayOptions *);
-
-
-/* This list specifies the headers shown in the "normal" headers display mode,
-   and also specifies the preferred ordering.  Headers which do not occur are
-   not shown (except Subject) and certain header-pairs have some special
-   behavior (see comments.)
-
-  #### We should come up with some secret way to set this from a user 
-  preference, perhaps from a special file in the ~/.netscape/ directory.
- */
-static char *mime_interesting_headers[] = {
-  HEADER_SUBJECT,
-  HEADER_RESENT_COMMENTS,
-  HEADER_RESENT_DATE,
-  HEADER_RESENT_SENDER,		/* not shown if HEADER_RESENT_FROM is present */
-  HEADER_RESENT_FROM,
-  HEADER_RESENT_TO,
-  HEADER_RESENT_CC,
-  HEADER_DATE,
-  HEADER_SENDER,			/* not shown if HEADER_FROM is present */
-  HEADER_FROM,
-  HEADER_REPLY_TO,			/* not shown if HEADER_FROM has the same addr. */
-  HEADER_ORGANIZATION,
-  HEADER_TO,
-  HEADER_CC,
-  HEADER_BCC,
-  HEADER_NEWSGROUPS,
-  HEADER_FOLLOWUP_TO,
-  HEADER_REFERENCES,		/* not shown in MimeHeadersSomeNoRef mode. */
-
-#ifdef DEBUG_jwz
-  HEADER_X_MAILER,			/* jwz finds these useful for debugging... */
-  HEADER_X_NEWSREADER,
-  HEADER_X_POSTING_SOFTWARE,
-#endif
-  0
-};
-
-
-static int
-MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
-									   MimeDisplayOptions *opt)
-{
-  PRBool wrote_any_p = PR_FALSE;
-  int status = 0;
-  char **rest;
-  PRBool did_from = PR_FALSE;
-  PRBool did_resent_from = PR_FALSE;
-
-  PR_ASSERT(hdrs);
-  if (!hdrs) return -1;
-
-  status = MimeHeaders_grow_obuffer (hdrs, 200);
-  if (status < 0) return status;
-
-  for (rest = mime_interesting_headers; *rest; rest++)
-	{
-	  char *name = *rest;
-
-	  /* The Subject header gets written in bold.
-	   */
-	  if (!PL_strcasecmp(name, HEADER_SUBJECT))
-		{
-		  status = MimeHeaders_write_subject_header (hdrs, name, opt);
-		}
-
-	  /* The References header is never interesting if we're emitting paper,
-		 since you can't click on it.
-	   */
-	  else if (!PL_strcasecmp(name, HEADER_REFERENCES))
-		{
-		  if (opt->headers != MimeHeadersSomeNoRef)
-			status = MimeHeaders_write_id_header (hdrs, name, PR_FALSE, opt);
-		}
-
-	  /* Random other Message-ID headers.  These aren't shown by default, but
-		 if the user adds them to the list, display them clickably.
-	   */
-	  else if (!PL_strcasecmp(name, HEADER_MESSAGE_ID) ||
-			   !PL_strcasecmp(name, HEADER_RESENT_MESSAGE_ID))
-		{
-		  status = MimeHeaders_write_id_header (hdrs, name, PR_TRUE, opt);
-		}
-
-	  /* The From header supercedes the Sender header.
-	   */
-	  else if (!PL_strcasecmp(name, HEADER_SENDER) ||
-			   !PL_strcasecmp(name, HEADER_FROM))
-		{
-		  if (did_from) continue;
-		  did_from = PR_TRUE;
-		  status = MimeHeaders_write_address_header (hdrs, HEADER_FROM, opt);
-		  if (status == 0)
-			status = MimeHeaders_write_address_header (hdrs, HEADER_SENDER,
-													   opt);
-		}
-
-	  /* Likewise, the Resent-From header supercedes the Resent-Sender header.
-	   */
-	  else if (!PL_strcasecmp(name, HEADER_RESENT_SENDER) ||
-			   !PL_strcasecmp(name, HEADER_RESENT_FROM))
-		{
-		  if (did_resent_from) continue;
-		  did_resent_from = PR_TRUE;
-		  status = MimeHeaders_write_address_header (hdrs, HEADER_RESENT_FROM,
-													 opt);
-		  if (status == 0)
-			status = MimeHeaders_write_address_header (hdrs,
-													   HEADER_RESENT_SENDER,
-													   opt);
-		}
-
-	  /* Emit the Reply-To header only if it differs from the From header.
-		 (we just compare the `address' part.)
-	   */
-	  else if (!PL_strcasecmp(name, HEADER_REPLY_TO))
-		{
-		  char *reply_to = MimeHeaders_get (hdrs, HEADER_REPLY_TO,
-											PR_FALSE, PR_FALSE);
-		  if (reply_to)
-			{
-			  char *from = MimeHeaders_get (hdrs, HEADER_FROM, PR_FALSE, PR_FALSE);
-			  char *froma = (from
-							 ? ExtractRFC822AddressMailboxes(from)
-							 : 0);
-			  char *repa  = ((reply_to && froma)
-							 ? ExtractRFC822AddressMailboxes(reply_to)
-							 : 0);
-
-			  PR_FREEIF(reply_to);
-			  if (!froma || !repa || PL_strcasecmp (froma, repa))
-				{
-				  PR_FREEIF(froma);
-				  PR_FREEIF(repa);
-				  status = MimeHeaders_write_address_header (hdrs,
-															 HEADER_REPLY_TO,
-															 opt);
-				}
-			  PR_FREEIF(repa);
-			  PR_FREEIF(froma);
-			  PR_FREEIF(from);
-			}
-		  PR_FREEIF(reply_to);
-		}
-
-	  /* Random other address headers.
-		 These headers combine all occurences: that is, if there is more than
-		 one CC field, all of them will be combined and presented as one.
-	   */
-	  else if (!PL_strcasecmp(name, HEADER_RESENT_TO) ||
-			   !PL_strcasecmp(name, HEADER_RESENT_CC) ||
-			   !PL_strcasecmp(name, HEADER_TO) ||
-			   !PL_strcasecmp(name, HEADER_CC) ||
-			   !PL_strcasecmp(name, HEADER_BCC))
-		{
-		  status = MimeHeaders_write_address_header (hdrs, name, opt);
-		}
-
-	  /* Random other newsgroup headers.
-		 These headers combine all occurences, as with address headers.
-	   */
-	  else if (!PL_strcasecmp(name, HEADER_NEWSGROUPS) ||
-			   !PL_strcasecmp(name, HEADER_FOLLOWUP_TO))
-		{
-		  status = MimeHeaders_write_news_header (hdrs, name, opt);
-		}
-
-	  /* Everything else.
-		 These headers don't combine: only the first instance of the header
-		 will be shown, if there is more than one.
-	   */
-	  else
-		{
-		  status = MimeHeaders_write_random_header (hdrs, name, PR_FALSE, opt);
-		}
-
-	  if (status < 0) break;
-	  wrote_any_p |= (status > 0);
-	}
-
-  return (status < 0 ? status : (wrote_any_p ? 1 : 0));
-}
-
 
 int
 MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBool attachment)
@@ -1960,29 +973,6 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
     nsCRT::memcpy(c2, contents, end - contents);
     c2[end - contents] = 0;
     
-    /*****************************************
-    if (!PL_strcasecmp(name, HEADER_CC) ||
-    !PL_strcasecmp(name, HEADER_FROM) ||
-    !PL_strcasecmp(name, HEADER_REPLY_TO) ||
-    !PL_strcasecmp(name, HEADER_RESENT_CC) ||
-    !PL_strcasecmp(name, HEADER_RESENT_FROM) ||
-    !PL_strcasecmp(name, HEADER_RESENT_SENDER) ||
-    !PL_strcasecmp(name, HEADER_RESENT_TO) ||
-    !PL_strcasecmp(name, HEADER_SENDER) ||
-    !PL_strcasecmp(name, HEADER_TO))
-    status = MimeHeaders_write_address_header_1(hdrs, name, c2, opt);
-    else if (!PL_strcasecmp(name, HEADER_FOLLOWUP_TO) ||
-    !PL_strcasecmp(name, HEADER_NEWSGROUPS))
-    status = MimeHeaders_write_news_header_1(hdrs, name, c2, opt);
-    else if (!PL_strcasecmp(name, HEADER_MESSAGE_ID) ||
-    !PL_strcasecmp(name, HEADER_RESENT_MESSAGE_ID) ||
-    !PL_strcasecmp(name, HEADER_REFERENCES))
-    status = MimeHeaders_write_id_header_1(hdrs, name, c2, PR_TRUE, opt);
-    else if (!PL_strcasecmp(name, HEADER_SUBJECT))
-    status = MimeHeaders_write_subject_header_1(hdrs, name, c2, opt);    
-    else
-    status = MimeHeaders_write_random_header_1(hdrs, name, c2, opt, PR_FALSE);
-    ****************************************/
     if (attachment)
       status = mimeEmitterAddAttachmentField(opt, name, 
                                 MimeHeaders_convert_header_value(opt, &c2));
@@ -1999,482 +989,6 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
   }
 
   return 1;
-
-// SHERRY NOT SURE FOR NOW-   return (wrote_any_p ? 1 : 0);
-}
-
-static int
-MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
-									   MimeDisplayOptions *opt)
-{
-  int status = 1;
-  char *subj  = MimeHeaders_get (hdrs, HEADER_SUBJECT, PR_FALSE, PR_FALSE);
-  char *from  = MimeHeaders_get (hdrs, HEADER_FROM, PR_FALSE, PR_TRUE);
-  char *date  = MimeHeaders_get (hdrs, HEADER_DATE, PR_FALSE, PR_TRUE);
-  char *out;
-  char *tString = NULL;
-  char *tString2 = NULL;
-
-  if (!from)
-	from = MimeHeaders_get (hdrs, HEADER_SENDER, PR_FALSE, PR_TRUE);
-  if (!date)
-	date = MimeHeaders_get (hdrs, HEADER_RESENT_DATE, PR_FALSE, PR_TRUE);
-
-  if (date && opt->reformat_date_fn)
-	{
-	  char *d2 = opt->reformat_date_fn(date, opt->stream_closure);
-	  if (d2)
-		{
-		  PR_Free(date);
-		  date = d2;
-		}
-	}
-
-
-  /* Convert MIME-2 data.
-   */
-#define FROB(VAR) do {														\
-  if (VAR)																	\
-	{																		\
-	  char *converted = 0;													\
-	  PRInt32 converted_length = 0;											\
-	  status = MimeHeaders_convert_rfc1522(opt, VAR, PL_strlen(VAR),		\
-										   &converted, &converted_length);	\
-	  if (status < 0) goto FAIL;											\
-	  if (converted)														\
-		{																	\
-		  PR_ASSERT(converted_length == (PRInt32) PL_strlen(converted));		\
-		  VAR = converted;													\
-		}																	\
-	} } while(0)
-  FROB(from);
-  FROB(subj);
-  FROB(date);
-#undef FROB
-
-#define THLHMAAMS 900
-
-  status = MimeHeaders_grow_obuffer (hdrs,
-									 (subj ? PL_strlen(subj)*2 : 0) +
-									 (from ? PL_strlen(from)   : 0) +
-									 (date ? PL_strlen(date)   : 0) +
-									 100
-								 + THLHMAAMS
-									 );
-  if (status < 0) goto FAIL;
-
-  if (subj) {
-	PR_ASSERT(!hdrs->munged_subject);
-	hdrs->munged_subject = PL_strdup(subj);
-  }
-
-  out = hdrs->obuffer;
-
-  tString = MimeGetStringByID(MIME_MHTML_FROM);
-  PR_snprintf(out, sizeof(out), "\
-<TR><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\" ALIGN=RIGHT><B>%s: </B></TD>\
-<TD VALIGN=TOP BGCOLOR=\"#CCCCCC\" width=100%%>\
-<table border=0 cellspacing=0 cellpadding=0 width=100%%><tr>\
-<td valign=top>", tString);
-  PR_FREEIF(tString);
-  out += PL_strlen(out);
-
-  if (from) {
-	status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
-	if (status < 0) goto FAIL;
-	status = MimeHeaders_write_grouped_header_1(hdrs, NULL, from, opt, PR_TRUE);
-	if (status < 0) goto FAIL;
-	out = hdrs->obuffer;
-  }
-
-  PL_strcpy(out, "</td><td valign=top align=right nowrap>");
-  out += PL_strlen(out);
-  if (date) PL_strcpy(out, date);
-  out += PL_strlen(out);
-  PL_strcpy(out, "</td></tr></table></TD>");
-  out += PL_strlen(out);
-
-  /* ### This is where to insert something like <TD VALIGN=TOP align=right bgcolor=\"#CCCCCC\" ROWSPAN=2><IMG SRC=\"http://gooey/projects/dogbert/mail/M_both.gif\"></TD> if we want to do an image. */
-  
-  PL_strcpy(out,
-			"</TR><TR><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\" ALIGN=RIGHT><B>");
-  out += PL_strlen(out);
-  tString2 = MimeGetStringByID(MIME_MHTML_SUBJECT);
-  PL_strcpy(out, tString2);
-  PR_FREEIF(tString2);
-  out += PL_strlen(out);
-  PL_strcpy(out, ": </B></TD><TD VALIGN=TOP BGCOLOR=\"#CCCCCC\">");
-  out += PL_strlen(out);
-  if (subj) {
-    nsMimeURLUtils myUtil;
-
-    status = myUtil.ScanForURLs(
-							   subj, PL_strlen(subj), out,
-							   hdrs->obuffer_size - (out - hdrs->obuffer) - 10,
-							   PR_TRUE);
-	  if (status != NS_OK) goto FAIL;
-  } else {
-	  PL_strcpy(out, "<BR>");
-  }
-  out += PL_strlen(out);
-  PL_strcpy(out, "</TR>");
-  out += PL_strlen(out);
-
-  status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
-  if (status < 0) goto FAIL;
-
-  /* At this point, we've written out the one-line summary.
-	 But we might want to write out some additional header lines, too...
-   */
-
-
-  /* If this was a redirected message, also show the Resent-From or
-	 Resent-Sender field, to avoid nasty surprises.
-   */
-  status = MimeHeaders_write_address_header(hdrs, HEADER_RESENT_FROM, opt);
-  if (status < 0) goto FAIL;
-  if (status == 0)   /* meaning "nothing written" */
-	status = MimeHeaders_write_address_header(hdrs, HEADER_RESENT_SENDER, opt);
-  if (status < 0) goto FAIL;
-
-
-  /* If this is the mail reader, show the full recipient list.
-   */
-  if (opt->headers == MimeHeadersMicroPlus)
-	{
-	  status = MimeHeaders_write_address_header (hdrs, HEADER_TO, opt);
-	  if (status < 0) goto FAIL;
-	  status = MimeHeaders_write_address_header (hdrs, HEADER_CC, opt);
-	  if (status < 0) goto FAIL;
-	  status = MimeHeaders_write_address_header (hdrs, HEADER_BCC, opt);
-	  if (status < 0) goto FAIL;
-	  status = MimeHeaders_write_news_header (hdrs, HEADER_NEWSGROUPS, opt);
-	  if (status < 0) goto FAIL;
-	}
-
- FAIL:
-
-  PR_FREEIF(subj);
-  PR_FREEIF(from);
-  PR_FREEIF(date);
-
-  return (status < 0 ? status : 1);
-}
-
-
-static int
-MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
-{
-  nsIPref *pref = GetPrefServiceManager(opt);   // Pref service manager
-  int status;
-  char *from = 0, *name = 0, *id = 0;
-  char *converted = 0;
-  PRInt32 converted_length = 0;
-  char  *tString=nsnull;
-
-  PR_ASSERT(hdrs);
-  if (!hdrs) return -1;
-
-  if (!opt || !opt->output_fn)
-	return 0;
-
-  from = MimeHeaders_get(hdrs, HEADER_FROM, PR_FALSE, PR_FALSE);
-  if (!from)
-	from = MimeHeaders_get(hdrs, HEADER_SENDER, PR_FALSE, PR_FALSE);
-  if (!from)
-	from = PL_strdup("Unknown");
-  if (!from)
-	{
-	  status = MIME_OUT_OF_MEMORY;
-	  goto FAIL;
-	}
-
-#if 0
-  id = MimeHeaders_get(hdrs, HEADER_MESSAGE_ID, PR_FALSE, PR_FALSE);
-#endif
-
-  name = ExtractRFC822AddressNames (from);
-  if (!name)
-	{
-	  name = from;
-	  from = 0;
-	}
-  PR_FREEIF(from);
-
-  if (id)
-    tString = MimeGetStringByID(MIME_MSG_X_USER_WROTE);
-  else
-    tString = MimeGetStringByID(MIME_MSG_USER_WROTE);
-
-  status = MimeHeaders_grow_obuffer (hdrs,
-									 PL_strlen(tString) + PL_strlen(name) +
-									 (id ? PL_strlen(id) : 0) + 58);
-  if (status < 0) 
-  {
-    PR_FREEIF(tString);
-    return status;
-  }
-
-  if (opt->nice_html_only_p) {
-	PRBool nReplyWithExtraLines = PR_FALSE, eReplyOnTop = PR_FALSE;
-	if (pref)
-  {
-    pref->GetBoolPref("mailnews.reply_with_extra_lines", &nReplyWithExtraLines);
-	  pref->GetBoolPref("mailnews.reply_on_top", &eReplyOnTop);
-  }
-	if (nReplyWithExtraLines && eReplyOnTop == 1) {
-//	  for (; nReplyWithExtraLines > 0; nReplyWithExtraLines--) {
-	  if (nReplyWithExtraLines) {
-		status = MimeHeaders_write(opt, "<BR>", 4);
-		if (status < 0) 
-    {
-      PR_FREEIF(tString);
-      return status;
-    }
-	  }
-	}
-  }
-
-  if (id)
-	  PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), tString, id, name);
-  else
-	  PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), tString, name);
-
-  status = MimeHeaders_convert_rfc1522(opt, hdrs->obuffer,
-									   PL_strlen(hdrs->obuffer),
-									   &converted, &converted_length);
-  if (status < 0) 
-  {
-    PR_FREEIF(tString);
-    return status;
-  }
-
-  if (converted)
-	{
-	  status = MimeHeaders_write(opt, converted, converted_length);
-	  if (status < 0) goto FAIL;
-	}
-  else
-	{
-	  status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
-	  if (status < 0) goto FAIL;
-	}
-
-#define MHTML_BLOCKQUOTE_BEGIN   "<BLOCKQUOTE TYPE=CITE>"
-  if (opt->nice_html_only_p) {
-	  char ptr[] = MHTML_BLOCKQUOTE_BEGIN;
-	  MimeHeaders_write(opt, ptr, PL_strlen(ptr));
-  }
-
- FAIL:
-
-  PR_FREEIF(tString);
-  PR_FREEIF(from);
-  PR_FREEIF(name);
-  PR_FREEIF(id);
-  return (status < 0 ? status : 1);
-}
-
-
-/* Writes the headers as text/plain.
-   This writes out a blank line after the headers, unless
-   dont_write_content_type is true, in which case the header-block
-   is not closed off, and none of the Content- headers are written.
- */
-int
-MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
-							   PRBool dont_write_content_type)
-{
-  int status;
-
-  if (hdrs && !hdrs->done_p)
-	{
-	  hdrs->done_p = PR_TRUE;
-	  status = MimeHeaders_build_heads_list(hdrs);
-	  if (status < 0) return 0;
-	}
-
-  if (!dont_write_content_type)
-	{
-	  char nl[] = MSG_LINEBREAK;
-	  if (hdrs)
-		{
-		  status = MimeHeaders_write(opt, hdrs->all_headers,
-									 hdrs->all_headers_fp);
-		  if (status < 0) return status;
-		}
-	  status = MimeHeaders_write(opt, nl, PL_strlen(nl));
-	  if (status < 0) return status;
-	}
-  else if (hdrs)
-	{
-	  PRInt32 i;
-	  for (i = 0; i < hdrs->heads_size; i++)
-		{
-		  char *head = hdrs->heads[i];
-		  char *end = (i == hdrs->heads_size-1
-					   ? hdrs->all_headers + hdrs->all_headers_fp
-					   : hdrs->heads[i+1]);
-
-		  PR_ASSERT(head);
-		  if (!head) continue;
-
-		  /* Don't write out any Content- header. */
-		  if (!PL_strncasecmp(head, "Content-", 8))
-			continue;
-
-		  /* Write out this (possibly multi-line) header. */
-		  status = MimeHeaders_write(opt, head, end - head);
-		  if (status < 0) return status;
-		}
-	}
-
-  if (hdrs)
-	MimeHeaders_compact (hdrs);
-
-  return 0;
-}
-
-int
-MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBool attachment)
-{
-  int status = 0;
-  PRBool wrote_any_p = PR_FALSE;
-
-  PR_ASSERT(hdrs);
-  if (!hdrs) 
-    return -1;
-
-  if (!opt || !opt->output_fn) 
-    return 0;
-
-  PR_FREEIF(hdrs->munged_subject);
-  status = MimeHeaders_grow_obuffer (hdrs, /*210*/ 750);
-  if (status < 0) return status;
-
-  if (opt->fancy_headers_p) {
-	  /* First, insert a table for the way-magic javascript appearing attachment
-	     indicator.  The ending code for this is way below. */
-#define MHTML_HEADER_TABLE       "<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>"
-#define MHTML_TABLE_BEGIN        "<TABLE><TR><TD>"
-
-  	PL_strcpy(hdrs->obuffer, MHTML_TABLE_BEGIN MHTML_HEADER_TABLE);
-  } 
-  else
-  	PL_strcpy (hdrs->obuffer, "<P>");
-
-  status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
-  if (status < 0) 
-  {
-    return status;
-  }
-
-  if ( (opt->headers == MimeHeadersAll) || (opt->headers == MimeHeadersOnly ) || attachment )
-    status = MimeHeaders_write_all_headers (hdrs, opt, attachment);
-  else if (opt->headers == MimeHeadersMicro ||
-                          opt->headers == MimeHeadersMicroPlus)
-    status = MimeHeaders_write_microscopic_headers (hdrs, opt);
-  else if (opt->headers == MimeHeadersCitation)
-    status = MimeHeaders_write_citation_headers (hdrs, opt);
-  else
-    status = MimeHeaders_write_interesting_headers (hdrs, opt);
-
-  wrote_any_p = (status > 0);
-
-  if (!wrote_any_p && opt->fancy_headers_p)
-	{
-#define MHTML_TABLE_COLUMN_BEGIN "<TR><TD><B><I>"
-#define MHTML_TABLE_COLUMN_END   "</I></B></TD></TR>"
-
-    char *msg = MimeGetStringByID(MIME_MSG_NO_HEADERS);
-	  PL_strcpy (hdrs->obuffer, MHTML_TABLE_COLUMN_BEGIN);
-	  PL_strcat (hdrs->obuffer, msg);
-	  PL_strcat (hdrs->obuffer, MHTML_TABLE_COLUMN_END);
-	  status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
-    PR_FREEIF(msg);
-	  if (status < 0) goto FAIL;
-	}
-
-  if (opt->fancy_headers_p) {
-#define MHTML_TABLE_END          "</TABLE>"
-
-    PL_strcpy (hdrs->obuffer, MHTML_TABLE_END);
-    
-    /* OK, here's the ending code for the way magic javascript indicator. */
-    if (!opt->nice_html_only_p && opt->fancy_links_p) {
-      if (opt->attachment_icon_layer_id == 0) {
-        static PRInt32 randomid = 1; /* Not very random. ### */
-        char *mouseOverStatusString = MimeGetStringByID(MIME_MSG_SHOW_ATTACHMENT_PANE);
-        opt->attachment_icon_layer_id = randomid;
-        
-#define MHTML_CLIP_START         "</TD><TD VALIGN=TOP><DIV "
-#ifndef XP_MAC
-#define MHTML_CLIP_DIM           "CLIP=0,0,30,30 "
-#else
-#define MHTML_CLIP_DIM           "CLIP=0,0,48,30 "
-#endif
-#define MHTML_NOATTACH_ID        "ID=noattach%ld>"
-#define MHTML_ENDBEGIN_DIV       "</DIV><DIV LOCKED "
-#define MHTML_ATTACH_ID          "ID=attach%ld style=\"display: 'none';\" >"
-#define MHTML_DISP_ICON_LINK     "<a href=javascript:toggleAttachments(); onMouseOver=\"window.status='%s'; return true\"; onMouseOut=\"window.status=''; return true\" PRIVATE>"
-#define MHTML_ATTACH_ICON        "<IMG SRC=resource:/res/network/gopher-text.gif BORDER=0>"
-#define MHTML_CLIP_END           "</a></DIV>"
-
-        /* Make sure we have enough buffer space. Grow it if needed. */
-        MimeHeaders_grow_obuffer(hdrs, 
-									 PL_strlen(hdrs->obuffer)+
-                   PL_strlen(mouseOverStatusString)+
-                   64 +    /* 64 counts for two long number*/
-                   412);   /* 412 counts for the following constant 
-                              string. It is less than 412  */
-        PR_snprintf(hdrs->obuffer + PL_strlen(hdrs->obuffer), ( sizeof(hdrs->obuffer) - PL_strlen(hdrs->obuffer)),
-          /* We set a CLIP=0,0,30,30 so that the attachment icon's layer cannot*/
-          /* be exploited for header spoofing.  This means that if the attachment */
-          /* icon changes size, then we have to change this size too */
-          MHTML_CLIP_START
-          MHTML_CLIP_DIM
-          MHTML_NOATTACH_ID
-          MHTML_ENDBEGIN_DIV
-          MHTML_CLIP_DIM
-          MHTML_ATTACH_ID
-          MHTML_DISP_ICON_LINK 
-          MHTML_ATTACH_ICON
-          MHTML_CLIP_END,
-          (long) randomid, (long) randomid, mouseOverStatusString);
-
-        PR_FREEIF(mouseOverStatusString);
-        randomid++;
-      }
-    }
-#define MHTML_COL_AND_TABLE_END  "</td></tr></table>"
-
-    PL_strcat(hdrs->obuffer, MHTML_COL_AND_TABLE_END);
-  } 
-  else
-    PL_strcpy (hdrs->obuffer, "<P>");
-  
-  status = MimeHeaders_write(opt, hdrs->obuffer, PL_strlen(hdrs->obuffer));
-  if (status < 0) goto FAIL;
-  if (hdrs->munged_subject) {
-    char* t2 = nsEscapeHTML(hdrs->munged_subject);
-    PR_FREEIF(hdrs->munged_subject);
-    if (t2) {
-      status = MimeHeaders_grow_obuffer(hdrs, PL_strlen(t2) + 20);
-      if (status >= 0) {
-#define MHTML_TITLE              "<TITLE>%s</TITLE>\n"
-
-        PR_snprintf(hdrs->obuffer, sizeof(hdrs->obuffer), MHTML_TITLE, t2);
-        status = MimeHeaders_write(opt, hdrs->obuffer,
-          PL_strlen(hdrs->obuffer));
-      }
-    }
-    PR_FREEIF(t2);
-    if (status < 0) goto FAIL;
-  }
-  
- FAIL:
-  MimeHeaders_compact (hdrs);
-  return status;
 }
 
 /* 
@@ -2732,3 +1246,76 @@ MimeHeaders_do_unix_display_hook_hack(MimeHeaders *hdrs)
 }
 #endif /* XP_UNIX */
 
+static void
+MimeHeaders_compact (MimeHeaders *hdrs)
+{
+  PR_ASSERT(hdrs);
+  if (!hdrs) return;
+
+  PR_FREEIF(hdrs->obuffer);
+  hdrs->obuffer_fp = 0;
+  hdrs->obuffer_size = 0;
+
+  /* These really shouldn't have gotten out of whack again. */
+  PR_ASSERT(hdrs->all_headers_fp <= hdrs->all_headers_size &&
+			hdrs->all_headers_fp + 100 > hdrs->all_headers_size);
+}
+
+/* Writes the headers as text/plain.
+   This writes out a blank line after the headers, unless
+   dont_write_content_type is true, in which case the header-block
+   is not closed off, and none of the Content- headers are written.
+ */
+int
+MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
+							   PRBool dont_write_content_type)
+{
+  int status;
+
+  if (hdrs && !hdrs->done_p)
+	{
+	  hdrs->done_p = PR_TRUE;
+	  status = MimeHeaders_build_heads_list(hdrs);
+	  if (status < 0) return 0;
+	}
+
+  if (!dont_write_content_type)
+	{
+	  char nl[] = MSG_LINEBREAK;
+	  if (hdrs)
+		{
+		  status = MimeHeaders_write(opt, hdrs->all_headers,
+									 hdrs->all_headers_fp);
+		  if (status < 0) return status;
+		}
+	  status = MimeHeaders_write(opt, nl, PL_strlen(nl));
+	  if (status < 0) return status;
+	}
+  else if (hdrs)
+	{
+	  PRInt32 i;
+	  for (i = 0; i < hdrs->heads_size; i++)
+		{
+		  char *head = hdrs->heads[i];
+		  char *end = (i == hdrs->heads_size-1
+					   ? hdrs->all_headers + hdrs->all_headers_fp
+					   : hdrs->heads[i+1]);
+
+		  PR_ASSERT(head);
+		  if (!head) continue;
+
+		  /* Don't write out any Content- header. */
+		  if (!PL_strncasecmp(head, "Content-", 8))
+			continue;
+
+		  /* Write out this (possibly multi-line) header. */
+		  status = MimeHeaders_write(opt, head, end - head);
+		  if (status < 0) return status;
+		}
+	}
+
+  if (hdrs)
+  	MimeHeaders_compact (hdrs);
+
+  return 0;
+}

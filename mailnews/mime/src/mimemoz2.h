@@ -103,7 +103,6 @@ struct mime_stream_data {           /* This struct is the state we pass around
                                        used by MIME_MessageConverter(). */
   char                *url_name;
   nsMimeOutputType    format_out;
-  MWContext           *context;     /* Must REMOVE this entry. */
   void                *pluginObj2;  /* The new XP-COM stream converter object */
   nsMIMESession       *istream;     /* Holdover - new stream we're writing out image data-if any. */
   MimeObject          *obj;         /* The root parser object */
