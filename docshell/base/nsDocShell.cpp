@@ -2360,13 +2360,20 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType)
 {
-    PRBool wasAnchor = PR_FALSE;
-    NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
-    if(wasAnchor)
+    // Check to see if the new URI is an anchor in the existing document.
+    if (aLoadType == loadNormal ||
+        aLoadType == loadNormalReplace ||
+        aLoadType == loadHistory ||
+        aLoadType == loadLink)
     {
-        mLoadType = aLoadType;
-        OnNewURI(aURI, nsnull, mLoadType);
-        return NS_OK;
+        PRBool wasAnchor = PR_FALSE;
+        NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
+        if(wasAnchor)
+        {
+            mLoadType = aLoadType;
+            OnNewURI(aURI, nsnull, mLoadType);
+            return NS_OK;
+        }
     }
 
     NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
@@ -2789,11 +2796,12 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 
     // Compare the URIs.
     //
-    // NOTE: this is case sensitive so it won't pick up www.ABC.com and
-    // www.abc.com being the same. It's not possible to do a case-insensitive
-    // comparison because some parts of the URI are case sensitive, and some
-    // are not. e.g. the paths "/Something" and "/something" are two
-    // different places on Unix.
+    // NOTE: this is a case sensitive comparison because some parts of the
+    // URI are case sensitive, and some are not. i.e. the domain name
+    // is case insensitive but the the paths are not.
+    //
+    // This means that comparing "http://www.ABC.com/" to "http://www.abc.com/"
+    // will fail this test.
  
     if (sCurrentLeft.CompareWithConversion(sNewLeft, PR_FALSE, -1) != 0)
     {
