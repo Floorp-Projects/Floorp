@@ -24,7 +24,8 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-DIRS		= outliner
+DIRS		= outliner \
+                  grid
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -67,10 +68,6 @@ CPPSRCS		= \
        nsTreeBoxObject.cpp \
        nsPopupBoxObject.cpp \
        nsBoxObject.cpp \
-       nsGridLayout.cpp \
-       nsObeliskLayout.cpp \
-       nsTempleLayout.cpp \
-       nsMonumentLayout.cpp \
        nsImageBoxFrame.cpp \
        nsRootBoxFrame.cpp \
        nsDocElementBoxFrame.cpp \

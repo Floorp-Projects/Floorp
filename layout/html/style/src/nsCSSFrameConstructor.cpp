@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//#define MOZ_GRID2 1
+#define MOZ_GRID2 1
 
 #include "nsCSSFrameConstructor.h"
 #include "nsIArena.h"
