@@ -124,7 +124,7 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
         if (NS_FRAME_IS_COMPLETE(aStatus)) {
           nsIFrame* childNextInFlow;
   
-          frame->GetNextInFlow(childNextInFlow);
+          frame->GetNextInFlow(&childNextInFlow);
           NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
         }
       }

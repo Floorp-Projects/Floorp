@@ -1664,7 +1664,7 @@ TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffs
       do {
         nextInFlow->SetSelected(PR_FALSE, 0, 0, aForceRedraw);
       }
-      while (NS_SUCCEEDED(nextInFlow->GetNextInFlow(nextInFlow)) && nextInFlow);//this is ok because frames arent reference counted this is not a leak!
+      while (NS_SUCCEEDED(nextInFlow->GetNextInFlow(&nextInFlow)) && nextInFlow);//this is ok because frames arent reference counted this is not a leak!
     }
   }
   else {
@@ -2430,7 +2430,7 @@ TextFrame::ComputeTotalWordWidth(nsLineLayout& aLineLayout,
       // XXX This assumes that a next-in-flow will follow it's
       // prev-in-flow in the text-run. Maybe not a good assumption?
       // What if the next-in-flow isn't actually part of the flow?
-      frame->GetNextInFlow(frame);
+      frame->GetNextInFlow(&frame);
     }
 
     // Move on to the next frame in the text-run

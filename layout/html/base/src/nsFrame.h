@@ -186,9 +186,9 @@ public:
                                     nsIFrame*        aParent,
                                     nsIStyleContext* aStyleContext,
                                     nsIFrame*&       aContinuingFrame);
-  NS_IMETHOD  GetPrevInFlow(nsIFrame*& aPrevInFlow) const;
+  NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
-  NS_IMETHOD  GetNextInFlow(nsIFrame*& aNextInFlow) const;
+  NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
   NS_IMETHOD  AppendToFlow(nsIFrame* aAfterFrame);
   NS_IMETHOD  PrependToFlow(nsIFrame* aAfterFrame);

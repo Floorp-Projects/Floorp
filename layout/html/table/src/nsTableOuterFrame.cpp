@@ -1137,7 +1137,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsI
 
   nsIFrame* nextInFlow;
    
-  aChild->GetNextInFlow(nextInFlow);
+  aChild->GetNextInFlow(&nextInFlow);
 
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
   nsTableOuterFrame* parent;
@@ -1148,7 +1148,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsI
   // delete it first).
   nsIFrame* nextNextInFlow;
 
-  nextInFlow->GetNextInFlow(nextNextInFlow);
+  nextInFlow->GetNextInFlow(&nextNextInFlow);
   if (nsnull != nextNextInFlow) {
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
@@ -1182,7 +1182,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsI
   nextInFlow->DeleteFrame(aPresContext);
 
 #ifdef NS_DEBUG
-  aChild->GetNextInFlow(nextInFlow);
+  aChild->GetNextInFlow(&nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
 }

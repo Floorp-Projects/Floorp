@@ -117,7 +117,7 @@ nsLineLayout::FindTextRunFor(nsIFrame* aFrame)
   // backup from the argument frame to its first-in-flow.
   for (;;) {
     nsIFrame* prevInFlow;
-    aFrame->GetPrevInFlow(prevInFlow);
+    aFrame->GetPrevInFlow(&prevInFlow);
     if (nsnull == prevInFlow) {
       break;
     }
@@ -143,7 +143,7 @@ nsLineLayout::FindNextText(nsIFrame* aFrame)
   // backup from the argument frame to its first-in-flow.
   for (;;) {
     nsIFrame* prevInFlow;
-    aFrame->GetPrevInFlow(prevInFlow);
+    aFrame->GetPrevInFlow(&prevInFlow);
     if (nsnull == prevInFlow) {
       break;
     }

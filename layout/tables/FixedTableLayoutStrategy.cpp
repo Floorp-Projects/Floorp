@@ -50,7 +50,7 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
 {
 #ifdef NS_DEBUG
   nsIFrame *tablePIF=nsnull;
-  mTableFrame->GetPrevInFlow(tablePIF);
+  mTableFrame->GetPrevInFlow(&tablePIF);
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
 #endif
 

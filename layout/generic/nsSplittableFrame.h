@@ -29,9 +29,9 @@ public:
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
 
   // Flow member functions.
-  NS_IMETHOD  GetPrevInFlow(nsIFrame*& aPrevInFlow) const;
+  NS_IMETHOD  GetPrevInFlow(nsIFrame** aPrevInFlow) const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
-  NS_IMETHOD  GetNextInFlow(nsIFrame*& aNextInFlow) const;
+  NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
 
   /**

@@ -251,13 +251,13 @@ nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
     // If parent has a prev-in-flow, check there for equality first
     // before looking upward.
     nsIFrame* parentPrevInFlow;
-    parent->GetPrevInFlow(parentPrevInFlow);
+    parent->GetPrevInFlow(&parentPrevInFlow);
     while (nsnull != parentPrevInFlow) {
       if (parentPrevInFlow == spaceFrame) {
         done = PR_TRUE;
         break;
       }
-      parentPrevInFlow->GetPrevInFlow(parentPrevInFlow);
+      parentPrevInFlow->GetPrevInFlow(&parentPrevInFlow);
     }
 
     if (!done) {

@@ -28,9 +28,9 @@ nsSplittableFrame::IsSplittable(nsSplittableType& aIsSplittable) const
   return NS_OK;
 }
 
-NS_METHOD nsSplittableFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
+NS_METHOD nsSplittableFrame::GetPrevInFlow(nsIFrame** aPrevInFlow) const
 {
-  aPrevInFlow = mPrevInFlow;
+  *aPrevInFlow = mPrevInFlow;
   return NS_OK;
 }
 
@@ -40,9 +40,9 @@ NS_METHOD nsSplittableFrame::SetPrevInFlow(nsIFrame* aFrame)
   return NS_OK;
 }
 
-NS_METHOD nsSplittableFrame::GetNextInFlow(nsIFrame*& aNextInFlow) const
+NS_METHOD nsSplittableFrame::GetNextInFlow(nsIFrame** aNextInFlow) const
 {
-  aNextInFlow = mNextInFlow;
+  *aNextInFlow = mNextInFlow;
   return NS_OK;
 }
 
@@ -82,7 +82,7 @@ NS_METHOD nsSplittableFrame::AppendToFlow(nsIFrame* aAfterFrame)
   NS_PRECONDITION(aAfterFrame != nsnull, "null pointer");
 
   mPrevInFlow = aAfterFrame;
-  aAfterFrame->GetNextInFlow(mNextInFlow);
+  aAfterFrame->GetNextInFlow(&mNextInFlow);
   mPrevInFlow->SetNextInFlow(this);
   if (mNextInFlow) {
     mNextInFlow->SetPrevInFlow(this);
@@ -95,7 +95,7 @@ NS_METHOD nsSplittableFrame::PrependToFlow(nsIFrame* aBeforeFrame)
 {
   NS_PRECONDITION(aBeforeFrame != nsnull, "null pointer");
 
-  aBeforeFrame->GetPrevInFlow(mPrevInFlow);
+  aBeforeFrame->GetPrevInFlow(&mPrevInFlow);
   mNextInFlow = aBeforeFrame;
   mNextInFlow->SetPrevInFlow(this);
   if (mPrevInFlow) {

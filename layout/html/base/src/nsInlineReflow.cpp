@@ -330,7 +330,7 @@ nsInlineReflow::ApplyLeftMargin()
 
   case NS_STYLE_FLOAT_NONE:
     // Only apply left-margin on the first-in flow for inline frames
-    pfd->mFrame->GetPrevInFlow(prevInFlow);
+    pfd->mFrame->GetPrevInFlow(&prevInFlow);
     if (nsnull != prevInFlow) {
       // Zero this out so that when we compute the max-element-size
       // of the frame we will properly avoid adding in the left
@@ -484,7 +484,7 @@ nsInlineReflow::ReflowFrame(PRBool aIsAdjacentWithTop,
     // a next-in-flow where it ends up).
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
       nsIFrame* kidNextInFlow;
-      frame->GetNextInFlow(kidNextInFlow);
+      frame->GetNextInFlow(&kidNextInFlow);
       if (nsnull != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the

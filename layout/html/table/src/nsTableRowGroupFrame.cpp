@@ -449,7 +449,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
           kidFrame = nextInFlow->mFrames.FirstChild();
         } else {
           // We've pulled up all the children, so move to the next-in-flow.
-          nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
+          nextInFlow->GetNextInFlow((nsIFrame**)&nextInFlow);
           continue;
         }
       }
@@ -769,7 +769,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
           // not already have a next-in-flow is that ReflowMappedChildren() reflows
           // the row frames with an unconstrained available height
           nsIFrame* nextInFlow;
-          rowFrame->GetNextInFlow(nextInFlow);
+          rowFrame->GetNextInFlow(&nextInFlow);
           NS_ASSERTION(!nextInFlow, "row frame already has next-in-flow");
 #endif
           // Create a continuing frame, add it to the child list, and then push it

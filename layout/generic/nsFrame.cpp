@@ -1107,9 +1107,9 @@ NS_IMETHODIMP nsFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
+NS_IMETHODIMP nsFrame::GetPrevInFlow(nsIFrame** aPrevInFlow) const
 {
-  aPrevInFlow = nsnull;
+  *aPrevInFlow = nsnull;
   return NS_OK;
 }
 
@@ -1119,9 +1119,9 @@ NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame*)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsFrame::GetNextInFlow(nsIFrame*& aNextInFlow) const
+NS_IMETHODIMP nsFrame::GetNextInFlow(nsIFrame** aNextInFlow) const
 {
-  aNextInFlow = nsnull;
+  *aNextInFlow = nsnull;
   return NS_OK;
 }
 

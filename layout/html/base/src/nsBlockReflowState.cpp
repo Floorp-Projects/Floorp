@@ -282,7 +282,7 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
 
   mPresContext = aPresContext;
   mBlock = (nsBlockFrame*) frame;
-  mBlock->GetNextInFlow((nsIFrame*&)mNextInFlow);
+  mBlock->GetNextInFlow((nsIFrame**)&mNextInFlow);
   mKidXMost = 0;
 
   mRunInFromFrame = nsnull;
@@ -3645,7 +3645,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
       // Destroy frame; capture its next-in-flow first in case we need
       // to destroy that too.
       nsIFrame* nextInFlow;
-      aDeletedFrame->GetNextInFlow(nextInFlow);
+      aDeletedFrame->GetNextInFlow(&nextInFlow);
       if (nsnull != nextInFlow) {
         aDeletedFrame->BreakFromNextFlow();
       }
@@ -3804,14 +3804,14 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   nsIFrame* nextInFlow;
   nsBlockFrame* parent;
    
-  aChild->GetNextInFlow(nextInFlow);
+  aChild->GetNextInFlow(&nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
   nextInFlow->GetParent((nsIFrame**)&parent);
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
   nsIFrame* nextNextInFlow;
-  nextInFlow->GetNextInFlow(nextNextInFlow);
+  nextInFlow->GetNextInFlow(&nextNextInFlow);
   if (nsnull != nextNextInFlow) {
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
@@ -3850,7 +3850,7 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   nextInFlow->DeleteFrame(aPresContext);
 
 #ifdef NS_DEBUG
-  aChild->GetNextInFlow(nextInFlow);
+  aChild->GetNextInFlow(&nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
 }

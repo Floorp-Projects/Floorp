@@ -573,7 +573,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       // Note: we can't do that optimization if our height is constrained or the
       // cell frame has a next-in-flow
       nsIFrame* kidNextInFlow;
-      kidFrame->GetNextInFlow(kidNextInFlow);
+      kidFrame->GetNextInFlow(&kidNextInFlow);
       if ((aReflowState.reflowState.availableHeight != NS_UNCONSTRAINEDSIZE) ||
           (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth()) ||
           (nsnull != kidNextInFlow))
