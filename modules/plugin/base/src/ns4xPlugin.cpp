@@ -48,7 +48,8 @@
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
 #include "nsPluginSafety.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsPluginLogging.h"
 
 #include "nsIPluginInstancePeer2.h"
@@ -91,7 +92,6 @@ enum eNPPStreamTypeInternal {
 
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
@@ -1796,8 +1796,8 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 #endif
 
   case NPNVjavascriptEnabledBool: {
-    *(NPBool*)result = PR_FALSE; 
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+    *(NPBool*)result = PR_FALSE;
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if(prefs) {
       PRBool js = PR_FALSE;;
       res = prefs->GetBoolPref("javascript.enabled", &js);

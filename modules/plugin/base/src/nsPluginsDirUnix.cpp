@@ -58,8 +58,8 @@
 #include <sys/stat.h>
 #include "nsString.h"
 #include "nsILocalFile.h"
-#include "nsIPref.h"
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #define LOCAL_PLUGIN_DLL_SUFFIX ".so"
 #if defined(__hpux)
@@ -156,12 +156,12 @@ static void LoadExtraSharedLibs()
 {
     // check out if user's prefs.js has libs name
     nsresult res;
-    nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &res);
+    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));
     if (NS_SUCCEEDED(res) && (prefs != nsnull)) {
         char *sonamesListFromPref = PREF_PLUGINS_SONAME;
         char *sonameList = NULL;
         PRBool prefSonameListIsSet = PR_TRUE;
-        res = prefs->CopyCharPref(sonamesListFromPref, &sonameList);
+        res = prefs->GetCharPref(sonamesListFromPref, &sonameList);
         if (!sonameList) {
             // pref is not set, lets use hardcoded list
             prefSonameListIsSet = PR_FALSE;
