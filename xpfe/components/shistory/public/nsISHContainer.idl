@@ -43,7 +43,7 @@ interface nsISHContainer : nsISupports
 	/**
 	 * Add a new child SHEntry.  Adds to the end of the list.
 	 */
-	void AddChild(in nsISHEntry child);
+	void AddChild(in nsISHEntry child, in long offset);
 
 	/**
 	 * Removes a child SHEntry

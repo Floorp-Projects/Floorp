@@ -60,6 +60,7 @@ NS_IMPL_RELEASE(nsSHistory)
 NS_INTERFACE_MAP_BEGIN(nsSHistory)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISHistory)
    NS_INTERFACE_MAP_ENTRY(nsISHistory)
+   NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -422,7 +423,7 @@ nsSHistory::LoadURI(const PRUnichar* aURI)
 
 
 NS_IMETHODIMP
-nsSHistory::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry)
+nsSHistory::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry, PRInt32 aChildOffset)
 {
 
   //XXX Not yet implemented
@@ -448,7 +449,9 @@ nsSHistory::GotoIndex(PRInt32 aIndex)
 NS_IMETHODIMP
 nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
 {
-   nsCOMPtr<nsIDocShell> docShell;
+	// XXX I think the docshell should be a weakref here. The rootDocshell
+	// from which we start walking down the hierarchy is a weak ref.
+   nsIDocShell* docShell = nsnull;
    nsCOMPtr<nsISHEntry> shEntry;
    PRInt32 oldIndex = mIndex;
 
@@ -462,18 +465,19 @@ nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
    nsCOMPtr<nsIURI> nexturi;
    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
    if (oldIndex != aIndex) {
-      PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, getter_AddRefs(docShell), getter_AddRefs(shEntry));
+      PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, (&docShell), getter_AddRefs(shEntry));
       if (!result)  
-	   mIndex = oldIndex;
-
-      if (!docShell || !shEntry || !mRootDocShell)
-	    return NS_ERROR_FAILURE;
+	    mIndex = oldIndex;
       
-
-      shEntry->GetURI(getter_AddRefs(nexturi));       
-   }	
+      nextEntry = shEntry;        
+   }
    else
-      nextEntry->GetURI(getter_AddRefs(nexturi));
+	   docShell = mRootDocShell;
+
+   if (!docShell || !nextEntry || !mRootDocShell)
+	    return NS_ERROR_FAILURE;
+
+   nextEntry->GetURI(getter_AddRefs(nexturi));
 
    mRootDocShell->CreateLoadInfo (getter_AddRefs(loadInfo));
    // This is not available yet
@@ -515,9 +519,17 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 	if (!prevUriSpec || !nextUriSpec)
 		   return PR_FALSE;
 
-    if (prevUriSpec != nextUriSpec) {
+	// XXX for some reason PL_strcmp isn't returning right value
+    nsAutoString prevAutoStr(NS_ConvertASCIItoUCS2((const char *)prevUriSpec));
+	//nsAutoString nextAutoStr(nextUriSpec);
+
+    if (!(prevAutoStr.EqualsWithConversion((const char *)nextUriSpec))) {
        *aDSResult = docshell;
 	   *aSHEResult = nextEntry;
+	   NS_IF_ADDREF(*aSHEResult);
+	   // XXX we don't addref docshell here. The rootDocShell from which we started
+	   // walking down the hierarchy is a weak ref.
+	   //NS_IF_ADDREF(*aDSResult);
 	   return PR_TRUE;
     }
 
@@ -532,6 +544,8 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 	rv = docshell->QueryInterface(NS_GET_IID(nsIDocShellTreeNode), (void  **) &dsTreeNode);
 
 	if (!NS_SUCCEEDED(rv) || !dsTreeNode)
+		return PR_FALSE;
+	if (!prevContainer || !nextContainer)
 		return PR_FALSE;
 
     prevContainer->GetChildCount(&pcnt);
@@ -549,10 +563,13 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 	  nextContainer->GetChildAt(i, getter_AddRefs(nChild));
 	  dsTreeNode->GetChildAt(i, &dsTreeItemChild);
 
+	  if (!dsTreeItemChild)
+		  return PR_FALSE;
+
 	  // XXX How about AddRef in QueryInterface? Is this OK?
 	  nsIDocShell *  dsChild = nsnull;
 	  
-	  rv = dsTreeItemChild->QueryInterface(NS_GET_IID(nsIDocShell), (void **) dsChild);
+	  rv = dsTreeItemChild->QueryInterface(NS_GET_IID(nsIDocShell), (void **) &dsChild);
 
 	  result = CompareSHEntry(pChild, nChild, dsChild, aDSResult, aSHEResult);
 	  if (result)  // We have found the docshell in which loadUri is to be called.

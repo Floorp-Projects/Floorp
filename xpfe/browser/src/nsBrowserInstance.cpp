@@ -519,12 +519,12 @@ nsBrowserInstance::Reload(nsLoadFlags flags)
 #ifdef SH_IN_FRAMES
 	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
-  webNav->Reload(flags);
+  webNav->Reload(nsIWebNavigation::loadReloadNormal);
 #else
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
-  webNav->Reload(nsIWebNavigation::reloadNormal);
+  webNav->Reload(nsIWebNavigation::loadReloadNormal);
 #endif
   return NS_OK;
 }   
