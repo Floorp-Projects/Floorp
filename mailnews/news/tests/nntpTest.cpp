@@ -45,6 +45,7 @@
 #include "nsINetService.h"
 #include "nsRepository.h"
 #include "nsString.h"
+#include "nsNNTPNewsgroupPost.h"
 
 #include "nntpCore.h"
 #include "nsNNTPProtocol.h"
@@ -96,7 +97,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {
   printf("XXX: return /tmp for fe_GetConfigDir\n");
-  return strdup("/tmp");
+  return PL_strdup("/tmp");
 }
 #endif /* XP_UNIX */
 
@@ -107,7 +108,6 @@ extern "C" char *fe_GetConfigDir(void) {
 /////////////////////////////////////////////////////////////////////////////////
 nsresult NS_NewNntpUrl(nsINntpUrl ** aResult, const nsString urlSpec)
 {
-	nsIURL * pUrl = NULL;
 	nsresult rv = NS_OK;
 
 	 nsNntpUrl * nntpUrl = new nsNntpUrl(nsnull, nsnull);
@@ -156,11 +156,14 @@ static void strip_nonprintable(char *string) {
 
     dest=src=string;
     while (*src) {
-        while (*src != '\0' && !isprint(*src)) src++;
-        *dest=*src;
-        dest++;
-        src++;
+        if (isprint(*src)) {
+            (*src)=(*dest);
+            src++; dest++;
+        } else {
+            src++;
+        }
     }
+    (*dest)='\0';
 }
 
 
@@ -250,7 +253,7 @@ nsNntpTestDriver::~nsNntpTestDriver()
 {
 	NS_IF_RELEASE(m_url);
 	NS_IF_RELEASE(m_transport);
-	delete m_nntpProtocol;
+	if (m_nntpProtocol) delete m_nntpProtocol;
 }
 
 nsresult nsNntpTestDriver::RunDriver()
@@ -339,8 +342,7 @@ nsresult nsNntpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 	// only replace m_userData if the user actually entered a valid line...
 	// this allows the command function to set a default value on m_userData before
 	// calling this routine....
-	if (tempBuffer && *tempBuffer)
-		PL_strcpy(m_userData, tempBuffer);
+    PL_strcpy(m_userData, tempBuffer);
 
 	return NS_OK;
 }
@@ -436,6 +438,7 @@ nsresult nsNntpTestDriver::OnListAllGroups()
 		InitializeProtocol(m_urlString);
 
 	m_url->SetSpec(m_urlString); // reset spec
+    printf("Running %s\n", m_urlString);
 	rv = m_nntpProtocol->LoadURL(m_url);
 	return rv;
 }
@@ -457,6 +460,7 @@ nsresult nsNntpTestDriver::OnListIDs()
 	// load the correct newsgroup interface as an event sink...
     if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
+        printf("Running %s\n", m_urlString);
         rv = m_nntpProtocol->LoadURL(m_url);
     }
 
@@ -480,6 +484,7 @@ nsresult nsNntpTestDriver::OnListArticle()
 
 	if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
+        printf("Running %s\n", m_urlString);
         rv = m_nntpProtocol->LoadURL(m_url);
     }
     
@@ -509,6 +514,7 @@ nsresult nsNntpTestDriver::OnSearch()
 	
 	if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
+        printf("Running %s\n", m_urlString);
         rv = m_nntpProtocol->LoadURL(m_url);
     }
     
@@ -523,8 +529,11 @@ nsNntpTestDriver::OnPostMessage()
     nsresult rv = NS_OK;
     char *subject;
     char *message;
+    char *newsgroup;
     
     rv = PromptForUserDataAndBuildUrl("Newsgroup: ");
+    newsgroup =PL_strdup(m_userData);
+    
     m_urlString[0] = '\0';
     PL_strcpy(m_urlString, m_urlSpec);
     PL_strcat(m_urlString, "/");
@@ -555,9 +564,22 @@ nsNntpTestDriver::OnPostMessage()
 
     printf("Ready to post the message:\n");
     printf("Subject: %s\n", subject);
-    printf("Message:\n", message);
+    printf("Message:\n %s\n", message);
     
     SetupUrl(m_userData);
+
+    nsINNTPNewsgroupPost *post;
+    rv = NS_NewNewsgroupPost(&post);
+    
+    if (NS_SUCCEEDED(rv)) {
+        post->AddNewsgroup(newsgroup);
+        post->SetBody(message);
+        post->SetSubject(subject);
+    }
+    
+    m_url->SetMessageToPost(post);
+    
+    printf("Running %s\n", m_urlString);
     rv = m_nntpProtocol->LoadURL(m_url);
 
 	return rv;
@@ -582,6 +604,7 @@ nsresult nsNntpTestDriver::OnGetGroup()
 
     if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
+        printf("Running %s\n", m_urlString);
 		rv = m_nntpProtocol->LoadURL(m_url);
 	} // if user provided the data...
 
@@ -603,6 +626,7 @@ nsresult nsNntpTestDriver::OnReadNewsRC()
 
 	// a read newsrc url is of the form: news://
 	// or news://HOST
+    printf("Running %s\n", m_urlString);
 	rv = m_nntpProtocol->LoadURL(m_url);
 	return rv;
 }
@@ -648,7 +672,6 @@ int main()
 	nsINetService * pNetService;
     PLEventQueue *queue;
     nsresult result;
-    nsIURL * pURL = NULL;
 
     nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
