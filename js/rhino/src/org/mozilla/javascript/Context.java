@@ -2031,21 +2031,14 @@ public class Context {
                              "org.mozilla.javascript.optimizer.Codegen");
 
     private Interpreter createCompiler() {
+        Interpreter result = null;
         if (optimizationLevel >= 0 && codegenClass != null) {
-            try {
-                return (Interpreter) codegenClass.newInstance();
-            }
-            catch (SecurityException x) {
-            }
-            catch (IllegalArgumentException x) {
-            }
-            catch (InstantiationException x) {
-            }
-            catch (IllegalAccessException x) {
-            }
-            // fall through
+            result = (Interpreter)ScriptRuntime.newInstanceOrNull(codegenClass);
         }
-        return new Interpreter();
+        if (result == null) {
+            result = new Interpreter();
+        }
+        return result;
     }
 
     private Parser createParser(IRFactory irf) {
@@ -2109,12 +2102,7 @@ public class Context {
             Class cl = ScriptRuntime.getClassOrNull(
                           "org.mozilla.javascript.regexp.RegExpImpl");
             if (cl != null) {
-                try {
-                    regExpProxy = (RegExpProxy) cl.newInstance();
-                    return regExpProxy;
-                } catch (InstantiationException e) {
-                } catch (IllegalAccessException e) {
-                }
+                regExpProxy = (RegExpProxy)ScriptRuntime.newInstanceOrNull(cl);
             }
         }
         return regExpProxy;

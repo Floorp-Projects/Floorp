@@ -1826,12 +1826,7 @@ public class ScriptRuntime {
     {
         Context cx = Context.enter();
         try {
-            Script script = null;
-            try {
-                script = (Script)scriptClass.newInstance();
-            } catch (InstantiationException e) {
-            } catch (IllegalAccessException e) {
-            }
+            Script script = (Script)newInstanceOrNull(scriptClass);
             if (script == null) {
                 throw new RuntimeException("Error creating script object");
             }
@@ -2027,6 +2022,17 @@ public class ScriptRuntime {
         } catch (IllegalArgumentException e) {
             // Can be thrown if name has characters that a class name
             // can not contain
+        }
+        return null;
+    }
+
+    static Object newInstanceOrNull(Class cl)
+    {
+        try {
+            return cl.newInstance();
+        } catch (SecurityException x) {
+        } catch (InstantiationException x) {
+        } catch (IllegalAccessException x) {
         }
         return null;
     }

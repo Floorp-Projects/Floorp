@@ -689,12 +689,7 @@ public class FunctionObject extends BaseFunction {
     private static Invoker newInvokerMaster() {
         Class cl = ScriptRuntime.getClassOrNull(INVOKER_MASTER_CLASS);
         if (cl != null) {
-            try {
-                return (Invoker)cl.newInstance();
-            }
-            catch (IllegalAccessException ex) {}
-            catch (InstantiationException ex) {}
-            catch (SecurityException ex) {}
+            return (Invoker)ScriptRuntime.newInstanceOrNull(cl);
         }
         return null;
     }

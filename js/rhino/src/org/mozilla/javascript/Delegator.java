@@ -77,6 +77,25 @@ public class Delegator implements Function {
     }
 
     /**
+     * Crete new Delegator instance.
+     * The default implementation calls this.getClass().newInstance().
+     *
+     * @see #construct(Context cx, Scriptable scope, Object[] args)
+     */
+    protected Delegator newInstance()
+    {
+        Exception ex;
+        try {
+            return (Delegator)this.getClass().newInstance();
+        } catch (InstantiationException e) {
+            ex = e;
+        } catch (IllegalAccessException e) {
+            ex = e;
+        }
+        throw WrappedException.wrapException(ex);
+    }
+
+    /**
      * Retrieve the delegee.
      *
      * @return the delegee
@@ -232,16 +251,15 @@ public class Delegator implements Function {
         if (obj == null) {
             //this little trick allows us to declare prototype objects for
             //Delegators
-            try {
-                Delegator n = (Delegator)this.getClass().newInstance();
-                n.setDelegee((Scriptable)args[0]);
-                return n;
+            Delegator n = newInstance();
+            Scriptable delegee;
+            if (args.length == 0) {
+                delegee = Undefined.instance;
+            } else {
+                delegee = ScriptRuntime.toObject(cx, scope, args[0]);
             }
-            catch (Exception e) {
-                e.printStackTrace();
-                System.exit(0);
-            }
-            return null;
+            n.setDelegee(delegee);
+            return n;
         }
         else {
             return ((Function)obj).construct(cx,scope,args);

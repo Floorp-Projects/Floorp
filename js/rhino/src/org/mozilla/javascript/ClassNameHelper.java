@@ -49,11 +49,8 @@ public abstract class ClassNameHelper {
                 "org.mozilla.javascript.optimizer.OptClassNameHelper");
             // nameHelperClass == null if running lite
             if (nameHelperClass != null) {
-                try {
-                    helper = (ClassNameHelper)nameHelperClass.newInstance();
-                } catch (IllegalAccessException x) {
-                } catch (InstantiationException x) {
-                }
+                helper = (ClassNameHelper)ScriptRuntime.newInstanceOrNull(
+                                              nameHelperClass);
             }
             if (helper != null) {
                 savedNameHelper = helper;
