@@ -1152,6 +1152,8 @@ alpha*-*-osf*)
     dnl Solves the problems the QNX compiler has with nsCOMPtr.h.
     AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+    dnl Explicit set STDC_HEADERS to workaround QNX 6.0's failing of std test
+    AC_DEFINE(STDC_HEADERS)
     if test "$no_x" = "yes"; then
 	    MOZ_WIDGET_TOOLKIT='photon'
 	    TK_CFLAGS='-I/usr/nto/include/photon'
@@ -1288,6 +1290,8 @@ esac
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
+AC_LANG_C
+AC_HEADER_STDC
 AC_C_CONST
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
@@ -1501,7 +1505,6 @@ fi
 
 dnl Checks for header files.
 dnl ========================================================
-AC_HEADER_STDC
 AC_HEADER_DIRENT
 dnl -ldir is a noop for OS/2
 case "$target_os" in
