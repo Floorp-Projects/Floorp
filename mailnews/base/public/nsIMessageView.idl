@@ -24,9 +24,9 @@
 
 interface nsIMessageView :  nsISupports
 {
-	void SetShowAll();
-	void SetShowUnread();
-	void SetShowRead();
-	void SetShowWatched();
-	void SetShowThreads(in boolean showThreads);
+%{C++
+  enum {  eShowAll =0, eShowRead =1, eShowUnread =2 , eShowWatched =3};
+%}
+	attribute unsigned long viewType;
+	attribute boolean showThreads;
 };

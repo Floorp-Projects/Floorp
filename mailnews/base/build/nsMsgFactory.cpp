@@ -61,6 +61,7 @@
 #include "nsMsgStatusFeedback.h"
 
 #include "nsMsgFilterService.h"
+#include "nsMessageView.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -107,6 +108,8 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 //Feedback stuff
 static NS_DEFINE_CID(kMsgStatusFeedbackCID, NS_MSGSTATUSFEEDBACK_CID);
 
+//MessageView
+static NS_DEFINE_CID(kMessageViewCID, NS_MESSAGEVIEW_CID);
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -304,6 +307,9 @@ nsMsgFactory::CreateInstance(nsISupports * aOuter,
   }
   else if (mClassID.Equals(kMsgStatusFeedbackCID)) {
       rv = NS_NewMsgStatusFeedback(aIID, aResult);
+  }
+  else if (mClassID.Equals(kMessageViewCID)) {
+      rv = NS_NewMessageView(aIID, aResult);
   }
 
   if (NS_SUCCEEDED(rv))
@@ -511,6 +517,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   NS_MSGSTATUSFEEDBACK_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
+	rv = compMgr->RegisterComponent(kMessageViewCID,
+                                  "Mail/News MessageView",
+                                  NS_MESSAGEVIEW_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
   return finalResult;
 }
 
@@ -564,6 +575,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->UnregisterComponent(kMsgStatusFeedbackCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->UnregisterComponent(kMessageViewCID, path);
+  if (NS_FAILED(rv)) finalResult = rv;
+
   return finalResult;
 }
 
