@@ -39,7 +39,6 @@
 #include "StringUtils.h"
 
 static void UnsetPort(GrafPtr port);
-static short getModifiers();
 
 EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frameRef, JMFrameKind kind,
 							const Rect* initialBounds, Boolean resizeable)
@@ -71,24 +70,10 @@ EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frame
 	}
 
 #if 0
-	mWindow = ::NewCWindow(NULL, &mBounds, "\p", false, windowProc, WindowPtr(-1), hasGoAway, long(this));
-	if (mWindow != NULL) {
-		if (getModifiers() & controlKey) {
-			// hack: Try creating a root control, to see if that messes up MRJ controls.
-			ControlHandle rootControl = NULL;
-			OSErr result = ::GetRootControl(mWindow, &rootControl);
-			if (result != noErr || rootControl == NULL) {
-				result = ::CreateRootControl(mWindow, &rootControl);
-				if (result == noErr && rootControl != NULL) {
-					FSSpec dumpFile = { -1, 2, "\pJava Console Controls" };
-					result = DumpControlHierarchy(mWindow, &dumpFile);
-				}
-			}
-		}
-	}
-#else
-
-#if 0
+	
+	// Note:  opening a new window on a stream using the following code crashes 4.X browsers.
+	// The problem is that the window has no URL assigned to it, and so some variables are
+	// unitialized and the browser crashes in a call to strlen().
 
 	class NewStreamMessage : public NativeMessage {
 		nsIPluginInstancePeer* mPeer;
@@ -98,7 +83,7 @@ EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frame
 		
 		virtual void execute() {
 			nsIOutputStream* output = NULL;
-			if (mPeer->NewStream(mType, "_blank", &output) == NS_OK) {
+			if (mPeer->NewStream(mType, "_new", &output) == NS_OK) {
 				// write some data to the stream.	
 				output->Close();
 				NS_RELEASE(output);
@@ -116,35 +101,38 @@ EmbeddedFrame::EmbeddedFrame(MRJPluginInstance* pluginInstance, JMFrameRef frame
 	}
 
 #else
+	// var w = window.open('', '_new','resizable=no,status=no,width=200,height=200'); d = w.document; d.open(); d.write('<BODY MARGINHEIGHT=0 MARGINWIDTH=0>Hi</BODY>'); d.close();
+
+	static UInt32 embeddedFrameCounter = 0;
 
 	// Use JavaScript to create a window with an <EMBED TYPE="application/x-java-frame"> tag.
-	const char* kEmbeddedFrameScript = "var w = window.open('','_new','resizable=no,status=no,width=200,height=200');"
-	                                   "var d = w.document; d.write('"
-	                                   // "<BODY MARGINWIDTH=0 MARGINHEIGHT=0>"	// this doesn't work, don't know why
-	                                   "<HTML><BODY>"
-	                                   "<EMBED TYPE=\"application/x-java-frame\""
-	                                   "WIDTH=200 HEIGHT=200 FRAME=XXXXXXXX></EMBED>"
-	                                   "</BODY></HTML>'); d.close();";
-	
-	char* script = strdup(kEmbeddedFrameScript);
-	char* address = strchr(script, 'X');
-	sprintf(address, "%08X", this);
-	address[8] = '>';
+	const char* kEmbeddedFrameScript = "var w = window.open('','__MRJ_JAVA_FRAME_%d__','resizable=no,status=no,width=%d,height=%d,screenX=%d,screenY=%d');"
+	                                   "var d = w.document; d.open();"
+	                                   "d.writeln('<BODY BGCOLOR=#FFFFFF MARGINWIDTH=0 MARGINHEIGHT=0>&nbsp;<EMBED TYPE=application/x-java-frame WIDTH=%d HEIGHT=%d JAVAFRAME=%08X>');"
+	                                   "d.close();";
+
+	int width = mBounds.right - mBounds.left;
+	int height = mBounds.bottom - mBounds.top;
+	int screenX = mBounds.left;
+	int screenY = mBounds.top;
+
+	char* script = new char[::strlen(kEmbeddedFrameScript) + 100];
+	::sprintf(script, kEmbeddedFrameScript, ++embeddedFrameCounter, width, height, screenX, screenY, width, height, this);
 
 	JSEvaluator* evaluator = new JSEvaluator(pluginInstance);
 	evaluator->AddRef();
 	
-	// create the window. It will be created after returning from eval.
+	// create the window. It will have been created after returning from eval.
 	const char* result = evaluator->eval(script);
+	
+	evaluator->Release();
 	
 	delete[] script;
 
 #endif
 
-#endif
-
 	if (mWindow != NULL) {
-		Point zeroPt = { 5, 5 };
+		Point zeroPt = { 0, 0 };
 		::JMSetFrameVisibility(mFrameRef, mWindow, zeroPt, NULL);
 	}
 }
@@ -321,11 +309,4 @@ static void UnsetPort(GrafPtr port)
 		::GetWMgrPort(&port);
 		::SetPort(port);
 	}
-}
-
-static short getModifiers()
-{
-	EventRecord event;
-	::OSEventAvail(0, &event);
-	return event.modifiers;
 }
