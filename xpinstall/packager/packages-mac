@@ -164,14 +164,6 @@ viewer:chrome:skins:*
 -viewer:chrome:packages:core:editor:content:sb-file-panel.xul
 -viewer:chrome:packages:core:editor:content:sb-FileWidgetFileHandler.js
 -viewer:chrome:packages:core:communicator:content:domviewer
-viewer:chrome:autocomplete.xml
-viewer:chrome:htmlBindings.xml
-viewer:chrome:menulistBindings.xml
-viewer:chrome:platformHTMLBindings.xml
-viewer:chrome:radioBindings.xml
-viewer:chrome:treeBindings.xml
-viewer:chrome:xul.css
-viewer:chrome:xulBindings.xml
 
 viewer:defaults:pref:all.js 
 viewer:defaults:pref:config.js 

@@ -166,14 +166,6 @@ bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
 bin/components/nsXmlRpcClient.js
 
-bin/chrome/autocomplete.xml
-bin/chrome/htmlBindings.xml
-bin/chrome/menulistBindings.xml
-bin/chrome/platformHTMLBindings.xml
-bin/chrome/radioBindings.xml
-bin/chrome/treeBindings.xml
-bin/chrome/xul.css
-bin/chrome/xulBindings.xml
 bin/chrome/locales/en-US/*
 bin/chrome/packages/widget-toolkit/*
 bin/chrome/packages/core/*
