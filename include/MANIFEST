@@ -7,12 +7,9 @@ csid.h
 ctxtfunc.h
 edttypes.h
 fe_proto.h
-glhist.h
-gui.h
 libc_r.h
 lo_ele.h
 merrors.h
-mime.h
 minicom.h
 mk_cx_fn.h
 msgtypes.h
@@ -24,7 +21,6 @@ npupp.h
 ntypes.h
 platform.h
 proto.h
-shist.h
 shistele.h
 structs.h
 unix-dns.h
