@@ -66,7 +66,7 @@ EXTRA_DSO_LDOPTS = \
 
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
-MODULE_NAME	= nsSystemPref
+MODULE_NAME	= nsSystemPrefModule
 
 EXPORTS		= \
 		nsSystemPrefService.h \
