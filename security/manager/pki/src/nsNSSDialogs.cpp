@@ -33,12 +33,7 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIComponentManager.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptContext.h"
 #include "nsIServiceManager.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
-#include "jsapi.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
 #include "nsIInterfaceRequestor.h"
@@ -47,6 +42,7 @@
 #include "nsILocaleService.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
+#include "nsIWindowWatcher.h"
 
 #include "nsNSSDialogs.h"
 #include "nsPKIParamBlock.h"
@@ -65,9 +61,10 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 /**
- * Common class that provides a standard dialog display function, 
- * and uses the hidden window if one can't be determined from
- * context
+ * Common class that uses the window watcher service to open a
+ * standard dialog, with or without a parent context. The params
+ * parameter can be an nsISupportsArray so any number of additional
+ * arguments can be used.
  */
 class nsNSSDialogHelper
 {
@@ -79,48 +76,9 @@ public:
                   nsIDOMWindowInternal *window,
                   const char *url,
                   nsISupports *params);
-
-  static nsresult openDialogVA(nsIDOMWindowInternal *window,
-                               const char *format, ...);
 };
 
 const char* nsNSSDialogHelper::kDefaultOpenWindowParam = "centerscreen,chrome,modal,titlebar";
-
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-
-static nsresult getHiddenWindow(nsIDOMWindowInternal **outWindow);
-static JSContext* getJSContext(nsIDOMWindowInternal *window);
-
-nsresult 
-getHiddenWindow(nsIDOMWindowInternal **outWindow)
-{
-  nsresult rv;
-
-  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  rv = appShell->GetHiddenDOMWindow( outWindow );
-  return rv;
-}
-
-JSContext* 
-getJSContext(nsIDOMWindowInternal *window)
-{
-  nsresult rv;
-
-  // Get JS context from parent window.
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( window, &rv );
-  if (!sgo) 
-    return nsnull;
-
-  nsCOMPtr<nsIScriptContext> context;
-  sgo->GetContext( getter_AddRefs( context ) );
-  if (!context) 
-    return nsnull;
-
-  return (JSContext*)context->GetNativeContext();
-}
 
 nsresult
 nsNSSDialogHelper::openDialog(
@@ -129,69 +87,16 @@ nsNSSDialogHelper::openDialog(
     nsISupports *params)
 {
   nsresult rv;
-  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
+  NS_WITH_SERVICE(nsIWindowWatcher, windowWatcher, "@mozilla.org/embedcomp/window-watcher;1", &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  if (!window) {
-    rv = getHiddenWindow(getter_AddRefs(hiddenWindow));
-    if (NS_FAILED(rv))
-      return rv;
-
-    window = hiddenWindow;
-  }
-
-  JSContext *jsContext = getJSContext(window);
-  if (!jsContext) return NS_ERROR_FAILURE;
-
-  void *stackPtr;
-  jsval *argv = JS_PushArguments( jsContext,
-                                  &stackPtr,
-                                  "sss%ip",
-                                  url,
-                                  "_blank",
-                                  nsNSSDialogHelper::kDefaultOpenWindowParam,
-                                  &NS_GET_IID(nsISupports),
-                                  (nsISupports*)params
-                                );
-  if ( !argv ) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMWindowInternal> newWindow;
-  rv = window->OpenDialog( jsContext, argv, 4, getter_AddRefs(newWindow) );
-   
-  JS_PopArguments( jsContext, stackPtr );
-
-  return rv;
-}
-
-nsresult
-nsNSSDialogHelper::openDialogVA(nsIDOMWindowInternal *window,
-                                const char *format,  ...)
-{
-  va_list ap;
-  nsresult rv;
-  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
-
-  va_start(ap, format);
-  if (!window) {
-    rv = getHiddenWindow(getter_AddRefs(hiddenWindow));
-    if (NS_FAILED(rv))
-      return rv;
-
-    window = hiddenWindow;
-  }
-
-  JSContext *jsContext = getJSContext(window);
-  if (!jsContext) return NS_ERROR_FAILURE;
-
-  void *stackPtr;
-  jsval *argv = JS_PushArgumentsVA(jsContext, &stackPtr, format, ap);
-
-  if ( !argv ) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMWindowInternal> newWindow;
-  rv = window->OpenDialog( jsContext, argv, 4, getter_AddRefs(newWindow) );
-   
-  JS_PopArguments( jsContext, stackPtr );
-
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  rv = windowWatcher->OpenWindow(window,
+                                 url,
+                                 "_blank",
+                                 nsNSSDialogHelper::kDefaultOpenWindowParam,
+                                 params,
+                                 getter_AddRefs(newWindow));
   return rv;
 }
 
