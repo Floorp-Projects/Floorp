@@ -1591,9 +1591,8 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
                      PRUint32             aFlags)
 {
   const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-  if ((vis != nsnull) && !vis->IsVisibleOrCollapsed()) {
+  if ((vis != nsnull) && !vis->IsVisibleOrCollapsed())
     return NS_OK;
-  }
   
   nsIFrame * child = mFrames.FirstChild();
   if (child) {    // if we have children, we are probably not really a plugin
@@ -1757,12 +1756,30 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
       mInstanceOwner->GetWindow(window);
 
       if (window->type == nsPluginWindowType_Drawable) {
+        // check if we need to call SetWindow with updated parameters
+        PRBool doupdatewindow = PR_FALSE;
+
+        // check if we need to update hdc
         PRUint32 hdc;
         aRenderingContext.RetrieveCurrentNativeGraphicData(&hdc);
         if(NS_REINTERPRET_CAST(PRUint32, window->window) != hdc) {
           window->window = NS_REINTERPRET_CAST(nsPluginPort*, hdc);
-          inst->SetWindow(window);
+          doupdatewindow = PR_TRUE;
         }
+
+        // check if we need to update window position
+        nsPoint origin;
+        GetWindowOriginInPixels(aPresContext, PR_TRUE, &origin);
+
+        if((window->x != origin.x) || (window->y != origin.y)) {
+          window->x = origin.x;
+          window->y = origin.y;
+          doupdatewindow = PR_TRUE;
+        }
+
+        if(doupdatewindow)
+          inst->SetWindow(window);
+
         mInstanceOwner->Paint(aDirtyRect, hdc);
       }
       NS_RELEASE(inst);
