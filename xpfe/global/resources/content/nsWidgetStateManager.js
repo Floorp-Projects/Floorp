@@ -43,7 +43,7 @@ function nsWidgetStateManager ( aFrameID )
         getPageData:
           function ( aPageTag )
             {
-              if( !this.pageData[aPageTag] )
+              if( !(aPageTag in this.pageData) )
                 this.pageData[aPageTag] = [];
               return this.pageData[aPageTag];
             },
@@ -51,7 +51,7 @@ function nsWidgetStateManager ( aFrameID )
         setItemData:
           function ( aPageTag, aItemID, aDataObject )
             {
-              if( !this.pageData[aPageTag] )
+              if( !(aPageTag in this.pageData) )
                 this.pageData[aPageTag] = [];
               this.pageData[aPageTag][aItemID] = aDataObject;
             },
@@ -59,7 +59,7 @@ function nsWidgetStateManager ( aFrameID )
         getItemData:  
           function ( aPageTag, aItemID )
             {
-              if( !this.pageData[aPageTag][aItemID] )
+              if( !(aItemID in this.pageData[aPageTag]) )
                 this.pageData[aPageTag][aItemID] = [];
               return this.pageData[aPageTag][aItemID];
             },
@@ -101,7 +101,7 @@ nsWidgetStateManager.prototype =
     savePageData: 
       function ( aPageTag )
         {
-          if( this.contentArea.GetFields )
+          if( 'GetFields' in this.contentArea)
             {
               // save page data based on user supplied function in content area
               var dataObject = this.contentArea.GetFields();
@@ -113,7 +113,7 @@ nsWidgetStateManager.prototype =
             //    used to build a list of elements to persist. <-- performant
             // 2) otherwise, all elements with 'wsm_persist' set to true
             //    are persisted <-- non-performant.
-           if( this.contentArea._elementIDs )
+           if( '_elementIDs' in this.contentArea )
               {
                 var elements = [];
                 for( var i = 0; i < this.contentArea._elementIDs.length; i++ )
@@ -137,13 +137,13 @@ nsWidgetStateManager.prototype =
               {
                 var elementID   = elements[i].id;
                 var elementType = elements[i].localName;
-                if (!this.dataManager.pageData[aPageTag])
+                if (!(aPageTag in this.dataManager.pageData) )
                     this.dataManager.pageData[aPageTag] = [];
                 this.dataManager.pageData[aPageTag][elementID] = [];
                 // persist element Type
                 this.dataManager.pageData[aPageTag][elementID].localName = elementType;
                 // persist attributes
-                var get_Func = this.handlers[elementType] != undefined ? 
+                var get_Func = (elementType in this.handlers) ?
                                 this.handlers[elementType].get : 
                                 this.handlers.default_handler.get;
                 this.dataManager.setItemData( aPageTag, elementID, get_Func( elementID ) );
@@ -154,7 +154,7 @@ nsWidgetStateManager.prototype =
       function ( aPageTag )
         {
           var pageData = this.dataManager.getPageData( aPageTag );
-          if( this.contentArea.SetFields )
+          if( 'SetFields' in this.contentArea )
             {
               this.contentArea.SetFields( pageData );
               return;
@@ -166,7 +166,7 @@ nsWidgetStateManager.prototype =
               if( element ) 
                 {
                   var elementType = element.localName;
-                  var set_Func = this.handlers[elementType] != undefined ?
+                  var set_Func = (elementType in this.handlers) ?
                                   this.handlers[elementType].set :
                                   this.handlers.default_handler.set;
                   set_Func( elementID, pageData[elementID] );
@@ -219,7 +219,7 @@ nsWidgetStateManager.prototype =
           // set all generic properties
           wsm.generic_Set( element, aDataObject );
           // set menulist specific properties
-          if( aDataObject.data != undefined )
+          if( 'data' in aDataObject )
             { 
               element.selectedItem = element.getElementsByAttribute( "data", aDataObject.data )[0];
             }
@@ -247,7 +247,7 @@ nsWidgetStateManager.prototype =
           
           var element = wsm.contentArea.document.getElementById( aElementID );
           wsm.generic_Set( element, aDataObject );
-          if( aDataObject.data != undefined )
+          if( 'data' in aDataObject )
             { 
               element.selectedItem = element.getElementsByAttribute( "data", aDataObject.data )[0];
             }
