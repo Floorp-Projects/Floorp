@@ -43,7 +43,7 @@ LLIBS=$(LLIBS)  $(LIBNSPR)		\
     $(NULL)
 
 # Hack to get /LIBPATH down to the cmdline
-OS_LIBS=$(OS_LIBS) /libpath:$(PYTHON_SRC)/pcbuild /libpath:$(PYTHON_SRC)/lib    
+OS_LIBS=$(OS_LIBS) /libpath:$(PYTHON_SRC)/pcbuild /libpath:$(PYTHON_SRC)/libs
 
 LINCS= /I$(PYTHON_SRC)\Include /I$(PYTHON_SRC)\PC \
     $(NULL)
