@@ -67,7 +67,6 @@
 #include "nsIURI.h"
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
-#include "nsIProgressEventSink.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -3452,16 +3451,6 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
 
     rv = loadGroup->AddRequest(mWyciwygChannel, nsnull);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to add request to load group.");
-
-    /*
-    nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor;
-    loadGroup->GetNotificationCallbacks(getter_AddRefs(interfaceRequestor));
-
-    nsCOMPtr<nsIProgressEventSink> progressSink =
-      do_GetInterface(interfaceRequestor);
-
-    progressSink->OnProgress(mWyciwygChannel, nsnull, 1, -1);
-    */
   }
 
   return rv;
