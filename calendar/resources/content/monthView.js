@@ -1108,6 +1108,6 @@ var monthViewEventDragAndDropObserver  = {
 
 function debug( Text )
 {
-   dump( "\nmonthView.js: "+ Text);
+   dump( "monthView.js: "+ Text +"\n");
 
 }

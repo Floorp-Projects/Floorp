@@ -606,5 +606,5 @@ DayView.prototype.hiliteTodaysDate = function dayview_hiliteTodaysDate( )
 
 function debug( Text )
 {
-   dump( "\ndayView.js: "+ Text);
+   dump( "dayView.js: "+ Text +"\n");
 }

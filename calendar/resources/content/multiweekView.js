@@ -1017,6 +1017,6 @@ MultiweekView.prototype.setFictitiousEvents = function multiweekView_setFictitio
 
 function debug( Text )
 {
-   dump( "\nmultiweekView.js: "+ Text);
+   dump( "multiweekView.js: "+ Text +"\n");
 
 }
