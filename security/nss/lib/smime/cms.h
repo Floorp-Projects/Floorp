@@ -34,7 +34,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.7 2001/01/04 00:44:29 wtc%netscape.com Exp $
+ * $Id: cms.h,v 1.8 2001/01/04 06:02:43 wtc%netscape.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -43,7 +43,6 @@
 #include "seccomon.h"
 
 #include "secoidt.h"
-#include "secder.h"	/* needed by certt.h; XXX go away when possible */
 #include "certt.h"
 #include "keyt.h"
 #include "hasht.h"

@@ -34,7 +34,7 @@
 /*
  * Interface to the PKCS7 implementation.
  *
- * $Id: secpkcs7.h,v 1.2 2001/01/04 00:44:27 wtc%netscape.com Exp $
+ * $Id: secpkcs7.h,v 1.3 2001/01/04 06:02:39 wtc%netscape.com Exp $
  */
 
 #ifndef _SECPKCS7_H_
@@ -43,7 +43,6 @@
 #include "seccomon.h"
 
 #include "secoidt.h"
-#include "secder.h"	/* needed by certt.h; XXX go away when possible */
 #include "certt.h"
 #include "keyt.h"
 #include "hasht.h"
