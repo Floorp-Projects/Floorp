@@ -40,7 +40,7 @@
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsIDocCharset.h"
 #include "nsIWebProgress.h"
 #include "nsCURILoader.h"
@@ -73,6 +73,8 @@ static PRLogModuleInfo *gPrefetchLog;
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREFSERVICE_CID);
+
+#define PREFETCH_PREF "network.prefetch-next"
 
 //-----------------------------------------------------------------------------
 // helpers
@@ -203,7 +205,7 @@ nsPrefetchService::nsPrefetchService()
     : mQueueHead(nsnull)
     , mQueueTail(nsnull)
     , mStopCount(0)
-    , mDisabled(PR_FALSE)
+    , mDisabled(PR_TRUE)
 {
 }
 
@@ -224,19 +226,20 @@ nsPrefetchService::Init()
 
     nsresult rv;
 
-    // Verify that "network.prefetch-next" preference is set to true. Skip
-    // this step if we encounter any errors.
+    // read prefs and hook up pref observer
     nsCOMPtr<nsIPrefService> prefServ(do_GetService(kPrefServiceCID, &rv));
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIPrefBranch> prefs;
         rv = prefServ->GetBranch(nsnull, getter_AddRefs(prefs));
         if (NS_SUCCEEDED(rv)) {
             PRBool enabled;
-            rv = prefs->GetBoolPref("network.prefetch-next", &enabled);
-            if (NS_SUCCEEDED(rv) && !enabled) {
-                LOG(("nsPrefetchService disabled via preferences\n"));
-                return NS_ERROR_ABORT;
-            }
+            rv = prefs->GetBoolPref(PREFETCH_PREF, &enabled);
+            if (NS_SUCCEEDED(rv) && enabled)
+                mDisabled = PR_FALSE;
+
+            nsCOMPtr<nsIPrefBranchInternal> prefsInt(do_QueryInterface(prefs));
+            if (prefsInt)
+                prefsInt->AddObserver(PREFETCH_PREF, this, PR_TRUE);
         }
     }
 
@@ -247,12 +250,11 @@ nsPrefetchService::Init()
 
     rv = observerServ->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
-            
-    // Register as an observer for the document loader  
-    nsCOMPtr<nsIWebProgress> progress(do_GetService(kDocLoaderServiceCID, &rv));
-    if (NS_FAILED(rv)) return rv;
 
-    return progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+    if (!mDisabled)
+        AddProgressListener();
+
+    return NS_OK;
 }
 
 void
@@ -304,6 +306,24 @@ nsPrefetchService::ProcessNextURI()
 //-----------------------------------------------------------------------------
 // nsPrefetchService <private>
 //-----------------------------------------------------------------------------
+
+void
+nsPrefetchService::AddProgressListener()
+{
+    // Register as an observer for the document loader  
+    nsCOMPtr<nsIWebProgress> progress(do_GetService(kDocLoaderServiceCID));
+    if (progress)
+        progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
+}
+
+void
+nsPrefetchService::RemoveProgressListener()
+{
+    // Register as an observer for the document loader  
+    nsCOMPtr<nsIWebProgress> progress(do_GetService(kDocLoaderServiceCID));
+    if (progress)
+        progress->RemoveProgressListener(this);
+}
 
 nsresult
 nsPrefetchService::EnqueueURI(nsIURI *aURI, nsIURI *aReferrerURI)
@@ -575,6 +595,26 @@ nsPrefetchService::Observe(nsISupports     *aSubject,
     if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         StopPrefetching();
         mDisabled = PR_TRUE;
+    }
+    else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+        nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject));
+        PRBool enabled;
+        nsresult rv = prefs->GetBoolPref(PREFETCH_PREF, &enabled);
+        if (NS_SUCCEEDED(rv) && enabled) {
+            if (mDisabled) {
+                LOG(("enabling prefetching\n"));
+                mDisabled = PR_FALSE;
+                AddProgressListener();
+            }
+        } 
+        else {
+            if (!mDisabled) {
+                LOG(("disabling prefetching\n"));
+                StopPrefetching();
+                mDisabled = PR_TRUE;
+                RemoveProgressListener();
+            }
+        }
     }
 
     return NS_OK;

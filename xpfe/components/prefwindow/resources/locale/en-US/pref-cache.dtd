@@ -3,16 +3,12 @@
 <!--LOCALIZATION NOTE : FILE Cache prefs dialog -->
 <!ENTITY  lHeader                       "Cache">
 <!ENTITY  cacheTitle.label              "Set Cache Options">
-<!ENTITY  cachePara                     "The cache keeps copies of frequently visited web pages on your hard disk. This reduces the amount of time you are connected to the Internet. (Clicking Reload always shows you the latest version of a page.)">
-<!ENTITY  memCache.label                "Memory Cache:">
-<!ENTITY  memCache.accesskey            "M">
-<!ENTITY  diskCache.label               "Disk Cache:">
-<!ENTITY  diskCache.accesskey           "d">
+<!ENTITY  cachePara                     "The cache keeps copies of frequently visited web pages on your hard disk. (Clicking Reload always shows you the latest version of a page.)">
+<!ENTITY  diskCache.label               "Cache:">
+<!ENTITY  diskCache.accesskey           "c">
 <!ENTITY  kbytes                        "KB">
-<!ENTITY  diskCacheFolder.label         "Disk Cache Folder:">
-<!ENTITY  clearMemCache.label           "Clear Memory Cache">
-<!ENTITY  clearMemCache.accesskey       "C">
-<!ENTITY  clearDiskCache.label          "Clear Disk Cache">
+<!ENTITY  diskCacheFolder.label         "Cache Folder:">
+<!ENTITY  clearDiskCache.label          "Clear Cache">
 <!ENTITY  clearDiskCache.accesskey      "l">
 <!ENTITY  chooseDiskCacheFolder.label   "Choose Folder...">
 <!ENTITY  chooseDiskCacheFolder.accesskey "h">
@@ -28,3 +24,9 @@
 <!ENTITY  neverRadio.accesskey          "n">
 <!ENTITY  autoRadio.label               "When the page is out of date">
 <!ENTITY  autoRadio.accesskey           "w">
+
+<!ENTITY prefetchTitle.label          "Link Prefetching">
+<!-- <!ENTITY enablePrefetch.label         "Enable link prefetching"> -->
+<!ENTITY enablePrefetch.label         "Prefetch web pages when idle, so that links in web pages designed for prefetching can load faster.">
+<!ENTITY enablePrefetch.accesskey     "p">
+<!-- <!ENTITY prefetchDesc.label           "If you check this item, &brandShortName; will follow special directives from websites to prefetch content while the browser is idle.  Websites designed to take advantage of this feature will appear to load quicker."> -->
