@@ -50,6 +50,7 @@ struct nsStreamBindingInfo {
  */
 class nsIStreamListener : public nsIStreamObserver {
 public:
+	 static const nsIID& IID() { static nsIID iid = NS_ISTREAMLISTENER_IID; return iid; }
     /**
      * Return information regarding the current URL load.<BR>
      * The info structure that is passed in is filled out and returned

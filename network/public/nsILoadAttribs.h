@@ -57,6 +57,7 @@ typedef enum {
 // Defining attributes of a url's load behavior.
 class nsILoadAttribs : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ILOAD_ATTRIBS_IID; return iid; }
     // Copy the state of another nsILoadAttribs instance.
   NS_IMETHOD Clone(nsILoadAttribs* aLoadAttribs) = 0;
 
