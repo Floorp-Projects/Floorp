@@ -138,9 +138,20 @@ INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(XPDIST)\include\nspr
 
 !ifdef REQUIRES
 
+!if "$(WINOS)" == "WIN95"
+
+# use perl to translate REQUIRES into a proper include line
+# using \1 instead of $1 because nmake barfs on $1
+!if [echo $(REQUIRES) | perl -pe "s/(\w+)/-I$(XPDIST:\=\\)\\include\\\1/g; print \"REQINCS=$_\";" > reqincs.inc]
+!endif
+ 
+!else
+
 REQINCS1=REQINCS=-I $(XPDIST)/include/$(REQUIRES: = -I$(XPDIST^)/include/)
 
 !if [echo $(REQINCS1) > reqincs.inc]
+!endif
+
 !endif
 
 !include reqincs.inc
