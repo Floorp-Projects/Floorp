@@ -551,7 +551,7 @@ nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
       nsCOMPtr<nsIContent> cont = do_QueryInterface(aTrustedNode);
       NS_ENSURE_TRUE(cont, NS_ERROR_UNEXPECTED);
 
-      nsCOMPtr<nsINodeInfo> ni = cont->GetNodeInfo();
+      nsINodeInfo *ni = cont->GetNodeInfo();
       NS_ENSURE_TRUE(ni, NS_ERROR_UNEXPECTED);
       
       ni->GetDocumentPrincipal(getter_AddRefs(trustedPrincipal));
@@ -787,7 +787,7 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
   nsIDocument* old_doc = aOldDocument;
 
   if (!old_doc) {
-    nsCOMPtr<nsINodeInfo> ni = aContent->GetNodeInfo();
+    nsINodeInfo *ni = aContent->GetNodeInfo();
 
     if (ni) {
       old_doc = ni->GetDocument();
