@@ -690,7 +690,7 @@ void nsMsgSearchOfflineMail::CleanUpScope()
 #endif // HAVE_SEARCH_PORT
 }
 
-nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
+NS_IMETHODIMP nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 {
     nsresult err = NS_OK;
 

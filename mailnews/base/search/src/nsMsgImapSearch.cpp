@@ -66,7 +66,7 @@ NS_IMETHODIMP nsMsgSearchOnlineMail::GetEncoding (char **result)
   return NS_OK;
 }
 
-nsresult nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
+NS_IMETHODIMP nsMsgSearchOnlineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 {
     nsresult err = NS_OK;
 

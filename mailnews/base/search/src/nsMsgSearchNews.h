@@ -42,7 +42,6 @@ public:
 	virtual char *EncodeTerm (nsMsgSearchTerm *);
 	char *EncodeValue (const char *);
 	
-	nsresult AddResultElement (nsIMsgDBHdr *);
     PRBool DuplicateHit(PRUint32 artNum) ;
     void CollateHits ();
     static int CompareArticleNumbers (const void *v1, const void *v2, void *data);

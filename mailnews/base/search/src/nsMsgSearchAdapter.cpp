@@ -114,6 +114,13 @@ NS_IMETHODIMP nsMsgSearchAdapter::GetEncoding (char **encoding)
   return NS_OK; 
 }
 
+NS_IMETHODIMP nsMsgSearchAdapter::AddResultElement (nsIMsgDBHdr *pHeaders)
+{
+    NS_ASSERTION(PR_FALSE, "shouldn't call this base class impl");
+    return NS_ERROR_FAILURE;
+}
+
+
 NS_IMETHODIMP nsMsgSearchAdapter::AddHit(nsMsgKey key)
 {
   NS_ASSERTION(PR_FALSE, "shouldn't call this base class impl");

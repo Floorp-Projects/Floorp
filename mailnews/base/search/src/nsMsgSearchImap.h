@@ -36,10 +36,10 @@ public:
 	NS_IMETHOD ValidateTerms ();
 	NS_IMETHOD Search ();
 	NS_IMETHOD GetEncoding (char **result);
+	NS_IMETHOD AddResultElement (nsIMsgDBHdr *);
 
 	static nsresult Encode (nsCString *ppEncoding, nsMsgSearchTermArray &searchTerms, const PRUnichar *srcCharset, const PRUnichar *destCharset);
 	
-	nsresult AddResultElement (nsIMsgDBHdr *);
 
 protected:
 	nsCString m_encoding;

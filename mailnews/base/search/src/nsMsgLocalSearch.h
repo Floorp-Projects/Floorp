@@ -42,6 +42,7 @@ public:
 	NS_IMETHOD ValidateTerms ();
 	NS_IMETHOD Search ();
 	NS_IMETHOD Abort ();
+	NS_IMETHOD AddResultElement (nsIMsgDBHdr *);
 	static nsresult  MatchTermsForFilter(nsIMsgDBHdr * msgToMatch,
                                          nsMsgSearchTermArray &termList,
                                          nsIMsgSearchScopeTerm *scope, 
@@ -57,7 +58,6 @@ public:
 	virtual nsresult OpenSummaryFile ();
 	nsresult SummaryFileError();
 
-	nsresult AddResultElement (nsIMsgDBHdr *);
 
 
 protected:
