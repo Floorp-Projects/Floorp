@@ -55,6 +55,7 @@ CPPSRCS =			\
 	nsJSHTMLIsIndexElement.cpp \
 	nsJSHTMLLIElement.cpp \
 	nsJSHTMLLabelElement.cpp \
+	nsJSHTMLLayerElement.cpp \
 	nsJSHTMLLegendElement.cpp \
 	nsJSHTMLLinkElement.cpp \
 	nsJSHTMLMapElement.cpp \

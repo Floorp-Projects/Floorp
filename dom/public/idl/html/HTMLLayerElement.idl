@@ -1,0 +1,14 @@
+
+interface HTMLLayerElement : HTMLElement {
+ /* IID: { 0xa6cf9100, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+  attribute long top;
+  attribute long left;
+  attribute DOMString visibility;
+  attribute DOMString background;
+  attribute DOMString bgColor;
+  attribute DOMString name;
+  attribute long zIndex;
+  readonly attribute Document document;
+};
