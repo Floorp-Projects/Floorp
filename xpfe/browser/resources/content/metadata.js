@@ -335,12 +335,28 @@ function hideNode(id)
     document.getElementById(id).setAttribute("style", "display:none;" + style);
 }
 
+const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
+
 // opens the link contained in the node's "value" attribute.
 function openLink(node)
 {
     var url = node.getAttribute("value");
-    nodeView._content.document.location = url;
-    window.close();
+    // Security-Critical: Only links to 'safe' protocols should be functional.
+    // Specifically, javascript: and data: URLs must be made non-functional
+    // here, because they will run with full privilege.
+    var safeurls = /(^http(s)?:|^file:|^chrome:|^resource:|^mailbox:|^imap:|^news:|^about:|^mailto:|^ftp:|^gopher:)/i;
+    if (url.search(safeurls) == 0) {
+        var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"].getService().
+                         QueryInterface(nsIScriptSecurityManager);
+        try {
+            secMan.checkLoadURIStr(nodeView._content.document.location,
+                                   url, nsIScriptSecurityManager.STANDARD);
+        } catch (e) {
+            return;
+        }
+        nodeView._content.document.location = url;
+        window.close();
+    }
 }
 
 /*
