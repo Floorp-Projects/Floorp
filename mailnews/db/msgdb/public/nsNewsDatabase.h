@@ -30,9 +30,9 @@ public:
 	char *GetGroupURL() { return m_groupURL; }
 	static nsresult	Open(const char * groupURL, MSG_Master *master,
 						 nsNewsDatabase** pMessageDB);
-	virtual nsresult		Close(PRBool forceCommit = TRUE);
+	virtual nsresult		Close(PRBool forceCommit = PR_TRUE);
 	virtual nsresult		ForceClosed();
-	virtual nsresult		Commit(PRBool compress = FALSE);
+	virtual nsresult		Commit(PRBool compress = PR_FALSE);
 
 	virtual int		GetCurVersion();
 
@@ -40,10 +40,10 @@ public:
 	virtual nsresult		MarkHdrRead(nsMsgHdr *msgHdr, PRBool bRead,
 								ChangeListener *instigator = NULL);
 	virtual nsresult		IsRead(MessageKey messageKey, PRBool *pRead);
-	virtual XP_Bool		IsArticleOffline(MessageKey messageKey);
+	virtual PRBool		IsArticleOffline(MessageKey messageKey);
 	virtual nsresult		MarkAllRead(MWContext *context, IDArray *thoseMarked = NULL);
 	virtual nsresult		AddHdrFromXOver(const char * line,  MessageKey *msgId);
-	virtual nsresult		AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = FALSE);
+	virtual nsresult		AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = PR_FALSE);
 
 	virtual nsresult		ListNextUnread(ListContext **pContext, nsMsgHdr **pResult);
 	// return highest article number we've seen.
@@ -56,8 +56,8 @@ public:
 	msg_NewsArtSet			*GetNewsArtSet() {return m_set;}
 	virtual nsNewsDatabase	*GetNewsDB() ;
 
-	virtual XP_Bool			PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
-	XP_Bool					IsCategory();
+	virtual PRBool			PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
+	PRBool					IsCategory();
 	NewsFolderInfo			*GetNewsFolderInfo() {return (NewsFolderInfo *) m_FolderInfo;}
 	nsresult				SetOfflineRetrievalInfo(MSG_RetrieveArtInfo *);
 	nsresult				SetPurgeHeaderInfo(MSG_PurgeInfo *purgeInfo);
@@ -79,7 +79,7 @@ protected:
 	char*				m_groupURL;
 	MSG_FilterList*		m_filterList;
 
-	uint32				m_headerIndex;		// index of unthreaded headers
+	PRUint32				m_headerIndex;		// index of unthreaded headers
 												// at a specified entry.
 	MSG_Master		*m_master;
 

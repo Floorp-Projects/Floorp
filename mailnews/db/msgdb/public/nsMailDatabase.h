@@ -38,7 +38,7 @@ public:
 			nsMailDatabase();
 	virtual ~nsMailDatabase();
 	static nsresult			Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB,
-									XP_Bool upgrading = FALSE);
+									PRBool upgrading = PR_FALSE);
 
 	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFilePath &pathName, nsMailDatabase** pMailDB);
 
@@ -66,7 +66,7 @@ public:
 	nsresult				DeleteOfflineOp(MessageKey opKey);
 	nsresult				SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, MessageKey key);
 	
-	virtual nsresult		SetSummaryValid(PRBool valid = TRUE);
+	virtual nsresult		SetSummaryValid(PRBool valid = PR_TRUE);
 	
 	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
 
@@ -78,7 +78,7 @@ protected:
 	virtual void			SetReparse(PRBool reparse);
 
 	MSG_Master		*m_master;
-	XP_Bool			m_reparse;
+	PRBool			m_reparse;
 	char			*m_folderName;
 	PRFileDesc		*m_folderFile;	/* this is a cache for loops which want file left open */
 };

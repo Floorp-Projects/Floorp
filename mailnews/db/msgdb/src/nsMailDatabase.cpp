@@ -29,12 +29,12 @@ nsMailDatabase::~nsMailDatabase()
 
 
 /* static */ nsresult	nsMailDatabase::Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB,
-					 XP_Bool upgrading /*=FALSE*/)
+					 PRBool upgrading /*=PR_FALSE*/)
 {
 	nsMailDatabase	*mailDB;
 	int				statResult;
 	XP_StatStruct	st;
-	XP_Bool			newFile = FALSE;
+	PRBool			newFile = PR_FALSE;
 	nsDBFolderInfo	*folderInfo = NULL;
 
 // OK, dbName is probably folder name, since I can't figure out how nsFilePath interacts
@@ -52,7 +52,7 @@ nsMailDatabase::~nsMailDatabase()
 	}
 	// if the old summary doesn't exist, we're creating a new one.
 	if (XP_Stat (folderName, &st, xpMailFolderSummary) && create)
-		newFile = TRUE;
+		newFile = PR_TRUE;
 
 
 	mailDB = new nsMailDatabase;
@@ -60,7 +60,7 @@ nsMailDatabase::~nsMailDatabase()
 	if (!mailDB)
 		return NS_ERROR_OUT_OF_MEMORY;
 	
-	mailDB->m_folderName = XP_STRDUP(folderName);
+	mailDB->m_folderName = PL_strdup(folderName);
 
 	dbName = WH_FileName(folderName, xpMailFolderSummary);
 	if (!dbName) 
@@ -71,7 +71,7 @@ nsMailDatabase::~nsMailDatabase()
 	statResult = XP_Stat (folderName, &st, xpMailFolder);
 
 	nsresult err = mailDB->OpenMDB(dbName, create);
-	XP_FREE(dbName);
+	PR_Free(dbName);
 
 	if (NS_SUCCEEDED(err))
 	{
