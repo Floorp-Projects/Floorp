@@ -214,10 +214,12 @@ function goHelpMenu( url )
 
 function openTopWin( url )
 {
-  /* note that this chrome url should probably change to not have all of the navigator controls,
-     but if we do this we need to have the option for chrome controls because goClickThrobber()
-     needs to use this function with chrome controls */
-  /* also, do we want to limit the number of help windows that can be spawned? */
+    /* note that this chrome url should probably change to not have
+       all of the navigator controls, but if we do this we need to have
+       the option for chrome controls because goClickThrobber() needs to
+       use this function with chrome controls */
+    /* also, do we want to
+       limit the number of help windows that can be spawned? */
     if ((url == null) || (url == "")) return;
 
     // xlate the URL if necessary
