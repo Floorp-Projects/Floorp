@@ -669,7 +669,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
-#if 1
+#if 0
   nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
                                                          aDesiredSize, aReflowState, aStatus);
   if (NS_SUCCEEDED(skiprv)) {
