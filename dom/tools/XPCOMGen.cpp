@@ -82,7 +82,7 @@ static const char *kFactoryClassDeclBeginStr =
 static const char *kConstructorDeclStr = "  NS_IMETHOD   CreateInstance(%snsIDOM%s **aReturn)=0;\n";
 static const char *kFactoryClassDeclEndStr = "\n};\n\n";
 static const char *kGlobalInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);\n\n";
-static const char *kInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype);\n\n";
+static const char *kInitClassStr = "extern \"C\" NS_DOM nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype);\n\n";
 static const char *kNewObjStr = "extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);\n\n";
 static const char *kMethodDeclMacroStr = "\n#define NS_DECL_IDOM%s   \\\n";
 static const char *kMethodForwardMacroStr = "\n#define NS_FORWARD_IDOM%s(_to)  \\\n";

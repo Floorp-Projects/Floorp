@@ -1336,7 +1336,7 @@ static const char *kInitClassBeginStr =
 "\n\n//\n"
 "// %s class initialization\n"
 "//\n"
-"nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype)\n"
+"extern \"C\" NS_DOM nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype)\n"
 "{\n"
 "  JSContext *jscontext = (JSContext *)aContext->GetNativeContext();\n"
 "  JSObject *proto = nsnull;\n"
