@@ -65,6 +65,7 @@
 #include "plstr.h"
 #include "prio.h"
 #include "prthread.h"
+#include "rdf.h"
 #include "rdfutil.h"
 #include "prlog.h"
 
@@ -90,12 +91,6 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
-
-////////////////////////////////////////////////////////////////////////
-// Vocabulary stuff
-#include "rdf.h"
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -177,6 +172,11 @@ protected:
     nsIRDFResource*   mRootResource;
     PRBool            mIsLoading; // true while the document is loading
     NameSpaceMap*     mNameSpaces;
+
+    // pseudo-constants
+    static PRInt32 gRefCnt;
+    static nsIRDFResource* kRDF_instanceOf;
+    static nsIRDFResource* kRDF_nextVal;
 
 public:
     RDFXMLDataSourceImpl(void);
@@ -339,6 +339,9 @@ public:
     SerializeEpilogue(nsIOutputStream* aStream);
 };
 
+PRInt32         RDFXMLDataSourceImpl::gRefCnt = 0;
+nsIRDFResource* RDFXMLDataSourceImpl::kRDF_instanceOf;
+nsIRDFResource* RDFXMLDataSourceImpl::kRDF_nextVal;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -368,14 +371,14 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mIsLoading(PR_FALSE),
       mNameSpaces(nsnull)
 {
+    NS_INIT_REFCNT();
+
     nsresult rv;
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
                                                     nsnull,
                                                     kIRDFDataSourceIID,
                                                     (void**) &mInner)))
         PR_ASSERT(0);
-
-    NS_INIT_REFCNT();
 
     // Initialize the name space stuff to know about any "standard"
     // namespaces that we want to look the same in all the RDF/XML we
@@ -385,6 +388,15 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
     // should've defined the RDF namespace to be _something_, and we
     // should just look at _that_ and use it. Oh well.
     AddNameSpace(NS_NewAtom("RDF"), RDF_NAMESPACE_URI);
+
+    if (gRefCnt++ == 0) {
+        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+        if (NS_FAILED(rv)) return;
+
+        rv = rdf->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_instanceOf);
+        rv = rdf->GetResource(RDF_NAMESPACE_URI "nextVal",    &kRDF_nextVal);
+    }
 }
 
 
@@ -422,6 +434,11 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 
     NS_IF_RELEASE(mRootResource);
     NS_RELEASE(mInner);
+
+    if (--gRefCnt == 0) {
+        NS_IF_RELEASE(kRDF_instanceOf);
+        NS_IF_RELEASE(kRDF_nextVal);
+    }
 }
 
 
@@ -1353,26 +1370,14 @@ static const char kRDFAlt[] = "RDF:Alt";
         if (rdf_IsOrdinalProperty(property)) {
             rv = SerializeMember(aStream, aContainer, property);
         }
+        else if (property == kRDF_instanceOf) {
+            // don't serialize instanceOf -- it's implicit in the tag
+        }
+        else if (property == kRDF_nextVal) { 
+            // don't serialize nextVal -- it's internal state
+        }
         else {
-            do {
-                PRBool eq;
-
-                // don't serialize instanceOf -- it's implicit in the tag
-                if (NS_FAILED(rv = property->EqualsString(kURIRDF_instanceOf, &eq)))
-                    break;
-
-                if (eq)
-                    break;
-
-                // don't serialize nextVal -- it's internal state
-                if (NS_FAILED(rv = property->EqualsString(kURIRDF_nextVal, &eq)))
-                    break;
-
-                if (eq)
-                    break;
-
-                rv = SerializeProperty(aStream, aContainer, property);
-            } while (0);
+            rv = SerializeProperty(aStream, aContainer, property);
         }
 
         NS_RELEASE(property);
