@@ -26,6 +26,8 @@
 #
 # features: reports tinderbox status upon request.
 # remembers urls. tells you the phase of the moon.
+# grabs mozillaZine headlines. bot will auto-op
+# based on nick and remote host.
 #
 # hack on me! required reading:
 #
@@ -45,23 +47,19 @@ $SIG{'TERM'} = 'killed';
 use strict 'vars';
 use lib ".";
 use Net::IRC;
+use LWP::Simple;
 use Tinderbox;
 use Carp;
 
 $|++;
 
-my $VERSION = "1.0";
-
-my $debug = 1;
+my $VERSION = "1.5"; # keep me in sync with the mozilla.org cvs repository
+my $debug = 1; # debug output also includes warnings, errors
 
 my %cmds = 
     (
-    "about" =>  "bot_about",
-    "hi" =>         "bot_hi", 
-    "moon" =>   "bot_moon",
-    "up" =>         "bot_up",
-    "trees" =>  "bot_tinderbox",
-    "url"   =>      "bot_urls",
+    "about" => "bot_about", "hi" => "bot_hi", "moon" => "bot_moon",
+    "up" => "bot_up", "trees" =>  "bot_tinderbox", "url" => "bot_urls",
     );
 
 @::origargv = @ARGV;
@@ -78,47 +76,56 @@ $channel = $channel             || "#mozilla";
 
 &debug ("mozbot $VERSION starting up");
 
-# create a pid file if we can
+&create_pid_file;
 
-my $pid = "$ENV{'HOME'}/.pid-mozbot";
-if (open PID, ">$pid")
-    {
-    print PID "$$\n";
-    close PID;
-    }
-else
-    {
-    &debug ("warning: problem creating pid file: $pid, $!");
-    }
+# read admin list 
+my %admins = ( "sar" => "netscape.com", "terry" => "netscape.com",
+	"harrison" => "(censor.com|netscape.com)");
+my $adminf = "$ENV{'HOME'}/.mozbot-admins";
+&fetch_admin_conf (\%admins);
 
 my $uptime = 0;
 
-# undef $moon if you don't want the moon
+my $moon = "$ENV{'HOME'}/bots/bin/moon";
+$moon = (-f $moon) ? $moon : ""; 
+delete $cmds{'moon'} if (! $moon);
 
-# my $moon = "$ENV{'HOME'}/bots/bin/moon";
 my $phase;
-my $last_moon;
+my $last_moon = 0;
 
 # leave @trees empty if you don't want tinderbox details
 
 my @trees = qw (Mozilla Mozilla-External raptor);
 my $trees;
-my $last;
+my $status;
 my $last_tree;
 my %broken;
-
 my @urls;
 
-# the action start here
+my $greet = 0;
+my @greetings = 
+	( 
+	"g'day", "bonjour", "guten tag", "moshi, moshi",
+	"hello", "hola", "hi", "buon giorno", "aloha",
+	"hey", "'sup", "lo", "howdy", "saluton", "hei",
+	"hallo"
+	);
 
-my $irc = new Net::IRC;
+# leave $mozillazine undef'd if you don't want headlines
+# checked every eight hours and available via
+# "mozilla, mozillazine" (or "zine" or "mz")
+
+my $mozillazine = "http://www.mozillazine.org/home.html";
+my @headlines;
+
+my $irc = new Net::IRC or confess "$0: duh?";
 
 my $bot = $irc->newconn
   (
   Server => $server,
   Port => $port,
   Nick => $nick,
-  Ircname => "Thingy",
+  Ircname => "mozilla.org bot/thing $VERSION",
   Username => $nick,
   )
 or die "$0: can't connect to $server, port $port";
@@ -131,10 +138,13 @@ $bot->add_global_handler ([ 'disconnect', 'kill', 474, 465 ], \&on_boot);
 
 &debug ("adding more handlers");
 $bot->add_handler ('msg', \&on_msg);
-$bot->add_handler('public', \&on_public);
+$bot->add_handler ('public', \&on_public);
+$bot->add_handler ('join',   \&on_join);
 
+&debug ("scheduling stuff");
 $bot->schedule (0, \&tinderbox);
 $bot->schedule (0, \&checksourcechange);
+$bot->schedule (0, \&mozillazine);
 
 &debug ("connecting to $server $port as $nick on $channel");
 $irc->start;
@@ -175,33 +185,106 @@ sub on_nick_taken
 
 sub on_msg
     {
-  my ($self, $event) = @_;
-  my ($nick) = $event->nick;
-  my ($arg) = $event->args;
-  my ($cmd, $rest) = split ' ', $arg;
-    
-    &debug ("msg from $nick: $arg");
-    
-    foreach (sort keys %cmds)
-        {
-        if ($_ =~ /^$cmd/i)
-            {
-            &debug ("command: $_");
-            my $msg = &{$cmds{$_}} ($nick, $cmd, $rest);
-            if (ref ($msg) eq "ARRAY")
-                {
-                foreach (@$msg)
-                    {
-                    $self->privmsg ($nick, $_);
-                    }
-                }
-            else
-                {
-                $self->privmsg ($nick, $msg);
-                }
-            return;
-            }
-        }
+  	my ($self, $event) = @_;
+  	my ($nick) = $event->nick;
+  	my ($arg) = $event->args;
+  	my ($cmd, $rest) = split ' ', $arg;
+ 		
+		# hoo dee boo
+
+		if (exists $admins{$nick})
+			{
+			if ((my ($who, $where) = $arg =~ /^bless\s+(\S+)\s+(\S+)$/i) or
+				$arg =~ /^bless/i)
+				{
+				if (! $who or ! $where)	
+					{
+					$self->privmsg ($nick, "usage: bless [ user ] [ host ] " . 
+						"(example: bless marca netscape.com)");
+					return;
+					}
+				$admins{$who} = $where;
+				&debug ("$nick blessed $who ($where)");
+				&store_admin_conf (\%admins);
+				$self->privmsg ($nick, 
+					"mozbot admins: " . join ' ', (sort keys %admins));
+				return;
+				}
+			elsif ($arg =~ /^unbless (\S+)$/i && exists ($admins{$1}))
+				{
+				delete $admins{$1};
+				&debug ("$nick unblessed $1");
+				&store_admin_conf (\%admins);
+				$self->privmsg ($nick, 
+					"mozbot admins: " . join ' ', (sort keys %admins));
+				return;
+				}
+			elsif ($arg eq "shutdown yes")
+				{
+				&debug ("forced shutdown from $nick");
+				$::dontQuitOnSignal++;
+				$self->quit ("$nick told me to shutdown");
+				exit (0);
+				}
+			elsif ($arg =~ /^shutdown/)
+				{
+				$self->privmsg ($nick, "usage: shutdown yes");
+				return;
+				}
+			elsif ($arg =~ /^say (.*)/)
+				{
+				$self->privmsg ($channel, $1);
+				return;
+				}
+			elsif ($arg =~ /^list$/)
+				{
+				foreach (sort keys %admins)
+					{
+					$self->privmsg ($nick, "$_ $admins{$_}");
+					}
+				return;
+				}
+			elsif ($arg =~ /^help/)
+				{
+				$self->privmsg($nick, 
+					"mozbot admin commands: bless help list say shutdown unbless");
+				return;
+				}
+			}
+   	else
+			{
+			&debug ("msg from $nick: $arg") if ($arg);
+			}
+		
+		if ($cmd ne "help")
+			{
+    	foreach (sort keys %cmds)
+        	{
+        	if ($_ =~ /^$cmd/i) # matched a command 
+            	{
+            	&debug ("command: $_");
+							
+							# see %cmds hash defined at the top
+            	my $msg = &{$cmds{$_}} ($nick, $cmd, $rest);
+							
+							# bot functions return either a reference to an 
+							# array or just a scalar
+           	 
+							if (ref ($msg) eq "ARRAY")
+                	{
+                	foreach (@$msg)
+                    	{
+                    	$self->privmsg ($nick, $_);
+                    	}
+                	}
+            	else
+                	{
+                	$self->privmsg ($nick, $msg);
+                	}
+            	return;
+            	}
+        	}
+			}
 
     # print help message
     
@@ -222,16 +305,35 @@ sub on_public
     
         if ($cmd =~ /tree/i)
             {
-            my $t = &bot_tinderbox (undef, undef, undef, $rest eq "all" ? 0 : 1);
+            my $t = &bot_tinderbox (undef, undef, undef, 
+							# it's all about making perl happy
+							(defined $rest && $rest eq "all") ? 0 : 1);
             foreach (@$t)
                 {
                 next if ($_ eq ".");
                 $self->privmsg ($channel, "$_");
                 }
             }
+				elsif ($cmd =~ /^(zine|mozillazine|mz)/)
+					{
+					$self->privmsg ($channel, 
+						"Headlines from mozillaZine (http://www.mozillazine.org/)");
+					if ($#headlines == -1)
+						{
+						$self->privmsg ($channel, "- sorry, no headlines -");
+						}
+					else
+						{
+						foreach (@headlines)
+							{
+							$self->privmsg ($channel, $_);
+							}
+						}
+					}
         elsif ($cmd =~ /^(hi|hello|lo|sup)/)
             {
-            $self->privmsg ($channel, "hi $nick");
+            $self->privmsg ($channel, $greetings[$greet++] . " $nick");
+						$greet = 0 if ($greet > $#greetings);
             }
         }
 
@@ -244,6 +346,23 @@ sub on_public
             { shift @urls; }
         }
     }
+
+sub on_join
+	{
+  my ($self, $event) = @_;
+  my ($channel) = ($event->to)[0];
+  my $nick = $event->nick;
+	my $userhost = $event->userhost;
+	
+	# auto-op if user is a mozbot admin and coming in from
+	# the right host 
+
+	if (exists $admins{$nick} && $userhost =~ /$admins{$nick}$/i)
+		{
+		$self->mode ($channel, "+o", $nick);
+		&debug ("auto-op for $nick on $channel");
+		}
+	}
 
 $::dontQuitOnSignal = 0;
 sub on_boot
@@ -263,11 +382,12 @@ sub on_boot
 
 sub bot_about
     {
-    return "i am mozbot. hack on me! " .
-        "$VERSION harrison\@netscape.com 10/16/98. " .
+    return "i am mozbot version $VERSION. hack on me! " .
+        "harrison\@netscape.com 10/16/98. " .
         "connected to $server since " .
-        &bot_up .
-        " from $ENV{'HOSTNAME'}";
+        &bot_up . ". " .
+				"see http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla/webtools/mozbot/&date=week " .
+				"for a changelog.";
     }
 
 # bot_hi: list commands, also default function for 
@@ -333,7 +453,7 @@ sub bot_tinderbox
     foreach my $t (@tree)
         {
         $bustage = 0;
-        $buf = "$t -> ";
+        $buf = "$t " . ($$status{$t} ? "<$$status{$t}> " : "") . ": ";
         
         # politely report failures
         if (! exists $$trees{$t})
@@ -355,7 +475,11 @@ sub bot_tinderbox
         push @buf, $buf, ".";
         }
 
-    $buf = $buf || "oh, rats. something broke. complain about this to somebody. ";
+    $buf = $buf || 
+			"something broke. report a bug here: " .
+			"http://cvs-mirror.mozilla.org/webtools/bugzilla/enter_bug.cgi " .
+			"with component set to Mozbot";
+
     push @buf, "last update: " .
         &logdate ($last_tree) . " (" . &days ($last_tree) . " ago)";
     return \@buf;
@@ -416,14 +540,138 @@ sub killed
     confess "i have received a signal of some manner. good night.\n\n";
     }
 
+# write admin list 
+
+sub store_admin_conf
+	{
+	my $admins = shift;
+	my $when = localtime (time) . " by $$";
+
+	if (open ADMINS, ">$adminf")
+		{
+		print ADMINS <<FIN;
+# mozbot admin list file
+#
+# this file is generated. do not edit.
+# generated $when 
+#
+# version: 1.0
+
+FIN
+
+		foreach (sort keys %admins)
+			{
+			print ADMINS "$_ $admins{$_}\n";
+			}
+		close ADMINS;
+		}
+	else
+		{
+		&debug ("&store_admin_conf $adminf: $!");
+		}
+	}
+
+# fetch list of admins
+
+sub fetch_admin_conf
+	{
+	my $admins = shift;
+
+	if (open ADMINS, $adminf)
+		{
+		while (<ADMINS>)
+			{
+			chomp;
+			next if ($_ =~ /^#/ or ! $_);
+			my ($user, $host) = split /\s+/, $_;
+			$$admins{$user} = $host;
+			}
+		&debug ("admins: " . keys %$admins);
+		}
+	else
+		{
+		&debug ("&fetch_admin_conf $adminf: $!");
+		}
+
+	close ADMINS;
+	}
+
+# create a pid file if we can
+
+sub create_pid_file
+	{
+	my $pid = "$ENV{'HOME'}/.mozbot-pid";
+
+	if (open PID, ">$pid")
+    {
+    print PID "$$\n";
+    close PID;
+    }
+	else
+    {
+    &debug ("warning: problem creating pid file: $pid, $!");
+    }
+	}
+
+# fetches headlines from mozillaZine
+#
+# this should be a more general feature, to grab
+# content. if you feel like it, implement a 
+# grabber for slashdot headlines:
+#
+# http://slashdot.org/ultramode.txt
+
+sub mozillazine
+	{
+	&debug ("fetching mozillazine headers");
+	
+	return if (! defined $mozillazine);
+	my $output = get $mozillazine;
+	return if (! $output);
+	my @mz = split /\n/, $output;
+	
+	@headlines = ();
+
+	foreach (@mz)
+		{
+		if (my ($h) = $_ =~ /COLOR="#FEFEFE"><B>([^<>]+)/)
+			{
+			$h =~ s/&nbsp;//g;
+			push @headlines, $h; 
+			}
+		}
+
+  $bot->schedule (60 * 60 * 8, \&mozillazine);
+	}
+
 # fetch tinderbox details
 
 sub tinderbox
     {
     &debug ("fetching tinderbox status");
-    my $newtrees;
-    ($newtrees, $last) = Tinderbox::status (\@trees);
+    my ($newtrees, $newstatus) = Tinderbox::status (\@trees);
+
+		if (! $newtrees)
+			{
+    	$bot->schedule (90, \&tinderbox);
+			&debug ("hmm, couldn't get tinderbox status");
+			return;
+			}
+
     $last_tree = time;
+
+		if (defined $status)
+			{
+			foreach my $s (keys %$newstatus)
+				{
+				if (defined $$newstatus{$s} && $$status{$s} ne $$newstatus{$s})
+					{
+					$bot->privmsg ($channel,
+						"$s changed state from $$status{$s} to $$newstatus{$s}");
+					}
+				}
+			}
+
     if (defined $trees) {
         foreach my $t (@trees) {
             foreach my $e (sort keys %{$$newtrees{$t}}) {
@@ -438,6 +686,7 @@ sub tinderbox
         }
     }
     $trees = $newtrees;
+		$status = $newstatus;
     
     $bot->schedule (360, \&tinderbox);
     }
@@ -460,7 +709,9 @@ sub checksourcechange {
         $atime,$mtime,$ctime,$blksize,$blocks)
         = stat("./Tinderbox.pm");
     $::tinderboxdate = $mtime;
-    if ($lastourdate > 0 && ($::ourdate > $lastourdate ||
+
+    if (defined $lastourdate && 
+			($::ourdate > $lastourdate ||
                              $::tinderboxdate > $lasttinderboxdate)) {
         $::dontQuitOnSignal = 1;
         $self->quit("someone seems to have changed my source code.  Be right back");

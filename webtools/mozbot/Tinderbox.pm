@@ -34,7 +34,7 @@ use LWP::Simple;
 use Carp;
 
 @ISA = qw (Exporter);
-@EXPORT = qw (status);
+@EXPORT = qw (status statuz);
 
 my $VERSION = "1.0";
 
@@ -42,78 +42,53 @@ my $VERSION = "1.0";
 # and a url ending with tree=, default to mozilla.org's
 # server if not provided. status returns two references
 # to hashes. the first contains tree names as key, 
-# tree status as value. second hash contains the tree 
-# name as key and the last update time as a value.
+# tree status as value. second hash contains trees to 
+# whether or tree is open or closed.
 #
 # tree status can be horked or success.
 #
-# bleh. 
+# barf.
 
 sub status
 	{
 	my $trees = shift;
 	my $url = shift;
-
+	my %info; my %tree_state;
+  
 	# maybe this is too helpful
 
-	if (ref ($trees) ne "ARRAY")
-		{
-		carp "status method wants a reference to a list, not a " . ref ($trees);
-		return;
-		}
-
-	$url = $url || "http://cvs-mirror.mozilla.org/webtools/tinderbox/" .
-		"showbuilds.cgi?express=1&tree=";
-
-  my $start = 0;
-  my %info; 
-	my %last;
-
-	# iterate through trees
-
-  foreach my $t (@$trees)
+  if (ref ($trees) ne "ARRAY")
     {
-    my $output = get $url . $t;
-
-		# this is a quick and dirty hack.
-		# 
-		# the proper way to do this would be to
-		# hack tinderbox and make the information
-		# easier to parse. but, no, i had to go 
-		# play around with regular expressions.
-		# lloyd tells me express=1 format won't 
-		# change anytime soon so this is FINE FOR NOW
-
-    $output =~ s/&nbsp;/ /g;
-
-    my ($page_tree) = $output =~
-      /<a href=showbuilds.cgi\?tree=$t>([^<>]+)<\/a>/i;
-
-    $last{$t} = $page_tree;
-
-    $output =~ s/\n//g;
-
-    my @l = split /<td/, $output;
-
-    foreach my $i (0 .. $#l)
-      {
-      $l[$i] =~ s#(</td>?|</table>|</?tr>|</a>)##g;
-
-      next if ($l[$i] =~ /as of/);
-      my $status = ($l[$i] =~ /background=/) ? "horked" : "success";
-      my @burp = split />/, $l[$i];
-			my $b = $#burp;
-
-			# strip leading, trailing spaces
-      $burp[$b] =~ s/\s+$//;
-      $burp[$b] =~ s/^\s+//;
-
-      $info{$t}{$burp[$b]} = $status;
-      }
+    carp "status method wants a reference to a list, not a " . ref ($trees);
+    return;
     }
 
-  return (\%info, \%last);
-  }
+  $url = $url || "http://cvs-mirror.mozilla.org/webtools/tinderbox/" .
+    "showbuilds.cgi?quickparse=1&tree="; 
+	
+  my $output = get $url . join ',', @$trees;
+	return if (! $output); 
+	
+	my @qp = split /\n/, $output;
+	
+	# loop through quickparse output
+
+	foreach my $op (@qp)
+		{
+		my ($type, $tree, $build, $state) = split /\|/, $op;
+
+		if ($type eq "State")
+			{
+			$tree_state{$tree} = $state;
+			}
+		elsif ($type eq "Build")
+			{
+			$state = "Horked" unless ($state ne "Success");
+			$info{$tree}{$build} = $state;
+			}
+		}
+	
+	return (\%info, \%tree_state);
+	}
 
 1;
-
