@@ -95,7 +95,7 @@ NS_IMETHODIMP nsIconProtocolHandler::NewURI(const nsACString &aSpec,
   
   nsCOMPtr<nsIURI> uri;
   NS_NEWXPCOM(uri, nsMozIconURI);
-  if (!uri) return NS_ERROR_FAILURE;
+  if (!uri) return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = uri->SetSpec(aSpec);
   if (NS_FAILED(rv)) return rv;
