@@ -179,6 +179,7 @@ main(int argc, char **argv)
     SECOidData *hashOID;
     PLOptState *optstate;
     PLOptStatus status;
+    SECStatus   rv;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -187,7 +188,12 @@ main(int argc, char **argv)
     outFile = NULL;
     hashName = NULL;
 
-    NSS_Init("/tmp");
+    rv = NSS_Init("/tmp");
+    if (rv != SECSuccess) {
+    	fprintf(stderr, "%s: NSS_Init failed in directory %s\n",
+	        progName, "/tmp");
+        return -1;
+    }
 
     /*
      * Parse command line arguments
