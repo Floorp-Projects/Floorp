@@ -28,6 +28,8 @@
  *  place in EditorOverride.css, instead of here.
 */
 
+@import url(chrome://communicator/skin/smileys.css);
+
 a[name] {
   min-height: 17px; margin-left: 2px; margin-top: 2px;
   padding-left: 20px; 
@@ -73,124 +75,6 @@ label
 {
   border: 1px dotted green;
 }
-
-/* smileys */
-span.moz-smiley-s1,
-span.moz-smiley-s2,
-span.moz-smiley-s3,
-span.moz-smiley-s4,
-span.moz-smiley-s5,
-span.moz-smiley-s6,
-span.moz-smiley-s7, 
-span.moz-smiley-s8, 
-span.moz-smiley-s9, 
-span.moz-smiley-s10, 
-span.moz-smiley-s11, 
-span.moz-smiley-s12, 
-span.moz-smiley-s13, 
-span.moz-smiley-s14, 
-span.moz-smiley-s15, 
-span.moz-smiley-s16 
-
-{
-  min-height: 17px; margin-left: 2px; margin-top: 2px;
-  padding-left: 20px; 
-  background-repeat: no-repeat; 
-  background-position: center center;
-  -moz-user-select: all;
-
-}
-
-span.moz-smiley-s1 > span,
-span.moz-smiley-s2 > span,
-span.moz-smiley-s3 > span,
-span.moz-smiley-s4 > span,
-span.moz-smiley-s5 > span,
-span.moz-smiley-s6 > span,
-span.moz-smiley-s7 > span,
-span.moz-smiley-s8 > span, 
-span.moz-smiley-s9 > span, 
-span.moz-smiley-s10 > span, 
-span.moz-smiley-s11 > span, 
-span.moz-smiley-s12 > span, 
-span.moz-smiley-s13 > span, 
-span.moz-smiley-s14 > span, 
-span.moz-smiley-s15 > span, 
-span.moz-smiley-s16 > span 
- 
-{
-    display: none;
-}
-
-
-
-span.moz-smiley-s1 {
-  background-image: url(chrome://editor/content/images/smile_n.gif);
-}
-
-
-span.moz-smiley-s2 {
-  background-image: url(chrome://editor/content/images/frown_n.gif);
-}
-
-
-span.moz-smiley-s3 {
-  background-image: url(chrome://editor/content/images/wink_n.gif);
-}
-
-
-span.moz-smiley-s4 { 
-  background-image: url(chrome://editor/content/images/tongue_n.gif);
-}
-
-span.moz-smiley-s5 {
-  background-image: url(chrome://editor/content/images/laughing_n.gif);
-}
-
-span.moz-smiley-s6 {
-  background-image: url(chrome://editor/content/images/embarrassed_n.gif);
-}
-
-span.moz-smiley-s7 {
-  background-image: url(chrome://editor/content/images/undecided_n.gif);
-}
-
-span.moz-smiley-s8 {
-  background-image: url(chrome://editor/content/images/surprise_n.gif);
-}
-
-span.moz-smiley-s9 {
-  background-image: url(chrome://editor/content/images/kiss_n.gif);
-}
-
-span.moz-smiley-s10 {
-  background-image: url(chrome://editor/content/images/yell_n.gif);
-}
-
-span.moz-smiley-s11 {
-  background-image: url(chrome://editor/content/images/cool_n.gif);
-}
-
-span.moz-smiley-s12 {
-  background-image: url(chrome://editor/content/images/money_n.gif);
-}
-
-span.moz-smiley-s13 {
-  background-image: url(chrome://editor/content/images/foot_n.gif);
-}
-
-span.moz-smiley-s14 {
-  background-image: url(chrome://editor/content/images/innocent_n.gif);
-}
-
-span.moz-smiley-s15 {
-  background-image: url(chrome://editor/content/images/cry_n.gif);
-}
-
-span.moz-smiley-s16 {
-  background-image: url(chrome://editor/content/images/sealed_n.gif);
-}
-
 
 img {
   -moz-force-broken-image-icon: 1;
