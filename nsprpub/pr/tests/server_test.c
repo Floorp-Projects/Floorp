@@ -94,7 +94,7 @@ PRCondVar *ServerStateCV;
 ***********************************************************************/
 
 
-static Test_Result (int result)
+static void Test_Result (int result)
 {
 	switch (result)
 	{
@@ -265,9 +265,9 @@ ServerSetup(void)
     }
 
     memset(&serverAddr, 0, sizeof(PRNetAddr));
-    serverAddr.inet.family = AF_INET;
+    serverAddr.inet.family = PR_AF_INET;
     serverAddr.inet.port = PR_htons(PORT);
-    serverAddr.inet.ip = PR_htonl(INADDR_ANY);
+    serverAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
 
     if ( PR_Bind(listenSocket, &serverAddr) == PR_FAILURE) {
         if (debug_mode) printf("\tServer error binding to server address: OS error %d\n",
@@ -361,9 +361,9 @@ ClientThreadFunc(void *unused)
         if (debug_mode) printf("\tClient could not malloc space!?\n");
 
     memset(&serverAddr, 0, sizeof(PRNetAddr));
-    serverAddr.inet.family = AF_INET;
+    serverAddr.inet.family = PR_AF_INET;
     serverAddr.inet.port = PR_htons(PORT);
-    serverAddr.inet.ip = PR_htonl(INADDR_LOOPBACK);
+    serverAddr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
 
     while(numRequests > 0) {
 
