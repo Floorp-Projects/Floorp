@@ -20,8 +20,13 @@
 #include "nsAbAutoCompleteSession.h"
 #include "nsString2.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsRDFCID.h"
+#include "nsIRDFService.h"
+#include "nsIAbDirectory.h"
+#include "nsIAbCard.h"
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResult)
 {
@@ -44,63 +49,102 @@ NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, nsCOMTypeInfo<nsIAutoCompleteSession>
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {
 	NS_INIT_REFCNT();
+
+    m_tableInitialized = PR_FALSE;
+}
+
+nsresult nsAbAutoCompleteSession::InitializeTable()
+{
+#ifdef DEBUG_seth
+  fprintf(stderr,"initializing autocomplete table\n");
+#endif
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr <nsIRDFResource> resource;
+  rv = rdfService->GetResource("abdirectory://Pab1", getter_AddRefs(resource));
+  if (NS_FAILED(rv)) return rv;
+  
+  // query interface 
+  nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIEnumerator> cards;
+  rv = directory->GetChildCards(getter_AddRefs(cards));
+  if (NS_FAILED(rv)) return rv;
+  
+  m_numEntries = 0;
+  rv = cards->First();
+  while (NS_SUCCEEDED(rv)) {
+    m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
+    m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
+    
+    nsCOMPtr<nsISupports> i;
+    rv = cards->CurrentItem(getter_AddRefs(i));
+    if (NS_FAILED(rv)) break;
+    
+    nsCOMPtr<nsIAbCard> card(do_QueryInterface(i, &rv));
+    if (NS_FAILED(rv)) break;
+    
+    rv=card->GetDisplayName(&m_searchNameCompletionEntryTable[m_numEntries].userName);
+    if (NS_FAILED(rv)) {
+      m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
+      break;
+    }
+    
+    rv=card->GetPrimaryEmail(&m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
+    if (NS_FAILED(rv)) {
+      m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
+      break;
+    }
+    
+    rv = cards->Next();
+    m_numEntries++;
+    m_tableInitialized = PR_TRUE;
+    
+    if (m_numEntries == MAX_ENTRIES) {
+      break;
+    }
+  }
+
+  return NS_OK;
 }
 
 nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
-{}
-
-
-typedef struct
 {
-	char * userName;
-	char * emailAddress;
-} nsAbStubEntry;
-
-nsAbStubEntry SearchNameCompletionEntryTable[] =
-{
-    {"Scott MacGregor",		"mscott@netscape.com"},
-    {"Seth Spitzer",		"sspitzer@netscape.com"},
-    {"Scott Putterman",		"scottip@netscape.com"},
-    {"mailnewsstaff",		"mailnewsstaff@netscape.com"},
-    {"David Bienvenu",		"bievenu@netscape.com"},
-    {"Jeff Tsai",		"jefft@netscape.com"},	
-    {"Alec Flett",		"alecf@netscape.com"},
-    {"Candice Huang",		"chuang@netscape.com"},
-    {"Jean-Francois Ducarroz",	"ducarroz@netscape.com"},
-    {"Esther Goes",		"esther@netscape.com"},
-    {"Rich Pizzaro",		"rhp@netscape.com"},
-    {"Par Pandit",		"ppandit@netscape.com"},
-    {"mailnewsqa",		"mailnewsqa@netscape.com"},	
-    {"Ninoschka Baca",		"nbaca@netscape.com"},
-    {"Lisa Chiang",		"lchiang@netscape.com"},
-    {"Fenella Gor ",		"fenella@netscape.com"},
-    {"Peter Mock",		"pmock@netscape.com"},	
-    {"Suresh Kasinathan",	"suresh@netscape.com"},
-    {"Paul Hangas",		"hangas@netscape.com"},
-    {"David Hyatt",		"hyatt@netscape.com"},
-    {"Chris Waterson",		"waterson@netscape.com"},
-    {"Phil Peterson",		"phil@netscape.com"},
-    {"Syd Logan",		"syd@netscape.com"},
-    {"Dave Rothschild",		"daver@netscape.com"}
-};
-
-const PRInt32 numStubEntries = 24;
-
+	PRInt32 i;
+	for (i=0;i<m_numEntries;i++) {
+      PR_FREEIF(m_searchNameCompletionEntryTable[m_numEntries].userName);     
+      m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
+      PR_FREEIF(m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
+      m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
+	}
+}
 
 NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener)
 {
 	// mscott - right now I'm not even going to bother to make this synchronous...
 	// I'll beef it up with some test data later but we want to see if this idea works for right now...
-
+    
 	nsresult rv = NS_OK;
+    if (!m_tableInitialized) {
+      rv = InitializeTable();
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    if (m_numEntries == 0) {
+      return NS_OK;
+    }
+
 	if (aResultListener)
 	{
 		PRUint32 searchStringLen = nsCRT::strlen(aSearchString);
 		PRBool matchFound = PR_FALSE;
-		for (PRInt32 index = 0; index < numStubEntries && !matchFound; index++)
+		for (PRInt32 index = 0; index < m_numEntries && !matchFound; index++)
 		{
-			if (nsCRT::strncasecmp(aSearchString, SearchNameCompletionEntryTable[index].userName, searchStringLen) == 0
-				|| nsCRT::strncasecmp(aSearchString, SearchNameCompletionEntryTable[index].emailAddress,searchStringLen) == 0)
+			if (nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[index].userName, searchStringLen) == 0
+				|| nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[index].emailAddress,searchStringLen) == 0)
 			{
 				matchFound = PR_TRUE; // so we kick out of the loop
 
@@ -113,8 +157,8 @@ NS_IMETHODIMP nsAbAutoCompleteSession::AutoComplete(const PRUnichar *aDocId, con
 
 				char * fullAddress = nsnull;
 				if (parser)
-					parser->MakeFullAddress(nsnull, SearchNameCompletionEntryTable[index].userName, 
-											SearchNameCompletionEntryTable[index].emailAddress, &fullAddress);
+					parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[index].userName, 
+											m_searchNameCompletionEntryTable[index].emailAddress, &fullAddress);
 				nsString2 searchResult(fullAddress);
 				// iterate over the table looking for a match
 				rv = aResultListener->OnAutoCompleteResult(aDocId, aSearchString, searchResult.GetUnicode());

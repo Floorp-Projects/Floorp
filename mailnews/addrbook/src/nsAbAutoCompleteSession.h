@@ -24,6 +24,15 @@
 #include "nsCOMPtr.h"
 #include "msgCore.h"
 
+
+typedef struct
+{
+	char * userName;
+	char * emailAddress;
+} nsAbStubEntry;
+
+#define MAX_ENTRIES 100
+
 class nsAbAutoCompleteSession : public nsIAutoCompleteSession
 {
 public:
@@ -34,7 +43,12 @@ public:
 	NS_IMETHOD AutoComplete(const PRUnichar *aDocId, const PRUnichar *aSearchString, nsIAutoCompleteListener *aResultListener); 
 
 protected:
-	nsCOMPtr<nsIAutoCompleteListener> m_resultListener;
+  nsresult InitializeTable();
+  
+  nsCOMPtr<nsIAutoCompleteListener> m_resultListener;
+  PRBool	m_tableInitialized;
+  nsAbStubEntry m_searchNameCompletionEntryTable[MAX_ENTRIES];
+  PRInt32   m_numEntries;
 };
 
 // factory method
