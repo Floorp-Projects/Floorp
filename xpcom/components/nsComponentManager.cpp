@@ -1928,6 +1928,28 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
 
     // deal only with files that have a valid extension
     PRBool validExtension = PR_FALSE;
+
+#ifdef	XP_MAC
+	// rjc - on Mac, check the file's type code (skip checking the creator code)
+	const nsFileSpec	*fs = nsnull;
+	if (NS_FAILED(rv = component->GetFileSpec(fs)))
+			return(rv);
+	if (!fs)	return(NS_ERROR_NULL_POINTER);
+
+	CInfoPBRec	catInfo;
+	OSErr 		err = fs->GetCatInfo(catInfo);
+	if (!err)
+	{
+		// on Mac, Mozilla shared libraries are of type 'shlb'
+		// Note: we don't check the creator (which for Mozilla is 'MOZZ')
+		// so that 3rd party shared libraries will be noticed!
+		if ((catInfo.hFileInfo.ioFlFndrInfo.fdType == 'shlb')
+			/* && (catInfo.hFileInfo.ioFlFndrInfo.fdCreator == 'MOZZ') */ )
+		{
+			validExtension = PR_TRUE;
+		}
+	}
+#else
     char *leafName = NULL;
     rv = component->GetLeafName(&leafName);
     if (NS_FAILED(rv)) return rv;
@@ -1946,6 +1968,7 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
         }
     }
     if (leafName) nsCRT::free(leafName);
+#endif
     	
     if (validExtension == PR_FALSE)
     {
