@@ -165,6 +165,7 @@ public:
   static BOOL DoAncestorsIncludeNode(BookmarkItem* bookmark, BookmarkItem* searchItem);
   static bool IsBookmarkDropValid(BookmarkItem* proposedParent, int index, NSArray* draggedIDs);
   static bool PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* draggedIDs);
+  static bool PerformProxyDrop(BookmarkItem* parentItem, BookmarkItem* beforeItem, NSDictionary* data);
   
   static void DropURL(NSString* title, NSURL* url, BookmarkItem* parent, int index);
   

@@ -71,7 +71,7 @@
     // The personal toolbar is 21 pixels tall.  The bottom two pixels
     // are a separator.
     [[NSColor colorWithCalibratedWhite: 0.90 alpha: 1.0] set];
-    NSRectFill(NSMakeRect(aRect.origin.x, [self bounds].size.height-2, aRect.size.width, [self bounds].size.height));
+    //NSRectFill(NSMakeRect(aRect.origin.x, [self bounds].size.height-2, aRect.size.width, [self bounds].size.height));
   }
 
   // The buttons will paint themselves. Just call our base class method.
@@ -103,7 +103,7 @@
   }
 
   if ([self isShown])
-  [self reflowButtons];
+    [self reflowButtons];
 }
 
 -(void)addButton: (nsIDOMElement*)aElt atIndex: (int)aIndex
@@ -320,63 +320,22 @@
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
 {
-  BookmarkItem* parent;
-  int index = 0;
-  NSArray *draggedItems = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-
-  // If we are dropping into a folder
-  if (mDragInsertionPosition == BookmarksService::CHInsertInto) {
-    nsCOMPtr<nsIDOMElement> parentElt = [mDragInsertionButton element];
-    nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parentElt));
-    parent = BookmarksService::GetWrapperFor(parentContent);
-    index = 0;
-  }
-
-  // If we are dropping onto the toolbar directly
-  else if (mDragInsertionPosition == BookmarksService::CHInsertBefore ||
-           mDragInsertionPosition == BookmarksService::CHInsertAfter) {
-    nsCOMPtr<nsIDOMElement> rootElt = BookmarksService::gToolbarRoot;
-    nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElt));
-    parent = BookmarksService::GetWrapperFor(rootContent);
-    index = [mButtons indexOfObject: mDragInsertionButton];
-    if (index == NSNotFound)
-      rootContent->ChildCount(index);
-    else if (mDragInsertionPosition == BookmarksService::CHInsertAfter)
-      index++;
-    } else {
-      mDragInsertionButton = nil;
-      mDragInsertionPosition = BookmarksService::CHInsertNone;
-      [self setNeedsDisplay:YES];
-      return NO;
-    }
-
-    bool valid = BookmarksService::IsBookmarkDropValid(parent, index, draggedItems);
-    if (!valid) {
-      mDragInsertionButton = nil;
-      mDragInsertionPosition = BookmarksService::CHInsertNone;
-      [self setNeedsDisplay:YES];
-    }
-
-  return valid;
+  return YES;
 }
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  BookmarkItem* parent;
+  BookmarkItem* parent = nsnull;
   int index = 0;
-  NSArray *draggedItems = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
 
-  // If we are dropping into a folder
-  if (mDragInsertionPosition == BookmarksService::CHInsertInto) {
+  if (mDragInsertionPosition == BookmarksService::CHInsertInto) {						// drop onto folder
     nsCOMPtr<nsIDOMElement> parentElt = [mDragInsertionButton element];
     nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parentElt));
     parent = BookmarksService::GetWrapperFor(parentContent);
     index = 0;
   }
-
-  // If we are dropping onto the toolbar directly
   else if (mDragInsertionPosition == BookmarksService::CHInsertBefore ||
-           mDragInsertionPosition == BookmarksService::CHInsertAfter) {
+             mDragInsertionPosition == BookmarksService::CHInsertAfter) {		// drop onto toolbar
     nsCOMPtr<nsIDOMElement> rootElt = BookmarksService::gToolbarRoot;
     nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElt));
     parent = BookmarksService::GetWrapperFor(rootContent);
@@ -392,7 +351,16 @@
       return NO;
     }
 
-  BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
+  NSArray *draggedItems = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
+  if ( draggedItems )
+    BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
+  else {
+    NSDictionary* proxy = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
+    nsCOMPtr<nsIContent> beforeContent;
+    [parent contentNode]->ChildAt(index, *getter_AddRefs(beforeContent));
+    BookmarkItem* beforeItem = mBookmarks->GetWrapperFor(beforeContent);		// can handle nil content
+    BookmarksService::PerformProxyDrop(parent, beforeItem, proxy);
+	}
 
   mDragInsertionButton = nil;
   mDragInsertionPosition = BookmarksService::CHInsertNone;

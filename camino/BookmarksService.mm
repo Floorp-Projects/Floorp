@@ -402,7 +402,10 @@
     
     nsCOMPtr<nsIContent> child;
     content->ChildAt(index, *getter_AddRefs(child));
-    return mBookmarks->GetWrapperFor(child);
+    if ( child )
+      return mBookmarks->GetWrapperFor(child);
+    
+    return nil;
 }
 
 - (BOOL)outlineView:(NSOutlineView *)outlineView isItemExpandable:(id)item
@@ -592,30 +595,11 @@
     NSArray *draggedItems = [[info draggingPasteboard] propertyListForType: @"MozBookmarkType"];
     BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
     return YES;
-  } else if ([types containsObject: @"MozURLType"]) {
-    NSDictionary* data = [[info draggingPasteboard] propertyListForType: @"MozURLType"];
-    nsCOMPtr<nsIDOMElement> parentElt;
-    parentElt = do_QueryInterface([parent contentNode]);
-
-    PRInt32 childCount = 0;
-    [item contentNode]->ChildCount(childCount);
-  
-    if (index >= childCount)
-      return NO;
-
-    BookmarkItem* beforeItem;
-    beforeItem = [[ov dataSource] outlineView:ov child:index ofItem:item];
-
-    if (!beforeItem)
-      return NO;
-
-    nsCOMPtr<nsIDOMElement> beforeElt;
-    beforeElt = do_QueryInterface([beforeItem contentNode]);
-
-    nsAutoString url; url.AssignWithConversion([[data objectForKey:@"url"] cString]);
-    nsAutoString title; title.AssignWithConversion([[data objectForKey:@"title"] cString]);
-    BookmarksService::AddBookmarkToFolder(url, title, parentElt, beforeElt);
-    return YES;
+  }
+  else if ([types containsObject: @"MozURLType"]) {
+    NSDictionary* proxy = [[info draggingPasteboard] propertyListForType: @"MozURLType"];    
+    BookmarkItem* beforeItem = [self outlineView:ov child:index ofItem:item];
+    return BookmarksService::PerformProxyDrop(parent, beforeItem, proxy);
   }
 
   return NO;
@@ -871,6 +855,9 @@ BookmarksService::GetRootItem() {
 BookmarkItem*
 BookmarksService::GetWrapperFor(nsIContent* aContent)
 {
+  if ( !aContent )
+    return nil;
+    
   if (!gDictionary)
     gDictionary = [[NSMutableDictionary alloc] initWithCapacity: 30];
 
@@ -1670,7 +1657,8 @@ BookmarksService::CreateIconForBookmark(nsIDOMElement* aElement)
 
 // Is searchItem equal to bookmark or bookmark's parent, grandparent, etc?
 BOOL
-BookmarksService::DoAncestorsIncludeNode(BookmarkItem* bookmark, BookmarkItem* searchItem) {
+BookmarksService::DoAncestorsIncludeNode(BookmarkItem* bookmark, BookmarkItem* searchItem)
+{
   nsCOMPtr<nsIContent> search = [searchItem contentNode];
   nsCOMPtr<nsIContent> current = [bookmark contentNode];
   nsCOMPtr<nsIContent> root;
@@ -1735,7 +1723,11 @@ BookmarksService::FilterOutDescendantsForDrag(NSArray* nodes)
 #endif
 
 bool
-BookmarksService::IsBookmarkDropValid(BookmarkItem* proposedParent, int index, NSArray* draggedIDs) {
+BookmarksService::IsBookmarkDropValid(BookmarkItem* proposedParent, int index, NSArray* draggedIDs)
+{
+  if ( !draggedIDs )
+    return NO;
+
   NSMutableArray *draggedItems = [NSMutableArray arrayWithCapacity: [draggedIDs count]];
   BOOL toolbarRootMoving = NO;
   
@@ -1775,7 +1767,27 @@ BookmarksService::IsBookmarkDropValid(BookmarkItem* proposedParent, int index, N
 
 
 bool
-BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* draggedIDs) {
+BookmarksService::PerformProxyDrop(BookmarkItem* parentItem, BookmarkItem* beforeItem, NSDictionary* data)
+{
+  if ( !data )
+    return NO;
+
+  nsCOMPtr<nsIDOMElement> parentElt;
+  parentElt = do_QueryInterface([parentItem contentNode]);
+
+  nsCOMPtr<nsIDOMElement> beforeElt;
+  beforeElt = do_QueryInterface([beforeItem contentNode]);
+
+  nsAutoString url; url.AssignWithConversion([[data objectForKey:@"url"] cString]);
+  nsAutoString title; title.AssignWithConversion([[data objectForKey:@"title"] cString]);
+  BookmarksService::AddBookmarkToFolder(url, title, parentElt, beforeElt);
+  return YES;  
+}
+
+
+bool
+BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* draggedIDs)
+{
   NSEnumerator *enumerator = [draggedIDs reverseObjectEnumerator];
   NSNumber *contentID;
   
