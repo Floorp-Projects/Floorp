@@ -89,7 +89,7 @@ sub show_graph {
 	# $yscale = "set yrange [ 0 : ]";
 
 	# btek hack
-	$yscale = "set yrange [ 1300 : 1400 ]";
+	$yscale = "set yrange [ 1200 : 1400 ]";
   }
 
   # interpolate params into gnuplot command
