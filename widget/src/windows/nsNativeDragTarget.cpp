@@ -41,6 +41,7 @@
 #include "nsNativeDragTarget.h"
 #include "nsDragService.h"
 #include "nsIServiceManager.h"
+#include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 
 #include "nsIWidget.h"
