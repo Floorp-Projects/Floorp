@@ -46,6 +46,11 @@
 
 #include "nsEmbedAPI.h"
 
+#define HACK_NON_REENTRANCY
+#ifdef HACK_NON_REENTRANCY
+static HANDLE s_hHackedNonReentrancy = NULL;
+#endif
+
 // Macros to return errors from bad calls to the automation
 // interfaces and sets a descriptive string on IErrorInfo so VB programmers
 // have a clue why the call failed.
@@ -725,19 +730,50 @@ HRESULT CMozillaBrowser::Initialize()
 	memset(szBinDirPath, 0, sizeof(szBinDirPath));
 	mSystemRegKey.QueryValue(szBinDirPath, c_szMozillaBinDirPathValue, &dwBinDirPath);
 
+#ifdef HACK_NON_REENTRANCY
+    // Attempt to open a named event for this process. If it's not there we
+    // know this is the first time the control has run in this process, so create
+    // the named event and do the initialisation. Otherwise do nothing.
+    TCHAR szHackEvent[255];
+    _stprintf(szHackEvent, _T("MozCtlEvent%d"), (int) GetCurrentProcessId());
+    s_hHackedNonReentrancy = OpenEvent(EVENT_ALL_ACCESS, FALSE, szHackEvent);
+    if (s_hHackedNonReentrancy == NULL)
+    {
+        s_hHackedNonReentrancy = CreateEvent(NULL, FALSE, FALSE, szHackEvent);
+#endif
+
 	// Create an object to represent the path
 	if (_tcslen(szBinDirPath) > 0)
 	{
 	    nsCOMPtr<nsILocalFile> binDir;
 	    
-		USES_CONVERSION;
-		NS_NewLocalFile(T2A(szBinDirPath), TRUE, getter_AddRefs(binDir));
-		nsresult res = NS_InitEmbedding(binDir, nsnull);
+		    USES_CONVERSION;
+		    NS_NewLocalFile(T2A(szBinDirPath), TRUE, getter_AddRefs(binDir));
+		    nsresult res = NS_InitEmbedding(binDir, nsnull);
 	}
     else
     {
         NS_InitEmbedding(nsnull, nsnull);
     }
+
+	// Load preferences service
+	nsresult rv = nsServiceManager::GetService(kPrefCID, 
+									NS_GET_IID(nsIPref), 
+									(nsISupports **)&mPrefs);
+	if (NS_FAILED(rv))
+	{
+		NG_ASSERT(0);
+		NG_TRACE_ALWAYS(_T("Could not create preference object rv=%08x\n"), (int) rv);
+        SetStartupErrorMessage(IDS_CANNOTCREATEPREFS);
+		return E_FAIL;
+	}
+
+    rv = mPrefs->StartUp();		//Initialize the preference service
+    rv = mPrefs->ReadUserPrefs();	//Reads from default_prefs.js
+	
+#ifdef HACK_NON_REENTRANCY
+    }
+#endif
 
 	return S_OK;
 }
@@ -746,7 +782,18 @@ HRESULT CMozillaBrowser::Initialize()
 // Terminates the web shell engine
 HRESULT CMozillaBrowser::Terminate()
 {
+#ifdef HACK_NON_REENTRANCY
+    if (0)
+    {
+#endif
+
+	NS_IF_RELEASE(mPrefs);
     NS_TermEmbedding();
+
+#ifdef HACK_NON_REENTRANCY
+    }
+#endif
+
 	return S_OK;
 }
 
@@ -854,21 +901,6 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
 	nsresult rv;
 
-	// Load preferences service
-	rv = nsServiceManager::GetService(kPrefCID, 
-									NS_GET_IID(nsIPref), 
-									(nsISupports **)&mPrefs);
-	if (NS_FAILED(rv))
-	{
-		NG_ASSERT(0);
-		NG_TRACE_ALWAYS(_T("Could not create preference object rv=%08x\n"), (int) rv);
-        SetStartupErrorMessage(IDS_CANNOTCREATEPREFS);
-		return E_FAIL;
-	}
-
-	rv = mPrefs->StartUp();		//Initialize the preference service
-	rv = mPrefs->ReadUserPrefs();	//Reads from default_prefs.js
-	
 	PRBool aAllowPlugins = PR_TRUE;
 
 	// Create web shell
@@ -881,24 +913,17 @@ HRESULT CMozillaBrowser::CreateBrowser()
 		return rv;
 	}
 
-    nsCOMPtr<nsIInterfaceRequestor> webBrowserAsReq(do_QueryInterface(mWebBrowser));
-
-    mWebBrowserAsWin = do_QueryInterface(mWebBrowser);
-	rv = mWebBrowserAsWin->InitWindow(nsNativeWidget(m_hWnd), nsnull,
-		0, 0, rcLocation.right - rcLocation.left, rcLocation.bottom - rcLocation.top);
-
- 	nsCOMPtr<nsIDocShellTreeItem> browserAsItem(do_QueryInterface(mWebBrowser));
-    browserAsItem->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
-
-	rv = mWebBrowserAsWin->Create();
 
     // Configure what the web browser can and cannot do
     nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
     webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
+    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_CONTAINS_CHROME, PR_TRUE);
 
-    // XXX delete when docshell becomes inaccessible
-
-	nsCOMPtr<nsIDocumentLoader> docLoader;
+    // Create the webbrowser window
+    mWebBrowserAsWin = do_QueryInterface(mWebBrowser);
+	rv = mWebBrowserAsWin->InitWindow(nsNativeWidget(m_hWnd), nsnull,
+		0, 0, rcLocation.right - rcLocation.left, rcLocation.bottom - rcLocation.top);
+	rv = mWebBrowserAsWin->Create();
 
 	// Create the container object
 	mWebBrowserContainer = new CWebBrowserContainer(this);
@@ -913,8 +938,11 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	// Set up the web shell
 	mWebBrowser->SetParentURIContentListener(mWebBrowserContainer);
 
+    // XXX delete when tree owner is not necessary (to receive context menu events)
+    nsCOMPtr<nsIDocShellTreeItem> browserAsItem = do_QueryInterface(mWebBrowser);
 	browserAsItem->SetTreeOwner(NS_STATIC_CAST(nsIDocShellTreeOwner *, mWebBrowserContainer));
 
+    // XXX delete when docshell becomes inaccessible
     nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
     if (rootDocShell == nsnull)
     {
@@ -958,11 +986,6 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 		mWebBrowserContainer = NULL;
 	}
 
-	if (mPrefs)
-	{
-		NS_RELEASE(mPrefs);
-	}
-	
 	mWebBrowser = nsnull;
 
 	return S_OK;
@@ -1068,7 +1091,8 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 	}
 
     // Get the DOM window from the webbrowser
-    nsCOMPtr<nsIDOMWindowInternal> window(do_GetInterface(mWebBrowser));
+    nsCOMPtr<nsIDOMWindow> window;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(window));
     if (window)
     {
         if (NS_SUCCEEDED(window->GetDocument(pDocument)) && *pDocument)
@@ -2505,22 +2529,6 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_FullScreen(VARIANT_BOOL bFullScre
 HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate2(VARIANT __RPC_FAR *URL, VARIANT __RPC_FAR *Flags, VARIANT __RPC_FAR *TargetFrameName, VARIANT __RPC_FAR *PostData, VARIANT __RPC_FAR *Headers)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::Navigate2);
-
-//Redundant code... taken care of in CMozillaBrowser::Navigate
-#if 0
-    if (!IsValid())
-	{
-		NG_ASSERT(0);
-		RETURN_E_UNEXPECTED();
-	}
-
-	if (URL == NULL)
-	{
-		NG_ASSERT(0);
-		RETURN_E_INVALIDARG();
-	}
-
-#endif
 
 	CComVariant vURLAsString;
 	if ( vURLAsString.ChangeType(VT_BSTR, URL) != S_OK )
