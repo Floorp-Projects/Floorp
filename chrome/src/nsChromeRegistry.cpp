@@ -44,6 +44,13 @@
 #include "nsIFileLocator.h"
 #include "nsIDOMWindow.h"
 #include "nsIWindowMediator.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIXULPrototypeCache.h"
+#include "nsIStyleSheet.h"
+#include "nsIHTMLCSSStyleSheet.h"
+#include "nsIHTMLStyleSheet.h"
+#include "nsIHTMLContentContainer.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
@@ -764,16 +771,20 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
   nsresult rv;
 
   // Flush the style sheet cache completely.
+  // XXX For now flush everything.  need a better call that only flushes style sheets.
+  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "components://netscape/rdf/xul-prototype-cache", &rv);
+  if (NS_SUCCEEDED(rv) && xulCache) {
+    xulCache->Flush();
+  }
 
-  // get the window mediator
+  // Get the window mediator
   NS_WITH_SERVICE(nsIWindowMediator, windowMediator, "components://netscape/rdf/datasource?name=window-mediator", &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
     if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
+      // Get each dom window
       PRBool more;
-
-      // get each dom window
       windowEnumerator->HasMoreElements(&more);
       while (more) {
         nsCOMPtr<nsISupports> protoWindow;
@@ -783,6 +794,7 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
           if (domWindow)
             RefreshWindow(domWindow);
         }
+        windowEnumerator->HasMoreElements(&more);
       }
     }
   }
@@ -792,16 +804,46 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 
 NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 {
+  nsresult rv;
+
+  // Get the XUL cache.
+  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "components://netscape/rdf/xul-prototype-cache", &rv);
+  
   // Get the DOM document.
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  aWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+    return NS_OK;
+
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+  if (!document)
+    return NS_OK;
+
+  nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
 
   // Iterate over the style sheets.
-  for ( ; ;) {
-    // Reload the style sheets synchronously right here. Cache them.
+  PRInt32 count = document->GetNumberOfStyleSheets();
+  for (PRInt32 i = 0; i < count; i++) {
+    // Get the style sheet
+    nsCOMPtr<nsIStyleSheet> styleSheet = getter_AddRefs(document->GetStyleSheetAt(i));
+    
+    // Make sure we aren't the special style sheets that never change.  We
+    // want to skip those.
+    nsCOMPtr<nsIHTMLStyleSheet> attrSheet;
+    container->GetAttributeStyleSheet(getter_AddRefs(attrSheet));
 
-    // Remove the old style sheet
+    nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
+    container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
 
-    // Add the newly loaded style sheet
+    nsCOMPtr<nsIStyleSheet> attr = do_QueryInterface(attrSheet);
+    nsCOMPtr<nsIStyleSheet> inl = do_QueryInterface(inlineSheet);
+    if ((attr.get() != styleSheet.get()) &&
+      (inl.get() != styleSheet.get())) {
+      // Reload the style sheet asynchronously.
+    }
   }
+  
+  // Remove all of our sheets.
   
   // Get our frames object
 
