@@ -31,6 +31,8 @@ typedef PRBool (*nsContentListMatchFunc)(nsIContent *aContent);
 class nsIDocument;
 
 class nsContentList : public nsIDOMNodeList, public nsIDOMHTMLCollection, public nsIScriptObjectOwner, public nsIDocumentObserver {
+protected:
+  nsContentList(nsIDocument *aDocument);
 public:
   nsContentList(nsIDocument *aDocument, const nsString& aMatchTag);
   nsContentList(nsIDocument *aDocument, nsContentListMatchFunc aFunc);

@@ -21,6 +21,7 @@
 #include "nsHTMLContent.h"
 #include "nsHTMLValue.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsIJSScriptObject.h"
 
 class nsIHTMLAttributes;
@@ -30,7 +31,7 @@ class nsIStyleContext;
 /** 
  * Base class for tagged html content objects, holds attributes.
  */
-class nsHTMLTagContent : public nsHTMLContent, public nsIDOMElement, public nsIJSScriptObject {
+class nsHTMLTagContent : public nsHTMLContent, public nsIDOMHTMLElement, public nsIJSScriptObject {
 public:
 
   // nsIContent
@@ -77,6 +78,9 @@ public:
    */
   virtual nsContentAttr GetAttribute(const nsString& aName,
                                      nsString& aResult) const;
+
+  virtual nsContentAttr GetAttribute(nsIAtom *aAttribute,
+                                     nsString &aResult) const;
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
 
@@ -126,34 +130,13 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);
 
   // nsIDOMNode interface
-  NS_IMETHOD    GetNodeName(nsString& aNodeName);
-  NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
-  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);
-  NS_IMETHOD    GetNodeType(PRInt32* aNodeType);
-  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
-  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn);
-  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
-  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);
-  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes);
-  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild);
-  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);
-  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
-  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);
-  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
-  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  NS_DECL_IDOMNODE
   
   // nsIDOMElement interface
-  NS_IMETHOD    GetTagName(nsString& aTagName);
-  NS_IMETHOD    GetDOMAttribute(const nsString& aName, nsString& aReturn);
-  NS_IMETHOD    SetDOMAttribute(const nsString& aName, const nsString& aValue);
-  NS_IMETHOD    RemoveAttribute(const nsString& aName);
-  NS_IMETHOD    GetAttributeNode(const nsString& aName, nsIDOMAttribute** aReturn);
-  NS_IMETHOD    SetAttributeNode(nsIDOMAttribute* aNewAttr);
-  NS_IMETHOD    RemoveAttributeNode(nsIDOMAttribute* aOldAttr);
-  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
-  NS_IMETHOD    Normalize();
+  NS_DECL_IDOMELEMENT
+
+  // nsIDOMHTMLElement interface
+  NS_DECL_IDOMHTMLELEMENT
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 

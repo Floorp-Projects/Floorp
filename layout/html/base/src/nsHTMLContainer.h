@@ -21,6 +21,7 @@
 #include "nsHTMLTagContent.h"
 #include "nsVoidArray.h"
 
+class nsDOMNodeList;
 // Generic HTML container class. This code manages an array of
 // children nodes that can be any kind of nsIContent
 class nsHTMLContainer : public nsHTMLTagContent {
@@ -79,6 +80,7 @@ protected:
                                    nsIPresContext* aPresContext);
 
   nsVoidArray mChildren;
+  nsDOMNodeList *mChildNodes;
 };
 
 #endif /* nsHTMLContainer_h___ */

@@ -19,6 +19,7 @@
 #define nsIFormManager_h___
 
 #include "nsISupports.h"
+#include "nsIContent.h"
 class nsIFormControl;
 class nsIPresContext;
 class nsIFrame;
@@ -119,9 +120,19 @@ public:
     * Get the named attribute of this manager
     * @param aName the name of the attribute
     * @param aResult the value of the attribute 
-    * @return PR_TRUE if there is an attribute with name aName
-    */
-  virtual PRBool GetAttribute(const nsString& aName,
+    * @return  <UL>
+    *
+    * <LI>If the attribute is not set and has no default value, return
+    * eContentAttr_NotThere.
+    *
+    * <LI>If the attribute exists, but has no value, return
+    * eContentAttr_NoValue.
+    *
+    * <LI>If the attribute has a value, empty or otherwise, set ret to
+    * be the value, and return eContentAttr_HasValue.
+    *
+    * </UL> */
+  virtual nsContentAttr GetAttribute(const nsString& aName,
                               nsString& aResult) const = 0;
   /**
     * Set the named attribute of this manager

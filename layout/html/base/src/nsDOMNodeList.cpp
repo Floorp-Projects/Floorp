@@ -21,20 +21,17 @@
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
-nsDOMNodeList::nsDOMNodeList(nsIContent &aContent) : mContent(aContent)
+nsDOMNodeList::nsDOMNodeList(nsIContent *aContent) : mContent(aContent)
 {
-  mRefCnt = 1;
-
-  // keep the content alive so the array of children
-  // does not go away without "this" to know
-  mContent.AddRef();
-
+  // Note that we don't add a reference to the content (to avoid
+  // circular references). The content will tell us if it's going
+  // away.
+  mRefCnt = 0;
   mScriptObject = nsnull;
 }
 
 nsDOMNodeList::~nsDOMNodeList()
 {
-  mContent.Release();
 }
 
 nsresult nsDOMNodeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -88,7 +85,12 @@ nsresult nsDOMNodeList::ResetScriptObject()
 NS_IMETHODIMP    
 nsDOMNodeList::GetLength(PRUint32* aLength)
 {
-  *aLength = mContent.ChildCount();
+  if (nsnull != mContent) {
+    *aLength = mContent->ChildCount();
+  }
+  else {
+    *aLength = 0;
+  }
   return NS_OK;
 }
 
@@ -97,10 +99,15 @@ nsDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsIContent *content = nsnull;
   nsresult res = NS_OK;
-  content = mContent.ChildAt(aIndex);
-  if (nsnull != content) {
-    res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
-    NS_RELEASE(content);
+  if (nsnull != mContent) {
+    content = mContent->ChildAt(aIndex);
+    if (nsnull != content) {
+      res = content->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+      NS_RELEASE(content);
+    }
+    else {
+      *aReturn = nsnull;
+    }
   }
   else {
     *aReturn = nsnull;
@@ -109,5 +116,12 @@ nsDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return res;
 }
 
+void
+nsDOMNodeList::ReleaseContent()
+{
+  if (nsnull != mContent) {
+    mContent = nsnull;
+  }
+}
 
 

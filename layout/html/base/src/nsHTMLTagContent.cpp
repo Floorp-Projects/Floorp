@@ -45,6 +45,7 @@
 
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -153,7 +154,12 @@ nsresult nsHTMLTagContent::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   nsresult res = nsHTMLContent::QueryInterface(aIID, aInstancePtr); 
   if (NS_NOINTERFACE == res) {
     if (aIID.Equals(kIDOMElementIID)) {
-      *aInstancePtr = (void*)(nsIDOMElement*)this;
+      *aInstancePtr = (void*)(nsIDOMElement*)(nsIDOMHTMLElement*)this;
+      AddRef();
+      return NS_OK;
+    }
+    if (aIID.Equals(kIDOMHTMLElementIID)) {
+      *aInstancePtr = (void*)(nsIDOMHTMLElement*)this;
       AddRef();
       return NS_OK;
     }
@@ -297,21 +303,17 @@ void nsHTMLTagContent::SetAttribute(const nsString& aName,
   NS_RELEASE(attr);
 }
 
-nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
-                                             nsString& aResult) const
+nsContentAttr nsHTMLTagContent::GetAttribute(nsIAtom *aAttribute,
+                                             nsString &aResult) const
 {
-  nsAutoString upper;
-  aName.ToUpperCase(upper);
-  nsIAtom* attr = NS_NewAtom(upper);
-
   nsHTMLValue value;
-  nsContentAttr result = GetAttribute(attr, value);
+  nsContentAttr result = GetAttribute(aAttribute, value);
 
   char cbuf[20];
   nscolor color;
   if (eContentAttr_HasValue == result) {
     // Try subclass conversion routine first
-    if (eContentAttr_HasValue == AttributeToString(attr, value, aResult)) {
+    if (eContentAttr_HasValue == AttributeToString(aAttribute, value, aResult)) {
       return result;
     }
 
@@ -357,6 +359,19 @@ nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
       break;
     }
   }
+  
+  return result;
+}
+
+nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
+                                             nsString& aResult) const
+{
+  nsAutoString upper;
+  aName.ToUpperCase(upper);
+  nsIAtom* attr = NS_NewAtom(upper);
+  nsContentAttr result;
+
+  result = GetAttribute(attr, aResult);
 
   NS_RELEASE(attr);
   return result;
@@ -937,6 +952,90 @@ nsHTMLTagContent::Normalize()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+//
+// Implementation of nsIDOMHTMLElement interface
+//
+NS_IMETHODIMP    
+nsHTMLTagContent::GetId(nsString& aId)
+{
+  GetAttribute(nsHTMLAtoms::id, aId);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::SetId(const nsString& aId)
+{
+  SetAttribute(nsHTMLAtoms::id, aId);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetTitle(nsString& aTitle)
+{
+  GetAttribute(nsHTMLAtoms::title, aTitle);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::SetTitle(const nsString& aTitle)
+{
+  SetAttribute(nsHTMLAtoms::title, aTitle);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetLang(nsString& aLang)
+{
+  GetAttribute(nsHTMLAtoms::lang, aLang);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::SetLang(const nsString& aLang)
+{
+  SetAttribute(nsHTMLAtoms::lang, aLang);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetDir(nsString& aDir)
+{
+  GetAttribute(nsHTMLAtoms::dir, aDir);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::SetDir(const nsString& aDir)
+{
+  SetAttribute(nsHTMLAtoms::dir, aDir);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetClassName(nsString& aClassName)
+{
+  GetAttribute(nsHTMLAtoms::kClass, aClassName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::SetClassName(const nsString& aClassName)
+{
+  SetAttribute(nsHTMLAtoms::kClass, aClassName);
+
+  return NS_OK;
+}
+
 
 void nsHTMLTagContent::TriggerLink(nsIPresContext& aPresContext,
                                        const nsString& aBase,

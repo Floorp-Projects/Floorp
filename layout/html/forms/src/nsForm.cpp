@@ -40,12 +40,22 @@
 #include "nsIRadioButton.h"
 #include "nsInputFile.h"
 #include "nsDocument.h"
+#include "nsHTMLContainer.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsIScriptObjectOwner.h"
 
 #include "net.h"
 #include "xp_file.h"
 #include "prio.h"
 #include "prmem.h"
 #include "prenv.h"
+
+// XXX Microsoft has a macro called GetClassName that conflicts
+// with the DOM HTMLElement::GetClassName method
+#ifdef GetClassName
+#undef GetClassName
+#endif
 
 #define CRLF "\015\012"   
 
@@ -94,7 +104,8 @@ nsString* URLEncode(nsString& aString)
 
 static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
 
-class nsForm : public nsIFormManager
+class nsFormElementList;
+class nsForm : public nsHTMLContainer, public nsIFormManager, public nsIDOMHTMLFormElement
 {
 public:
   // Construct a new Form Element with no attributes. This needs to be
@@ -137,7 +148,7 @@ public:
 
   virtual void SetAttribute(const nsString& aName, const nsString& aValue);
 
-  virtual PRBool GetAttribute(const nsString& aName,
+  virtual nsContentAttr GetAttribute(const nsString& aName,
                               nsString& aResult) const;
 
   virtual nsresult GetRefCount() const;
@@ -146,6 +157,14 @@ public:
 
   virtual nsFormRenderingMode GetMode() const { return mRenderingMode; }
   virtual void SetMode(nsFormRenderingMode aMode) { mRenderingMode = aMode; }
+
+  NS_FORWARD_IDOMNODE(nsHTMLContainer)
+  NS_FORWARD_IDOMELEMENT(nsHTMLContainer)
+  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLContainer)
+
+  NS_DECL_IDOMHTMLFORMELEMENT
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
   static nsString* gGET;
   static nsString* gPOST;
@@ -173,7 +192,31 @@ protected:
   PRInt32 mMethod;
   PRBool  mInited;
   nsFormRenderingMode mRenderingMode;
+  nsFormElementList *mElements;
 };
+
+class nsFormElementList :  public nsIDOMHTMLCollection, public nsIScriptObjectOwner {
+public:
+  nsFormElementList(nsForm *aForm);
+  virtual ~nsFormElementList();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
+
+  // nsIDOMHTMLCollection interface
+  NS_DECL_IDOMHTMLCOLLECTION
+  
+  // Called to tell us that the form is going away and that we
+  // should drop our (non ref-counted) reference to it
+  void ReleaseForm();
+
+private:
+  nsForm *mForm;
+  void *mScriptObject;
+};
+
 
 #define METHOD_UNSET    0
 #define METHOD_GET      1
@@ -186,12 +229,13 @@ nsString* nsForm::gPOST      = new nsString("post");
 nsString* nsForm::gMULTIPART = new nsString("multipart/form-data");
 
 // Note: operator new zeros our memory
-nsForm::nsForm(nsIAtom* aTag)
+nsForm::nsForm(nsIAtom* aTag) : nsHTMLContainer(aTag)
 {
   NS_INIT_REFCNT();
   mTag = aTag;
   NS_IF_ADDREF(aTag);
   mInited = PR_FALSE;
+  mElements = nsnull;
 }
 
 nsForm::~nsForm()
@@ -209,9 +253,26 @@ nsForm::~nsForm()
   if (nsnull != mTarget) delete mTarget;
 
   RemoveRadioGroups();
+
+  if (nsnull != mElements) {
+    mElements->ReleaseForm();
+    NS_RELEASE(mElements);
+  }
 }
 
-NS_IMPL_QUERY_INTERFACE(nsForm,kIFormManagerIID);
+nsresult nsForm::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  nsresult res = nsHTMLContainer::QueryInterface(aIID, aInstancePtr); 
+  if (NS_NOINTERFACE == res) {
+    if (aIID.Equals(kIFormManagerIID)) {
+      *aInstancePtr = (void*)(nsIFormManager*)this;
+      AddRef();
+      return NS_OK;
+    }
+  }
+
+  return res;
+}
 NS_IMPL_ADDREF(nsForm);
 
 nsrefcnt nsForm::GetRefCount() const
@@ -778,29 +839,29 @@ void nsForm::SetAttribute(const nsString& aName, const nsString& aValue)
   NS_RELEASE(atom);
 }
 
-PRBool nsForm::GetAttribute(const nsString& aName,
+nsContentAttr nsForm::GetAttribute(const nsString& aName,
                             nsString& aResult) const
 {
   nsAutoString tmp(aName);
   tmp.ToUpperCase();
   nsIAtom* atom = NS_NewAtom(tmp);
-  PRBool rv = PR_FALSE;
+  nsContentAttr rv = eContentAttr_NoValue;
   if (atom == nsHTMLAtoms::action) {
     if (nsnull != mAction) {
       aResult = *mAction;
-      rv = PR_TRUE;
+      rv = eContentAttr_HasValue;
     }
   }
   else if (atom == nsHTMLAtoms::encoding) {
     if (nsnull != mEncoding) {
       aResult = *mEncoding;
-      rv = PR_TRUE;
+      rv = eContentAttr_HasValue;
     }
   }
   else if (atom == nsHTMLAtoms::target) {
     if (nsnull != mTarget) {
       aResult = *mTarget;
-      rv = PR_TRUE;
+      rv = eContentAttr_HasValue;
     }
   }
   else if (atom == nsHTMLAtoms::method) {
@@ -811,17 +872,20 @@ PRBool nsForm::GetAttribute(const nsString& aName,
       else {
         aResult = "get";
       }
-      rv = PR_TRUE;
+      rv = eContentAttr_HasValue;
     }
   }
   else {
     // Use default storage for unknown attributes
     if (nsnull != mAttributes) {
       nsHTMLValue value;
-      if (eContentAttr_HasValue == mAttributes->GetAttribute(atom, value)) {
+      rv = mAttributes->GetAttribute(atom, value);
+      if (eContentAttr_HasValue == rv) {
         if (value.GetUnit() == eHTMLUnit_String) {
           value.GetStringValue(aResult);
-          rv = PR_TRUE;
+        }
+        else {
+          rv = eContentAttr_NoValue;
         }
       }
     }
@@ -910,6 +974,120 @@ nsForm::OnRadioChecked(nsIFormControl& aControl)
       group->SetCheckedRadio(&aControl);
     }
   }
+}
+
+NS_IMETHODIMP    
+nsForm::GetElements(nsIDOMHTMLCollection** aElements)
+{
+  NS_PRECONDITION(nsnull != aElements, "null pointer");
+  if (nsnull == mElements) {
+    mElements = new nsFormElementList(this);
+    NS_ADDREF(mElements);
+  }
+  *aElements = mElements;
+  NS_ADDREF(mElements);
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsForm::GetName(nsString& aName)
+{
+  // XXX The explicit class was required to get MSVC to be happy.
+  // It doesn't make sense.
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::name, aName);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::GetAcceptCharset(nsString& aAcceptCharset)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::acceptcharset, aAcceptCharset);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::SetAcceptCharset(const nsString& aAcceptCharset)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::acceptcharset, aAcceptCharset);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::GetAction(nsString& aAction)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::action, aAction);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::SetAction(const nsString& aAction)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::action, aAction);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::GetEnctype(nsString& aEnctype)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::enctype, aEnctype);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::SetEnctype(const nsString& aEnctype)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::enctype, aEnctype);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::GetMethod(nsString& aMethod)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::method, aMethod);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::SetMethod(const nsString& aMethod)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::method, aMethod);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::GetTarget(nsString& aTarget)
+{
+  ((nsHTMLContainer *)this)->GetAttribute(nsHTMLAtoms::target, aTarget);
+
+  return NS_OK;  
+}
+
+NS_IMETHODIMP    
+nsForm::SetTarget(const nsString& aTarget)
+{
+  ((nsHTMLContainer *)this)->SetAttribute(nsHTMLAtoms::target, aTarget);
+
+  return NS_OK;  
+}
+
+nsresult 
+nsForm::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptHTMLFormElement(aContext, this, nsnull, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+  return res;
 }
 
 nsresult
@@ -1092,4 +1270,141 @@ char* nsForm::Temp_GenerateTempFileName(PRInt32 aMaxSize, char* file_buf)
   
 }
 
+//
+// Implementation of nsFormElementList
+//
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 
+nsFormElementList::nsFormElementList(nsForm *aForm) : mForm(aForm)
+{
+  // Note that we don't add a reference to the form (to avoid
+  // circular references). The form will tell us if it's going
+  // away.
+  mRefCnt = 0;
+  mScriptObject = nsnull;
+}
+
+nsFormElementList::~nsFormElementList()
+{
+}
+
+nsresult nsFormElementList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+  static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
+  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+  if (aIID.Equals(kIDOMHTMLCollectionIID)) {
+    *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIDOMHTMLCollection*)this;
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+NS_IMPL_ADDREF(nsFormElementList)
+NS_IMPL_RELEASE(nsFormElementList)
+
+
+nsresult nsFormElementList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptHTMLCollection(aContext, this, nsnull, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+  return res;
+}
+
+nsresult nsFormElementList::ResetScriptObject()
+{
+  mScriptObject = nsnull;
+  return NS_OK;
+}
+
+// nsIDOMHTMLCollection interface
+NS_IMETHODIMP    
+nsFormElementList::GetLength(PRUint32* aLength)
+{
+  if (nsnull != mForm) {
+    *aLength = mForm->GetFormControlCount();
+  }
+  else {
+    *aLength = 0;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormElementList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  nsIFormControl *control = nsnull;
+  nsresult res = NS_OK;
+  if (nsnull != mForm) {
+    control = mForm->GetFormControlAt(aIndex);
+    if (nsnull != control) {
+      res = control->QueryInterface(kIDOMNodeIID, (void**)aReturn);
+      NS_RELEASE(control);
+    }
+    else {
+      *aReturn = nsnull;
+    }
+  }
+  else {
+    *aReturn = nsnull;
+  }
+
+  return res;
+}
+
+NS_IMETHODIMP 
+nsFormElementList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+{
+  PRInt32 i, count = mForm->GetFormControlCount();
+  nsresult result = NS_OK;
+
+  *aReturn = nsnull;
+  for (i = 0; i < count, *aReturn == nsnull; i++) {
+    nsIFormControl *control = (nsIFormControl *)mForm->GetFormControlAt(i);
+    if (nsnull != control) {
+      nsIContent *content;
+      
+      result = control->QueryInterface(kIContentIID, (void **)&content);
+      if (NS_OK == result) {
+        nsAutoString name;
+        // XXX Should it be an EqualsIgnoreCase?
+        if (((content->GetAttribute("NAME", name) == eContentAttr_HasValue) &&
+             (aName.Equals(name))) ||
+            ((content->GetAttribute("ID", name) == eContentAttr_HasValue) &&
+             (aName.Equals(name)))) {
+          result = control->QueryInterface(kIDOMNodeIID, (void **)aReturn);
+        }
+        NS_RELEASE(content);
+      }
+      NS_RELEASE(control);
+    }
+  }
+  
+  return result;
+}
+
+void
+nsFormElementList::ReleaseForm()
+{
+  if (nsnull != mForm) {
+    mForm = nsnull;
+  }
+}

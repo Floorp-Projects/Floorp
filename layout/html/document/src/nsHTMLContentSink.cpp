@@ -563,6 +563,9 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
       GetAttributeValueAt(aNode, i, v);
       mCurrentForm->SetAttribute(k, v);
     }
+    // XXX Temporary code till forms become real content
+    // Add the form to the document
+    ((nsHTMLDocument*)mDocument)->AddForm(mCurrentForm);
   }
 
   return NS_OK;

@@ -297,6 +297,13 @@ void nsHTMLContent::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
 }
 
+nsContentAttr nsHTMLContent::GetAttribute(nsIAtom *aAttribute,
+                                          nsString &aResult) const
+{
+  aResult.SetLength(0);
+  return eContentAttr_NotThere;
+}
+
 void nsHTMLContent::SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue)
 {
 }

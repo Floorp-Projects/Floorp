@@ -44,6 +44,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIFontMetrics.h"
 #include "nsCSSRendering.h"
+#include "nsIDOMHTMLImageElement.h"
 
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 
@@ -56,9 +57,11 @@
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 #define nsHTMLImageSuper nsHTMLTagContent
-class nsHTMLImage : public nsHTMLImageSuper {
+class nsHTMLImage : public nsHTMLImageSuper, public nsIDOMHTMLImageElement {
 public:
   nsHTMLImage(nsIAtom* aTag);
+
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   virtual nsresult CreateFrame(nsIPresContext* aPresContext,
@@ -69,6 +72,14 @@ public:
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
   virtual void MapAttributesInto(nsIStyleContext* aContext, 
                                  nsIPresContext* aPresContext);
+
+  NS_FORWARD_IDOMNODE(nsHTMLImageSuper)
+  NS_FORWARD_IDOMELEMENT(nsHTMLImageSuper)
+  NS_FORWARD_IDOMHTMLELEMENT(nsHTMLImageSuper)
+
+  NS_DECL_IDOMHTMLIMAGEELEMENT
+
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
 protected:
   virtual ~nsHTMLImage();
@@ -910,6 +921,33 @@ nsHTMLImage::~nsHTMLImage()
 {
 }
 
+static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
+
+nsresult nsHTMLImage::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  nsresult res = nsHTMLTagContent::QueryInterface(aIID, aInstancePtr); 
+  if (NS_NOINTERFACE == res) {
+    if (aIID.Equals(kIDOMHTMLImageElementIID)) {
+      *aInstancePtr = (void*)(nsIDOMHTMLImageElement*)this;
+      AddRef();
+      return NS_OK;
+    }
+  }
+  
+  return res;
+}
+
+nsrefcnt nsHTMLImage::AddRef(void)
+{
+  return nsHTMLTagContent::AddRef(); 
+}
+
+nsrefcnt nsHTMLImage::Release(void)
+{
+  return nsHTMLTagContent::Release(); 
+}
+
+
 NS_IMETHODIMP
 nsHTMLImage::SizeOf(nsISizeOfHandler* aHandler) const
 {
@@ -1071,6 +1109,232 @@ nsHTMLImage::CreateFrame(nsIPresContext* aPresContext,
   aResult = frame;
   frame->SetStyleContext(aPresContext, aStyleContext);
   return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetLowSrc(nsString& aLowSrc)
+{
+  GetAttribute(nsHTMLAtoms::lowsrc, aLowSrc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetLowSrc(const nsString& aLowSrc)
+{
+  SetAttribute(nsHTMLAtoms::lowsrc, aLowSrc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetName(nsString& aName)
+{
+  GetAttribute(nsHTMLAtoms::name, aName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetName(const nsString& aName)
+{
+  SetAttribute(nsHTMLAtoms::name, aName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetAlign(nsString& aAlign)
+{
+  GetAttribute(nsHTMLAtoms::align, aAlign);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetAlign(const nsString& aAlign)
+{
+  SetAttribute(nsHTMLAtoms::align, aAlign);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetAlt(nsString& aAlt)
+{
+  GetAttribute(nsHTMLAtoms::alt, aAlt);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetAlt(const nsString& aAlt)
+{
+  SetAttribute(nsHTMLAtoms::alt, aAlt);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetBorder(nsString& aBorder)
+{
+  GetAttribute(nsHTMLAtoms::border, aBorder);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetBorder(const nsString& aBorder)
+{
+  SetAttribute(nsHTMLAtoms::border, aBorder);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetHeight(nsString& aHeight)
+{
+  GetAttribute(nsHTMLAtoms::height, aHeight);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetHeight(const nsString& aHeight)
+{
+  SetAttribute(nsHTMLAtoms::height, aHeight);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetHspace(nsString& aHspace)
+{
+  GetAttribute(nsHTMLAtoms::hspace, aHspace);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetHspace(const nsString& aHspace)
+{
+  SetAttribute(nsHTMLAtoms::hspace, aHspace);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetIsMap(PRBool* aIsMap)
+{
+  nsAutoString result;
+
+  *aIsMap = (PRBool)(eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::ismap, result)); 
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetIsMap(PRBool aIsMap)
+{
+  if (PR_TRUE == aIsMap) {
+    SetAttribute(nsHTMLAtoms::ismap, "");
+  }
+  else {
+    UnsetAttribute(nsHTMLAtoms::ismap);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetLongDesc(nsString& aLongDesc)
+{
+  GetAttribute(nsHTMLAtoms::longdesc, aLongDesc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetLongDesc(const nsString& aLongDesc)
+{
+  SetAttribute(nsHTMLAtoms::longdesc, aLongDesc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetSrc(nsString& aSrc)
+{
+  GetAttribute(nsHTMLAtoms::src, aSrc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetSrc(const nsString& aSrc)
+{
+  SetAttribute(nsHTMLAtoms::src, aSrc);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetUseMap(nsString& aUseMap)
+{
+  GetAttribute(nsHTMLAtoms::usemap, aUseMap);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetUseMap(const nsString& aUseMap)
+{
+  SetAttribute(nsHTMLAtoms::usemap, aUseMap);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetVspace(nsString& aVspace)
+{
+  GetAttribute(nsHTMLAtoms::vspace, aVspace);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetVspace(const nsString& aVspace)
+{
+  SetAttribute(nsHTMLAtoms::vspace, aVspace);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::GetWidth(nsString& aWidth)
+{
+  GetAttribute(nsHTMLAtoms::width, aWidth);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLImage::SetWidth(const nsString& aWidth)
+{
+  SetAttribute(nsHTMLAtoms::width, aWidth);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLImage::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptHTMLImageElement(aContext, this, mParent, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+  return res;  
 }
 
 nsresult
