@@ -151,16 +151,10 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
   long dpi;
   GFX (::DevQueryCaps(mPrintDC, CAPS_VERTICAL_FONT_RES, 1, &dpi), FALSE);
 
-  int pt2t = 72;
+  mPixelsToTwips = NSToIntRound((float)NSIntPointsToTwips(72) / ((float)dpi));
+  mTwipsToPixels = 1.0 / mPixelsToTwips;
 
-  // make p2t a nice round number - this prevents rounding problems
-//  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(dpi)));
-//  mTwipsToPixels = 1.0f / mPixelsToTwips;
-  mTwipsToPixels = ((float)dpi) / (float)NSIntPointsToTwips(72);
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
-
-  GetTwipsToDevUnits( newscale);
-
+  GetTwipsToDevUnits(newscale);
 // On OS/2, origscale can be different based on the video resolution.
 // On 640x480, it's 1/15, on everything else it is 1/12.
 // For consistent printing, 1/15 is the correct value to use.
@@ -170,8 +164,8 @@ nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
 
   mCPixelScale = newscale / origscale;
 
-  aOrigContext->GetTwipsToDevUnits( t2d);
-  aOrigContext->GetAppUnitsToDevUnits( a2d);
+  aOrigContext->GetTwipsToDevUnits(t2d);
+  aOrigContext->GetAppUnitsToDevUnits(a2d);
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
@@ -605,10 +599,8 @@ nsDeviceContextOS2::SetDPI(PRInt32 aPrefDPI)
   int pt2t = 72;
 
   // make p2t a nice round number - this prevents rounding problems
-//  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(mDpi)));
-//  mTwipsToPixels = 1.0f / mPixelsToTwips;
-  mTwipsToPixels = ((float)mDpi) / (float)NSIntPointsToTwips(72);
-  mPixelsToTwips = 1.0f / mTwipsToPixels;
+  mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(mDpi)));
+  mTwipsToPixels = 1.0f / mPixelsToTwips;
 
   // XXX need to reflow all documents
   return NS_OK;
