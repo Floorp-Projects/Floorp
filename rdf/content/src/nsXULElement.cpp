@@ -2324,7 +2324,7 @@ nsXULElement::SetParent(nsIContent* aParent)
       // Get the binding parent.
       nsCOMPtr<nsIContent> bindingParent;
       mParent->GetBindingParent(getter_AddRefs(bindingParent));
-      if (bindingParent && (bindingParent != mBindingParent))
+      if (bindingParent && (bindingParent.get() != mBindingParent))
         UpdateBindingParent((nsIStyledContent*)this, bindingParent);
     }
 
