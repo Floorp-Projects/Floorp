@@ -25,6 +25,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base components browser
+DIRS = base components browser lite
 
 include $(topsrcdir)/config/rules.mk
