@@ -478,10 +478,10 @@ PK11_GetPBEIV(SECAlgorithmID *algid, SECItem *pwitem);
  * New fucntions which are already depricated....
  **********************************************************************/
 SECItem *
-PK11GetLowLevelKeyIDForCert(PK11SlotInfo *slot,
+PK11_GetLowLevelKeyIDForCert(PK11SlotInfo *slot,
 					CERTCertificate *cert, void *pwarg);
 SECItem *
-PK11GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *key);
+PK11_GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *key);
 
 SEC_END_PROTOS
 
