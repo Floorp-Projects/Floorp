@@ -19,11 +19,13 @@
    - Contributor(s):
    -   Stephen Lamm <slamm@netscape.com>
    -   Blake Ross <blakeross@telocity.com>
+   -   Mike Kowalski <mikejk@ameritech.net>
   --> 
 
 <!-- extracted from ./bookmarks.xul -->
 <!ENTITY menuBar.tooltip               "Menu Bar">
 <!ENTITY bookmarkToolbar.tooltip       "Bookmark Toolbar">
+<!ENTITY bookmarksSearch.tooltip       "Bookmarks Search Toolbar">
 <!ENTITY menuitem.newBookmark.label    "Bookmark">
 <!ENTITY command.newBookmark.accesskey "B">
 <!ENTITY menuitem.newFolder.label      "Folder">
