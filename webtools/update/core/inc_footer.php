@@ -40,11 +40,12 @@
   <hr class="hide">
   <div id="footer">
    <ul id="bn">
-    <li><a href="sitemap.html">Site Map</a></li>
-    <li><a href="contact/">Contact Us</a></li>
-    <li><a href="foundation/donate.html">Donate</a></li>
+    <li><a href="/about/policies/">Terms of Use</a></li>
+    <li><a href="/about/contact/">Contact Us</a></li>
+    <li><a href="http://www.mozilla.org/foundation/donate.html">Donate</a></li>
    </ul>
-   <p>Copyright &copy; 1998-2004 The Mozilla Organization</p>
+    <p><strong>Update-Beta is a technology Preivew. For internal use only.</strong><br>
+    Copyright &copy; 2004 The Mozilla Organization</p>
   </div>
   <!-- closes #footer-->
 
@@ -65,10 +66,5 @@ echo"<DIV class=\"footer\">&copy; 2004 <A HREF=\"http://www.mozilla.org\">The Mo
 
 if ($pos !== false) {
 echo"</div>\n";
-}
-if ($_SESSION["debug"]=="true") {
-print(session_id());
-echo"<PRE>";print_r($_SESSION); echo"</PRE><Br>\n";
-echo"Current application data: $application - $app_version - $OS ";
 }
 ?>

@@ -126,7 +126,7 @@ WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int`<='$curr
   </div>
   <div class="frontcolumnlast">
     <h2><a href="http://www.MozillaStore.com">Get Plugins</a></h2>
-    <a href="http://www.MozillaStore.com"><img src="images/front-store.jpg" alt="Mozilla Store" class="promo" width="75" height="75"></a>
+    <a href="http://www.MozillaStore.com"><img src="images/product-front-firefox.png" alt="Mozilla Store" class="promo" width="60" height="60"></a>
     <p>Now you can order all <a href="http://store.mozilla.org/products/software/">Mozilla software on CD</a> and purchase <a href="http://store.mozilla.org/products/clothing">Mozilla logo merchandise</a> at the <a href="http://www.MozillaStore.com">Mozilla Store</a>.</p>
   </div>
 

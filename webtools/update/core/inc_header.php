@@ -61,7 +61,7 @@
  <ul title="Main Site Sections">
   <li id="menu_aboutus"><a href="../about/" title="About Mozilla Update">About</a></li>
   <li id="menu_developers"><a href="../developers/" title="Using Mozilla's products for your own applications">Developers</a></li>
-  <li id="menu_store"><a href="http://www.mozillastore.com" title="Shop for Mozilla products on CD and other merchanise">---</a></li>
+  <li id="menu_store"><a href="/" title="Available Space">---</a></li>
   <li id="menu_support"><a href="../themes/" title="Installation, trouble-shooting, and the knowledge base">Themes</a></li>
   <li id="menu_products"><a href="../extensions/" title="All software Mozilla currently offers">Extensions</a></li>
  </ul>
@@ -83,29 +83,6 @@
 
 
 <DIV class="header">
-<?php //if ($_GET["application"]) {$application=$_GET["application"]; } else {$application="firefox"; } ?>
-<DIV class="logo"><IMG SRC="/images/<?php echo"$application"; ?>-cornerlogo.png" BORDER=0 ALT=""></DIV>
-<DIV class="tabbar">
-<A HREF="/?application=mozilla"><IMG SRC="/images/tab-mozilla<?php if ($application=="mozilla") {echo"-selected"; } ?>.png" BORDER=0 HEIGHT=20 WIDTH=98 ALT="[Mozilla] "></A><A HREF="/?application=firefox"><IMG SRC="/images/tab-firefox<?php if ($application=="firefox") {echo"-selected"; } ?>.png" BORDER=0 HEIGHT=20 WIDTH=98 ALT="[Firefox] "></A><A HREF="/?application=thunderbird"><IMG SRC="/images/tab-thunderbird<?php if ($application=="thunderbird") {echo"-selected"; } ?>.png" BORDER=0 HEIGHT=20 WIDTH=105 ALT="[Thunderbird] "></A><A HREF="/developercp.php"><IMG SRC="/images/tab-login<?php if ($application=="login") {echo"-selected"; } ?>.png" BORDER=0 HEIGHT=20 WIDTH=98 ALT="[Login]"></A>
-</DIV>
-</DIV>
-<DIV class="bar"></DIV>
-<DIV class="nav">
-<?php if ($application !=="login") { ?>
-<A HREF="/">Home</A>
- | <A HREF="/faq/">FAQ</A>
-<?php
-// Types
-$types = array("E"=>"Extensions","T"=>"Themes");
-foreach($types as $typeid => $typename) {
-echo" | <A HREF=\"/".strtolower($typename)."/\">$typename</A>";
-}
-//echo"<BR>\n";
-
-} else { echo"&nbsp;"; }
-?>
-</DIV>
-
 <?php
 if ($pos !== false) {
 ?>
