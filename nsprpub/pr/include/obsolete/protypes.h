@@ -57,7 +57,9 @@ typedef PRIntn intn;
 typedef PRInt64 int64;
 
 /* /usr/include/model.h on HP-UX defines int8, int16, and int32 */
-#if !defined(HPUX) || !defined(_MODEL_INCLUDED)
+#if defined(HPUX)
+#include <model.h>
+#else
 #if !defined(WIN32) || !defined(_WINSOCK2API_)  /* defines its own "int32" */
 #if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
 typedef PRInt32 int32;
@@ -67,7 +69,7 @@ typedef long int32;
 #endif
 typedef PRInt16 int16;
 typedef PRInt8 int8;
-#endif /* !defined(HPUX) || !defined(_MODEL_INCLUDED) */
+#endif /* HPUX */
 #endif /* AIX4_3 */
 
 typedef PRFloat64 float64;
