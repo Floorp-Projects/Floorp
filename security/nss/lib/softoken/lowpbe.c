@@ -415,7 +415,8 @@ loser:
 #endif
 
 #define HMAC_BUFFER 64
-#define ROUNDUP(x,y) ((((x)+((y)-1))/(y))*(y))
+#define NSSPBE_ROUNDUP(x,y) ((((x)+((y)-1))/(y))*(y))
+#define NSSPBE_MIN(x,y) ((x) < (y) ? (x) : (y))
 /*
  * This is the extended PBE function defined by the final PKCS #12 spec.
  */
@@ -456,8 +457,8 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
 	goto loser;
     }
     
-    SLen = ROUNDUP(salt->len,HMAC_BUFFER);
-    PLen = ROUNDUP(pwitem->len,HMAC_BUFFER);
+    SLen = NSSPBE_ROUNDUP(salt->len,HMAC_BUFFER);
+    PLen = NSSPBE_ROUNDUP(pwitem->len,HMAC_BUFFER);
     I.len = SLen+PLen;
     I.data = (unsigned char*)PORT_ArenaZAlloc(arena, I.len);
     if (I.data == NULL) {
@@ -470,19 +471,13 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
 
     PORT_Memset(D.data, (char)bitGenPurpose, D.len);
     if (SLen) {
-	unsigned int z = 0;
-	while (z < SLen) {
-	    int amount = (z + salt->len > SLen) ? SLen - z : salt->len;
-	    PORT_Memcpy(S, salt->data, amount);
-	    z += salt->len;
+	for (i=0; i < SLen; i += salt->len) {
+	    PORT_Memcpy(S+i, salt->data, NSSPBE_MIN(SLen-i,salt->len));
 	}
     } 
     if (PLen) {
-	unsigned int z = 0;
-	while (z < PLen) {
-	    int amount = (z + pwitem->len > PLen) ? PLen - z : pwitem->len;
-	    PORT_Memcpy(P, pwitem->data, amount);
-	    z += pwitem->len;
+	for (i=0; i < PLen; i += pwitem->len) {
+	    PORT_Memcpy(P+i, pwitem->data, NSSPBE_MIN(PLen-i,pwitem->len));
 	}
     } 
 
@@ -520,9 +515,7 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
 
 	PORT_Memcpy(Ai, iterBuf, hashLength);
 	for (Bidx = 0; Bidx < B.len; Bidx += hashLength) {
-	    PORT_Memcpy(B.data +Bidx, iterBuf,
-			(((Bidx + hashLength) > B.len) ? (B.len - Bidx) : 
-						       hashLength));
+	    PORT_Memcpy(B.data+Bidx,iterBuf,NSSPBE_MIN(B.len-Bidx,hashLength));
 	}
 
 	k = I.len/B.len;
