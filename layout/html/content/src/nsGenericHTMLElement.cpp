@@ -1148,20 +1148,16 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
           //Click or return key
           if (aEvent->message == NS_MOUSE_LEFT_CLICK || keyEvent->keyCode == NS_VK_RETURN) {
             nsAutoString target;
-            nsIURI* baseURL = nsnull;
-            GetBaseURL(baseURL);
+            nsCOMPtr<nsIURI> baseURL;
+            GetBaseURL(*getter_AddRefs(baseURL));
             GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
             if (target.Length() == 0) {
               GetBaseTarget(target);
             }
-            // if meta (cmd on mac) is down, open in new window.
-            if ( inputEvent->isMeta )
-              ret = TriggerLink(aPresContext, eLinkVerb_New,
-                                       baseURL, href, target, PR_TRUE);
-            else
-              ret = TriggerLink(aPresContext, eLinkVerb_Replace,
-                                      baseURL, href, target, PR_TRUE);
-            NS_IF_RELEASE(baseURL);
+            if (inputEvent->isControl || inputEvent->isMeta || inputEvent->isAlt ||inputEvent->isShift)
+              break;  // let the click go through so we can handle it in JS/XUL
+            ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href,
+                              target, PR_TRUE);
             *aEventStatus = nsEventStatus_eConsumeDoDefault;
           }
         }
@@ -1185,15 +1181,14 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
       case NS_FOCUS_CONTENT:
       {
         nsAutoString target;
-        nsIURI* baseURL = nsnull;
-        GetBaseURL(baseURL);
+        nsCOMPtr<nsIURI> baseURL;
+        GetBaseURL(*getter_AddRefs(baseURL));
         GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
         if (target.Length() == 0) {
           GetBaseTarget(target);
         }
         ret = TriggerLink(aPresContext, eLinkVerb_Replace,
                           baseURL, href, target, PR_FALSE);
-        NS_IF_RELEASE(baseURL);
       }
       break;
 

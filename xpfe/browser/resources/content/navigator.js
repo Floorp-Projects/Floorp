@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *  Blake Ross <BlakeR1234@aol.com>
+ *  Blake Ross <blakeross@telocity.com>
  *  Peter Annema <disttsc@bart.nl>
  */
 
@@ -87,9 +87,11 @@ function savePage( url )
     // Save; use page in cache if possible.
     var postData = appCore.postData;
     xfer.SelectFileAndTransferLocationSpec( url, window, "", "", true, postData );
+    return true;
   } 
   catch( exception ) { 
     // suppress NS_ERROR_ABORT exceptions for cancellation 
+    return false;
   }
 }
 
@@ -1556,33 +1558,21 @@ function BrowserEditBookmarks()
     {
       var nodeName = node.localName;
       if (nodeName == "")
-	  {
-	  dump('****** returning null 1\n');
         return null;
-	}
       nodeName = nodeName.toLowerCase();
       if (nodeName == "" || nodeName == "body"
           || nodeName == "html" || nodeName == "#document")
-		  {
-	  dump('****** returning null 2\n');
         return null;
-		}
-      var href = node.href;
-      if (nodeName == "a" && href != "")
-	  {
-	  dump('****** returning :'+node+'\n');
+      if (nodeName == "a")
         return node;
-		}
       node = node.parentNode;
     }
-	  dump('****** returning null 3\n');
     return null;
   }
 
-   function isScrollbar(node)
-   {
-     while (node)
-     {
+  function isScrollbar(node)
+  {
+     while (node) {
        var nodeName = node.localName;
        if (nodeName == "")
          return false;
@@ -1593,43 +1583,52 @@ function BrowserEditBookmarks()
      return false;
   }
 
-  function browserHandleMiddleClick(event)
+  function browserHandleMiddleClick(event, linkURL)
   {
-    var target = event.originalTarget;
-    if (pref.GetBoolPref("middlemouse.openNewWindow"))
-    {
-      var node = enclosingLink(target);
-      var href ="";
-      if (node)
-        href = node.href;
-      if (href != "")
-      {
-        openNewWindowWith(href);
-        event.preventBubble();
-        return;
-      }
+    if (pref.GetBoolPref("middlemouse.openNewWindow")) {
+      openNewWindowWith(linkURL);
+      event.preventBubble();
+      return true;
     }
 
-    if (pref.GetBoolPref("middlemouse.paste"))
-    {
-      if (isScrollbar(target)) {
-         return;
-	  }
+    if (pref.GetBoolPref("middlemouse.paste")) {
+      if (isScrollbar(target))
+         return false;
       var tagName = target.tagName;
-      if (tagName) tagName = tagName.toLowerCase();
+      if (tagName)
+        tagName = tagName.toLowerCase();
       var type = target.type;
       if (type) type = type.toLowerCase();
 
       var url = readFromClipboard();
       //dump ("Loading URL on clipboard: '" + url + "'; length = " + url.length + "\n");
-      if (url && url.length > 0)
-      {
+      if (url) {
         var urlBar = document.getElementById("urlbar");
         urlBar.value = url;
         BrowserLoadURL();
         event.preventBubble();
+        return true;
       }
     }
+    return false;
+  }
+
+  function linkClick(event) 
+  {
+    var node = enclosingLink(event.originalTarget);
+    if (node) {
+      if (event.button == 1) {
+        if (event.metaKey || event.ctrlKey) {               // if meta+ or ctrl+click
+          openNewWindowWith(node.href);                     // open link in new window
+          event.preventBubble();
+          return true;
+        } 
+        if (event.altKey)                                   // if alt+click
+          return savePage(node.href);                       // save the link    
+      } else if (event.button == 2)                         // if middle button clicked
+        return browserHandleMiddleClick(event, node.href);  // handle it separately
+    }
+    return true; // already handled in nsGenericHTMLElement::HandleDOMEventForAnchors
   }
 
   function OpenMessenger()
