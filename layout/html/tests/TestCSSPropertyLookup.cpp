@@ -54,6 +54,9 @@ int TestProps() {
   nsCSSProperty id;
   nsCSSProperty index;
 
+  // Everything appears to assert if we don't do this first...
+  nsCSSProps::AddRefTable();
+
   // First make sure we can find all of the tags that are supposed to
   // be in the table. Futz with the case to make sure any case will
   // work
@@ -102,6 +105,7 @@ int TestProps() {
     }
   }
 
+  nsCSSProps::ReleaseTable();
   return rv;
 }
 
