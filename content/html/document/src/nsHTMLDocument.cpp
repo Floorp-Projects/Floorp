@@ -1890,6 +1890,7 @@ nsHTMLDocument::Close()
                             NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, PR_TRUE);
     mWriteLevel--;
     mIsWriting = 0;
+    NS_RELEASE(mParser);
   }
 
   return NS_OK;
