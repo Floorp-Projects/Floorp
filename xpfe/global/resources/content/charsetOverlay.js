@@ -5,7 +5,7 @@ function MultiplexHandler(event)
   var charset;
 
   if (name == 'detectorGroup') {
-    SelectDetector(event);
+    SelectDetector(event, true);
   } else if (name == 'charsetGroup') {
     charset = node.getAttribute('id');
     charset = charset.substring('charset.'.length, charset.length)
@@ -17,13 +17,32 @@ function MultiplexHandler(event)
   }
 }
 
+function MailMultiplexHandler(event)
+{
+  var node = event.target;
+  var name = node.getAttribute('name');
+  var charset;
+
+  if (name == 'detectorGroup') {
+    SelectDetector(event, false);
+  } else if (name == 'charsetGroup') {
+    charset = node.getAttribute('id');
+    charset = charset.substring('charset.'.length, charset.length)
+    MessengerSetDefaultCharacterSet(charset);
+  } else if (name == 'charsetCustomize') {
+    //do nothing - please remove this else statement, once the charset prefs moves to the pref window
+  } else {
+    MessengerSetDefaultCharacterSet(node.getAttribute('id'));
+  }
+}
+
 function SetDefaultCharacterSet(charset)
 {
 	dump("Charset Overlay menu item pressed: " + charset + "\n");
     BrowserSetDefaultCharacterSet(charset);
 }
 
-function SelectDetector(event)
+function SelectDetector(event, doReload)
 {
 	dump("Charset Detector menu item pressed: " + event.target.getAttribute('id') + "\n");
 
@@ -41,7 +60,7 @@ function SelectDetector(event)
  
     if (pref) {
         pref.SetCharPref("intl.charset.detector", prefvalue);
-        window.content.location.reload();
+        if (doReload) window.content.location.reload();
     }
 }
 
