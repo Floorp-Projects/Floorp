@@ -26,7 +26,7 @@
 #include "nsSocketTransportService.h"
 #include "nsSocketTransport.h"
 #include "nsAutoLock.h"
-#include "nsIOService.h"
+#include "nsIIOService.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -90,10 +90,11 @@ nsSocketTransportService::~nsSocketTransportService()
 NS_METHOD
 nsSocketTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
+    nsresult rv;
+
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    nsresult rv;
     NS_WITH_SERVICE(nsIIOService, ios, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     PRBool offline;
