@@ -1216,8 +1216,7 @@ NS_IMETHODIMP
 nsBookmarksService::GetAllCmds(nsIRDFResource* source,
                                        nsISimpleEnumerator/*<nsIRDFResource>*/** commands)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return(NS_NewEmptyEnumerator(commands));
 }
 
 NS_IMETHODIMP
