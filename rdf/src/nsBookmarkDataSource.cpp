@@ -26,6 +26,7 @@
 #include "nsVoidArray.h"
 #include "prio.h"
 #include "rdf.h"
+#include "rdfutil.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +39,7 @@ static const char kURI_bookmarks[] = "rdf:bookmarks"; // XXX?
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Bookmark);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns); // XXX this is unsavory.
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PersonalToolbarFolderCategory);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkAddDate);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Description);
@@ -94,17 +96,7 @@ protected:
                         const nsString& predicateURI,
                         const nsString& time);
 
-    nsresult Assert(nsIRDFNode* subject,
-                    const nsString& predicateURI,
-                    const nsString& objectURI);
-
-    nsresult Assert(nsIRDFNode* subject,
-                    const nsString& predicateURI,
-                    nsIRDFNode* object);
-
-    nsresult Assert(nsIRDFNode* subject,
-                    nsIRDFNode* predicate,
-                    nsIRDFNode* object);
+    nsresult AddColumns(void);
 
 public:
     BookmarkParser(void);
@@ -141,6 +133,7 @@ BookmarkParser::~BookmarkParser(void)
         nsServiceManager::ReleaseService(kRDFResourceManagerCID, mResourceMgr);
 }
 
+
 nsresult
 BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
 {
@@ -176,8 +169,39 @@ BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
     }
 
     NS_IF_RELEASE(mLastItem);
+
+    rv = AddColumns();
     return rv;
 }
+
+
+nsresult
+BookmarkParser::AddColumns(void)
+{
+    // XXX this is unsavory. I really don't like hard-coding the
+    // columns that should be displayed here. What we should do is
+    // merge in a "style" graph that contains just a wee bit of
+    // information about columns, etc.
+    nsresult rv;
+
+    nsIRDFNode* columns = nsnull;
+
+    if (NS_FAILED(rv = rdf_CreateAnonymousNode(mResourceMgr, columns)))
+        goto done;
+
+    rdf_Assert(mResourceMgr, mDataSource, kURI_bookmarks, kURINC_Columns, columns);
+
+    rdf_Assert(mResourceMgr, mDataSource, columns, kURINC_Name,              "Name");
+    rdf_Assert(mResourceMgr, mDataSource, columns, kURINC_BookmarkAddDate,   "Date Added");
+    rdf_Assert(mResourceMgr, mDataSource, columns, kURIWEB_LastVisitDate,    "Last Visited");
+    rdf_Assert(mResourceMgr, mDataSource, columns, kURIWEB_LastModifiedDate, "Last Modified");
+
+done:
+    NS_IF_RELEASE(columns);
+    return rv;
+}
+
+
 
 void
 BookmarkParser::Tokenize(const char* buf, PRInt32 size)
@@ -227,7 +251,7 @@ BookmarkParser::NextToken(void)
         if (NS_FAILED(mResourceMgr->GetNode(folderURI, folder)))
             return;
 
-        Assert(parent, kURINC_Folder, folder);
+        rdf_Assert(mResourceMgr, mDataSource, parent, kURINC_Folder, folder);
 
         if (mFolderDate.Length()) {
             AssertTime(folder, kURINC_BookmarkAddDate, mFolderDate);
@@ -238,13 +262,13 @@ BookmarkParser::NextToken(void)
         mLastItem = folder;
 
         if (mState != eBookmarkParserState_InTitle)
-            Assert(mLastItem, kURINC_Name, mLine);
+            rdf_Assert(mResourceMgr, mDataSource, mLastItem, kURINC_Name, mLine);
 
         if (mLine.Find(kPersonalToolbar) == 0)
-            Assert(mLastItem, kURIRDF_instanceOf, kURINC_PersonalToolbarFolderCategory);
+            rdf_Assert(mResourceMgr, mDataSource, mLastItem, kURIRDF_instanceOf, kURINC_PersonalToolbarFolderCategory);
     }
     else if (mState == eBookmarkParserState_InItemDescription) {
-        Assert(mLastItem, kURINC_Description, mLine);
+        rdf_Assert(mResourceMgr, mDataSource, mLastItem, kURINC_Description, mLine);
     }
 }
 
@@ -297,7 +321,7 @@ BookmarkParser::DoStateTransition(void)
              (mLine.Find(kBRString) == 0)) {
         // XXX in the original bmk2rdf.c, we only added the
         // description in the case that it wasn't set already...why?
-        Assert(mLastItem, kURINC_Description, mLine);
+        rdf_Assert(mResourceMgr, mDataSource, mLastItem, kURINC_Description, mLine);
     }
     else {
         mState = eBookmarkParserState_Initial;
@@ -349,7 +373,7 @@ BookmarkParser::CreateBookmark(void)
     if (! parent)
         return;
 
-    Assert(parent, kURINC_Bookmark, bookmark);
+    rdf_Assert(mResourceMgr, mDataSource, parent, kURINC_Bookmark, bookmark);
 
     if (values[eBmkAttribute_AddDate].Length() > 0)
         AssertTime(bookmark, kURINC_BookmarkAddDate, values[eBmkAttribute_AddDate]);
@@ -370,60 +394,7 @@ BookmarkParser::AssertTime(nsIRDFNode* object,
                            const nsString& time)
 {
     // XXX
-    return Assert(object, predicateURI, time);
-}
-
-nsresult
-BookmarkParser::Assert(nsIRDFNode* subject,
-                       nsIRDFNode* predicate,
-                       nsIRDFNode* object)
-{
-#ifdef DEBUG
-    char buf[1024];
-    nsAutoString s;
-
-    subject->GetStringValue(s);
-    printf("(%s\n", s.ToCString(buf, sizeof buf));
-    predicate->GetStringValue(s);
-    printf(" %s\n", s.ToCString(buf, sizeof buf));
-    object->GetStringValue(s);
-    printf(" %s)\n", s.ToCString(buf, sizeof buf));
-#endif
-    return mDataSource->Assert(subject, predicate, object);
-}
-
-
-nsresult
-BookmarkParser::Assert(nsIRDFNode* subject,
-                       const nsString& predicateURI,
-                       nsIRDFNode* object)
-{
-    nsresult rv;
-    nsIRDFNode* predicate;
-    if (NS_FAILED(rv = mResourceMgr->GetNode(predicateURI, predicate)))
-        return rv;
-
-    rv = Assert(subject, predicate, object);
-    NS_RELEASE(predicate);
-
-    return rv;
-}
-
-
-nsresult
-BookmarkParser::Assert(nsIRDFNode* subject,
-                       const nsString& predicateURI,
-                       const nsString& objectURI)
-{
-    nsresult rv;
-    nsIRDFNode* object;
-    if (NS_FAILED(rv = mResourceMgr->GetNode(objectURI, object)))
-        return rv;
-
-    rv = Assert(subject, predicateURI, object);
-    NS_RELEASE(object);
-
-    return rv;
+    return rdf_Assert(mResourceMgr, mDataSource, object, predicateURI, time);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -435,6 +406,7 @@ protected:
 
     nsresult ReadBookmarks(void);
     nsresult WriteBookmarks(void);
+    nsresult AddColumns(void);
 
 public:
     BookmarkDataSourceImpl(void);
@@ -486,7 +458,6 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 
     return rv;
 }
-
 
 
 nsresult
