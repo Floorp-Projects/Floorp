@@ -426,6 +426,7 @@ nsViewManager::nsViewManager()
   mAllowDoubleBuffering = PR_TRUE; 
   mHasPendingInvalidates = PR_FALSE;
   mPendingInvalidateEvent = PR_FALSE;
+  mRecursiveRefreshPending = PR_FALSE;
 }
 
 nsViewManager::~nsViewManager()
@@ -693,6 +694,10 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
 #endif
 
 	NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+	if (mPainting) {
+		mRecursiveRefreshPending = PR_TRUE;
+		return;
+	}  
 
 	mPainting = PR_TRUE;
 
@@ -790,6 +795,11 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
 		}
 	}
 
+	if (mRecursiveRefreshPending) {
+		UpdateAllViews(aUpdateFlags);
+		mRecursiveRefreshPending = PR_FALSE;
+	}
+
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DEBUGLOG(("Stop: nsViewManager::Refresh(region), this=%p\n", this));
   MOZ_TIMER_STOP(mWatch);
@@ -817,6 +827,10 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, const
 #endif
 
 	NS_ASSERTION(!(PR_TRUE == mPainting), "recursive painting not permitted");
+	if (mPainting) {
+		mRecursiveRefreshPending = PR_TRUE;
+		return;
+	}  
 
 	mPainting = PR_TRUE;
 
@@ -918,6 +932,11 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, const
 				}
 			}
 		}
+	}
+
+	if (mRecursiveRefreshPending) {
+		UpdateAllViews(aUpdateFlags);
+		mRecursiveRefreshPending = PR_FALSE;
 	}
 
 #ifdef NS_VM_PERF_METRICS
