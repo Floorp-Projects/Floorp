@@ -85,8 +85,6 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         if (fieldAndMethods != null) {
             Object result = fieldAndMethods.get(name);
             if (result != null) {
-                if (result instanceof NativeJavaMethod) // must be a method invocation for property access...
-                    return ((NativeJavaMethod) result).getDefaultValue(null);
                 return result;
             }
         }

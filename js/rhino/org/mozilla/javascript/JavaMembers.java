@@ -15,13 +15,14 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
  * Norris Boyd
  * Frank Mitchell
  * Mike Shaver
+ * Kurt Westerfield
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -62,8 +63,7 @@ class JavaMembers {
         Object obj = ht.get(name);
         if (obj != null) {
             return true;
-        }
-        else {
+        } else {
             Member member = this.findExplicitFunction(name, isStatic);
             return member != null;
         }
@@ -85,19 +85,28 @@ class JavaMembers {
                 return Scriptable.NOT_FOUND;
         }
         if (member instanceof Scriptable)
-            return member;
-        Field field = (Field) member;
+            return member;      // why is this here?
         Object rval;
+        Class type;
         try {
-            rval = field.get(isStatic ? null : javaObject);
+            if (member instanceof BeanProperty) {
+                BeanProperty bp = (BeanProperty) member;
+                rval = bp.getter.invoke(javaObject, ScriptRuntime.emptyArgs);
+                type = bp.getter.getReturnType();
+            } else {
+                Field field = (Field) member;
+                rval = field.get(isStatic ? null : javaObject);
+                type = field.getType();
+            }
         } catch (IllegalAccessException accEx) {
             throw new RuntimeException("unexpected IllegalAccessException "+
                                        "accessing Java field");
+        } catch (InvocationTargetException e) {
+            throw new WrappedException(e);
         }
         // Need to wrap the object before we return it.
-        Class fieldType = field.getType();
         scope = ScriptableObject.getTopLevelScope(scope);
-        return NativeJavaObject.wrap(scope, rval, fieldType);
+        return NativeJavaObject.wrap(scope, rval, type);
     }
 
     Member findExplicitFunction(String name, boolean isStatic) {
@@ -138,11 +147,9 @@ class JavaMembers {
         return null;
     }
 
-    Object getExplicitFunction(Scriptable scope, 
-                               String name,
-                               Object javaObject,
-                               boolean isStatic) {
-
+    Object getExplicitFunction(Scriptable scope, String name, 
+                               Object javaObject, boolean isStatic) 
+    {
         Hashtable ht = isStatic ? staticMembers : members;
         Object member = null;
         Member methodOrCtor = this.findExplicitFunction(name, isStatic);
@@ -158,8 +165,7 @@ class JavaMembers {
                 fun.setPrototype(prototype);
                 member = fun;
                 ht.put(name, fun);
-            }
-            else {
+            } else {
                 String trueName = methodOrCtor.getName();
                 member = ht.get(trueName);
 
@@ -193,23 +199,22 @@ class JavaMembers {
         if (member instanceof FieldAndMethods) {
             FieldAndMethods fam = (FieldAndMethods) ht.get(name);
             member = fam.getField();
-            if (member == null) 
-                member = fam.getBeanSetMethod();
         }
         
         // Is this a bean property "set"?
-        if (member instanceof Method) { 
+        if (member instanceof BeanProperty) { 
             try {
-                Method method = (Method) member;
+                Method method = ((BeanProperty) member).setter;
+                if (method == null)
+                    throw reportMemberNotFound(name);
                 Class[] types = method.getParameterTypes();
                 Object[] params = { NativeJavaObject.coerceType(types[0], value) };
                 method.invoke(javaObject, params);
             } catch (IllegalAccessException accessEx) {
-                throw new RuntimeException("unexpected IllegalAccessException "+
+                throw new RuntimeException("unexpected IllegalAccessException " +
                                            "accessing Java field");
-            } catch (InvocationTargetException invTarget) {
-                throw Context.reportRuntimeError("unexpected " + invTarget.getTargetException() +
-                                                 " accessing Java field");
+            } catch (InvocationTargetException e) {
+                throw new WrappedException(e);
             }
         }
         else {
@@ -276,16 +281,11 @@ class JavaMembers {
             }
             if (member instanceof Field) {
             	Field oldField = (Field) member;
-            	// beard:
-            	// If an exception is thrown here, then JDirect classes on MRJ can't be used. JDirect
-            	// classes implement multiple interfaces that each have a static "libraryInstance" field.
-            	if (false) {
-	                throw new RuntimeException("cannot have multiple Java " +
-    	                                       "fields with same name");
-            	}
-            	// If this newly reflected field shadows an inherited field, then replace it. Otherwise,
-            	// since access to the field would be ambiguous from Java, no field should be reflected.
-            	// For now, the first field found wins, unless another field explicitly shadows it.
+            	// If this newly reflected field shadows an inherited field, 
+                // then replace it. Otherwise, since access to the field 
+                // would be ambiguous from Java, no field should be reflected.
+            	// For now, the first field found wins, unless another field 
+                // explicitly shadows it.
             	if (oldField.getDeclaringClass().isAssignableFrom(field.getDeclaringClass()))
             		ht.put(name, field);
             	return;
@@ -328,7 +328,7 @@ class JavaMembers {
 
         makeBeanProperties(scope, false);
         makeBeanProperties(scope, true);
-
+        
         ctors = cl.getConstructors();
     }
     
@@ -349,37 +349,40 @@ class JavaMembers {
     void makeBeanProperties(Scriptable scope, boolean isStatic) {
         Hashtable ht = isStatic ? staticMembers : members;
         Hashtable toAdd = new Hashtable();
-        Scriptable prototype = ScriptableObject.getFunctionPrototype(scope);
         
         // Now, For each member, make "bean" properties.
         for (Enumeration e = ht.keys(); e.hasMoreElements(); ) {
             
             // Is this a getter?
             String name = (String) e.nextElement();
-            boolean memberIsGetMethod = name.startsWith("get"), memberIsIsMethod = name.startsWith("is");
-            if (memberIsGetMethod || memberIsIsMethod)
-            {
+            boolean memberIsGetMethod = name.startsWith("get");
+            boolean memberIsIsMethod = name.startsWith("is");
+            if (memberIsGetMethod || memberIsIsMethod) {
                 // Double check name component.
                 String nameComponent = name.substring(memberIsGetMethod ? 3 : 2);
-                if( nameComponent.length() == 0 ) 
+                if (nameComponent.length() == 0) 
                     continue;
                 
                 // Make the bean property name.
                 String beanPropertyName = nameComponent;
-                if( nameComponent.length() > 1 && 
-                    Character.isUpperCase( nameComponent.charAt(0)) && 
-                    ! Character.isUpperCase( nameComponent.charAt(1)) )
-                   beanPropertyName = Character.toLowerCase(nameComponent.charAt(0)) + nameComponent.substring(1);
+                if (nameComponent.length() > 1 && 
+                    Character.isUpperCase(nameComponent.charAt(0)) && 
+                    !Character.isUpperCase(nameComponent.charAt(1)))
+                {
+                   beanPropertyName = Character.toLowerCase(nameComponent.charAt(0)) + 
+                                      nameComponent.substring(1);
+                }
                 
-                // If we already have a field by this name, don't do this property.
+                // If we already have a field by this name, don't do this
+                // property.
                 if (ht.containsKey(beanPropertyName)) {
-                    
                     // Exclude field.
                     Object propertyMethod = ht.get(beanPropertyName);
                     if (propertyMethod instanceof Field)
                         continue;
                     
-                    // Exclude when there's a method with non-bean characteristics or non-static affinity.
+                    // Exclude when there's a method with non-bean 
+                    // characteristics or non-static affinity.
                     Method[] methods = ((NativeJavaMethod) propertyMethod).getMethods();
                     boolean exclude = false;
                     for (int i = 0; i < methods.length; ++i) 
@@ -401,11 +404,12 @@ class JavaMembers {
                 Class[] params;
                 Method[] getMethods = getJavaMethod.getMethods();
                 Class type;
-                if( getMethods != null && 
+                if (getMethods != null && 
                     getMethods.length == 1 && 
                     (type = getMethods[0].getReturnType()) != null &&
                     (params = getMethods[0].getParameterTypes()) != null && 
-                    params.length == 0) { 
+                    params.length == 0) 
+                { 
                     
                     // Make sure the method static-ness is preserved for this property.
                     if (isStatic && !Modifier.isStatic(getMethods[0].getModifiers()))
@@ -430,7 +434,7 @@ class JavaMembers {
                             // and one to find a widening conversion.
                             NativeJavaMethod setJavaMethod = (NativeJavaMethod) method;
                             Method[] setMethods = setJavaMethod.getMethods();
-                            for (int pass = 1; pass <= 2 && setMethod == null; ++pass)
+                            for (int pass = 1; pass <= 2 && setMethod == null; ++pass) {
                                 for (int i = 0; i < setMethods.length; ++i) {
                                     if (setMethods[i].getReturnType() == void.class &&
                                         (!isStatic || Modifier.isStatic(setMethods[i].getModifiers())) &&
@@ -444,32 +448,28 @@ class JavaMembers {
                                         }
                                     }
                                 }
+                            }
                         }
                     }
                             
                     // Make the property.
-                    Method[] bothMethods = {getMethods[0], setMethod};
-                    Method[] oneMethod = {getMethods[0]};
-                    Method[] methods = (setMethod == null) ? oneMethod : bothMethods;
-                    FieldAndMethods fam = new FieldAndMethods(methods, null, beanPropertyName);
-                    fam.setParentScope(scope);
-                    fam.setPrototype(prototype);
-                    toAdd.put(beanPropertyName, fam);
+                    BeanProperty bp = new BeanProperty(getMethods[0], setMethod);
+                    toAdd.put(beanPropertyName, bp);
                 }
             }
         }           
         
         // Add the new bean properties.
-        Hashtable fmht = getFieldAndMethodsTable(isStatic);
         for (Enumeration e = toAdd.keys(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
             Object value = toAdd.get(key);
             ht.put(key, value);
-            fmht.put(key, value);
         }
     }
 
-    Hashtable getFieldAndMethodsObjects(Scriptable scope, Object javaObject, boolean isStatic) {
+    Hashtable getFieldAndMethodsObjects(Scriptable scope, Object javaObject,
+                                        boolean isStatic) 
+    {
         Hashtable ht = isStatic ? staticFieldAndMethods : fieldAndMethods;
         if (ht == null)
             return null;
@@ -542,6 +542,14 @@ class JavaMembers {
     private Constructor[] ctors;
 }
 
+class BeanProperty {
+    BeanProperty(Method getter, Method setter) {
+        this.getter = getter;
+        this.setter = setter;
+    }
+    Method getter;
+    Method setter;
+}
 
 class FieldAndMethods extends NativeJavaMethod {
 
@@ -565,57 +573,14 @@ class FieldAndMethods extends NativeJavaMethod {
         return field;
     }
     
-    private Method getBeanMethod(boolean which) {
-        Method methods[] = getMethods();
-        for (int i = 0; i < methods.length; ++i) {
-            Class[] params = methods[i].getParameterTypes();
-            boolean isSetter = params != null && params.length == 1;
-            if (which == isSetter) 
-                return methods[i];
-        }
-        return null;
-    }
-    
-    Method getBeanGetMethod() {
-        return getBeanMethod(false);
-    }
-    
-    Method getBeanSetMethod() {
-        return getBeanMethod(true);
-    }
-    
-    Class getBeanType() {
-        Method methods[] = getMethods();
-        for (int i = 0; i < methods.length; ++i) {
-            Class[] params = methods[i].getParameterTypes();
-            if (params != null && params.length == 1)
-                return params[0];
-            Class returnType = methods[i].getReturnType();
-            if (returnType != null)
-                return returnType;
-        }
-        return null;
-    }
-
     public Object getDefaultValue(Class hint) {
         if (hint == ScriptRuntime.FunctionClass)
             return this;
         Object rval;
         Class type;
         try {
-            if (field != null) {
-                rval = field.get(javaObject);
-                type = field.getType();
-            }
-            else {
-                Method method = getBeanGetMethod();
-                boolean isStatic = Modifier.isStatic(method.getModifiers());
-                rval = method.invoke(isStatic ? null : javaObject, null);
-                type = getBeanType();
-            }
-        } catch (InvocationTargetException invTarget) {
-            throw Context.reportRuntimeError("unexpected " + invTarget.getTargetException() +
-                                             " accessing Java property");
+            rval = field.get(javaObject);
+            type = field.getType();
         } catch (IllegalAccessException accEx) {
             Object[] args = {getName()};
             throw Context.reportRuntimeError(Context.getMessage
@@ -623,14 +588,7 @@ class FieldAndMethods extends NativeJavaMethod {
         }
         rval = NativeJavaObject.wrap(this, rval, type);
         if (rval instanceof Scriptable) {
-            ((Scriptable)rval).setParentScope(this);
-            ((Scriptable)rval).setPrototype(parent != null ? parent.getPrototype() : getPrototype());
-            // TODO: why are we setting the prototype of the return value here?
-            //       this seems wrong...what if rval is a string, for instance?   
-            
-            // Handle string conversion request.
-            if (hint == ScriptRuntime.StringClass && rval != null)
-                rval = Context.toString(rval);
+            rval = ((Scriptable) rval).getDefaultValue(hint);
         }
         return rval;
     }
