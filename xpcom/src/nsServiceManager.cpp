@@ -536,9 +536,12 @@ nsServiceManager::UnregisterService(const char* aProgID)
 //
 //	- There exists no global Registry. Registry can be created from the component manager.
 //
+
 #include "nsComponentManager.h"
 #include "nsIRegistry.h"
 #include "nsXPComCIID.h"
+#include "nsAllocator.h"
+
 extern "C" NS_EXPORT nsresult
 NS_RegistryGetFactory(nsISupports* servMgr, nsIFactory** aFactory);
 
@@ -579,17 +582,13 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
     }
     
     rv = servMgr->RegisterService(kComponentManagerCID, compMgr);
-    if (NS_FAILED(rv))
-    {
-        return rv;
-    }
-
+    if (NS_FAILED(rv)) return rv;
 
     // 3. Register the RegistryFactory with the component manager so that
     //    clients can create new registry objects.
     nsIFactory *registryFactory = NULL;
     rv = NS_RegistryGetFactory(servMgr, &registryFactory);
-    if (NS_FAILED(rv)) return (rv);
+    if (NS_FAILED(rv)) return rv;
 
     NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 
@@ -597,6 +596,18 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
                                   NS_REGISTRY_PROGID, registryFactory,
                                   PR_TRUE);
     NS_RELEASE(registryFactory);
+    if (NS_FAILED(rv)) return rv;
 
-   return (rv); 
+    // Register nsAllocator
+    nsAllocatorFactory* alloc = new nsAllocatorFactory();
+    if (alloc == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(alloc);
+    static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
+    rv = compMgr->RegisterFactory(kAllocatorCID, "Malloc/Free Allocator",
+                                  NULL, alloc, PR_TRUE);
+    NS_RELEASE(alloc);
+    if (NS_FAILED(rv)) return rv;
+
+    return rv; 
 }

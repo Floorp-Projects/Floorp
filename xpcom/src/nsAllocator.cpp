@@ -78,13 +78,14 @@ nsAllocatorImpl::Alloc(PRUint32 size)
 }
 
 NS_METHOD_(void*)
-nsAllocatorImpl::Realloc(void* ptr, PRUint32 size)
+nsAllocatorImpl::Realloc(void* ptr, PRUint32 size,
+                         PRInt32 oldSize)
 {
     return PR_Realloc(ptr, size);
 }
 
 NS_METHOD
-nsAllocatorImpl::Free(void* ptr)
+nsAllocatorImpl::Free(void* ptr, PRInt32 size)
 {
     PR_Free(ptr);
     return NS_OK;
@@ -105,6 +106,7 @@ nsAllocatorImpl::HeapMinimize(void)
 
 nsAllocatorFactory::nsAllocatorFactory(void)
 {
+    NS_INIT_REFCNT();
 }
 
 nsAllocatorFactory::~nsAllocatorFactory(void)
