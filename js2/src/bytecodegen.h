@@ -157,7 +157,7 @@ typedef enum {
     JuxtaposeOp,            //                          <attribute> <attribute> --> <attribute>
     NamedArgOp,             //                          <object> <string> --> <named arg object>
     UseOp,                  //                          <object> -->
-    UseOnceOp,              //                          <object> -->
+    UseOnceOp,              // <pool ref>
 
     OpCodeCount
 

@@ -368,6 +368,7 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 { -1,       "Juxtapose", },
 { -1,       "NamedArgument", },
 { -1,       "Use", },
+{ 0,        "UseOnceOp", },
 
 };
 
@@ -1389,11 +1390,28 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
 
         }
         break;
-    case StmtNode::Package:
-    case StmtNode::Import:
     case StmtNode::Namespace:
         {
             // do anything at bytecodegen?
+        }
+        break;
+    case StmtNode::Package:
+        {
+            PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
+	    mScopeChain->addScope(ps->scope);
+            genCodeForStatement(ps->body, static_cg, finallyLabel);
+	    mScopeChain->popScope();
+        }
+        break;
+    case StmtNode::Import:
+        {
+            ImportStmtNode *i = checked_cast<ImportStmtNode *>(p);
+            ExprList *namespaces = i->namespaces;
+            while (namespaces) {
+                genExpr(namespaces->expr);
+                addOp(UseOp);
+                namespaces = namespaces->next;
+            }
         }
         break;
     default:
@@ -2063,6 +2081,7 @@ BinaryOpEquals:
             delete ref;
             return Object_Type;
         }
+    case ExprNode::qualify:
     case ExprNode::identifier:
         {
             Reference *ref = genReference(p, Read);

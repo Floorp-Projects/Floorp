@@ -1246,33 +1246,44 @@ void ScopeChain::collectNames(StmtNode *p)
         break;
     case StmtNode::Import:
         {
-            // if loaded already - just skip.
             ImportStmtNode *i = checked_cast<ImportStmtNode *>(p);
-	    String packagePath;
-	    if (i->packageIdList) {
-		packagePath = getPackageName(i->packageIdList);
-                if (!m_cx->checkForPackage(packagePath)) {
-                    m_cx->loadPackage(packagePath, packagePath + ".js");
+	    String packageName;
+	    if (i->packageIdList)
+		packageName = getPackageName(i->packageIdList);
+            else
+                packageName = *i->packageString;
 
-		    JSValue packageValue = getCompileTimeValue(packagePath, NULL);
-		    ASSERT(packageValue.isObject() && (packageValue.object->mType == Package_Type));
-		    Package *package = checked_cast<Package *>(packageValue.object);
-                    
-                    for (PropertyIterator it = package->mProperties.begin(), end = package->mProperties.end();
-                                (it != end); it++) {
-                    
-                        ASSERT(PROPERTY_KIND(it) == ValuePointer);
-                        defineAlias(m_cx, PROPERTY_NAME(it), PROPERTY_NAMESPACELIST(it), PROPERTY_ATTR(it), PROPERTY_TYPE(it), PROPERTY_VALUEPOINTER(it));
+            if (!m_cx->checkForPackage(packageName))
+                m_cx->loadPackage(packageName, packageName + ".js");
+
+	    JSValue packageValue = getCompileTimeValue(packageName, NULL);
+	    ASSERT(packageValue.isObject() && (packageValue.object->mType == Package_Type));
+	    Package *package = checked_cast<Package *>(packageValue.object);
+            
+            if (i->varName)
+                defineVariable(m_cx, *i->varName, NULL, Package_Type, JSValue(package));
+            
+            for (PropertyIterator it = package->mProperties.begin(), end = package->mProperties.end();
+                        (it != end); it++)
+            {
+                ASSERT(PROPERTY_KIND(it) == ValuePointer);
+                bool makeAlias = true;
+                if (i->includeExclude) {
+                    makeAlias = !i->exclude;
+                    IdentifierList *idList = i->includeExclude;
+                    while (idList) {
+                        if (idList->name.compare(PROPERTY_NAME(it)) == 0) {
+                            makeAlias = !makeAlias;
+                            break;
+                        }
+                        idList = idList->next;
                     }
-
                 }
-	    }
-            else {
-                packagePath = *i->packageString + ".js";
-                if (!m_cx->checkForPackage(*i->packageString)) {
-                    m_cx->loadPackage(*i->packageString, packagePath);
-                }
+                if (makeAlias)
+                    defineAlias(m_cx, PROPERTY_NAME(it), PROPERTY_NAMESPACELIST(it), PROPERTY_ATTR(it), PROPERTY_TYPE(it), PROPERTY_VALUEPOINTER(it));
             }
+
+
         }
         break;
     case StmtNode::Namespace:
@@ -1289,7 +1300,7 @@ void ScopeChain::collectNames(StmtNode *p)
 	    String packageName = getPackageName(ps->packageIdList);
 	    Package *package = new Package(packageName);
             ps->scope = package;
-            m_cx->getGlobalObject()->defineVariable(m_cx, packageName, (NamespaceList *)(NULL), Property::NoAttribute, Package_Type, JSValue(package));
+            defineVariable(m_cx, packageName, NULL, Package_Type, JSValue(package));
 	    m_cx->mPackages.push_back(package);
 
 	    addScope(ps->scope);
