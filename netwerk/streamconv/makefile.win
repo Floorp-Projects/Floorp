@@ -21,8 +21,6 @@
 
 DEPTH = ..\..
 
-MODULE = streamconv
-
 DIRS=          \
     public \
     src    \
