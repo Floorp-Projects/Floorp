@@ -5343,9 +5343,14 @@ EOF
   fi
 
 dnl Probably shouldn't call this manually but we always want the output of DEFS
+rm -f confdefs.h.save
+mv confdefs.h confdefs.h.save
+egrep -v "$_EGREP_PATTERN" confdefs.h.save > confdefs.h
 AC_OUTPUT_MAKE_DEFS()
 MOZ_DEFINES=$DEFS
 AC_SUBST(MOZ_DEFINES)
+rm -f confdefs.h
+mv confdefs.h.save confdefs.h
 
 dnl Load the list of Makefiles to generate.
 dnl   To add new Makefiles, edit allmakefiles.sh.
