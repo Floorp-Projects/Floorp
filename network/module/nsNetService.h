@@ -100,6 +100,8 @@ public:
 
 	NS_IMETHOD CreateSocketTransport(nsITransport **aTransport, PRUint32 aPortToUse, const char * aHostName);
 
+	NS_IMETHOD CreateFileSocketTransport(nsITransport **aTransport, const char * aFileName);
+
 protected:
     virtual ~nsNetlibService();
 

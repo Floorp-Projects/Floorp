@@ -1056,6 +1056,24 @@ NS_IMETHODIMP nsNetlibService::CreateSocketTransport(nsITransport **aTransport, 
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsNetlibService::CreateFileSocketTransport(nsITransport **aTransport, const char * aFileName)
+{
+	NS_PRECONDITION(aFileName, "You need to specify the file name of the file you wish to create a socket for");
+
+	nsSocketTransport *pNSSocketTransport = NULL;
+
+	NS_DEFINE_IID(kITransportIID, NS_ITRANSPORT_IID);
+
+	pNSSocketTransport = new nsSocketTransport(aFileName);
+	if (pNSSocketTransport->QueryInterface(kITransportIID, (void**)aTransport) != NS_OK) {
+    // then we're trying get a interface other than nsISupports and
+    // nsITransport
+    return NS_ERROR_FAILURE;
+	}
+ 
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsNetlibService::AreThereActiveConnections()
