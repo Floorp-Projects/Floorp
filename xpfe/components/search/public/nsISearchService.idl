@@ -60,6 +60,8 @@ interface nsIInternetSearchContext : nsISupports
 	const unsigned long WEB_SEARCH_CONTEXT      = 1;
 	const unsigned long ENGINE_DOWNLOAD_CONTEXT = 2;
 	const unsigned long ICON_DOWNLOAD_CONTEXT   = 3;
+	const unsigned long ENGINE_UPDATE_CONTEXT   = 4;
+	const unsigned long ICON_UPDATE_CONTEXT     = 5;
 
 	// attributes
 	readonly attribute unsigned long ContextType;

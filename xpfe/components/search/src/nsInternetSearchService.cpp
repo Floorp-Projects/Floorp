@@ -76,6 +76,8 @@
 #include "nsIBookmarksService.h"
 #include "nsITimer.h"
 #include "nsIPref.h"
+#include "nsISupportsArray.h"
+#include "nsIHTTPHeader.h"
 
 #ifdef	XP_MAC
 #include <Files.h>
@@ -88,6 +90,7 @@
 
 #ifdef	DEBUG
 // #define	DEBUG_SEARCH_OUTPUT	1
+// #define	DEBUG_SEARCH_UPDATES	1
 #endif
 
 
@@ -332,7 +335,11 @@ static	PRBool				mEngineListBuilt;
 	static nsIRDFResource		*kNC_Availability;
 	static nsIRDFResource		*kNC_BookmarkSeparator;
 	static nsIRDFResource		*kNC_Update;
+	static nsIRDFResource		*kNC_UpdateIcon;
 	static nsIRDFResource		*kNC_UpdateCheckDays;
+	static nsIRDFResource		*kWEB_LastPingDate;
+	static nsIRDFResource		*kWEB_LastPingModDate;
+	static nsIRDFResource		*kWEB_LastPingContentLen;
 
 	static nsIRDFResource		*kNC_SearchCommand_AddToBookmarks;
 	static nsIRDFResource		*kNC_SearchCommand_FilterResult;
@@ -342,19 +349,23 @@ static	PRBool				mEngineListBuilt;
 	static nsIRDFLiteral		*kTrueLiteral;
 
 protected:
-	static nsIRDFDataSource		*mInner;
-
+	static nsIRDFDataSource			*mInner;
+	static nsCOMPtr<nsIRDFDataSource>	mLocalstore;
+	static nsCOMPtr<nsISupportsArray>	mUpdateArray;
 	static nsCOMPtr<nsITimer>		mTimer;
 	static nsCOMPtr<nsILoadGroup>		mBackgroundLoadGroup;
 	static nsCOMPtr<nsILoadGroup>		mLoadGroup;
 	static nsCOMPtr<nsIRDFDataSource>	categoryDataSource;
 	static nsCOMPtr<nsIPref>		prefs;
+	PRBool					busySchedule;
+	nsCOMPtr<nsIRDFResource>		busyResource;
 
 
 friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 friend	int		searchModePrefCallback(const char *pref, void *aClosure);
 
 	// helper methods
+	nsresult	GetSearchEngineToPing(nsIRDFResource **theResource, nsCString &updateURL);
 	PRBool		isEngineURI(nsIRDFResource* aResource);
 	PRBool		isSearchURI(nsIRDFResource* aResource);
 	PRBool		isSearchCategoryURI(nsIRDFResource* aResource);
@@ -364,17 +375,22 @@ friend	int		searchModePrefCallback(const char *pref, void *aClosure);
 	nsresult	resolveSearchCategoryEngineURI(nsIRDFResource *source, nsIRDFResource **trueEngine);
 	nsresult	BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);
 	nsresult	FindData(nsIRDFResource *engine, nsIRDFLiteral **data);
+	nsresult	updateDataHintsInGraph(nsIRDFResource *engine, const PRUnichar *data);
+	nsresult	updateAtom(nsIRDFDataSource *db, nsIRDFResource *src, nsIRDFResource *prop, nsIRDFNode *newValue, PRBool *dirtyFlag);
+	nsresult	validateEngine(nsIRDFResource *engine);
 	nsresult	DoSearch(nsIRDFResource *source, nsIRDFResource *engine, const nsString &fullURL, const nsString &text);
 	nsresult	MapEncoding(const nsString &numericEncoding, nsString &stringEncoding);
 	nsresult	SaveEngineInfoIntoGraph(const nsFileSpec *file, const nsFileSpec *icon, const PRUnichar *hint, const PRUnichar *data, PRBool checkMacFileType);
 	nsresult	GetSearchEngineList(nsFileSpec spec, PRBool checkMacFileType);
 	nsresult	GetCategoryList();
 	nsresult	GetSearchFolder(nsFileSpec &spec);
-	nsresult	ReadFileContents(nsFileSpec baseFilename, nsString & sourceContents);
+	nsresult	ReadFileContents(const nsFileSpec &baseFilename, nsString & sourceContents);
 	nsresult	GetData(const PRUnichar *data, const char *sectionToFind, PRUint32 sectionNum, const char *attribToFind, nsString &value);
 	nsresult	GetNumInterpretSections(const PRUnichar *data, PRUint32 &numInterpretSections);
 	nsresult	GetInputs(const PRUnichar *data, nsString &userVar, const nsString &text, nsString &input);
 	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
+	nsresult	validateEngineNow(nsIRDFResource *engine);
+	nsresult	webSearchFinalize(nsIChannel *channel, nsIInternetSearchContext *context);
 	nsresult	ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRDFResource *engine, const PRUnichar *htmlPage);
 	nsresult	SetHint(nsIRDFResource *mParent, nsIRDFResource *hintRes);
 	nsresult	ConvertEntities(nsString &str, PRBool removeHTMLFlag = PR_TRUE, PRBool removeCRLFsFlag = PR_TRUE, PRBool trimWhiteSpaceFlag = PR_TRUE);
@@ -414,8 +430,10 @@ public:
 static	nsIRDFService		*gRDFService = nsnull;
 static	nsIRDFContainerUtils	*gRDFC = nsnull;
 
-PRInt32				InternetSearchDataSource::gRefCnt;
+PRInt32				InternetSearchDataSource::gRefCnt = 0;
 nsIRDFDataSource		*InternetSearchDataSource::mInner = nsnull;
+nsCOMPtr<nsISupportsArray>	InternetSearchDataSource::mUpdateArray;
+nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::mLocalstore;
 nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::categoryDataSource;
 PRBool				InternetSearchDataSource::mEngineListBuilt;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mBackgroundLoadGroup;
@@ -458,7 +476,11 @@ nsIRDFResource			*InternetSearchDataSource::kNC_PriceSort;
 nsIRDFResource			*InternetSearchDataSource::kNC_Availability;
 nsIRDFResource			*InternetSearchDataSource::kNC_BookmarkSeparator;
 nsIRDFResource			*InternetSearchDataSource::kNC_Update;
+nsIRDFResource			*InternetSearchDataSource::kNC_UpdateIcon;
 nsIRDFResource			*InternetSearchDataSource::kNC_UpdateCheckDays;
+nsIRDFResource			*InternetSearchDataSource::kWEB_LastPingDate;
+nsIRDFResource			*InternetSearchDataSource::kWEB_LastPingModDate;
+nsIRDFResource			*InternetSearchDataSource::kWEB_LastPingContentLen;
 
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_AddToBookmarks;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterResult;
@@ -470,8 +492,11 @@ nsIRDFLiteral			*InternetSearchDataSource::kTrueLiteral;
 static const char		kEngineProtocol[] = "engine://";
 static const char		kSearchProtocol[] = "internetsearch:";
 
+#ifdef	DEBUG_SEARCH_UPDATES
+#define	SEARCH_UPDATE_TIMEOUT	10000		// fire every 10 seconds
+#else
 #define	SEARCH_UPDATE_TIMEOUT	60000		// fire every 60 seconds
-
+#endif
 
 
 int PR_CALLBACK
@@ -485,7 +510,7 @@ searchModePrefCallback(const char *pref, void *aClosure)
 		PRInt32		searchMode=0;
 		searchDS->prefs->GetIntPref(pref, &searchMode);
 #ifdef	DEBUG
-		printf("searchModePrefCallback: '%s' = %lu\n", pref, searchMode);
+		printf("searchModePrefCallback: '%s' = %d\n", pref, searchMode);
 #endif
 		searchDS->Assert(searchDS->kNC_LastSearchRoot, searchDS->kNC_LastSearchMode, searchDS->kTrueLiteral, PR_TRUE);
 	}
@@ -546,7 +571,11 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "Availability",        &kNC_Availability);
 		gRDFService->GetResource(NC_NAMESPACE_URI "BookmarkSeparator",   &kNC_BookmarkSeparator);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Update",              &kNC_Update);
+		gRDFService->GetResource(NC_NAMESPACE_URI "UpdateIcon",          &kNC_UpdateIcon);
 		gRDFService->GetResource(NC_NAMESPACE_URI "UpdateCheckDays",     &kNC_UpdateCheckDays);
+		gRDFService->GetResource(WEB_NAMESPACE_URI "LastPingDate",       &kWEB_LastPingDate);
+		gRDFService->GetResource(WEB_NAMESPACE_URI "LastPingModDate",    &kWEB_LastPingModDate);
+		gRDFService->GetResource(WEB_NAMESPACE_URI "LastPingContentLen", &kWEB_LastPingContentLen);
 
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=addtobookmarks", &kNC_SearchCommand_AddToBookmarks);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filterresult",   &kNC_SearchCommand_FilterResult);
@@ -604,7 +633,11 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_Availability);
 		NS_IF_RELEASE(kNC_BookmarkSeparator);
 		NS_IF_RELEASE(kNC_Update);
+		NS_IF_RELEASE(kNC_UpdateIcon);
 		NS_IF_RELEASE(kNC_UpdateCheckDays);
+		NS_IF_RELEASE(kWEB_LastPingDate);
+		NS_IF_RELEASE(kWEB_LastPingModDate);
+		NS_IF_RELEASE(kWEB_LastPingContentLen);
 
 		NS_IF_RELEASE(kNC_SearchCommand_AddToBookmarks);
 		NS_IF_RELEASE(kNC_SearchCommand_FilterResult);
@@ -615,6 +648,8 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 
 		NS_IF_RELEASE(mInner);
 
+		mUpdateArray = nsnull;
+		mLocalstore = nsnull;
 		mBackgroundLoadGroup = nsnull;
 		mLoadGroup = nsnull;
 		categoryDataSource = nsnull;		
@@ -649,11 +684,125 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 
 
 
+nsresult
+InternetSearchDataSource::GetSearchEngineToPing(nsIRDFResource **theEngine, nsCString &updateURL)
+{
+	nsresult	rv = NS_OK;
+
+	*theEngine = nsnull;
+	updateURL.Truncate();
+
+	if (!mUpdateArray)	return(NS_OK);
+
+	PRUint32	numEngines = 0;
+	if (NS_FAILED(rv = mUpdateArray->Count(&numEngines)))	return(rv);
+	if (numEngines < 1)	return(NS_OK);
+
+	nsCOMPtr<nsISupports>	isupports = mUpdateArray->ElementAt(0);
+
+	// note: important to remove element from array
+	mUpdateArray->RemoveElementAt(0);
+	if (isupports)
+	{
+		nsCOMPtr<nsIRDFResource>	aRes = do_QueryInterface(isupports);
+		if (aRes)
+		{
+			if (isSearchCategoryEngineURI(aRes))
+			{
+				nsCOMPtr<nsIRDFResource>	trueEngine;
+				rv = resolveSearchCategoryEngineURI(aRes, getter_AddRefs(trueEngine));
+				if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))	return(rv);
+				if (!trueEngine)	return(NS_RDF_NO_VALUE);
+
+				aRes = trueEngine;
+			}
+
+			if (!aRes)	return(NS_OK);
+
+			*theEngine = aRes.get();
+			NS_ADDREF(*theEngine);
+
+			// get update URL
+			nsCOMPtr<nsIRDFNode>	aNode;
+			if (NS_SUCCEEDED(rv = mInner->GetTarget(aRes, kNC_Update, PR_TRUE, getter_AddRefs(aNode)))
+				&& (rv != NS_RDF_NO_VALUE))
+			{
+				nsCOMPtr<nsIRDFLiteral>	aLiteral = do_QueryInterface(aNode);
+				if (aLiteral)
+				{
+					const PRUnichar	*updateUni = nsnull;
+					aLiteral->GetValueConst(&updateUni);
+					if (updateUni)
+					{
+						updateURL.AssignWithConversion(updateUni);
+					}
+				}
+			}
+		}
+	}
+	return(rv);
+}
+
+
+
 void
 InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 {
 	InternetSearchDataSource *search = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
 	if (!search)	return;
+
+	if (search->busySchedule == PR_FALSE)
+	{
+		nsresult			rv;
+		nsCOMPtr<nsIRDFResource>	searchURI;
+		nsCAutoString			updateURL;
+		if (NS_FAILED(rv = search->GetSearchEngineToPing(getter_AddRefs(searchURI), updateURL)))
+			return;
+		if (!searchURI)			return;
+		if (updateURL.Length() < 1)	return;
+
+		search->busyResource = searchURI;
+
+		nsCOMPtr<nsIInternetSearchContext>	engineContext;
+		if (NS_FAILED(rv = NS_NewInternetSearchContext(nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT,
+			nsnull, searchURI, nsnull, nsnull, getter_AddRefs(engineContext))))
+			return;
+		if (!engineContext)	return;
+
+		nsCOMPtr<nsIURI>	uri;
+		if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(uri), updateURL)))	return;
+
+		nsCOMPtr<nsIChannel>	channel;
+		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))	return;
+
+		channel->SetLoadAttributes(nsIChannel::FORCE_VALIDATION | nsIChannel::VALIDATE_ALWAYS);
+
+		nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+		if (!httpChannel)	return;
+
+		// rjc says: just check "HEAD" info for whether a search file has changed
+		nsCOMPtr<nsIAtom> headAtom = getter_AddRefs(NS_NewAtom("HEAD"));
+		if (headAtom)
+		{
+			httpChannel->SetRequestMethod(headAtom);
+		}
+
+		if (NS_SUCCEEDED(rv = channel->AsyncRead(search, engineContext)))
+		{
+			search->busySchedule = TRUE;
+
+#ifdef	DEBUG_SEARCH_UPDATES
+			printf("    InternetSearchDataSource::FireTimer - Pinging '%s'\n", (char *)updateURL);
+#endif
+
+		}
+	}
+#ifdef	DEBUG_SEARCH_UPDATES
+else
+	{
+	printf("    InternetSearchDataSource::FireTimer - busy pinging.\n");
+	}
+#endif
 
 #ifndef	REPEATING_TIMERS
 	if (mTimer)
@@ -847,6 +996,13 @@ InternetSearchDataSource::Init()
 		nsnull, NS_GET_IID(nsIRDFDataSource), (void **)&mInner)))
 		return(rv);
 
+	// get localstore, as we'll be using it
+	if (NS_FAILED(rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(mLocalstore))))
+		return(rv);
+
+	if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(mUpdateArray))))
+		return(rv);
+
 	// register this as a named data source with the service manager
 	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return(rv);
@@ -856,14 +1012,15 @@ InternetSearchDataSource::Init()
 
 	if (!mTimer)
 	{
-	    mTimer = do_CreateInstance("component://netscape/timer", &rv);
-	    if (mTimer)
-	    {
-		mTimer->Init(InternetSearchDataSource::FireTimer, this,
+		busySchedule = PR_FALSE;
+		mTimer = do_CreateInstance("component://netscape/timer", &rv);
+		if (mTimer)
+		{
+			mTimer->Init(InternetSearchDataSource::FireTimer, this,
 			     SEARCH_UPDATE_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
-		// Note: don't addref "this" as we'll cancel the timer in the
-		//       InternetSearchDataSource destructor
-	    }
+			// Note: don't addref "this" as we'll cancel the timer in the
+			//       InternetSearchDataSource destructor
+		}
 	}
 
 	mEngineListBuilt = PR_FALSE;
@@ -1573,15 +1730,13 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 	// check if we have any filters, enable command to clear them
 	PRBool				haveFilters = PR_FALSE;
 
-	nsCOMPtr<nsIRDFDataSource>	localstore;
-	if (NS_SUCCEEDED(rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore)))
-		&& (localstore))
+	if (mLocalstore)
 	{
 		nsCOMPtr<nsISimpleEnumerator>	cursor;
 		PRBool				hasMore = PR_FALSE;
 
 		// check kNC_FilterSearchURLsRoot
-		if (NS_SUCCEEDED(rv = localstore->GetTargets(kNC_FilterSearchURLsRoot, kNC_Child,
+		if (NS_SUCCEEDED(rv = mLocalstore->GetTargets(kNC_FilterSearchURLsRoot, kNC_Child,
 			PR_TRUE, getter_AddRefs(cursor))))
 		{
 			if (NS_SUCCEEDED(cursor->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
@@ -1592,7 +1747,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 		if (haveFilters == PR_FALSE)
 		{
 			// check kNC_FilterSearchSitesRoot
-			if (NS_SUCCEEDED(rv = localstore->GetTargets(kNC_FilterSearchSitesRoot, kNC_Child,
+			if (NS_SUCCEEDED(rv = mLocalstore->GetTargets(kNC_FilterSearchSitesRoot, kNC_Child,
 				PR_TRUE, getter_AddRefs(cursor))))
 			{
 				if (NS_SUCCEEDED(cursor->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
@@ -1766,12 +1921,8 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
 
 	// add aResource into a list of nodes to filter out
-	nsCOMPtr<nsIRDFDataSource>	localstore;
-	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
-	if (NS_FAILED(rv))	return(rv);
-
 	PRBool	alreadyFiltered = PR_FALSE;
-	if (NS_SUCCEEDED(rv = localstore->HasAssertion(kNC_FilterSearchURLsRoot, kNC_Child, urlLiteral,
+	if (NS_SUCCEEDED(rv = mLocalstore->HasAssertion(kNC_FilterSearchURLsRoot, kNC_Child, urlLiteral,
 		PR_TRUE, &alreadyFiltered)) && (alreadyFiltered == PR_TRUE))
 	{
 		// already filtered, nothing to do
@@ -1779,10 +1930,10 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 	}
 
 	// filter this URL out
-	localstore->Assert(kNC_FilterSearchURLsRoot, kNC_Child, urlLiteral, PR_TRUE);
+	mLocalstore->Assert(kNC_FilterSearchURLsRoot, kNC_Child, urlLiteral, PR_TRUE);
 
 	// flush localstore
-	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(localstore);
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
 	if (remoteLocalStore)
 	{
 		remoteLocalStore->Flush();
@@ -1847,12 +1998,8 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
 
 	// add aResource into a list of nodes to filter out
-	nsCOMPtr<nsIRDFDataSource>	localstore;
-	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
-	if (NS_FAILED(rv))	return(rv);
-
 	PRBool	alreadyFiltered = PR_FALSE;
-	if (NS_SUCCEEDED(rv = localstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral,
+	if (NS_SUCCEEDED(rv = mLocalstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral,
 		PR_TRUE, &alreadyFiltered)) && (alreadyFiltered == PR_TRUE))
 	{
 		// already filtered, nothing to do
@@ -1860,10 +2007,10 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 	}
 
 	// filter this site out
-	localstore->Assert(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral, PR_TRUE);
+	mLocalstore->Assert(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral, PR_TRUE);
 
 	// flush localstore
-	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(localstore);
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
 	if (remoteLocalStore)
 	{
 		remoteLocalStore->Flush();
@@ -1957,16 +2104,12 @@ InternetSearchDataSource::clearFilters(void)
 	if (!mInner)	return(NS_ERROR_UNEXPECTED);
 
 	nsresult			rv;
-	nsCOMPtr<nsIRDFDataSource>	localstore;
-	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
-	if (NS_FAILED(rv))	return(rv);
-
 	nsCOMPtr<nsISimpleEnumerator>	arcs;
 	PRBool				hasMore = PR_TRUE;
 	nsCOMPtr<nsISupports>		arc;
 
 	// remove all filtered URLs
-	if (NS_SUCCEEDED(rv = localstore->GetTargets(kNC_FilterSearchURLsRoot, kNC_Child,
+	if (NS_SUCCEEDED(rv = mLocalstore->GetTargets(kNC_FilterSearchURLsRoot, kNC_Child,
 		PR_TRUE, getter_AddRefs(arcs))))
 	{
 		hasMore = PR_TRUE;
@@ -1980,12 +2123,12 @@ InternetSearchDataSource::clearFilters(void)
 			nsCOMPtr<nsIRDFLiteral>	filterURL = do_QueryInterface(arc);
 			if (!filterURL)	continue;
 			
-			localstore->Unassert(kNC_FilterSearchURLsRoot, kNC_Child, filterURL);
+			mLocalstore->Unassert(kNC_FilterSearchURLsRoot, kNC_Child, filterURL);
 		}
 	}
 
 	// remove all filtered sites
-	if (NS_SUCCEEDED(rv = localstore->GetTargets(kNC_FilterSearchSitesRoot, kNC_Child,
+	if (NS_SUCCEEDED(rv = mLocalstore->GetTargets(kNC_FilterSearchSitesRoot, kNC_Child,
 		PR_TRUE, getter_AddRefs(arcs))))
 	{
 		hasMore = PR_TRUE;
@@ -1999,12 +2142,12 @@ InternetSearchDataSource::clearFilters(void)
 			nsCOMPtr<nsIRDFLiteral>	filterSiteLiteral = do_QueryInterface(arc);
 			if (!filterSiteLiteral)	continue;
 			
-			localstore->Unassert(kNC_FilterSearchSitesRoot, kNC_Child, filterSiteLiteral);
+			mLocalstore->Unassert(kNC_FilterSearchSitesRoot, kNC_Child, filterSiteLiteral);
 		}
 	}
 
 	// flush localstore
-	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(localstore);
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
 	if (remoteLocalStore)
 	{
 		remoteLocalStore->Flush();
@@ -2019,11 +2162,7 @@ PRBool
 InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
 {
 	PRBool		filterStatus = PR_FALSE;
-
-	nsresult			rv;
-	nsCOMPtr<nsIRDFDataSource>	localstore;
-	rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
-	if (NS_FAILED(rv))	return(filterStatus);
+	nsresult	rv;
 
 	const PRUnichar	*hrefUni = hrefStr.GetUnicode();
 	if (!hrefUni)	return(filterStatus);
@@ -2032,7 +2171,7 @@ InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
 	nsCOMPtr<nsIRDFLiteral>	hrefLiteral;
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(hrefUni, getter_AddRefs(hrefLiteral))))
 	{
-		if (NS_SUCCEEDED(rv = localstore->HasAssertion(kNC_FilterSearchURLsRoot,
+		if (NS_SUCCEEDED(rv = mLocalstore->HasAssertion(kNC_FilterSearchURLsRoot,
 			kNC_Child, hrefLiteral, PR_TRUE, &filterStatus)))
 		{
 			if (filterStatus == PR_TRUE)
@@ -2056,7 +2195,7 @@ InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
 	if (NS_FAILED(rv = gRDFService->GetLiteral(host.GetUnicode(), getter_AddRefs(urlLiteral)))
 		|| (urlLiteral == nsnull))	return(NS_ERROR_UNEXPECTED);
 
-	rv = localstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral,
+	rv = mLocalstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral,
 		PR_TRUE, &filterStatus);
 
 	return(filterStatus);
@@ -2148,14 +2287,12 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 					  const PRUnichar *suggestedTitle, const PRUnichar *suggestedCategory)
 {
 	NS_PRECONDITION(engineURL != nsnull, "null ptr");
-	NS_PRECONDITION(iconURL != nsnull, "null ptr");
 	if (!engineURL)	return(NS_ERROR_NULL_POINTER);
-	if (!iconURL)	return(NS_ERROR_NULL_POINTER);
-	// Note: suggestedTitle & suggestedCategory can be null or empty strings, which is OK
+	// Note: iconURL, suggestedTitle & suggestedCategory
+	// can be null or empty strings, which is OK
 
 #ifdef	DEBUG_SEARCH_OUTPUT
 	printf("AddSearchEngine: engine='%s'\n", engineURL);
-	printf("AddSearchEngine:   icon='%s'\n", iconURL);
 #endif
 
 	nsresult	rv = NS_OK;
@@ -2194,17 +2331,19 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 		return(rv);
 	if (!iconContext)	return(NS_ERROR_UNEXPECTED);
 
-	nsCOMPtr<nsIURI>	iconURI;
-	if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(iconURI), iconURL)))
-		return(rv);
+	if (iconURL && (*iconURL))
+	{
+		nsCOMPtr<nsIURI>	iconURI;
+		if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(iconURI), iconURL)))
+			return(rv);
 
-	nsCOMPtr<nsIChannel>	iconChannel;
-	if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(iconChannel), iconURI, nsnull, mBackgroundLoadGroup)))
-		return(rv);
+		nsCOMPtr<nsIChannel>	iconChannel;
+		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(iconChannel), iconURI, nsnull, mBackgroundLoadGroup)))
+			return(rv);
 
-	if (NS_FAILED(rv = iconChannel->AsyncRead(this, iconContext)))
-		return(rv);
-
+		if (NS_FAILED(rv = iconChannel->AsyncRead(this, iconContext)))
+			return(rv);
+	}
 	return(NS_OK);
 }
 
@@ -2243,7 +2382,8 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 
 	// make sure that search engines are .src files
 	PRInt32	extensionOffset;
-	if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT)
+	if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
+		contextType == nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT)
 	{
 		extensionOffset = baseName.RFind(".src", PR_TRUE);
 		if ((extensionOffset < 0) || (extensionOffset != (PRInt32)(baseName.Length()-4)))
@@ -2270,6 +2410,8 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	// save data to file
 	// Note: write out one character at a time, as we might be dealing
 	//       with binary data (such as 0x00) [especially for images]
+	fileSpec.Delete(PR_FALSE);
+
 	nsOutputFileStream	outputStream(fileSpec);
 	if (!outputStream.failed())
 	{
@@ -2277,9 +2419,11 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 		{
 			outputStream.put((char)(dataBuf[loop]));
 		}
+		outputStream.flush();		
 		outputStream.close();
 
-		if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT)
+		if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
+			contextType == nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT)
 		{
 #ifdef	XP_MAC
 			// set appropriate Mac file type/creator for search engine files
@@ -2972,39 +3116,180 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 	// save file contents
 	if (data.Length() < 1)	return(NS_ERROR_UNEXPECTED);
 
+	rv = updateDataHintsInGraph(engine, data.GetUnicode());
+
 	nsCOMPtr<nsIRDFLiteral>	aLiteral;
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(data.GetUnicode(), getter_AddRefs(aLiteral))))
 	{
-		mInner->Assert(engine, kNC_Data, aLiteral, PR_TRUE);
-
 		*dataLit = aLiteral;
 		NS_IF_ADDREF(*dataLit);
 	}
+	
+	return(rv);
+}
 
-	// save name of search engine (as specified in file)
+
+
+nsresult
+InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const PRUnichar *dataUni)
+{
+	nsresult	rv = NS_OK;
+
+	// save/update search engine data
+	nsCOMPtr<nsIRDFLiteral>	dataLiteral;
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(dataUni, getter_AddRefs(dataLiteral))))
+	{
+		updateAtom(mInner, engine, kNC_Data, dataLiteral, nsnull);
+	}
+
+	// save/update name of search engine (as specified in file)
 	nsAutoString	nameValue;
-	if (NS_SUCCEEDED(rv = GetData(data.GetUnicode(), "search", 0, "name", nameValue)))
+	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "name", nameValue)))
 	{
 		nsCOMPtr<nsIRDFLiteral>	nameLiteral;
 		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nameValue.GetUnicode(),
 				getter_AddRefs(nameLiteral))))
 		{
-			mInner->Assert(engine, kNC_Name, nameLiteral, PR_TRUE);
+			rv = updateAtom(mInner, engine, kNC_Name, nameLiteral, nsnull);
 		}
 	}
 
-	// save description of search engine (if specified)
+	// save/update description of search engine (if specified)
 	nsAutoString	descValue;
-	if (NS_SUCCEEDED(rv = GetData(data.GetUnicode(), "search", 0, "description", descValue)))
+	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "description", descValue)))
 	{
 		nsCOMPtr<nsIRDFLiteral>	descLiteral;
 		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(descValue.GetUnicode(),
 				getter_AddRefs(descLiteral))))
 		{
-			mInner->Assert(engine, kNC_Description, descLiteral, PR_TRUE);
+			rv = updateAtom(mInner, engine, kNC_Description, descLiteral, nsnull);
 		}
 	}
 
+	PRBool	updatePrivateFiles = PR_FALSE;
+
+	if (NS_SUCCEEDED(rv = mInner->HasAssertion(engine, kNC_SearchType, kNC_Engine, PR_TRUE, &updatePrivateFiles))
+		&& (updatePrivateFiles == PR_TRUE))
+	{
+		// rjc says: so here is our strategy. The spec says that the "search"|"update"
+		// attribute MUST refer to a binhex-ed file (i.e. ends with ".src.hqx"). We don't
+		// support binhex (due to being cross-platform minded folks) and, even if we did,
+		// its not enough info to figure out what the appropriate icon should be.
+		// The answer: we're add additional attributes in our private <BROWSER> section
+		// to re-define these values. If they aren't there, we'll fallback to the <SEARCH>
+		// section values and try and make logical choices:  for example, if we have an
+		// "update" URL which ends with ".src.hqx", we'll strip off the ".hqx" part and
+		// check to see if it exists... which at least makes it possible for a web site
+		// to put up both a binhexed version and a straight text version of the search file.
+
+		// get update URL and # of days to check for updates
+		// Note: only check for updates on our private search files
+		nsAutoString	updateStr, updateIconStr, updateCheckDaysStr;
+
+		GetData(dataUni, "browser", 0, "update", updateStr);
+		if (updateStr.Length() < 1)
+		{
+			// fallback to trying "search"|"updateCheckDays"
+			GetData(dataUni, "search", 0, "update", updateStr);
+
+			// if we have a ".hqx" extension, strip it off
+			nsAutoString	extension;
+			updateStr.Right(extension, 4);
+			if (extension.EqualsIgnoreCase(".hqx"))
+			{
+				updateStr.Truncate(updateStr.Length() - 4);
+			}
+
+			// now, either way, ensure that we have a ".src" file
+			updateStr.Right(extension, 4);
+			if (extension.EqualsIgnoreCase(".src") == PR_FALSE)
+			{
+				// and if we don't, toss it
+				updateStr.Truncate();
+			}
+		}
+		else
+		{
+			// note: its OK if the "updateIcon" isn't specified
+			GetData(dataUni, "browser", 0, "updateIcon", updateIconStr);
+		}
+		if (updateStr.Length() > 0)
+		{
+			GetData(dataUni, "browser", 0, "updateCheckDays", updateCheckDaysStr);
+			if (updateCheckDaysStr.Length() < 1)
+			{
+				// fallback to trying "search"|"updateCheckDays"
+				GetData(dataUni, "search", 0, "updateCheckDays", updateCheckDaysStr);
+			}
+		}
+
+		if ((updateStr.Length() > 0) && (updateCheckDaysStr.Length() > 0))
+		{
+			nsCOMPtr<nsIRDFLiteral>	updateLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateStr.GetUnicode(),
+					getter_AddRefs(updateLiteral))))
+			{
+				rv = updateAtom(mInner, engine, kNC_Update, updateLiteral, nsnull);
+			}
+
+			PRInt32	err;
+			PRInt32	updateDays = updateCheckDaysStr.ToInteger(&err);
+			if ((err) || (updateDays < 1))
+			{
+				// default to something sane
+				updateDays = 3;
+			}
+
+			nsCOMPtr<nsIRDFInt>	updateCheckDaysLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetIntLiteral(updateDays,
+					getter_AddRefs(updateCheckDaysLiteral))))
+			{
+				rv = updateAtom(mInner, engine, kNC_UpdateCheckDays, updateCheckDaysLiteral, nsnull);
+			}
+
+			if (updateIconStr.Length() > 0)
+			{
+				nsCOMPtr<nsIRDFLiteral>	updateIconLiteral;
+				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateIconStr.GetUnicode(),
+						getter_AddRefs(updateIconLiteral))))
+				{
+					rv = updateAtom(mInner, engine, kNC_UpdateIcon, updateIconLiteral, nsnull);
+				}
+			}
+		}
+	}
+
+	return(rv);
+}
+
+
+
+nsresult
+InternetSearchDataSource::updateAtom(nsIRDFDataSource *db, nsIRDFResource *src,
+			nsIRDFResource *prop, nsIRDFNode *newValue, PRBool *dirtyFlag)
+{
+	nsresult		rv;
+	nsCOMPtr<nsIRDFNode>	oldValue;
+
+	if (dirtyFlag != nsnull)
+	{
+		*dirtyFlag = PR_FALSE;
+	}
+
+	if (NS_SUCCEEDED(rv = db->GetTarget(src, prop, PR_TRUE, getter_AddRefs(oldValue))) &&
+		(rv != NS_RDF_NO_VALUE))
+	{
+		rv = db->Change(src, prop, oldValue, newValue);
+
+		if ((oldValue.get() != newValue) && (dirtyFlag != nsnull))
+		{
+			*dirtyFlag = PR_TRUE;
+		}
+	}
+	else
+	{
+		rv = db->Assert(src, prop, newValue, PR_TRUE);
+	}
 	return(rv);
 }
 
@@ -3081,17 +3366,113 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 
 
 nsresult
+InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
+{
+	nsresult	rv;
+
+#ifdef	DEBUG_SEARCH_UPDATES
+	const char	*engineURI = nsnull;
+	engine->GetValueConst(&engineURI);
+#endif
+
+	// get the engines "updateCheckDays" value
+	nsCOMPtr<nsIRDFNode>	updateCheckDaysNode;
+	rv = mInner->GetTarget(engine, kNC_UpdateCheckDays, PR_TRUE, getter_AddRefs(updateCheckDaysNode));
+	if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE))	return(rv);
+	nsCOMPtr<nsIRDFInt>	updateCheckDaysLiteral = do_QueryInterface(updateCheckDaysNode);
+	PRInt32		updateCheckDays;
+	updateCheckDaysLiteral->GetValue(&updateCheckDays);
+	// convert updateCheckDays from days to seconds;
+
+#ifndef	DEBUG_SEARCH_UPDATES
+	PRInt32		updateCheckSecs = updateCheckDays * (60 * 60 * 24);
+#else
+	// rjc note: for debugging, use as minutes instead days
+	PRInt32		updateCheckSecs = updateCheckDays * 60;
+#endif
+
+	// get the current date/time [from microseconds (PRTime) to seconds]
+	PRTime		now64 = PR_Now(), temp64, million;
+	LL_I2L(million, PR_USEC_PER_SEC);
+	LL_DIV(temp64, now64, million);
+	PRInt32		now32;
+	LL_L2I(now32, temp64);
+
+	nsCOMPtr<nsIRDFNode>	aNode;
+	rv = mLocalstore->GetTarget(engine, kWEB_LastPingDate, PR_TRUE, getter_AddRefs(aNode));
+	if (NS_FAILED(rv))	return(rv);
+	if (rv == NS_RDF_NO_VALUE)
+	{
+		// if we've never validated this engine before,
+		// then start its epoch as of now
+		validateEngineNow(engine);
+
+#ifdef	DEBUG_SEARCH_UPDATES
+		printf("    Search engine '%s' marked valid as of now.\n", engineURI);
+#endif
+
+		return(NS_OK);
+	}
+
+	// get last validate date/time
+	nsCOMPtr<nsIRDFLiteral>	lastCheckLiteral = do_QueryInterface(aNode);
+	if (!lastCheckLiteral)	return(NS_ERROR_UNEXPECTED);
+	const PRUnichar		*lastCheckUni = nsnull;
+	lastCheckLiteral->GetValueConst(&lastCheckUni);
+	if (!lastCheckUni)	return(NS_ERROR_UNEXPECTED);
+	nsAutoString		lastCheckStr(lastCheckUni);
+	PRInt32			lastCheckInt=0, err=0;
+	lastCheckInt = lastCheckStr.ToInteger(&err);
+	if (err)		return(NS_ERROR_UNEXPECTED);
+
+	// calculate duration since last validation and
+	// just return if its too early to check again
+	PRInt32			durationSecs = now32 - lastCheckInt;
+	if (durationSecs < updateCheckSecs)
+	{
+#ifdef	DEBUG_SEARCH_UPDATES
+		printf("    Search engine '%s' is valid for %d more seconds.\n",
+			engineURI, (updateCheckSecs-durationSecs));
+#endif
+		return(NS_OK);
+	}
+
+	// search engine needs to be checked again, so add it into the to-be-validated array
+	PRInt32		elementIndex = mUpdateArray->IndexOf(engine);
+	if (elementIndex < 0)
+	{
+		mUpdateArray->AppendElement(engine);
+
+#ifdef	DEBUG_SEARCH_UPDATES
+		printf("    Search engine '%s' is now queued to be validated via HTTP HEAD method.\n",
+			engineURI, durationSecs);
+#endif
+	}
+	else
+	{
+#ifdef	DEBUG_SEARCH_UPDATES
+		printf("    Search engine '%s' is already in queue to be validated.\n",
+			engineURI);
+#endif
+	}
+	return(NS_OK);
+}
+
+
+
+nsresult
 InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine,
 				const nsString &fullURL, const nsString &text)
 {
 	nsresult	rv;
 	nsAutoString	textTemp(text);
 
+	if (!mInner)	return(NS_RDF_NO_VALUE);
 //	Note: source can be null
 //	if (!source)	return(NS_ERROR_NULL_POINTER);
-
 	if (!engine)	return(NS_ERROR_NULL_POINTER);
-	if (!mInner)	return(NS_RDF_NO_VALUE);
+
+	validateEngine(engine);
 
 	nsCOMPtr<nsIUnicodeDecoder>	unicodeDecoder;
 	nsAutoString			action, methodStr, input, userVar;
@@ -3360,7 +3741,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 		{
 			if (file)
 			{
-				mInner->Assert(searchRes, kNC_URL, searchLiteral, PR_TRUE);
+				updateAtom(mInner, searchRes, kNC_URL, searchLiteral, nsnull);
 			}
 		}
 	}
@@ -3381,7 +3762,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(iconURL.GetUnicode(),
 					getter_AddRefs(iconLiteral))))
 			{
-				mInner->Assert(searchRes, kNC_Icon, iconLiteral, PR_TRUE);
+				updateAtom(mInner, searchRes, kNC_Icon, iconLiteral, nsnull);
 			}
 		}
 	}
@@ -3390,67 +3771,12 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsFileSpec *file, const 
 	{
 		// mark our private search files, so that we can distinguish
 		// between ours and any that are included with the OS
-		mInner->Assert(searchRes, kNC_SearchType, kNC_Engine, PR_TRUE);
+		updateAtom(mInner, searchRes, kNC_SearchType, kNC_Engine, nsnull);
 	}
 
 	if (dataUni != nsnull)
 	{
-		// save name of search engine (as specified in file)
-		nsAutoString	nameValue;
-		if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "name", nameValue)))
-		{
-			nsCOMPtr<nsIRDFLiteral>	nameLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nameValue.GetUnicode(),
-					getter_AddRefs(nameLiteral))))
-			{
-				mInner->Assert(searchRes, kNC_Name, nameLiteral, PR_TRUE);
-			}
-		}
-
-		// save description of search engine (if specified)
-		nsAutoString	descValue;
-		if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "description", descValue)))
-		{
-			nsCOMPtr<nsIRDFLiteral>	descLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(descValue.GetUnicode(),
-					getter_AddRefs(descLiteral))))
-			{
-				mInner->Assert(searchRes, kNC_Description, descLiteral, PR_TRUE);
-			}
-		}
-
-		if (checkMacFileType == PR_FALSE)
-		{
-			// get update URL and # of days to check for updates
-			// Note: only check for updates on our private search files
-			nsAutoString	updateStr, updateCheckDaysStr;
-			GetData(dataUni, "search", 0, "update", updateStr);
-			GetData(dataUni, "search", 0, "updateCheckDays", updateCheckDaysStr);
-			if ((updateStr.Length() > 0) && (updateCheckDaysStr.Length() > 0))
-			{
-				nsCOMPtr<nsIRDFLiteral>	updateLiteral;
-				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(updateStr.GetUnicode(),
-						getter_AddRefs(updateLiteral))))
-				{
-					mInner->Assert(searchRes, kNC_Update, updateLiteral, PR_TRUE);
-				}
-
-				PRInt32	err;
-				PRInt32	updateDays = updateCheckDaysStr.ToInteger(&err);
-				if (err)
-				{
-					updateDays = 3;
-				}
-
-				nsCOMPtr<nsIRDFInt>	updateCheckDaysLiteral;
-				if (NS_SUCCEEDED(rv = gRDFService->GetIntLiteral(updateDays,
-						getter_AddRefs(updateCheckDaysLiteral))))
-				{
-					mInner->Assert(searchRes, kNC_UpdateCheckDays,
-						updateCheckDaysLiteral, PR_TRUE);
-				}
-			}
-		}
+		updateDataHintsInGraph(searchRes, dataUni);
 
 		// finally, if we have a category hint, add this new engine into the category (if it exists)
 		if (categoryHint && categoryDataSource)
@@ -3543,7 +3869,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 
 	for (nsDirectoryIterator i(nativeDir, PR_TRUE); i.Exists(); i++)
 	{
-		const nsFileSpec	fileSpec = (const nsFileSpec &)i;
+		const nsFileSpec	fileSpec = i.Spec();
 		if (fileSpec.IsHidden())
 		{
 			// Ignore hidden files/directories
@@ -3647,7 +3973,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 
 
 nsresult
-InternetSearchDataSource::ReadFileContents(nsFileSpec fileSpec, nsString& sourceContents)
+InternetSearchDataSource::ReadFileContents(const nsFileSpec &fileSpec, nsString& sourceContents)
 {
 	nsresult			rv = NS_ERROR_FAILURE;
 	PRUint32			contentsLen;
@@ -4105,25 +4431,257 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	PRUint32	contextType = 0;
 	if (NS_FAILED(rv = context->GetContextType(&contextType)))		return(rv);
 
-	if ((contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT) ||
-	    (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT))
+	if (contextType == nsIInternetSearchContext::WEB_SEARCH_CONTEXT)
+	{
+		// continue to process nsIInternetSearchContext::WEB_SEARCH_CONTEXT
+		rv = webSearchFinalize(channel, context);
+	}
+	else if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
+		 contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
 	{
 		nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
-		if (httpChannel)
+		if (!httpChannel)	return(NS_ERROR_UNEXPECTED);
+
+		// check HTTP status to ensure success
+		PRUint32	httpStatus = 0;
+		if (NS_SUCCEEDED(rv = httpChannel->GetResponseStatus(&httpStatus)) &&
+			(httpStatus == 200))
 		{
-			// check HTTP status to ensure success
-			PRUint32	httpStatus = 0;
-			if (NS_SUCCEEDED(rv = httpChannel->GetResponseStatus(&httpStatus)) &&
-				(httpStatus == 200))
+			rv = saveContents(channel, context, contextType);
+		}
+	}
+	else if (contextType == nsIInternetSearchContext::ENGINE_UPDATE_CONTEXT)
+	{
+		nsCOMPtr<nsIRDFResource>	theEngine;
+		if (NS_FAILED(rv = context->GetEngine(getter_AddRefs(theEngine))))	return(rv);
+		if (!theEngine)	return(NS_ERROR_NO_INTERFACE);
+
+#ifdef	DEBUG_SEARCH_UPDATES
+		const char	*engineURI = nsnull;
+		theEngine->GetValueConst(&engineURI);
+#endif
+
+		// free up "busy" info now & mark as non-busy
+		busySchedule = PR_FALSE;
+		busyResource = nsnull;
+
+		// we only have HTTP "HEAD" information when doing updates
+		nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+		if (!httpChannel)	return(NS_ERROR_UNEXPECTED);
+
+		// check HTTP status to ensure success
+		PRUint32	httpStatus = 0;
+		if (NS_FAILED(rv = httpChannel->GetResponseStatus(&httpStatus)))
+			return(rv);
+		if (httpStatus != 200)	return(NS_ERROR_UNEXPECTED);
+
+		// get last-modified & content-length info
+		nsCAutoString			lastModValue, contentLengthValue;
+
+		nsCOMPtr<nsISimpleEnumerator>	enumerator;
+		if (NS_FAILED(rv = httpChannel->GetResponseHeaderEnumerator(getter_AddRefs(enumerator))))
+			return(rv);
+		PRBool			bMoreHeaders;
+		while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&bMoreHeaders))
+			&& (bMoreHeaders == PR_TRUE))
+		{
+			nsCOMPtr<nsISupports>   item;
+			enumerator->GetNext(getter_AddRefs(item));
+			nsCOMPtr<nsIHTTPHeader>	header = do_QueryInterface(item);
+			NS_ASSERTION(header, "InternetSearchDataSource::OnStopRequest - Bad HTTP header.");
+			if (!header)	return(NS_ERROR_UNEXPECTED);
+
+			nsCOMPtr<nsIAtom>       headerAtom;
+			header->GetField(getter_AddRefs(headerAtom));
+			nsAutoString		headerStr;
+			headerAtom->ToString(headerStr);
+
+			char	*val = nsnull;
+			
+			if (headerStr.EqualsIgnoreCase("Last-Modified"))
 			{
-				rv = saveContents(channel, context, contextType);
+				header->GetValue(&val);
+				if (val)
+				{
+#ifdef	DEBUG_SEARCH_UPDATES
+					printf("    Search engine='%s' Last-Modified='%s'\n", engineURI, val);
+#endif
+					lastModValue = val;
+					nsCRT::free(val);
+				}
+			}
+			else if (headerStr.EqualsIgnoreCase("Content-Length"))
+			{
+				header->GetValue(&val);
+				if (val)
+				{
+#ifdef	DEBUG_SEARCH_UPDATES
+					printf("    Search engine='%s' Content-Length='%s'\n", engineURI, val);
+#endif
+					contentLengthValue = val;
+					nsCRT::free(val);
+				}
 			}
 		}
-		return(rv);
+
+		// should we fetch the entire file?
+		PRBool		updateSearchEngineFile = PR_FALSE;
+
+		// save out new search engine state data into localstore
+		PRBool			tempDirty = PR_FALSE;
+		nsCOMPtr<nsIRDFLiteral>	newValue;
+		if (lastModValue.Length() > 0)
+		{
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(lastModValue).GetUnicode(),
+				getter_AddRefs(newValue));
+			if (newValue)
+			{
+				updateAtom(mLocalstore, theEngine, kWEB_LastPingModDate, newValue,
+					&tempDirty);
+				if (tempDirty == PR_TRUE)	updateSearchEngineFile = PR_TRUE;
+			}
+		}
+		if (contentLengthValue.Length() > 0)
+		{
+			gRDFService->GetLiteral(NS_ConvertASCIItoUCS2(contentLengthValue).GetUnicode(),
+				getter_AddRefs(newValue));
+			if (newValue)
+			{
+				updateAtom(mLocalstore, theEngine, kWEB_LastPingContentLen, newValue,
+					&tempDirty);
+				if (tempDirty == PR_TRUE)
+				{
+					updateSearchEngineFile = PR_TRUE;
+				}
+				else
+				{
+					// worst case: compare local data size vs. remote content size
+					nsCOMPtr<nsIRDFLiteral>	dataLit;
+					if (NS_SUCCEEDED(rv = FindData(theEngine, getter_AddRefs(dataLit))) &&
+						(rv != NS_RDF_NO_VALUE))
+					{
+						const PRUnichar	*dataUni = nsnull;
+						dataLit->GetValueConst(&dataUni);
+						nsAutoString	dataStr(dataUni);
+						PRInt32		dataLen=dataStr.Length();
+#ifdef	DEBUG_SEARCH_UPDATES
+						printf("    Search engine='%s' data length='%d'\n", engineURI, dataLen);
+#endif
+						PRInt32	contentLen=0, err=0;
+						contentLen = contentLengthValue.ToInteger(&err);
+						if ((!err) && (dataLen != contentLen))
+						{
+#ifdef	DEBUG_SEARCH_UPDATES
+							printf("    Search engine '%s' data length != remote content length, so update\n",
+								engineURI, dataLen);
+#endif
+							updateSearchEngineFile = PR_TRUE;
+						}
+					}
+				}
+			}
+		}
+
+		// mark now as the last time we stat'ted the search engine
+		validateEngineNow(theEngine);
+
+		if (updateSearchEngineFile == PR_TRUE)
+		{
+#ifdef	DEBUG_SEARCH_UPDATES
+			printf("    Search engine='%s' needs updating, so fetching it\n", engineURI);
+#endif
+			// get update URL
+			nsCString		updateURL;
+			nsCOMPtr<nsIRDFNode>	aNode;
+			if (NS_SUCCEEDED(rv = mInner->GetTarget(theEngine, kNC_Update, PR_TRUE, getter_AddRefs(aNode)))
+				&& (rv != NS_RDF_NO_VALUE))
+			{
+				nsCOMPtr<nsIRDFLiteral>	aLiteral = do_QueryInterface(aNode);
+				if (aLiteral)
+				{
+					const PRUnichar	*updateUni = nsnull;
+					aLiteral->GetValueConst(&updateUni);
+					if (updateUni)
+					{
+						updateURL.AssignWithConversion(updateUni);
+					}
+				}
+			}
+
+			// get update icon
+			nsCString		updateIconURL;
+			if (NS_SUCCEEDED(rv = mInner->GetTarget(theEngine, kNC_UpdateIcon, PR_TRUE, getter_AddRefs(aNode)))
+				&& (rv != NS_RDF_NO_VALUE))
+			{
+				nsCOMPtr<nsIRDFLiteral>	aIconLiteral = do_QueryInterface(aNode);
+				if (aIconLiteral)
+				{
+					const PRUnichar	*updateIconUni = nsnull;
+					aIconLiteral->GetValueConst(&updateIconUni);
+					if (updateIconUni)
+					{
+						updateIconURL.AssignWithConversion(updateIconUni);
+					}
+				}
+			}
+
+			// download it!
+			AddSearchEngine(updateURL, updateIconURL, nsnull, nsnull);
+		}
+		else
+		{
+#ifdef	DEBUG_SEARCH_UPDATES
+			printf("    Search engine='%s' is current and requires no updating\n", engineURI);
+#endif
+		}
 	}
+	else
+	{
+		rv = NS_ERROR_UNEXPECTED;
+	}
+	return(rv);
+}
 
-	// continue to process nsIInternetSearchContext::WEB_SEARCH_CONTEXT
 
+
+nsresult
+InternetSearchDataSource::validateEngineNow(nsIRDFResource *engine)
+{
+	// get the current date/time [from microseconds (PRTime) to seconds]
+	// also, need to convert from 64 bites to 32 bites as we don't have an easy
+	// way to convert from 64 bit number to a string like we do for 32 bit numbers
+	PRTime		now64 = PR_Now(), temp64, million;
+	LL_I2L(million, PR_USEC_PER_SEC);
+	LL_DIV(temp64, now64, million);
+	PRInt32		now32;
+	LL_L2I(now32, temp64);
+
+	// validate this engine as of now (save as string
+	// literal as that's all RDF can currently serialize)
+	nsAutoString	nowStr;
+	nowStr.AppendInt(now32);
+
+	nsresult		rv;
+	nsCOMPtr<nsIRDFLiteral>	nowLiteral;
+	if (NS_FAILED(rv = gRDFService->GetLiteral(nowStr.GetUnicode(),
+			getter_AddRefs(nowLiteral))))	return(rv);
+	updateAtom(mLocalstore, engine, kWEB_LastPingDate, nowLiteral, nsnull);
+
+	// flush localstore
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteLocalStore = do_QueryInterface(mLocalstore);
+	if (remoteLocalStore)
+	{
+		remoteLocalStore->Flush();
+	}
+	return(NS_OK);
+}
+
+
+
+nsresult
+InternetSearchDataSource::webSearchFinalize(nsIChannel* channel, nsIInternetSearchContext *context)
+{
+	nsresult			rv;
 	nsCOMPtr<nsIRDFResource>	mParent;
 	if (NS_FAILED(rv = context->GetParent(getter_AddRefs(mParent))))	return(rv);
 //	Note: mParent can be null
