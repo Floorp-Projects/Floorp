@@ -494,6 +494,18 @@ function Shutdown()
   } catch (ex) {
   }
 
+  var bt = document.getElementById("bookmarks-ptf");
+  if (bt) {
+    bt.database.RemoveObserver(BookmarksToolbarRDFObserver);
+    bt.controllers.removeController(BookmarksMenuController);
+  }
+  var bm = document.getElementById("bookmarks-menu");
+  bm.controllers.removeController(BookmarksMenuController);
+
+  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pbi.removeObserver(gFormFillPrefListener.domain, gFormFillPrefListener);
+  pbi.removeObserver(gHomeButton.prefDomain, gHomeButton);
+
   BrowserOffline.uninit();
   
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
