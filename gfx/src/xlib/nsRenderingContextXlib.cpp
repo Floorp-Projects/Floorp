@@ -353,7 +353,8 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
     NS_IF_RELEASE(mClipRegion);
     
     mClipRegion = state->mClipRegion;
-    mFontMetrics = state->mFontMetrics;
+    if (mFontMetrics != state->mFontMetrics)
+      SetFont(state->mFontMetrics);
 
     if (mRenderingSurface && mClipRegion) {
       Region region;

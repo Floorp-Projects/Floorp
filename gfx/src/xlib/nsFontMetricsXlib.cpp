@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "xp_core.h"
@@ -26,6 +27,10 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharRepresentable.h"
+#include "nsIPref.h"
+#include "nsILocale.h"
+#include "nsILocaleService.h"
+#include "nsLocaleCID.h"
 #include "nsCOMPtr.h"
 #include "nspr.h"
 #include "plhash.h"
@@ -35,9 +40,13 @@
 
 // these are in the widget set
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
 static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
+
+static Display *gDisplay = NULL;
 
 nsFontMetricsXlib::nsFontMetricsXlib()
 {
@@ -67,6 +76,8 @@ nsFontMetricsXlib::nsFontMetricsXlib()
 
 nsFontMetricsXlib::~nsFontMetricsXlib()
 {
+  // do not free mGeneric here since it's a pointer into the mFonts list
+
   if (nsnull != mFont) {
     delete mFont;
     mFont = nsnull;
@@ -127,32 +138,75 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 
 #endif /* FONT_SWITCHING */
 
-NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont,
-                                      nsIAtom* aLangGroup,
-                                      nsIDeviceContext* aContext)
+NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
+  nsIDeviceContext* aContext)
 {
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
 
-  mLangGroup = aLangGroup;
 #ifdef FONT_SWITCHING
 
   mFont = new nsFont(aFont);
+  mLangGroup = aLangGroup;
 
   mDeviceContext = aContext;
 
   mDisplay = ((nsDeviceContextXlib *) mDeviceContext)->GetDisplay();
+  gDisplay = mDisplay;
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  char* factorStr = getenv("GECKO_FONT_SIZE_FACTOR");
-  double factor;
-  if (factorStr) {
-    factor = atof(factorStr);
-  }
-  else {
-    factor = 1.0;
+  static double factor = 1.0;
+  static PRUint16 minimum = 1;
+  static int init = 0;
+  if (!init) {
+    init = 1;
+    char* factorStr = getenv("GECKO_FONT_SIZE_FACTOR");
+    if (factorStr) {
+      factor = atof(factorStr);
+    }
+    else {
+      factor = 1.0;
+    }
+
+    /*
+     * XXX This is a temporary solution for the large CJK font problem.
+     * On Unix, East Asian fonts are large, and ugly when scaled. So we try
+     * to avoid scaling them, but then any adjacent English text looks too
+     * small. The proper solution is to get the layout engine to ask for
+     * the font heights for a string, rather than the height of the ASCII
+     * font only. (nsIFontMetrics::GetHeight only measures the ASCII font
+     * currently, and we don't want to load all of the fonts just to get a
+     * height.) Until we get the proper solution in the layout engine, we
+     * apply this temporary solution, based on the East Asian locale.
+     */
+    static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
+    nsresult res = NS_ERROR_FAILURE;
+    NS_WITH_SERVICE(nsILocaleService, service, kLocaleServiceCID, &res);
+    if (NS_SUCCEEDED(res) && service) {
+      nsCOMPtr<nsILocale> locale = nsnull;
+      res = service->GetApplicationLocale(getter_AddRefs(locale));
+      if (NS_SUCCEEDED(res) && locale) {
+        PRUnichar* str = nsnull;
+        res = locale->GetCategory(nsAutoString(NSILOCALE_CTYPE).GetUnicode(),
+                                  &str);
+        if (NS_SUCCEEDED(res) && str) {
+          nsAutoString loc(str);
+          loc.Truncate(2);
+          loc.ToLowerCase();
+          if ((loc == "ja") || (loc == "ko") || (loc == "zh")) {
+            // In CJK environments, we want the minimum request to be 16px,
+            // since the smallest font for some of those langs is 16.
+            minimum = 16;
+          }
+          Recycle(str);
+        }
+      }
+    }
   }
   mPixelSize = NSToIntRound(app2dev * factor * mFont->size);
+  if (mPixelSize < minimum) {
+    mPixelSize = minimum;
+  }
   mStretchIndex = 4; // normal
   mStyleIndex = mFont->style;
 
@@ -411,6 +465,7 @@ void nsFontMetricsXlib::RealizeFont()
 
   int rawWidth = XTextWidth(mFontHandle, " ", 1);
   mSpaceWidth = NSToCoordRound(rawWidth * f);
+
   unsigned long pr = 0;
 
   if (::XGetFontProperty(mFontHandle, XA_X_HEIGHT, &pr))
@@ -422,7 +477,7 @@ void nsFontMetricsXlib::RealizeFont()
   if (::XGetFontProperty(mFontHandle, XA_UNDERLINE_POSITION, &pr))
   {
     /* this will only be provided from adobe .afm fonts */
-    mUnderlineOffset = NSToIntRound(pr * f);
+    mUnderlineOffset = -NSToIntRound(pr * f);
     PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("underlineOffset=%d\n", mUnderlineOffset));
   }
   else
@@ -543,18 +598,21 @@ NS_IMETHODIMP  nsFontMetricsXlib::GetFont(const nsFont*& aFont)
   return NS_OK;
 }
 
-NS_IMETHODIMP  nsFontMetricsXlib::GetFontHandle(nsFontHandle &aHandle)
+NS_IMETHODIMP  nsFontMetricsXlib::GetLangGroup(nsIAtom** aLangGroup)
 {
-  aHandle = (nsFontHandle)mFontHandle;
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFontMetricsXlib::GetLangGroup(nsIAtom **aResult)
+NS_IMETHODIMP  nsFontMetricsXlib::GetFontHandle(nsFontHandle &aHandle)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mLangGroup;
-  NS_IF_ADDREF(*aResult);
-
+  aHandle = (nsFontHandle)mFontHandle;
   return NS_OK;
 }
 
@@ -790,6 +848,9 @@ typedef struct nsFontCharSetMap
   nsFontCharSetInfo* mInfo;
 } nsFontCharSetMap;
 
+static int gGotAllFontNames = 0;
+
+// XXX many of these statics need to be freed at shutdown time
 static PLHashTable* gFamilies = nsnull;
 
 static PLHashTable* gFamilyNames = nsnull;
@@ -806,12 +867,12 @@ static nsFontFamilyName gFamilyNameTable[] =
   { "courier new",     "courier" },
   { "times new roman", "times" },
 
-  { "serif",           "times" },
-  { "sans-serif",      "helvetica" },
-  { "fantasy",         "courier" },
-  { "cursive",         "courier" },
-  { "monospace",       "courier" },
-  { "-moz-fixed",      "courier" },
+  { "serif",           nsnull },
+  { "sans-serif",      nsnull },
+  { "fantasy",         nsnull },
+  { "cursive",         nsnull },
+  { "monospace",       nsnull },
+  { "-moz-fixed",      nsnull },
 
   { nsnull, nsnull }
 };
@@ -867,9 +928,9 @@ SingleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
     aSelf->mConverter->Convert(aSrcBuf, &aSrcLen, aDestBuf, &aDestLen);
     count = aDestLen;
   }
+
   return count;
 }
-
 static void 
 ReverseBuffer(char* aBuf, int count)
 {
@@ -906,6 +967,7 @@ DoubleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
     count = aDestLen;
   }
   // XXX do high-bit if font requires it
+
   return count;
 }
 
@@ -934,7 +996,7 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
 {
   nsresult result;
   NS_WITH_SERVICE(nsICharsetConverterManager, manager,
-                  NS_CHARSETCONVERTERMANAGER_PROGID, &result);
+    NS_CHARSETCONVERTERMANAGER_PROGID, &result);
   if (manager && NS_SUCCEEDED(result)) {
     nsAutoString charset(aSelf->mCharSet);
     nsIUnicodeEncoder* converter = nsnull;
@@ -1032,7 +1094,6 @@ static nsFontCharSetInfo CMCMSY =
    { "x-cm-cmsy", SingleByteConvert, 0 };
 #endif
 
-
 /*
  * Normally, the charset of an X font can be determined simply by looking at
  * the last 2 fields of the long XLFD font name (CHARSET_REGISTRY and
@@ -1066,6 +1127,8 @@ static nsFontCharSetMap gCharSetMap[] =
 #ifdef MOZ_MATHML
   { "adobe-fontspecific", &Special       },
 #endif
+  { "big5-0",             &Big5          },
+  { "big5.et-0",          &Big5          },
   { "cns11643.1986-1",    &CNS116431     },
   { "cns11643.1986-2",    &CNS116432     },
   { "cns11643.1992-1",    &CNS116431     },
@@ -1240,6 +1303,7 @@ struct nsFontSearch
   nsFontXlib*        mFont;
 };
 
+#if 0
 static void
 GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
   unsigned long* aThickness)
@@ -1267,6 +1331,7 @@ GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
     *aThickness = (overall.ascent + overall.descent);
   }
 }
+#endif /* 0 */
 
 static PRUint32*
 GetMapFor10646Font(XFontStruct* aFont)
@@ -1299,7 +1364,6 @@ GetMapFor10646Font(XFontStruct* aFont)
   return map;
 }
 
-
 void
 nsFontXlib::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXlib* aMetrics)
 {
@@ -1316,15 +1380,26 @@ nsFontXlib::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXlib* aMetrics)
       }
     }
     mFont = xlibFont;
+
+#ifdef MOZ_MATHML
+    // setting the actual size to the pixel size mSize from the XFLD
+    // seems to be more reliable.
+    mActualSize = mSize;
+#else
     mActualSize = xlibFont->max_bounds.ascent + xlibFont->max_bounds.descent;
-    if (aCharSet->mInfo->mSpecialUnderline) {
-      XFontStruct* asciiXFont = aMetrics->mFontHandle;
+#endif
+
+#if 0
+    if (aCharSet->mInfo->mSpecialUnderline && aMetrics->mFontHandle) {
+      XFontStruct* asciiXFont =
+        (XFontStruct*) GDK_FONT_XFONT(aMetrics->mFontHandle);
       unsigned long positionX2;
       unsigned long thickness;
       GetUnderlineInfo(asciiXFont, &positionX2, &thickness);
       mActualSize += (positionX2 + thickness);
       mBaselineAdjust = (-xlibFont->max_bounds.descent);
     }
+#endif /* 0 */
   }
 }
 
@@ -1433,6 +1508,10 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     if (p == endScaled) {
       s = new nsFontXlib;
       if (s) {
+        /*
+         * XXX Instead of passing desiredSize, we ought to take underline
+         * into account. (Extra space for underline for Asian fonts.)
+         */
         s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
         if (!s->mName) {
           delete s;
@@ -1908,13 +1987,13 @@ SearchFamily(PLHashEntry* he, PRIntn i, void* arg)
 }
 
 static nsFontFamily*
-GetFontNames(Display * aDisplay,char* aPattern)
+GetFontNames(char* aPattern)
 {
   nsFontFamily* family = nsnull;
 
   int count;
   //PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("XListFonts %s\n", aPattern));
-  char** list = ::XListFonts(aDisplay, aPattern, INT_MAX, &count);
+  char** list = ::XListFonts(gDisplay, aPattern, INT_MAX, &count);
   if ((!list) || (count < 1)) {
     return nsnull;
   }
@@ -2166,6 +2245,135 @@ GetFontNames(Display * aDisplay,char* aPattern)
   return family;
 }
 
+static void
+FindFamily(nsFontSearch* aSearch, nsString* aName)
+{
+  aSearch->mFont = nsnull;
+  nsFontFamily* family =
+    (nsFontFamily*) PL_HashTableLookup(gFamilies, aName);
+  if (!family) {
+    char name[128];
+    aName->ToCString(name, sizeof(name));
+    char buf[256];
+    PR_snprintf(buf, sizeof(buf), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*", name);
+    family = GetFontNames(buf);
+    if (!family) {
+      family = new nsFontFamily; // dummy entry to avoid calling X again
+      if (family) {
+        nsString* copy = new nsString(*aName);
+        if (copy) {
+          PL_HashTableAdd(gFamilies, copy, family);
+        }
+        else {
+          delete family;
+          return;
+        }
+      }
+      else {
+        return;
+      }
+    }
+  }
+  TryFamily(aSearch, family);
+}
+
+static nsIPref* gPref = nsnull;
+
+static void
+PrefEnumCallback(const char* aName, void* aClosure)
+{
+  nsFontSearch* search = (nsFontSearch*) aClosure;
+  if (!search->mFont) {
+    char* value = nsnull;
+    gPref->CopyCharPref(aName, &value);
+    nsAutoString name;
+    if (value) {
+      name = value;
+      nsAllocator::Free(value);
+      value = nsnull;
+      FindFamily(search, &name);
+    }
+    if (!search->mFont) {
+      gPref->CopyDefaultCharPref(aName, &value);
+      if (value) {
+        name = value;
+        nsAllocator::Free(value);
+        value = nsnull;
+        FindFamily(search, &name);
+      }
+    }
+  }
+}
+
+void
+nsFontMetricsXlib::FindGenericFont(nsFontSearch* aSearch)
+{
+  aSearch->mFont = nsnull;
+  if (!gPref) {
+    nsServiceManager::GetService(kPrefCID,
+      nsCOMTypeInfo<nsIPref>::GetIID(), (nsISupports**) &gPref);
+    if (!gPref) {
+      return;
+    }
+  }
+  if (mTriedAllGenerics) {
+    return;
+  }
+  nsAutoString prefix("font.name.");
+  char* value = nsnull;
+  if (mGeneric) {
+    prefix.Append(*mGeneric);
+  }
+  else {
+    gPref->CopyCharPref("font.default", &value);
+    if (value) {
+      prefix.Append(value);
+      nsAllocator::Free(value);
+      value = nsnull;
+    }
+    else {
+      prefix.Append("serif");
+    }
+  }
+  char name[128];
+  if (mLangGroup) {
+    nsAutoString pref = prefix;
+    pref.Append('.');
+    const PRUnichar* langGroup = nsnull;
+    mLangGroup->GetUnicode(&langGroup);
+    pref.Append(langGroup);
+    pref.ToCString(name, sizeof(name));
+    gPref->CopyCharPref(name, &value);
+    nsAutoString str;
+    if (value) {
+      str = value;
+      nsAllocator::Free(value);
+      value = nsnull;
+      FindFamily(aSearch, &str);
+      if (aSearch->mFont) {
+        return;
+      }
+    }
+    value = nsnull;
+    gPref->CopyDefaultCharPref(name, &value);
+    if (value) {
+      str = value;
+      nsAllocator::Free(value);
+      value = nsnull;
+      FindFamily(aSearch, &str);
+      if (aSearch->mFont) {
+        return;
+      }
+    }
+  }
+  prefix.ToCString(name, sizeof(name));
+  gPref->EnumerateChildren(name, PrefEnumCallback, aSearch);
+  if (aSearch->mFont) {
+    return;
+  }
+  mTriedAllGenerics = 1;
+}
+
 /*
  * XListFonts(*) is expensive. Delay this till the last possible moment.
  * XListFontsWithInfo is expensive. Use XLoadQueryFont instead.
@@ -2173,15 +2381,26 @@ GetFontNames(Display * aDisplay,char* aPattern)
 nsFontXlib*
 nsFontMetricsXlib::FindFont(PRUnichar aChar)
 {
+  static nsString* gGeneric = nsnull;
   static int gInitialized = 0;
   if (!gInitialized) {
     gInitialized = 1;
     gFamilies = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
     gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
+    gGeneric = new nsAutoString();
+    if (!gGeneric) {
+      return nsnull;
+    }
     nsFontFamilyName* f = gFamilyNameTable;
     while (f->mName) {
       nsString* name = new nsString(f->mName);
-      nsString* xName = new nsString(f->mXName);
+      nsString* xName;
+      if (f->mXName) {
+        xName = new nsString(f->mXName);
+      }
+      else {
+        xName = gGeneric;
+      }
       if (name && xName) {
         PL_HashTableAdd(gFamilyNames, name, (void*) xName);
       }
@@ -2223,38 +2442,33 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
 
   nsFontSearch search = { this, aChar, nsnull };
 
+  /*
+   * First try the fonts in this nsFont (font-family).
+   */
+  nsString* familyName = nsnull;
+  nsString* xName = nsnull;
   while (mFontsIndex < mFontsCount) {
-    nsString* familyName = &mFonts[mFontsIndex++];
-    nsString* xName = (nsString*) PL_HashTableLookup(gFamilyNames, familyName);
-    if (!xName) {
+    familyName = &mFonts[mFontsIndex++];
+    xName = (nsString*) PL_HashTableLookup(gFamilyNames, familyName);
+    if (xName == gGeneric) {
+      mGeneric = familyName;
+      break;
+    }
+    else if (!xName) {
       xName = familyName;
     }
-    nsFontFamily* family =
-      (nsFontFamily*) PL_HashTableLookup(gFamilies, xName);
-    if (!family) {
-      char name[128];
-      xName->ToCString(name, sizeof(name));
-      char buf[256];
-      PR_snprintf(buf, sizeof(buf), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*", name);
-      family = GetFontNames(mDisplay,buf);
-      if (!family) {
-        family = new nsFontFamily; // dummy entry to avoid calling X again
-        if (family) {
-          nsString* copy = new nsString(*xName);
-          if (copy) {
-            PL_HashTableAdd(gFamilies, copy, family);
-          }
-          else {
-            delete family;
-          }
-        }
-        continue;
-      }
-    }
-    TryFamily(&search, family);
+    FindFamily(&search, xName);
     if (search.mFont) {
       return search.mFont;
     }
+  }
+
+  /*
+   * Now try the generic font encountered above, or serif.
+   */
+  FindGenericFont(&search);
+  if (search.mFont) {
+    return search.mFont;
   }
 
   // XXX If we get to this point, that means that we have exhausted all the
@@ -2262,10 +2476,12 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
   // specific to the vendor of the X server here. Because XListFonts for the
   // whole list is very expensive on some Unixes.
 
-  static int gGotAllFontNames = 0;
+  /*
+   * Finally, try all the fonts on the system.
+   */
   if (!gGotAllFontNames) {
     gGotAllFontNames = 1;
-    GetFontNames(mDisplay,"-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
+    GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
   }
 
   PL_HashTableEnumerateEntries(gFamilies, SearchFamily, &search);

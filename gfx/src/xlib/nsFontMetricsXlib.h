@@ -24,14 +24,15 @@
 #define nsFontMetricsXlib_h__
 
 #include "nsIFontMetrics.h"
+#include "nsIFontEnumerator.h"
 #include "nsFont.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 #include "nsDeviceContextXlib.h"
 #include "nsDrawingSurfaceXlib.h"
-#include "nsCOMPtr.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -91,10 +92,9 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
-                   nsIDeviceContext *aContext);
+                   nsIDeviceContext* aContext);
   NS_IMETHOD  Destroy();
 
-  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetXHeight(nscoord& aResult);
   NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
@@ -107,14 +107,16 @@ public:
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
+  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
   virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
 
 #ifdef FONT_SWITCHING
 
-  nsFontXlib*  FindFont(PRUnichar aChar);
-  static  int GetWidth(nsFontXlib* aFont, const PRUnichar* aString,
+  nsFontXlib* FindFont(PRUnichar aChar);
+  void        FindGenericFont(nsFontSearch* aSearch);
+  static int  GetWidth(nsFontXlib* aFont, const PRUnichar* aString,
                        PRUint32 aLength);
 
 #ifdef MOZ_MATHML
@@ -148,6 +150,10 @@ public:
   PRUint16    mFontsCount;
   PRUint16    mFontsIndex;
 
+  nsString          *mGeneric;
+  int               mTriedAllGenerics;
+  nsCOMPtr<nsIAtom> mLangGroup;
+
 #endif /* FONT_SWITCHING */
 
 protected:
@@ -159,7 +165,6 @@ protected:
   nsFont              *mFont;
   XFontStruct         *mFontHandle;
   XFontStruct         *mFontStruct;
-  nsCOMPtr<nsIAtom>   mLangGroup;
 
   nscoord             mHeight;
   nscoord             mAscent;
