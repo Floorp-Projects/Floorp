@@ -1191,6 +1191,7 @@ NET_GetURL
 # NET_InitNetLib
 # NET_InitNewsProtocol
 # NET_InitPop3Protocol
+NET_InitRDFCookieResources
 # NET_InitRemoteProtocol
 # NET_InitURNProtocol
 # NET_InitWAISProtocol
