@@ -819,7 +819,7 @@ RDFXMLDataSourceImpl::Flush(void)
     nsFileURL url(mURLSpec, PR_TRUE);
     nsFileSpec path(url);
 
-    nsOutputFileStream out(path);
+    nsOutputFileStream out(path, nsOutputFileStream::kDefaultMode, 0755);
     if (! out.is_open())
         return NS_ERROR_FAILURE;
 
