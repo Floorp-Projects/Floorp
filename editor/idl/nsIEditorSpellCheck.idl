@@ -45,7 +45,7 @@ interface nsITextServicesFilter;
 interface nsIEditorSpellCheck : nsISupports
 {
 
-  void          InitSpellChecker(in nsIEditor editor);
+  void          InitSpellChecker(in nsIEditor editor, in boolean enableSelectionChecking);
   wstring       GetNextMisspelledWord();
   wstring       GetSuggestedWord();
   boolean       CheckCurrentWord(in wstring suggestedWord);

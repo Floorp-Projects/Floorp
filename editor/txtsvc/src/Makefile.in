@@ -40,6 +40,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  widget \
 		  unicharutil \
+		  lwbrk \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -2424,7 +2424,7 @@ var nsSpellingCommand =
     try {
       var skipBlockQuotes = (window.document.firstChild.getAttribute("windowtype") == "msgcompose");
       window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank",
-              "chrome,close,titlebar,modal", false, skipBlockQuotes);
+              "chrome,close,titlebar,modal", false, skipBlockQuotes, true);
     }
     catch(ex) {}
     window.content.focus();

@@ -42,6 +42,7 @@
 #include "nsISupports.h"
 
 class nsIDOMDocument;
+class nsIDOMRange;
 class nsIPresShell;
 class nsIEditor;
 class nsString;
@@ -100,6 +101,36 @@ public:
    * by this method.
    */
   NS_IMETHOD InitWithEditor(nsIEditor *aEditor) = 0;
+
+  /**
+   * Sets the range/extent over which the text services document
+   * will iterate. Note that InitWithDocument() or InitWithEditor()
+   * should have been called prior to calling this method. If this
+   * method is never called, the text services defaults to iterating
+   * over the entire document.
+   *
+   * @param aDOMRange is the range to use. aDOMRange must point to a
+   * valid range object.
+   */
+  NS_IMETHOD SetExtent(nsIDOMRange* aDOMRange) = 0;
+
+  /**
+   * Gets the range that the text services document
+   * is currently iterating over. If SetExtent() was never
+   * called, this method will return a range that spans the
+   * entire body of the document.
+   *
+   * @param aDOMRange will contain an AddRef'd pointer to the range.
+   */
+  NS_IMETHOD GetExtent(nsIDOMRange** aDOMRange) = 0;
+
+  /**
+   * Expands the end points of the range so that it spans complete words.
+   * This call does not change any internal state of the text services document.
+   *
+   * @param aDOMRange the range to be expanded/adjusted.
+   */
+  NS_IMETHOD ExpandRangeToWordBoundaries(nsIDOMRange *aRange) = 0;
 
   /**
    * Sets the filter to be used while iterating over content.
