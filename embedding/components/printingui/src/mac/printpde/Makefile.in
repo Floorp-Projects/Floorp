@@ -60,6 +60,8 @@ endif
 
 libs::
 	pbxbuild -buildstyle $(BUILDSTYLE) install
-	cp -R build/UninstalledProducts/PrintPDE.plugin $(DIST)
+	mkdir -p $(DIST)/package
+	cp -R build/UninstalledProducts/PrintPDE.plugin $(DIST)/package/
+
 clean clobber::
 	rm -rf build
