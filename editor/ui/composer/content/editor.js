@@ -118,9 +118,8 @@ var DocumentStateListener =
     // Call EditorSetDefaultPrefs first so it gets the default author before initing toolbars
     EditorSetDefaultPrefs();
     EditorInitToolbars();
-    DoRecentFilesMenuSave();  // Save the recent files menu
-	 
-    BuildRecentMenu();
+    BuildRecentMenu(true);      // Build the recent files menu and save to prefs
+
     window._content.focus();
 
     // udpate menu items now that we have an editor to play with
@@ -1159,124 +1158,109 @@ function EditorOpenUrl(url)
   }
 }
 
-function DoRecentFilesMenuSave()
+function BuildRecentMenu(savePrefs)
 {
   // Can't do anything if no prefs
   if (!gPrefs) return;
 
-  var curTitle = window.editorShell.editorDocument.title;
-  var curUrl = window.editorShell.editorDocument.location;
-  var newDoc = (curUrl == "about:blank");
-
-  if(!newDoc) // Can't preform this function if document is new
-  {
-    // Always put latest-opened URL at start of array
-    ShuffleRecentMenu(curUrl)
-    SaveRecentFilesPrefs(curTitle, curUrl, "0");
-  }
-}
-
-function ShuffleRecentMenu(curUrl)
-{
-  // This function simply saves the remaining items (from entry 2 and beyond) to the prefs file.
-  var historyCount = 10;  // This will be changed by the next line, but if they don't have that pref, this is a good default
-  try { historyCount = gPrefs.CopyUnicharPref("editor.history.url_maximum"); } catch(e) {} // Number of items in recent files menu
-  var titleArray = new Array(historyCount);
-  var urlArray = new Array(historyCount);
-  var i;
-  for (i = 0; i < historyCount; i++)
-  {
-    titleArray[i] = getUnicharPref("editor.history_title_"+i);
-    urlArray[i] = getUnicharPref("editor.history_url_"+i);
-  }
-
-  var placeholder = 1; // i+1, holds number that decides which menuitem the recent file is going in
-  for (i = 0; i < historyCount; i++)
-  {
-    // If we skip over an item in the array, placeholder is not incremented
-    if (urlArray[i] != curUrl)
-    {
-      // Save the menu one spot down in the list
-      SaveRecentFilesPrefs(titleArray[i], urlArray[i], placeholder);
-      placeholder++;
-    }
-  }
-  gPrefs.SavePrefFile(); // Save the prefs file
-}
-
-function SaveRecentFilesPrefs(title, url, i)
-{
-  if (!url) {
-    return;
-  }
-    
-  // Now save the title and url of the document recently opened to the array
-  setUnicharPref("editor.history_title_"+i, title);
-  setUnicharPref("editor.history_url_"+i, url);
-}
-
-function BuildRecentMenu()
-{
-  // Populate the Recent Files Menu.
-  // Can't do anything if we don't have any prefs
-  if(!gPrefs) return;
-  // Build the submenu
   var popup = document.getElementById("menupopup_RecentFiles");
-  if (!popup) return;
+  if (!popup || !window.editorShell || 
+      !window.editorShell.editorDocument) 
+    return;
+
   // Delete existing menu
   while (popup.firstChild)
     popup.removeChild(popup.firstChild);
 
-  // Again, this is changed in the next line but if the pref never existed, this default coincides with above
+  // Current page is the "0" item in the list we save in prefs,
+  //  but we don't include it in the menu.
+  var curTitle = window.editorShell.editorDocument.title;
+  var curUrl = window.editorShell.editorDocument.location;
+  var newDoc = (curUrl == "about:blank");
   var historyCount = 10; 
   try { historyCount = gPrefs.CopyUnicharPref("editor.history.url_maximum"); } catch(e) {}
+  var titleArray = new Array(historyCount);
+  var urlArray   = new Array(historyCount);
+  var menuIndex = 1;
+  var arrayIndex = 0;
+  var i;
 
-  var a=1; // Keeps track of which access key to use in the menuitem
-  for (var i = 0; i < historyCount; i++)
+  if(!newDoc)
+  {
+    // Always put latest-opened URL at start of array
+    titleArray[0] = curTitle;
+    urlArray[0] = curUrl;
+    arrayIndex = 1;
+  }
+  for (i = 0; i < historyCount; i++)
   {
     var title = getUnicharPref("editor.history_title_"+i);
     var url = getUnicharPref("editor.history_url_"+i);
 
     if (!url)
       break;
-
-    // If the current url is already opened, don't put useless entries into the menu
-    if (url != window.editorShell.editorDocument.location)
+    
+    // Skip over current URL
+    if (url != curUrl)
     {
-      AppendRecentMenuitem(a, popup, title, url);
-      a++;
+      // Build the menu
+      AppendRecentMenuitem(popup, title, url, menuIndex);
+      menuIndex++;
+
+      // Save in array for prefs
+      if (savePrefs && arrayIndex < historyCount)
+      {    
+        titleArray[arrayIndex] = title;
+        urlArray[arrayIndex] = url;
+        arrayIndex++;
+      }      
     }
   }
+
+  // Now resave the list back to prefs in the new order
+  if (savePrefs)
+  {
+    savePrefs = false;
+    for (i = 0; i < historyCount; i++)
+    {
+      if (!urlArray[i])
+        break;
+      setUnicharPref("editor.history_title_"+i, titleArray[i]);
+      setUnicharPref("editor.history_url_"+i, urlArray[i]);
+      savePrefs = true;
+    }
+  }
+  // Force saving to file so next file opened finds these values
+  if (savePrefs)
+    gPrefs.SavePrefFile();
 }
 
-function AppendRecentMenuitem(accessKey, menupopup, title, url)
+function AppendRecentMenuitem(menupopup, title, url, menuIndex)
 {
   if (menupopup)
   {
     var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     if (menuItem)
     {
-      // Build the menuitem using the title (or url) and accesskey
-      var itemString;
-      if (accessKey > 9) 
-      {
-        // Access key is two digits so spaces are put in where the access key
-        // would go and the title is added.
-        itemString = "   "+title;  // Set title and spaces (no access key)
-        if (title.length < 1)
-          // There is no title to display on the menuitem so use the URL instead
-          itemString = "    "+url;
-	  } else {
-        itemString = accessKey+" "+title;  // Set the menuitem to use the title and accesskey
-        if (title.length < 1)
-          // There is no title to display on the menuitem so use the URL instead
-          itemString = accessKey+" "+url;
-        menuItem.setAttribute("accesskey", accessKey);
-      }
+      var accessKey;
+      if (menuIndex <= 9)
+        accessKey = String(menuIndex);
+      else if (menuIndex == 10)
+        accessKey = "0";
+      else
+        accessKey = " ";
+
+      var itemString = accessKey+" ";
+      if (title)
+        itemString += title;
+      else
+        itemString += url;
 
       menuItem.setAttribute("value", itemString);
       menuItem.setAttribute("data", url);
-      menuItem.setAttribute("oncommand", "EditorOpenUrl(getAttribute('data'))");
+      if (accessKey != " ")
+        menuItem.setAttribute("accesskey", accessKey); 
+      menuItem.setAttribute("oncommand", "EditorOpenUrl(getAttribute('data'))"); 
       menupopup.appendChild(menuItem);
     }
   }
