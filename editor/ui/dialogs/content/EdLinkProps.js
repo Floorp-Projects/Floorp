@@ -288,7 +288,7 @@ function FillListboxes()
       {
         // Use just first 40 characters, don't add "...",
         //  and replace whitespace with "_" and strip non-word characters
-        text = PrepareStringForURL(TruncateStringAtWordEnd(text, 40, false));
+        text = ConvertToCDATAString(TruncateStringAtWordEnd(text, 40, false));
         // Append "_" to any name already in the list
         if (GetExistingHeadingIndex(text) > -1)
           text += "_";
@@ -327,12 +327,16 @@ function ChangeText()
   }
 }
 
+var gClearListSelections = true;
+
 function ChangeLocation()
 {
-  // Unselect the treelists
-  UnselectNamedAnchor();
-  UnselectHeadings();
-  
+  if (gClearListSelections)
+  {
+    // Unselect the treelists
+    UnselectNamedAnchor();
+    UnselectHeadings();
+  }  
   // Set OK button enable state
   ChangeText();
 }
@@ -354,8 +358,11 @@ function SelectNamedAnchor()
   {
     if (haveNamedAnchors)
     {
+      // Prevent ChangeLocation() from unselecting the list
+      gClearListSelections = false;
       dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.NamedAnchorList);
-      ChangeText();
+      gClearListSelections = true;
+      //ChangeText();
     }
     else
       UnselectNamedAnchor();
@@ -370,8 +377,9 @@ function SelectHeading()
   {
     if (haveHeadings)
     {
+      gClearListSelections = false;
       dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.HeadingsList);
-      ChangeText();
+      gClearListSelections = true;
     }
     else
       UnselectHeadings();
