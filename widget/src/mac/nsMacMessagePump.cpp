@@ -75,7 +75,7 @@
 #define botRight(r) (((Point *) &(r))[1])
 #endif
 
-#if DEBUG
+#if DEBUG && !defined(MACOSX)
 #include <SIOUX.h>
 #include "macstdlibextras.h"
 #endif
@@ -356,7 +356,7 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 	if (aRealEvent == PR_TRUE)
 	{
 
-#if DEBUG
+#if DEBUG && !defined(MACOSX)
 		if ((anEvent->what != kHighLevelEvent) && SIOUXHandleOneEvent(anEvent))
 			return;
 #endif
