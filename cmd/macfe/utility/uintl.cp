@@ -20,7 +20,7 @@
 #include "resgui.h"
 #include "uprefd.h"
 #include "intl_csi.h"
-
+#include "intlpriv.h"
 INTL_Encoding_ID ScriptToEncoding(ScriptCode script)
 {
 	switch(script)
@@ -91,3 +91,25 @@ uint16 FE_DefaultDocCharSetID(iDocumentContext context)
 	
 	return csid;
 }
+
+                                                                                 
+INTLCharSetID FE_GetCharSetID(INTL_CharSetID_Selector selector)                 
+{                                                                               
+    INTLCharSetID   charsetID = CS_DEFAULT;                                     
+                                                                                
+    switch (selector)                                                           
+    {                                                                           
+    case INTL_FileNameCsidSel:                                                  
+        charsetID = (INTLCharSetID) ScriptToEncoding(GetScriptManagerVariable(smSysScript));
+        break;                                                                  
+    case INTL_DefaultTextWidgetCsidSel:                                         
+        charsetID = (INTLCharSetID) ScriptToEncoding(FontToScript(applFont));   
+        break;                                                                  
+    default:                                                                    
+        break;                                                                  
+    }                                                                           
+                                                                                
+    XP_ASSERT(charsetID != CS_DEFAULT);                                         
+                                                                                
+    return charsetID;                                                           
+ }           
