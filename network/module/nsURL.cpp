@@ -324,9 +324,11 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       portBuffer[0] = '\0';
     }
 
-    PRInt32 plen = PL_strlen(mProtocol) + PL_strlen(mHost) + PL_strlen(portBuffer) + PL_strlen(mFile) + 3;
+    PRInt32 plen = PL_strlen(mProtocol) + PL_strlen(mHost) + PL_strlen(portBuffer) + PL_strlen(mFile) + 4;
     mSpec = (char *) PR_Malloc(plen + 1);
-    sprintf(mSpec, "%s://%s%s%s", mProtocol, mHost, portBuffer, mFile);
+    sprintf(mSpec, "%s://%s%s%s", mProtocol,
+            mHost ? mHost : "",
+            portBuffer, mFile);
 
   } else {
     // absolute spec
