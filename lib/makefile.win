@@ -43,7 +43,11 @@ include <$(DEPTH)\config\config.mak>
 DIRS=   libi18n htmldlgs libparse layout libstyle
 
 !ifdef MOZ_MAIL_NEWS
-DIRS= $(DIRS) libaddr 
+DIRS= $(DIRS) libaddr
+!endif
+
+!ifdef MOZ_MAIL_COMPOSE
+DIRS= $(DIRS) mailto
 !endif
 
 #//------------------------------------------------------------------------
