@@ -55,7 +55,7 @@ void XXXNeverCalled()
     NS_NewEmptyRDFArcsOutCursor(nsnull);
 
     // nsRDFResource
-    nsRDFResource r("foo");
+    nsRDFResource r();
 }
 
 
