@@ -51,7 +51,9 @@
         <box><html:div>&div.cookiesonsystem.label;</html:div></box>
         <spring style="height: 10px;"/>
         <html:div style="width: 380px;">
-          <tree id="cookietree" style="height: 150px; width: 380px;" align="vertical" onclick="ViewCookieSelected(event.target.parentNode.parentNode)">
+          <tree id="cookietree" style="height: 150px; width: 380px;" align="vertical" 
+            onclick="ViewCookieSelected(event)"
+            onkeypress="HandleKeyPress(event)">
             <treecol width="30%"/>
             <treecol width="70%"/>
             <treehead>
@@ -98,7 +100,7 @@
         </html:fieldset>
         <spring flex="5%"/>
         <box align="horizontal">
-          <titledbutton class="dialog push" value="&button.removecookie.label;" onclick="DeleteCookieSelected();"/>
+          <titledbutton id="removeCookies" class="dialog push" disabled="true" value="&button.removecookie.label;" onclick="DeleteCookieSelected();"/>
         </box>
       </box>
       
@@ -106,7 +108,9 @@
         <html:div>&div.bannedservers.label;</html:div>
         <spring flex="5%"/>
         <html:div flex="100%">
-          <tree id="permissionstree" style="height: 280px; width: 380px;" align="vertical">
+          <tree id="permissionstree" style="height: 280px; width: 380px;" align="vertical"
+                onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
+                onclick="ViewPermissionSelected();">
             <treehead>
               <treerow>
                 <treecell>&treehead.sitename.label;</treecell>
@@ -118,7 +122,9 @@
         </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
-          <titledbutton value="&removepermission.label;" onclick="gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"/>
+          <titledbutton id="removePermissions" class="dialog push" disabled="true" 
+                        value="&removepermission.label;" 
+                        onclick="gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"/>
         </box>
         <spring style="height: 5px;"/>
       </box>
