@@ -460,7 +460,10 @@ CERT_CreateName;
 ;+NSS_3.3 { 	# NSS 3.3. release
 ;+    global:
 CERT_CheckCertUsage;
+CERT_FindCertIssuer;
+PK11_GetModule;
 SECKEY_CreateDHPrivateKey;
+SECKEY_GetPublicKeyType;
 SECMOD_AddNewModule;
 ;+#
 ;+# The following symbols are exported only to make JSS work.
