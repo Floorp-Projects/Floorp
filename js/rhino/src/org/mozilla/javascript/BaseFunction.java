@@ -223,33 +223,51 @@ public class BaseFunction extends IdScriptable implements Function {
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
-        Scriptable newInstance = createObject(cx, scope);
-        Object val = call(cx, scope, newInstance, args);
-        if (val instanceof Scriptable && val != Undefined.instance) {
-            return (Scriptable) val;
+        Scriptable result = createObject(cx, scope);
+        if (result != null) {
+            Object val = call(cx, scope, result, args);
+            if (val instanceof Scriptable && val != Undefined.instance) {
+                result = (Scriptable)val;
+            }
+        } else {
+            Object val = call(cx, scope, null, args);
+            if (!(val instanceof Scriptable && val != Undefined.instance)) {
+                // It is program error not to return Scriptable from
+                // the call method if createObject returns null.
+                throw new IllegalStateException(
+                    "Bad implementaion of call as constructor, name="
+                    +functionName+" in "+getClass().getName());
+            }
+            result = (Scriptable)val;
+            if (result.getPrototype() == null) {
+                result.setPrototype(getClassPrototype());
+            }
+            if (result.getParentScope() == null) {
+                Scriptable parent = getParentScope();
+                if (result != parent) {
+                    result.setParentScope(parent);
+                }
+            }
         }
-        return newInstance;
+        return result;
     }
 
-    public Scriptable createObject(Context cx, Scriptable scope)
+    /**
+     * Creates new script object.
+     * The default implementation of {@link #construct} uses the method to
+     * to get the value for <tt>thisObj</tt> argument when invoking
+     * {@link #call}.
+     * The methos is allowed to return <tt>null</tt> to indicate that
+     * {@link #call} will create a new object itself. In this case
+     * {@link #construct} will set scope and prototype on the result
+     * {@link #call} unless they are already set.
+     */
+    protected Scriptable createObject(Context cx, Scriptable scope)
     {
         Scriptable newInstance = new NativeObject();
         newInstance.setPrototype(getClassPrototype());
         newInstance.setParentScope(getParentScope());
         return newInstance;
-    }
-
-    final void initCallResultAsNewObject(Scriptable newObj)
-    {
-        if (newObj.getPrototype() == null) {
-            newObj.setPrototype(getClassPrototype());
-        }
-        if (newObj.getParentScope() == null) {
-            Scriptable parent = getParentScope();
-            if (newObj != parent) {
-                newObj.setParentScope(parent);
-            }
-        }
     }
 
     /**

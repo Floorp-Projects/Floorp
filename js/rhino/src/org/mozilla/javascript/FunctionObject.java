@@ -435,48 +435,27 @@ public class FunctionObject extends BaseFunction {
     }
 
     /**
-     * Performs conversions on argument types if needed and
-     * invokes the underlying Java method or constructor
-     * to create a new Scriptable object.
-     * <p>
-     * Implements Function.construct.
-     *
-     * @param cx the current Context for this thread
-     * @param scope the scope to execute the function relative to. This
-     *              set to the value returned by getParentScope() except
-     *              when the function is called from a closure.
-     * @param args arguments to the constructor
-     * @see org.mozilla.javascript.Function#construct
-     * @exception JavaScriptException if the underlying Java method or constructor
-     *            threw an exception
+     * Return new {@link Scriptable} instance using the default
+     * constructor for the class of the underlying Java method.
+     * Return null to indicate that the call method should be used to create
+     * new objects.
      */
-    public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
-    {
+    protected Scriptable createObject(Context cx, Scriptable scope) {
         if (method == null || parmsLength == VARARGS_CTOR) {
-            Scriptable result = (Scriptable) call(cx, scope, null, args);
-            initCallResultAsNewObject(result);
-            return result;
-        } else if (method != null && !isStatic) {
-            Scriptable result;
-            try {
-                result = (Scriptable) method.getDeclaringClass().newInstance();
-            } catch (IllegalAccessException e) {
-                throw WrappedException.wrapException(e);
-            } catch (InstantiationException e) {
-                throw WrappedException.wrapException(e);
-            }
-
-            result.setPrototype(getClassPrototype());
-            result.setParentScope(getParentScope());
-
-            Object val = call(cx, scope, result, args);
-            if (val instanceof Scriptable && val != Undefined.instance) {
-                result = (Scriptable) val;
-            }
-            return result;
+            return null;
         }
-        return super.construct(cx, scope, args);
+        Scriptable result;
+        try {
+            result = (Scriptable) method.getDeclaringClass().newInstance();
+        } catch (IllegalAccessException e) {
+            throw WrappedException.wrapException(e);
+        } catch (InstantiationException e) {
+            throw WrappedException.wrapException(e);
+        }
+
+        result.setPrototype(getClassPrototype());
+        result.setParentScope(getParentScope());
+        return result;
     }
 
     private Object callVarargs(Context cx, Scriptable thisObj, Object[] args)

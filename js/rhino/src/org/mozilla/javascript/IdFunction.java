@@ -86,24 +86,12 @@ public class IdFunction extends BaseFunction
         return master.execMethod(methodId, this, cx, scope, thisObj, args);
     }
 
-    public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
+    protected Scriptable createObject(Context cx, Scriptable scope)
     {
-        if (!useCallAsConstructor) {
-            return Undefined.instance;
+        if (useCallAsConstructor) {
+            return null;
         }
-        Object callResult = call(cx, scope, null, args);
-        if (!(callResult instanceof Scriptable)) {
-            // It is program error not to return Scriptable from
-            // IdFunctionMaster for IdFunction marked suitable for
-            // constructor call.
-            throw new IllegalStateException(
-                "Bad implementtaion of execMethod, id="+methodId+" in "
-                +master.getClass().getName());
-        }
-        Scriptable result = (Scriptable)callResult;
-        initCallResultAsNewObject(result);
-        return result;
+        throw NativeGlobal.typeError1("msg.not.ctor", functionName, scope);
     }
 
     public String decompile(Context cx, int indent, boolean justbody) {
