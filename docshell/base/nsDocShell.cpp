@@ -4854,7 +4854,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             nsCOMPtr<nsISeekableStream>
                 postDataSeekable(do_QueryInterface(aPostData));
             if (postDataSeekable) {
-                postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+                rv = postDataSeekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+                NS_ENSURE_SUCCESS(rv, rv);
             }
 
             nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
