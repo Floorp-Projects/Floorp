@@ -164,10 +164,14 @@ nsWalletViewer.prototype =
       savePageData:
         function(tag) {
           /* collect the list of menuItem labels */
-          var elementIDs = window.frames[this.contentFrame]._elementIDs;
+          var elementIDs;
+          var contentFrame = window.frames[this.contentFrame];
+          if ("_elementIDs" in contentFrame) { // make sure page finished loading
+            elementIDs = contentFrame._elementIDs;
+          }
           for(var i = 0; i < elementIDs.length; i++) {
             var values = "";
-            var menuList = window.frames[this.contentFrame].document.getElementById(elementIDs[i]);
+            var menuList = contentFrame.document.getElementById(elementIDs[i]);
             if (menuList.parentNode.getAttribute("hidden") == "true") {
               continue; /* needed for concatenations only */
             }
