@@ -69,7 +69,7 @@ function launch() {
          {
            // browser made up of browser.xpi + install.xpi on the Mac
            xpi["Browser"] = "browser.xpi";
-           xpi["Install"] = "install.xpi";
+           xpi["XPCOM"]   = "xpcom.xpi";
            numxpi += 2;
          }
          else
@@ -97,6 +97,7 @@ will cause you grief.
 <form name="installForm">
 <input type="checkbox" name="browser" value="Navigator" checked> Navigator <br>
 <input type="checkbox" name="mail" value="Mail" checked> Mail <br>
+<input type="checkbox" name="chatzilla" value="Chatzilla" checked> Chatzilla <br>
 <input type="button" value="Launch XPInstall" onclick="launch()">
 </form>
 </body>

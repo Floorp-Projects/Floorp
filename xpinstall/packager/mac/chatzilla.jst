@@ -6,7 +6,7 @@
 var err = initInstall("Chatzilla v0.5", "Chatzilla", "$Version$"); 
 logComment("initInstall: " + err);
 
-fProgram = getFolder("Program","Mozilla Folder");
+var fProgram = getFolder("Program");
 addFile("Chatzilla service",
         "viewer/Components/chatzilla-service.js",
         getFolder(fProgram,"Components"),
