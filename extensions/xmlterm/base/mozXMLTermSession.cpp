@@ -2338,14 +2338,22 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
     //  nsCOMPtr<nsIContent> childContent (do_QueryInterface(childNode));
     //    if (childContent) childContent->List(stderr);
 
-    // Insert child node
+    // Deep clone child node
+    // Note: Not clear why this needs to be done, but like "deep refresh",
+    //       seems to be essential for event handlers to work
+    nsCOMPtr<nsIDOMNode> cloneNode;
+    result = childNode->CloneNode(PR_TRUE, getter_AddRefs(cloneNode));
+    if (NS_FAILED(result) || !cloneNode)
+      return NS_ERROR_FAILURE;
+
+    // Insert clone of child node
     nsCOMPtr<nsIDOMNode> resultNode;
 
     PRBool replaceTem = replace;
     if (beforeNode) {
       if (replaceTem) {
         // Replace before node
-        result = parentNode->ReplaceChild(childNode, beforeNode,
+        result = parentNode->ReplaceChild(cloneNode, beforeNode,
                                           getter_AddRefs(resultNode));
 
         beforeNode = nsnull;
@@ -2360,12 +2368,12 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
 
       } else {
         // Insert before specified node
-        result = parentNode->InsertBefore(childNode, beforeNode,
+        result = parentNode->InsertBefore(cloneNode, beforeNode,
                                           getter_AddRefs(resultNode));
       }
     } else {
       // Append child
-      result = parentNode->AppendChild(childNode, getter_AddRefs(resultNode));
+      result = parentNode->AppendChild(cloneNode, getter_AddRefs(resultNode));
     }
     if (NS_FAILED(result))
       return result;
