@@ -26,7 +26,7 @@
  *  - in: string frame id/name set of iframe, pageMap showing navigation of wizard
  *  - out: nothing (object)
  **/
-function WidgetStateManager( frame_id )
+function WidgetStateManager( frame_id, panelPrefix, panelSuffix )
 {
   // data members
   /**
@@ -36,16 +36,22 @@ function WidgetStateManager( frame_id )
    *    page2  =>  id1  =>  value1
    *    page2  =>  id2  =>  value2
    **/
-  this.PageData         = [];
-  this.content_frame    = window.frames[frame_id];
+  this.PageData          = [];
+  this.content_frame     = window.frames[frame_id];
 
+  this.panelPrefix       = ( panelPrefix ) ? panelPrefix : null;
+  this.panelSuffix       = ( panelSuffix ) ? panelSuffix : null;
+  
   // member functions
-  this.SavePageData     = WSM_SavePageData;
-  this.SetPageData      = WSM_SetPageData;
-  this.GetTagFromURL    = WSM_GetTagFromURL;
-  this.GetURLFromTag    = WSM_GetURLFromTag;
-  this.toString         = WSM_toString;
-  this.ConvertToArray   = WSM_ConvertToArray;
+  this.SavePageData      = WSM_SavePageData;
+  this.SetPageData       = WSM_SetPageData;
+  this.GetTagFromURL     = WSM_GetTagFromURL;
+  this.GetURLFromTag     = WSM_GetURLFromTag;
+  this.toString          = WSM_toString;
+  this.AddAttributes     = WSM_AddAttributes;
+  this.ElementIsIgnored  = WSM_ElementIsIgnored;
+  this.HasValidElements  = WSM_HasValidElements;
+  this.LookupElement     = WSM_LookupElement;
 }
 
 /** void SavePageData() ;
@@ -57,63 +63,79 @@ function WidgetStateManager( frame_id )
  *  - in:  nothing
  *  - out: nothing
  **/               
-function WSM_SavePageData( currentPageTag )
+function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElements )
 {
+  // 11/26/99: changing this to support the saving of an optional number of extra
+  // attributes other than the default value. these attributes are specified as 
+  // strings in an array passed in as the second parameter. these values are stored
+  // in the table associated with the element:
+  // 
+  // this.wsm.PageData[pageTag][element][id]    - id of element       (default)
+  // this.wsm.PageData[pageTag][element][value] - value of element    (default)
+  // this.wsm.PageData[pageTag][element][foo]   - optional attribute  (default)
+  // 11/27/99: changing this to support the exclusion of specified elements.
+  // typically this is includes fieldsets, legends and labels. These are default
+  // and do not need to be passed. 
+  
+  if( !currentPageTag )
+    var currentPageTag = this.GetTagFromURL( this.content_frame.location.href, this.panelPrefix, this.panelSuffix, true );
+  
   var doc = this.content_frame.document;
+  this.PageData[currentPageTag] = []; 
+
   if( this.content_frame.GetFields ) {
-    // data user-provided from GetFields function
-    var data = this.content_frame.GetFields();
-  } 
+    this.PageData[currentPageTag] = this.content_frame.GetFields();  // user GetFields function
+    var string = "";
+    for( var i in this.PageData[currentPageTag] )
+    {
+      string += "element: " + i + "\n";
+    }
+  }
   else {
-    // autosave data from form fields in the document
     var fields = doc.getElementsByTagName("FORM")[0].elements;   
     var data = [];
     for( var i = 0; i < fields.length; i++ ) 
     { 
       data[i] = []; 
       var formElement = fields[i];
-      data[i][0] = formElement.id;
+      var elementEntry = this.PageData[currentPageTag][formElement.id] = [];
+
+      // check to see if element is excluded
+      if( !this.ElementIsIgnored( formElement, exclElements ) )
+        elementEntry.excluded = false;
+      else 
+        elementEntry.excluded = true;
+
       if( formElement.nodeName.toLowerCase() == "select" ) { // select & combo
-        // data[i][0] = formElement.getAttribute("id");
-        // here's a bug. this gives errors, even though this style of thing works
-        // in 4.x
-        // data[i][1] = formElement.options[formElement.options.selectedIndex].value;
-        // dump("*** CURRSELECT:: VALUE: " + data[i][1] + "\n");
+        /* commenting out until select fields work properly, or someone tells me how
+           to do this (also, is it better to store .value, or .text?):
+           var value = formElement.options[formElement.options.selectedIndex].value;
+           this.AddAttributes( formElement, elementEntry, value, optAttributes );
+         */
       }
-      else if( formElement.nodeName.toLowerCase() == "textarea" ) { // textarea
-        data[i][0] = currTextArea.getAttribute("id");
-        data[i][1] = currTextArea.value;
-      }
-      else if( formElement.type == "checkbox" || formElement.type == "radio" ) {
-        // form element is a checkbox or a radio group item
-        data[i][1] =  formElement.checked;
-      }  
+      else if( formElement.type == "checkbox" || formElement.type == "radio")
+        this.AddAttributes( formElement, elementEntry, "checked", optAttributes );
       else if( formElement.type == "text" &&
-               formElement.getAttribute( "datatype" ) == "nsIFileSpec" ) {
-        if( formElement.value ) {
-          var progId = "component://netscape/filespec";
-          var filespec = Components.classes[progId].createInstance( Components.interfaces.nsIFileSpec );
-          filespec.nativePath = formElement.value;
-          data[i][1] = filespec;
-        } else
-          data[i][1] = null;
+               formElement.getAttribute( "datatype" ) == "nsIFileSpec" &&
+               formElement.value ) {
+        try {
+          var filespec = Components.classes["component://netscape/filespec"].createInstance();
+          filespec = filespec.QueryInterface( Components.interfaces.nsIFileSpec );
+        }
+        catch(e) {
+          dump("*** Failed to create filespec object\n");
+        }
+        filespec.nativePath = formElement.value;
+        this.AddAttributes( formElement, elementEntry, filespec, optAttributes )
       }
-      else {
-        // generic form element: text, password field, buttons, textareas, etc
-        data[i][1] = formElement.value;
-      }
+      else 
+        this.AddAttributes( formElement, elementEntry, "value", optAttributes );  // generic
+
+      elementEntry.nodeName = formElement.nodeName;
     }
-    // trees are not supported here as they are too complex and customisable 
-    // to provide default handling for.
   }
-  this.PageData[currentPageTag] = []; 
-  if( data.length )  {
-    for( var i = 0; i < data.length; i++ ) {
-      this.PageData[currentPageTag][data[i][0]] = data[i][1];
-    }
-  } 
-  else
-    this.PageData[currentPageTag]["nodata"] = true; // no fields or functions
+  if( !this.HasValidElements( this.PageData[currentPageTag] ) )
+    this.PageData[currentPageTag].nodata = true;    // page has no (valid) elements
 }
 
 /** void SetPageData() ;
@@ -124,74 +146,83 @@ function WSM_SavePageData( currentPageTag )
  *  - in:  nothing.
  *  - out: nothing.
  **/
-function WSM_SetPageData( currentPageTag )
+function WSM_SetPageData( currentPageTag, hasExtraAttributes )
 {
+  if( !currentPageTag )
+    var currentPageTag = this.GetTagFromURL( this.content_frame.location.href, this.panelPrefix, this.panelSuffix, true );
+  
 	var doc = this.content_frame.document;
-  if ( this.PageData[currentPageTag] != undefined ) {
-    if ( !this.PageData[currentPageTag]["nodata"] ) {
-    	for( var i in this.PageData[currentPageTag] ) {
-        var value = this.PageData[currentPageTag][i];
-        if( this.content_frame.SetFields ) {
-          // user-provided SetFields function
-          this.content_frame.SetFields( i, this.PageData[currentPageTag][i] );
+  if ( this.PageData[currentPageTag] != undefined && !this.PageData[currentPageTag]["nodata"] ) {
+  	for( var i in this.PageData[currentPageTag] ) {
+      if( this.PageData[currentPageTag][i].excluded || !i )
+        continue;     // element is excluded, goto next
+     
+      var id    = this.PageData[currentPageTag][i].id;
+      var value = this.PageData[currentPageTag][i].value;
+
+      if( this.content_frame.SetFields && !hasExtraAttributes )
+        this.content_frame.SetFields( id, value );  // user provided setfields
+      else if( this.content_frame.SetFields && hasExtraAttributes )
+        this.content_frame.SetFields( id, value, this.PageData[currentPageTag][i]); // SetFields + attrs
+      else {                              // automated data provision
+        var formElement = doc.getElementById( i );
+        
+        if( hasExtraAttributes ) {        // if extra attributes are set, set them
+          for( var attName in this.PageData[currentPageTag][i] ) 
+          {
+            // for each attribute set for this element
+            if( attName == "value" || attName == "id" )
+              continue;                   // don't set value/id (value = default, id = dangerous)
+            var attValue  = this.PageData[currentPageTag][i][attName];
+            formElement.setAttribute( attName, attValue );
+          }
         }
-        else {
-          // automated data provision
-          // plundering code liberally from AccountManager.js
-          var formElement = doc.getElementById( i );
-          if( formElement && formElement.nodeName.toLowerCase() == "input" ) {
-            if( formElement.type == "checkbox" || formElement.type == "radio" ) {
-              // formElement is something interesting like a checkbox or radio
-              if( value == undefined )
-                formElement.checked = formElement.defaultChecked;
-              else {
-                if( formElement.getAttribute( "reversed" ) )
-                  formElement.checked = !value;
-                else
-                  formElement.checked = value;
-              }
-            }
-            else if( formElement.type == "text" &&
-                 formElement.getAttribute( "datatype" ) == "nsIFileSpec" ) {
-              // formElement has something to do with fileSpec. looked important
-              if( value ) {
-                var filespec = value.QueryInterface( Components.interfaces.nsIFileSpec );
-                try {
-                  formElement.value = filespec.nativePath;
-                } 
-                catch( ex ) {
-                  dump("Still need to fix uninitialized filespec problem!\n");
-                }
-              } 
-              else
-                formElement.value = formElement.defaultValue;
-            }
+        
+        // default "value" attributes        
+        if( formElement && formElement.nodeName.toLowerCase() == "input" ) {
+          if( formElement.type == "checkbox" || formElement.type == "radio" ) {
+            if( value == undefined )
+              formElement.checked = formElement.defaultChecked;
             else {
-              // some other type of form element
-              if( value == undefined )
-                formElement.value = formElement.defaultValue;
+              if( formElement.getAttribute( "reversed" ) )
+                formElement.checked = !value;
               else
-                formElement.value = value;
+                formElement.checked = value;
             }
-          } 
-          else if( formElement && formElement.nodeName.toLowerCase() == "select" ) {
-            // select the option element that has the value that matches data[i][1]
-            /* commenting out while select widgets appear to be broken
-            if( formElement.hasChildNodes() ) {
-              for( var j = 0; j < formElement.childNodes.length; j++ ) {
-                var currNode = formElement.childNodes[i];
-                if( currNode.nodeName.toLowerCase() == "option" ) {
-                  if( currNode.getAttribute("value") == value )
-                    currNode.selected = true;
-                }
+          }
+          else if( formElement.type == "text" &&
+               formElement.getAttribute( "datatype" ) == "nsIFileSpec" ) {
+            // formElement has something to do with fileSpec. looked important
+            if( value ) {
+              var filespec = value.QueryInterface( Components.interfaces.nsIFileSpec );
+              try {
+                formElement.value = filespec.nativePath;
+              } 
+              catch( ex ) {
+                dump("Still need to fix uninitialized filespec problem!\n");
               }
+            } 
+            else
+              formElement.value = formElement.defaultValue;
+          }
+          else {                          // some other type of form element
+            if( value == undefined )
+              formElement.value = formElement.defaultValue;
+            else
+              formElement.value = value;
+          }
+        } 
+        else if( formElement && formElement.nodeName.toLowerCase() == "select" ) {
+          /* commenting this out until select widgets work properly
+            for ( var k = 0; k < formElement.options.length; k++ )
+            {
+              if( formElement.options[k].value == value )
+                formElement.options[k].selected = true;
             }
            */
-          }
-          else if( formElement && formElement.nodeName.toLowerCase() == "textarea" ) {
-            formElement.value = value;
-          }
         }
+        else if( formElement && formElement.nodeName.toLowerCase() == "textarea" )
+          formElement.value = value;
       }
     }
   }
@@ -202,9 +233,12 @@ function WSM_SetPageData( currentPageTag )
  *  - in:   string url representing the complete location of the page.
  *  - out:  string tag representing the specific page to be loaded
  **/               
-function WSM_GetTagFromURL( url, prefix, suffix )
+function WSM_GetTagFromURL( url, prefix, suffix, mode )
 {
-  return url.substring( prefix.length, url.lastIndexOf(suffix) );
+  if( mode )
+    return url.substring( prefix.length, url.lastIndexOf(suffix) );
+  else
+    return url.substring( url.lastIndexOf(prefix) + 1, url.lastIndexOf(suffix) );
 }
 
 /** string GetUrlFromTag( string tag, string prefix, string postfix ) ;
@@ -226,19 +260,92 @@ function WSM_toString()
 {
   var string = "";
   for( var i in this.PageData ) {
-    for( var k in this.PageData[i] ) {
-      string += "WSM.PageData[" + i + "][" + k + "] : " + this.PageData[i][k] + ";\n";
+    for( var j in this.PageData[i] ) {
+      for( var k in this.PageData[i][j] ) {
+        string += "WSM.PageData[" + i + "][" + j + "][" + k + "] : " + this.PageData[i][j][k] + ";\n";
+      }
     }
   }
   return string;
 }
 
-function WSM_ConvertToArray( nodeList )
+/** void AddAttributes( DOMElement formElement, AssocArray elementEntry, 
+                        String valueAttribute, StringArray optAttributes ) ;
+ *  - purpose: adds name/value entries to associative array.
+ *  - in:       formElement - element to add attributes from
+ *  -           elementEntry - the associative array to add data to
+ *  -           valueAttribute - string representing which attribute represents 
+ *  -               value (e.g. "value", "checked")
+ *  -           optAttributes - array of extra attributes to store. 
+ *  - out: nothing;
+ **/
+function WSM_AddAttributes( formElement, elementEntry, valueAttribute, optAttributes )
 {
-  var retArray = [];
-  for( var i = 0; i < nodeList.length; i++ )
-  {
-    retArray[i] = nodeList[i];
+  elementEntry.value = formElement[valueAttribute]; // get the value (e.g. "checked")
+  
+  if( optAttributes ) {   // if we've got optional attributes, add em
+    for(var k = 0; k < optAttributes.length; k++ ) 
+    {
+      attValue = formElement.getAttribute( optAttributes[k] );
+      if( attValue )
+        elementEntry[optAttributes[k]] = attValue;
+    }
   }
-  return retArray;
 }
+
+/** string ElementIsIgnored( DOMElement element, StringArray exclElements ) ;
+ *  - purpose: check to see if the current element is one of the ignored elements
+ *  - in:       element - element to check, 
+ *  -           exclElements - array of string ignored attribute nodeNames;
+ *  - out:      boolean if element is ignored (true) or not (false);
+ **/
+function WSM_ElementIsIgnored( element, exclElements )
+{
+  for( var i = 0; i < exclElements.length; i++ )
+  {
+    if( element.nodeName.toLowerCase() == exclElements[i] )
+      return true;
+  }
+  return false;
+}
+
+/** string HasValidElements( AssocArray dataStore ) ;
+ *  - purpose:  checks to see if there are any elements on this page that are 
+ *  -           valid.
+ *  - in:       associative array representing the page;
+ *  - out:      boolean whether or not valid elements are present (true) or not (false);
+ **/
+function WSM_HasValidElements( dataStore )
+{
+  for( var i in dataStore ) 
+  {
+    if( !dataStore[i].excluded )
+      return true;
+  }
+  return false;
+}
+
+
+function WSM_LookupElement( element, lookby, property )
+{
+  for(var i in this.PageData )
+  {
+    for( var j in this.PageData[i] )
+    {
+      if(!lookby) 
+        lookby = "id";    // search by id by default
+      if( j[lookby] == element && !property )
+        return j;
+      else if( j[lookby] == element ) {
+        var container = [];
+        for( var k = 0; k < property.length; k++ )
+        {
+          container[k] = this.PageData[i][k][property[k]];
+        }
+        return container; // only support one single match per hash just now
+      }
+    }
+  }
+}
+
+/* it will be dark soon */
