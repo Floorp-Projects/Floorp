@@ -2961,10 +2961,11 @@ function s2v_createframe (sourceTab, index, raiseFlag)
     sourceTab.tab = tab;
 
     var tabPanel = document.createElement("tabpanel");
-    tabPanel.setAttribute ("flex", "1");
     var iframe = document.createElement("browser");
     iframe.setAttribute ("flex", "1");
     iframe.setAttribute ("context", "context:source2");
+    iframe.setAttribute ("disablehistory", "true");
+    iframe.setAttribute ("disablesecurity", "true");
     iframe.setAttribute ("type", "content");
     iframe.setAttribute ("onclick",
                          "console.views.source2.onSourceClick(event);");
