@@ -108,6 +108,19 @@ nsLineData::Verify(PRBool aFinalCheck) const
     NS_ASSERTION(len == mChildCount, "bad child count");
   }
 
+  if (1 == mChildCount) {
+    if (mIsBlock) {
+      nsIFrame* child = mFirstChild;
+      nsIStyleContext* sc;
+      child->GetStyleContext(nsnull, sc);
+      nsStyleDisplay* display = (nsStyleDisplay*)
+        sc->GetData(eStyleStruct_Display);
+      NS_ASSERTION((NS_STYLE_DISPLAY_BLOCK == display->mDisplay) ||
+                   (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay),
+                   "bad mIsBlock state");
+    }
+  }
+
   // XXX verify content offsets and mLastContentIsComplete
   return NS_OK;
 }
