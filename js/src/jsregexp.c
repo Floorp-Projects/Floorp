@@ -436,7 +436,7 @@ parseRegExp(CompilerState *state)
     /* Watch out for empty regexp */
     if (state->cp == state->cpend) {
         state->result = NewRENode(state, REOP_EMPTY);
-        return JS_TRUE;
+        return (state->result != NULL);
     }
 
     operatorStack = (REOpData *)JS_malloc(state->context, 
@@ -451,7 +451,18 @@ parseRegExp(CompilerState *state)
 
 
     while (JS_TRUE) {
-        if (state->cp != state->cpend) {
+        if (state->cp == state->cpend) {
+            /*
+             * If we are at the end of the regexp and we're short an operand,
+             * the regexp must have the form /x|/ or some such.
+             */
+            if (operatorSP == operandSP) {
+                operand = NewRENode(state, REOP_EMPTY);
+                if (!operand)
+                    goto out;
+                goto pushOperand;
+            }
+        } else {
             switch (*state->cp) {
                 /* balance '(' */
             case '(':           /* balance ')' */
