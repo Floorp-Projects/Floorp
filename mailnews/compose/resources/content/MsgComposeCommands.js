@@ -179,7 +179,6 @@ function ComposeStartup()
 			window.editorShell.Init();
 			dump("Created editorShell\n");
 
-			SetupToolbarElements(); //defined into EditorCommands.js
             contentWindow = window.content;
 
 			// setEditorType MUST be call before setContentWindow
