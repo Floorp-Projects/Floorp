@@ -58,7 +58,7 @@ void nsXULAtoms::AddrefAtoms() {
     toolbar = NS_NewAtom("toolbar");
     toolbox = NS_NewAtom("toolbox");
     tree = NS_NewAtom("tree");
-    window = NS_NewAtom("widget");
+    widget = NS_NewAtom("widget");
     window = NS_NewAtom("window");
   }
   ++gRefCnt;
@@ -75,6 +75,7 @@ void nsXULAtoms::ReleaseAtoms() {
     NS_RELEASE(toolbar);
     NS_RELEASE(toolbox);
     NS_RELEASE(tree);
+	NS_RELEASE(widget);
     NS_RELEASE(window);
     NS_IF_RELEASE(gNameSpaceManager);
   }
