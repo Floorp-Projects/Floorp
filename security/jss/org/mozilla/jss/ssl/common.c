@@ -358,21 +358,22 @@ JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd)
 }
 
 /*
- * These must match up with the constants defined in SSLSocket.java.
+ * These must match up with the constants defined in SocketBase.java.
  */
 PRInt32 JSSL_enums[] = {
     SSL_ENABLE_SSL2,            /* 0 */
     SSL_ENABLE_SSL3,            /* 1 */
-    PR_SockOpt_NoDelay,         /* 2 */
-    PR_SockOpt_Keepalive,       /* 3 */
-    PR_SHUTDOWN_RCV,            /* 4 */
-    PR_SHUTDOWN_SEND,           /* 5 */
-    SSL_REQUIRE_CERTIFICATE,    /* 6 */
-    SSL_REQUEST_CERTIFICATE,    /* 7 */
-    SSL_NO_CACHE,               /* 8 */
-    SSL_POLICY_DOMESTIC,        /* 9 */
-    SSL_POLICY_EXPORT,          /* 10 */
-    SSL_POLICY_FRANCE,          /* 11 */
+    SSL_ENABLE_TLS,             /* 2 */
+    PR_SockOpt_NoDelay,         /* 3 */
+    PR_SockOpt_Keepalive,       /* 4 */
+    PR_SHUTDOWN_RCV,            /* 5 */
+    PR_SHUTDOWN_SEND,           /* 6 */
+    SSL_REQUIRE_CERTIFICATE,    /* 7 */
+    SSL_REQUEST_CERTIFICATE,    /* 8 */
+    SSL_NO_CACHE,               /* 9 */
+    SSL_POLICY_DOMESTIC,        /* 10 */
+    SSL_POLICY_EXPORT,          /* 11 */
+    SSL_POLICY_FRANCE,          /* 12 */
 
     0
 };

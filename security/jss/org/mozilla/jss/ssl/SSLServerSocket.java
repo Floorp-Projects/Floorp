@@ -317,6 +317,14 @@ public class SSLServerSocket extends java.net.ServerSocket {
     }
 
     /**
+     * Enables TLS on this socket. It is enabled by default, unless the
+     *  default has been changed with <code>SSLSocket.enableTLSDefault</code>.
+     */
+    public void enableTLS(boolean enable) throws SocketException {
+        base.enableTLS(enable);
+    }
+
+    /**
      * @return the local address of this server socket.
      */
     public InetAddress getInetAddress() {

@@ -456,10 +456,25 @@ public class SSLSocket extends java.net.Socket {
     }
 
     /**
-     * Sets the default for SSL v2 for all new sockets.
+     * Sets the default for SSL v3 for all new sockets.
      */
     static public void enableSSL3Default(boolean enable) throws SocketException{
         setSSLDefaultOption(SocketBase.SSL_ENABLE_SSL3, enable);
+    }
+
+    /**
+     * Enables TLS on this socket.  It is enabled by default, unless the
+     * default has been changed with <code>enableTLSDefault</code>.
+     */
+    public void enableTLS(boolean enable) throws SocketException {
+        base.enableTLS(enable);
+    }
+
+    /**
+     * Sets the default for TLS for all new sockets.
+     */
+    static public void enableTLSDefault(boolean enable) throws SocketException{
+        setSSLDefaultOption(SocketBase.SSL_ENABLE_TLS, enable);
     }
 
     /**
