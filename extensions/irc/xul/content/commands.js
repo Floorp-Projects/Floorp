@@ -2270,6 +2270,8 @@ function cmdNotify(e)
 
 function cmdStalk(e)
 {
+    var list = client.prefs["stalkWords"];
+
     if (!e.text)
     {
         if (list.length == 0)
@@ -2279,8 +2281,8 @@ function cmdStalk(e)
         return;
     }
 
-    client.prefs["stalkWords"].push(e.text);
-    client.prefs["stalkWords"].update();
+    list.push(e.text);
+    list.update();
 
     display(getMsg(MSG_STALK_ADD, e.text));
 }
@@ -2290,7 +2292,7 @@ function cmdUnstalk(e)
     e.text = e.text.toLowerCase();
     var list = client.prefs["stalkWords"];
 
-    for (i in list)
+    for (var i = 0; i < list.length; ++i)
     {
         if (list[i].toLowerCase() == e.text)
         {
