@@ -763,7 +763,7 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
 
   if (styledContent) {
     nsRuleWalker *ruleWalker = aData->mRuleWalker;
-    if (styledContent->IsContentOfType(nsIContent::eHTML)) {
+    if (aData->mIsHTMLContent) {
       nsIAtom* tag = aData->mContentTag;
 
       // if we have anchor colors, check if this is an anchor with an href
@@ -844,9 +844,8 @@ HTMLStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
              (aData->mStateMask & NS_EVENT_STATE_ACTIVE) &&
              aData->mStyledContent &&
              aData->mIsHTMLContent &&
-             aData->mContentTag == nsHTMLAtoms::a &&
-             aData->mStyledContent->HasAttr(kNameSpaceID_None,
-                                            nsHTMLAtoms::href);
+             aData->mIsHTMLLink &&
+             aData->mContentTag == nsHTMLAtoms::a;
 
   return NS_OK;
 }
