@@ -527,11 +527,14 @@ function js_who_menu(n,extra,d) {
     }
     l = document.layers['popup'];
     l.src="../registry/who.cgi?email="+n+extra;
-    l.top = d.target.y - 6;
-    l.left = d.target.x - 6;
-    if( l.left + l.clipWidth > window.width ){
-        l.left = window.width - l.clipWidth;
+
+    if(d.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
+         l.top = (window.innerHeight + window.pageYOffset - l.clip.height);
+    } else {
+         l.top = d.target.y - 6;
     }
+    l.left = d.target.x - 6;
+
     l.visibility="show";
     return false;
 }
