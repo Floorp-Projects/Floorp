@@ -58,7 +58,7 @@ EXPORTS	= \
 		nsIRenderingContextOS2.h \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= gkgfx img_s mozutil_s
+EXTRA_DSO_LIBS	= gkgfx mozutil_s
 
 EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \

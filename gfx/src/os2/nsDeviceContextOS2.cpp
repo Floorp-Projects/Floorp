@@ -24,7 +24,9 @@
 #include "nsDeviceContextOS2.h"
 #include "nsRenderingContextOS2.h"
 #include "nsDeviceContextSpecOS2.h"
+#ifdef COLOR_256
 #include "il_util.h"
+#endif
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -52,10 +54,12 @@ nsDeviceContextOS2 :: nsDeviceContextOS2()
   : DeviceContextImpl()
 {
   mSurface = NULL;
+#ifdef COLOR_256
   mPaletteInfo.isPaletteDevice = PR_FALSE;
   mPaletteInfo.sizePalette = 0;
   mPaletteInfo.numReserved = 0;
   mPaletteInfo.palette = NULL;
+#endif
   mPrintDC = NULL;
   mPixelScale = 1.0f;
   mWidth = -1;
@@ -192,6 +196,7 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
   mPelsPerMeter = alArray[CAPS_VERTICAL_RESOLUTION];
 
   mDepth = alArray[CAPS_COLOR_BITCOUNT];
+#ifdef COLOR_256
   mPaletteInfo.isPaletteDevice = !!(alArray[CAPS_ADDITIONAL_GRAPHICS] & CAPS_PALETTE_MANAGER);
 
   /* OS2TODO - pref to turn off palette management should set isPaletteDevice to false */
@@ -204,6 +209,7 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
   } else {
     mPaletteInfo.numReserved = alArray[CAPS_COLORS];
   } /* endif */
+#endif
 
   mWidth = alArray[CAPS_WIDTH];
   mHeight = alArray[CAPS_HEIGHT];
@@ -654,6 +660,7 @@ NS_IMETHODIMP nsDeviceContextOS2::GetDepth(PRUint32& aDepth)
   return NS_OK;
 }
 
+#ifdef COLOR_256
 NS_IMETHODIMP nsDeviceContextOS2::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   if (nsnull == mColorSpace) {
@@ -814,6 +821,7 @@ NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
   aPaletteInfo.palette = mPaletteInfo.palette;
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP nsDeviceContextOS2 :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
