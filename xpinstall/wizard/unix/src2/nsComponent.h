@@ -67,6 +67,8 @@ public:
     int             SetLaunchApp();
     int             SetDontLaunchApp();
     int             IsLaunchApp();
+    int             SetDownloadOnly();
+    int             IsDownloadOnly();
     int             SetNext(nsComponent *aComponent);
     int             InitNext();
     nsComponent     *GetNext();
@@ -90,10 +92,11 @@ public:
  *---------------------------------------------------------------*/
     enum 
     {
-        NO_ATTR     = 0x00000000,
-        SELECTED    = 0x00000001,
-        INVISIBLE   = 0x00000010,
-        LAUNCHAPP   = 0x00000100
+        NO_ATTR         = 0x00000000,
+        SELECTED        = 0x00000001,
+        INVISIBLE       = 0x00000010,
+        LAUNCHAPP       = 0x00000100,
+        DOWNLOAD_ONLY   = 0x00001000
     };
 
 private:

@@ -326,6 +326,23 @@ nsComponent::IsLaunchApp()
     return FALSE;
 }
 
+int 
+nsComponent::SetDownloadOnly()
+{
+    mAttributes |= nsComponent::DOWNLOAD_ONLY;
+
+    return OK;
+}
+
+int
+nsComponent::IsDownloadOnly()
+{
+    if (mAttributes & nsComponent::DOWNLOAD_ONLY)
+        return TRUE;
+
+    return FALSE;
+}
+
 int
 nsComponent::SetNext(nsComponent *aComponent)
 {

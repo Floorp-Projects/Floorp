@@ -375,12 +375,19 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
             if (  (aCustom && currComp->IsSelected()) ||
                   (!aCustom)  )
             {
-                nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
-                    compNum, mTotalComps, nsInstallDlg::ACT_INSTALL);
-                err = InstallXPI(currComp, &stub);
-                if (err != OK)
-                    ErrorHandler(err); // handle and continue
-                compNum++;
+#ifdef DEBUG
+                printf("%s %d: DOWNLOAD_ONLY for %s is %d", __FILE__, __LINE__, 
+                    currComp->GetArchive(), currComp->IsDownloadOnly());
+#endif
+                if (!currComp->IsDownloadOnly())
+                {
+                    nsInstallDlg::MajorProgressCB(currComp->GetDescShort(),
+                        compNum, mTotalComps, nsInstallDlg::ACT_INSTALL);
+                    err = InstallXPI(currComp, &stub);
+                    if (err != OK)
+                        ErrorHandler(err); // handle and continue
+                    compNum++;
+                }
             }
 
             currComp = currComp->GetNext();
