@@ -4432,8 +4432,17 @@ loser:
 /*
  * SSL Key generation given pre master secret
  */
-static char *mixers[] = { "A", "BB", "CCC", "DDDD", "EEEEE", "FFFFFF", "GGGGGGG"};
 #define NUM_MIXERS 9
+static const char * const mixers[NUM_MIXERS] = { 
+    "A", 
+    "BB", 
+    "CCC", 
+    "DDDD", 
+    "EEEEE", 
+    "FFFFFF", 
+    "GGGGGGG",
+    "HHHHHHHH",
+    "IIIIIIIII" };
 #define SSL3_PMS_LENGTH 48
 #define SSL3_MASTER_SECRET_LENGTH 48
 
@@ -4853,6 +4862,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		*/
 		PORT_Memcpy(ssl3_keys_out->pIVServer, &key_block[i], IVSize);
 	    	i += IVSize;
+		PORT_Assert(i <= sizeof key_block);
 
 	    } else if (!isTLS) {
 
