@@ -29,24 +29,24 @@
 
 nsMsgViewIndex nsMsgKeyArray::FindIndex(nsMsgKey key, PRUint32 startIndex)
 {
-	for (PRUint32 i = startIndex; i < GetSize(); i++)
-	{
-		if ((nsMsgKey)(m_pData[i]) == key)
-		{
-			return i;
-		}
-	}
-	return nsMsgViewIndex_None;
+  for (PRUint32 i = startIndex; i < GetSize(); i++)
+  {
+    if ((nsMsgKey)(m_pData[i]) == key)
+    {
+      return i;
+    }
+  }
+  return nsMsgViewIndex_None;
 }
 
 void nsMsgKeyArray::SetArray(nsMsgKey* pData, int numElements, int numAllocated)
 {
-	NS_ASSERTION(pData != NULL, "storage is NULL");
-	NS_ASSERTION(numElements >= 0, "negative number of elements");
-	NS_ASSERTION(numAllocated >= numElements, "num elements more than array size");
-	
-	delete [] m_pData;			// delete previous array
-	m_pData = pData;			// set new array
-	m_nMaxSize = numAllocated;	// set size
-	m_nSize = numElements;		// set allocated length
+  NS_ASSERTION(pData != NULL, "storage is NULL");
+  NS_ASSERTION(numElements >= 0, "negative number of elements");
+  NS_ASSERTION(numAllocated >= numElements, "num elements more than array size");
+  
+  delete [] m_pData;			// delete previous array
+  m_pData = pData;			// set new array
+  m_nMaxSize = numAllocated;	// set size
+  m_nSize = numElements;		// set allocated length
 }

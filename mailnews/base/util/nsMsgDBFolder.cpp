@@ -479,13 +479,13 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
     return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder:: DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *)
+NS_IMETHODIMP nsMsgDBFolder::DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *)
 {
   NS_ASSERTION(PR_FALSE, "imap and news need to override this");
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder:: DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow)
+NS_IMETHODIMP nsMsgDBFolder::DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow)
 {
   NS_ASSERTION(PR_FALSE, "imap and news need to override this");
   return NS_OK;
