@@ -132,6 +132,7 @@ protected:
 	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
 	nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createFolderMessageNode(nsIMsgFolder *folder, nsIRDFNode **target);
@@ -153,6 +154,7 @@ protected:
   nsresult DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
 
+	nsresult GetBiffStateString(PRUint32 biffState, nsString& biffStateStr);
 
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_MessageChild;
@@ -164,6 +166,7 @@ protected:
   static nsIRDFResource* kNC_TotalMessages;
   static nsIRDFResource* kNC_TotalUnreadMessages;
   static nsIRDFResource* kNC_Charset;
+  static nsIRDFResource* kNC_BiffState;
 
   // commands
   static nsIRDFResource* kNC_Delete;

@@ -52,8 +52,10 @@ public:
 
 protected:
 	PRInt32 FindServer(nsIMsgIncomingServer *server);
+	nsresult SetNextBiffTime(nsBiffEntry *biffEntry, nsTime startTime);
 	nsresult SetupNextBiff();
 	nsresult AddBiffEntry(nsBiffEntry *biffEntry);
+	nsresult PerformBiff();
 
 protected:
 	nsITimer *mBiffTimer;

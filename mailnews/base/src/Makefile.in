@@ -42,6 +42,7 @@ EXPORTS = \
 	nsMsgServerDataSource.h	\
 	nsMsgRDFDataSource.h \
 	nsMsgBiffManager.h \
+	nsMsgNotificationManager.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -64,6 +65,7 @@ CPPSRCS = \
 	nsMsgServerDataSource.cpp	\
 	nsMsgRDFUtils.cpp \
 	nsMsgBiffManager.cpp \
+	nsMsgNotificationManager.cpp \
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

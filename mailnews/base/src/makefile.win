@@ -41,6 +41,7 @@ EXPORTS=						\
 	nsMsgIdentityDataSource.h	\
 	nsMsgServerDataSource.h		\
 	nsMsgBiffManager.h			\
+	nsMsgNotificationManager.h	\
 	$(NULL)
 
 
@@ -68,6 +69,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMsgIdentityDataSource.obj	\
 	.\$(OBJDIR)\nsMsgServerDataSource.obj	\
 	.\$(OBJDIR)\nsMsgBiffManager.obj		\
+	.\$(OBJDIR)\nsMsgNotificationManager.obj \
 	$(NULL)
 
 

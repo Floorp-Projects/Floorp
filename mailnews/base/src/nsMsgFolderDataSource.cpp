@@ -52,6 +52,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_BiffState = nsnull;
 
 // commands
 nsIRDFResource* nsMsgFolderDataSource::kNC_Delete= nsnull;
@@ -99,6 +100,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
   NS_RELEASE2(kNC_TotalMessages, refcnt);
   NS_RELEASE2(kNC_TotalUnreadMessages, refcnt);
   NS_RELEASE2(kNC_Charset, refcnt);
+  NS_RELEASE2(kNC_BiffState, refcnt);
 
   NS_RELEASE2(kNC_Delete, refcnt);
   NS_RELEASE2(kNC_NewFolder, refcnt);
@@ -149,6 +151,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::Init(const char* uri)
     mRDFService->GetResource(NC_RDF_TOTALMESSAGES, &kNC_TotalMessages);
     mRDFService->GetResource(NC_RDF_TOTALUNREADMESSAGES, &kNC_TotalUnreadMessages);
     mRDFService->GetResource(NC_RDF_CHARSET, &kNC_Charset);
+    mRDFService->GetResource(NC_RDF_BIFFSTATE, &kNC_BiffState);
     
 	mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
     mRDFService->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
@@ -366,6 +369,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsIMsgFolder *folder,
   (*arcs)->AppendElement(kNC_TotalMessages);
   (*arcs)->AppendElement(kNC_TotalUnreadMessages);
   (*arcs)->AppendElement(kNC_Charset);
+  (*arcs)->AppendElement(kNC_BiffState);
   (*arcs)->AppendElement(kNC_Child);
   (*arcs)->AppendElement(kNC_MessageChild);
   
@@ -573,6 +577,28 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyChanged(nsISupports *item, co
 NS_IMETHODIMP nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item, const char *property,
 									   PRUint32 oldFlag, PRUint32 newFlag)
 {
+	nsresult rv;
+	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
+	if(folder)
+	{
+		nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item));
+		if(resource)
+		{
+			if(PL_strcmp("BiffState", property) == 0)
+			{
+				nsAutoString oldBiffStateStr((const char *)"",eOneByte), newBiffStateStr ((const char *)"", eOneByte);
+
+				rv = GetBiffStateString(oldFlag, oldBiffStateStr);
+				if(NS_FAILED(rv))
+					return rv;
+				rv = GetBiffStateString(newFlag, newBiffStateStr);
+				if(NS_FAILED(rv))
+					return rv;
+				NotifyPropertyChanged(resource, kNC_BiffState, oldBiffStateStr.GetBuffer(), newBiffStateStr.GetBuffer());
+			}
+		}
+
+	}
 	return NS_OK;
 
 }
@@ -607,6 +633,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createUnreadMessagesNode(folder, target);
 	else if (peq(kNC_Charset, property))
 		rv = createCharsetNode(folder, target);
+	else if (peq(kNC_BiffState, property))
+		rv = createBiffStateNode(folder, target);
 	else if (peq(kNC_Child, property))
 		rv = createFolderChildNode(folder, target);
 	else if (peq(kNC_MessageChild, property))
@@ -690,6 +718,34 @@ nsMsgFolderDataSource::createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **targ
 	createNode(charsetStr, target);
 	return NS_OK;
 
+}
+
+nsresult
+nsMsgFolderDataSource::createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **target)
+{
+	nsresult rv;
+	PRUint32 biffState;
+	rv = folder->GetBiffState(&biffState);
+	if(NS_FAILED(rv)) return rv;
+
+	nsString biffString;
+
+	GetBiffStateString(biffState, biffString);
+	createNode(biffString, target);
+	return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::GetBiffStateString(PRUint32 biffState, nsString& biffStateStr)
+{
+	if(biffState == nsMsgBiffState_NewMail)
+		biffStateStr = "NewMail";
+	else if(biffState == nsMsgBiffState_NoMail)
+		biffStateStr = "NoMail";
+	else 
+		biffStateStr = "UnknownMail";
+
+	return NS_OK;
 }
 
 nsresult 
@@ -857,17 +913,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 		return NS_OK;
 	}
 
-    if (peq(kNC_Name, property) || peq(kNC_SpecialFolder, property) || peq(kNC_TotalMessages, property)
-		|| peq(kNC_TotalUnreadMessages, property) || peq(kNC_Charset, property))
-	{
-		nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));
-
-		if(NS_FAILED(rv))
-			return rv;
-
-		rv = GetTargetHasAssertion(this, folderResource, property, tv, target, hasAssertion);
-	}
-	else if(peq(kNC_Child, property))
+	if(peq(kNC_Child, property))
 	{
 		nsCOMPtr<nsIFolder> childFolder(do_QueryInterface(target, &rv));
 		if(NS_SUCCEEDED(rv))
@@ -885,7 +931,17 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 		if(NS_SUCCEEDED(rv))
 			rv = folder->HasMessage(message, hasAssertion);
 	}
-	else
+	else if (peq(kNC_Name, property) || peq(kNC_SpecialFolder, property) || peq(kNC_TotalMessages, property)
+		|| peq(kNC_TotalUnreadMessages, property) || peq(kNC_Charset, property) || peq(kNC_BiffState, property))
+	{
+		nsCOMPtr<nsIRDFResource> folderResource(do_QueryInterface(folder, &rv));
+
+		if(NS_FAILED(rv))
+			return rv;
+
+		rv = GetTargetHasAssertion(this, folderResource, property, tv, target, hasAssertion);
+	}
+	else 
 		*hasAssertion = PR_FALSE;
 
 	return rv;

@@ -28,6 +28,8 @@ nsresult
 NS_NewMsgBiffManager(const nsIID& iid, void **result)
 {
 	nsMsgBiffManager *biffManager = new nsMsgBiffManager();
+	if(!biffManager)
+		return NS_ERROR_OUT_OF_MEMORY;
 	return biffManager->QueryInterface(iid, result);
 }
 
@@ -61,8 +63,7 @@ nsMsgBiffManager::nsMsgBiffManager()
 {
 	NS_INIT_REFCNT();
 
-	NS_NewTimer(&mBiffTimer);
-
+	mBiffTimer = nsnull;
 	mBiffArray = new nsVoidArray();
 }
 
@@ -89,17 +90,15 @@ NS_IMETHODIMP nsMsgBiffManager::AddServerBiff(nsIMsgIncomingServer *server)
 	//Only add it if it hasn't been added already.
 	if(serverIndex == -1)
 	{
-		PRInt32 biffInterval;
 		nsBiffEntry *biffEntry = new nsBiffEntry;
 		if(!biffEntry)
 			return NS_ERROR_OUT_OF_MEMORY;
 		biffEntry->server = server;
-		rv = server->GetBiffMinutes(&biffInterval);
+		nsTime currentTime;
+		rv = SetNextBiffTime(biffEntry, currentTime);
 		if(NS_FAILED(rv))
 			return rv;
-		//Add 60 secs/minute in microseconds to current time. biffEntry->nextBiffTime's
-		//constructor makes it the current time.
-		biffEntry->nextBiffTime += (60000000 * biffInterval);
+
 		AddBiffEntry(biffEntry);
 		SetupNextBiff();
 	}
@@ -124,7 +123,7 @@ NS_IMETHODIMP nsMsgBiffManager::ForceBiffAll()
 
 void nsMsgBiffManager::Notify(nsITimer *timer)
 {
-	
+	PerformBiff();		
 }
 
 PRInt32 nsMsgBiffManager::FindServer(nsIMsgIncomingServer *server)
@@ -142,8 +141,7 @@ PRInt32 nsMsgBiffManager::FindServer(nsIMsgIncomingServer *server)
 nsresult nsMsgBiffManager::AddBiffEntry(nsBiffEntry *biffEntry)
 {
 	PRInt32 count = mBiffArray->Count();
-	PRInt32 i;
-	for(i = 0; i < count; i++)
+	for(PRInt32 i = 0; i < count; i++)
 	{
 		nsBiffEntry *current = (nsBiffEntry*)mBiffArray->ElementAt(i);
 		if(biffEntry->nextBiffTime < current->nextBiffTime)
@@ -154,33 +152,76 @@ nsresult nsMsgBiffManager::AddBiffEntry(nsBiffEntry *biffEntry)
 	return NS_OK;
 }
 
+nsresult nsMsgBiffManager::SetNextBiffTime(nsBiffEntry *biffEntry, nsTime startTime)
+{
+	nsresult rv;
+	nsIMsgIncomingServer *server = biffEntry->server;
+
+	if(!server)
+		return NS_ERROR_FAILURE;
+
+	PRInt32 biffInterval;
+	rv = server->GetBiffMinutes(&biffInterval);
+	if(NS_FAILED(rv))
+		return rv;
+	//Add 60 secs/minute in microseconds to current time. biffEntry->nextBiffTime's
+	//constructor makes it the current time.
+	biffEntry->nextBiffTime = startTime;
+	biffEntry->nextBiffTime += (60000000 * biffInterval);
+	return NS_OK;
+}
+
 nsresult nsMsgBiffManager::SetupNextBiff()
 {
-	/*
+	
 	if(mBiffArray->Count() > 0)
 	{
 		
 		//Get the next biff entry
 		nsBiffEntry *biffEntry = (nsBiffEntry*)mBiffArray->ElementAt(0);
 		nsTime currentTime;
-		nsTime biffDelay;
-
+		nsInt64 biffDelay;
+		nsInt64 ms(1000);
 		if(currentTime > biffEntry->nextBiffTime)
-			biffDelay = LL_ZERO;
+			biffDelay = 1;
 		else
 			biffDelay = biffEntry->nextBiffTime - currentTime;
-		mBiffTimer->Cancel();
 		//Convert biffDelay into milliseconds
-		PRInt64 timeInMS;
-		PRUint32 timeInMSUint32;
-		PRInt64 ms;
-		LL_I2L(ms, 1000); 
-		LL_DIV(timeInMS, biffDelay, ms);
-		LL_L2UI(timeInMSUint32, timeInMS);
+		nsInt64 timeInMS = biffDelay / ms;
+		PRUint32 timeInMSUint32 = (PRUint32)timeInMS;
+		//Can't currently reset a timer when it's in the process of
+		//calling Notify. So, just release the timer here and create a new one.
+		if(mBiffTimer)
+		{
+			mBiffTimer->Cancel();
+			NS_RELEASE(mBiffTimer);
+		}
+		NS_NewTimer(&mBiffTimer);
 		mBiffTimer->Init(this, timeInMSUint32);
 		
 	}
-	*/
 	return NS_OK;
 }
 
+//This is the function that does a biff on all of the servers whose time it is to biff.
+nsresult nsMsgBiffManager::PerformBiff()
+{
+	nsTime currentTime;
+	for(PRInt32 i = 0; i < mBiffArray->Count(); i++)
+	{
+		nsBiffEntry *current = (nsBiffEntry*)mBiffArray->ElementAt(i);
+		if(current->nextBiffTime < currentTime)
+		{
+			current->server->PerformBiff();
+			mBiffArray->RemoveElementAt(i);
+			i--; //Because we removed it we need to look at the one that just moved up.
+			SetNextBiffTime(current, currentTime);
+			AddBiffEntry(current);
+		}
+		else
+			//since we're in biff order, there's no reason to keep checking
+			break;
+	}
+	SetupNextBiff();
+	return NS_OK;
+}

@@ -46,6 +46,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_TOTALMESSAGES		"http://home.netscape.com/NC-rdf#TotalMessages"
 #define NC_RDF_TOTALUNREADMESSAGES	"http://home.netscape.com/NC-rdf#TotalUnreadMessages"
 #define NC_RDF_CHARSET				"http://home.netscape.com/NC-rdf#Charset"
+#define NC_RDF_BIFFSTATE			"http://home.netscape.com/NC-rdf#BiffState"
 
 //Folder Commands
 #define NC_RDF_DELETE				"http://home.netscape.com/NC-rdf#Delete"

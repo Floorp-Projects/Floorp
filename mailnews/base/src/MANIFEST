@@ -28,4 +28,6 @@ nsMsgAccount.h
 nsMsgAccountManager.h
 nsMsgRDFDataSource.h
 nsMsgBiffManager.h
+nsMsgNotificationManager.h
+
 
