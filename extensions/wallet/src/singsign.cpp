@@ -114,145 +114,6 @@ si_3ButtonConfirm(PRUnichar * szMessage) {
 }
 
 PRIVATE PRBool
-si_PromptUsernameAndPassword(char *szMessage, char **szUsername, char **szPassword) {
-#ifdef NECKO
-  nsString username;
-  nsString password;
-  PRBool retval;
-  nsresult res;
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return PR_FALSE; /* failure value */
-  }
-  const nsString message = szMessage;
-  PRUnichar* usr;
-  PRUnichar* pwd;
-  res = dialog->PromptUsernameAndPassword(message.GetUnicode(), &usr, &pwd, &retval);
-  if (NS_FAILED(res)) {
-    return PR_FALSE; /* failure value */
-  }
-  username = usr;
-  delete[] usr;
-  password = pwd;
-  delete[] pwd;
-  *szUsername = username.ToNewCString();
-  *szPassword = password.ToNewCString();
-  return retval;
-#else
-    nsString username;
-    nsString password;
-    PRBool retval;
-    nsINetSupportDialogService* dialog = NULL;
-    nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-    nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-    if (NS_FAILED(res)) {
-      return PR_FALSE; /* failure value */
-    }
-    if (dialog) {
-      const nsString message = szMessage;
-      dialog->PromptUserAndPassword(message, username, password, &retval);
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  *szUsername = username.ToNewCString();
-  *szPassword = password.ToNewCString();
-  return retval;
-#endif
-}
-
-PRIVATE char*
-si_PromptPassword(char *szMessage) {
-#ifdef NECKO
-  nsString password;
-  PRBool retval;
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return NULL; /* failure value */
-  }
-  const nsString message = szMessage;
-  PRUnichar* pwd;
-  res = dialog->PromptPassword(message.GetUnicode(), &pwd, &retval);
-  if (NS_FAILED(res)) {
-    return NULL; /* failure value */
-  }
-  password = pwd;
-  delete[] pwd;
-  if (retval) {
-    return password.ToNewCString();
-  } else {
-    return NULL; /* user pressed cancel */
-  }
-#else
-  nsString password;
-  PRBool retval;
-  nsINetSupportDialogService* dialog = NULL;
-  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-  if (NS_FAILED(res)) {
-    return NULL; /* failure value */
-  }
-  if (dialog) {
-    const nsString message = szMessage;
-    dialog->PromptPassword(message, password, &retval);
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  if (retval) {
-    return password.ToNewCString();
-  } else {
-    return NULL; /* user pressed cancel */
-  }
-#endif
-}
-
-PRIVATE char*
-si_Prompt(char *szMessage, char* szDefaultUsername) {
-#ifdef NECKO
-  nsString defaultUsername = szDefaultUsername;
-  nsString username;
-  PRBool retval;
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    return NULL; /* failure value */
-  }
-  const nsString message = szMessage;
-  PRUnichar* usr;
-  res = dialog->Prompt(message.GetUnicode(), defaultUsername.GetUnicode(),
-                       &usr, &retval);
-  if (NS_FAILED(res)) {
-    return NULL; /* failure value */
-  }
-  username = usr;
-  delete[] usr;
-  if (retval) {
-    return username.ToNewCString();
-  } else {
-    return NULL; /* user pressed cancel */
-  }
-#else
-  nsString defaultUsername = szDefaultUsername;
-  nsString username;
-  PRBool retval;
-  nsINetSupportDialogService* dialog = NULL;
-  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
-  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
-  if (NS_FAILED(res)) {
-    return NULL; /* failure value */
-  }
-  if (dialog) {
-    const nsString message = szMessage;
-    dialog->Prompt(message, defaultUsername, username, &retval);
-  }
-  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
-  if (retval) {
-    return username.ToNewCString();
-  } else {
-    return NULL; /* user pressed cancel */
-  }
-#endif
-}
-
-PRIVATE PRBool
 si_SelectDialog(const PRUnichar* szMessage, char** pList, PRInt32* pCount) {
   PRBool retval = PR_TRUE; /* default value */
   nsresult res;  
@@ -331,11 +192,6 @@ si_KeyResetTime() {
 PRIVATE PRBool
 si_KeyTimedOut() {
   return Wallet_KeyTimedOut();
-}
-
-PRIVATE PRInt32
-si_KeySize() {
-  return Wallet_KeySize();
 }
 
 /***************************
@@ -786,11 +642,6 @@ si_RemoveUser(char *URLName, char *userName, PRBool save) {
   char * userName2 = nsnull;
   char * colon = nsnull;
   if (URLName) {
-    NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
-    if (NS_FAILED(res)) {
-      return PR_FALSE;
-    }
-
     nsCOMPtr<nsIURL> uri;
     nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
     uri->SetSpec((char *)URLName);
@@ -2342,11 +2193,6 @@ SINGSIGN_PromptUsernameAndPassword
   }
 
   /* convert to a uri so we can parse out the hostname */
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
   uri->SetSpec((char *)urlname);
@@ -2407,11 +2253,6 @@ SINGSIGN_PromptPassword
   }
 
   /* convert to a uri so we can parse out the username and hostname */
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
-  if (NS_FAILED(res)) {
-    return res;
-  }
-
   nsCOMPtr<nsIURL> uri;
   nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(uri));
   uri->SetSpec((char *)urlname);
