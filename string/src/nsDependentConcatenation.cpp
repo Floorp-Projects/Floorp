@@ -35,26 +35,26 @@
 PRUint32
 nsDependentConcatenation::Length() const
   {
-    return mStrings[kLeftString]->Length() + mStrings[kRightString]->Length();
+    return mStrings[kFirstString]->Length() + mStrings[kLastString]->Length();
   }
 
 PRBool
-nsDependentConcatenation::IsDependentOn( const string_type& aString ) const
+nsDependentConcatenation::IsDependentOn( const abstract_string_type& aString ) const
   {
-    return mStrings[0]->IsDependentOn(aString) || mStrings[1]->IsDependentOn(aString);
+    return mStrings[kFirstString]->IsDependentOn(aString) || mStrings[kLastString]->IsDependentOn(aString);
   }
 
 #if 0
 PRBool
-nsDependentConcatenation::PromisesExactly( const string_type& aString ) const
+nsDependentConcatenation::PromisesExactly( const abstract_string_type& aString ) const
   {
       // Not really like this, test for the empty string, etc
-    return mStrings[0] == &aString && !mStrings[1] || !mStrings[0] && mStrings[1] == &aString;
+    return mStrings[kFirstString] == &aString && !mStrings[kLastString] || !mStrings[kFirstString] && mStrings[kLastString] == &aString;
   }
 #endif
 
-const PRUnichar*
-nsDependentConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
+const nsDependentConcatenation::char_type*
+nsDependentConcatenation::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
     int whichString;
 
@@ -68,20 +68,20 @@ nsDependentConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aF
           break;
 
         case kFirstFragment:
-          whichString = SetLeftStringInFragment(aFragment);
+          whichString = SetFirstStringInFragment(aFragment);
           break;
 
         case kLastFragment:
-          whichString = SetRightStringInFragment(aFragment);
+          whichString = SetLastStringInFragment(aFragment);
           break;
 
         case kFragmentAt:
-          PRUint32 leftLength = mStrings[kLeftString]->Length();
+          PRUint32 leftLength = mStrings[kFirstString]->Length();
           if ( aPosition < leftLength )
-            whichString = SetLeftStringInFragment(aFragment);
+            whichString = SetFirstStringInFragment(aFragment);
           else
             {
-              whichString = SetRightStringInFragment(aFragment);
+              whichString = SetLastStringInFragment(aFragment);
               aPosition -= leftLength;
             }
           break;
@@ -98,15 +98,15 @@ nsDependentConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aF
         if ( !result )
           {
             done = PR_FALSE;
-            if ( aRequest == kNextFragment && whichString == kLeftString )
+            if ( aRequest == kNextFragment && whichString == kFirstString )
               {
                 aRequest = kFirstFragment;
-                whichString = SetRightStringInFragment(aFragment);
+                whichString = SetLastStringInFragment(aFragment);
               }
-            else if ( aRequest == kPrevFragment && whichString == kRightString )
+            else if ( aRequest == kPrevFragment && whichString == kLastString )
               {
                 aRequest = kLastFragment;
-                whichString = SetLeftStringInFragment(aFragment);
+                whichString = SetFirstStringInFragment(aFragment);
               }
             else
               done = PR_TRUE;
@@ -120,26 +120,26 @@ nsDependentConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aF
 PRUint32
 nsDependentCConcatenation::Length() const
   {
-    return mStrings[kLeftString]->Length() + mStrings[kRightString]->Length();
+    return mStrings[kFirstString]->Length() + mStrings[kLastString]->Length();
   }
 
 PRBool
-nsDependentCConcatenation::IsDependentOn( const string_type& aString ) const
+nsDependentCConcatenation::IsDependentOn( const abstract_string_type& aString ) const
   {
-    return mStrings[0]->IsDependentOn(aString) || mStrings[1]->IsDependentOn(aString);
+    return mStrings[kFirstString]->IsDependentOn(aString) || mStrings[kLastString]->IsDependentOn(aString);
   }
 
 #if 0
 PRBool
-nsDependentCConcatenation::PromisesExactly( const string_type& aString ) const
+nsDependentCConcatenation::PromisesExactly( const abstract_string_type& aString ) const
   {
       // Not really like this, test for the empty string, etc
-    return mStrings[0] == &aString && !mStrings[1] || !mStrings[0] && mStrings[1] == &aString;
+    return mStrings[kFirstString] == &aString && !mStrings[kLastString] || !mStrings[kFirstString] && mStrings[kLastString] == &aString;
   }
 #endif
 
-const char*
-nsDependentCConcatenation::GetReadableFragment( nsReadableFragment<char_type>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
+const nsDependentCConcatenation::char_type*
+nsDependentCConcatenation::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
     int whichString;
 
@@ -153,20 +153,20 @@ nsDependentCConcatenation::GetReadableFragment( nsReadableFragment<char_type>& a
           break;
 
         case kFirstFragment:
-          whichString = SetLeftStringInFragment(aFragment);
+          whichString = SetFirstStringInFragment(aFragment);
           break;
 
         case kLastFragment:
-          whichString = SetRightStringInFragment(aFragment);
+          whichString = SetLastStringInFragment(aFragment);
           break;
 
         case kFragmentAt:
-          PRUint32 leftLength = mStrings[kLeftString]->Length();
+          PRUint32 leftLength = mStrings[kFirstString]->Length();
           if ( aPosition < leftLength )
-            whichString = SetLeftStringInFragment(aFragment);
+            whichString = SetFirstStringInFragment(aFragment);
           else
             {
-              whichString = SetRightStringInFragment(aFragment);
+              whichString = SetLastStringInFragment(aFragment);
               aPosition -= leftLength;
             }
           break;
@@ -183,15 +183,15 @@ nsDependentCConcatenation::GetReadableFragment( nsReadableFragment<char_type>& a
         if ( !result )
           {
             done = PR_FALSE;
-            if ( aRequest == kNextFragment && whichString == kLeftString )
+            if ( aRequest == kNextFragment && whichString == kFirstString )
               {
                 aRequest = kFirstFragment;
-                whichString = SetRightStringInFragment(aFragment);
+                whichString = SetLastStringInFragment(aFragment);
               }
-            else if ( aRequest == kPrevFragment && whichString == kRightString )
+            else if ( aRequest == kPrevFragment && whichString == kLastString )
               {
                 aRequest = kLastFragment;
-                whichString = SetLeftStringInFragment(aFragment);
+                whichString = SetFirstStringInFragment(aFragment);
               }
             else
               done = PR_TRUE;

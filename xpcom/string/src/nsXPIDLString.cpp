@@ -72,7 +72,7 @@ nsImportedStringHandle<CharT>::RecalculateBoundaries() const
 
 
 #if DEBUG_STRING_STATS
-const nsBufferHandle<PRUnichar>*
+const nsXPIDLString::buffer_handle_type*
 nsXPIDLString::GetFlatBufferHandle() const
   {
     --sShareCount;
@@ -80,7 +80,7 @@ nsXPIDLString::GetFlatBufferHandle() const
   }
 
 
-const nsBufferHandle<PRUnichar>*
+const nsXPIDLString::buffer_handle_type*
 nsXPIDLString::GetBufferHandle() const
   {
     --sShareCount;
@@ -97,10 +97,10 @@ nsXPIDLString::DebugPrintStats( FILE* aOutFile )
 #endif
 
 
-const nsSharedBufferHandle<PRUnichar>*
+const nsXPIDLString::shared_buffer_handle_type*
 nsXPIDLString::GetSharedBufferHandle() const
   {
-    const nsImportedStringHandle<PRUnichar>* answer = NS_STATIC_CAST(const nsImportedStringHandle<PRUnichar>*, mBuffer.get());
+    const nsImportedStringHandle<char_type>* answer = NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get());
     
     if ( answer && !answer->DataEnd() && answer->StorageStart() )
       answer->RecalculateBoundaries();
@@ -112,10 +112,10 @@ nsXPIDLString::GetSharedBufferHandle() const
   }
 
 
-PRUnichar**
+nsXPIDLString::char_type**
 nsXPIDLString::PrepareForUseAsOutParam()
   {
-    nsImportedStringHandle<PRUnichar>* handle = new nsImportedStringHandle<PRUnichar>();
+    nsImportedStringHandle<char_type>* handle = new nsImportedStringHandle<char_type>();
     NS_ASSERTION(handle, "Trouble!  We couldn't get a new handle during |getter_Copies|.");
 
     mBuffer = handle;
@@ -127,7 +127,7 @@ nsXPIDLString::PrepareForUseAsOutParam()
 
 
 #if DEBUG_STRING_STATS
-const nsBufferHandle<char>*
+const nsXPIDLCString::buffer_handle_type*
 nsXPIDLCString::GetFlatBufferHandle() const
   {
     --sShareCount;
@@ -135,7 +135,7 @@ nsXPIDLCString::GetFlatBufferHandle() const
   }
 
 
-const nsBufferHandle<char>*
+const nsXPIDLCString::buffer_handle_type*
 nsXPIDLCString::GetBufferHandle() const
   {
     --sShareCount;
@@ -152,10 +152,10 @@ nsXPIDLCString::DebugPrintStats( FILE* aOutFile )
 #endif
 
 
-const nsSharedBufferHandle<char>*
+const nsXPIDLCString::shared_buffer_handle_type*
 nsXPIDLCString::GetSharedBufferHandle() const
   {
-    const nsImportedStringHandle<char>* answer = NS_STATIC_CAST(const nsImportedStringHandle<char>*, mBuffer.get());
+    const nsImportedStringHandle<char_type>* answer = NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get());
     
     if ( answer && !answer->DataEnd() && answer->StorageStart() )
       answer->RecalculateBoundaries();
@@ -167,10 +167,10 @@ nsXPIDLCString::GetSharedBufferHandle() const
   }
 
 
-char**
+nsXPIDLCString::char_type**
 nsXPIDLCString::PrepareForUseAsOutParam()
   {
-    nsImportedStringHandle<char>* handle = new nsImportedStringHandle<char>();
+    nsImportedStringHandle<char_type>* handle = new nsImportedStringHandle<char_type>();
     NS_ASSERTION(handle, "Trouble!  We couldn't get a new handle during |getter_Copies|.");
 
     mBuffer = handle;

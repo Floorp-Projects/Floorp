@@ -29,8 +29,8 @@ nsDependentSubstring::Length() const
     return mLength;
   }
 
-const PRUnichar*
-nsDependentSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
+const nsDependentSubstring::char_type*
+nsDependentSubstring::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
       // Offset any request for a specific position (First, Last, At) by our
       //  substrings startpos within the owning string
@@ -50,7 +50,7 @@ nsDependentSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragm
 
     // requests for |kNextFragment| or |kPrevFragment| are just relayed down into the string we're slicing
 
-    const PRUnichar* position_ptr = mString.GetReadableFragment(aFragment, aRequest, aPosition);
+    const char_type* position_ptr = mString.GetReadableFragment(aFragment, aRequest, aPosition);
 
     // If |GetReadableFragment| returns |0|, then we are off the string, the contents of the
     //  fragment are garbage.
@@ -80,8 +80,8 @@ nsDependentCSubstring::Length() const
     return mLength;
   }
 
-const char*
-nsDependentCSubstring::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
+const nsDependentCSubstring::char_type*
+nsDependentCSubstring::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aPosition ) const
   {
       // Offset any request for a specific position (First, Last, At) by our
       //  substrings startpos within the owning string
@@ -101,7 +101,7 @@ nsDependentCSubstring::GetReadableFragment( nsReadableFragment<char>& aFragment,
 
     // requests for |kNextFragment| or |kPrevFragment| are just relayed down into the string we're slicing
 
-    const char* position_ptr = mString.GetReadableFragment(aFragment, aRequest, aPosition);
+    const char_type* position_ptr = mString.GetReadableFragment(aFragment, aRequest, aPosition);
 
     // If |GetReadableFragment| returns |0|, then we are off the string, the contents of the
     //  fragment are garbage.

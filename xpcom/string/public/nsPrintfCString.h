@@ -76,21 +76,21 @@ class NS_COM nsPrintfCString
 
 
     public:
-      explicit nsPrintfCString( const char* format, ... );
-      nsPrintfCString( size_t n, const char* format, ...);
+      explicit nsPrintfCString( const char_type* format, ... );
+      nsPrintfCString( size_t n, const char_type* format, ...);
      ~nsPrintfCString();
 
       virtual PRUint32 Length() const;
 
     protected:
-      virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
-      virtual       char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 ) { return 0; }
-//    virtual PRBool GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest ) const;
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
+//    virtual       PRBool     GetReadableFragment( const_fragment_type&, nsFragmentRequest ) const;
 
     private:
-      char*     mStart;
-      PRUint32  mLength;
-      char      mLocalBuffer[ kLocalBufferSize + 1 ];
+      char_type* mStart;
+      PRUint32   mLength;
+      char_type  mLocalBuffer[ kLocalBufferSize + 1 ];
   };
 
 #endif // !defined(nsPrintfCString_h___)

@@ -40,7 +40,7 @@
 #include "prprf.h"
 
 
-nsPrintfCString::nsPrintfCString( const char* format, ... )
+nsPrintfCString::nsPrintfCString( const char_type* format, ... )
     : mStart(mLocalBuffer),
       mLength(0)
   {
@@ -54,7 +54,7 @@ nsPrintfCString::nsPrintfCString( const char* format, ... )
     va_end(ap);
   }
 
-nsPrintfCString::nsPrintfCString( size_t n, const char* format, ... )
+nsPrintfCString::nsPrintfCString( size_t n, const char_type* format, ... )
     : mStart(mLocalBuffer),
       mLength(0)
   {
@@ -64,7 +64,7 @@ nsPrintfCString::nsPrintfCString( size_t n, const char* format, ... )
     size_t logical_capacity = kLocalBufferSize;
     if ( n > logical_capacity )
       {
-        char* nonlocal_buffer = new char[n];
+        char_type* nonlocal_buffer = new char_type[n];
 
           // if we got something, use it
         if ( nonlocal_buffer )
@@ -96,7 +96,7 @@ nsPrintfCString::Length() const
 
 #if 0
 PRBool
-nsPrintfCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest ) const
+nsPrintfCString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest ) const
   {
     switch ( aRequest )
       {
@@ -114,8 +114,8 @@ nsPrintfCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFra
       }
   }
 #else
-const char*
-nsPrintfCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+const nsPrintfCString::char_type*
+nsPrintfCString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
     switch ( aRequest )
       {

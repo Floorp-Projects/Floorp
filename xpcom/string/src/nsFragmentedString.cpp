@@ -26,8 +26,8 @@
 #include "nsFragmentedString.h"
 
 
-const PRUnichar*
-nsFragmentedString::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+const nsFragmentedString::char_type*
+nsFragmentedString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
     const nsSharedBufferList::Buffer* buffer = 0;
     switch ( aRequest )
@@ -65,8 +65,8 @@ nsFragmentedString::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragmen
   }
 
 
-PRUnichar*
-nsFragmentedString::GetWritableFragment( nsWritableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
+nsFragmentedString::char_type*
+nsFragmentedString::GetWritableFragment( fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
   {
     nsSharedBufferList::Buffer* buffer = 0;
     switch ( aRequest )

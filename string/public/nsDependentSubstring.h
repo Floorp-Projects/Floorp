@@ -49,15 +49,15 @@ class NS_COM nsDependentSubstring
       calls to |GetReadableFragment()|.
     */
   {
-    typedef nsAString                   string_type;
-    typedef string_type::const_iterator const_iterator;
+    public:
+      typedef nsDependentSubstring self_type;
 
     protected:
-      virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
-      virtual       PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) { return 0; }
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
 
     public:
-      nsDependentSubstring( const string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
+      nsDependentSubstring( const abstract_string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
           : mString(aString),
             mStartPos( NS_MIN(aStartPos, aString.Length()) ),
             mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
@@ -74,21 +74,21 @@ class NS_COM nsDependentSubstring
           mLength = Distance(aStart, aEnd);
         }
 
-      // nsDependentSubstring( const nsDependentSubstring& ); // auto-generated copy-constructor should be OK
+      // nsDependentSubstring( const self_type& ); // auto-generated copy-constructor should be OK
       // ~nsDependentSubstring();                           // auto-generated destructor OK
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsDependentSubstring& );        // we're immutable, you can't assign into a substring
+      void operator=( const self_type& );        // we're immutable, you can't assign into a substring
 
     public:
       virtual PRUint32 Length() const;
-      virtual PRBool IsDependentOn( const string_type& aString ) const { return mString.IsDependentOn(aString); }
+      virtual PRBool IsDependentOn( const abstract_string_type& aString ) const { return mString.IsDependentOn(aString); }
 
     private:
-      const string_type&  mString;
-      PRUint32            mStartPos;
-      PRUint32            mLength;
+      const abstract_string_type&  mString;
+      PRUint32                     mStartPos;
+      PRUint32                     mLength;
   };
 
 class NS_COM nsDependentCSubstring
@@ -102,15 +102,15 @@ class NS_COM nsDependentCSubstring
       calls to |GetReadableFragment()|.
     */
   {
-    typedef nsACString                  string_type;
-    typedef string_type::const_iterator const_iterator;
+    public:
+      typedef nsDependentCSubstring self_type;
 
     protected:
-      virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
-      virtual       char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 ) { return 0; }
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
 
     public:
-      nsDependentCSubstring( const string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
+      nsDependentCSubstring( const abstract_string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
           : mString(aString),
             mStartPos( NS_MIN(aStartPos, aString.Length()) ),
             mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
@@ -127,21 +127,21 @@ class NS_COM nsDependentCSubstring
           mLength = Distance(aStart, aEnd);
         }
 
-      // nsDependentCSubstring( const nsDependentCSubstring& ); // auto-generated copy-constructor should be OK
+      // nsDependentCSubstring( const self_type& ); // auto-generated copy-constructor should be OK
       // ~nsDependentCSubstring();                            // auto-generated destructor OK
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsDependentCSubstring& );         // we're immutable, you can't assign into a substring
+      void operator=( const self_type& );         // we're immutable, you can't assign into a substring
 
     public:
       virtual PRUint32 Length() const;
-      virtual PRBool IsDependentOn( const string_type& aString ) const { return mString.IsDependentOn(aString); }
+      virtual PRBool IsDependentOn( const abstract_string_type& aString ) const { return mString.IsDependentOn(aString); }
 
     private:
-      const string_type&  mString;
-      PRUint32            mStartPos;
-      PRUint32            mLength;
+      const abstract_string_type&  mString;
+      PRUint32                     mStartPos;
+      PRUint32                     mLength;
   };
 
 
