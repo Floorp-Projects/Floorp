@@ -249,8 +249,6 @@ public:
       nsISupportsArray* aArguments);
 };
 
-static int CompareItemTitle(const void* aArg1, const void* aArg2, void *data);
-
 //----------------------------------------------------------------------------
 // Global functions and data [implementation]
 
@@ -277,7 +275,7 @@ NS_IMETHODIMP NS_NewCharsetMenu(nsISupports * aOuter, const nsIID & aIID,
   return res;
 }
 
-static int CompareMenuItems(const void* aArg1, const void* aArg2, void *data)
+static int PR_CALLBACK CompareMenuItems(const void* aArg1, const void* aArg2, void *data)
 {
   PRInt32 res; 
   nsMenuItem * aItem1 = *((nsMenuItem **) aArg1);
