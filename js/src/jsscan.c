@@ -265,6 +265,8 @@ js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
 JS_FRIEND_API(JSBool)
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
 {
+    if (ts->flags & TSF_OWNFILENAME)
+        JS_free(cx, (void *) ts->filename);
     if (ts->principals)
         JSPRINCIPALS_DROP(cx, ts->principals);
     return !ts->file || fclose(ts->file) == 0;
@@ -738,6 +740,8 @@ GetUnicodeEscape(JSTokenStream *ts)
     return '\\';
 }
 
+#define JS_FILENAME_MAX 1024
+
 JSTokenType
 js_GetToken(JSContext *cx, JSTokenStream *ts)
 {
@@ -1128,6 +1132,78 @@ retry:
 
       case '/':
         if (MatchChar(ts, '/')) {
+            /*
+             * Hack for source filters such as the Mozilla XUL preprocessor:
+             * "//@line 123\n" sets the line number to 123 of the *next* line
+             * after the comment to 123.
+             */
+            if (JS_HAS_ATLINE_OPTION(cx)) {
+                jschar cp[5];
+                uintN i, line, temp;
+                char filename[JS_FILENAME_MAX];
+
+                if (PeekChars(ts, 5, cp) &&
+                    cp[0] == '@' &&
+                    cp[1] == 'l' &&
+                    cp[2] == 'i' &&
+                    cp[3] == 'n' &&
+                    cp[4] == 'e') {
+                    SkipChars(ts, 5);
+                    while ((c = GetChar(ts)) != EOF && JS_ISSPACE(c)) {
+                        if (c == '\n')
+                            break;
+                    }
+                    if (JS7_ISDEC(c)) {
+                        line = JS7_UNDEC(c);
+                        while ((c = GetChar(ts)) != EOF && JS7_ISDEC(c)) {
+                            temp = 10 * line + JS7_UNDEC(c);
+                            if (temp < line) {
+                                /* Ignore overlarge line numbers. */
+                                goto skipline;
+                            }
+                            line = temp;
+                        }
+                        while (JS_ISSPACE(c) && c != '\n') {
+                            c = GetChar(ts);
+                            if (c == EOF)
+                                break;
+                        }
+                        i = 0;
+                        if (c == '"') {
+                            while ((c = GetChar(ts)) != EOF && c != '"') {
+                                if (c == '\n') {
+                                    UngetChar(ts, c);
+                                    goto skipline;
+                                }
+                                if ((c >> 8) != 0 || i >= JS_FILENAME_MAX)
+                                    goto skipline;
+                                filename[i++] = (char) c;
+                            }
+                            if (c == '"') {
+                                while ((c = GetChar(ts)) != EOF &&
+                                       JS_ISSPACE(c)) {
+                                    if (c == '\n')
+                                        break;
+                                }
+                            }
+                        }
+                        filename[i] = '\0';
+                        if (c == '\n') {
+                            if (filename[0]) {
+                                if (ts->flags & TSF_OWNFILENAME)
+                                    JS_free(cx, (void *) ts->filename);
+                                ts->filename = JS_strdup(cx, filename);
+                                if (!ts->filename)
+                                    RETURN(TOK_ERROR);
+                                ts->flags |= TSF_OWNFILENAME;
+                            }
+                            ts->lineno = line;
+                        }
+                    }
+                    UngetChar(ts, c);
+                }
+            }
+
 skipline:
             while ((c = GetChar(ts)) != EOF && c != '\n')
                 /* skip to end of line */;
