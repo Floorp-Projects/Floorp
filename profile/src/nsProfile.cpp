@@ -590,8 +590,9 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 						*profileDir = descriptor;
 
 						PR_FREEIF(encodedProfileDir);
-
-						orgProfileDir.Copy(profileDir->GetCString());
+						
+						// nsXPIDLCString::operator =() now copies, and owns result.
+						orgProfileDir = profileDir->GetCString();
 
 						// Get the value of entry "migrated" to check the nature of the profile
 						m_reg->GetString( newKey, "migrated", &isMigrated);
