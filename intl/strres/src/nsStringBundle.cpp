@@ -112,8 +112,8 @@ nsStringBundle::~nsStringBundle()
 nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 {
-  nsAutoString name("");
-  name.Append(aID, 10);
+  nsAutoString name;
+  name.AppendWithConversion(aID, 10);
   nsresult ret = mProps->GetStringProperty(name, aResult);
 
 #ifdef DEBUG_tao
@@ -147,7 +147,7 @@ NS_IMETHODIMP
 nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
 {
   *aResult = nsnull;
-  nsString tmpstr("");
+  nsString tmpstr;
 
   nsresult ret = GetStringFromID(aID, tmpstr);
   PRInt32 len =  tmpstr.Length()+1;
@@ -166,7 +166,7 @@ NS_IMETHODIMP
 nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 {
   *aResult = nsnull;
-  nsString tmpstr("");
+  nsString tmpstr;
   nsString nameStr(aName);
   nsresult ret = GetStringFromName(nameStr, tmpstr);
   PRInt32 len =  tmpstr.Length()+1;
@@ -205,7 +205,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 #if 1
    /* plan A: don't fallback; use aURLSpec: xxx.pro -> xxx.pro
    */
-   strFile2 = aURLSpec;
+   strFile2.AssignWithConversion(aURLSpec);
    ret = OpenInputStream(strFile2, in);
 #else
   nsString   lc_lang;
@@ -293,7 +293,7 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString& lang, nsString& cou
 
   PRUnichar *lc_name_unichar;
   nsString	  lc_name;
-  nsString  	category("NSILOCALE_MESSAGES");
+  nsString  	category; category.AssignWithConversion("NSILOCALE_MESSAGES");
   nsresult	  result	 = aLocale->GetCategory(category.GetUnicode(), &lc_name_unichar);
   lc_name.Assign(lc_name_unichar);
   nsAllocator::Free(lc_name_unichar);

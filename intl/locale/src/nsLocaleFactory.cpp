@@ -106,8 +106,11 @@ nsLocaleFactory::nsLocaleFactory(void)
 
   fCategoryList = new nsString*[LOCALE_CATEGORY_LISTLEN];
 
-  for(i=0;i< LOCALE_CATEGORY_LISTLEN;i++)
-	fCategoryList[i] = new nsString(localeCategoryList[i]);
+  for(i=0;i< LOCALE_CATEGORY_LISTLEN;i++) {
+    nsString* temp = new nsString;
+    temp->AssignWithConversion(localeCategoryList[i]);
+	  fCategoryList[i] = temp;
+	}
 
 #if defined(XP_PC) && !defined(XP_OS2)
    fWin32LocaleInterface = nsnull;
@@ -339,7 +342,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 #else
   nsString* systemLocaleName;
 
-	systemLocaleName = new nsString("en-US");
+	systemLocaleName = new nsString; systemLocaleName->AssignWithConversion("en-US");
 	result = this->NewLocale(systemLocaleName,&fSystemLocale);
 	if (NS_FAILED(result)) {
 		delete systemLocaleName;
@@ -421,7 +424,7 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 #else
   nsString* applicationLocaleName;
 
-	applicationLocaleName = new nsString("en-US");
+	applicationLocaleName = new nsString; applicationLocaleName->AssignWithConversion("en-US");
 	result = this->NewLocale(applicationLocaleName,&fApplicationLocale);
 	if (NS_FAILED(result)) {
 		delete applicationLocaleName;
@@ -538,7 +541,7 @@ nsLocaleFactory::GetLocaleFromAcceptLanguage(const char* acceptLanguage, nsILoca
   //
   result = NS_ERROR_FAILURE;
   if (countLang>0) {
-	  localeName = new nsString(acceptLanguageList[0]);
+	  localeName = new nsString; localeName->AssignWithConversion(acceptLanguageList[0]);
 	  result = NewLocale(localeName,acceptLocale);
 	  delete localeName;
   }

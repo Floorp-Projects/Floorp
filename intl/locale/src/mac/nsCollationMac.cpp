@@ -142,10 +142,10 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
 
   // locale -> script code + charset name
   m_scriptcode = smRoman;
-  mCharset.SetString("ISO-8859-1");
+  mCharset.AssignWithConversion("ISO-8859-1");
 
   PRUnichar *aLocaleUnichar; 
-  nsAutoString aCategory("NSILOCALE_COLLATE");
+  nsAutoString aCategory; aCategory.AssignWithConversion("NSILOCALE_COLLATE");
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
@@ -180,7 +180,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.SetString(mappedCharset);
+        mCharset.Assign(mappedCharset);
         nsAllocator::Free(mappedCharset);
       }
     }

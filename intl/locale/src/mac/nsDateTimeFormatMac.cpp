@@ -226,7 +226,7 @@ NS_IMPL_ISUPPORTS(nsDateTimeFormatMac, kIDateTimeFormatIID);
 nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 {
   PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory("NSILOCALE_TIME");
+  nsString aCategory; aCategory.AssignWithConversion("NSILOCALE_TIME");
   nsresult res;
 
   // use cached info if match with stored locale
@@ -249,7 +249,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   mScriptcode = smSystemScript;
   mLangcode = langEnglish;
   mRegioncode = verUS;
-  mCharset.SetString("ISO-8859-1");
+  mCharset.AssignWithConversion("ISO-8859-1");
   
 
   // get locale string, use app default if no locale specified
@@ -261,7 +261,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
       if (NS_SUCCEEDED(res)) {
         res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
         if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-          mAppLocale.SetString(aLocaleUnichar); // cache app locale name
+          mAppLocale.Assign(aLocaleUnichar); // cache app locale name
         }
         appLocale->Release();
       }
@@ -273,7 +273,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 
   // Get a script code and charset name from locale, if available
   if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-    mLocale.SetString(aLocaleUnichar); // cache locale name
+    mLocale.Assign(aLocaleUnichar); // cache locale name
     nsAllocator::Free(aLocaleUnichar);
 
     nsCOMPtr <nsIMacLocale> macLocale = do_GetService(kMacLocaleFactoryCID, &res);
@@ -286,7 +286,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.SetString(mappedCharset);
+        mCharset.Assign(mappedCharset);
         nsAllocator::Free(mappedCharset);
       }
     }
@@ -322,11 +322,11 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   
   // return, nothing to format
   if (dateFormatSelector == kDateFormatNone && timeFormatSelector == kTimeFormatNone) {
-    stringOut.SetString("");
+    stringOut.SetLength(0);
     return NS_OK;
   }
 
-  stringOut.SetString(asctime(tmTime));	// set the default string, in case for API/conversion errors
+  stringOut.AssignWithConversion(asctime(tmTime));	// set the default string, in case for API/conversion errors
   
   // convert struct tm to input format of mac toolbox call
   NS_ASSERTION(tmTime->tm_mon >= 0, "tm is not set correctly");
@@ -422,7 +422,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
         res = decoder->Convert(aBuffer, &srcLength,
                                unichars, &unicharLength);
         if (NS_SUCCEEDED(res)) {
-          stringOut.SetString(unichars, unicharLength);
+          stringOut.Assign(unichars, unicharLength);
         }
       }
       delete [] unichars;
