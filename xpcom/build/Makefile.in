@@ -44,6 +44,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libxptinfo.a \
 		$(DIST)/lib/libxpt.a \
 		$(DIST)/lib/libxptcmd.a \
+		$(DIST)/lib/libmozreg_s.a \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
@@ -61,7 +62,6 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/lib \
-		-lmozreg_s \
 		$(NULL)
 
 ifdef MOZ_DEMANGLE_SYMBOLS
