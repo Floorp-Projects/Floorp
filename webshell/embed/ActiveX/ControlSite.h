@@ -18,6 +18,8 @@
 #ifndef CONTROLSITE_H
 #define CONTROLSITE_H
 
+#include "IOleCommandTargetImpl.h"
+
 #define CCONTROLSITE_INTERFACES() \
 	COM_INTERFACE_ENTRY(IOleWindow) \
 	COM_INTERFACE_ENTRY(IOleClientSite) \
@@ -29,7 +31,8 @@
 	COM_INTERFACE_ENTRY(IDispatch) \
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx) \
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink2, IAdviseSinkEx) \
-	COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx)
+	COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx) \
+	COM_INTERFACE_ENTRY(IOleCommandTarget)
 
 
 class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
@@ -37,7 +40,8 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 						public IOleInPlaceSiteWindowless,
 						public IOleControlSite,
 						public IAdviseSinkEx,
-						public IDispatch
+						public IDispatch,
+						public IOleCommandTargetImpl<CControlSite>
 {
 	// Handle to parent window
 	HWND m_hWndParent;
@@ -108,13 +112,28 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	// Flag indicating if control is in edit/user mode
 	bool m_bAmbientUserMode;
 
+protected:
+	// Notifies the attached control of a change to an ambient property
+	virtual void FireAmbientPropertyChange(DISPID id);
+
 public:
+	// Constructor
 	CControlSite();
+	// Destructor
 	virtual ~CControlSite();
 
 BEGIN_COM_MAP(CControlSite)
 	CCONTROLSITE_INTERFACES()
 END_COM_MAP()
+
+BEGIN_OLECOMMAND_TABLE()
+END_OLECOMMAND_TABLE()
+
+	// Returns the window used when processing ole commands
+	HWND GetCommandTargetWindow()
+	{
+		return NULL; // TODO
+	}
 
 	// List of controls
 	static std::list<CControlSite *> m_cControlList;
@@ -128,6 +147,11 @@ END_COM_MAP()
 	virtual HRESULT DoVerb(LONG nVerb, LPMSG lpMsg = NULL);
 	virtual HRESULT Advise(IUnknown *pIUnkSink, const IID &iid, DWORD *pdwCookie);
 	virtual HRESULT Unadvise(const IID &iid, DWORD dwCookie);
+
+	// Methods to set ambient properties
+	virtual void SetAmbientUserMode(BOOL bUser);
+
+	// Inline methods
 
 	virtual const CLSID &GetObjectCLSID() const
 	{

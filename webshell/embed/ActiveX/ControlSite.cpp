@@ -319,6 +319,30 @@ HRESULT CControlSite::SetPosition(const RECT &rcPos)
 }
 
 
+void CControlSite::FireAmbientPropertyChange(DISPID id)
+{
+	if (m_spObject)
+	{
+		CIPtr(IOleControl) spControl = m_spObject;
+		if (spControl)
+		{
+			spControl->OnAmbientPropertyChange(id);
+		}
+	}
+}
+
+
+void CControlSite::SetAmbientUserMode(BOOL bUserMode)
+{
+	bool bNewMode = bUserMode ? true : false;
+	if (m_bAmbientUserMode != bNewMode)
+	{
+		m_bAmbientUserMode = bNewMode;
+		FireAmbientPropertyChange(DISPID_AMBIENT_USERMODE);
+	}
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // IDispatch implementation
 
@@ -947,3 +971,4 @@ HRESULT STDMETHODCALLTYPE CControlSite::ShowPropertyFrame(void)
 {
 	return E_NOTIMPL;
 }
+
