@@ -1112,6 +1112,9 @@ nsresult
 nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname, PRInt32 accountNum)
 {
   nsresult rv;
+  PRInt32 oldint;
+  PRBool oldbool;
+
   if (!hostname) return NS_ERROR_NULL_POINTER;
   if (accountNum < 1) return NS_ERROR_FAILURE;
   
@@ -1164,7 +1167,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   
   server->SetType("imap");
   server->SetHostName((char *)hostname);
-  
+
   char prefName[1024];
   PR_snprintf(prefName, 1024, "mail.imap.server.%s.userName",hostname);
   rv = m_prefs->CopyCharPref(prefName, &oldstr);
@@ -1173,13 +1176,28 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     PR_FREEIF(oldstr);
     oldstr = nsnull;
   }
-  
+
+  // upgrade the password
+  // this won't work, since 5.0 is crypto free.
   PR_snprintf(prefName, 1024, "mail.imap.server.%s.password",hostname);
   rv = m_prefs->CopyCharPref(prefName, &oldstr);
   if (NS_SUCCEEDED(rv)) {
     server->SetPassword("enter your clear text password here");
     PR_FREEIF(oldstr);
     oldstr = nsnull;
+  }
+
+  // upgrade the biff prefs
+  PR_snprintf(prefName, 1024, "mail.imap.server.%s.check_new_mail",hostname);
+  rv = m_prefs->GetBoolPref(prefName, &oldbool);
+  if (NS_SUCCEEDED(rv)) {
+    server->SetDoBiff(oldbool);
+  }
+
+  PR_snprintf(prefName, 1024, "mail.imap.server.%s.check_time",hostname);
+  rv = m_prefs->GetIntPref(prefName, &oldint);
+  if (NS_SUCCEEDED(rv)) {
+    server->SetBiffMinutes(oldint);
   }
   
   // create the directory structure for this pop account
