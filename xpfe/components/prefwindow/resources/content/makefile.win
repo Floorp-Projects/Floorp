@@ -66,6 +66,8 @@ install::
 	$(MAKE_INSTALL) preftree.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-mousewheel.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-mousewheel.js  $(DIST)\bin\chrome\communicator\content\pref
+	$(MAKE_INSTALL) pref-winhooks.xul  $(DIST)\bin\chrome\communicator\content\pref
+	$(MAKE_INSTALL) pref-winhooks.js  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) prefutilities.js  $(DIST)\bin\chrome\communicator\content\pref
 
 clobber::
