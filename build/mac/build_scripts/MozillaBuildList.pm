@@ -905,7 +905,6 @@ sub BuildIDLProjects()
     # necko
     BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");
     BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",                 "uriloader");
-    BuildIDLProject(":mozilla:uriloader:extprotocol:mac:extProtocolIDL.mcp",        "extprotocol");
 
     # psm glue
     BuildIDLProject(":mozilla:extensions:psm-glue:macbuild:psmglueIDL.mcp",         "psmglue"); 
@@ -1268,7 +1267,6 @@ sub BuildBrowserUtilsProjects()
     StartBuildModule("browserutils");
 
     BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",                "uriLoader$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:uriloader:extprotocol:mac:extProtocol.mcp",       "extProtocol$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     
     BuildOneProject(":mozilla:profile:macbuild:profile.mcp",                    "profile$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp", "prefm$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
