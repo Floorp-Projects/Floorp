@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.10 $ $Date: 2001/11/28 16:23:34 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.11 $ $Date: 2001/12/12 20:23:05 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1055,6 +1055,9 @@ nssHash_Destroy
  * nssHash_Add
  *
  */
+
+extern const NSSError NSS_ERROR_HASH_COLLISION;
+
 NSS_EXTERN PRStatus
 nssHash_Add
 (

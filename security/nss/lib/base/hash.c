@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.5 $ $Date: 2001/11/29 19:33:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: hash.c,v $ $Revision: 1.6 $ $Date: 2001/12/12 20:23:07 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -246,7 +246,7 @@ nssHash_Add
   const void *value
 )
 {
-  PRStatus error = PR_SUCCESS;
+  PRStatus error = PR_FAILURE;
   PLHashEntry *he;
 
   PZ_Lock(hash->mutex);
@@ -254,8 +254,11 @@ nssHash_Add
   he = PL_HashTableAdd(hash->plHashTable, key, (void *)value);
   if( (PLHashEntry *)NULL == he ) {
     nss_SetError(NSS_ERROR_NO_MEMORY);
+  } else if (he->value != value) {
+    nss_SetError(NSS_ERROR_HASH_COLLISION);
   } else {
     hash->count++;
+    error = PR_SUCCESS;
   }
 
   (void)PZ_Unlock(hash->mutex);
