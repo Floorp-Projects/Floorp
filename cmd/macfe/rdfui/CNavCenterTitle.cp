@@ -268,7 +268,7 @@ CNavCenterTitle :: SetView ( HT_View inView )
 
 CNavCenterCommandStrip :: CNavCenterCommandStrip ( LStream *inStream )
 	: CNavCenterStrip (inStream),
-		mDetails(NULL), mClose(NULL)
+		mAddPage(NULL), mManage(NULL), mClose(NULL)
 {
 
 }
@@ -288,11 +288,10 @@ CNavCenterCommandStrip :: ~CNavCenterCommandStrip()
 void
 CNavCenterCommandStrip :: FinishCreateSelf ( )
 {
-	mDetails = dynamic_cast<CChameleonCaption*>(FindPaneByID(kDetailsPaneID));
-	Assert_(mDetails != NULL);
-
-	// close command not always present
+	// none of these are always present
 	mClose = dynamic_cast<CChameleonCaption*>(FindPaneByID(kClosePaneID));
+	mAddPage = dynamic_cast<CChameleonCaption*>(FindPaneByID(kAddPagePaneID));
+	mManage = dynamic_cast<CChameleonCaption*>(FindPaneByID(kManagePaneID));
 	
 } // FinishCreateSelf
 
@@ -307,30 +306,9 @@ CNavCenterCommandStrip :: SetView ( HT_View inView )
 {
 	RGBColor textColor;
 	if ( URDFUtilities::GetColor(HT_TopNode(GetView()), ForegroundColorProperty(), &textColor) ) {
-		mDetails->SetColor ( textColor );
-		if ( mClose )
-			mClose->SetColor ( textColor );
+		if ( mClose ) mClose->SetColor ( textColor );
+		if ( mAddPage ) mAddPage->SetColor ( textColor );
+		if ( mManage ) mManage->SetColor ( textColor );
 	}
 
 } // SetView
-
-
-//
-// ListenToMessage
-//
-// Handle mode switches between navigation and management.
-//
-void
-CNavCenterCommandStrip :: ListenToMessage ( MessageT inMessage, void* ioParam )
-{
-	switch ( inMessage ) {
-		case msg_ModeSwitch:
-			//еее set the title of the "show details" caption
-			Refresh();
-			break;
-		
-		default:
-			CNavCenterStrip::ListenToMessage ( inMessage, ioParam );
-	}
-
-} // ListenToMessage

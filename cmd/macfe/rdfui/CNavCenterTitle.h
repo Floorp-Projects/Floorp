@@ -103,8 +103,8 @@ private:
 class CNavCenterCommandStrip : public CNavCenterStrip
 {
 public:
-	enum { class_ID = 'tcmd', kDetailsPaneID = 'deta', kClosePaneID = 'clos' } ;
-	enum { msg_CloseShelfNow = 'clos', msg_ModeSwitch = 'mode' } ;
+	enum { class_ID = 'tcmd', kAddPagePaneID = 'addp', kManagePaneID = 'edit', kClosePaneID = 'clos' } ;
+	enum { msg_CloseShelfNow = 'clos', msg_AddPage = 'addp', msg_Manage = 'edit' } ;
 
 		// Construction, Destruction
 	CNavCenterCommandStrip(LStream *inStream);
@@ -114,13 +114,13 @@ private:
 
 	virtual void SetView ( HT_View inView ) ;
 	virtual void FinishCreateSelf ( ) ;
-	virtual void ListenToMessage ( MessageT inMessage, void* ioParam );	
 
 	virtual void* BackgroundURLProperty ( ) const { return gNavCenter->controlStripBGURL; }
 	virtual void* BackgroundColorProperty ( ) const { return gNavCenter->controlStripBGColor; }
 	virtual void* ForegroundColorProperty ( ) const { return gNavCenter->controlStripFGColor; } 
 
-	CChameleonCaption*	mDetails;
-	CChameleonCaption*	mClose;
+	CChameleonCaption* mAddPage;
+	CChameleonCaption* mManage;
+	CChameleonCaption* mClose;
 	
 }; // class CNavCenterCommandStrip
