@@ -30,6 +30,9 @@
 #ifdef NS_DEBUG
 #include "nsLayoutAtoms.h"
 #endif
+#include "nsILayoutHistoryState.h"
+#include "nsIStatefulFrame.h"
+#include "nsIContent.h"
 
 // Class IID's
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -133,6 +136,10 @@ public:
                                        nsIFrame*       aFrame);
 
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
+
+  NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
+  NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
+
 
 private:
   nsIPresShell*                   mPresShell;  // weak link, because the pres shell owns us
@@ -552,6 +559,109 @@ FrameManager::CantRenderReplacedElement(nsIPresContext* aPresContext,
       // Post the event
       eventQueue->PostEvent(ev);
     }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+{
+  nsresult rv = NS_OK;
+  NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
+
+  // See if the frame is stateful.
+  nsCOMPtr<nsIStatefulFrame> statefulFrame = do_QueryInterface(aFrame);
+  if (nsnull != statefulFrame) {
+    // If so, get the content ID, state type and the state and
+    // add an association between (ID, type) and (state) to the
+    // history state storage object, aState.
+    nsCOMPtr<nsIContent> content;    
+    rv = aFrame->GetContent(getter_AddRefs(content));   
+    if (NS_SUCCEEDED(rv)) {
+      PRUint32 ID;
+      rv = content->GetContentID(&ID);
+      if (NS_SUCCEEDED(rv)) {
+        PRInt32 type = NS_HISTORY_STATE_TYPE_NONE;        
+        rv = statefulFrame->GetStateType(&type);
+        if (NS_SUCCEEDED(rv)) {
+          nsISupports* frameState;
+          rv = statefulFrame->SaveState(&frameState);
+          if (NS_SUCCEEDED(rv)) {
+            rv = aState->AddState(ID, frameState, type);
+          }
+        }
+      }
+    }
+  }
+
+  // XXX We are only going through the principal child list right now.
+  // Need to talk to Troy to find out about other kinds of
+  // child lists and whether they will contain stateful frames.
+
+  // Capture frame state for the first child 
+  nsIFrame* child = nsnull;
+  rv = aFrame->FirstChild(nsnull, &child);
+  if (NS_SUCCEEDED(rv) && nsnull != child) {
+    rv = CaptureFrameState(child, aState);
+  }
+
+  // Capture frame state for the next sibling
+  nsIFrame* sibling = nsnull;
+  rv = aFrame->GetNextSibling(&sibling);
+  if (NS_SUCCEEDED(rv) && nsnull != sibling) {
+    rv = CaptureFrameState(sibling, aState);    
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+{
+  nsresult rv = NS_OK;
+  NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
+
+  // See if the frame is stateful.
+  nsCOMPtr<nsIStatefulFrame> statefulFrame = do_QueryInterface(aFrame);
+  if (nsnull != statefulFrame) {
+    // If so, get the content ID, state type and the frame state and
+    // ask the frame object to restore its state.    
+    nsCOMPtr<nsIContent> content;    
+    rv = aFrame->GetContent(getter_AddRefs(content));   
+    if (NS_SUCCEEDED(rv)) {
+      PRUint32 ID;
+      rv = content->GetContentID(&ID);
+      if (NS_SUCCEEDED(rv)) {
+        PRInt32 type = NS_HISTORY_STATE_TYPE_NONE;        
+        rv = statefulFrame->GetStateType(&type);
+        if (NS_SUCCEEDED(rv)) {
+          nsISupports* frameState = nsnull;
+          rv = aState->GetState(ID, &frameState, type);          
+          if (NS_SUCCEEDED(rv) && nsnull != frameState) {
+            rv = statefulFrame->RestoreState(frameState);  
+          }
+        }
+      }
+    }
+  }
+
+  // XXX We are only going through the principal child list right now.
+  // Need to talk to Troy to find out about other kinds of
+  // child lists and whether they will contain stateful frames.
+
+  // Capture frame state for the first child 
+  nsIFrame* child = nsnull;
+  rv = aFrame->FirstChild(nsnull, &child);
+  if (NS_SUCCEEDED(rv) && nsnull != child) {
+    rv = RestoreFrameState(child, aState);
+  }
+
+  // Capture frame state for the next sibling
+  nsIFrame* sibling = nsnull;
+  rv = aFrame->GetNextSibling(&sibling);
+  if (NS_SUCCEEDED(rv) && nsnull != sibling) {
+    rv = RestoreFrameState(sibling, aState);    
   }
 
   return rv;

@@ -27,6 +27,7 @@ class nsIFrame;
 class nsIPresContext;
 class nsIPresShell;
 class nsIStyleSet;
+class nsILayoutHistoryState;
 
 #define NS_IFRAMEMANAGER_IID     \
 { 0xa6cf9107, 0x15b3, 0x11d2, \
@@ -91,6 +92,14 @@ public:
   // Notification that a frame is about to be destroyed. This allows any outstanding
   // references to the frame to be cleaned up
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
+
+  /**
+   * Capture/restore frame state for the frame subtree rooted at aFrame.
+   * aState is the document state storage object onto which each frame 
+   * stores its state.
+   */
+  NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
+  NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
 };
 
 /**

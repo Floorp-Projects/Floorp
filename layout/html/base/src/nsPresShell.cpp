@@ -63,7 +63,6 @@
 #include "nsIFrameManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsILayoutHistoryState.h"
-#include "nsIStatefulFrame.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -176,8 +175,9 @@ public:
   NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const;
 
   NS_IMETHOD DoCopy();
+
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
-  NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState);
+  NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState);  
 
   //nsIViewObserver interface
 
@@ -287,6 +287,7 @@ protected:
   nsCOMPtr<nsIStyleSet> mStyleSet;
   nsIFrame* mRootFrame;
   nsIViewManager* mViewManager;   // [WEAK] docViewer owns it so I don't have to
+  nsILayoutHistoryState* mHistoryState; // [WEAK] session history owns this
   PRUint32 mUpdateCount;
   nsVoidArray mReflowCommands;
   PRUint32 mReflowLockCount;
@@ -509,6 +510,8 @@ PresShell::Init(nsIDocument* aDocument,
   aPresContext->SetShell(this);
 
   mStyleSet = dont_QueryInterface(aStyleSet);
+
+  mHistoryState = nsnull;
 
   nsresult result = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
                                                  nsIFrameSelection::GetIID(),
@@ -1574,43 +1577,16 @@ PresShell::GetHistoryState(nsILayoutHistoryState** aState)
   rv = GetRootFrame(&rootFrame);
   if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
 
-  rv = CaptureFrameState(rootFrame, *aState);
+  rv = mFrameManager->CaptureFrameState(rootFrame, *aState);
 
   return rv;
 }
 
 NS_IMETHODIMP
-PresShell::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+PresShell::SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState)
 {
-  nsresult rv = NS_OK;
-  NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
-
-  // See if the frame is stateful.
-  nsCOMPtr<nsIStatefulFrame> statefulFrame = do_QueryInterface(aFrame);
-  if (nsnull != statefulFrame) {
-    // If so, ask the frame to save its state
-    rv = statefulFrame->SaveState(aState);    
-  }
-
-  // XXX We are only going through the principal child list right now.
-  // Need to talk to Troy to find out about other kinds of
-  // child lists and whether they will contain stateful frames.
-
-  // Capture frame state for the first child 
-  nsIFrame* child = nsnull;
-  rv = aFrame->FirstChild(nsnull, &child);
-  if (NS_SUCCEEDED(rv) && nsnull != child) {
-    rv = CaptureFrameState(child, aState);
-  }
-
-  // Capture frame state for the next sibling
-  nsIFrame* sibling = nsnull;
-  rv = aFrame->GetNextSibling(&sibling);
-  if (NS_SUCCEEDED(rv) && nsnull != sibling) {
-    rv = CaptureFrameState(sibling, aState);    
-  }
-
-  return rv;
+  mHistoryState = aLayoutHistoryState;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1663,6 +1639,17 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 {
   EnterReflowLock();
   nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
+
+  if (NS_SUCCEEDED(rv) && nsnull != mHistoryState) {
+    // If history state has been set by session history, ask the frame manager 
+    // to restore frame state for the frame hierarchy created for the chunk of
+    // content that just came in.
+    nsIFrame* frame = nsnull;
+    rv = GetPrimaryFrameFor(aContainer, &frame);
+    if (NS_SUCCEEDED(rv))
+      mFrameManager->RestoreFrameState(frame, mHistoryState);
+  }
+
   ExitReflowLock();
   return rv;
 }
