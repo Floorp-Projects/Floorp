@@ -1020,6 +1020,10 @@ calendar/sunbird/app/Makefile
 calendar/sunbird/base/Makefile
 "
 
+MAKEFILES_macbrowser="
+camino/Makefile
+"
+
 MAKEFILES_sql="
 extensions/sql/Makefile
 extensions/sql/base/Makefile
@@ -1208,7 +1212,7 @@ if [ "$MOZ_MATHML" ]; then
 fi
 
 #libart
-if [ "$MOZ_INTERNAL_LIBART_LGPL" ]; then
+if [ "$MOZ_SVG_RENDERER_LIBART" ]; then
     MAKEFILES_libart="other-licenses/libart_lgpl/Makefile"
 fi
 
@@ -1539,6 +1543,10 @@ fi
 
 if test -n "$MOZ_SUNBIRD"; then
     add_makefiles "$MAKEFILES_sunbird"
+fi
+
+if test "$MOZ_BUILD_APP" = "macbrowser"; then
+    add_makefiles "$MAKEFILES_macbrowser"
 fi
 
 if test -n "$MOZ_IPCD"; then

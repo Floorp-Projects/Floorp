@@ -3,9 +3,8 @@
 #  . $topsrcdir/mail/config/mozconfig
 # to the top of your mozconfig file.
 
-MOZ_THUNDERBIRD=1
-export MOZ_THUNDERBIRD
-mk_add_options MOZ_THUNDERBIRD=1
+mk_add_options MOZ_CO_PROJECT=mail
+ac_add_options --enable-application=mail
 
 ac_add_options --enable-crypto
 ac_add_options --disable-mathml
@@ -14,8 +13,6 @@ ac_add_options --disable-activex-scripting
 ac_add_options --disable-tests
 ac_add_options --disable-oji
 ac_add_options --disable-necko-disk-cache
-ac_add_options --enable-single-profile
-ac_add_options --disable-profilesharing
 ac_add_options --enable-extensions=wallet,spellcheck,xmlextras,webservices
 ac_add_options --enable-necko-protocols=http,file,jar,viewsource,res,data
 ac_add_options --enable-image-decoders=default,-xbm

@@ -1,3 +1,5 @@
+mk_add_options MOZ_CO_PROJECT=macbrowser
+ac_add_options --enable-application=macbrowser
 ac_add_options --enable-default-toolkit=cocoa
 ac_add_options --disable-tests
 ac_add_options --enable-crypto

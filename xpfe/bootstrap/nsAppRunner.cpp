@@ -151,6 +151,8 @@ extern "C" void ShowOSAlert(const char* aMessage);
 #include "jprof.h"
 #endif
 
+#define MOZ_APP_NAME "mozilla"
+
 // on x86 linux, the current builds of some popular plugins (notably
 // flashplayer and real) expect a few builtin symbols from libgcc
 // which were available in some older versions of gcc.  However,

@@ -29,11 +29,12 @@ dnl               Dan Mosedale <dmose@mozilla.org>
 dnl                 LDAP support
 dnl               Seth Spitzer <sspitzer@netscape.com>
 dnl                 xpctools support
+dnl               Benjamin Smedberg <bsmedberg@covad.net>
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
 
-AC_PREREQ(2.12)
+AC_PREREQ(2.13)
 AC_INIT(config/config.mk)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
@@ -569,7 +570,6 @@ TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 CYGWIN_WRAPPER=
 MOZ_USER_DIR=".mozilla"
-MOZ_APP_NAME=mozilla
 
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='-L$(DIST)/lib -lmozjpeg'
@@ -908,7 +908,6 @@ esac
 dnl Get mozilla version from central milestone file
 MOZILLA_VERSION=`$PERL $srcdir/config/milestone.pl -topsrcdir $srcdir`
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
-MOZ_APP_VERSION=$MOZILLA_VERSION
 
 dnl ========================================================
 dnl System overrides of the defaults for target
@@ -3414,6 +3413,124 @@ AC_SUBST(MOZ_X11)
 
 dnl ========================================================
 dnl =
+dnl = Application
+dnl =
+dnl ========================================================
+
+MOZ_ARG_HEADER(Application)
+
+MOZ_CALENDAR=
+MOZ_MAIL_NEWS=
+MOZ_STATIC_MAIL_BUILD=
+MOZ_SINGLE_PROFILE=
+MOZ_PROFILESHARING=1
+MOZ_IPCD=
+MOZ_PROFILELOCKING=1
+
+MOZ_ARG_ENABLE_STRING(application,
+[  --enable-application=APP
+                          Options include:
+                            suite
+                            browser (Firefox)
+                            mail (Thunderbird)
+                            composer
+                            calendar
+                            xulrunner
+                            macbrowser (Camino)
+                            standalone (use this for standalone
+                              xpcom/xpconnect or to manually drive a build)],
+[ MOZ_BUILD_APP=$enableval ] )
+
+case "$MOZ_BUILD_APP" in
+suite)
+  MOZ_APP_NAME=mozilla
+  MOZ_MAIL_NEWS=1
+  MOZ_LDAP_XPCOM=1
+  MOZ_COMPOSER=1
+  MOZ_PROFILESHARING=1
+  MOZ_APP_VERSION=$MOZILLA_VERSION
+  ;;
+
+browser)
+  MOZ_APP_NAME=firefox
+  MOZ_XUL_APP=1
+  MOZ_PHOENIX=1
+  MOZ_APP_VERSION=`cat $topsrcdir/browser/config/version.txt`
+  AC_DEFINE(MOZ_PHOENIX)
+  ;;
+
+mail)
+  MOZ_APP_NAME=thunderbird
+  MOZ_XUL_APP=1
+  MOZ_THUNDERBIRD=1
+  MOZ_MAIL_NEWS=1
+  MOZ_LDAP_XPCOM=1
+  MOZ_STATIC_MAIL_BUILD=1
+  MOZ_COMPOSER=1
+  MOZ_APP_VERSION=`cat $topsrcdir/mail/config/version.txt`
+  AC_DEFINE(MOZ_THUNDERBIRD)
+  ;;
+
+composer)
+  MOZ_APP_NAME=nvu
+  MOZ_XUL_APP=1
+  MOZ_STANDALONE_COMPOSER=1
+  MOZ_COMPOSER=1
+  MOZ_APP_VERSION=0.17+
+  AC_DEFINE(MOZ_STANDALONE_COMPOSER)
+  ;;
+
+calendar)
+  MOZ_APP_NAME=sunbird
+  MOZ_XUL_APP=1
+  MOZ_SUNBIRD=1
+  MOZ_CALENDAR=1
+  MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
+  AC_DEFINE(MOZ_SUNBIRD)
+  ;;
+
+xulrunner)
+  MOZ_APP_NAME=xulrunner
+  MOZ_XUL_APP=1
+  MOZ_XULRUNNER=1 
+  MOZ_APP_VERSION=`cat $topsrcdir/xulrunner/config/version.txt`
+  AC_DEFINE(MOZ_XULRUNNER)
+  ;;
+
+macbrowser) 
+  MOZ_APP_NAME=mozilla
+  MOZ_APP_VERSION=$MOZILLA_VERSION
+  ;;
+
+standalone) 
+  MOZ_APP_NAME=mozilla
+  MOZ_APP_VERSION=$MOZILLA_VERSION
+  ;;
+
+*)
+  AC_MSG_ERROR([--enable-application=APP is required])
+  ;;
+
+esac
+
+AC_SUBST(MOZ_BUILD_APP)
+AC_SUBST(MOZ_XUL_APP)
+AC_SUBST(MOZ_PHOENIX)
+AC_SUBST(MOZ_THUNDERBIRD)
+AC_SUBST(MOZ_STANDALONE_COMPOSER)
+AC_SUBST(MOZ_SUNBIRD)
+AC_SUBST(MOZ_XULRUNNER)
+
+AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
+
+if test "$MOZ_XUL_APP"; then
+  MOZ_SINGLE_PROFILE=1
+  MOZ_PROFILESHARING=
+  AC_DEFINE(MOZ_XUL_APP)
+fi
+
+dnl ========================================================
+dnl =
 dnl = Components & Features
 dnl = 
 dnl ========================================================
@@ -3431,10 +3548,10 @@ AC_SUBST(MOZ_CALENDAR)
 dnl =========================================================
 dnl = Mail & News
 dnl =========================================================
-MOZ_MAIL_NEWS=1
 MOZ_ARG_DISABLE_BOOL(mailnews,
 [  --disable-mailnews      Disable building of mail & news components],
-    MOZ_MAIL_NEWS= )
+    MOZ_MAIL_NEWS=,
+    MOZ_MAIL_NEWS=1 )
 AC_SUBST(MOZ_MAIL_NEWS)
 
 dnl ========================================================
@@ -3454,7 +3571,6 @@ AC_SUBST(MOZ_STATIC_MAIL_BUILD)
 dnl =========================================================
 dnl = LDAP
 dnl =========================================================
-MOZ_LDAP_XPCOM=1
 MOZ_ARG_DISABLE_BOOL(ldap,
 [  --disable-ldap          Disable LDAP support],
     MOZ_LDAP_XPCOM=,
@@ -3488,80 +3604,6 @@ fi
 
 AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
-
-dnl ========================================================
-dnl = Phoenix
-dnl ========================================================
-MOZ_XUL_APP=
-if test "$MOZ_PHOENIX"; then
-   AC_DEFINE(MOZ_PHOENIX)
-   MOZ_XUL_APP=1
-   AC_DEFINE(MOZ_XUL_APP)
-   MOZ_APP_NAME=firefox
-   MOZ_APP_VERSION=`cat $topsrcdir/browser/config/version.txt`
-fi
-
-AC_SUBST(MOZ_PHOENIX)
-
-dnl ========================================================
-dnl = XUL Runner
-dnl ========================================================
-if test "$MOZ_XULRUNNER"; then
-   AC_DEFINE(MOZ_XULRUNNER)
-   MOZ_XUL_APP=1
-   AC_DEFINE(MOZ_XUL_APP)
-   MOZ_APP_NAME=xulrunner
-   MOZ_APP_VERSION=`cat $topsrcdir/xulrunner/config/version.txt`
-fi
-
-AC_SUBST(MOZ_XULRUNNER)
-
-dnl ========================================================
-dnl = Thunderbird
-dnl ========================================================
-if test "$MOZ_THUNDERBIRD"; then
-   AC_DEFINE(MOZ_THUNDERBIRD)
-
-   MOZ_STATIC_MAIL_BUILD=1
-   AC_DEFINE(MOZ_STATIC_MAIL_BUILD)
-   
-   MOZ_XUL_APP=1
-   AC_DEFINE(MOZ_XUL_APP)
-   MOZ_APP_NAME=thunderbird
-   MOZ_APP_VERSION=`cat $topsrcdir/mail/config/version.txt`
-fi
-
-AC_SUBST(MOZ_THUNDERBIRD)
-
-dnl ========================================================
-dnl = Standalone Composer
-dnl ========================================================
-if test "$MOZ_STANDALONE_COMPOSER"; then
-   AC_DEFINE(MOZ_STANDALONE_COMPOSER)
-   
-   MOZ_XUL_APP=1
-   AC_DEFINE(MOZ_XUL_APP)
-   MOZ_APP_NAME=nvu
-   MOZ_APP_VERSION=0.17+
-fi
-
-AC_SUBST(MOZ_STANDALONE_COMPOSER)
-
-dnl ========================================================
-dnl = Sunbird
-dnl ========================================================
-if test "$MOZ_SUNBIRD"; then
-   AC_DEFINE(MOZ_SUNBIRD)
-
-   MOZ_XUL_APP=1
-   AC_DEFINE(MOZ_XUL_APP)
-   MOZ_APP_NAME=sunbird
-   MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
-fi
-
-AC_SUBST(MOZ_SUNBIRD)
-AC_SUBST(MOZ_XUL_APP)
-AC_DEFINE_UNQUOTED(MOZ_APP_NAME, "$MOZ_APP_NAME")
 
 dnl ========================================================
 dnl = FreeType2
@@ -3937,7 +3979,6 @@ fi
 dnl ========================================================
 dnl Single profile support off by default
 dnl ========================================================
-MOZ_SINGLE_PROFILE=
 MOZ_ARG_ENABLE_BOOL(single-profile,
 [  --enable-single-profile Enable single profile support ],
     MOZ_SINGLE_PROFILE=1,
@@ -3987,7 +4028,6 @@ AC_SUBST(MOZ_PLAINTEXT_EDITOR_ONLY)
 dnl ========================================================
 dnl Composer is on by default.
 dnl ========================================================
-MOZ_COMPOSER=1
 MOZ_ARG_DISABLE_BOOL(composer,
 [  --disable-composer      Disable building of Composer],
     MOZ_COMPOSER=,
@@ -5475,38 +5515,30 @@ MOZ_LIBART_CFLAGS=
 MOZ_LIBART_LIBS=
 
 if test "$MOZ_SVG_RENDERER_LIBART"; then
-  if test "$MOZ_INTERNAL_LIBART_LGPL"; then
-    dnl libart's configure hasn't been run yet, but we know what the
-    dnl answer should be anyway
-    MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
-    case "$target_os" in
-    msvc*|mks*|cygwin*|mingw*)
-        MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(IMPORT_LIB_SUFFIX)' 
-        ;;
-    beos*)
-        MOZ_LIBART_LIBS='-lmoz_art_lgpl -lroot -lbe'
-        ;;
-    *)
-        MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
-        ;;
-    esac
-    AC_FUNC_ALLOCA
-  else
-dnl Disable system libart until the pixel format changes are merged upstream
-    AC_MSG_ERROR([SVG requires a modified version of libart. To pull and build
-this LGPL library, set MOZ_INTERNAL_LIBART_LGPL, and then rerun the
-checkout stage])
-dnl    AM_PATH_LIBART($LIBART_VERSION,
-dnl      AC_MSG_ERROR(SVG requires at least version $LIBART_VERSION of libart))
-dnl
-dnl    MOZ_LIBART_CFLAGS=$LIBART_CFLAGS
-dnl    MOZ_LIBART_LIBS=$LIBART_LIBS
+  if test ! -f $topsrcdir/other-licenses/libart_lgpl/Makefile.in; then
+    AC_MSG_ERROR([You must check out the mozilla version of libart. Use
+mk_add_options MOZ_CO_MODULE=mozilla/other-licenses/libart_lgpl])
   fi
+
+  dnl libart's configure hasn't been run yet, but we know what the
+  dnl answer should be anyway
+  MOZ_LIBART_CFLAGS='-I${DIST}/include/libart_lgpl'
+  case "$target_os" in
+  msvc*|mks*|cygwin*|mingw*)
+      MOZ_LIBART_LIBS='$(DIST)/lib/$(LIB_PREFIX)moz_art_lgpl.$(IMPORT_LIB_SUFFIX)' 
+      ;;
+  beos*)
+      MOZ_LIBART_LIBS='-lmoz_art_lgpl -lroot -lbe'
+      ;;
+  *)
+      MOZ_LIBART_LIBS='-lmoz_art_lgpl -lm'
+      ;;
+  esac
+  AC_FUNC_ALLOCA
 fi
 
 AC_SUBST(MOZ_LIBART_CFLAGS)
 AC_SUBST(MOZ_LIBART_LIBS)
-AC_SUBST(MOZ_INTERNAL_LIBART_LGPL)
 
 dnl ========================================================
 dnl Check for cairo
@@ -5542,8 +5574,6 @@ AC_SUBST(MOZ_XUL)
 dnl ========================================================
 dnl disable profile sharing
 dnl ========================================================
-MOZ_PROFILESHARING=1
-MOZ_IPCD=
 MOZ_ARG_DISABLE_BOOL(profilesharing,
 [  --disable-profilesharing           Disable profile sharing],
     MOZ_PROFILESHARING=,
@@ -5558,7 +5588,6 @@ dnl disable profile locking
 dnl   do no use this in applications that can have more than
 dnl   one process accessing the profile directory.
 dnl ========================================================
-MOZ_PROFILELOCKING=1
 MOZ_ARG_DISABLE_BOOL(profilelocking,
 [  --disable-profilelocking           Disable profile locking],
     MOZ_PROFILELOCKING=,

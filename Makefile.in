@@ -128,7 +128,7 @@ ifdef MOZ_INSTALLER
 tier_1_dirs	+= modules/zlib/standalone
 endif
 
-ifdef MOZ_INTERNAL_LIBART_LGPL
+ifdef MOZ_SVG_RENDERER_LIBART
 tier_1_dirs	+= other-licenses/libart_lgpl
 endif
 
@@ -394,6 +394,10 @@ ifeq ($(OS_ARCH),OS2)
 ifneq (,$(ENABLE_TESTS)$(MOZILLA_OFFICIAL))
 tier_99_dirs += embedding/tests
 endif
+endif
+
+ifeq ($(MOZ_BUILD_APP),macbrowser)
+tier_99_dirs += camino
 endif
 
 else
