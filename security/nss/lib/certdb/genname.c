@@ -252,6 +252,8 @@ SECItem *
 CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest, PRArenaPool *arena)
 {
 
+    const SEC_ASN1Template * template;
+
     PORT_Assert(arena);
     if (arena == NULL) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -263,58 +265,36 @@ CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest, PRArenaPool *are
 	if (!dest)
 	    goto loser;
     }
-    switch (genName->type) {
-      case certURI:
-          dest = SEC_ASN1EncodeItem(arena, dest, genName, 
-				    CERT_URITemplate);
-	  break;
-      case certRFC822Name:
-          dest = SEC_ASN1EncodeItem(arena, dest, genName, 
-				    CERT_RFC822NameTemplate);
-	  break;
-      case certDNSName:
-          dest = SEC_ASN1EncodeItem(arena, dest, genName, 
-				    CERT_DNSNameTemplate);
-	  break;
-      case certIPAddress:
-	  dest = SEC_ASN1EncodeItem(arena, dest, genName,
-				    CERT_IPAddressTemplate);
-	  break;
-      case certOtherName:
-	  dest = SEC_ASN1EncodeItem(arena, dest, genName,
-				    CERTOtherNameTemplate);
-	  break;
-      case certRegisterID:
-	  dest = SEC_ASN1EncodeItem(arena, dest, genName,
-				    CERT_RegisteredIDTemplate);
-	  break;
-      case certEDIPartyName:
-	  /* for this type, we expect the value is already encoded */
-	  dest = SEC_ASN1EncodeItem (arena, dest, genName, 
-				     CERT_EDIPartyNameTemplate);
-	  break;
-      case certX400Address:
-	  /* for this type, we expect the value is already encoded */
-	  dest = SEC_ASN1EncodeItem (arena, dest, genName, 
-				     CERT_X400AddressTemplate);
-	  break;
-      case certDirectoryName:
-	  if (genName->derDirectoryName.data == NULL) {
-	      /* The field hasn't been encoded yet. */
-	      SECItem * pre_dest =
-	      SEC_ASN1EncodeItem (arena, &(genName->derDirectoryName),
-				  &(genName->name.directoryName), 
-				  CERT_NameTemplate);
-	      if (!pre_dest)
-		  goto loser;
-	  }
-	  if (genName->derDirectoryName.data == NULL) {
-	      goto loser;
-	  }
-	  dest = SEC_ASN1EncodeItem(arena, dest, genName, 
-				    CERT_DirectoryNameTemplate);
-	  break;
+    if (genName->type == certDirectoryName) {
+	if (genName->derDirectoryName.data == NULL) {
+	    /* The field hasn't been encoded yet. */
+            SECItem * pre_dest =
+            SEC_ASN1EncodeItem (arena, &(genName->derDirectoryName),
+                                &(genName->name.directoryName),
+                                CERT_NameTemplate);
+            if (!pre_dest)
+                goto loser;
+	}
+	if (genName->derDirectoryName.data == NULL) {
+	    goto loser;
+	}
     }
+    switch (genName->type) {
+    case certURI:           template = CERT_URITemplate;           break;
+    case certRFC822Name:    template = CERT_RFC822NameTemplate;    break;
+    case certDNSName:       template = CERT_DNSNameTemplate;       break;
+    case certIPAddress:     template = CERT_IPAddressTemplate;     break;
+    case certOtherName:     template = CERTOtherNameTemplate;      break;
+    case certRegisterID:    template = CERT_RegisteredIDTemplate;  break;
+         /* for this type, we expect the value is already encoded */
+    case certEDIPartyName:  template = CERT_EDIPartyNameTemplate;  break;
+	 /* for this type, we expect the value is already encoded */
+    case certX400Address:   template = CERT_X400AddressTemplate;   break;
+    case certDirectoryName: template = CERT_DirectoryNameTemplate; break;
+    default:
+	PORT_Assert(0); goto loser;
+    }
+    dest = SEC_ASN1EncodeItem(arena, dest, genName, template);
     if (!dest) {
 	goto loser;
     }
@@ -370,6 +350,7 @@ CERT_DecodeGeneralName(PRArenaPool      *arena,
 		       SECItem          *encodedName,
 		       CERTGeneralName  *genName)
 {
+    const SEC_ASN1Template *         template;
     CERTGeneralNameType              genNameType;
     SECStatus                        rv = SECSuccess;
 
@@ -382,47 +363,31 @@ CERT_DecodeGeneralName(PRArenaPool      *arena,
     }
     genNameType = (CERTGeneralNameType)((*(encodedName->data) & 0x0f) + 1);
     switch (genNameType) {
-      case certURI:
-	  rv = SEC_ASN1DecodeItem(arena, genName, CERT_URITemplate, encodedName);
-	  break;
-      case certRFC822Name:
-	  rv = SEC_ASN1DecodeItem(arena, genName, CERT_RFC822NameTemplate, encodedName);
-	  break;
-      case certDNSName:
-	  rv = SEC_ASN1DecodeItem(arena, genName, CERT_DNSNameTemplate, encodedName);
-	  break;
-      case certIPAddress:
-	  rv = SEC_ASN1DecodeItem(arena, genName, CERT_IPAddressTemplate, encodedName);
-	  break;
-      case certOtherName:
-	  rv = SEC_ASN1DecodeItem(arena, genName, CERTOtherNameTemplate, encodedName);
-	  break;
-      case certRegisterID:
-	  rv = SEC_ASN1DecodeItem(arena, genName, CERT_RegisteredIDTemplate, encodedName);
-	  break;
-      case certEDIPartyName:
-	  rv = SEC_ASN1DecodeItem(arena, genName, CERT_EDIPartyNameTemplate, encodedName);
-	  break;
-      case certX400Address:
-	  rv = SEC_ASN1DecodeItem(arena, genName, CERT_X400AddressTemplate, encodedName);
-	  break;
-      case certDirectoryName:
-		rv = SEC_ASN1DecodeItem
-		     (arena, genName, CERT_DirectoryNameTemplate, encodedName);
-		if (rv != SECSuccess) {
-		    goto loser;
-		}
-		rv = SEC_ASN1DecodeItem
-		      (arena, &(genName->name.directoryName), CERT_NameTemplate,
-		      &(genName->derDirectoryName));
-	  break;
+    case certURI: 		template = CERT_URITemplate;           break;
+    case certRFC822Name: 	template = CERT_RFC822NameTemplate;    break;
+    case certDNSName: 		template = CERT_DNSNameTemplate;       break;
+    case certIPAddress: 	template = CERT_IPAddressTemplate;     break;
+    case certOtherName: 	template = CERTOtherNameTemplate;      break;
+    case certRegisterID: 	template = CERT_RegisteredIDTemplate;  break;
+    case certEDIPartyName: 	template = CERT_EDIPartyNameTemplate;  break;
+    case certX400Address: 	template = CERT_X400AddressTemplate;   break;
+    case certDirectoryName: 	template = CERT_DirectoryNameTemplate; break;
+    default: 
+        PORT_Assert(0); goto loser;
+    }
+    rv = SEC_ASN1DecodeItem(arena, genName, template, encodedName);
+    if (rv != SECSuccess) 
+	goto loser;
+    if (genNameType == certDirectoryName) {
+	rv = SEC_ASN1DecodeItem(arena, &(genName->name.directoryName), 
+				CERT_NameTemplate, 
+				&(genName->derDirectoryName));
+        if (rv != SECSuccess)
+	    goto loser;
     }
 
-    if (rv != SECSuccess) {
-	goto loser;
-    }
     genName->type = genNameType;
-    genName->l.next = (PRCList *) ((char *) genName) + offsetof(CERTGeneralName, l);
+    genName->l.next = (PRCList *)((char *)genName + offsetof(CERTGeneralName, l));
     genName->l.prev = genName->l.next;
     /* TODO: unmark arena */
     return genName;
