@@ -162,16 +162,23 @@ NS_IMETHODIMP nsBufferDecoderSupport::Convert(const char * aSrc,
 
     if ((res == NS_OK_UDEC_MOREINPUT) && (bcw == 0)) {
         res = NS_ERROR_UNEXPECTED;
+#if defined(DEBUG_yokoyama) || defined(DEBUG_ftang)
+        NS_ASSERTION(0, "This should not happen. Internal buffer may be corrupted.");
+#endif
         break;
     } else {
       if (bcr < buffLen) {
         // we didn't convert that residual data - unfill the buffer
         src -= mBufferLength - buffLen;
         mBufferLength = buffLen;
+#if defined(DEBUG_yokoyama) || defined(DEBUG_ftang)
+        NS_ASSERTION(0, "This should not happen. Internal buffer may be corrupted.");
+#endif
       } else {
         // the buffer and some extra data was converted - unget the rest
         src -= mBufferLength - bcr;
         mBufferLength = 0;
+        res = NS_OK;
       }
       break;
     }
