@@ -338,6 +338,7 @@ function SubscribeOKCallback(serverURI, changeTable)
 	var subscribableServer =
         server.QueryInterface(Components.interfaces.nsISubscribableServer);
 
+
 	for (var name in changeTable) {
 		//dump(name + " = " + changeTable[name] + "\n");
 		if (changeTable[name] == true) {
@@ -360,6 +361,17 @@ function SubscribeOKCallback(serverURI, changeTable)
     }
     catch (ex) {
         //dump("*** not an imap server\n");
+    }
+	var nntpServer;
+    try {
+        nntpServer =
+            server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
+		// write out the subscribe changes
+        if (nntpServer)
+            nntpServer.writeNewsrcFile();
+    }
+    catch (ex) {
+        //dump("*** not a news server\n");
     }
 }
 
