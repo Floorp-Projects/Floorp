@@ -122,26 +122,6 @@ const ResIDT cPaulsMiscStrListID = 16010;
 const Int16 cSendPageIndex = 4;
 const Int16 cSendFrameIndex = 5;
 
-	// Explicit Template instantiation for StValueChanger for LO_Element*
-
-template <class T>
-StValueChanger<T>::StValueChanger(
-	T	&ioVariable,
-	T	inNewValue)
-		: mVariable(ioVariable),
-		  mOrigValue(ioVariable)
-{
-	ioVariable = inNewValue;
-}
-
-
-template <class T>
-StValueChanger<T>::~StValueChanger()
-{
-	mVariable = mOrigValue;
-}
-
-template class StValueChanger<LO_Element*>;
 
 // Utility function for table borders
 Uint16 AddWithoutOverflow(Uint16 base, Uint16 addition);
