@@ -217,3 +217,14 @@ CFLAGS= -O2 -fPIC -DLINUX1_2 -Di386 -D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall \
  -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR \
  -DXP_UNIX -UDEBUG -DNDEBUG -D_REENTRANT $(MPICMN)
 endif
+
+ifeq ($(TARGET),AMD64SOLARIS)
+ASFLAGS += -xarch=generic64
+AS_OBJS = mpi_amd64.o mpi_amd64_sun.o
+MP_CONFIG = -DMP_ASSEMBLY_MULTIPLY -DMPI_AMD64
+CFLAGS = -xarch=generic64 -xO4 -I. -DMP_API_COMPATIBLE -DMP_IOFUNC $(MP_CONFIG)
+MPICMN += $(MP_CONFIG)
+
+mpi_amd64_asm.o: mpi_amd64_sun.s
+	$(AS) -xarch=generic64 -P -D_ASM mpi_amd64_sun.s
+endif
