@@ -199,6 +199,35 @@ sub ProcessMultipartFormFields {
     }
 }
 
+sub CanonicaliseParams {
+    my ($buffer, $exclude) = (@_);
+    my %pieces;
+    
+    # Split the buffer up into key/value pairs, and store the non-empty ones
+    my @args = split('&', $buffer);
+        
+    foreach my $arg (@args) {
+        my ($name, $value) = split('=', $arg, 2);
+
+        if ($value) {
+            push(@{$pieces{$name}}, $value);
+        }
+    }
+
+    # Reconstruct the URL by concatenating the sorted param=value pairs
+    my @parameters;
+    foreach my $key (sort keys %pieces) {
+        # Leave this key out if it's in the exclude list
+        next if lsearch($exclude, $key) != -1; 
+        
+        foreach my $value (@{$pieces{$key}}) {
+            push(@parameters, "$key=$value");
+        }
+    }
+    
+    return join("&", @parameters);
+}
+
 # check and see if a given field exists, is non-empty, and is set to a 
 # legal value.  assume a browser bug and abort appropriately if not.
 # if $legalsRef is not passed, just check to make sure the value exists and 

@@ -37,13 +37,22 @@ GetVersionTable();
 
 quietly_check_login();
 
-# If other report types are added, some of this code can be moved into a sub,
-# and the correct sub chosen based on $::FORM{'type'}.
+if ($::FORM{'action'} ne "plot") {
+    print "Content-Type: text/html\n\n";
+    $template->process("reports/menu.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    exit;
+}
 
 $::FORM{'y_axis_field'} || ThrowCodeError("no_y_axis_defined");
 
+if ($::FORM{'z_axis_field'} && !$::FORM{'x_axis_field'}) {
+    ThrowUserError("z_axis_defined_with_no_x_axis");
+}
+
 my $col_field = $::FORM{'x_axis_field'};
 my $row_field = $::FORM{'y_axis_field'};
+my $tbl_field = $::FORM{'z_axis_field'};
 
 my %columns;
 $columns{'bug_severity'}     = "bugs.bug_severity";        
@@ -61,10 +70,11 @@ $columns{'op_sys'}           = "bugs.op_sys";
 $columns{'votes'}            = "bugs.votes";
 $columns{'keywords'}         = "bugs.keywords";
 $columns{'target_milestone'} = "bugs.target_milestone";
+# One which means "nothing". Any number would do, really. It just gets SELECTed
+# so that we always select 3 items in the query.
+$columns{''}                 = "42217354";
 
-my @axis_fields = ($row_field);
-# The X axis (horizontal) is optional
-push(@axis_fields, $col_field) if $col_field;
+my @axis_fields = ($row_field, $col_field, $tbl_field);
 
 my @selectnames = map($columns{$_}, @axis_fields);
 
@@ -72,59 +82,42 @@ my $search = new Bugzilla::Search('fields' => \@selectnames,
                                   'url' => $::buffer);
 my $query = $search->getSQL();
 
-$query =~ s/DISTINCT//;
 SendSQL($query, $::userid);
 
-# We have a hash for each direction for the totals, and a hash of hashes for 
-# the data itself.
+# We have a hash of hashes for the data itself, and a hash to hold the 
+# row/col/table names.
 my %data;
-my %row_totals;
-my %col_totals;
-my $grand_total;
+my %names;
 
 # Read the bug data and increment the counts.
 while (MoreSQLData()) {
-    my ($row, $col) = FetchSQLData();    
-    $row = "" if !defined($row);
-    $col = "" if !defined($col);
+    my ($row, $col, $tbl) = FetchSQLData();
+    $col = "" if ($col == $columns{''});
+    $tbl = "" if ($tbl == $columns{''});
     
-    $data{$row}{$col}++;    
-    $row_totals{$row}++;    
-    $col_totals{$col}++;    
-    $grand_total++;
+    $data{$tbl}{$col}{$row}++;
+    $names{"col"}{$col}++;
+    $names{"row"}{$row}++;
+    $names{"tbl"}{$tbl}++;
 }
 
-$vars->{'data'} = \%data;
-$vars->{'row_totals'} = \%row_totals;
-$vars->{'col_totals'} = \%col_totals;
-$vars->{'grand_total'} = $grand_total;
-
 # Determine the labels for the rows and columns
-my @row_names = sort(keys(%row_totals));
-my @col_names = sort(keys(%col_totals));
-
-$vars->{'row_names'} = \@row_names;
-$vars->{'col_names'} = \@col_names;
-
-$vars->{'row_field'} = $row_field;
 $vars->{'col_field'} = $col_field;
+$vars->{'row_field'} = $row_field;
+$vars->{'tbl_field'} = $tbl_field;
+$vars->{'names'} = \%names;
+$vars->{'data'} = \%data;
+$vars->{'time'} = time();
 
 $::buffer =~ s/format=[^&]*&?//g;
 
 # Calculate the base query URL for the hyperlinked numbers
-my $buglistbase = $::buffer;
-$buglistbase =~ s/$row_field=[^&]*&?//g;
-$buglistbase =~ s/$col_field=[^&]*&?//g;
-
-$vars->{'buglistbase'} = $buglistbase;
+$vars->{'buglistbase'} = CanonicaliseParams($::buffer, 
+                ["x_axis_field", "y_axis_field", "z_axis_field", @axis_fields]);
 $vars->{'buffer'} = $::buffer;
 
-$::FORM{'type'} =~ s/[^a-zA-Z\-]//g;
-
 # Generate and return the result from the appropriate template.
-my $format = GetFormat("reports/$::FORM{'type'}", 
-                       $::FORM{'format'}, 
-                       $::FORM{'ctype'});
+my $format = GetFormat("reports/report", $::FORM{'format'}, $::FORM{'ctype'});
 print "Content-Type: $format->{'contenttype'}\n\n";
 $template->process("$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());

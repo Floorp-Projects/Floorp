@@ -1,0 +1,207 @@
+ <!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 <rdean@cambianetworks.com>
+  #%]
+
+[%# INTERFACE:
+  # basequery: The base query for this table, in URL form
+  # data: hash of hash of hash of numbers. Bug counts.
+  # names: hash of hash of strings. Names of tables, rows and columns.
+  # col_field: string. Name of the field being plotted as columns.
+  # row_field: string. Name of the field being plotted as rows.
+  # tbl_field: string. Name of the field being plotted as tables.
+  #%]
+
+[% PROCESS "global/field-descs.html.tmpl" %]
+
+[% tbl_field_disp = field_descs.$tbl_field || tbl_field %]
+[% col_field_disp = field_descs.$col_field || col_field %]
+[% row_field_disp = field_descs.$row_field || row_field %]
+
+[% title = BLOCK %]
+  Report: 
+  [% "$tbl_field_disp / " IF tbl_field %]
+  [% "$col_field_disp / " IF col_field %]
+  [% row_field_disp %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl 
+  style = "
+    .t1     { background-color: #ffffff } /* white       */
+    .t2     { background-color: #dfefff } /* light blue  */
+    .t3     { background-color: #dddddd } /* grey        */
+    .t4     { background-color: #c3d3ed } /* darker blue */
+    .ttotal { background-color: #cfffdf } /* light green */
+  "
+%]
+
+<div align="right">
+  [% time2str("%Y-%m-%d %H:%M:%S", time) %]
+</div>
+
+[% tbl_names = names.tbl.keys.sort %]
+[% col_names = names.col.keys.sort %]
+[% row_names = names.row.keys.sort %]
+
+[% total_name = "Total" %]
+
+[% IF tbl_field %]
+  [%# Calculate and set up the Total table %]
+  
+  [% FOREACH tbl = tbl_names %]
+    [% FOREACH row = row_names %]
+      [% FOREACH col = col_names %]
+        [% data.$total_name.$col.$row = 
+           data.$total_name.$col.$row + data.$tbl.$col.$row %]
+      [% END %]
+    [% END %]
+  [% END %]
+  
+  [% tbl_names.push(total_name) %]
+[% END %]
+
+<div align="center">
+
+[% FOREACH tbl = tbl_names %]
+  <table>
+    [% IF tbl_field %]
+      <tr>
+        <td>
+        </td>
+        <td align="center">
+          <h2>[% tbl FILTER html %]</h2>
+        </td>
+      </tr>
+    [% END %]  
+    <tr>
+      <td>
+      </td>
+      <td align="center">
+        <strong>[% col_field_disp FILTER html %]</strong>
+      </td>
+    </tr>
+
+    <tr>
+      <td valign="middle">
+        <strong>[% row_field_disp FILTER html %]</strong>
+      </td>
+      <td>
+
+
+[% classes = [ [ "t1", "t2" ] , [ "t3", "t4" ] ] %]
+[% col_idx = 0 %]
+[% row_idx = 0 %]
+[% grand_total = 0 %]
+
+<table border="1">
+  [% IF col_field %]
+    <tr>
+      <td class="[% classes.$row_idx.$col_idx %]">
+      </td>
+      [% FOREACH col = col_names %]
+        [% col_totals.$col = 0 %]
+        [% NEXT IF col == "" %]
+        
+        [% col_idx = 1 - col_idx %]
+        <td class="[% classes.$row_idx.$col_idx %]">
+          [% col FILTER html %]
+        </td>
+      [% END %]
+      <td class="ttotal">
+        Total
+      </td>
+    </tr>
+  [% END %]
+  
+  [% FOREACH row = row_names %]
+    [% row_total = 0 %]
+    
+    [% row_idx = 1 - row_idx %]
+    <tr>
+      <td class="[% classes.$row_idx.$col_idx %]" align="right">
+        [% row FILTER html %]
+      </td>
+      [% FOREACH col = col_names %]
+        [% row_total = row_total + data.$tbl.$col.$row %]
+        [% col_totals.$col = col_totals.$col + data.$tbl.$col.$row %]
+        [% NEXT IF col == "" %]
+        
+        [% col_idx = 1 - col_idx %]
+        <td class="[% classes.$row_idx.$col_idx %]" align="center">
+          [% IF data.$tbl.$col.$row AND data.$tbl.$col.$row > 0 %]
+            <a href="buglist.cgi?[% buglistbase %]&
+              [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %]&amp;
+              [% row_field FILTER url_quote %]=[% row FILTER url_quote %]&amp;
+              [% col_field FILTER url_quote %]=[% col FILTER url_quote %]">
+              [% data.$tbl.$col.$row %]</a>
+          [% ELSE %]
+            .
+          [% END %]
+        </td>
+      [% END %] 
+      <td class="ttotal" align="right">
+        <a href="buglist.cgi?[% buglistbase %]&
+          [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %]&amp;
+          [% row_field FILTER url_quote %]=[% row FILTER url_quote %]">
+        [% row_total %]</a>
+        [% grand_total = grand_total + row_total %]
+      </td>
+    </tr>
+  [% END %]
+  
+  <tr>
+    [% row_idx = 1 - row_idx %]
+    <td class="ttotal">
+      Total
+    </td>
+    [% FOREACH col = col_names %]
+      [% NEXT IF col == "" %]
+      
+      <td class="ttotal" align="center">
+        <a href="buglist.cgi?[% buglistbase %]&
+          [% tbl_field FILTER url_quote %]=[% tbl FILTER url_quote %]&amp;
+          [% col_field FILTER url_quote %]=[% col FILTER url_quote %]">
+        [% col_totals.$col %]</a>
+      <strong>
+      </td> 
+    [% END %]
+    <td class="ttotal" align="right">
+      <strong>
+        <a href="buglist.cgi?[% buglistbase %]">[% grand_total %]</a>
+      </strong>
+    </td>
+  </tr>
+</table>
+      
+      
+      </td>
+    </tr>
+  </table>
+    
+  <br>
+
+[% END %]
+  
+  <a href="query.cgi?[% buffer %]&format=report-table">Edit this report</a>
+</div>
+
+<br>
+
+[% PROCESS global/footer.html.tmpl %]

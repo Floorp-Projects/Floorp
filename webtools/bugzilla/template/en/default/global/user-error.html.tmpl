@@ -521,6 +521,11 @@
     [% title = "Wrong Token" %]
     That token cannot be used to change your email address.
 
+  [% ELSIF error == "z_axis_defined_with_no_x_axis" %]
+    [% title = "Nonsensical Options" %]
+    You've defined a field for multiple tables without having defined
+    a horizontal axis for those tables.
+
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]
     The file you are trying to attach is empty!    

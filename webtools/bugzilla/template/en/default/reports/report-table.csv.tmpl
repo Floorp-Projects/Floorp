@@ -21,21 +21,37 @@
 [%# INTERFACE:
   # See report.html.tmpl.
   #%]
-[% row_field FILTER csv -%]
+  
+[% tbl_names = names.tbl.keys.sort %]
+[% col_names = names.col.keys.sort %]
+[% row_names = names.row.keys.sort %]
 
-[% IF col_field -%]
+[% FOREACH tbl = tbl_names %]
+  [% IF tbl_field -%]
+    [% tbl FILTER html %]
+  [% END %]
+
+  [% row_field FILTER csv -%]
+
+  [% IF col_field -%]
  \ [% col_field FILTER csv -%],
-[% FOREACH col = col_names -%]
-[% col FILTER csv -%],
-[% END -%]
-[% ELSE -%]
-,Number of bugs,
-[% END %]
+  [% FOREACH col = col_names -%]
+    [% col FILTER csv -%],
+  [% END -%]
+  [% ELSE -%]
+    [% -%],Number of bugs
+  [% END %]
 
-[% FOREACH row = row_names %]
-[% row FILTER csv -%],
-[% FOREACH col = col_names %]
-[% IF data.$row AND data.$row.$col %][% data.$row.$col -%],[% ELSE %]0,[% END %]
-[% END %]
+  [% FOREACH row = row_names %]
+    [% row FILTER csv -%],
+    [% FOREACH col = col_names %]
+      [% IF data.$tbl AND data.$tbl.$col AND data.$tbl.$col.$row %]
+        [% data.$tbl.$col.$row -%],
+      [% ELSE %]
+        [% -%]0,
+      [% END %]
+    [% END %]
 
+  [% END %]
+  
 [% END %]

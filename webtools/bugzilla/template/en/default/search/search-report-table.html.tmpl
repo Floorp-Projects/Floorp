@@ -29,47 +29,51 @@
   onload = "selectProduct(document.forms['reportform']);"
 %]
 
+[% PROCESS "global/field-descs.html.tmpl" %]
+
 <p>
-  Produce a table of bug counts by choosing two fields to plot against each 
-  other, and then refining your set of bugs using the rest of the form.
+  Produce a table of bug counts by choosing one or more fields to plot against
+  each other, and then refining your set of bugs using the rest of the form. If
+  you choose a third axis, it will be represented by multiple tables of data.
 </p>
 
 [% button_name = "Generate Report" %]
 
 <form method="get" action="report.cgi" name="reportform">
 
-<table>
+<table align="center">
   <tr>
-    <th align="center">
-      Vertical Axis
-    </th>
-    <th align="center">
-      Horizontal Axis
-    </th>
-    <th>
-      &nbsp;&nbsp;
-    </th>
-    <th align="center">
-      Format
-    </th>
-  </tr>
-  
-  <tr>
-    <td align="center">
-      [% PROCESS select sel = { name => 'y_axis_field' } %]
+    <td>
     </td>
-    <td align="center">  
+    <td align="center">
+      <b>Horizontal Axis:</b>
       [% PROCESS select sel = { name => 'x_axis_field', noop = 1 } %]
     </td>
-    <td>
-      &nbsp;&nbsp;
-    </td>
-    <td>
-      <input type="radio" name="ctype" value="html" checked>HTML
+    <td>&nbsp;&nbsp;</td>
+    <td rowspan="2">
+      <b>Format:</b><br>
+      <input type="radio" name="ctype" value="html" checked>HTML<br>
       <input type="radio" name="ctype" value="csv">CSV
     </td>
   </tr>
-</table>
+  
+  <tr>
+    <td valign="middle" align="center">
+      <b>Vertical Axis:</b><br>
+      [% PROCESS select sel = { name => 'y_axis_field' } %]
+    </td>
+    <td width="150px" height="150px">
+      <table border="1" width="100%" height="100%">
+        <tr>
+          <td align="center" valign="middle">
+            <b>Multiple Tables:</b><br>
+            [% PROCESS select sel = { name => 'z_axis_field', noop = 1 } %]
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>  
 
 <hr>
 
@@ -77,7 +81,8 @@
 
 <br>
 <input type="submit" value="[% button_name %]">
-<input type="hidden" name="type" value="table">
+<input type="hidden" name="format" value="table">
+<input type="hidden" name="action" value="plot">
 <hr>
 
 [% PROCESS "search/boolean-charts.html.tmpl" %]
@@ -91,35 +96,24 @@
 [%############################################################################%]
 
 [% BLOCK select %]
-  [% fields = [
-    { name => "",                 description => "---" },
-    { name => "product",          description => "Product" },
-    { name => "component",        description => "Component" },
-    { name => "version",          description => "Version" },
-    { name => "rep_platform",     description => "Platform" },
-    { name => "op_sys",           description => "OS" },
-    { name => "bug_status",       description => "Status" },
-    { name => "resolution",       description => "Resolution" },
-    { name => "bug_severity",     description => "Severity" },
-    { name => "priority",         description => "Priority" },
-    { name => "target_milestone", description => "Target Milestone" },
-    { name => "keywords",         description => "Keywords" },
-    { name => "assigned_to",      description => "Assignee" },
-    { name => "reporter",         description => "Reporter" },
-    { name => "qa_contact",       description => "QA Contact" },
-    { name => "votes",            description => "Votes" } ] %]
+  [% fields = ["product", "component", "version", "rep_platform",  
+               "op_sys", "bug_status", "resolution", "bug_severity", 
+               "priority", "target_milestone", "keywords", "assigned_to",
+               "reporter", "qa_contact", "votes" ] %]
 
   <select name="[% sel.name %]">
+    [% IF sel.noop %]
+      <option value="">&lt;none&gt;</option>
+    [% END %]
+    
     [% FOREACH field = fields %]
-      [% NEXT IF field.name == "" AND !sel.noop %]
-      [% NEXT IF field.name == "target_milestone" AND
-                               !Param('usetargetmilestone') %]
-      [% NEXT IF field.name == "qa_contact" AND !Param('useqacontact') %]
-      [% NEXT IF field.name == "votes" AND !Param('usevotes') %]
+      [% NEXT IF field == "target_milestone" AND !Param('usetargetmilestone') %]
+      [% NEXT IF field == "qa_contact" AND !Param('useqacontact') %]
+      [% NEXT IF field == "votes" AND !Param('usevotes') %]
       
-      <option value="[% field.name FILTER html %]" 
-        [% " selected" IF default.${sel.name}.0 == field.name %]>
-        [% field.description FILTER html %]</option>
+      <option value="[% field FILTER html %]" 
+        [% " selected" IF default.${sel.name}.0 == field %]>
+        [% field_descs.$field || field FILTER html %]</option>
     [% END %]
   </select>
 [% END %]
