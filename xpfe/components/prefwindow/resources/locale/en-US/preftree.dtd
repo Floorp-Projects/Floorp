@@ -23,3 +23,4 @@
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
 <!ENTITY smart.label "Smart Update">
+<!ENTITY debug.label "Debug">

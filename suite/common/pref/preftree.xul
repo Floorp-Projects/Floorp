@@ -223,6 +223,13 @@
     </treeitem>
   </treechildren>
 
+    <treeitem open="true">
+      <treerow>       
+        <treecell name="chrome://pref/content/pref-debug.xul"><treeindentation/>&debug.label;</treecell>
+      </treerow>
+
+    </treeitem>
+
 </tree>
 
 </html:div>

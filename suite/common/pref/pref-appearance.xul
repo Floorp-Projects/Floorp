@@ -109,38 +109,5 @@
 	</box>
 </html:form>
 
-<!-- Temporary hack to turn on gfx-rendered widgets -->  
-<html:form>
-	<box align="vertical" style="width: 100%;">
-		<html:fieldset style="width: 100%;">
-    	<html:legend align="left">
-		<html:div>&widgetRendering.label;</html:div> 
-		</html:legend>
-     	    <box align="horizontal">
-		<html:div>
-				<html:input name="widgetRendering" type="radio" id="pref:0:int:nglayout.widget.mode" />
-				<html:label for="pref:0:int:nglayout.widget.mode" accesskey="n" tabindex="0">
-				&nativeWidgets.label;
-				</html:label>
-			</html:div>
-			<html:div>
-				<html:input name="widgetRendering" type="radio" id="pref:1:int:nglayout.widget.mode" />
-				<html:label for="pref:1:int:nglayout.widget.mode" accesskey="n" tabindex="0">
-				&partialGfxWidgets.label;
-				</html:label>
-			</html:div>
-			<html:div>
-				<html:input name="widgetRendering" type="radio" id="pref:2:int:nglayout.widget.mode" />
-				<html:label for="pref:2:int:nglayout.widget.mode" accesskey="g" tabindex="0">
-				&gfxWidgets.label;
-				</html:label>
-			</html:div>  
-          </box> 
-		</html:fieldset>
-	</box>
-</html:form> 
-
-
-
 </html:div>
 </window>
