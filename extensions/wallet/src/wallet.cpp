@@ -1478,7 +1478,7 @@ wallet_Initialize() {
     char * message = Wallet_Localize("IncorrectKey_TryAgain?");
     char * failed = Wallet_Localize("KeyFailure");
     while (!Wallet_SetKey(PR_FALSE)) {
-      if (!FE_Confirm(message)) {
+      if (!FE_Confirm(message) || !wallet_GetUsingDialogsPref()) {
         FE_Confirm(failed);
         PR_FREEIF(message);
         PR_FREEIF(failed);
