@@ -55,7 +55,7 @@ certutil -S -n SampleRootCA -x -t "CTu,CTu,CTu" \
 # Generate the server cert.  This cert is signed by the CA cert generated
 # above.  The CN must be hostname.domain.[com|org|net|...].
 certutil -S -n SampleSSLServerCert -c SampleRootCA -t "u,u,u" \
-            -s "CN=$HOSTNAME.mcom.com, O=$HOSTNAME Corp." \
+            -s "CN=$HOSTNAME.$MYDOMAIN, O=$HOSTNAME Corp." \
             -m 25001 -o ./SampleCertDBs/SampleSSLServer.crt \
             -d SampleCertDBs -f passfile
 
