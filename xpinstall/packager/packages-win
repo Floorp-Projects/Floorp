@@ -88,6 +88,7 @@ bin\components\necko_ftp.xpt
 bin\components\necko_http.xpt
 bin\components\nkabout.dll
 bin\components\nkcache.dll
+bin\components\nkcache.xpt
 bin\components\nkdata.dll
 bin\components\nkfile.dll
 bin\components\nkftp.dll
