@@ -282,6 +282,7 @@ extern char * SI_Prompt
 extern void SI_AnonymizeSignons();
 extern void SI_UnanonymizeSignons();
 extern void SI_StartOfForm();
+extern void SI_LogNewURL();
 #endif
 
 #ifdef LAYERS
