@@ -32,9 +32,17 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsJPEGDecoder)
 
 static const nsModuleComponentInfo components[] =
 {
-  { "ppm decoder",
+  { "JPEG decoder",
     NS_JPEGDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/jpeg",
+    nsJPEGDecoderConstructor, },
+  { "JPEG decoder",
+    NS_JPEGDECODER_CID,
+    "@mozilla.org/image/decoder;2?type=image/pjpeg",
+    nsJPEGDecoderConstructor, },
+  { "JPEG decoder",
+    NS_JPEGDECODER_CID,
+    "@mozilla.org/image/decoder;2?type=image/jpg",
     nsJPEGDecoderConstructor, },
 };
 
