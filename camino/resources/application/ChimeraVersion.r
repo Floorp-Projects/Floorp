@@ -58,9 +58,9 @@
 
 // Version Strings (Finder's Get Info dialog box) //
 
-#define     VERSION_STRING          "0.6+"
+#define     VERSION_STRING          "0.7+"
 
-#define     COPYRIGHT_STRING        "© 1998-2002 The Mozilla Organization"
+#define     COPYRIGHT_STRING        "© 1998-2003 The Mozilla Organization"
 #define     GETINFO_VERSION         VERSION_STRING ", " COPYRIGHT_STRING
 #define     PACKAGE_NAME            "Camino " VERSION_STRING
 

@@ -63,7 +63,7 @@ pref("chimera.log_js_to_console", true);
 
 // Identify Chimera in the UA string
 pref("general.useragent.vendor", "Chimera");
-pref("general.useragent.vendorSub", "0.6+");
+pref("general.useragent.vendorSub", "0.7+");
 
 pref("network.dir.generate_html", true);
 pref("browser.chrome.favicons", true);
