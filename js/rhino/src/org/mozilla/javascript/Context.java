@@ -139,9 +139,11 @@ public class Context {
      * must have a matching call to <code>exit()</code>. For example,
      * <pre>
      *      Context cx = Context.enter();
-     *      ...
-     *      cx.evaluateString(...);
-     *      Context.exit();
+     *      try {
+     *          ...
+     *          cx.evaluateString(...);
+     *      }
+     *      finally { Context.exit(); }
      * </pre>
      * @return a Context associated with the current thread
      * @see org.mozilla.javascript.Context#getCurrentContext
@@ -163,35 +165,38 @@ public class Context {
      * @return a Context associated with the current thread
      */
     public static Context enter(Context cx) {
-        // There's some duplication of code in this method to avoid
-        // unnecessary synchronizations.
         Thread t = Thread.currentThread();
-        Context current = (Context) threadContexts.get(t);
-        if (current != null) {
-            synchronized (current) {
-                current.enterCount++;
-            }
-        }
-        else if (cx != null) {
-            synchronized (cx) {
-                if (cx.currentThread == null) {
-                    cx.currentThread = t;
-                    threadContexts.put(t, cx);
-                    cx.enterCount++;
+        Object[] listeners;
+        Context current;
+        synchronized (threadContexts) {
+            current = (Context) threadContexts.get(t);
+            if (cx != null) {
+                // Check supplied context sanity
+                Thread old = cx.currentThread;
+                if (old != null && old != t) {
+                    throw new RuntimeException
+                        ("Can not enter on Context active on another thread");
                 }
+                if (Context.check && old == t && cx != current)
+                    Context.codeBug();
             }
-            current = cx;
+
+            if (current == null) {
+                if (cx == null) {
+                    cx = new Context();
+                }
+                cx.currentThread = t;
+                threadContexts.put(t, cx);
+                current = cx;
+            }
+
+            ++current.enterCount;
+            listeners = contextListeners;
         }
-        else {
-        current = new Context();
-        current.currentThread = t;
-        threadContexts.put(t, current);
-        current.enterCount = 1;
-        }
-        Object[] array = contextListeners;
-        if (array != null) {
-            for (int i = array.length; i-- != 0;) {
-                ((ContextListener)array[i]).contextEntered(current);
+
+        if (listeners != null) {
+            for (int i = listeners.length; i-- != 0;) {
+                ((ContextListener)listeners[i]).contextEntered(current);
             }
         }
         return current;
@@ -211,24 +216,57 @@ public class Context {
      * @see org.mozilla.javascript.Context#enter
      */
     public static void exit() {
-        Context cx = getCurrentContext();
+        Thread t = Thread.currentThread();
         boolean released = false;
-        if (cx != null) {
-            synchronized (cx) {
-                if (--cx.enterCount == 0) {
-                    threadContexts.remove(cx.currentThread);
-                    cx.currentThread = null;
-                    released = true;
+        Context cx;
+        Object[] listeners;
+        synchronized (threadContexts) {
+            cx = (Context)threadContexts.get(t);
+            if (cx == null) {
+                throw new RuntimeException
+                    ("Calling Context.exit without previous Context.enter");
+            }
+            if (Context.check && (cx.currentThread != t || cx.enterCount < 1))
+                Context.codeBug();
+            
+            --cx.enterCount;
+            if (cx.enterCount == 0) {
+                released = true;
+                threadContexts.remove(t);
+                cx.currentThread = null;
+            }
+
+            listeners = contextListeners;
+        }
+
+        if (listeners != null) {
+            for (int i = listeners.length; i-- != 0;) {
+                ((ContextListener)listeners[i]).contextExited(cx);
+            }
+            if (released) {
+                for (int i = listeners.length; i-- != 0;) {
+                    ((ContextListener)listeners[i]).contextReleased(cx);
                 }
             }
-            Object[] array = contextListeners;
-            if (array != null) {
-                for (int i = array.length; i-- != 0;) {
-                    ContextListener l = (ContextListener)array[i];
-                    l.contextExited(cx);
-                    if (released) { l.contextReleased(cx); }
-                }
-            }
+        }
+    }
+
+    /**
+     * Add a Context listener.
+     */
+    public static void addContextListener(ContextListener listener) {
+        synchronized (threadContexts) {
+            contextListeners = ListenerArray.add(contextListeners, listener);
+        }
+    }
+    
+    /**
+     * Remove a Context listener.
+     * @param listener the listener to remove.
+     */
+    public static void removeContextListener(ContextListener listener) {
+        synchronized (threadContexts) {
+            contextListeners = ListenerArray.remove(contextListeners, listener);
         }
     }
 
@@ -1289,7 +1327,7 @@ public class Context {
      */
     public void setClassName(String className) {
         if (nameHelper != null) 
-	      nameHelper.setClassName(className);
+              nameHelper.setClassName(className);
     }
     
     /**
@@ -1301,11 +1339,11 @@ public class Context {
      */
     public String getTargetClassFileName() {
         if (nameHelper != null) {
-	  	ClassRepository repository = nameHelper.getClassRepository();
-		if (repository instanceof FileClassRepository)
-		    return ((FileClassRepository)repository).getTargetClassFileName(nameHelper.getClassName());
-	  }
-	  return null;
+                ClassRepository repository = nameHelper.getClassRepository();
+                if (repository instanceof FileClassRepository)
+                    return ((FileClassRepository)repository).getTargetClassFileName(nameHelper.getClassName());
+          }
+          return null;
     }
     
     /**
@@ -1319,10 +1357,10 @@ public class Context {
      */
     public void setTargetClassFileName(String classFileName) {
         if (nameHelper != null)
-	      if (classFileName != null)
+              if (classFileName != null)
                 nameHelper.setClassRepository(new FileClassRepository(classFileName));
-		else
-		    nameHelper.setClassName(null);
+                else
+                    nameHelper.setClassName(null);
     }
 
     /**
@@ -1401,25 +1439,6 @@ public class Context {
         }
     }
     
-    /**
-     * Add a Context listener.
-     */
-    public static void addContextListener(ContextListener listener) {
-        synchronized (staticDataLock) {
-            contextListeners = ListenerArray.add(contextListeners, listener);
-        }
-    }
-    
-    /**
-     * Remove a Context listener.
-     * @param listener the listener to remove.
-     */
-    public static void removeContextListener(ContextListener listener) {
-        synchronized (staticDataLock) {
-            contextListeners = ListenerArray.remove(contextListeners, listener);
-        }
-    }
-
     /**
      * Set the security support for this context. 
      * <p> SecuritySupport may only be set if it is currently null.
@@ -1746,8 +1765,7 @@ public class Context {
      * enter().
      */
     static Context getContext() {
-        Thread t = Thread.currentThread();
-        Context cx = (Context) threadContexts.get(t);
+        Context cx = getCurrentContext();
         if (cx == null) {
             throw new RuntimeException(
                 "No Context associated with current Thread");
@@ -2099,6 +2117,11 @@ public class Context {
 
     static final boolean useJSObject = false;
 
+    static boolean isCachingEnabled = true;
+
+    private static Hashtable threadContexts = new Hashtable(11);
+    private static Object[] contextListeners;
+
     /** 
      * The activation of the currently executing function or script. 
      */
@@ -2112,12 +2135,10 @@ public class Context {
 
     int version;
     int errorCount;
-    static boolean isCachingEnabled = true;
     
     private SecuritySupport securitySupport;
     private ErrorReporter errorReporter;
     private Thread currentThread;
-    private static Hashtable threadContexts = new Hashtable(11);
     private RegExpProxy regExpProxy;
     private Locale locale;
     private boolean generatingDebug;
@@ -2139,11 +2160,6 @@ public class Context {
      * function activation records.
      */
     private Hashtable activationNames;
-
-    // Private lock for static fields to avoid a possibility of denial
-    // of service via synchronized (Context.class) { while (true) {} }
-    private static final Object staticDataLock = new Object();
-    private static Object[] contextListeners;
 
     // For the interpreter to indicate line/source for error reports.
     int interpreterLine;
@@ -2193,8 +2209,7 @@ public class Context {
         String getTargetClassFileName(String className) {
             StringBuffer sb = new StringBuffer();
             if (generatingDirectory != null) {
-            sb.append(generatingDirectory);
-            sb.append(File.separator);
+            sb.append(generatingDirectory);            sb.append(File.separator);
             }
             sb.append(className);
             sb.append(".class");
