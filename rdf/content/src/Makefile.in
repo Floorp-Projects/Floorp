@@ -27,6 +27,7 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME = rdfcontent_s
 
 CPPSRCS =				\
+	nsXULAttributes.cpp		\
 	nsJSElementObserver.cpp		\
 	nsJSNodeObserver.cpp		\
 	nsJSXULDocument.cpp		\
