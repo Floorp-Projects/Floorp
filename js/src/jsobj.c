@@ -2135,8 +2135,11 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 	if (!OBJ_GET_CLASS(cx, obj)->convert(cx, obj, hint, &v))
 	    return JS_FALSE;
 	if (!JSVAL_IS_PRIMITIVE(v)) {
-	    if (JS_TypeOfValue(cx, v) == hint)
+	    JSType type = JS_TypeOfValue(cx, v);
+	    if (type == hint || 
+	        (type == JSTYPE_FUNCTION && hint == JSTYPE_OBJECT)) {
 		goto out;
+	    }
 	    /* Don't convert to string (source object literal) for JS1.2. */
 	    if (cx->version == JSVERSION_1_2 && hint == JSTYPE_BOOLEAN)
 		goto out;
