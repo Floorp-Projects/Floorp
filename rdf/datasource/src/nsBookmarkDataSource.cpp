@@ -45,7 +45,7 @@ static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 
-static const char kURI_bookmarks[] = "rdf:bookmarks"; // XXX?
+static const char kURINC_BookmarksRoot[] = "NC:BookmarksRoot"; // XXX?
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
@@ -54,13 +54,6 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Description);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PersonalToolbarFolderCategory);
-
-// XXX these are here until we can undo the hard-coding of the column
-// info in the data source. See BookmarkParser::AddColumns() for more
-// info.
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Column);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Title);
 
 
 #define WEB_NAMESPACE_URI "http://home.netscape.com/WEB-rdf#"
@@ -116,8 +109,6 @@ protected:
     nsresult AssertTime(nsIRDFResource* subject,
                         const nsString& predicateURI,
                         const nsString& time);
-
-    nsresult AddColumns(void);
 
 public:
     BookmarkParser(void);
@@ -175,7 +166,6 @@ BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
     mLastItem = nsnull;
     mLine.Truncate();
 
-    nsresult rv;
     char buf[1024];
     PRInt32 len;
 
@@ -183,73 +173,8 @@ BookmarkParser::Parse(PRFileDesc* file, nsIRDFDataSource* dataSource)
         Tokenize(buf, len);
 
     NS_IF_RELEASE(mLastItem);
-
-    rv = AddColumns();
-    return rv;
+    return NS_OK;
 }
-
-
-nsresult
-BookmarkParser::AddColumns(void)
-{
-    // XXX this is unsavory. I really don't like hard-coding the
-    // columns that should be displayed here. What we should do is
-    // merge in a "style" graph that contains just a wee bit of
-    // information about columns, etc.
-    nsresult rv;
-
-    nsIRDFResource* columns = nsnull;
-
-    static const char* gColumnTitles[] = {
-        "Name", 
-        "Date Added",
-        "Last Visited",
-        "Last Modified",
-        nsnull
-    };
-
-    static const char* gColumnURIs[] = {
-        kURINC_Name,
-        kURINC_BookmarkAddDate,
-        kURIWEB_LastVisitDate,
-        kURIWEB_LastModifiedDate,
-        nsnull
-    };
-
-    const char* const* columnTitle = gColumnTitles;
-    const char* const* columnURI   = gColumnURIs;
-
-    if (NS_FAILED(rv = rdf_CreateAnonymousResource(mRDFService, &columns)))
-        goto done;
-
-    if (NS_FAILED(rv = rdf_MakeSeq(mRDFService, mDataSource, columns)))
-        goto done;
-
-    while (*columnTitle && *columnURI) {
-        nsIRDFResource* column = nsnull;
-
-        if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(mRDFService, &column))) {
-            rdf_Assert(mRDFService, mDataSource, column, kURINC_Title,  *columnTitle);
-            rdf_Assert(mRDFService, mDataSource, column, kURINC_Column, *columnURI);
-
-            rdf_ContainerAddElement(mRDFService, mDataSource, columns, column);
-            NS_IF_RELEASE(column);
-        }
-
-        ++columnTitle;
-        ++columnURI;
-
-        if (NS_FAILED(rv))
-            break;
-    }
-
-    rdf_Assert(mRDFService, mDataSource, kURI_bookmarks, kURINC_Columns, columns);
-
-done:
-    NS_IF_RELEASE(columns);
-    return rv;
-}
-
 
 
 void
@@ -291,7 +216,7 @@ BookmarkParser::NextToken(void)
         if (mStack.Count() > 0) {
             // a regular old folder
             
-            nsAutoString folderURI(kURI_bookmarks);
+            nsAutoString folderURI(kURINC_BookmarksRoot);
             folderURI.Append('#');
             folderURI.Append(++mCounter, 10);
 
@@ -303,7 +228,7 @@ BookmarkParser::NextToken(void)
         }
         else {
             // it's the root
-            if (NS_FAILED(mRDFService->GetResource(kURI_bookmarks, &folder)))
+            if (NS_FAILED(mRDFService->GetResource(kURINC_BookmarksRoot, &folder)))
                 return;
         }
 
