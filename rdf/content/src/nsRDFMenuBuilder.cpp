@@ -180,7 +180,8 @@ RDFMenuBuilderImpl::~RDFMenuBuilderImpl(void)
 nsresult
 RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
                                   nsIRDFResource* aProperty,
-                                  nsIRDFResource* aValue)
+                                  nsIRDFResource* aValue,
+                                  PRInt32 naturalOrderPos)
 {
     nsresult rv;
 
