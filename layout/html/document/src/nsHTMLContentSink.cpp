@@ -2516,6 +2516,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   if (NS_SUCCEEDED(result)) {
     // Add in the attributes and add the style content object to the
     // head container.
+    element->SetDocument(mDocument, PR_FALSE);
     result = AddAttributes(aNode, element, sco);
     if (NS_FAILED(result)) {
       NS_RELEASE(element);
@@ -2554,6 +2555,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
       // Add in the attributes and add the meta content object to the
       // head container.
       nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+      it->SetDocument(mDocument, PR_FALSE);
       rv = AddAttributes(aNode, it, sco);
       NS_IF_RELEASE(sco);
       if (NS_OK != rv) {
@@ -2843,6 +2845,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   if (NS_SUCCEEDED(rv)) {
     // Add in the attributes and add the style content object to the
     // head container.
+    element->SetDocument(mDocument, PR_FALSE);
     rv = AddAttributes(aNode, element, sco);
     if (NS_FAILED(rv)) {
       NS_RELEASE(element);
