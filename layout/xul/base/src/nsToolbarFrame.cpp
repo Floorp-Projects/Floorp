@@ -33,6 +33,9 @@
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
+#include "nsIViewManager.h"
+#include "nsXULAtoms.h"
+#include "nsINameSpaceManager.h"
 
 #define TEMP_HACK_FOR_BUG_11291 1
 #if TEMP_HACK_FOR_BUG_11291
@@ -220,8 +223,12 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
   GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
 
+  // register our drag over and exit capturers. These annotate the content object
+  // with enough info to determine where the drop would happen so that JS can
+  // do the right thing.
   mDragListener = new nsToolbarDragListener(this, &aPresContext);
-  receiver->AddEventListenerByIID((nsIDOMDragListener *)mDragListener, nsIDOMDragListener::GetIID());
+  receiver->AddEventListener("dragover", mDragListener, PR_TRUE);
+  receiver->AddEventListener("dragexit", mDragListener, PR_TRUE);
 
 #if TEMP_HACK_FOR_BUG_11291
   // Ok, this is a hack until Ender lands. We need to have a mouse listener on text widgets
@@ -266,7 +273,6 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
   nsresult res =  nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
 
   if (mXDropLoc != -1) {
-    //printf("mXDropLoc: %d\n", mXDropLoc);
     // XXX this is temporary
     if (!mMarkerStyle) {
       nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
@@ -281,7 +287,6 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
     } else {
       color = NS_RGB(0,0,0);
     }
-    //printf("paint %d\n", mXDropLoc);
     aRenderingContext.SetColor(color);
     aRenderingContext.DrawLine(mXDropLoc, 0, mXDropLoc, mRect.height);
   }
@@ -376,3 +381,59 @@ nsToolbarFrame::ReResolveStyles(nsIPresContext& aPresContext,
 }
 #endif
 
+
+////////////////////////////////////////////////////////////////////////
+// This is temporary until the bubling of event for CSS actions work
+////////////////////////////////////////////////////////////////////////
+static void ForceDrawFrame(nsIFrame * aFrame);
+static void ForceDrawFrame(nsIFrame * aFrame)
+{
+  if (aFrame == nsnull) {
+    return;
+  }
+  nsRect    rect;
+  nsIView * view;
+  nsPoint   pnt;
+  aFrame->GetOffsetFromView(pnt, &view);
+  aFrame->GetRect(rect);
+  rect.x = pnt.x;
+  rect.y = pnt.y;
+  if (view) {
+    nsCOMPtr<nsIViewManager> viewMgr;
+    view->GetViewManager(*getter_AddRefs(viewMgr));
+    if (viewMgr)
+      viewMgr->UpdateView(view, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
+  }
+
+}
+
+
+//
+// AttributeChanged
+//
+// Track several attributes set by the d&d drop feedback tracking mechanism. The first
+// is the "tb-triggerrepaint" attribute so JS can trigger a repaint when it
+// needs up update the drop feedback. The second is the x (or y, if bar is vertical) 
+// coordinate of where the drop feedback bar should be drawn.
+//
+NS_IMETHODIMP
+nsToolbarFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* aChild,
+                                      nsIAtom* aAttribute, PRInt32 aHint)
+{
+  nsresult rv = NS_OK;
+  
+  if ( aAttribute == nsXULAtoms::tbTriggerRepaint )
+    ForceDrawFrame ( this );
+  else if ( aAttribute == nsXULAtoms::tbDropLocationCoord ) {
+    nsAutoString attribute;
+    aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
+    char* iHateNSString = attribute.ToNewCString();
+    mXDropLoc = atoi( iHateNSString );
+    nsAllocator::Free ( iHateNSString );
+  }
+  else
+    rv = nsBoxFrame::AttributeChanged ( aPresContext, aChild, aAttribute, aHint );
+
+  return rv;
+  
+} // AttributeChanged
