@@ -102,7 +102,7 @@
             FunctionInstance *x = checked_cast<FunctionInstance *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
             pc += sizeof(short);
 
-            x->fWrap->env = new Environment(meta->env);
+//            x->fWrap->env = new Environment(meta->env);
 /*
             // For each active plural frame in the function definition environment, we need
             // to find it's current singular counterpart and use that as the dohickey

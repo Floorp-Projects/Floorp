@@ -3838,6 +3838,7 @@ static const uint8 urlCharType[256] =
         showTrees(false),
         referenceArena(NULL)
     {
+        rngInitialized = false;
         engine->meta = this;
 
         cxt.openNamespaces.clear();
