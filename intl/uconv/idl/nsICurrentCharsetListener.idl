@@ -1,0 +1,36 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+
+%{C++
+// {CF9428C1-DF50-11d3-9D0C-0050040007B2}
+#define NS_CURRENTCHARSETLISTENER_CID { 0xcf9428c1, 0xdf50, 0x11d3, { 0x9d, 0xc, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2 } }
+#define NS_ICURRENTCHARSETLISTENER_PROGID "component://netscape/intl/currentcharsetlistener"
+%}
+
+[scriptable, uuid(CF9428C1-DF50-11d3-9D0C-0050040007B2)]
+interface nsICurrentCharsetListener : nsISupports
+{
+	void SetCurrentCharset(in wstring charset);
+};

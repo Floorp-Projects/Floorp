@@ -1,2 +1,3 @@
 nsITextToSubURI.idl
+nsICurrentCharsetListener.idl
 

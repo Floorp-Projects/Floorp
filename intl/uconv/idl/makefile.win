@@ -27,6 +27,7 @@ DEPTH=..\..\..
 
 XPIDLSRCS =										\
             .\nsITextToSubURI.idl	\
+            .\nsICurrentCharsetListener.idl	\
             $(NULL)
 
 
