@@ -78,11 +78,9 @@ Uninstall Filename=$UninstallFile$
 url=$ArchiveUrl$
 
 ; Default Setup Type values:
-;   Setup Type 0 - first radio button (default)
-;   Setup Type 1 - second radio button
-;   Setup Type 2 - third radio button
-;   Setup Type 3 - fourth radio button (usually the Custom option)
-Default Setup Type=Setup Type 1
+;   Setup Type 0 - first radio button (easy install)
+;   Setup Type 1 - second radio button (custom)
+Default Setup Type=Setup Type 0
 
 ; Forces the icons on the system to be refreshed.
 ; Default value is FALSE.
@@ -187,7 +185,9 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ Setup
 ;*** LOCALIZE ME BABY ***
-Message0=Welcome to %s. You are about to install %s 0.8.
+MessageWelcome=Welcome to %s.
+;*** LOCALIZE ME BABY ***
+Message0=You are about to install %s 0.8.
 ;*** LOCALIZE ME BABY ***
 Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
 ;*** LOCALIZE ME BABY ***
@@ -205,11 +205,9 @@ License File=license.txt
 ;*** LOCALIZE ME BABY ***
 Message0=Please read the following license agreement.  Use the scroll bar to view the rest of this agreement.
 ;*** LOCALIZE ME BABY ***
-Message1=XXXben Do you accept the agreement?
+RadioAccept=XXXben I Accept the Agreement
 ;*** LOCALIZE ME BABY ***
-Message2=XXXben I Accept the Agreement
-;*** LOCALIZE ME BABY ***
-Message3=XXXben I do NOT Accept the Agreement
+RadioDecline=XXXben I do NOT Accept the Agreement
 
 [Dialog Setup Type]
 Show Dialog=TRUE
@@ -611,7 +609,7 @@ Description Long=Additional tools including mouse-gesture navigation, a site nav
 Archive=abe.xpi
 $InstallSize$:abe
 $InstallSizeArchive$:abe.xpi
-Attributes=SELECTED
+Attributes=SELECTED|VISIBLE
 
 [Component ADT]
 Description Short=Developer Tools
@@ -620,7 +618,7 @@ Description Long=Tools for web developers including an error console, the Docume
 Archive=adt.xpi
 $InstallSize$:adt
 $InstallSizeArchive$:adt.xpi
-Attributes=FORCE_UPGRADE
+Attributes=FORCE_UPGRADE|VISIBLE
 Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
 Force Upgrade File1=[SETUP PATH]\chrome\inspector.jar
 
