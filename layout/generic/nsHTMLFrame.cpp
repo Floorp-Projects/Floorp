@@ -299,8 +299,9 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       kidFrame->SetRect(rect);
     }
 
-    // If this is a resize reflow, then do a repaint
-    if (eReflowReason_Resize == aReflowState.reason) {
+    // If this is a resize reflow or the initial reflow, then do a repaint
+    if ((eReflowReason_Initial == aReflowState.reason) ||
+        (eReflowReason_Resize == aReflowState.reason)) {
       nsRect  damageRect(0, 0, aReflowState.availableWidth, aReflowState.availableHeight);
       Invalidate(damageRect, PR_FALSE);
     }
