@@ -129,10 +129,10 @@ nsCacheMetaData::GetKey( PLDHashTable * /* table */, PLDHashEntryHdr *hashEntry)
 }
 
 PLDHashNumber
-nsCacheMetaData::HashKey( PLDHashTable * /* table */, const void *key)
+nsCacheMetaData::HashKey( PLDHashTable * table, const void *key)
 {
     //** need scc's new flat string abstract class here (bug 70075)
-    return PLDHashNumber(((nsCString *)key)->get());
+    return PL_DHashStringKey(table, ((nsCString *)key)->get());
 }
 
 PRBool

@@ -36,16 +36,12 @@ public:
     nsMemoryCacheDevice();
     virtual ~nsMemoryCacheDevice();
 
-    nsresult  Init();
+    virtual nsresult  Init();
 
-    static nsresult  Create(nsCacheDevice **result);
-
-
-    virtual const char *  GetDeviceID(void);
-
-    virtual nsresult ActivateEntryIfFound( nsCacheEntry * entry );
-    virtual nsresult DeactivateEntry( nsCacheEntry * entry );
-    virtual nsresult BindEntry( nsCacheEntry * entry );
+    virtual const char *   GetDeviceID(void);
+    virtual nsCacheEntry * FindEntry( nsCString * key );
+    virtual nsresult       DeactivateEntry( nsCacheEntry * entry );
+    virtual nsresult       BindEntry( nsCacheEntry * entry );
 
     virtual nsresult GetTransportForEntry( nsCacheEntry * entry,
                                            nsITransport **transport );

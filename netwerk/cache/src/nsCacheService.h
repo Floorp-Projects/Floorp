@@ -35,70 +35,6 @@
 
 class nsCacheRequest;
 
-class nsCacheDeviceElement {
-private:
-    friend class nsCacheService;
-
-    nsCacheDeviceElement(const char * id, nsCacheDevice * cacheDevice)
-        : deviceID(id),
-          device(cacheDevice)
-    {
-        PR_INIT_CLIST(&link);
-    }
-
-    ~nsCacheDeviceElement() {}
-
-    PRCList *                     GetListNode(void)         { return &link; }
-    static nsCacheDeviceElement * GetInstance(PRCList * qp) {
-        return (nsCacheDeviceElement*)((char*)qp - offsetof(nsCacheDeviceElement, link));
-    }
-
-    PRCList        link;
-    const char *   deviceID;
-    nsCacheDevice *device;
-};
-
-#if 0
-typedef struct {
-    PLDHashNumber  keyHash;
-    char *         clientID;
-} nsCacheClientHashTableEntry;
-
-
-class nsCacheClientHashTable
-{
-public:
-    nsCacheClientHashTable();
-    ~nsCacheClientHashTable();
-
-    nsresult Init();
-    void     AddClientID(const char *clientID);
-    //** enumerate clientIDs
-
-private:
-    // PLDHashTable operation callbacks
-    static const void *   GetKey( PLDHashTable *table, PLDHashEntryHdr *entry);
-
-    static PLDHashNumber  HashKey( PLDHashTable *table, const void *key);
-
-    static PRBool         MatchEntry( PLDHashTable *           table,
-                                      const PLDHashEntryHdr *  entry,
-                                      const void *             key);
-
-    static void           MoveEntry( PLDHashTable *table,
-                                     const PLDHashEntryHdr *from,
-                                     PLDHashEntryHdr       *to);
-
-    static void           ClearEntry( PLDHashTable *table, PLDHashEntryHdr *entry);
-
-    static void           Finalize( PLDHashTable *table);
-
-    // member variables
-    static PLDHashTableOps ops;
-    PLDHashTable           table;
-    PRBool                 initialized;
-};
-#endif
 
 /**
  *  nsCacheService
@@ -135,16 +71,15 @@ public:
 
 private:
 
-    nsresult       CommonOpenCacheEntry(nsCacheSession *   session,
-                                        const char *       clientKey,
-                                        nsCacheAccessMode  accessRequested,
-                                        nsICacheListener * listener,
-                                        nsCacheRequest **  request,
-                                        nsCacheEntry **    entry);
+    nsresult       CreateRequest(nsCacheSession *   session,
+                                 const char *       clientKey,
+                                 nsCacheAccessMode  accessRequested,
+                                 nsICacheListener * listener,
+                                 nsCacheRequest **  request);
 
     nsresult       ActivateEntry(nsCacheRequest * request, nsCacheEntry ** entry);
 
-    nsresult       SearchCacheDevices(nsCacheEntry *entry, nsCacheDevice ** result);
+    nsCacheEntry * SearchCacheDevices(nsCString * key, nsCacheStoragePolicy policy);
 
     nsresult       Doom(nsCacheEntry * entry);
 
@@ -162,7 +97,10 @@ private:
     static nsCacheService * gService;  // there can be only one...
 
     PRLock*                 mCacheServiceLock;
-    PRCList                 mDeviceList;
+    
+    nsCacheDevice *         mMemoryDevice;
+    nsCacheDevice *         mDiskDevice;
+
     //    nsCacheClientHashTable  mClientIDs;
     nsCacheEntryHashTable   mActiveEntries;
     PRCList                 mDoomedEntries;

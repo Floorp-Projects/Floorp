@@ -71,10 +71,10 @@ nsCacheEntry::~nsCacheEntry()
 nsresult
 nsCacheEntry::GetData(nsISupports **result)
 {
-    if (IsStreamData())
-        return NS_ERROR_CACHE_DATA_IS_STREAM;
+    if (IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
+    if (!result)         return NS_ERROR_NULL_POINTER;
 
-    if (result) *result = mData;
+    NS_IF_ADDREF(*result = mData);
     return NS_OK;
 }
 
@@ -109,6 +109,14 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
             return NS_ERROR_OUT_OF_MEMORY;
     }
     return mMetaData->SetElement(&key, &value);
+}
+
+
+void
+nsCacheEntry::MarkValid()
+{
+    //** convert pending requests to descriptors, etc.
+    mFlags |= eValidMask;
 }
 
 
@@ -316,7 +324,7 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
     if (!cacheEntry) return NS_ERROR_NULL_POINTER;
 
     hashEntry = PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_ADD);
-    NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry != 0,
+    NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry == 0,
                  "nsCacheEntryHashTable::AddEntry - entry already used");
 
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = cacheEntry;
@@ -355,7 +363,7 @@ nsCacheEntryHashTable::GetKey( PLDHashTable * /*table*/, PLDHashEntryHdr *hashEn
 PLDHashNumber
 nsCacheEntryHashTable::HashKey( PLDHashTable *table, const void *key)
 {
-    return PLDHashNumber(((nsCString *)key)->get());
+    return PL_DHashStringKey(table,((nsCString *)key)->get());
 }
 
 PRBool
