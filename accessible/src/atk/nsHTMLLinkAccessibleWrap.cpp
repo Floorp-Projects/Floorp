@@ -50,7 +50,7 @@
 // --------------------------------------------------------
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLLinkAccessibleWrap, nsHTMLLinkAccessible, nsIAccessibleHyperLink)
 
-nsHTMLLinkAccessibleWrap::nsHTMLLinkAccessibleWrap(nsIDOMNode* aDomNode, nsISupportsArray* aTextNodes, nsIWeakReference* aShell, nsIFrame *aFrame):
+nsHTMLLinkAccessibleWrap::nsHTMLLinkAccessibleWrap(nsIDOMNode* aDomNode, nsIArray* aTextNodes, nsIWeakReference* aShell, nsIFrame *aFrame):
 nsHTMLLinkAccessible(aDomNode, aShell, aFrame)
 { 
   mTextNodes = aTextNodes;
@@ -138,9 +138,9 @@ nsresult nsHTMLLinkAccessibleWrap::GetLinkOffset(PRInt32* aStartOffset, PRInt32*
   PRUint32 index, count = 0;
   PRUint32 totalLength = 0, textLength = 0;
 
-  mTextNodes->Count(&count);
+  mTextNodes->GetLength(&count);
   for (index = 0; index < count; index++) {
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextNodes->ElementAt(index)));
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryElementAt(mTextNodes, index));
     nsCOMPtr<nsIDOMText> domText(do_QueryInterface(domNode));
     if (domText) {
       domText->GetLength(&textLength);
