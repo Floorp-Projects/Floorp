@@ -66,39 +66,6 @@ public:
 	nsIImapLog* m_realImapLog;
 };
 
-class nsImapMailFolderSinkProxy : public nsIImapMailFolderSink, 
-                              public nsImapProxyBase
-{
-public:
-    nsImapMailFolderSinkProxy(nsIImapMailFolderSink* aImapMailFolderSink,
-                          nsIImapProtocol* aProtocol,
-                          nsIEventQueue* aEventQ,
-                          PRThread* aThread);
-    virtual ~nsImapMailFolderSinkProxy();
-    
-    NS_DECL_ISUPPORTS
-
-    // Tell mail master about the newly selected mailbox
-    NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
-                                     nsImapMailboxSpec* aSpec);
-    NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
-                                       nsImapMailboxSpec* aSpec);
-    NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol);
-    NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
-                                                PRBool* aBool);
-
-    NS_IMETHOD SetupHeaderParseStream(nsIImapProtocol* aProtocol,
-                                   StreamInfo* aStreamInfo);
-
-    NS_IMETHOD ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
-                                   msg_line_info* aMsgLineInfo);
-    
-    NS_IMETHOD NormalEndHeaderParseStream(nsIImapProtocol* aProtocol);
-    
-    NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
-    
-    nsIImapMailFolderSink* m_realImapMailFolderSink;
-};
 
 class nsImapExtensionSinkProxy : public nsIImapExtensionSink, 
                              public nsImapProxyBase
@@ -207,13 +174,6 @@ struct nsImapLogProxyEvent : public nsImapEvent
 	NS_IMETHOD HandleEvent();
 	char *m_logData;
 	nsImapLogProxy *m_proxy;
-};
-
-struct nsImapMailFolderSinkProxyEvent : public nsImapEvent
-{
-    nsImapMailFolderSinkProxyEvent(nsImapMailFolderSinkProxy* aProxy);
-    virtual ~nsImapMailFolderSinkProxyEvent();
-    nsImapMailFolderSinkProxy* m_proxy;
 };
 
 struct nsImapExtensionSinkProxyEvent : nsImapEvent
