@@ -22,16 +22,16 @@
 
 NS_IMPL_ISUPPORTS(nsXPCWrappedNativeClass, NS_IXPCONNECT_WRAPPED_NATIVE_CLASS_IID)
 
-// static 
-nsXPCWrappedNativeClass* 
+// static
+nsXPCWrappedNativeClass*
 nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
                                           REFNSIID aIID)
 {
     IID2WrappedNativeClassMap* map;
     nsXPCWrappedNativeClass* clazz;
-    
+
     NS_PRECONDITION(xpcc, "bad param");
-    
+
     map = xpcc->GetWrappedNativeClassMap();
     NS_ASSERTION(map,"bad map");
 
@@ -52,10 +52,10 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
             // if failed: NS_RELEASE(map) and set map = NULL
         }
     }
-    return clazz;    
+    return clazz;
 }
 
-nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID, 
+nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,
                                                nsIInterfaceInfo* aInfo)
     : mXPCContext(xpcc),
       mIID(aIID),
@@ -69,7 +69,7 @@ nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID
     mXPCContext->GetWrappedNativeClassMap()->Add(this);
 
     // XXX Do other stuff...
-}            
+}
 
 nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
 {
@@ -79,20 +79,20 @@ nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
     // XXX e.g. mMembers
     // XXX e.g. functon object of mbers
     NS_RELEASE(mInfo);
-}            
+}
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     nsXPCWrappedNative* wrapper;
-    
+
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if (!wrapper) {
         if (type == JSTYPE_OBJECT) {
             *vp = OBJECT_TO_JSVAL(obj);
             return JS_TRUE;
         }
-        
+
         JS_ReportError(cx, "illegal operation on WrappedNative prototype object");
         return JS_FALSE;
     }
@@ -137,50 +137,122 @@ nsXPCWrappedNativeClass::LookupMemberByID(jsid id) const
             return desc;
     }
     return NULL;
-}        
+}
 
-const char* 
+const char*
 nsXPCWrappedNativeClass::GetMethodName(int MethodIndex) const
 {
     const nsXPCMethodInfo* info;
     if(NS_SUCCEEDED(mInfo->GetMethodInfo(MethodIndex, &info)))
         return info->GetName();
-    return NULL;    
-}        
+    return NULL;
+}
 
-JSBool 
-nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper, 
-                                            const XPCNativeMemberDescriptor* desc, 
+void
+nsXPCWrappedNativeClass::SetDescriptorCounts(XPCNativeMemberDescriptor* desc)
+{
+    // XXX this is subject to serious improvement!
+    switch(desc->category)
+    {
+    case XPCNativeMemberDescriptor::CONSTANT:
+        NS_ASSERTION(0,"bad call");
+        break;
+    case XPCNativeMemberDescriptor::METHOD:
+    {
+        const nsXPCMethodInfo* info;
+        if(NS_FAILED(mInfo->GetMethodInfo(desc->index, &info)))
+            break;
+        uintN paramWords = 0;
+        uintN scratchWords = 0;
+
+        for(uint8 i = info->GetParamCount()-1 ; i >= 0; i--)
+        {
+            const nsXPCParamInfo* param = info->GetParam(i);
+            nsXPCType type = param->GetType();
+
+            uintN thingSize =
+                    (type == nsXPCType::T_DOUBLE ||
+                     type == nsXPCType::T_I64 ||
+                     type == nsXPCType::T_U64) ? 2 : 1;
+            if(param->IsOut())
+            {
+                paramWords++;
+                scratchWords += thingSize;
+            }
+            else
+            {
+                paramWords += thingSize;
+            }
+        }
+        desc->maxParamWordCount   = paramWords;
+        desc->maxScratchWordCount = scratchWords;
+    }
+    case XPCNativeMemberDescriptor::ATTRIB_RO:
+    case XPCNativeMemberDescriptor::ATTRIB_RW:
+        // XXX just set these for the max possible...
+        desc->maxParamWordCount = 2;
+        desc->maxScratchWordCount = 2;
+    default:
+        NS_ASSERTION(0,"bad category");
+        break;
+    }
+}
+
+JSBool
+nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
+                                            const XPCNativeMemberDescriptor* desc,
                                             jsval* vp)
 {
     // XXX implement
     return JS_FALSE;
+
 }
 
-JSBool 
-nsXPCWrappedNativeClass::GetAttributeAsJSVal(nsXPCWrappedNative* wrapper, 
-                                             const XPCNativeMemberDescriptor* desc, 
-                                             jsval* vp)
-{
-    return CallWrappedMethod(wrapper, desc, JS_FALSE, 0, NULL, vp);
-}
-
-JSBool 
-nsXPCWrappedNativeClass::SetAttributeFromJSVal(nsXPCWrappedNative* wrapper, 
-                                               const XPCNativeMemberDescriptor* desc, 
-                                               jsval* vp)
-{
-    return CallWrappedMethod(wrapper, desc, JS_TRUE, 1, vp, NULL);
-}
-
-JSBool 
-nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper, 
-                                           const XPCNativeMemberDescriptor* desc, 
+JSBool
+nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
+                                           const XPCNativeMemberDescriptor* desc,
                                            JSBool isAttributeSet,
                                            uintN argc, jsval *argv, jsval *vp)
 {
+#define PARAM_WORDS     32
+#define SCRATCH_WORDS   32
+
+    uint32 paramBuffer[PARAM_WORDS];
+    uint32 scratchBuffer[SCRATCH_WORDS];
+    JSBool retval = JS_FALSE;
+
+    uint32* params = NULL;
+    uint32* scratch = NULL;
+
+    if(GetMaxParamWordCount(desc) > PARAM_WORDS)
+        params = new uint32[GetMaxParamWordCount(desc)];
+    else
+        params = paramBuffer;
+
+    if(GetMaxScratchWordCount(desc) > SCRATCH_WORDS)
+        scratch = new uint32[GetMaxScratchWordCount(desc)];
+    else
+        scratch = paramBuffer;
+    if(!params || !scratch)
+        goto done;
+
     // XXX implement
-    return JS_FALSE;
+
+    // iterate through the params doing conversions
+
+    // do the invoke
+
+    // iterate through the params to gather the results
+
+    // set the retval for success
+
+
+done:
+    if(params && params != paramBuffer)
+        delete [] params;
+    if(scratch && scratch != scratchBuffer)
+        delete [] scratch;
+    return retval;
 }
 
 
@@ -193,7 +265,7 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
     jsval idval;
 
     nsXPCWrappedNative* wrapper;
-    
+
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(!wrapper)
         return JS_FALSE;
@@ -213,7 +285,7 @@ WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
     return clazz->CallWrappedMethod(wrapper, desc, JS_FALSE, argc, argv, vp);
 }
 
-JSObject* 
+JSObject*
 nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
 {
     if(!desc->invokeFuncObj)
@@ -228,8 +300,8 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
         if(!fun)
             return NULL;
 
-        XPCNativeMemberDescriptor* descRW = 
-            NS_CONST_CAST(XPCNativeMemberDescriptor*,descRW);
+        XPCNativeMemberDescriptor* descRW =
+            NS_CONST_CAST(XPCNativeMemberDescriptor*,desc);
 
         descRW->invokeFuncObj = JS_GetFunctionObject(fun);
         // XXX verify released in dtor
@@ -242,7 +314,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     nsXPCWrappedNative* wrapper;
-    
+
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(!wrapper)
         return JS_FALSE;
@@ -253,7 +325,7 @@ WrappedNative_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
     if(!desc)
         return JS_FALSE;
-    
+
     switch(desc->category)
     {
     case XPCNativeMemberDescriptor::CONSTANT:
@@ -278,7 +350,7 @@ WrappedNative_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     case XPCNativeMemberDescriptor::ATTRIB_RW:
         return clazz->GetAttributeAsJSVal(wrapper, desc, vp);
 
-    default:        
+    default:
         NS_ASSERTION(0,"bad category");
         return JS_FALSE;
     }
@@ -288,7 +360,7 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 WrappedNative_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     nsXPCWrappedNative* wrapper;
-    
+
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(!wrapper)
         return JS_FALSE;
@@ -299,7 +371,7 @@ WrappedNative_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     const XPCNativeMemberDescriptor* desc = clazz->LookupMemberByID(id);
     if(!desc)
         return JS_FALSE;
-    
+
     switch(desc->category)
     {
     case XPCNativeMemberDescriptor::CONSTANT:
@@ -310,7 +382,7 @@ WrappedNative_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     case XPCNativeMemberDescriptor::ATTRIB_RW:
         return clazz->SetAttributeFromJSVal(wrapper, desc, vp);
-    default:        
+    default:
         NS_ASSERTION(0,"bad category");
         return JS_FALSE;
     }
@@ -325,7 +397,7 @@ WrappedNative_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                             )
 {
     nsXPCWrappedNative* wrapper;
-    
+
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if(wrapper)
     {
@@ -392,7 +464,7 @@ WrappedNative_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                         jsval *statep, jsid *idp)
 {
     nsXPCWrappedNative* wrapper;
-    
+
     wrapper = (nsXPCWrappedNative*) JS_GetPrivate(cx, obj);
     if (!wrapper) {
         *statep = JSVAL_NULL;
@@ -410,7 +482,7 @@ WrappedNative_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (idp)
             *idp = INT_TO_JSVAL(clazz->GetMemberCount());
         return JS_TRUE;
-        
+
     case JSENUMERATE_NEXT:
     {
         int index = JSVAL_TO_INT(*statep);
@@ -504,8 +576,8 @@ JSClass WrappedNative_class = {
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-// static 
-JSBool 
+// static
+JSBool
 nsXPCWrappedNativeClass::InitForContext(XPCContext* xpcc)
 {
     WrappedNative_ops.newObjectMap = js_ObjectOps.newObjectMap;
@@ -513,7 +585,7 @@ nsXPCWrappedNativeClass::InitForContext(XPCContext* xpcc)
 
     // XXX do we really want this class init'd this way? access to ctor?
 
-    if (!JS_InitClass(xpcc->GetJSContext(), xpcc->GetGlobalObject(), 
+    if (!JS_InitClass(xpcc->GetJSContext(), xpcc->GetGlobalObject(),
         0, &WrappedNative_class, 0, 0,
         0, 0,
         0, 0))
@@ -521,7 +593,7 @@ nsXPCWrappedNativeClass::InitForContext(XPCContext* xpcc)
     return JS_TRUE;
 }
 
-JSObject* 
+JSObject*
 nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
 {
     JSContext* cx = GetXPCContext()->GetJSContext();
@@ -529,5 +601,5 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
     if(!jsobj || !JS_SetPrivate(cx, jsobj, self))
         return NULL;
     return jsobj;
-}        
+}
 

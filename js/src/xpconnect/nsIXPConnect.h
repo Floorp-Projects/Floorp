@@ -130,7 +130,7 @@ public:
 
     NS_IMETHOD InitJSContext(nsIJSContext* aJSContext,
                              nsIJSObject* aGlobalJSObj) = 0;
-    
+
     NS_IMETHOD GetInterfaceInfo(REFNSIID aIID,
                                 nsIInterfaceInfo** info) = 0;
 
@@ -167,6 +167,14 @@ XPC_NewJSContext(JSContext* cx);
 
 XPC_PUBLIC_API(nsIJSObject*)
 XPC_NewJSObject(nsIJSContext* aJSContext, JSObject* jsobj);
+
+#ifdef DEBUG
+// XXX temprary forawrd declaration
+class nsXPCVarient;
+XPC_PUBLIC_API(nsresult)
+XPC_TestInvoke(void* that, PRUint32 index,
+               uint32 paramCount, nsXPCVarient* params);
+#endif
 
 JS_END_EXTERN_C
 

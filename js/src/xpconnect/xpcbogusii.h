@@ -27,7 +27,7 @@ private:
     uint8 t;    // only member
 
 public:
-    nsXPCType();    // no implementation
+    nsXPCType() {}
     nsXPCType(uint8 type) : t(type) {}
 
     nsXPCType& operator=(uint8 type) {t = type; return *this;}
@@ -78,8 +78,9 @@ public:
     };
 };
 
-class nsVarient
+class nsXPCVarient
 {
+public:
     nsXPCType type;
 
     union
@@ -98,7 +99,7 @@ class nsVarient
         char    c;
         wchar_t wc;
         void*   p;
-    } value;
+    } val;
 };
 
 

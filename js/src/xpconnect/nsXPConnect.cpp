@@ -114,7 +114,7 @@ nsXPConnect::GetInterfaceInfo(REFNSIID aIID,
 {
     NS_PRECONDITION(info,"bad param");
     // XXX implement...FOR REAL...
-        
+
     *info = new nsInterfaceInfo(aIID, "name", NULL);
 
     return NS_OK;
@@ -131,7 +131,7 @@ nsXPConnect::WrapNative(nsIJSContext* aJSContext,
     NS_PRECONDITION(aWrapper,"bad param");
 
     *aWrapper = NULL;
-    
+
     JSContext* cx;
     if(NS_FAILED(aJSContext->GetNative(&cx)))
         return NS_ERROR_FAILURE;
@@ -140,7 +140,7 @@ nsXPConnect::WrapNative(nsIJSContext* aJSContext,
     if(!xpcc)
         return NS_ERROR_FAILURE;
 
-    nsXPCWrappedNative* wrapper = 
+    nsXPCWrappedNative* wrapper =
         nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, aIID);
 
     if(!wrapper)
@@ -171,7 +171,7 @@ nsXPConnect::GetJSObjectOfWrappedJS(nsIXPConnectWrappedJS* aWrapper,
     nsXPCWrappedJS* realWrapper = NS_STATIC_CAST(nsXPCWrappedJS*, aWrapper);
     JSObject* jsobj = realWrapper->GetJSObject();
     NS_ASSERTION(jsobj,"bad WrappedJS");
-    nsJSContext* aContext = 
+    nsJSContext* aContext =
         new nsJSContext(realWrapper->GetClass()->GetXPCContext()->GetJSContext());
     *aJSObj = new nsJSObject(aContext, jsobj);
     return NS_OK;
@@ -190,7 +190,7 @@ nsXPConnect::GetJSObjectOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
 
     JSObject* jsobj = realWrapper->GetJSObject();
     NS_ASSERTION(jsobj,"bad WrappedNative");
-    nsJSContext* aContext = 
+    nsJSContext* aContext =
         new nsJSContext(realWrapper->GetClass()->GetXPCContext()->GetJSContext());
     *aJSObj = new nsJSObject(aContext, jsobj);
     return NS_OK;
