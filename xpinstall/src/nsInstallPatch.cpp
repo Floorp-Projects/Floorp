@@ -58,6 +58,10 @@
 #include "nsILocalFileMac.h"
 #endif
 
+#ifdef XP_WIN
+#include <windows.h>
+#endif
+
 #define BUFSIZE     32768
 #define OPSIZE      1
 #define MAXCMDSIZE  12

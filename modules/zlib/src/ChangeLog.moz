@@ -2,8 +2,8 @@
 		Mozilla ChangeLog file for zlib
 
 Mozilla.org changes:
-- 11 March 2002
-  Sync'd with 1.1.4 release
+- 17 June 2004
+  Sync'd with 1.2.1 release
 
-- 13 July 2001 (Colin Blake)
-  do not prototype strerror for VMS in zutil.h
+- 17 June 2004
+  Add mozzconf.h
