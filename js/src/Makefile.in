@@ -285,11 +285,9 @@ jsdtoa.o: jsdtoa.c
 endif
 
 $(FDLIBM_LIBRARY):
-	@set -e; set $(EXIT_ON_ERROR); \
-	oldDir=`pwd`; \
-	echo "cd $(@D); $(MAKE) $(@F)"; \
-	cd $(@D); $(MAKE) $(@F); cd $$oldDir; \
-	set +e
+	@$(CONTINUE_ON_ERROR) \
+	$(MAKE) -C $(@D) $(@F); \
+	$(EXIT_ON_ERROR)
 
 jsopcode.h jsopcode.c: jsopcode.tbl
 
