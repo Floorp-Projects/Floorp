@@ -27,6 +27,7 @@ MODULE=raptor
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsBulletinBoardLayout.cpp \
         nsScrollBoxFrame.cpp \
         nsEditorBoxObject.cpp \
         nsIFrameBoxObject.cpp \
@@ -97,6 +98,7 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+  .\$(OBJDIR)\nsBulletinBoardLayout.obj \
   .\$(OBJDIR)\nsScrollBoxFrame.obj \
   .\$(OBJDIR)\nsEditorBoxObject.obj \
   .\$(OBJDIR)\nsIFrameBoxObject.obj \

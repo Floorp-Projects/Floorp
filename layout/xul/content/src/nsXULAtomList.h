@@ -111,6 +111,8 @@ XUL_ATOM(autostretch, "autostretch")
 
 XUL_ATOM(autorepeatbutton, "autorepeatbutton")
 
+XUL_ATOM(bulletinboard, "bulletinboard")
+
 XUL_ATOM(titledbox, "titledbox")
 XUL_ATOM(title, "title")
 XUL_ATOM(titledboxContentPseudo, ":titledbox-content")
