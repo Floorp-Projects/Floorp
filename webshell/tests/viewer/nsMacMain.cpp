@@ -206,7 +206,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 				case cmd_SaveAs:	/*n.a.*/						break;
 				case cmd_Revert:	/*n.a.*/						break;
 				case cmd_PageSetup:	/*n.a.*/						break;
-				case cmd_Print:		/*n.a.*/						break;
+				case cmd_Print:		xpID = VIEWER_PRINT;	break;
 				case cmd_Quit:		xpID = VIEWER_EXIT;				break;
 			}
 			break;
