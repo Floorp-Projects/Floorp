@@ -47,9 +47,10 @@ var BookmarksMenu = {
         aTarget.lastChild.id == "openintabs-menuitem")
       return;
     var element = document.createElementNS(XUL_NS, "menuseparator");
+    element.setAttribute("id", "openintabs-menuseparator");
     aTarget.appendChild(element);
     element = document.createElementNS(XUL_NS, "menuitem");
-    element.setAttribute("id", "openintabs-menuitem")
+    element.setAttribute("id", "openintabs-menuitem");
     element.setAttribute("label", BookmarksUtils.getLocaleString("cmd_bm_openfolder"));
     element.setAttribute("accesskey", BookmarksUtils.getLocaleString("cmd_bm_openfolder_accesskey"));
     aTarget.appendChild(element);
