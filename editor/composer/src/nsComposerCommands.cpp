@@ -661,8 +661,11 @@ nsMultiStateCommand::DoCommandParams(const char *aCommandName,
 
       if (aParams) {
         nsXPIDLCString s;
-        aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
-        tString.AssignWithConversion(s);
+        rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
+        if (NS_SUCCEEDED(rv))
+          tString.AssignWithConversion(s);
+        else
+          rv = aParams->GetStringValue(STATE_ATTRIBUTE, tString);
       }
 
       rv = SetState(editor, tString);
@@ -749,10 +752,8 @@ nsFontFaceStateCommand::GetCurrentState(nsIEditor *aEditor,
   nsresult rv = htmlEditor->GetFontFaceState(&outMixed, outStateString);
   if (NS_SUCCEEDED(rv))
   {
-    nsCAutoString tOutStateString;
-    tOutStateString.AssignWithConversion(outStateString);
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
-    aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
+    aParams->SetStringValue(STATE_ATTRIBUTE, outStateString);
   }
   return rv;
 }
