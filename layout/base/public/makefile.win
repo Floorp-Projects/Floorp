@@ -24,6 +24,7 @@ DEPTH=..\..\..
 EXPORTS =				\
 	nslayout.h			\
 	nsContentPolicyUtils.h          \
+	nsDocumentImpl.h          \
 	nsHTMLReflowState.h		\
 	nsIAutoCopy.h			\
 	nsICaret.h			\
@@ -41,6 +42,7 @@ EXPORTS =				\
 	nsIFrameDebug.h			\
 	nsIFrameImageLoader.h		\
 	nsIFrameManager.h		\
+	nsIIndependentSelection.h		\
 	nsILayoutDebugger.h		\
 	nsINameSpace.h			\
 	nsINameSpaceManager.h		\
@@ -78,6 +80,7 @@ EXPORTS =				\
 	nsISelfScrollingFrame.h \
 	nsIScrollableFrame.h \
 	nsIPrivateDOMImplementation.h \
+	nsIXIFConverter.h \
 	$(NULL)
 
 MODULE=raptor 
