@@ -169,30 +169,30 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 
 inline void CombineRects(const nsRect& r1, nsRect& r2)
 {
-  nscoord x0 = r2.x;
-  nscoord y0 = r2.y;
-  nscoord x1 = x0 + r2.width;
-  nscoord y1 = y0 + r2.height;
+  nscoord xa = r2.x;
+  nscoord ya = r2.y;
+  nscoord xb = xa + r2.width;
+  nscoord yb = ya + r2.height;
   nscoord x = r1.x;
   nscoord y = r1.y;
   nscoord xmost = x + r1.width;
   nscoord ymost = y + r1.height;
-  if (x < x0) {
-    x0 = x;
+  if (x < xa) {
+    xa = x;
   }
-  if (xmost > x1) {
-    x1 = xmost;
+  if (xmost > xb) {
+    xb = xmost;
   }
-  if (y < y0) {
-    y0 = y;
+  if (y < ya) {
+    ya = y;
   }
-  if (ymost > y1) {
-    y1 = ymost;
+  if (ymost > yb) {
+    yb = ymost;
   }
-  r2.x = x0;
-  r2.y = y0;
-  r2.width = x1 - x0;
-  r2.height = y1 - y0;
+  r2.x = xa;
+  r2.y = ya;
+  r2.width = xb - xa;
+  r2.height = yb - ya;
 }
 
 //----------------------------------------------------------------------
@@ -822,6 +822,22 @@ nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) tmp;
     return NS_OK;
   }
+  if (aIID.Equals(nsILineIterator::GetIID())) {
+    nsLineIterator* it = new nsLineIterator;
+    if (!it) {
+      *aInstancePtr = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    const nsStyleDisplay* display;
+    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+    nsresult rv = it->Init(mLines,
+                           display->mDirection == NS_STYLE_DIRECTION_RTL);
+    if (NS_FAILED(rv)) {
+      delete it;
+      return rv;
+    }
+    return it->QueryInterface(aIID, aInstancePtr);
+  }
   return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -1441,7 +1457,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   // Compute the combined area of our children
   // XXX take into account the overflow->clip property!
 // XXX_perf: This can be done incrementally
-  nscoord x0 = 0, y0 = 0, x1 = aMetrics.width, y1 = aMetrics.height;
+  nscoord xa = 0, ya = 0, xb = aMetrics.width, yb = aMetrics.height;
   nsLineBox* line = mLines;
   while (nsnull != line) {
     // Compute min and max x/y values for the reflowed frame's
@@ -1450,32 +1466,32 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     nscoord y = line->mCombinedArea.y;
     nscoord xmost = x + line->mCombinedArea.width;
     nscoord ymost = y + line->mCombinedArea.height;
-    if (x < x0) {
-      x0 = x;
+    if (x < xa) {
+      xa = x;
     }
-    if (xmost > x1) {
-      x1 = xmost;
+    if (xmost > xb) {
+      xb = xmost;
     }
-    if (y < y0) {
-      y0 = y;
+    if (y < ya) {
+      ya = y;
     }
-    if (ymost > y1) {
-      y1 = ymost;
+    if (ymost > yb) {
+      yb = ymost;
     }
     line = line->mNext;
   }
 #ifdef NOISY_COMBINED_AREA
   IndentBy(stdout, GetDepth());
   ListTag(stdout);
-  printf(": ca=%d,%d,%d,%d\n", x0, y0, x1-x0, y1-y0);
+  printf(": ca=%d,%d,%d,%d\n", xa, ya, xb-xa, yb-ya);
 #endif
 
   // If the combined area of our children exceeds our bounding box
   // then set the NS_FRAME_OUTSIDE_CHILDREN flag, otherwise clear it.
-  aMetrics.mCombinedArea.x = x0;
-  aMetrics.mCombinedArea.y = y0;
-  aMetrics.mCombinedArea.width = x1 - x0;
-  aMetrics.mCombinedArea.height = y1 - y0;
+  aMetrics.mCombinedArea.x = xa;
+  aMetrics.mCombinedArea.y = ya;
+  aMetrics.mCombinedArea.width = xb - xa;
+  aMetrics.mCombinedArea.height = yb - ya;
   if ((aMetrics.mCombinedArea.x < 0) ||
       (aMetrics.mCombinedArea.y < 0) ||
       (aMetrics.mCombinedArea.XMost() > aMetrics.width) ||
@@ -1692,13 +1708,13 @@ nsBlockFrame::PropogateReflowDamage(nsBlockReflowState& aState,
 {
   if (aLine->mCombinedArea.YMost() > aLine->mBounds.YMost()) {
     // The line has an object that extends outside of its bounding box.
-    nscoord impactY0 = aLine->mCombinedArea.y;
-    nscoord impactY1 = aLine->mCombinedArea.YMost();
+    nscoord impactYA = aLine->mCombinedArea.y;
+    nscoord impactYB = aLine->mCombinedArea.YMost();
 #ifdef NOISY_INCREMENTAL_REFLOW
     if (aState.mReflowState.reason == eReflowReason_Incremental) {
       IndentBy(stdout, gNoiseIndent);
-      printf("impactY0=%d impactY1=%d deltaY=%d\n",
-             impactY0, impactY1, aDeltaY);
+      printf("impactYA=%d impactYB=%d deltaY=%d\n",
+             impactYA, impactYB, aDeltaY);
     }
 #endif
 
@@ -1711,9 +1727,9 @@ nsBlockFrame::PropogateReflowDamage(nsBlockReflowState& aState,
     // because lines might be overlapping because of negative margins.
     nsLineBox* next = aLine->mNext;
     while (nsnull != next) {
-      nscoord lineY0 = next->mBounds.y + aDeltaY;
-      nscoord lineY1 = lineY0 + next->mBounds.height;
-      if ((lineY0 < impactY1) && (impactY0 < lineY1)) {
+      nscoord lineYA = next->mBounds.y + aDeltaY;
+      nscoord lineYB = lineYA + next->mBounds.height;
+      if ((lineYA < impactYB) && (impactYA < lineYB)) {
 #ifdef NOISY_INCREMENTAL_REFLOW
         if (aState.mReflowState.reason == eReflowReason_Incremental) {
           IndentBy(stdout, gNoiseIndent);
@@ -2594,19 +2610,17 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // be no correct ascent value. Therefore, make one up...
         nscoord ascent = 0;
         const nsStyleFont* font;
-        nsresult rv;
-        rv = frame->GetStyleData(eStyleStruct_Font,
-                                 (const nsStyleStruct*&) font);
-        if (NS_SUCCEEDED(rv) && (nsnull != font)) {
-          nsIRenderingContext& rc = *aState.mReflowState.rendContext;
-          rc.SetFont(font->mFont);
-          nsIFontMetrics* fm;
-          rv = rc.GetFontMetrics(fm);
-          if (NS_SUCCEEDED(rv) && (nsnull != fm)) {
-            fm->GetMaxAscent(ascent);
-            NS_RELEASE(fm);
-          }
+        frame->GetStyleData(eStyleStruct_Font,
+                            (const nsStyleStruct*&) font);
+        nsIRenderingContext& rc = *aState.mReflowState.rendContext;
+        rc.SetFont(font->mFont);
+        nsIFontMetrics* fm;
+        rv = rc.GetFontMetrics(fm);
+        if (NS_SUCCEEDED(rv) && (nsnull != fm)) {
+          fm->GetMaxAscent(ascent);
+          NS_RELEASE(fm);
         }
+        rv = NS_OK;
 
         // Tall bullets won't look particularly nice here...
         nsRect bbox;
@@ -3509,7 +3523,7 @@ nsBlockFrame::WrapFramesInFirstLineFrame(nsIPresContext* aPresContext)
     nsIStyleContext* firstLineStyle = GetFirstLineStyle(aPresContext);
 
     // Create line frame
-    nsresult rv = NS_NewFirstLineFrame((nsIFrame**) &lineFrame);
+    rv = NS_NewFirstLineFrame((nsIFrame**) &lineFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -3594,7 +3608,6 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
-    nsresult rv;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
                                  nsIReflowCommand::ReflowDirty,
                                  nsnull);
@@ -3645,7 +3658,6 @@ nsBlockFrame::InsertFrames(nsIPresContext& aPresContext,
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
-    nsresult rv;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
                                  nsIReflowCommand::ReflowDirty,
                                  nsnull);
@@ -4005,7 +4017,6 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
-    nsresult rv;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
                                  nsIReflowCommand::ReflowDirty,
                                  nsnull);
@@ -4147,9 +4158,9 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
           // continuation is in a different parent. So break out of
           // the loop so that we advance to the next parent.
 #ifdef NS_DEBUG
-          nsIFrame* parent;
-          aDeletedFrame->GetParent(&parent);
-          NS_ASSERTION(parent != flow, "strange continuation");
+          nsIFrame* checkParent;
+          aDeletedFrame->GetParent(&checkParent);
+          NS_ASSERTION(checkParent != flow, "strange continuation");
 #endif
           break;
         }
@@ -4524,33 +4535,33 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
         // type, assuming its placed on the current line. This is
         // where the floater will be placed horizontally if it can go
         // here.
-        nscoord x0;
+        nscoord xa;
         if (NS_STYLE_FLOAT_LEFT == aFloats) {
-          x0 = mAvailSpaceRect.x;
+          xa = mAvailSpaceRect.x;
         }
         else {
-          x0 = mAvailSpaceRect.XMost() - aFloaterRect.width;
+          xa = mAvailSpaceRect.XMost() - aFloaterRect.width;
 
           // In case the floater is too big, don't go past the left edge
-          if (x0 < mAvailSpaceRect.x) {
-            x0 = mAvailSpaceRect.x;
+          if (xa < mAvailSpaceRect.x) {
+            xa = mAvailSpaceRect.x;
           }
         }
-        nscoord x1 = x0 + aFloaterRect.width;
+        nscoord xb = xa + aFloaterRect.width;
 
         // Calculate the top and bottom y coordinates, again assuming
         // that the floater is placed on the current line.
         const nsMargin& borderPadding = BorderPadding();
-        nscoord y0 = mY - borderPadding.top;
-        if (y0 < 0) {
+        nscoord ya = mY - borderPadding.top;
+        if (ya < 0) {
           // CSS2 spec, 9.5.1 rule [4]: A floating box's outer top may not
           // be higher than the top of its containing block.
 
           // XXX It's not clear if it means the higher than the outer edge
           // or the border edge or the inner edge?
-          y0 = 0;
+          ya = 0;
         }
-        nscoord y1 = y0 + aFloaterRect.height;
+        nscoord yb = ya + aFloaterRect.height;
 
         nscoord saveY = mY;
         for (;;) {
@@ -4567,14 +4578,14 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
           // Check and make sure the floater won't intersect any
           // floaters on this band. The floaters starting and ending
           // coordinates must be entirely in the available space.
-          if ((x0 < mAvailSpaceRect.x) || (x1 > mAvailSpaceRect.XMost())) {
+          if ((xa < mAvailSpaceRect.x) || (xb > mAvailSpaceRect.XMost())) {
             // The floater can't go here.
             result = PR_FALSE;
             break;
           }
 
           // See if there is now enough height for the floater.
-          if (y1 < mY + mAvailSpaceRect.height) {
+          if (yb < mY + mAvailSpaceRect.height) {
             // Winner. The bottom Y coordinate of the floater is in
             // this band.
             break;
@@ -4812,7 +4823,7 @@ static void ComputeCombinedArea(nsLineBox* aLine,
                                 nscoord aWidth, nscoord aHeight,
                                 nsRect& aResult)
 {
-  nscoord x0 = 0, y0 = 0, x1 = aWidth, y1 = aHeight;
+  nscoord xa = 0, ya = 0, xb = aWidth, yb = aHeight;
   while (nsnull != aLine) {
     // Compute min and max x/y values for the reflowed frame's
     // combined areas
@@ -4820,25 +4831,25 @@ static void ComputeCombinedArea(nsLineBox* aLine,
     nscoord y = aLine->mCombinedArea.y;
     nscoord xmost = x + aLine->mCombinedArea.width;
     nscoord ymost = y + aLine->mCombinedArea.height;
-    if (x < x0) {
-      x0 = x;
+    if (x < xa) {
+      xa = x;
     }
-    if (xmost > x1) {
-      x1 = xmost;
+    if (xmost > xb) {
+      xb = xmost;
     }
-    if (y < y0) {
-      y0 = y;
+    if (y < ya) {
+      ya = y;
     }
-    if (ymost > y1) {
-      y1 = ymost;
+    if (ymost > yb) {
+      yb = ymost;
     }
     aLine = aLine->mNext;
   }
 
-  aResult.x = x0;
-  aResult.y = y0;
-  aResult.width = x1 - x0;
-  aResult.height = y1 - y0;
+  aResult.x = xa;
+  aResult.y = ya;
+  aResult.width = xb - xa;
+  aResult.height = yb - ya;
 }
 #endif
 
