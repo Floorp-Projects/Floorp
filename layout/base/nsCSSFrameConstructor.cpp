@@ -1352,6 +1352,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     nsresult rv = aDocument->GetNodeInfoManager(*getter_AddRefs(nimgr));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // XXXldb We should not be creating an |image| element, because it
+    // matches selectors!  See bug 109216.
     nsCOMPtr<nsINodeInfo> nodeInfo;
     nimgr->GetNodeInfo(nsHTMLAtoms::img, nsnull, kNameSpaceID_None,
                        *getter_AddRefs(nodeInfo));
@@ -4890,14 +4892,24 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
 
-  // first, create it's "before" generated content
-  nsIFrame* beforeFrame;
-  if (CreateGeneratedContentFrame(aPresShell, aPresContext,
-                                  aState, aParentFrame, aContent,
-                                  aStyleContext, nsCSSAtoms::beforePseudo,
-                                  PR_FALSE, &beforeFrame)) {
-    // Add the generated frame to the child list
-    aFrameItems.AddChild(beforeFrame);
+  // first, create its "before" generated content
+  // XXXldb We really shouldn't be doing this at all, based on the
+  // interpretation of CSS2 *excluding examples*.  And we could remove
+  // |RemoveGeneratedContentFrameSiblings|.  However, it would break our
+  // hr stuff in the UA stylesheet.  However, instead we're only going
+  // to do it when |processChildren| is false, since when
+  // |processChildren| is true, |nsCSSFrameConstructor::ProcessChildren|
+  // will handle :before and :after (and correctly too, unlike here).
+  // See bug 141289.
+  if (!processChildren) {
+    nsIFrame* beforeFrame;
+    if (CreateGeneratedContentFrame(aPresShell, aPresContext,
+                                    aState, aParentFrame, aContent,
+                                    aStyleContext, nsCSSAtoms::beforePseudo,
+                                    PR_FALSE, &beforeFrame)) {
+      // Add the generated frame to the child list
+      aFrameItems.AddChild(beforeFrame);
+    }
   }
 
   // If the frame is a replaced element, then set the frame state bit
@@ -5028,14 +5040,24 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
   }
 
-  // finally, create it's "after" generated content
-  nsIFrame* afterFrame;
-  if (CreateGeneratedContentFrame(aPresShell, aPresContext,
-                                  aState, aParentFrame, aContent,
-                                  aStyleContext, nsCSSAtoms::afterPseudo,
-                                  PR_FALSE, &afterFrame)) {
-    // Add the generated frame to the child list
-    aFrameItems.AddChild(afterFrame);
+  // finally, create its "after" generated content
+  // XXXldb We really shouldn't be doing this at all, based on the
+  // interpretation of CSS2 *excluding examples*.  And we could remove
+  // |RemoveGeneratedContentFrameSiblings|.  However, it would break our
+  // hr stuff in the UA stylesheet.  However, instead we're only going
+  // to do it when |processChildren| is false, since when
+  // |processChildren| is true, |nsCSSFrameConstructor::ProcessChildren|
+  // will handle :before and :after (and correctly too, unlike here).
+  // See bug 141289.
+  if (!processChildren) {
+    nsIFrame* afterFrame;
+    if (CreateGeneratedContentFrame(aPresShell, aPresContext,
+                                    aState, aParentFrame, aContent,
+                                    aStyleContext, nsCSSAtoms::afterPseudo,
+                                    PR_FALSE, &afterFrame)) {
+      // Add the generated frame to the child list
+      aFrameItems.AddChild(afterFrame);
+    }
   }
 
   return rv;
