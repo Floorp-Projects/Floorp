@@ -62,7 +62,6 @@ struct RowReflowState {
   nscoord maxCellVertSpace; // the maximum MAX(cellheight + topMargin + bottomMargin)
   
   nsTableFrame *tableFrame;
-   
 
   RowReflowState(const nsHTMLReflowState& aReflowState,
                  nsTableFrame*            aTableFrame)
@@ -1416,6 +1415,17 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
     break;
   }
+
+  // check the visibility in the final pass. If it is collapse, set our desired size to 0
+  if (nsTableFrame::IsFinalPass(aReflowState)) {
+    const nsStyleDisplay *display;
+    GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+      aDesiredSize.width  = 0;
+      aDesiredSize.height = 0;
+    }
+  }
+
 
   // XXX TROY
 #if 0

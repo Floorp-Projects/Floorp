@@ -402,6 +402,8 @@ public:
 
   virtual void AddColumnFrame (nsTableColFrame *aColFrame);
 
+  static PRBool IsFinalPass(const nsReflowState& aReflowState);
+
 protected:
 
   /** protected constructor.

@@ -4949,3 +4949,9 @@ nsTableFrame::GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDispl
   return (nsTableRowGroupFrame*)result;
 }
 
+PRBool
+nsTableFrame::IsFinalPass(const nsReflowState& aState) 
+{
+  return (NS_UNCONSTRAINEDSIZE != aState.availableWidth) ||
+         (NS_UNCONSTRAINEDSIZE != aState.availableHeight);
+}

@@ -643,7 +643,8 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   {
     const nsStyleDisplay *childDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    if ((NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay) &&
+        (NS_STYLE_VISIBILITY_COLLAPSE != childDisplay->mVisible))
     {
       // get the height of the tallest cell in the row (excluding cells that span rows)
       nscoord maxCellHeight       = ((nsTableRowFrame*)rowFrame)->GetTallestChild();
@@ -661,7 +662,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
     }
     // Get the next row
     rowFrame->GetNextSibling(rowFrame);
-  }
+    }
 
   /* Step 2:  Now account for cells that span rows.
    *          A spanning cell's height is the sum of the heights of the rows it spans,
@@ -1027,6 +1028,16 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     if (aDesiredSize.height > aReflowState.availableHeight) {
       // Nope, find a place to split the row group
       SplitRowGroup(aPresContext, aDesiredSize, aReflowState, aStatus);
+    }
+  }
+
+  // check the visibility in the final pass. If it is collapse, set our desired size to 0
+  if (nsTableFrame::IsFinalPass(aReflowState)) {
+    const nsStyleDisplay *display;
+    GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+      aDesiredSize.width  = 0;
+      aDesiredSize.height = 0;
     }
   }
 
