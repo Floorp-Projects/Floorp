@@ -152,17 +152,30 @@ protected:
   nsresult CreateFontStyleForInsertText(nsIDOMNode      *aNewTextNode,
                                         const nsString  &aAttr, 
                                         const nsString  &aValue, 
-                                        nsIDOMSelection *aSelection);
+                                        nsIDOMSelection *aInOutSelection);
 
-  /** create a new style node of type aTag in aParentNode, and put a new text node 
-    * in the new style node.  
-    * If aSelection is provided and points to a text node, just call InsertStyleNode instead.
-    * aSelection is optional.  If provided, aSelection is set to (newTextNode, 0)
+  /** create a new style node of type aTag in aParentNode at aOffset, 
+    * and create a new text node in the new style node.  
+    *
+    * @param aParentNode   the node that will be the parent of the new style node
+    * @param aOffset       the positoin in aParentNode to put the new style node
+    * @param aTag          the type of style node to create
+    *                      no validation of aTag is done, caller is responsible 
+    *                      for passing in a reasonable tag name
+    * @param aAttr         optional attribute to set on new style node
+    *                      ignored if it is an empty string
+    * @param aValue        optional value for aAttr.  Ignored if aAttr is an empty string
+    * @param aInOutSelection    optional.  If provided and if it is collapsed to a text node, 
+    *                           we use the text node and wrap a style node around it.
+    *                           If provided, aSelection is collapsed to (newTextNode, 0)
     * if newTextNode was successfully created.
     */
   nsresult InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, 
-                                       nsIAtom    *aTag, 
-                                       nsIDOMSelection *aSelection);
+                                     PRInt32     aOffset,
+                                     nsIAtom    *aTag,
+                                     const nsString  &aAttr,
+                                     const nsString  &aValue,
+                                     nsIDOMSelection *aSelection);
 
   /** creates a bogus text node if the document has no editable content */
   nsresult CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection);

@@ -71,6 +71,9 @@ public:
   /** must be called before any IMECommitTxn is instantiated */
   static nsresult ClassInit();
 
+  /** must be called once we are guaranteed all IMECommitTxn have completed */
+  static nsresult ClassShutdown();
+
   enum { kTransactionID = 11230 };
 
 protected:

@@ -28,6 +28,12 @@ nsresult IMECommitTxn::ClassInit()
   return NS_OK;
 }
 
+nsresult IMECommitTxn::ClassShutdown()
+{
+  NS_IF_RELEASE(gIMECommitTxnName);
+  return NS_OK;
+}
+
 IMECommitTxn::IMECommitTxn()
   : EditTxn()
 {

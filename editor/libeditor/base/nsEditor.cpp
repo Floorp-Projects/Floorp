@@ -180,6 +180,11 @@ nsEditor::~nsEditor()
     delete mActionListeners;
     mActionListeners = 0;
   }
+
+  /* shut down all classes that needed initialization */
+  InsertTextTxn::ClassShutdown();
+  IMETextTxn::ClassShutdown();
+  IMECommitTxn::ClassShutdown();
 }
 
 
@@ -341,6 +346,7 @@ NS_IMETHODIMP
 nsEditor::Do(nsITransaction *aTxn)
 {
   if (gNoisy) { printf("Editor::Do ----------\n"); }
+  
   nsresult result = NS_OK;
   
   if (mPlaceHolderBatch && !mPlaceHolderTxn)
@@ -366,26 +372,30 @@ nsEditor::Do(nsITransaction *aTxn)
     txn->AddRef();
     Do(txn);
   }
-  
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
+
+  if (aTxn)
+  {  
+    // get the selection and start a batch change
+    nsCOMPtr<nsIDOMSelection>selection;
+    result = GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(result)) { return result; }
+    if (!selection) { return NS_ERROR_NULL_POINTER; }
+
     selection->StartBatchChanges();
-    if (aTxn)
-    {
-      if (mTxnMgr) {
-        result = mTxnMgr->Do(aTxn);
-      }
-      else {
-        result = aTxn->Do();
-      }
-      
-      if (NS_SUCCEEDED(result))
-        result = DoAfterDoTransaction(aTxn);
+    if (mTxnMgr) {
+      result = mTxnMgr->Do(aTxn);
     }
-    
-    selection->EndBatchChanges();
+    else {
+      result = aTxn->Do();
+    }
+    if (NS_SUCCEEDED(result)) {
+      result = DoAfterDoTransaction(aTxn);
+    }
+  
+    selection->EndBatchChanges(); // no need to check result here, don't lose result of operation
   }
+
+  NS_POSTCONDITION((NS_SUCCEEDED(result)), "transaction did not execute properly\n");
 
   return result;
 }
@@ -1446,7 +1456,7 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsString bodyTag = "body"; 
+  nsAutoString bodyTag = "body"; 
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
@@ -2391,6 +2401,7 @@ nsEditor::IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock)
       {
         aIsBlock = PR_TRUE;
       }
+      NS_RELEASE(tagAtom);
       result = NS_OK;
     }
   } else {
