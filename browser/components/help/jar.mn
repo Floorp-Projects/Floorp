@@ -15,7 +15,7 @@ help.jar:
 	locale/en-US/help/popup.xhtml                   (locale/en-US/popup.xhtml)
 	locale/en-US/help/prefs.xhtml                   (locale/en-US/prefs.xhtml)
 	locale/en-US/help/profiles.xhtml                (locale/en-US/profiles.xhtml)
-	locale/en-US/help/shortcuts.xhtml               (locale/en-US/shortcuts.xhtml)
+*      locale/en-US/help/shortcuts.xhtml               (locale/en-US/shortcuts.xhtml)
 	locale/en-US/help/using_firebird.xhtml          (locale/en-US/using_firebird.xhtml)
 	locale/en-US/help/welcome.xhtml                 (locale/en-US/welcome.xhtml)
 	locale/en-US/help/customization.xhtml           (locale/en-US/customization.xhtml)
