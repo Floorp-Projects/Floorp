@@ -69,9 +69,6 @@ nsAcceptLang::~nsAcceptLang()
 NS_IMETHODIMP
 nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_retval)
 {
-#if DEBUG_tao
-  printf("\n--> nsAcceptLang::GetAcceptLangFromLocale <--\n");
-#endif
   nsString lc_name(aLocale);
   if (lc_name.Length() <=0) {
     printf("nsAcceptLang::GetAcceptLangFromLocale: aLocale is empty!");
@@ -88,46 +85,64 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
   }
 
   nsIStringBundle *bundle = nsnull;
+#if 1
+  res = sBundleService->CreateBundle("resource:/res/language.properties",
+                              nsnull, &bundle);
+#else
   res = sBundleService->CreateBundle("chrome://global/locale/languageNames.properties",
                               nsnull, &bundle);
+#endif
   PRUnichar *ptrv = nsnull;
-  if (NS_OK == (res = bundle->GetStringFromName(aLocale, &ptrv))) {
-    // valid name already
-    *_retval = copyUnicode(lc_name);
-    return res;
+  nsString  lc_tmp(aLocale);
+  nsCString sAccept(".accept");
+  nsCString sTrue("true");
+
+  lc_tmp.ToLowerCase();
+  lc_tmp = lc_tmp + sAccept;
+  if (NS_OK == (res = bundle->GetStringFromName(lc_tmp.GetUnicode(), &ptrv))) {
+    nsString tmp(ptrv);
+    if (tmp.Equals(sTrue)) {
+      // valid name already
+      *_retval = copyUnicode(lc_name);
+      return res;
+    }
+  }
+
+  /* not in languageNames.properties; lang only?
+   */
+  PRInt32  dash = lc_tmp.FindCharInSet("-");
+  nsString lang;
+  nsString country;
+  if (dash > 0) {
+    /* lang-country
+     */
+    PRInt32 count = 0;
+    count = lc_tmp.Left(lang, dash);
+    count = lc_tmp.Right(country, (lc_tmp.Length()-dash-1));
+    /* ja-JP -> ja*/
   }
   else {
-    /* not in languageNames.properties; lang only?
-     */
-    PRInt32  dash = lc_name.FindCharInSet("-");
-    nsString lang;
-    nsString country;
-    if (dash > 0) {
-      /* lang-country
-       */
-      PRInt32 count = 0;
-      count = lc_name.Left(lang, dash);
-      count = lc_name.Right(country, (lc_name.Length()-dash-1));
-      /* ja-JP -> ja*/
-    }
-    else {
-      /* ja ?? en-JP 
-         en-JP ->ja (how about product locale or syste, locale ???)
-         ja-EN ->ja
-       */
-      lang = lc_name;
-    }
+    /* ja ?? en-JP 
+       en-JP ->ja (how about product locale or syste, locale ???)
+       ja-EN ->ja
+    */
+    lang = lc_name;
+  }
+  
+  // lang always in lower case; don't convert
+  *_retval = copyUnicode(lang);
+  lang = lang + sAccept;
+  if (NS_OK == (res = bundle->GetStringFromName(lang.GetUnicode(), &ptrv))) {
 
-    *_retval = copyUnicode(lang);
-    if (NS_OK == (res = bundle->GetStringFromName(lang.GetUnicode(), &ptrv))) {
+    nsString tmp(ptrv);
+    if (tmp.Equals(sTrue)) {
       /* lang is accepted */
       return res;
     }
-    else {
-      /* unsupported lang */
-      *_retval = nsnull;
-    }
   }
+
+  /* unsupported lang */
+  *_retval = nsnull;
   return NS_ERROR_FAILURE;
 }
 
@@ -156,32 +171,30 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
     *_retval = copyUnicode(acceptLang);
     return res;
   }
-  else {
-    /* lang only 
-     */
-    NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
-    if (NS_FAILED(res) || (nsnull == sBundleService)) {
-      printf("\n** nsAcceptLang::GetLocaleFromAcceptLang: failed to get nsIStringBundleService!! **\n");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsIStringBundle *bundle = nsnull;
-    /* shall we put the file in res/ instead ? */
-    res = sBundleService->CreateBundle("chrome://global/locale/accept2locale.properties",
-                                nsnull, &bundle);
-    
-    PRUnichar *ptrv = nsnull;
-    if (NS_OK == (res = bundle->GetStringFromName(acceptLang.GetUnicode(), &ptrv))) {
-      
-      // valid name already
-      nsString lc_name(ptrv);
-      *_retval = copyUnicode(lc_name);
-    }
-    else {
-      /* shall we use system locale instead ? */
-    }
+  /* lang only 
+   */
+  NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
+  if (NS_FAILED(res) || (nsnull == sBundleService)) {
+    printf("\n** nsAcceptLang::GetLocaleFromAcceptLang: failed to get nsIStringBundleService!! **\n");
+    return NS_ERROR_FAILURE;
   }
-
+  
+  nsIStringBundle *bundle = nsnull;
+  /* shall we put the file in res/ instead ? */
+  res = sBundleService->CreateBundle("chrome://global/locale/accept2locale.properties",
+                                     nsnull, &bundle);
+    
+  PRUnichar *ptrv = nsnull;
+  if (NS_OK == (res = bundle->GetStringFromName(acceptLang.GetUnicode(), &ptrv))) {
+    
+    // valid name already
+    nsString lc_name(ptrv);
+    *_retval = copyUnicode(lc_name);
+  }
+  else {
+    /* shall we use system locale instead ? */
+  }
+  
   /* ja -> ja-JP
    * en-JP -> ?
    * default -> system locale, product locale, or good guess from aName?
