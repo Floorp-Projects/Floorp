@@ -84,7 +84,7 @@ NS_INTERFACE_MAP_BEGIN(nsNntpUrl)
    NS_INTERFACE_MAP_ENTRY(nsINntpUrl)
    NS_INTERFACE_MAP_ENTRY(nsIMsgMessageUrl)
    NS_INTERFACE_MAP_ENTRY(nsIMsgI18NUrl)
-NS_INTERFACE_MAP_END_INHERITING(nsNntpUrl)
+NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsINntpUrl specific support
