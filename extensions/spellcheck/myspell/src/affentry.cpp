@@ -1,9 +1,9 @@
 #include "license.readme"
 
-#include <cctype>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h> 
+#include <stdio.h> 
 
 #include "affentry.hxx"
 

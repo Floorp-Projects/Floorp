@@ -1,8 +1,8 @@
 #include "license.readme"
 
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "hashmgr.hxx"
 

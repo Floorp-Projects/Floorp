@@ -1,8 +1,8 @@
 #include "license.readme"
-#include <cstdlib>
-#include <cctype>
-#include <cstring>
-#include <cstdio>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "suggestmgr.hxx"
 
