@@ -66,14 +66,14 @@ nsAuthenticationInfoImp::~nsAuthenticationInfoImp()
 }
 
 /* readonly attribute string username; */
-NS_IMETHODIMP nsAuthenticationInfoImp::GetUsername(char * *aUsername)
+NS_IMETHODIMP nsAuthenticationInfoImp::GetUsername(const char * *aUsername)
 {
     *aUsername = mUserName;
     return NS_OK;
 }
 
 /* readonly attribute string password; */
-NS_IMETHODIMP nsAuthenticationInfoImp::GetPassword(char * *aPassword)
+NS_IMETHODIMP nsAuthenticationInfoImp::GetPassword(const char * *aPassword)
 {
     *aPassword = mPassWord;
     return NS_OK;

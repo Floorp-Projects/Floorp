@@ -34,6 +34,7 @@
 
 %}
 
+[ptr] native const_char_ptr(const char);
 
 [noscript, uuid(078a1b99-6be2-4a57-a749-378f4a506097)]
 interface nsIAuthenticationInfo : nsISupports
@@ -42,8 +43,8 @@ interface nsIAuthenticationInfo : nsISupports
     * AuthenticationInfo (username/password pair)
     */
 
-   readonly attribute string  username;
-   readonly attribute string  password;
+   readonly attribute const_char_ptr  username;
+   readonly attribute const_char_ptr  password;
 };
 
 [noscript, uuid(82274a32-a196-42ee-8e3b-fcb73e339518)]
