@@ -70,12 +70,17 @@ void nsEntryStack::Empty(void) {
 void nsEntryStack::Push(eHTMLTags aTag) {
   if(mCount==mCapacity){ 
     nsTagEntry* temp=new nsTagEntry[mCapacity+=50]; 
-    PRUint32 index=0; 
-    for(index=0;index<mCount;index++) {
-      temp[index]=mEntries[index];
+    if(temp){ 
+      PRUint32 index=0; 
+      for(index=0;index<mCount;index++) {
+        temp[index]=mEntries[index];
+      }
+      delete [] mEntries;
+      mEntries=temp;
     }
-    delete [] mEntries;
-    mEntries=temp;
+    else{
+      //XXX HACK! This is very bad! We failed to get memory.
+    }
   }
   mEntries[mCount].mTag=aTag;
   mEntries[mCount].mBankIndex=-1;
@@ -304,8 +309,13 @@ void nsDTDContext::PushStyle(eHTMLTags aTag){
   if(!theStack){
     //time to make a databank for this element...
     theStack=new nsEntryStack();
-    mStyles.Push(theStack);
-    theEntry.mStyleIndex=mStyles.GetSize()-1;
+    if(theStack){
+      mStyles.Push(theStack);
+      theEntry.mStyleIndex=mStyles.GetSize()-1;
+    }
+    else{
+      //XXX Hack! This is very back, we've failed to get memory.
+    }
   }
   if(theStack){
     theStack->Push(aTag);
@@ -348,8 +358,13 @@ void nsDTDContext::SaveToken(CToken* aToken, PRInt32 aID)
     if(!theDeque){
       //time to make a databank for this element...
       theDeque=new nsDeque(0);
-      mSkipped.Push(theDeque);
-      theEntry.mBankIndex=mSkipped.GetSize()-1;
+      if(theDeque){
+        mSkipped.Push(theDeque);
+        theEntry.mBankIndex=mSkipped.GetSize()-1;
+      }
+      else{
+        //XXX Hack! This is very back, we've failed to get memory.
+      }
     }
     theDeque->Push(aToken);
   }

@@ -183,6 +183,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mStreamStatus=0;
   mDTDVerification=PR_FALSE;
   mCharsetSource=kCharsetUninitialized;
+  mInternalState=NS_OK;
 }
 
  
@@ -628,6 +629,9 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
       PushContext(*pc);
       result=NS_OK;
     }
+    else{
+      result=mInternalState=NS_ERROR_HTMLPARSER_BADCONTEXT;
+    }
   }
   return result;
 }
@@ -659,6 +663,9 @@ nsresult nsParser::Parse(nsIInputStream& aStream,PRBool aVerifyEnabled, void* aK
     result=ResumeParse();
     pc=PopContext();
     delete pc;
+  }
+  else{
+    result=mInternalState=NS_ERROR_HTMLPARSER_BADCONTEXT;
   }
   return result;
 }
@@ -775,10 +782,6 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
       if(NS_OK==result) {
      
         result=Tokenize();
-        if(eOnStop==mParserContext->mStreamListenerState){
-          nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
-          mParserContext->mDTD->EmitMisplacedContent(theTokenizer);
-        }
         result=BuildModel();
 
         if((!mParserContext->mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
@@ -797,7 +800,9 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
         }//if
       }//if
     }//if
-    else result=NS_ERROR_HTMLPARSER_UNRESOLVEDDTD;
+    else {
+      mInternalState=result=NS_ERROR_HTMLPARSER_UNRESOLVEDDTD;
+    }
   }//if
   return result;
 }
@@ -818,18 +823,23 @@ nsresult nsParser::BuildModel() {
 //    mParserContext->mCurrentPos=new nsDequeIterator(mParserContext->mTokenDeque.Begin());
 
     //Get the root DTD for use in model building...
+
+  nsresult result=NS_OK;
   CParserContext* theRootContext=mParserContext;
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
-  while(theRootContext->mPrevContext) {
-    theRootContext=theRootContext->mPrevContext;
-  }
+  if(theTokenizer){
+    while(theRootContext->mPrevContext) {
+      theRootContext=theRootContext->mPrevContext;
+    }
 
-  nsIDTD* theRootDTD=theRootContext->mDTD;
-  nsresult result=NS_OK;
-  if(theRootDTD) {
-    result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);
+    nsIDTD* theRootDTD=theRootContext->mDTD;
+    if(theRootDTD) {
+      result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);
+    }
   }
-
+  else{
+    mInternalState=result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
+  }
   return result;
 }
 
@@ -1062,21 +1072,26 @@ nsresult nsParser::Tokenize(){
 
   ++mMajorIteration; 
 
-  WillTokenize();
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
-  while(NS_SUCCEEDED(result)) {
-    mParserContext->mScanner->Mark();
-    ++mMinorIteration;
-    result=theTokenizer->ConsumeToken(*mParserContext->mScanner);
-    if(!NS_SUCCEEDED(result)) {
-      mParserContext->mScanner->RewindToMark();
-      if(kEOF==result){
-        result=NS_OK;
-        break;
+  if(theTokenizer){
+    WillTokenize();
+    while(NS_SUCCEEDED(result)) {
+      mParserContext->mScanner->Mark();
+      ++mMinorIteration;
+      result=theTokenizer->ConsumeToken(*mParserContext->mScanner);
+      if(!NS_SUCCEEDED(result)) {
+        mParserContext->mScanner->RewindToMark();
+        if(kEOF==result){
+          result=NS_OK;
+          break;
+        }
       }
-    }
+    } 
+    DidTokenize();
   } 
-  DidTokenize();
+  else{
+    result=mInternalState=NS_ERROR_HTMLPARSER_BADTOKENIZER;
+  }
   return result;
 }
 
@@ -1110,10 +1125,12 @@ PRBool nsParser::DidTokenize(){
 void nsParser::DebugDumpSource(ostream& aStream) {
   PRInt32 theIndex=-1;
   nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
-  CToken* theToken;
-  while(nsnull != (theToken=theTokenizer->GetTokenAt(++theIndex))) {
-    // theToken->DebugDumpToken(out);
-    theToken->DebugDumpSource(aStream);
+  if(theTokenizer){
+    CToken* theToken;
+    while(nsnull != (theToken=theTokenizer->GetTokenAt(++theIndex))) {
+      // theToken->DebugDumpToken(out);
+      theToken->DebugDumpSource(aStream);
+    }
   }
 }
 
@@ -1128,6 +1145,6 @@ nsresult nsParser::CreateTagStack(nsITagStack** aTagStack){
   *aTagStack=new nsTagStack();
   if(*aTagStack)
     return NS_OK;
-  return NS_ERROR_HTMLPARSER_MEMORYFAILURE;
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 

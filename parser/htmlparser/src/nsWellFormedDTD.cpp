@@ -317,7 +317,9 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifyS
  */
 nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
   nsITokenizer* theTokenizer=GetTokenizer();
-  return theTokenizer->GetTokenRecycler();
+  if(theTokenizer)
+    return theTokenizer->GetTokenRecycler();
+  return 0;
 }
 
 /**
@@ -407,16 +409,6 @@ PRBool CWellFormedDTD::Verify(nsString& aURLRef,nsIParser* aParser) {
  * @return
  */
 void CWellFormedDTD::SetVerification(PRBool aEnabled){
-}
-
-/**
- *  
- *  
- *  @update  gess 4/01/99
- *  @param   aTokenizer 
- *  @return  
- */
-void CWellFormedDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
 }
 
 /**

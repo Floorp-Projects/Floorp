@@ -228,17 +228,19 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength)
   CErrorToken* token= (CErrorToken *) gTokenRecycler->CreateTokenOfType(eToken_error, eHTMLTag_unknown);
   nsParserError *error = new nsParserError;
   PRUint32 byteIndexRelativeToFile = 0;
-  
-  error->code = XML_GetErrorCode(mExpatParser);
-  error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
-  error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
-  error->description = XML_ErrorString(error->code);
-  byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);  
-  SetErrorContextInfo(error, (byteIndexRelativeToFile - mBytesParsed), aBuffer, aLength);  
-  token->SetError(error);
 
-  CToken* theToken = (CToken* )token;
-  AddToken(theToken, NS_OK, *gTokenDeque,gTokenRecycler);
+  if(error){  
+    error->code = XML_GetErrorCode(mExpatParser);
+    error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
+    error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
+    error->description = XML_ErrorString(error->code);
+    byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);  
+    SetErrorContextInfo(error, (byteIndexRelativeToFile - mBytesParsed), aBuffer, aLength);  
+    token->SetError(error);
+
+    CToken* theToken = (CToken* )token;
+    AddToken(theToken, NS_OK, *gTokenDeque,gTokenRecycler);
+  }
 }
 
 nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength){

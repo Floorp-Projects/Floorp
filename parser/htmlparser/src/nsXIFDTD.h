@@ -227,8 +227,6 @@ class nsXIFDTD : public nsIDTD {
      */
     virtual void SetURLRef(char * aURLRef);
 
-    virtual  void EmitMisplacedContent(nsITokenizer* aTokenizer);
-
     /**
      * 
      * @update	jevering 6/18/98

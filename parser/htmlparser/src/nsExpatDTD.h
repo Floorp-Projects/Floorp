@@ -203,8 +203,6 @@ class nsExpatDTD : public nsIDTD {
      */
     virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
-    virtual  void EmitMisplacedContent(nsITokenizer* aTokenizer);
-
     /**
      *  This method gets called to determine whether a given 
      *  tag is itself a container

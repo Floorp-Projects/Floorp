@@ -357,7 +357,9 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
  */
 nsITokenRecycler* CViewSourceHTML::GetTokenRecycler(void){
   nsITokenizer* theTokenizer=GetTokenizer();
-  return theTokenizer->GetTokenRecycler();
+  if(theTokenizer)
+    return theTokenizer->GetTokenRecycler();
+  return 0;
 }
 
 /**
@@ -421,16 +423,6 @@ PRBool CViewSourceHTML::Verify(nsString& aURLRef,nsIParser* aParser) {
  * @return
  */
 void CViewSourceHTML::SetVerification(PRBool aEnabled){
-}
-
-/**
- *  
- *  
- *  @update  gess 4/01/99
- *  @param   aTokenizer 
- *  @return  
- */
-void CViewSourceHTML::EmitMisplacedContent(nsITokenizer* aTokenizer){
 }
 
 /**

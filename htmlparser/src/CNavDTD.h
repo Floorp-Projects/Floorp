@@ -261,8 +261,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      */
     NS_IMETHOD WillInterruptParse(void);
 
-    virtual  void EmitMisplacedContent(nsITokenizer* aTokenizer);
-
     /**
      *  This method is called to determine whether or not a tag
      *  of one type can contain a tag of another type.

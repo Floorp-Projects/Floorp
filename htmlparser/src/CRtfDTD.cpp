@@ -353,15 +353,6 @@ PRBool CRtfDTD::IsContainer(PRInt32 aTag) const{
   return result;
 }
 
-/**
- *  
- *  
- *  @update  gess 4/01/99
- *  @param   aTokenizer 
- *  @return  
- */
-void CRtfDTD::EmitMisplacedContent(nsITokenizer* aTokenizer){
-}
 
 /**
  *  This method is called to determine whether or not a tag

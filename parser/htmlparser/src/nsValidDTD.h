@@ -202,7 +202,6 @@ class CValidDTD : public nsIDTD {
      */
     virtual void SetVerification(PRBool aEnable);
 
-    virtual  void EmitMisplacedContent(nsITokenizer* aTokenizer);
 
     /**
      *  This method is called to determine whether or not a tag
