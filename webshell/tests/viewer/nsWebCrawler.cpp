@@ -152,11 +152,9 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
 
   mBrowser = nsnull;
   mViewer = aViewer;
-  NS_IF_ADDREF(aViewer);
   mTimer = nsnull;
   mCrawl = PR_FALSE;
   mJiggleLayout = PR_FALSE;
-  mFilter = nsnull;
   mPostExit = PR_FALSE;
   mDelay = 0;
   mWidth = -1;
@@ -189,7 +187,6 @@ nsWebCrawler::~nsWebCrawler()
   FreeStrings(mSafeDomains);
   FreeStrings(mAvoidDomains);
   NS_IF_RELEASE(mBrowser);
-  NS_IF_RELEASE(mViewer);
   NS_IF_RELEASE(mTimer);
   NS_IF_RELEASE(mLinkTag);
   NS_IF_RELEASE(mFrameTag);
@@ -198,8 +195,6 @@ nsWebCrawler::~nsWebCrawler()
   NS_IF_RELEASE(mSrcAttr);
   NS_IF_RELEASE(mBaseHrefAttr);
   delete mVisited;
-  if (nsnull!=mFilter)
-    delete mFilter;
 }
 
 NS_IMPL_ISUPPORTS(nsWebCrawler, kIStreamObserverIID)
@@ -276,7 +271,7 @@ nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
     NS_RELEASE(shell);
   }
 
-  if ((nsnull != mFilter) || (mOutputDir.Length() > 0)) {
+  if (mOutputDir.Length() > 0) {
     nsIPresShell* shell = GetPresShell();
     if (nsnull != shell) {
       nsIFrame* root;
@@ -410,15 +405,6 @@ nsWebCrawler::AddAvoidDomain(const nsString& aDomain)
 {
   nsString* s = new nsString(aDomain);
   mAvoidDomains.AppendElement(s);
-}
-
-void 
-nsWebCrawler::SetFilter(const nsString& aFilter)
-{
-  if (nsnull==mFilter)
-    mFilter = new nsString(aFilter);
-  else
-    (*mFilter) = aFilter;
 }
 
 void 
@@ -758,112 +744,20 @@ nsWebCrawler::GetPresShell()
   return shell;
 }
 
-static nsresult
-LoadOneTree(const nsString& aBaseName, const nsString& aOutputName,
-            nsIFrameUtil* aFrameUtil,
-            nsIXMLContent** aResult)
+static FILE*
+OpenRegressionFile(const nsString& aBaseName, const nsString& aOutputName)
 {
   nsAutoString a;
   a.Append(aBaseName);
   a.Append("/");
   a.Append(aOutputName);
   char* fn = a.ToNewCString();
-  printf("Reading regression data from %s\n", fn);
   FILE* fp = fopen(fn, "r");
-  delete fn;
   if (!fp) {
-    printf("Unable to open regression data file\n");
-    return NS_ERROR_FAILURE;
+    printf("Unable to open regression data file %s\n", fn);
   }
-  nsresult rv = aFrameUtil->ReadFrameRegressionData(fp, aResult);
-  if (NS_FAILED(rv)) {
-    printf("can't decode regression data into an xml tree\n");
-    return rv;
-  }
-  return NS_OK;
-}
-
-static nsIAtom* kX = NS_NewAtom("x");
-static nsIAtom* kY = NS_NewAtom("y");
-static nsIAtom* kW = NS_NewAtom("w");
-static nsIAtom* kH = NS_NewAtom("h");
-
-static void
-GetBBOX(nsIXMLContent* aContent, nsString& aResult)
-{
-  nsAutoString x, y, w, h;
-  aContent->GetAttribute(kNameSpaceID_None, kX, x);
-  aContent->GetAttribute(kNameSpaceID_None, kY, y);
-  aContent->GetAttribute(kNameSpaceID_None, kW, w);
-  aContent->GetAttribute(kNameSpaceID_None, kH, h);
-  aResult = x;
-  aResult.Append(",");
-  aResult.Append(y);
-  aResult.Append(",");
-  aResult.Append(w);
-  aResult.Append(",");
-  aResult.Append(h);
-}
-
-static PRBool
-CompareBBOX(nsIXMLContent* aA, nsString& aR1, nsIXMLContent* aB, nsString& aR2)
-{
-  GetBBOX(aA, aR1);
-  GetBBOX(aB, aR2);
-  return aR1.Equals(aR2);
-}
-
-static PRBool
-CompareContainer(nsIXMLContent* aA, nsIXMLContent* aB)
-{
-  if (nsnull == aA) {
-    if (nsnull != aB) {
-      printf("tree structure mismatch\n");
-      return PR_FALSE;
-    }
-  }
-  else if (nsnull == aB) {
-    printf("tree structure mismatch\n");
-    return PR_FALSE;
-  }
-  nsAutoString r1, r2;
-  if (!CompareBBOX(aA, r1, aB, r2)) {
-    printf("bbox mismatch: a=");
-    fputs(r1, stdout);
-    printf(" b=");
-    fputs(r2, stdout);
-    printf("\n");
-    return PR_FALSE;
-  }
-
-  PRInt32 i, ca, cb;
-  aA->ChildCount(ca);
-  aB->ChildCount(cb);
-  if (ca != cb) {
-    printf("child count mismatch\n");
-    return PR_FALSE;
-  }
-  PRBool done = PR_FALSE;
-  for (i = 0; (i < ca) && !done; i++) {
-    nsIContent* kida;
-    nsIContent* kidb;
-    aA->ChildAt(i, kida);
-    aB->ChildAt(i, kidb);
-    nsIXMLContent* xkida;
-    nsIXMLContent* xkidb;
-    if (NS_SUCCEEDED(kida->QueryInterface(kIXMLContentIID, (void**) &xkida)) &&
-        NS_SUCCEEDED(kidb->QueryInterface(kIXMLContentIID, (void**) &xkidb))) {
-      PRBool status = CompareContainer(xkida, xkidb);
-      NS_IF_RELEASE(xkida);
-      NS_IF_RELEASE(xkidb);
-      if (!status) {
-        done = PR_TRUE;
-      }
-    }
-    NS_IF_RELEASE(kida);
-    NS_IF_RELEASE(kidb);
-  }
-  return PR_TRUE;
+  delete fn;
+  return fp;
 }
 
 // Load up both data files (original and the one we just output) into
@@ -879,25 +773,21 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
     printf("Can't find nsIFrameUtil implementation\n");
     return;
   }
-  nsIXMLContent* atree;
-  rv = LoadOneTree(mRegressionDir, aOutputName, fu, &atree);
-  if (NS_FAILED(rv)) {
+  FILE* f1 = OpenRegressionFile(mRegressionDir, aOutputName);
+  if (!f1) {
     NS_RELEASE(fu);
     return;
   }
-atree->List(stdout, 0);
-  nsIXMLContent* btree;
-  rv = LoadOneTree(mOutputDir, aOutputName, fu, &btree);
-  if (NS_FAILED(rv)) {
-    NS_IF_RELEASE(atree);
+  FILE* f2 = OpenRegressionFile(mOutputDir, aOutputName);
+  if (!f2) {
+    fclose(f1);
     NS_RELEASE(fu);
     return;
   }
+  rv = fu->CompareRegressionData(f1, f2);
+  fclose(f1);
+  fclose(f2);
   NS_RELEASE(fu);
 
-  // Now compare the trees
-  PRBool passed = CompareContainer(atree, btree);
-  NS_IF_RELEASE(atree);
-  NS_IF_RELEASE(btree);
-  printf("regression test %s\n", passed ? "passed" : "failed");
+  printf("regression test %s\n", NS_SUCCEEDED(rv) ? "passed" : "failed");
 }
