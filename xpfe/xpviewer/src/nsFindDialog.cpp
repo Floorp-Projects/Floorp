@@ -21,6 +21,7 @@
 #include "nsIXPBaseWindow.h"
 
 #include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLDocument.h"
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 //-------------------------------------------------------------------------
@@ -45,22 +46,27 @@ nsFindDialog::~nsFindDialog()
 //---------------------------------------------------------------
 void nsFindDialog::Initialize(nsIXPBaseWindow * aWindow) 
 {
-  aWindow->FindDOMElement("find",       mFindBtn);
-  aWindow->FindDOMElement("cancel",     mCancelBtn);
-  aWindow->FindDOMElement("searchup",     mUpRB);
-  aWindow->FindDOMElement("searchdown", mDwnRB);
-  aWindow->FindDOMElement("matchcase",  mMatchCaseCB);
+  nsIDOMHTMLDocument *doc = nsnull;
+  aWindow->GetDocument(doc);
+  if (nsnull != doc) {
+    doc->GetElementById("find",       &mFindBtn);
+    doc->GetElementById("cancel",     &mCancelBtn);
+    doc->GetElementById("searchup",     &mUpRB);
+    doc->GetElementById("searchdown", &mDwnRB);
+    doc->GetElementById("matchcase",  &mMatchCaseCB);
 
-  // XXX: Register event listening on each dom element. We should change this so
-  // all DOM events are automatically passed through.
-  aWindow->AddEventListener(mFindBtn);
-  aWindow->AddEventListener(mCancelBtn);
-  aWindow->AddEventListener(mUpRB);
-  aWindow->AddEventListener(mDwnRB);
+    // XXX: Register event listening on each dom element. We should change this so
+    // all DOM events are automatically passed through.
+    aWindow->AddEventListener(mFindBtn);
+    aWindow->AddEventListener(mCancelBtn);
+    aWindow->AddEventListener(mUpRB);
+    aWindow->AddEventListener(mDwnRB);
 
-  SetChecked(mUpRB, PR_FALSE);
-  SetChecked(mDwnRB, PR_TRUE);
-  SetChecked(mMatchCaseCB, PR_FALSE);
+    SetChecked(mUpRB, PR_FALSE);
+    SetChecked(mDwnRB, PR_TRUE);
+    SetChecked(mMatchCaseCB, PR_FALSE);
+    NS_RELEASE(doc);
+  }
 }
 
 //-----------------------------------------------------------------
@@ -104,24 +110,29 @@ nsFindDialog::DoFind(nsIXPBaseWindow * aWindow)
   // Now we have the content tree, lets find the 
   // widgets holding the info.
 
-  nsIDOMElement * textNode;
-  if (NS_OK == aWindow->FindDOMElement("query", textNode)) {
-    nsIDOMHTMLInputElement * element;
-    if (NS_OK == textNode->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element)) {
-      nsString str;
-      PRBool foundIt = PR_FALSE;
-      element->GetValue(str);
-      PRBool searchDown = IsChecked(mDwnRB);
-      PRBool matchcase  = IsChecked(mMatchCaseCB);
+  nsIDOMElement * textNode = nsnull;
+  nsIDOMHTMLDocument *doc = nsnull;
+  aWindow->GetDocument(doc);
+  if (nsnull != doc) {
+    if (NS_OK == doc->GetElementById("query", &textNode)) {
+      nsIDOMHTMLInputElement * element;
+      if (NS_OK == textNode->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element)) {
+        nsString str;
+        PRBool foundIt = PR_FALSE;
+        element->GetValue(str);
+        PRBool searchDown = IsChecked(mDwnRB);
+        PRBool matchcase  = IsChecked(mMatchCaseCB);
 
-      mBrowserWindow->FindNext(str, matchcase, searchDown, foundIt);
-      if (foundIt) {
-        mBrowserWindow->ForceRefresh();
+        mBrowserWindow->FindNext(str, matchcase, searchDown, foundIt);
+        if (foundIt) {
+          mBrowserWindow->ForceRefresh();
+        }
+
+        NS_RELEASE(element);
       }
-
-      NS_RELEASE(element);
+      NS_RELEASE(textNode);
     }
-    NS_RELEASE(textNode);
+    NS_RELEASE(doc);
   }
 }
 

@@ -48,6 +48,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsWindowListener.h"
 
 
@@ -81,6 +82,7 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID,   NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 
@@ -486,99 +488,25 @@ NS_IMETHODIMP nsXPBaseWindow::AddWindowListener(nsWindowListener * aWindowListen
   }
   return NS_OK;
 }
-//-----------------------------------------------------
-nsIDOMNode * nsXPBaseWindow::SearchTree(nsIDOMNode *aNode, const nsString &aId) 
-{
-  nsString idStr("id");
-  PRUint16 nodeType = 0;
-
-  aNode->GetNodeType(&nodeType);
-  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-    nsIDOMElement* nodeElement;
-    nsresult result = aNode->QueryInterface(kIDOMElementIID, (void**) &nodeElement);
-    if (NS_OK == result) {
-      nsString id;
-      if (NS_OK == nodeElement->GetDOMAttribute(idStr, id)) {
-        if (id == aId) {
-          NS_RELEASE(nodeElement);
-          return(aNode);
-        }
-        NS_RELEASE(nodeElement);
-      }
-    }
-  }
-
-  PRBool hasChildren;
-  aNode->HasChildNodes(&hasChildren);
-  if (hasChildren) {
-    nsIDOMNode * childNode;
-    aNode->GetFirstChild(&childNode);
-    while (childNode != nsnull) {
-      nsIDOMNode * node = SearchTree(childNode, aId);
-      if (node != nsnull) {
-        return node;
-      }
-      nsIDOMNode * oldChild = childNode;
-      oldChild->GetNextSibling(&childNode);
-      NS_RELEASE(oldChild);
-    }
-  }
-  return nsnull;
-}
 
 //-----------------------------------------------------
-// Find a DOM Node in the tree
-NS_IMETHODIMP nsXPBaseWindow::FindDOMElement(const nsString &aId, nsIDOMElement *& aElement)
+// Get the HTML Document
+NS_IMETHODIMP nsXPBaseWindow::GetDocument(nsIDOMHTMLDocument *& aDocument)
 {
-  aElement = nsnull;
-  nsIDOMNode* bodyContent = nsnull;
-  nsIDOMElement *root = nsnull;
-  nsresult rv = mContentRoot->QueryInterface(kIDOMElementIID,(void **)&root);
-  if (NS_OK != rv) {
-    return(nsnull);
-  }
-
-  nsString bodyStr("BODY");
-  nsIDOMNode * child;
-  root->GetFirstChild(&child);
-
-  while (child != nsnull) {
-    nsIDOMElement* domElement;
-    nsresult rv = child->QueryInterface(kIDOMElementIID,(void **)&domElement);
-    if (NS_OK == rv) {
-      nsString tagName;
-      domElement->GetTagName(tagName);
-      if (bodyStr.EqualsIgnoreCase(tagName)) {
-        bodyContent = child;
-        break;
-      }
-      NS_RELEASE(domElement);
+  nsIDOMHTMLDocument *htmlDoc = nsnull;
+  nsIPresShell *shell = nsnull;
+  GetPresShell(shell);
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsresult result = doc->QueryInterface(kIDOMHTMLDocumentIID,(void **)&htmlDoc);
+      NS_RELEASE(doc);
     }
-    nsIDOMNode * node = child;
-    NS_RELEASE(child);
-    node->GetNextSibling(&child);
+    NS_RELEASE(shell);
   }
 
-  if (bodyContent == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-
-  //printRefs(bodyContent, 0);
-
-  NS_ADDREF(bodyContent);    
-  // Search the rest of the tree looking for a node with
-  // a matching id
-  nsIDOMNode* node = SearchTree(bodyContent, aId);
-
-  if (nsnull != node) {
-     nsIDOMElement* nodeElement;
-     nsresult result = node->QueryInterface(kIDOMElementIID, (void**) &nodeElement);
-     if (NS_OK == result) {
-       aElement = nodeElement;
-       return NS_OK;
-     }
-  }
-  return(nsnull);
+  aDocument = htmlDoc;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------
