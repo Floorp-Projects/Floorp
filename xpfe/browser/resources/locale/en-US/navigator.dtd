@@ -63,10 +63,7 @@
 <!ENTITY smallestTextSizeCmd.label "Smallest">
 <!ENTITY smallestTextSizeCmd.accesskey "a">
 <!ENTITY useStyleSheetMenu.label "Use Stylesheet">
-<!ENTITY useStyleSheetDefaultCmd.label "Default">
-<!ENTITY useStyleSheetEasyReadingCmd.label "Easy Reading">
-<!ENTITY useStyleSheetMaxInfoCmd.label "Maximum Information">
-<!ENTITY useStlyleSheetBizarreCmd.label "Bizarre">
+<!ENTITY useStyleSheetNone.label "None">
 <!ENTITY reloadCmd.label "Reload">
 <!ENTITY showImagesCmd.label "Show Images">
 <!ENTITY stopCmd.label "Stop">

@@ -1686,3 +1686,65 @@ function FillInHTMLTooltip ( tipElement )
   
   return retVal;
 }
+
+
+/**
+ * Use Stylesheet functions. 
+ *     Written by Tim Hill (bug 6782)
+ **/
+function stylesheetFillPopup(forDocument, menuPopup, itmNoOptStyles) {
+  children = menuPopup.childNodes;
+  ccount = children.length;
+  for (i=0; i<ccount; i++) {
+    mnuitem = children[i];
+    if (mnuitem.getAttribute("class") == "authssmenuitem")
+      menuPopup.removeChild(mnuitem);
+  }
+
+  checkNoOptStyles = true;
+  var numSS = forDocument.styleSheets.length;
+  var SS = forDocument.styleSheets;
+  existingSS = new Array();
+
+  for (var i=0; i<numSS; i++) {
+    curSS = SS[i];
+
+    if (curSS.title == "") continue;
+
+    if (!curSS.disabled)
+      checkNoOptStyles = false;
+
+    lastWithSameTitle = existingSS[curSS.title];
+    if (lastWithSameTitle == undefined) {
+      mnuitem = document.createElement("menuitem");
+      mnuitem.setAttribute("value", curSS.title);
+      mnuitem.setAttribute("data", curSS.title);
+      mnuitem.setAttribute("type", "radio");
+      mnuitem.setAttribute("checked", !curSS.disabled);
+      mnuitem.setAttribute("class", "authssmenuitem");
+      mnuitem.setAttribute("name", "authorstyle");
+      mnuitem.setAttribute("oncommand", "stylesheetSwitch(window._content.document, this.getAttribute('data'))");
+      menuPopup.appendChild(mnuitem);
+      existingSS[curSS.title] = mnuitem;
+    }
+    else {
+      if (curSS.disabled) lastWithSameTitle.setAttribute("checked", false);
+    }
+  }
+  itmNoOptStyles.setAttribute("checked", checkNoOptStyles);
+}
+
+function stylesheetSwitch(forDocument, title) {
+  docStyleSheets = forDocument.styleSheets;
+  numSS = docStyleSheets.length;
+
+  for (i=0; i<numSS; i++) {
+    docStyleSheet = docStyleSheets[i];
+    if (docStyleSheet.title == "") {
+      if (docStyleSheet.disabled == true)
+        docStyleSheet.disabled = false;
+      continue;
+    }
+    docStyleSheet.disabled = (title != docStyleSheet.title);
+  }
+}
