@@ -298,10 +298,14 @@ protected:
   virtual PRBool ExcludeFrameFromReflow(nsIFrame* aFrame) { return PR_FALSE; };
   virtual nsIFrame* GetFirstFrameForReflow(nsIPresContext& aPresContext) { return mFrames.FirstChild(); };
   virtual void GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFrame* aFrame, nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
+  void GetNextRowSibling(nsIFrame** aRowFrame);
+
+public:
   virtual nsIFrame* GetFirstFrame() { return mFrames.FirstChild(); };
   virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); };
   virtual void GetNextFrame(nsIFrame* aFrame, nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
-  void GetNextRowSibling(nsIFrame** aRowFrame);
+  virtual PRBool RowsDesireExcessSpace() { return PR_TRUE; };
+  virtual PRBool RowGroupDesiresExcessSpace() { return PR_TRUE; };
 
 private:
   nsIAtom *mType;

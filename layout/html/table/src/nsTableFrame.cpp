@@ -4205,8 +4205,8 @@ void nsTableFrame::DistributeSpaceToCells(nsIPresContext& aPresContext,
                                    nsIFrame* aRowGroupFrame)
 {
   // now that all of the rows have been resized, resize the cells       
-  nsTableIterator iter2(*aRowGroupFrame, eTableLTR);
-  nsIFrame* rowFrame = iter2.First();
+  nsTableRowGroupFrame* rowGroupFrame = (nsTableRowGroupFrame*)aRowGroupFrame;
+  nsIFrame * rowFrame = rowGroupFrame->GetFirstFrame();
   while (nsnull!=rowFrame) {
     const nsStyleDisplay *rowDisplay;
     rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
@@ -4216,7 +4216,7 @@ void nsTableFrame::DistributeSpaceToCells(nsIPresContext& aPresContext,
     // The calling function, DistributeSpaceToRows, takes care of the recursive row
     // group descent, which is why there's no NS_STYLE_DISPLAY_TABLE_ROW_GROUP case
     // here.
-    rowFrame = iter2.Next();
+    rowGroupFrame->GetNextFrame(rowFrame, &rowFrame);
   }
 }
 
@@ -4229,9 +4229,8 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
 {
   // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
   // and the rowgroup itself needs to be expanded by SUM(row height deltas)
-  nsIFrame * rowFrame=nsnull;
-  nsTableIterator iter(*aRowGroupFrame, eTableLTR);
-  rowFrame = iter.First();
+  nsTableRowGroupFrame* rowGroupFrame = (nsTableRowGroupFrame*)aRowGroupFrame;
+  nsIFrame * rowFrame = rowGroupFrame->GetFirstFrame();
   nscoord y = 0;
   while (nsnull!=rowFrame)
   {
@@ -4247,19 +4246,23 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
       rowFrame->GetRect(rowRect);
       float percent = ((float)(rowRect.height)) / ((float)(aSumOfRowHeights));
       nscoord excessForRow = NSToCoordRound((float)aExcess*percent);
-      nsRect newRowRect(rowRect.x, y, rowRect.width, excessForRow+rowRect.height);
-      rowFrame->SetRect(newRowRect);
-      if (NS_STYLE_BORDER_COLLAPSE==aTableStyle->mBorderCollapse)
-      {
-        nsBorderEdge *border = (nsBorderEdge *)
-          (mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
-        border->mLength=newRowRect.height;
-        border = (nsBorderEdge *)
-          (mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
-        border->mLength=newRowRect.height;
+
+      if (rowGroupFrame->RowsDesireExcessSpace()) {
+        nsRect newRowRect(rowRect.x, y, rowRect.width, excessForRow+rowRect.height);
+        rowFrame->SetRect(newRowRect);
+        if (NS_STYLE_BORDER_COLLAPSE==aTableStyle->mBorderCollapse)
+        {
+          nsBorderEdge *border = (nsBorderEdge *)
+            (mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
+          border->mLength=newRowRect.height;
+          border = (nsBorderEdge *)
+            (mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(((nsTableRowFrame*)rowFrame)->GetRowIndex()));
+          border->mLength=newRowRect.height;
+        }
+        // better if this were part of an overloaded row::SetRect
+        y += excessForRow+rowRect.height;
       }
-      // better if this were part of an overloaded row::SetRect
-      y += excessForRow+rowRect.height;
+
       aExcessForRowGroup += excessForRow;
     }
     else
@@ -4269,14 +4272,17 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
       y += rowRect.height;
     }
 
-    rowFrame = iter.Next();
+    rowGroupFrame->GetNextFrame(rowFrame, &rowFrame);
   }
-  nsRect rowGroupRect;
-  aRowGroupFrame->GetRect(rowGroupRect);
-  nsRect newRowGroupRect(rowGroupRect.x, aRowGroupYPos, rowGroupRect.width, aExcessForRowGroup+rowGroupRect.height);
-  aRowGroupFrame->SetRect(newRowGroupRect);
 
-  aRowGroupYPos += aExcessForRowGroup + rowGroupRect.height;
+  nsRect rowGroupRect;
+  aRowGroupFrame->GetRect(rowGroupRect);  
+  if (rowGroupFrame->RowGroupDesiresExcessSpace()) {
+    nsRect newRowGroupRect(rowGroupRect.x, aRowGroupYPos, rowGroupRect.width, aExcessForRowGroup+rowGroupRect.height);
+    aRowGroupFrame->SetRect(newRowGroupRect);
+    aRowGroupYPos += aExcessForRowGroup + rowGroupRect.height;
+  }
+  else aRowGroupYPos += rowGroupRect.height;
 
   DistributeSpaceToCells(aPresContext, aReflowState, aRowGroupFrame);
 }

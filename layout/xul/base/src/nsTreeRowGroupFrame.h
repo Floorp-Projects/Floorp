@@ -41,6 +41,12 @@ public:
   NS_IMETHOD  TreeInsertFrames(nsIFrame*       aPrevFrame,
                                nsIFrame*       aFrameList);
 
+  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  void PaintChildren(nsIPresContext&      aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer);
+
   PRBool ContinueReflow(nscoord y, nscoord height);
 
   PRBool IsFull() { return mIsFull; };
@@ -48,12 +54,18 @@ public:
   // Responses to changes
   void OnContentAdded(nsIPresContext& aPresContext);
 
+  virtual nsIFrame* GetFirstFrame();
+  virtual nsIFrame* GetLastFrame();
+  virtual void GetNextFrame(nsIFrame* aFrame, nsIFrame** aResult);
+  virtual PRBool RowsDesireExcessSpace() { return PR_FALSE; };
+  virtual PRBool RowGroupDesiresExcessSpace();
+
 protected:
   nsTreeRowGroupFrame();
   virtual ~nsTreeRowGroupFrame();
 
-  virtual PRBool RowGroupReceivesExcessSpace() { return PR_FALSE; };
-
+  virtual PRBool RowGroupReceivesExcessSpace();
+  
   NS_IMETHOD     ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowGroupReflowState& aReflowState,
@@ -62,10 +74,6 @@ protected:
 
   virtual nsIFrame* GetFirstFrameForReflow(nsIPresContext& aPresContext);
   virtual void GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFrame* aFrame, nsIFrame** aResult);
-
-  virtual nsIFrame* GetFirstFrame();
-  virtual nsIFrame* GetLastFrame();
-  virtual void GetNextFrame(nsIFrame* aFrame, nsIFrame** aResult);
 
   void LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult);
 
