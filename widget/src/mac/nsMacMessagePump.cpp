@@ -224,7 +224,6 @@ nsRefData			*theRefData;
 			// take care of the childern
 			thewindow->DoPaintWidgets(updateregion,pEvent.renderingContext);
 	    }
-		
 		}
 	
 	::SetPort(curport);
@@ -275,10 +274,10 @@ PRInt16				partcode;
 nsWindow			*thewindow;
 nsMouseEvent	mouseevent;
 nsSizeEvent 	event;
-nsEventStatus	eventStatus;
 nsRect				sizerect;
 Point					newPt;
 nsRefData			*theRefData;
+nsPaintEvent 	pEvent;
 
 	partcode = FindWindow(aTheEvent->where,&whichwindow);
 
@@ -409,6 +408,21 @@ nsRefData			*theRefData;
 			        event.eventStructType = NS_SIZE_EVENT;
 			        event.widget = thewindow;
 							thewindow->OnResize(event);
+
+
+							// generate a paint event
+							pEvent.message = NS_PAINT;
+				      pEvent.renderingContext = thewindow->GetRenderingContext();
+							pEvent.widget = thewindow;
+							pEvent.eventStructType = NS_PAINT_EVENT;
+							pEvent.point.x = 0;
+							pEvent.point.y = 0;
+							pEvent.rect = &sizerect;
+							pEvent.time = 0; 
+							thewindow->OnPaint(pEvent);
+
+							// take care of the childern
+							thewindow->DoPaintWidgets(thewindow->mWindowRegion,pEvent.renderingContext);
 						}
 #ifdef DRAW_ON_RESIZE
 					}
