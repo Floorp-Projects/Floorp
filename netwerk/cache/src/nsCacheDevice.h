@@ -35,8 +35,6 @@ class nsCacheEntry;
 
 class nsCacheDevice {
 public:
-    virtual ~nsCacheDevice() = 0;
-
     virtual const char *  GetDeviceID(void) = 0;
 
     virtual nsresult ActivateEntryIfFound( nsCacheEntry * entry ) = 0;

@@ -19,12 +19,17 @@
 #
 # Contributor(s): 
 
-MODULE = necko
-LIBRARY_NAME=nkcacheservice_s
+MODULE = nkcacheservice
+DLLNAME=nkcacheservice
+
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+MAKE_OBJ_TYPE=DLL
 
 DEPTH = ..\..\..
 include <$(DEPTH)/config/config.mak>
 
+LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 EXPORTS = \
 		nsCacheService.h    \
@@ -32,20 +37,28 @@ EXPORTS = \
 
 CPP_OBJS = \
 	.\$(OBJDIR)\nsCacheEntry.obj			\
-	.\$(OBJDIR)\nsCacheEntryDescriptor.obj  \
+	.\$(OBJDIR)\nsCacheEntryDescriptor.obj          \
 	.\$(OBJDIR)\nsCacheMetaData.obj			\
 	.\$(OBJDIR)\nsCacheModule.obj			\
-    .\$(OBJDIR)\nsCacheService.obj			\
+	.\$(OBJDIR)\nsCacheService.obj			\
 	.\$(OBJDIR)\nsCacheSession.obj			\
 	.\$(OBJDIR)\nsDiskCacheDevice.obj		\
 	.\$(OBJDIR)\nsMemoryCacheDevice.obj		\
 	$(NULL)
 
 
+LLIBS	= \
+	$(LIBNSPR) \
+	$(DIST)\lib\xpcom.lib \
+	$(NULL)
+
 include <$(DEPTH)/config/rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY_NAME) $(DIST)\lib
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+
 
 clobber::
-        rm -rf $(OBJDIR)
+        $(RM) $(DIST)\bin\components\$(DLLNAME).dll
+	$(RM) $(DIST)\lib\$(DLLNAME).lib 
