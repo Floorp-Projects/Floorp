@@ -308,6 +308,7 @@ protected:
    virtual PRBool DispatchWindowEvent(nsGUIEvent* event);
    virtual PRBool DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
    PRBool  DispatchStandardEvent( PRUint32 aMsg);
+   PRBool  DispatchAppCommandEvent(PRUint32 aEventCommand);
    virtual PRBool DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2);
    virtual PRBool DispatchResizeEvent( PRInt32 aClientX, PRInt32 aClientY);
    void GetNonClientBounds(nsRect &aRect);
