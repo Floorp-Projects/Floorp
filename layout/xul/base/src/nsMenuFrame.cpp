@@ -964,8 +964,7 @@ nsMenuFrame::RemoveFrame(nsIPresContext& aPresContext,
   for (int i=0; i < mSpringCount; i++) 
     mSprings[i].clear();
 
-  nsIFrame* popup = mPopupFrames.FirstChild();
-  if (popup == aOldFrame) {
+  if (mPopupFrames.ContainsFrame(aOldFrame)) {
     // Go ahead and remove this frame.
     nsHTMLContainerFrame::RemoveFrame(aPresContext, aPresShell, nsLayoutAtoms::popupList, aOldFrame);
     mPopupFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -986,12 +985,12 @@ nsMenuFrame::InsertFrames(nsIPresContext& aPresContext,
   for (int i=0; i < mSpringCount; i++) 
     mSprings[i].clear();
 
-  nsCOMPtr<nsIContent> menuChildren;
   nsCOMPtr<nsIContent> frameChild;
-  GetMenuChildrenElement(getter_AddRefs(menuChildren));
   aFrameList->GetContent(getter_AddRefs(frameChild));
 
-  if (menuChildren.get() == frameChild.get()) {
+  nsCOMPtr<nsIAtom> tag;
+  frameChild->GetTag(*getter_AddRefs(tag));
+  if (tag && tag.get() == nsXULAtoms::menupopup) {
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
   }
   return nsHTMLContainerFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);  
@@ -1010,12 +1009,12 @@ nsMenuFrame::AppendFrames(nsIPresContext& aPresContext,
   for (int i=0; i < mSpringCount; i++) 
     mSprings[i].clear();
 
-  nsCOMPtr<nsIContent> menuChildren;
   nsCOMPtr<nsIContent> frameChild;
-  GetMenuChildrenElement(getter_AddRefs(menuChildren));
   aFrameList->GetContent(getter_AddRefs(frameChild));
 
-  if (menuChildren.get() == frameChild.get()) {
+  nsCOMPtr<nsIAtom> tag;
+  frameChild->GetTag(*getter_AddRefs(tag));
+  if (tag && tag.get() == nsXULAtoms::menupopup) {
     mPopupFrames.AppendFrames(nsnull, aFrameList);
   }
   
