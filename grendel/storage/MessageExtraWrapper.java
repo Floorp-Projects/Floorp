@@ -257,12 +257,16 @@ class MessageExtraWrapper implements MessageExtra {
       buf.append(Constants.BYTEBUFLINEBREAK);
     }
     buf.append(Constants.BYTEBUFLINEBREAK);
+
+    ByteBuf buf2 = new ByteBuf();
     try {
-      return new SequenceInputStream(buf.makeInputStream(),
-                                     m.getInputStream());
+      buf2.append(m.getContent());
     } catch (IOException ee) {
       throw new MessagingException("I/O error", ee);
     }
+
+    return new SequenceInputStream(buf.makeInputStream(),
+                                   buf2.makeInputStream());
 
   }
 
