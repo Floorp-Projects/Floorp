@@ -23,26 +23,19 @@
 #include "nscore.h"
 
 class nsIStreamListener;
-#ifndef NECKO
 class nsILoadGroup;
-#endif
+
 typedef PRBool (*nsReconnectCB)(void* arg, nsIStreamListener* aListener);
 
 extern "C" NS_GFX_(nsresult)
   NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
-#ifndef NECKO
                         nsILoadGroup* aLoadGroup,
-#endif
                         nsReconnectCB aReconnectCallback,
                         void* aReconnectArg);
 
 extern "C" NS_GFX_(nsresult) 
   NS_NewImageURL(ilIURL **aInstancePtrResult,  
-                 const char *aURL
-#ifndef NECKO
-                 , nsILoadGroup* aLoadGroup
-#endif
-    );
+                 const char *aURL , nsILoadGroup* aLoadGroup);
 
 extern "C" NS_GFX_(nsresult) NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult);
 

@@ -24,7 +24,9 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
-#ifndef NECKO
+#ifdef NECKO
+#include "nsILoadGroup.h"
+#else
 #include "nsIURLGroup.h"
 #endif
 #include "nsITimer.h"
@@ -58,9 +60,7 @@ class ImageConsumer;
 class ImageNetContextImpl : public ilINetContext {
 public:
   ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
-#ifndef NECKO
                       nsILoadGroup* aLoadGroup,
-#endif
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg);
   virtual ~ImageNetContextImpl();
@@ -96,9 +96,7 @@ public:
 
   nsVoidArray *mRequests;
   NET_ReloadMethod mReloadPolicy;
-#ifndef NECKO
   nsILoadGroup* mLoadGroup;
-#endif
   nsReconnectCB mReconnectCallback;
   void* mReconnectArg;
 };
@@ -399,9 +397,7 @@ ImageConsumer::~ImageConsumer()
 }
 
 ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
-#ifndef NECKO
                                          nsILoadGroup* aLoadGroup,
-#endif
                                          nsReconnectCB aReconnectCallback,
                                          void* aReconnectArg)
 {
@@ -439,11 +435,7 @@ ImageNetContextImpl::Clone()
 {
   ilINetContext *cx;
 
-#ifdef NECKO
-  if (NS_NewImageNetContext(&cx, mReconnectCallback, mReconnectArg) == NS_OK)
-#else
   if (NS_NewImageNetContext(&cx, mLoadGroup, mReconnectCallback, mReconnectArg) == NS_OK)
-#endif
   {
     return cx;
   }
@@ -488,11 +480,7 @@ ImageNetContextImpl::CreateURL(const char *aURL,
 {
   ilIURL *url;
 
-#ifdef NECKO
-  if (NS_NewImageURL(&url, aURL) == NS_OK)
-#else
   if (NS_NewImageURL(&url, aURL, mLoadGroup) == NS_OK)
-#endif
   {
     return url;
   }
@@ -597,9 +585,7 @@ ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer)
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
-#ifndef NECKO
                       nsILoadGroup* aLoadGroup,
-#endif
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg)
 {
@@ -609,9 +595,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
   }
   
   ilINetContext *cx = new ImageNetContextImpl(NET_NORMAL_RELOAD,
-#ifndef NECKO
                                               aLoadGroup,
-#endif
                                               aReconnectCallback,
                                               aReconnectArg);
   if (cx == nsnull) {
