@@ -157,10 +157,10 @@ CheckJSFunctionCallerAccess(JSContext *cx, JSObject *obj, jsval id,
 {
     // Currently, this function will be called only when function.caller
     // is accessed. If that changes, we will need to change this function.
-    NS_ASSERTION(nsCRT::strcmp(JS_GetStringChars(JSVAL_TO_STRING(id)),
+    NS_ASSERTION(nsCRT::strcmp(NS_REINTERPRET_CAST(PRUnichar*,
+                                                   JS_GetStringChars(JSVAL_TO_STRING(id))),
                                NS_LITERAL_STRING("caller").get()) == 0,
                  "CheckJSFunctionCallerAccess called for a property other than \'caller\'");
-
     // Get the security manager
     //XXX: Any way to avoid this service lookup?
     nsresult rv;
