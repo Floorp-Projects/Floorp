@@ -1655,17 +1655,23 @@ PresShell::Init(nsIDocument* aDocument,
 NS_IMETHODIMP
 PresShell::PushStackMemory()
 {
-  if (nsnull == mStackArena)
-     mStackArena = new StackArena();
-   
+  if (!mStackArena) {
+    mStackArena = new StackArena();
+    if (!mStackArena)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return mStackArena->Push();
 }
 
 NS_IMETHODIMP
 PresShell::PopStackMemory()
 {
-  if (nsnull == mStackArena)
-     mStackArena = new StackArena();
+  if (!mStackArena) {
+    mStackArena = new StackArena();
+    if (!mStackArena)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return mStackArena->Pop();
 }
@@ -1673,8 +1679,11 @@ PresShell::PopStackMemory()
 NS_IMETHODIMP
 PresShell::AllocateStackMemory(size_t aSize, void** aResult)
 {
-  if (nsnull == mStackArena)
-     mStackArena = new StackArena();
+  if (!mStackArena) {
+    mStackArena = new StackArena();
+    if (!mStackArena)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return mStackArena->Allocate(aSize, aResult);
 }
