@@ -62,7 +62,6 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/wizardOverlay.js \
 		$(srcdir)/wizardOverlay.xul \
 		$(srcdir)/treePopups.js \
-		$(srcdir)/PSMTaskMenu.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
