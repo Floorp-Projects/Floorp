@@ -86,6 +86,11 @@ mozTXTToHTMLConv::UnescapeStr(const nsAutoString& aString)
         result += '&';
         i += 5;
       }
+      else
+      {
+        result += aString[i];
+        i++;
+      }
     }
     else
     {
