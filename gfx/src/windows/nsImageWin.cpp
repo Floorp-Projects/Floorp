@@ -803,6 +803,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
                                    PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aDestRect)
 {
+  NS_ASSERTION(!aDestRect.IsEmpty(), "DrawTile doesn't work with empty rects");
   if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
     return NS_OK;
 
