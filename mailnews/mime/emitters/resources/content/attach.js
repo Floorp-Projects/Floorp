@@ -34,14 +34,6 @@ function OpenAttachURL(url)
   dump(url);
   dump("\n");
   messenger.SetWindow(window, statusFeedback);
-  messenger.OpenURL(url);
+  messenger.openAttachment(url);
 }
 
-function SaveAttachURL(url)
-{
-  dump("\nSaveAttachURL from XUL\n");
-  dump(url);
-  dump("\n");
-  messenger.SetWindow(window, statusFeedback);
-  messenger.OpenURL(url);
-}
