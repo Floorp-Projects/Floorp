@@ -37,6 +37,7 @@
 #include "nsNSSComponent.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIObserverService.h"
@@ -116,6 +117,8 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *window,
                             nsIDOMElement *button)
 {
+fprintf(stderr, "===> nsSecureBrowserUIImpl::Init\n");
+
   nsresult rv = NS_OK;
   mSecurityButton = button;  /* may be null */
   mWindow = window;
