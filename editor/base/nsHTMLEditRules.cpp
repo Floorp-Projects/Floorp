@@ -158,10 +158,6 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
 
   char specialChars[] = {'\t',' ',nbsp,'\n',0};
   
-  // we have to batch this in case there are returns
-  // Insert Break txns don't auto merge with insert text txns
-  nsAutoEditBatch beginBatching(mEditor);
-
   // if the selection isn't collapsed, delete it.
   PRBool bCollapsed;
   res = aSelection->GetIsCollapsed(&bCollapsed);
@@ -193,61 +189,52 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
     }
   }
   
-  // strategy: there are simple cases and harder cases.  The harder cases
-  // we handle recursively by breaking them into a series of simple cases.
-  // The simple cases are:
-  // 1) a single space
-  // 2) a single nbsp
-  // 3) a single tab
-  // 4) a single return
-  // 5) a run of chars containing no spaces, nbsp's, tabs, or returns
   char nbspStr[2] = {nbsp, 0};
   
-    // is it an innocous run of chars?  no spaces, nbsps, returns, tabs?
-    nsString theString(*inString);  // copy instr for now
-    PRInt32 pos = theString.FindCharInSet(specialChars);
-    while (theString.Length())
+  nsString theString(*inString);  // copy instr for now
+  PRInt32 pos = theString.FindCharInSet(specialChars);
+  while (theString.Length())
+  {
+    PRBool bCancel;
+    nsString partialString;
+    // if first char is special, then use just it
+    if (pos == 0) pos = 1;
+    if (pos == -1) pos = theString.Length();
+    theString.Left(partialString, pos);
+    theString.Cut(0, pos);
+    // is it a solo tab?
+    if (partialString == "\t" )
     {
-      PRBool bCancel;
-      nsString partialString;
-      // if first char is special, then use just it
-      if (pos == 0) pos = 1;
-      if (pos == -1) pos = theString.Length();
-      theString.Left(partialString, pos);
-      theString.Cut(0, pos);
-	  // is it a solo tab?
-	  if (partialString == "\t" )
-	  {
-	    res = InsertTab(aSelection,&bCancel,aTxn,outString);
-	    if (NS_FAILED(res)) return res;
-        res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
-	  }
-	  // is it a solo space?
-	  else if (partialString == " ")
-	  {
-	    res = InsertSpace(aSelection,&bCancel,aTxn,outString);
-	    if (NS_FAILED(res)) return res;
-        res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
-	  }
-	  // is it a solo nbsp?
-	  else if (partialString == nbspStr)
-	  {
-	    res = InsertSpace(aSelection,&bCancel,aTxn,outString);
-	    if (NS_FAILED(res)) return res;
-        res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
-	  }
-	  // is it a solo return?
-	  else if (partialString == "\n")
-	  {
-	    res = mEditor->InsertBreak();
-	  }
-	  else
-	  {
-	    res = DoTextInsertion(aSelection, aCancel, aTxn, &partialString, typeInState);
-	  }
-	  if (NS_FAILED(res)) return res;
-      pos = theString.FindCharInSet(specialChars);
+      res = InsertTab(aSelection,&bCancel,aTxn,outString);
+      if (NS_FAILED(res)) return res;
+      res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
     }
+    // is it a solo space?
+    else if (partialString == " ")
+    {
+      res = InsertSpace(aSelection,&bCancel,aTxn,outString);
+      if (NS_FAILED(res)) return res;
+      res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
+    }
+    // is it a solo nbsp?
+    else if (partialString == nbspStr)
+    {
+      res = InsertSpace(aSelection,&bCancel,aTxn,outString);
+      if (NS_FAILED(res)) return res;
+      res = DoTextInsertion(aSelection, aCancel, aTxn, outString, typeInState);
+    }
+    // is it a solo return?
+    else if (partialString == "\n")
+    {
+      res = mEditor->InsertBreak();
+    }
+    else
+    {
+      res = DoTextInsertion(aSelection, aCancel, aTxn, &partialString, typeInState);
+    }
+    if (NS_FAILED(res)) return res;
+    pos = theString.FindCharInSet(specialChars);
+  }
   
   return res;
 }
@@ -374,11 +361,11 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
       if (!offset && (aAction == nsIEditor::eDeletePrevious))
       {
         nsCOMPtr<nsIDOMNode> priorNode;
-        res = mEditor->GetPriorNode(node, PR_TRUE, getter_AddRefs(priorNode));
+        res = GetPriorHTMLNode(node, &priorNode);
         if (NS_FAILED(res)) return res;
         
-        // if there is no prior node, or it's not in the body, then cancel the deletion
-        if (!priorNode || !InBody(priorNode))
+        // if there is no prior node then cancel the deletion
+        if (!priorNode)
         {
           *aCancel = PR_TRUE;
           return res;
@@ -423,7 +410,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
           && (aAction == nsIEditor::eDeleteNext))
       {
         nsCOMPtr<nsIDOMNode> nextNode;
-        res = mEditor->GetNextNode(node, PR_TRUE, getter_AddRefs(nextNode));
+        res = GetNextHTMLNode(node, &nextNode);
         if (NS_FAILED(res)) return res;
          
         // if there is no next node, or it's not in the body, then cancel the deletion
@@ -467,9 +454,9 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESe
       nsCOMPtr<nsIDOMNode> nodeToDelete;
       
       if (aAction == nsIEditor::eDeletePrevious)
-        res = mEditor->GetPriorNode(node, offset, PR_TRUE, getter_AddRefs(nodeToDelete));
+        res = GetPriorHTMLNode(node, offset, &nodeToDelete);
       else if (aAction == nsIEditor::eDeleteNext)
-        res = mEditor->GetNextNode(node, offset, PR_TRUE, getter_AddRefs(nodeToDelete));
+        res = GetNextHTMLNode(node, offset, &nodeToDelete);
       else
         return NS_OK;
         
@@ -1580,6 +1567,87 @@ nsHTMLEditRules::IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// GetPriorHTMLNode: returns the previous editable leaf node, if there is
+//                   one within the <body>
+//                       
+nsresult
+nsHTMLEditRules::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = mEditor->GetPriorNode(inNode, PR_TRUE, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  
+  // if it's not in the body, then zero it out
+  if (*outNode || !InBody(*outNode))
+  {
+    *outNode = nsnull;
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetPriorHTMLNode: same as above but takes {parent,offset} instead of node
+//                       
+nsresult
+nsHTMLEditRules::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = mEditor->GetPriorNode(inParent, inOffset, PR_TRUE, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  
+  // if it's not in the body, then zero it out
+  if (*outNode || !InBody(*outNode))
+  {
+    *outNode = nsnull;
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetNextHTMLNode: returns the previous editable leaf node, if there is
+//                   one within the <body>
+//                       
+nsresult
+nsHTMLEditRules::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = mEditor->GetNextNode(inNode, PR_TRUE, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  
+  // if it's not in the body, then zero it out
+  if (*outNode || !InBody(*outNode))
+  {
+    *outNode = nsnull;
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetNHTMLextNode: same as above but takes {parent,offset} instead of node
+//                       
+nsresult
+nsHTMLEditRules::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode)
+{
+  if (!outNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = mEditor->GetNextNode(inParent, inOffset, PR_TRUE, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  
+  // if it's not in the body, then zero it out
+  if (*outNode || !InBody(*outNode))
+  {
+    *outNode = nsnull;
+  }
+  return res;
+}
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////
 // GetTabAsNBSPs: stuff the right number of nbsp's into outString
 //                       
 nsresult
@@ -1587,7 +1655,7 @@ nsHTMLEditRules::GetTabAsNBSPs(nsString *outString)
 {
   if (!outString) return NS_ERROR_NULL_POINTER;
   // XXX - this should get the right number from prefs
-  *outString += nbsp; *outString += nbsp; *outString += nbsp; *outString += nbsp; 
+  *outString = (char)nbsp; *outString += nbsp; *outString += nbsp; *outString += nbsp; 
   return NS_OK;
 }
 
@@ -1600,7 +1668,7 @@ nsHTMLEditRules::GetTabAsNBSPsAndSpace(nsString *outString)
 {
   if (!outString) return NS_ERROR_NULL_POINTER;
   // XXX - this should get the right number from prefs
-  *outString += nbsp; *outString += nbsp; *outString += nbsp; *outString += ' '; 
+  *outString = (char)nbsp; *outString += nbsp; *outString += nbsp; *outString += ' '; 
   return NS_OK;
 }
 
@@ -2131,7 +2199,7 @@ nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection,
     
   if (isPRE)
   {
-    *outString += '\t';
+    *outString = '\t';
     return NS_OK;
   }
 
@@ -2195,7 +2263,7 @@ nsHTMLEditRules::InsertSpace(nsIDOMSelection *aSelection,
   
   if (isPRE)
   {
-    *outString += " ";
+    *outString = " ";
     return NS_OK;
   }
   
@@ -2213,22 +2281,22 @@ nsHTMLEditRules::InsertSpace(nsIDOMSelection *aSelection,
     // XXX for now put in wrong place
     if (isNextWhiteSpace)
     {
-      *outString += nbsp;
+      *outString = (char)nbsp;
       return NS_OK;
     }
-    *outString += nbsp;
+    *outString = (char)nbsp;
     return NS_OK;
   }
   
   if (isNextWhiteSpace)
   {
     // character after us is ws.  insert nbsp
-    *outString += nbsp;
+    *outString = (char)nbsp;
     return NS_OK;
   }
     
   // else just a space
-  *outString += " ";
+  *outString = " ";
   
   return NS_OK;
 }
@@ -2685,7 +2753,7 @@ nsHTMLEditRules::IsFirstEditableChild( nsIDOMNode *aNode, PRBool *aOutIsFirst)
   if (!mEditor->IsEditable(child))
   {
     nsCOMPtr<nsIDOMNode> tmp;
-    res = mEditor->GetNextNode(child, PR_TRUE, getter_AddRefs(tmp));
+    res = GetNextHTMLNode(child, &tmp);
     if (NS_FAILED(res)) return res;
     if (!tmp) return NS_ERROR_FAILURE;
     child = tmp;
@@ -2717,7 +2785,7 @@ nsHTMLEditRules::IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast)
   if (!mEditor->IsEditable(child))
   {
     nsCOMPtr<nsIDOMNode> tmp;
-    res = mEditor->GetPriorNode(child, PR_TRUE, getter_AddRefs(tmp));
+    res = GetPriorHTMLNode(child, &tmp);
     if (NS_FAILED(res)) return res;
     if (!tmp) return NS_ERROR_FAILURE;
     child = tmp;
@@ -2841,7 +2909,7 @@ nsHTMLEditRules::CleanUpSelection(nsIDOMSelection *aSelection)
   
   // grab anything that can fit in the selection
   nsCOMPtr<nsISupportsArray> arrayOfRanges;
-  nsresult res = GetPromotedRanges(aSelection, &arrayOfRanges, kMakeList);
+  nsresult res = GetPromotedRanges(aSelection, &arrayOfRanges, kDefault);
   if (NS_FAILED(res)) return res;
 
   // and walk it looking for empty nodes
@@ -2962,16 +3030,13 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
   res = mEditor->InsertNode(curNode, curParPar, parOffset);
   if (NS_FAILED(res)) return res;
     
-  // convert list items to divs if we promoted them out of list
+  // remove list items container if we promoted them out of list
   if (!IsList(curParPar) && IsListItem(curNode)) 
   {
-    nsAutoString blockType("div");
-    nsCOMPtr<nsIDOMNode> newBlock;
-    res = ReplaceContainer(curNode,&newBlock,blockType);
+    res = RemoveContainer(curNode);
     *aOutOfList = PR_TRUE;
     if (NS_FAILED(res)) return res;
   }
-
   return res;
 }
 
