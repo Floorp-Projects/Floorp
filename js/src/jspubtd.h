@@ -130,24 +130,31 @@ typedef JSBool
 (* CRT_CALL JSPropertyOp)(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 /*
- *  This function type is used for callbacks that enumerate the properties of a
- *  JSObject.  The behavior depends on the value of enum_op:
+ * This function type is used for callbacks that enumerate the properties of
+ * a JSObject.  The behavior depends on the value of enum_op:
  *
- *    JSENUMERATE_INIT - A new, opaque iterator state should be allocated and
- *           stored in *statep.  (You can use PRIVATE_TO_JSVAL() to store
- *           a pointer in *statep).  The number of properties that will be
- *           enumerated should be returned as an integer jsval in *idp, if idp
- *           is non-NULL.
- *    JSENUMERATE_NEXT - A previously allocated opaque iterator state is passed
- *           in via statep.  Return the next jsid in the iteration using *idp.
- *           The opaque iterator state pointed at by statep is destroyed and
- *           *statep is set to JSVAL_NULL if there are no properties left to
- *           enumerate.
- *    JSENUMERATE_DESTROY - Destroy the opaque iterator previous allocated by
- *           a call to this function with enum_op set to JSENUMERATE_INIT.
+ *  JSENUMERATE_INIT
+ *    A new, opaque iterator state should be allocated and stored in *statep.
+ *    (You can use PRIVATE_TO_JSVAL() to tag the pointer to be stored).
  *
- *   The return value is always used to indicate success, with a value of JS_FALSE
- *   for failure.
+ *    The number of properties that will be enumerated should be returned as
+ *    an integer jsval in *idp, if idp is non-null, and provided the number of
+ *    enumerable properties is known.  If idp is non-null and the number of
+ *    enumerable properties can't be computed in advance, *idp should be set
+ *    to JSVAL_ZERO.
+ *
+ *  JSENUMERATE_NEXT
+ *    A previously allocated opaque iterator state is passed in via statep.
+ *    Return the next jsid in the iteration using *idp.  The opaque iterator
+ *    state pointed at by statep is destroyed and *statep is set to JSVAL_NULL
+ *    if there are no properties left to enumerate.
+ *
+ *  JSENUMERATE_DESTROY
+ *    Destroy the opaque iterator state previously allocated in *statep by a
+ *    call to this function when enum_op was JSENUMERATE_INIT.
+ *
+ * The return value is used to indicate success, with a value of JS_FALSE
+ * indicating failure.
  */
 typedef JSBool
 (* CRT_CALL JSNewEnumerateOp)(JSContext *cx, JSObject *obj,
