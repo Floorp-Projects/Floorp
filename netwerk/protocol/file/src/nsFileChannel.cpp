@@ -107,6 +107,23 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 		} else {
 			nsFilePath filePath(fileString);
 			mSpec = filePath;
+			
+			// Don't assume we actually created a good file spec
+			FSSpec theSpec = mSpec.GetFSSpec();
+			if (!theSpec.name[0])
+			{
+				NS_ERROR("failed to create a file spec");
+
+				// Some temp debugstr hackery so optimized builds display an error message
+				// !!!!!REMOVE THIS ONCE WE GET THE FILE NAME UN-ESCAPING CODE IN
+				DebugStr("\p\rFailed to create a file spec for the specified file.\r"\
+						"This is usually due to having a space somewhere in the path\r"\
+						"to the application (say if your hard drive is named Macintosh HD\r"\
+						"or you're trying to run from the Desktop Folder). We'll fix this soon.");
+				
+				// Since we didn't actually create the file spec we return an error
+				return NS_ERROR_MALFORMED_URI;
+			}
 		}
 #else
 		nsFilePath filePath(fileString);
