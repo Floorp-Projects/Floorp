@@ -687,14 +687,14 @@
 (values
  (length (grammar-states *jg*))
  (depict-rtf-to-local-file
-  "JS20/ParserGrammar.rtf"
+  "JS20/ParserGrammarJS2.rtf"
   "JavaScript 2.0 Parser Grammar"
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *jg*)
       (depict-world-commands markup-stream *jw* :visible-semantics nil)))
  (compute-ecma-subset)
  (depict-rtf-to-local-file
-  "JS20/ParserGrammar ECMA.rtf"
+  "JS20/ParserGrammarES4.rtf"
   "ECMAScript Edition 4 Parser Grammar"
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *eg*)
@@ -703,7 +703,7 @@
 (values
  (length (grammar-states *jg*))
  (depict-html-to-local-file
-  "JS20/ParserGrammar.html"
+  "JS20/ParserGrammarJS2.html"
   "JavaScript 2.0 Parser Grammar"
   t
   #'(lambda (markup-stream)
@@ -711,16 +711,16 @@
       (depict-world-commands markup-stream *jw* :visible-semantics nil)))
  (compute-ecma-subset)
  (depict-html-to-local-file
-  "JS20/ParserGrammar ECMA.html"
+  "JS20/ParserGrammarES4.html"
   "ECMAScript Edition 4 Parser Grammar"
   t
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *eg*)
       (depict-world-commands markup-stream *ew* :visible-semantics nil))))
 
-(with-local-output (s "JS20/ParserGrammar.txt") (print-grammar *jg* s))
+(with-local-output (s "JS20/ParserGrammarJS2 states") (print-grammar *jg* s))
 (compute-ecma-subset)
-(with-local-output (s "JS20/ParserGrammar ECMA.txt") (print-grammar *eg* s))
+(with-local-output (s "JS20/ParserGrammarES4 states") (print-grammar *eg* s))
 |#
 
 (length (grammar-states *jg*))
