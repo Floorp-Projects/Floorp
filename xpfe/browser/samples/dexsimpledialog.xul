@@ -47,7 +47,7 @@
       var taglist = document.getElementsByTagName("*");
 
       element = null;
-      for (ctr = 0; ctr < taglist.length; ctr++)
+      for (ctr = 0; ctr &lt; taglist.length; ctr++)
         if (taglist[ctr].getAttribute("id") == id) {
           element = taglist[ctr];
           break;

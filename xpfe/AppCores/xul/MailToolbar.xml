@@ -74,7 +74,7 @@
                           <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
           </html:button>
           <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
-                  <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
+                  <html:img alt="Throbber!" border="0" src="resource:/res/throbber/anims00.gif"/>
           </html:a>
     </xul:toolbar>
     
