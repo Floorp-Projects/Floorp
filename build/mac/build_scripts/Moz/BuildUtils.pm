@@ -30,6 +30,7 @@ use vars qw(@ISA @EXPORT);
                 StartBuildModule
                 EndBuildModule
                 GetBinDirectory
+                BuildOneProjectWithOutput
                 BuildOneProject
                 BuildIDLProject
                 BuildFolderResourceAliases
@@ -217,16 +218,13 @@ sub BuildIDLProject($$)
 
 
 #//--------------------------------------------------------------------------------------------------
-#// Build one project, and make the alias. Parameters
-#// are project path, target name, make shlb alias (boolean), make xSYM alias (boolean)
-#// 
-#// Note that this routine assumes that the target name and the shared libary name
-#// are the same.
+#// Build one project, and make the alias. Parameters are project path, target name, shared  library
+#// name, make shlb alias (boolean), make xSYM alias (boolean), and is component (boolean).
 #//--------------------------------------------------------------------------------------------------
 
-sub BuildOneProject($$$$$)
+sub BuildOneProjectWithOutput($$$$$$)
 {
-    my ($project_path, $target_name, $alias_shlb, $alias_xSYM, $component) = @_;
+    my ($project_path, $target_name, $output_name, $alias_shlb, $alias_xSYM, $component) = @_;
 
     unless ($project_path =~ m/^$main::BUILD_ROOT.+/) { return; }
     
@@ -242,16 +240,29 @@ sub BuildOneProject($$$$$)
 
     if ($main::CLOBBER_LIBS)
     {
-        unlink "$project_dir$target_name";              # it's OK if these fail
-        unlink "$project_dir$target_name.xSYM";
+        unlink "$project_dir$output_name";              # it's OK if these fail
+        unlink "$project_dir$output_name.xSYM";
     }
     
     BuildProject($project_path, $target_name);
     
-    $alias_shlb ? MakeAlias("$project_dir$target_name", "$dist_dir$component_dir") : 0;
-    $alias_xSYM ? MakeAlias("$project_dir$target_name.xSYM", "$dist_dir$component_dir") : 0;
+    $alias_shlb ? MakeAlias("$project_dir$output_name", "$dist_dir$component_dir") : 0;
+    $alias_xSYM ? MakeAlias("$project_dir$output_name.xSYM", "$dist_dir$component_dir") : 0;
 }
 
+#//--------------------------------------------------------------------------------------------------
+#// For compatiblity with existing scripts, BuildOneProject now just calls
+#// BuildOneProjectWithOutput, with the output name and target name identical.
+#// Note that this routine assumes that the target name and the shared libary name
+#// are the same.
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildOneProject($$$$$)
+{
+    my ($project_path, $target_name, $alias_shlb, $alias_xSYM, $component) = @_;
+	BuildOneProjectWithOutput($project_path, $target_name, $target_name,
+							  $alias_shlb, $alias_xSYM, $component);
+}
 
 #//--------------------------------------------------------------------------------------------------
 #// Make resource aliases for one directory

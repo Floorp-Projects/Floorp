@@ -827,12 +827,15 @@ sub BuildStubs()
 
     my($distdirectory) = ":mozilla:dist";
 
+    # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
+    my($C) = $main::CARBON ? "Carbon" : "";
+
     StartBuildModule("stubs");
 
     #//
     #// Clean projects
     #//
-    BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",                "Stubs");
+    BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp", "Stubs$C");
 
     # because ToolServer can fail mysteriously, explicitly detect failure here
     if (! -e "$distdirectory:client_stubs:NSStdLibStubs")
@@ -1002,6 +1005,11 @@ sub BuildRuntimeProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
+    # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
+    my($C) = $main::CARBON ? "Carbon" : "";
+    my($P) = $main::PROFILE ? "Profil" : "";
+    my($EssentialFiles) = $main::DEBUG ? ":mozilla:dist:viewer_debug:Essential Files:" : ":mozilla:dist:viewer:Essential Files:";
+
     #//
     #// Shared libraries
     #//
@@ -1017,73 +1025,25 @@ sub BuildRuntimeProjects()
     else
     {
         if ($main::UNIVERSAL_INTERFACES_VERSION >= 0x0330) {
-        BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "MacOS Interfaces (3.3)");
+    	    BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "MacOS Interfaces (3.3)");
         } else {
-        BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "MacOS Interfaces");
-    }
+    	    BuildProject(":mozilla:lib:mac:InterfaceLib:Interface.mcp",            "MacOS Interfaces");
+	    }
     }
     
     #// Build all of the startup libraries, for Application, Component, and Shared Libraries. These are
     #// required for all subsequent libraries in the system.
     BuildProject(":mozilla:lib:mac:NSStartup:NSStartup.mcp",                           "NSStartup.all");
     
-    #// for NSRuntime under Carbon, don't use BuildOneProject to alias the shlb or the xsym since the 
-    #// target names differ from the output names. Make them by hand instead.
-    if ( $main::CARBON ) {
-        if ($main::PROFILE) {
-            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeCarbonProfil.shlb", 0, 0, 0);
-        }
-        else {
-            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeCarbon$D.shlb", 0, 0, 0);
-        }
-        MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
-        if ( $main::ALIAS_SYM_FILES ) {
-            MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");      
-        }
-    }
-    else {
-        if ($main::PROFILE) {
-            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntimeProfil.shlb", 0, 0, 0);
-            MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
-            if ( $main::ALIAS_SYM_FILES ) {
-                MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");      
-            }
-        }
-        else {
-            BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",                 "NSRuntime$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-        }
-    }
-    
+    BuildOneProjectWithOutput(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp", "NSRuntime$C$P$D.shlb", "NSRuntime$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+
     BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",          "MoreFiles.o");
     
-    #// for MemAllocator under Carbon, right now we have to use the MSL allocators because sfraser's heap zones
-    #// don't exist in Carbon. Just use different targets. Since this is a static library, we don't have to fuss
-    #// with the aliases and target name mismatches like we did above.
-    if ( $main::CARBON ) {
-        BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",       "MemAllocatorCarbon$D.o");  
-    }
-    else {
-        if ($main::GC_LEAK_DETECTOR) {
-            BuildProject(":mozilla:gc:boehm:macbuild:gc.mcp",                      "gc.ppc.lib");
-            MakeAlias(":mozilla:gc:boehm:macbuild:gc.PPC.lib",                     ":mozilla:dist:gc:gc.PPC.lib");
-            BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp", "MemAllocatorGC.o");
-        } else {
-            BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp", "MemAllocator$D.o");
-        }
-    }
+	BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp", "MemAllocator$C$D.o");
 
-    BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",                       "NSStdLib$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProjectWithOutput(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp", "NSStdLib$C$D.shlb", "NSStdLib$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
-    #// for NSPR under Carbon, have to link against some additional static libraries when NOT building with TARGET_CARBON.
-    if ( $main::CARBON ) {
-        BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",                  "NSPR20$D.shlb (Carbon)", 0, 0, 0);
-        MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
-        if ($main::ALIAS_SYM_FILES) {
-            MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");
-        }
-    } else {
-        BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",                  "NSPR20$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-    }
+	BuildOneProjectWithOutput(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp", "NSPR20$C$D.shlb", "NSPR20$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
     EndBuildModule("runtime");
 }
@@ -1212,17 +1172,14 @@ sub BuildNeckoProjects()
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
 
+    # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
+    my($C) = $main::CARBON ? "Carbon" : "";
+
+    my($Components) = $main::DEBUG ? ":mozilla:dist:viewer_debug:Components:" : ":mozilla:dist:viewer:Components:";
+
     StartBuildModule("necko");
 
-    if ( $main::CARBON ) {
-        BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",                    "Necko$D.shlb (Carbon)", 0, 0, 0);
-        MakeAlias(":mozilla:netwerk:macbuild:Necko$D.shlb",                        ":mozilla:dist:viewer_debug:Components:");
-        if ($main::ALIAS_SYM_FILES) {
-            MakeAlias(":mozilla:netwerk:macbuild:Necko$D.shlb.xSYM",               ":mozilla:dist:viewer_debug:Components:");
-        }
-    } else {
-        BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",                    "Necko$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    }
+    BuildOneProjectWithOutput(":mozilla:netwerk:macbuild:netwerk.mcp", "Necko$C$D.shlb", "Necko$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     
     BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",                   "Necko2$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",                "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1339,6 +1296,8 @@ sub BuildLayoutProjects()
 
     # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
     my($D) = $main::DEBUG ? "Debug" : "";
+    # $C becomes a component of target names for selecting either the Carbon or non-Carbon target of a project
+    my($C) = $main::CARBON ? "Carbon" : "";
     my($dist_dir) = GetBinDirectory();
     
     StartBuildModule("nglayout");
@@ -1377,7 +1336,7 @@ sub BuildLayoutProjects()
     }
     BuildOneProject(":mozilla:layout:macbuild:layout.mcp",                      "layout$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:view:macbuild:view.mcp",                          "view$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:widget:macbuild:widget.mcp",                      "widget$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+    BuildOneProjectWithOutput(":mozilla:widget:macbuild:widget.mcp",            "widget$C$D.shlb", "widget$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:docshell:macbuild:docshell.mcp",                  "docshell$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",              "RaptorShell$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
@@ -1458,7 +1417,7 @@ sub BuildEmbeddingProjects()
     BuildOneProject(":mozilla:embedding:base:macbuild:EmbedAPI.mcp", "EmbedAPI$D.o", 0, 0, 0);
     MakeAlias(":mozilla:embedding:base:macbuild:EmbedAPI$D.o", ":mozilla:dist:embedding:");
 
-    if ($main::options{embedding_test})
+    if ($main::options{embedding_test} && !$main::CARBON)
     {
         if (-e GetCodeWarriorRelativePath("MacOS Support:PowerPlant"))
         {
