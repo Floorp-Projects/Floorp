@@ -597,6 +597,15 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
     return NS_ERROR_ALREADY_INITIALIZED;
 
   mDocument = aDocument; // not refcounted!
+
+  // This initializes the Gfx Scrollbar Prefs booleans
+  mGotGfxPrefs = PR_FALSE;
+  mHasGfxScrollbars = PR_FALSE;
+  mDoGfxListbox     = PR_FALSE;
+  mDoGfxCombobox    = PR_FALSE;
+
+  HasGfxScrollbars();
+
   return NS_OK;
 }
 
@@ -2939,7 +2948,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       parentFrame = newScrollableFrame;
 
       // if gfx scrollbars store them
-      if (HasGfxScrollbars(aPresContext)) {
+      if (HasGfxScrollbars()) {
           mGfxScrollFrame = newFrame;
       } else {
           mGfxScrollFrame = nsnull;
@@ -3209,21 +3218,24 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*        aPresShell
 }
 
 PRBool
-nsCSSFrameConstructor::HasGfxScrollbars(nsIPresContext* aPresContext)
+nsCSSFrameConstructor::HasGfxScrollbars()
 {
+  // Get the Prefs
+  if (!mGotGfxPrefs) {
     nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
-    PRBool gfx = PR_FALSE;
     if (pref) {
-	    pref->GetBoolPref("nglayout.widget.gfxscrollbars", &gfx);
+      pref->GetBoolPref("nglayout.widget.gfxscrollbars", &mHasGfxScrollbars);
+      pref->GetBoolPref("nglayout.widget.gfxlistbox", &mDoGfxListbox);
+      pref->GetBoolPref("nglayout.widget.gfxcombobox", &mDoGfxCombobox);
+      mGotGfxPrefs = PR_TRUE;
+    } else {
+      mHasGfxScrollbars = PR_FALSE;
+      mDoGfxListbox     = PR_FALSE;
+      mDoGfxCombobox    = PR_FALSE;
     }
+  }
 
-    return gfx;
-
-  /*
-  nsWidgetRendering mode;
-  aPresContext->GetWidgetRenderingMode(&mode);
-  return (eWidgetRendering_Native != mode);
-  */
+  return mHasGfxScrollbars;
 }
 
 nsresult
@@ -3245,15 +3257,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
   nsWidgetRendering mode;
   aPresContext->GetWidgetRenderingMode(&mode);
   const PRInt32 kNoSizeSpecified = -1;
-
-  PRBool hasGfxScrollbars = HasGfxScrollbars(aPresContext);
-  nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
-  PRBool doGfxListbox  = PR_FALSE;
-  PRBool doGfxCombobox = PR_FALSE;
-  if (pref) {
-	  pref->GetBoolPref("nglayout.widget.gfxlistbox", &doGfxListbox);
-	  pref->GetBoolPref("nglayout.widget.gfxcombobox", &doGfxCombobox);
-  }
 
   if (eWidgetRendering_Gfx == mode) {
     // Construct a frame-based listbox or combobox
@@ -3288,7 +3291,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         nsHTMLContainerFrame::CreateViewForFrame(aPresContext, comboboxFrame,
                                                  aStyleContext, PR_FALSE);
 
-        if (hasGfxScrollbars && doGfxCombobox) {
+        if (HasGfxScrollbars() && mDoGfxCombobox) {
           ///////////////////////////////////////////////////////////////////
           // Combobox - New GFX Implementation
           ///////////////////////////////////////////////////////////////////
@@ -3338,7 +3341,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
             }
 
             // create the area frame we are scrolling 
-            PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
+            flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
             nsIFrame* scrolledFrame = nsnull;
             NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
 
@@ -3540,7 +3543,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
             aFrameHasBeenInitialized = PR_TRUE;
           }
         }
-      } else if (hasGfxScrollbars && doGfxListbox) {
+      } else if (HasGfxScrollbars() && mDoGfxListbox) {
         
         ///////////////////////////////////////////////////////////////////
         // ListBox - New GFX Implementation
@@ -4179,7 +4182,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*        aPresShell,
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::label == aTag) {
-        rv = NS_NewLabelFrame(aPresShell, &newFrame);
+        rv = NS_NewLabelFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
         processChildren = PR_TRUE;
       }
     }
@@ -5125,7 +5128,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
 
   nsCOMPtr<nsIStyleContext> contentStyle = dont_QueryInterface(aContentStyle);
 
-  PRBool isGfx = HasGfxScrollbars(aPresContext);
+  PRBool isGfx = HasGfxScrollbars();
 
   if (isGfx) {
   
