@@ -403,7 +403,7 @@ static nsFontLangGroup FLG_ZHCN    = { "zh-CN",         nsnull };
 static nsFontLangGroup FLG_ZHTW    = { "zh-TW",         nsnull };
 static nsFontLangGroup FLG_JA      = { "ja",            nsnull };
 static nsFontLangGroup FLG_KO      = { "ko",            nsnull };
-static nsFontLangGroup FLG_INDIC   = { "hi-IN",         nsnull };
+static nsFontLangGroup FLG_INDIC   = { "x-devanagari",  nsnull };
 static nsFontLangGroup FLG_NONE    = { nsnull,          nsnull };
 
 /*
