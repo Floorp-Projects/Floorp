@@ -109,15 +109,25 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   return NS_OK;
 #endif
   
-  char *oldPOPMailPathStr, *oldIMAPMailPathStr, *oldNewsPathStr;
-  char *newPOPMailPathStr, *newIMAPMailPathStr, *newNewsPathStr;
+  char *oldPOPMailPathStr, *oldNewsPathStr;
+  char *newPOPMailPathStr, *newNewsPathStr;
 
-  nsFileSpec oldPOPMailPath, oldNewsPath;
-  nsFileSpec newPOPMailPath, newNewsPath;
+  nsFileSpec oldPOPMailPath, oldIMAPMailPath, oldNewsPath;
+  nsFileSpec newPOPMailPath, newIMAPMailPath, newNewsPath;
 
-  PRUint32 totalMailSize = 0, totalNewsSize = 0, totalProfileSize = 0, totalSize = 0,
-           numberOfMailFiles = 0, numberOfNewsFiles = 0, numberOfProfileFiles = 0;
+  PRUint32 totalPOPMailSize = 0, 
+           totalIMAPMailSize = 0, 
+           totalNewsSize = 0, 
+           totalProfileSize = 0,
+           totalRequired = 0,
+           totalSize = 0,
+           numberOfMailFiles = 0, 
+           numberOfNewsFiles = 0, 
+           numberOfProfileFiles = 0;
+
   PRInt32 oldDirLength = 0;
+  
+  PRBool hasIMAP = PR_FALSE;
 
 #if defined(NS_DEBUG)
   printf("*Entered Actual Migration routine*\n");
@@ -128,28 +138,28 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   {
     PR_Free(newPOPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
-    return 0;
+    return NS_OK;
   }
 
   if((newNewsPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
     PR_Free(newNewsPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
-    return 0;
+    return NS_OK;
   }
 
   if((oldPOPMailPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
     PR_Free(oldPOPMailPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
-    return 0;
+    return NS_OK;
   }
 
   if((oldNewsPathStr = (char*) PR_MALLOC(_MAX_PATH)) == NULL)
   {
     PR_Free(oldNewsPathStr);
     *aResult = NS_ERROR_OUT_OF_MEMORY;
-    return 0;
+    return NS_OK;
   }
 
 
@@ -158,7 +168,7 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
   if (success != NS_OK)
   {
     *aResult = success;
-    return 0;
+    return NS_OK;
   }
 
   /* Create the new mail directory from the setting in prefs.js or a default */
@@ -191,35 +201,145 @@ nsPrefMigration::ProcessPrefs(char* oldProfilePathStr, char* newProfilePathStr, 
     newNewsPath += "News";
   }
 
+  //IMAP mail doesn't have a pref for its location, so just set it.
+  oldIMAPMailPath = oldProfilePathStr;
+  oldIMAPMailPath += "imapmail";
+  if(oldIMAPMailPath.IsDirectory())
+  {
+    newIMAPMailPath = newProfilePathStr;
+    newIMAPMailPath += "imapmail";
+    hasIMAP = PR_TRUE;
+  }
+
   nsFileSpec oldProfilePath(oldProfilePathStr); /* nsFileSpec version of the profile's 4.x root dir */
   nsFileSpec newProfilePath(newProfilePathStr); /* Ditto for the profile's new 5.x root dir         */
   
   success = GetSizes(oldProfilePath, PR_FALSE, &totalProfileSize);
-  success = GetSizes(oldPOPMailPath, PR_TRUE, &totalMailSize);
+  success = GetSizes(oldPOPMailPath, PR_TRUE, &totalPOPMailSize);
   success = GetSizes(oldNewsPath, PR_TRUE, &totalNewsSize);
-
-  if(CheckForSpace(newPOPMailPath, totalMailSize) != NS_OK)
+  if(hasIMAP)
   {
-    *aResult = NS_ERROR_ABORT;
-	  return NS_ERROR_ABORT;  /* Need error code for not enough space */
+    success = GetSizes(oldIMAPMailPath, PR_TRUE, &totalIMAPMailSize);
+    totalProfileSize += totalIMAPMailSize; /* IMAP tree is ALWAYS off the profile dir */
   }
 
-  if(CheckForSpace(newNewsPath, totalNewsSize) != NS_OK)
-  {
-    *aResult = NS_ERROR_ABORT;
-    return NS_ERROR_ABORT;
-  }
+  
+  /* Get the drive name or letter for the profile tree */
+  char *profile_hd_name;
+  if ((profile_hd_name = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+  GetDriveName(oldProfilePath, profile_hd_name);
+  
+  /* Get the drive name or letter for the pop mail tree */
+  char *POP_hd_name;
+  if ((POP_hd_name = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+  GetDriveName(oldPOPMailPath, POP_hd_name);
 
+  /* Get the drive name or letter for the news tree */
+  char *news_hd_name;
+  if ((news_hd_name = (char*) PR_MALLOC(MAXPATHLEN)) == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+  GetDriveName(oldNewsPath, news_hd_name);
+
+  
+  /* Check to see if all the dirs are on the same drive (the default case) */
+  if((PL_strcmp(profile_hd_name, POP_hd_name) == 0) &&
+     (PL_strcmp(profile_hd_name, news_hd_name) == 0)) /* All dirs are on the same drive */
+  {
+    totalRequired = totalProfileSize + totalPOPMailSize + totalNewsSize + totalIMAPMailSize;
+    if(CheckForSpace(newProfilePath, totalRequired) != NS_OK)
+    {
+      *aResult = NS_ERROR_ABORT;
+	    return NS_ERROR_ABORT;  /* Need error code for not enough space */
+    }
+  }
+  else
+  {
+    if(PL_strcmp(POP_hd_name, news_hd_name) == 0) /* Mail and news on same drive */
+    {
+      totalRequired = totalPOPMailSize + totalNewsSize;
+      if(CheckForSpace(newPOPMailPath, totalRequired) != NS_OK)
+      {
+        *aResult = NS_ERROR_ABORT;
+	      return NS_OK;  /* Need error code for not enough space */
+      }
+      if(CheckForSpace(newProfilePath, totalProfileSize) != NS_OK)
+      {
+        *aResult = NS_ERROR_ABORT;
+        return NS_OK;
+      }
+    }
+    else
+    {
+      if(PL_strcmp(profile_hd_name, POP_hd_name) == 0) /* Mail and profile on same drive */
+      {
+        totalRequired = totalProfileSize + totalPOPMailSize;
+        if(CheckForSpace(newProfilePath, totalRequired) != NS_OK)
+        {
+          *aResult = NS_ERROR_ABORT;
+          return NS_ERROR_ABORT;  /* Need error code for not enough space */
+        }
+        if(CheckForSpace(newNewsPath, totalNewsSize) != NS_OK)
+        {
+          *aResult = NS_ERROR_ABORT;
+          return NS_OK;  /* Need error code for not enough space */
+        }
+      }
+      else
+      {
+        if(PL_strcmp(profile_hd_name, news_hd_name) == 0) /* News and profile on same drive */
+        {
+          totalRequired = totalProfileSize + totalNewsSize;
+          if(CheckForSpace(newProfilePath, totalRequired) != NS_OK)
+          {
+            *aResult = NS_ERROR_ABORT;
+            return NS_ERROR_ABORT;  /* Need error code for not enough space */
+          }
+          if(CheckForSpace(newPOPMailPath, totalPOPMailSize) != NS_OK)
+          {
+            *aResult = NS_ERROR_ABORT;
+            return NS_ERROR_ABORT;  /* Need error code for not enough space */
+          }
+        }
+        else
+        {
+          /* All the trees are on different drives */
+          if(CheckForSpace(newPOPMailPath, totalPOPMailSize) != NS_OK)
+          {
+            *aResult = NS_ERROR_ABORT;
+            return NS_ERROR_ABORT;  /* Need error code for not enough space */
+          }
+          if(CheckForSpace(newNewsPath, totalNewsSize) != NS_OK)
+          {
+            *aResult = NS_ERROR_ABORT;
+            return NS_ERROR_ABORT;  /* Need error code for not enough space */
+          }
+          if(CheckForSpace(newProfilePath, totalProfileSize) != NS_OK)
+          {
+            *aResult = NS_ERROR_ABORT;
+            return NS_ERROR_ABORT;  /* Need error code for not enough space */
+          }
+        }
+      } /* else */
+    } /* else */
+  } /* else */
+
+  PR_Free(profile_hd_name);
+  PR_Free(POP_hd_name);
+  PR_Free(news_hd_name);
+  
   PR_MkDir(newPOPMailPath, PR_RDWR);
   PR_MkDir(newNewsPath, PR_RDWR);
+  if(hasIMAP)
+    PR_MkDir(newIMAPMailPath, PR_RDWR);
 
 
   success = DoTheCopy(oldProfilePath, newProfilePath, PR_FALSE);
-  
   success = DoTheCopy(oldPOPMailPath, newPOPMailPath, PR_TRUE);
-
   success = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
-
+  if(hasIMAP)
+    success = DoTheCopy(oldIMAPMailPath, newIMAPMailPath, PR_TRUE);
   
   success = DoSpecialUpdates(newProfilePath);
 
@@ -307,7 +427,8 @@ nsPrefMigration::GetDirFromPref(char* newProfilePath, char* pref, char* newPath,
 
   //if(PREF_Init(prefs_jsPath))
   //{
-    if(PREF_GetCharPref(pref, oldPath, &oldDirLength) == PREF_OK) /* found the pref */
+    PREF_GetCharPref(pref, oldPath, &oldDirLength);
+    if(*oldPath != '\0')
     {
       PL_strcpy(newPath, oldPath);
       PL_strcat(newPath, "5");
@@ -370,6 +491,40 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
   return NS_OK;
 }
 
+
+/*--------------------------------------------------------------------------
+ * GetDriveName gets the drive letter (on Windows) or the volume name (on Mac)
+ *
+ * INPUT: an nsFileSpec path
+ * 
+ * OUTPUT: the drive letter or volume name
+ * 
+ * RETURNS: NS_OK if found
+ *          NS_ERROR_FAILURE if some error occurs while iterating through the
+ *                           parent nodes.
+ *
+ *--------------------------------------------------------------------------*/
+nsresult
+nsPrefMigration::GetDriveName(nsFileSpec inputPath, char* driveName)
+{
+  nsFileSpec oldParent, newParent;
+  PRBool foundIt = PR_FALSE;
+
+  inputPath.GetParent(oldParent); /* do initial pass to optimize one directory case */
+  while (!foundIt)
+  {
+    PL_strcpy(driveName, oldParent.GetCString());
+    oldParent.GetParent(newParent);
+    /* Since GetParent doesn't return an error if there's no more parents
+     * I have to compare the results of the parent value (string) to see 
+     * if they've changed. */
+    if (PL_strcmp(driveName, newParent.GetCString()) == 0)
+      foundIt = PR_TRUE;
+    else
+      oldParent = newParent;
+  }
+  return NS_OK;
+}
 
 /*--------------------------------------------------------------------------
  * CheckForSpace checks the target drive for enough space
@@ -448,10 +603,14 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
 nsresult
 nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
 {
+  /*
   nsFileSpec bookmarkFile = profilePath;
   bookmarkFile += "bookmark.htm";
   if (bookmarkFile.Exists())
     bookmarkFile.Rename("bookmark.html");
+  */
+  /* This was originally designed for the bookmark renaming.  Since that's now
+     invalid I'm leaving this in place for future miscellaneous migrations */
   return NS_OK;
 }
 
