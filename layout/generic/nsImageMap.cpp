@@ -148,7 +148,17 @@ Area::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 #endif
 
 #include <stdlib.h>
-#define XP_ATOI(_s) ::atoi(_s)
+
+inline PRBool
+is_space(char c)
+{
+  return (c == ' ' ||
+          c == '\f' ||
+          c == '\n' ||
+          c == '\r' ||
+          c == '\t' ||
+          c == '\v');
+}
 
 // XXX straight copy from laymap.c
 static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
@@ -162,22 +172,22 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
    * Nothing in an empty list
    */
   *value_cnt = 0;
-  if ((str == NULL)||(*str == '\0'))
+  if (!str || *str == '\0')
   {
-    return((PRInt32 *)NULL);
+    return nsnull;
   }
 
   /*
    * Skip beginning whitespace, all whitespace is empty list.
    */
   n_str = str;
-  while (XP_IS_SPACE(*n_str))
+  while (is_space(*n_str))
   {
     n_str++;
   }
   if (*n_str == '\0')
   {
-    return((PRInt32 *)NULL);
+    return nsnull;
   }
 
   /*
@@ -193,7 +203,7 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
      * Skip to a separator
      */
     tptr = n_str;
-    while ((!XP_IS_SPACE(*tptr))&&(*tptr != ',')&&(*tptr != '\0'))
+    while (!is_space(*tptr) && *tptr != ',' && *tptr != '\0')
     {
       tptr++;
     }
@@ -212,7 +222,7 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
      * comma.
      */
     has_comma = PR_FALSE;
-    while ((XP_IS_SPACE(*tptr))||(*tptr == ','))
+    while (is_space(*tptr) || *tptr == ',')
     {
       if (*tptr == ',')
       {
@@ -255,15 +265,13 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
    */
   cnt++;
  
-  *value_cnt = cnt;
-
   /*
    * Allocate space for the coordinate array.
    */
   value_list = new nscoord[cnt];
-  if (value_list == NULL)
+  if (!value_list)
   {
-    return((PRInt32 *)NULL);
+    return nsnull;
   }
 
   /*
@@ -275,7 +283,7 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
     char *ptr;
 
     ptr = strchr(tptr, ',');
-    if (ptr != NULL)
+    if (ptr)
     {
       *ptr = '\0';
     }
@@ -283,7 +291,7 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
      * Strip whitespace in front of number because I don't
      * trust atoi to do it on all platforms.
      */
-    while (XP_IS_SPACE(*tptr))
+    while (is_space(*tptr))
     {
       tptr++;
     }
@@ -293,15 +301,17 @@ static nscoord* lo_parse_coord_list(char *str, PRInt32* value_cnt)
     }
     else
     {
-      value_list[i] = (nscoord)XP_ATOI(tptr);
+      value_list[i] = (nscoord) ::atoi(tptr);
     }
-    if (ptr != NULL)
+    if (ptr)
     {
       *ptr = ',';
-      tptr = (char *)(ptr + 1);
+      tptr = ptr + 1;
     }
   }
-  return(value_list);
+
+  *value_cnt = cnt;
+  return value_list;
 }
 
 void Area::ParseCoords(const nsString& aSpec)
