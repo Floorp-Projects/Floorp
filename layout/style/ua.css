@@ -136,6 +136,10 @@
   background-color: inherit;
 }
 
+*|*:-moz-viewport-scroll {
+  overflow: auto;
+}
+
 *|*:-moz-scrolled-content { 
   /* e.g., text inputs, select boxes */
   background: inherit;

@@ -190,6 +190,15 @@ protected:
   // We need this if a scrollbar frame is recreated
   void ReloadChildFrames(nsIPresContext* aPresContext);
 
+  struct ScrollbarStyles {
+    // one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
+    // NS_STYLE_OVERFLOW_VISIBLE, NS_STYLE_OVERFLOW_AUTO
+    PRInt32 mHorizontal;
+    PRInt32 mVertical;
+    ScrollbarStyles(PRInt32 h, PRInt32 v) : mHorizontal(h), mVertical(v) {}
+  };
+  virtual ScrollbarStyles GetScrollbarStyles() const;
+
 private:
   friend class nsGfxScrollFrameInner;
   nsGfxScrollFrameInner* mInner;

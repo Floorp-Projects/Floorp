@@ -172,7 +172,6 @@ select > input[type="button"]:active {
 }
 
 select[size] {
-  overflow: -moz-scrollbars-vertical;
    -moz-appearance: listbox;
 }
 

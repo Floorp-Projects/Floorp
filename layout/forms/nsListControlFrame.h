@@ -253,6 +253,8 @@ public:
                                              nscoord aCharWidth) const;
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
+  virtual ScrollbarStyles GetScrollbarStyles() const;
+
     // for accessibility purposes
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -361,7 +363,7 @@ protected:
 
   // Dropped down stuff
   void     SetComboboxItem(PRInt32 aIndex);
-  PRBool   IsInDropDownMode();
+  PRBool   IsInDropDownMode() const;
 
   // Selection
   PRBool   SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
