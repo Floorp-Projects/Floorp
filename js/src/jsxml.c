@@ -3394,8 +3394,6 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
     if (i >= n) {
         if (!IndexToIdVal(cx, n, &id))
             return JS_FALSE;
-        if (!XMLARRAY_INSERT(cx, &xml->xml_kids, n, NULL))
-            return JS_FALSE;
         i = n;
     }
 
@@ -3408,14 +3406,14 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
 
     switch (vxml ? vxml->xml_class : JSXML_CLASS_LIMIT) {
       case JSXML_CLASS_ELEMENT:
+        /* OPTION: enforce that descendants have superset namespaces. */
       case JSXML_CLASS_COMMENT:
       case JSXML_CLASS_PROCESSING_INSTRUCTION:
       case JSXML_CLASS_TEXT:
-        /* OPTION: enforce that descendants have superset namespaces. */
         goto do_replace;
 
       case JSXML_CLASS_LIST:
-        if (xml->xml_kids.vector[i] && !DeleteByIndex(cx, xml, id, &junk))
+        if (i < n && !DeleteByIndex(cx, xml, id, &junk))
             return JS_FALSE;
         if (!Insert(cx, xml, id, v))
             return JS_FALSE;
@@ -3440,7 +3438,8 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
                 js_DestroyXML(cx, kid);
             }
         }
-        XMLARRAY_SET_MEMBER(&xml->xml_kids, i, vxml);
+        if (!XMLARRAY_INSERT(cx, &xml->xml_kids, i, vxml))
+            return JS_FALSE;
         break;
     }
 
