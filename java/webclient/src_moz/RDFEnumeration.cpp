@@ -20,9 +20,7 @@
  * Contributor(s):  Ed Burns <edburns@acm.org>
  */
 
-#include "RDFEnumeration.h"
-
-#include "RDFActionEvents.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_RDFEnumeration.h"
 
 #include "rdf_util.h"
 #include "rdf_progids.h"
@@ -37,92 +35,242 @@
 
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
 
+//
+// Local function prototypes
+//
+
+/**
+
+ * pull the int for the field nativeEnum from the java object obj.
+
+ */
+
+jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode);
+
 // 
 // JNI methods
 //
 
 JNIEXPORT jboolean JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeHasMoreElements
-(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode)
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFEnumeration_nativeHasMoreElements
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeRDFNode)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFEnumeration_nativeHasMoreElements: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
+    PR_ASSERT(nativeRDFNode);
+    nsresult rv;
     jboolean result = JNI_FALSE;
-    
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeIsContainer");
-		return result;
-	}
-    
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't see if isContainer");
+    PRBool prResult = PR_FALSE;
+    jint nativeEnum;
+
+    if (-1 == (nativeEnum = getNativeEnumFromJava(env, obj, nativeRDFNode))) {
+        // PENDING(edburns): should this be an exception?
         return result;
     }
-    wsRDFHasMoreElementsEvent *actionEvent = 
-        new wsRDFHasMoreElementsEvent(initContext,
-                                      (PRUint32) nativeRDFNode,
-                                      (void *) obj);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
     
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (0 != voidResult) ? JNI_TRUE : JNI_FALSE;
+    nsCOMPtr<nsISimpleEnumerator> enumerator = (nsISimpleEnumerator *)nativeEnum;
+    rv = enumerator->HasMoreElements(&prResult);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeHasMoreElements: Can't ask nsISimpleEnumerator->HasMoreElements().");
+        return result;
+    }
+    result = (PR_FALSE == prResult) ? JNI_FALSE : JNI_TRUE;
+
+    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFEnumeration_nativeHasMoreElements: exiting\n"));
 
     return result;
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeNextElement
-(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode)
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFEnumeration_nativeNextElement
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeRDFNode)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFEnumeration_nativeNextElement: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
+    PR_ASSERT(nativeRDFNode);
+    PR_ASSERT(-1 != nativeRDFNode);
+    nsresult rv;
     jint result = -1;
+    PRBool hasMoreElements = PR_FALSE;
+    jint nativeEnum;
+    nsCOMPtr<nsISupports> supportsResult;
+    nsCOMPtr<nsIRDFNode> nodeResult;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeIsContainer");
-		return result;
-	}
-    
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't see if isContainer");
+    if (-1 == (nativeEnum = getNativeEnumFromJava(env, (jobject) obj, 
+                                                  nativeRDFNode))) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNextElement: Can't get nativeEnum from nativeRDFNode.");
         return result;
     }
-    wsRDFNextElementEvent *actionEvent = 
-        new wsRDFNextElementEvent(initContext,
-                                  (PRUint32) nativeRDFNode,
-                                  (void *) obj);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
     
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (jint) voidResult;
+    nsCOMPtr<nsISimpleEnumerator> enumerator = (nsISimpleEnumerator *)nativeEnum;
+    rv = enumerator->HasMoreElements(&hasMoreElements);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNextElement: Can't ask nsISimpleEnumerator->HasMoreElements().");
+        return result;
+    }
     
+    if (!hasMoreElements) {
+        return result;
+    }
+    
+    rv = enumerator->GetNext(getter_AddRefs(supportsResult));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("Exception: nativeNextElement: Can't get next from enumerator.\n"));
+        }
+        return result;
+    }
+    
+    // make sure it's an RDFNode
+    rv = supportsResult->QueryInterface(NS_GET_IID(nsIRDFNode), 
+                                        getter_AddRefs(nodeResult));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("Exception: nativeNextElement: next from enumerator is not an nsIRDFNode.\n"));
+        }
+        return result;
+    }
+    
+    result = (jint)nodeResult.get();
+    ((nsISupports *)result)->AddRef();
+    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFEnumeration_nativeNextElement: exiting\n"));
+
     return result;
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize
-(JNIEnv *env, jobject obj, jint webShellPtr)
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFEnumeration_nativeFinalize
+(JNIEnv *env, jobject obj, jint nativeContext)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFEnumeration_nativeFinalize: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeFinalize");
-	}
-    
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't finalize");
+    PR_ASSERT(wcContext);
+    jint nativeEnum, nativeContainer;
+
+    // release the nsISimpleEnumerator
+    if (-1 == (nativeEnum = 
+               ::util_GetIntValueFromInstance(env, obj, "nativeEnum"))) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("nativeFinalize: Can't get fieldID for nativeEnum.\n"));
+        }
+        return;
     }
-    wsRDFFinalizeEvent *actionEvent = 
-        new wsRDFFinalizeEvent((void *) obj);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
+    nsCOMPtr<nsISimpleEnumerator> enumerator = 
+        (nsISimpleEnumerator *) nativeEnum;
+    ((nsISupports *)enumerator.get())->Release();
     
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    if (NS_FAILED((nsresult) voidResult)) {
-		::util_ThrowExceptionToJava(env, "Exception: Can't Finalize");
-	}
+    // release the nsIRDFContainer
+    if (-1 == (nativeContainer = 
+               ::util_GetIntValueFromInstance(env, obj, "nativeContainer"))) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("nativeFinalize: Can't get fieldID for nativeContainerFieldID.\n"));
+        }
+        return;
+    }
+    nsCOMPtr<nsIRDFContainer> container = (nsIRDFContainer *) nativeContainer;
+    ((nsISupports *)container.get())->Release();
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFEnumeration_nativeFinalize: exiting\n"));
+
     return;
 }
 
+jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
+{
+    nsresult rv;
+    jint result = -1;
 
+    result = ::util_GetIntValueFromInstance(env, obj, "nativeEnum");
 
+    // if the field has been initialized, just return the value
+    if (-1 != result) {
+        // NORMAL EXIT 1
+        return result;
+    }
+
+    // else, we need to create the enum
+    nsCOMPtr<nsIRDFNode> node = (nsIRDFNode *) nativeRDFNode;
+    nsCOMPtr<nsIRDFResource> nodeResource;
+    nsCOMPtr<nsIRDFContainer> container;
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+
+    rv = node->QueryInterface(NS_GET_IID(nsIRDFResource), 
+                              getter_AddRefs(nodeResource));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: Argument nativeRDFNode isn't an nsIRDFResource.\n"));
+        }
+        return -1;
+    }
+
+    // get a container in order to get the enum
+    container = do_CreateInstance(kRDFContainerCID);
+    if (!container) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: can't get a new container\n"));
+        }
+        return -1;
+    }
+
+    if (prLogModuleInfo) {
+        const char *value = nsnull;
+        nodeResource->GetValueConst(&value);
+        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+               ("getNativeEnumFromJava: current node: %s\n", value));
+    }
+
+    
+    rv = container->Init(gBookmarksDataSource, nodeResource);
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+                   ("getNativeEnumFromJava: Can't Init container.\n"));
+        }
+        return -1;
+    }
+
+    rv = container->GetElements(getter_AddRefs(enumerator));
+    if (NS_FAILED(rv)) {
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: Can't get enumeration from container.\n"));
+        }
+        return -1;
+    }
+
+    // IMPORTANT: Store the enum back into java
+    ::util_SetIntValueForInstance(env,obj,"nativeEnum",(jint)enumerator.get());
+    // IMPORTANT: make sure it doesn't get deleted when it goes out of scope
+    ((nsISupports *)enumerator.get())->AddRef(); 
+
+    // PENDING(edburns): I'm not sure if we need to keep the
+    // nsIRDFContainer from being destructed in order to maintain the
+    // validity of the nsISimpleEnumerator that came from the container.
+    // Just to be safe, I'm doing so.
+    ::util_SetIntValueForInstance(env, obj, "nativeContainer", 
+                                  (jint) container.get());
+    ((nsISupports *)container.get())->AddRef();
+    
+    // NORMAL EXIT 2
+    result = (jint)enumerator.get();    
+    return result;
+}

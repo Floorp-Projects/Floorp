@@ -218,8 +218,8 @@ extern JavaVM *gVm; // defined in jni_util.cpp
 #define nsnull 0
 #endif
 
-void    util_InitializeShareInitContext(void *initContext);
-void    util_DeallocateShareInitContext(void *initContext);
+void    util_InitializeShareInitContext(JNIEnv *env, void *initContext);
+void    util_DeallocateShareInitContext(JNIEnv *env, void *initContext);
 
 /**
 
@@ -258,7 +258,9 @@ void util_DumpJavaStack(JNIEnv *env);
 
 jobject util_NewGlobalRef(JNIEnv *env, jobject toAddRef);
 
-void util_DeleteGlobalRef(JNIEnv *env, jobject toAddRef);
+void util_DeleteGlobalRef(JNIEnv *env, jobject toDeleteRef);
+
+void util_DeleteLocalRef(JNIEnv *env, jobject toDeleteRef);
 
 jthrowable util_ExceptionOccurred(JNIEnv *env);
 
@@ -350,6 +352,11 @@ jboolean util_GetBoolFromPropertiesObject(JNIEnv *, jobject propertiesObject,
 
 jint util_GetIntFromPropertiesObject(JNIEnv *, jobject propertiesObject,
                                      jobject name, jobject reserved);
+
+void util_getSystemProperty(JNIEnv *env, 
+                            const char *propName,
+                            char *propValue, 
+                            jint propValueLen);
 
 //
 // Functions provided by the browser specific native code

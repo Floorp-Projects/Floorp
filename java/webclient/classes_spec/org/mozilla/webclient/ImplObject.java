@@ -68,26 +68,6 @@ public abstract class ImplObject extends Object
 
 /**
 
- * The factory that created me.  It's true that the WrapperFactory
- * instance is stored as a static member of BrowserControlImpl, and thus
- * you might say we don't need to keep it as an ivar here.  BUT, we
- * don't want to introduce the notion of WrapperFactory to the webclient
- * user, AND we don't want to have webclient interface implementation
- * classes depend on BrowserControlImpl, SO we keep it as ivar.  That
- * is, given that we don't want to talk to myBrowserControl as anything
- * but a BrowserControl (and not a BrowserControlImpl), we would have to
- * add an accessor to the public BrowserControl interface in order to
- * avoid having this myFactory ivar.  But we can't do that, because we
- * don't want to expose the WrapperFactory concept to the webclient API
- * end user.  Got it?
-
- */
-
-public WrapperFactory myFactory = null;
-
-  
-/**
-
  * The BrowserControl to which I'm attached, used for locking and communication.
 
  */
@@ -99,14 +79,10 @@ public BrowserControl myBrowserControl = null;
 // Constructors and Initializers    
 //
 
-public ImplObject(WrapperFactory yourFactory, 
-		  BrowserControl yourBrowserControl)
+public ImplObject(BrowserControl yourBrowserControl)
 {
     super();
-    ParameterCheck.nonNull(yourFactory);
-    ParameterCheck.nonNull(yourBrowserControl);
 
-    myFactory = yourFactory;
     myBrowserControl = yourBrowserControl;
 }
 
@@ -124,7 +100,6 @@ public ImplObject(WrapperFactory yourFactory,
 
 public void delete()
 {
-    myFactory = null;
     myBrowserControl = null;
 }
 

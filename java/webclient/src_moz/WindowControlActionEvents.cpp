@@ -147,7 +147,8 @@ wsDeallocateInitContextEvent::handleEvent ()
     
     mInitContext->currentDocument = nsnull;
     mInitContext->browserContainer = nsnull;
-    util_DeallocateShareInitContext(&(mInitContext->shareContext));
+    util_DeallocateShareInitContext((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION),
+                                    &(mInitContext->shareContext));
 
     //  delete mInitContext;
     if (isLastWindow) {

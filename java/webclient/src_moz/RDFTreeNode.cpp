@@ -20,19 +20,22 @@
  * Contributor(s):  Ed Burns <edburns@acm.org>
  */
 
-#include "RDFTreeNode.h"
-
-#include "RDFActionEvents.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_RDFTreeNode.h"
 
 #include "rdf_util.h"
 #include "rdf_progids.h"
 #include "ns_util.h"
+#include "wsRDFObserver.h"
 
-#include "nsIServiceManager.h"
-#include "nsString.h" // for nsCAutoString
+#include <nsIServiceManager.h>
+#include <nsString.h> // for nsCAutoString
 
-#include "prlog.h" // for PR_ASSERT
+#include <prlog.h> // for PR_ASSERT
+#include <nsRDFCID.h> // for NS_RDFCONTAINER_CID
 
+
+static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
+static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 
 //
 // Local function prototypes
@@ -42,26 +45,18 @@
 // JNI methods
 //
 
-JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsLeaf
-(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode)
+JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeIsLeaf
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeRDFNode)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
-    jint childCount = -1;
-    jboolean result = JNI_FALSE;
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeGetChildCount");
-		return result;
-	}
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeIsLeaf: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
     
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't getChildAt");
-        return result;
-    }
+    PR_ASSERT(wcContext);
+    jboolean result = JNI_FALSE;
 
     PRInt32 count;
     nsresult rv;
-    // PENDING(edburns): assert rdf_InitRDFUtils()
     nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) nativeRDFNode;
 
     rv = rdf_getChildCount(parent, &count);
@@ -71,88 +66,85 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_RDFTreeNod
     }
     result = (count == 0) ? JNI_TRUE : JNI_FALSE;
 
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeIsLeaf: exiting\n"));
 
     return result;
 }
 
-JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeIsContainer
-(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode)
+JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeIsContainer
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeRDFNode)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeIsContainer: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
+    nsCOMPtr<nsIRDFNode> node = (nsIRDFNode *) nativeRDFNode;
+    nsCOMPtr<nsIRDFResource> nodeResource;
+    nsresult rv;
     jboolean result = JNI_FALSE;
+    PRBool prBool;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeIsContainer");
-		return result;
-	}
-    
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't see if isContainer");
-        return result;
+    rv = node->QueryInterface(NS_GET_IID(nsIRDFResource), 
+                              getter_AddRefs(nodeResource));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeIsContainer: nativeRDFNode is not an RDFResource.");
+        return nsnull;
     }
-    wsRDFIsContainerEvent *actionEvent = new wsRDFIsContainerEvent(initContext,
-                                                                   (PRUint32) nativeRDFNode);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
-    
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (0 != voidResult) ? JNI_TRUE : JNI_FALSE;
+    rv = gRDFCU->IsContainer(gBookmarksDataSource, nodeResource, 
+                             &prBool);
+    result = (prBool == PR_FALSE) ? JNI_FALSE : JNI_TRUE;
 
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeIsContainer: exiting\n"));
     return result;
 }
 
 
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildAt
-(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode, 
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeGetChildAt
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeRDFNode, 
  jint childIndex)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeGetChildAt: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
+    
     jint result = -1;
+    nsresult rv;
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) nativeRDFNode;
+    nsCOMPtr<nsIRDFResource> child;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeGetChildAt");
-		return result;
-	}
-    
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't getChildAt");
-        return result;
+    rv = rdf_getChildAt(childIndex, parent, getter_AddRefs(child));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeGetChildAt: Can't get child.");
+        return nsnull;
     }
-    wsRDFGetChildAtEvent *actionEvent = 
-        new wsRDFGetChildAtEvent(initContext,
-                                 (PRUint32) nativeRDFNode,
-                                 (PRUint32) childIndex);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
-    
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (jint) voidResult;
+    result = (jint)child.get();
+    ((nsISupports *)result)->AddRef();
 
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeGetChildAt: exiting\n"));
     return result;
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildCount
-(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode)
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeGetChildCount
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeRDFNode)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeGetChildCount: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
     jint result = -1;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeGetChildCount");
-		return result;
-	}
-    
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't getChildAt");
-        return result;
-    }
     PRInt32 count;
     nsresult rv;
-    // PENDING(edburns): assert rdf_InitRDFUtils()
     nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) nativeRDFNode;
 
     rv = rdf_getChildCount(parent, &count);
@@ -162,62 +154,53 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetChildCount
     }
     result = (jint) count;
 
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeGetChildCount: exiting\n"));
+
     return result;
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeGetIndex
-(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode, 
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeGetIndex
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeRDFNode, 
  jint childRDFNode)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeGetIndex: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
     jint result = -1;
+    PRInt32 index;
+    nsresult rv;
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) nativeRDFNode;
+    nsCOMPtr<nsIRDFResource> child = (nsIRDFResource *) childRDFNode;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeGetChildIndex");
-		return result;
-	}
+    rv = rdf_getIndexOfChild(parent, child, &index);
+    result = (jint) index;
     
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't getChildIndex");
-        return result;
-    }
-    wsRDFGetChildIndexEvent *actionEvent = 
-        new wsRDFGetChildIndexEvent(initContext,
-                                    (PRUint32) nativeRDFNode, 
-                                    (PRUint32) childRDFNode);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
-    
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (jint) voidResult;
-    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeGetIndex: exiting\n"));
+
     return result;
 }
 
 JNIEXPORT jstring JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
-(JNIEnv *env, jobject obj, jint webShellPtr, jint nativeRDFNode)
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeToString
+(JNIEnv *env, jobject obj, jint nativeContext, jint nativeRDFNode)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
-    jstring result = nsnull;
-
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeToString");
-		return result;
-	}
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeToString: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
     
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't toString");
-        return result;
-    }
-
+    PR_ASSERT(wcContext);
+    
     nsCOMPtr<nsIRDFResource> currentResource = 
         (nsIRDFResource *) nativeRDFNode;
     nsCOMPtr<nsIRDFNode> node;
     nsCOMPtr<nsIRDFLiteral> literal;
     PRBool isContainer = PR_FALSE;
+    jstring result = nsnull;
     nsresult rv;
     const PRUnichar *textForNode = nsnull;
 
@@ -302,77 +285,296 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
         result = ::util_NewStringUTF(env, "");
     }
 
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeToString: exiting\n"));
+
     return result;
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeInsertElementAt
-(JNIEnv *env, jobject obj, jint webShellPtr, jint parentRDFNode, 
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeInsertElementAt
+(JNIEnv *env, jobject obj, jint nativeContext, jint parentRDFNode, 
  jint childRDFNode, jobject childProps, jint childIndex)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
-    jobject propsGlobalRef;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeInsertElementAt: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeInsertElementAt");
-	}
+    PR_ASSERT(wcContext);
+    PR_ASSERT(childProps); // PENDING(edburns): do we need to NewGlobalRef this?
+
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) parentRDFNode;
+    nsCOMPtr<nsIRDFResource> newChild = (nsIRDFResource *) childRDFNode;
+    nsCOMPtr<nsIRDFContainer> container;
+    nsCOMPtr<nsIRDFLiteral> nameLiteral;
+    nsCOMPtr<nsIRDFLiteral> urlLiteral;
+
+    jstring name;
+    const jchar *nameJchar;
     
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't InsertElementAt");
+    jstring url;
+    const jchar *urlJchar;
+
+    nsresult rv;
+    PRBool isContainer;
+    
+    rv = gRDFCU->IsContainer(gBookmarksDataSource, parent, 
+                             &isContainer);
+
+    // PENDING(edburns): I don't think we can throw exceptions from
+    // here, no?
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeInsertElementAt: RDFResource is not a container.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
     }
-    propsGlobalRef = ::util_NewGlobalRef(env, childProps);
-    wsRDFInsertElementAtEvent *actionEvent = 
-        new wsRDFInsertElementAtEvent(initContext,
-                                      (PRUint32) parentRDFNode,
-                                      (PRUint32) childRDFNode,
-                                      (void *) propsGlobalRef,
-                                      (PRUint32) childIndex);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
+
+    // get a container in order to create a child
+    container = do_CreateInstance(kRDFContainerCID);
+
+    if (!container) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeInsertElementAt: can't create container.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+    rv = container->Init(gBookmarksDataSource, parent);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeInsertElementAt: can't create container.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+
+    // pull the info from the properties object and add it to the new
+    // node.
+    if (nsnull == (name = (jstring) ::util_GetFromPropertiesObject(env, 
+                                                                   childProps,
+                                                                   BM_NAME_VALUE,
+                                                                   (jobject) &(wcContext->shareContext)))) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
     
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    ::util_DeleteGlobalRef(env, propsGlobalRef);
-    if (NS_FAILED((nsresult) voidResult)) {
+    if (nsnull == (nameJchar = ::util_GetStringChars(env, name))) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+    
+    if (nsnull == (url = (jstring) ::util_GetFromPropertiesObject(env, childProps,
+                                                                  BM_URL_VALUE,
+                                                                  (jobject) &(wcContext->shareContext)))) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+    
+    if (nsnull == (urlJchar = ::util_GetStringChars(env, url))) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+    // if we get here, we have valid nameJchar and urlJchar strings.
+
+    // create literals for the name and url
+    rv = gRDF->GetLiteral((const PRUnichar *) nameJchar,
+                          getter_AddRefs(nameLiteral));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeInsertElementAt: can't arguments nsISupportsArray.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+
+    rv = gRDF->GetLiteral((const PRUnichar *) urlJchar,
+                          getter_AddRefs(urlLiteral));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeInsertElementAt: can't create arguments nsISupportsArray.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+
+    // now Assert them to add the to the newChild
+    rv = gBookmarksDataSource->Assert(newChild, kNC_Name, nameLiteral, 
+                                      PR_TRUE);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeInsertElementAt: can't add name literal to new node.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+
+    // + 1 because for some reason the 1 is the first, not 0.
+    rv = container->InsertElementAt(newChild, childIndex + 1, PR_TRUE);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeInsertElementAt: can't insert element into parent container.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto omwiwnrtnniea_CLEANUP;
+    }
+
+ omwiwnrtnniea_CLEANUP:
+    ::util_ReleaseStringChars(env, name, nameJchar);
+    ::util_ReleaseStringChars(env, url, urlJchar);
+
+    if (NS_FAILED(rv)) {
 		::util_ThrowExceptionToJava(env, "Exception: Can't InsertElementAt");
 	}
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeInsertElementAt: exiting\n"));
+
     return;
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeNewFolder
-(JNIEnv *env, jobject obj, jint webShellPtr, jint parentRDFNode, 
+Java_org_mozilla_webclient_impl_wrapper_1native_RDFTreeNode_nativeNewFolder
+(JNIEnv *env, jobject obj, jint nativeContext, jint parentRDFNode, 
  jobject childProps)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
-    jobject propsGlobalRef;
-    jint retVal = 0;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeNewFolder: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeNewFolder");
-	}
+    PR_ASSERT(wcContext);
+
+    jint result = -1;
+    nsCOMPtr<nsIRDFResource> parent = (nsIRDFResource *) parentRDFNode;
+    nsCOMPtr<nsIRDFResource> newChildFromObserver;
+    nsCOMPtr<nsISupportsArray> selectionArray;
+    nsCOMPtr<nsISupportsArray> argumentsArray;
+    nsCOMPtr<nsIRDFLiteral> nameLiteral;
+    nsCOMPtr<nsIRDFLiteral> urlLiteral;
+    nsresult rv = NS_ERROR_UNEXPECTED;
+    PRBool isContainer;
+    nsCOMPtr<nsIRDFObserver> observer = new wsRDFObserver();
+    wsRDFObserver *wsO = nsnull;
     
-    if (!initContext->initComplete || !childProps) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't NewFolder");
+    jstring name;
+    const jchar *nameJchar;
+    
+    jstring url;
+    const jchar *urlJchar;
+    
+    rv = gRDFCU->IsContainer(gBookmarksDataSource, parent, &isContainer);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewFolder: RDFResource is not a container.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
     }
-    propsGlobalRef = ::util_NewGlobalRef(env, childProps);
-    if (!propsGlobalRef) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't NewFolder");
+    
+    // pull out the necessary keys from the properties table
+    if (nsnull == (name = (jstring) ::util_GetFromPropertiesObject(env, 
+                                                                   childProps,
+                                                                   BM_NAME_VALUE,
+                                                                   (jobject) &(wcContext->shareContext)))) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
     }
     
-    wsRDFNewFolderEvent *actionEvent = 
-        new wsRDFNewFolderEvent(initContext,
-                                (PRUint32) parentRDFNode,
-                                (void *) propsGlobalRef,
-                                (PRUint32 *) &retVal);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
+    if (nsnull == (nameJchar = ::util_GetStringChars(env, name))) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
+    }
     
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    ::util_DeleteGlobalRef(env, propsGlobalRef);
-    if (NS_FAILED((nsresult) voidResult)) {
-		::util_ThrowExceptionToJava(env, "Exception: Can't do NewFolder");
-	}
-    return retVal;
+    if (nsnull == (url = (jstring) ::util_GetFromPropertiesObject(env, childProps,
+                                                                  BM_URL_VALUE,
+                                                                (jobject) &(wcContext->shareContext)))) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
+    }
+    
+    if (nsnull == (urlJchar = ::util_GetStringChars(env, url))) {
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
+    }
+    // if we get here, we have valid nameJchar and urlJchar strings.
+    
+    // use the magic "command interface" as in bookmarks.js
+    // http://lxr.mozilla.org/mozilla/source/xpfe/components/bookmarks/resources/bookmarks.js#1190
+    
+    // set up selection nsISupportsArray
+    selectionArray = do_CreateInstance(kSupportsArrayCID);
+    if (!selectionArray) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewFolder: can't create selection nsISupportsArray.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
+    }
+    
+    // set up arguments nsISupportsArray
+    argumentsArray = do_CreateInstance(kSupportsArrayCID);
+    if (argumentsArray) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewFolder: can't create arguments nsISupportsArray.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
+    }
+    // get various arguments (parent, name)
+    // kNC_parent
+    // kNC_Name
+    // kNC_URL
+    
+    // add parent into selection array
+    selectionArray->AppendElement(parent);
+    
+    // add multiple arguments into arguments array
+    argumentsArray->AppendElement(kNC_parent);
+    argumentsArray->AppendElement(parent);
+    
+    rv = gRDF->GetLiteral((const PRUnichar *) nameJchar,
+                          getter_AddRefs(nameLiteral));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewFolder: can't arguments nsISupportsArray.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
+    }
+    argumentsArray->AppendElement(kNC_Name);
+    argumentsArray->AppendElement(nameLiteral);
+    
+    rv = gRDF->GetLiteral((const PRUnichar *) urlJchar,
+                          getter_AddRefs(urlLiteral));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewFolder: can't create arguments nsISupportsArray.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
+    }
+    argumentsArray->AppendElement(kNC_URL);
+    argumentsArray->AppendElement(urlLiteral);
+    
+    // at this point, selectionArray contains the parent
+    // and argumentsArray contains arcs and literals for the name and the 
+    // url of the node to be inserted.
+    
+    if (observer) {
+        gBookmarksDataSource->AddObserver(observer);
+    }
+    
+    // find out if it's a folder
+    if (nsnull != ::util_GetFromPropertiesObject(env, childProps, 
+                                                 BM_IS_FOLDER_VALUE, (jobject)
+                                                 (jobject) &(wcContext->shareContext))){
+        // do the command
+        rv = gBookmarksDataSource->DoCommand(selectionArray, 
+                                             kNewFolderCommand, 
+                                             argumentsArray);
+    }
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeInsertElementAt: can't execute bookmarks command to add folder.");
+        rv = NS_ERROR_UNEXPECTED;
+        goto RNFEHE_CLEANUP;
+    }
+
+    if (observer) {
+        gBookmarksDataSource->RemoveObserver(observer);
+        wsO = (wsRDFObserver *) observer.get();
+        newChildFromObserver = wsO->getFolder();
+        if (newChildFromObserver) {
+            result = (jint) newChildFromObserver.get();
+            ((nsISupports *)result)->AddRef();
+        }
+    }
+
+ RNFEHE_CLEANUP:
+    ::util_ReleaseStringChars(env, name, nameJchar);
+    ::util_ReleaseStringChars(env, url, urlJchar);
+
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("RDFTreeNode_nativeNewFolder: exiting\n"));
+
+    return result;
 }
 
 

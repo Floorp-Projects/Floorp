@@ -108,13 +108,18 @@ char *DOMMouseListener_maskNames[] = {
     nsnull
 };
 
-void    util_InitializeShareInitContext(void *yourInitContext)
+void    util_InitializeShareInitContext(JNIEnv *env, 
+                                        void *yourInitContext)
 {
     ShareInitContext *initContext = (ShareInitContext *) yourInitContext;
     initContext->propertiesClass = nsnull;
+    initContext->propertiesClass = 
+        ::util_FindClass(env, "java/util/Properties");
+    util_Assert(initContext->propertiesClass);
 }
 
-void    util_DeallocateShareInitContext(void *yourInitContext)
+void    util_DeallocateShareInitContext(JNIEnv *env,
+                                        void *yourInitContext)
 {
     // right now there is nothing to deallocate
 }
@@ -438,6 +443,14 @@ void util_DeleteGlobalRef(JNIEnv *env, jobject obj)
 #ifdef BAL_INTERFACE
 #else
     env->DeleteGlobalRef(obj);
+#endif
+}
+
+void util_DeleteLocalRef(JNIEnv *env, jobject obj)
+{
+#ifdef BAL_INTERFACE
+#else
+    env->DeleteLocalRef(obj);
 #endif
 }
 
@@ -804,6 +817,44 @@ jint util_GetIntFromPropertiesObject(JNIEnv *env, jobject propertiesObject,
 
     return result;
 }
+
+void util_getSystemProperty(JNIEnv *env, 
+                            const char *propName,
+                            char *propValue, jint propValueLen)
+{
+    jstring 
+        resultJstr = nsnull,
+        propNameJstr = ::util_NewStringUTF(env, propName);
+    jclass clazz = nsnull;
+    jmethodID getPropertyMethodId;
+    const char * result = nsnull;
+    int i = 0;
+
+    memset(propValue, nsnull, propValueLen);
+    
+    if (nsnull == (clazz = ::util_FindClass(env, "java/lang/System"))) {
+        return;
+    }
+    
+    if (nsnull == (getPropertyMethodId = 
+                   env->GetStaticMethodID(clazz, "getProperty",
+                                          "(Ljava/lang/String;)Ljava/lang/String;"))) {
+        return;
+    }
+    if (nsnull == 
+        (resultJstr = (jstring) env->CallStaticObjectMethod(clazz, 
+                                                            getPropertyMethodId, 
+                                                            propNameJstr))) {
+        return;
+    }
+    ::util_DeleteStringUTF(env, propNameJstr);
+    result = ::util_GetStringUTFChars(env, resultJstr);
+    strncpy(propValue, result, propValueLen - 1);
+    ::util_ReleaseStringUTFChars(env, resultJstr, result);
+
+    return;
+}
+
 
 JNIEXPORT jvalue JNICALL
 JNU_CallMethodByName(JNIEnv *env, 

@@ -30,7 +30,7 @@
 #ifndef NativeEventThreadActionEvents_h___
 #define NativeEventThreadActionEvents_h___
 
-#include "NativeEventThread.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_NativeEventThread.h"
 #include "CBrowserContainer.h"
 
 #include "nsIServiceManager.h"

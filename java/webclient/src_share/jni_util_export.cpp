@@ -113,6 +113,30 @@ JNIEXPORT jsize  JNICALL util_GetStringLength(JNIEnv *env,
     return result;
 }
 
+JNIEXPORT jobjectArray util_GetJstringArrayFromJcharArray(JNIEnv *env, 
+                                                          jint len,
+                                                          jchar **strings,
+                                                          jint *stringLengths)
+{
+    jobjectArray result = nsnull;
+    jclass clazz = nsnull;
+    jstring curString = nsnull;
+    jint i = 0;
+#ifdef BAL_INTERFACE
+#else
+    clazz = ::util_FindClass(env, "java/lang/String");
+    result = env->NewObjectArray(len, clazz, nsnull);
+    for (i = 0; i < len; i++) {
+        curString = ::util_NewString(env, strings[i], 
+                                     stringLengths[i]);
+        env->SetObjectArrayElement(result, i, curString);
+        ::util_DeleteLocalRef(env, curString);
+    }
+#endif
+    return result;
+}
+
+
 JNIEXPORT jstring JNICALL util_NewStringUTF(JNIEnv *env, const char *inString)
 {
     jstring result = nsnull;

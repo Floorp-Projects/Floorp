@@ -31,37 +31,20 @@ package org.mozilla.webclient;
 import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
+import org.mozilla.util.Utilities;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Properties;
 
 
 /**
  *
- *  <p><B>BrowserControlFactory</B> uses a discovery algorithm to find
- *  an implementation of {@link BrowserControlFactoryInterface}.  All of
- *  the public static methods in this class simply call through to this
+ *  <p><B>BrowserControlFactory</B> uses the discovery algorithm below
+ *  to find an implementation of {@link WebclientFactory}.  All of the
+ *  public static methods in this class simply call through to this
  *  implemenatation instance.</p>
  *
- * <p>The discovery mechanism used is to look try to load a resource
- * called
- * <code>META-INF/services/org.mozilla.webclient.BrowserControlFactoryInterface</code>.
- * If the resource is found, interpret it as a <code>Properties</code>
- * file and read out its first line.  Interpret the first line as the
- * fully qualified class name of a class that implements {@link
- * BrowserControlFactoryInterface}.  The named class must have a public
- * no-arg constructor.</p>
  *
- *
- * @version $Id: BrowserControlFactory.java,v 1.8 2003/09/06 06:26:45 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.9 2003/09/28 06:29:04 edburns%acm.org Exp $
  * 
  *
  */
@@ -76,7 +59,7 @@ public class BrowserControlFactory extends Object
 // Class Variables
 //
 
-private static BrowserControlFactoryInterface instance = null;
+private static WebclientFactory instance = null;
 
 //
 // Constructors and Initializers    
@@ -91,14 +74,35 @@ private BrowserControlFactory()
 // Class methods
 //
 
+/**
+ *
+ * <p>Initialize the webclient API passing in the path to the browser
+ * binary, if necessary.  This must be the first method called in the
+ * Webclient API.</p>
+ * 
+ * <p>If we are embedding a native browser, calling this method will
+ * cause the native libraries to be loaded into the JVM.</p>
+ *
+ * @param absolutePathToNativeBrowserBinDir if non-<code>null</code>
+ * this must be the path to the bin dir of the native browser, including
+ * the bin.  ie: "D:\\Projects\\mozilla\\dist\\win32_d.obj\\bin".  When
+ * embedding a non-native browser, this may be null.
+ *
+ */
+
 public static void setAppData(String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
 {
-    getInstance().setAppData(BrowserControl.BROWSER_TYPE_NATIVE, absolutePathToNativeBrowserBinDir);
+    getInstance().setAppData(absolutePathToNativeBrowserBinDir);
 }
 
-public static void setAppData(String myBrowserType, String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
+/**
+ *
+ * @deprecated Use {@link #setAppData(java.lang.String)} instead.
+ */
+
+public static void setAppData(String notUsed, String absolutePathToNativeBrowserBinDir) throws FileNotFoundException, ClassNotFoundException
 {
-    getInstance().setAppData(myBrowserType, absolutePathToNativeBrowserBinDir);
+    getInstance().setAppData(absolutePathToNativeBrowserBinDir);
 }
 
 public static void appTerminate() throws Exception
@@ -122,67 +126,14 @@ public static void deleteBrowserControl(BrowserControl toDelete)
 // helper methods
 // 
 
-protected static BrowserControlFactoryInterface getInstance() 
+protected static WebclientFactory getInstance() 
 {
     if (null != instance) {
         return instance;
     }
 
-    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    if (classLoader == null) {
-        throw new RuntimeException("Context ClassLoader");
-    }
-    
-    BufferedReader reader = null;
-    InputStream stream = null;
-    String 
-        className = null,
-        resourceName = "META-INF/services/org.mozilla.webclient.BrowserControlFactoryInterface";
-    try {
-        stream = classLoader.getResourceAsStream(resourceName);
-        if (stream != null) {
-            // Deal with systems whose native encoding is possibly
-            // different from the way that the services entry was created
-            try {
-                reader =
-                    new BufferedReader(new InputStreamReader(stream,
-                                                             "UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                reader = new BufferedReader(new InputStreamReader(stream));
-            }
-            className = reader.readLine();
-            reader.close();
-            reader = null;
-            stream = null;
-        }
-    } catch (IOException e) {
-    } catch (SecurityException e) {
-    } finally {
-        if (reader != null) {
-            try {
-                reader.close();
-            } catch (Throwable t) {
-                ;
-            }
-            reader = null;
-            stream = null;
-        }
-        if (stream != null) {
-            try {
-                stream.close();
-            } catch (Throwable t) {
-                ;
-            }
-            stream = null;
-        }
-    }
-    if (null != className) {
-        try {
-            Class clazz = classLoader.loadClass(className);
-            instance = (BrowserControlFactoryInterface) (clazz.newInstance());
-        } catch (Exception e) {
-        }
-    }
+    instance = (WebclientFactory) 
+       Utilities.getImplFromServices("org.mozilla.webclient.WebclientFactory");
     return instance;
 }
 

@@ -20,7 +20,7 @@
  * Contributor(s):  Ed Burns <edburns@acm.org>
  */
 
-#include "ISupportsPeer.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_ISupportsPeer.h"
 
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
@@ -30,7 +30,7 @@
 //
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_ISupportsPeer_nativeAddRef
+Java_org_mozilla_webclient_impl_wrapper_1native_ISupportsPeer_nativeAddRef
 (JNIEnv *env, jobject obj, jint nativeISupportsImpl)
 {
     nsCOMPtr<nsISupports> supports = (nsISupports *) nativeISupportsImpl;
@@ -38,7 +38,7 @@ Java_org_mozilla_webclient_wrapper_1native_ISupportsPeer_nativeAddRef
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_ISupportsPeer_nativeRelease
+Java_org_mozilla_webclient_impl_wrapper_1native_ISupportsPeer_nativeRelease
 (JNIEnv *env, jobject obj, jint nativeISupportsImpl)
 {
     nsCOMPtr<nsISupports> supports = (nsISupports *) nativeISupportsImpl;

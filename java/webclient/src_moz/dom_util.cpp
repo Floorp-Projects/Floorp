@@ -22,7 +22,7 @@
 
 #include "dom_util.h"
 
-#include "ns_globals.h" // for prLogModuleInfo and gComponentManager
+#include "ns_globals.h" // for prLogModuleInfo 
 
 #include "prlog.h" // for PR_ASSERT
 

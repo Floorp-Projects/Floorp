@@ -25,7 +25,7 @@
  *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  */
 
-#include "HistoryImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_HistoryImpl.h"
 
 #include "HistoryActionEvents.h"
 
@@ -35,7 +35,7 @@
 
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack
+Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeBack
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     JNIEnv	*	pEnv = env;
@@ -60,7 +60,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack
 }
 
 JNIEXPORT jboolean 
-JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeCanBack
+JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanBack
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     jboolean result = JNI_FALSE;
@@ -89,7 +89,7 @@ JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeCanBack
     return result;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetBackList
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetBackList
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     jobjectArray result = nsnull;
@@ -98,13 +98,13 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_Histor
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeClearHistory
+Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeClearHistory
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeForward
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeForward
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     JNIEnv	*	pEnv = env;
@@ -128,7 +128,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_na
     return;
 }
 
-JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeCanForward
+JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanForward
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     jboolean result = JNI_FALSE;
@@ -156,7 +156,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImp
     return result;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetForwardList
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetForwardList
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     jobjectArray result = nsnull;
@@ -164,7 +164,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_Histor
     return result;
 }
 
-JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistory
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetHistory
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     jobjectArray result = nsnull;
@@ -173,7 +173,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_wrapper_1native_Histor
 }
 
 JNIEXPORT jobject JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistoryEntry
+Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetHistoryEntry
 (JNIEnv *env, jobject obj, jint webShellPtr, jint historyIndex)
 {
     jobject result = nsnull;
@@ -182,7 +182,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistoryEntry
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetCurrentHistoryIndex
+Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetCurrentHistoryIndex
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     JNIEnv	*	pEnv = env;
@@ -211,7 +211,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetCurrentHistoryIn
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeSetCurrentHistoryIndex
+Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeSetCurrentHistoryIndex
 (JNIEnv *env, jobject obj, jint webShellPtr, jint historyIndex)
 {
     JNIEnv	*	pEnv = env;
@@ -236,7 +236,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeSetCurrentHistoryIn
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistoryLength
+Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetHistoryLength
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     JNIEnv	*	pEnv = env;
@@ -264,7 +264,7 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetHistoryLength
     return result;
 }
 
-JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeGetURLForIndex
+JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetURLForIndex
 (JNIEnv *env, jobject obj, jint webShellPtr, jint historyIndex)
 {
     JNIEnv	*	pEnv = env;

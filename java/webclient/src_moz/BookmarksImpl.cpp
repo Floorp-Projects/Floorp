@@ -20,9 +20,7 @@
  * Contributor(s):  Ed Burns <edburns@acm.org>
  */
 
-#include "BookmarksImpl.h"
-
-#include "RDFActionEvents.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_BookmarksImpl.h"
 
 #include "rdf_util.h"
 #include "ns_util.h"
@@ -31,73 +29,132 @@
 #include "nsISimpleEnumerator.h"
 #include "nsString.h"
 
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_BookmarksImpl_nativeStartup
+(JNIEnv *env, jobject obj, jint nativeContext)
+{
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("BookmarksImpl_nativeStartup: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
+    nsresult rv;
+    
+    rv = rdf_startup();
+    
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Can't initialize bookmarks.");
+        return;
+    }
+    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("BookmarksImpl_nativeStartup: exiting\n"));
+}
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_BookmarksImpl_nativeShutdown
+(JNIEnv *env, jobject obj, jint nativeContext)
+{
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("BookmarksImpl_nativeShutdown: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
+    nsresult rv;
+    
+    rv = rdf_shutdown();
+    
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Can't shutdown bookmarks.");
+        return;
+    }
+    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("BookmarksImpl_nativeShutdown: exiting\n"));
+}
+
+
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeAddBookmark
+Java_org_mozilla_webclient_impl_wrapper_1native_BookmarksImpl_nativeAddBookmark
 (JNIEnv *, jobject, jint, jobject)
 {
 
 }
 
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeGetBookmarks
-(JNIEnv *env, jobject obj, jint webShellPtr)
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_BookmarksImpl_nativeGetBookmarks
+(JNIEnv *env, jobject obj, jint nativeContext)
 {
     jint result = -1;
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("BookmarksImpl_nativeGetBookmarks: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
     
-	if (initContext == nsnull) {
-		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeGetBookmarks");
-		return result;
-	}
+    PR_ASSERT(wcContext);
+    PR_ASSERT(kNC_BookmarksRoot);
+
+    result = (jint) kNC_BookmarksRoot.get();
     
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't initialize RDF Utils");
-        return result;
-    }
-    
-    wsInitBookmarksEvent *actionEvent = new wsInitBookmarksEvent(initContext);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
-    
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (jint) voidResult;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("BookmarksImpl_nativeGetBookmarks: exiting\n"));
 
     return result;
 }
 
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
-(JNIEnv *env, jobject obj, jint webShellPtr, jstring urlString, 
+Java_org_mozilla_webclient_impl_wrapper_1native_BookmarksImpl_nativeNewRDFNode
+(JNIEnv *env, jobject obj, jint nativeContext, jstring urlString, 
  jboolean isFolder)
 {
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("BookmarksImpl_nativeNewRDFNode: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
     jint result = -1;
-	nsCAutoString uri("NC:BookmarksRoot");
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    void	*	voidResult = nsnull;
     
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeNewRDFNode");
-      return result;
-    }
-    
-    if (!initContext->initComplete) {
-        ::util_ThrowExceptionToJava(env, "Exception: can't get new RDFNode");
-        return result;
-    }
-    
-    const char *url = ::util_GetStringUTFChars(env, urlString);
+    PRUnichar *url = (PRUnichar *) ::util_GetStringChars(env, urlString);
     if (!url) {
         ::util_ThrowExceptionToJava(env, "Exception: can't get new RDFNode, can't create url string");
         return result;
     }
     
-    wsNewRDFNodeEvent *actionEvent = new wsNewRDFNodeEvent(initContext,
-                                                           url, 
-                                                           (PRBool) isFolder);
-    PLEvent	   	* event       = (PLEvent*) *actionEvent;
+    nsresult rv;
+    nsCOMPtr<nsIRDFResource> newNode;
     
-    voidResult = ::util_PostSynchronousEvent(initContext, event);
-    result = (jint) voidResult;
+    rv = gRDF->GetUnicodeResource(nsDependentString(url), 
+                                  getter_AddRefs(newNode));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeNewRDFNode: can't create new nsIRDFResource.");
+        return result;
+    }
+
+    if (isFolder) {
+        rv = gRDFCU->MakeSeq(gBookmarksDataSource, newNode, nsnull);
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Exception: unable to make new folder as a sequence.");
+            return result;
+        }
+        rv = gBookmarksDataSource->Assert(newNode, kRDF_type, 
+                                          kNC_Folder, PR_TRUE);
+        if (rv != NS_OK) {
+            ::util_ThrowExceptionToJava(env, "Exception: unable to mark new folder as folder.");
+            
+            return result;
+        }
+    }
     
-    ::util_ReleaseStringUTFChars(env, urlString, url);
+    /*
+
+     * Do the AddRef here.
+
+     */
+    
+    result = (jint) newNode.get();
+    ((nsISupports *)result)->AddRef();
+    
+    ::util_ReleaseStringChars(env, urlString, url);
+    
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("BookmarksImpl_nativeNewRDFNode: exiting\n"));
+    
     return result;
 }

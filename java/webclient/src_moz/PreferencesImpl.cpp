@@ -20,100 +20,155 @@
  * Contributor(s):  Ed Burns <edburns@acm.org>
  */
 
-#include "PreferencesImpl.h"
-#include "PreferencesActionEvents.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_PreferencesImpl.h"
 
-JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetUnicharPref
-(JNIEnv *env, jobject obj, jint webShellPtr, jstring prefName, 
- jstring prefValue)
+#include <nsIPref.h>
+#include <nsIServiceManager.h> // for do_getService
+#include <nsDataHashtable.h>
+#include <nsHashKeys.h> // for nsStringHashKey
+#include "ns_util.h"
+//
+// Local Data
+// 
+
+#include "ns_util.h"
+
+typedef struct _peStruct {
+    WebclientContext *cx;
+    jobject obj;
+    jobject callback;
+} peStruct;
+
+nsDataHashtable<nsCStringHashKey,peStruct *> closures;
+
+//
+// Local functions
+//
+
+void prefEnumerator(const char *name, void *closure);
+static int PR_CALLBACK prefChanged(const char *name, void *closure);
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeStartup
+(JNIEnv *env, jobject obj, jint nativeContext)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to netiveSetPref");
-      return;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeStartup: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    
+    PR_ASSERT(wcContext);
+    
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+    
+    if (!prefs) {
+        ::util_ThrowExceptionToJava(env, "Can't get the preferences.");
+        return;
     }
 
-    const char	*	prefNameChars = (char *) ::util_GetStringUTFChars(env, 
-                                                                      prefName);
-    const jchar	*	prefValueChars = (jchar *) ::util_GetStringChars(env, 
-                                                                     prefValue);
-    nsresult rv = NS_ERROR_FAILURE;
-    wsSetUnicharPrefEvent *actionEvent = nsnull;
-    void *voidResult = nsnull;
+    wcContext->sPrefs = prefs.get();
+    NS_ADDREF(wcContext->sPrefs);
+
+    closures.Init();
     
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeStartup: exiting\n"));
+}
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeShutdown
+(JNIEnv *env, jobject obj, jint nativeContext)
+{
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeShutdown: entering\n"));
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+
+    PR_ASSERT(wcContext);
+
+    closures.Clear();
+
+    NS_RELEASE(wcContext->sPrefs);
+    wcContext->sPrefs = nsnull;
+
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeShutdown: exiting\n"));
+}
+
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeSetUnicharPref
+(JNIEnv *env, jobject obj, jint nativeContext, jstring prefName, 
+ jstring prefValue)
+{
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeSetUnicharPref: entering\n"));
+    
+    nsresult rv = NS_ERROR_FAILURE;
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    nsCOMPtr<nsIPref> prefs = nsnull;
+    PR_ASSERT(wcContext);
+    
+    prefs = wcContext->sPrefs;
+    PR_ASSERT(prefs);
+    
+    const char	*	prefNameChars = (char *)::util_GetStringUTFChars(env, 
+                                                                     prefName);
+    const jchar	*	prefValueChars = (jchar *)::util_GetStringChars(env, 
+                                                                    prefValue);
     if (nsnull == prefNameChars) {
         ::util_ThrowExceptionToJava(env, "nativeSetUnicharPref: unable to extract Java string for pref name");
         rv = NS_ERROR_NULL_POINTER;
-        goto NSUP_CLEANUP;
+        goto OMWIWNPINSUP_CLEANUP;
     }
     if (nsnull == prefValueChars) {
         ::util_ThrowExceptionToJava(env, "nativeSetUnicharPref: unable to extract Java string for pref value");
         rv = NS_ERROR_NULL_POINTER;
-        goto NSUP_CLEANUP;
+        goto OMWIWNPINSUP_CLEANUP;
     }
 
-    if (!(actionEvent = new wsSetUnicharPrefEvent(prefNameChars, 
-                                                  prefValueChars))) {
-        ::util_ThrowExceptionToJava(env, "nativeSetPref: unable to create actionEvent");
-        rv = NS_ERROR_NULL_POINTER;
-        goto NSUP_CLEANUP;
-    }
-    
-    voidResult = ::util_PostSynchronousEvent(initContext,
-                                             (PLEvent *) *actionEvent);
-    rv = (nsresult) voidResult;
+    rv = prefs->SetUnicharPref(prefNameChars, 
+                               (const PRUnichar *) prefValueChars);
 
- NSUP_CLEANUP:
+ OMWIWNPINSUP_CLEANUP:
     
     ::util_ReleaseStringUTFChars(env, prefName, prefNameChars);
-    ::util_ReleaseStringChars(env, prefName, prefValueChars);
+    ::util_ReleaseStringChars(env, prefValue, prefValueChars);
     
     if (NS_FAILED(rv)) {
         // PENDING(edburns): set a more specific kind of pref
         ::util_ThrowExceptionToJava(env, "nativeSetUnicharPref: can't set pref");
     }
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeSetUnicharPref: exiting\n"));
     
     return;
 }
 
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetIntPref
-(JNIEnv *env, jobject obj, jint webShellPtr, jstring prefName, 
+Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeSetIntPref
+(JNIEnv *env, jobject obj, jint nativeContext, jstring prefName, 
  jint prefValue)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeSetIntPref: entering\n"));
+    
+    nsresult rv = NS_ERROR_FAILURE;
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    nsCOMPtr<nsIPref> prefs = nsnull;
+    PR_ASSERT(wcContext);
+    
+    prefs = wcContext->sPrefs;
+    PR_ASSERT(prefs);
 
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to netiveSetPref");
-      return;
-    }
     const char	*	prefNameChars = (char *) ::util_GetStringUTFChars(env, 
                                                                       prefName);
-    nsresult rv = NS_ERROR_FAILURE;
-    wsSetIntPrefEvent *actionEvent = nsnull;
-    void *voidResult = nsnull;
-    
     if (nsnull == prefNameChars) {
         ::util_ThrowExceptionToJava(env, "nativeSetIntPref: unable to extract Java string");
         return;
     }
 
-    if (!(actionEvent = new wsSetIntPrefEvent(prefNameChars, 
-                                              (PRInt32) prefValue))) {
-        ::util_ThrowExceptionToJava(env, "nativeSetPref: unable to create actionEvent");
-        rv = NS_ERROR_NULL_POINTER;
-        goto NSIP_CLEANUP;
-    }
+    rv = prefs->SetIntPref(prefNameChars, (PRInt32) prefValue);
     
-    voidResult = ::util_PostSynchronousEvent(initContext,
-                                             (PLEvent *) *actionEvent);
-    rv = (nsresult) voidResult;
-
- NSIP_CLEANUP:
-
     ::util_ReleaseStringUTFChars(env, prefName, prefNameChars);
     
     if (NS_FAILED(rv)) {
@@ -121,45 +176,36 @@ Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetIntPref
         ::util_ThrowExceptionToJava(env, "nativeSetIntPref: can't set pref");
     }
     
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeSetIntPref: exiting\n"));
     return;
 }
 
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetBoolPref
-(JNIEnv *env, jobject obj, jint webShellPtr, jstring prefName, 
+Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeSetBoolPref
+(JNIEnv *env, jobject obj, jint nativeContext, jstring prefName, 
  jboolean prefValue)
 {
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to netiveSetPref");
-      return;
-    }
-
-    const char	*	prefNameChars = (char *) ::util_GetStringUTFChars(env, 
-                                                                      prefName);
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeSetIntPref: entering\n"));
+    
     nsresult rv = NS_ERROR_FAILURE;
-    wsSetBoolPrefEvent *actionEvent = nsnull;
-    void *voidResult = nsnull;
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    nsCOMPtr<nsIPref> prefs = nsnull;
+    PR_ASSERT(wcContext);
+    
+    prefs = wcContext->sPrefs;
+    PR_ASSERT(prefs);
 
+    const char	*	prefNameChars = (char *)::util_GetStringUTFChars(env, 
+                                                                     prefName);
     if (nsnull == prefNameChars) {
         ::util_ThrowExceptionToJava(env, "nativeSetBoolPref: unable to extract Java string");
         return;
     }
-
-    if (!(actionEvent = new wsSetBoolPrefEvent(prefNameChars, 
-                                               prefValue))) {
-        ::util_ThrowExceptionToJava(env, "nativeSetPref: unable to create actionEvent");
-        rv = NS_ERROR_NULL_POINTER;
-        goto NSBP_CLEANUP;
-    }
     
-    voidResult = ::util_PostSynchronousEvent(initContext,
-                                             (PLEvent *) *actionEvent);
-    rv = (nsresult) voidResult;
-
- NSBP_CLEANUP:
+    rv = prefs->SetBoolPref(prefNameChars, prefValue);
 
     ::util_ReleaseStringUTFChars(env, prefName, prefNameChars);
 
@@ -169,31 +215,34 @@ Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeSetBoolPref
     }
 
     return;
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeSetIntPref: exiting\n"));
+
 }
 
 JNIEXPORT jobject JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeGetPrefs
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject props)
+Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeGetPrefs
+(JNIEnv *env, jobject obj, jint nativeContext, jobject props)
 {
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeGetIntPref: entering\n"));
+    
     nsresult rv = NS_ERROR_FAILURE;
-    jobject newProps;
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    wsGetPrefsEvent *actionEvent = nsnull;
-    void *voidResult = nsnull;
-
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to netiveGetPrefs");
-      return props;
-    }
-
-    PR_ASSERT(initContext->initComplete);
+    jobject newProps = nsnull;
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    nsCOMPtr<nsIPref> prefs = nsnull;
+    PR_ASSERT(wcContext);
+    
+    prefs = wcContext->sPrefs;
+    PR_ASSERT(prefs);
 
     // step one: create or clear props
     if (nsnull == props) {
         if (nsnull == 
             (newProps = 
              ::util_CreatePropertiesObject(env, (jobject)
-                                           &(initContext->shareContext)))) {
+                                           &(wcContext->shareContext)))) {
             ::util_ThrowExceptionToJava(env, "Exception: nativeGetPrefs: can't create prefs.");
             return props;
         }
@@ -204,7 +253,7 @@ Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeGetPrefs
     }
     else {
         ::util_ClearPropertiesObject(env, props, (jobject) 
-                                     &(initContext->shareContext));
+                                     &(wcContext->shareContext));
         
     }
     PR_ASSERT(props);
@@ -212,64 +261,46 @@ Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeGetPrefs
     // step two, call the magic enumeration function, to populate the
     // properties
     peStruct pes;
-    pes.cx = initContext;
+    pes.cx = wcContext;
     pes.obj = props;
-    if (!(actionEvent = new wsGetPrefsEvent(&pes))) {
-        ::util_ThrowExceptionToJava(env, "nativeSetPref: unable to create actionEvent");
-        return props;
-    }
-    
-    voidResult = ::util_PostSynchronousEvent(initContext,
-                                             (PLEvent *) *actionEvent);
-    rv = (nsresult) voidResult;
+
+    rv = prefs->EnumerateChildren("", prefEnumerator, &pes);
 
     if (NS_FAILED(rv)) {
         // PENDING(edburns): set a more specific kind of pref
         ::util_ThrowExceptionToJava(env, "nativeGetPrefs: can't get prefs");
     }
+
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeGetIntPref: exiting\n"));
     
     return props;
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeRegisterPrefChangedCallback
-(JNIEnv *env, jobject obj, jint webShellPtr, 
+Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeRegisterPrefChangedCallback
+(JNIEnv *env, jobject obj, jint nativeContext, 
  jobject callback, jstring prefName, jobject closure)
 {
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeRegisterPrefChangedCallback: entering\n"));
+    
     nsresult rv = NS_ERROR_FAILURE;
-    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
-    const char *prefNameChars;
-    wsRegisterPrefCallbackEvent *actionEvent = nsnull;
-    void *voidResult = nsnull;
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    const char *prefNameChars = nsnull;
+    nsCOMPtr<nsIPref> prefs = nsnull;
+    PR_ASSERT(wcContext);
     
-    if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeRegisterPrefChangedCallback");
-        return;
-    }
-    
-    PR_ASSERT(initContext->initComplete);
+    prefs = wcContext->sPrefs;
+    PR_ASSERT(prefs);
 
-    if (nsnull == (callback = ::util_NewGlobalRef(env, callback))) {
-        ::util_ThrowExceptionToJava(env, "Exception: nativeRegisterPrefChangedCallback: can't global ref for callback");
-        return;
-    }
-    
-    if (nsnull == (closure = ::util_NewGlobalRef(env, closure))) {
-        ::util_ThrowExceptionToJava(env, "Exception: nativeRegisterPrefChangedCallback: can't global ref for closure");
-        return;
-    }
-    
     // step one, set up our struct
-    peStruct *pes;
+    peStruct *pes = new peStruct();
     
-    if (nsnull == (pes = new peStruct())) {
-        ::util_ThrowExceptionToJava(env, "Exception: nativeRegisterPrefChangedCallback: can't get peStruct");
-        return;
-    }
-    
-    pes->cx = initContext;
-    pes->obj = closure;
-    pes->callback = callback;
+    pes->cx = wcContext;
+    pes->obj = ::util_NewGlobalRef(env, closure);
+    pes->callback = ::util_NewGlobalRef(env, callback);
+    closures.Put(nsDependentCString(prefNameChars), pes);
 
     // step two: create a const char * from the prefName
     if (nsnull == (prefNameChars = ::util_GetStringUTFChars(env, prefName))) {
@@ -277,15 +308,7 @@ Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeRegisterPrefCha
         return;
     }
 
-    if (!(actionEvent = new wsRegisterPrefCallbackEvent(prefNameChars, pes))) {
-        ::util_ThrowExceptionToJava(env, "nativeSetPref: unable to create actionEvent");
-        rv = NS_ERROR_NULL_POINTER;
-        return;
-    }
-    
-    voidResult = ::util_PostSynchronousEvent(initContext,
-                                             (PLEvent *) *actionEvent);
-    rv = (nsresult) voidResult;
+    rv = prefs->RegisterCallback(prefNameChars, prefChanged, pes);
 
     if (NS_FAILED(rv)) {
         // PENDING(edburns): set a more specific kind of pref
@@ -293,6 +316,165 @@ Java_org_mozilla_webclient_wrapper_1native_PreferencesImpl_nativeRegisterPrefCha
     }
     
     ::util_ReleaseStringUTFChars(env, prefName, prefNameChars);
-            
+    
     return;
 }
+
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeUnregisterPrefChangedCallback
+(JNIEnv *env, jobject obj, jint nativeContext, 
+ jobject callback, jstring prefName, jobject closure)
+{
+    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+           ("PreferencesImpl_nativeRegisterPrefChangedCallback: entering\n"));
+    
+    nsresult rv = NS_ERROR_FAILURE;
+    WebclientContext *wcContext = (WebclientContext *) nativeContext;
+    const char *prefNameChars = nsnull;
+    nsCOMPtr<nsIPref> prefs = nsnull;
+    PR_ASSERT(wcContext);
+    
+    prefs = wcContext->sPrefs;
+    PR_ASSERT(prefs);
+
+    // step one, set up our struct
+    peStruct *pes = nsnull;
+    
+
+    // step two: create a const char * from the prefName
+    if (nsnull == (prefNameChars = ::util_GetStringUTFChars(env, prefName))) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeRegisterPrefChangedCallback: can't get string for prefName");
+        return;
+    }
+    
+    nsDependentCString prefNameCString(prefNameChars);
+    
+    if (closures.Get(prefNameCString, &pes)) {
+        closures.Remove(prefNameCString);
+
+        rv = prefs->UnregisterCallback(prefNameChars, prefChanged, pes);
+        
+        if (NS_FAILED(rv)) {
+            // PENDING(edburns): set a more specific kind of pref
+            ::util_ThrowExceptionToJava(env, "nativeRegisterPrefChangedCallback: can't set callback");
+        }
+        
+        ::util_DeleteGlobalRef(env, pes->obj);
+        ::util_DeleteGlobalRef(env, pes->callback);
+        delete pes;
+    }
+    
+    ::util_ReleaseStringUTFChars(env, prefName, prefNameChars);
+    
+    return;
+}
+
+// 
+// Helper functions
+//
+
+void prefEnumerator(const char *name, void *closure)
+{
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    if (nsnull == closure) {
+        return;
+    }
+    peStruct *pes = (peStruct *) closure;
+    WebclientContext *wcContext =  pes->cx;
+    jobject props = pes->obj;
+    PRInt32 prefType, intVal;
+    PRBool boolVal;
+    jstring prefName = nsnull;
+    jstring prefValue = nsnull;
+    PRUnichar *prefValueUni = nsnull;
+    nsAutoString prefValueAuto;
+    const PRInt32 bufLen = 20;
+    char buf[bufLen];
+    memset(buf, 0, bufLen);
+    nsCOMPtr<nsIPref> prefs = wcContext->sPrefs;
+    
+    if (nsnull == props || !prefs) {
+        return;
+    }
+    if (NS_FAILED(prefs->GetPrefType(name, &prefType))) {
+        return;
+    }
+    
+    if (nsnull == (prefName = ::util_NewStringUTF(env, name))) {
+        return;
+    }
+    
+    switch(prefType) {
+    case nsIPref::ePrefInt:
+        if (NS_SUCCEEDED(prefs->GetIntPref(name, &intVal))) {
+            WC_ITOA(intVal, buf, 10);
+            prefValue = ::util_NewStringUTF(env, buf);
+        }
+        break;
+    case nsIPref::ePrefBool:
+        if (NS_SUCCEEDED(prefs->GetBoolPref(name, &boolVal))) {
+            if (boolVal) {
+                prefValue = ::util_NewStringUTF(env, "true");
+            }
+            else {
+                prefValue = ::util_NewStringUTF(env, "false");
+            }
+        }
+        break;
+    case nsIPref::ePrefString:
+        if (NS_SUCCEEDED(prefs->CopyUnicharPref(name, &prefValueUni))) {
+            prefValueAuto = prefValueUni;
+            prefValue = ::util_NewString(env, (const jchar *) prefValueUni,
+                                         prefValueAuto.Length());
+            delete [] prefValueUni;
+        }
+        break;
+    default:
+        PR_ASSERT(PR_TRUE);
+        break;
+    }
+    if (nsnull == prefValue) {
+        prefValue = ::util_NewStringUTF(env, "");
+    }
+    ::util_StoreIntoPropertiesObject(env, props, prefName, prefValue, 
+                                     (jobject) &(wcContext->shareContext));
+    ::util_DeleteLocalRef(env, prefName);
+    ::util_DeleteLocalRef(env, prefValue);
+}
+
+static int PR_CALLBACK prefChanged(const char *name, void *closure)
+{
+    if (nsnull == name || nsnull == closure) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    nsresult rv;
+    int result;
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    peStruct *pes = (peStruct *) closure;
+    jstring prefName;
+    
+    if (!(prefName = ::util_NewStringUTF(env, name))) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    
+#ifdef BAL_INTERFACE
+#else
+    jclass pcClass = nsnull;
+    jmethodID pcMID = nsnull;
+    
+    if (!(pcClass = env->GetObjectClass(pes->callback))) {
+        return NS_ERROR_FAILURE;
+    }
+    if (!(pcMID =env->GetMethodID(pcClass, "prefChanged",
+                                  "(Ljava/lang/String;Ljava/lang/Object;)I"))){
+        return NS_ERROR_FAILURE;
+    }
+    result = env->CallIntMethod(pes->callback, pcMID, prefName, 
+                                pes->obj);
+    
+#endif
+    
+    ::util_DeleteStringUTF(env, prefName);
+
+    return result;
+}
+ 

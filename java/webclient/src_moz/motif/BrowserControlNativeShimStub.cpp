@@ -34,7 +34,7 @@
 // JNI Header
 #include "../.h"
 // JNI Header
-#include "../NativeEventThread.h"
+#include "../org_mozilla_webclient_impl_wrapper_0005fnative_NativeEventThread.h"
 
 // allow code in webclientstub.so to load us
 #include "BrowserControlNativeShimStub.h"

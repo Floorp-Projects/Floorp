@@ -41,24 +41,6 @@ extern PRLogModuleInfo *prLogModuleInfo; // defined in WrapperFactory.cpp
 
 /**
 
- * Lifetime: 
-
- * Created using NS_GetGlobalComponentManager in WrapperFactoryImpl.cpp
- * nativeAppInitialize().
-
- * Set to nsnull in WrapperFactoryImpl.cpp nativeTerminate().
-
- * PENDING(edburns): is it preferable to use nsComponentManager:: static
- * methods?
-
- */
-
-class nsIComponentManager;
-extern nsIComponentManager *gComponentManager; // defined in NativeEventThread.cpp
-extern const char * gBinDir; // defined in WrapperFactoryImpl.cpp
-
-/**
-
  * Lifetime:
 
  * Lazily created in NativeEventThread.cpp InitMozillaStuff().

@@ -28,7 +28,7 @@
  *               Anthony Sizer <sizera@yahoo.com>
  */
 
-#include "NavigationImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_NavigationImpl.h"
 
 #include "NavigationActionEvents.h"
 #include "nsIServiceManagerUtils.h"
@@ -38,7 +38,7 @@
 
 #include "ns_util.h"
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeLoadURL
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeLoadURL
 (JNIEnv *env, jobject obj, jint webShellPtr, jstring urlString)
 {
     jobject			jobj = obj;
@@ -83,7 +83,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     ::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeLoadFromStream
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeLoadFromStream
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject stream, jstring uri, 
  jstring contentType, jint contentLength, jobject loadProperties)
 {
@@ -150,7 +150,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     // wsLoadFromStreamEvent destructor.
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativePost
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativePost
 (JNIEnv *env, jobject obj, jint webShellPtr, jstring absoluteURL, jstring target, jint postDataLength,
  jstring postData, jint postHeadersLength, jstring postHeaders)
 {
@@ -268,7 +268,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     return;
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeRefresh
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeRefresh
 (JNIEnv *env, jobject obj, jint webShellPtr, jlong loadFlags)
 {
 	JNIEnv	*	pEnv = env;
@@ -293,7 +293,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
 	return;
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeStop
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeStop
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
 	JNIEnv	*	pEnv = env;
@@ -315,7 +315,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeSetPrompt
+Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeSetPrompt
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject userPrompt)
 {
 	JNIEnv	*	pEnv = env;

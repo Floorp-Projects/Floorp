@@ -106,12 +106,11 @@ CPPSRCS = \
 	InputStreamShim.cpp \
 	RDFEnumeration.cpp \
 	RDFTreeNode.cpp \
-	RDFActionEvents.cpp \
 	wsRDFObserver.cpp \
 	WindowControlImpl.cpp \
 	WindowControlActionEvents.cpp \
 	PreferencesImpl.cpp \
-	PreferencesActionEvents.cpp \
+	ProfileManagerImpl.cpp \
 	WrapperFactoryImpl.cpp \
 	WindowCreator.cpp \
 	$(NULL)

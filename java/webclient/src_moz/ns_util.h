@@ -106,6 +106,19 @@ struct WebShellInitContext {
     ShareInitContext   shareContext;
 };
 
+class nsIProfile;
+class nsIProfileInternal;
+class nsIPref;
+class nsIAppShell;
+
+typedef struct WebclientContext {
+    nsIProfile *sProfile;
+    nsIProfileInternal *sProfileInternal;
+    nsIPref *sPrefs;
+    nsIAppShell *sAppShell;
+    ShareInitContext   shareContext;
+};
+
 enum {
 	kEventQueueError = 1,
 	kCreateWebShellError,

@@ -21,7 +21,7 @@
  */
 
 /*
- * RDFActionEvents.cpp
+ * PromptActionEvents.cpp
  */
 
 #include "PromptActionEvents.h"

@@ -30,7 +30,7 @@
  * CurrentPageImpl.cpp
  */
 
-#include "CurrentPageImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl.h"
 
 #include "CurrentPageActionEvents.h"
 
@@ -39,7 +39,7 @@
 
 #include "nsCRT.h"
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeCopyCurrentSelectionToSystemClipboard
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeCopyCurrentSelectionToSystemClipboard
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -52,7 +52,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSelection
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSelection
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject selection)
 {
     WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
@@ -76,7 +76,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 }
 
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeHighlightSelection
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeHighlightSelection
 (JNIEnv *env, jobject obj, jint webShellPtr, jobject startContainer, jobject endContainer, jint startOffset, jint endOffset)
 {
     WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
@@ -94,7 +94,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 }
 
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeClearAllSelections
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeClearAllSelections
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext *initContext = (WebShellInitContext *) webShellPtr;
@@ -113,11 +113,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 }
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeFindInPage
  * Signature: (Ljava/lang/String;ZZ)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindInPage
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFindInPage
 (JNIEnv *env, jobject obj, jint webShellPtr, jstring searchString, jboolean forward, jboolean matchCase)
 {
 
@@ -144,11 +144,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeFindNextInPage
  * Signature: (Z)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeFindNextInPage
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFindNextInPage
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
 
@@ -166,11 +166,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 }
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetCurrentURL
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetCurrentURL
+JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetCurrentURL
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     JNIEnv  *   pEnv = env;
@@ -205,7 +205,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
     return urlString;
 }
 
-JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetDOM
+JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetDOM
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -244,13 +244,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetSource
  * Signature: ()Ljava/lang/String;
  */
 
 /* PENDING(ashuk): remove this from here and in the motif directory
-JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSource
+JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSource
 (JNIEnv * env, jobject jobj)
 {
     jstring result = nsnull;
@@ -261,13 +261,13 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetSourceBytes
  * Signature: ()[B
  */
 
 /* PENDING(ashuk): remove this from here and in the motif directory
-JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
+JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
 (JNIEnv * env, jobject jobj, jint webShellPtr, jboolean viewMode)
 {
 
@@ -289,11 +289,11 @@ JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentP
 
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeResetFind
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeResetFind
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeResetFind
 (JNIEnv * env, jobject obj, jint webShellPtr)
 {
   WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -303,11 +303,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeSelectAll
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeSelectAll
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeSelectAll
 (JNIEnv * env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -319,11 +319,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 }
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativePrint
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativePrint
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativePrint
 (JNIEnv * env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -335,11 +335,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 }
 
 /*
- * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
+ * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativePrintPreview
  * Signature: (IZ)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativePrintPreview
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativePrintPreview
 (JNIEnv * env, jobject obj, jint webShellPtr, jboolean preview)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;

@@ -72,11 +72,12 @@
       <classpath refid="compile.classpath"/>
       <src path="${source.home}"/>
       <patternset>
-            <include name="org/mozilla/webclient/wrapper_native/gtk/*" 
+            <include name="org/mozilla/webclient/impl/wrapper_native/gtk/*" 
                      if="build.unix.classes"/>
       </patternset>
+
       <patternset>
-            <include name="org/mozilla/webclient/wrapper_native/win32/*" 
+            <include name="org/mozilla/webclient/impl/wrapper_native/win32/*" 
                      if="build.win32.classes"/>
       </patternset>
 
@@ -84,13 +85,14 @@
            HotJava, etc -->
 
       <include name="org/mozilla/webclient/*"/>
-      <include name="org/mozilla/webclient/wrapper_native/*"/>
-      <include name="org/mozilla/webclient/impl/**"/>
+      <include name="org/mozilla/webclient/impl/wrapper_native/*"/>
+      <include name="org/mozilla/webclient/impl/*"/>
       <include name="org/mozilla/webclient/test/*"/>
     </javac>
 
     <mkdir dir="${build.home}/META-INF/services"/>
-    <echo file="${build.home}/META-INF/services/org.mozilla.webclient.BrowserControlFactoryInterface">org.mozilla.webclient.impl.BrowserControlFactoryImpl</echo>
+    <echo file="${build.home}/META-INF/services/org.mozilla.webclient.WebclientFactory">org.mozilla.webclient.impl.WebclientFactoryImpl</echo>
+    <echo file="${build.home}/META-INF/services/org.mozilla.webclient.impl.WrapperFactory">org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImpl</echo>
 
   </target>
 
@@ -105,50 +107,10 @@
 
   </target>
 
-  <target name="compile.javah.headers" depends="compile.javah.canvas.headers">
+  <target name="compile.javah.headers" depends="compile.classes_spec,compile.javah.canvas.headers">
 
-    <javah outputFile="${basedir}/src_share/BookmarksImpl.h"
-           class="org.mozilla.webclient.wrapper_native.BookmarksImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/PreferencesImpl.h"
-           class="org.mozilla.webclient.wrapper_native.PreferencesImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/CurrentPageImpl.h"
-           class="org.mozilla.webclient.wrapper_native.CurrentPageImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/HistoryImpl.h"
-           class="org.mozilla.webclient.wrapper_native.HistoryImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/WrapperFactoryImpl.h"
-           class="org.mozilla.webclient.wrapper_native.WrapperFactoryImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/NavigationImpl.h"
-           class="org.mozilla.webclient.wrapper_native.NavigationImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/RDFEnumeration.h"
-           class="org.mozilla.webclient.wrapper_native.RDFEnumeration">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/RDFTreeNode.h"
-           class="org.mozilla.webclient.wrapper_native.RDFTreeNode">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/ISupportsPeer.h"
-           class="org.mozilla.webclient.wrapper_native.ISupportsPeer">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/WindowControlImpl.h"
-           class="org.mozilla.webclient.wrapper_native.WindowControlImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/NativeEventThread.h"
-           class="org.mozilla.webclient.wrapper_native.NativeEventThread">
+    <javah destdir="${basedir}/src_share"
+           class="org.mozilla.webclient.impl.wrapper_native.BookmarksImpl,org.mozilla.webclient.impl.wrapper_native.ProfileManagerImpl,org.mozilla.webclient.impl.wrapper_native.PreferencesImpl,org.mozilla.webclient.impl.wrapper_native.CurrentPageImpl,org.mozilla.webclient.impl.wrapper_native.HistoryImpl,org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImpl,org.mozilla.webclient.impl.wrapper_native.NavigationImpl,org.mozilla.webclient.impl.wrapper_native.RDFEnumeration,org.mozilla.webclient.impl.wrapper_native.RDFTreeNode,org.mozilla.webclient.impl.wrapper_native.ISupportsPeer,org.mozilla.webclient.impl.wrapper_native.WindowControlImpl,org.mozilla.webclient.impl.wrapper_native.NativeEventThread">
       <classpath refid="compile.classpath"/>
     </javah>
   </target>
@@ -158,8 +120,8 @@
 
   <target name="compile.unix.canvas.headers" if="build.unix.classes">
 
-    <javah outputFile="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"
-      class="org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas">
+    <javah destdir="${basedir}/src_moz/gtk"
+      class="org.mozilla.webclient.impl.wrapper_native.gtk.GtkBrowserControlCanvas">
       <classpath refid="compile.classpath"/>
     </javah>
 
@@ -167,8 +129,8 @@
 
   <target name="compile.win32.canvas.headers" if="build.win32.classes">
 
-    <javah outputFile="${basedir}/src_moz/win32/Win32BrowserControlCanvas.h"
-      class="org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas">
+    <javah destdir="${basedir}/src_moz/win32"
+      class="org.mozilla.webclient.impl.wrapper_native.win32.Win32BrowserControlCanvas">
       <classpath refid="compile.classpath"/>
     </javah>
 
@@ -207,7 +169,7 @@ depends="create.win32.webclient.scripts,create.unix.webclient.scripts"/>
   <target name="create.win32.webclient.scripts"
 if="build.win32.classes">
 
-    <condition property="debug.options" value="-Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n">
+    <condition property="debug.options" value="${debug.jvm.args}">
       <equals arg1="${myenv.MOZ_DEBUG}" arg2="1"/>
     </condition>
     <condition property="debug.options" value="">
@@ -225,7 +187,7 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
   <target name="create.unix.webclient.scripts"
 if="build.unix.classes">
 
-    <condition property="debug.options" value="-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n">
+    <condition property="debug.options" value="${debug.jvm.args}">
       <equals arg1="${myenv.MOZ_DEBUG}" arg2="1"/>
     </condition>
     <condition property="debug.options" value="">
@@ -242,9 +204,41 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
 
   </target>
 
-  <target name="clean">
+  <target name="clean.classes_spec">
+    <delete dir="${build.home}/org/mozilla/webclient"/>
+  </target>
+
+  <target name="clean" depends="clean.classes_spec">
 
     <ant antfile="build-tests.xml" target="clean"/>   
+    <delete>
+      <fileset dir="${basedir}/src_moz">
+        <include name="**/*BrowserControlCanvas.h"/>
+        <exclude name="motif/MotifBrowserControlCanvas.h"/>
+      </fileset>
+    </delete>
+
+    <delete >
+      <fileset dir="${basedir}/src_share">
+        <include name="*.h"/>
+        <exclude name="bal_util.h"/>
+        <exclude name="jni_util_export.h"/>
+        <exclude name="jni_util.h"/>
+      </fileset>
+    </delete>
+
+    <delete >
+      <fileset dir="${basedir}/src_moz">
+        <include name="*.ilk"/>
+      </fileset>
+    </delete>
+
+
+    <delete >
+      <fileset dir="${basedir}/src_ie">
+        <include name="*.ilk"/>
+      </fileset>
+    </delete>
 
     <exec os="SunOS" dir="${basedir}/src_moz" executable="gmake" 
           failonerror="yes">
@@ -284,37 +278,9 @@ ${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.Embedd
       <arg line="clobber_all"/>
     </exec>
 
-    <delete >
-      <fileset dir="${basedir}/src_share">
-        <include name="*.h"/>
-        <exclude name="bal_util.h"/>
-        <exclude name="jni_util_export.h"/>
-        <exclude name="jni_util.h"/>
-      </fileset>
-    </delete>
-
-    <delete >
-      <fileset dir="${basedir}/src_moz">
-        <include name="*.ilk"/>
-      </fileset>
-    </delete>
-
-
-    <delete file="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"/>
-    <delete file="${basedir}/src_moz/win32/Win32BrowserControlCanvas.h"/>
-
-
-    <delete dir="${build.home}/org/mozilla/webclient"/>
-
-    <delete >
-      <fileset dir="${basedir}/src_ie">
-        <include name="*.ilk"/>
-      </fileset>
-    </delete>
-
   </target>
 
-  <target name="run.test" depends="main" description="Run unit tests">
+  <target name="test" depends="main" description="Run unit tests">
 
     <ant antfile="build-tests.xml" target="run.test"/>
     

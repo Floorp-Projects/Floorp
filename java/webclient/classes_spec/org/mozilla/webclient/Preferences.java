@@ -30,6 +30,8 @@ public interface Preferences
   public Properties getPrefs();
   public void registerPrefChangedCallback(PrefChangedCallback cb,
                                           String prefName, Object closure);
+  public void unregisterPrefChangedCallback(PrefChangedCallback cb,
+                                            String prefName, Object closure);
 } 
 // end of interface Preferences
 

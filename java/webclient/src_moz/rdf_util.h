@@ -53,7 +53,8 @@ extern nsCOMPtr<nsIRDFResource> kRDF_type;
 extern nsCOMPtr<nsIRDFResource> kNewFolderCommand;
 extern nsCOMPtr<nsIRDFResource> kNewBookmarkCommand;
 
-nsresult rdf_InitRDFUtils();
+nsresult rdf_startup();
+nsresult rdf_shutdown();
 void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource);
 void rdf_printArcLabels(nsCOMPtr<nsIRDFResource> currentResource);
 

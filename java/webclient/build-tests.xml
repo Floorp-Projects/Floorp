@@ -72,6 +72,7 @@
     <!-- Output directory for test data files -->
     <property name="build.test" value="${basedir}/build.test"/>
 
+    <property name="native.waitForDebugger" value=""/>
 
     <path id="test.classpath">
       <pathelement location="${junit.jar}"/>
@@ -128,14 +129,20 @@
             <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>
             <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
             <jvmarg value="-DBROWSER_BIN_DIR=${myenv.MOZILLA_FIVE_HOME}"/>
+            <sysproperty key="native.waitForDebugger" 
+                         value="${native.waitForDebugger}"/>
             <jvmarg line="${debug.jvm.args}"/>
-
 
             <classpath refid="test.classpath"/>
 
             <formatter type="plain" usefile="false"/>
-
             <test name="org.mozilla.webclient.BrowserControlFactoryTest"/>
+            <test name="org.mozilla.webclient.ProfileManagerTest"/>
+            <test name="org.mozilla.webclient.PreferencesTest"/>
+            <test name="org.mozilla.webclient.BookmarksTest"/>
+            <test name="org.mozilla.webclient.impl.WebclientFactoryImplTest"/>
+            <test name="org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImplTest"/>
+
 <!-- non-running tests 
 
             <test name="org.mozilla.webclient.wrapper_native.gtk.TestGtkBrowserControlCanvas"/>

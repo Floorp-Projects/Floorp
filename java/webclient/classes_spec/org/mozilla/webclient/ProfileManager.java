@@ -24,21 +24,25 @@ package org.mozilla.webclient;
 
 public interface ProfileManager
 {
-public int GetProfileCount();
 
-public String [] GetProfileList(int [] length);
+public int getProfileCount();
 
-public boolean ProfileExists(String profileName);
+public String [] getProfileList();
 
-public String GetCurrentProfile();
+public boolean profileExists(String profileName);
 
-public void SetCurrentProfile(String profileName);
+public String getCurrentProfile();
 
-public void CreateNewProfile(String profileName, String nativeProfileDir, String langcode, boolean useExistingDir);
+public void setCurrentProfile(String profileName);
 
-public void RenameProfile(String currName, String newName);
+public void createNewProfile(String profileName, 
+                             String nativeProfileDir, 
+                             String langcode, 
+                             boolean useExistingDir);
 
-public void DeleteProfile(String profileName, boolean canDeleteFiles);
+public void renameProfile(String currName, String newName);
 
-public void CloneProfile(String currName);
+public void deleteProfile(String profileName, boolean canDeleteFiles);
+
+public void cloneProfile(String currName);
 }

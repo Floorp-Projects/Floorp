@@ -26,7 +26,7 @@
  *               Ann Sunhachawee
  */
 
-#include "WindowControlImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_WindowControlImpl.h"
 
 #include "WindowControlActionEvents.h"
 
@@ -37,11 +37,8 @@
 #include "nsCOMPtr.h" // to get nsIBaseWindow from webshell
 #include "nsIBaseWindow.h" // to get methods like SetVisibility
 
-
-
-
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeSetBounds
+Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetBounds
 (JNIEnv *env, jobject obj, jint webShellPtr, jint x, jint y, jint w, jint h)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -60,7 +57,7 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeSetBounds
     
 }
 
-JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeCreateInitContext
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeCreateInitContext
 (JNIEnv *env, jobject obj, jint windowPtr, jint x, jint y, 
  jint width, jint height, jobject aBrowserControlImpl)
 {
@@ -100,15 +97,9 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->h = height;
     initContext->currentDocument = nsnull;
     initContext->browserContainer = nsnull;
-    util_InitializeShareInitContext(&(initContext->shareContext));
+    util_InitializeShareInitContext(env, &(initContext->shareContext));
 
 #ifdef XP_UNIX
-    /***** Uncomment this to debug on unix
-    pid_t pid = getpid();
-    printf("++++++++++++++++debug: edburns: pid is: %d\n", pid);
-    sleep(7);
-    **************/ 
-
     initContext->gtkWinPtr = 
         (int)::util_GetGTKWinPtrFromCanvas(env, aBrowserControlImpl);
 #else
@@ -119,7 +110,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 }
 
 JNIEXPORT void JNICALL 
-Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitContext
+Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeDestroyInitContext
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -143,7 +134,7 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
 }
 
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeMoveWindowTo
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeMoveWindowTo
 (JNIEnv *env, jobject obj, jint webShellPtr, jint x, jint y)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -161,7 +152,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 	}
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeRemoveFocus
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeRemoveFocus
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -179,7 +170,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 	}
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeRepaint
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeRepaint
 (JNIEnv *env, jobject obj, jint webShellPtr, jboolean forceRepaint)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
@@ -198,7 +189,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
 
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeSetVisible
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetVisible
 (JNIEnv *env, jobject obj, jint webShellPtr, jboolean newState)
 {
 
@@ -215,7 +206,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
   
 }
 
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeSetFocus
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowControlImpl_nativeSetFocus
 (JNIEnv *env, jobject obj, jint webShellPtr)
 {
     WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;

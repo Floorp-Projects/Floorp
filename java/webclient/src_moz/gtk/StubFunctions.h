@@ -23,19 +23,19 @@
 
 #include <jni.h>
 
-#include "BookmarksImpl.h"
-#include "PreferencesImpl.h"
-#include "CurrentPageImpl.h"
-#include "HistoryImpl.h"
-#include "ISupportsPeer.h"
-#include "NavigationImpl.h"
-#include "RDFEnumeration.h"
-#include "RDFTreeNode.h"
-#include "WindowControlImpl.h"
-#include "WrapperFactoryImpl.h"
-#include "NativeEventThread.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_BookmarksImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_PreferencesImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_HistoryImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_ISupportsPeer.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_NavigationImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_RDFEnumeration.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_RDFTreeNode.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_WindowControlImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_WrapperFactoryImpl.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_NativeEventThread.h"
 
-#include "GtkBrowserControlCanvas.h"
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_gtk_GtkBrowserControlCanvas.h"
 
 #define WEBCLIENTSTUB_LOG_MODULE "webclientstub"
 #define WEBCLIENT_DSO "libwebclient.so"
@@ -64,13 +64,13 @@ void (* processEvents) (JNIEnv *, jobject);
 void (* setGTKWindowSize) (JNIEnv *, jobject, jint, jint, jint);
 jint (* getHandleToPeer) (JNIEnv *, jobject);
 
-// from NativeEventThread.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_NativeEventThread.h
 void (* nativeAddListener) (JNIEnv *, jobject, jint, jobject, jstring);
 void (* nativeRemoveListener) (JNIEnv *, jobject, jint, jobject, jstring);
 void (* nativeRemoveAllListeners) (JNIEnv *, jobject, jint);
 void (* nativeInitialize) (JNIEnv *, jobject, jint);
 void (* nativeProcessEvents) (JNIEnv *, jobject, jint);
-// from BookmarksImpl.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_BookmarksImpl.h
 jint (* nativeGetBookmarks) (JNIEnv *, jobject, jint);
 jint (* nativeNewRDFNode)  (JNIEnv *, jobject, jint, jstring, jboolean);
 // from PreferencesImpl.h
@@ -79,7 +79,7 @@ void (* nativeSetIntPref) (JNIEnv *, jobject, jint, jstring, jint);
 void (* nativeSetBoolPref) (JNIEnv *, jobject, jint, jstring, jboolean);
 jobject (* nativeGetPrefs) (JNIEnv *env, jobject obj, jint webShellPtr, jobject props);
 void (* nativeRegisterPrefChangedCallback) (JNIEnv *env, jobject obj, jint webShellPtr, jobject callback, jstring prefName, jobject closure);
-// from CurrentPageImpl.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl.h
 void (* nativeCopyCurrentSelectionToSystemClipboard) (JNIEnv *, jobject, jint);
 void (* nativeGetSelection) (JNIEnv *, jobject, jint, jobject);
 void (* nativeHighlightSelection) (JNIEnv *, jobject, jint, jobject, jobject, jint, jint);
@@ -90,7 +90,7 @@ jstring (* nativeGetCurrentURL) (JNIEnv *, jobject, jint);
 void (* nativeResetFind) (JNIEnv *, jobject, jint);
 void (* nativeSelectAll) (JNIEnv *, jobject, jint);
 jobject (* nativeGetDOM) (JNIEnv *, jobject, jint);
-// from HistoryImpl.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_HistoryImpl.h
 void (* nativeBack) (JNIEnv *, jobject, jint);
 jboolean (* nativeCanBack) (JNIEnv *, jobject, jint);
 jboolean (* nativeCanForward) (JNIEnv *, jobject, jint);
@@ -104,20 +104,20 @@ jobject (* nativeGetHistoryEntry) (JNIEnv *, jobject, jint, jint);
 jint (* nativeGetHistoryLength) (JNIEnv *, jobject, jint);
 jstring (* nativeGetURLForIndex) (JNIEnv *, jobject, jint, jint);
 void (* nativeSetCurrentHistoryIndex) (JNIEnv *, jobject, jint, jint);
-// from ISupportsPeer.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_ISupportsPeer.h
 void (* nativeAddRef) (JNIEnv *, jobject, jint);
 void (* nativeRelease) (JNIEnv *, jobject, jint);
-// from NavigationImpl.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_NavigationImpl.h
 void (* nativeLoadURL) (JNIEnv *, jobject, jint, jstring);
 void (* nativeLoadFromStream) (JNIEnv *, jobject, jint, jobject, jstring, jstring, jint, jobject);
 void (* nativeRefresh) (JNIEnv *, jobject, jint, jlong);
 void (* nativeStop) (JNIEnv *, jobject, jint);
 void (* nativeSetPrompt) (JNIEnv *, jobject, jint, jobject);
-// from RDFEnumeration.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_RDFEnumeration.h
 void (* nativeFinalize) (JNIEnv *, jobject, jint);
 jboolean (* nativeHasMoreElements) (JNIEnv *, jobject, jint, jint);
 jint (* nativeNextElement) (JNIEnv *, jobject, jint, jint);
-// from RDFTreeNode.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_RDFTreeNode.h
 jint (* nativeGetChildAt) (JNIEnv *, jobject, jint, jint, jint);
 jint (* nativeGetChildCount) (JNIEnv *, jobject, jint, jint);
 jint (* nativeGetIndex) (JNIEnv *, jobject, jint, jint, jint);
@@ -126,7 +126,7 @@ jint (* nativeNewFolder) (JNIEnv *, jobject, jint, jint, jobject);
 jboolean (* nativeIsContainer) (JNIEnv *, jobject, jint, jint);
 jboolean (* nativeIsLeaf) (JNIEnv *, jobject, jint, jint);
 jstring (* nativeToString) (JNIEnv *, jobject, jint, jint);
-// from WindowControlImpl.h
+// from org_mozilla_webclient_impl_wrapper_0005fnative_WindowControlImpl.h
 jint (* nativeCreateInitContext) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jobject);
 void (* nativeMoveWindowTo) (JNIEnv *, jobject, jint, jint, jint);
 void (* nativeRemoveFocus) (JNIEnv *, jobject, jint);
@@ -135,8 +135,8 @@ void (* nativeSetBounds) (JNIEnv *, jobject, jint, jint, jint, jint, jint);
 void (* nativeSetFocus) (JNIEnv *, jobject, jint);
 void (* nativeSetVisible) (JNIEnv *, jobject, jint, jboolean);
 void (* nativeDestroyInitContext) (JNIEnv *, jobject, jint);
-//from WrapperFactoryImpl.h
+//from org_mozilla_webclient_impl_wrapper_0005fnative_WrapperFactoryImpl.h
 jboolean (* nativeDoesImplement) (JNIEnv *, jobject, jstring);
-void (* nativeAppInitialize) (JNIEnv *, jobject, jstring);
-void (* nativeTerminate) (JNIEnv *, jobject);
+jint (* nativeAppInitialize) (JNIEnv *, jobject, jstring);
+void (* nativeTerminate) (JNIEnv *, jobject, jint);
 

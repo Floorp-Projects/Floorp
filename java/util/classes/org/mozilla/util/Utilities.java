@@ -33,6 +33,11 @@ import java.util.MissingResourceException;
 import java.awt.Component;
 import java.awt.Container;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 public class Utilities extends Object {
     // PENDING(kbern) NOTE: These Vector methods should eventually move into a file
@@ -283,6 +288,82 @@ public class Utilities extends Object {
             return false;
         return aString.regionMatches(true, aString.length() - endingLength,
                                      possibleEnding, 0, endingLength);
+    }
+
+    /**
+     *
+     * <p>This method tries to load the resource
+     * <code>META-INF/services/&gt;interfaceClassName&gt;</code>, where
+     * <code>&gt;interfaceClassName&lt;</code> is the argument to this
+     * method.  If the resource is found, interpret it as a
+     * <code>Properties</code> file and read out its first line.
+     * Interpret the first line as the fully qualified class name of a
+     * class that implements <code></code>.  The named class must have a
+     * public no-arg constructor.</p>
+     *
+     */
+
+
+    public static Object getImplFromServices(String interfaceClassName) {
+        Object instance = null;
+        
+        ClassLoader classLoader = 
+            Thread.currentThread().getContextClassLoader();
+        if (classLoader == null) {
+            throw new RuntimeException("Context ClassLoader");
+        }
+        
+        BufferedReader reader = null;
+        InputStream stream = null;
+        String 
+            className = null,
+            resourceName = "META-INF/services/" + interfaceClassName;
+        try {
+            stream = classLoader.getResourceAsStream(resourceName);
+            if (stream != null) {
+                // Deal with systems whose native encoding is possibly
+                // different from the way that the services entry was created
+                try {
+                    reader =
+                        new BufferedReader(new InputStreamReader(stream,
+                                                                 "UTF-8"));
+                } catch (UnsupportedEncodingException e) {
+                    reader = new BufferedReader(new InputStreamReader(stream));
+                }
+                className = reader.readLine();
+                reader.close();
+                reader = null;
+                stream = null;
+            }
+        } catch (IOException e) {
+        } catch (SecurityException e) {
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Throwable t) {
+                    ;
+                }
+                reader = null;
+                stream = null;
+            }
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (Throwable t) {
+                    ;
+                }
+                stream = null;
+            }
+        }
+        if (null != className) {
+            try {
+                Class clazz = classLoader.loadClass(className);
+                instance = clazz.newInstance();
+            } catch (Exception e) {
+            }
+        }
+        return instance;
     }
 }
 

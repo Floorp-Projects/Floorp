@@ -54,6 +54,11 @@ JNIEXPORT void JNICALL util_ReleaseStringChars(JNIEnv *env, jstring inString,
 JNIEXPORT jsize  JNICALL util_GetStringLength(JNIEnv *env, 
                                                     jstring inString);
 
+JNIEXPORT jobjectArray util_GetJstringArrayFromJcharArray(JNIEnv *env, 
+                                                          jint len,
+                                                          jchar **strings,
+                                                          jint *stringLengths);
+
 JNIEXPORT jstring JNICALL util_NewStringUTF(JNIEnv *env, 
                                             const char * inString);
 
