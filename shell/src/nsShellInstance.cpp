@@ -33,20 +33,29 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kCShellInstance, NS_SHELLINSTANCE_CID);
 
 class nsShellInstanceFactory : public nsIFactory {
 
 public:
-  nsShellInstanceFactory();
+  nsShellInstanceFactory(const nsCID &aClass);
   ~nsShellInstanceFactory();
 
-  NS_DECL_ISUPPORTS
+  // nsISupports methods   
+  NS_IMETHOD QueryInterface(const nsIID &aIID,    
+                            void **aResult);   
+  NS_IMETHOD_(nsrefcnt) AddRef(void);   
+  NS_IMETHOD_(nsrefcnt) Release(void);   
 
   NS_IMETHOD CreateInstance(nsISupports * aOuter,
                             const nsIID &aIID,
                             void ** aResult);
 
   NS_IMETHOD LockFactory(PRBool aLock);
+
+private:   
+  nsrefcnt  mRefCnt;   
+  nsCID     mClassID;
 
 };
 
@@ -126,6 +135,10 @@ nsresult nsShellInstance::RegisterFactories()
   #define GFXWIN_DLL "libgfxunix.so"
   #define WIDGET_DLL "libwidgetunix.so"
 #endif
+
+
+  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
+  NSRepository::RegisterFactory(kIWidgetIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   // register graphics classes
   static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID);
@@ -230,61 +243,83 @@ nsIWidget * nsShellInstance::GetApplicationWidget()
   return (mApplicationWindow);
 }
 
-nsShellInstanceFactory::nsShellInstanceFactory()
+nsShellInstanceFactory::nsShellInstanceFactory(const nsCID &aClass)
 {    
+  mRefCnt = 0;
+  mClassID = aClass;
 }
 
 nsShellInstanceFactory::~nsShellInstanceFactory()
 {    
+  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }
 
-nsresult nsShellInstanceFactory::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+nsresult nsShellInstanceFactory::QueryInterface(const nsIID &aIID,   
+                                      void **aResult)   
+{   
+  if (aResult == NULL) {   
+    return NS_ERROR_NULL_POINTER;   
+  }   
 
-  if (aIID.Equals(kIFactoryIID)) {
-    *aInstancePtr = (void*)(nsShellInstanceFactory*)this;
-    AddRef();
-    return NS_OK;
-  }
+  // Always NULL result, in case of failure   
+  *aResult = NULL;   
 
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsShellInstanceFactory*)this;
-    AddRef();
-    return NS_OK;
-  }
+  if (aIID.Equals(kISupportsIID)) {   
+    *aResult = (void *)(nsISupports*)this;   
+  } else if (aIID.Equals(kIFactoryIID)) {   
+    *aResult = (void *)(nsIFactory*)this;   
+  }   
 
-  return NS_NOINTERFACE;
-}
+  if (*aResult == NULL) {   
+    return NS_NOINTERFACE;   
+  }   
 
-NS_IMPL_ADDREF(nsShellInstanceFactory)
-NS_IMPL_RELEASE(nsShellInstanceFactory)
+  AddRef(); // Increase reference count for caller   
+  return NS_OK;   
+}   
+
+nsrefcnt nsShellInstanceFactory::AddRef()   
+{   
+  return ++mRefCnt;   
+}   
+
+nsrefcnt nsShellInstanceFactory::Release()   
+{   
+  if (--mRefCnt == 0) {   
+    delete this;   
+    return 0; // Don't access mRefCnt after deleting!   
+  }   
+  return mRefCnt;   
+}  
 
 nsresult nsShellInstanceFactory::CreateInstance(nsISupports * aOuter,
                                                    const nsIID &aIID,
                                                    void ** aResult)
 {
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
+  if (aResult == NULL) {  
+    return NS_ERROR_NULL_POINTER;  
+  }  
+
+  *aResult = NULL;  
+  
+  nsISupports *inst = nsnull;
+
+  if (mClassID.Equals(kCShellInstance)) {
+    inst = (nsISupports *)new nsShellInstance();
   }
 
-  *aResult = NULL ;  
-
-  nsISupports * inst = new nsShellInstance() ;
-
-  if (inst == NULL) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  if (inst == NULL) {  
+    return NS_ERROR_OUT_OF_MEMORY;  
+  }  
 
   nsresult res = inst->QueryInterface(aIID, aResult);
 
-  if (res != NS_OK) {
-    delete inst ;
-  }
+  if (res != NS_OK) {  
+    // We didn't get the right interface, so clean up  
+    delete inst;  
+  }  
 
-  return res;
+  return res;  
 
 }
 
@@ -294,13 +329,13 @@ nsresult nsShellInstanceFactory::LockFactory(PRBool aLock)
 }
 
 // return the proper factory to the caller
-extern "C" NS_WEB nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" NS_SHELL nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 {
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aFactory = new nsShellInstanceFactory();
+  *aFactory = new nsShellInstanceFactory(aClass);
 
   if (nsnull == aFactory) {
     return NS_ERROR_OUT_OF_MEMORY;

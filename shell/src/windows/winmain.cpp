@@ -31,7 +31,9 @@ extern nsIID kIXPCOMApplicationShellCID ;
 
 static NS_DEFINE_IID(kIApplicationShellIID, NS_IAPPLICATIONSHELL_IID);
 static NS_DEFINE_IID(kCApplicationShellIID, NS_IAPPLICATIONSHELL_CID);
-static NS_DEFINE_IID(kCShellInstanceIID, NS_ISHELLINSTANCE_IID);
+
+static NS_DEFINE_IID(kIShellInstanceIID, NS_ISHELLINSTANCE_IID);
+static NS_DEFINE_IID(kCShellInstanceCID, NS_SHELLINSTANCE_CID);
 
 int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
@@ -41,11 +43,11 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
 	nsIApplicationShell * pApplicationShell ;
 
     // Let get a ShellInstance for this Application instance
-    NSRepository::RegisterFactory(kCShellInstanceIID, SHELL_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCShellInstanceCID, SHELL_DLL, PR_FALSE, PR_FALSE);
 
-	result = NSRepository::CreateInstance(kCShellInstanceIID,
+	result = NSRepository::CreateInstance(kCShellInstanceCID,
 										  NULL,
-										  kCShellInstanceIID,
+										  kIShellInstanceIID,
 										  (void **) &pShellInstance) ;
 
 	if (result != NS_OK)
