@@ -1399,41 +1399,37 @@ function InitPrompts()
 // prompt for getting messages when offline
 function PromptGetMessagesOffline()
 {
+  var buttonPressed = false;
   InitPrompts();
   if (gPromptService) {
-    var buttonPressed = {value:0};
     var checkValue = {value:false};
-    gPromptService.confirmEx(window, 
+    buttonPressed = gPromptService.confirmEx(window, 
                             gOfflinePromptsBundle.getString('getMessagesOfflineWindowTitle'), 
                             gOfflinePromptsBundle.getString('getMessagesOfflineLabel'),
                             (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
                             (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1),
                             gOfflinePromptsBundle.getString('getMessagesOfflineGoButtonLabel'),
-                            null, null, null, checkValue, buttonPressed);
-    if(buttonPressed) {
-      return buttonPressed.value;
-    }
+                            null, null, null, checkValue);
   }
+  return buttonPressed;
 }
 
 // prompt for sending messages when offline
 function PromptSendMessagesOffline()
 {
+  var buttonPressed = false;
   InitPrompts();
   if (gPromptService) {
-    var buttonPressed = {value:0};
     var checkValue= {value:false};
-    gPromptService.confirmEx(window, 
+    buttonPressed = gPromptService.confirmEx(window, 
                             gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
                             gOfflinePromptsBundle.getString('sendMessagesOfflineLabel'),
                             (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
                             (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1),
                             gOfflinePromptsBundle.getString('sendMessagesOfflineGoButtonLabel'),
                             null, null, null, checkValue, buttonPressed);
-    if(buttonPressed) {
-      return buttonPressed.value;
-    }
   }
+  return buttonPressed;
 }
 
 function GetFolderMessages()

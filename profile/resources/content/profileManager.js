@@ -162,17 +162,16 @@ function ConfirmDelete()
     if (pathExists) {
       dialogText = gProfileManagerBundle.getFormattedString("deleteprofile", [path]);
       dialogText = dialogText.replace(/\s*<html:br\/>/g,"\n");
-      var buttonPressed = {value:0}
-      promptService.confirmEx(window, dialogTitle, dialogText,
+      var buttonPressed = promptService.confirmEx(window, dialogTitle, dialogText,
                               (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
                               (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
                               (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2),
                               gProfileManagerBundle.getString("dontDeleteFiles"),
                               null,
                               gProfileManagerBundle.getString("deleteFiles"),
-                              null, {value:0}, buttonPressed);
-      if (buttonPressed.value != 1)
-          DeleteProfile(buttonPressed.value == 2);
+                              null, {value:0});
+      if (buttonPressed != 1)
+          DeleteProfile(buttonPressed == 2);
     }
     else
       DeleteProfile(false);

@@ -156,16 +156,14 @@ function onCancel()
     if (accountCount < 1) {
       var confirmMsg = gPrefsBundle.getString("cancelWizard");
       var confirmTitle = gPrefsBundle.getString("accountWizard");
-      var result = {value:0};
-
-      promptService.confirmEx(window, confirmTitle, confirmMsg,
+      var result = promptService.confirmEx(window, confirmTitle, confirmMsg,
         (promptService.BUTTON_TITLE_IS_STRING*promptService.BUTTON_POS_0)+
         (promptService.BUTTON_TITLE_IS_STRING*promptService.BUTTON_POS_1),
         gPrefsBundle.getString('WizardExit'),
         gPrefsBundle.getString('WizardContinue'), 
-        null, null, {value:0}, result);
+        null, null, {value:0});
 
-      if (result.value == 1)
+      if (result == 1)
         closeWizard = false;
     }
 

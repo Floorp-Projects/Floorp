@@ -369,17 +369,15 @@ var homeButtonObserver = {
 function openHomeDialog(aURL)
 {
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  var pressedVal = { };
   var promptTitle = gNavigatorBundle.getString("droponhometitle");
   var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
   var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
-
-  promptService.confirmEx(window, promptTitle, promptMsg,
+  var pressedVal = promptService.confirmEx(window, promptTitle, promptMsg,
                           (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
                           (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-                          okButton, null, null, null, {value:0}, pressedVal);
+                          okButton, null, null, null, {value:0});
 
-  if (pressedVal.value == 0) {
+  if (pressedVal == 0) {
     nsPreferences.setUnicharPref("browser.startup.homepage", aURL);
     setTooltipText("home-button", aURL);
   }

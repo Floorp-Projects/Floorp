@@ -1716,9 +1716,8 @@ function SendMessageWithCheck()
     var warn = sPrefs.getBoolPref("mail.warn_on_send_accel_key");
 
     if (warn) {
-        var buttonPressed = {value:1};
         var checkValue = {value:false};
-        gPromptService.confirmEx(window, 
+        var buttonPressed = gPromptService.confirmEx(window, 
               sComposeMsgsBundle.getString('sendMessageCheckWindowTitle'), 
               sComposeMsgsBundle.getString('sendMessageCheckLabel'),
               (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
@@ -1726,8 +1725,8 @@ function SendMessageWithCheck()
               sComposeMsgsBundle.getString('sendMessageCheckSendButtonLabel'),
               null, null,
               sComposeMsgsBundle.getString('CheckMsg'), 
-              checkValue, buttonPressed);
-        if (!buttonPressed || buttonPressed.value != 0) {
+              checkValue);
+        if (buttonPressed != 0) {
             return;
         }
         if (checkValue.value) {
@@ -2010,31 +2009,27 @@ function ComposeCanClose()
 {
   if (gSendOrSaveOperationInProgress)
   {
-      var result;
+    var result;
 
-      if (gPromptService)
-      {
-        var promptTitle = sComposeMsgsBundle.getString("quitComposeWindowTitle");
-        var promptMsg = sComposeMsgsBundle.getString("quitComposeWindowMessage");
-        var quitButtonLabel = sComposeMsgsBundle.getString("quitComposeWindowQuitButtonLabel");
-        var waitButtonLabel = sComposeMsgsBundle.getString("quitComposeWindowWaitButtonLabel");
+    if (gPromptService)
+    {
+      var promptTitle = sComposeMsgsBundle.getString("quitComposeWindowTitle");
+      var promptMsg = sComposeMsgsBundle.getString("quitComposeWindowMessage");
+      var quitButtonLabel = sComposeMsgsBundle.getString("quitComposeWindowQuitButtonLabel");
+      var waitButtonLabel = sComposeMsgsBundle.getString("quitComposeWindowWaitButtonLabel");
 
-        result = {value:0};
-        gPromptService.confirmEx(window, promptTitle, promptMsg,
+      result = gPromptService.confirmEx(window, promptTitle, promptMsg,
           (gPromptService.BUTTON_TITLE_IS_STRING*gPromptService.BUTTON_POS_0) +
           (gPromptService.BUTTON_TITLE_IS_STRING*gPromptService.BUTTON_POS_1),
-          waitButtonLabel, quitButtonLabel, null, null, {value:0}, result);
+          waitButtonLabel, quitButtonLabel, null, null, {value:0});
 
-        if (result.value == 1)
-          {
-            gMsgCompose.abort();
-            return true;
-          }
-        else 
-          {
-            return false;
-          }
+      if (result == 1)
+      {
+        gMsgCompose.abort();
+        return true;
       }
+      return false;
+    }
   }
 
   dump("XXX changed? " + gContentChanged + "," + gMsgCompose.bodyModified + "\n");
@@ -2046,31 +2041,26 @@ function ComposeCanClose()
     window.focus();
     if (gPromptService)
     {
-            result = {value:0};
-            gPromptService.confirmEx(window,
+      result = gPromptService.confirmEx(window,
                               sComposeMsgsBundle.getString("saveDlogTitle"),
                               sComposeMsgsBundle.getString("saveDlogMessage"),
                               (gPromptService.BUTTON_TITLE_SAVE * gPromptService.BUTTON_POS_0) +
                               (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1) +
                               (gPromptService.BUTTON_TITLE_DONT_SAVE * gPromptService.BUTTON_POS_2),
                               null, null, null,
-                              null, {value:0}, result);
-
-      if (result)
+                              null, {value:0});
+      switch (result)
       {
-        switch (result.value)
-        {
-          case 0: //Save
-                        if (LastToClose())
-                            NotifyQuitApplication();
-            gCloseWindowAfterSave = true;
-            SaveAsDraft();
-            return false;
-          case 1: //Cancel
-            return false;
-          case 2: //Don't Save
-            break;
-        }
+        case 0: //Save
+          if (LastToClose())
+          NotifyQuitApplication();
+          gCloseWindowAfterSave = true;
+          SaveAsDraft();
+          return false;
+        case 1: //Cancel
+          return false;
+        case 2: //Don't Save
+          break;
       }
     }
 

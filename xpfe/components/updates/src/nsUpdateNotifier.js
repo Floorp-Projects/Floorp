@@ -240,16 +240,15 @@ var nsUpdateDatasourceObserver =
       var button1Text = unBundle.GetStringFromName("noThanks");
       var checkMsg = unBundle.GetStringFromName("dontAskAgain");
       var checkVal = {value:0};
-      var result = {value:1}; // default to "No Thanks" in case user clicks `x'
 
-      promptService.confirmEx(winWatcher.activeWindow, title, desc, 
+      var result = promptService.confirmEx(winWatcher.activeWindow, title, desc, 
         (promptService.BUTTON_POS_0 * promptService.BUTTON_TITLE_IS_STRING) +
         (promptService.BUTTON_POS_1 * promptService.BUTTON_TITLE_IS_STRING),
-        button0Text, button1Text, null, checkMsg, checkVal, result);
+        button0Text, button1Text, null, checkMsg, checkVal);
 
       // user wants update now so open new window 
-      // (result.value => 0 is button0)
-      if (result.value == 0)
+      // (result => 0 is button0)
+      if (result == 0)
         winWatcher.openWindow(winWatcher.activeWindow, updateInfo.URL, 
           "_blank", "", null);
 

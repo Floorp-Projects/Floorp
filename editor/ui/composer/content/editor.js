@@ -511,9 +511,11 @@ function CheckAndSaveDocument(command, allowDontSave)
     promptFlags += doPublish ?
         (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2)
         : (promptService.BUTTON_TITLE_DONT_SAVE * promptService.BUTTON_POS_2);
-    
-  promptService.confirmEx(window, dialogTitle, dialogMsg, promptFlags,
-                          button1Title, null, button3Title, null, {value:0}, result);
+
+  result = promptService.confirmEx(
+    window, dialogTitle, dialogMsg, promptFlags,
+    button1Title, null, button3Title, null, {value:0}
+  );
 
   if (result.value == 0)
   {
