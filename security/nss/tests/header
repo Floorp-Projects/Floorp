@@ -139,9 +139,9 @@ KILL_SELFSERV=OFF   # if sourcing script sets this to on cleanup will also
                     # Set the masterbuilds 
 if [ -z "$UX_MASTERBUILD" ]
 then                     
-    UX_MASTERBUILD=y2sun2_Solaris8
+    UX_MASTERBUILD=booboo_Solaris8
     #if [ ! -d $UX_MASTERBUILD ] ; then
-        #UX_MASTERBUILD=y2sun2_Solaris8_forte6
+        #UX_MASTERBUILD=booboo_Solaris8_forte6
     #fi
 fi
 if [ -z "$NT_MASTERBUILD" ]
@@ -176,7 +176,7 @@ fi
 if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
 then                      # a linux compiler bug prevents us from doing the 
                           # testing against a rtm - so we rebuild the branch
-    BC_MASTER=nss322/builds/20010820.1
+    BC_MASTER=nss322/builds/20010820.1/y2sun2_Solaris8
     #if [ "`uname -sp`" != "SunOS i386" ] ; then
         #BC_MASTER="nss32/builds/20010510.1-nss-3.2-ref"
     #else
@@ -510,8 +510,8 @@ init_dirs()
     set_daily_build_dirs
 
     if [ -z "${BCDIST}" ] ; then
-        #BCDIST=/share/builds/mccrel/nss/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
-        BCDIST=${NSS_VER_DIR}/../${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+        #BCDIST=/share/builds/mccrel/nss/${BC_MASTER}/mozilla/dist
+        BCDIST=${NSS_VER_DIR}/../${BC_MASTER}/mozilla/dist
         if [ ! -d $BCDIST ] ; then
             ask "Backward compatibility directory $BCDIST does not exist, continue" "y" "n" || Exit
         fi
