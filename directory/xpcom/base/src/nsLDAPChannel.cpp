@@ -624,6 +624,7 @@ nsLDAPChannel::pipeWrite(char *str)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXXdmose deal more gracefully with an error here
+  // XXX use of strlen() ok?
   //
   rv = mListener->OnDataAvailable(this, mResponseContext, mReadPipeIn, 
 				  mReadPipeOffset, strlen(str));
