@@ -229,17 +229,6 @@ function Shutdown()
         appCore.stop();
     }
     dump( "Loading page specified via openDialog\n" );
-    dump("Check if a view source window \n");
-    if( window.arguments[1]=="view-source" )
-    {
-    	dump(" A view source window \n");
-    	var element = document.getElementById("main-window");
-    	
-    	var preface = element.getAttribute("viewsourcetitlepreface");
-    	element.setAttribute( "titlepreface", preface );
-    	appCore.isViewSource = true;
-    	element.setAttribute("windowtype","Browser:view-source");
-    }
     appCore.loadUrl( window.arguments[0] );
   }
 
@@ -962,12 +951,10 @@ function BrowserEditBookmarks()
   function BrowserViewSource()
   {
 	dump("BrowserViewSource(); \n ");
-    // Use a browser window to view source
-    window.openDialog( "chrome://navigator/content/",
-                       "_blank",
-                       "chrome,menubar,status,dialog=no,resizable",
-                       window.content.location,
-                       "view-source" );
+   window.openDialog( "chrome://navigator/content/viewSource.xul",
+							 "_blank",
+							 "chrome,dialog=no",
+							 window.content.location);
   }
 
 
