@@ -20,6 +20,7 @@
 #include "CRDFToolbarItem.h"
 #include "URDFUtilities.h"
 
+#include <vector>
 #include <cassert>
 #include "htrdf.h"
 #include "CPaneEnabler.h"
@@ -30,65 +31,109 @@ extern RDF_NCVocab		gNavCenter;
 extern RDF_CoreVocab	gCoreVocab;
 
 
-	/*
-		The functions |pane_params_from|, |view_params_from|, and |is_docked| should be
-		within an anonymous namespace.
-	*/
 
-static
-SPaneInfo
-pane_params_from( HT_View /*ht_view*/, LView* pp_superview )
+
+
+namespace
 	{
-		SPaneInfo info;
+			// BULLSHIT ALERT: the following magic numbers should be derived from HT
+		const SInt16 TOOLBAR_HORIZONTAL_PADDING	= 2;
+		const SInt16 TOOLBAR_VERTICAL_PADDING		= 2;
+		const SInt16 TOOLBAR_INITIAL_VERTICAL_OFFSET = 14;
 
-		info.paneID			= 0;
+		struct item_spec
+			{
+				item_spec()
+					{
+						// nothing else to do
+					}
 
-		SDimension16 superview_size;
-		pp_superview->GetFrameSize(superview_size);
-		info.width			= superview_size.width;
+				item_spec( CRDFToolbarItem& item, SDimension16 available_space )
+						: _item( &item ),
+							_size( item.NaturalSize(available_space) ),
+							_is_stretchy( item.IsStretchy() )
+					{
+						// nothing else to do
+					}
 
-		info.height			= 55; // NO! Get this value from the |HT_View|.
-		info.visible		= false;		// we'll get shown when bar is added.
-		info.enabled		= false;
-		
-		SBooleanRect bindings = { true, true, true, false };
-		info.bindings	= bindings;
+				CRDFToolbarItem*	_item;
+				SDimension16			_size;
+				bool							_is_stretchy;
+			};
 
-		info.left				= 0;
-		info.top				= 0;
+		typedef std::vector<item_spec> item_list;
 
-		info.userCon		= 0;
-		info.superView	= pp_superview;
 
-		return info;
-	}
+		void
+		layout_row( item_list::iterator first, item_list::iterator last, SInt16 inLeft, SInt16 inBottom, SInt16 stretchy_space )
+			{
+				for ( ; first != last; ++first )
+					{
+						if ( first->_is_stretchy )
+							first->_size.width += stretchy_space;
 
-static
-SViewInfo
-view_params_from( HT_View /*ht_view*/ )
-	{
-		SViewInfo info;
+						first->_item->ResizeFrameTo(first->_size.width, first->_size.height, false);
+						first->_item->PlaceInSuperFrameAt(inLeft, inBottom-first->_size.height, false);
 
-		SDimension32 image_size = { 0, 0 };
-		info.imageSize = image_size;
+						inLeft += first->_size.width + TOOLBAR_HORIZONTAL_PADDING;
+					}
+			}
 
-		SPoint32 scroll_pos = { 0, 0 };
-		info.scrollPos = scroll_pos;
+		SPaneInfo
+		pane_params_from( HT_View /*ht_view*/, LView* pp_superview )
+			{
+				SPaneInfo info;
 
-		SPoint32 scroll_unit = { 1, 1 };
-		info.scrollUnit = scroll_unit;
+				info.paneID			= 0;
 
-		info.reconcileOverhang = 0;
+				SDimension16 superview_size;
+				pp_superview->GetFrameSize(superview_size);
+				info.width			= superview_size.width;
 
-		return info;
-	}
+				info.height			= 55; // NO! Get this value from the |HT_View|.
+				info.visible		= false;		// we'll get shown when bar is added.
+				info.enabled		= false;
+				
+				SBooleanRect bindings = { true, true, true, false };
+				info.bindings	= bindings;
 
-static
-bool
-is_docked( HT_View /*ht_view*/ )
-	{
-		return false;
-	}
+				info.left				= 0;
+				info.top				= 0;
+
+				info.userCon		= 0;
+				info.superView	= pp_superview;
+
+				return info;
+			}
+
+		SViewInfo
+		view_params_from( HT_View /*ht_view*/ )
+			{
+				SViewInfo info;
+
+				SDimension32 image_size = { 0, 0 };
+				info.imageSize = image_size;
+
+				SPoint32 scroll_pos = { 0, 0 };
+				info.scrollPos = scroll_pos;
+
+				SPoint32 scroll_unit = { 1, 1 };
+				info.scrollUnit = scroll_unit;
+
+				info.reconcileOverhang = 0;
+
+				return info;
+			}
+
+		bool
+		is_docked( HT_View /*ht_view*/ )
+			{
+				return false;
+			}
+
+
+	} // namespace
+
 
 
 
@@ -160,7 +205,7 @@ CRDFToolbar :: FillInToolbar ( )
 		return;
 
 	HT_Resource item = NULL;
-	while (item = HT_GetNextItem(cursor))
+	while ( (item = HT_GetNextItem(cursor)) != 0 )
 		AddHTButton(item);
 
 	HT_DeleteCursor(cursor);
@@ -170,58 +215,77 @@ CRDFToolbar :: FillInToolbar ( )
 } // FillInToolbar
 
 
-//
-// LayoutButtons
-//
-// Do the work to layout the buttons
-//
+
+
 void
-CRDFToolbar :: LayoutButtons ( )
-{
-	Uint32 horiz = 20;
+CRDFToolbar::LayoutButtons()
+		/*
+			...some property has changed that may effect the layout of the items within me.
+			I need to re-calculate the layout of my contents.
 
-	bool iconOnTop = false;
-	char* value = NULL;
-	PRBool success = HT_GetTemplateData ( TopNode(), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &value );
-	if ( success && value ) {
-		if ( strcmp(value, "top") == 0 )
-			iconOnTop = true;
-	}
-	
-	HT_Cursor cursor = HT_NewCursor(TopNode());
-	if (cursor == NULL)
-		return;
+			TO DO: make sure this doesn't get called recursively, i.e., when it resizes itself.
+				No harm done, just wasted work.
 
-	HT_Resource item = NULL;
-	while (item = HT_GetNextItem(cursor)) {
-		CRDFToolbarItem* button = reinterpret_cast<CRDFToolbarItem*>(HT_GetNodeFEData(item));
-		if ( button ) {
-			Uint32 hDelta = 0;
-			if ( HT_IsURLBar(item) ) {
-				button->ResizeFrameTo ( 300, 50, false );
-				button->PlaceInSuperFrameAt ( horiz, 5, false );
-				hDelta = 300;			
+			TO DO: make and use an |auto_ptr<_HT_Cursor>|.
+		*/
+	{
+			// loop over the items, if we can
+		if ( HT_Cursor cursor = HT_NewCursor(TopNode()) )
+			{
+				SDimension16 toolbar_size;
+				GetFrameSize(toolbar_size);
+					// BULLSHIT ALERT: do I need to account for the grippy pane?
+
+				SInt16 row_bottom = 0;
+
+				SInt16 row_height = 0;
+				SInt16 width_available = toolbar_size.width;
+				size_t number_of_stretchy_items = 0;
+
+				item_list row;
+				row.reserve(32); // reserve room for enough items to make allocation unlikely
+
+				while ( HT_Resource resource = HT_GetNextItem(cursor) )
+					if ( CRDFToolbarItem* toolbar_item = reinterpret_cast<CRDFToolbarItem*>(HT_GetNodeFEData(resource)) )
+						{
+							item_spec spec(*toolbar_item, toolbar_size);
+
+								// If the current item is too big to fit in this row...
+							if ( spec._size.width > width_available )
+								{
+										// ...we're done with this row.  Lay it out.
+									layout_row(row.begin(), row.end(), TOOLBAR_INITIAL_VERTICAL_OFFSET, row_bottom+=(TOOLBAR_VERTICAL_PADDING+row_height), width_available / number_of_stretchy_items);
+
+										// And start accumulating a new row.
+									row.resize(0);
+									row_height = 0;
+									width_available = toolbar_size.width;
+									number_of_stretchy_items = 0;
+								}
+
+								// Add this item to the row we're currently accumulating.
+							row.push_back(spec);
+
+								// ...and account for its size.
+							width_available -= (spec._size.width + TOOLBAR_HORIZONTAL_PADDING);
+							if ( spec._size.height > row_height )
+								row_height = spec._size.height;	// this item makes the row taller
+							if ( spec._is_stretchy )
+								++number_of_stretchy_items;
+						}
+
+					// The final row comprises all remaining accumulated items.  Lay it out.
+				layout_row(row.begin(), row.end(), TOOLBAR_INITIAL_VERTICAL_OFFSET, row_bottom+=(TOOLBAR_VERTICAL_PADDING+row_height), width_available / number_of_stretchy_items);
+				if ( toolbar_size.height != (row_bottom += TOOLBAR_VERTICAL_PADDING) )
+					ResizeFrameTo(toolbar_size.width, row_bottom, false);
+
+				HT_DeleteCursor(cursor);
 			}
-			else {
-				if ( iconOnTop ) {
-					button->ResizeFrameTo ( 50, 50, false );
-					button->PlaceInSuperFrameAt ( horiz, 5, false );
-					hDelta = 50;
-				}
-				else {
-					button->ResizeFrameTo ( 80, 20, false );
-					button->PlaceInSuperFrameAt ( horiz, 5, false );
-					hDelta = 80;
-				}			
-			}
-			horiz += hDelta;
-		}
 	}
-	Refresh();
 
-	HT_DeleteCursor(cursor);
-	
-} // LayoutButtons
+
+
+
 
 
 //
@@ -287,34 +351,23 @@ CRDFToolbar::ImageIsReady()
 	}
 
 
-//
-// DrawStandby
-//
-// Called when the bg image is not present (or there isn't one). Needs to repaint the background the
-// appropriate color.
-//
 void
 CRDFToolbar::DrawStandby( const Point&, const IconTransformType ) const
-{
-	EraseBackground();
-}
+		// Called to take alternative action when the BG image is not ready, or does not exist.
+	{
+		EraseBackground();
+	}
 
 
-//
-// EraseBackground
-//
-// Draw the bg of the toolbar to match what HT tells us. We know at this point that we don't have
-// a bg image, else it would have been drawn already.
-//
 void
-CRDFToolbar :: EraseBackground ( ) const
-{
-	Rect backRect = { 0, 0, mFrameSize.height, mFrameSize.width };
-	
-	URDFUtilities::SetupBackgroundColor ( TopNode(), gNavCenter->viewBGColor, kThemeListViewBackgroundBrush );
-	::EraseRect(&backRect);
-
-} // EraseBackground
+CRDFToolbar::EraseBackground() const
+		// Erase to the HT supplied color.  We know we don't have an image, or it would have been drawn already.
+	{
+		Rect backRect = { 0, 0, mFrameSize.height, mFrameSize.width };
+		
+		URDFUtilities::SetupBackgroundColor ( TopNode(), gNavCenter->viewBGColor, kThemeListViewBackgroundBrush );
+		::EraseRect(&backRect);
+	}
 
 
 void
