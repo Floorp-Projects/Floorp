@@ -634,12 +634,6 @@ nsGenericDOMDataNode::GetIDAttributeName() const
   return nsnull;
 }
 
-nsIAtom *
-nsGenericDOMDataNode::GetClassAttributeName() const
-{
-  return nsnull;
-}
-
 already_AddRefed<nsINodeInfo>
 nsGenericDOMDataNode::GetExistingAttrNameFromQName(const nsAString& aStr) const
 {

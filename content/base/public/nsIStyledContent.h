@@ -48,7 +48,7 @@ class nsAttrValue;
 
 // IID for the nsIStyledContent class
 #define NS_ISTYLEDCONTENT_IID   \
-{ 0x13cc12f1, 0x2892, 0x47e4, { 0xaa, 0x77, 0x24, 0xc, 0xa7, 0x49, 0x82, 0xde } };
+{ 0xa7b53093, 0x3516, 0x4392, { 0xb3, 0x3e, 0x12, 0xc0, 0x0d, 0xe7, 0x85, 0xaa } };
 
 // Abstract interface for all styled content (that supports ID, CLASS, STYLE, and
 // the ability to specify style hints on an attribute change).
@@ -85,6 +85,14 @@ public:
    */
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const = 0;
+
+
+  /**
+   * Returns an atom holding the name of the "class" attribute on this
+   * content node (if applicable).  Returns null for non-element
+   * content nodes.
+   */
+  virtual nsIAtom *GetClassAttributeName() const = 0;
 
 };
 
