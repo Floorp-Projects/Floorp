@@ -28,12 +28,9 @@
 class nsConsoleMessage : public nsIConsoleMessage {
 public:
     nsConsoleMessage();
+    nsConsoleMessage(const PRUnichar *message);
 
     virtual ~nsConsoleMessage();
-
-    nsConsoleMessage(const PRUnichar *message) {
-        mMessage.Assign(message);
-    }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
