@@ -38,9 +38,7 @@ public:
     virtual ~nsMsgSendPart();	  // Note that the destructor also destroys
 								                // any children that were added.
 
-    virtual int       Write(PRBool    aMultiPartRelatedWithAttachmentsMessage,
-                            char      *attachmentSeparator,
-                            char      *multipartRelatedSeparator);
+    virtual int       Write();
 
     virtual int       SetFile(nsFileSpec *filename);
     const nsFileSpec  *GetFileSpec() {return m_filespec;}
@@ -85,17 +83,10 @@ public:
                       {
                         return m_mainpart;
                       }
-  void                SetMultipartRelatedFlag(PRBool aFlag);
-  PRBool              IsMultipartRelatedPart();
-  void                SetPartSeparator(char *aPartSeparator);
-  char                *GetPartSeparator();
-
 protected:
 	int                 CopyString(char** dest, const char* src);
 	int                 PushBody(char* buffer, PRInt32 length);
 
-  char                *mPartSeparator;  // Don't Free this memory!
-  PRBool              mMHTMLPart;       // Is this an MHTML part?
 	nsMsgComposeAndSend *m_state;
 	nsMsgSendPart       *m_parent;
   nsFileSpec          *m_filespec;

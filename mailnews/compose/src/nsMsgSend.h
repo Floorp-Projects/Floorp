@@ -234,8 +234,7 @@ public:
 			             const char       *attachment1_body,
 			             PRUint32         attachment1_body_length,
 			             const nsMsgAttachmentData   *attachments,
-			             const nsMsgAttachedFile     *preloaded_attachments,
-			             nsMsgSendPart    *relatedPart);
+			             const nsMsgAttachedFile     *preloaded_attachments);
 
   //
   // Setup the composition fields
@@ -283,7 +282,6 @@ public:
                                const char  *attachment1_type);
 
   PRInt32     PreProcessPart(nsMsgAttachmentHandler  *ma,
-                             char                    *aSeparator,
                              nsMsgSendPart           *toppart); // The very top most container of the message
                                                                 // For part processing
 
@@ -379,6 +377,7 @@ public:
 
 	// The multipart/related save object for HTML text.
   nsMsgSendPart           *m_related_part;
+  nsMsgSendPart           *m_related_body_part;
 
   //
   // Subsequent attachments, if any.

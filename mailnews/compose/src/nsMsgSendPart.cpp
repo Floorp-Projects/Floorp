@@ -62,9 +62,6 @@ nsMsgSendPart::nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charse
   
   SetMimeDeliveryState(state);
 
-  mMHTMLPart = PR_FALSE;
-  mPartSeparator = nsnull;
-
   m_parent = NULL;
   m_filespec = NULL;
   m_filetype = (XP_FileType)0;
@@ -98,30 +95,6 @@ nsMsgSendPart::~nsMsgSendPart()
 	if (m_filespec)
     delete m_filespec;
 	PR_FREEIF(m_type);
-}
-
-void
-nsMsgSendPart::SetMultipartRelatedFlag(PRBool aFlag)
-{
-  mMHTMLPart = aFlag;
-}
-
-void
-nsMsgSendPart::SetPartSeparator(char *aPartSeparator)
-{
-  mPartSeparator = aPartSeparator;
-}
-
-char *
-nsMsgSendPart::GetPartSeparator()
-{
-  return mPartSeparator;
-}
-
-PRBool
-nsMsgSendPart::IsMultipartRelatedPart()
-{
-  return mMHTMLPart;
 }
 
 int nsMsgSendPart::CopyString(char** dest, const char* src)
@@ -491,12 +464,10 @@ divide_content_headers(const char *headers,
 }
 
 int 
-nsMsgSendPart::Write(PRBool   aMultiPartRelatedWithAttachmentsMessage,
-                     char     *attachmentSeparator,
-                     char     *multipartRelatedSeparator)
+nsMsgSendPart::Write()
 {
   int     status = 0;
-  PRBool  partOfMPARTMessage;
+  char    *separator = nsnull;
 
 #define PUSHLEN(str, length)									\
   do {														\
@@ -544,11 +515,16 @@ nsMsgSendPart::Write(PRBool   aMultiPartRelatedWithAttachmentsMessage,
       if (!NS_SUCCEEDED(res))
         goto FAIL;
       
-      myURLUtil->ScanHTMLForURLs(m_buffer, &tmp);
-      if (tmp) 
+      const char* charset = GetCharsetName();
+      if (!nsCRT::strcasecmp("us-ascii", charset) ||
+          !nsCRT::strcasecmp("ISO-8859-1", charset))
       {
-        SetBuffer(tmp);
-        PR_Free(tmp);
+        myURLUtil->ScanHTMLForURLs(m_buffer, &tmp);
+        if (tmp) 
+        {
+          SetBuffer(tmp);
+          PR_Free(tmp);
+        }
       }
     }
   }
@@ -624,6 +600,16 @@ nsMsgSendPart::Write(PRBool   aMultiPartRelatedWithAttachmentsMessage,
       char *ct2;
       NS_ASSERTION(m_type, "null ptr");
 
+      if (!separator)
+      {
+        separator = mime_make_separator("");
+        if (!separator)
+        {
+          status = NS_ERROR_OUT_OF_MEMORY;
+          goto FAIL;
+        }
+      }
+
       L = PL_strlen(content_type_header);
       
       if (content_type_header[L-1] == LF)
@@ -631,7 +617,7 @@ nsMsgSendPart::Write(PRBool   aMultiPartRelatedWithAttachmentsMessage,
       if (content_type_header[L-1] == CR)
         content_type_header[--L] = 0;
       
-      ct2 = PR_smprintf("%s;\r\n boundary=\"%s\"" CRLF, content_type_header, attachmentSeparator);
+      ct2 = PR_smprintf("%s;\r\n boundary=\"%s\"" CRLF, content_type_header, separator);
       PR_Free(content_type_header);
       if (!ct2) 
       {
@@ -782,10 +768,8 @@ nsMsgSendPart::Write(PRBool   aMultiPartRelatedWithAttachmentsMessage,
   
   // 
   // Ok, from here we loop and drive the the output of all children 
-  // for this message. Need to do write the correct separator depending
-  // on what kind of part it is
+  // for this message.
   //
-  partOfMPARTMessage = PR_TRUE;
   if (m_numchildren > 0) 
   {
     for (int i = 0 ; i < m_numchildren ; i ++) 
@@ -793,44 +777,23 @@ nsMsgSendPart::Write(PRBool   aMultiPartRelatedWithAttachmentsMessage,
       PUSH(CRLF);
       PUSH("--");
 
-      PUSH(m_children[i]->GetPartSeparator());
-      PUSH(CRLF);
-      status = m_children[i]->Write(aMultiPartRelatedWithAttachmentsMessage,
-                                    attachmentSeparator,
-                                    multipartRelatedSeparator);
+			PUSH(separator);
+			PUSH(CRLF);
+
+      status = m_children[i]->Write();
       if (status < 0)
         goto FAIL;
-
-      // 
-      // If we are at a part that has a new separator, then 
-      // this is not part of the past the first entry, then we are at the
-      // end of the multipart related message and we need to
-      // mark the end of the multipart/related field.
-      //
-      if ( (aMultiPartRelatedWithAttachmentsMessage) &&
-           (partOfMPARTMessage) && 
-           (i+1 < m_numchildren) &&
-           (!m_children[i+1]->mMHTMLPart) )
-           //(i > 0) &&
-           // PL_strcasecmp(m_children[i]->GetPartSeparator(), m_children[i-1]->GetPartSeparator(), ) != 0 ) 
-      {
-        PUSH(CRLF);
-        PUSH("--");
-        PUSH(m_children[i]->GetPartSeparator());
-        PUSH("--");
-        PUSH(CRLF);
-        partOfMPARTMessage = PR_FALSE;
-      }
     }
 
     PUSH(CRLF);
     PUSH("--");
-    PUSH(m_children[m_numchildren-1]->GetPartSeparator());
+    PUSH(separator);
     PUSH("--");
     PUSH(CRLF);
   }	
   
 FAIL:
+  PR_FREEIF(separator);
   return status;
 }
 
