@@ -218,13 +218,9 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 
     // Adjust the available height if its constrained so that the
     // child frame doesn't think it can reflow into its margin area.
-    // XXX write me
-#if 0
-    availSpace.y += topMargin;
-    if (NS_UNCONSTRAINEDSIZE != availHeight) {
-      availSpace.height -= topMargin;
+    if (aApplyTopMargin && (NS_UNCONSTRAINEDSIZE != reflowState.availableHeight)) {
+      reflowState.availableHeight -= topMargin;
     }
-#endif
   }
   mTopMargin = topMargin;
 
