@@ -2758,10 +2758,10 @@ nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
             PRUint32 prehostLocation = ref.Find(prehost.get(), PR_TRUE);
             PRInt32 remainingStart = prehostLocation +
                     PL_strlen(prehost.get()) + 1; // 1 for @
-            ref = Substring(NS_READABLE_CAST(char*, ref),
+            ref = Substring(NS_READABLE_CAST(char, ref),
                     (PRUint32) 0,
                     (PRUint32) prehostLocation) +
-                Substring(NS_READABLE_CAST(char*, ref),
+                Substring(NS_READABLE_CAST(char, ref),
                     (PRUint32) remainingStart,
                     (PRUint32) ref.Length()-remainingStart);
         }
