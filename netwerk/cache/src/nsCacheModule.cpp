@@ -29,31 +29,6 @@
 // nsCacheService
 //
 
-
-#ifdef DEBUG
-
-// Provide factories for some internal classes (debug only)
-// 
-
-#include "nsMemoryCacheTransport.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMemoryCacheTransport)
-
-#define NS_MEMORYCACHETRANSPORT_CLASSNAME \
-    "Memory Cache Transport"
-#define NS_MEMORYCACHETRANSPORT_CONTRACTID \
-    "@mozilla.org/network/memory-cache-transport;1"
-#define NS_MEMORYCACHETRANSPORT_CID                  \
-{ /* 31cb2052-d906-4b53-b3d2-6905c6c6d3b1 */         \
-    0x31cb2052,                                      \
-    0xd906,                                          \
-    0x4b53,                                          \
-    {0xb3, 0xd2, 0x69, 0x05, 0xc6, 0xc6, 0xd3, 0xb1} \
-}
-
-#endif
-
-
 static nsModuleComponentInfo gResComponents[] = {
     {
         NS_CACHESERVICE_CLASSNAME,
@@ -61,14 +36,6 @@ static nsModuleComponentInfo gResComponents[] = {
         NS_CACHESERVICE_CONTRACTID,
         nsCacheService::Create
     }
-#ifdef DEBUG
-   ,{
-        NS_MEMORYCACHETRANSPORT_CLASSNAME,
-        NS_MEMORYCACHETRANSPORT_CID,
-        NS_MEMORYCACHETRANSPORT_CONTRACTID,
-        nsMemoryCacheTransportConstructor
-    }
-#endif
 };
 
 NS_IMPL_NSGETMODULE("cacheservice", gResComponents)
