@@ -369,7 +369,7 @@ if test -n "$CROSS_COMPILE"; then
         openvms*)     OS_TARGET=`uname -s`
                       OS_ARCH=`uname -s | sed -e 's|/|_|g'`
                       OS_RELEASE=`uname -r`
-                      OS_TEST=`uname -m`;;
+                      OS_TEST=`uname -Wh`;;
     esac
 else
     OS_TARGET=`uname -s`
