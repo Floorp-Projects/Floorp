@@ -48,13 +48,6 @@ class nsISupportsArray;
 class nsIDOMScriptObjectFactory;
 class nsChildContentList;
 
-enum nsSetAttrNotify {
-  eSetAttrNotify_None = 0,
-  eSetAttrNotify_Render = 1,
-  eSetAttrNotify_Reflow = 2,
-  eSetAttrNotify_Restart = 3
-};
-
 class nsGenericHTMLElement : public nsIJSScriptObject {
 public:
   nsGenericHTMLElement();
@@ -134,7 +127,7 @@ public:
                         PRBool aNotify);
   nsresult SetAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
                         PRBool aNotify);
-  nsresult UnsetAttribute(nsIAtom* aAttribute);
+  nsresult UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify);
   nsresult GetAttribute(nsIAtom *aAttribute, nsString &aResult) const;
   nsresult GetAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
   nsresult GetAllAttributeNames(nsISupportsArray* aArray,
@@ -162,14 +155,6 @@ public:
   NS_DECL_ISUPPORTS
 
   //----------------------------------------
-
-  nsresult SetAttr(nsIAtom* aAttribute, const nsString& aValue,
-                   nsSetAttrNotify aNotify);
-
-  nsresult SetAttr(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                   nsSetAttrNotify aNotify);
-
-  nsresult UnsetAttr(nsIAtom* aAttribute, nsSetAttrNotify aNotify);
 
   nsresult RenderFrame();
 
@@ -700,8 +685,8 @@ public:
                           const nsHTMLValue& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aAttribute, aValue, aNotify);               \
   }                                                                    \
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute) {                     \
-    return _g.UnsetAttribute(aAttribute);                              \
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {     \
+    return _g.UnsetAttribute(aAttribute, aNotify);                     \
   }                                                                    \
   NS_IMETHOD GetAttribute(nsIAtom *aAttribute,                         \
                           nsString &aResult) const {                   \
@@ -759,8 +744,8 @@ public:
                           const nsHTMLValue& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aAttribute, aValue, aNotify);               \
   }                                                                    \
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute) {                     \
-    return _g.UnsetAttribute(aAttribute);                              \
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {     \
+    return _g.UnsetAttribute(aAttribute, aNotify);                     \
   }                                                                    \
   NS_IMETHOD GetAttribute(nsIAtom *aAttribute,                         \
                           nsString &aResult) const {                   \
@@ -870,17 +855,17 @@ public:
  * valued content property. The method uses the generic SetAttr and
  * GetAttribute methods.
  */
-#define NS_IMPL_STRING_ATTR(_class, _method, _atom, _notify)    \
-  NS_IMETHODIMP                                                 \
-  _class::Get##_method(nsString& aValue)                        \
-  {                                                             \
-    mInner.GetAttribute(nsHTMLAtoms::_atom, aValue);            \
-    return NS_OK;                                               \
-  }                                                             \
-  NS_IMETHODIMP                                                 \
-  _class::Set##_method(const nsString& aValue)                  \
-  {                                                             \
-    return mInner.SetAttr(nsHTMLAtoms::_atom, aValue, _notify); \
+#define NS_IMPL_STRING_ATTR(_class, _method, _atom, _notify)         \
+  NS_IMETHODIMP                                                      \
+  _class::Get##_method(nsString& aValue)                             \
+  {                                                                  \
+    mInner.GetAttribute(nsHTMLAtoms::_atom, aValue);                 \
+    return NS_OK;                                                    \
+  }                                                                  \
+  NS_IMETHODIMP                                                      \
+  _class::Set##_method(const nsString& aValue)                       \
+  {                                                                  \
+    return mInner.SetAttribute(nsHTMLAtoms::_atom, aValue, PR_TRUE); \
   }
 
 /**
@@ -888,26 +873,26 @@ public:
  * valued content property. The method uses the generic SetAttr and
  * GetAttribute methods.
  */
-#define NS_IMPL_BOOL_ATTR(_class, _method, _atom, _notify)       \
-  NS_IMETHODIMP                                                  \
-  _class::Get##_method(PRBool* aValue)                           \
-  {                                                              \
-    nsHTMLValue val;                                             \
-    nsresult rv = mInner.GetAttribute(nsHTMLAtoms::_atom, val);  \
-    *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                   \
-    return NS_OK;                                                \
-  }                                                              \
-  NS_IMETHODIMP                                                  \
-  _class::Set##_method(PRBool aValue)                            \
-  {                                                              \
-    nsAutoString empty;                                          \
-    if (aValue) {                                                \
-      return mInner.SetAttr(nsHTMLAtoms::_atom, empty, _notify); \
-    }                                                            \
-    else {                                                       \
-      mInner.UnsetAttr(nsHTMLAtoms::_atom, _notify);             \
-      return NS_OK;                                              \
-    }                                                            \
+#define NS_IMPL_BOOL_ATTR(_class, _method, _atom, _notify)            \
+  NS_IMETHODIMP                                                       \
+  _class::Get##_method(PRBool* aValue)                                \
+  {                                                                   \
+    nsHTMLValue val;                                                  \
+    nsresult rv = mInner.GetAttribute(nsHTMLAtoms::_atom, val);       \
+    *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                        \
+    return NS_OK;                                                     \
+  }                                                                   \
+  NS_IMETHODIMP                                                       \
+  _class::Set##_method(PRBool aValue)                                 \
+  {                                                                   \
+    nsAutoString empty;                                               \
+    if (aValue) {                                                     \
+      return mInner.SetAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE); \
+    }                                                                 \
+    else {                                                            \
+      mInner.UnsetAttribute(nsHTMLAtoms::_atom, PR_TRUE);             \
+      return NS_OK;                                                   \
+    }                                                                 \
   }
 
 /**
@@ -915,25 +900,25 @@ public:
  * valued content property. The method uses the generic SetAttr and
  * GetAttribute methods.
  */
-#define NS_IMPL_INT_ATTR(_class, _method, _atom, _notify)      \
-  NS_IMETHODIMP                                                \
-  _class::Get##_method(PRInt32* aValue)                        \
-  {                                                            \
-    nsHTMLValue value;                                         \
-    *aValue = -1;                                              \
-    if (NS_CONTENT_ATTR_HAS_VALUE ==                           \
-        mInner.GetAttribute(nsHTMLAtoms::_atom, value)) {      \
-      if (value.GetUnit() == eHTMLUnit_Integer) {              \
-        *aValue = value.GetIntValue();                         \
-      }                                                        \
-    }                                                          \
-    return NS_OK;                                              \
-  }                                                            \
-  NS_IMETHODIMP                                                \
-  _class::Set##_method(PRInt32 aValue)                         \
-  {                                                            \
-    nsHTMLValue value(aValue, eHTMLUnit_Integer);              \
-    return mInner.SetAttr(nsHTMLAtoms::_atom, value, _notify); \
+#define NS_IMPL_INT_ATTR(_class, _method, _atom, _notify)           \
+  NS_IMETHODIMP                                                     \
+  _class::Get##_method(PRInt32* aValue)                             \
+  {                                                                 \
+    nsHTMLValue value;                                              \
+    *aValue = -1;                                                   \
+    if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
+        mInner.GetAttribute(nsHTMLAtoms::_atom, value)) {           \
+      if (value.GetUnit() == eHTMLUnit_Integer) {                   \
+        *aValue = value.GetIntValue();                              \
+      }                                                             \
+    }                                                               \
+    return NS_OK;                                                   \
+  }                                                                 \
+  NS_IMETHODIMP                                                     \
+  _class::Set##_method(PRInt32 aValue)                              \
+  {                                                                 \
+    nsHTMLValue value(aValue, eHTMLUnit_Integer);                   \
+    return mInner.SetAttribute(nsHTMLAtoms::_atom, value, PR_TRUE); \
   }
 
 #endif /* nsGenericHTMLElement_h___ */
