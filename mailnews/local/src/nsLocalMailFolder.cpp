@@ -115,8 +115,8 @@ extern void KillPopData(char* data);
 
 nsLocalMailCopyState::nsLocalMailCopyState() :
   m_fileStream(nsnull), m_curDstKey(0xffffffff), m_curCopyIndex(0),
-  m_totalMsgCount(0), m_isMove(PR_FALSE), m_dataBufferSize(0),
-  m_leftOver(0), m_dummyEnvelopeNeeded(PR_FALSE), m_fromLineSeen(PR_FALSE), m_writeFailed(PR_FALSE)
+  m_totalMsgCount(0), m_dataBufferSize(0), m_leftOver(0),
+  m_isMove(PR_FALSE), m_dummyEnvelopeNeeded(PR_FALSE), m_fromLineSeen(PR_FALSE), m_writeFailed(PR_FALSE)
 {
 }
 
