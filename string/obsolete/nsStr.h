@@ -455,13 +455,14 @@ struct NS_COM nsStr {
 
   PRUint32        mLength;
   PRUint32        mCapacity;
-  eCharSize       mCharSize;
-  PRBool          mOwnsBuffer;
-
+  
   union { 
     char*         mStr;
     PRUnichar*    mUStr;
   };
+
+  PRInt8          mCharSize;
+  PRPackedBool    mOwnsBuffer;
 
 private:
   static PRBool Alloc(nsStr& aString,PRUint32 aCount);
