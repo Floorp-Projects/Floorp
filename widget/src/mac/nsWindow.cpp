@@ -100,11 +100,6 @@ nsWindow::~nsWindow()
 		mWindowPtr = nsnull;
 		mWindowRecord = nsnull;
 	}
-  //XtDestroyWidget(mWidget);
-  //if (nsnull != mGC) {
-    //::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
-    //mGC = nsnull;
-  //}
 }
 
 
@@ -127,7 +122,7 @@ void nsWindow::Create(nsIWidget *aParent,
 	if (0==aParent)
     CreateMainWindow(0, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
   else
-    CreateChildWindow(aParent->GetNativeData(NS_NATIVE_WIDGET), aParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+		CreateChildWindow(aParent->GetNativeData(NS_NATIVE_WINDOW), aParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 }
 
 //-------------------------------------------------------------------------
@@ -151,7 +146,7 @@ void nsWindow::Create(nsNativeWidget aParent,
 	else
 	{
 		mParent = (nsWindow*)(((WindowPeek)aParent)->refCon);
-		CreateChildWindow(aParent, mParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+		CreateChildWindow(aParent,mParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 	}		
 }
 
@@ -205,7 +200,7 @@ nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 {
 Rect		bounds;
 
-  mBounds = aRect;
+	
   mAppShell = aAppShell;
   NS_IF_ADDREF(mAppShell);
 	
@@ -214,19 +209,28 @@ Rect		bounds;
 	// save the event callback function
   mEventCallback = aHandleEventFunction;
 
+  strcpy(gInstanceClassName, "Parent nsWindow");
 	
 	// build the main native window
 	if(0==aNativeParent)
 		{
-		bounds.top = aRect.x;
+		// calculate the structure size offset by the menubar height
+		bounds.top = aRect.x + LMGetMBarHeight() + 20; 
 		bounds.left = aRect.y;
-		bounds.bottom = aRect.y+aRect.height;
-		bounds.right = aRect.x+aRect.width;
+		bounds.bottom = bounds.top+aRect.height + LMGetMBarHeight() + 20;
+		bounds.right = bounds.left+aRect.width;
+		
 		mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
 		if (bounds.top <= 0)
 			bounds.top = LMGetMBarHeight()+20;
 		mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
 		
+		// the bounds of the widget is the mac content region in global coordinates
+		::SetPort(mWindowPtr);
+		bounds = mWindowPtr->portRect;
+		LocalToGlobal(&topLeft(bounds));
+		LocalToGlobal(&botRight(bounds));
+		this->SetBounds(bounds);
 
 		mWindowMadeHere = PR_TRUE;
 		mIsMainWindow = PR_TRUE;
@@ -238,7 +242,8 @@ Rect		bounds;
 		mWindowMadeHere = PR_FALSE;
 		mIsMainWindow = PR_TRUE;		
 		}
-		
+	
+	// the widow region is going to be the size of the content region, local coordinates	
 	mWindowRegion = NewRgn();
 	SetRectRgn(mWindowRegion,0,0,mWindowPtr->portRect.right,mWindowPtr->portRect.bottom);
 	
@@ -260,13 +265,14 @@ void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent,
                       nsWidgetInitData *aInitData)
 {
 
+
 	// bounds of this child
   mBounds = aRect;
   mAppShell = aAppShell;
   NS_IF_ADDREF(mAppShell);
   mIsMainWindow = PR_FALSE;
   mWindowMadeHere = PR_TRUE;
-  strcpy(gInstanceClassName, "childwindow");
+  strcpy(gInstanceClassName, "Child nswindow");
 
   InitToolkit(aToolkit, aWidgetParent);
   
@@ -283,7 +289,7 @@ void nsWindow::CreateChildWindow(nsNativeWidget  aNativeParent,
  
 	mWindowRegion = NewRgn();
 	SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
-  InitDeviceContext(aContext,aNativeParent);
+  InitDeviceContext(aContext,(nsNativeWidget)mWindowPtr);
 
   // Force cursor to default setting
   mCursor = eCursor_select;
@@ -1018,8 +1024,8 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
  **/
 PRBool nsWindow::OnPaint(nsPaintEvent &event)
 {
-nsresult	result;
-nsRect 		rr;
+nsresult				result;
+nsRect 					rr;
 
   // call the event callback 
   if (mEventCallback) 
@@ -1037,9 +1043,53 @@ nsRect 		rr;
 					      kRenderingContextIID, 
 					      (void **)&event.renderingContext))
       {
+      PRInt32					offx,offy;
+			GrafPtr					theport;
+			Rect						macrect;
+			nsRect					therect;
+			RgnHandle				thergn;
+			RGBColor				redcolor = {0xff00,0,0};
+			RGBColor				greencolor = {0,0xff00,0};
+
         event.renderingContext->Init(mContext, this);
+        
+        CalcOffset(offx,offy);
+				GetPort(&theport);
+				::SetPort(mWindowPtr);
+				::SetOrigin(-offx,-offy);
+				GetBounds(therect);
+        
+        if(mParent)
+        	{
+					CalcOffset(offx,offy);
+					nsRectToMacRect(therect,macrect);
+					thergn = ::NewRgn();
+					::GetClip(thergn);
+					::ClipRect(&macrect);
+					::PenNormal();
+					::RGBForeColor(&greencolor);
+	        ::FrameRect(&macrect); 
+					}
+				else
+					{
+					macrect.top = 0;
+					macrect.left = 0;
+					macrect.bottom = therect.height;
+					macrect.right = therect.width;
+					
+					thergn = ::NewRgn();
+					::GetClip(thergn);
+					::ClipRect(&macrect);
+					::PenNormal();
+					::RGBForeColor(&redcolor);
+					::EraseRect(&macrect);
+	        ::FrameRect(&macrect); 
+					}		
+					
         result = DispatchEvent(&event);
         NS_RELEASE(event.renderingContext);
+        SetOrigin(0,0);
+        SetPort(theport);
       }
     else 
       {
@@ -1350,7 +1400,7 @@ nsPaintEvent 	pevent;
 	::SectRgn(aTheRegion,this->mWindowRegion,thergn);
 	
 	if (!::EmptyRgn(thergn))
-		{
+		{		
 		// traverse through all the nsWindows to find who needs to be painted
 		if (mChildren) 
 			{
