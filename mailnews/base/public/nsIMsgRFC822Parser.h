@@ -38,6 +38,10 @@
 
  class nsIMsgRFC822Parser: public nsISupports { 
  public: 
+  static const nsIID& IID() {
+    static nsIID iid = NS_IMSGRFC822PARSER_IID;
+    return iid;
+  }
 	/* Given a string which contains a list of RFC822 addresses, parses it into
 	   their component names and mailboxes.
 
