@@ -167,12 +167,11 @@ void nsGtkWidget_InitNSMouseEvent(GdkEvent *aGev,
 
   if (anXEv != NULL) { // Do Mouse Event specific intialization
     anEvent.time       = anXEv->time;
-/*
-    anEvent.isShift    = (anXEv->xbutton.state & ShiftMask) ? PR_TRUE : PR_FALSE;
-    anEvent.isControl  = (anXEv->xbutton.state & ControlMask) ? PR_TRUE : PR_FALSE;
-    anEvent.isAlt      = (anXEv->xbutton.state & Mod1Mask) ? PR_TRUE : PR_FALSE;
-*/
-    anEvent.clickCount = anXEv->button; //XXX Fix for double-clicks
+    anEvent.isShift    = (anXEv->state & ShiftMask) ? PR_TRUE : PR_FALSE;
+    anEvent.isControl  = (anXEv->state & ControlMask) ? PR_TRUE : PR_FALSE;
+    anEvent.isAlt      = (anXEv->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
+//    anEvent.clickCount = anXEv->button; //XXX Fix for double-clicks
+    anEvent.clickCount = 1; //XXX Fix for double-clicks
     anEvent.eventStructType = NS_MOUSE_EVENT;
 
   }
@@ -228,7 +227,6 @@ void nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, 
   nsRect       rect;
   nsGtkWidget_InitNSEvent((GdkEvent*)event, p, pevent, NS_PAINT);
   pevent.rect = (nsRect *)&rect;
-  XEvent xev;
 
   rect.x      = event->area.x;
   rect.y      = event->area.y;
@@ -245,6 +243,7 @@ void nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, 
 /* FIXME
   Display* display = XtDisplay(w);
   Window   window = XtWindow(w);
+  XEvent xev;
 
   XSync(display, FALSE);
 
@@ -563,13 +562,6 @@ void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpo
   nsGtkWidget_InitNSKeyEvent(NS_KEY_UP, kevent, w, p, event);
   nsWindow * widgetWindow = (nsWindow *) p ;
   widgetWindow->OnKey(NS_KEY_UP, kevent.keyCode, &kevent);
-}
-
-//==============================================================
-void nsGtkWidget_ResetResize_Callback(gpointer call_data)
-{
-    nsWindow* widgetWindow = (nsWindow*)call_data;
-    widgetWindow->SetResized(PR_FALSE);
 }
 
 //==============================================================
