@@ -26,24 +26,19 @@
 
 #include "imgIRequest.h"
 
-#include "nsIChannel.h"
-#include "nsIURI.h"
 #include "imgIContainer.h"
 #include "imgIDecoder.h"
 #include "imgIDecoderObserver.h"
-#include "nsIStreamListener.h"
-#include "nsCOMPtr.h"
 
+#include "nsICacheEntryDescriptor.h"
+#include "nsIChannel.h"
+#include "nsIStreamListener.h"
+#include "nsIURI.h"
+
+#include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsWeakReference.h"
-
-#include "nsString.h"
-
-#ifdef MOZ_NEW_CACHE
-#include "nsICacheEntryDescriptor.h"
-#else
-class nsICacheEntryDescriptor;
-#endif
 
 class imgRequestProxy;
 
@@ -81,7 +76,7 @@ public:
 
 protected:
   void RemoveFromCache();
-  nsresult GetResultFromStatus();
+  inline nsresult GetResultFromStatus(PRUint32 aStatus);
 
 public:
   NS_DECL_ISUPPORTS
@@ -108,9 +103,7 @@ private:
 
   nsCString mContentType;
 
-#ifdef MOZ_NEW_CACHE
   nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to this so long as we have observers */
-#endif
 };
 
 #endif

@@ -71,7 +71,6 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   imgRequest *request = nsnull;
 
-#ifdef MOZ_NEW_CACHE
   nsCOMPtr<nsICacheEntryDescriptor> entry;
   imgCache::Get(aURI, &request, getter_AddRefs(entry)); // addrefs request
 
@@ -103,7 +102,6 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
       request = nsnull;
     }
   }
-#endif
 
   if (!request) {
     /* no request from the cache.  do a new load */
@@ -186,8 +184,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
       /* If AsyncOpen fails, then we want to hand back a request proxy
          object that has a canceled load.
        */
-      PR_LOG(gImgLog, PR_LOG_DEBUG,
-             ("[this=%p] imgLoader::LoadImage -- async open failed.\n", this));
+      LOG_MSG(gImgLog, "imgLoader::LoadImage", "async open failed.");
 
       nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                              cx, _retval);
@@ -203,13 +200,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   } else {
     /* request found in cache.  use it */
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgLoader::LoadImage |cache hit| [request=%p]\n",
-            this, request));
+    LOG_MSG_WITH_PARAM(gImgLog, "imgLoader::LoadImage |cache hit|", "request", request);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgLoader::LoadImage -- creating proxy request.\n", this));
+  LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
 
   nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, cx, _retval);
 
@@ -228,10 +222,9 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   nsCOMPtr<nsIURI> uri;
   channel->GetOriginalURI(getter_AddRefs(uri));
 
-#ifdef MOZ_NEW_CACHE
   nsCOMPtr<nsICacheEntryDescriptor> entry;
   imgCache::Get(uri, &request, getter_AddRefs(entry)); // addrefs request
-#endif
+
   if (request) {
     // we have this in our cache already.. cancel the current (document) load
 
@@ -247,13 +240,9 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     NS_ADDREF(request);
 
-#ifdef MOZ_NEW_CACHE
     imgCache::Put(uri, request, getter_AddRefs(entry));
 
     request->Init(channel, entry);
-#else
-    request->Init(channel, nsnull);
-#endif
 
     ProxyListener *pl = new ProxyListener(NS_STATIC_CAST(nsIStreamListener *, request));
     if (!pl) {

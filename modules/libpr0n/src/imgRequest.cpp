@@ -23,41 +23,40 @@
 
 #include "imgRequest.h"
 
+#include "imgCache.h"
 #include "imgRequestProxy.h"
 
-#include "nsIChannel.h"
-#include "nsILoadGroup.h"
-#include "nsIInputStream.h"
-
 #include "imgILoader.h"
-#include "nsIComponentManager.h"
-
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-
-#include "nsString.h"
-#include "nsXPIDLString.h"
+#include "ImageLogging.h"
 
 #include "gfxIImageFrame.h"
 
-#ifdef MOZ_NEW_CACHE
+#include "nsIChannel.h"
 #include "nsICachingChannel.h"
-#endif
-#include "imgCache.h"
+#include "nsILoadGroup.h"
+#include "nsIInputStream.h"
 
-#include "ImageLogging.h"
+#include "nsIComponentManager.h"
+#include "nsIProxyObjectManager.h"
+#include "nsIServiceManager.h"
+
+#include "nsAutoLock.h"
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
-NS_IMPL_ISUPPORTS7(imgRequest, imgIRequest, nsIRequest,
-                   imgIDecoderObserver, imgIContainerObserver,
-                   nsIStreamListener, nsIRequestObserver,
-                   nsISupportsWeakReference)
+NS_IMPL_THREADSAFE_ISUPPORTS7(imgRequest, imgIRequest, nsIRequest,
+                              imgIDecoderObserver, imgIContainerObserver,
+                              nsIStreamListener, nsIRequestObserver,
+                              nsISupportsWeakReference)
 
 imgRequest::imgRequest() : 
-  mObservers(0), mLoading(PR_FALSE), mProcessing(PR_FALSE), mStatus(imgIRequest::STATUS_NONE), mState(0)
+  mObservers(0),
+  mLoading(PR_FALSE), mProcessing(PR_FALSE),
+  mStatus(imgIRequest::STATUS_NONE), mState(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -71,8 +70,7 @@ imgRequest::~imgRequest()
 
 nsresult imgRequest::Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheEntry)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::Init\n", this));
+  LOG_FUNC(gImgLog, "imgRequest::Init");
 
   NS_ASSERTION(!mImage, "imgRequest::Init -- Multiple calls to init");
   NS_ASSERTION(aChannel, "imgRequest::Init -- No channel");
@@ -86,9 +84,7 @@ nsresult imgRequest::Init(nsIChannel *aChannel, nsICacheEntryDescriptor *aCacheE
   */
   mLoading = PR_TRUE;                      
 
-#ifdef MOZ_NEW_CACHE
   mCacheEntry = aCacheEntry;
-#endif
 
   return NS_OK;
 }
@@ -144,17 +140,16 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
 
   // OnStopDecode
   if (mState & onStopDecode)
-    proxy->OnStopDecode(nsnull, nsnull, GetResultFromStatus(), nsnull);
+    proxy->OnStopDecode(nsnull, nsnull, GetResultFromStatus(mStatus), nsnull);
 
   if (mImage && (mObservers.Count() == 1)) {
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgRequest::AddObserver -- starting animation\n", this));
+    LOG_MSG(gImgLog, "imgRequest::AddProxy", "starting animation");
 
     mImage->StartAnimation();
   }
 
   if (mState & onStopRequest) {
-    proxy->OnStopRequest(nsnull, nsnull, GetResultFromStatus());
+    proxy->OnStopRequest(nsnull, nsnull, GetResultFromStatus(mStatus));
   } 
 
   return NS_OK;
@@ -184,8 +179,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 
   if (mObservers.Count() == 0) {
     if (mImage) {
-      PR_LOG(gImgLog, PR_LOG_DEBUG,
-             ("[this=%p] imgRequest::RemoveObserver -- stopping animation\n", this));
+      LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "stopping animation");
 
       mImage->StopAnimation();
     }
@@ -196,16 +190,13 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
        and won't leave a bad pointer in mObservers.
      */
     if (mChannel && mLoading && NS_FAILED(aStatus)) {
-      PR_LOG(gImgLog, PR_LOG_DEBUG,
-             ("[this=%p] imgRequest::RemoveObserver -- load in progress.  canceling\n", this));
+      LOG_MSG(gImgLog, "imgRequest::RemoveProxy", "load in progress.  canceling");
 
       this->Cancel(NS_BINDING_ABORTED);
     }
 
-#ifdef MOZ_NEW_CACHE
     /* break the cycle from the cache entry. */
     mCacheEntry = nsnull;
-#endif
   }
 
   return NS_OK;
@@ -215,23 +206,19 @@ void imgRequest::RemoveFromCache()
 {
   LOG_SCOPE(gImgLog, "imgRequest::RemoveFromCache");
 
-#ifdef MOZ_NEW_CACHE
-
   if (mCacheEntry) {
     mCacheEntry->Doom();
     mCacheEntry = nsnull;
   }
-
-#endif
 }
 
-nsresult imgRequest::GetResultFromStatus()
+nsresult imgRequest::GetResultFromStatus(PRUint32 aStatus)
 {
   nsresult rv = NS_OK;
 
-  if (mStatus & imgIRequest::STATUS_ERROR)
+  if (aStatus & imgIRequest::STATUS_ERROR)
     rv = NS_IMAGELIB_ERROR_FAILURE;
-  else if (mStatus & imgIRequest::STATUS_LOAD_COMPLETE)
+  else if (aStatus & imgIRequest::STATUS_LOAD_COMPLETE)
     rv = NS_IMAGELIB_SUCCESS_LOAD_FINISHED;
 
   return rv;
@@ -269,8 +256,7 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
   LOG_SCOPE(gImgLog, "imgRequest::Cancel");
 
   if (mImage) {
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgRequest::Cancel -- stopping animation\n", this));
+    LOG_MSG(gImgLog, "imgRequest::Cancel", "stopping animation");
 
     mImage->StopAnimation();
   }
@@ -327,8 +313,7 @@ NS_IMETHODIMP imgRequest::SetLoadFlags(nsLoadFlags flags)
 /* attribute imgIContainer image; */
 NS_IMETHODIMP imgRequest::GetImage(imgIContainer * *aImage)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::GetImage\n", this));
+  LOG_FUNC(gImgLog, "imgRequest::GetImage");
 
   *aImage = mImage;
   NS_IF_ADDREF(*aImage);
@@ -337,8 +322,7 @@ NS_IMETHODIMP imgRequest::GetImage(imgIContainer * *aImage)
 
 NS_IMETHODIMP imgRequest::SetImage(imgIContainer *aImage)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::SetImage\n", this));
+  LOG_FUNC(gImgLog, "imgRequest::SetImage");
 
   mImage = aImage;
   return NS_OK;
@@ -347,8 +331,7 @@ NS_IMETHODIMP imgRequest::SetImage(imgIContainer *aImage)
 /* readonly attribute unsigned long imageStatus; */
 NS_IMETHODIMP imgRequest::GetImageStatus(PRUint32 *aStatus)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::GetImageStatus\n", this));
+  LOG_FUNC(gImgLog, "imgRequest::GetImageStatus");
 
   *aStatus = mStatus;
   return NS_OK;
@@ -357,8 +340,7 @@ NS_IMETHODIMP imgRequest::GetImageStatus(PRUint32 *aStatus)
 /* readonly attribute nsIURI URI; */
 NS_IMETHODIMP imgRequest::GetURI(nsIURI **aURI)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::GetURI\n", this));
+  LOG_FUNC(gImgLog, "imgRequest::GetURI");
 
   if (mChannel)
     return mChannel->GetOriginalURI(aURI);
@@ -541,7 +523,7 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
-    if (proxy) proxy->OnStopDecode(aRequest, aCX, GetResultFromStatus(), aStatusArg);
+    if (proxy) proxy->OnStopDecode(aRequest, aCX, GetResultFromStatus(mStatus), aStatusArg);
   }
 
   return NS_OK;
@@ -616,8 +598,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status); */
 NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStopRequest\n", this));
+  LOG_FUNC(gImgLog, "imgRequest::OnStopRequest");
 
   mState |= onStopRequest;
 
@@ -677,7 +658,7 @@ static NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, cons
 /* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
 NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
-  LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable");
+  LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "count", count);
 
   NS_ASSERTION(aRequest, "imgRequest::OnDataAvailable -- no request!");
 
@@ -718,17 +699,12 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
         return NS_BINDING_ABORTED;
       }
 
-      PR_LOG(gImgLog, PR_LOG_DEBUG,
-             ("[this=%p] imgRequest::OnDataAvailable -- Got content type from the channel\n",
-              this));
+      LOG_MSG(gImgLog, "imgRequest::OnDataAvailable", "Got content type from the channel");
 
       mContentType = contentType;
     }
 
-#if defined(PR_LOGGING)
-    PR_LOG(gImgLog, PR_LOG_DEBUG,
-           ("[this=%p] imgRequest::OnDataAvailable -- Content type is %s\n", this, mContentType.get()));
-#endif
+    LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());
 
     nsCAutoString conid("@mozilla.org/image/decoder;2?type=");
     conid += mContentType.get();
@@ -776,7 +752,6 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
     return NS_BINDING_ABORTED;
   }
-
 
   return NS_OK;
 }
