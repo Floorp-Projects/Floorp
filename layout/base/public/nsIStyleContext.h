@@ -24,6 +24,7 @@
 #include "nsCoord.h"
 #include "nsMargin.h"
 #include "nsFont.h"
+#include "nsVoidArray.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
@@ -188,6 +189,45 @@ struct nsStyleTable: public nsStyleStruct {
 protected:
   nsStyleTable(void);
 };
+
+#define BORDER_PRECEDENT_EQUAL 0
+#define BORDER_PRECEDENT_LOWER 1
+#define BORDER_PRECEDENT_HIGHER 2
+
+
+/** an encapsulation of border edge info */
+struct nsBorderEdge
+{
+  nscoord mWidth;
+  PRUint8 mStyle;  
+  nscolor mColor;
+  PRUint8 mSide;
+
+  nsBorderEdge();
+};
+
+inline nsBorderEdge::nsBorderEdge()
+{
+  mWidth=0;
+  mStyle=NS_STYLE_BORDER_STYLE_NONE;
+  mColor=0;
+  mSide=NS_SIDE_LEFT;
+};
+
+/** an encapsulation of a border defined by its edges */
+struct nsBorderEdges
+{
+  nsVoidArray mEdges[4];
+  nsMargin    mMaxBorderWidth;
+
+  nsBorderEdges();
+};
+
+inline nsBorderEdges::nsBorderEdges()
+{
+  mMaxBorderWidth.SizeTo(0,0,0,0);
+};
+
 
 //----------------------------------------------------------------------
 
