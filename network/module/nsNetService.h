@@ -123,5 +123,7 @@ private:
     nsHashtable* mProtocols;
 };
 
+extern "C" void net_ReleaseContext(MWContext *context);
+
 
 #endif /* nsNetService_h___ */
