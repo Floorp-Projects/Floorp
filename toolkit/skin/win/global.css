@@ -47,6 +47,10 @@ menulist > menupopup,
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
 }
 
+toolbarpaletteitem[type="spacer"] {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#toolbarpaletteitem-spacer");
+}
+
 /* ::::: root elements ::::: */
 
 window,

@@ -20,4 +20,12 @@
     </content>
   </binding>
 
+  <binding id="toolbarpaletteitem-spacer" extends="chrome://global/content/widgets/toolbar.xml#toolbarpaletteitem">
+    <content>
+      <xul:spacer class="spacer-left"/>
+      <children/>
+      <xul:spacer class="spacer-right"/>
+    </content>
+  </binding>
+
 </bindings>

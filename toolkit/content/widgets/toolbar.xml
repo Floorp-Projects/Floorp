@@ -11,95 +11,211 @@
     </resources>
   </binding>
   
-  <binding id="toolbar" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base">
+  <binding id="toolbox" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base">  
     <implementation>
       <field name="palette">
         null
       </field>
-      <field name="afterPalette">
+
+      <field name="toolbarset">
         null
       </field>
-
-      <field name="toolbarChanged">
-        null
+      
+      <field name="customToolbarCount">
+        0
       </field>
-
-      <method name="rebuild">
-        <body>
-          <![CDATA[
-            while (this.firstChild != this.afterPalette) {
-              this.removeChild(this.firstChild);
+      
+      <constructor>
+        <![CDATA[
+          // Look to see if there is a toolbarset.
+          this.toolbarset = this.firstChild;
+          while (this.toolbarset && this.toolbarset.localName != "toolbarset")
+            this.toolbarset = toolbarset.nextSibling;
+          
+          if (this.toolbarset) {
+            // Create each toolbar described by the toolbarset.
+            var index = 0;
+            while (toolbarset.hasAttribute("toolbar"+(++index))) {
+              var toolbarInfo = toolbarset.getAttribute("toolbar"+index);
+              var infoSplit = toolbarInfo.split(":");
+              this.appendCustomToolbar(infoSplit[0], infoSplit[1]);
             }
-            this.buildItemsFromPalette();
-            this.toolbarChanged();
+          }
+        ]]>
+      </constructor>
+      
+      <method name="appendCustomToolbar">
+        <parameter name="aName"/>
+        <parameter name="aCurrentSet"/>
+        <body>
+          <![CDATA[            
+            var toolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                  "toolbar");
+            toolbar.id = "__customToolbar_" + aName.replace(" ", "");
+            toolbar.setAttribute("customizable", "true");
+            toolbar.setAttribute("customindex", ++this.customToolbarCount);
+            toolbar.setAttribute("toolbarname", aName);
+            toolbar.setAttribute("currentset", aCurrentSet);
+            toolbar.setAttribute("mode", this.getAttribute("mode"));
+            toolbar.setAttribute("iconsize", this.getAttribute("iconsize"));
+            toolbar.setAttribute("context", this.toolbarset.getAttribute("context"));
+                        
+            this.insertBefore(toolbar, this.toolbarset);
+            return toolbar;
           ]]>
         </body>
       </method>
-      <method name="buildItemsFromPalette">
-        <body>
-          <![CDATA[
-            var currentSet = this.getAttribute("currentset");
-            if (!currentSet)
-              currentSet = this.getAttribute("defaultset");
-            if (!currentSet)
-              return;
-
-            var node = this.palette ? this.palette : this.firstChild;
-              
-            if (!this.palette) {
-              while (node) {
-                if (node.localName == "toolbarpalette")
-                  break;
-                node = node.nextSibling;
-              }
-              if (!node)
-                return;
-            
-              this.afterPalette = node.nextSibling;
-              this.palette = node;
-              this.removeChild(node);
+    </implementation>
+  </binding>
+  
+  <binding id="toolbar" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base">
+    <implementation>
+      <field name="lastPermanentChild">
+        null
+      </field>
+      
+      <property name="toolbarName"
+                onget="return this.getAttribute('toolbarname');"
+                onset="this.setAttribute('toolbarname', val); return val;"/>
+      
+      <constructor>
+        <![CDATA[
+          this.lastPermanentChild = this.firstChild;
+          
+          // Searching for the toolbox palette in the toolbar binding because
+          // toolbars are constructed first.
+          var toolbox = this.parentNode;
+          if (!toolbox.palette) {
+            // Look to see if there is a toolbarpalette.
+            var node = toolbox.firstChild;
+            while (node) {
+              if (node.localName == "toolbarpalette")
+                break;
+              node = node.nextSibling;
             }
             
-            var items = currentSet.split(",");
-            for (var i = 0; i < items.length; i++) {
-              var item = items[i];
-              if (!item) continue;
+            if (!node)
+              return;
 
-              if (item == "separator") {
-                var sep = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                   "toolbarseparator");
-                sep.id = "separator";
-                this.insertBefore(sep, this.afterPalette);
-                continue;
+            // Hold on to the palette but remove it from the document.
+            toolbox.palette = node;       
+            toolbox.removeChild(node);
+          }
+          
+          // Build up our contents from the palette.
+          var currentSet = this.getAttribute("currentset");
+          if (!currentSet)
+            currentSet = this.getAttribute("defaultset");
+          if (currentSet)
+            this.currentSet = currentSet;
+        ]]>
+      </constructor>
+
+      <property name="currentSet">
+        <getter>
+          <![CDATA[
+            var node = this.firstChild;
+            var currentSet = "";
+            while (node) {
+              if (node.id &&
+                  node.localName == "toolbaritem" || 
+                  node.localName == "toolbarbutton" ||
+                  node.localName == "toolbarseparator" ||
+                  node.localName == "spacer")
+              {
+                if (currentSet)
+                  currentSet += ",";
+
+                if (node.localName == "toolbarseparator")
+                  currentSet += "separator";
+                else if (node.localName == "spacer")
+                  currentSet += "spacer";
+                else
+                  currentSet += node.id;
               }
+              node = node.nextSibling;
+            }
+            
+            return currentSet ? currentSet : "__empty";
+          ]]>
+        </getter>
+        
+        <setter>
+          <![CDATA[
+            // Remove all items before the last permanent child.
+            if (this.lastPermanentChild) {
+              while (this.lastPermanentChild.previousSibling)
+                this.removeChild(this.lastPermanentChild.previousSibling);
+            } else {
+              while (this.lastChild)
+                this.removeChild(this.lastChild);
+            }
+            
+            if (val == "__empty")
+              return;
 
-              // Attempt to locate the item within the palette's list of children.
-              var paletteItem = node.firstChild;
+            if (val) {
+              var itemIds = val.split(",");
+              for (var i = 0; i < itemIds.length; i++)
+                this.insertItem(itemIds[i], null);
+            }
+          ]]>
+        </setter>
+      </property>
+      
+      <method name="insertItem">
+        <parameter name="aId"/>
+        <parameter name="aBeforeElt"/>
+        <parameter name="aWrapper"/>
+        <body>
+          <![CDATA[
+            var newItem = null;
+            
+            // Create special cases of palette items.
+            if (aId == "separator") {
+              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                 "toolbarseparator");
+              var uniqueId = (new Date()).getTime();
+              newItem.id = "separator" + uniqueId;
+            } else if (aId == "spacer") {
+              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                 "spacer");
+              var uniqueId = (new Date()).getTime();
+              newItem.flex = 1;
+              newItem.id = "spacer" + uniqueId;
+            } else {
+              // Attempt to locate an item with a matching id within palette.
+              var paletteItem = this.parentNode.palette.firstChild;
               while (paletteItem) {
-                var paletteID = paletteItem.getAttribute("id");
-                if (paletteID == item) {
-                  var newItem = paletteItem.cloneNode(true);
-                  newItem.hidden = true;
-                  this.insertBefore(newItem, this.afterPalette);
-                  newItem.hidden = false;
+                var paletteId = paletteItem.id;
+                if (paletteId == aId) {
+                  newItem = paletteItem.cloneNode(true);
                   break;
                 }
-                  
                 paletteItem = paletteItem.nextSibling;
               }
             }
+            
+            var insertItem = newItem;
+            
+            // Wrap the item in another node if so inclined.
+            if (aWrapper) {
+              aWrapper.appendChild(newItem);
+              insertItem = aWrapper;
+            }
+            
+            // Insert the palette item into the toolbar.
+            if (aBeforeElt || this.lastPermanentChild)
+              this.insertBefore(insertItem, aBeforeElt ? aBeforeElt : this.lastPermanentChild);
+            else
+              this.appendChild(insertItem);
+               
+            return newItem;
           ]]>
         </body>
-      </method>
-      <constructor>
-        <![CDATA[
-          this.buildItemsFromPalette();
-        ]]>
-      </constructor>
+      </method>      
     </implementation>
   </binding>
-
-  <binding id="toolbox" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
 
   <binding id="menubar" extends="xul:menubar">
     <resources>
@@ -121,6 +237,7 @@
 
   <binding id="toolbarseparator" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
 
-  <binding id="toolbarpaletteitem" extends="xul:button"/>
+  <binding id="toolbarpaletteitem" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base" display="xul:button"/>
+  
 </bindings>          
 
