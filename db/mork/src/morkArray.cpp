@@ -193,7 +193,7 @@ morkArray::SafeAt(morkEnv* ev, mork_pos inPos)
 {
   if ( mArray_Slots )
   {
-    if ( inPos < mArray_Fill )
+    if ( inPos >= 0 && inPos < (mork_pos) mArray_Fill )
       return mArray_Slots[ inPos ];
     else
       this->IndexBeyondEndError(ev);
@@ -209,7 +209,7 @@ morkArray::SafeAtPut(morkEnv* ev, mork_pos inPos, void* ioSlot)
 {
   if ( mArray_Slots )
   {
-    if ( inPos < mArray_Fill )
+    if ( inPos >= 0 && inPos < (mork_pos) mArray_Fill )
     {
       mArray_Slots[ inPos ] = ioSlot;
       ++mArray_Seed;
@@ -270,7 +270,7 @@ void
 morkArray::CutSlot(morkEnv* ev, mork_pos inPos)
 {
   mork_fill fill = mArray_Fill;
-  if ( inPos < fill ) // cutting a slot in the used array portion?
+  if ( inPos >= 0 && inPos < (mork_pos) fill ) // cutting slot in used array portion?
   {
     void** slot = mArray_Slots; // the slot vector
     void** end = slot + fill; // one past the last used array slot
