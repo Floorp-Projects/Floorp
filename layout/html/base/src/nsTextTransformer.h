@@ -30,6 +30,28 @@ class nsIWordBreaker;
 
 #define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 100
 
+// A growable text buffer that tries to avoid using malloc by having a
+// builtin buffer. Ideally used as an automatic variable.
+class nsAutoTextBuffer {
+public:
+  nsAutoTextBuffer();
+  ~nsAutoTextBuffer();
+
+  nsresult GrowBy(PRInt32 aAtLeast, PRBool aCopyToHead = PR_TRUE);
+
+  nsresult GrowTo(PRInt32 aNewSize, PRBool aCopyToHead = PR_TRUE);
+
+  PRUnichar* GetBuffer() { return mBuffer; }
+  PRUnichar* GetBufferEnd() { return mBuffer + mBufferLen; }
+  PRInt32 GetBufferLength() const { return mBufferLen; }
+
+  PRUnichar* mBuffer;
+  PRInt32 mBufferLen;
+  PRUnichar mAutoBuffer[NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE];
+};
+
+//----------------------------------------
+
 /**
  * This object manages the transformation of text:
  *
@@ -51,7 +73,7 @@ public:
   // Note: The text transformer does not hold a reference to the line
   // breaker and work breaker objects
   nsTextTransformer(nsILineBreaker* aLineBreaker,
-                    nsIWordBreaker *aWordBreaker);
+                    nsIWordBreaker* aWordBreaker);
 
   ~nsTextTransformer();
 
@@ -65,53 +87,90 @@ public:
                 PRInt32 aStartingOffset);
 
   PRInt32 GetContentLength() const {
-    return mContentLength;
+    return mFrag ? mFrag->GetLength() : 0;
   }
 
   PRUnichar* GetNextWord(PRBool aInWord,
-                         PRInt32& aWordLenResult,
-                         PRInt32& aContentLenResult,
-                         PRBool& aIsWhitespaceResult,
+                         PRInt32* aWordLenResult,
+                         PRInt32* aContentLenResult,
+                         PRBool* aIsWhitespaceResult,
                          PRBool aForLineBreak = PR_TRUE);
 
   PRUnichar* GetPrevWord(PRBool aInWord,
-                               PRInt32& aWordLenResult,
-                               PRInt32& aContentLenResult,
-                               PRBool& aIsWhitespaceResult,
-                               PRBool aForLineBreak = PR_TRUE);
+                         PRInt32* aWordLenResult,
+                         PRInt32* aContentLenResult,
+                         PRBool* aIsWhitespaceResult,
+                         PRBool aForLineBreak = PR_TRUE);
+
   PRBool HasMultibyte() const {
     return mHasMultibyte;
   }
 
   PRUnichar* GetWordBuffer() {
-    return mBuffer;
+    return mTransformBuf.GetBuffer();
   }
 
   PRInt32 GetWordBufferLength() const {
-    return mBufferLength;
+    return mTransformBuf.GetBufferLength();
   }
 
-protected:
-  PRBool GrowBuffer(PRBool aForNextWord = PR_TRUE);
+  static nsresult Initialize();
 
-  PRUnichar* mBuffer;
-  PRInt32 mBufferLength;
+  static void Shutdown();
+
+protected:
+  // Helper methods for GetNextWord (F == forwards)
+  PRInt32 ScanNormalWhiteSpace_F();
+  PRInt32 ScanNormalAsciiText_F(PRInt32* aWordLen);
+  PRInt32 ScanNormalUnicodeText_F(PRBool aForLineBreak, PRInt32* aWordLen);
+  PRInt32 ScanPreWrapWhiteSpace_F(PRInt32* aWordLen);
+  PRInt32 ScanPreAsciiData_F(PRInt32* aWordLen);
+  PRInt32 ScanPreData_F(PRInt32* aWordLen);
+
+  // Helper methods for GetPrevWord (B == backwards)
+  PRInt32 ScanNormalWhiteSpace_B();
+  PRInt32 ScanNormalAsciiText_B(PRInt32* aWordLen);
+  PRInt32 ScanNormalUnicodeText_B(PRBool aForLineBreak, PRInt32* aWordLen);
+  PRInt32 ScanPreWrapWhiteSpace_B(PRInt32* aWordLen);
+  PRInt32 ScanPreData_B(PRInt32* aWordLen);
+
+  // Set to true if at any point during GetNextWord or GetPrevWord we
+  // run across a multibyte (> 127) unicode character.
   PRBool mHasMultibyte;
 
-  PRInt32 mContentLength;
-  PRInt32 mStartingOffset;
+  // The text fragment that we are looking at
+  const nsTextFragment* mFrag;
+
+  // Our current offset into the text fragment
   PRInt32 mOffset;
 
-  const nsTextFragment* mFrag;
-  PRInt32 mCurrentFragOffset;
-
+  // The frame's text-transform state
   PRUint8 mTextTransform;
-  PRUint8 mPreformatted;
 
-  nsILineBreaker* mLineBreaker;  // does NOT hold reference
-  nsIWordBreaker* mWordBreaker;  // does NOT hold reference
+  // The frame's white-space mode we are using to process text
+  enum {
+    eNormal,
+    ePreformatted,
+    ePreWrap
+  } mMode;
 
-  PRUnichar mAutoWordBuffer[NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE];
+  nsILineBreaker* mLineBreaker;  // [WEAK]
+
+  nsIWordBreaker* mWordBreaker;  // [WEAK]
+
+  // Buffer used to hold the transformed words from GetNextWord or
+  // GetPrevWord
+  nsAutoTextBuffer mTransformBuf;
+
+#ifdef DEBUG
+  static void SelfTest(nsILineBreaker* aLineBreaker,
+                       nsIWordBreaker* aWordBreaker);
+
+  nsresult Init2(const nsTextFragment* aFrag,
+                 PRInt32 aStartingOffset,
+                 PRUint8 aWhiteSpace,
+                 PRUint8 aTextTransform);
+#endif
 };
 
 #endif /* nsTextTransformer_h___ */
