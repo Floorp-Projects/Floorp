@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@netscape.com> (original author)
+ *   Alexey Chernyak <alexeyc@bigfoot.com> (XHTML 1.1 conversion)
  */
 
 #include <limits.h>
@@ -80,7 +81,14 @@ nsAboutCacheEntry::OnCacheEntryAvailable(nsICacheEntryDescriptor *descriptor,
     rv = storageStream->GetOutputStream(0, getter_AddRefs(outputStream));
     if (NS_FAILED(rv)) return rv;
 
-    buffer.Assign("<html>\n<head>\n<title>Cache entry information</title>\n</head>\n<body>\n");
+    buffer.Assign("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                  "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"\n"
+                  "    \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"
+                  "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
+                  "<head>\n<title>Cache entry information</title>\n"
+                  "<style type=\"text/css\">\npre {\n  margin: 0;\n}\n"
+                  "td:first-child {\n  text-align: right;\n  vertical-align: top;\n"
+                  "  line-height: 0.8em;\n}\n</style>\n</head>\n<body>\n");
     outputStream->Write(buffer, buffer.Length(), &n);
 
     if (NS_SUCCEEDED(status))
@@ -340,11 +348,9 @@ static void PrintTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
     PR_FormatTime(buf, bufsize, "%c", &et);
 }
 
-#define TD_RIGHT_ALIGN "<td valign=top align=right>"
-
 #define APPEND_ROW(label, value) \
     PR_BEGIN_MACRO \
-    buffer.Append("<tr>" TD_RIGHT_ALIGN "<tt><b>"); \
+    buffer.Append("<tr><td><tt><b>"); \
     buffer.Append(label); \
     buffer.Append(":</b></tt></td>\n<td><pre>"); \
     buffer.Append(value); \
@@ -366,7 +372,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     
     buffer.Assign("<table>");
 
-    buffer.Append("<tr>" TD_RIGHT_ALIGN "<tt><b>key:</b></tt></td><td>");
+    buffer.Append("<tr><td><tt><b>key:</b></tt></td><td>");
 
     // Test if the key is actually a URI
     nsCOMPtr<nsIURI> uri;
@@ -381,7 +387,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     }
     else
         buffer.Append(str);
-    buffer.Append("</td></tr>");
+    buffer.Append("</td></tr>\n");
 
 
     // temp vars for reporting
@@ -447,10 +453,10 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
                    "This document does not have any security info associated with it.");
     }
 
-    buffer.Append("</table>");
+    buffer.Append("</table>\n");
     // Meta Data
     // let's just look for some well known (HTTP) meta data tags, for now.
-    buffer.Append("<hr><table>");
+    buffer.Append("<hr />\n<table>");
 
     // Client ID
     str.Adopt(0);
@@ -463,7 +469,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     mBuffer = nsnull;
     
 
-    buffer.Append("</table>");
+    buffer.Append("</table>\n");
 
     outputStream->Write(buffer, buffer.Length(), &n);
     return NS_OK;
@@ -539,7 +545,7 @@ nsAboutCacheEntry::VisitMetaDataElement(const char * key,
                                         const char * value,
                                         PRBool *     keepGoing)
 {
-    mBuffer->Append("<tr><td valign=top align=right><tt><b>");
+    mBuffer->Append("<tr><td><tt><b>");
     mBuffer->Append(key);
     mBuffer->Append(":</b></tt></td>\n<td><pre>");
     mBuffer->Append(value);

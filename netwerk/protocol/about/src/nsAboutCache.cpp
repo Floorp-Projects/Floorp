@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Alexey Chernyak <alexeyc@bigfoot.com> (XHTML 1.1 conversion)
  *   Henrik Gemal <gemal@gemal.dk>
  *   Darin Fisher <darin@netscape.com>
  */
@@ -90,7 +91,6 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
 
     nsCOMPtr<nsIStorageStream> storageStream;
     nsCOMPtr<nsIOutputStream> outputStream;
-    nsCString buffer;
 
     // Init: (block size, maximum length)
     rv = NS_NewStorageStream(256, (PRUint32)-1, getter_AddRefs(storageStream));
@@ -99,7 +99,12 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     rv = storageStream->GetOutputStream(0, getter_AddRefs(outputStream));
     if (NS_FAILED(rv)) return rv;
 
-    mBuffer.Assign("<html>\n<head>\n<title>Information about the Cache Service</title>\n</head>\n<body>\n");
+    mBuffer.Assign("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                   "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\"\n"
+                   "    \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"
+                   "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
+                   "<head>\n<title>Information about the Cache Service</title>\n</head>\n"
+                   "<body>\n<div>\n");
 
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 
@@ -110,7 +115,11 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     rv = cacheService->VisitEntries(this);
     if (NS_FAILED(rv)) return rv;
 
-    mBuffer.Assign("</body>\n</html>\n");
+    mBuffer.Truncate(0);
+    if (!mDeviceID.IsEmpty()) {
+        mBuffer.Append("</pre>\n");
+    }
+    mBuffer.Append("</div>\n</body>\n</html>\n");
     outputStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
         
     nsCOMPtr<nsIInputStream> inStr;
@@ -148,27 +157,27 @@ nsAboutCache::VisitDevice(const char *deviceID,
 
         mBuffer.Assign("<h2>");
         mBuffer.Append(str);
-        mBuffer.Append("</h2><br>\n");
+        mBuffer.Append("</h2>\n<br />\n");
 
         // Write out cache info
 
         mBuffer.Append("<table>\n");
 
-        mBuffer.Append("\n<tr><td><b>Number of entries: </b></td>\n");
+        mBuffer.Append("\n<tr>\n<td><b>Number of entries: </b></td>\n");
         value = 0;
         deviceInfo->GetEntryCount(&value);
         mBuffer.Append("<td><tt>");
         mBuffer.AppendInt(value);
         mBuffer.Append("</tt></td>\n</tr>\n");
 
-        mBuffer.Append("\n<tr><td><b>Maximum storage size: </b></td>\n");
+        mBuffer.Append("\n<tr>\n<td><b>Maximum storage size: </b></td>\n");
         value = 0;
         deviceInfo->GetMaximumSize(&value);
         mBuffer.Append("<td><tt>");
         mBuffer.AppendInt(value);
         mBuffer.Append(" Bytes</tt></td>\n</tr>\n");
 
-        mBuffer.Append("\n<tr><td><b>Storage in use: </b></td>\n");
+        mBuffer.Append("\n<tr>\n<td><b>Storage in use: </b></td>\n");
         mBuffer.Append("<td><tt>");
         value = 0;
         deviceInfo->GetTotalSize(&value);
@@ -179,17 +188,18 @@ nsAboutCache::VisitDevice(const char *deviceID,
         
         deviceInfo->GetUsageReport(getter_Copies(str));
         mBuffer.Append(str);
-        mBuffer.Append("\n<br>");
+        mBuffer.Append("\n<br />");
 
         if (mDeviceID.IsEmpty()) {
             mBuffer.Append("\n<a href=\"about:cache?device=");
             mBuffer.Append(deviceID);
             mBuffer.Append("\">List Cache Entries</a>\n");
+            mBuffer.Append("<hr />\n");
         } else {
             *visitEntries = PR_TRUE;
+            mBuffer.Append("<hr />\n<pre>\n");
         }
         
-        mBuffer.Append("<hr>\n");
         mStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
     }
 
@@ -220,56 +230,50 @@ nsAboutCache::VisitEntry(const char *deviceID,
     nsCAutoString url;
     url += NS_LITERAL_CSTRING("about:cache-entry?client=");
     url += clientID;
-    url += NS_LITERAL_CSTRING("&sb=");
+    url += NS_LITERAL_CSTRING("&amp;sb=");
     url += streamBased ? "1" : "0";
-    url += NS_LITERAL_CSTRING("&key=");
+    url += NS_LITERAL_CSTRING("&amp;key=");
     url += key; // key
 
     // Entry start...
-    mBuffer.Assign("<p><tt>\n");
 
     // URI
-    mBuffer.Append("<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                     "&nbsp;&nbsp;&nbsp;&nbsp;Key: </b>");
-    mBuffer.Append("<a href=\"");
+    mBuffer.Assign("<b>           Key: </b><a href=\"");
     mBuffer.Append(url);
     mBuffer.Append("\">");
     mBuffer.Append(key);
-    mBuffer.Append("</a><br>\n");
+    mBuffer.Append("</a>");
 
     // Content length
     PRUint32 length = 0;
     entryInfo->GetDataSize(&length);
 
-    mBuffer.Append("<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Data size: </b>");
+    mBuffer.Append("\n<b>     Data size: </b>");
     mBuffer.AppendInt(length);
-    mBuffer.Append(" Bytes<br>\n");
+    mBuffer.Append(" Bytes");
 
     // Number of accesses
     PRInt32 fetchCount = 0;
     entryInfo->GetFetchCount(&fetchCount);
 
-    mBuffer.Append("<b>&nbsp;&nbsp;&nbsp;Fetch count: </b>");
+    mBuffer.Append("\n<b>   Fetch count: </b>");
     mBuffer.AppendInt(fetchCount);
-    mBuffer.Append("<br>\n");
 
     // vars for reporting time
     char buf[255];
     PRUint32 t;
 
     // Last modified time
-    mBuffer.Append("<b>&nbsp;Last Modified: </b>");
+    mBuffer.Append("\n<b> Last Modified: </b>");
     entryInfo->GetLastModified(&t);
     if (t) {
         PrintTimeString(buf, sizeof(buf), t);
         mBuffer.Append(buf);
     } else
         mBuffer.Append("No last modified time");
-    mBuffer.Append("<br>");
 
     // Expires time
-    mBuffer.Append("<b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                 "Expires: </b>");
+    mBuffer.Append("\n<b>       Expires: </b>");
     entryInfo->GetExpirationTime(&t);
     if (t) {
         PrintTimeString(buf, sizeof(buf), t);
@@ -277,10 +281,9 @@ nsAboutCache::VisitEntry(const char *deviceID,
     } else {
         mBuffer.Append("No expiration time");
     }
-    mBuffer.Append("<br>");
 
     // Entry is done...
-    mBuffer.Append("</p></tt>\n");
+    mBuffer.Append("\n\n");
 
     mStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 
