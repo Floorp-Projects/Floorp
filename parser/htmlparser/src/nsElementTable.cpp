@@ -1624,6 +1624,12 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsEntryStack& aTagStack,PRInt32
       }
     }
   }
+  else if(IsMemberOf(kFontStyle)){
+    eHTMLTags theTag=aTagStack.Last();
+    if(gHTMLElements[theTag].IsMemberOf(kFontStyle)) {
+      result=theTag;
+    }
+  }
   return result;
 }
 

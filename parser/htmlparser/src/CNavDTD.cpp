@@ -899,6 +899,17 @@ PRInt32 GetIndexOfChildOrSynonym(nsEntryStack& aTagStack,eHTMLTags aChildTag) {
     CTagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
     if(theSynTags) {
       theChildIndex=theSynTags->GetTopmostIndexOf(aTagStack);
+    } 
+    else{
+      theChildIndex=aTagStack.GetCount();
+      PRInt32 theGroup=gHTMLElements[aChildTag].mParentBits;
+      while(-1<--theChildIndex) {
+        eHTMLTags theTag=aTagStack[theChildIndex];
+        if(gHTMLElements[theTag].IsMemberOf(theGroup)) {
+          break;   
+        }
+      }
+
     }
   }
   return theChildIndex;
@@ -951,6 +962,40 @@ PRBool CanBeContained(eHTMLTags aParentTag,eHTMLTags aChildTag,nsEntryStack& aTa
 
   return result;
 }
+
+enum eProcessRule {eIgnore,eTest};
+
+eProcessRule GetProcessRule(eHTMLTags aParentTag,eHTMLTags aChildTag){
+  int mParentGroup=gHTMLElements[aParentTag].mParentBits;
+  int mChildGroup=gHTMLElements[aChildTag].mParentBits;
+
+  eProcessRule result=eTest;
+
+  switch(mParentGroup){
+    case kSpecial:
+    case kPhrase:
+    case kFontStyle:
+    case kFormControl:
+      switch(mChildGroup){
+        case kBlock:
+        case kHTMLContent:
+        case kExtensions:
+        //case kFlowEntity:
+        case kList:
+        case kBlockEntity:
+        case kHeading:
+        case kHeadMisc:
+        case kPreformatted:
+        case kNone:
+          result=eIgnore;
+      }
+      break;
+
+    default:
+      break;
+  }
+  return result;
+}
     
 /** 
  *  This method gets called when a start token has been 
@@ -971,43 +1016,56 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
 
   nsresult  result=NS_OK;
 
-  PRBool theCanContainResult=PR_FALSE;
-  PRBool theChildAgrees=PR_TRUE;
-
+  PRBool  theCanContainResult=PR_FALSE;
+  PRBool  theChildAgrees=PR_TRUE;
+  PRInt32 theIndex=mBodyContext->GetCount();
+  
   do {
 
-    eHTMLTags theParentTag=mBodyContext->Last();
+    eHTMLTags theParentTag=mBodyContext->TagAt(--theIndex);
     if(CanOmit(theParentTag,aChildTag)){
       //call handleOmittedTag()...
       return result;
     }
 
-    theCanContainResult=CanContain(theParentTag,aChildTag);
-    theChildAgrees=PR_TRUE;
-    if(theCanContainResult) {
+    eProcessRule theRule=eTest; //GetProcessRule(theParentTag,aChildTag);
+    switch(theRule){
+      case eTest:
+        theCanContainResult=CanContain(theParentTag,aChildTag);
+        theChildAgrees=PR_TRUE;
+        if(theCanContainResult) {
 
-      eHTMLTags theAncestor=gHTMLElements[aChildTag].mExcludingAncestor;
-      if(eHTMLTag_unknown!=theAncestor){
-        theChildAgrees=!HasOpenContainer(theAncestor);
-      }
+          eHTMLTags theAncestor=gHTMLElements[aChildTag].mExcludingAncestor;
+          if(eHTMLTag_unknown!=theAncestor){
+            theChildAgrees=!HasOpenContainer(theAncestor);
+          }
 
-      if(theChildAgrees){
-        theAncestor=gHTMLElements[aChildTag].mRequiredAncestor;
-        if(eHTMLTag_unknown!=theAncestor){
-          theChildAgrees=HasOpenContainer(theAncestor);
+          if(theChildAgrees){
+            theAncestor=gHTMLElements[aChildTag].mRequiredAncestor;
+            if(eHTMLTag_unknown!=theAncestor){
+              theChildAgrees=HasOpenContainer(theAncestor);
+            }
+          }
         }
-      }
-    }
 
-    if(!(theCanContainResult && theChildAgrees)) {
-      if (!CanPropagate(theParentTag,aChildTag)) { 
-        if(nsHTMLElement::IsContainer(aChildTag)){        
-          CloseTopmostContainer();  //drastic measures, to be sure!
+        if(!(theCanContainResult && theChildAgrees)) {
+          if (!CanPropagate(theParentTag,aChildTag)) { 
+            if(nsHTMLElement::IsContainer(aChildTag)){        
+              CloseContainersTo(theIndex,theParentTag,PR_TRUE);
+            }//if
+            else break;
+          }//if
+          else {
+            CreateContextStackFor(aChildTag);
+            theIndex=mBodyContext->GetCount();
+          }
         }//if
-        else break;
-      }//if
-      else CreateContextStackFor(aChildTag);
-    }//if
+        break;
+      case eIgnore:
+      default:
+        break;
+
+    }//switch
   } while(!(theCanContainResult && theChildAgrees));
 
 
