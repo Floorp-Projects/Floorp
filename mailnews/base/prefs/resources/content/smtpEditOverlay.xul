@@ -52,15 +52,16 @@
         </box>
       </box>
      </box>
-<!-- remove for now - bug 46393
-  <checkbox wsm_persist="true" id="smtp.isSecure" value="&isSecure.label;" oncommand="updateControls();"/>
+     <box autostretch="never">
+	<text class="label" value="&isSecure.label;"/>
+     </box>
      <radiogroup id="smtp.trySSL">
-       <box orient="horizontal">
-         <radio group="smtp.trySSL" value="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
-         <radio group="smtp.trySSL" value="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
-       </box>
+       <hbox style="margin-left: 2em">
+	 <radio group="smtp.trySSL" data="0" value="&neverSecure.label;" id="smtp.neverSecure"/>
+         <radio group="smtp.trySSL" data="1" value="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
+         <radio group="smtp.trySSL" data="2" value="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
+       </hbox>
      </radiogroup>
--->
   </box>
 
 </overlay>

@@ -30,6 +30,7 @@ var gSmtpUsernameLabel;
 var gSmtpHostname;
 var gSmtpUseUsername;
 var gSmtpAuthMethod;
+var gSmtpTrySSL;
 
 var gSavedUsername="";
 
@@ -40,14 +41,19 @@ function initSmtpSettings(server) {
     gSmtpHostname = document.getElementById("smtp.hostname");
     gSmtpUseUsername = document.getElementById("smtp.useUsername");
     gSmtpAuthMethod = document.getElementById("smtp.authMethod");
+    gSmtpTrySSL = document.getElementById("smtp.trySSL");
     
     if (server) {
         gSmtpHostname.value = server.hostname;
         gSmtpUsername.value = server.username;
         gSmtpAuthMethod.setAttribute("value", server.authMethod);
-        // radio groups not implemented
-        //document.getElementById("smtp.trySSL").value = server.trySSL;
 
+        var elements = [];
+        if (server.trySSL != "")
+            elements = gSmtpTrySSL.getElementsByAttribute("data", server.trySSL);
+        if (elements.length == 0)
+            elements = gSmtpTrySSL.getElementsByAttribute("data", "1");
+        gSmtpTrySSL.selectedItem = elements[0];
     }
 
     if (gSmtpAuthMethod.getAttribute("value") == "1")
@@ -75,6 +81,7 @@ function saveSmtpSettings(server)
         //dump("Saved authmethod = " + server.authMethod +
         //     " but checked = " + gSmtpUseUsername.checked + "\n");
         server.username = gSmtpUsername.value;
+        server.trySSL = gSmtpTrySSL.selectedItem.data;
     }
 }
 

@@ -296,6 +296,7 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 
 	m_flags = 0;
   m_prefAuthMethod = PREF_AUTH_NONE;
+    m_prefTrySSL = PREF_SSL_TRY;
 	m_port = SMTP_PORT;
   m_tlsInitiated = PR_FALSE;
 
@@ -336,10 +337,10 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
   // round trip communication between the client and server
   nsCOMPtr<nsISmtpServer> smtpServer;
   m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
-  if (smtpServer)
+  if (smtpServer) {
       smtpServer->GetAuthMethod(&m_prefAuthMethod);
-   else
-     m_prefAuthMethod = PREF_AUTH_NONE; 
+      smtpServer->GetTrySSL(&m_prefTrySSL);
+  }
     
   rv = RequestOverrideInfo(smtpServer);
   // if we aren't waiting for a login override, then go ahead an
@@ -349,11 +350,15 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     aURL->GetHost(getter_Copies(hostName));
     PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s", (const char *) hostName));
 
-    // pass in "ssl" for the last arg if you want this to be over SSL
-    if (m_prefAuthMethod == PREF_AUTH_TLS_ONLY)
+    if (m_prefTrySSL != PREF_SSL_NEVER) {
         rv = OpenNetworkSocket(aURL, "tls");
-    else
+        if (NS_FAILED(rv) && m_prefTrySSL == PREF_SSL_TRY) {
+            m_prefTrySSL = PREF_SSL_NEVER;
+            rv = OpenNetworkSocket(aURL, nsnull);
+        }
+    } else {
         rv = OpenNetworkSocket(aURL, nsnull);
+    }
   }
 }
 
@@ -709,8 +714,8 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
       /* EHLO must not be implemented by the server so fall back to the HELO case */
 
         if (m_prefAuthMethod == PREF_AUTH_ANY ||
-            m_prefAuthMethod == PREF_AUTH_TLS_ONLY ||
-            m_prefAuthMethod == PREF_AUTH_LOGIN)
+            m_prefAuthMethod == PREF_AUTH_LOGIN ||
+            m_prefTrySSL == PREF_SSL_ALWAYS)
         {
             m_nextState = SMTP_ERROR_DONE;
             m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
@@ -794,9 +799,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
     {
         if(TestFlag(SMTP_EHLO_STARTTLS_ENABLED))
         {
-            if (m_prefAuthMethod == PREF_AUTH_ANY ||
-                m_prefAuthMethod == PREF_AUTH_TLS_TRY ||
-                m_prefAuthMethod == PREF_AUTH_TLS_ONLY)
+            if (m_prefTrySSL != PREF_SSL_NEVER)
             {
                 buffer = "STARTTLS";
                 buffer += CRLF;
@@ -812,7 +815,7 @@ PRInt32 nsSmtpProtocol::ProcessAuth()
                 return status;
             }
         }
-        else if (m_prefAuthMethod == PREF_AUTH_TLS_ONLY)
+        else if (m_prefTrySSL == PREF_SSL_ALWAYS)
         {
             m_nextState = SMTP_ERROR_DONE;
             m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;

@@ -3,5 +3,6 @@
 <!ENTITY userName.label "User Name:">
 <!ENTITY savePassword.label "Save my password">
 <!ENTITY isSecure.label "Use secure connection (SSL)">
+<!ENTITY neverSecure.label "Never">
 <!ENTITY alwaysSecure.label "Always">
 <!ENTITY sometimesSecure.label "When available">

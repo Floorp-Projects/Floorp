@@ -102,7 +102,7 @@ nsSmtpServer::GetTrySSL(PRInt32 *trySSL)
     *trySSL= 0;
     getPrefString("try_ssl", pref);
     rv = prefs->GetIntPref(pref, trySSL);
-    if (NS_FAILED(rv)) *trySSL = 0;
+    if (NS_FAILED(rv)) *trySSL = 1;
     return NS_OK;
 }
 

@@ -89,15 +89,13 @@ SMTP_AUTH_PROCESS_STATE                             // 21
 typedef enum _PrefAuthMethod {
     PREF_AUTH_NONE = 0,
     PREF_AUTH_ANY = 1,
-    PREF_AUTH_LOGIN = 2,
-    PREF_AUTH_TLS_TRY = 3,
-    PREF_AUTH_TLS_ONLY = 4
+    PREF_AUTH_LOGIN = 2
 } PrefAuthMethod;
 
 typedef enum _PrefTrySSL {
-    PREF_NO_SSL = 0,
-    PREF_TRY_SSL = 1,
-    PREF_ALWAYS_SSL = 2
+    PREF_SSL_NEVER = 0,
+    PREF_SSL_TRY = 1,
+    PREF_SSL_ALWAYS = 2
 } PrefTrySSL;
 
 class nsSmtpProtocol : public nsMsgProtocol,
@@ -160,6 +158,7 @@ private:
   // *** the following should move to the smtp server when we support
   // multiple smtp servers
   PRInt32 m_prefAuthMethod;
+    PRInt32 m_prefTrySSL;
   PRBool m_tlsEnabled;
   
   PRBool m_tlsInitiated;
