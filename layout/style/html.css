@@ -1509,30 +1509,33 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 }
 
 
+
+
 /* The following namespace if for use with viewsource */
 
 viewsource|key   {font-weight:bold;} 
 viewsource|key:before {content: " "; color: black;} 
-viewsource|key:after {content: "="; color: black;} 
+
 viewsource|val  {color: blue; font-weight:normal;} 
+viewsource|val:before {content: "="; color: black;} 
 
-viewsource|entity     {color: maroon; font-weight:normal;} 
+viewsource|entity  {color: maroon; font-weight:normal;} 
 
-viewsource|comment    {color: green; font-style:italic; } 
+viewsource|comment {color: green; font-style:italic; } 
 
 viewsource|doctype {color: green; font-style:italic;} 
 
-viewsource|pi         {color: #D74702; font-style:italic;} 
+viewsource|pi  {color: #D74702; font-style:italic;} 
 
-viewsource|starttag {color: purple;  font-weight:bold;} 
-viewsource|starttag:before {content: "<"; color: black;} 
-viewsource|starttag:after {content: ">"; color: black;} 
+viewsource|start {color: purple;  font-weight:bold;} 
+viewsource|start:before {content: "<"; color: black;} 
+viewsource|start:after {content: ">"; color: black;} 
 
-viewsource|endtag {color: purple;  font-weight:bold;} 
-viewsource|endtag:before {content: "</"; color: black;} 
-viewsource|endtag:after {content: ">"; color: black;} 
+viewsource|end {color: purple;  font-weight:bold;} 
+viewsource|end:before {content: "</"; color: black;} 
+viewsource|end:after {content: ">"; color: black;} 
 
 viewsource|viewsource { font-family: monospace; font-weight:normal; color:black; white-space:pre;} 
 
-viewsource|text {font-weight: normal; }
+viewsource|txt {font-weight: normal; }
 
