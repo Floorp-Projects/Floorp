@@ -5265,7 +5265,7 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
           // Check if node is text and has more than just a &nbsp
           nsCOMPtr<nsIDOMCharacterData>textNode = do_QueryInterface(node);
           nsAutoString text;
-          char nbspStr[2] = {nbsp, 0};
+          PRUnichar nbspStr[2] = {nbsp, 0};
           if (textNode && textNode->GetData(text))
           {
             // Set selection relative to the text node
