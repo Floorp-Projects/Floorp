@@ -57,14 +57,11 @@ function Init()
 {
   doSetOKCancel(AddAvailableLanguage);
   
-  dump("********** Init()\n");    
-
   try {
-    GetBundles()
+    GetBundles();
   }
 
   catch(ex) {
-    dump("*** Couldn't get string bundles\n");
   }
 
   ReadAvailableLanguages();
@@ -79,7 +76,6 @@ function Init()
     } //try
 
     catch(ex) {
-      dump("*** Couldn't get XUL element handles\n");
     } //catch
 
     try {
@@ -87,10 +83,7 @@ function Init()
     }
 
     catch(ex) {
-
-      dump("*** Couldn't initialize page switcher and pref loader.\n");
       //pref service backup
-
     } //catch
 
     try {
@@ -100,15 +93,6 @@ function Init()
     } //try
 
     catch(ex) {
-      dump("*** Couldn't read pref string\n");
-    } //catch
-
-    try {
-      dump("*** Language PrefString: " + pref_string + "\n");
-    } //try
-
-    catch(ex) {
-      dump("*** Pref object doesn't exist\n");
     } //catch
 
     LoadActiveLanguages();
@@ -128,27 +112,15 @@ function Init()
     } //try
 
     catch(ex) {
-      dump("*** Couldn't get XUL element handles\n");
     } //catch
 
-    try {
-      dump("*** AddAvailable Language PrefString: " + pref_string + "\n");
-    } //try
-
-    catch(ex) {
-      dump("*** Pref object doesn't exist\n");
-    } //catch
-
-
-	  LoadAvailableLanguages();
-
+    LoadAvailableLanguages();
   }
 }
 
 
 function AddLanguage() 
-{
-    dump("********** AddLanguage()\n");    
+{ 
     //cludge: make pref string available from the popup
     document.getElementById('intlAcceptLanguages').value = pref_string;
     window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","","modal=yes,chrome,resizable=no", "addlangwindow");
@@ -200,8 +172,6 @@ function ReadAvailableLanguages()
                  }
           
                  catch (ex) {
-                    dump("tit:" + tit + "\n");
-                    dump("No language string for:" + stringLangRegion[1] + "\n");
                     tit = "";
                  }
 
@@ -213,9 +183,7 @@ function ReadAvailableLanguages()
                    }
                
                    catch (ex) {
-                      dump("No region string for:" + stringLangRegion[1] + "\n");
 		      tit += "["+str+"]";
-					  dump(":"+tit+":"+str);
                    }
 
                  } //if region
@@ -231,25 +199,17 @@ function ReadAvailableLanguages()
 	        availLanguageDict[i][1]	= str;
 	        availLanguageDict[i][2]	= visible;
                 i++;
-
-	        if (tit) {}
-	        else dump('Not label for :' + str + ', ' + tit+'\n');
 			        
              } // if str&tit
             //} //if visible
 	    } //if accepted
     } //while
-
-    dump('length:'+availLanguageDict.length+'\n');
-	availLanguageDict.sort();
+    availLanguageDict.sort();
 }
 
 
 function LoadAvailableLanguages()
-{
-
-  dump("Loading available languages!\n");
-  
+{  
   if (availLanguageDict) 
     for (var i = 0; i < availLanguageDict.length; i++) {
 
@@ -265,15 +225,10 @@ function LoadAvailableLanguages()
 
 function LoadActiveLanguages()
 {
-
-  dump("LoadActiveLanguages, PrefString: " + pref_string + "\n");
-
   try {
 	  arrayOfPrefs = pref_string.split(', ');
   } 
-  
   catch (ex) {
-	  dump("failed to split the preference string!\n");
   }
 	
   if (arrayOfPrefs) 
@@ -294,9 +249,6 @@ function LoadActiveLanguages()
 
 function LangAlreadyActive(langId)
 {
-
-  dump("*** LangAlreadyActive, PrefString: " + pref_string + "\n");
-
   var found = false;
   try {
     var arrayOfPrefs = pref_string.split(', ');
@@ -418,8 +370,6 @@ function AddAvailableLanguage()
   
   if (otherField.value) {
 
-    dump("Other field: " + otherField.value + "\n");
-
     /* reject bogus lang strings, INCLUDING those with HTTP "q"
        values kludged on the end of them
     */
@@ -491,7 +441,6 @@ function GetLanguageTitle(id)
 
       if ( availLanguageDict[j][1] == id) {	
       //title = 
-	dump("found title for:" + id + " ==> " + availLanguageDict[j][0] + "\n");
 	return availLanguageDict[j][0];
       }	
     }
@@ -517,12 +466,10 @@ function AddTreeItem(doc, treeRoot, langID, langTitle)
 			row.appendChild(cell);
 
 			treeRoot.appendChild(item);
-			//dump("*** Added tree item: " + langTitle + "\n");
 
 	} //try
 
 	catch (ex) {
-		dump("*** Failed to add item: " + langTitle + "\n");
 	} //catch 
 
 }
@@ -532,8 +479,6 @@ function UpdateSavePrefString()
 {
   var num_languages = 0;
   pref_string = null;
-
-  dump("*** UpdateSavePrefString()\n");
 
   for (var item = active_languages_treeroot.firstChild; item != null; item = item.nextSibling) {
 
@@ -554,7 +499,6 @@ function UpdateSavePrefString()
 	  } //if
   }//for
 
-  dump("*** Pref string set to: " + pref_string + "\n");
   parent.hPrefWindow.setPref( "string", "intl.accept_languages", pref_string );
   //Save();
 
@@ -562,8 +506,6 @@ function UpdateSavePrefString()
 
 function Save()
 {
-
-  dump('*** Save()\n');
 
   try
 	{
@@ -582,13 +524,11 @@ function Save()
 		if (prefInt)
 		{
 			prefInt.SetCharPref("intl.accept_languages", pref_string);
-			dump('*** saved pref: ' + pref_string + '.\n');
 		}
 	}
 
 	catch(ex)
 	{
-		dump("*** Couldn't save!\n");
 	}
 
 } //Save
