@@ -52,12 +52,8 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   mWindowRegion = nsnull;
   mWindowPtr = nsnull;
-  mPainting = PR_FALSE;
+  mDrawing = PR_FALSE;
 	mDestroyCalled = PR_FALSE;
-
-  mMacPortRelativeRegion = nsnull;
-  mMacPortRelativeX = 0;
-  mMacPortRelativeY = 0;
 
 	SetBackgroundColor(NS_RGB(255, 255, 255));
 	SetForegroundColor(NS_RGB(0, 0, 0));
@@ -79,12 +75,6 @@ nsWindow::~nsWindow()
 	{
 		::DisposeRgn(mWindowRegion);
 		mWindowRegion = nsnull;	
-	}
-
-	if (mMacPortRelativeRegion != nsnull)
-	{
-		::DisposeRgn(mMacPortRelativeRegion);
-		mMacPortRelativeRegion = nsnull;	
 	}
 	
 	NS_IF_RELEASE(mTempRenderingContext);
@@ -110,20 +100,12 @@ nsresult nsWindow::StandardCreate(nsIWidget *aParent,
 
 	mBounds = aRect;
 	mWindowRegion = ::NewRgn();
-	::SetRectRgn(mWindowRegion, aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height);		 
+	if (mWindowRegion == nil)
+		return NS_ERROR_OUT_OF_MEMORY;
+	::SetRectRgn(mWindowRegion, 0, 0, aRect.width, aRect.height);		 
 
 	BaseCreate(aParent, aRect, aHandleEventFunction, 
 							aContext, aAppShell, aToolkit, aInitData);
-
-	mMacPortRelativeX = (PRInt32)GetNativeData(NS_NATIVE_OFFSETX);
-	mMacPortRelativeY = (PRInt32)GetNativeData(NS_NATIVE_OFFSETY);
-	mMacPortRelativeRegion = ::NewRgn();
-	::SetRectRgn(mMacPortRelativeRegion, 
-		mMacPortRelativeX, 
-		mMacPortRelativeY, 
-		mMacPortRelativeX + aRect.width, 
-		mMacPortRelativeY + aRect.height );
-
 
 	if (mParent)
 	{
@@ -241,21 +223,15 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     	break;
 
     case NS_NATIVE_OFFSETX:
-//   	retVal = (void*)mMacPortRelativeX;
     	point.MoveTo(mBounds.x, mBounds.y);
     	LocalToWindowCoordinate(point);
     	retVal = (void*)point.x;
      	break;
 
     case NS_NATIVE_OFFSETY:
-//   	retVal = (void*)mMacPortRelativeY;
     	point.MoveTo(mBounds.x, mBounds.y);
     	LocalToWindowCoordinate(point);
     	retVal = (void*)point.y;
-    	break;
-    	
-    case NS_NATIVE_REGION_IN_PORT:
-    	retVal = (void*)mMacPortRelativeRegion;
     	break;
 	}
 
@@ -426,25 +402,15 @@ NS_IMETHODIMP nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
 	if ((mBounds.x != aX) || (mBounds.y != aY))
 	{
-		// Move mMacPortRelativeRegion
-		// first find the delta for the move, and then adjust the region
-		nsPoint point(aX, aY);
-		LocalToWindowCoordinate(point);
-		
-		::SetRectRgn(
-	  	  mMacPortRelativeRegion,
-	  	  point.x,
-	  	  point.y,
-	  	  point.x + mBounds.width,
-	  	  point.y + mBounds.height
-	  	);	
+		// Invalidate the current location (unless it's the top-level window)
+		if (mParent != nsnull)
+			Invalidate(PR_FALSE);
 	  	
-	  	mMacPortRelativeX = point.x;
-	  	mMacPortRelativeY = point.y;
-	  	
-		// Set mBounds
+		// Set the bounds
 		mBounds.x = aX;
 		mBounds.y = aY;
+
+		// Report the event
 		ReportMoveEvent();
 	}
 	return NS_OK;
@@ -459,27 +425,20 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepain
 {
 	if ((mBounds.width != aWidth) || (mBounds.height != aHeight))
 	{
-	  // Set mMacPortRelativeRegion
-	  ::SetRectRgn(
-	  	mMacPortRelativeRegion,
-	  	(**mMacPortRelativeRegion ).rgnBBox.left,
-	  	(**mMacPortRelativeRegion).rgnBBox.top,
-	  	(**mMacPortRelativeRegion ).rgnBBox.left + aWidth,
-	  	(**mMacPortRelativeRegion).rgnBBox.top + aHeight );	
-	  
-	  // Set mBounds
+	  // Set the bounds
 	  mBounds.width  = aWidth;
 	  mBounds.height = aHeight;
+
+		// Update the region
+		::SetRectRgn(mWindowRegion, 0, 0, aWidth, aHeight);		 
 	 
-	  // Set mWindowRegion
-		if (mWindowRegion)
-			::SetRectRgn(mWindowRegion, mBounds.x, mBounds.y, mBounds.x + aWidth, mBounds.y + aHeight);		 
-	 
+		// Invalidate the new location
+		if (aRepaint)
+			Invalidate(PR_FALSE);
+
+		// Report the event
 		ReportSizeEvent();
 	}
-	
-	  if (aRepaint)
-	  	Invalidate(true);
 	return NS_OK;
 }
 
@@ -540,11 +499,12 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	if (!mWindowPtr)
 		return NS_OK;
 
-	if (aIsSynchronous && !mPainting)
+	static PRBool	reentrant = PR_FALSE;
+	if (aIsSynchronous && !reentrant)
 	{
-		mPainting = PR_TRUE;	// no reentrance please
+		reentrant = PR_TRUE;	// no reentrance please
 		Update();
-		mPainting = PR_FALSE;
+		reentrant = PR_FALSE;
 	}
 	else
 	{
@@ -553,8 +513,11 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 		LocalToWindowCoordinate(wRect);
 		nsRectToMacRect(wRect, macRect);
 
+		GrafPtr savePort;
+		::GetPort(&savePort);
 		::SetPort(mWindowPtr);
 		::InvalRect(&macRect);
+		::SetPort(savePort);
 	}
 	return NS_OK;
 }
@@ -582,6 +545,10 @@ inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 //-------------------------------------------------------------------------
 void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 {
+	if (mDrawing)
+		return;
+	mDrawing = PR_TRUE;
+
 	// make sure we have a rendering context
 	if (aRenderingContext == nsnull)
 		mTempRenderingContext = GetRenderingContext();
@@ -627,6 +594,10 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 //-------------------------------------------------------------------------
 void nsWindow::EndDraw()
 {
+	if (!	mDrawing)
+		return;
+	mDrawing = PR_FALSE;
+
 	PRBool clipEmpty;
 	mTempRenderingContext->PopState(clipEmpty);
 	NS_RELEASE(mTempRenderingContext);
@@ -651,9 +622,20 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
 {
+	// calculate the update region relatively to the window port rect
+	// (at this point, the grafPort origin should always be 0,0
+	// so mWindowRegion has to be converted to window coordinates)
 	RgnHandle updateRgn = ::NewRgn();
-	//::SectRgn(mWindowPtr->visRgn, mWindowRegion, updateRgn);
-	::SectRgn(mWindowPtr->visRgn, mMacPortRelativeRegion, updateRgn);
+	if (updateRgn == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+	::CopyRgn(mWindowRegion, updateRgn);
+
+	nsRect bounds = mBounds;
+	LocalToWindowCoordinate(bounds);
+	::OffsetRgn(updateRgn, bounds.x, bounds.y);
+
+	// check if the update region is visible
+	::SectRgn(mWindowPtr->visRgn, updateRgn, updateRgn);
 	if (!::EmptyRgn(updateRgn))
 	{
 		// make sure we have a rendering context
@@ -920,18 +902,10 @@ PRBool nsWindow::ReportSizeEvent()
  *  @return  PR_TRUE if the these regions intersect
  */
 
-PRBool
-nsWindow::RgnIntersects(RgnHandle aTheRegion,RgnHandle	aIntersectRgn)
+PRBool nsWindow::RgnIntersects(RgnHandle aTheRegion, RgnHandle aIntersectRgn)
 {
-PRBool			result = PR_FALSE;
-
-	// cps - not sure if this is intended to be in the parent widget's coord
-	// system or not... It would be implied by the use of mWIndowRegion
-	::SectRgn(aTheRegion,this->mWindowRegion,aIntersectRgn);
-	//::SectRgn(aTheRegion, this->mMacPortRelativeRegion, aIntersectRgn);
-	if (!::EmptyRgn(aIntersectRgn))
-		result = TRUE;
-	return(result);
+	::SectRgn(aTheRegion, this->mWindowRegion, aIntersectRgn);
+	return (::EmptyRgn(aIntersectRgn) != false);
 }
 
 
