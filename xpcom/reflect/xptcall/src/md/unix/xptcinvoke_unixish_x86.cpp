@@ -25,6 +25,8 @@
 #include "xptcprivate.h"
 #include "xptc_platforms_unixish_x86.h"
 
+extern "C" {
+
 // Remember that these 'words' are 32bit DWORDS
 
 static PRUint32
@@ -38,37 +40,12 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
             result++;
             continue;
         }
+        result++;
         switch(s->type)
         {
-        case nsXPTType::T_I8     :
-        case nsXPTType::T_I16    :
-        case nsXPTType::T_I32    :
-            result++;
-            break;
         case nsXPTType::T_I64    :
-            result+=2;
-            break;
-        case nsXPTType::T_U8     :
-        case nsXPTType::T_U16    :
-        case nsXPTType::T_U32    :
-            result++;
-            break;
         case nsXPTType::T_U64    :
-            result+=2;
-            break;
-        case nsXPTType::T_FLOAT  :
-            result++;
-            break;
         case nsXPTType::T_DOUBLE :
-            result+=2;
-            break;
-        case nsXPTType::T_BOOL   :
-        case nsXPTType::T_CHAR   :
-        case nsXPTType::T_WCHAR  :
-            result++;
-            break;
-        default:
-            // all the others are plain pointer types
             result++;
             break;
         }
@@ -86,38 +63,36 @@ invoke_copy_to_stack(PRUint32 paramCount, nsXPTCVariant* s, PRUint32* d)
             *((void**)d) = s->ptr;
             continue;
         }
+
+/* XXX: the following line is here (rather than as the default clause in
+ *      the following switch statement) so that the Sun native compiler
+ *      will generate the correct assembly code on the Solaris Intel
+ *      platform. See the comments in bug #28817 for more details.
+ */
+
+        *((void**)d) = s->val.p;
+
         switch(s->type)
         {
-        case nsXPTType::T_I8     : *((PRInt8*)  d) = s->val.i8;          break;
-        case nsXPTType::T_I16    : *((PRInt16*) d) = s->val.i16;         break;
-        case nsXPTType::T_I32    : *((PRInt32*) d) = s->val.i32;         break;
         case nsXPTType::T_I64    : *((PRInt64*) d) = s->val.i64; d++;    break;
-        case nsXPTType::T_U8     : *((PRUint8*) d) = s->val.u8;          break;
-        case nsXPTType::T_U16    : *((PRUint16*)d) = s->val.u16;         break;
-        case nsXPTType::T_U32    : *((PRUint32*)d) = s->val.u32;         break;
         case nsXPTType::T_U64    : *((PRUint64*)d) = s->val.u64; d++;    break;
-        case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;           break;
         case nsXPTType::T_DOUBLE : *((double*)  d) = s->val.d;   d++;    break;
-        case nsXPTType::T_BOOL   : *((PRBool*)  d) = s->val.b;           break;
-        case nsXPTType::T_CHAR   : *((char*)    d) = s->val.c;           break;
-        case nsXPTType::T_WCHAR  : *((wchar_t*) d) = s->val.wc;          break;
-        default:
-            // all the others are plain pointer types
-            *((void**)d) = s->val.p;
-            break;
         }
     }
+}
+
 }
 
 XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params)
 {
-    PRUint32 result;
+#ifdef __GNUC__            /* Gnu compiler. */
+  PRUint32 result;
   PRUint32 n = invoke_count_words (paramCount, params) * 4;
   void (*fn_copy) (unsigned int, nsXPTCVariant *, PRUint32 *) = invoke_copy_to_stack;
   int temp1, temp2, temp3;
-
+ 
  __asm__ __volatile__(
     "subl  %8, %%esp\n\t" /* make room for params */
     "pushl %%esp\n\t"
@@ -127,7 +102,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "addl  $0xc, %%esp\n\t"
     "movl  %4, %%ecx\n\t"
 #ifdef CFRONT_STYLE_THIS_ADJUST
-    "movl  (%%ecx), %%edx\n\t" 
+    "movl  (%%ecx), %%edx\n\t"
     "movl  %5, %%eax\n\t"   /* function index */
     "shl   $3, %%eax\n\t"   /* *= 8 */
     "addl  $8, %%eax\n\t"   /* += 8 skip first entry */
@@ -138,7 +113,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "addl  $4, %%edx\n\t"   /* += 4, method pointer */
 #else /* THUNK_BASED_THIS_ADJUST */
     "pushl %%ecx\n\t"
-    "movl  (%%ecx), %%edx\n\t" 
+    "movl  (%%ecx), %%edx\n\t"
     "movl  %5, %%eax\n\t"   /* function index */
     "leal  8(%%edx,%%eax,4), %%edx\n\t"
 #endif
@@ -157,6 +132,52 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
       "0" (fn_copy)         /* %3 */
     : "memory"
     );
-  
+    
   return result;
+#else if defined(__SUNPRO_CC)               /* Sun Workshop Compiler. */
+
+asm(
+	"\n\t /: PRUint32 n = invoke_count_words (paramCount, params) * 4;"
+
+	"\n\t pushl %ebx / preserve ebx"
+	"\n\t pushl %esi / preserve esi"
+	"\n\t movl  %esp, %ebx / save address of pushed esi and ebx"
+
+	"\n\t pushl 20(%ebp) / \"params\""
+	"\n\t pushl 16(%ebp) / \"paramCount\""
+	"\n\t call  invoke_count_words"
+	"\n\t mov   %ebx, %esp / restore esp"
+
+	"\n\t sall  $2,%eax"
+	"\n\t subl  %eax, %esp / make room for arguments"
+	"\n\t movl  %esp, %esi / save new esp"
+
+	"\n\t pushl %esp"
+	"\n\t pushl 20(%ebp) / \"params\""
+	"\n\t pushl 16(%ebp) / \"paramCount\""
+	"\n\t call  invoke_copy_to_stack  /  copy params"
+	"\n\t movl  %esi, %esp / restore new esp"
+
+	"\n\t movl  8(%ebp),%ecx / \"that\""
+	"\n\t pushl %ecx / \"that\""
+	"\n\t movl  (%ecx), %edx" 
+	"\n\t movl  12(%ebp), %eax / function index: \"methodIndex\""
+	"\n\t movl  8(%edx,%eax,4), %edx"
+
+	"\n\t call  *%edx"
+	"\n\t mov   %ebx, %esp"
+	"\n\t popl  %esi"
+	"\n\t popl  %ebx"
+	"\n\t leave"
+	"\n\t ret\n"
+);
+
+/* result == %eax */
+  if(0) /* supress "*** is expected to return a value." error */
+     return 0;
+
+#else
+#error "can't find a compiler to use"
+#endif /* __GNUC__ */
+
 }    
