@@ -64,6 +64,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIObserverService.h"
+#include "nsEscape.h"
 
 //-----------------------------------------------------------------------------
 
@@ -189,11 +190,19 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
                              nsIURI *aBaseURI,
                              nsIURI **result)
 {
-    // FindCharInSet isn't available right now for nsACstrings
-    // so we use FindChar instead
+    nsCAutoString spec(aSpec);
+    char *fwdPtr = spec.BeginWriting();
 
-    // ftp urls should not have \r or \n in them
-    if (aSpec.FindChar('\r') >= 0 || aSpec.FindChar('\n') >= 0)
+    // now unescape it... %xx reduced inline to resulting character
+
+    PRInt32 len = NS_UnescapeURL(fwdPtr);
+
+    // NS_UnescapeURL() modified spec's buffer, truncate to ensure
+    // spec knows its new length.
+    spec.Truncate(len);
+
+    // return an error if we find a NUL, CR, or LF in the path
+    if (spec.FindCharInSet(CRLF) >= 0 || spec.FindChar('\0') >= 0)
         return NS_ERROR_MALFORMED_URI;
 
     nsresult rv;
