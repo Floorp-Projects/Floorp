@@ -1803,6 +1803,7 @@ nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow, PRBool aLinksOnly)
 
   mLinksOnly = aLinksOnly;
   mLinksOnlyManuallySet = PR_TRUE;
+  mRepeatingMode = eRepeatingNone;
 
   PRBool isAutoStartWin;
   GetAutoStart(startWindow, &isAutoStartWin);
