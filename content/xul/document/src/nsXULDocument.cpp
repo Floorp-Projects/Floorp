@@ -22,6 +22,7 @@
  *
  * Contributor(s): 
  *   Ben Goodger <ben@netscape.com>
+ *   Pete Collins <petejc@collab.net>
  */
 
 /*
@@ -47,6 +48,7 @@
 
 // Note the ALPHABETICAL ORDERING
 #include "nsXULDocument.h"
+#include "nsDocument.h"
 
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
@@ -63,7 +65,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIDOMStyleSheetList.h"
 #include "nsIDOMText.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMAbstractView.h"
@@ -405,9 +406,9 @@ nsXULDocument::nsXULDocument(void)
       mTemplateBuilderTable(nsnull),
       mResolutionPhase(nsForwardReference::eStart),
       mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
+      mNumCapturers(0),
       mState(eState_Master),
-      mCurrentScriptProto(nsnull),
-      mNumCapturers(0)
+      mCurrentScriptProto(nsnull)
 {
     NS_INIT_REFCNT();
     mCharSetID.AssignWithConversion("UTF-8");
@@ -438,7 +439,7 @@ nsXULDocument::~nsXULDocument()
     // mParentDocument is never refcounted
     // Delete references to sub-documents
     {
-        PRInt32 i = mSubDocuments.Count();
+        i = mSubDocuments.Count();
         while (--i >= 0) {
             nsIDocument* subdoc = (nsIDocument*) mSubDocuments.ElementAt(i);
             NS_RELEASE(subdoc);
@@ -447,7 +448,7 @@ nsXULDocument::~nsXULDocument()
 
     // Delete references to style sheets but only if we aren't a popup document.
     if (!mIsPopup) {
-        PRInt32 i = mStyleSheets.Count();
+        i = mStyleSheets.Count();
         while (--i >= 0) {
             nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(i);
             sheet->SetOwningDocument(nsnull);
@@ -464,6 +465,7 @@ nsXULDocument::~nsXULDocument()
     if (mCSSLoader) {
       mCSSLoader->DropDocumentReference();
     }
+
 
     delete mTemplateBuilderTable;
     delete mBoxObjectTable;
@@ -581,6 +583,9 @@ nsXULDocument::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(NS_GET_IID(nsIStreamLoaderObserver))) {
         *result = NS_STATIC_CAST(nsIStreamLoaderObserver*, this);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIDOMDocumentStyle))) {
+        *result = NS_STATIC_CAST(nsIDOMDocumentStyle*, this);
     }
     else {
         *result = nsnull;
@@ -800,6 +805,22 @@ nsXULDocument::GetBaseURL(nsIURI*& aURL) const
     aURL = mDocumentURL;
     NS_IF_ADDREF(aURL);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets)
+{
+  if (!mDOMStyleSheets) {
+    mDOMStyleSheets = new nsDOMStyleSheetList(this);
+    if (!mDOMStyleSheets) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  *aStyleSheets = mDOMStyleSheets;
+  NS_ADDREF(*aStyleSheets);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1074,9 +1095,9 @@ void
 nsXULDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
 {
   PRInt32 count = mPresShells.Count();
-  PRInt32 index;
-  for (index = 0; index < count; index++) {
-    nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+  PRInt32 indx;
+  for (indx = 0; indx < count; indx++) {
+    nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(indx);
     nsCOMPtr<nsIStyleSet> set;
     if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
       if (set) {
@@ -1186,11 +1207,11 @@ nsXULDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray*
     }
   }
 
-  for (PRInt32 index = 0; index < mObservers.Count(); index++) {
-    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+  for (PRInt32 indx = 0; indx < mObservers.Count(); indx++) {
+    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
     observer->StyleSheetRemoved(this, sheet);
-    if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
-      index--;
+    if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
+      indx--;
     }
   }
 
@@ -1201,9 +1222,9 @@ void
 nsXULDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
 {
   PRInt32 count = mPresShells.Count();
-  PRInt32 index;
-  for (index = 0; index < count; index++) {
-    nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+  PRInt32 indx;
+  for (indx = 0; indx < count; indx++) {
+    nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(indx);
     nsCOMPtr<nsIStyleSet> set;
     if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
       if (set) {
@@ -1226,11 +1247,11 @@ nsXULDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
     RemoveStyleSheetFromStyleSets(aSheet);
 
     // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
-    for (PRInt32 index = 0; index < mObservers.Count(); index++) {
-      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+    for (PRInt32 indx = 0; indx < mObservers.Count(); indx++) {
+      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
       observer->StyleSheetRemoved(this, aSheet);
-      if (observer != (nsIDocumentObserver*)mObservers.ElementAt(index)) {
-        index--;
+      if (observer != (nsIDocumentObserver*)mObservers.ElementAt(indx)) {
+        indx--;
       }
     }
   }
@@ -5820,7 +5841,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
             if (rv == NS_CONTENT_ATTR_HAS_VALUE && broadcasterID.Length() > 0) {
               // We've got something in the command attribute.  We only treat this as
               // a normal broadcaster if we are not a menuitem or a key.
-              nsCOMPtr<nsIAtom> tag;
+              
               aElement->GetTag(*getter_AddRefs(tag));
               if (tag.get() == nsXULAtoms::menuitem || tag.get() == nsXULAtoms::key) {
                 *aNeedsHookup = PR_FALSE;
