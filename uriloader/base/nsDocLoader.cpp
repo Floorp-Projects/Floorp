@@ -36,7 +36,7 @@
 #include "nsITimer.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
-#include "nsIHttpUrl.h"
+#include "nsIHttpURL.h"
 #include "nsILoadAttribs.h"
 #include "nsIURLGroup.h"
 #include "nsIServiceManager.h"
