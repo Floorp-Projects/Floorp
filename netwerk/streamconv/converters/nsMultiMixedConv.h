@@ -105,14 +105,14 @@ public:
     // member data
     PRBool              mFoundBoundary;  // Have we seen the first boundary?
     PRBool              mNewPart;        // Are we processing the beginning of a part?
-    nsCAutoString       mBufferedData;   // holds any left over data after a crank turn
+    nsCString           mBufferedData;   // holds any left over data after a crank turn
     nsCOMPtr<nsIStreamListener> mFinalListener; // this guy gets the converted data via his OnDataAvailable()
     char                *mBoundaryCStr;
     PRInt32             mBoundaryStrLen;
     PRUint16            mPartCount;     // the number of parts we've seen so far
     nsCOMPtr<nsIChannel>mPartChannel;  // the channel for the given part we're processing.
                                         // one channel per part.
-    nsCAutoString       mContentType;
+    nsCString           mContentType;
     PRInt32             mContentLength;
     PRInt8              mLineFeedIncrement; // this is the amount to increment the
                                             // cursor beyond the last "line". It will
