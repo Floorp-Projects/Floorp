@@ -53,32 +53,10 @@
 
 
 /***************************************************************************/
-static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-
-#ifdef XP_PC
-#define XPCOM_DLL  "xpcom.dll"
-#else
-#ifdef XP_MAC
-#define XPCOM_DLL  "XPCOM_DLL"
-#else
-#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
-#endif
-#endif
 
 static void SetupRegistry()
 {
     nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
-
-//    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL,
-//                                          XPCOM_DLL, PR_FALSE, PR_FALSE);
-
-    nsComponentManager::RegisterComponent(kAllocatorCID, NULL, "allocator", 
-                                          XPCOM_DLL, PR_TRUE, PR_TRUE);
-
-    nsComponentManager::RegisterComponent(kGenericFactoryCID, NULL, NULL, 
-                                          XPCOM_DLL, PR_FALSE, PR_FALSE);
 }
 
 static nsIXPConnect* GetXPConnect()

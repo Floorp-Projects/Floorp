@@ -798,6 +798,17 @@ private:
 
 /***************************************************************************/
 
+extern JSClass WrappedNative_class;
+extern JSClass WrappedNativeWithCall_class;
+
+extern JSBool JS_DLL_CALLBACK
+WrappedNative_CallMethod(JSContext *cx, JSObject *obj,
+                         uintN argc, jsval *argv, jsval *vp);
+
+extern JSBool xpc_WrappedNativeJSOpsOneTimeInit();
+
+/***************************************************************************/
+
 // the include of declarations of the maps comes last because they have
 // inlines which call methods on classes above.
 
