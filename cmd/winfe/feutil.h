@@ -205,5 +205,8 @@ extern HWND FindNavigatorHiddenWindow(void);
 HWND FEU_GetWindowFromPoint(HWND hWndTop, POINT *pPoint);
 CNSGenFrame *FEU_GetDockingFrameFromPoint(POINT *pPoint);
 
+HRESULT FEU_CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID *ppv);
+extern "C" char *FE_GetProgramDirectory(char *buffer, int length);
+
 
 #endif //	FE_UTILITIES__H

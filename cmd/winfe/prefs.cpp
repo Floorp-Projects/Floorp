@@ -286,7 +286,7 @@ HRESULT
 CBrowserPrefs::Init()
 {
 	// Create the object as part of an aggregate
-	return CoCreateInstance(CLSID_BrowserPrefs, (LPUNKNOWN)this,
+	return FEU_CoCreateInstance(CLSID_BrowserPrefs, (LPUNKNOWN)this,
 		CLSCTX_INPROC_SERVER, IID_IUnknown, (LPVOID *)&m_pCategory);
 }
 
@@ -715,7 +715,7 @@ HRESULT
 CAppearancePrefs::Init()
 {
 	// Create the object as part of an aggregate
-	return CoCreateInstance(CLSID_AppearancePrefs, (LPUNKNOWN)this,
+	return FEU_CoCreateInstance(CLSID_AppearancePrefs, (LPUNKNOWN)this,
 		CLSCTX_INPROC_SERVER, IID_IUnknown, (LPVOID *)&m_pCategory);
 }
 
@@ -948,7 +948,7 @@ CMailNewsPreferences::Init()
 {
 
 	// Create the object as part of an aggregate
-	return CoCreateInstance(CLSID_MailNewsPrefs, (LPUNKNOWN)this,
+	return FEU_CoCreateInstance(CLSID_MailNewsPrefs, (LPUNKNOWN)this,
 		CLSCTX_INPROC_SERVER, IID_IUnknown, (LPVOID *)&m_pCategory);
 }
 
@@ -1523,7 +1523,7 @@ HRESULT
 COfflinePreference::Init()
 {
 	// Create the object as part of an aggregate
-	return CoCreateInstance(CLSID_OfflinePrefs, (LPUNKNOWN)this,
+	return FEU_CoCreateInstance(CLSID_OfflinePrefs, (LPUNKNOWN)this,
 		CLSCTX_INPROC_SERVER, IID_IUnknown, (LPVOID *)&m_pCategory);
 }
 
@@ -1639,7 +1639,7 @@ HRESULT
 CLIPreference::Init()
 {
 	// Create the object as part of an aggregate
-	return CoCreateInstance(CLSID_LIPrefs, (LPUNKNOWN)this,
+	return FEU_CoCreateInstance(CLSID_LIPrefs, (LPUNKNOWN)this,
 		CLSCTX_INPROC_SERVER, IID_IUnknown, (LPVOID *)&m_pCategory);
 }
 
@@ -1880,7 +1880,7 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 
 #ifdef EDITOR		
 		// Editor category
-		if (SUCCEEDED(CoCreateInstance(CLSID_EditorPrefs,
+		if (SUCCEEDED(FEU_CoCreateInstance(CLSID_EditorPrefs,
 			                           NULL,
 									   CLSCTX_INPROC_SERVER,
 									   IID_ISpecifyPropertyPageObjects,
@@ -1896,7 +1896,7 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 #endif // MOZ_OFFLINE		
 
 		// Advanced category
-		if (SUCCEEDED(CoCreateInstance(CLSID_AdvancedPrefs,
+		if (SUCCEEDED(FEU_CoCreateInstance(CLSID_AdvancedPrefs,
 			                           NULL,
 									   CLSCTX_INPROC_SERVER,
 									   IID_ISpecifyPropertyPageObjects,

@@ -2605,4 +2605,29 @@ extern "C" PRBool FE_MakeNetscapeDefault(void) {
 	return PR_TRUE;
 }
 
+//  Use this to create some COM objects, as we need to switch to the
+//      directory where the .EXE sits if the current directory isn't
+//      the same, as the pref COM DLLs have relative paths in the
+//      registry.
+HRESULT FEU_CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID *ppv)
+{
+    HRESULT hRetval = NULL;
+
+    char aOrigDir[MAX_PATH + 1];
+    DWORD dwCheck = GetCurrentDirectory(sizeof(aOrigDir), aOrigDir);
+    ASSERT(dwCheck);
+
+    char aProgramDir[MAX_PATH + 1];
+    FE_GetProgramDirectory(aProgramDir, sizeof(aProgramDir));
+
+    BOOL bCheck = SetCurrentDirectory(aProgramDir);
+    ASSERT(bCheck);
+
+    hRetval = CoCreateInstance(rclsid, pUnkOuter, dwClsContext, riid, ppv);
+
+    BOOL bRestoreCheck = SetCurrentDirectory(aOrigDir);
+    ASSERT(bRestoreCheck);
+
+    return(hRetval);
+}
 
