@@ -20,6 +20,7 @@
 #define nsIWebShellServices_h___
 
 #include "nsISupports.h"
+#include "nsIParser.h"
 
 // Interface ID for nsIWebShellServices
 
@@ -34,7 +35,9 @@ class nsIWebShellServices : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_SERVICES_IID; return iid; }
 
-  NS_IMETHOD LoadDocument(const char* aURL) = 0;
+  NS_IMETHOD LoadDocument(const char* aURL, 
+                          const char* aCharset, 
+                          nsCharsetSource aSource) = 0;
   NS_IMETHOD StopDocumentLoad(void) = 0;
   NS_IMETHOD SetRendering(PRBool aRender) = 0;
 
