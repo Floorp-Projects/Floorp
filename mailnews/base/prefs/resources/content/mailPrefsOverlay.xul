@@ -12,7 +12,8 @@
 
   <script language="JavaScript">
   <![CDATA[
-    if (panel) {
+    var panel;
+    if (panel != undefined) {
       switch(panel) 
       {
       case "chrome://communicator/content/pref/pref-advanced.xul":
