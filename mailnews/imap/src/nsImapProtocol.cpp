@@ -608,7 +608,10 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     if ( m_runningUrl && !m_channel /* and we don't have a transport yet */)
     {
       // extract the file name and create a file transport...
-      PRInt32 port = IMAP_PORT;
+      PRInt32 port=-1;
+      m_server->GetPort(&port);
+      if (port <= 0) port = IMAP_PORT;
+      
       nsXPIDLCString hostName;
             
             NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
