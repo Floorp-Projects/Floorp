@@ -194,7 +194,11 @@ function createAccount(hash) {
 
     var account = am.createAccount();
 
-    var server = am.createIncomingServer(hash["server.type"]);
+    // workaround for lame-ass combo box bug
+    var serverType = hash["server.type"];
+    if (!serverType  || serverType == "")
+        serverType = "pop3";
+    var server = am.createIncomingServer(serverType);
     
     var identity = am.createIdentity();
 
