@@ -17,7 +17,7 @@
  */
 
 #include "nsKeywordProtocolHandler.h"
-#include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
@@ -156,15 +156,14 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     nsAllocator::Free(path);
     if (!httpSpec) return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = uri->SetSpec(httpSpec);
-    nsAllocator::Free(httpSpec);
-    if (NS_FAILED(rv)) return rv;
-
-    // now we have an HTTP url, give the user an HTTP channel
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return serv->NewChannelFromURI(verb, uri, aGroup, eventSinkGetter, aOriginalURI, result);    
+    // now we have an HTTP url, give the user an HTTP channel
+    rv = serv->NewChannel(verb, httpSpec, nsnull, aGroup, eventSinkGetter, aOriginalURI, result);
+    nsAllocator::Free(httpSpec);
+    return rv;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
