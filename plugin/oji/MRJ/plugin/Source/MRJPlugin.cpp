@@ -40,6 +40,7 @@
 #include "nsIWindowlessPlugInstPeer.h"
 #include "LiveConnectNativeMethods.h"
 #include "CSecureEnv.h"
+#include "EventFilter.h"
 
 nsIServiceManager* theServiceManager = NULL;
 
@@ -69,13 +70,6 @@ static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININST
 
 #pragma export on
 
-/* NS_METHOD NP_CreatePlugin(NPIPluginManager* manager, NPIPlugin* *result)
-{
-	thePluginManager = manager;
-	*result = new MRJPlugin(manager);
-	return nsPluginError_NoError;
-} */
-
 nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const char *aClassName, const char *aProgID, nsIFactory **aFactory)
 {
 	nsresult result = NS_OK;
@@ -102,15 +96,40 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 
 #pragma export off
 
-extern "C" void cfm_NSShutdownPlugin(void);
+extern "C" {
 
-void cfm_NSShutdownPlugin()
+pascal OSErr __initialize(const CFragInitBlock *initBlock);
+pascal void __terminate(void);
+
+pascal OSErr MRJPlugin__initialize(const CFragInitBlock *initBlock);
+pascal void MRJPlugin__terminate(void);
+
+}
+
+static FSSpec thePluginSpec;
+
+pascal OSErr MRJPlugin__initialize(const CFragInitBlock *initBlock)
 {
+	if (initBlock->fragLocator.where == kDataForkCFragLocator)
+		thePluginSpec = *initBlock->fragLocator.u.onDisk.fileSpec;
+	
+	return noErr;
+}
+
+pascal void MRJPlugin__terminate()
+{
+	// Is this strictly necessary?
 	if (thePlugin != NULL) {
 		nsrefcnt refs = thePlugin->Release();
 		while (refs > 0 && thePlugin != NULL)
 			refs = thePlugin->Release();
+		thePlugin = NULL;
 	}
+
+#ifdef MRJPLUGIN_4X	
+	// Make sure the event filters are removed.
+	RemoveEventFilters();
+#endif
 }
 
 //
@@ -235,12 +254,14 @@ NS_METHOD MRJPlugin::Initialize()
 		if (mThreadManager != NULL)
 			mThreadManager->GetCurrentThread(&mPluginThreadID);
 	}
-	
-	// create a console, only if we can register windows.
+
+#ifndef MRJPLUGIN_4X
+	// create a console, only if there's user interface for it.
 	if (thePluginManager2 != NULL) {
 		mConsole = new MRJConsole(this);
 		mConsole->AddRef();
 	}
+#endif
 
 	return result;
 }
@@ -313,6 +334,10 @@ NS_METHOD MRJPlugin::StartupJVM()
 			}
 		}
 #endif
+
+		// Add "MRJPlugin.jar" to the class path.
+		FSSpec jarFileSpec = { thePluginSpec.vRefNum, thePluginSpec.parID, "\pMRJPlugin.jar" };
+		mSession->addToClassPath(jarFileSpec);
 
 		InitLiveConnectSupport(this);
 
@@ -530,6 +555,7 @@ MRJPluginInstance::~MRJPluginInstance()
 }
 
 static const char* kGetCodeBaseScriptURL = "javascript:var href = window.location.href; href.substring(0, href.lastIndexOf('/') + 1)";
+static const char* kGetDocumentBaseScriptURL = "javascript:window.location";
 
 static bool hasTagInfo(nsISupports* supports)
 {
@@ -562,7 +588,7 @@ NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 		// fire up a JavaScript URL to get the current document's location.
 		nsIPluginInstance* pluginInstance = this;
 		nsIPluginStreamListener* listener = this;
-		result = thePluginManager->GetURL(pluginInstance, kGetCodeBaseScriptURL, NULL, listener);
+		result = thePluginManager->GetURL(pluginInstance, kGetDocumentBaseScriptURL, NULL, listener);
 	}
 
 	return NS_OK;
@@ -571,18 +597,21 @@ NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 NS_METHOD MRJPluginInstance::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length)
 {
 	// hopefully all our data is available.
-	char* codeBase = new char[length + 1];
-	if (codeBase != NULL) {
-		if (input->Read(codeBase, length, &length) == NS_OK) {
+	char* documentBase = new char[length + 1];
+	if (documentBase != NULL) {
+		if (input->Read(documentBase, length, &length) == NS_OK) {
 			// We've delayed processing the applet tag, because we
-			// don't know the location of the curren document yet.
-			codeBase[length] = '\0';
+			// don't know the location of the current document yet.
+			documentBase[length] = '\0';
 			
-			mContext->setCodeBase(codeBase);
+			// set up the default document location, which can be used to compute relative CODEBASE, etc.
+			mContext->setDocumentBase(documentBase);
+			delete[] documentBase;
+			
 			mContext->processAppletTag();
 			mContext->createContext();
 			
-			// SetWindow is called at an inopportune time.
+			// SetWindow may be called at an inopportune time.
 			if (mPluginWindow != NULL)
 				mContext->setWindow(mPluginWindow);
 		}
@@ -683,6 +712,16 @@ NS_METHOD MRJPluginInstance::HandleEvent(nsPluginEvent* pluginEvent, PRBool* eve
 		if (event->what == nullEvent) {
 			// Give MRJ another quantum of time.
 			mSession->idle(kDefaultJMTime);	// now SpendTime does this.
+
+#if 0			
+			// check for pending update events.
+			if (CheckUpdate(event)) {
+				MRJFrame* frame = mContext->findFrame(WindowRef(event->message));
+				if (frame != NULL)
+					frame->update();
+			}
+#endif
+
 		} else {
 			MRJFrame* frame = mContext->findFrame(WindowRef(pluginEvent->window));
 			if (frame != NULL) {
