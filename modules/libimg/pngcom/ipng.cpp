@@ -114,9 +114,13 @@ il_png_write(il_container *ic, const unsigned char *buf, int32 len)
     }
     /* note addition of ic to png structure.... */
     png_ptr->io_ptr = ic;
+    if (setjmp(png_ptr->jmpbuf)) {
+         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+         return !OK;
+    }
     png_process_data( png_ptr, info_ptr, (unsigned char *)buf, len );
     ipng_ptr->state = PNG_CONTINUE;
-   
+          
     return OK;
 }
 
@@ -237,7 +241,7 @@ il_png_complete(il_container *ic)
 	/* notify observers that the current frame has completed. */
  
     //il_frame_complete_notify(ic);                
-  ic->imgdcb->ImgDCBHaveImageFrame();
+    ic->imgdcb->ImgDCBHaveImageFrame();
 
     /* An image can specify a delay time before which to display
        subsequent images.  Block until the appointed time. */
@@ -262,33 +266,5 @@ void il_png_abort(il_container *ic)
 {
 /*    il_abort( ic ); */
 	return;
-}
-
-
-/*-----------------------------------------------------------------------------
- * Put alpha channel in a separate 8 bit input
- *---------------------------------------------------------------------------*/
-void
-il_get_alpha_channel(
-    uint8  *src,                 /* RGBa, input data */
-    int src_len,                /* Number of pixels in source row */
-    uint8  *maskp,       /* Output pointer, left-justified bitmask */
-    int mask_len               /* Number of pixels in output row */
-    )
-{
-    
-    if (!src || !mask_len)
-        return;
- 
-    if (src_len == mask_len)
-    {   
-        int i = src_len;
-
-        while (i--) {
-           *maskp++ = *(src + 3);
-                src += 4;
-            }
-     }
-
 }
 
