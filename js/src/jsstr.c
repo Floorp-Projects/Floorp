@@ -2021,7 +2021,7 @@ static JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     {js_toString_str,   str_toString,           0,0,0},
     {js_valueOf_str,    str_valueOf,            0,0,0},
-    {"substring",       str_substring,          1,0,0},
+    {"substring",       str_substring,          2,0,0},
     {"toLowerCase",     str_toLowerCase,        0,0,0},
     {"toUpperCase",     str_toUpperCase,        0,0,0},
     {"charAt",          str_charAt,             1,0,0},
