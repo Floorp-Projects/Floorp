@@ -1342,6 +1342,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_close];
   case NS_PAGE_LOAD:
   case NS_IMAGE_LOAD:
+  case NS_SCRIPT_LOAD:
     return mEventNames[eDOMEvents_load];
   case NS_PAGE_UNLOAD:
     return mEventNames[eDOMEvents_unload];

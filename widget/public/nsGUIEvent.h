@@ -444,7 +444,8 @@ enum nsDragDropEventStatus {
 #define NS_IMAGE_LOAD                   (NS_STREAM_EVENT_START + 2)
 #define NS_IMAGE_ABORT                  (NS_STREAM_EVENT_START + 3)
 #define NS_IMAGE_ERROR                  (NS_STREAM_EVENT_START + 4)
-
+#define NS_SCRIPT_LOAD                  (NS_STREAM_EVENT_START + 5)
+ 
 #define NS_FORM_EVENT_START             1200
 #define NS_FORM_SUBMIT                  (NS_FORM_EVENT_START)
 #define NS_FORM_RESET                   (NS_FORM_EVENT_START + 1)
