@@ -81,14 +81,15 @@ interface nsIURIContentListener : nsISupports
   *                             handle the load completely by itself.  This
   *                             causes the URI Loader do nothing else...
   *                             <code>false</code> if the URI Loader should
-  *                             continue handling the load.
+  *                             continue handling the load and call the
+  *                             returned streamlistener's methods. 
   */
   boolean doContent(in string aContentType,
                     in boolean aIsContentPreferred,
                     in nsIRequest aRequest,
                     out nsIStreamListener aContentHandler);
 
- /*
+ /**
   * When given a uri to dispatch, if the URI is specified as 'preferred 
   * content' then the uri loader tries to find a preferred content handler
   * for the content type. The thought is that many content listeners may
