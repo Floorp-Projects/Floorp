@@ -112,7 +112,7 @@ Rights Reserved.
               <menu id="menu_New">
                 <menupopup>
                   <menuitem value="&newFolderCmd.label;" oncommand="MsgNewFolder();"/>
-                  <menuitem value="&newAccountCmd.label;" oncommand="MsgNewAccount();"/>
+                  <menuitem value="&newAccountCmd.label;" oncommand="MsgAccountWizard();"/>
                   <menuseparator/>
                   <menuitem id="menu_newNavigator"/>
                   <menuitem id="menu_newMessage"/>
