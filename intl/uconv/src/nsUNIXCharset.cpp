@@ -82,7 +82,6 @@ static PRStatus InitLock(void)
 
 nsPlatformCharset::nsPlatformCharset()
 {
-  NS_INIT_ISUPPORTS();
   PR_AtomicIncrement(&gCnt);
   static PRCallOnceType once;
   PR_CallOnce(&once, InitLock);

@@ -50,7 +50,6 @@ NS_IMPL_ISUPPORTS1(xpcTestParentOne, nsIXPCTestParentOne);
 
 xpcTestParentOne :: xpcTestParentOne() 
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 
@@ -114,7 +113,6 @@ NS_IMPL_ISUPPORTS1(xpcTestParentTwo, nsIXPCTestParentTwo);
 
 xpcTestParentTwo :: xpcTestParentTwo()
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 
@@ -185,7 +183,6 @@ NS_IMPL_ISUPPORTS3_CI(xpcTestChild2,nsIXPCTestChild2,nsIXPCTestParentOne,nsIXPCT
 
 xpcTestChild2 :: xpcTestChild2() 
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 
@@ -307,7 +304,6 @@ NS_IMPL_ISUPPORTS2(xpcTestChild3,nsIXPCTestChild3,nsIXPCTestParentOne);
 
 xpcTestChild3 :: xpcTestChild3() 
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 
 };
@@ -405,7 +401,6 @@ NS_IMPL_ISUPPORTS3(xpcTestChild4,nsIXPCTestChild4,nsIXPCTestParentOne,nsIXPCTest
 
 xpcTestChild4 :: xpcTestChild4() 
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 
@@ -476,7 +471,6 @@ NS_IMPL_ISUPPORTS3(xpcTestChild5,nsIXPCTestChild5,nsIXPCTestParentOne,nsIXPCTest
 
 xpcTestChild5 :: xpcTestChild5() 
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 

@@ -48,7 +48,6 @@ public:
 NS_IMPL_ISUPPORTS1(xpcTestInOut, nsIXPCTestInOut);
 
 xpcTestInOut :: xpcTestInOut() {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 

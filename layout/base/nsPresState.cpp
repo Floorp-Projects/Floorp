@@ -49,7 +49,6 @@ NS_IMPL_ISUPPORTS1(nsPresState, nsIPresState)
 nsPresState::nsPresState(void)
 :mPropertyTable(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPresState::~nsPresState(void)

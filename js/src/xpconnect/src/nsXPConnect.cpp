@@ -62,8 +62,6 @@ nsXPConnect::nsXPConnect()
         mDefaultSecurityManagerFlags(0),
         mShuttingDown(JS_FALSE)
 {
-    NS_INIT_ISUPPORTS();
-
     // Ignore the result. If the runtime service is not ready to rumble
     // then we'll set this up later as needed.
     CreateRuntime();

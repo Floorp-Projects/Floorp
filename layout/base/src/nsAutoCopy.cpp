@@ -83,7 +83,6 @@ NS_NewAutoCopyService(nsIAutoCopyService** aResult)
 
 nsAutoCopyService::nsAutoCopyService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP

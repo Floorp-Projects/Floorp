@@ -53,7 +53,6 @@ NS_IMPL_ISUPPORTS1(xpcTestDOMString, nsIXPCTestDOMString);
 xpcTestDOMString::xpcTestDOMString()
     : mHandle(0)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

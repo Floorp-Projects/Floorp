@@ -78,7 +78,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsCharsetConverterManager,
 nsCharsetConverterManager::nsCharsetConverterManager() 
 :mDataBundle(NULL), mTitleBundle(NULL)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 

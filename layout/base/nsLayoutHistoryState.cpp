@@ -79,7 +79,6 @@ NS_NewLayoutHistoryState(nsILayoutHistoryState** aState)
 
 nsLayoutHistoryState::nsLayoutHistoryState()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsLayoutHistoryState::~nsLayoutHistoryState()

@@ -58,7 +58,7 @@
 class nsStringBundleTextOverride : public nsIStringBundleOverride
 {
  public:
-    nsStringBundleTextOverride() { NS_INIT_ISUPPORTS(); }
+    nsStringBundleTextOverride() { }
     virtual ~nsStringBundleTextOverride() {}
 
     nsresult Init();

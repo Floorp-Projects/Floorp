@@ -410,7 +410,6 @@ NS_IMPL_ISUPPORTS1(nsIWin32LocaleImpl,nsIWin32Locale)
 
 nsIWin32LocaleImpl::nsIWin32LocaleImpl(void)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsIWin32LocaleImpl::~nsIWin32LocaleImpl(void)

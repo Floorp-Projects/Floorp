@@ -55,7 +55,7 @@ public:
     URLPropertyElement(nsIPropertyElement *aRealElement, PRUint32 aURLLength) :
         mRealElement(aRealElement),
         mURLLength(aURLLength)
-    { NS_INIT_ISUPPORTS(); }
+    { }
     virtual ~URLPropertyElement() {}
 
     NS_DECL_ISUPPORTS
@@ -123,7 +123,6 @@ public:
         mURL.ReplaceSubstring(":", "%3A");
         // there is always a # between the url and the real key
         mURL.Append('#');
-        NS_INIT_ISUPPORTS();
     }
 
     NS_DECL_ISUPPORTS

@@ -42,7 +42,6 @@ NS_IMPL_ISUPPORTS1(nsXPCToolsCompiler, nsIXPCToolsCompiler)
 
 nsXPCToolsCompiler::nsXPCToolsCompiler()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsXPCToolsCompiler::~nsXPCToolsCompiler()

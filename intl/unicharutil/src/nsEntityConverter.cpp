@@ -53,7 +53,6 @@ nsEntityConverter::nsEntityConverter()
 :	mVersionList(NULL),
   mVersionListLength(0)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsEntityConverter::~nsEntityConverter()

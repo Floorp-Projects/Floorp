@@ -71,7 +71,6 @@ public:
 class name : public nsIBreakState {                          \
   NS_DECL_ISUPPORTS                                          \
   name (const PRUnichar *aText, PRUint32 aLen) {             \
-     NS_INIT_ISUPPORTS();                                       \
      mText = aText; mLen = aLen;                             \
      mPos = 0; mPriv = 0; mDone = PR_FALSE;                  \
   } ;                                                        \

@@ -51,7 +51,6 @@ NS_IMPL_ISUPPORTS1(nsTestVariant, nsITestVariant)
 
 nsTestVariant::nsTestVariant()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsTestVariant::~nsTestVariant()

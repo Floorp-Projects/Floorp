@@ -93,7 +93,6 @@ char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 
 nsXPCComponents_Interfaces::nsXPCComponents_Interfaces()
 {
-    NS_INIT_ISUPPORTS();
     mManager = dont_AddRef(XPTI_GetInterfaceInfoManager());
 }
 
@@ -327,7 +326,6 @@ public:
 
 nsXPCComponents_Classes::nsXPCComponents_Classes()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCComponents_Classes::~nsXPCComponents_Classes()
@@ -485,7 +483,6 @@ public:
 
 nsXPCComponents_ClassesByID::nsXPCComponents_ClassesByID()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCComponents_ClassesByID::~nsXPCComponents_ClassesByID()
@@ -662,7 +659,6 @@ public:
 
 nsXPCComponents_Results::nsXPCComponents_Results()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCComponents_Results::~nsXPCComponents_Results()
@@ -797,7 +793,6 @@ private:
 
 nsXPCComponents_ID::nsXPCComponents_ID()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCComponents_ID::~nsXPCComponents_ID()
@@ -927,7 +922,6 @@ private:
 
 nsXPCComponents_Exception::nsXPCComponents_Exception()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCComponents_Exception::~nsXPCComponents_Exception()
@@ -1125,7 +1119,6 @@ nsXPCConstructor::nsXPCConstructor(nsIJSCID* aClassID,
                                    nsIJSIID* aInterfaceID,
                                    const char* aInitializer)
 {
-    NS_INIT_ISUPPORTS();
     NS_IF_ADDREF(mClassID = aClassID);
     NS_IF_ADDREF(mInterfaceID = aInterfaceID);
     mInitializer = aInitializer ?
@@ -1291,7 +1284,6 @@ private:
 
 nsXPCComponents_Constructor::nsXPCComponents_Constructor()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCComponents_Constructor::~nsXPCComponents_Constructor()
@@ -1548,7 +1540,6 @@ nsXPCComponents::nsXPCComponents()
         mException(nsnull),
         mConstructor(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCComponents::~nsXPCComponents()

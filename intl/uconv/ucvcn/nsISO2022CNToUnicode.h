@@ -56,7 +56,7 @@ class nsISO2022CNToUnicode : public nsBasicDecoderSupport
 public:
   nsISO2022CNToUnicode() : 
         mState(eState_ASCII), 
-        mPlaneID(0) { NS_INIT_ISUPPORTS(); };
+        mPlaneID(0) { };
 
   virtual ~nsISO2022CNToUnicode() {};
 

@@ -121,7 +121,6 @@ ExceptionalErrorReporter (JSContext *cx, const char *message,
 
 mozJSSubScriptLoader::mozJSSubScriptLoader() : mSystemPrincipal(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 mozJSSubScriptLoader::~mozJSSubScriptLoader()    

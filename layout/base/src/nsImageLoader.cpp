@@ -48,7 +48,6 @@ NS_IMPL_ISUPPORTS2(nsImageLoader, imgIDecoderObserver, imgIContainerObserver)
 nsImageLoader::nsImageLoader() :
   mFrame(nsnull), mPresContext(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsImageLoader::~nsImageLoader()

@@ -95,7 +95,6 @@ nsStringBundle::nsStringBundle(const char* aURLSpec,
   mAttemptedLoad(PR_FALSE),
   mLoaded(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult
@@ -375,8 +374,6 @@ NS_IMPL_ISUPPORTS1(nsExtensibleStringBundle, nsIStringBundle)
 
 nsExtensibleStringBundle::nsExtensibleStringBundle()
 {
-  NS_INIT_ISUPPORTS();
-
   mLoaded = PR_FALSE;
 }
 
@@ -513,7 +510,6 @@ nsStringBundleService::nsStringBundleService() :
 #ifdef DEBUG_tao_
   printf("\n++ nsStringBundleService::nsStringBundleService ++\n");
 #endif
-  NS_INIT_ISUPPORTS();
 
   PR_INIT_CLIST(&mBundleCache);
   PL_InitArenaPool(&mCacheEntryPool, "srEntries",

@@ -145,7 +145,6 @@ NS_IMPL_ISUPPORTS1(nsHankakuToZenkaku, nsITextTransform)
 
 nsHankakuToZenkaku::nsHankakuToZenkaku()
 {
-  NS_INIT_ISUPPORTS();
 }
 nsHankakuToZenkaku::~nsHankakuToZenkaku()
 {

@@ -56,7 +56,6 @@ NS_IMPL_ISUPPORTS1(nsAcceptLang, nsIAcceptLang)
 
 nsAcceptLang::nsAcceptLang()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

@@ -145,7 +145,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDispatchSupport, nsIDispatchSupport)
 
 nsDispatchSupport::nsDispatchSupport()
 {
-    NS_INIT_ISUPPORTS();
     /* member initializers and constructor code */
 }
 

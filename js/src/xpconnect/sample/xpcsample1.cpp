@@ -103,7 +103,6 @@ NS_IMPL_ISUPPORTS1(nsXPCSample_ClassA, nsIXPCSample_ClassA)
 nsXPCSample_ClassA::nsXPCSample_ClassA(PRInt32 aValue)
     :   mValue(aValue)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCSample_ClassA::~nsXPCSample_ClassA()
@@ -142,7 +141,6 @@ NS_IMPL_ISUPPORTS1(nsXPCSample_ClassB, nsIXPCSample_ClassB)
 nsXPCSample_ClassB::nsXPCSample_ClassB(PRInt32 aValue)
     :   mValue(aValue)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCSample_ClassB::~nsXPCSample_ClassB()
@@ -181,7 +179,6 @@ NS_IMPL_ISUPPORTS1(nsXPCSample_ClassC, nsIXPCSample_ClassC)
 nsXPCSample_ClassC::nsXPCSample_ClassC(PRInt32 aValue)
     :   mValue(aValue)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCSample_ClassC::~nsXPCSample_ClassC()
@@ -219,7 +216,6 @@ NS_IMPL_ISUPPORTS1(nsXPCSample_HookerUpper, nsIXPCSample_HookerUpper)
 
 nsXPCSample_HookerUpper::nsXPCSample_HookerUpper()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCSample_HookerUpper::~nsXPCSample_HookerUpper()

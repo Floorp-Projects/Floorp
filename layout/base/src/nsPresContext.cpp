@@ -154,7 +154,6 @@ nsPresContext::nsPresContext()
       NS_FONT_WEIGHT_NORMAL, 0, NSIntPointsToTwips(12)),
     mNoTheme(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   mCompatibilityMode = eCompatibility_FullStandards;
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
   mImageAnimationMode = imgIContainer::kNormalAnimMode;

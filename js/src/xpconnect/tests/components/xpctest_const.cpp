@@ -47,7 +47,6 @@ public:
 NS_IMPL_ISUPPORTS1(xpcTestConst, nsIXPCTestConst);
 
 xpcTestConst :: xpcTestConst() {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 

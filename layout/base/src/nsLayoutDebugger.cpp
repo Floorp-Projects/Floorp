@@ -82,7 +82,6 @@ NS_NewLayoutDebugger(nsILayoutDebugger** aResult)
 
 nsLayoutDebugger::nsLayoutDebugger()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsLayoutDebugger::~nsLayoutDebugger()

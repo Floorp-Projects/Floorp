@@ -76,7 +76,6 @@ private:
 NS_IMPL_ISUPPORTS1(xpcTestOut, nsIXPCTestOut);
 
 xpcTestOut :: xpcTestOut() {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 

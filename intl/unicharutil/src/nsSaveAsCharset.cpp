@@ -58,8 +58,6 @@ NS_IMPL_ISUPPORTS1(nsSaveAsCharset, nsISaveAsCharset)
 //
 nsSaveAsCharset::nsSaveAsCharset()
 {
-  NS_INIT_ISUPPORTS();
-
   mAttribute = attr_htmlTextDefault;
   mEntityVersion = 0;
   mCharsetListIndex = -1;
