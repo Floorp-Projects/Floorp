@@ -497,6 +497,7 @@
 ; Find ambiguities, if any, in the grammar.  Report them on the given stream.
 ; Fix all ambiguities in favor of the first transition listed
 ; (the transitions were ordered by finish-transitions).
+; Return true if ambiguities were found.
 (defun report-and-fix-ambiguities (grammar stream)
   (let ((found-ambiguities nil))
     (dolist (state (grammar-states grammar))
@@ -538,7 +539,8 @@
         (let ((transition-conses (state-transitions state)))
           (setf (state-transitions state) (check transition-conses transition-conses)))))
     (when found-ambiguities
-      (write-char #\newline stream))))
+      (write-char #\newline stream))
+    found-ambiguities))
 
 
 ; Remove the temporary item and laitem lists from the grammar's states.  This reduces the grammar's lisp
@@ -558,7 +560,7 @@
 
 
 ; Construct a LR or LALR parser in the given grammar.  kind should be :lalr-1, :lr-1, or :canonical-lr-1.
-; Return the grammar.
+; Return true if ambiguities were found.
 (defun compile-parser (grammar kind)
   (clear-parser grammar)
   (setf (grammar-items-hash grammar) (make-hash-table :test #'equal))
@@ -571,14 +573,29 @@
     (:canonical-lr-1
      (add-all-canonical-lr-states grammar)))
   (finish-transitions grammar)
-  (report-and-fix-ambiguities grammar *error-output*)
-  grammar)
+  (report-and-fix-ambiguities grammar *error-output*))
 
+
+
+; (cons (list <kind> <start-symbol> <grammar-source> <grammar-options>) <grammar>)
+(defvar *make-and-compile-grammar-cache* (cons nil nil))
 
 ; Make the grammar and compile its parser.  kind should be :lalr-1, :lr-1, or :canonical-lr-1.
 (defun make-and-compile-grammar (kind parametrization start-symbol grammar-source &rest grammar-options)
-  (compile-parser (apply #'make-grammar parametrization start-symbol grammar-source grammar-options)
-                  kind))
+  (let ((key (list kind start-symbol grammar-source grammar-options))
+        (cached-grammar (cdr *make-and-compile-grammar-cache*)))
+    (if (and (equal key (car *make-and-compile-grammar-cache*))
+             (grammar-parametrization-= parametrization cached-grammar))
+      (progn
+        (format *trace-output* "Re-using grammar ~S ~S ~S~%" kind start-symbol grammar-options)
+        cached-grammar)
+      (let* ((grammar (apply #'make-grammar parametrization start-symbol grammar-source grammar-options))
+             (found-ambiguities (compile-parser grammar kind)))
+        (setq *make-and-compile-grammar-cache*
+              (if found-ambiguities
+                (cons nil nil)
+                (cons key grammar)))
+        grammar))))
 
 
 ; Collapse states that have at most one possible reduction into forwarding states.
