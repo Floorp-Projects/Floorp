@@ -17,7 +17,7 @@
  */
 
 /*
- *  nppg.h $Revision: 3.1 $
+ *  nppg.h $Revision: 3.2 $
  *  Prototypes for functions exported by the FEs and called by libplugin.
  *  Some (perhaps all) of these prototypes could be moved to fe_proto.h.
  *  Protypes for functions exported by libplugin are in np.h.
@@ -46,6 +46,7 @@ extern void 			FE_PluginProgress(MWContext *context, const char *message);
 extern void 			FE_ResetRefreshURLTimer(MWContext *context);
 extern void				FE_RegisterWindow(void* plugin, void* window);
 extern void				FE_UnregisterWindow(void* plugin, void* window);
+extern SInt16			FE_AllocateMenuID(void *plugin, XP_Bool isSubmenu);
 #endif
 
 #ifdef XP_UNIX
