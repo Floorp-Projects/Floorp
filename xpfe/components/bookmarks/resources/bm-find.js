@@ -21,8 +21,11 @@
  *    Robert John Churchill    <rjc@netscape.com>
  *
  * Contributor(s): 
+ *    Blake Ross <blakeross@telocity.com>
+ *    Peter Annema <disttsc@bart.nl>
  */
 
+var findText;
 
 function debug(msg)
 {
@@ -34,6 +37,8 @@ function debug(msg)
 
 function doLoad()
 {
+	findText = document.getElementById("findtext");
+
 	// disable "Save Search" button (initially)
 	var searchButton = document.getElementById("SaveSearch");
 	if (searchButton)
@@ -41,12 +46,10 @@ function doLoad()
 		searchButton.setAttribute("disabled", "true");
 	}
 
+	doEnabling();
+
 	// set initial focus
-	var findtext = document.getElementById("findtext");
-	if (findtext)
-	{
-		findtext.focus();
-	}
+	findText.focus();
 }
 
 
@@ -104,9 +107,8 @@ function doFind()
 	debug("Method: " + method + "\n");
 
 	// get user text to find
-	var textNode = document.getElementById("findtext");
-	if (!textNode)	return(false);
-	gTextName = textNode.value;
+	if (!findText)	return(false);
+	gTextName = findText.value;
 	if (!gTextName || gTextName=="")	return(false);
 	debug("Find text: " + gTextName + "\n");
 
@@ -262,3 +264,229 @@ function doSort(sortColName, naturalOrderResource)
 	}
 	return(true);
 }
+
+
+
+function itemSelect()
+{
+	var tree = document.getElementById("findresultstree");
+	if (tree.selectedItems.length == 1)
+	{
+		var status = document.getElementById("statusbar-display");
+		var val = getAbsoluteID("findresultstree", tree.selectedItems[0]);
+
+		// Ignore "NC:" urls.
+		if (val.substring(0, 3) == "NC:") 
+			status.value = "";
+		else
+			status.value = val;
+	}
+}
+
+
+
+function doEnabling()
+{
+	var findButton = document.getElementById("search");
+
+	if (!findText.value) {
+		// No input, disable find button if enabled.
+		if (!findButton.disabled) {
+			findButton.disabled = true;
+		}
+	}
+	else
+		if (findButton.disabled)
+			findButton.disabled = false;
+}
+
+
+
+function update_sort_menuitems(column, direction)
+{
+    var unsorted_menuitem = document.getElementById("unsorted_menuitem");
+    var sort_ascending = document.getElementById('sort_ascending');
+    var sort_descending = document.getElementById('sort_descending');
+
+    // as this function may be called from various places, including the
+    // bookmarks sidebar panel (which doesn't have any menu items)
+    // ensure that the document contains the elements
+    if ((!unsorted_menuitem) || (!sort_ascending) || (!sort_descending))
+        return;
+
+    if (direction == "natural") {
+        unsorted_menuitem.setAttribute('checked','true');
+        sort_ascending.setAttribute('disabled','true');
+        sort_descending.setAttribute('disabled','true');
+        sort_ascending.removeAttribute('checked');
+        sort_descending.removeAttribute('checked');
+    } else {
+        sort_ascending.removeAttribute('disabled');
+        sort_descending.removeAttribute('disabled');
+        if (direction == "ascending") {
+            sort_ascending.setAttribute('checked','true');
+        } else {
+            sort_descending.setAttribute('checked','true');
+        }
+
+        var columns = document.getElementById('theColumns');
+        var column_node = columns.firstChild;
+        var column_name = column.id;
+        var menuitem = document.getElementById('fill_after_this_node');
+        menuitem = menuitem.nextSibling
+        while (1) {
+            var name = menuitem.getAttribute('column_id');
+            debug("update: "+name)
+            if (!name) break;
+            if (column_name == name) {
+                menuitem.setAttribute('checked', 'true');
+                break;
+            }
+            menuitem = menuitem.nextSibling;
+            column_node = column_node.nextSibling;
+            if (column_node && column_node.tagName == "splitter")
+                column_node = column_node.nextSibling;
+        }
+    }
+    enable_sort_menuitems();
+}
+
+function enable_sort_menuitems() {
+    var columns = document.getElementById('theColumns');
+    var column_node = columns.firstChild;
+    var head = document.getElementById('headRow');
+    var tree_column = head.firstChild;
+    var skip_column = document.getElementById('popupCell');
+    var menuitem = document.getElementById('fill_after_this_node');
+    menuitem = menuitem.nextSibling
+    while (column_node) {
+        if (skip_column != tree_column) {
+            if ("true" == column_node.getAttribute("hidden")) {
+                menuitem.setAttribute("disabled", "true");
+            } else {
+                menuitem.removeAttribute("disabled");
+            }
+        }
+        menuitem = menuitem.nextSibling;
+        tree_column = tree_column.nextSibling;
+        column_node = column_node.nextSibling;
+
+        if (column_node && column_node.tagName == "splitter")
+            column_node = column_node.nextSibling;
+    }
+}
+
+function find_sort_column() {
+    var columns = document.getElementById('theColumns');
+    var column = columns.firstChild;
+    while (column) {
+        if ("true" == column.getAttribute('sortActive')) {
+            return column;
+        }
+        column = column.nextSibling;
+    }
+    return columns.firstChild;
+}
+
+function find_sort_direction(column) {
+    if ("true" == column.getAttribute('sortActive')) {
+        return column.getAttribute('sortDirection');
+    } else {
+        return "natural";
+    }
+}
+
+function SetSortDirection(direction)
+{
+    debug("SetSortDirection("+direction+")");
+    var current_column = find_sort_column();
+    var current_direction = find_sort_direction(current_column);
+    if (current_direction != direction) {
+        sort_column(current_column, direction);
+    }
+}
+
+function SetSortColumn(column_name)
+{
+    debug("SetSortColumn("+column_name+")");
+    var current_column = find_sort_column();
+    var current_direction = find_sort_direction(current_column);
+    var column = document.getElementById(column_name);
+    if (column != current_column || current_direction == "natural") {
+        sort_column(column, "ascending");
+    }
+}
+
+
+
+function sort_column(column, direction)
+{
+    var isupports_uri = "component://netscape/rdf/xul-sort-service";
+    var isupports = Components.classes[isupports_uri].getService();
+    if (!isupports) return false;
+    var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+    if (!xulSortService) return false;
+    try
+    {
+        var sort_resource = column.getAttribute('resource');
+        xulSortService.Sort(column, sort_resource, direction);
+    }
+    catch(ex)
+    {
+        debug("Exception calling xulSortService.Sort()");
+    }
+    update_sort_menuitems(column, direction);
+    return false;
+}
+
+function fillViewMenu(popup)
+{
+  var fill_after = document.getElementById('fill_after_this_node');
+  var fill_before = document.getElementById('fill_before_this_node');
+  var columns = document.getElementById('theColumns');
+  var head = document.getElementById('headRow');
+  var skip_column = document.getElementById('popupCell');
+      
+  if (fill_after.nextSibling == fill_before) {
+      var name_template = get_localized_string("SortMenuItem");
+      var tree_column = head.firstChild;
+      var column_node = columns.firstChild;
+      while (tree_column) {
+          if (skip_column != tree_column) {
+              // Construct an entry for each cell in the row.
+              var column_name = tree_column.getAttribute("value");
+              var item = document.createElement("menuitem");
+              item.setAttribute("type", "radio");
+              item.setAttribute("name", "sort_column");
+              if (column_name == "") {
+                  column_name = tree_column.getAttribute("display");
+              }
+              var name = name_template.replace(/%NAME%/g, column_name);
+              var id = column_node.id;
+              item.setAttribute("value", name);
+              item.setAttribute("oncommand", "SetSortColumn('"+id+"', true);");
+              item.setAttribute("column_id", id);
+              
+              popup.insertBefore(item, fill_before);
+          }
+          tree_column = tree_column.nextSibling;
+          column_node = column_node.nextSibling;
+
+          if (column_node && column_node.tagName == "splitter")
+              column_node = column_node.nextSibling;
+      }
+  }
+  var sort_column = find_sort_column();
+  var sort_direction = find_sort_direction(sort_column);
+  update_sort_menuitems(sort_column, sort_direction);
+}
+
+
+
+function get_localized_string(name) {
+    var uri = "chrome://communicator/locale/bookmarks/bookmark.properties";
+    var bundle = srGetStrBundle(uri);
+    return bundle.GetStringFromName(name);
+}
+
+//*==================================================

@@ -20,7 +20,7 @@
    -    Robert John Churchill    <rjc@netscape.com>
    -
    - Contributor(s):
-   -    Blake Ross <BlakeR1234@aol.com>
+   -    Blake Ross               <blakeross@telocity.com>
   --> 
 
 <!ENTITY window.title.label             "Search Bookmarks/History">
@@ -29,7 +29,9 @@
 <!ENTITY search2.label                  " whose ">
 
 <!ENTITY search.button.label            "Find">
-<!ENTITY save.button.label              "Bookmark Find Query">
+<!ENTITY search.button.accesskey        "n">
+<!ENTITY save.button.label              "Bookmark Search Results">
+<!ENTITY save.button.accesskey          "b">
 
 <!ENTITY bookmarks.label                "Bookmarks">
 <!ENTITY history.label                  "History">
@@ -45,3 +47,12 @@
 <!ENTITY is.label                       "is">
 <!ENTITY isnot.label                    "is not">
 <!ENTITY doesntcontain.label            "doesn't contain">
+
+<!ENTITY menuitem.view.unsorted.label         "Unsorted">
+<!ENTITY menuitem.view.unsorted.accesskey     "u">
+<!ENTITY menuitem.view.ascending.label        "A > Z Sort Order">
+<!ENTITY menuitem.view.ascending.accesskey    "a">
+<!ENTITY menuitem.view.descending.label       "Z > A Sort Order">
+<!ENTITY menuitem.view.descending.accesskey   "z">
+<!ENTITY menuitem.view.show_columns.label     "Show columns">
+<!ENTITY menuitem.view.show_columns.accesskey "s">

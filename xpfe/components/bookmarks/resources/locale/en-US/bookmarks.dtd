@@ -16,34 +16,40 @@
    - Corp. are Copyright (C) 1999 Netscape Communications Corp. All
    - Rights Reserved.
    - 
-   - Contributor(s): Stephen Lamm <slamm@netscape.com>
+   - Contributor(s):
+   -   Stephen Lamm <slamm@netscape.com>
+   -   Blake Ross <blakeross@telocity.com>
   --> 
 
 <!-- extracted from ./bookmarks.xul -->
 
 <!ENTITY menuitem.newBookmark.label     "New Bookmark">
-<!ENTITY menuitem.newBookmark.accesskey "N">
+<!ENTITY menuitem.newBookmark.accesskey "n">
 <!ENTITY menuitem.newFolder.label       "New Folder">
 <!ENTITY menuitem.newSeparator.label    "New Separator">
-<!ENTITY menuitem.saveas.label          "Save As...">
-<!ENTITY menuitem.saveas.accesskey      "S">
-<!ENTITY file.saveas.keybinding         "s">
 <!ENTITY menuitem.import.label          "Import Bookmarks...">
 <!ENTITY menuitem.export.label          "Export Bookmarks...">
 <!ENTITY menuitem.find.label            "Find in Bookmarks...">
-<!ENTITY menuitem.find.accesskey        "F">
+<!ENTITY menuitem.find.accesskey        "f">
 <!ENTITY edit.find.keybinding           "f">
 <!ENTITY menuitem.properties.label      "Properties...">
-<!ENTITY menuitem.properties.accesskey  "o">
-<!ENTITY edit.properties.keybinding     "e">
+<!ENTITY menuitem.properties.accesskey  "p">
+<!ENTITY edit.properties.keybinding     "p">
 
-<!ENTITY menuitem.view.unsorted.label "Unsorted">
-<!ENTITY menuitem.view.ascending.label "A > Z Sort Order">
-<!ENTITY menuitem.view.descending.label "Z > A Sort Order">
-<!ENTITY menuitem.view.show_columns.label "Show columns">
-<!ENTITY menuitem.newbookmarkfolder.label         "Set as New Bookmark Folder">
-<!ENTITY menuitem.newinternetsearchfolder.label   "Set as New Internet Search Folder">
-<!ENTITY menuitem.personaltoolbarfolder.label     "Set as Personal Toolbar Folder">
+<!ENTITY menuitem.view.unsorted.label               "Unsorted">
+<!ENTITY menuitem.view.unsorted.accesskey           "u">
+<!ENTITY menuitem.view.ascending.label              "A > Z Sort Order">
+<!ENTITY menuitem.view.ascending.accesskey          "a">
+<!ENTITY menuitem.view.descending.label             "Z > A Sort Order">
+<!ENTITY menuitem.view.descending.accesskey         "z">
+<!ENTITY menuitem.view.show_columns.label           "Show columns">
+<!ENTITY menuitem.view.show_columns.accesskey       "s">
+<!ENTITY menuitem.newbookmarkfolder.label           "Set as New Bookmark Folder">
+<!ENTITY menuitem.newbookmarkfolder.accesskey       "b">
+<!ENTITY menuitem.newinternetsearchfolder.label     "Set as New Internet Search Folder">
+<!ENTITY menuitem.newinternetsearchfolder.accesskey "i">
+<!ENTITY menuitem.personaltoolbarfolder.label       "Set as Personal Toolbar Folder">
+<!ENTITY menuitem.personaltoolbarfolder.accesskey   "p">
 
 <!ENTITY tree.header.name.label         "Name">
 <!-- LOCALIZATION NOTE (tree.header.url.label) : DONT_TRANSLATE -->

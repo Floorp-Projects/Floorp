@@ -16,14 +16,15 @@
  * Reserved.
  *
  * Contributor(s):
- *  Dave Hyatt (hyatt@netscape.com)
+ *   Dave Hyatt (hyatt@netscape.com)
+ *   Peter Annema <disttsc@bart.nl>
+ *   Blake Ross <blakeross@telocity.com>
  */
 
 function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
 {
   var popupChild = popup.firstChild;
-  if (popupChild)
-    return;
+  var firstTime = !popupChild ? true : false;
 
   var currTreeCol = treeHeadRow.firstChild;
   var currColNode = treeColGroup.firstChild;
@@ -32,27 +33,37 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
       currColNode = currColNode.nextSibling;
 
     if (skipCell != currTreeCol) {
-		// Construct an entry for each cell in the row.
-		var columnName = currTreeCol.getAttribute("value");
-		var v = document.createElement("menuitem");
-		v.setAttribute("type", "checkbox");
-		v.setAttribute("value", columnName);
-		if (columnName == "") {
-		  var display = currTreeCol.getAttribute("display");
-		  v.setAttribute("value", display);
-		}
-		v.setAttribute("colid", currColNode.id);
-		var hidden = currColNode.getAttribute("hidden");
-		if (hidden != "true")
-		  v.setAttribute("checked", "true");
+      // Construct an entry for each cell in the row.
+      var columnName = currTreeCol.getAttribute("value");
+      if (firstTime) {
+        popupChild = document.createElement("menuitem");
+        popupChild.setAttribute("type", "checkbox");
+        popupChild.setAttribute("value", columnName);
+        if (columnName == "") {
+          var display = currTreeCol.getAttribute("display");
+          popupChild.setAttribute("value", display);
+        }
+        popupChild.setAttribute("colid", currColNode.id);
+        popupChild.setAttribute("oncommand", "ToggleColumnState(this, document)");
+        if ("true" != currColNode.getAttribute("hidden")) {
+          popupChild.setAttribute("checked", "true");
+        }
+        popup.appendChild(popupChild);
+      } else {
+        if ("true" == currColNode.getAttribute("hidden")) {
+          if (popupChild.getAttribute("checked"))
+            popupChild.removeAttribute("checked");
+        } else {
+          if (!popupChild.getAttribute("checked"))
+            popupChild.setAttribute("checked", "true");
+        }
+        popupChild = popupChild.nextSibling;
+      }
 
-		popup.appendChild(v);
+    }
 
-    v.setAttribute("oncommand", "ToggleColumnState(this, document)");
-	}
-
-	currTreeCol = currTreeCol.nextSibling;
-	currColNode = currColNode.nextSibling;
+    currTreeCol = currTreeCol.nextSibling;
+    currColNode = currColNode.nextSibling;
   }
 }
 
@@ -72,8 +83,9 @@ function ToggleColumnState(popupElement, doc)
   if (colNode) {
     dump(colNode.id + "\n");
     var checkedState = popupElement.getAttribute("checked");
-	if (checkedState == "true")
-	  colNode.removeAttribute("hidden");
-	else colNode.setAttribute("hidden", "true");
+    if (checkedState == "true")
+      colNode.removeAttribute("hidden");
+    else
+      colNode.setAttribute("hidden", "true");
   }
 }

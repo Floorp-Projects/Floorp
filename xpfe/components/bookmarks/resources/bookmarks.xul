@@ -19,7 +19,7 @@
   Rights Reserved.
  
   Contributor(s): 
-         Blake Ross <BlakeR1234@aol.com>
+    Blake Ross <blakeross@telocity.com>
 
 -->
 
@@ -48,6 +48,7 @@
   <script src="chrome://global/content/treePopups.js"/>
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/nsJSComponentManager.js"/>
 
 <commands id="commands">
   <commandset id="CommandUpdate_Bookmarks"
@@ -75,6 +76,7 @@
   <broadcaster id="cmd_paste"/>
   <broadcaster id="cmd_delete"/>
   <broadcaster id="cmd_selectAll"/>
+  <broadcaster id="cmd_preferences"/>
 </broadcasterset>
 
 <keyset id="keyset">
@@ -83,8 +85,6 @@
   <key id="key_newEditor"/>
   <key id="key_close"/>
   <key id="key_quit"/>
-  <key id="bm_key_saveas" xulkey="true" key="&file.saveas.keybinding;"
-    observes="bm_cmd_saveas"/>
   <!-- Edit Menu -->
   <key id="key_undo"/>
   <key id="key_cut"/>
@@ -92,12 +92,12 @@
   <key id="key_paste"/>
   <key id="key_delete"/>
   <key id="key_selectAll"/>
-  <key id="bm_key_find" xulkey="true" key="&edit.find.keybinding;"/>
+  <key id="bm_key_find" xulkey="true" key="&edit.find.keybinding;" shift="false" observes="bm_cmd_find"/>
   <key id="bm_key_properties" xulkey="true"
-    key="&edit.properties.keybinding;"/>
+    key="&edit.properties.keybinding;" shift="false" observes="bm_cmd_properties"/>
 </keyset>
 <toolbox>
-<menubar>
+<menubar id="main-menubar">
   <menu id="menu_File">
     <menupopup id="menu_FilePopup">
       <menuitem accesskey="&menuitem.newBookmark.accesskey;" value="&menuitem.newBookmark.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=newbookmark');" />
@@ -112,9 +112,6 @@
       </menu>
       <menuseparator/>
       <menuitem id="menu_close"/>
-      <menuitem observes="bm_cmd_saveas" key="bm_key_saveas"
-        accesskey="&menuitem.saveas.accesskey;" 
-        value="&menuitem.saveas.label;" disabled="true" />
       <menuseparator/>
       <menuitem value="&menuitem.import.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=import');" />
       <menuitem value="&menuitem.export.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=export');" />
@@ -134,40 +131,43 @@
       <menuitem id="menu_selectAll"/>
       <menuseparator/>
       <menuitem observes="bm_cmd_find" key="bm_key_find"
-        value="&menuitem.find.label;"/>
+        value="&menuitem.find.label;" accesskey="&menuitem.find.accesskey;"/>
       <menuseparator/>
+      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       <menuitem observes="bm_cmd_properties" key="bm_key_properties" 
-        value="&menuitem.properties.label;" />
+        value="&menuitem.properties.label;" accesskey="&menuitem.properties.accesskey;" />
     </menupopup>
   </menu>
 
   <menu id="menu_View">
     <menupopup oncreate="fillViewMenu(this)">
       <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
-        value="&menuitem.view.unsorted.label;"
+        value="&menuitem.view.unsorted.label;" accesskey="&menuitem.view.unsorted.accesskey;"
         oncommand="return SetSortDirection('natural');"/>
       <menuseparator id="fill_after_this_node" collapsed="true" />
       <menuseparator id="fill_before_this_node"/>
       <menuitem type="radio" name="sort_direction" id="sort_ascending"
-        value="&menuitem.view.ascending.label;"
+        value="&menuitem.view.ascending.label;" accesskey="&menuitem.view.ascending.accesskey;"
         oncommand="return SetSortDirection('ascending');"/>
       <menuitem type="radio" name="sort_direction" id="sort_descending"
-        value="&menuitem.view.descending.label;"
+        value="&menuitem.view.descending.label;" accesskey="&menuitem.view.descending.accesskey;"
         oncommand="return SetSortDirection('descending');"/>
       <menuseparator/>
-      <menu value="&menuitem.view.show_columns.label;">
+      <menu value="&menuitem.view.show_columns.label;" accesskey="&menuitem.view.show_columns.accesskey;">
         <menupopup
           oncreate="BuildTreePopup(document.getElementById('theColumns'), 
                                    document.getElementById('headRow'), this,
                                    document.getElementById('popupCell'))"/>
       </menu>
       <menuseparator/>
-      <menuitem value="&menuitem.newbookmarkfolder.label;"
+      <menuitem value="&menuitem.newbookmarkfolder.label;" accesskey="&menuitem.newbookmarkfolder.accesskey;"
         oncommand="return doContextCmd(NC+'command?cmd=setnewbookmarkfolder')"/>
       <menuitem value="&menuitem.newinternetsearchfolder.label;"
-        oncommand="return doContextCmd(NC+'command?cmd=setnewsearchfolder')"/>
+        oncommand="return doContextCmd(NC+'command?cmd=setnewsearchfolder')"
+        accesskey="&menuitem.newinternetsearchfolder.accesskey;"/>
       <menuitem value="&menuitem.personaltoolbarfolder.label;"
-        oncommand="return doContextCmd(NC+'command?cmd=setpersonaltoolbarfolder')"/>
+        oncommand="return doContextCmd(NC+'command?cmd=setpersonaltoolbarfolder')"
+        accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
     </menupopup>
   </menu>
   <menu id="tasksMenu" accesskey="t" />
@@ -345,6 +345,7 @@
 </tree>
 
 <statusbar id="status-bar">
+  <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
   <statusbarpanel id="statusbar-text" flex="1"/>
 </statusbar>
 </window>
