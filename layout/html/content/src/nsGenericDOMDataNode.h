@@ -154,7 +154,7 @@ struct nsGenericDOMDataNode {
                         PRBool aNotify) {
     return NS_OK;
   }
-  nsresult UnsetAttribute(nsIAtom* aAttribute) {
+  nsresult UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {
     return NS_OK;
   }
   nsresult GetAttribute(nsIAtom *aAttribute, nsString &aResult) const {
@@ -460,8 +460,8 @@ struct nsGenericDOMDataNode {
                           const nsHTMLValue& aValue, PRBool aNotify) { \
     return _g.SetAttribute(aAttribute, aValue, aNotify);               \
   }                                                                    \
-  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute) {                     \
-    return _g.UnsetAttribute(aAttribute);                              \
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute, PRBool aNotify) {     \
+    return _g.UnsetAttribute(aAttribute, aNotify);                     \
   }                                                                    \
   NS_IMETHOD GetAttribute(nsIAtom *aAttribute,                         \
                           nsString &aResult) const {                   \
