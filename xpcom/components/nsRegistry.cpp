@@ -28,6 +28,7 @@
 #include "prmem.h"
 #include "prlock.h"
 #include "prlog.h"
+#include "prprf.h"
 #include "nsCRT.h"
 #include "nsMemory.h"
 
