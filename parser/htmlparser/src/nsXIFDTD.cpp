@@ -1787,7 +1787,7 @@ void nsXIFDTD::AddCSSSelector(const nsIParserNode& aNode)
 
 void nsXIFDTD::BeginCSSDeclarationList(const nsIParserNode& aNode)
 {
-  PRInt32 indx = mBuffer.RFind('\n');
+  PRInt32 indx = mBuffer.RFindChar('\n');
   if (indx == kNotFound)
     indx = 0;
   PRInt32 offset = mBuffer.Length() - indx;
