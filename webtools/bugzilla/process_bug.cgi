@@ -979,7 +979,7 @@ Someone else has made changes to this bug at the same time you were trying to.
 The changes made were:
 <p>
 ";
-        DumpBugActivity($id, $delta_ts);
+        DumpBugActivity($id, $::FORM{'delta_ts'});
         my $longdesc = GetLongDescriptionAsHTML($id);
         my $longchanged = 0;
 
