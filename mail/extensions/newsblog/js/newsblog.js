@@ -41,10 +41,13 @@ var nsNewsBlogFeedDownloader =
   downloadFeed: function(aUrl, aFolder, aQuickMode, aTitle, aUrlListener, aMsgWindow)
   {
     // we might just pull all these args out of the aFolder DB, instead of passing them in...
-    feed = new Feed(aUrl, aQuickMode, aTitle);
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+        .getService(Components.interfaces.nsIRDFService);
+    id = rdf.GetResource(aUrl);
+    feed = new Feed(id);
     feed.urlListener = aUrlListener;
-		feed.folder = aFolder;
-		feed.msgWindow = aMsgWindow;
+    feed.folder = aFolder;
+    feed.msgWindow = aMsgWindow;
     feed.download();
   },
  
@@ -166,17 +169,17 @@ var serializer = Components
 // can access the Feed objects after it finishes downloading the feed files.
 var gFzFeedCache = new Object();
 
-function Feed(url, quickMode, title) {
-  this.url = url;
-  this.quickMode = quickMode || false;
-  this.title = title || null;
+function Feed(resource) {
+    this.resource = resource.QueryInterface(Components.interfaces.nsIRDFResource);
 
-  this.description = null;
-  this.author = null;
+    this.description = null;
+    this.author = null;
+  
+    this.request = null;
 
-  this.request = null;
-
-  return this;
+    this.items = new Array();
+  
+    return this;
 }
 
 // The name of the message folder corresponding to the feed.
@@ -245,6 +248,47 @@ Feed.onDownloadError = function(event) {
   throw("error downloading feed " + url);
 }
 
+Feed.prototype.url getter = function() {
+    var ds = getSubscriptionsDS();
+    var url = ds.GetTarget(this.resource, DC_IDENTIFIER, true);
+    if (url)
+      url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    else
+      url = this.resource.Value;
+    return url;
+}
+
+Feed.prototype.title getter = function() {
+    var ds = getSubscriptionsDS();
+    var title = ds.GetTarget(this.resource, DC_TITLE, true);
+    if (title)
+      title = title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    return title;
+}
+
+Feed.prototype.title setter = function(new_title) {
+    var ds = getSubscriptionsDS();
+    new_title = rdf.GetLiteral(new_title || "");
+    var old_title = ds.GetTarget(this.resource, DC_TITLE, true);
+    if (old_title)
+        ds.Change(this.resource, DC_TITLE, old_title, new_title);
+    else
+        ds.Assert(this.resource, DC_TITLE, new_title, true);
+}
+
+Feed.prototype.quickMode getter = function() {
+    var ds = getSubscriptionsDS();
+    var quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
+    if (quickMode) {
+        quickMode = quickMode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        quickMode = quickMode.Value;
+        quickMode = eval(quickMode);
+    }
+    return quickMode;
+}
+
+
+
 Feed.prototype.parse = function() {
   // Figures out what description language (RSS, Atom) and version this feed
   // is using and calls a language/version-specific feed parser.
@@ -295,6 +339,8 @@ Feed.prototype.parseAsRSS2 = function() {
   if (!this.parseItems)
     return;
 
+  this.invalidateItems();
+
   var itemNodes = this.request.responseXML.getElementsByTagName("item");
   for ( var i=0 ; i<itemNodes.length ; i++ ) {
     var itemNode = itemNodes[i];
@@ -326,7 +372,9 @@ Feed.prototype.parseAsRSS2 = function() {
                 || item.date;
 
     item.store();
+    item.markValid();
   }
+  this.removeInvalidItems();
 }
 
 Feed.prototype.parseAsRSS1 = function() {
@@ -345,6 +393,8 @@ Feed.prototype.parseAsRSS1 = function() {
 
   if (!this.parseItems)
     return;
+
+  this.invalidateItems();
 
   var items = ds.GetTarget(channel, RSS_ITEMS, true);
   //items = items.QueryInterface(Components.interfaces.nsIRDFContainer);
@@ -380,7 +430,9 @@ Feed.prototype.parseAsRSS1 = function() {
     item.content = getRDFTargetValue(ds, itemResource, RSS_CONTENT_ENCODED);
 
     item.store();
+    item.markValid();
   }
+  this.removeInvalidItems();
 }
 
 Feed.prototype.parseAsAtom = function() {
@@ -397,6 +449,8 @@ Feed.prototype.parseAsAtom = function() {
 
   if (!this.parseItems)
     return;
+
+  this.invalidateItems();
 
   var items = this.request.responseXML.getElementsByTagName("entry");
   for ( var i=0 ; i<items.length ; i++ ) {
@@ -470,8 +524,45 @@ Feed.prototype.parseAsAtom = function() {
     item.content = content;
 
     item.store();
+    item.markValid();
   }
+  this.removeInvalidItems();
 }
+
+Feed.prototype.invalidateItems = function invalidateItems() {
+    var ds = getItemsDS();
+    debug("invalidating items for " + this.url);
+    var items = ds.GetSources(FZ_FEED, this.resource, true);
+    var item;
+    while (items.hasMoreElements()) {
+        item = items.getNext();
+        item = item.QueryInterface(Components.interfaces.nsIRDFResource);
+        debug("invalidating " + item.Value);
+        var valid = ds.GetTarget(item, FZ_VALID, true);
+        if (valid)
+            ds.Unassert(item, FZ_VALID, valid, true);
+    }
+}
+
+Feed.prototype.removeInvalidItems = function() {
+    var ds = getItemsDS();
+    debug("removing invalid items for " + this.url);
+    var items = ds.GetSources(FZ_FEED, this.resource, true);
+    var item;
+    while (items.hasMoreElements()) {
+        item = items.getNext();
+        item = item.QueryInterface(Components.interfaces.nsIRDFResource);
+        if (ds.HasAssertion(item, FZ_VALID, RDF_LITERAL_TRUE, true))
+            continue;
+        debug("removing " + item.Value);
+        ds.Unassert(item, FZ_FEED, this.resource, true);
+        if (ds.hasArcOut(item, FZ_FEED))
+            debug(item.Value + " is from more than one feed; only the reference to this feed removed");
+        else
+            removeAssertions(ds, item);
+    }
+}
+
 
 
 // -----------------------------------------------
@@ -646,7 +737,6 @@ FeedItem.prototype.store = function() {
       content = content.replace(/%DESCRIPTION%/, this.description || this.title);
       this.content = content; // XXX store it elsewhere, f.e. this.page
       this.writeToFolder();
-      //this.download();
     }
 }
 
@@ -674,22 +764,56 @@ FeedItem.prototype.isStored = function() {
     return false;
   }
 
-  try {
-    folder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var db = folder.getMsgDatabase(this.feed.msgWindow);
-    var hdr = db.getMsgHdrForMessageID(this.messageID);
-    if (hdr) {
-      debug(this.identity + " stored");
-      return true;
+  var ds = getItemsDS();
+  var itemResource = rdf.GetResource(this.url || ("urn:" + this.id));
+  var downloaded = ds.GetTarget(itemResource, FZ_STORED, true);
+  if (!downloaded || downloaded.QueryInterface(Components.interfaces.nsIRDFLiteral).Value == "false") 
+  {
+    debug(this.identity + " not stored");
+    return false;
+  }
+  else 
+  {
+    debug(this.identity + " stored");
+    return true;
+  }
+}
+
+// XXX This should happen in the constructor automatically.
+FeedItem.prototype.markValid = function() {
+    debug("validating " + this.url);
+
+    var ds = getItemsDS();
+    var resource = rdf.GetResource(this.url || ("urn:" + this.id));
+    
+    if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
+      ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
+    
+    if (ds.hasArcOut(resource, FZ_VALID)) {
+      var currentValue = ds.GetTarget(resource, FZ_VALID, true);
+      ds.Change(resource, FZ_VALID, currentValue, RDF_LITERAL_TRUE);
     }
     else {
-      return false;
+      ds.Assert(resource, FZ_VALID, RDF_LITERAL_TRUE, true);
     }
-  }
-  catch(e) {
-    debug(this.identity + " error checking if stored: " + e);
-    throw(e);
-  }
+}
+
+
+FeedItem.prototype.markStored = function() {
+    var ds = getItemsDS();
+    var resource = rdf.GetResource(this.url || ("urn:" + this.id));
+    
+    if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
+      ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
+    
+    var currentValue;
+    if (ds.hasArcOut(resource, FZ_STORED)) {
+      currentValue = ds.GetTarget(resource, FZ_STORED, true);
+      ds.Change(resource, FZ_STORED, currentValue, RDF_LITERAL_TRUE);
+    }
+    else {
+      ds.Assert(resource, FZ_STORED, RDF_LITERAL_TRUE, true);
+    }
 }
 
 FeedItem.prototype.download = function() {
@@ -797,6 +921,7 @@ FeedItem.prototype.writeToFolder = function() {
   var folder = server.rootMsgFolder.getChildNamed(this.feed.name);
   folder = folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
   folder.addMessage(source);
+  this.markStored();
 }
 
 function W3CToIETFDate(dateString) {
@@ -1233,6 +1358,11 @@ const FZ_FEEDS = rdf.GetResource(FZ_NS + "feeds");
 const FZ_FEED = rdf.GetResource(FZ_NS + "feed");
 const FZ_QUICKMODE = rdf.GetResource(FZ_NS + "quickMode");
 const FZ_DESTFOLDER = rdf.GetResource(FZ_NS + "destFolder");
+const FZ_STORED = rdf.GetResource(FZ_NS + "stored");
+const FZ_VALID = rdf.GetResource(FZ_NS + "valid");
+
+const RDF_LITERAL_TRUE = rdf.GetLiteral("true");
+const RDF_LITERAL_FALSE = rdf.GetLiteral("false");
 
 // XXX There's a containerutils in forumzilla.js that this should be merged with.
 var containerUtils =
@@ -1346,4 +1476,72 @@ function createSubscriptionsFile(file) {
 </RDF:RDF>\n\
 ');
   file.close();
+}
+
+var gFzItemsDS; // cache
+function getItemsDS() {
+    if (gFzItemsDS)
+        return gFzItemsDS;
+
+    var file = getItemsFile();
+    var url = fileHandler.getURLSpecFromFile(file);
+
+    gFzItemsDS = rdf.GetDataSource(url);
+    if (!gFzItemsDS)
+        throw("can't get subscriptions data source");
+
+    // Note that it this point the datasource may not be loaded yet.
+    // You have to QueryInterface it to nsIRDFRemoteDataSource and check
+    // its "loaded" property to be sure.  You can also attach an observer
+    // which will get notified when the load is complete.
+
+    return gFzItemsDS;
+}
+
+function getItemsFile() {
+  // Get the app directory service so we can look up the user's profile dir.
+  var appDirectoryService =
+    Components
+      .classes["@mozilla.org/file/directory_service;1"]
+        .getService(Components.interfaces.nsIProperties);
+  if ( !appDirectoryService )
+    throw("couldn't get the directory service");
+
+  // Get the user's profile directory.
+  var profileDir =
+    appDirectoryService.get("ProfD", Components.interfaces.nsIFile);
+  if ( !profileDir )
+    throw ("couldn't get the user's profile directory");
+
+  // Get the user's subscriptions file.
+  var file = profileDir.clone();
+  file.append("feeditems.rdf");
+
+  // If the file doesn't exist, create it.
+  if (!file.exists()) {
+    var newfile = new LocalFile(file, MODE_WRONLY | MODE_CREATE);
+    newfile.write('\
+<?xml version="1.0"?>\n\
+<RDF:RDF xmlns:dc="http://purl.org/dc/elements/1.1/"\n\
+         xmlns:fz="' + FZ_NS + '"\n\
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n\
+</RDF:RDF>\n\
+');
+    newfile.close();
+  }
+  return file;
+}
+
+function removeAssertions(ds, resource) {
+    var properties = ds.ArcLabelsOut(resource);
+    var property;
+    while (properties.hasMoreElements()) {
+        property = properties.getNext();
+        var values = ds.GetTargets(resource, property, true);
+        var value;
+        while (values.hasMoreElements()) {
+            value = values.getNext();
+            ds.Unassert(resource, property, value, true);
+        }
+    }
 }

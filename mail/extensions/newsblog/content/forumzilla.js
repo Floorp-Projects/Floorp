@@ -34,6 +34,7 @@ var gFzStartupTime = new Date();
 
 // Load and cache the subscriptions data source so it's available when we need it.
 getSubscriptionsDS();
+getItemsDS();
 
 function onLoad() {
   // XXX Code to make the News & Blogs toolbar button show up automatically.
@@ -47,6 +48,19 @@ function onLoad() {
   //  currentset += ",button-newsandblogs";
   //toolbar.setAttribute('currentset', currentset);
 
+  // Make sure the subscriptions and items data source is loaded, since we'll
+  // need them for everything we do.
+  var itemsDS =
+      getItemsDS()
+          .QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+  if (!itemsDS.loaded) {
+      if (new Date() - gFzStartupTime < 30 * 1000) {
+          window.setTimeout(onLoad, 1000);
+          return;
+      }
+      else
+          throw("couldn't load the items datasource within thirty seconds");
+  }
   // Make sure the subscriptions data source is loaded, since we'll need it
   // for everything we do.  If it's not loaded, recheck it every second until
   // it's been ten seconds since we started up, then give up.
@@ -78,35 +92,18 @@ function onLoad() {
 window.setTimeout(onLoad, gFzStartupDelay * 1000);
 
 function downloadFeeds() {
-  // Reload subscriptions every 30 minutes (XXX make this configurable via a pref).
-  window.setTimeout(downloadFeeds, 30 * 60 * 1000);
+  
+    var ds = getSubscriptionsDS();
+    var feeds = getSubscriptionsList().GetElements();
+  
+    var feed;
+    while(feeds.hasMoreElements())
+        downloadFeed(feeds.getNext());
+}
 
+function downloadFeed(feed) {
   var ds = getSubscriptionsDS();
-  var feeds = getSubscriptionsList().GetElements();
-
-  var feed, url, quickMode, title;
-  while(feeds.hasMoreElements()) {
-    feed = feeds.getNext();
-    feed = feed.QueryInterface(Components.interfaces.nsIRDFResource);
-
-    url = ds.GetTarget(feed, DC_IDENTIFIER, true);
-    if (url)
-      url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-
-    quickMode = ds.GetTarget(feed, FZ_QUICKMODE, true);
-    if (quickMode) {
-      quickMode = quickMode.QueryInterface(Components.interfaces.nsIRDFLiteral);
-      quickMode = quickMode.Value;
-      quickMode = eval(quickMode);
-    }
-
-    title = ds.GetTarget(feed, DC_TITLE, true);
-    if (title)
-      title = title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-
-    feed = new Feed(url, quickMode, title);
-    feed.download();
-  }
+  new Feed(feed).download();
 }
 
 function migrateSubscriptions(oldFile) {

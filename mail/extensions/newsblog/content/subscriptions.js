@@ -39,41 +39,47 @@ function doAdd() {
 
     // if the user hit cancel, exit without doing anything
     if (!feedProperties.result)
+    {
+      debug("feedProperties.result empty\n");
       return;
-
+    }
     if (!feedProperties.feedLocation)
+    {
+        debug("feedProperties.feedLocation empty\n");
         return;
-
+    }
     const DEFAULT_FEED_TITLE = "feed title";
     const DEFAULT_FEED_URL = "feed location";
 
-    feed = new Feed(feedProperties.feedLocation || DEFAULT_FEED_URL);
-    feed.download(false, false);
     if (!feedProperties.feedName)
         feedProperties.feedName = DEFAULT_FEED_TITLE;
+
+    var itemResource = rdf.GetResource(feedProperties.feedLocation);
+    feed = new Feed(itemResource);
+    feed.download(false, false);
+    debug("after download, feed name = " + feed.name + "\n");
 
     var server = getIncomingServer();
     var folder;
     try {
-        //var folder = server.rootMsgFolder.FindSubFolder(feed.name);
-        folder = server.rootMsgFolder.getChildNamed(feedProperties.feedName);
+        var folder = server.rootMsgFolder.getChildNamed(feed.name);
     }
     catch(e) {
         // If we're here, it's probably because the folder doesn't exist yet,
         // so create it.
-        debug("folder for new feed " + feedProperties.feedName + " doesn't exist; creating");
-				debug("creating " + feedProperties.feedName + "as child of " + server.rootMsgFolder + "\n");
-        server.rootMsgFolder.createSubfolder(feedProperties.feedName, getMessageWindow());
-        folder = server.rootMsgFolder.FindSubFolder(feedProperties.feedName);
+        debug("folder for new feed " + feed.name + " doesn't exist; creating");
+				debug("creating " + feed.name + "as child of " + server.rootMsgFolder + "\n");
+        server.rootMsgFolder.createSubfolder(feed.name, getMessageWindow());
+        folder = server.rootMsgFolder.FindSubFolder(feed.name);
         var msgdb = folder.getMsgDatabase(null);
         var folderInfo = msgdb.dBFolderInfo;
         folderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
     }
 
     // XXX This should be something like "subscribe to feed".
-		dump ("feed name = " + feedProperties.feedName + "\n");
-    addFeed(feedProperties.feedLocation, feedProperties.feedName, null, folder);
-    // XXX Maybe we can combine this with the earlier download?
+		dump ("feed name = " + feed.name + "\n");
+    addFeed(feedProperties.feedLocation, feed.name, null, folder);
+    // now download it for real, now that we have a folder.
     feed.download();
 }
 
@@ -174,7 +180,7 @@ function doEdit() {
         // the title, so despite the cancellation we should still redownload
         // the feed if the title has changed.
         if (new_title != old_title) {
-            feed = new Feed(old_url, null, feedProperties.feedName);
+            feed = new Feed(item.id);
             feed.download();
         }
         return;
@@ -182,7 +188,7 @@ function doEdit() {
     else if (feedProperties.feedLocation != old_url)
         updateURL(item.id, feedProperties.feedLocation);
 
-    feed = new Feed(feedProperties.feedLocation, null, feedProperties.feedName);
+    feed = new Feed(item.id);
     feed.download();
 }
 
@@ -204,8 +210,7 @@ function doRemove() {
             var server = getIncomingServer();
             var openerResource = server.rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
             var titleValue = title ? title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : "";
-            var url = ds.GetTarget(resource, DC_IDENTIFIER, true);
-            var feed = new Feed(url, null, titleValue);
+            var feed = new Feed(resource);
             try {
               var folderResource = server.rootMsgFolder.getChildNamed(feed.name).QueryInterface(Components.interfaces.nsIRDFResource);
               var foo = window.opener.messenger.DeleteFolders(window.opener.GetFolderDatasource(), openerResource, folderResource);
@@ -218,7 +223,7 @@ function doRemove() {
                 // so don't remove it.
                 folder = server.rootMsgFolder.getChildNamed(feed.name);
                 if (folder) 
-									return;
+                  return;
             }
             catch (e) {}
             ds.Unassert(resource, DC_TITLE, title, true);
@@ -232,6 +237,23 @@ function doRemove() {
 
         feeds.RemoveElementAt(index, true);
     }
+    // Remove all assertions about the feed from the subscriptions database.
+    var ds = getSubscriptionsDS();
+    removeAssertions(ds, feed);
+
+    // Remove all assertions about items in the feed from the items database.
+    ds = getItemsDS();
+    var items = ds.GetSources(FZ_FEED, feed, true);
+    while (items.hasMoreElements()) {
+        var item = items.getNext();
+        item = item.QueryInterface(Components.interfaces.nsIRDFResource);
+        ds.Unassert(item, FZ_FEED, feed, true);
+        if (ds.hasArcOut(item, FZ_FEED))
+            debug(item.Value + " is from more than one feed; only the reference to this feed removed");
+        else
+            removeAssertions(ds, item);
+    }
+
     //tree.builder.rebuild();
 }
 

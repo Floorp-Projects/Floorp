@@ -15,17 +15,17 @@ var serializer = new XMLSerializer;
 // can access the Feed objects after it finishes downloading the feed files.
 var gFzFeedCache = new Object();
 
-function Feed(url, quickMode, title) {
-  this.url = url;
-  this.quickMode = quickMode || false;
-  this.title = title || null;
+function Feed(resource) {
+    this.resource = resource.QueryInterface(Components.interfaces.nsIRDFResource);
 
-  this.description = null;
-  this.author = null;
+    this.description = null;
+    this.author = null;
+  
+    this.request = null;
 
-  this.request = null;
-
-  return this;
+    this.items = new Array();
+  
+    return this;
 }
 
 // The name of the message folder corresponding to the feed.
@@ -92,6 +92,45 @@ Feed.onDownloadError = function(event) {
   throw("error downloading feed " + url);
 }
 
+Feed.prototype.url getter = function() {
+    var ds = getSubscriptionsDS();
+    var url = ds.GetTarget(this.resource, DC_IDENTIFIER, true);
+    if (url)
+      url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    else
+      url = this.resource.Value;
+    return url;
+}
+
+Feed.prototype.title getter = function() {
+    var ds = getSubscriptionsDS();
+    var title = ds.GetTarget(this.resource, DC_TITLE, true);
+    if (title)
+      title = title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    return title;
+}
+
+Feed.prototype.title setter = function(new_title) {
+    var ds = getSubscriptionsDS();
+    new_title = rdf.GetLiteral(new_title || "");
+    var old_title = ds.GetTarget(this.resource, DC_TITLE, true);
+    if (old_title)
+        ds.Change(this.resource, DC_TITLE, old_title, new_title);
+    else
+        ds.Assert(this.resource, DC_TITLE, new_title, true);
+}
+
+Feed.prototype.quickMode getter = function() {
+    var ds = getSubscriptionsDS();
+    var quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
+    if (quickMode) {
+        quickMode = quickMode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        quickMode = quickMode.Value;
+        quickMode = eval(quickMode);
+    }
+    return quickMode;
+}
+
 Feed.prototype.parse = function() {
   // Figures out what description language (RSS, Atom) and version this feed
   // is using and calls a language/version-specific feed parser.
@@ -125,6 +164,9 @@ Feed.prototype.parse = function() {
     debug(this.url + " is of unknown format; assuming an RSS 0.9x feed");
     this.parseAsRSS2();
   }
+  var ds = getItemsDS();
+  ds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+  ds.Flush();
 }
 
 Feed.prototype.parseAsRSS2 = function() {
@@ -141,6 +183,8 @@ Feed.prototype.parseAsRSS2 = function() {
 
   if (!this.parseItems)
     return;
+
+  this.invalidateItems();
 
   var itemNodes = this.request.responseXML.getElementsByTagName("item");
   for ( var i=0 ; i<itemNodes.length ; i++ ) {
@@ -173,7 +217,10 @@ Feed.prototype.parseAsRSS2 = function() {
                 || item.date;
 
     item.store();
+    item.markValid();
+
   }
+  this.removeInvalidItems();
 }
 
 Feed.prototype.parseAsRSS1 = function() {
@@ -192,6 +239,8 @@ Feed.prototype.parseAsRSS1 = function() {
 
   if (!this.parseItems)
     return;
+
+  this.invalidateItems();
 
   var items = ds.GetTarget(channel, RSS_ITEMS, true);
   //items = items.QueryInterface(Components.interfaces.nsIRDFContainer);
@@ -227,7 +276,9 @@ Feed.prototype.parseAsRSS1 = function() {
     item.content = getRDFTargetValue(ds, itemResource, RSS_CONTENT_ENCODED);
 
     item.store();
+    item.markValid();
   }
+  this.removeInvalidItems();
 }
 
 Feed.prototype.parseAsAtom = function() {
@@ -244,6 +295,8 @@ Feed.prototype.parseAsAtom = function() {
 
   if (!this.parseItems)
     return;
+
+  this.invalidateItems();
 
   var items = this.request.responseXML.getElementsByTagName("entry");
   for ( var i=0 ; i<items.length ; i++ ) {
@@ -317,5 +370,42 @@ Feed.prototype.parseAsAtom = function() {
     item.content = content;
 
     item.store();
+    item.markValid();
   }
+  this.removeInvalidItems();
 }
+
+Feed.prototype.invalidateItems = function invalidateItems() {
+    var ds = getItemsDS();
+    debug("invalidating items for " + this.url);
+    var items = ds.GetSources(FZ_FEED, this.resource, true);
+    var item;
+    while (items.hasMoreElements()) {
+        item = items.getNext();
+        item = item.QueryInterface(Components.interfaces.nsIRDFResource);
+        debug("invalidating " + item.Value);
+        var valid = ds.GetTarget(item, FZ_VALID, true);
+        if (valid)
+            ds.Unassert(item, FZ_VALID, valid, true);
+    }
+}
+
+Feed.prototype.removeInvalidItems = function() {
+    var ds = getItemsDS();
+    debug("removing invalid items for " + this.url);
+    var items = ds.GetSources(FZ_FEED, this.resource, true);
+    var item;
+    while (items.hasMoreElements()) {
+        item = items.getNext();
+        item = item.QueryInterface(Components.interfaces.nsIRDFResource);
+        if (ds.HasAssertion(item, FZ_VALID, RDF_LITERAL_TRUE, true))
+            continue;
+        debug("removing " + item.Value);
+        ds.Unassert(item, FZ_FEED, this.resource, true);
+        if (ds.hasArcOut(item, FZ_FEED))
+            debug(item.Value + " is from more than one feed; only the reference to this feed removed");
+        else
+            removeAssertions(ds, item);
+    }
+}
+

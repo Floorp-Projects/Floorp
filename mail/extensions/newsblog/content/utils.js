@@ -40,6 +40,11 @@ const FZ_FEEDS = rdf.GetResource(FZ_NS + "feeds");
 const FZ_FEED = rdf.GetResource(FZ_NS + "feed");
 const FZ_QUICKMODE = rdf.GetResource(FZ_NS + "quickMode");
 const FZ_DESTFOLDER = rdf.GetResource(FZ_NS + "destFolder");
+const FZ_STORED = rdf.GetResource(FZ_NS + "stored");
+const FZ_VALID = rdf.GetResource(FZ_NS + "valid");
+
+const RDF_LITERAL_TRUE = rdf.GetLiteral("true");
+const RDF_LITERAL_FALSE = rdf.GetLiteral("false");
 
 // XXX There's a containerutils in forumzilla.js that this should be merged with.
 var containerUtils =
@@ -81,6 +86,11 @@ function addFeed(url, title, quickMode, destFolder) {
 		ds.Assert(id, FZ_DESTFOLDER, destFolder, true);
     ds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
     ds.Flush();
+    // Create a new feed object for the feed.
+    feed = new Feed(id);
+
+    // Downloading the feed synchronously will pick up the title.
+    feed.download(false, false);
 }
 
 
@@ -183,4 +193,72 @@ function createSubscriptionsFile(file) {
 </RDF:RDF>\n\
 ');
   file.close();
+}
+
+var gFzItemsDS; // cache
+function getItemsDS() {
+    if (gFzItemsDS)
+        return gFzItemsDS;
+
+    var file = getItemsFile();
+    var url = fileHandler.getURLSpecFromFile(file);
+
+    gFzItemsDS = rdf.GetDataSource(url);
+    if (!gFzItemsDS)
+        throw("can't get subscriptions data source");
+
+    // Note that it this point the datasource may not be loaded yet.
+    // You have to QueryInterface it to nsIRDFRemoteDataSource and check
+    // its "loaded" property to be sure.  You can also attach an observer
+    // which will get notified when the load is complete.
+
+    return gFzItemsDS;
+}
+
+function getItemsFile() {
+  // Get the app directory service so we can look up the user's profile dir.
+  var appDirectoryService =
+    Components
+      .classes["@mozilla.org/file/directory_service;1"]
+        .getService(Components.interfaces.nsIProperties);
+  if ( !appDirectoryService )
+    throw("couldn't get the directory service");
+
+  // Get the user's profile directory.
+  var profileDir =
+    appDirectoryService.get("ProfD", Components.interfaces.nsIFile);
+  if ( !profileDir )
+    throw ("couldn't get the user's profile directory");
+
+  // Get the user's subscriptions file.
+  var file = profileDir.clone();
+  file.append("feeditems.rdf");
+
+  // If the file doesn't exist, create it.
+  if (!file.exists()) {
+    var newfile = new LocalFile(file, MODE_WRONLY | MODE_CREATE);
+    newfile.write('\
+<?xml version="1.0"?>\n\
+<RDF:RDF xmlns:dc="http://purl.org/dc/elements/1.1/"\n\
+         xmlns:fz="' + FZ_NS + '"\n\
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n\
+</RDF:RDF>\n\
+');
+    newfile.close();
+  }
+  return file;
+}
+
+function removeAssertions(ds, resource) {
+    var properties = ds.ArcLabelsOut(resource);
+    var property;
+    while (properties.hasMoreElements()) {
+        property = properties.getNext();
+        var values = ds.GetTargets(resource, property, true);
+        var value;
+        while (values.hasMoreElements()) {
+            value = values.getNext();
+            ds.Unassert(resource, property, value, true);
+        }
+    }
 }

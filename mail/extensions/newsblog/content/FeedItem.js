@@ -186,7 +186,8 @@ FeedItem.prototype.isStored = function() {
   } catch(e) {
     folder = null;
   }
-  if (!folder) {
+  if (!folder) 
+  {
     debug(this.feed.name + " folder doesn't exist; creating");
 		debug("creating " + this.feed.name + "as child of " + server.rootMsgFolder + "\n");
     server.rootMsgFolder.createSubfolder(this.feed.name, getMessageWindow());
@@ -198,22 +199,56 @@ FeedItem.prototype.isStored = function() {
     return false;
   }
 
-  try {
-    folder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var db = folder.getMsgDatabase(getMessageWindow());
-    var hdr = db.getMsgHdrForMessageID(this.messageID);
-    if (hdr) {
-      debug(this.identity + " stored");
-      return true;
+  var ds = getItemsDS();
+  var itemResource = rdf.GetResource(this.url || ("urn:" + this.id));
+  var downloaded = ds.GetTarget(itemResource, FZ_STORED, true);
+  if (!downloaded || downloaded.QueryInterface(Components.interfaces.nsIRDFLiteral).Value == "false") 
+  {
+    debug(this.identity + " not stored");
+    return false;
+  }
+  else 
+  {
+    debug(this.identity + " stored");
+    return true;
+  }
+}
+
+// XXX This should happen in the constructor automatically.
+FeedItem.prototype.markValid = function() {
+    debug("validating " + this.url);
+
+    var ds = getItemsDS();
+    var resource = rdf.GetResource(this.url || ("urn:" + this.id));
+    
+    if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
+      ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
+    
+    if (ds.hasArcOut(resource, FZ_VALID)) {
+      var currentValue = ds.GetTarget(resource, FZ_VALID, true);
+      ds.Change(resource, FZ_VALID, currentValue, RDF_LITERAL_TRUE);
     }
     else {
-      return false;
+      ds.Assert(resource, FZ_VALID, RDF_LITERAL_TRUE, true);
     }
-  }
-  catch(e) {
-    debug(this.identity + " error checking if stored: " + e);
-    throw(e);
-  }
+}
+
+
+FeedItem.prototype.markStored = function() {
+    var ds = getItemsDS();
+    var resource = rdf.GetResource(this.url || ("urn:" + this.id));
+    
+    if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
+      ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
+    
+    var currentValue;
+    if (ds.hasArcOut(resource, FZ_STORED)) {
+      currentValue = ds.GetTarget(resource, FZ_STORED, true);
+      ds.Change(resource, FZ_STORED, currentValue, RDF_LITERAL_TRUE);
+    }
+    else {
+      ds.Assert(resource, FZ_STORED, RDF_LITERAL_TRUE, true);
+    }
 }
 
 FeedItem.prototype.download = function() {
@@ -319,6 +354,7 @@ FeedItem.prototype.writeToFolder = function() {
   var folder = server.rootMsgFolder.getChildNamed(this.feed.name);
   folder = folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
   folder.addMessage(source);
+  this.markStored();
 }
 
 function W3CToIETFDate(dateString) {
