@@ -106,11 +106,17 @@ private:
   static void GetEventDocument(nsIDOMEvent* inEvent, nsIDOMDocument** outDocument);
   static nsresult GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage** outImage);
 
+  static nsresult GetDraggableSelectionData(nsISelection* inSelection,
+                        nsIDOMNode* inRealTargetNode, nsIDOMNode **outImageOrLinkNode, PRBool* outDragSelectedText);
+  // if inNode is null, use the selection from the window
+  static nsresult SerializeNodeOrSelection(const char* inMimeType, PRUint32 inFlags,
+                        nsIDOMWindow* inWindow, nsIDOMNode* inNode, nsAString& outResultString);
+  
   PRBool BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outURLString, nsAString & outTitleString,
-                        nsAString & outHTMLString, nsIImage** outImage, PRBool* outIsAnchor);
+                        nsAString & outHTMLString, nsAString & outImageSourceString, nsIImage** outImage, PRBool* outIsAnchor);
   nsresult CreateTransferable(const nsAString & inURLString, const nsAString & inTitleString, 
-                                const nsAString & inHTMLString, nsIImage* inImage, PRBool inIsAnchor, 
-                                nsITransferable** outTrans);
+                                const nsAString & inHTMLString, const nsAString & inImageSourceString,
+                                nsIImage* inImage, PRBool inIsAnchor, nsITransferable** outTrans);
   void ExtractURLFromData(const nsACString & inFlavor, nsISupports* inDataWrapper, PRUint32 inDataLen,
                            nsAString & outURL);
 
