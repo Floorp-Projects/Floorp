@@ -24,9 +24,6 @@
 #include "nsViewsCID.h"
 #include "nsPluginsCID.h"
 #include "nsRDFCID.h"
-#ifdef ClientWallet
-#include "nsIWalletService.h"
-#endif /* ClientWallet */
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -78,9 +75,6 @@
 #define DOM_DLL    "jsdom.dll"
 #define LAYOUT_DLL "raptorhtml.dll"
 #define NETLIB_DLL "netlib.dll"
-#ifdef ClientWallet
-#define WALLETLIB_DLL "walletlib.dll"
-#endif
 #define EDITOR_DLL "ender.dll"
 #define RDF_DLL    "rdf.dll"
 #define CAPS_DLL   "caps.dll"
@@ -111,9 +105,6 @@
 #define DOM_DLL    	"DOM_DLL"
 #define LAYOUT_DLL	"LAYOUT_DLL"
 #define NETLIB_DLL	"NETLIB_DLL"
-#ifdef ClientWallet
-#define WALLETLIB_DLL "WALLETLIB_DLL"
-#endif
 #define EDITOR_DLL	"ENDER_DLL"
 #define RDF_DLL			"RDF_DLL"
 #define UCONV_DLL    "UCONV_DLL"
@@ -145,9 +136,6 @@
 #define DOM_DLL    "libjsdom.so"
 #define LAYOUT_DLL "libraptorhtml.so"
 #define NETLIB_DLL "libnetlib.so"
-#ifdef ClientWallet
-#define WALLETLIB_DLL "walletlib.so"
-#endif
 #define EDITOR_DLL "libender.so"
 #define RDF_DLL    "librdf.so"
 #define UCONV_DLL    "libuconv.so"
@@ -222,10 +210,6 @@ static NS_DEFINE_IID(kCDragServiceCID,       NS_DRAGSERVICE_CID);
 static NS_DEFINE_IID(kCDragSourceCID,        NS_DRAGSOURCE_CID);
 static NS_DEFINE_IID(kCDragTargetCID,        NS_DRAGTARGET_CID);
 static NS_DEFINE_IID(kCDraggedObjectCID,     NS_DRAGGEDOBJECT_CID);
-#endif
-
-#ifdef ClientWallet
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
 #if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out
@@ -359,9 +343,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kCHTMLImageElement, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kNameSpaceManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-#ifdef ClientWallet
-  nsComponentManager::RegisterComponent(kWalletServiceCID, NULL, NULL, WALLETLIB_DLL, PR_FALSE, PR_FALSE);
-#endif
   nsComponentManager::RegisterComponent(kCEventListenerManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
 #if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out
