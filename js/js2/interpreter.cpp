@@ -172,43 +172,43 @@ void Context::doCall(JSFunction *target, Instruction *pc)
 }
 */
 
-JSValue shiftLeft_Default(const JSValue& r1, const JSValue& r2)
+static JSValue shiftLeft_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.i32 << (num2.u32 & 0x1F));
 }
-JSValue shiftRight_Default(const JSValue& r1, const JSValue& r2)
+static JSValue shiftRight_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.i32 >> (num2.u32 & 0x1F));
 }
-JSValue UshiftRight_Default(const JSValue& r1, const JSValue& r2)
+static JSValue UshiftRight_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toUInt32());
     JSValue num2(r2.toUInt32());
     return JSValue(num1.u32 >> (num2.u32 & 0x1F));
 }
-JSValue and_Default(const JSValue& r1, const JSValue& r2)
+static JSValue and_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
     return JSValue(num1.i32 & num2.i32);
 }
-JSValue or_Default(const JSValue& r1, const JSValue& r2)
+static JSValue or_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
     return JSValue(num1.i32 | num2.i32);
 }
-JSValue xor_Default(const JSValue& r1, const JSValue& r2)
+static JSValue xor_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toInt32());
     JSValue num2(r2.toInt32());
     return JSValue(num1.i32 ^ num2.i32);
 }
-JSValue add_Default(const JSValue& r1, const JSValue& r2)
+static JSValue add_Default(const JSValue& r1, const JSValue& r2)
 {
     //
     // could also handle these as separate entries in the override table for add
@@ -227,37 +227,37 @@ JSValue add_Default(const JSValue& r1, const JSValue& r2)
         return JSValue(num1.f64 + num2.f64);
     }
 }
-JSValue add_String1(const JSValue& r1, const JSValue& r2)
+static JSValue add_String1(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 + num2.f64);
 }
-JSValue subtract_Default(const JSValue& r1, const JSValue& r2)
+static JSValue subtract_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 - num2.f64);
 }
-JSValue multiply_Default(const JSValue& r1, const JSValue& r2)
+static JSValue multiply_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 * num2.f64);
 }
-JSValue divide_Default(const JSValue& r1, const JSValue& r2)
+static JSValue divide_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(num1.f64 / num2.f64);
 }
-JSValue remainder_Default(const JSValue& r1, const JSValue& r2)
+static JSValue remainder_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
     JSValue num2(r2.toNumber());
     return JSValue(fmod(num1.f64, num2.f64));
 }
-JSValue less_Default(const JSValue& r1, const JSValue& r2)
+static JSValue less_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue lv = r1.toPrimitive(JSValue::Number);
     JSValue rv = r2.toPrimitive(JSValue::Number);
@@ -274,7 +274,7 @@ JSValue less_Default(const JSValue& r1, const JSValue& r2)
             return JSValue(lv.f64 < rv.f64);
     }
 }
-JSValue lessEqual_Default(const JSValue& r1, const JSValue& r2)
+static JSValue lessEqual_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue lv = r1.toPrimitive(JSValue::Number);
     JSValue rv = r2.toPrimitive(JSValue::Number);
@@ -291,7 +291,7 @@ JSValue lessEqual_Default(const JSValue& r1, const JSValue& r2)
             return JSValue(lv.f64 <= rv.f64);
     }
 }
-JSValue equal_Default(const JSValue& r1, const JSValue& r2)
+static JSValue equal_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue lv = r1.toPrimitive(JSValue::Number);
     JSValue rv = r2.toPrimitive(JSValue::Number);
@@ -308,7 +308,7 @@ JSValue equal_Default(const JSValue& r1, const JSValue& r2)
             return JSValue(lv.f64 == rv.f64);
     }
 }
-JSValue identical_Default(const JSValue& r1, const JSValue& r2)
+static JSValue identical_Default(const JSValue& r1, const JSValue& r2)
 {
     if (r1.getType() != r2.getType())
         return kFalse;
@@ -412,7 +412,7 @@ public:
 } initializer = InitBinaryOperators();
 
 
-const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op)
+static const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op)
 {
     int32 bestDist1 = JSType::NoRelation;
     int32 bestDist2 = JSType::NoRelation;
