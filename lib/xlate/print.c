@@ -25,6 +25,7 @@
 
 #include "xlate_i.h"
 #include "xplocale.h"
+#include "xp_mem.h"
 #include "libimg.h"             /* Image Library public API. */
 
 #ifdef X_PLUGINS
@@ -46,6 +47,12 @@
 #define GREY                    5
 #define DARK_GREY               2
 #define DARKER_GREY             0
+
+static void
+display_non_latin1_multibyte_text(MWContext *, unsigned char *, int, int, int);
+
+static void
+display_non_latin1_singlebyte_text(MWContext *, unsigned char *, int, int,int);
 
 PRIVATE void
 default_completion(PrintSetup *p)
@@ -326,9 +333,11 @@ XL_TranslatePostscript(MWContext *context, URL_Struct *url_struct, SHIST_SavedDa
 #define min(a,b) ((a)<(b)?(a):(b))
 #endif
 
+/* return text width */
 static void
-measure_non_latin1_text(MWContext *cx, PS_FontInfo *f, unsigned char *cp,
-	int start, int last, float sf, LO_TextInfo *text_info)
+measure_asian_text(MWContext *cx, PS_FontInfo *otherf, PS_FontInfo *f, 
+	unsigned char *cp, int start, int last, float sf, 
+	LO_TextInfo *text_info)
 {
 	int	charSize;
 	int	height;
@@ -344,8 +353,10 @@ measure_non_latin1_text(MWContext *cx, PS_FontInfo *f, unsigned char *cp,
 
 	width = height = left = right = x = y = 0;
 
-	square = cx->prSetup->otherFontWidth;
-	text_info->ascent = max(f->fontBBox.ury, cx->prSetup->otherFontAscent) * sf;
+	/* for asian language, the width is fixed, so just take anyone */
+	square = otherf->chars[0].wx;
+	
+	text_info->ascent = max(f->fontBBox.ury, otherf->fontBBox.ury) * sf;
 
 	i = start;
 	while (i <= last)
@@ -366,7 +377,7 @@ measure_non_latin1_text(MWContext *cx, PS_FontInfo *f, unsigned char *cp,
 					right = max(right, x + square*9/10);
 					x += square;
 				}
-				height = max(height, y + square*7/10);
+				height = max(height, y + otherf->chars[0].wy);
 				left = min(left, x + square/25);
 				charSize = INTL_CharLen(win_csid, cp);
 				i += charSize;
@@ -379,7 +390,7 @@ measure_non_latin1_text(MWContext *cx, PS_FontInfo *f, unsigned char *cp,
 			{
 				PS_CharInfo *temp;
 	
-				temp = f->chars + *cp;
+				temp = &(f->chars[(int)*cp]);
 				width = max(width, x + temp->wx);
 				height = max(height, y + temp->charBBox.ury);
 				left = min(left, x + temp->charBBox.llx);
@@ -400,18 +411,27 @@ measure_non_latin1_text(MWContext *cx, PS_FontInfo *f, unsigned char *cp,
 }
 
 
+/* returns text width */
 PRIVATE void
 ps_measure_text(MWContext *cx, LO_TextStruct *text,
 		LO_TextInfo *text_info, int start, int last)
 {
-    PS_FontInfo *f;
+    PS_FontInfo *f = NULL;
     float sf;
     int x, y, left, right, height, width;
     int i;
     unsigned char *cp;
+    INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(cx);
+    int16 win_csid = INTL_GetCSIWinCSID(csi);
 
     assert(text->text_attr->fontmask >= 0 && text->text_attr->fontmask < N_FONTS);
-    f = PSFE_MaskToFI[text->text_attr->fontmask];
+
+    /* try to use other font info, if any */
+    if (cx->prSetup->otherFontName[text->text_attr->fontmask] 
+        && cx->prSetup->otherFontInfo[text->text_attr->fontmask])
+        f = cx->prSetup->otherFontInfo[text->text_attr->fontmask];
+    if (!f) f = PSFE_MaskToFI[text->text_attr->fontmask];
+
     assert(f != NULL);
     /*
     ** Font info is scale by 1000, I want everything to be in points*10,
@@ -425,16 +445,17 @@ ps_measure_text(MWContext *cx, LO_TextStruct *text,
     width = height = left = right = x = y = 0.0;
     cp = ((unsigned char*) text->text)+start;
 
-    if (cx->prSetup->otherFontName) {
-	measure_non_latin1_text(cx, f, cp, start, last, sf, text_info);
-	return;
+    if (cx->prSetup->otherFontName[text->text_attr->fontmask]
+        && win_csid & MULTIBYTE ) {
+        /* other font is specified, but it is multi-byte non-latin1 */
+        return measure_asian_text(cx, f,
+                                  PSFE_MaskToFI[text->text_attr->fontmask],
+                                  cp, start, last, sf, text_info);
     }
-
-
     for (i = start; i <= last; cp++, i++) {
 	PS_CharInfo *temp;
 
-	temp = f->chars + *cp;
+	temp = &(f->chars[(int)*cp]);
 	width = max(width, x + temp->wx);
 	height = max(height, y + temp->charBBox.ury);
 	left = min(left, x + temp->charBBox.llx);
@@ -464,129 +485,152 @@ xl_annotate_page(MWContext *cx, char *template, int y, int delta_dir, int pn)
   sf = scale_factor(cx, 1, LO_FONT_NORMAL) / 10.0;
   as = PSFE_MaskToFI[LO_FONT_NORMAL]->fontBBox.ury * sf;
   dc = -PSFE_MaskToFI[LO_FONT_NORMAL]->fontBBox.lly * sf;
-
+  
 #if 0
   y += cx->prInfo->page_break;
 #endif
   ty = y;
   y += cx->prInfo->page_topy;
   if (delta_dir == 1)
-  {
-    y += (dc * delta_dir);
+      {
+          y += (dc * delta_dir);
 #if 0
-    ty = y + as + dc;
+          ty = y + as + dc;
 #endif
-  } else {
-    y -= (as + dc);
+      } else {
+          y -= (as + dc);
 #if 0
-    ty = y - (dc + dc);
+          ty = y - (dc + dc);
 #endif
-  }
+      }
 
   bp = left;
   fence = left + sizeof left - 1;  
   *left = *middle = *right = '\0';
   while (*template != '\0')
-  {
-    int useit;
-    int my_pn;
-    
-    useit = 1;
-    
-    my_pn = pn;
-    if (*template == '%')
-    {
-      useit = 0;
-      switch (*++template)
       {
-      default:
-	useit = 1;
-	break;
-      case '\0':
-	break;
-      case 'u': case 'U':
-      {
-	char *up;
-	up = cx->prSetup->url->address;
-	while (*up != '\0' && bp < fence)
-	  *bp++ = *up++;
-	break;
+          int useit;
+          int my_pn;
+          
+          useit = 1;
+          
+          my_pn = pn;
+          if (*template == '%')
+              {
+                  useit = 0;
+                  switch (*++template)
+                      {
+                      default:
+                          useit = 1;
+                          break;
+                      case '\0':
+                          break;
+                      case 'u': case 'U':
+                          {
+                              char *up;
+                              up = cx->prSetup->url->address;
+                              while (*up != '\0' && bp < fence)
+                                  *bp++ = *up++;
+                              break;
+                          }
+                      case 't': case 'T':
+                          {
+                              char *tp;
+                              tp = cx->prInfo->doc_title;
+                              while (*tp != '\0' && bp < fence)
+                                  *bp++ = *tp++;
+                              break;
+                          }
+                      case 'm': case 'M':
+                          *bp = '\0';
+                          bp = middle;
+                          fence = middle + sizeof middle - 1;
+                          break;
+                      case 'r': case 'R':
+                          *bp = '\0';
+                          bp = right;
+                          fence = right + sizeof right - 1;
+                          break;
+                      case 's': case 'S':
+                          xl_moveto(cx, 0, y);
+                          xl_box(cx, cx->prInfo->page_width, POINT_TO_PAGE(1));
+                          xl_fill(cx);
+                          break;
+                      case 'n': case 'N':
+                          my_pn = cx->prInfo->n_pages;
+                      case 'p': case 'P':
+                          {
+                              
+                              char bf[20], *pp;
+                              sprintf(bf, "%d/%d", my_pn+1, cx->prInfo->n_pages);
+                              pp = bf;
+                              while (*pp && bp < fence)
+                                  *bp++ = *pp++;
+                              break;
+                          }	
+                          
+                      case 'd':
+                      case 'D':
+                          {
+                              time_t now;
+                              struct tm *tp;
+                              char bf[50], *dp;
+                              
+                              now = time(NULL);
+                              tp = localtime(&now);
+                              FE_StrfTime(cx, bf, 50, XP_DATE_TIME_FORMAT, tp);
+                              
+                              dp = bf;
+                              while (*dp && bp < fence)
+                                  *bp++ = *dp++;
+                          }
+                      }
+                  if (useit == 0 && *template != '\0')
+                      template++;
+              }
+          if (useit && bp < fence)
+              *bp++ = *template++;
       }
-      case 't': case 'T':
-      {
-	char *tp;
-	tp = cx->prInfo->doc_title;
-	while (*tp != '\0' && bp < fence)
-	  *bp++ = *tp++;
-	break;
-      }
-      case 'm': case 'M':
-	*bp = '\0';
-	bp = middle;
-	fence = middle + sizeof middle - 1;
-	break;
-      case 'r': case 'R':
-	*bp = '\0';
-	bp = right;
-	fence = right + sizeof right - 1;
-	break;
-      case 's': case 'S':
-	xl_moveto(cx, 0, y);
-	xl_box(cx, cx->prInfo->page_width, POINT_TO_PAGE(1));
-	xl_fill(cx);
-	break;
-      case 'n': case 'N':
-	my_pn = cx->prInfo->n_pages;
-      case 'p': case 'P':
-      {
-  
-	char bf[20], *pp;
-	sprintf(bf, "%d of %d", my_pn+1, cx->prInfo->n_pages);
-	pp = bf;
-	while (*pp && bp < fence)
-	  *bp++ = *pp++;
-	break;
-      }	
-
-      case 'd':
-      case 'D':
-      {
-	time_t now;
-	struct tm *tp;
-	char bf[50], *dp;
-	
-	now = time(NULL);
-	tp = localtime(&now);
-	FE_StrfTime(cx, bf, 50, XP_DATE_TIME_FORMAT, tp);
-
-	dp = bf;
-	while (*dp && bp < fence)
-	  *bp++ = *dp++;
-      }
-      }
-      if (useit == 0 && *template != '\0')
-	template++;
-    }
-    if (useit && bp < fence)
-      *bp++ = *template++;
-  }
   *bp = '\0';
   
-  XP_FilePrintf(cx->prSetup->out, "%d f0 ", scale_factor(cx, 1, LO_FONT_NORMAL));
   if (*left != '\0')
   {
-    xl_moveto_loc(cx, cx->prSetup->left/2, ty);
-    xl_show(cx, left, strlen(left), "");
+      /*
+       * display left header as multilingual.
+       */
+      INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(cx);
+      int16 win_csid = INTL_GetCSIWinCSID(csi);
+      float l_sf;
+
+      l_sf = scale_factor(cx, 1, LO_FONT_NORMAL);
+      xl_moveto_loc(cx, cx->prSetup->left/2, ty);
+      if (cx->prSetup->otherFontName[LO_FONT_NORMAL]) {
+          if (win_csid & MULTIBYTE) 
+              display_non_latin1_multibyte_text
+                  (cx, left, strlen(left), l_sf, (int)LO_FONT_NORMAL);
+          else display_non_latin1_singlebyte_text
+                   (cx, left, strlen(left), l_sf, (int)LO_FONT_NORMAL);
+      }else{
+          XP_FilePrintf(cx->prSetup->out, "%d f0\n", l_sf);
+          xl_show(cx, left, strlen(left), "");
+      }
+
+      /*
+        xl_moveto_loc(cx, cx->prSetup->left/2, ty);
+        xl_show(cx, left, strlen(left), "");
+      */
   }
   if (*middle != '\0') 
   {
-    xl_moveto_loc(cx, cx->prInfo->page_width / 2, ty);
-    xl_show(cx, middle, strlen(middle), "c");
+      XP_FilePrintf(cx->prSetup->out, "%d f0 ", scale_factor(cx, 1, LO_FONT_NORMAL));
+      xl_moveto_loc(cx, cx->prInfo->page_width / 2, ty);
+      xl_show(cx, middle, strlen(middle), "c");
   }
   if (*right != '\0')
   {
-    xl_moveto_loc(cx, cx->prInfo->page_width+cx->prSetup->left+cx->prSetup->right/2, ty);
-    xl_show(cx, right, strlen(right), "r");
+      XP_FilePrintf(cx->prSetup->out, "%d f0 ", scale_factor(cx, 1, LO_FONT_NORMAL));
+      xl_moveto_loc(cx, cx->prInfo->page_width+cx->prSetup->left+cx->prSetup->right/2, ty);
+      xl_show(cx, right, strlen(right), "r");
   }
 }
 
@@ -654,7 +698,7 @@ display_non_latin1_multibyte_text(MWContext *cx, unsigned char *str, int len, in
 				len -= charSize;
 				str += charSize;
 			}
-			XP_FilePrintf(f, "%d of\n", sf);
+			XP_FilePrintf(f, "%d of%d\n", sf, fontmask);
 			if (convert)
 			{
 				out = INTL_CallCharCodeConverter(obj, start,
@@ -741,7 +785,7 @@ display_non_latin1_singlebyte_text(MWContext *cx, unsigned char *str, int len, i
 			len -= charSize;
 			str += charSize;
 		}
-			XP_FilePrintf(f, "%d of\n", sf);
+			XP_FilePrintf(f, "%d of%d\n", sf, fontmask);
 			if (convert)
 			{
 				out = INTL_CallCharCodeConverter(obj, start,
@@ -777,7 +821,7 @@ display_non_latin1_singlebyte_text(MWContext *cx, unsigned char *str, int len, i
 				len--;
 				str++;
 			}
-			XP_FilePrintf(f, "%d of\n", sf);
+			XP_FilePrintf(f, "%d of%d\n", sf, fontmask);
 			xl_show(cx, (char *) start, str - start, "");
 	    }
 	}
@@ -798,35 +842,42 @@ PSFE_DisplaySubtext(MWContext *cx, int iLocation, LO_TextStruct *text,
   y = text->y + text->y_offset;
   top = y;
   height = text->height;
+  /* to measure skip */
   ps_measure_text(cx, text, &ti, 0, start_pos-1);
-  y += ti.ascent;		/* Move to baseline */
+  y += ti.ascent;		    /* Move to baseline */
   x += ti.max_width;		/* Skip over un-displayed text */
   if (!XP_CheckElementSpan(cx, top, height))
     return;
 
+  /* to measure text width */
+  ps_measure_text(cx, text, &ti, start_pos, end_pos);
   sf = scale_factor(cx, text->text_attr->size, text->text_attr->fontmask);
   xl_moveto(cx, x, y);
-  if (cx->prSetup->otherFontName) {
-       	if (win_csid & MULTIBYTE) 
-    	     display_non_latin1_multibyte_text(cx, 
-    				((unsigned char *) (text->text)) + start_pos,
-			    	end_pos - start_pos + 1, sf,
-			    	(int) text->text_attr->fontmask);
-	else display_non_latin1_singlebyte_text(cx,
-				((unsigned char *) (text->text)) + start_pos,
-			    	end_pos - start_pos + 1, sf,
-			    	(int) text->text_attr->fontmask);
-    	return;
+  if (cx->prSetup->otherFontName[text->text_attr->fontmask]) {
+      if (win_csid & MULTIBYTE) 
+          display_non_latin1_multibyte_text(cx, 
+                             ((unsigned char *) (text->text)) + start_pos,
+                             end_pos - start_pos + 1, sf,
+                             (int) text->text_attr->fontmask);
+      else display_non_latin1_singlebyte_text(cx,
+				             ((unsigned char *) (text->text)) + start_pos,
+			    	         end_pos - start_pos + 1, sf,
+                             (int) text->text_attr->fontmask);
+      /*return;   XXX why?*/
+  }else{
+      XP_FilePrintf(cx->prSetup->out, "%d f%d\n", sf,
+                    (int) text->text_attr->fontmask);
+      xl_show(cx, ((char*) text->text) + start_pos, end_pos - start_pos + 1,"");
   }
-  XP_FilePrintf(cx->prSetup->out, "%d f%d\n", sf,
-		(int) text->text_attr->fontmask);
-  xl_show(cx, ((char*) text->text) + start_pos, end_pos - start_pos + 1,"");
 
+  /* Font attributes */
   /* Underline the text? */
+  XP_FilePrintf(cx->prSetup->out, "%% attr: %d, width: %d\n", 
+                (int) text->text_attr->attrmask, ti.rbearing);
 
-  if (text->text_attr->attrmask & LO_ATTR_UNDERLINE) {
-	  y = text->y + text->y_offset + ti.ascent + ti.descent/2;
-	  x2 = x + text->width - 1;
+  if (text->text_attr->attrmask & (LO_ATTR_UNDERLINE | LO_ATTR_ANCHOR)) {
+	  y = text->y + text->y_offset + ti.ascent - ti.descent/2;
+      x2 = x + ti.rbearing - 1;
 	  xl_line(cx, x, y, x2, y, THIN_LINE_THICKNESS);
   }
 
@@ -834,7 +885,7 @@ PSFE_DisplaySubtext(MWContext *cx, int iLocation, LO_TextStruct *text,
 
   if (text->text_attr->attrmask & LO_ATTR_STRIKEOUT) {
 	  y = text->y + text->y_offset + height/2;
-	  x2 = x + text->width - 1;
+      x2 = x + ti.rbearing - 1;
 	  xl_line(cx, x, y, x2, y, THIN_LINE_THICKNESS);
   }
 

@@ -20,12 +20,20 @@
 #include "isotab.c"
 #include "locale.h"
 
+#include <libi18n.h>
+#include "intl_csi.h"
+
 #define RED_PART 0.299		/* Constants for converting RGB to greyscale */
 #define GREEN_PART 0.587
 #define BLUE_PART 0.114
 
 #define XL_SET_NUMERIC_LOCALE() char* cur_locale = setlocale(LC_NUMERIC, "C")
 #define XL_RESTORE_NUMERIC_LOCALE() setlocale(LC_NUMERIC, cur_locale)
+
+/* 
+ * Paper Names 
+ */
+char* paper_string[]={ "Letter", "Legal", "Executive", "A4" };
 
 /*
 ** These two functions swap values around in order to deal with page
@@ -61,6 +69,7 @@ void xl_begin_document(MWContext *cx)
 {
     int i;
     XP_File f;
+    char* charset_name = NULL;
 
     f = cx->prSetup->out;
     XP_FilePrintf(f, "%%!PS-Adobe-3.0\n");
@@ -70,7 +79,9 @@ void xl_begin_document(MWContext *cx)
 	PAGE_TO_POINT_I(cx->prSetup->width-cx->prSetup->right),
 	PAGE_TO_POINT_I(cx->prSetup->height-cx->prSetup->top));
     XP_FilePrintf(f, "%%%%Creator: Mozilla (NetScape) HTML->PS\n");
-    XP_FilePrintf(f, "%%%%DocumentData: Clean7Bit\n");
+    XP_FilePrintf(f, "%%%%DocumentData: Clean8Bit\n");
+    XP_FilePrintf(f, "%%%%DocumentPaperSizes: %s\n",
+	 paper_string[cx->prSetup->paper_size]);
     XP_FilePrintf(f, "%%%%Orientation: %s\n",
         (cx->prSetup->width < cx->prSetup->height) ? "Portrait" : "Landscape");
     XP_FilePrintf(f, "%%%%Pages: %d\n", (int) cx->prInfo->n_pages);
@@ -83,7 +94,19 @@ void xl_begin_document(MWContext *cx)
     XP_FilePrintf(f, "%%%%For: %n", user_name_stuff);
 #endif
     XP_FilePrintf(f, "%%%%EndComments\n");
+
+    /* general comments: Mozilla-specific */
+    XP_FilePrintf(f, "\n%% MozillaURL: %s\n", cx->prSetup->url->address);
+    /* get charset name of non-latin1 fonts */
+    /* for external filters, supply information */
+    if (cx->prSetup->otherFontName[0] || cx->prSetup->otherFontInfo[0]){
+      INTL_CharSetIDToName(cx->prSetup->otherFontCharSetID, charset_name);
+      XP_FilePrintf(f, "%% MozillaCharsetName: %s\n\n", charset_name);
+    }else
+      /* default: iso-8859-1 */
+      XP_FilePrintf(f, "%% MozillaCharsetName: iso-8859-1\n\n");
     
+    /* now begin prolog */
     XP_FilePrintf(f, "%%%%BeginProlog\n");
     XP_FilePrintf(f, "[");
     for (i = 0; i < 256; i++)
@@ -92,7 +115,7 @@ void xl_begin_document(MWContext *cx)
 	  XP_FilePrintf(f, " /.notdef");
 	else
 	  XP_FilePrintf(f, " /%s", isotab[i]);
-	if (( i % 10) == 9)
+	if (( i % 6) == 5)
 	  XP_FilePrintf(f, "\n");
       }
     XP_FilePrintf(f, "] /isolatin1encoding exch def\n");
@@ -109,9 +132,13 @@ void xl_begin_document(MWContext *cx)
 	    "definefont pop\n"
 	    "/f%d { /F%d findfont exch scalefont setfont } bind def\n",
 		i, PSFE_MaskToFI[i]->name, i, i);
-    if (cx->prSetup->otherFontName)
-      XP_FilePrintf(f, "/of { /%s findfont exch scalefont "
-		     "setfont } bind def\n", cx->prSetup->otherFontName);
+    for (i = 0; i < N_FONTS; i++)
+      if (cx->prSetup->otherFontName[i]) {
+	  XP_FilePrintf(f, 
+	    	"/of%d { /%s findfont exch scalefont setfont } bind def\n",
+		i, cx->prSetup->otherFontName[i]);
+/*          XP_FilePrintf(f, "/of /of1;\n", cx->prSetup->otherFontName); */
+      }
     XP_FilePrintf(f, "/rhc {\n");
     XP_FilePrintf(f, "    {\n");
     XP_FilePrintf(f, "        currentfile read {\n");
