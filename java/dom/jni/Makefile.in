@@ -32,11 +32,14 @@ CPPSRCS		= \
 	org_mozilla_dom_DocumentTypeImpl.cpp \
 	org_mozilla_dom_DOMImplementationImpl.cpp \
 	org_mozilla_dom_ElementImpl.cpp \
+	org_mozilla_dom_EntityImpl.cpp \
 	org_mozilla_dom_NamedNodeMapImpl.cpp \
 	org_mozilla_dom_NodeImpl.cpp \
 	org_mozilla_dom_NodeListImpl.cpp \
 	org_mozilla_dom_ProcessingInstructionImpl.cpp \
 	org_mozilla_dom_TextImpl.cpp 
+
+#	org_mozilla_dom_NotationImpl.cpp \
 
 include $(topsrcdir)/config/config.mk
 

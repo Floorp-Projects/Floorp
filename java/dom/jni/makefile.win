@@ -30,12 +30,15 @@ CPPSRCS= \
 	org_mozilla_dom_DocumentTypeImpl.cpp \
 	org_mozilla_dom_DOMImplementationImpl.cpp \
 	org_mozilla_dom_ElementImpl.cpp \
+	org_mozilla_dom_EntityImpl.cpp \
 	org_mozilla_dom_NamedNodeMapImpl.cpp \
 	org_mozilla_dom_NodeImpl.cpp \
 	org_mozilla_dom_NodeListImpl.cpp \
 	org_mozilla_dom_ProcessingInstructionImpl.cpp \
 	org_mozilla_dom_TextImpl.cpp \
  $(NULL)
+
+#	org_mozilla_dom_NotationImpl.cpp \
 
 CPP_OBJS= \
 	.\$(OBJDIR)\javaDOMGlobals.obj \
@@ -47,12 +50,15 @@ CPP_OBJS= \
 	.\$(OBJDIR)\org_mozilla_dom_DocumentTypeImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_DOMImplementationImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_ElementImpl.obj \
+	.\$(OBJDIR)\org_mozilla_dom_EntityImpl.cpp \
 	.\$(OBJDIR)\org_mozilla_dom_NamedNodeMapImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_NodeImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_NodeListImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_ProcessingInstructionImpl.obj \
 	.\$(OBJDIR)\org_mozilla_dom_TextImpl.obj \
  $(NULL)
+
+#	.\$(OBJDIR)\org_mozilla_dom_NotationImpl.cpp \
 
 LINCS=
 

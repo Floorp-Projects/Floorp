@@ -130,7 +130,10 @@ public class DOMFactory implements DocumentLoadListener {
     /*
     Node fc = node.getFirstChild();
     if (fc != null)
-      System.out.println(fc);
+      System.out.println("firstchild=" + fc.toString());
+    Node lc = node.getLastChild();
+    if (lc != null)
+      System.out.println("lastchild=" + lc.toString());
     */
 
     int length = children.getLength();

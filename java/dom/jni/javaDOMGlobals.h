@@ -41,7 +41,9 @@ class JavaDOMGlobals {
   static jclass namedNodeMapClass;
   static jclass nodeClass;
   static jclass nodeListClass;
+#if 0
   static jclass notationClass;
+#endif
   static jclass processingInstructionClass;
   static jclass textClass;
 

@@ -122,9 +122,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getAttributes
 
   nsIDOMNamedNodeMap* nodeMap = nsnull;
   nsresult rv = node->GetAttributes(&nodeMap);
-  if (NS_FAILED(rv) || !nodeMap) {
+  if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Node.getAttributes: failed (%x)\n", rv));
+    return NULL;
+  }
+  if (!nodeMap) {
+    /* according to the spec, getAttributes may return NULL when there
+       are no attributes. So this is not an error */
     return NULL;
   }
 
@@ -206,9 +211,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getFirstChild
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetFirstChild(&ret);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Node.getFirstChild: failed (%x)\n", rv));
+    return NULL;
+  }
+  if (!ret) {
+    /* according to the spec, getFirstChild may return NULL when there
+       are no children. So this is not an error */
     return NULL;
   }
 
@@ -233,9 +243,14 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getLastChild
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetLastChild(&ret);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Node.getLastChild: failed (%x)\n", rv));
+    return NULL;
+  }
+  if (!ret) {
+    /* according to the spec, getLastChild may return NULL when there
+       are no children. So this is not an error */
     return NULL;
   }
 

@@ -1,16 +1,55 @@
+o Convert to using IDL and GenericFactories. Once support for
+  ComponentLoaders is implemented in xpcom, use that to load our
+  component.
+
+  [5d]
+
 o Implement DOM exceptions.
 
+  [5d. In Progress. Denis Sharypov <sdv@sparc.spb.su>]
+
 o Implement the equals() and hashCode() methods for all DOM
-objects. The equals method is to be implemented by doing a
-QueryInterface to nsISupports and them comparing pointers to the
-native DOM objects.
+  objects. The equals method is to be implemented by doing a
+  QueryInterface to nsISupports and them comparing pointers to the
+  native DOM objects. Similarly, thye hashCode method should do a 
+  QI to nsISupports and then return the pointer.
+
+  [2d. In progress, ttully@eng.sun.com] 
 
 o Use OJI to obtain the JVM.
+
+  [5d. Awaiting OJI availability]
 
 o i18n the API
 
 o Implement DOMEvents from the DOM Level 2 current working draft.
 
+  [4w. Assigned. Contact: Sergey Lunegov <lsv@sparc.spb.su>]
+
+o Use nsISupportsProxies to work around thread 
+  limitations. This will mean writing an IDL for nsIJavaDOM.h, but 
+  that sould be trivial. Dcumentation for nsISupportsProxies is 
+  available at
+  http://www.mozilla.org/projects/xpcom/Proxies.html.
+
+  [2w. Assigned. Contact: Sergey Lunegov <lsv@sparc.spb.su>]
+
+o Eliminate finalize methds from classes that extend Node,
+  DOMImplementation and NodeList. finalize need only be defined for
+  these three base classes. Having it defined in the derived classes 
+  is redundant, but not an error.
+
+  [1d]
+
+o Go through the spec and for all methods that return null, fix the
+  api so that no error message is logged. The api works fine, it 
+  just logs some bogus errors. For an example, see 
+  Node.getAttributes.
+
+  [2d. Assigned. Contact: Sergey Lunegov <lsv@sparc.spb.su>]
+
 o Investigate the possibility of writing a tool that can generate the
-JNI code from idl. This is the only practical way to implement the
-HTML DOM (because it is too big to hand-code).
+  JNI code from idl. This is the only practical way to implement the
+  HTML DOM (because it is too big to hand-code).
+
+  [4w+]

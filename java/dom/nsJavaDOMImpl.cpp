@@ -311,10 +311,11 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartDocumentLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
 #ifdef NECKO
 					       nsIChannel* channel, 
+					       nsresult aStatus,
 #else
 					       nsIURI* aURL, 
-#endif
 					       PRInt32 aStatus,
+#endif
 					       nsIDocumentLoaderObserver* aObserver)
 {
   char* urlSpec = "";
@@ -471,10 +472,11 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader,
 NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader, 
 #ifdef NECKO
 					  nsIChannel* channel, 
+					  nsresult aStatus)
 #else
 					  nsIURI* aURL, 
-#endif
 					  PRInt32 aStatus)
+#endif
 {
   char* urlSpec = "";
 #ifdef NECKO

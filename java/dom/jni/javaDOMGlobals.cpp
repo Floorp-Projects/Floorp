@@ -33,7 +33,9 @@ jclass JavaDOMGlobals::entityReferenceClass = NULL;
 jclass JavaDOMGlobals::namedNodeMapClass = NULL;
 jclass JavaDOMGlobals::nodeClass = NULL;
 jclass JavaDOMGlobals::nodeListClass = NULL;
+#if 0
 jclass JavaDOMGlobals::notationClass = NULL;
+#endif
 jclass JavaDOMGlobals::processingInstructionClass = NULL;
 jclass JavaDOMGlobals::textClass = NULL;
 
@@ -86,10 +88,25 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
   attrClass = (jclass) env->NewGlobalRef(attrClass);
   if (!attrClass) return;
 
+  cDataSectionClass = env->FindClass("org/mozilla/dom/CDATASectionImpl");
+  if (!cDataSectionClass) return;
+  cDataSectionClass = (jclass) env->NewGlobalRef(cDataSectionClass);
+  if (!cDataSectionClass) return;
+
+  commentClass = env->FindClass("org/mozilla/dom/CommentImpl");
+  if (!commentClass) return;
+  commentClass = (jclass) env->NewGlobalRef(commentClass);
+  if (!commentClass) return;
+
   documentClass = env->FindClass("org/mozilla/dom/DocumentImpl");
   if (!documentClass) return;
   documentClass = (jclass) env->NewGlobalRef(documentClass);
   if (!documentClass) return;
+
+  documentFragmentClass = env->FindClass("org/mozilla/dom/DocumentFragmentImpl");
+  if (!documentFragmentClass) return;
+  documentFragmentClass = (jclass) env->NewGlobalRef(documentFragmentClass);
+  if (!documentFragmentClass) return;
 
   documentTypeClass = env->FindClass("org/mozilla/dom/DocumentTypeImpl");
   if (!documentTypeClass) return;
@@ -108,6 +125,16 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
   if (!elementClass) return;
   elementClass = (jclass) env->NewGlobalRef(elementClass);
   if (!elementClass) return;
+
+  entityClass = env->FindClass("org/mozilla/dom/EntityImpl");
+  if (!entityClass) return;
+  entityClass = (jclass) env->NewGlobalRef(entityClass);
+  if (!entityClass) return;
+
+  entityReferenceClass = env->FindClass("org/mozilla/dom/EntityReferenceImpl");
+  if (!entityReferenceClass) return;
+  entityReferenceClass = (jclass) env->NewGlobalRef(entityReferenceClass);
+  if (!entityReferenceClass) return;
 
   namedNodeMapClass = env->FindClass("org/mozilla/dom/NamedNodeMapImpl");
   if (!namedNodeMapClass) return;
@@ -158,6 +185,23 @@ void JavaDOMGlobals::Initialize(JNIEnv *env)
   nodeTypeTextFID = 
     env->GetStaticFieldID(nodeClass, "TEXT_NODE", "S");
   if (!nodeTypeTextFID) return;
+
+#if 0
+  notationClass = env->FindClass("org/mozilla/dom/NotationImpl");
+  if (!notationClass) return;
+  notationClass = (jclass) env->NewGlobalRef(notationClass);
+  if (!notationClass) return;
+#endif
+
+  processingInstructionClass = env->FindClass("org/mozilla/dom/ProcessingInstructionImpl");
+  if (!processingInstructionClass) return;
+  processingInstructionClass = (jclass) env->NewGlobalRef(processingInstructionClass);
+  if (!processingInstructionClass) return;
+
+  textClass = env->FindClass("org/mozilla/dom/TextImpl");
+  if (!textClass) return;
+  textClass = (jclass) env->NewGlobalRef(textClass);
+  if (!textClass) return;
 }
 
 void JavaDOMGlobals::Destroy(JNIEnv *env) 
@@ -171,20 +215,47 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
   }
   attrClass = NULL;
 
+  env->DeleteGlobalRef(cDataSectionClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete CDATASection global ref %x\n", 
+	    cDataSectionClass));
+    return;
+  }
+  cDataSectionClass = NULL;
+
+  env->DeleteGlobalRef(commentClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete Comment global ref %x\n", 
+	    commentClass));
+    return;
+  }
+  commentClass = NULL;
+
   env->DeleteGlobalRef(documentClass);
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 
 	   ("JavaDOMGlobals::Destroy: failed to delete Document global ref %x\n", 
-	    attrClass));
+	    documentClass));
     return;
   }
   documentClass = NULL;
+
+  env->DeleteGlobalRef(documentFragmentClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete DocumentFragment global ref %x\n", 
+	    documentFragmentClass));
+    return;
+  }
+  documentFragmentClass = NULL;
 
   env->DeleteGlobalRef(documentTypeClass);
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 
 	   ("JavaDOMGlobals::Destroy: failed to delete DocumentType global ref %x\n", 
-	    attrClass));
+	    documentTypeClass));
     return;
   }
   documentTypeClass = NULL;
@@ -193,7 +264,7 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 
 	   ("JavaDOMGlobals::Destroy: failed to delete DOMImplementation global ref %x\n", 
-	    attrClass));
+	    domImplementationClass));
     return;
   }
   domImplementationClass = NULL;
@@ -202,16 +273,34 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 
 	   ("JavaDOMGlobals::Destroy: failed to delete Element global ref %x\n", 
-	    attrClass));
+	    elementClass));
     return;
   }
   elementClass = NULL;
+
+  env->DeleteGlobalRef(entityClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete Entity global ref %x\n", 
+	    entityClass));
+    return;
+  }
+  entityClass = NULL;
+
+  env->DeleteGlobalRef(entityReferenceClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete EntityReference global ref %x\n", 
+	    entityReferenceClass));
+    return;
+  }
+  entityReferenceClass = NULL;
 
   env->DeleteGlobalRef(namedNodeMapClass);
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 
 	   ("JavaDOMGlobals::Destroy: failed to delete NamedNodeMap global ref %x\n", 
-	    attrClass));
+	    namedNodeMapClass));
     return;
   }
   namedNodeMapClass = NULL;
@@ -220,7 +309,7 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 
 	   ("JavaDOMGlobals::Destroy: failed to delete NodeList global ref %x\n", 
-	    attrClass));
+	    nodeListClass));
     return;
   }
   nodeListClass = NULL;
@@ -229,10 +318,39 @@ void JavaDOMGlobals::Destroy(JNIEnv *env)
   if (env->ExceptionOccurred()) {
     PR_LOG(log, PR_LOG_ERROR, 
 	   ("JavaDOMGlobals::Destroy: failed to delete Node global ref %x\n", 
-	    attrClass));
+	    nodeClass));
     return;
   }
   nodeClass = NULL;
+
+#if 0
+  env->DeleteGlobalRef(notationClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete Notation global ref %x\n", 
+	    notationClass));
+    return;
+  }
+  notationClass = NULL;
+#endif
+
+  env->DeleteGlobalRef(processingInstructionClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete ProcessingInstruction global ref %x\n", 
+	    processingInstructionClass));
+    return;
+  }
+  processingInstructionClass = NULL;
+
+  env->DeleteGlobalRef(textClass);
+  if (env->ExceptionOccurred()) {
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::Destroy: failed to delete Text global ref %x\n", 
+	    textClass));
+    return;
+  }
+  textClass = NULL;
 
   TakeOutGarbage();
   PR_DestroyLock(garbageLock);
@@ -270,6 +388,10 @@ jobject JavaDOMGlobals::CreateNodeSubtype(JNIEnv *env,
     clazz = documentTypeClass;
     break;
 
+  case nsIDOMNode::ELEMENT_NODE:
+    clazz = elementClass;
+    break;
+
   case nsIDOMNode::ENTITY_NODE:
     clazz = entityClass;
     break;
@@ -279,7 +401,11 @@ jobject JavaDOMGlobals::CreateNodeSubtype(JNIEnv *env,
     break;
 
   case nsIDOMNode::NOTATION_NODE:
+    PR_LOG(log, PR_LOG_ERROR, 
+	   ("JavaDOMGlobals::CreateNodeSubtype: Unsupported: allocating Node of type Notation\n"));
+#if 0
     clazz = notationClass;
+#endif
     break;
 
   case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
@@ -291,6 +417,9 @@ jobject JavaDOMGlobals::CreateNodeSubtype(JNIEnv *env,
     break;
   }
 
+  PR_LOG(log, PR_LOG_ERROR, 
+	 ("JavaDOMGlobals::CreateNodeSubtype: allocating Node of type %d, clazz=%x\n", 
+	  nodeType, clazz));
   jobject jnode = env->AllocObject(clazz);
   if (!jnode) {
     PR_LOG(log, PR_LOG_ERROR, 

@@ -42,10 +42,11 @@ class nsIJavaDOM : public nsIDocumentLoaderObserver {
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
 #ifdef NECKO
 			       nsIChannel* channel, 
+			       nsresult aStatus,
 #else
 			       nsIURI* aURL, 
-#endif
 			       PRInt32 aStatus,
+#endif
 			       nsIDocumentLoaderObserver* aObserver) = 0;
 
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
@@ -77,10 +78,11 @@ class nsIJavaDOM : public nsIDocumentLoaderObserver {
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
 #ifdef NECKO
 			  nsIChannel* channel, 
+			  nsresult aStatus) = 0;
 #else
 			  nsIURI* aURL, 
-#endif
 			  PRInt32 aStatus) = 0;
+#endif
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
 #ifdef NECKO
