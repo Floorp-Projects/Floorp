@@ -1476,7 +1476,7 @@ $(MKDEPEND_BUILTIN):
 ifneq ($(OS_ARCH),WINNT)
 	$(MAKE) -C $(DEPTH)/config nsinstall$(BIN_SUFFIX)
 endif
-	$(MAKE) -C $(MKDEPEND_DIR) mkdepend
+	$(MAKE) -C $(MKDEPEND_DIR) mkdepend$(BIN_SUFFIX)
 endif
 
 ifndef MOZ_AUTO_DEPS

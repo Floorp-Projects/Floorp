@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mkdepend
-PROGRAM		= mkdepend
+PROGRAM		= mkdepend$(BIN_SUFFIX)
 ifdef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -O3
 else
