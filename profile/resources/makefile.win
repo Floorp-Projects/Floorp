@@ -37,8 +37,9 @@ FILES=\
 		profileManager.html				\
 		errorDialog.html				\
         common.css						\
-	pm.xul					\
-	pm.css					\
+		pm.xul							\
+		pm.css							\
+		pmrename.xul					\
         $(NULL)
 
 install::
