@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:26 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: mutex.c,v $ $Revision: 1.2 $ $Date: 2001/09/20 22:09:46 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -136,7 +136,6 @@ nssCKFWMutex_Create
   NSSCKFWMutex *mutex;
   CK_ULONG count = (CK_ULONG)0;
   CK_BBOOL os_ok = CK_FALSE;
-  CK_VOID_PTR pMutex = (CK_VOID_PTR)NULL;
 
   if( (CK_C_INITIALIZE_ARGS_PTR)NULL != pInitArgs ) {
     if( (CK_CREATEMUTEX )NULL != pInitArgs->CreateMutex  ) count++;

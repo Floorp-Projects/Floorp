@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.5 $ $Date: 2000/09/06 22:23:56 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: sessobj.c,v $ $Revision: 1.6 $ $Date: 2001/09/20 22:09:46 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -200,7 +200,7 @@ nss_ckmdSessionObject_GetAttributeSize
   CK_RV *pError
 );
 
-static NSSItem *
+static const NSSItem *
 nss_ckmdSessionObject_GetAttribute
 (
   NSSCKMDObject *mdObject,
@@ -580,7 +580,7 @@ nss_ckmdSessionObject_GetAttributeSize
  * nss_ckmdSessionObject_GetAttribute
  *
  */
-static NSSItem *
+static const NSSItem *
 nss_ckmdSessionObject_GetAttribute
 (
   NSSCKMDObject *mdObject,

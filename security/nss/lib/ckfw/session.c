@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.5 $ $Date: 2000/09/13 21:15:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.6 $ $Date: 2001/09/20 22:09:46 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -1909,9 +1909,9 @@ NSSCKFWSession_CallNotification
   CK_NOTIFICATION event
 )
 {
+#ifdef DEBUG
   CK_RV error = CKR_OK;
 
-#ifdef DEBUG
   error = nssCKFWSession_verifyPointer(fwSession);
   if( CKR_OK != error ) {
     return error;
