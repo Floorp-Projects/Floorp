@@ -80,6 +80,10 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 /* ::::: online/offline icons ::::: */
 
+#offline-status {
+  padding: 0px 2px 0px 2px;
+}
+
 #offline-status[offline="true"] {
   list-style-image: url("chrome://communicator/skin/icons/offline.gif");
 }
