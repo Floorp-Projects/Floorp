@@ -372,12 +372,19 @@ static nsFontCharSetInfo Mathematica5 =
    { "x-mathematica5", SingleByteConvert, 0, TT_OS2_CPR1_SYMBOL, 0};
 #endif
 
-nsFontLangGroup FLG_WESTERN = { "x-western", nsnull };
-nsFontLangGroup FLG_ZHCN =    { "zh-CN", nsnull };
-nsFontLangGroup FLG_ZHTW =    { "zh-TW", nsnull };
-nsFontLangGroup FLG_JA =      { "ja", nsnull };
-nsFontLangGroup FLG_KO =      { "ko", nsnull };
-nsFontLangGroup FLG_NONE =    { nsnull , nsnull };
+static nsFontLangGroup FLG_WESTERN = { "x-western",     nsnull };
+static nsFontLangGroup FLG_RUSSIAN = { "x-cyrillic",    nsnull };
+static nsFontLangGroup FLG_GREEK   = { "el",            nsnull };
+static nsFontLangGroup FLG_TURKISH = { "tr",            nsnull };
+static nsFontLangGroup FLG_HEBREW  = { "he",            nsnull };
+static nsFontLangGroup FLG_ARABIC  = { "ar",            nsnull };
+static nsFontLangGroup FLG_THAI    = { "th",            nsnull };
+static nsFontLangGroup FLG_ZHCN    = { "zh-CN",         nsnull };
+static nsFontLangGroup FLG_ZHTW    = { "zh-TW",         nsnull };
+static nsFontLangGroup FLG_JA      = { "ja",            nsnull };
+static nsFontLangGroup FLG_KO      = { "ko",            nsnull };
+static nsFontLangGroup FLG_INDIC   = { "hi-IN",         nsnull };
+static nsFontLangGroup FLG_NONE    = { nsnull,          nsnull };
 
 /*
  * Normally, the charset of an X font can be determined simply by looking at
@@ -410,7 +417,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "-ascii",             &FLG_NONE,    &Unknown       },
   { "-ibm pc",            &FLG_NONE,    &Unknown       },
   { "adobe-fontspecific", &FLG_NONE,    &Special       },
-  { "ansi-1251",          &FLG_NONE,    &CP1251        },
+  { "ansi-1251",          &FLG_RUSSIAN, &CP1251        },
   { "big5-0",             &FLG_ZHTW,    &Big5          },
   { "big5-1",             &FLG_ZHTW,    &Big5          },
   { "big5.et-0",          &FLG_ZHTW,    &Big5          },
@@ -444,7 +451,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "cns11643-5",         &FLG_ZHTW,    &CNS116435     },
   { "cns11643-6",         &FLG_ZHTW,    &CNS116436     },
   { "cns11643-7",         &FLG_ZHTW,    &CNS116437     },
-  { "cp1251-1",           &FLG_NONE,    &CP1251        },
+  { "cp1251-1",           &FLG_RUSSIAN, &CP1251        },
   { "dec-dectech",        &FLG_NONE,    &Unknown       },
   { "dtsymbol-1",         &FLG_NONE,    &Unknown       },
   { "fontspecific-0",     &FLG_NONE,    &Unknown       },
@@ -485,41 +492,41 @@ static nsFontCharSetMap gCharSetMap[] =
   { "iso8859-2",          &FLG_WESTERN, &ISO88592      },
   { "iso8859-3",          &FLG_WESTERN, &ISO88593      },
   { "iso8859-4",          &FLG_WESTERN, &ISO88594      },
-  { "iso8859-5",          &FLG_NONE,    &ISO88595      },
-  { "iso8859-6",          &FLG_NONE,    &ISO88596      },
-  { "iso8859-7",          &FLG_WESTERN, &ISO88597      },
-  { "iso8859-8",          &FLG_NONE,    &ISO88598      },
-  { "iso8859-9",          &FLG_WESTERN, &ISO88599      },
+  { "iso8859-5",          &FLG_RUSSIAN, &ISO88595      },
+  { "iso8859-6",          &FLG_ARABIC,  &ISO88596      },
+  { "iso8859-7",          &FLG_GREEK,   &ISO88597      },
+  { "iso8859-8",          &FLG_HEBREW,  &ISO88598      },
+  { "iso8859-9",          &FLG_TURKISH, &ISO88599      },
   { "iso10646-1",         &FLG_NONE,    &ISO106461     },
   { "jisx0201.1976-0",    &FLG_JA,      &JISX0201      },
   { "jisx0201.1976-1",    &FLG_JA,      &JISX0201      },
   { "jisx0208.1983-0",    &FLG_JA,      &JISX0208      },
   { "jisx0208.1990-0",    &FLG_JA,      &JISX0208      },
   { "jisx0212.1990-0",    &FLG_JA,      &JISX0212      },
-  { "koi8-r",             &FLG_NONE,    &KOI8R         },
-  { "koi8-u",             &FLG_NONE,    &KOI8U         },
+  { "koi8-r",             &FLG_RUSSIAN, &KOI8R         },
+  { "koi8-u",             &FLG_RUSSIAN, &KOI8U         },
   { "johab-1",            &FLG_KO,      &X11Johab      },
   { "johabs-1",           &FLG_KO,      &X11Johab      },
   { "johabsh-1",          &FLG_KO,      &X11Johab      },
   { "ksc5601.1987-0",     &FLG_KO,      &KSC5601       },
   { "ksc5601.1992-3",     &FLG_KO,      &JohabNoAscii  },
-  { "microsoft-cp1251",   &FLG_NONE,    &CP1251        },
+  { "microsoft-cp1251",   &FLG_RUSSIAN, &CP1251        },
   { "misc-fontspecific",  &FLG_NONE,    &Unknown       },
   { "sgi-fontspecific",   &FLG_NONE,    &Unknown       },
   { "sun-fontspecific",   &FLG_NONE,    &Unknown       },
   { "sunolcursor-1",      &FLG_NONE,    &Unknown       },
   { "sunolglyph-1",       &FLG_NONE,    &Unknown       },
   { "symbol-fontspecific",&FLG_NONE,    &Special       },
-  { "tis620.2529-1",      &FLG_NONE,    &TIS620        },
-  { "tis620.2533-0",      &FLG_NONE,    &TIS620        },
-  { "tis620.2533-1",      &FLG_NONE,    &TIS620        },
-  { "tis620-0",           &FLG_NONE,    &TIS620        },
-  { "iso8859-11",         &FLG_NONE,    &TIS620        },
+  { "tis620.2529-1",      &FLG_THAI,    &TIS620        },
+  { "tis620.2533-0",      &FLG_THAI,    &TIS620        },
+  { "tis620.2533-1",      &FLG_THAI,    &TIS620        },
+  { "tis620-0",           &FLG_THAI,    &TIS620        },
+  { "iso8859-11",         &FLG_THAI,    &TIS620        },
   { "ucs2.cjk-0",         &FLG_NONE,    &Unknown       },
   { "ucs2.cjk_japan-0",   &FLG_NONE,    &Unknown       },
   { "ucs2.cjk_taiwan-0",  &FLG_NONE,    &Unknown       },
 #ifdef SUNCTL
-  { "sun.unicode.india-0",&FLG_NONE,    &SunIndic      },
+  { "sun.unicode.india-0",&FLG_INDIC,   &SunIndic      },
 #endif /* SUNCTL */
 
   { nsnull,               nsnull,       nsnull         }
