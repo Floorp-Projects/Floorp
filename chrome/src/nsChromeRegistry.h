@@ -144,7 +144,7 @@ public:
     enum MatchType {
       EXACT = 0,
       LOCALE = 1, // "en-GB" is selected, we found "en-US"
-      SKIN = 2
+      ANY = 2
     };
 
     ProviderEntry* GetProvider(const nsACString& aPreferred, MatchType aType);
