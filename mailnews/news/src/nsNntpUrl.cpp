@@ -73,6 +73,8 @@ nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
     m_port = NEWS_PORT;
     m_spec = nsnull;
     m_search = nsnull;
+
+	m_filePath = nsnull;
  
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
@@ -96,11 +98,7 @@ nsNntpUrl::~nsNntpUrl()
 	PR_FREEIF(m_errorMessage);
     PR_FREEIF(m_newsgroupName);
     
-    if (m_filePath) {
-        delete m_filePath;
-        m_filePath = nsnull;
-    }
-
+    delete m_filePath;
     PR_FREEIF(m_spec);
     PR_FREEIF(m_protocol);
     PR_FREEIF(m_host);
