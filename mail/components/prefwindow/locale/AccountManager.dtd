@@ -21,4 +21,5 @@
      XUL/FE DEVELOPERS: DO NOT MODIFY THIS VALUE. It represents the correct size of
      this window for en-US. -->
 <!ENTITY accountManager.size "width: 55em; height: 44em;"> 
+<!ENTITY macAccountManager.size "width: 60em; height: 44em;">
 <!ENTITY accountTree.width   "width: 17em;">
