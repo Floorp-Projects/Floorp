@@ -55,7 +55,11 @@ NS_IMETHODIMP
 nsSupportsArrayEnumerator::First()
 {
   mCursor = 0;
-  return NS_OK;
+  PRInt32 end = (PRInt32)mArray->Count();
+  if (mCursor < end)
+    return NS_OK;
+  else
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
