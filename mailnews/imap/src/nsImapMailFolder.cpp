@@ -1810,8 +1810,10 @@ nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
     rv = BuildIdsAndKeyArray(messages, messageIds, keysToMarkRead);
     if (NS_FAILED(rv)) return rv;
 
-    rv = StoreImapFlags(kImapMsgSeenFlag, markRead,  keysToMarkRead.GetArray(), keysToMarkRead.GetSize());
-    mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+    StoreImapFlags(kImapMsgSeenFlag, markRead,  keysToMarkRead.GetArray(), keysToMarkRead.GetSize());
+    rv = GetDatabase(nsnull);
+    if (NS_SUCCEEDED(rv))
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
   return rv;
 }
