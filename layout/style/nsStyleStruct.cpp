@@ -667,9 +667,9 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 // nsStyleList
 //
 nsStyleList::nsStyleList() 
+  : mListStyleType(NS_STYLE_LIST_STYLE_DISC),
+    mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE)
 {
-  mListStyleType = NS_STYLE_LIST_STYLE_BASIC;
-  mListStylePosition = NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
 }
 
 nsStyleList::~nsStyleList() 

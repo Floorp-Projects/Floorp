@@ -230,7 +230,6 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
       break;
 
     default:
-    case NS_STYLE_LIST_STYLE_BASIC:
     case NS_STYLE_LIST_STYLE_DISC:
       aRenderingContext.FillEllipse(mPadding.left, mPadding.top,
                                     mRect.width - (mPadding.left + mPadding.right),
@@ -1481,7 +1480,6 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_BASIC:
     case NS_STYLE_LIST_STYLE_SQUARE:
       aCX->GetTwipsToPixels(&t2p);
       fm->GetMaxAscent(ascent);

@@ -360,7 +360,7 @@ MapDirAndMenuAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
         aData->mListData->mType.SetIntValue(value.GetIntValue(),
                                             eCSSUnit_Enumerated);
       } else if (value.GetUnit() != eHTMLUnit_Null) {
-        aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_BASIC,
+        aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_DISC,
                                             eCSSUnit_Enumerated);
       }
     }

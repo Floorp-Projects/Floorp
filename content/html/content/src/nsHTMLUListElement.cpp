@@ -224,7 +224,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aD
       if (value.GetUnit() == eHTMLUnit_Enumerated)
         aData->mListData->mType.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
       else if (value.GetUnit() != eHTMLUnit_Null)
-        aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eCSSUnit_Enumerated);
+        aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_DISC, eCSSUnit_Enumerated);
     }
   }
 
