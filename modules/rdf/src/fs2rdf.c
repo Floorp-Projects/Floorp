@@ -744,9 +744,13 @@ fsGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PR
 		{
 			if ((len = strlen(pathname)) > 0)
 			{
+				char * nameInFSCharset;
 				if (pathname[len-1] == '/')  pathname[--len] = '\0';
 				n = revCharSearch('/', pathname);
-				retVal = (void *)unescapeURL(&pathname[n+1]);
+
+				nameInFSCharset = unescapeURL(&pathname[n+1]);
+				retVal = (void*) convertString2UTF8(INTL_GetCharSetID(INTL_FileNameCsidSel) , nameInFSCharset);
+				freeMem(nameInFSCharset);				
 				freeMem(pathname);
 			}
 		}
