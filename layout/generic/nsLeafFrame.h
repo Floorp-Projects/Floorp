@@ -56,16 +56,12 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize) = 0;
 
   /**
-   * Get the inner rect of this frame. This takes the outer size (mRect)
-   * and subtracts off the borders and padding.
-   */
-  void GetInnerArea(nsIPresContext* aPresContext, nsRect& aInnerArea) const;
-
-  /**
    * Subroutine to add in borders and padding
    */
   void AddBordersAndPadding(nsIPresContext* aPresContext,
-                            nsHTMLReflowMetrics& aDesiredSize);
+                            const nsHTMLReflowState& aReflowState,
+                            nsHTMLReflowMetrics& aDesiredSize,
+                            nsMargin& aBorderPadding);
 };
 
 #endif /* nsLeafFrame_h___ */
