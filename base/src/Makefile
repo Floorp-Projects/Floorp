@@ -24,9 +24,12 @@ LIBRARY_NAME = raptorbase
 CPPSRCS =				\
 	nsArena.cpp			\
 	nsAtomTable.cpp			\
+  nsBTree.cpp \
 	nsByteBuffer.cpp		\
 	nsCRT.cpp			\
+	nsDeque.cpp		\
 	nsInputStream.cpp		\
+  nsRBTree.cpp \
 	nsString.cpp			\
 	nsUnicharBuffer.cpp		\
 	nsUnicharInputStream.cpp	\
@@ -36,7 +39,9 @@ CPPSRCS =				\
 
 EXPORTS =				\
 	nscore.h			\
+  nsBTree.h \
 	nsCRT.h				\
+  nsDeque.h \
 	nsIArena.h			\
 	nsIAtom.h			\
 	nsIByteBuffer.h			\
@@ -46,6 +51,7 @@ EXPORTS =				\
 	nsIUnicharBuffer.h		\
 	nsIUnicharInputStream.h		\
 	nsIURL.h			\
+  nsRBTree.h \
 	nsString.h			\
 	nsVoidArray.h			\
 	nsUnitConversion.h		\
