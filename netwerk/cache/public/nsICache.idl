@@ -123,9 +123,17 @@ interface nsICache
      * STORE_ON_DISK   - Requires the cache entry to reside in persistent
      *                   storage (ie. typically on a system's hard disk).
      */
-    const nsCacheStoragePolicy STORE_ANYWHERE  = 0;
-    const nsCacheStoragePolicy STORE_IN_MEMORY = 1;
-    const nsCacheStoragePolicy STORE_ON_DISK   = 2;
+    const nsCacheStoragePolicy STORE_ANYWHERE   = 0;
+    const nsCacheStoragePolicy STORE_IN_MEMORY  = 1;
+    const nsCacheStoragePolicy STORE_ON_DISK    = 2;
+
+    /**
+     * All entries for a cache session are stored as streams of data or
+     * as objects.  These constant my be used to specify the type of entries
+     * when calling nsICacheService::CreateSession().
+     */
+    const long              NOT_STREAM_BASED = 0;
+    const long              STREAM_BASED     = 1;
 };
 
 
