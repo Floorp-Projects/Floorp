@@ -607,11 +607,13 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
 
         //now iterate the numeric chars and build our result
       PRUnichar* first=--cp;  //in case we have to back up.
+      PRBool haveValue = PR_FALSE;
 
       while(cp<endcp){
         theChar=*cp++;
         if(('0'<=theChar) && (theChar<='9')){
           result = (theRadix * result) + (theChar-'0');
+          haveValue = PR_TRUE;
         }
         else if((theChar>='A') && (theChar<='F')) {
           if(10==theRadix) {
@@ -619,6 +621,7 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
               theRadix=16;
               cp=first; //backup
               result=0;
+              haveValue = PR_FALSE;
             }
             else {
               *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
@@ -628,6 +631,7 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
           }
           else {
             result = (theRadix * result) + ((theChar-'A')+10);
+            haveValue = PR_TRUE;
           }
         }
         else if((theChar>='a') && (theChar<='f')) {
@@ -636,6 +640,7 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
               theRadix=16;
               cp=first; //backup
               result=0;
+              haveValue = PR_FALSE;
             }
             else {
               *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
@@ -645,9 +650,13 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
           }
           else {
             result = (theRadix * result) + ((theChar-'a')+10);
+            haveValue = PR_TRUE;
           }
         }
-        else if(('X'==theChar) || ('x'==theChar) || ('#'==theChar) || ('+'==theChar)) {
+        else if((('X'==theChar) || ('x'==theChar)) && (!haveValue || result == 0)) {
+          continue;
+        }
+        else if((('#'==theChar) || ('+'==theChar)) && !haveValue) {
           continue;
         }
         else {
