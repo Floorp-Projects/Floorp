@@ -37,6 +37,12 @@ public:
 							         const nsHTMLReflowState& aReflowState,
 							         nsReflowStatus&          aStatus);
 
+  NS_IMETHOD     Init(nsIPresContext*  aPresContext,
+                      nsIContent*      aContent,
+                      nsIFrame*        aParent,
+                      nsIStyleContext* aContext,
+                      nsIFrame*        aPrevInFlow);
+
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
