@@ -107,6 +107,28 @@ nsResourceSet::Add(nsIRDFResource* aResource)
     return NS_OK;
 }
 
+void
+nsResourceSet::Remove(nsIRDFResource* aProperty)
+{
+    PRBool found = PR_FALSE;
+
+    nsIRDFResource** res = mResources;
+    nsIRDFResource** limit = mResources + mCount;
+    while (res < limit) {
+        if (found) {
+            *(res - 1) = *res;
+        }
+        else if (*res == aProperty) {
+            NS_RELEASE(*res);
+            found = PR_TRUE;
+        }
+        ++res;
+    }
+
+    if (found)
+        --mCount;
+}
+
 PRBool
 nsResourceSet::Contains(nsIRDFResource* aResource) const
 {
