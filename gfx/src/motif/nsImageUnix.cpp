@@ -15,9 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "nsImageUnix.h"
 #include "nsRenderingContextUnix.h"
+#include "nsDeviceContextUnix.h"
+
+#include "nspr.h"
+
+#define IsFlagSet(a,b) (a & b)
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
@@ -26,12 +30,18 @@ static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 nsImageUnix :: nsImageUnix()
 {
   NS_INIT_REFCNT();
+  
+  mImage = nsnull ;
 }
 
 //------------------------------------------------------------
 
 nsImageUnix :: ~nsImageUnix()
 {
+  if (nsnull != mImage) {
+    XDestroyImage(mImage);
+    mImage = nsnull;
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsImageUnix, kIImageIID);
@@ -40,6 +50,11 @@ NS_IMPL_ISUPPORTS(nsImageUnix, kIImageIID);
 
 nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
+  mWidth = aWidth;
+  mHeight = aHeight;
+  mDepth = aDepth;
+  mMaskReq = aMaskRequirements;
+
   return NS_OK;
 }
 
@@ -48,6 +63,18 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
 // set up the pallete to the passed in color array, RGB only in this array
 void nsImageUnix :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
+  if (nsnull == mImage) {
+    CreateImage(aContext);
+  }
+
+  if (nsnull == mImage)
+    return;
+
+
+  if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, aFlags)){
+
+  }
+
 }
 
 
@@ -57,6 +84,9 @@ void nsImageUnix :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsR
 PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
+  if (nsnull == mImage)
+    return PR_FALSE;
+
   return PR_TRUE;
 }
 
@@ -66,6 +96,9 @@ PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurf
 PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                           PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
+  if (nsnull == mImage)
+    return PR_FALSE;
+
   return PR_TRUE;
 }
 
@@ -92,4 +125,45 @@ nsresult nsImageUnix::Optimize(nsDrawingSurface aDrawingSurface)
 nsIImage * nsImageUnix::DuplicateImage()
 {
   return(nsnull);
+}
+
+void nsImageUnix::CreateImage(nsIDeviceContext * aDeviceContext)
+{
+
+  /* The XImage must be compatible with the Pixmap we draw into */
+  nsDrawingSurfaceUnix * surface = (nsDrawingSurfaceUnix *) 
+    ((nsDeviceContextUnix *)aDeviceContext)->GetDrawingSurface();
+
+  XWindowAttributes wa;
+  PRUint32 wdepth;
+  Visual * visual ;
+  PRUint32 format ;
+
+  char * data = (char *) PR_Malloc(sizeof(char) * mWidth * mHeight * mDepth);
+
+  ::XGetWindowAttributes(surface->display,
+			 surface->drawable,
+			 &wa);
+  
+  /* XXX What if mDepth != wDepth */
+  wdepth = wa.depth;
+  visual = wa.visual;
+
+  /* Need to support monochrome too */
+  if (visual->c_class == TrueColor || visual->c_class == DirectColor)
+    format = ZPixmap;
+  else
+    format = XYPixmap;
+
+  mImage = ::XCreateImage(surface->display,
+			  visual,
+			  wdepth,
+			  format,
+			  0,
+			  data,
+			  mWidth, 
+			  mHeight,
+			  8,0);
+
+  return ;
 }
