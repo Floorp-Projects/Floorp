@@ -27,6 +27,10 @@ ifeq ($(USE_PTHREADS), 1)
 	DIRS += pthreads
 endif
 
+ifeq ($(USE_BTHREADS), 1)
+	DIRS += bthreads
+endif
+
 ifeq ($(USE_CPLUS), 1)
 	DIRS += cplus
 endif
@@ -195,7 +199,10 @@ OBJS += \
     io/$(OBJDIR)/prdir.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prfile.$(OBJ_SUFFIX) \
     io/$(OBJDIR)/prio.$(OBJ_SUFFIX) \
-    io/$(OBJDIR)/prsocket.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prsocket.$(OBJ_SUFFIX)
+
+ifndef USE_BTHREADS
+OBJS += \
 	threads/$(OBJDIR)/prcthr.$(OBJ_SUFFIX) \
 	threads/$(OBJDIR)/prdump.$(OBJ_SUFFIX) \
 	threads/$(OBJDIR)/prmon.$(OBJ_SUFFIX) \
@@ -205,6 +212,8 @@ OBJS += \
 	threads/combined/$(OBJDIR)/prulock.$(OBJ_SUFFIX) \
 	threads/combined/$(OBJDIR)/prustack.$(OBJ_SUFFIX) \
 	threads/combined/$(OBJDIR)/pruthr.$(OBJ_SUFFIX)
+endif
+
 endif
 
 ifeq ($(USE_IPV6), 1)
@@ -301,8 +310,13 @@ endif
 
 else
 
-# Unix
-include md/unix/objs.mk
+ifeq ($(OS_ARCH), BeOS)
+	include md/beos/objs.mk
+	include bthreads/objs.mk
+else
+	# Unix
+	include md/unix/objs.mk
+endif
 
 endif
 

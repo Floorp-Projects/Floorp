@@ -52,6 +52,8 @@
 #define EXISTING_FILENAME "c:/boot.ini"
 #elif defined(OS2)
 #define EXISTING_FILENAME "c:/config.sys"
+#elif defined(BEOS)
+#define EXISTING_FILENAME "/boot/beos/bin/sh"
 #else
 #error "Unknown OS"
 #endif

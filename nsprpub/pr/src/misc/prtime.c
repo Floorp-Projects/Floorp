@@ -609,7 +609,7 @@ static struct tm *MT_safe_localtime(const time_t *clock, struct tm *result)
 
 #endif  /* definition of MT_safe_localtime() */
 
-#if defined(XP_UNIX) || defined(XP_PC)
+#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 
 PR_IMPLEMENT(PRTimeParameters)
 PR_LocalTimeParameters(const PRExplodedTime *gmt)

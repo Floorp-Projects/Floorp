@@ -31,6 +31,10 @@
 #include <pthread.h>
 #endif
 
+#if defined(_PR_BTHREADS)
+#include <kernel/OS.h>
+#endif
+
 #ifdef WINNT
 /* Need to force service-pack 3 extensions to be defined by
 ** setting _WIN32_WINNT to NT 4.0 for winsock.h, winbase.h, winnt.h.
@@ -1220,14 +1224,18 @@ struct PRLock {
     pthread_mutex_t mutex;          /* the underlying lock */
     _PT_Notified notified;          /* array of conditions notified */
     pthread_t owner;                /* current lock owner */
-#else  /* defined(_PR_PTHREADS) */
+#elif defined(_PR_BTHREADS)
+    sem_id	semaphoreID;	    /* the underlying lock */
+    int32	benaphoreCount;	    /* number of people in lock */
+    thread_id	owner;		    /* current lock owner */
+#else /* not pthreads or Be threads */
     PRCList links;                  /* linkage for PRThread.lockList */
     struct PRThread *owner;         /* current lock owner */
     PRCList waitQ;                  /* list of threads waiting for lock */
     PRThreadPriority priority;      /* priority of lock */ 
     PRThreadPriority boostPriority; /* boosted priority of lock owner */
     _MDLock ilock;                  /* Internal Lock to protect user-level fields */
-#endif /* defined(_PR_PTHREADS) */
+#endif
 };
 
 extern void _PR_InitLocks(void);
@@ -1237,11 +1245,14 @@ struct PRCondVar {
 #if defined(_PR_PTHREADS)
     pthread_cond_t cv;          /* underlying pthreads condition */
     PRInt32 notify_pending;     /* CV has destroy pending notification */
-#else  /* defined(_PR_PTHREADS) */
+#elif defined(_PR_BTHREADS)
+    sem_id	isem;		/* Semaphore used to lock threadQ */
+    int32	benaphoreCount; /* Number of people in lock */
+#else /* not pthreads or Be threads */
     PRCList condQ;              /* Condition variable wait Q */
     _MDLock ilock;              /* Internal Lock to protect condQ */
     _MDCVar md;
-#endif /* defined(_PR_PTHREADS) */
+#endif
 };
 
 /************************************************************************/
@@ -1261,6 +1272,10 @@ struct PRMonitor {
 /************************************************************************/
 
 struct PRSemaphore {
+#if defined(_PR_BTHREADS)
+    sem_id  sem;
+    int32   benaphoreCount;
+#else
     PRCondVar *cvar;        /* associated lock and condition variable queue */
     PRUintn count;            /* the value of the counting semaphore */
     PRUint32 waiters;            /* threads waiting on the semaphore */
@@ -1268,6 +1283,7 @@ struct PRSemaphore {
 #else  /* defined(_PR_PTHREADS) */
     _MDSemaphore md;
 #endif /* defined(_PR_PTHREADS) */
+#endif /* defined(_PR_BTHREADS) */
 };
 
 PR_EXTERN(void) _PR_InitSem(void);
@@ -1340,7 +1356,13 @@ struct PRThread {
     pthread_mutex_t suspendResumeMutex;
     pthread_cond_t suspendResumeCV;
 #endif
-#else /* defined(_PR_PTHREADS) */
+#elif defined(_PR_BTHREADS)
+    PRUint32 flags;
+    _MDThread md;
+    PRBool io_pending;
+    PRInt32 io_fd;
+    PRBool io_suspended;
+#else /* not pthreads or Be threads */
     _MDLock threadLock;             /* Lock to protect thread state variables.
                                      * Protects the following fields:
                                      *     state
@@ -1405,7 +1427,7 @@ struct PRThread {
     PRBool io_suspended;
 
     _MDThread md;
-#endif /* defined(_PR_PTHREADS) */
+#endif
 };
 
 struct PRProcessAttr {
@@ -1682,6 +1704,23 @@ PR_EXTERN(PRInt32) _PR_MD_GET_SOCKET_ERROR(void);
 /* Get name of current host */
 extern PRStatus _PR_MD_GETHOSTNAME(char *name, PRUint32 namelen);
 #define    _PR_MD_GETHOSTNAME _MD_GETHOSTNAME
+
+#ifdef XP_BEOS
+
+extern PRLock *_connectLock;
+
+typedef struct _ConnectListNode {
+	PRInt32		osfd;
+	PRNetAddr	addr;
+	PRUint32	addrlen;
+	PRIntervalTime	timeout;
+} ConnectListNode;
+
+extern ConnectListNode connectList[64];
+
+extern PRUint32 connectCount;
+
+#endif /* XP_BEOS */
 
 PR_END_EXTERN_C
 

@@ -295,6 +295,16 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
 	else     
 		return PR_SUCCESS;
 
+#elif defined(XP_BEOS)
+
+    err = _MD_beos_get_nonblocking_connect_error(bottom);
+    if( err != 0 ) {
+	_PR_MD_MAP_CONNECT_ERROR(err);
+	return PR_FAILURE;
+    }
+    else
+	return PR_SUCCESS;
+
 #else
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return PR_FAILURE;
@@ -905,6 +915,7 @@ static PRStatus PR_CALLBACK SocketGetSockOpt(
     {
         if (PR_SockOpt_Linger == optname)
         {
+#if !defined(XP_BEOS)
             struct linger linger;
             PRInt32 len = sizeof(linger);
             rv = _PR_MD_GETSOCKOPT(
@@ -917,6 +928,10 @@ static PRStatus PR_CALLBACK SocketGetSockOpt(
                     linger.l_linger);
                 *optlen = sizeof(PRLinger);
             }
+#else
+            PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
+            return PR_FAILURE;
+#endif
         }
         else
         {
@@ -966,12 +981,17 @@ static PRStatus PR_CALLBACK SocketSetSockOpt(
     {
         if (PR_SockOpt_Linger == optname)
         {
+#if !defined(XP_BEOS)
             struct linger linger;
             linger.l_onoff = ((PRLinger*)(optval))->polarity ? 1 : 0;
             linger.l_linger = PR_IntervalToSeconds(
                 ((PRLinger*)(optval))->linger);
             rv = _PR_MD_SETSOCKOPT(
                 fd, level, name, (char *) &linger, sizeof(linger));
+#else
+            PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
+            return PR_FAILURE;
+#endif
         }
         else
         {

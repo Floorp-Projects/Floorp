@@ -30,7 +30,10 @@
  * This can lead to infinite recursion.
  */
 static PRLock *_pr_logLock;
-#if (defined(_PR_PTHREADS) || defined(_PR_GLOBAL_THREADS_ONLY))
+#if defined(_PR_PTHREADS) || defined(_PR_BTHREADS)
+#define _PR_LOCK_LOG() PR_Lock(_pr_logLock);
+#define _PR_UNLOCK_LOG() PR_Unlock(_pr_logLock);
+#elif defined(_PR_GLOBAL_THREADS_ONLY)
 #define _PR_LOCK_LOG() { _PR_LOCK_LOCK(_pr_logLock)
 #define _PR_UNLOCK_LOG() _PR_LOCK_UNLOCK(_pr_logLock); }
 #else
@@ -393,6 +396,8 @@ PR_IMPLEMENT(void) PR_LogPrint(const char *fmt, ...)
               * pointer, but a structure; so you can't easily print it...
               */
                      me ? &(me->id): 0L, me);
+#elif defined(_PR_BTHREADS)
+		     me, me);
 #else
                      me ? me->id : 0L, me);
 #endif
@@ -462,7 +467,7 @@ PR_IMPLEMENT(void) PR_Assert(const char *s, const char *file, PRIntn ln)
 {
 #ifdef PR_LOGGING
     PR_LogPrint("Assertion failure: %s, at %s:%d\n", s, file, ln);
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
 #endif
 #ifdef XP_MAC

@@ -28,6 +28,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif 
+#ifdef XP_BEOS
+#include <OS.h>
+#endif
 
 PRInt32 _pr_pageShift;
 PRInt32 _pr_pageSize;
@@ -56,6 +59,10 @@ static void GetPageSize(void)
 #ifdef XP_MAC
     _pr_pageSize = 4096;
 #endif /* XP_MAC */
+
+#ifdef XP_BEOS
+    _pr_pageSize = B_PAGE_SIZE;
+#endif
 
 #ifdef XP_PC
 #ifdef _WIN32
