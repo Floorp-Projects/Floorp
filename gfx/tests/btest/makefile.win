@@ -28,7 +28,6 @@ LLIBS=				\
  $(DIST)\lib\raptorgfxwin.lib		\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)			\
- $(DIST)\lib\plc3.lib		\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib		\
  $(DIST)\lib\util.lib 		 \
  $(RESFILE)
@@ -42,21 +41,5 @@ install:: $(PROGRAMS)
 
 clobber::
 	rm -f $(DIST)\bin\BitTest.exe
-
-# Move this into config/obj.inc when it's allowed
-.cpp{.\$(OBJDIR)\}.exe:
-    $(CC) @<<$(CFGFILE)
-        $(CFLAGS)
-        $(LCFLAGS)
-        $(LINCS)
-        $(LINCS_1)
-        $(INCS)
-        $(LLIBS)
-        $(OS_LIBS)
-        -Fd.\$(OBJDIR)\
-        -Fe.\$(OBJDIR)\
-        -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).cpp
-<<
 
 $(PROG0): $(OBJDIR) BitTest.cpp $(RESFILE)

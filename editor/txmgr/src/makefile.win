@@ -47,9 +47,6 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME = txmgr
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-MISCDEP =				\
- $(DIST)\lib\xpcom.lib
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \

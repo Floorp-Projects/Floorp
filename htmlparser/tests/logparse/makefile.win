@@ -21,11 +21,6 @@ IGNORE_MANIFEST=1
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\logparse.exe
 
-MISCDEP=				\
- $(DIST)\lib\raptorhtmlpars.lib		\
- $(DIST)\lib\xpcom.lib		\
- $(LIBNSPR)
-
 OBJS =					\
 	.\$(OBJDIR)\logparse.obj	\
 	$(NULL)

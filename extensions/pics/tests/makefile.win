@@ -46,7 +46,6 @@ LINCS = -I$(PUBLIC)/js \
 LLIBS=				\
  $(DIST)\lib\pics.lib	\
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\plc3.lib \
  $(LIBNSPR) \
 
 include <$(DEPTH)\config\rules.mak>

@@ -107,7 +107,6 @@ LINCS= $(LINCS) \
 
 LLIBS = \
 	$(LIBNSPR)			\
-	$(DIST)\lib\plc3.lib	\
 	$(DIST)\lib\xpcom.lib         \
 	$(DIST)\lib\xplib.lib           \
 	$(DIST)\lib\zlib.lib \

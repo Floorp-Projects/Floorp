@@ -21,12 +21,6 @@ IGNORE_MANIFEST=1
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\grabpage.exe
 
-MISCDEP=				\
- $(DIST)\lib\raptorhtmlpars.lib		\
- $(DIST)\lib\netlib.lib			\
- $(DIST)\lib\xpcom.lib		\
- $(LIBNSPR)
-
 OBJS =					\
 	.\$(OBJDIR)\grabpage.obj	\
 	$(NULL)
