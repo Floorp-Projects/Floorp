@@ -777,7 +777,7 @@ case "$target" in
         no_x=yes
         MACOSX=1
         _PLATFORM_DEFAULT_TOOLKIT='mac'
-        DSO_LDOPTS="$DSO_LDOPTS -arch ppc -install_name @executable_path/\$@"
+        DSO_LDOPTS="$DSO_LDOPTS -arch ppc"
         TK_LIBS='-framework Carbon /System/Library/Frameworks/Carbon.framework/Carbon'
         TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
         CFLAGS="$CFLAGS $TK_CFLAGS"
