@@ -86,6 +86,9 @@ public:
 
     // Colors which will hopefully become CSS3
     eColor__moz_field,
+    eColor__moz_fieldtext,
+    eColor__moz_dialog,
+    eColor__moz_dialogtext,
     eColor__moz_dragtargetzone,				//used to highlight valid regions to drop something onto
 
     //colours needed by Mac Classic skin

@@ -194,7 +194,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID,nscolor &aColor)
       break;
 
     case eColor_buttonshadow:
-    case eColor_threedshadow: // i think these should be the same
+    case eColor_threedshadow:
       aColor = QCOLOR_TO_NS_RGB(normalGroup.shadow());
       break;
 
@@ -219,6 +219,18 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID,nscolor &aColor)
      // http://www.w3.org/tr/2000/wd-css3-userint-20000216.html#color
      case eColor__moz_field:
        aColor = QCOLOR_TO_NS_RGB(normalGroup.base());
+       break;
+
+     case eColor__moz_fieldtext:
+       aColor = QCOLOR_TO_NS_RGB(normalGroup.text());
+       break;
+
+     case eColor__moz_dialog:
+       aColor = QCOLOR_TO_NS_RGB(normalGroup.background());
+       break;
+
+     case eColor__moz_dialogtext:
+       aColor = QCOLOR_TO_NS_RGB(normalGroup.text());
        break;
 
      case eColor__moz_dragtargetzone:

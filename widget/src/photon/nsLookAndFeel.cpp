@@ -184,6 +184,15 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 	  case eColor__moz_field:
 		aColor = PH_TO_NS_RGB(Pg_WHITE);
 		break;
+      case eColor__moz_fieldtext:
+        aColor = PH_TO_NS_RGB(Pg_BLACK);
+        break;
+      case eColor__moz_dialog:
+        aColor = PH_TO_NS_RGB(Pg_GREY);
+        break;
+      case eColor__moz_dialogtext:
+        aColor = PH_TO_NS_RGB(Pg_BLACK);
+        break;
   default:
     /* default color is BLACK */
     aColor = PH_TO_NS_RGB(Pg_BLACK);;
