@@ -805,6 +805,9 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
 {
     NS_ENSURE_ARG_POINTER(card);
 
+    // If memset() call is missing, callers of MS COM nsSynchronizeAB() will
+    // receive a different return code even if nsSynchronizeAB() return S_OK.
+    memset(card, 0, sizeof(nsABCOMCardStruct));
     card->dwRecordId = mRecordId;
     card->dwCategoryId = mCategoryId;
     card->dwStatus = mStatus;
