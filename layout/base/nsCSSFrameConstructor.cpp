@@ -3710,7 +3710,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
   nsIFrame* parentFrame = viewportFrame;
 
-  if (isScrollable) {
+  // It should be scrollable.. and it also can not be paginated
+  if (isScrollable && !isPaginated) {
 
       // built the frame. We give it the content we are wrapping which is the document,
       // the root frame, the parent view port frame, and we should get back the new
