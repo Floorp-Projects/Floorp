@@ -42,6 +42,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIDocument.h"
 #include "nsIRDFContent.h"
@@ -110,6 +111,7 @@ private:
     static nsIAtom* kTreeBodyAtom;
     static nsIAtom* kTreeCellAtom;
     static nsIAtom* kTreeChildrenAtom;
+    static nsIAtom* kTreeColAtom;
     static nsIAtom* kTreeHeadAtom;
     static nsIAtom* kTreeIndentationAtom;
     static nsIAtom* kTreeItemAtom;
@@ -172,12 +174,20 @@ public:
                nsIRDFResource* aValue);
 
     nsresult
+    EnsureCell(nsIContent* aTreeItemElement, PRInt32 aIndex, nsIContent** aCellElement);
+
+    nsresult
     CreateTreeItemCells(nsIContent* aTreeItemElement);
 
     nsresult
     FindTreeCellForProperty(nsIContent* aTreeRowElement,
                             nsIRDFResource* aProperty,
                             nsIRDFContent** aTreeCell);
+
+    nsresult
+    GetColumnForProperty(nsIContent* aTreeElement,
+                         nsIRDFResource* aProperty,
+                         PRInt32* aIndex);
 
     nsresult
     SetCellValue(nsIContent* aTreeRowElement,
@@ -189,15 +199,6 @@ public:
 
     PRBool
     IsTreeItemElement(nsIContent* aElement);
-
-    PRBool
-    IsColumnSetElement(nsIContent* aElement);
-
-    PRBool
-    IsColumnProperty(nsIContent* aElement, nsIRDFResource* aProperty);
-
-    PRBool
-    IsColumnElement(nsIContent* node);
 
     PRBool
     IsTreeProperty(nsIRDFResource* aProperty);
@@ -215,6 +216,7 @@ nsIAtom* RDFTreeBuilderImpl::kTreeAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeBodyAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeCellAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeChildrenAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeColAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeHeadAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeIndentationAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeItemAtom;
@@ -267,6 +269,7 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kTreeBodyAtom        = NS_NewAtom("treebody");
         kTreeCellAtom        = NS_NewAtom("treecell");
         kTreeChildrenAtom    = NS_NewAtom("treechildren");
+        kTreeColAtom         = NS_NewAtom("treecol");
         kTreeHeadAtom        = NS_NewAtom("treehead");
         kTreeIndentationAtom = NS_NewAtom("treeindentation");
         kTreeItemAtom        = NS_NewAtom("treeitem");
@@ -348,6 +351,7 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
         NS_RELEASE(kTreeBodyAtom);
         NS_RELEASE(kTreeCellAtom);
         NS_RELEASE(kTreeChildrenAtom);
+        NS_RELEASE(kTreeColAtom);
         NS_RELEASE(kTreeHeadAtom);
         NS_RELEASE(kTreeIndentationAtom);
         NS_RELEASE(kTreeItemAtom);
@@ -966,6 +970,93 @@ RDFTreeBuilderImpl::FindTreeElement(nsIContent* aElement,
     return NS_ERROR_FAILURE;
 }
 
+
+nsresult
+RDFTreeBuilderImpl::EnsureCell(nsIContent* aTreeItemElement,
+                               PRInt32 aIndex,
+                               nsIContent** aCellElement)
+{
+    // This method returns that the aIndex-th <xul:treecell> element
+    // if it is already present, and if not, will create up to aIndex
+    // nodes to create it.
+    NS_PRECONDITION(aIndex >= 0, "invalid arg");
+    if (aIndex < 0)
+        return NS_ERROR_INVALID_ARG;
+
+    nsresult rv;
+
+    // XXX at this point, we should probably ensure that aElement is
+    // actually a <xul:treeitem>...
+
+
+    // Iterate through the children of the <xul:treeitem>, counting
+    // <xul:treecell> tags until we get to the aIndex-th one.
+    PRInt32 count;
+    if (NS_FAILED(rv = aTreeItemElement->ChildCount(count))) {
+        NS_ERROR("unable to get xul:treeitem's child count");
+        return rv;
+    }
+
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIContent> kid;
+        if (NS_FAILED(rv = aTreeItemElement->ChildAt(i, *getter_AddRefs(kid)))) {
+            NS_ERROR("unable to retrieve xul:treeitem's child");
+            return rv;
+        }
+
+        PRInt32 nameSpaceID;
+        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID))) {
+            NS_ERROR("unable to get child namespace");
+            return rv;
+        }
+
+        if (nameSpaceID != kNameSpaceID_XUL)
+            continue; // not <xul:*>
+
+        nsCOMPtr<nsIAtom> tag;
+        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag)))) {
+            NS_ERROR("unable to get child tag");
+            return rv;
+        }
+
+        if (tag != kTreeCellAtom)
+            continue; // not <xul:treecell>
+
+        // Okay, it's a xul:treecell; see if it's the right one...
+        if (aIndex == 0) {
+            *aCellElement = kid;
+            NS_ADDREF(*aCellElement);
+            return NS_OK;
+        }
+
+        // Nope, decrement the counter and move on...
+        --aIndex;
+    }
+
+    // Create all of the xul:treecell elements up to and including the
+    // index of the cell that was asked for.
+    NS_ASSERTION(aIndex >= 0, "uh oh, I thought aIndex was s'posed t' be >= 0...");
+
+    nsCOMPtr<nsIContent> cellElement;
+    while (aIndex-- >= 0) {
+        if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(cellElement),
+                                                   kNameSpaceID_XUL,
+                                                   kTreeCellAtom))) {
+            NS_ERROR("unable to create new xul:treecell");
+            return rv;
+        }
+
+        if (NS_FAILED(rv = aTreeItemElement->AppendChildTo(cellElement, PR_FALSE))) {
+            NS_ERROR("unable to append xul:treecell to treeitem");
+            return rv;
+        }
+    }
+
+    *aCellElement = cellElement;
+    NS_ADDREF(*aCellElement);
+    return NS_OK;
+}
+
 nsresult
 RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
 {
@@ -998,52 +1089,76 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
                                                        getter_AddRefs(treeItemResource))))
         return rv;
 
-    // Now walk up to the primordial <xul:tree> tag, then down into
-    // the <xul:treehead> so that we can iterate through all of the
-    // tree's columns.
+    // Now walk up to the primordial <xul:tree> tag so that we can
+    // iterate through all of the tree's columns.
     nsCOMPtr<nsIContent> treeElement;
     if (NS_FAILED(rv = FindTreeElement(aTreeItemElement,
-                                       getter_AddRefs(treeElement))))
+                                       getter_AddRefs(treeElement)))) {
+        NS_ERROR("unable to find xul:tree element");
         return rv;
-
-    nsCOMPtr<nsIContent> treeHead;
-    if (NS_FAILED(rv = FindChildByTag(treeElement,
-                                      kNameSpaceID_XUL,
-                                      kTreeHeadAtom,
-                                      getter_AddRefs(treeHead))))
-        return rv;
-
-    nsCOMPtr<nsIContent> treeItem;
-    if (NS_FAILED(rv = FindChildByTag(treeHead,
-                                      kNameSpaceID_XUL,
-                                      kTreeItemAtom,
-                                      getter_AddRefs(treeItem))))
-        return rv;
+    }
 
     PRInt32 count;
-    if (NS_FAILED(rv = treeItem->ChildCount(count)))
+    if (NS_FAILED(rv = treeElement->ChildCount(count))) {
+        NS_ERROR("unable to count xul:tree element's kids");
         return rv;
+    }
 
     // Iterate through all the columns that have been specified,
     // constructing a cell in the content model for each one.
+    PRInt32 cellIndex = 0;
     for (PRInt32 i = 0; i < count; ++i) {
         nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = treeItem->ChildAt(i, *getter_AddRefs(kid))))
-            return rv; // XXX fatal
+        if (NS_FAILED(rv = treeElement->ChildAt(i, *getter_AddRefs(kid)))) {
+            NS_ERROR("unable to get xul:tree's child");
+            return rv;
+        }
 
         PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID)))
-            return rv; // XXX fatal
+        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID))) {
+            NS_ERROR("unable to get child's namespace");
+            return rv;
+        }
 
         if (nameSpaceID != kNameSpaceID_XUL)
-            continue; // not <xul:treecell>
+            continue; // not <xul:*>
 
         nsCOMPtr<nsIAtom> tag;
-        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag))))
-            return rv; // XXX fatal
+        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag)))) {
+            NS_ERROR("unable to get child's tag");
+            return rv;
+        }
 
-        if (tag != kTreeCellAtom)
-            continue; // not <xul:treecell>
+        if (tag != kTreeColAtom)
+            continue; // not <xul:treecol>
+
+        // Okay, we've found a column. Ensure that we've got a real
+        // tree cell that lives beneath _this_ tree item for its
+        // value.
+        nsCOMPtr<nsIContent> cellElement;
+        if (NS_FAILED(rv = EnsureCell(aTreeItemElement, cellIndex, getter_AddRefs(cellElement)))) {
+            NS_ERROR("unable to find/create cell element");
+            return rv;
+        }
+
+        // The first cell gets a <xul:treeindentation> element.
+        //
+        // XXX This is bogus: dogfood ready crap. We need to figure
+        // out a better way to specify this.
+        if (cellIndex == 0) {
+            nsCOMPtr<nsIContent> indentationElement;
+            if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(indentationElement),
+                                                       kNameSpaceID_XUL,
+                                                       kTreeIndentationAtom))) {
+                NS_ERROR("unable to create indentation node");
+                return rv;
+            }
+
+            if (NS_FAILED(rv = cellElement->AppendChildTo(indentationElement, PR_FALSE))) {
+                NS_ERROR("unable to append indentation element");
+                return rv;
+            }
+        }
 
         // The column property is stored in the RDF:resource attribute
         // of the tag.
@@ -1053,56 +1168,29 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
             return rv;
         }
 
+        // Set its value, if we know it.
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-            // now construct the cell
+
+            // First construct a property resource from the URI...
             nsCOMPtr<nsIRDFResource> property;
             if (NS_FAILED(gRDFService->GetUnicodeResource(uri, getter_AddRefs(property)))) {
                 NS_ERROR("unable to construct resource for xul:treecell");
                 return rv; // XXX fatal
             }
 
-            nsCOMPtr<nsIRDFContent> cellElement;
-            if (NS_FAILED(rv = NS_NewRDFResourceElement(getter_AddRefs(cellElement),
-                                                        property,
-                                                        kNameSpaceID_XUL,
-                                                        kTreeCellAtom))) {
-                NS_ERROR("unable to create new xul:treecell");
-                return rv;
-            }
-
-            if (NS_FAILED(rv = aTreeItemElement->AppendChildTo(cellElement, PR_FALSE))) {
-                NS_ERROR("unable to appen xul:treecell to treeitem");
-                return rv;
-            }
-
-            if (i == 0) {
-                // The first column gets a <xul:treeindentation> element.
-
-                // XXX This is bogus: dogfood ready crap. We need to
-                // figure out a better way to specify this.
-                nsCOMPtr<nsIContent> indentationElement;
-                if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(indentationElement),
-                                                           kNameSpaceID_XUL,
-                                                           kTreeIndentationAtom))) {
-                    NS_ERROR("unable to create indentation node");
-                    return rv;
-                }
-
-                if (NS_FAILED(rv = cellElement->AppendChildTo(indentationElement, PR_FALSE))) {
-                    NS_ERROR("unable to append indentation element");
-                    return rv;
-                }
-            }
-
-            // Set its value, if we know it.
+            // ...then query the RDF back-end
             nsCOMPtr<nsIRDFNode> value;
             if (NS_SUCCEEDED(rv = mDB->GetTarget(treeItemResource,
                                                  property,
                                                  PR_TRUE,
                                                  getter_AddRefs(value)))) {
-                if (NS_FAILED(rv = rdf_AttachTextNode(cellElement, value))) {
+
+                // Attach a plain old text node: nothing fancy. Here's
+                // where we'd do wacky stuff like pull in an icon or
+                // whatever.
+                if (NS_FAILED(rv = nsRDFContentUtils::AttachTextNode(cellElement, value))) {
                     NS_ERROR("unable to attach text node to xul:treecell");
-                    return rv; // XXX fatal
+                    return rv;
                 }
             }
             else if (rv == NS_ERROR_RDF_NO_VALUE) {
@@ -1115,28 +1203,85 @@ RDFTreeBuilderImpl::CreateTreeItemCells(nsIContent* aTreeItemElement)
                 return rv; // XXX something serious happened
             }
         }
-        else {
-            // attach an empty cell
-            NS_WARNING("column header with no RDF:resource");
 
-            nsCOMPtr<nsIContent> cellElement;
-            if (NS_FAILED(rv = NS_NewRDFGenericElement(getter_AddRefs(cellElement),
-                                                       kNameSpaceID_XUL,
-                                                       kTreeCellAtom))) {
-                NS_ERROR("unable to create new xul:treecell");
-                return rv;
-            }
-
-            if (NS_FAILED(rv = aTreeItemElement->AppendChildTo(cellElement, PR_FALSE))) {
-                NS_ERROR("unable to append xul:treecell to treeitem");
-                return rv;
-            }
-        }
+        ++cellIndex;
     }
 
     return NS_OK;
 }
 
+
+nsresult
+RDFTreeBuilderImpl::GetColumnForProperty(nsIContent* aTreeElement,
+                                         nsIRDFResource* aProperty,
+                                         PRInt32* aIndex)
+{
+    nsresult rv;
+
+    const char* propertyURI;
+    if (NS_FAILED(rv = aProperty->GetValue(&propertyURI))) {
+        NS_ERROR("unable to get property's URI");
+        return rv;
+    }
+
+    // XXX should ensure that aTreeElement really is a xul:tree
+    
+    PRInt32 count;
+    if (NS_FAILED(rv = aTreeElement->ChildCount(count))) {
+        NS_ERROR("unable to count xul:tree element's kids");
+        return rv;
+    }
+
+    // Iterate through the columns to find the one that's appropriate
+    // for this cell.
+    PRInt32 index = 0;
+    for (PRInt32 i = 0; i < count; ++i) {
+        nsCOMPtr<nsIContent> kid;
+        if (NS_FAILED(rv = aTreeElement->ChildAt(i, *getter_AddRefs(kid)))) {
+            NS_ERROR("unable to get xul:tree's child");
+            return rv;
+        }
+
+        PRInt32 nameSpaceID;
+        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID))) {
+            NS_ERROR("unable to get child's namespace");
+            return rv;
+        }
+
+        if (nameSpaceID != kNameSpaceID_XUL)
+            continue; // not <xul:*>
+
+        nsCOMPtr<nsIAtom> tag;
+        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag)))) {
+            NS_ERROR("unable to get child's tag");
+            return rv;
+        }
+
+        if (tag != kTreeColAtom)
+            continue; // not <xul:treecol>
+
+        // Okay, we've found a column. Is it the right one?  The
+        // column property is stored in the RDF:resource attribute of
+        // the tag....
+        nsAutoString uri;
+        if (NS_FAILED(rv = kid->GetAttribute(kNameSpaceID_RDF, kResourceAtom, uri))) {
+            NS_ERROR("severe error occured retrieving attribute");
+            return rv;
+        }
+
+        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+            if (0 == nsCRT::strcmp(uri, propertyURI)) {
+                *aIndex == index;
+                return NS_OK;
+            }
+        }
+
+        ++index;
+    }
+
+    // Nope, couldn't find it.
+    return NS_ERROR_FAILURE;
+}
 
 nsresult
 RDFTreeBuilderImpl::SetCellValue(nsIContent* aTreeItemElement,
@@ -1148,28 +1293,34 @@ RDFTreeBuilderImpl::SetCellValue(nsIContent* aTreeItemElement,
     // XXX We assume that aTreeItemElement is actually a
     // <xul:treeitem>, it'd be good to enforce this...
 
-    // Find the <xul:treecell> beneath <xul:treeitem> that corresponds
-    // to aProperty
-    nsCOMPtr<nsIContent> cellElement;
-    if (NS_FAILED(rv = FindChildByTagAndResource(aTreeItemElement,
-                                                 kNameSpaceID_XUL,
-                                                 kTreeCellAtom,
-                                                 aProperty,
-                                                 getter_AddRefs(cellElement)))) {
-        if (rv == NS_ERROR_RDF_NO_VALUE) {
-            // If we can't find a cell for the specified property,
-            // that just means there isn't a column in the tree for
-            // that property. No big deal.
-            return NS_OK;
-        }
+    // First, walk up to the tree's root so we can enumerate the
+    // columns & figure out where to put this...
 
-        return rv; // XXX somthing worse happened...
+    nsCOMPtr<nsIContent> treeElement;
+    if (NS_FAILED(rv = FindTreeElement(aTreeItemElement,
+                                       getter_AddRefs(treeElement)))) {
+        NS_ERROR("unable to find xul:tree element");
+        return rv;
+    }
+
+    PRInt32 index;
+    if (NS_FAILED(rv = GetColumnForProperty(treeElement, aProperty, &index))) {
+        // If we can't find a column for the specified property, that
+        // just means there isn't a column in the tree for that
+        // property. No big deal. Bye!
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIContent> cellElement;
+    if (NS_FAILED(rv = EnsureCell(aTreeItemElement, index, getter_AddRefs(cellElement)))) {
+        NS_ERROR("unable to find/create cell element");
+        return rv;
     }
 
     // XXX if the cell already has a value, we need to replace it, not
     // just append new text...
 
-    if (NS_FAILED(rv = rdf_AttachTextNode(cellElement, aValue)))
+    if (NS_FAILED(rv = nsRDFContentUtils::AttachTextNode(cellElement, aValue)))
         return rv;
 
     return NS_OK;
@@ -1209,95 +1360,6 @@ RDFTreeBuilderImpl::IsTreeItemElement(nsIContent* aElement)
         return PR_FALSE;
 
     return PR_TRUE;
-}
-
-
-PRBool
-RDFTreeBuilderImpl::IsColumnSetElement(nsIContent* aElement)
-{
-    // Returns PR_TRUE if the specified element is the tree's column
-    // set; that is, it is the <xul:treeitem> inside the <xul:treehead>
-    // that specifies the tree's columns.
-    nsresult rv;
-
-    // The element must be xul:treerow
-    nsCOMPtr<nsIAtom> elementTag;
-    if (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(elementTag))))
-        return PR_FALSE;
-
-    if (elementTag != kTreeItemAtom)
-        return PR_FALSE;
-
-    // "parent" must be xul:treehead
-    nsCOMPtr<nsIContent> parent;
-    if (NS_FAILED(rv = aElement->GetParent(*getter_AddRefs(parent))))
-        return PR_FALSE;
-
-    nsCOMPtr<nsIAtom> parentTag;
-    if (NS_FAILED(rv = parent->GetTag(*getter_AddRefs(parentTag))))
-        return PR_FALSE;
-
-    if (parentTag != kTreeHeadAtom)
-        return PR_FALSE;
-
-    // "grand-parent" must be xul:tree
-    nsCOMPtr<nsIContent> grandParent;
-    if (NS_FAILED(rv = parent->GetParent(*getter_AddRefs(grandParent))))
-        return PR_FALSE;
-
-    if (! IsTreeElement(grandParent))
-        return PR_FALSE;
-
-    // XXX we could be really anal here and enforce that the parent's
-    // resource is actually an RDF container, but what the hell.
-    return PR_TRUE;
-}
-
-PRBool
-RDFTreeBuilderImpl::IsColumnProperty(nsIContent* aElement,
-                                     nsIRDFResource* aProperty)
-{
-    // Returns PR_TRUE if the element is the column set element, and
-    // the RDF property specifies a member of the column set. (This
-    // assumes that all columns are specified in an RDF container;
-    // therefore, the individual columns will be ordinal elements of
-    // the container.)
-    if (IsColumnSetElement(aElement) && rdf_IsOrdinalProperty(aProperty))
-        return PR_TRUE;
-    else
-        return PR_FALSE;
-}
-
-
-PRBool
-RDFTreeBuilderImpl::IsColumnElement(nsIContent* aElement)
-{
-    // Returns PR_TRUE if the specified element is a column element,
-    // that is, a <xul:treecell> in the treehead:
-    //
-    // <xul:tree>
-    //   <xul:treehead>
-    //     <xul:treerow>
-    //       <!-- Below is a "column element" -->
-    //       <xul:treecell>
-    //       ...
-    //
-    nsresult rv;
-
-    // "element" must be xul:treecell
-    nsCOMPtr<nsIAtom> elementTag;
-    if (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(elementTag))))
-        return PR_FALSE;
-
-    if (elementTag != kTreeCellAtom)
-        return PR_FALSE;
-
-    // "parent" must be the column set element.
-    nsCOMPtr<nsIContent> parent;
-    if (NS_FAILED(rv = aElement->GetParent(*getter_AddRefs(parent))))
-        return PR_FALSE;
-
-    return IsColumnSetElement(parent);
 }
 
 

@@ -582,7 +582,7 @@ RDFXULBuilderImpl::AppendChild(nsIContent* aElement,
                                                       (void**) getter_AddRefs(literal)))) {
         // If it's a literal, then add it as a simple text node.
 
-        if (NS_FAILED(rv = rdf_AttachTextNode(aElement, literal))) {
+        if (NS_FAILED(rv = nsRDFContentUtils::AttachTextNode(aElement, literal))) {
             NS_ERROR("unable to add text to content model");
             return rv;
         }

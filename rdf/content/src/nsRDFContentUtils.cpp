@@ -18,6 +18,13 @@
  */
 
 
+/*
+
+  A package of routines shared by the RDF content code.
+
+ */
+
+
 #include "nsIContent.h"
 #include "nsIRDFNode.h"
 #include "nsITextContent.h"
@@ -35,7 +42,7 @@ static NS_DEFINE_CID(kTextNodeCID,     NS_TEXTNODE_CID);
 
 
 nsresult
-rdf_AttachTextNode(nsIContent* parent, nsIRDFNode* value)
+nsRDFContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
 {
     nsresult rv;
     nsAutoString s;

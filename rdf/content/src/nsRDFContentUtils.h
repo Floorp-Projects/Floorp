@@ -19,7 +19,7 @@
 
 /*
 
-  Utility routines used throughout the content model library.
+  A package of routines shared by the RDF content code.
 
  */
 
@@ -33,13 +33,14 @@ class nsIDOMNodeList;
 class nsIRDFNode;
 class nsString;
 
-nsresult
-rdf_GetQuotedAttributeValue(const nsString& aSource, 
-                            const nsString& aAttribute,
-                            nsString& aValue);
 
-nsresult
-rdf_AttachTextNode(nsIContent* parent, nsIRDFNode* value);
+class nsRDFContentUtils
+{
+public:
+
+    static nsresult
+    AttachTextNode(nsIContent* parent, nsIRDFNode* value);
+};
 
 // In nsRDFDOMNodeList.cpp
 extern nsresult
