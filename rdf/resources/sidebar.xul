@@ -55,9 +55,29 @@ function doSort(sortColName)
         return(false);
 }
 
+
+function OpenURL(event,node)
+  {
+    if (node.getAttribute('type') !=
+        "http://home.netscape.com/NC-rdf#Bookmark") {
+      return false;
+    }
+    url = node.getAttribute('id');
+
+    // Ignore "NC:" urls.
+    if (url.substring(0, 3) == "NC:") {
+      return false;
+    }
+     
+	dump(url);
+    parent.frames[1].location.href = url;
+	RefreshUrlbar();
+
+    return true;
+  }
 </html:script>
 
-<xul:tree datasources="rdf:find rdf:files rdf:ftp rdf:bookmarks rdf:history">
+<xul:tree datasources="rdf:find rdf:files rdf:ftp rdf:bookmarks rdf:history"  onclick="return OpenURL(event,event.target.parentNode);">
   <xul:treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <xul:treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <xul:treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
