@@ -74,6 +74,7 @@ typedef enum {
    kCharsetFromParentFrame,
    kCharsetFromAutoDetection,
    kCharsetFromMetaTag,
+   kCharsetFromByteOrderMark,
    kCharsetFromHTTPHeader,
    kCharsetFromUserForced,
    kCharsetFromOtherComponent,

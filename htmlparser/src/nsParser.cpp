@@ -1172,6 +1172,7 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
         // FE FF
         // UTF-16, big-endian 
         oCharset = UCS2_BE; // should change to UTF-16BE
+        oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
    case 0xFF:
@@ -1179,6 +1180,7 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
         // FF FE
         // UTF-16, little-endian 
         oCharset = UCS2_LE; // should change to UTF-16LE
+        oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
    // case 0x4C: if((0x6F==aBytes[1]) && ((0xA7==aBytes[2] && (0x94==aBytes[3])) {
