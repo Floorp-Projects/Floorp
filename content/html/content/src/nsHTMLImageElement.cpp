@@ -136,14 +136,10 @@ public:
                      const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
                      PRBool aNotify);
-
+  
   // XXXbz What about UnsetAttr?  We don't seem to unload images when
   // that happens...
-
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                         PRBool aCompileEventHandlers);  
-  NS_IMETHOD SetParent(nsIContent* aParent);  
-
+  
 protected:
   void GetImageFrame(nsIImageFrame** aImageFrame);
   nsresult GetXY(PRInt32* aX, PRInt32* aY);
@@ -618,13 +614,9 @@ NS_IMETHODIMP
 nsHTMLImageElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             const nsAString& aValue, PRBool aNotify)
 {
-  // If we plan to call ImageURIChanged, we want to do it first so that the
-  // image load kicks off _before_ the reflow triggered by the SetAttr.  But if
-  // aNotify is false, we are coming from the parser or some such place; we'll
-  // get our parent set after all the attributes have been set, so we'll do the
-  // image load from SetParent.  Skip the ImageURIChanged call in that case.
-  if (aNotify &&
-      aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::src) {
+  // Call ImageURIChanged first so that the image load kicks off
+  // _before_ the reflow triggered by the SetAttr
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsHTMLAtoms::src) {
     ImageURIChanged(aValue);
   }
     
@@ -637,40 +629,6 @@ nsHTMLImageElement::SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
                             PRBool aNotify)
 {
   return nsGenericHTMLLeafElement::SetAttr(aNodeInfo, aValue, aNotify);
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                                PRBool aCompileEventHandlers)
-{
-  nsresult rv = nsGenericHTMLLeafElement::SetDocument(aDocument, aDeep,
-                                                      aCompileEventHandlers);
-  if (aDocument && mParent) {
-    // Our base URI may have changed; claim that our URI changed, and the
-    // nsImageLoadingContent will decide whether a new image load is warranted.
-    nsAutoString uri;
-    nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
-    if (result == NS_CONTENT_ATTR_HAS_VALUE) {
-      ImageURIChanged(uri);
-    }
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLImageElement::SetParent(nsIContent* aParent)
-{
-  nsresult rv = nsGenericHTMLLeafElement::SetParent(aParent);
-  if (aParent && mDocument) {
-    // Our base URI may have changed; claim that our URI changed, and the
-    // nsImageLoadingContent will decide whether a new image load is warranted.
-    nsAutoString uri;
-    nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
-    if (result == NS_CONTENT_ATTR_HAS_VALUE) {
-      ImageURIChanged(uri);
-    }
-  }
-  return rv;
 }
 
 NS_IMETHODIMP
