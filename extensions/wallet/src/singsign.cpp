@@ -2534,7 +2534,7 @@ SINGSIGN_PromptUsernameAndPassword
   /* get new username/password from user */
   *user = username.ToNewUnicode();
   *pwd = password.ToNewUnicode();
-  PRBool checked = PR_TRUE;
+  PRBool checked = PR_FALSE;
   res = si_CheckGetUsernamePassword(user, pwd, text, &checked);
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
@@ -2616,7 +2616,7 @@ SINGSIGN_PromptPassword
 
   /* no password found, get new password from user */
   *pwd = password.ToNewUnicode();
-  PRBool checked = PR_TRUE;
+  PRBool checked = PR_FALSE;
   res = si_CheckGetPassword(pwd, text, &checked);
   if (NS_FAILED(res)) {
     /* user pressed Cancel */
