@@ -68,8 +68,8 @@ function PutDescription() {
                padding: 2px">
     <font color="#990000">
       <b>
-        Note: This is a tool for reporting bugs
-        with the Mozilla web browser from mozilla.org. Use Netscape's
+        Note: This is a tool for reporting bugs in software from mozilla.org. 
+        Use Netscape's
         <a href="http://help.netscape.com/forms/bug-client.html">bug reporting
         form</a> to report bugs with Netscape products like Navigator 4.x. 
         Netscape products have a blue and black N in the top right hand
@@ -91,8 +91,8 @@ function PutDescription() {
          Netscape [% matches.0 %] Feedback Center.</a>
       </b>
     </font>
-    This form is only for reporting bugs in the Mozilla
-    web browser from mozilla.org. To report a bug you find in 
+    This form is only for reporting bugs in the Mozilla web browser and other
+    products from mozilla.org. To report a bug you find in 
     Netscape [% matches.0 %] with this form, 
     you must reproduce it first in a 
     <a href="http://ftp.mozilla.org/pub/mozilla/nightly/latest/">
@@ -104,12 +104,12 @@ function PutDescription() {
 <p>
   This form prompts you for the information required to
   file a good bug report (or enhancement request.)
-  It may seem lengthy, but Mozilla developers need all this information 
+  It may seem lengthy, but developers need all this information 
   to understand and reproduce the bug, which is the first step towards 
   fixing it. Please note that <strong>we do not accept bug reports by 
   email</strong> - please do not email developers or mozilla.org staff 
   with bug reports. <font color="red">Also, please do not
-  file bugs on copies of Mozilla older than two weeks.</font>
+  file Mozilla bugs on copies of Mozilla older than two weeks.</font>
 </p>
 
 <a name="step1"></a> 
@@ -292,7 +292,8 @@ function PutDescription() {
     </td>
     <td valign="top">
       <p>
-        This is the line beginning <tt>"Mozilla/5.0"</tt> in 
+        If reporting a bug in Mozilla, 
+        this is the line beginning <tt>"Mozilla/5.0"</tt> in 
         <tt>Help | About Mozilla</tt>. 
         It identifies exactly the version of Mozilla you were using.
         If you are using the problem copy of Mozilla, this will be
@@ -432,7 +433,7 @@ function PutDescription() {
     </td>
     <td valign="top">
       <p>
-        What should Mozilla have done instead?
+        What should the software have done instead?
       </p>
       <textarea rows="4" cols="80" name="expected_results" 
                 wrap="hard"></textarea>
@@ -456,7 +457,7 @@ function PutDescription() {
         <br>
         <br>
         If you are reporting a crash, note the module in
-        which Mozilla crashed (e.g., <tt>Application Violation in
+        which the software crashed (e.g., <tt>Application Violation in
         gkhtml.dll</tt>). On Macintosh, if you
         have MacsBug, attach the results of the <b><tt>how</tt></b> and
         <b><tt>sc</tt></b> commands.
@@ -477,10 +478,11 @@ function PutDescription() {
       </p>
       <select name="bug_severity">
         <option name="blocker" value="blocker">
-          Blocker: This bug prevents you from testing or developing Mozilla.
+          Blocker: This bug prevents you from testing or developing the 
+          software.
         </option>
         <option name="critical" value="critical">
-          Critical: Mozilla crashes, hangs, or causes you to 
+          Critical: The software crashes, hangs, or causes you to 
           lose data.
         </option>
         <option name="major" value="major">
