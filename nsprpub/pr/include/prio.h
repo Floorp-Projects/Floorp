@@ -277,8 +277,7 @@ typedef enum PRDescType
     PR_DESC_FILE = 1,
     PR_DESC_SOCKET_TCP = 2,
     PR_DESC_SOCKET_UDP = 3,
-    PR_DESC_LAYERED = 4,
-    PR_DESC_SOCKET_POLL = 5
+    PR_DESC_LAYERED = 4
 } PRDescType;
 
 typedef enum PRSeekWhence {
@@ -1078,44 +1077,6 @@ PR_EXTERN(PRFileDesc*)    PR_NewUDPSocket(void);
  */
 
 PR_EXTERN(PRFileDesc*)    PR_NewTCPSocket(void);
-
-/*
- *************************************************************************
- * FUNCTION: PR_CreateSocketPollFd
- * DESCRIPTION:
- *     Create a PRFileDesc wrapper for a native socket handle, for use with
- *	   PR_Poll only
- * INPUTS:
- *     None
- * OUTPUTS:
- *     None
- * RETURN: PRFileDesc*
- *     Upon successful completion, PR_CreateSocketPollFd returns a pointer
- *     to the PRFileDesc created for the native socket handle
- *     Returns a NULL pointer if the create of a new PRFileDesc failed
- *
- **************************************************************************
- */
-
-PR_EXTERN(PRFileDesc*)	PR_CreateSocketPollFd(PRInt32 osfd);
-
-/*
- *************************************************************************
- * FUNCTION: PR_DestroySocketPollFd
- * DESCRIPTION:
- *     Destroy the PRFileDesc wrapper created by PR_CreateSocketPollFd
- * INPUTS:
- *     None
- * OUTPUTS:
- *     None
- * RETURN: PRFileDesc*
- *     Upon successful completion, PR_DestroySocketPollFd returns
- *	   PR_SUCCESS, else PR_FAILURE
- *
- **************************************************************************
- */
-
-PR_EXTERN(PRStatus) PR_DestroySocketPollFd(PRFileDesc *fd);
 
 /*
  *************************************************************************
