@@ -74,7 +74,7 @@ interface nsIDirectoryServiceProvider: nsISupports
  * An extension of nsIDirectoryServiceProvider which allows
  * multiple files to be returned for the given key.
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 
 [scriptable, uuid(2f977d4b-5485-11d4-87e2-0010a4e75ef2)]
