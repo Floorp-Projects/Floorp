@@ -853,7 +853,7 @@ morkBuilder::OnValue(morkEnv* ev, const morkSpan& inSpan,
     yarn.mYarn_More = 0;
     yarn.mYarn_Form = mBuilder_CellForm;
     yarn.mYarn_Grow = 0;
-    morkAtom* atom = store->YarnToAtom(ev, &yarn);
+    morkAtom* atom = store->YarnToAtom(ev, &yarn, PR_TRUE /* create */);
     cell->SetAtom(ev, atom, store->StorePool());
   }
   else if ( mParser_InMeta )
