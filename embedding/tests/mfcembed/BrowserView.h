@@ -95,6 +95,13 @@ public:
 	inline void ClearFindDialog() { m_pFindDlg = NULL; }
 	CFindDialog* m_pFindDlg;
 
+    // When set to TRUE...
+    // indicates that the clipboard operation needs to be 
+    // performed on the UrlBar rather than on
+    // the web page content
+    //
+    BOOL m_bUrlBarClipOp;
+
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CBrowserView)
@@ -128,6 +135,7 @@ protected:
 	afx_msg void OnCut();
 	afx_msg void OnCopy();
 	afx_msg void OnPaste();
+    afx_msg void OnUndoUrlBarEditOp();
 	afx_msg void OnSelectAll();
 	afx_msg void OnSelectNone();
 	afx_msg void OnCopyLinkLocation();
