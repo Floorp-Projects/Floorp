@@ -78,12 +78,22 @@ include ../platrules.mk
 # compliant).  So we accept both ytab.{c,h} and y.tab.{c,h} here.
 #
 
-installparse.c:  installparse.y
+ifeq ($(OS_ARCH), WINNT)
+installparse.c:  installparse.y FORCE
 	yacc -d installparse.y
-	if test -f ytab.c ; then \
+	if test -f ytab.c; then \
 		mv ytab.c installparse.c; \
 		mv ytab.h installparse.h; \
 	else \
 		mv y.tab.c installparse.c; \
 		mv y.tab.h installparse.h; \
 	fi
+
+FORCE:
+
+else
+installparse.c:  installparse.y
+	yacc -d installparse.y
+	mv y.tab.c installparse.c
+	mv y.tab.h installparse.h
+endif
