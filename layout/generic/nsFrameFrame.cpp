@@ -94,6 +94,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIFrameFrame.h"
 #include "nsAutoPtr.h"
+#include "nsCSSAnonBoxes.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -409,9 +410,9 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     mFrames.SetFrames(firstChild);
     // Resolve the style context for the inner frame
     nsresult rv = NS_OK;
-    nsRefPtr<nsStyleContext> innerStyleContext;
-    innerStyleContext = aPresContext->ResolveStyleContextFor(mContent,
-                                                             mStyleContext);
+    nsRefPtr<nsStyleContext> innerStyleContext
+      = aPresContext->ResolvePseudoStyleContextFor(aContent,
+        nsCSSAnonBoxes::mozAnonymousBlock, mStyleContext);
     rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);
     if (NS_FAILED(rv)){
       NS_WARNING( "Error initializing InnerFrame in nsHTMLFrameOuterFrame");
