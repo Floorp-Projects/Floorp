@@ -39,6 +39,7 @@ class nsIReflowCommand;
 class nsAutoString;
 class nsString;
 class nsIFocusTracker; 
+class nsStyleChangeList;
 
 struct nsPoint;
 struct nsRect;
@@ -304,9 +305,19 @@ public:
    * re-resolution.
    * This is also used when style context parentage has to change for 
    * reflow purposes. 
+   * When used for reflow, changelist and return change may be nsnull
+   * aLocalChange is provided only for subclasses that override this
+   * method to capture local change information
+   *
+   * When local style context changes, call CaptureStyleChageFor
+   * to capture change data into change list. Pass local change
+   * to children as parent change
    */
   NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
-                                    nsIStyleContext* aParentContext) = 0;
+                                    nsIStyleContext* aParentContext,
+                                    PRInt32 aParentChange,
+                                    nsStyleChangeList* aChangeList,
+                                    PRInt32* aLocalChange) = 0;
 
   /**
    * Accessor functions for geometric parent
