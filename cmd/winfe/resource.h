@@ -2035,6 +2035,7 @@
 #define ID_ENDER                        3000
 #define IDS_EDIT_FLOAT_TOOLBAR          3001
 #define IDB_EDIT_FLOAT_TOOLBAR          3002
+#define IDC_SHOW_DESKTOP_PREFS          3003
 /*Mail and News has reserved resource ID's 10,0000 to 15,000. */
 #define FIRST_HISTORY_MENU_ID           16384
 #define LAST_HISTORY_MENU_ID            16600
