@@ -30,7 +30,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIParser.h"
-
+#include "nsContentList.h"
 
 #include "nsCSSPropIDs.h"
 #include "nsCSSProps.h"
@@ -143,7 +143,8 @@ nsDocument::nsDocument()
   mScriptContextOwner = nsnull;
   mListenerManager = nsnull;
   mParser = nsnull;
- 
+  mInDestructor = PR_FALSE;
+
   if (NS_OK != NS_NewSelection(&mSelection)) {
     printf("*************** Error: nsDocument::nsDocument - Creation of Selection failed!\n");
   }
@@ -153,6 +154,18 @@ nsDocument::nsDocument()
 
 nsDocument::~nsDocument()
 {
+  // XXX Inform any remaining observers that we are going away.
+  // Note that this currently contradicts the rule that all
+  // observers must hold on to live references to the document.
+  // This notification will occur only after the reference has
+  // been dropped.
+  mInDestructor = PR_TRUE;
+  PRInt32 index, count = mObservers.Count();
+  for (index = 0; index < count; index++) {
+    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+    observer->DocumentWillBeDestroyed(this);
+  }
+
   if (nsnull != mDocumentTitle) {
     delete mDocumentTitle;
     mDocumentTitle = nsnull;
@@ -162,7 +175,7 @@ nsDocument::~nsDocument()
   mParentDocument = nsnull;
 
   // Delete references to sub-documents
-  PRInt32 index = mSubDocuments.Count();
+  index = mSubDocuments.Count();
   while (--index >= 0) {
     nsIDocument* subdoc = (nsIDocument*) mSubDocuments.ElementAt(index);
     NS_RELEASE(subdoc);
@@ -399,7 +412,7 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
   count = mObservers.Count();
   for (index = 0; index < count; index++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
-    observer->StyleSheetAdded(aSheet);
+    observer->StyleSheetAdded(this, aSheet);
   }
 }
 
@@ -453,7 +466,14 @@ void nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 
 PRBool nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
 {
-  return mObservers.RemoveElement(aObserver);
+  // If we're in the process of destroying the document (and we're
+  // informing the observers of the destruction), don't remove the
+  // observers from the list. This is not a big deal, since we
+  // don't hold a live reference to the observers.
+  if (!mInDestructor)
+    return mObservers.RemoveElement(aObserver);
+  else
+    return (mObservers.IndexOf(aObserver) != -1);
 }
 
 NS_IMETHODIMP
@@ -462,7 +482,7 @@ nsDocument::BeginLoad()
   PRInt32 i, count = mObservers.Count();
   for (i = 0; i < count; i++) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
-    observer->BeginLoad();
+    observer->BeginLoad(this);
   }
   return NS_OK;
 }
@@ -473,7 +493,7 @@ nsDocument::EndLoad()
   PRInt32 i, count = mObservers.Count();
   for (i = 0; i < count; i++) {
     nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
-    observer->EndLoad();
+    observer->EndLoad(this);
   }
   return NS_OK;
 }
@@ -484,7 +504,7 @@ void nsDocument::ContentChanged(nsIContent* aContent,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentChanged(aContent, aSubContent);
+    observer->ContentChanged(this, aContent, aSubContent);
   }
 }
 
@@ -493,7 +513,7 @@ void nsDocument::ContentAppended(nsIContent* aContainer)
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentAppended(aContainer);
+    observer->ContentAppended(this, aContainer);
   }
 }
 
@@ -504,7 +524,7 @@ void nsDocument::ContentInserted(nsIContent* aContainer,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentInserted(aContainer, aChild, aIndexInContainer);
+    observer->ContentInserted(this, aContainer, aChild, aIndexInContainer);
   }
 }
 
@@ -516,7 +536,7 @@ void nsDocument::ContentReplaced(nsIContent* aContainer,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentReplaced(aContainer, aOldChild, aNewChild,
+    observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                               aIndexInContainer);
   }
 }
@@ -528,7 +548,8 @@ void nsDocument::ContentWillBeRemoved(nsIContent* aContainer,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentWillBeRemoved(aContainer, aChild, aIndexInContainer);
+    observer->ContentWillBeRemoved(this, aContainer, 
+                                   aChild, aIndexInContainer);
   }
 }
 
@@ -539,7 +560,8 @@ void nsDocument::ContentHasBeenRemoved(nsIContent* aContainer,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentHasBeenRemoved(aContainer, aChild, aIndexInContainer);
+    observer->ContentHasBeenRemoved(this, aContainer, 
+                                    aChild, aIndexInContainer);
   }
 }
 
@@ -679,8 +701,14 @@ NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsString& aTagname, 
                                  nsIDOMNodeList** aReturn)
 {
-  //XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsContentList* list = new nsContentList(this, aTagname);
+  if (nsnull == list) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aReturn = (nsIDOMNodeList *)list;
+  NS_ADDREF(list);
+
+  return NS_OK;
 }
 
 //
@@ -991,7 +1019,6 @@ void nsDocument::GetSelectionText(nsString & aText) {
   PRBool inRange = PR_FALSE;
   TraverseTree(aText, mRootContent, startPnt->GetContent(), endPnt->GetContent(), inRange);
 }
-
 
 
 void nsDocument::BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)

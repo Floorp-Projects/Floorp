@@ -23,6 +23,7 @@ class nsIContent;
 class nsIPresShell;
 class nsIStyleSheet;
 class nsString;
+class nsIDocument;
 
 #define NS_IDOCUMENT_OBSERVER_IID \
 { 0xb3f92460, 0x944c, 0x11d1, {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -34,37 +35,37 @@ public:
    * Notify that a content model update is beginning. This call can be
    * nested.
    */
-  NS_IMETHOD BeginUpdate() = 0;
+  NS_IMETHOD BeginUpdate(nsIDocument *aDocument) = 0;
 
   /**
    * Notify that a content model update is finished. This call can be
    * nested.
    */
-  NS_IMETHOD EndUpdate() = 0;
+  NS_IMETHOD EndUpdate(nsIDocument *aDocument) = 0;
 
   /**
    * Notify the observer that a document load is beginning.
    */
-  NS_IMETHOD BeginLoad() = 0;
+  NS_IMETHOD BeginLoad(nsIDocument *aDocument) = 0;
 
   /**
    * Notify the observer that a document load has finished. Note that
    * the associated reflow of the document will be done <b>before</b>
    * EndLoad is invoked, not after.
    */
-  NS_IMETHOD EndLoad() = 0;
+  NS_IMETHOD EndLoad(nsIDocument *aDocument) = 0;
 
   /**
    * Notify the observer that the document is being reflowed in
    * the given presentation shell.
    */
-  NS_IMETHOD BeginReflow(nsIPresShell* aShell) = 0;
+  NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell) = 0;
 
   /**
    * Notify the observer that the document is done being reflowed in
    * the given presentation shell.
    */
-  NS_IMETHOD EndReflow(nsIPresShell* aShell) = 0;
+  NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell) = 0;
 
   /**
    * Notification that the content model has changed. This method is
@@ -78,11 +79,13 @@ public:
    * added/removed from the document (the other notifications are used
    * for that).
    *
+   * @param aDocument The document being observed
    * @param aContent the piece of content that changed
    * @param aSubContent subrange information about the piece of content
    *  that changed
    */
-  NS_IMETHOD ContentChanged(nsIContent* aContent,
+  NS_IMETHOD ContentChanged(nsIDocument *aDocument,
+                            nsIContent* aContent,
                             nsISupports* aSubContent) = 0;
 
   /**
@@ -93,9 +96,11 @@ public:
    * method directly). The notification is passed on to all of the
    * document observers.
    *
+   * @param aDocument The document being observed
    * @param aContainer the container that had a new child appended
    */
-  NS_IMETHOD ContentAppended(nsIContent* aContainer) = 0;
+  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
+                             nsIContent* aContainer) = 0;
 
   /**
    * Notification that content has been inserted. This method is called
@@ -104,11 +109,13 @@ public:
    * need to invoke this method directly). The notification is passed on
    * to all of the document observers.
    *
+   * @param aDocument The document being observed
    * @param aContainer the container that now contains aChild
    * @param aChild the child that was inserted
    * @param aIndexInContainer the index of the child in the container
    */
-  NS_IMETHOD ContentInserted(nsIContent* aContainer,
+  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
+                             nsIContent* aContainer,
                              nsIContent* aChild,
                              PRInt32 aIndexInContainer) = 0;
 
@@ -119,13 +126,15 @@ public:
    * invoke this method directly). The notification is passed on to all
    * of the document observers.
    *
+   * @param aDocument The document being observed
    * @param aContainer the container that now contains aChild
    * @param aOldChild the child that was replaced
    * @param aNewChild the child that replaced aOldChild
    * @param aIndexInContainer the index of the old and new child in the
    *  container
    */
-  NS_IMETHOD ContentReplaced(nsIContent* aContainer,
+  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
+                             nsIContent* aContainer,
                              nsIContent* aOldChild,
                              nsIContent* aNewChild,
                              PRInt32 aIndexInContainer) = 0;
@@ -137,11 +146,13 @@ public:
    * there is normally no need to invoke this method directly). The
    * notification is passed on to all of the document observers.
    *
+   * @param aDocument The document being observed
    * @param aContainer the container that contains aChild
    * @param aChild the child that will be removed
    * @param aIndexInContainer the index of the child in the container
    */
-  NS_IMETHOD ContentWillBeRemoved(nsIContent* aContainer,
+  NS_IMETHOD ContentWillBeRemoved(nsIDocument *aDocument,
+                                  nsIContent* aContainer,
                                   nsIContent* aChild,
                                   PRInt32 aIndexInContainer) = 0;
 
@@ -152,12 +163,14 @@ public:
    * invoke this method directly). The notification is passed on to all
    * of the document observers.
    *
+   * @param aDocument The document being observed
    * @param aContainer the container that had a child removed
    * @param aChild the child that was just removed
    * @param aIndexInContainer the index of the child in the container
    *  before it was removed
    */
-  NS_IMETHOD ContentHasBeenRemoved(nsIContent* aContainer,
+  NS_IMETHOD ContentHasBeenRemoved(nsIDocument *aDocument,
+                                   nsIContent* aContainer,
                                    nsIContent* aChild,
                                    PRInt32 aIndexInContainer) = 0;
 
@@ -167,9 +180,20 @@ public:
    * to the document. The notification is passed on to all of the 
    * document observers.
    *
+   * @param aDocument The document being observed
    * @param aStyleSheet the StyleSheet that has been added
    */
-  NS_IMETHOD StyleSheetAdded(nsIStyleSheet* aStyleSheet) = 0;
+  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
+                             nsIStyleSheet* aStyleSheet) = 0;
+
+  /**
+   * The document is in the process of being destroyed.
+   * This method is called automatically during document
+   * destruction.
+   * 
+   * @param aDocument The document being observed
+   */
+  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) = 0;
 };
 
 #endif /* nsIDocumentObserver_h___ */

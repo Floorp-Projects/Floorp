@@ -37,7 +37,8 @@
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 #include "CNavDTD.h"
-
+#include "nsIScriptGlobalObject.h"
+#include "nsContentList.h"
 
 //#define rickgdebug 1
 #ifdef rickgdebug
@@ -49,6 +50,7 @@ static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 
 NS_LAYOUT nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult)
@@ -61,11 +63,21 @@ nsHTMLDocument::nsHTMLDocument()
   : nsMarkupDocument(),
     mAttrStyleSheet(nsnull)
 {
+  mImages = nsnull;
+  mApplets = nsnull;
+  mEmbeds = nsnull;
+  mLinks = nsnull;
+  mAnchors = nsnull;
   nsHTMLAtoms::AddrefAtoms();
 }
 
 nsHTMLDocument::~nsHTMLDocument()
 {
+  NS_IF_RELEASE(mImages);
+  NS_IF_RELEASE(mApplets);
+  NS_IF_RELEASE(mEmbeds);
+  NS_IF_RELEASE(mLinks);
+  NS_IF_RELEASE(mAnchors);
   NS_IF_RELEASE(mAttrStyleSheet);
   nsHTMLAtoms::ReleaseAtoms();
 }
@@ -79,12 +91,26 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
   }
   if (aIID.Equals(kIHTMLDocumentIID)) {
     AddRef();
-    *aInstancePtr = (void**) &mIHTMLDocument;
+    *aInstancePtr = (void**) (nsIHTMLDocument *)this;
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMHTMLDocumentIID)) {
+    AddRef();
+    *aInstancePtr = (void**) (nsIDOMHTMLDocument *)this;
     return NS_OK;
   }
   return nsDocument::QueryInterface(aIID, aInstancePtr);
 }
 
+nsrefcnt nsHTMLDocument::AddRef()
+{
+  return nsDocument::AddRef();
+}
+
+nsrefcnt nsHTMLDocument::Release()
+{
+  return nsDocument::Release();
+}
 
 NS_IMETHODIMP
 nsHTMLDocument::StartDocumentLoad(nsIURL *aURL, 
@@ -244,6 +270,9 @@ void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet
   }
 }
 
+//
+// nsIDOMDocument interface implementation
+//
 NS_IMETHODIMP    
 nsHTMLDocument::CreateElement(const nsString& aTagName, 
                               nsIDOMNamedNodeMap* aAttributes, 
@@ -271,42 +300,270 @@ nsHTMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aTextNode)
   return rv;
 }
 
-//----------------------------------------------------------------------
-
-// Aggregation class to give nsHTMLDocument the nsIHTMLDocument interface
-
-#define GET_OUTER() \
- ((nsHTMLDocument*) ((char*)this - nsHTMLDocument::GetOuterOffset()))
-
-nsHTMLDocument::AggIHTMLDocument::AggIHTMLDocument() {
-  NS_INIT_REFCNT();
-}
-
-nsHTMLDocument::AggIHTMLDocument::~AggIHTMLDocument() { }
-
-NS_IMETHODIMP_(nsrefcnt) nsHTMLDocument::AggIHTMLDocument::AddRef() {
-  return GET_OUTER()->AddRef();
-}
-
-NS_IMETHODIMP_(nsrefcnt) nsHTMLDocument::AggIHTMLDocument::Release() {
-  return GET_OUTER()->Release();
-}
-
-NS_IMETHODIMP nsHTMLDocument::AggIHTMLDocument::QueryInterface(REFNSIID aIID,
-                                                               void** aInstancePtr)
+NS_IMETHODIMP    
+nsHTMLDocument::GetDocumentType(nsIDOMDocumentType** aDocumentType)
 {
-  return GET_OUTER()->QueryInterface(aIID, aInstancePtr);
+  // There's no document type for a HTML document
+  *aDocumentType = nsnull;
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLDocument::AggIHTMLDocument::SetTitle(const nsString& aTitle) {
-  return GET_OUTER()->SetTitle(aTitle);
+//
+// nsIDOMHTMLDocument interface implementation
+//
+NS_IMETHODIMP
+nsHTMLDocument::GetTitle(nsString& aTitle)
+{
+  if (nsnull != mDocumentTitle) {
+    aTitle.SetString(*mDocumentTitle);
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLDocument::AggIHTMLDocument::AddImageMap(nsIImageMap* aMap) {
-  return GET_OUTER()->AddImageMap(aMap);
+NS_IMETHODIMP    
+nsHTMLDocument::GetReferrer(nsString& aReferrer)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLDocument::AggIHTMLDocument::GetImageMap(const nsString& aMapName,
-                                            nsIImageMap** aResult) {
-  return GET_OUTER()->GetImageMap(aMapName, aResult);
+NS_IMETHODIMP    
+nsHTMLDocument::GetFileSize(nsString& aFileSize)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetFileCreatedDate(nsString& aFileCreatedDate)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetFileModifiedDate(nsString& aFileModifiedDate)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetFileUpdatedDate(nsString& aFileUpdatedDate)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetDomain(nsString& aDomain)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetURL(nsString& aURL)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetImages(nsIDOMHTMLCollection** aImages)
+{
+  if (nsnull == mImages) {
+    mImages = new nsContentList(this, "IMG");
+    if (nsnull == mImages) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mImages);
+  }
+
+  *aImages = (nsIDOMHTMLCollection *)mImages;
+  NS_ADDREF(mImages);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
+{
+  if (nsnull == mApplets) {
+    mApplets = new nsContentList(this, "APPLET");
+    if (nsnull == mApplets) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mApplets);
+  }
+
+  *aApplets = (nsIDOMHTMLCollection *)mImages;
+  NS_ADDREF(mImages);
+
+  return NS_OK;
+}
+
+PRBool
+nsHTMLDocument::MatchLinks(nsIContent *aContent)
+{
+  nsIAtom *name = aContent->GetTag();
+  static nsAutoString area("AREA"), anchor("A");
+  nsAutoString attr;
+  PRBool result = PR_FALSE;
+  
+  if ((nsnull != name) && 
+      (area.EqualsIgnoreCase(name) || anchor.EqualsIgnoreCase(name)) &&
+      (eContentAttr_HasValue == aContent->GetAttribute("HREF", attr))) {
+      result = PR_TRUE;
+  }
+
+  NS_IF_RELEASE(name);
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
+{
+  if (nsnull == mLinks) {
+    mLinks = new nsContentList(this, MatchLinks);
+    if (nsnull == mLinks) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mLinks);
+  }
+
+  *aLinks = (nsIDOMHTMLCollection *)mLinks;
+  NS_ADDREF(mLinks);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PRBool
+nsHTMLDocument::MatchAnchors(nsIContent *aContent)
+{
+  nsIAtom *name = aContent->GetTag();
+  static nsAutoString anchor("A");
+  nsAutoString attr;
+  PRBool result = PR_FALSE;
+  
+  if ((nsnull != name) && 
+      anchor.EqualsIgnoreCase(name) &&
+      (eContentAttr_HasValue == aContent->GetAttribute("NAME", attr))) {
+      result = PR_TRUE;
+  }
+
+  NS_IF_RELEASE(name);
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
+{
+  if (nsnull == mAnchors) {
+    mAnchors = new nsContentList(this, MatchAnchors);
+    if (nsnull == mAnchors) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mAnchors);
+  }
+
+  *aAnchors = (nsIDOMHTMLCollection *)mAnchors;
+  NS_ADDREF(mAnchors);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetCookie(nsString& aCookie)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::SetCookie(const nsString& aCookie)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::Close()
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::Write(JSContext *cx, jsval *argv, PRUint32 argc)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::Writeln(JSContext *cx, jsval *argv, PRUint32 argc)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetElementById(const nsString& aElementId, nsIDOMElement** aReturn)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn)
+{
+  //XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  nsIScriptGlobalObject *global = aContext->GetGlobalObject();
+
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptHTMLDocument(aContext, this, (nsISupports *)global, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+
+  NS_RELEASE(global);
+  return res;
+}
+

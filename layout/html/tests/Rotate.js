@@ -19,7 +19,7 @@
 var body = document.documentElement.childNodes[1];
 var para = body.childNodes[1];
 var img1 = para.childNodes[5];
-var tbody = body.childNodes[2].childNodes[1];
+var tbody = document.getElementsByTagName("TBODY")[0];
 var tparent = tbody.childNodes[0].childNodes[0];
 var img2 = tparent.childNodes[0].childNodes[0];
 

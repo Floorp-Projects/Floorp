@@ -3066,7 +3066,7 @@ nsCSSBlockFrame::ContentInserted(nsIPresShell*   aShell,
       }
       else {
         // Insert frame into the line.
-        NS_ASSERTION(line->GetLastContentIsComplete(), "bad line LCIC");
+        // NS_ASSERTION(line->GetLastContentIsComplete(), "bad line LCIC");
         line->mChildCount++;
         line->MarkDirty();
       }

@@ -22,6 +22,7 @@ DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =				\
 	nsContainerFrame.cpp		\
+	nsContentList.cpp		\
 	nsDocument.cpp			\
 	nsFrame.cpp			\
 	nsFrameImageLoader.cpp		\
@@ -46,6 +47,7 @@ EXPORTS=nsSelectionRange.h nsSelectionPoint.h
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsContainerFrame.obj	\
+	.\$(OBJDIR)\nsContentList.obj 	 	\
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsFrame.obj			\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
