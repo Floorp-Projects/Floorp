@@ -616,7 +616,7 @@ nsInstall::DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName
 }
 
 PRInt32    
-nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt32* aReturn)
+nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRUint32* aReturn)
 {
     nsFileSpec fsFolder(aFolder);
 

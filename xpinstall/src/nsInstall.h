@@ -180,7 +180,7 @@ class nsInstall
         
         PRInt32    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);
         PRInt32    DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
-        PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRInt32* aReturn);
+        PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRUint32* aReturn);
         PRInt32    Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* aReturn);
         PRInt32    Execute(const nsString& aJarSource, PRInt32* aReturn);
         PRInt32    FinalizeInstall(PRInt32* aReturn);
