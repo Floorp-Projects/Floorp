@@ -1662,8 +1662,7 @@ pk11_deleteTokenKeyByHandle(PK11Slot *slot, CK_OBJECT_HANDLE handle)
    SECItem *item;
    PRBool rem;
 
-   item = (SECItem *)PL_HashTableLookupConst(slot->tokenHashTable,
-							(void *)handle);
+   item = (SECItem *)PL_HashTableLookup(slot->tokenHashTable, (void *)handle);
    if (item) {
 	SECITEM_FreeItem(item,PR_TRUE);
    }
@@ -1692,8 +1691,7 @@ pk11_addTokenKeyByHandle(PK11Slot *slot, CK_OBJECT_HANDLE handle, SECItem *key)
 static SECItem *
 pk11_lookupTokenKeyByHandle(PK11Slot *slot, CK_OBJECT_HANDLE handle)
 {
-    return (SECItem *)PL_HashTableLookupConst(slot->tokenHashTable,
-							(void *)handle);
+    return (SECItem *)PL_HashTableLookup(slot->tokenHashTable, (void *)handle);
 }
 
 /*
@@ -1762,6 +1760,39 @@ pk11_PutObjectToList(PK11SessionObject *object) {
     PK11_USE_THREADS(PZ_DestroyLock(object->obj.refLock);)
     object->attributeLock = object->obj.refLock = NULL;
     PORT_Free(object);
+}
+
+static PK11Object *
+pk11_freeObjectData(PK11Object *object) {
+   PK11Object *next = object->next;
+
+   PORT_Free(object);
+   return next;
+}
+   
+void
+pk11_CleanupFreeLists()
+{
+#ifdef MAX_OBJECT_LIST_SIZE
+    PK11Object *object;
+
+    if (!objectLock) {
+	return;
+    }
+    PK11_USE_THREADS(PZ_Lock(objectLock));
+    for (object= objectFreeList; object != NULL; 
+					object = pk11_freeObjectData(object)) {
+#ifdef PKCS11_USE_THREADS
+	PZ_DestroyLock(object->refLock);
+	PZ_DestroyLock(((PK11SessionObject *)object)->attributeLock);
+#endif
+    }
+    object_count = 0;
+    objectFreeList = NULL;
+    PK11_USE_THREADS(PZ_Unlock(objectLock));
+    PZ_DestroyLock(objectLock);
+    objectLock = NULL;
+#endif
 }
 
 

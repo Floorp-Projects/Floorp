@@ -92,12 +92,25 @@
 
 /* these are data base storage hashes, not cryptographic hashes.. The define
  * the effective size of the various object hash tables */
+#ifdef MOZ_CLIENT
+/* clients care more about memory usage than lookup performance on
+ * cyrptographic objects. Clients also have less objects around to play with */
+ *
+ * we eventually should make this configurable at runtime! Especially now that
+ * NSS is a shared library.
+ */
+#define ATTRIBUTE_HASH_SIZE 32 
+#define SESSION_OBJECT_HASH_SIZE 16
+#define TOKEN_OBJECT_HASH_SIZE 32
+#define SESSION_HASH_SIZE 32
+#else
 #define ATTRIBUTE_HASH_SIZE 32
 #define SESSION_OBJECT_HASH_SIZE 32
 #define TOKEN_OBJECT_HASH_SIZE 1024
 #define SESSION_HASH_SIZE 512
 #define MAX_OBJECT_LIST_SIZE 800  /* how many objects to keep on the free list
 				   * before we start freeing them */
+#endif
 #define MAX_KEY_LEN 256
 
 

@@ -35,7 +35,11 @@
 #include <winver.h>
 
 #define MY_LIBNAME "softoken"
+#ifdef MOZ_CLIENT
+#define MY_FILEDESCRIPTION "NSS Builtin Crypto PKCS #11 Library for Clients"
+#else
 #define MY_FILEDESCRIPTION "NSS Builtin Crypto PKCS #11 Library"
+#endif
 
 #define STRINGIZE(x) #x
 #define STRINGIZE2(x) STRINGIZE(x)

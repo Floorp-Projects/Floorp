@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.3 2001/11/15 23:04:40 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.4 2001/11/30 23:24:30 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -117,7 +117,7 @@ static PZLock *certRefCountLock = NULL;
  * arg here so that it will be easy to make it per-cert in the future if
  * that turns out to be necessary.
  */
-static void
+void
 nsslowcert_LockCertRefCount(NSSLOWCERTCertificate *cert)
 {
     if ( certRefCountLock == NULL ) {
@@ -132,7 +132,7 @@ nsslowcert_LockCertRefCount(NSSLOWCERTCertificate *cert)
 /*
  * Free the cert reference count lock
  */
-static void
+void
 nsslowcert_UnlockCertRefCount(NSSLOWCERTCertificate *cert)
 {
     PRStatus prstat;
@@ -3898,21 +3898,19 @@ nsslowcert_TraversePermCerts(NSSLOWCERTCertDBHandle *handle,
  * Close the database
  */
 void
-__nsslowcert_ClosePermCertDB(NSSLOWCERTCertDBHandle *handle)
+nsslowcert_ClosePermCertDB(NSSLOWCERTCertDBHandle *handle)
 {
     if ( handle ) {
 	if ( handle->permCertDB ) {
 	    certdb_Close( handle->permCertDB );
-	    handle->permCertDB = 0;
+	    handle->permCertDB = NULL;
+	}
+	if (handle->dbMon) {
+    	    PZ_DestroyMonitor(handle->dbMon);
+	    handle->dbMon = NULL;
 	}
     }
     return;
-}
-
-void
-nsslowcert_ClosePermCertDB(NSSLOWCERTCertDBHandle *handle)
-{
-    __nsslowcert_ClosePermCertDB(handle);
 }
 
 /*
@@ -4454,4 +4452,21 @@ loser:
 	DestroyDBEntry((certDBEntry *)entry);
     }
     return(rv);
+}
+
+void
+nsslowcert_DestroyGlobalLocks()
+{
+    if (dbLock) {
+	PZ_DestroyLock(dbLock);
+	dbLock = NULL;
+    }
+    if (certRefCountLock) {
+	PZ_DestroyLock(certRefCountLock);
+	certRefCountLock = NULL;
+    }
+    if (certTrustLock) {
+	PZ_DestroyLock(certTrustLock);
+	certTrustLock = NULL;
+    }
 }
