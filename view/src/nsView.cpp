@@ -396,6 +396,8 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
           nscoord     posx, posy;
           nsRect      damRect = rect;
 
+          rc.PushState();
+
           GetPosition(&posx, &posy);
 
           //we need to go back to the coordinate system that was there
@@ -512,8 +514,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
             delete views;
           }
 
-          //now go forward again... XXX xform not accounted for. MMP
-          rc.Translate(posx, posy);
+          rc.PopState();
         }
 
         //now draw ourself...

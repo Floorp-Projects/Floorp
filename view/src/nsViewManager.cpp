@@ -262,9 +262,9 @@ NS_IMETHODIMP nsViewManager :: SetWindowOffsets(nscoord xoffset, nscoord yoffset
     nsresult           retval;
 
     retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-    if (NS_SUCCEEDED(retval)) {
+
+    if (NS_SUCCEEDED(retval))
       scroller->SetVisibleOffset(xoffset, yoffset);
-    }
 
     return retval;
   }
