@@ -468,7 +468,7 @@ void nsBayesianFilter::classifyMessage(Tokenizer& messageTokens, const char* mes
     delete[] tokens;
 
     if (listener)
-        listener->OnMessageClassified(messageURI, isJunk ? PRInt32(nsIJunkMailPlugin::JUNK) : PRInt32(nsIJunkMailPlugin::GOOD));
+        listener->OnMessageClassified(messageURI, isJunk ? nsIJunkMailPlugin::JUNK : nsIJunkMailPlugin::GOOD);
 }
 
 /* void shutdown (); */
