@@ -85,7 +85,7 @@ nsBuffer::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 nsresult
 nsBuffer::PushWriteSegment()
 {
-    nsAutoMonitor mon(this);        // protect mSegments
+    nsAutoCMonitor mon(this);        // protect mSegments
 
     if (mBufferSize >= mMaxSize) {
         if (mObserver) {
@@ -118,7 +118,7 @@ nsresult
 nsBuffer::PopReadSegment()
 {
     nsresult rv;
-    nsAutoMonitor mon(this);        // protect mSegments
+    nsAutoCMonitor mon(this);        // protect mSegments
 
     PRCList* header = (PRCList*)mSegments.next;
     char* segment = (char*)header;
