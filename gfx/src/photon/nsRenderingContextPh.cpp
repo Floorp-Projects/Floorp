@@ -69,12 +69,8 @@ long FillColorVal[8] = {Pg_BLACK,Pg_BLUE,Pg_RED,Pg_YELLOW,Pg_GREEN,Pg_MAGENTA,Pg
 #define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 #define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
-/* This global int turns on/off double buffering, there is probably */
-/* a better way but not sure what it is.. */
-int double_buffer = 1;
 #include <prlog.h>
-PRLogModuleInfo *PhGfxLog = NULL;
-unsigned char   PhGfxLogState = 0;		/* 0 == Not Enabled */
+PRLogModuleInfo *PhGfxLog = PR_NewLogModule("PhGfxLog");
 #include "nsPhGfxLog.h"
 
 /* Global Variable for Alpha Blending */
@@ -859,9 +855,6 @@ NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUi
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  mSurface is NULL - failure!\n"));
     return NS_ERROR_FAILURE;
   }
-
-  extern int double_buffer;
-  if (!double_buffer) return NS_OK;
 
  nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
 //printf ("create2: %p %d\n",surf,aSurfFlags);
