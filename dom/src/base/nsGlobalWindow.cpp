@@ -2593,6 +2593,9 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrivateRoot(nsIDOMWindowInternal ** aParent)
 
   nsCOMPtr<nsIScriptGlobalObject> parentTop = do_QueryInterface(parent);
   nsCOMPtr<nsIDocShell> docShell;
+  NS_ASSERTION(parentTop, "cannot get parentTop");
+  if(parentTop == nsnull)
+    return NS_ERROR_FAILURE;
   parentTop->GetDocShell(getter_AddRefs(docShell));
   nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
   docShell->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
