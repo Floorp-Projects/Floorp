@@ -49,6 +49,9 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+#if defined(XP_WIN32)
+#include <malloc.h> /* _heapMin */
+#endif
 
 #if defined(HAVE_BOUTELL_GD)
 /*
@@ -83,6 +86,16 @@
 ** the globals variables.  happy joy.
 */
 static STGlobals globals;
+
+/*
+** have the heap cleanup at opportune times, if possible.
+*/
+void heapCompact(void)
+{
+#if defined(XP_WIN32)
+    _heapmin();
+#endif
+}
 
 /*
 ** showHelp
@@ -129,9 +142,9 @@ int showHelp(void)
 
         PR_fprintf(PR_STDOUT, "%s",
 " -o<num>           Sets the order in which lists are sorted when displayed.\n"
-"                          '0' is by weight (lifespan interval * byte size).\n"
+"                                   '0' is by weight (lifespan * byte size).\n"
 "                                                       '1' is by byte size.\n"
-"                                             '2' is by interval (lifetime).\n"
+"                                                 '2' is by time (lifetime).\n"
 "                                                  By default, <num> is '0'.\n"
                    "\n");
 
@@ -146,80 +159,82 @@ int showHelp(void)
                    "\n");
 
         PR_fprintf(PR_STDOUT,
-" -tmin<num>                   Set the minimum allocation lifetime interval.\n"
-"             Excludes allocations which do not live at least said interval.\n"
-"                                              The default <num> is '%u'.\n"
-                   "\n", PR_SecondsToInterval(ST_DEFAULT_LIFETIME_MIN));
+" -tmin<num>                 Set the minimum allocation lifetime in seconds.\n"
+"              Excludes allocations which do not live at least said seconds.\n"
+"                                         The default <num> is '%u' seconds.\n"
+                   "\n", ST_DEFAULT_LIFETIME_MIN);
 
         PR_fprintf(PR_STDOUT, "%s",
-" -tmax<num>                   Set the maximum allocation lifetime interval.\n"
-"             Excludes allocations which live longer than the said interval.\n"
+" -tmax<num>                 Set the maximum allocation lifetime in seconds.\n"
+"              Excludes allocations which live longer than the said seconds.\n"
 "                                           By default, there is no maximum.\n"
                    "\n");
 
         PR_fprintf(PR_STDOUT, "%s",
 " -wmin<num>                              Set the minimum allocation weight.\n"
-"                                   Weight is lifespan interval * byte size.\n"
+"                                            Weight is lifespan * byte size.\n"
 "                         Excludes allocations which do not have the weight.\n"
 "                                                  The default <num> is '0'.\n"
                    "\n");
 
         PR_fprintf(PR_STDOUT, "%s",
 " -wmax<num>                              Set the maximum allocation weight.\n"
-"                                   Weight is lifespan interval * byte size.\n"
+"                                            Weight is lifespan * byte size.\n"
 "                                Excludes allocations which are over weight.\n"
 "                                           By default, there is no maximum.\n"
                    "\n");
 
         PR_fprintf(PR_STDOUT, "%s",
-" -imin<num>                                       Set the minimum interval.\n"
-"                 Excludes allocations existing solely before said interval.\n"
+" -imin<num>                                     Set the minimum in seconds.\n"
+"                   Excludes allocations existing solely before said second.\n"
 "                                                  The default <num> is '0'.\n"
                    "\n");
 
         PR_fprintf(PR_STDOUT, "%s",
-" -imax<num>                                       Set the maximum interval.\n"
-"                  Excludes allocations existing solely after said interval.\n"
+" -imax<num>                                     Set the maximum in seconds.\n"
+"                    Excludes allocations existing solely after said second.\n"
 "                                           By default, there is no maximum.\n"
                    "\n");
 
         PR_fprintf(PR_STDOUT, "%s",
-" -amin<num>                            Set the allocation minimum interval.\n"
-"                         Excludes allocations created before said interval.\n"
+" -amin<num>                          Set the allocation minimum in seconds.\n"
+"                           Excludes allocations created before said second.\n"
 "                                                  The default <num> is '0'.\n"
                    "\n");
 
         PR_fprintf(PR_STDOUT, "%s",
-" -amax<num>                            Set the allocation maximum interval.\n"
-"                          Excludes allocations created after said interval.\n"
+" -amax<num>                          Set the allocation maximum in seconds.\n"
+"                            Excludes allocations created after said second.\n"
 "                                           By default, there is no maximum.\n"
                    "\n");
 
 #if WANT_GRAPHS
         PR_fprintf(PR_STDOUT, "%s",
-" -gmin<num>                                 Set the graph minimum interval.\n"
-"                Excludes representing graph intervals before said interval.\n"
+" -gmin<num>                               Set the graph minimum in seconds.\n"
+"                  Excludes representing graph intervals before said second.\n"
 "                                                  The default <num> is '0'.\n"
                    "\n");
 
         PR_fprintf(PR_STDOUT, "%s",
-" -gmax<num>                                 Set the graph maximum interval.\n"
-"                 Excludes representing graph intervals after said interval.\n"
+" -gmax<num>                               Set the graph maximum in seconds.\n"
+"                   Excludes representing graph intervals after said second.\n"
 "                                           By default, there is no maximum.\n"
                    "\n");
 #endif /* WANT_GRAPHS */
+
+        PR_fprintf(PR_STDOUT,
+" -a<num>                               Set an allocation alignment boundry.\n"
+"                                     All allocations are a factor of <num>.\n"
+"      Meaning, an allocation of 1 byte would actually count as <num> bytes.\n"
+"              Set <num> to '1' in order to see the actual allocation sizes.\n"
+"                                                   By default, <num> is %u.\n"
+                   "\n", ST_DEFAULT_ALIGNMENT_SIZE);
 
         PR_fprintf(PR_STDOUT, "%s",
 " -c<text>     Restrict callsite backtraces to only those containing <text>.\n"
 "                      Allows targeting of specific object creation methods.\n"
 "                                By default, there is no <text> restriction.\n"
                    "\n");
-
-        PR_fprintf(PR_STDOUT,
-"NOTES:\n"
-" One second is equivalent to an interval of %u on this machine.\n"
-                   "\n", PR_SecondsToInterval(1));
-
 
         /*
         ** Showed something.
@@ -272,9 +287,9 @@ int initOptions(int aArgCount, char** aArgArray)
     globals.mOptions.mListItemMax = listItemMax;
 
     /*
-    ** As a default, there is no maximum interval on the dataset.
+    ** As a default, there is no maximum timeval on the dataset.
     */
-    globals.mOptions.mIntervalMax = (PRUint32)-1;
+    globals.mOptions.mTimevalMax = ST_TIMEVAL_MAX;
 
     /*
     ** As a default, there is no maximum allocation size on the dataset.
@@ -284,12 +299,12 @@ int initOptions(int aArgCount, char** aArgArray)
     /*
     ** As a default, want to look at allocations which live at least...
     */
-    globals.mOptions.mLifetimeMin = PR_SecondsToInterval(ST_DEFAULT_LIFETIME_MIN);
+    globals.mOptions.mLifetimeMin = ST_DEFAULT_LIFETIME_MIN * ST_TIMEVAL_RESOLUTION;
 
     /*
-    ** As a default, there is no maximum allocation lifetime interval.
+    ** As a default, there is no maximum allocation lifetime timeval.
     */
-    globals.mOptions.mLifetimeMax = (PRUint32)-1;
+    globals.mOptions.mLifetimeMax = ST_TIMEVAL_MAX;
 
     /*
     ** As a default, there is no maximum weight allowed.
@@ -297,14 +312,19 @@ int initOptions(int aArgCount, char** aArgArray)
     globals.mOptions.mWeightMax64 = LL_INIT(0xFFFFFFFF, 0xFFFFFFFF);
 
     /*
-    ** As a default, there is no maximum allocation interval.
+    ** As a default, there is no maximum allocation timeval.
     */
-    globals.mOptions.mAllocationIntervalMax = (PRUint32)-1;
+    globals.mOptions.mAllocationTimevalMax = ST_TIMEVAL_MAX;
 
     /*
-    ** As a default, there is no maximum graph interval.
+    ** As a default, there is no maximum graph timeval.
     */
-    globals.mOptions.mGraphIntervalMax = (PRUint32)-1;
+    globals.mOptions.mGraphTimevalMax = ST_TIMEVAL_MAX;
+
+    /*
+    ** As a default, we align byte sizes to a particular size.
+    */
+    globals.mOptions.mAlignBy = ST_DEFAULT_ALIGNMENT_SIZE;
 
     /*
     ** Go through all arguments.
@@ -388,7 +408,7 @@ int initOptions(int aArgCount, char** aArgArray)
                         /*
                         ** Increase size of batch buffer.
                         */
-                        expand = (const char**)realloc(globals.mOptions.mBatchRequests, sizeof(const char*) * (globals.mOptions.mBatchRequestCount + 1));
+                        expand = (const char**)realloc((void*)globals.mOptions.mBatchRequests, sizeof(const char*) * (globals.mOptions.mBatchRequestCount + 1));
                         if(NULL != expand)
                         {
                             /*
@@ -439,13 +459,17 @@ int initOptions(int aArgCount, char** aArgArray)
                         PRInt32 scanRes = 0;
 
                         /*
-                        ** Interval min.
+                        ** Timeval min.
                         */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mIntervalMin);
+                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mTimevalMin);
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
                             globals.mOptions.mShowHelp = __LINE__;
+                        }
+                        else
+                        {
+                            globals.mOptions.mTimevalMin *= ST_TIMEVAL_RESOLUTION;
                         }
                     }
                     else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
@@ -453,13 +477,17 @@ int initOptions(int aArgCount, char** aArgArray)
                         PRInt32 scanRes = 0;
 
                         /*
-                        ** Interval max
+                        ** Timeval max
                         */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mIntervalMax);
+                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mTimevalMax);
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
                             globals.mOptions.mShowHelp = __LINE__;
+                        }
+                        else
+                        {
+                            globals.mOptions.mTimevalMax *= ST_TIMEVAL_RESOLUTION;
                         }
                     }
                     else
@@ -477,13 +505,17 @@ int initOptions(int aArgCount, char** aArgArray)
                         PRInt32 scanRes = 0;
 
                         /*
-                        ** Allocation Interval min.
+                        ** Allocation Timeval min.
                         */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mAllocationIntervalMin);
+                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mAllocationTimevalMin);
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
                             globals.mOptions.mShowHelp = __LINE__;
+                        }
+                        else
+                        {
+                            globals.mOptions.mAllocationTimevalMin *= ST_TIMEVAL_RESOLUTION;
                         }
                     }
                     else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
@@ -491,19 +523,32 @@ int initOptions(int aArgCount, char** aArgArray)
                         PRInt32 scanRes = 0;
 
                         /*
-                        ** Allocation Interval max
+                        ** Allocation timeval max
                         */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mAllocationIntervalMax);
+                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mAllocationTimevalMax);
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
                             globals.mOptions.mShowHelp = __LINE__;
                         }
+                        else
+                        {
+                            globals.mOptions.mAllocationTimevalMax *= ST_TIMEVAL_RESOLUTION;
+                        }
                     }
                     else
                     {
-                        retval = __LINE__;
-                        globals.mOptions.mShowHelp = __LINE__;
+                        PRInt32 scanRes = 0;
+                        
+                        /*
+                        ** Align by.
+                        */
+                        scanRes = PR_sscanf(&aArgArray[traverse][2], "%u", &globals.mOptions.mAlignBy);
+                        if(1 != scanRes)
+                        {
+                            retval = __LINE__;
+                            globals.mOptions.mShowHelp = __LINE__;
+                        }
                     }
                 }
                 break;
@@ -516,13 +561,17 @@ int initOptions(int aArgCount, char** aArgArray)
                         PRInt32 scanRes = 0;
 
                         /*
-                        ** Graph Interval min.
+                        ** Graph Timeval min.
                         */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mGraphIntervalMin);
+                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mGraphTimevalMin);
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
                             globals.mOptions.mShowHelp = __LINE__;
+                        }
+                        else
+                        {
+                            globals.mOptions.mGraphTimevalMin *= ST_TIMEVAL_RESOLUTION;
                         }
                     }
                     else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
@@ -530,13 +579,17 @@ int initOptions(int aArgCount, char** aArgArray)
                         PRInt32 scanRes = 0;
 
                         /*
-                        ** Graph Interval max
+                        ** Graph Timeval max
                         */
-                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mGraphIntervalMax);
+                        scanRes = PR_sscanf(&aArgArray[traverse][5], "%u", &globals.mOptions.mGraphTimevalMax);
                         if(1 != scanRes)
                         {
                             retval = __LINE__;
                             globals.mOptions.mShowHelp = __LINE__;
+                        }
+                        else
+                        {
+                            globals.mOptions.mGraphTimevalMax *= ST_TIMEVAL_RESOLUTION;
                         }
                     }
                     else
@@ -601,6 +654,10 @@ int initOptions(int aArgCount, char** aArgArray)
                             retval = __LINE__;
                             globals.mOptions.mShowHelp = __LINE__;
                         }
+                        else
+                        {
+                            globals.mOptions.mLifetimeMin *= ST_TIMEVAL_RESOLUTION;
+                        }
                     }
                     else if(0 == strncmp(&aArgArray[traverse][2], "max", 3))
                     {
@@ -614,6 +671,10 @@ int initOptions(int aArgCount, char** aArgArray)
                         {
                             retval = __LINE__;
                             globals.mOptions.mShowHelp = __LINE__;
+                        }
+                        else
+                        {
+                            globals.mOptions.mLifetimeMax *= ST_TIMEVAL_RESOLUTION;
                         }
                     }
                     else
@@ -987,6 +1048,22 @@ PRUint32 byteSize(STAllocation* aAlloc)
         while(0 == retval && 0 != index && TM_EVENT_REALLOC == aAlloc->mEvents[index].mEventType);
     }
 
+    /*
+    ** Need to bump the result by our alignment.
+    ** The idea here is that an allocation actually costs you more than you
+    **  thought (1 bytes = 16 bytes).
+    */
+    if(0 != retval && 1 < globals.mOptions.mAlignBy)
+    {
+        PRUint32 mod = 0;
+
+        mod = retval % globals.mOptions.mAlignBy;
+        if(0 != mod)
+        {
+            retval += globals.mOptions.mAlignBy - mod;
+        }
+    }
+
     return retval;
 }
 
@@ -1054,18 +1131,18 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
             */
             if(0 != aRun->mStats.mStamp)
             {
-                PRUint32 interval = aAllocation->mMaxInterval - aAllocation->mMinInterval;
+                PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
                 PRUint32 size = byteSize(aAllocation);
                 PRUint64 weight64 = LL_INIT(0, 0);
                 PRUint32 eventLoop = 0;
 
-                LL_MUL(weight64, (PRUint64)interval, (PRUint64)size);
+                LL_MUL(weight64, (PRUint64)timeval, (PRUint64)size);
 
                 /*
                 ** First, update this run.
                 */
                 aRun->mStats.mSize += size;
-                LL_ADD(aRun->mStats.mInterval64, aRun->mStats.mInterval64, (PRUint64)interval);
+                LL_ADD(aRun->mStats.mTimeval64, aRun->mStats.mTimeval64, (PRUint64)timeval);
                 LL_ADD(aRun->mStats.mWeight64, aRun->mStats.mWeight64, weight64);
 
                 /*
@@ -1106,7 +1183,7 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
                                 **  reallocs N times, we are N-1 times over.
                                 */
                                 callsiteRun->mStats.mSize += size;
-                                LL_ADD(callsiteRun->mStats.mInterval64, callsiteRun->mStats.mInterval64, (PRUint64)interval);
+                                LL_ADD(callsiteRun->mStats.mTimeval64, callsiteRun->mStats.mTimeval64, (PRUint64)timeval);
                                 LL_ADD(callsiteRun->mStats.mWeight64, callsiteRun->mStats.mWeight64, weight64);
                             }
 
@@ -1228,38 +1305,38 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
 
                 /*
                 ** Use this as an opportune time to fixup a memory
-                **  leaked interval, so as to not completely skew
+                **  leaked timeval, so as to not completely skew
                 **  the weights.
                 */
-                if((PRUint32)-1 == current->mMaxInterval)
+                if(ST_TIMEVAL_MAX == current->mMaxTimeval)
                 {
-                    current->mMaxInterval = globals.mMaxInterval;
+                    current->mMaxTimeval = globals.mMaxTimeval;
                 }
 
                 /*
-                ** Check allocation interval restrictions.
-                ** We have to slide the recorded intervals to be zero
+                ** Check allocation timeval restrictions.
+                ** We have to slide the recorded timevals to be zero
                 **  based, so that the comparisons make sense.
                 */
-                if(aOptions->mAllocationIntervalMin > (current->mMinInterval - globals.mMinInterval))
+                if(aOptions->mAllocationTimevalMin > (current->mMinTimeval - globals.mMinTimeval))
                 {
                     continue;
                 }
-                else if(aOptions->mAllocationIntervalMax < (current->mMinInterval - globals.mMinInterval))
+                else if(aOptions->mAllocationTimevalMax < (current->mMinTimeval - globals.mMinTimeval))
                 {
                     continue;
                 }
 
                 /*
-                ** Check interval restrictions.
-                ** We have to slide the recorded intervals to be zero
+                ** Check timeval restrictions.
+                ** We have to slide the recorded timevals to be zero
                 **  based, so that the comparisons make sense.
                 */
-                if(aOptions->mIntervalMin > (current->mMaxInterval - globals.mMinInterval))
+                if(aOptions->mTimevalMin > (current->mMaxTimeval - globals.mMinTimeval))
                 {
                     continue;
                 }
-                else if(aOptions->mIntervalMax < (current->mMinInterval - globals.mMinInterval))
+                else if(aOptions->mTimevalMax < (current->mMinTimeval - globals.mMinTimeval))
                 {
                     continue;
                 }
@@ -1267,7 +1344,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 /*
                 ** Check lifetime restrictions.
                 */
-                lifetime = current->mMaxInterval - current->mMinInterval;
+                lifetime = current->mMaxTimeval - current->mMinTimeval;
                 if(lifetime < aOptions->mLifetimeMin)
                 {
                     continue;
@@ -1361,8 +1438,8 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2)
                     PRUint64 weight164 = LL_INIT(0, 0);
                     PRUint64 weight264 = LL_INIT(0, 0);
 
-                    LL_MUL(weight164, (PRUint64)byteSize(alloc1), (PRUint64)(alloc1->mMaxInterval - alloc1->mMinInterval));
-                    LL_MUL(weight264, (PRUint64)byteSize(alloc2), (PRUint64)(alloc2->mMaxInterval - alloc2->mMinInterval));
+                    LL_MUL(weight164, (PRUint64)byteSize(alloc1), (PRUint64)(alloc1->mMaxTimeval - alloc1->mMinTimeval));
+                    LL_MUL(weight264, (PRUint64)byteSize(alloc2), (PRUint64)(alloc2->mMaxTimeval - alloc2->mMinTimeval));
 
                     if(LL_UCMP(weight164, <, weight264))
                     {
@@ -1391,16 +1468,16 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2)
                 }
                 break;
 
-                case ST_INTERVAL:
+                case ST_TIMEVAL:
                 {
-                    PRUint32 interval1 = (alloc1->mMaxInterval - alloc1->mMinInterval);
-                    PRUint32 interval2 = (alloc2->mMaxInterval - alloc2->mMinInterval);
+                    PRUint32 timeval1 = (alloc1->mMaxTimeval - alloc1->mMinTimeval);
+                    PRUint32 timeval2 = (alloc2->mMaxTimeval - alloc2->mMinTimeval);
 
-                    if(interval1 < interval2)
+                    if(timeval1 < timeval2)
                     {
                         retval = __LINE__;
                     }
-                    else if(interval1 > interval2)
+                    else if(timeval1 > timeval2)
                     {
                         retval = - __LINE__;
                     }
@@ -1645,7 +1722,7 @@ STAllocation* getLiveAllocationByHeapID(STRun* aRun, PRUint32 aHeapID)
 ** Given an allocation, append a new event to it's lifetime.
 ** Returns the new event on success, otherwise NULL.
 */
-STAllocEvent* appendEvent(STAllocation* aAllocation, PRUint32 aInterval, char aEventType, PRUint32 aHeapID, PRUint32 aHeapSize, tmcallsite* aCallsite)
+STAllocEvent* appendEvent(STAllocation* aAllocation, PRUint32 aTimeval, char aEventType, PRUint32 aHeapID, PRUint32 aHeapSize, tmcallsite* aCallsite)
 {
     STAllocEvent* retval = NULL;
 
@@ -1677,7 +1754,7 @@ STAllocEvent* appendEvent(STAllocation* aAllocation, PRUint32 aInterval, char aE
             /*
             ** Fill in the event.
             */
-            retval->mInterval = aInterval;
+            retval->mTimeval = aTimeval;
             retval->mEventType = aEventType;
             retval->mHeapID = aHeapID;
             retval->mHeapSize = aHeapSize;
@@ -1685,22 +1762,22 @@ STAllocEvent* appendEvent(STAllocation* aAllocation, PRUint32 aInterval, char aE
 
             /*
             ** Allocation may need to update idea of lifetime.
-            ** See allocationTracker to see mMinInterval inited to (PRUint32)-1.
+            ** See allocationTracker to see mMinTimeval inited to ST_TIMEVAL_MAX.
             */
-            if(aAllocation->mMinInterval > aInterval)
+            if(aAllocation->mMinTimeval > aTimeval)
             {
-                aAllocation->mMinInterval = aInterval;
+                aAllocation->mMinTimeval = aTimeval;
             }
 
             /*
             ** This a free event?
-            ** Can only set max interval on a free.
-            ** Otherwise, mMaxInterval remains (PRUint32)-1.
+            ** Can only set max timeval on a free.
+            ** Otherwise, mMaxTimeval remains  ST_TIMEVAL_MAX.
             ** Set in allocationTracker.
             */
             if(TM_EVENT_FREE == aEventType || (TM_EVENT_REALLOC == aEventType && 0 == aHeapSize))
             {
-                aAllocation->mMaxInterval = aInterval;
+                aAllocation->mMaxTimeval = aTimeval;
             }
         }
         else
@@ -1765,9 +1842,11 @@ int hasAllocation(STRun* aRun, STAllocation* aTestFor)
 ** Returns a pointer to the allocation on success.
 ** Return NULL on failure.
 */
-STAllocation* allocationTracker(PRUint32 aInterval, char aType, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
+STAllocation* allocationTracker(PRUint32 aTimeval, char aType, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
 {
     STAllocation* retval = NULL;
+    static int compactor = 1;
+    const int frequency = 10000;
 
     if(NULL != aCallsite)
     {
@@ -1782,15 +1861,15 @@ STAllocation* allocationTracker(PRUint32 aInterval, char aType, tmcallsite* aCal
         globals.mOperationCount++;
 
         /*
-        ** Fix up the intervals if needed.
+        ** Fix up the timevals if needed.
         */
-        if(aInterval < globals.mMinInterval)
+        if(aTimeval < globals.mMinTimeval)
         {
-            globals.mMinInterval = aInterval;
+            globals.mMinTimeval = aTimeval;
         }
-        if(aInterval > globals.mMaxInterval)
+        if(aTimeval > globals.mMaxTimeval)
         {
-            globals.mMaxInterval = aInterval;
+            globals.mMaxTimeval = aTimeval;
         }
 
         switch(aType)
@@ -1882,10 +1961,10 @@ STAllocation* allocationTracker(PRUint32 aInterval, char aType, tmcallsite* aCal
             if(NULL != allocation)
             {
                 /*
-                ** Fixup the min interval so if logic later will just work.
+                ** Fixup the min timeval so if logic later will just work.
                 */
-                allocation->mMinInterval = (PRUint32)-1;
-                allocation->mMaxInterval = (PRUint32)-1;
+                allocation->mMinTimeval = ST_TIMEVAL_MAX;
+                allocation->mMaxTimeval = ST_TIMEVAL_MAX;
             }
         }
         else if(NULL != searchCallsite && NULL != CALLSITE_RUN(searchCallsite) && 0 != searchHeapID)
@@ -1909,7 +1988,7 @@ STAllocation* allocationTracker(PRUint32 aInterval, char aType, tmcallsite* aCal
             ** Now that we have an allocation, we need to make sure it has
             **  the proper event.
             */
-            appendResult = appendEvent(allocation, aInterval, aType, aHeapID, aSize, aCallsite);
+            appendResult = appendEvent(allocation, aTimeval, aType, aHeapID, aSize, aCallsite);
             if(NULL != appendResult)
             {
                 if(0 != newAllocation)
@@ -2001,6 +2080,15 @@ STAllocation* allocationTracker(PRUint32 aInterval, char aType, tmcallsite* aCal
         REPORT_ERROR(__LINE__, allocationTracker);
     }
 
+    /*
+    ** Compact the heap a bit if you can.
+    */
+    compactor++;
+    if(0 == (compactor % frequency))
+    {
+        heapCompact();
+    }
+
     return retval;
 }
 
@@ -2010,7 +2098,7 @@ STAllocation* allocationTracker(PRUint32 aInterval, char aType, tmcallsite* aCal
 ** An allocation event has dropped in on us.
 ** We need to do the right thing and track it.
 */
-void trackEvent(PRUint32 aInterval, char aType, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
+void trackEvent(PRUint32 aTimeval, char aType, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
 {
     if(NULL != aCallsite)
     {
@@ -2024,7 +2112,7 @@ void trackEvent(PRUint32 aInterval, char aType, tmcallsite* aCallsite, PRUint32 
             /*
             ** Add to the allocation tracking code.
             */
-            allocation = allocationTracker(aInterval, aType, aCallsite, aHeapID, aSize, aOldCallsite, aOldHeapID, aOldSize);
+            allocation = allocationTracker(aTimeval, aType, aCallsite, aHeapID, aSize, aOldCallsite, aOldHeapID, aOldSize);
         
             if(NULL == allocation)
             {
@@ -2102,7 +2190,22 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
                     */
                     if(NULL != CALLSITE_RUN(callsite))
                     {
-                        trackEvent(aEvent->u.alloc.interval, aEvent->type, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
+                        static PRIntervalTime sec2int = 0;
+                        PRUint32 timeval = 0;
+                        PRUint64 timeval64 = LL_INIT(0, 0);
+                        
+                        if(0 == sec2int)
+                        {
+                            sec2int = PR_SecondsToInterval(1);
+                        }
+
+                        /*
+                        ** Convert the interval to a timeval.
+                        */
+                        LL_MUL(timeval64, (PRUint64)aEvent->u.alloc.interval, (PRUint64)ST_TIMEVAL_RESOLUTION);
+                        LL_DIV(timeval64, timeval64, (PRUint64)sec2int);
+                        LL_L2UI(timeval, timeval64);
+                        trackEvent(timeval, aEvent->type, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
                     }
                 }
                 else
@@ -2598,12 +2701,14 @@ int getDataPRUint32Base(const char* aGetData, const char* aCheckFor, void* aStor
 
     return retval;
 }
-int getDataPRUint32(const char* aGetData, const char* aCheckFor, PRUint32* aStoreResult, int* aChanged)
+int getDataPRUint32(const char* aGetData, const char* aCheckFor, PRUint32* aStoreResult, int* aChanged, PRUint32 aConversion)
 {
     int retval = 0;
     PRUint32 value = *aStoreResult;
 
     retval =  getDataPRUint32Base(aGetData, aCheckFor, aStoreResult, 32);
+
+    *aStoreResult *= aConversion;
     if(NULL != aChanged && value != *aStoreResult)
     {
         (*aChanged) = (*aChanged) + 1;
@@ -2650,6 +2755,7 @@ int getDataString(const char* aGetData, const char* aCheckFor, char** aStoreResu
             const char* dataPoint = NULL;
             const char* endPoint = NULL;
             char* oldResult = NULL;
+            int theLen = 0;
             
             /*
             ** Skip the varname.
@@ -2678,11 +2784,49 @@ int getDataString(const char* aGetData, const char* aCheckFor, char** aStoreResu
             /*
             ** Allocate space for new string.
             */
-            *aStoreResult = (char*)malloc((size_t)(endPoint - dataPoint) + 1);
+            theLen = (int)(endPoint - dataPoint);
+            *aStoreResult = (char*)malloc((size_t)(theLen + 1));
             if(NULL != *aStoreResult)
             {
-                strncpy(*aStoreResult, dataPoint, (endPoint - dataPoint));
-                (*aStoreResult)[endPoint - dataPoint] = '\0';
+                int index1 = 0;
+                int index2 = 0;
+
+                strncpy(*aStoreResult, dataPoint, theLen);
+                (*aStoreResult)[theLen] = '\0';
+
+                /*
+                ** Here's a totally suboptimal and bug prone unhexcaper.
+                */
+                for(; index1 <= theLen; index1++)
+                {
+                    if('%' == (*aStoreResult)[index1] && '\0' != (*aStoreResult)[index1 + 1] && '\0' != (*aStoreResult)[index1 + 2])
+                    {
+                        int unhex = 0;
+
+                        if('9' >= (*aStoreResult)[index1 + 1])
+                        {
+                            unhex |= (((*aStoreResult)[index1 + 1] - '0') << 4);
+                        }
+                        else
+                        {
+                            unhex |= ((toupper((*aStoreResult)[index1 + 1]) - 'A' + 10) << 4);
+                        }
+
+                        if('9' >= (*aStoreResult)[index1 + 2])
+                        {
+                            unhex |= ((*aStoreResult)[index1 + 2] - '0');
+                        }
+                        else
+                        {
+                            unhex |= (toupper((*aStoreResult)[index1 + 2]) - 'A' + 10);
+                        }
+
+                        index1 += 2;
+                        (*aStoreResult)[index1] = unhex;
+                    }
+
+                    (*aStoreResult)[index2++] = (*aStoreResult)[index1];
+                }
 
                 /*
                 ** See if the value actually changed.
@@ -2750,9 +2894,9 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
             PR_fprintf(globals.mRequest.mFD, "<tr>\n");
             PR_fprintf(globals.mRequest.mFD, "<td><b>Rank</b></td>\n");
             PR_fprintf(globals.mRequest.mFD, "<td><b>Index</b></td>\n");
-            PR_fprintf(globals.mRequest.mFD, "<td><b>Weight</b></td>\n");
             PR_fprintf(globals.mRequest.mFD, "<td><b>Byte Size</b></td>\n");
-            PR_fprintf(globals.mRequest.mFD, "<td><b>Lifespan Interval</b></td>\n");
+            PR_fprintf(globals.mRequest.mFD, "<td><b>Lifespan Seconds</b></td>\n");
+            PR_fprintf(globals.mRequest.mFD, "<td><b>Weight</b></td>\n");
             if(0 != aWantCallsite)
             {
                 PR_fprintf(globals.mRequest.mFD, "<td><b>Origin Callsite</b></td>\n");
@@ -2767,7 +2911,7 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
                 current = aRun->mAllocations[loop];
                 if(NULL != current)
                 {
-                    PRUint32 lifespan = current->mMaxInterval - current->mMinInterval;
+                    PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
                     PRUint32 size = byteSize(current);
                     PRUint64 weight64 = LL_INIT(0, 0);
                     char buffer[32];
@@ -2790,11 +2934,6 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
                     PR_fprintf(globals.mRequest.mFD, "</td>\n");
 
                     /*
-                    ** Weight.
-                    */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%llu</td>\n", weight64);
-
-                    /*
                     ** Byte Size.
                     */
                     PR_fprintf(globals.mRequest.mFD, "<td align=right>%u</td>\n", size);
@@ -2802,7 +2941,12 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
                     /*
                     ** Lifespan.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%u</td>\n", lifespan);
+                    PR_fprintf(globals.mRequest.mFD, "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(lifespan));
+
+                    /*
+                    ** Weight.
+                    */
+                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%llu</td>\n", weight64);
 
                     if(0 != aWantCallsite)
                     {
@@ -2852,9 +2996,9 @@ int displayMemoryLeaks(STRun* aRun)
         PR_fprintf(globals.mRequest.mFD, "<tr>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Rank</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Index</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Weight</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Byte Size</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Lifespan Interval</b></td>\n");
+        PR_fprintf(globals.mRequest.mFD, "<td><b>Lifespan Seconds</b></td>\n");
+        PR_fprintf(globals.mRequest.mFD, "<td><b>Weight</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Origin Callsite</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "</tr>\n");
 
@@ -2875,7 +3019,7 @@ int displayMemoryLeaks(STRun* aRun)
                 */
                 if(TM_EVENT_FREE != current->mEvents[current->mEventCount - 1].mEventType && (TM_EVENT_REALLOC != current->mEvents[current->mEventCount - 1].mEventType || 0 != current->mEvents[current->mEventCount - 1].mHeapSize))
                 {
-                    PRUint32 lifespan = current->mMaxInterval - current->mMinInterval;
+                    PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
                     PRUint32 size = byteSize(current);
                     PRUint64 weight64 = LL_INIT(0, 0);
                     char buffer[32];
@@ -2903,11 +3047,6 @@ int displayMemoryLeaks(STRun* aRun)
                     PR_fprintf(globals.mRequest.mFD, "</td>\n");
                     
                     /*
-                    ** Weight.
-                    */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%llu</td>\n", weight64);
-                    
-                    /*
                     ** Byte Size.
                     */
                     PR_fprintf(globals.mRequest.mFD, "<td align=right>%u</td>\n", size);
@@ -2915,7 +3054,12 @@ int displayMemoryLeaks(STRun* aRun)
                     /*
                     ** Lifespan.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%u</td>\n", lifespan);
+                    PR_fprintf(globals.mRequest.mFD, "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(lifespan));
+                    
+                    /*
+                    ** Weight.
+                    */
+                    PR_fprintf(globals.mRequest.mFD, "<td align=right>%llu</td>\n", weight64);
                     
                     /*
                     ** Callsite.
@@ -2987,9 +3131,9 @@ int displayCallsites(tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aR
                         PR_fprintf(globals.mRequest.mFD, "<table border=1>\n");
                         PR_fprintf(globals.mRequest.mFD, "<tr>\n");
                         PR_fprintf(globals.mRequest.mFD, "<td><b>Callsite</b></td>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Weight</b></td>\n");
                         PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Byte Size</b></td>\n");
-                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Interval</b></td>\n");
+                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Seconds</b></td>\n");
+                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Weight</b></td>\n");
                         PR_fprintf(globals.mRequest.mFD, "</tr>\n");
                     }
 
@@ -3006,19 +3150,19 @@ int displayCallsites(tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aR
                     PR_fprintf(globals.mRequest.mFD, "</td>");
 
                     /*
-                    ** Weight.
-                    */
-                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%llu</td>\n", run->mStats.mWeight64);
-
-                    /*
                     ** Byte Size.
                     */
                     PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%u</td>\n", run->mStats.mSize);
 
                     /*
-                    ** Interval.
+                    ** Seconds.
                     */
-                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%llu</td>\n", run->mStats.mInterval64);
+                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats.mTimeval64));
+
+                    /*
+                    ** Weight.
+                    */
+                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%llu</td>\n", run->mStats.mWeight64);
                     
                     PR_fprintf(globals.mRequest.mFD, "</tr>\n");
                 }
@@ -3081,18 +3225,19 @@ int displayAllocationDetails(STAllocation* aAllocation)
     {
         PRUint32 traverse = 0;
         PRUint32 bytesize = byteSize(aAllocation);
-        PRUint32 interval = aAllocation->mMaxInterval - aAllocation->mMinInterval;
+        PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         PRUint64 weight64 = LL_INIT(0, 0);
+        PRUint32 cacheval = 0;
         int displayRes = 0;
 
-        LL_MUL(weight64, (PRUint64)bytesize, (PRUint64)interval);
+        LL_MUL(weight64, (PRUint64)bytesize, (PRUint64)timeval);
 
         PR_fprintf(globals.mRequest.mFD, "Allocation %u Details:<p>\n", aAllocation->mRunIndex);
 
         PR_fprintf(globals.mRequest.mFD, "<table>\n");
-        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Weight:</td><td align=right>%llu</td></tr>\n", weight64);
         PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Final Size:</td><td align=right>%u</td></tr>\n", bytesize);
-        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Lifespan Interval:</td><td align=right>%u</td></tr>\n", interval);
+        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Lifespan Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE(timeval));
+        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Weight:</td><td align=right>%llu</td></tr>\n", weight64);
         PR_fprintf(globals.mRequest.mFD, "</table><p>\n");
 
         /*
@@ -3104,7 +3249,7 @@ int displayAllocationDetails(STAllocation* aAllocation)
         PR_fprintf(globals.mRequest.mFD, "<td></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Operation</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Size</b></td>\n");
-        PR_fprintf(globals.mRequest.mFD, "<td><b>Interval</b></td>\n");
+        PR_fprintf(globals.mRequest.mFD, "<td><b>Seconds</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td></td>\n");
         PR_fprintf(globals.mRequest.mFD, "</tr>\n");
 
@@ -3148,9 +3293,10 @@ int displayAllocationDetails(STAllocation* aAllocation)
             PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%u</td>\n", aAllocation->mEvents[traverse].mHeapSize);
 
             /*
-            ** Interval.
+            ** Timeval.
             */
-            PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%u</td>\n", aAllocation->mEvents[traverse].mInterval - globals.mMinInterval);
+            cacheval = aAllocation->mEvents[traverse].mTimeval - globals.mMinTimeval;
+            PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(cacheval));
 
             /*
             ** Callsite backtrace.
@@ -3247,16 +3393,16 @@ int compareCallsites(const void* aSite1, const void* aSite2)
                     }
                     break;
 
-                    case ST_INTERVAL:
+                    case ST_TIMEVAL:
                     {
-                        PRUint64 interval164 = stats1->mInterval64;
-                        PRUint64 interval264 = stats2->mInterval64;
+                        PRUint64 timeval164 = stats1->mTimeval64;
+                        PRUint64 timeval264 = stats2->mTimeval64;
 
-                        if(LL_UCMP(interval164, <, interval264))
+                        if(LL_UCMP(timeval164, <, timeval264))
                         {
                             retval = __LINE__;
                         }
-                        else if(LL_UCMP(interval164, >, interval264))
+                        else if(LL_UCMP(timeval164, >, timeval264))
                         {
                             retval = - __LINE__;
                         }
@@ -3354,9 +3500,9 @@ int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint
                     PR_fprintf(globals.mRequest.mFD, "<tr>\n");
                     PR_fprintf(globals.mRequest.mFD, "<td><b>Rank</b></td>\n");
                     PR_fprintf(globals.mRequest.mFD, "<td><b>Callsite</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Weight</b></td>\n");
                     PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Size</b></td>\n");
-                    PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Interval</b></td>\n");
+                    PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Seconds</b></td>\n");
+                    PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Weight</b></td>\n");
                     PR_fprintf(globals.mRequest.mFD, "</tr>\n");
                 }
 
@@ -3377,19 +3523,19 @@ int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint
                 PR_fprintf(globals.mRequest.mFD, "</td>\n");
 
                 /*
-                ** Weight.
-                */
-                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%llu</td>\n", run->mStats.mWeight64);
-
-                /*
                 ** Size.
                 */
                 PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%u</td>\n", run->mStats.mSize);
 
                 /*
-                ** Interval.
+                ** Timeval.
                 */
-                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%llu</td>\n", run->mStats.mInterval64);
+                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats.mTimeval64));
+
+                /*
+                ** Weight.
+                */
+                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%llu</td>\n", run->mStats.mWeight64);
 
                 PR_fprintf(globals.mRequest.mFD, "</tr>\n");
 
@@ -3445,9 +3591,9 @@ int displayCallsiteDetails(tmcallsite* aCallsite)
         PR_fprintf(globals.mRequest.mFD, "%s+%u(%u) Callsite Details:<p>\n", tmgraphnode_name(aCallsite->method), aCallsite->offset, (PRUint32)aCallsite->entry.key);
 
         PR_fprintf(globals.mRequest.mFD, "<table border=0>\n");
-        PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mStats.mWeight64);
         PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mSize);
-        PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Interval:</td><td align=right>%llu</td></tr>\n", thisRun->mStats.mInterval64);
+        PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE64(thisRun->mStats.mTimeval64));
+        PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mStats.mWeight64);
         PR_fprintf(globals.mRequest.mFD, "</table>\n<p>\n");
 
         /*
@@ -3588,7 +3734,7 @@ int graphFootprint(STRun* aRun)
         PRUint32 *YData = NULL;
         PRUint32 YDataArray[STGD_SPACE_X];
         PRUint32 traverse = 0;
-        PRUint32 interval = globals.mOptions.mGraphIntervalMin;
+        PRUint32 timeval = globals.mOptions.mGraphTimevalMin;
         PRUint32 loop = 0;
 
         /*
@@ -3617,17 +3763,17 @@ int graphFootprint(STRun* aRun)
             for(traverse = 0; 0 == retval && traverse < STGD_SPACE_X; traverse++)
             {
                 /*
-                ** Compute what interval this Y data lands in.
+                ** Compute what timeval this Y data lands in.
                 */
-                interval = ((traverse * (globals.mOptions.mGraphIntervalMax - globals.mOptions.mGraphIntervalMin)) / STGD_SPACE_X) + globals.mMinInterval + globals.mOptions.mGraphIntervalMin;
+                timeval = ((traverse * (globals.mOptions.mGraphTimevalMax - globals.mOptions.mGraphTimevalMin)) / STGD_SPACE_X) + globals.mMinTimeval + globals.mOptions.mGraphTimevalMin;
 
                 /*
                 ** Loop over the run.
-                ** Should an allocation contain said interval, we're good.
+                ** Should an allocation contain said Timeval, we're good.
                 */
                 for(loop = 0; loop < aRun->mAllocationCount; loop++)
                 {
-                    if(interval >= aRun->mAllocations[loop]->mMinInterval && interval <= aRun->mAllocations[loop]->mMaxInterval)
+                    if(timeval >= aRun->mAllocations[loop]->mMinTimeval && timeval <= aRun->mAllocations[loop]->mMaxTimeval)
                     {
                         YData[traverse] += byteSize(aRun->mAllocations[loop]);
                     }
@@ -3678,29 +3824,31 @@ int graphFootprint(STRun* aRun)
                 int x2 = 0;
                 int y2 = 0;
                 PRUint32 percents[11] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                char* intervals[11];
+                char* timevals[11];
                 char* bytes[11];
-                char intervalSpace[11][32];
+                char timevalSpace[11][32];
                 char byteSpace[11][32];
                 int legendColors[1];
                 const char* legends[1] = { "Memory in Use" };
+                PRUint32 cached = 0;
 
                 /*
                 ** Figure out what the labels will say.
                 */
                 for(traverse = 0; traverse < 11; traverse++)
                 {
-                    intervals[traverse] = intervalSpace[traverse];
+                    timevals[traverse] = timevalSpace[traverse];
                     bytes[traverse] = byteSpace[traverse];
 
-                    PR_snprintf(intervals[traverse], 32, "%u", (((globals.mOptions.mGraphIntervalMax - globals.mOptions.mGraphIntervalMin) * percents[traverse]) / 100) + globals.mOptions.mGraphIntervalMin);
+                    cached = (((globals.mOptions.mGraphTimevalMax - globals.mOptions.mGraphTimevalMin) * percents[traverse]) / 100) + globals.mOptions.mGraphTimevalMin;
+                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT, ST_TIMEVAL_PRINTABLE(cached));
                     PR_snprintf(bytes[traverse], 32, "%u", ((maxMemory - minMemory) * percents[traverse]) / 100);
                 }
                 
                 red = gdImageColorAllocate(graph, 255, 0, 0);
                 legendColors[0] = red;
                 
-                drawGraph(graph, -1, "Memory Footprint Over Time", "Interval", "Bytes", 11, percents, (const char**)intervals, 11, percents, (const char**)bytes, 1, legendColors, legends);
+                drawGraph(graph, -1, "Memory Footprint Over Time", "Seconds", "Bytes", 11, percents, (const char**)timevals, 11, percents, (const char**)bytes, 1, legendColors, legends);
 
                 if(maxMemory != minMemory)
                 {
@@ -3762,7 +3910,7 @@ int graphFootprint(STRun* aRun)
 
 #if WANT_GRAPHS
 /*
-** graphInterval
+** graphTimeval
 **
 ** Output a PNG graph of when the memory is allocated.
 **
@@ -3771,7 +3919,7 @@ int graphFootprint(STRun* aRun)
 **
 ** Returns !0 on failure.
 */
-int graphInterval(STRun* aRun)
+int graphTimeval(STRun* aRun)
 {
     int retval = 0;
 
@@ -3780,7 +3928,7 @@ int graphInterval(STRun* aRun)
         PRUint32 *YData = NULL;
         PRUint32 YDataArray[STGD_SPACE_X];
         PRUint32 traverse = 0;
-        PRUint32 interval = globals.mOptions.mGraphIntervalMin + globals.mMinInterval;
+        PRUint32 timeval = globals.mOptions.mGraphTimevalMin + globals.mMinTimeval;
         PRUint32 loop = 0;
 
         /*
@@ -3788,7 +3936,7 @@ int graphInterval(STRun* aRun)
         */
         if(aRun == globals.mCache.mSortedRun)
         {
-            YData = globals.mCache.mIntervalYData;
+            YData = globals.mCache.mTimevalYData;
         }
         else
         {
@@ -3798,9 +3946,9 @@ int graphInterval(STRun* aRun)
         /*
         ** Only do the computations if we aren't cached already.
         */
-        if(YData != globals.mCache.mIntervalYData || 0 == globals.mCache.mIntervalCached)
+        if(YData != globals.mCache.mTimevalYData || 0 == globals.mCache.mTimevalCached)
         {
-            PRUint32 prevInterval = 0;
+            PRUint32 prevTimeval = 0;
 
             memset(YData, 0, sizeof(PRUint32) * STGD_SPACE_X);
 
@@ -3811,19 +3959,19 @@ int graphInterval(STRun* aRun)
             for(traverse = 0; 0 == retval && traverse < STGD_SPACE_X; traverse++)
             {
                 /*
-                ** Compute what interval this Y data lands in.
+                ** Compute what timeval this Y data lands in.
                 */
-                prevInterval = interval;
-                interval = ((traverse * (globals.mOptions.mGraphIntervalMax - globals.mOptions.mGraphIntervalMin)) / STGD_SPACE_X) + globals.mMinInterval + globals.mOptions.mGraphIntervalMin;
+                prevTimeval = timeval;
+                timeval = ((traverse * (globals.mOptions.mGraphTimevalMax - globals.mOptions.mGraphTimevalMin)) / STGD_SPACE_X) + globals.mMinTimeval + globals.mOptions.mGraphTimevalMin;
 
                 /*
                 ** Loop over the run.
                 ** Should an allocation have been allocated between
-                **  prevInterval and interval....
+                **  prevTimeval and timeval....
                 */
                 for(loop = 0; loop < aRun->mAllocationCount; loop++)
                 {
-                    if(prevInterval < aRun->mAllocations[loop]->mMinInterval && interval >= aRun->mAllocations[loop]->mMinInterval)
+                    if(prevTimeval < aRun->mAllocations[loop]->mMinTimeval && timeval >= aRun->mAllocations[loop]->mMinTimeval)
                     {
                         YData[traverse] += byteSize(aRun->mAllocations[loop]);
                     }
@@ -3833,9 +3981,9 @@ int graphInterval(STRun* aRun)
             /*
             ** Did we cache this?
             */
-            if(YData == globals.mCache.mIntervalYData)
+            if(YData == globals.mCache.mTimevalYData)
             {
-                globals.mCache.mIntervalCached = __LINE__;
+                globals.mCache.mTimevalCached = __LINE__;
             }
         }
 
@@ -3874,29 +4022,31 @@ int graphInterval(STRun* aRun)
                 int x2 = 0;
                 int y2 = 0;
                 PRUint32 percents[11] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                char* intervals[11];
+                char* timevals[11];
                 char* bytes[11];
-                char intervalSpace[11][32];
+                char timevalSpace[11][32];
                 char byteSpace[11][32];
                 int legendColors[1];
                 const char* legends[1] = { "Memory Allocated" };
+                PRUint32 cached = 0;
 
                 /*
                 ** Figure out what the labels will say.
                 */
                 for(traverse = 0; traverse < 11; traverse++)
                 {
-                    intervals[traverse] = intervalSpace[traverse];
+                    timevals[traverse] = timevalSpace[traverse];
                     bytes[traverse] = byteSpace[traverse];
 
-                    PR_snprintf(intervals[traverse], 32, "%u", (((globals.mOptions.mGraphIntervalMax - globals.mOptions.mGraphIntervalMin) * percents[traverse]) / 100) + globals.mOptions.mGraphIntervalMin);
+                    cached = (((globals.mOptions.mGraphTimevalMax - globals.mOptions.mGraphTimevalMin) * percents[traverse]) / 100) + globals.mOptions.mGraphTimevalMin;
+                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT, ST_TIMEVAL_PRINTABLE(cached));
                     PR_snprintf(bytes[traverse], 32, "%u", ((maxMemory - minMemory) * percents[traverse]) / 100);
                 }
                 
                 red = gdImageColorAllocate(graph, 255, 0, 0);
                 legendColors[0] = red;
                 
-                drawGraph(graph, -1, "Allocations by Interval", "Interval", "Bytes", 11, percents, (const char**)intervals, 11, percents, (const char**)bytes, 1, legendColors, legends);
+                drawGraph(graph, -1, "Allocation Times", "Seconds", "Bytes", 11, percents, (const char**)timevals, 11, percents, (const char**)bytes, 1, legendColors, legends);
 
                 if(maxMemory != minMemory)
                 {
@@ -3949,7 +4099,7 @@ int graphInterval(STRun* aRun)
     else
     {
         retval = __LINE__;
-        REPORT_ERROR(__LINE__, graphInterval);
+        REPORT_ERROR(__LINE__, graphTimeval);
     }
 
     return retval;
@@ -3976,7 +4126,7 @@ int graphLifespan(STRun* aRun)
         PRUint32 *YData = NULL;
         PRUint32 YDataArray[STGD_SPACE_X];
         PRUint32 traverse = 0;
-        PRUint32 interval = globals.mOptions.mGraphIntervalMin;
+        PRUint32 timeval = globals.mOptions.mGraphTimevalMin;
         PRUint32 loop = 0;
 
         /*
@@ -3996,7 +4146,7 @@ int graphLifespan(STRun* aRun)
         */
         if(YData != globals.mCache.mLifespanYData || 0 == globals.mCache.mLifespanCached)
         {
-            PRUint32 prevInterval = 0;
+            PRUint32 prevTimeval = 0;
             PRUint32 lifespan = 0;
 
             memset(YData, 0, sizeof(PRUint32) * STGD_SPACE_X);
@@ -4008,21 +4158,21 @@ int graphLifespan(STRun* aRun)
             for(traverse = 0; 0 == retval && traverse < STGD_SPACE_X; traverse++)
             {
                 /*
-                ** Compute what interval this Y data lands in.
+                ** Compute what timeval this Y data lands in.
                 */
-                prevInterval = interval;
-                interval = ((traverse * (globals.mOptions.mGraphIntervalMax - globals.mOptions.mGraphIntervalMin)) / STGD_SPACE_X) + globals.mOptions.mGraphIntervalMin;
+                prevTimeval = timeval;
+                timeval = ((traverse * (globals.mOptions.mGraphTimevalMax - globals.mOptions.mGraphTimevalMin)) / STGD_SPACE_X) + globals.mOptions.mGraphTimevalMin;
 
                 /*
                 ** Loop over the run.
                 ** Should an allocation have lived between
-                **  prevInterval and interval....
+                **  prevTimeval and timeval....
                 */
                 for(loop = 0; loop < aRun->mAllocationCount; loop++)
                 {
-                    lifespan = aRun->mAllocations[loop]->mMaxInterval - aRun->mAllocations[loop]->mMinInterval;
+                    lifespan = aRun->mAllocations[loop]->mMaxTimeval - aRun->mAllocations[loop]->mMinTimeval;
 
-                    if(prevInterval < lifespan && interval >= lifespan)
+                    if(prevTimeval < lifespan && timeval >= lifespan)
                     {
                         YData[traverse] += byteSize(aRun->mAllocations[loop]);
                     }
@@ -4073,29 +4223,31 @@ int graphLifespan(STRun* aRun)
                 int x2 = 0;
                 int y2 = 0;
                 PRUint32 percents[11] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                char* intervals[11];
+                char* timevals[11];
                 char* bytes[11];
-                char intervalSpace[11][32];
+                char timevalSpace[11][32];
                 char byteSpace[11][32];
                 int legendColors[1];
                 const char* legends[1] = { "Live Memory" };
+                PRUint32 cached = 0;
 
                 /*
                 ** Figure out what the labels will say.
                 */
                 for(traverse = 0; traverse < 11; traverse++)
                 {
-                    intervals[traverse] = intervalSpace[traverse];
+                    timevals[traverse] = timevalSpace[traverse];
                     bytes[traverse] = byteSpace[traverse];
 
-                    PR_snprintf(intervals[traverse], 32, "%u", (((globals.mOptions.mGraphIntervalMax - globals.mOptions.mGraphIntervalMin) * percents[traverse]) / 100) + globals.mOptions.mGraphIntervalMin);
+                    cached = (((globals.mOptions.mGraphTimevalMax - globals.mOptions.mGraphTimevalMin) * percents[traverse]) / 100) + globals.mOptions.mGraphTimevalMin;
+                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT, ST_TIMEVAL_PRINTABLE(cached));
                     PR_snprintf(bytes[traverse], 32, "%u", ((maxMemory - minMemory) * percents[traverse]) / 100);
                 }
                 
                 red = gdImageColorAllocate(graph, 255, 0, 0);
                 legendColors[0] = red;
                 
-                drawGraph(graph, -1, "Lifespan by Interval", "Lifespan", "Bytes", 11, percents, (const char**)intervals, 11, percents, (const char**)bytes, 1, legendColors, legends);
+                drawGraph(graph, -1, "Allocation Lifespans", "Lifespan", "Bytes", 11, percents, (const char**)timevals, 11, percents, (const char**)bytes, 1, legendColors, legends);
 
                 if(maxMemory != minMemory)
                 {
@@ -4175,7 +4327,7 @@ int graphWeight(STRun* aRun)
         PRUint64 *YData64 = NULL;
         PRUint64 YDataArray64[STGD_SPACE_X];
         PRUint32 traverse = 0;
-        PRUint32 interval = globals.mOptions.mGraphIntervalMin + globals.mMinInterval;
+        PRUint32 timeval = globals.mOptions.mGraphTimevalMin + globals.mMinTimeval;
         PRUint32 loop = 0;
 
         /*
@@ -4195,7 +4347,7 @@ int graphWeight(STRun* aRun)
         */
         if(YData64 != globals.mCache.mWeightYData64 || 0 == globals.mCache.mWeightCached)
         {
-            PRUint32 prevInterval = 0;
+            PRUint32 prevTimeval = 0;
 
             memset(YData64, 0, sizeof(PRUint64) * STGD_SPACE_X);
 
@@ -4206,26 +4358,26 @@ int graphWeight(STRun* aRun)
             for(traverse = 0; 0 == retval && traverse < STGD_SPACE_X; traverse++)
             {
                 /*
-                ** Compute what interval this Y data lands in.
+                ** Compute what timeval this Y data lands in.
                 */
-                prevInterval = interval;
-                interval = ((traverse * (globals.mOptions.mGraphIntervalMax - globals.mOptions.mGraphIntervalMin)) / STGD_SPACE_X) + globals.mMinInterval + globals.mOptions.mGraphIntervalMin;
+                prevTimeval = timeval;
+                timeval = ((traverse * (globals.mOptions.mGraphTimevalMax - globals.mOptions.mGraphTimevalMin)) / STGD_SPACE_X) + globals.mMinTimeval + globals.mOptions.mGraphTimevalMin;
 
                 /*
                 ** Loop over the run.
                 ** Should an allocation have been allocated between
-                **  prevInterval and interval....
+                **  prevTimeval and timeval....
                 */
                 for(loop = 0; loop < aRun->mAllocationCount; loop++)
                 {
-                    if(prevInterval < aRun->mAllocations[loop]->mMinInterval && interval >= aRun->mAllocations[loop]->mMinInterval)
+                    if(prevTimeval < aRun->mAllocations[loop]->mMinTimeval && timeval >= aRun->mAllocations[loop]->mMinTimeval)
                     {
                         PRUint64 size64 = LL_INIT(0, 0);
                         PRUint64 lifespan64 = LL_INIT(0, 0);
                         PRUint64 weight64 = LL_INIT(0, 0);
 
                         LL_UI2L(size64, byteSize(aRun->mAllocations[loop]));
-                        LL_UI2L(lifespan64, (aRun->mAllocations[loop]->mMaxInterval - aRun->mAllocations[loop]->mMinInterval));
+                        LL_UI2L(lifespan64, (aRun->mAllocations[loop]->mMaxTimeval - aRun->mAllocations[loop]->mMinTimeval));
                         LL_MUL(weight64, size64, lifespan64);
 
                         LL_ADD(YData64[traverse], YData64[traverse], weight64);
@@ -4277,15 +4429,16 @@ int graphWeight(STRun* aRun)
                 int x2 = 0;
                 int y2 = 0;
                 PRUint32 percents[11] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                char* intervals[11];
+                char* timevals[11];
                 char* bytes[11];
-                char intervalSpace[11][32];
+                char timevalSpace[11][32];
                 char byteSpace[11][32];
                 int legendColors[1];
                 const char* legends[1] = { "Memory Weight" };
                 PRUint64 percent64 = LL_INIT(0, 0);
                 PRUint64 result64 = LL_INIT(0, 0);
                 PRUint64 hundred64 = LL_INIT(0, 0);
+                PRUint32 cached = 0;
 
                 LL_UI2L(hundred64, 100);
 
@@ -4294,10 +4447,11 @@ int graphWeight(STRun* aRun)
                 */
                 for(traverse = 0; traverse < 11; traverse++)
                 {
-                    intervals[traverse] = intervalSpace[traverse];
+                    timevals[traverse] = timevalSpace[traverse];
                     bytes[traverse] = byteSpace[traverse];
 
-                    PR_snprintf(intervals[traverse], 32, "%u", (((globals.mOptions.mGraphIntervalMax - globals.mOptions.mGraphIntervalMin) * percents[traverse]) / 100) + globals.mOptions.mGraphIntervalMin);
+                    cached = (((globals.mOptions.mGraphTimevalMax - globals.mOptions.mGraphTimevalMin) * percents[traverse]) / 100) + globals.mOptions.mGraphTimevalMin;
+                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT, ST_TIMEVAL_PRINTABLE(cached));
 
                     LL_UI2L(percent64, percents[traverse]);
                     LL_SUB(result64, maxWeight64, minWeight64);
@@ -4309,7 +4463,7 @@ int graphWeight(STRun* aRun)
                 red = gdImageColorAllocate(graph, 255, 0, 0);
                 legendColors[0] = red;
                 
-                drawGraph(graph, -1, "Weight by Interval", "Interval", "Weight", 11, percents, (const char**)intervals, 11, percents, (const char**)bytes, 1, legendColors, legends);
+                drawGraph(graph, -1, "Allocation Weights", "Seconds", "Weight", 11, percents, (const char**)timevals, 11, percents, (const char**)bytes, 1, legendColors, legends);
 
                 if(LL_NE(maxWeight64, minWeight64))
                 {
@@ -4378,6 +4532,7 @@ int graphWeight(STRun* aRun)
 int displaySettings(void)
 {
     int retval = 0;
+    PRUint32 cached = 0;
 
     /*
     ** If we've got get data, we need to attempt to enact the changes.
@@ -4391,20 +4546,23 @@ int displaySettings(void)
         int changedGraph = 0;
         int changedDontCare = 0;
 
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mListItemMax", &globals.mOptions.mListItemMax, &changedDontCare);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mIntervalMin", &globals.mOptions.mIntervalMin, &changedSet);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mIntervalMax", &globals.mOptions.mIntervalMax, &changedSet);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationIntervalMin", &globals.mOptions.mAllocationIntervalMin, &changedSet);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationIntervalMax", &globals.mOptions.mAllocationIntervalMax, &changedSet);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mListItemMax", &globals.mOptions.mListItemMax, &changedDontCare, 1);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMin", &globals.mOptions.mTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mTimevalMax", &globals.mOptions.mTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationTimevalMin", &globals.mOptions.mAllocationTimevalMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mAllocationTimevalMax", &globals.mOptions.mAllocationTimevalMax, &changedSet, ST_TIMEVAL_RESOLUTION);
+
 #if WANT_GRAPHS
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphIntervalMin", &globals.mOptions.mGraphIntervalMin, &changedGraph);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphIntervalMax", &globals.mOptions.mGraphIntervalMax, &changedGraph);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphTimevalMin", &globals.mOptions.mGraphTimevalMin, &changedGraph, ST_TIMEVAL_RESOLUTION);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mGraphTimevalMax", &globals.mOptions.mGraphTimevalMax, &changedGraph, ST_TIMEVAL_RESOLUTION);
 #endif /* WANT_GRAPHS */
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMin", &globals.mOptions.mSizeMin, &changedSet);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMax", &globals.mOptions.mSizeMax, &changedSet);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mOrderBy", &globals.mOptions.mOrderBy, &changedOrder);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMin", &globals.mOptions.mLifetimeMin, &changedSet);
-        getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMin", &globals.mOptions.mSizeMin, &changedSet, 1);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mSizeMax", &globals.mOptions.mSizeMax, &changedSet, 1);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mAlignBy", &globals.mOptions.mAlignBy, &changedSet, 1);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mOrderBy", &globals.mOptions.mOrderBy, &changedOrder, 1);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMin", &globals.mOptions.mLifetimeMin, &changedSet, ST_TIMEVAL_RESOLUTION);
+        getRes += getDataPRUint32(globals.mRequest.mGetData, "mLifetimeMax", &globals.mOptions.mLifetimeMax, &changedSet, ST_TIMEVAL_RESOLUTION);
         getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMin", &globals.mOptions.mWeightMin64, &changedSet);
         getRes += getDataPRUint64(globals.mRequest.mGetData, "mWeightMax", &globals.mOptions.mWeightMax64, &changedSet);
         getRes += getDataString(globals.mRequest.mGetData, "mRestrictText", &globals.mOptions.mRestrictText, &changedSet);
@@ -4434,15 +4592,15 @@ int displaySettings(void)
         if(0 != changedSet || 0 != changedGraph)
         {
             /*
-            ** Automove the graph interval if required.
+            ** Automove the graph timeval if required.
             */
-            if((globals.mMaxInterval - globals.mMinInterval) < globals.mOptions.mGraphIntervalMax)
+            if((globals.mMaxTimeval - globals.mMinTimeval) < globals.mOptions.mGraphTimevalMax)
             {
-                globals.mOptions.mGraphIntervalMax = (globals.mMaxInterval - globals.mMinInterval);
+                globals.mOptions.mGraphTimevalMax = (globals.mMaxTimeval - globals.mMinTimeval);
             }
 
             globals.mCache.mFootprintCached = 0;
-            globals.mCache.mIntervalCached = 0;
+            globals.mCache.mTimevalCached = 0;
             globals.mCache.mLifespanCached = 0;
             globals.mCache.mWeightCached = 0;
         }
@@ -4468,9 +4626,8 @@ int displaySettings(void)
     ** A small blurb regarding the options.
     */
     PR_fprintf(globals.mRequest.mFD, "NOTES:<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "The total interval of this run is: 0 to %u<br>\n", globals.mMaxInterval - globals.mMinInterval);
-    PR_fprintf(globals.mRequest.mFD, "One second is equivalent to an interval of %u on this server.<br>\n", PR_SecondsToInterval(1));
-    PR_fprintf(globals.mRequest.mFD, "One percent of the total run interval for this run is %u.<br>\n", (globals.mMaxInterval - globals.mMinInterval) / 100);
+    cached = globals.mMaxTimeval - globals.mMinTimeval;
+    PR_fprintf(globals.mRequest.mFD, "The total seconds in this run is: 0 to " ST_TIMEVAL_FORMAT "<br>\n", ST_TIMEVAL_PRINTABLE(cached));
 
     PR_fprintf(globals.mRequest.mFD, "All options should have command line equivalents to support batch mode.<br>\n");
     PR_fprintf(globals.mRequest.mFD, "Changes to the options take effect immediately.<br>\n");
@@ -4488,27 +4645,27 @@ int displaySettings(void)
 
     PR_fprintf(globals.mRequest.mFD, "This option controls the sort order of the lists presented.<br>\n");
     PR_fprintf(globals.mRequest.mFD, "There are 3 choices:<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<ul><li>0 is by weight (byte size * interval).<li>1 is by byte size.<li>2 is by interval (lifetime).</ul><p>\n");
+    PR_fprintf(globals.mRequest.mFD, "<ul><li>0 is by weight (byte size * seconds).<li>1 is by byte size.<li>2 is by seconds (lifetime).</ul><p>\n");
     PR_fprintf(globals.mRequest.mFD, "Desired sort order?<br>\n");
     PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mOrderBy\" value=\"%u\"><br>\n", globals.mOptions.mOrderBy);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
 #if WANT_GRAPHS
-    PR_fprintf(globals.mRequest.mFD, "Modify the intervals which the graphs cover;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "meaning that a narrower interval range will produce a more detailed graph for that interval span.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum graph interval?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mGraphIntervalMin\" value=\"%u\"><br>\n", globals.mOptions.mGraphIntervalMin);
-    PR_fprintf(globals.mRequest.mFD, "Maximum graph interval?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mGraphIntervalMax\" value=\"%u\"><br>\n", globals.mOptions.mGraphIntervalMax);
+    PR_fprintf(globals.mRequest.mFD, "Modify the seconds for which the graphs cover;<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "meaning that a narrower range will produce a more detailed graph for that timespan.<p>\n");
+    PR_fprintf(globals.mRequest.mFD, "Minimum graph second?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mGraphTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mGraphTimevalMin / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(globals.mRequest.mFD, "Maximum graph second?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mGraphTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mGraphTimevalMax / ST_TIMEVAL_RESOLUTION);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 #endif /* WANT_GRAPHS */
 
-    PR_fprintf(globals.mRequest.mFD, "Modify the intervals to target allocations created during a particular interval;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "meaning that the allocations created only withing that interval are of interest.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum allocation interval?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAllocationIntervalMin\" value=\"%u\"><br>\n", globals.mOptions.mAllocationIntervalMin);
-    PR_fprintf(globals.mRequest.mFD, "Maximum allocation interval?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAllocationIntervalMax\" value=\"%u\"><br>\n", globals.mOptions.mAllocationIntervalMax);
+    PR_fprintf(globals.mRequest.mFD, "Modify the secondss to target allocations created during a particular timespan;<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "meaning that the allocations created only within the timespan are of interest.<p>\n");
+    PR_fprintf(globals.mRequest.mFD, "Minimum allocation second?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAllocationTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mAllocationTimevalMin / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(globals.mRequest.mFD, "Maximum allocation second?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAllocationTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mAllocationTimevalMax / ST_TIMEVAL_RESOLUTION);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
     PR_fprintf(globals.mRequest.mFD, "Modify the byte sizes to target allocations of a particular byte size.<p>\n");
@@ -4518,27 +4675,33 @@ int displaySettings(void)
     PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mSizeMax\" value=\"%u\"><br>\n", globals.mOptions.mSizeMax);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "Modify the intervals to target allocations of a particular lifespan/duration;<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "Modify the alignment boundry of allocations to see the actual impact an allocation has on a heap;<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "meaning that normally an allocation of 1 bytes actually costs more bytes depending on your heap implementation.<p>\n");
+    PR_fprintf(globals.mRequest.mFD, "Align by?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mAlignBy\" value=\"%u\"><br>\n", globals.mOptions.mAlignBy);
+    PR_fprintf(globals.mRequest.mFD, "<hr>\n");
+
+    PR_fprintf(globals.mRequest.mFD, "Modify the seconds to target allocations of a particular lifespan/duration;<br>\n");
     PR_fprintf(globals.mRequest.mFD, "meaning that the allocations existed at least or at most the specified span of time.<p>\n");
     PR_fprintf(globals.mRequest.mFD, "Minimum lifetime?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mLifetimeMin\" value=\"%u\"><br>\n", globals.mOptions.mLifetimeMin);
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mLifetimeMin\" value=\"%u\"><br>\n", globals.mOptions.mLifetimeMin / ST_TIMEVAL_RESOLUTION);
     PR_fprintf(globals.mRequest.mFD, "Maximum lifetime?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mLifetimeMax\" value=\"%u\"><br>\n", globals.mOptions.mLifetimeMax);
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mLifetimeMax\" value=\"%u\"><br>\n", globals.mOptions.mLifetimeMax / ST_TIMEVAL_RESOLUTION);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
     PR_fprintf(globals.mRequest.mFD, "Modify the numbers to target allocations of particular weights;<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "the weight of an allocation is the byte size multiplied by the lifespan interval.<p>\n");
+    PR_fprintf(globals.mRequest.mFD, "the weight of an allocation is the byte size multiplied by the lifespan.<p>\n");
     PR_fprintf(globals.mRequest.mFD, "Minimum weight?<br>\n");
     PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mWeightMin\" value=\"%llu\"><br>\n", globals.mOptions.mWeightMin64);
     PR_fprintf(globals.mRequest.mFD, "Maximum weight?<br>\n");
     PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mWeightMax\" value=\"%llu\"><br>\n", globals.mOptions.mWeightMax64);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
-    PR_fprintf(globals.mRequest.mFD, "By manipulating the interval range, you narrow or widen the set of live allocations evaluated.  Allocations existing solely before the minimum or solely after the maximum will not be considered.<p>\n");
-    PR_fprintf(globals.mRequest.mFD, "Minimum interval?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mIntervalMin\" value=\"%u\"><br>\n", globals.mOptions.mIntervalMin);
-    PR_fprintf(globals.mRequest.mFD, "Maximum interval?<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mIntervalMax\" value=\"%u\"><br>\n", globals.mOptions.mIntervalMax);
+    PR_fprintf(globals.mRequest.mFD, "By manipulating the time range, you narrow or widen the set of live allocations evaluated.  Allocations existing solely before the minimum or solely after the maximum will not be considered.<p>\n");
+    PR_fprintf(globals.mRequest.mFD, "Minimum second?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mTimevalMin\" value=\"%u\"><br>\n", globals.mOptions.mTimevalMin / ST_TIMEVAL_RESOLUTION);
+    PR_fprintf(globals.mRequest.mFD, "Maximum timeval?<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mTimevalMax\" value=\"%u\"><br>\n", globals.mOptions.mTimevalMax / ST_TIMEVAL_RESOLUTION);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
     PR_fprintf(globals.mRequest.mFD, "Restrict callsite backtraces to thost only containing the specified text.\n");
@@ -4592,13 +4755,13 @@ int displayIndex(void)
     htmlAnchor("footprint_graph.html", "Footprint");
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("lifespan_graph.html", "Allocations by Lifespan");
+    htmlAnchor("lifespan_graph.html", "Allocation Lifespans");
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("interval_graph.html", "Allocations by Interval");
+    htmlAnchor("times_graph.html", "Allocation Times");
     
     PR_fprintf(globals.mRequest.mFD, "\n<li>");
-    htmlAnchor("weight_graph.html", "Allocations by Weight");
+    htmlAnchor("weight_graph.html", "Allocation Weights");
     
     PR_fprintf(globals.mRequest.mFD, "\n</ul>\n");
 #endif /* WANT_GRAPHS */
@@ -4829,14 +4992,14 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         }
 #endif /* WANT_GRAPHS */
 #if WANT_GRAPHS
-        else if(0 == strcmp("interval_graph.html", aFileName))
+        else if(0 == strcmp("times_graph.html", aFileName))
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Allocations by Interval Report");
+            htmlHeader("SpaceTrace Allocation Times Report");
             
             PR_fprintf(globals.mRequest.mFD, "<div align=center>\n");
-            PR_fprintf(globals.mRequest.mFD, "<img src=\"./interval.png\">\n");
+            PR_fprintf(globals.mRequest.mFD, "<img src=\"./times.png\">\n");
             PR_fprintf(globals.mRequest.mFD, "</div>\n");
 
             htmlFooter();
@@ -4847,7 +5010,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Allocations by Lifespan Report");
+            htmlHeader("SpaceTrace Allocation Lifespans Report");
             
             PR_fprintf(globals.mRequest.mFD, "<div align=center>\n");
             PR_fprintf(globals.mRequest.mFD, "<img src=\"./lifespan.png\">\n");
@@ -4861,7 +5024,7 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         {
             int displayRes = 0;
 
-            htmlHeader("SpaceTrace Allocations by Weight Report");
+            htmlHeader("SpaceTrace Allocation Weights Report");
             
             PR_fprintf(globals.mRequest.mFD, "<div align=center>\n");
             PR_fprintf(globals.mRequest.mFD, "<img src=\"./weight.png\">\n");
@@ -4884,15 +5047,15 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         }
 #endif /* WANT_GRAPHS */
 #if WANT_GRAPHS
-        else if(0 == strcmp("interval.png", aFileName))
+        else if(0 == strcmp("times.png", aFileName))
         {
             int graphRes = 0;
 
-            graphRes = graphInterval(globals.mCache.mSortedRun);
+            graphRes = graphTimeval(globals.mCache.mSortedRun);
             if(0 != graphRes)
             {
                 retval = __LINE__;
-                REPORT_ERROR(__LINE__, graphInterval);
+                REPORT_ERROR(__LINE__, graphTimeval);
             }
         }
 #endif /* WANT_GRAPHS */
@@ -4950,6 +5113,11 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
         retval = __LINE__;
         REPORT_ERROR(__LINE__, handleRequest);
     }
+
+    /*
+    ** Compact a little if you can after each request.
+    */
+    heapCompact();
 
     return retval;
 }
@@ -5343,11 +5511,11 @@ int doRun(void)
         {
 #if WANT_GRAPHS
             /*
-            ** May want to set the max graph interval, now that we have it.
+            ** May want to set the max graph timeval, now that we have it.
             */
-            if((PRUint32)-1 == globals.mOptions.mGraphIntervalMax)
+            if(ST_TIMEVAL_MAX == globals.mOptions.mGraphTimevalMax)
             {
-                globals.mOptions.mGraphIntervalMax = (globals.mMaxInterval - globals.mMinInterval);
+                globals.mOptions.mGraphTimevalMax = (globals.mMaxTimeval - globals.mMinTimeval);
             }
 #endif /* WANT_GRAPHS */
 
@@ -5437,10 +5605,10 @@ int main(int aArgCount, char** aArgArray)
     int showedHelp = 0;
 
     /*
-    ** Set the minimum interval really high so other code
-    **  that checks the interval will get it right.
+    ** Set the minimum timeval really high so other code
+    **  that checks the timeval will get it right.
     */
-    globals.mMinInterval = (PRUint32)-1;
+    globals.mMinTimeval = ST_TIMEVAL_MAX;
 
     /*
     ** NSPR init.

@@ -52,6 +52,7 @@ LCFLAGS= $(LCFLAGS) \
 	$(NULL)
 
 LLIBS= $(LLIBS) \
+	$(DIST)\lib\zlib_s.lib \
 	$(HAVE_BOUTELL_GD)\gd.lib \
 	$(NULL)
 
