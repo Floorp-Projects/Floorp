@@ -5243,8 +5243,6 @@ nsBlockFrame::PaintChildren(nsIPresContext* aPresContext,
 #endif
 }
 
-#define MAGIC_LINENUM 20
-
 nsresult
 nsBlockFrame::GetClosestLine(nsILineIterator *aLI, 
                              const nsPoint &aOrigin, 
@@ -5253,53 +5251,74 @@ nsBlockFrame::GetClosestLine(nsILineIterator *aLI,
 {
   if (!aLI)
     return NS_ERROR_NULL_POINTER;
+
   nsRect rect;
-  PRInt32 countLines;
+  PRInt32 numLines;
   PRInt32 lineFrameCount;
   nsIFrame *firstFrame;
   PRUint32 flags;
 
-  nsresult result = aLI->GetNumLines(&countLines);
+  nsresult result = aLI->GetNumLines(&numLines);
 
-  if (NS_FAILED(result) || countLines<0)
+  if (NS_FAILED(result) || numLines < 0)
     return NS_OK;//do not handle
 
-  //how many divisions
-  PRInt16 divisions = 0;
-  PRUint32 shifted = (PRUint32)countLines;
-  PRInt32 start = 0;
+  PRInt32 shifted = numLines;
+  PRInt32 start = 0, midpoint = 0;
   PRInt32 y = 0;
 
-  while( shifted > 1 )
+  while(shifted > 0)
   {
+    // Cut the number of lines to look at in half and
+    // calculate the midpoint of the region we are looking at.
+
     shifted >>= 1; //divide by 2
-    result = aLI->GetLine(start + shifted, &firstFrame, &lineFrameCount,rect,&flags);
+    midpoint  = start + shifted;
+
+    // Get the dimensions of the line that is at the half
+    // point of the region we are looking at.
+
+    result = aLI->GetLine(midpoint, &firstFrame, &lineFrameCount,rect,&flags);
     if (NS_FAILED(result))
       break;//do not handle
+
+    // Check to see if our point lies with the line's Y bounds.
 
     rect+=aOrigin; //offset origin to get comparative coordinates
 
     y = aPoint.y - rect.y;
     if (y >=0 && (aPoint.y < (rect.y+rect.height)))
     {
-      aClosestLine = start + shifted; //spot on!
+      aClosestLine = midpoint; //spot on!
       return NS_OK;
     }
-    
-    if (y > 0) //advance start shifted amount
-      start+=shifted;
+
+    if (y > 0)
+    {
+      // If we get here, no match was found above, so aPoint.y must
+      // be greater than the Y bounds of the current line rect. Move
+      // our starting point just beyond the midpoint of the current region.
+
+      start = midpoint;
+
+      if (numLines > 1 && start < (numLines - 1))
+        ++start;
+      else
+        shifted = 0;
+    }
   }
 
-  //special case for missed line.
-  if ( y > 0 )
-    ++start; //set the start to the next line before leaving loop
-  else 
-    --start; //set the start to the previous line
+  // Make sure we don't go off the edge in either direction!
 
-  if (start == countLines)//dont let it slip off the edge
-    --start; 
+  NS_ASSERTION(start >=0 && start <= numLines, "Invalid start calculated.");
+
+  if (start < 0)
+    start = 0;
+  else if (start >= numLines)
+    start = numLines - 1; 
 
   aClosestLine = start; //close as we could come
+
   return NS_OK;
 }
 
