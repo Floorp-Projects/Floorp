@@ -112,14 +112,14 @@ nsColorNames::LookupName(const nsAString& aColor)
   return eColorName_UNKNOWN;
 }
 
-const nsCString& 
+const nsAFlatCString& 
 nsColorNames::GetStringValue(nsColorName aColor)
 {
   NS_ASSERTION(gColorTable, "no lookup table, needs addref");
   if (gColorTable) {
     return gColorTable->GetStringValue(PRInt32(aColor));
   } else {
-    static nsCString kNullStr;
+    static nsDependentCString kNullStr("");
     return kNullStr;
   }
 }

@@ -39,8 +39,9 @@
 #ifndef nsHTMLTags_h___
 #define nsHTMLTags_h___
 
-class nsString;
-class nsCString;
+class nsAString;
+class nsACString;
+class nsAFlatCString;
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -71,9 +72,9 @@ public:
   static void AddRefTable(void);
   static void ReleaseTable(void);
 
-  static nsHTMLTag LookupTag(const nsString& aTag);
-  static nsHTMLTag LookupTag(const nsCString& aTag);
-  static const nsCString& GetStringValue(nsHTMLTag aEnum);
+  static nsHTMLTag LookupTag(const nsAString& aTag);
+  static nsHTMLTag LookupTag(const nsACString& aTag);
+  static const nsAFlatCString& GetStringValue(nsHTMLTag aEnum);
   static const char* GetCStringValue(nsHTMLTag aEnum);
 };
 

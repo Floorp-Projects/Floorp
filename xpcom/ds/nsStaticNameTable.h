@@ -63,17 +63,16 @@ public:
   PRBool           Init(const char* Names[], PRInt32 Count);
   PRInt32          Lookup(const nsACString& aName);
   PRInt32          Lookup(const nsAString& aName);
-  const nsCString& GetStringValue(PRInt32 index);
-  PRBool           IsNullString(const nsCString& s) {return s == mNullStr;}
+  const nsAFlatCString& GetStringValue(PRInt32 index);
 
   nsStaticCaseInsensitiveNameTable();
   ~nsStaticCaseInsensitiveNameTable();
 
 private:
-  nsCString*   mNameArray;
+  nsDependentCString*   mNameArray;
   nsHashtable* mNameTable;
   PRInt32      mCount;
-  nsCString    mNullStr;
+  nsDependentCString    mNullStr;
 };
 
 #endif /* nsStaticNameTable_h___ */

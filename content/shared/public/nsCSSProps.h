@@ -63,22 +63,22 @@ public:
 
   // Given a property string, return the enum value
   static nsCSSProperty LookupProperty(const nsAReadableString& aProperty);
-  static nsCSSProperty LookupProperty(const nsCString& aProperty);
+  static nsCSSProperty LookupProperty(const nsACString& aProperty);
 
   // Given a property enum, get the string value
-  static const nsCString& GetStringValue(nsCSSProperty aProperty);
+  static const nsAFlatCString& GetStringValue(nsCSSProperty aProperty);
 
   // Given a CSS Property and a Property Enum Value
   // Return back a const nsString& representation of the 
   // value. Return back nullstr if no value is found
-  static const nsCString& LookupPropertyValue(nsCSSProperty aProperty, PRInt32 aValue);
+  static const nsAFlatCString& LookupPropertyValue(nsCSSProperty aProperty, PRInt32 aValue);
 
   // Get a color name for a predefined color value like buttonhighlight or activeborder
   // Sets the aStr param to the name of the propertyID
   static PRBool GetColorName(PRInt32 aPropID, nsCString &aStr);
 
   static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[]);
-  static const nsCString& SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[]);
+  static const nsAFlatCString& SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[]);
 
   static const PRInt32  kHintTable[];
 

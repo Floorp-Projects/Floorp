@@ -37,16 +37,21 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsStaticNameTable.h"
+#include "nsReadableUtils.h"
 
 nsStaticCaseInsensitiveNameTable::nsStaticCaseInsensitiveNameTable()
-    : mNameArray(nsnull), mNameTable(nsnull), mCount(0)
+  : mNameArray(nsnull), mNameTable(nsnull), mCount(0), mNullStr("")
 {
     MOZ_COUNT_CTOR(nsStaticCaseInsensitiveNameTable);
 }  
 
 nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
 {
-    delete [] mNameArray;
+    // manually call the destructor on placement-new'ed objects
+    for (PRInt32 index = 0; index < mCount; index++) {
+      mNameArray[index].~nsDependentCString();
+    }
+    nsMemory::Free((void*)mNameArray);
     delete mNameTable;
     MOZ_COUNT_DTOR(nsStaticCaseInsensitiveNameTable);
 }  
@@ -60,7 +65,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
     NS_ASSERTION(Count, "0 count");
 
     mCount = Count;
-    mNameArray = new nsCString[Count];
+    mNameArray = (nsDependentCString*)nsMemory::Alloc(Count * sizeof(nsDependentCString));
     // XXX best bucket count heuristic?
     mNameTable = new nsHashtable(Count<16 ? Count : Count<128 ? Count/4 : 128);
     if (!mNameArray || !mNameTable) {
@@ -70,17 +75,18 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
     for (PRInt32 index = 0; index < Count; ++index) {
         char*    raw = (char*) Names[index];
         PRUint32 len = nsCRT::strlen(raw);
-        nsStr*   str = NS_STATIC_CAST(nsStr*, &mNameArray[index]);
 #ifdef DEBUG
        {
        // verify invarients of contents
        nsCAutoString temp1(raw);
-       nsCAutoString temp2(raw);
+       nsDependentCString temp2(raw);
        temp1.ToLowerCase();
        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
        }
-#endif      
-        nsStr::Initialize(*str, raw, len, len, eOneByte, PR_FALSE);
+#endif
+       // use placement-new to initialize the string object
+       nsDependentCString *str =
+         new (&mNameArray[index]) nsDependentCString(raw);
         nsCStringKey key(raw, len, nsCStringKey::NEVER_OWN);
         mNameTable->Put(&key, (void*)(index+1)); // to make 0 != nsnull
     }
@@ -88,7 +94,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
 }  
 
 inline PRInt32
-LookupLowercasedKeyword(const nsCString& aLowercasedKeyword, 
+LookupLowercasedKeyword(const nsACString& aLowercasedKeyword, 
                         nsHashtable* aTable)
 {
     nsCStringKey key(aLowercasedKeyword);
@@ -105,7 +111,7 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
     NS_ASSERTION(mCount,     "not inited");
 
     nsCAutoString strLower(aName);
-    strLower.ToLowerCase();
+    ToLowerCase(strLower);
     return LookupLowercasedKeyword(strLower, mNameTable);
 }  
 
@@ -118,11 +124,11 @@ nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
    
     nsCAutoString strLower;
     strLower.AssignWithConversion(aName);
-    strLower.ToLowerCase();
+    ToLowerCase(strLower);
     return LookupLowercasedKeyword(strLower, mNameTable);
 }  
 
-const nsCString& 
+const nsAFlatCString& 
 nsStaticCaseInsensitiveNameTable::GetStringValue(PRInt32 index)
 {
     NS_ASSERTION(mNameArray, "not inited");  

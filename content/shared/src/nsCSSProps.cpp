@@ -92,7 +92,7 @@ nsCSSProps::ReleaseTable(void)
 }
 
 nsCSSProperty 
-nsCSSProps::LookupProperty(const nsCString& aProperty)
+nsCSSProps::LookupProperty(const nsACString& aProperty)
 {
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
   if (gPropertyTable) {
@@ -107,14 +107,14 @@ nsCSSProps::LookupProperty(const nsAReadableString& aProperty) {
   return LookupProperty(theProp);
 }
 
-const nsCString& 
+const nsAFlatCString& 
 nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 {
   NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
   if (gPropertyTable) {
     return gPropertyTable->GetStringValue(PRInt32(aProperty));
   } else {
-    static nsCString sNullStr;
+    static nsDependentCString sNullStr("");
     return sNullStr;
   }
 }
@@ -754,19 +754,19 @@ nsCSSProps::SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[])
   return -1;
 }
 
-const nsCString&
+const nsAFlatCString&
 nsCSSProps::SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
 {
   PRInt32 i = SearchKeywordTableInt(aValue, aTable);
   if (i < 0) {
-    static nsCString sNullStr;
+    static nsDependentCString sNullStr("");
     return sNullStr;
   } else {
     return nsCSSKeywords::GetStringValue(nsCSSKeyword(i));
   }
 }
 
-const nsCString& 
+const nsAFlatCString& 
 nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
 {
 static const PRInt32 kBackgroundXPositionKTable[] = {
@@ -1128,7 +1128,7 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
     NS_ERROR("invalid property");
     break;
   }
-  static nsCString sNullStr;
+  static nsDependentCString sNullStr("");
   return sNullStr;
 }
 

@@ -38,8 +38,9 @@
 #ifndef nsCSSKeywords_h___
 #define nsCSSKeywords_h___
 
-class nsString;
-class nsCString;
+class nsAString;
+class nsACString;
+class nsAFlatCString;
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -63,11 +64,11 @@ public:
   static void ReleaseTable(void);
 
   // Given a keyword string, return the enum value
-  static nsCSSKeyword LookupKeyword(const nsCString& aKeyword);
-  static nsCSSKeyword LookupKeyword(const nsString& aKeyword);
+  static nsCSSKeyword LookupKeyword(const nsACString& aKeyword);
+  static nsCSSKeyword LookupKeyword(const nsAString& aKeyword);
 
   // Given a keyword enum, get the string value
-  static const nsCString& GetStringValue(nsCSSKeyword aKeyword);
+  static const nsAFlatCString& GetStringValue(nsCSSKeyword aKeyword);
 };
 
 #endif /* nsCSSKeywords_h___ */

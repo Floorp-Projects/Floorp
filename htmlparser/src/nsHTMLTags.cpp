@@ -86,7 +86,7 @@ nsHTMLTags::ReleaseTable(void)
 }
 
 nsHTMLTag 
-nsHTMLTags::LookupTag(const nsCString& aTag)
+nsHTMLTags::LookupTag(const nsACString& aTag)
 {
   NS_ASSERTION(gTagTable, "no lookup table, needs addref");
   if (gTagTable) {
@@ -111,7 +111,7 @@ nsHTMLTags::LookupTag(const nsCString& aTag)
 }
 
 nsHTMLTag 
-nsHTMLTags::LookupTag(const nsString& aTag)
+nsHTMLTags::LookupTag(const nsAString& aTag)
 {
   NS_ASSERTION(gTagTable, "no lookup table, needs addref");
   if (gTagTable) {
@@ -140,7 +140,7 @@ nsHTMLTags::LookupTag(const nsString& aTag)
   return eHTMLTag_userdefined;
 }
 
-const nsCString& 
+const nsAFlatCString& 
 nsHTMLTags::GetStringValue(nsHTMLTag aTag)
 {
   NS_ASSERTION(gTagTable, "no lookup table, needs addref");
@@ -148,7 +148,7 @@ nsHTMLTags::GetStringValue(nsHTMLTag aTag)
     // table is zero based, but tags are one based
     return gTagTable->GetStringValue(PRInt32(aTag)-1);
   } else {
-    static nsCString kNullStr;
+    static nsDependentCString kNullStr("");
     return kNullStr;
   }
 }
