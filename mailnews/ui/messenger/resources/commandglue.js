@@ -21,3 +21,13 @@ function NewMessage()
 	}
 }
 
+function GetNewMail()
+{
+	var appCore = new MsgAppCore();
+	if (appCore != null) {
+		dump("Initializing MsgAppCore and setting Window\n");
+		appCore.Init("MsgAppCore");
+		appCore.SetWindow(window);
+		appCore.GetNewMail();
+	}
+}
