@@ -1499,7 +1499,7 @@ public:
 **|
 |*/
 class mdbRow : public mdbCollection { // cell tuple
-
+public:
 // { ===== begin mdbRow methods =====
 
   // { ----- begin cursor methods -----
