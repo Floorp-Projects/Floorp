@@ -410,6 +410,8 @@ class nsCOMPtr : private nsCOMPtr_base
 			void
 			Assert_NoQueryNeeded()
 				{
+          if ( !mRawPtr )
+            return;
 					T* query_result = 0;
 					nsresult status = CallQueryInterface(mRawPtr, &query_result);
 					NS_ASSERTION(query_result == mRawPtr, "QueryInterface needed");
