@@ -380,7 +380,7 @@ sub applyUserPrefsFieldChange {
     if ($fieldCategory eq 'contact') {
         if ($editingUserIsTargetUser) {
             if ($newValue eq '') {
-                # old value must be defined else we couldn't have reached here
+                # old value must be defined (and different) else we couldn't have reached here
                 if (scalar(keys(%{$targetUser->fields->{'contact'}})) > 1) {
                     $field->remove();
                 } else {
