@@ -363,9 +363,8 @@ find_creator_url(MWContext *context)
 	if (!address)
 	    address = he->address;
 	switch (NET_URL_Type(address)) {
-	  case ABOUT_TYPE_URL:
 	  case MOCHA_TYPE_URL:
-	    /* These types cannot name the true origin (server) of JS code. */
+	    /* This type cannot name the true origin (server) of JS code. */
 	    break;
 	  case WYSIWYG_TYPE_URL:
 	    return LM_SkipWysiwygURLPrefix(address);
