@@ -128,6 +128,36 @@ nsInterfaceInfo::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
 }
 
 NS_IMETHODIMP
+nsInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
+                                      const nsXPTMethodInfo** result)
+{
+    // XXX probably want to speed this up with a hashtable, or by at least interning
+    // the names to avoid the strcmp
+    nsresult rv;
+    for (uint16 i = mMethodBaseIndex; i < mMethodCount; i++) {
+        const nsXPTMethodInfo* info;
+        info = NS_REINTERPRET_CAST(nsXPTMethodInfo*,
+                                   &mInterfaceRecord->interfaceDescriptor->
+                                   method_descriptors[i - mMethodBaseIndex]);
+        if (PL_strcmp(methodName, info->name) == 0) {
+#ifdef NS_DEBUG
+            // make sure there aren't duplicate names
+            for (; i < mMethodCount; i++) {
+                const nsXPTMethodInfo* info2;
+                info2 = NS_REINTERPRET_CAST(nsXPTMethodInfo*,
+                                           &mInterfaceRecord->interfaceDescriptor->
+                                           method_descriptors[i - mMethodBaseIndex]);
+                NS_ASSERTION(PL_strcmp(methodName, info2->name)!= 0, "duplicate names");
+            }
+#endif
+            *result = info;
+            return NS_OK;
+        }
+    }
+    return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
 nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
 {
     NS_PRECONDITION(constant, "bad param");
