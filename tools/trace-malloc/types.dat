@@ -3086,6 +3086,12 @@ __builtin_new
 __builtin_vec_new
 SinkContext::GrowStack(void)
 
+<nsScanner>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+nsScanner::Append(char const *, unsigned int)
+
 <nsParser>
 __builtin_new
 nsParser::Parse(nsIURI *, nsIStreamObserver *, int, void *, nsDTDMode)
