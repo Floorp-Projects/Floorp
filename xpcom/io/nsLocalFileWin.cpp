@@ -1945,7 +1945,7 @@ nsLocalFile::Launch()
   GetPath(getter_Copies(path));
 
   // use the app registry name to launch a shell execute....
-  LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
+  LONG r = (LONG) ::ShellExecute( NULL, NULL, (const char *) path, NULL, NULL, SW_SHOWNORMAL);
   if (r < 32) 
     rv = NS_ERROR_FAILURE;
 	else
