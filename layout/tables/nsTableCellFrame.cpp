@@ -57,7 +57,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
-#include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -127,7 +126,7 @@ nsTableCellFrame::Init(nsIPresContext*  aPresContext,
     nsTableCellFrame* cellFrame = (nsTableCellFrame*)aPrevInFlow;
     PRInt32           colIndex;
     cellFrame->GetColIndex(colIndex);
-    InitCellFrame(colIndex);
+    SetColIndex(colIndex);
   }
 
   return rv;
@@ -274,35 +273,9 @@ nsTableCellFrame::RemoveFrame(nsIPresContext* aPresContext,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
-{
-  nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && tableFrame) {
-    SetColIndex(aColIndex);
-  }
-}
-
-nsresult nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
+void nsTableCellFrame::SetColIndex(PRInt32 aColIndex)
 {  
   mBits.mColIndex = aColIndex;
-  // for style context optimization, set the content's column index if possible.
-  // this can only be done if we really have an nsTableCell.  
-  // other tags mapped to table cell display won't benefit from this optimization
-  // see nsHTMLStyleSheet::RulesMatching
-
-  //nsIContent* cell = kidFrame->GetContent();
-  nsIContent* cell = GetContent();
-  if (!cell)
-    return NS_OK;
-
-  nsIHTMLTableCellElement* cellContent = nsnull;
-  nsresult rv = CallQueryInterface(cell, &cellContent); // cellContent: REFCNT++
-  if (cellContent && NS_SUCCEEDED(rv)) { // it's a table cell
-    cellContent->SetColIndex(aColIndex);
-    NS_RELEASE(cellContent);
-  }
-  return rv;
 }
 
 

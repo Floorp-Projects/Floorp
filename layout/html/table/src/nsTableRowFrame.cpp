@@ -53,9 +53,6 @@
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsCOMPtr.h"
-// the following header files are required for style optimizations that work only when the child content is really a cell
-#include "nsIHTMLTableCellElement.h"
-// end includes for style optimizations that require real content knowledge
 
 
 struct nsTableCellReflowState : public nsHTMLReflowState

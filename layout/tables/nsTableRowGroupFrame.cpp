@@ -170,7 +170,7 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsIPresContext*       aPresContext,
                    "cell frames have different content");
       PRInt32 colIndex;
       originalCellFrame->GetColIndex(colIndex);
-      copyCellFrame->InitCellFrame(colIndex);
+      copyCellFrame->SetColIndex(colIndex);
         
       // Move to the next cell frame
       copyCellFrame     = copyCellFrame->GetNextCell();

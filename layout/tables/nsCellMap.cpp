@@ -1302,7 +1302,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   }
 
   // initialize the cell frame
-  aCellFrame->InitCellFrame(startColIndex);
+  aCellFrame->SetColIndex(startColIndex);
 
   // Create CellData objects for the rows that this cell spans. Set
   // their mOrigCell to nsnull and their mSpanData to point to data.
@@ -1586,7 +1586,7 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
         SetDataAt(aMap, *data, rowX, colX, (colX == aColIndex + 1)); 
       }
     }
-    cellFrame->InitCellFrame(startColIndex); 
+    cellFrame->SetColIndex(startColIndex);
   }
   PRInt32 damageHeight = (aRowSpanIsZero) ? aMap.GetColCount() - aRowIndex : aRowSpan;
   SetDamageArea(aColIndex, aRowIndex, 1 + endColIndex - aColIndex, damageHeight, aDamageArea); 

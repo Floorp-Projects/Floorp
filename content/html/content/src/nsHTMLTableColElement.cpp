@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLTableColElement.h"
-#include "nsIHTMLTableColElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsMappedAttributes.h"
@@ -50,8 +49,7 @@
 #define MAX_COLSPAN 1000
 
 class nsHTMLTableColElement : public nsGenericHTMLElement,
-                              public nsIDOMHTMLTableColElement,
-                              public nsIHTMLTableColElement
+                              public nsIDOMHTMLTableColElement
 {
 public:
   nsHTMLTableColElement();
@@ -71,9 +69,6 @@ public:
 
   // nsIDOMHTMLTableColElement
   NS_DECL_NSIDOMHTMLTABLECOLELEMENT
-
-  // nsIHTMLTableColElement
-  NS_IMETHOD GetSpanValue(PRInt32* aSpan);
 
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -129,7 +124,6 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableColElement, nsGenericElement)
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableColElement,
                                     nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableColElement)
-  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIHTMLTableColElement, col) // for col only
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableColElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -327,22 +321,6 @@ nsHTMLTableColElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aM
     aMapRuleFunc = &ColMapAttributesIntoRule;
   } else {
     aMapRuleFunc = &MapAttributesIntoRule;
-  }
-
-  return NS_OK;
-}
-
-
-NS_METHOD nsHTMLTableColElement::GetSpanValue(PRInt32* aSpan)
-{
-  if (nsnull!=aSpan) {
-    PRInt32 span=-1;
-    GetSpan(&span);
-
-    if (-1==span)
-      span=1; // the default;
-
-    *aSpan = span;
   }
 
   return NS_OK;
