@@ -39,18 +39,18 @@ CPPSRCS		= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libjsdombase_s.a \
-		$(DIST)/lib/libjsdomcore_s.a \
-		$(DIST)/lib/libjsdomevents_s.a \
-		$(DIST)/lib/libjsdomrange_s.a \
-		$(DIST)/lib/libjsdomhtml_s.a \
-		$(DIST)/lib/libjsdomcss_s.a \
+		$(DIST)/lib/libjsdombase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libjsdomcore_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libjsdomevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libjsdomrange_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libjsdomhtml_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libjsdomcss_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_TIMER_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		-lmozjs \
+		$(MOZ_JS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

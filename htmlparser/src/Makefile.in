@@ -29,6 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= htmlparser
 LIBRARY_NAME	= raptorhtmlpars
 IS_COMPONENT	= 1
+SHORT_LIBNAME	= htmlpars
+EXTRA_DSO_LIBS	= expat_s xmltok_s mozutil_s
 
 REQUIRES	= xpcom netlib raptor
 
@@ -109,12 +111,12 @@ EXPORTS		= \
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 EXTRA_DSO_LDOPTS = \
-		$(DIST)/lib/libexpat_s.a \
-		$(DIST)/lib/libxmltok_s.a \
+		$(DIST)/lib/libexpat_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libxmltok_s.$(LIB_SUFFIX) \
 		$(NULL)
 ifdef MOZ_PERF
 EXTRA_DSO_LDOPTS += \
-		$(DIST)/lib/libmozutil_s.a \
+		$(DIST)/lib/libmozutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 endif
 

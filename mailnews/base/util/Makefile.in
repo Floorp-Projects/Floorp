@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgbaseutil
 LIBRARY_NAME	= msgbaseutil
+SHORT_LIBNAME	= msgbutil
 
 CPPSRCS		= \
 		nsMsgGroupRecord.cpp \

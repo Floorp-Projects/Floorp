@@ -36,7 +36,6 @@ CPPSRCS		= \
 		nsDirectoryService.cpp \
 		nsEscape.cpp \
 		nsLinebreakConverter.cpp \
-		nsLocalFileUnix.cpp \
 		nsLocalFileCommon.cpp \
 		nsFileSpec.cpp \
 		nsFileSpecStreaming.cpp \
@@ -54,11 +53,16 @@ CPPSRCS		= \
 		nsByteArrayInputStream.cpp \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS		+= nsLocalFileOS2.cpp
+else
+CPPSRCS		+= nsLocalFileUnix.cpp
+endif
+
 EXPORTS		= \
 		nsEscape.h \
 		nsDirectoryService.h \
 		nsLocalFile.h \
-		nsLocalFileUnix.h \
 		nsLinebreakConverter.h \
 		nsFileSpec.h \
 		nsFileSpecStreaming.h \
@@ -70,6 +74,12 @@ EXPORTS		= \
 	        nsScriptableInputStream.h \
 		nsStorageStream.h \
 		$(NULL)			
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+EXPORTS		+= nsLocalFileOS2.h
+else
+EXPORTS		+= nsLocalFileUnix.h
+endif
 
 XPIDLSRCS	= \
 		nsIBaseStream.idl \

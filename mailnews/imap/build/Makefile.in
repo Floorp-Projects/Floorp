@@ -30,19 +30,25 @@ MODULE		= msgimap
 LIBRARY_NAME	= msgimap
 IS_COMPONENT	= 1
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= msgbutil
+else
+EXTRA_DSO_LIBS	= msgbaseutil
+endif
+
 CPPSRCS		= nsImapFactory.cpp
 EXPORTS		= nsMsgImapCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmsgimap_s.a \
+		$(DIST)/lib/libmsgimap_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/librdfutil_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-L$(DIST)/lib \
+		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
-		-lrdfutil_s \
-		-lmsgbaseutil \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -30,19 +30,20 @@ IS_COMPONENT	= 1
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= webbrwsr
+EXTRA_DSO_LIBS	= jsdom
 
 CPPSRCS		= \
 		nsWebBrowserModule.cpp		\
 		$(NULL)
 
 SHARED_LIBRARY_LIBS= \
-		$(DIST)/lib/libnsWebBrowser_s.a	\
-		$(DIST)/lib/libnsWebBrowserSetup_s.a	\
+		$(DIST)/lib/libnsWebBrowser_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libnsWebBrowserSetup_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS= \
 		-L$(DIST)/bin \
-		-ljsdom \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

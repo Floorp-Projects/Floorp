@@ -29,6 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= uconv
 LIBRARY_NAME	= uconv
 IS_COMPONENT	= 1
+# To avoid conflict with OS/2 system uconv.dll
+SHORT_LIBNAME  = mozuconv
 
 REQUIRES	= libxpcom
 
@@ -43,7 +45,6 @@ CPPSRCS		= \
 		nsTextToSubURI.cpp \
 		nsUnicodeDecodeHelper.cpp \
 		nsUnicodeEncodeHelper.cpp \
-		nsUNIXCharset.cpp \
 		nsCharsetAliasImp.cpp \
 		nsURLProperties.cpp \
 		nsMappingCache.cpp \
@@ -53,16 +54,33 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORT_RESOURCE	= \
-		$(srcdir)/unixcharset.properties \
 		$(srcdir)/charsetalias.properties \
 		$(srcdir)/charsetTitles.properties \
 		$(srcdir)/charsetData.properties \
-        $(srcdir)/acceptlanguage.properties \
+        	$(srcdir)/acceptlanguage.properties \
 		$(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS			+= nsOS2Charset.cpp
+EXPORT_RESOURCE		+= $(srcdir)/os2charset.properties
+else
+CPPSRCS			+= nsUNIXCharset.cpp
+EXPORT_RESOURCE		+= $(srcdir)/unixcharset.properties
+endif
 
 EXTRA_DSO_LDOPTS = $(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_LIBS += libuls.lib
+else
+OS_LIBS += -llibuni
+endif
+endif
+
+LOCAL_INCLUDES	= -I$(srcdir)/../ucvlatin -I$(srcdir)/../ucvja
 
 include $(topsrcdir)/config/rules.mk
 
@@ -73,8 +91,6 @@ CFLAGS		+= -DUSE_NSREG
 ifeq (,$(filter AIX OpenVMS QNX,$(OS_ARCH)))
 CFLAGS		+= -D__STDC__
 endif
-
-INCLUDES	+= -I$(srcdir)/../ucvlatin -I$(srcdir)/../ucvja
 
 install::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res

@@ -40,8 +40,8 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(EXTRA_DSO_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_DSO_LDOPTS += libuls.lib
@@ -51,7 +51,5 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= $(srcdir)/..
-
-OS_LIBS		+= $(NSPR_LIBS)
+INCLUDES	+= -I$(srcdir)/..
 

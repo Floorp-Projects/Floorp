@@ -6,7 +6,7 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE          = timebombgen 
-SIMPLE_PROGRAMS = timebombgen 
+SIMPLE_PROGRAMS = timebombgen$(BIN_SUFFIX)
 
 CPPSRCS         = \
                 timebombgen.cpp \

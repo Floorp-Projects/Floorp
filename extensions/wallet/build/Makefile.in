@@ -41,10 +41,10 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libcookieviewer_s.a \
-		$(DIST)/lib/libsignonviewer_s.a \
-		$(DIST)/lib/libwalletpreview_s.a \
-		$(DIST)/lib/libwalleteditor_s.a \
+		$(DIST)/lib/libcookieviewer_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libsignonviewer_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libwalletpreview_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libwalleteditor_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
