@@ -110,6 +110,7 @@ bin/components/libembedcomponents.so
 bin/components/libgfx2.so
 bin/components/libgfx_gtk.so
 bin/components/libgfxps.so
+bin/components/libgfxxprint.so
 bin/components/libimglib2.so
 bin/components/libimggif.so
 bin/components/libimgjpeg.so
