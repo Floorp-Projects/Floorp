@@ -26,6 +26,7 @@ function StartUp(windowName)
 {
 	dump("\nDoing " + windowName + " startup...\n");
 	dump("Looking up prefwindow object...\n");
+	
 	if (prefwindow == null)
 	{
 		dump("Creating prefwindow object...\n");
@@ -41,6 +42,30 @@ function StartUp(windowName)
 	}
 }
 
+function OnLoadPref()
+{
+	doSetOKCancel(handleOKButton, handleCancelButton);
+}
+
+function handleOKButton()
+{
+	if ( prefwindow )
+	{
+		prefwindow.savePrefs();
+		return false;
+	}
+	return true;
+}
+
+function handleCancelButton()
+{
+	if ( prefwindow )
+	{
+		prefwindow.cancelPrefs();
+		return false;
+	}
+	return true;
+}
 
 //function to open and close the manual prefs
 function openit()  {
@@ -146,9 +171,8 @@ function onOK()
 	return true
 }
 
-function startUpProxy() {
-	doSetOKCancel(onOK, null);
-
+function startUpProxy()
+{
 }
 
 function manualSelected()  {
@@ -160,3 +184,4 @@ function manualSelected()  {
 	  manualProxy.setAttribute("style", "display: block");
 
 }
+
