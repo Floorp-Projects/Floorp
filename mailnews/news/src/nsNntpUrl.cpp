@@ -32,6 +32,7 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsCRT.h"
+#include "nsNewsUtils.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class

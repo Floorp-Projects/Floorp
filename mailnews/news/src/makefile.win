@@ -35,6 +35,8 @@ CPPSRCS=    nsNNTPProtocol.cpp				\
 			nsNntpService.cpp				\
 			nsNewsFolder.cpp	\
 			nsNntpIncomingServer.cpp	\
+			nsNewsMessage.cpp	\
+			nsNewsUtils.cpp		\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
@@ -47,6 +49,8 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNntpService.obj				\
 			.\$(OBJDIR)\nsNewsFolder.obj				\
 			.\$(OBJDIR)\nsNntpIncomingServer.obj			\
+			.\$(OBJDIR)\nsNewsMessage.obj				\
+			.\$(OBJDIR)\nsNewsUtils.obj					\
 			$(NULL)
 
 
@@ -60,6 +64,7 @@ EXPORTS=	nsNNTPProtocol.h				\
 			nsNntpService.h					\
 			nsNewsFolder.h \
 			nsNntpIncomingServer.h 				\
+			nsNewsMessage.h	\
             $(NULL)
 
 LINCS=							\

@@ -24,6 +24,7 @@
 #include "nsNewsFolder.h"	 
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
+#include "prsystem.h"
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
 #include "nsIEnumerator.h"
@@ -35,6 +36,9 @@
 #include "nsRDFCID.h"
 #include "nsFileStream.h"
 #include "nsMsgDBCID.h"
+#include "nsNewsMessage.h"
+#include "nsNewsUtils.h"
+
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -58,30 +62,6 @@ nsMsgNewsFolder::nsMsgNewsFolder(void)
 #ifdef DEBUG_sspitzer
   printf("nsMsgNewsFolder::nsMsgNewsFolder\n");
 #endif
-
-		//XXXX This is a hack for the moment.  I'm assuming the only listener is our rdf:mailnews datasource.
-		//In reality anyone should be able to listen to folder changes. 
-
-		nsIRDFService* rdfService = nsnull;
-		nsIRDFDataSource* datasource = nsnull;
-
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-												nsIRDFService::GetIID(),
-												(nsISupports**) &rdfService);
-		if(NS_SUCCEEDED(rv))
-		{
-			if(NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:mailnewsfolders", &datasource)))
-			{
-				nsIFolderListener *folderListener;
-				if(NS_SUCCEEDED(datasource->QueryInterface(nsIFolderListener::GetIID(), (void**)&folderListener)))
-				{
-					AddFolderListener(folderListener);
-					NS_RELEASE(folderListener);
-				}
-				NS_RELEASE(datasource);
-			}
-			nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
-		}
 
 //  NS_INIT_REFCNT(); done by superclass
 }
@@ -399,9 +379,17 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 	nsresult rv = GetDatabase();
 
 	if(NS_SUCCEEDED(rv))
-		return mNewsDatabase->EnumerateMessages(result);
-	else
-		return rv;
+	{
+		nsIEnumerator *msgHdrEnumerator = nsnull;
+		nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
+		rv = mNewsDatabase->EnumerateMessages(&msgHdrEnumerator);
+		if(NS_SUCCEEDED(rv))
+			rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
+												   this, &messageEnumerator);
+		*result = messageEnumerator;
+		NS_IF_RELEASE(msgHdrEnumerator);
+	}
+	return rv;
 #endif
   return NS_ERROR_NULL_POINTER;
 }
@@ -427,9 +415,19 @@ nsMsgNewsFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
 {
 	nsresult rv = GetDatabase();
 	if(NS_SUCCEEDED(rv))
-		return mNewsDatabase->GetThreadContainingMsgHdr(message, thread);
-	else
-		return rv;
+	{
+		nsIMsgDBHdr *msgDBHdr = nsnull;
+		//We know from our factory that mailbox message resources are going to be
+  	//nsNewsMessages.
+	  nsNewsMessage *newsMessage = NS_STATIC_CAST(nsNewsMessage*, message);
+		rv = newsMessage->GetMsgDBHdr(&msgDBHdr);
+		if(NS_SUCCEEDED(rv))
+		{
+			rv = mNewsDatabase->GetThreadContainingMsgHdr(msgDBHdr, thread);
+			NS_IF_RELEASE(msgDBHdr);
+		}
+	}
+	return rv;
 
 }
 
@@ -659,7 +657,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetName(char **name)
     }
   }
 	nsAutoString folderName;
-	nsURI2Name(kNewsRootURI, mURI, folderName);
+	nsNewsURI2Name(kNewsRootURI, mURI, folderName);
 	*name = folderName.ToNewCString();
 
   return NS_OK;
@@ -859,7 +857,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
 #endif
   nsFileSpec nopath("");
   if (mPath == nopath) {
-    nsresult rv = nsURI2Path(kNewsRootURI, mURI, mPath);
+    nsresult rv = nsNewsURI2Path(kNewsRootURI, mURI, mPath);
     if (NS_FAILED(rv)) return rv;
   }
   aPathName = mPath;
@@ -868,44 +866,27 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
 
 NS_IMETHODIMP nsMsgNewsFolder::DeleteMessage(nsIMessage *message)
 {
-	if(mNewsDatabase)
-		return(mNewsDatabase->DeleteHeader(message, nsnull, PR_TRUE, PR_TRUE));
-
-	return NS_OK;
-}
-
-nsresult nsMsgNewsFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)
-{
-	nsISupports *supports;
-	if(NS_SUCCEEDED(QueryInterface(kISupportsIID, (void**)&supports)))
+	nsresult rv = GetDatabase();
+	if(NS_SUCCEEDED(rv))
 	{
-		PRUint32 i;
-		for(i = 0; i < mListeners->Count(); i++)
+		nsIMsgDBHdr *msgDBHdr = nsnull;
+		//We know from our factory that news message resources are going to be
+  	//nsNewsMessages.
+	  nsNewsMessage *newsMessage = NS_STATIC_CAST(nsNewsMessage*, message);
+
+		rv = newsMessage->GetMsgDBHdr(&msgDBHdr);
+		if(NS_SUCCEEDED(rv))
 		{
-			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-			listener->OnItemPropertyChanged(supports, property, oldValue, newValue);
-			NS_RELEASE(listener);
+			rv =mNewsDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+			NS_IF_RELEASE(msgDBHdr);
 		}
-		NS_RELEASE(supports);
 	}
+	return rv;}
 
-	return NS_OK;
-
-}
-
-nsresult nsMsgNewsFolder::NotifyItemAdded(nsISupports *item)
+NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message)
 {
 
-	PRUint32 i;
-	for(i = 0; i < mListeners->Count(); i++)
-	{
-		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-		listener->OnItemAdded(this, item);
-		NS_RELEASE(listener);
-	}
-
-	return NS_OK;
-
+	return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
@@ -917,22 +898,31 @@ NS_IMETHODIMP nsMsgNewsFolder::OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags,
 NS_IMETHODIMP nsMsgNewsFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
-	nsIMessage *pMessage;
-	mNewsDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
-	nsString author, subject;
-	nsISupports *msgSupports;
-	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	nsIMsgDBHdr *pMsgDBHdr;
+	nsresult rv = mNewsDatabase->GetMsgHdrForKey(aKeyChanged, &pMsgDBHdr);
+	if(NS_SUCCEEDED(rv))
 	{
-		PRUint32 i;
-		for(i = 0; i < mListeners->Count(); i++)
+		nsIMessage *message = nsnull;
+		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, &message);
+		if(NS_SUCCEEDED(rv))
 		{
-			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-			listener->OnItemRemoved(this, msgSupports);
-			NS_RELEASE(listener);
+			nsISupports *msgSupports;
+			if(NS_SUCCEEDED(message->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+			{
+				PRUint32 i;
+				for(i = 0; i < mListeners->Count(); i++)
+				{
+					nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+					listener->OnItemRemoved(this, msgSupports);
+					NS_RELEASE(listener);
+				}
+				NS_IF_RELEASE(msgSupports);
+			}
+			NS_IF_RELEASE(message);
+			UpdateSummaryTotals();
 		}
+		NS_IF_RELEASE(pMsgDBHdr);
 	}
-	UpdateSummaryTotals();
-	NS_RELEASE(msgSupports);
 
 	return NS_OK;
 }
@@ -940,16 +930,26 @@ NS_IMETHODIMP nsMsgNewsFolder::OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags,
 NS_IMETHODIMP nsMsgNewsFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
-	nsIMessage *pMessage;
-	mNewsDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
-	nsString author, subject;
-	nsISupports *msgSupports;
-	if(pMessage && NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	nsIMsgDBHdr *pMsgDBHdr;
+	nsresult rv = mNewsDatabase->GetMsgHdrForKey(aKeyChanged, &pMsgDBHdr);
+	if(NS_SUCCEEDED(rv))
 	{
-		NotifyItemAdded(msgSupports);
+		nsIMessage *message;
+		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, &message);
+		if(NS_SUCCEEDED(rv))
+		{
+			nsISupports *msgSupports;
+			if(message && NS_SUCCEEDED(message->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+			{
+				NotifyItemAdded(msgSupports);
+				NS_IF_RELEASE(msgSupports);
+			}
+			UpdateSummaryTotals();
+			NS_IF_RELEASE(message);
+		}
+		NS_IF_RELEASE(pMsgDBHdr);
 	}
-	UpdateSummaryTotals();
-	NS_RELEASE(msgSupports);
+	return NS_OK;
 
 	return NS_OK;
 }
@@ -958,3 +958,4 @@ NS_IMETHODIMP nsMsgNewsFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer * insti
 {
 	return NS_OK;
 }
+

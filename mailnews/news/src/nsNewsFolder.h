@@ -88,6 +88,7 @@ public:
   virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessage(nsIMessage *message);
+	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 
 	// nsIMsgNewsFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
@@ -106,8 +107,6 @@ protected:
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase();
-	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
-	nsresult NotifyItemAdded(nsISupports *item);
 
 	/* Finds the directory associated with this folder.  That is if the path is
 	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
