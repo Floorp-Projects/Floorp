@@ -36,6 +36,7 @@
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
+#include "nsIProxyAutoConfig.h"
 #include "nsIFile.h"
 
 #include "nsIInputStream.h"
@@ -1811,77 +1812,132 @@ NS_IMETHODIMP nsPluginHostImpl::NotifyStatusChange(nsIPlugin* plugin, nsresult e
 
 NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
 {
-  nsresult res = NS_ERROR_NOT_IMPLEMENTED;
+  if (!url || !result) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsresult res;
   const PRInt32 bufLen = 80;
-
-  nsIURI *uriIn = nsnull;
-  char *protocol = nsnull; 
-  char *host = nsnull; 
   char buf[bufLen];
+
+  nsCOMPtr<nsIURI> uriIn;
+  nsCOMPtr<nsIProxyAutoConfig> pacService;
+  nsXPIDLCString protocol; 
+  nsXPIDLCString type;
   nsXPIDLCString proxyHost;
   nsXPIDLCString noProxyList;
   PRInt32 proxyPort = -1;
   PRBool useDirect = PR_FALSE;
+  PRBool usePrefs = PR_TRUE;
     
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &res);
 
-  if (NS_FAILED(res) || (nsnull == prefs) || (nsnull == url)) {
+  if (NS_FAILED(res) || !prefs) {
     return res;
   }
 
   NS_WITH_SERVICE(nsIIOService, theService, kIOServiceCID, &res);
 
-  if (NS_FAILED(res) || (nsnull == theService) || (nsnull == url)) {
-    goto FPFU_CLEANUP;
+  if (NS_FAILED(res) || !theService) {
+    return res;
   }
 
   // make an nsURI from the argument url
-  res = theService->NewURI(url, nsnull, &uriIn);
+  res = theService->NewURI(url, nsnull, getter_AddRefs(uriIn));
   if (NS_FAILED(res)) {
-    goto FPFU_CLEANUP;
+    return res;
   }
 
-  // If the host for this url is in the "no proxy for" list, just go
-  // direct.
-  res = prefs->CopyCharPref("network.proxy.no_proxies_on", 
-                            getter_Copies(noProxyList));
-  if (NS_SUCCEEDED(res) && PL_strlen((const char *) noProxyList) > 0) {
-    res = uriIn->GetHost(&host);
-    if (NS_SUCCEEDED(res) && PL_strlen((const char *) host) > 0) {
-      if (PL_strstr(noProxyList, host)) {
+  // FIRST, see if the ProxyAutoConfig service is activated and enabled
+  pacService = do_GetService("@mozilla.org/network/proxy_autoconfig;1");
+  if (pacService) {
+
+    // ASSUMPTION: the only time where it's appropriate to NOT look at
+    // the prefs is a successful return from PAC.
+
+    if (NS_SUCCEEDED(res = pacService->ProxyForURL(uriIn, 
+                                                   getter_Copies(proxyHost), 
+                                                   &proxyPort, 
+                                                   getter_Copies(type)))) {
+      if (PL_strstr(type, "direct")) {
+        usePrefs = PR_FALSE;
         useDirect = PR_TRUE;
       }
-    }
-  }
-
-  if (!useDirect) {
-    // get the scheme from this nsURI
-    res = uriIn->GetScheme(&protocol);
-    if (NS_FAILED(res)) {
-      goto FPFU_CLEANUP;
-    }
-    
-    PR_snprintf(buf, bufLen, "network.proxy.%s", protocol);
-    res = prefs->CopyCharPref(buf, getter_Copies(proxyHost));
-    if (NS_SUCCEEDED(res) && PL_strlen((const char *) proxyHost) > 0) {
-      PR_snprintf(buf, bufLen, "network.proxy.%s_port", protocol);
-      res = prefs->GetIntPref(buf, &proxyPort);
-      
-      if (NS_SUCCEEDED(res) && (proxyPort>0)) { // currently a bug in IntPref
-        // construct the return value
-        *result = PR_smprintf("PROXY %s:%d", (const char *) proxyHost, 
-                              proxyPort);
-        if (nsnull == *result) {
-          res = NS_ERROR_OUT_OF_MEMORY;
-          goto FPFU_CLEANUP;
+      else {
+        if (proxyHost) {
+          usePrefs = PR_FALSE;
+          *result = PR_smprintf("PROXY %s:%d", (const char *) proxyHost, 
+                                proxyPort);
+          if (nsnull == *result) {
+            res = NS_ERROR_OUT_OF_MEMORY;
+            return res;
+          }
         }
       }
-      else { 
-        useDirect = PR_TRUE;
+    }
+  }
+  if (usePrefs) {
+    // If ProxyAutoConfig is not enabled, look to the prefs.
+    
+    // If the host for this url is in the "no proxy for" list, just go
+    // direct.
+    res = prefs->CopyCharPref("network.proxy.no_proxies_on", 
+                              getter_Copies(noProxyList));
+    if (NS_SUCCEEDED(res) && nsCRT::strlen((const char *) noProxyList) > 0) {
+      res = uriIn->GetHost(getter_Copies(proxyHost));
+      if (NS_SUCCEEDED(res) && nsCRT::strlen(proxyHost) > 0) {
+        // tokenize the noProxyList, and scan each token for
+        // the proxyHost.
+        // if only one host in noProxyList
+        const char *comma = ",";
+        char *newStr;
+        char *token;
+        char *noProxyCopy = nsXPIDLCString::Copy(noProxyList);
+        if (!noProxyCopy) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        
+        token = nsCRT::strtok( noProxyCopy, comma, &newStr );   
+        while( token != NULL ) {
+          if (PL_strstr((const char *) token, (const char *) proxyHost)) {
+            useDirect = PR_TRUE;
+            break;
+          }
+          token = nsCRT::strtok( newStr, comma, &newStr );
+        }
+        nsCRT::free(noProxyCopy);
+        
       }
     }
-    else {
-      useDirect = PR_TRUE;
+    if (!useDirect) {
+      // get the scheme from this nsURI
+      res = uriIn->GetScheme(getter_Copies(protocol));
+      if (NS_FAILED(res)) {
+        return res;
+      }
+      
+      PR_snprintf(buf, bufLen, "network.proxy.%s", (const char *) protocol);
+      res = prefs->CopyCharPref(buf, getter_Copies(proxyHost));
+      if (NS_SUCCEEDED(res) && nsCRT::strlen((const char *) proxyHost) > 0) {
+        PR_snprintf(buf, bufLen, "network.proxy.%s_port", 
+                    (const char *) protocol);
+        res = prefs->GetIntPref(buf, &proxyPort);
+        
+        if (NS_SUCCEEDED(res) && (proxyPort>0)) { // currently a bug in IntPref
+          // construct the return value
+          *result = PR_smprintf("PROXY %s:%d", (const char *) proxyHost, 
+                                proxyPort);
+          if (nsnull == *result) {
+            res = NS_ERROR_OUT_OF_MEMORY;
+            return res;
+          }
+        }
+        else { 
+          useDirect = PR_TRUE;
+        }
+      }
+      else {
+        useDirect = PR_TRUE;
+      }
     }
   }
   
@@ -1890,17 +1946,9 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
     *result = PR_smprintf("DIRECT");
     if (nsnull == *result) {
       res = NS_ERROR_OUT_OF_MEMORY;
-      goto FPFU_CLEANUP;
     }
   }
-  
 
- FPFU_CLEANUP:
-  nsCRT::free(protocol);
-  nsCRT::free(host);
-  NS_RELEASE(uriIn);
-
-  
   return res;
 }
 
