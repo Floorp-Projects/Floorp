@@ -49,9 +49,9 @@ DIRS		= profile/extensions
 PREF_JS_EXPORTS = $(srcdir)/profile/sunbird.js
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
-PROGRAM = MozillaSunbird$(BIN_SUFFIX)
+PROGRAM = sunbird$(BIN_SUFFIX)
 else
-PROGRAM = MozillaSunbird-bin$(BIN_SUFFIX)
+PROGRAM = sunbird-bin$(BIN_SUFFIX)
 endif
 
 REQUIRES = \
@@ -215,20 +215,19 @@ endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
-MozillaSunbird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+sunbird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
-                -e "s|%MOZ_USER_DIR%|.sunbird|" \
-		-e "s|%MREDIR%|$(mredir)|" \
-		-e "s|%MOZILLA-BIN%|$(PROGRAM)|g" > $@
+                -e "s|%MOZ_USER_DIR%|.mozilla/sunbird|" \
+		-e "s|%MREDIR%|$(mredir)|" > $@
 	chmod +x $@
 
-libs:: MozillaSunbird
+libs:: sunbird
 	$(INSTALL) $< $(DIST)/bin
 
-install:: MozillaSunbird
+install:: sunbird
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
-GARBAGE += MozillaSunbird
+GARBAGE += sunbird
 GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, sunbird.js)
 
 endif
@@ -270,7 +269,7 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-APP_NAME = MozillaSunbird
+APP_NAME = Sunbird
 
 libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS

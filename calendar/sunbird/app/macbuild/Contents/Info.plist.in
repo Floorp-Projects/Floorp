@@ -8,9 +8,9 @@
 	<array>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>MozillaSunbird-bin</string>
+	<string>sunbird-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>MozillaSunbird APP_VERSION, © 1998-2004 Contributors</string>
+	<string>Sunbird APP_VERSION, © 1998-2004 Contributors</string>
 	<key>CFBundleIconFile</key>
 	<string>sunbird</string>
 	<key>CFBundleIdentifier</key>
@@ -18,7 +18,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>APP_VERSION</string>
 	<key>CFBundleName</key>
-	<string>MozillaSunbird</string>
+	<string>Sunbird</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

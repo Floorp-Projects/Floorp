@@ -47,11 +47,11 @@ IDI_APPLICATION ICON "sunbird.ico"
 STRINGTABLE DISCARDABLE
 BEGIN
 #ifdef DEBUG
-    ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird Debug"
-    IDS_STARTMENU_APPNAME,              "Mozilla Sunbird Debug"
+    ID_DDE_APPLICATION_NAME,            "Sunbird Debug"
+    IDS_STARTMENU_APPNAME,              "Sunbird Debug"
 #else
-    ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird"
-    IDS_STARTMENU_APPNAME,              "Mozilla Sunbird"
+    ID_DDE_APPLICATION_NAME,            "Sunbird"
+    IDS_STARTMENU_APPNAME,              "Sunbird"
 #endif
 END
 

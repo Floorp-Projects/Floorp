@@ -1,5 +1,5 @@
 <!ENTITY  lang.version          "1.7a">
-<!ENTITY  brandShortName        "Mozilla Sunbird">
+<!ENTITY  brandShortName        "Sunbird">
 <!ENTITY  brandFullName         "Mozilla Sunbird">
 #expand <!ENTITY  version               __APP_VERSION__>
 <!ENTITY  vendorShortName       "Mozilla">

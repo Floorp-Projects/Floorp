@@ -47,9 +47,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 #ifdef DEBUG
-    ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird Debug"
+    ID_DDE_APPLICATION_NAME,            "Sunbird Debug"
 #else
-    ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird"
+    ID_DDE_APPLICATION_NAME,            "Sunbird"
 #endif
 END
 

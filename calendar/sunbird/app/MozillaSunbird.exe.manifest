@@ -3,10 +3,10 @@
 <assemblyIdentity
         version="1.0.0.0"
         processorArchitecture="X86"
-        name="Mozilla.Sunbird"
+        name="Sunbird"
         type="win32"
 />
-<description>Mozilla Sunbird</description>
+<description>Sunbird</description>
 <dependency>
         <dependentAssembly>
                 <assemblyIdentity
