@@ -47,11 +47,6 @@
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
 }
 
-.toolbarbutton-1[type="menu-button"]
-{
-  min-width: 57px;
-}
-
 toolbar[mode="icons"] .toolbarbutton-text {
   display: none;
 }
@@ -68,127 +63,127 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 #button-send {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 30px 30px 0px);
+  -moz-image-region: rect(0px 24px 24px 0px);
 }
 
 #button-send:hover {
-  -moz-image-region: rect(30px 30px 60px 0px);
+  -moz-image-region: rect(24px 24px 48px 0px);
 } 
 
 #button-send[disabled="true"] {
-  -moz-image-region: rect(60px 30px 90px 0px) !important;
+  -moz-image-region: rect(48px 24px 72px 0px) !important;
 } 
 
 #button-address {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 60px 30px 30px) !important;
+  -moz-image-region: rect(0px 48px 24px 24px) !important;
 }
 
 #button-address:hover {
-  -moz-image-region: rect(30px 60px 60px 30px) !important;
+  -moz-image-region: rect(24px 48px 48px 24px) !important;
 } 
 
 #button-address[disabled="true"] {
-  -moz-image-region: rect(60px 60px 90px 30px) !important;
+  -moz-image-region: rect(48px 48px 72px 24px) !important;
 } 
 
 #spellingButton {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 90px 30px 60px);
+  -moz-image-region: rect(0px 72px 24px 48px);
 }
 
 #spellingButton:hover {
-  -moz-image-region: rect(30px 90px 60px 60px);
+  -moz-image-region: rect(24px 72px 48px 48px);
 }
 
 #spellingButton[disabled="true"] {
-  -moz-image-region: rect(60px 90px 90px 60px) !important;
+  -moz-image-region: rect(48px 72px 72px 48px) !important;
 }
 
 #button-attach {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 120px 30px 90px);
+  -moz-image-region: rect(0px 96px 24px 72px);
 }
 
 #button-attach[buttonover="true"] {
-  -moz-image-region: rect(30px 120px 60px 90px);
+  -moz-image-region: rect(24px 96px 48px 72px);
 } 
 
 #button-attach[buttondown="true"] {
-  -moz-image-region: rect(30px 120px 60px 90px);
+  -moz-image-region: rect(24px 96px 48px 72px);
 } 
 
 #button-attach[disabled="true"] {
-  -moz-image-region: rect(60px 120px 90px 90px) !important;
+  -moz-image-region: rect(48px 96px 72px 72px) !important;
 } 
 
 #button-save {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 180px 30px 150px);
+  -moz-image-region: rect(0px 144px 24px 120px);
 }
 
 #button-save[buttonover="true"] {
-  -moz-image-region: rect(30px 180px 60px 150px);
+  -moz-image-region: rect(24px 144px 48px 120px);
 } 
 
 #button-save[buttondown="true"] {
-  -moz-image-region: rect(30px 180px 60px 150px);
+  -moz-image-region: rect(24px 144px 48px 120px);
 } 
 
 #button-save[disabled="true"] {
-  -moz-image-region: rect(60px 180px 90px 150px) !important;
+  -moz-image-region: rect(48px 144px 72px 120px) !important;
 } 
 
 #quoteButton {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 210px 30px 180px);
+  -moz-image-region: rect(0px 168px 24px 144px);
 }
 
 #quoteButton:hover {
-  -moz-image-region: rect(30px 210px 60px 180px);
+  -moz-image-region: rect(24px 168px 48px 144px);
 }
 
 #quoteButton[disabled="true"] {
-  -moz-image-region: rect(60px 210px 90px 180px) !important;
+  -moz-image-region: rect(48px 168px 72px 144px) !important;
 }
 
 #cut-button {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 240px 30px 210px);
+  -moz-image-region: rect(0px 192px 24px 168px);
 }
 
 #cut-button:hover {
-  -moz-image-region: rect(30px 240px 60px 210px);
+  -moz-image-region: rect(24px 192px 48px 168px);
 }
 
 #cut-button[disabled="true"] {
-  -moz-image-region: rect(60px 240px 90px 210px) !important;
+  -moz-image-region: rect(48px 192px 72px 168px) !important;
 }
 
 #copy-button {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 270px 30px 240px);
+  -moz-image-region: rect(0px 216px 24px 192px);
 }
 
 #copy-button:hover {
-  -moz-image-region: rect(30px 270px 60px 240px);
+  -moz-image-region: rect(24px 216px 48px 192px);
 }
 
 #copy-button[disabled="true"] {
-  -moz-image-region: rect(60px 270px 90px 240px) !important;
+  -moz-image-region: rect(48px 216px 72px 192px) !important;
 }
 
 #paste-button {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 300px 30px 270px);
+  -moz-image-region: rect(0px 240px 24px 216px);
 }
 
 #paste-button:hover {
-  -moz-image-region: rect(30px 300px 60px 270px);
+  -moz-image-region: rect(24px 240px 48px 216px);
 }
 
 #paste-button[disabled="true"] {
-  -moz-image-region: rect(60px 300px 90px 270px) !important;
+  -moz-image-region: rect(48px 240px 72px 216px) !important;
 }
 
 
@@ -200,148 +195,118 @@ toolbar[iconsize="small"] .toolbarbutton-1 {
 
 toolbar[iconsize="small"] #button-send {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 20px 20px 0px);
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
 
 toolbar[iconsize="small"] #button-send:hover {
-  -moz-image-region: rect(20px 20px 40px 0px);
+  -moz-image-region: rect(16px 16px 32px 0px);
 } 
 
 toolbar[iconsize="small"] #button-send[disabled] {
-  -moz-image-region: rect(40px 20px 60px 0px) !important;
+  -moz-image-region: rect(32px 16px 48px 0px) !important;
 } 
 
 toolbar[iconsize="small"] #button-address {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 40px 20px 20px) !important;
+  -moz-image-region: rect(0px 32px 16px 16px) !important;
 }
 
 toolbar[iconsize="small"] #button-address:hover {
-  -moz-image-region: rect(20px 40px 40px 20px) !important;
+  -moz-image-region: rect(16px 32px 32px 16px) !important;
 } 
 
 toolbar[iconsize="small"] #button-address[disabled] {
-   -moz-image-region: rect(40px 40px 60px 20px) !important;
+   -moz-image-region: rect(32px 32px 48px 16px) !important;
 } 
 
 toolbar[iconsize="small"] #spellingButton {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 60px 20px 40px);
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 toolbar[iconsize="small"] #spellingButton:hover {
-  -moz-image-region: rect(20px 60px 40px 40px);
+  -moz-image-region: rect(16px 48px 32px 32px);
 } 
 
 toolbar[iconsize="small"] #spellingButton[disabled="true"] {
-  -moz-image-region: rect(40px 60px 60px 40px) !important;
+  -moz-image-region: rect(32px 48px 48px 32px) !important;
 } 
 
 toolbar[iconsize="small"] #button-attach {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 80px 20px 60px);
+  -moz-image-region: rect(0px 64px 16px 48px);
 }
 
 toolbar[iconsize="small"] #button-attach:hover {
-  -moz-image-region: rect(20px 80px 40px 60px);
+  -moz-image-region: rect(16px 64px 32px 48px);
 } 
 
 toolbar[iconsize="small"] #button-attach[disabled] {
-  -moz-image-region: rect(40px 80px 60px 60px) !important;
+  -moz-image-region: rect(32px 64px 48px 48px) !important;
 } 
 
 toolbar[iconsize="small"] #button-save {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 120px 20px 100px);
+  -moz-image-region: rect(0px 96px 16px 80px);
 }
 
 toolbar[iconsize="small"] #button-save:hover {
-  -moz-image-region: rect(20px 120px 40px 100px);
+  -moz-image-region: rect(16px 96px 32px 80px);
 } 
 
 toolbar[iconsize="small"] #button-save[disabled] {
-  -moz-image-region: rect(40px 120px 60px 100px) !important;
+  -moz-image-region: rect(32px 96px 48px 80px) !important;
 } 
 
 toolbar[iconsize="small"] #quoteButton {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 140px 20px 120px);
+  -moz-image-region: rect(0px 112px 16px 96px);
 }
 
 toolbar[iconsize="small"] #quoteButton:hover {
-  -moz-image-region: rect(20px 140px 40px 120px);
+  -moz-image-region: rect(16px 112px 32px 96px);
 } 
 
 toolbar[iconsize="small"] #quoteButton[disabled="true"] {
-  -moz-image-region: rect(40px 140px 60px 120px) !important;
+  -moz-image-region: rect(32px 112px 48px 96px) !important;
 }
 
 toolbar[iconsize="small"] #cut-button {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 160px 20px 140px);
+  -moz-image-region: rect(0px 128px 16px 112px);
 }
 
 toolbar[iconsize="small"] #cut-button:hover {
-  -moz-image-region: rect(20px 160px 40px 140px);
+  -moz-image-region: rect(16px 128px 32px 112px);
 } 
 
 toolbar[iconsize="small"] #cut-button[disabled="true"] {
-  -moz-image-region: rect(40px 160px 60px 140px) !important;
+  -moz-image-region: rect(32px 128px 48px 112px) !important;
 }
 
 toolbar[iconsize="small"] #copy-button {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 180px 20px 160px);
+  -moz-image-region: rect(0px 144px 16px 128px);
 }
 
 toolbar[iconsize="small"] #copy-button:hover {
-  -moz-image-region: rect(20px 180px 40px 160px);
+  -moz-image-region: rect(16px 144px 32px 128px);
 } 
 
 toolbar[iconsize="small"] #copy-button[disabled="true"] {
-  -moz-image-region: rect(40px 180px 60px 160px) !important;
+  -moz-image-region: rect(32px 144px 48px 128px) !important;
 }
 toolbar[iconsize="small"] #paste-button {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 200px 20px 180px);
+  -moz-image-region: rect(0px 160px 16px 144px);
 }
 
 toolbar[iconsize="small"] #paste-button:hover {
-  -moz-image-region: rect(20px 200px 40px 180px);
+  -moz-image-region: rect(16px 160px 32px 144px);
 } 
 
 toolbar[iconsize="small"] #paste-button[disabled="true"] {
-  -moz-image-region: rect(40px 200px 60px 180px) !important;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1 {
-  padding: 2px;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[open="true"] {
-  padding: 3px 1px 1px 3px;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"]:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"][open="true"] {
-  padding: 2px;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[checked="true"] {
-  padding: 3px 1px 1px 3px !important;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"]:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][open="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:hover:active {
-  padding: 0;
+  -moz-image-region: rect(32px 160px 48px 144px) !important;
 }
 
 /* ::::: special toolbar colors ::::: */
@@ -473,295 +438,124 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #DecreaseFontSizeButton {
-  -moz-image-region: rect(64px 14px 80px 0px);
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
-
 #DecreaseFontSizeButton:hover {
-  -moz-image-region: rect(64px 28px 80px 14px);
+  -moz-image-region: rect(16px 16px 32px 0px);
 }
-
-#DecreaseFontSizeButton:hover:active {
-  -moz-image-region: rect(64px 42px 80px 28px);
-}
-
 #DecreaseFontSizeButton[disabled="true"] {
-  -moz-image-region: rect(64px 56px 80px 42px) !important;
+  -moz-image-region: rect(32px 16px 48px 0px) !important;
 }
 
 #IncreaseFontSizeButton {
-  -moz-image-region: rect(81px 18px 98px 0px);
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
-
 #IncreaseFontSizeButton:hover {
-  -moz-image-region: rect(81px 36px 98px 18px);
+  -moz-image-region: rect(16px 32px 32px 16px);
 }
-
-#IncreaseFontSizeButton:hover:active {
-  -moz-image-region: rect(81px 54px 98px 36px);
-}
-
 #IncreaseFontSizeButton[disabled="true"] {
-  -moz-image-region: rect(81px 72px 98px 54px) !important;
+  -moz-image-region: rect(32px 32px 48px 16px) !important;
 }
 
 #boldButton {
-  -moz-image-region: rect(16px 16px 32px 0px);
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
-
-#boldButton:hover {
-  -moz-image-region: rect(16px 32px 32px 16px);
-}
-
-#boldButton:hover:active {
+#boldButton:hover, #boldButton[checked="true"] {
   -moz-image-region: rect(16px 48px 32px 32px);
 }
-
-#boldButton[checked="true"] {
-  -moz-image-region: rect(16px 16px 32px 0px);
-}
-
 #boldButton[disabled="true"] {
-  -moz-image-region: rect(16px 64px 32px 48px) !important;
+  -moz-image-region: rect(32px 48px 48px 32px) !important;
 }
 
 #italicButton {
-  -moz-image-region: rect(98px 16px 114px 0px);
+  -moz-image-region: rect(0px 64px 16px 48px);
 }
-
-#italicButton:hover {
-  -moz-image-region: rect(98px 32px 114px 16px);
+#italicButton:hover, #italicButton[checked="true"] {
+  -moz-image-region: rect(16px 64px 32px 48px);
 }
-
-#italicButton:hover:active {
-  -moz-image-region: rect(98px 48px 114px 32px);
-}
-
-#italicButton[checked="true"] {
-  -moz-image-region: rect(98px 16px 114px 0px);
-}
-
 #italicButton[disabled="true"] {
-  -moz-image-region: rect(98px 64px 114px 48px) !important;
-}
-
-#underlineButton {
-  -moz-image-region: rect(114px 16px 130px 0px);
-}
-
-#underlineButton:hover {
-  -moz-image-region: rect(114px 32px 130px 16px);
-}
-
-#underlineButton:hover:active {
-  -moz-image-region: rect(114px 48px 130px 32px);
-}
-
-#underlineButton[checked="true"] {
-  -moz-image-region: rect(114px 16px 130px 0px);
-}
-
-#underlineButton[disabled="true"] {
-  -moz-image-region: rect(114px 64px 130px 48px) !important;
-}
-
-#ulButton {
-  -moz-image-region: rect(32px 16px 48px 0px);
-}
-
-#ulButton:hover {
-  -moz-image-region: rect(32px 32px 48px 16px);
-}
-
-#ulButton:hover:active {
-  -moz-image-region: rect(32px 48px 48px 32px);
-}
-
-#ulButton[checked="true"] {
-  -moz-image-region: rect(32px 16px 48px 0px);
-}
-
-#ulButton[disabled="true"] {
   -moz-image-region: rect(32px 64px 48px 48px) !important;
 }
 
+#underlineButton {
+  -moz-image-region: rect(0px 80px 16px 64px);
+}
+#underlineButton:hover, #underlineButton[checked="true"] {
+  -moz-image-region: rect(16px 80px 32px 64px);
+}
+
+#underlineButton[disabled="true"] {
+  -moz-image-region: rect(32px 80px 48px 64px) !important;
+}
+
+#ulButton {
+  -moz-image-region: rect(0px 96px 16px 80px);
+}
+#ulButton:hover, #ulButton[checked="true"] {
+  -moz-image-region: rect(16px 96px 32px 80px);
+}
+#ulButton[disabled="true"] {
+  -moz-image-region: rect(32px 96px 48px 80px) !important;
+}
+
 #olButton {
-  -moz-image-region: rect(194px 16px 210px 0px);
+  -moz-image-region: rect(0px 112px 16px 96px);
 }
-
-#olButton:hover {
-  -moz-image-region: rect(194px 32px 210px 16px);
+#olButton:hover, #olButton[checked="true"] {
+  -moz-image-region: rect(16px 112px 32px 96px);
 }
-
-#olButton:hover:active {
-  -moz-image-region: rect(194px 48px 210px 32px);
-}
-
-#olButton[checked="true"] {
-  -moz-image-region: rect(194px 16px 210px 0px);
-}
-
 #olButton[disabled="true"] {
-  -moz-image-region: rect(194px 64px 210px 48px) !important;
+  -moz-image-region: rect(32px 112px 48px 96px) !important;
 }
 
 #outdentButton {
-  -moz-image-region: rect(210px 16px 226px 0px);
+  -moz-image-region: rect(0px 128px 16px 112px);
 }
-
 #outdentButton:hover {
-  -moz-image-region: rect(210px 32px 226px 16px);
+  -moz-image-region: rect(16px 128px 32px 112px);
 }
-
-#outdentButton:hover:active {
-  -moz-image-region: rect(210px 48px 226px 32px);
-}
-
 #outdentButton[disabled="true"] {
-  -moz-image-region: rect(210px 64px 226px 48px) !important;
+  -moz-image-region: rect(32px 128px 48px 112px) !important;
 }
 
 #indentButton {
-  -moz-image-region: rect(178px 16px 194px 0px);
+  -moz-image-region: rect(0px 144px 16px 128px);
 }
-
 #indentButton:hover {
-  -moz-image-region: rect(178px 32px 194px 16px);
+  -moz-image-region: rect(16px 144px 32px 128px);
 }
-
-#indentButton:hover:active {
-  -moz-image-region: rect(178px 48px 194px 32px);
-}
-
 #indentButton[disabled="true"] {
-  -moz-image-region: rect(178px 64px 194px 48px) !important;
-}
-
-#align-left-button {
-  -moz-image-region: rect(146px 16px 162px 0px);
-}
-
-#align-left-button:hover {
-  -moz-image-region: rect(146px 32px 162px 16px);
-}
-
-#align-left-button:hover:active {
-  -moz-image-region: rect(146px 48px 162px 32px);
-}
-
-#align-left-button[checked="true"] {
-  -moz-image-region: rect(146px 16px 162px 0px);
-}
-
-#align-left-button[disabled="true"] {
-  -moz-image-region: rect(146px 64px 162px 48px) !important;
-}
-
-#align-center-button {
-  -moz-image-region: rect(48px 16px 64px 0px);
-}
-
-#align-center-button:hover {
-  -moz-image-region: rect(48px 32px 64px 16px);
-}
-
-#align-center-button:hover:active {
-  -moz-image-region: rect(48px 48px 64px 32px);
-}
-
-#align-center-button[checked="true"] {
-  -moz-image-region: rect(48px 16px 64px 0px);
-}
-
-#align-center-button[disabled="true"] {
-  -moz-image-region: rect(48px 64px 64px 48px) !important;
-}
-
-#align-right-button {
-  -moz-image-region: rect(162px 16px 178px 0px);
-}
-
-#align-right-button:hover {
-  -moz-image-region: rect(162px 32px 178px 16px);
-}
-
-#align-right-button:hover:active {
-  -moz-image-region: rect(162px 48px 178px 32px);
-}
-
-#align-right-button[checked="true"] {
-  -moz-image-region: rect(162px 16px 178px 0px);
-}
-
-#align-right-button[disabled="true"] {
-  -moz-image-region: rect(162px 64px 178px 48px) !important;
-}
-
-#align-justify-button {
-  -moz-image-region: rect(130px 16px 146px 0px);
-}
-
-#align-justify-button:hover {
-  -moz-image-region: rect(130px 32px 146px 16px);
-}
-
-#align-justify-button:hover:active {
-  -moz-image-region: rect(130px 48px 146px 32px);
-}
-
-#align-justify-button[checked="true"] {
-  -moz-image-region: rect(130px 16px 146px 0px);
-}
-
-#align-justify-button[disabled="true"] {
-  -moz-image-region: rect(130px 64px 146px 48px) !important;
+  -moz-image-region: rect(32px 144px 48px 128px) !important;
 }
 
 #AlignPopupButton {
-  -moz-image-region: rect(0px 16px 16px 0px);
+  -moz-image-region: rect(0px 176px 16px 160px);
 }
-
-#AlignPopupButton:hover {
-  -moz-image-region: rect(0px 32px 16px 16px);
+#AlignPopupButton:hover, #AlignPopupButton[open="true"] {
+  -moz-image-region: rect(16px 176px 32px 160px);
 }
-
-#AlignPopupButton[open="true"] {
-  -moz-image-region: rect(0px 48px 16px 32px) !important;
-}
-
 #AlignPopupButton[disabled="true"] {
-  -moz-image-region: rect(0px 64px 16px 48px) !important;
+  -moz-image-region: rect(32px 176px 48px 160px) !important;
 }
 
 #InsertPopupButton {
-  -moz-image-region: rect(244px 16px 260px 0px);
+  -moz-image-region: rect(0px 256px 16px 240px);
 }
-
-#InsertPopupButton:hover {
-  -moz-image-region: rect(244px 32px 260px 16px);
+#InsertPopupButton:hover, #InsertPopupButton[open="true"] {
+  -moz-image-region: rect(16px 256px 32px 240px);
 }
-
-#InsertPopupButton[open="true"] {
-  -moz-image-region: rect(244px 48px 260px 32px) !important;
-}
-
 #InsertPopupButton[disabled="true"] {
-  -moz-image-region: rect(244px 64px 260px 48px) !important;
+  -moz-image-region: rect(32px 256px 48px 240px) !important;
 }
 
 #smileButtonMenu {
-  -moz-image-region: rect(227px 17px 244px 0px);
+  -moz-image-region: rect(0px 304px 16px 288px);
 }
-
-#smileButtonMenu:hover {
-  -moz-image-region: rect(227px 34px 244px 17px);
+#smileButtonMenu:hover, #smileButtonMenu[open="true"] {
+  -moz-image-region: rect(16px 304px 32px 288px);
 }
-
-#smileButtonMenu[open="true"] {
-  -moz-image-region: rect(227px 51px 244px 34px) !important;
-}
-
 #smileButtonMenu[disabled="true"] {
-  -moz-image-region: rect(227px 68px 244px 51px) !important;
+  -moz-image-region: rect(32px 304px 48px 288px) !important;
 }
 
 /* ..... align menu ..... */
@@ -771,81 +565,45 @@ treechildren::-moz-tree-image(remote-err) {
 }
 
 #AlignLeftItem {
-  -moz-image-region: rect(146px 16px 162px 0px);
-}
-
-#AlignLeftItem:hover {
-  -moz-image-region: rect(146px 32px 162px 16px);
+  -moz-image-region: rect(0px 160px 16px 144px);
 }
 
 #AlignCenterItem {
-  -moz-image-region: rect(48px 16px 64px 0px);
-}
-
-#AlignCenterItem:hover {
-  -moz-image-region: rect(48px 32px 64px 16px);
+  -moz-image-region: rect(0px 176px 16px 160px);
 }
 
 #AlignRightItem {
-  -moz-image-region: rect(162px 16px 178px 0px);
-}
-
-#AlignRightItem:hover {
-  -moz-image-region: rect(162px 32px 178px 16px);
+  -moz-image-region: rect(0px 192px 16px 176px);
 }
 
 #AlignJustifyItem {
-  -moz-image-region: rect(130px 16px 146px 0px);
-}
-
-#AlignJustifyItem:hover {
-  -moz-image-region: rect(130px 32px 146px 16px);
+  -moz-image-region: rect(0px 208px 16px 192px);
 }
 
 /* ..... insert menu ..... */
 
 #InsertPopup > menuitem {
-  list-style-image: url("chrome://editor/skin/icons/btn1.gif");
+  list-style-image: url("chrome://messenger/skin/messengercompose/format-buttons.png");
 }
 
 #InsertLinkItem {
-  -moz-image-region: rect(16px 16px 32px 0);
-}
-
-#InsertLinkItem:hover {
-  -moz-image-region: rect(16px 32px 32px 16px);
+  -moz-image-region: rect(0px 224px 16px 208px);
 }
 
 #InsertAnchorItem {
-  -moz-image-region: rect(128px 16px 144px 0);
-}
-
-#InsertAnchorItem:hover {
-  -moz-image-region: rect(128px 32px 144px 16px);
+  -moz-image-region: rect(0px 240px 16px 224px);
 }
 
 #InsertImageItem {
-  -moz-image-region: rect(144px 16px 160px 0);
-}
-
-#InsertImageItem:hover {
-  -moz-image-region: rect(144px 32px 160px 16px);
+  -moz-image-region: rect(0px 256px 16px 240px);
 }
 
 #InsertHRuleItem {
-  -moz-image-region: rect(32px 16px 48px 0);
-}
-
-#InsertHRuleItem:hover {
-  -moz-image-region: rect(32px 32px 48px 16px);
+  -moz-image-region: rect(0px 272px 16px 256px);
 }
 
 #InsertTableItem {
-  -moz-image-region: rect(112px 16px 128px 0);
-}
-
-#InsertTableItem:hover {
-  -moz-image-region: rect(112px 32px 128px 16px);
+  -moz-image-region: rect(0px 288px 16px 272px);
 }
 
 /* ..... smiley menu ..... */

@@ -96,6 +96,12 @@ treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
 }
 
+/* ..... Saved Search Folder ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {
+  list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
+}
+
 
 /* ..... Servers  ..... */
 
@@ -242,19 +248,19 @@ treecol.threadColumnHeader[sortDirection="descending"] {
 }
 
 treechildren::-moz-tree-image(threadCol, container) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-closed.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread.png");
 }
 
 treechildren::-moz-tree-image(threadCol, container, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread.png");
 }
 
 treechildren::-moz-tree-image(threadCol, container, hasUnread) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-closed.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-new.png");
 }
 
 treechildren::-moz-tree-image(threadCol, container, hasUnread, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-new.png");
 }
 
 /* ..... read column ..... */
@@ -415,35 +421,35 @@ treechildren::-moz-tree-image(subjectCol, news, new) {
 /* ..... new thread icons for watch and ignore ..... */
 
 treechildren::-moz-tree-image(news, threadCol, watch) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-closed-eye.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-watched.png");
 }
 
 treechildren::-moz-tree-image(news, threadCol, ignore) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-closed-kill.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-ignored.png");
 }
 
 treechildren::-moz-tree-image(news, threadCol, container, hasUnread, watch) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-closed-eye.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-watched-new.png");
 }
 
 treechildren::-moz-tree-image(news, threadCol, container, hasUnread, ignore) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-closed-kill.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-ignored-new.png");
 }
 
 treechildren::-moz-tree-image(news, threadCol, container, hasUnread, watch, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open-eye.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-watched-new.png");
 }
 
 treechildren::-moz-tree-image(news, threadCol, container, hasUnread, ignore, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-new-open-kill.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-ignored-new.png");
 }
 
 treechildren::-moz-tree-image(news, threadCol, container, watch, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open-eye.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-watched.png");
 }
 
 treechildren::-moz-tree-image(news, threadCol, container, ignore, open) {
-  list-style-image: url("chrome://messenger/skin/icons/thread-open-kill.gif");
+  list-style-image: url("chrome://messenger/skin/icons/thread-ignored.png");
 }
 
 #sizeCol,

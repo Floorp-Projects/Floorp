@@ -44,32 +44,32 @@
 
 #button-security {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 150px 30px 120px);
+  -moz-image-region: rect(0px 120px 24px 96px);
 }
 
 #button-security[buttonover] {
-  -moz-image-region: rect(30px 150px 60px 120px);
+  -moz-image-region: rect(24px 120px 48px 96px);
 } 
 
 #button-security[buttondown] {
-  -moz-image-region: rect(30px 150px 60px 120px);
+  -moz-image-region: rect(24px 120px 48px 96px);
 } 
 
 #button-security[disabled] {
-  -moz-image-region: rect(60px 150px 90px 120px) !important;
+  -moz-image-region: rect(48px 120px 72px 96px) !important;
 } 
 
 toolbar[iconsize="small"] #button-security {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 100px 20px 80px);
+  -moz-image-region: rect(0px 80px 16px 64px);
 }
 
 toolbar[iconsize="small"] #button-security:hover {
-  -moz-image-region: rect(20px 100px 40px 80px);
+  -moz-image-region: rect(16px 80px 32px 64px);
 } 
 
 toolbar[iconsize="small"] #button-security[disabled] {
-  -moz-image-region: rect(40px 100px 60px 80px) !important;
+  -moz-image-region: rect(32px 80px 48px 64px) !important;
 } 
 
 #msgcomposeWindow #signing-status {
@@ -78,12 +78,12 @@ toolbar[iconsize="small"] #button-security[disabled] {
 }
 
 #msgcomposeWindow[signing="ok"] #signing-status {
-  list-style-image: url("chrome://messenger/skin/smime/icons/sbSignOk.gif");
+  list-style-image: url("chrome://messenger/skin/smime/icons/sbSignOk.png");
   visibility: visible;
 }
 
 #msgcomposeWindow[signing="notok"] #signing-status {
-  list-style-image: url("chrome://messenger/skin/smime/icons/sbSignNotOk.gif");
+  list-style-image: url("chrome://messenger/skin/smime/icons/sbSignNotOk.png");
   visibility: visible;
 }
 
@@ -94,12 +94,12 @@ toolbar[iconsize="small"] #button-security[disabled] {
 }
 
 #msgcomposeWindow[crypto="ok"] #encryption-status {
-  list-style-image: url("chrome://messenger/skin/smime/icons/sbCryptoOk.gif");
+  list-style-image: url("chrome://messenger/skin/smime/icons/sbCryptoOk.png");
   visibility: visible;
 }
 
 #msgcomposeWindow[crypto="notok"] #encryption-status {
-  list-style-image: url("chrome://messenger/skin/smime/icons/sbCryptoNotOk.gif");
+  list-style-image: url("chrome://messenger/skin/smime/icons/sbCryptoNotOk.png");
   visibility: visible;
 }
 

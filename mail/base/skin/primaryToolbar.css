@@ -31,17 +31,15 @@
 
 .toolbarbutton-1 {
   -moz-box-orient: vertical;
-  min-width: 47px;
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar.png");
-}
-
-.toolbarbutton-1[type="menu-button"]
-{
-  min-width: 57px;
 }
 
 .toolbarbutton-1[type="menu"] > .toolbarbutton-menu-dropmarker {
   display: none;
+}
+
+toolbar[mode="full"] .toolbarbutton-1 {
+  min-width: 47px;
 }
 
 toolbar[mode="icons"] .toolbarbutton-text {
@@ -59,184 +57,184 @@ toolbar[mode="text"] .toolbarbutton-text {
 }
 
 #button-getmsg {
-  -moz-image-region: rect(0px 30px 30px 0px);
+  -moz-image-region: rect(0px 24px 24px 0px);
 }
 
 #button-getmsg:hover {
-  -moz-image-region: rect(30px 30px 60px 0px);
+  -moz-image-region: rect(24px 24px 48px 0px);
 } 
 
 #button-getmsg[disabled] {
-  -moz-image-region: rect(60px 30px 90px 0px) !important;
+  -moz-image-region: rect(48px 24px 72px 0px) !important;
 } 
 
 #button-newmsg {
-  -moz-image-region: rect(0px 60px 30px 30px);
+  -moz-image-region: rect(0px 48px 24px 24px);
 }
 
 #button-newmsg:hover {
-  -moz-image-region: rect(30px 60px 60px 30px);
+  -moz-image-region: rect(24px 48px 48px 24px);
 } 
 
 #button-newmsg[disabled] {
-   -moz-image-region: rect(60px 60px 90px 30px) !important;
+   -moz-image-region: rect(48px 48px 72px 24px) !important;
 } 
 
 #button-address {
-  -moz-image-region: rect(0px 90px 30px 60px);
+  -moz-image-region: rect(0px 72px 24px 48px);
 }
 
 #button-address:hover {
-  -moz-image-region: rect(30px 90px 60px 60px);
+  -moz-image-region: rect(24px 72px 48px 48px);
 } 
 
 #button-address[disabled="true"] {
-  -moz-image-region: rect(60px 90px 90px 60px) !important;
+  -moz-image-region: rect(48px 72px 72px 48px) !important;
 } 
 
 #button-reply {
-  -moz-image-region: rect(0px 120px 30px 90px);
+  -moz-image-region: rect(0px 96px 24px 72px);
 }
 
 #button-reply:hover {
-  -moz-image-region: rect(30px 120px 60px 90px);
+  -moz-image-region: rect(24px 96px 48px 72px);
 } 
 
 #button-reply[disabled] {
-  -moz-image-region: rect(60px 120px 90px 90px) !important;
+  -moz-image-region: rect(48px 96px 72px 72px) !important;
 } 
 
 #button-replyall {
-  -moz-image-region: rect(0px 150px 30px 120px);
+  -moz-image-region: rect(0px 120px 24px 96px);
 }
 
 #button-replyall:hover {
-  -moz-image-region: rect(30px 150px 60px 120px);
+  -moz-image-region: rect(24px 120px 48px 96px);
 } 
 
 #button-replyall[disabled] {
-  -moz-image-region: rect(60px 150px 90px 120px) !important;
+  -moz-image-region: rect(48px 120px 72px 96px) !important;
 } 
 
 #button-forward {
-  -moz-image-region: rect(0px 180px 30px 150px);
+  -moz-image-region: rect(0px 144px 24px 120px);
 }
 
 #button-forward:hover {
-  -moz-image-region: rect(30px 180px 60px 150px);
+  -moz-image-region: rect(24px 144px 48px 120px);
 } 
 
 #button-forward[disabled] {
-  -moz-image-region: rect(60px 180px 90px 150px) !important;
+  -moz-image-region: rect(48px 144px 72px 120px) !important;
 } 
 
 #button-delete {
-  -moz-image-region: rect(0px 210px 30px 180px);
+  -moz-image-region: rect(0px 168px 24px 144px);
 }
 
 #button-delete:hover {
-  -moz-image-region: rect(30px 210px 60px 180px);
+  -moz-image-region: rect(24px 168px 48px 144px);
 } 
 
 #button-delete[disabled] {
-  -moz-image-region: rect(60px 210px 90px 180px) !important;
+  -moz-image-region: rect(48px 168px 72px 144px) !important;
 } 
 
 .junk-button {
-  -moz-image-region: rect(0px 240px 30px 210px);
+  -moz-image-region: rect(0px 192px 24px 168px);
 }
 
 .junk-button:hover {
-  -moz-image-region: rect(30px 240px 60px 210px);
+  -moz-image-region: rect(24px 192px 48px 168px);
 }
 
 .junk-button[disabled="true"] {
-  -moz-image-region: rect(60px 240px 90px 210px) !important;
+  -moz-image-region: rect(48px 192px 72px 168px) !important;
 }
 
 #button-print {
-  -moz-image-region: rect(0px 270px 30px 240px);
+  -moz-image-region: rect(0px 216px 24px 192px);
 }
 
 #button-print[buttonover] {
-  -moz-image-region: rect(30px 270px 60px 240px);
+  -moz-image-region: rect(24px 216px 48px 192px);
 }
 
 #button-print[buttondown] {
-  -moz-image-region: rect(30px 270px 60px 240px);
+  -moz-image-region: rect(24px 216px 48px 192px);
 }
 
 #button-print[disabled] {
-  -moz-image-region: rect(60px 270px 90px 240px) !important;
+  -moz-image-region: rect(48px 216px 72px 192px) !important;
 }
 
 #button-stop {
-  -moz-image-region: rect(0px 300px 30px 270px);
+  -moz-image-region: rect(0px 240px 24px 216px);
 }
 
 #button-stop:hover {
-  -moz-image-region: rect(30px 300px 60px 270px);
+  -moz-image-region: rect(24px 240px 48px 216px);
 } 
 
 #button-stop[disabled="true"] {
-  -moz-image-region: rect(60px 300px 90px 270px) !important;
+  -moz-image-region: rect(48px 240px 72px 216px) !important;
 }
 
 #button-file {
-  -moz-image-region: rect(0px 330px 30px 300px);
+  -moz-image-region: rect(0px 264px 24px 240px);
 }
 
 #button-file:hover {
-  -moz-image-region: rect(30px 330px 60px 300px);
+  -moz-image-region: rect(24px 264px 48px 240px);
 } 
 
 #button-file:hover:active,
 #button-file[open] {
-  -moz-image-region: rect(30px 330px 60px 300px);
+  -moz-image-region: rect(24px 264px 48px 240px);
 } 
 
 #button-file[disabled] {
-  -moz-image-region: rect(60px 330px 90px 300px) !important;
+  -moz-image-region: rect(48px 264px 72px 240px) !important;
 } 
 
 #button-next {
-  -moz-image-region: rect(0px 360px 30px 330px);
+  -moz-image-region: rect(0px 288px 24px 264px);
 }
 
 #button-next:hover {
-  -moz-image-region: rect(30px 360px 60px 330px);
+  -moz-image-region: rect(24px 288px 48px 264px);
 } 
 
 #button-next[disabled] {
-  -moz-image-region: rect(60px 360px 90px 330px) !important;
+  -moz-image-region: rect(48px 288px 72px 264px) !important;
 } 
 
 #button-previous {
-  -moz-image-region: rect(0px 390px 30px 360px);
+  -moz-image-region: rect(0px 312px 24px 288px);
 }
 
 #button-previous:hover {
-  -moz-image-region: rect(30px 390px 60px 360px);
+  -moz-image-region: rect(24px 312px 48px 288px);
 } 
 
 #button-previous[disabled] {
-  -moz-image-region: rect(60px 390px 90px 360px) !important;
+  -moz-image-region: rect(48px 312px 72px 288px) !important;
 } 
 
 #button-mark {
-  -moz-image-region: rect(0px 420px 30px 390px);
+  -moz-image-region: rect(0px 336px 24px 312px);
 }
 
 #button-mark[buttonover] {
-  -moz-image-region: rect(30px 420px 60px 390px);
+  -moz-image-region: rect(24px 336px 48px 312px);
 } 
 
 #button-mark[buttondown] {
-  -moz-image-region: rect(30px 420px 60px 390px);
+  -moz-image-region: rect(24px 336px 48px 312px);
 } 
 
 #button-mark[disabled] {
-  -moz-image-region: rect(60px 420px 90px 390px) !important;
+  -moz-image-region: rect(48px 336px 72px 312px) !important;
 } 
 
 
@@ -244,216 +242,183 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 toolbar[iconsize="small"] .toolbarbutton-1 {
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png");
-  min-width: 30px;
 }
 
 toolbar[iconsize="small"] #button-getmsg {
-  -moz-image-region: rect(0px 20px 20px 0px);
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
 
 toolbar[iconsize="small"] #button-getmsg:hover {
-  -moz-image-region: rect(20px 20px 40px 0px);
+  -moz-image-region: rect(16px 16px 32px 0px);
 } 
 
 toolbar[iconsize="small"] #button-getmsg[disabled] {
-  -moz-image-region: rect(40px 20px 60px 0px) !important;
+  -moz-image-region: rect(32px 16px 48px 0px) !important;
 } 
 
 toolbar[iconsize="small"] #button-newmsg {
-  -moz-image-region: rect(0px 40px 20px 20px);
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 toolbar[iconsize="small"] #button-newmsg:hover {
-  -moz-image-region: rect(20px 40px 40px 20px);
+  -moz-image-region: rect(16px 32px 32px 16px);
 } 
 
 toolbar[iconsize="small"] #button-newmsg[disabled] {
-   -moz-image-region: rect(40px 40px 60px 20px) !important;
+   -moz-image-region: rect(32px 32px 48px 16px) !important;
 } 
 
 toolbar[iconsize="small"] #button-address {
-  -moz-image-region: rect(0px 60px 20px 40px);
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 toolbar[iconsize="small"] #button-address:hover {
-  -moz-image-region: rect(20px 60px 40px 40px);
+  -moz-image-region: rect(16px 48px 32px 32px);
 } 
 
 toolbar[iconsize="small"] #button-address[disabled="true"] {
-  -moz-image-region: rect(40px 60px 60px 40px) !important;
+  -moz-image-region: rect(32px 48px 48px 32px) !important;
 } 
 
 toolbar[iconsize="small"] #button-reply {
-  -moz-image-region: rect(0px 80px 20px 60px);
+  -moz-image-region: rect(0px 64px 16px 48px);
 }
 
 toolbar[iconsize="small"] #button-reply:hover {
-  -moz-image-region: rect(20px 80px 40px 60px);
+  -moz-image-region: rect(16px 64px 32px 48px);
 } 
 
 toolbar[iconsize="small"] #button-reply[disabled] {
-  -moz-image-region: rect(40px 80px 60px 60px) !important;
+  -moz-image-region: rect(32px 64px 48px 48px) !important;
 } 
 
 toolbar[iconsize="small"] #button-replyall {
-  -moz-image-region: rect(0px 100px 20px 80px);
+  -moz-image-region: rect(0px 80px 16px 64px);
 }
 
 toolbar[iconsize="small"] #button-replyall:hover {
-  -moz-image-region: rect(20px 100px 40px 80px);
+  -moz-image-region: rect(16px 80px 32px 64px);
 } 
 
 toolbar[iconsize="small"] #button-replyall[disabled] {
-  -moz-image-region: rect(40px 100px 60px 80px) !important;
+  -moz-image-region: rect(32px 80px 48px 64px) !important;
 } 
 
 toolbar[iconsize="small"] #button-forward {
-  -moz-image-region: rect(0px 120px 20px 100px);
+  -moz-image-region: rect(0px 96px 16px 80px);
 }
 
 toolbar[iconsize="small"] #button-forward:hover {
-  -moz-image-region: rect(20px 120px 40px 100px);
+  -moz-image-region: rect(16px 96px 32px 80px);
 } 
 
 toolbar[iconsize="small"] #button-forward[disabled] {
-  -moz-image-region: rect(40px 120px 60px 100px) !important;
+  -moz-image-region: rect(32px 96px 48px 80px) !important;
 } 
 
 toolbar[iconsize="small"] #button-delete {
-  -moz-image-region: rect(0px 140px 20px 120px);
+  -moz-image-region: rect(0px 112px 16px 96px);
 }
 
 toolbar[iconsize="small"] #button-delete:hover {
-  -moz-image-region: rect(20px 140px 40px 120px);
+  -moz-image-region: rect(16px 112px 32px 96px);
 } 
 
 toolbar[iconsize="small"] #button-delete[disabled] {
-  -moz-image-region: rect(40px 140px 60px 120px) !important;
+  -moz-image-region: rect(32px 112px 48px 96px) !important;
 } 
 
 toolbar[iconsize="small"] .junk-button{
-  -moz-image-region: rect(0px 160px 20px 140px);
+  -moz-image-region: rect(0px 128px 16px 112px);
 }
 
 toolbar[iconsize="small"] .junk-button:hover {
-  -moz-image-region: rect(20px 160px 40px 140px);
+  -moz-image-region: rect(16px 128px 32px 112px);
 }
 
 toolbar[iconsize="small"] .junk-button[disabled="true"] {
-  -moz-image-region: rect(40px 160px 60px 140px) !important;
+  -moz-image-region: rect(32px 128px 48px 112px) !important;
 }
 
 toolbar[iconsize="small"] #button-print {
-  -moz-image-region: rect(0px 180px 20px 160px);
+  -moz-image-region: rect(0px 144px 16px 128px);
 }
 
 toolbar[iconsize="small"] #button-print[buttonover] {
-  -moz-image-region: rect(20px 180px 40px 160px);
+  -moz-image-region: rect(16px 144px 32px 128px);
 }
 
 toolbar[iconsize="small"] #button-print[buttondown] {
-  -moz-image-region: rect(20px 180px 40px 160px);
+  -moz-image-region: rect(16px 144px 32px 128px);
 }
 
 toolbar[iconsize="small"] #button-print[disabled] {
-  -moz-image-region: rect(40px 180px 60px 160px) !important;
+  -moz-image-region: rect(32px 144px 48px 128px) !important;
 }
 
 toolbar[iconsize="small"] #button-stop {
-  -moz-image-region: rect(0px 200px 20px 180px);
+  -moz-image-region: rect(0px 160px 16px 144px);
 }
 
 toolbar[iconsize="small"] #button-stop:hover {
-  -moz-image-region: rect(20px 200px 40px 180px);
+  -moz-image-region: rect(16px 160px 32px 144px);
 } 
 
 toolbar[iconsize="small"] #button-stop[disabled="true"] {
-  -moz-image-region: rect(40px 200px 60px 180px) !important;
+  -moz-image-region: rect(32px 160px 48px 144px) !important;
 }
 
 toolbar[iconsize="small"] #button-file {
-  -moz-image-region: rect(0px 220px 20px 200px);
+  -moz-image-region: rect(0px 176px 16px 160px);
 }
 
 toolbar[iconsize="small"] #button-file:hover {
-  -moz-image-region: rect(20px 220px 40px 200px);
+  -moz-image-region: rect(16px 176px 32px 160px);
 } 
 
 toolbar[iconsize="small"] #button-file:hover:active,
 toolbar[iconsize="small"] #button-file[open] {
-  -moz-image-region: rect(20px 220px 40px 200px);
+  -moz-image-region: rect(16px 176px 32px 160px);
 } 
 
 toolbar[iconsize="small"] #button-file[disabled] {
-  -moz-image-region: rect(40px 220px 60px 200px) !important;
+  -moz-image-region: rect(32px 176px 48px 160px) !important;
 } 
 
 toolbar[iconsize="small"] #button-next {
-  -moz-image-region: rect(0px 240px 20px 220px);
+  -moz-image-region: rect(0px 192px 16px 176px);
 }
 
 toolbar[iconsize="small"] #button-next:hover {
-  -moz-image-region: rect(20px 240px 40px 220px);
+  -moz-image-region: rect(16px 192px 32px 176px);
 } 
 
 toolbar[iconsize="small"] #button-next[disabled] {
-  -moz-image-region: rect(40px 240px 60px 220px) !important;
+  -moz-image-region: rect(32px 192px 48px 176px) !important;
 } 
 
 toolbar[iconsize="small"] #button-previous {
-  -moz-image-region: rect(0px 260px 20px 240px);
+  -moz-image-region: rect(0px 208px 16px 192px);
 }
 
 toolbar[iconsize="small"] #button-previous:hover {
-  -moz-image-region: rect(20px 260px 40px 240px);
+  -moz-image-region: rect(16px 208px 32px 192px);
 } 
 
 toolbar[iconsize="small"] #button-previous[disabled] {
-  -moz-image-region: rect(40px 260px 60px 240px) !important;
+  -moz-image-region: rect(32px 208px 48px 192px) !important;
 } 
 
 toolbar[iconsize="small"] #button-mark {
-  -moz-image-region: rect(0px 280px 20px 260px);
+  -moz-image-region: rect(0px 224px 16px 208px);
 }
 
 toolbar[iconsize="small"] #button-mark:hover {
-  -moz-image-region: rect(20px 280px 40px 260px);
+  -moz-image-region: rect(16px 224px 32px 208px);
 } 
 
 toolbar[iconsize="small"] #button-mark[disabled] {
-  -moz-image-region: rect(40px 280px 60px 260px) !important;
-} 
-
-/* Smaller padding on small toolbar buttons */
-
-toolbar[iconsize="small"] .toolbarbutton-1 {
-  padding: 2px;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[open="true"] {
-  padding: 3px 1px 1px 3px;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"]:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[disabled="true"][open="true"] {
-  padding: 2px;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[checked="true"] {
-  padding: 3px 1px 1px 3px !important;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"]:hover:active,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][open="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"],
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:hover,
-toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:hover:active {
-  padding: 0;
+  -moz-image-region: rect(32px 224px 48px 208px) !important;
 }
 
 /* ::::: end small primary toolbar buttons ::::: */
@@ -462,7 +427,7 @@ toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:
 
 #junkBarImage {
   list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png");
-  -moz-image-region: rect(0px 160px 20px 140px);
+  -moz-image-region: rect(0px 128px 16px 112px);
   padding-left: 3px;
 }
 
@@ -489,8 +454,7 @@ toolbar[iconsize="small"] .toolbarbutton-1[type="menu-button"][disabled="true"]:
 }
 
 #remoteContentImage {
-  list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png"); /* temporary artwork!! */
-  -moz-image-region: rect(0px 140px 20px 120px);
+  list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
   padding-left: 3px;
 }
 
