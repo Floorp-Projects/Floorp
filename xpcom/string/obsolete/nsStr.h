@@ -267,6 +267,225 @@ protected:
     MOZ_COUNT_DTOR(nsStr);
   }
 
+ /**
+  * This method initializes an nsStr for use
+  *
+  * @update	gess 01/04/99
+  * @param  aString is the nsStr to be initialized
+  * @param  aCharSize tells us the requested char size (1 or 2 bytes)
+  */
+  static void Initialize(nsStr& aDest,eCharSize aCharSize);
+
+ /**
+  * This method initializes an nsStr for use
+  *
+  * @update	gess 01/04/99
+  * @param  aString is the nsStr to be initialized
+  * @param  aCharSize tells us the requested char size (1 or 2 bytes)
+  */
+  static void Initialize(nsStr& aDest,char* aCString,PRUint32 aCapacity,PRUint32 aLength,eCharSize aCharSize,PRBool aOwnsBuffer);
+ /**
+  * This method destroys the given nsStr, and *MAY* 
+  * deallocate it's memory depending on the setting
+  * of the internal mOwnsBUffer flag.
+  *
+  * @update	gess 01/04/99
+  * @param  aString is the nsStr to be manipulated
+  */
+  static void Destroy(nsStr& aDest); 
+
+ /**
+  * These methods are where memory allocation/reallocation occur. 
+  *
+  * @update	gess 01/04/99
+  * @param  aString is the nsStr to be manipulated
+  * @return  
+  */
+  static PRBool EnsureCapacity(nsStr& aString,PRUint32 aNewLength);
+  static PRBool GrowCapacity(nsStr& aString,PRUint32 aNewLength);
+
+ /**
+  * These methods are used to append content to the given nsStr
+  *
+  * @update	gess 01/04/99
+  * @param  aDest is the nsStr to be appended to
+  * @param  aSource is the buffer to be copied from
+  * @param  anOffset tells us where in source to start copying
+  * @param  aCount tells us the (max) # of chars to copy
+  */
+  static void StrAppend(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
+
+ /**
+  * These methods are used to assign contents of a source string to dest string
+  *
+  * @update	gess 01/04/99
+  * @param  aDest is the nsStr to be appended to
+  * @param  aSource is the buffer to be copied from
+  * @param  anOffset tells us where in source to start copying
+  * @param  aCount tells us the (max) # of chars to copy
+  */
+  static void StrAssign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
+
+ /**
+  * These methods are used to insert content from source string to the dest nsStr
+  *
+  * @update	gess 01/04/99
+  * @param  aDest is the nsStr to be appended to
+  * @param  aDestOffset tells us where in dest to start insertion
+  * @param  aSource is the buffer to be copied from
+  * @param  aSrcOffset tells us where in source to start copying
+  * @param  aCount tells us the (max) # of chars to insert
+  */
+  static void StrInsert1into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+  static void StrInsert1into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+  static void StrInsert2into1( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+  static void StrInsert2into2( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+
+
+  /**
+   * Helper routines for StrInsert1into1, etc
+   */
+  static PRInt32 GetSegmentLength(const nsStr& aSource,
+                                  PRUint32 aSrcOffset, PRInt32 aCount);
+  static void AppendForInsert(nsStr& aDest, PRUint32 aDestOffset, const nsStr& aSource, PRUint32 aSrcOffset, PRInt32 theLength);
+
+ /**
+  * This method deletes chars from the given str. 
+  * The given allocator may choose to resize the str as well.
+  *
+  * @update	gess 01/04/99
+  * @param  aDest is the nsStr to be deleted from
+  * @param  aDestOffset tells us where in dest to start deleting
+  * @param  aCount tells us the (max) # of chars to delete
+  */
+  static void Delete1(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
+  static void Delete2(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount);
+
+  /**
+   * helper routines for Delete1, Delete2
+   */
+  static PRInt32 GetDeleteLength(const nsStr& aDest, PRUint32 aDestOffset, PRUint32 aCount);
+
+ /**
+  * This method is used to truncate the given string.
+  * The given allocator may choose to resize the str as well (but it's not likely).
+  *
+  * @update	gess 01/04/99
+  * @param  aDest is the nsStr to be appended to
+  * @param  aDestOffset tells us where in dest to start insertion
+  * @param  aSource is the buffer to be copied from
+  * @param  aSrcOffset tells us where in source to start copying
+  */
+  static void StrTruncate(nsStr& aDest,PRUint32 aDestOffset);
+
+  /**
+   * This method trims chars (given in aSet) from the edges of given buffer 
+   *
+   * @update	gess 01/04/99
+   * @param   aDest is the buffer to be manipulated
+   * @param   aSet tells us which chars to remove from given buffer
+   * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
+   * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+   */
+  static void Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+  
+  /**
+   * This method compresses duplicate runs of a given char from the given buffer 
+   *
+   * @update	gess 01/04/99
+   * @param   aDest is the buffer to be manipulated
+   * @param   aSet tells us which chars to compress from given buffer
+   * @param   aChar is the replacement char
+   * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
+   * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+   */
+  static void CompressSet1(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+  static void CompressSet2(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing);
+
+  /**
+   * This method removes all occurances of chars in given set from aDest 
+   *
+   * @update	gess 01/04/99
+   * @param   aDest is the buffer to be manipulated
+   * @param   aSet tells us which chars to compress from given buffer
+   * @param   aChar is the replacement char
+   * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
+   * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+   */
+  static void StripChars1(nsStr& aDest,const char* aSet);
+  static void StripChars2(nsStr& aDest,const char* aSet);
+
+  /**
+   * This method compares the data bewteen two nsStr's 
+   *
+   * @update	gess 01/04/99
+   * @param   aStr1 is the first buffer to be compared
+   * @param   aStr2 is the 2nd buffer to be compared
+   * @param   aCount is the number of chars to compare
+   * @param   aIgnorecase tells us whether to use a case-sensitive comparison
+   * @return  -1,0,1 depending on <,==,>
+   */
+  static PRInt32 StrCompare1To1(const nsStr& aDest,const nsStr& aSource,
+                                PRInt32 aCount,PRBool aIgnoreCase);
+  static PRInt32 StrCompare1To2(const nsStr& aDest, const nsStr& aSource,
+                                PRInt32 aCount, PRBool aIgnoreCase);
+  static PRInt32 StrCompare2To1(const nsStr& aDest, const nsStr& aSource,
+                                PRInt32 aCount, PRBool aIgnoreCase);
+  static PRInt32 StrCompare2To2(const nsStr& aDest, const nsStr& aSource,
+                                PRInt32 aCount, PRBool aIgnoreCase);
+
+ /**
+  * These methods scan the given string for 1 or more chars in a given direction
+  *
+  * @update	gess 01/04/99
+  * @param  aDest is the nsStr to be searched to
+  * @param  aSource (or aChar) is the substr we're looking to find
+  * @param  aIgnoreCase tells us whether to search in a case-sensitive manner
+  * @param  anOffset tells us where in the dest string to start searching
+  * @return the index of the source (substr) in dest, or -1 (kNotFound) if not found.
+  */
+  static PRInt32 FindSubstr1in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 FindSubstr1in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 FindSubstr2in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 FindSubstr2in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  
+  static PRInt32 FindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 FindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
+  
+  static PRInt32 FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset);
+  
+  static PRInt32 RFindSubstr1in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 RFindSubstr2in1(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 RFindSubstr1in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 RFindSubstr2in2(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  
+  static PRInt32 RFindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 RFindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount);
+  
+  static PRInt32 RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
+  static PRInt32 RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRInt32 anOffset);
+
+  static void    Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 anOffset);
+  
+#ifdef NS_STR_STATS
+  static PRBool   DidAcquireMemory(void);
+#endif
+
+  /**
+   * Returns a hash code for the string for use in a PLHashTable.
+   */
+  static PRUint32 HashCode(const nsStr& aDest);
+
+#ifdef NS_STR_STATS
+  /**
+   * Prints an nsStr. If truncate is true, the string is only printed up to 
+   * the first newline. (Note: The current implementation doesn't handle
+   * non-ascii unicode characters.)
+   */
+  static void Print(const nsStr& aDest, FILE* out, PRBool truncate = PR_FALSE);
+#endif
+
 protected:
   union { 
     char*         mStr;
@@ -309,13 +528,16 @@ private:
        (aOwnsBuffer ? 1 : 0) << NSSTR_OWNSBUFFER_BIT);
   }
   
+  static PRBool Alloc(nsStr& aString,PRUint32 aCount);
+  static PRBool Realloc(nsStr& aString,PRUint32 aCount);
+  static PRBool Free(nsStr& aString);
+
 public:
   friend NS_COM
   char*
   ToNewUTF8String( const nsAString& aSource );
   friend inline void AddNullTerminator(nsStr& aDest);
   friend inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex);
-  friend class nsStrPrivate;
   friend class nsString;
   friend class nsCString;
 };
