@@ -27,7 +27,7 @@
 #include "nsISSLSocketProvider.h"
 
 
-#define NS_TLSSOCKETPROVIDER_CID \
+#define NS_TLSSTEPUPSOCKETPROVIDER_CID \
 { /* b9507aec-1dd1-11b2-8cd5-c48ee0c50307 */         \
      0xb9507aec,                                     \
      0x1dd1,                                         \
