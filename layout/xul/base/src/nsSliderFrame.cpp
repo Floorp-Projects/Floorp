@@ -49,15 +49,18 @@
 #include "nsTitledButtonFrame.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIScrollbarListener.h"
+#include "nsISupportsArray.h"
+
+static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 
 nsresult
-NS_NewSliderFrame ( nsIFrame** aNewFrame )
+NS_NewSliderFrame ( nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsSliderFrame* it = new nsSliderFrame;
+  nsSliderFrame* it = new nsSliderFrame();
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -66,10 +69,45 @@ NS_NewSliderFrame ( nsIFrame** aNewFrame )
   
 } // NS_NewSliderFrame
 
-
 nsSliderFrame::nsSliderFrame()
 :mScrollbarListener(nsnull), mCurPos(0)
 {
+}
+
+/**
+ * Anonymous interface
+ */
+NS_IMETHODIMP
+nsSliderFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+{
+  // supply anonymous content if there is no content
+  PRInt32 count = 0;
+  mContent->ChildCount(count); 
+  if (count == 0) 
+  {
+    // get the document
+    nsCOMPtr<nsIDocument> idocument;
+    mContent->GetDocument(*getter_AddRefs(idocument));
+
+    nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
+
+    // create a thumb
+    nsCOMPtr<nsIDOMElement> node;
+    document->CreateElement("thumb",getter_AddRefs(node));
+    nsCOMPtr<nsIContent> content;
+    content = do_QueryInterface(node);
+
+    // if we are not in a scrollbar default our thumbs flex to be
+    // flexible.
+    nsIContent* scrollbar = GetScrollBar();
+
+    if (scrollbar) 
+       content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_TRUE);
+
+    aAnonymousChildren.AppendElement(content);
+  }
+
+  return NS_OK;
 }
 
 
@@ -765,7 +803,11 @@ NS_IMETHODIMP nsSliderFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                                         
-  if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
+  if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
+    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  } else if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
     *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        

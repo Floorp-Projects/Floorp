@@ -24,44 +24,45 @@
 // See documentation in associated header file
 //
 
-#include "nsScrollbarFrame.h"
-#include "nsScrollbarButtonFrame.h"
+#include "nsSplitterFrame.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIXMLContent.h"
 #include "nsDocument.h"
 #include "nsINameSpaceManager.h"
+#include "nsScrollbarButtonFrame.h"
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 
 //
-// NS_NewToolbarFrame
+// NS_NewSplitterFrame
 //
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewScrollbarFrame ( nsIFrame** aNewFrame )
+NS_NewSplitterFrame ( nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsScrollbarFrame* it = new nsScrollbarFrame;
+  nsSplitterFrame* it = new nsSplitterFrame;
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aNewFrame = it;
   return NS_OK;
   
-} // NS_NewScrollbarFrame
+} // NS_NewSplitterFrame
 
 /**
  * Anonymous interface
  */
 NS_IMETHODIMP
-nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
+nsSplitterFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 {
   // if not content the create some anonymous content
   PRInt32 count = 0;
@@ -71,28 +72,28 @@ nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
     // get the document
     nsCOMPtr<nsIDocument> idocument;
     mContent->GetDocument(*getter_AddRefs(idocument));
-
     nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
 
-    // create a decrement button
+    // create a spring
     nsCOMPtr<nsIDOMElement> node;
-    document->CreateElement("scrollbarbutton",getter_AddRefs(node));
-    nsCOMPtr<nsIContent> content;
-
+    document->CreateElement("spring",getter_AddRefs(node));
+    nsCOMPtr<nsIXMLContent> content;
     content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, "decrement", PR_TRUE);
-    aAnonymousChildren.AppendElement(content);
-
-    // a slider
-    document->CreateElement("slider",getter_AddRefs(node));
-    content = do_QueryInterface(node);
+    content->SetNameSpaceID(nsXULAtoms::nameSpaceID);
     content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_TRUE);
     aAnonymousChildren.AppendElement(content);
 
-    // and increment button
-    document->CreateElement("scrollbarbutton",getter_AddRefs(node));
+    // a grippy
+    document->CreateElement("grippy",getter_AddRefs(node));
     content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, "increment", PR_TRUE);
+    content->SetNameSpaceID(nsXULAtoms::nameSpaceID);
+    aAnonymousChildren.AppendElement(content);
+
+    // create a spring
+    document->CreateElement("spring",getter_AddRefs(node));
+    content = do_QueryInterface(node);
+    content->SetNameSpaceID(nsXULAtoms::nameSpaceID);
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_TRUE);
     aAnonymousChildren.AppendElement(content);
   }
 
@@ -100,28 +101,60 @@ nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsSplitterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
                                               aAttribute, aHint);
-  // if the current position changes
-  if (aAttribute == nsXULAtoms::curpos) {
+  // if the alignment changed. Let the grippy know
+  if (aAttribute == nsHTMLAtoms::align) {
      // tell the slider its attribute changed so it can 
      // update itself
-     nsIFrame* slider;
-     nsScrollbarButtonFrame::GetChildWithTag(nsXULAtoms::slider, this, slider);
-     if (slider)
-        slider->AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+     nsIFrame* grippy = nsnull;
+     nsScrollbarButtonFrame::GetChildWithTag(nsXULAtoms::grippy, this, grippy);
+     if (grippy)
+        grippy->AttributeChanged(aPresContext, aChild, aAttribute, aHint);
   }
 
   return rv;
 }
 
+/**
+ * Initialize us. If we are in a box get our alignment so we know what direction we are
+ */
+NS_IMETHODIMP
+nsSplitterFrame::Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  // find the box we are in
+  nsIFrame* box = nsnull;
+  nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::box, this, box);
+
+  // see if the box is horizontal or vertical
+  if (box) {
+    nsCOMPtr<nsIContent> content;  
+    box->GetContent(getter_AddRefs(content));
+
+    nsString value;
+    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+    if (value.EqualsIgnoreCase("vertical"))
+      mHorizontal = PR_TRUE;
+    else 
+      mHorizontal = PR_FALSE;
+  }
+   
+  return rv;
+}
+
 NS_IMETHODIMP 
-nsScrollbarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+nsSplitterFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {           
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
@@ -137,3 +170,4 @@ nsScrollbarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
+

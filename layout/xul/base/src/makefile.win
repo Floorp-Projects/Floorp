@@ -24,6 +24,8 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsSplitterFrame.cpp        \
+        nsGrippyFrame.cpp        \
         nsTabFrame.cpp        \
         nsDeckFrame.cpp        \
         nsBoxFrame.cpp        \
@@ -45,6 +47,8 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
+        .\$(OBJDIR)\nsGrippyFrame.obj    \
+        .\$(OBJDIR)\nsSplitterFrame.obj    \
         .\$(OBJDIR)\nsTabFrame.obj    \
         .\$(OBJDIR)\nsDeckFrame.obj    \
         .\$(OBJDIR)\nsBoxFrame.obj    \

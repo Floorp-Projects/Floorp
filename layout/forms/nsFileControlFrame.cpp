@@ -38,14 +38,20 @@
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h"
+#include "nsISupportsArray.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsDocument.h"
+#include "nsIDOMMouseListener.h"
 
-// XXX make this pixels
-#define CONTROL_SPACING 40  
+
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
+static NS_DEFINE_IID(kIDOMMouseListenerIID,     NS_IDOMMOUSELISTENER_IID);
+static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
 
 nsresult
 NS_NewFileControlFrame(nsIFrame** aNewFrame)
@@ -54,7 +60,7 @@ NS_NewFileControlFrame(nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsFileControlFrame* it = new nsFileControlFrame;
+  nsFileControlFrame* it = new nsFileControlFrame();
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -62,12 +68,38 @@ NS_NewFileControlFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsFileControlFrame::nsFileControlFrame()
-  : nsHTMLContainerFrame()
+nsFileControlFrame::nsFileControlFrame():mTextFrame(nsnull), mFormFrame(nsnull)
 {
-  mTextFrame   = nsnull;
-  mBrowseFrame = nsnull;
-  mFormFrame   = nsnull;
+}
+
+NS_IMETHODIMP
+nsFileControlFrame::CreateAnonymousContent(nsISupportsArray& aChildList)
+{
+  
+  // create text field
+  nsIHTMLContent* text = nsnull;
+  nsIAtom* tag = NS_NewAtom("input");
+  NS_NewHTMLInputElement(&text, tag);
+  text->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("text"), PR_FALSE);
+  aChildList.AppendElement(text);
+
+  // create browse button
+  nsIHTMLContent* browse = nsnull;
+  tag = NS_NewAtom("input");
+  NS_NewHTMLInputElement(&browse, tag);
+  browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, nsAutoString("button"), PR_FALSE);
+  browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
+  aChildList.AppendElement(browse);
+
+  // get the reciever interface from the browser button's content node
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(browse));
+
+  // we shouldn't have to unregister this listener because when
+  // our frame goes away all these content node go away as well
+  // because our frame is the only one who references them.
+  reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
+
+  return NS_OK;
 }
 
 nsresult
@@ -76,11 +108,19 @@ nsFileControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   NS_PRECONDITION(0 != aInstancePtr, "null ptr");
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIFormControlFrameIID)) {
+  } else if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
+    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  } else if (aIID.Equals(kIFormControlFrameIID)) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  }
+  } else  if (aIID.Equals(kIDOMMouseListenerIID)) {                                         
+    *aInstancePtr = (void*)(nsIDOMMouseListener*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 
@@ -133,14 +173,16 @@ nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   }
 }
 
-// this is in response to the MouseClick from the containing browse button
-// XXX still need to get filters from accept attribute
-void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
+/**
+ * This is called when our browse button is clicked
+ */
+nsresult 
+nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   nsIView* textView;
   mTextFrame->GetView(&textView);
   if (nsnull == textView) {
-    return;
+    return NS_OK;
   }
 
   nsresult result = NS_OK;
@@ -174,6 +216,8 @@ void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
 	  NS_RELEASE(fileWidget);
   }
   NS_RELEASE(parentWidget);
+
+  return NS_OK;
 }
 
 
@@ -182,114 +226,67 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
 {
-  // add ourself as an nsIFormControlFrame
-  if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
+  if (mFormFrame == nsnull && eReflowReason_Initial == aReflowState.reason) {
+    // add ourself as an nsIFormControlFrame
     nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    mTextFrame = GetTextControlFrame(this);
   }
 
-  PRInt32 numChildren = mFrames.GetLength();
-  
-  nsIFrame* childFrame;
-  if (0 == numChildren) {
-    // XXX This code should move to Init(), someday when the frame construction
-    // changes are all done and Init() is always getting called...
-    PRBool disabled = nsFormFrame::GetDisabled(this);
-    nsIHTMLContent* text = nsnull;
-    nsIAtom* tag = NS_NewAtom("text");
-    NS_NewHTMLInputElement(&text, tag);
-    text->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, nsAutoString("text"), PR_FALSE);
-    if (disabled) {
-      text->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX this should use an "empty" bool value
+  return nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+}
+
+/*
+NS_IMETHODIMP
+nsFileControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                              nsIAtom*        aListName,
+                                              nsIFrame*       aChildList)
+{
+  nsresult r = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+
+  // given that the CSS frame constuctor created all our frames. We need to find the text field
+  // so we can get info from it.
+  mTextFrame = GetTextControlFrame(this);
+}
+*/
+
+/**
+ * Given a start node. Find the given text node inside. We need to do this because the 
+ * frame constuctor create the frame and its implementation. So we are given the text
+ * node from the constructor and we find it in our tree.
+ */
+nsTextControlFrame*
+nsFileControlFrame::GetTextControlFrame(nsIFrame* aStart)
+{
+  // find the text control frame.
+  nsIFrame* childFrame = nsnull;
+  aStart->FirstChild(nsnull, &childFrame);
+
+  while (nsnull != childFrame) 
+  {    
+    // see if the child is a text control
+    nsCOMPtr<nsIContent> content;
+    childFrame->GetContent(getter_AddRefs(content));
+    nsIAtom* atom;
+    if (content->GetTag(atom) == NS_OK && atom == nsHTMLAtoms::input) {
+      nsString value;
+
+      if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value))
+      {
+        if (value == "text")
+           return (nsTextControlFrame*)childFrame;      
+      }
     }
 
-    // XXX: hard-wired for the native text control frame
-    // construction of the text control should happen in nsCSSFrameConstruction
-    NS_NewNativeTextControlFrame(&childFrame);
-
-     //XXX: This style should be cached, rather than resolved each time.
-     // Get pseudo style for the text field
-    nsCOMPtr<nsIStyleContext> textFieldStyleContext;
-    nsresult rv = aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fileTextStylePseudo,
-                                                       mStyleContext, PR_FALSE,
-                                                       getter_AddRefs(textFieldStyleContext));
-
-    if (NS_SUCCEEDED(rv)) {
-        // Found the pseudo style for the text field
-      childFrame->Init(aPresContext, text, this, textFieldStyleContext, nsnull);
-    } else {
-        // Can't find pseduo style so use the style set for the file updload element
-      childFrame->Init(aPresContext, mContent, this, mStyleContext, nsnull);
-    }
-    mTextFrame = (nsTextControlFrame*)childFrame;
-    mFrames.SetFrames(childFrame);
-
-    nsIHTMLContent* browse = nsnull;
-    tag = NS_NewAtom("browse");
-    NS_NewHTMLInputElement(&browse, tag);
-    browse->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, nsAutoString("browse"), PR_FALSE);
-    if (disabled) {
-      browse->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, nsAutoString("1"), PR_FALSE);  // XXX should be "empty"
-    }
-    NS_NewButtonControlFrame(&childFrame);
-    ((nsButtonControlFrame*)childFrame)->SetMouseListener((nsIFormControlFrame*)this);
-    mBrowseFrame = (nsButtonControlFrame*)childFrame;
-
-     //XXX: This style should be cached, rather than resolved each time.
-     // Get pseudo style for the button
-    nsCOMPtr<nsIStyleContext> buttonStyleContext;
-    rv = aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fileButtonStylePseudo,
-                                                       mStyleContext, PR_FALSE,
-                                                       getter_AddRefs(buttonStyleContext));
-    if (NS_SUCCEEDED(rv)) {
-       // Found pseduo style for the button
-      childFrame->Init(aPresContext, browse, this, buttonStyleContext, nsnull);
-    } else {
-       // Can't find pseudo style for the button so use the style set for the file upload element
-      childFrame->Init(aPresContext, mContent, this, mStyleContext, nsnull);
-    }
-
-    mFrames.FirstChild()->SetNextSibling(childFrame);
-
-    NS_RELEASE(text);
-    NS_RELEASE(browse);
+    // if not continue looking
+    nsTextControlFrame* frame = GetTextControlFrame(childFrame);
+    if (frame != nsnull)
+       return frame;
+     
+    nsresult rv = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(rv == NS_OK,"failed to get next child");
   }
 
-  nsSize maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
-  nsHTMLReflowMetrics desiredSize = aDesiredSize;
-  aDesiredSize.width = CONTROL_SPACING; 
-  aDesiredSize.height = 0;
-  childFrame = mFrames.FirstChild();
-  nsPoint offset(0,0);
-  while (nsnull != childFrame) {  // reflow, place, size the children
-    nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame,
-                                    maxSize);
-    nsIHTMLReflow*      htmlReflow;
-
-    if (NS_OK == childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(aPresContext);
-      htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-      nsRect rect(offset.x, offset.y, desiredSize.width, desiredSize.height);
-      childFrame->SetRect(rect);
-      maxSize.width  -= desiredSize.width;
-      aDesiredSize.width  += desiredSize.width; 
-      aDesiredSize.height = desiredSize.height;
-      childFrame->GetNextSibling(&childFrame);
-      offset.x += desiredSize.width + CONTROL_SPACING;
-    }
-  }
-
-  aDesiredSize.ascent = aDesiredSize.height;
-  aDesiredSize.descent = 0;
-
-  if (nsnull != aDesiredSize.maxElementSize) {
-//XXX    aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
-  }
-
-  aStatus = NS_FRAME_COMPLETE;
-  return NS_OK;
+  return nsnull;
 }
 
 PRIntn
@@ -439,41 +436,5 @@ nsFileControlFrame::Paint(nsIPresContext& aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
-#ifndef XP_MAC
-// XXX: This is temporary until we can find out whats going wrong on the MAC
-// where widget's are not being created in presentation shell 0. 
-
-  // Since the file control has a mTextFrame which does not live in
-  // the content model it is necessary to get the current text value
-  // from the nsFileControlFrame through the content model, then
-  // explicitly ask the test frame to draw it.  The mTextFrame's Paint
-  // method will still be called, but it will not render the current
-  // contents because it will not be possible for the content
-  // associated with the mTextFrame to get a handle to it frame in the
-  // presentation shell 0.
-
-   // Only paint if it doesn't have a widget.
-  if (HasWidget())
-    return NS_OK;
-
-
-  nsAutoString browse("Browse...");
-  nsRect rect;
-  mBrowseFrame->GetRect(rect);
-  mBrowseFrame->PaintButton(aPresContext, aRenderingContext, aDirtyRect,
-                            browse, rect);
-
-
-  mTextFrame->PaintTextControlBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    nsString text;
-    if (NS_SUCCEEDED(nsFormControlHelper::GetInputElementValue(mContent, &text, PR_FALSE))) {
-      nsRect rect;
-      mTextFrame->GetRect(rect);
-      mTextFrame->PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, text, mStyleContext, rect);
-    }
-  }
-#endif
-  return NS_OK;
+  return nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }

@@ -17,11 +17,11 @@
  */
 
 //
-// nsScrollbarFrame
+// nsSplitterFrame
 //
 
-#ifndef nsScrollbarFrame_h__
-#define nsScrollbarFrame_h__
+#ifndef nsSplitterFrame_h__
+#define nsSplitterFrame_h__
 
 
 #include "nsBoxFrame.h"
@@ -29,17 +29,16 @@
 
 class nsISupportsArray;
 
-nsresult NS_NewScrollbarFrame(nsIFrame** aResult) ;
+nsresult NS_NewSplitterFrame(nsIFrame** aResult) ;
 
-class nsScrollbarFrame : public nsBoxFrame,
-                         public nsIAnonymousContentCreator
+class nsSplitterFrame : public nsBoxFrame, public nsIAnonymousContentCreator
 {
 public:
-  nsScrollbarFrame() {}
+  nsSplitterFrame() {}
 
     // nsIFrame overrides
   NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("ScrollbarFrame", aResult);
+    return MakeFrameName("SplitterFrame", aResult);
   }
 
  
@@ -48,13 +47,19 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  // nsIAnonymousConentCreator
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+                                    nsIContent*      aContent,
+                                    nsIFrame*        aParent,
+                                    nsIStyleContext* aContext,
+                                    nsIFrame*        aPrevInFlow);
+
+  // nsIAnonymousContentCreator
   NS_IMETHOD  CreateAnonymousContent(nsISupportsArray& aAnonymousItems);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
-}; // class nsScrollbarFrame
+}; // class nsSplitterFrame
 
 #endif

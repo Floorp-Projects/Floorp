@@ -61,6 +61,8 @@
 #include "nsCSSAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsTextFragment.h"
+#include "nsISupportsArray.h"
+#include "nsIAnonymousContentCreator.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -73,7 +75,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsDocument.h"
-
 
 nsresult
 NS_NewTabFrame ( nsIFrame** aNewFrame );
@@ -114,6 +115,11 @@ NS_NewScrollbarButtonFrame ( nsIFrame** aNewFrame );
 nsresult
 NS_NewScrollbarFrame ( nsIFrame** aNewFrame );
 
+nsresult
+NS_NewGrippyFrame ( nsIFrame** aNewFrame );
+
+nsresult
+NS_NewSplitterFrame ( nsIFrame** aNewFrame );
 #endif
 
 //static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -1275,11 +1281,26 @@ nsCSSFrameConstructor::ConstructTableGroupFrameOnly(nsIPresContext*          aPr
       
       // Create some anonymous extras within the tree body.
       if (aTableCreator.IsTreeCreator()) {
-        nsCOMPtr<nsIAtom> tag;
-        aContent->GetTag(*getter_AddRefs(tag));
-        CreateAnonymousXULContent(aPresContext, tag, aState, aContent, aNewGroupFrame,
-                                  childItems);
-
+        // BEGIN ANONYMOUS
+        // See if our parent is a tree.
+         nsCOMPtr<nsIAtom> tag;
+         aContent->GetTag(*getter_AddRefs(tag));
+         
+         if (tag == nsXULAtoms::treechildren) {
+            // See if our parent is a tree.
+            nsCOMPtr<nsIContent> grandPappy;
+            aContent->GetParent(*getter_AddRefs(grandPappy));
+            grandPappy->GetTag(*getter_AddRefs(tag));
+            nsCOMPtr<nsIDOMElement> element = do_QueryInterface(grandPappy);
+            nsString mode;
+            element->GetAttribute("mode", mode);
+            if (tag.get() == nsXULAtoms::tree) {
+              // We will want to have a scrollbar.
+              ((nsTreeRowGroupFrame*)aParentFrame)->SetFrameConstructor(this);
+              ((nsTreeRowGroupFrame*)aParentFrame)->SetShouldHaveScrollbar();
+            }
+          }
+        // END ANONYMOUS 
 		const nsStyleDisplay *parentDisplay;
         aParentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)parentDisplay);
         if (parentDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
@@ -1758,7 +1779,9 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 
 #ifdef INCLUDE_XUL
   if (  (nsXULAtoms::button          == tag.get())  ||
-	    (nsXULAtoms::titledbutton    == tag.get())  ||
+	    (nsXULAtoms::titledbutton      == tag.get())  ||
+        (nsXULAtoms::grippy          == tag.get())  ||
+        (nsXULAtoms::splitter        == tag.get())  ||
         (nsXULAtoms::checkbox        == tag.get())  ||
         (nsXULAtoms::slider == tag.get())  ||
         (nsXULAtoms::spinner == tag.get())  ||
@@ -2668,6 +2691,11 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
                              PR_TRUE, childItems);
       }
 
+      // if there are any anonymous children create frames for them
+      CreateAnonymousFrames(aPresContext, aTag, aState, aContent, newFrame,
+                          childItems);
+
+
       // Set the frame's initial child list
       newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
 
@@ -2715,6 +2743,59 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
 
   return rv;
 }
+
+// after the node has been constructed and initialized create any
+// anonymous content a node needs.
+nsresult
+nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresContext,
+                                             nsIAtom*                 aTag,
+                                             nsFrameConstructorState& aState,
+                                             nsIContent*              aContent,
+                                             nsIFrame*                aNewFrame,
+                                             nsFrameItems&            aChildItems)
+{
+
+  // only these tags types can have anonymous content. We do this check for performance
+  // reasons. If we did a query interface on every tag it would be very inefficient.
+  if (aTag !=  nsHTMLAtoms::input &&
+      aTag !=  nsXULAtoms::slider &&
+      aTag !=  nsXULAtoms::splitter &&
+      aTag !=  nsXULAtoms::scrollbar) {
+     return NS_OK;
+
+  }
+  
+
+  nsCOMPtr<nsIAnonymousContentCreator> creator(do_QueryInterface(aNewFrame));
+
+  if (!creator)
+     return NS_OK;
+
+  // see if the frame implements anonymous content
+  nsCOMPtr<nsISupportsArray> anonymousItems;
+  NS_NewISupportsArray(getter_AddRefs(anonymousItems));
+
+  creator->CreateAnonymousContent(*anonymousItems);
+  
+  PRUint32 count = 0;
+  anonymousItems->Count(&count);
+
+  for (PRUint32 i=0; i < count; i++)
+  {
+    // get our child's content and set its parent to our content
+    nsCOMPtr<nsISupports> node;
+    anonymousItems->GetElementAt(i,getter_AddRefs(node));
+
+    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+    content->SetParent(aContent);
+
+    // create the frame and attach it to our frame
+    ConstructFrame(aPresContext, aState, content, aNewFrame, PR_FALSE, aChildItems);
+  }
+
+  return NS_OK;
+}
+
 
 #ifdef INCLUDE_XUL
 nsresult
@@ -2939,6 +3020,22 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       rv = NS_NewTitledButtonFrame(&newFrame);
     }
     // End of THUMB CONSTRUCTION logic
+
+    // SPLITTER CONSTRUCTION
+    else if (aTag == nsXULAtoms::splitter) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewSplitterFrame(&newFrame);
+    }
+    // End of SPLITTER CONSTRUCTION logic
+
+    // GRIPPY CONSTRUCTION
+    else if (aTag == nsXULAtoms::grippy) {
+      processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewGrippyFrame(&newFrame);
+    }
+    // End of GRIPPY CONSTRUCTION logic
   }
 
   // If we succeeded in creating a frame then initialize it, process its
@@ -2971,9 +3068,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
                            childItems);
     }
 
-    // if any anonymous nodes need to be created create them.
-    CreateAnonymousXULContent(aPresContext, aTag, aState, aContent, newFrame,
-                              childItems);
+    // if there are any anonymous children create frames for them
+    CreateAnonymousFrames(aPresContext, aTag, aState, aContent, newFrame,
+                          childItems);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -2999,117 +3096,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 
   return rv;
 }
-
-// after the node has been constructed create any
-// anonymous content a node needs.
-nsresult
-nsCSSFrameConstructor::CreateAnonymousXULContent(nsIPresContext* aPresContext,
-                                       nsIAtom*                 aTag,
-                                       nsFrameConstructorState& aState,
-                                       nsIContent*              aContent,
-                                       nsIFrame*                aParentFrame,
-                                       nsFrameItems&            aChildItems)
-{
-  if (aTag == nsXULAtoms::treechildren) {
-    // See if our parent is a tree.
-    nsCOMPtr<nsIContent> grandPappy;
-    aContent->GetParent(*getter_AddRefs(grandPappy));
-    nsCOMPtr<nsIAtom> tag;
-    grandPappy->GetTag(*getter_AddRefs(tag));
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(grandPappy);
-    nsString mode;
-    element->GetAttribute("mode", mode);
-    if (tag.get() == nsXULAtoms::tree) {
-      // We will want to have a scrollbar.
-      ((nsTreeRowGroupFrame*)aParentFrame)->SetFrameConstructor(this);
-      ((nsTreeRowGroupFrame*)aParentFrame)->SetShouldHaveScrollbar();
-    }
-  }
-
-    // if we are creating a scrollbar
-    if (aTag == nsXULAtoms::scrollbar) {
-
-      // if we have no children create anonymous ones
-      PRInt32   count;
-      aContent->ChildCount(count);
-
-      if (count == 0)
-      {
-        // get the document
-        nsCOMPtr<nsIDocument> idocument;
-        aContent->GetDocument(*getter_AddRefs(idocument));
-
-        nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
-
-        // create a decrement button
-        nsCOMPtr<nsIDOMElement> node;
-        document->CreateElement("scrollbarbutton",getter_AddRefs(node));
-        nsCOMPtr<nsIContent> content;
-        //content->SetNameSpaceID(nsXULAtoms::nameSpaceID);
-        
-        content = do_QueryInterface(node);
-        content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, "decrement", PR_TRUE);
-        content->SetParent(aContent);
-
-        ConstructFrame(aPresContext, aState, content, aParentFrame, PR_FALSE, aChildItems);
-
-        // a slider
-        document->CreateElement("slider",getter_AddRefs(node));
-        content = do_QueryInterface(node);
-        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_TRUE);
-        content->SetParent(aContent);
-
-        ConstructFrame(aPresContext, aState, content, aParentFrame, PR_FALSE, aChildItems);
-
-        // make sure the slider's thumb is flexible.
-        nsIFrame* thumb;
-        aChildItems.lastChild->FirstChild(nsnull,&thumb);
-        nsCOMPtr<nsIContent> thumbContent;
-        thumb->GetContent(getter_AddRefs(thumbContent));
-
-        // make sure we got it
-        nsIAtom* tag = nsnull;
-        thumbContent->GetTag(tag);
-        NS_ASSERTION(tag == nsXULAtoms::thumb, "Could not get slider while creating scrollbar!");
-
-        thumbContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100%", PR_TRUE);
-
-
-        // and increment button
-        document->CreateElement("scrollbarbutton",getter_AddRefs(node));
-        content = do_QueryInterface(node);
-        content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, "increment", PR_TRUE);
-        content->SetParent(aContent);
-
-        ConstructFrame(aPresContext, aState, content, aParentFrame, PR_FALSE, aChildItems);
-      }
-    } else if (aTag == nsXULAtoms::slider) {
-
-      // if we have not children create anonymous ones
-      PRInt32   count;
-      aContent->ChildCount(count);
-
-      if (count == 0)
-      {
-        // get the document
-        nsCOMPtr<nsIDocument> idocument;
-        aContent->GetDocument(*getter_AddRefs(idocument));
-
-        nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
-
-        // create a thumb
-        nsCOMPtr<nsIDOMElement> node;
-        document->CreateElement("thumb",getter_AddRefs(node));
-        nsCOMPtr<nsIContent> content;
-        content = do_QueryInterface(node);
-        
-        ConstructFrame(aPresContext, aState, content, aParentFrame, PR_FALSE, aChildItems);
-      }
-    }
-
-    return NS_OK;
-}
-
 
 #endif
 
