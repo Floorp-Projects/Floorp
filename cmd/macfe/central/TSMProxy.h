@@ -20,6 +20,7 @@
 #define _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_ 1
 #include <AESubDescs.h>
 #include <AEStream.h>
+#include "libi18n.h"
 
 
 class HoldUpdatesProxy
@@ -71,7 +72,7 @@ class	HTMLInlineTSMProxy //: public VTSMProxy
 																					
 			virtual void	AEOffset2Pos( const AESubDesc	&inAppleEvent, AEStream &inStream ) const;
 
-			void			PasteFromPtr( const Ptr thedata, int32 len, short hiliteStyle );
+			void			PasteFromPtr( const Ptr thedata, int32 len, short hiliteStyle , INTL_Encoding_ID datacsid );
 #endif _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
 											
 			int				mInputHoleActive;

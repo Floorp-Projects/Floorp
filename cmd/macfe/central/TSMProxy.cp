@@ -92,7 +92,7 @@ AEEventHandlerUPP	HTMLInlineTSMProxy::sAEHandler 		= NewAEEventHandlerProc( AEHa
 
 
 #if _HAVE_FIXES_FOR_REPLACING_AEGIZMOS_
-void HTMLInlineTSMProxy::PasteFromPtr(const Ptr thedata, int32 len, short hiliteStyle)
+void HTMLInlineTSMProxy::PasteFromPtr(const Ptr thedata, int32 len, short hiliteStyle,  INTL_Encoding_ID datacsid)
 {
 	if (len < 1)
 		return;
@@ -136,10 +136,12 @@ void HTMLInlineTSMProxy::PasteFromPtr(const Ptr thedata, int32 len, short hilite
 	char *unicodeString = thedata;
 	INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(mContext);
 	int16 win_csid = INTL_GetCSIWinCSID(csi);
-	if ( (win_csid == CS_UTF8) || (win_csid==CS_UTF7) ) {
-	
-		INTL_Encoding_ID winCSID = ScriptToEncoding( ::GetScriptManagerVariable( smKeyScript ) );
-		unicodeString = (char *)INTL_ConvertLineWithoutAutoDetect( winCSID, CS_UTF8, (unsigned char *)thedata, len );
+	XP_ASSERT( CS_UTF7 != win_csid );
+	if(( (win_csid == CS_UTF8)  ) && 
+	   ( win_csid != datacsid ))
+ 
+	{
+		unicodeString = (char *)INTL_ConvertLineWithoutAutoDetect( datacsid, win_csid, (unsigned char *)thedata, len );
        	len = strlen(unicodeString);
 
 	}
@@ -461,17 +463,23 @@ void	HTMLInlineTSMProxy::AEUpdate(
 	long dummylen;
 	
 	// Get keyAETheData
-	AEGetKeySubDesc( &inAppleEvent, keyAETheData, &keySubDesc );
+	err = AEGetKeySubDesc( &inAppleEvent, keyAETheData, &keySubDesc );
+	ThrowIfOSErr_(err);
 	Ptr thedata = (char *) AEGetSubDescData( &keySubDesc, &textlen );
 	
 	// Get keyAEFixLength
-	AEGetKeySubDesc( &inAppleEvent, keyAEFixLength, &keySubDesc );
+	err = AEGetKeySubDesc( &inAppleEvent, keyAEFixLength, &keySubDesc );
+	ThrowIfOSErr_(err);
 	Int32 fixLength = *(Int32 *) AEGetSubDescData( &keySubDesc, &dummylen );
 	if (fixLength < 0)			// special signal to fix it all!!
 		fixLength = textlen;
 
-	
 	// Get keyAEScriptTag
+	err = AEGetKeySubDesc( &inAppleEvent, keyAETSMScriptTag, &keySubDesc );
+	ThrowIfOSErr_(err);
+	ScriptLanguageRecord *sl = (ScriptLanguageRecord *) AEGetSubDescData( &keySubDesc, &dummylen );
+	INTL_Encoding_ID datacsid = ScriptToEncoding( sl->fScript );	
+
 	
 	// Currently do not depend on it.	
 
@@ -513,7 +521,7 @@ void	HTMLInlineTSMProxy::AEUpdate(
 	// the input hole is going away because we are going to fix everything...
 	if (fixLength == textlen) 
 	{
-		PasteFromPtr(thedata, fixLength, kRawText);		
+		PasteFromPtr(thedata, fixLength, kRawText, datacsid);		
 		mInputHoleActive = false;
 		CEditView::OutOfFocus(&mTextView);
 		mTextView.HideCaret(false);
@@ -522,7 +530,7 @@ void	HTMLInlineTSMProxy::AEUpdate(
 	
 	// we have already selected the old data, now paste in anything that needs to be fixed
 	if (fixLength) {
-		PasteFromPtr(thedata, fixLength, kRawText);
+		PasteFromPtr(thedata, fixLength, kRawText, datacsid);
 		mInputHoleStart = EDT_GetInsertPointOffset(mContext);	// a new starting point for our input hole
 	}
 
@@ -543,7 +551,7 @@ void	HTMLInlineTSMProxy::AEUpdate(
 			record.fEnd = abs(p->fRange[i].fEnd);
 			record.fHiliteStyle = abs(p->fRange[i].fHiliteStyle);
 			
-			PasteFromPtr(thedata + fixLength + record.fStart, record.fEnd - record.fStart, record.fHiliteStyle);
+			PasteFromPtr(thedata + fixLength + record.fStart, record.fEnd - record.fStart, record.fHiliteStyle, datacsid);
 		}
 	}
 	
