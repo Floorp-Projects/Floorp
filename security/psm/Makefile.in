@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 CORE_DEPTH=$(topsrcdir)/security
 
 include $(CORE_DEPTH)/coreconf/arch.mk
-ifeq (,$(filter-out NetBSD OS2,$(OS_TARGET)))
+ifeq (,$(filter-out FreeBSD NetBSD OS2,$(OS_TARGET)))
 include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
 else
 include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
