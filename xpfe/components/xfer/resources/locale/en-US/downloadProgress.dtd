@@ -4,6 +4,7 @@
 <!ENTITY  location "Location"> 
 <!ENTITY  saving "Saving"> 
 <!ENTITY  status "Status:"> 
+<!-- LOCALIZATION NOTE  dialogStatus.label: Do NOT localize "nn.n" and "mm.m" -->
 <!ENTITY  dialogStatus.label "( nn.nK of mm.mK bytes )"> 
 <!ENTITY  timeLeft "Time Left:">
 <!ENTITY dialogTimeLeft.label "?"> 
