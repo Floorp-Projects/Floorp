@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="internet.css" type="text/css"?>
+
+
+<!DOCTYPE window
+[
+<!ENTITY window.title.label          "Search Internet">
+<!ENTITY words.label                 "Words: ">
+
+<!ENTITY checkbox.column.label       "On">
+<!ENTITY engine.column.label         "Search Engines">
+]>
+
+
+<window title="&window.title.label;" style="width:100%; height:100%"
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+	<html:script src="internet.js" />
+	<html:script src="shared.js" />
+
+	<box align="horizontal">
+		<html:center>
+		<html:table>
+			<html:tr>
+				<html:td>
+					&words.label;
+					<html:input id="searchtext" type="text" width="20" onkeyup="if (event.which == 13) { doSearch(); }" />
+					<html:input type="button" value="Search" onclick="return doSearch();" />
+					<html:p />
+				</html:td>
+			</html:tr>
+
+			<html:tr><html:td>
+				<tree id="searchengines" flex="100%" datasources="rdf:internetsearch" >
+					<treecol id="CheckboxColumn" />
+					<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+
+					<template rootcontainment="treebody" subcontainment="treechildren">
+						<treeitem uri="...">
+							<treecell treeallowevents="true">
+								<checkbox value="0" />
+							</treecell>
+							<treecell>
+								<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" style="list-style-image: none;" />
+							</treecell>
+						</treeitem>
+					</template>
+
+					<treehead>
+						<treeitem>
+							<treecell>
+								&checkbox.column.label;
+							</treecell>
+							<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');">
+								<observes element="NameColumn" attribute="sortActive"/>
+								<observes element="NameColumn" attribute="sortDirection"/>
+								&engine.column.label;
+							</treecell>
+						</treeitem>
+					</treehead>
+
+					<treebody id="NC:SearchEngineRoot" />
+				</tree>
+			</html:td></html:tr>
+
+			<html:tr><html:td>
+				<html:input type="button" value="Uncheck All" onclick="return doUncheckAll();" />
+			</html:td></html:tr>
+		</html:table>
+		</html:center>
+		<html:p />
+		<spring flex="100%" align="horizontal" />
+	</box>
+</window>
