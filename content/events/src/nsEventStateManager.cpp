@@ -1648,6 +1648,15 @@ nsEventStateManager::DoScrollText(nsPresContext* aPresContext,
       target->DispatchEvent(event, &allowDefault);
       if (!allowDefault)
         return NS_OK;
+      // Re-resolve |aTargetFrame| in case it was destroyed by the
+      // DOM event handler above, bug 257998.
+      aPresContext->GetPresShell()->GetPrimaryFrameFor(targetContent, &aTargetFrame);
+      if (!aTargetFrame) {
+        // Without a frame we can't do the normal ancestor search for a view to scroll.
+        // Don't fall through to the "passToParent" code at the end because that will
+        // likely scroll the wrong view (in an enclosing document).
+        return NS_OK;
+      }
     }
   }
 
