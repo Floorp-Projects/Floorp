@@ -1220,4 +1220,21 @@ nsFontEnumeratorMac::EnumerateFonts(const char* aLangGroup,
 
   return NS_OK;
 }
+NS_IMETHODIMP
+nsFontEnumeratorMac::HaveFontFor(const char* aLangGroup,PRBool* aResult)
+{
+  if ((! aLangGroup) )
+  	return NS_ERROR_NULL_POINTER;
+  	
+  if (aResult) {
+    *aResult = PR_FALSE;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aResult = PR_TRUE; // for now, just return true
+  // fix me later - ftang
+  return NS_OK;
+}
 
