@@ -161,6 +161,13 @@ inline const BitMap * GetPortBitMapForCopyBits(CGrafPtr port)
     return &((GrafPtr)port)->portBits;
 }
 
+inline OSErr AEGetDescData (const AEDesc * theAEDesc, void * dataPtr, Size maximumSize)
+{
+    ::BlockMoveData(*(theAEDesc->dataHandle), dataPtr, maximumSize);
+    return noErr;
+}
+
+
 #endif /* !TARGET_CARBON */
 
 #endif /* CarbonHelpers_h__ */
