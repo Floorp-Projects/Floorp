@@ -140,9 +140,10 @@
     <separator/>
 
     <!-- Misc -->
-    <checkbox id="showDialog" label="&showDialog.label;" accesskey="&showDialog.accesskey;"/>
-
+    <box autostretch="never">
+        <checkbox id="showDialog" label="&showDialog.label;" accesskey="&showDialog.accesskey;"/>     
+    </box>
     <spring flex="1"/>
-
+    
 </window>
 
