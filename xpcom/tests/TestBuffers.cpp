@@ -225,7 +225,7 @@ TestSearch(const char* delim, PRUint32 segDataSize)
         rv = buffer->Write(delim, delimLen, &amt);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Write failed");
         if (i + amt < bufDataSize) {
-            for (j = i + amt; j < bufDataSize; j++) {
+            for (PRUint32 j = i + amt; j < bufDataSize; j++) {
                 rv = buffer->Write("+", 1, &amt);
                 NS_ASSERTION(NS_SUCCEEDED(rv) && amt == 1, "Write failed");
             }
