@@ -74,8 +74,8 @@ nsFtpProtocolHandler::MakeAbsoluteUrl(const char* aSpec,
 
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewUrl(const char* aSpec,
-                              nsIUrl* aBaseUrl,
-                              nsIUrl* *result)
+                              nsIUrl* *result,
+                              nsIUrl* aBaseUrl)
 {
     nsresult rv;
 

@@ -54,8 +54,8 @@ public:
      * component manager with kTypicalUrlCID.
      */
     NS_IMETHOD NewUrl(const char* aSpec,
-                      nsIUrl* aBaseUrl,
-                      nsIUrl* *result) const = 0;
+                      nsIUrl* *result, 
+                      nsIUrl* aBaseUrl=0) const = 0;
 
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,
