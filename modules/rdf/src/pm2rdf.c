@@ -22,6 +22,7 @@
    For more information on RDF, look at the RDF section of www.mozilla.org
 */
 
+#ifdef SMART_MAIL
 
 #include "net.h"
 #include "rdf-int.h"
@@ -374,7 +375,8 @@ MakePopDB (char* url)
 	return(ntr);
   } else return NULL;
 }
-    
+
+#endif    
   
     
     
