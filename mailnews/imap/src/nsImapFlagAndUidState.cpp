@@ -151,7 +151,7 @@ nsImapFlagAndUidState::nsImapFlagAndUidState(const nsImapFlagAndUidState& state,
 
 nsImapFlagAndUidState::~nsImapFlagAndUidState()
 {
-  PR_FREEIF(fFlags);
+  PR_Free(fFlags);
   if (m_customFlagsHash)
   {
     m_customFlagsHash->Reset(FreeCustomFlags, nsnull);

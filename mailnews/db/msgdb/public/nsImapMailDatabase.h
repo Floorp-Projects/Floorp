@@ -42,13 +42,13 @@
 class nsImapMailDatabase : public nsMailDatabase
 {
 public:
-	// OK, it's dumb that this should require a fileSpec, since there is no file
-	// for the folder. This is mainly because we're deriving from nsMailDatabase;
-	// Perhaps we shouldn't...
-	nsImapMailDatabase();
-	virtual ~nsImapMailDatabase();
-	
-	NS_IMETHOD		Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
+  // OK, it's dumb that this should require a fileSpec, since there is no file
+  // for the folder. This is mainly because we're deriving from nsMailDatabase;
+  // Perhaps we shouldn't...
+  nsImapMailDatabase();
+  virtual ~nsImapMailDatabase();
+  
+  NS_IMETHOD    Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
 
   NS_IMETHOD    StartBatch();
   NS_IMETHOD    EndBatch();
@@ -56,13 +56,22 @@ public:
   NS_IMETHOD    DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
   virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
 
+  NS_IMETHOD    ForceClosed();
   NS_IMETHOD    SetFolderStream(nsIOFileStream *aFileStream);
+  NS_IMETHOD    AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify);
+  NS_IMETHOD    SetAttributesOnPendingHdr(nsIMsgDBHdr *pendingHdr, const char *property, 
+                                  const char *propertyVal, PRInt32 flags);
 
 protected:
-	// IMAP does not set local file flags, override does nothing
-	virtual void	UpdateFolderFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, 
-									 MsgFlags flag, nsIOFileStream **ppFileStream);
+  // IMAP does not set local file flags, override does nothing
+  virtual void	UpdateFolderFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, 
+                                  MsgFlags flag, nsIOFileStream **ppFileStream);
   virtual PRBool SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags flag);
+
+   nsresult     GetAllPendingHdrsTable();
+   mdb_token    m_pendingHdrsRowScopeToken;
+   mdb_token    m_pendingHdrsTableKindToken; 
+   nsCOMPtr <nsIMdbTable> m_mdbAllPendingHdrsTable;
 };
 
 

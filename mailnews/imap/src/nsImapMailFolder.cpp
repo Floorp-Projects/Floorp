@@ -2325,6 +2325,11 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     
     aSpec->GetFlagState(getter_AddRefs(flagState));
     
+    // remember what the supported user flags are.
+    PRUint32 supportedUserFlags;
+    aSpec->GetSupportedUserFlags(&supportedUserFlags);
+    SetSupportedUserFlags(supportedUserFlags);
+
     m_uidValidity = folderValidity;
     if ((imapUIDValidity != folderValidity) /* && // if UIDVALIDITY Changed 
       !NET_IsOffline() */)
@@ -6251,6 +6256,34 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   rv = dstServer->Equals(srcServer, &sameServer);
   if (NS_FAILED(rv)) goto done;
 
+   PRUint32 supportedUserFlags;
+   GetSupportedUserFlags(&supportedUserFlags);
+
+   if (! (supportedUserFlags & kImapMsgSupportUserFlag))
+   {
+      PRUint32 count = 0;
+      PRUint32 i;
+
+      rv = messages->Count(&count);
+      if (NS_FAILED(rv)) return rv;
+
+      // check if any msg hdr has special flags or properties set
+      // that we need to set on the dest hdr
+      for (i = 0; i < count; i++)
+      {
+        nsCOMPtr <nsIMsgDBHdr> msgDBHdr = do_QueryElementAt(messages, i, &rv);
+        if (mDatabase && msgDBHdr)
+        {
+          nsXPIDLCString junkScore, junkScoreOrigin;
+          msgDBHdr->GetStringProperty("junkscore", getter_Copies(junkScore));
+          msgDBHdr->GetStringProperty("junkscoreorigin", getter_Copies(junkScoreOrigin));
+          if (!junkScore.IsEmpty()) // ignore already scored messages.
+            mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "junkscore", junkScore.get(), 0);
+          if (!junkScoreOrigin.IsEmpty())
+            mDatabase->SetAttributesOnPendingHdr(msgDBHdr, "junkscoreorigin", junkScore.get(), 0);
+        }
+      }
+   }
   // if the folders aren't on the same server, do a stream base copy
   if (!sameServer) 
   {
@@ -7261,15 +7294,18 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
         {          
           nsCOMPtr<nsIMsgFolder> folder;
           rv = GetExistingFolder(spamFolderURI, getter_AddRefs(folder));
-          if (NS_SUCCEEDED(rv) && folder) {
+          if (NS_SUCCEEDED(rv) && folder) 
+          {
             rv = folder->SetFlag(MSG_FOLDER_FLAG_JUNK);
             NS_ENSURE_SUCCESS(rv,rv);
-            if (NS_SUCCEEDED(GetMoveCoalescer())) {
+            if (NS_SUCCEEDED(GetMoveCoalescer())) 
+            {
               m_moveCoalescer->AddMove(folder, msgKey);
               willMoveMessage = PR_TRUE;
             }
           }
-          else {
+          else 
+          {
             // XXX TODO
             // JUNK MAIL RELATED
             // the listener should do

@@ -187,6 +187,7 @@ public:
   PRInt32 number_of_recent_messages;
   
   PRUint32  box_flags;
+  PRUint32  supportedUserFlags;
   
   char          *allocatedPathName;
   PRUnichar *unicharPathName;
@@ -231,7 +232,7 @@ typedef enum
 
 
 // This class is only used for passing data
-// between the IMAP and mozilla threadns 
+// between the IMAP and mozilla threads 
 class nsIMAPACLRightsInfo
 { 
 public:

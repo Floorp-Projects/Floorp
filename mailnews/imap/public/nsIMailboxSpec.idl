@@ -43,26 +43,27 @@ interface nsIMAPNamespace;
 [scriptable, uuid(76cbfa2e-c7f2-11d3-a54e-0060b0fc04b7)]
 interface nsIMailboxSpec : nsISupports
 {
-	attribute long folder_UIDVALIDITY;
-	attribute long number_of_messages;
-	attribute long number_of_unseen_messages;
-	attribute long number_of_recent_messages;
+  attribute long folder_UIDVALIDITY;
+  attribute long number_of_messages;
+  attribute long number_of_unseen_messages;
+  attribute long number_of_recent_messages;
 	
-	attribute unsigned long		box_flags;
+  attribute unsigned long	box_flags;
+  attribute unsigned long supportedUserFlags;
 	
-	attribute string allocatedPathName;
-	attribute wstring unicharPathName;
-	attribute char hierarchySeparator;
-	attribute string hostName;
-	
-	attribute nsIImapFlagAndUidState     flagState;
-	
-	attribute boolean folderSelected;
-	attribute boolean discoveredFromLsub;
+  attribute string allocatedPathName;
+  attribute wstring unicharPathName;
+  attribute char hierarchySeparator;
+  attribute string hostName;
 
-	attribute boolean onlineVerified;
+  attribute nsIImapFlagAndUidState flagState;
 
-	[noscript] attribute nsIMAPNamespace	namespaceForFolder;
+  attribute boolean folderSelected;
+  attribute boolean discoveredFromLsub;
+
+  attribute boolean onlineVerified;
+
+  [noscript] attribute nsIMAPNamespace  namespaceForFolder;
 };
 
 

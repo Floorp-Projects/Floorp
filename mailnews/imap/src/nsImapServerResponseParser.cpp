@@ -2771,19 +2771,12 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
     const char *mailboxNameToConvert = (mailboxName) ? mailboxName : fSelectedMailboxName;
     if (mailboxNameToConvert)
     {
-      const char *serverKey = 				
-        fServerConnection.GetImapServerKey();
+      const char *serverKey = fServerConnection.GetImapServerKey();
       nsIMAPNamespace *ns = nsnull;
       if (serverKey && fHostSessionList)
-      {
         fHostSessionList->GetNamespaceForMailboxForHost(serverKey, mailboxNameToConvert, ns);	// for
         // delimiter
-      }
-      
-      if (ns)
-        returnSpec->hierarchySeparator = ns->GetDelimiter();
-      else
-        returnSpec->hierarchySeparator = '/';	// a guess?
+      returnSpec->hierarchySeparator = (ns) ? ns->GetDelimiter(): '/';
       
     }
     
@@ -2793,6 +2786,8 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
     returnSpec->number_of_unseen_messages = fNumberOfUnseenMessages;
     returnSpec->number_of_recent_messages = fNumberOfRecentMessages;
     
+    returnSpec->supportedUserFlags = fSupportsUserDefinedFlags;
+
     returnSpec->box_flags = kNoFlags;	// stub
     returnSpec->onlineVerified = PR_FALSE;	// we're fabricating this.  The flags aren't verified.
     returnSpec->allocatedPathName = nsCRT::strdup(mailboxNameToConvert);
@@ -2802,7 +2797,8 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
       nsIURI * aUrl = nsnull;
       nsresult rv = NS_OK;
       returnSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aUrl);
-      if (NS_SUCCEEDED(rv) && aUrl) {
+      if (NS_SUCCEEDED(rv) && aUrl) 
+      {
         nsCAutoString host;
         aUrl->GetHost(host);
         returnSpec->hostName = ToNewCString(host);
