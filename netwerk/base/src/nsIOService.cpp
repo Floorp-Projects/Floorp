@@ -340,7 +340,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
       // If the pref for this protocol was explicitly set to false, we want to
       // use our special "blocked protocol" handler.  That will ensure we don't
       // open any channels for this protocol.
-      if (listedProtocol) {
+      if (listedProtocol && !externalProtocol) {
         rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default-blocked",
                             result);
         if (NS_FAILED(rv)) return NS_ERROR_UNKNOWN_PROTOCOL;
