@@ -60,12 +60,14 @@ Rights Reserved.
                   MessageType="rdf:http://home.netscape.com/NC-rdf#MessageType"/>
             	<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#Sender" id ="SenderColumnTemplate"/>
 				<treecell class="treecell-image unreadcol" 
+                  allowevents="true"
                   value="rdf:http://home.netscape.com/NC-rdf#IsUnread"/>
 				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#Date"/>
 				<treecell class="tree-cell-image prioritycol" 
   		            Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
                   value="rdf:http://home.netscape.com/NC-rdf#PriorityString"/>
 				<treecell class="flagcol treecell-image" 
+                  allowevents="true"
                   value="rdf:http://home.netscape.com/NC-rdf#Flagged" />
 				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#StatusString"/>
 				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#Size"/>

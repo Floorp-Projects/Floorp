@@ -21,19 +21,24 @@
 function ThreadPaneOnClick(event)
 {
     if (event.target.localName != "treecell" &&
-        event.target.localName != "treeitem")
+        event.target.localName != "treeitem" &&
+        event.target.localName != "image")
         return;
     
-    var targetclass = event.target.getAttribute('class');
+    if (event.target.localName == "image")
+      var targetclass = event.target.parentNode.getAttribute('class');
+    else 
+      var targetclass = event.target.getAttribute('class');
+
     dump('targetclass = ' + targetclass + '\n');
 
 	if(targetclass.indexOf('unreadcol') != -1)
 	{
-		ToggleMessageRead(event.target.parentNode.parentNode);
+		ToggleMessageRead(event.target.parentNode.parentNode.parentNode);
 	}
 	if(targetclass.indexOf('flagcol') != -1)
 	{
-		ToggleMessageFlagged(event.target.parentNode.parentNode);
+		ToggleMessageFlagged(event.target.parentNode.parentNode.parentNode);
 	}
     else if (targetclass == 'tree-cell-twisty') {
         // The twisty is nested three below the treeitem:
