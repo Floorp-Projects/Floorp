@@ -42,6 +42,8 @@
 [ptr] native nsIDocumentLoaderObserver(nsIDocumentLoaderObserver);
 [ptr] native nsIContentViewer(nsIContentViewer);
 
+interface nsIDocShellTreeOwner;
+
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
 {
@@ -129,6 +131,21 @@ interface nsIDocShell : nsISupports
 	attribute nsIDocShell parent;
 
 	/*
+	The owner of the DocShell Tree.  This interface will be called upon when
+	the docshell has things it needs to tell to the owner of the docshell.
+	
+	Note implementers of this interface should NOT effect the lifetime of the 
+	parent DocShell by holding this reference as it creates a cycle.  Owners
+	when releasing this interface should set the treeOwner to nsnull.
+	Implementers of this interface are guaranteed that when treeOwner is
+	set that the poitner is valid without having to addref.
+	
+	Further note however when others try to get the interface it should be 
+	addref'd before handing it to them. 
+	*/
+	attribute nsIDocShellTreeOwner treeOwner;
+
+	/*
 	URI content listener parent
 	*/
 	attribute nsIURIContentListener parentURIContentListener;
@@ -154,7 +171,6 @@ interface nsIDocShell : nsISupports
 	* no zoom. 
 	*/
 	attribute float zoom;
-
 
 	/*
 	XXX Comment here!
