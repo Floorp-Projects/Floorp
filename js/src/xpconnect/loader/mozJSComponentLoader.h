@@ -55,11 +55,9 @@ public:
     nsresult UnregisterComponent(nsIFile *component);
     nsresult RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
     JSObject *GlobalForLocation(const char *aLocation, nsIFile *component);
-    nsIModule *ModuleForLocation(const char *aLocation,
-                                 nsIFile *component);
+    nsIModule *ModuleForLocation(const char *aLocation, nsIFile *component);
     PRBool HasChanged(const char *registryLocation, nsIFile *component);
-    nsresult SetRegistryInfo(const char *registryLocation,
-                             nsIFile *component);
+    nsresult SetRegistryInfo(const char *registryLocation, nsIFile *component);
     nsresult RemoveRegistryInfo(const char *registryLocation);
 
     nsIComponentManager* mCompMgr; // weak ref, should make it strong?
@@ -68,11 +66,7 @@ public:
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
 #endif
-
-    JSObject  *mSuperGlobal;
     JSRuntime *mRuntime;
-    JSObject  *mCompMgrWrapper;
-    
     PLHashTable *mModules;
     PLHashTable *mGlobals;
     nsRegistryKey mXPCOMKey;
