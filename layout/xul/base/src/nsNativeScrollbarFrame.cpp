@@ -159,7 +159,7 @@ nsNativeScrollbarFrame::FindScrollbar(nsIFrame* start, nsIFrame** outFrame,
       if (currContent && currContent->Tag() == nsXULAtoms::scrollbar) {
         *outContent = currContent;
         *outFrame = start;
-        NS_IF_ADDREF(*outContent);
+        NS_ADDREF(*outContent);
         return NS_OK;
       }
     }
@@ -262,9 +262,9 @@ nsNativeScrollbarFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   native->GetNarrowSize(&narrowDimension);
   
   if ( IsVertical() )
-    aSize.width = narrowDimension * p2t;
+    aSize.width = nscoord(narrowDimension * p2t);
   else
-    aSize.height = narrowDimension * p2t;
+    aSize.height = nscoord(narrowDimension * p2t);
   
   // By now, we have both the content node for the scrollbar and the associated
   // scrollbar mediator (for outliner, if applicable). Hook up the scrollbar to
