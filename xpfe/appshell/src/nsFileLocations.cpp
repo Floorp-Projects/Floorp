@@ -55,7 +55,7 @@
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 // for profile manager
-#if defined(NS_USING_PROFILES)
+#if defined(NS_USING_PROFILES) || 1
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 #endif // NS_USING_PROFILES
 
