@@ -116,8 +116,8 @@ public:
 
    PRBool AddHorizontalScrollbar   (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
    PRBool AddVerticalScrollbar     (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
-   PRBool RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
-   PRBool RemoveVerticalScrollbar  (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
+   void RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnBottom);
+   void RemoveVerticalScrollbar  (nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnRight);
 
    nsIScrollableView* GetScrollableView(nsIPresContext* aPresContext);
 
@@ -1117,16 +1117,26 @@ nsGfxScrollFrameInner::AddVerticalScrollbar(nsBoxLayoutState& aState, nsRect& aS
   return AddRemoveScrollbar(aState, aScrollAreaSize, aOnRight, PR_FALSE, PR_TRUE);
 }
 
-PRBool
+void
 nsGfxScrollFrameInner::RemoveHorizontalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnTop)
 {
-   return AddRemoveScrollbar(aState, aScrollAreaSize, aOnTop, PR_TRUE, PR_FALSE);
+  // removing a scrollbar should always fit
+#ifdef DEBUG
+  PRBool result =
+#endif
+  AddRemoveScrollbar(aState, aScrollAreaSize, aOnTop, PR_TRUE, PR_FALSE);
+  NS_ASSERTION(result, "Removing horizontal scrollbar failed to fit??");
 }
 
-PRBool
+void
 nsGfxScrollFrameInner::RemoveVerticalScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize,  PRBool aOnRight)
 {
-   return AddRemoveScrollbar(aState, aScrollAreaSize, aOnRight, PR_FALSE, PR_FALSE);
+  // removing a scrollbar should always fit
+#ifdef DEBUG
+  PRBool result =
+#endif
+  AddRemoveScrollbar(aState, aScrollAreaSize, aOnRight, PR_FALSE, PR_FALSE);
+  NS_ASSERTION(result, "Removing vertical scrollbar failed to fit??");
 }
 
 PRBool
@@ -1307,27 +1317,33 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   nsRect clientRect(0,0,0,0);
   mOuter->GetClientRect(clientRect);
 
-  
-  // get the preferred size of the scrollbars
-  nsSize hSize(0,0);
-  nsSize vSize(0,0);
-  nsSize hMinSize(0,0);
-  nsSize vMinSize(0,0);
-
-  /*
-  mHScrollbarBox->GetPrefSize(aState, hSize);
-  mVScrollbarBox->GetPrefSize(aState, vSize);
-  mHScrollbarBox->GetMinSize(aState, hMinSize);
-  mVScrollbarBox->GetMinSize(aState, vMinSize);
-
-  nsBox::AddMargin(mHScrollbarBox, hSize);
-  nsBox::AddMargin(mVScrollbarBox, vSize);
-  nsBox::AddMargin(mHScrollbarBox, hMinSize);
-  nsBox::AddMargin(mVScrollbarBox, vMinSize);
-  */
-
   // the scroll area size starts off as big as our content area
   nsRect scrollAreaRect(clientRect);
+
+  /**************
+   Our basic strategy here is to first try laying out the content with
+   the scrollbars in their current state. We're hoping that that will
+   just "work"; the content will overflow wherever there's a scrollbar
+   already visible. If that does work, then there's no need to lay out
+   the scrollarea. Otherwise we fix up the scrollbars; first we add a
+   vertical one to scroll the content if necessary, or remove it if
+   it's not needed. Then we reflow the content if the scrollbar
+   changed.  Then we add a horizontal scrollbar if necessary (or
+   remove if not needed), and if that changed, we reflow the content
+   again. At this point, any scrollbars that are needed to scroll the
+   content have been added.
+
+   In the second phase we check to see if any scrollbars are too small
+   to display, and if so, we remove them. We check the horizontal
+   scrollbar first; removing it might make room for the vertical
+   scrollbar, and if we have room for just one scrollbar we'll save
+   the vertical one.
+
+   Finally we position and size the scrollbars and scrollcorner (the
+   square that is needed in the corner of the window when two
+   scrollbars are visible), and reflow any fixed position views
+   (if we're the viewport and we added or removed a scrollbar).
+   **************/
 
   nsGfxScrollFrame::ScrollbarStyles styles = mOuter->GetScrollbarStyles();
 
@@ -1364,10 +1380,9 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
         if (mHasVerticalScrollbar) {
           // We left room for the vertical scrollbar, but it's not needed;
           // remove it.
-          if (RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight)) {
-            needsLayout = PR_TRUE;
-            SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
-          }
+          RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight);
+          needsLayout = PR_TRUE;
+          SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
         }
       } else {
         if (!mHasVerticalScrollbar) {
@@ -1375,7 +1390,6 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
           // out we needed it
           if (AddVerticalScrollbar(aState, scrollAreaRect, scrollBarRight))
             needsLayout = PR_TRUE;
-
         }
     }
 
@@ -1433,9 +1447,9 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
         // if the area is smaller or equal to and we have a scrollbar then
         // remove it.
       if (mHasHorizontalScrollbar) {
-          if (RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom))
-             needsLayout = PR_TRUE;
-             SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
+        RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom);
+        needsLayout = PR_TRUE;
+        SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
       }
     }
   }
@@ -1469,89 +1483,85 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (fm)
     fm->GetHeight(fontHeight);
 
+  // get the preferred size of the scrollbars
+  nsSize hSize(0,0);
+  nsSize vSize(0,0);
+  nsSize hMinSize(0,0);
+  nsSize vMinSize(0,0);
+
+  if (mHScrollbarBox && mHasHorizontalScrollbar) {
+    mHScrollbarBox->GetPrefSize(aState, hSize);
+    mHScrollbarBox->GetMinSize(aState, hMinSize);
+    nsBox::AddMargin(mHScrollbarBox, hSize);
+    nsBox::AddMargin(mHScrollbarBox, hMinSize);
+  }
+  if (mVScrollbarBox && mHasVerticalScrollbar) {
+    mVScrollbarBox->GetPrefSize(aState, vSize);
+    mVScrollbarBox->GetMinSize(aState, vMinSize);
+    nsBox::AddMargin(mVScrollbarBox, vSize);
+    nsBox::AddMargin(mVScrollbarBox, vMinSize);
+  }
+
+  NS_ASSERTION(vMinSize.width == vSize.width, "vertical scrollbar can change width");
+  NS_ASSERTION(hMinSize.height == hSize.height, "horizontal scrollbar can change height");
+
+  // Disable scrollbars that are too small
+  // Disable horizontal scrollbar first. If we have to disable only one
+  // scrollbar, we'd rather keep the vertical scrollbar.
+  if (mHasHorizontalScrollbar &&
+      (hMinSize.width > clientRect.width - vSize.width
+       || hMinSize.height > clientRect.height)) {
+    RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom);
+    needsLayout = PR_TRUE;
+    SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
+    // set the scrollbar to zero height to make it go away
+    hSize.height = 0;
+    hMinSize.height = 0;
+  }
+  // Now disable vertical scrollbar if necessary
+  if (mHasVerticalScrollbar &&
+      (vMinSize.height > clientRect.height - hSize.height
+       || vMinSize.width > clientRect.width)) {
+    RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight);
+    needsLayout = PR_TRUE;
+    SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
+    // set the scrollbar to zero width to make it go away
+    vSize.width = 0;
+    vMinSize.width = 0;
+  }
+
   nscoord maxX = scrolledContentSize.width - scrollAreaRect.width;
   nscoord maxY = scrolledContentSize.height - scrollAreaRect.height;
 
   nsIScrollableView* scrollable = GetScrollableView(presContext);
   scrollable->SetLineHeight(fontHeight);
 
-  if (mHScrollbarBox)
-    mHScrollbarBox->GetPrefSize(aState, hSize);
-  
-  if (mVScrollbarBox)
-    mVScrollbarBox->GetPrefSize(aState, vSize);
-
-  // layout vertical scrollbar
-  nsRect vRect(clientRect);
-
-  vRect.width = mHasVerticalScrollbar ? vSize.width : 0;
-  vRect.y = clientRect.y;
-
-  if (mHasHorizontalScrollbar) {
-    vRect.height -= hSize.height;
-    if (!scrollBarBottom)
-        vRect.y += hSize.height;
-  }
-
-  vRect.x = clientRect.x;
-
-  if (scrollBarRight)
-     vRect.x += clientRect.width - vRect.width;
-
-  if (mHasVerticalScrollbar && mVScrollbarBox) {
+  if (mVScrollbarBox) {
     SetAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY);
     SetAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(scrollAreaRect.height - fontHeight));
     SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight);
-  }
 
-  if (mVScrollbarBox) {
+    nsRect vRect(scrollAreaRect);
+    vRect.width = vSize.width;
+    vRect.x = scrollBarRight ? scrollAreaRect.XMost() : clientRect.x;
+    nsMargin margin;
+    mVScrollbarBox->GetMargin(margin);
+    vRect.Deflate(margin);
     LayoutBox(aState, mVScrollbarBox, vRect);
-    mVScrollbarBox->GetPrefSize(aState, vSize);
-    mVScrollbarBox->GetMinSize(aState, vMinSize);
   }
-
-  if (mHasVerticalScrollbar && mVScrollbarBox && (vMinSize.width > vRect.width || vMinSize.height > vRect.height)) {
-    if (RemoveVerticalScrollbar(aState, scrollAreaRect, scrollBarRight)) {
-        needsLayout = PR_TRUE;
-        SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
-    }
-
-    mVScrollbarBox->GetPrefSize(aState, vSize);
-  }
-
-  // layout horizontal scrollbar
-  nsRect hRect(clientRect);
-  hRect.height = mHasHorizontalScrollbar ? hSize.height : 0;
-
-  hRect.x = clientRect.x;
-
-  if (mHasVerticalScrollbar) {
-     hRect.width -= vSize.width;
-     if (!scrollBarRight)
-        hRect.x += vSize.width;
-  }
-
-  hRect.y = clientRect.y;
-
-  if (scrollBarBottom)
-     hRect.y += clientRect.height - hRect.height;
-
-  if (mHasHorizontalScrollbar && mHScrollbarBox) {
+    
+  if (mHScrollbarBox) {
     SetAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX);
     SetAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(scrollAreaRect.width)*0.8));
     SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel);
-  } 
 
-  if (mHScrollbarBox) {
+    nsRect hRect(scrollAreaRect);
+    hRect.height = hSize.height;
+    hRect.y = scrollBarBottom ? scrollAreaRect.YMost() : clientRect.y;
+    nsMargin margin;
+    mHScrollbarBox->GetMargin(margin);
+    hRect.Deflate(margin);
     LayoutBox(aState, mHScrollbarBox, hRect);
-    mHScrollbarBox->GetMinSize(aState, hMinSize);
-  }
-
-  if (mHasHorizontalScrollbar && mHScrollbarBox && (hMinSize.width > hRect.width || hMinSize.height > hRect.height)) {
-    if (RemoveHorizontalScrollbar(aState, scrollAreaRect, scrollBarBottom)) {
-      needsLayout = PR_TRUE;
-      SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
-    }
   } 
 
   // we only need to set the rect. The inner child stays the same size.
