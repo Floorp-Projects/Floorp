@@ -161,7 +161,18 @@ PopulateGeneralKeys(char *cfgText)
     
     /* don't check retval siunce we don't care if we don't find this: it's optional */
     FillKeyValueUsingResID(sGeneral, sSubfolder, gControls->cfg->targetSubfolder, cfgText);
-    		
+    
+    /* General section: global URL */
+    gControls->cfg->globalURL = NewHandleClear(kValueMaxLen);
+    if (!gControls->cfg->globalURL)
+    {
+        ErrorHandler(eMem);
+        return eParseFailed;
+    }
+    
+    /* not compulsory since mozilla doesn't download */
+    FillKeyValueUsingResID(sGeneral, sURL, gControls->cfg->globalURL, cfgText);
+
     return err;
 }
 
@@ -324,6 +335,8 @@ PopulateCompWinKeys(char *cfgText)
 		gControls->cfg->comp[i].shortDesc = NewHandleClear(kValueMaxLen);
 		if (!FillKeyValueUsingName(currSName, currKey, gControls->cfg->comp[i].shortDesc, cfgText))
 		{
+		    DisposePtr(currSName);
+		    DisposePtr(currSNameBuf);
 			DisposePtr(currKey);
 			break; // no more Components
 		}
@@ -453,59 +466,6 @@ PopulateCompWinKeys(char *cfgText)
 		/* initialize to not highlighted */
 		gControls->cfg->comp[i].highlighted = false;
 		
-		/* URLs for redundancy/retry/failover */
-		gControls->cfg->comp[i].numURLs = 0;
-		for (j=0; j<kMaxURLPerComp; j++)
-		{
-			// first get domain
-			GetIndString(pkey, rParseKeys, sDomain);
-			currKeyBuf = PascalToC(pkey);
-			currKey = NewPtrClear(strlen(currKeyBuf)+3); // tens, unit, null termination
-			strncpy(currKey, currKeyBuf, strlen(currKeyBuf));
-			gControls->cfg->comp[i].domain[j] = NewHandleClear(kValueMaxLen);
-			
-			GetIndString(pidx, rIndices, j+1);
-			idxCh = PascalToC(pidx);
-			strncat(currKey, idxCh, 1);
-			DisposePtr(idxCh);
-			strncat(currKey, eof, 1);
-			
-			// don't break if this fails since there may be more Server Paths thatn Domains
-			FillKeyValueUsingName(currSName, currKey, gControls->cfg->comp[i].domain[j], cfgText);
-
-			if (currKey)
-				DisposePtr(currKey);
-			if (currKeyBuf)
-				DisposePtr(currKeyBuf);
-				
-			// then get server paths
-			GetIndString(pkey, rParseKeys, sServerPath);
-			currKeyBuf = PascalToC(pkey);
-			currKey = NewPtrClear(strlen(currKeyBuf)+3); // tens, unit, null termination
-			strncpy(currKey, currKeyBuf, strlen(currKeyBuf));
-			gControls->cfg->comp[i].serverPath[j] = NewHandleClear(kValueMaxLen);
-			
-			GetIndString(pidx, rIndices, j+1);
-			idxCh = PascalToC(pidx);
-			strncat(currKey, idxCh, 1);
-			DisposePtr(idxCh);
-			strncat(currKey, eof, 1);
-			
-			if (!FillKeyValueUsingName(currSName, currKey, gControls->cfg->comp[i].serverPath[j], cfgText))
-			{
-				if (currKey)
-					DisposePtr(currKey);
-				if (currKeyBuf)
-					DisposePtr(currKeyBuf);
-				break;
-			}
-			gControls->cfg->comp[i].numURLs++;
-			if (currKey)
-				DisposePtr(currKey);
-			if (currKeyBuf)
-				DisposePtr(currKeyBuf);
-		}
-		
 		/* dependees for other components */
 		gControls->cfg->comp[i].numDeps = 0;
 		GetIndString(pkey, rParseKeys, sDependee);
@@ -584,6 +544,8 @@ PopulateSetupTypeWinKeys(char *cfgText)
 		if (!FillKeyValueUsingName(currSName, currKey, gControls->cfg->st[i].shortDesc, cfgText))
 		{
 			DisposePtr(currKey);
+			DisposePtr(currSName);
+			DisposePtr(currSNameBuf);
 			break; // no more SetupTypes 
 		}
 		DisposePtr(currKey);
@@ -667,8 +629,9 @@ PopulateTermWinKeys(char *cfgText)
 {
 	OSErr 	err = noErr;
 	short 	i;
-	Str255 	pSection, pDomainRoot, pDescRoot, pURLRoot;
-	char  	*cSection = NULL, *cDesc = NULL, *cDomain = NULL, *cIndex = NULL, *cURL = NULL;
+	Str255 	pSection, pIdRoot, pDomainRoot, pDescRoot, pSubpath;
+	char  	*cSection = NULL, *cId = NULL, *cDomain = NULL, 
+	        *cDesc = NULL, *cSubpath = NULL, *cIndex = NULL;
 	Boolean bMoreSites = true;
 	
 	/* TerminalWin: start install msg */
@@ -678,11 +641,13 @@ PopulateTermWinKeys(char *cfgText)
 	/* site selector keys */
 	gControls->cfg->numSites = 0;
 	GetIndString(pSection, rParseKeys, sSiteSelector);
+	GetIndString(pIdRoot, rParseKeys, sIdentifier);
 	GetIndString(pDomainRoot, rParseKeys, sDomain);
 	GetIndString(pDescRoot, rParseKeys, sDescription);
+	cSection = PascalToC(pSection);
+	cId = NewPtrClear(pIdRoot[0] + 4);
 	cDesc = NewPtrClear(pDescRoot[0] + 4);
 	cDomain = NewPtrClear(pDomainRoot[0] + 4);
-	cSection = PascalToC(pSection);
 	if (!cSection || !cDesc || !cDomain)
 		return eParseFailed;
 	for (i = 0; i < kMaxSites; i++)
@@ -690,6 +655,10 @@ PopulateTermWinKeys(char *cfgText)
 		cIndex = ltoa(i);
 		if (!cIndex) 
 			break;
+		
+		memset(cId, 0, pIdRoot[0] + 4);
+		strncpy(cId, (char*)&pIdRoot[1], pIdRoot[0]);
+		strcat(cId, cIndex);
 		
 		memset(cDesc, 0, pDescRoot[0] + 4);
 		strncpy(cDesc, (char*)&pDescRoot[1], pDescRoot[0]);
@@ -699,11 +668,14 @@ PopulateTermWinKeys(char *cfgText)
 		strncpy(cDomain, (char*)&pDomainRoot[1], pDomainRoot[0]);
 		strcat(cDomain, cIndex);
 		
-		gControls->cfg->site[i].desc = NewHandleClear(kValueMaxLen);
-		if (!FillKeyValueUsingName(cSection, cDesc, gControls->cfg->site[i].desc, cfgText))
-			bMoreSites = false;
+		gControls->cfg->site[i].id = NewHandleClear(kValueMaxLen);
+		if (!FillKeyValueUsingName(cSection, cId, gControls->cfg->site[i].id, cfgText))
+		    bMoreSites = false;
 		if (bMoreSites)
 		{
+			gControls->cfg->site[i].desc = NewHandleClear(kValueMaxLen);
+		    if (!FillKeyValueUsingName(cSection, cDesc, gControls->cfg->site[i].desc, cfgText))
+			    bMoreSites = false;
 			gControls->cfg->site[i].domain = NewHandleClear(kValueMaxLen);
 			if (!FillKeyValueUsingName(cSection, cDomain, gControls->cfg->site[i].domain, cfgText))
 				bMoreSites = false;
@@ -711,7 +683,6 @@ PopulateTermWinKeys(char *cfgText)
 				gControls->cfg->numSites++;
 		}
 
-		
 		if (cIndex)
 			free(cIndex);
 		cIndex = NULL;
@@ -722,44 +693,27 @@ PopulateTermWinKeys(char *cfgText)
 	
 	if (cSection)
 		DisposePtr((Ptr) cSection);
+	if (cId)
+	    DisposePtr((Ptr) cId);
 	if (cDesc)
 		DisposePtr((Ptr) cDesc);
 	if (cDomain)
 		DisposePtr((Ptr) cDomain);
 		
 	/* redirect for remote site selector section */
-	gControls->cfg->redirect.numURLs = 0;
 	GetIndString(pSection, rParseKeys, sRedirect);
-	GetIndString(pURLRoot, rParseKeys, sURL);
+	GetIndString(pSubpath, rParseKeys, sSubpath);
 	cSection = PascalToC(pSection);
 	cDesc = PascalToC(pDescRoot);
-	cURL = NewPtrClear(pURLRoot[0] + 4);
-	if (!cURL || !cSection || !cDesc)
+	cSubpath = PascalToC(pSubpath);
+	if (!cSubpath || !cSection || !cDesc)
 		return eMem;
 		
 	gControls->cfg->redirect.desc = NewHandleClear(kValueMaxLen);
 	if (FillKeyValueUsingResID(sRedirect, sDescription, gControls->cfg->redirect.desc, cfgText))
-	{
-		for (i = 0; i < kMaxSites; i++)
-		{
-			cIndex = ltoa(i);
-			if (!cIndex)
-				break;
-				
-			memset(cURL, 0 , pURLRoot[0] + 4);
-			strncpy(cURL, (char*)&pURLRoot[1], pURLRoot[0]);
-			strcat(cURL, cIndex);
-			
-			gControls->cfg->redirect.url[i] = NewHandleClear(kValueMaxLen);
-			if (!FillKeyValueUsingName(cSection, cURL, gControls->cfg->redirect.url[i], cfgText))
-				break;
-				
-			gControls->cfg->redirect.numURLs++;
-			
-			if (cIndex)
-				free(cIndex);
-			cIndex = NULL;
-		}
+	{			
+		gControls->cfg->redirect.subpath = NewHandleClear(kValueMaxLen);
+		FillKeyValueUsingName(cSection, cSubpath, gControls->cfg->redirect.subpath, cfgText);
 	}
 	
 	/* save bits msg */
@@ -770,8 +724,8 @@ PopulateTermWinKeys(char *cfgText)
 		DisposePtr((Ptr)cSection);
 	if (cDesc)
 		DisposePtr((Ptr)cDesc);
-	if (cURL)
-		DisposePtr((Ptr)cURL);
+	if (cSubpath)
+		DisposePtr((Ptr)cSubpath);
 		
 	return err;
 }
@@ -1196,17 +1150,20 @@ find_contents:
 	}
 	    
     /* handle case where '[' is in key or value (i.e., for i18n)*/
-    if (*txt == START_SECTION && 
-        !(txt == *ioTxt || *(txt-1) == MAC_EOL || *(txt-1) == WIN_EOL))
+    if (*txt != MY_EOF)
     {
-		if( kSectionMaxLen-1 >= cnt++)	/* prevent from falling of end of outSection buffer */				
-		{
-			*sbuf = *txt;
-			sbuf++; txt++;
-		}
-		else
-			txt++;
-        goto find_contents;
+        if (*txt == START_SECTION && 
+            !(txt == *ioTxt || *(txt-1) == MAC_EOL || *(txt-1) == WIN_EOL))
+        {
+    		if( kSectionMaxLen-1 >= cnt++)	/* prevent from falling of end of outSection buffer */				
+    		{
+    			*sbuf = *txt;
+    			sbuf++; txt++;
+    		}
+    		else
+    			txt++;
+            goto find_contents;
+        }
     } 
     
 	*sbuf = MY_EOF;   	/* close string */
@@ -1327,4 +1284,10 @@ char *PascalToC(unsigned char *str)
 	while (p < end) *p++ = *q++;
 	*p = '\0';
 	return((char *)cpy);
+}
+
+void CopyPascalStrToC(ConstStr255Param srcPString, char* dest)
+{
+    BlockMoveData(&srcPString[1], dest, srcPString[0]);
+    dest[srcPString[0]] = '\0';
 }

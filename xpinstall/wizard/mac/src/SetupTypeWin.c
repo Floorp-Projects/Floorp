@@ -95,7 +95,6 @@ ShowSetupTypeWin(void)
 		HUnlock((Handle)gControls->stw->instDescBox);	
 		InsetRect(&viewRect, kTxtRectPad, kTxtRectPad);
 
-		gControls->stw->instDescTxt = (TEHandle) NewPtrClear(sizeof(TEPtr));
 		TextFont(systemFont);
 		TextFace(normal);
 		TextSize(12);	
