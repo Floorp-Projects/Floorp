@@ -22,7 +22,7 @@
 DEPTH=..\..
 THEME_ROOT_DEPTH = .
 
-DIRS=communicator editor global messenger navigator preview
+DIRS=communicator editor global messenger navigator
 
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
