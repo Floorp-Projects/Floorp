@@ -60,7 +60,7 @@ class nsImageControlFrame : public nsImageControlFrameSuper,
                             public nsIFormControlFrame 
 {
 public:
-  nsImageControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsImageControlFrame();
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -95,7 +95,6 @@ public:
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
 protected:
-  virtual  ~nsImageControlFrame();
   void GetTranslatedRect(nsRect& aRect); // XXX this implementation is a copy of nsHTMLButtonControlFrame
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
@@ -109,9 +108,8 @@ protected:
 };
 
 
-nsImageControlFrame::nsImageControlFrame(nsIContent* aContent,
-                                           nsIFrame* aParentFrame)
-  : nsImageControlFrameSuper(aContent, aParentFrame)
+nsImageControlFrame::nsImageControlFrame()
+  : nsImageControlFrameSuper()
 {
   mLastMouseState = eMouseNone;
   mLastClickPoint = nsPoint(0,0);
@@ -120,16 +118,10 @@ nsImageControlFrame::nsImageControlFrame(nsIContent* aContent,
   mGotFocus = PR_FALSE;
 }
 
-nsImageControlFrame::~nsImageControlFrame()
-{
-}
-
 nsresult
-NS_NewImageControlFrame(nsIContent* aContent,
-                        nsIFrame*   aParent,
-                        nsIFrame*&  aResult)
+NS_NewImageControlFrame(nsIFrame*& aResult)
 {
-  aResult = new nsImageControlFrame(aContent, aParent);
+  aResult = new nsImageControlFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -99,8 +99,6 @@ protected:
 #define ImageFrameSuper nsLeafFrame
 class nsImageFrame : public ImageFrameSuper {
 public:
-  nsImageFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD Paint(nsIPresContext& aPresContext,

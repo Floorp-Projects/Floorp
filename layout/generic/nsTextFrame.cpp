@@ -101,7 +101,7 @@ public:
 
 class TextFrame : public nsSplittableFrame {
 public:
-  TextFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  TextFrame();
 
   // nsIFrame
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -417,10 +417,9 @@ void BlinkTimer::Notify(nsITimer *timer)
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewTextFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aResult)
+NS_NewTextFrame(nsIFrame*& aResult)
 {
-  nsIFrame* frame = new TextFrame(aContent, aParentFrame);
+  nsIFrame* frame = new TextFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -428,8 +427,8 @@ NS_NewTextFrame(nsIContent* aContent, nsIFrame* aParentFrame,
   return NS_OK;
 }
 
-TextFrame::TextFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsSplittableFrame(aContent, aParentFrame)
+TextFrame::TextFrame()
+  : nsSplittableFrame()
 {
   if (nsnull == gTextBlinker) {
     // Create text timer the first time out
@@ -474,11 +473,11 @@ TextFrame::CreateContinuingFrame(nsIPresContext&  aCX,
                                  nsIStyleContext* aStyleContext,
                                  nsIFrame*&       aContinuingFrame)
 {
-  TextFrame* cf = new TextFrame(mContent, aParent);
+  TextFrame* cf = new TextFrame;
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->SetStyleContext(&aCX, aStyleContext);
+  cf->Init(aCX, mContent, aParent, aStyleContext);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
   return NS_OK;

@@ -56,8 +56,8 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 
-nsFormControlFrame::nsFormControlFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aParentFrame)
+nsFormControlFrame::nsFormControlFrame()
+  : nsLeafFrame()
 {
   mLastMouseState = eMouseNone;
   mDidInit        = PR_FALSE;

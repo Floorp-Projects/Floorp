@@ -23,8 +23,6 @@
 // Page frame class used by the simple page sequence frame
 class nsPageFrame : public nsContainerFrame {
 public:
-  nsPageFrame(nsIContent* aContent, nsIFrame* aParent);
-
   NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,

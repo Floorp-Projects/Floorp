@@ -241,158 +241,56 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 
 // Factory methods for creating html layout objects
 
-extern nsresult
-NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-              nsIFrame*& aNewFrame);
-
-extern nsresult
-NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aNewFrame, PRUint32 aFlags);
-
-extern nsresult
-NS_NewBlockFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                 nsIFrame*& aNewFrame, PRUint32 aFlags);
+extern nsresult NS_NewBRFrame(nsIFrame*& aNewFrame);
+extern nsresult NS_NewBodyFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
+extern nsresult NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
 
 // Flags for body and block frames
 #define NS_BODY_SHRINK_WRAP     0x1
 #define NS_BODY_NO_AUTO_MARGINS 0x2
 #define NS_BODY_THE_BODY        0x4
 
-extern nsresult
-NS_NewCommentFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                   nsIFrame*& aFrameResult);
-
-extern nsresult
-NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-              nsIFrame*& aNewFrame);
+extern nsresult NS_NewCommentFrame(nsIFrame*& aFrameResult);
+extern nsresult NS_NewHRFrame(nsIFrame*& aNewFrame);
 
 // <frame> and <iframe> 
-extern nsresult
-NS_NewHTMLFrameOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                          nsIFrame*& aNewFrame);
+extern nsresult NS_NewHTMLFrameOuterFrame(nsIFrame*& aNewFrame);
 // <frameset>
-extern nsresult
-NS_NewHTMLFramesetFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                        nsIFrame*& aNewFrame);
+extern nsresult NS_NewHTMLFramesetFrame(nsIFrame*& aNewFrame);
 
-extern nsresult
-NS_NewHTMLFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aNewFrame);
-
-extern nsresult
-NS_NewImageFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                 nsIFrame*& aFrameResult);
-
-extern nsresult
-NS_NewInlineFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                  nsIFrame*& aNewFrame);
-
-extern nsresult
-NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                  nsIFrame*& aFrameResult);
-
-nsresult
-NS_NewSpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                  nsIFrame*& aResult);
-
-nsresult
-NS_NewTextFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aResult);
-
-nsresult
-NS_NewWBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-               nsIFrame*& aResult);
-
-extern nsresult
-NS_NewScrollFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                  nsIFrame*& aResult);
-
-extern nsresult
-NS_NewSimplePageSequenceFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                              nsIFrame*& aResult);
+extern nsresult NS_NewHTMLFrame(nsIFrame*& aNewFrame);
+extern nsresult NS_NewImageFrame(nsIFrame*& aFrameResult);
+extern nsresult NS_NewInlineFrame(nsIFrame*& aNewFrame);
+extern nsresult NS_NewObjectFrame(nsIFrame*& aFrameResult);
+extern nsresult NS_NewSpacerFrame(nsIFrame*& aResult);
+extern nsresult NS_NewTextFrame(nsIFrame*& aResult);
+extern nsresult NS_NewWBRFrame(nsIFrame*& aResult);
+extern nsresult NS_NewScrollFrame(nsIFrame*& aResult);
+extern nsresult NS_NewSimplePageSequenceFrame(nsIFrame*& aResult);
 
 // forms
-extern nsresult
-NS_NewFormFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aResult);
-
-extern nsresult
-NS_NewButtonControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                         nsIFrame*& aResult);
-
-extern nsresult
-NS_NewImageControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                        nsIFrame*& aResult);
-
-extern nsresult
-NS_NewHTMLButtonControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                             nsIFrame*& aResult);
-
-extern nsresult
-NS_NewCheckboxControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                           nsIFrame*& aResult);
-
-extern nsresult
-NS_NewFieldSetFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                    nsIFrame*& aResult);
-
-extern nsresult
-NS_NewFileControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                       nsIFrame*& aResult);
-
-extern nsresult
-NS_NewLabelFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                 nsIFrame*& aResult);
-
-extern nsresult
-NS_NewLegendFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                  nsIFrame*& aResult);
-
-extern nsresult
-NS_NewTextControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                       nsIFrame*& aResult);
-
-extern nsresult
-NS_NewRadioControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                        nsIFrame*& aResult);
-
-extern nsresult
-NS_NewSelectControlFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                         nsIFrame*& aResult);
+extern nsresult NS_NewFormFrame(nsIFrame*& aResult);
+extern nsresult NS_NewButtonControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewImageControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewHTMLButtonControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewCheckboxControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewFieldSetFrame(nsIFrame*& aResult);
+extern nsresult NS_NewFileControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewLabelFrame(nsIFrame*& aResult);
+extern nsresult NS_NewLegendFrame(nsIFrame*& aResult);
+extern nsresult NS_NewTextControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewRadioControlFrame(nsIFrame*& aResult);
+extern nsresult NS_NewSelectControlFrame(nsIFrame*& aResult);
 
 // table frame factories
 
-extern nsresult
-NS_NewTableOuterFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                      nsIFrame*& aResult);
-
-extern nsresult
-NS_NewTableFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                 nsIFrame*& aResult);
-
-extern nsresult
-NS_NewTableCaptionFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                        nsIFrame*& aResult);
-
-extern nsresult
-NS_NewTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                    nsIFrame*& aResult);
-
-extern nsresult
-NS_NewTableColGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                         nsIFrame*& aResult);
-
-extern nsresult
-NS_NewTableRowFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                    nsIFrame*& aResult);
-
-extern nsresult
-NS_NewTableRowGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                         nsIFrame*& aResult);
-
-extern nsresult
-NS_NewTableCellFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                     nsIFrame*& aResult);
+extern nsresult NS_NewTableOuterFrame(nsIFrame*& aResult);
+extern nsresult NS_NewTableFrame(nsIFrame*& aResult);
+extern nsresult NS_NewTableColFrame(nsIFrame*& aResult);
+extern nsresult NS_NewTableColGroupFrame(nsIFrame*& aResult);
+extern nsresult NS_NewTableRowFrame(nsIFrame*& aResult);
+extern nsresult NS_NewTableRowGroupFrame(nsIFrame*& aResult);
+extern nsresult NS_NewTableCellFrame(nsIFrame*& aResult);
 
 // Everything below this line is obsolete...
 //----------------------------------------------------------------------

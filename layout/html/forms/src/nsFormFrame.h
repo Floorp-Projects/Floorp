@@ -61,7 +61,7 @@ class nsFormFrame : public nsLeafFrame,
                     public nsIFormManager
 {
 public:
-  nsFormFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsFormFrame();
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,

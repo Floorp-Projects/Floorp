@@ -95,24 +95,6 @@ struct RowGroupReflowState {
 
 /* ----------- nsTableRowGroupFrame ---------- */
 
-nsTableRowGroupFrame::nsTableRowGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
-{
-  aContent->GetTag(mType);       // mType: REFCNT++
-}
-
-nsTableRowGroupFrame::~nsTableRowGroupFrame()
-{
-  NS_IF_RELEASE(mType);              // mType: REFCNT--
-}
-
-NS_METHOD nsTableRowGroupFrame::GetRowGroupType(nsIAtom *& aType)
-{
-  NS_ADDREF(mType);
-  aType=mType;
-  return NS_OK;
-}
-
 NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount)
 {
   // init out-param
@@ -1261,11 +1243,12 @@ nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
                                             nsIStyleContext* aStyleContext,
                                             nsIFrame*&       aContinuingFrame)
 {
-  nsTableRowGroupFrame* cf = new nsTableRowGroupFrame(mContent, aParent);
+  nsTableRowGroupFrame* cf = new nsTableRowGroupFrame;
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PrepareContinuingFrame(aPresContext, aParent, aStyleContext, cf);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->AppendToFlow(this);
   if (PR_TRUE==gsDebug) printf("nsTableRowGroupFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;
   return NS_OK;
@@ -1274,11 +1257,9 @@ nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableRowGroupFrame(nsIContent* aContent,
-                         nsIFrame*   aParentFrame,
-                         nsIFrame*&  aResult)
+NS_NewTableRowGroupFrame(nsIFrame*& aResult)
 {
-  nsIFrame* it = new nsTableRowGroupFrame(aContent, aParentFrame);
+  nsIFrame* it = new nsTableRowGroupFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -28,8 +28,6 @@
 
 class BRFrame : public nsFrame {
 public:
-  BRFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
   // nsIFrame
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -46,21 +44,14 @@ protected:
 };
 
 nsresult
-NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-              nsIFrame*& aResult)
+NS_NewBRFrame(nsIFrame*& aResult)
 {
-  nsIFrame* frame = new BRFrame(aContent, aParentFrame);
+  nsIFrame* frame = new BRFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   aResult = frame;
   return NS_OK;
-}
-
-BRFrame::BRFrame(nsIContent* aContent,
-                 nsIFrame* aParentFrame)
-  : nsFrame(aContent, aParentFrame)
-{
 }
 
 BRFrame::~BRFrame()

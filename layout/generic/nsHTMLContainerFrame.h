@@ -29,9 +29,6 @@ struct nsStylePosition;
 // functionality.
 class nsHTMLContainerFrame : public nsContainerFrame {
 public:
-  nsHTMLContainerFrame(nsIContent* aContent,
-                       nsIFrame* aParent);
-
   NS_IMETHOD  Paint(nsIPresContext& aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect);
@@ -81,8 +78,6 @@ public:
                                   nsIFrame* aNewParent);
 
 protected:
-  virtual ~nsHTMLContainerFrame();
-
   virtual PRIntn GetSkipSides() const = 0;
 };
 

@@ -54,9 +54,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableRowFrame(nsIContent* aContent,
-                      nsIFrame*   aParentFrame,
-                      nsIFrame*&  aResult);
+  NS_NewTableRowFrame(nsIFrame*& aResult);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -132,10 +130,7 @@ protected:
   /** protected constructor.
     * @see NewFrame
     */
-  nsTableRowFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
-  /** destructor */
-  virtual ~nsTableRowFrame();
+  nsTableRowFrame();
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;

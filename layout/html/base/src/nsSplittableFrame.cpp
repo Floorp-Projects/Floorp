@@ -21,16 +21,6 @@
 #include "nsIStyleContext.h"
 #include "nsISizeOfHandler.h"
 
-nsSplittableFrame::nsSplittableFrame(nsIContent* aContent,
-                                     nsIFrame*   aParent)
-  : nsFrame(aContent, aParent)
-{
-}
-
-nsSplittableFrame::~nsSplittableFrame()
-{
-}
-
 NS_IMETHODIMP
 nsSplittableFrame::SizeOf(nsISizeOfHandler* aHandler) const
 {

@@ -139,10 +139,6 @@ private:
 
 class nsObjectFrame : public nsObjectFrameSuper {
 public:
-  nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
-//  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame *aChildList);
-
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -178,11 +174,6 @@ private:
   nsIFrame              *mFirstChild;
 };
 
-nsObjectFrame::nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsObjectFrameSuper(aContent, aParentFrame)
-{
-}
-
 nsObjectFrame::~nsObjectFrame()
 {
   NS_IF_RELEASE(mInstanceOwner);
@@ -209,13 +200,6 @@ nsObjectFrame::~nsObjectFrame()
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-
-//NS_IMETHODIMP
-//nsObjectFrame::Init(nsIPresContext& aPresContext, nsIFrame *aChildList)
-//{
-//  mFirstChild = aChildList;
-//  return NS_OK;
-//}
 
 nsresult
 nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
@@ -645,10 +629,9 @@ nsresult nsObjectFrame :: GetFullURL(nsString& aFullURL)
 
 
 nsresult
-NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                  nsIFrame*& aFrameResult)
+NS_NewObjectFrame(nsIFrame*& aFrameResult)
 {
-  aFrameResult = new nsObjectFrame(aContent, aParentFrame);
+  aFrameResult = new nsObjectFrame;
   if (nsnull == aFrameResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -24,8 +24,6 @@ class nsFileControlFrame;
 
 class nsButtonControlFrame : public nsFormControlFrame {
 public:
-  nsButtonControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect);
@@ -71,8 +69,6 @@ public:
                                 nsString* aValues, nsString* aNames);
 
 protected:
-  virtual  ~nsButtonControlFrame();
-
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,

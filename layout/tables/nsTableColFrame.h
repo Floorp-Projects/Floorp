@@ -39,9 +39,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableColFrame(nsIContent* aContent,
-                      nsIFrame*   aParentFrame,
-                      nsIFrame*&  aResult);
+  NS_NewTableColFrame(nsIFrame*& aResult);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -93,9 +91,7 @@ public:
 
 protected:
 
-  nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
-  ~nsTableColFrame();
+  nsTableColFrame();
 
   /** the starting index of the column (starting at 0) that this col object represents */
   PRInt32  mColIndex;

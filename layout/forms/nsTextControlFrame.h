@@ -26,8 +26,6 @@ class nsIPresContext;
 
 class nsTextControlFrame : public nsFormControlFrame {
 public:
-  nsTextControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
@@ -66,8 +64,6 @@ public:
 
 protected:
 
-  virtual ~nsTextControlFrame();
-  
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,

@@ -36,15 +36,6 @@
 #undef NOISY
 #endif
 
-nsContainerFrame::nsContainerFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsSplittableFrame(aContent, aParent)
-{
-}
-
-nsContainerFrame::~nsContainerFrame()
-{
-}
-
 NS_IMETHODIMP
 nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler) const
 {
@@ -119,17 +110,6 @@ nsContainerFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
     child->SizeOf(aHandler);
     child->GetNextSibling(child);
   }
-}
-
-void
-nsContainerFrame::PrepareContinuingFrame(nsIPresContext&   aPresContext,
-                                         nsIFrame*         aParent,
-                                         nsIStyleContext*  aStyleContext,
-                                         nsContainerFrame* aContFrame)
-{
-  // Append the continuing frame to the flow
-  aContFrame->AppendToFlow(this);
-  aContFrame->SetStyleContext(&aPresContext, aStyleContext);
 }
 
 NS_IMETHODIMP

@@ -24,11 +24,6 @@
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 
-nsLeafFrame::nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame)
-  : nsFrame(aContent, aParentFrame)
-{
-}
-
 nsLeafFrame::~nsLeafFrame()
 {
 }

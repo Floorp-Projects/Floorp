@@ -42,7 +42,6 @@ public:
                             nsISupports*    aSubContent);
 
 protected:
-  nsLeafFrame(nsIContent* aContent, nsIFrame* aParentFrame);
   virtual ~nsLeafFrame();
 
   /**

@@ -46,8 +46,6 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
  */
 class nsScrollFrame : public nsHTMLContainerFrame {
 public:
-  nsScrollFrame(nsIContent* aContent, nsIFrame* aParent);
-
   NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
                        nsDidReflowStatus aStatus);
 
@@ -68,11 +66,6 @@ protected:
 private:
   nsresult CreateScrollingView();
 };
-
-nsScrollFrame::nsScrollFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsHTMLContainerFrame(aContent, aParent)
-{
-}
 
 NS_IMETHODIMP
 nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
@@ -467,11 +460,9 @@ nsScrollFrame::GetFrameName(nsString& aResult) const
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewScrollFrame(nsIContent* aContent,
-                  nsIFrame*   aParentFrame,
-                  nsIFrame*&  aResult)
+NS_NewScrollFrame(nsIFrame*&  aResult)
 {
-  aResult = new nsScrollFrame(aContent, aParentFrame);
+  aResult = new nsScrollFrame;
   if (nsnull == aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

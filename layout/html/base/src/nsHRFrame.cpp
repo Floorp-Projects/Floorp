@@ -40,9 +40,6 @@ static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 
 class HRuleFrame : public nsLeafFrame {
 public:
-  HRuleFrame(nsIContent* aContent,
-             nsIFrame* aParentFrame);
-
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -66,21 +63,14 @@ protected:
 };
 
 nsresult
-NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-              nsIFrame*& aResult)
+NS_NewHRFrame(nsIFrame*& aResult)
 {
-  nsIFrame* frame = new HRuleFrame(aContent, aParentFrame);
+  nsIFrame* frame = new HRuleFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   aResult = frame;
   return NS_OK;
-}
-
-HRuleFrame::HRuleFrame(nsIContent* aContent,
-                       nsIFrame* aParentFrame)
-  : nsLeafFrame(aContent, aParentFrame)
-{
 }
 
 HRuleFrame::~HRuleFrame()

@@ -23,29 +23,18 @@
 #include "nsHTMLIIDs.h"
 
 nsresult
-NS_NewAbsoluteFrame(nsIFrame**  aInstancePtrResult,
-                    nsIContent* aContent,
-                    nsIFrame*   aParent,
-                    nsIFrame*   aAbsoluteFrame)
+NS_NewAbsoluteFrame(nsIFrame**  aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIFrame* it = new nsAbsoluteFrame(aContent, aParent, aAbsoluteFrame);
+  nsIFrame* it = new nsAbsoluteFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   *aInstancePtrResult = it;
   return NS_OK;
-}
-
-nsAbsoluteFrame::nsAbsoluteFrame(nsIContent* aContent,
-                                 nsIFrame*   aParent,
-                                 nsIFrame*   aAbsoluteFrame)
-  : nsFrame(aContent, aParent)
-{
-  mFrame = aAbsoluteFrame;
 }
 
 nsAbsoluteFrame::~nsAbsoluteFrame()

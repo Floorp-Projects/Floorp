@@ -43,15 +43,10 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugIR = PR_FALSE;
 #endif
 
-nsTableColGroupFrame::nsTableColGroupFrame(nsIContent* aContent,
-                     nsIFrame*   aParentFrame)
-  : nsHTMLContainerFrame(aContent, aParentFrame)
+nsTableColGroupFrame::nsTableColGroupFrame()
+  : nsHTMLContainerFrame()
 {
   mColCount=0;
-}
-
-nsTableColGroupFrame::~nsTableColGroupFrame()
-{
 }
 
 NS_IMETHODIMP
@@ -95,12 +90,12 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 
         // Create a new col frame
         nsIFrame* colFrame;
-        NS_NewTableColFrame(col, this, colFrame);
+        NS_NewTableColFrame(colFrame);
 
         // Set its style context
         nsIStyleContextPtr colStyleContext =
           aPresContext.ResolveStyleContextFor(col, mStyleContext, PR_TRUE);
-        colFrame->SetStyleContext(&aPresContext, colStyleContext);
+        colFrame->Init(aPresContext, col, this, colStyleContext);
         colFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 
         // Set nsColFrame-specific information
@@ -719,11 +714,9 @@ PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
 /* ----- global methods ----- */
 
 nsresult 
-NS_NewTableColGroupFrame(nsIContent* aContent,
-                         nsIFrame*   aParentFrame,
-                         nsIFrame*&  aResult)
+NS_NewTableColGroupFrame(nsIFrame*& aResult)
 {
-  nsIFrame* it = new nsTableColGroupFrame(aContent, aParentFrame);
+  nsIFrame* it = new nsTableColGroupFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

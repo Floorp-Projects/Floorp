@@ -41,9 +41,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableColGroupFrame(nsIContent* aContent,
-                           nsIFrame*   aParentFrame,
-                           nsIFrame*&  aResult);
+  NS_NewTableColGroupFrame(nsIFrame*& aResult);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -98,9 +96,7 @@ public:
 
 protected:
 
-  nsTableColGroupFrame(nsIContent* aContent, nsIFrame* aParentFrame);
-
-  ~nsTableColGroupFrame();
+  nsTableColGroupFrame();
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;

@@ -44,15 +44,6 @@
 
 NS_DEF_PTR(nsIStyleContext);
 
-nsHTMLContainerFrame::nsHTMLContainerFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsContainerFrame(aContent, aParent)
-{
-}
-
-nsHTMLContainerFrame::~nsHTMLContainerFrame()
-{
-}
-
 NS_IMETHODIMP
 nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
@@ -118,15 +109,15 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
   nsIContent* content;
   aFloatedFrame->GetContent(content);
 
-  nsPlaceholderFrame* placeholder;
-  NS_NewPlaceholderFrame((nsIFrame**)&placeholder, content, this,
-                         aFloatedFrame);
-  NS_IF_RELEASE(content);
-
   // Let the placeholder share the same style context as the floated element
   nsIStyleContext*  kidSC;
   aFloatedFrame->GetStyleContext(kidSC);
-  placeholder->SetStyleContext(&aPresContext, kidSC);
+
+  nsPlaceholderFrame* placeholder;
+  NS_NewPlaceholderFrame((nsIFrame**)&placeholder);
+  placeholder->Init(aPresContext, content, this, kidSC);
+  placeholder->SetAnchoredItem(aFloatedFrame);
+  NS_IF_RELEASE(content);
   NS_RELEASE(kidSC);
   
   return placeholder;
@@ -139,14 +130,15 @@ nsHTMLContainerFrame::CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContex
   nsIContent* content;
   aAbsoluteFrame->GetContent(content);
 
-  nsAbsoluteFrame* placeholder;
-  NS_NewAbsoluteFrame((nsIFrame**)&placeholder, content, this, aAbsoluteFrame);
-  NS_IF_RELEASE(content);
-
   // Let the placeholder share the same style context as the floated element
   nsIStyleContext*  kidSC;
   aAbsoluteFrame->GetStyleContext(kidSC);
-  placeholder->SetStyleContext(&aPresContext, kidSC);
+
+  nsAbsoluteFrame* placeholder;
+  NS_NewAbsoluteFrame((nsIFrame**)&placeholder);
+  placeholder->Init(aPresContext, content, this, kidSC);
+  placeholder->SetAbsoluteFrame(aAbsoluteFrame);
+  NS_IF_RELEASE(content);
   NS_RELEASE(kidSC);
   
   return placeholder;
@@ -164,15 +156,15 @@ nsHTMLContainerFrame::CreateWrapperFrame(nsIPresContext& aPresContext,
   aFrame->GetContent(content);
   content->CanContainChildren(isContainer);
   if (isContainer) {
-    // Wrap the frame in a BODY frame.
-    NS_NewBodyFrame(content, this, aWrapperFrame, NS_BODY_SHRINK_WRAP);/* XXX auto margins? */
-
-    // The body wrapper frame gets the original style context, and the wrapped
-    // frame gets a pseudo style context
+    // Wrap the frame in a BODY frame. The body wrapper frame gets the
+    // original style context
     nsIStyleContext*  kidStyle;
     aFrame->GetStyleContext(kidStyle);
-    aWrapperFrame->SetStyleContext(&aPresContext, kidStyle);
 
+    NS_NewBodyFrame(aWrapperFrame, NS_BODY_SHRINK_WRAP);  // XXX auto margins?
+    aWrapperFrame->Init(aPresContext, content, this, kidStyle);
+
+    // The wrapped frame gets a pseudo style context
     nsIStyleContext*  pseudoStyle;
     pseudoStyle = aPresContext.ResolvePseudoStyleContextFor(content, 
                                                             nsHTMLAtoms::columnPseudo,

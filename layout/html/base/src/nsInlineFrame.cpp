@@ -56,9 +56,6 @@ nsInlineReflowState::~nsInlineReflowState()
 class nsInlineFrame : public nsHTMLContainerFrame
 {
 public:
-  nsInlineFrame(nsIContent* aContent, nsIFrame* aParent);
-  virtual ~nsInlineFrame();
-
   // nsIFrame
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -142,9 +139,7 @@ public:
 
   PRBool SafeToPull(nsIFrame* aFrame);
 
-  friend nsresult NS_NewInlineFrame(nsIContent* aContent,
-                                    nsIFrame* aParentFrame,
-                                    nsIFrame*& aNewFrame);
+  friend nsresult NS_NewInlineFrame(nsIFrame*& aNewFrame);
 
   struct AdjustData {
     nsIFrame* frame;
@@ -156,23 +151,13 @@ public:
 
 //----------------------------------------------------------------------
 
-nsresult NS_NewInlineFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                           nsIFrame*& aNewFrame)
+nsresult NS_NewInlineFrame(nsIFrame*& aNewFrame)
 {
-  aNewFrame = new nsInlineFrame(aContent, aParentFrame);
+  aNewFrame = new nsInlineFrame;
   if (nsnull == aNewFrame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
-}
-
-nsInlineFrame::nsInlineFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsHTMLContainerFrame(aContent, aParent)
-{
-}
-
-nsInlineFrame::~nsInlineFrame()
-{
 }
 
 PRIntn
@@ -257,11 +242,12 @@ nsInlineFrame::CreateContinuingFrame(nsIPresContext&  aCX,
                                      nsIStyleContext* aStyleContext,
                                      nsIFrame*&       aContinuingFrame)
 {
-  nsInlineFrame* cf = new nsInlineFrame(mContent, aParent);
+  nsInlineFrame* cf = new nsInlineFrame;
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PrepareContinuingFrame(aCX, aParent, aStyleContext, cf);
+  cf->Init(aCX, mContent, aParent, aStyleContext);
+  cf->AppendToFlow(this);
   aContinuingFrame = cf;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("nsInlineFrame::CreateContinuingFrame: newFrame=%p", cf));

@@ -54,14 +54,7 @@ public:
   nsIFrame*   GetPrevInFlow();
   nsIFrame*   GetNextInFlow();
 
-
 protected:
-  // Constructor. Takes as arguments the content object, the index in parent,
-  // and the Frame for the content parent
-  nsSplittableFrame(nsIContent* aContent, nsIFrame* aParent);
-
-  virtual ~nsSplittableFrame();
-
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   virtual void DumpBaseRegressionData(FILE* out, PRInt32 aIndent);

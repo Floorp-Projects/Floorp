@@ -171,12 +171,10 @@ nsCommentNode::HandleDOMEvent(nsIPresContext& aPresContext,
 }
 
 nsresult
-NS_NewCommentFrame(nsIContent* aContent,
-                   nsIFrame* aParentFrame,
-                   nsIFrame*& aResult)
+NS_NewCommentFrame(nsIFrame*& aResult)
 {
   nsIFrame* frame;
-  NS_NewEmptyFrame(&frame, aContent, aParentFrame);
+  NS_NewEmptyFrame(&frame);
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

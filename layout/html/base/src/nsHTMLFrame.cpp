@@ -44,8 +44,6 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
 class RootFrame : public nsHTMLContainerFrame {
 public:
-  RootFrame(nsIContent* aContent);
-
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
@@ -70,20 +68,14 @@ protected:
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewHTMLFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aResult)
+NS_NewHTMLFrame(nsIFrame*& aResult)
 {
-  RootFrame* frame = new RootFrame(aContent);
+  RootFrame* frame = new RootFrame;
   if (nsnull == frame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   aResult = frame;
   return NS_OK;
-}
-
-RootFrame::RootFrame(nsIContent* aContent)
-  : nsHTMLContainerFrame(aContent, nsnull)
-{
 }
 
 NS_IMETHODIMP

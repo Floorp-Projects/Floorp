@@ -46,9 +46,7 @@ public:
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
   friend nsresult 
-  NS_NewTableCellFrame(nsIContent* aContent,
-                       nsIFrame*   aParentFrame,
-                       nsIFrame*&  aResult);
+  NS_NewTableCellFrame(nsIFrame*& aResult);
 
   // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -131,10 +129,6 @@ public:
   
   NS_IMETHOD GetMargin(nsMargin& aMargin);
 
-
-  /** destructor */
-  virtual ~nsTableCellFrame();
-
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -189,8 +183,7 @@ protected:
   /** protected constructor.
     * @see NewFrame
     */
-  nsTableCellFrame(nsIContent* aContent,
-					         nsIFrame* aParentFrame);
+  nsTableCellFrame();
 
   // Subclass hook for style post processing
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
