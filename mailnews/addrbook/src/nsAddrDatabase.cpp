@@ -164,7 +164,7 @@ nsAddrDatabase::nsAddrDatabase()
 
 nsAddrDatabase::~nsAddrDatabase()
 {
-	Close(FALSE);	// better have already been closed.
+	Close(PR_FALSE);	// better have already been closed.
     if (m_ChangeListeners)
 	{
         // better not be any listeners, because we're going away.
