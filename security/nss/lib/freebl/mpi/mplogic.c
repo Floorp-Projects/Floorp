@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.12 2000/09/14 00:30:50 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.13 2002/09/07 01:00:04 jpierre%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -76,7 +76,7 @@ static unsigned char bitc[] = {
 mp_err mpl_not(mp_int *a, mp_int *b)
 {
   mp_err   res;
-  int      ix;
+  unsigned int      ix;
 
   ARGCHK(a != NULL && b != NULL, MP_BADARG);
 
@@ -101,7 +101,7 @@ mp_err mpl_and(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_int  *which, *other;
   mp_err   res;
-  int      ix;
+  unsigned int      ix;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -133,7 +133,7 @@ mp_err mpl_or(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_int  *which, *other;
   mp_err   res;
-  int      ix;
+  unsigned int      ix;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -163,7 +163,7 @@ mp_err mpl_xor(mp_int *a, mp_int *b, mp_int *c)
 {
   mp_int  *which, *other;
   mp_err   res;
-  int      ix;
+  unsigned int      ix;
 
   ARGCHK(a != NULL && b != NULL && c != NULL, MP_BADARG);
 
@@ -247,7 +247,8 @@ mp_err mpl_lsh(const mp_int *a, mp_int *b, mp_digit d)
 
 mp_err mpl_num_set(mp_int *a, int *num)
 {
-  int            ix, db, nset = 0;
+  unsigned int   ix;
+  int            db, nset = 0;
   mp_digit       cur;
   unsigned char  reg;
 
@@ -276,7 +277,8 @@ mp_err mpl_num_set(mp_int *a, int *num)
 
 mp_err mpl_num_clear(mp_int *a, int *num)
 {
-  int            ix, db, nset = 0;
+  unsigned int   ix;
+  int            db, nset = 0;
   mp_digit       cur;
   unsigned char  reg;
 
@@ -315,7 +317,8 @@ mp_err mpl_num_clear(mp_int *a, int *num)
 
 mp_err mpl_parity(mp_int *a)
 {
-  int      ix, par = 0;
+  unsigned int ix;
+  int      par = 0;
   mp_digit cur;
 
   ARGCHK(a != NULL, MP_BADARG);
