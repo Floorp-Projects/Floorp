@@ -31,6 +31,7 @@
 #include "nsMsgComposeFact.h"
 #include "nsMsgCompFieldsFact.h"
 #include "nsMsgSendFact.h"
+#include "nsMsgPostFact.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
@@ -40,6 +41,7 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCMsgComposeCID, NS_MSGCOMPOSE_CID);
 static NS_DEFINE_CID(kCMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_CID(kCMsgSendCID, NS_MSGSEND_CID);
+static NS_DEFINE_CID(kCMsgPostCID, NS_MSGPOST_CID);
 static NS_DEFINE_CID(kCSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kCComposeAppCoreCID, NS_COMPOSEAPPCORE_CID);
 static NS_DEFINE_CID(kCComposerBootstrapCID, NS_COMPOSERBOOTSTRAP_CID);
@@ -128,8 +130,6 @@ NS_IMPL_RELEASE(nsMsgComposeFactory)
 
 nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
 {  
-	nsresult res = NS_OK;
-
 	if (aResult == NULL)  
 		return NS_ERROR_NULL_POINTER;  
 
@@ -151,24 +151,29 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		// okay now turn around and give inst a handle on it....
 		return smtpService->QueryInterface(kISupportsIID, aResult);
 	}
-	// do they want an Message Compose interface ?
+	// do they want a Message Compose interface ?
 	else if (mClassID.Equals(kCMsgComposeCID)) 
 	{
 		return NS_NewMsgCompose(aIID, aResult);
 	}
 
-	// do they want an Message Compose Fields interface ?
+	// do they want a Message Compose Fields interface ?
 	else if (mClassID.Equals(kCMsgCompFieldsCID)) 
 	{
 		return NS_NewMsgCompFields(aIID, aResult);
 	}
 
-	// do they want an Message Send interface ?
+	// do they want a Message Send interface ?
 	else if (mClassID.Equals(kCMsgSendCID)) 
 	{
 		return NS_NewMsgSend(aIID, aResult);
 	}
-	// do they want an Compose AppCore interface ?
+  // do they want a Message Post interface ?
+  else if (mClassID.Equals(kCMsgPostCID))
+  {
+    return NS_NewMsgPost(aIID, aResult);
+  }
+	// do they want a Compose AppCore interface ?
     else if (mClassID.Equals(kCComposeAppCoreCID)) 
 	{
         return NS_NewComposeAppCore(aIID, aResult);
@@ -247,6 +252,11 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 										nsnull, path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) goto done;
 
+ 	rv = compMgr->RegisterComponent(kCMsgPostCID,
+										"Message Post",
+										nsnull, path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done; 
+
 	rv = compMgr->RegisterComponent(kCMsgComposeCID,
 										"Message Compose",
 										nsnull,
@@ -309,6 +319,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kCMsgSendCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kCMsgPostCID, path);
 	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kCMsgCompFieldsCID, path);

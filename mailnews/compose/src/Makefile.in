@@ -41,6 +41,7 @@ CPPSRCS = \
 	nsSmtpProtocol.cpp \
 	nsMsgSend.cpp \
 	nsMsgSendPart.cpp \
+	nsMsgPost.cpp \
 	nsSmtpService.cpp \
 	nsJSComposeAppCore.cpp \
 	nsComposeAppCore.cpp \

@@ -53,6 +53,7 @@
 #include "nsIMsgCompose.h"
 #include "nsIMsgCompFields.h"
 #include "nsIMsgSend.h"
+#include "nsIMsgPost.h"
 
 // jefft
 #include "nsIXULWindowCallbacks.h"
@@ -75,6 +76,9 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 
 static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
+
+static NS_DEFINE_IID(kIMsgPostIID, NS_IMSGPOST_IID); 
+static NS_DEFINE_CID(kMsgPostCID, NS_MSGPOST_CID);
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
@@ -129,15 +133,16 @@ public:
                           nsIDOMNodeList *nodeList, nsIDOMMsgAppCore *
                           msgAppCore, const PRInt32 messageType);
 	NS_IMETHOD SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
-                           nsAutoString& aAddrBcc, nsAutoString& aSubject,
+                           nsAutoString& aAddrBcc, 
+                           nsAutoString& aAddrNewsgroup,
+                           nsAutoString& aSubject,
                            nsAutoString& aMsg);
 	NS_IMETHOD SendMessage2(PRInt32 * _retval);
 
 protected:
   
 	nsIScriptContext *	GetScriptContext(nsIDOMWindow * aWin);
-	void SetWindowFields(nsIDOMDocument* domDoc, nsString& to, nsString& cc, nsString& bcc,
-		nsString& subject, nsString& body);
+	void SetWindowFields(nsIDOMDocument* domDoc, nsString& to, nsString& cc, nsString& bcc, nsString& newsgroup, nsString& subject, nsString& body);
 
 	nsString mId;
 	nsString mScript;
@@ -152,6 +157,8 @@ protected:
 	/* jefft */
 	nsIMsgCompFields *mMsgCompFields;
 	nsIMsgSend *mMsgSend;
+    nsIMsgPost *mMsgPost;
+
     // ****** Hack Alert ***** Hack Alert ***** Hack Alert *****
     void HackToGetBody(PRInt32 what);
 };
@@ -169,6 +176,7 @@ nsComposeAppCore::nsComposeAppCore()
 	mEditor			= nsnull;
 	mMsgCompFields	= nsnull;
 	mMsgSend		= nsnull;
+    mMsgPost        = nsnull;
 }
 
 nsComposeAppCore::~nsComposeAppCore()
@@ -191,6 +199,7 @@ nsComposeAppCore::~nsComposeAppCore()
 	NS_IF_RELEASE(mWindow);
 	NS_IF_RELEASE(mEditor);
 	NS_IF_RELEASE(mMsgSend);
+    NS_IF_RELEASE(mMsgPost);
 	NS_IF_RELEASE(mMsgCompFields);
 }
 
@@ -231,7 +240,7 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
  	{
  		nsString aCharset(msgCompHeaderInternalCharset());
     char *aString;
-    nsString to, cc, bcc, subject, body;
+    nsString to, cc, bcc, newsgroup, subject, body;
     nsresult res;
     
     mMsgCompFields->GetTo(&aString);
@@ -245,6 +254,10 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
     mMsgCompFields->GetBcc(&aString);
     if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, bcc))) {
       bcc = aString;
+    }
+    mMsgCompFields->GetNewsgroups(&aString);
+    if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, newsgroup))) {
+      newsgroup = aString;
     }
     mMsgCompFields->GetSubject(&aString);
     if (NS_FAILED(res = ConvertToUnicode(aCharset, aString, subject))) {
@@ -260,7 +273,7 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
       body = subject;
     }
  		
- 		SetWindowFields(domDoc, to, cc, bcc, subject, body);
+ 		SetWindowFields(domDoc, to, cc, bcc, newsgroup, subject, body);
  	}
 #endif    
 	return NS_OK;
@@ -279,7 +292,7 @@ nsresult nsComposeAppCore::SetDocumentCharset(class nsString const & aCharset)
 			res = domDoc->QueryInterface(kIDocumentIID,(void**)&doc);
 			if (NS_SUCCEEDED(res) && nsnull != doc) 
 			{
-				nsString *aNewCharset = new nsString(aCharset);
+                nsString *aNewCharset = new nsString(aCharset);
 				if (nsnull != aNewCharset) 
 				{
 					doc->SetDocumentCharacterSet(aNewCharset);
@@ -353,8 +366,7 @@ nsComposeAppCore::HackToGetBody(PRInt32 what)
 }
 
 void 
-nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, nsString& msgCc, nsString& msgBcc,
-		nsString& msgSubject, nsString& msgBody)
+nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, nsString& msgCc, nsString& msgBcc, nsString& msgNewsgroup, nsString& msgSubject, nsString& msgBody)
 {
 	nsresult res = NS_OK;
 
@@ -384,6 +396,7 @@ nsComposeAppCore::SetWindowFields(nsIDOMDocument *domDoc, nsString& msgTo, nsStr
 						if (id == "msgTo") inputElement->SetValue(msgTo);
 						if (id == "msgCc") inputElement->SetValue(msgCc);
 						if (id == "msgBcc") inputElement->SetValue(msgBcc);
+                        if (id == "msgNewsgroup") inputElement->SetValue(msgNewsgroup);
 						if (id == "msgSubject") inputElement->SetValue(msgSubject);
 					}
                     
@@ -508,7 +521,15 @@ nsComposeAppCore::Init(const nsString& aId)
 		if (NS_FAILED(res)) return NS_ERROR_FAILURE;
 		printf("We succesfully obtained a nsIMsgSend interface....\n");
 	}
-
+	if (!mMsgPost)
+	{
+		res = nsComponentManager::CreateInstance(kMsgPostCID, 
+		                                         NULL, 
+			                                     kIMsgPostIID, 
+                                                 (void **) &mMsgPost); 
+		if (NS_FAILED(res)) return NS_ERROR_FAILURE;
+		printf("We succesfully obtained a nsIMsgPost interface....\n");
+	}
 	if (!mMsgCompFields)
 	{
 		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
@@ -573,12 +594,14 @@ nsComposeAppCore::CompleteCallback(nsAutoString& aScript)
          nsString cc = aString;
          mMsgCompFields->GetBcc(&aString);
          nsString bcc = aString;
+         mMsgCompFields->GetNewsgroups(&aString);
+         nsString bcc = aString;
          mMsgCompFields->GetSubject(&aString);
          nsString subject = aString;
          mMsgCompFields->GetBody(&aString);
          nsString body = aString;
  		
- 		SetWindowFields(domDoc, to, cc, bcc, subject, body);
+ 		 SetWindowFields(domDoc, to, cc, bcc, newsgroup, subject, body);
  	}
 #endif 
 	return NS_OK;
@@ -591,8 +614,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                              nsIDOMMsgAppCore * msgAppCore,
                              const PRInt32 messageType)
 {
-
-	char *  urlstr=nsnull;
+	//char *  urlstr=nsnull;
 	nsresult rv;
 	nsString controllerCID;
 
@@ -708,6 +730,7 @@ done:
 NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
                                             nsAutoString& aAddrCc,
                                             nsAutoString& aAddrBcc,
+                                            nsAutoString& aAddrNewsgroup,
                                             nsAutoString& aSubject,
                                             nsAutoString& aMsg)
 {
@@ -768,6 +791,14 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 		else 
 			mMsgCompFields->SetBcc(nsAutoCString(aAddrBcc), NULL);
 
+		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aAddrNewsgroup, &outCString))) 
+		{
+			mMsgCompFields->SetNewsgroups(outCString, NULL);
+			PR_Free(outCString);
+		}
+		else 
+			mMsgCompFields->SetNewsgroups(nsAutoCString(aAddrNewsgroup), NULL);
+        
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, aSubject, &outCString))) 
 		{
 			mMsgCompFields->SetSubject(outCString, NULL);
@@ -785,11 +816,14 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 			mMsgCompFields->SetBody(outCString, NULL);
 			PR_Free(outCString);
 		}
-		else 
+		else
 			mMsgCompFields->SetBody(nsAutoCString(aMsg), NULL);
 
 		if (mMsgSend)
 			mMsgSend->SendMessage(mMsgCompFields, NULL);
+
+        if (mMsgPost)
+            mMsgPost->PostMessage(mMsgCompFields);
 	}
 
 	if (nsnull != mScriptContext) {
@@ -820,6 +854,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
 	nsAutoString msgTo;
 	nsAutoString msgCc;
 	nsAutoString msgBcc;
+    nsAutoString msgNewsgroup;
 	nsAutoString msgSubject;
 	nsAutoString msgBody;
 
@@ -849,6 +884,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
 							if (id == "msgCc") inputElement->GetValue(msgCc);
 							if (id == "msgBcc") inputElement->GetValue(msgBcc);
 							if (id == "msgSubject") inputElement->GetValue(msgSubject);
+                            if (id == "msgNewsgroup") inputElement->GetValue(msgNewsgroup);
 						}
 
 					}
@@ -857,7 +893,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
 				if (mEditor)
 				{
 					mEditor->GetContentsAsText(msgBody);
-					SendMessage(msgTo, msgCc, msgBcc, msgSubject, msgBody);
+					SendMessage(msgTo, msgCc, msgBcc, msgNewsgroup, msgSubject, msgBody);          
 				}
 			}
 		}

@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 IDLSRCS = \
 		nsIMsgCompose.idl \
+		nsIMsgPost.idl \
 		$(NULL)
 
 EXPORTS = \
@@ -33,6 +34,8 @@ EXPORTS = \
 		nsMsgCompFieldsFact.h	\
 		nsIMsgSend.h \
 		nsMsgSendFact.h \
+		nsIMsgPost.h \
+		nsMsgPostFact.h \
 		nsISmtpUrl.h	\
 		nsIMsgSend.h	\
 		nsISmtpService.h \

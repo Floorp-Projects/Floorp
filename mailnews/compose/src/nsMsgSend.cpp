@@ -370,7 +370,7 @@ nsresult nsMsgSendMimeDeliveryState::SendMessage(nsIMsgCompFields *fields, const
 		printf("\n%s", pBody);
 
 		StartMessageDelivery(NULL, NULL, (nsMsgCompFields *)fields, PR_FALSE, PR_FALSE,
-			MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, 0, NULL, NULL, NULL);
+			MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, 0, NULL, NULL, NULL);				
 	}
 	return NS_OK;
 }

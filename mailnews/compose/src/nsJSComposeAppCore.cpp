@@ -325,6 +325,7 @@ ComposeAppCoreSendMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsAutoString b2;
   nsAutoString b3;
   nsAutoString b4;
+  nsAutoString b5;
 
   *rval = JSVAL_NULL;
 
@@ -340,8 +341,9 @@ ComposeAppCoreSendMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
     nsJSUtils::nsConvertJSValToString(b3, cx, argv[3]);
     nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
+    nsJSUtils::nsConvertJSValToString(b5, cx, argv[5]);
 
-    if (NS_OK != nativeThis->SendMessage(b0, b1, b2, b3, b4)) {
+    if (NS_OK != nativeThis->SendMessage(b0, b1, b2, b3, b4, b5)) {
       return JS_FALSE;
     }
 

@@ -27,3 +27,5 @@ nsISmtpService.h
 MsgCompGlue.h
 nsIDOMComposeAppCore.h
 nsIComposer.h
+nsIMsgPost.h
+nsMsgPostFact.h
