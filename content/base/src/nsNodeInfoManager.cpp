@@ -44,7 +44,7 @@
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
-#include "nsISupportsArray.h"
+#include "nsArray.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 
@@ -95,7 +95,6 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 
 
 nsNodeInfoManager::nsNodeInfoManager()
-  : mDocument(nsnull)
 {
 
   if (gNodeManagerCount == 1 && gAnonymousNodeInfoManager) {
@@ -154,7 +153,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsNodeInfoManager, nsINodeInfoManager)
 
 // nsINodeInfoManager
 
-NS_IMETHODIMP
+nsresult
 nsNodeInfoManager::Init(nsIDocument *aDocument)
 {
   NS_ENSURE_TRUE(mNodeInfoHash, NS_ERROR_OUT_OF_MEMORY);
@@ -168,7 +167,7 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 }
 
 
-NS_IMETHODIMP
+void
 nsNodeInfoManager::DropDocumentReference()
 {
   if (mDocument) {
@@ -183,12 +182,10 @@ nsNodeInfoManager::DropDocumentReference()
     }
   }
   mDocument = nsnull;
-
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
@@ -224,7 +221,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
@@ -233,7 +230,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
                                const nsAString& aNamespaceURI,
                                nsINodeInfo** aNodeInfo)
@@ -274,7 +271,7 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aQualifiedName,
   return nsNodeInfoManager::GetNodeInfo(nameAtom, prefixAtom, nsid, aNodeInfo);
 }
 
-NS_IMETHODIMP
+nsresult
 nsNodeInfoManager::GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo)
 {
@@ -287,13 +284,7 @@ nsNodeInfoManager::GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
 }
 
 
-nsIDocument*
-nsNodeInfoManager::GetDocument() const
-{
-  return mDocument;
-}
-
-NS_IMETHODIMP
+nsresult
 nsNodeInfoManager::GetDocumentPrincipal(nsIPrincipal** aPrincipal)
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
@@ -320,7 +311,7 @@ nsNodeInfoManager::GetDocumentPrincipal(nsIPrincipal** aPrincipal)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
 {
   NS_ENSURE_FALSE(mDocument, NS_ERROR_UNEXPECTED);
@@ -328,24 +319,14 @@ nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfoArray(nsISupportsArray** aArray)
+nsresult
+nsNodeInfoManager::GetNodeInfos(nsCOMArray<nsINodeInfo> *aArray)
 {
-  *aArray = nsnull;
-
-  nsCOMPtr<nsISupportsArray> array;
-  nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   PL_HashTableEnumerateEntries(mNodeInfoHash,
                                GetNodeInfoArrayEnumerator,
-                               array);
-  PRUint32 n;
-  array->Count(&n);
-  NS_ENSURE_TRUE(n == mNodeInfoHash->nentries, NS_ERROR_OUT_OF_MEMORY);
-
-  *aArray = array;
-  NS_ADDREF(*aArray);
+                               aArray);
+  PRInt32 n = aArray->Count();
+  NS_ENSURE_TRUE((PRUint32)n == mNodeInfoHash->nentries, NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
@@ -356,10 +337,9 @@ nsNodeInfoManager::GetNodeInfoArrayEnumerator(PLHashEntry* he, PRIntn i,
                                               void* arg)
 {
   NS_ASSERTION(arg, "missing array");
-  nsISupportsArray* array = (nsISupportsArray*)arg;
+  nsCOMArray<nsINodeInfo> *array = (nsCOMArray<nsINodeInfo> *) arg;
 
-  nsresult rv = array->AppendElement((nsINodeInfo*)he->value);
-  if (NS_FAILED(rv)) {
+  if (!array->AppendObject((nsINodeInfo*)he->value)) {
     return HT_ENUMERATE_STOP;
   }
 

@@ -61,13 +61,14 @@
 #include "nsAString.h"
 #include "domstubs.h"
 #include "nsINameSpaceManager.h"
+#include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 
 // Forward declarations
-class nsINodeInfoManager;
+class nsINodeInfo;
 class nsIDocument;
 class nsIURI;
 class nsIPrincipal;
-class nsISupportsArray;
 
 
 // IID for the nsINodeInfo interface
@@ -83,15 +84,89 @@ class nsISupportsArray;
 #define NS_NODEINFOMANAGER_CONTRACTID "@mozilla.org/layout/nodeinfomanager;1"
 
 
+class nsINodeInfoManager : public nsISupports
+{
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INODEINFOMANAGER_IID)
+
+  nsINodeInfoManager()
+    : mDocument(nsnull)
+  {
+  }
+
+  virtual ~nsINodeInfoManager() { }
+
+  /*
+   * Initialize the nodeinfo manager with a document.
+   */
+  virtual nsresult Init(nsIDocument *aDocument) = 0;
+
+  /*
+   * Release the reference to the document, this will be called when
+   * the document is going away.
+   */
+  virtual void DropDocumentReference() = 0;
+
+  /*
+   * Methods for creating nodeinfo's from atoms and/or strings.
+   */
+  virtual nsresult GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
+                               PRInt32 aNamespaceID,
+                               nsINodeInfo** aNodeInfo) = 0;
+  virtual nsresult GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
+                               PRInt32 aNamespaceID,
+                               nsINodeInfo** aNodeInfo) = 0;
+  virtual nsresult GetNodeInfo(const nsAString& aQualifiedName,
+                               const nsAString& aNamespaceURI,
+                               nsINodeInfo** aNodeInfo) = 0;
+
+  virtual nsresult GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
+                               PRInt32 aNamespaceID,
+                               nsINodeInfo** aNodeInfo) = 0;
+
+  /*
+   * Retrieve a pointer to the document that owns this node info
+   * manager.
+   */
+  nsIDocument* GetDocument() const
+  {
+    return mDocument;
+  }
+
+  /**
+   * Gets the principal of the document associated with this.
+   */
+  virtual nsresult GetDocumentPrincipal(nsIPrincipal** aPrincipal) = 0;
+  
+  /**
+   * Sets the principal of the nodeinfo manager. This should only be called
+   * when this nodeinfo manager isn't connected to an nsIDocument.
+   */
+  virtual nsresult SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
+  
+  /**
+   * Populate the given nsCOMArray with all of the nsINodeInfos
+   * managed by this manager.
+   */
+  virtual nsresult GetNodeInfos(nsCOMArray<nsINodeInfo> *aArray) = 0;
+
+protected:
+  nsIDocument *mDocument; // WEAK
+};
+
+
 class nsINodeInfo : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INODEINFO_IID)
 
   nsINodeInfo()
-    : mInner(nsnull, nsnull, kNameSpaceID_None)
+    : mInner(nsnull, nsnull, kNameSpaceID_None),
+      mOwnerManager(nsnull)
   {
   }
+
+  virtual ~nsINodeInfo() { }
 
   /*
    * Get the name from this node as a string, this does not include the prefix.
@@ -99,11 +174,9 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "body".
    */
-  nsresult GetName(nsAString& aName) const
+  void GetName(nsAString& aName) const
   {
     mInner.mName->ToString(aName);
-
-    return NS_OK;
   }
 
   /*
@@ -113,9 +186,8 @@ public:
    * For the HTML element "<body>" this will return the "body" atom and for
    * the XML element "<html:body>" this will return the "body" atom.
    */
-  already_AddRefed<nsIAtom> GetNameAtom() const
+  nsIAtom* NameAtom() const
   {
-    NS_ADDREF(mInner.mName);
     return mInner.mName;
   }
 
@@ -126,7 +198,7 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "html:body".
    */
-  NS_IMETHOD GetQualifiedName(nsAString& aQualifiedName) const = 0;
+  virtual void GetQualifiedName(nsAString& aQualifiedName) const = 0;
 
   /*
    * Get the local name from this node as a string, GetLocalName() gets the
@@ -137,7 +209,7 @@ public:
    * For the HTML element "<body>" in a HTML document this will return a null
    * string and for the XML element "<html:body>" this will return "body".
    */
-  NS_IMETHOD GetLocalName(nsAString& aLocalName) const = 0;
+  virtual void GetLocalName(nsAString& aLocalName) const = 0;
 
   /*
    * Get the prefix from this node as a string.
@@ -145,15 +217,13 @@ public:
    * For the HTML element "<body>" this will return a null string and for
    * the XML element "<html:body>" this will return the string "html".
    */
-  nsresult GetPrefix(nsAString& aPrefix) const
+  void GetPrefix(nsAString& aPrefix) const
   {
     if (mInner.mPrefix) {
       mInner.mPrefix->ToString(aPrefix);
     } else {
       SetDOMStringToNull(aPrefix);
     }
-
-    return NS_OK;
   }
 
   /*
@@ -162,10 +232,8 @@ public:
    * For the HTML element "<body>" this will return a null atom and for
    * the XML element "<html:body>" this will return the "html" atom.
    */
-  already_AddRefed<nsIAtom> GetPrefixAtom() const
+  nsIAtom* GetPrefixAtom() const
   {
-    NS_IF_ADDREF(mInner.mPrefix);
-
     return mInner.mPrefix;
   }
 
@@ -178,7 +246,7 @@ public:
    * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
    * the string "http://www.w3.org/1999/xhtml".
    */
-  NS_IMETHOD GetNamespaceURI(nsAString& aNameSpaceURI) const = 0;
+  virtual nsresult GetNamespaceURI(nsAString& aNameSpaceURI) const = 0;
 
   /*
    * Get the namespace ID for a node if the node has a namespace, if not this
@@ -190,7 +258,7 @@ public:
    * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
    * the namespace ID for "http://www.w3.org/1999/xhtml".
    */
-  PRInt32 GetNamespaceID() const
+  PRInt32 NamespaceID() const
   {
     return mInner.mNamespaceID;
   }
@@ -201,13 +269,23 @@ public:
    * for the definition of an ID attribute.
    *
    */
-  NS_IMETHOD_(nsIAtom*) GetIDAttributeAtom() const = 0;
-  NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult) = 0;
+  nsIAtom* GetIDAttributeAtom() const
+  {
+    return mIDAttributeAtom;
+  }
+
+  void SetIDAttributeAtom(nsIAtom* aID)
+  {
+    mIDAttributeAtom = aID;
+  }
 
   /*
    * Get the owning node info manager, this will never return null.
    */
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) const = 0;
+  nsINodeInfoManager* NodeInfoManager() const
+  {
+    return mOwnerManager;
+  }
 
   /*
    * Utility functions that can be used to check if a nodeinfo holds a specific
@@ -255,39 +333,52 @@ public:
     return mInner.mNamespaceID == aNamespaceID;
   }
 
-  NS_IMETHOD_(PRBool) Equals(const nsAString& aName) const = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
-                             const nsAString& aPrefix) const = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
-                             PRInt32 aNamespaceID) const = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
-                             const nsAString& aPrefix,
-                             PRInt32 aNamespaceID) const = 0;
-  NS_IMETHOD_(PRBool) NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
+  virtual PRBool Equals(const nsAString& aName) const = 0;
+  virtual PRBool Equals(const nsAString& aName,
+                        const nsAString& aPrefix) const = 0;
+  virtual PRBool Equals(const nsAString& aName,
+                        PRInt32 aNamespaceID) const = 0;
+  virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
+                        PRInt32 aNamespaceID) const = 0;
+  virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
   // switch to UTF8 - this allows faster access for consumers
-  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsACString& aQualifiedName) const = 0;
+  virtual PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const = 0;
 
   /*
    * This is a convinience method that creates a new nsINodeInfo that differs
    * only by name from the one this is called on.
    */
-  NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo** aResult) = 0;
+  nsresult NameChanged(nsIAtom *aName, nsINodeInfo** aResult)
+  {
+    return mOwnerManager->GetNodeInfo(aName, mInner.mPrefix,
+                                      mInner.mNamespaceID, aResult);
+  }
 
   /*
    * This is a convinience method that creates a new nsINodeInfo that differs
    * only by prefix from the one this is called on.
    */
-  NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo** aResult) = 0;
+  nsresult PrefixChanged(nsIAtom *aPrefix, nsINodeInfo** aResult)
+  {
+    return mOwnerManager->GetNodeInfo(mInner.mName, aPrefix,
+                                      mInner.mNamespaceID, aResult);
+  }
 
   /*
    * Retrieve a pointer to the document that owns this node info.
    */
-  virtual nsIDocument* GetDocument() const = 0;
+  nsIDocument* GetDocument() const
+  {
+    return mOwnerManager->GetDocument();
+  }
 
   /*
    * Retrieve a pointer to the principal for the document of this node info.
    */
-  NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal) const = 0;
+  nsresult GetDocumentPrincipal(nsIPrincipal** aPrincipal) const
+  {
+    return mOwnerManager->GetDocumentPrincipal(aPrincipal);
+  }
 
 protected:
   /*
@@ -321,60 +412,9 @@ protected:
   friend class nsNodeInfoManager;
 
   nsNodeInfoInner mInner;
-};
 
-
-class nsINodeInfoManager : public nsISupports
-{
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INODEINFOMANAGER_IID)
-
-  /*
-   * Initialize the nodeinfo manager with a document.
-   */
-  NS_IMETHOD Init(nsIDocument *aDocument) = 0;
-
-  /*
-   * Release the reference to the document, this will be called when
-   * the document is going away.
-   */
-  NS_IMETHOD DropDocumentReference() = 0;
-
-  /*
-   * Methods for creating nodeinfo's from atoms and/or strings.
-   */
-  NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
-                         const nsAString& aNamespaceURI,
-                         nsINodeInfo** aNodeInfo) = 0;
-
-  NS_IMETHOD GetNodeInfo(const nsACString& aName, nsIAtom *aPrefix,
-                         PRInt32 aNamespaceID, nsINodeInfo** aNodeInfo) = 0;
-
-  /*
-   * Retrieve a pointer to the document that owns this node info
-   * manager.
-   */
-  virtual nsIDocument* GetDocument() const = 0;
-
-  /**
-   * Gets the principal of the document associated with this.
-   */
-  NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal) = 0;
-  
-  /**
-   * Sets the principal of the nodeinfo manager. This should only be called
-   * when this nodeinfo manager isn't connected to an nsIDocument.
-   */
-  NS_IMETHOD SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
-  
-  /**
-   * Returns an nsISupportsArray of all nsINodeInfos managed by this manager
-   */
-  NS_IMETHOD GetNodeInfoArray(nsISupportsArray** aArray) = 0;
+  nsCOMPtr<nsIAtom> mIDAttributeAtom;
+  nsINodeInfoManager* mOwnerManager; // Strong reference!
 };
 
 nsresult

@@ -1137,7 +1137,7 @@ nsXMLDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult)
   
   nsCOMPtr<nsIContent> content;
 
-  PRInt32 namespaceID = aNodeInfo->GetNamespaceID();
+  PRInt32 namespaceID = aNodeInfo->NamespaceID();
 
   nsCOMPtr<nsIElementFactory> elementFactory;
   nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,

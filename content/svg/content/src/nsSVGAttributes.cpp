@@ -550,7 +550,7 @@ nsSVGAttributes::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
          attr->GetNodeInfo()->NamespaceEquals(aNameSpaceID)) &&
         (attr->GetNodeInfo()->Equals(aName))) {
       // AddRefs
-      *aPrefix = attr->GetNodeInfo()->GetPrefixAtom().get();
+      *aPrefix = attr->GetNodeInfo()->PrefixAtom().get();
       attr->GetValue()->GetValueString(aResult);
       if (!aResult.IsEmpty()) {
         rv = NS_CONTENT_ATTR_HAS_VALUE;
@@ -604,7 +604,7 @@ nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
   }
 
   PRInt32 nameSpaceID = aNodeInfo->GetNamespaceID();
-  nsCOMPtr<nsIAtom> name = aNodeInfo->GetNameAtom();
+  nsIAtom *name = aNodeInfo->NameAtom();
 
   // Send the notification before making any updates
   mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
@@ -799,10 +799,8 @@ nsSVGAttributes::GetAttrNameAt(PRInt32 aIndex,
   nsSVGAttribute* attr = ElementAt(aIndex);
   if (attr) {
     *aNameSpaceID = attr->GetNodeInfo()->GetNamespaceID();
-    // AddRefs
-    *aName = attr->GetNodeInfo()->GetNameAtom().get();
-    // AddRefs
-    *aPrefix = attr->GetNodeInfo()->GetPrefixAtom().get();
+    NS_ADDREF(*aName = attr->GetNodeInfo()->NameAtom());
+    NS_IF_ADDREF(*aPrefix = attr->GetNodeInfo()->PrefixAtom());
 
     return NS_OK;
   }

@@ -120,7 +120,8 @@ nsDOMAttribute::GetName(nsAString& aName)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
-  return mNodeInfo->GetQualifiedName(aName);
+  mNodeInfo->GetQualifiedName(aName);
+  return NS_OK;
 }
 
 nsresult
@@ -129,11 +130,9 @@ nsDOMAttribute::GetValue(nsAString& aValue)
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
   if (mContent) {
-    nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
-    PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
-
     nsAutoString tmpValue;
-    nsresult attrResult = mContent->GetAttr(nameSpaceID, name,
+    nsresult attrResult = mContent->GetAttr(mNodeInfo->NamespaceID(),
+                                            mNodeInfo->NameAtom(),
                                             tmpValue);
     if (NS_CONTENT_ATTR_NOT_THERE != attrResult) {
       mValue = tmpValue;
@@ -170,10 +169,8 @@ nsDOMAttribute::GetSpecified(PRBool* aSpecified)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
-  PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
-
-  *aSpecified = mContent->HasAttr(nameSpaceID, name);
+  *aSpecified = mContent->HasAttr(mNodeInfo->NamespaceID(),
+                                  mNodeInfo->NameAtom());
 
   return NS_OK;
 }
@@ -362,11 +359,9 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   nsDOMAttribute* newAttr;
 
   if (mContent) {
-    nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
-    PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
-  
     nsAutoString value;
-    mContent->GetAttr(nameSpaceID, name, value);
+    mContent->GetAttr(mNodeInfo->NamespaceID(),
+                      mNodeInfo->NameAtom(), value);
     newAttr = new nsDOMAttribute(nsnull, mNodeInfo, value); 
   }
   else {
@@ -410,7 +405,8 @@ nsDOMAttribute::GetPrefix(nsAString& aPrefix)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
-  return mNodeInfo->GetPrefix(aPrefix);
+  mNodeInfo->GetPrefix(aPrefix);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -428,8 +424,8 @@ nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mContent) {
-    nsCOMPtr<nsIAtom> name = mNodeInfo->GetNameAtom();
-    PRInt32 nameSpaceID = mNodeInfo->GetNamespaceID();
+    nsIAtom *name = mNodeInfo->NameAtom();
+    PRInt32 nameSpaceID = mNodeInfo->NamespaceID();
 
     nsAutoString tmpValue;
     rv = mContent->GetAttr(nameSpaceID, name, tmpValue);
@@ -450,7 +446,8 @@ nsDOMAttribute::GetLocalName(nsAString& aLocalName)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
-  return mNodeInfo->GetLocalName(aLocalName);
+  mNodeInfo->GetLocalName(aLocalName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 

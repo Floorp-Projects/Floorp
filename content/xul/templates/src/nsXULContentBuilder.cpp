@@ -871,8 +871,8 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
         nsCOMPtr<nsINodeInfo> ni =
             aTemplateNode->GetExistingAttrNameFromQName(attribute);
         if (ni) {
-            tag = ni->GetNameAtom();
-            nameSpaceID = ni->GetNamespaceID();
+            tag = ni->NameAtom();
+            nameSpaceID = ni->NamespaceID();
         }
         else {
             tag = do_GetAtom(attribute);

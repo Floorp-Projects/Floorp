@@ -204,11 +204,11 @@ public:
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext,
-                               nsISupportsArray* aNodeInfos) = 0;
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos) = 0;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
-                                 nsISupportsArray* aNodeInfos) = 0;
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos) = 0;
 
     void AddRef() { ++mRefCnt; };
     void Release()
@@ -262,11 +262,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext,
-                               nsISupportsArray* aNodeInfos);
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
-                                 nsISupportsArray* aNodeInfos);
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
     PRUint32                 mNumChildren;
     nsXULPrototypeNode**     mChildren;           // [OWNER]
@@ -309,13 +309,13 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext,
-                               nsISupportsArray* aNodeInfos);
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos);
     nsresult SerializeOutOfLine(nsIObjectOutputStream* aStream,
                                 nsIScriptContext* aContext);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
-                                 nsISupportsArray* aNodeInfos);
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos);
     nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
                                   nsIScriptContext* aContext);
 
@@ -364,11 +364,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext,
-                               nsISupportsArray* aNodeInfos);
+                               const nsCOMArray<nsINodeInfo> *aNodeInfos);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
-                                 nsISupportsArray* aNodeInfos);
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
     nsString                 mValue;
 };

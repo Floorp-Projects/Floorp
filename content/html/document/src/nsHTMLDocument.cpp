@@ -1543,7 +1543,7 @@ nsHTMLDocument::CreateElementNS(const nsAString& aNamespaceURI,
                                               getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 namespaceID = nodeInfo->GetNamespaceID();
+  PRInt32 namespaceID = nodeInfo->NamespaceID();
 
   nsCOMPtr<nsIElementFactory> elementFactory;
   nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,

@@ -573,12 +573,6 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
         {
             nsCOMPtr<nsIContent> element = do_QueryInterface(aNode);
 
-            nsINodeInfo *ni = element->GetNodeInfo();
-
-            PRInt32 namespaceID = ni->GetNamespaceID();
-            nsCOMPtr<nsIAtom> localname = ni->GetNameAtom();
-            nsCOMPtr<nsIAtom> prefix = ni->GetPrefixAtom();
-
             PRUint32 attsCount = element->GetAttrCount();
             nsAutoArrayPtr<txStylesheetAttr> atts;
             if (attsCount > 0) {
@@ -595,7 +589,11 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
                 }
             }
 
-            rv = aCompiler->startElement(namespaceID, localname, prefix, atts,
+            nsINodeInfo *ni = element->GetNodeInfo();
+
+            rv = aCompiler->startElement(ni->NamespaceID(),
+                                         ni->NameAtom(),
+                                         ni->GetPrefixAtom(), atts,
                                          attsCount);
             NS_ENSURE_SUCCESS(rv, rv);
 

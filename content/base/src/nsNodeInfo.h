@@ -52,27 +52,17 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsINodeInfo
-  NS_IMETHOD GetQualifiedName(nsAString &aQualifiedName) const;
-  NS_IMETHOD GetLocalName(nsAString& aLocalName) const;
-  NS_IMETHOD GetNamespaceURI(nsAString& aNameSpaceURI) const;
-  NS_IMETHOD_(nsIAtom*) GetIDAttributeAtom() const;
-  NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult);
-  NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) const;
-  NS_IMETHOD_(PRBool) Equals(const nsAString& aName) const;
-  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
-                             const nsAString& aPrefix) const;
-  NS_IMETHOD_(PRBool) Equals(const nsAString& aName,
-                             PRInt32 aNamespaceID) const;
-  NS_IMETHOD_(PRBool) Equals(const nsAString& aName, const nsAString& aPrefix,
-                             PRInt32 aNamespaceID) const;
-  NS_IMETHOD_(PRBool) NamespaceEquals(const nsAString& aNamespaceURI) const;
-  NS_IMETHOD_(PRBool) QualifiedNameEquals(const nsACString& aQualifiedName) const;
-
-  NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo** aResult);
-  NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo** aResult);
-  
-  virtual nsIDocument* GetDocument() const;
-  NS_IMETHOD GetDocumentPrincipal(nsIPrincipal** aPrincipal) const;
+  virtual void GetQualifiedName(nsAString &aQualifiedName) const;
+  virtual void GetLocalName(nsAString& aLocalName) const;
+  virtual nsresult GetNamespaceURI(nsAString& aNameSpaceURI) const;
+  virtual PRBool Equals(const nsAString& aName) const;
+  virtual PRBool Equals(const nsAString& aName,
+                        const nsAString& aPrefix) const;
+  virtual PRBool Equals(const nsAString& aName, PRInt32 aNamespaceID) const;
+  virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
+                        PRInt32 aNamespaceID) const;
+  virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const;
+  virtual PRBool QualifiedNameEquals(const nsACString& aQualifiedName) const;
 
   // nsNodeInfo
   // Create objects with Create
@@ -98,11 +88,6 @@ public:
    * Call before shutdown to clear the cache and free memory for this class.
    */
   static void ClearCache();
-
-protected:
-  nsCOMPtr<nsIAtom>   mIDAttributeAtom;
-
-  nsNodeInfoManager* mOwnerManager; // Strong reference!
 
 private:
   void Clear();

@@ -449,7 +449,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   *aAppendContent = PR_TRUE;
   nsresult rv = NS_OK;
 
-  PRInt32 nameSpaceID = aNodeInfo->GetNamespaceID();
+  PRInt32 nameSpaceID = aNodeInfo->NamespaceID();
 
   // XHTML needs some special attention
   if (nameSpaceID != kNameSpaceID_XHTML) {
@@ -484,7 +484,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   rv = CallQueryInterface(htmlContent, aResult);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIAtom> tagAtom = aNodeInfo->GetNameAtom();
+  nsIAtom *tagAtom = aNodeInfo->NameAtom();
   if (tagAtom == nsHTMLAtoms::script) {
     // Don't append the content to the tree until we're all
     // done collecting its contents
@@ -1199,7 +1199,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
     nsCOMPtr<nsIAtom> IDAttr = do_GetAtom(aAtts[aIndex]);
 
     if (IDAttr) {
-      result = nodeInfo->SetIDAttributeAtom(IDAttr);
+      nodeInfo->SetIDAttributeAtom(IDAttr);
     }
   }
 

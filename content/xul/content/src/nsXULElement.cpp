@@ -101,7 +101,6 @@
 #include "nsICSSStyleRule.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyledContent.h"
-#include "nsISupportsArray.h"
 #include "nsIURL.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
@@ -646,7 +645,8 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP
 nsXULElement::GetNodeName(nsAString& aNodeName)
 {
-    return NodeInfo()->GetQualifiedName(aNodeName);
+    NodeInfo()->GetQualifiedName(aNodeName);
+    return NS_OK;
 }
 
 
@@ -862,7 +862,8 @@ nsXULElement::GetNamespaceURI(nsAString& aNamespaceURI)
 NS_IMETHODIMP
 nsXULElement::GetPrefix(nsAString& aPrefix)
 {
-    return NodeInfo()->GetPrefix(aPrefix);
+    NodeInfo()->GetPrefix(aPrefix);
+    return NS_OK;
 }
 
 
@@ -896,7 +897,8 @@ nsXULElement::SetPrefix(const nsAString& aPrefix)
 NS_IMETHODIMP
 nsXULElement::GetLocalName(nsAString& aLocalName)
 {
-    return NodeInfo()->GetLocalName(aLocalName);
+    NodeInfo()->GetLocalName(aLocalName);
+    return NS_OK;
 }
 
 
@@ -1181,7 +1183,8 @@ nsXULElement::IsSupported(const nsAString& aFeature,
 NS_IMETHODIMP
 nsXULElement::GetTagName(nsAString& aTagName)
 {
-    return NodeInfo()->GetQualifiedName(aTagName);
+    NodeInfo()->GetQualifiedName(aTagName);
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(nsINodeInfo *)
@@ -1201,10 +1204,7 @@ nsXULElement::GetAttribute(const nsAString& aName,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIAtom> nameAtom = nodeInfo->GetNameAtom();
-    PRInt32 nameSpaceID = nodeInfo->GetNamespaceID();
-
-    GetAttr(nameSpaceID, nameAtom, aReturn);
+    GetAttr(nodeInfo->NamespaceID(), nodeInfo->NameAtom(), aReturn);
 
     return NS_OK;
 }
@@ -1216,12 +1216,9 @@ nsXULElement::SetAttribute(const nsAString& aName,
 {
     nsCOMPtr<nsINodeInfo> ni = GetExistingAttrNameFromQName(aName);
     if (!ni) {
-        nsCOMPtr<nsINodeInfoManager> nimgr;
-        NodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
-        NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
-        nsresult rv = nimgr->GetNodeInfo(aName, nsnull, kNameSpaceID_None,
-                                         getter_AddRefs(ni));
+        nsresult rv = NodeInfo()->NodeInfoManager()->GetNodeInfo(aName, nsnull,
+                                                                 kNameSpaceID_None,
+                                                                 getter_AddRefs(ni));
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -1237,10 +1234,7 @@ nsXULElement::RemoveAttribute(const nsAString& aName)
         return NS_OK;
     }
 
-    nsCOMPtr<nsIAtom> tag = ni->GetNameAtom();
-    PRInt32 nameSpaceID = ni->GetNamespaceID();
-
-    return UnsetAttr(nameSpaceID, tag, PR_TRUE);
+    return UnsetAttr(ni->NamespaceID(), ni->NameAtom(), PR_TRUE);
 }
 
 
@@ -1345,12 +1339,10 @@ nsXULElement::SetAttributeNS(const nsAString& aNamespaceURI,
                              const nsAString& aQualifiedName,
                              const nsAString& aValue)
 {
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-    nsresult rv = NodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsCOMPtr<nsINodeInfo> ni;
-    rv = nimgr->GetNodeInfo(aQualifiedName, aNamespaceURI, getter_AddRefs(ni));
+    nsresult rv = NodeInfo()->NodeInfoManager()->GetNodeInfo(aQualifiedName,
+                                                             aNamespaceURI,
+                                                             getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);
 
     return SetAttr(ni, aValue, PR_TRUE);
@@ -1722,10 +1714,10 @@ nsXULElement::AddListenerFor(nsINodeInfo *aNodeInfo,
     // If appropriate, add a popup listener and/or compile the event
     // handler. Called when we change the element's document, create a
     // new element, change an attribute's value, etc.
-    PRInt32 nameSpaceID = aNodeInfo->GetNamespaceID();
+    PRInt32 nameSpaceID = aNodeInfo->NamespaceID();
 
     if (nameSpaceID == kNameSpaceID_None) {
-        nsCOMPtr<nsIAtom> attr = aNodeInfo->GetNameAtom();
+        nsIAtom *attr = aNodeInfo->NameAtom();
 
         if (attr == nsXULAtoms::menu ||
             attr == nsXULAtoms::contextmenu ||
@@ -2189,7 +2181,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 NS_IMETHODIMP
 nsXULElement::GetNameSpaceID(PRInt32* aNameSpaceID) const
 {
-    *aNameSpaceID = NodeInfo()->GetNamespaceID();
+    *aNameSpaceID = NodeInfo()->NamespaceID();
 
     return NS_OK;
 }
@@ -2197,8 +2189,7 @@ nsXULElement::GetNameSpaceID(PRInt32* aNameSpaceID) const
 NS_IMETHODIMP
 nsXULElement::GetTag(nsIAtom** aResult) const
 {
-    // AddRefs
-    *aResult = NodeInfo()->GetNameAtom().get();
+    NS_ADDREF(*aResult = NodeInfo()->NameAtom());
 
     return NS_OK;
 }
@@ -2287,9 +2278,6 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     if (nsnull == aNodeInfo)
         return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIAtom> attrName = aNodeInfo->GetNameAtom();
-    PRInt32 attrns = aNodeInfo->GetNamespaceID();
-
     nsresult rv = EnsureAttributes();
     if (NS_FAILED(rv)) return rv;
 
@@ -2310,6 +2298,9 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
         // do nothing if there is no change
         return NS_OK;
     }
+
+    nsIAtom *attrName = aNodeInfo->NameAtom();
+    PRInt32 attrns = aNodeInfo->NamespaceID();
 
     // Send the update notification _before_ changing anything
     mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
@@ -2424,13 +2415,9 @@ nsXULElement::SetAttr(PRInt32 aNameSpaceID,
                       const nsAString& aValue,
                       PRBool aNotify)
 {
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-
-    NodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
     nsCOMPtr<nsINodeInfo> ni;
-    nimgr->GetNodeInfo(aName, nsnull, aNameSpaceID, getter_AddRefs(ni));
+    NodeInfo()->NodeInfoManager()->GetNodeInfo(aName, nsnull, aNameSpaceID,
+                                               getter_AddRefs(ni));
 
     return SetAttr(ni, aValue, aNotify);
 }
@@ -2468,8 +2455,7 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID,
 
                 nsINodeInfo *ni = attr->GetNodeInfo();
                 if (ni->Equals(aName, aNameSpaceID)) {
-                    // AddRefs
-                    *aPrefix = ni->GetPrefixAtom().get();
+                    NS_IF_ADDREF(*aPrefix = ni->GetPrefixAtom());
                     attr->GetValue(aResult);
                     return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
                 }
@@ -2484,8 +2470,7 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID,
 
             nsINodeInfo *ni = attr->mNodeInfo;
             if (ni->Equals(aName, aNameSpaceID)) {
-                // AddRefs
-                *aPrefix = ni->GetPrefixAtom().get();
+                NS_IF_ADDREF(*aPrefix = ni->GetPrefixAtom());
                 attr->mValue.GetValue( aResult );
                 return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
             }
@@ -2712,11 +2697,9 @@ nsXULElement::GetAttrNameAt(PRUint32 aIndex,
         if (aIndex < Attributes()->Count()) {
             nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, Attributes()->ElementAt(aIndex));
             if (attr) {
-                *aNameSpaceID = attr->GetNodeInfo()->GetNamespaceID();
-                // AddRefs
-                *aName = attr->GetNodeInfo()->GetNameAtom().get();
-                // AddRefs
-                *aPrefix = attr->GetNodeInfo()->GetPrefixAtom().get();
+                *aNameSpaceID = attr->GetNodeInfo()->NamespaceID();
+                NS_ADDREF(*aName = attr->GetNodeInfo()->NameAtom());
+                NS_IF_ADDREF(*aPrefix = attr->GetNodeInfo()->GetPrefixAtom());
 #ifdef DEBUG_ATTRIBUTE_STATS
                 fprintf(stderr, " local!\n");
 #endif
@@ -2745,12 +2728,10 @@ nsXULElement::GetAttrNameAt(PRUint32 aIndex,
 #ifdef DEBUG_ATTRIBUTE_STATS
                 fprintf(stderr, " proto[%d]!\n", aIndex);
 #endif
-                *aNameSpaceID = attr->mNodeInfo->GetNamespaceID();
+                *aNameSpaceID = attr->mNodeInfo->NamespaceID();
 
-                // AddRefs
-                *aName = attr->mNodeInfo->GetNameAtom().get();
-                // AddRefs
-                *aPrefix = attr->mNodeInfo->GetPrefixAtom().get();
+                NS_ADDREF(*aName = attr->mNodeInfo->NameAtom());
+                NS_IF_ADDREF(*aPrefix = attr->mNodeInfo->GetPrefixAtom());
 
                 return NS_OK;
             }
@@ -3556,13 +3537,11 @@ nsXULElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
         attr->SetValueInternal(stringValue);
     }
     else {
-        nsCOMPtr<nsINodeInfoManager> nimgr;
-        NodeInfo()->GetNodeInfoManager(getter_AddRefs(nimgr));
-        NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
-
         nsCOMPtr<nsINodeInfo> ni;
-        rv = nimgr->GetNodeInfo(nsXULAtoms::style, nsnull, kNameSpaceID_None,
-                                getter_AddRefs(ni));
+        rv = NodeInfo()->NodeInfoManager()->GetNodeInfo(nsXULAtoms::style,
+                                                        nsnull,
+                                                        kNameSpaceID_None,
+                                                        getter_AddRefs(ni));
         NS_ENSURE_SUCCESS(rv, rv);
 
         // Need to create a local attr
@@ -4607,7 +4586,7 @@ nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 nsresult
 nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
                                  nsIScriptContext* aContext,
-                                 nsISupportsArray* aNodeInfos)
+                                 const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 
@@ -4674,7 +4653,7 @@ nsresult
 nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                    nsIScriptContext* aContext,
                                    nsIURI* aDocumentURI,
-                                   nsISupportsArray* aNodeInfos)
+                                   const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
     nsresult rv;
@@ -4682,7 +4661,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     // Read Node Info
     PRUint32 number;
     rv = aStream->Read32(&number);
-    mNodeInfo = do_QueryElementAt(aNodeInfos, number);
+    mNodeInfo = aNodeInfos->SafeObjectAt(number);
     if (!mNodeInfo)
         return NS_ERROR_UNEXPECTED;
 
@@ -4699,7 +4678,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
         nsAutoString attributeValue;
         for (i = 0; i < mNumAttributes; ++i) {
             rv |= aStream->Read32(&number);
-            mAttributes[i].mNodeInfo = do_QueryElementAt(aNodeInfos, number);
+            mAttributes[i].mNodeInfo = aNodeInfos->SafeObjectAt(number);
             if (!mAttributes[i].mNodeInfo)
                 return NS_ERROR_UNEXPECTED;
 
@@ -4844,7 +4823,7 @@ nsXULPrototypeScript::~nsXULPrototypeScript()
 nsresult
 nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 nsIScriptContext* aContext,
-                                nsISupportsArray* aNodeInfos)
+                                const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
                  "script source still loading when serializing?!");
@@ -4966,7 +4945,7 @@ nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                                   nsIScriptContext* aContext,
                                   nsIURI* aDocumentURI,
-                                  nsISupportsArray* aNodeInfos)
+                                  const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     NS_TIMELINE_MARK_FUNCTION("chrome js deserialize");
     nsresult rv;
@@ -5221,7 +5200,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
 nsresult
 nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
                               nsIScriptContext* aContext,
-                              nsISupportsArray* aNodeInfos)
+                              const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 
@@ -5237,7 +5216,7 @@ nsresult
 nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
                                 nsIScriptContext* aContext,
                                 nsIURI* aDocumentURI,
-                                nsISupportsArray* aNodeInfos)
+                                const nsCOMArray<nsINodeInfo> *aNodeInfos)
 {
     nsresult rv;
 

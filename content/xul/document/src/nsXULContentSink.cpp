@@ -822,7 +822,7 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
     nsCOMPtr<nsIAtom> IDAttr = do_GetAtom(aAtts[aIndex]);
 
     if (IDAttr) {
-      rv = nodeInfo->SetIDAttributeAtom(IDAttr);
+      nodeInfo->SetIDAttributeAtom(IDAttr);
     }
   }
 

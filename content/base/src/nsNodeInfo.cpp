@@ -64,7 +64,6 @@ nsNodeInfo::Create()
 }
 
 nsNodeInfo::nsNodeInfo()
-  : nsINodeInfo(), mOwnerManager(nsnull)
 {
 }
 
@@ -78,7 +77,7 @@ void
 nsNodeInfo::Clear()
 {
   if (mOwnerManager) {
-    mOwnerManager->RemoveNodeInfo(this);
+    NS_STATIC_CAST(nsNodeInfoManager*, mOwnerManager)->RemoveNodeInfo(this);
     NS_RELEASE(mOwnerManager);
   }
 
@@ -119,7 +118,7 @@ NS_IMPL_QUERY_INTERFACE1(nsNodeInfo, nsINodeInfo)
 
 // nsINodeInfo
 
-NS_IMETHODIMP
+void
 nsNodeInfo::GetQualifiedName(nsAString& aQualifiedName) const
 {
   if (mInner.mPrefix) {
@@ -134,29 +133,25 @@ nsNodeInfo::GetQualifiedName(nsAString& aQualifiedName) const
   mInner.mName->ToString(name);
 
   aQualifiedName.Append(name);
-
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
+void
 nsNodeInfo::GetLocalName(nsAString& aLocalName) const
 {
 #ifdef STRICT_DOM_LEVEL2_LOCALNAME
   if (mInner.mNamespaceID > 0) {
-    return mInner.mName->ToString(aLocalName);
+    mInner.mName->ToString(aLocalName);
+  } else {
+    SetDOMStringToNull(aLocalName);
   }
-
-  SetDOMStringToNull(aLocalName);
-
-  return NS_OK;
 #else
-  return mInner.mName->ToString(aLocalName);
+  mInner.mName->ToString(aLocalName);
 #endif
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 {
   nsresult rv = NS_OK;
@@ -172,40 +167,14 @@ nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 }
 
 
-NS_IMETHODIMP_(nsIAtom*)
-nsNodeInfo::GetIDAttributeAtom() const
-{
-  return mIDAttributeAtom;
-}
-
-NS_IMETHODIMP
-nsNodeInfo::SetIDAttributeAtom(nsIAtom* aID)
-{
-  NS_ENSURE_ARG(aID);
-  mIDAttributeAtom = aID;
-
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsNodeInfo::GetNodeInfoManager(nsINodeInfoManager** aNodeInfoManager) const
-{
-  NS_ADDREF(*aNodeInfoManager = mOwnerManager);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsNodeInfo::Equals(const nsAString& aName) const
 {
   return mInner.mName->Equals(aName);
 }
 
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix) const
 {
   if (!mInner.mName->Equals(aName)) {
@@ -220,7 +189,7 @@ nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix) const
 }
 
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsNodeInfo::Equals(const nsAString& aName, PRInt32 aNamespaceID) const
 {
   return mInner.mNamespaceID == aNamespaceID &&
@@ -228,7 +197,7 @@ nsNodeInfo::Equals(const nsAString& aName, PRInt32 aNamespaceID) const
 }
 
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
                    PRInt32 aNamespaceID) const
 {
@@ -241,7 +210,7 @@ nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
 }
 
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
   PRInt32 nsid;
@@ -250,7 +219,7 @@ nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
   return nsINodeInfo::NamespaceEquals(nsid);
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsNodeInfo::QualifiedNameEquals(const nsACString& aQualifiedName) const
 {
   
@@ -291,33 +260,6 @@ nsNodeInfo::QualifiedNameEquals(const nsACString& aQualifiedName) const
   // Compare the local name to the string between the colon and the
   // end of aQualifiedName
   return mInner.mName->EqualsUTF8(Substring(colon, end));
-}
-
-NS_IMETHODIMP
-nsNodeInfo::NameChanged(nsIAtom *aName, nsINodeInfo** aResult)
-{
-  return mOwnerManager->GetNodeInfo(aName, mInner.mPrefix, mInner.mNamespaceID,
-                                    aResult);
-}
-
-
-NS_IMETHODIMP
-nsNodeInfo::PrefixChanged(nsIAtom *aPrefix, nsINodeInfo** aResult)
-{
-  return mOwnerManager->GetNodeInfo(mInner.mName, aPrefix, mInner.mNamespaceID,
-                                    aResult);
-}
-
-nsIDocument*
-nsNodeInfo::GetDocument() const
-{
-  return mOwnerManager->GetDocument();
-}
-
-NS_IMETHODIMP
-nsNodeInfo::GetDocumentPrincipal(nsIPrincipal** aPrincipal) const
-{
-  return mOwnerManager->GetDocumentPrincipal(aPrincipal);
 }
 
 // static

@@ -403,12 +403,12 @@ nsGenericHTMLElement::SetAttribute(const nsAString& aName,
 nsresult
 nsGenericHTMLElement::GetNodeName(nsAString& aNodeName)
 {
-  nsresult rv = mNodeInfo->GetQualifiedName(aNodeName);
+  mNodeInfo->GetQualifiedName(aNodeName);
 
   if (mNodeInfo->NamespaceEquals(kNameSpaceID_None))
     ToUpperCase(aNodeName);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -1699,12 +1699,9 @@ nsGenericHTMLElement::GetExistingAttrNameFromQName(const nsAString& aStr)
                                     getter_AddRefs(prefixAtom));
 
     if (QualifiedNameEquals(lower, nameAtom, prefixAtom)) {
-      nsCOMPtr<nsINodeInfoManager> nimgr;
-      mNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
-      NS_ENSURE_TRUE(nimgr, nsnull);
-
       nsINodeInfo* nodeInfo;
-      nimgr->GetNodeInfo(nameAtom, prefixAtom, nameSpace, &nodeInfo);
+      mNodeInfo->NodeInfoManager()->GetNodeInfo(nameAtom, prefixAtom,
+                                                nameSpace, &nodeInfo);
 
       return nodeInfo;
     }
@@ -1726,13 +1723,10 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
   nsresult  result = NS_OK;
 
   if (aNameSpaceID != kNameSpaceID_None) {
-    nsCOMPtr<nsINodeInfoManager> nimgr;
-    result = mNodeInfo->GetNodeInfoManager(getter_AddRefs(nimgr));
-    NS_ENSURE_SUCCESS(result, result);
-
     nsCOMPtr<nsINodeInfo> ni;
-    result = nimgr->GetNodeInfo(aAttribute, nsnull, aNameSpaceID,
-                                getter_AddRefs(ni));
+    result = mNodeInfo->NodeInfoManager()->GetNodeInfo(aAttribute, nsnull,
+                                                       aNameSpaceID,
+                                                       getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(result, result);
 
     return SetAttr(ni, aValue, aNotify);
@@ -1851,8 +1845,8 @@ nsGenericHTMLElement::SetAttr(nsINodeInfo* aNodeInfo,
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsCOMPtr<nsIAtom> localName = aNodeInfo->GetNameAtom();
-  PRInt32 namespaceID = aNodeInfo->GetNamespaceID();
+  nsIAtom *localName = aNodeInfo->NameAtom();
+  PRInt32 namespaceID = aNodeInfo->NamespaceID();
 
   NS_ASSERTION(namespaceID != kNameSpaceID_XHTML,
                "Error, attribute on [X]HTML element set with XHTML namespace, "

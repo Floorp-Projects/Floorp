@@ -137,7 +137,7 @@ public:
         return NS_ERROR_FAILURE;
       }
 
-      *aElementName = nodeInfo->GetNameAtom().get();
+      NS_ADDREF(*aElementName = nodeInfo->NameAtom());
 
       *aChildElement = childElement;
       NS_ADDREF(*aChildElement);
