@@ -37,7 +37,6 @@
 #include "nsMsgCompUtils.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
-#include "nsIMIMEInfo.h"
 #include "nsMimeTypes.h"
 #include "prmem.h"
 

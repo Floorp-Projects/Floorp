@@ -61,7 +61,6 @@
 #include "nsReadableUtils.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
-#include "nsIMIMEInfo.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
