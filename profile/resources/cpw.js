@@ -1,4 +1,4 @@
-var wizardMap = new Array("test-content1_1.xul");
+var wizardMap = ["test-content1_1.xul"];
 var content;
 var wizardHash = new Array;
 var firstTime = true;
