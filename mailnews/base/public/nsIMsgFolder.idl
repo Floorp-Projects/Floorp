@@ -51,6 +51,7 @@
 %}
 
 [ptr] native octet_ptr(PRUint8);
+[ptr] native nsAutoString(nsAutoString);
 
 interface nsIMsgDBHdr;
 interface nsIMsgWindow;
@@ -60,7 +61,6 @@ interface nsMsgKeyArray;
 interface nsIMsgFilterList;
 
 interface nsIMsgFolderCacheElement;
-interface nsAutoString;
 interface nsITransport;
 interface nsIFileSpec;
 interface nsIOutputStream;

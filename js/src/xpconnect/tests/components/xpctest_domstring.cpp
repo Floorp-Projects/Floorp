@@ -50,35 +50,25 @@ public:
     xpcTestDOMString();
     virtual ~xpcTestDOMString();
 private:
-    const nsSharedBufferHandle<PRUnichar> *mHandle;
+    nsString mStr;
 };
 
 NS_IMPL_ISUPPORTS1(xpcTestDOMString, nsIXPCTestDOMString)
 
 xpcTestDOMString::xpcTestDOMString()
-    : mHandle(0)
 {
     NS_ADDREF_THIS();
 }
 
 xpcTestDOMString::~xpcTestDOMString()
 {
-    if (mHandle)
-        mHandle->ReleaseReference();
 }
 
 NS_IMETHODIMP
 xpcTestDOMString::HereHaveADOMString(const nsAString &str)
 {
-    const nsSharedBufferHandle<PRUnichar> *handle;
-    handle = str.GetSharedBufferHandle();
-    if (!handle || NS_PTR_TO_INT32(handle) == 1)
-        return NS_ERROR_INVALID_ARG;
-    
-    if (mHandle)
-        mHandle->ReleaseReference();
-    mHandle = handle;
-    mHandle->AcquireReference();
+    // assignment will share buffer if possible
+    mStr = str;
     return NS_OK;
 }
 

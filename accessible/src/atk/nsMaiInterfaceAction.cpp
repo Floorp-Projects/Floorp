@@ -57,9 +57,7 @@ static gboolean     setDescriptionCB(AtkAction *aAction, gint aActionIndex,
 G_END_DECLS
 
 MaiInterfaceAction::MaiInterfaceAction(nsAccessibleWrap *aAccWrap):
-    MaiInterface(aAccWrap),
-    mName(nsnull),
-    mKeyBinding(nsnull)
+    MaiInterface(aAccWrap)
 {
 }
 

@@ -144,7 +144,7 @@ nsSampleImpl::Poke(const char* aValue)
 
 static void GetStringValue(nsACString& aValue)
 {
-  aValue.Assign("GetValue");
+    NS_CStringSetData(aValue, "GetValue");
 }
 
 NS_IMETHODIMP

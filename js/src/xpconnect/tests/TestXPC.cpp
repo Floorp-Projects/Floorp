@@ -52,7 +52,7 @@
 #include "nsMemory.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsICategoryManager.h"
-#include "nsAString.h"
+#include "nsString.h"
 #include "nsIVariant.h"
 
 #include "jsapi.h"

@@ -38,9 +38,7 @@
 #ifndef nsCSSKeywords_h___
 #define nsCSSKeywords_h___
 
-class nsAString;
-class nsACString;
-class nsAFlatCString;
+#include "nsStringFwd.h"
 
 /*
    Declare the enum list using the magic of preprocessing

@@ -47,11 +47,7 @@
 
 #ifdef XPCOM_GLUE
 #include "nsXPCOMGlue.h"
-#include "nsIServiceManager.h"
-#include "nsIFile.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsDirectoryService.h"
-#include "nsEmbedString.h"
+#include "nsXPCOMPrivate.h"
 #else
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINativeComponentLoader.h"
@@ -285,29 +281,9 @@ nsGenericModule::Initialize(nsIComponentManager *compMgr)
 
 
 #ifdef XPCOM_GLUE
-    nsCOMPtr<nsIServiceManager> servMgr = do_QueryInterface(compMgr, &rv);
+    rv = XPCOMGlueStartup(".");
     if (NS_FAILED(rv))
         return rv;
-
-    nsCOMPtr<nsIProperties> dirService;
-    rv = servMgr->GetServiceByContractID(NS_DIRECTORY_SERVICE_CONTRACTID, 
-                                         NS_GET_IID(nsIProperties), 
-                                         getter_AddRefs(dirService));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsIFile> xpcomDll;
-    rv = dirService->Get(NS_XPCOM_LIBRARY_FILE, NS_GET_IID(nsIFile), getter_AddRefs(xpcomDll));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsEmbedCString path;
-    xpcomDll->GetNativePath(path);
-    rv = XPCOMGlueStartup(path.get());
-
-    if (NS_FAILED(rv))
-        return rv;
-
 #endif
 
     nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(compMgr, &rv);

@@ -191,9 +191,9 @@ public:
     MOZ_COUNT_DTOR(searchTerm);
   }
   
-  nsDependentSingleFragmentCSubstring datasource;  // should always be "history" ?
-  nsDependentSingleFragmentCSubstring property;    // AgeInDays, Hostname, etc
-  nsDependentSingleFragmentCSubstring method;      // is, isgreater, isless
+  nsDependentCSubstring datasource;  // should always be "history" ?
+  nsDependentCSubstring property;    // AgeInDays, Hostname, etc
+  nsDependentCSubstring method;      // is, isgreater, isless
   nsXPIDLString text;          // text to match
   rowMatchCallback match;      // matching callback if needed
 };
@@ -4062,7 +4062,7 @@ nsGlobalHistory::StartSearch(const nsAString &aSearchString,
     
     // pass string through filter and then determine which prefixes to exclude
     // when chopping prefixes off of history urls during comparison
-    nsSharableString filtered = AutoCompletePrefilter(aSearchString);
+    nsString filtered = AutoCompletePrefilter(aSearchString);
     AutocompleteExclude exclude;
     AutoCompleteGetExcludeInfo(filtered, &exclude);
     
@@ -4322,7 +4322,7 @@ nsGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aEx
     aURL.Cut(0, idx);
 }
 
-nsSharableString
+nsString
 nsGlobalHistory::AutoCompletePrefilter(const nsAString& aSearchString)
 {
   nsAutoString url(aSearchString);
@@ -4341,7 +4341,7 @@ nsGlobalHistory::AutoCompletePrefilter(const nsAString& aSearchString)
     ToLowerCase(url);
   }
   
-  return nsSharableString(url);
+  return nsString(url);
 }
 
 PRBool

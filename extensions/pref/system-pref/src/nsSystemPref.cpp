@@ -44,7 +44,7 @@
 
 #include "nsSystemPrefLog.h"
 #include "nsSystemPrefService.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 const char sSysPrefString[] = "config.use_system_prefs";
 union MozPrefValue {

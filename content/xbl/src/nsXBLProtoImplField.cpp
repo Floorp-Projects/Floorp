@@ -81,7 +81,7 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 {
   if (mFieldText) {
     nsDependentString fieldTextStr(mFieldText, mFieldTextLength);
-    const nsAString& newFieldText = fieldTextStr + aText;
+    nsAutoString newFieldText = fieldTextStr + aText;
     PRUnichar* temp = mFieldText;
     mFieldText = ToNewUnicode(newFieldText);
     mFieldTextLength = newFieldText.Length();

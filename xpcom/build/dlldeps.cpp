@@ -76,7 +76,6 @@
 #include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
 #include "nsProcess.h"
-#include "nsSlidingString.h"
 #include "nsStringEnumerator.h"
 #include "nsIInputStreamTee.h"
 #include "nsCheapSets.h"
@@ -89,6 +88,10 @@
 #include "nsVariant.h"
 #include "nsEscape.h"
 #include "nsStreamUtils.h"
+
+#define nsAString_external nsAString_external_
+#define nsACString_external nsACString_external_
+#include "nsStringAPI.h"
 
 void XXXNeverCalled()
 {
@@ -151,13 +154,15 @@ void XXXNeverCalled()
     new nsProcess();
     nsStaticCaseInsensitiveNameTable();
     nsAutoString str1;
+    nsAutoString str1b(CBufDescriptor((PRUnichar*)0, 0, 0, 0));
+    str1.AssignWithConversion(nsnull, 0);
     nsCAutoString str2;
+    nsCAutoString str2b(CBufDescriptor((char*)0, 0, 0, 0));
     ToNewUnicode(str1);
     ToNewUnicode(str2);
     ToNewCString(str1);
     ToNewCString(str2);
     PL_DHashTableFinish(nsnull);
-    nsSlidingString sliding(nsnull, nsnull, nsnull);
     NS_NewInputStreamTee(nsnull, nsnull, nsnull);
     NS_NewArray(nsnull);
     nsCOMArray<nsISupports> dummyArray;
@@ -173,4 +178,18 @@ void XXXNeverCalled()
     NS_NewUTF8StringEnumerator(nsnull, &carray);
     NS_NewAdoptingUTF8StringEnumerator(nsnull, &carray);
     nsVoidableString str3;
+    nsCStringContainer sc1;
+    NS_CStringContainerInit(sc1);
+    NS_CStringContainerFinish(sc1);
+    NS_CStringGetData(str2, nsnull, nsnull);
+    NS_CStringSetData(str2, nsnull, 0);
+    NS_CStringSetDataRange(str2, 0, 0, nsnull, 0);
+    NS_CStringCopy(str2, str2);
+    nsStringContainer sc2;
+    NS_StringContainerInit(sc2);
+    NS_StringContainerFinish(sc2);
+    NS_StringGetData(str1, nsnull, nsnull);
+    NS_StringSetData(str1, nsnull, 0);
+    NS_StringSetDataRange(str1, 0, 0, nsnull, 0);
+    NS_StringCopy(str1, str1);
 }

@@ -24,6 +24,7 @@
 /* The long avoided variant support for xpcom. */
 
 #include "nsIVariant.h"
+#include "nsStringFwd.h"
 #include "xpt_struct.h"
 
 /** 

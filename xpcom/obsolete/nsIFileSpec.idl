@@ -179,9 +179,9 @@ interface nsIDirectoryIterator : nsISupports
 
 %{C++
 // Factory methods if you link with xpcom
-NS_COM nsresult NS_NewFileSpecWithSpec(const nsFileSpec& aSrcFileSpec, nsIFileSpec **result);
-NS_COM nsresult NS_NewFileSpec(nsIFileSpec** result);
-NS_COM nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
+NS_COM_OBSOLETE nsresult NS_NewFileSpecWithSpec(const nsFileSpec& aSrcFileSpec, nsIFileSpec **result);
+NS_COM_OBSOLETE nsresult NS_NewFileSpec(nsIFileSpec** result);
+NS_COM_OBSOLETE nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
 
 // Convert from nsIFile to nsIFileSpec
 //
@@ -194,7 +194,7 @@ NS_COM nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
 //    public - It might lead to continued use of nsIFileSpec. Right now, [mozilla] has
 //    such a need for it, here it is. Let's stop having to use it though."
 //
-NS_COM nsresult NS_NewFileSpecFromIFile(nsIFile *aFile, nsIFileSpec **result);
+NS_COM_OBSOLETE nsresult NS_NewFileSpecFromIFile(nsIFile *aFile, nsIFileSpec **result);
 
 #define NS_BOOL_ACCESSOR(_method) { PRBool yes; return NS_SUCCEEDED(f->_method(&yes)) && yes; }
 inline PRBool Exists(nsIFileSpec* f) NS_BOOL_ACCESSOR(Exists)

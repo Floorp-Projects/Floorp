@@ -42,9 +42,6 @@
 #include "nsAString.h"
 #endif
 
-class nsASingleFragmentString;
-class nsString;
-
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
 

@@ -49,7 +49,7 @@
 class nsXREAppData {
 public:
   nsXREAppData()
-    : mUseSplash(PR_FALSE), mUseStartupPrefs(PR_FALSE), mProductName(nsnull) { }
+    : mUseSplash(PR_FALSE), mUseStartupPrefs(PR_FALSE) { }
 
   // Set whether the application should use a splash screen.
   // If set to true, the splash screen must be linked to the application as follows:

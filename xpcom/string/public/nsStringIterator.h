@@ -24,65 +24,66 @@
 #ifndef nsStringIterator_h___
 #define nsStringIterator_h___
 
-#ifndef nsStringFragment_h___
-#include "nsStringFragment.h"
-#endif
-
 #ifndef nsCharTraits_h___
 #include "nsCharTraits.h"
 #endif
 
-#ifndef nsStringTraits_h___
-#include "nsStringTraits.h"
-#endif
-
 #ifndef nsAlgorithm_h___
 #include "nsAlgorithm.h"
-  // for |NS_MIN|, |NS_MAX|, and |NS_COUNT|...
 #endif
 
-
-
-
-
+#ifndef nsDebug_h___
+#include "nsDebug.h"
+#endif
 
   /**
-   *
-   * @see nsReadableFragment
-   * @see nsAString
-   * @status FROZEN
+   * @see nsTAString
    */
 
 template <class CharT>
 class nsReadingIterator
-//    : public bidirectional_iterator_tag
   {
     public:
+      typedef nsReadingIterator<CharT>    self_type;
       typedef ptrdiff_t                   difference_type;
       typedef CharT                       value_type;
       typedef const CharT*                pointer;
       typedef const CharT&                reference;
-//    typedef bidirectional_iterator_tag  iterator_category;
-
-      typedef nsReadableFragment<CharT>   const_fragment_type;
-      typedef nsWritableFragment<CharT>   fragment_type;
 
     private:
       friend class nsAString;
       friend class nsACString;
-      typedef typename nsStringTraits<CharT>::abstract_string_type abstract_string_type;
+      friend class nsSubstring;
+      friend class nsCSubstring;
 
-      const_fragment_type         mFragment;
-      const CharT*                mPosition;
-      const abstract_string_type* mOwningString;
+        // unfortunately, the API for nsReadingIterator requires that the
+        // iterator know its start and end positions.  this was needed when
+        // we supported multi-fragment strings, but now it is really just
+        // extra baggage.  we should remove mStart and mEnd at some point.
+
+      const CharT* mStart;
+      const CharT* mEnd;
+      const CharT* mPosition;
 
     public:
       nsReadingIterator() { }
       // nsReadingIterator( const nsReadingIterator<CharT>& );                    // auto-generated copy-constructor OK
       // nsReadingIterator<CharT>& operator=( const nsReadingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
-      inline void normalize_forward();
-      inline void normalize_backward();
+      inline void normalize_forward() {}
+      inline void normalize_backward() {}
+
+      pointer
+      start() const
+        {
+          return mStart;
+        }
+
+      pointer
+      end() const
+        {
+          return mEnd;
+        }
 
       pointer
       get() const
@@ -106,133 +107,119 @@ class nsReadingIterator
         }
 #endif
 
-      nsReadingIterator<CharT>&
+      self_type&
       operator++()
         {
           ++mPosition;
-          normalize_forward();
           return *this;
         }
 
-      nsReadingIterator<CharT>
+      self_type
       operator++( int )
         {
-          nsReadingIterator<CharT> result(*this);
+          self_type result(*this);
           ++mPosition;
-          normalize_forward();
           return result;
         }
 
-      nsReadingIterator<CharT>&
+      self_type&
       operator--()
         {
-          normalize_backward();
           --mPosition;
           return *this;
         }
 
-      nsReadingIterator<CharT>
+      self_type
       operator--( int )
         {
-          nsReadingIterator<CharT> result(*this);
-          normalize_backward();
+          self_type result(*this);
           --mPosition;
           return result;
-        }
-
-      const const_fragment_type&
-      fragment() const
-        {
-          return mFragment;
-        }
-
-      const abstract_string_type&
-      string() const
-        {
-          NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
-          return *mOwningString;
         }
 
       difference_type
       size_forward() const
         {
-          return mFragment.mEnd - mPosition;
+          return mEnd - mPosition;
         }
 
       difference_type
       size_backward() const
         {
-          return mPosition - mFragment.mStart;
+          return mPosition - mStart;
         }
 
-      nsReadingIterator<CharT>&
+      self_type&
       advance( difference_type n )
         {
-          while ( n > 0 )
+          if (n > 0)
             {
-              difference_type one_hop = NS_MIN(n, size_forward());
+              difference_type step = NS_MIN(n, size_forward());
 
-              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a reading iterator beyond the end of a string");
-                // perhaps I should |break| if |!one_hop|?
+              NS_ASSERTION(step>0, "can't advance a reading iterator beyond the end of a string");
 
-              mPosition += one_hop;
-              normalize_forward();
-              n -= one_hop;
+              mPosition += step;
             }
-
-          while ( n < 0 )
+          else if (n < 0)
             {
-              normalize_backward();
-              difference_type one_hop = NS_MAX(n, -size_backward());
+              difference_type step = NS_MAX(n, -size_backward());
 
-              NS_ASSERTION(one_hop<0, "Infinite loop: can't advance (backward) a reading iterator beyond the end of a string");
-                // perhaps I should |break| if |!one_hop|?
+              NS_ASSERTION(step<0, "can't advance (backward) a reading iterator beyond the end of a string");
 
-              mPosition += one_hop;
-              n -= one_hop;
+              mPosition += step;
             }
-
           return *this;
         }
   };
 
   /**
-   *
-   * @see nsWritableFragment
-   * @see nsAString
-   * @status FROZEN
+   * @see nsTAString
    */
 
 template <class CharT>
 class nsWritingIterator
-//  : public nsReadingIterator<CharT>
   {
     public:
-      typedef ptrdiff_t                   difference_type;
-      typedef CharT                       value_type;
-      typedef CharT*                      pointer;
-      typedef CharT&                      reference;
-//    typedef bidirectional_iterator_tag  iterator_category;
-
-      typedef nsReadableFragment<CharT>   const_fragment_type;
-      typedef nsWritableFragment<CharT>   fragment_type;
+      typedef nsWritingIterator<CharT>   self_type;
+      typedef ptrdiff_t                  difference_type;
+      typedef CharT                      value_type;
+      typedef CharT*                     pointer;
+      typedef CharT&                     reference;
 
     private:
       friend class nsAString;
       friend class nsACString;
-      typedef typename nsStringTraits<CharT>::abstract_string_type abstract_string_type;
+      friend class nsSubstring;
+      friend class nsCSubstring;
 
-      fragment_type               mFragment;
-      CharT*                      mPosition;
-      abstract_string_type*       mOwningString;
+        // unfortunately, the API for nsWritingIterator requires that the
+        // iterator know its start and end positions.  this was needed when
+        // we supported multi-fragment strings, but now it is really just
+        // extra baggage.  we should remove mStart and mEnd at some point.
+
+      CharT* mStart;
+      CharT* mEnd;
+      CharT* mPosition;
 
     public:
       nsWritingIterator() { }
       // nsWritingIterator( const nsWritingIterator<CharT>& );                    // auto-generated copy-constructor OK
       // nsWritingIterator<CharT>& operator=( const nsWritingIterator<CharT>& );  // auto-generated copy-assignment operator OK
 
-      inline void normalize_forward();
-      inline void normalize_backward();
+      inline void normalize_forward() {}
+      inline void normalize_backward() {}
+
+      pointer
+      start() const
+        {
+          return mStart;
+        }
+
+      pointer
+      end() const
+        {
+          return mEnd;
+        }
 
       pointer
       get() const
@@ -256,105 +243,67 @@ class nsWritingIterator
         }
 #endif
 
-      nsWritingIterator<CharT>&
+      self_type&
       operator++()
         {
           ++mPosition;
-          normalize_forward();
           return *this;
         }
 
-      nsWritingIterator<CharT>
+      self_type
       operator++( int )
         {
-          nsWritingIterator<CharT> result(*this);
+          self_type result(*this);
           ++mPosition;
-          normalize_forward();
           return result;
         }
 
-      nsWritingIterator<CharT>&
+      self_type&
       operator--()
         {
-          normalize_backward();
           --mPosition;
           return *this;
         }
 
-      nsWritingIterator<CharT>
+      self_type
       operator--( int )
         {
-          nsWritingIterator<CharT> result(*this);
-          normalize_backward();
+          self_type result(*this);
           --mPosition;
           return result;
-        }
-
-      const fragment_type&
-      fragment() const
-        {
-          return mFragment;
-        }
-
-      fragment_type&
-      fragment()
-        {
-          return mFragment;
-        }
-
-      const abstract_string_type&
-      string() const
-        {
-          NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
-          return *mOwningString;
-        }
-
-      abstract_string_type&
-      string()
-        {
-          NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
-          return *mOwningString;
         }
 
       difference_type
       size_forward() const
         {
-          return mFragment.mEnd - mPosition;
+          return mEnd - mPosition;
         }
 
       difference_type
       size_backward() const
         {
-          return mPosition - mFragment.mStart;
+          return mPosition - mStart;
         }
 
-      nsWritingIterator<CharT>&
+      self_type&
       advance( difference_type n )
         {
-          while ( n > 0 )
+          if (n > 0)
             {
-              difference_type one_hop = NS_MIN(n, size_forward());
+              difference_type step = NS_MIN(n, size_forward());
 
-              NS_ASSERTION(one_hop>0, "Infinite loop: can't advance a writing iterator beyond the end of a string");
-                // perhaps I should |break| if |!one_hop|?
+              NS_ASSERTION(step>0, "can't advance a writing iterator beyond the end of a string");
 
-              mPosition += one_hop;
-              normalize_forward();
-              n -= one_hop;
+              mPosition += step;
             }
-
-          while ( n < 0 )
+          else if (n < 0)
             {
-              normalize_backward();
-              difference_type one_hop = NS_MAX(n, -size_backward());
+              difference_type step = NS_MAX(n, -size_backward());
 
-              NS_ASSERTION(one_hop<0, "Infinite loop: can't advance (backward) a writing iterator beyond the end of a string");
-                // perhaps I should |break| if |!one_hop|?
+              NS_ASSERTION(step<0, "can't advance (backward) a writing iterator beyond the end of a string");
 
-              mPosition += one_hop;
-              n -= one_hop;
+              mPosition += step;
             }
-
           return *this;
         }
 
@@ -363,32 +312,11 @@ class nsWritingIterator
         {
           NS_ASSERTION(size_forward() > 0, "You can't |write| into an |nsWritingIterator| with no space!");
 
-          n = NS_MIN(n, PRUint32(size_forward()));
           nsCharTraits<value_type>::move(mPosition, s, n);
           advance( difference_type(n) );
           return n;
         }
   };
-
-template <class CharT>
-inline
-void
-nsReadingIterator<CharT>::normalize_forward()
-  {
-    while ( mPosition == mFragment.mEnd
-         && mOwningString->GetReadableFragment(mFragment, kNextFragment) )
-        mPosition = mFragment.mStart;
-  }
-
-template <class CharT>
-inline
-void
-nsReadingIterator<CharT>::normalize_backward()
-  {
-    while ( mPosition == mFragment.mStart
-         && mOwningString->GetReadableFragment(mFragment, kPrevFragment) )
-        mPosition = mFragment.mEnd;
-  }
 
 template <class CharT>
 inline
@@ -410,26 +338,6 @@ operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
   //
   // |nsWritingIterator|s
   //
-
-template <class CharT>
-inline
-void
-nsWritingIterator<CharT>::normalize_forward()
-  {
-    while ( mPosition == mFragment.mEnd
-         && mOwningString->GetWritableFragment(mFragment, kNextFragment) )
-      mPosition = mFragment.mStart;
-  }
-
-template <class CharT>
-inline
-void
-nsWritingIterator<CharT>::normalize_backward()
-  {
-    while ( mPosition == mFragment.mStart
-         && mOwningString->GetWritableFragment(mFragment, kPrevFragment) )
-      mPosition = mFragment.mEnd;
-  }
 
 template <class CharT>
 inline

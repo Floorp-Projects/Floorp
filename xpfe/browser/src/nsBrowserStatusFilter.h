@@ -43,7 +43,7 @@
 #include "nsWeakReference.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 //-----------------------------------------------------------------------------
 // nsBrowserStatusFilter - a web progress listener implementation designed to 

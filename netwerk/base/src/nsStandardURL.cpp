@@ -465,9 +465,9 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     //
     // generate the normalized URL string
     //
-    char *buf = (char *) nsMemory::Alloc(approxLen + 32);
-    if (!buf)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mSpec.SetLength(approxLen + 32);
+    char *buf;
+    mSpec.BeginWriting(buf);
     PRUint32 i = 0;
 
     if (mScheme.mLen > 0) {
@@ -576,7 +576,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         }
         CoalescePath(coalesceFlag, buf + mDirectory.mPos);
     }
-    mSpec.Adopt(buf);
+    mSpec.SetLength(strlen(buf));
     return NS_OK;
 }
 

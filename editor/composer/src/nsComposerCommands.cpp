@@ -54,6 +54,7 @@
 
 #include "nsComposerCommands.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsICommandParams.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"

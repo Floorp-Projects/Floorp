@@ -709,16 +709,12 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(useAllocator)
             {
-                if(str)
+                // XXX extra string copy when isNewString
+                if(str && !isNewString)
                 {
                     XPCReadableJSStringWrapper *wrapper =
                         XPCStringConvert::JSStringToReadable(str);
                     if(!wrapper)
-                        return JS_FALSE;
-
-                    // Ask for the shared buffer handle, which will root the
-                    // string.
-                    if(isNewString && ! wrapper->GetSharedBufferHandle())
                         return JS_FALSE;
 
                     *((const nsAString**)d) = wrapper;
@@ -734,7 +730,8 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 }
                 else
                 {
-                    const nsAString *rs = new nsAutoString(chars, length);
+                    // use nsString to encourage sharing
+                    const nsAString *rs = new nsString(chars, length);
                     if(!rs)
                         return JS_FALSE;
                     *((const nsAString**)d) = rs;
@@ -883,23 +880,22 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             length = JS_GetStringLength(str);
 
+            nsCString *rs;
             if(useAllocator)
             {                
-                const nsACString *rs = new NS_ConvertUCS2toUTF8((const PRUnichar*)chars, length);
+                // Use nsCString to enable sharing
+                rs = new nsCString();
                 if(!rs)
                     return JS_FALSE;
 
-                *((const nsACString**)d) = rs;
+                *((const nsCString**)d) = rs;
             }
             else
             {
-                nsCString* rs = *((nsCString**)d);
-
-                // XXX This code needs to change when Jag lands the new
-                // UTF8String implementation.  Adopt() is a method that 
-                // shouldn't be used by string consumers.
-                rs->Adopt(ToNewUTF8String(nsDependentString((const PRUnichar*)chars, length)));
+                rs = *((nsCString**)d);
             }
+            CopyUTF16toUTF8(nsDependentString((const PRUnichar*)chars, length),
+                            *rs);
             return JS_TRUE;
         }
 

@@ -59,7 +59,6 @@ const char kDNSServiceContractId[] = "@mozilla.org/network/dns-service;1";
 //
 nsLDAPConnection::nsLDAPConnection()
     : mConnectionHandle(0),
-      mBindName(0),
       mPendingOperations(0),
       mRunnable(0),
       mSSL(PR_FALSE),

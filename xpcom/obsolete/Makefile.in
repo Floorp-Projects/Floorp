@@ -60,6 +60,7 @@ CPPSRCS		+= dlldeps.cpp
 endif
 
 EXPORTS		= \
+		xpcomobsolete.h    \
 		nsFileSpec.h    \
 		nsFileStream.h  \
 		nsIFileStream.h \
@@ -87,7 +88,7 @@ FORCE_SHARED_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_COM
+DEFINES		+= -D_IMPL_NS_COM_OBSOLETE
 
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

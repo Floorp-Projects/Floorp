@@ -49,6 +49,11 @@
   // for |PRUint32|...
 #endif
 
+#ifndef nsDebug_h___
+#include "nsDebug.h"
+  // for NS_ASSERTION
+#endif
+
 template <class T>
 inline
 const T&

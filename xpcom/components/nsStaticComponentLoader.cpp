@@ -18,6 +18,7 @@
 #include "nsStaticComponent.h"
 #include "nsIComponentLoader.h"
 #include "pldhash.h"
+#include NEW_H
 
 struct StaticModuleInfo : public PLDHashEntryHdr {
     nsStaticModuleInfo  info;

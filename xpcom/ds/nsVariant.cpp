@@ -24,7 +24,7 @@
 /* The long avoided variant support for xpcom. */
 
 #include "nsVariant.h"
-#include "nsReadableUtils.h"
+#include "nsString.h"
 #include "prprf.h"
 #include "prdtoa.h"
 #include <math.h>

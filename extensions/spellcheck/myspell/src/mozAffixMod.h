@@ -61,7 +61,7 @@
 struct mozAffixMod
 {
   char mID;                        //character identifier.
-  nsSharableCString mAppend;       //Standard ending to append
+  nsCString mAppend;               //Standard ending to append
   PRUint16  flags;                 //flags
   PRUint16  mTruncateLength;       //length of special ending to remove
   mozAffixMod* next;  

@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsIScriptNameSpaceManager.h"
+#include "nsXPIDLString.h"
 #include "wspproxytest.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(WSPProxyTest)

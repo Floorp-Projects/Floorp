@@ -125,7 +125,7 @@ typedef BOOL (WINAPI * GetSpecialPathProc) (HWND hwndOwner, LPSTR lpszPath, int 
 GetSpecialPathProc gGetSpecialPathProc = NULL;
 static HINSTANCE gShell32DLLInst = NULL;
 #endif
-NS_COM void StartupSpecialSystemDirectory()
+NS_COM_OBSOLETE void StartupSpecialSystemDirectory()
 {
 #if defined (XP_WIN)
     /* On windows, the old method to get file locations is incredibly slow.
@@ -144,7 +144,7 @@ NS_COM void StartupSpecialSystemDirectory()
 #endif
 }
 
-NS_COM void ShutdownSpecialSystemDirectory()
+NS_COM_OBSOLETE void ShutdownSpecialSystemDirectory()
 {
     if (systemDirectoriesLocations)
     {

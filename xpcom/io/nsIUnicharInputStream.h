@@ -38,9 +38,9 @@
 #define nsIUnicharInputStream_h___
 
 #include "nsIInputStream.h"
+#include "nsString.h"
 #include "nscore.h"
 
-class nsString;
 class nsIUnicharInputStream;
 
 typedef NS_CALLBACK(nsWriteUnicharSegmentFun)(nsIUnicharInputStream *aInStream,

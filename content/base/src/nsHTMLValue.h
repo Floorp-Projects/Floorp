@@ -81,7 +81,7 @@ public:
    * @param aBuf the buffer to get string from
    * @return a DependentString representing this string
    */
-  static nsDependentSingleFragmentSubstring GetDependentString(const PRUnichar* aBuf) {
+  static nsDependentSubstring GetDependentString(const PRUnichar* aBuf) {
     NS_ASSERTION(aBuf, "Cannot work on null buffer!");
     const PRUnichar* buf = StrPtr(aBuf);
     return Substring(buf, buf + Length(aBuf));
@@ -379,7 +379,7 @@ private:
    *
    * @return a DependentString representing this string
    */
-  nsDependentSingleFragmentSubstring GetDependentString() const;
+  nsDependentSubstring GetDependentString() const;
   /**
    * Get the unit class (HTMLUNIT_*)
    * @return the unit class
@@ -387,7 +387,7 @@ private:
   PRUint32 GetUnitClass() const { return mUnit & HTMLUNIT_CLASS_MASK; }
 };
 
-inline nsDependentSingleFragmentSubstring nsHTMLValue::GetDependentString() const
+inline nsDependentSubstring nsHTMLValue::GetDependentString() const
 {
   NS_ASSERTION(GetUnitClass() == HTMLUNIT_STRING,
                "Some dork called GetDependentString() on a non-string!");

@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nscore.h"
+#include NEW_H
+
 #include "nsHashSets.h"
 
 DHASH_SET(nsStringHashSet, PLDHashStringEntry, nsAString&)

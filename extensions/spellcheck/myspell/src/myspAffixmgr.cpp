@@ -66,7 +66,7 @@
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
-static PRInt32 SplitString(nsACString &in,nsSharableCString out[],PRInt32 size);
+static PRInt32 SplitString(nsACString &in,nsCString out[],PRInt32 size);
 static void doubleReverseHack(nsACString &s);
 
 myspAffixMgr::myspAffixMgr() 
@@ -163,7 +163,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
   nsCAutoString line;
   PRBool moreData=PR_TRUE;
   PRInt32 pos;
-  nsSharableCString cmds[5];
+  nsCString cmds[5];
   mozAffixMod newMod;
 
   prefixes.clear();
@@ -216,7 +216,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
         for (j=0; (j < numents)&&moreData; j++) {
           NS_ReadLine(strm,lineBuffer,line,&moreData);
           PRInt32 numFields=SplitString(line,cmds,5);
-          nsSharableString tempStr;
+          nsString tempStr;
 
           if((numFields < 5)||(cmds[1].First()!=flag)){ //consistency check
             //complain loudly
@@ -247,7 +247,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
             prefixes.addMod(cmds[3].get(),&newMod);
           }
           else{ // suffix
-            nsSharableCString suffixTest;
+            nsCString suffixTest;
             if(cmds[2].Equals("0")){
               newMod.mAppend.Assign("");
               if(!cmds[4].Equals(".")){
@@ -360,7 +360,7 @@ PRBool
 myspAffixMgr::prefixCheck(const nsAFlatCString &word)
 {
   nsACString::const_iterator end,curr;
-  nsSharableCString tempWord;
+  nsCString tempWord;
   mozAffixState *currState= &prefixes;
   const char * he = NULL;
   PRUint32 wLength=word.Length();
@@ -398,7 +398,7 @@ myspAffixMgr::prefixCheck(const nsAFlatCString &word)
 PRBool myspAffixMgr::suffixCheck(const nsAFlatCString &word,PRBool cross,char crossID)
 {
   nsACString::const_iterator start,curr;
-  nsSharableCString tempWord;
+  nsCString tempWord;
   mozAffixState *currState= &suffixes;
   const char * he = NULL;
   PRUint32 wLength=word.Length();
@@ -467,7 +467,7 @@ PRBool myspAffixMgr::check(const nsAFlatString &word)
 
 
 static PRInt32 
-SplitString(nsACString &in,nsSharableCString out[],PRInt32 size)
+SplitString(nsACString &in,nsCString out[],PRInt32 size)
 {
   nsACString::const_iterator startWord;
   nsACString::const_iterator endWord;

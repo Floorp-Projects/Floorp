@@ -132,7 +132,7 @@ public:
     {
     }
 
-    const nsDependentSingleFragmentSubstring Value()
+    const nsDependentSubstring Value()
     {
         return Substring(mStart, mEnd);
     }

@@ -55,7 +55,7 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     if (NS_FAILED(rv)) return rv;
   
     // Replace \ with / to convert to an url
-    for (char *s = (char *) ePath.get(); *s; ++s) {
+    for (char *s = ePath.BeginWriting(s); *s; ++s) {
         // We need to call IsDBCSLeadByte because
         // Japanese windows can have 0x5C in the second byte 
         // of a Japanese character, for example 0x8F 0x5C is

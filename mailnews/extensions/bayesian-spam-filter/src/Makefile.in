@@ -31,6 +31,7 @@ LIBRARY_NAME	= bayesflt_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
 		  string \
+		  unicharutil \
 		  msgbase \
 		  necko \
 		  mailnews \

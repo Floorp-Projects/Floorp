@@ -47,7 +47,7 @@
 #include "nsHTMLTags.h"
 #include "nsParserError.h"
 #include "nsString.h"
-#include "nsSlidingString.h"
+#include "nsScannerString.h"
 
 class nsScanner;
 
@@ -212,8 +212,8 @@ class CCommentToken: public CHTMLToken {
     nsresult ConsumeQuirksComment(nsScanner& aScanner);
 
   protected:
-    nsSlidingSubstring mComment; // does not include MDO & MDC
-    nsSlidingSubstring mCommentDecl; // includes MDO & MDC
+    nsScannerSubstring mComment; // does not include MDO & MDC
+    nsScannerSubstring mCommentDecl; // includes MDO & MDC
 };
 
 
@@ -289,11 +289,11 @@ class CTextToken: public CHTMLToken {
     virtual PRInt32     GetTextLength(void);
     virtual void        CopyTo(nsAString& aStr);
     virtual const nsAString& GetStringValue(void);
-    virtual void        Bind(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd);
+    virtual void        Bind(nsScanner* aScanner, nsScannerIterator& aStart, nsScannerIterator& aEnd);
     virtual void        Bind(const nsAString& aStr);
 
   protected:
-    nsSlidingSubstring          mTextValue;
+    nsScannerSubstring          mTextValue;
 };
 
 
@@ -338,7 +338,7 @@ public:
     virtual const nsAString& GetStringValue(void);
 
 protected:
-    nsSlidingSubstring  mTextValue;
+    nsScannerSubstring  mTextValue;
 };
 
 
@@ -361,9 +361,9 @@ class CAttributeToken: public CHTMLToken {
     virtual nsresult      Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
     virtual const char*   GetClassName(void);
     virtual PRInt32       GetTokenType(void);
-    virtual const nsAString&     GetKey(void) {return mTextKey;}
+    virtual const nsAString&     GetKey(void); // XXX {return mTextKey;}
     virtual void          SetKey(const nsAString& aKey);
-    virtual void          BindKey(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd);
+    virtual void          BindKey(nsScanner* aScanner, nsScannerIterator& aStart, nsScannerIterator& aEnd);
     virtual const nsAString&     GetValue(void) {return mTextValue;}
     virtual void          SanitizeKey();
     virtual const nsAString& GetStringValue(void);
@@ -376,7 +376,7 @@ class CAttributeToken: public CHTMLToken {
     PRPackedBool       mLastAttribute;
 #endif
     nsAutoString       mTextValue;
-    nsSlidingSubstring mTextKey;
+    nsScannerSubstring mTextKey;
 }; 
 
 

@@ -129,8 +129,7 @@ nsIAtom *nsEditor::gIMETxnName;
 nsIAtom *nsEditor::gDeleteTxnName;
 
 nsEditor::nsEditor()
-:  mContentMIMEType(nsnull)
-,  mModCount(0)
+:  mModCount(0)
 ,  mPresShellWeak(nsnull)
 ,  mViewManager(nsnull)
 ,  mUpdateCount(0)

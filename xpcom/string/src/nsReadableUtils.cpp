@@ -24,127 +24,7 @@
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
 #include "nsString.h"
-#include "nsCRT.h"
 #include "nsUTF8Utils.h"
-
-#ifndef nsStringTraits_h___
-#include "nsStringTraits.h"
-#endif
-
-  /**
-   * this allocator definition, and the global functions to access it need to move
-   * to their own file
-   */
-
-template <class CharT>
-class XPCOM_StringAllocator
-    : public nsStringAllocator<CharT>
-  {
-    public:
-      virtual void Deallocate( CharT* ) const;
-  };
-
-template <class CharT>
-void
-XPCOM_StringAllocator<CharT>::Deallocate( CharT* aBuffer ) const
-  {
-    nsMemory::Free(aBuffer);
-  }
-
-NS_COM
-nsStringAllocator<char>&
-StringAllocator_char()
-  {
-    static XPCOM_StringAllocator<char> sStringAllocator_char;
-    return sStringAllocator_char;
-  }
-
-NS_COM
-nsStringAllocator<PRUnichar>&
-StringAllocator_wchar_t()
-  {
-    static XPCOM_StringAllocator<PRUnichar> sStringAllocator_wchar_t;
-    return sStringAllocator_wchar_t;
-  }
-
-template <class CharT> class CalculateLength
-  {
-    public:
-      typedef CharT value_type;
-
-      CalculateLength() : mDistance(0) { }
-      size_t GetDistance() const       { return mDistance; }
-
-      PRUint32 write( const CharT*, PRUint32 N )
-                                       { mDistance += N; return N; }
-    private:
-      size_t mDistance;
-  };
-
-template <class CharT>
-inline
-size_t
-Distance_Impl( const nsReadingIterator<CharT>& aStart,
-          const nsReadingIterator<CharT>& aEnd )
-  {
-    CalculateLength<CharT> sink;
-    nsReadingIterator<CharT> fromBegin(aStart);
-    copy_string(fromBegin, aEnd, sink);
-    return sink.GetDistance();
-  }
-
-NS_COM
-size_t
-Distance( const nsReadingIterator<PRUnichar>&aStart, const nsReadingIterator<PRUnichar>&aEnd )
-  {
-    return Distance_Impl(aStart, aEnd);
-  }
-
-NS_COM
-size_t
-Distance( const nsReadingIterator<char>&aStart, const nsReadingIterator<char>&aEnd )
-  {
-    return Distance_Impl(aStart, aEnd);
-  }
-
-
-
-  /**
-   * A character sink that performs a |reinterpret_cast| style conversion between character types.
-   */
-template <class FromCharT, class ToCharT>
-class LossyConvertEncoding
-  {
-    public:
-      typedef FromCharT value_type;
- 
-      typedef FromCharT input_type;
-      typedef ToCharT   output_type;
-
-      typedef typename nsCharTraits<FromCharT>::unsigned_char_type unsigned_input_type;
-
-    public:
-      LossyConvertEncoding( output_type* aDestination ) : mDestination(aDestination) { }
-
-      PRUint32
-      write( const input_type* aSource, PRUint32 aSourceLength )
-        {
-          const input_type* done_writing = aSource + aSourceLength;
-          while ( aSource < done_writing )
-            *mDestination++ = (output_type)(unsigned_input_type)(*aSource++);  // use old-style cast to mimic old |ns[C]String| behavior
-          return aSourceLength;
-        }
-
-      void
-      write_terminator()
-        {
-          *mDestination = output_type(0);
-        }
-
-    private:
-      output_type* mDestination;
-  };
-
 
 NS_COM
 void
@@ -738,19 +618,11 @@ ToUpperCase( nsACString& aCString )
 
 NS_COM
 void
-ToUpperCase( nsASingleFragmentCString& aCString )
+ToUpperCase( nsCSubstring& aCString )
   {
     ConvertToUpperCase converter;
     char* start;
     converter.write(aCString.BeginWriting(start), aCString.Length());
-  }
-
-NS_COM
-void
-ToUpperCase( nsCString& aCString )
-  {
-    ConvertToUpperCase converter;
-    converter.write(aCString.mStr, aCString.Length());
   }
 
   /**
@@ -834,19 +706,11 @@ ToLowerCase( nsACString& aCString )
 
 NS_COM
 void
-ToLowerCase( nsASingleFragmentCString& aCString )
+ToLowerCase( nsCSubstring& aCString )
   {
     ConvertToLowerCase converter;
     char* start;
     converter.write(aCString.BeginWriting(start), aCString.Length());
-  }
-
-NS_COM
-void
-ToLowerCase( nsCString& aCString )
-  {
-    ConvertToLowerCase converter;
-    converter.write(aCString.mStr, aCString.Length());
   }
 
   /**
@@ -1056,201 +920,19 @@ RFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearch
     return found_it;
   }
 
-PRBool
-nsSubstituteString::IsDependentOn( const nsAString& aString ) const
-  {
-    return mText.IsDependentOn(aString) || mPattern.IsDependentOn(aString) || mReplacement.IsDependentOn(aString);
-  }
-
-PRUint32
-nsSubstituteString::MaxLength() const
-  {
-    PRInt32 numberOfMatches = mNumberOfMatches;
-
-      // if we don't know exactly how long the result will be,
-      //  calculate the longest possible result
-    if ( numberOfMatches < 0 )
-      {
-        if ( mReplacement.Length() <= mPattern.Length() )
-          numberOfMatches = 0;  // substitutions shrink the result, so worst case is none
-        else
-          numberOfMatches = PRInt32(mText.Length() / mPattern.Length());
-                  // substitutions grow the result, so worst case is the maximum number of times |mPattern| can be found
-      }
-
-    PRInt32 costPerMatch = PRInt32(mReplacement.Length()) - PRInt32(mPattern.Length());
-    return mText.Length() + (numberOfMatches * costPerMatch);
-  }
-
-void
-nsSubstituteString::CountMatches() const
-  {
-    nsAString::const_iterator textEnd;
-    nsAString::const_iterator searchEnd = mText.EndReading(textEnd);
-
-    nsAString::const_iterator searchStart;
-    mText.BeginReading(searchStart);
-
-    PRInt32 numberOfMatches = 0;
-    while ( FindInReadable(mPattern, searchStart, searchEnd) )
-      {
-        ++numberOfMatches;
-        searchStart = searchEnd;
-        searchEnd = textEnd;
-      }
-
-    NS_CONST_CAST(nsSubstituteString*, this)->mNumberOfMatches = numberOfMatches;
-  }
-
-PRUint32
-nsSubstituteString::Length() const
-  {
-    if ( mNumberOfMatches < 0 )
-      CountMatches();
-    return MaxLength();
-  }
-
-PRUnichar*
-nsSubstituteString::operator()( PRUnichar* aDestBuffer ) const
-  {
-    nsAString::const_iterator replacementEnd;
-    mReplacement.EndReading(replacementEnd);
-
-    nsAString::const_iterator textEnd;
-    nsAString::const_iterator searchEnd = mText.EndReading(textEnd);
-
-    nsAString::const_iterator uncopiedStart;
-    nsAString::const_iterator searchStart = mText.BeginReading(uncopiedStart);
-
-    while ( FindInReadable(mPattern, searchStart, searchEnd) )
-      {
-        // |searchStart| and |searchEnd| now bracket the match
- 
-          // copy everything up to this match
-        copy_string(uncopiedStart, searchStart, aDestBuffer);  // updates |aDestBuffer|
-
-          // copy the replacement
-        nsAString::const_iterator replacementStart;
-        copy_string(mReplacement.BeginReading(replacementStart), replacementEnd, aDestBuffer);
-
-          // start searching from where the current match ends
-        uncopiedStart = searchStart = searchEnd;
-        searchEnd = textEnd;
-      }
-
-      // copy everything after the final (if any) match
-    copy_string(uncopiedStart, textEnd, aDestBuffer);
-    return aDestBuffer;
-  }
-
-PRBool
-nsSubstituteCString::IsDependentOn( const nsACString& aString ) const
-  {
-    return mText.IsDependentOn(aString) || mPattern.IsDependentOn(aString) || mReplacement.IsDependentOn(aString);
-  }
-
-PRUint32
-nsSubstituteCString::MaxLength() const
-  {
-    PRInt32 numberOfMatches = mNumberOfMatches;
-
-      // if we don't know exactly how long the result will be,
-      //  calculate the longest possible result
-    if ( numberOfMatches < 0 )
-      {
-        if ( mReplacement.Length() <= mPattern.Length() )
-          numberOfMatches = 0;  // substitutions shrink the result, so worst case is none
-        else
-          numberOfMatches = PRInt32(mText.Length() / mPattern.Length());
-                  // substitutions grow the result, so worst case is the maximum number of times |mPattern| can be found
-      }
-
-    PRInt32 costPerMatch = PRInt32(mReplacement.Length()) - PRInt32(mPattern.Length());
-    return mText.Length() + (numberOfMatches * costPerMatch);
-  }
-
-void
-nsSubstituteCString::CountMatches() const
-  {
-    nsACString::const_iterator textEnd;
-    nsACString::const_iterator searchEnd = mText.EndReading(textEnd);
-
-    nsACString::const_iterator searchStart;
-    mText.BeginReading(searchStart);
-
-    PRInt32 numberOfMatches = 0;
-    while ( FindInReadable(mPattern, searchStart, searchEnd) )
-      {
-        ++numberOfMatches;
-        searchStart = searchEnd;
-        searchEnd = textEnd;
-      }
-
-    NS_CONST_CAST(nsSubstituteCString*, this)->mNumberOfMatches = numberOfMatches;
-  }
-
-PRUint32
-nsSubstituteCString::Length() const
-  {
-    if ( mNumberOfMatches < 0 )
-      CountMatches();
-    return MaxLength();
-  }
-
-char*
-nsSubstituteCString::operator()( char* aDestBuffer ) const
-  {
-    nsACString::const_iterator replacementEnd;
-    mReplacement.EndReading(replacementEnd);
-
-    nsACString::const_iterator textEnd;
-    nsACString::const_iterator searchEnd = mText.EndReading(textEnd);
-
-    nsACString::const_iterator uncopiedStart;
-    nsACString::const_iterator searchStart = mText.BeginReading(uncopiedStart);
-
-    while ( FindInReadable(mPattern, searchStart, searchEnd) )
-      {
-        // |searchStart| and |searchEnd| now bracket the match
- 
-          // copy everything up to this match
-        copy_string(uncopiedStart, searchStart, aDestBuffer);  // updates |aDestBuffer|
-
-          // copy the replacement
-        nsACString::const_iterator replacementStart;
-        copy_string(mReplacement.BeginReading(replacementStart), replacementEnd, aDestBuffer);
-
-          // start searching from where the current match ends
-        uncopiedStart = searchStart = searchEnd;
-        searchEnd = textEnd;
-      }
-
-      // copy everything after the final (if any) match
-    copy_string(uncopiedStart, textEnd, aDestBuffer);
-    return aDestBuffer;
-  }
-
 NS_COM 
 PRBool 
 FindCharInReadable( PRUnichar aChar, nsAString::const_iterator& aSearchStart, const nsAString::const_iterator& aSearchEnd )
   {
-    while ( aSearchStart != aSearchEnd )
-      {
-        PRInt32 fragmentLength;
-        if ( SameFragment(aSearchStart, aSearchEnd) ) 
-          fragmentLength = aSearchEnd.get() - aSearchStart.get();
-        else
-          fragmentLength = aSearchStart.size_forward();
+    PRInt32 fragmentLength = aSearchEnd.get() - aSearchStart.get();
 
-        const PRUnichar* charFoundAt = nsCharTraits<PRUnichar>::find(aSearchStart.get(), fragmentLength, aChar);
-        if ( charFoundAt ) {
-          aSearchStart.advance( charFoundAt - aSearchStart.get() );
-          return PR_TRUE;
-        }
+    const PRUnichar* charFoundAt = nsCharTraits<PRUnichar>::find(aSearchStart.get(), fragmentLength, aChar);
+    if ( charFoundAt ) {
+      aSearchStart.advance( charFoundAt - aSearchStart.get() );
+      return PR_TRUE;
+    }
 
-        aSearchStart.advance(fragmentLength);
-      }
-
+    aSearchStart.advance(fragmentLength);
     return PR_FALSE;
   }
 
@@ -1258,23 +940,15 @@ NS_COM
 PRBool 
 FindCharInReadable( char aChar, nsACString::const_iterator& aSearchStart, const nsACString::const_iterator& aSearchEnd )
   {
-    while ( aSearchStart != aSearchEnd )
-      {
-        PRInt32 fragmentLength;
-        if ( SameFragment(aSearchStart, aSearchEnd) ) 
-          fragmentLength = aSearchEnd.get() - aSearchStart.get();
-        else
-          fragmentLength = aSearchStart.size_forward();
+    PRInt32 fragmentLength = aSearchEnd.get() - aSearchStart.get();
 
-        const char* charFoundAt = nsCharTraits<char>::find(aSearchStart.get(), fragmentLength, aChar);
-        if ( charFoundAt ) {
-          aSearchStart.advance( charFoundAt - aSearchStart.get() );
-          return PR_TRUE;
-        }
+    const char* charFoundAt = nsCharTraits<char>::find(aSearchStart.get(), fragmentLength, aChar);
+    if ( charFoundAt ) {
+      aSearchStart.advance( charFoundAt - aSearchStart.get() );
+      return PR_TRUE;
+    }
 
-        aSearchStart.advance(fragmentLength);
-      }
-
+    aSearchStart.advance(fragmentLength);
     return PR_FALSE;
   } 
 

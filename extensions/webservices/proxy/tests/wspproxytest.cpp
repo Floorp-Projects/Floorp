@@ -40,7 +40,7 @@
 
 #include "nsCOMPtr.h"
 #include "wspproxytest.h"
-#include "nsAString.h"
+#include "nsString.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIServiceManager.h"
 

@@ -38,8 +38,8 @@
 #ifndef nsPrintfCString_h___
 #define nsPrintfCString_h___
  
-#ifndef nsAFlatString_h___
-#include "nsAFlatString.h"
+#ifndef nsString_h___
+#include "nsString.h"
 #endif
 
 
@@ -67,28 +67,20 @@
    * much more efficiently handled with |NS_LITERAL_[C]STRING| and |nsLiteral[C]String|.
    */
 
-class NS_COM nsPrintfCString
-    : public nsAFlatCString
+class NS_COM nsPrintfCString : public nsCString
   {
+    typedef nsCString string_type;
+
     enum { kLocalBufferSize=15 };
       // ought to be large enough for most things ... a |long long| needs at most 20 (so you'd better ask)
       //  pinkerton suggests 7.  We should measure and decide what's appropriate
 
-
     public:
+      // XXX don't these need to be declared CDECL ??
       explicit nsPrintfCString( const char_type* format, ... );
-      nsPrintfCString( size_t n, const char_type* format, ...);
-     ~nsPrintfCString();
-
-      virtual PRUint32 Length() const;
-
-    protected:
-      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
-      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
+      nsPrintfCString( size_type n, const char_type* format, ...);
 
     private:
-      char_type* mStart;
-      PRUint32   mLength;
       char_type  mLocalBuffer[ kLocalBufferSize + 1 ];
   };
 

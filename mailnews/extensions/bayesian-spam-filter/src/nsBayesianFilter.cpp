@@ -54,6 +54,7 @@
 #include "nsIMsgWindow.h"
 #include "prlog.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsUnicharUtils.h"
 
 static PRLogModuleInfo *BayesianFilterLogModule = nsnull;
 

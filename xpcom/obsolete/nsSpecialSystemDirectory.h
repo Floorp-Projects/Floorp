@@ -26,7 +26,7 @@
 #ifndef _NSSPECIALSYSTEMDIRECTORY_H_
 #define _NSSPECIALSYSTEMDIRECTORY_H_
 
-#include "nscore.h"
+#include "xpcomobsolete.h"
 #include "nsFileSpec.h"
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -34,14 +34,14 @@
 #endif
 
 
-extern NS_COM void StartupSpecialSystemDirectory();
-extern NS_COM void ShutdownSpecialSystemDirectory();
+extern NS_COM_OBSOLETE void StartupSpecialSystemDirectory();
+extern NS_COM_OBSOLETE void ShutdownSpecialSystemDirectory();
 
 
 // SEE ALSO:
 //      mozilla/xpfe/appshell/public/nsFileLocations.h
 
-class NS_COM nsSpecialSystemDirectory : public nsFileSpec
+class NS_COM_OBSOLETE nsSpecialSystemDirectory : public nsFileSpec
 {
 
     public:
@@ -146,7 +146,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
 private:
     void            operator = (const char* inPath) { *(nsFileSpec*)this = inPath; }
 
-}; // class NS_COM nsSpecialSystemDirectory
+}; // class NS_COM_OBSOLETE nsSpecialSystemDirectory
 
 
 #endif

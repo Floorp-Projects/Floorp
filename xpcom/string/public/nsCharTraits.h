@@ -39,10 +39,6 @@
 #ifndef nsCharTraits_h___
 #define nsCharTraits_h___
 
-#ifndef nsStringDefines_h___
-#include "nsStringDefines.h"
-#endif
-
 #include <ctype.h>
   // for |EOF|, |WEOF|
 
@@ -66,10 +62,6 @@
   // for |PRUnichar|
 #endif
 
-#ifndef nsStringIteratorUtils_h___
-#include "nsStringIteratorUtils.h"
-#endif
-
 #ifdef HAVE_CPP_BOOL
   typedef bool nsCharTraits_bool;
 #else
@@ -84,6 +76,8 @@ struct nsCharTraits<PRUnichar>
     typedef PRUnichar char_type;
     typedef PRUint16  unsigned_char_type;
     typedef char      incompatible_char_type;
+
+    NS_COM static const char_type *sEmptyBuffer;
 
     static
     void
@@ -255,6 +249,8 @@ struct nsCharTraits<char>
     typedef unsigned char  unsigned_char_type;
     typedef PRUnichar      incompatible_char_type;
 
+    NS_COM static const char_type *sEmptyBuffer;
+
     static
     void
     assign( char_type& lhs, char_type rhs )
@@ -380,27 +376,12 @@ struct nsCharSourceTraits
   {
     typedef typename InputIterator::difference_type difference_type;
 
-#if 0
-    static
-    PRUint32
-    distance( const InputIterator& first, const InputIterator& last )
-      {
-        // ...
-      }
-#endif
-
-    static
-    PRUint32
-    readable_distance( const InputIterator& iter )
-      {
-        return iter.size_forward();
-      }
-
     static
     PRUint32
     readable_distance( const InputIterator& first, const InputIterator& last )
       {
-        return PRUint32(SameFragment(first, last) ? last.get()-first.get() : first.size_forward());
+        // assumes single fragment
+        return last.get() - first.get();
       }
 
     static
@@ -424,15 +405,6 @@ template <class CharT>
 struct nsCharSourceTraits<CharT*>
   {
     typedef ptrdiff_t difference_type;
-
-#if 0
-    static
-    PRUint32
-    distance( CharT* first, CharT* last )
-      {
-        return PRUint32(last-first);
-      }
-#endif
 
     static
     PRUint32
@@ -471,15 +443,6 @@ struct nsCharSourceTraits<const char*>
   {
     typedef ptrdiff_t difference_type;
 
-#if 0
-    static
-    PRUint32
-    distance( const char* first, const char* last )
-      {
-        return PRUint32(last-first);
-      }
-#endif
-
     static
     PRUint32
     readable_distance( const char* s )
@@ -515,15 +478,6 @@ NS_SPECIALIZE_TEMPLATE
 struct nsCharSourceTraits<const PRUnichar*>
   {
     typedef ptrdiff_t difference_type;
-
-#if 0
-    static
-    PRUint32
-    distance( const PRUnichar* first, const PRUnichar* last )
-      {
-        return PRUint32(last-first);
-      }
-#endif
 
     static
     PRUint32

@@ -704,7 +704,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
   
   if(aToken) {
     // Save the position after '<' for use in recording traling contents. Ref: Bug. 15204.
-    nsReadingIterator<PRUnichar> origin;
+    nsScannerIterator origin;
     aScanner.CurrentPosition(origin);
 
     result= aToken->Consume(aChar,aScanner,mFlags);     //tell new token to finish consuming text...    
@@ -1063,9 +1063,9 @@ nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& 
 
 void nsHTMLTokenizer::PreserveToken(CStartToken* aStartToken, 
                                     nsScanner& aScanner, 
-                                    nsReadingIterator<PRUnichar> aOrigin) {
+                                    nsScannerIterator aOrigin) {
   if(aStartToken) {
-    nsReadingIterator<PRUnichar> theCurrentPosition;
+    nsScannerIterator theCurrentPosition;
     aScanner.CurrentPosition(theCurrentPosition);
 
     nsString& trailingContent = aStartToken->mTrailingContent;
