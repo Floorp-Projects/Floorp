@@ -78,7 +78,6 @@ LINCS=-I$(PUBLIC)\raptor                \
       -I$(PUBLIC)\netlib		\
 !endif
       -I$(PUBLIC)\rdf			\
-      -I$(PUBLIC)\pics \
       -I$(PUBLIC)\xpfe\components \
 !ifdef MOZ_FULLCIRCLE
       -I$(MOZ_TOOLS)\include \
