@@ -388,5 +388,26 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   }
 }
 
+static PRBool gSetupSmoothTextMenu = PR_FALSE;
+
+-(BOOL)validateMenuItem: (id <NSMenuItem> )aMenuItem
+{
+  // XXXDWH I should not be using strings here.  Not localizable.
+  // SHould use tags instead.
+  if ([[aMenuItem title] isEqualToString: @"Smooth Text"] &&
+      !gSetupSmoothTextMenu) {
+    gSetupSmoothTextMenu = PR_TRUE;
+    // Grab the prefs service and just set the pref directly.
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+    int mode;
+    pref->GetIntPref("nglayout.mac.renderingmode", &mode);
+    if (mode == 0)
+      [aMenuItem setState: NSOffState];
+    else
+      [aMenuItem setState: NSOnState];	
+  }
+
+  return YES;
+}
 
 @end
