@@ -436,17 +436,6 @@ void  nsMacMessagePump::DoIdle(EventRecord &anEvent)
 
 	lastWhere = anEvent.where;
 	DoMouseMove(anEvent);
-
-	// idle controls						//¥TODO? : is this really necessary?
-	WindowPtr win = ::FrontWindow();
-	while (win)
-	{
-		::SetPort(win);
-		::SetOrigin(0,0);
-		::ClipRect(&win->portRect);
-		::IdleControls(win);
-		win = ::GetNextWindow(win);
-	}
 }
 
 
