@@ -425,9 +425,16 @@ nsAppShellService::CreateHiddenWindow()
 {
   nsresult rv;
   PRInt32 initialHeight = 100, initialWidth = 100;
+    
 #if defined(XP_MAC) || defined(XP_MACOSX)
-  const char* hiddenWindowURL = "chrome://global/content/hiddenWindow.xul";
+  const char* defaultHiddenWindowURL = "chrome://global/content/hiddenWindow.xul";
   PRUint32    chromeMask = 0;
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  nsXPIDLCString prefVal;
+  rv = prefBranch->GetCharPref("browser.hiddenWindowChromeURL", getter_Copies(prefVal));
+  const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : defaultHiddenWindowURL;
 #else
   const char* hiddenWindowURL = "about:blank";
   PRUint32    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;
