@@ -32,6 +32,7 @@ XPIDLSRCS	= \
 		nsIRDFCompositeDataSource.idl \
 		nsIRDFContainer.idl \
 		nsIRDFContainerUtils.idl \
+		nsIRDFDelegateFactory.idl \
 		nsIRDFDataSource.idl \
 		nsIRDFLiteral.idl \
 		nsIRDFNode.idl \

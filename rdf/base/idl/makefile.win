@@ -31,12 +31,13 @@ XPIDLSRCS=      .\nsIRDFNode.idl                  \
                 .\nsIRDFService.idl               \
                 .\nsIRDFContainer.idl             \
                 .\nsIRDFContainerUtils.idl        \
+                .\nsIRDFDelegateFactory.idl       \
                 .\nsIRDFPurgeableDataSource.idl   \
                 .\nsIRDFRemoteDataSource.idl      \
                 .\nsIRDFXMLSink.idl               \
                 .\nsIRDFXMLSource.idl             \
                 .\nsIController.idl               \
-				.\nsIControllers.idl              \
+                .\nsIControllers.idl              \
                 .\xulstubs.idl                    \
                 .\nsIXULSortService.idl           \
                 $(NULL)
