@@ -18,7 +18,7 @@
 <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/am-help.js"/>
-<script type="application/x-javascript" src="chrome://help/content/help.js"/>
+<script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <keyset id="dialogKeys"/>
 

@@ -42,7 +42,7 @@ function Startup(){
 
 function doHelpButton()
 {
-  openHelp("chrome://help/content/help.xul?imagemap_properties");
+  openHelp("imagemap_properties");
 }
 
 function initDialog(){

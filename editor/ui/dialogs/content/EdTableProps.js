@@ -1283,7 +1283,7 @@ function Apply()
 
 function doHelpButton()
 {
-  openHelp("chrome://help/content/help.xul?table_properties");
+  openHelp("table_properties");
 }
 
 function onAccept()

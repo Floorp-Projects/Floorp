@@ -297,7 +297,7 @@ function UpdateSettings()
 
 function doHelpButton()
 {
-  openHelp("chrome://help/content/help.xul?site_settings");
+  openHelp("site_settings");
 }
 
 function onAccept()

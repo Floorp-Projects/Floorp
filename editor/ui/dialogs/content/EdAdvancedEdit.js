@@ -333,6 +333,6 @@ function AddTreeItem ( name, value, treeChildrenId, attArray )
 
 function doHelpButton()
 {
-  openHelp("chrome://help/content/help.xul?advanced_property_editor");
+  openHelp("advanced_property_editor");
   return true;
 }

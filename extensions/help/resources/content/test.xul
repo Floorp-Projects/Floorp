@@ -3,29 +3,16 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    id="main" orient="vertical"  title="Test RelaxNG" persist="screenX screenY width height sizemode">
-  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
-  <popupset id="aTooltipSet" />
-  <hbox>
-    <button label="Mozilla Help" 
-      onclick="openHelp('chrome://help/locale/mozillahelp.rdf')" 
-      tooltip="aTooltip" 
-      tooltiptext="Mozilla Help"/>
-    <button label="Mozilla Mail Help" 
-      onclick="openHelp('chrome://help/locale/mozillahelp.rdf?mail-doc')" 
-      tooltip="aTooltip" 
-      tooltiptext="Mail Help"/>
-    <button label="Mozilla Mail Help (shortcut)" 
-      onclick="openHelp('?mail-doc')" 
-      tooltip="aTooltip" 
-      tooltiptext="Mail Help (shortcut)"/>
-    <button label="Test Help" 
-      onclick="openHelp('chrome://help/locale/testhelp.rdf')" 
-      tooltip="aTooltip" 
-      tooltiptext="Test Help"/>
-    <button label="Test Mail Help" 
-      onclick="openHelp('chrome://help/locale/testhelp.rdf?mail-doc')" 
-      tooltip="aTooltip" 
-      tooltiptext="Test Mail Help"/>
+  id="main" orient="vertical"  title="Test Help" persist="screenX screenY width height sizemode">
+  <script type="application/x-javascript"
+  src="chrome://help/content/contextHelp.js"/>
+
+  <hbox flex="0">
+    <button label="Mozilla Help" onclick="setHelpFileURI('chrome://help/locale/mozillahelp.rdf');openHelp()" tooltip="aTooltip" tooltiptext="Mozilla Help"/>
+    <button label="Mozilla Mail Help" onclick="setHelpFileURI('chrome://help/locale/mozillahelp.rdf');openHelp('mail-doc')" tooltip="aTooltip" tooltiptext="Mail Help"/>
+    <button label="Test Help" onclick="setHelpFileURI('chrome://help/locale/testhelp.rdf');openHelp()" tooltip="aTooltip" tooltiptext="Test Help"/>
+    <button label="Test Mail Help" onclick="setHelpFileURI('chrome://help/locale/testhelp.rdf');openHelp('mail-doc')" tooltip="aTooltip" tooltiptext="Test Mail Help"/>
   </hbox>
 </window>
+
+

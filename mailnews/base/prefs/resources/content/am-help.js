@@ -19,12 +19,6 @@
  */
 
 /**
- * Global help XUL document from which the URI corresponding to 
- * the help tag passed is extracted.
- */
-var gHelpURL = 'chrome://help/content/help.xul';
-
-/**
  * Key value pairs to derive the tag based on the page loaded.
  * Each key is the page loaded when user clicks on one of the items on
  * the accounttree of the AccountManager window.
@@ -32,12 +26,12 @@ var gHelpURL = 'chrome://help/content/help.xul';
  * context sensitive help. 
  */
 var pageTagPairs = {
-  "chrome://messenger/content/am-main.xul": "?mail_account_identity",
-  "chrome://messenger/content/am-server.xul": "?mail",
-  "chrome://messenger/content/am-copies.xul": "?mail_copies",
-  "chrome://messenger/content/am-addressing.xul": "?mail_addressing_settings",
-  "chrome://messenger/content/am-offline.xul": "?mail",
-  "chrome://messenger/content/am-smtp.xul": "?mail_smtp"
+  "chrome://messenger/content/am-main.xul": "mail_account_identity",
+  "chrome://messenger/content/am-server.xul": "mail",
+  "chrome://messenger/content/am-copies.xul": "mail_copies",
+  "chrome://messenger/content/am-addressing.xul": "mail_addressing_settings",
+  "chrome://messenger/content/am-offline.xul": "mail",
+  "chrome://messenger/content/am-smtp.xul": "mail_smtp"
 } 
 
 function doHelpButton() 
@@ -48,7 +42,7 @@ function doHelpButton()
   var helpTag = pageTagPairs[pageSourceURI];
 
   // If the help tag is generic, check if there is a need to set tags per server type
-  if (helpTag == "?mail") {
+  if (helpTag == "mail") {
     // Get server type, as we may need to set help tags per server type for some pages
     var serverType = GetServerType();
   
@@ -62,11 +56,11 @@ function doHelpButton()
      */ 
     switch (pageSourceURI) {
       case "chrome://messenger/content/am-server.xul":
-        helpTag = "?mail_server_" + serverType;
+        helpTag = "mail_server_" + serverType;
         break;
 
       case "chrome://messenger/content/am-offline.xul":
-        helpTag = "?mail_offline_" + serverType;
+        helpTag = "mail_offline_" + serverType;
         break;
 
       default :
@@ -75,9 +69,9 @@ function doHelpButton()
   }
 
   if ( helpTag ) 
-  	openHelp(gHelpURL + helpTag);  
+  	openHelp(helpTag);  
   else
-	openHelp(gHelpURL + '?mail'); 
+	openHelp('mail'); 
 }
 
 /**

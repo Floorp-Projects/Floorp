@@ -151,7 +151,7 @@ function ValidateData()
 
 function doHelpButton()
 {
-  openHelp("chrome://help/content/help.xul?image_properties");
+  openHelp("image_properties");
   return true;
 }
 

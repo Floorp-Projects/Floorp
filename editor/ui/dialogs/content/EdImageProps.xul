@@ -48,7 +48,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdImageProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://help/content/help.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
