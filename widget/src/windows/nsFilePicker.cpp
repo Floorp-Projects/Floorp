@@ -85,7 +85,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     mDefault.ToCString(fileBuffer,MAX_PATH);
   }
   else {
-    PL_strcpy(fileBuffer, converted);
+    PL_strncpyz(fileBuffer, converted, MAX_PATH+1);
     nsMemory::Free( converted );
   }
 
