@@ -2360,8 +2360,8 @@ nsCSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 
 NS_IMETHODIMP    
 nsCSSStyleSheet::InsertRule(const nsAString& aRule, 
-                              PRUint32 aIndex, 
-                              PRUint32* aReturn)
+                            PRUint32 aIndex, 
+                            PRUint32* aReturn)
 {
   NS_ENSURE_TRUE(mInner, NS_ERROR_FAILURE);
   // No doing this if the sheet is not complete!
@@ -2369,6 +2369,11 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
   GetComplete(complete);
   if (!complete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+
+  if (aRule.IsEmpty()) {
+    // Nothing to do here
+    return NS_OK;
   }
   
   nsresult result;
@@ -2418,7 +2423,8 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
   
   PRUint32 rulecount = 0;
   rules->Count(&rulecount);  
-  if (rulecount == 0 && !aRule.IsEmpty()) {
+  if (rulecount == 0) {
+    // Since we know aRule was not an empty string, just throw
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
   
@@ -2480,8 +2486,8 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
     }
   }
   
-  result = mInner->mOrderedRules->InsertElementsAt(rules, aIndex);
-  NS_ENSURE_SUCCESS(result, result);
+  PRBool insertResult = mInner->mOrderedRules->InsertElementsAt(rules, aIndex);
+  NS_ENSURE_TRUE(insertResult, NS_ERROR_OUT_OF_MEMORY);
   DidDirty();
 
   nsCOMPtr<nsICSSRule> cssRule;
@@ -2617,7 +2623,10 @@ nsCSSStyleSheet::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
 }
 
 NS_IMETHODIMP
-nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval)
+nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
+                                     nsICSSGroupRule* aGroup,
+                                     PRUint32 aIndex,
+                                     PRUint32* _retval)
 {
   nsresult result;
   NS_ASSERTION(mInner && mInner->mComplete,
@@ -2629,6 +2638,11 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* a
     return NS_ERROR_INVALID_ARG;
   }
 
+  if (aRule.IsEmpty()) {
+    // Nothing to do here
+    return NS_OK;
+  }
+  
   // Hold strong ref to the CSSLoader in case the document update
   // kills the document
   nsCOMPtr<nsICSSLoader> loader;
@@ -2662,7 +2676,8 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* a
 
   PRUint32 rulecount = 0;
   rules->Count(&rulecount);
-    if (rulecount == 0 && !aRule.IsEmpty()) {
+  if (rulecount == 0) {
+    // Since we know aRule was not an empty string, just throw
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
