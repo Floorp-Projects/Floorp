@@ -22,6 +22,9 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsGfxCIID.h"
+#include "nspr.h"
+#include "xlibrgb.h"
+#include "../ps/nsDeviceContextPS.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
@@ -84,7 +87,7 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
   mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
-  CommonInit();
+  //  printf("GFX: dpi=%d t2p=%g p2t=%g\n", dpi, mTwipsToPixels, mPixelsToTwips);
 
   return NS_OK;
 }
@@ -96,16 +99,15 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
   nsIRenderingContext  *context = nsnull;
   nsDrawingSurfaceXlib *surface = nsnull;
   nsresult                  rv;
-  Window                    win = (Window)aContext;
-  // XXX umm...this isn't done.
+
   context = new nsRenderingContextXlib();
 
   if (nsnull != context) {
     NS_ADDREF(context);
     surface = new nsDrawingSurfaceXlib();
     if (nsnull != surface) {
-      GC gc = XCreateGC(gDisplay, win, 0, NULL);
-      rv = surface->Init((Drawable)win, gc);
+      GC gc = XCreateGC(gDisplay, (Drawable)mWidget, 0, NULL);
+      rv = surface->Init((Drawable)mWidget, gc);
       if (NS_OK == rv) {
         rv = context->Init(this, surface);
       }
@@ -152,24 +154,61 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
 NS_IMETHODIMP nsDeviceContextXlib::GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   printf("nsDeviceContextXlib::GetDrawingSurface()\n");
-  return NS_OK;
+  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
+  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;  
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   printf("nsDeviceContextXlib::ConvertPixel()\n");
+  aPixel = xlib_rgb_xpixel_from_rgb(aPixel);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 {
   printf("nsDeviceContextXlib::CheckFontExistence()\n");
+  char        **fnames = nsnull;
+  PRInt32     namelen = aFontName.Length() + 1;
+  char        *wildstring = (char *)PR_Malloc(namelen + 200);
+  float       t2d;
+  GetTwipsToDevUnits(t2d);
+  PRInt32     dpi = NSToIntRound(t2d * 1440);
+  int         numnames = 0;
+  XFontStruct *fonts;
+  nsresult    rv = NS_ERROR_FAILURE;
+  
+  if (nsnull == wildstring)
+    return NS_ERROR_UNEXPECTED;
+  
+  if (abs(dpi - 75) < abs(dpi - 100))
+    dpi = 75;
+  else
+    dpi = 100;
+  
+  char* fontName = aFontName.ToNewCString();
+  PR_snprintf(wildstring, namelen + 200,
+              "*-%s-*-*-normal--*-*-%d-%d-*-*-*",
+              fontName, dpi, dpi);
+  delete [] fontName;
+  
+  fnames = ::XListFontsWithInfo(gDisplay, wildstring, 1, &numnames, &fonts);
+  
+  if (numnames > 0)
+  {
+    ::XFreeFontInfo(fnames, fonts, numnames);
+    rv = NS_OK;
+  }
+  
+  PR_Free(wildstring);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
   printf("nsDeviceContextXlib::GetDeviceSurfaceDimensions()\n");
+  aWidth = 1;
+  aHeight = 1;
   return NS_OK;
 }
 
@@ -177,7 +216,10 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDe
                                                         nsIDeviceContext *&aContext)
 {
   printf("nsDeviceContextXlib::GetDeviceContextFor()\n");
-  return NS_OK;
+  aContext = new nsDeviceContextPS();
+  ((nsDeviceContextPS *)aContext)->SetSpec(aDevice);
+  NS_ADDREF(aDevice);
+  return((nsDeviceContextPS *) aContext)->Init((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::BeginDocument(void)

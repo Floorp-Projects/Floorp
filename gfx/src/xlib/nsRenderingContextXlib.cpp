@@ -502,7 +502,7 @@ nsRenderingContextXlib::GetLineStyle(nsLineStyle &aLineStyle)
 NS_IMETHODIMP
 nsRenderingContextXlib::SetColor(nscolor aColor)
 {
-  printf("nsRenderingContextXlib::SetColor()\n");
+  printf("nsRenderingContextXlib::SetColor(nscolor)\n");
   if (nsnull == mContext)
     return NS_ERROR_FAILURE;
 
@@ -510,6 +510,7 @@ nsRenderingContextXlib::SetColor(nscolor aColor)
   xlib_rgb_gc_set_foreground(mRenderingSurface->GetGC(), NS_RGB(NS_GET_R(aColor),
                                                                 NS_GET_G(aColor),
                                                                 NS_GET_B(aColor)));
+  printf("Setting color to %d %d %d\n", NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
   return NS_OK;
 }
 
@@ -733,6 +734,8 @@ NS_IMETHODIMP
 nsRenderingContextXlib::FillRect(const nsRect& aRect)
 {
   printf("nsRenderingContextXlib::FillRect()\n");
+  printf("About to fill rect %d %d %d %d\n",
+         aRect.x, aRect.y, aRect.width, aRect.height);
   return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
