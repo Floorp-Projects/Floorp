@@ -1151,6 +1151,9 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(component);
 
+#ifdef XPCONNECT_STANDALONE
+    nsString temp;
+#endif
     char *location;             // declare before first jump to out:
     jsval retval;
     nsXPIDLCString displayPath;
@@ -1167,7 +1170,8 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     // XPCONNECT_STANDALONE case - but at least it builds and runs otherwise.
     // See: http://bugzilla.mozilla.org/show_bug.cgi?id=121438 
 #ifdef XPCONNECT_STANDALONE
-    localFile->GetPath(getter_Copies(displayPath));
+    localFile->GetPath(temp);
+    displayPath = NS_LossyConvertUCS2toASCII(temp);
 #else
     NS_GetURLSpecFromFile(localFile, displayPath);
 #endif
