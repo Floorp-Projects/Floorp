@@ -429,6 +429,37 @@ cert_stresscerts()
   fi
 }
 
+############################## cert_fips #####################################
+# local shell function to create certificates for FIPS tests 
+##############################################################################
+cert_fips()
+{
+  CERTFAILED=0
+  echo "$SCRIPTNAME: Creating FIPS 140-1 DSA Certificates =============="
+  cert_init_cert "${FIPSDIR}" "FIPS PUB 140-1 Test Certificate" 1000
+
+  CU_ACTION="Initializing ${CERTNAME}'s Cert DB"
+  certu -N -d "${CERTDIR}" -f "${R_FIPSPWFILE}" 2>&1
+
+  echo "$SCRIPTNAME: Enable FIPS mode on database -----------------------"
+  modutil -dbdir ${CERTDIR} -fips true 2>&1 <<MODSCRIPT
+y
+MODSCRIPT
+  CU_ACTION="Enable FIPS mode on database for ${CERTNAME}"
+  if [ "$?" -ne 0 ]; then
+    html_failed "<TR><TD>${CU_ACTION} ($?) " 
+    cert_log "ERROR: ${CU_ACTION} failed $?"
+  else
+    html_passed "<TR><TD>${CU_ACTION}"
+  fi
+
+  CU_ACTION="Generate Certificate for ${CERTNAME}"
+  CU_SUBJECT="CN=${CERTNAME}, E=fips@bogus.com, O=BOGUS NSS, OU=FIPS PUB 140-1, L=Mountain View, ST=California, C=US"
+  certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${CERTDIR}" -f "${R_FIPSPWFILE}" -k dsa -m ${CERTSERIAL} -z "${R_NOISE_FILE}" 2>&1
+  if [ "$RET" -eq 0 ]; then
+    cert_log "SUCCESS: FIPS passed"
+  fi
+}
 
 ############################## cert_cleanup ############################
 # local shell function to finish this script (no exit since it might be
@@ -455,4 +486,5 @@ if [ -n "$DO_DIST_ST" -a "$DO_DIST_ST" = "TRUE" ] ; then
     #cp -r $HOSTDIR/../clio.8/* $HOSTDIR
 
 fi
+cert_fips
 cert_cleanup
