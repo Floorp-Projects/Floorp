@@ -510,8 +510,15 @@ void nsXPInstallManager::LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock)
 NS_IMETHODIMP
 nsXPInstallManager::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 {
-    mItem->mFile->OpenStreamForWriting();
-    return NS_OK;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    NS_ASSERTION( mItem && mItem->mFile, "XPIMgr::OnStartRequest bad state");
+    if ( mItem && mItem->mFile )
+    {
+        rv = mItem->mFile->OpenStreamForWriting();
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -539,20 +546,26 @@ nsXPInstallManager::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
             rv = NS_ERROR_ILLEGAL_VALUE;
     }
 
-    mItem->mFile->CloseStream();
+    if ( mItem->mFile )
+        mItem->mFile->CloseStream();
 
     if (!NS_SUCCEEDED(rv))
     {
-        nsFileSpec fspec;
-        rv = mItem->mFile->GetFileSpec(&fspec);
-        if ( NS_SUCCEEDED(rv) && fspec.Exists() )
-            fspec.Delete(0);
+        if ( mItem->mFile )
+        {
+            nsFileSpec fspec;
+            nsresult rv2 ;
+            rv2 = mItem->mFile->GetFileSpec(&fspec);
+            if ( NS_SUCCEEDED(rv2) && fspec.Exists() )
+                fspec.Delete(0);
 
-        mItem->mFile = 0;
+            mItem->mFile = 0;
+        }
 
         mTriggers->SendStatus( mItem->mURL.GetUnicode(),
                                nsInstall::DOWNLOAD_ERROR );
     }
+
     DownloadNext();
     return rv;
 }
@@ -571,9 +584,9 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
     
     if (mCancelled)
     {
-        // XXX forcing a CloseStream doesn't appear to call closesocket() (on Win32 at least),
-        // XXX so the socket lingers open but no bits are flowing in apparently; need to follow up
-        return OnStopRequest(channel, ctxt, NS_BINDING_ABORTED, (const PRUnichar *)0);
+        // returning an error will stop the download. We may get extra
+        // OnData calls if they were already queued so beware
+        return NS_ERROR_FAILURE;
     }
 
     do 
