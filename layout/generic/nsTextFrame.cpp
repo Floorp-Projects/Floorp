@@ -3333,19 +3333,29 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             //check for whitespace next.
             keepSearching = PR_TRUE;
             aPos->mEatingWS = PR_TRUE;
-            while (!isWhitespace &&
-                   tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE)){
+            if (!isWhitespace){
+					if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE)){
 #ifdef DEBUGWORDJUMP
               printf("2-GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n", 
                      wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
 #endif
-              aPos->mContentOffset += contentLen;
-              keepSearching = PR_FALSE;
+						if (isWhitespace)
+							aPos->mContentOffset += contentLen;
+						keepSearching = PR_FALSE;
+						found = PR_TRUE;
+					}
             }
+				else  //we just need to jump the space, done here
+				{
+					keepSearching = PR_FALSE;
+					found = PR_TRUE;
+				}
           }
           else if (aPos->mEatingWS)
+			 {
             aPos->mContentOffset = mContentOffset;
-          found = isWhitespace;
+				found = PR_TRUE;
+			 }
           if (!isWhitespace){
             aPos->mEatingWS = PR_FALSE;
           }
