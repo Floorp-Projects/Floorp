@@ -84,20 +84,21 @@ public:
   void UnlockDrawable();
  
 private: 
-  BView			*mView;
-  BBitmap		*mBitmap;
+  BView         *mView;
+  BBitmap       *mBitmap;
+  BBitmap       *mLockBitmap;
   nsPixelFormat mPixFormat;
   PRUint32      mWidth;
   PRUint32      mHeight;
-  PRUint32     mFlags; 
-  PRBool       mIsOffscreen; 
+  PRUint32      mFlags; 
+  PRBool        mIsOffscreen; 
  
   /* for locks */ 
   PRInt32      mLockX; 
   PRInt32      mLockY; 
   PRUint32     mLockWidth; 
   PRUint32     mLockHeight; 
-  PRUint32      mLockFlags;
+  PRUint32     mLockFlags;
   PRBool       mLocked;
 };
 
