@@ -550,10 +550,14 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
 $query .= "group by bugs.bug_id\n";
 
 
-if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
-    if ($::COOKIE{'LASTORDER'} && $::FORM{'order'} =~ /^reuse/i) {
+if ($::COOKIE{'LASTORDER'}) {
+    if ((!$::FORM{'order'}) || $::FORM{'order'} =~ /^reuse/i) {
         $::FORM{'order'} = url_decode($::COOKIE{'LASTORDER'});
     }
+}
+
+
+if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
     $query .= "order by ";
     $::FORM{'order'} =~ s/votesum/bugs.votes/; # Silly backwards compatability
                                                # hack.
