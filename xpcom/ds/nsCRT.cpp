@@ -477,7 +477,7 @@ PRBool nsCRT::IsAscii(const char *aString) {
  *           the number of chars in aString before the null terminator
  *  @return  PR_TRUE if all chars are valid ASCII chars, PR_FALSE otherwise
  */
-PRBool nsCRT::IsAscii(const char* aString, PRUnichar aLength)
+PRBool nsCRT::IsAscii(const char* aString, PRUint32 aLength)
 {
     const char* end = aString + aLength;
     while (aString < end) {

@@ -262,7 +262,7 @@ public:
   static PRBool IsAsciiDigit(PRUnichar aChar);
   static PRBool IsAsciiSpace(PRUnichar aChar);
   static PRBool IsAscii(const char* aString);
-  static PRBool IsAscii(const char* aString, PRUnichar aLength);
+  static PRBool IsAscii(const char* aString, PRUint32 aLength);
 };
 
 #define FF '\014'
