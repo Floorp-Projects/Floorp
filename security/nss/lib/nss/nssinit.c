@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.16 2001/02/10 02:02:57 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.17 2001/02/21 22:18:42 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -374,6 +374,10 @@ NSS_Shutdown(void)
     SECKEY_SetDefaultKeyDB(NULL); 
 }
 
+
+extern const char __nss_base_rcsid[];
+extern const char __nss_base_sccsid[];
+
 PRBool
 NSS_VersionCheck(const char *importedVersion)
 {
@@ -388,6 +392,9 @@ NSS_VersionCheck(const char *importedVersion)
      */
     int vmajor = 0, vminor = 0, vpatch = 0;
     const char *ptr = importedVersion;
+    volatile char c; /* force a reference that won't get optimized away */
+
+    c = __nss_base_rcsid[0] + __nss_base_sccsid[0]; 
 
     while (isdigit(*ptr)) {
         vmajor = 10 * vmajor + *ptr - '0';
@@ -423,3 +430,5 @@ NSS_VersionCheck(const char *importedVersion)
     }
     return PR_TRUE;
 }
+
+
