@@ -21,6 +21,7 @@
 
 #include "nsIToolbarManager.h"
 #include "nsIToolbarItem.h"
+#include "nsIContentConnector.h"
 #include "nsWindow.h"
 #include "nsIImageButtonListener.h"
 
@@ -37,9 +38,20 @@ typedef struct {
 } TabInfo;
 
 
+//
+// pinkerton's notes 
+//
+// The only access to the toolbars this manages should be through the DOM. As a result,
+// we don't need a separate toolbar manager interface to the outside world besides the
+// minimum required to be loaded by the loader (nsILoader or something). The
+// |nsIToolbarManager| interface will probably go away soon.
+//
+
+
 //------------------------------------------------------------
 class nsToolbarManager : public ChildWindow,
-                         public nsIToolbarManager,
+                         public nsIToolbarManager, //*** for now 
+                         public nsIContentConnector,
                          public nsIImageButtonListener
 
                   
@@ -49,6 +61,10 @@ public:
     virtual ~nsToolbarManager();
 
     NS_DECL_ISUPPORTS
+
+	// nsIContentConnector Interface --------------------------------
+	NS_IMETHOD SetContentRoot(nsIContent* pContent);
+	NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
     NS_IMETHOD AddToolbar(nsIToolbar* aToolbar);
     NS_IMETHOD InsertToolbarAt(nsIToolbar* aToolbar, PRInt32 anIndex);
@@ -88,6 +104,9 @@ protected:
                              const nsString& aRollOverURL);
 
   nsIToolbarManagerListener * mListener;
+
+  //*** this should be smart pointers ***
+//nsToolbarDataModel* mDataModel;   // The data source from which everything to draw is obtained.
 
   // CollapseTab URLs
   nsString mCollapseUpURL;
