@@ -79,6 +79,7 @@
 		};
 		0FA8EFA20423B36300A80166 = {
 			children = (
+				82AC0D60065A5FD600776B02,
 				F5F181C90208006F0124611D,
 				F507A82C030BFB7901026D5D,
 				F6BD63A601B3131201A962F7,
@@ -116,6 +117,8 @@
 		};
 		0FA8EFA30423B37000A80166 = {
 			children = (
+				82AC0D5E065A5F5100776B02,
+				82AC0D5D065A5F2300776B02,
 				F56DEF11020802A501FF5ADC,
 				F5F181C50208006F0124611D,
 				F5F181C60208006F0124611D,
@@ -2678,6 +2681,9 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				82AC0D64065A601500776B02,
+				82AC0D65065A602200776B02,
+				82AC0D66065A602200776B02,
 				3F44ACD005BDFB9F00CB4B08,
 				3F44ACD105BDFB9F00CB4B08,
 				3F44ACD205BDFB9F00CB4B08,
@@ -3317,6 +3323,7 @@
 			dstPath = res;
 			dstSubfolderSpec = 6;
 			files = (
+				82AC0D68065A603400776B02,
 				3F44AD2E05BDFB9F00CB4B08,
 				3F44AD2F05BDFB9F00CB4B08,
 				3F44AD3005BDFB9F00CB4B08,
@@ -4915,7 +4922,7 @@
 				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profdirserviceprovider ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/chardet ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/xpcom_obsolete ../dist/include/cookie ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon $(LOCAL_LIBRARY_DIR)/Frameworks/SharedMenusCocoa.framework/Headers";
 				INFOPLIST_FILE = "Info-CaminoStatic__Upgraded_.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util ../js/src/xpconnect/loader ../extensions/transformiix/build";
 				OTHER_CFLAGS = "-fshort-wchar";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lxpcom_compat -lmozjs -lmozjpeg -ljsj -lmozpng -lpthread -lz -lm";
 				PRODUCT_NAME = Camino;
@@ -6618,6 +6625,8 @@
 			dstPath = components;
 			dstSubfolderSpec = 6;
 			files = (
+				828FBD97065A986900B3D52A,
+				828FBD98065A986900B3D52A,
 				3F44AF0A05BDFBA000CB4B08,
 				3F44AF0B05BDFBA000CB4B08,
 				3F44AF0C05BDFBA000CB4B08,
@@ -7054,6 +7063,7 @@
 			dstPath = res;
 			dstSubfolderSpec = 6;
 			files = (
+				828FBD9B065A988400B3D52A,
 				3F44AF4905BDFBA000CB4B08,
 				3F44AF4A05BDFBA000CB4B08,
 				3F44AF4B05BDFBA000CB4B08,
@@ -7634,6 +7644,7 @@
 				3F44AFC205BDFBA000CB4B08,
 				3F44AFC305BDFBA000CB4B08,
 				3FECC8E705D1FE800068E7ED,
+				82C39664065B156600A82035,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8899,6 +8910,105 @@
 //792
 //793
 //794
+//820
+//821
+//822
+//823
+//824
+		828FBD97065A986900B3D52A = {
+			fileRef = 82AC0D5E065A5F5100776B02;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		828FBD98065A986900B3D52A = {
+			fileRef = 82AC0D5D065A5F2300776B02;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		828FBD9B065A988400B3D52A = {
+			fileRef = 82AC0D5F065A5F9F00776B02;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		82AC0D5D065A5F2300776B02 = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			name = content_xslt.xpt;
+			path = ../dist/bin/components/content_xslt.xpt;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		82AC0D5E065A5F5100776B02 = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			name = dom_xpath.xpt;
+			path = ../dist/bin/components/dom_xpath.xpt;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		82AC0D5F065A5F9F00776B02 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			name = xslt.properties;
+			path = ../extensions/transformiix/resources/xslt.properties;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		82AC0D60065A5FD600776B02 = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			name = libtransformiix.dylib;
+			path = ../dist/lib/components/libtransformiix.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		82AC0D64065A601500776B02 = {
+			fileRef = 82AC0D60065A5FD600776B02;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		82AC0D65065A602200776B02 = {
+			fileRef = 82AC0D5E065A5F5100776B02;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		82AC0D66065A602200776B02 = {
+			fileRef = 82AC0D5D065A5F2300776B02;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		82AC0D68065A603400776B02 = {
+			fileRef = 82AC0D5F065A5F9F00776B02;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		82C39663065B156600A82035 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libtransformiix.a;
+			path = ../dist/lib/components/libtransformiix.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		82C39664065B156600A82035 = {
+			fileRef = 82C39663065B156600A82035;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//820
+//821
+//822
+//823
+//824
 //A70
 //A71
 //A72
@@ -11118,6 +11228,7 @@
 		};
 		F56F242202AC6F7101A967F3 = {
 			children = (
+				82C39663065B156600A82035,
 				0FA8EFCA0423EAAD00A80166,
 				F56F242602AC706801A967F3,
 				F56F242702AC706801A967F3,
@@ -13141,6 +13252,7 @@
 		};
 		F6BD645501B3167601A962F7 = {
 			children = (
+				82AC0D5F065A5F9F00776B02,
 				F6BD64B801B316DA01A962F7,
 				F6BD64B901B316DA01A962F7,
 				F6BD64BA01B316DA01A962F7,
