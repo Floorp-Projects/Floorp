@@ -423,7 +423,6 @@ int main(int argc, char *argv[])
       if (tagBuf)
         PL_strcpy(tagBuf, "Do that voodo, that you do, soooo weeeelllll!");
 
-#if 0
       pMsgSend->CreateAndSendMessage(nsnull, // identity
                                      pMsgCompFields, 
 						    PR_FALSE,         // PRBool                            digest_p,
@@ -437,9 +436,6 @@ int main(int argc, char *argv[])
 						    NULL,             // nsMsgSendPart                     *relatedPart,
 						    nsnull);          // listener array
 
-#else
-	printf("rhp fix me!\n");
-#endif
 
       PR_FREEIF(ptr);
     }    
