@@ -519,8 +519,9 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
   // 3. From the same '<' offset also search for start of a comment '<!--'. If found search for
   //    end comment '-->' between the terminal string and '<!--'.  If you did not find the end
   //    comment, then we have a malformed document, i.e., this section has a prematured terminal string
-  //    Ex. <SCRIPT><!-- document.write('</SCRIPT>') //--> </SCRIPT>. But anyway record terminal string's
-  //    offset and update the current offset to the terminal string (prematured) offset and goto step 1.
+  //    Ex. <SCRIPT><!-- document.write('</SCRIPT>') //--> </SCRIPT>. But record terminal string's
+  //    offset if this is the first premature terminal string, and update the current offset to the terminal 
+  //    string (prematured) offset and goto step 1.
   // 4. Amen...If you found a terminal string and '-->'. Otherwise goto step 1.
   // 5. If the end of the document is reached and if we still don't have the condition in step 4. then
   //    assume that the prematured terminal string is the actual terminal string and goto step 1. This
@@ -576,7 +577,10 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
             // If you're here it means that we have a bogus terminal string.
             // Even though it is bogus, the position of the terminal string
             // could be helpful in case we hit the rock bottom.
-            theAltTermStrPos = theTermStrPos;
+            if (theAltTermStrPos == endPos) {
+              // But we only want to remember the first bogus terminal string.
+              theAltTermStrPos = theTermStrPos;
+            }
     
             // We did not find '-->' so keep searching for terminal string.
             theCurrOffset = theTermStrPos;
