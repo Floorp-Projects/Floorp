@@ -24,21 +24,23 @@
 #include "nsNativeAppSupportWin.h"
 
 // Program icon.
-IDI_MOZILLA ICON
+IDI_APPLICATION ICON
 	"mozilla.ico"
 
 // Splash screen dialog.
-IDD_SPLASH DIALOG
+IDD_SPLASH DIALOGEX
 	DISCARDABLE
-	0, 0, 260, 160
-	STYLE DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_VISIBLE
+	0,0,0,0
+	STYLE DS_SETFOREGROUND | DS_CENTER | WS_POPUP
+    EXSTYLE WS_EX_TOOLWINDOW
 	FONT 8, "MS Sans Serif"
 	BEGIN
-		CONTROL IDB_SPLASH,
-			-1,
+		CONTROL
+            IDB_SPLASH,
+			IDB_SPLASH,
 			"Static",
 			SS_BITMAP,
-			0,0,390,261
+			0,0,0,0
 	END
 
 // Splash screen bitmap.
