@@ -2134,7 +2134,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       theTransform->SetToIdentity();  
 	    theTransform->AddScale(app2dev, app2dev);
 
-      aRenderingContext.SetClipRect(srcRect, nsClipCombine_kReplace, clip);
+      //aRenderingContext.SetClipRect(srcRect, nsClipCombine_kReplace, clip);
 
       // copy the initial image to our buffer, this takes twips and converts to pixels.. 
       // which is what the image is in
