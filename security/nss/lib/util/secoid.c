@@ -1033,7 +1033,7 @@ secoid_DynamicRehash(void)
     for ( i = secoidLastHashEntry; i < last; i++ ) {
 	oid = secoidDynamicTable[i];
 
-	entry = PL_HashTableAdd( oid_d_hash, &oid->oid.data, oid );
+	entry = PL_HashTableAdd( oid_d_hash, &oid->oid, oid );
 	if ( entry == NULL ) {
 	    return(SECFailure);
 	}
@@ -1210,7 +1210,7 @@ SECOID_FindOIDByMechanism(unsigned long mechanism)
 	    return NULL;
 	}
     }
-    ret = PL_HashTableLookup ( oidmechhash, (void *)mechanism);
+    ret = PL_HashTableLookupConst ( oidmechhash, (void *)mechanism);
     if ( ret == NULL ) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     }
@@ -1232,7 +1232,7 @@ SECOID_FindOID(SECItem *oid)
 	}
     }
     
-    ret = PL_HashTableLookup ( oidhash, oid );
+    ret = PL_HashTableLookupConst ( oidhash, oid );
     if ( ret == NULL ) {
 	ret  = secoid_FindDynamic(oid);
 	if (ret == NULL) {
