@@ -668,5 +668,153 @@
     </content>
   </binding>
 
+  <!--
+    Inline Editable UI Element
+    - This binding forms the basis of the inline edit treecell and the inline edit
+    - buttons. 
+    - TODO: investigate creating extensions to the wrapper widgets (tree, toolbar)
+    -       to make them provide some object implementing an interface similar to
+    -       outliner's so we can build in some of the ile behavior (such as going
+    -       in and out of the mode, asking isEditable etc) so as to remove some of
+    -       the burden from the implementor. 
+    -
+    - Note that this widget will be no longer used in the bookmarks window once 
+    - outliner is extended to have this functionality built in. 
+    -->
+  <binding id="inline-edit-base" extends="chrome://global/content/xulBindings.xml#basetext">
+    <implementation>
+      <property name="_mode">0</property>
+      <method name="setMode">
+        <parameter name="val"/>
+        <body>
+        <![CDATA[
+          var ctr = document.getAnonymousElementByAttribute(this, "ileattr", "text-container");
+          var txt = document.getAnonymousElementByAttribute(this, "ileattr", "text");
+          this.setAttribute("mode", val);
+          if (val == "edit") {
+            var nodes = document.getAnonymousNodes(this);
+
+            if (txt.getAttribute("hidden") != "true") {
+              ctr.setAttribute("mode", "edit");
+              var width = ctr.boxObject.width;
+              txt.setAttribute("hidden", "true");
+              const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+              var field = document.createElementNS(kXULNS, "textbox");
+              field.className = "textbox-inline-edit";
+              field.setAttribute("flex", "1");
+              field.setAttribute("value", txt.getAttribute("value"));
+              field.setAttribute("ileattr", "field");
+              field.setAttribute("rootcontent", txt.getAttribute("rootcontent"));
+              field.setAttribute("style", "width: " + width + "px");
+              ctr.appendChild(field);
+              field.addEventListener("keydown", this.fieldKeyDown, false);
+              field.addEventListener("change", this.fieldChange, false);
+              field.select();
+            }
+          }
+          else {
+            nodes = document.getAnonymousNodes(this);
+            var fld = document.getAnonymousElementByAttribute(this, "ileattr", "field");
+            if (fld && txt.getAttribute("hidden") == "true") {
+              ctr.removeAttribute("mode");
+              fld.blur();
+              ctr.removeChild(fld);
+              txt.removeAttribute("hidden");
+            }
+          }
+        ]]>
+        </body>
+      </method>
+      <property name="_observers">
+      <![CDATA[
+        ({
+          reject: [], 
+          accept: []
+        })
+      ]]>
+      </property>
+      <property name="valueIsRejected">false</property>
+      <method name="addObserver">
+        <parameter name="aObserver"/>
+        <parameter name="aTopic"/>
+        <parameter name="aParams"/>
+        <body>
+          this._observers[aTopic].push({ callback: aObserver, params: aParams });
+        </body>
+      </method>
+      <method name="fieldKeyDown">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var rootLocalName = aEvent.target.getAttribute("rootcontent");
+          if (rootLocalName) {
+            // Root content is the bound element. 
+            var rootContent = aEvent.target;
+            while (rootContent && rootContent.localName != rootLocalName) 
+              rootContent = rootContent.parentNode;
+            
+            if (rootContent) {
+              var ctr = document.getAnonymousElementByAttribute(rootContent, "ileattr", "text-container");
+              if (aEvent.keyCode == 13) {
+                rootContent.valueIsRejected = false;
+                rootContent.fieldChange(aEvent);
+              }
+              if (aEvent.keyCode == 27) {
+                rootContent.valueIsRejected = true;
+                var fld = document.getAnonymousElementByAttribute(rootContent, "ileattr", "field");
+                for (i = 0; i < rootContent._observers["reject"].length; ++i) 
+                  rootContent._observers["reject"][i].callback(rootContent._observers["reject"][i].params.concat(fld.value), "reject");
+                if ("setMode" in rootContent) 
+                  rootContent.setMode("normal");
+              }
+            }
+          }
+          aEvent.preventBubble();
+        ]]>
+        </body>
+      </method>
+      <property name="valueIsAccepted">false</property>
+      <method name="fieldChange">
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          var rootLocalName = this.getAttribute("rootcontent");
+          if (rootLocalName) {
+            // Root content is the bound element. 
+            var rootContent = this;
+            while (rootContent && rootContent.localName != rootLocalName) 
+              rootContent = rootContent.parentNode;
+            
+            if (rootContent) {
+              var ctr = document.getAnonymousElementByAttribute(rootContent, "ileattr", "text-container");
+              if (!rootContent.valueIsRejected) {
+                var fld = document.getAnonymousElementByAttribute(rootContent, "ileattr", "field");
+                for (var i = 0; i < rootContent._observers["accept"].length; ++i)
+                  rootContent._observers["accept"][i].callback(rootContent._observers["accept"][i].params.concat(fld.value), "accept");
+                if ("setMode" in rootContent)
+                  rootContent.setMode("normal");
+              }
+            }
+          }
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- inline editable buttons -->
+  <binding id="buttonleft-ile" extends="chrome://global/content/xulBindings.xml#inline-edit-base">
+    <content>
+      <xul:hbox class="button-internal-box" autostretch="never" flex="1">
+        <xul:image class="button-icon" inherits="src"/>
+        <xul:vbox class="button-text-container" autostretch="never" flex="1" ileattr="text-container">
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top" ileattr="text" rootcontent="button"/>
+        </xul:vbox>
+      </xul:hbox>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+  
+
 </bindings>
 

@@ -29,6 +29,7 @@
 
 .bookmark-item.button-toolbar {
   cursor: pointer;
+  -moz-binding: url("chrome://global/content/xulBindings.xml#buttonleft-ile");
 }
 
 .bookmark-item.button-toolbar:hover {
@@ -49,5 +50,6 @@
 .bookmark-item.button-toolbar[container="true"]:hover {
   cursor: default;
   text-decoration: none;
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-toolbar-single-ile");
 }
 

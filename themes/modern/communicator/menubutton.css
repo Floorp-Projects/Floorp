@@ -33,6 +33,11 @@ menubutton.button-toolbar {
   -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-toolbar-single");
 }
 
+.button-toolbar > .menubutton-toolbar-single-internal-box
+  {
+    vertical-align: middle;
+  }
+
 .menubutton-internal-box,
 .button-toolbar[disabled="true"]:hover > .menubutton-internal-box,
 .button-toolbar-4[disabled="true"]:hover > .menubutton-internal-box,

@@ -6,7 +6,12 @@
     
   .button-toolbar.bookmark-item,
   .button-toolbar.bookmark-item:hover,
-  .button-toolbar.bookmark-item:hover:active,
+  .button-toolbar.bookmark-item:hover:active
+    {
+      border              : none !important;
+      vertical-align      : middle;
+    }
+
   .button-toolbar.bookmark-item > .button-internal-box,
   .button-toolbar.bookmark-item:hover > .button-internal-box,
   .button-toolbar.bookmark-item:hover:active > .button-internal-box,
@@ -18,23 +23,41 @@
       > .menubutton-toolbar-single-internal-box
     {
       border              : none !important;
+      vertical-align      : middle;
+      padding             : 1px 2px 1px 2px;
     }
     
+  .button-toolbar.bookmark-item[mode="edit"] > .button-internal-box,
+  .button-toolbar.bookmark-item[mode="edit"]:hover > .button-internal-box,
+  .button-toolbar.bookmark-item[mode="edit"]:hover:active > .button-internal-box,
+  .button-toolbar.bookmark-item[mode="edit"] 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar.bookmark-item[mode="edit"]:hover 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar.bookmark-item[mode="edit"]:hover:active 
+      > .menubutton-toolbar-single-internal-box
+    {
+      padding             : 1px 2px 0px 2px;
+    }
+
+  .bookmark-item.button-toolbar
+    {
+      cursor	            : pointer;
+      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft-ile");
+    }
+
   .bookmark-item.button-toolbar[container="true"],
   .bookmark-item.button-toolbar[container="true"]:hover,
   .bookmark-item.button-toolbar[container="true"]:hover:active
     {
+      -moz-binding        : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single-ile");
       cursor              : default;
       background-color    : transparent;
       color               : inherit;
       text-decoration     : none;
+      vertical-align      : middle;
     }
   
-  .bookmark-item.button-toolbar
-    {
-      cursor	            : pointer;
-    }
-
   .bookmark-item > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
     {
       display             : none;
@@ -42,15 +65,9 @@
     
   .button-toolbar.bookmark-item
     {
-      max-width           : 10em;
+      max-width           : 13em !important;
     }
     
-  .button-toolbar.bookmark-item > .menubutton-toolbar-single-internal-box
-      > .menubutton-toolbar-single-text 
-    {
-      max-width           : 8em !important;
-    }
-
   .bookmark-item.button-toolbar:hover
     {
       color               : #0000FF;

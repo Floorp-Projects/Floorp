@@ -56,4 +56,19 @@
     </content>
   </binding>
   
+  <binding id="menubutton-toolbar-single-ile" extends="chrome://global/content/xulBindings.xml#inline-edit-base" display="xul:menu">
+    <content>
+      <xul:hbox class="menubutton-toolbar-single-internal-box" flex="1" autostretch="never">
+        <xul:image class="menubutton-toolbar-single-icon" inherits="src,disabled"/>
+        <xul:hbox class="menubutton-toolbar-single-ile-text-container" 
+                  flex="1" ileattr="text-container" autostretch="never">
+          <xul:text class="menubutton-toolbar-single-ile-text" 
+                    inherits="value=label,accesskey,crop,disabled,dragover-top" 
+                    ileattr="text" rootcontent="menubutton" flex="1"/>
+        </xul:hbox>
+      </xul:hbox>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
 </bindings>

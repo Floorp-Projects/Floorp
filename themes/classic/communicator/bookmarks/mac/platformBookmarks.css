@@ -1,0 +1,29 @@
+/**
+ * Bookmarks tree 
+ **/ 
+   
+  .bookmarks-window-tree
+    {
+      border-top          : 1px solid #000000 !important;
+      border-bottom       : 1px solid #DDDDDD;
+      border-left         : 1px solid #9D9D9D;
+      border-right        : 1px solid #FFFFFF;
+    }
+
+  .bookmarks-window-tree > .tree-container-treerows
+    {
+      border-left         : 1px solid #000000;
+      border-right        : 1px solid #DDDDDD;
+    }  
+    
+  .bookmarks-panel-tree, .bookmarks-panel-tree > .tree-container-treerows
+    {
+      border              : none;
+    }
+    
+  #panel-bar
+    {
+      border-top          : 1px solid #FFFFFF;
+      border-bottom       : 1px solid #9D9D9D;
+    }    
+

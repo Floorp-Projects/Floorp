@@ -45,6 +45,7 @@
 .button-toolbar[disabled="true"]:hover:active > .button-internal-box,
 .button-toolbar[toggled="true"]:hover:active > .button-internal-box {
   padding: 1px 2px 1px 2px;
+  vertical-align: middle;
 }
 
 .button-toolbar[label] > .button-internal-box > .button-icon {

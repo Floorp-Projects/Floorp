@@ -35,7 +35,8 @@
   .button-toolbar > .button-internal-box
     {
       border              : 1px solid transparent;
-  	  padding             : 1px 3px;
+      padding             : 1px 3px;
+      vertical-align      : middle;
     }
 
   .button-toolbar-1 > .button-internal-box,

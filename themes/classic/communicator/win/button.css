@@ -243,7 +243,7 @@
 
   menubutton.button-toolbar-4
     {
-      -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+      -moz-binding        : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
     }
 
 /** Low profile rollover buttons, e.g. "search"
@@ -251,17 +251,17 @@
  
   .button-toolbar-3
     {
-      -moz-binding          : url("chrome://global/content/xulBindings.xml#buttonleft");
-      margin                : 0px 0px 1px 3px !important;
-      min-width             : 0px;
-      background-color      : transparent;
-      color                 : -moz-DialogText;
-      -moz-user-focus       : ignore;
+      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
+      margin              : 0px 0px 1px 3px !important;
+      min-width           : 0px;
+      background-color    : transparent;
+      color               : -moz-DialogText;
+      -moz-user-focus     : ignore;
     }  
     
   .button-toolbar-3 > .button-internal-box
     {
-      background-color      : -moz-Dialog;
+      background-color    : -moz-Dialog;
       color                 : inherit;
     }
     
@@ -269,12 +269,12 @@
   .button-toolbar-3[disabled="true"]:hover,
   .button-toolbar-3[disabled="true"]:hover:active
     {
-      border                : 1px solid transparent;
+      border              : 1px solid transparent;
     }
     
   .button-toolbar-3:hover, .button-toolbar-3:hover:active
     {
-      border-color          : ThreeDDarkShadow;
+      border-color        : ThreeDDarkShadow;
     }
     
   .button-toolbar-3 > .button-internal-box,
@@ -282,27 +282,32 @@
   .button-toolbar-3[disabled="true"]:hover > .button-internal-box,
   .button-toolbar-3[disabled="true"]:hover:active > .button-internal-box
     {
-      border-left           : 1px solid ThreeDHighlight !important;
-      border-top            : 1px solid ThreeDHighlight !important;
-      border-right          : 1px solid ThreeDShadow !important;
-      border-bottom         : 1px solid ThreeDShadow !important;
-      padding               : 1px 4px 1px 4px;
+      border-left         : 1px solid ThreeDHighlight !important;
+      border-top          : 1px solid ThreeDHighlight !important;
+      border-right        : 1px solid ThreeDShadow !important;
+      border-bottom       : 1px solid ThreeDShadow !important;
+      padding             : 1px 4px 1px 4px;
     }
     
   .button-toolbar-3:hover:active > .button-internal-box 
     {
-      border-left           : 1px solid ThreeDShadow !important;
-      border-top            : 1px solid ThreeDShadow !important;
-      border-bottom         : 1px solid ThreeDHighlight !important;
-      border-right          : 1px solid ThreeDHighlight !important;
-      padding               : 2px 3px 0px 5px;
+      border-left         : 1px solid ThreeDShadow !important;
+      border-top          : 1px solid ThreeDShadow !important;
+      border-bottom       : 1px solid ThreeDHighlight !important;
+      border-right        : 1px solid ThreeDHighlight !important;
+      padding             : 2px 3px 0px 5px;
     } 
 
   .button-toolbar-3 > .button-internal-box > .button-icon,
   .button-toolbar-3 > .button-internal-box > .button-text
     {
-      margin-right          : 2px;
+      margin-right        : 2px;
     }  
+
+  .button-toolbar > .button-internal-box > .button-icon
+    {
+      margin-right        : 5px;
+    }
 
 /** Expanding Region Button **/
 

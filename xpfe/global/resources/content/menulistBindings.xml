@@ -199,7 +199,7 @@
     </content>
   </binding>
 
-  <binding id="menubutton-single-left">
+  <binding id="menubutton-single-left" extends="xul:menu">
     <content>
       <xul:box class="menubutton-internal-box" autostretch="never">
         <xul:image class="menubutton-single-icon"/>
@@ -209,7 +209,7 @@
     </content>
   </binding>
   
-  <binding id="menubutton-single-top">
+  <binding id="menubutton-single-top" extends="xul:menu">
     <content>
       <xul:box class="button-internal-box" autostretch="never" orient="vertical" flex="1">
         <xul:image class="menubutton-single-icon"/>
@@ -219,7 +219,7 @@
     </content>
   </binding>
 
-  <binding id="menubutton-single-bottom">
+  <binding id="menubutton-single-bottom" extends="xul:menu">
     <content>
       <xul:box class="button-internal-box" autostretch="never" orient="vertical" flex="1">
         <xul:text class="menubutton-single-text" inherits="value=label,crop,accesskey"/>
@@ -231,7 +231,7 @@
 
 <!-- 
   BINDING : menubutton-icon
-  XUL REPRESENTATION : <menubutton class="menubutton-icon">
+  XUL REPRESENTATION : <menubutton class="menubutton-icon" extends="xul:menu">
   -->
   <binding id="menubutton-icon">
     <content>
@@ -246,7 +246,7 @@
   BINDING : menubutton-dual
   XUL REPRESENTATION : <menubutton class="menubutton-dual">
   -->
-  <binding id="menubutton-dual-top">
+  <binding id="menubutton-dual-top" extends="xul:menu">
     <content>
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button top" allowevents="true" 
@@ -259,7 +259,7 @@
     </content>
   </binding>
 
-  <binding id="menubutton-dual-left">
+  <binding id="menubutton-dual-left" extends="xul:menu">
     <content>
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button left" allowevents="true" 
@@ -272,7 +272,7 @@
     </content>
   </binding>
 
-  <binding id="menubutton-dual-right">
+  <binding id="menubutton-dual-right" extends="xul:menu">
     <content>
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button right" allowevents="true" 
@@ -285,7 +285,7 @@
     </content>
   </binding>
 
-  <binding id="menubutton-dual-bottom">
+  <binding id="menubutton-dual-bottom" extends="xul:menu">
     <content>
       <xul:box class="menubutton-internal-box">
         <xul:button class="menubutton-dual-button bottom" allowevents="true" 
