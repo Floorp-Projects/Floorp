@@ -20,13 +20,13 @@
 
 #|
 (depict-rtf-to-local-file
- ";Test;StandardFunctionSemantics.rtf"
+ "Test/StandardFunctionSemantics.rtf"
  "Standard Function Semantics"
  #'(lambda (rtf-stream)
      (depict-world-commands rtf-stream *sfw*)))
 
 (depict-html-to-local-file
- ";Test;StandardFunctionSemantics.html"
+ "Test/StandardFunctionSemantics.html"
  "Standard Function Semantics"
  t
  #'(lambda (html-stream)

@@ -51,19 +51,19 @@
 
 #|
 (depict-rtf-to-local-file
- ";Test;ConstraintTestGrammar.rtf"
+ "Test/ConstraintTestGrammar.rtf"
  "Constraint Test Grammar"
  #'(lambda (markup-stream)
      (depict-world-commands markup-stream *ctw* :visible-semantics nil)))
 
 (depict-html-to-local-file
- ";Test;ConstraintTestGrammar.html"
+ "Test/ConstraintTestGrammar.html"
  "Constraint Test Grammar"
  t
  #'(lambda (markup-stream)
      (depict-world-commands markup-stream *ctw* :visible-semantics nil)))
 
-(with-local-output (s ";Test;ConstraintTestGrammar.txt") (print-grammar *ctg* s))
+(with-local-output (s "Test/ConstraintTestGrammar.txt") (print-grammar *ctg* s))
 
 (pprint (parse *ctg* #'identity '(begin letter letter letter digit end)))
 |#

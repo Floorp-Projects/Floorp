@@ -586,33 +586,33 @@
 #|
 (progn
   (depict-rtf-to-local-file
-   ";JS20;RegExpGrammar.rtf"
+   "JS20/RegExpGrammar.rtf"
    "Regular Expression Grammar"
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *rw* :visible-semantics nil)))
   (depict-rtf-to-local-file
-   ";JS20;RegExpSemantics.rtf"
+   "JS20/RegExpSemantics.rtf"
    "Regular Expression Semantics"
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *rw*))))
 
 (progn
   (depict-html-to-local-file
-   ";JS20;RegExpGrammar.html"
+   "JS20/RegExpGrammar.html"
    "Regular Expression Grammar"
    t
    #'(lambda (html-stream)
        (depict-world-commands html-stream *rw* :visible-semantics nil))
    :external-link-base "notation.html")
   (depict-html-to-local-file
-   ";JS20;RegExpSemantics.html"
+   "JS20/RegExpSemantics.html"
    "Regular Expression Semantics"
    t
    #'(lambda (html-stream)
        (depict-world-commands html-stream *rw*))
    :external-link-base "notation.html"))
 
-(with-local-output (s ";JS20;RegExpGrammar.txt") (print-lexer *rl* s) (print-grammar *rg* s))
+(with-local-output (s "JS20/RegExpGrammar.txt") (print-lexer *rl* s) (print-grammar *rg* s))
 
 (lexer-pparse *rl* "a+" :trace t)
 (lexer-pparse *rl* "[]+" :trace t)

@@ -155,7 +155,8 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; VALUE ASSERTS
 
-(defconstant *value-asserts* t)
+(eval-when (:compile-toplevel :load-toplevel)
+  (defconstant *value-asserts* t))
 
 ; Assert that (test value) returns non-nil.  Return value.
 (defmacro assert-value (value test &rest format-and-parameters)

@@ -345,7 +345,7 @@
 (defun grammar-symbol-= (grammar-symbol1 grammar-symbol2)
   (eql grammar-symbol1 grammar-symbol2))
 ; A version of grammar-symbol-= suitable for being the test function for hash tables.
-(defconstant *grammar-symbol-=* #'eql)
+(defparameter *grammar-symbol-=* #'eql)
 
 
 ; Return the general-grammar-symbol's symbol.  Return it unchanged if it is not

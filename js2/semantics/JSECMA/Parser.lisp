@@ -829,19 +829,19 @@
 
 #|
 (depict-rtf-to-local-file
- ";JSECMA;ParserSemantics.rtf"
+ "JSECMA/ParserSemantics.rtf"
  "ECMAScript 1 Parser Semantics"
  #'(lambda (rtf-stream)
      (depict-world-commands rtf-stream *gw*)))
 
 (depict-html-to-local-file
- ";JSECMA;ParserSemantics.html"
+ "JSECMA/ParserSemantics.html"
  "ECMAScript 1 Parser Semantics"
  t
  #'(lambda (rtf-stream)
      (depict-world-commands rtf-stream *gw*)))
 
-(with-local-output (s ";JSECMA;ParserGrammar.txt") (print-grammar *gg* s))
+(with-local-output (s "JSECMA/ParserGrammar.txt") (print-grammar *gg* s))
 
 
 (ecma-pparse "('abc')")

@@ -428,7 +428,7 @@
 
 #|
 (depict-rtf-to-local-file
- ";JSECMA;LexerCharClasses.rtf"
+ "JSECMA/LexerCharClasses.rtf"
  "ECMAScript 1 Lexer Character Classes"
  #'(lambda (rtf-stream)
      (depict-paragraph (rtf-stream ':grammar-header)
@@ -440,19 +440,19 @@
      (depict-grammar rtf-stream *lg*)))
 
 (depict-rtf-to-local-file
- ";JSECMA;LexerSemantics.rtf"
+ "JSECMA/LexerSemantics.rtf"
  "ECMAScript 1 Lexer Semantics"
  #'(lambda (rtf-stream)
      (depict-world-commands rtf-stream *lw*)))
 
 (depict-html-to-local-file
- ";JSECMA;LexerSemantics.html"
+ "JSECMA/LexerSemantics.html"
  "ECMAScript 1 Lexer Semantics"
  t
  #'(lambda (rtf-stream)
      (depict-world-commands rtf-stream *lw*)))
 
-(with-local-output (s ";JSECMA;LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))
+(with-local-output (s "JSECMA/LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))
 
 (print-illegal-strings m)
 

@@ -355,8 +355,8 @@
 ; (an output stream), dividing the text as specified by dynamically scoped calls
 ; to break-line.  Return the text as a base-string.
 (defun write-limited-lines (emitter)
-  (let ((limited-stream (make-string-output-stream :element-type 'base-character))
-        (*current-limited-lines* (make-string-output-stream :element-type 'base-character))
+  (let ((limited-stream (make-string-output-stream :element-type #-mcl 'character #+mcl 'base-character))
+        (*current-limited-lines* (make-string-output-stream :element-type #-mcl 'character #+mcl 'base-character))
         (*current-limited-lines-non-empty* nil)
         (*current-limited-position* 0))
     (funcall emitter limited-stream)
@@ -525,7 +525,7 @@
 ; Read RTF from the text file with the given name (relative to the
 ; local directory) and return it in list form.
 (defun read-rtf-from-local-file (filename)
-  (with-open-file (stream (merge-pathnames filename *semantic-engine-directory*)
+  (with-open-file (stream (filename-to-semantic-engine-pathname filename)
                           :direction :input)
     (read-rtf stream)))
 
@@ -543,7 +543,7 @@
   (let ((i (position-if #'(lambda (char) (member char *rtf-special*)) string)))
     (if i
       (let* ((string-length (length string))
-             (result-string (make-array string-length :element-type 'base-character :adjustable t :fill-pointer i)))
+             (result-string (make-array string-length :element-type #-mcl 'character #+mcl 'base-character :adjustable t :fill-pointer i)))
         (replace result-string string)
         (do ((i i (1+ i)))
             ((= i string-length))
@@ -632,7 +632,7 @@
 ; Write RTF to the text file with the given name (relative to the
 ; local directory).
 (defun write-rtf-to-local-file (filename rtf)
-  (with-open-file (stream (merge-pathnames filename *semantic-engine-directory*)
+  (with-open-file (stream (filename-to-semantic-engine-pathname filename)
                           :direction :output
                           :if-exists :supersede
                           #+mcl :external-format #+mcl "RTF "

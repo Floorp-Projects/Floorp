@@ -634,21 +634,21 @@
 
 #|
 (depict-rtf-to-local-file
- ";JS20;ParserGrammar.rtf"
+ "JS20/ParserGrammar.rtf"
  "JavaScript 2.0 Parser Grammar"
  #'(lambda (markup-stream)
      (depict-js-terminals markup-stream *jg*)
      (depict-world-commands markup-stream *jw* :visible-semantics nil)))
 
 (depict-html-to-local-file
- ";JS20;ParserGrammar.html"
+ "JS20/ParserGrammar.html"
  "JavaScript 2.0 Parser Grammar"
  t
  #'(lambda (markup-stream)
      (depict-js-terminals markup-stream *jg*)
      (depict-world-commands markup-stream *jw* :visible-semantics nil)))
 
-(with-local-output (s ";JS20;ParserGrammar.txt") (print-grammar *jg* s))
+(with-local-output (s "JS20/ParserGrammar.txt") (print-grammar *jg* s))
 |#
 
 (length (grammar-states *jg*))

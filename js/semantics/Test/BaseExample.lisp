@@ -45,13 +45,13 @@
 
 #|
 (depict-rtf-to-local-file
- ";Test;BaseExampleSemantics.rtf"
+ "Test/BaseExampleSemantics.rtf"
  "Base Example Semantics"
  #'(lambda (rtf-stream)
      (depict-world-commands rtf-stream *bew*)))
 
 (depict-html-to-local-file
- ";Test;BaseExampleSemantics.html"
+ "Test/BaseExampleSemantics.html"
  "Base Example Semantics"
  t
  #'(lambda (html-stream)

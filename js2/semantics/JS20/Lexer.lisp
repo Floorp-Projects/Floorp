@@ -524,7 +524,7 @@
 
 #|
 (depict-rtf-to-local-file
- ";JS20;LexerCharClasses.rtf"
+ "JS20/LexerCharClasses.rtf"
  "JavaScript 2 Lexer Character Classes"
  #'(lambda (rtf-stream)
      (depict-paragraph (rtf-stream ':grammar-header)
@@ -537,33 +537,33 @@
 
 (progn
   (depict-rtf-to-local-file
-   ";JS20;LexerGrammar.rtf"
+   "JS20/LexerGrammar.rtf"
    "JavaScript 2 Lexer Grammar"
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw* :visible-semantics nil)))
   (depict-rtf-to-local-file
-   ";JS20;LexerSemantics.rtf"
+   "JS20/LexerSemantics.rtf"
    "JavaScript 2 Lexer Semantics"
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw*))))
 
 (progn
   (depict-html-to-local-file
-   ";JS20;LexerGrammar.html"
+   "JS20/LexerGrammar.html"
    "JavaScript 2 Lexer Grammar"
    t
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw* :visible-semantics nil))
    :external-link-base "notation.html")
   (depict-html-to-local-file
-   ";JS20;LexerSemantics.html"
+   "JS20/LexerSemantics.html"
    "JavaScript 2 Lexer Semantics"
    t
    #'(lambda (rtf-stream)
        (depict-world-commands rtf-stream *lw*))
    :external-link-base "notation.html"))
 
-(with-local-output (s ";JS20;LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))
+(with-local-output (s "JS20/LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))
 
 (print-illegal-strings m)
 |#
