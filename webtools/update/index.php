@@ -64,21 +64,31 @@ browse only for Firefox 0.9 compatible extensions, for example. For more informa
 
 </SPAN>
 </DIV>
-<?php //include"inc_featuredupdate.php"; ?>
+<?php include"inc_featuredupdate.php"; ?>
 
 <?php
 //include"inc_softwareupdate.php";
 if ($_GET["application"]) {$application=$_GET["application"]; }
 ?>
+<?php
+//Temporary!! Current Version Array Code
+$currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.8", "mozilla"=>"1.7");
+$currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird"=>"0.8", "mozilla"=>"1.7.x");
+$currentver = $currentver_array[$application];
+$currentver_display = $currentver_display_array[$application];
+?>
+
+
 <DIV class="frontpagecontainer">
 <DIV class="contentbox contentcolumns">
-<DIV class="boxheader"><?php print(ucwords($application)); ?> Extensions</DIV>
+<DIV class="boxheader"><?php print(ucwords($application)); echo" $currentver_display"; ?> Extensions</DIV>
+
 <?php
 $sql = "SELECT TM.ID
 FROM  `t_main` TM
 INNER  JOIN t_version TV ON TM.ID = TV.ID
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `approved` = 'YES' GROUP BY TM.ID";
+WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int`<='$currentver' AND `maxAppVer_int` >='$currentver' AND `approved` = 'YES' GROUP BY TM.ID";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numextensions = mysql_num_rows($sql_result);
 ?>
@@ -125,12 +135,12 @@ echo"<SPAN class=\"itemdescription\">$body</SPAN><BR>\n";
 </DIV>
 
 <DIV class="contentbox contentcolumns">
-<DIV class="boxheader"><?php print(ucwords($application)); ?> Themes</DIV>
+<DIV class="boxheader"><?php print(ucwords($application)); echo" $currentver_display"; ?> Themes</DIV>
 <?php
 $sql = "SELECT TM.ID FROM  `t_main` TM
 INNER  JOIN t_version TV ON TM.ID = TV.ID
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `approved` = 'YES' GROUP BY TM.ID";
+WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `approved` = 'YES' GROUP BY TM.ID";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numthemes = mysql_num_rows($sql_result);
 ?>

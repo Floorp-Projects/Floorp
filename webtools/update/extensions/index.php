@@ -107,6 +107,13 @@ echo"<SPAN class=\"itemdescription\">$body</SPAN><BR>\n";
 }
 ?>
 </DIV>
+<?php
+//Temporary!! Current Version Array Code
+$currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.8", "mozilla"=>"1.7");
+$currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird"=>"0.8", "mozilla"=>"1.7.x");
+$currentver = $currentver_array[$application];
+$currentver_display = $currentver_display_array[$application];
+?>
 <DIV class="box" style="width: 80%; min-height: 200px; border: 0px">
 <DIV class="boxcolumns">
 <DIV class="boxheader"><A HREF="showlist.php?category=Popular">Most Popular</A>:</DIV>
@@ -116,7 +123,7 @@ $sql = "SELECT TM.ID, TV.vID,TM.Name, TV.Version, TM.TotalDownloads, TM.download
 FROM  `t_main` TM
 INNER  JOIN t_version TV ON TM.ID = TV.ID
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
+WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `downloadcount` > '0' AND `approved` = 'YES' ORDER BY `downloadcount` DESC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
    $i++;
@@ -147,7 +154,7 @@ INNER  JOIN t_version TV ON TM.ID = TV.ID
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
 INNER JOIN t_authorxref TAX ON TAX.ID = TM.ID
 INNER JOIN t_userprofiles TU ON TU.UserID = TAX.UserID
-WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `Rating` > '0' AND `approved` = 'YES' ORDER BY `Rating` DESC, `Name` ASC, `Version` DESC";
+WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `Rating` > '0' AND `approved` = 'YES' ORDER BY `Rating` DESC, `Name` ASC, `Version` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
    $r++; $s++;
@@ -191,7 +198,7 @@ FROM  `t_main` TM
 INNER  JOIN t_version TV ON TM.ID = TV.ID
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
 INNER  JOIN t_os TOS ON TV.OSID = TOS.OSID
-WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND (`OSName` = '$_SESSION[app_os]' OR `OSName` = 'ALL') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
+WHERE  `Type`  =  '$type' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$_SESSION[app_os]' OR `OSName` = 'ALL') AND `approved` = 'YES' ORDER BY `DateAdded` DESC ";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
    $i++;

@@ -38,12 +38,22 @@
 ?>
 
 
-<DIV class="contentbox" style="margin-left: 2px; border-color: #E00;">
-<DIV class="boxheader">Security Update - <A HREF="http://update.mozilla.org/extensions/moreinfo.php?id=154">ShellBlock</A></DIV>
+<DIV class="contentbox" style="margin-left: 2px; border-color: #00E;">
+<DIV class="boxheader">Firefox 1.0 Preview Release and Thunderbird 0.8 Released!</DIV>
 <SPAN class="itemdescription">
-ShellBlock is a security fix update for <A HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=250180">Bug 250180</A>.
-It disables the ability to call the shell protocol from within affected Mozilla programs. The shell protocol allows applications to call Windows Explorer using the protocol to run the file specified on the local machine. This update is for users of Mozilla 1.x (up to Mozilla 1.7), Mozilla Firefox (up to 0.9.1), and Mozilla Thunderbird (up to 0.7.1) on Microsoft Windows 2000 and XP only.<BR>
-<A HREF="http://ftp.mozilla.org/pub/mozilla.org/mozilla/releases/mozilla1.7.1/mozilla-win32-1.7.1-installer.exe">Mozilla 1.7.1</A>, <A HREF="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.9.2/FirefoxSetup-0.9.2.exe">Firefox 0.9.2</A> and <A HREF="http://www.mozilla.org/products/thunderbird/download.html?http%3A//ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/0.7.2/ThunderbirdSetup-0.7.2.exe">Thunderbird 0.7.2</A> have been released with this fix included.<BR>
-For more information on the issue, read <A HREF="http://www.mozilla.org/security/shell.html">What Mozilla Users should know about the shell: protocol security issue</A>.
+<P>The Firefox 1.0 Preview Release is now available. Three large new features — Live Bookmarks, the Find bar and a new plugin
+installer — have landed since 0.9, along with a host of critical bugfixes.</P>
+
+<P>Mozilla Thunderbird 0.8 has just been released! This latest milestone adds a frequently requested feature: support for
+filtering all POP mail into a Global Inbox under Local Folders. In addition, this release sees the debut of
+Thunderbird's support for RSS and Atom feeds. Users can set up an RSS News & Blogs account and then subscribe to feeds
+from their favourite news sites and weblogs. Each feed appears as a folder with each individual item appearing as a message.</P>
+
+<SPAN style="font-size: 16pt; text-align: center;">
+<a href="http://www.mozilla.org/products/firefox/">Get Firefox 1.0 PR!</a> <a href="http://www.mozilla.org/products/thunderbird/">Get Thunderbird 0.8!</a></SPAN><BR>
+
+<a href="http://www.mozilla.org/products/firefox/releases/0.10.html">Firefox Release Notes</a> | <a href="http://www.mozilla.org/products/thunderbird/releases/">Thunderbird Release Notes</a> | <a href="http://www.mozilla.org/press/mozilla-2004-09-14-02.html">Press Release</a><BR>
+
+
 </SPAN>
 </DIV>
