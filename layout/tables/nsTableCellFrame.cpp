@@ -51,6 +51,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
+#include "nsINameSpaceManager.h"
 
 
 //TABLECELL SELECTION
@@ -149,7 +150,28 @@ void nsTableCellFrame::SetPass1MaxElementSize(nscoord       aMaxWidth,
                                               const nsSize& aMaxElementSize)
 { 
   mPass1MaxElementSize.height = aMaxElementSize.height;
-  mPass1MaxElementSize.width = aMaxElementSize.width;
+
+  nscoord maxElemWidth = aMaxElementSize.width;
+  const nsStylePosition* stylePosition;
+  const nsStyleText* styleText;
+  // check for fixed width and not nowrap and not pre
+  GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)stylePosition));
+  GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)styleText));
+  if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord &&
+      styleText->mWhiteSpace != NS_STYLE_WHITESPACE_NOWRAP &&
+      styleText->mWhiteSpace != NS_STYLE_WHITESPACE_PRE) {
+    // has fixed width, check the content for nowrap
+    nsAutoString nowrap;
+    nsCOMPtr<nsIContent> cellContent;
+    GetContent(getter_AddRefs(cellContent));
+    nsresult result = cellContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::nowrap, nowrap);
+    if(NS_CONTENT_ATTR_NOT_THERE != result) {
+      // content has nowrap (is not mapped to style be cause it has width)
+      // set the max element size to the value of the fixed width (NAV/IE quirk)
+      maxElemWidth = stylePosition->mWidth.GetCoordValue();
+    }
+  }
+  mPass1MaxElementSize.width = maxElemWidth;
 }
 
 NS_IMETHODIMP
