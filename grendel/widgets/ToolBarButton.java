@@ -23,6 +23,7 @@ package grendel.widgets;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
@@ -31,7 +32,7 @@ import java.awt.event.MouseListener;
  *  the mouse moves over it. 
  *
  *  @author <a href="mailto:talisman@anamorphic.com">Jeff Galyan</a>
- *  @version $Revision: 1.2 $
+ *  @version $Revision: 1.3 $
  */
 public class ToolBarButton extends JButton implements MouseListener {
 
@@ -41,6 +42,7 @@ public class ToolBarButton extends JButton implements MouseListener {
   public ToolBarButton() { 
     super();
     addMouseListener(this);
+    setMargin(new Insets(5,5,5,5));
   }
 
   /** Creates a button with an icon only.
@@ -57,6 +59,7 @@ public class ToolBarButton extends JButton implements MouseListener {
   public ToolBarButton( String text ) { 
     super(text);
     addMouseListener(this);
+    setMargin(new Insets(5,5,5,5));
   }
 
   /** Creates a button with a text label and an icon.
@@ -77,6 +80,7 @@ public class ToolBarButton extends JButton implements MouseListener {
    */
   public void mouseEntered(MouseEvent evt) {
     setBorder(BorderFactory.createRaisedBevelBorder());
+    setMargin(new Insets(5,5,5,5));
   }
 
   /** Paints an empty border when the mouse leaves the button area.
@@ -92,12 +96,14 @@ public class ToolBarButton extends JButton implements MouseListener {
    */
   public void mousePressed(MouseEvent evt) { 
     setBorder(BorderFactory.createLoweredBevelBorder());
+    setMargin(new Insets(5,5,5,5));
   }
 
   /** Paints the border raised again when the mouse is released.
    */
   public void mouseReleased(MouseEvent evt) {
     setBorder(BorderFactory.createRaisedBevelBorder());
+    setMargin(new Insets(5,5,5,5));
   }
 
   // No-ops to satisfy the implements clause of this class.
