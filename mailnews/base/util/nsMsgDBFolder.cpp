@@ -84,7 +84,7 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 		mDatabase->Close(PR_TRUE);
 		mDatabase = null_nsCOMPtr();
 
-	}
+  }
 
 	if(shutdownChildren)
 	{
@@ -948,6 +948,13 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 	PR_Free(uri);
 #endif
 	return rv;
+}
+
+NS_IMETHODIMP
+nsMsgDBFolder::SetFlag(PRUint32 flag)
+{
+  ReadDBFolderInfo(PR_FALSE);
+  return nsMsgFolder::SetFlag(flag);
 }
 
 NS_IMETHODIMP

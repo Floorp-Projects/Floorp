@@ -75,6 +75,7 @@ public:
 
 	NS_IMETHOD MarkAllMessagesRead(void);
     NS_IMETHOD MarkThreadRead(nsIMsgThread *thread);
+  NS_IMETHOD SetFlag(PRUint32 flag);
 
 
 	NS_IMETHOD Shutdown(PRBool shutdownChildren);

@@ -178,6 +178,7 @@ public:
   NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 	NS_IMETHOD SetPath(nsIFileSpec * aPath);
 
+  NS_IMETHOD Shutdown(PRBool shutdownChildren);
     // nsIMsgImapMailFolder methods
 	NS_DECL_NSIMSGIMAPMAILFOLDER
 

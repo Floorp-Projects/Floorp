@@ -1221,7 +1221,9 @@ nsMsgAccountManager::SetSpecialFoldersForIdentities()
       if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
       {
         folder = do_QueryInterface(res, &rv);
-        if (NS_SUCCEEDED(rv))
+        nsCOMPtr <nsIFolder> parent;
+        folder->GetParent(getter_AddRefs(parent));
+        if (NS_SUCCEEDED(rv) && parent)
           rv = folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
       }
       thisIdentity->GetDraftFolder(getter_Copies(folderUri));
@@ -1235,7 +1237,9 @@ nsMsgAccountManager::SetSpecialFoldersForIdentities()
       if (folderUri && NS_SUCCEEDED(rdf->GetResource(folderUri, getter_AddRefs(res))))
       {
         folder = do_QueryInterface(res, &rv);
-        if (NS_SUCCEEDED(rv))
+        nsCOMPtr <nsIFolder> parent;
+        folder->GetParent(getter_AddRefs(parent));
+        if (NS_SUCCEEDED(rv) && parent) // only set flag if folder is real
           rv = folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
       }
     }

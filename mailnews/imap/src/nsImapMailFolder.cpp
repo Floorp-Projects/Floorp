@@ -1349,25 +1349,13 @@ NS_IMETHODIMP nsImapMailFolder::GetOnlineName(char ** aOnlineFolderName)
 NS_IMETHODIMP
 nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
-    nsresult openErr=NS_ERROR_UNEXPECTED;
-    if(!db || !folderInfo)
-    return NS_ERROR_NULL_POINTER; //ducarroz: should we use NS_ERROR_INVALID_ARG?
+  nsresult openErr=NS_ERROR_UNEXPECTED;
+  if(!db || !folderInfo)
+  return NS_ERROR_NULL_POINTER; //ducarroz: should we use NS_ERROR_INVALID_ARG?
 
-  nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-  nsCOMPtr<nsIMsgDatabase> mailDB;
+  openErr = GetDatabase(nsnull);
 
-  nsresult rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
-  if (NS_SUCCEEDED(rv) && mailDBFactory)
-  {
-
-    nsCOMPtr<nsIFileSpec> pathSpec;
-    rv = GetPath(getter_AddRefs(pathSpec));
-    if (NS_FAILED(rv)) return rv;
-
-    openErr = mailDBFactory->Open(pathSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &mailDB);
-  }
-
-    *db = mailDB;
+  *db = mDatabase;
   NS_IF_ADDREF(*db);
     if (NS_SUCCEEDED(openErr)&& *db)
   {
@@ -1382,7 +1370,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
         else
         {
           char *uri = nsnull;
-          rv = GetURI(&uri);
+          nsresult rv = GetURI(&uri);
           if (NS_FAILED(rv)) return rv;
           char * hostname = nsnull;
           rv = GetHostname(&hostname);
@@ -1742,63 +1730,47 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
     return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::Shutdown(PRBool shutdownChildren)
+{
+  m_filterList = null_nsCOMPtr();
+  return nsMsgDBFolder::Shutdown(shutdownChildren);
+}
+
 NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
   nsIImapProtocol* aProtocol, nsIMailboxSpec* aSpec)
 {
   nsresult rv = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-
-  nsCOMPtr<nsIFileSpec> pathSpec;
-  rv = GetPath(getter_AddRefs(pathSpec));
-  if (NS_FAILED(rv)) return rv;
-
-    nsFileSpec dbName;
-  rv = pathSpec->GetFileSpec(&dbName);
-  if (NS_FAILED(rv)) return rv;
-
-    rv = nsComponentManager::CreateInstance(kCImapDB, nsnull,
-                                            NS_GET_IID(nsIMsgDatabase),
-                                            (void **) getter_AddRefs(mailDBFactory));
-    if (NS_FAILED(rv)) return rv;
-
   ChangeNumPendingTotalMessages(-GetNumPendingTotalMessages());
   ChangeNumPendingUnread(-GetNumPendingUnread());
 
-    if (!mDatabase)
-    {
-        // if we pass in PR_TRUE for upgrading, the db code will ignore the
-        // summary out of date problem for now.
-        rv = mailDBFactory->Open(pathSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **)
-                                 getter_AddRefs(mDatabase));
-        if (NS_FAILED(rv))
-            return rv;
-        if (!mDatabase) 
-            return NS_ERROR_NULL_POINTER;
-        if (mDatabase && mAddListener)
-            mDatabase->AddListener(this);
-    }
+  if (!mDatabase)
+  {
+    GetDatabase(nsnull);
+    if (mDatabase && mAddListener)
+        mDatabase->AddListener(this);
+  }
   PRBool folderSelected;
   rv = aSpec->GetFolderSelected(&folderSelected);
-    if (NS_SUCCEEDED(rv) && folderSelected)
-    {
-      nsMsgKeyArray existingKeys;
-      nsMsgKeyArray keysToDelete;
-      nsMsgKeyArray keysToFetch;
+  if (NS_SUCCEEDED(rv) && folderSelected)
+  {
+    nsMsgKeyArray existingKeys;
+    nsMsgKeyArray keysToDelete;
+    nsMsgKeyArray keysToFetch;
     nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
     PRInt32 imapUIDValidity = 0;
 
-        rv = NS_ERROR_UNEXPECTED;
-        if (mDatabase)
-            rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    rv = NS_ERROR_UNEXPECTED;
+    if (mDatabase)
+        rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
 
     if (NS_SUCCEEDED(rv) && dbFolderInfo)
       dbFolderInfo->GetImapUidValidity(&imapUIDValidity);
 
-        if (mDatabase) {
-            mDatabase->ListAllKeys(existingKeys);
-            if (mDatabase->ListAllOfflineDeletes(&existingKeys) > 0)
-                existingKeys.QuickSort();
-        }
+    if (mDatabase) {
+        mDatabase->ListAllKeys(existingKeys);
+        if (mDatabase->ListAllOfflineDeletes(&existingKeys) > 0)
+            existingKeys.QuickSort();
+    }
     PRInt32 folderValidity;
     aSpec->GetFolder_UIDVALIDITY(&folderValidity);
 
@@ -1806,9 +1778,24 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 
     aSpec->GetFlagState(getter_AddRefs(flagState));
 
-      if ((imapUIDValidity != folderValidity) /* && // if UIDVALIDITY Changed 
-        !NET_IsOffline() */)
-      {
+    if ((imapUIDValidity != folderValidity) /* && // if UIDVALIDITY Changed 
+      !NET_IsOffline() */)
+    {
+
+      nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+
+      nsCOMPtr<nsIFileSpec> pathSpec;
+      rv = GetPath(getter_AddRefs(pathSpec));
+      if (NS_FAILED(rv)) return rv;
+
+      nsFileSpec dbName;
+      rv = pathSpec->GetFileSpec(&dbName);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = nsComponentManager::CreateInstance(kCImapDB, nsnull,
+                                              NS_GET_IID(nsIMsgDatabase),
+                                              (void **) getter_AddRefs(mailDBFactory));
+      if (NS_FAILED(rv)) return rv;
 
       nsCOMPtr <nsIDBFolderInfo> transferInfo;
       dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
@@ -1818,11 +1805,11 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
         mDatabase->ForceClosed();
       }
       mDatabase = null_nsCOMPtr();
-        
+      
       nsLocalFolderSummarySpec  summarySpec(dbName);
       // Remove summary file.
       summarySpec.Delete(PR_FALSE);
-      
+    
       // Create a new summary file, update the folder message counts, and
       // Close the summary file db.
       rv = mailDBFactory->Open(pathSpec, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
@@ -1846,12 +1833,13 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
             dbFolderInfo->InitFromTransferInfo(transferInfo);
         }
         SummaryChanged();
-                rv = NS_ERROR_UNEXPECTED;
-                if (mDatabase) {
+        rv = NS_ERROR_UNEXPECTED;
+        if (mDatabase) 
+        {
           if(mAddListener)
-                      mDatabase->AddListener(this);
-                    rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-                }
+            mDatabase->AddListener(this);
+          rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+        }
       }
       // store the new UIDVALIDITY value
 
@@ -1860,22 +1848,25 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
                         // delete all my msgs, the keys are bogus now
                       // add every message in this folder
       existingKeys.RemoveAll();
-//      keysToDelete.CopyArray(&existingKeys);
+  //      keysToDelete.CopyArray(&existingKeys);
 
       if (flagState)
       {
         nsMsgKeyArray no_existingKeys;
           FindKeysToAdd(no_existingKeys, keysToFetch, flagState);
-        }
-      }   
-      else if (!flagState /*&& !NET_IsOffline() */) // if there are no messages on the server
-      {
-      keysToDelete.CopyArray(&existingKeys);
       }
-      else /* if ( !NET_IsOffline()) */
-      {
-        FindKeysToDelete(existingKeys, keysToDelete, flagState);
-            
+      if (NS_FAILED(rv))
+          dbName.Delete(PR_FALSE);
+
+    }   
+    else if (!flagState /*&& !NET_IsOffline() */) // if there are no messages on the server
+    {
+      keysToDelete.CopyArray(&existingKeys);
+    }
+    else /* if ( !NET_IsOffline()) */
+    {
+      FindKeysToDelete(existingKeys, keysToDelete, flagState);
+        
       PRUint32 boxFlags;
 
       aSpec->GetBox_flags(&boxFlags);
@@ -1883,17 +1874,17 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       if (!(boxFlags & kJustExpunged))
         FindKeysToAdd(existingKeys, keysToFetch, flagState);
       }
-      
-      
+  
+  
       if (keysToDelete.GetSize())
       {
       PRUint32 total;
-            
+        
       // It would be nice to notify RDF or whoever of a mass delete here.
-            if (mDatabase) {
-                mDatabase->DeleteMessages(&keysToDelete,NULL);
-                total = keysToDelete.GetSize();
-            }
+      if (mDatabase) {
+          mDatabase->DeleteMessages(&keysToDelete,NULL);
+          total = keysToDelete.GetSize();
+      }
     }
     // if this is the INBOX, tell the stand-alone biff about the new high water mark
     if (mFlags & MSG_FOLDER_FLAG_INBOX)
@@ -1911,37 +1902,34 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       }
     }
     SyncFlags(flagState);
-      if (keysToFetch.GetSize())
-      {     
-            PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);
+    if (keysToFetch.GetSize())
+    {     
+          PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);
+    if (aProtocol)
+      aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
+    }
+    else 
+    {
+            // let the imap libnet module know that we don't need headers
+      if (aProtocol)
+        aProtocol->NotifyHdrsToDownload(NULL, 0);
+      // wait until we can get body id monitor before continuing.
+//      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_TRUE);
+      // I think the real fix for this is to seperate the header ids from body id's.
+      // this is for fetching bodies for offline use
       if (aProtocol)
         aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
-      }
-      else 
+      PRBool gettingNewMessages;
+      GetGettingNewMessages(&gettingNewMessages);
+      if (gettingNewMessages)
       {
-              // let the imap libnet module know that we don't need headers
-        if (aProtocol)
-          aProtocol->NotifyHdrsToDownload(NULL, 0);
-        // wait until we can get body id monitor before continuing.
-  //      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_TRUE);
-        // I think the real fix for this is to seperate the header ids from body id's.
-        // this is for fetching bodies for offline use
-        if (aProtocol)
-          aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
-        PRBool gettingNewMessages;
-        GetGettingNewMessages(&gettingNewMessages);
-        if (gettingNewMessages)
-        {
-          ProgressStatus(aProtocol,IMAP_NO_NEW_MESSAGES, nsnull);
-        }
-
-  //      NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
-  //      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_FALSE);
+        ProgressStatus(aProtocol,IMAP_NO_NEW_MESSAGES, nsnull);
       }
-    }
 
-    if (NS_FAILED(rv))
-        dbName.Delete(PR_FALSE);
+//      NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
+//      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_FALSE);
+    }
+  }
 
   return rv;
 }
