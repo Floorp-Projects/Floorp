@@ -140,9 +140,15 @@ BOOL CBrowseDlg::OnInitDialog()
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TESTPARTIAL));
 
 	// Set up the editor bar
+	CRect rcEditBarMarker;
+	GetDlgItem(IDC_EDITBAR_MARKER)->GetWindowRect(&rcEditBarMarker);
+	ScreenToClient(rcEditBarMarker);
+	GetDlgItem(IDC_EDITBAR_MARKER)->DestroyWindow();
+
 	m_EditBar.Create(this);
 	m_EditBar.LoadToolBar(IDR_DHTMLEDIT);
-	m_EditBar.SetWindowPos(&wndTop, 0, 0, 400, 40, SWP_SHOWWINDOW);
+	m_EditBar.SetWindowPos(&wndTop, rcEditBarMarker.left, rcEditBarMarker.top,
+		rcEditBarMarker.Width(), rcEditBarMarker.Height(), SWP_SHOWWINDOW);
 
 	// Set up some URLs. The first couple are internal
 	m_cmbURLs.AddString(m_szTestURL);
@@ -544,7 +550,7 @@ void CBrowseDlg::UpdateTest(HTREEITEM hItem, TestResult nResult)
 	}
 	else if (nResult == trPartial)
 	{
-		// TODO
+		m_TabTests.m_tcTests.SetItemImage(hItem, IL_TESTPARTIAL, IL_TESTPARTIAL);
 	}
 }
 
