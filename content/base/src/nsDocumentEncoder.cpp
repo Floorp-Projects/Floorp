@@ -1374,6 +1374,7 @@ nsHTMLCopyEncoder::PromoteRange(nsIDOMRange *inRange)
   {
     rv = PromoteAncestorChain(address_of(opStartNode), &opStartOffset, &opEndOffset);
     NS_ENSURE_SUCCESS(rv, rv);
+    opEndNode = opStartNode;
   }
   
   // set the range to the new values
