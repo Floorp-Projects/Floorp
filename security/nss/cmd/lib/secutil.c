@@ -64,7 +64,11 @@
 
 static char consoleName[] =  {
 #ifdef XP_UNIX
+#ifdef VMS
+    "TT"
+#else
     "/dev/tty"
+#endif
 #else
     "CON:"
 #endif

@@ -55,7 +55,7 @@ static int quiet_fgets (char *buf, int length, FILE *input);
 
 static void echoOff(int fd)
 {
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(VMS)
     if (isatty(fd)) {
 	struct termios tio;
 	tcgetattr(fd, &tio);
@@ -67,7 +67,7 @@ static void echoOff(int fd)
 
 static void echoOn(int fd)
 {
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(VMS)
     if (isatty(fd)) {
 	struct termios tio;
 	tcgetattr(fd, &tio);
