@@ -3473,22 +3473,32 @@ HTMLContentSink::StartLayout()
 
   // If the document we are loading has a reference or it is a 
   // frameset document, disable the scroll bars on the views.
-  char* ref = nsnull;           // init in case mDocumentURI is not a url
-  nsIURL* url;
-  rv = mDocumentURI->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
-  if (NS_SUCCEEDED(rv)) {
-    rv = url->GetRef(&ref);
-    NS_RELEASE(url);
-  }
-  if (rv == NS_OK) {
-    if (ref)
-    {
-      mRef.Assign(ref);
-      nsCRT::free(ref);
+
+  if (mDocumentURI) {
+    nsXPIDLCString ref;
+
+    // Since all URI's that pass through here aren't URL's we can't
+    // rely on the nsIURI implementation for providing a way for
+    // finding the 'ref' part of the URI, we'll haveto revert to
+    // string routines for finding the data past '#'
+
+    rv = mDocumentURI->GetSpec(getter_Copies(ref));
+
+    nsLiteralCString refstr(ref);
+
+    nsReadingIterator<char> start, end;
+
+    refstr.BeginReading(start);
+    refstr.EndReading(end);
+
+    if (FindCharInReadable('#', start, end)) {
+      ++start; // Skip over the '#'
+
+      mRef = Substring(start, end);
     }
   }
 
-  if (ref || mFrameset) {
+  if (!mRef.IsEmpty() || mFrameset) {
     // XXX support more than one presentation-shell here
 
     // Get initial scroll preference and save it away; disable the
@@ -3557,8 +3567,7 @@ static nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRe
 void
 HTMLContentSink::ScrollToRef()
 {
-  if (!mRef.IsEmpty())
-  {
+  if (!mRef.IsEmpty()) {
     nsresult rv = NS_ERROR_FAILURE;
     // We assume that the bytes are in UTF-8, as it says in the spec:
     // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
@@ -3570,20 +3579,23 @@ HTMLContentSink::ScrollToRef()
       if (shell) {
         // Scroll to the anchor
         shell->FlushPendingNotifications();
+
         // Check an empty string which might be caused by the UTF-8 conversion
         if (!ref.IsEmpty())
           rv = shell->GoToAnchor(ref);
         else
           rv = NS_ERROR_FAILURE;
 
-        // If UTF-8 URL failed then try to assume the string as a document's charset.
-        if (NS_FAILED(rv))
-        {
+        // If UTF-8 URL failed then try to assume the string as a
+        // document's charset.
+
+        if (NS_FAILED(rv)) {
           nsAutoString docCharset;
           rv = mDocument->GetDocumentCharacterSet(docCharset);
-          if (NS_SUCCEEDED(rv))
-          {
+
+          if (NS_SUCCEEDED(rv)) {
             rv = CharsetConvRef(docCharset, mRef, ref);
+
             if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
               rv = shell->GoToAnchor(ref);
           }
