@@ -89,7 +89,7 @@ sub ChangeKarma {
                 delete($self->{'scores'}->{lc $who});
             }
         }
-        $nick = lc $event->{'userName'};
+        my $nick = lc $event->{'userName'};
         if ($nick) {
             if (not defined($self->{"privateScores"}->{$nick})) {
                 $self->{"privateScores"}->{$nick} = (lc($who) . ' ' . $delta);
