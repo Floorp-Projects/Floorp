@@ -13,5 +13,4 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<menuitem  id="netHelp"  position="3" value="&netHelpCmd.label;" oncommand="openTopWin('urn:clienturl:help:nethelp')" />
 	<menuseparator position="4" />
 	<menuitem  id="feedBack"  position="5" value="&feedBackCmd.label;" oncommand="openTopWin('urn:clienturl:help:feedback')" />
-	<menuitem  id="intUsers"  position="6" value="&intUsersCmd.label;" 
-oncommand="openTopWin('urn:clienturl:help:intlusers')" />
+	<menuitem  id="intUsers"  position="6" value="&intUsersCmd.label;" oncommand="openTopWin('urn:clienturl:help:intlusers')" />
