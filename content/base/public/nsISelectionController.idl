@@ -51,7 +51,21 @@ interface nsISelectionController : nsISupports
    const short SELECTION_FOCUS_REGION = 1;
    const short NUM_SELECTION_REGIONS = 2;
 
-  /**
+   const short SELECTION_OFF = 0;
+   const short SELECTION_ON = 1;
+   const short SELECTION_DISABLED = 2;
+
+   /**
+   * SetDisplaySelection will set the display mode for the selection. OFF,ON,DISABLED
+   */
+    void    setDisplaySelection(in short toggle);
+
+   /**
+   * GetDisplaySelection will get the display mode for the selection. OFF,ON,DISABLED
+   */
+    short   getDisplaySelection();
+
+   /**
    * GetSelection will return the selection that the presentation
    *  shell may implement.
    *

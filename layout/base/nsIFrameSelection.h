@@ -294,6 +294,12 @@ public:
    *  it will select the whole doc
    */
   NS_IMETHOD SelectAll()=0;
+
+  /** Sets/Gets The display selection enum.
+   */
+  NS_IMETHOD SetDisplaySelection(PRInt16 aState)=0;
+  NS_IMETHOD GetDisplaySelection(PRInt16 *aState)=0;
+
 };
 
 

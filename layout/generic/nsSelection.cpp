@@ -141,6 +141,7 @@ public:
   NS_IMETHOD    ToString(nsString& aReturn);
   NS_IMETHOD    SetHint(PRBool aHintRight);
   NS_IMETHOD    GetHint(PRBool *aHintRight);
+
 /*END nsIDOMSelection interface implementations*/
 
 /*BEGIN nsIScriptObjectOwner interface implementations*/
@@ -277,6 +278,8 @@ public:
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend); 
   NS_IMETHOD SelectAll();
+  NS_IMETHOD SetDisplaySelection(PRInt16 aState);
+  NS_IMETHOD GetDisplaySelection(PRInt16 *aState);
   /*END nsIFrameSelection interfacse*/
 
 
@@ -290,6 +293,7 @@ public:
   NS_IMETHOD    StartBatchChanges();
   NS_IMETHOD    EndBatchChanges();
   NS_IMETHOD    DeleteFromDocument();
+
   nsIFocusTracker *GetTracker(){return mTracker;}
 private:
   NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
@@ -350,6 +354,7 @@ private:
   
   nsIFocusTracker *mTracker;
   PRBool mMouseDownState; //for drag purposes
+  PRInt8 mDisplaySelection; //for visual display purposes.
   PRInt32 mDesiredX;
   PRBool mDesiredXSet;
   enum HINT {HINTLEFT=0,HINTRIGHT=1}mHint;//end of this line or beginning of next
@@ -1508,7 +1513,6 @@ nsDOMSelection::GetHint(PRBool *aHintRight)
 }
 
 
-
 NS_IMETHODIMP
 nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, 
                        PRUint32 aContentEndOffset, PRBool aContinueSelection, 
@@ -2623,6 +2627,22 @@ nsSelection::DeleteFromDocument()
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsSelection::SetDisplaySelection(PRInt16 aToggle)
+{
+  mDisplaySelection = aToggle;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSelection::GetDisplaySelection(PRInt16 *aToggle)
+{
+  if (!aToggle)
+    return NS_ERROR_INVALID_ARG;
+  *aToggle = mDisplaySelection;
+  return NS_OK;
+}
 
 //END nsIDOMSelection interface implementations
 

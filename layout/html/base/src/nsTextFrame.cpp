@@ -785,7 +785,7 @@ class DrawSelectionIterator
 public:
   DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,
                         PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle,
-                        PRInt8 aSelectionStatus);
+                        PRInt16 aSelectionStatus);
   ~DrawSelectionIterator();
   PRBool      First();
   PRBool      Next();
@@ -810,14 +810,14 @@ private:
   PRBool    mDone;
   PRUint8 * mTypes;
   PRBool    mInit;
-  PRInt8    mSelectionStatus;//see nsIDocument.h SetDisplaySelection()
+  PRInt16    mSelectionStatus;//see nsIDocument.h SetDisplaySelection()
   nscolor   mDisabledColor;
   //private methods
   void FillCurrentData();
 };
 
 DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText, 
-							PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle, PRInt8 aSelectionStatus)
+							PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle, PRInt16 aSelectionStatus)
               :mOldStyle(aTextStyle)
 {
     mDetails = aSelDetails;
@@ -1022,13 +1022,13 @@ DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
   {
       if (mCurrentIdx == (PRUint32)mDetails->mStart)
       {
-        aColor = (mSelectionStatus==nsIDocument::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
+        aColor = (mSelectionStatus==nsISelectionController::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
         return PR_TRUE;
       }
   }
   else if (mTypes[mCurrentIdx] | nsISelectionController::SELECTION_NORMAL)
   {
-    aColor = (mSelectionStatus==nsIDocument::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
+    aColor = (mSelectionStatus==nsISelectionController::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -1734,10 +1734,17 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
                               TextStyle& aTextStyle,
                               nscoord dx, nscoord dy)
 {
-  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(rv) || !shell)
+    return;
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(shell, &rv);
+  if (NS_FAILED(rv) || !selCon)
+    return;
 
-  PRInt8 displaySelection;
-  displaySelection = doc->GetDisplaySelection();
+  PRInt16 displaySelection;
+  selCon->GetDisplaySelection(&displaySelection);
 
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
@@ -1754,6 +1761,10 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   // transformed when we formatted it, then there's no need to do all
   // this and we should just render the text fragment directly. See
   // PaintAsciiText()...
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
+  if (!doc)
+    return;
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
@@ -2241,10 +2252,18 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
                              TextStyle& aTextStyle,
                              nscoord dx, nscoord dy)
 {
-  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(rv) || !shell)
+    return;
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(shell, &rv);
+  if (NS_FAILED(rv) || !selCon)
+    return;
 
-  PRBool displaySelection;
-  displaySelection = doc->GetDisplaySelection();
+  PRInt16 displaySelection;
+  selCon->GetDisplaySelection(&displaySelection);
+
 
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
@@ -2256,6 +2275,10 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   PRInt32 textLength;
 
   // Transform text from content into renderable form
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
+  if (!doc)
+    return;
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
@@ -2368,11 +2391,19 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
                             nscoord dx, nscoord dy)
 {
   NS_PRECONDITION(0 == (TEXT_HAS_MULTIBYTE & mState), "text is multi-byte");
-  nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_FAILED(rv) || !shell)
+    return;
+  nsCOMPtr<nsISelectionController> selCon;
+  selCon = do_QueryInterface(shell, &rv);
+  if (NS_FAILED(rv) || !selCon)
+    return;
 
-  PRBool displaySelection;
+  PRInt16 displaySelection;
   PRBool isSelected;
-  displaySelection = doc->GetDisplaySelection();
+  selCon->GetDisplaySelection(&displaySelection);
+
   isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 
   // Get the text fragment
@@ -2395,6 +2426,10 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
   }
 
   // Construct a text transformer
+  nsCOMPtr<nsIDocument> doc;
+  shell->GetDocument(getter_AddRefs(doc));
+  if (!doc)
+    return;
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
   nsTextTransformer tx(lb, nsnull);
