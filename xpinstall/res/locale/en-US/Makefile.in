@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE_XPINSTALL = \
 		$(srcdir)/xpinstall.properties \
-		$(srcdir)/progress.dtd \
 		$(srcdir)/xpistatus.dtd \
 		$(srcdir)/institems.dtd \
 		$(NULL)

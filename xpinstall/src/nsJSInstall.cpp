@@ -57,10 +57,11 @@ enum Install_slots
   INSTALL_JARFILE         = -3,
   INSTALL_ARGUMENTS       = -4,
   INSTALL_URL             = -5,
-  INSTALL_STATUSSENT      = -6,
-  INSTALL_INSTALL         = -7,
-  INSTALL_FILEOP          = -8,
-  INSTALL_INSTALLED_FILES = -9
+  INSTALL_FLAGS           = -6,
+  INSTALL_STATUSSENT      = -7,
+  INSTALL_INSTALL         = -8,
+  INSTALL_FILEOP          = -9,
+  INSTALL_INSTALLED_FILES = -10
 };
 
 // prototype for fileOp object
@@ -145,6 +146,10 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+
+      case INSTALL_FLAGS:
+          *vp = INT_TO_JSVAL( a->GetInstallFlags() );
+          break;
 
       case INSTALL_STATUSSENT:
           *vp = BOOLEAN_TO_JSVAL( a->GetStatusSent() );
@@ -1766,6 +1771,7 @@ static JSPropertySpec InstallProperties[] =
   {"jarfile",           INSTALL_JARFILE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
   {"url",               INSTALL_URL,                JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"flags",             INSTALL_FLAGS,              JSPROP_ENUMERATE | JSPROP_READONLY},
   {"_statusSent",       INSTALL_STATUSSENT,         JSPROP_READONLY},
   {"Install",           INSTALL_INSTALL,            JSPROP_READONLY},
   {"File",              INSTALL_FILEOP,             JSPROP_READONLY},
@@ -1885,49 +1891,6 @@ static JSFunctionSpec InstallMethods[] =
   {"abortInstall",              InstallAbortInstall,            1}, 
   {"finalizeInstall",           InstallFinalizeInstall,         0},
   {"startInstall",              InstallStartInstall,            4},
-  {"AbortInstall",              InstallAbortInstall,            1},
-  {"AddDirectory",              InstallAddDirectory,            6},
-  {"AddSubcomponent",           InstallAddSubcomponent,         6},
-  {"DeleteComponent",           InstallDeleteComponent,         1},
-  {"DeleteFile",                InstallDeleteFile,              2},
-  {"DiskSpaceAvailable",        InstallDiskSpaceAvailable,      1},
-  {"Execute",                   InstallExecute,                 2},
-  {"FinalizeInstall",           InstallFinalizeInstall,         0},
-  {"Gestalt",                   InstallGestalt,                 1},
-  {"GetComponentFolder",        InstallGetComponentFolder,      2},
-  {"GetFolder",                 InstallGetFolder,               2},
-  {"GetLastError",              InstallGetLastError,            0},
-  {"GetWinProfile",             InstallGetWinProfile,           2},
-  {"GetWinRegistry",            InstallGetWinRegistry,          0},
-  {"LoadResources",             InstallLoadResources,           1},
-  {"Patch",                     InstallPatch,                   5},
-  {"ResetError",                InstallResetError,              0},
-  {"SetPackageFolder",          InstallSetPackageFolder,        1},
-  {"StartInstall",              InstallStartInstall,            4},
-  {"Uninstall",                 InstallUninstall,               1},
-  {"DirCreate",                 InstallFileOpDirCreate,                1},
-  {"DirGetParent",              InstallFileOpDirGetParent,             1},
-  {"DirRemove",                 InstallFileOpDirRemove,                2},
-  {"DirRename",                 InstallFileOpDirRename,                2},
-  {"FileCopy",                  InstallFileOpFileCopy,                 2},
-  {"FileDelete",                InstallFileOpFileRemove,               1},
-  {"FileExists",                InstallFileOpFileExists,               1},
-  {"FileExecute",               InstallFileOpFileExecute,              2},
-  {"FileGetNativeVersion",      InstallFileOpFileGetNativeVersion,     1},
-  {"FileGetDiskSpaceAvailable", InstallFileOpFileGetDiskSpaceAvailable,1},
-  {"FileGetModDate",            InstallFileOpFileGetModDate,           1},
-  {"FileGetSize",               InstallFileOpFileGetSize,              1},
-  {"FileIsDirectory",           InstallFileOpFileIsDirectory,          1},
-  {"FileIsFile",                InstallFileOpFileIsFile,               1},
-  {"FileModDateChanged",        InstallFileOpFileModDateChanged,       2},
-  {"FileMove",                  InstallFileOpFileMove,                 2},
-  {"FileRename",                InstallFileOpFileRename,               2},
-  {"FileWindowsShortcut",       InstallFileOpFileWindowsShortcut,      7},
-  {"FileMacAlias",              InstallFileOpFileMacAlias,             2},
-  {"FileUnixLink",              InstallFileOpFileUnixLink,             2},
-  {"LogComment",                InstallLogComment,                     1},
-  {"Alert",                     InstallAlert,                          1},
-  {"Confirm",                   InstallConfirm,                        2},
   {0}
 };
 
@@ -1940,6 +1903,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
                              nsIFile* jarfile, 
                              const PRUnichar* url,
                              const PRUnichar* args,
+                             PRUint32 flags,
                              nsIZipReader * theJARFile)
 {
   JSObject *installObject  = nsnull;
@@ -1976,6 +1940,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   nativeInstallObject->SetJarFileLocation(jarfile);
   nativeInstallObject->SetInstallArguments(args);
   nativeInstallObject->SetInstallURL(url);
+  nativeInstallObject->SetInstallFlags(flags);
 
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);

@@ -63,7 +63,7 @@ class nsXPInstallManager : public nsIXPINotifier,
 
         NS_DECL_ISUPPORTS
 
-        NS_IMETHOD InitManager( nsXPITriggerInfo* aTrigger );
+        NS_IMETHOD InitManager( nsXPITriggerInfo* aTrigger, PRUint32 chromeType );
 
         // nsIStreamObserver
         NS_DECL_NSISTREAMOBSERVER
@@ -88,6 +88,8 @@ class nsXPInstallManager : public nsIXPINotifier,
         NS_IMETHOD  DownloadNext();
         void        Shutdown();
         void        LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
+        PRBool      ConfirmInstall(nsIDialogParamBlock* ioParamBlock);
+        PRBool      ConfirmChromeInstall();
         
         nsXPITriggerInfo*   mTriggers;
         nsXPITriggerItem*   mItem;
@@ -95,6 +97,8 @@ class nsXPInstallManager : public nsIXPINotifier,
         PRInt32             mNumJars;
         PRBool              mFinalizing;
         PRBool              mCancelled;
+        PRUint32            mChromeType;
+        PRBool              mSelectChrome;
         PRInt32             mContentLength;
 
         nsCOMPtr<nsIXPIProgressDlg>  mProxy;

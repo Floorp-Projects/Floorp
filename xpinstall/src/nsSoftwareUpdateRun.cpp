@@ -53,14 +53,14 @@
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, nsIZipReader* hZip);
+extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIZipReader* hZip);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
+static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
@@ -246,6 +246,7 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
 // Argument         : const char* jarFile - native filepath to where jar exists on disk 
 // Argument         : const PRUnichar* url  - URL of where this package came from
 // Argument         : const PRUnichar* args    - any arguments passed into the javascript context
+// Argument         : PRUint32 flags   - bitmask of flags passed in
 // Argument         : JSRuntime *jsRT    - A valid JS Runtime
 // Argument         : JSContext **jsCX   - Created context, destroy via JS_DestroyContext
 // Argument         : JSObject **jsGlob  - created global object
@@ -253,7 +254,8 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
 static nsresult SetupInstallContext(nsIZipReader* hZip,
                                     nsIFile* jarFile,
                                     const PRUnichar* url,
-                                    const PRUnichar* args, 
+                                    const PRUnichar* args,
+                                    PRUint32 flags,
                                     JSRuntime *rt, 
                                     JSContext **jsCX, 
                                     JSObject **jsGlob)
@@ -276,7 +278,7 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
     JS_SetErrorReporter(cx, XPInstallErrorReporter);
 
 
-    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, hZip);
+    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, flags, hZip);
     // Init standard classes
     JS_InitStandardClasses(cx, glob);
 
@@ -403,12 +405,13 @@ extern "C" void RunInstallOnThread(void *data)
                 // service not available (wizard context?)
                 // create our own runtime
                 ownRuntime = PR_TRUE;
-	            rt = JS_Init(4L * 1024L * 1024L);
+                rt = JS_Init(4L * 1024L * 1024L);
             }
 
-            rv = SetupInstallContext( hZip, jarpath, 
+            rv = SetupInstallContext( hZip, jarpath,
                                       url.GetUnicode(),
-                                      args.GetUnicode(), 
+                                      args.GetUnicode(),
+                                      installInfo->GetFlags(),
                                       rt, &cx, &glob);
 
             if (NS_SUCCEEDED(rv))
@@ -417,9 +420,9 @@ extern "C" void RunInstallOnThread(void *data)
                 jsval rval;
                 jsval installedFiles;
 
-                PRBool ok = JS_EvaluateScript(  cx, 
+                PRBool ok = JS_EvaluateScript(  cx,
                                                 glob,
-                                                scriptBuffer, 
+                                                scriptBuffer,
                                                 scriptLength,
                                                 nsnull,
                                                 0,

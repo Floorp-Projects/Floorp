@@ -48,6 +48,8 @@ public:
 
   NS_IMETHOD    Install(nsXPITriggerInfo* aInfo, PRBool* aReturn)=0;
 
+  NS_IMETHOD    InstallChrome(PRUint32 aType, nsXPITriggerItem* aItem, PRBool* aReturn)=0;
+
   NS_IMETHOD    StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)=0;
 
   NS_IMETHOD    ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)=0;

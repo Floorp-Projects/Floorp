@@ -87,8 +87,6 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 	
-#define XPINSTALL_BUNDLE_URL "chrome://communicator/locale/xpinstall/xpinstall.properties"
-
 // filename length maximums
 #ifdef XP_MAC
 #define MAX_NAME_LENGTH 31
@@ -105,7 +103,7 @@ MOZ_DECL_CTOR_COUNTER(nsInstallInfo);
 nsInstallInfo::nsInstallInfo(nsIFile*         aFile, 
                              const PRUnichar* aURL,
                              const PRUnichar* aArgs, 
-                             long             flags, 
+                             PRUint32         flags, 
                              nsIXPINotifier*  aNotifier)
 : mError(0), 
   mFlags(flags),

@@ -51,11 +51,10 @@ static NS_DEFINE_IID(kIInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 
 
 
-
 nsInstallTrigger::nsInstallTrigger()
 {
     mScriptObject   = nsnull;
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsInstallTrigger::~nsInstallTrigger()
@@ -165,12 +164,12 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 NS_IMETHODIMP
 nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
 {
-    nsresult rv;
+    NS_ASSERTION(aReturn, "Invalid pointer arg");
     *aReturn = PR_FALSE;
 
     PRBool enabled;
-    UpdateEnabled(&enabled);
-    if (!enabled) 
+    nsresult rv = UpdateEnabled(&enabled);
+    if (NS_FAILED(rv) || !enabled) 
     {
         delete aTrigger;
         return NS_OK;
@@ -180,7 +179,7 @@ nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
     if (mgr)
     {
         // The Install manager will delete itself when done
-        rv = mgr->InitManager( aTrigger );
+        rv = mgr->InitManager( aTrigger, 0 );
         if (NS_SUCCEEDED(rv))
             *aReturn = PR_TRUE;
     }
@@ -194,6 +193,45 @@ nsInstallTrigger::Install(nsXPITriggerInfo* aTrigger, PRBool* aReturn)
     return rv;
 }
 
+
+NS_IMETHODIMP
+nsInstallTrigger::InstallChrome(PRUint32 aType, nsXPITriggerItem *aItem, PRBool* aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aReturn);
+    NS_ENSURE_ARG_POINTER(aItem);
+    *aReturn = PR_FALSE;
+
+
+    // make sure we're allowing installs
+    PRBool enabled;
+    nsresult rv = UpdateEnabled(&enabled);
+    if (NS_FAILED(rv) || !enabled)
+        return NS_OK;
+
+
+    // The Install manager will delete itself when done, once we've called
+    // InitManager. Before then **WE** must delete it
+    nsXPInstallManager *mgr = new nsXPInstallManager();
+    if (mgr)
+    {
+        nsXPITriggerInfo* trigger = new nsXPITriggerInfo();
+        if ( trigger )
+        {
+            trigger->Add( aItem );
+
+            // The Install manager will delete itself when done
+            rv = mgr->InitManager( trigger, aType );
+            *aReturn = PR_TRUE;
+        }
+        else
+        {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            delete mgr;
+        }
+    }
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP    
 nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)
@@ -219,7 +257,7 @@ nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRBo
             {
                 trigger->Add( item );
                 // The Install manager will delete itself when done
-                rv = mgr->InitManager( trigger );
+                rv = mgr->InitManager( trigger, 0 );
                 *aReturn = PR_TRUE;
             }
             else
