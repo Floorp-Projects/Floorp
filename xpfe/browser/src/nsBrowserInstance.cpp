@@ -85,8 +85,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWalletService.h"
 
 #include "nsCURILoader.h"
+#include "nsIContentHandler.h"
 #include "nsNetUtil.h"
-
 
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
@@ -2313,12 +2313,11 @@ nsBrowserInstance::DoContent(const char *aContentType, nsURILoadCommand aCommand
 }
 
 NS_IMETHODIMP 
-nsBrowserInstance::CanHandleContent(const char * aContentType,
-                                    nsURILoadCommand aCommand,
-                                    const char * aWindowTarget,
-                                    char ** aDesiredContentType,
-                                    PRBool * aCanHandleContent)
-
+nsBrowserInstance::IsPreferred(const char * aContentType,
+                               nsURILoadCommand aCommand,
+                               const char * aWindowTarget,
+                               char ** aDesiredContentType,
+                               PRBool * aCanHandleContent)
 {
   // the browser window is the primary content handler for the following types:
   // If we are asked to handle any of these types, we will always say Yes!
@@ -2334,12 +2333,6 @@ nsBrowserInstance::CanHandleContent(const char * aContentType,
   //      image/png
   //      image/tiff
   //      application/http-index-format
-  //
-  // the browser window can also show the following content types. However, it isn't
-  // the primary content handler for these types. So we won't try to accept this content
-  // unless the uri load command is viewNormal (which implies that we are trying to view a url inline)
-  //    incoming Type                     Preferred type
-  //      message/rfc822                    text/xul
 
   if (aContentType)
   {
@@ -2356,20 +2349,26 @@ nsBrowserInstance::CanHandleContent(const char * aContentType,
        || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
        || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
        *aCanHandleContent = PR_TRUE;
-     
-     // (2) we aren't the desired content type handlers for these types; however,
-     // if we are given a view normal load command, we can view them if we have too....
-     if (aCommand == nsIURILoader::viewNormal)
-     {
-        if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
-        {
-          *aCanHandleContent = PR_TRUE;
-           *aDesiredContentType = nsCRT::strdup("text/xul");
-        }
-
-     }
-       
   }
+  else
+    *aCanHandleContent = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBrowserInstance::CanHandleContent(const char * aContentType,
+                                    nsURILoadCommand aCommand,
+                                    const char * aWindowTarget,
+                                    char ** aDesiredContentType,
+                                    PRBool * aCanHandleContent)
+
+{
+  // can handle is really determined by what our docshell can 
+  // load...so ask it....
+  nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(mContentAreaWebShell)); 
+  if (ctnListener)
+    return ctnListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, aCanHandleContent);
   else
     *aCanHandleContent = PR_FALSE;
 
@@ -2404,8 +2403,6 @@ nsBrowserInstance::SetLoadCookie(nsISupports * aLoadCookie)
   return NS_OK;
 }
 
-
-
 NS_DEFINE_MODULE_INSTANCE_COUNTER()
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBrowserInstance, Init)
@@ -2418,3 +2415,4 @@ static nsModuleComponentInfo components[] = {
 };
 
 NS_IMPL_NSGETMODULE("nsBrowserModule", components)
+
