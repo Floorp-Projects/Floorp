@@ -95,8 +95,8 @@ nsTextEditRules::GetFlags(PRUint32 *aFlags)
 
 // Initial style for plaintext
 static char* PlaintextInitalStyle = "white-space: -moz-pre-wrap; width: 72ch; \
-                                     font-family: -moz-fixed; \
                                      background-color: rgb(255, 255, 255)";
+//                                     font-family: -moz-fixed; \
 
 NS_IMETHODIMP
 nsTextEditRules::SetFlags(PRUint32 aFlags)
