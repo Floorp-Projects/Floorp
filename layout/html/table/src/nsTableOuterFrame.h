@@ -54,31 +54,6 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  /** outer tables are reflowed in two steps.
-    * Step 1:, we lay out the caption and the inner table with
-    * height and width set to NS_UNCONSTRAINEDSIZE.
-    * This gives us absolute minimum and maximum widths for each component.
-    * In the second step, we set the caption and the inner table to 
-    * the width of the widest component, given the table's style, width constraints
-    * and compatibility mode.<br>
-    * Step 2: With the widths now known, we reflow the captions and table.<br>
-    * NOTE: for breaking across pages, this method has to account for table content 
-    *       that is not laid out linearly vis a vis the frames.  
-    *       That is, content hierarchy and the frame hierarchy do not match.
-    *
-    * @see NeedsReflow
-    * @see ResizeReflowCaptionsPass1
-    * @see ResizeReflowTopCaptionsPass2
-    * @see ResizeReflowBottomCaptionsPass2
-    * @see PlaceChild
-    * @see ReflowMappedChildren
-    * @see PullUpChildren
-    * @see ReflowChild
-    * @see nsTableFrame::ResizeReflowPass1
-    * @see nsTableFrame::ResizeReflowPass2
-    * @see nsTableFrame::BalanceColumnWidths
-    * @see nsIFrame::Reflow 
-    */
   NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
@@ -107,48 +82,13 @@ protected:
   /** create all child frames for this table */
   nsresult CreateChildFrames(nsIPresContext* aPresContext);
 
-  /**
-    * Reflow the caption and get its max element size
-    */
-  nsReflowStatus ReflowCaptionPass1(nsIPresContext* aPresContext,
-                                    OuterTableReflowState& aState);
+  void PlaceChild(OuterTableReflowState& aState,
+                  nsIFrame*              aKidFrame,
+                  const nsRect&          aKidRect,
+                  nsSize*                aMaxElementSize,
+                  nsSize&                aKidMaxElementSize);
 
-  void          PlaceChild( OuterTableReflowState& aState,
-                            nsIFrame*          aKidFrame,
-                            const nsRect&      aKidRect,
-                            nsSize*            aMaxElementSize,
-                            nsSize&            aKidMaxElementSize);
-
-  /**
-   * Reflow the frames we've already created
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aState current inline state
-   * @return  true if we successfully reflowed all the mapped children and false
-   *            otherwise, e.g. we pushed children to the next in flow
-   */
-  PRBool        ReflowMappedChildren(nsIPresContext*        aPresContext,
-                                     OuterTableReflowState& aState,
-                                     nsSize*                aMaxElementSize);
-
-  /**
-   * Try and pull-up frames from our next-in-flow
-   *
-   * @param   aPresContext presentation context to use
-   * @param   aState current inline state
-   * @return  true if we successfully pulled-up all the children and false
-   *            otherwise, e.g. child didn't fit
-   */
-  PRBool        PullUpChildren(nsIPresContext*        aPresContext,
-                               OuterTableReflowState& aState,
-                               nsSize*                aMaxElementSize);
-
-  virtual nsReflowStatus ReflowChild( nsIFrame*              aKidFrame,
-                                      nsIPresContext*        aPresContext,
-                                      nsReflowMetrics&       aDesiredSize,
-                                      const nsReflowState&   aKidReflowState,
-                                      nsSize*                aMaxElementSize,
-                                      OuterTableReflowState& aState);
+  nscoord GetTableWidth(const nsReflowState& aReflowState);
 
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::VerifyTree
