@@ -236,6 +236,8 @@ CalendarEventDataSource.prototype.search = function( searchText, fieldName )
          
       }
    }
+   searchEventTable.sort( this.orderRawEventsByDate );
+
    return searchEventTable;
 }
 
@@ -404,8 +406,11 @@ CalendarEventDataSource.prototype.getAllEvents = function( )
    while( eventList.hasMoreElements() )
    {
       var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
+      
       eventArray[ eventArray.length ] = tmpevent;
    }
+   eventArray.sort( this.orderRawEventsByDate );
+
    return eventArray;
 }
 
@@ -467,6 +472,35 @@ CalendarEventDataSource.prototype.openNewEventDialog = function( onOK, startTime
    //this doens't work yet
    calendar.openDialog("caNewEvent", "chrome://calendar/content/ca-event-dialog.xul", false, args );   
 }
+
+/** PACKAGE STATIC
+*   CalendarEvent orderEventsByDate.
+* 
+* NOTES
+*   Used to sort table by date
+*/
+
+CalendarEventDataSource.prototype.orderEventsByDate = function( eventA, eventB )
+{
+    /*
+    return( eventA.event.start.getTime() - eventB.event.start.getTime() );
+    */
+    return( eventA.displayDate.getTime() - eventB.displayDate.getTime() );
+}
+
+
+/** PACKAGE STATIC
+*   CalendarEvent orderRawEventsByDate.
+* 
+* NOTES
+*   Used to sort table by date
+*/
+
+CalendarEventDataSource.prototype.orderRawEventsByDate = function( eventA, eventB )
+{
+    return( eventA.start.getTime() - eventB.start.getTime() );
+}
+
 
 /******************************************************************************************************
 ******************************************************************************************************

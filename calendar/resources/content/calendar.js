@@ -131,14 +131,14 @@ function calendarInit()
    // get the Ical Library
    gICalLib = gEventSource.getICalLib();
    
-   // set up the unifinder
-   
-   prepareCalendarUnifinder( gEventSource );
-
    // set up the CalendarWindow instance
    
    gCalendarWindow = new CalendarWindow( gEventSource );
    
+   // set up the unifinder
+   
+   prepareCalendarUnifinder( gEventSource );
+
    // show the month view, with today selected
    
    gCalendarWindow.switchToMonthView( );
