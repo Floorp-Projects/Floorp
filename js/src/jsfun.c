@@ -1339,7 +1339,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      */
     parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(argv[-2]));
 #else
-    /* Set up for dynamic parenting (see Call in jsinterp.c). */
+    /* Set up for dynamic parenting (see js_Invoke in jsinterp.c). */
     parent = NULL;
 #endif
 
