@@ -207,7 +207,6 @@ class nsXULPrototypeElement : public nsXULPrototypeNode
 public:
     nsXULPrototypeElement(PRInt32 aLineNo)
         : nsXULPrototypeNode(eType_Element, aLineNo),
-          mDocument(nsnull),
           mNumChildren(0),
           mChildren(nsnull),
           mNumAttributes(0),
@@ -235,7 +234,6 @@ public:
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext);
 
-    nsIXULPrototypeDocument* mDocument;           // [WEAK] because doc is refcounted
     PRInt32                  mNumChildren;
     nsXULPrototypeNode**     mChildren;           // [OWNER]
 
