@@ -66,6 +66,14 @@ public:
                                      nsIStyleContext* aStyleContext,
                                      PRBool aForce);
 
+  // Helper methods for handling attribute changes
+  static void ApplyStyleChangeToTree(nsIPresContext& aPresContext,
+                                     nsIFrame* aFrame);
+  static void ApplyRenderingChangeToTree(nsIPresContext& aPresContext,
+                                         nsIFrame* aFrame);
+  static void ApplyReflowChangeToTree(nsIPresContext& aPresContext,
+                                      nsIFrame* aFrame);
+
 protected:
   virtual ~nsHTMLContainerFrame();
 

@@ -477,3 +477,96 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
   }
   return NS_OK;
 }
+
+void
+nsHTMLContainerFrame::ApplyStyleChangeToTree(nsIPresContext& aPresContext,
+                                             nsIFrame* aFrame)
+{
+  nsIContent* content;
+  nsIFrame* geometricParent;
+  nsIStyleContext* oldSC;
+  aFrame->GetGeometricParent(geometricParent);
+  aFrame->GetContent(content);
+  aFrame->GetStyleContext(&aPresContext, oldSC);
+
+  if (nsnull != content) {
+    nsIStyleContext* newSC =
+      aPresContext.ResolveStyleContextFor(content, geometricParent);
+    if (newSC == oldSC) {
+      // Force cached style data to be recomputed
+      newSC->RemapStyle(&aPresContext);
+    }
+    else {
+      // Switch to new style context
+      aFrame->SetStyleContext(&aPresContext, newSC);
+    }
+    NS_IF_RELEASE(oldSC);
+    NS_RELEASE(newSC);
+    NS_RELEASE(content);
+
+    // Update the children too...
+    nsIFrame* kid;
+    aFrame->FirstChild(kid);
+    while (nsnull != kid) {
+      ApplyStyleChangeToTree(aPresContext, kid);
+      kid->GetNextSibling(kid);
+    }
+  }
+}
+
+void
+nsHTMLContainerFrame::ApplyRenderingChangeToTree(nsIPresContext& aPresContext,
+                                                 nsIFrame* aFrame)
+{
+  nsIViewManager* viewManager = nsnull;
+
+  // Trigger rendering updates by damaging this frame and any
+  // continuations of this frame.
+  while (nsnull != aFrame) {
+    // Get the frame's bounding rect
+    nsRect r;
+    aFrame->GetRect(r);
+    r.x = 0;
+    r.y = 0;
+
+    // Get view if this frame has one and trigger an update. If the
+    // frame doesn't have a view, find the nearest containing view
+    // (adjusting r's coordinate system to reflect the nesting) and
+    // update there.
+    nsIView* view;
+    aFrame->GetView(view);
+    if (nsnull != view) {
+    } else {
+      nsPoint offset;
+      aFrame->GetOffsetFromView(offset, view);
+      NS_ASSERTION(nsnull != view, "no view");
+      r += offset;
+    }
+    if (nsnull == viewManager) {
+      view->GetViewManager(viewManager);
+    }
+    viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
+
+    aFrame->GetNextInFlow(aFrame);
+  }
+
+  if (nsnull != viewManager) {
+    viewManager->Composite();
+    NS_RELEASE(viewManager);
+  }
+}
+
+void
+nsHTMLContainerFrame::ApplyReflowChangeToTree(nsIPresContext& aPresContext,
+                                              nsIFrame* aFrame)
+{
+  nsIContent* content;
+  nsIDocument* document;
+  aFrame->GetContent(content);
+  if (nsnull != content) {
+    content->GetDocument(document);
+    if (nsnull != document) {
+      document->ContentChanged(content, nsnull);
+    }
+  }
+}
