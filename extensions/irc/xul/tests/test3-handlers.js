@@ -26,7 +26,7 @@
 
 function onLoad()
 {
-    
+
     initHost(client);
     setOutputStyle ("default");
     initStatic();
