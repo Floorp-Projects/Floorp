@@ -651,6 +651,100 @@
                 <SETTING><NAME>MWCFM68K_libfolder</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWCFM68K_alignment</NAME><VALUE>Align_2</VALUE></SETTING>
 
+                <!-- Settings for "FTP Panel" panel -->
+                <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_uploadDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ftp_port</NAME><VALUE>21</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_SendBin</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ShouldLog</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Command Line" panel -->
+                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Language" panel -->
+                <SETTING><NAME>MWJava_Language_optimize</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_warnDeprecated</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitMap</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileNames</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileHierarchy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitHeaders</NAME><VALUE>NoNativeHeaders</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_packageFilter</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genComments</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genHeaders</NAME><VALUE>0</VALUE></SETTING>
+
+                <!-- Settings for "Java MacOS Settings" panel -->
+                <SETTING><NAME>MWJava_MacOS_type</NAME><VALUE>JBindery</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_grow</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_profile</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_verify</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useHttpProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFTPProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFirewallProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outfile</NAME><VALUE>JBoundApp</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outcreator</NAME><VALUE>1061109567</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_maxMem</NAME><VALUE>1048576</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_minMem</NAME><VALUE>524288</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_red</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_green</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_blue</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutType</NAME><VALUE>1464421956</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinType</NAME><VALUE>1853189228</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_merge</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_write_old_rsrcs</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_jbindrundebug</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutfile</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinfile</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Output" panel -->
+                <SETTING><NAME>MWJava_Output_outputtype</NAME><VALUE>JarFile</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_outfile</NAME><VALUE>JavaClasses.jar</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_ftype</NAME><VALUE>1514754080</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_fcreator</NAME><VALUE>1297570384</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_genManifest</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_trunctype</NAME><VALUE>Front</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_deleteClasses</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_consoleApp</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Project" panel -->
+                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Applet</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_runtimeArgs</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppCreator</NAME><VALUE>1463898714</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppWin32Name</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_useVM</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_workingDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmarguments</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmName</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "JavaDoc Project" panel -->
+                <SETTING><NAME>MWJavaDoc_Proj_Version</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Depricated</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Author</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Index</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Tree</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_SunResolveToSame</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Shortnames</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Folder</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_GenerateAPILinks</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_scope</NAME><VALUE>Public</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_fcreator</NAME><VALUE>1297303877</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_encodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_decodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_javaPackagePath</NAME><VALUE>http://java.sun.com/products/jdk/1.1/docs/api/</VALUE></SETTING>
+
                 <!-- Settings for "MacOS Merge Panel" panel -->
                 <SETTING><NAME>MWMerge_MacOS_projectType</NAME><VALUE>Application</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_outputName</NAME><VALUE>Merge Out</VALUE></SETTING>
@@ -661,9 +755,10 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>hžp</VALUE></SETTING>
-                    <SETTING><VALUE>¥ûø</VALUE></SETTING>
-                    <SETTING><VALUE>4mð</VALUE></SETTING>
+                    <SETTING><VALUE>0</VALUE></SETTING>
+                    <SETTING><VALUE>
+}&lt;ø</VALUE></SETTING>
+                    <SETTING><VALUE>²ï@</VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
@@ -1790,6 +1885,100 @@
                 <SETTING><NAME>MWCFM68K_libfolder</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWCFM68K_alignment</NAME><VALUE>Align_2</VALUE></SETTING>
 
+                <!-- Settings for "FTP Panel" panel -->
+                <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_uploadDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ftp_port</NAME><VALUE>21</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_SendBin</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ShouldLog</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Command Line" panel -->
+                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Language" panel -->
+                <SETTING><NAME>MWJava_Language_optimize</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_warnDeprecated</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitMap</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileNames</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileHierarchy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitHeaders</NAME><VALUE>NoNativeHeaders</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_packageFilter</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genComments</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genHeaders</NAME><VALUE>0</VALUE></SETTING>
+
+                <!-- Settings for "Java MacOS Settings" panel -->
+                <SETTING><NAME>MWJava_MacOS_type</NAME><VALUE>JBindery</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_grow</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_profile</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_verify</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useHttpProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFTPProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFirewallProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outfile</NAME><VALUE>JBoundApp</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outcreator</NAME><VALUE>1061109567</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_maxMem</NAME><VALUE>1048576</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_minMem</NAME><VALUE>524288</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_red</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_green</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_blue</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutType</NAME><VALUE>1464421956</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinType</NAME><VALUE>1853189228</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_merge</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_write_old_rsrcs</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_jbindrundebug</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutfile</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinfile</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Output" panel -->
+                <SETTING><NAME>MWJava_Output_outputtype</NAME><VALUE>JarFile</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_outfile</NAME><VALUE>JavaClasses.jar</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_ftype</NAME><VALUE>1514754080</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_fcreator</NAME><VALUE>1297570384</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_genManifest</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_trunctype</NAME><VALUE>Front</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_deleteClasses</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_consoleApp</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Project" panel -->
+                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Applet</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_runtimeArgs</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppCreator</NAME><VALUE>1463898714</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppWin32Name</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_useVM</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_workingDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmarguments</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmName</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "JavaDoc Project" panel -->
+                <SETTING><NAME>MWJavaDoc_Proj_Version</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Depricated</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Author</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Index</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Tree</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_SunResolveToSame</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Shortnames</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Folder</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_GenerateAPILinks</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_scope</NAME><VALUE>Public</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_fcreator</NAME><VALUE>1297303877</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_encodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_decodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_javaPackagePath</NAME><VALUE>http://java.sun.com/products/jdk/1.1/docs/api/</VALUE></SETTING>
+
                 <!-- Settings for "MacOS Merge Panel" panel -->
                 <SETTING><NAME>MWMerge_MacOS_projectType</NAME><VALUE>Application</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_outputName</NAME><VALUE>Merge Out</VALUE></SETTING>
@@ -1800,9 +1989,10 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>hžp</VALUE></SETTING>
-                    <SETTING><VALUE>¥ûø</VALUE></SETTING>
-                    <SETTING><VALUE>4mð</VALUE></SETTING>
+                    <SETTING><VALUE>0</VALUE></SETTING>
+                    <SETTING><VALUE>
+}&lt;ø</VALUE></SETTING>
+                    <SETTING><VALUE>²ï@</VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
@@ -2547,6 +2737,100 @@
                 <SETTING><NAME>MWCFM68K_libfolder</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWCFM68K_alignment</NAME><VALUE>Align_2</VALUE></SETTING>
 
+                <!-- Settings for "FTP Panel" panel -->
+                <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_uploadDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ftp_port</NAME><VALUE>21</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_SendBin</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ShouldLog</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Command Line" panel -->
+                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Language" panel -->
+                <SETTING><NAME>MWJava_Language_optimize</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_warnDeprecated</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitMap</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileNames</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileHierarchy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitHeaders</NAME><VALUE>NoNativeHeaders</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_packageFilter</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genComments</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genHeaders</NAME><VALUE>0</VALUE></SETTING>
+
+                <!-- Settings for "Java MacOS Settings" panel -->
+                <SETTING><NAME>MWJava_MacOS_type</NAME><VALUE>JBindery</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_grow</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_profile</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_verify</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useHttpProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFTPProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFirewallProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outfile</NAME><VALUE>JBoundApp</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outcreator</NAME><VALUE>1061109567</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_maxMem</NAME><VALUE>1048576</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_minMem</NAME><VALUE>524288</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_red</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_green</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_blue</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutType</NAME><VALUE>1464421956</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinType</NAME><VALUE>1853189228</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_merge</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_write_old_rsrcs</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_jbindrundebug</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutfile</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinfile</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Output" panel -->
+                <SETTING><NAME>MWJava_Output_outputtype</NAME><VALUE>JarFile</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_outfile</NAME><VALUE>JavaClasses.jar</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_ftype</NAME><VALUE>1514754080</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_fcreator</NAME><VALUE>1297570384</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_genManifest</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_trunctype</NAME><VALUE>Front</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_deleteClasses</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_consoleApp</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Project" panel -->
+                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Applet</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_runtimeArgs</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppCreator</NAME><VALUE>1463898714</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppWin32Name</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_useVM</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_workingDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmarguments</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmName</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "JavaDoc Project" panel -->
+                <SETTING><NAME>MWJavaDoc_Proj_Version</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Depricated</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Author</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Index</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Tree</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_SunResolveToSame</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Shortnames</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Folder</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_GenerateAPILinks</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_scope</NAME><VALUE>Public</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_fcreator</NAME><VALUE>1297303877</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_encodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_decodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_javaPackagePath</NAME><VALUE>http://java.sun.com/products/jdk/1.1/docs/api/</VALUE></SETTING>
+
                 <!-- Settings for "MacOS Merge Panel" panel -->
                 <SETTING><NAME>MWMerge_MacOS_projectType</NAME><VALUE>Application</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_outputName</NAME><VALUE>Merge Out</VALUE></SETTING>
@@ -2557,9 +2841,10 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>hžp</VALUE></SETTING>
-                    <SETTING><VALUE>¥ûø</VALUE></SETTING>
-                    <SETTING><VALUE>4mð</VALUE></SETTING>
+                    <SETTING><VALUE>0</VALUE></SETTING>
+                    <SETTING><VALUE>
+}&lt;ø</VALUE></SETTING>
+                    <SETTING><VALUE>²ï@</VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
@@ -3293,6 +3578,14 @@
                     0000000000000000000000000000000000000000000000000000000000000000
                     0000000000000000000000000000000000000000000000000000000000000000
                     0000000000000000000000000000000000000000000000000000000000000000
+                    000000000000000000000000000000000BE1B7D000000000000001000BE1C0E0
+                    0002000000000000000000000BE1AF7000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
                     00000000000000000000000000000000
                 </VALUE></PANELDATA>
 
@@ -3436,6 +3729,100 @@
                 <SETTING><NAME>MWCFM68K_libfolder</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWCFM68K_alignment</NAME><VALUE>Align_2</VALUE></SETTING>
 
+                <!-- Settings for "FTP Panel" panel -->
+                <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_uploadDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ftp_port</NAME><VALUE>21</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_SendBin</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ShouldLog</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Command Line" panel -->
+                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Language" panel -->
+                <SETTING><NAME>MWJava_Language_optimize</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_warnDeprecated</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitMap</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileNames</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileHierarchy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitHeaders</NAME><VALUE>NoNativeHeaders</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_packageFilter</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genComments</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genHeaders</NAME><VALUE>0</VALUE></SETTING>
+
+                <!-- Settings for "Java MacOS Settings" panel -->
+                <SETTING><NAME>MWJava_MacOS_type</NAME><VALUE>JBindery</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_grow</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_profile</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_verify</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useHttpProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFTPProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFirewallProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outfile</NAME><VALUE>JBoundApp</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outcreator</NAME><VALUE>1061109567</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_maxMem</NAME><VALUE>1048576</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_minMem</NAME><VALUE>524288</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_red</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_green</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_blue</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutType</NAME><VALUE>1464421956</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinType</NAME><VALUE>1853189228</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_merge</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_write_old_rsrcs</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_jbindrundebug</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutfile</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinfile</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Output" panel -->
+                <SETTING><NAME>MWJava_Output_outputtype</NAME><VALUE>JarFile</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_outfile</NAME><VALUE>MRJPlugin.jar</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_ftype</NAME><VALUE>1514754080</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_fcreator</NAME><VALUE>1297570384</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_genManifest</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_trunctype</NAME><VALUE>Front</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_deleteClasses</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_consoleApp</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Project" panel -->
+                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Library</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_runtimeArgs</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppCreator</NAME><VALUE>1463898714</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppWin32Name</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_useVM</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_workingDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmarguments</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmName</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "JavaDoc Project" panel -->
+                <SETTING><NAME>MWJavaDoc_Proj_Version</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Depricated</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Author</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Index</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Tree</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_SunResolveToSame</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Shortnames</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Folder</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_GenerateAPILinks</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_scope</NAME><VALUE>Public</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_fcreator</NAME><VALUE>1297303877</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_encodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_decodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_javaPackagePath</NAME><VALUE>http://java.sun.com/products/jdk/1.1/docs/api/</VALUE></SETTING>
+
                 <!-- Settings for "MacOS Merge Panel" panel -->
                 <SETTING><NAME>MWMerge_MacOS_projectType</NAME><VALUE>Application</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_outputName</NAME><VALUE>Merge Out</VALUE></SETTING>
@@ -3446,9 +3833,10 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>hžp</VALUE></SETTING>
-                    <SETTING><VALUE>¥ûø</VALUE></SETTING>
-                    <SETTING><VALUE>4mð</VALUE></SETTING>
+                    <SETTING><VALUE>0</VALUE></SETTING>
+                    <SETTING><VALUE>
+}&lt;ø</VALUE></SETTING>
+                    <SETTING><VALUE>²ï@</VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
@@ -3709,82 +4097,6 @@
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
-            <SEGMENTLIST>
-                <SEGMENT>
-                    <NAME>x</NAME>
-                    <ATTRIBUTES>Protected, Purgeable</ATTRIBUTES>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:Source:JNIUtils.java</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:Source:JNIThread.java</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>System</PATHROOT>
-                        <ACCESSPATH>:Extensions:MRJ Libraries:MRJClasses:</ACCESSPATH>
-                        <PATH>:JDKClasses.zip</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>System</PATHROOT>
-                        <ACCESSPATH>:Extensions:MRJ Libraries:MRJClasses:</ACCESSPATH>
-                        <PATH>:MRJClasses.zip</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:liveconnect.jar</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:ConsoleApplet.jar</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:netscape.plugin.jar</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:Source:MRJPlugin.java</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:Source:AWTUtils.java</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <PATHTYPE>PathRelative</PATHTYPE>
-                        <PATHROOT>Project</PATHROOT>
-                        <ACCESSPATH>:</ACCESSPATH>
-                        <PATH>:Source:PrintingPort.java</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                </SEGMENT>
-            </SEGMENTLIST>
         </TARGET>
         <TARGET>
             <NAME>MRJPlugin (GC)</NAME>
@@ -4407,6 +4719,100 @@
                 <SETTING><NAME>MWCFM68K_libfolder</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWCFM68K_alignment</NAME><VALUE>Align_2</VALUE></SETTING>
 
+                <!-- Settings for "FTP Panel" panel -->
+                <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_uploadDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ftp_port</NAME><VALUE>21</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_SendBin</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_ShouldLog</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Command Line" panel -->
+                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Language" panel -->
+                <SETTING><NAME>MWJava_Language_optimize</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_warnDeprecated</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitMap</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileNames</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_strictFileHierarchy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_emitHeaders</NAME><VALUE>NoNativeHeaders</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_packageFilter</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genComments</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Language_genHeaders</NAME><VALUE>0</VALUE></SETTING>
+
+                <!-- Settings for "Java MacOS Settings" panel -->
+                <SETTING><NAME>MWJava_MacOS_type</NAME><VALUE>JBindery</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_grow</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_profile</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_verify</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useHttpProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFTPProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_useFirewallProxy</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outfile</NAME><VALUE>JBoundApp</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_outcreator</NAME><VALUE>1061109567</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_maxMem</NAME><VALUE>1048576</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_minMem</NAME><VALUE>524288</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_red</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_green</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_blue</NAME><VALUE>65535</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutType</NAME><VALUE>1464421956</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinType</NAME><VALUE>1853189228</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxyPort</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_httpProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_fTPProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_firewallProxy</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_merge</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_write_old_rsrcs</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_jbindrundebug</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdoutfile</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_MacOS_stdinfile</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "Java Output" panel -->
+                <SETTING><NAME>MWJava_Output_outputtype</NAME><VALUE>JarFile</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_outfile</NAME><VALUE>JavaClasses.jar</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_ftype</NAME><VALUE>1514754080</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_fcreator</NAME><VALUE>1297570384</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_genManifest</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_trunctype</NAME><VALUE>Front</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_deleteClasses</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Output_consoleApp</NAME><VALUE>1</VALUE></SETTING>
+
+                <!-- Settings for "Java Project" panel -->
+                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Applet</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_runtimeArgs</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppCreator</NAME><VALUE>1463898714</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_HTMLAppWin32Name</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_compress</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_useVM</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_workingDir</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmarguments</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJava_Proj_vmName</NAME><VALUE></VALUE></SETTING>
+
+                <!-- Settings for "JavaDoc Project" panel -->
+                <SETTING><NAME>MWJavaDoc_Proj_Version</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Depricated</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Author</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Index</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Tree</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_SunResolveToSame</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Shortnames</NAME><VALUE>1</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_Folder</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_GenerateAPILinks</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_scope</NAME><VALUE>Public</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_fcreator</NAME><VALUE>1297303877</VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_encodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_decodingName</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWJavaDoc_Proj_javaPackagePath</NAME><VALUE>http://java.sun.com/products/jdk/1.1/docs/api/</VALUE></SETTING>
+
                 <!-- Settings for "MacOS Merge Panel" panel -->
                 <SETTING><NAME>MWMerge_MacOS_projectType</NAME><VALUE>Application</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_outputName</NAME><VALUE>Merge Out</VALUE></SETTING>
@@ -4417,9 +4823,10 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>hžp</VALUE></SETTING>
-                    <SETTING><VALUE>¥ûø</VALUE></SETTING>
-                    <SETTING><VALUE>4mð</VALUE></SETTING>
+                    <SETTING><VALUE>0</VALUE></SETTING>
+                    <SETTING><VALUE>
+}&lt;ø</VALUE></SETTING>
+                    <SETTING><VALUE>²ï@</VALUE></SETTING>
                 </SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
