@@ -81,9 +81,13 @@ function sidebarOverlayInit(usersidebar)
     return
   }
 
-  dump("sidebar = " + sidebar + "\n")
-  dump("sidebar.resource = " + sidebar.resource + "\n")
-  dump("sidebar.db = " + sidebar.db + "\n")
+  //dump("sidebar = " + sidebar + "\n")
+  //dump("sidebar.resource = " + sidebar.resource + "\n")
+  //dump("sidebar.db = " + sidebar.db + "\n")
+  //var panelsbox = document.getElementById('sidebar-panels')
+  //panelsbox.setAttribute('datasources',sidebar.db);
+  //panelsbox.setAttribute('datasource',sidebar.db);
+  //return;
 
   var registry
   try {
@@ -128,7 +132,7 @@ function sidebarOverlayInit(usersidebar)
     return;
   }
 
-  // Now enumerate all of the flash datasources.
+  // Now enumerate all of the datasources.
   var enumerator = null
   try {
   enumerator = sb_datasource.GetElements()
@@ -237,11 +241,12 @@ function sidebarShowHide() {
   var sidebar = document.getElementById('sidebar-box')
   var sidebar_splitter = document.getElementById('sidebar-splitter')
   var is_hidden = sidebar.getAttribute('hidden')
+
   if (is_hidden && is_hidden == "true") {
     //dump("Showing the sidebar\n")
     sidebar.setAttribute('hidden','')
     sidebar_splitter.setAttribute('hidden','')
-    sidebarOverlayInit(sidebar)
+    sidebarOverlayInit()
   } else {
     //dump("Hiding the sidebar\n")
     sidebar.setAttribute('hidden','true')
@@ -255,21 +260,12 @@ function sidebarSavePanelState(splitter) {
 function sidebarSaveState(splitter) {
   /* Do nothing for now */
   return;
-  dump('========== saving width\n')
-  var style = sidebarbox.getAttribute('style')
-  var visibility = style.match('visibility:([^;]*)')
-  if (visibility) {
-    visibility = visibility[1]
+  if (splitter.getAttribute('state') == "collapse") {
+    dump("Expanding the sidebar\n")
+  } else {
+    dump("Collapsing the sidebar\n")
   }
-  dump('splitter attrs\n')
-  dumpAttributes(splitter)
-  dump('sidebarbox attrs\n')
-  dumpAttributes(sidebarbox)
-  dump('sidebarbox.width='+sidebarbox.getAttribute('width')+'\n')
-  dump('sidebarbox.collapsed='+sidebarbox.getAttribute('collapsed')+'\n')
-  dump('sidebarbox.visibility='+sidebarbox.getAttribute('visibility')+'\n')
-  dump("style="+style+"\n")
-  dump("visibility="+visibility+"\n")
+  dumpStats()
 }
 
 function dumpAttributes(node) {
@@ -282,6 +278,24 @@ function dumpAttributes(node) {
     var attr = attributes.item(ii)
     dump("attr "+ii+": "+ attr.name +"="+attr.value+"\n")
   }
+}
+
+function dumpStats() {
+  var box = document.getElementById('sidebar-box');
+  var splitter = document.getElementById('sidebar-splitter');
+  var style = box.getAttribute('style')
+
+  var visibility = style.match('visibility:([^;]*)')
+  if (visibility) {
+    visibility = visibility[1]
+  }
+  dump("sidebar-box.style="+style+"\n")
+  dump("sidebar-box.visibility="+visibility+"\n")
+  dump('sidebar-box.width='+box.getAttribute('width')+'\n')
+  dump('sidebar-box attrs\n---------------------\n')
+  dumpAttributes(box)
+  dump('sidebar-splitter attrs\n--------------------------\n')
+  dumpAttributes(splitter)
 }
 
 function dumpTree(node, depth) {
@@ -302,8 +316,8 @@ function dumpTree(node, depth) {
 // To get around "window.onload" not working in viewer.
 function sidebarOverlayBoot()
 {
-    var tree = document.getElementById('sidebar-box');
-    if (tree == null) {
+    var panels = document.getElementById('sidebar-panels');
+    if (panels == null) {
         setTimeout(sidebarOverlayBoot, 1);
     }
     else {
