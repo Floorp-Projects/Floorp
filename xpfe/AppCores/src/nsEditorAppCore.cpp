@@ -58,6 +58,7 @@
 #include "nsIDOMSelection.h"
 
 #include "nsIFileWidget.h"
+#include "nsIDOMToolkitCore.h"
 
 ///////////////////////////////////////
 // Editor Includes
@@ -143,7 +144,7 @@ nsEditorAppCore::nsEditorAppCore()
   mWebShellWin          = nsnull;
   mWebShell             = nsnull;
   mEditor               = nsnull;
-
+  
   IncInstanceCount();
   NS_INIT_REFCNT();
 }
@@ -221,17 +222,17 @@ nsEditorAppCore::Init(const nsString& aId)
 	mEditorTypeString.ToLowerCase();
 
   // register object into Service Manager
-  static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
   static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
   nsIDOMAppCoresManager * appCoreManager;
   nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID,
-                                             kIDOMAppCoresManagerIID,
+                                             nsIDOMAppCoresManager::GetIID(),
                                              (nsISupports**)&appCoreManager);
   if (NS_OK == rv) {
 	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
     nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
   }
+  
 	return rv;
 }
 
@@ -607,28 +608,23 @@ nsEditorAppCore::SetEnableCallback(const nsString& aScript)
 NS_IMETHODIMP    
 nsEditorAppCore::LoadUrl(const nsString& aUrl)
 {
-  char *urlstr = aUrl.ToNewCString();
-
-  if (!urlstr)
-    return NS_OK;
-
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
 	if (globalObj)
 	{
 	  nsCOMPtr<nsIWebShell> webShell;
 	  globalObj->GetWebShell(getter_AddRefs(webShell));
 	  if (webShell)
-		  webShell->LoadURL(nsString(urlstr).GetUnicode());
+		  webShell->LoadURL(aUrl.GetUnicode());
 	}
 	
-  delete[] urlstr;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsEditorAppCore::MakeEditor()
+nsEditorAppCore::PrepareDocumentForEditing()
 {
+  nsresult  rv = NS_OK;
+  
 	NS_PRECONDITION(mContentWindow, "Content window not set yet");
 	if (!mContentWindow)
 		return NS_ERROR_NOT_INITIALIZED;
@@ -643,8 +639,8 @@ nsEditorAppCore::MakeEditor()
   if (webShell) {
     DoEditorMode(webShell);
   }
-
-	return NS_OK;
+  
+	return rv;
 }
 
 NS_IMETHODIMP    
@@ -779,9 +775,8 @@ nsEditorAppCore::Open()
 	nsCOMPtr<nsIFileWidget>	fileWidget;
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 
-	rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, getter_AddRefs(fileWidget));
+	rv = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
 	if (NS_FAILED(rv) || !fileWidget)
 		return rv;
 		
@@ -797,11 +792,26 @@ static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
  
  	// stolen from browser app core.
   nsFileURL fileURL(docFileSpec);
-  char buffer[1024];
-  const nsAutoCString cstr(fileURL.GetAsString());
-  PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)cstr);
-  ExecuteScript( mToolbarScriptContext, buffer );
-  
+  //char buffer[1024];
+  //const nsAutoCString cstr(fileURL.GetAsString());
+  //PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", (const char*)cstr);
+  //ExecuteScript( mToolbarScriptContext, buffer );
+
+	// all I want to do is call a method on nsToolkitCore that would normally
+	// be static. But I have to go through all this crap. XPCOM sucks so bad.
+static NS_DEFINE_IID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
+	nsCOMPtr<nsIDOMToolkitCore>	toolkitCore;
+  rv = nsComponentManager::CreateInstance(kToolkitCoreCID,
+  																	nsnull,
+                                    nsIDOMToolkitCore::GetIID(),
+                                    getter_AddRefs(toolkitCore));
+	if (NS_SUCCEEDED(rv) && toolkitCore)
+	{
+	  // at some point we need to be passing nsFileSpecs around. When nsIUrl is fileSpec-
+	  // savvy, we should use that.
+		rv = toolkitCore->ShowWindowWithArgs("chrome://editor/content", nsnull, fileURL.GetAsString());
+	}
+	
   return rv;
 }
 
@@ -1179,6 +1189,57 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
 }
 
 NS_IMETHODIMP
+nsEditorAppCore::GetWrapColumn(PRInt32* aWrapColumn)
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	if (!aWrapColumn)
+	  return NS_ERROR_NULL_POINTER;
+	
+	// fill result in case of failure
+	*aWrapColumn = 0;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->GetBodyWrapWidth(aWrapColumn);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::SetWrapColumn(PRInt32 aWrapColumn)
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	if (!aWrapColumn)
+	  return NS_ERROR_NULL_POINTER;
+		
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->SetBodyWrapWidth(aWrapColumn);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP
 nsEditorAppCore::GetParagraphFormat(nsString& aParagraphFormat)
 {
 	nsresult	err = NS_NOINTERFACE;
@@ -1222,7 +1283,7 @@ nsEditorAppCore::SetParagraphFormat(const nsString& aParagraphFormat)
 
 
 NS_IMETHODIMP
-nsEditorAppCore::GetContentsAsText(nsIOutputStream* aContentsAsText)
+nsEditorAppCore::GetContentsAsTextStream(nsIOutputStream* aContentsAsText)
 {
 	nsresult	err = NS_NOINTERFACE;
 	
@@ -1250,7 +1311,7 @@ nsEditorAppCore::GetContentsAsText(nsIOutputStream* aContentsAsText)
 }
 
 NS_IMETHODIMP
-nsEditorAppCore::GetContentsAsHTML(nsIOutputStream* aContentsAsHTML)
+nsEditorAppCore::GetContentsAsHTMLStream(nsIOutputStream* aContentsAsHTML)
 {
 	nsresult	err = NS_NOINTERFACE;
 	
@@ -1509,58 +1570,6 @@ nsEditorAppCore::EndBatchChanges()
   return err;
 }
 
-static PRInt32 MakeNewWindow(char* urlName)
-{
-  nsresult rv;
-  char *  urlstr=nsnull;
-  //char *   progname = nsnull;
-  //char *   width=nsnull, *height=nsnull;
-  //char *  iconic_state=nsnull;
-
-  nsIAppShellService* appShell = nsnull;
-  urlstr = urlName;
-
-  /*
-   * Create the Application Shell instance...
-   */
-  rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
-                                    (nsISupports**)&appShell);
-  if (!NS_SUCCEEDED(rv)) {
-    goto done;
-  }
-
-  /*
-   * Post an event to the shell instance to load the AppShell 
-   * initialization routines...  
-   * 
-   * This allows the application to enter its event loop before having to 
-   * deal with GUI initialization...
-   */
-  ///write me...
-  nsIURL* url;
-  nsIWebShellWindow* newWindow;
-  
-  rv = NS_NewURL(&url, urlstr);
-  if (NS_FAILED(rv)) {
-    goto done;
-  }
-
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
-              nsnull, nsnull, 615, 480);
-
-  NS_RELEASE(url);
-  
-done:
-  /* Release the shell... */
-  if (nsnull != appShell) {
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  }
-
-  return NS_OK;
-}
-
-
 //----------------------------------------
 void nsEditorAppCore::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName)
 {
@@ -1610,7 +1619,7 @@ nsEditorAppCore::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, co
 NS_IMETHODIMP
 nsEditorAppCore::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus)
 {
-   return MakeEditor();
+   return PrepareDocumentForEditing();
 }
 
 NS_IMETHODIMP

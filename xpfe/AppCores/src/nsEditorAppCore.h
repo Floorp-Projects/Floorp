@@ -84,10 +84,14 @@ class nsEditorAppCore : public nsBaseAppCore,
 		NS_IMETHOD    GetParagraphFormat(nsString& aParagraphFormat);
     NS_IMETHOD    SetParagraphFormat(const nsString& aParagraphFormat);
 
+    NS_IMETHOD    GetWrapColumn(PRInt32* aWrapColumn);
+    NS_IMETHOD    SetWrapColumn(PRInt32 aWrapColumn);
+
 		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
 		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
-		NS_IMETHOD    GetContentsAsText(nsIOutputStream* aContentsAsText);
-		NS_IMETHOD    GetContentsAsHTML(nsIOutputStream* aContentsAsHTML);
+		// can't use overloading in interfaces
+		NS_IMETHOD    GetContentsAsTextStream(nsIOutputStream* aContentsAsText);
+		NS_IMETHOD    GetContentsAsHTMLStream(nsIOutputStream* aContentsAsHTML);
 
 		NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);
 
@@ -155,7 +159,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
 		NS_IMETHOD			CreateWindowWithURL(const char* urlStr);
-		NS_IMETHOD  	  MakeEditor();
+		NS_IMETHOD  	  PrepareDocumentForEditing();
 		
     nsString            mEnableScript;     
     nsString            mDisableScript;     
@@ -172,8 +176,6 @@ class nsEditorAppCore : public nsBaseAppCore,
 		EEditorType					mEditorType;
 		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)
     nsISupports*	 			mEditor;						// this can be either an HTML or plain text (or other?) editor
-    //nsIDOMDocument* 		mDomDoc;
-    //nsIDOMNode* 				mCurrentNode;
 
 };
 
