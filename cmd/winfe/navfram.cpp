@@ -298,6 +298,8 @@ CNSNavFrame* CNSNavFrame::CreateFramedRDFViewFromResource(CWnd* pParent, int xPo
 	
 	// Display in the appropriate spot depending on our tree state (docked, standalone, or popup)
 	int treeState = HT_GetTreeStateForButton(node);
+	XP_RegisterNavCenter(pNavFrame->GetHTPane(), NULL);
+
 	if (treeState == HT_POPUP_WINDOW)
 	{
 		HT_SetWindowType(pNavFrame->GetHTPane(), HT_POPUP_WINDOW);
