@@ -183,7 +183,7 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
     dstLength = bufferLength - pos2;
     rv = mEncoder->Convert(&inString[pos1], &srcLength, &dstPtr[pos2], &dstLength);
 
-    pos1 += srcLength;
+    pos1 += srcLength ? srcLength : 1;
     pos2 += dstLength;
     dstPtr[pos2] = '\0';
 
@@ -200,7 +200,7 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
 
     // do the fallback
     if (!ATTR_NO_FALLBACK(mAttribute)) {
-      PRUnichar unMappedChar = inString[pos1];
+      PRUnichar unMappedChar = inString[pos1-1];
 
       rv = mEncoder->GetMaxLength(inString+pos1, inStringLength-pos1, &dstLength);
       if (NS_FAILED(rv)) 
@@ -211,7 +211,6 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
         break;
       dstPtr[pos2] = '\0';
     }
-    pos1++; // for the unmapped char
   }
 
   if (NS_FAILED(rv)) {

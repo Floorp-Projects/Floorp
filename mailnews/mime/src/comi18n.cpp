@@ -1483,7 +1483,6 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
       else {
         // convert from unicode
         PRUnichar *currentUStringPtr = unichars;
-        PRInt32 oldUnicharLength = unicharLength;
         PRInt32 currentUnicharLength = unicharLength;
         char *currentCStringPtr = dstPtr;
         PRInt32 totalCLength = 0;
@@ -1499,19 +1498,17 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
           if (0 >= currentUnicharLength || NS_ERROR_UENC_NOMAPPING != res) {
             break;
           }
-          // could not map unicode to the destination charset, skip one unichar and continue
-          // increment for source unicode, skip one unichar
+          // could not map unicode to the destination charset
+          // increment for source unicode and continue
           if (NULL != numUnConverted) {
             (*numUnConverted)++;
           }
-          currentUStringPtr += currentUnicharLength + 1;
-          oldUnicharLength -= (currentUnicharLength + 1);
-          currentUnicharLength = oldUnicharLength;
-          // estimate target length again
-          (void) encoder->GetMaxLength(currentUStringPtr, currentUnicharLength, &dstLength);
-          if (dstLength > unicharLength) {
-            dstLength = unicharLength;  // not to exceed allocated buffer length
-          }
+          currentUStringPtr += currentUnicharLength;
+          unicharLength -= currentUnicharLength;   // adjust availabe buffer size
+          currentUnicharLength = unicharLength;
+
+          // reset the encoder
+          encoder->Reset();
         }
          dstPtr[totalCLength] = '\0';
          *outBuffer = dstPtr;      // set the result string

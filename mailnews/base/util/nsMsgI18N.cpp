@@ -90,13 +90,13 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
           if (0 >= unicharLength || NS_ERROR_UENC_NOMAPPING != res) {
             break;
           }
-          // could not map unicode to the destination charset, skip one unichar and continue
-          // increment for source unicode, skip one unichar
-          unichars += unicharLength + 1;
-          oldUnicharLength -= (unicharLength + 1);
+          // could not map unicode to the destination charset
+          // increment for source unicode and continue
+          unichars += unicharLength;
+          oldUnicharLength -= unicharLength;   // adjust availabe buffer size
           unicharLength = oldUnicharLength;
-          // estimate target length again
-          (void) encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+          // reset the encoder
+          encoder->Reset();
         }
         (*outCString)[totalCLength] = '\0';
       }
