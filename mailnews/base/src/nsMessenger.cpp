@@ -665,7 +665,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
       saveListener->m_saveAllAttachmentsState = saveState;
 
   urlString = unescapedUrl;
-  urlString.ReplaceSubstring(NS_LITERAL_CSTRING("/;section").get(), NS_LITERAL_CSTRING("?section").get());
+  urlString.ReplaceSubstring("/;section", "?section");
   nsresult rv = CreateStartupUrl(urlString.get(), getter_AddRefs(URL));
 
   if (NS_SUCCEEDED(rv))

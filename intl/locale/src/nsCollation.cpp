@@ -231,7 +231,7 @@ nsresult nsCollation::UnicodeToChar(const nsAString& aSrc, char** dst)
 
   nsresult res = NS_OK;
   if (!mEncoder)
-    res = SetCharset(NS_LITERAL_CSTRING("ISO-8859-1").get());
+    res = SetCharset("ISO-8859-1");
 
   if (NS_SUCCEEDED(res)) {
     const nsPromiseFlatString& src = PromiseFlatString(aSrc);

@@ -705,7 +705,7 @@ SetMailCharacterSetToMsgWindow(MimeObject *obj, const char *aCharacterSet)
             msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
             if (msgWindow)
               rv = msgWindow->SetMailCharacterSet(!nsCRT::strcasecmp(aCharacterSet, "us-ascii") ?
-                                                  NS_LITERAL_CSTRING("ISO-8859-1").get() :
+                                                  "ISO-8859-1" :
                                                   aCharacterSet);
           }
         }
