@@ -500,8 +500,8 @@ protected:
   {
   }
 
-  static JSBool ScrollIntoView(JSContext *cx, JSObject *obj, uintN argc,
-                               jsval *argv, jsval *rval);
+  static JSBool JS_DLL_CALLBACK ScrollIntoView(JSContext *cx, JSObject *obj, uintN argc,
+                                               jsval *argv, jsval *rval);
 
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
