@@ -44,6 +44,7 @@
 //#include "nsTextTokenizer.h"
 #include "nsExpatTokenizer.h"
 #include "nsIParserService.h"
+#include "nsElementTable.h"
 
 static NS_DEFINE_IID(kIParserServiceIID, NS_IPARSERSERVICE_IID);
 
@@ -59,7 +60,10 @@ public:
   NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const;
   
   NS_IMETHOD HTMLConvertEntityToUnicode(const nsString& aEntity, 
-					PRInt32* aUnicode) const;
+                                        PRInt32* aUnicode) const;
+  NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
+                                        nsCString& aEntity) const;
+  NS_IMETHOD IsContainer(nsString& aTag, PRBool& aIsContainer) const;
 };
 
 nsParserService::nsParserService()
@@ -92,6 +96,25 @@ nsParserService::HTMLConvertEntityToUnicode(const nsString& aEntity,
                                             PRInt32* aUnicode) const
 {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsParserService::HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
+                                            nsCString& aEntity) const
+{
+  const nsCString& str = nsHTMLEntities::UnicodeToEntity(aUnicode);
+  if (str.Length() > 0) {
+    aEntity.Assign(str);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsParserService::IsContainer(nsString& aTag, PRBool& aIsContainer) const
+{
+  PRInt32 id = nsHTMLTags::LookupTag(aTag);
+  aIsContainer = nsHTMLElement::IsContainer((eHTMLTags)id);
   return NS_OK;
 }
 

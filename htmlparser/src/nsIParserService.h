@@ -37,6 +37,11 @@ class nsIParserService : public nsISupports {
   NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const =0;
   
   NS_IMETHOD HTMLConvertEntityToUnicode(const nsString& aEntity, 
-					PRInt32* aUnicode) const =0;
+                                        PRInt32* aUnicode) const =0;
+
+  NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
+                                        nsCString& aEntity) const =0;
+
+  NS_IMETHOD IsContainer(nsString& aTag, PRBool& aIsContainer) const =0;
 };
 
