@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.11 2002/05/16 20:39:02 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.12 2002/05/16 20:48:27 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -304,7 +304,7 @@ struct RDBStr {
 int
 db_BeginTransaction(DB *db)
 {
-    RDB *rdb = (RDB *)db;
+    struct RDBStr *rdb = (struct RDBStr *)db;
     if (db->type != DB_RDB) {
 	return 0;
     }
@@ -315,7 +315,7 @@ db_BeginTransaction(DB *db)
 int
 db_FinishTransaction(DB *db, PRBool abort)
 {
-    RDB *rdb = (RDB *)db;
+    struct RDBStr *rdb = (struct RDBStr *)db;
     if (db->type != DB_RDB) {
 	return 0;
     }
