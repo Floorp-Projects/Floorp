@@ -43,7 +43,6 @@ CHROME_CONTENT= \
 	.\commonDialog.js \
 	.\strres.js \
 	.\builtinURLs.js \
-	.\about.html \
 	.\logo.gif \
 	.\about.xul \
 	.\mozilla.html \
