@@ -107,9 +107,7 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
   PRInt32 myCursor = styleColor->mCursor;
 
   // Get child's cursor, if any
-  nsresult rv = nsContainerFrame::GetCursorAt(aPresContext, aPoint, aFrame,
-                                              aCursor);
-  if (NS_OK != rv) return rv;
+  nsContainerFrame::GetCursorAt(aPresContext, aPoint, aFrame, aCursor);
   if (aCursor != NS_STYLE_CURSOR_INHERIT) {
     nsIAtom* tag = mContent->GetTag();
     if (nsHTMLAtoms::a == tag) {
@@ -120,7 +118,7 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
       }
     }
     NS_RELEASE(tag);
-    return rv;
+    return NS_OK;
   }
 
   if (NS_STYLE_CURSOR_INHERIT != myCursor) {
