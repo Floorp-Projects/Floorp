@@ -79,7 +79,7 @@
                value="[% col.value FILTER html %]"> 
       </td>
       
-      [% IF NOT col == row.last %]
+      [% UNLESS loop.last %]
         <td align="center"> 
           Or 
         </td>    
@@ -94,7 +94,7 @@
     [% END %]
     </tr>
     
-    [% IF NOT row == chart.last %]
+    [% UNLESS loop.last %]
     <tr>
       <td>And</td>
     </tr>    
