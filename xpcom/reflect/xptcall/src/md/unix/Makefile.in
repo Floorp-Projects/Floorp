@@ -134,6 +134,15 @@ CPPSRCS		:= xptcinvoke_netbsd_m68k.cpp xptcstubs_netbsd_m68k.cpp
 endif
 endif
 
+#
+# Linux/m68k
+#
+ifeq ($(OS_ARCH),Linux)
+ifeq ($(OS_TEST),m68k)
+CPPSRCS		:= xptcinvoke_linux_m68k.cpp xptcstubs_linux_m68k.cpp
+endif
+endif
+
 ######################################################################
 # MIPS
 ######################################################################
