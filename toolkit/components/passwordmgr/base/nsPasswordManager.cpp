@@ -967,6 +967,9 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                           nsIURI* aActionURL,
                           PRBool* aCancelSubmit)
 {
+  // This function must never return a failure code or the form submit
+  // will be cancelled.
+
   // Don't do anything if the global signon pref is disabled
   if (!SingleSignonEnabled())
     return NS_OK;
@@ -1081,16 +1084,16 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
               entry->passField.Equals(passFieldName)) {
 
             if (NS_FAILED(DecryptData(entry->userValue, buffer)))
-              return NS_ERROR_FAILURE;
+              return NS_OK;
 
             if (buffer.Equals(userValue)) {
 
               if (NS_FAILED(DecryptData(entry->passValue, buffer)))
-                return NS_ERROR_FAILURE;
+                return NS_OK;
 
               if (!buffer.Equals(passValue)) {
                 if (NS_FAILED(EncryptDataUCS2(passValue, entry->passValue)))
-                  return NS_ERROR_FAILURE;
+                  return NS_OK;
 
                 WritePasswords(mSignonFile);
               }
@@ -1126,7 +1129,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         if (NS_FAILED(EncryptDataUCS2(userValue, entry->userValue)) ||
             NS_FAILED(EncryptDataUCS2(passValue, entry->passValue))) {
           delete entry;
-          return NS_ERROR_FAILURE;
+          return NS_OK;
         }
 
         AddSignonData(realm, entry);
@@ -1181,7 +1184,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
 
               for (PRUint32 arg = 0; arg < entryCount; ++arg) {
                 if (NS_FAILED(DecryptData(temp->userValue, ptUsernames[arg])))
-                  return NS_ERROR_FAILURE;
+                  return NS_OK;
 
                 formatArgs[arg] = ptUsernames[arg].get();
                 temp = temp->next;
@@ -1215,7 +1218,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
               nsAutoString dialogTitle, dialogText, ptUser;
 
               if (NS_FAILED(DecryptData(entry->userValue, ptUser)))
-                return NS_ERROR_FAILURE;
+                return NS_OK;
 
               const PRUnichar* formatArgs[1] = { ptUser.get() };
 
@@ -1247,7 +1250,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         nsAutoString newValue;
         passFields.ObjectAt(1)->GetValue(newValue);
         if (NS_FAILED(EncryptDataUCS2(newValue, changeEntry->passValue)))
-          return NS_ERROR_FAILURE;
+          return NS_OK;
 
         WritePasswords(mSignonFile);
       }
