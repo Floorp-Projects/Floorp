@@ -504,6 +504,8 @@ protected:
     static nsIAtom*  kPersistAtom;
     static nsIAtom*  kPopupAtom;
     static nsIAtom*  kPositionAtom;
+    static nsIAtom*  kInsertAfterAtom;
+    static nsIAtom*  kInsertBeforeAtom;
     static nsIAtom*  kRefAtom;
     static nsIAtom*  kRuleAtom;
     static nsIAtom*  kStyleAtom;

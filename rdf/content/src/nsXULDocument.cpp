@@ -22,6 +22,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Ben Goodger <ben@netscape.com>
  */
 
 /*
@@ -207,6 +208,8 @@ nsIAtom* nsXULDocument::kOpenAtom;
 nsIAtom* nsXULDocument::kOverlayAtom;
 nsIAtom* nsXULDocument::kPersistAtom;
 nsIAtom* nsXULDocument::kPositionAtom;
+nsIAtom* nsXULDocument::kInsertAfterAtom;
+nsIAtom* nsXULDocument::kInsertBeforeAtom;
 nsIAtom* nsXULDocument::kPopupAtom;
 nsIAtom* nsXULDocument::kRefAtom;
 nsIAtom* nsXULDocument::kRuleAtom;
@@ -491,6 +494,8 @@ nsXULDocument::~nsXULDocument()
         NS_IF_RELEASE(kOverlayAtom);
         NS_IF_RELEASE(kPersistAtom);
         NS_IF_RELEASE(kPositionAtom);
+        NS_IF_RELEASE(kInsertAfterAtom);
+        NS_IF_RELEASE(kInsertBeforeAtom);
         NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kRuleAtom);
@@ -4007,6 +4012,8 @@ nsXULDocument::Init()
         kPersistAtom        = NS_NewAtom("persist");
         kPopupAtom          = NS_NewAtom("popup");
         kPositionAtom       = NS_NewAtom("position");
+        kInsertAfterAtom    = NS_NewAtom("insertafter");
+        kInsertBeforeAtom   = NS_NewAtom("insertbefore");
         kRefAtom            = NS_NewAtom("ref");
         kRuleAtom           = NS_NewAtom("rule");
         kStyleAtom          = NS_NewAtom("style");
@@ -6426,19 +6433,73 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
     nsresult rv;
 
     nsAutoString posStr;
-    rv = aChild->GetAttribute(kNameSpaceID_None, kPositionAtom, posStr);
-    if (NS_FAILED(rv)) return rv;
-
     PRBool wasInserted = PR_FALSE;
 
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        // Positions are one-indexed.
-        PRInt32 pos = posStr.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
-        if (NS_SUCCEEDED(rv)) {
-            rv = aParent->InsertChildAt(aChild, pos - 1, PR_FALSE);
-            if (NS_FAILED(rv)) return rv;
+    // insert after an element of a given id
+    rv = aChild->GetAttribute(kNameSpaceID_None, kInsertAfterAtom, posStr);
+    if (NS_FAILED(rv)) return rv;
+    PRBool isInsertAfter = PR_TRUE;
 
-            wasInserted = PR_TRUE;
+    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+        rv = aChild->GetAttribute(kNameSpaceID_None, kInsertBeforeAtom, posStr);
+        if (NS_FAILED(rv)) return rv;
+        isInsertAfter = PR_FALSE;
+    }
+    
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        nsCOMPtr<nsIDocument> document;
+        rv = aParent->GetDocument(*getter_AddRefs(document));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIDOMXULDocument> xulDocument(do_QueryInterface(document));
+        nsCOMPtr<nsIDOMElement> domElement;
+
+        char* str = posStr.ToNewCString();
+        char* remainder;
+        char* token = nsCRT::strtok(str, ", ", &remainder);
+
+        while (token) {
+            rv = xulDocument->GetElementById(NS_ConvertASCIItoUCS2(token), getter_AddRefs(domElement));
+            if (domElement) break;
+
+            token = nsCRT::strtok(remainder, ", ", &remainder);
+        }
+        nsMemory::Free(str);
+        if (NS_FAILED(rv)) return rv;
+
+        if (domElement) {
+            nsCOMPtr<nsIContent> content(do_QueryInterface(domElement));
+            NS_ASSERTION(content != nsnull, "null ptr");
+            if (!content)
+                return NS_ERROR_UNEXPECTED;
+
+            PRInt32 pos;
+            aParent->IndexOf(content, pos);
+
+            if (pos != -1) {
+                pos = isInsertAfter ? pos + 1 : pos;
+                rv = aParent->InsertChildAt(aChild, pos, PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
+
+                wasInserted = PR_TRUE;
+            }
+        }
+    }
+
+    if (!wasInserted) {
+    
+        rv = aChild->GetAttribute(kNameSpaceID_None, kPositionAtom, posStr);
+        if (NS_FAILED(rv)) return rv;
+
+        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+            // Positions are one-indexed.
+            PRInt32 pos = posStr.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
+            if (NS_SUCCEEDED(rv)) {
+                rv = aParent->InsertChildAt(aChild, pos - 1, PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
+
+                wasInserted = PR_TRUE;
+            }
         }
     }
 
