@@ -59,7 +59,8 @@ function fillSettings()
   {
     document.getElementById("description").value = prefValue;
     try{
-      prefValue = gPrefInt.getCharPref(gCurrentDirectoryString +".uri");
+      prefValue = gPrefInt.getComplexValue(gCurrentDirectoryString +".uri",
+                                           Components.interfaces.nsISupportsWString).data;
     }
     catch(ex){
       prefValue="";
@@ -300,7 +301,12 @@ function onAccept()
   if (secure.checked)
     ldapUrl.options |= ldapUrl.OPT_SECURE;
   pref_string_title = gPref_string_desc + ".uri";
-  gPrefInt.setCharPref(pref_string_title, ldapUrl.spec);
+
+  var uri = Components.classes["@mozilla.org/supports-wstring;1"]
+                      .createInstance(Components.interfaces.nsISupportsWString);
+  uri.data = ldapUrl.spec;
+  gPrefInt.setComplexValue(pref_string_title, Components.interfaces.nsISupportsWString, uri);
+
   pref_string_content = results;
   pref_string_title = gPref_string_desc + ".maxHits";
   if (pref_string_content != kDefaultMaxHits) {

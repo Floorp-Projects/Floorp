@@ -247,7 +247,12 @@ function () {
       }
       ldapUrl.port = port;
       ldapUrl.scope = 2;
-      gPrefInt.setCharPref(pref_string + ".uri", ldapUrl.spec);
+
+      var uri = Components.classes["@mozilla.org/supports-wstring;1"]
+                      .createInstance(Components.interfaces.nsISupportsWString);
+      uri.data = ldapUrl.spec;
+      gPrefInt.setComplexValue(pref_string + ".uri", Components.interfaces.nsISupportsWString, uri);
+
       /* is this server selected for autocompletion? 
          if yes, convert the preference to mozilla format.
          Atmost one server is selected for autocompletion. 
