@@ -122,7 +122,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
     if (gsf)
     {
       allowFontScaling = PR_TRUE;
-      g_free(gsf);
+//      g_free(gsf);
     }
   }
 #endif
