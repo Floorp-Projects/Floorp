@@ -68,6 +68,9 @@ public:
 	MRJPlugin();
 	virtual ~MRJPlugin();
 	
+    static nsresult GetService(const nsCID &aCID, const nsIID& aIID, void* *aService);
+    static nsresult GetService(const char* aContractID, const nsIID& aIID, void* *aService);
+
 	static const char* PLUGIN_VERSION;
 	
 	// Currently, this is a singleton, statically allocated object.
@@ -468,7 +471,7 @@ public:
 private:
 	void pushInstance(void);
 	void popInstance(void);
-	void inspectInstance(void);
+	void inspectInstance(Boolean isUpdateEvt);
 
 private:
     nsIPluginInstancePeer* mPeer;
