@@ -242,7 +242,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     nsIDocument*  doc = mShell->GetDocument();
     NS_ASSERTION(nsnull != doc, "expect document here");
     if (nsnull != doc) {
-      mBaseURL = doc->GetDocumentURL();
+      doc->GetBaseURL(mBaseURL);
       NS_RELEASE(doc);
     }
   }

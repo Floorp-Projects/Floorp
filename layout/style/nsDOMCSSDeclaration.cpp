@@ -23,6 +23,7 @@
 #include "nsIStyleRule.h"
 #include "nsICSSDeclaration.h"
 #include "nsCSSProps.h"
+#include "nsIURL.h"
 
 nsDOMCSSDeclaration::nsDOMCSSDeclaration()
 {
@@ -214,7 +215,10 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
     result = NS_NewCSSParser(&css);
     if (NS_OK == result) {
       PRInt32 hint;
-      result = css->ParseAndAppendDeclaration(declString, nsnull, decl, &hint);
+      nsIURL* baseURL = nsnull;
+      GetBaseURL(&baseURL);
+      result = css->ParseAndAppendDeclaration(declString, baseURL, decl, &hint);
+      NS_IF_RELEASE(baseURL);
       if (NS_OK == result) {
         result = StylePropertyChanged(aPropertyName, hint);
       }

@@ -45,6 +45,7 @@ class nsIDOMScriptObjectFactory;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
+class nsIURL;
 
 class nsGenericHTMLElement : public nsGenericElement {
 public:
@@ -106,6 +107,8 @@ public:
   nsresult HasClass(nsIAtom* aClass) const;
   nsresult GetContentStyleRule(nsIStyleRule*& aResult);
   nsresult GetInlineStyleRule(nsIStyleRule*& aResult);
+  nsresult GetBaseURL(nsIURL*& aBaseURL) const;
+  nsresult GetBaseTarget(nsString& aBaseTarget) const;
   nsresult ToHTMLString(nsString& aResult) const;
   nsresult ToHTML(FILE* out) const;
 
@@ -426,6 +429,12 @@ public:
   NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult) {              \
     return _g.GetInlineStyleRule(aResult);                             \
   }                                                                    \
+  NS_IMETHOD GetBaseURL(nsIURL*& aBaseURL) const {                     \
+    return _g.GetBaseURL(aBaseURL);                                    \
+  }                                                                    \
+  NS_IMETHOD GetBaseTarget(nsString& aBaseTarget) const {              \
+    return _g.GetBaseTarget(aBaseTarget);                              \
+  }                                                                    \
   NS_IMETHOD ToHTMLString(nsString& aResult) const {                   \
     return _g.ToHTMLString(aResult);                                   \
   }                                                                    \
@@ -465,6 +474,12 @@ public:
   }                                                                    \
   NS_IMETHOD GetContentStyleRule(nsIStyleRule*& aResult);              \
   NS_IMETHOD GetInlineStyleRule(nsIStyleRule*& aResult);               \
+  NS_IMETHOD GetBaseURL(nsIURL*& aBaseURL) const {                     \
+    return _g.GetBaseURL(aBaseURL);                                    \
+  }                                                                    \
+  NS_IMETHOD GetBaseTarget(nsString& aBaseTarget) const {              \
+    return _g.GetBaseTarget(aBaseTarget);                              \
+  }                                                                    \
   NS_IMETHOD ToHTMLString(nsString& aResult) const {                   \
     return _g.ToHTMLString(aResult);                                   \
   }                                                                    \

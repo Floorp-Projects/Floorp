@@ -518,6 +518,7 @@ public:
   virtual nsresult StylePropertyChanged(const nsString& aPropertyName,
                                         PRInt32 aHint);
   virtual nsresult GetParent(nsISupports **aParent);
+  virtual nsresult GetBaseURL(nsIURL** aURL);
 
 protected:
   nsICSSStyleRule *mRule;
@@ -581,6 +582,26 @@ DOMCSSDeclarationImpl::GetParent(nsISupports **aParent)
   }
 
   return NS_OK;
+}
+
+nsresult
+DOMCSSDeclarationImpl::GetBaseURL(nsIURL** aURL)
+{
+  NS_ASSERTION(nsnull != aURL, "null pointer");
+
+  nsresult result = NS_ERROR_NULL_POINTER;
+
+  if (nsnull != aURL) {
+    *aURL = nsnull;
+    if (nsnull != mRule) {
+      nsIStyleSheet* sheet = nsnull;
+      result = mRule->GetStyleSheet(sheet);
+      if (nsnull != sheet) {
+        result = sheet->GetURL(*aURL);
+      }
+    }
+  }
+  return result;
 }
 
 // -- nsCSSStyleRule -------------------------------

@@ -27,6 +27,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsINameSpaceManager.h"
+#include "nsIURL.h"
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
@@ -271,14 +272,16 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
         if (activeLink == this) {
           if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-            nsAutoString base, target;
-            GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base);
+            nsAutoString target;
+            nsIURL* baseURL = nsnull;
+            GetBaseURL(baseURL);
             GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
             if (target.Length() == 0) {
-              GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, target);
+              GetBaseTarget(target);
             }
             mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
-                               base, href, target, PR_TRUE);
+                               baseURL, href, target, PR_TRUE);
+            NS_IF_RELEASE(baseURL);
             aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
         }
@@ -291,14 +294,16 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
 
       case NS_MOUSE_ENTER:
       {
-        nsAutoString base, target;
-        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base);
+        nsAutoString target;
+        nsIURL* baseURL = nsnull;
+        GetBaseURL(baseURL);
         GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
         if (target.Length() == 0) {
-          GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, target);
+          GetBaseTarget(target);
         }
         mInner.TriggerLink(aPresContext, eLinkVerb_Replace,
-                           base, href, target, PR_FALSE);
+                           baseURL, href, target, PR_FALSE);
+        NS_IF_RELEASE(baseURL);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
@@ -306,7 +311,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       case NS_MOUSE_EXIT:
       {
         nsAutoString empty;
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, empty, empty, empty, PR_FALSE);
+        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
         aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;

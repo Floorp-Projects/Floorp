@@ -605,20 +605,23 @@ nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 PRIVATE
 void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
 {
-  nsIURL* docURL = nsnull;
-  nsIDocument* doc = nsnull;
-  aContent->GetDocument(doc);
-  if (nsnull != doc) {
-    docURL = doc->GetDocumentURL();
-    NS_RELEASE(doc);
+  nsIURL* baseURL = nsnull;
+  nsIHTMLContent* htmlContent;
+  if (NS_SUCCEEDED(aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+    htmlContent->GetBaseURL(baseURL);
+    NS_RELEASE(htmlContent);
+  }
+  else {
+    nsIDocument* doc;
+    if (NS_SUCCEEDED(aContent->GetDocument(doc))) {
+      doc->GetBaseURL(baseURL);
+      NS_RELEASE(doc);
+    }
   }
 
-  nsAutoString base;
-  if (NS_CONTENT_ATTR_HAS_VALUE != aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, base)) {
-    base.Truncate(); 
-  }
-  nsresult rv = NS_MakeAbsoluteURL(docURL, base, aRelURL, aAbsURL);
-  NS_IF_RELEASE(docURL);
+  nsString empty;
+  nsresult rv = NS_MakeAbsoluteURL(baseURL, empty, aRelURL, aAbsURL);
+  NS_IF_RELEASE(baseURL);
 }
 
 

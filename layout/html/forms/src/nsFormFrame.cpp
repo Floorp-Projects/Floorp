@@ -507,7 +507,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
     if (nsnull != doc) {
-      docURL = doc->GetDocumentURL();
+      doc->GetBaseURL(docURL);
       NS_RELEASE(doc);
     }
 
@@ -621,6 +621,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
     (void)docURL->GetSpec(&spec);
 	  URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
 	  PL_strcpy(URLName, spec);
+    NS_RELEASE(docURL);
   }
 #endif
 
