@@ -4566,7 +4566,7 @@ EOF
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
        MKSHLIB_FORCE_ALL='-z allextract'
        MKSHLIB_UNFORCE_ALL=''
-       DSO_LDOPTS='-G -h $@'
+       DSO_LDOPTS='-G -z muldefs -h $@'
        AR_LIST="$AR t"
        AR_EXTRACT="$AR x"
        AR_DELETE="$AR d"
