@@ -28,6 +28,11 @@
 
 
 
+
+
+  /**
+   * A character sink that performs a |reinterpret_cast| style conversion between character types.
+   */
 template <class FromCharT, class ToCharT>
 class LossyConvertEncoding
   {
@@ -59,6 +64,15 @@ class LossyConvertEncoding
       output_type* mDestination;
   };
 
+
+
+  /**
+   * A helper function that allocates a buffer of the desired character type big enough to hold a copy of the supplied string (plus a zero terminator).
+   *
+   * @param aSource an string you will eventually be making a copy of
+   * @return a new buffer (of the type specified by the second parameter) which you must free with |nsMemory::Free|.
+   *
+   */
 template <class FromCharT, class ToCharT>
 inline
 ToCharT*
@@ -107,8 +121,7 @@ ToNewUnicode( const nsAReadableCString& aSource )
 PRBool
 IsASCII( const nsAReadableString& aString )
   {
-
-    const PRUnichar NOT_ASCII = PRUnichar(~0x007F);
+    static const PRUnichar NOT_ASCII = PRUnichar(~0x007F);
 
 
     // Don't want to use |copy_string| for this task, since we can stop at the first non-ASCII character
