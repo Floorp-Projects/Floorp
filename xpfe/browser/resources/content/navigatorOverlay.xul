@@ -87,6 +87,8 @@
 
 	<!-- Misc -->
 	<key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
+        <!-- the amazing fishcam dept. -->
+	<key id="key_fishcam" key="f" modifiers="control,alt" oncommand="window._content.location.href='http://home.netscape.com/fishcam/fishcam.html'"/>
 	
 </keyset>
 
