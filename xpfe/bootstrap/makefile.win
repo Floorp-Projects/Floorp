@@ -144,10 +144,10 @@ include <$(DEPTH)\config\rules.mak>
 
 $(SEDCMDS): $(FINAL_LINK_COMP_NAMES)
         rm -f $@
-        echo s/%DECLARE_COMPONENTS%/\>> $@
-        sed -e "s/^/DECL_MODULE(/" -e "s/$$/);\\\/" $(FINAL_LINK_COMP_NAMES) >> $@
+        echo s/%DECL_NSGETMODULES%/\>> $@
+        sed -e "s/^/DECL_NSGETMODULE(/" -e "s/$$/)\\\/" $(FINAL_LINK_COMP_NAMES) >> $@
         echo />> $@
-        echo s/%COMPONENT_LIST%/\>> $@
+        echo s/%MODULE_LIST%/\>> $@
         sed -e "s/^/MODULE(/" -e "s/$$/),\\\/" $(FINAL_LINK_COMP_NAMES) >> $@
         echo />> $@
         

@@ -262,8 +262,13 @@ nsGenericModule::Initialize()
 void
 nsGenericModule::Shutdown()
 {
-    if (mDtor)
-        mDtor(this);
+    if (mInitialized) {
+        mInitialized = PR_FALSE;
+
+        if (mDtor)
+            mDtor(this);
+    }
+
     // Release the factory objects
     mFactories.Reset();
 }
@@ -410,23 +415,17 @@ nsGenericModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 }
 
 NS_COM nsresult
-NS_NewGenericModule(const char* moduleName,
-                    PRUint32 componentCount,
-                    nsModuleComponentInfo* components,
-                    nsModuleConstructorProc ctor,
-                    nsModuleDestructorProc dtor,
-                    nsIModule* *result)
+NS_NewGenericModule(nsModuleInfo* info, nsIModule* *result)
 {
     nsresult rv = NS_OK;
 
-    NS_ASSERTION(result, "Null argument");
-
     // Create and initialize the module instance
     nsGenericModule *m = 
-        new nsGenericModule(moduleName, componentCount, components, ctor, dtor);
-    if (!m) {
+        new nsGenericModule(info->mModuleName, info->mCount, info->mComponents,
+                            info->mCtor, info->mDtor);
+
+    if (!m)
         return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     // Increase refcnt and store away nsIModule interface to m in return_cobj
     rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)result);

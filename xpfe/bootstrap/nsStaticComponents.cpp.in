@@ -19,33 +19,54 @@
  *
  * Contributor(s):
  * 	Christopher Seawood <cls@seawood.org>
+ *  Chris Waterson <waterson@netscape.com>
  */
 
+#line 26 "nsStaticComponents.cpp.in"
 #define XPCOM_TRANSLATE_NSGM_ENTRY_POINT 1
 
 #include "nsIGenericFactory.h"
-
 #include "nsStaticComponent.h"
 
+/**
+ * Construct a unique NSGetModule entry point for a generic module.
+ */
+#define NSGETMODULE(_name) _name##_NSGetmodule
 
-#define MODULE(name) { #name "_NSGetModule", NSGETMODULE_ENTRY_POINT(name) }
-#define DECL_MODULE(name)                                      \
-extern "C" nsresult                                            \
-NSGETMODULE_ENTRY_POINT(name) (nsIComponentManager *aCompMgr,  \
-                               nsIFile *aLocation,             \
-                               nsIModule **aResult)
+/**
+ * Declare an NSGetModule() routine for a generic module.
+ */
+#define DECL_NSGETMODULE(_name)                                \
+extern nsModuleInfo NSMODULEINFO(_name);                       \
+extern "C" NS_EXPORT nsresult                                  \
+NSGETMODULE(_name) (nsIComponentManager* aCompMgr,             \
+                    nsIFile*             aLocation,            \
+                    nsIModule**          aResult)              \
+{                                                              \
+    return NS_NewGenericModule(&NSMODULEINFO(_name), aResult); \
+}
 
-%DECLARE_COMPONENTS%
+// NSGetModule entry points
+%DECL_NSGETMODULES%
+#line 52 "nsStaticComponents.cpp.in"
 
-static nsStaticModuleInfo StaticModuleInfo[] = {
-	%COMPONENT_LIST%
+/**
+ * The nsStaticModuleInfo
+ */
+static nsStaticModuleInfo gStaticModuleInfo[] = {
+#define MODULE(_name) { (#_name), NSGETMODULE(_name) }
+	%MODULE_LIST%
+#line 60 "nsStaticComponents.cpp.in"
 };
 
-nsresult PR_CALLBACK
+/**
+ * Our NSGetStaticModuleInfoFunc
+ */
+nsresult
 apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count)
 {
-  *info = StaticModuleInfo;
-  *count = sizeof(StaticModuleInfo) / sizeof(StaticModuleInfo[0]);
+  *info = gStaticModuleInfo;
+  *count = sizeof(gStaticModuleInfo) / sizeof(gStaticModuleInfo[0]);
   return NS_OK;
 }
 
