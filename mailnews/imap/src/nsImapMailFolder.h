@@ -102,6 +102,7 @@ public:
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
  	NS_IMETHOD DeleteMessage(nsIMessage *message);
+	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage **message);
 
     // nsIImapMailFolderSink methods
     // Tell mail master about a discovered imap mailbox
@@ -250,7 +251,7 @@ protected:
 	void PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const
                                      nsMsgKeyArray &keysToFetch, 
                                      mailbox_spec *boxSpec);
-	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMessage *tweakMe);
+	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr *tweakMe);
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);

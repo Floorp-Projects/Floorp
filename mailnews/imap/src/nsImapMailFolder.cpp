@@ -33,6 +33,8 @@
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
 #include "nsIImapUrl.h"
+#include "nsImapUtils.h"
+#include "nsMsgUtils.h"
 #include "nsIMsgMailSession.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -157,7 +159,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPathName(nsNativeFileSpec& aPathName)
     nsFileSpec nopath("");
     if (m_pathName == nopath) 
     {
-        nsresult rv = nsURI2Path(kImapRootURI, mURI, m_pathName);
+        nsresult rv = nsImapURI2Path(kImapRootURI, mURI, m_pathName);
         if (NS_FAILED(rv)) return rv;
     }
     aPathName = m_pathName;
@@ -393,7 +395,16 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 	rv = GetDatabase();
 
 	if(NS_SUCCEEDED(rv))
-		rv = m_mailDatabase->EnumerateMessages(result);
+	{
+		nsIEnumerator *msgHdrEnumerator = nsnull;
+		nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
+		rv = m_mailDatabase->EnumerateMessages(&msgHdrEnumerator);
+		if(NS_SUCCEEDED(rv))
+			rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
+												   this, &messageEnumerator);
+		*result = messageEnumerator;
+		NS_IF_RELEASE(msgHdrEnumerator);
+	}
 	else
 		return rv;
 
@@ -550,7 +561,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
         }
     }
 	nsAutoString folderName;
-	nsURI2Name(kImapRootURI, mURI, folderName);
+	nsImapURI2Name(kImapRootURI, mURI, folderName);
 	*name = folderName.ToNewCString();
     
     return NS_OK;
@@ -1032,7 +1043,14 @@ NS_IMETHODIMP nsImapMailFolder::AbortHeaderParseStream(nsIImapProtocol*
     nsresult rv = NS_ERROR_FAILURE;
     return rv;
 }
-    
+ 
+NS_IMETHODIMP nsImapMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage **message)
+{
+
+	return NS_ERROR_FAILURE;
+}
+
+  
 NS_IMETHODIMP nsImapMailFolder::OnKeyChange(nsMsgKey aKeyChanged, 
 											int32 aFlags, 
 											nsIDBChangeListener * aInstigator)
@@ -1045,22 +1063,31 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged,
 											 int32 aFlags, 
 											 nsIDBChangeListener * aInstigator)
 {
-	nsIMessage *pMessage;
-	m_mailDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
-	nsString author, subject;
-	nsISupports *msgSupports;
-	if(NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	nsIMsgDBHdr *pMsgDBHdr = nsnull;
+	nsresult rv = m_mailDatabase->GetMsgHdrForKey(aKeyChanged, &pMsgDBHdr);
+	if(NS_SUCCEEDED(rv))
 	{
-		PRUint32 i;
-		for(i = 0; i < mListeners->Count(); i++)
+		nsIMessage *message = nsnull;
+		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, &message);
+		if(NS_SUCCEEDED(rv))
 		{
-			nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
-			listener->OnItemRemoved(this, msgSupports);
-			NS_RELEASE(listener);
+			nsISupports *msgSupports;
+			if(NS_SUCCEEDED(message->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+			{
+				PRUint32 i;
+				for(i = 0; i < mListeners->Count(); i++)
+				{
+					nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+					listener->OnItemRemoved(this, msgSupports);
+					NS_RELEASE(listener);
+				}
+				NS_IF_RELEASE(msgSupports);
+			}
+			NS_IF_RELEASE(message);
+			UpdateSummaryTotals();
 		}
+		NS_IF_RELEASE(pMsgDBHdr);
 	}
-	UpdateSummaryTotals();
-	NS_RELEASE(msgSupports);
 
 	return NS_OK;
 }
@@ -1069,19 +1096,27 @@ NS_IMETHODIMP nsImapMailFolder::OnKeyAdded(nsMsgKey aKeyChanged,
 										   int32 aFlags, 
 										   nsIDBChangeListener * aInstigator)
 {
-	nsIMessage *pMessage;
-	m_mailDatabase->GetMsgHdrForKey(aKeyChanged, &pMessage);
-	nsString author, subject;
-	nsISupports *msgSupports;
-	if(pMessage && NS_SUCCEEDED(pMessage->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+	nsresult rv;
+	nsIMsgDBHdr *pMsgDBHdr;
+	rv = m_mailDatabase->GetMsgHdrForKey(aKeyChanged, &pMsgDBHdr);
+	if(NS_SUCCEEDED(rv))
 	{
-		NotifyItemAdded(msgSupports);
+		nsIMessage *message;
+		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, &message);
+		if(NS_SUCCEEDED(rv))
+		{
+			nsISupports *msgSupports;
+			if(message && NS_SUCCEEDED(message->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+			{
+				NotifyItemAdded(msgSupports);
+				NS_IF_RELEASE(msgSupports);
+			}
+			UpdateSummaryTotals();
+			NS_IF_RELEASE(message);
+		}
+		NS_IF_RELEASE(pMsgDBHdr);
 	}
-	UpdateSummaryTotals();
-	NS_RELEASE(msgSupports);
-
-	return NS_OK;
-}
+	return NS_OK;}
 
 NS_IMETHODIMP nsImapMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
 													 instigator)
@@ -1108,7 +1143,6 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
 	nsresult rv = NS_ERROR_FAILURE;
 	return rv;
 }
-
 
 // both of these algorithms assume that key arrays and flag states are sorted by increasing key.
 void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsImapFlagAndUidState *flagState)
@@ -1237,7 +1271,7 @@ void nsImapMailFolder::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, c
 }
 
 
-void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMessage *tweakMe)
+void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr *tweakMe)
 {
 	if (m_mailDatabase && aProtocol && tweakMe)
 	{
