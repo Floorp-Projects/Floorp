@@ -71,6 +71,8 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
     mPath(nsnull), mExpungedBytes(0), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mOptionLines(nsnull), mHostname(nsnull)
 {
+  mIsNewsHost = PR_FALSE;
+  mIsNewsHostInitialized = PR_FALSE;
 //  NS_INIT_REFCNT(); done by superclass
 }
 
@@ -117,37 +119,45 @@ NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr
 PRBool
 nsMsgNewsFolder::isNewsHost() 
 {
+  if (mIsNewsHostInitialized) {
+    return mIsNewsHost;
+  }
+
   // this will do for now.  Eventually, this will go away...
   PRInt32 uriLen = PL_strlen(mURI);
 
   // if we are shorter than news://, we are too short to be a host
   if (uriLen <= kNewsRootURILen) {
-    return PR_FALSE;
-  }
-  
-  if (PL_strncmp(mURI, kNewsRootURI, kNewsRootURILen) == 0) {
-    // if we get here, mURI looks like this:  news://x
-    // where x is non-empty, and may contain "/"
-    char *rightAfterTheRoot = mURI+kNewsRootURILen+1;
-#ifdef DEBUG_NEWS
-    printf("search for a slash in %s\n",rightAfterTheRoot);
-#endif
-    if (!PL_strstr(rightAfterTheRoot,"/")) {
-      // there is no slashes after news://,
-      // so mURI is of the form news://x
-      return PR_TRUE;
-    }
-    else {
-      // there is another slash, so mURI is of the form
-      // news://x/y, so it is not a host
-      return PR_FALSE;
-    }
+    mIsNewsHost = PR_FALSE;
   }
   else {
-    // mURI doesn't start with news:// so it can't be a host
-    return PR_FALSE;
+    if (PL_strncmp(mURI, kNewsRootURI, kNewsRootURILen) == 0) {
+      // if we get here, mURI looks like this:  news://x
+      // where x is non-empty, and may contain "/"
+      char *rightAfterTheRoot = mURI+kNewsRootURILen+1;
+#ifdef DEBUG_NEWS
+      printf("search for a slash in %s\n",rightAfterTheRoot);
+#endif
+      if (!PL_strstr(rightAfterTheRoot,"/")) {
+        // there is no slashes after news://,
+        // so mURI is of the form news://x
+        mIsNewsHost=PR_TRUE;
+      }
+      else {
+        // there is another slash, so mURI is of the form
+        // news://x/y, so it is not a host
+        mIsNewsHost=PR_FALSE;
+      }
+    }
+    else {
+      // mURI doesn't start with news:// so it can't be a host
+      mIsNewsHost=PR_FALSE;
+    }
   }
+  mIsNewsHostInitialized = PR_TRUE;
+  return mIsNewsHost;
 }
+
 #ifdef USE_NEWSRC_MAP_FILE
 
 #define NEWSRC_MAP_FILE_COOKIE "netscape-newsrc-map-file"
@@ -558,7 +568,7 @@ NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 {
 #ifdef DEBUG_seth
-  printf("nsMsgNewsFolder::GetMessages()\n");
+  printf("nsMsgNewsFolder::GetMessages(%s)\n",mURI);
 #endif
   // number_to_show is a tempory hack to allow newsgroups
   // with thousands of message to work.  the way it works is
@@ -1001,7 +1011,7 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
 {
 #ifdef DEBUG_seth
-	printf("nsMsgNewsFolder::UpdateSummaryTotals()\n");
+	printf("nsMsgNewsFolder::UpdateSummaryTotals(%s)\n",mURI);
 #endif
 
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;

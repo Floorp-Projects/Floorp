@@ -133,6 +133,8 @@ protected:
 	nsISupportsArray *mMessages;
   char      *mOptionLines;
   char      *mHostname;
+  PRBool    mIsNewsHost;
+  PRBool    mIsNewsHostInitialized;
 };
 
 #endif // nsMsgNewsFolder_h__
