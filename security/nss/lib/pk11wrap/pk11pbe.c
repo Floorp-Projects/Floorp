@@ -504,6 +504,7 @@ PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
     SECItem mechItem;
     CK_PBE_PARAMS pbe_params;
     CK_MECHANISM_TYPE mechanism = CKM_INVALID_MECHANISM;
+    PK11SlotInfo *slot;
     PK11SymKey *symKey = NULL;
     unsigned char ivData[8];
     
@@ -567,8 +568,10 @@ PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
     mechItem.len = sizeof(pbe_params);
 
 
-    symKey = PK11_RawPBEKeyGen(PK11_GetInternalSlot(),mechanism,
+    slot = PK11_GetInternalSlot();
+    symKey = PK11_RawPBEKeyGen(slot,mechanism,
 					&mechItem, pwitem, PR_FALSE, NULL);
+    PK11_FreeSlot(slot);
     if (symKey != NULL) {
 	if (bitGenPurpose == pbeBitGenCipherIV) {
 	    /* NOTE: this assumes that bitsNeeded is a multiple of 8! */
@@ -615,6 +618,7 @@ SEC_PKCS5GetIV(SECAlgorithmID *algid, SECItem *pwitem, PRBool faulty3DES)
     SECItem *iv = NULL;
     SECStatus rv;
     int iv_len;
+    PK11SlotInfo *slot;
     PK11SymKey *symKey;
 
     rv = pbe_PK11AlgidToParam(algid,&mechItem);
@@ -626,8 +630,10 @@ SEC_PKCS5GetIV(SECAlgorithmID *algid, SECItem *pwitem, PRBool faulty3DES)
     iv_len = PK11_GetIVLength(mechanism);
     pbe_params = (CK_PBE_PARAMS_PTR)mechItem.data;
 
-    symKey = PK11_RawPBEKeyGen(PK11_GetInternalSlot(),mechanism,
+    slot = PK11_GetInternalSlot();
+    symKey = PK11_RawPBEKeyGen(slot,mechanism,
 					&mechItem, pwitem, faulty3DES,NULL);
+    PK11_FreeSlot(slot);
 
     if (symKey) {
 	SECItem tmp;
