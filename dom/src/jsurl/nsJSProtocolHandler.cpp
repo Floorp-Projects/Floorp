@@ -31,7 +31,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 #include "nsJSProtocolHandler.h"
-#include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 #include "jsapi.h"
 #include "nsIJSContextStack.h"
@@ -53,7 +52,7 @@ public:
 
     nsJSInputStream()
         : mVerb(nsnull), mURI(nsnull), mEventSinkGetter(nsnull),
-          mResult(nsnull), mLength(0), mReadCursor(0) {
+          mResult(nsnull), mLength(0), mReadCursor(0), mPrincipal(nsnull) {
         NS_INIT_REFCNT();
     }
 
@@ -64,6 +63,7 @@ public:
         NS_IF_RELEASE(mEventSinkGetter);
         if (mResult)
             nsCRT::free(mResult);
+        NS_IF_RELEASE(mPrincipal);
     }
 
     nsresult Init(const char* verb, nsIURI* uri,
@@ -82,10 +82,8 @@ public:
                         NS_SCRIPTSECURITYMANAGER_PROGID, &result);
         if (NS_FAILED(result)) 
             return NS_ERROR_FAILURE;
-        if (NS_FAILED(securityManager->GetSubjectPrincipal(
-                        getter_AddRefs(mPrincipal))))
+        if (NS_FAILED(securityManager->GetSubjectPrincipal(&mPrincipal)))
             return NS_ERROR_FAILURE;
-
         return NS_OK;
     }
 
@@ -184,7 +182,7 @@ protected:
     char*                   mResult;
     PRUint32                mLength;
     PRUint32                mReadCursor;
-    nsCOMPtr<nsIPrincipal>  mPrincipal;
+    nsIPrincipal*           mPrincipal;
 };
 
 NS_IMPL_ISUPPORTS(nsJSInputStream, NS_GET_IID(nsIInputStream));
