@@ -44,7 +44,6 @@ bin\components\xpinstal.dll
 ; files listed in xpcom (missing in this section) will be installed as part of the browser
 bin\gkgfxwin.dll
 bin\gkplugin.dll
-bin\gkweb.dll
 bin\gkwidget.dll
 bin\img3250.dll
 bin\jpeg3250.dll
