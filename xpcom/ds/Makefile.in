@@ -116,6 +116,7 @@ XPIDLSRCS	= \
 		nsIPersistentProperties2.idl \
 		nsIProperties.idl \
 		nsIPropertyBag.idl \
+		nsIRecyclingAllocator.idl \
 		nsIVariant.idl \
 		nsISerializable.idl \
 		nsISupportsArray.idl \
