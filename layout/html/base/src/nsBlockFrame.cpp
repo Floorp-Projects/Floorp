@@ -1112,12 +1112,13 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                 delta, perLineDelta, numLines, ectc - ctc);
     printf("%s\n", buf);
   }
-#endif
-#ifdef NOISY_MAX_ELEMENT_SIZE
-  if (aMetrics.maxElementSize) {
-    printf("block %p returning with maxElementSize=%d,%d\n", this,
-           aMetrics.maxElementSize->width,
-           aMetrics.maxElementSize->height);
+  if (gNoisyMaxElementSize) {
+    if (aMetrics.maxElementSize) {
+      IndentBy(stdout, gNoiseIndent);
+      printf("block %p returning with maxElementSize=%d,%d\n", this,
+             aMetrics.maxElementSize->width,
+             aMetrics.maxElementSize->height);
+    }
   }
 #endif
 
@@ -1424,9 +1425,12 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // Store away the final value
     aMetrics.maxElementSize->width = maxWidth;
     aMetrics.maxElementSize->height = maxHeight;
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    printf ("nsBlockFrame::CFS: %p returning MES %d\n", 
-             this, aMetrics.maxElementSize->width);
+#ifdef DEBUG
+    if (gNoisyMaxElementSize) {
+      IndentBy(stdout, gNoiseIndent);
+      printf ("nsBlockFrame::CFS: %p returning MES %d\n", 
+              this, aMetrics.maxElementSize->width);
+    }
 #endif
   }
 
@@ -1454,17 +1458,19 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
            aState.mReflowState.availableHeight);
   }
 #endif
-#ifdef NOISY_MAX_ELEMENT_SIZE
-  if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-    IndentBy(stdout, GetDepth());
-    if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-      printf("PASS1 ");
+#ifdef DEBUG
+  if (gNoisyMaxElementSize) {
+    if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
+      IndentBy(stdout, gNoiseIndent);
+      if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+        printf("PASS1 ");
+      }
+      ListTag(stdout);
+      printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+             maxWidth, maxHeight, aMetrics.width, aMetrics.height,
+             aState.mReflowState.availableWidth,
+             aState.mReflowState.availableHeight);
     }
-    ListTag(stdout);
-    printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
-           maxWidth, maxHeight, aMetrics.width, aMetrics.height,
-           aState.mReflowState.availableWidth,
-           aState.mReflowState.availableHeight);
   }
 #endif
 
@@ -2619,9 +2625,12 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         }
         if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE))
         {
-#ifdef NOISY_MAX_ELEMENT_SIZE
-          printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaxElementWidth to %d\n", 
-                 this, aLine, aLine->mMaxElementWidth);
+#ifdef DEBUG
+          if (gNoisyMaxElementSize) {
+            IndentBy(stdout, gNoiseIndent);
+            printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaxElementWidth to %d\n", 
+                   this, aLine, aLine->mMaxElementWidth);
+          }
 #endif
           aState.UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
         }
@@ -4237,16 +4246,18 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   aState.mY = newY;
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    IndentBy(stdout, GetDepth());
-    if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-      printf("PASS1 ");
+#ifdef DEBUG
+    if (gNoisyMaxElementSize) {
+      IndentBy(stdout, gNoiseIndent);
+      if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+        printf("PASS1 ");
+      }
+      ListTag(stdout);
+      printf(": line.floaters=%s band.floaterCount=%d\n",
+             //aLine->mFloaters.NotEmpty() ? "yes" : "no",
+             aState.mHaveRightFloaters ? "(have right floaters)" : "",
+             aState.mBand.GetFloaterCount());
     }
-    ListTag(stdout);
-    printf(": line.floaters=%s band.floaterCount=%d\n",
-           //aLine->mFloaters.NotEmpty() ? "yes" : "no",
-           aState.mHaveRightFloaters ? "(have right floaters)" : "",
-           aState.mBand.GetFloaterCount());
 #endif
     if (0 != aState.mBand.GetFloaterCount()) {
       // Add in floater impacts to the lines max-element-size
@@ -4265,9 +4276,12 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       // We also cache the max element width in the line. This is needed for
       // incremental reflow
       aLine->mMaxElementWidth = maxElementSize.width;
-#ifdef NOISY_MAX_ELEMENT_SIZE
-      printf ("nsBlockFrame::PlaceLine: %p setting MES for line %p to %d\n", 
-               this, aLine, maxElementSize.width);
+#ifdef DEBUG
+      if (gNoisyMaxElementSize) {
+        IndentBy(stdout, gNoiseIndent);
+        printf ("nsBlockFrame::PlaceLine: %p setting MES for line %p to %d\n", 
+                this, aLine, maxElementSize.width);
+      }
 #endif
     }
 
@@ -4374,13 +4388,15 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
 {
   nscoord maxWidth, maxHeight;
   aState.mBand.GetMaxElementSize(aState.mPresContext, &maxWidth, &maxHeight);
-#ifdef NOISY_MAX_ELEMENT_SIZE
-  IndentBy(stdout, GetDepth());
-  if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-    printf("PASS1 ");
+#ifdef DEBUG
+  if (gNoisyMaxElementSize) {
+    IndentBy(stdout, gNoiseIndent);
+    if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+      printf("PASS1 ");
+    }
+    ListTag(stdout);
+    printf(": maxFloaterSize=%d,%d\n", maxWidth, maxHeight);
   }
-  ListTag(stdout);
-  printf(": maxFloaterSize=%d,%d\n", maxWidth, maxHeight);
 #endif
 
   // To ensure that we always place some content next to a floater,
@@ -4397,9 +4413,12 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
       aMaxElementSize->height = maxHeight;
     }
   }
-#ifdef NOISY_MAX_ELEMENT_SIZE
-  printf ("nsBlockFrame::ComputeLineMaxElementSize: %p returning MES %d\n", 
-           this, aMaxElementSize->width);
+#ifdef DEBUG
+  if (gNoisyMaxElementSize) {
+    IndentBy(stdout, gNoiseIndent);
+    printf ("nsBlockFrame::ComputeLineMaxElementSize: %p returning MES %d\n", 
+            this, aMaxElementSize->width);
+  }
 #endif
 }
 
@@ -4426,9 +4445,12 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     // We also cache the max element width in the line. This is needed for
     // incremental reflow
     aLine->mMaxElementWidth = aMaxElementSize.width;
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    printf ("nsBlockFrame::PostPlaceLine: %p setting line %p MES %d\n", 
-               this, aLine, aMaxElementSize.width);
+#ifdef DEBUG
+    if (gNoisyMaxElementSize) {
+      IndentBy(stdout, gNoiseIndent);
+      printf ("nsBlockFrame::PostPlaceLine: %p setting line %p MES %d\n", 
+              this, aLine, aMaxElementSize.width);
+    }
 #endif
   }
 

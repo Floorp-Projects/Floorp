@@ -165,8 +165,11 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   }
 
   SetFlag(BRS_COMPUTEMAXELEMENTSIZE, (nsnull != aMetrics.maxElementSize));
-#ifdef NOISY_MAX_ELEMENT_SIZE
-  printf("BRS: setting compute-MES to %d\n", (nsnull != aMetrics.maxElementSize));
+#ifdef DEBUG
+  if (nsBlockFrame::gNoisyMaxElementSize) {
+    nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+    printf("BRS: setting compute-MES to %d\n", (nsnull != aMetrics.maxElementSize));
+  }
 #endif
   mMaxElementSize.SizeTo(0, 0);
   SetFlag(BRS_COMPUTEMAXWIDTH, 
@@ -572,8 +575,11 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
     mKidXMost = xmost;
   }
   if (GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-#ifdef NOISY_MAX_ELEMENT_SIZE
-    printf("nsBlockReflowState::RecoverStateFrom block %p caching max width %d\n", mBlock, aLine->mMaxElementWidth);
+#ifdef DEBUG
+    if (nsBlockFrame::gNoisyMaxElementSize) {
+      nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+      printf("nsBlockReflowState::RecoverStateFrom block %p caching max width %d\n", mBlock, aLine->mMaxElementWidth);
+    }
 #endif
     UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
   }
@@ -697,7 +703,7 @@ nsBlockReflowState::AddFloater(nsLineLayout&       aLineLayout,
 void
 nsBlockReflowState::UpdateMaxElementSize(const nsSize& aMaxElementSize)
 {
-#ifdef NOISY_MAX_ELEMENT_SIZE
+#ifdef DEBUG
   nsSize oldSize = mMaxElementSize;
 #endif
   if (aMaxElementSize.width > mMaxElementSize.width) {
@@ -706,17 +712,19 @@ nsBlockReflowState::UpdateMaxElementSize(const nsSize& aMaxElementSize)
   if (aMaxElementSize.height > mMaxElementSize.height) {
     mMaxElementSize.height = aMaxElementSize.height;
   }
-#ifdef NOISY_MAX_ELEMENT_SIZE
-  if ((mMaxElementSize.width != oldSize.width) ||
-      (mMaxElementSize.height != oldSize.height)) {
-    nsFrame::IndentBy(stdout, mBlock->GetDepth());
-    if (NS_UNCONSTRAINEDSIZE == mReflowState.availableWidth) {
-      printf("PASS1 ");
+#ifdef DEBUG
+  if (nsBlockFrame::gNoisyMaxElementSize) {
+    if ((mMaxElementSize.width != oldSize.width) ||
+        (mMaxElementSize.height != oldSize.height)) {
+      nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+      if (NS_UNCONSTRAINEDSIZE == mReflowState.availableWidth) {
+        printf("PASS1 ");
+      }
+      nsFrame::ListTag(stdout, mBlock);
+      printf(": old max-element-size=%d,%d new=%d,%d\n",
+             oldSize.width, oldSize.height,
+             mMaxElementSize.width, mMaxElementSize.height);
     }
-    nsFrame::ListTag(stdout, mBlock);
-    printf(": old max-element-size=%d,%d new=%d,%d\n",
-           oldSize.width, oldSize.height,
-           mMaxElementSize.width, mMaxElementSize.height);
   }
 #endif
 }
