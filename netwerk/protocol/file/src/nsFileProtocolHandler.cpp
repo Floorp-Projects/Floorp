@@ -54,7 +54,7 @@
 #include "nsStandardURL.h"
 #include "nsNetCID.h"
 #include "nsURLHelper.h"
-#include "nsCRT.h"
+#include "nsIDirectoryListing.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -73,7 +73,11 @@ nsFileProtocolHandler::Init()
     nsresult rv;
     nsCOMPtr<nsIPref> pPref(do_GetService(kPrefCID, &rv)); 
     if (NS_SUCCEEDED(rv) || pPref) { 
-        pPref->GetBoolPref("network.dir.generate_html", &mGenerateHTMLContent);
+        PRInt32 sFormat;
+        rv = pPref->GetIntPref("network.dir.format", &sFormat);
+
+        if (NS_SUCCEEDED(rv) && sFormat == nsIDirectoryListing::FORMAT_HTML)
+            mGenerateHTMLContent = PR_TRUE;
     }
 
     return NS_OK;
