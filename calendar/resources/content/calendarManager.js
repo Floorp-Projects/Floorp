@@ -479,9 +479,6 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
    {
       //calendarSubscribed is the subscribed calendar object.
    }
-   
-
-      
 }
 
 
@@ -496,6 +493,8 @@ function onResponseAndRefresh( )
       gCalendarWindow.calendarManager.addCalendar( calendarToGet );
 
    refreshEventTree( false );
+
+   refreshToDoTree( false );
 
    gCalendarWindow.currentView.refreshEvents();
 
