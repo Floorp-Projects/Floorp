@@ -21,6 +21,8 @@
 
 #include "mkgeturl.h"
 
+PR_BEGIN_EXTERN_C
+
 /* removes all cookies structs from the cookie list */
 extern void
 NET_RemoveAllCookies(void);
@@ -60,5 +62,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
                                 MWContext * context,
                                 char * cur_url,
                                 char * set_cookie_header);
+
+PR_END_EXTERN_C
 
 #endif /* COOKIES_H */
