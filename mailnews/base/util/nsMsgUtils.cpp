@@ -428,8 +428,9 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP, char **modifiedSub
           goto AGAIN;       /* Skip whitespace and try again. */
         }
       }
-    } 
-    tokPtr++;
+    }
+    if (*tokPtr)
+      tokPtr++;
   }
   
   if (decodedString)
