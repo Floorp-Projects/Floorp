@@ -563,8 +563,9 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
   PRInt32 linelen;
   linelen = ReadLine(&nextLineStart);
   curLine.Assign(filebuf, linelen);
-  if ( ((aFileType == JAR_MF) && (curLine != JAR_MF_HEADER) ) ||
-       ((aFileType == JAR_SF) && (curLine != JAR_SF_HEADER) ) )
+
+  if ( ((aFileType == JAR_MF) && !curLine.Equals(JAR_MF_HEADER) ) ||
+       ((aFileType == JAR_SF) && !curLine.Equals(JAR_SF_HEADER) ) )
      return NS_ERROR_FILE_CORRUPTED;
 
   //-- Skip header section
@@ -653,8 +654,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
                 curItemSF->status = nsIZipReader::NOT_SIGNED;
               else
               {
-                if (storedSectionDigest !=
-                    (const char*)curItemSF->calculatedSectionDigest)
+                if (!storedSectionDigest.Equals((const char*)curItemSF->calculatedSectionDigest))
                   curItemSF->status = nsIZipReader::INVALID_MANIFEST;
                 JAR_NULLFREE(curItemSF->calculatedSectionDigest)
                 storedSectionDigest = "";
