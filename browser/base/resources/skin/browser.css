@@ -343,8 +343,6 @@
   border-top: none;
 }
 
-/* ::::: personal toolbar ::::: */
-
 #security-button {
   list-style-image: url("chrome://communicator/skin/icons/lock-insecure.gif");
 }
@@ -360,4 +358,3 @@
 #security-button[level="broken"] {
   list-style-image: url("chrome://communicator/skin/icons/lock-broken.gif");
 }
-

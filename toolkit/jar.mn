@@ -6,3 +6,6 @@ toolkit.jar:
 +        content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
          content/global/nsBrowserStatusHandler.js           (content/nsBrowserStatusHandler.js)
          content/global/nsBrowserContentListener.js         (content/nsBrowserContentListener.js)
+         content/global/charset.js                          (content/charset.js)
+en-US.jar:
++        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
