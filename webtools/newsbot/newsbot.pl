@@ -85,7 +85,7 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
         next;
         }
     if ( !( ($parts[1]->head->mime_type =~ /message\/rfc822/) ||
-            ($parts[1]->head->mime_type =~ /message\/news/)
+            ($parts[1]->head->mime_type =~ /message\/news/) )
           ) {
         next;
         }
