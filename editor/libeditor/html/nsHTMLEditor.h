@@ -32,6 +32,9 @@
  */
 class nsHTMLEditor  : public nsTextEditor, public nsIHTMLEditor
 {
+
+  typedef enum {eNoOp=0, eReplaceParent=1, eInsertParent=2} BlockTransformationType;
+
 public:
   // see nsIHTMLEditor for documentation
 
@@ -96,7 +99,9 @@ public:
 // End of methods implemented in nsEditor
 //=============================================================
 // HTML Editing methods
+  NS_IMETHOD GetParagraphStyle(nsStringArray *aTagList);
   NS_IMETHOD AddBlockParent(nsString& aParentTag);
+  NS_IMETHOD ReplaceBlockParent(nsString& aParentTag);
   NS_IMETHOD RemoveBlockParent();
   NS_IMETHOD RemoveParent(const nsString &aParentTag);
 
@@ -138,15 +143,20 @@ protected:
 
   virtual void  InitRules();
 
-  NS_IMETHOD ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag);
+  NS_IMETHOD ReParentContentOfNode(nsIDOMNode *aNode, 
+                                   nsString   &aParentTag,
+                                   BlockTransformationType aTranformation);
 
   NS_IMETHOD ReParentBlockContent(nsIDOMNode  *aNode, 
                                   nsString    &aParentTag,
                                   nsIDOMNode  *aBlockParentNode,
                                   nsString    &aBlockParentTag,
+                                  BlockTransformationType aTranformation,
                                   nsIDOMNode **aNewParentNode);
   
-  NS_IMETHOD ReParentContentOfRange(nsIDOMRange *aRange, nsString &aParentTag);
+  NS_IMETHOD ReParentContentOfRange(nsIDOMRange *aRange, 
+                                    nsString    &aParentTag,
+                                    BlockTransformationType aTranformation);
 
   NS_IMETHOD CanContainBlock(nsString &aBlockChild, nsString &aBlockParent, PRBool &aCanContain);
 

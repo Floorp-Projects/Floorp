@@ -151,8 +151,11 @@ protected:
     */
   NS_IMETHOD GetBlockParent(nsIDOMNode *aNode, nsIDOMElement **aBlockParent) const;
 
-  NS_IMETHOD GetBlockDelimitedContent(nsIDOMNode *aParent, nsIDOMNode *aChild,
-                                      nsIDOMNode **aLeftNode, nsIDOMNode **aRightNode) const;
+  NS_IMETHOD GetBlockDelimitedContent(nsIDOMNode *aChild,
+                                      nsIDOMNode **aLeftNode, 
+                                      nsIDOMNode **aRightNode) const;
+
+  NS_IMETHOD GetBlockRanges(nsIDOMRange *aRange, nsISupportsArray *aSubRanges) const;
 
   /** returns PR_TRUE in out-param aResult if all nodes between (aStartNode, aStartOffset)
     * and (aEndNode, aEndOffset) are inline as defined by HTML DTD. 
@@ -265,13 +268,13 @@ protected:
                                        const nsString *aAttribute,
                                        const nsString *aValue);
   
-  TypeInState GetTypeInState() { return mTypeInState;}
+  TypeInState *GetTypeInState(); 
 
 
 // Data members
 protected:
-  TypeInState      mTypeInState;  // xxx - isn't it wrong to have xpcom classes as members?  shouldn't it be a pointer?
-  nsTextEditRules* mRules;
+  TypeInState     *mTypeInState;
+  nsTextEditRules *mRules;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
   nsCOMPtr<nsIDOMEventListener> mTextListenerP;

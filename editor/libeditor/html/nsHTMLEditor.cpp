@@ -35,6 +35,8 @@
 #include "nsEditorCID.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
+#include "nsISupportsArray.h"
+#include "nsVoidArray.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -360,10 +362,74 @@ nsHTMLEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 // Note: Table Editing methods are implemented in EditTable.cpp
 //
 
+// get the paragraph style(s) for the selection
+NS_IMETHODIMP 
+nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
+{
+  if (gNoisy) { printf("---------- nsHTMLEditor::GetParagraphStyle ----------\n"); }
+  if (!aTagList) { return NS_ERROR_NULL_POINTER; }
+
+  nsresult result;
+  nsCOMPtr<nsIDOMSelection>selection;
+  result = nsEditor::GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
+  {
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = do_QueryInterface(selection);
+    if (enumerator)
+    {
+      enumerator->First(); 
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      {
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        // scan the range for all the independent block content subranges
+        // and get the block parent of each
+        nsISupportsArray *subRanges;
+        result = NS_NewISupportsArray(&subRanges);
+        if ((NS_SUCCEEDED(result)) && subRanges)
+        {
+          result = GetBlockRanges(range, subRanges);
+          if (NS_SUCCEEDED(result))
+          {
+            nsIDOMRange *subRange;
+            subRange = (nsIDOMRange *)(subRanges->ElementAt(0));
+            while (subRange && (NS_SUCCEEDED(result)))
+            {
+              nsCOMPtr<nsIDOMNode>startParent;
+              result = subRange->GetStartParent(getter_AddRefs(startParent));
+              if (NS_SUCCEEDED(result) && startParent) 
+              {
+                nsCOMPtr<nsIDOMElement> blockParent;
+                result = GetBlockParent(startParent, getter_AddRefs(blockParent));
+                if (NS_SUCCEEDED(result) && blockParent)
+                {
+                  nsAutoString blockParentTag;
+                  blockParent->GetTagName(blockParentTag);
+                  if (-1==aTagList->IndexOf(blockParentTag)) {
+                    aTagList->AppendString(blockParentTag);
+                  }
+                }
+              }
+              NS_RELEASE(subRange);
+              subRanges->RemoveElementAt(0);
+              subRange = (nsIDOMRange *)(subRanges->ElementAt(0));
+            }
+          }
+          NS_RELEASE(subRanges);
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+// use this when block parents are to be added regardless of current state
 NS_IMETHODIMP 
 nsHTMLEditor::AddBlockParent(nsString& aParentTag)
 {
-
   if (gNoisy) 
   { 
     char *tag = aParentTag.ToNewCString();
@@ -388,58 +454,9 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
       if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        nsCOMPtr<nsIDOMNode>commonParent;
-        result = range->GetCommonParent(getter_AddRefs(commonParent));
-        if ((NS_SUCCEEDED(result)) && commonParent)
-        {
-          PRInt32 startOffset, endOffset;
-          range->GetStartOffset(&startOffset);
-          range->GetEndOffset(&endOffset);
-          nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
-          range->GetStartParent(getter_AddRefs(startParent));
-          range->GetEndParent(getter_AddRefs(endParent));
-          if (startParent.get()==endParent.get()) 
-          { // the range is entirely contained within a single node
-            result = ReParentContentOfNode(startParent, aParentTag);
-          }
-          else
-          {
-            nsCOMPtr<nsIDOMNode> startGrandParent;
-            startParent->GetParentNode(getter_AddRefs(startGrandParent));
-            nsCOMPtr<nsIDOMNode> endGrandParent;
-            endParent->GetParentNode(getter_AddRefs(endGrandParent));
-            if (NS_SUCCEEDED(result))
-            {
-              PRBool canCollapse = PR_FALSE;
-              if (endGrandParent.get()==startGrandParent.get())
-              {
-                result = IntermediateNodesAreInline(range, startParent, startOffset, 
-                                                    endParent, endOffset, 
-                                                    canCollapse);
-              }
-              if (NS_SUCCEEDED(result)) 
-              {
-                if (PR_TRUE==canCollapse)
-                { // the range is between 2 nodes that have a common (immediate) grandparent,
-                  // and any intermediate nodes are just inline style nodes
-                  result = ReParentContentOfNode(startParent, aParentTag);
-                }
-                else
-                { // the range is between 2 nodes that have no simple relationship
-                  result = ReParentContentOfRange(range, aParentTag);
-                }
-              }
-            }
-          }
-          if (NS_SUCCEEDED(result))
-          { // compute a range for the selection
-            // don't want to actually do anything with selection, because
-            // we are still iterating through it.  Just want to create and remember
-            // an nsIDOMRange, and later add the range to the selection after clearing it.
-            // XXX: I'm blocked here because nsIDOMSelection doesn't provide a mechanism
-            //      for setting a compound selection yet.
-          }
-        }
+        // scan the range for all the independent block content subranges
+        // and apply the transformation to them
+        result = ReParentContentOfRange(range, aParentTag, eInsertParent);
       }
     }
     nsEditor::EndTransaction();
@@ -453,8 +470,74 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
   return result;
 }
 
+// use this when a paragraph type is being transformed from one type to another
 NS_IMETHODIMP 
-nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag)
+nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
+{
+
+  if (gNoisy) 
+  { 
+    char *tag = aParentTag.ToNewCString();
+    printf("---------- nsHTMLEditor::ReplaceBlockParent %s ----------\n", tag); 
+    delete [] tag;
+  }
+  
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMSelection>selection;
+  result = nsEditor::GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
+  {
+    // set the block parent for all selected ranges
+    nsEditor::BeginTransaction();
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = do_QueryInterface(selection);
+    if (enumerator)
+    {
+      enumerator->First(); 
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      {
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        // scan the range for all the independent block content subranges
+        // and apply the transformation to them
+        result = ReParentContentOfRange(range, aParentTag, eReplaceParent);
+      }
+    }
+    nsEditor::EndTransaction();
+    if (NS_SUCCEEDED(result))
+    { // set the selection
+      // XXX: can't do anything until I can create ranges
+    }
+  }
+  if (gNoisy) {printf("Finished nsHTMLEditor::AddBlockParent with this content:\n"); DebugDumpContent(); } // DEBUG
+
+  return result;
+}
+
+void IsRootTag(nsString &aTag, PRBool &aIsTag)
+{
+  static nsAutoString bodyTag = "body";
+  static nsAutoString tdTag = "td";
+  static nsAutoString thTag = "th";
+  static nsAutoString captionTag = "caption";
+  if (PR_TRUE==aTag.EqualsIgnoreCase(bodyTag) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(tdTag) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(thTag) ||
+      PR_TRUE==aTag.EqualsIgnoreCase(captionTag) )
+  {
+    aIsTag = PR_TRUE;
+  }
+  else {
+    aIsTag = PR_FALSE;
+  }
+}
+
+
+NS_IMETHODIMP 
+nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, 
+                                    nsString &aParentTag,
+                                    BlockTransformationType aTransformation)
 {
   if (!aNode) { return NS_ERROR_NULL_POINTER; }
   // find the current block parent, or just use aNode if it is a block node
@@ -473,7 +556,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag)
       nodeIsBlock=PR_TRUE;
     }
   }
-  // if aNode is the block parent, then we're operating on one of its children
+  // if aNode is the block parent, then the node to reparent is one of its children
   if (PR_TRUE==nodeIsBlock) 
   {
     result = aNode->QueryInterface(nsIDOMNode::GetIID(), getter_AddRefs(blockParentElement));
@@ -481,7 +564,7 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag)
       result = aNode->GetFirstChild(getter_AddRefs(nodeToReParent));
     }
   }
-  else {
+  else { // we just need to get the block parent of aNode
     result = nsTextEditor::GetBlockParent(aNode, getter_AddRefs(blockParentElement));
   }
   // at this point, we must have a good result, a node to reparent, and a block parent
@@ -494,38 +577,44 @@ nsHTMLEditor::ReParentContentOfNode(nsIDOMNode *aNode, nsString &aParentTag)
     // we need to treat nodes directly inside the body differently
     nsAutoString parentTag;
     blockParentElement->GetTagName(parentTag);
-    nsAutoString bodyTag = "body";
-    if (PR_TRUE==parentTag.EqualsIgnoreCase(bodyTag))
+    PRBool isRoot;
+    IsRootTag(parentTag, isRoot);
+    if (PR_TRUE==isRoot)    
     {
-      // if nodeToReParent is a text node, we have <BODY><TEXT>text.
-      // re-parent <TEXT> into a new <aTag> at the offset of <TEXT> in <BODY>
+      // if nodeToReParent is a text node, we have <ROOT>Text.
+      // re-parent Text into a new <aTag> at the offset of Text in <ROOT>
+      // so we end up with <ROOT><aTag>Text
+      // ignore aTransformation, replaces act like inserts
       nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(nodeToReParent);
       if (nodeAsText)
       {
         result = ReParentBlockContent(nodeToReParent, aParentTag, blockParentNode, parentTag, 
-                                      getter_AddRefs(newParentNode));
+                                      aTransformation, getter_AddRefs(newParentNode));
       }
       else
       { // this is the case of an insertion point between 2 non-text objects
+        // XXX: how to you know it's an insertion point???
         PRInt32 offsetInParent=0;
         result = nsIEditorSupport::GetChildOffset(nodeToReParent, blockParentNode, offsetInParent);
         NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
         // otherwise, just create the block parent at the selection
         result = nsTextEditor::CreateNode(aParentTag, blockParentNode, offsetInParent, 
                                           getter_AddRefs(newParentNode));
-        // XXX: need to create a bogus text node inside this new block!
+        // XXX: need to move some of the children of blockParentNode into the newParentNode?
+        // XXX: need to create a bogus text node inside this new block?
         //      that means, I need to generalize bogus node handling
       }
     }
     else
-    { 
-      // for the selected block content, replace blockParentNode with a new node of the correct type
-      if (PR_FALSE==parentTag.EqualsIgnoreCase(aParentTag))
+    { // the block parent is not a ROOT, 
+      // for the selected block content, transform blockParentNode 
+      if (((eReplaceParent==aTransformation) && (PR_FALSE==parentTag.EqualsIgnoreCase(aParentTag))) ||
+           (eInsertParent==aTransformation))
       {
-		if (gNoisy) { DebugDumpContent(); } // DEBUG
+		    if (gNoisy) { DebugDumpContent(); } // DEBUG
         result = ReParentBlockContent(nodeToReParent, aParentTag, blockParentNode, parentTag, 
-                                      getter_AddRefs(newParentNode));
-        if (NS_SUCCEEDED(result) && newParentNode)
+                                      aTransformation, getter_AddRefs(newParentNode));
+        if ((NS_SUCCEEDED(result)) && (newParentNode) && (eReplaceParent==aTransformation))
         {
           PRBool hasChildren;
           blockParentNode->HasChildNodes(&hasChildren);
@@ -554,6 +643,7 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
                                    nsString    &aParentTag,
                                    nsIDOMNode  *aBlockParentNode,
                                    nsString    &aBlockParentTag,
+                                   BlockTransformationType aTranformation,
                                    nsIDOMNode **aNewParentNode)
 {
   if (!aNode || !aBlockParentNode || !aNewParentNode) { return NS_ERROR_NULL_POINTER; }
@@ -574,16 +664,13 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
   }
   // now, previousAncestor is the node we are operating on
   nsCOMPtr<nsIDOMNode>leftNode, rightNode;
-  result = GetBlockDelimitedContent(aBlockParentNode, 
-                                    previousAncestor, 
+  result = GetBlockDelimitedContent(previousAncestor, 
                                     getter_AddRefs(leftNode), 
                                     getter_AddRefs(rightNode));
   if ((NS_SUCCEEDED(result)) && leftNode && rightNode)
   {
     PRInt32 offsetInParent=0;
-    PRBool canContain;
-    CanContainBlock(aParentTag, aBlockParentTag, canContain);
-    if (PR_TRUE==canContain)
+    if (eInsertParent==aTranformation)
     {
       result = nsIEditorSupport::GetChildOffset(leftNode, aBlockParentNode, offsetInParent);
       NS_ASSERTION((NS_SUCCEEDED(result)), "bad result from GetChildOffset");
@@ -644,10 +731,36 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::ReParentContentOfRange(nsIDOMRange *aRange, nsString &aParentTag)
+nsHTMLEditor::ReParentContentOfRange(nsIDOMRange *aRange, 
+                                     nsString &aParentTag,
+                                     BlockTransformationType aTranformation)
 {
-  nsresult result=NS_ERROR_NOT_IMPLEMENTED;
-  printf("transformations over complex selections not implemented.\n");
+  if (!aRange) { return NS_ERROR_NULL_POINTER; }
+  nsresult result;
+  nsISupportsArray *subRanges;
+  result = NS_NewISupportsArray(&subRanges);
+  if ((NS_SUCCEEDED(result)) && subRanges)
+  {
+    result = GetBlockRanges(aRange, subRanges);
+    if (NS_SUCCEEDED(result)) 
+    {
+      nsIDOMRange *subRange;
+      subRange = (nsIDOMRange *)(subRanges->ElementAt(0));
+      while (subRange && (NS_SUCCEEDED(result)))
+      {
+        nsCOMPtr<nsIDOMNode>startParent;
+        result = subRange->GetStartParent(getter_AddRefs(startParent));
+        if (NS_SUCCEEDED(result) && startParent) 
+        {
+          result = ReParentContentOfNode(startParent, aParentTag, aTranformation);
+        }
+        NS_RELEASE(subRange);
+        subRanges->RemoveElementAt(0);
+        subRange = (nsIDOMRange *)(subRanges->ElementAt(0));
+      }
+    }
+    NS_RELEASE(subRanges);
+  }
   return result;
 }
 
