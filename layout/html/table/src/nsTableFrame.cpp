@@ -520,6 +520,9 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
   if (nsnull==mCellMap)
     return; // no info yet, so nothing useful to do
 
+  // make sure we've accounted for the COLS attribute
+  AdjustColumnsForCOLSAttribute();
+
   PRInt32 actualColumns = 0;
   nsTableColGroupFrame *lastColGroupFrame = nsnull;
   nsIFrame * firstRowGroupFrame=nsnull;
@@ -2438,13 +2441,47 @@ void nsTableFrame::VerticallyAlignChildren(nsIPresContext* aPresContext,
 {
 }
 
+void nsTableFrame::AdjustColumnsForCOLSAttribute()
+{
+  NS_ASSERTION(nsnull!=mCellMap, "bad cell map");
+  
+  // any specified-width column turns off COLS attribute
+  nsStyleTable* tableStyle = (nsStyleTable *)mStyleContext->GetMutableStyleData(eStyleStruct_Table);
+  if (tableStyle->mCols != NS_STYLE_TABLE_COLS_NONE)
+  {
+    PRInt32 numCols = GetColCount();
+    PRInt32 numRows = GetRowCount();
+    for (PRInt32 rowIndex=0; rowIndex<numRows; rowIndex++)
+    {
+      for (PRInt32 colIndex=0; colIndex<numCols; colIndex++)
+      {
+        nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(rowIndex, colIndex);
+        // get the cell style info
+        const nsStylePosition* cellPosition;
+        if (nsnull!=cellFrame)
+        {
+          cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
+          if ((eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) ||
+               (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) 
+          {
+            tableStyle->mCols = NS_STYLE_TABLE_COLS_NONE;
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
 NS_METHOD
 nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
                                      nsTableCellFrame* aCellFrame,
                                      nsTableRowFrame * aRowFrame)
 {
-  // if this cell is in the first row, then the width attribute
-  // also acts as the width attribute for the entire column
+  // if this cell is the first non-col-spanning cell to have a width attribute, 
+  // then the width attribute also acts as the width attribute for the entire column
+  // if the cell has a colspan, the width is used provisionally, divided equally among 
+  // the spanned columns
   if ((nsnull!=aPresContext) && (nsnull!=aCellFrame) && (nsnull!=aRowFrame))
   {
     // get the cell style info
