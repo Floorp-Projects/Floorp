@@ -102,6 +102,7 @@ nsActivePlugin::nsActivePlugin(nsIPluginInstance* aInstance, char * url)
     NS_ADDREF(aInstance);
   }
   mStopped = PR_FALSE;
+  mllStopTime = LL_ZERO;
 }
 
 nsActivePlugin::~nsActivePlugin()
@@ -113,6 +114,15 @@ nsActivePlugin::~nsActivePlugin()
     NS_RELEASE(mPeer);
   }
   PL_strfree(mURL);
+}
+
+void nsActivePlugin::setStopped(PRBool stopped)
+{
+  mStopped = stopped;
+  if(mStopped)
+    mllStopTime = PR_Now();
+  else
+    mllStopTime = LL_ZERO;
 }
 
 nsActivePluginList::nsActivePluginList()
@@ -218,6 +228,24 @@ PRUint32 nsActivePluginList::getStoppedCount()
       stoppedCount++;
   }
   return stoppedCount;
+}
+
+nsActivePlugin * nsActivePluginList::findOldestStopped()
+{
+  nsActivePlugin * res = nsnull;
+  PRInt64 llTime = LL_MAXINT;
+  for(nsActivePlugin * p = first; p != nsnull; p = p->mNext)
+  {
+    if(!p->mStopped)
+      continue;
+
+    if(LL_CMP(p->mllStopTime, <, llTime))
+    {
+      llTime = p->mllStopTime;
+      res = p;
+    }
+  }
+  return res;
 }
 
 nsPluginTag::nsPluginTag()
@@ -1856,7 +1884,7 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
     aOwner->CreateWidget();
     instance->SetWindow(window);
 
-    plugin->mStopped = PR_FALSE;
+    plugin->setStopped(PR_FALSE);
     nsCRT::free(url);
     return NS_OK;
   }
@@ -2642,7 +2670,15 @@ nsPluginHostImpl::StopPluginInstance(nsIPluginInstance* aInstance)
   nsActivePlugin * plugin = mActivePluginList.find(aInstance);
 
   if(plugin != nsnull)
-    plugin->mStopped = PR_TRUE;
+  {
+    if(mActivePluginList.getStoppedCount() >= MAX_NUMBER_OF_STOPPED_PLUGINS)
+    {
+      nsActivePlugin * oldest = mActivePluginList.findOldestStopped();
+      if(oldest != nsnull)
+        mActivePluginList.remove(oldest);
+    }
+    plugin->setStopped(PR_TRUE);
+  }
 
   return NS_OK;
 }
