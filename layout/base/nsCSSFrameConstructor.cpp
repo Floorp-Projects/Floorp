@@ -9607,32 +9607,40 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresContext*          aPresConte
   return rv;
 }
 
-// Helper function that walks a framne list and recursively removed content to
-// frame mappings and undisplayed content mappings.
-// This differs from DeletingFrameSubtree() because the frames have no yet been
+// Helper function that recursively removes content to frame mappings and
+// undisplayed content mappings.
+// This differs from DeletingFrameSubtree() because the frames have not yet been
 // added to the frame hierarchy
+static void
+DoCleanupFrameReferences(nsIFrameManager* aFrameManager,
+                         nsIFrame*        aFrame)
+{
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  
+  // Remove the mapping from the content object to its frame
+  aFrameManager->SetPrimaryFrameFor(content, nsnull);
+  aFrameManager->ClearAllUndisplayedContentIn(content);
+
+  // Recursively walk the child frames.
+  // Note: we only need to look at the principal child list
+  nsIFrame* childFrame;
+  aFrame->FirstChild(nsnull, &childFrame);
+  while (childFrame) {
+    DoCleanupFrameReferences(aFrameManager, childFrame);
+    
+    // Get the next sibling child frame
+    childFrame->GetNextSibling(&childFrame);
+  }
+}
+
+// Helper function that walks a frame list and calls DoCleanupFrameReference()
 static void
 CleanupFrameReferences(nsIFrameManager* aFrameManager,
                        nsIFrame*        aFrameList)
 {
   while (aFrameList) {
-    nsCOMPtr<nsIContent> content;
-    aFrameList->GetContent(getter_AddRefs(content));
-    
-    // Remove the mapping from the content object to its frame
-    aFrameManager->SetPrimaryFrameFor(content, nsnull);
-    aFrameManager->ClearAllUndisplayedContentIn(content);
-
-    // Recursively walk the child frames.
-    // Note: we only need to look at the principal child list
-    nsIFrame* childFrame;
-    aFrameList->FirstChild(nsnull, &childFrame);
-    while (childFrame) {
-      CleanupFrameReferences(aFrameManager, childFrame);
-      
-      // Get the next sibling child frame
-      childFrame->GetNextSibling(&childFrame);
-    }
+    DoCleanupFrameReferences(aFrameManager, aFrameList);
 
     // Get the sibling frame
     aFrameList->GetNextSibling(&aFrameList);
