@@ -1,22 +1,5 @@
 housecleaning
 ------------- 
-* currently nsILDAPOperation::SimpleBind is called as though it were
-  asynchronous (ie from the UI thread), which it mostly is -- the call
-  to connect() can stall.  We could use the ASYNC_CONNECT flag,
-  but it seems to do weird stuff on Linux, and mcs says it isn't well
-  tested anyway.  At the moment, my feeling is that fixing
-  ASYNC_CONNECT is probably the right thing to do, but the bind could
-  actually be pushed from nsILDAPOperation into nsILDAPConnection and
-  then called after the thread for the connection is spun up.
-  
-* some (many?) destructors don't clean up completely or correctly.  
-  audit for this and fix.
-
-* many of the instance vars in the various class are probably not 
-  initialized correctly.  audit for this (especially member
-  initializers, which may have the potential to break XPCOM compliance
-  on errors) and fix.
-
 * implement nsIPipeObserver in nsLDAPChannel in case pipe fills up?
 
 * audit for and implement any appropriate NOT_IMPLEMENTED functions
@@ -54,13 +37,14 @@ housecleaning
 
 * grep for XXXs and fix the issues 
 
+
 items blocked waiting for other work
 ------------------------------------
 * searches that return lots of entries to the nsLDAPChannel
   (eg (sn=Smith) at netcenter) mostly stall out the UI.  moving most of the 
   callback work off the UI thread to the LDAP connection thread didn't 
   help; so this would appear to be lossage in the event system itself.  
-  blocked waiting for more event love from blizzard and dougt.
+  (blocked waiting on advice/help from event wizards - bug 50104).
 
 * move the ldap_unbind() call out of the nsLDAPConnection destructor, 
   since nsLDAPConnection will soon go back to being callable from the
@@ -78,7 +62,7 @@ items blocked waiting for other work
 
 * deal with timeouts (blocked on LDAP C SDK 4.1, in the hopes that the NSPR 
   binding of the IO functions will provide us with some way to pop out
-  of the select()).
+  of the select() that's called under ldap_result() ).
 
 * error handling: sort out what should be NS_ASSERTIONs vs. normal
   error conditions (eg network & data errors).  should audit interface
@@ -87,7 +71,17 @@ items blocked waiting for other work
   void in ldapSearch.  (blocked in the hopes that 13423 (xpidl nsresult decls)
   gets implemented soon).
 
+* currently nsILDAPOperation::SimpleBind is called as though it were
+  asynchronous (ie from the UI thread), which it mostly is -- the call
+  to connect() can stall.  We could use the ASYNC_CONNECT flag, but it
+  seems to do weird stuff on Linux, and mcs says it isn't well tested
+  anyway.  At the moment, my feeling is that fixing ASYNC_CONNECT is
+  probably the right thing to do, but the bind could actually be
+  pushed from nsILDAPOperation into nsILDAPConnection and then called
+  after the thread for the connection is spun up (waiting on help from
+  the LDAP SDK folks: bug 50074).
 
+  
 misc
 ----
 * i18n / l10n (any text strings)
