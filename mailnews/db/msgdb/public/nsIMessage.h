@@ -85,6 +85,7 @@ public:
     NS_IMETHOD SetPriority(const char *priority) = 0;
     NS_IMETHOD GetMessageOffset(PRUint32 *result) = 0;
     NS_IMETHOD GetStatusOffset(PRUint32 *result) = 0; 
+	NS_IMETHOD GetCharSet(nsString &result) = 0;
 };
 
 #endif // nsIMessage_h__

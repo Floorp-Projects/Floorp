@@ -304,6 +304,7 @@ protected:
 	mdb_token			m_threadUnreadChildrenColumnToken;
 	mdb_token			m_messageThreadIdColumnToken;
 	mdb_token			m_numReferencesColumnToken;
+	mdb_token			m_messageCharSetColumnToken;
 	nsIMsgHeaderParser	*m_HeaderParser;
 };
 

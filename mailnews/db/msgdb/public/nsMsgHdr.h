@@ -21,7 +21,7 @@
 
 #include "nsIMessage.h"
 #include "nsRDFResource.h"
-#include "nsString.h"
+#include "nsString2.h"
 #include "MailNewsTypes.h"
 #include "xp.h"
 #include "mdb.h"
@@ -84,7 +84,7 @@ public:
     NS_IMETHOD SetPriority(const char *priority);
     NS_IMETHOD GetMessageOffset(PRUint32 *result);
     NS_IMETHOD GetStatusOffset(PRUint32 *result); 
-
+	NS_IMETHOD GetCharSet(nsString &result);
     ////////////////////////////////////////////////////////////////////////////
     // nsMsgHdr methods:
     nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
@@ -115,7 +115,7 @@ protected:
     PRUint32		m_flags;
     PRUint16		m_numReferences;	// x-ref header for threading
     PRInt16			m_csID;			// cs id of message
-	nsString		m_charSet;		// OK, charset of headers, since cs id's aren't supported.
+	nsString2		m_charSet;		// OK, charset of headers, since cs id's aren't supported.
     nsMsgPriority	m_priority;
 
     // nsMsgHdrs will have to know what db and row they belong to, since they are really

@@ -502,6 +502,10 @@ NS_IMETHODIMP nsMsgHdr::GetRecipientsCollationKey(nsString &resultRecipients)
 	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
 }
 
+NS_IMETHODIMP nsMsgHdr::GetCharSet(nsString &result)
+{
+	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageCharSetColumnToken, result);
+}
 
 nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
 {
