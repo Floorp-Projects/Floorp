@@ -123,7 +123,6 @@ nsGridRowGroupLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize
     PRInt32 start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (PRInt32 i=0; i < extraColumns; i++)
     {
-      nsGridRow* column = grid->GetColumnAt(i+start, isHorizontal);
       nscoord size = 0;
       grid->GetPrefRowHeight(aState, i+start, size, !isHorizontal); // GetPrefColumnWidth
 
@@ -151,7 +150,6 @@ nsGridRowGroupLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
     PRInt32 start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (PRInt32 i=0; i < extraColumns; i++)
     {
-      nsGridRow* column = grid->GetColumnAt(i+start, isHorizontal);
       nscoord size = 0;
       grid->GetMaxRowHeight(aState, i+start, size, !isHorizontal); // GetMaxColumnWidth
 
@@ -180,7 +178,6 @@ nsGridRowGroupLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize&
     PRInt32 start = grid->GetColumnCount(isHorizontal) - grid->GetExtraColumnCount(isHorizontal);
     for (PRInt32 i=0; i < extraColumns; i++)
     {
-      nsGridRow* column = grid->GetColumnAt(i+start, isHorizontal);
       nscoord size = 0;
       grid->GetMinRowHeight(aState, i+start, size, !isHorizontal); // GetMinColumnWidth
 
@@ -203,7 +200,6 @@ nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
     nsIBox* child = nsnull;
     aBox->GetChildBox(&child); 
     nsIBox* deepChild = child;
-    PRInt32 rowCount = 0;
 
     while(child) {
 
@@ -237,7 +233,6 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
     nsIBox* child = nsnull;
     aBox->GetChildBox(&child); 
     nsIBox* deepChild = child;
-    PRInt32 rowCount = 0;
 
     while(child) {
       
