@@ -288,7 +288,7 @@
       <!-- menuitem id="menu_SendPage" is merged here from mailEditorOverlay.xul,
            where "position" is assumed to be 14. Change that label if menu position changes.      -->
       <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
-      <menuitem accesskey="&fileprint.accesskey;"      observes="cmd_print" label="&printCmd.label;"/>
+      <menuitem accesskey="&fileprint.accesskey;" key="printkb" observes="cmd_print" label="&printCmd.label;"/>
       <menuseparator/>
       <!-- The Exit/Quit item is merged from platformGlobalOverlay.xul -->
     </menupopup>
