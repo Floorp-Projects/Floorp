@@ -828,6 +828,17 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             if (ie == NULL)
                 continue;
 
+            if (mListener)
+            {
+                char *objString = ie->toString();
+                if (objString)
+                {
+                    mListener->FinalizeProgress(NS_ConvertASCIItoUCS2(objString).GetUnicode(),
+                                               (i+1), mInstalledFiles->Count());
+                    delete [] objString;
+                }
+            }
+
             result = ie->Complete();
 
             if (result != nsInstall::SUCCESS) 
@@ -841,17 +852,6 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 {
                     InternalAbort( result );
                     break;
-                }
-            }
-
-            if (mListener)
-            {
-                char *objString = ie->toString();
-                if (objString)
-                {
-                    mListener->FinalizeProgress(NS_ConvertASCIItoUCS2(objString).GetUnicode(),
-                                               (i+1), mInstalledFiles->Count());
-                    delete [] objString;
                 }
             }
         }
@@ -2025,6 +2025,41 @@ nsInstall::FileOpFileMacAlias(nsIFile *aSourceFile, nsIFile *aAliasFile, PRInt32
 PRInt32
 nsInstall::FileOpFileUnixLink(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn)
 {
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpWinRegisterServer(nsInstallFolder& aTarget, PRInt32* aReturn)
+{
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+  if (localFile == nsnull)
+  {
+     *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+     return NS_OK;
+  }
+
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_WIN_REGISTER_SERVER, localFile, aReturn);
+  if (ifop == nsnull)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      delete ifop;
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+  
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+  
+  SaveError(*aReturn);
+
   return NS_OK;
 }
 

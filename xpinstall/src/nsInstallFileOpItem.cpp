@@ -27,6 +27,7 @@
 #include "ScheduledTasks.h"
 
 #ifdef _WINDOWS
+#include <windows.h>
 #include "nsWinShortcut.h"
 #endif
 
@@ -262,6 +263,9 @@ PRInt32 nsInstallFileOpItem::Complete()
     case NS_FOP_UNIX_LINK:
       ret = NativeFileOpUnixLink();
       break;
+    case NS_FOP_WIN_REGISTER_SERVER:
+      ret = NativeFileOpWindowsRegisterServerComplete();
+      break;
   }
 
   if ( (ret != nsInstall::SUCCESS) && (ret < nsInstall::GESTALT_INVALID_ARGUMENT || ret > nsInstall::REBOOT_NEEDED) )
@@ -280,8 +284,6 @@ char* nsInstallFileOpItem::toString()
   char*    srcPath;
   char*    dstPath;
 
-  // XXX these hardcoded strings should be replaced by nsInstall::GetResourcedString(id)
-
     // STRING USE WARNING: perhaps |result| should be an |nsCAutoString| to avoid all this double converting
   
   switch(mCommand)
@@ -296,6 +298,7 @@ char* nsInstallFileOpItem::toString()
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
+
     case NS_FOP_FILE_DELETE:
       if(mTarget == nsnull)
         break;
@@ -305,6 +308,7 @@ char* nsInstallFileOpItem::toString()
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
+
     case NS_FOP_FILE_EXECUTE:
       if(mTarget == nsnull)
         break;
@@ -329,6 +333,7 @@ char* nsInstallFileOpItem::toString()
         Recycle(temp);
 
       break;
+
     case NS_FOP_FILE_MOVE:
       if((mSrc == nsnull) || (mTarget == nsnull))
         break;
@@ -339,6 +344,7 @@ char* nsInstallFileOpItem::toString()
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
+
     case NS_FOP_FILE_RENAME:
       if((mSrc == nsnull) || (mTarget == nsnull))
         break;
@@ -349,6 +355,7 @@ char* nsInstallFileOpItem::toString()
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
+
     case NS_FOP_DIR_CREATE:
       if(mTarget == nsnull)
         break;
@@ -358,6 +365,7 @@ char* nsInstallFileOpItem::toString()
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
+
     case NS_FOP_DIR_REMOVE:
       if(mTarget == nsnull)
         break;
@@ -367,6 +375,7 @@ char* nsInstallFileOpItem::toString()
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
+
     case NS_FOP_DIR_RENAME:
       if((mSrc == nsnull) || (mTarget == nsnull))
         break;
@@ -377,6 +386,7 @@ char* nsInstallFileOpItem::toString()
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, srcPath, dstPath );
       break;
+
     case NS_FOP_WIN_SHORTCUT:
       rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("WindowsShortcut"));
       if(rsrcVal != nsnull)
@@ -393,6 +403,7 @@ char* nsInstallFileOpItem::toString()
         }
       }
       break;
+
     case NS_FOP_MAC_ALIAS:
       if(mTarget == nsnull)
         break;
@@ -402,11 +413,23 @@ char* nsInstallFileOpItem::toString()
       if(rsrcVal != nsnull)
         PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
       break;
+
     case NS_FOP_UNIX_LINK:
       break;
+
+    case NS_FOP_WIN_REGISTER_SERVER:
+      if(mTarget == nsnull)
+        break;
+
+      mTarget->GetPath(&dstPath);
+      rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("WindowsRegisterServer"));
+      if(rsrcVal != nsnull)
+        PR_snprintf(resultCString, RESBUFSIZE, rsrcVal, dstPath );
+      break;
+
     default:
       if(rsrcVal != nsnull)
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("UnknownFileOpCommand"));
+        resultCString = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("UnknownFileOpCommand"));
       break;
   }
 
@@ -453,6 +476,9 @@ PRInt32 nsInstallFileOpItem::Prepare()
       break;
     case NS_FOP_UNIX_LINK:
       break;
+    case NS_FOP_WIN_REGISTER_SERVER:
+      ret = NativeFileOpWindowsRegisterServerPrepare();
+      break;
     default:
       break;
   }
@@ -497,6 +523,9 @@ void nsInstallFileOpItem::Abort()
       NativeFileOpMacAliasAbort();
       break;
     case NS_FOP_UNIX_LINK:
+      break;
+    case NS_FOP_WIN_REGISTER_SERVER:
+      NativeFileOpWindowsRegisterServerAbort();
       break;
   }
 }
@@ -1285,5 +1314,99 @@ PRInt32
 nsInstallFileOpItem::NativeFileOpUnixLink()
 {
   return nsInstall::SUCCESS;
+}
+
+PRInt32
+nsInstallFileOpItem::NativeFileOpWindowsRegisterServerPrepare()
+{
+  PRInt32 rv = nsInstall::SUCCESS;
+
+#ifdef _WINDOWS
+  char      *file = nsnull;
+  FARPROC   DllReg;
+  HINSTANCE hLib;
+
+  mTarget->GetPath(&file);
+  if(file != nsnull)
+  {
+    if((hLib = LoadLibraryEx(file, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) != NULL)
+    {
+      if((DllReg = GetProcAddress(hLib, "DllRegisterServer")) == NULL)
+        rv = nsInstall::UNABLE_TO_LOCATE_LIB_FUNCTION;
+
+      FreeLibrary(hLib);
+    }
+    else
+      rv = nsInstall::UNABLE_TO_LOAD_LIBRARY;
+  }
+  else
+    rv = nsInstall::UNEXPECTED_ERROR;
+#endif
+
+  return(rv);
+}
+
+PRInt32
+nsInstallFileOpItem::NativeFileOpWindowsRegisterServerComplete()
+{
+  PRInt32 rv = nsInstall::SUCCESS;
+
+#ifdef _WINDOWS
+  char      *file = nsnull;
+  FARPROC   DllReg;
+  HINSTANCE hLib;
+
+  mTarget->GetPath(&file);
+  if(file != nsnull)
+  {
+    if((hLib = LoadLibraryEx(file, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) != NULL)
+    {
+      if((DllReg = GetProcAddress(hLib, "DllRegisterServer")) != NULL)
+        DllReg();
+      else
+        rv = nsInstall::UNABLE_TO_LOCATE_LIB_FUNCTION;
+
+      FreeLibrary(hLib);
+    }
+    else
+      rv = nsInstall::UNABLE_TO_LOAD_LIBRARY;
+  }
+  else
+    rv = nsInstall::UNEXPECTED_ERROR;
+#endif
+
+  return(rv);
+}
+
+PRInt32
+nsInstallFileOpItem::NativeFileOpWindowsRegisterServerAbort()
+{
+  PRInt32 rv = nsInstall::SUCCESS;
+
+#ifdef _WINDOWS
+  char      *file = nsnull;
+  FARPROC   DllUnReg;
+  HINSTANCE hLib;
+
+  mTarget->GetPath(&file);
+  if(file != nsnull)
+  {
+    if((hLib = LoadLibraryEx(file, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) != NULL)
+    {
+      if((DllUnReg = GetProcAddress(hLib, "DllUnregisterServer")) != NULL)
+        DllUnReg();
+      else
+        rv = nsInstall::UNABLE_TO_LOCATE_LIB_FUNCTION;
+
+      FreeLibrary(hLib);
+    }
+    else
+      rv = nsInstall::UNABLE_TO_LOAD_LIBRARY;
+  }
+  else
+    rv = nsInstall::UNEXPECTED_ERROR;
+#endif
+
+  return(rv);
 }
 

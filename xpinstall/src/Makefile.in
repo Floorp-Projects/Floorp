@@ -68,6 +68,7 @@ CPPSRCS		= \
 		nsInstallFileOpItem.cpp \
 		nsJSFileSpecObj.cpp \
 		nsInstallLogComment.cpp \
+		nsInstallBitwise.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public

@@ -1855,6 +1855,9 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::INSUFFICIENT_DISK_SPACE,    "INSUFFICIENT_DISK_SPACE"      },
     { nsInstall::FILENAME_TOO_LONG,          "FILENAME_TOO_LONG"            },
 
+    { nsInstall::UNABLE_TO_LOCATE_LIB_FUNCTION, "UNABLE_TO_LOCATE_LIB_FUNCTION"},
+    { nsInstall::UNABLE_TO_LOAD_LIBRARY,     "UNABLE_TO_LOAD_LIBRARY"       },
+
     { nsInstall::GESTALT_UNKNOWN_ERR,        "GESTALT_UNKNOWN_ERR"          },
     { nsInstall::GESTALT_INVALID_ARGUMENT,   "GESTALT_INVALID_ARGUMENT"     },
 
@@ -1865,6 +1868,10 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::FULL_INSTALL,               "FULL_INSTALL"                 },
     { nsInstall::NO_STATUS_DLG ,             "NO_STATUS_DLG"                },
     { nsInstall::NO_FINALIZE_DLG,            "NO_FINALIZE_DLG"              },
+
+    // these are bitwise values supported by addFile
+    { nsInstall::DO_NOT_UNINSTALL,           "DO_NOT_UNINSTALL"             },
+    { nsInstall::WIN_SHARED_FILE,            "WIN_SHARED_FILE"              },
 
     { CHROME_SKIN,                           "SKIN"                         },
     { CHROME_LOCALE,                         "LOCALE"                       },

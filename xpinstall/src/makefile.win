@@ -90,6 +90,7 @@ OBJS =                                          \
        .\$(OBJDIR)\nsJSFileSpecObj.obj          \
        .\$(OBJDIR)\nsInstallLogComment.obj      \
 #     .\$(OBJDIR)\nsUpdateNotification.obj     \
+       .\$(OBJDIR)\nsInstallBitwise.obj         \
        $(NULL)
 
 WIN_LIBS=                                       \

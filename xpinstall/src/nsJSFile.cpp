@@ -1258,6 +1258,53 @@ InstallFileOpFileUnixLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return JS_TRUE;
 }
 
+//
+// Native method WindowsRegisterServer
+//
+JSBool PR_CALLBACK
+InstallFileOpWinRegisterServer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  PRInt32 nativeRet;
+  JSObject *jsObj;
+  nsInstallFolder *folder;
+
+  *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if(nsnull == nativeThis)
+  {
+    return JS_TRUE;
+  }
+
+  //  public int WinRegisterServer (nsInstallFolder aNativeFolderPath);
+
+  if ( argc == 0 || argv[0] == JSVAL_NULL || !JSVAL_IS_OBJECT(argv[0])) //argv[0] MUST be a jsval
+  {
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
+  }
+
+  jsObj = JSVAL_TO_OBJECT(argv[0]);
+
+  if (!JS_InstanceOf(cx, jsObj, &FileSpecObjectClass, nsnull))
+  {
+    *rval = INT_TO_JSVAL(nsInstall::INVALID_ARGUMENTS);
+    return JS_TRUE;
+  }
+
+  folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
+  
+  if(!folder || NS_OK != nativeThis->FileOpWinRegisterServer(*folder, &nativeRet))
+  {
+    return JS_TRUE;
+  }
+
+  *rval = INT_TO_JSVAL(nativeRet);
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // Install Properties Getter
@@ -1324,6 +1371,7 @@ static JSFunctionSpec FileOpMethods[] =
   {"windowsShortcut",           InstallFileOpFileWindowsShortcut,      7},
   {"macAlias",                  InstallFileOpFileMacAlias,             2},
   {"unixLink",                  InstallFileOpFileUnixLink,             2},
+  {"windowsRegisterServer",     InstallFileOpWinRegisterServer,        1},
   {0}
 };
 
