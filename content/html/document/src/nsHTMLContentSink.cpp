@@ -153,6 +153,9 @@
 
 
 #include "nsEscape.h"
+
+#include "nsIElementObserver.h"
+
 static NS_DEFINE_CID(kLayoutHistoryStateCID, NS_LAYOUT_HISTORY_STATE_CID);
 
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
@@ -3955,12 +3958,15 @@ PRInt32 oldMaxTokenProcessingTime = GetMaxTokenProcessingTime();
   return NS_OK;
 }
 
-#include "nsIElementObserver.h"
-
 NS_IMETHODIMP
 HTMLContentSink::NotifyTagObservers(nsIParserNode* aNode)
 {
-  return mObservers? mObservers->Notify(aNode,mParser,mWebShell) : NS_OK;
+  // Bug 125317
+  // Inform observers that we're handling a document.write.
+  // This information is necessary for the charset observer, atleast,
+  // to make a decision whether a new charset loading is required or not.
+  PRUint32 flag = mHTMLDocument && mHTMLDocument->IsWriting() ? nsIElementObserver::IS_DOCUMENT_WRITE : 0;
+  return mObservers? mObservers->Notify(aNode, mParser, mWebShell, flag) : NS_OK;
 }
 
 void

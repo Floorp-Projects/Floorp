@@ -1523,7 +1523,8 @@ nsObserverEntry::~nsObserverEntry() {
 NS_IMETHODIMP
 nsObserverEntry::Notify(nsIParserNode* aNode,
                         nsIParser* aParser,
-                        nsISupports* aWebShell) 
+                        nsISupports* aWebShell,
+                        const PRUint32 aFlags) 
 {
   NS_ENSURE_ARG_POINTER(aNode);
   NS_ENSURE_ARG_POINTER(aParser);
@@ -1573,7 +1574,7 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
           if (observer) {
             result = observer->Notify(aWebShell, channel,
                                       nsHTMLTags::GetStringValue(theTag),
-                                      &keys, &values);
+                                      &keys, &values, aFlags);
             if (NS_FAILED(result)) {
               break;
             }

@@ -61,6 +61,7 @@ class nsIElementObserver : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IELEMENTOBSERVER_IID; return iid; }
 
+  enum { IS_DOCUMENT_WRITE = 1U };
   /*
    *   Subject call observer when the parser hit the tag
    *   @param aDocumentID- ID of the document
@@ -81,7 +82,8 @@ public:
                     nsISupports* aChannel,
                     const PRUnichar* aTag, 
                     const nsStringArray* aKeys, 
-                    const nsStringArray* aValues) = 0;
+                    const nsStringArray* aValues,
+                    const PRUint32 aFlags) = 0;
 
 };
 

@@ -73,7 +73,8 @@ public:
                     nsISupports* aChannel,
                     const PRUnichar* aTag, 
                     const nsStringArray* keys, 
-                    const nsStringArray* values)
+                    const nsStringArray* values,
+                    const PRUint32 aFlags)
   { return NS_ERROR_NOT_IMPLEMENTED; }
 
   NS_DECL_ISUPPORTS

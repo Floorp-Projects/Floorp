@@ -66,7 +66,8 @@ public:
                                    nsISupports* aChannel,
                                    const PRUnichar* aTag, 
                                    const nsStringArray* aKeys, 
-                                   const nsStringArray* aValues);
+                                   const nsStringArray* aValues,
+                                   const PRUint32 aFlags);
 
   /* methods for nsIObserver */
   NS_DECL_NSIOBSERVER
