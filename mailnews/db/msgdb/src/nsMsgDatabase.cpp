@@ -3339,29 +3339,28 @@ NS_IMETHODIMP nsMsgDatabase::GetLowWaterArticleNum(nsMsgKey *key)
 NS_IMETHODIMP nsMsgDatabase::HasMessagesOfType(PRUint32 viewType, PRBool *hasMessages)
 {
     nsresult rv;
-    nsCOMPtr <nsISimpleEnumerator> messages;
+    PRInt32 numMessages = 0;
+    
+    NS_ASSERTION(m_dbFolderInfo, "no m_dbFolderInfo");
+    if (!m_dbFolderInfo) return NS_ERROR_FAILURE;
 
     switch (viewType) {
         case nsMsgViewType::eShowAll:
-            rv = EnumerateMessages(getter_AddRefs(messages));
-            NS_ENSURE_SUCCESS(rv,rv);
-            break;
-        case nsMsgViewType::eShowRead:
-            rv = EnumerateReadMessages(getter_AddRefs(messages));
+            rv = m_dbFolderInfo->GetNumMessages(&numMessages);
             NS_ENSURE_SUCCESS(rv,rv);
             break;
         case nsMsgViewType::eShowUnread:
-            rv = EnumerateUnreadMessages(getter_AddRefs(messages));
+            rv = m_dbFolderInfo->GetNumNewMessages(&numMessages);
             NS_ENSURE_SUCCESS(rv,rv);
             break;
+        case nsMsgViewType::eShowRead:
         case nsMsgViewType::eShowWatched:
         default:
             NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
             break;
     }
 
-    rv = messages->HasMoreElements(hasMessages);
-    NS_ENSURE_SUCCESS(rv,rv);
+    *hasMessages = (numMessages > 0);
     return NS_OK;
 }
 

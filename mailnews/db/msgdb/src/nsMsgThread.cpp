@@ -825,28 +825,53 @@ NS_IMETHODIMP nsMsgThreadEnumerator::HasMoreElements(PRBool *aResult)
     return NS_OK;
 }
 
-#if 0
-// this performance optimization isn't working quite right yet.
 NS_IMETHODIMP nsMsgThread::HasMessagesOfType(nsMsgKey parentKey, PRUint32 viewType, PRBool *hasMessages)
 {
     nsresult rv;
     PRUint32 numChildren = 0;
     PRUint32 numUnreadChildren = 0;
 
+    nsMsgKey topHdrMsgKey = m_threadRootKey;
+
+    // if we don't know the key for the top of the thread, go get it.
+    if (topHdrMsgKey == nsMsgKey_None) {
+        nsCOMPtr <nsIMsgDBHdr> topHdr;
+
+        rv = GetRootHdr(nsnull, getter_AddRefs(topHdr));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        rv = topHdr->GetMessageKey(&topHdrMsgKey);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        NS_ASSERTION(topHdrMsgKey == nsMsgKey_None,"this is bad");
+        if (topHdrMsgKey == nsMsgKey_None) {
+            *hasMessages = PR_FALSE;
+            return NS_OK;
+        }
+    }
+
+    // if not top of thread, return false;
+    if (topHdrMsgKey != parentKey) {
+        *hasMessages = PR_FALSE;
+        return NS_OK;
+    }
+
     rv = GetNumChildren(&numChildren);
     NS_ENSURE_SUCCESS(rv,rv);
 
     switch (viewType) {
         case nsMsgViewType::eShowAll:
-            // don't return true on messages without children
+            // don't return true on threads without children
             *hasMessages = (numChildren > 1);
             break;
         case nsMsgViewType::eShowUnread:
             rv = GetNumUnreadChildren(&numUnreadChildren);
             NS_ENSURE_SUCCESS(rv,rv);
 
-            // don't return true on messages without children
-            *hasMessages = ((numChildren > 1) && (numUnreadChildren > 1));
+            // don't return true on threads without children
+            // and at least 1 unread child.  for now, this is
+            // "Threads with Unread Messages"
+            *hasMessages = ((numChildren > 1) && (numUnreadChildren > 0));
             break;
         case nsMsgViewType::eShowRead:
         case nsMsgViewType::eShowWatched:
@@ -858,33 +883,6 @@ NS_IMETHODIMP nsMsgThread::HasMessagesOfType(nsMsgKey parentKey, PRUint32 viewTy
     NS_ENSURE_SUCCESS(rv,rv);
     return NS_OK;
 }
-#else
-NS_IMETHODIMP nsMsgThread::HasMessagesOfType(nsMsgKey parentKey, PRUint32 viewType, PRBool *hasMessages)
-{
-    nsresult rv;
-    nsCOMPtr <nsISimpleEnumerator> messages;
-
-    switch (viewType) {
-        case nsMsgViewType::eShowAll:
-            rv = EnumerateMessages(parentKey, getter_AddRefs(messages));
-            NS_ENSURE_SUCCESS(rv,rv);
-            break;
-        case nsMsgViewType::eShowUnread:
-            rv = EnumerateUnreadMessages(parentKey, getter_AddRefs(messages));
-            NS_ENSURE_SUCCESS(rv,rv);
-            break;
-        case nsMsgViewType::eShowRead:
-        case nsMsgViewType::eShowWatched:
-        default:
-            NS_ENSURE_SUCCESS(NS_ERROR_UNEXPECTED,NS_ERROR_UNEXPECTED);
-            break;
-    }
-
-    rv = messages->HasMoreElements(hasMessages);
-    NS_ENSURE_SUCCESS(rv,rv);
-    return NS_OK;
-}
-#endif
 
 static nsresult
 nsMsgThreadUnreadFilter(nsIMsgDBHdr* msg, void* closure)
