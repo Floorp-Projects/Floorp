@@ -22,7 +22,13 @@
 
 #include "xpt_xdr.h"
 #include <stdio.h>
+#ifdef XP_MAC
+#include <stat.h>
+#include <StandardFile.h>
+#include "FullPath.h"
+#else
 #include <sys/stat.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include "prprf.h"
@@ -99,6 +105,35 @@ xpt_dump_usage(char *argv[]) {
             "       -v verbose mode\n", argv[0]);
 }
 
+#ifdef XP_MAC
+
+static int get_args(char*** argv)
+{
+	static char* args[] = { "xpt_dump", NULL, NULL };
+	static StandardFileReply reply;
+	
+	*argv = args;
+	
+	printf("choose an .xpt file to dump.\n");
+	
+	StandardGetFile(NULL, 0, NULL, &reply);
+	if (reply.sfGood && !reply.sfIsFolder) {
+		short len = 0;
+		Handle fullPath = NULL;
+		if (FSpGetFullPath(&reply.sfFile, &len, &fullPath) == noErr && fullPath != NULL) {
+			char* path = args[1] = PR_Malloc(1 + len);
+			BlockMoveData(*fullPath, path, len);
+			path[len] = '\0';
+			DisposeHandle(fullPath);
+			return 2;
+		}
+	}
+	
+	return 1;
+}
+
+#endif
+
 int 
 main(int argc, char **argv)
 {
@@ -110,6 +145,10 @@ main(int argc, char **argv)
     size_t flen;
     char *whole;
     FILE *in;
+
+#ifdef XP_MAC
+	argc = get_args(&argv);
+#endif
 
     switch (argc) {
     case 2:
@@ -370,14 +409,15 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
     if (id->parent_interface && id->parent_interface != 0) {
 
         parent_ide = &header->interface_directory[id->parent_interface - 1];
-        
+
+#ifndef XP_MAC        
         if (parent_ide) {
             fprintf(stdout, "%*sParent: %s::%s\n", indent, " ", 
                     parent_ide->name_space ? 
                     parent_ide->name_space : "", 
                     parent_ide->name);
         }
-        
+#endif
     }
 
     if (verbose_mode) {
