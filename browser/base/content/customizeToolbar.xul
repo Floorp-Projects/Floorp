@@ -27,15 +27,21 @@
 <!DOCTYPE dialog [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
   %brandDTD;
-  <!ENTITY % navigatorDTD SYSTEM "chrome://browser/locale/navigator.dtd">
-  %navigatorDTD;
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+%browserDTD;
+<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
+%globalRegionDTD;
+<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charset.dtd" >
+%charsetDTD;
 ]>
 
-<dialog id="main-window"
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+
+<dialog id="main-window" onload="buildDialog()"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<description>
-Howdy! I ain't implemented yet!
-</description>
+<script type="application/x-javascript" src="chrome://browser/content/customizeToolbar.js"/>
+  
+<toolbox style="margin:5px;" id="cloned-bar-container"/>
 
 </dialog>
