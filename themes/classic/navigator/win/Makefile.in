@@ -19,8 +19,8 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-THEME_ROOT_DEPTH = @srcdir@/..
+DEPTH		= ../../../..
+THEME_ROOT_DEPTH = @srcdir@/../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -31,38 +31,12 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
 
 EXPORT_RESOURCE_SAMPLES = \
-	alertl.gif \
-	back.gif \
-	back-disabled.gif \
-	back-hover.gif \
-	back-hover-active.gif \
-	errorl.gif \
-	forward.gif \
-	forward-hover.gif \
-	forward-hover-active.gif \
-	forward-disabled.gif \
-	home.gif \
-	location-hover.gif \
-	location.gif \
-	messagel.gif \
-	mynetscape.gif \
-	n-box-persbar.gif \
-	print.gif \
-	questionl.gif \
-	reload.gif \
-	reload-disabled.gif \
-	reload-hover.gif \
-	reload-hover-active.gif \
-	search.gif \
-	stop.gif \
-	stop-disabled.gif \
-	stop-hover.gif \
-	stop-hover-active.gif \
-	$(NULL)
-
-DIRS		= win
+	navigator.css \
+	pageInfo.css \
+    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
 
 GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
 

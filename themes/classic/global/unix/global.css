@@ -55,7 +55,7 @@
       background-color    : threedface;
       color               : windowtext;
       padding             : 0px;
-      font                : dialog;
+      font                : dialog, sans-serif;
     }
   
   window[wait-cursor] 

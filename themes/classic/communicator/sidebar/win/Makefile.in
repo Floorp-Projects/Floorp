@@ -19,8 +19,8 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-THEME_ROOT_DEPTH = @srcdir@/..
+DEPTH		= ../../../../..
+THEME_ROOT_DEPTH = @srcdir@/../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -28,39 +28,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/sidebar
 
 EXPORT_RESOURCE_SAMPLES = \
-	alertl.gif \
-	back.gif \
-	back-disabled.gif \
-	back-hover.gif \
-	back-hover-active.gif \
-	errorl.gif \
-	forward.gif \
-	forward-hover.gif \
-	forward-hover-active.gif \
-	forward-disabled.gif \
-	home.gif \
-	location-hover.gif \
-	location.gif \
-	messagel.gif \
-	mynetscape.gif \
-	n-box-persbar.gif \
-	print.gif \
-	questionl.gif \
-	reload.gif \
-	reload-disabled.gif \
-	reload-hover.gif \
-	reload-hover-active.gif \
-	search.gif \
-	stop.gif \
-	stop-disabled.gif \
-	stop-hover.gif \
-	stop-hover-active.gif \
+	customize.css  \
+	preview.css \
+	sidebar.css  \
 	$(NULL)
-
-DIRS		= win
 
 include $(topsrcdir)/config/rules.mk
 

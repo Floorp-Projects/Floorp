@@ -160,7 +160,7 @@ EXPORT_RESOURCE_SAMPLES_2 = \
 	twisty-open-selected.gif \
 	$(NULL)
 
-DIRS = unix
+DIRS = win
 
 include $(topsrcdir)/config/rules.mk
 

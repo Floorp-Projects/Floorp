@@ -19,8 +19,8 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-THEME_ROOT_DEPTH = @srcdir@/..
+DEPTH		= ../../../..
+THEME_ROOT_DEPTH = @srcdir@/../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -29,25 +29,16 @@ include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
 EXPORT_RESOURCE = \
-		$(srcdir)/lock.gif \
-		$(srcdir)/unlock.gif \
-		$(srcdir)/broken.gif \
-		$(srcdir)/navbar-endbox.gif \
-		$(srcdir)/tb-menubutton-dm.gif \
-		$(srcdir)/tb-menubutton-dm-disabled.gif \
-		$(srcdir)/menubuttonBindings.xml \
-		$(srcdir)/offline.gif \
-		$(srcdir)/online.gif \
-		$(srcdir)/smallheader-bg.gif \
-		$(srcdir)/securityOverlay.css \
-		$(srcdir)/toolbar-bg.gif \
-		$(srcdir)/toolbar-bg.png \
-		$(srcdir)/search.gif \
-		$(srcdir)/search-active.gif \
-		$(srcdir)/search-hover.gif \
+		$(srcdir)/box.css \
+		$(srcdir)/brand.css \
+		$(srcdir)/button.css \
+		$(srcdir)/communicator.css \
+		$(srcdir)/formatting.css \
+		$(srcdir)/menubutton.css \
+		$(srcdir)/toolbar.css \
+		$(srcdir)/dialogOverlay.css \
+		$(srcdir)/tasksOverlay.css \
 		$(NULL)
-
-DIRS = bookmarks directory profile regviewer related search sidebar win wallet xpinstall
 
 include $(topsrcdir)/config/rules.mk
 

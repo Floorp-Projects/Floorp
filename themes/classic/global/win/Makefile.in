@@ -19,8 +19,8 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../..
-THEME_ROOT_DEPTH = @srcdir@/..
+DEPTH		= ../../../..
+THEME_ROOT_DEPTH = @srcdir@/../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -28,39 +28,38 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/global/skin
 
 EXPORT_RESOURCE_SAMPLES = \
-	alertl.gif \
-	back.gif \
-	back-disabled.gif \
-	back-hover.gif \
-	back-hover-active.gif \
-	errorl.gif \
-	forward.gif \
-	forward-hover.gif \
-	forward-hover-active.gif \
-	forward-disabled.gif \
-	home.gif \
-	location-hover.gif \
-	location.gif \
-	messagel.gif \
-	mynetscape.gif \
-	n-box-persbar.gif \
-	print.gif \
-	questionl.gif \
-	reload.gif \
-	reload-disabled.gif \
-	reload-hover.gif \
-	reload-hover-active.gif \
-	search.gif \
-	stop.gif \
-	stop-disabled.gif \
-	stop-hover.gif \
-	stop-hover-active.gif \
+	box.css \
+	button.css \
+	checkbox.css \
+	commonDialog.css \
+	console.css \
+	filepicker.css \
+	formatting.css \
+	global.css \
+	menu.css \
+	menubutton.css \
+	menulist.css \
+	radio.css \
+	scrollbars.css \
+	splitter.css \
+	tabcontrol.css \
+	textfield.css \
+	toolbar.css \
+	tree.css \
+	wizardOverlay.css \
+	buttonBindings.xml \
+	classicBindings.xml \
+	menulistBindings.xml \
+	treeBindings.xml \
+	scrollbar-slider-bg.gif \
+	error-icon.gif \
+	message-icon.gif \
+	question-icon.gif \
+	alert-icon.gif \
 	$(NULL)
-
-DIRS		= win
 
 include $(topsrcdir)/config/rules.mk
 
