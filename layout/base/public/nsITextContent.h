@@ -22,27 +22,27 @@
 class nsString;
 
 // IID for the nsITextContent interface
-#define NS_ITEXTCONTENT_IID   \
-{ 0xdd0755d0, 0x944d, 0x11d1, \
-  {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+#define NS_ITEXT_CONTENT_IID \
+ {0xa6cf9065, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
-// Abstract interface for textual content. Note that this interface
-// does not implement nsISupports (which means it's not transitive or
-// reflexive). This is done for efficiency reasons.
-class nsITextContent {
+/**
+ * Interface for textual content. This interface is used to provide
+ * an efficient access to text content.
+ */
+class nsITextContent : public nsISupports {
 public:
   /*
-   * Get the total length of the text content.
+   * Get direct access to the text in the text content.
    */
-  virtual PRInt32 GetLength() = 0;
-
+  NS_IMETHOD GetText(const PRUnichar*& aBaseResult,
+                     PRInt32& aLengthResult) = 0;
   /*
-   * Copy a subrange of the text content into aBuf starting at aOffset
-   * for aCount characters. aBuf's length will be reset before the
-   * copy occurs and it's length upon return will reflect the amount
-   * of data copied.
+   * Set the text to the given value. If aNotify is PR_TRUE then
+   * the document is notified of the content change.
    */
-  virtual void GetText(nsString& aBuf, PRInt32 aOffset, PRInt32 aCount) = 0;
+  NS_IMETHOD SetText(const PRUnichar* aBuffer,
+                     PRInt32 aLength,
+                     PRBool aNotify) = 0;
 };
 
 #endif /* nsITextContent_h___ */
