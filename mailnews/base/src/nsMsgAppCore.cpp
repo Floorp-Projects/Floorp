@@ -107,6 +107,8 @@ public:
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
   NS_IMETHOD DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
+  NS_IMETHOD DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXULElement *parentFolder, nsIDOMXULElement *folder);
+
   NS_IMETHOD CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *folderElement, nsIDOMNodeList *nodeList,
 						  PRBool isMove);
   NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
@@ -116,11 +118,16 @@ public:
   NS_IMETHOD ViewAllMessages(nsIRDFCompositeDataSource *databsae);
   NS_IMETHOD ViewUnreadMessages(nsIRDFCompositeDataSource *databsae);
   NS_IMETHOD ViewAllThreadMessages(nsIRDFCompositeDataSource *database);
+  NS_IMETHOD MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead);
+
   NS_IMETHOD NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 						const char *name);
   NS_IMETHOD AccountManager(nsIDOMWindow *parent);
 
-
+protected:
+	nsresult DoDelete(nsIRDFCompositeDataSource* db, nsISupportsArray *srcArray, nsISupportsArray *deletedArray);
+	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
+					   nsISupportsArray *arguments);
 private:
   
   nsString mId;
@@ -420,18 +427,8 @@ nsMsgAppCore::GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *fo
 
 	folderArray->AppendElement(folderResource);
 
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	DoCommand(db, NC_RDF_GETNEWMESSAGES, folderArray, nsnull);
 
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIRDFResource> getMessagesResource;
-		rv = rdfService->GetResource(NC_RDF_GETNEWMESSAGES, getter_AddRefs(getMessagesResource));
-
-		if(NS_SUCCEEDED(rv))
-		{
-			rv = db->DoCommand(folderArray, getMessagesResource, nsnull);
-		}
-	}
 	return rv;
 }
 
@@ -539,55 +536,99 @@ nsMsgAppCore::OpenURL(const char * url)
 	return NS_OK;
 }
 
+nsresult
+nsMsgAppCore::DoCommand(nsIRDFCompositeDataSource* db, char *command,
+						nsISupportsArray *srcArray, nsISupportsArray *argumentArray)
+{
+
+	nsresult rv;
+
+    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIRDFResource> commandResource;
+	rv = rdfService->GetResource(command, getter_AddRefs(commandResource));
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = db->DoCommand(srcArray, commandResource, argumentArray);
+	}
+
+	return rv;
+
+}
+
 NS_IMETHODIMP
 nsMsgAppCore::DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList)
 {
 	nsresult rv;
-	nsIRDFCompositeDataSource *database;
-	nsISupportsArray *resourceArray, *folderArray;
-	nsIRDFResource *resource;
-	nsIMsgFolder *srcFolder;
+	nsCOMPtr<nsIRDFCompositeDataSource> database;
+	nsCOMPtr<nsISupportsArray> resourceArray, folderArray;
+	nsCOMPtr<nsIRDFResource> resource;
 
-	if(NS_FAILED(rv = srcFolderElement->GetResource(&resource)))
+	rv = srcFolderElement->GetResource(getter_AddRefs(resource));
+
+	if(NS_FAILED(rv))
 		return rv;
 
-	if(NS_FAILED(rv = resource->QueryInterface(nsIMsgFolder::GetIID(), (void**)&srcFolder)))
+	rv = tree->GetDatabase(getter_AddRefs(database));
+	if(NS_FAILED(rv))
 		return rv;
 
-	if(NS_FAILED(rv = tree->GetDatabase(&database)))
+	rv =ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
+	if(NS_FAILED(rv))
 		return rv;
 
-	if(NS_FAILED(rv =ConvertDOMListToResourceArray(nodeList, &resourceArray)))
-		return rv;
-
-	if(NS_FAILED(NS_NewISupportsArray(&folderArray)))
+	rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+	if(NS_FAILED(rv))
 	{
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
-	folderArray->AppendElement(srcFolder);
+	folderArray->AppendElement(resource);
 	
-	nsIRDFService* gRDFService = nsnull;
-	nsIRDFResource* deleteResource;
-	rv = nsServiceManager::GetService(kRDFServiceCID,
-												nsIRDFService::GetIID(),
-												(nsISupports**) &gRDFService);
-	if(NS_SUCCEEDED(rv))
+	rv = DoCommand(database, NC_RDF_DELETE, folderArray, resourceArray);
+
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgAppCore::DeleteFolders(nsIRDFCompositeDataSource *db, nsIDOMXULElement *parentFolderElement,
+							nsIDOMXULElement *folderElement)
+{
+	nsresult rv;
+	nsCOMPtr<nsISupportsArray> parentArray, deletedArray;
+	nsCOMPtr<nsIRDFResource> parentResource, deletedFolderResource;
+
+	rv = parentFolderElement->GetResource(getter_AddRefs(parentResource));
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = folderElement->GetResource(getter_AddRefs(deletedFolderResource));
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(parentArray));
+
+	if(NS_FAILED(rv))
 	{
-		if(NS_SUCCEEDED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#Delete", &deleteResource)))
-		{
-			rv = database->DoCommand(folderArray, deleteResource, resourceArray);
-			NS_RELEASE(deleteResource);
-		}
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
-	NS_RELEASE(database);
-	NS_RELEASE(resourceArray);
-	NS_RELEASE(resource);
-	NS_RELEASE(srcFolder);
-	NS_RELEASE(folderArray);
-	return rv;
+	rv = NS_NewISupportsArray(getter_AddRefs(deletedArray));
+
+	if(NS_FAILED(rv))
+	{
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	parentArray->AppendElement(parentResource);
+	deletedArray->AppendElement(deletedFolderResource);
+
+	rv = DoCommand(db, NC_RDF_DELETE, parentArray, deletedArray);
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -744,57 +785,67 @@ nsMsgAppCore::ViewAllThreadMessages(nsIRDFCompositeDataSource *database)
 }
 
 NS_IMETHODIMP
+nsMsgAppCore::MarkMessagesRead(nsIRDFCompositeDataSource *database, nsIDOMNodeList *messages, PRBool markRead)
+{
+	nsresult rv;
+	nsCOMPtr<nsISupportsArray> resourceArray, argumentArray;
+
+
+	rv =ConvertDOMListToResourceArray(messages, getter_AddRefs(resourceArray));
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = NS_NewISupportsArray(getter_AddRefs(argumentArray));
+	if(NS_FAILED(rv))
+	{
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	if(markRead)
+		rv = DoCommand(database, NC_RDF_MARKREAD, resourceArray, argumentArray);
+	else
+		rv = DoCommand(database, NC_RDF_MARKUNREAD, resourceArray,  argumentArray);
+
+	return rv;
+}
+
+NS_IMETHODIMP
 nsMsgAppCore::NewFolder(nsIRDFCompositeDataSource *database, nsIDOMXULElement *parentFolderElement,
 						const char *name)
 {
 	nsresult rv;
-	nsIRDFResource *resource;
-	nsIMsgFolder *parentFolder;
-	nsISupportsArray *nameArray, *folderArray;
+	nsCOMPtr<nsIRDFResource> folderResource;
+	nsCOMPtr<nsISupportsArray> nameArray, folderArray;
 
 	if(!parentFolderElement || !name)
 		return NS_ERROR_NULL_POINTER;
 
-	rv = parentFolderElement->GetResource(&resource);
+	rv = parentFolderElement->GetResource(getter_AddRefs(folderResource));
 	if(NS_FAILED(rv))
 		return rv;
 
-	rv = resource->QueryInterface(nsIMsgFolder::GetIID(), (void**)&parentFolder);
+	rv = NS_NewISupportsArray(getter_AddRefs(nameArray));
 	if(NS_FAILED(rv))
-		return rv;
-
-	if(NS_FAILED(NS_NewISupportsArray(&nameArray)))
 	{
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
-	if(NS_FAILED(NS_NewISupportsArray(&folderArray)))
+	rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+	if(NS_FAILED(rv))
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	folderArray->AppendElement(parentFolder);
+	folderArray->AppendElement(folderResource);
 
-	nsIRDFService* gRDFService = nsnull;
-	rv = nsServiceManager::GetService(kRDFServiceCID,
-												nsIRDFService::GetIID(),
-												(nsISupports**) &gRDFService);
+    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
 	if(NS_SUCCEEDED(rv))
 	{
 		nsString nameStr = name;
-		nsIRDFLiteral *nameLiteral;
-		nsIRDFResource *newFolderResource;
+		nsCOMPtr<nsIRDFLiteral> nameLiteral;
 
-    gRDFService->GetLiteral(nameStr.GetUnicode(), &nameLiteral);
+		rdfService->GetLiteral(nameStr.GetUnicode(), getter_AddRefs(nameLiteral));
 		nameArray->AppendElement(nameLiteral);
-		if(NS_SUCCEEDED(rv = gRDFService->GetResource("http://home.netscape.com/NC-rdf#NewFolder", &newFolderResource)))
-		{
-			rv = database->DoCommand(folderArray, newFolderResource, nameArray);
-			NS_RELEASE(newFolderResource);
-		}
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+		rv = DoCommand(database, NC_RDF_NEWFOLDER, folderArray, nameArray);
 	}
-	NS_IF_RELEASE(nameArray);
-	NS_IF_RELEASE(resource);
-	NS_IF_RELEASE(parentFolder);
 	return rv;
 }
 

@@ -355,6 +355,61 @@ MsgAppCoreDeleteMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   return JS_TRUE;
 }
 
+//
+// Native method DeleteMessages
+//
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreDeleteFolders(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+	nsIRDFCompositeDataSource *db;
+	nsIDOMXULElement *parentFolder;
+	nsIDOMXULElement *folder;
+	const nsString typeName;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 3) {
+		rBool = nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&db,
+									nsIRDFCompositeDataSource::GetIID(),
+									cx,
+									argv[0]);
+
+		rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&parentFolder,
+									nsIDOMXULElement::GetIID(),
+									typeName,
+									cx,
+									argv[1]);
+
+		rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&folder,
+									nsIDOMXULElement::GetIID(),
+									typeName,
+									cx,
+									argv[2]);
+
+		
+    if (!rBool || NS_OK != nativeThis->DeleteFolders(db, parentFolder, folder)) {
+      return JS_FALSE;
+    }
+
+	NS_IF_RELEASE(db);
+	NS_IF_RELEASE(parentFolder);
+	NS_IF_RELEASE(folder);
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function DeleteMessages requires 3 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
 
 //
 // Native method GetRDFResourceForMessage
@@ -619,6 +674,52 @@ MsgAppCoreViewAllThreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval 
 }
 
 PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreMarkMessagesRead(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+	nsIRDFCompositeDataSource *db;
+	nsIDOMNodeList *messages;
+	PRBool markRead;
+	const nsString typeName;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return NS_OK;
+  }
+
+  if (argc >= 3) {
+		rBool = nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&db,
+                                                 nsIRDFCompositeDataSource::GetIID(),
+                                                 cx,
+                                                 argv[0]);
+		
+		rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&messages,
+									nsIDOMNodeList::GetIID(),
+									typeName,
+									cx,
+									argv[1]);
+
+		rBool = rBool && nsJSUtils::nsConvertJSValToBool(&markRead, cx, argv[2]);
+     if (!rBool || NS_OK != nativeThis->MarkMessagesRead(db, messages, markRead)) {
+      return JS_FALSE;
+    }
+
+		NS_IF_RELEASE(db);
+		NS_IF_RELEASE(messages);
+  }
+  else {
+    JS_ReportError(cx, "Function MarkMessagesRead requires 3 parameter");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreNewFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 
@@ -752,6 +853,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"SetWindow",          MsgAppCoreSetWindow,     1},
   {"OpenURL",          MsgAppCoreOpenURL,     1},
   {"DeleteMessages",          MsgAppCoreDeleteMessages,     3},
+  {"DeleteFolders",		MsgAppCoreDeleteFolders,			3},
   {"GetRDFResourceForMessage",    MsgAppCoreGetRDFResourceForMessage,     2},
   {"exit",				MsgAppCoreExit, 0},
   {"CopyMessages",		MsgAppCoreCopyMessages, 3},
@@ -759,6 +861,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"ViewAllMessages",	MsgAppCoreViewAllMessages, 1},
   {"ViewUnreadMessages", MsgAppCoreViewUnreadMessages, 1},
   {"ViewAllThreadMessages", MsgAppCoreViewAllThreadMessages, 1},
+  {"MarkMessagesRead",	MsgAppCoreMarkMessagesRead, 3},
   {"NewFolder",			MsgAppCoreNewFolder, 3},
   {"AccountManager",	MsgAppCoreAccountManager, 1},
   {0}
