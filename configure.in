@@ -1163,7 +1163,11 @@ xpfe/xpviewer/src/Makefile
 xpfe/xpviewer/public/Makefile"
 
 EDITOR_MAKEFILES="
-editor/core/Makefile"
+editor/core/Makefile
+editor/txmgr/Makefile
+editor/txmgr/public/Makefile
+editor/txmgr/src/Makefile
+editor/txmgr/tests/Makefile"
 
 MAKEFILES="$NG_MAKEFILES"
 
