@@ -51,4 +51,6 @@ INCLUDES += -I../../base/src -I../../style/src -I../../../base/src
 
 DEFINES += -D_IMPL_NS_HTML
 
+MKSHLIB :=
+
 include $(DEPTH)/config/rules.mk

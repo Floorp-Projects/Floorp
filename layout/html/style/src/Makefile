@@ -46,5 +46,7 @@ INCLUDES += -I../../base/src -I../../../base/src -I.
 
 REQUIRES = xpcom raptor dom netlib js
 
+MKSHLIB :=
+
 include $(DEPTH)/config/rules.mk
 
