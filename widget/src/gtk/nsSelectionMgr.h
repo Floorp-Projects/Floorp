@@ -53,8 +53,8 @@ private:
 
   static GtkWidget* sWidget;    // the app's top level widget, set by nsWindow
 
-  void SelectionClear( GtkWidget *w,
-                       GdkEventSelection *event );
+  void SelectionClearor( GtkWidget *w,
+                         GdkEventSelection *event );
   void SelectionRequestor( GtkWidget *w,
                            GtkSelectionData *selection_data );
 
