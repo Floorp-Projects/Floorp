@@ -65,6 +65,7 @@
     #define NS_MAC_DOCUMENTS_DIR                "Docs"
     #define NS_MAC_INTERNET_SEARCH_DIR          "ISrch"
     #define NS_MAC_HOME_DIR                     "Home"
+    #define NS_MAC_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
 #elif defined (XP_OS2)
     #define NS_OS2_DIR                          "0S2Dir"
     #define NS_OS2_HOME_DIR                     "Home"
