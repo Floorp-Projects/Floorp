@@ -260,8 +260,6 @@ function Startup()
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
 
-  SetPageProxyState("invalid", null);
-
   var webNavigation;
   try {
     // Create the browser instance component.
@@ -403,6 +401,7 @@ function Startup()
 function delayedStartup(aElt)
 {
   gBrowser.addEventListener("load", function(evt) { setTimeout(loadEventHandlers, 0, evt); }, true);
+  
   if (gMustLoadSidebar) {
     var sidebar = document.getElementById("sidebar");
     sidebar.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
@@ -422,6 +421,8 @@ function delayedStartup(aElt)
   addEventListener("fullscreen", onFullScreen, false);
 
   WindowFocusTimerCallback(aElt);
+
+  SetPageProxyState("invalid", null);
 
   // Get the preferences service
   var prefService = Components.classes["@mozilla.org/preferences-service;1"]
