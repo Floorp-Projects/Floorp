@@ -299,7 +299,7 @@ dont_QueryInterface( T* aRawPtr )
 		};
 
 	typedef nsCOMPtrQueryRequest<nsISupports>				nsQueryInterface;
-	typedef nsCOMPtrQueryRequest<nsIWeakReference>	nsQueryReference;
+	typedef nsCOMPtrQueryRequest<nsIWeakReference>	nsQueryReferent;
 
 #else
 
@@ -322,10 +322,10 @@ dont_QueryInterface( T* aRawPtr )
 	    nsresult*    mErrorPtr;
 	  };
 
-	struct nsQueryReference
+	struct nsQueryReferent
 		{
 			explicit
-			nsQueryReference( nsIWeakReference* aRawPtr, nsresult* error = 0 )
+			nsQueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
 					: mRawPtr(aRawPtr),
 						mErrorPtr(error)
 				{
@@ -346,10 +346,10 @@ do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
   }
 
 inline
-const nsQueryReference
-do_QueryReference( nsIWeakReference* aRawPtr, nsresult* error = 0 )
+const nsQueryReferent
+do_QueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
 	{
-		return nsQueryReference(aRawPtr, error);
+		return nsQueryReferent(aRawPtr, error);
 	}
 
 
@@ -433,7 +433,7 @@ class nsCOMPtr_base
 
       NS_EXPORT void    assign_with_AddRef( nsISupports* );
       NS_EXPORT void    assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
-      NS_EXPORT void    assign_with_QueryReference( nsIWeakReference*, const nsIID&, nsresult* );
+      NS_EXPORT void    assign_with_QueryReferent( nsIWeakReference*, const nsIID&, nsresult* );
       NS_EXPORT void**  begin_assignment();
 
     protected:
@@ -452,7 +452,7 @@ class nsCOMPtr
 		private:
 			void		assign_with_AddRef( nsISupports* );
 			void		assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
-			void		assign_with_QueryReference( nsIWeakReference*, const nsIID&, nsresult* );
+			void		assign_with_QueryReferent( nsIWeakReference*, const nsIID&, nsresult* );
 			void**	begin_assignment();
 
 		private:
@@ -486,10 +486,10 @@ class nsCOMPtr
           assign_with_QueryInterface(aSmartPtr.mRawPtr, nsCOMTypeInfo<T>::GetIID(), aSmartPtr.mErrorPtr);
         }
 
-			nsCOMPtr( const nsQueryReference& aSmartPtr )
+			nsCOMPtr( const nsQueryReferent& aSmartPtr )
 					: NSCAP_CTOR_BASE(0)
 				{
-					assign_with_QueryReference(aSmartPtr.mRawPtr, nsCOMTypeInfo<T>::GetIID(), aSmartPtr.mErrorPtr);
+					assign_with_QueryReferent(aSmartPtr.mRawPtr, nsCOMTypeInfo<T>::GetIID(), aSmartPtr.mErrorPtr);
 				}
 
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
@@ -558,9 +558,9 @@ class nsCOMPtr
         }
 
       nsCOMPtr<T>&
-      operator=( const nsQueryReference& rhs )
+      operator=( const nsQueryReferent& rhs )
         {
-          assign_with_QueryReference(rhs.mRawPtr, nsCOMTypeInfo<T>::GetIID(), rhs.mErrorPtr);
+          assign_with_QueryReferent(rhs.mRawPtr, nsCOMTypeInfo<T>::GetIID(), rhs.mErrorPtr);
           return *this;
         }
 
@@ -669,11 +669,11 @@ nsCOMPtr<T>::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid, 
 
 template <class T>
 void
-nsCOMPtr<T>::assign_with_QueryReference( nsIWeakReference* rawPtr, const nsIID& iid, nsresult* result )
+nsCOMPtr<T>::assign_with_QueryReferent( nsIWeakReference* rawPtr, const nsIID& iid, nsresult* result )
 	{
     nsresult status = NS_ERROR_NULL_POINTER;
     T* newPtr;
-    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryReference(iid, NSCAP_REINTERPRET_CAST(void**, &newPtr)) ) )
+    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryReferent(iid, NSCAP_REINTERPRET_CAST(void**, &newPtr)) ) )
       newPtr = 0;
 
     if ( mRawPtr )

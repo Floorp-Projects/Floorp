@@ -40,7 +40,7 @@ class NS_COM nsWeakReference : public nsIWeakReference
 			NS_IMETHOD QueryInterface( const nsIID&, void** );
 
 		// nsIWeakReference...
-			NS_IMETHOD QueryReference( const nsIID&, void** );
+			NS_IMETHOD QueryReferent( const nsIID&, void** );
 
 
 		private:

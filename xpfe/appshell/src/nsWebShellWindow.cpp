@@ -1739,7 +1739,7 @@ nsWebShellWindow::ShowModally(PRBool aPrepare)
   if (aPrepare && NS_FAILED(appShell->PushThreadEventQueue()))
     aPrepare = PR_FALSE;
 
-  parentWidget = do_QueryReference(mParentWindow);
+  parentWidget = do_QueryReferent(mParentWindow);
   if (parentWidget)
     parentWidget->Enable(PR_FALSE);
   rv = ShowModal();
