@@ -21,10 +21,11 @@ IGNORE_MANIFEST=1
 
 MODULE=raptor 
 
-EXPORTS =					\
-        nsappshell.h        			\
-        nsIAppShellService.h			\
-	$(NULL)
+EXPORTS =                         \
+        nsAppShellCIDs.h          \
+        nsIAppShellService.h      \
+        nsIWidgetController.h     \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
