@@ -29,6 +29,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsISimpleEnumerator.h"
+#include "nsString.h"
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeAddBookmark

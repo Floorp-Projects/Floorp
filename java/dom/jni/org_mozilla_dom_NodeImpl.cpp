@@ -561,7 +561,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeName
     return NULL;
   }
 
-  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.get(), ret.Length());
   if (!jret) {
     JavaDOMGlobals::ThrowException(env,
       "Node.getNodeName: NewString failed");
@@ -717,7 +717,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
     return NULL;
   }
 
-  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.get(), ret.Length());
   if (!jret) {
     JavaDOMGlobals::ThrowException(env,
       "Node.getNodeValue: NewString failed");
@@ -1216,7 +1216,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNamespaceURI
       return NULL;
   }
 
-  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.get(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Node.getNamespaceURI: NewString failed\n"));
@@ -1250,7 +1250,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getPrefix
       return NULL;
   }
 
-  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.get(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Node.getPrefix: NewString failed\n"));
@@ -1320,7 +1320,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getLocalName
       return NULL;
   }
 
-  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.get(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Node.getLocalName: NewString failed\n"));

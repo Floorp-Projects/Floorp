@@ -37,6 +37,7 @@
 #include "nsIGenericFactory.h"
 
 #include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
 
 #if defined(DEBUG)
 #include <stdio.h>
@@ -632,8 +633,8 @@ static void dump_node(FILE* of, nsIDOMNode* node, int indent,
   node->GetNodeValue(value);
   node->GetNodeType(&type);
 
-  const PRUnichar* cname = name.GetUnicode();
-  const PRUnichar* cvalue = value.GetUnicode();
+  const PRUnichar* cname = name.get();
+  const PRUnichar* cvalue = value.get();
   char* cnorm = strip_whitespace(cvalue, value.Length());
   fprintf(of, "name=\"%s\" type=%s value=\"%s\"", 
 	  cname, describe_type(type), cnorm);

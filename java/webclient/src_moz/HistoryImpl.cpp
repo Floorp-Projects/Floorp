@@ -31,6 +31,8 @@
 
 #include "ns_util.h"
 
+#include "nsCRT.h"
+
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack

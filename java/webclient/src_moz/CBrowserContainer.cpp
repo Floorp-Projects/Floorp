@@ -664,7 +664,7 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
 
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     
-    msgJStr = (jobject) ::util_NewString(env, autoName.GetUnicode(), 
+    msgJStr = (jobject) ::util_NewString(env, autoName.get(), 
                                          autoName.Length());
     
     util_SendEventToJava(mInitContext->env, 
@@ -704,7 +704,7 @@ NS_IMETHODIMP CBrowserContainer::OnStatusChange(nsIWebProgress *aWebProgress,
     
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     jstring statusMessage = ::util_NewString(env, (const jchar *) 
-                                             aMsg.GetUnicode(), length);
+                                             aMsg.get(), length);
     
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, 
                          mDocTarget, 
@@ -842,7 +842,7 @@ CBrowserContainer::doStartURLLoad(const PRUnichar *aDocumentName)
 #endif
     nsAutoString nameAutoStr(aDocumentName);
     jstring nameJStr = ::util_NewString(env, (const jchar *) 
-                                             nameAutoStr.GetUnicode(), 
+                                             nameAutoStr.get(), 
                                              nameAutoStr.Length());
     
     util_SendEventToJava(mInitContext->env, 
@@ -875,7 +875,7 @@ CBrowserContainer::doEndURLLoad(const PRUnichar *aDocumentName)
 #endif
     nsAutoString nameAutoStr(aDocumentName);
     jstring nameJStr = ::util_NewString(env, (const jchar *) 
-                                             nameAutoStr.GetUnicode(), 
+                                             nameAutoStr.get(), 
                                              nameAutoStr.Length());
     
     util_SendEventToJava(mInitContext->env, 
@@ -1745,9 +1745,9 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
             PR_LOG(prLogModuleInfo, 4, ("%s", (const char *)nodeInfoCStr));
         }
         
-        jNodeName = ::util_NewString(env, nodeName.GetUnicode(), 
+        jNodeName = ::util_NewString(env, nodeName.get(), 
                                      nodeName.Length());
-        jNodeValue = ::util_NewString(env, nodeValue.GetUnicode(), 
+        jNodeValue = ::util_NewString(env, nodeValue.get(), 
                                       nodeValue.Length());
         
         util_StoreIntoPropertiesObject(env, (jobject) curThis->properties,
@@ -1809,9 +1809,9 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
                 PR_LOG(prLogModuleInfo, 4, 
                        ("attribute[%d] %s", i,(const char *)nodeInfoCStr));
             }
-            jNodeName = ::util_NewString(env, nodeName.GetUnicode(), 
+            jNodeName = ::util_NewString(env, nodeName.get(), 
                                          nodeName.Length());
-            jNodeValue = ::util_NewString(env, nodeValue.GetUnicode(), 
+            jNodeValue = ::util_NewString(env, nodeValue.get(), 
                                           nodeValue.Length());
             
             util_StoreIntoPropertiesObject(env, (jobject) curThis->properties,

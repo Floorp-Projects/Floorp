@@ -27,7 +27,7 @@
 #include "PromptActionEvents.h"
 
 #include "ns_util.h"
-
+#include "nsString2.h" // for nsAutoString
 
 wsPromptUsernameAndPasswordEvent::wsPromptUsernameAndPasswordEvent(WebShellInitContext *yourInitContext,
                              jobject yourPromptGlobalRef, 

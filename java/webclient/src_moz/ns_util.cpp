@@ -33,6 +33,8 @@
 #include "nsIStringBundle.h"
 #include "nsIServiceManager.h"
 
+#include "nsString2.h"
+
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define kCommonDialogsProperties "chrome://global/locale/commonDialogs.properties"
@@ -86,9 +88,9 @@ nsresult util_CreateJstringsFromUnichars(wsStringStruct *strings,
     for (i = 0; i < arrayLen; i++) {
         autoStr = strings[i].uniStr;
         strings[i].jStr = nsnull;
-        if (autoStr.GetUnicode()) {
+        if (autoStr.get()) {
             strings[i].jStr = ::util_NewString(env, (const jchar *) 
-                                               autoStr.GetUnicode(),
+                                               autoStr.get(),
                                                autoStr.Length());
             if (nsnull == strings[i].jStr) {
                 return NS_ERROR_NULL_POINTER;
@@ -166,7 +168,7 @@ nsresult util_GetLocaleString(const char *aKey, PRUnichar **aResult)
   rv = stringService->CreateBundle(kCommonDialogsProperties, getter_AddRefs(stringBundle));
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).GetUnicode(), aResult);
+  rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).get(), aResult);
 
   return rv;
 

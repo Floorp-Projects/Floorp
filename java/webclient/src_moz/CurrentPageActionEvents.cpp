@@ -40,7 +40,8 @@
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
 #include "nsIInterfaceRequestor.h"
-
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 
 wsCopySelectionEvent::wsCopySelectionEvent(WebShellInitContext *yourInitContext) :
         nsActionEvent(),
@@ -98,7 +99,8 @@ wsFindEvent::handleEvent ()
     
     if (mInitContext) {
         //First get the FindComponent object
-        NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_CONTRACTID, &rv);
+        nsCOMPtr<nsIFindComponent> findComponent;
+        findComponent = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
         
         if (NS_FAILED(rv) || nsnull == findComponent)  {
             return (void *) rv;

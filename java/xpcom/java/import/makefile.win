@@ -48,7 +48,7 @@ $(JAVAXPIDLSRCS) :
 #idk@eng.sun.com (04/02/2001)
 
 exclude:
-	del nsISupportsPRTime.java
+	rm -f nsISupportsPRTime.java
 
 java2class:
 	if  not exist $(DEPTH)\dist\classes mkdir $(DEPTH)\dist\classes

@@ -67,7 +67,7 @@ wsLoadURLEvent::handleEvent ()
   printf ("+++++++++++++++++++++ Thread Id ---- %p\n\n", threadId);
 
   if (mWebNavigation && mURL) {
-      nsresult rv = mWebNavigation->LoadURI(mURL->GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      nsresult rv = mWebNavigation->LoadURI(mURL->get(), nsIWebNavigation::LOAD_FLAGS_NONE);
   }
   return nsnull;
 } // handleEvent()
@@ -317,8 +317,8 @@ wsPostEvent::handleEvent ()
 
   rv = lh->OnLinkClick(content, 
                        eLinkVerb_Replace, 
-                       mAbsoluteURL->GetUnicode(), 
-                       ((mTarget != nsnull) ? mTarget->GetUnicode() : nsnull),
+                       mAbsoluteURL->get(), 
+                       ((mTarget != nsnull) ? mTarget->get() : nsnull),
                        postDataStream,
                        headersDataStream);  
   
@@ -352,7 +352,7 @@ void *
 wsStopEvent::handleEvent ()
 {
         if (mWebNavigation) {
-                nsresult rv = mWebNavigation->Stop();
+                nsresult rv = mWebNavigation->Stop(nsIWebNavigation::STOP_ALL);
         }
         return nsnull;
 } // handleEvent()

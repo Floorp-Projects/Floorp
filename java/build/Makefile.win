@@ -41,9 +41,9 @@ buildRunems:
 	-mkdir $(PACKAGE_EXAMPLE)
 	-mkdir $(DIST)\..\java\build\org
 	-mkdir $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
 	cd $(DIST)\..\java\build
 	jar -cvfM0 JavaDOM_$(PACKAGE_VER)_win32.jar org 
 	copy JavaDOM_$(PACKAGE_VER)_win32.jar ..\..\javadev\lib\JavaDOM_$(PACKAGE_VER)_win32.jar
@@ -66,10 +66,10 @@ buildRunems:
 	-mkdir $(PACKAGE_EXAMPLE)
 	-mkdir $(DIST)\..\java\build\org
 	-mkdir $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\plugins $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\plugins $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
 	cd $(DIST)\..\java\build
 	jar -cvfM0 Pluglet_$(PACKAGE_VER)_win32.jar org 
 	copy Pluglet_$(PACKAGE_VER)_win32.jar ..\..\javadev\lib\Pluglet_$(PACKAGE_VER)_win32.jar
@@ -96,11 +96,11 @@ buildRunems:
 	-mkdir $(PACKAGE_EXAMPLE)
 	-mkdir $(DIST)\..\java\build\org
 	-mkdir $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\webclient $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\xpcom $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\webclient $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\xpcom $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
 	cd $(DIST)\..\java\build
 	jar -cvfM0 Webclient_$(PACKAGE_VER)_win32.jar org 
 	copy Webclient_$(PACKAGE_VER)_win32.jar ..\..\javadev\lib\Webclient_$(PACKAGE_VER)_win32.jar
@@ -126,7 +126,7 @@ buildRunems:
 	chmod 775 $(PACKAGE_LIB)\webclient.dll
 	chmod 775 $(PACKAGE_LIB)\wc_share.lib
 	@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
-	del /Q runem_win_commercial.bat
+	rm -f runem_win_commercial.bat
 	@echo set CLASSPATH=..\lib\Webclient_$(PACKAGE_VER)_win32.jar > runem_win_commercial.bat
 	@echo $(PERL) .\runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem_win_commercial.bat
 	copy runem_win_commercial.bat $(PACKAGE_EXAMPLE)\runem.bat
@@ -145,8 +145,8 @@ buildRunems:
 	-mkdir $(PACKAGE_EXAMPLE)
 	-mkdir $(DIST)\..\java\build\org
 	-mkdir $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\xpcom $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\util $(DIST)\..\java\build\org\mozilla
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\xpcom $(DIST)\..\java\build\org\mozilla
 	cd $(DIST)\..\java\build
 	jar -cvfM0 Blackconnect_$(PACKAGE_VER)_win32.jar org 
 	copy Blackconnect_$(PACKAGE_VER)_win32.jar ..\..\javadev\lib\Blackconnect_$(PACKAGE_VER)_win32.jar
@@ -175,8 +175,8 @@ buildRunems:
 	-mkdir $(PACKAGE_EXAMPLE)
 	-mkdir $(DIST)\..\java\build\org
 	-mkdir $(DIST)\..\java\build\org\mozilla
-	xcopy /E $(DIST)\..\classes\org\mozilla\* $(DIST)\..\java\build\org
-	xcopy /E $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
+	xcopy /E /Y $(DIST)\..\classes\org\mozilla\* $(DIST)\..\java\build\org
+	xcopy /E /Y $(DIST)\..\classes\org\w3c $(DIST)\..\java\build\org
 	cd $(DIST)\..\java\build
 	jar -cvfM0 Blackwood_$(PACKAGE_VER)_win32.jar org 
 	copy Blackwood_$(PACKAGE_VER)_win32.jar ..\..\javadev\lib\Blackwood_$(PACKAGE_VER)_win32.jar
@@ -206,7 +206,7 @@ buildRunems:
 	chmod 775 $(PACKAGE_LIB)\bcxpcomstubs.dll
 	chmod 775 $(PACKAGE_LIB)\regxpcom.exe
 	@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
-	del /Q runem_win_commercial.bat
+	rm -f runem_win_commercial.bat
 	@echo set CLASSPATH=..\lib\Blackwood_$(PACKAGE_VER)_win32.jar > runem_win_commercial.bat
 	@echo $(PERL) .\runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem_win_commercial.bat
 	copy runem_win_commercial.bat $(PACKAGE_EXAMPLE)\runem.bat

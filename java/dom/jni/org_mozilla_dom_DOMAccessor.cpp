@@ -33,7 +33,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_register
 	   ("DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
 	    rv));
   } else {
-    NS_WITH_SERVICE(nsIWebProgressListener, javaDOM, kJavaDOMCID, &rv);
+    nsCOMPtr<nsIWebProgressListener> javaDOM;
+    javaDOM = do_GetService(kJavaDOMCID, &rv);
     if (NS_FAILED(rv) || !javaDOM) {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	     ("DOMAccessor::register: GetService(JavaDOM) failed: %x\n", 
@@ -77,7 +78,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_unregister
 	   ("DOMAccessor::unregister: GetService(DocLoaderService) failed %x\n", 
 	    rv));
   } else {
-    NS_WITH_SERVICE(nsIWebProgressListener, javaDOM, kJavaDOMCID, &rv);
+    nsCOMPtr<nsIWebProgressListener> javaDOM;
+    javaDOM = do_GetService(kJavaDOMCID, &rv);
     if (NS_FAILED(rv) || !javaDOM) {
       PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	     ("DOMAccessor::unregister: GetService(JavaDOM) failed %x\n", 

@@ -28,6 +28,9 @@
 
 #include "nsIPref.h"
 #include "nsCRT.h" // for memset
+#include "nsString2.h" // for nsAutoString
+
+#include "nsIServiceManager.h" // for do_GetService
 
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
