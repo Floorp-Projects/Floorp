@@ -609,56 +609,6 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
   display: -moz-box;
 }
 
-/* ::::: tabs ::::: */
-
-.tabbrowser-strip {
-  padding-bottom: 3px;
-  border-bottom: 2px solid;
-}
-
-.tabbrowser-tabs {
-  padding-top: 1px;
-}
-
-.tabs-left {
-  width: 3px;
-}
-
-tab {
-  padding: 1px 3px 0px 3px;
-}
-
-tab[busy] {
-  list-style-image: url("chrome://browser/skin/loading.gif") !important;
-}
-
-.tab-icon {
-  margin-right: 3px;
-  width: 16px;
-  height: 16px;
-  list-style-image: url("chrome://browser/skin/bookmark-icon-n.png");
-}
-
-
-/* --- close button --- */
-
-.tabs-closebutton {
-  margin: 0px 4px;
-  padding: 1px 2px 2px 2px;
-  border: none;
-  list-style-image: url("chrome://browser/skin/close.png");
-  -moz-image-region: rect(0px 20px 20px 0px);
-}
-
-.tabs-closebutton:hover {
-  -moz-image-region: rect(0px 50px 20px 30px);
-}
-
-.tabs-closebutton:hover:active {
-  -moz-image-region: rect(0px 110px 20px 90px);
-}
-
-
 /* ::::: throbber ::::: */
 
 #navigator-throbber {
