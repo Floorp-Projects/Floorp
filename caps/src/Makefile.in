@@ -46,11 +46,13 @@ CPPSRCS		= \
 		nsZig.cpp \
 		$(NULL)
 
-REQUIRES	= nspr xpcom security layer js jar pref img util rdf caps
-
-ifndef MOZ_NATIVE_ZLIB
-REQUIRES	+= zlib
-endif
+EXTRA_DSO_LDOPTS = \
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		-lz	\
+		-lxp	\
+		$(NSPR_LIBS) \
+		$(NULL)
 
 CSRCS		= \
 		jpermission.c \
