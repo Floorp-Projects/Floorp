@@ -208,7 +208,7 @@ static const unsigned char parityTable[256] = {
 /* Mechanisms */
 struct mechanismList {
     CK_MECHANISM_TYPE	type;
-    CK_MECHANISM_INFO	domestic;
+    CK_MECHANISM_INFO	info;
     PRBool		privkey;
 };
 
@@ -354,8 +354,8 @@ static const struct mechanismList mechanisms[] = {
 #endif
 #if NSS_SOFTOKEN_DOES_RC5
      /* ------------------------- RC5 Operations --------------------------- */
-     {CKM_RC5_KEY_GEN,		{1, 32, CKF_GENERATE}, 	PR_TRUE},
-     	{CKM_RC5_ECB,		{1, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
+     {CKM_RC5_KEY_GEN,		{1, 32, CKF_GENERATE},          PR_TRUE},
+     {CKM_RC5_ECB,		{1, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
      {CKM_RC5_CBC,		{1, 32, CKF_EN_DE_WR_UN},	PR_TRUE},
      {CKM_RC5_MAC,		{1, 32, CKF_SN_VR},  		PR_TRUE},
      {CKM_RC5_MAC_GENERAL,	{1, 32, CKF_SN_VR},  		PR_TRUE},
@@ -407,7 +407,7 @@ static const struct mechanismList mechanisms[] = {
      {CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN,     {16,16, CKF_GENERATE}, PR_TRUE},
      {CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN,     {16,16, CKF_GENERATE}, PR_TRUE},
 };
-static CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
+static const CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
 
 static char *
 pk11_setStringName(const char *inString, char *buffer, int buffer_length)
@@ -2835,20 +2835,20 @@ CK_RV NSC_GetTokenInfo(CK_SLOT_ID slotID,CK_TOKEN_INFO_PTR pInfo)
 CK_RV NSC_GetMechanismList(CK_SLOT_ID slotID,
 	CK_MECHANISM_TYPE_PTR pMechanismList, CK_ULONG_PTR pulCount)
 {
-    int i;
+    CK_ULONG i;
 
     switch (slotID) {
     case NETSCAPE_SLOT_ID:
 	*pulCount = mechanismCount;
 	if (pMechanismList != NULL) {
-	    for (i=0; i < (int) mechanismCount; i++) {
+	    for (i=0; i < mechanismCount; i++) {
 		pMechanismList[i] = mechanisms[i].type;
 	    }
 	}
 	break;
      default:
 	*pulCount = 0;
-	for (i=0; i < (int) mechanismCount; i++) {
+	for (i=0; i < mechanismCount; i++) {
 	    if (mechanisms[i].privkey) {
 		(*pulCount)++;
 		if (pMechanismList != NULL) {
@@ -2868,7 +2868,7 @@ CK_RV NSC_GetMechanismInfo(CK_SLOT_ID slotID, CK_MECHANISM_TYPE type,
     					CK_MECHANISM_INFO_PTR pInfo)
 {
     PRBool isPrivateKey;
-    int i;
+    CK_ULONG i;
 
     switch (slotID) {
     case NETSCAPE_SLOT_ID:
@@ -2878,18 +2878,45 @@ CK_RV NSC_GetMechanismInfo(CK_SLOT_ID slotID, CK_MECHANISM_TYPE type,
 	isPrivateKey = PR_TRUE;
 	break;
     }
-    for (i=0; i < (int) mechanismCount; i++) {
+    for (i=0; i < mechanismCount; i++) {
         if (type == mechanisms[i].type) {
 	    if (isPrivateKey && !mechanisms[i].privkey) {
     		return CKR_MECHANISM_INVALID;
 	    }
-	    PORT_Memcpy(pInfo,&mechanisms[i].domestic,
-						sizeof(CK_MECHANISM_INFO));
+	    PORT_Memcpy(pInfo,&mechanisms[i].info, sizeof(CK_MECHANISM_INFO));
 	    return CKR_OK;
 	}
     }
     return CKR_MECHANISM_INVALID;
 }
+
+CK_RV pk11_MechAllowsOperation(CK_MECHANISM_TYPE type, CK_ATTRIBUTE_TYPE op)
+{
+    CK_ULONG i;
+    CK_FLAGS flags;
+
+    switch (op) {
+    case CKA_ENCRYPT:         flags = CKF_ENCRYPT;         break;
+    case CKA_DECRYPT:         flags = CKF_DECRYPT;         break;
+    case CKA_WRAP:            flags = CKF_WRAP;            break;
+    case CKA_UNWRAP:          flags = CKF_UNWRAP;          break;
+    case CKA_SIGN:            flags = CKF_SIGN;            break;
+    case CKA_SIGN_RECOVER:    flags = CKF_SIGN_RECOVER;    break;
+    case CKA_VERIFY:          flags = CKF_VERIFY;          break;
+    case CKA_VERIFY_RECOVER:  flags = CKF_VERIFY_RECOVER;  break;
+    case CKA_DERIVE:          flags = CKF_DERIVE;          break;
+    default:
+    	return CKR_ARGUMENTS_BAD;
+    }
+    for (i=0; i < mechanismCount; i++) {
+        if (type == mechanisms[i].type) {
+	    return (flags & mechanisms[i].info.flags) ? CKR_OK 
+	                                              : CKR_MECHANISM_INVALID;
+	}
+    }
+    return CKR_MECHANISM_INVALID;
+}
+
 
 static SECStatus
 pk11_TurnOffUser(NSSLOWCERTCertificate *cert, SECItem *k, void *arg)

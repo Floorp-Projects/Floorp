@@ -622,6 +622,8 @@ extern SECStatus secmod_AddPermDB(const char *domain, const char *filename,
 			const char *dbname, char *module, PRBool rw);
 extern SECStatus secmod_ReleasePermDBData(const char *domain, 
 	const char *filename, const char *dbname, char **specList, PRBool rw);
+/* mechanism allows this operation */
+extern CK_RV pk11_MechAllowsOperation(CK_MECHANISM_TYPE type, CK_ATTRIBUTE_TYPE op);
 /*
  * OK there are now lots of options here, lets go through them all:
  *
