@@ -572,6 +572,7 @@ NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
   
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - Not Implemented\n"));
 
+#if 0
   /* convert the mSpec into a nsDeviceContextPh */
   if (mSpec)
   {
@@ -599,7 +600,11 @@ NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
 
 #endif
 		PhDrawContext_t *DrawContext = nsnull;
-		DrawContext = PpPrintStart(PrinterContext);
+
+//DrawContext = PpPrintStart(PrinterContext);
+DrawContext = PpContinueJob(PrinterContext);
+
+
 		if (DrawContext)
 		{
           PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - DrawContext=<%p>\n", DrawContext));
@@ -609,6 +614,7 @@ NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
     }
     NS_RELEASE(PrintSpec);
   }  
+#endif
 
   return ret_code;
 }

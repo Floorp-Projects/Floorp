@@ -24,16 +24,23 @@
 #define __nsSound_h__
 
 #include "nsISound.h"
+#include "nsIStreamLoader.h"
 
-class nsSound : public nsISound {
+
+class nsSound : public nsISound, 
+                public nsIStreamLoaderObserver
+{
  public: 
 
   nsSound();
   virtual ~nsSound();
-  nsresult Init();
-  
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
+  NS_DECL_NSISTREAMLOADEROBSERVER
+
+private:
+  nsresult Init();
+  PRBool mInited;
 };
 
 #endif /* __nsSound_h__ */

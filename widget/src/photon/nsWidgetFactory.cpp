@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -12,296 +12,210 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Initial Developer of the Original Code is Christopher
+ * Blizzard.  Portions created by Christopher Blizzard are
+ * Copyright (C) 2000 Christopher Blizzard. All Rights Reserved.
  *
  * Contributor(s): 
+ *   Christopher Blizzzard <blizzard@mozilla.org>
+ *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-/* Interface Headers */
-#include "nsIFactory.h"
-#include "nsISupports.h"
-
-
-#include "nsIButton.h"
-#include "nsITextWidget.h"
-#include "nsITextAreaWidget.h"
-#if 0
-#include "nsILabel.h"
-#include "nsICheckButton.h"
-#include "nsIRadioButton.h"
-#include "nsIListBox.h"
-#include "nsIComboBox.h"
-#endif
-
-#include "nsIFileWidget.h"
-#include "nsFileSpecWithUIImpl.h"
-#include "nsISound.h"
-#include "nsFontRetrieverService.h"
-
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
+#include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
 
-/* Implmentation Headers */
-#include "nsToolkit.h"
 #include "nsWindow.h"
-#include "nsAppShell.h"
-#include "nsLookAndFeel.h"
-
 #include "nsButton.h"
-#include "nsTextWidget.h"
-#include "nsTextAreaWidget.h"
-#if 0
-#include "nsCheckButton.h"
-#include "nsRadioButton.h"
-#include "nsListBox.h"
-#include "nsComboBox.h"
-#include "nsLabel.h"
-#endif
-
-#include "nsScrollbar.h"
+//#include "nsCheckButton.h"
 #include "nsFileWidget.h"
-#include "nsClipboard.h"
+#include "nsTextWidget.h"
+#include "nsAppShell.h"
+#include "nsToolkit.h"
+#include "nsLookAndFeel.h"
+//#include "nsLabel.h"
 #include "nsTransferable.h"
+#include "nsClipboard.h"
 #include "nsXIFFormatConverter.h"
+#include "nsFontRetrieverService.h"
 #include "nsDragService.h"
+#include "nsFileSpecWithUIImpl.h"
+#include "nsScrollbar.h"
+#include "nsSound.h"
 
 #include <prlog.h>
 struct PRLogModuleInfo  *PhWidLog =  nsnull;
 #include "nsPhWidgetLog.h"
 
-static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
-static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsButton)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsCheckButton)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextWidget)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXIFFormatConverter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 
-static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
-static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
-static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
-#if 0
-static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
-static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
-#endif
-
-static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
-static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
-static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kCFontRetrieverService,    NS_FONTRETRIEVERSERVICE_CID);
-static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
-
-// Drag & Drop, Clipboard
-static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
-static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
-static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
-
-static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
-static NS_DEFINE_CID(kCSound,   	  NS_SOUND_CID);
-
-static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
-
-
-class nsWidgetFactory : public nsIFactory
-{   
-public:   
-
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIFACTORY
-
-    nsWidgetFactory(const nsCID &aClass);   
-    virtual ~nsWidgetFactory();   
-private:
-  nsCID mClassID;
-
-};   ;   
-
-nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
-{   
-  NS_INIT_ISUPPORTS();
-  mClassID = aClass;
-
-  if (!PhWidLog)
-  {
-    PhWidLog =  PR_NewLogModule("PhWidLog");
-  }
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::nsWidgetFactory Constructor Called\n"));
-
-}   
-
-nsWidgetFactory::~nsWidgetFactory()   
-{   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::~nsWidgetFactory Destructor Called\n"));
-}   
-
-NS_IMPL_ISUPPORTS(nsWidgetFactory, NS_GET_IID(nsIFactory))
-
-nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,  
-                                          const nsIID &aIID,  
-                                          void **aResult)  
-{  
-//PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 1 mRefCnt=<%d>\n", mRefCnt));
-
-    if (aResult == NULL) {  
-        return NS_ERROR_NULL_POINTER;  
-    }  
-
-    *aResult = NULL;  
-
-    if (nsnull != aOuter)
-      return NS_ERROR_NO_AGGREGATION;
-  
-    nsISupports *inst = nsnull;
-
-    if (mClassID.Equals(kCWindow)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsWindow\n"));
-      inst = (nsISupports *)(nsBaseWidget*)new nsWindow();
-    }
-    else if (mClassID.Equals(kCChild)) {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsChildWindow\n"));
-      inst = (nsISupports *)(nsBaseWidget*)new ChildWindow();
-    }
-    else if (mClassID.Equals(kCHorzScrollbar)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of HorzScrollBar\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsScrollbar( PR_FALSE );
-    }
-    else if (mClassID.Equals(kCVertScrollbar)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of VertScrollBar\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsScrollbar( PR_TRUE );
-    }
-    else if (mClassID.Equals(kCFileOpen)) {
-      inst = (nsISupports *) new nsFileWidget();
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsFileWidget\n" ));
-    }
-    else if (mClassID.Equals(kCSound)) {
-    	nsISound* aSound = nsnull;
-    	NS_NewSound(&aSound);
-        inst = (nsISupports*) aSound;
- 	    PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsSound\n" ));
-
-    }
-    else if (mClassID.Equals(kCAppShell)) {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsAppShell\n" ));
-        inst = (nsISupports*)(nsIAppShell*)new nsAppShell();
-    }
-    else if (mClassID.Equals(kCToolkit)) {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsToolkit\n" ));
-        inst = (nsISupports*)new nsToolkit();
-    }
-    else if (mClassID.Equals(kCLookAndFeel)) {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLookAndFeel\n" ));
-        inst = (nsISupports*)new nsLookAndFeel();
-    }
-    else if (mClassID.Equals(kCClipboard)) {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsClipboard\n"));
-        inst = (nsISupports*)(nsBaseClipboard *)new nsClipboard();
-    }
-    else if (mClassID.Equals(kCXIFFormatConverter)) {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsXIFFormatConverter\n" ));
-        inst = (nsISupports*)new nsXIFFormatConverter();
-    }
-    else if (mClassID.Equals(kCFontRetrieverService)) {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsIFontRetrieverService\n" ));
-        inst = (nsISupports*)(nsIFontRetrieverService *) new nsFontRetrieverService();
-    }
-    else if (mClassID.Equals(kCDragService)) {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsIDragService\n" ));
-        inst = (nsISupports*) (nsIDragService *) new nsDragService();
-	}
-    else if (mClassID.Equals(kCFileSpecWithUI))
-    {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsFileSpecWithUIImpl\n" ));
-    	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
-    }
-    else if (mClassID.Equals(kCTransferable)) {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsTransferable\n" ));
-        inst = (nsISupports*)new nsTransferable();
-    }
-    else if (mClassID.Equals(kCButton)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsButton\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsButton();
-    }
-    else if (mClassID.Equals(kCTextArea)) {
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextAreaWidget();
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of TextArea\n" ));
-    }
-    else if (mClassID.Equals(kCTextField)) {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of TextField\n"));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextWidget();
-    }    
-#if 0    
-    else if (mClassID.Equals(kCCheckButton)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsCheckButton\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsCheckButton();
-    }
-    else if (mClassID.Equals(kCRadioButton)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsRadioButton\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsRadioButton();
-    }
-    else if (mClassID.Equals(kCListbox)) {
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsListBox();
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsListBox\n" ));
-	}
-    else if (mClassID.Equals(kCCombobox)) {
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsComboBox();
- 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsComboBox\n" ));
-    }
-    else if (mClassID.Equals(kCLabel)) {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLabel\n" ));
-      inst = (nsISupports*)(nsILabel *)new nsLabel();
-    }
-#endif
-												
-    if (inst == NULL) {  
-        PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance Failed to create widget.\n" ));
-        return NS_ERROR_OUT_OF_MEMORY;  
-    }  
-
-//PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 2 mRefCnt=<%d>\n", mRefCnt));
-
-    NS_ADDREF(inst);
-    nsresult res = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-
-    return res;
-
-}  
-
-nsresult nsWidgetFactory::LockFactory(PRBool aLock)  
-{  
-//  PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::Lock Factory mRefCnt=<%d> - Not Implemented\n", mRefCnt));
-
-    // Not implemented in simplest case.  
-    return NS_OK;
-}  
-
-// return the proper factory to the caller
-extern "C" NS_WIDGET nsresult 
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    if (nsnull == aFactory) {
-        return NS_ERROR_NULL_POINTER;
-    }
+  nsresult rv;
+  nsISupports *inst = nsnull;
 
-    *aFactory = new nsWidgetFactory(aClass);
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidgetFactory::nsHorizScrollbarConstructor\n"));
+  
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  
+  inst = (nsISupports *)(nsBaseWidget *)(nsWidget *)new nsScrollbar(PR_FALSE);
+  if (inst == NULL)
+  {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
 
-    if (nsnull == aFactory) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+  return rv;
 }
 
+static nsresult nsVertScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  nsISupports *inst = nsnull;
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidgetFactory::nsVertScrollbarConstructor\n"));
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  
+  inst = (nsISupports *)(nsBaseWidget *)(nsWidget *)new nsScrollbar(PR_TRUE);
+  if (inst == NULL)
+  {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+
+static nsModuleComponentInfo components[] =
+{
+  { "Ph nsWindow",
+    NS_WINDOW_CID,
+    "mozilla.widgets.window.ph.1",
+    nsWindowConstructor },
+  { "Ph Child nsWindow",
+    NS_CHILD_CID,
+    "mozilla.widgets.child_window.ph.1",
+    ChildWindowConstructor },
+  { "Ph Button",
+    NS_BUTTON_CID,
+    "mozilla.widgets.button.ph.1",
+    nsButtonConstructor },
+/*
+  { "Ph Check Button",
+    NS_CHECKBUTTON_CID,
+    "mozilla.widgets.checkbutton.ph.1",
+    nsCheckButtonConstructor },
+*/
+  { "Ph File Widget",
+    NS_FILEWIDGET_CID,
+    "mozilla.widgets.filewidget.ph.1",
+    nsFileWidgetConstructor },
+  { "Ph Horiz Scrollbar",
+    NS_HORZSCROLLBAR_CID,
+    "mozilla.widgets.horizscroll.ph.1",
+    nsHorizScrollbarConstructor },
+  { "Ph Vert Scrollbar",
+    NS_VERTSCROLLBAR_CID,
+    "mozilla.widgets.vertscroll.ph.1",
+    nsVertScrollbarConstructor },
+  { "Ph Text Widget",
+    NS_TEXTFIELD_CID,
+    "mozilla.widgets.textwidget.ph.1",
+    nsTextWidgetConstructor },
+  { "Ph AppShell",
+    NS_APPSHELL_CID,
+    "mozilla.widget.appshell.ph.1",
+    nsAppShellConstructor },
+  { "Ph Toolkit",
+    NS_TOOLKIT_CID,
+    "mozilla.widget.toolkit.ph.1",
+    nsToolkitConstructor },
+  { "Ph Look And Feel",
+    NS_LOOKANDFEEL_CID,
+    "mozilla.widget.lookandfeel.ph.1",
+    nsLookAndFeelConstructor },
+/*
+  { "Ph Label",
+    NS_LABEL_CID,
+    "mozilla.widget.label.ph.1",
+    nsLabelConstructor },
+*/
+  { "Ph Sound",
+    NS_SOUND_CID,
+    //    "mozilla.widget.sound.ph.1"
+    "component://netscape/sound",
+    nsSoundConstructor },
+  { "Transferrable",
+    NS_TRANSFERABLE_CID,
+    //    "mozilla.widget.transferrable.ph.1",
+    "component://netscape/widget/transferable",
+    nsTransferableConstructor },
+  { "Ph Clipboard",
+    NS_CLIPBOARD_CID,
+    //    "mozilla.widget.clipboard.ph.1",
+    "component://netscape/widget/clipboard",
+    nsClipboardConstructor },
+  { "XIF Format Converter",
+    NS_XIFFORMATCONVERTER_CID,
+    "mozilla.widget.xifformatconverter.ph.1",
+    nsXIFFormatConverterConstructor },
+  { "Ph Font Retriever Service",
+    NS_FONTRETRIEVERSERVICE_CID,
+    "mozilla.widget.fontretrieverservice.ph.1",
+    nsFontRetrieverServiceConstructor },
+  { "Ph Drag Service",
+    NS_DRAGSERVICE_CID,
+    //    "mozilla.widget.dragservice.ph.1",
+    "component://netscape/widget/dragservice",
+    nsDragServiceConstructor },
+  { "File Spec with UI",
+    NS_FILESPECWITHUI_CID,
+    //    "mozilla.widget.filespecwithui.ph.1",
+    "component://netscape/filespecwithui",
+    nsFileSpecWithUIImplConstructor }
+};
+
+
+NS_IMPL_NSGETMODULE("nsWidgetPhModule", components)
 
