@@ -37,6 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_LOGGING
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
 #include "nsReadConfig.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIAppShellService.h"
