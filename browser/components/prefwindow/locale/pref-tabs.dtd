@@ -4,6 +4,5 @@
 <!ENTITY background.label "Load links in the background">
 <!ENTITY openTabs.label "Open tabs instead of windows for">
 <!ENTITY middleClick.label "Middle-click of links in a Web page">
-<!ENTITY urlbar.label "Shift+Enter in the Location bar">
 <!ENTITY openFolder.label "When opening a bookmark folder in tabs">
 <!ENTITY openFolderReplace.label "Replace the current set of tabs">

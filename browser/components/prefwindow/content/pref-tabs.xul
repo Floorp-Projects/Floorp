@@ -51,10 +51,6 @@
       <checkbox id="middleClick"
                 label="&middleClick.label;" 
                 prefstring="browser.tabs.opentabfor.middleclick"/>
-
-      <checkbox id="urlBar"
-                label="&urlbar.label;" 
-                prefstring="browser.tabs.opentabfor.urlbar"/>
   </groupbox>
 
   <groupbox>

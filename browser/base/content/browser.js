@@ -802,8 +802,7 @@ function BrowserLoadURL(aTriggeringEvent)
       // Tack www. and .com on.
       url = gURLBar.value = "www." + url + ".com";
 
-    if (gPrefService && gPrefService.getBoolPref("browser.tabs.opentabfor.urlbar") &&
-        getBrowser().localName == "tabbrowser" &&
+    if (getBrowser().localName == "tabbrowser" &&
         aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
         aTriggeringEvent.shiftKey) {
       var t = getBrowser().addTab(getShortcutOrURI(url)); // open link in new tab
@@ -4172,7 +4171,7 @@ function openNewTabOrWindow(event, href, linkNode, overrideVal)
   if (overrideVal == 1 || (overrideVal == 0 && gPrefService && gPrefService.getBoolPref("browser.tabs.opentabfor.middleclick") &&
       ("getBrowser" in window) && getBrowser().localName == "tabbrowser")) {
     var loadInBackground = gPrefService.getBoolPref("browser.tabs.loadInBackground");
-    if (event.ctrlKey)
+    if (event.shiftKey)
       loadInBackground = !loadInBackground;
     var theTab = getBrowser().addTab(href, getReferrer(document));
     if (!loadInBackground)
@@ -4208,7 +4207,7 @@ function handleLinkClick(event, href, linkNode)
   switch (event.button) {                                   
     case 0:                                                         // if left button clicked
       if (event.metaKey || event.shiftKey || event.ctrlKey) {       // and meta or ctrl or shift are down
-        var overrideVal = event.shiftKey ? 1 : 2;
+        var overrideVal = event.ctrlKey ? 1 : 2;
         if (openNewTabOrWindow(event, href, linkNode, overrideVal))
           return true;
       } 
@@ -4238,8 +4237,8 @@ function middleMousePaste( event )
   if (!url)
     return false;
 
-  // On shift-middleclick, open in new window or tab.
-  if (event.shiftKey)
+  // On ctrl-middleclick, open in new tab.
+  if (event.ctrlKey)
     return openNewTabOrWindow(event, url, null, 0);
 
   // If ctrl wasn't down, then just load the url in the current win/tab.
