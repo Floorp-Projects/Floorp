@@ -1589,12 +1589,16 @@ nsFontGTK::LoadFont(void)
 
 }
 
+MOZ_DECL_CTOR_COUNTER(nsFontGTK);
+
 nsFontGTK::nsFontGTK()
 {
+  MOZ_COUNT_CTOR(nsFontGTK);
 }
 
 nsFontGTK::~nsFontGTK()
 {
+  MOZ_COUNT_DTOR(nsFontGTK);
   if (mFont) {
     gdk_font_unref(mFont);
   }
