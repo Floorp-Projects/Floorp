@@ -236,7 +236,7 @@ _MD_PutEnv(const char *string)
 		
 		if (currentVariable == NULL) {
 			PR_DELETE(variableCopy);
-			return PR_FALSE;
+			return -1;
 		}
 		
 		currentVariable->variable = strdup(variableCopy);
@@ -260,7 +260,7 @@ _MD_PutEnv(const char *string)
 	}
 	
 	PR_DELETE(variableCopy);
-	return PR_TRUE;
+	return 0;
 }
 
 

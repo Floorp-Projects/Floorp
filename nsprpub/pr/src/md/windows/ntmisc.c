@@ -44,9 +44,14 @@ char *_PR_MD_GET_ENV(const char *name)
     return getenv(name);
 }
 
+/*
+** _PR_MD_PUT_ENV() -- add or change environment variable
+**
+**
+*/
 PRIntn _PR_MD_PUT_ENV(const char *name)
 {
-    return putenv(name);
+    return(putenv(name));
 }
 
 

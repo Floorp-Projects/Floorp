@@ -72,17 +72,16 @@ PR_IMPLEMENT(char*) PR_GetEnv(const char *var)
     return ev;
 }
 
-#ifdef XP_MAC
-PR_IMPLEMENT(PRIntn) PR_PutEnv(const char *string)
+PR_IMPLEMENT(PRStatus) PR_PutEnv(const char *string)
 {
     PRIntn result;
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
+    if ( !strchr(string, '=')) return(PR_FAILURE);
+
     _PR_LOCK_ENV();
     result = _PR_MD_PUT_ENV(string);
     _PR_UNLOCK_ENV();
-    return result;
+    return (result)? PR_FAILURE : PR_SUCCESS;
 }
-#endif
-

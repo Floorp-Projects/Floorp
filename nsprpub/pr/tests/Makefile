@@ -73,6 +73,7 @@ CSRCS =             \
 	dceemu.c		\
 	dlltest.c		\
 	dtoa.c			\
+	env.c           \
 	errcodes.c		\
 	errset.c		\
 	exit.c  		\
