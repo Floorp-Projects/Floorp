@@ -38,7 +38,6 @@ NS_EXTERN_IID(kIDocumentViewerIID);
 NS_EXTERN_IID(kIDOMDocumentIID);
 NS_EXTERN_IID(kIDOMNodeIID);
 NS_EXTERN_IID(kIDOMElementIID);
-NS_EXTERN_IID(kIWebShellContainerIID);
 NS_EXTERN_IID(kIStreamObserverIID);
 NS_EXTERN_IID(kIDocumentLoaderObserverIID);
 NS_EXTERN_IID(kISupportsIID);
