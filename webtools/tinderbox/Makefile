@@ -39,7 +39,6 @@ addnote.cgi	\
 admintree.cgi	\
 buildwho.pl	\
 clean.pl	\
-copydata.pl	\
 doadmin.cgi	\
 ep_mac.pl	\
 ep_unix.pl	\
