@@ -71,8 +71,11 @@ protected:
 protected:
 	THPrint		mPrtRec;									// the print record
 	PRBool		mPrintManagerOpen;				// tells if the print manager is open
+#if !TARGET_CARBON
+// pinkerton - obsolete APIs. Doesn't exist in carbon
 	TPrPort*	mPrinterPort;
-	
+#endif
+
 friend nsDeviceContextMac;
 };
 
