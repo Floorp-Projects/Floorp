@@ -36,6 +36,7 @@ function nsContextMenu( xulMenu ) {
     this.menu       = null;
     this.onImage    = false;
     this.onLink     = false;
+    this.onSaveableLink = false;
     this.link       = false;
     this.inFrame    = false;
     this.hasBGImage = false;
@@ -70,14 +71,14 @@ nsContextMenu.prototype = {
     },
     initOpenItems : function () {
         // Remove open/edit link if not applicable.
-        this.showItem( "context-openlink", this.onLink );
-        this.showItem( "context-editlink", this.onLink );
+        this.showItem( "context-openlink", this.onSaveableLink );
+        this.showItem( "context-editlink", this.onSaveableLink );
     
         // Remove open frame if not applicable.
         this.showItem( "context-openframe", this.inFrame );
     
         // Remove separator after open items if neither link nor frame.
-        this.showItem( "context-sep-open", this.onLink || this.inFrame );
+        this.showItem( "context-sep-open", this.onSaveableLink || this.inFrame );
     },
     initNavigationItems : function () {
         // Back determined by canGoBack broadcaster.
@@ -98,7 +99,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-saveframe", this.inFrame );
     
         // Save link depends on whether we're in a link.
-        this.showItem( "context-savelink", this.onLink );
+        this.showItem( "context-savelink", this.onSaveableLink );
     
         // Save background image depends on whether there is one.
         this.showItem( "context-savebgimage", this.hasBGImage );
@@ -191,6 +192,7 @@ nsContextMenu.prototype = {
                                         // Default matches entire image.
                                         this.onLink = true;
                                         this.link = area;
+                                        this.onSaveableLink = this.isLinkSaveable( this.link );
                                         break;
                                 }
                             }
@@ -235,8 +237,23 @@ nsContextMenu.prototype = {
                 this.onLink = true;
                 // Remember corresponding element.
                 this.link = elem;
+                // Remember if it is saveable.
+                this.onSaveableLink = this.isLinkSaveable( this.link );
             }
             elem = elem.parentNode;
+        }
+    },
+    // Returns true iff clicked on link is saveable.
+    isLinkSaveable : function ( link ) {
+        // Test for missing protocol property.
+        if ( !link.protocol ) {
+           // We must resort to testing the URL string :-(.
+           dump( "Bug! Link.protocol is still undefined!\n" );
+           var protocol = link.href.substr( 0, 11 );
+           return protocol != "javascript:";
+        } else {
+           // Presume all but javascript: urls are saveable.
+           return link.protocol != "javascript:";
         }
     },
     // Open linked-to URL in a new window.
