@@ -75,6 +75,14 @@ class nsIDOMNode;
 @end
 
 
+typedef enum
+{
+  eNewTabEmpty,
+  eNewTabAboutBlank,
+  eNewTabHomepage
+  
+} ENewTabContents;
+
 @class BookmarksDataSource;
 @class HistoryDataSource;
 @class BrowserTabView;
@@ -210,7 +218,7 @@ class nsIDOMNode;
 - (IBAction)toggleSidebar:(id)aSender;
 - (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection;
 
-- (void)newTab:(BOOL)allowHomepage;
+- (void)newTab:(ENewTabContents)contents;
 - (void)closeTab;
 - (void)previousTab;
 - (void)nextTab;

@@ -312,7 +312,7 @@ static NSArray* sToolbarDefaults = nil;
     // create ourselves a new tab and fill it with the appropriate content. If we
     // have a URL pending to be opened here, don't load anything in it, otherwise,
     // load the homepage if that's what the user wants (or about:blank).
-    [self newTab:(!mPendingURL && mShouldLoadHomePage)];
+    [self newTab:(mPendingURL ? eNewTabEmpty : (mShouldLoadHomePage ? eNewTabHomepage : eNewTabAboutBlank))];
     
     // we have a url "pending" from the "open new window with link" command. Deal
     // with it now that everything is loaded.
@@ -667,6 +667,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)focusURLBar
 {
+  [[mBrowserView getBrowserView] setActive:NO];
 	[mURLBar selectText: self];
 }
 
@@ -976,33 +977,44 @@ static NSArray* sToolbarDefaults = nil;
 	[mProxyIcon setImage:siteIconImage];
 }
 
--(void)newTab:(BOOL)allowHomepage
+- (void)newTab:(ENewTabContents)contents;
 {
     BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
     BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
 
-    PRInt32 newTabPage = 0;
-    if (allowHomepage) {
+    BOOL loadHomepage = NO;
+    if (contents == eNewTabHomepage)
+    {
       nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+      PRInt32 newTabPage = 0;		// 0=about:blank, 1=home page, 2=last page visited
       pref->GetIntPref("browser.tabs.startPage", &newTabPage);
+      loadHomepage = (newTabPage == 1);
     }
 
-    [newTab setLabel: ((newTabPage == 1) ? NSLocalizedString(@"TabLoading", @"") : NSLocalizedString(@"UntitledPageTitle", @""))];
+    [newTab setLabel: (loadHomepage ? NSLocalizedString(@"TabLoading", @"") : NSLocalizedString(@"UntitledPageTitle", @""))];
     [newTab setView: newView];
     [mTabBrowser addTabViewItem: newTab];
     
-    // Focus the URL bar if we're opening a blank tab and the URL bar is visible.
-    NSToolbar* toolbar = [[self window] toolbar];
-    BOOL focusURLBar = ([toolbar isVisible] &&
-                        ([toolbar displayMode] == NSToolbarDisplayModeIconAndLabel ||
-                         [toolbar displayMode] == NSToolbarDisplayModeIconOnly) &&
-                        newTabPage != 1 && allowHomepage);
+    BOOL focusURLBar = NO;
+    if (contents != eNewTabEmpty)
+    {
+      // Focus the URL bar if we're opening a blank tab and the URL bar is visible.
+      NSToolbar* toolbar = [[self window] toolbar];
+      BOOL locationBarVisible = [toolbar isVisible] &&
+                                ([toolbar displayMode] == NSToolbarDisplayModeIconAndLabel ||
+                                 [toolbar displayMode] == NSToolbarDisplayModeIconOnly);
+                                
+      NSString* urlToLoad = @"about:blank";
+      if (loadHomepage)
+        urlToLoad = [[PreferenceManager sharedInstance] homePage: NO];
+
+      focusURLBar = locationBarVisible && [urlToLoad isEqualToString:@"about:blank"];      
+
+      [newView loadURI:urlToLoad referrer:nil flags:NSLoadFlagsNone activate:!focusURLBar];
+    }
     
-    if (allowHomepage)
-      [newView loadURI: ((newTabPage == 1) ? [[PreferenceManager sharedInstance] homePage: NO] : @"about:blank") referrer:nil flags:NSLoadFlagsNone activate:!focusURLBar];
-
     [mTabBrowser selectLastTabViewItem: self];
-
+    
     if (focusURLBar)
       [self focusURLBar];
 }

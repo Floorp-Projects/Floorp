@@ -665,36 +665,38 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
 -(NSString*)getCurrentURLSpec
 {
-    NSString* empty = @"";
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-    if (!domWindow)
-        return empty;
-    
-    nsCOMPtr<nsIDOMDocument> domDocument;
-    domWindow->GetDocument(getter_AddRefs(domDocument));
-    if (!domDocument)
-        return empty;
-    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
-    if (!nsDoc)
-        return empty;
-    nsCOMPtr<nsIDOMLocation> location;
-    nsDoc->GetLocation(getter_AddRefs(location));
-    if (!location)
-        return empty;
+  NSString* empty = @"";
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  if (!domWindow)
+    return empty;
+  
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  domWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+    return empty;
 
-    nsAutoString urlStr;
-    location->GetHref(urlStr);
-    return [NSString stringWith_nsAString: urlStr];
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+  if (!nsDoc)
+    return empty;
+
+  nsCOMPtr<nsIDOMLocation> location;
+  nsDoc->GetLocation(getter_AddRefs(location));
+  if (!location)
+    return empty;
+
+  nsAutoString urlStr;
+  location->GetHref(urlStr);
+  return [NSString stringWith_nsAString: urlStr];
 }
 
 - (void)setActive: (BOOL)aIsActive
 {
-    nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
-    if (aIsActive)
-        wbf->Activate();
-    else
-        wbf->Deactivate();
+  nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
+  if (aIsActive)
+    wbf->Activate();
+  else
+    wbf->Deactivate();
 }
 
 -(NSMenu*)getContextMenu
