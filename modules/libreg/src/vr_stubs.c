@@ -84,7 +84,7 @@ extern void vr_findGlobalRegName ()
     pathlen = strlen(path);
 
     if ( pathlen > 0 ) {
-        XP_STRCPY( path+pathlen, "\\nsreg.dat" );
+        XP_STRCPY( path+pathlen, "\\mozregistry.dat" );
         globalRegName = XP_STRDUP(path);
     }
 }
@@ -123,7 +123,7 @@ extern void vr_findGlobalRegName ()
    
     pathlen = GetWindowsDirectory(path, PATHLEN);
     if ( pathlen > 0 ) {
-        XP_STRCPY( path+pathlen, "\\nsreg.dat" );
+        XP_STRCPY( path+pathlen, "\\mozregistry.dat" );
         globalRegName = XP_STRDUP(path);
     }
 }
@@ -414,7 +414,7 @@ int main(int argc, char *argv[]);
 
 #ifdef XP_UNIX
 
-#define DEF_REG "/.netscape/registry"
+#define DEF_REG "/.mozilla/registry"
 
 #ifdef STANDALONE_REGISTRY
 extern XP_File vr_fileOpen (const char *name, const char * mode)
