@@ -20,10 +20,8 @@
 # Contributor(s):
 
 DEPTH=..\..
-THEME_ROOT_DEPTH = .
 
 include <$(DEPTH)\config\config.mak>
-include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 DIRS =  global\win
 
@@ -35,3 +33,4 @@ chrome::
         $(REGCHROME) skin classic/global classic.jar
         $(REGCHROME) skin classic/messenger classic.jar
         $(REGCHROME) skin classic/navigator classic.jar
+        $(REGCHROME) skin classic/forms classic.jar

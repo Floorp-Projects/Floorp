@@ -43,3 +43,4 @@ libs::
 	@$(REGCHROME) skin classic/global classic.jar
 	@$(REGCHROME) skin classic/messenger classic.jar
 	@$(REGCHROME) skin classic/navigator classic.jar
+	@$(REGCHROME) skin classic/forms classic.jar

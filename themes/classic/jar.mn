@@ -254,3 +254,5 @@ classic.jar:
   skin/classic/navigator/btn1/up-disabled.gif                           (navigator/btn1/up-disabled.gif)
   skin/classic/navigator/btn1/up-hover.gif                              (navigator/btn1/up-hover.gif)
   skin/classic/navigator/icons/btn1.gif                                 (navigator/icons/btn1.gif)
+  skin/classic/forms/contents.rdf                                       (forms/contents.rdf)
+  skin/classic/forms/forms.css                                          (forms/forms.css)
