@@ -90,7 +90,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	if (aClass.Equals(kMacLocaleFactoryCID))
 	{
 		nsMacLocaleFactory	*mac_factory = new nsMacLocaleFactory();
-		res = mac_factory->QueryInterface(kILocaleFactoryIID,(void**) aFactory);
+		res = mac_factory->QueryInterface(kIFactoryIID,(void**) aFactory);
 		
 		if (NS_FAILED(res))
 		{
@@ -203,5 +203,3 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
-
-
