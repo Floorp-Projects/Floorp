@@ -1013,15 +1013,12 @@ function deleteEventCommand( DoNotConfirm )
          {
             var calendarEvent = SelectedItems[0];
 
-            if ( SelectedItems.length > 1 ) {
-               if ( !confirm( confirmDeleteAllEvents ) ) {
-                  break outerLoop; } }
-            else if ( calendarEvent.title != "" ) {
-               if ( !confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) ) {
-                  break outerLoop; } }
-            else {
-               if ( !confirm( confirmDeleteUntitledEvent ) ) {
-                  break outerLoop; } }
+            if ( SelectedItems.length > 1 && !confirm( confirmDeleteAllEvents ) )
+               break outerLoop;
+            else if ( calendarEvent.title != "" && !confirm( confirmDeleteEvent+" "+calendarEvent.title+"?" ) )
+               break outerLoop;
+            else if ( !confirm( confirmDeleteUntitledEvent ) )
+               break outerLoop;
          }
 
          calendarsToPublish = new Array();
@@ -1065,7 +1062,7 @@ function deleteEventCommand( DoNotConfirm )
          gICalLib.batchMode = false;
 
          // If we need to publish at least one calendar, publish to each calendarServer in the array
-         if( calendarsToPublish.length() )
+         if( calendarsToPublish.length )
          {
             for( i = 0; i < calendarsToPublish.length; i++ )
             {
