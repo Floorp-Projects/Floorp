@@ -27,6 +27,8 @@
 #include "nsISupportsArray.h"
 #include "nsIPref.h"
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
