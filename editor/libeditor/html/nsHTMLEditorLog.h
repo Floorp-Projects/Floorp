@@ -129,7 +129,7 @@ public:
 
   /* nsHTMLEditorLog public methods. */
   nsresult Write(const char *aBuffer);
-  nsresult WriteInt(const char *aFormat, PRInt32 aInt);
+  nsresult WriteInt(PRInt32 aInt);
   nsresult Flush();
   nsresult PrintUnicode(const nsAString &aString);
   nsresult PrintSelection();

@@ -89,7 +89,7 @@ private:
   /* nsEditorTxnLog private methods. */
   nsresult PrintIndent(PRInt32 aIndentLevel);
   nsresult Write(const char *aBuffer);
-  nsresult WriteInt(const char *aFormat, PRInt32 aInt);
+  nsresult WriteInt(PRInt32 aInt);
   nsresult WriteTransaction(nsITransaction *aTransaction);
   nsresult Flush();
 };
