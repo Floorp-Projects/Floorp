@@ -41,10 +41,8 @@ static NS_DEFINE_IID(kITEXTWIDGETIID, NS_TEXTFIELD_CID);
  */
 nsMacMessagePump::nsMacMessagePump(nsToolkit	*aToolkit)
 {
-
 	mRunning = PR_FALSE;
 	mToolkit = aToolkit;
-
 }
 
 //=================================================================
@@ -67,7 +65,6 @@ nsMacMessagePump::~nsMacMessagePump()
 PRBool 
 nsMacMessagePump::DoMessagePump()
 {
-PRBool				stillrunning = PR_TRUE;
 EventRecord		theevent;
 long					sleep=0;
 PRInt16				haveevent;
@@ -86,7 +83,7 @@ unsigned char	evtype;
 	SetRectRgn(currgn,-32000,-32000,-32000,-32000);
 	
 	
-	while(mRunning && stillrunning)
+	while(mRunning)
 		{			
 		haveevent = ::WaitNextEvent(everyEvent,&theevent,sleep,0l);
 
@@ -253,68 +250,6 @@ nsWindow			*thewindow;
 
 }
 
-//==============================================================
-
-// XXXX Quick and Extra Ugly hack: These #defines copied from resources.h in the viewer
-// project. This makes the the widget project tied to the viewer project. This is bad. This
-// is ugly. This should be fixed soon.
-
-#define VIEWER_OPEN             40000
-#define VIEWER_EXIT             40002
-#define PREVIEW_CLOSE           40003
-
-#define VIEWER_WINDOW_OPEN      40009
-#define VIEWER_FILE_OPEN        40010
-
-// Note: must be in ascending sequential order
-#define VIEWER_DEMO0            40011
-
-#define VIEWER_VISUAL_DEBUGGING     40021
-
-// Note: must be in ascending sequential order
-#define VIEWER_ONE_COLUMN       40040
-
-#define JS_CONSOLE              40100
-#define EDITOR_MODE             40120
-
-#define VIEWER_EDIT_CUT         40201
-
-#define FILE_MENU 2000
-#define EDIT_MENU 2001
-#define DEBU_MENU 2002
-#define DEMO_MENU 128
-#define PRIN_MENU 129
-
-static PRUint32 translateMenu (long aMenuResult)
-{
-	PRUint32 result = 0;
-	long menuid = HiWord(aMenuResult);
-	long menuItem = LoWord(aMenuResult);
-	
-	switch (menuid)
-	{
-		case FILE_MENU:
-			switch (menuItem)
-			{
-				//case XXX: result = XXXX; break;
-			}
-			break;
-		case EDIT_MENU:
-			result = VIEWER_EDIT_CUT + menuItem;
-			break;
-		case DEBU_MENU:
-			result = VIEWER_VISUAL_DEBUGGING + menuItem;
-			break;
-		case DEMO_MENU:
-			  result = VIEWER_DEMO0 - 1 + menuItem;
-			break;
-		case PRIN_MENU:
-			result = VIEWER_ONE_COLUMN + menuItem;
-			break;
-	}
-	return result;
-}
-
 //=================================================================
 /*  Turns a mousedown event into a raptor mousedown event
  *  @update  dc 08/31/98
@@ -338,27 +273,9 @@ nsMouseEvent	mouseevent;
 
 	if (inMenuBar == partcode)
 	{
-	  nsMenuEvent theEvent;
-	  nsWindow *raptorWindow;
-	  long menuItem = MenuSelect(aTheEvent->where);
-	  
-	  HiliteMenu(0);
-
-	#if 1
-	  whichwindow = FrontWindow();
-      raptorWindow = (nsWindow *) GetWRefCon (whichwindow);
-    #else
-      // XXX For some reason this returns null... which is bad...
-	  raptorWindow = mToolkit->GetFocus();
-    #endif
-    
-      theEvent.eventStructType = NS_MENU_EVENT;
-      theEvent.message  = NS_MENU_SELECTED;
-	  theEvent.menuItem = translateMenu (menuItem);
-	  theEvent.widget   = raptorWindow;
-	  theEvent.nativeMsg = aTheEvent;
-	  
-      raptorWindow->DispatchEvent(&theEvent);
+	  long menuResult = MenuSelect(aTheEvent->where);
+	  if (HiWord(menuResult) != 0)
+	      DoMenu(aTheEvent, menuResult);
 	  return;
 	}
 
@@ -479,7 +396,7 @@ nsMouseEvent	mouseevent;
 					if(thewindow)
 						{
 						thewindow->Destroy();
-						mRunning = PR_FALSE;
+						//mRunning = PR_FALSE;
 						}
 					else
 						{
@@ -732,6 +649,9 @@ nsTextWidget	*widget;
 	if(aTheEvent->modifiers&cmdKey)
 		{
 		// do a menu key command
+		long menuResult = MenuKey(ch);
+		if (HiWord(menuResult) != 0)
+			DoMenu(aTheEvent, menuResult);
 		}
 	else
 		{
@@ -767,4 +687,37 @@ nsTextWidget	*widget;
 		}
 }
 
-//==============================================================
+//=================================================================
+/*  Turns a menu event into a raptor menu event
+ *  @update  ps 09/21/98
+ *  @param   aTheEvent -- A pointer to a Macintosh EventRecord
+ *  @return  NONE
+ */
+void 
+nsMacMessagePump::DoMenu(EventRecord *aTheEvent, long menuItem)
+{
+	WindowPtr whichwindow;
+	nsMenuEvent theEvent;
+	nsWindow* raptorWindow = nsnull;
+
+#if 1
+	whichwindow = FrontWindow();
+	if (whichwindow)
+	    raptorWindow = (nsWindow *) GetWRefCon (whichwindow);
+#else
+	// XXX For some reason this returns null... which is bad...
+	raptorWindow = mToolkit->GetFocus();
+#endif
+    
+	if (raptorWindow)
+	{
+		theEvent.eventStructType = NS_MENU_EVENT;
+		theEvent.message  = NS_MENU_SELECTED;
+		theEvent.menuItem = menuItem;
+		theEvent.widget   = raptorWindow;
+		theEvent.nativeMsg = aTheEvent;
+		raptorWindow->DispatchEvent(&theEvent);
+	}
+
+	HiliteMenu(0);
+}
