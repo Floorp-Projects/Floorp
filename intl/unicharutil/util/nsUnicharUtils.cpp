@@ -78,7 +78,7 @@ static nsresult NS_InitCaseConversion() {
 
 
 // to be turned on for bug 100214
-#if 0
+//#if 0
 class ConvertToLowerCase
 {
 public:
@@ -151,7 +151,7 @@ nsCaseInsensitiveStringComparator::operator()( PRUnichar lhs, PRUnichar rhs ) co
       return 1;
   }
 
-#endif
+///#endif
 
 PRUnichar
 ToLowerCase(PRUnichar aChar)

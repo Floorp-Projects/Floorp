@@ -34,10 +34,10 @@ nsDefaultStringComparator::operator()( const char_type* lhs, const char_type* rh
   }
 
 int
-nsCaseInsensitiveStringComparator::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
+nsDefaultStringComparator::operator()( char_type lhs, char_type rhs) const
   {
-    return nsCRT::strncasecmp(lhs, rhs, aLength);
-  }
+    return lhs - rhs;
+  } 
 
 NS_COM
 int
@@ -537,10 +537,27 @@ nsDefaultCStringComparator::operator()( const char_type* lhs, const char_type* r
     return nsCharTraits<char_type>::compare(lhs, rhs, aLength);
   }
 
+PRBool
+nsDefaultCStringComparator::operator()( char_type lhs, char_type rhs ) const
+  {
+    return lhs - rhs;
+  }
+
 int
 nsCaseInsensitiveCStringComparator::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
   {
     return nsCRT::strncasecmp(lhs, rhs, aLength);
+  }
+
+PRBool
+nsCaseInsensitiveCStringComparator::operator()( char lhs, char rhs ) const
+  {
+    if (lhs == rhs) return 0;
+    
+    lhs = nsCRT::ToLower(lhs);
+    rhs = nsCRT::ToLower(rhs);
+
+    return lhs - rhs;
   }
 
 NS_COM
