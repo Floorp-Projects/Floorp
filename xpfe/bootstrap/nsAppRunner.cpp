@@ -21,7 +21,6 @@
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
-#include "nsNeckoUtil2.h"
 #endif // NECKO
 #include "nsIWidget.h"
 #include "nsIBrowserWindow.h"
