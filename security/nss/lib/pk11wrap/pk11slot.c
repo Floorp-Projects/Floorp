@@ -4562,6 +4562,8 @@ PK11_ResetToken(PK11SlotInfo *slot, char *sso_pwd)
 	PORT_SetError(PK11_MapError(crv));
 	return SECFailure;
     }
+    nssTrustDomain_UpdateCachedTokenCerts(slot->nssToken->trustDomain,
+	                                      slot->nssToken);
     return SECSuccess;
 }
 
