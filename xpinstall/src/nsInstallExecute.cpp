@@ -44,31 +44,34 @@ nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
         return;
     }
 
-    mJarLocation = inJarLocation;
-    mArgs        = inArgs;
+    mJarLocation        = inJarLocation;
+    mArgs               = inArgs;
+    mExecutableFile     = nsnull;
 
 }
 
 
 nsInstallExecute::~nsInstallExecute()
 {
+    delete mExecutableFile;
 }
+
 
 
 PRInt32 nsInstallExecute::Prepare()
 {
-    if (mInstall == NULL || mExecutableFile == "null" || mJarLocation == "null") 
+    if (mInstall == NULL || mJarLocation == "null") 
         return nsInstall::INVALID_ARGUMENTS;
 
-    PRInt32 err;
-    mInstall->ExtractFileFromJar(mJarLocation, "", mExecutableFile, &err);
-  
-    return err;
+    return mInstall->ExtractFileFromJar(mJarLocation, "", &mExecutableFile);
 }
 
 PRInt32 nsInstallExecute::Complete()
 {
-    char* tempCString = mExecutableFile.ToNewCString();
+    if (mExecutableFile == nsnull)
+        return nsInstall::INVALID_ARGUMENTS;
+    
+    char* tempCString = mExecutableFile->ToNewCString();
 
     nsFileSpec appPath(tempCString , false);
     
@@ -94,23 +97,23 @@ void nsInstallExecute::Abort()
     int result;
 
     /* Get the names */
-    if (mExecutableFile == "") 
+    if (mExecutableFile == nsnull) 
         return;
-    currentName = mExecutableFile.ToNewCString();
+
+    currentName = mExecutableFile->ToNewCString();
 
     result = PR_Delete(currentName);
-    PR_ASSERT(result == 0); /* XXX: need to fe_deletefilelater() or something */
+    PR_ASSERT(result == 0); /* FIX: need to fe_deletefilelater() or something */
+    
     delete currentName;
 }
 
 char* nsInstallExecute::toString()
 {
-    nsString fullPathString;
+    nsString fullPathString(mJarLocation);
+    fullPathString.Append(*mExecutableFile);
 
-    fullPathString = mJarLocation;
-    fullPathString += mExecutableFile;
-
-    if (mExecutableFile == "null") 
+    if (mExecutableFile == nsnull) 
     {
         // FIX!
        // return nsInstallErrorMessages::GetString(nsInstall::DETAILS_EXECUTE_PROGRESS, fullPathString);

@@ -25,8 +25,9 @@
 #include "nsInstallObject.h"
 
 #include "nsInstall.h"
+#include "nsInstallVersion.h"
 #include "nsIDOMInstallFolder.h"
-#include "nsIDOMInstallVersion.h"
+
 
 
 class nsInstallFile : public nsInstallObject 
@@ -66,7 +67,7 @@ class nsInstallFile : public nsInstallObject
     private:
 
         /* Private Fields */
-        nsIDOMInstallVersion* mVersionInfo;	        /* Version info for this file*/
+        nsInstallVersion* mVersionInfo;	        /* Version info for this file*/
         
         nsString*   mJarLocation;	      /* Location in the JAR */
         nsString*   mTempFile;	          /* temporary file location */
@@ -81,7 +82,6 @@ class nsInstallFile : public nsInstallObject
 
         int         NativeComplete();
         PRBool      DoesFileExist();
-        void        AddToClasspath(nsString* file);
 };
 
 #endif /* nsInstallFile_h__ */

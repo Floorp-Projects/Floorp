@@ -51,7 +51,8 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     
     mJarLocation    =   inJarLocation; 
 
-    mPatchFile      =   "";
+    mPatchFile      =   nsnull;
+
     mTargetFile     =   "";
     mPatchedFile    =   "";
 
@@ -97,7 +98,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mVersionInfo    =   inVInfo;    /* Who owns this object? May be we should make a copy of it */
     mJarLocation    =   inJarLocation; 
 
-    mPatchFile      =   "";
+    mPatchFile      =   nsnull;
     mPatchedFile    =   "";
 
     folderSpec->MakeFullPath(inPartialPath, mTargetFile);
@@ -105,6 +106,8 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
 
 nsInstallPatch::~nsInstallPatch()
 {
+    if (mPatchFile != nsnull)
+        delete mPatchFile;
 }
 
 
@@ -138,7 +141,7 @@ PRInt32 nsInstallPatch::Prepare()
         return err;
     }
 
-    mInstall->ExtractFileFromJar(mJarLocation, mTargetFile, mPatchFile, &err);
+    err =  mInstall->ExtractFileFromJar(mJarLocation, mTargetFile, &mPatchFile);
    
     
     nsString *fileName = nsnull;
@@ -156,7 +159,7 @@ PRInt32 nsInstallPatch::Prepare()
         deleteOldSrc = PR_FALSE;
     }
 
-    err = NativePatch( *fileName, mPatchFile, mPatchedFile);
+    err = NativePatch( *fileName, *mPatchFile, mPatchedFile);
     
     if (err != nsInstall::SUCCESS)
     {   

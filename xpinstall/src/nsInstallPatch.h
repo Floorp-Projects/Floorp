@@ -64,7 +64,9 @@ class nsInstallPatch : public nsInstallObject
         nsIDOMInstallVersion*   mVersionInfo;
 
         nsString                mJarLocation;
-        nsString                mPatchFile;
+
+        nsString                *mPatchFile;
+        
         nsString                mTargetFile;
         nsString                mPatchedFile;
 

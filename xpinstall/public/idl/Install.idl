@@ -3,48 +3,48 @@ interface Install
 /* IID: { 0x18c2f988, 0xb09f, 0x11d2, \
   {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}} */
 
-	const int SUERR_BAD_PACKAGE_NAME          = -200;
-	const int SUERR_UNEXPECTED_ERROR          = -201;
-	const int SUERR_ACCESS_DENIED             = -202;
-	const int SUERR_TOO_MANY_CERTIFICATES     = -203; /* Installer file must have 1 certificate */
-	const int SUERR_NO_INSTALLER_CERTIFICATE  = -204; /* Installer file must have a certificate */
-	const int SUERR_NO_CERTIFICATE            = -205; /* Extracted file is not signed */
-	const int SUERR_NO_MATCHING_CERTIFICATE   = -206; /* Extracted file does not match installer certificate */
-	const int SUERR_UNKNOWN_JAR_FILE          = -207; /* JAR file has not been opened */
-	const int SUERR_INVALID_ARGUMENTS         = -208; /* Bad arguments to a function */
-	const int SUERR_ILLEGAL_RELATIVE_PATH     = -209; /* Illegal relative path */
-	const int SUERR_USER_CANCELLED            = -210; /* User cancelled */
-	const int SUERR_INSTALL_NOT_STARTED       = -211;
-	const int SUERR_SILENT_MODE_DENIED        = -212;
-	const int SUERR_NO_SUCH_COMPONENT         = -213; /* no such component in the registry. */
-	const int SUERR_FILE_DOES_NOT_EXIST       = -214; /* File cannot be deleted as it does not exist */
-	const int SUERR_FILE_READ_ONLY            = -215; /* File cannot be deleted as it is read only. */
-	const int SUERR_FILE_IS_DIRECTORY         = -216; /* File cannot be deleted as it is a directory */
-	const int SUERR_NETWORK_FILE_IS_IN_USE    = -217; /* File on the network is in-use */
-	const int SUERR_APPLE_SINGLE_ERR          = -218; /* error in AppleSingle unpacking */
-	const int SUERR_INVALID_PATH_ERR          = -219; /* GetFolder() did not like the folderID */
-	const int SUERR_PATCH_BAD_DIFF            = -220; /* error in GDIFF patch */
-	const int SUERR_PATCH_BAD_CHECKSUM_TARGET = -221; /* source file doesn't checksum  */
-	const int SUERR_PATCH_BAD_CHECKSUM_RESULT = -222; /* final patched file fails checksum  */
-	const int SUERR_UNINSTALL_FAILED          = -223; /* error while uninstalling a package  */
-	const int SUERR_GESTALT_UNKNOWN_ERR       = -5550;         
-	const int SUERR_GESTALT_INVALID_ARGUMENT  = -5551;
+	const int BAD_PACKAGE_NAME          = -200;
+	const int UNEXPECTED_ERROR          = -201;
+	const int ACCESS_DENIED             = -202;
+	const int TOO_MANY_CERTIFICATES     = -203; /* Installer file must have 1 certificate */
+	const int NO_INSTALLER_CERTIFICATE  = -204; /* Installer file must have a certificate */
+	const int NO_CERTIFICATE            = -205; /* Extracted file is not signed */
+	const int NO_MATCHING_CERTIFICATE   = -206; /* Extracted file does not match installer certificate */
+	const int UNKNOWN_JAR_FILE          = -207; /* JAR file has not been opened */
+	const int INVALID_ARGUMENTS         = -208; /* Bad arguments to a function */
+	const int ILLEGAL_RELATIVE_PATH     = -209; /* Illegal relative path */
+	const int USER_CANCELLED            = -210; /* User cancelled */
+	const int INSTALL_NOT_STARTED       = -211;
+	const int SILENT_MODE_DENIED        = -212;
+	const int NO_SUCH_COMPONENT         = -213; /* no such component in the registry. */
+	const int FILE_DOES_NOT_EXIST       = -214; /* File cannot be deleted as it does not exist */
+	const int FILE_READ_ONLY            = -215; /* File cannot be deleted as it is read only. */
+	const int FILE_IS_DIRECTORY         = -216; /* File cannot be deleted as it is a directory */
+	const int NETWORK_FILE_IS_IN_USE    = -217; /* File on the network is in-use */
+	const int APPLE_SINGLE_ERR          = -218; /* error in AppleSingle unpacking */
+	const int INVALID_PATH_ERR          = -219; /* GetFolder() did not like the folderID */
+	const int PATCH_BAD_DIFF            = -220; /* error in GDIFF patch */
+	const int PATCH_BAD_CHECKSUM_TARGET = -221; /* source file doesn't checksum  */
+	const int PATCH_BAD_CHECKSUM_RESULT = -222; /* final patched file fails checksum  */
+	const int UNINSTALL_FAILED          = -223; /* error while uninstalling a package  */
+	const int GESTALT_UNKNOWN_ERR       = -5550;         
+	const int GESTALT_INVALID_ARGUMENT  = -5551;
 
-	const int SU_SUCCESS					  = 0;
-	const int SU_REBOOT_NEEDED                = 999;
+	const int SUCCESS					  = 0;
+	const int REBOOT_NEEDED               = 999;
 
 	/* install types */
-	const int SU_LIMITED_INSTALL              = 0;
-	const int SU_FULL_INSTALL                 = 1;
-	const int SU_NO_STATUS_DLG				  = 2;
-	const int SU_NO_FINALIZE_DLG			  = 4;
+	const int LIMITED_INSTALL             = 0;
+	const int FULL_INSTALL                = 1;
+	const int NO_STATUS_DLG				  = 2;
+	const int NO_FINALIZE_DLG			  = 4;
 
-	
+	// these should not be public...
 	/* message IDs*/
 	const int SU_INSTALL_FILE_UNEXPECTED_MSG_ID  = 0;
 	const int SU_DETAILS_REPLACE_FILE_MSG_ID  = 1;
 	const int SU_DETAILS_INSTALL_FILE_MSG_ID  = 2;
-
+    //////////////////////////
 	
 	readonly attribute wstring UserPackageName;
 	readonly attribute wstring RegPackageName;

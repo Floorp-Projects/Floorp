@@ -21,6 +21,9 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsString.h"
+
+
 
 //FIX NEED REAL IID
 #define NS_ISOFTWAREUPDATE_IID \
@@ -34,6 +37,8 @@ class nsISoftwareUpdate : public nsISupports
 
             NS_IMETHOD Startup() = 0;
             NS_IMETHOD Shutdown()= 0;
+            NS_IMETHOD InstallJar(const nsString& jarFile, const nsString& args) = 0;
+
   
 };
 

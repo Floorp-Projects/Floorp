@@ -12,8 +12,10 @@
 #include "nsIScriptContextOwner.h"
 
 #include "nsInstall.h"
+#include "zipfile.h"
 
-extern PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, nsFileSpec* jarfile, PRInt32 flags, char* argc, PRInt32 argv);
+
+extern PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, char* jarfile, char* args);
 
 
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
@@ -35,7 +37,7 @@ static short ReadFileIntoBuffer(char * fileName, char** buffer, unsigned long *b
 
     if ( stat( fileName, &st) != 0 )
     {
-        result = ErrInternalError;
+        result = -1;
         goto fail;
     }
 
@@ -53,13 +55,13 @@ static short ReadFileIntoBuffer(char * fileName, char** buffer, unsigned long *b
 
     if ( file == NULL)
     {
-        result = ErrInternalError;
+        result = -1;
         goto fail;
     }
 
     if ( PR_Read(file, *buffer, *bufferSize ) != st.st_size )
     {
-        result = ErrInternalError;
+        result = -1;
         PR_Close( file );
         goto fail;
     }
@@ -77,11 +79,39 @@ fail:
 }
 
 
-
-int RunInstallJS(char* installJSFile)
+extern "C" NS_EXPORT PRInt32 Install(char* jarFile, char* args)
 {
+    // Open the jarfile.
+    void* hZip;
+
+    PRInt32 result = ZIPR_OpenArchive(jarFile ,  &hZip);
+    
+    if (result != ZIP_OK)
+    {
+        return result;
+    }
+
+
+    // Read manifest file for Install Script filename.
+    //FIX:  need to do.
+    
+    char* installJSFile = "c:\\temp\\install.js";
+
+
+    remove(installJSFile);
+
+    // Extract the install.js file.
+    result  = ZIPR_ExtractFile( hZip, "install.js", installJSFile );
+    if (result != ZIP_OK)
+    {
+        return result;
+    }
+
+    
     nsIBrowserWindow    *aWindow;
     nsIWebShell         *aWebShell;
+
+    // Create a new window so that we can both run a script in it and display UI.
 
     nsresult rv = nsRepository::CreateInstance( kBrowserWindowCID, 
                                                 nsnull,
@@ -90,6 +120,12 @@ int RunInstallJS(char* installJSFile)
     if (rv == NS_OK) 
     {
         nsRect rect(0, 0, 275, 300);
+        
+        nsAutoString            retval;
+        PRBool                  isUndefined;
+        
+        nsIScriptContextOwner*  scriptContextOwner;
+        nsIScriptContext*       scriptContext;
 
         rv = aWindow->Init(nsnull, nsnull, rect, PRUint32(0), PR_FALSE);
 
@@ -97,47 +133,27 @@ int RunInstallJS(char* installJSFile)
         {
             rv = aWindow->GetWebShell(aWebShell);
             
-            /* FIX: Display a window here...(ie.OpenURL)
-            
-               What about silent/forced installs?
-            */
+            /* 
+             * FIX: Display a window here...(ie.OpenURL)
+             */
 
-
-            nsAutoString            retval;
-            PRBool                  isUndefined;
-            nsIScriptContextOwner*  scriptContextOwner;
-            
-            if (NS_OK == aWebShell->QueryInterface( kIScriptContextOwnerIID,
-                                                    (void**)&scriptContextOwner)) 
+            if (NS_OK == aWebShell->QueryInterface( kIScriptContextOwnerIID, (void**)&scriptContextOwner)) 
             {
-                const char* url = "";
-                nsIScriptContext* scriptContext;
                 rv = scriptContextOwner->GetScriptContext(&scriptContext);
 
                 if (NS_OK == rv) 
                 {
-
-                    ///////////////////////////////////////////////////////////////////////
-                    // Init Install Object
-                    /////////////////////////////////////////////////////////////////////// 
-                    nsFileSpec jarfile("c:\\temp\\jarfile.jar");
-                    PRInt32    flags   = 0;
-                    char*      argc    = nsnull;
-                    PRInt32    argv    = 0;
-
-                    InitXPInstallObjects(scriptContext, &jarfile, flags, argc, argv );
-                   
-                    ///////////////////////////////////////////////////////////////////////
-
-
-
+                    
+                    InitXPInstallObjects(scriptContext, jarFile, args );
 
                     char* buffer;
                     unsigned long bufferLength;
+                    
                     ReadFileIntoBuffer(installJSFile, &buffer, &bufferLength);
-                    
+
+                    // We expected this to block.
                     scriptContext->EvaluateString(nsString(buffer), nsnull, 0, retval, &isUndefined);
-                    
+
                     PR_FREEIF(buffer);
                     NS_RELEASE(scriptContext);
                 }
@@ -145,9 +161,16 @@ int RunInstallJS(char* installJSFile)
                 NS_RELEASE(scriptContextOwner);
             }
         }
+
         aWindow->Close();
 	    NS_RELEASE(aWindow);
     }
+    else
+    {
+        return -1;
+    }
+
+    ZIPR_CloseArchive(&hZip);
+
     return 0;
 }
-

@@ -35,6 +35,7 @@ LINCS= \
 	-I..\base					   \
     -I$(XPDIST)\public\xpinstall   \
     -I$(XPDIST)\public\js          \
+    -I$(XPDIST)\public\jar         \
     -I$(XPDIST)\public\netlib      \
     -I$(XPDIST)\public\network     \
     -I$(XPDIST)\public\dom         \
@@ -47,6 +48,7 @@ LINCS= \
     $(NULL)
 
 LLIBS =                            \
+	$(DIST)\lib\jar50.lib          \
 	$(DIST)\lib\libreg32.lib       \
     $(DIST)\lib\netlib.lib         \
     $(DIST)\lib\xpcom32.lib        \

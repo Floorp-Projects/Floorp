@@ -31,8 +31,9 @@
 #include "nsInstallFile.h"
 
 #include "nsInstall.h"
+#include "nsInstallVersion.h"
 #include "nsIDOMInstallFolder.h"
-#include "nsIDOMInstallVersion.h"
+
 
 #include "nsInstallErrorMessages.h"
 
@@ -80,16 +81,25 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         return;
     }
     
-    mVersionRegistryName    = new nsString(inVRName);
-    mJarLocation            = new nsString(inJarLocation);
-    mVersionInfo	        = inVInfo; /* XXX: Who owns and who free's this object. Is it nsSoftwareUpdate?? */
+
+    mReplaceFile            = DoesFileExist();
     mForceInstall           = forceInstall;
     
-    folderSpec->IsJavaCapable(&mJavaInstall);
+    mVersionRegistryName    = new nsString(inVRName);
+    mJarLocation            = new nsString(inJarLocation);
+    mVersionInfo	        = new nsInstallVersion();
+    
+    
+    //FIX need to delete char* created by .ToNewCString(). 
+
+    nsString tempString;
+    inVInfo->ToString(tempString);
+    mVersionInfo->Init(tempString.ToNewCString());
+
     mFinalFile = new nsString();
     folderSpec->MakeFullPath(inPartialPath, *mFinalFile);
     
-    mReplaceFile            = DoesFileExist();
+    
 
     
     nsString regPackageName;
@@ -122,12 +132,20 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
 nsInstallFile::~nsInstallFile()
 {
-  delete mVersionRegistryName;
-  delete mJarLocation;
-  if (mTempFile)
-    delete mTempFile;
-  if (mFinalFile)
-    delete mFinalFile;
+    if (mVersionRegistryName)
+        delete mVersionRegistryName;
+  
+    if (mJarLocation)
+        delete mJarLocation;
+  
+    if (mTempFile)
+        delete mTempFile;
+
+    if (mFinalFile)
+        delete mFinalFile;
+  
+    if (mVersionInfo)
+      delete mVersionInfo;
 }
 
 /* Prepare
@@ -138,10 +156,7 @@ PRInt32 nsInstallFile::Prepare()
     if (mInstall == NULL || mFinalFile == NULL || mJarLocation == NULL) 
         return nsInstall::INVALID_ARGUMENTS;
 
-    PRInt32 err;
-    mInstall->ExtractFileFromJar(*mJarLocation, *mFinalFile, *mTempFile, &err);
-
-    return err;
+    return mInstall->ExtractFileFromJar(*mJarLocation, *mFinalFile, &mTempFile);
 }
 
 /* Complete
@@ -165,22 +180,9 @@ PRInt32 nsInstallFile::Complete()
     err = NativeComplete();
   
 
-    char *vr_name    = mVersionRegistryName->ToNewCString();
     char *final_file = mFinalFile->ToNewCString();
-  
-      // Add java archives to the classpath. Don't add if we're
-      // replacing an existing file -- it'll already be there.
-  
-    if ( mJavaInstall && !mReplaceFile ) 
-    {
-        PRBool found_zip = endsWith(mFinalFile, ".zip");
-        PRBool found_jar = endsWith(mFinalFile, ".jar");;
-        if (found_zip || found_jar) 
-        {
-            AddToClasspath( mFinalFile );
-        }
-    }
-  
+    char *vr_name    = mVersionRegistryName->ToNewCString();
+      
     nsString regPackageName;
     mInstall->GetRegPackageName(regPackageName);
     
@@ -418,17 +420,6 @@ end:
   delete [] finalName;
   delete [] currentName;
   return result;  
-}
-
-
-
-void nsInstallFile::AddToClasspath(nsString* file)
-{
-  if ( file != NULL ) {
-    char *final_file = file->ToNewCString();
-// FIX    JVM_AddToClassPath(final_file);
-    delete final_file;
-  }
 }
 
 
