@@ -168,7 +168,7 @@ nsGfxTextControlFrame::InitTextControl()
   mDocObserver->SetFrame(this);
   NS_ADDREF(mDocObserver);
 
-  nsCOMPtr<nsIEditor> theEditor;
+  nsCOMPtr<nsIHTMLEditor> theEditor;
   result = nsComponentManager::CreateInstance(kHTMLEditorCID,
                                               nsnull,
                                               nsIHTMLEditor::GetIID(), getter_AddRefs(theEditor));
