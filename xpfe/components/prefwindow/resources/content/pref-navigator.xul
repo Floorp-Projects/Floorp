@@ -65,7 +65,8 @@
       <hbox align="center">
         <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
         <textbox id="browserStartupHomepage" type="autocomplete" flex="1" 
-                 searchSessions="history" timeout="50" maxrows="6" preftype="localizedstring"
+                 searchSessions="history" timeout="50" maxrows="6"
+                 oninput="locationInputHandler();" preftype="localizedstring"
                  prefstring="browser.startup.homepage"/>  <!-- we may wish to change this to data
                                                  when we support fancy formatted local filenames -->
       </hbox>

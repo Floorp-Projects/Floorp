@@ -158,7 +158,6 @@ pref("browser.search.basic.min_ver", "0.0");
 pref("browser.urlbar.autocomplete.enabled", true);
 pref("browser.urlbar.clickSelectsAll", true);
 
-pref("browser.history.last_page_visited", "");
 pref("browser.history_expire_days", 9);
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
