@@ -42,8 +42,6 @@
 #include "nsIDOMRange.h"
 #include "nsIContent.h"
 #include "nsLayoutCID.h"
-#include "nsIEnumerator.h"
-#include "nsISupportsArray.h"
 
 // hooks
 #include "nsIClipboardDragDropHooks.h"
