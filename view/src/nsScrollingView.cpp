@@ -33,6 +33,7 @@ class ScrollBarView : public nsView
 public:
   ScrollBarView();
   ~ScrollBarView();
+  void SetPosition(nscoord x, nscoord y);
   void SetDimensions(nscoord width, nscoord height);
 };
 
@@ -42,6 +43,21 @@ ScrollBarView :: ScrollBarView()
 
 ScrollBarView :: ~ScrollBarView()
 {
+}
+
+void ScrollBarView :: SetPosition(nscoord x, nscoord y)
+{
+  mBounds.MoveTo(x, y);
+
+  if (nsnull != mWindow)
+  {
+    nsIPresContext  *px = mViewManager->GetPresContext();
+    float           scale = px->GetTwipsToPixels();
+    
+    mWindow->Move(NS_TO_INT_ROUND(x * scale), NS_TO_INT_ROUND(y * scale));
+
+    NS_RELEASE(px);
+  }
 }
 
 void ScrollBarView :: SetDimensions(nscoord width, nscoord height)
