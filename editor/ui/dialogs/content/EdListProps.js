@@ -188,7 +188,7 @@ function ConvertStartAttrToUserString(startAttr, type)
 
 function BuildBulletStyleList()
 {
-  ClearMenulist(gDialog.BulletStyleList);
+  gDialog.BulletStyleList.removeAllItems();
   var label;
 
   if (gListType == "ul")

@@ -23,7 +23,7 @@
 
 function BuildJSEAttributeNameList()
 {
-  ClearMenulist(gDialog.AddJSEAttributeNameList);
+  gDialog.AddJSEAttributeNameList.removeAllItems();
   
   // Get events specific to current element
   var elementName = gElement.localName.toLowerCase();

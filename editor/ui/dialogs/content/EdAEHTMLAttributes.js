@@ -23,7 +23,7 @@
 
 function BuildHTMLAttributeNameList()
 {
-  ClearMenulist(gDialog.AddHTMLAttributeNameInput);
+  gDialog.AddHTMLAttributeNameInput.removeAllItems();
   
   var elementName = gElement.localName.toLowerCase();
   var attNames = gHTMLAttr[elementName];
@@ -228,7 +228,7 @@ function onInputHTMLAttributeName()
       // one (default) item, don't use menulist for that
       if (listLen > 1)
       {
-        ClearMenulist(gDialog.AddHTMLAttributeValueMenulist);
+        gDialog.AddHTMLAttributeValueMenulist.removeAllItems();
 
         if (deckIndex != "1")
         {

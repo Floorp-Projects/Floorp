@@ -65,9 +65,7 @@
               <!-- Contents filled in at runtime -->
               <menulist id="SiteList" 
                 style="min-width:18em; max-width:18em;" crop="right"
-                oncommand="SelectSiteList();">
-                <menupopup/>
-              </menulist>
+                oncommand="SelectSiteList();"/>
               <hbox>
                 <button label="&newSiteButton.label;" oncommand="AddNewSite();"/>
                 <spacer flex="1"/>
@@ -93,9 +91,7 @@
         <hbox align="center">
           <!-- Contents filled in at runtime -->
           <menulist id="DocDirList" class="minWidth20 uri-element" editable="true"  flex="1"
-                    oninput="onInputSettings();">
-            <menupopup/>
-          </menulist>
+                    oninput="onInputSettings();"/>
 <!-- 
           <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.DocDirList);" disabled="true"/>
 -->
@@ -125,9 +121,7 @@
             <spacer class="radio-spacer"/>
             <!-- Contents filled in at runtime -->
             <menulist id="OtherDirList" class="minWidth20 uri-element" editable="true" flex="1"
-              tooltiptext="&useSubdir.tooltip;" oninput="onInputSettings();">
-              <menupopup/>
-            </menulist>
+              tooltiptext="&useSubdir.tooltip;" oninput="onInputSettings();"/>
 <!-- 
             <button label="&chooseDirButton.label;" oncommand="ChooseDir(gDialog.OtherDirList);" disabled="true"/>
 -->
