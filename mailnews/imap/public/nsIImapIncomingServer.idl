@@ -58,5 +58,5 @@ interface nsIImapIncomingServer : nsISupports {
 
   void RemoveConnection(in nsIImapProtocol aImapConnection);
   void ResetNamespaceReferences();
-  void PseudoInterruptMsgLoad(in nsIMsgFolder folder, out boolean interrupted);
+  void PseudoInterruptMsgLoad(in nsIImapUrl aImapUrl, out boolean interrupted);
 };

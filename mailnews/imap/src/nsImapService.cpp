@@ -427,6 +427,19 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 		  // const char *. hopefully they will fix it soon.
 		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
 
+	   if (aImapMailFolder && aDisplayConsumer)
+	   {
+			nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
+			rv = aImapMailFolder->GetServer(getter_AddRefs(aMsgIncomingServer));
+			if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
+			{
+				PRBool interrupted;
+				nsCOMPtr<nsIImapIncomingServer>
+					aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
+				if (NS_SUCCEEDED(rv) && aImapServer)
+					aImapServer->PseudoInterruptMsgLoad(aImapUrl, &interrupted);
+			}
+	   }
       // if the display consumer is a webshell, then we should run the url in the webshell.
       // otherwise, it should be a stream listener....so open a channel using AsyncRead
       // and the provided stream listener....

@@ -1276,7 +1276,7 @@ NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 
 }
 
-NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aFolder, PRBool *interrupted)
+NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted)
 {
 	nsresult rv = NS_OK;
 	PRBool canRunUrl = PR_FALSE;
@@ -1297,7 +1297,7 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aFolder
         aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
         connection = do_QueryInterface(aSupport);
 		if (connection)
-			rv = connection->PseudoInterruptMsgLoad(aFolder, interrupted);
+			rv = connection->PseudoInterruptMsgLoad(aImapUrl, interrupted);
 	}
     
     PR_CExitMonitor(this);

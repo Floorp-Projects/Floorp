@@ -2616,7 +2616,7 @@ void nsImapMailFolder::UpdatePendingCounts(PRBool countUnread, PRBool missingAre
 			// count the moves that were unread
 			int numUnread = 0;
 			nsCOMPtr <nsIMsgFolder> srcFolder = do_QueryInterface(m_copyState->m_srcSupport);
-			for (int keyIndex=0; keyIndex < m_copyState->m_totalCount; keyIndex++)
+			for (PRUint32 keyIndex=0; keyIndex < m_copyState->m_totalCount; keyIndex++)
 			{
 				nsCOMPtr<nsIMessage> message;
 

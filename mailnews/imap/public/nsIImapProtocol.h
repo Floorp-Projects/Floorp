@@ -104,7 +104,7 @@ public:
     // Get last active time stamp
     NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp) = 0;
 
-	NS_IMETHOD PseudoInterruptMsgLoad(nsIMsgFolder *aFolder, PRBool *interrupted) = 0;
+	NS_IMETHOD PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted) = 0;
 };
 
 #endif /* nsIImapProtocol_h___ */

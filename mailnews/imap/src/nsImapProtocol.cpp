@@ -48,7 +48,7 @@
 #include "nsIIOService.h"
 #include "nsXPIDLString.h"
 #include "nsIPipe.h"
-
+#include "nsIMsgFolder.h"
 #include "nsImapStringBundle.h"
 #include "nsCOMPtr.h"
 PRLogModuleInfo *IMAP;
@@ -187,7 +187,7 @@ static PRInt32 gIdealTime = 4;
 static PRInt32 gChunkAddSize = 2048;
 static PRInt32 gChunkSize = 10240;
 static PRInt32 gChunkThreshold = 10240 + 4096;
-//static PRBool gFetchByChunks = PR_TRUE;
+static PRBool gFetchByChunks = PR_TRUE;
 static PRInt32 gMaxChunkSize = 40960;
 static PRBool gInitialized = PR_FALSE;
 nsresult nsImapProtocol::GlobalInitialization()
@@ -286,10 +286,29 @@ nsImapProtocol::nsImapProtocol() :
     m_autoUnsubscribe = PR_TRUE;
     m_autoSubscribeOnOpen = PR_TRUE;
     m_deletableChildren = nsnull;
+
+	Configure(gTooFastTime, gIdealTime, gChunkAddSize, gChunkSize,
+										gChunkThreshold, gFetchByChunks, gMaxChunkSize);
+
 	// where should we do this? Perhaps in the factory object?
 	if (!IMAP)
 		IMAP = PR_NewLogModule("IMAP");
 }
+
+nsresult nsImapProtocol::Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
+									PRInt32 ChunkAddSize, PRInt32 ChunkSize, PRInt32 ChunkThreshold,
+									PRBool FetchByChunks, PRInt32 MaxChunkSize)
+{
+	m_tooFastTime = TooFastTime;		// secs we read too little too fast
+	m_idealTime = IdealTime;		// secs we read enough in good time
+	m_chunkAddSize = ChunkAddSize;		// buffer size to add when wasting time
+	m_chunkStartSize = m_chunkSize = ChunkSize;
+	m_chunkThreshold = ChunkThreshold;
+	m_fetchByChunks = FetchByChunks;
+	m_maxChunkSize = MaxChunkSize;
+	return NS_OK;
+}
+
 
 nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, nsIEventQueue * aSinkEventQueue)
 {
@@ -796,11 +815,45 @@ nsImapProtocol::GetLastActiveTimeStamp(PRTime* aTimeStamp)
 }
 
 NS_IMETHODIMP
-nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aFolder, PRBool *interrupted)
+nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted)
 {
+	if (!interrupted)
+		return NS_ERROR_NULL_POINTER;
+
+	PR_CEnterMonitor(this);
+
+	if (m_runningUrl)
+	{
+		nsIImapUrl::nsImapAction imapAction;
+		m_runningUrl->GetImapAction(&imapAction);
+
+		if (imapAction == nsIImapUrl::nsImapMsgFetch)
+		{
+			nsresult rv = NS_OK;
+			nsCOMPtr<nsIMsgFolder> folder;
+			nsCOMPtr<nsIImapUrl> runningImapURL;
+			nsXPIDLCString msgKey;
+
+			rv = GetRunningImapURL(getter_AddRefs(runningImapURL));
+			if (NS_SUCCEEDED(rv) && runningImapURL)
+			{
+                nsXPIDLCString runningImapUrlSourceFolder;
+                nsXPIDLCString newImapUrlSourceFolder;
+
+				runningImapURL->CreateServerSourceFolderPathString(getter_Copies(runningImapUrlSourceFolder));
+				aImapUrl->CreateServerSourceFolderPathString(getter_Copies(newImapUrlSourceFolder));
+				if (!nsCRT::strcmp(runningImapUrlSourceFolder, newImapUrlSourceFolder))
+				{
+					PseudoInterrupt(PR_TRUE);
+					*interrupted = PR_TRUE;
+				}
+			}
+		}
+	}
 	// this should check if the protocol instance is currently running a msg fetch
 	// url for the passed folder, and if so, pseudo interrupt it.
-	return NS_ERROR_NOT_IMPLEMENTED;
+    PR_CExitMonitor(this);
+	return NS_OK;
 }
 
 void
@@ -3877,7 +3930,7 @@ void nsImapProtocol::ResetProgressInfo()
 {
 	LL_I2L(m_lastProgressTime, 0);
 	m_lastPercent = -1;
-	m_lastProgressStringId = -1;
+	m_lastProgressStringId = (PRUint32) -1;
 }
 
 void nsImapProtocol::SetProgressString(PRInt32 stringId)

@@ -117,7 +117,7 @@ public:
     // Get last active time stamp
     NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp);
 
-	NS_IMETHOD PseudoInterruptMsgLoad(nsIMsgFolder *aFolder, PRBool *interrupted);
+	NS_IMETHOD PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -479,6 +479,9 @@ private:
                                   const char *newParentMailboxName);
 
 	nsresult GlobalInitialization();
+	nsresult Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
+									PRInt32 ChunkAddSize, PRInt32 ChunkSize, PRInt32 ChunkThreshold,
+									PRBool FetchByChunks, PRInt32 MaxChunkSize);
 
 	// End Process AuthenticatedState Url helper methods
 
