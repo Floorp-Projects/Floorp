@@ -2013,7 +2013,7 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
         if((0x00==aBytes[2]) && (0x00==aBytes[3])) {
            // 00 3C 00 00 UCS-4, unusual octet order (3412)
            oCharset.AssignWithConversion(UCS4_3412);
-        } else if((0x3C==aBytes[2]) && (0x3F==aBytes[3])) {
+        } else if((0x00==aBytes[2]) && (0x3F==aBytes[3])) {
            // 00 3C 00 3F UTF-16, big-endian, no Byte Order Mark
            oCharset.AssignWithConversion(UCS2_BE); // should change to UTF-16BE
         } 
