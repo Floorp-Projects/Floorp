@@ -196,6 +196,7 @@ BEGIN
         MENUITEM "Select &All",                 ID_EDIT_SELECT_ALL
         MENUITEM "Select &None",                ID_EDIT_SELECT_NONE
         MENUITEM "&Copy",                       ID_EDIT_COPY
+        MENUITEM "&Paste",                      ID_EDIT_PASTE
     END
 END
 
