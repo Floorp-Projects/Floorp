@@ -1605,8 +1605,9 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
                                        PRBool aNotify)
 {
   nsresult rv;
-  PRUint8 modType = aModification ? nsIDOMMutationEvent::MODIFICATION :
-                                    nsIDOMMutationEvent::ADDITION;
+  PRUint8 modType = aModification ?
+    NS_STATIC_CAST(PRUint8. nsIDOMMutationEvent::MODIFICATION) :
+    NS_STATIC_CAST(PRUint8. nsIDOMMutationEvent::ADDITION);
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
   if (aNotify && mDocument) {
