@@ -1152,6 +1152,15 @@ nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (PR_TRUE==gsDebug)
     printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   aContinuingFrame = cf;
+
+  // Create a continuing inner table frame
+  nsIFrame*         childList;
+  nsIStyleContext*  kidSC;
+
+  mInnerTableFrame->GetStyleContext(kidSC);
+  mInnerTableFrame->CreateContinuingFrame(aPresContext, cf, kidSC, childList);
+  NS_RELEASE(kidSC);
+  cf->SetInitialChildList(aPresContext, nsnull, childList);
   return NS_OK;
 }
 

@@ -377,10 +377,11 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
       // Note that if the width is too big that's okay and we allow the
       // child to extend horizontally outside of the reflow area
       PushChildren(kidFrame, prevKidFrame);
+      aStatus = NS_FRAME_NOT_COMPLETE;
       break;
     }
 
-    // Place the child after taking into account it's margin
+    // Place the child after taking into account its margin
     nsRect kidRect (kidMargin.left, aReflowState.y, desiredSize.width, desiredSize.height);
     PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
                kidMaxElementSize);
