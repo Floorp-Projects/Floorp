@@ -175,8 +175,9 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char * aFileExt, nsIM
     rv = icService->GetMIMEInfoFromExtension(aFileExt, aMIMEInfo);
     // if we got an entry, don't waste time hitting IC for this information next time, store it in our
     // hash table....
-    if (NS_SUCCEEDED(rv) && *aMIMEInfo)
-    	AddMimeInfoToCache(*aMIMEInfo);    
+    // XXX Once cache can be invalidated, add the mime info to it.  See bug 121644
+    // if (NS_SUCCEEDED(rv) && *aMIMEInfo)
+    //  	AddMimeInfoToCache(*aMIMEInfo);    
   }
   
   if (!*aMIMEInfo) rv = NS_ERROR_FAILURE;
@@ -200,8 +201,9 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char * aMIMEType, nsIM
     rv = icService->FillInMIMEInfo(aMIMEType, nsnull, aMIMEInfo);
     // if we got an entry, don't waste time hitting IC for this information next time, store it in our
     // hash table....
-    if (NS_SUCCEEDED(rv) && *aMIMEInfo)
-    	AddMimeInfoToCache(*aMIMEInfo);    
+    // XXX Once cache can be invalidated, add the mime info to it.  See bug 121644
+    // if (NS_SUCCEEDED(rv) && *aMIMEInfo)
+    //   AddMimeInfoToCache(*aMIMEInfo);    
   }
   
   if (!*aMIMEInfo) rv = NS_ERROR_FAILURE;

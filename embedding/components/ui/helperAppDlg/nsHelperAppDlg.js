@@ -280,7 +280,8 @@ nsHelperAppDialog.prototype = {
         try 
         {
           var fileURL = url.QueryInterface( Components.interfaces.nsIFileURL);
-          if (fileURL)
+          // All URLs will QI to nsIFileURL.  Need to check the scheme to determine type
+          if (fileURL.schemeIs("file"))
           {
              var fileObject = fileURL.file;
              if (fileObject)

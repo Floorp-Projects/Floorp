@@ -1205,7 +1205,8 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char *aFileExt,
   *_retval = mimeInfo;
   NS_ADDREF(*_retval);
   
-  AddMimeInfoToCache(*_retval);
+  // XXX Once cache can be invalidated, add the mime info to it.  See bug 121644
+  // AddMimeInfoToCache(*_retval);
   
   return NS_OK;
 }
@@ -1299,6 +1300,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char *aMIMEType,
   *_retval = mimeInfo;
   NS_ADDREF(*_retval);
     
-  AddMimeInfoToCache(*_retval);
+  // XXX Once cache can be invalidated, add the mime info to it.  See bug 121644
+  // AddMimeInfoToCache(*_retval);
   return NS_OK;
 }
