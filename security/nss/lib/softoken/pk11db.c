@@ -48,83 +48,83 @@
 #define FREE_CLEAR(p) if (p) { PORT_Free(p); p = NULL; }
 
 static void
-secmod_parseTokenFlags(char *tmp, pk11_token_parameters *parsed) { 
-    parsed->readOnly = pk11_argHasFlag("flags","readOnly",tmp);
-    parsed->noCertDB = pk11_argHasFlag("flags","noCertDB",tmp);
-    parsed->noKeyDB = pk11_argHasFlag("flags","noKeyDB",tmp);
-    parsed->forceOpen = pk11_argHasFlag("flags","forceOpen",tmp);
-    parsed->pwRequired = pk11_argHasFlag("flags","passwordRequired",tmp);
-    parsed->optimizeSpace = pk11_argHasFlag("flags","optimizeSpace",tmp);
+secmod_parseTokenFlags(char *tmp, sftk_token_parameters *parsed) { 
+    parsed->readOnly = sftk_argHasFlag("flags","readOnly",tmp);
+    parsed->noCertDB = sftk_argHasFlag("flags","noCertDB",tmp);
+    parsed->noKeyDB = sftk_argHasFlag("flags","noKeyDB",tmp);
+    parsed->forceOpen = sftk_argHasFlag("flags","forceOpen",tmp);
+    parsed->pwRequired = sftk_argHasFlag("flags","passwordRequired",tmp);
+    parsed->optimizeSpace = sftk_argHasFlag("flags","optimizeSpace",tmp);
     return;
 }
 
 static void
-secmod_parseFlags(char *tmp, pk11_parameters *parsed) { 
-    parsed->noModDB = pk11_argHasFlag("flags","noModDB",tmp);
-    parsed->readOnly = pk11_argHasFlag("flags","readOnly",tmp);
+secmod_parseFlags(char *tmp, sftk_parameters *parsed) { 
+    parsed->noModDB = sftk_argHasFlag("flags","noModDB",tmp);
+    parsed->readOnly = sftk_argHasFlag("flags","readOnly",tmp);
     /* keep legacy interface working */
-    parsed->noCertDB = pk11_argHasFlag("flags","noCertDB",tmp);
-    parsed->forceOpen = pk11_argHasFlag("flags","forceOpen",tmp);
-    parsed->pwRequired = pk11_argHasFlag("flags","passwordRequired",tmp);
-    parsed->optimizeSpace = pk11_argHasFlag("flags","optimizeSpace",tmp);
+    parsed->noCertDB = sftk_argHasFlag("flags","noCertDB",tmp);
+    parsed->forceOpen = sftk_argHasFlag("flags","forceOpen",tmp);
+    parsed->pwRequired = sftk_argHasFlag("flags","passwordRequired",tmp);
+    parsed->optimizeSpace = sftk_argHasFlag("flags","optimizeSpace",tmp);
     return;
 }
 
 CK_RV
-secmod_parseTokenParameters(char *param, pk11_token_parameters *parsed) 
+secmod_parseTokenParameters(char *param, sftk_token_parameters *parsed) 
 {
     int next;
     char *tmp;
     char *index;
-    index = pk11_argStrip(param);
+    index = sftk_argStrip(param);
 
     while (*index) {
-	PK11_HANDLE_STRING_ARG(index,parsed->configdir,"configDir=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->certPrefix,"certPrefix=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->keyPrefix,"keyPrefix=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->tokdes,"tokenDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->slotdes,"slotDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,tmp,"minPWLen=", 
+	SFTK_HANDLE_STRING_ARG(index,parsed->configdir,"configDir=",;)
+	SFTK_HANDLE_STRING_ARG(index,parsed->certPrefix,"certPrefix=",;)
+	SFTK_HANDLE_STRING_ARG(index,parsed->keyPrefix,"keyPrefix=",;)
+	SFTK_HANDLE_STRING_ARG(index,parsed->tokdes,"tokenDescription=",;)
+	SFTK_HANDLE_STRING_ARG(index,parsed->slotdes,"slotDescription=",;)
+	SFTK_HANDLE_STRING_ARG(index,tmp,"minPWLen=", 
 			if(tmp) { parsed->minPW=atoi(tmp); PORT_Free(tmp); })
-	PK11_HANDLE_STRING_ARG(index,tmp,"flags=", 
+	SFTK_HANDLE_STRING_ARG(index,tmp,"flags=", 
 	   if(tmp) { secmod_parseTokenFlags(param,parsed); PORT_Free(tmp); })
-	PK11_HANDLE_FINAL_ARG(index)
+	SFTK_HANDLE_FINAL_ARG(index)
    }
    return CKR_OK;
 }
 
 static void
-secmod_parseTokens(char *tokenParams, pk11_parameters *parsed)
+secmod_parseTokens(char *tokenParams, sftk_parameters *parsed)
 {
     char *tokenIndex;
-    pk11_token_parameters *tokens = NULL;
+    sftk_token_parameters *tokens = NULL;
     int i=0,count = 0,next;
 
     if ((tokenParams == NULL) || (*tokenParams == 0))  return;
 
     /* first count the number of slots */
-    for (tokenIndex = pk11_argStrip(tokenParams); *tokenIndex;
-		tokenIndex = pk11_argStrip(pk11_argSkipParameter(tokenIndex))) {
+    for (tokenIndex = sftk_argStrip(tokenParams); *tokenIndex;
+		tokenIndex = sftk_argStrip(sftk_argSkipParameter(tokenIndex))) {
 	count++;
     }
 
     /* get the data structures */
-    tokens = (pk11_token_parameters *) 
-			PORT_ZAlloc(count*sizeof(pk11_token_parameters));
+    tokens = (sftk_token_parameters *) 
+			PORT_ZAlloc(count*sizeof(sftk_token_parameters));
     if (tokens == NULL) return;
 
-    for (tokenIndex = pk11_argStrip(tokenParams), i = 0;
+    for (tokenIndex = sftk_argStrip(tokenParams), i = 0;
 					*tokenIndex && i < count ; i++ ) {
 	char *name;
-	name = pk11_argGetName(tokenIndex,&next);
+	name = sftk_argGetName(tokenIndex,&next);
 	tokenIndex += next;
 
-	tokens[i].slotID = pk11_argDecodeNumber(name);
+	tokens[i].slotID = sftk_argDecodeNumber(name);
         tokens[i].readOnly = PR_TRUE;
 	tokens[i].noCertDB = PR_TRUE;
 	tokens[i].noKeyDB = PR_TRUE;
-	if (!pk11_argIsBlank(*tokenIndex)) {
-	    char *args = pk11_argFetchValue(tokenIndex,&next);
+	if (!sftk_argIsBlank(*tokenIndex)) {
+	    char *args = sftk_argFetchValue(tokenIndex,&next);
 	    tokenIndex += next;
 	    if (args) {
 		secmod_parseTokenParameters(args,&tokens[i]);
@@ -132,7 +132,7 @@ secmod_parseTokens(char *tokenParams, pk11_parameters *parsed)
 	    }
 	}
 	if (name) PORT_Free(name);
-	tokenIndex = pk11_argStrip(tokenIndex);
+	tokenIndex = sftk_argStrip(tokenIndex);
     }
     parsed->token_count = i;
     parsed->tokens = tokens;
@@ -140,7 +140,7 @@ secmod_parseTokens(char *tokenParams, pk11_parameters *parsed)
 }
 
 CK_RV
-secmod_parseParameters(char *param, pk11_parameters *parsed, PRBool isFIPS) 
+secmod_parseParameters(char *param, sftk_parameters *parsed, PRBool isFIPS) 
 {
     int next;
     char *tmp;
@@ -150,39 +150,39 @@ secmod_parseParameters(char *param, pk11_parameters *parsed, PRBool isFIPS)
     char *slotdes = NULL, *pslotdes = NULL;
     char *fslotdes = NULL, *fpslotdes = NULL;
     char *minPW = NULL;
-    index = pk11_argStrip(param);
+    index = sftk_argStrip(param);
 
-    PORT_Memset(parsed, 0, sizeof(pk11_parameters));
+    PORT_Memset(parsed, 0, sizeof(sftk_parameters));
 
     while (*index) {
-	PK11_HANDLE_STRING_ARG(index,parsed->configdir,"configDir=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->secmodName,"secmod=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->man,"manufacturerID=",;)
-	PK11_HANDLE_STRING_ARG(index,parsed->libdes,"libraryDescription=",;)
+	SFTK_HANDLE_STRING_ARG(index,parsed->configdir,"configDir=",;)
+	SFTK_HANDLE_STRING_ARG(index,parsed->secmodName,"secmod=",;)
+	SFTK_HANDLE_STRING_ARG(index,parsed->man,"manufacturerID=",;)
+	SFTK_HANDLE_STRING_ARG(index,parsed->libdes,"libraryDescription=",;)
 	/* constructed values, used so legacy interfaces still work */
-	PK11_HANDLE_STRING_ARG(index,certPrefix,"certPrefix=",;)
-        PK11_HANDLE_STRING_ARG(index,keyPrefix,"keyPrefix=",;)
-        PK11_HANDLE_STRING_ARG(index,tokdes,"cryptoTokenDescription=",;)
-        PK11_HANDLE_STRING_ARG(index,ptokdes,"dbTokenDescription=",;)
-        PK11_HANDLE_STRING_ARG(index,slotdes,"cryptoSlotDescription=",;)
-        PK11_HANDLE_STRING_ARG(index,pslotdes,"dbSlotDescription=",;)
-        PK11_HANDLE_STRING_ARG(index,fslotdes,"FIPSSlotDescription=",;)
-        PK11_HANDLE_STRING_ARG(index,minPW,"FIPSTokenDescription=",;)
-	PK11_HANDLE_STRING_ARG(index,tmp,"minPWLen=",;)
+	SFTK_HANDLE_STRING_ARG(index,certPrefix,"certPrefix=",;)
+        SFTK_HANDLE_STRING_ARG(index,keyPrefix,"keyPrefix=",;)
+        SFTK_HANDLE_STRING_ARG(index,tokdes,"cryptoTokenDescription=",;)
+        SFTK_HANDLE_STRING_ARG(index,ptokdes,"dbTokenDescription=",;)
+        SFTK_HANDLE_STRING_ARG(index,slotdes,"cryptoSlotDescription=",;)
+        SFTK_HANDLE_STRING_ARG(index,pslotdes,"dbSlotDescription=",;)
+        SFTK_HANDLE_STRING_ARG(index,fslotdes,"FIPSSlotDescription=",;)
+        SFTK_HANDLE_STRING_ARG(index,minPW,"FIPSTokenDescription=",;)
+	SFTK_HANDLE_STRING_ARG(index,tmp,"minPWLen=",;)
 
-	PK11_HANDLE_STRING_ARG(index,tmp,"flags=", 
+	SFTK_HANDLE_STRING_ARG(index,tmp,"flags=", 
 		if(tmp) { secmod_parseFlags(param,parsed); PORT_Free(tmp); })
-	PK11_HANDLE_STRING_ARG(index,tmp,"tokens=", 
+	SFTK_HANDLE_STRING_ARG(index,tmp,"tokens=", 
 		if(tmp) { secmod_parseTokens(tmp,parsed); PORT_Free(tmp); })
-	PK11_HANDLE_FINAL_ARG(index)
+	SFTK_HANDLE_FINAL_ARG(index)
     }
     if (parsed->tokens == NULL) {
 	int  count = isFIPS ? 1 : 2;
 	int  index = count-1;
-	pk11_token_parameters *tokens = NULL;
+	sftk_token_parameters *tokens = NULL;
 
-	tokens = (pk11_token_parameters *) 
-			PORT_ZAlloc(count*sizeof(pk11_token_parameters));
+	tokens = (sftk_token_parameters *) 
+			PORT_ZAlloc(count*sizeof(sftk_token_parameters));
 	if (tokens == NULL) {
 	    goto loser;
 	}
@@ -235,7 +235,7 @@ loser:
 }
 
 void
-secmod_freeParams(pk11_parameters *params)
+secmod_freeParams(sftk_parameters *params)
 {
     int i;
 
@@ -264,18 +264,18 @@ secmod_getSecmodName(char *param, char **appName, char **filename,PRBool *rw)
     char *value = NULL;
     char *save_params = param;
     const char *lconfigdir;
-    param = pk11_argStrip(param);
+    param = sftk_argStrip(param);
 	
 
     while (*param) {
-	PK11_HANDLE_STRING_ARG(param,configdir,"configDir=",;)
-	PK11_HANDLE_STRING_ARG(param,secmodName,"secmod=",;)
-	PK11_HANDLE_FINAL_ARG(param)
+	SFTK_HANDLE_STRING_ARG(param,configdir,"configDir=",;)
+	SFTK_HANDLE_STRING_ARG(param,secmodName,"secmod=",;)
+	SFTK_HANDLE_FINAL_ARG(param)
    }
 
    *rw = PR_TRUE;
-   if (pk11_argHasFlag("flags","readOnly",save_params) ||
-	pk11_argHasFlag("flags","noModDB",save_params)) *rw = PR_FALSE;
+   if (sftk_argHasFlag("flags","readOnly",save_params) ||
+	sftk_argHasFlag("flags","noModDB",save_params)) *rw = PR_FALSE;
 
    if (!secmodName || *secmodName == '\0') {
 	if (secmodName) PORT_Free(secmodName);
@@ -283,7 +283,7 @@ secmod_getSecmodName(char *param, char **appName, char **filename,PRBool *rw)
    }
    *filename = secmodName;
 
-   lconfigdir = pk11_EvaluateConfigDir(configdir, appName);
+   lconfigdir = sftk_EvaluateConfigDir(configdir, appName);
 
    if (lconfigdir) {
 	value = PR_smprintf("%s" PATH_SEPARATOR "%s",lconfigdir,secmodName);
@@ -299,9 +299,9 @@ static SECStatus secmod_MakeKey(DBT *key, char * module) {
     int len = 0;
     char *commonName;
 
-    commonName = pk11_argGetParamValue("name",module);
+    commonName = sftk_argGetParamValue("name",module);
     if (commonName == NULL) {
-	commonName = pk11_argGetParamValue("library",module);
+	commonName = sftk_argGetParamValue("library",module);
     }
     if (commonName == NULL) return SECFailure;
     len = PORT_Strlen(commonName);
@@ -393,7 +393,7 @@ secmod_EncodeData(DBT *data, char * module)
     PK11PreSlotInfo *slotInfo = NULL;
     SECStatus rv = SECFailure;
 
-    rv = pk11_argParseModuleSpec(module,&dllName,&commonName,&param,&nss);
+    rv = sftk_argParseModuleSpec(module,&dllName,&commonName,&param,&nss);
     if (rv != SECSuccess) return rv;
     rv = SECFailure;
 
@@ -410,8 +410,8 @@ secmod_EncodeData(DBT *data, char * module)
 	len3 = PORT_Strlen(param);
     }
 
-    slotParams = pk11_argGetParamValue("slotParams",nss); 
-    slotInfo = pk11_argParseSlotInfo(NULL,slotParams,&count);
+    slotParams = sftk_argGetParamValue("slotParams",nss); 
+    slotInfo = sftk_argParseSlotInfo(NULL,slotParams,&count);
     if (slotParams) PORT_Free(slotParams);
 
     if (count && slotInfo == NULL) {
@@ -435,24 +435,24 @@ secmod_EncodeData(DBT *data, char * module)
     encoded->major = SECMOD_DB_VERSION_MAJOR;
     encoded->minor = SECMOD_DB_VERSION_MINOR;
     encoded->internal = (unsigned char) 
-			(pk11_argHasFlag("flags","internal",nss) ? 1 : 0);
+			(sftk_argHasFlag("flags","internal",nss) ? 1 : 0);
     encoded->fips = (unsigned char) 
-			(pk11_argHasFlag("flags","FIPS",nss) ? 1 : 0);
+			(sftk_argHasFlag("flags","FIPS",nss) ? 1 : 0);
     encoded->isModuleDB = (unsigned char) 
-			(pk11_argHasFlag("flags","isModuleDB",nss) ? 1 : 0);
+			(sftk_argHasFlag("flags","isModuleDB",nss) ? 1 : 0);
     encoded->isModuleDBOnly = (unsigned char) 
-			(pk11_argHasFlag("flags","isModuleDBOnly",nss) ? 1 : 0);
+			(sftk_argHasFlag("flags","isModuleDBOnly",nss) ? 1 : 0);
     encoded->isCritical = (unsigned char) 
-			(pk11_argHasFlag("flags","critical",nss) ? 1 : 0);
+			(sftk_argHasFlag("flags","critical",nss) ? 1 : 0);
 
-    order = pk11_argReadLong("trustOrder",nss, PK11_DEFAULT_TRUST_ORDER, NULL);
+    order = sftk_argReadLong("trustOrder",nss, SFTK_DEFAULT_TRUST_ORDER, NULL);
     SECMOD_PUTLONG(encoded->trustOrder,order);
-    order = pk11_argReadLong("cipherOrder",nss,PK11_DEFAULT_CIPHER_ORDER,NULL);
+    order = sftk_argReadLong("cipherOrder",nss,SFTK_DEFAULT_CIPHER_ORDER,NULL);
     SECMOD_PUTLONG(encoded->cipherOrder,order);
 
    
-    ciphers = pk11_argGetParamValue("ciphers",nss); 
-    pk11_argSetNewCipherFlags(&ssl[0], ciphers);
+    ciphers = sftk_argGetParamValue("ciphers",nss); 
+    sftk_argSetNewCipherFlags(&ssl[0], ciphers);
     SECMOD_PUTLONG(encoded->ssl,ssl[0]);
     SECMOD_PUTLONG(&encoded->ssl[4],ssl[1]);
     if (ciphers) PORT_Free(ciphers);
@@ -549,8 +549,8 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     unsigned long slotID;
     unsigned long defaultFlags;
     unsigned long timeout;
-    unsigned long trustOrder	=PK11_DEFAULT_TRUST_ORDER;
-    unsigned long cipherOrder	=PK11_DEFAULT_CIPHER_ORDER;
+    unsigned long trustOrder	=SFTK_DEFAULT_TRUST_ORDER;
+    unsigned long cipherOrder	=SFTK_DEFAULT_CIPHER_ORDER;
     unsigned short len;
     unsigned short namesOffset  = 0;	/* start of the names block */
     unsigned long namesRunningOffset;	/* offset to name we are 
@@ -726,14 +726,14 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	hasRootCerts = slots->hasRootCerts;
 	if (isOldVersion && internal && (slotID != 2)) {
 		unsigned long internalFlags=
-			pk11_argSlotFlags("slotFlags",SECMOD_SLOT_FLAGS);
+			sftk_argSlotFlags("slotFlags",SECMOD_SLOT_FLAGS);
 		defaultFlags |= internalFlags;
 	}
 	if (hasRootCerts && !extended) {
 	    trustOrder = 100;
 	}
 
-	slotStrings[i] = pk11_mkSlotString(slotID, defaultFlags, timeout, 
+	slotStrings[i] = sftk_mkSlotString(slotID, defaultFlags, timeout, 
 	                                   (unsigned char)slots->askpw, 
 	                                   hasRootCerts, hasRootTrust);
 	if (slotStrings[i] == NULL) {
@@ -742,13 +742,13 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	}
     }
 
-    nss = pk11_mkNSS(slotStrings, slotCount, internal, isFIPS, isModuleDB, 
+    nss = sftk_mkNSS(slotStrings, slotCount, internal, isFIPS, isModuleDB, 
 		     isModuleDBOnly, internal, trustOrder, cipherOrder, 
 		     ssl0, ssl1);
     secmod_FreeSlotStrings(slotStrings,slotCount);
     /* it's permissible (and normal) for nss to be NULL. it simply means
      * there are no NSS specific parameters in the database */
-    moduleSpec = pk11_mkNewModuleSpec(dllName,commonName,parameters,nss);
+    moduleSpec = sftk_mkNewModuleSpec(dllName,commonName,parameters,nss);
     PR_smprintf_free(nss);
     PORT_FreeArena(arena,PR_TRUE);
     return moduleSpec;
@@ -855,7 +855,7 @@ secmod_addEscape(const char *string, char quote)
 }
 
 #define SECMOD_STEP 10
-#define PK11_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical trustOrder=75 cipherOrder=100 slotParams=(1={%s askpw=any timeout=30})\""
+#define SFTK_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical trustOrder=75 cipherOrder=100 slotParams=(1={%s askpw=any timeout=30})\""
 /*
  * Read all the existing modules in
  */
@@ -905,7 +905,7 @@ done:
     if (!moduleList[0]) {
 	char * newparams = secmod_addEscape(params,'"');
 	if (newparams) {
-	    moduleList[0] = PR_smprintf(PK11_DEFAULT_INTERNAL_INIT,newparams,
+	    moduleList[0] = PR_smprintf(SFTK_DEFAULT_INTERNAL_INIT,newparams,
 						SECMOD_SLOT_FLAGS);
 	    PORT_Free(newparams);
 	}

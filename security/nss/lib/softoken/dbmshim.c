@@ -37,7 +37,7 @@
 /*
  * Berkeley DB 1.85 Shim code to handle blobs.
  *
- * $Id: dbmshim.c,v 1.10 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: dbmshim.c,v 1.11 2005/03/29 18:21:18 nelsonb%netscape.com Exp $
  */
 #include "mcom_db.h"
 #include "secitem.h"
@@ -45,7 +45,7 @@
 #include "prprf.h"
 #include "cdbhdl.h"
 
-/* Call to PK11_FreeSlot below */
+/* Call to SFTK_FreeSlot below */
 
 #include "pcertt.h"
 #include "secasn1.h"

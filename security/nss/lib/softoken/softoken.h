@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: softoken.h,v 1.6 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: softoken.h,v 1.7 2005/03/29 18:21:18 nelsonb%netscape.com Exp $ */
 
 #ifndef _SOFTOKEN_H_
 #define _SOFTOKEN_H_
@@ -46,7 +46,7 @@
 #include "softoknt.h"
 #include "secoidt.h"
 
-#include "pkcs11t.h"     /* CK_RV Required for pk11_fipsPowerUpSelfTest(). */
+#include "pkcs11t.h"     /* CK_RV Required for sftk_fipsPowerUpSelfTest(). */
 
 SEC_BEGIN_PROTOS
 
@@ -152,12 +152,12 @@ extern unsigned char * DES_PadBuffer(PRArenaPool *arena, unsigned char *inbuf,
 ** Power-Up selftests required for FIPS and invoked only
 ** under PKCS #11 FIPS mode.
 */
-extern CK_RV pk11_fipsPowerUpSelfTest( void ); 
+extern CK_RV sftk_fipsPowerUpSelfTest( void ); 
 
 /*
 ** make known fixed PKCS #11 key types to their sizes in bytes
 */	
-unsigned long pk11_MapKeySize(CK_KEY_TYPE keyType);
+unsigned long sftk_MapKeySize(CK_KEY_TYPE keyType);
 
 SEC_END_PROTOS
 
