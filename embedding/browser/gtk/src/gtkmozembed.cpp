@@ -1866,12 +1866,9 @@ GtkMozEmbedContentProgress::~GtkMozEmbedContentProgress(void)
 {
 }
 
-NS_IMPL_ADDREF(GtkMozEmbedContentProgress)
-NS_IMPL_RELEASE(GtkMozEmbedContentProgress)
-NS_INTERFACE_MAP_BEGIN(GtkMozEmbedContentProgress)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS2(GtkMozEmbedContentProgress,
+                   nsIWebProgressListener,
+                   nsISupportsWeakReference)
 
 void
 GtkMozEmbedContentProgress::Init(GtkMozEmbed *aEmbed)
@@ -1986,12 +1983,9 @@ GtkMozEmbedChromeProgress::~GtkMozEmbedChromeProgress(void)
 {
 }
 
-NS_IMPL_ADDREF(GtkMozEmbedChromeProgress)
-NS_IMPL_RELEASE(GtkMozEmbedChromeProgress)
-NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChromeProgress)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS2(GtkMozEmbedChromeProgress,
+                   nsIWebProgressListener,
+                   nsISupportsWeakReference)
 
 void
 GtkMozEmbedChromeProgress::Init(GtkMozEmbed *aEmbed)
