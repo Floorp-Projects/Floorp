@@ -33,9 +33,9 @@ nsLeafFrame::~nsLeafFrame()
 {
 }
 
-void nsLeafFrame::Paint(nsIPresContext& aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect& aDirtyRect)
+NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect& aDirtyRect)
 {
   nsStyleColor* myColor =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
@@ -45,13 +45,14 @@ void nsLeafFrame::Paint(nsIPresContext& aPresContext,
                                   aDirtyRect, mRect, *myColor);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                               aDirtyRect, mRect, *myMol, 0);
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-nsLeafFrame::ResizeReflow(nsIPresContext* aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize& aMaxSize,
-                          nsSize* aMaxElementSize)
+NS_METHOD nsLeafFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                    nsReflowMetrics& aDesiredSize,
+                                    const nsSize& aMaxSize,
+                                    nsSize* aMaxElementSize,
+                                    ReflowStatus& aStatus)
 {
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
@@ -62,14 +63,15 @@ nsLeafFrame::ResizeReflow(nsIPresContext* aPresContext,
     aMaxElementSize->width = aDesiredSize.width;
     aMaxElementSize->height = aDesiredSize.height;
   }
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-nsLeafFrame::IncrementalReflow(nsIPresContext* aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize& aMaxSize,
-                               nsReflowCommand& aReflowCommand)
+NS_METHOD nsLeafFrame::IncrementalReflow(nsIPresContext* aPresContext,
+                                         nsReflowMetrics& aDesiredSize,
+                                         const nsSize& aMaxSize,
+                                         nsReflowCommand& aReflowCommand,
+                                         ReflowStatus& aStatus)
 {
   // XXX Unless the reflow command is a style change, we should
   // just return the current size, otherwise we should invoke
@@ -80,7 +82,8 @@ nsLeafFrame::IncrementalReflow(nsIPresContext* aPresContext,
   GetDesiredSize(aPresContext, aDesiredSize, aMaxSize);
   AddBordersAndPadding(aPresContext, aDesiredSize);
 
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
 // XXX how should border&padding effect baseline alignment?
@@ -109,9 +112,11 @@ void nsLeafFrame::GetInnerArea(nsIPresContext* aPresContext,
     (mol->borderPadding.top + mol->borderPadding.bottom);
 }
 
-nsIFrame* nsLeafFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                             nsIFrame*       aParent)
+NS_METHOD nsLeafFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aParent,
+                                             nsIFrame*&      aContinuingFrame)
 {
   NS_NOTREACHED("Attempt to split the unsplittable");
-  return nsnull;
+  aContinuingFrame = nsnull;
+  return NS_OK;
 }

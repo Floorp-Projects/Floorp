@@ -73,9 +73,9 @@ public:
              PRInt32 aIndexInParent,
              nsIFrame* aParentFrame);
 
-  virtual void Paint(nsIPresContext& aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  NS_METHOD Paint(nsIPresContext& aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect);
 
 protected:
   virtual ~HRuleFrame();
@@ -109,9 +109,9 @@ HRuleFrame::~HRuleFrame()
 {
 }
 
-void HRuleFrame::Paint(nsIPresContext& aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect& aDirtyRect)
+NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect)
 {
   float p2t = aPresContext.GetPixelsToTwips();
   nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->mThickness);
@@ -197,6 +197,7 @@ void HRuleFrame::Paint(nsIPresContext& aPresContext,
                                  width - diameter, height);
      }
   }
+  return NS_OK;
 }
 
 // Weird color computing code stolen from winfe which was stolen

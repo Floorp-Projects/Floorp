@@ -110,26 +110,28 @@ public:
             PRInt32 aIndexInParent,
             nsIFrame* aParentFrame);
 
-  virtual void Paint(nsIPresContext& aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext* aCX,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize& aMaxSize,
-                                    nsSize* aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aCX,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize& aMaxSize,
+                          nsSize* aMaxElementSize,
+                          ReflowStatus& aStatus);
 
-  virtual void GetReflowMetrics(nsIPresContext*  aPresContext,
-                                nsReflowMetrics& aMetrics);
+  NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
+                              nsReflowMetrics& aMetrics);
 
-  virtual void JustifyReflow(nsIPresContext* aCX,
-                             nscoord aAvailableSpace);
+  NS_IMETHOD JustifyReflow(nsIPresContext* aCX,
+                           nscoord aAvailableSpace);
 
-  virtual PRInt32 GetCursorAt(nsIPresContext& aPresContext,
-                              const nsPoint& aPoint,
-                              nsIFrame** aFrame);
+  NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
+                         const nsPoint& aPoint,
+                         nsIFrame** aFrame,
+                         PRInt32& aCursor);
 
-  virtual void List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
 protected:
   virtual ~TextFrame();
@@ -340,7 +342,8 @@ void TextTimer::Notify(nsITimer *timer)
     nsPoint offset;
     nsRect bounds;
     text->GetRect(bounds);
-    nsIView* view = text->GetOffsetFromView(offset);
+    nsIView* view;
+    text->GetOffsetFromView(offset, view);
     nsIViewManager* vm = view->GetViewManager();
     bounds.x = offset.x;
     bounds.y = offset.y;
@@ -379,9 +382,10 @@ TextFrame::~TextFrame()
   }
 }
 
-PRInt32 TextFrame::GetCursorAt(nsIPresContext& aPresContext,
-                               const nsPoint& aPoint,
-                               nsIFrame** aFrame)
+NS_METHOD TextFrame::GetCursorAt(nsIPresContext& aPresContext,
+                                 const nsPoint& aPoint,
+                                 nsIFrame** aFrame,
+                                 PRInt32& aCursor)
 {
   nsStyleMolecule* mol = (nsStyleMolecule*)
     mStyleContext->GetData(kStyleMoleculeSID);
@@ -390,18 +394,19 @@ PRInt32 TextFrame::GetCursorAt(nsIPresContext& aPresContext,
     // let the child decide.
     *aFrame = this;
   }
-  return (PRInt32) mol->cursor;
+  aCursor = (PRInt32) mol->cursor;
+  return NS_OK;
 }
 
 // XXX it would be nice to use a method pointer here, but I don't want
 // to pay for the storage.
 
-void TextFrame::Paint(nsIPresContext& aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect& aDirtyRect)
+NS_METHOD TextFrame::Paint(nsIPresContext& aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           const nsRect& aDirtyRect)
 {
   if ((0 != (mFlags & TEXT_BLINK_ON)) && gBlinkTextOff) {
-    return;
+    return NS_OK;
   }
 
   // Get style data
@@ -421,7 +426,7 @@ void TextFrame::Paint(nsIPresContext& aPresContext,
       aRenderingContext.SetColor(color->mBackgroundColor);
       PaintJustifiedText(aRenderingContext, aDirtyRect, onePixel, onePixel);
     }
-    return;
+    return NS_OK;
   }
   PaintRegularText(aRenderingContext, aDirtyRect, 0, 0);
   if (font->mThreeD) {
@@ -429,6 +434,8 @@ void TextFrame::Paint(nsIPresContext& aPresContext,
     aRenderingContext.SetColor(color->mBackgroundColor);
     PaintRegularText(aRenderingContext, aDirtyRect, onePixel, onePixel);
   }
+
+  return NS_OK;
 }
 
 void TextFrame::PaintRegularText(nsIRenderingContext& aRenderingContext,
@@ -619,8 +626,8 @@ void TextFrame::PaintJustifiedText(nsIRenderingContext& aRenderingContext,
   }
 }
 
-void TextFrame::GetReflowMetrics(nsIPresContext* aCX,
-                                 nsReflowMetrics& aMetrics)
+NS_METHOD TextFrame::GetReflowMetrics(nsIPresContext* aCX,
+                                      nsReflowMetrics& aMetrics)
 {
   aMetrics.width = mRect.width;
   aMetrics.height = mRect.height;
@@ -631,13 +638,14 @@ void TextFrame::GetReflowMetrics(nsIPresContext* aCX,
   aMetrics.ascent = fm->GetMaxAscent();
   aMetrics.descent = fm->GetMaxDescent();
   NS_RELEASE(fm);
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-TextFrame::ResizeReflow(nsIPresContext* aCX,
-                        nsReflowMetrics& aDesiredSize,
-                        const nsSize& aMaxSize,
-                        nsSize* aMaxElementSize)
+NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
+                                  nsReflowMetrics& aDesiredSize,
+                                  const nsSize& aMaxSize,
+                                  nsSize* aMaxElementSize,
+                                  ReflowStatus& aStatus)
 {
 #ifdef NOISY
   ListTag(stdout);
@@ -674,7 +682,7 @@ TextFrame::ResizeReflow(nsIPresContext* aCX,
         break;
       }
     }
-    parent = parent->GetGeometricParent();
+    parent->GetGeometricParent(parent);
   }
   if (nsnull != parent) {
     nsIPresShell* shell = aCX->GetShell();
@@ -698,24 +706,23 @@ TextFrame::ResizeReflow(nsIPresContext* aCX,
   nsStyleMolecule* mol =
     (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
 
-  ReflowStatus status;
   if (NS_STYLE_WHITESPACE_PRE == mol->whiteSpace) {
     // Use a specialized routine for pre-formatted text
-    status = ReflowPre(aCX, aDesiredSize, aMaxSize,
+    aStatus = ReflowPre(aCX, aDesiredSize, aMaxSize,
                        aMaxElementSize, *font, startingOffset, state);
   } else {
     // Use normal wrapping routine for non-pre text (this includes
     // text that is not wrapping)
-    status = ReflowNormal(aCX, aDesiredSize, aMaxSize,
+    aStatus = ReflowNormal(aCX, aDesiredSize, aMaxSize,
                           aMaxElementSize, *font, *mol, startingOffset, state);
   }
 
 #ifdef NOISY
   ListTag(stdout);
   printf(": reflow %scomplete [flags=%x]\n",
-         ((status == frComplete) ? "" : "not "), mFlags);
+         ((aStatus == frComplete) ? "" : "not "), mFlags);
 #endif
-  return status;
+  return NS_OK;
 }
 
 // Reflow normal text (stuff that doesn't have to deal with horizontal
@@ -960,11 +967,11 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
 
 #define NUM_WORDS 20
 
-void TextFrame::JustifyReflow(nsIPresContext* aCX, nscoord aAvailableSpace)
+NS_METHOD TextFrame::JustifyReflow(nsIPresContext* aCX, nscoord aAvailableSpace)
 {
   if (mFlags & TEXT_IS_PRE) {
     // no way
-    return;
+    return NS_OK;
   }
 
   nsStyleFont* font =
@@ -1145,10 +1152,11 @@ bail:
     delete wp0;
   }
   NS_RELEASE(fm);
+  return NS_OK;
 }
 #undef NUM_WORDS
 
-void TextFrame::List(FILE* out, PRInt32 aIndent) const
+NS_METHOD TextFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -1189,6 +1197,7 @@ void TextFrame::List(FILE* out, PRInt32 aIndent) const
     fputs("\n", out);
   }
 #endif
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

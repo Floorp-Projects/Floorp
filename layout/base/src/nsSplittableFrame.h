@@ -28,13 +28,15 @@ public:
 
   // CreateContinuingFrame() does the default behavior of using the
   // content delegate to create a new frame
-  virtual PRBool      IsSplittable() const;
-  virtual nsIFrame*   CreateContinuingFrame(nsIPresContext* aPresContext,
-                                            nsIFrame*       aParent);
-  virtual nsIFrame*   GetPrevInFlow() const;
-  virtual void        SetPrevInFlow(nsIFrame*);
-  virtual nsIFrame*   GetNextInFlow() const;
-  virtual void        SetNextInFlow(nsIFrame*);
+  NS_IMETHOD  IsSplittable(PRBool& aIsSplittable) const;
+  NS_IMETHOD  CreateContinuingFrame(nsIPresContext* aPresContext,
+                                    nsIFrame*       aParent,
+                                    nsIFrame*&      aContinuingFrame);
+
+  NS_IMETHOD  GetPrevInFlow(nsIFrame*& aPrevInFlow) const;
+  NS_IMETHOD  SetPrevInFlow(nsIFrame*);
+  NS_IMETHOD  GetNextInFlow(nsIFrame*& aNextInFlow) const;
+  NS_IMETHOD  SetNextInFlow(nsIFrame*);
 
   /**
    * Return the first frame in our current flow. 
@@ -46,11 +48,11 @@ public:
    */
   nsIFrame* GetLastInFlow() const;
 
-  virtual void        AppendToFlow(nsIFrame* aAfterFrame);
-  virtual void        PrependToFlow(nsIFrame* aBeforeFrame);
-  virtual void        RemoveFromFlow();
-  virtual void        BreakFromPrevFlow();
-  virtual void        BreakFromNextFlow();
+  NS_IMETHOD  AppendToFlow(nsIFrame* aAfterFrame);
+  NS_IMETHOD  PrependToFlow(nsIFrame* aAfterFrame);
+  NS_IMETHOD  RemoveFromFlow();
+  NS_IMETHOD  BreakFromPrevFlow();
+  NS_IMETHOD  BreakFromNextFlow();
 
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,

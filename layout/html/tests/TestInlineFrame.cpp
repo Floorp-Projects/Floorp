@@ -213,11 +213,13 @@ InlineFrame::InlineFrame(nsIContent* aContent,
 {
 }
 
+#if 0
 PRInt32 InlineFrame::MaxChildWidth()
 {
   PRInt32 maxWidth = 0;
 
-  for (nsIFrame* f = FirstChild(); nsnull != f; f = f->GetNextSibling()) {
+  nsIFrame* f;
+  for (FirstChild(f); nsnull != f; f->GetNextSibling(f)) {
     if (f->GetWidth() > maxWidth) {
       maxWidth = f->GetWidth();
     }
@@ -1576,9 +1578,11 @@ TestMaxElementSize(nsIPresContext* presContext)
   NS_RELEASE(b);
   return PR_TRUE;
 }
+#endif
 
 int main(int argc, char** argv)
 {
+#if 0
   // Create test document and presentation context
   MyDocument *myDoc = new MyDocument();
   nsIPresContext* presContext;
@@ -1643,5 +1647,6 @@ int main(int argc, char** argv)
 
   presContext->Release();
   myDoc->Release();
+#endif
   return 0;
 }

@@ -83,8 +83,11 @@ void nsCellLayoutData::SetMaxElementSize(nsSize * aMaxElementSize)
   **/
 nsStyleMolecule* nsCellLayoutData::GetStyleMolecule()
 {
-  if (mCellFrame != nsnull)
-    return (nsStyleMolecule*)mCellFrame->GetStyleData(kStyleMoleculeSID);
+  if (mCellFrame != nsnull) {
+    nsStyleMolecule*  styleMol;
+    mCellFrame->GetStyleData(kStyleMoleculeSID, (nsStyleStruct*&)styleMol);
+    return styleMol;
+  }
   return nsnull;
 }
 
@@ -398,8 +401,11 @@ nsStyleMolecule* nsCellLayoutData::FindOuterBorder( nsTableFrame* aTableFrame,
     // for the parent frame is also zero
     if (margin == 0)
     { 
-      nsIFrame*         parentFrame = aFrame->GetGeometricParent();
-      nsStyleMolecule*  parentStyle = (nsStyleMolecule*)aFrame->GetStyleData(kStyleMoleculeSID);
+      nsIFrame*         parentFrame;
+      nsStyleMolecule*  parentStyle;
+
+      aFrame->GetGeometricParent(parentFrame);
+      aFrame->GetStyleData(kStyleMoleculeSID, (nsStyleStruct*&)parentStyle);
 
       // if the padding for the parent style is zero just
       // recursively call this routine
@@ -547,7 +553,9 @@ void nsCellLayoutData::RecalcLayoutData(nsTableFrame* aTableFrame,
                                         nsVoidArray* aBoundaryCells[4])
 
 {
-  nsStyleMolecule* cellStyle = (nsStyleMolecule*)mCellFrame->GetStyleData(kStyleMoleculeSID);
+  nsStyleMolecule* cellStyle;
+
+  mCellFrame->GetStyleData(kStyleMoleculeSID, (nsStyleStruct*&)cellStyle);
   
   CalculateBorders(aTableFrame,cellStyle,aBoundaryCells);
   CalculateMargins(aTableFrame,cellStyle,aBoundaryCells);
@@ -558,7 +566,9 @@ void nsCellLayoutData::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 indent;
 
-  nsTableCell* cell = (nsTableCell*)mCellFrame->GetContent();
+  nsTableCell* cell;
+
+  mCellFrame->GetContent((nsIContent*&)cell);
   if (cell != nsnull)
   {
     for (indent = aIndent; --indent >= 0; ) fputs("  ", out);

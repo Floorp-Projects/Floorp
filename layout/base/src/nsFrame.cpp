@@ -119,19 +119,21 @@ nsrefcnt nsFrame::Release(void)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
-void nsFrame::DeleteFrame()
+NS_METHOD nsFrame::DeleteFrame()
 {
   nsIView* view = mView;
   if (nsnull == view) {
-    nsIFrame* parent = GetParentWithView();
+    nsIFrame* parent;
+     
+    GetParentWithView(parent);
     if (nsnull != parent) {
-      view = parent->GetView();
+      parent->GetView(view);
     }
   }
   if (nsnull != view) {
     nsIViewManager* vm = view->GetViewManager();
     nsIPresContext* cx = vm->GetPresContext();
-    //is this a really good ordering for the releases? MMP
+    // XXX Is this a really good ordering for the releases? MMP
     NS_RELEASE(vm);
     NS_RELEASE(view);
     cx->StopLoadImage(this);
@@ -139,36 +141,42 @@ void nsFrame::DeleteFrame()
   }
 
   delete this;
+  return NS_OK;
 }
 
-nsIContent* nsFrame::GetContent() const
+NS_METHOD nsFrame::GetContent(nsIContent*& aContent) const
 {
   if (nsnull != mContent) {
     NS_ADDREF(mContent);
   }
-  return mContent;
+  aContent = mContent;
+  return NS_OK;
 }
 
-PRInt32 nsFrame::GetIndexInParent() const
+NS_METHOD nsFrame::GetIndexInParent(PRInt32& aIndexInParent) const
 {
-  return mIndexInParent;
+  aIndexInParent = mIndexInParent;
+  return NS_OK;
 }
 
-void nsFrame::SetIndexInParent(PRInt32 aIndexInParent)
+NS_METHOD nsFrame::SetIndexInParent(PRInt32 aIndexInParent)
 {
   mIndexInParent = aIndexInParent;
+  return NS_OK;
 }
 
-nsIStyleContext* nsFrame::GetStyleContext(nsIPresContext* aPresContext)
+NS_METHOD nsFrame::GetStyleContext(nsIPresContext*   aPresContext,
+                                   nsIStyleContext*& aStyleContext)
 {
   if (nsnull == mStyleContext) {
     mStyleContext = aPresContext->ResolveStyleContextFor(mContent, mGeometricParent); // XXX should be content parent???
   }
   NS_IF_ADDREF(mStyleContext);
-  return mStyleContext;
+  aStyleContext = mStyleContext;
+  return NS_OK;
 }
 
-void nsFrame::SetStyleContext(nsIStyleContext* aContext)
+NS_METHOD nsFrame::SetStyleContext(nsIStyleContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
   if (aContext != mStyleContext) {
@@ -178,65 +186,77 @@ void nsFrame::SetStyleContext(nsIStyleContext* aContext)
       NS_ADDREF(aContext);
     }
   }
+
+  return NS_OK;
+}
+
+NS_METHOD nsFrame::GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct)
+{
+  NS_ASSERTION(mStyleContext!=nsnull,"null style context");
+  if (mStyleContext) {
+    aStyleStruct = mStyleContext->GetData(aSID);
+  } else {
+    aStyleStruct = nsnull;
+  }
+  return NS_OK;
 }
 
 // Geometric and content parent member functions
 
-nsIFrame* nsFrame::GetContentParent() const
+NS_METHOD nsFrame::GetContentParent(nsIFrame*& aParent) const
 {
-  return mContentParent;
+  aParent = mContentParent;
+  return NS_OK;
 }
 
-void nsFrame::SetContentParent(const nsIFrame* aParent)
+NS_METHOD nsFrame::SetContentParent(const nsIFrame* aParent)
 {
   mContentParent = (nsIFrame*)aParent;
+  return NS_OK;
 }
 
-nsIFrame* nsFrame::GetGeometricParent() const
+NS_METHOD nsFrame::GetGeometricParent(nsIFrame*& aParent) const
 {
-  return mGeometricParent;
+  aParent = mGeometricParent;
+  return NS_OK;
 }
 
-void nsFrame::SetGeometricParent(const nsIFrame* aParent)
+NS_METHOD nsFrame::SetGeometricParent(const nsIFrame* aParent)
 {
   mGeometricParent = (nsIFrame*)aParent;
+  return NS_OK;
 }
 
 // Bounding rect member functions
 
-nsRect nsFrame::GetRect() const
-{
-  return mRect;
-}
-
-void nsFrame::GetRect(nsRect& aRect) const
+NS_METHOD nsFrame::GetRect(nsRect& aRect) const
 {
   aRect = mRect;
+  return NS_OK;
 }
 
-void nsFrame::GetOrigin(nsPoint& aPoint) const
+NS_METHOD nsFrame::GetOrigin(nsPoint& aPoint) const
 {
   aPoint.x = mRect.x;
   aPoint.y = mRect.y;
+  return NS_OK;
 }
 
-nscoord nsFrame::GetWidth() const
+NS_METHOD nsFrame::GetSize(nsSize& aSize) const
 {
-  return mRect.width;
+  aSize.width = mRect.width;
+  aSize.height = mRect.height;
+  return NS_OK;
 }
 
-nscoord nsFrame::GetHeight() const
-{
-  return mRect.height;
-}
-
-void nsFrame::SetRect(const nsRect& aRect)
+NS_METHOD nsFrame::SetRect(const nsRect& aRect)
 {
   MoveTo(aRect.x, aRect.y);
   SizeTo(aRect.width, aRect.height);
+  return NS_OK;
 }
 
-void nsFrame::MoveTo(nscoord aX, nscoord aY)
+NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
 {
   if ((aX != mRect.x) || (aY != mRect.y)) {
     mRect.x = aX;
@@ -247,9 +267,11 @@ void nsFrame::MoveTo(nscoord aX, nscoord aY)
       mView->SetPosition(aX, aY);
     }
   }
+
+  return NS_OK;
 }
 
-void nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+NS_METHOD nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
   if ((aWidth != mRect.width) || (aHeight != mRect.height)) {
     mRect.width = aWidth;
@@ -260,76 +282,89 @@ void nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
       mView->SetDimensions(aWidth, aHeight);
     }
   }
+
+  return NS_OK;
 }
 
 // Child frame enumeration
 
-PRInt32 nsFrame::ChildCount() const
+NS_METHOD nsFrame::ChildCount(PRInt32& aChildCount) const
 {
-  return 0;
+  aChildCount = 0;
+  return NS_OK;
 }
 
-nsIFrame* nsFrame::ChildAt(PRInt32 aIndex) const
+NS_METHOD nsFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
 {
   NS_ERROR("not a container");
-  return nsnull;
+  aFrame = nsnull;
+  return NS_OK;
 }
 
-PRInt32 nsFrame::IndexOf(const nsIFrame* aChild) const
+NS_METHOD nsFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
 {
   NS_ERROR("not a container");
-  return -1;
+  aIndex = -1;
+  return NS_OK;
 }
 
-nsIFrame* nsFrame::FirstChild() const
+NS_METHOD nsFrame::FirstChild(nsIFrame*& aFirstChild) const
 {
-  return nsnull;
+  aFirstChild = nsnull;
+  return NS_OK;
 }
 
-nsIFrame* nsFrame::NextChild(const nsIFrame* aChild) const
-{
-  NS_ERROR("not a container");
-  return nsnull;
-}
-
-nsIFrame* nsFrame::PrevChild(const nsIFrame* aChild) const
+NS_METHOD nsFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
 {
   NS_ERROR("not a container");
-  return nsnull;
+  aNextChild = nsnull;
+  return NS_OK;
 }
 
-nsIFrame* nsFrame::LastChild() const
+NS_METHOD nsFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
 {
-  return nsnull;
+  NS_ERROR("not a container");
+  aPrevChild = nsnull;
+  return NS_OK;
 }
 
-void nsFrame::Paint(nsIPresContext& aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect)
+NS_METHOD nsFrame::LastChild(nsIFrame*& aLastChild) const
 {
+  aLastChild = nsnull;
+  return NS_OK;
 }
 
-nsEventStatus nsFrame::HandleEvent(nsIPresContext& aPresContext, 
-                            nsGUIEvent* aEvent)
+NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect&        aDirtyRect)
 {
-  nsEventStatus  retval = nsEventStatus_eIgnore;
-  return retval;
+  return NS_OK;
 }
 
-PRInt32 nsFrame::GetCursorAt(nsIPresContext& aPresContext,
-                             const nsPoint& aPoint,
-                             nsIFrame** aFrame)
+NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext, 
+                               nsGUIEvent*     aEvent,
+                               nsEventStatus&  aEventStatus)
 {
-  return NS_STYLE_CURSOR_INHERIT;
+  aEventStatus = nsEventStatus_eIgnore;
+  return NS_OK;
+}
+
+NS_METHOD nsFrame::GetCursorAt(nsIPresContext& aPresContext,
+                               const nsPoint&  aPoint,
+                               nsIFrame**      aFrame,
+                               PRInt32&        aCursor)
+{
+  aCursor = NS_STYLE_CURSOR_INHERIT;
+  return NS_OK;
 }
 
 // Resize and incremental reflow
 
-nsIFrame::ReflowStatus
-nsFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                      nsReflowMetrics& aDesiredSize,
-                      const nsSize&    aMaxSize,
-                      nsSize*          aMaxElementSize)
+NS_METHOD nsFrame::ResizeReflow(nsIPresContext*  aPresContext,
+                                nsReflowMetrics& aDesiredSize,
+                                const nsSize&    aMaxSize,
+                                nsSize*          aMaxElementSize,
+                                ReflowStatus&    aStatus)
 {
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
@@ -339,136 +374,156 @@ nsFrame::ResizeReflow(nsIPresContext*  aPresContext,
     aMaxElementSize->width = 0;
     aMaxElementSize->height = 0;
   }
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
-void
-nsFrame::JustifyReflow(nsIPresContext* aPresContext,
-                       nscoord aAvailableSpace)
+NS_METHOD nsFrame::JustifyReflow(nsIPresContext* aPresContext,
+                                 nscoord         aAvailableSpace)
 {
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-nsFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                           nsReflowMetrics& aDesiredSize,
-                           const nsSize&    aMaxSize,
-                           nsReflowCommand& aReflowCommand)
+NS_METHOD nsFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+                                     nsReflowMetrics& aDesiredSize,
+                                     const nsSize&    aMaxSize,
+                                     nsReflowCommand& aReflowCommand,
+                                     ReflowStatus&    aStatus)
 {
   NS_ERROR("not a reflow command handler");
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
   aDesiredSize.descent = 0;
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
-void nsFrame::ContentAppended(nsIPresShell* aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent* aContainer)
+NS_METHOD nsFrame::ContentAppended(nsIPresShell*   aShell,
+                                   nsIPresContext* aPresContext,
+                                   nsIContent*     aContainer)
 {
+  return NS_OK;
 }
 
-void nsFrame::ContentInserted(nsIPresShell* aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInParent)
+NS_METHOD nsFrame::ContentInserted(nsIPresShell*   aShell,
+                                   nsIPresContext* aPresContext,
+                                   nsIContent*     aContainer,
+                                   nsIContent*     aChild,
+                                   PRInt32         aIndexInParent)
 {
+  return NS_OK;
 }
 
-void nsFrame::ContentReplaced(nsIPresShell* aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent* aContainer,
-                              nsIContent* aOldChild,
-                              nsIContent* aNewChild,
-                              PRInt32 aIndexInParent)
+NS_METHOD nsFrame::ContentReplaced(nsIPresShell*   aShell,
+                                   nsIPresContext* aPresContext,
+                                   nsIContent*     aContainer,
+                                   nsIContent*     aOldChild,
+                                   nsIContent*     aNewChild,
+                                   PRInt32         aIndexInParent)
 {
+  return NS_OK;
 }
 
-void nsFrame::ContentDeleted(nsIPresShell* aShell,
-                             nsIPresContext* aPresContext,
-                             nsIContent* aContainer,
-                             nsIContent* aChild,
-                             PRInt32 aIndexInParent)
+NS_METHOD nsFrame::ContentDeleted(nsIPresShell*   aShell,
+                                  nsIPresContext* aPresContext,
+                                  nsIContent*     aContainer,
+                                  nsIContent*     aChild,
+                                  PRInt32         aIndexInParent)
 {
+  return NS_OK;
 }
 
-void nsFrame::GetReflowMetrics(nsIPresContext* aPresContext,
-                               nsReflowMetrics& aMetrics)
+NS_METHOD nsFrame::GetReflowMetrics(nsIPresContext*  aPresContext,
+                                    nsReflowMetrics& aMetrics)
 {
   aMetrics.width = mRect.width;
   aMetrics.height = mRect.height;
   aMetrics.ascent = mRect.height;
   aMetrics.descent = 0;
+  return NS_OK;
 }
 
 // Flow member functions
 
-PRBool nsFrame::IsSplittable() const
+NS_METHOD nsFrame::IsSplittable(PRBool& aIsSplittable) const
 {
-  return PR_FALSE;
+  aIsSplittable = PR_FALSE;
+  return NS_OK;
 }
 
-nsIFrame* nsFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                         nsIFrame*       aParent)
+NS_METHOD nsFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                         nsIFrame*       aParent,
+                                         nsIFrame*&      aContinuingFrame)
 {
   NS_ERROR("not splittable");
-  return nsnull;
+  aContinuingFrame = nsnull;
+  return NS_OK;
 }
 
-nsIFrame* nsFrame::GetPrevInFlow() const
+NS_METHOD nsFrame::GetPrevInFlow(nsIFrame*& aPrevInFlow) const
 {
-  return nsnull;
+  aPrevInFlow = nsnull;
+  return NS_OK;
 }
 
-void nsFrame::SetPrevInFlow(nsIFrame*)
-{
-  NS_ERROR("not splittable");
-}
-
-nsIFrame* nsFrame::GetNextInFlow() const
-{
-  return nsnull;
-}
-
-void nsFrame::SetNextInFlow(nsIFrame*)
+NS_METHOD nsFrame::SetPrevInFlow(nsIFrame*)
 {
   NS_ERROR("not splittable");
+  return NS_OK;
 }
 
-void nsFrame::AppendToFlow(nsIFrame* aAfterFrame)
+NS_METHOD nsFrame::GetNextInFlow(nsIFrame*& aNextInFlow) const
 {
-  NS_ERROR("not splittable");
+  aNextInFlow = nsnull;
+  return NS_OK;
 }
 
-void nsFrame::PrependToFlow(nsIFrame* aBeforeFrame)
+NS_METHOD nsFrame::SetNextInFlow(nsIFrame*)
 {
   NS_ERROR("not splittable");
+  return NS_OK;
 }
 
-void nsFrame::RemoveFromFlow()
+NS_METHOD nsFrame::AppendToFlow(nsIFrame* aAfterFrame)
 {
   NS_ERROR("not splittable");
+  return NS_OK;
 }
 
-void nsFrame::BreakFromPrevFlow()
+NS_METHOD nsFrame::PrependToFlow(nsIFrame* aBeforeFrame)
 {
   NS_ERROR("not splittable");
+  return NS_OK;
 }
 
-void nsFrame::BreakFromNextFlow()
+NS_METHOD nsFrame::RemoveFromFlow()
 {
   NS_ERROR("not splittable");
+  return NS_OK;
+}
+
+NS_METHOD nsFrame::BreakFromPrevFlow()
+{
+  NS_ERROR("not splittable");
+  return NS_OK;
+}
+
+NS_METHOD nsFrame::BreakFromNextFlow()
+{
+  NS_ERROR("not splittable");
+  return NS_OK;
 }
 
 // Associated view object
-nsIView* nsFrame::GetView() const
+NS_METHOD nsFrame::GetView(nsIView*& aView) const
 {
-  NS_IF_ADDREF(mView);
-  return mView;
+  aView = mView;
+  NS_IF_ADDREF(aView);
+  return NS_OK;
 }
 
-void nsFrame::SetView(nsIView* aView)
+NS_METHOD nsFrame::SetView(nsIView* aView)
 {
   NS_IF_RELEASE(mView);
   if (nsnull != aView) {
@@ -476,78 +531,88 @@ void nsFrame::SetView(nsIView* aView)
     aView->SetFrame(this);
     NS_ADDREF(aView);
   }
+  return NS_OK;
 }
 
 // Find the first geometric parent that has a view
-nsIFrame* nsFrame::GetParentWithView() const
+NS_METHOD nsFrame::GetParentWithView(nsIFrame*& aParent) const
 {
-  nsIFrame* parent = mGeometricParent;
+  aParent = mGeometricParent;
 
-  while (nsnull != parent) {
-    nsIView* parView = parent->GetView();
+  while (nsnull != aParent) {
+    nsIView* parView;
+     
+    aParent->GetView(parView);
     if (nsnull != parView) {
       NS_RELEASE(parView);
       break;
     }
-    parent = parent->GetGeometricParent();
+    aParent->GetGeometricParent(aParent);
   }
 
-  return parent;
+  return NS_OK;
 }
 
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
-nsIView* nsFrame::GetOffsetFromView(nsPoint& aOffset) const
+NS_METHOD nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const
 {
-  const nsIFrame* frame = this;
-  nsIView*  result = nsnull;
-  nsPoint   origin;
+  nsIFrame* frame = (nsIFrame*)this;
 
+  aView = nsnull;
   aOffset.MoveTo(0, 0);
-  nsIView* view = nsnull;
   do {
+    nsPoint origin;
+
     frame->GetOrigin(origin);
     aOffset += origin;
-    frame = frame->GetGeometricParent();
-    view = (frame == nsnull) ? nsnull : frame->GetView();
-  } while ((nsnull != frame) && (nsnull == view));
+    frame->GetGeometricParent(frame);
+    if (nsnull != frame) {
+      frame->GetView(aView);
+    }
+  } while ((nsnull != frame) && (nsnull == aView));
 
-  return view;
+  return NS_OK;
 }
 
-nsIWidget* nsFrame::GetWindow() const
+NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
 {
-  nsIWidget* window = nsnull;
-  const nsIFrame* frame = this;
+  nsIFrame* frame = (nsIFrame*)this;
+
+  aWindow = nsnull;
   while (nsnull != frame) {
-    nsIView* view = frame->GetView();
+    nsIView* view;
+     
+    frame->GetView(view);
     if (nsnull != view) {
-      window = view->GetWidget();
+      aWindow = view->GetWidget();
       NS_RELEASE(view);
-      if (nsnull != window) {
-        return window;
+      if (nsnull != aWindow) {
+        break;
       }
     }
-    frame = frame->GetParentWithView();
+    frame->GetParentWithView(frame);
   }
-  NS_POSTCONDITION(nsnull != window, "no window in frame tree");
-  return nsnull;
+  NS_POSTCONDITION(nsnull != aWindow, "no window in frame tree");
+  return NS_OK;
 }
 
 // Sibling pointer used to link together frames
 
-nsIFrame* nsFrame::GetNextSibling() const
+NS_METHOD nsFrame::GetNextSibling(nsIFrame*& aNextSibling) const
 {
-  return mNextSibling;
+  aNextSibling = mNextSibling;
+  return NS_OK;
 }
 
-void nsFrame::SetNextSibling(nsIFrame* aNextSibling)
+NS_METHOD nsFrame::SetNextSibling(nsIFrame* aNextSibling)
 {
   mNextSibling = aNextSibling;
+  return NS_OK;
 }
 
 // Debugging
-void nsFrame::List(FILE* out, PRInt32 aIndent) const
+NS_METHOD nsFrame::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -557,10 +622,11 @@ void nsFrame::List(FILE* out, PRInt32 aIndent) const
   fputs(" ", out);
   out << mRect;
   fputs("<>\n", out);
+  return NS_OK;
 }
 
 // Output the frame's tag
-void nsFrame::ListTag(FILE* out) const
+NS_METHOD nsFrame::ListTag(FILE* out) const
 {
   nsIAtom* tag = mContent->GetTag();
   if (tag != nsnull) {
@@ -570,16 +636,10 @@ void nsFrame::ListTag(FILE* out) const
     NS_RELEASE(tag);
   }
   fprintf(out, "(%d)@%p", mIndexInParent, this);
+  return NS_OK;
 }
 
-void nsFrame::VerifyTree() const
+NS_METHOD nsFrame::VerifyTree() const
 {
-}
-
-nsStyleStruct* nsFrame::GetStyleData(const nsIID& aSID)
-{
-  NS_ASSERTION(mStyleContext!=nsnull,"null style context");
-  if (mStyleContext)
-    return mStyleContext->GetData(aSID);
-  return nsnull;
+  return NS_OK;
 }

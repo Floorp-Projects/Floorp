@@ -100,7 +100,7 @@ SpacerFrame::ResizeReflow(nsIPresContext* aPresContext,
         break;
       }
     }
-    parent = parent->GetGeometricParent();
+    parent->GetGeometricParent(parent);
   }
   if (nsnull != parent) {
     nsIPresShell* shell = aPresContext->GetShell();

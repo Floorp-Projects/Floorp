@@ -42,19 +42,21 @@ public:
                            PRInt32     aIndexInParent,
                            nsIFrame*   aParent);
 
-  void          Paint(nsIPresContext& aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
-  ReflowStatus  ResizeReflow(nsIPresContext* aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize&   aMaxSize,
-                             nsSize*         aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext* aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&   aMaxSize,
+                          nsSize*         aMaxElementSize,
+                          ReflowStatus&   aStatus);
 
-  ReflowStatus  IncrementalReflow(nsIPresContext*  aPresContext,
-                                  nsReflowMetrics& aDesiredSize,
-                                  const nsSize&    aMaxSize,
-                                  nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize&    aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus&    aStatus);
 
 protected:
 
@@ -79,20 +81,21 @@ nsTableColFrame::~nsTableColFrame()
 {
 }
 
-void nsTableColFrame::Paint(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
+                                 nsIRenderingContext& aRenderingContext,
+                                 const nsRect& aDirtyRect)
 {
   if (gsDebug==PR_TRUE)
     printf("nsTableColFrame::Paint\n");
+  return NS_OK;
 }
 
 
-nsIFrame::ReflowStatus
-nsTableColFrame::ResizeReflow(nsIPresContext* aPresContext,
-                        nsReflowMetrics& aDesiredSize,
-                        const nsSize&   aMaxSize,
-                        nsSize*         aMaxElementSize)
+NS_METHOD nsTableColFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                        nsReflowMetrics& aDesiredSize,
+                                        const nsSize&   aMaxSize,
+                                        nsSize*         aMaxElementSize,
+                                        ReflowStatus&   aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   if (gsDebug==PR_TRUE) printf("nsTableoupFrame::ResizeReflow\n");
@@ -103,20 +106,22 @@ nsTableColFrame::ResizeReflow(nsIPresContext* aPresContext,
     aMaxElementSize->width=0;
     aMaxElementSize->height=0;
   }
-  return nsIFrame::frComplete;
+  aStatus = nsIFrame::frComplete;
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-nsTableColFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                   nsReflowMetrics& aDesiredSize,
-                                   const nsSize&    aMaxSize,
-                                   nsReflowCommand& aReflowCommand)
+NS_METHOD nsTableColFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+                                             nsReflowMetrics& aDesiredSize,
+                                             const nsSize&    aMaxSize,
+                                             nsReflowCommand& aReflowCommand,
+                                             ReflowStatus&    aStatus)
 {
   NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   if (gsDebug==PR_TRUE) printf("nsTableColFrame::IncrementalReflow\n");
   aDesiredSize.width=0;
   aDesiredSize.height=0;
-  return nsIFrame::frComplete;
+  aStatus = nsIFrame::frComplete;
+  return NS_OK;
 }
 
 nsresult nsTableColFrame::NewFrame(nsIFrame** aInstancePtrResult,

@@ -454,7 +454,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
   nsIStyleContext* parentContext = nsnull;
   
   if (nsnull != aParentFrame) {
-    parentContext = aParentFrame->GetStyleContext(aPresContext);
+    aParentFrame->GetStyleContext(aPresContext, parentContext);
     NS_ASSERTION(nsnull != parentContext, "parent must have style context");
   }
 

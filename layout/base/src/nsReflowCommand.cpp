@@ -143,7 +143,7 @@ void nsReflowCommand::Dispatch(nsReflowMetrics& aDesiredSize,
   // Build the path from the target frame (index 0) to the root frame
   mPath.Clear();
   for (nsIFrame* f = (nsIFrame*)mTargetFrame; nsnull != f;
-       f = f->GetGeometricParent()) {
+       f->GetGeometricParent(f)) {
     mPath.AppendElement((void*)f);
   }
 
@@ -160,7 +160,10 @@ void nsReflowCommand::Dispatch(nsReflowMetrics& aDesiredSize,
 
   if (nsnull != root) {
     mPath.RemoveElementAt(mPath.Count() - 1);
-    root->IncrementalReflow(mPresContext, aDesiredSize, aMaxSize, *this);
+
+    nsIFrame::ReflowStatus  status;
+
+    root->IncrementalReflow(mPresContext, aDesiredSize, aMaxSize, *this, status);
   }
 }
 
@@ -178,8 +181,8 @@ nsIFrame::ReflowStatus nsReflowCommand::Next(nsReflowMetrics& aDesiredSize,
 
     NS_ASSERTION(nsnull != aNextFrame, "null frame");
     mPath.RemoveElementAt(count - 1);
-    result = aNextFrame->IncrementalReflow(mPresContext, aDesiredSize, aMaxSize,
-                                           *this);
+    aNextFrame->IncrementalReflow(mPresContext, aDesiredSize, aMaxSize,
+                                  *this, result);
   } else {
     aNextFrame = nsnull;
   }
@@ -209,12 +212,12 @@ nsIFrame::ReflowStatus nsReflowCommand::Next(nsISpaceManager* aSpaceManager,
 
     if (NS_OK == aNextFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
       reflowRunaround->IncrementalReflow(mPresContext, aSpaceManager, aMaxSize,
-                                         aDesiredRect, *this);
+                                         aDesiredRect, *this, result);
     } else {
       nsReflowMetrics desiredSize;
 
-      result = aNextFrame->IncrementalReflow(mPresContext, desiredSize, aMaxSize,
-                                             *this);
+      aNextFrame->IncrementalReflow(mPresContext, desiredSize, aMaxSize,
+                                    *this, result);
       aDesiredRect.x = 0;
       aDesiredRect.y = 0;
       aDesiredRect.width = desiredSize.width;

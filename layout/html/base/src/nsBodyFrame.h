@@ -33,22 +33,25 @@ public:
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  virtual ReflowStatus  ResizeReflow(nsIPresContext*  aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsSize*          aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&    aMaxSize,
+                          nsSize*          aMaxElementSize,
+                          ReflowStatus&    aStatus);
 
-  virtual ReflowStatus  IncrementalReflow(nsIPresContext*  aPresContext,
-                                          nsReflowMetrics& aDesiredSize,
-                                          const nsSize&    aMaxSize,
-                                          nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize&    aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus&    aStatus);
 
-  virtual void ContentAppended(nsIPresShell*   aShell,
-                               nsIPresContext* aPresContext,
-                               nsIContent*     aContainer);
+  NS_IMETHOD ContentAppended(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aContainer);
 
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame*       aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aParent,
+                                   nsIFrame*&      aContinuingFrame);
 
   virtual void AddAnchoredItem(nsIFrame*         aAnchoredItem,
                                AnchoringPosition aPosition,
@@ -56,7 +59,7 @@ public:
 
   virtual void RemoveAnchoredItem(nsIFrame* aAnchoredItem);
 
-  virtual void VerifyTree() const;
+  NS_IMETHOD VerifyTree() const;
 
 protected:
   nsBodyFrame(nsIContent* aContent,

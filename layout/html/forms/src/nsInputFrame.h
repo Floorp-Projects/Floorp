@@ -59,24 +59,26 @@ public:
     * Respond to a gui event
     * @see nsIFrame::HandleEvent
     */
-  virtual nsEventStatus HandleEvent(nsIPresContext& aPresContext, 
-                                    nsGUIEvent* aEvent);
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus);
   /**
     * Draw this frame within the context of a presentation context and rendering context
     * @see nsIFrame::Paint
     */
-  virtual void Paint(nsIPresContext& aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
   /**
     * Respond to the request to resize and/or reflow
     * @see nsIFrame::ResizeReflow
     */
-  virtual ReflowStatus  ResizeReflow(nsIPresContext*  aCX,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsSize*          aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext*  aCX,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&    aMaxSize,
+                          nsSize*          aMaxElementSize,
+                          ReflowStatus&    aStatus);
 
   // New Behavior
 

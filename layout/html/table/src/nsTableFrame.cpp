@@ -388,9 +388,9 @@ void nsTableFrame::ResetColumnLayoutData()
 
 
 /* SEC: TODO: adjust the rect for captions */
-void nsTableFrame::Paint(nsIPresContext& aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect)
+NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              const nsRect& aDirtyRect)
 {
   // table paint code is concerned primarily with borders and bg color
   nsStyleColor* myColor =
@@ -414,6 +414,7 @@ void nsTableFrame::Paint(nsIPresContext& aPresContext,
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  return NS_OK;
 }
 
 PRBool nsTableFrame::NeedsReflow(const nsSize& aMaxSize)
@@ -444,10 +445,11 @@ PRBool nsTableFrame::NeedsReflow(const nsSize& aMaxSize)
 
 /** Layout the entire inner table.
   */
-nsIFrame::ReflowStatus nsTableFrame::ResizeReflow( nsIPresContext* aPresContext,
-                                                   nsReflowMetrics& aDesiredSize,
-                                                   const nsSize& aMaxSize,
-                                                   nsSize* aMaxElementSize)
+NS_METHOD nsTableFrame::ResizeReflow(nsIPresContext* aPresContext,
+                                     nsReflowMetrics& aDesiredSize,
+                                     const nsSize& aMaxSize,
+                                     nsSize* aMaxElementSize,
+                                     ReflowStatus& aStatus)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   if (gsDebug==PR_TRUE) 
@@ -461,7 +463,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflow( nsIPresContext* aPresContext,
   PreReflowCheck();
 #endif
 
-  ReflowStatus result = frComplete;
+  aStatus = frComplete;
 
   PRIntervalTime startTime = PR_IntervalNow();
 
@@ -479,7 +481,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflow( nsIPresContext* aPresContext,
     if (PR_FALSE==IsFirstPassValid())
     { // we treat the table as if we've never seen the layout data before
       mPass = kPASS_FIRST;
-      result = ResizeReflowPass1(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, tableStyleMol);
+      aStatus = ResizeReflowPass1(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, tableStyleMol);
       // check result
     }
     mPass = kPASS_SECOND;
@@ -490,7 +492,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflow( nsIPresContext* aPresContext,
     // assign table width
     SetTableWidth(aPresContext, tableStyleMol);
 
-    result = ResizeReflowPass2(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, tableStyleMol, 0, 0);
+    aStatus = ResizeReflowPass2(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, tableStyleMol, 0, 0);
 
     PRIntervalTime endTime = PR_IntervalNow();
     if (gsTiming) printf("Table reflow took %ld ticks for frame %d\n", endTime-startTime, this);
@@ -503,10 +505,10 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflow( nsIPresContext* aPresContext,
   }
 
 #ifdef NS_DEBUG
-  PostReflowCheck(result);
+  PostReflowCheck(aStatus);
 #endif  
 
-  return result;
+  return NS_OK;
 }
 
 /** the first of 2 reflow passes
@@ -587,7 +589,9 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
 
       // SEC: TODO:  when content is appended or deleted, be sure to clear out the frame hierarchy!!!!
 
-      nsIFrame* kidFrame = ChildAt(kidIndex);
+      nsIFrame* kidFrame;
+
+      ChildAt(kidIndex, kidFrame);
       // if this is the first time, allocate the caption frame
       if (nsnull==kidFrame)
       {
@@ -662,7 +666,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
   }
 
   if (nsnull != prevKidFrame) {
-    NS_ASSERTION(LastChild() == prevKidFrame, "unexpected last child");
+    NS_ASSERTION(IsLastChild(prevKidFrame), "unexpected last child");
                                            // can't use SetLastContentOffset here
     mLastContentOffset = contentOffset-1;    // takes into account colGroup frame we're not using
     if (gsDebug) printf("INNER: set last content offset to %d\n", GetLastContentOffset()); //@@@
@@ -899,10 +903,14 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
     nsIFrame::ReflowStatus  status;
 
     // Get top margin for this kid
-    nsIContent* kid = kidFrame->GetContent();
+    nsIContent* kid;
+
+    kidFrame->GetContent(kid);
     if (((nsTableContent *)kid)->GetType() == nsITableContent::kTableRowGroupType)
     { // skip children that are not row groups
-      nsIStyleContext* kidSC = kidFrame->GetStyleContext(aPresContext);
+      nsIStyleContext* kidSC;
+
+      kidFrame->GetStyleContext(aPresContext, kidSC);
       nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
       nscoord bottomMargin = kidMol->margin.bottom;
@@ -960,17 +968,22 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
 
       // Special handling for incomplete children
       if (frNotComplete == status) {
-        nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
+        nsIFrame* kidNextInFlow;
+         
+        kidFrame->GetNextInFlow(kidNextInFlow);
         PRBool lastContentIsComplete = mLastContentIsComplete;
         if (nsnull == kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a continuing
           // frame. This hooks the child into the flow
-          nsIFrame* continuingFrame =
-            kidFrame->CreateContinuingFrame(aPresContext, this);
+          nsIFrame* continuingFrame;
+           
+          kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
           NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
           // Add the continuing frame to the sibling list
-          nsIFrame* nextSib = kidFrame->GetNextSibling();
+          nsIFrame* nextSib;
+           
+          kidFrame->GetNextSibling(nextSib);
           continuingFrame->SetNextSibling(nextSib);
           kidFrame->SetNextSibling(continuingFrame);
           if (nsnull == nextSib) {
@@ -982,7 +995,9 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
         }
         // We've used up all of our available space so push the remaining
         // children to the next-in-flow
-        nsIFrame* nextSibling = kidFrame->GetNextSibling();
+        nsIFrame* nextSibling;
+         
+        kidFrame->GetNextSibling(nextSibling);
         if (nsnull != nextSibling) {
           PushChildren(nextSibling, kidFrame, lastContentIsComplete);
           SetLastContentOffset(prevKidFrame);
@@ -993,15 +1008,23 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
     }
 
     // Get the next child
-    kidFrame = kidFrame->GetNextSibling();
+    kidFrame->GetNextSibling(kidFrame);
 
     // XXX talk with troy about checking for available space here
   }
 
   // Update the child count
   mChildCount = childCount;
+#ifdef NS_DEBUG
   NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
-  NS_POSTCONDITION(LastChild()->GetIndexInParent() == mLastContentOffset, "bad last content offset");
+
+  nsIFrame* lastChild;
+  PRInt32   lastIndexInParent;
+
+  LastChild(lastChild);
+  lastChild->GetIndexInParent(lastIndexInParent);
+  NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
+#endif
 
 #ifdef NS_DEBUG
   VerifyLastIsComplete();
@@ -1067,7 +1090,9 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
 #ifdef NS_DEBUG
   PRInt32        kidIndex = NextChildOffset();
 #endif
-  nsIFrame*      prevKidFrame = LastChild();
+  nsIFrame*      prevKidFrame;
+   
+  LastChild(prevKidFrame);
 
   // This will hold the prevKidFrame's mLastContentIsComplete
   // status. If we have to push the frame that follows prevKidFrame
@@ -1095,7 +1120,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
         kidFrame = nextInFlow->mFirstChild;
       } else {
         // We've pulled up all the children, so move to the next-in-flow.
-        nextInFlow = (nsTableFrame*)nextInFlow->GetNextInFlow();
+        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
         continue;
       }
     }
@@ -1103,8 +1128,12 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
     // See if the child fits in the available space. If it fits or
     // it's splittable then reflow it. The reason we can't just move
     // it is that we still need ascent/descent information
-    if ((kidFrame->GetHeight() > aState.availSize.height) &&
-        !kidFrame->IsSplittable()) {
+    nsSize  kidFrameSize;
+    PRBool  kidIsSplittable;
+
+    kidFrame->GetSize(kidFrameSize);
+    kidFrame->IsSplittable(kidIsSplittable);
+    if ((kidFrameSize.height > aState.availSize.height) && !kidIsSplittable) {
       result = PR_FALSE;
       mLastContentIsComplete = prevLastContentIsComplete;
       break;
@@ -1134,7 +1163,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
 
     // Remove the frame from its current parent
-    nextInFlow->mFirstChild = kidFrame->GetNextSibling();
+    kidFrame->GetNextSibling(nextInFlow->mFirstChild);
     nextInFlow->mChildCount--;
     // Update the next-in-flows first content offset
     if (nsnull != nextInFlow->mFirstChild) {
@@ -1143,7 +1172,10 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
 
     // Link the frame into our list of children
     kidFrame->SetGeometricParent(this);
-    if (nextInFlow == kidFrame->GetContentParent()) {
+    nsIFrame* contentParent;
+
+    kidFrame->GetContentParent(contentParent);
+    if (nextInFlow == contentParent) {
       kidFrame->SetContentParent(this);
     }
     if (nsnull == prevKidFrame) {
@@ -1163,13 +1195,16 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
     mLastContentIsComplete = PRBool(status == frComplete);
     if (frNotComplete == status) {
       // No the child isn't complete
-      nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
+      nsIFrame* kidNextInFlow;
+       
+      kidFrame->GetNextInFlow(kidNextInFlow);
       if (nsnull == kidNextInFlow) {
         // The child doesn't have a next-in-flow so create a
         // continuing frame. The creation appends it to the flow and
         // prepares it for reflow.
-        nsIFrame* continuingFrame =
-          kidFrame->CreateContinuingFrame(aPresContext, this);
+        nsIFrame* continuingFrame;
+
+        kidFrame->CreateContinuingFrame(aPresContext, this, continuingFrame);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to our sibling list and then push
@@ -1197,7 +1232,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
 
   // Update our last content offset
   if (nsnull != prevKidFrame) {
-    NS_ASSERTION(LastChild() == prevKidFrame, "bad last child");
+    NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
     SetLastContentOffset(prevKidFrame);
   }
 
@@ -1217,7 +1252,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
       // the next-in-flows must be empty. Do a sanity check
       while (nsnull != nextInFlow) {
         NS_ASSERTION(nsnull == nextInFlow->mFirstChild, "non-empty next-in-flow");
-        nextInFlow = (nsTableFrame*)nextInFlow->GetNextInFlow();
+        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
       }
 #endif
     }
@@ -1258,7 +1293,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     mFirstContentOffset = prev->NextChildOffset();
     if (!prev->mLastContentIsComplete) {
       // Our prev-in-flow's last child is not complete
-      kidPrevInFlow = prev->LastChild();
+      prev->LastChild(kidPrevInFlow);
     }
   }
   mLastContentIsComplete = PR_TRUE;
@@ -1267,8 +1302,9 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
   PRInt32   kidIndex = NextChildOffset();
-  nsIFrame* prevKidFrame = LastChild();
+  nsIFrame* prevKidFrame;
 
+  LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
     nsIContent* kid = mContent->ChildAt(kidIndex);
@@ -1301,7 +1337,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
       NS_RELEASE(kidDel);
       kidFrame->SetStyleContext(kidStyleContext);
     } else {
-      kidFrame = kidPrevInFlow->CreateContinuingFrame(aPresContext, this);
+      kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
     }
     NS_RELEASE(kid);
     NS_RELEASE(kidStyleContext);
@@ -1356,7 +1392,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   }
 
   // Update the content mapping
-  NS_ASSERTION(LastChild() == prevKidFrame, "bad last child");
+  NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
   SetLastContentOffset(prevKidFrame);
 #ifdef NS_DEBUG
   PRInt32 len = LengthOf(mFirstChild);
@@ -1536,7 +1572,8 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext, PRInt
         // SEC: TODO -- when we have a style system, set the mol for the col
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(0));
         nsTableCellFrame *cellFrame = data->GetCellFrame();
-        nsTableCell *cell = (nsTableCell *)cellFrame->GetContent();          // cell: REFCNT++
+        nsTableCell *cell;
+        cellFrame->GetContent((nsIContent*&)cell);          // cell: REFCNT++
         nsStyleMolecule* cellStyle = (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
         NS_ASSERTION(nsnull != cellStyle, "bad style for cell.");
         // SEC: this is the code to replace
@@ -1954,7 +1991,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext,
   nscoord rightInset = aTableStyle->borderPadding.right;
   nscoord leftInset = aTableStyle->borderPadding.left;
   tableWidth += (leftInset + rightInset);
-  nsRect tableSize = GetRect();
+  nsRect tableSize = mRect;
   tableSize.width = tableWidth;
   if (gsDebug==PR_TRUE)
   {
@@ -1975,16 +2012,22 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
   gsDebug = PR_FALSE;  // turn on debug in this method
 #endif
   // iterate children, tell all row groups to ShrinkWrap
-  PRInt32 childCount = ChildCount();
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
   PRInt32 tableHeight = 0;
+  PRInt32 childCount = mChildCount;
+
   for (PRInt32 i = 0; i < childCount; i++)
   {
     PRInt32 childHeight=0;
     // for every child that is a rowFrame, set the row frame height  = sum of row heights
-    nsIFrame * kidFrame = ChildAt(i); // frames are not ref counted
+    // XXX This is a n-squared algorithm. Use GetNextSibling() instead...
+    nsIFrame * kidFrame;
+
+    ChildAt(i, kidFrame); // frames are not ref counted
     NS_ASSERTION(nsnull != kidFrame, "bad kid frame");
-    nsTableContent* kid = (nsTableContent*)(kidFrame->GetContent());  // kid: REFCNT++
+    nsTableContent* kid;
+     
+    kidFrame->GetContent((nsIContent*&)kid);  // kid: REFCNT++
     NS_ASSERTION(nsnull != kid, "bad kid");
     if (kid->GetType() == nsITableContent::kTableRowGroupType)
     {
@@ -1993,33 +2036,48 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
        */
       PRInt32 rowGroupHeight = 0;
       nsTableRowGroupFrame * rowGroupFrame = (nsTableRowGroupFrame *)kidFrame;
-      PRInt32 numRows = rowGroupFrame->ChildCount();
+      PRInt32 numRows;
+      rowGroupFrame->ChildCount(numRows);
       PRInt32 *rowHeights = new PRInt32[numRows];
       if (gsDebug==PR_TRUE) printf("Height Step 1...\n");
       for (PRInt32 rowIndex = 0; rowIndex < numRows; rowIndex++)
       {
         // get the height of the tallest cell in the row (excluding cells that span rows)
-        nsTableRowFrame *rowFrame = (nsTableRowFrame *)(rowGroupFrame->ChildAt(rowIndex));
+        nsTableRowFrame *rowFrame;
+         
+        rowGroupFrame->ChildAt(rowIndex, (nsIFrame*&)rowFrame);
         NS_ASSERTION(nsnull != rowFrame, "bad row frame");
         rowHeights[rowIndex] = rowFrame->GetTallestChild();
-        rowFrame->SizeTo(rowFrame->GetWidth(), rowHeights[rowIndex]);
+
+        nsSize  rowFrameSize;
+
+        rowFrame->GetSize(rowFrameSize);
+        rowFrame->SizeTo(rowFrameSize.width, rowHeights[rowIndex]);
         rowGroupHeight += rowHeights[rowIndex];
         // resize all the cells based on the rowHeight
-        PRInt32 numCells = rowFrame->ChildCount();
+        PRInt32 numCells;
+
+        rowFrame->ChildCount(numCells);
         for (PRInt32 cellIndex = 0; cellIndex < numCells; cellIndex++)
         {
-          nsTableCellFrame *cellFrame = (nsTableCellFrame *)(rowFrame->ChildAt(cellIndex));
+          nsTableCellFrame *cellFrame;
+
+          rowFrame->ChildAt(cellIndex, (nsIFrame*&)cellFrame);
           PRInt32 rowSpan = cellFrame->GetRowSpan();
           if (1==rowSpan)
           {
             if (gsDebug==PR_TRUE) printf("  setting cell[%d,%d] height to %d\n", rowIndex, cellIndex, rowHeights[rowIndex]);
-            cellFrame->SizeTo(cellFrame->GetWidth(), rowHeights[rowIndex]);
+
+            nsSize  cellFrameSize;
+
+            cellFrame->GetSize(cellFrameSize);
+            cellFrame->SizeTo(cellFrameSize.width, rowHeights[rowIndex]);
             // Realign cell content based on new height
             cellFrame->VerticallyAlignChild(aPresContext);
           }
           else
           {
-            if (gsDebug==PR_TRUE) printf("  skipping cell[%d,%d] with a desired height of %d\n", rowIndex, cellIndex, cellFrame->GetHeight());
+            if (gsDebug==PR_TRUE) printf("  skipping cell[%d,%d]\n", rowIndex, cellIndex);
             atLeastOneRowSpanningCell = PR_TRUE;
           }
         }
@@ -2041,11 +2099,16 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
       rowGroupHeight=0;
       for (rowIndex = 0; rowIndex < numRows; rowIndex++)
       {
-        nsTableRowFrame *rowFrame = (nsTableRowFrame *)(rowGroupFrame->ChildAt(rowIndex));
-        PRInt32 numCells = rowFrame->ChildCount();
+        nsTableRowFrame *rowFrame;
+        PRInt32 numCells;
+
+        rowGroupFrame->ChildAt(rowIndex, (nsIFrame*&)rowFrame);
+        rowFrame->ChildCount(numCells);
         for (PRInt32 cellIndex = 0; cellIndex < numCells; cellIndex++)
         {
-          nsTableCellFrame *cellFrame = (nsTableCellFrame *)(rowFrame->ChildAt(cellIndex));
+          nsTableCellFrame *cellFrame;
+
+          rowFrame->ChildAt(cellIndex, (nsIFrame*&)cellFrame);
           PRInt32 rowSpan = cellFrame->GetRowSpan();
           if (1<rowSpan)
           {
@@ -2054,10 +2117,13 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
             for (PRInt32 i=0; i<rowSpan; i++)
               heightOfRowsSpanned += rowHeights[i+rowIndex];
             /* if the cell height fits in the rows, expand the cell height and slap it in */
-            if (heightOfRowsSpanned>cellFrame->GetHeight())
+            nsSize  cellFrameSize;
+
+            cellFrame->GetSize(cellFrameSize);
+            if (heightOfRowsSpanned>cellFrameSize.height)
             {
               if (gsDebug==PR_TRUE) printf("  cell[%d,%d] fits, setting height to %d\n", rowIndex, cellIndex, heightOfRowsSpanned);
-              cellFrame->SizeTo(cellFrame->GetWidth(), heightOfRowsSpanned);
+              cellFrame->SizeTo(cellFrameSize.width, heightOfRowsSpanned);
               // Realign cell content based on new height
               cellFrame->VerticallyAlignChild(aPresContext);
             }
@@ -2066,20 +2132,28 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
              */
             else
             {
-              PRInt32 excessHeight = cellFrame->GetHeight() - heightOfRowsSpanned;
+              PRInt32 excessHeight = cellFrameSize.height - heightOfRowsSpanned;
               PRInt32 excessHeightPerRow = excessHeight/rowSpan;
               if (gsDebug==PR_TRUE) printf("  cell[%d,%d] does not fit, excessHeight = %d, excessHeightPerRow = %d\n", 
                       rowIndex, cellIndex, excessHeight, excessHeightPerRow);
               // for the rows effected...
               for (i=rowIndex; i<numRows; i++)
               {
-                nsTableRowFrame *rowFrameToBeResized = (nsTableRowFrame *)(rowGroupFrame->ChildAt(i));
+                nsTableRowFrame *rowFrameToBeResized;
+
+                rowGroupFrame->ChildAt(i, (nsIFrame*&)rowFrameToBeResized);
                 if (i<rowIndex+rowSpan)
                 {
                   rowHeights[i] += excessHeightPerRow;
                   if (gsDebug==PR_TRUE) printf("    rowHeight[%d] set to %d\n", i, rowHeights[i]);
-                  rowFrameToBeResized->SizeTo(rowFrameToBeResized->GetWidth(), rowHeights[i]);
-                  PRInt32 cellCount = rowFrameToBeResized->ChildCount();
+
+                  nsSize  rowFrameSize;
+
+                  rowFrameToBeResized->GetSize(rowFrameSize);
+                  rowFrameToBeResized->SizeTo(rowFrameSize.width, rowHeights[i]);
+                  PRInt32 cellCount;
+
+                  rowFrameToBeResized->ChildCount(cellCount);
                   for (PRInt32 j=0; j<cellCount; j++)
                   {
                     if (i==rowIndex && j==cellIndex)
@@ -2087,11 +2161,16 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
                       if (gsDebug==PR_TRUE) printf("      cell[%d, %d] skipping self\n", i, j);
                       continue; // don't do math on myself, only the other cells I effect
                     }
-                    nsTableCellFrame *frame = (nsTableCellFrame *)(rowFrameToBeResized->ChildAt(j));
+                    nsTableCellFrame *frame;
+
+                    rowFrameToBeResized->ChildAt(j, (nsIFrame*&)frame);
                     if (frame->GetRowSpan()==1)
                     {
-                      if (gsDebug==PR_TRUE) printf("      cell[%d, %d] set height to %d\n", i, j, frame->GetHeight()+excessHeightPerRow);
-                      frame->SizeTo(frame->GetWidth(), frame->GetHeight()+excessHeightPerRow);
+                      nsSize  frameSize;
+
+                      frame->GetSize(frameSize);
+                      if (gsDebug==PR_TRUE) printf("      cell[%d, %d] set height to %d\n", i, j, frameSize.height+excessHeightPerRow);
+                      frame->SizeTo(frameSize.width, frameSize.height+excessHeightPerRow);
                       // Realign cell content based on new height
                       frame->VerticallyAlignChild(aPresContext);
                     }
@@ -2101,7 +2180,9 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
                 // push that row down by the amount we've expanded the cell heights by
                 if (i>rowIndex)
                 {
-                  nsRect rowRect = rowFrameToBeResized->GetRect();
+                  nsRect rowRect;
+                   
+                  rowFrameToBeResized->GetRect(rowRect);
                   rowFrameToBeResized->MoveTo(rowRect.x, rowRect.y + (excessHeightPerRow*(i-rowIndex)));
                   if (gsDebug==PR_TRUE) printf("      row %d moved to y-offset %d\n", i, 
                                                 rowRect.y + (excessHeightPerRow*(i-rowIndex)));
@@ -2113,7 +2194,11 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
         rowGroupHeight += rowHeights[rowIndex];
       }
       if (gsDebug==PR_TRUE) printf("row group height set to %d\n", rowGroupHeight);
-      rowGroupFrame->SizeTo(rowGroupFrame->GetWidth(), rowGroupHeight);
+
+      nsSize  rowGroupFrameSize;
+
+      rowGroupFrame->GetSize(rowGroupFrameSize);
+      rowGroupFrame->SizeTo(rowGroupFrameSize.width, rowGroupHeight);
       tableHeight += rowGroupHeight;
     }
     NS_RELEASE(kid);                                                  // kid: REFCNT--
@@ -2139,11 +2224,11 @@ PRBool nsTableFrame::IsProportionalWidth(nsStyleMolecule* aMol)
 
 /**
   */
-nsIFrame::ReflowStatus
-nsTableFrame::IncrementalReflow(nsIPresContext*  aCX,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize&    aMaxSize,
-                              nsReflowCommand& aReflowCommand)
+NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext*  aCX,
+                                          nsReflowMetrics& aDesiredSize,
+                                          const nsSize&    aMaxSize,
+                                          nsReflowCommand& aReflowCommand,
+                                          ReflowStatus&    aStatus)
 {
   NS_ASSERTION(nsnull != aCX, "bad arg");
   if (gsDebug==PR_TRUE) printf ("nsTableFrame::IncrementalReflow: maxSize=%d,%d\n",
@@ -2153,7 +2238,8 @@ nsTableFrame::IncrementalReflow(nsIPresContext*  aCX,
 
   aDesiredSize.width = mRect.width;
   aDesiredSize.height = mRect.height;
-  return frComplete;
+  aStatus = frComplete;
+  return NS_OK;
 }
 
 void nsTableFrame::VerticallyAlignChildren(nsIPresContext* aPresContext,
@@ -2294,7 +2380,9 @@ nsCellLayoutData * nsTableFrame::GetCellLayoutData(nsTableCell *aCell)
       for (PRInt32 i=0; i<count; i++)
       {
         nsCellLayoutData * data = (nsCellLayoutData *)(cells->ElementAt(i));
-        nsTableCell *cell = (nsTableCell *)(data->GetCellFrame()->GetContent());  // cell: REFCNT++
+        nsTableCell *cell;
+         
+        data->GetCellFrame()->GetContent((nsIContent*&)cell);  // cell: REFCNT++
         if (cell == aCell)
         {
           result = data;
@@ -2345,18 +2433,21 @@ PRBool nsTableFrame::AutoColumnWidths(nsStyleMolecule* aTableStyleMol)
   return isAutoColumnWidths;
 }
 
-nsIFrame* nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                              nsIFrame*       aParent)
+NS_METHOD nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                              nsIFrame*       aParent,
+                                              nsIFrame*&      aContinuingFrame)
 {
   nsTableFrame* cf = new nsTableFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   if (PR_TRUE==gsDebug) printf("nsTableFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
   // set my width, because all frames in a table flow are the same width
   // code in nsTableOuterFrame depends on this being set
-  cf->SetRect(nsRect(0, 0, GetWidth(), 0));
+  cf->SetRect(nsRect(0, 0, mRect.width, 0));
   // add headers and footers to cf
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
-  PRInt32 childCount = firstInFlow->ChildCount();
+  PRInt32 childCount;
+   
+  firstInFlow->ChildCount(childCount);
   PRInt32 childIndex = 0;
   for (; childIndex < childCount; childIndex++)
   {
@@ -2364,7 +2455,8 @@ nsIFrame* nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
     // maybe need to do this in ResizeReflow at the beginning, when we determine we are a continuing frame
   }
 
-  return cf;
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
 PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)

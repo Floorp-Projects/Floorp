@@ -44,16 +44,18 @@ public:
              PRInt32 aIndexInParent,
              nsIFrame* aParentFrame);
 
-  virtual void Paint(nsIPresContext& aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect);
 
-  virtual nsEventStatus HandleEvent(nsIPresContext& aPresContext,
-                                    nsGUIEvent* aEvent);
+  NS_METHOD HandleEvent(nsIPresContext& aPresContext,
+                        nsGUIEvent* aEvent,
+                        nsEventStatus& aEventStatus);
 
-  virtual PRInt32 GetCursorAt(nsIPresContext& aPresContext,
-                              const nsPoint& aPoint,
-                              nsIFrame** aFrame);
+  NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
+                         const nsPoint& aPoint,
+                         nsIFrame** aFrame,
+                         PRInt32& aCursor);
 
 protected:
   virtual ~ImageFrame();
@@ -131,13 +133,13 @@ nsIImage* ImageFrame::GetImage(nsIPresContext& aPresContext)
   return nsnull;
 }
 
-void ImageFrame::Paint(nsIPresContext& aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect& aDirtyRect)
+NS_METHOD ImageFrame::Paint(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect)
 {
   nsIImage* image = GetImage(aPresContext);
   if (nsnull == image) {
-    return;
+    return NS_OK;
   }
 
   // First paint background and borders
@@ -156,6 +158,8 @@ void ImageFrame::Paint(nsIPresContext& aPresContext,
       map->Draw(aPresContext, aRenderingContext);
     }
   }
+
+  return NS_OK;
 }
 
 nsIImageMap* ImageFrame::GetImageMap()
@@ -201,10 +205,11 @@ void ImageFrame::TriggerLink(nsIPresContext& aPresContext,
 }
 
 // XXX what about transparent pixels?
-nsEventStatus ImageFrame::HandleEvent(nsIPresContext& aPresContext,
-                                      nsGUIEvent* aEvent)
+NS_METHOD ImageFrame::HandleEvent(nsIPresContext& aPresContext,
+                                  nsGUIEvent* aEvent,
+                                  nsEventStatus& aEventStatus)
 {
-  nsEventStatus rv = nsEventStatus_eIgnore; 
+  aEventStatus = nsEventStatus_eIgnore; 
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
@@ -233,7 +238,7 @@ nsEventStatus ImageFrame::HandleEvent(nsIPresContext& aPresContext,
         if (NS_OK == r) {
           // We hit a clickable area. Time to go somewhere...
           TriggerLink(aPresContext, absURL, target);
-          rv = nsEventStatus_eConsumeNoDefault; 
+          aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }
         break;
       }
@@ -242,15 +247,16 @@ nsEventStatus ImageFrame::HandleEvent(nsIPresContext& aPresContext,
 
   default:
     // Let default event handler deal with it
-    return nsLeafFrame::HandleEvent(aPresContext, aEvent);
+    return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
 
-  return rv;
+  return NS_OK;
 }
 
-PRInt32 ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
-                                const nsPoint& aPoint,
-                                nsIFrame** aFrame)
+NS_METHOD ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
+                                  const nsPoint& aPoint,
+                                  nsIFrame** aFrame,
+                                  PRInt32& aCursor)
 {
   nsStyleMolecule* mol = (nsStyleMolecule*)
     mStyleContext->GetData(kStyleMoleculeSID);
@@ -258,7 +264,7 @@ PRInt32 ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
     // If this container has a particular cursor, use it, otherwise
     // let the child decide.
     *aFrame = this;
-    return (PRInt32) mol->cursor;
+    aCursor = (PRInt32) mol->cursor;
   }
   nsIImageMap* map = GetImageMap();
   if (nsnull != map) {
@@ -270,9 +276,10 @@ PRInt32 ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
       rv = NS_STYLE_CURSOR_HAND;
     }
     NS_RELEASE(map);
-    return rv;
+    return NS_OK;
   }
-  return NS_STYLE_CURSOR_INHERIT;
+  aCursor = NS_STYLE_CURSOR_INHERIT;
+  return NS_OK;
 }
 
 void ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,

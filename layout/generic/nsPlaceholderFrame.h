@@ -36,11 +36,12 @@ public:
   nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
 
   // Resize reflow methods
-  virtual ReflowStatus  ResizeReflow(nsIPresContext*  aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsSize*          aMaxElementSize);
-  virtual void          ListTag(FILE* out = stdout) const;
+  NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
+                           nsReflowMetrics& aDesiredSize,
+                           const nsSize&    aMaxSize,
+                           nsSize*          aMaxElementSize,
+                           ReflowStatus&    aStatus);
+  NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,

@@ -98,7 +98,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
     NS_ASSERTION(prevBody->ChildIsPseudoFrame(prevColumn), "bad previous column");
 
     // Create a continuing column
-    mFirstChild = prevColumn->CreateContinuingFrame(aPresContext, this);
+    prevColumn->CreateContinuingFrame(aPresContext, this, mFirstChild);
     mChildCount = 1;
   }
 }
@@ -130,13 +130,13 @@ nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
   return result;
 }
 
-nsIFrame::ReflowStatus
-nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
-                          nsReflowMetrics& aDesiredSize,
-                          const nsSize&    aMaxSize,
-                          nsSize*          aMaxElementSize)
+NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
+                                    nsReflowMetrics& aDesiredSize,
+                                    const nsSize&    aMaxSize,
+                                    nsSize*          aMaxElementSize,
+                                    ReflowStatus&    aStatus)
 {
-  nsIFrame::ReflowStatus  status = frComplete;
+  aStatus = frComplete;  // initialize out parameter
 
   // Do we have any children?
   if (nsnull == mFirstChild) {
@@ -168,8 +168,8 @@ nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     nsRect  desiredRect;
 
     mSpaceManager->Translate(leftInset, topInset);
-    status = ReflowChild(mFirstChild, aPresContext, mSpaceManager, columnMaxSize,
-                         desiredRect, aMaxElementSize);
+    aStatus = ReflowChild(mFirstChild, aPresContext, mSpaceManager, columnMaxSize,
+                          desiredRect, aMaxElementSize);
     mSpaceManager->Translate(-leftInset, -topInset);
 
     // Place and size the column
@@ -193,16 +193,18 @@ nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     aDesiredSize.descent = 0;
   }
 
-  return status;
+  return NS_OK;
 }
 
-void nsBodyFrame::VerifyTree() const
+NS_METHOD nsBodyFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG
   // Check our child count
   PRInt32 len = LengthOf(mFirstChild);
   NS_ASSERTION(len == mChildCount, "bad child count");
-  nsIFrame* lastChild = LastChild();
+  nsIFrame* lastChild;
+   
+  LastChild(lastChild);
   if (len != 0) {
     NS_ASSERTION(nsnull != lastChild, "bad last child");
   }
@@ -217,7 +219,7 @@ void nsBodyFrame::VerifyTree() const
   while (nsnull != child) {
     // Make sure that the child's tree is valid
     child->VerifyTree();
-    child = child->GetNextSibling();
+    child->GetNextSibling(child);
   }
 
   // Make sure that our flow blocks offsets are all correct
@@ -233,16 +235,15 @@ void nsBodyFrame::VerifyTree() const
     }
   }
 #endif
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                               nsReflowMetrics& aDesiredSize,
-                               const nsSize&    aMaxSize,
-                               nsReflowCommand& aReflowCommand)
+NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
+                                         nsReflowMetrics& aDesiredSize,
+                                         const nsSize&    aMaxSize,
+                                         nsReflowCommand& aReflowCommand,
+                                         ReflowStatus&    aStatus)
 {
-  ReflowStatus  status;
-
   // Get our border/padding info
   nsStyleMolecule* myMol =
     (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
@@ -276,8 +277,8 @@ nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
     NS_ASSERTION(nsnull != mFirstChild, "no first child");
     mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
-    status = reflowRunaround->IncrementalReflow(aPresContext, mSpaceManager,
-      columnMaxSize, aDesiredRect, aReflowCommand);
+    reflowRunaround->IncrementalReflow(aPresContext, mSpaceManager,
+      columnMaxSize, aDesiredRect, aReflowCommand, aStatus);
 
     // Place and size the column
     aDesiredRect.x += leftInset;
@@ -302,7 +303,7 @@ nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     nsRect    desiredRect;
     nsIFrame* child;
 
-    status = aReflowCommand.Next(mSpaceManager, desiredRect, aMaxSize, child);
+    aStatus = aReflowCommand.Next(mSpaceManager, desiredRect, aMaxSize, child);
 
     // XXX Deal with next in flow, adjusting of siblings, adjusting the
     // content length...
@@ -315,24 +316,17 @@ nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   }
 
   mSpaceManager->Translate(-leftInset, -topInset);
-  return status;
+  return NS_OK;
 }
 
-void nsBodyFrame::ContentAppended(nsIPresShell* aShell,
-                                  nsIPresContext* aPresContext,
-                                  nsIContent* aContainer)
+NS_METHOD nsBodyFrame::ContentAppended(nsIPresShell*   aShell,
+                                       nsIPresContext* aPresContext,
+                                       nsIContent*     aContainer)
 {
   NS_ASSERTION(mContent == aContainer, "bad content-appended target");
 
-  // Zip down to the end-of-flow
-  nsBodyFrame* flow = this;
-  for (;;) {
-    nsBodyFrame* next = (nsBodyFrame*) flow->GetNextInFlow();
-    if (nsnull == next) {
-      break;
-    }
-    flow = next;
-  }
+  // Get the last-in-flow
+  nsBodyFrame* flow = (nsBodyFrame*)GetLastInFlow();
 
   // Since body frame's have only a single pseudo-frame in them,
   // pass on the content-appended call to the pseudo-frame
@@ -344,6 +338,7 @@ void nsBodyFrame::ContentAppended(nsIPresShell* aShell,
     new nsReflowCommand(aPresContext, flow, nsReflowCommand::FrameAppended,
                         oldLastContentOffset);
   aShell->AppendReflowCommand(rc);
+  return NS_OK;
 }
 
 void nsBodyFrame::AddAnchoredItem(nsIFrame*         aAnchoredItem,
@@ -352,26 +347,31 @@ void nsBodyFrame::AddAnchoredItem(nsIFrame*         aAnchoredItem,
 {
   aAnchoredItem->SetGeometricParent(this);
   // Add the item to the end of the child list
-  LastChild()->SetNextSibling(aAnchoredItem);
+  nsIFrame* lastChild;
+
+  LastChild(lastChild);
+  lastChild->SetNextSibling(aAnchoredItem);
   aAnchoredItem->SetNextSibling(nsnull);
   mChildCount++;
 }
 
 void nsBodyFrame::RemoveAnchoredItem(nsIFrame* aAnchoredItem)
 {
-  NS_PRECONDITION(this == aAnchoredItem->GetGeometricParent(), "bad anchored item");
+  NS_PRECONDITION(IsChild(aAnchoredItem), "bad anchored item");
   NS_ASSERTION(aAnchoredItem != mFirstChild, "unexpected anchored item");
   // Remove the anchored item from the child list
   // XXX Implement me
   mChildCount--;
 }
 
-nsIFrame* nsBodyFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                             nsIFrame*       aParent)
+NS_METHOD nsBodyFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aParent,
+                                             nsIFrame*&      aContinuingFrame)
 {
   nsBodyFrame* cf = new nsBodyFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
-  return cf;
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
 // XXX use same logic as block frame?

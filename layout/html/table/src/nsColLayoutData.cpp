@@ -100,7 +100,9 @@ PRInt32 nsColLayoutData::IndexOf(nsTableCell* aTableCell) const
         nsTableCellFrame* frame = cellData->GetCellFrame();
         if (frame != nsnull)
         {
-          nsTableCell* cell = (nsTableCell*)frame->GetContent();
+          nsTableCell* cell;
+           
+          frame->GetContent((nsIContent*&)cell);
           if (cell == aTableCell)
           {
             result = index;

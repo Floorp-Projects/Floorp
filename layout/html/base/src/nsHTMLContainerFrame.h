@@ -30,16 +30,18 @@ public:
                        PRInt32 aIndexInParent,
                        nsIFrame* aParent);
 
-  virtual void Paint(nsIPresContext& aPresContext,
-                     nsIRenderingContext& aRenderingContext,
-                     const nsRect& aDirtyRect);
+  NS_IMETHOD  Paint(nsIPresContext& aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect);
 
-  virtual nsEventStatus HandleEvent(nsIPresContext& aPresContext,
-                                    nsGUIEvent* aEvent);
+  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
+                          nsGUIEvent* aEvent,
+                          nsEventStatus& aEventStatus);
 
-  virtual PRInt32 GetCursorAt(nsIPresContext& aPresContext,
-                              const nsPoint& aPoint,
-                              nsIFrame** aFrame);
+  NS_IMETHOD  GetCursorAt(nsIPresContext& aPresContext,
+                          const nsPoint& aPoint,
+                          nsIFrame** aFrame,
+                          PRInt32& aCursor);
 
 #if 0
   virtual ReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,

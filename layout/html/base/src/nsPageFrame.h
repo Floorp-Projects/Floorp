@@ -23,27 +23,30 @@
 // Pseudo frame created by the root content frame
 class PageFrame : public nsContainerFrame {
 public:
-  PageFrame(nsIContent* aContent, nsIFrame* aParent);
+  PageFrame(nsIContent* aContent, PRInt32 aIndexInParent, nsIFrame* aParent);
 
-  virtual ReflowStatus ResizeReflow(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsSize*          aMaxElementSize);
+  NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
+                           nsReflowMetrics& aDesiredSize,
+                           const nsSize&    aMaxSize,
+                           nsSize*          aMaxElementSize,
+                           ReflowStatus&    aStatus);
 
-  virtual ReflowStatus IncrementalReflow(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aDesiredSize,
-                                         const nsSize&    aMaxSize,
-                                         nsReflowCommand& aReflowCommand);
+  NS_IMETHOD  IncrementalReflow(nsIPresContext*  aPresContext,
+                                nsReflowMetrics& aDesiredSize,
+                                const nsSize&    aMaxSize,
+                                nsReflowCommand& aReflowCommand,
+                                ReflowStatus&    aStatus);
 
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame* aParent);
+  NS_IMETHOD  CreateContinuingFrame(nsIPresContext* aPresContext,
+                                    nsIFrame*       aParent,
+                                    nsIFrame*&      aContinuingFrame);
 
-  virtual void          Paint(nsIPresContext&      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              const nsRect&        aDirtyRect);
+  NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect);
 
   // Debugging
-  virtual void  ListTag(FILE* out = stdout) const;
+  NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
   void CreateFirstChild(nsIPresContext* aPresContext);

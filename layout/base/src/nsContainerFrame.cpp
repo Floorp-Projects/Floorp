@@ -51,7 +51,9 @@ nsContainerFrame::~nsContainerFrame()
   // we do all of this before our base class releases it's hold on the
   // view.
   for (nsIFrame* child = mFirstChild; child; ) {
-    nsIFrame* nextChild = child->GetNextSibling();
+    nsIFrame* nextChild;
+     
+    child->GetNextSibling(nextChild);
     child->DeleteFrame();
     child = nextChild;
   }
@@ -80,108 +82,122 @@ void nsContainerFrame::PrepareContinuingFrame(nsIPresContext* aPresContext,
   NS_RELEASE(styleContext);
 }
 
-nsIFrame*
-nsContainerFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
-                                        nsIFrame*       aParent)
+NS_METHOD nsContainerFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
+                                                  nsIFrame*       aParent,
+                                                  nsIFrame*&      aContinuingFrame)
 {
   nsIContentDelegate* contentDelegate = mContent->GetDelegate(aPresContext);
-  nsContainerFrame* continuingFrame = (nsContainerFrame*)
-    contentDelegate->CreateFrame(aPresContext, mContent, mIndexInParent,
-                                 aParent);
+
+  aContinuingFrame = contentDelegate->CreateFrame(aPresContext, mContent,
+                                                  mIndexInParent, aParent);
   NS_RELEASE(contentDelegate);
 
-  PrepareContinuingFrame(aPresContext, aParent, continuingFrame);
-
-  return continuingFrame;
+  PrepareContinuingFrame(aPresContext, aParent, (nsContainerFrame*)aContinuingFrame);
+  return NS_OK;
 }
 
 
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-PRInt32 nsContainerFrame::ChildCount() const
+NS_METHOD nsContainerFrame::ChildCount(PRInt32& aChildCount) const
 {
-  return mChildCount;
+  aChildCount = mChildCount;
+  return NS_OK;
 }
 
-nsIFrame* nsContainerFrame::ChildAt(PRInt32 aIndex) const
+NS_METHOD nsContainerFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
 {
   // Check that the index is in range
   if ((aIndex < 0) || (aIndex >= mChildCount)) {
-    return nsnull;
+    aFrame = nsnull;
+    return NS_OK;
   }
 
-  nsIFrame* result = mFirstChild;
-
-  while ((aIndex-- > 0) && (result != nsnull)) {
-    result = result->GetNextSibling();
+  aFrame = mFirstChild;
+  while ((aIndex-- > 0) && (aFrame != nsnull)) {
+    aFrame->GetNextSibling(aFrame);
   }
-  return result;
+  return NS_OK;
 }
 
-PRInt32 nsContainerFrame::IndexOf(const nsIFrame* aChild) const
+NS_METHOD nsContainerFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
 {
-  PRInt32 result = -1;
+  aIndex = -1;  // initialize out parameter
 
-  for (nsIFrame* f = mFirstChild; f != nsnull; f = f->GetNextSibling()) {
-    result++;
+  for (nsIFrame* f = mFirstChild; f != nsnull; f->GetNextSibling(f)) {
+    aIndex++;
 
     if (f == aChild)
       break;
   }
 
-  return result;
+  return NS_OK;
 }
 
-nsIFrame* nsContainerFrame::FirstChild() const
+NS_METHOD nsContainerFrame::FirstChild(nsIFrame*& aFirstChild) const
 {
-  return mFirstChild;
+  aFirstChild = mFirstChild;
+  return NS_OK;
 }
 
-nsIFrame* nsContainerFrame::NextChild(const nsIFrame* aChild) const
-{
-  NS_PRECONDITION(aChild != nsnull, "null pointer");
-  return aChild->GetNextSibling();
-}
-
-nsIFrame* nsContainerFrame::PrevChild(const nsIFrame* aChild) const
+NS_METHOD nsContainerFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
 {
   NS_PRECONDITION(aChild != nsnull, "null pointer");
+  aChild->GetNextSibling(aNextChild);
+  return NS_OK;
+}
 
-  nsIFrame*  result;
+NS_METHOD nsContainerFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
+{
+  NS_PRECONDITION(aChild != nsnull, "null pointer");
 
   if (mFirstChild == aChild) {
-    result = nsnull;
+    aPrevChild = nsnull;
   } else {
-    result = mFirstChild;
+    aPrevChild = mFirstChild;
 
-    while ((result != nsnull) && (result->GetNextSibling() != aChild))
-      result = result->GetNextSibling();
+    while ((aPrevChild != nsnull)) {
+      nsIFrame* nextChild;
+         
+      aPrevChild->GetNextSibling(nextChild);
+      if (nextChild == aChild) {
+        break;
+      }
+
+      aPrevChild = nextChild;
+    }
   }
 
-  return result;
+  return NS_OK;
 }
 
-nsIFrame* nsContainerFrame::LastChild() const
+NS_METHOD nsContainerFrame::LastChild(nsIFrame*& aLastChild) const
 {
-  nsIFrame* result = mFirstChild;
+  aLastChild = mFirstChild;
 
-  if (result) {
-    while (result->GetNextSibling() != nsnull)
-      result = result->GetNextSibling();
+  if (nsnull != aLastChild) {
+    nsIFrame* nextChild;
+
+    aLastChild->GetNextSibling(nextChild);
+    while (nextChild != nsnull) {
+      aLastChild = nextChild;
+      aLastChild->GetNextSibling(nextChild);
+    }
   }
 
-  return result;
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Painting
 
-void nsContainerFrame::Paint(nsIPresContext&      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect)
+NS_METHOD nsContainerFrame::Paint(nsIPresContext&      aPresContext,
+                                  nsIRenderingContext& aRenderingContext,
+                                  const nsRect&        aDirtyRect)
 {
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
+  return NS_OK;
 }
 
 // aDirtyRect is in our coordinate system
@@ -192,7 +208,9 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
 {
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
-    nsIView *pView = kid->GetView();
+    nsIView *pView;
+     
+    kid->GetView(pView);
     if (nsnull == pView) {
       nsRect kidRect;
       kid->GetRect(kidRect);
@@ -212,19 +230,21 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
         aRenderingContext.PopState();
       }
     }
-    else
+    else {
       NS_RELEASE(pView);
-    kid = kid->GetNextSibling();
+    }
+    kid->GetNextSibling(kid);
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Events
 
-nsEventStatus nsContainerFrame::HandleEvent(nsIPresContext& aPresContext, 
-                                     nsGUIEvent*     aEvent)
+NS_METHOD nsContainerFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                        nsGUIEvent*     aEvent,
+                                        nsEventStatus&  aEventStatus)
 {
-  nsEventStatus  retval = nsEventStatus_eIgnore;
+  aEventStatus = nsEventStatus_eIgnore;
 
   nsIFrame* kid = mFirstChild;
   while (nsnull != kid) {
@@ -232,21 +252,22 @@ nsEventStatus nsContainerFrame::HandleEvent(nsIPresContext& aPresContext,
     kid->GetRect(kidRect);
     if (kidRect.Contains(aEvent->point)) {
       aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
-      retval = kid->HandleEvent(aPresContext, aEvent);
+      kid->HandleEvent(aPresContext, aEvent, aEventStatus);
       aEvent->point.MoveBy(kidRect.x, kidRect.y);
-      return retval;
+      break;
     }
-    kid = kid->GetNextSibling();
+    kid->GetNextSibling(kid);
   }
 
-  return retval;
+  return NS_OK;
 }
 
-PRInt32 nsContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
-                                      const nsPoint& aPoint,
-                                      nsIFrame** aFrame)
+NS_METHOD nsContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
+                                        const nsPoint&  aPoint,
+                                        nsIFrame**      aFrame,
+                                        PRInt32&        aCursor)
 {
-  PRInt32 retval = NS_STYLE_CURSOR_INHERIT;
+  aCursor = NS_STYLE_CURSOR_INHERIT;
 
   nsIFrame* kid = mFirstChild;
   nsPoint tmp;
@@ -255,12 +276,12 @@ PRInt32 nsContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
     kid->GetRect(kidRect);
     if (kidRect.Contains(aPoint)) {
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      retval = kid->GetCursorAt(aPresContext, tmp, aFrame);
-      return retval;
+      kid->GetCursorAt(aPresContext, tmp, aFrame, aCursor);
+      break;
     }
-    kid = kid->GetNextSibling();
+    kid->GetNextSibling(kid);
   }
-  return retval;
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -293,13 +314,13 @@ PRInt32 nsContainerFrame::NextChildOffset() const
 void nsContainerFrame::SetFirstContentOffset(const nsIFrame* aFirstChild)
 {
   NS_PRECONDITION(nsnull != aFirstChild, "bad argument");
-  NS_PRECONDITION(aFirstChild->GetGeometricParent() == this, "bad geometric parent");
+  NS_PRECONDITION(IsChild(aFirstChild), "bad geometric parent");
 
   if (ChildIsPseudoFrame(aFirstChild)) {
     nsContainerFrame* pseudoFrame = (nsContainerFrame*)aFirstChild;
     mFirstContentOffset = pseudoFrame->mFirstContentOffset;
   } else {
-    mFirstContentOffset = aFirstChild->GetIndexInParent();
+    aFirstChild->GetIndexInParent(mFirstContentOffset);
   }
 }
 
@@ -311,7 +332,7 @@ void nsContainerFrame::SetFirstContentOffset(const nsIFrame* aFirstChild)
 void nsContainerFrame::SetLastContentOffset(const nsIFrame* aLastChild)
 {
   NS_PRECONDITION(nsnull != aLastChild, "bad argument");
-  NS_PRECONDITION(aLastChild->GetGeometricParent() == this, "bad geometric parent");
+  NS_PRECONDITION(IsChild(aLastChild), "bad geometric parent");
 
   if (ChildIsPseudoFrame(aLastChild)) {
     nsContainerFrame* pseudoFrame = (nsContainerFrame*)aLastChild;
@@ -321,15 +342,11 @@ void nsContainerFrame::SetLastContentOffset(const nsIFrame* aLastChild)
 #endif
     mLastContentIsComplete = pseudoFrame->mLastContentIsComplete;
   } else {
-    mLastContentOffset = aLastChild->GetIndexInParent();
+    aLastChild->GetIndexInParent(mLastContentOffset);
   }
 #ifdef NS_DEBUG
   if (mLastContentOffset < mFirstContentOffset) {
-    nsIFrame* top = this;
-    while (top->GetGeometricParent() != nsnull) {
-      top = top->GetGeometricParent();
-    }
-    top->List();
+    DumpTree();
   }
 #endif
   NS_ASSERTION(mLastContentOffset >= mFirstContentOffset, "unexpected content mapping");
@@ -344,8 +361,9 @@ PRBool nsContainerFrame::IsPseudoFrame() const
   PRBool  result = PR_FALSE;
 
   if (nsnull != mGeometricParent) {
-    nsIContent* parentContent = mGeometricParent->GetContent();
-
+    nsIContent* parentContent;
+     
+    mGeometricParent->GetContent(parentContent);
     if (parentContent == mContent) {
       result = PR_TRUE;
     }
@@ -358,10 +376,13 @@ PRBool nsContainerFrame::IsPseudoFrame() const
 // Returns true if aChild is being used as a pseudo frame
 PRBool nsContainerFrame::ChildIsPseudoFrame(const nsIFrame* aChild) const
 {
-  NS_PRECONDITION(aChild->GetGeometricParent() == (nsIFrame*)this, "bad geometric parent");
-  nsIContent* childContent = aChild->GetContent();
-  PRBool      result = PRBool(childContent == mContent);
+  NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
+  nsIContent* childContent;
+  PRBool      result;
+   
+  aChild->GetContent(childContent);
+  result = PRBool(childContent == mContent);
   NS_RELEASE(childContent);
   return result;
 }
@@ -381,18 +402,22 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
                               const nsSize&    aMaxSize,
                               nsSize*          aMaxElementSize)
 {
-  ReflowStatus status = aKidFrame->ResizeReflow(aPresContext, aDesiredSize,
-                          aMaxSize, aMaxElementSize);
+  ReflowStatus status;
+                                                  
+  aKidFrame->ResizeReflow(aPresContext, aDesiredSize, aMaxSize, aMaxElementSize, status);
 
   if (frComplete == status) {
-    nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
+    nsIFrame* kidNextInFlow;
+     
+    aKidFrame->GetNextInFlow(kidNextInFlow);
     if (nsnull != kidNextInFlow) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
-      nsContainerFrame* parent = (nsContainerFrame*)
-        aKidFrame->GetGeometricParent();
-      parent->DeleteChildsNextInFlow(aKidFrame);
+      nsIFrame* parent;
+       
+      aKidFrame->GetGeometricParent(parent);
+      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aKidFrame);
     }
   }
   return status;
@@ -421,8 +446,8 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   // Does the child frame support interface nsIRunaround?
   if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
     // Yes, the child frame wants to interact directly with the space manager
-    status = reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, aMaxSize,
-                                           aDesiredRect, aMaxElementSize);
+    reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, aMaxSize,
+                                  aDesiredRect, aMaxElementSize, status);
   } else {
     // No, use interface nsIFrame instead.
     nsReflowMetrics desiredSize;
@@ -456,8 +481,9 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     }
 
     nsSize  availSize(rects->width, aMaxSize.height);
-    status = aKidFrame->ResizeReflow(aPresContext, desiredSize, availSize,
-                                     aMaxElementSize);
+
+    aKidFrame->ResizeReflow(aPresContext, desiredSize, availSize,
+                            aMaxElementSize, status);
 
     // Return the desired rect
     aDesiredRect.x = rects->x;
@@ -467,14 +493,17 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
   }
 
   if (frComplete == status) {
-    nsIFrame* kidNextInFlow = aKidFrame->GetNextInFlow();
+    nsIFrame* kidNextInFlow;
+     
+    aKidFrame->GetNextInFlow(kidNextInFlow);
     if (nsnull != kidNextInFlow) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
-      nsContainerFrame* parent = (nsContainerFrame*)
-        aKidFrame->GetGeometricParent();
-      parent->DeleteChildsNextInFlow(aKidFrame);
+      nsIFrame* parent;
+       
+      aKidFrame->GetGeometricParent(parent);
+      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aKidFrame);
     }
   }
   return status;
@@ -492,28 +521,42 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
  */
 PRBool nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
 {
-  NS_PRECONDITION(aChild->GetGeometricParent() == (nsIFrame*)this, "bad geometric parent");
-  NS_PRECONDITION(nsnull != aChild->GetNextInFlow(), "null next-in-flow");
+  NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
-  nsIFrame*         nextInFlow = aChild->GetNextInFlow();
-  nsContainerFrame* parent = (nsContainerFrame*)nextInFlow->GetGeometricParent();
+  nsIFrame*         nextInFlow;
+  nsContainerFrame* parent;
+   
+  aChild->GetNextInFlow(nextInFlow);
+  NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
+  nextInFlow->GetGeometricParent((nsIFrame*&)parent);
 
-  // If the next-in-flow has a next-in-flow then delete it too (and
+  // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
-  if (nsnull != nextInFlow->GetNextInFlow()) {
-    parent->DeleteChildsNextInFlow(nextInFlow);
+  nsIFrame* nextNextInFlow;
+
+  nextInFlow->GetNextInFlow(nextNextInFlow);
+  if (nsnull != nextNextInFlow) {
+    ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(nextInFlow);
   }
 
-  NS_ASSERTION((0 == nextInFlow->ChildCount()) &&
-               (nsnull == nextInFlow->FirstChild()),
-               "deleting !empty next-in-flow");
+#ifdef NS_DEBUG
+  PRInt32   childCount;
+  nsIFrame* firstChild;
+
+  nextInFlow->ChildCount(childCount);
+  nextInFlow->FirstChild(firstChild);
+
+  NS_ASSERTION(childCount == 0, "deleting !empty next-in-flow");
+
+  NS_ASSERTION((0 == childCount) && (nsnull == firstChild), "deleting !empty next-in-flow");
+#endif
 
   // Disconnect the next-in-flow from the flow list
   nextInFlow->BreakFromPrevFlow();
 
   // Take the next-in-flow out of the parent's child list
   if (parent->mFirstChild == nextInFlow) {
-    parent->mFirstChild = nextInFlow->GetNextSibling();
+    nextInFlow->GetNextSibling(parent->mFirstChild);
     if (nsnull != parent->mFirstChild) {
       parent->SetFirstContentOffset(parent->mFirstChild);
       if (parent->IsPseudoFrame()) {
@@ -530,15 +573,19 @@ PRBool nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
     // will be repaired.
 
   } else {
+    nsIFrame* nextSibling;
+
     // Because the next-in-flow is not the first child of the parent
     // we know that it shares a parent with aChild. Therefore, we need
     // to capture the next-in-flow's next sibling (in case the
     // next-in-flow is the last next-in-flow for aChild AND the
     // next-in-flow is not the last child in parent)
-    NS_ASSERTION(aChild->GetGeometricParent() == parent, "screwy flow");
-    NS_ASSERTION(aChild->GetNextSibling() == nextInFlow, "unexpected sibling");
+    NS_ASSERTION(((nsContainerFrame*)parent)->IsChild(aChild), "screwy flow");
+    aChild->GetNextSibling(nextSibling);
+    NS_ASSERTION(nextSibling == nextInFlow, "unexpected sibling");
 
-    aChild->SetNextSibling(nextInFlow->GetNextSibling());
+    nextInFlow->GetNextSibling(nextSibling);
+    aChild->SetNextSibling(nextSibling);
   }
 
   // Delete the next-in-flow frame and adjust it's parent's child count
@@ -548,9 +595,11 @@ PRBool nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
   if (0 != parent->mChildCount) {
     parent->CheckContentOffsets();
   }
+
+  aChild->GetNextInFlow(nextInFlow);
+  NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
 
-  NS_POSTCONDITION(nsnull == aChild->GetNextInFlow(), "non null next-in-flow");
   return PR_TRUE;
 }
 
@@ -605,7 +654,12 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
 {
   NS_PRECONDITION(nsnull != aFromChild, "null pointer");
   NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
-  NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
+#ifdef NS_DEBUG
+  nsIFrame* prevNextSibling;
+
+  aPrevSibling->GetNextSibling(prevNextSibling);
+  NS_PRECONDITION(prevNextSibling == aFromChild, "bad prev sibling");
+#endif
 
   // Disconnect aFromChild from its previous sibling
   aPrevSibling->SetNextSibling(nsnull);
@@ -631,7 +685,7 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
 #endif
     // Compute the number of children being pushed, and for each child change
     // its geometric parent. Remember the last child
-    for (nsIFrame* f = aFromChild; nsnull != f; f = f->GetNextSibling()) {
+    for (nsIFrame* f = aFromChild; nsnull != f; f->GetNextSibling(f)) {
       numChildren++;
 #ifdef NOISY
       printf("  ");
@@ -640,7 +694,11 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
 #endif
       lastChild = f;
       f->SetGeometricParent(nextInFlow);
-      if (this == f->GetContentParent()) {
+
+      nsIFrame* contentParent;
+
+      f->GetContentParent(contentParent);
+      if (this == contentParent) {
         f->SetContentParent(nextInFlow);
       }
     }
@@ -653,14 +711,15 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
     // Update our next-in-flow's first content offset and child count
     nextInFlow->SetFirstContentOffset(aFromChild);
     if (0 == nextInFlow->mChildCount) {
-      NS_ASSERTION(nextInFlow->LastChild() == lastChild, "unexpected last child");
       nextInFlow->SetLastContentOffset(lastChild);
       // If the child is pseudo-frame then SetLastContentOffset will
       // have updated the next-in-flow's mLastContentIsComplete flag,
       // otherwise we have to do it.
       if (!nextInFlow->ChildIsPseudoFrame(lastChild)) {
-        nextInFlow->mLastContentIsComplete =
-          PRBool(nsnull == lastChild->GetNextInFlow());
+        nsIFrame* lastChildNextInFlow;
+
+        lastChild->GetNextInFlow(lastChildNextInFlow);
+        nextInFlow->mLastContentIsComplete = PRBool(nsnull == lastChildNextInFlow);
       }
     }
     nextInFlow->mChildCount += numChildren;
@@ -701,12 +760,12 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
 // Note: mLastContentIsComplete is not set correctly by this routine
 // (we don't always know the correct value at this time)
 nsIFrame* nsContainerFrame::PullUpOneChild(nsContainerFrame* aNextInFlow,
-                                           nsIFrame* aLastChild)
+                                           nsIFrame*         aLastChild)
 {
   NS_PRECONDITION(nsnull != aNextInFlow, "null ptr");
 #ifdef NS_DEBUG
   if (nsnull != aLastChild) {
-    NS_PRECONDITION(nsnull == aLastChild->GetNextSibling(), "bad last child");
+    NS_PRECONDITION(aNextInFlow->IsLastChild(aLastChild), "bad last child");
   }
 #endif
 
@@ -727,7 +786,7 @@ nsIFrame* nsContainerFrame::PullUpOneChild(nsContainerFrame* aNextInFlow,
   // Take the frame away from the next-in-flow. Update it's first
   // content offset and propagate upward the offset if the
   // next-in-flow is a pseudo-frame.
-  aNextInFlow->mFirstChild = kidFrame->GetNextSibling();
+  kidFrame->GetNextSibling(aNextInFlow->mFirstChild);
   aNextInFlow->mChildCount--;
   if (nsnull != aNextInFlow->mFirstChild) {
     aNextInFlow->SetFirstContentOffset(aNextInFlow->mFirstChild);
@@ -743,7 +802,11 @@ nsIFrame* nsContainerFrame::PullUpOneChild(nsContainerFrame* aNextInFlow,
 
   // Now give the frame to this container
   kidFrame->SetGeometricParent(this);
-  if (aNextInFlow == kidFrame->GetContentParent()) {
+
+  nsIFrame* contentParent;
+
+  kidFrame->GetContentParent(contentParent);
+  if (aNextInFlow == contentParent) {
     kidFrame->SetContentParent(this);
   }
   if (nsnull == aLastChild) {
@@ -813,18 +876,26 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
     // We have no children so aChild becomes the first child
     mFirstChild = aChild;
   } else {
-    LastChild()->SetNextSibling(aChild);
+    nsIFrame* lastChild;
+
+    LastChild(lastChild);
+    lastChild->SetNextSibling(aChild);
   }
 
   // Update our child count and last content offset
   nsIFrame* lastChild;
-  for (nsIFrame* f = aChild; nsnull != f; f = f->GetNextSibling()) {
+  for (nsIFrame* f = aChild; nsnull != f; f->GetNextSibling(f)) {
     lastChild = f;
     mChildCount++;
 
     // Reset the geometric parent if requested
     if (aSetParent) {
-      if (f->GetContentParent() == f->GetGeometricParent()) {
+      nsIFrame* geometricParent;
+      nsIFrame* contentParent;
+
+      f->GetGeometricParent(geometricParent);
+      f->GetContentParent(contentParent);
+      if (contentParent == geometricParent) {
         f->SetContentParent(this);
       }
       f->SetGeometricParent(this);
@@ -837,7 +908,10 @@ void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
   }
   SetLastContentOffset(lastChild);
   if (!ChildIsPseudoFrame(lastChild)) {
-    mLastContentIsComplete = PRBool(nsnull == lastChild->GetNextInFlow());
+    nsIFrame* nextInFlow;
+
+    lastChild->GetNextInFlow(nextInFlow);
+    mLastContentIsComplete = PRBool(nsnull == nextInFlow);
   }
 
 #ifdef NS_DEBUG
@@ -883,7 +957,7 @@ void nsContainerFrame::AdjustOffsetOfEmptyNextInFlows()
 
   while (nsnull != nextInFlow) {
     if (nsnull == nextInFlow->mFirstChild) {
-      NS_ASSERTION(0 == nextInFlow->ChildCount(), "bad child count");
+      NS_ASSERTION(nextInFlow->IsEmpty(), "bad state");
       nextInFlow->mFirstContentOffset = nextOffset;
       // If the next-in-flow is a pseudo-frame then we need to have it
       // update it's parents offsets too.
@@ -908,7 +982,7 @@ void nsContainerFrame::AdjustOffsetOfEmptyNextInFlows()
 /////////////////////////////////////////////////////////////////////////////
 // Debugging
 
-void nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
+NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -926,13 +1000,13 @@ void nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   out << mRect;
 
   // Output the children
-  if (ChildCount() > 0) {
+  if (mChildCount > 0) {
     if (!mLastContentIsComplete) {
       fputs(", complete=>false ", out);
     }
 
     fputs("<\n", out);
-    for (nsIFrame* child = FirstChild(); child; child = NextChild(child)) {
+    for (nsIFrame* child = mFirstChild; child; NextChild(child, child)) {
       child->List(out, aIndent + 1);
     }
     for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -940,33 +1014,35 @@ void nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   } else {
     fputs("<>\n", out);
   }
+
+  return NS_OK;
 }
 
-void nsContainerFrame::ListTag(FILE* out) const
+NS_METHOD nsContainerFrame::ListTag(FILE* out) const
 {
   if ((nsnull != mGeometricParent) && IsPseudoFrame()) {
     fputs("*", out);
   }
   nsFrame::ListTag(out);
+  return NS_OK;
 }
 
 #define VERIFY_ASSERT(_expr, _msg)                \
   if (!(_expr)) {                                 \
-    const nsIFrame* top = this;                   \
-    while (top->GetGeometricParent() != nsnull) { \
-      top = top->GetGeometricParent();            \
-    }                                             \
-    top->List();                                  \
+    DumpTree();                       \
   }                                               \
   NS_ASSERTION(_expr, _msg)
 
-void nsContainerFrame::VerifyTree() const
+NS_METHOD nsContainerFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG
   // Check our child count
   PRInt32 len = LengthOf(mFirstChild);
   VERIFY_ASSERT(len == mChildCount, "bad child count");
-  nsIFrame* lastChild = LastChild();
+
+  nsIFrame* lastChild;
+  LastChild(lastChild);
+
   if (len != 0) {
     VERIFY_ASSERT(nsnull != lastChild, "bad last child");
   }
@@ -1003,13 +1079,19 @@ void nsContainerFrame::VerifyTree() const
         offset++;
       }
     } else {
-      VERIFY_ASSERT(offset == child->GetIndexInParent(), "bad child offset");
-      if (nsnull == child->GetNextInFlow()) {
+      PRInt32 indexInParent;
+
+      child->GetIndexInParent(indexInParent);
+      VERIFY_ASSERT(offset == indexInParent, "bad child offset");
+
+      nsIFrame* nextInFlow;
+      child->GetNextInFlow(nextInFlow);
+      if (nsnull == nextInFlow) {
         offset++;
       }
     }
 
-    child = child->GetNextSibling();
+    child->GetNextSibling(child);
   }
 
   // Verify that our last content offset is correct
@@ -1034,6 +1116,7 @@ void nsContainerFrame::VerifyTree() const
     }
   }
 #endif
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1045,10 +1128,65 @@ PRInt32 nsContainerFrame::LengthOf(nsIFrame* aFrame)
 
   while (nsnull != aFrame) {
     result++;
-    aFrame = aFrame->GetNextSibling();
+    aFrame->GetNextSibling(aFrame);
   }
 
   return result;
+}
+
+PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
+{
+  // Check the geometric parent
+  nsIFrame* parent;
+
+  aChild->GetGeometricParent(parent);
+  if (parent != (nsIFrame*)this) {
+    return PR_FALSE;
+  }
+
+  // Check that aChild is in our sibling list
+  PRInt32 index;
+
+  IndexOf(aChild, index);
+  if (-1 == index) {
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+PRBool nsContainerFrame::IsLastChild(const nsIFrame* aChild) const
+{
+  // Check the geometric parent
+  nsIFrame* parent;
+
+  aChild->GetGeometricParent(parent);
+  if (parent != (nsIFrame*)this) {
+    return PR_FALSE;
+  }
+
+  // Check that aChild is in our sibling list
+  nsIFrame* lastChild;
+
+  LastChild(lastChild);
+  if (lastChild != aChild) {
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+void nsContainerFrame::DumpTree() const
+{
+  nsIFrame* root = (nsIFrame*)this;
+  nsIFrame* parent = mGeometricParent;
+
+  while (nsnull != parent) {
+    root = parent;
+    parent->GetGeometricParent(parent);
+  }
+
+  root->List();
 }
 
 void nsContainerFrame::CheckContentOffsets()
@@ -1060,30 +1198,25 @@ void nsContainerFrame::CheckContentOffsets()
     nsContainerFrame* pseudoFrame = (nsContainerFrame*)mFirstChild;
 
     if (pseudoFrame->GetFirstContentOffset() != mFirstContentOffset) {
-      nsIFrame* top = this;
-      while (top->GetGeometricParent() != nsnull) {
-        top = top->GetGeometricParent();
-      }
-      top->List();
+      DumpTree();
     }
     NS_ASSERTION(pseudoFrame->GetFirstContentOffset() == mFirstContentOffset,
                  "bad first content offset");
   } else {
-#ifdef NS_DEBUG
-    if (!(mFirstChild->GetIndexInParent() == mFirstContentOffset)) {
-      nsIFrame* top = this;
-      while (top->GetGeometricParent() != nsnull) {
-        top = top->GetGeometricParent();
-      }
-      top->List();
+    PRInt32 indexInParent;
+
+    mFirstChild->GetIndexInParent(indexInParent);
+    if (indexInParent != mFirstContentOffset) {
+      DumpTree();
     }
-#endif
-    NS_ASSERTION(mFirstChild->GetIndexInParent() == mFirstContentOffset,
-                 "bad first content offset");
+
+    NS_ASSERTION(indexInParent == mFirstContentOffset, "bad first content offset");
   }
 
   // Verify that our last content offset is correct
-  nsIFrame* lastChild = LastChild();
+  nsIFrame* lastChild;
+   
+  LastChild(lastChild);
   if (ChildIsPseudoFrame(lastChild)) {
     nsContainerFrame* pseudoFrame = (nsContainerFrame*)lastChild;
 
@@ -1091,8 +1224,10 @@ void nsContainerFrame::CheckContentOffsets()
                  "bad last content offset");
 
   } else {
-    NS_ASSERTION(lastChild->GetIndexInParent() == mLastContentOffset,
-                 "bad last content offset");
+    PRInt32 indexInParent;
+
+    lastChild->GetIndexInParent(indexInParent);
+    NS_ASSERTION(indexInParent == mLastContentOffset, "bad last content offset");
   }
 }
 
@@ -1160,11 +1295,7 @@ void nsContainerFrame::CheckNextInFlowOffsets()
     }
 #ifdef NS_DEBUG
     if (nextInFlow->GetFirstContentOffset() != nextOffset) {
-      nsIFrame* top = this;
-      while (top->GetGeometricParent() != nsnull) {
-        top = top->GetGeometricParent();
-      }
-      top->List();
+      DumpTree();
     }
 #endif
     NS_ASSERTION(nextInFlow->GetFirstContentOffset() == nextOffset,
@@ -1193,7 +1324,9 @@ nsContainerFrame::SafeToCheckLastContentOffset(nsContainerFrame* aContainer)
     return PR_FALSE;
   }
 
-  nsIFrame* lastChild = aContainer->LastChild();
+  nsIFrame* lastChild;
+   
+  aContainer->LastChild(lastChild);
   if (aContainer->ChildIsPseudoFrame(lastChild)) {
     // If the containers last child is a pseudo-frame then the
     // containers last content offset is determined by the child. Ask
@@ -1218,8 +1351,9 @@ void nsContainerFrame::VerifyLastIsComplete() const
     return;
   }
 
-  nsIFrame* lastKid = LastChild();
+  nsIFrame* lastKid;
 
+  LastChild(lastKid);
   if (ChildIsPseudoFrame(lastKid)) {
     // When my last child is a pseudo-frame it means that our
     // mLastContentIsComplete is a copy of it's.
@@ -1230,17 +1364,14 @@ void nsContainerFrame::VerifyLastIsComplete() const
     // If my last child has a next-in-flow then our
     // mLastContentIsComplete must be false (because our last child is
     // obviously not complete)
-    nsIFrame* lastKidNextInFlow = lastKid->GetNextInFlow();
+    nsIFrame* lastKidNextInFlow;
+     
+    lastKid->GetNextInFlow(lastKidNextInFlow);
     if (nsnull != lastKidNextInFlow) {
       if (mLastContentIsComplete) {
-        const nsIFrame* top = this;
-        while (top->GetGeometricParent() != nsnull) {
-          top = top->GetGeometricParent();
-        }
-        top->List();
+        DumpTree();
       }
-      NS_ASSERTION(mLastContentIsComplete == PR_FALSE,
-                   "bad mLastContentIsComplete");
+      NS_ASSERTION(mLastContentIsComplete == PR_FALSE, "bad mLastContentIsComplete");
     } else {
       // We don't know what state our mLastContentIsComplete should be in.
     }

@@ -84,7 +84,7 @@ void
 nsInputCheckboxFrame::PreInitializeWidget(nsIPresContext* aPresContext, 
                                           nsSize& aBounds)
 {
-  nsInputCheckbox* content = (nsInputCheckbox *)GetContent(); // this must be an nsCheckbox 
+  nsInputCheckbox* content = (nsInputCheckbox *)mContent; // this must be an nsCheckbox 
 
   // get the state
   nsHTMLValue value; 
@@ -92,7 +92,6 @@ nsInputCheckboxFrame::PreInitializeWidget(nsIPresContext* aPresContext,
   if (result != eContentAttr_NotThere) {
     mCacheState = PR_TRUE;/* XXX why cache state? */
   }
-  NS_RELEASE(content);
 
   float p2t = aPresContext->GetPixelsToTwips();
   aBounds.width  = (int)(13 * p2t);
@@ -113,7 +112,8 @@ void
 nsInputCheckboxFrame::MouseClicked() 
 {
   nsICheckButton* checkbox;
-  nsIView* view = GetView();
+  nsIView* view;
+  GetView(view);
   if (NS_OK == GetWidget(view, (nsIWidget **)&checkbox)) {
 	PRBool newState = (checkbox->GetState()) ? PR_FALSE : PR_TRUE;
 	checkbox->SetState(newState);

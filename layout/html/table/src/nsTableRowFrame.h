@@ -52,9 +52,9 @@ public:
                            nsIFrame*   aParent);
 
   /** @see nsIFrame::Paint */
-  virtual void  Paint(nsIPresContext&      aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect&        aDirtyRect);
+  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect);
 
 
   /** ask all children to paint themselves, without clipping (for cells with rowspan>1)
@@ -77,20 +77,23 @@ public:
     * @see nsTableFrame::BalanceColumnWidths
     * @see nsTableFrame::ShrinkWrapChildren
     */
-  ReflowStatus  ResizeReflow(nsIPresContext*  aPresContext,
-                             nsReflowMetrics& aDesiredSize,
-                             const nsSize&    aMaxSize,
-                             nsSize*          aMaxElementSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext*  aPresContext,
+                          nsReflowMetrics& aDesiredSize,
+                          const nsSize&    aMaxSize,
+                          nsSize*          aMaxElementSize,
+                          ReflowStatus&    aStatus);
 
   /** @see nsIFrame::IncrementalReflow */
-  ReflowStatus  IncrementalReflow(nsIPresContext*  aPresContext,
-                                  nsReflowMetrics& aDesiredSize,
-                                  const nsSize&    aMaxSize,
-                                  nsReflowCommand& aReflowCommand);
+  NS_IMETHOD IncrementalReflow(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aDesiredSize,
+                               const nsSize&    aMaxSize,
+                               nsReflowCommand& aReflowCommand,
+                               ReflowStatus&    aStatus);
 
   /** @see nsContainerFrame::CreateContinuingFrame */
-  virtual nsIFrame* CreateContinuingFrame(nsIPresContext* aPresContext,
-                                          nsIFrame*       aParent);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aParent,
+                                   nsIFrame*&      aContinuingFrame);
   
   /** set mTallestCell to 0 in anticipation of recalculating it */
   void ResetMaxChildHeight();

@@ -34,12 +34,10 @@ class nsIView;
 class nsIWidget;
 class nsReflowCommand;
 
-struct nsStyleStruct;
-struct nsGUIEvent;
-
 struct nsPoint;
 struct nsRect;
 struct nsReflowMetrics;
+struct nsStyleStruct;
 
 // IID for the nsIFrame interface {12B193D0-9F70-11d1-8500-00A02468FAB6}
 #define NS_IFRAME_IID         \
@@ -81,13 +79,13 @@ public:
    * QueryInterface() defined in nsISupports. This is the only member
    * function of nsISupports that is public.
    */
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr) = 0;
+  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr) = 0;
 
   /**
    * Deletes this frame and each of its child frames (recursively calls
    * DeleteFrame() for each child)
    */
-  virtual void DeleteFrame() = 0;
+  NS_IMETHOD  DeleteFrame() = 0;
 
   /**
    * Get the content object associated with this frame. Adds a reference to
@@ -95,66 +93,73 @@ public:
    *
    * @see nsISupports#Release()
    */
-  virtual nsIContent*   GetContent() const = 0;
+  NS_IMETHOD  GetContent(nsIContent*& aContent) const = 0;
 
   /**
    * Get/Set the frame's index in parent.
    */
-  virtual PRInt32       GetIndexInParent() const = 0;
-  virtual void          SetIndexInParent(PRInt32 aIndexInParent) = 0;
+  NS_IMETHOD  GetIndexInParent(PRInt32& aIndexInParent) const = 0;
+  NS_IMETHOD  SetIndexInParent(PRInt32 aIndexInParent) = 0;
 
   /**
    * Get the style context associated with this frame. Note that GetStyleContext()
    * adds a reference to the style context so the caller must do a release.
    *
-   * @see #nsISupports#Release()
+   * @see nsISupports#Release()
    */
-  virtual nsIStyleContext* GetStyleContext(nsIPresContext* aContext) = 0;
-  virtual void             SetStyleContext(nsIStyleContext* aContext) = 0;
-
+  NS_IMETHOD  GetStyleContext(nsIPresContext*   aContext,
+                              nsIStyleContext*& aStyleContext) = 0;
+  NS_IMETHOD  SetStyleContext(nsIStyleContext* aContext) = 0;
 
   /**
-   *
    * Get the style data associated with this frame
-   *
-   *
    */
-  virtual nsStyleStruct* GetStyleData(const nsIID& aSID) = 0;
+  NS_IMETHOD  GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct) = 0;
 
   /**
    * Accessor functions for geometric and content parent.
    */
-  virtual nsIFrame*     GetContentParent() const = 0;
-  virtual void          SetContentParent(const nsIFrame* aParent) = 0;
-  virtual nsIFrame*     GetGeometricParent() const = 0;
-  virtual void          SetGeometricParent(const nsIFrame* aParent) = 0;
+  NS_IMETHOD  GetContentParent(nsIFrame*& aParent) const = 0;
+  NS_IMETHOD  SetContentParent(const nsIFrame* aParent) = 0;
+  NS_IMETHOD  GetGeometricParent(nsIFrame*& aParent) const = 0;
+  NS_IMETHOD  SetGeometricParent(const nsIFrame* aParent) = 0;
 
   /**
    * Bounding rect of the frame. The values are in twips, and the origin is
    * relative to the upper-left of the geometric parent. The size includes the
    * content area, borders, and padding.
    */
-  virtual nsRect        GetRect() const = 0;
-  virtual void          GetRect(nsRect& aRect) const = 0;
-  virtual void          GetOrigin(nsPoint& aPoint) const = 0;
-  virtual nscoord       GetWidth() const = 0;
-  virtual nscoord       GetHeight() const = 0;
-  virtual void          SetRect(const nsRect& aRect) = 0;
-  virtual void          MoveTo(nscoord aX, nscoord aY) = 0;
-  virtual void          SizeTo(nscoord aWidth, nscoord aHeight) = 0;
+  NS_IMETHOD  GetRect(nsRect& aRect) const = 0;
+  NS_IMETHOD  GetOrigin(nsPoint& aPoint) const = 0;
+  NS_IMETHOD  GetSize(nsSize& aSize) const = 0;
+  NS_IMETHOD  SetRect(const nsRect& aRect) = 0;
+  NS_IMETHOD  MoveTo(nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight) = 0;
+
+  /**
+   * Child frame enumeration
+   */
+  NS_IMETHOD  ChildCount(PRInt32& aChildCount) const = 0;
+  NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const = 0;
+  NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const = 0;
+  NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const = 0;
+  NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const = 0;
+  NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const = 0;
+  NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const = 0;
 
   /**
    * Painting
    */
-  virtual void          Paint(nsIPresContext&      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
-                              const nsRect&        aDirtyRect) = 0;
+  NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect) = 0;
 
   /**
    * Handle an event. 
    */
-  virtual nsEventStatus   HandleEvent(nsIPresContext& aPresContext,
-                                      nsGUIEvent*     aEvent) = 0;
+  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
+                          nsGUIEvent*     aEvent,
+                          nsEventStatus&  aEventStatus) = 0;
 
   /**
    * Get the cursor for a given point in the frame tree. The
@@ -162,20 +167,10 @@ public:
    * no cursor is wanted). In addition, if a cursor is desired
    * then *aFrame is set to the frame that wants the cursor.
    */
-  virtual PRInt32       GetCursorAt(nsIPresContext& aPresContext,
-                                    const nsPoint& aPoint,
-                                    nsIFrame** aFrame) = 0;
-
-  /**
-   * Child frame enumeration
-   */
-  virtual PRInt32       ChildCount() const = 0;
-  virtual nsIFrame*     ChildAt(PRInt32 aIndex) const = 0;
-  virtual PRInt32       IndexOf(const nsIFrame* aChild) const = 0;
-  virtual nsIFrame*     FirstChild() const = 0;
-  virtual nsIFrame*     NextChild(const nsIFrame* aChild) const = 0;
-  virtual nsIFrame*     PrevChild(const nsIFrame* aChild) const = 0;
-  virtual nsIFrame*     LastChild() const = 0;
+  NS_IMETHOD  GetCursorAt(nsIPresContext& aPresContext,
+                          const nsPoint&  aPoint,
+                          nsIFrame**      aFrame,
+                          PRInt32&        aCursor) = 0;
 
   /**
    * Reflow status returned by the reflow methods
@@ -206,10 +201,11 @@ public:
    *          a maximum element size. The maximum element size must be less than or
    *          equal to your desired size.
    */
-  virtual ReflowStatus  ResizeReflow(nsIPresContext*  aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsSize*          aMaxElementSize) = 0;
+  NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
+                           nsReflowMetrics& aDesiredSize,
+                           const nsSize&    aMaxSize,
+                           nsSize*          aMaxElementSize,
+                           ReflowStatus&    aStatus) = 0;
 
   /**
    * Post-processing reflow method invoked when justification is enabled.
@@ -218,8 +214,8 @@ public:
    * @param aAvailableSpace The amount of available space that the frame
    *         should distribute internally.
    */
-  virtual void          JustifyReflow(nsIPresContext*  aPresContext,
-                                      nscoord          aAvailableSpace) = 0;
+  NS_IMETHOD  JustifyReflow(nsIPresContext* aPresContext,
+                            nscoord         aAvailableSpace) = 0;
 
   /**
    * Incremental reflow. The reflow command contains information about the
@@ -243,10 +239,11 @@ public:
    * @see nsReflowCommand#GetTarget()
    * @see nsReflowCommand#GetType()
    */
-  virtual ReflowStatus  IncrementalReflow(nsIPresContext*  aPresContext,
-                                          nsReflowMetrics& aDesiredSize,
-                                          const nsSize&    aMaxSize,
-                                          nsReflowCommand& aReflowCommand) = 0;
+  NS_IMETHOD  IncrementalReflow(nsIPresContext*  aPresContext,
+                                nsReflowMetrics& aDesiredSize,
+                                const nsSize&    aMaxSize,
+                                nsReflowCommand& aReflowCommand,
+                                ReflowStatus&    aStatus) = 0;
 
   /**
    * This call is invoked when content is appended to the content
@@ -256,9 +253,9 @@ public:
    * the call must generate reflow commands that will incrementally
    * reflow and repair the damaged portion of the frame tree.
    */
-  virtual void ContentAppended(nsIPresShell* aShell,
-                               nsIPresContext* aPresContext,
-                               nsIContent* aContainer) = 0;
+  NS_IMETHOD  ContentAppended(nsIPresShell*   aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent*     aContainer) = 0;
 
   /**
    * This call is invoked when content is inserted in the content
@@ -271,11 +268,11 @@ public:
    * @param aIndexInParent the index in the content container where
    *          the new content was inserted.
    */
-  virtual void ContentInserted(nsIPresShell* aShell,
-                               nsIPresContext* aPresContext,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInParent) = 0;
+  NS_IMETHOD  ContentInserted(nsIPresShell*   aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent*     aContainer,
+                              nsIContent*     aChild,
+                              PRInt32         aIndexInParent) = 0;
 
   /**
    * This call is invoked when content is replaced in the content
@@ -288,12 +285,12 @@ public:
    *
    * @param aIndexInParent the index in the content container where
    *          the new content was inserted.  */
-  virtual void ContentReplaced(nsIPresShell* aShell,
-                               nsIPresContext* aPresContext,
-                               nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInParent) = 0;
+  NS_IMETHOD  ContentReplaced(nsIPresShell*   aShell,
+                              nsIPresContext* aPresContext,
+                              nsIContent*     aContainer,
+                              nsIContent*     aOldChild,
+                              nsIContent*     aNewChild,
+                              PRInt32         aIndexInParent) = 0;
 
   /**
    * This call is invoked when content is deleted from the content
@@ -306,11 +303,11 @@ public:
    * @param aIndexInParent the index in the content container where
    *          the new content was deleted.
    */
-  virtual void ContentDeleted(nsIPresShell* aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInParent) = 0;
+  NS_IMETHOD  ContentDeleted(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInParent) = 0;
 
   /**
    * Return the reflow metrics for this frame. If the frame is a
@@ -320,43 +317,45 @@ public:
    * ascent of the line's children). Note that the metrics returned
    * apply to the frame as it exists at the time of the call.
    */
-  virtual void          GetReflowMetrics(nsIPresContext*  aPresContext,
-                                         nsReflowMetrics& aMetrics) = 0;
+  NS_IMETHOD  GetReflowMetrics(nsIPresContext*  aPresContext,
+                               nsReflowMetrics& aMetrics) = 0;
 
   /**
    * Flow member functions. CreateContinuingFrame() is responsible for appending
    * the continuing frame to the flow.
    */
-  virtual PRBool        IsSplittable() const = 0;
-  virtual nsIFrame*     CreateContinuingFrame(nsIPresContext* aPresContext,
-                                              nsIFrame*       aParent) = 0;
-  virtual nsIFrame*     GetPrevInFlow() const = 0;
-  virtual void          SetPrevInFlow(nsIFrame*) = 0;
-  virtual nsIFrame*     GetNextInFlow() const = 0;
-  virtual void          SetNextInFlow(nsIFrame*) = 0;
+  NS_IMETHOD  IsSplittable(PRBool& aIsSplittable) const = 0;
+  NS_IMETHOD  CreateContinuingFrame(nsIPresContext* aPresContext,
+                                    nsIFrame*       aParent,
+                                    nsIFrame*&      aContinuingFrame) = 0;
 
-  virtual void          AppendToFlow(nsIFrame* aAfterFrame) = 0;
-  virtual void          PrependToFlow(nsIFrame* aBeforeFrame) = 0;
-  virtual void          RemoveFromFlow() = 0;
-  virtual void          BreakFromPrevFlow() = 0;
-  virtual void          BreakFromNextFlow() = 0;
+  NS_IMETHOD  GetPrevInFlow(nsIFrame*& aPrevInFlow) const = 0;
+  NS_IMETHOD  SetPrevInFlow(nsIFrame*) = 0;
+  NS_IMETHOD  GetNextInFlow(nsIFrame*& aNextInFlow) const = 0;
+  NS_IMETHOD  SetNextInFlow(nsIFrame*) = 0;
+
+  NS_IMETHOD  AppendToFlow(nsIFrame* aAfterFrame) = 0;
+  NS_IMETHOD  PrependToFlow(nsIFrame* aBeforeFrame) = 0;
+  NS_IMETHOD  RemoveFromFlow() = 0;
+  NS_IMETHOD  BreakFromPrevFlow() = 0;
+  NS_IMETHOD  BreakFromNextFlow() = 0;
 
   /**
    * Accessor functions to get/set the associated view object
    */
-  virtual nsIView*      GetView() const = 0;  // may be null
-  virtual void          SetView(nsIView* aView) = 0;
+  NS_IMETHOD  GetView(nsIView*& aView) const = 0;  // may be null
+  NS_IMETHOD  SetView(nsIView* aView) = 0;
 
   /**
    * Find the first geometric parent that has a view
    */
-  virtual nsIFrame*     GetParentWithView() const = 0;
+  NS_IMETHOD  GetParentWithView(nsIFrame*& aParent) const = 0;
 
   /**
    * Returns the offset from this frame to the closest geometric parent that
    * has a view. Also returns the containing view or null in case of error
    */
-  virtual nsIView*      GetOffsetFromView(nsPoint& aOffset) const = 0;
+  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const = 0;
 
   /**
    * Returns the window that contains this frame. If this frame has a
@@ -364,18 +363,18 @@ public:
    * returned, otherwise this frame's geometric parent is checked
    * recursively upwards.
    */
-  virtual nsIWidget*    GetWindow() const = 0;
+  NS_IMETHOD  GetWindow(nsIWidget*&) const = 0;
 
   /**
    * Sibling pointer used to link together frames
    */
-  virtual nsIFrame*     GetNextSibling() const = 0;
-  virtual void          SetNextSibling(nsIFrame* aNextSibling) = 0;
+  NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const = 0;
+  NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling) = 0;
 
   // Debugging
-  virtual void          List(FILE* out = stdout, PRInt32 aIndent = 0) const= 0;
-  virtual void          ListTag(FILE* out = stdout) const = 0;
-  virtual void          VerifyTree() const = 0;
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const= 0;
+  NS_IMETHOD  ListTag(FILE* out = stdout) const = 0;
+  NS_IMETHOD  VerifyTree() const = 0;
 
   // Show frame borders when rendering
   static NS_LAYOUT void ShowFrameBorders(PRBool aEnable);

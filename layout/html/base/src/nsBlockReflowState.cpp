@@ -221,7 +221,7 @@ void nsBlockReflowState::DumpLine()
     printf("  ");
     ((nsFrame*)f)->ListTag(stdout);/* XXX */
     printf("\n");
-    f = f->GetNextSibling();
+    f->GetNextSibling(f);
   }
 }
 
@@ -232,7 +232,7 @@ void nsBlockReflowState::DumpList()
     printf("  ");
     ((nsFrame*)f)->ListTag(stdout);/* XXX */
     printf("\n");
-    f = f->GetNextSibling();
+    f->GetNextSibling(f);
   }
 }
 #endif
@@ -335,7 +335,9 @@ void nsBlockFrame::PlaceBelowCurrentLineFloaters(nsIPresContext* aCX,
     GetAvailableSpaceBand(aState, aY);
 
     // Get the type of floater
-    nsIStyleContext*  styleContext = floater->GetStyleContext(aCX);
+    nsIStyleContext*  styleContext;
+     
+    floater->GetStyleContext(aCX, styleContext);
     nsStyleMolecule*  mol = (nsStyleMolecule*)styleContext->GetData(kStyleMoleculeSID);
     NS_RELEASE(styleContext);
   
@@ -394,7 +396,10 @@ PRBool nsBlockFrame::AdvanceToNextLine(nsIPresContext* aCX,
       // both the line and the floaters are pushed to the next-in-flow...
     }
   } else {
-    lineHeight = aState.lineStart->GetHeight();
+    nsSize  size;
+
+    aState.lineStart->GetSize(size);
+    lineHeight = size.height;
   }
 
   // The first line always fits
@@ -447,7 +452,7 @@ PRBool nsBlockFrame::AdvanceToNextLine(nsIPresContext* aCX,
   nsIFrame* lastFrame = aState.lineStart;
   PRInt32 lineLen = aState.lineLength - 1;
   while (--lineLen >= 0) {
-    lastFrame = lastFrame->GetNextSibling();
+    lastFrame->GetNextSibling(lastFrame);
   }
 
   // Update maxElementSize
@@ -663,8 +668,12 @@ void nsBlockFrame::PushKids(nsBlockReflowState& aState)
 {
   nsIFrame* prevFrame = aState.prevLineLastFrame;
   NS_PRECONDITION(nsnull != prevFrame, "pushing all kids");
-  NS_PRECONDITION(prevFrame->GetNextSibling() == aState.lineStart,
-                  "bad prev line");
+#ifdef NS_DEBUG
+  nsIFrame* nextSibling;
+
+  prevFrame->GetNextSibling(nextSibling);
+  NS_PRECONDITION(nextSibling == aState.lineStart, "bad prev line");
+#endif
 
 #ifdef NS_DEBUG
   PRInt32 numKids = LengthOf(mFirstChild);
@@ -692,7 +701,7 @@ void nsBlockFrame::PushKids(nsBlockReflowState& aState)
   PRInt32 kids = 0;
   while (nsnull != kid) {
     kids++;
-    kid = kid->GetNextSibling();
+    kid->GetNextSibling(kid);
   }
   mChildCount = kids;
 
@@ -823,8 +832,11 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
 
   // Get kid and its style
   // XXX How is this any different than what was passed in to us as aKidMol?
-  nsIContent* kid = kidFrame->GetContent();
-  nsIStyleContext* kidSC = kidFrame->GetStyleContext(aCX);
+  nsIContent* kid;
+  nsIStyleContext* kidSC;
+   
+  kidFrame->GetContent(kid);
+  kidFrame->GetStyleContext(aCX, kidSC);
   nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
   NS_RELEASE(kid);
 
@@ -854,7 +866,7 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     nsIFrame* lastFrame = aState.lineStart;
     PRInt32   lineLen = aState.lineLength - 1;
     while (--lineLen >= 0) {
-      lastFrame = lastFrame->GetNextSibling();
+      lastFrame->GetNextSibling(lastFrame);
     }
 
     if (!AdvanceToNextLine(aCX, aState)) {
@@ -866,7 +878,9 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
     // Get the style for the last child, and see if it wanted to clear floaters.
     // This handles the BR tag, which is the only inline element for which clear
     // applies
-    nsIStyleContext* lastChildSC = lastFrame->GetStyleContext(aCX);
+    nsIStyleContext* lastChildSC;
+     
+    lastFrame->GetStyleContext(aCX, lastChildSC);
     nsStyleMolecule* lastChildMol = (nsStyleMolecule*)lastChildSC->GetData(kStyleMoleculeSID); 
     if (lastChildMol->clear != NS_STYLE_CLEAR_NONE) {
       ClearFloaters(aState, lastChildMol->clear);
@@ -964,7 +978,10 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
           GetAvailableSpaceBand(aState, aState.y + aState.topMargin);
 
           // Reflow splittable children
-          if (kidFrame->IsSplittable()) {
+          PRBool  isSplittable;
+
+          kidFrame->IsSplittable(isSplittable);
+          if (isSplittable) {
             // Update size info now that we are on the next line. Then
             // reflow the child into the new available space.
             GetAvailSize(kidAvailSize, aState, kidMol, PR_TRUE);
@@ -973,7 +990,10 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
 
             // If we just reflowed our last child then update the
             // mLastContentIsComplete state.
-            if (nsnull == kidFrame->GetNextSibling()) {
+            nsIFrame* nextSibling;
+
+            kidFrame->GetNextSibling(nextSibling);
+            if (nsnull == nextSibling) {
               // Use state from the reflow we just did
               mLastContentIsComplete = PRBool(status == frComplete);
             }
@@ -1042,7 +1062,10 @@ nsBlockFrame::PlaceAndReflowChild(nsIPresContext* aCX,
 
   // If we just reflowed our last child then update the
   // mLastContentIsComplete state.
-  if (nsnull == kidFrame->GetNextSibling()) {
+  nsIFrame* nextSibling;
+
+  kidFrame->GetNextSibling(nextSibling);
+  if (nsnull == nextSibling) {
     // Use state from the reflow we just did
     mLastContentIsComplete = PRBool(status == frComplete);
   }
@@ -1091,7 +1114,9 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
   nsIFrame* prevKidFrame = nsnull;
 
   for (kidFrame = mFirstChild; nsnull != kidFrame; ) {
-    nsIContent* kid = kidFrame->GetContent();
+    nsIContent* kid;
+     
+    kidFrame->GetContent(kid);
     nsIStyleContext* kidSC = aCX->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     NS_RELEASE(kid);
@@ -1113,21 +1138,26 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
     }
 
     // Is the child complete?
+    nsIFrame* kidNextInFlow;
+
+    kidFrame->GetNextInFlow(kidNextInFlow);
     if (frComplete == status) {
       // Yes, the child is complete
-      NS_ASSERTION(nsnull == kidFrame->GetNextInFlow(), "bad child flow list");
+      NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
     } else {
       // No the child isn't complete
-      nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
       if (nsnull == kidNextInFlow) {
         // The child doesn't have a next-in-flow so create a continuing
         // frame. This hooks the child into the flow
-        nsIFrame* continuingFrame =
-          kidFrame->CreateContinuingFrame(aCX, this);
+        nsIFrame* continuingFrame;
+         
+        kidFrame->CreateContinuingFrame(aCX, this, continuingFrame);
         NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
 
         // Add the continuing frame to the sibling list
-        nsIFrame* nextSib = kidFrame->GetNextSibling();
+        nsIFrame* nextSib;
+         
+        kidFrame->GetNextSibling(nextSib);
         continuingFrame->SetNextSibling(nextSib);
         kidFrame->SetNextSibling(continuingFrame);
         mChildCount++;
@@ -1141,14 +1171,18 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
 
     // Get the next child frame
     prevKidFrame = kidFrame;
-    kidFrame = kidFrame->GetNextSibling();
+    kidFrame->GetNextSibling(kidFrame);
   }
 
- push_done:;
-  // Update the child count member data
-  NS_POSTCONDITION(LastChild()->GetIndexInParent() == mLastContentOffset, "bad last content offset");
-
+ push_done:
 #ifdef NS_DEBUG
+  nsIFrame* lastChild;
+  PRInt32   lastIndexInParent;
+
+  LastChild(lastChild);
+  lastChild->GetIndexInParent(lastIndexInParent);
+  NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
+
   PRInt32 len = LengthOf(mFirstChild);
   NS_POSTCONDITION(len == mChildCount, "bad child count");
   VerifyLastIsComplete();
@@ -1224,14 +1258,16 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
     mFirstContentOffset = prev->NextChildOffset();
     if (PR_FALSE == prev->mLastContentIsComplete) {
       // Our prev-in-flow's last child is not complete
-      kidPrevInFlow = prev->LastChild();
+      prev->LastChild(kidPrevInFlow);
     }
   }
 
   // Place our children, one at a time until we are out of children
   PRInt32 kidIndex = NextChildOffset();
-  nsIFrame* prevKidFrame = LastChild();
   nsIFrame* kidFrame = nsnull;
+  nsIFrame* prevKidFrame;
+   
+  LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
     nsIContent* kid = mContent->ChildAt(kidIndex);
@@ -1289,14 +1325,19 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
     } else {
       // Since kid has a prev-in-flow, use that to create the next
       // frame.
-      kidFrame = kidPrevInFlow->CreateContinuingFrame(aCX, this);
+      kidPrevInFlow->CreateContinuingFrame(aCX, this, kidFrame);
     }
 
     // Link child frame into the list of children. If the frame ends
     // up not fitting and getting pushed, the PushKids code will fixup
     // the child count for us.
     if (nsnull != prevKidFrame) {
-      NS_ASSERTION(nsnull == prevKidFrame->GetNextSibling(), "bad append");
+#ifdef NS_DEBUG
+      nsIFrame* nextSibling;
+
+      prevKidFrame->GetNextSibling(nextSibling);
+      NS_ASSERTION(nsnull == nextSibling, "bad append");
+#endif
       prevKidFrame->SetNextSibling(kidFrame);
     } else {
       NS_ASSERTION(nsnull == mFirstChild, "bad create");
@@ -1314,7 +1355,10 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
       status = aState.reflowStatus;
       if (0 == (placeStatus & PLACE_FIT)) {
         // We ran out of room.
-        mLastContentIsComplete = PRBool(nsnull == kidFrame->GetNextInFlow());
+        nsIFrame* kidNextInFlow;
+
+        kidFrame->GetNextInFlow(kidNextInFlow);
+        mLastContentIsComplete = PRBool(nsnull == kidNextInFlow);
         PushKids(aState);
 
         NS_RELEASE(kid);
@@ -1327,26 +1371,41 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
       if (frNotComplete == status) {
         // Child didn't complete so create a continuing frame
         kidPrevInFlow = kidFrame;
-        nsIFrame* continuingFrame = kidFrame->CreateContinuingFrame(aCX, this);
+        nsIFrame* continuingFrame;
+         
+        kidFrame->CreateContinuingFrame(aCX, this, continuingFrame);
 
         // Add the continuing frame to the sibling list
-        continuingFrame->SetNextSibling(kidFrame->GetNextSibling());
+        nsIFrame* kidNextSibling;
+
+        kidFrame->GetNextSibling(kidNextSibling);
+        continuingFrame->SetNextSibling(kidNextSibling);
         kidFrame->SetNextSibling(continuingFrame);
         kidFrame = continuingFrame;
         mChildCount++;
 
         // Switch to new kid style
         NS_RELEASE(kidSC);
-        kidSC = kidFrame->GetStyleContext(aCX);
+        kidFrame->GetStyleContext(aCX, kidSC);
         kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       }
-      NS_ASSERTION(nsnull == kidFrame->GetNextInFlow(), "huh?");
+#ifdef NS_DEBUG
+      nsIFrame* kidNextInFlow;
+
+      kidFrame->GetNextInFlow(kidNextInFlow);
+      NS_ASSERTION(nsnull == kidNextInFlow, "huh?");
+#endif
     } while (frNotComplete == status);
     NS_RELEASE(kid);
     NS_RELEASE(kidSC);
 
     // The child that we just reflowed is complete
-    NS_ASSERTION(nsnull == kidFrame->GetNextInFlow(), "bad child flow list");
+#ifdef NS_DEBUG
+    nsIFrame* kidNextInFlow;
+
+    kidFrame->GetNextInFlow(kidNextInFlow);
+    NS_ASSERTION(nsnull == kidNextInFlow, "bad child flow list");
+#endif
     kidIndex++;
     kidPrevInFlow = nsnull;
   }
@@ -1356,8 +1415,7 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
   // children OR we are a pseudo-frame and we ran into a block
   // element. In either case our last content MUST be complete.
   NS_ASSERTION(PR_TRUE == aState.lastContentIsComplete, "bad state");
-
-  NS_ASSERTION(LastChild() == prevKidFrame, "bad last child");
+  NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
   SetLastContentOffset(prevKidFrame);
 
  push_done:
@@ -1395,7 +1453,9 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
 
   PRBool result = PR_TRUE;
   nsBlockFrame* nextInFlow = (nsBlockFrame*) mNextInFlow;
-  nsIFrame* prevKidFrame = LastChild();
+  nsIFrame* prevKidFrame;
+   
+  LastChild(prevKidFrame);
   while (nsnull != nextInFlow) {
     // Get first available frame from the next-in-flow
     nsIFrame* kidFrame = PullUpOneChild(nextInFlow, prevKidFrame);
@@ -1407,7 +1467,9 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
     }
 
     // Get style information for the pulled up kid
-    nsIContent* kid = kidFrame->GetContent();
+    nsIContent* kid;
+     
+    kidFrame->GetContent(kid);
     nsIStyleContext* kidSC = aCX->ResolveStyleContextFor(kid, this);
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
 
@@ -1417,7 +1479,10 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
       status = aState.reflowStatus;
       if (0 == (placeStatus & PLACE_FIT)) {
         // Push the kids that didn't fit back down to the next-in-flow
-        mLastContentIsComplete = PRBool(nsnull == kidFrame->GetNextInFlow());
+        nsIFrame* kidNextInFlow;
+
+        kidFrame->GetNextInFlow(kidNextInFlow);
+        mLastContentIsComplete = PRBool(nsnull == kidNextInFlow);
         PushKids(aState);
 
         result = PR_FALSE;
@@ -1428,14 +1493,20 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
 
       if (frNotComplete == status) {
         // Child is not complete
-        nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
+        nsIFrame* kidNextInFlow;
+         
+        kidFrame->GetNextInFlow(kidNextInFlow);
         if (nsnull == kidNextInFlow) {
           // Create a continuing frame for the incomplete child
-          nsIFrame* continuingFrame =
-            kidFrame->CreateContinuingFrame(aCX, this);
+          nsIFrame* continuingFrame;
+           
+          kidFrame->CreateContinuingFrame(aCX, this, continuingFrame);
 
           // Add the continuing frame to our sibling list.
-          continuingFrame->SetNextSibling(kidFrame->GetNextSibling());
+          nsIFrame* nextSibling;
+
+          kidFrame->GetNextSibling(nextSibling);
+          continuingFrame->SetNextSibling(nextSibling);
           kidFrame->SetNextSibling(continuingFrame);
           prevKidFrame = kidFrame;
           kidFrame = continuingFrame;
@@ -1443,14 +1514,13 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
 
           // Switch to new kid style
           NS_RELEASE(kidSC);
-          kidSC = kidFrame->GetStyleContext(aCX);
+          kidFrame->GetStyleContext(aCX, kidSC);
           kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
         } else {
           // The child has a next-in-flow, but it's not one of ours.
           // It *must* be in one of our next-in-flows. Collect it
           // then.
-          NS_ASSERTION(kidNextInFlow->GetGeometricParent() != this,
-                       "busted kid next-in-flow");
+          NS_ASSERTION(!IsChild(kidNextInFlow), "busted kid next-in-flow");
           break;
         }
       }
@@ -1466,7 +1536,7 @@ nsBlockFrame::PullUpChildren(nsIPresContext* aCX,
     // in our next-in-flows (and reflowing any continunations they
     // have). Therefore we KNOW that our last child is complete.
     NS_ASSERTION(PR_TRUE == aState.lastContentIsComplete, "bad state");
-    NS_ASSERTION(LastChild() == prevKidFrame, "bad last child");
+    NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
     SetLastContentOffset(prevKidFrame);
   }
 
@@ -1546,22 +1616,22 @@ void nsBlockFrame::SetupState(nsIPresContext* aCX,
 }
 
 #include "nsUnitConversion.h"/* XXX */
-nsIFrame::ReflowStatus
-nsBlockFrame::ResizeReflow(nsIPresContext* aCX,
-                           nsISpaceManager* aSpaceManager,
-                           const nsSize& aMaxSize,
-                           nsRect& aDesiredRect,
-                           nsSize* aMaxElementSize)
+NS_METHOD nsBlockFrame::ResizeReflow(nsIPresContext* aCX,
+                                     nsISpaceManager* aSpaceManager,
+                                     const nsSize& aMaxSize,
+                                     nsRect& aDesiredRect,
+                                     nsSize* aMaxElementSize,
+                                     ReflowStatus& aStatus)
 {
   nsBlockReflowState state;
   SetupState(aCX, state, aMaxSize, aMaxElementSize, aSpaceManager);
-  return DoResizeReflow(aCX, state, aDesiredRect);
+  return DoResizeReflow(aCX, state, aDesiredRect, aStatus);
 }
 
-nsIFrame::ReflowStatus
-nsBlockFrame::DoResizeReflow(nsIPresContext* aCX,
-                             nsBlockReflowState& aState,
-                             nsRect& aDesiredRect)
+nsresult nsBlockFrame::DoResizeReflow(nsIPresContext* aCX,
+                                      nsBlockReflowState& aState,
+                                      nsRect& aDesiredRect,
+                                      ReflowStatus& aStatus)
 {
 #ifdef NS_DEBUG
   PreReflowCheck();
@@ -1591,11 +1661,11 @@ nsBlockFrame::DoResizeReflow(nsIPresContext* aCX,
 
   // First reflow any existing frames
   PRBool reflowMappedOK = PR_TRUE;
-  ReflowStatus status = frComplete;
+  aStatus = frComplete;
   if (nsnull != mFirstChild) {
     reflowMappedOK = ReflowMappedChildren(aCX, aState);
     if (!reflowMappedOK) {
-      status = frNotComplete;
+      aStatus = frNotComplete;
     }
   }
 
@@ -1607,19 +1677,19 @@ nsBlockFrame::DoResizeReflow(nsIPresContext* aCX,
       // unmapped.  We need to return the correct completion status,
       // so see if there is more to reflow.
       if (MoreToReflow(aCX)) {
-        status = frNotComplete;
+        aStatus = frNotComplete;
       }
     } else if (MoreToReflow(aCX)) {
       // Try and pull-up some children from a next-in-flow
       if ((nsnull == mNextInFlow) || PullUpChildren(aCX, aState)) {
         // If we still have unmapped children then create some new frames
         if (MoreToReflow(aCX)) {
-          status = ReflowAppendedChildren(aCX, aState);
+          aStatus = ReflowAppendedChildren(aCX, aState);
         }
       } else {
         // We were unable to pull-up all the existing frames from the
         // next in flow
-        status = frNotComplete;
+        aStatus = frNotComplete;
       }
     }
   }
@@ -1638,11 +1708,11 @@ nsBlockFrame::DoResizeReflow(nsIPresContext* aCX,
 #endif
 
       PushKids(aState);
-      status = frNotComplete;
+      aStatus = frNotComplete;
     }
   }
 
-  if (frComplete == status) {
+  if (frComplete == aStatus) {
     // Don't forget to add in the bottom margin from our last child.
     // Only add it in if there is room for it.
     nscoord margin = aState.prevMaxPosBottomMargin -
@@ -1689,7 +1759,7 @@ nsBlockFrame::DoResizeReflow(nsIPresContext* aCX,
   aDesiredRect.height = aState.y;
 
 #ifdef NS_DEBUG
-  PostReflowCheck(status);
+  PostReflowCheck(aStatus);
 #endif
 #ifdef NOISY
   ListTag(stdout);
@@ -1703,7 +1773,7 @@ nsBlockFrame::DoResizeReflow(nsIPresContext* aCX,
   DumpFlow();
 #endif
   mCurrentState = nsnull;
-  return status;
+  return NS_OK;
 }
 
 void nsBlockFrame::JustifyLines(nsIPresContext* aCX,
@@ -1732,11 +1802,11 @@ void nsBlockFrame::JustifyLines(nsIPresContext* aCX,
           kid->JustifyReflow(aCX, availableSpace);
           kid->SizeTo(r.width + availableSpace, r.height);
         }
-        kid = kid->GetNextSibling();
+        kid->GetNextSibling(kid);
       } else {
         // XXX Get justification of multiple elements working
         while (--lineLength >= 0) {
-          kid = kid->GetNextSibling();
+          kid->GetNextSibling(kid);
         }
       }
     }
@@ -1748,22 +1818,24 @@ void nsBlockFrame::JustifyLines(nsIPresContext* aCX,
   }
 }
 
-nsIFrame* nsBlockFrame::CreateContinuingFrame(nsIPresContext* aCX,
-                                              nsIFrame* aParent)
+NS_METHOD nsBlockFrame::CreateContinuingFrame(nsIPresContext* aCX,
+                                              nsIFrame* aParent,
+                                              nsIFrame*& aContinuingFrame)
 {
   nsBlockFrame* cf = new nsBlockFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aCX, aParent, cf);
-  return cf;
+  aContinuingFrame = cf;
+  return NS_OK;
 }
 
-nsIFrame::ReflowStatus
-nsBlockFrame::IncrementalReflow(nsIPresContext* aCX,
-                                nsISpaceManager* aSpaceManager,
-                                const nsSize& aMaxSize,
-                                nsRect& aDesiredRect,
-                                nsReflowCommand& aReflowCommand)
+NS_METHOD nsBlockFrame::IncrementalReflow(nsIPresContext* aCX,
+                                          nsISpaceManager* aSpaceManager,
+                                          const nsSize& aMaxSize,
+                                          nsRect& aDesiredRect,
+                                          nsReflowCommand& aReflowCommand,
+                                          ReflowStatus& aStatus)
 {
-  ReflowStatus status = frComplete;
+  aStatus = frComplete;
 
   if (aReflowCommand.GetTarget() == this) {
     // XXX for now, just do a complete reflow mapped (it'll kinda
@@ -1773,7 +1845,7 @@ nsBlockFrame::IncrementalReflow(nsIPresContext* aCX,
     SetupState(aCX, state, aMaxSize, nsnull, aSpaceManager);
     PRBool reflowMappedOK = ReflowMappedChildren(aCX, state);
     if (!reflowMappedOK) {
-      status = frNotComplete;
+      aStatus = frNotComplete;
     }
   } else {
     // XXX not yet implemented
@@ -1786,26 +1858,32 @@ nsBlockFrame::IncrementalReflow(nsIPresContext* aCX,
   }
 
   mCurrentState = nsnull;
-  return status;
+  return NS_OK;
 }
 
 PRBool nsBlockFrame::IsLeftMostChild(nsIFrame* aFrame)
 {
   do {
-    nsIFrame* parent = aFrame->GetGeometricParent();
+    nsIFrame* parent;
+     
+    aFrame->GetGeometricParent(parent);
   
     // See if there are any non-zero sized child frames that precede aFrame
     // in the child list
-    nsIFrame* child = parent->FirstChild();
-  
+    nsIFrame* child;
+     
+    parent->FirstChild(child);
     while ((nsnull != child) && (aFrame != child)) {
+      nsSize  size;
+
       // Is the child zero-sized?
-      if ((child->GetWidth() > 0) || (child->GetHeight() > 0)) {
+      child->GetSize(size);
+      if ((size.width > 0) || (size.height > 0)) {
         // We found a non-zero sized child frame that precedes aFrame
         return PR_FALSE;
       }
   
-      child = child->GetNextSibling();
+      child->GetNextSibling(child);
     }
   
     // aFrame is the left-most non-zero sized frame in its geometric parent.
@@ -1848,7 +1926,9 @@ void nsBlockFrame::PlaceFloater(nsIPresContext* aCX,
   // todo list and we'll handle it when we flush out the line
   if (IsLeftMostChild(aPlaceholder)) {
     // Get the type of floater
-    nsIStyleContext*  styleContext = aFloater->GetStyleContext(aCX);
+    nsIStyleContext*  styleContext;
+
+    aFloater->GetStyleContext(aCX, styleContext);
     nsStyleMolecule*  mol = (nsStyleMolecule*)styleContext->GetData(kStyleMoleculeSID);
     NS_RELEASE(styleContext);
 
@@ -1889,24 +1969,19 @@ void nsBlockFrame::PlaceFloater(nsIPresContext* aCX,
   }
 }
 
-void nsBlockFrame::ContentAppended(nsIPresShell* aShell,
-                                   nsIPresContext* aPresContext,
-                                   nsIContent* aContainer)
+NS_METHOD nsBlockFrame::ContentAppended(nsIPresShell* aShell,
+                                        nsIPresContext* aPresContext,
+                                        nsIContent* aContainer)
 {
-  // Zip down to the end-of-flow
-  nsBlockFrame* flow = this;
-  for (;;) {
-    nsBlockFrame* next = (nsBlockFrame*) flow->GetNextInFlow();
-    if (nsnull == next) {
-      break;
-    }
-    flow = next;
-  }
+  // Get the last-in-flow
+  nsBlockFrame* flow = (nsBlockFrame*)GetLastInFlow();
 
   PRInt32 kidIndex = flow->NextChildOffset();
   PRInt32 startIndex = kidIndex;
-  nsIFrame* prevKidFrame = flow->LastChild();
   nsIFrame* kidFrame = nsnull;
+  nsIFrame* prevKidFrame;
+   
+  flow->LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
     nsIContent* kid = mContent->ChildAt(kidIndex);
@@ -1943,7 +2018,7 @@ void nsBlockFrame::ContentAppended(nsIPresShell* aShell,
           NS_RELEASE(kidSC);
           NS_RELEASE(kid);
   
-          return;
+          return NS_OK;
         }
         // FALL THROUGH (and create frame)
   
@@ -1964,7 +2039,12 @@ void nsBlockFrame::ContentAppended(nsIPresShell* aShell,
 
     // Link child frame into the list of children
     if (nsnull != prevKidFrame) {
-      NS_ASSERTION(nsnull == prevKidFrame->GetNextSibling(), "bad append");
+#ifdef NS_DEBUG
+      nsIFrame* nextSibling;
+
+      prevKidFrame->GetNextSibling(nextSibling);
+      NS_ASSERTION(nsnull == nextSibling, "bad append");
+#endif
       prevKidFrame->SetNextSibling(kidFrame);
     } else {
       NS_ASSERTION(nsnull == mFirstChild, "bad create");
@@ -1986,6 +2066,7 @@ void nsBlockFrame::ContentAppended(nsIPresShell* aShell,
                           startIndex);
     aShell->AppendReflowCommand(rc);
   }
+  return NS_OK;
 }
 
 PRIntn nsBlockFrame::GetSkipSides() const
@@ -2005,13 +2086,14 @@ nsHTMLFrameType nsBlockFrame::GetFrameType() const
   return eHTMLFrame_Block;
 }
 
-void nsBlockFrame::ListTag(FILE* out) const
+NS_METHOD nsBlockFrame::ListTag(FILE* out) const
 {
   if ((nsnull != mGeometricParent) && IsPseudoFrame()) {
     fprintf(out, "*block(%d)@%p", mIndexInParent, this);
   } else {
     nsHTMLContainerFrame::ListTag(out);
   }
+  return NS_OK;
 }
 
 #ifdef NS_DEBUG

@@ -190,7 +190,9 @@ void ImageLoader::UpdateFrames()
     nsIFrame* frame = (nsIFrame*) mFrames.ElementAt(i);
 
     // XXX installed colormap should be presentation-context/window state
-    nsIWidget* window = frame->GetWindow();
+    nsIWidget* window;
+     
+    frame->GetWindow(window);
     if (!gXXXInstalledColorMap && mImage) {
       nsColorMap* cmap = mImage->GetColorMap();
       if ((nsnull != cmap) && (cmap->NumColors > 0)) {
@@ -203,7 +205,9 @@ void ImageLoader::UpdateFrames()
     nsPoint offset;
     nsRect bounds;
     frame->GetRect(bounds);
-    nsIView* view = frame->GetOffsetFromView(offset);
+    nsIView* view;
+     
+    frame->GetOffsetFromView(offset, view);
     nsIViewManager* vm = view->GetViewManager();
     bounds.x = offset.x;
     bounds.y = offset.y;
@@ -360,7 +364,9 @@ nsIImage* nsPresContext::LoadImage(const nsString& aURL, nsIFrame* aForFrame)
   if (nsnull == mImageGroup) {
     // XXX this is bad; if we allow for subwindows that have different
     // rendering context's this won't work
-    nsIWidget* window = aForFrame->GetWindow();
+    nsIWidget* window;
+     
+    aForFrame->GetWindow(window);
     nsIRenderingContext* drawCtx = window->GetRenderingContext();
     drawCtx->Scale(mDeviceContext->GetAppUnitsToDevUnits(),
                    mDeviceContext->GetAppUnitsToDevUnits());

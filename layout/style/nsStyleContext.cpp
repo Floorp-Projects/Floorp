@@ -526,7 +526,9 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
     // It's text (!)
     mMolecule.display = NS_STYLE_DISPLAY_INLINE;
     mMolecule.cursor = NS_STYLE_CURSOR_IBEAM;
-    nsIContent* content = aParentFrame->GetContent();
+    nsIContent* content;
+     
+    aParentFrame->GetContent(content);
     nsIAtom* parentTag = content->GetTag();
     parentTag->ToString(buf);
     NS_RELEASE(content);
@@ -539,9 +541,13 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
 //      mFont.mFont.decorations = NS_FONT_DECORATION_UNDERLINE;
       // This simulates a <PRE><A>text inheritance rule
       // Check the parent of the A
-      nsIFrame* parentParentFrame = aParentFrame->GetGeometricParent();
+      nsIFrame* parentParentFrame;
+       
+      aParentFrame->GetGeometricParent(parentParentFrame);
       if (nsnull != parentParentFrame) {
-        nsIContent* parentParentContent = parentParentFrame->GetContent();
+        nsIContent* parentParentContent;
+         
+        parentParentFrame->GetContent(parentParentContent);
         nsIAtom* parentParentTag = parentParentContent->GetTag();
         parentParentTag->ToString(buf);
         NS_RELEASE(parentParentTag);
@@ -607,7 +613,7 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
 
   nsIStyleContext* parent = nsnull;
   if (nsnull != aParentFrame) {
-    parent = aParentFrame->GetStyleContext(aPresContext);
+    aParentFrame->GetStyleContext(aPresContext, parent);
     NS_ASSERTION(nsnull != parent, "parent frame must have style context");
   }
 
