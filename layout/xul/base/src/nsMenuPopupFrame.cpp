@@ -1642,9 +1642,13 @@ nsMenuPopupFrame::DismissChain()
     nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(frame);
     if (!menuFrame) {
       nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
-      if (popupSetFrame)
+      if (popupSetFrame) {
+        // make sure the menu is not highlighted
+        if (mCurrentMenu)
+          mCurrentMenu->SelectMenu(PR_FALSE);
         // Destroy the popup.
         popupSetFrame->DestroyPopup(this);
+      }
       return NS_OK;
     }
   
