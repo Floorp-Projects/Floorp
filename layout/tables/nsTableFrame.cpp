@@ -1223,12 +1223,27 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
                                           this, kidStyleContext, kidFrame);
         reflowReason = eReflowReason_Initial;
         NS_RELEASE(kidDel);
+
+        // Link child frame into the list of children
+        if (nsnull != prevKidFrame) {
+          prevKidFrame->SetNextSibling(kidFrame);
+        } else {
+          // Our first child
+          mFirstChild = kidFrame;
+          SetFirstContentOffset(kidFrame);
+          if (gsDebug) printf("INNER: set first content offset to %d\n", GetFirstContentOffset()); //@@@
+        }
+        mChildCount++;
       }
 
       nsSize maxKidElementSize(0,0);
       nsReflowState kidReflowState(kidFrame, aReflowState, availSize,
                                    reflowReason);
+      PRInt32 yCoord = y;
+      if (NS_UNCONSTRAINEDSIZE!=yCoord)
+        yCoord+= topInset;
       kidFrame->WillReflow(*aPresContext);
+      kidFrame->MoveTo(leftInset, yCoord);
       result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
       // Place the child since some of it's content fit in us.
@@ -1236,9 +1251,6 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
         printf ("%p: reflow of row group returned desired=%d,%d, max-element=%d,%d\n",
                 this, kidSize.width, kidSize.height, kidMaxSize.width, kidMaxSize.height);
       }
-      PRInt32 yCoord = y;
-      if (NS_UNCONSTRAINEDSIZE!=yCoord)
-        yCoord+= topInset;
       kidFrame->SetRect(nsRect(leftInset, yCoord,
                                kidSize.width, kidSize.height));
       if (NS_UNCONSTRAINEDSIZE==kidSize.height)
@@ -1252,17 +1264,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
         maxSize.height = kidMaxSize.height;
       }
 
-      // Link child frame into the list of children
-      if (nsnull != prevKidFrame) {
-        prevKidFrame->SetNextSibling(kidFrame);
-      } else {
-        // Our first child (**blush**)
-        mFirstChild = kidFrame;
-        SetFirstContentOffset(kidFrame);
-        if (gsDebug) printf("INNER: set first content offset to %d\n", GetFirstContentOffset()); //@@@
-      }
       prevKidFrame = kidFrame;
-      mChildCount++;
 
       if (NS_FRAME_IS_NOT_COMPLETE(result)) {
         // If the child didn't finish layout then it means that it used
@@ -2031,6 +2033,15 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
                                            kidFrame);
     }
 
+    // Link child frame into the list of children
+    if (nsnull != prevKidFrame) {
+      prevKidFrame->SetNextSibling(kidFrame);
+    } else {
+      mFirstChild = kidFrame;  // our first child
+      SetFirstContentOffset(kidFrame);
+    }
+    mChildCount++;
+
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics kidSize(pKidMaxElementSize);
@@ -2038,6 +2049,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                    eReflowReason_Initial);
     kidFrame->WillReflow(*aPresContext);
+    kidFrame->MoveTo(0, aState.y);
     nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize, kidReflowState);
 
     // Did the child fit?
@@ -2057,8 +2069,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // apply the bottom margin when we hit the next child (or
     // finish).
     //aState.y += topMargin;
-    nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    kidRect.y += aState.y;
+    nsRect kidRect (0, aState.y, kidSize.width, kidSize.height);
     const nsStyleDisplay *childDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
@@ -2068,15 +2079,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
       PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
     }
 
-    // Link child frame into the list of children
-    if (nsnull != prevKidFrame) {
-      prevKidFrame->SetNextSibling(kidFrame);
-    } else {
-      mFirstChild = kidFrame;  // our first child
-      SetFirstContentOffset(kidFrame);
-    }
     prevKidFrame = kidFrame;
-    mChildCount++;
     kidIndex++;
 
     // Did the child complete?

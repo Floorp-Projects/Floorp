@@ -766,6 +766,15 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
                                            kidFrame);
     }
 
+    // Link child frame into the list of children
+    if (nsnull != prevKidFrame) {
+      prevKidFrame->SetNextSibling(kidFrame);
+    } else {
+      mFirstChild = kidFrame;  // our first child
+      SetFirstContentOffset(kidFrame);
+    }
+    mChildCount++;
+
     // Try to reflow the child into the available space. It might not
     // fit or might need continuing.
     nsReflowMetrics kidSize(pKidMaxElementSize);
@@ -773,6 +782,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     nsReflowState   kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                    eReflowReason_Initial);
     kidFrame->WillReflow(*aPresContext);
+    kidFrame->MoveTo(0, aState.y);
     nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize,
                                         kidReflowState);
 
@@ -793,15 +803,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     kidRect.y += aState.y;
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
 
-    // Link child frame into the list of children
-    if (nsnull != prevKidFrame) {
-      prevKidFrame->SetNextSibling(kidFrame);
-    } else {
-      mFirstChild = kidFrame;  // our first child
-      SetFirstContentOffset(kidFrame);
-    }
     prevKidFrame = kidFrame;
-    mChildCount++;
     kidIndex++;
 
     // Did the child complete?
