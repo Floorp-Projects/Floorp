@@ -4677,6 +4677,7 @@ void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
 
 void nsImapProtocol::OnRefreshAllACLs()
 {
+	GetServerStateParser().SetReportingErrors(PR_TRUE);
 	// mscott - haven't ported this yet
 }
 
@@ -5380,7 +5381,8 @@ void nsImapProtocol::DiscoverMailboxList()
 	if (GetServerStateParser().ServerHasACLCapability())
 	{
 		PRInt32 total = m_listedMailboxList.Count(), cnt = 0;
-		GetServerStateParser().SetReportingErrors(PR_FALSE);
+		// Let's not turn this off here, since we don't turn it on after
+		// GetServerStateParser().SetReportingErrors(PR_FALSE);
 		if (total)
 		{
 			ProgressEventFunctionUsingId(IMAP_GETTING_ACL_FOR_FOLDER);
