@@ -360,6 +360,10 @@ nsHeaderSniffer.prototype = {
         }
         catch (e) {
         }
+        if (!this.contentType || this.contentType == "application/x-unknown-content-type") {
+          // We didn't get a type from the server.  Fall back on other type detection mechanisms
+          throw "Unknown Type";
+        }
       }
       else {
         var bundle = getStringBundle();
