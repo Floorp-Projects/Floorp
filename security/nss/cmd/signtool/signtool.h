@@ -43,6 +43,7 @@
 #include "prprf.h"
 #include "prio.h"
 #include "secutil.h"
+#include "ocsp.h"
 #include "jar.h"
 #include "jarfile.h"
 #include "secpkcs7.h"
