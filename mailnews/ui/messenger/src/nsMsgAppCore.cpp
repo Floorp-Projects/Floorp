@@ -256,7 +256,7 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
   /* rhp - Needed to access the webshell to drive message display */
   printf("nsMsgAppCore::SetWindow(): Getting the webShell of interest...\n");
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( aWin );
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) 
   {
     return NS_ERROR_FAILURE;
