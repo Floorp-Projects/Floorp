@@ -898,7 +898,7 @@ nsFileChannel::Exists(PRBool *result)
 NS_IMETHODIMP
 nsFileChannel::Create()
 {
-    nsFileSpec mySpec(mSpec, PR_TRUE); // relative path.
+    nsFileSpec mySpec(mSpec); // relative path.
     {
         nsIOFileStream testStream(mySpec); // creates the file
         // Scope ends here, file gets closed
