@@ -675,6 +675,73 @@ void nsTableRowFrame::PlaceChild(nsIPresContext&    aPresContext,
 #endif
 }
 
+// Calculate the cell's actual size given its pass2 desired width and height.
+// Takes into account the specified height (in the style), and any special logic
+// needed for backwards compatibility.
+// Modifies the desired width and height that are passed in.
+nsresult
+nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
+                                         nscoord&  aDesiredWidth,
+                                         nscoord&  aDesiredHeight,
+                                         nscoord   aAvailWidth)
+{
+  nscoord                specifiedHeight = 0;
+  const nsStylePosition* position;
+  
+  // Get the height specified in the style information
+  aCellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+  
+  switch (position->mHeight.GetUnit()) {
+  case eStyleUnit_Coord:
+    specifiedHeight = position->mHeight.GetCoordValue();
+    break;
+
+  case eStyleUnit_Inherit:
+    // XXX for now, do nothing
+  default:
+  case eStyleUnit_Auto:
+    break;
+  }
+
+  // If the specified height is greater than the desired height, then use the
+  // specified height
+  if (specifiedHeight > aDesiredHeight)
+    aDesiredHeight = specifiedHeight;
+
+  // begin special Nav4 compatibility code for the width
+  if (0 == aDesiredWidth)
+  {
+    aDesiredWidth = aAvailWidth;
+  }
+  // end special Nav4 compatibility code
+
+  return NS_OK;
+}
+
+// Calculates the available width for the table cell based on the known
+// column widths taking into account column spans and column spacing
+nscoord
+nsTableRowFrame::CalculateCellAvailableWidth(nsTableFrame* aTableFrame,
+                                             nsIFrame*     aCellFrame,
+                                             PRInt32       aCellColIndex,
+                                             PRInt32       aNumColSpans,
+                                             nscoord       aCellSpacingX)
+{
+  nscoord availWidth = 0;
+  for (PRInt32 index = 0; index < aNumColSpans; index++) {
+    // Add in the width of this column
+    availWidth += aTableFrame->GetColumnWidth(aCellColIndex + index);
+
+    // If the cell spans columns, then for all columns except the first column
+    // add in the column spacing
+    if ((index != 0) && (aTableFrame->GetNumCellsOriginatingIn(aCellColIndex + index) > 0)) {
+      availWidth += aCellSpacingX;
+    }
+  }
+
+  return availWidth;
+}
+
 /**
  * Called for a resize reflow. Typically because the column widths have
  * changed. Reflows all the existing table cell frames unless aDirtyOnly
@@ -775,15 +842,12 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   
         aReflowState.x += cellSpacingX;
   
-        // at this point, we know the column widths.  
-        // so we get the avail width from the known column widths
-        nscoord availWidth = 0;
-        for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++) {
-          availWidth += aReflowState.tableFrame->GetColumnWidth(cellColIndex+numColSpan);
-          if ((numColSpan != 0) && (aReflowState.tableFrame->GetNumCellsOriginatingIn(cellColIndex + numColSpan) > 0)) {
-            availWidth += cellSpacingX;
-          }
-        }
+        // Calculate the available width for the table cell using the known
+        // column widths
+        nscoord availWidth = CalculateCellAvailableWidth(aReflowState.tableFrame,
+                                                         kidFrame, cellColIndex,
+                                                         cellColSpan, cellSpacingX);
+        
         // remember the rightmost (ltr) or leftmost (rtl) column this cell spans into
         prevColIndex = (iter.IsLeftToRight()) ? cellColIndex + (cellColSpan - 1) : cellColIndex;
         nsHTMLReflowMetrics desiredSize(pKidMaxElementSize);
@@ -854,40 +918,18 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
             *pKidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetPass1MaxElementSize();
         }
   
-        // Place the child after taking into account its margin and attributes
-        nscoord specifiedHeight = 0;
-        nscoord cellHeight = desiredSize.height;
-        nsIStyleContextPtr kidSC;
-        kidFrame->GetStyleContext(kidSC.AssignPtr());
-        const nsStylePosition* kidPosition = (const nsStylePosition*)
-          kidSC->GetStyleData(eStyleStruct_Position);
-        switch (kidPosition->mHeight.GetUnit()) {
-        case eStyleUnit_Coord:
-          specifiedHeight = kidPosition->mHeight.GetCoordValue();
-          break;
-  
-        case eStyleUnit_Inherit:
-          // XXX for now, do nothing
-        default:
-        case eStyleUnit_Auto:
-          break;
-        }
-        if (specifiedHeight>cellHeight)
-          cellHeight = specifiedHeight;
-  
-        nscoord cellWidth = desiredSize.width;
-        // begin special Nav4 compatibility code
-        if (0==cellWidth)
-        {
-          cellWidth = availWidth;
-        }
-        // end special Nav4 compatibility code
+        // Calculate the cell's actual size given its pass2 size. This function
+        // takes into account the specified height (in the style), and any special
+        // logic needed for backwards compatibility
+        CalculateCellActualSize(kidFrame, desiredSize.width, desiredSize.height,
+                                availWidth);
   
         // Place the child
-        nsRect kidRect (aReflowState.x, kidMargin.top, cellWidth, cellHeight);
+        nsRect kidRect (aReflowState.x, kidMargin.top, desiredSize.width,
+                        desiredSize.height);
   
-        PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
-                   pKidMaxElementSize);
+        PlaceChild(aPresContext, aReflowState, kidFrame, kidRect,
+                   aDesiredSize.maxElementSize, pKidMaxElementSize);
   
       }
       else
@@ -1085,26 +1127,12 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
           // Get the cell's desired height the last time it was reflowed
           nsSize  desiredSize = ((nsTableCellFrame *)frame)->GetDesiredSize();
 
-          // See if it has a specified height that overrides the desired size
-          nscoord specifiedHeight = 0;
-          nsIStyleContextPtr kidSC;
-          frame->GetStyleContext(kidSC.AssignPtr());
-          const nsStylePosition* kidPosition = (const nsStylePosition*)
-            kidSC->GetStyleData(eStyleStruct_Position);
-          switch (kidPosition->mHeight.GetUnit()) {
-          case eStyleUnit_Coord:
-            specifiedHeight = kidPosition->mHeight.GetCoordValue();
-            break;
-      
-          case eStyleUnit_Inherit:
-            // XXX for now, do nothing
-          default:
-          case eStyleUnit_Auto:
-            break;
-          }
-          if (specifiedHeight > desiredSize.height)
-            desiredSize.height = specifiedHeight;
-        
+          // See if it has a specified height that overrides the desired size.
+          // Note: we don't care about the width so don't compute the column
+          // width and just pass in the desired width for the available width
+          CalculateCellActualSize(frame, desiredSize.width, desiredSize.height,
+                                  desiredSize.width);
+
           // Update maxCellHeight
           if (desiredSize.height > aReflowState.maxCellHeight) {
             aReflowState.maxCellHeight = desiredSize.height;
@@ -1260,22 +1288,15 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     ((nsTableCellFrame *)aNextFrame)->GetColIndex(cellColIndex);
     PRInt32 cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
                                                                        ((nsTableCellFrame *)aNextFrame));
-    nscoord availWidth = 0;
-    for (PRInt32 numColSpan = 0; numColSpan < cellColSpan; numColSpan++)
-    {
-      availWidth += aReflowState.tableFrame->GetColumnWidth(cellColIndex+numColSpan);
-      if (0<numColSpan)
-      {
-        availWidth += kidMargin.right;
-        if (0!=cellColIndex)
-          availWidth += kidMargin.left;
-      }
-    }
+    nscoord cellSpacingX = aReflowState.tableFrame->GetCellSpacingX();
+
+    nscoord cellAvailWidth = CalculateCellAvailableWidth(aReflowState.tableFrame, aNextFrame,
+                                                         cellColIndex, cellColSpan, cellSpacingX);
 
     // Always let the cell be as high as it wants. We ignore the height that's
     // passed in and always place the entire row. Let the row group decide
     // whether we fit or wehther the entire row is pushed
-    nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
+    nsSize  kidAvailSize(cellAvailWidth, NS_UNCONSTRAINEDSIZE);
 
     // Pass along the reflow command
     nsSize          kidMaxElementSize;
@@ -1290,77 +1311,70 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     // the width of the previous reflow...
     rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
 
-    // Now do the regular pass 1 reflow and gather the max width and max element
-    // size.
-    // XXX It would be nice if we could skip this step and the next step if the
-    // column width isn't dependent on the max cell width...
-    if (aReflowState.tableFrame->RequiresPass1Layout()) {
+    // Now see if we need to do the regular pass 1 reflow and gather the max
+    // width and max element size. Note that since we don't now whether the
+    // minimum width has changed we pass is PR_TRUE
+    if (aReflowState.tableFrame->ColumnsCanBeInvalidatedBy(*(nsTableCellFrame*)aNextFrame,
+                                                           PR_TRUE)) {
+      // Changes to the cell frame could require the columns to be rebalanced.
+      // Remember the current mimumum and desired size, we'll need them later
+      nsSize  oldMinSize = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
+      nsSize  oldDesiredSize = ((nsTableCellFrame*)aNextFrame)->GetPass1DesiredSize();
+
+      // Do the unconstrained reflow and get the pass1 information
+      // XXX Why the reflow reason of eReflowReason_Initial?
       kidReflowState.reason = eReflowReason_Initial;
       kidReflowState.reflowCommand = nsnull;
       kidReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
       rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
-      // Update the cell layout data.
+
       //XXX: this is a hack, shouldn't it be the case that a min size is 
       //     never larger than a desired size?
       if (kidMaxElementSize.width>desiredSize.width)
         desiredSize.width = kidMaxElementSize.width;
       if (kidMaxElementSize.height>desiredSize.height)
         desiredSize.height = kidMaxElementSize.height;
+      
+      // Update the cell layout data.
       ((nsTableCellFrame *)aNextFrame)->SetPass1DesiredSize(desiredSize);
       ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
-      
-      // Now reflow the cell again this time constraining the width
-      // XXX Ignore for now the possibility that the column width has changed...
-      kidReflowState.availableWidth = availWidth;
-      rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+
+      // Now that we know the minimum and preferred widths see if the column
+      // widths need to be rebalanced
+      if (aReflowState.tableFrame->ColumnsAreValidFor(*(nsTableCellFrame*)aNextFrame,
+                                                      oldMinSize.width,
+                                                      oldDesiredSize.width)) {
+        // The column widths don't need to be rebalanced. Now reflow the cell
+        // again this time constraining the width back to the column width again
+        kidReflowState.reason = eReflowReason_Resize;
+        kidReflowState.availableWidth = cellAvailWidth;
+        rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+
+      } else {
+        // The column widths need to be rebalanced, so don't waste time reflowing
+        // the cell again. Tell the table to rebalance the column widths
+        aReflowState.tableFrame->InvalidateColumnWidths();
+      }
     }
   
-    // Place the child after taking into account it's margin and attributes
+    // Calculate the cell's actual size given its pass2 size. This function
+    // takes into account the specified height (in the style), and any special
+    // logic needed for backwards compatibility
     // XXX We need to ask the table (or the table layout strategy) if the column
     // widths have changed. If so, we just bail and return a status indicating
     // what happened and let the table reflow all the table cells...
-    nscoord specifiedHeight = 0;
-    nscoord cellHeight = desiredSize.height;
-    nsIStyleContextPtr kidSC;
-    aNextFrame->GetStyleContext(kidSC.AssignPtr());
-    const nsStylePosition* kidPosition = (const nsStylePosition*)
-      kidSC->GetStyleData(eStyleStruct_Position);
-    switch (kidPosition->mHeight.GetUnit()) {
-    case eStyleUnit_Coord:
-      specifiedHeight = kidPosition->mHeight.GetCoordValue();
-      break;
-
-    case eStyleUnit_Inherit:
-      // XXX for now, do nothing
-    default:
-    case eStyleUnit_Auto:
-      break;
-    }
-    if (specifiedHeight>cellHeight)
-      cellHeight = specifiedHeight;
-
-    nscoord cellWidth = desiredSize.width;
-    // begin special Nav4 compatibility code
-    if (0==cellWidth)
-    {
-      cellWidth = aReflowState.tableFrame->GetColumnWidth(cellColIndex);
-    }
-    // end special Nav4 compatibility code
+    CalculateCellActualSize(aNextFrame, desiredSize.width, desiredSize.height,
+                            cellAvailWidth);
 
     // Now place the child
-    nsRect kidRect (aReflowState.x, kidMargin.top, cellWidth, cellHeight);
+    nsRect kidRect (aReflowState.x, kidMargin.top, desiredSize.width,
+                    desiredSize.height);
+    PlaceChild(aPresContext, aReflowState, aNextFrame, kidRect,
+               aDesiredSize.maxElementSize, &kidMaxElementSize);
 
-    PlaceChild(aPresContext, aReflowState, aNextFrame, kidRect, aDesiredSize.maxElementSize,
-               &kidMaxElementSize);
+    SetMaxChildHeight(aReflowState.maxCellHeight, maxCellTopMargin,
+                      maxCellBottomMargin);
 
-    SetMaxChildHeight(aReflowState.maxCellHeight, maxCellTopMargin, maxCellBottomMargin);
-
-    // If the column widths have changed, then tell the table to rebalance
-    // the column widths
-    if (aReflowState.tableFrame->RequiresPass1Layout()) {
-      aReflowState.tableFrame->InvalidateColumnWidths();
-    }
-    
     // Return our desired size. Note that our desired width is just whatever width
     // we were given by the row group frame
     aDesiredSize.width = aReflowState.availSize.width;

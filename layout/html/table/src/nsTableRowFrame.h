@@ -235,6 +235,17 @@ protected:
                            nsTableCellFrame *   aStartFrame,
                            PRBool               aDoSiblings);
 
+  nsresult CalculateCellActualSize(nsIFrame* aRowFrame,
+                                   nscoord&  aDesiredWidth,
+                                   nscoord&  aDesiredHeight,
+                                   nscoord   aAvailWidth);
+
+  nscoord CalculateCellAvailableWidth(nsTableFrame* aTableFrame,
+                                      nsIFrame*     aCellFrame,
+                                      PRInt32       aCellColIndex,
+                                      PRInt32       aNumColSpans,
+                                      nscoord       aCellSpacingX);
+
 private:
   PRInt32  mRowIndex;
   nscoord  mTallestCell;          // not my height, but the height of my tallest child
