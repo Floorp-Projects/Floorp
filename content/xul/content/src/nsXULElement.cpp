@@ -2313,7 +2313,7 @@ NS_IMETHODIMP
 nsXULElement::GetParent(nsIContent*& aResult) const
 {
     aResult = mParent;
-    NS_IF_ADDREF(mParent);
+    NS_IF_ADDREF(aResult);
     return NS_OK;
 }
 
