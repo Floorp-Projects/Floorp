@@ -1419,7 +1419,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
        (*aEventStatus != nsEventStatus_eConsumeNoDefault &&
         (aEvent->message == NS_MOUSE_ENTER_SYNTH ||
          aEvent->message == NS_MOUSE_EXIT_SYNTH))) &&
-      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
+      !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
 
     // If we're here, then aOuter should be an nsILink. We'll use the
     // nsILink interface to get a canonified URL that has been

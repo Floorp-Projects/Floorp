@@ -654,18 +654,32 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIScriptEventHandlerOwner))) {
         *result = NS_STATIC_CAST(nsIScriptEventHandlerOwner*, this);
     }
-    else if (iid.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
-        *result = NS_STATIC_CAST(nsIDOMEventReceiver*, this);
+    else if (iid.Equals(NS_GET_IID(nsIDOMEventReceiver)) ||
+             iid.Equals(NS_GET_IID(nsIDOMEventTarget))) {
+      nsISupports *inst = NS_STATIC_CAST(nsIDOMEventReceiver *,
+                            nsDOMEventRTTearoff::Create(this));
+      NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+      NS_ADDREF(inst);
+      *result = inst;
+      return NS_OK;
     }
-    else if (iid.Equals(NS_GET_IID(nsIDOMEventTarget))) {
-        *result = NS_STATIC_CAST(nsIDOMEventTarget*, this);
+    else if (iid.Equals(NS_GET_IID(nsIDOM3EventTarget))) {
+      nsISupports *inst = NS_STATIC_CAST(nsIDOM3EventTarget *,
+                            nsDOMEventRTTearoff::Create(this));
+      NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+      NS_ADDREF(inst);
+      *result = inst;
+      return NS_OK;
     }
     else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
     }
     else if (iid.Equals(NS_GET_IID(nsIDOM3Node))) {
-        *result = new nsNode3Tearoff(this);
-        NS_ENSURE_TRUE(*result, NS_ERROR_OUT_OF_MEMORY);
+        nsISupports *inst = new nsNode3Tearoff(this);
+        NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+        NS_ADDREF(inst);
+        *result = inst;
+        return NS_OK;
     }
     else if (iid.Equals(NS_GET_IID(nsIClassInfo))) {
         nsISupports *inst = nsContentUtils::
@@ -1767,90 +1781,6 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName,
     return rv;
 }
 
-//----------------------------------------------------------------------
-// nsIDOMEventReceiver interface
-
-NS_IMETHODIMP
-nsXULElement::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
-{
-    nsIEventListenerManager *manager;
-
-    if (NS_OK == GetListenerManager(&manager)) {
-        manager->AddEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-        NS_RELEASE(manager);
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXULElement::RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
-{
-    if (mListenerManager) {
-        mListenerManager->RemoveEventListenerByIID(aListener, aIID, NS_EVENT_FLAG_BUBBLE);
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXULElement::AddEventListener(const nsAString& aType,
-                               nsIDOMEventListener* aListener,
-                               PRBool aUseCapture)
-{
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXULElement::RemoveEventListener(const nsAString& aType,
-                                  nsIDOMEventListener* aListener,
-                                  PRBool aUseCapture)
-{
-  if (mListenerManager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsXULElement::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
-{
-  // Do nothing if element isn't in the document
-  if (!mDocument)
-    return NS_OK;
-
-  // Obtain a presentation context
-  PRInt32 count = mDocument->GetNumberOfShells();
-  if (count == 0)
-    return NS_OK;
-
-  nsCOMPtr<nsIPresShell> shell;
-  mDocument->GetShellAt(0, getter_AddRefs(shell));
-  
-  // Retrieve the context
-  nsCOMPtr<nsIPresContext> aPresContext;
-  shell->GetPresContext(getter_AddRefs(aPresContext));
-
-  nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
-    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIStyledContent*, this), aEvent, _retval);
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
 nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
@@ -1870,12 +1800,6 @@ nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
-{
-  PRBool noDefault;
-  return DispatchEvent(aEvent, &noDefault);
-}
 
 NS_IMETHODIMP
 nsXULElement::DoneCreatingElement()
@@ -2480,7 +2404,9 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
           if (event) {
             event->InitEvent(NS_LITERAL_STRING("select"), PR_FALSE, PR_TRUE);
             PRBool noDefault;
-            DispatchEvent(event, &noDefault);
+            nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+            NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
+            target->DispatchEvent(event, &noDefault);
           }
         }
 
@@ -3310,8 +3236,9 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         else
           aDOMEvent = &domEvent;
 
-        aEvent->flags = aFlags;
+        aEvent->flags |= aFlags;
         aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
+        aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
 
         if (!externalDOMEvent) {
             // In order for the event to have a proper target for events that don't go through
@@ -3351,8 +3278,10 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
                 // the frame. If we don't have a frame (e.g., we're a
                 // menu), then that breaks.
                 nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
-                if (privateEvent)
-                  privateEvent->SetTarget(this);
+                if (privateEvent) {
+                  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+                  privateEvent->SetTarget(target);
+                }
                 else
                   return NS_ERROR_FAILURE;
 
@@ -3443,14 +3372,14 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
 
     //Capturing stage evaluation
-    if (NS_EVENT_FLAG_BUBBLE != aFlags) {
+    if (NS_EVENT_FLAG_CAPTURE & aFlags) {
       //Initiate capturing phase.  Special case first call to document
       if (parent) {
-        parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+        parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
       }
       else if (mDocument != nsnull) {
           ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                          NS_EVENT_FLAG_CAPTURE, aEventStatus);
+                                          aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
       }
     }
 
@@ -3466,7 +3395,8 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     //Local handling stage
     if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
         aEvent->flags |= aFlags;
-        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this, aFlags, aEventStatus);
+        nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, target, aFlags, aEventStatus);
         aEvent->flags &= ~aFlags;
     }
 
@@ -3480,17 +3410,17 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
 
     //Bubbling stage
-    if (NS_EVENT_FLAG_CAPTURE != aFlags) {
+    if (NS_EVENT_FLAG_BUBBLE & aFlags) {
         if (parent != nsnull) {
             // We have a parent. Let them field the event.
             ret = parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                          NS_EVENT_FLAG_BUBBLE, aEventStatus);
+                                          aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
       }
         else if (mDocument != nsnull) {
         // We must be the document root. The event should bubble to the
         // document.
         ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                        NS_EVENT_FLAG_BUBBLE, aEventStatus);
+                                        aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
         }
     }
 
@@ -4665,9 +4595,10 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
 
     // Add the popup as a listener on this element.
     nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
-
-    AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
-    AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
+    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+    NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
+    target->AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE);
+    target->AddEventListener(NS_LITERAL_STRING("contextmenu"), eventListener, PR_FALSE);
 
     return NS_OK;
 }

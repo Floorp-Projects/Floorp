@@ -34,6 +34,10 @@ SDK_XPIDLSRCS =                                 \
 	nsIDOMEvent.idl				\
 	nsIDOMEventTarget.idl			\
 	nsIDOMEventListener.idl			\
+	nsIDOM3DocumentEvent.idl			\
+	nsIDOM3EventTarget.idl			\
+	nsIDOMEventGroup.idl			\
+	nsIDOMCustomEvent.idl			\
 	$(NULL)
 
 XPIDLSRCS =					\

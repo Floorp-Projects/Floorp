@@ -399,14 +399,14 @@ nsDOMEvent::SetTrusted(PRBool aTrusted)
 NS_IMETHODIMP
 nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 {
-  if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
+  if (mEvent->flags & NS_EVENT_FLAG_INIT) {
+    *aEventPhase = nsIDOMMouseEvent::AT_TARGET;
+  }
+  else if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
     *aEventPhase = nsIDOMMouseEvent::CAPTURING_PHASE;
   }
   else if (mEvent->flags & NS_EVENT_FLAG_BUBBLE) {
     *aEventPhase = nsIDOMMouseEvent::BUBBLING_PHASE;
-  }
-  else if (mEvent->flags & NS_EVENT_FLAG_INIT) {
-    *aEventPhase = nsIDOMMouseEvent::AT_TARGET;
   }
   else {
     *aEventPhase = 0;

@@ -6252,6 +6252,20 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, PRUint32 aFlags,
         }
       }
 
+      //Continue with second dispatch to system event handlers
+      if (mCurrentEventContent) {
+        rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
+                                           aFlags | NS_EVENT_FLAG_SYSTEM_EVENT, aStatus);
+      }
+      else {
+        nsIContent* targetContent;
+        if (NS_OK == mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent, &targetContent) && nsnull != targetContent) {
+          rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
+                                             aFlags | NS_EVENT_FLAG_SYSTEM_EVENT, aStatus);
+          NS_RELEASE(targetContent);
+        }
+      }
+
       //3. Give event to the Frames for browser default processing.
       // XXX The event isn't translated into the local coordinate space
       // of the frame...

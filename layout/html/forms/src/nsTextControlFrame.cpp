@@ -99,6 +99,9 @@
 #include "nsIStyleRule.h"//observe documents to send onchangenotifications
 #include "nsIDOMEventListener.h"//observe documents to send onchangenotifications
 #include "nsGUIEvent.h"
+#include "nsIDOMEventGroup.h"
+#include "nsIDOM3EventTarget.h"
+#include "nsIDOMNSUIEvent.h"
 
 #include "nsIDOMFocusListener.h" //onchange events
 #include "nsIDOMCharacterData.h" //for selection setting helper func
@@ -313,6 +316,15 @@ nsTextInputListener::KeyPress(nsIDOMEvent* aKeyEvent)
     PRBool dispatchStopped;
     privateEvent->IsDispatchStopped(&dispatchStopped);
     if(dispatchStopped)
+      return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
+  if(nsUIEvent) 
+  {
+    PRBool defaultPrevented;
+    nsUIEvent->GetPreventDefault(&defaultPrevented);
+    if(defaultPrevented)
       return NS_OK;
   }
 
@@ -1422,7 +1434,17 @@ nsTextControlFrame::PreDestroy(nsIPresContext* aPresContext)
     if (erP)
     {
       erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
-      erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener*,mTextListener), NS_GET_IID(nsIDOMKeyListener));
+      // register the event listeners with the DOM event reveiver
+      nsCOMPtr<nsIDOMEventGroup> sysGroup;
+      nsresult rv = erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
+        if (dom3Targ) {
+          rv = dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"), 
+                                                    NS_STATIC_CAST(nsIDOMKeyListener *,mTextListener), 
+                                                    PR_FALSE, sysGroup);
+        }
+      }
     }
   }
 
@@ -3147,8 +3169,21 @@ nsTextControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
   {
     // register the event listeners with the DOM event reveiver
-    rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMKeyListener *,mTextListener), NS_GET_IID(nsIDOMKeyListener));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register key listener");
+
+    nsCOMPtr<nsIDOMEventGroup> sysGroup;
+    rv = erP->GetSystemEventGroup(getter_AddRefs(sysGroup));
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
+      if (dom3Targ) {
+        rv = dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), 
+                                               NS_STATIC_CAST(nsIDOMKeyListener *,mTextListener), 
+                                               PR_FALSE, sysGroup);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register key listener");
+      }
+    }
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register event listeners on nsTextControlFrame");
+
+
     rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     nsCOMPtr<nsIPresShell> shell;

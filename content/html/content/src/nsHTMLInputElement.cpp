@@ -1356,7 +1356,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIDOMHTMLInputElement> selectedRadioButton;
 
-  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) &&
+  if (!(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
       aEvent->message == NS_MOUSE_LEFT_CLICK) {
     GetChecked(&originalCheckedValue);
     checkWasSet = PR_TRUE;
@@ -1428,7 +1428,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
 
   // now check to see if the event was "cancelled"
-  if (nsEventStatus_eConsumeNoDefault == *aEventStatus && checkWasSet
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus && checkWasSet && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)
       && (type == NS_FORM_INPUT_CHECKBOX || type == NS_FORM_INPUT_RADIO)) {
     // if it was cancelled and a radio button, then set the old
     // selected btn to TRUE. if it is a checkbox then set it to its
@@ -1467,7 +1467,8 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   GetType(&type);
 
   if ((NS_OK == rv) && (nsEventStatus_eIgnore == *aEventStatus) &&
-      !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
+      !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
+      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
     switch (aEvent->message) {
 
       case NS_FOCUS_CONTENT:

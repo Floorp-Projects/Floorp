@@ -47,7 +47,8 @@
 #include "nsIArena.h"
 #include "nsICSSLoader.h"
 #include "nsIContent.h"
-#include "nsIDOMEventCapturer.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocumentStyle.h"
 #include "nsIDOMDocumentView.h"
@@ -84,6 +85,7 @@
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsIDOM3DocumentEvent.h"
 #include "nsScriptLoader.h"
 #include "pldhash.h"
 
@@ -119,6 +121,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIXULDocument,
                       public nsIDOMXULDocument,
                       public nsIDOMDocumentEvent,
+                      public nsIDOM3DocumentEvent,
                       public nsIDOMDocumentView,
                       public nsIDOMDocumentXBL,
                       public nsIDOMDocumentRange,
@@ -126,7 +129,8 @@ class nsXULDocument : public nsIDocument,
                       public nsIDOMNSDocument,
                       public nsIDOM3Node,
                       public nsIDOMDocumentStyle,
-                      public nsIDOMEventCapturer,
+                      public nsIDOMEventReceiver,
+                      public nsIDOM3EventTarget,
                       public nsIHTMLContentContainer,
                       public nsIStreamLoaderObserver,
                       public nsSupportsWeakReference
@@ -375,30 +379,27 @@ public:
     NS_IMETHOD OnPrototypeLoadDone();
     NS_IMETHOD OnHide();
 
-    // nsIDOMEventCapturer interface
-    NS_IMETHOD    CaptureEvent(const nsAString& aType);
-    NS_IMETHOD    ReleaseEvent(const nsAString& aType);
-
-    // nsIDOMEventReceiver interface (yuck. inherited from nsIDOMEventCapturer)
+    // nsIDOMEventReceiver interface
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
     NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
     NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
     NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
+    NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
     // nsIDOMEventTarget interface
-    NS_IMETHOD AddEventListener(const nsAString& aType,
-                                nsIDOMEventListener* aListener,
-                                PRBool aUseCapture);
-    NS_IMETHOD RemoveEventListener(const nsAString& aType,
-                                   nsIDOMEventListener* aListener,
-                                   PRBool aUseCapture);
-    NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
+    NS_DECL_NSIDOMEVENTTARGET
+
+    // nsIDOM3EventTarget interface
+    NS_DECL_NSIDOM3EVENTTARGET
 
     // nsIDOMDocument interface
     NS_DECL_NSIDOMDOCUMENT
 
     // nsIDOMDocumentEvent interface
     NS_DECL_NSIDOMDOCUMENTEVENT
+
+    // nsIDOM3DocumentEvent interface
+    NS_DECL_NSIDOM3DOCUMENTEVENT
 
     // nsIDOMDocumentView interface
     NS_DECL_NSIDOMDOCUMENTVIEW

@@ -4375,10 +4375,10 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
     privEvt->SetTarget(eventTarget);
 
     //Key and mouse events have additional security to prevent event spoofing
-    nsEvent * internalEvent;
-    privEvt->GetInternalNSEvent(&internalEvent);
-    if (internalEvent && (internalEvent->eventStructType == NS_KEY_EVENT ||
-        internalEvent->eventStructType == NS_MOUSE_EVENT)) {
+    nsEvent * innerEvent;
+    privEvt->GetInternalNSEvent(&innerEvent);
+    if (innerEvent && (innerEvent->eventStructType == NS_KEY_EVENT ||
+        innerEvent->eventStructType == NS_MOUSE_EVENT)) {
       //Check security state to determine if dispatcher is trusted
       nsCOMPtr<nsIScriptSecurityManager>
       securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
@@ -4397,8 +4397,6 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
       privEvt->SetTrusted(PR_TRUE);
     }
 
-    nsEvent* innerEvent;
-    privEvt->GetInternalNSEvent(&innerEvent);
     if (innerEvent) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsCOMPtr<nsIScriptGlobalObject> target(do_QueryInterface(aTarget));
