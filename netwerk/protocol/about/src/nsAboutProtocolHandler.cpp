@@ -136,6 +136,9 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     FindCharInReadable('?', begin, end); // moves begin to first '?' or to end
     end = begin;
     what.BeginReading(begin);
+    FindCharInReadable('#', begin, end); // moves begin to first '#' or to end
+    end = begin;
+    what.BeginReading(begin);
     contractID.Append(Substring(begin, end));
 
     NS_WITH_SERVICE(nsIAboutModule, aboutMod, contractID.get(), &rv);
