@@ -147,7 +147,7 @@ js_DestroyContext(JSContext *cx, JSBool force_gc)
 	free(cx->lastMessage);
 
 #ifdef JS_THREADSAFE
-    /* Destroying a context implicitly calls JS_EndRequest(). */ 
+    /* Destroying a context implicitly calls JS_EndRequest(). */
     if (cx->requestDepth)
         JS_EndRequest(cx);
 #endif
@@ -234,14 +234,14 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
     if (callback) {
 	fmtData = (*callback)(userRef, "Mountain View", errorNumber);
 	if (fmtData != NULL) {
-            int totalArgsLength = 0;
-            int argLengths[10]; /* only {0} thru {9} supported */
+            size_t totalArgsLength = 0;
+            size_t argLengths[10]; /* only {0} thru {9} supported */
 	    argCount = fmtData->argCount;
             JS_ASSERT(argCount <= 10);
 	    if (argCount > 0) {
 		/*
                  * Gather the arguments into an array, and accumulate
-                 * their sizes. We allocate 1 more than necessary and 
+                 * their sizes. We allocate 1 more than necessary and
                  * null it out to act as the caboose when we free the
                  * pointers later.
 		 */
@@ -253,7 +253,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 for (i = 0; i < argCount; i++) {
                     if (charArgs) {
                         char *charArg = va_arg(ap, char *);
-		        reportp->messageArgs[i] 
+		        reportp->messageArgs[i]
                             = js_InflateString(cx, charArg, strlen(charArg));
                     }
                     else
@@ -262,7 +262,7 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                     totalArgsLength += argLengths[i];
                 }
                 /* NULL-terminate for easy copying. */
-                reportp->messageArgs[i] = NULL; 
+                reportp->messageArgs[i] = NULL;
 	    }
 	    /*
 	     * Parse the error format, substituting the argument X
@@ -274,14 +274,15 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                     const jschar *arg;
 		    jschar *out;
 		    int expandedArgs = 0;
-		    int expandedLength
+		    size_t expandedLength
 			= strlen(fmtData->format)
 			  - (3 * argCount) /* exclude the {n} */
                           + totalArgsLength;
-            /* Note - the above calculation assumes that each argument
-             *   is used once and only once in the expansion !!!
-             */
-		    reportp->ucmessage = out 
+		    /*
+		     * Note - the above calculation assumes that each argument
+		     * is used once and only once in the expansion !!!
+		     */
+		    reportp->ucmessage = out
                         = JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
 		    if (!out) {
 			if (reportp->messageArgs) {
@@ -311,14 +312,18 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
 		    }
 		    JS_ASSERT(expandedArgs == argCount);
 		    *out = 0;
-                    *messagep = js_DeflateString(cx, reportp->ucmessage,
-                                                    out - reportp->ucmessage);
+                    *messagep =
+			js_DeflateString(cx, reportp->ucmessage,
+					 (size_t)(out - reportp->ucmessage));
 		}
-            } else { /* 0 arguments, the format string
-                        (if it exists) is the entire message */
+            } else {
+            	/*
+            	 * Zero arguments: the format string (if it exists) is the
+            	 * entire message.
+            	 */
                 if (fmtData->format) {
 		    *messagep = JS_strdup(cx, fmtData->format);
-                    reportp->ucmessage 
+                    reportp->ucmessage
                         = js_InflateString(cx, *messagep, strlen(*messagep));
                 }
 	    }
@@ -396,12 +401,12 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
      */
     if (errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
         report.flags |= JSREPORT_EXCEPTION;
-    
+
 #if JS_HAS_ERROR_EXCEPTIONS
-    /* 
-     * Only call the error reporter if an exception wasn't raised. 
+    /*
+     * Only call the error reporter if an exception wasn't raised.
      *
-     * If an exception was raised, then we call the debugErrorHook 
+     * If an exception was raised, then we call the debugErrorHook
      * (if present) to give it a chance to see the error before it
      * propigates out of scope. This is needed for compatability with
      * the old scheme.
@@ -422,11 +427,11 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
 	JS_free(cx, message);
     if (report.messageArgs) {
         int i = 0;
-        while (report.messageArgs[i]) 
+        while (report.messageArgs[i])
             JS_free(cx, (void *)report.messageArgs[i++]);
         JS_free(cx, (void *)report.messageArgs);
     }
-    if (report.ucmessage) 
+    if (report.ucmessage)
         JS_free(cx, (void *)report.ucmessage);
 }
 

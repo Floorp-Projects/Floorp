@@ -117,7 +117,7 @@ static int fill2(SprintfState *ss, const char *src, int srclen, int width,
     }
 
     /* Copy out the source data */
-    rv = (*ss->stuff)(ss, src, srclen);
+    rv = (*ss->stuff)(ss, src, (JSUint32)srclen);
     if (rv < 0) {
 	return rv;
     }
@@ -211,7 +211,7 @@ static int fill_n(SprintfState *ss, const char *src, int srclen, int width,
 	    return rv;
 	}
     }
-    rv = (*ss->stuff)(ss, src, srclen);
+    rv = (*ss->stuff)(ss, src, (JSUint32)srclen);
     if (rv < 0) {
 	return rv;
     }
@@ -326,7 +326,7 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
 	/* Totally bogus % command to sprintf. Just ignore it */
 	return 0;
     }
-    memcpy(fin, fmt0, amount);
+    memcpy(fin, fmt0, (size_t)amount);
     fin[amount] = 0;
 
     /* Convert floating point using the native sprintf code */
@@ -906,7 +906,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 		i = fmt - dolPt;
 		if( i < sizeof( pattern ) ){
 		    pattern[0] = '%';
-		    memcpy( &pattern[1], dolPt, i );
+		    memcpy( &pattern[1], dolPt, (size_t)i );
 		    rv = cvt_f(ss, u.d, pattern, &pattern[i+1] );
 		}
 	    } else

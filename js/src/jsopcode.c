@@ -665,7 +665,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
 		    return JS_FALSE;
 		jp->indent += 2;
 		if (JSVAL_IS_STRING(key)) {
-		    rval = QuoteString(&ss->sprinter, str, '"');
+		    rval = QuoteString(&ss->sprinter, str, (jschar)'"');
 		    if (!rval)
 			return JS_FALSE;
 		} else {
@@ -1619,7 +1619,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    todo = Sprint(&ss->sprinter, buf);
 		} else if (JSVAL_IS_STRING(key)) {
 		    rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-				       '"');
+				       (jschar)'"');
 		    if (!rval)
 			return JS_FALSE;
 		    todo = Sprint(&ss->sprinter, "%s", rval);

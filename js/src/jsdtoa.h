@@ -47,7 +47,7 @@ JS_strtod(const char *s00, char **se);
  * point value.
  */
 JS_FRIEND_API(void)
-JS_cnvtf(char *buf, intN bufsz, intN prcsn, double dval);
+JS_cnvtf(char *buf, size_t bufsz, int prcsn, double dval);
 
 JS_END_EXTERN_C
 

@@ -108,11 +108,11 @@ static JSPropertySpec object_props[] = {
 static JSBool
 obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    jsint slot;
+    uint32 slot;
     JSAccessMode mode;
     uintN attrs;
 
-    slot = JSVAL_TO_INT(id);
+    slot = (uint32) JSVAL_TO_INT(id);
     if (id == INT_TO_JSVAL(JSSLOT_PROTO)) {
 	id = (jsid)cx->runtime->atomState.protoAtom;
 	mode = JSACC_PROTO;
@@ -130,12 +130,12 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSObject *obj2;
-    jsint slot;
+    uint32 slot;
 
     if (!JSVAL_IS_OBJECT(*vp))
 	return JS_TRUE;
     obj2 = JSVAL_TO_OBJECT(*vp);
-    slot = JSVAL_TO_INT(id);
+    slot = (uint32) JSVAL_TO_INT(id);
     while (obj2) {
 	if (obj2 == obj) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -426,7 +426,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 	/* If id is a non-identifier string, it needs to be quoted. */
 	if (JSVAL_IS_STRING(id) && !js_IsIdentifier(idstr)) {
-	    idstr = js_QuoteString(cx, idstr, '\'');
+	    idstr = js_QuoteString(cx, idstr, (jschar)'\'');
 	    if (!idstr) {
 		ok = JS_FALSE;
 		goto error;
@@ -1724,7 +1724,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     uintN protoattrs;
     JSClass *clasp;
     jsval pval;
-    jsint slot;
+    uint32 slot;
     JSString *str;
 
     rt = cx->runtime;
@@ -1750,7 +1750,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	sprop = sym_property(sym);
 #if JS_HAS_OBJ_WATCHPOINT
 	if (!sprop) {
-	    uint32 slot, nslots;
+	    uint32 nslots;
 	    jsval *slots;
 
 	    /*
@@ -2644,7 +2644,7 @@ void printObj(JSObject *jsobj) {
 }
 
 void printVal(jsval val) {
-    fprintf(stderr, "val %d (0x%p) = ", val, (void *)val);
+    fprintf(stderr, "val %d (0x%p) = ", (int)val, (void *)val);
     if (JSVAL_IS_NULL(val)) {
 	fprintf(stderr, "null\n");
     } else if (JSVAL_IS_VOID(val)) {
@@ -2666,7 +2666,7 @@ void printVal(jsval val) {
 }
 
 void printId(jsid id) {
-    fprintf(stderr, "id %d (0x%p) is ", id, (void *)id);
+    fprintf(stderr, "id %d (0x%p) is ", (int)id, (void *)id);
     printVal(js_IdToValue(id));
 }
 
