@@ -210,13 +210,13 @@ nsInstall::~nsInstall()
         delete mVersionInfo;
 }
 
-#ifdef _WINDOWS
+
 nsInstall::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = (JSObject*) aScriptObject;
   return NS_OK;
 }
-
+#ifdef _WINDOWS
 nsInstall::SaveWinRegPrototype(void *aScriptObject)
 {
   mWinRegObject = (JSObject*) aScriptObject;
