@@ -176,8 +176,6 @@ void
 nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
                                      const char    *pref)
 {
-    printf(">>> PrefsChanged [pref=%s]\n", pref);
-
     nsresult rv = NS_OK;
     PRBool reloadPAC = PR_FALSE;
     nsXPIDLCString tempString;
