@@ -90,6 +90,11 @@ pref("mousewheel.horizscroll.withshiftkey.action", 0);
 pref("mousewheel.horizscroll.withshiftkey.numlines", 1);
 pref("mousewheel.horizscroll.withshiftkey.sysnumline", true);
 
+// enable horizontal scrolling with horizontal scroll wheels
+pref("mousewheel.horizscroll.withnokey.action",0);
+pref("mousewheel.horizscroll.withnokey.numlines",1);
+pref("mousewheel.horizscroll.withnokey.sysnumlines",true);
+
 // make history scrolling with option go the standard way
 pref("mousewheel.horizscroll.withaltkey.action", 2);
 pref("mousewheel.horizscroll.withaltkey.numlines", 1);
