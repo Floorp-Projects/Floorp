@@ -1,4 +1,4 @@
-#! /bin/ksh  
+#! /bin/sh  
 #
 # This is just a quick script so we can still run our testcases.
 # Longer term we need a scriptable test environment..
@@ -206,66 +206,58 @@ fi
 # wait until it's alive
 echo "tstclnt -p ${PORT} -h ${HOST} -q"
 tstclnt -p ${PORT} -h ${HOST} -q
-
- cat ${SSLCOV} | while read tls param testname
-do
-    if [ $tls != "#" ]; then
-	if [ $param != "i" ]; then
-	    echo "********************* $testname ****************************"
-	    TLS_FLAG=-T
-	    if [ $tls = "TLS" ]; then
-		TLS_FLAG=""
-	    fi
-
-	    tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
-	    if [ $? -ne 0 ]; then
-		echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-	    else
-		echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-	    fi
-	fi
-    fi
-done 
-
-# now kill the server
-${KILL} `cat ${SERVERPID}`
-wait `cat ${SERVERPID}`
-if [ ${fileout} -eq 1 ]; then
-   cat ${SERVEROUTFILE}
-fi
-${SLEEP}
-
-# Launch the server for the null cipher tests
-echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss -c i &"
-if [ ${fileout} -eq 1 ]; then
-    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss -c i > ${SERVEROUTFILE} 2>&1 & 
+if [ $? -ne 0 ]; then
+    echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
 else
-    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss -c i -i ${SERVERPID} & 
+    echo "<TR><TD> Wait for Server </TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
-# wait until it's alive
-echo "tstclnt -p ${PORT} -h ${HOST} -q"
-tstclnt -p ${PORT} -h ${HOST} -q
+
+NULL_SERVER=0
 
  cat ${SSLCOV} | while read tls param testname
 do
     if [ $tls != "#" ]; then
-	if [ $param == "i" ]; then
-	    echo "********************* $testname ****************************"
-	    TLS_FLAG=-T
-	    if [ $tls = "TLS" ]; then
-		TLS_FLAG=""
-	    fi
+	echo "********************* $testname ****************************"
+	TLS_FLAG=-T
+	if [ $tls = "TLS" ]; then
+	    TLS_FLAG=""
+	fi
+	sparam=""
+	if [ ${param} = "i" ]; then
+		sparam='-c i'
+		if [ $NULL_SERVER = 0 ]
+		then
+			${KILL} `cat ${SERVERPID}` # now kill the server
+			wait `cat ${SERVERPID}`
+			if [ ${fileout} -eq 1 ]; then
+   				cat ${SERVEROUTFILE}
+			fi
+			${SLEEP}
+			echo "selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss ${sparam} & "
+			if [ ${fileout} -eq 1 ]; then
+				selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -i ${SERVERPID} -w nss ${sparam} > ${SERVEROUT FILE} 2>&1 &
+			else
+				selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
+			fi
+			echo "tstclnt -p ${PORT} -h ${HOST} -q"
+			tstclnt -p ${PORT} -h ${HOST} -q
+			if [ $? -ne 0 ]; then
+    			echo "<TR><TD> Wait for Server - NULL </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+			else
+    			echo "<TR><TD> Wait for Server - NULL </TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
+			fi
+			NULL_SERVER=1
+		fi
+	fi
 
-	    tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
-	    if [ $? -ne 0 ]; then
-		echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-	    else
-		echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-	    fi
+	tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
+	if [ $? -ne 0 ]; then
+	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+	else
+	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 	fi
     fi
 done 
-
 # now kill the server
 ${KILL} `cat ${SERVERPID}`
 wait `cat ${SERVERPID}`
