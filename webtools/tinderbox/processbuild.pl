@@ -106,6 +106,7 @@ sub parse_log_variables {
     if (/^tinderbox:.*:/) {
       last if /^tinderbox: END/;
       my ($key, $value) = (split /:\s*/, $_, 3)[1..2];
+      $value =~ s/\s*$//;
       $tbx->{$key} = $value;
     }
   }
