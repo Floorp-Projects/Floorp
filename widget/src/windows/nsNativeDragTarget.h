@@ -24,6 +24,8 @@
 class nsIDragService;
 class nsIWidget;
 
+struct IDataObject;
+
 /*
  * nsNativeDragTarget implements the IDropTarget interface and gets most of its
  * behavior from the associated adapter (m_dragDrop).
@@ -68,13 +70,23 @@ class nsNativeDragTarget : public IDropTarget
 		STDMETHODIMP Drop(LPDATAOBJECT pSource, DWORD grfKeyState,
 									    POINTL point, DWORD* pEffect);
 
-	 protected:
-      void DispatchDragDropEvent(PRUint32 aType, POINTL pt);
+  protected:
+    // methods
+    void GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect, PRUint32 * aGeckoAction);
+    void ProcessDrag(PRUint32     aEventType, 
+                     DWORD        grfKeyState,
+							       POINTL       pt, 
+                     DWORD*       pdwEffect);
+    void DispatchDragDropEvent(PRUint32 aType, POINTL pt);
 
-		  ULONG            m_cRef;      // reference count
-		  nsIDragService*  mDragService;  // adapter
-      nsIWidget *      mWindow;
-      HWND             mHWnd;
+    // Native Stuff
+    ULONG            m_cRef;      // reference count
+    HWND             mHWnd;
+    IDataObject *    mDataObj;
+
+    // Gecko Stuff
+    nsIWidget      * mWindow;
+    nsIDragService * mDragService;
 };
 
 #endif // _nsNativeDragTarget_h_
