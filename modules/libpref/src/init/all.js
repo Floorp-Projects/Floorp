@@ -113,8 +113,6 @@ pref("browser.chrome.toolbar_style",        2);
 pref("browser.toolbars.showbutton.bookmarks", true);
 pref("browser.toolbars.showbutton.go",      false);
 pref("browser.toolbars.showbutton.home",    true);
-pref("browser.toolbars.showbutton.mynetscape", true);
-pref("browser.toolbars.showbutton.net2phone", true);
 pref("browser.toolbars.showbutton.print",   true);
 pref("browser.toolbars.showbutton.search",  true);
 
