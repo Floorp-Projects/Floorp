@@ -84,7 +84,7 @@
 			<html:div>&fontSizeHeader;</html:div> 
 					</html:legend> 
 	<html:div>
-		<html:input name="font" type="radio" id="pref:0:int:fontsize_mode" val="checked" />	
+		<html:input name="font" type="radio" id="pref:0:int:fontsize_mode" checked="true" />	
 		<html:label for="pref:0:int:fontsize_mode" accesskey="s" tabindex="0">
 		&relSizeRadio.label;			
 		</html:label>
