@@ -2578,6 +2578,7 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
 
   /* step through all cookies and delete those that are in the sequence */
   char * gone = cookie_FindValueInArgs(results, "|goneC|");
+  char * block = cookie_FindValueInArgs(results, "|block|");
   cookie_LockList();
   if (cookie_cookieList) {
     count = cookie_cookieList->Count();
@@ -2585,6 +2586,11 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
       count--;
       cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(count));
       if (cookie && cookie_InSequence(gone, count)) {
+        if (PL_strlen(block) && block[0]=='t') {
+          char * hostname = nsnull;
+          StrAllocCopy(hostname, cookie->host);
+          permission_Add(hostname, PR_FALSE, COOKIEPERMISSION, PR_TRUE);
+        }
         cookie_FreeCookie(cookie);
         cookie_cookiesChanged = PR_TRUE;
       }
@@ -2593,6 +2599,7 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
   cookie_Save();
   cookie_UnlockList();
   nsCRT::free(gone);
+  nsCRT::free(block);
 
   /* step through all permissions and delete those that are in the sequence */
   for (PRInt32 type = 0; type < NUMBER_OF_PERMISSIONS; type++) {
