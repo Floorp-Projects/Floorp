@@ -233,7 +233,7 @@ nsTransactionItem::GetNumberOfRedoItems(PRInt32 *aNumItems)
 nsresult
 nsTransactionItem::Write(nsIOutputStream *aOutputStream)
 {
-  PRInt32 len;
+  PRUint32 len;
 
   if (mTransaction)
     mTransaction->Write(aOutputStream);
@@ -272,7 +272,6 @@ nsTransactionItem::RecoverFromRedoError(void)
   // called Redo(), then undo the transaction item itself.
   //
 
-  nsTransactionItem *item;
   nsresult result;
 
   result = UndoChildren();
