@@ -76,7 +76,7 @@ elsif ($action eq "show_user") {
     show_user();
 }
 elsif ($action eq "vote") {
-    record_votes();
+    record_votes() if Param('usevotes');
     show_user();
 }
 else {
@@ -128,7 +128,7 @@ sub show_user {
     my $who = DBNameToIdAndCheck($name);
     my $userid = Bugzilla->user->id;
     
-    my $canedit = 1 if ($userid && $name eq Bugzilla->user->login);
+    my $canedit = (Param('usevotes') && $userid == $who) ? 1 : 0;
     
     SendSQL("LOCK TABLES bugs READ, products READ, votes WRITE,
              cc READ, bug_group_map READ, user_group_map READ,
@@ -213,7 +213,8 @@ sub show_user {
 
     SendSQL("DELETE FROM votes WHERE vote_count <= 0");
     SendSQL("UNLOCK TABLES");
-    
+
+    $vars->{'canedit'} = $canedit;
     $vars->{'voting_user'} = { "login" => $name };
     $vars->{'products'} = \@products;
 

@@ -23,12 +23,15 @@
 
 [% IF !header_done %]
   [% h2 = voting_user.login FILTER html %]
-  [% PROCESS global/header.html.tmpl title = "Show Votes" %]
+  [% IF canedit %]
+    [% title = "Change Votes" %]
+  [% ELSE %]
+    [% title = "Show Votes" %]
+  [% END %]
+  [% PROCESS global/header.html.tmpl %]
 [% ELSE %]
   <hr>
 [% END %]
-
-[% canedit = 1 IF voting_user.login == user.login %]
 
 [% IF votes_recorded %]
   <p>
