@@ -305,6 +305,7 @@ NPError NewControl(const char *pluginType,
     {
         return NPERR_GENERIC_ERROR;
     }
+    pSite->m_bSupportWindowlessActivation = FALSE;
     pSite->AddRef();
 
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT

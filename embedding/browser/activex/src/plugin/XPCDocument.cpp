@@ -52,21 +52,671 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMLocation.h"
 
+/*
+ * This file contains partial implementations of various IE objects and
+ * interfaces that many ActiveX controls expect to be able to obtain and
+ * call from their control site. Typically controls will use these methods
+ * in order to integrate themselves with the browser, e.g. a control
+ * might want to initiate a load, or obtain the user agent.
+ */
+
+// Note: corresponds to the window.navigator property in the IE DOM
+class Navigator :
+    public CComObjectRootEx<CComSingleThreadModel>,
+    public IDispatchImpl<IOmNavigator, &IID_IOmNavigator, &LIBID_MSHTML>
+{
+public:
+BEGIN_COM_MAP(Navigator)
+    COM_INTERFACE_ENTRY(IDispatch)
+    COM_INTERFACE_ENTRY(IOmNavigator)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowser)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowser2)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowserApp)
+    COM_INTERFACE_ENTRY_BREAK(IServiceProvider)
+END_COM_MAP()
+
+    PluginInstanceData *mData;
+
+// IOmNavigator
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_appCodeName( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_appName( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_appVersion( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_userAgent( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        USES_CONVERSION;
+        const char *userAgent = NPN_UserAgent(mData->pPluginInstance);
+        *p = ::SysAllocString(A2CW(userAgent));
+        return S_OK;
+    }
+
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE javaEnabled( 
+        /* [out][retval] */ VARIANT_BOOL __RPC_FAR *enabled)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE taintEnabled( 
+        /* [out][retval] */ VARIANT_BOOL __RPC_FAR *enabled)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_mimeTypes( 
+        /* [out][retval] */ IHTMLMimeTypesCollection __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_plugins( 
+        /* [out][retval] */ IHTMLPluginsCollection __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_cookieEnabled( 
+        /* [out][retval] */ VARIANT_BOOL __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_opsProfile( 
+        /* [out][retval] */ IHTMLOpsProfile __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE toString( 
+        /* [out][retval] */ BSTR __RPC_FAR *string)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_cpuClass( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_systemLanguage( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [hidden][id][propget] */ HRESULT STDMETHODCALLTYPE get_browserLanguage( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_userLanguage( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_platform( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_appMinorVersion( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [hidden][id][propget] */ HRESULT STDMETHODCALLTYPE get_connectionSpeed( 
+        /* [out][retval] */ long __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_onLine( 
+        /* [out][retval] */ VARIANT_BOOL __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_userProfile( 
+        /* [out][retval] */ IHTMLOpsProfile __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+};
+
+
+// Note: Corresponds to the window object in the IE DOM
+class HTMLWindow :
+    public CComObjectRootEx<CComSingleThreadModel>,
+    public IDispatchImpl<IHTMLWindow2, &IID_IHTMLWindow2, &LIBID_MSHTML>
+{
+public:
+    PluginInstanceData *mData;
+    CComObject<Navigator> *mNavigator;
+
+    HTMLWindow() : mNavigator(NULL)
+    {
+    }
+
+protected:
+    virtual ~HTMLWindow()
+    {
+        if (mNavigator)
+        {
+            mNavigator->Release();
+        }
+    }
+
+public:
+    
+BEGIN_COM_MAP(HTMLWindow)
+    COM_INTERFACE_ENTRY(IDispatch)
+    COM_INTERFACE_ENTRY(IHTMLWindow2)
+    COM_INTERFACE_ENTRY(IHTMLFramesCollection2)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowser)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowser2)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowserApp)
+    COM_INTERFACE_ENTRY_BREAK(IServiceProvider)
+END_COM_MAP()
+
+//IHTMLFramesCollection2
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE item( 
+        /* [in] */ VARIANT __RPC_FAR *pvarIndex,
+        /* [out][retval] */ VARIANT __RPC_FAR *pvarResult)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_length( 
+        /* [out][retval] */ long __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+
+// IHTMLWindow2
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_frames( 
+        /* [out][retval] */ IHTMLFramesCollection2 __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_defaultStatus( 
+        /* [in] */ BSTR v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_defaultStatus( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_status( 
+        /* [in] */ BSTR v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_status( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE setTimeout( 
+        /* [in] */ BSTR expression,
+        /* [in] */ long msec,
+        /* [in][optional] */ VARIANT __RPC_FAR *language,
+        /* [out][retval] */ long __RPC_FAR *timerID)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE clearTimeout( 
+        /* [in] */ long timerID)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE alert( 
+        /* [in][defaultvalue] */ BSTR message)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE confirm( 
+        /* [in][defaultvalue] */ BSTR message,
+        /* [out][retval] */ VARIANT_BOOL __RPC_FAR *confirmed)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE prompt( 
+        /* [in][defaultvalue] */ BSTR message,
+        /* [in][defaultvalue] */ BSTR defstr,
+        /* [out][retval] */ VARIANT __RPC_FAR *textdata)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_Image( 
+        /* [out][retval] */ IHTMLImageElementFactory __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_location( 
+        /* [out][retval] */ IHTMLLocation __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_history( 
+        /* [out][retval] */ IOmHistory __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE close( void)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_opener( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_opener( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_navigator( 
+        /* [out][retval] */ IOmNavigator __RPC_FAR *__RPC_FAR *p)
+    {
+        if (!mNavigator)
+        {
+            CComObject<Navigator>::CreateInstance(&mNavigator);
+            if (!mNavigator)
+            {
+                return E_UNEXPECTED;
+            }
+        }
+        mNavigator->mData = mData;
+        return mNavigator->QueryInterface(__uuidof(IOmNavigator), (void **) p);
+    }
+    
+    virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_name( 
+        /* [in] */ BSTR v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_name( 
+        /* [out][retval] */ BSTR __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_parent( 
+        /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE open( 
+        /* [in][defaultvalue] */ BSTR url,
+        /* [in][defaultvalue] */ BSTR name,
+        /* [in][defaultvalue] */ BSTR features,
+        /* [in][defaultvalue] */ VARIANT_BOOL replace,
+        /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *pomWindowResult)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_self( 
+        /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_top( 
+        /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_window( 
+        /* [out][retval] */ IHTMLWindow2 __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE navigate( 
+        /* [in] */ BSTR url)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onfocus( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onfocus( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onblur( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onblur( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onload( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onload( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onbeforeunload( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onbeforeunload( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onunload( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onunload( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onhelp( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onhelp( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onerror( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onerror( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onresize( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onresize( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propput] */ HRESULT STDMETHODCALLTYPE put_onscroll( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [bindable][displaybind][id][propget] */ HRESULT STDMETHODCALLTYPE get_onscroll( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [source][id][propget] */ HRESULT STDMETHODCALLTYPE get_document( 
+        /* [out][retval] */ IHTMLDocument2 __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_event( 
+        /* [out][retval] */ IHTMLEventObj __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [restricted][hidden][id][propget] */ HRESULT STDMETHODCALLTYPE get__newEnum( 
+        /* [out][retval] */ IUnknown __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE showModalDialog( 
+        /* [in] */ BSTR dialog,
+        /* [in][optional] */ VARIANT __RPC_FAR *varArgIn,
+        /* [in][optional] */ VARIANT __RPC_FAR *varOptions,
+        /* [out][retval] */ VARIANT __RPC_FAR *varArgOut)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE showHelp( 
+        /* [in] */ BSTR helpURL,
+        /* [in][optional] */ VARIANT helpArg,
+        /* [in][defaultvalue] */ BSTR features)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_screen( 
+        /* [out][retval] */ IHTMLScreen __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_Option( 
+        /* [out][retval] */ IHTMLOptionElementFactory __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE focus( void)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_closed( 
+        /* [out][retval] */ VARIANT_BOOL __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE blur( void)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE scroll( 
+        /* [in] */ long x,
+        /* [in] */ long y)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_clientInformation( 
+        /* [out][retval] */ IOmNavigator __RPC_FAR *__RPC_FAR *p)
+    {
+        return get_navigator(p);
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE setInterval( 
+        /* [in] */ BSTR expression,
+        /* [in] */ long msec,
+        /* [in][optional] */ VARIANT __RPC_FAR *language,
+        /* [out][retval] */ long __RPC_FAR *timerID)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE clearInterval( 
+        /* [in] */ long timerID)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_offscreenBuffering( 
+        /* [in] */ VARIANT v)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_offscreenBuffering( 
+        /* [out][retval] */ VARIANT __RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE execScript( 
+        /* [in] */ BSTR code,
+        /* [in][defaultvalue] */ BSTR language,
+        /* [out][retval] */ VARIANT __RPC_FAR *pvarRet)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE toString( 
+        /* [out][retval] */ BSTR __RPC_FAR *String)
+    {
+        return E_NOTIMPL;
+            }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE scrollBy( 
+        /* [in] */ long x,
+        /* [in] */ long y)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE scrollTo( 
+        /* [in] */ long x,
+        /* [in] */ long y)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE moveTo( 
+        /* [in] */ long x,
+        /* [in] */ long y)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE moveBy( 
+        /* [in] */ long x,
+        /* [in] */ long y)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE resizeTo( 
+        /* [in] */ long x,
+        /* [in] */ long y)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE resizeBy( 
+        /* [in] */ long x,
+        /* [in] */ long y)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_external( 
+        /* [out][retval] */ IDispatch __RPC_FAR *__RPC_FAR *p)
+    {
+        return E_NOTIMPL;
+    }
+        
+};
+
+// Note: Corresponds to the document object in the IE DOM
 class HTMLDocument :
     public CComObjectRootEx<CComSingleThreadModel>,
-    public IHTMLDocument2,
+    public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML>,
     public IServiceProvider
 {
 public:
     PluginInstanceData *mData;
+    CComObject<HTMLWindow> *mWindow;
 
-    HTMLDocument()
+    HTMLDocument() :
+        mWindow(NULL)
     {
         xpc_AddRef();
     }
 
     virtual ~HTMLDocument()
     {
+        if (mWindow)
+        {
+            mWindow->Release();
+        }
         xpc_Release();
     }
 
@@ -75,6 +725,9 @@ BEGIN_COM_MAP(HTMLDocument)
     COM_INTERFACE_ENTRY(IHTMLDocument)
     COM_INTERFACE_ENTRY(IHTMLDocument2)
     COM_INTERFACE_ENTRY(IServiceProvider)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowser)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowser2)
+    COM_INTERFACE_ENTRY_BREAK(IWebBrowserApp)
 END_COM_MAP()
 
 // IServiceProvider
@@ -117,45 +770,6 @@ END_COM_MAP()
         return QueryInterface(riid, ppvObject);
     }
 
-// IDispatch
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount( 
-        /* [out] */ UINT *pctinfo)
-    {
-        return E_NOTIMPL;
-    }
-
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo( 
-        /* [in] */ UINT iTInfo,
-        /* [in] */ LCID lcid,
-        /* [out] */ ITypeInfo **ppTInfo)
-    {
-        return E_NOTIMPL;
-    }
-
-
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames( 
-        /* [in] */ REFIID riid,
-        /* [size_is][in] */ LPOLESTR *rgszNames,
-        /* [in] */ UINT cNames,
-        /* [in] */ LCID lcid,
-        /* [size_is][out] */ DISPID *rgDispId)
-    {
-        return E_NOTIMPL;
-    }
-
-    virtual /* [local] */ HRESULT STDMETHODCALLTYPE Invoke( 
-        /* [in] */ DISPID dispIdMember,
-        /* [in] */ REFIID riid,
-        /* [in] */ LCID lcid,
-        /* [in] */ WORD wFlags,
-        /* [out][in] */ DISPPARAMS *pDispParams,
-        /* [out] */ VARIANT *pVarResult,
-        /* [out] */ EXCEPINFO *pExcepInfo,
-        /* [out] */ UINT *puArgErr)
-    {
-        return E_NOTIMPL;
-    }
-        
 // IHTMLDocument
     virtual /* [nonbrowsable][hidden][id][propget] */ HRESULT STDMETHODCALLTYPE get_Script( 
         /* [out][retval] */ IDispatch **p)
@@ -802,7 +1416,16 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_parentWindow( 
         /* [out][retval] */ IHTMLWindow2 **p)
     {
-        return E_NOTIMPL;
+        if (!mWindow)
+        {
+            CComObject<HTMLWindow>::CreateInstance(&mWindow);
+            if (!mWindow)
+            {
+                return E_UNEXPECTED;
+            }
+            mWindow->mData = mData;
+        }
+        return mWindow->QueryInterface(_uuidof(IHTMLWindow2), (void **) p);
     }
     
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_styleSheets( 
