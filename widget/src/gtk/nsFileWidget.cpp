@@ -40,74 +40,49 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 //-------------------------------------------------------------------------
 nsFileWidget::~nsFileWidget()
 {
-//  gtk_widget_destroy(mWidget);
+  gtk_widget_destroy(mWidget);
 }
 
 
+static void file_ok_clicked(GtkWidget *w, PRBool *ret)
+{
+  g_print("user hit ok\n");
+  *ret = PR_TRUE;
+  gtk_main_quit();
+}
+
+static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
+{
+  g_print("user hit cancel\n");
+  *ret = PR_FALSE;
+  gtk_main_quit();
+}
 
 //-------------------------------------------------------------------------
 //
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
-
 PRBool nsFileWidget::Show()
 {
+  // make things shorter
+  GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
+  PRBool ret;
+
+  gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
   gtk_widget_show(mWidget);
-/*
-  char fileBuffer[MAX_PATH+1] = "";
-  mDefault.ToCString(fileBuffer,MAX_PATH);
 
-  OPENFILENAME ofn;
-  memset(&ofn, 0, sizeof(ofn));
-
-  ofn.lStructSize = sizeof(ofn);
-
-  nsString filterList;
-  GetFilterListArray(filterList);
-  char *filterBuffer = filterList.ToNewCString();
-  char *title = mTitle.ToNewCString();
-  ofn.lpstrTitle = title;
-  ofn.lpstrFilter = filterBuffer;
-  ofn.nFilterIndex = 1;
-  ofn.hwndOwner = mWnd;
-  ofn.lpstrFile = fileBuffer;
-  ofn.nMaxFile = MAX_PATH;
-  ofn.Flags = OFN_SHAREAWARE | OFN_NOCHANGEDIR | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
-  
-  BOOL result;
-
-    // Save current directory, so we can reset if it changes.
-  char* currentDirectory = new char[MAX_PATH+1];
-  VERIFY(::GetCurrentDirectory(MAX_PATH, currentDirectory) > 0);
-
-  if (mMode == eMode_load) {
-    result = GetOpenFileName(&ofn);
-  }
-  else if (mMode == eMode_save) {
-    result = GetSaveFileName(&ofn);
-  }
-  else {
-    NS_ASSERTION(0, "Only load and save are supported modes"); 
-  }
-
-  VERIFY(::SetCurrentDirectory(currentDirectory));
-  
-   // Clean up filter buffers
-  delete filterBuffer;
-  delete title;
-
-   // Set user-selected location of file or directory
-  mFile.SetLength(0);
-  if (result==PR_TRUE) {
-    mFile.Append(fileBuffer);
-  }
-  
-  return((PRBool)result);
-  */
-  // returning true causes the browser to try and display the dir structure...
+// handle close, destroy, etc on the dialog
+  gtk_signal_connect(GTK_OBJECT(fs->ok_button), "clicked",
+	             GTK_SIGNAL_FUNC(file_ok_clicked),
+		     &ret);
+  gtk_signal_connect(GTK_OBJECT(fs->cancel_button), "clicked",
+	             GTK_SIGNAL_FUNC(file_cancel_clicked),
+		     &ret);
+  gtk_main();
+// returning true causes the browser to try and display the dir structure...
 //  return PR_TRUE;
-  return PR_FALSE;
+  return ret;
 }
 
 //-------------------------------------------------------------------------
