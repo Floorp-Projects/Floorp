@@ -175,7 +175,7 @@ nsNativeTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       // Allow the base class to handle common attributes supported
       // by all form elements... 
       else {
-        result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+        result = Inherited::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
       }
       NS_RELEASE(text);
     }
@@ -206,12 +206,12 @@ nsNativeTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         // Allow the base class to handle common attributes supported
         // by all form elements... 
         else {
-          result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+          result = Inherited::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
         }
         NS_RELEASE(textArea);
       }
       else { // We didn't get a Text or TextArea.  Uh oh...
-        result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+        result = Inherited::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
       }
     }
   }
@@ -331,7 +331,7 @@ nsNativeTextControlFrame::PaintTextControlBackground(nsIPresContext& aPresContex
                                                      nsIRenderingContext& aRenderingContext,
                                                      const nsRect& aDirtyRect,
                                                      nsFramePaintLayer aWhichLayer) {
-  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  Inherited::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 void
@@ -563,7 +563,7 @@ NS_IMETHODIMP nsNativeTextControlFrame::SetProperty(nsIAtom* aName, const nsStri
     }
   }
   else {
-    return nsFormControlFrame::SetProperty(aName, aValue);
+    return Inherited::SetProperty(aName, aValue);
   }
   return rv;
 }      
@@ -577,7 +577,7 @@ NS_IMETHODIMP nsNativeTextControlFrame::GetProperty(nsIAtom* aName, nsString& aV
     GetTextControlFrameState(aValue);
   }
   else {
-    return nsFormControlFrame::GetProperty(aName, aValue);
+    return Inherited::GetProperty(aName, aValue);
   }
 
   return NS_OK;

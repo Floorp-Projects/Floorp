@@ -85,8 +85,6 @@ public:
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
 
-  PRBool HasWidget();
- 
   // from nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsISupportsArray& aChildList);
 

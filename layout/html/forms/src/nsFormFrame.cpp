@@ -28,7 +28,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsFormControlFrame.h"
 #include "nsFileControlFrame.h"
-#include "nsRadioControlFrame.h"
+#include "nsRadioControlGroup.h"
 
 #include "nsIForm.h"
 #include "nsIFormControl.h"

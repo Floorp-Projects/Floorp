@@ -429,7 +429,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    result = Inherited::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
   }
 
 // DUMMY
@@ -632,7 +632,7 @@ NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIAtom* aName, const nsString&
     mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
   }
   else {
-    return nsFormControlFrame::SetProperty(aName, aValue);
+    return Inherited::SetProperty(aName, aValue);
   }
   return NS_OK;
 }      
@@ -646,7 +646,7 @@ NS_IMETHODIMP nsGfxTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValu
     GetTextControlFrameState(aValue);
   }
   else {
-    return nsFormControlFrame::GetProperty(aName, aValue);
+    return Inherited::GetProperty(aName, aValue);
   }
 
   return NS_OK;
@@ -792,7 +792,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
-  nsresult rv = nsFormControlFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+  nsresult rv = Inherited::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
 #ifdef NOISY
   printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
            aMetrics.width, aMetrics.height);

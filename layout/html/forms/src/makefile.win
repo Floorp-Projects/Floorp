@@ -36,13 +36,22 @@ CPPSRCS= \
   nsTextControlFrame.cpp  	\
   nsGfxTextControlFrame.cpp \
   nsTextControlFrame.cpp  	\
-  nsSelectControlFrame.cpp \
+  nsNativeSelectControlFrame.cpp \
   nsFieldSetFrame.cpp \
   nsLegendFrame.cpp \
   nsHTMLButtonControlFrame.cpp \
   nsLabelFrame.cpp \
   nsButtonFrameRenderer.cpp \
-  nsImageControlFrame.cpp
+  nsImageControlFrame.cpp \
+  nsGfxButtonControlFrame.cpp \
+  nsGfxCheckboxControlFrame.cpp \
+  nsGfxRadioControlFrame.cpp \
+  nsNativeButtonControlFrame.cpp \
+  nsNativeCheckboxControlFram.cpp \
+  nsNativeFormControlFrame.cpp \
+  nsNativeRadioControlFrame.cpp \
+  nsNativeSelectControlFrame.cpp \
+  nsRadioControlGroup.cpp
 
 CPP_OBJS= \
   .\$(OBJDIR)\nsFormControlHelper.obj \
@@ -57,13 +66,22 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsTextControlFrame.obj \
   .\$(OBJDIR)\nsGfxTextControlFrame.obj \
   .\$(OBJDIR)\nsNativeTextControlFrame.obj \
-  .\$(OBJDIR)\nsSelectControlFrame.obj \
+  .\$(OBJDIR)\nsNativeSelectControlFrame.obj \
   .\$(OBJDIR)\nsFieldSetFrame.obj \
   .\$(OBJDIR)\nsLegendFrame.obj \
   .\$(OBJDIR)\nsHTMLButtonControlFrame.obj \
   .\$(OBJDIR)\nsLabelFrame.obj \
   .\$(OBJDIR)\nsButtonFrameRenderer.obj \
-  .\$(OBJDIR)\nsImageControlFrame.obj
+  .\$(OBJDIR)\nsImageControlFrame.obj \
+  .\$(OBJDIR)\nsGfxButtonControlFrame.obj \
+  .\$(OBJDIR)\nsGfxCheckboxControlFrame.obj \
+  .\$(OBJDIR)\nsGfxRadioControlFrame.obj \
+  .\$(OBJDIR)\nsNativeButtonControlFrame.obj \
+  .\$(OBJDIR)\nsNativeCheckboxControlFram.obj \
+  .\$(OBJDIR)\nsNativeFormControlFrame.obj \
+  .\$(OBJDIR)\nsNativeRadioControlFrame.obj \
+  .\$(OBJDIR)\nsNativeSelectControlFrame.obj \
+  .\$(OBJDIR)\nsRadioControlGroup.obj
 
 
 LINCS= -I$(PUBLIC)\xpcom  \

@@ -19,13 +19,15 @@
 #ifndef nsButtonControlFrame_h___
 #define nsButtonControlFrame_h___
 
-#include "nsFormControlFrame.h"
+#include "nsNativeFormControlFrame.h"
 #include "nsButtonFrameRenderer.h"
 
-class nsButtonControlFrame : public nsFormControlFrame {
+class nsButtonControlFrame : public nsNativeFormControlFrame {
+private:
+	typedef nsNativeFormControlFrame Inherited;
+
 public:
 
-  nsButtonControlFrame();
    // nsFormControlFrame overrides
   nsresult RequiresWidget(PRBool &aHasWidget);
 
@@ -33,38 +35,7 @@ public:
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
-
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent*     aChild,
-                              nsIAtom*        aAttribute,
-                              PRInt32         aHint);
-
-   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
-                   nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
-                   nsIFrame*        asPrevInFlow);
-
-  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                      nsIStyleContext* aParentContext,
-                                      PRInt32 aParentChange,
-                                      nsStyleChangeList* aChangeList,
-                                      PRInt32* aLocalChange) ;
-
   NS_IMETHOD GetFrameName(nsString& aResult) const;
-
-  virtual void PostCreateWidget(nsIPresContext* aPresContext,
-                                nscoord& aWidth,
-                                nscoord& aHeight);
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
@@ -92,16 +63,6 @@ public:
   // Sets listener for button click
   void SetMouseListener(nsIFormControlFrame* aListener) { mMouseListener = aListener; }
 
-  virtual void PaintButton(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect,
-                            nsString& aLabel,
-                            const nsRect& aRect);
-
-   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
-                         nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
-
 protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -115,9 +76,6 @@ protected:
 
 
   nsIFormControlFrame* mMouseListener; // for browse buttons only
-
-   //GFX-rendered state variables
-   nsButtonFrameRenderer mRenderer;
 };
 
 

@@ -19,12 +19,12 @@
 #ifndef nsTextControlFrame_h___
 #define nsTextControlFrame_h___
 
-#include "nsFormControlFrame.h"
+#include "nsNativeFormControlFrame.h"
 class nsIContent;
 class nsIFrame;
 class nsIPresContext;
 
-class nsTextControlFrame : public nsFormControlFrame
+class nsTextControlFrame : public nsNativeFormControlFrame
 {
 /* ---------- methods implemented by base class ---------- */
 public:

@@ -798,22 +798,22 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresContext  *aPresContext,
   nsAutoString  val;
   if (NS_OK == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, val)) {
     if (val.EqualsIgnoreCase("submit")) {
-      rv = NS_NewButtonControlFrame(&aFrame);
+      rv = ConstructButtonControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("reset")) {
-      rv = NS_NewButtonControlFrame(&aFrame);
+      rv = ConstructButtonControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("button")) {
-      rv = NS_NewButtonControlFrame(&aFrame);
+      rv = ConstructButtonControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("checkbox")) {
-      rv = NS_NewCheckboxControlFrame(&aFrame);
+      rv = ConstructCheckboxControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("file")) {
       rv = NS_NewFileControlFrame(&aFrame);
     }
     else if (val.EqualsIgnoreCase("hidden")) {
-      rv = NS_NewButtonControlFrame(&aFrame);
+      rv = ConstructButtonControlFrame(aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("image")) {
       rv = NS_NewImageControlFrame(&aFrame);
@@ -2350,13 +2350,71 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
   return rv;
 }
 
+
+nsWidgetRendering
+nsCSSFrameConstructor::GetFormElementRenderingMode(nsIPresContext*		aPresContext,
+																									 nsWidgetType				aWidgetType) 
+{ 
+  if (!aPresContext) { return eWidgetRendering_Gfx;}
+
+  nsWidgetRendering mode;
+  aPresContext->GetWidgetRenderingMode(&mode);
+
+	switch (mode)
+	{ 
+		case eWidgetRendering_Gfx: 
+			return eWidgetRendering_Gfx; 
+
+		case eWidgetRendering_PartialGfx: 
+			switch (aWidgetType)
+			{
+				case eWidgetType_Button:
+				case eWidgetType_Checkbox:
+				case eWidgetType_Radio:
+				case eWidgetType_Text:
+					return eWidgetRendering_Gfx; 
+
+				default: 
+					return eWidgetRendering_Native; 
+			} 
+
+		case eWidgetRendering_Native: 
+		  PRBool useNativeWidgets = PR_FALSE;
+	    nsIDeviceContext* dc;
+	    aPresContext->GetDeviceContext(&dc);
+	    if (dc) {
+	      PRBool  supportsWidgets;
+	      if (NS_SUCCEEDED(dc->SupportsNativeWidgets(supportsWidgets))) {
+	        useNativeWidgets = supportsWidgets;
+	      }
+	      NS_RELEASE(dc);
+	    }
+			if (useNativeWidgets) 
+				return eWidgetRendering_Native;
+			else
+				return eWidgetRendering_Gfx;
+	}
+	return eWidgetRendering_Gfx; 
+}
+
+
 nsresult
 nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresContext*  aPresContext,
                                                  nsIFrame*&   aNewFrame,
                                                  nsIContent*  aContent,
                                                  nsIStyleContext* aStyleContext)
 {
-  nsresult rv = NS_NewRadioControlFrame(&aNewFrame);
+  nsresult rv = NS_OK;
+	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Radio) == eWidgetRendering_Gfx)
+		rv = NS_NewGfxRadioControlFrame(&aNewFrame);
+	else
+    rv = NS_NewNativeRadioControlFrame(&aNewFrame);
+
+  if (NS_FAILED(rv)) {
+    aNewFrame = nsnull;
+    return rv;
+  }
+
   nsCOMPtr<nsIStyleContext> radioStyle;
   aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::radioPseudo, 
     aStyleContext, PR_FALSE, getter_AddRefs(radioStyle));
@@ -2366,6 +2424,38 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresContext*  aPresContext,
     NS_RELEASE(radio);
   }
  return rv;
+}
+
+nsresult
+nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresContext*     		aPresContext,
+                                                	 nsIFrame*&          		aNewFrame)
+{
+  nsresult rv = NS_OK;
+	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Checkbox) == eWidgetRendering_Gfx)
+		rv = NS_NewGfxCheckboxControlFrame(&aNewFrame);
+	else
+    rv = NS_NewNativeCheckboxControlFrame(&aNewFrame);
+
+  if (NS_FAILED(rv)) {
+    aNewFrame = nsnull;
+  }
+  return rv;
+}
+
+nsresult
+nsCSSFrameConstructor::ConstructButtonControlFrame(nsIPresContext*     		aPresContext,
+                                                	 nsIFrame*&          		aNewFrame)
+{
+  nsresult rv = NS_OK;
+	if (GetFormElementRenderingMode(aPresContext, eWidgetType_Button) == eWidgetRendering_Gfx)
+		rv = NS_NewGfxButtonControlFrame(&aNewFrame);
+	else
+    rv = NS_NewNativeButtonControlFrame(&aNewFrame);
+
+  if (NS_FAILED(rv)) {
+    aNewFrame = nsnull;
+  }
+  return rv;
 }
 
 nsresult
@@ -2517,12 +2607,12 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
       }
       NS_RELEASE(select);
     } else {
-      rv = NS_NewSelectControlFrame(&aNewFrame);
+      rv = NS_NewNativeSelectControlFrame(&aNewFrame);
     }
   }
   else {
     // Not frame based. Use a SelectFrame which creates a native widget.
-     rv = NS_NewSelectControlFrame(&aNewFrame);
+     rv = NS_NewNativeSelectControlFrame(&aNewFrame);
   }
 
   return rv;
@@ -2866,7 +2956,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 
     // Create a frame based on the tag
     if (aTag == nsXULAtoms::button)
-      rv = NS_NewButtonControlFrame(&newFrame);
+      rv = ConstructButtonControlFrame(aPresContext, newFrame);
     else if (aTag == nsXULAtoms::checkbox)
       rv = NS_NewTriStateCheckboxFrame(&newFrame);
     else if (aTag == nsXULAtoms::spinner)
