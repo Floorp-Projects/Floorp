@@ -95,6 +95,10 @@ public:
     static XmString  entryToXmString    (HT_Resource        entry,
                                          INTL_CharSetInfo   char_set_info);
 
+
+	static XmString	getStringFromResource	(MWContext *		context,
+											 HT_Resource		entry);
+
 };
 
 #endif // _xfe_rdf_utils_h_

@@ -369,3 +369,20 @@ XFE_RDFUtils::formatItem(HT_Resource entry,int16 charset)
   return (xmstring);
 }
 //////////////////////////////////////////////////////////////////////////
+/* static */ XmString
+XFE_RDFUtils::getStringFromResource(MWContext *		context,
+									HT_Resource		entry)
+{
+	XmString xmname;
+
+	XP_ASSERT( context != NULL );
+	XP_ASSERT( entry != NULL );
+
+    INTL_CharSetInfo charSetInfo = LO_GetDocumentCharacterSetInfo(context);
+	
+    // Create am XmString from the entry
+	xmname = XFE_RDFUtils::entryToXmString(entry, charSetInfo);
+	
+    return xmname;
+}
+//////////////////////////////////////////////////////////////////////////

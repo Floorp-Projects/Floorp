@@ -1111,26 +1111,6 @@ XFE_RDFMenuToolbarBase::setItemLabelString(Widget item,HT_Resource entry)
     }
 }
 //////////////////////////////////////////////////////////////////////////
-
-XmString
-XFE_RDFMenuToolbarBase::getStringFromResource(HT_Resource entry)
-{
-
-  XmString xmname;
-
-   XP_ASSERT( entry != NULL );
-
-    MWContext * context = _frame->getContext();
-    INTL_CharSetInfo charSetInfo =
-        LO_GetDocumentCharacterSetInfo(context);
-
-    // Create am XmString from the entry
-     xmname = XFE_RDFUtils::entryToXmString(entry, charSetInfo);
-
-    return(xmname);
-
-}
-//////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFMenuToolbarBase::getStyleAndLayout(HT_Resource  entry, int32 * toolbar_style, unsigned char * layout)
 {

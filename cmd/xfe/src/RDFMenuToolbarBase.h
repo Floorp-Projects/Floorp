@@ -145,7 +145,6 @@ protected:
 	XP_Bool		getOnlyHeaders		  ();
 
     void        setItemLabelString    (Widget menu, HT_Resource entry);
-    XmString getStringFromResource(HT_Resource );
     void getStyleAndLayout(HT_Resource , int32 *, unsigned char * );
 
     // Item callbacks

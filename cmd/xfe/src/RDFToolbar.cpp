@@ -24,6 +24,7 @@
 #include "RDFToolbar.h"
 #include "Logo.h"
 #include "MozillaApp.h"
+#include "RDFUtils.h"
 
 #include "prefapi.h"
 #include "felocale.h"
@@ -655,8 +656,11 @@ XFE_RDFToolbar::tooltipCB(Widget w, XtPointer client_data, XmString * string_ret
        *string_return = str;
        *need_to_free_string = True;
     }
-    else {
-      *string_return = obj->getStringFromResource(entry);
+    else 
+    {
+      MWContext * context = (obj->getFrame())->getContext();
+
+      *string_return = XFE_RDFUtils::getStringFromResource(context,entry);
       *need_to_free_string = True;
     }
 
@@ -692,12 +696,15 @@ XFE_RDFToolbar::docStringSetCB(Widget w, XtPointer client_data, XmString * strin
        *string_return = str;
        *need_to_free_string = True;
     }
-    else {
+    else
+	{
+		
+		Boolean isContainer = HT_IsContainer(entry);
+		MWContext * context = (obj->getFrame())->getContext();
+		
+		*string_return = XFE_RDFUtils::getStringFromResource(context,entry);
 
-      Boolean isContainer = HT_IsContainer(entry);
-      
-         *string_return = obj->getStringFromResource(entry);
-         *need_to_free_string = True;
+		*need_to_free_string = True;
     }
 
 }
