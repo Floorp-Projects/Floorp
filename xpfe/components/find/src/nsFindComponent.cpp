@@ -252,7 +252,7 @@ struct nsFindDialog : public nsIXULWindowCallbacks,
     // nsFindDialog stuff
     nsFindDialog( nsIFindComponent *aComponent,
                   nsFindComponent::Context *aContext );
-    virtual ~nsFindDialog() {}
+    virtual ~nsFindDialog() { NS_IF_RELEASE(mContext); }
     void OnFind( nsIContent *aContent );
     void OnNext();
     void OnCancel();
@@ -260,7 +260,7 @@ struct nsFindDialog : public nsIXULWindowCallbacks,
 
 private:
     nsCOMPtr<nsIFindComponent>         mComponent;
-    nsCOMPtr<nsFindComponent::Context> mContext;
+    nsFindComponent::Context          *mContext;
     nsCOMPtr<nsIWebShell>              mWebShell;
     nsCOMPtr<nsIWebShellWindow>        mWindow;
 }; // nsFindDialog
@@ -303,11 +303,12 @@ nsFindDialog::QueryInterface( REFNSIID anIID, void **anInstancePtr) {
 nsFindDialog::nsFindDialog( nsIFindComponent         *aComponent,
                             nsFindComponent::Context *aContext )
         : mComponent( nsDontQueryInterface<nsIFindComponent>( aComponent ) ),
-          mContext( nsDontQueryInterface<nsFindComponent::Context>(aContext) ),
+          mContext( aContext ),
           mWebShell(),
           mWindow() {
     // Initialize ref count.
     NS_INIT_REFCNT();
+    mContext->AddRef();
 }
 
 // Do startup stuff from C++ side.
