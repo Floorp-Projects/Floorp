@@ -131,7 +131,7 @@ class nsEUCSampler {
   public:
     nsEUCSampler() {
       mTotal =0;
-      mThreshold = 2000;
+      mThreshold = 200;
 	  mState = 0;
       PRInt32 i;
       for(i=0;i<94;i++)
@@ -434,7 +434,8 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
           PRInt32 eucCnt=0;
           float bestScore = 0.0f;
           for(j = 0; j < mItems; j++) {
-             if(nsnull != mStatisticsData[mItemIdx[j]]) 
+             if((nsnull != mStatisticsData[mItemIdx[j]])  &&
+                (&gBig5Statistics != mStatisticsData[mItemIdx[j]]))
              {
                 float score = mSampler.GetScore(
                    mStatisticsData[mItemIdx[j]]->mFirstByteFreq,
