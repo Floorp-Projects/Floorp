@@ -75,6 +75,7 @@ public:
                                            nsMsgComposeAndSend  *aMsgSendObj);
 
   nsresult              DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
+                               nsIMessage *aMsgToReplace, PRBool aIsDraft,
                                nsITransactionManager *txnMgr);
 
   nsIMsgFolder          *GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity);

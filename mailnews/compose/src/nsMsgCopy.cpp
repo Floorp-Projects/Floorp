@@ -101,7 +101,6 @@ CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
   return NS_OK;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////
 // END  END  END  END  END  END  END  END  END  END  END  END  END  END  END 
 // This is the listener class for the copy operation. We have to create this class 
@@ -128,6 +127,8 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
                               nsMsgComposeAndSend  *aMsgSendObj)
 {
   nsCOMPtr<nsIMsgFolder>  dstFolder;
+  nsIMessage              *msgToReplace = nsnull;
+  PRBool                  isDraft = PR_FALSE;
 
   if (!aMsgSendObj)
     return NS_ERROR_FAILURE;
@@ -137,24 +138,28 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   //
   if (aMode == nsMsgQueueForLater)       // QueueForLater (Outbox)
   {
-    dstFolder = GetUnsentMessagesFolder(aUserIdentity); 
+    dstFolder = GetUnsentMessagesFolder(aUserIdentity);
+    isDraft = PR_FALSE;
   }
   else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {
     dstFolder = GetDraftsFolder(aUserIdentity);
+    isDraft = PR_TRUE;
   }
   else if (aMode == nsMsgSaveAsTemplate) // SaveAsTemplate (Templates)
   {
     dstFolder = GetTemplatesFolder(aUserIdentity);
+    isDraft = PR_FALSE;
   }
   else // SaveInSentFolder (Sent) -  nsMsgDeliverNow
   {
     dstFolder = GetSentFolder(aUserIdentity);
+    isDraft = PR_FALSE;
   }
 
   mMode = aMode;
-  
-  nsresult rv = DoCopy(aFileSpec, dstFolder, nsnull);
+  nsresult rv = DoCopy(aFileSpec, dstFolder, msgToReplace, isDraft, nsnull);
+
   if (NS_SUCCEEDED(rv))
   {
     mMsgSendObj = aMsgSendObj;
@@ -167,6 +172,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
 
 nsresult 
 nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
+                  nsIMessage *aMsgToReplace, PRBool aIsDraft,
                   nsITransactionManager *txnMgr)
 {
   nsresult rv = NS_OK;
@@ -184,7 +190,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
       return MK_OUT_OF_MEMORY;
 
     copyListener->SetMsgComposeAndSendObject(mMsgSendObj);
-    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, nsnull, PR_FALSE, 
+    rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, aIsDraft, 
                                       copyListener, nsnull, txnMgr);
 	}
 
