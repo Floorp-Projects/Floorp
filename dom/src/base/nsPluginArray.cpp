@@ -171,7 +171,22 @@ PluginArrayImpl::NamedItem(const nsAReadableString& aName,
 NS_IMETHODIMP
 PluginArrayImpl::Refresh(PRBool aReloadDocuments)
 {
-  return NS_OK;
+  if(mPluginHost == nsnull)
+    return NS_ERROR_FAILURE;
+
+  nsresult res = NS_OK;
+
+  res = nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginHost), (nsISupports**)&mPluginHost);
+
+  if(NS_FAILED(res))
+    return res;
+
+  nsCOMPtr<nsIPluginManager> pm = do_QueryInterface(mPluginHost);
+  
+  if(pm)
+    pm->ReloadPlugins(aReloadDocuments);
+
+  return res;
 }
 
 nsresult
