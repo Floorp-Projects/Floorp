@@ -1238,6 +1238,10 @@ intl/locale/public/Makefile
 intl/locale/src/Makefile
 intl/locale/src/unix/Makefile
 intl/locale/tests/Makefile
+intl/lwbrk/Makefile
+intl/lwbrk/src/Makefile
+intl/lwbrk/public/Makefile
+intl/lwbrk/tests/Makefile
 intl/unicharutil/Makefile
 intl/unicharutil/src/Makefile
 intl/unicharutil/public/Makefile
