@@ -44,11 +44,8 @@ bcXPCOMMarshalToolkit::bcXPCOMMarshalToolkit(PRUint16 _methodIndex, nsIInterface
             return;
         }
         for (unsigned int i = 0; i < paramCount; i++) {
-            (params)[i].Init(_params[i], info->GetParam(i).GetType(),0);
-            if (info->GetParam(i).IsOut()) {
-                params[i].flags |= nsXPTCVariant::PTR_IS_DATA;
-                params[i].ptr = params[i].val.p = _params[i].val.p;
-            }
+            uint8 flags = info->GetParam(i).IsOut() ? nsXPTCVariant::PTR_IS_DATA : 0;
+            (params)[i].Init(_params[i], info->GetParam(i).GetType(),flags);
         }
     }
 }
@@ -101,7 +98,7 @@ nsresult bcXPCOMMarshalToolkit::Marshal(bcIMarshaler *m) {
         }
         nsXPTCVariant *value = & params[i];
         void *data;
-        data = (isOut) ? value->val.p : value;
+        data = (isOut) ? value->ptr : value;
         r = MarshalElement(m,data,&param,param.GetType().TagPart(),i);
     }
     return r;
@@ -113,34 +110,23 @@ nsresult bcXPCOMMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
     for (unsigned int i = 0; i < paramCount; i++) {
         nsXPTParamInfo param = info->GetParam(i);
         PRBool isOut = param.IsOut();
-        nsXPTCMiniVariant tmpValue = params[i]; //we need to set value for client side
         nsXPTCMiniVariant * value;
-        value = &tmpValue;
+        value = &params[i]; //we need to set value for client side
         nsXPTType type = param.GetType();
+        uint8 flags = isOut ? nsXPTCVariant::PTR_IS_DATA : 0;
         if (callSide == onServer
             && param.IsOut()) { //we need to allocate memory for out parametr
             value->val.p = allocator->Alloc(sizeof(nsXPTCMiniVariant)); // sizeof(nsXPTCMiniVariant) is good
-            params[i].Init(*value,type,0);
-            params[i].ptr = params[i].val.p = value->val.p;
-            params[i].flags |= nsXPTCVariant::PTR_IS_DATA;
+            params[i].Init(*value,type,flags);
         }
-#if 0
-        if (callSide == onClient 
-            &&  param.GetType().IsPointer() 
-            &&  ! param.GetType().IsReference() 
-            ) {
-            allocator->Free(params[i].val.p);
-        }
-#endif
-        
-
         if ( (callSide == onServer && !param.IsIn() 
               || (callSide == onClient && !param.IsOut()))){ 
             continue;
         }
-        void *data = (isOut) ? value->val.p : value;
+        void *data = (isOut) ? params[i].ptr : value;
         UnMarshalElement(data, um, &param, param.GetType().TagPart(),allocator);
-        params[i].Init(*value,type,0);
+		value = (nsXPTCMiniVariant*)((isOut) ? &data : data);
+        params[i].Init(*value,type, flags);
     }
     return NS_OK;
 }
@@ -172,7 +158,7 @@ nsresult bcXPCOMMarshalToolkit::GetArraySizeFromParam( nsIInterfaceInfo *_interf
         return PR_FALSE;
     
     if(arg_param.IsOut())
-        *result = *(PRUint32*)nativeParams[argnum].val.p;
+        *result = *(PRUint32*)nativeParams[argnum].ptr;
     else
         *result = nativeParams[argnum].val.u32;
     
@@ -298,7 +284,7 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                     if(arg_type.IsPointer() &&
                        arg_type.TagPart() == nsXPTType::T_IID) {
                         if(arg_param.IsOut())
-                            iid =*((nsID**)params[argnum].val.p);
+                            iid =*((nsID**)params[argnum].ptr);
                         else
                             iid = (nsID*)params[argnum].val.p;
                     }
