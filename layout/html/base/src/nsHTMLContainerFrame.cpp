@@ -35,6 +35,8 @@
 #include "nsAbsoluteFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIContentDelegate.h"
+#include "nsIHTMLContent.h"
+#include "nsHTMLParts.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -381,178 +383,28 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
   return NS_OK;
 }
 
-#if 0
-nsIFrame::ReflowStatus
-nsHTMLContainerFrame::IncrementalReflow(nsIPresContext*  aPresContext,
-                                        nsReflowMetrics& aDesiredSize,
-                                        const nsSize&    aMaxSize,
-                                        nsISpaceManager* aSpaceManager,
-                                        nsReflowCommand& aReflowCommand)
+nsresult
+nsHTMLContainerFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
 {
-  // 0. Get to the correct flow block for this frame that applies to
-  // the effected frame. If the reflow command is not for us or it's
-  // deleted or changed then "child" is the child being
-  // effected. Otherwise child is the child before the effected
-  // content child (or null if the effected child is our first child)
-  <T>* flow = FindFlowBlock(aReflowCommand, &child);
-
-  // 1. Recover reflow state
-  <T>State state;
-  RecoverState(aPresContext, ..., state);
-
-  // 2. Put state into presentation shell cache so child frames can find
-  // it.
-
-  if (aReflowCommand.GetTarget() == this) {
-    // Apply reflow command to the flow frame; one of it's immediate
-    // children has changed state.
-    ReflowStatus status;
-    switch (aReflowCommand.GetType()) {
-    case nsReflowCommand::rcContentAppended:
-      status = ReflowAppended(aPresContext, aDesiredSize, aMaxSize,
-                              aSpaceManager, state, flow);
-      break;
-    case nsReflowCommand::rcContentInserted:
-      status = ReflowInserted(aPresContext, aDesiredSize, aMaxSize,
-                              aSpaceManager, state, flow);
-      break;
-    case nsReflowCommand::rcContentDeleted:
-      status = ReflowDeleted(aPresContext, aDesiredSize, aMaxSize,
-                             aSpaceManager, state, flow);
-      break;
-    case nsReflowCommand::rcContentChanged:
-      status = ReflowChanged(aPresContext, aDesiredSize, aMaxSize,
-                             aSpaceManager, state, flow);
-      break;
-    case nsReflowCommand::rcUserDefined:
-      switch (
-      break;
-    default:
-      // Ignore all other reflow commands
-      status = NS_FRAME_COMPLETE;
-      break;
+  nsStyleDisplay* display = (nsStyleDisplay*)
+    mStyleContext->GetData(eStyleStruct_Display);
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+               ("nsHTMLContainerFrame::ProcessInitialReflow: display=%d",
+                display->mDisplay));
+  if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
+    // This container is a list-item container. Therefore it needs a
+    // bullet content object.
+    nsIHTMLContent* bullet;
+    nsresult rv = NS_NewHTMLBullet(&bullet);
+    if (NS_OK != rv) {
+      return rv;
     }
-  } else {
-    // Reflow command applies to one of our children. We need to
-    // figure out which child because it's going to change size most
-    // likely and we need to be prepared to deal with it.
-    nsIFrame* kid = nsnull;
-    status = aReflowCommand.Next(aDesiredSize, aMaxSize, aSpaceManager, kid);
 
-    // Execute the ReflowChanged post-processing code that deals with
-    // the child frame's size change; next-in-flows, overflow-lists,
-    // etc.
+    // XXX
+    // Note: this will generate a content-inserted reflow operation
+    // which we need to discard.
+    mContent->InsertChildAt(bullet, 0);
   }
 
-  // 4. Remove state from presentation shell cache
-
-  return status;
+  return NS_OK;
 }
-
-nsIFrame::ReflowStatus
-nsHTMLContainerFrame::ReflowAppended(nsIPresContext*  aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsISpaceManager* aSpaceManager,
-                                     nsReflowCommand& aReflowCommand)
-{
-  // 1. compute state up to but not including new content w/o reflowing
-  // everything that's already been flowed
-
-  // 2. if this container uses pseudo-frames then 2b, else 2a
-
-  //   2a. start a reflow-unmapped of the new children
-
-  //   2b. reflow-mapped the last-child if it's a pseudo as it might
-  //   pickup the new children; smarter containers can avoid this if
-  //   they can determine that the last-child won't pickup the new
-  //   children up. Once reflowing the last-child is complete then if
-  //   the status is frComplete then and only then try reflowing any
-  //   remaining unmapped children
-
-  //   2c. For inline and column code the result of a reflow mapped
-  //   cannot impact any previously reflowed children. For block this
-  //   is not true so block needs to reconstruct the line and then
-  //   proceed as if the line were being reflowed for the first time
-  //   (skipping over the existing children, of course). The line still
-  //   needs to be flushed out, vertically aligned, etc, which may cause
-  //   it to not fit.
-
-  // 3. we may end up pushing kids to next-in-flow or stopping before
-  // all children have been mapped because we are out of room. parent
-  // needs to look at our return status and create a next-in-flow for
-  // us; the currently implemented reflow-unmapped code will do the
-  // right thing in that a child that is being appended and reflowed
-  // will get it's continuations created by us; if we run out of room
-  // we return an incomplete status to our parent and it does the same
-  // to us.
-}
-
-// use a custom reflow command when we push or create an overflow list; 
-
-nsIFrame::ReflowStatus
-nsHTMLContainerFrame::ReflowInserted(nsIPresContext*  aPresContext,
-                                     nsReflowMetrics& aDesiredSize,
-                                     const nsSize&    aMaxSize,
-                                     nsISpaceManager* aSpaceManager,
-                                     nsReflowCommand& aReflowCommand)
-{
-  // 1. compute state up to but not including new content w/o reflowing
-  // everything that's already been flowed
-
-  // 2. Content insertion implies a new child of this container; the
-  // content inserted may need special attention (see
-  // ContentAppended). The same rules apply. However, if the
-  // pseudo-frame doesn't pullup the child then we need to
-  // ResizeReflow the addition (We cannot go through the
-  // reflow-unmapped path because the child frame(s) will need to be
-  // inserted into the list).
-
-  // 2a if reflow results in a push then go through push reflow
-  // command path else go through deal-with-size-change
-}
-
-nsIFrame::ReflowStatus
-nsHTMLContainerFrame::ReflowDeleted(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsISpaceManager* aSpaceManager,
-                                    nsReflowCommand& aReflowCommand)
-{
-  // 1. compute state up to but not including deleted content w/o reflowing
-  // everything that's already been flowed
-
-  // 2. remove all of the child frames that belong to the deleted
-  // child; this includes next-in-flows. mark all of our next-in-flows
-  // that are impacted by this as dirty (or generate another reflow
-  // command)
-
-  // 3. Run reflow-mapped code starting at the deleted child point;
-  // return the usual status to the parent.
-
-
-  // Generate reflow commands for my next-in-flows if they are
-  // impacted by deleting my child's next-in-flows
-}
-
-// Meta point about ReflowChanged; we will factor out the change so
-// that only stylistic changes that actually require a reflow end up
-// at this frame. The style system will differentiate between
-// rendering-only changes and reflow changes.
-
-nsIFrame::ReflowStatus
-nsHTMLContainerFrame::ReflowChanged(nsIPresContext*  aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
-                                    const nsSize&    aMaxSize,
-                                    nsISpaceManager* aSpaceManager,
-                                    nsReflowCommand& aReflowCommand)
-{
-  // 1. compute state up to but not including deleted content w/o reflowing
-  // everything that's already been flowed
-
-  // 2. delete the frame that corresponds to the changed child (and
-  // it's next-in-flows, etc.)
-
-  // 3. run the ReflowInserted code on the content
-}
-#endif
