@@ -2066,11 +2066,15 @@ HTMLContentSink::ScrollToRef()
         if (nsnull != frame) {
           nsIViewManager* vm = shell->GetViewManager();
           if (nsnull != vm) {
-            nsIView* rootView = nsnull;
-            vm->GetRootView(rootView);
-            if (nsnull != rootView) {
+            nsIView* viewportView = nsnull;
+            vm->GetRootView(viewportView);
+            if (nsnull != viewportView) {
+              nsIView* viewportScrollView;
+              viewportView->GetChild(0, viewportScrollView);
+
+              // Try and get the nsIScrollableView interface
               nsIScrollableView* sview = nsnull;
-              rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
+              viewportScrollView->QueryInterface(kIScrollableViewIID, (void**) &sview);
               if (nsnull != sview) {
                 // Determine the x,y scroll offsets for the given
                 // frame. The offsets are relative to the
@@ -2079,7 +2083,7 @@ HTMLContentSink::ScrollToRef()
                 nsPoint offset;
                 nsIView* view;
                 frame->GetOffsetFromView(offset, &view);
-                if (view == rootView) {
+                if (view == viewportView) {
 // XXX write me!
 // printf("view==rootView ");
                 }
