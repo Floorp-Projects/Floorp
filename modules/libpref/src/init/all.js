@@ -223,7 +223,7 @@ pref("print.show_print_progress", true);
 
 // When this is set to false it means each window has its PrintSettings
 // and a change in one browser window does not effect the others
-pref("print.use_global_printsettings", false);
+pref("print.use_global_printsettings", true);
 
 // This indicates whether it should use the native dialog or the XP Dialog50
 pref("print.use_native_print_dialog", false);

@@ -104,6 +104,8 @@ const char kJustLeft[]   = "left";
 const char kJustCenter[] = "center";
 const char kJustRight[]  = "right";
 
+static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
+
 nsFont* nsPrintOptions::sDefaultFont = nsnull;
 
 /** ---------------------------------------------------
@@ -1000,6 +1002,20 @@ NS_IMETHODIMP nsPrintOptions::GetGlobalPrintSettings(nsIPrintSettings * *aGlobal
   if (!mGlobalPrintSettings) {
     CreatePrintSettings(getter_AddRefs(mGlobalPrintSettings));
     NS_ASSERTION(mGlobalPrintSettings, "Can't be NULL!");
+    // The very first we should initialize from the default printer
+    if (mGlobalPrintSettings) {
+      nsresult rv;
+      nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        PRUnichar* printerName = nsnull;
+        // Not sure if all platforms will return the proper error code
+        // so for insurance, make sure there is a printer name
+        if (NS_SUCCEEDED(prtEnum->GetDefaultPrinterName(&printerName)) && printerName && !*printerName) {
+          prtEnum->InitPrintSettingsFromPrinter(printerName, mGlobalPrintSettings);
+          nsMemory::Free(printerName);
+        }
+      }
+    }
   }
 
   // If this still NULL, we have some very big problems going on

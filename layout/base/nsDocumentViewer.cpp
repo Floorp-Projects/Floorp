@@ -7321,7 +7321,6 @@ DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetti
   nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = printService->GetGlobalPrintSettings(aGlobalPrintSettings);
-    InitPrintSettingsFromPrinter(nsnull, *aGlobalPrintSettings);
   }
   return rv;
 }
