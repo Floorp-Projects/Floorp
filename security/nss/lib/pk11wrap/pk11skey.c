@@ -3232,14 +3232,18 @@ PK11_ExitContextMonitor(PK11Context *cx) {
 void
 PK11_DestroyContext(PK11Context *context, PRBool freeit)
 {
+    SECStatus rv = SECFailure;
     if (context->ownSession && context->key && /* context owns session & key */
         context->key->session == context->session && /* sharing session */
         !context->key->sessionOwner)              /* sanity check */
     {
 	/* session still valid, let the key free it as necessary */
-        (void)PK11_Finalize(context); /* end any ongoing activity */
-	context->key->sessionOwner = PR_TRUE;
-    } else {
+        rv = PK11_Finalize(context); /* end any ongoing activity */
+	if (rv == SECSuccess) {
+	    context->key->sessionOwner = PR_TRUE;
+	} /* else couldn't finalize the session, close it */
+    }
+    if (rv == SECFailure) {
 	pk11_CloseSession(context->slot,context->session,context->ownSession);
     }
     /* initialize the critical fields of the context */
