@@ -428,9 +428,11 @@ if ($action eq 'new') {
     push(@series, [$::FORM{'open_name'}, $query]);
 
     foreach my $sdata (@series) {
-        my $series = new Bugzilla::Series($product, $::FORM{'subcategory'},
+        my $series = new Bugzilla::Series(undef, $product, 
+                                          $::FORM{'subcategory'},
                                           $sdata->[0], $::userid, 1,
                                           $sdata->[1] . "&product=$product", 1);
+        $series->writeToDatabase();
     }
 
     # Make versioncache flush

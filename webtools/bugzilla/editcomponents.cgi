@@ -466,9 +466,10 @@ if ($action eq 'new') {
     push(@series, [$::FORM{'closed_name'}, $resolved . $prodcomp]);
 
     foreach my $sdata (@series) {
-        my $series = new Bugzilla::Series($product, $component,
+        my $series = new Bugzilla::Series(undef, $product, $component,
                                           $sdata->[0], $::userid, 1,
                                           $sdata->[1], 1);
+        $series->writeToDatabase();
     }
 
     # Make versioncache flush

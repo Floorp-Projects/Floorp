@@ -3727,9 +3727,10 @@ if (!$series_exists) {
         
         foreach my $field (@fields) {            
             # Create a Series for each field in this product
-            my $series = new Bugzilla::Series($product, $all_name,
+            my $series = new Bugzilla::Series(undef, $product, $all_name,
                                               $field, $::userid, 1,
                                               $queries{$field}, 1);
+            $series->writeToDatabase();
             $seriesids{$field} = $series->{'series_id'};
         }
         
@@ -3737,9 +3738,10 @@ if (!$series_exists) {
         # the same set as new products (see editproducts.cgi.)
         my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
         my $query = join("&", map { "bug_status=$_" } @openedstatuses);
-        my $series = new Bugzilla::Series($product, $all_name,
+        my $series = new Bugzilla::Series(undef, $product, $all_name,
                                           $open_name, $::userid, 1, 
                                           $query_prod . $query, 1);
+        $series->writeToDatabase();
         
         # Now, we attempt to read in historical data, if any
         # Convert the name in the same way that collectstats.pl does
