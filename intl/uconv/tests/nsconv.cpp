@@ -32,12 +32,13 @@ static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_I
 void usage()
 {
   printf(
-"nsconv -f fromcode -t tocode [file]\n"
+"nsconv -f fromcode -t tocode infile outfile\n"
   );
 }
 int fromcodeind = 0;
 int tocodeind = 0;
 FILE* infile = 0;
+FILE* outfile = 0;
 #define INBUFSIZE (1024*16)
 #define MEDBUFSIZE (1024*16*2)
 #define OUTBUFSIZE (1024*16*8)
@@ -59,7 +60,7 @@ int main(int argc, const char** argv)
 	 fprintf(stderr, "Cannot get Character Converter Manager %x\n", res);
    }
    int i;
-   if(argc > 5)
+   if(argc > 6)
    {
      for(i =0; i < argc; i++)
      {
@@ -86,21 +87,22 @@ int main(int argc, const char** argv)
   		return -1;
 	     }
        }
-     }
-     if(argc == 6)
-     {
+	 }
         infile = fopen(argv[5], "rb");
         if(NULL == infile) 
         {  
            usage();
-           fprintf(stderr,"cannot open file %s\n", argv[5]);
+           fprintf(stderr,"cannot open input file %s\n", argv[5]);
            return -1; 
         }
-     }
-     else
-     {
-        infile = stdin;
-     }
+        outfile = fopen(argv[6], "ab");
+        if(NULL == outfile) 
+        {  
+           usage();
+           fprintf(stderr,"cannot open output file %s\n", argv[6]);
+           return -1; 
+        }
+
     
      PRInt32 insize,medsize,outsize;
      while((insize=fread(inbuffer, 1,INBUFSIZE,infile)) > 0)
@@ -118,12 +120,12 @@ int main(int argc, const char** argv)
             fprintf(stderr, "failed in encoder->Convert %x\n",res);
 	    return -1;
 	}
-        fwrite(outbuffer, 1, outsize, stdout);
+        fwrite(outbuffer, 1, outsize, outfile);
 
      }
      
      fclose(infile);
-     fclose(stdout);
+     fclose(outfile);
      fprintf(stderr, "Done!\n");
      return 0;
    }
