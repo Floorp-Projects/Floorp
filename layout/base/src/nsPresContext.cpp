@@ -423,15 +423,16 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   if (NS_OK != rv) {
     return rv;
   }
+  mImageLoaders.AppendElement(loader);
 
   rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aTargetFrame,
                     aNeedSizeUpdate);
   if (NS_OK != rv) {
+    mImageLoaders.RemoveElement(loader);
     NS_RELEASE(loader);
     return rv;
   }
   // Return the loader
-  mImageLoaders.AppendElement(loader);
   NS_ADDREF(loader);
   aLoaderResult = loader;
   return NS_OK;
