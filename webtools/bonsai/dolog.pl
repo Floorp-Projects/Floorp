@@ -37,7 +37,7 @@
 # Now, on my.bonsai.machine, add a mail alias so that mail sent to
 # "bonsai-checkin-daemon" will get piped to handleCheckinMail.pl.
 
-use Socket;
+use Mail::Mailer;
 
 $username = $ENV{"CVS_USER"} || getlogin || (getpwuid($<))[0] || "nobody";
 $envcvsroot = $ENV{'CVSROOT'};
@@ -312,78 +312,22 @@ sub process_tag_command {
 sub do_commitinfo {
 }
 
-
-
-
-sub get_response_code {
-    my ($expecting) = @_;
-#   if ($flag_debug) {
-#       print STDERR "SMTP: Waiting for code $expecting\n";
-#   }
-    while (1) {
-        my $line = <S>;
-#       if ($flag_debug) {
-#           print STDERR "SMTP: $line";
-#       }
-        if ($line =~ /^[0-9]*-/) {
-            next;
-        }
-        if ($line =~ /(^[0-9]*) /) {
-            my $code = $1;
-            if ($code == $expecting) {
-#               if ($flag_debug) {
-#                   print STDERR "SMTP: got it.\n";
-#               }
-                return;
-            }
-            die "Bad response from SMTP -- $line";
-        }
-    }
-}
-
-
-
-
 sub mail_notification {
     chop(my $hostname = `hostname`);
+    my $mailer = Mail::Mailer->new("smtp", Server => $mailhost) ||
+        die("Failed to send mail notification\n");
+    my %headers;
 
-    my ($remote,$port, $iaddr, $paddr, $proto, $line);
-
-    $remote  = $mailhost;
-    $port    = 25;
-    if ($port =~ /\D/) { $port = getservbyname($port, 'tcp') }
-    die "No port" unless $port;
-    $iaddr   = inet_aton($remote)               || die "no host: $remote";
-    $paddr   = sockaddr_in($port, $iaddr);
-
-    $proto   = getprotobyname('tcp');
-    socket(S, PF_INET, SOCK_STREAM, $proto)  || die "socket: $!";
-    connect(S, $paddr)    || die "connect: $!";
-    select(S); $| = 1; select(STDOUT);
-
-    get_response_code(220);
-    print S "HELO $hostname\n";
-    get_response_code(250);
-    print S "MAIL FROM: bonsai-daemon\@$hostname\n";
-    get_response_code(250);
-    foreach $i (@mailto) {
-        print S "RCPT TO: $i\n";
-        get_response_code(250);
-    }
-    print S "DATA\n";
-    get_response_code(354);
-    # Get one line starting with "354 ".
+    $headers{'From'} = "bonsai-daemon\@$hostname";
+    $headers{'To'} = \@mailto;
     if ($flag_tagcmd) {
-        print S "Subject:  cvs tag in $repository\n";
+        $headers{'Subject'} = "cvs tag in $repository";
     } else {
-        print S "Subject:  cvs commit to $repository\n";
+        $headers{'Subject'} = "cvs commit to $repository";
     }
-    print S "\n";
-    print S @outlist, "\n";
-    print S ".\n";
-    get_response_code(250);
-    print S "QUIT\n";
-    close(S);
+    $mailer->open(\%headers);
+    print $mailer @outlist;
+    $mailer->close;
 }
 
 sub stdout_notification { 
