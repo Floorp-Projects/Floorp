@@ -31,6 +31,7 @@
 #include "nsSSLIOLayer.h"
 #include "nsIWebProgressListener.h"
 #include "nsISSLSocketControl.h"
+#include "nsIChannel.h"
 
 static PRDescIdentity  nsSSLIOLayerIdentity;
 static PRIOMethods     nsSSLIOLayerMethods;
@@ -69,6 +70,7 @@ protected:
     CMT_CONTROL* mControl;
     CMSocket*    mSocket;
     PRFileDesc*  mFd;
+    nsIChannel*  mChannel;
     
     nsString     mHostName;
     PRInt32      mHostPort;
@@ -174,7 +176,7 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
                                        ipBuffer,
                                        (hostName ? hostName : ipBuffer),
                                        handshake,
-                                       nsnull);
+                                       infoObject);
     }
     
     if (hostName)  Recycle(hostName);
@@ -364,13 +366,13 @@ nsPSMSocketInfo::ProxyStepUp()
     nsCAutoString hostName;
     hostName.AssignWithConversion(mHostName);
     
-    return CMT_ProxyStepUp(mControl, mSocket, nsnull, hostName);
+    return CMT_ProxyStepUp(mControl, mSocket, this, hostName);
 }
 
 NS_IMETHODIMP
 nsPSMSocketInfo::TLSStepUp()
 {
-    return CMT_TLSStepUp(mControl, mSocket, nsnull);
+    return CMT_TLSStepUp(mControl, mSocket, this);
 }
 
 NS_IMETHODIMP
@@ -571,6 +573,21 @@ nsPSMSocketInfo::GetSecurityState(PRInt32 *aSecurityState)
     *aSecurityState = mPickledStatus ? (PRInt32) nsIWebProgressListener::STATE_IS_SECURE
         : (PRInt32) nsIWebProgressListener::STATE_IS_BROKEN;
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPSMSocketInfo::GetChannel(nsIChannel** aChannel)
+{
+    *aChannel = mChannel;
+    NS_IF_ADDREF(*aChannel);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPSMSocketInfo::SetChannel(nsIChannel* aChannel)
+{
+    mChannel = aChannel;
     return NS_OK;
 }
 

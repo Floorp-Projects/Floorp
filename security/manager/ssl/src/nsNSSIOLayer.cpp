@@ -37,11 +37,11 @@
 #include "nsNSSIOLayer.h"
 #include "nsNSSCallbacks.h"
 
-#include "nsString.h"
 #include "prlog.h"
 #include "nsISecurityManagerComponent.h"
 #include "nsIServiceManager.h"
 #include "nsIWebProgressListener.h"
+#include "nsIChannel.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -61,7 +61,8 @@ extern PRLogModuleInfo* gPIPNSSLog;
 nsNSSSocketInfo::nsNSSSocketInfo()
   : mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
     mForceHandshake(PR_FALSE),
-    mUseTLS(PR_FALSE)
+    mUseTLS(PR_FALSE),
+    mChannel(nsnull)
 { 
   NS_INIT_ISUPPORTS();
 }
@@ -137,6 +138,21 @@ nsresult
 nsNSSSocketInfo::SetProxyPort(PRInt32 aPort)
 {
   mProxyPort = aPort;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::GetChannel(nsIChannel** aChannel)
+{
+  *aChannel = mChannel;
+  NS_IF_ADDREF(*aChannel);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSSocketInfo::SetChannel(nsIChannel* aChannel)
+{
+  mChannel = aChannel;
   return NS_OK;
 }
 
@@ -502,13 +518,13 @@ nsSSLIOLayerAddToSocket(const char* host,
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] Socket set up\n", (void*)sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));
-  if (SECSuccess != SSL_Enable(sslSock, SSL_SECURITY, PR_TRUE)) {
+  if (SECSuccess != SSL_OptionSet(sslSock, SSL_SECURITY, PR_TRUE)) {
     goto loser;
   }
-  if (SECSuccess != SSL_Enable(sslSock, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
+  if (SECSuccess != SSL_OptionSet(sslSock, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) {
     goto loser;
   }
-  if (SECSuccess != SSL_Enable(sslSock, SSL_ENABLE_FDX, PR_TRUE)) {
+  if (SECSuccess != SSL_OptionSet(sslSock, SSL_ENABLE_FDX, PR_TRUE)) {
     goto loser;
   }
   if (SECSuccess != SSL_BadCertHook(sslSock, nsNSSBadCertHandler,

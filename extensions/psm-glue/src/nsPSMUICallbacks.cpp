@@ -45,13 +45,14 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsIXULWindow.h"
+#include "nsIChannel.h"
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 
 // Happy callbacks
-static char * PromptUserCallback(void *arg, char *prompt, int isPasswd);
+static char * PromptUserCallback(void *arg, char *prompt, void* clientContext, int isPasswd);
 static char * FilePathPromptCallback(void *arg, char *prompt, char *fileRegEx, CMUint32 shouldFileExist);
 static void   ApplicationFreeCallback(char *userInput);
 
@@ -334,26 +335,62 @@ void* CartmanUIHandler(uint32 resourceID, void* clientContext, uint32 width, uin
 
     
     
-char * PromptUserCallback(void *arg, char *prompt, int isPasswd)
+char * PromptUserCallback(void *arg, char *prompt, void* clientContext, int isPasswd)
 {
 
     nsresult rv = NS_OK;
     PRUnichar *password;
     PRBool  value;
 
-    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, NS_UI_THREAD_EVENTQ, &rv);
-    
-    if (NS_SUCCEEDED(rv)) {
-	    rv = dialog->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
-                                  NS_ConvertASCIItoUCS2(" ").GetUnicode(),      // hostname
-                                  nsIPrompt::SAVE_PASSWORD_NEVER, &password, &value);
+    nsIChannelSecurityInfo* csi = NS_STATIC_CAST(nsIChannelSecurityInfo*, clientContext);
+    nsCOMPtr<nsIChannel> channel;
+    csi->GetChannel(getter_AddRefs(channel));
+    if (!channel) return nsnull;
 
-        if (NS_SUCCEEDED(rv) && value) {
-            nsString a(password);
-            char* str = a.ToNewCString();
-            Recycle(password);
-            return str;
-        }
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    if (!callbacks) return nsnull;
+
+    // The notification callbacks object may not be safe, so
+    // proxy the call to get the nsIPrompt.
+
+    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+    if (!proxyman) return nsnull;
+
+    nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+    proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                NS_GET_IID(nsIInterfaceRequestor),
+                                callbacks,
+                                PROXY_SYNC,
+                                getter_AddRefs(proxiedCallbacks));
+    if (!proxiedCallbacks) return nsnull;
+
+    nsCOMPtr<nsIPrompt> iprompt(do_GetInterface(proxiedCallbacks));
+    if (!iprompt) return nsnull;
+
+    // Finally, get a proxy for the nsIPrompt
+
+    nsCOMPtr<nsIPrompt> proxyPrompt;
+    proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                NS_GET_IID(nsIPrompt),
+                                iprompt,
+                                PROXY_SYNC,
+                                getter_AddRefs(proxyPrompt));
+
+    if (!proxyPrompt) {
+      NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
+      return nsnull;
+    }
+
+    rv = proxyPrompt->PromptPassword(nsnull, NS_ConvertASCIItoUCS2(prompt).GetUnicode(),
+                                     NS_LITERAL_STRING(" "),      // hostname
+                                     nsIPrompt::SAVE_PASSWORD_NEVER, &password, &value);
+
+    if (NS_SUCCEEDED(rv) && value) {
+        nsString a(password);
+        char* str = a.ToNewCString();
+        Recycle(password);
+        return str;
     }
 
     return nsnull;

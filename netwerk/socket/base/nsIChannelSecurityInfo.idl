@@ -24,6 +24,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIChannel;
+
 [noscript, uuid(98d9cc72-1dd1-11b2-9156-eaf4d18b60d1)]
 interface nsIChannelSecurityInfo : nsISupports {
     readonly attribute string           hostName;
@@ -32,8 +34,9 @@ interface nsIChannelSecurityInfo : nsISupports {
     readonly attribute string           proxyName;
     readonly attribute PRInt32          proxyPort;
 
+    attribute nsIChannel                channel;
     attribute boolean                   forceHandshake;
     readonly attribute long             securityState;
-    readonly attribute wstring           shortSecurityDescription;
+    readonly attribute wstring          shortSecurityDescription;
 };
 
