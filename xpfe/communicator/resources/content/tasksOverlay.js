@@ -356,22 +356,22 @@ function WalletAction( action )
     return;
   }
 
-  if( appCore ) {
+  var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+
     switch( action ) {
       case "safefill":
-        appCore.walletPreview(window, window._content);
+        walletPreview(window._content);
         break;
 //    case "password":
-//      appCore.walletChangePassword();
+//      walletService.WALLET_ChangePassword();
 //      break;
       case "quickfill": 
-        appCore.walletQuickFillin(window._content);
+    walletService.WALLET_Prefill(true, window._content);
         break;
       case "capture":
       default:
-        status = appCore.walletRequestToCapture(window._content);
+    status = walletService.WALLET_RequestToCapture(window._content);
         break;
-    }
   }
 }  
 

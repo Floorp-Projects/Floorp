@@ -436,15 +436,13 @@ nsContextMenu.prototype = {
 
     // Capture the values that are filled in on the form being displayed.
     capture : function () {
-      if( appCore ) {
-        status = appCore.walletRequestToCapture(window._content);
-      }
+      var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
+      
+      walletService.WALLET_RequestToCapture(window._content);
     },
     // Prefill the form being displayed.
     prefill : function () {
-      if( appCore ) {
-        appCore.walletPreview(window, window._content);
-      }
+      walletPreview(window._content);
     },
 
     // Determine if "Save Form Data" is to appear in the menu.
