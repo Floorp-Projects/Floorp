@@ -159,6 +159,9 @@ PROCESS_MAP_FILE = grep -v ';-' $(LIBRARY_NAME).def | \
 ifdef NS_USE_GCC
 	DSO_LDOPTS += -shared -h $(notdir $@)
 else
+ifeq ($(USE_64), 1)
+	DSO_LDOPTS += -xarch=v9
+endif
 	DSO_LDOPTS += -G -h $(notdir $@)
 endif
 
