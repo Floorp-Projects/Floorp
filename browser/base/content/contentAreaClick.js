@@ -202,14 +202,14 @@
     }
 
     if (result && linkNode) {
-      var computedOldColor = linkNode.ownerDocument.defaultView.getComputedStyle(linkNode,"").getPropertyValue("color");
-      var oldStyleColor = linkNode.style.color;
-      linkNode.style.color = "-moz-hyperlinktext";
-      var computedNewColor = linkNode.ownerDocument.defaultView.getComputedStyle(linkNode,"").getPropertyValue("color");
-      if (computedNewColor == computedOldColor)
-        linkNode.style.color = "-moz-visitedhyperlinktext";
-      else
-        linkNode.style.color = oldStyleColor;
+      var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                  .getService(Components.interfaces.nsIGlobalHistory);
+      if (!globalHistory.isVisited(href)) {
+        globalHistory.addPage(href);
+        var oldHref = linkNode.href;
+        linkNode.href = "";
+        linkNode.href = oldHref;
+      }
     }
         
     // let someone else deal with it
