@@ -257,7 +257,7 @@ void
 nsMenuBarX :: AquifyMenuBar ( )
 {
   nsCOMPtr<nsIDocument> containingDoc;
-  mMenuBarContent->GetDocument ( *getter_AddRefs(containingDoc) );
+  mMenuBarContent->GetDocument ( getter_AddRefs(containingDoc) );
   nsCOMPtr<nsIDOMDocument> domDoc ( do_QueryInterface(containingDoc) );
   if ( domDoc ) {
     // remove quit item and its separator
@@ -481,10 +481,10 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
   mMenuBarContent->ChildCount(count);
   for ( int i = 0; i < count; ++i ) { 
     nsCOMPtr<nsIContent> menu;
-    mMenuBarContent->ChildAt ( i, *getter_AddRefs(menu) );
+    mMenuBarContent->ChildAt ( i, getter_AddRefs(menu) );
     if ( menu ) {
       nsCOMPtr<nsIAtom> tag;
-      menu->GetTag ( *getter_AddRefs(tag) );
+      menu->GetTag ( getter_AddRefs(tag) );
       if (tag == nsWidgetAtoms::menu) {
         nsAutoString menuName;
         nsAutoString menuAccessKey(NS_LITERAL_STRING(" "));

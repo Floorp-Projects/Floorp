@@ -585,11 +585,11 @@ nsEventStatus nsMenuX::MenuConstruct(
   menuPopup->ChildCount(count);
   for ( PRInt32 i = 0; i < count; ++i ) {
     nsCOMPtr<nsIContent> child;
-    menuPopup->ChildAt(i, *getter_AddRefs(child));
+    menuPopup->ChildAt(i, getter_AddRefs(child));
     if ( child ) {
       // depending on the type, create a menu item, separator, or submenu
       nsCOMPtr<nsIAtom> tag;
-      child->GetTag ( *getter_AddRefs(tag) );
+      child->GetTag ( getter_AddRefs(tag) );
       if ( tag == nsWidgetAtoms::menuitem )
         LoadMenuItem(this, child);
       else if ( tag == nsWidgetAtoms::menuseparator )
@@ -631,11 +631,11 @@ nsEventStatus nsMenuX::HelpMenuConstruct(
   menuPopup->ChildCount(count);
   for ( PRInt32 i = 0; i < count; ++i ) {
     nsCOMPtr<nsIContent> child;
-    menuPopup->ChildAt(i, *getter_AddRefs(child));
+    menuPopup->ChildAt(i, getter_AddRefs(child));
     if ( child ) {      
       // depending on the type, create a menu item, separator, or submenu
       nsCOMPtr<nsIAtom> tag;
-      child->GetTag ( *getter_AddRefs(tag) );
+      child->GetTag ( getter_AddRefs(tag) );
       if ( tag == nsWidgetAtoms::menuitem )
         LoadMenuItem(this, child);
       else if ( tag == nsWidgetAtoms::menuseparator )
@@ -1034,7 +1034,7 @@ nsMenuX::OnCreate()
     popupContent->ChildCount(count);
     for (PRInt32 i = 0; i < count; i++) {
       nsCOMPtr<nsIContent> grandChild;
-      popupContent->ChildAt(i, *getter_AddRefs(grandChild));
+      popupContent->ChildAt(i, getter_AddRefs(grandChild));
       nsCOMPtr<nsIAtom> tag;
       grandChild->GetTag(getter_AddRefs(tag));
       if (tag.get() == nsWidgetAtoms::menuitem) {
@@ -1230,7 +1230,7 @@ nsMenuX::GetMenuPopupContent(nsIContent** aResult)
   for (PRInt32 i = 0; i < count; i++) {
     PRInt32 dummy;
     nsCOMPtr<nsIContent> child;
-    mMenuContent->ChildAt(i, *getter_AddRefs(child));
+    mMenuContent->ChildAt(i, getter_AddRefs(child));
     nsCOMPtr<nsIAtom> tag;
     xblService->ResolveTag(child, &dummy, getter_AddRefs(tag));
     if (tag && tag.get() == nsWidgetAtoms::menupopup) {
