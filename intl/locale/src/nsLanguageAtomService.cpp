@@ -38,12 +38,11 @@
 
 #include "nsIComponentManager.h"
 #include "nsLanguageAtomService.h"
-#include "nsIURI.h"
-#include "nsNetUtil.h"
 #include "nsICharsetConverterManager.h"
 #include "nsILocaleService.h"
 #include "nsXPIDLString.h"
 #include "nsUnicharUtils.h"
+#include "nsIServiceManager.h"
 
 class nsLanguageAtom : public nsILanguageAtom
 {
@@ -137,21 +136,17 @@ nsLanguageAtomService::InitLangTable()
 NS_IMETHODIMP
 nsLanguageAtomService::InitLangGroupTable()
 {
-  if (!mLangGroups.get()) {
-    nsAutoString uriStr;
-    uriStr.Assign(NS_LITERAL_STRING("resource:/res/langGroups.properties"));
-    nsCOMPtr<nsIURI> uri;
-    NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriStr), NS_ERROR_FAILURE);
-    nsCOMPtr<nsIInputStream> in;
-    NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(in), uri), NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(
-      NS_PERSISTENTPROPERTIES_CONTRACTID, nsnull,
-      NS_GET_IID(nsIPersistentProperties), getter_AddRefs(mLangGroups)),
-      NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(mLangGroups->Load(in), NS_ERROR_FAILURE);
-  }
+  if (mLangGroups) return NS_OK;
+  nsresult rv;
+  
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-  return NS_OK;
+
+  rv = bundleService->CreateBundle("resource:/res/langGroups.properties",
+                                   getter_AddRefs(mLangGroups));
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -189,7 +184,7 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
   if (!lang) {
     nsLanguageAtom* language = new nsLanguageAtom();
     NS_ENSURE_TRUE(language, NS_ERROR_OUT_OF_MEMORY);
-    nsAutoString langGroupStr;
+    nsXPIDLString langGroupStr;
 
     if (lowered.Equals(NS_LITERAL_STRING("en-us"))) {
       langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
@@ -201,13 +196,13 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
       if (!mLangGroups) {
         NS_ENSURE_SUCCESS(InitLangGroupTable(), NS_ERROR_FAILURE);
       }
-      res = mLangGroups->GetStringProperty(lowered, langGroupStr);
+      res = mLangGroups->GetStringFromName(lowered.get(), getter_Copies(langGroupStr));
       if (NS_FAILED(res)) {
         PRInt32 hyphen = lowered.FindChar('-');
         if (hyphen >= 0) {
           nsAutoString truncated(lowered);
           truncated.Truncate(hyphen);
-          res = mLangGroups->GetStringProperty(truncated, langGroupStr);
+          res = mLangGroups->GetStringFromName(truncated.get(), getter_Copies(langGroupStr));
           if (NS_FAILED(res)) {
             langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
           }

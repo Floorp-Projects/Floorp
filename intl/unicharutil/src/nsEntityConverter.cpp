@@ -41,15 +41,10 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsReadableUtils.h"
-#include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsCRT.h"
-
-//
-// guids
-//
-NS_DEFINE_IID(kIFactoryIID,NS_IFACTORY_IID);
-NS_DEFINE_IID(kIPersistentPropertiesIID,NS_IPERSISTENTPROPERTIES_IID);
+#include "nsLiteralString.h"
+#include "nsXPIDLString.h"
+#include "nsString.h"
 
 //
 // implementation methods
@@ -69,93 +64,72 @@ nsEntityConverter::~nsEntityConverter()
 NS_IMETHODIMP 
 nsEntityConverter::LoadVersionPropertyFile()
 {
-    NS_NAMED_LITERAL_STRING(aUrl, "resource:/res/entityTables/htmlEntityVersions.properties");
-	nsIPersistentProperties* entityProperties = NULL;
-	nsIURI* url = NULL;
-	nsIInputStream* in = NULL;
+    NS_NAMED_LITERAL_CSTRING(url, "resource:/res/entityTables/htmlEntityVersions.properties");
 	nsresult rv;
-  
-  rv = NS_NewURI(&url,aUrl);
-	if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        do_CreateInstance(NS_STRINGBUNDLE_CONTRACTID, &rv);
 
-	rv = NS_OpenURI(&in,url);
-	NS_RELEASE(url);
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIStringBundle> entities;
+    rv = bundleService->CreateBundle(url.get(), getter_AddRefs(entities));
+    if (NS_FAILED(rv)) return rv;
+    
+    PRInt32	result;
 
-	rv = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID,NULL,
-                                             kIPersistentPropertiesIID, 
-                                             (void**)&entityProperties);
-	if(NS_SUCCEEDED(rv) && in) {
-		rv = entityProperties->Load(in);
-    if (NS_SUCCEEDED(rv)) {
-	    nsAutoString key, value; key.Assign(NS_LITERAL_STRING("length"));
-    	PRInt32	result;
+    nsAutoString key;
+    nsXPIDLString value;
+    rv = entities->GetStringFromName(NS_LITERAL_STRING("length").get(),
+                                     getter_Copies(value));
+    NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
+    if (NS_FAILED(rv)) return rv;
+      
+    mVersionListLength = nsAutoString(value).ToInteger(&result);
+    NS_ASSERTION(32 >= mVersionListLength,"nsEntityConverter: malformed entity table\n");
+    if (32 < mVersionListLength) return NS_ERROR_FAILURE;
+    
+    mVersionList = new nsEntityVersionList[mVersionListLength];
+    if (!mVersionList) return NS_ERROR_OUT_OF_MEMORY;
 
-	    rv = entityProperties->GetStringProperty(key,value);
-	    NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
-      if (NS_FAILED(rv)) goto done;
-      mVersionListLength = value.ToInteger(&result);
- 	    NS_ASSERTION(32 >= mVersionListLength,"nsEntityConverter: malformed entity table\n");
-      if (32 < mVersionListLength) goto done;
-      mVersionList = new nsEntityVersionList[mVersionListLength];
-      if (NULL == mVersionList) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
-
-      for (PRUint32 i = 0; i < mVersionListLength && NS_SUCCEEDED(rv); i++) {
+    for (PRUint32 i = 0; i < mVersionListLength && NS_SUCCEEDED(rv); i++) {
         key.SetLength(0);
         key.AppendInt(i+1, 10);
-	      rv = entityProperties->GetStringProperty(key, value);
+        rv = entities->GetStringFromName(key.get(), getter_Copies(value));
         PRUint32 len = value.Length();
-        if (kVERSION_STRING_LEN < len) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
+        if (kVERSION_STRING_LEN < len) return NS_ERROR_UNEXPECTED;
+        
         memcpy(mVersionList[i].mEntityListName, value.get(), len*sizeof(PRUnichar));
         mVersionList[i].mEntityListName[len] = 0;
         mVersionList[i].mVersion = (1 << i);
-        mVersionList[i].mEntityProperties = NULL;
-      }
     }
-done:
-		NS_IF_RELEASE(in);
-		NS_IF_RELEASE(entityProperties);
-	}
-  return rv;
+
+    return NS_OK;
 }
 
-nsIPersistentProperties* 
-nsEntityConverter::LoadEntityPropertyFile(PRInt32 version)
+already_AddRefed<nsIStringBundle>
+nsEntityConverter::LoadEntityBundle(PRUint32 version)
 {
-  nsString aUrl(NS_LITERAL_STRING("resource:/res/entityTables/"));
-	nsIPersistentProperties* entityProperties = NULL;
-	nsIURI* url = NULL;
-	nsIInputStream* in = NULL;
+  nsCAutoString url(NS_LITERAL_CSTRING("resource:/res/entityTables/"));
   const PRUnichar *versionName = NULL;
-	nsresult rv;
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> bundleService =
+      do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return NULL;
   
   versionName = GetVersionName(version);
   if (NULL == versionName) return NULL;
 
-  aUrl.Append(versionName);
-  aUrl.Append(NS_LITERAL_STRING(".properties"));
+  // all property file names are ASCII, like "html40Latin1" so this is safe
+  url.Append(NS_LossyConvertUCS2toASCII(versionName) +
+             NS_LITERAL_CSTRING(".properties"));
 
-  rv = NS_NewURI(&url,aUrl);
-	if (NS_FAILED(rv)) return NULL;
-
-	rv = NS_OpenURI(&in,url);
-	NS_RELEASE(url);
-	if (NS_FAILED(rv)) return NULL;
-
-	rv = nsComponentManager::CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID,NULL,
-                                             kIPersistentPropertiesIID, 
-                                             (void**)&entityProperties);
-	if(NS_SUCCEEDED(rv) && in) {
-		rv = entityProperties->Load(in);
-    if (NS_SUCCEEDED(rv)) {
-      NS_IF_RELEASE(in);
-      return entityProperties;
-    }
-	}
-  NS_IF_RELEASE(in);
-  NS_IF_RELEASE(entityProperties);
-    
-  return NULL;
+  nsIStringBundle* bundle;
+  rv = bundleService->CreateBundle(url.get(), &bundle);
+  if (NS_FAILED(rv)) return NULL;
+  
+  // does this addref right?
+  return bundle;
 }
 
 const PRUnichar*
@@ -169,8 +143,8 @@ nsEntityConverter:: GetVersionName(PRUint32 versionNumber)
   return NULL;
 }
 
-nsIPersistentProperties*
-nsEntityConverter:: GetVersionPropertyInst(PRUint32 versionNumber)
+nsIStringBundle*
+nsEntityConverter:: GetVersionBundleInstance(PRUint32 versionNumber)
 {
   if (NULL == mVersionList) {
     // load the property file which contains available version names
@@ -182,13 +156,13 @@ nsEntityConverter:: GetVersionPropertyInst(PRUint32 versionNumber)
   PRUint32 i;
   for (i = 0; i < mVersionListLength; i++) {
     if (versionNumber == mVersionList[i].mVersion) {
-      if (NULL == mVersionList[i].mEntityProperties)
+      if (NULL == mVersionList[i].mEntities)
       { // not loaded
         // load the property file
-        mVersionList[i].mEntityProperties = LoadEntityPropertyFile(versionNumber);
-        NS_ASSERTION(mVersionList[i].mEntityProperties, "LoadEntityPropertyFile failed");
+        mVersionList[i].mEntities = LoadEntityBundle(versionNumber);
+        NS_ASSERTION(mVersionList[i].mEntities, "LoadEntityBundle failed");
       }
-      return mVersionList[i].mEntityProperties;
+      return mVersionList[i].mEntities.get();
     }
   }
 
@@ -216,15 +190,17 @@ nsEntityConverter::ConvertToEntity(PRUnichar character, PRUint32 entityVersion, 
   for (PRUint32 mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
     if (0 == (entityVersion & mask)) 
       continue;
-    nsIPersistentProperties* entityProperties = GetVersionPropertyInst(entityVersion & mask);
-    NS_ASSERTION(entityProperties, "Cannot get the property file");
+    nsIStringBundle* entities = GetVersionBundleInstance(entityVersion & mask);
+    NS_ASSERTION(entities, "Cannot get the property file");
 
-    if (NULL == entityProperties) 
+    if (NULL == entities) 
       continue;
 
-    nsAutoString key, value; key.Assign(NS_LITERAL_STRING("entity."));
-		key.AppendInt(character,10);
-    nsresult rv = entityProperties->GetStringProperty(key, value);
+    nsAutoString key(NS_LITERAL_STRING("entity."));
+    key.AppendInt(character,10);
+
+    nsXPIDLString value;
+    nsresult rv = entities->GetStringFromName(key.get(), getter_Copies(value));
     if (NS_SUCCEEDED(rv)) {
       *_retval = ToNewCString(value);
       if(nsnull == *_retval)
@@ -251,19 +227,23 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
   // per character look for the entity
   PRUint32 len = nsCRT::strlen(inString);
   for (PRUint32 i = 0; i < len; i++) {
-    nsAutoString value, key; key.Assign(NS_LITERAL_STRING("entity."));
-		key.AppendInt(inString[i],10);
+    nsAutoString key(NS_LITERAL_STRING("entity."));
+    key.AppendInt(inString[i],10);
+    
+    nsXPIDLString value;
+    
     entity = NULL;
     for (PRUint32 mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
       if (0 == (entityVersion & mask)) 
          continue;
-      nsIPersistentProperties* entityProperties = GetVersionPropertyInst(entityVersion & mask);
-      NS_ASSERTION(entityProperties, "Cannot get the property file");
+      nsIStringBundle* entities = GetVersionBundleInstance(entityVersion & mask);
+      NS_ASSERTION(entities, "Cannot get the property file");
 
-      if (NULL == entityProperties) 
+      if (NULL == entities) 
           continue;
 
-      nsresult rv = entityProperties->GetStringProperty(key, value);
+      nsresult rv = entities->GetStringFromName(key.get(),
+                                                getter_Copies(value));
       if (NS_SUCCEEDED(rv)) {
         entity = value.get();
         break;

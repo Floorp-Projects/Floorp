@@ -25,6 +25,7 @@ REQUIRES	= xpcom \
 		  string \
 		  unicharutil \
 		  uconv \
+		  intl \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

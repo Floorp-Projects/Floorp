@@ -47,7 +47,7 @@ nsPlatformCharset::nsPlatformCharset()
   // XXX We should make the following block critical section
   if(nsnull == gInfo)
   {
-    nsURLProperties *info = new nsURLProperties(NS_LITERAL_STRING("resource:/res/os2charset.properties"));
+    nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource:/res/os2charset.properties"));
     NS_ASSERTION( info , " cannot create nsURLProperties");
     gInfo = info;
   }

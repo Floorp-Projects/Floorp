@@ -26,7 +26,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  locale \
 		  unicharutil \
-		  necko \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

@@ -39,7 +39,7 @@
 #include "nsCOMPtr.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsILanguageAtomService.h"
-#include "nsIPersistentProperties2.h"
+#include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
 
@@ -60,7 +60,7 @@ public:
 protected:
   nsCOMPtr<nsICharsetConverterManager2> mCharSets;
   nsCOMPtr<nsISupportsArray> mLangs;
-  nsCOMPtr<nsIPersistentProperties> mLangGroups;
+  nsCOMPtr<nsIStringBundle> mLangGroups;
   nsCOMPtr<nsIAtom> mLocaleLangGroup;
   nsCOMPtr<nsIAtom> mUnicode;
 };
