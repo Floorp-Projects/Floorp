@@ -35,98 +35,150 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsOS2Uni.h"
+#include "nsIServiceManager.h"
+#include "nsIPlatformCharset.h"
+#include <stdlib.h>
 
-int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize )
+
+/**********************************************************
+    OS2Uni
+ **********************************************************/
+nsICharsetConverterManager* OS2Uni::gCharsetManager = nsnull;
+
+struct ConverterInfo
 {
-  UconvObject Converter = OS2Uni::GetUconvObject(CodePage);
+  PRUint16            mCodePage;
+  char*               mConvName;
+  nsIUnicodeEncoder*  mEncoder;
+  nsIUnicodeDecoder*  mDecoder;
+};
 
-  UniChar *ucsString = (UniChar*) pText;
-  size_t   ucsLen = ulLength;
-  size_t   cplen = ulSize;
-  size_t   cSubs = 0;
+#define eCONVERTER_COUNT  17
+ConverterInfo gConverterInfo[eCONVERTER_COUNT] =
+{
+  { 0,    "",              nsnull,  nsnull },
+  { 1252, "windows-1252",  nsnull,  nsnull },
+  { 1208, "UTF-8",         nsnull,  nsnull },
+  { 1250, "windows-1250",  nsnull,  nsnull },
+  { 1251, "windows-1251",  nsnull,  nsnull },
+  { 813,  "ISO-8859-7",    nsnull,  nsnull },
+  { 1254, "windows-1254",  nsnull,  nsnull },
+  { 864,  "IBM864",        nsnull,  nsnull },
+  { 1257, "windows-1257",  nsnull,  nsnull },
+  { 874,  "windows-874",   nsnull,  nsnull },
+  { 932,  "Shift_JIS",     nsnull,  nsnull },
+  { 943,  "Shift_JIS",     nsnull,  nsnull },
+  { 1381, "GB2312",        nsnull,  nsnull },
+  { 1386, "GB2312",        nsnull,  nsnull },
+  { 949,  "x-windows-949", nsnull,  nsnull },
+  { 950,  "Big5",          nsnull,  nsnull },
+  { 1361, "x-johab",       nsnull,  nsnull }
+};
 
-  char *tmp = szBuffer; // function alters the out pointer
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-  int unirc = ::UniUconvFromUcs( Converter, &ucsString, &ucsLen,
-                                 (void**) &tmp, &cplen, &cSubs);
-
-  if( unirc != ULS_SUCCESS )
-    return 0;
-
-  if( unirc == UCONV_E2BIG)
-  {
-    // terminate output string (truncating)
-    *(szBuffer + ulSize - 1) = '\0';
+nsISupports*
+OS2Uni::GetUconvObject(int aCodePage, ConverterRequest aReq)
+{
+  if (gCharsetManager == nsnull) {
+    nsServiceManager::GetService(kCharsetConverterManagerCID,
+      NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharsetManager);
   }
 
-  return ulSize - cplen;
-}
-
-int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize )
-{
-  UconvObject Converter = OS2Uni::GetUconvObject(CodePage);
-
-  char *ucsString = (char*) pText;
-  size_t   ucsLen = ulLength;
-  size_t   cplen = ulSize;
-  size_t   cSubs = 0;
-
-  PRUnichar *tmp = szBuffer; // function alters the out pointer
-
-  int unirc = ::UniUconvToUcs( Converter, (void**)&ucsString, &ucsLen,
-                               NS_REINTERPRET_CAST(UniChar**, &tmp),
-                               &cplen, &cSubs);
-                               
-  if( unirc != ULS_SUCCESS )
-    return 0;
-
-  if( unirc == UCONV_E2BIG)
-  {
-    // terminate output string (truncating)
-    *(szBuffer + ulSize - 1) = '\0';
-  }
-
-  return ulSize - cplen;
-}
-
-nsHashtable OS2Uni::gUconvObjects;
-
-UconvObject
-OS2Uni::GetUconvObject(int CodePage)
-{
-  nsPRUint32Key key(CodePage);
-  UconvObject uco = OS2Uni::gUconvObjects.Get(&key);
-  if (!uco) {
-    UniChar codepage[20];
-    int unirc = ::UniMapCpToUcsCp(CodePage, codepage, 20);
-    if (unirc == ULS_SUCCESS) {
-       unirc = ::UniCreateUconvObject(codepage, &uco);
-       if (unirc == ULS_SUCCESS) {
-          uconv_attribute_t attr;
-
-          ::UniQueryUconvObject(uco, &attr, sizeof(uconv_attribute_t), 
-                                NULL, NULL, NULL);
-          attr.options = UCONV_OPTION_SUBSTITUTE_BOTH;
-          attr.subchar_len=1;
-          attr.subchar[0]='?';
-          ::UniSetUconvObject(uco, &attr);
-          OS2Uni::gUconvObjects.Put(&key, uco);
-       }
+  nsresult rv;
+  nsISupports* uco = nsnull;
+  for (int i = 0; i < eCONVERTER_COUNT; i++) {
+    if (aCodePage == gConverterInfo[i].mCodePage) {
+      if (gConverterInfo[i].mEncoder == nsnull) {
+        const char* convname;
+        nsCAutoString charset;
+        if (aCodePage == 0) {
+          nsCOMPtr<nsIPlatformCharset>
+                      plat(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
+          if (NS_SUCCEEDED(rv)) {
+            plat->GetCharset(kPlatformCharsetSel_FileName, charset);
+          } else {
+            // default to IBM850 if this should fail
+            charset = "IBM850";
+          }
+          convname = charset.get();
+        } else {
+          convname = gConverterInfo[i].mConvName;
+        }
+        rv = gCharsetManager->GetUnicodeEncoderRaw(convname,
+                                                   &gConverterInfo[i].mEncoder);
+        gConverterInfo[i].mEncoder->
+                    SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace,
+                                           nsnull, '?');
+        gCharsetManager->GetUnicodeDecoderRaw(convname,
+                                              &gConverterInfo[i].mDecoder);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get converter");
+      }
+      if (aReq == eConv_Encoder) {
+        uco = gConverterInfo[i].mEncoder;
+      } else {
+        uco = gConverterInfo[i].mDecoder;
+      }
+      break;
     }
   }
-  return uco;
-}
 
-PR_STATIC_CALLBACK(PRIntn)
-UconvObjectEnum(nsHashKey* hashKey, void *aData, void* closure)
-{
-  UniFreeUconvObject((UconvObject)aData);
-  return kHashEnumerateRemove;
+  return uco;
 }
 
 void OS2Uni::FreeUconvObjects()
 {
-  if (gUconvObjects.Count()) {
-    gUconvObjects.Enumerate(UconvObjectEnum, nsnull);
+  for (int i = 0; i < eCONVERTER_COUNT; i++) {
+    NS_IF_RELEASE(gConverterInfo[i].mEncoder);
+    NS_IF_RELEASE(gConverterInfo[i].mDecoder);
   }
+  NS_IF_RELEASE(gCharsetManager);
+}
+
+/**********************************************************
+    WideCharToMultiByte
+ **********************************************************/
+nsresult
+WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
+                    PRInt32 aSrcLength, nsAutoCharBuffer& aResult,
+                    PRInt32& aResultLength)
+{
+  nsresult rv;
+  nsISupports* sup = OS2Uni::GetUconvObject(aCodePage, eConv_Encoder);
+  nsCOMPtr<nsIUnicodeEncoder> uco = do_QueryInterface(sup);
+
+  if (NS_FAILED(uco->GetMaxLength(aSrc, aSrcLength, &aResultLength))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (!aResult.EnsureElemCapacity(aResultLength + 1))
+    return NS_ERROR_OUT_OF_MEMORY;
+  char* str = aResult.get();
+
+  rv = uco->Convert(aSrc, &aSrcLength, str, &aResultLength);
+  aResult.get()[aResultLength] = '\0';
+  return rv;
+}
+
+/**********************************************************
+    MultiByteToWideChar
+ **********************************************************/
+nsresult
+MultiByteToWideChar(int aCodePage, const char* aSrc,
+                    PRInt32 aSrcLength, nsAutoChar16Buffer& aResult,
+                    PRInt32& aResultLength)
+{
+  nsresult rv;
+  nsISupports* sup = OS2Uni::GetUconvObject(aCodePage, eConv_Decoder);
+  nsCOMPtr<nsIUnicodeDecoder> uco = do_QueryInterface(sup);
+
+  if (NS_FAILED(uco->GetMaxLength(aSrc, aSrcLength, &aResultLength))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (!aResult.EnsureElemCapacity(aResultLength + 1))
+    return NS_ERROR_OUT_OF_MEMORY;
+  PRUnichar* str = aResult.get();
+
+  rv = uco->Convert(aSrc, &aSrcLength, str, &aResultLength);
+  aResult.get()[aResultLength] = '\0';
+  return rv;
 }

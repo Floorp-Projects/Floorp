@@ -124,7 +124,6 @@ PRBool nsClipboard::GetClipboardData(const char *aFlavor)
 PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 {
   PVOID pDataMem;
-  PVOID pTempBuf;
   PRUint32 NumOfBytes;
   PRBool TempBufAllocated = PR_FALSE;
 
@@ -144,13 +143,13 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
       if (!strcmp( aFlavor, kUnicodeMime ))  // Asked for unicode, but only plain text available.  Convert it!
       {
-        NumOfBytes *= sizeof(UniChar);
-
-        pTempBuf = nsMemory::Alloc( NumOfBytes + sizeof(UniChar) );
+        nsAutoChar16Buffer buffer;
+        PRInt32 bufLength;
+        MultiByteToWideChar(0, NS_STATIC_CAST(char*, pDataMem), NumOfChars,
+                            buffer, bufLength);
+        pDataMem = ToNewUnicode(nsDependentString(buffer.get()));
         TempBufAllocated = PR_TRUE;
-        NumOfChars = MultiByteToWideChar(0, NS_STATIC_CAST(char*, pDataMem), NumOfChars, NS_STATIC_CAST(PRUnichar*, pTempBuf), NumOfChars);
-        NumOfBytes = NumOfChars * sizeof(UniChar);
-        pDataMem = pTempBuf;
+        NumOfBytes = bufLength * sizeof(UniChar);
       }
 
     }
@@ -158,9 +157,10 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
     {
       PRUint32 NumOfChars = UniStrlen( NS_STATIC_CAST(UniChar*, pDataMem) );
       NumOfBytes = NumOfChars * sizeof(UniChar);
-      pTempBuf = nsMemory::Alloc(NumOfBytes);
+      PVOID pTempBuf = nsMemory::Alloc(NumOfBytes);
       memcpy(pTempBuf, pDataMem, NumOfBytes);
       pDataMem = pTempBuf;
+      TempBufAllocated = PR_TRUE;
     }
 
     // DOM wants LF only, so convert from CRLF
@@ -274,8 +274,9 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
       {
         char* pByteMem = nsnull;
 
-        if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + 1, 
-                               PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
+        if (DosAllocSharedMem(NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull,
+                              NumOfBytes + 1, 
+                              PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
           PRUnichar* uchtemp = (PRUnichar*)pMozData;
           for (int i=0;i<NumOfChars;i++) {
@@ -293,12 +294,16 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
                 break;
             }
           }
-          WideCharToMultiByte(0, NS_STATIC_CAST(PRUnichar*, pMozData), NumOfBytes, pByteMem, NumOfBytes);
-          pByteMem [NumOfBytes] = '\0';
 
+          nsAutoCharBuffer buffer;
+          PRInt32 bufLength;
+          WideCharToMultiByte(0, NS_STATIC_CAST(PRUnichar*, pMozData),
+                              NumOfBytes, buffer, bufLength);
+          memcpy(pByteMem, buffer.get(), NumOfBytes);
           // Don't copy text larger than 64K to the clipboard
           if (strlen(pByteMem) <= 0xFFFF) {
-            WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
+            WinSetClipbrdData(0, NS_REINTERPRET_CAST(ULONG, pByteMem), CF_TEXT,
+                              CFI_POINTER);
           } else {
             WinAlarm(HWND_DESKTOP, WA_ERROR);
           }
