@@ -32,6 +32,8 @@ WIDGET *tempWidget;
 char buffer[50000];
 XPI	xpiList[100];
 int xpiLen = -1;
+JAR jarList[100];
+int jarLen = -1;
 // Setup Sections for config.ini
 CString Setup0Short = "&Typical";
 CString Setup1Short = "C&ustom";
@@ -64,7 +66,7 @@ int findXPI(CString xpiname, CString filename)
 int ExtractXPIFile(CString xpiname, CString xpifile)
 {
 	CString command;
-
+//	AfxMessageBox("The xpiname is "+xpiname+" and the file is "+xpifile,MB_OK);
 	if (findXPI(xpiname, xpifile))
 		return TRUE;
 
@@ -93,6 +95,65 @@ int ReplaceXPIFiles()
 			DWORD e = GetLastError();
 
 		command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +xpiArcDest + quotes + spaces + quotes + xpiList[i].filename + quotes;
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+	}
+
+	return TRUE;
+}
+
+int findJAR(CString jarname, CString filename)
+{
+	int found = FALSE;
+
+	for (int i=0; !found && i<=jarLen; i++)
+		if (jarList[i].jarname == jarname && 
+			jarList[i].filename == filename)
+				found = TRUE;
+
+	if (!found)
+	{
+		jarLen++;
+		jarList[jarLen].jarname  = jarname;
+		jarList[jarLen].filename = filename;
+	}
+
+	return found;
+}
+
+int ExtractJARFile(CString xpiname, CString jarname, CString xpifile)
+{
+//	AfxMessageBox("The xpiname is "+xpiname+" and the jar name is "+jarname+" and the file is "+xpifile,MB_OK);
+
+	ExtractXPIFile(xpiname, jarname);
+
+	CString command;
+//We have to get rid of the bin/chrome/ and hence the delete.
+	jarname.Delete(0,11);
+
+	if (findJAR(jarname, xpifile))
+		return TRUE;
+	
+	// Can use -d instead of change CWD???
+	CString jarArchive = tempPath + "\\bin\\chrome\\" + jarname;
+	command = quotes +rootPath + "unzip.exe"+ quotes + "-o" + spaces + quotes + jarArchive + quotes + spaces + quotes + xpifile + quotes;
+	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+
+	return TRUE;
+}
+
+int ReplaceJARFiles()
+{
+	CString command;
+	CString jarArchive;
+
+	// Go through the whole list putting them into the archives
+	for (int i=0; i<=jarLen; i++)
+	{
+		// This copy preserves the existing archive if it exists - do we
+		// need to delete it the first time through?
+		jarArchive = tempPath + "\\bin\\chrome\\" + jarList[i].jarname;
+
+		command = quotes + rootPath + "zip.exe" + quotes + "-m " + spaces + quotes +jarArchive + quotes + spaces + quotes + jarList[i].filename + quotes;
 		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	}
 
@@ -384,9 +445,11 @@ int interpret(char *cmd)
 	else if (strcmp(cmdname, "replaceXPI") == 0)
 	{
 		char *xpiname	= strtok(NULL, ",)");
+		char *jname		= strtok(NULL, ",)");
 		char *xpifile	= strtok(NULL, ",)");
 		char *value 	= strtok(NULL, ",)");
 		char *newvalue	= value;
+		CString jarname = jname;
 		if (value[0] == '%')
 		{
 			value++;
@@ -406,7 +469,12 @@ int interpret(char *cmd)
 		if (filename.IsEmpty())
 			return TRUE;
 		////////////////////////////////
+		//check to see if it is a jar and then do accordingly
+		if (jarname.CompareNoCase("no.jar")==0)
 		ExtractXPIFile(xpiname, xpifile);
+		else 
+		ExtractJARFile(xpiname, jarname, xpifile);
+
 		if (!CopyFile(newvalue, xpifile, FALSE))
 		{
 			DWORD e = GetLastError();
@@ -418,10 +486,13 @@ int interpret(char *cmd)
 			(strcmp(cmdname, "modifyProperties") == 0))
 	{
 		char *xpiname	= strtok(NULL, ",)");
+		char *jname		= strtok(NULL, ",)");
 		char *xpifile	= strtok(NULL, ",)");
 		char *entity	= strtok(NULL, ",)");
 		char *value 	= strtok(NULL, ",)");
 		char *newvalue	= value;
+		CString jarname = jname;
+
 		if (value[0] == '%')
 		{
 			value++;
@@ -433,7 +504,12 @@ int interpret(char *cmd)
 		}
 		if (!xpiname || !xpifile || !entity || !newvalue)
 			return TRUE;//*** Changed FALSE to TRUE
+		//check to see if it is a jar and then do accordingly
+		if (jarname.CompareNoCase("no.jar")==0)
 		ExtractXPIFile(xpiname, xpifile);
+		else 
+		ExtractJARFile(xpiname, jarname, xpifile);
+
 		if(strcmp(cmdname, "modifyJS") == 0)
 			ModifyJS(xpifile,entity,newvalue);
 		else if (strcmp(cmdname, "modifyProperties") == 0)
@@ -868,6 +944,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 	dlg->SetWindowText("         Customization is in Progress \n         |||||||||");
 
 	// Put all the extracted files back into their new XPI homes
+	ReplaceJARFiles();
+
 	ReplaceXPIFiles();
 
 	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||");
