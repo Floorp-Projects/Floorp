@@ -158,6 +158,11 @@ public class Main {
         debugGui.setVisible(flag);
     }
 
+    public boolean isVisible()
+    {
+        return debugGui.isVisible();
+    }
+
     public static void main(String[] args)
         throws Exception
     {
