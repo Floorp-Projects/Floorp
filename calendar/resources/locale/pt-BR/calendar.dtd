@@ -72,7 +72,7 @@
 <!ENTITY priority.level.high.accesskey    "H">
 
 <!ENTITY newevent.title.label        "T&#xED;tulo" >
-<!ENTITY newevent.location.label     "Localiza&#xE7;&#xE4;o" >
+<!ENTITY newevent.location.label     "Localiza&#xE7;&#xE3;o" >
 <!ENTITY newevent.start.label        "In&#xED;cio" >
 <!ENTITY newevent.date.label         "Data" >
 <!ENTITY newevent.startdate.label    "In&#xED;cio" >
@@ -96,22 +96,22 @@
 <!ENTITY newevent.numberoftimes.label "N&#xFA;mero de vezes" >
 <!ENTITY newevent.category.label      "Categoria" >
 <!ENTITY newevent.exceptions.caption "Exce&#xE7;&#xF5;es">
-<!ENTITY newevent.addexceptions.label "Acrescentar Exce&#xE7;&#xE4;o">
-<!ENTITY newevent.deleteexceptions.label "Apagar Exce&#xE7;&#xE4;o">
+<!ENTITY newevent.addexceptions.label "Acrescentar Exce&#xE7;&#xE3;o">
+<!ENTITY newevent.deleteexceptions.label "Apagar Exce&#xE7;&#xE3;o">
 <!ENTITY newevent.endtime.warning    "A hora de in&#xED;cio &#xE9; depois da sua hora de t&#xE9;rmino.">
 <!ENTITY newevent.enddate.warning    "A sua data de in&#xED;cio &#xE9; ap&#xF3;s a sua data de t&#xE9;rmino.">
 <!ENTITY newevent.repeatdate.tooltip    "Escolha uma data para t&#xE9;rmino" >
-<!ENTITY newevent.recurend.warning    "A sua hora de repeti&#xE7;&#xE4;o termina antes da sua hora de t&#xE9;rmino.">
+<!ENTITY newevent.recurend.warning    "A sua hora de repeti&#xE7;&#xE3;o termina antes da sua hora de t&#xE9;rmino.">
 <!ENTITY newevent.endtime.tooltip    "Escolha uma hora de t&#xE9;rmino para este evento" >
 <!ENTITY newevent.starttimeerror.alertmessage "O seu evento n&#xE3;o pode terminar antes de ser iniciado. Por favor acerte a hora de in&#xED;cio ou a hora de t&#xE9;rmino." >
-<!ENTITY newevent.recurendtimeerror.alertmessage "A hora de repeti&#xE7;&#xE4;o de seu evento n&#xE3;o pode ser anterior a hora de t&#xE9;rmino do evento. Por favor corrija, ou desligue a repeti&#xE7;&#xE4;o." >
+<!ENTITY newevent.recurendtimeerror.alertmessage "A hora de repeti&#xE7;&#xE3;o de seu evento n&#xE3;o pode ser anterior a hora de t&#xE9;rmino do evento. Por favor corrija, ou desligue a repeti&#xE7;&#xE3;o." >
 <!ENTITY newevent.newevent.tab.label "Evento" >
 <!ENTITY newevent.recurrence.tab.label "Recorr&#xEA;ncia" >
 <!ENTITY newevent.contacts.tab.label "Contatos" >
 <!ENTITY newevent.files.tab.label "Arquivos" >
 <!ENTITY newevent.status.label "Status" >
 <!ENTITY newevent.status.longlabel "Status do Evento">
-<!ENTITY newevent.status.needsaction.label "Necessita Aten&#xE7;&#xE4;o" >
+<!ENTITY newevent.status.needsaction.label "Necessita Aten&#xE7;&#xE3;o" >
 <!ENTITY newevent.status.inprogress.label  "Em Curso" >
 <!ENTITY newevent.status.completed.label   "Completo" >
 <!ENTITY newevent.status.cancelled.label   "Cancelado" >
@@ -225,17 +225,17 @@
 <!ENTITY calendar.unifinder.tree.duedate.label       "Previs&#xE3;o">
 <!ENTITY calendar.unifinder.tree.completeddate.label "Completado">
 <!ENTITY calendar.unifinder.tree.categories.label    "Categorias">
-<!ENTITY calendar.unifinder.tree.location.label    "Localiza&#xE7;&#xE4;o">
+<!ENTITY calendar.unifinder.tree.location.label    "Localiza&#xE7;&#xE3;o">
 <!ENTITY calendar.unifinder.tree.status.label    "Status">
 <!ENTITY calendar.unifinder.tree.filename.label    "Nome do Calend&#xE1;rio">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Ir Para Hoje" >
 <!ENTITY calendar.choosedate.button.tooltip       "Escolha a data que deseja ir" >
 
-<!ENTITY calendar.dayview.button.tooltip          "Mudar para vis&#xE4;o do dia" >
-<!ENTITY calendar.weekview.button.tooltip         "Mudar para vis&#xE4;o da semana" >
-<!ENTITY calendar.monthview.button.tooltip        "Mudar para vis&#xE4;o do m&#xEA;s" >
-<!ENTITY calendar.multiweekview.button.tooltip        "Mudar para vis&#xE4;o de m&#xFA;ltiplas semanas" >
+<!ENTITY calendar.dayview.button.tooltip          "Mudar para vis&#xE3;o do dia" >
+<!ENTITY calendar.weekview.button.tooltip         "Mudar para vis&#xE3;o da semana" >
+<!ENTITY calendar.monthview.button.tooltip        "Mudar para vis&#xE3;o do m&#xEA;s" >
+<!ENTITY calendar.multiweekview.button.tooltip        "Mudar para vis&#xE3;o de m&#xFA;ltiplas semanas" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Pr&#xF3;ximo Dia" >
 <!ENTITY calendar.prevday.button.tooltip        "Dia Anterior" >
@@ -410,7 +410,7 @@
 <!ENTITY calendar.publish.example.url.description   "Algo como http://www.myserver.com/webdav/test.ics">
 
 <!-- TRANSLATORS: this label must be short to keep a reasonable column width in the week view -->
-<!ENTITY allDayEvents.label "Eventos de Dia Inteiro">
+<!ENTITY allDayEvents.label "Dia Inteiro">
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importar: Importa eventos de um arquivo local em um calend&#xE1;rio existente.">
@@ -428,7 +428,7 @@
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Imprimir um Calend&#xE1;rio">
 <!ENTITY calendar.print.selectoptions.label "Selecione suas op&#xE7;&#xF5;es abaixo, e use OK para imprimir">
-<!ENTITY calendar.print.selectviews.label "Selecione Vis&#xE4;o a ser Impressa">
+<!ENTITY calendar.print.selectviews.label "Selecione Vis&#xE3;o a ser Impressa">
 <!ENTITY calendar.print.listselected.label "Listar Eventos Selecionados">
 <!ENTITY calendar.print.onlyitemsstatus.label "Imprimir apenas itens com este status:">
 <!ENTITY calendar.print.onlyitemscategory.label "Imprimir apenas itens com esta categoria:">
