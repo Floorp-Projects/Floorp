@@ -1610,14 +1610,11 @@ nsMenuFrame::BuildAcceleratorText()
 void
 nsMenuFrame::Execute(nsGUIEvent *aEvent)
 {
-  if (!aEvent || (aEvent->message != NS_MOUSE_RIGHT_BUTTON_UP &&
-    aEvent->message != NS_CONTEXTMENU)) {
-    // flip "checked" state if we're a checkbox menu, or
-    // an un-checked radio menu
-    // aEvent is null if called from ::Enter(), we do want to flip our check 
-    // in that case
-    if (mType == eMenuType_Checkbox ||
-        (mType == eMenuType_Radio && !mChecked)) {
+  // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
+  if (mType == eMenuType_Checkbox || (mType == eMenuType_Radio && !mChecked)) {
+    nsAutoString value;
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::autocheck, value);
+    if (!value.Equals(NS_LITERAL_STRING("false"))) {
       if (mChecked) {
         mContent->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::checked,
                             PR_TRUE);
