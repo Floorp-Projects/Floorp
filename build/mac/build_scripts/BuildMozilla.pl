@@ -100,4 +100,4 @@ $MOZ_SRC = cwd();
 my($do_checkout)    = 0;
 my($do_build)       = 1;
 
-RunBuild($do_checkout, $do_build, "Mozilla opt build prefs");
+RunBuild($do_checkout, $do_build, "MozillaBuildFlags.txt", "Mozilla opt build prefs");
