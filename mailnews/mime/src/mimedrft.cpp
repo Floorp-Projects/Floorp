@@ -1893,7 +1893,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsCOMPtr<nsIMIMEInfo> mimeInfo = nsnull;
-      rv = mimeFinder->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeInfo));
+      rv = mimeFinder->GetFromTypeAndExtension(contentType.get(), nsnull, getter_AddRefs(mimeInfo));
       if (NS_SUCCEEDED(rv) && mimeInfo) 
       {
         nsXPIDLCString fileExtension;

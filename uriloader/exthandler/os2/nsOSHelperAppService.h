@@ -31,6 +31,9 @@
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"
 
+class nsHashtable;
+class nsILineInputStream;
+
 class nsOSHelperAppService : public nsExternalHelperAppService
 {
 public:
@@ -41,8 +44,7 @@ public:
   NS_IMETHOD LaunchAppWithTempFile(nsIMIMEInfo *aMIMEInfo, nsIFile * aTempFile);
 
   // method overrides for mime.types and mime.info look up steps
-  nsresult GetMIMEInfoForExtensionFromOS(const char *aFileExt, nsIMIMEInfo **_retval);
-  nsresult GetMIMEInfoForMimeTypeFromOS(const char *aMIMEType, nsIMIMEInfo **_retval);
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char *aMimeType, const char *aFileExt);
 
   // override nsIExternalProtocolService methods
   NS_IMETHOD ExternalProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
@@ -55,7 +57,78 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile);
   
 protected:
+  already_AddRefed<nsIMIMEInfo> GetFromType(const char *aMimeType);
+  already_AddRefed<nsIMIMEInfo> GetFromExtension(const char *aFileExt);
 
+private:
+  // Helper methods which have to access static members
+  static nsresult UnescapeCommand(const nsAString& aEscapedCommand,
+                                  const nsAString& aMajorType,
+                                  const nsAString& aMinorType,
+                                  nsHashtable& aTypeOptions,
+                                  nsACString& aUnEscapedCommand);
+  static nsresult GetFileLocation(const char* aPrefName,
+                                  const char* aEnvVarName,
+                                  PRUnichar** aFileLocation);
+  static nsresult LookUpTypeAndDescription(const nsAString& aFileExtension,
+                                    nsAString& aMajorType,
+                                    nsAString& aMinorType,
+                                    nsAString& aDescription);
+  static nsresult CreateInputStream(const nsAString& aFilename,
+                                    nsIFileInputStream ** aFileInputStream,
+                                    nsILineInputStream ** aLineInputStream,
+                                    nsAString& aBuffer,
+                                    PRBool * aNetscapeFormat,
+                                    PRBool * aMore);
+
+  static nsresult GetTypeAndDescriptionFromMimetypesFile(const nsAString& aFilename,
+                                                         const nsAString& aFileExtension,
+                                                         nsAString& aMajorType,
+                                                         nsAString& aMinorType,
+                                                         nsAString& aDescription);
+
+  static nsresult LookUpExtensionsAndDescription(const nsAString& aMajorType,
+                                                 const nsAString& aMinorType,
+                                                 nsAString& aFileExtensions,
+                                                 nsAString& aDescription);
+
+  static nsresult GetExtensionsAndDescriptionFromMimetypesFile(const nsAString& aFilename,
+                                                               const nsAString& aMajorType,
+                                                               const nsAString& aMinorType,
+                                                               nsAString& aFileExtensions,
+                                                               nsAString& aDescription);
+
+  static nsresult ParseNetscapeMIMETypesEntry(const nsAString& aEntry,
+                                              nsAString::const_iterator& aMajorTypeStart,
+                                              nsAString::const_iterator& aMajorTypeEnd,
+                                              nsAString::const_iterator& aMinorTypeStart,
+                                              nsAString::const_iterator& aMinorTypeEnd,
+                                              nsAString& aExtensions,
+                                              nsAString::const_iterator& aDescriptionStart,
+                                              nsAString::const_iterator& aDescriptionEnd);
+
+  static nsresult ParseNormalMIMETypesEntry(const nsAString& aEntry,
+                                            nsAString::const_iterator& aMajorTypeStart,
+                                            nsAString::const_iterator& aMajorTypeEnd,
+                                            nsAString::const_iterator& aMinorTypeStart,
+                                            nsAString::const_iterator& aMinorTypeEnd,
+                                            nsAString& aExtensions,
+                                            nsAString::const_iterator& aDescriptionStart,
+                                            nsAString::const_iterator& aDescriptionEnd);
+
+  static nsresult LookUpHandlerAndDescription(const nsAString& aMajorType,
+                                              const nsAString& aMinorType,
+                                              nsHashtable& aTypeOptions,
+                                              nsAString& aHandler,
+                                              nsAString& aDescription,
+                                              nsAString& aMozillaFlags);
+  static nsresult GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
+                                                          const nsAString& aMajorType,
+                                                          const nsAString& aMinorType,
+                                                          nsHashtable& aTypeOptions,
+                                                          nsAString& aHandler,
+                                                          nsAString& aDescription,
+                                                          nsAString& aMozillaFlags);
 };
 
 #endif // nsOSHelperAppService_h__

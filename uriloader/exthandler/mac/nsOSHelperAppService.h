@@ -45,10 +45,8 @@ public:
   NS_IMETHOD LoadUrl(nsIURI * aURL);
   
   // method overrides --> used to hook the mime service into internet config....
-  NS_IMETHOD GetFromExtension(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo);
-  NS_IMETHOD GetFromMIMEType(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo);
-  nsresult GetMIMEInfoForExtensionFromOS(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo);
-  nsresult GetMIMEInfoForMimeTypeFromOS(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo);
+  NS_IMETHOD GetFromTypeAndExtension(const char * aType, const char * aFileExt, nsIMIMEInfo ** aMIMEInfo);
+  already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const char * aMIMEType, const char * aFileExt);
 
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 

@@ -282,7 +282,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
     if (NS_SUCCEEDED(rv) && mimeFinder) 
     {
       nsIMIMEInfo *mimeInfo = nsnull;
-      rv = mimeFinder->GetFromMIMEType(contentType.get(), &mimeInfo);
+      rv = mimeFinder->GetFromTypeAndExtension(contentType.get(), nsnull, &mimeInfo);
       if (NS_SUCCEEDED(rv) && mimeInfo) 
       {
         char *aFileExtension = nsnull;

@@ -1807,7 +1807,7 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
       if (mimeService)
       {
         nsCOMPtr<nsIMIMEInfo> mimeinfo;
-        if (NS_SUCCEEDED(mimeService->GetFromMIMEType(m_contentType.get(), getter_AddRefs(mimeinfo))))
+        if (NS_SUCCEEDED(mimeService->GetFromTypeAndExtension(m_contentType.get(), nsnull, getter_AddRefs(mimeinfo))))
         {
           PRUint32 aMacType;
           PRUint32 aMacCreator;

@@ -30,12 +30,15 @@
 #include "nsILocalFile.h"
 #include "nsIProcess.h"
 #include "plstr.h"
+#include "nsAutoPtr.h"
 
 // we need windows.h to read out registry information...
 #include <windows.h>
 
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
+
+#define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
 
 // helper methods: forward declarations...
 BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen=0);
@@ -296,79 +299,104 @@ static nsresult GetMIMEInfoFromRegistry( LPBYTE fileType, nsIMIMEInfo *pInfo )
 // method overrides used to gather information from the windows registry for
 // various mime types. 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-nsresult nsOSHelperAppService::GetMIMEInfoForExtensionFromOS(const char *aFileExt, nsIMIMEInfo **_retval) 
-{
-  if (!aFileExt || !*aFileExt) return NS_ERROR_FAILURE;
 
-  nsresult rv = NS_OK;
+/// Looks up the type for the extension aExt and compares it to aType
+static PRBool typeFromExtEquals(const char *aExt, const char *aType)
+{
+  if (!aType)
+    return PR_FALSE;
+  nsCAutoString fileExtToUse;
+  if (aExt[0] != '.')
+    fileExtToUse = '.';
+
+  fileExtToUse.Append(aExt);
+
+  HKEY hKey;
+  LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
+  if (err == ERROR_SUCCESS)
+  {
+     LPBYTE pBytes = GetValueBytes( hKey, "Content Type");
+     PRBool eq = strcmp((const char *)pBytes, aType) == 0;
+     delete[] pBytes;
+     return eq;
+  }
+  return PR_FALSE;
+}
+
+already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetByExtension(const char *aFileExt, const char *aTypeHint)
+{
+  if (!aFileExt || !*aFileExt)
+    return nsnull;
 
   // windows registry assumes your file extension is going to include the '.'.
   // so make sure it's there...
   nsCAutoString fileExtToUse;
-  if (aFileExt && aFileExt[0] != '.')
+  if (*aFileExt != '.')
     fileExtToUse = '.';
 
   fileExtToUse.Append(aFileExt);
 
   // o.t. try to get an entry from the windows registry.
-   HKEY hKey;
-   LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
-   if (err == ERROR_SUCCESS)
-   {
+  HKEY hKey;
+  LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
+  if (err == ERROR_SUCCESS)
+  {
+    nsCAutoString typeToUse;
+    if (aTypeHint) {
+      typeToUse.Assign(aTypeHint);
+    }
+    else {
       LPBYTE pBytes = GetValueBytes( hKey, "Content Type");
-      LPBYTE pFileDescription = GetValueBytes(hKey, "");
-
-      nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
-      if (mimeInfo && pBytes)
-      {
-        mimeInfo->SetMIMEType((char *) pBytes);
-        // if the file extension includes the '.' then we don't want to include that when we append
-        // it to the mime info object.
-        if (aFileExt && *aFileExt == '.' && (aFileExt+1))
-          mimeInfo->AppendExtension(aFileExt+1);
-        else
-          mimeInfo->AppendExtension(aFileExt);
-
-        mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
-
-        nsAutoString description;
-        description.AssignWithConversion((char *) pFileDescription);
-
-        PRInt32 pos = description.FindChar('.');
-        if (pos > 0) 
-          description.Truncate(pos); 
-        // the format of the description usually looks like appname.version.something.
-        // for now, let's try to make it pretty and just show you the appname.
-
-        mimeInfo->SetDefaultDescription(description.get());
-
-        // Get other nsIMIMEInfo fields from registry, if possible.
-        if ( pFileDescription )
-        {
-            GetMIMEInfoFromRegistry( pFileDescription, mimeInfo );
-        }
-
-        // if we got here, then set our return variable
-        *_retval = mimeInfo;
-        NS_ADDREF(*_retval);
-      }
-      else
-        rv = NS_ERROR_FAILURE; // we failed to really find an entry in the registry
-
+      if (pBytes)
+        typeToUse.Assign((const char*)pBytes);
       delete [] pBytes;
-      delete [] pFileDescription;
+    }
+    LPBYTE pFileDescription = GetValueBytes(hKey, "");
 
-      // close the key
-     ::RegCloseKey(hKey);
-   }
+    nsIMIMEInfo* mimeInfo = nsnull;
+    CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mimeInfo);
+    if (mimeInfo && !typeToUse.IsEmpty())
+    {
+      mimeInfo->SetMIMEType(typeToUse.get());
+      // don't append the '.'
+      mimeInfo->AppendExtension(fileExtToUse.get() + 1);
 
-   // we failed to find a mime type.
-   if (!*_retval) rv = NS_ERROR_FAILURE;
-    
-   return rv;
+      mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
+
+      nsAutoString description;
+      description.AssignWithConversion((char *) pFileDescription);
+
+      PRInt32 pos = description.FindChar('.');
+      if (pos > 0) 
+        description.Truncate(pos); 
+      // the format of the description usually looks like appname.version.something.
+      // for now, let's try to make it pretty and just show you the appname.
+
+      mimeInfo->SetDefaultDescription(description.get());
+
+      // Get other nsIMIMEInfo fields from registry, if possible.
+      if ( pFileDescription )
+      {
+          GetMIMEInfoFromRegistry( pFileDescription, mimeInfo );
+      }
+    }
+    else {
+      NS_IF_RELEASE(mimeInfo); // we failed to really find an entry in the registry
+    }
+
+    delete [] pFileDescription;
+
+    // close the key
+    ::RegCloseKey(hKey);
+
+    return mimeInfo;
+  }
+
+  // we failed to find a mime type.
+  return nsnull;
 }
 
-nsresult nsOSHelperAppService::GetMIMEInfoForMimeTypeFromOS(const char *aMIMEType, nsIMIMEInfo ** _retval) 
+already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFileExt) 
 {
   if (PL_strcasecmp(aMIMEType, APPLICATION_OCTET_STREAM) == 0) {
     /* XXX Gross hack to wallpaper over the most common Win32
@@ -377,20 +405,66 @@ nsresult nsOSHelperAppService::GetMIMEInfoForMimeTypeFromOS(const char *aMIMETyp
      * want to remove this once we have fixed all this stuff to work
      * right; any info we get from the OS on this type is pretty much
      * useless....
+     * Just lookup by extension for this filetype.
      */
-    return NS_ERROR_FAILURE;
+    aMIMEType = nsnull;
+    // If we now have nothing to lookup from, return
+    if (!aFileExt || !*aFileExt)
+      return nsnull;
   }
-  
-  // (1) try to use the windows mime database to see if there is a mapping to a file extension
-  // (2) try to see if we have some left over 4.x registry info we can peek at...
+
   nsCAutoString fileExtension;
-  GetExtensionFromWindowsMimeDatabase(aMIMEType, fileExtension);
-  if (fileExtension.IsEmpty())
-    GetExtensionFrom4xRegistryInfo(aMIMEType, fileExtension);
-
-  // now look up based on the file extension.
+  if (aMIMEType && *aMIMEType) {
+    // (1) try to use the windows mime database to see if there is a mapping to a file extension
+    // (2) try to see if we have some left over 4.x registry info we can peek at...
+    GetExtensionFromWindowsMimeDatabase(aMIMEType, fileExtension);
+    LOG(("Windows mime database: extension '%s'\n", fileExtension.get()));
+    if (fileExtension.IsEmpty()) {
+      GetExtensionFrom4xRegistryInfo(aMIMEType, fileExtension);
+      LOG(("4.x Registry: extension '%s'\n", fileExtension.get()));
+    }
+  }
+  // If we found an extension for the type, do the lookup
+  nsIMIMEInfo* mi = nsnull;
   if (!fileExtension.IsEmpty())
-    return GetFromExtension(fileExtension.get(), _retval);
+    mi = GetByExtension(fileExtension.get(), aMIMEType).get();
+  LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(), mi));
 
-  return NS_ERROR_FAILURE;
+  PRBool hasDefault = PR_FALSE;
+  if (mi) {
+    mi->GetHasDefaultHandler(&hasDefault);
+    // OK. We might have the case that |aFileExt| is a valid extension for the
+    // mimetype we were given. In that case, we do want to append aFileExt
+    // to the mimeinfo that we have. (E.g.: We are asked for video/mpeg and
+    // .mpg, but the primary extension for video/mpeg is .mpeg. But because
+    // .mpg is an extension for video/mpeg content, we want to append it)
+    if (aFileExt && *aFileExt && typeFromExtEquals(aFileExt, aMIMEType)) {
+      LOG(("Appending extension '%s' to mimeinfo, because its mimetype is '%s'\n",
+           aFileExt, aMIMEType));
+      PRBool extExist = PR_FALSE;
+      mi->ExtensionExists(aFileExt, &extExist);
+      if (!extExist)
+        mi->AppendExtension(aFileExt);
+    }
+  }
+  if (!mi || !hasDefault) {
+    nsCOMPtr<nsIMIMEInfo> miByExt = GetByExtension(aFileExt, aMIMEType);
+    LOG(("Ext. lookup for '%s' found 0x%p\n", aFileExt, miByExt.get()));
+    if (!miByExt)
+      return mi;
+    if (!mi) {
+      miByExt.swap(mi);
+      return mi;
+    }
+
+    // if we get here, mi has no default app. copy from extension lookup.
+    nsCOMPtr<nsIFile> defaultApp;
+    nsXPIDLString desc;
+    miByExt->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
+    miByExt->GetDefaultDescription(getter_Copies(desc));
+
+    mi->SetDefaultApplicationHandler(defaultApp);
+    mi->SetDefaultDescription(desc.get());
+  }
+  return mi;
 }

@@ -186,66 +186,62 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
 // method overrides --> use internet config information for mime type lookup.
 ///////////////////////////
 
-NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo)
+NS_IMETHODIMP nsOSHelperAppService::GetFromTypeAndExtension(const char * aType, const char * aFileExt, nsIMIMEInfo ** aMIMEInfo)
 {
   // first, ask our base class....
-  nsresult rv = nsExternalHelperAppService::GetFromExtension(aFileExt, aMIMEInfo);
+  nsresult rv = nsExternalHelperAppService::GetFromTypeAndExtension(aType, aFileExt, aMIMEInfo);
   if (NS_SUCCEEDED(rv) && *aMIMEInfo) 
   {
     UpdateCreatorInfo(*aMIMEInfo);
   }
   return rv;
 }
-  
-nsresult nsOSHelperAppService::GetMIMEInfoForExtensionFromOS(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo)
-{
-  nsresult rv;
-  
-  // ask the internet config service to look it up for us...
-  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
-  if (icService)
-  {
-    rv = icService->GetMIMEInfoFromExtension(aFileExt, aMIMEInfo);
-    // if we got an entry, don't waste time hitting IC for this information next time, store it in our
-    // hash table....
-    // XXX Once cache can be invalidated, add the mime info to it.  See bug 121644
-    // if (NS_SUCCEEDED(rv) && *aMIMEInfo)
-    //  	AddMimeInfoToCache(*aMIMEInfo);    
-  }
-  
-  if (!*aMIMEInfo) rv = NS_ERROR_FAILURE;
-  return rv;
-}
 
-NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo)
+already_AddRefed<nsIMIMEInfo>
+nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
+                                        const char * aFileExt)
 {
-  // first, ask our base class....
-  nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, aMIMEInfo);
-  if (NS_SUCCEEDED(rv) && *aMIMEInfo) 
-  {
-    UpdateCreatorInfo(*aMIMEInfo);
-  }
-  return rv;
-}
-  
-nsresult nsOSHelperAppService::GetMIMEInfoForMimeTypeFromOS(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo)
-{
-  nsresult rv;
+  nsIMIMEInfo* mimeInfo = nsnull;
 
   // ask the internet config service to look it up for us...
   nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  PR_LOG(mLog, PR_LOG_DEBUG, ("Mac: HelperAppService lookup for type '%s' ext '%s' (IC: 0x%p)\n",
+                              aMIMEType, aFileExt, icService.get()));
   if (icService)
   {
-    rv = icService->FillInMIMEInfo(aMIMEType, nsnull, aMIMEInfo);
-    // if we got an entry, don't waste time hitting IC for this information next time, store it in our
-    // hash table....
-    // XXX Once cache can be invalidated, add the mime info to it.  See bug 121644
-    // if (NS_SUCCEEDED(rv) && *aMIMEInfo)
-    //   AddMimeInfoToCache(*aMIMEInfo);    
+    nsCOMPtr<nsIMIMEInfo> miByType, miByExt;
+    if (aMIMEType && *aMIMEType)
+      icService->FillInMIMEInfo(aMIMEType, aFileExt, getter_AddRefs(miByType));
+
+    PRBool hasDefault = PR_FALSE;
+    if (miByType)
+      miByType->GetHasDefaultHandler(&hasDefault);
+
+    if (aFileExt && *aFileExt && (!hasDefault || !miByType)) {
+      icService->GetMIMEInfoFromExtension(aFileExt, getter_AddRefs(miByExt));
+      if (miByExt && aMIMEType)
+        miByExt->SetMIMEType(aMIMEType);
+    }
+    PR_LOG(mLog, PR_LOG_DEBUG, ("OS gave us: By Type: 0x%p By Ext: 0x%p type has default: %s\n",
+                                miByType.get(), miByExt.get(), hasDefault ? "true" : "false"));
+
+    // If we got two matches, and the type has no default app, copy default app
+    if (!hasDefault && miByType && miByExt) {
+      nsCOMPtr<nsIFile> defaultApp;
+      nsXPIDLString desc;
+      miByExt->GetDefaultDescription(getter_Copies(desc));
+      miByExt->GetDefaultApplicationHandler(getter_AddRefs(defaultApp));
+
+      miByType->SetDefaultDescription(desc.get());
+      miByType->SetDefaultApplicationHandler(defaultApp);
+    }
+    if (miByType)
+      miByType.swap(mimeInfo);
+    else if (miByExt)
+      miByExt.swap(mimeInfo);
   }
   
-  if (!*aMIMEInfo) rv = NS_ERROR_FAILURE;
-  return rv;
+  return mimeInfo;
 }
 
 // we never want to use a hard coded value for the creator and file type for the mac. always look these values up

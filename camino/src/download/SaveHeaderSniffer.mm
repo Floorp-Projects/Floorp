@@ -272,7 +272,7 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         if (!mimeService)
             return rv;
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
-        rv = mimeService->GetFromMIMEType(mContentType.get(), getter_AddRefs(mimeInfo));
+        rv = mimeService->GetFromTypeAndExtension(mContentType.get(), nsnull, getter_AddRefs(mimeInfo));
         if (!mimeInfo)
           return rv;
 

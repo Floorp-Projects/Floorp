@@ -409,7 +409,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     nsCOMPtr<nsIMIMEInfo> mimeObject;
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mimeService->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeObject));
+    mimeService->GetFromTypeAndExtension(contentType.get(), nsnull, getter_AddRefs(mimeObject));
     if (mimeObject)
     {
       nsXPIDLCString fileExt;
