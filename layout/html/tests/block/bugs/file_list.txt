@@ -87,6 +87,7 @@ file:///s:/mozilla/layout/html/tests/block/bugs/17844.html
 file:///s:/mozilla/layout/html/tests/block/bugs/22037.html
 file:///s:/mozilla/layout/html/tests/block/bugs/22413.html
 file:///s:/mozilla/layout/html/tests/block/bugs/27211.html
+file:///s:/mozilla/layout/html/tests/block/bugs/28811.html
 file:///s:/mozilla/layout/html/tests/block/bugs/36401-a.html
 file:///s:/mozilla/layout/html/tests/block/bugs/36401-b.html
 file:///s:/mozilla/layout/html/tests/block/bugs/36401-c.html
