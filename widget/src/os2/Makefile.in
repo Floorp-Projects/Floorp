@@ -35,8 +35,6 @@ ifdef ENABLE_TESTS
 DIRS		+= tests
 endif
 
-CSRCS		= tabctrl.c
-
 CPPSRCS		= \
 		nsAppShell.cpp \
 		nsCanvas.cpp \
@@ -65,18 +63,6 @@ CPPSRCS		= \
 #		nsNativeDragSource.cpp      \
 #		nsDataObj.cpp      \
 #		nsDataObjCollection.cpp      \
-
-# OBSOLETE FILES
-#	nsBaseList.cpp \
-#	nsCheckbutton.cpp \
-#	nsCombobox.cpp \
-#	nsEntryField.cpp \
-#	nsLabel.cpp \
-#	nsListbox.cpp \
-#	nsPushbutton.cpp \
-#	nsRadiobutton.cpp \
-#	nsTextArea.cpp \
-#       nsTabWidget.cpp \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.$(LIB_SUFFIX)
 
