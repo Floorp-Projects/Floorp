@@ -680,7 +680,7 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, nsIMsgRec
 	if (! pAddrArray)
 		return NS_ERROR_OUT_OF_MEMORY;
 	
-	rv = pAddrArray->QueryInterface(NS_GET_IID(nsIMsgRecipientArray), _retval);
+	rv = pAddrArray->QueryInterface(NS_GET_IID(nsIMsgRecipientArray), (void **)_retval);
 	if (NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr<nsIMsgHeaderParser> parser;
