@@ -201,7 +201,8 @@ protected:
   nsCOMPtr<nsIDOMNode> mBody;          // cached root node
   PRUint32             mFlags;
   PRUint32             mActionNesting;
-  PRBool               mLockRulesSniffing;
+  PRPackedBool         mLockRulesSniffing;
+  PRPackedBool         mDidExplicitlySetInterline;
   PRInt32              mTheAction;     // the top level editor action
   // friends
   friend class nsAutoLockRulesSniffing;

@@ -102,6 +102,7 @@ nsTextEditRules::nsTextEditRules()
 , mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
 , mActionNesting(0)
 , mLockRulesSniffing(PR_FALSE)
+, mDidExplicitlySetInterline(PR_FALSE)
 , mTheAction(0)
 {
 }
@@ -202,6 +203,7 @@ nsTextEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   if (mLockRulesSniffing) return NS_OK;
   
   nsAutoLockRulesSniffing lockIt(this);
+  mDidExplicitlySetInterline = PR_FALSE;
   
   if (!mActionNesting)
   {
@@ -977,11 +979,13 @@ nsTextEditRules::DidDeleteSelection(nsISelection *aSelection,
       if (NS_FAILED(res)) return res;
     }
   }
-  // We prevent the caret from sticking on the left of prior BR
-  // (i.e. the end of previous line) after this deletion.  Bug 92124
-  nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(aSelection);
-  if (selPriv) res = selPriv->SetInterlinePosition(PR_TRUE);
-
+  if (!mDidExplicitlySetInterline)
+  {
+    // We prevent the caret from sticking on the left of prior BR
+    // (i.e. the end of previous line) after this deletion.  Bug 92124
+    nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(aSelection);
+    if (selPriv) res = selPriv->SetInterlinePosition(PR_TRUE);
+  }
   return res;
 }
 
