@@ -571,8 +571,8 @@ js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
     JSParseNode *pn = NULL;
 #endif
     JSErrorReporter onError;
-    jschar *tokenptr;
-    ptrdiff_t tokenpos;
+    JSTokenPos *tp;
+    uintN index;
     char *message;
     JSBool warning;
 
@@ -634,19 +634,19 @@ js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
                                                     jschar),
                                             0);
                 report.linebuf = linestr
-                    ? JS_GetStringBytes(linestr)
-                    : NULL;
-                tokenptr =
-                    ts->tokens[(ts->cursor + ts->lookahead) & NTOKENS_MASK].ptr;
-                tokenpos = PTRDIFF(tokenptr, ts->linebuf.base, jschar);
+                                 ? JS_GetStringBytes(linestr)
+                                 : NULL;
+                tp = &ts->tokens[(ts->cursor+ts->lookahead) & NTOKENS_MASK].pos;
 #if JS_HAS_XML_SUPPORT
                 if (pn)
-                    tokenpos = pn->pn_pos.begin.index;
+                    tp = &pn->pn_pos;
 #endif
-                report.tokenptr = linestr ? report.linebuf + tokenpos : NULL;
+                index = (tp->begin.lineno == tp->end.lineno)
+                        ? tp->begin.index - ts->linepos
+                        : 0;
+                report.tokenptr = linestr ? report.linebuf + index : NULL;
                 report.uclinebuf = linestr ? JS_GetStringChars(linestr) : NULL;
-                report.uctokenptr = linestr ? report.uclinebuf + tokenpos
-                                            : NULL;
+                report.uctokenptr = linestr ? report.uclinebuf + index : NULL;
                 break;
             }
 
@@ -970,7 +970,8 @@ NewToken(JSTokenStream *ts, ptrdiff_t adjust)
     tp = &CURRENT_TOKEN(ts);
     tp->ptr = ts->linebuf.ptr + adjust;
     tp->pos.begin.index = ts->linepos +
-                          PTRDIFF(tp->ptr, ts->linebuf.base, jschar);
+                          PTRDIFF(tp->ptr, ts->linebuf.base, jschar) -
+                          ts->ungetpos;
     tp->pos.begin.lineno = tp->pos.end.lineno = (uint16)ts->lineno;
     return tp;
 }
@@ -1018,12 +1019,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
         INIT_TOKENBUF();
         qc = (ts->flags & TSF_XMLONLYMODE) ? '<' : '{';
 
-        while ((c = GetChar(ts)) != qc && c != '<') {
-            if (c == EOF) {
-                tt = TOK_EOF;
-                goto out;
-            }
-
+        while ((c = GetChar(ts)) != qc && c != '<' && c != EOF) {
             if (c == '&') {
                 if (!GetXMLEntity(cx, ts))
                     goto error;
