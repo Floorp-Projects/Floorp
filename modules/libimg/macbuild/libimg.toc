@@ -2,14 +2,9 @@
 mozilla/modules/libimg/src/color.cpp
 mozilla/modules/libimg/src/colormap.cpp
 mozilla/modules/libimg/src/dither.cpp
-mozilla/modules/libimg/src/gif.cpp
 mozilla/modules/libimg/src/if.cpp
 mozilla/modules/libimg/src/ilclient.cpp
 mozilla/modules/libimg/src/ilNetReader.cpp
 mozilla/modules/libimg/src/il_util.cpp
-mozilla/modules/libimg/src/ipng.cpp
-mozilla/modules/libimg/src/jpeg.cpp
-mozilla/modules/libimg/src/png_png.cpp
 mozilla/modules/libimg/src/scale.cpp
-mozilla/modules/libimg/src/xbm.cpp
 mozilla/modules/libimg/src/xpcompat.cpp
