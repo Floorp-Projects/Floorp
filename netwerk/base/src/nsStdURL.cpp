@@ -218,7 +218,7 @@ nsStdURL::Equals(nsIURI *i_OtherURI, PRBool *o_Equals)
         if (NS_FAILED(rv)) return rv;
         rv = this->GetSpec(getter_Copies(spec2));
         if (NS_FAILED(rv)) return rv;
-        eq = nsAutoString(spec).Equals(spec2);
+        eq = nsCAutoString(spec).Equals(spec2);
     }
     *o_Equals = eq;
     return NS_OK;
@@ -457,7 +457,7 @@ nsStdURL::SetDirectory(const char* i_Directory)
     if (mDirectory)
         nsCRT::free(mDirectory);
 
-    nsAutoString dir;
+    nsCAutoString dir;
     if ('/' != *i_Directory)
         dir += "/";
     
@@ -1012,11 +1012,36 @@ nsStdURL::SetFile(nsIFile * aFile)
 
     // set up this URL to denote the nsIFile
     SetScheme("file");
+    CRTFREEIF(mUsername);
+    CRTFREEIF(mPassword);
+    CRTFREEIF(mHost);
+    mPort = -1;
 
     char* ePath = nsnull;
+    nsCAutoString escPath;
+
     rv = aFile->GetPath(&ePath);
     if (NS_SUCCEEDED(rv)) {
-        rv = SetPath(ePath);
+#if defined (XP_PC)
+        // Replace \ with / to convert to an url
+        char* s = ePath;
+	    while (*s)
+	    {
+		    if (*s == '\\')
+			    *s = '/';
+		    s++;
+	    }
+#endif
+#if defined( XP_MAC )
+   	    // Swap the / and colons to convert to an url
+        SwapSlashColon(ePath);
+#endif
+        // Escape the path with the directory mask
+        rv = nsURLEscape(ePath,nsIIOService::url_Directory+
+                               nsIIOService::url_Forced,escPath);
+        if (NS_SUCCEEDED(rv)) {
+            rv = SetPath(escPath.GetBuffer());
+        }
     }
     CRTFREEIF(ePath);
     return rv;
