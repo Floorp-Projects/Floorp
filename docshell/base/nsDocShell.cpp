@@ -45,6 +45,7 @@
 
 // Interfaces Needed
 #include "nsIGlobalHistory.h"
+#include "nsIHTTPChannel.h"
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
 #define WEB_TRACE(_bit,_args)            \
@@ -715,8 +716,14 @@ NS_IMETHODIMP nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
 NS_IMETHODIMP nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
 {
    mTreeOwner = aTreeOwner; // Weak reference per API
-   nsCOMPtr<nsIWebProgressListener> progressListener(do_QueryInterface(aTreeOwner));
-   mOwnerProgressListener = progressListener; // Weak reference per API
+   // Don't automatically set the progress based on the tree owner for frames
+   if(!IsFrame()) 
+      {
+      nsCOMPtr<nsIWebProgressListener> progressListener(do_QueryInterface(aTreeOwner));
+      mOwnerProgressListener = progressListener; // Weak reference per API
+      }
+   else
+      mOwnerProgressListener = nsnull;
 
    PRInt32 i, n = mChildren.Count();
    for(i = 0; i < n; i++)
@@ -2271,8 +2278,12 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIURI* aURI)
+NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIChannel* aChannel)
 {
+   nsCOMPtr<nsIURI> uri;
+   aChannel->GetURI(getter_AddRefs(uri));
+   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
    UpdateCurrentSessionHistory();
    UpdateCurrentGlobalHistory();
 
@@ -2280,17 +2291,25 @@ NS_IMETHODIMP nsDocShell::OnLoadingSite(nsIURI* aURI)
       {
       PRBool shouldAdd = PR_FALSE;
 
-      ShouldAddToSessionHistory(aURI, &shouldAdd);
+      ShouldAddToSessionHistory(uri, &shouldAdd);
       if(shouldAdd)
-         AddToSessionHistory(aURI);
+         AddToSessionHistory(uri);
 
       shouldAdd = PR_FALSE;
-      ShouldAddToGlobalHistory(aURI, &shouldAdd);
+      ShouldAddToGlobalHistory(uri, &shouldAdd);
       if(shouldAdd)
-         AddToGlobalHistory(aURI);
+         AddToGlobalHistory(uri);
       }
 
-   SetCurrentURI(aURI);
+   SetCurrentURI(uri);
+   nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+   if(httpChannel)
+      {
+      nsCOMPtr<nsIURI> referrer;
+      httpChannel->GetReferrer(getter_AddRefs(referrer));
+      SetReferrerURI(referrer);
+      }
+
    mInitialPageLoad = PR_FALSE;
    return NS_OK;
 }
