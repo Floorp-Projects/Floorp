@@ -63,11 +63,6 @@ public:
   nsCookieService();
   virtual ~nsCookieService(void);
   nsresult Init();
-  
-protected:
-  // cached IOService
-  nsCOMPtr<nsIFile> mDir;
-  
 };
 
 #endif /* nsCookieService_h__ */
