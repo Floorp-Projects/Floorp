@@ -69,6 +69,7 @@ public:
   static const PRInt32 kBoxSizingKTable[];
   static const PRInt32 kCaptionSideKTable[];
   static const PRInt32 kClearKTable[];
+  static const PRInt32 kColorKTable[];
   static const PRInt32 kContentKTable[];
   static const PRInt32 kCursorKTable[];
   static const PRInt32 kDirectionKTable[];

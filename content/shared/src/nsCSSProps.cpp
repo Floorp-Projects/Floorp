@@ -20,6 +20,8 @@
 #include "nsCSSKeywords.h"
 #include "nsStyleConsts.h"
 
+#include "nsILookAndFeel.h" // for system colors
+
 #include "nsString.h"
 #include "nsAVLTree.h"
 
@@ -229,6 +231,43 @@ const PRInt32 nsCSSProps::kClearKTable[] = {
   eCSSKeyword_left, NS_STYLE_CLEAR_LEFT,
   eCSSKeyword_right, NS_STYLE_CLEAR_RIGHT,
   eCSSKeyword_both, NS_STYLE_CLEAR_LEFT_AND_RIGHT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kColorKTable[] = {
+#if 0 // Rod: remove this #if 0 and fixup the eColor_XX enums when you update the look and feel
+  eCSSKeyword_activeborder, eColor_activeborder,
+  eCSSKeyword_activecaption, eColor_activecaption,
+  eCSSKeyword_appworkspace, eColor_appworkspace,
+  eCSSKeyword_background, eColor_background,
+  eCSSKeyword_buttonface, eColor_buttonface,
+  eCSSKeyword_buttonhighlight, eColor_buttonhighlight,
+  eCSSKeyword_buttonshadow, eColor_buttonshadow,
+  eCSSKeyword_buttontext, eColor_buttontext,
+  eCSSKeyword_captiontext, eColor_captiontext,
+  eCSSKeyword_graytext, eColor_graytext,
+  eCSSKeyword_highlight, eColor_highlight,
+  eCSSKeyword_highlighttext, eColor_highlighttext,
+  eCSSKeyword_inactiveborder, eColor_inactiveborder,
+  eCSSKeyword_inactivecaption, eColor_inactivecaption,
+  eCSSKeyword_inactivecaptiontext, eColor_inactivecaptiontext,
+  eCSSKeyword_infobackground, eColor_infobackground,
+  eCSSKeyword_infotext, eColor_infotext,
+  eCSSKeyword_menu, eColor_menu,
+  eCSSKeyword_menutext, eColor_menutext,
+  eCSSKeyword_scrollbar, eColor_scrollbar,
+  eCSSKeyword_threeddarkshadow, eColor_threeddarkshadow,
+  eCSSKeyword_threedface, eColor_threedface,
+  eCSSKeyword_threedhighlight, eColor_threedhighlight,
+  eCSSKeyword_threedlightshadow, eColor_threedlightshadow,
+  eCSSKeyword_threedshadow, eColor_threedshadow,
+  eCSSKeyword_window, eColor_window,
+  eCSSKeyword_windowframe, eColor_windowframe,
+  eCSSKeyword_windowtext, eColor_windowtext,
+#else // debugging set of colors
+  eCSSKeyword_activeborder, nsILookAndFeel::eColor_WindowBackground,
+  eCSSKeyword_activecaption, nsILookAndFeel::eColor_WindowForeground,
+#endif
   -1,-1
 };
 
