@@ -77,12 +77,13 @@ function fillSettings()
         document.getElementById("search").value = gLdapService.
                                           UTF8toUCS2(ldapUrl.filter);
       }
+      var sub = document.getElementById("sub");
       switch(ldapUrl.scope)
       {
         case 1:
-          document.getElementById("one").checked = true; break;
+          sub.radioGroup.selectedItem = document.getElementById("one"); break;
         default:
-          document.getElementById("sub").checked = true; break;
+          sub.radioGroup.selectedItem = sub; break;
       }
     }
     try {
@@ -99,7 +100,8 @@ function fillDefaultSettings()
 {
   document.getElementById("port").value = gPortNumber;
   document.getElementById("results").value = gMaxHits;
-  document.getElementById("sub").checked = true;
+  var sub = document.getElementById("sub");
+  sub.radioGroup.selectedItem = sub;
 }
 
 // find a unique server-name for the new directory server
@@ -256,7 +258,7 @@ function onOK()
     ldapUrl.port = gPortNumber;
   else
     ldapUrl.port = port;
-  if (document.getElementById("one").checked)
+  if (document.getElementById("one").selected)
   {
     ldapUrl.scope = 1;
   }
