@@ -345,11 +345,11 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 					/* this is trying to estimate the image data size of the zoom image */
 					if (( mPhImage.bpl * scaled_w * scaled_h / mPhImage.size.w ) < IMAGE_SHMEM_THRESHOLD) {
 						mPhImageZoom = PiResizeImage( &mPhImage, NULL, scaled_w, scaled_h, Pi_USE_COLORS);
-						mImageFlags |= ZOOM_SHMEM;
+						mImageFlags &= ~ZOOM_SHMEM;
 						}
 					else {
 						mPhImageZoom = PiResizeImage( &mPhImage, NULL, scaled_w, scaled_h, Pi_USE_COLORS|Pi_SHMEM);
-						mImageFlags &= ~ZOOM_SHMEM;
+						mImageFlags |= ZOOM_SHMEM;
 						}
 
 ///* ATENTIE */ printf( "\t\t\tzoom from=%d,%d to=%d,%d\n", mPhImage.size.w, mPhImage.size.h, scaled_w, scaled_h );
