@@ -696,8 +696,8 @@ function onAccountClick(tree) {
 // show the page for the given server:
 // - save the old values
 // - start loading the new page
-function showPage(serverId, pageId) {
-
+function showPage(serverId, pageId) 
+{
   if (pageId == currentPageId &&
       serverId == currentServerId)
     return;
@@ -707,7 +707,7 @@ function showPage(serverId, pageId) {
 
   if (gSmtpHostNameIsIllegal) {
     gSmtpHostNameIsIllegal = false;
-    return false;
+    return;
   }
 
   // save the previous page
@@ -728,7 +728,6 @@ function showPage(serverId, pageId) {
   else if (serverId != currentServerId) {
     restorePage(pageId, serverId);
   }
-
 }
 
 // page has loaded
