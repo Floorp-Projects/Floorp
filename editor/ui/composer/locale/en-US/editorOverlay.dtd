@@ -140,6 +140,7 @@
 <!ENTITY viewcharsetmenu4.accesskey "">
 <!ENTITY dcharMenu5.label "Character Set  Windows">
 <!ENTITY viewcharsetmenu5.accesskey "">
+<!-- LOCALIZATION NOTE (dcharIso1Cmd.label): Don't translate the ISO code -->
 <!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
 <!ENTITY charsetLatin1.accesskey "">
 <!ENTITY dcharIso2Cmd.label "Central European (ISO-8859-2)">
@@ -368,9 +369,9 @@
 <!ENTITY coloryellow.accesskey "y">
 <!ENTITY colorMagentaCmd.label "Magenta">
 <!ENTITY colormagenta.accesskey "m">
-<!-- 
-Menu item text for "[Page|Table|Cell] Background color" is filled from 
- editor.properties strings, so accesskey should be compatable with those
+<!-- LOCALIZATION NOTE ( formatbkgdcolormenu ):
+ Menu item text for "[Page|Table|Cell] Background color" is filled from 
+ editor.properties strings, so accesskey should be compatible with those
 -->
 <!ENTITY formatbkgdcolormenu.accesskey "b">
 <!ENTITY removeAllStylesCmd.label "Remove All Text Styles">
@@ -612,3 +613,4 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY sourceMode.label "HTML Source">
 <!ENTITY sourceMode.tooltip "Edit HTML source">
 <!ENTITY ToggleEditModeType.tooltip "Toggle between tab icons and text labels ">
+

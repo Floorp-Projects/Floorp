@@ -52,6 +52,7 @@
 <!ENTITY copyCmd.label "Copy">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY deleteCmd.label "Delete">
+<!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
 <!ENTITY walletMenu.label "Wallet">
 <!ENTITY walletSafeFillCmd.label "Safe Form Fill">
 <!ENTITY walletQuickFillCmd.label "Quick Form Fill">
@@ -79,6 +80,7 @@
 <!ENTITY pageInfoCmd.label "Page Info">
 <!ENTITY charSetMenu.label "Character Set"> 
 <!ENTITY charWesternCmd.label "Latin1">  
+<!-- LOCALIZATION NOTE (charJapaneseCmd.label): Don't translate the ISO code -->
 <!ENTITY charJapaneseCmd.label "Japanese (ISO-2022-JP)">  
 <!ENTITY charShiftJisCmd.label "Shift_JIS">
 <!ENTITY charEupCmd.label "EUC-JP">
@@ -98,6 +100,7 @@
 <!ENTITY goForwardCmd.label "Go Forward">
 <!ENTITY goHomeCmd.label "Home">
 <!ENTITY tasksMenu.label "Tasks">
+<!-- LOCALIZATION NOTE (navigatorCmd.label): DONT_TRANSLATE -->
 <!ENTITY navigatorCmd.label "Navigator">
 <!ENTITY messengerCmd.label "Messenger">
 <!ENTITY editorCmd.label "Editor">
@@ -120,6 +123,7 @@
 <!ENTITY softwareUpdatesCmd.label "Software Updates">
 <!ENTITY technicalSupportCmd.label "Technical Support">
 <!ENTITY releaseNotesCmd.label "Release Notes">
+<!-- LOCALIZATION NOTE (aboutCommunicatorCmd.label): DONT_TRANSLATE -->
 <!ENTITY aboutCommunicatorCmd.label "About Communicator Prototype">
 
 
