@@ -310,7 +310,7 @@ nsMsgIdentity::GetIdentityName(PRUnichar **idName) {
 
     nsAutoString str;
     str += (const PRUnichar*)fullName;
-    str += "<";
+    str += " <";
     str += (const char*)email;
     str += ">";
     *idName = str.ToNewUnicode();
