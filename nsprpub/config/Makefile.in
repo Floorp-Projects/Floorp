@@ -27,6 +27,10 @@ include $(MOD_DEPTH)/config/autoconf.mk
 # Indicate that this directory builds build tools.
 INTERNAL_TOOLS	= 1
 
+# autoconf.mk must be deleted last (from the top-level directory)
+# because it is included by every makefile.
+DIST_GARBAGE	= nsprincl.mk nsprincl.sh
+
 include $(topsrcdir)/config/config.mk
 
 CSRCS	= nsinstall.c now.c
