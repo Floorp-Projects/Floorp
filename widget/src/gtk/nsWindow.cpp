@@ -322,7 +322,6 @@ void nsWindow::InitCallbacks(char * aName)
                      "draw",
                      GTK_SIGNAL_FUNC(nsWindow::DrawSignal),
                      (gpointer) this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "expose_event",
                      GTK_SIGNAL_FUNC(handle_expose_event),
@@ -344,30 +343,23 @@ void nsWindow::InitCallbacks(char * aName)
 //-------------------------------------------------------------------------
 void *nsWindow::GetNativeData(PRUint32 aDataType)
 {
-    switch(aDataType) {
-      case NS_NATIVE_WINDOW:
-#ifdef NS_GTK_REF
-	return (void *)gdk_window_ref(GTK_LAYOUT(mWidget)->bin_window);
-#else
-	return (void *)GTK_LAYOUT(mWidget)->bin_window;
-#endif
-      case NS_NATIVE_DISPLAY:
-	return (void *)GDK_DISPLAY();
-      case NS_NATIVE_WIDGET:
-      case NS_NATIVE_PLUGIN_PORT:
-
-#ifdef NS_GTK_REF
-	gtk_widget_ref(mWidget);
-#endif
-	return (void *)mWidget;
-      case NS_NATIVE_GRAPHIC:
-       /* GetSharedGC ups the ref count on the GdkGC so make sure you release
-	* it afterwards. */
-        return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
-      default:
-	break;
-    }
-    return nsnull;
+  switch(aDataType)
+  {
+  case NS_NATIVE_WINDOW:
+    return (void *)GTK_LAYOUT(mWidget)->bin_window;
+  case NS_NATIVE_DISPLAY:
+    return (void *)GDK_DISPLAY();
+  case NS_NATIVE_WIDGET:
+  case NS_NATIVE_PLUGIN_PORT:
+    return (void *)mWidget;
+  case NS_NATIVE_GRAPHIC:
+    /* GetSharedGC ups the ref count on the GdkGC so make sure you release
+     * it afterwards. */
+    return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
+  default:
+    break;
+  }
+  return nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -466,22 +458,9 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
       g_print("nsWindow::OnPaint(this=%p, NO RECT)\n", this);
     }
 #endif
-    static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-    if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
-                                                    nsnull,
-                                                    NS_GET_IID(nsIRenderingContext),
-                                                    (void **)&event.renderingContext))
-    {
-      event.renderingContext->Init(mContext, this);
-      result = DispatchWindowEvent(&event);
-      NS_RELEASE(event.renderingContext);
-    }
-    else
-    {
-      result = PR_FALSE;
-    }
-    
-    //NS_RELEASE(event.widget);
+
+    event.renderingContext = GetRenderingContext();
+    result = DispatchWindowEvent(&event);
   }
   return result;
 }
@@ -633,16 +612,40 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
   if (mIsToplevel && mShell)
   {
     if (aCapture)
-      gtk_grab_add(mShell);
+    {
+      printf("grabbing mShell\n");
+      mGrabTime = gdk_time_get();
+
+      gdk_pointer_grab (mShell->window, PR_TRUE,(GdkEventMask)
+                        (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                         GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                         GDK_POINTER_MOTION_MASK),
+                        NULL, NULL, mGrabTime);
+    }
     else
-      gtk_grab_remove(mShell);
+    {
+      printf("ungrabbing mShell\n");
+      gdk_pointer_ungrab(mGrabTime);
+    }
   }
   else
   { 
     if (aCapture)
-      gtk_grab_add(mWidget);
+    {
+      printf("grabbing mWidget\n");
+      mGrabTime = gdk_time_get();
+
+      gdk_pointer_grab (mWidget->window, PR_TRUE,(GdkEventMask)
+                        (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                         GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                         GDK_POINTER_MOTION_MASK),
+                        NULL, NULL, mGrabTime);
+    }
     else
-      gtk_grab_remove(mWidget);
+    {
+      printf("ungrabbing mWidget\n");
+      gdk_pointer_ungrab(mGrabTime);
+    }
   }
 
   return NS_OK;
