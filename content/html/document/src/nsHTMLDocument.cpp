@@ -1929,10 +1929,10 @@ nsHTMLDocument::GetBaseURI(nsAString &aURI)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::CompareTreePosition(nsIDOMNode* aOther,
-                                    PRUint16* aReturn)
+nsHTMLDocument::CompareDocumentPosition(nsIDOMNode* aOther,
+                                        PRUint16* aReturn)
 {
-  return nsDocument::CompareTreePosition(aOther, aReturn);
+  return nsDocument::CompareDocumentPosition(aOther, aReturn);
 }
 
 NS_IMETHODIMP

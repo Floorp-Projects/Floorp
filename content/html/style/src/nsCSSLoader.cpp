@@ -1360,7 +1360,7 @@ CSSLoaderImpl::PrepareSheet(nsICSSStyleSheet* aSheet,
  *    which the inserting requests come in, since all of these are
  *    inserted during header data processing in the content sink
  * 3) Sheets with linking elements are ordered based on document order
- *    as determined by CompareTreePosition.
+ *    as determined by CompareDocumentPosition.
  */
 nsresult
 CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
@@ -1413,15 +1413,20 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
     }
 
     // Have to compare
-    PRUint16 comparisonFlags = nsIDOMNode::TREE_POSITION_DISCONNECTED;
-    rv = linkingNode->CompareTreePosition(sheetOwner, &comparisonFlags);
+    PRUint16 comparisonFlags = 0;
+    rv = linkingNode->CompareDocumentPosition(sheetOwner, &comparisonFlags);
     // If we can't get the order right, just bail...
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ASSERTION(!(comparisonFlags & nsIDOMNode::TREE_POSITION_DISCONNECTED),
+    NS_ASSERTION(!(comparisonFlags & nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED),
                  "Why are these elements in different documents?");
-    NS_ASSERTION(!(comparisonFlags & nsIDOMNode::TREE_POSITION_SAME_NODE),
-                 "Why do we still have our old sheet?");
-    if (comparisonFlags & nsIDOMNode::TREE_POSITION_PRECEDING) {
+#ifdef DEBUG
+    {
+      PRBool sameNode = PR_FALSE;
+      linkingNode->IsSameNode(sheetOwner, &sameNode);
+      NS_ASSERTION(!sameNode, "Why do we still have our old sheet?");
+    }
+#endif // DEBUG
+    if (comparisonFlags & nsIDOMNode::DOCUMENT_POSITION_PRECEDING) {
       // The current sheet comes before us, and it better be the first
       // such, because now we break
       break;

@@ -676,10 +676,10 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
         nsCOMPtr<nsIDOMNode> newNode(do_QueryInterface(firstAppendedContent));
         NS_ASSERTION(newNode, "Content being inserted is not a node.... why?");
         PRUint16 comparisonFlags;
-        nsresult rv = ourLastDOM3Node->CompareTreePosition(newNode,
-                                                           &comparisonFlags);
+        nsresult rv =
+          ourLastDOM3Node->CompareDocumentPosition(newNode, &comparisonFlags);
         if (NS_SUCCEEDED(rv) && 
-            (comparisonFlags & nsIDOMNode::TREE_POSITION_FOLLOWING)) {
+            (comparisonFlags & nsIDOMNode::DOCUMENT_POSITION_FOLLOWING)) {
           appendToList = PR_TRUE;
         }
       }

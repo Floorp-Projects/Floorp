@@ -43,6 +43,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptContext.h"
+#include "nsCOMArray.h"
 
 class nsIScriptGlobalObject;
 class nsIXPConnect;
@@ -133,13 +134,39 @@ public:
    * closest to the common ancestor, but not an ancestor of |aOther|.
    * The third, if present, is the ancestor node of |aOther| which is
    * closest to the common ancestor, but not an ancestor of |aNode|.
-   *
-   * These elements were |nsIDOMNode*|s before casting to void* and must
-   * be cast back to |nsIDOMNode*| on usage, or bad things will happen.
    */
   static nsresult GetFirstDifferentAncestors(nsIDOMNode *aNode,
                                              nsIDOMNode *aOther,
-                                             nsVoidArray* aDifferentNodes);
+                                             nsCOMArray<nsIDOMNode>& aDifferentNodes);
+
+  /**
+   * Compares the document position of nodes which may have parents.
+   * DO NOT pass in nodes that cannot have a parentNode. In other words:
+   * DO NOT pass in Attr, Document, DocumentFragment, Entity, or Notation!
+   * The results will be completely wrong!
+   *
+   * @param   aNode   The node to which you are comparing.
+   * @param   aOther  The reference node to which aNode is compared.
+   *
+   * @return  The document position flags of the nodes.
+   *
+   * @see nsIDOMNode
+   * @see nsIDOM3Node
+   */
+  static PRUint16 ComparePositionWithAncestors(nsIDOMNode *aNode,
+                                               nsIDOMNode *aOther);
+
+  /**
+   * Reverses the document position flags passed in.
+   *
+   * @param   aDocumentPosition   The document position flags to be reversed.
+   *
+   * @return  The reversed document position flags.
+   *
+   * @see nsIDOMNode
+   * @see nsIDOM3Node
+   */
+  static PRUint16 ReverseDocumentPosition(PRUint16 aDocumentPosition);
 
   // These are copied from nsJSUtils.h
 
