@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.6 $ $Date: 2002/02/04 21:57:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.7 $ $Date: 2002/02/16 00:29:37 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -207,11 +207,25 @@ nssToken_IsPresent
     nssSession *session;
     CK_SLOT_INFO slotInfo;
     NSSSlot *slot = token->slot;
+    PRIntervalTime time,lastTime;
+    static PRIntervalTime delayTime = 0;
+    
     session = token->defaultSession;
     /* permanent slots are always present */
     if (nssSlot_IsPermanent(slot) && session != CK_INVALID_SESSION) {
 	return PR_TRUE;
     }
+
+    if (delayTime == 0) {
+	delayTime = PR_SecondsToInterval(10);
+    }
+    
+    time = PR_IntervalNow();
+    lastTime = token->lastTime;
+    if ((time > lastTime) && ((time - lastTime) < delayTime)) {
+	return (PRBool) ((slot->ckFlags & CKF_TOKEN_PRESENT) != 0);
+    }
+    token->lastTime = time;
     nssSession_EnterMonitor(session);
     /* First obtain the slot info */
     ckrv = CKAPI(slot)->C_GetSlotInfo(slot->slotID, &slotInfo);
