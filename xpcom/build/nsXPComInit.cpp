@@ -465,15 +465,21 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     return rv;
 }
 
-static nsVoidArray gExitRoutines;
+static nsVoidArray* gExitRoutines;
+
 static void CallExitRoutines()
 {
-    PRInt32 count = gExitRoutines.Count();
+    if (!gExitRoutines)
+        return;
+
+    PRInt32 count = gExitRoutines->Count();
     for (PRInt32 i = 0; i < count; i++) {
-        XPCOMExitRoutine func = (XPCOMExitRoutine) gExitRoutines.ElementAt(i);
+        XPCOMExitRoutine func = (XPCOMExitRoutine) gExitRoutines->ElementAt(i);
         func();
     }
-    gExitRoutines.Clear();
+    gExitRoutines->Clear();
+    delete gExitRoutines;
+    gExitRoutines = nsnull;
 }
 
 nsresult NS_COM
@@ -481,14 +487,25 @@ NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
 {
     // priority are not used right now.  It will need to be implemented as more
     // classes are moved into the glue library --dougt
-    PRBool okay = gExitRoutines.AppendElement((void*)exitRoutine);
+    if (!gExitRoutines) {
+        gExitRoutines = new nsVoidArray();
+        if (!gExitRoutines) {
+            NS_WARNING("Failed to allocate gExitRoutines");
+            return NS_ERROR_FAILURE;
+        }
+    }
+
+    PRBool okay = gExitRoutines->AppendElement((void*)exitRoutine);
     return okay ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult NS_COM
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 {
-    PRBool okay = gExitRoutines.RemoveElement((void*)exitRoutine);
+    if (!gExitRoutines)
+        return NS_ERROR_FAILURE;
+
+    PRBool okay = gExitRoutines->RemoveElement((void*)exitRoutine);
     return okay ? NS_OK : NS_ERROR_FAILURE;
 }
 

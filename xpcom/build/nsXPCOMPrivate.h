@@ -47,6 +47,9 @@
  *
  * This API is for the exclusive use of the xpcom glue library.
  * 
+ * Note that these APIs are NOT threadsafe and must be called on the
+ * main thread.
+ * 
  * @status FROZEN
  * @param exitRoutine pointer to user defined callback function
  *                    of type XPCOMExitRoutine. 
