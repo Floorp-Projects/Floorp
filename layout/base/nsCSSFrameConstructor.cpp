@@ -2257,12 +2257,12 @@ IsTableRelated(nsIAtom* aParentType,
 }
            
 static nsIFrame*
-GetOuterTableFrame(nsIFrame* aParentFrame) 
+AdjustCaptionParentFrame(nsIFrame* aParentFrame) 
 {
-  if (nsLayoutAtoms::tableOuterFrame == aParentFrame->GetType()) {
-    return aParentFrame;
+  if (nsLayoutAtoms::tableFrame == aParentFrame->GetType()) {
+    return aParentFrame->GetParent();;
   }
-  return aParentFrame->GetParent();
+  return aParentFrame;
 }
     
 static nsresult 
@@ -3727,7 +3727,7 @@ nsCSSFrameConstructor::TableProcessChild(nsFrameConstructorState& aState,
 
   case NS_STYLE_DISPLAY_TABLE_CAPTION:
     if (!aCaption) {  // only allow one caption
-      nsIFrame* parentFrame = GetOuterTableFrame(aParentFrame);
+      nsIFrame* parentFrame = AdjustCaptionParentFrame(aParentFrame);
       rv = ConstructTableCaptionFrame(aState, aChildContent, parentFrame,
                                       childStyleContext, aTableCreator, 
                                       aChildItems, aCaption, isPseudoParent);
