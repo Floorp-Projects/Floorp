@@ -121,8 +121,8 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
   
-	<broadcaster id="canGoBack"	disabled="true" buttonaction="BrowserBack();"/>
-	<broadcaster id="canGoForward" disabled="true" buttonaction="BrowserForward();"/>
+	<broadcaster id="canGoBack"	disabled="true" oncommand="BrowserBack();"/>
+	<broadcaster id="canGoForward" disabled="true" oncommand="BrowserForward();"/>
 	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" oncommand="BrowserHome();" />
   
 	<broadcaster id="Browser:Find"      value="&findOnCmd.label;"            oncommand="BrowserFind();" />
