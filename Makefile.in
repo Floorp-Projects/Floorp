@@ -26,9 +26,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+include $(topsrcdir)/build/unix/modules.mk
+
+ifneq ($(BUILD_MODULES),all)
+
+DIRS		= $(BUILD_MODULE_DIRS)
+
+else
+
 DIRS		= config build
 
-#
 ifdef MOZ_L10N
 DIRS        += l10n
 endif
@@ -40,16 +47,7 @@ DIRS += 			\
   $(NULL)
 endif
 
-ifndef MOZ_NATIVE_NSPR
-# Do not regenerate Makefile for NSPR
-ifdef USE_NSPR_AUTOCONF
-DIRS		+= nsprpub
-STATIC_MAKEFILES := nsprpub
-else
-DIRS		+= $(topsrcdir)/nsprpub
-STATIC_MAKEFILES := $(topsrcdir)/nsprpub
-endif
-endif
+DIRS	+= $(NSPRPUB_DIR)
 
 # boehm needs to be built before XPCOM
 ifdef GC_LEAK_DETECTOR
@@ -123,6 +121,8 @@ endif
 ifdef ENABLE_TESTS
 DIRS		+= xpcom/tests
 endif
+
+endif # BUILD_MODULES == all
 
 GARBAGE += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
