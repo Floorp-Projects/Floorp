@@ -220,6 +220,8 @@ sub BuildDist()
 #SUN_JAVA
     [":mozilla:sun-java:stubs:include:MANIFEST", "$distdirectory:sun-java:"],
     [":mozilla:sun-java:stubs:macjri:MANIFEST", "$distdirectory:sun-java:"],
+#PRIVACY
+		[":mozilla:privacy:public:MANIFEST", "$distdirectory:libimg:"],
 #NAV_JAVA
     [":mozilla:nav-java:stubs:include:MANIFEST", "$distdirectory:nav-java:"],
     [":mozilla:nav-java:stubs:macjri:MANIFEST", "$distdirectory:nav-java:"],
@@ -233,6 +235,7 @@ sub BuildDist()
     [":mozilla:modules:libimg:png:MANIFEST", "$distdirectory:libimg:"],
     [":mozilla:modules:libimg:src:MANIFEST", "$distdirectory:libimg:"],
     [":mozilla:modules:libimg:public:MANIFEST", "$distdirectory:libimg:"],
+    [":mozilla:modules:rdf:include:MANIFEST", "$distdirectory:libimg:"],
 #PLUGIN
     [":mozilla:modules:plugin:nglsrc:MANIFEST", "$distdirectory:plugin:"],
     [":mozilla:modules:plugin:public:MANIFEST", "$distdirectory:plugin:"],
