@@ -74,6 +74,10 @@ nsMIMEService::InitFromHack() {
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
     mInfoArray->AppendElement(anInfo);
 
+    anInfo = new nsMIMEInfoImpl("text/css", "css", "Style Sheet");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+
     return NS_OK;
 }
 
