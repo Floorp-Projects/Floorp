@@ -50,7 +50,8 @@ base/src/xlib/Makefile
 base/tests/Makefile
 build/Makefile
 build/unix/Makefile
-build/unix/nsprenv.mk
+build/unix/nspr_my_config.mk
+build/unix/nspr_my_overrides.mk
 build/package/rpm/mozilla.spec
 build/package/rpm/nspr-pthreads.spec
 config/Makefile
