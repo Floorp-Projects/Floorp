@@ -438,14 +438,11 @@ main()
 				// [Shouldn't compile] Is it a compile time error to try to |delete| an |nsCOMPtr|?
 			//delete foop;
 
-	  /* Solaris Workshop compiler fails to compile this. */
-#if !defined(XP_UNIX) || !(defined(SOLARIS) && !defined(__GNUG__))
       cout << endl << "### Test  3: can you |AddRef| if you must?" << endl;
       STATIC_CAST(IFoo*, foop)->AddRef();
 
       cout << endl << "### Test  4: can you |Release| if you must?" << endl;
       STATIC_CAST(IFoo*, foop)->Release();
-#endif
 
       cout << endl << "### Test  5: will a |nsCOMPtr| |Release| when it goes out of scope?" << endl;
     }
