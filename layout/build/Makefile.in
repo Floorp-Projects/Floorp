@@ -78,7 +78,7 @@ shared_library_objs: $(SHARED_LIBRARY_LIBS)
 	(cd objs; for lib in $(SHARED_LIBRARY_LIBS); do ar xv ../$$lib; done) \
 	 | awk '{ print "objs/"$$3 }' > objs/objslist
 
-$(SHARED_LIBRARY): shared_library_objs Makefile
+$(LIBRARY) $(SHARED_LIBRARY): shared_library_objs Makefile
 else
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 endif
