@@ -568,6 +568,33 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext, nsIFrame
   return result;
 }
 
+// XXX for now only works for strength 0 & 1
+static void SortRulesByStrength(nsISupportsArray* aRules, PRInt32& aBackstopRuleCount)
+{
+  PRInt32 count = aRules->Count();
+
+  if (1 < count) {
+    PRInt32 index;
+    PRInt32 strength;
+    for (index = 0; index < count; ) {
+      nsIStyleRule* rule = (nsIStyleRule*)aRules->ElementAt(index);
+      rule->GetStrength(strength);
+      if (0 < strength) {
+        aRules->RemoveElementAt(index);
+        aRules->AppendElement(rule);
+        count--;
+        if (index < aBackstopRuleCount) {
+          aBackstopRuleCount--;
+        }
+      }
+      else {
+        index++;
+      }
+      NS_RELEASE(rule);
+    }
+  }
+}
+
 nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
                                                nsIContent* aContent,
                                                nsIFrame* aParentFrame,
@@ -595,6 +622,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
       PRInt32 backstopRules = ruleCount;
       ruleCount += RulesMatching(mDocSheets, aPresContext, aContent, aParentFrame, rules);
       ruleCount += RulesMatching(mOverrideSheets, aPresContext, aContent, aParentFrame, rules);
+
+      SortRulesByStrength(rules, backstopRules);
 
       result = GetContext(aPresContext, aParentFrame, aContent, parentContext, rules, aForceUnique);
       if (nsnull != result) {
@@ -655,6 +684,8 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
     ruleCount += RulesMatching(mDocSheets, aPresContext, aPseudoTag, aParentFrame, rules);
     ruleCount += RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
+    SortRulesByStrength(rules, backstopRules);
+
     result = GetContext(aPresContext, aParentFrame, nsnull, parentContext, rules, aForceUnique);
     if (nsnull != result) {
       result->SetBackstopStyleRuleCount(backstopRules);
@@ -693,6 +724,8 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
     ruleCount += RulesMatching(mOverrideSheets, aPresContext, aPseudoTag, aParentFrame, rules);
 
     if (0 < ruleCount) {
+      SortRulesByStrength(rules, backstopRules);
+
       result = GetContext(aPresContext, aParentFrame, nsnull, parentContext, rules, aForceUnique);
       if (nsnull != result) {
         result->SetBackstopStyleRuleCount(backstopRules);
