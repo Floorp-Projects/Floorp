@@ -1,5 +1,12 @@
 
 #dialogs:locale:en-US directory
 
+EditorHLineProperties.dtd
 EditorImageProperties.dtd
+EditorInsertSource.dtd
+EditorInsertTable.dtd
 EditorLinkProperties.dtd
+EditorPersonalDictionary.dtd
+EditorSpellCheck.dtd
+EdLinkProps.dtd
+EdNamedAnchorProperties.dtd
