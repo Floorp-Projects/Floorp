@@ -528,11 +528,13 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
     nsXPIDLCString displayPath;
     dll->GetDisplayPath(displayPath);
 
+#ifdef DEBUG
     fprintf(stderr, 
             "nsNativeComponentLoader: %s(%s) Load FAILED with error: %s\n", 
             aCallerName,
             displayPath.get(), 
             errorMsg.get());
+#endif
 
     // Do NSPR log
 #ifdef PR_LOGGING
