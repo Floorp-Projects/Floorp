@@ -55,6 +55,10 @@
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
 
+#ifdef DEBUG_seth
+#define HEED_DIR_PREFS 1
+#endif 
+
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -63,7 +67,10 @@ static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
+/* TODO:  do we want to clear these after migration? */
 #define PREF_NEWS_DIRECTORY "news.directory"
+#define PREF_MAIL_DIRECTORY "mail.directory"
+#define PREF_IMAP_DIRECTORY "mail.imap.root_dir"
 
 /* we are going to clear these after migration */
 #define PREF_4X_MAIL_IDENTITY_USEREMAIL "mail.identity.useremail"
@@ -304,7 +311,7 @@ private:
   nsresult MigrateAndClearOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
   
   nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile);
+  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, nsFileSpec &newsHostsDir);
   nsresult MigrateAndClearOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, const char *newsrcfile);
   
   static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
@@ -1282,14 +1289,6 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
   account->AddIdentity(copied_identity);
   
   // now upgrade all the prefs
-  nsFileSpec profileDir;
-  
-  NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-    
-  rv = profile->GetCurrentProfileDir(&profileDir);
-  if (NS_FAILED(rv)) return rv;
-    
   // some of this ought to be moved out into the NONE implementation
   nsCOMPtr<nsINoIncomingServer> noServer;
   noServer = do_QueryInterface(server, &rv);
@@ -1300,19 +1299,46 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
   server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
     
   // create the directory structure for old 4.x "Local Mail"
-  // under <profile dir>/Mail/Local Mail
-
-  // TODO:  heed "mail.directory"?
-  // it may not always be under the profile directory
+  // under <profile dir>/Mail/Local Mail or
+  // <"mail.directory" pref>/Local Mail
   nsCOMPtr <nsIFileSpec> mailDir;
-  nsFileSpec dir(profileDir);
+  nsFileSpec dir;
   PRBool dirExists;
-  
-  // turn profileDir into the mail dir.
-  dir += "Mail";
-  if (!dir.Exists()) {
-    dir.CreateDir();
+
+  char *mail_directory_value = nsnull;
+#ifdef HEED_DIR_PREFS
+  rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
+#else
+  rv = NS_ERROR_FAILURE;
+#endif /* HEED_DIR_PREFS */
+  // if the "mail.directory" pref is set, use that.
+  if (NS_SUCCEEDED(rv) && mail_directory_value && (PL_strlen(mail_directory_value) > 0)) {
+    dir = mail_directory_value;
+    PR_FREEIF(mail_directory_value);
+  }
+  else {    
+    nsFileSpec profileDir;
+    
+    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = profile->GetCurrentProfileDir(&profileDir);
+    if (NS_FAILED(rv)) return rv;
+    
+    dir = profileDir;
+
+    // we want <profile>/Mail, not <profile>
+    dir += "Mail";
+
+    // create <profile>/Mail if it doesn't exist
+    if (!dir.Exists()) {
+      dir.CreateDir();
     }
+  }
+
+  // at this point, dir == the directory that will contain the "Local Mail" folder.
+  // "Local Mail" in 4.x was under Users/sspitzer/Mail
+  // in 5.0, it's under Users50/sspitzer/Mail/Local Mail.
   dir += LOCAL_MAIL_FAKE_HOST_NAME;
   
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(mailDir));
@@ -1361,14 +1387,10 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   account->AddIdentity(identity);
 
   // now upgrade all the prefs
-  nsFileSpec profileDir;
-  
-  NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = profile->GetCurrentProfileDir(&profileDir);
-  if (NS_FAILED(rv)) return rv;
-  
+  nsCOMPtr <nsIFileSpec> mailDir;
+  nsFileSpec dir;
+  PRBool dirExists;
+
   server->SetType("pop3");
   char *hostname=nsnull;
   rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &hostname);
@@ -1383,18 +1405,43 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
 
   rv = MigrateAndClearOldPopPrefs(server, hostname);
   if (NS_FAILED(rv)) return rv;
-    
-  // create the directory structure for this pop account
-  // under <profile dir>/Mail/<hostname>
-  nsCOMPtr <nsIFileSpec> mailDir;
-  nsFileSpec dir(profileDir);
-  PRBool dirExists;
-  
-  // turn profileDir into the mail dir.
-  dir += "Mail";
-  if (!dir.Exists()) {
-    dir.CreateDir();
+
+  char *mail_directory_value = nsnull;
+#ifdef HEED_DIR_PREFS
+  rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
+#else
+  rv = NS_ERROR_FAILURE;
+#endif /* HEED_DIR_PREFS */
+  // create the directory structure for old 4.x pop mail
+  // under <profile dir>/Mail/<pop host name> or
+  // <"mail.directory" pref>/<pop host name>
+  //
+  // if the "mail.directory" pref is set, use that.
+  if (NS_SUCCEEDED(rv) && mail_directory_value && (PL_strlen(mail_directory_value) > 0)) {
+    dir = mail_directory_value;
+    PR_FREEIF(mail_directory_value);
   }
+  else {
+    nsFileSpec profileDir;
+    
+    NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = profile->GetCurrentProfileDir(&profileDir);
+    if (NS_FAILED(rv)) return rv;
+
+    dir = profileDir;
+    
+    // we wan't <profile>/Mail, not <profile>
+    dir += "Mail";
+
+    // create <profile>/Mail if it doesn't exist
+    if (!dir.Exists()) {
+      dir.CreateDir();
+    }
+  }
+
+  // we want .../Mail/<hostname>, not .../Mail
   dir += hostname;
   PR_FREEIF(hostname);
   
@@ -1624,17 +1671,32 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = MigrateAndClearOldImapPrefs(server, hostname);
   if (NS_FAILED(rv)) return rv;
   
-  // create the directory structure for this pop account
-  // under <profile dir>/Mail/<hostname>
   nsCOMPtr <nsIFileSpec> imapMailDir;
-  nsFileSpec dir(profileDir);
+  nsFileSpec dir;
   PRBool dirExists;
-  
-  // turn profileDir into the mail dir.
-  dir += "ImapMail";
-  if (!dir.Exists()) {
-    dir.CreateDir();
+
+  char *imap_directory_value = nsnull;
+#ifdef HEED_DIR_PREFS
+  rv = m_prefs->CopyCharPref(PREF_IMAP_DIRECTORY, &imap_directory_value);
+#else
+  rv = NS_ERROR_FAILURE;
+#endif /* HEED_DIR_PREFS */
+  // if the "mail.imap.root_dir" pref is set, use that.
+  if (NS_SUCCEEDED(rv) && imap_directory_value && (PL_strlen(imap_directory_value) > 0)) {
+    dir = imap_directory_value;
+    PR_FREEIF(imap_directory_value);
   }
+  else {
+    dir = profileDir;
+  
+    // we want <profile>/ImapMail, not <profile>
+    dir += "ImapMail";
+    if (!dir.Exists()) {
+      dir.CreateDir();
+    }
+  }
+
+  // we want .../ImapMail/<hostname>, not .../ImapMail
   dir += hostname;
   
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(imapMailDir));
@@ -1702,35 +1764,63 @@ nsresult
 nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 {
 	nsresult rv;
-
-	// there should be one imap or one pop by this point.
-	// if there isn't, bail now?
-	//if (accountNum < 1) return 0;
-
+    nsFileSpec newsrcDir; // the directory that holds the newsrc files (and the fat file, if we are using one)
+    nsFileSpec newsHostsDir; // the directory that holds the host directory, and the summary files.
 	nsFileSpec profileDir;
-	
-	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-	
-	rv = profile->GetCurrentProfileDir(&profileDir);
-	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    char *news_directory_value = nsnull;
 
-	nsFileSpec newsDir(profileDir);
-	
-	// turn profileDir into the News dir.
-	newsDir += "News";
-	if (!newsDir.Exists()) {
-		newsDir.CreateDir();
-	}
+    // the host directories will be under <profile dir>/News or
+    // <"news.directory" pref>/News.
+    //
+    // the newsrc file don't necessarily live under there.
+    //
+    // if we didn't use the map file (UNIX) then we want to force the newsHostsDir to be
+    // <profile>/News.  in 4.x, on UNIX, the summary files lived in ~/.netscape/xover-cache/<hostname>
+    // in 5.0, they will live under <profile>/News/<hostname>, like the other platforms.
+    // in 4.x, on UNIX, the "news.directory" pref pointed to the directory to where
+    // the newsrc files lived.  we don't want that for the newsHostsDir.
+#ifdef USE_NEWSRC_MAP_FILE
+#ifdef HEED_DIR_PREFS
+    rv = m_prefs->CopyCharPref(PREF_NEWS_DIRECTORY, &news_directory_value);
+#else
+    rv = NS_ERROR_FAILURE;
+#endif /* HEED_DIR_PREFS */
+#else
+    rv = NS_ERROR_FAILURE;
+#endif /* USE_NEWSRC_MAP_FILE */
+	if (NS_SUCCEEDED(rv) && news_directory_value && (PL_strlen(news_directory_value) > 0)) {
+      newsHostsDir = news_directory_value;
+      PR_FREEIF(news_directory_value);
+    }
+    else {
+      NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+      
+      rv = profile->GetCurrentProfileDir(&profileDir);
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+      
+      newsHostsDir = profileDir;
+      
+      // we want <profile>/News, not <profile>
+      newsHostsDir += "News";
+      
+      // create <profile>/News if it doesn't exist
+      if (!newsHostsDir.Exists()) {
+		newsHostsDir.CreateDir();
+      }
+    }
 
 #ifdef USE_NEWSRC_MAP_FILE	
-	// use news.directory to find the fat file
-	// for each news server in the fat file call MigrateNewsAccount();
-	
-	// use news.directory?
-	nsFileSpec fatFile(newsDir);
+    // if we are using the fat file, it lives in the newsHostsDir.
+    newsrcDir = newsHostsDir;
+
+    // the fat file is really <newsrcDir>/<fat file name>
+    // example:  News\fat on Windows, News\NewsFAT on the Mac
+    // don't worry, after we migrate, the fat file is going away
+    nsFileSpec fatFile(newsrcDir);
 	fatFile += NEWS_FAT_FILE_NAME;
-	
+
+    // for each news server in the fat file call MigrateNewsAccount();
 	char buffer[512];
 	char psuedo_name[512];
 	char filename[512];
@@ -1821,7 +1911,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 			}
 
 			char *hostname = psuedo_name + PL_strlen(PSUEDO_NAME_PREFIX);
-            rv = MigrateNewsAccount(identity, hostname, rcFile);
+            rv = MigrateNewsAccount(identity, hostname, rcFile, newsHostsDir);
             if (NS_FAILED(rv)) {
 				// failed to migrate.  bail out
 				return rv;
@@ -1830,26 +1920,14 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 	}
 	
 	inputStream.close();
-
-#else
-    char *news_directory_value = nsnull;
-	nsFileSpec dirWithTheNewsrcFiles;
-    
+#else /* USE_NEWSRC_MAP_FILE */
 	rv = m_prefs->CopyCharPref(PREF_NEWS_DIRECTORY, &news_directory_value);
-	if (NS_SUCCEEDED(rv)) {
-      dirWithTheNewsrcFiles = news_directory_value;
+	if (NS_SUCCEEDED(rv) && news_directory_value && (PL_strlen(news_directory_value) > 0)) {
+      newsrcDir = news_directory_value;
       PR_FREEIF(news_directory_value);
-
-#if 0
-      /* leave "news.directory" pref, we may still be using it in 5.0 */
-      
-      // clear the 4.x pref to avoid confusion
-      rv = m_prefs->ClearUserPref(PREF_NEWS_DIRECTORY);
-#endif
-	}
+    }
     else {
-      // if that fails, use the home directory
-      
+      // if that fails, use the home directory.
 #ifdef XP_UNIX
       nsSpecialSystemDirectory homeDir(nsSpecialSystemDirectory::Unix_HomeDirectory);
 #elif XP_BEOS
@@ -1857,11 +1935,10 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 #else
 #error where_are_your_newsrc_files
 #endif /* XP_UNIX, XP_BEOS */
-
-      dirWithTheNewsrcFiles = homeDir;
-    }
-
-    for (nsDirectoryIterator i(dirWithTheNewsrcFiles, PR_FALSE); i.Exists(); i++) {
+      newsrcDir = homeDir;
+	}
+    
+    for (nsDirectoryIterator i(newsrcDir, PR_FALSE); i.Exists(); i++) {
       nsFileSpec possibleRcFile = i.Spec();
 
       char *filename = possibleRcFile.GetLeafName();
@@ -1871,7 +1948,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
         printf("found a newsrc file: %s\n", filename);
 #endif
         char *hostname = filename + PL_strlen(NEWSRC_FILE_PREFIX);
-        rv = MigrateNewsAccount(identity, hostname, possibleRcFile);
+        rv = MigrateNewsAccount(identity, hostname, possibleRcFile, newsHostsDir);
         if (NS_FAILED(rv)) {
           // failed to migrate.  bail out
           return rv;
@@ -1886,10 +1963,10 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 }
 
 nsresult
-nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile)
+nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, nsFileSpec & newsHostsDir)
 {  
 	nsresult rv;
-	
+	nsFileSpec thisNewsHostsDir = newsHostsDir;
 	if (!newsrcfile) return NS_ERROR_NULL_POINTER;
 	if (!hostname) return NS_ERROR_NULL_POINTER;
 
@@ -1918,49 +1995,31 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	account->AddIdentity(copied_identity);
 	
 	// now upgrade all the prefs
-	nsFileSpec profileDir;
-	
-	NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-	
-	rv = profile->GetCurrentProfileDir(&profileDir);
-	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-		
 	server->SetType("nntp");
     server->SetHostName((char *)hostname);
 
     rv = MigrateAndClearOldNntpPrefs(server, hostname, newsrcfile);
     if (NS_FAILED(rv)) return rv;
 		
-	// create the directory structure for this pop account
-	// under <profile dir>/News/host-<hostname>
-	nsCOMPtr <nsIFileSpec> newsDir;
-	nsFileSpec dir(profileDir);
-	PRBool dirExists;
-	
-	// turn profileDir into the News dir.
-	dir += "News";
-	if (!dir.Exists()) {
-		dir.CreateDir();
-	}
-
 	// can't do dir += "host-"; dir += hostname; 
 	// because += on a nsFileSpec inserts a separator
 	// so we'd end up with host-/<hostname> and not host-<hostname>
 	nsCAutoString alteredHost ((const char *) "host-");
 	alteredHost += hostname;
 	NS_MsgHashIfNecessary(alteredHost);	
-	dir += (const char *) alteredHost;
+	thisNewsHostsDir += (const char *) alteredHost;
 
-	rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(newsDir));
+    nsCOMPtr <nsIFileSpec> newsDir;
+    PRBool dirExists;
+	rv = NS_NewFileSpecWithSpec(thisNewsHostsDir, getter_AddRefs(newsDir));
 	if (NS_FAILED(rv)) return rv;
 
-	char *str = nsnull;
-	newsDir->GetNativePath(&str);
+	char *path_str = nsnull;
+	newsDir->GetNativePath(&path_str);
 	
-	if (str && *str) {
-		server->SetLocalPath(str);
-		PR_FREEIF(str);
+	if (path_str && *path_str) {
+		server->SetLocalPath(path_str);
+		PR_FREEIF(path_str);
 	}
 	
 	rv = newsDir->Exists(&dirExists);
