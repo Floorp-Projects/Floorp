@@ -75,7 +75,7 @@ OS_LIBS = gdi32.lib kernel32.lib advapi32.lib user32.lib
 MATH_LIB=
 
 GUI_LIBS = 
-NSPR_LIBS = libplds21 libplc21 libnspr21 libmsgc21
+NSPR_LIBS = libplds21 libplc21 libnspr21 
 OPT_SLASH = /
 LIB_PREFIX      =
 XP_REG_LIB      = libreg$(MOZ_BITS)
