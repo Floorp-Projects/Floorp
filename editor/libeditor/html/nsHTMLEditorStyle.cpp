@@ -423,7 +423,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
       if (NS_FAILED(res)) return res;
       PRInt32 count;
       // then we add the css styles corresponding to the HTML style request
-      res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count);
+      res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count, PR_FALSE);
       if (NS_FAILED(res)) return res;
       return res;
     }
@@ -693,7 +693,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aNode,
                                                       aProperty,
                                                       aAttribute,
-                                                      &propertyValue);
+                                                      &propertyValue,
+                                                      PR_FALSE);
         // remove the node if it is a span, if its style attribute is empty or absent,
         // and if it does not have a class nor an id
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);

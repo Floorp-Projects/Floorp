@@ -375,6 +375,18 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
     return PR_TRUE;
   }
 
+  if (aAttribute && (aAttribute->Equals(NS_LITERAL_STRING("valign"))) &&
+      (nsIEditProperty::col == tagName
+       || nsIEditProperty::colgroup   == tagName
+       || nsIEditProperty::tbody  == tagName
+       || nsIEditProperty::td  == tagName
+       || nsIEditProperty::th  == tagName
+       || nsIEditProperty::tfoot  == tagName
+       || nsIEditProperty::thead  == tagName
+       || nsIEditProperty::tr  == tagName)) {
+    return PR_TRUE;
+  }
+
   // attributes TEXT, BACKGROUND and BGCOLOR on BODY
   if (aAttribute && (nsIEditProperty::body == tagName) &&
       (aAttribute->Equals(NS_LITERAL_STRING("text"))
@@ -447,12 +459,18 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIDOMNode * aNode,
 // the lowest level above the transaction; adds the css declaration "aProperty : aValue" to
 // the inline styles carried by aElement
 nsresult
-nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue)
+nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue,
+                               PRBool aSuppressTransaction)
 {
   ChangeCSSInlineStyleTxn *txn;
   nsresult result = CreateCSSPropertyTxn(aElement, aProperty, aValue, &txn, PR_FALSE);
   if (NS_SUCCEEDED(result))  {
-    result = mHTMLEditor->Do(txn);
+    if (aSuppressTransaction) {
+      result = txn->DoTransaction();
+    }
+    else {
+      result = mHTMLEditor->Do(txn);
+    }
   }
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
@@ -463,12 +481,18 @@ nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, con
 // specified for the CSS property aProperty, or totally remove the declaration if this
 // property accepts only one value
 nsresult
-nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue)
+nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, const nsAString & aValue,
+                                  PRBool aSuppressTransaction)
 {
   ChangeCSSInlineStyleTxn *txn;
   nsresult result = CreateCSSPropertyTxn(aElement, aProperty, aValue, &txn, PR_TRUE);
   if (NS_SUCCEEDED(result))  {
-    result = mHTMLEditor->Do(txn);
+    if (aSuppressTransaction) {
+      result = txn->DoTransaction();
+    }
+    else {
+      result = mHTMLEditor->Do(txn);
+    }
   }
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
@@ -609,7 +633,7 @@ nsHTMLCSSUtils::RemoveCSSInlineStyle(nsIDOMNode *aNode, nsIAtom *aProperty, cons
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
 
   // remove the property from the style attribute
-  nsresult res = RemoveCSSProperty(elem, aProperty, aPropertyValue);
+  nsresult res = RemoveCSSProperty(elem, aProperty, aPropertyValue, PR_FALSE);
   if (NS_FAILED(res)) return res;
 
   if (mHTMLEditor->NodeIsType(aNode, nsIEditProperty::span)) {
@@ -960,7 +984,8 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                             nsIAtom *aHTMLProperty,
                                             const nsAString *aAttribute,
                                             const nsAString *aValue,
-                                            PRInt32 * aCount)
+                                            PRInt32 * aCount,
+                                            PRBool aSuppressTransaction)
 {
   nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
   nsresult res = NS_OK;
@@ -983,7 +1008,7 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
       cssValueArray.StringAt(index, valueString);
       nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
       res = SetCSSProperty(theElement, (nsIAtom *)cssPropertyArray.ElementAt(index),
-                           valueString);
+                           valueString, aSuppressTransaction);
       if (NS_FAILED(res)) return res;
     }
   }
@@ -993,9 +1018,10 @@ nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
 // Remove from aNode the CSS inline style equivalent to HTMLProperty/aAttribute/aValue for the node
 nsresult
 nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
-                                            nsIAtom *aHTMLProperty,
-                                            const nsAString *aAttribute,
-                                            const nsAString *aValue)
+                                               nsIAtom *aHTMLProperty,
+                                               const nsAString *aAttribute,
+                                               const nsAString *aValue,
+                                               PRBool aSuppressTransaction)
 {
   nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
   nsresult res = NS_OK;
@@ -1017,7 +1043,8 @@ nsHTMLCSSUtils::RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
       nsAutoString valueString;
       cssValueArray.StringAt(index, valueString);
       nsCOMPtr<nsIDOMElement> theElement = do_QueryInterface(aNode);
-      res = RemoveCSSProperty(theElement, (nsIAtom *)cssPropertyArray.ElementAt(index), valueString);
+      res = RemoveCSSProperty(theElement, (nsIAtom *)cssPropertyArray.ElementAt(index), valueString,
+                              aSuppressTransaction);
       if (NS_FAILED(res)) return res;
     }
   }

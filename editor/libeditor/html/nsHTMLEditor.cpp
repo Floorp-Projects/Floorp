@@ -5354,14 +5354,16 @@ nsHTMLEditor::IsEmptyNodeImpl( nsIDOMNode *aNode,
 nsresult
 nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                        const nsAString & aAttribute,
-                                       const nsAString & aValue)
+                                       const nsAString & aValue,
+                                       PRBool aSuppressTransaction)
 {
   PRBool useCSS;
   nsresult res = NS_OK;
   GetIsCSSEnabled(&useCSS);
   if (useCSS && mHTMLCSSUtils) {
     PRInt32 count;
-    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, &aValue, &count);
+    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, &aValue, &count,
+                                                     aSuppressTransaction);
     if (NS_FAILED(res)) return res;
     if (count) {
       // we found an equivalence ; let's remove the HTML attribute itself if it is set
@@ -5404,13 +5406,15 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
 
 nsresult
 nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                          const nsAString & aAttribute)
+                                          const nsAString & aAttribute,
+                                          PRBool aSuppressTransaction)
 {
   PRBool useCSS;
   nsresult res = NS_OK;
   GetIsCSSEnabled(&useCSS);
   if (useCSS && mHTMLCSSUtils) {
-    res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, nsnull);
+    res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, nsnull,
+                                                        aSuppressTransaction);
     if (NS_FAILED(res)) return res;
   }
 
@@ -5504,7 +5508,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
           cachedBlockParent = blockParent;
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
           PRInt32 count;
-          res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+          res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count, PR_FALSE);
           if (NS_FAILED(res)) return res;
         }
       }
@@ -5513,7 +5517,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
         // we have no block in the document, let's apply the background to the body 
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(startNode);
         PRInt32 count;
-        res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+        res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count, PR_FALSE);
         if (NS_FAILED(res)) return res;
       }
       else if ((startNode == endNode) && (((endOffset-startOffset) == 1) || (!startOffset && !endOffset)))
@@ -5533,7 +5537,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
           cachedBlockParent = blockParent;
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
           PRInt32 count;
-          res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+          res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count, PR_FALSE);
           if (NS_FAILED(res)) return res;
         }
       }
@@ -5601,7 +5605,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
             cachedBlockParent = blockParent;
             nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
             PRInt32 count;
-            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count, PR_FALSE);
             if (NS_FAILED(res)) return res;
           }
         }
@@ -5629,7 +5633,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
             nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
             PRInt32 count;
             // and set the property on it
-            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count, PR_FALSE);
             if (NS_FAILED(res)) return res;
           }
           arrayOfNodes->RemoveElementAt(0);
@@ -5647,7 +5651,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
             cachedBlockParent = blockParent;
             nsCOMPtr<nsIDOMElement> element = do_QueryInterface(blockParent);
             PRInt32 count;
-            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count);
+            res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count, PR_FALSE);
             if (NS_FAILED(res)) return res;
           }
         }

@@ -368,11 +368,11 @@ function ValidateData()
   // Colors values are updated as they are picked, no validation necessary
   if (gDialog.DefaultColorsRadio.selected)
   {
-    globalElement.removeAttribute(textStr);
+    gEditor.removeAttributeOrEquivalent(globalElement, textStr, true);
     globalElement.removeAttribute(linkStr);
     globalElement.removeAttribute(vlinkStr);
     globalElement.removeAttribute(alinkStr);
-    globalElement.removeAttribute(bgcolorStr);
+    gEditor.removeAttributeOrEquivalent(globalElement, bgcolorStr, true);
   }
   else
   {
@@ -383,13 +383,13 @@ function ValidateData()
     if (tmpColor != "windowtext")
       globalElement.setAttribute(textStr,    customTextColor);
     else
-      globalElement.removeAttribute(textStr);
+      gEditor.removeAttributeOrEquivalent(globalElement, textStr, true);
 
     tmpColor = customBackgroundColor.toLowerCase();
     if (tmpColor != "window")
       globalElement.setAttribute(bgcolorStr, customBackgroundColor);
     else
-      globalElement.removeAttribute(bgcolorStr);
+      gEditor.removeAttributeOrEquivalent(globalElement, bgcolorStr, true);
 
     globalElement.setAttribute(linkStr,    customLinkColor);
     globalElement.setAttribute(vlinkStr,   customVisitedColor);
@@ -402,7 +402,7 @@ function ValidateData()
     if (gBackgroundImage)
       globalElement.setAttribute(backgroundStr, gBackgroundImage);
     else
-      globalElement.removeAttribute(backgroundStr);
+      gEditor.removeAttributeOrEquivalent(globalElement, backgroundStr, true);
   
     return true;
   }  

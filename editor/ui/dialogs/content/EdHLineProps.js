@@ -186,7 +186,7 @@ function ValidateData()
   if (align)
     globalElement.setAttribute("align", align);
   else
-    globalElement.removeAttribute("align");
+    gEditor.removeAttributeOrEquivalent(globalElement, "align", true);
 
   if (gDialog.shading.checked) {
     shading = true;

@@ -2152,14 +2152,16 @@ void nsPlaintextEditor::HandleEventListenerError()
 nsresult
 nsPlaintextEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                             const nsAString & aAttribute,
-                                            const nsAString & aValue)
+                                            const nsAString & aValue,
+                                            PRBool aSuppressTransaction)
 {
   return nsEditor::SetAttribute(aElement, aAttribute, aValue);
 }
 
 nsresult
 nsPlaintextEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
-                                               const nsAString & aAttribute)
+                                               const nsAString & aAttribute,
+                                               PRBool aSuppressTransaction)
 {
   return nsEditor::RemoveAttribute(aElement, aAttribute);
 }

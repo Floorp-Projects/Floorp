@@ -117,11 +117,14 @@ public:
     * @param aElement       [IN] a DOM element
     * @param aProperty      [IN] an atom containing the CSS property to set
     * @param aValue         [IN] a string containing the value of the CSS property
+    * @param aSuppressTransaction [IN] a boolean indicating, when true,
+    *                                  that no transaction should be recorded
     */
   nsresult    SetCSSProperty(nsIDOMElement * aElement, nsIAtom * aProperty,
-                             const nsAString & aValue);
+                             const nsAString & aValue,
+                             PRBool aSuppressTransaction);
   nsresult    RemoveCSSProperty(nsIDOMElement * aElement, nsIAtom * aProperty,
-                                const nsAString & aPropertyValue);
+                                const nsAString & aPropertyValue, PRBool aSuppressTransaction);
 
   /** gets the specified/computed style value of a CSS property for a given node (or its element
     * ancestor if it is not an element)
@@ -215,12 +218,15 @@ public:
     * @param aAttribute     [IN] a pointer to an attribute name or nsnull if irrelevant
     * @param aValue         [IN] the attribute value
     * @param aCount         [OUT] the number of CSS properties set by the call
+    * @param aSuppressTransaction [IN] a boolean indicating, when true,
+    *                                  that no transaction should be recorded
     */
   nsresult    SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                           nsIAtom * aHTMLProperty,
                                           const nsAString * aAttribute,
                                           const nsAString * aValue,
-                                          PRInt32 * aCount);
+                                          PRInt32 * aCount,
+                                          PRBool aSuppressTransaction);
 
   /** removes from the node the CSS inline styles equivalent to the HTML style
     *
@@ -228,11 +234,14 @@ public:
     * @param aHTMLProperty  [IN] an atom containing an HTML property
     * @param aAttribute     [IN] a pointer to an attribute name or nsnull if irrelevant
     * @param aValue         [IN] the attribute value
+    * @param aSuppressTransaction [IN] a boolean indicating, when true,
+    *                                  that no transaction should be recorded
     */
   nsresult    RemoveCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                              nsIAtom *aHTMLProperty,
                                              const nsAString *aAttribute,
-                                             const nsAString *aValue);
+                                             const nsAString *aValue,
+                                             PRBool aSuppressTransaction);
 
   /** parses a "xxxx.xxxxxuuu" string where x is a digit and u an alpha char
     * we need such a parser because nsIDOMCSSStyleDeclaration::GetPropertyCSSValue() is not

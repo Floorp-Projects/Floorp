@@ -549,12 +549,12 @@ function EditorResetFontAndColorAttributes()
   var bodyelement = GetBodyElement();
   if (bodyelement)
   {
-    bodyelement.removeAttribute("text");
-    bodyelement.removeAttribute("bgcolor");
+    gEditor.removeAttributeOrEquivalent(bodyelement, "text", true);
+    gEditor.removeAttributeOrEquivalent(bodyelement, "bgcolor", true);
     bodyelement.removeAttribute("link");
     bodyelement.removeAttribute("alink");
     bodyelement.removeAttribute("vlink");
-    bodyelement.removeAttribute("background");
+    gEditor.removeAttributeOrEquivalent(bodyelement, "background", true);
   }
   gColorObj.LastTextColor = "";
   gColorObj.LastBackgroundColor = "";
@@ -1330,9 +1330,9 @@ function EditorSelectColor(colorType, mouseEvent)
         if (bgcolor != gColorObj.BackgroundColor)
         {
           if (gColorObj.BackgroundColor)
-            gEditor.setAttributeOrEquivalent(table, "bgcolor", gColorObj.BackgroundColor);
+            gEditor.setAttributeOrEquivalent(table, "bgcolor", gColorObj.BackgroundColor, false);
           else
-            gEditor.removeAttributeOrEquivalent(table, "bgcolor");
+            gEditor.removeAttributeOrEquivalent(table, "bgcolor", false);
         }
       }
     }
@@ -1355,7 +1355,7 @@ function EditorSelectColor(colorType, mouseEvent)
             if (defColors)
             {
               if (!bodyelement.getAttribute("text"))
-                gEditor.setAttributeOrEquivalent(bodyelement, "text", defColors.TextColor);
+                gEditor.setAttributeOrEquivalent(bodyelement, "text", defColors.TextColor, false);
 
               // The following attributes have no individual CSS declaration counterparts
               // Getting rid of them in favor of CSS implies CSS rules management
@@ -2382,12 +2382,12 @@ function EditorSetDefaultPrefsAndDoctype()
       // and use them for the default text and background colors if not empty
       if (text_color)
       {
-        bodyelement.setAttribute("text", text_color);
+        gEditor.setAttributeOrEquivalent(bodyelement, "text", text_color, true);
         gDefaultTextColor = text_color;
       }
       if (background_color)
       {
-        bodyelement.setAttribute("bgcolor", background_color);
+        gEditor.setAttributeOrEquivalent(bodyelement, "bgcolor", background_color, true);
         gDefaultBackgroundColor = background_color
       }
 
@@ -2403,7 +2403,7 @@ function EditorSetDefaultPrefsAndDoctype()
     try { background_image = gPrefs.getCharPref("editor.default_background_image"); } catch(e) {}
 
     if (background_image)
-      bodyelement.setAttribute("background", background_image);
+      gEditor.setAttributeOrEquivalent(bodyelement, "background", background_image, true);
   }
   // auto-save???
 }
