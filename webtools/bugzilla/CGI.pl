@@ -978,7 +978,7 @@ if (defined $ENV{"REQUEST_METHOD"}) {
         }
         ProcessFormFields $::buffer;
     } else {
-        if ($ENV{"CONTENT_TYPE"} =~
+        if (exists($ENV{"CONTENT_TYPE"}) && $ENV{"CONTENT_TYPE"} =~
             m@multipart/form-data; boundary=\s*([^; ]+)@) {
             ProcessMultipartFormFields($1);
             $::buffer = "";
