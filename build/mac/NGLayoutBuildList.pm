@@ -392,42 +392,30 @@ sub BuildLayoutProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
-	BuildProject(":mozilla:base:macbuild:base.mcp",				"base$D.o");
-
-	BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.o");
-	
-	BuildProject(":mozilla:dom:macbuild:dom.mcp",				"dom$D.o");
-
-	BuildProject(":mozilla:gfx:macbuild:gfx.mcp",				"gfx$D.o");
-
-	BuildProject(":mozilla:layout:macbuild:layout.mcp",	"layout$D.o");
-
-	BuildProject(":mozilla:widget:macbuild:widget.mcp",	"widget$D.o");
-
-	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",	"webshell$D.o");
-
-	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",	"viewer$D");
-
-
+	#--
+	#-- Make aliases of resource files
+	#--
 	my($resource_dir) = "$dist_dir" . "res:";
 	MakeAlias(":mozilla:layout:html:document:src:ua.css", "$resource_dir");
 
-	#-- not yet: the throbber chokes if we feed it with gifs
-	#my($throbber_dir) = "$dist_dir" . "res:throbber:";
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims00.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims01.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims02.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims03.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims04.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims05.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims06.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims07.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims08.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims09.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims10.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims11.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims12.gif", "$throbber_dir");
-	#MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims13.gif", "$throbber_dir");
+	my($throbber_dir) = "$dist_dir" . "res:throbber:";
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims00.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims01.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims02.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims03.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims04.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims05.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims06.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims07.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims08.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims09.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims10.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims11.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims12.gif", "$throbber_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:throbber:anims13.gif", "$throbber_dir");
+
+	my($html_dir) = "$dist_dir" . "res:html:";
+	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif", "$html_dir");
 
 	my($samples_dir) = "$dist_dir" . "res:samples:";
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:test0.html", "$samples_dir");
@@ -446,6 +434,18 @@ sub BuildLayoutProjects()
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:gear1.gif", "$samples_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:raptor.jpg", "$samples_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:samples:rock_gra.gif", "$samples_dir");
+
+	#--
+	#-- Build Layout projects
+	#--
+	BuildProject(":mozilla:base:macbuild:base.mcp",						"base$D.o");
+	BuildProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",			"htmlparser$D.o");
+	BuildProject(":mozilla:dom:macbuild:dom.mcp",						"dom$D.o");
+	BuildProject(":mozilla:gfx:macbuild:gfx.mcp",						"gfx$D.o");
+	BuildProject(":mozilla:layout:macbuild:layout.mcp",					"layout$D.o");
+	BuildProject(":mozilla:widget:macbuild:widget.mcp",					"widget$D.o");
+	BuildProject(":mozilla:webshell:macbuild:webshell.mcp",				"webshell$D.o");
+	BuildProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",		"viewer$D");
 }
 
 sub BuildProjects()
