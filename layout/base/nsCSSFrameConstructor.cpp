@@ -1400,6 +1400,8 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*          aPresCo
     if (NS_FAILED(rv)) return rv;
     if (contentDisplayIsGroup) { // called from above
       innerFrame->SetInitialChildList(*aPresContext, nsnull, topFrame);
+      // set the primary frame to avoid getting the anonymous table frame 
+      aState.mFrameManager->SetPrimaryFrameFor(aContent, aNewGroupFrame);
     } else { // called from row below
       aToDo->Set(innerFrame, topFrame);
     }
@@ -1548,6 +1550,12 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*          aPresCont
     rv = ConstructTableRowFrameOnly(aPresContext, aState, aContent, groupFrame, styleContext, 
                                     contentDisplayIsRow, aNewRowFrame, aTableCreator);
     if (NS_FAILED(rv)) return rv;
+
+    if (contentDisplayIsRow) { // called from above
+      // set the primary frame to avoid getting the anonymous row group frame 
+      aState.mFrameManager->SetPrimaryFrameFor(aContent, aNewRowFrame);
+    }
+
     groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewRowFrame);
     if (contentDisplayIsRow) { // called from above
       TableProcessTableList(aPresContext, *toDo);
