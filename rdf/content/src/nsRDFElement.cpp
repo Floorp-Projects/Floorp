@@ -2852,18 +2852,19 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
             }
             else return NS_ERROR_FAILURE;
         }
-
-        if (mDocument != nsnull)
-            ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                            NS_EVENT_FLAG_CAPTURE, aEventStatus);
     }
   
     // Node capturing stage
-    if (NS_EVENT_FLAG_BUBBLE != aFlags && mParent) {
-      // Pass off to our parent.
-      mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                              NS_EVENT_FLAG_CAPTURE, aEventStatus);
+    if (NS_EVENT_FLAG_BUBBLE != aFlags) {
+      if(mParent) {
+        // Pass off to our parent.
+        mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                NS_EVENT_FLAG_CAPTURE, aEventStatus);
+      } else if (mDocument != nsnull)
+            ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                            NS_EVENT_FLAG_CAPTURE, aEventStatus);
     }
+    
 
     //Local handling stage
     if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
