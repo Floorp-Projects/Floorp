@@ -344,8 +344,8 @@
     ("grammar-argument" . :grammar-argument)
     ("indent" . :body-text)
     ("operator-heading" . :heading4)
-    ("semantics" . :semantics)
-    ("semantics-next" . :semantics-next)))
+    ("algorithm-stmt" . :algorithm-stmt)
+    ("algorithm-next-stmt" . :algorithm-next-stmt)))
 
 
 (defun class-to-paragraph-style (element)
@@ -374,6 +374,8 @@
 (defparameter *divs-containing-divs*
   '("indent"))
 
+(defvar *algorithm-level* nil)
+
 (defun emit-div (markup-stream element class)
   (cond
    ((equal class "grammar-rule")
@@ -387,6 +389,20 @@
             (setq style :body-text))
           (depict-paragraph (markup-stream style)
             (emit-inline-parts markup-stream child))))))
+   ((equal class "algorithm")
+    (let ((*algorithm-level* 0))
+      (emit-paragraph-elements markup-stream element)))
+   ((or (equal class "algorithm-next") (equal class "algorithm-indent"))
+    (let ((*algorithm-level* 1))
+      (emit-paragraph-elements markup-stream element)))
+   ((equal class "lvl")
+    (let ((*algorithm-level* (1+ *algorithm-level*)))
+      (emit-paragraph-elements markup-stream element)))
+   ((equal class "stmt")
+    (unless (and *algorithm-level* (< *algorithm-level* 10))
+      (error "The stmt class can only be used inside an algorithm class"))
+    (depict-paragraph (markup-stream (find-symbol (format nil "ALGORITHM-~D" *algorithm-level*) :keyword))
+      (emit-inline-parts markup-stream element)))
    ((member class *divs-containing-divs* :test #'equal)
     (depict-paragraph (markup-stream :body-text)
       (depict markup-stream "***** BEGIN DIV" class))
