@@ -521,9 +521,6 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     if (NS_FAILED(RealizeFont()))
         return NS_ERROR_FAILURE;
 
-    // Set up the mini-font in case it needs to be used later
-    SetupMiniFont();
-
     return NS_OK;
 }
 
@@ -1342,6 +1339,10 @@ nsFontMetricsXft::RawGetWidth(const PRUnichar* aString, PRUint32 aLength)
 nsresult
 nsFontMetricsXft::SetupMiniFont(void)
 {
+    // The minifont is initialized lazily.
+    if (mMiniFont)
+        return NS_OK;
+
     FcPattern *pattern = nsnull;
     XftFont *font = nsnull;
     XftFont *xftFont = mWesternFont->GetXftFont();
@@ -1624,6 +1625,7 @@ nsFontMetricsXft::DrawStringCallback(const FcChar32 *aString, PRUint32 aLen,
         data->context->GetTranMatrix()->TransformCoord(&x, &y);
 
         NS_ASSERTION(aLen == 1, "An unknown glyph should come by itself");
+        SetupMiniFont();
         DrawUnknownGlyph(*aString, x, y + mMiniFontYOffset, &data->color,
                          data->draw);
 
@@ -1656,6 +1658,7 @@ nsFontMetricsXft::TextDimensionsCallback(const FcChar32 *aString, PRUint32 aLen,
 
     if (!aFont) {
         NS_ASSERTION(aLen == 1, "An unknown glyph should come by itself");
+        SetupMiniFont();
         data->dimensions->width += 
             mMiniFontWidth * (IS_NON_BMP(*aString) ? 3 : 2) +
             mMiniFontPadding * (IS_NON_BMP(*aString) ? 6 : 5);
@@ -1695,6 +1698,7 @@ nsFontMetricsXft::GetWidthCallback(const FcChar32 *aString, PRUint32 aLen,
 
     if (!aFont) {
         NS_ASSERTION(aLen == 1, "An unknown glyph should come by itself");
+        SetupMiniFont();
         data->width += mMiniFontWidth * (IS_NON_BMP(*aString) ? 3 : 2) + 
                        mMiniFontPadding * (IS_NON_BMP(*aString) ? 6 : 5);
         return NS_OK;
@@ -1715,6 +1719,7 @@ nsFontMetricsXft::BoundingMetricsCallback(const FcChar32 *aString,
 
     if (!aFont) {
         NS_ASSERTION(aLen == 1, "An unknown glyph should come by itself");
+        SetupMiniFont();
         bm.width = mMiniFontWidth * (IS_NON_BMP(*aString) ? 3 : 2) +
                    mMiniFontPadding * (IS_NON_BMP(*aString) ? 6 : 5);
         bm.rightBearing = bm.width; // no need to set leftBearing.
