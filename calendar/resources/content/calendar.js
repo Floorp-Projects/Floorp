@@ -175,6 +175,8 @@ function calendarFinish()
    finishCalendarToDoUnifinder();
 
    gCalendarWindow.close();
+
+   gICalLib.removeObserver( gEventSource.alarmObserver );
 }
 
 function launchPreferences()
