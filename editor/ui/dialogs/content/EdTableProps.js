@@ -967,9 +967,9 @@ function CloneAttribute(destElement, srcElement, attr)
   //  we need transaction system for undo
   try {
     if (!value || value.length == 0)
-      gActiveEditor.removeAttribute(destElement, attr);
+      gActiveEditor.removeAttributeOrEquivalent(destElement, attr, false);
     else
-      gActiveEditor.setAttribute(destElement, attr, value);
+      gActiveEditor.setAttributeOrEquivalent(destElement, attr, value, false);
   } catch(e) {}
 }
 
