@@ -1560,25 +1560,25 @@ PresShell::DoCopy()
 
       // Create a data flavor to tell the transferable 
       // that it is about to receive XIF
-      nsIDataFlavor * flavor;
+      nsCOMPtr<nsIDataFlavor> flavor;
       rv = nsComponentManager::CreateInstance(kCDataFlavorCID, 
                                               nsnull, 
-                                              kIDataFlavorIID, (void**) &flavor);
+                                              kIDataFlavorIID, (void**) getter_AddRefs(flavor));
       if (NS_OK == rv) {
         // Initialize data flavor to XIF
         flavor->Init(kXIFMime, "XIF");
 
         // Create a transferable for putting data on the Clipboard
-        nsIGenericTransferable * genericTrans;
+        nsCOMPtr<nsIGenericTransferable> genericTrans;
         rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
-                                                kIGenericTransferableIID, (void**) &genericTrans);
+                                                kIGenericTransferableIID, (void**) getter_AddRefs(genericTrans));
         if (NS_OK == rv) {
           // The data on the clipboard will be in "XIF" format
           // so give the clipboard transferable a "XIFConverter" for 
           // converting from XIF to other formats
-          nsIFormatConverter * xifConverter;
+          nsCOMPtr<nsIFormatConverter> xifConverter;
           rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, 
-                                                  kIFormatConverterIID, (void**) &xifConverter);
+                                                  kIFormatConverterIID, (void**) getter_AddRefs(xifConverter));
           if (NS_OK == rv) {
             // Add the XIF DataFlavor to the transferable
             // this tells the transferable that it can handle receiving the XIF format
@@ -1595,13 +1595,10 @@ PresShell::DoCopy()
             if (trans) {
               clipboard->SetData(trans, nsnull);
             }
-            NS_IF_RELEASE(xifConverter);
           }
-          NS_IF_RELEASE(genericTrans);
         }
-        NS_IF_RELEASE(flavor);
       }
-      NS_IF_RELEASE(clipboard);
+      nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
     }
   }
   return NS_OK;
