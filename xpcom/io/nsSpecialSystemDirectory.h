@@ -44,6 +44,7 @@ class NS_BASE nsSpecialSystemDirectory : public nsFileSpec
             OS_DriveDirectory         =   1
         ,   OS_TemporaryDirectory     =   2
         ,   OS_CurrentProcessDirectory=   3
+        ,   OS_CurrentWorkingDirectory=   4
 
         ,   Mac_SystemDirectory       =   101
         ,   Mac_DesktopDirectory      =   102
