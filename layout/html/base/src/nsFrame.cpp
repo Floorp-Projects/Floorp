@@ -928,17 +928,6 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-//IF THIS FRAME IS GENERATED
-  result = kid->GetFrameState(&frameState);
-
-      if (NS_FAILED(result))
-        return result;
-
-      if (frameState & NS_FRAME_GENERATED_CONTENT) {
-        // It's generated content, so skip it!
-        skipThisKid = PR_TRUE;
-  
-  
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
   if (me->clickCount >1 )
     return HandleMultiplePress(aPresContext,aEvent,aEventStatus);
