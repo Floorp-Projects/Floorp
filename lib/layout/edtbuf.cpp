@@ -2061,8 +2061,9 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
     if ( pEndElement ) {
         CEditElement* pTable = pEndElement->GetTopmostTableOrLayer();
         if ( m_bDisplayTables && pTable) {
-            // If this is in a table, skip after it.
-            pEndElement = pTable->GetLastMostChild()->NextLeaf();
+            // If this is in a table, skip after it. 
+            //do not go beyond the last cell for reflow. bad things happed when we reflow the wrong things
+            pEndElement = pTable->GetLastMostChild();//->NextLeaf();
         }
     }
 
