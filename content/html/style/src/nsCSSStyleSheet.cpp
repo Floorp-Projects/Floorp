@@ -2953,7 +2953,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
     }
   }  
   if (checkType) {
-    if (localTrue == ((nsnull != aSelector->mTag) && (aSelector->mTag != data.mContentTag)))  {
+    if ((nsnull != aSelector->mTag) && (aSelector->mTag != data.mContentTag))  {
       return result;
     }
     if (1 < aNegationIndex) {
