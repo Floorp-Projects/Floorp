@@ -44,7 +44,7 @@
 #include "nsIDOMSVGNumber.h"
 #include "nsISVGValueUtils.h"
 #include "nsWeakReference.h"
-
+#include "nsContentUtils.h"
 #include <math.h>
 
 #ifndef M_PI

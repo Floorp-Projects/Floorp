@@ -41,7 +41,8 @@
 
 #include "nscore.h"
 #include "nsISVGValue.h"
-#include "nsGenericElement.h" // for nsSmallVoidArray
+#include "nsAutoPtr.h"
+#include "nsVoidArray.h"
 #include "nsISVGValueObserver.h"
 
 class nsSVGValue : public nsISVGValue

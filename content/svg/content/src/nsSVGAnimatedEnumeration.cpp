@@ -40,6 +40,7 @@
 #include "nsWeakReference.h"
 #include "nsSVGAnimatedEnumeration.h"
 #include "nsISVGEnum.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGAnimatedEnumeration

@@ -39,6 +39,7 @@
 #include "nsSVGValue.h"
 #include "nsWeakReference.h"
 #include "nsSVGAnimatedString.h"
+#include "nsContentUtils.h"
 
 
 ////////////////////////////////////////////////////////////////////////

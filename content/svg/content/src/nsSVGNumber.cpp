@@ -41,6 +41,7 @@
 #include "prdtoa.h"
 #include "nsSVGValue.h"
 #include "nsISVGValueUtils.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGNumber class

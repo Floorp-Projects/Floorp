@@ -46,6 +46,7 @@
 #include "nsCRT.h"
 #include "nsISVGValueUtils.h"
 #include "prdtoa.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGNumberList

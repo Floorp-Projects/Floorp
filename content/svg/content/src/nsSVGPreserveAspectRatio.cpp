@@ -39,6 +39,7 @@
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsSVGValue.h"
 #include "nsCRT.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPreserveAspectRatio class

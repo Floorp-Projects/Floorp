@@ -40,6 +40,7 @@
 #include "nsSVGLengthList.h"
 #include "nsSVGValue.h"
 #include "nsWeakReference.h"
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGAnimatedTransformList

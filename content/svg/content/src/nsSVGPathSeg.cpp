@@ -40,6 +40,7 @@
 #include "prdtoa.h"
 #include "nsSVGValue.h"
 #include "nsTextFormatter.h"
+#include "nsContentUtils.h"
 
 //----------------------------------------------------------------------
 // implementation helper macros

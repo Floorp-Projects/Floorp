@@ -39,6 +39,7 @@
 #include "nsSVGPoint.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsSVGValue.h"
+#include "nsContentUtils.h"
 
 class nsSVGPoint : public nsIDOMSVGPoint,
                    public nsSVGValue
