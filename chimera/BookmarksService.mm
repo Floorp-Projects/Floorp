@@ -779,7 +779,7 @@ BookmarksService::AddObserver()
                 
         nsCOMPtr<nsIFile> profileDir;
         NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
-        profileDir->Append(NS_LITERAL_CSTRING("bookmarks.xml"));
+        profileDir->Append(NS_LITERAL_STRING("bookmarks.xml"));
     
         nsCAutoString bookmarksFileURL;
         NS_GetURLSpecFromFile(profileDir, bookmarksFileURL);
@@ -890,7 +890,7 @@ BookmarksService::FlushBookmarks()
 {
     nsCOMPtr<nsIFile> bookmarksFile;
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(bookmarksFile));
-    bookmarksFile->Append(NS_LITERAL_CSTRING("bookmarks.xml"));
+    bookmarksFile->Append(NS_LITERAL_STRING("bookmarks.xml"));
 
     nsCOMPtr<nsIOutputStream> outputStream;
     NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), bookmarksFile);

@@ -42,6 +42,7 @@
 #include <Cocoa/Cocoa.h>
 
 #include "nsIDOMMouseListener.h"
+#import "BrowserWindowController.h"
 
 class ContentClickListener :  public nsIDOMMouseListener
 {
@@ -61,7 +62,7 @@ public:
   NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; };
 
 private:
-  id mBrowserController; // Our browser controller (weakly held)
+  BrowserWindowController* mBrowserController; // Our browser controller (weakly held)
 };
 
 

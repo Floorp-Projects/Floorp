@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import <AppKit/AppKit.h>
+#include "nscore.h"
 
 class nsIWebBrowserPersist;
 class nsISupports;
@@ -71,7 +72,7 @@ class nsDownloadListener;
                postData: (nsIInputStream*)aInputStream
                bypassCache: (BOOL)aBypassCache;
 
--(void) setSourceURL: (const char*)aSource;
--(void) setDestination: (const char*)aDestination;
+-(void) setSourceURL: (const PRUnichar*)aSource;
+-(void) setDestination: (const PRUnichar*)aDestination;
 
 @end
