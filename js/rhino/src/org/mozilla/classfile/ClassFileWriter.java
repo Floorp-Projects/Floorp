@@ -76,7 +76,7 @@ public class ClassFileWriter {
             itsSourceFileNameIndex = itsConstantPool.addUtf8(sourceFileName);
         itsFlags = ACC_PUBLIC;
     }
-    
+
     public final String getClassName()
     {
         return generatedClassName;
@@ -1065,6 +1065,15 @@ public class ClassFileWriter {
         setTableSwitchJump(switchStart, caseIndex, itsCodeBufferTop);
     }
 
+    public final void markTableSwitchCase(int switchStart, int caseIndex,
+                                          int stackTop)
+    {
+        if (!(0 <= stackTop && stackTop <= itsMaxStack))
+            throw new IllegalArgumentException("Bad stack index: "+stackTop);
+        itsStackTop = (short)stackTop;
+        setTableSwitchJump(switchStart, caseIndex, itsCodeBufferTop);
+    }
+
     public void setTableSwitchJump(int switchStart, int caseIndex,
                                    int jumpTarget)
     {
@@ -1081,7 +1090,7 @@ public class ClassFileWriter {
         } else {
             caseOffset = switchStart + 1 + padSize + 4 * (3 + caseIndex);
         }
-        if (!(0 <= switchStart 
+        if (!(0 <= switchStart
               && switchStart <= itsCodeBufferTop - 4 * 4 - padSize - 1))
         {
             throw new IllegalArgumentException(
@@ -2386,7 +2395,7 @@ public class ClassFileWriter {
     private static final boolean DEBUGLABELS = false;
     private static final boolean DEBUGCODE = false;
     private static final int CodeBufferSize = 128;
-    
+
     private String generatedClassName;
 
     private ExceptionTableEntry itsExceptionTable[];
