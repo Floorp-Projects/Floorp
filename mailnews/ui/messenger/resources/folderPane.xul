@@ -11,6 +11,9 @@
 	<!ENTITY imapHost.img "chrome://messenger/skin/localMailHost.gif">
 	<!ENTITY imapHost.label "Imap Mail">
 	<!ENTITY newsHost.img "chrome://messenger/skin/newsHost.gif">
+	<!ENTITY newsHost.label "news.mozilla.org">
+	<!ENTITY accounts.label "Accounts">
+	<!ENTITY accounts.img "chrome://messenger/skin/localMailHost.gif">
 ]>
 
 <window
@@ -19,7 +22,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
-<tree rdf:datasources="rdf:mailnewsfolders" id="folderTree" onclick="return parent.parent.ChangeFolderByDOMNode(event.target.parentNode)">
+<tree rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="folderTree" onclick="return parent.parent.ChangeFolderByDOMNode(event.target.parentNode)">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
@@ -32,31 +35,12 @@
   </treehead>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
-     <treeitem id="mailbox:/" open="true">
-          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&localMailHost.img;"/><b>&localMailHost.label;</b></treecell>
-	  <treecell style="background-color: lightgrey"/>
-	  <treecell style="background-color: lightgrey"/>
-    </treeitem>
-     <treeitem id="imap:/" open="false">
-          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&imapHost.img;"/><b>&imapHost.label;</b></treecell>   
-	  <treecell style="background-color: lightgrey"/>
-	  <treecell style="background-color: lightgrey"/>
-    </treeitem>
-    <treeitem id="news://news.mozilla.org" open="false">
-          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/><b>news.mozilla.org</b></treecell>
-	  <treecell style="background-color: lightgrey"/>
-	  <treecell style="background-color: lightgrey"/>
-    </treeitem>
-    <treeitem id="news://news" open="false">
-          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/><b>news</b></treecell>
-	  <treecell style="background-color: lightgrey"/>
-	  <treecell style="background-color: lightgrey"/>
-    </treeitem>
-	  <treeitem id="news://news.mcom.com" open="false">
-          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/><b>news.mcom.com</b></treecell>
-	  <treecell style="background-color: lightgrey"/>
-	  <treecell style="background-color: lightgrey"/>
+    <treeitem id="msgaccounts:/" open="true">
+      <treecell style="background-color: blue"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&accounts.img;"/>&accounts.label;</treecell>
+      <treecell style="background-color: green"/>
+      <treecell style="background-color: red"/>
     </treeitem>
   </treebody>
+
 </tree>
 </window>
