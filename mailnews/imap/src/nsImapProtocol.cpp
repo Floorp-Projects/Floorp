@@ -7753,7 +7753,12 @@ nsresult nsImapMockChannel::OpenCacheEntry()
     if (folderSink)
       folderSink->GetUidValidity(&uidValidity);
   }
-  return cacheSession->AsyncOpenCacheEntry(urlSpec.get(), nsICache::ACCESS_READ_WRITE, this);
+  // stick the uid validity in front of the url, so that if the uid validity
+  // changes, we won't re-use the wrong cache entries.
+  nsCAutoString cacheKey;
+  cacheKey.AppendInt(uidValidity, 16);
+  cacheKey.Append(urlSpec);
+  return cacheSession->AsyncOpenCacheEntry(cacheKey.get(), nsICache::ACCESS_READ_WRITE, this);
 }
 
 nsresult nsImapMockChannel::ReadFromMemCache(nsICacheEntryDescriptor *entry)
