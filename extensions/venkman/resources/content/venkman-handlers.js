@@ -33,6 +33,12 @@
  *
  */
 
+console.displayUsageError =
+function con_dusage (command)
+{
+    display (command.name + " " + command.usage, MT_ERROR);
+}
+
 console.doCommandStep =
 function con_step()
 {
@@ -57,40 +63,6 @@ function con_step()
 
     cont();
     return true;
-}
-
-console.onTModeMenuCreate =
-function con_tmodecreate()
-{
-    var check;
-    
-    switch (getThrowMode())
-    {
-        case TMODE_IGNORE:
-            check = "menu_TModeIgnore";
-            break;
-        case TMODE_TRACE:
-            check = "menu_TModeTrace";
-            break;
-        case TMODE_BREAK:
-            check = "menu_TModeBreak";
-            break;
-    }
-    
-    var menu = document.getElementById("menu_TModeIgnore");
-    menu.setAttribute("checked", "menu_TModeIgnore" == check);
-
-    menu = document.getElementById("menu_TModeTrace");
-    menu.setAttribute("checked", "menu_TModeTrace" == check);
-
-    menu = document.getElementById("menu_TModeBreak");
-    menu.setAttribute("checked", "menu_TModeBreak" == check);
-}
-
-console.displayUsageError =
-function con_dusage (command)
-{
-    display (command.name + " " + command.usage, MT_ERROR);
 }
 
 console.onDebugTrap =
@@ -640,7 +612,7 @@ function con_stackclick (e)
 }
 
 console.onScriptClick =
-function con_stackclick (e)
+function con_scptclick (e)
 {
     var target = e.originalTarget;
     
@@ -675,6 +647,13 @@ function con_stackclick (e)
         }
     }
 
+}
+
+console.onScriptCreated =
+function con_scptcreate (script)
+{
+    if (script.functionName)
+        console._scriptsOutlinerView.setScripts(console._scripts);
 }
 
 console.onSourceClick =
@@ -792,6 +771,34 @@ function con_tabcomplete (e)
                 
     }
 
+}
+
+console.onTModeMenuCreate =
+function con_tmodecreate()
+{
+    var check;
+    
+    switch (getThrowMode())
+    {
+        case TMODE_IGNORE:
+            check = "menu_TModeIgnore";
+            break;
+        case TMODE_TRACE:
+            check = "menu_TModeTrace";
+            break;
+        case TMODE_BREAK:
+            check = "menu_TModeBreak";
+            break;
+    }
+    
+    var menu = document.getElementById("menu_TModeIgnore");
+    menu.setAttribute("checked", "menu_TModeIgnore" == check);
+
+    menu = document.getElementById("menu_TModeTrace");
+    menu.setAttribute("checked", "menu_TModeTrace" == check);
+
+    menu = document.getElementById("menu_TModeBreak");
+    menu.setAttribute("checked", "menu_TModeBreak" == check);
 }
 
 console.onUnload =
