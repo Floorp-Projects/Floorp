@@ -294,7 +294,7 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
   nsCSSUnit unit = aCSSValue.GetUnit();
   if (NS_MATHML_SIGN_INVALID != aSign && eCSSUnit_Null != unit) 
   {
-    nscoord scaler, amount;
+    nscoord scaler = 0, amount = 0;
 
     if (eCSSUnit_Percent == unit || eCSSUnit_Number == unit) 
     {
