@@ -452,7 +452,7 @@ AC_ARG_ENABLE(toolkit,
 [  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
   [if test "$enableval" = "motif" \
         -o "$enableval" = "gtk" \
-	-o "$enableval" = "xlib" \
+        -o "$enableval" = "xlib" \
         -o "$useRhapsody" ; then
      dnl nglayout only supports building with one toolkit,
      dnl so ignore everything after the first comma (",").
@@ -582,6 +582,12 @@ if echo ":$MOZ_TOOLKIT" | grep "gtk" >/dev/null; then
        TK_LIBS="$TK_LIBS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
     fi
     TK_CFLAGS=$GTK_CFLAGS
+fi
+
+# tk=xlib build.
+if echo ":$MOZ_TOOLKIT" | grep "xlib" >/dev/null; then
+    TK_CFLAGS='$(XCFLAGS)'
+    TK_LIBS='$(XLDFLAGS) $(XLIBS)'
 fi
 
 fi # $no_x
