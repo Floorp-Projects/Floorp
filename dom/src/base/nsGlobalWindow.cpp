@@ -41,6 +41,7 @@
 #include "nsIDOMFormListener.h"
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDragListener.h"
+#include "nsIDOMPaintListener.h"
 #include "nsIScriptEventListener.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIBrowserWindow.h"
@@ -67,6 +68,7 @@ static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
 static NS_DEFINE_IID(kIDOMFormListenerIID, NS_IDOMFORMLISTENER_IID);
 static NS_DEFINE_IID(kIDOMLoadListenerIID, NS_IDOMLOADLISTENER_IID);
 static NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMDRAGLISTENER_IID);
+static NS_DEFINE_IID(kIDOMPaintListenerIID, NS_IDOMPAINTLISTENER_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
@@ -1482,6 +1484,17 @@ GlobalWindowImpl::CheckForEventListener(JSContext *aContext, nsString& aPropName
     if (NS_OK == GetListenerManager(&mManager)) {
       nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
       if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMLoadListenerIID)) {
+        NS_RELEASE(mManager);
+        return PR_FALSE;
+      }
+    }
+  }
+  else if (aPropName == "onpaint") {
+    if (NS_OK == GetListenerManager(&mManager)) {
+      nsIScriptContext *mScriptCX = (nsIScriptContext *)
+        JS_GetContextPrivate(aContext);
+      if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this,
+                                                     kIDOMPaintListenerIID)) {
         NS_RELEASE(mManager);
         return PR_FALSE;
       }
