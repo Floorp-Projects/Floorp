@@ -15,12 +15,22 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include <Menus.h>
 
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsIImageManager.h"
+#include "nsIWidget.h"
 #include <stdlib.h>
+#include "resources.h"
+
+#include <ToolUtils.h>		// MacOS includes
+#include <Menus.h>
+#include <Windows.h>
+#include <Devices.h>
+#include <Resources.h>
+#include <Dialogs.h>
+
+#include <PP_Messages.h>	// PP includes
 
 
 static nsNativeViewerApp* gTheApp;
@@ -51,43 +61,119 @@ nsNativeBrowserWindow::~nsNativeBrowserWindow()
 {
 }
 
-/*static void MenuProc(PRUint32 aId) 
+enum
 {
-  // XXX our menus are horked: we can't support multiple windows!
-  nsBrowserWindow* bw = (nsBrowserWindow*)
-    nsBrowserWindow::gBrowsers.ElementAt(0);
-  bw->DispatchMenuItem(aId);
-}*/ // XXX Nothing was calling this function
+	menu_First = 128,
+	menu_Apple = menu_First,
+	menu_File,
+	menu_Edit,
+	menu_Sample,
+	menu_Last = menu_Sample,
 
-// why is width passed to this function? XXX Platform specific?
+	submenu_Print = 16,
+
+	cmd_Sample0			= 1000,
+	cmd_PrintOneColumn	= 2000,
+	cmd_Find			= 3000
+};
 
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
-  MenuHandle theMenu;
-  //CreateViewerMenus(XtParent((Widget)mWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
-  int i;
-  
-  for (i = 2000; i <= 2004; ++i)
-  {
-  	theMenu = GetMenu (i);
-  	if (i < 2003)
-  		InsertMenu (theMenu, 0);
-    else
-    	InsertMenu (theMenu, -1);
-  }
-  AppendResMenu (GetMenuHandle (2000), 'DRVR');
-  DrawMenuBar();
-  return NS_OK;
+	for (int i = menu_First; i <= menu_Last; i++)
+	{
+		InsertMenu(GetMenu(i), 0);
+	}
+	InsertMenu(GetMenu(submenu_Print), -1);
+	AppendResMenu(GetMenuHandle(menu_Apple), 'DRVR');
+	DrawMenuBar();
+	return NS_OK;
 }
 
 nsEventStatus
 nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 {
-  // Dispatch motif-only menu code goes here
+	PRInt32 xpID = 0;
+	long menuID = HiWord(aID);
+	long menuItem = LoWord(aID);
+	
+	Int16**	theMcmdH = (Int16**) ::GetResource('Mcmd', menuID);
+	if (theMcmdH != nil)
+	{
+		if (::GetHandleSize((Handle)theMcmdH) > 0)
+		{
+			Int16 numCommands = (*theMcmdH)[0];
+			if (numCommands >= menuItem)
+			{
+				CommandT* theCommandNums = (CommandT*)(&(*theMcmdH)[1]);
+				menuItem = theCommandNums[menuItem-1];
+			}
+		}
+		::ReleaseResource((Handle) theMcmdH);
+	}
 
-  // Dispatch xp menu items
-  return nsBrowserWindow::DispatchMenuItem(aID);
+	switch (menuID)
+	{
+		case menu_Apple:
+			switch (menuItem)
+			{
+				case cmd_About:
+					::Alert(128, nil);
+					break;
+				default:
+					Str255 daName;
+					GetMenuItemText(GetMenuHandle(menu_Apple), menuItem, daName);
+					OpenDeskAcc(daName);
+					break;
+			}
+			break;
+
+		case menu_File:
+			switch (menuItem)
+			{
+				case cmd_New:		xpID = VIEWER_WINDOW_OPEN;		break;
+				case cmd_Open:		xpID = VIEWER_FILE_OPEN;		break;
+				case cmd_Close:
+					  WindowPtr whichwindow = FrontWindow();
+				      nsIWidget* raptorWindow = (nsIWidget*)GetWRefCon(whichwindow);
+				      raptorWindow->Destroy();
+					break;
+				case cmd_Save:		/*n.a.*/						break;
+				case cmd_SaveAs:	/*n.a.*/						break;
+				case cmd_Revert:	/*n.a.*/						break;
+				case cmd_PageSetup:	/*n.a.*/						break;
+				case cmd_Print:		/*n.a.*/						break;
+				case cmd_Quit:		xpID = VIEWER_EXIT;				break;
+			}
+			break;
+
+		case menu_Edit:
+			switch (menuItem)
+			{
+				case cmd_Undo:		/*n.a.*/						break;
+				case cmd_Cut:		xpID = VIEWER_EDIT_CUT;			break;
+				case cmd_Copy:		xpID = VIEWER_EDIT_COPY;		break;
+				case cmd_Paste:		xpID = VIEWER_EDIT_PASTE;		break;
+				case cmd_Clear:		/*n.a.*/						break;
+				case cmd_SelectAll:	xpID = VIEWER_EDIT_SELECTALL;	break;
+				case cmd_Find:		xpID = VIEWER_EDIT_FINDINPAGE;	break;
+			}
+			break;
+
+		case menu_Sample:
+			xpID = VIEWER_DEMO0 + menuItem - cmd_Sample0;
+			break;
+
+		case submenu_Print:
+			xpID = VIEWER_ONE_COLUMN + menuItem - cmd_PrintOneColumn;
+			break;
+	}
+
+	// Dispatch xp menu items
+	if (xpID != 0)
+		return nsBrowserWindow::DispatchMenuItem(xpID);
+	else
+		return nsEventStatus_eIgnore;
 }
 
 //----------------------------------------------------------------------
