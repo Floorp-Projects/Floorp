@@ -58,7 +58,7 @@
 
 #define PKCS11_USE_THREADS	/* set to true of you are need threads */
 /* 
- *  Attribute Allocation strategy is static allocation:
+ * The attribute allocation strategy is static allocation:
  *   Attributes are pre-allocated as part of the session object and used from
  *   the object array.
  */

@@ -69,10 +69,10 @@ pk11_NewAttribute(PK11Object *object,
 	PORT_Assert(0);
     }
     /* 
-     * We attempt to keep down contention on Malloc and Arena locks
-     * by limiting the number of these calls on high traversed paths. this
-     * is done for attributes by 'allocating' them from a pool already allocated
-     * by the parent object.
+     * We attempt to keep down contention on Malloc and Arena locks by
+     * limiting the number of these calls on high traversed paths. This
+     * is done for attributes by 'allocating' them from a pool already
+     * allocated by the parent object.
      */
     PK11_USE_THREADS(PZ_Lock(so->attributeLock);)
     index = so->nextAttr++;
