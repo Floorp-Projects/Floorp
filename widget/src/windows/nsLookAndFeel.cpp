@@ -22,6 +22,7 @@
  */
 
 #include "nsLookAndFeel.h"
+#include "nsXPLookAndFeel.h"
 #include <windows.h>
 #include "nsFont.h"
  
