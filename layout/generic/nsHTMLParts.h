@@ -120,9 +120,8 @@ extern nsresult
                        nsIArena* aArena, PRUnichar* us, PRInt32 uslen = 0);
 
 /** Create a new horizontal rule content object (e.g <HR>.) */
-extern nsresult
-NS_NewHRulePart(nsIHTMLContent** aInstancePtrResult,
-                nsIAtom* aTag);
+nsresult
+NS_NewHTMLHR(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag);
 
 /** Create a new table content object <TABLE> */
 extern nsresult
