@@ -40,6 +40,8 @@
 #ifndef NSNAMEVALUEPAIRDB_H
 #define NSNAMEVALUEPAIRDB_H
 
+#include "nsString.h"
+
 #define FC_BUF_LEN 1024
 
 #define NVPDB_MIN_BUFLEN 100

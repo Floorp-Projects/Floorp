@@ -40,9 +40,8 @@
 #include "nspr.h"
 #include "nsCOMPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsIFileSpec.h"
 #include "nsNameValuePairDB.h"
-#include "nsLocalFileUnix.h"
+#include "nsILocalFile.h"
 
 #define NVPDB_VERSION_MAJOR 1
 #define NVPDB_VERSION_MINOR 0
