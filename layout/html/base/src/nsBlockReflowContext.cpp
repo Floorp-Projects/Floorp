@@ -102,9 +102,8 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
   // top-padding then this step is skipped because it will be a margin
   // root.  It is also skipped if the frame is a margin root for other
   // reasons.
-  nsFrameState state;
   if (0 == aRS.mComputedBorderPadding.top &&
-      (aRS.frame->GetFrameState(&state), !(state & NS_BLOCK_MARGIN_ROOT))) {
+      !(aRS.frame->GetStateBits() & NS_BLOCK_MARGIN_ROOT)) {
     nsBlockFrame* bf;
     if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID,
                                        NS_REINTERPRET_CAST(void**, &bf)))) {
@@ -327,9 +326,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   // line). In this case the reason will be wrong so we need to check
   // the frame state.
   aFrameRS.reason = eReflowReason_Resize;
-  nsFrameState state;
-  mFrame->GetFrameState(&state);
-  if (NS_FRAME_FIRST_REFLOW & state) {
+  if (NS_FRAME_FIRST_REFLOW & mFrame->GetStateBits()) {
     aFrameRS.reason = eReflowReason_Initial;
   }
   else if (mOuterReflowState.reason == eReflowReason_Incremental) {
@@ -351,7 +348,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
       if (type == eReflowType_StyleChanged)
         aFrameRS.reason = eReflowReason_StyleChange;
       else if (type == eReflowType_ReflowDirty &&
-               (state & NS_FRAME_IS_DIRTY) &&
+               (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
                !frameIsOnReflowPath) {
         aFrameRS.reason = eReflowReason_Dirty;
       }
@@ -361,7 +358,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     aFrameRS.reason = eReflowReason_StyleChange;
   }
   else if (mOuterReflowState.reason == eReflowReason_Dirty) {
-    if (state & NS_FRAME_IS_DIRTY)
+    if (mFrame->GetStateBits() & NS_FRAME_IS_DIRTY)
       aFrameRS.reason = eReflowReason_Dirty;
   }
 
@@ -435,12 +432,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     nscoord frameWidth;
      
     if (NS_UNCONSTRAINEDSIZE == aFrameRS.mComputedWidth) {
-      nsSize  frameSize;
-
       // Use the current frame width
-      mFrame->GetSize(frameSize);
-      frameWidth = frameSize.width;
-
+      frameWidth = mFrame->GetSize().width;
     } else {
       frameWidth = aFrameRS.mComputedWidth +
                    aFrameRS.mComputedBorderPadding.left +
@@ -466,11 +459,9 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     // width to determine where it will be placed horizontally
     if (aFrameRS.reason != eReflowReason_Initial) {
       nsBlockHorizontalAlign  align;
-      nsSize                  size;
 
-      mFrame->GetSize(size);
       align.mXOffset = x;
-      AlignBlockHorizontally(size.width, align);
+      AlignBlockHorizontally(mFrame->GetSize().width, align);
       // Don't reset "mX". because PlaceBlock() will recompute the
       // x-offset and expects "mX" to be at the left margin edge
       x = align.mXOffset;
@@ -489,7 +480,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   // Position it and its view (if it has one)
   // Note: Use "x" and "y" and not "mX" and "mY" because they more accurately
   // represents where we think the block will be placed
-  mFrame->MoveTo(mPresContext, x, y);
+  mFrame->SetPosition(nsPoint(x, y));
   nsContainerFrame::PositionFrameView(mPresContext, mFrame);
 
 #ifdef DEBUG
@@ -595,8 +586,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   }
 #endif
 
-  mFrame->GetFrameState(&state);
-  if (0 == (NS_FRAME_OUTSIDE_CHILDREN & state)) {
+  if (!(NS_FRAME_OUTSIDE_CHILDREN & mFrame->GetStateBits())) {
     // Provide overflow area for child that doesn't have any
     mMetrics.mOverflowArea.x = 0;
     mMetrics.mOverflowArea.y = 0;
@@ -608,11 +598,11 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   // the NS_FRAME_FIRST_REFLOW bit is cleared so that never give it an
   // initial reflow reason again.
   if (eReflowReason_Initial == aFrameRS.reason) {
-    mFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
+    mFrame->RemoveStateBits(NS_FRAME_FIRST_REFLOW);
   }
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus) ||
-      (state & NS_FRAME_OUT_OF_FLOW)) {
+      (mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
     // If frame is complete and has a next-in-flow, we need to delete
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
@@ -625,9 +615,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
         // the right parent to do the removal (it's possible that the
         // parent is not this because we are executing pullup code)
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
-        nsHTMLContainerFrame* parent;
-        kidNextInFlow->GetParent((nsIFrame**)&parent);
-        parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
+        NS_STATIC_CAST(nsHTMLContainerFrame*, kidNextInFlow->GetParent())
+          ->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }
     }
   }

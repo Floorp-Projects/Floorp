@@ -528,8 +528,7 @@ nsFrame::Init(nsIPresContext*  aPresContext,
 
   if (aPrevInFlow) {
     // Make sure the general flags bits are the same
-    nsFrameState state;
-    aPrevInFlow->GetFrameState(&state);
+    nsFrameState state = aPrevInFlow->GetStateBits();
 
     // Make bits that are currently on (see constructor) the same:
     mState &= state | ~(NS_FRAME_SYNC_FRAME_AND_VIEW);
@@ -541,8 +540,7 @@ nsFrame::Init(nsIPresContext*  aPresContext,
                        NS_FRAME_IS_SPECIAL);
   }
   if (mParent) {
-    nsFrameState state;
-    mParent->GetFrameState(&state);
+    nsFrameState state = mParent->GetStateBits();
 
     // Make bits that are currently off (see constructor) the same:
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
@@ -617,7 +615,7 @@ nsFrame::Destroy(nsIPresContext* aPresContext)
 
   // Get the view pointer now before the frame properties disappear
   // when we call NotifyDestroyingFrame()
-  nsIView* view = GetView(aPresContext);
+  nsIView* view = GetView();
   
   // XXX Rather than always doing this it would be better if it was part of
   // a frame observer mechanism and the pres shell could register as an
@@ -774,17 +772,14 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
 *********************************************************/
 static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFrame, nsIContent * aContent)
 {
-  nsIContent* frameContent;
-  aFrame->GetContent(&frameContent);
-  if (frameContent == aContent) {
+  if (aFrame->GetContent() == aContent) {
     ForceDrawFrame(aPresContext, (nsFrame *)aFrame);
   }
-  NS_IF_RELEASE(frameContent);
 
   aFrame->FirstChild(aPresContext, nsnull, &aFrame);
   while (aFrame) {
     RefreshAllContentFrames(aPresContext, aFrame, aContent);
-    aFrame->GetNextSibling(&aFrame);
+    aFrame = aFrame->GetNextSibling();
   }
 }
 
@@ -797,26 +792,22 @@ static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFr
  */
 void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame)//, PRBool)
 {
-  if (aFrame == nsnull) {
+  if (!aFrame) {
     return;
   }
-  nsRect    rect;
   nsIView * view;
   nsPoint   pnt;
   aFrame->GetOffsetFromView(aPresContext, pnt, &view);
-  aFrame->GetRect(rect);
+  nsRect rect = aFrame->GetRect();
   rect.x = pnt.x;
   rect.y = pnt.y;
-  if (view != nsnull) {
-    nsIViewManager * viewMgr;
-    view->GetViewManager(viewMgr);
-    if (viewMgr != nsnull) {
+  if (view) {
+    nsIViewManager* viewMgr = view->GetViewManager();
+    if (viewMgr) {
       viewMgr->UpdateView(view, rect, 0);
-      NS_RELEASE(viewMgr);
     }
     //viewMgr->UpdateView(view, rect, NS_VMREFRESH_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
   }
-
 }
 
 
@@ -850,9 +841,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
 
 //check frame selection state
   PRBool isSelected;
-  nsFrameState  frameState;
-  GetFrameState(&frameState);
-  isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+  isSelected = (GetStateBits() & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 //if not selected then return 
   if (!isSelected)
     return NS_OK; //nothing to do
@@ -897,8 +886,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
   
   if (details)
   {
-    nsRect rect;
-    GetRect(rect);
+    nsRect rect = GetRect();
     rect.width-=2;
     rect.height-=2;
     rect.x=1; //we are in the coordinate system of the frame now with regards to the rendering context.
@@ -974,7 +962,9 @@ nsFrame::GetContentForEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIContent** aContent)
 {
-  return GetContent(aContent);
+  *aContent = GetContent();
+  NS_IF_ADDREF(*aContent);
+  return NS_OK;
 }
 
 /**
@@ -1094,24 +1084,18 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection,
         //  or select column when along top edge?
         break;
       } else {
-        result = frame->GetParent(&frame);
+        frame = frame->GetParent();
+        result = NS_OK;
         // Stop if we have hit the selection's limiting content node
-        if (frame)
-        {
-          nsIContent* frameContent;
-          frame->GetContent(&frameContent);
-          if (frameContent == limiter.get())
-            break;
-        }
+        if (frame && frame->GetContent() == limiter.get())
+          break;
       }
     }
   }
   // We aren't in a cell or table
   if (!foundCell && !foundTable) return NS_OK;
 
-  nsCOMPtr<nsIContent> tableOrCellContent;
-  result = frame->GetContent(getter_AddRefs(tableOrCellContent));
-  if (NS_FAILED(result)) return result;
+  nsIContent* tableOrCellContent = frame->GetContent();
   if (!tableOrCellContent) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> parentContent;
@@ -1160,7 +1144,7 @@ nsFrame::FrameOrParentHasSpecialSelectionStyle(PRUint8 aSelectionStyle, nsIFrame
       return NS_OK;
     }
   
-    thisFrame->GetParent(&thisFrame);
+    thisFrame = thisFrame->GetParent();
   }
   
   *foundFrame = nsnull;
@@ -1191,11 +1175,10 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
   //    _MOZ_ALL -> TEXT     -> AUTO -> AUTO,     the returned value is _MOZ_ALL
   //    AUTO     -> CELL     -> TEXT -> AUTO,     the returned value is TEXT
   //
-  nsresult result      = NS_OK;
   PRUint8 selectStyle  = NS_STYLE_USER_SELECT_AUTO;
   nsIFrame* frame      = (nsIFrame*)this;
 
-  while (frame && NS_SUCCEEDED(result)) {
+  while (frame) {
     const nsStyleUIReset* userinterface = frame->GetStyleUIReset();
     switch (userinterface->mUserSelect) {
       case NS_STYLE_USER_SELECT_ALL:
@@ -1211,7 +1194,7 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
         }
         break;
     }
-    result = frame->GetParent(&frame);
+    frame = frame->GetParent();
   }
 
   // convert internal values to standard values
@@ -1250,7 +1233,6 @@ ContentContainsPoint(nsIPresContext *aPresContext,
   if (NS_FAILED(rv) || !frame) return PR_FALSE;
 
   nsIView *frameView = nsnull;
-  nsRect frameRect;
   nsPoint offsetPoint;
 
   // Get the view that contains the content's frame.
@@ -1270,16 +1252,9 @@ ContentContainsPoint(nsIPresContext *aPresContext,
     // of aRelativeView and walk up the view hierarchy calculating what
     // the actual point is, relative to frameView.
 
-    nsPoint viewOffset(0, 0);
-
     while (aRelativeView && aRelativeView != frameView) {
-      aRelativeView->GetPosition(&viewOffset.x, &viewOffset.y);
-
-      point.x += viewOffset.x;
-      point.y += viewOffset.y;
-
-      rv = aRelativeView->GetParent(aRelativeView);
-      if (NS_FAILED(rv)) return PR_FALSE;
+      point += aRelativeView->GetPosition();
+      aRelativeView = aRelativeView->GetParent();
     }
 
     // At this point the point should be in the correct
@@ -1295,7 +1270,7 @@ ContentContainsPoint(nsIPresContext *aPresContext,
     // Get the frame's rect and make it relative to the
     // upper left corner of it's parent view.
 
-    frame->GetRect(frameRect);
+    nsRect frameRect = frame->GetRect();
     frameRect.x = offsetPoint.x;
     frameRect.y = offsetPoint.y;
 
