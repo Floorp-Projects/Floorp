@@ -83,7 +83,7 @@ $(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP) makefile.win
 !ifdef MAPFILE
 		/MAP:$(MAPFILE)
 !endif
-!if exist(win32.order) && !defined(MOZ_DEBUG)
+!if exist(win32.order) && !defined(MOZ_DEBUG) && defined(MOZ_COVERAGE)
         /ORDER:@win32.order
 !endif
         $(LFLAGS)
