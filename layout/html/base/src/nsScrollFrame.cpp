@@ -773,7 +773,9 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Compute our desired size
   aDesiredSize.width = scrollAreaSize.width;
-  aDesiredSize.width += border.left + border.right;
+  if (NS_UNCONSTRAINEDSIZE != aDesiredSize.width) {
+    aDesiredSize.width += border.left + border.right;
+  }
   if ((kidDesiredSize.height > scrollAreaSize.height) ||
       (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL)) {
     aDesiredSize.width += sbWidth;
