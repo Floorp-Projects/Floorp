@@ -106,6 +106,8 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
       nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem(do_QueryInterface(shell));
       if(shellAsTreeItem)
          {
+         if(aRequestor == shellAsTreeItem.get())
+            continue;
          // Do this so we can pass in the tree owner as the requestor so the child knows not
          // to call back up.
          nsCOMPtr<nsIDocShellTreeOwner> shellOwner;
@@ -124,10 +126,7 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
 NS_IMETHODIMP nsChromeTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
-   nsContentShellInfo* shellInfo = new nsContentShellInfo(aID, aPrimary, aContentShell);
-
-   mXULWindow->mContentShells.AppendElement((void*)shellInfo);
-
+   mXULWindow->ContentShellAdded(aContentShell, aPrimary, aID);
    return NS_OK;
 }
 
@@ -165,12 +164,14 @@ NS_IMETHODIMP nsChromeTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
 
 NS_IMETHODIMP nsChromeTreeOwner::Create()
 {
-   return NS_OK;
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::Destroy()
 {
-   return NS_ERROR_NOT_IMPLEMENTED;
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsChromeTreeOwner::SetPosition(PRInt32 x, PRInt32 y)
@@ -301,4 +302,3 @@ nsXULWindow* nsChromeTreeOwner::XULWindow()
 {
    return mXULWindow;
 }
-
