@@ -248,12 +248,10 @@ nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
 void
 nsInlineFrame::InsertNewFrame(nsIFrame* aNewFrame, nsIFrame* aPrevSibling)
 {
-  nsIFrame* nextSibling = nsnull;
+  nsIFrame* nextSibling;
 
   if (nsnull == aPrevSibling) {
-    if (nsnull != mFirstChild) {
-      mFirstChild->GetNextSibling(nextSibling);
-    }
+    nextSibling = mFirstChild;
     mFirstChild = aNewFrame;
   } else {
     aPrevSibling->GetNextSibling(nextSibling);
