@@ -91,6 +91,9 @@ Flasher.prototype =
   { 
     if (val && val.nodeType == 1) {
       this.mElement = val; 
+      if ("scrollIntoView" in val) {
+        val.scrollIntoView();
+      }
     } else 
       throw "Invalid node type.";
   },
