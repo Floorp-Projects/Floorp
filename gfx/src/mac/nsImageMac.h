@@ -33,7 +33,7 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32     GetBytesPix()       { return ThePixelmap.cmpCount; }
+  virtual PRInt32     GetBytesPix()       { return mThePixelmap.cmpCount; }
   virtual PRInt32     GetHeight()         { return mHeight;}
   virtual PRInt32     GetWidth()          { return mWidth; }
   virtual PRUint8*    GetBits() ;          //{ return mImageBits; }
