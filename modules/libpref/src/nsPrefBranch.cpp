@@ -281,7 +281,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
       } else {
         rv = GetCharPref(aPrefName, getter_Copies(utf8String));
         if (NS_SUCCEEDED(rv)) {
-          rv = theString->SetData(NS_ConvertASCIItoUCS2(utf8String).get());
+          rv = theString->SetData(NS_ConvertUTF8toUCS2(utf8String).get());
         }
       }
       if (NS_SUCCEEDED(rv)) {
@@ -321,7 +321,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsISupportsWString> theString(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
-      rv = theString->SetData(NS_ConvertASCIItoUCS2(utf8String).get());
+      rv = theString->SetData(NS_ConvertUTF8toUCS2(utf8String).get());
       if (NS_SUCCEEDED(rv)) {
         nsISupportsWString *temp = theString;
 
