@@ -1490,7 +1490,8 @@ oeICalImpl::GetEventsForRange(PRTime aBeginDate, PRTime aEndDate, nsISimpleEnume
 
     nsVoidArray occurList;
     oeIICalEvent *tmpevent;
-    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+    PRInt32 i;
+    for (i = 0 ; i < m_eventlist.Count(); ++i) {
         tmpevent = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
         struct icaltimetype check = checkdate;
         bool isbeginning;
@@ -1515,7 +1516,7 @@ oeICalImpl::GetEventsForRange(PRTime aBeginDate, PRTime aEndDate, nsISimpleEnume
     }
     occurList.Sort(occurCompareFunc, nsnull);
 
-    for (PRInt32 i = 0 ; i < occurList.Count(); ++i) {
+    for (i = 0 ; i < occurList.Count(); ++i) {
         eventOccurence *occur = NS_STATIC_CAST(eventOccurence*, occurList[i]);
         tmpevent = NS_STATIC_CAST(oeIICalEvent*, occur->event);
         ((oeICalEventImpl *)tmpevent)->
