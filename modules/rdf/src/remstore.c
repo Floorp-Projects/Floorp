@@ -384,10 +384,6 @@ remoteStoreNextValue (RDFT mcf, RDF_Cursor c)
         c->value = (c->inversep ? as->u : as->value);
       }
       c->pdata = (c->inversep ? as->invNext : as->next);
-      if (c->type == RDF_RESOURCE_TYPE) {
-        FE_Trace(resourceID(c->value));
-        FE_Trace("\n");
-      }
       return c->value;
     }
     c->pdata = (c->inversep ? as->invNext : as->next);
