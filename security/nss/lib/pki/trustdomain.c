@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.27 $ $Date: 2002/01/23 17:00:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.28 $ $Date: 2002/01/23 20:35:18 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -861,6 +861,29 @@ NSSTrustDomain_FindUserCertificatesForEmailSigning
     nss_SetError(NSS_ERROR_NOT_FOUND);
     return NULL;
 }
+
+static struct traverse_arg 
+{
+  PRStatus (*callback)(NSSCertificate *c, void *arg);
+  nssList *cached;
+  void *arg;
+};
+
+static PRStatus traverse_callback(NSSCertificate *c, void *arg)
+{
+    PRStatus nssrv;
+    struct traverse_arg *ta = (struct traverse_arg *)arg;
+    nssrv = (*ta->callback)(c, ta->arg);
+    if (nssrv == PR_SUCCESS) {
+	NSSTrustDomain *td = NSSCertificate_GetTrustDomain(c);
+	nssTrustDomain_AddCertsToCache(td, &c, 1);
+	if (!nssList_Get(ta->cached, c)) {
+	    nssCertificate_AddRef(c);
+	    nssList_Add(ta->cached, c);
+	}
+    }
+    return nssrv;
+}
  
 NSS_IMPLEMENT PRStatus *
 NSSTrustDomain_TraverseCertificates
@@ -874,11 +897,17 @@ NSSTrustDomain_TraverseCertificates
     NSSToken *token;
     nssList *certList;
     nssTokenCertSearch search;
+    struct traverse_arg ta;
     certList = nssList_Create(NULL, PR_FALSE);
+    if (!certList) return NULL;
     (void *)nssTrustDomain_GetCertsFromCache(td, certList);
+    /* set traverse args */
+    ta.callback = callback;
+    ta.cached = certList;
+    ta.arg = arg;
     /* set the search criteria */
-    search.callback = callback;
-    search.cbarg = arg;
+    search.callback = traverse_callback;
+    search.cbarg = &ta;
     search.cached = certList;
     search.searchType = nssTokenSearchType_TokenOnly;
     /* traverse the tokens */
