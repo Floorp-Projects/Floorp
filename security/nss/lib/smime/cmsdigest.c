@@ -34,7 +34,7 @@
 /*
  * CMS digesting.
  *
- * $Id: cmsdigest.c,v 1.6 2003/12/17 03:49:10 nelsonb%netscape.com Exp $
+ * $Id: cmsdigest.c,v 1.7 2003/12/19 03:58:28 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -252,7 +252,10 @@ NSS_CMSDigestContext_FinishMultiple(NSSCMSDigestContext *cmsdigcx,
 
 cleanup:
     NSS_CMSDigestContext_Cancel(cmsdigcx);
-    if (rv == SECSuccess && digestsp) {
+    /* Don't change the caller's digests pointer if we have no digests.
+    **  NSS_CMSSignedData_Encode_AfterData depends on this behavior.
+    */
+    if (rv == SECSuccess && digestsp && digests) {
 	*digestsp = digests;
     }
     return rv;
