@@ -1,0 +1,83 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+ 
+#include "nsISupports.idl"
+
+%{C++
+#include "nsIDOMKeyEvent.h"
+%}
+
+[ptr] native nsIDOMKeyEvent(nsIDOMKeyEvent);
+
+[scriptable, uuid(b5f39ed4-1dd1-11b2-9d00-fd54d6f54962)]
+interface nsIPlaintextEditor : nsISupports
+{
+  /**
+    * The length of the contents in characters.
+    */
+  readonly attribute long textLength;
+
+  /**
+    * The maximum number of characters allowed.
+    */
+  attribute long maxTextLength;
+
+  /** Get and set the body wrap width.
+    * 
+    * Special values:
+    *    0 = wrap to window width
+    *   -1 = no wrap at all
+    * 
+    */
+  attribute long bodyWrapWidth;
+
+  /** 
+   * EditorKeyPress consumes a keyevent.
+   * @param aKeyEvent    key event to consume
+   */
+  [noscript]void handleKeyPress(in nsIDOMKeyEvent aKeyEvent);
+
+  /**
+   * Inserts a string at the current location,
+   * given by the selection.
+   * If the selection is not collapsed, the selection is deleted
+   * and the insertion takes place at the resulting collapsed selection.
+   *
+   * @param aString   the string to be inserted
+   */
+   void insertText(in wstring aStringToInsert);
+
+  /**
+   * Insert a line break into the content model.
+   * The interpretation of a break is up to the implementation:
+   * it may enter a character, split a node in the tree, etc.
+   * This may be more efficient than calling InsertText with a newline.
+   */
+  void insertLineBreak();
+
+  /**
+    * Set selection to start of text.
+    * This will be moved to a different API eventually!
+    * Should probably be done through the selection controller.
+    */
+  void collapseSelectionToStart();
+};
