@@ -88,6 +88,12 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\MailFrame.html        $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\MailToolbar.xml       $(DIST)\bin\res\samples
 
+	$(MAKE_INSTALL) ..\xul\resources\Mail_SendMsg.gif $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\Mail_GetMsg.gif  $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\Mail_Reply.gif   $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\Mail_NewMsg.gif  $(DIST)\bin\res\toolbar
+	$(MAKE_INSTALL) ..\xul\resources\Mail_Forward.gif $(DIST)\bin\res\toolbar
+
 clobber::
 	rm -f $(DIST)\lib\$(MODULE).lib
 	rm -f $(DIST)\bin\$(MODULE).dll
@@ -95,3 +101,8 @@ clobber::
 	rm -f $(DIST)\res\samples\MailAppShellNoTB.html
 	rm -f $(DIST)\res\samples\MailFrame.html
 	rm -f $(DIST)\res\samples\MailToolbar.xml
+	rm -f $(DIST)\res\toolbar\Mail_SendMsg.gif
+	rm -f $(DIST)\res\toolbar\Mail_GetMsg.gif
+	rm -f $(DIST)\res\toolbar\Mail_Reply.gif
+	rm -f $(DIST)\res\toolbar\Mail_NewMsg.gif
+	rm -f $(DIST)\res\toolbar\Mail_Forward.gif
