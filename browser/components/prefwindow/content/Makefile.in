@@ -26,11 +26,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-DIRS		= win
-else
-DIRS		= unix
-endif
-
 include $(topsrcdir)/config/rules.mk
 
