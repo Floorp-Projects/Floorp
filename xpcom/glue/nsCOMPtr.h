@@ -182,7 +182,7 @@ class nsDerivedSafe : public T
       NS_IMETHOD_(nsrefcnt) Release(void);
 #endif
 
-      void operator delete( void*, size_t );                  // NOT TO BE IMPLEMENTED
+      void operator delete( void*, size_t );               		// NOT TO BE IMPLEMENTED
         // declaring |operator delete| private makes calling delete on an interface pointer a compile error
 
       nsDerivedSafe<T>& operator=( const nsDerivedSafe<T>& ); // NOT TO BE IMPLEMENTED
@@ -264,19 +264,26 @@ do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
     return nsQueryInterface(aRawPtr, error);
   }
 
-inline
-const nsQueryInterface
-null_nsCOMPtr()
-		/*
-			You can use this to assign |NULL| into an |nsCOMPtr|, e.g.,
+#ifdef NSCAP_FEATURE_ALLOW_RAW_POINTERS
 
-        myPtr = null_nsCOMPtr();
-		*/
-	{
-		typedef nsISupports* nsISupports_Ptr;
-		return nsQueryInterface(nsISupports_Ptr(0));
-	}
+	#define null_nsCOMPtr() (0)
 
+#else
+
+	inline
+	const nsQueryInterface
+	null_nsCOMPtr()
+			/*
+				You can use this to assign |NULL| into an |nsCOMPtr|, e.g.,
+
+	        myPtr = null_nsCOMPtr();
+			*/
+		{
+			typedef nsISupports* nsISupports_Ptr;
+			return nsQueryInterface(nsISupports_Ptr(0));
+		}
+
+#endif
 
 
 
@@ -288,9 +295,10 @@ struct nsDontAddRef
       machinery of |getter_AddRefs| in the argument list to functions that |AddRef|
       their results before returning them to the caller.
 
-			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| instead.
+			DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| or
+			|dont_AddRef()| instead.
 
-      See also |getter_AddRefs()| and |class nsGetterAddRefs|.
+      See also |getter_AddRefs()|, |dont_AddRef()|, and |class nsGetterAddRefs|.
     */
   {
     explicit
@@ -315,7 +323,6 @@ getter_AddRefs( T* aRawPtr )
 		return nsDontAddRef<T>(aRawPtr);
 	}
 
-	// This call is now deprecated.  Use |getter_AddRefs()| instead.
 template <class T>
 inline
 const nsDontAddRef<T>
@@ -575,10 +582,6 @@ getter_AddRefs( nsCOMPtr<T>& aSmartPtr )
 
 #ifdef NSCAP_FEATURE_ALLOW_COMPARISONS
 
-	/*
-		Note: can't enable this till I find a suitable replacement for |bool|.
-	*/
-
 template <class T, class U>
 inline
 NSCAP_BOOL
@@ -603,6 +606,24 @@ operator==( const U* lhs, const nsCOMPtr<T>& rhs )
 		return NSCAP_STATIC_CAST(const void*, lhs) == NSCAP_STATIC_CAST(const void*, rhs.get());
 	}
 
+template <class T>
+inline
+NSCAP_BOOL
+operator==( const nsCOMPtr<T>& lhs, int rhs )
+		// specifically to allow |smartPtr == 0|
+	{
+		return NSCAP_STATIC_CAST(const void*, lhs.get()) == NSCAP_REINTERPRET_CAST(const void*, rhs);
+	}
+
+template <class T>
+inline
+NSCAP_BOOL
+operator==( int lhs, const nsCOMPtr<T>& rhs )
+		// specifically to allow |0 == smartPtr|
+	{
+		return NSCAP_REINTERPRET_CAST(const void*, lhs) == NSCAP_STATIC_CAST(const void*, rhs.get());
+	}
+
 template <class T, class U>
 inline
 NSCAP_BOOL
@@ -625,6 +646,24 @@ NSCAP_BOOL
 operator!=( const U* lhs, const nsCOMPtr<T>& rhs )
 	{
 		return NSCAP_STATIC_CAST(const void*, lhs) != NSCAP_STATIC_CAST(const void*, rhs.get());
+	}
+
+template <class T>
+inline
+NSCAP_BOOL
+operator!=( const nsCOMPtr<T>& lhs, int rhs )
+		// specifically to allow |smartPtr != 0|
+	{
+		return NSCAP_STATIC_CAST(const void*, lhs.get()) != NSCAP_REINTERPRET_CAST(const void*, rhs);
+	}
+
+template <class T>
+inline
+NSCAP_BOOL
+operator!=( int lhs, const nsCOMPtr<T>& rhs )
+		// specifically to allow |0 != smartPtr|
+	{
+		return NSCAP_REINTERPRET_CAST(const void*, lhs) != NSCAP_STATIC_CAST(const void*, rhs.get());
 	}
 
 inline
