@@ -71,23 +71,23 @@
       <label for="knob-resolve">
         Resolve [% terms.bug %], changing 
         <a href="page.cgi?id=fields.html#resolution">resolution</a> to
-        <select name="resolution"
-                onchange="document.changeform.knob[[% knum %]].checked=true">
+      </label>  
+      <select name="resolution"
+              onchange="document.changeform.knob[[% knum %]].checked=true">
         [% FOREACH r = bug.choices.resolution %]
           <option value="[% r FILTER html %]">[% r FILTER html %]</option>
         [% END %]
-        </select>
-      </label>
+      </select>
       <br>
       [% knum = knum + 1 %]
 
       <input type="radio" id="knob-duplicate" name="knob" value="duplicate">
       <label for="knob-duplicate">
         Resolve [% terms.bug %], mark it as duplicate of [% terms.bug %] #
-        <input name="dup_id" size="6"
-               onchange="if (this.value != '')
-                         {document.changeform.knob[[% knum %]].checked=true}">
       </label>
+      <input name="dup_id" size="6"
+             onchange="if (this.value != '')
+                       {document.changeform.knob[[% knum %]].checked=true}">
       <br>
       [% knum = knum + 1 %]
 
@@ -95,19 +95,20 @@
       <label for="knob-reassign">
         <a href="page.cgi?id=fields.html#assigned_to">Reassign</a> 
         [% terms.bug %] to
-        <input name="assigned_to" size="32"
-               onchange="if ((this.value != '[% bug.assigned_to.email FILTER js %]') &&
-                              (this.value != '')) {
-                           document.changeform.knob[[% knum %]].checked=true;
-                         }"
-               value="[% bug.assigned_to.email FILTER html %]">
-        <br>
-        [% IF bug.isunconfirmed && bug.user.canconfirm %]
-          &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="andconfirm">
-          and confirm [% terms.bug %] (change status to <b>NEW</b>)
-          <br>
-        [% END %]
       </label>
+      <input name="assigned_to" size="32"
+             onchange="if ((this.value != '[% bug.assigned_to.email FILTER js %]') &&
+                            (this.value != '')) {
+                         document.changeform.knob[[% knum %]].checked=true;
+                       }"
+             value="[% bug.assigned_to.email FILTER html %]">
+      <br>
+      [% IF bug.isunconfirmed && bug.user.canconfirm %]
+        &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="andconfirm" name="andconfirm">
+        <label for="andconfirm">
+          and confirm [% terms.bug %] (change status to <b>NEW</b>)
+        <br>
+      [% END %]
       [% knum = knum + 1 %]
 
       <input type="radio" id="knob-reassign-cmp" name="knob" value="reassignbycomponent">
@@ -117,8 +118,10 @@
         of selected component
         <br>
         [% IF bug.isunconfirmed && bug.user.canconfirm %]
-          &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" name="compconfirm">
-          and confirm [% terms.bug %] (change status to <b>NEW</b>)
+          &nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="compconfirm" name="compconfirm">
+          <label for="compconfirm">
+            and confirm [% terms.bug %] (change status to <b>NEW</b>)
+          </label>
           <br>
         [% END %]
       </label>
