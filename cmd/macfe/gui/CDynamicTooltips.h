@@ -53,13 +53,11 @@ public:
 
 	virtual void		CalcFrameWithRespectTo(
 							LWindow*				inOwningWindow,
-							LPane*					inOwningPane,
 							const EventRecord&		inMacEvent,
 							Rect& 					outTipFrame);
 
 	virtual	void 		CalcTipText(
 							LWindow*				inOwningWindow,
-							LPane*					inOwningPane,
 							const EventRecord&		inMacEvent,
 							StringPtr				outTipText);
 

@@ -35,8 +35,7 @@
 // been correctly set.
 //
 void
-CDynamicTooltipPane :: CalcFrameWithRespectTo( LWindow* inOwningWindow, LPane*	inOwningPane,
-												const EventRecord& inMacEvent, 
+CDynamicTooltipPane :: CalcFrameWithRespectTo( LWindow* inOwningWindow, const EventRecord& inMacEvent, 
 												Rect& outTipFrame)
 {
 	const short kXPadding = 5;
@@ -54,7 +53,7 @@ CDynamicTooltipPane :: CalcFrameWithRespectTo( LWindow* inOwningWindow, LPane*	i
 	GlobalToPortPoint(theLocalPoint);
 
 	Rect theWindowFrame;
-	inOwningPane->CalcPortFrameRect(theWindowFrame);
+	mOwningPane->CalcPortFrameRect(theWindowFrame);
 
 	outTipFrame.left = theLocalPoint.h + kXPadding;
 	outTipFrame.top = theLocalPoint.v + kYPadding;
@@ -73,10 +72,10 @@ CDynamicTooltipPane :: CalcFrameWithRespectTo( LWindow* inOwningWindow, LPane*	i
 // for the tooltip at the current mouse location
 //
 void 
-CDynamicTooltipPane :: CalcTipText( LWindow* /* inOwningWindow */, LPane* inOwningPane,
-									const EventRecord& inMacEvent, StringPtr outTipText)
+CDynamicTooltipPane :: CalcTipText( LWindow* /* inOwningWindow */, const EventRecord& inMacEvent,
+									StringPtr outTipText)
 {
-	CDynamicTooltipMixin* parent = dynamic_cast<CDynamicTooltipMixin*>(inOwningPane);
+	CDynamicTooltipMixin* parent = dynamic_cast<CDynamicTooltipMixin*>(mOwningPane);
 	Assert_(parent != NULL);
 	parent->FindTooltipForMouseLocation ( inMacEvent, outTipText );
 
