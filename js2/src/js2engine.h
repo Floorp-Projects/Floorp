@@ -265,6 +265,9 @@ public:
     void insert(js2val x, int count);
 
 
+    void pushHandler(uint8 *pc) { }
+    void popHandler()           { }
+
     void mark();
 
 

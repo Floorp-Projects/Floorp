@@ -113,3 +113,23 @@
             push(fi->value(this));
         }
         break;
+
+
+    case eTry:
+        {
+            int32 finallyOffset = BytecodeContainer::getOffset(pc);
+            if (finallyOffset != NotALabel)
+                pushHandler(pc + finallyOffset);
+            pc += sizeof(int32);
+            int32 catchOffset = BytecodeContainer::getOffset(pc);
+            if (catchOffset != NotALabel)
+                pushHandler(pc + catchOffset);
+            pc += sizeof(int32);
+        }
+        break;
+
+    case eHandler:
+        {
+            popHandler();
+        }
+        break;

@@ -851,9 +851,9 @@ namespace MetaData {
             break;
         case StmtNode::Try:
 /*
-            try {   //  [catch,finally] handler labels are pushed on try stack
+            try {   //  [catch,finally] handler labels are pushed on try stack [eTry]
                     <tryblock>
-                }   //  catch handler label is popped off try stack
+                }   //  catch handler label is popped off try stack [eHandler]
                 jsr finally
                 jump-->finished                 
 

@@ -79,21 +79,91 @@ namespace MetaData {
         retval = JS2VAL_VOID;
         baseVal = JS2VAL_VOID;
         indexVal = JS2VAL_VOID;
-        while (true) {
-            a = JS2VAL_VOID;
-            b = JS2VAL_VOID;
-            JS2Op op = (JS2Op)*pc++;
-            switch (op) {
-    #include "js2op_arithmetic.cpp"
-    #include "js2op_invocation.cpp"
-    #include "js2op_access.cpp"
-    #include "js2op_literal.cpp"
-    #include "js2op_flowcontrol.cpp"
-            default:
-                NOT_REACHED("Bad opcode, no biscuit");
+        try {
+            while (true) {
+                a = JS2VAL_VOID;
+                b = JS2VAL_VOID;
+                JS2Op op = (JS2Op)*pc++;
+                switch (op) {
+        #include "js2op_arithmetic.cpp"
+        #include "js2op_invocation.cpp"
+        #include "js2op_access.cpp"
+        #include "js2op_literal.cpp"
+        #include "js2op_flowcontrol.cpp"
+                default:
+                    NOT_REACHED("Bad opcode, no biscuit");
+                }
+                JS2Object::gc(meta);        // XXX temporarily, for testing
             }
-            JS2Object::gc(meta);        // XXX temporarily, for testing
         }
+        catch (Exception &jsx) {
+#if 0
+            if (mTryStack.size() > 0) {
+                HandlerData *hndlr = (HandlerData *)mTryStack.top();
+                Activation *curAct = (mActivationStack.size() > 0) ? mActivationStack.top() : NULL;
+                
+                js2val x;
+                if (curAct != hndlr->mActivation) {
+                    ASSERT(mActivationStack.size() > 0);
+                    Activation *prev;// = mActivationStack.top();
+                    do {
+                        prev = curAct;
+                        if (prev->mPC == NULL) {
+                            // Yikes! the exception is getting thrown across a re-invocation
+                            // of the interpreter loop.
+                            throw jsx;
+                        }
+                        mActivationStack.pop();
+                        curAct = mActivationStack.top();                            
+                    } while (hndlr->mActivation != curAct);
+                    if (jsx.hasKind(Exception::userException))  // snatch the exception before the stack gets clobbered
+                        x = popValue();
+                    mNamespaceList = prev->mNamespaceList;
+                    mCurModule = prev->mModule;
+                    endPC = mCurModule->mCodeBase + mCurModule->mLength;
+                    mLocals = prev->mLocals;
+                    mStack = prev->mStack;
+                    mStackMax = mCurModule->mStackDepth;
+                    mArgumentBase = prev->mArgumentBase;
+                    mThis = prev->mThis;
+                }
+                else {
+                    if (jsx.hasKind(Exception::userException))
+                        x = popValue();
+                }
+
+                // make sure there's a JS object for the catch clause to work with
+                if (!jsx.hasKind(Exception::userException)) {
+                    js2val argv[1];
+                    argv[0] = JSValue::newString(new String(jsx.fullMessage()));
+                    switch (jsx.kind) {
+                    case Exception::syntaxError:
+                        x = SyntaxError_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    case Exception::referenceError:
+                        x = ReferenceError_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    case Exception::typeError:
+                        x = TypeError_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    case Exception::rangeError:
+                        x = RangeError_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    default:
+                        x = Error_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    }
+                }
+                
+                resizeStack(hndlr->mStackSize);
+                pc = hndlr->mPC;
+                pushValue(x);
+            }
+            else
+                throw jsx; //reportError(Exception::uncaughtError, "No handler for throw");
+#endif
+        }
+
         return retval;
     }
 
