@@ -31,6 +31,7 @@
 #include "nsIScrollbarFrame.h"
 #include "nsISupportsArray.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsIDocument.h"
 
 #define TICK_FACTOR 50
 
@@ -697,4 +698,94 @@ nsXULTreeOuterGroupFrame::FindNextRowContent(PRInt32& aDelta, nsIContent* aUpwar
     FindNextRowContent(aDelta, parentContent, nsnull, aResult);
 
   // Bail. There's nothing else we can do.
+}
+
+void
+nsXULTreeOuterGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
+{
+  PRInt32 rows = GetAvailableHeight()/mRowHeight;
+  PRInt32 bottomIndex = mCurrentIndex + rows - 1;
+  
+  // if row is visible, ignore
+  if (mCurrentIndex <= aRowIndex && aRowIndex <= bottomIndex)
+    return;
+
+  // Try to center the new index.
+  PRInt32 newIndex = aRowIndex - rows/2;
+  if (newIndex < 0)
+    newIndex = 0;
+
+  PRInt32 delta = mCurrentIndex > newIndex ? mCurrentIndex - newIndex : newIndex - mCurrentIndex;
+  PRInt32 up = newIndex < mCurrentIndex;
+  mCurrentIndex = newIndex;
+  InternalPositionChanged(up, delta);
+
+  // This change has to happen immediately.
+  // Flush any pending reflow commands.
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  doc->FlushPendingNotifications();
+}
+
+// walks the DOM to get the zero-based row index of the current content
+// note that aContent can be any element, this will get the index of the
+// element's parent
+NS_IMETHODIMP
+nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
+                                      PRBool aDescendIntoRows, // Invariant
+                                      PRBool aParentIsOpen,
+                                      PRInt32 *aResult)
+{
+  PRInt32 childCount=0;
+  aRoot->ChildCount(childCount);
+
+  nsresult rv;
+  
+  PRInt32 childIndex;
+  for (childIndex=0; childIndex<childCount; childIndex++) {
+    nsCOMPtr<nsIContent> child;
+    aRoot->ChildAt(childIndex, *getter_AddRefs(child));
+    
+    nsCOMPtr<nsIAtom> childTag;
+    child->GetTag(*getter_AddRefs(childTag));
+
+    // is this it?
+    if (child.get() == aContent)
+      return NS_OK;
+
+    // we hit a treerow, count it
+    if (childTag.get() == nsXULAtoms::treeitem)
+      (*aResult)++;
+  
+    PRBool descend = PR_TRUE;
+    PRBool parentIsOpen = aParentIsOpen;
+
+    // don't descend into closed children
+    if (childTag.get() == nsXULAtoms::treechildren && !parentIsOpen)
+      descend = PR_FALSE;
+
+    // speed optimization - descend into rows only when told
+    else if (childTag.get() == nsXULAtoms::treerow && !aDescendIntoRows)
+      descend = PR_FALSE;
+
+    // descend as normally, but remember that the parent is closed!
+    else if (childTag.get() == nsXULAtoms::treeitem) {
+      nsAutoString isOpen;
+      rv = child->GetAttribute(kNameSpaceID_None, nsXULAtoms::open, isOpen);
+
+      if (!isOpen.EqualsWithConversion("true"))
+        parentIsOpen=PR_FALSE;
+    }
+
+    // now that we've analyzed the tags, recurse
+    if (descend) {
+      rv = IndexOfItem(child, aContent,
+                       aDescendIntoRows, parentIsOpen, aResult);
+      if (NS_SUCCEEDED(rv))
+        return NS_OK;
+    }
+  }
+
+  // not found
+  return NS_ERROR_FAILURE;
 }
