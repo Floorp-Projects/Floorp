@@ -237,7 +237,7 @@ NextIsRaw(struct input_callback_data *data, char **startp, int *lenp)
         
     start = *startp = data->point;
     
-    while (end < data_end && (end = strstr(start, "%}"))) {
+    while (start < data_end && (end = strstr(start, "%}"))) {
         if (end[-1] == '\r' ||
             end[-1] == '\n')
             break;
