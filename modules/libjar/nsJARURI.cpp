@@ -268,8 +268,7 @@ nsJARURI::Equals(nsIURI *other, PRBool *result)
     if (other == nsnull)
         return NS_OK;	// not equal
 
-    nsJARURI* otherJAR;
-    rv = other->QueryInterface(NS_GET_IID(nsIJARURI), (void**)&otherJAR);
+    nsCOMPtr<nsIJARURI> otherJAR(do_QueryInterface(other, &rv));
     if (NS_FAILED(rv))
         return NS_OK;   // not equal
 
