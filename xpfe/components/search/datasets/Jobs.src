@@ -1,0 +1,25 @@
+# Sherlock Plugin for Netscape Open Directory
+# Copyright (c) 1999 Netscape Communications Corp.
+# Author - Myron Rosmarin
+# 
+
+<search 
+     name        = "Jobs"
+     description = "Jobs"
+     method      = "GET"
+     action      = "http://info.netscape.com/fwd/sidb1/http://jobsearch.netscape.monster.com/jobsearch.asp"
+>
+
+<INPUT NAME="fn" VALUE="">
+<INPUT NAME="loc" VALUE="">
+<INPUT NAME="ss" VALUE="0">
+<INPUT NAME="q" user>
+
+
+<interpret
+     resultListStart = "<!-- Jobs nnn of nnn -->"
+     resultListEnd   = "<!-- Define a "previous" button if this isn't the first page -->"
+     resultItemStart = "<TR>"
+>
+
+</search>

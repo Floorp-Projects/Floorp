@@ -1,0 +1,28 @@
+# Sherlock Plugin for Netscape Open Directory
+# Copyright (c) 1999 Netscape Communications Corp.
+# Author - Myron Rosmarin
+# 
+
+<search 
+     name        = "Shareware"
+     description = "Shareware - Netscape"
+     method      = "GET"
+     action      = "http://info.netscape.com/fwd/sidb1/http://sharewaresearch.netscape.com/cgi-bin/search.cgi"
+>
+
+<INPUT NAME="keywords" user> 
+<INPUT NAME="where" VALUE="shw"> 
+<INPUT NAME="p" VALUE="PC"> 
+
+
+
+<interpret
+     resultListStart = "<B>Search Results</B>"
+     resultListEnd   = "</HTML>"
+     resultItemStart = "<TD WIDTH=30>"
+     bannerStart     = "<!-- START: AOL 468 X 60 HTML AD TOKEN"
+     bannerEnd       = "</A>"
+>
+
+</search>
+

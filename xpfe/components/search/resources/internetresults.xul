@@ -32,7 +32,7 @@
 
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance"
-				rdf:resource2="http://home.netscape.com/NC-rdf#Name" width="30px"
+				rdf:resource2="http://home.netscape.com/NC-rdf#Name"
 				style="width: 0; visibility: collapse;" />
 		<treecol id="PriceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Price"
 				rdf:resource2="http://home.netscape.com/NC-rdf#Availability"
@@ -62,14 +62,15 @@
         <treechildren>
   				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
   					<treerow>
-  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+  						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
   						<treecell>
+							<progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
   							<titledbutton align="left" crop="right" flex="1" value="rdf:http://home.netscape.com/NC-rdf#Relevance" style="list-style-image: none;" />
   						</treecell>
   						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Price" />
   						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Availability" />
   						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
-  						<treecell align="left" crop="right" class="iconic" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
+  						<treecell align="left" crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
   					</treerow>
   				</treeitem>
         </treechildren>

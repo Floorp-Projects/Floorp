@@ -1,20 +1,23 @@
-# Copyright (c)1998-1999 America Online, Inc.
+# Netscape Search - Sherlock Plug-in for Navigator 6.0 Beta 1
+# Copyright (C)2000 Netscape Communications Corp.
 
-<SEARCH
-	name = "AOLSearch"
-	description = "AOL.com Search"
-	action = "http://search.aol.com/dirsearch.adp"
-	method = get
-	routeType = internet>
-<INPUT name = "query" user>
-<INTERPRET
-	bannerStart = "<!--- END NAV BAR --->"
-	bannerEnd = "'<P><P ALIGN=Left>"
-	resultListStart = 'The following results are from the World Wide Web and may contain objectionable material that AOL does not endorse.'
-	resultListEnd = "<P ALIGN=CENTER>"
-	resultItemStart = '<P>'
-	resultItemEnd = "</I>"
-	relevanceStart = '<FONT COLOR=#990000 STYLE="font-weight:bold; font-size:12px">'
-	relevanceEnd = "</FONT>"
+<SEARCH 
+	name="AOL.COM"
+	description="AOL.COM Search"
+	method="GET"
+	action="http://info.netscape.com/fwd/sidb1aol/http://search.aol.com/dirsearch.adp"
+	routeType = internet
 >
+
+<INPUT name="query" user>
+
+<INTERPRET
+	bannerStart="<!--- END NAV BAR --->"
+	bannerEnd="<P><P ALIGN=Left>"
+	resultListStart="The following results are from the World Wide Web and may contain objectionable material that AOL does not endorse."
+	resultListEnd="<P ALIGN=CENTER>"
+	resultItemStart="<P>"
+	resultItemEnd="</I>"
+>
+
 </SEARCH>
