@@ -137,6 +137,11 @@ main(int argc, char **argv)
         char *name = argv[i];
 
         flen = get_file_length(name);
+        if (!flen) {
+            fprintf(stderr, "ERROR: file %s is zero length\n", name);
+            return 1;
+        }
+
         in = fopen(name, "rb");
         if (!in) {
             perror("FAILED: fopen");
