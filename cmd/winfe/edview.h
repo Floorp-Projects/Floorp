@@ -292,7 +292,8 @@ public:
 
     // Delete existing menu starting at iStartItem then
     //  append a new menu with current recently-edited URLs
-    void BuildEditHistoryMenu(HMENU hMenu, int iStartItem);
+    // Returns number of items added to the menu
+    int BuildEditHistoryMenu(HMENU hMenu, int iStartItem);
     
     // Trigger a mouse-move message to update the cursor
     void UpdateCursor();

@@ -4365,17 +4365,18 @@ LRESULT CNetscapeEditView::OnImeChangeComposition(HGLOBAL p_global)
 #endif //_IME_COMPOSITION
 
 
-void CNetscapeEditView::BuildEditHistoryMenu(HMENU hMenu, int iStartItem)
+int CNetscapeEditView::BuildEditHistoryMenu(HMENU hMenu, int iStartItem)
 {
     if( !hMenu )
-        return;
-    int nCount = GetMenuItemCount(hMenu);
+        return 0;
+    int iCount = GetMenuItemCount(hMenu);
     int i;
     
     // Delete existing menu
-    for( i = nCount - 1; i >= iStartItem; i-- )
+    for( i = iCount - 1; i >= iStartItem; i-- )
         DeleteMenu(hMenu, i, MF_BYPOSITION);
 
+    iCount = 0;
     char * pUrl = NULL;
     char * pMenuItem = NULL;
 	for( i = 0; i < MAX_EDIT_HISTORY_LOCATIONS; i++ )
@@ -4402,9 +4403,11 @@ void CNetscapeEditView::BuildEditHistoryMenu(HMENU hMenu, int iStartItem)
             {
                 AppendMenu(hMenu, MF_STRING, ID_EDIT_HISTORY_BASE+i, pMenuItem);
                 XP_FREE(pMenuItem);
+                iCount++;
             }
         }
     }
+    return iCount;
 }
 
 void CNetscapeEditView::OnCheckSpelling()

@@ -2248,14 +2248,16 @@ void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMe
     		hSubMenu = GetSubMenu(hMenu, i);
 		    if( hSubMenu )
             {
-                // We need to build recent files submenu only when that item is selected
-                if( i == ED_MENU_FILE && nItemID == ed_RECENTFILE_INDEX)
+                // Build recent files submenu when menu is opened so we can disable if empty
+                if( i == ED_MENU_FILE && nItemID == ED_MENU_FILE )
                 {
-                    if( bInEditMenu )
+                    if( bInFileMenu )
                         return;
                     bInFileMenu = TRUE;
                     // Build a menu of recently-edited URL titles
-                    ((CNetscapeEditView*)GetActiveView())->BuildEditHistoryMenu(::GetSubMenu(hSubMenu, ed_RECENTFILE_INDEX), 0);
+                    int iCount = ((CNetscapeEditView*)GetActiveView())->BuildEditHistoryMenu(::GetSubMenu(hSubMenu, ed_RECENTFILE_INDEX), 0);
+                    if( iCount == 0 )
+                        EnableMenuItem(hSubMenu, ed_RECENTFILE_INDEX, MF_BYPOSITION | MF_GRAYED);
                 }
                 // Checking nItemID assures we do stuff only when the popup opens first time
                 else if( i == ED_MENU_EDIT && nItemID == ED_MENU_EDIT )
