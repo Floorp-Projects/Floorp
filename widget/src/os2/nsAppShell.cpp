@@ -27,11 +27,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
-#include "nsITimer.h"
-#include "nsITimerQueue.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 // Appshell manager.  Same threads must get the same appshell object,
 // or else the message queue will be taken over by the second (nested)
@@ -153,12 +150,6 @@ nsresult nsAppShell::Run()
    NS_ADDREF_THIS();
    int  keepGoing = 1;
   
-#if 0
-   nsresult rv;
-   nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
-   if (NS_FAILED(rv)) return rv;
-#endif
-
    // Process messages
    do {
       // Give priority to system messages (in particular keyboard, mouse,
@@ -182,15 +173,6 @@ nsresult nsAppShell::Run()
             }
          }
 
-#if 0
-      // process timer queue.
-      } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
-
-         do {
-            queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
-         } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-                  !WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_NOREMOVE));
-#endif      
       } else {
          // Block and wait for any posted application message
          WinWaitMsg((HAB)0, 0, 0);
@@ -243,12 +225,6 @@ nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
 {
    PRBool gotMessage = PR_FALSE;
 
-#if 0
-   nsresult rv;
-   nsCOMPtr<nsITimerQueue> queue(do_GetService(kTimerManagerCID, &rv));
-   if (NS_FAILED(rv)) return rv;
-#endif
-
    do {
       // Give priority to system messages (in particular keyboard, mouse,
       // timer, and paint messages).
@@ -259,15 +235,6 @@ nsresult nsAppShell::GetNativeEvent( PRBool &aRealEvent, void *&aEvent)
 
         gotMessage = PR_TRUE;
 
-#if 0
-      // process timer queue.
-      } else if (queue->HasReadyTimers(NS_PRIORITY_LOWEST)) {
-
-         do {
-            queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
-         } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-                  !WinPeekMsg((HAB)0, &mQmsg, NULL, 0, 0, PM_NOREMOVE));
-#endif
       } else {
          // Block and wait for any posted application message
          WinWaitMsg((HAB)0, 0, 0);
