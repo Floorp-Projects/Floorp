@@ -103,7 +103,7 @@ extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec
 extern void SavePopData(char *data, nsIFileSpec* maildirectory);
 extern void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed);
 extern void KillPopData(char* data);
-nsIAtom* nsMsgLocalMailFolder::mCompactCompletedAtom=nsnull;
+
 //////////////////////////////////////////////////////////////////////////////
 // nsLocal
 /////////////////////////////////////////////////////////////////////////////
@@ -144,19 +144,11 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
     mCheckForNewMessagesAfterParsing(PR_FALSE), mParsingInbox(PR_FALSE)
 
 {
-  if (nsMsgDBFolder::mInstanceCount == 1)
-  {
-    mCompactCompletedAtom = NS_NewAtom("CompactCompleted");
-  }
 //  NS_INIT_REFCNT(); done by superclass
 }
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
-  if (nsMsgDBFolder::mInstanceCount ==1)
-  {
-    NS_IF_RELEASE(mCompactCompletedAtom);
-}
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)

@@ -144,7 +144,7 @@ protected:
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;
   static nsIAtom* mDeleteOrMoveMsgFailedAtom;
-
+  static nsIAtom* mCompactCompletedAtom;
 private:
   static nsrefcnt mInstanceCount;
 };
