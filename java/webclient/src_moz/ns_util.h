@@ -97,15 +97,14 @@ extern const char *gSupportedListenerInterfaces[]; // defined in ns_util.cpp
  * http://lxr.mozilla.org/mozilla/source/xpcom/threads/plevent.c#248
 
  * which simply uses nice monitors to insert the event into the provided
- * event queue, which is from NativeBrowserControl->actionQueue, which is
- * created in NativeEventThread.cpp:InitMozillaStuff().  The events are
- * processed in NativeEventThread.cpp:processEventLoop, which is called
- * from the Java NativeEventThread.run().  See the code and comments for
- * processEventLoop in NativeEventThread.cpp.
+ * event queue, which is from NativeWrapperFactory::sActionQueue.  The
+ * events are processed in NativeEventThread.cpp:processEventLoop, which
+ * is called from the Java NativeEventThread.run().  See the code and
+ * comments for processEventLoop in NativeEventThread.cpp.
 
  */
 
-void    util_PostEvent (NativeBrowserControl * initContext, PLEvent * event);
+void    util_PostEvent (PLEvent * event);
 
 
 /**
@@ -121,7 +120,7 @@ void    util_PostEvent (NativeBrowserControl * initContext, PLEvent * event);
 
  */
 
-void *  util_PostSynchronousEvent (NativeBrowserControl * initContext, PLEvent * event);
+void *  util_PostSynchronousEvent (PLEvent * event);
 
 typedef struct _wsStringStruct {
     const PRUnichar *uniStr;

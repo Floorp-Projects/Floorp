@@ -86,7 +86,6 @@ REQUIRES	= xpcom \
 	$(NULL)
 
 # BROKEN SOURCES
-#	nsActions.cpp \
 #	CBrowserContainer.cpp \
 #	PromptActionEvents.cpp  \
 #	CurrentPageActionEvents.cpp \
@@ -94,11 +93,12 @@ REQUIRES	= xpcom \
 #	HistoryActionEvents.cpp \
 #	ISupportsPeer.cpp \
 #	NativeEventThreadActionEvents.cpp \
-#	NavigationActionEvents.cpp \
 #	WindowControlActionEvents.cpp \
 #	WindowCreator.cpp \
 
 CPPSRCS = \
+	nsActions.cpp \
+	NavigationActionEvents.cpp \
 	InputStreamShim.cpp \
 	CurrentPageImpl.cpp \
 	NativeBrowserControl.cpp \

@@ -75,6 +75,8 @@ private boolean isClosed;
 
 private boolean firstRead;
 
+private boolean randomExceptions = true;
+
 /**
 
  * the number of times that read(bytearray) can be called and still get
@@ -97,9 +99,10 @@ static {
     CHARSET = charSet.getBytes();
 }
 
-public RandomHTMLInputStream(int yourNumReads)
+public RandomHTMLInputStream(int yourNumReads, boolean yourRandomExceptions)
 {
     ParameterCheck.greaterThan(yourNumReads, 1);
+    randomExceptions = yourRandomExceptions;
 
     random = new Random();
     Assert.assert_it(null != random);
@@ -255,6 +258,9 @@ public void close() throws IOException
 
 private boolean shouldThrowException()
 {
+    if (!randomExceptions) {
+        return false;
+    }
     int nextInt = random.nextInt(10000);
 
     boolean result = false;

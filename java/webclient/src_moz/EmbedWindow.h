@@ -42,6 +42,9 @@
 #include "nsString.h"
 
 class NativeBrowserControl;
+class nsIInputStream;
+class nsIURI;
+class nsIDocShellLoadInfo;
 
 #include "ns_util.h"
 
@@ -63,6 +66,11 @@ public:
 
     nsresult SelectAll       ();
     nsresult GetSelection    (JNIEnv *env, jobject selection);
+
+    nsresult LoadStream      (nsIInputStream *aStream, nsIURI * aURI,
+                              const nsACString &aContentType,
+                              const nsACString &aContentCharset,
+                              nsIDocShellLoadInfo * aLoadInfo);
     
     NS_DECL_ISUPPORTS
     

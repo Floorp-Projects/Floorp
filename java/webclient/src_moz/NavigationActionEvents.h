@@ -40,10 +40,10 @@
 #include "nsIURI.h"
 #include "ns_util.h"
 
-struct NativeBrowserControl;
+class NativeBrowserControl;
 class InputStreamShim;
 
-
+/********************
 class wsLoadURLEvent : public nsActionEvent {
 public:
                         wsLoadURLEvent (nsIWebNavigation* webNavigation, PRUnichar * urlString, PRInt32 urlLength);
@@ -55,9 +55,11 @@ protected:
         nsString    *   mURL;
 };
 
+******************/
+
 class wsLoadFromStreamEvent : public nsActionEvent {
 public:
-    wsLoadFromStreamEvent(NativeBrowserControl *yourInitContext, 
+    wsLoadFromStreamEvent(NativeBrowserControl *yourNativeBC, 
                           void *globalStream,
                           nsString &uriToCopy,
                           const char *contentTypeToCopy,
@@ -71,17 +73,18 @@ private:
 
 protected:
 
-    NativeBrowserControl *mInitContext;
+    NativeBrowserControl *mNativeBrowserControl;
     nsString mUriString;
     char *mContentType;       // MUST be delete'd in destructor
     void * mProperties;       // MUST be util_deleteGlobalRef'd in destructor.
     InputStreamShim *mShim;   // DO NOT delete this in the destructor
 };
 
+/*****************
 
 class wsPostEvent : public nsActionEvent {
 public:
-    wsPostEvent(NativeBrowserControl *yourInitContext, 
+    wsPostEvent(NativeBrowserControl *yourNativeBC, 
                 nsIURI              *absoluteUrl,
                 const PRUnichar      *targetToCopy,
                 PRInt32              targetLength,
@@ -97,7 +100,7 @@ private:
 
 protected:
 
-    NativeBrowserControl *mInitContext;
+    NativeBrowserControl *mNativeBrowserControl;
     nsCOMPtr<nsIURI>     mAbsoluteURI;          
     nsString            *mTarget;          
     const char          *mPostData;      
@@ -139,7 +142,7 @@ protected:
         jobject mUserPrompt;
 };
 
-
+*******************/
 
 #endif /* NavigationActionEvents_h___ */
 

@@ -48,9 +48,10 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 
-/*
- * wsLoadURLEvent
- */
+#include "NativeBrowserControl.h"
+#include "EmbedWindow.h"
+
+/*****************************
 
 wsLoadURLEvent::wsLoadURLEvent(nsIWebNavigation* webNavigation, PRUnichar * urlString, PRInt32 urlLength) :
         nsActionEvent(),
@@ -81,14 +82,15 @@ wsLoadURLEvent::~wsLoadURLEvent ()
     delete mURL;
 }
 
+***********************/
 
-wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourInitCx, 
+wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourNativeBC, 
                                              void *globalStream,
                                              nsString &uriToCopy,
                                              const char *contentTypeToCopy,
                                              PRInt32 contentLength, 
                                              void *globalLoadProperties) :
-    nsActionEvent(), mInitContext(yourInitCx), mUriString(uriToCopy),
+    nsActionEvent(), mNativeBrowserControl(yourNativeBC), mUriString(uriToCopy),
     mContentType(PL_strdup(contentTypeToCopy)), 
     mProperties(globalLoadProperties), mShim(nsnull)
 {
@@ -96,9 +98,9 @@ wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourInitCx,
     NS_IF_ADDREF(mShim);
 }
 
-wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourInitCx,
+wsLoadFromStreamEvent::wsLoadFromStreamEvent(NativeBrowserControl *yourNativeBC,
                                              InputStreamShim *yourShim) :
-    nsActionEvent(), mInitContext(yourInitCx), mUriString(nsnull),
+    nsActionEvent(), mNativeBrowserControl(yourNativeBC), mUriString(nsnull),
     mContentType(nsnull), mProperties(nsnull), mShim(yourShim)
 {
 }
@@ -128,8 +130,8 @@ wsLoadFromStreamEvent::handleEvent ()
     
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     
-    // we must have both mInitContext and mShim to do anything
-    if (!mInitContext || !mShim) {
+    // we must have both mNativeBrowserControl and mShim to do anything
+    if (!mNativeBrowserControl || !mShim) {
         return (void *) rv;
     }
 
@@ -162,16 +164,10 @@ wsLoadFromStreamEvent::handleEvent ()
 	printf ("debug: capelli: LoadStream - mContentType: %s  mUriString: %s\n", 
 	                                      mContentType,     mUriString.get());
 	
-        rv = mInitContext->docShell->LoadStream(mShim, uri, 
+        rv = mNativeBrowserControl->mWindow->LoadStream(mShim, uri, 
 						nsDependentCString(mContentType),
 					        NS_LITERAL_CSTRING(""),
                                                 nsnull);
-        if (mProperties) {
-            JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-            ::util_DeleteGlobalRef(env, (jobject) mProperties);
-            mProperties = nsnull;
-        }
-        
         // make it so we don't issue multiple LoadStream calls 
         // for this InputStreamShim instance.
         
@@ -182,9 +178,9 @@ wsLoadFromStreamEvent::handleEvent ()
     // if there is more data
     if (NS_OK == readFromJavaStatus){
         // and we can create a copy of ourselves
-        if (repeatEvent = new wsLoadFromStreamEvent(mInitContext, mShim)) {
+        if (repeatEvent = new wsLoadFromStreamEvent(mNativeBrowserControl, mShim)) {
             // do the loop
-            ::util_PostEvent(mInitContext, (PLEvent *) *repeatEvent);
+            ::util_PostEvent((PLEvent *) *repeatEvent);
             rv = NS_OK;
         }
         else {
@@ -204,12 +200,16 @@ wsLoadFromStreamEvent::~wsLoadFromStreamEvent ()
 {
     nsCRT::free(mContentType);
     mContentType = nsnull;
+    if (mProperties) {
+        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+        ::util_DeleteGlobalRef(env, (jobject) mProperties);
+        mProperties = nsnull;
+    }
+        
 }
 
 
-/*
- * wsPostEvent
- */
+/**********************
 wsPostEvent::wsPostEvent(NativeBrowserControl *yourInitContext, 
                          nsIURI              *absoluteUri,
                          const PRUnichar     *targetToCopy,
@@ -219,7 +219,7 @@ wsPostEvent::wsPostEvent(NativeBrowserControl *yourInitContext,
                          PRInt32              postHeadersLength,
                          const char          *postHeadersToCopy) :
     nsActionEvent(), 
-    mInitContext(yourInitContext)
+    mNativeBrowserControl(yourInitContext)
 {
   mAbsoluteURI = absoluteUri;
   if (targetToCopy != nsnull){
@@ -253,8 +253,8 @@ wsPostEvent::handleEvent ()
 {
   nsresult rv = NS_ERROR_FAILURE;
     
-  // we must have mInitContext to do anything
-  if (!mInitContext) {
+  // we must have mNativeBrowserControl to do anything
+  if (!mNativeBrowserControl) {
       return (void *) rv;
   }
   nsCOMPtr<nsIPresContext> presContext;
@@ -265,7 +265,7 @@ wsPostEvent::handleEvent ()
   nsCOMPtr<nsILinkHandler> lh;
   nsCOMPtr<nsIInputStream> result;
   
-  rv = mInitContext->docShell->GetPresShell(getter_AddRefs(presShell));
+  rv = mNativeBrowserControl->docShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(rv) || !presShell) {
       return (void *) rv;
   }
@@ -280,7 +280,7 @@ wsPostEvent::handleEvent ()
       return (void *) rv;
   }
 
-  rv = mInitContext->docShell->GetPresContext(getter_AddRefs(presContext));
+  rv = mNativeBrowserControl->docShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(rv) || !presContext) {
       return (void *) rv;
   }
@@ -295,7 +295,6 @@ wsPostEvent::handleEvent ()
   if (!lh) {
       return (void *) rv;
   }
-  */
 
   rv = presContext->GetLinkHandler(getter_AddRefs(lh));
   if (NS_FAILED(rv) || (!lh)) {
@@ -342,10 +341,6 @@ wsPostEvent::~wsPostEvent ()
 }
 
 
-/*
- * wsStopEvent
- */
-
 wsStopEvent::wsStopEvent(nsIWebNavigation* webNavigation) :
         nsActionEvent(),
         mWebNavigation(webNavigation)
@@ -366,9 +361,6 @@ wsStopEvent::handleEvent ()
 
 // Added by Mark Goddard OTMP 9/2/1999
 
-/*
- * wsRefreshEvent
- */
 
 wsRefreshEvent::wsRefreshEvent(nsIWebNavigation* webNavigation, PRInt32 reloadType) :
         nsActionEvent(),
@@ -408,3 +400,5 @@ wsSetPromptEvent::handleEvent ()
         }
         return nsnull;
 } // handleEvent()
+
+**********************/

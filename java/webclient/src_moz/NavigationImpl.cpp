@@ -38,6 +38,7 @@
 #include "nsNetCID.h"
 
 #include "NativeBrowserControl.h"
+#include "NavigationActionEvents.h"
 #include "ns_util.h"
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeLoadURL
@@ -84,8 +85,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     ::util_ReleaseStringChars(env, urlString, (const jchar *) urlStringChars);
 }
 
-    /**********************
-
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_NavigationImpl_nativeLoadFromStream
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jobject stream, jstring uri, 
  jstring contentType, jint contentLength, jobject loadProperties)
@@ -117,7 +116,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         goto NLFS_CLEANUP;
     }
     
-    // the deleteGlobalRef is done in the wsLoadFromStream destructor
+    // the deleteGlobalRef is done in the InputStreamShim destructor
     if (!(globalStream = ::util_NewGlobalRef(env, stream))) {
         ::util_ThrowExceptionToJava(env, "Exception: nativeLoadFromStream: unable to create gloabal ref to stream");
         goto NLFS_CLEANUP;
@@ -142,7 +141,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
         ::util_ThrowExceptionToJava(env, "Exception: nativeLoadFromStream: can't create wsLoadFromStreamEvent");
         goto NLFS_CLEANUP;
     }
-    ::util_PostSynchronousEvent(nativeBrowserControl, (PLEvent *) *actionEvent);
+    ::util_PostSynchronousEvent((PLEvent *) *actionEvent);
 
  NLFS_CLEANUP:
     ::util_ReleaseStringChars(env, uri, (const jchar *) uriStringUniChars);
@@ -152,6 +151,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Navigatio
     // note, the deleteGlobalRef for loadProperties happens in the
     // wsLoadFromStreamEvent destructor.
 }
+
+    /**********************
 
 
 

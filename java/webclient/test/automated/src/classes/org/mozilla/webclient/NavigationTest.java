@@ -1,5 +1,5 @@
 /*
- * $Id: NavigationTest.java,v 1.4 2004/04/28 14:39:54 edburns%acm.org Exp $
+ * $Id: NavigationTest.java,v 1.5 2004/04/28 16:40:15 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -89,11 +89,12 @@ public class NavigationTest extends WebclientTestCase {
 	assertTrue(-1 != selection.toString().indexOf("This test file is for the NavigationTest."));
 	System.out.println("Selection is: " + selection.toString());
 
-	/*********
-	RandomHTMLInputStream rhis = new RandomHTMLInputStream(3);
+	RandomHTMLInputStream rhis = new RandomHTMLInputStream(5, false);
 	nav.loadFromStream(rhis, "http://randomstream.com/",
 			   "text/html", -1, null);
-	************/
+	selection = currentPage.getSelection();
+	System.out.println("Selection is: " + selection.toString());
+
 	frame.setVisible(false);
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
 	BrowserControlFactory.appTerminate();

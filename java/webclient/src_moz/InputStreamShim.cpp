@@ -51,9 +51,13 @@ InputStreamShim::~InputStreamShim()
 
     mContentLength = -1;
 
+    PR_Lock(mLock);
+
     delete [] mBuffer;
     mBuffer = nsnull;
     mBufferLength = 0;
+
+    PR_Unlock(mLock);
 
     mAvailable = 0;
     mAvailableForMozilla = 0;

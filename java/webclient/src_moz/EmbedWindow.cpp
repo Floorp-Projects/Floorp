@@ -40,6 +40,9 @@
 #include "nsIContentViewerEdit.h"
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIInputStream.h"
+#include "nsIURI.h"
+#include "nsIDocShellLoadInfo.h"
 
 
 #include "NativeBrowserControl.h"
@@ -265,6 +268,20 @@ EmbedWindow::GetSelection(JNIEnv *env, jobject mSelection)
                          (jint)startOffset, (jint)endOffset);
     
     return NS_OK;
+}
+
+nsresult 
+EmbedWindow::LoadStream(nsIInputStream *aStream, nsIURI * aURI,
+                        const nsACString &aContentType,
+                        const nsACString &aContentCharset,
+                        nsIDocShellLoadInfo * aLoadInfo) 
+{
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebBrowser);
+    if (!docShell) {
+        return NS_ERROR_FAILURE;
+    }
+    return docShell->LoadStream(aStream, aURI, aContentType, aContentCharset,
+                                aLoadInfo);
 }
 
 // nsISupports

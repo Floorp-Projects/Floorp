@@ -57,7 +57,7 @@ const char *gSupportedListenerInterfaces[] = {
     nsnull
 };
 
-void util_PostEvent(NativeBrowserControl * initContext, PLEvent * event)
+void util_PostEvent(PLEvent * event)
 {
     PL_ENTER_EVENT_QUEUE_MONITOR(NativeWrapperFactory::sActionQueue);
   
@@ -67,7 +67,7 @@ void util_PostEvent(NativeBrowserControl * initContext, PLEvent * event)
 } // PostEvent()
 
 
-void *util_PostSynchronousEvent(NativeWrapperFactory * initContext, PLEvent * event)
+void *util_PostSynchronousEvent(PLEvent * event)
 {
     void    *       voidResult = nsnull;
 
