@@ -35,6 +35,9 @@ CHROME_CONTENT = \
 		EditorCommands.js \
 		ComposerCommands.js \
 		EditorCommandsDebug.js \
+		EditorCommandsOverlay.xul \
+		EditorContextMenu.js \
+		EditorContextMenuOverlay.xul \
 		TextEditorAppShell.xul \
 		EditorInitPage.html \
 		EditorInitPagePlain.html \
