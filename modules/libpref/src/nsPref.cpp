@@ -1164,12 +1164,17 @@ extern "C" NS_EXPORT nsresult NSGetFactory(
 
     if (aClass.Equals(kPrefCID))
     {
+        nsresult res = NS_OK;
         nsPrefFactory *factory = new nsPrefFactory();
-        nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
-        if (NS_FAILED(res))
-        {
-            *aFactory = NULL;
-            delete factory;
+        if (factory) {
+            res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
+            if (NS_FAILED(res))
+            {
+                *aFactory = NULL;
+                delete factory;
+            }
+        } else {
+            res = NS_ERROR_OUT_OF_MEMORY;
         }
         return res;
     }
