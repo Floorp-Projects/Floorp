@@ -44,10 +44,12 @@ nsJSDOMEventListener::nsJSDOMEventListener(nsIScriptContext* aContext,
     mHandler(aHandler)
 {
   NS_INIT_REFCNT();
+  aContext->AddNamedReference(&mHandler, mHandler, "nsJSDOMEventListener.mHandler");
 }
 
 nsJSDOMEventListener::~nsJSDOMEventListener() 
 {
+  mContext->RemoveReference(&mHandler, mHandler);
 }
 
 nsresult nsJSDOMEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
