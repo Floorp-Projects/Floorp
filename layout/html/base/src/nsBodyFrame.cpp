@@ -38,19 +38,14 @@
 #include "nsHTMLTagContent.h"
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
-nsresult nsBodyFrame::NewFrame(nsIFrame** aInstancePtrResult,
-                               nsIContent* aContent,
-                               nsIFrame*   aParent)
+nsresult
+NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsIFrame* it = new nsBodyFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aInstancePtrResult = it;
+  aResult = it;
   return NS_OK;
 }
 

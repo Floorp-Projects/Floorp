@@ -33,9 +33,8 @@ class nsBodyFrame : public nsHTMLContainerFrame,
                     public nsIAbsoluteItems
 {
 public:
-  static nsresult NewFrame(nsIFrame** aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
+  friend nsresult NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent,
+                                  nsIFrame*& aResult);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
