@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim:expandtab:shiftwidth=2:tabstop=3:
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:expandtab:shiftwidth=2:tabstop=2:
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -389,8 +389,8 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     // Firstly, get the content-disposition header
     nsCAutoString disp;
     ExtractDisposition(channel, disp);
+    nsAutoString filename;
     if (!disp.IsEmpty()) {
-      nsAutoString filename;
       GetFilenameFromDisposition(filename, disp, uri);
       if (!filename.IsEmpty()) {
         LOG(("Getting filename from disposition: Disp='%s', filename='%s'\n",
@@ -406,8 +406,8 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
 
     // If the method is post, don't bother getting the file extension;
     // it will belong to a CGI script anyway
-    // Also, if we already have an extension, don't bother
-    if (uri && !methodIsPost && fileExtension.IsEmpty()) {
+    // Also, if we had a Content-Disposition header, don't bother
+    if (uri && !methodIsPost && filename.IsEmpty()) {
       nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
 
       if (url) {
