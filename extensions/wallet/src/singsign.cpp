@@ -1582,6 +1582,7 @@ SI_LoadSignonData() {
   nsInputFileStream strm(dirSpec+signonFileName);
 
   if (!strm.is_open()) {
+    si_PartiallyLoaded = PR_TRUE;
     return 0;
   }
 
