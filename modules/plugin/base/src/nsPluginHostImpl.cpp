@@ -3351,13 +3351,27 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     }
   }
 
+  // Determine if the scheme of this URL is one we can handle internaly because we should
+  // only open the initial stream if it's one that we can handle internally. Otherwise
+  // |NS_OpenURI| in |InstantiateEmbededPlugin| may open up a OS protocal registered helper app
+  PRBool bCanHandleInternally = PR_FALSE;
+  nsXPIDLCString scheme;
+  if (aURL && NS_SUCCEEDED(aURL->GetScheme(getter_Copies(scheme)))) {
+      nsCAutoString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
+      contractID += scheme;
+      ToLowerCase(contractID);
+      nsCOMPtr<nsIProtocolHandler> handler = do_GetService(contractID.get());
+      if (handler)
+        bCanHandleInternally = PR_TRUE;
+  }
+
   if(FindStoppedPluginForURL(aURL, aOwner) == NS_OK) {
 
     PLUGIN_LOG(PLUGIN_LOG_NOISY, 
     ("nsPluginHostImpl::InstatiateEmbededPlugin FoundStopped mime=%s\n", aMimeType));
 
     aOwner->GetInstance(instance);
-    if(!aMimeType || !isJava)
+    if((!aMimeType || !isJava) && bCanHandleInternally)
       rv = NewEmbededPluginStream(aURL, nsnull, instance);
 
     // notify Java DOM component 
@@ -3374,12 +3388,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   // if we don't have a MIME type at this point, we still have one more chance by 
   // opening the stream and seeing if the server hands one back 
   if (!aMimeType)
-    if (aURL)
-    {
-       rv = NewEmbededPluginStream(aURL, aOwner, nsnull);
-       return rv;
-    } else
-       return NS_ERROR_FAILURE;
+    return bCanHandleInternally ? NewEmbededPluginStream(aURL, aOwner, nsnull) : NS_ERROR_FAILURE;
 
   rv = SetUpPluginInstance(aMimeType, aURL, aOwner);
 
@@ -3455,7 +3464,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
         havedata = NS_SUCCEEDED(pti->GetAttribute("DATA", &value));
     }
 
-    if(havedata && !isJava)
+    if(havedata && !isJava && bCanHandleInternally)
       rv = NewEmbededPluginStream(aURL, nsnull, instance);
 
     // notify Java DOM component 
