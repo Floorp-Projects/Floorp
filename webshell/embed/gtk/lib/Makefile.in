@@ -98,7 +98,7 @@ ZLIB_LIBS = -lz
 
 TIMER_LIBS = -ltimer_s
 
-BASE_LIBS =          -lmozreg                -lmozjs 		$(TIMER_LIBS)         -lxpcom              -lmozutil         $(NULL)
+BASE_LIBS =          -lmozjs 		$(TIMER_LIBS)         -lxpcom              -lmozutil         $(NULL)
 
 
 GECKO_LIBS =  		-lraptorgfx 		-ljsdom 		-ljsurl 		$(NULL)
