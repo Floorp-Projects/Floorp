@@ -3057,7 +3057,7 @@ net_ReadCookiePermissions(char * filename)
         host = buffer;
         // isolate the host field which is the first field on the line 
         if( !(p = PL_strchr(host, '\t')) ) {
-            continue; /* no permission field 
+            continue; / * no permission field * /
         }
         *p++ = '\0';
         if(*p == CR || *p == LF || *p == 0) {
