@@ -1374,8 +1374,8 @@ HTMLAttributesImpl::GetAttribute(nsIAtom* aAttrName,
 NS_IMETHODIMP_(PRBool)
 HTMLAttributesImpl::HasAttribute(nsIAtom* aAttrName) const
 {
-  if (mMapped)
-    return mMapped->HasAttribute(aAttrName);
+  if (mMapped && mMapped->HasAttribute(aAttrName))
+    return PR_TRUE;
 
   const HTMLAttribute*  attr = HTMLAttribute::FindHTMLAttribute(aAttrName, mFirstUnmapped);
   return attr != nsnull;
