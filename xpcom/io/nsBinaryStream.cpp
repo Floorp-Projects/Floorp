@@ -76,31 +76,9 @@ nsBinaryOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRU
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsBinaryOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsBinaryOutputStream::SetNonBlocking(PRBool aNonBlocking)
-{
-    NS_NOTREACHED("SetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsBinaryOutputStream::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsBinaryOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mOutputStream->IsNonBlocking(aNonBlocking);
 }
 
 nsresult
@@ -321,24 +299,9 @@ nsBinaryInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUi
 }
 
 NS_IMETHODIMP
-nsBinaryInputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsBinaryInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsBinaryInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsBinaryInputStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mInputStream->IsNonBlocking(aNonBlocking);
 }
 
 NS_IMETHODIMP

@@ -41,9 +41,7 @@ public:
 	NS_IMETHOD Available(PRUint32 *_retval);
 	NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *_retval);
 	NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval);
-	NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
-	NS_IMETHOD GetObserver(nsIInputStreamObserver * *aObserver);
-	NS_IMETHOD SetObserver(nsIInputStreamObserver * aObserver);
+	NS_IMETHOD IsNonBlocking(PRBool *aNonBlocking);
 };
 
 
@@ -113,47 +111,18 @@ PyG_nsIInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUin
 }
 
 NS_IMETHODIMP
-PyG_nsIInputStream::GetNonBlocking(PRBool *aNonBlocking)
+PyG_nsIInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
 	NS_PRECONDITION(aNonBlocking, "null pointer");
 	CEnterLeavePython _celp;
 	PyObject *ret;
-	const char *propName = "nonBlocking";
-	nsresult nr = InvokeNativeGetViaPolicy(propName, &ret);
+	const char *methodName = "isNonBlocking";
+	nsresult nr = InvokeNativeViaPolicy(methodName, &ret);
 	if (NS_SUCCEEDED(nr)) {
 		*aNonBlocking = PyInt_AsLong(ret);
 		if (PyErr_Occurred())
-			nr = HandleNativeGatewayError(propName);
+			nr = HandleNativeGatewayError(methodName);
 		Py_XDECREF(ret);
 	}
-	return nr;
-}
-
-NS_IMETHODIMP
-PyG_nsIInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-	NS_PRECONDITION(aObserver, "null pointer");
-	CEnterLeavePython _celp;
-	PyObject *ret;
-	const char *propName = "observer";
-	nsresult nr = InvokeNativeGetViaPolicy(propName, &ret);
-	if (NS_SUCCEEDED(nr)) {
-		Py_nsISupports::InterfaceFromPyObject(ret, NS_GET_IID(nsIInputStreamObserver), (nsISupports **)aObserver, PR_FALSE);
-		if (PyErr_Occurred())
-			nr = HandleNativeGatewayError(propName);
-	}
-	return nr;
-}
-
-NS_IMETHODIMP
-PyG_nsIInputStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-	CEnterLeavePython _celp;
-	const char *propName = "observer";
-	PyObject *obObserver = MakeInterfaceParam(aObserver, &NS_GET_IID(nsIInputStreamObserver));
-	if (obObserver==NULL)
-		return HandleNativeGatewayError(propName);
-	nsresult nr = InvokeNativeSetViaPolicy(propName, obObserver);
-	Py_DECREF(obObserver);
 	return nr;
 }

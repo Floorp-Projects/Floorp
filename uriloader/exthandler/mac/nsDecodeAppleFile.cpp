@@ -191,24 +191,9 @@ NS_IMETHODIMP nsDecodeAppleFile::WriteSegments(nsReadSegmentFun reader, void * c
   return m_output->WriteSegments(reader, closure, count, _retval);
 }
 
-NS_IMETHODIMP nsDecodeAppleFile::GetNonBlocking(PRBool *aNonBlocking)
+NS_IMETHODIMP nsDecodeAppleFile::IsNonBlocking(PRBool *aNonBlocking)
 {
-  return m_output->GetNonBlocking(aNonBlocking);
-}
-
-NS_IMETHODIMP nsDecodeAppleFile::SetNonBlocking(PRBool aNonBlocking)
-{
-  return m_output->SetNonBlocking(aNonBlocking);
-}
-
-NS_IMETHODIMP nsDecodeAppleFile::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-  return m_output->GetObserver(aObserver);
-}
-
-NS_IMETHODIMP nsDecodeAppleFile::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-  return m_output->SetObserver(aObserver);
+  return m_output->IsNonBlocking(aNonBlocking);
 }
 
 NS_IMETHODIMP nsDecodeAppleFile::Write(const char *buffer, PRUint32 bufferSize, PRUint32* writeCount)

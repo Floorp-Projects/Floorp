@@ -711,25 +711,11 @@ nsStorageTransport::nsReadRequest::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-nsStorageTransport::nsReadRequest::GetNonBlocking(PRBool *aNonBlocking)
+nsStorageTransport::nsReadRequest::IsNonBlocking(PRBool *aNonBlocking)
 {
     NS_ENSURE_ARG_POINTER(aNonBlocking);
     *aNonBlocking = PR_FALSE;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStorageTransport::nsReadRequest::GetObserver(nsIInputStreamObserver **aObserver)
-{
-    NS_ENSURE_ARG_POINTER(aObserver);
-    *aObserver = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStorageTransport::nsReadRequest::SetObserver(nsIInputStreamObserver *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //----------------------------------------------------------------------------
@@ -791,25 +777,11 @@ nsStorageTransport::nsInputStream::ReadSegments(nsWriteSegmentFun aWriter,
 }
 
 NS_IMETHODIMP
-nsStorageTransport::nsInputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsStorageTransport::nsInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     NS_ENSURE_ARG_POINTER(aNonBlocking);
     *aNonBlocking = PR_TRUE;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStorageTransport::nsInputStream::GetObserver(nsIInputStreamObserver **aObserver)
-{
-    NS_ENSURE_ARG_POINTER(aObserver);
-    *aObserver = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStorageTransport::nsInputStream::SetObserver(nsIInputStreamObserver *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //----------------------------------------------------------------------------
@@ -901,29 +873,9 @@ nsStorageTransport::nsOutputStream::WriteSegments(nsReadSegmentFun aReader,
 }
 
 NS_IMETHODIMP
-nsStorageTransport::nsOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsStorageTransport::nsOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     NS_ENSURE_ARG_POINTER(aNonBlocking);
     *aNonBlocking = PR_FALSE;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStorageTransport::nsOutputStream::SetNonBlocking(PRBool aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsStorageTransport::nsOutputStream::GetObserver(nsIOutputStreamObserver **aObserver)
-{
-    NS_ENSURE_ARG_POINTER(aObserver);
-    *aObserver = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStorageTransport::nsOutputStream::SetObserver(nsIOutputStreamObserver *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }

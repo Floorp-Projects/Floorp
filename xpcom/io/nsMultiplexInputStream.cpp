@@ -287,7 +287,7 @@ nsMultiplexInputStream::ReadSegCb(nsIInputStream* aIn, void* aClosure,
 
 /* readonly attribute boolean nonBlocking; */
 NS_IMETHODIMP
-nsMultiplexInputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsMultiplexInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     nsresult rv;
     PRUint32 i, len;
@@ -295,25 +295,13 @@ nsMultiplexInputStream::GetNonBlocking(PRBool *aNonBlocking)
     mStreams.Count(&len);
     for (i = 0; i < len; ++i) {
         nsCOMPtr<nsIInputStream> stream(do_QueryElementAt(&mStreams, i));
-        rv = stream->GetNonBlocking(aNonBlocking);
+        rv = stream->IsNonBlocking(aNonBlocking);
         NS_ENSURE_SUCCESS(rv, rv);
         // If one is non-blocking the entire stream becomes non-blocking
         if (*aNonBlocking)
             return NS_OK;
     }
     return NS_OK;
-}
-
-/* attribute nsIInputStreamObserver observer; */
-NS_IMETHODIMP
-nsMultiplexInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP
-nsMultiplexInputStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void seek (in PRInt32 whence, in PRInt32 offset); */

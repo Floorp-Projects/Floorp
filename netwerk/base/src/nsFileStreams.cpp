@@ -594,24 +594,10 @@ nsFileInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint
 }
 
 NS_IMETHODIMP
-nsFileInputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsFileInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileInputStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_FALSE;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -712,30 +698,10 @@ nsFileOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUin
 }
 
 NS_IMETHODIMP
-nsFileOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsFileOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFileOutputStream::SetNonBlocking(PRBool aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileOutputStream::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsFileOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -129,6 +129,8 @@ XPIDLSRCS	= \
 		nsIStorageStream.idl \
 		nsIStreamBufferAccess.idl \
 		nsIStringStream.idl \
+		nsIObservableInputStream.idl \
+		nsIObservableOutputStream.idl \
 		$(NULL)
 
 SDK_XPIDLSRCS   = \

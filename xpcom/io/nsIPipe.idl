@@ -43,18 +43,31 @@ interface nsIInputStream;
 interface nsIOutputStream;
 
 [scriptable, uuid(f4211abc-61b3-11d4-9877-00c04fa0cf4a)]
-interface nsIPipe : nsISupports {
+interface nsIPipe : nsISupports
+{
+    /**
+     * initialize this pipe
+     */
     void initialize(in unsigned long segmentSize,
                     in unsigned long maxSize,
                     in boolean nonBlockingInput,
                     in boolean nonBlockingOutput,
                     in nsIMemory segmentAllocator);
+
+    /**
+     * supports nsIObservableInputStream and nsISearchableInputStream
+     */
     readonly attribute nsIInputStream inputStream;
+
+    /**
+     * supports nsIObservableOutputStream
+     */
     readonly attribute nsIOutputStream outputStream;
 };
 
 [scriptable, uuid(8C39EF62-F7C9-11d4-98F5-001083010E9B)] 
-interface nsISearchableInputStream : nsISupports {
+interface nsISearchableInputStream : nsISupports
+{
     /**
      * Searches for a string in the input stream. Since the stream has a notion
      * of EOF, it is possible that the string may at some time be in the 

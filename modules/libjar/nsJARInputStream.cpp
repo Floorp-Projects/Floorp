@@ -71,7 +71,10 @@ nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint3
    *_retval = 0;
    if (NS_SUCCEEDED(rv)) {
      rv = writer(this, closure, readBuf, 0, nBytes, _retval);
-     NS_ASSERTION(nBytes == *_retval, "Didn't write all Data.");
+
+     // XXX _retval may be less than nBytes!!  This is the wrong
+     // way to synthesize ReadSegments.
+     NS_ASSERTION(*_retval == nBytes, "data loss");
    }
  
    nsMemory::Free(readBuf);
@@ -79,24 +82,10 @@ nsJARInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint3
 }
 
 NS_IMETHODIMP
-nsJARInputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsJARInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJARInputStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

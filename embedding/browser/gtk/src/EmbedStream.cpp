@@ -68,12 +68,9 @@ EmbedStream::Init(void)
 
   if (NS_FAILED(rv)) return rv;
   
-  mInputStream  = do_QueryInterface(bufInStream, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  mOutputStream = do_QueryInterface(bufOutStream, &rv);
-  return rv;
+  mInputStream  = bufInStream;
+  mOutputStream = bufOutStream;
+  return NS_OK;
 }
 
 NS_METHOD
@@ -271,6 +268,10 @@ EmbedStream::ReadSegments(nsWriteSegmentFun aWriter, void * aClosure,
   if (NS_SUCCEEDED(rv)) {
     PRUint32 writeCount = 0;
     rv = aWriter(this, aClosure, readBuf, 0, nBytes, &writeCount);
+
+    // XXX writeCount may be less than nBytes!!  This is the wrong
+    // way to synthesize ReadSegments.
+    NS_ASSERTION(writeCount == nBytes, "data loss");
   }
 
   nsMemory::Free(readBuf);
@@ -279,22 +280,7 @@ EmbedStream::ReadSegments(nsWriteSegmentFun aWriter, void * aClosure,
 }
 
 NS_IMETHODIMP
-EmbedStream::GetNonBlocking(PRBool *aNonBlocking)
+EmbedStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-EmbedStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-EmbedStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return mInputStream->IsNonBlocking(aNonBlocking);
 }

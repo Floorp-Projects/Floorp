@@ -121,17 +121,8 @@ private:
                                   PRUint32         count,
                                   PRUint32 *       result);
 
-         NS_IMETHOD GetNonBlocking(PRBool * nonBlocking)
-         { return mOutput->GetNonBlocking(nonBlocking); }
-
-         NS_IMETHOD SetNonBlocking(PRBool nonBlocking)
-         { return mOutput->SetNonBlocking(nonBlocking); }
-
-         NS_IMETHOD GetObserver(nsIOutputStreamObserver ** observer)
-         { return mOutput->GetObserver(observer); }
-
-         NS_IMETHOD SetObserver(nsIOutputStreamObserver * observer)
-         { return mOutput->SetObserver(observer); }
+         NS_IMETHOD IsNonBlocking(PRBool * nonBlocking)
+         { return mOutput->IsNonBlocking(nonBlocking); }
 
          nsOutputStreamWrapper(nsCacheEntryDescriptor * descriptor,
                                nsIOutputStream *        output)

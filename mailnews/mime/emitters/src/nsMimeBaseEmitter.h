@@ -44,6 +44,8 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIObservableInputStream.h"
+#include "nsIObservableOutputStream.h"
 #include "nsIURI.h"
 #include "nsIPref.h"
 #include "nsIChannel.h"

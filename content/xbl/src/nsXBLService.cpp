@@ -500,16 +500,9 @@ public:
     return rv;
   }
 
-  NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  NS_IMETHOD GetObserver(nsIInputStreamObserver * *aObserver) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  NS_IMETHOD SetObserver(nsIInputStreamObserver * aObserver) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_IMETHOD IsNonBlocking(PRBool *aNonBlocking) {
+    *aNonBlocking = PR_TRUE;
+    return NS_OK;
   }
 
   // Implementation

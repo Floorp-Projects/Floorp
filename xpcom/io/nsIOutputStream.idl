@@ -19,7 +19,8 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Warren Harris <warren@netscape.com>
+ *                 Darin Fisher <darin@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -36,101 +37,126 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+
 interface nsIOutputStream;
-interface nsIOutputStreamObserver;
 interface nsIInputStream;
 
 %{C++
 /**
- * The signature for the reader function passed to WriteSegment. This 
- * specifies where the data should come from that gets written into the buffer.
+ * The signature for the reader function passed to WriteSegments. This 
+ * is the "provider" of data that gets written into the stream's buffer.
+ *
+ * @param aOutStream stream being written to
+ * @param aClosure opaque parameter passed to WriteSegments
+ * @param aToSegment pointer to memory owned by the output stream
+ * @param aFromOffset amount already written (since WriteSegments was called)
+ * @param aCount length of toSegment
+ * @param aReadCount number of bytes written
+ *
  * Implementers should return the following:
- * @return NS_OK and readCount > 0 - if successfully read something
- * @return NS_OK and readCount == 0 - if no more to read (EOF)
- * @return NS_BASE_STREAM_WOULD_BLOCK - if there is currently no data (in
- *   a non-blocking mode)
- * @return <other-error> - on failure
+ *
+ * @return NS_OK and (*aReadCount > 0) if successfully provided some data
+ * @return NS_OK and (*aReadCount = 0) or
+ * @return NS_BASE_STREAM_WOULD_BLOCK if not interested in providing any data
+ * @return <other-error> on failure
+ *
+ * Errors are passed to the caller of WriteSegments, unless aFromOffset is
+ * greater than zero.
+ *
+ * @status UNDER_REVIEW
  */
-typedef NS_CALLBACK(nsReadSegmentFun)(nsIOutputStream* out,
-                                      void* closure,
-                                      char* toRawSegment,
-                                      PRUint32 fromOffset,
-                                      PRUint32 count,
-                                      PRUint32 *readCount);
+typedef NS_CALLBACK(nsReadSegmentFun)(nsIOutputStream *aOutStream,
+                                      void *aClosure,
+                                      char *aToSegment,
+                                      PRUint32 aFromOffset,
+                                      PRUint32 aCount,
+                                      PRUint32 *aReadCount);
 %}
 
 native nsReadSegmentFun(nsReadSegmentFun);
 
+/**
+ * nsIOutputStream
+ *
+ * @status UNDER_REVIEW
+ */
 [scriptable, uuid(0d0acd2a-61b4-11d4-9877-00c04fa0cf4a)]
 interface nsIOutputStream : nsISupports
 {
     /** 
-     * Closes the stream. 
+     * Close the stream. Forces the output stream to flush any buffered data.
+     *
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if unable to flush without blocking 
+     *   the calling thread (non-blocking mode only)
      */
     void close();
 
     /**
-     * Flushes the stream.
+     * Flush the stream.
+     *
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if unable to flush without blocking 
+     *   the calling thread (non-blocking mode only)
      */
     void flush();
 
-    /** Write data into the stream.
-     *  @param aBuf the buffer from which the data is read
-     *  @param aCount the maximum number of bytes to write
-     *  @return aWriteCount out parameter to hold the number of
-     *         bytes written. if an error occurs, the writecount
-     *         is undefined
+    /**
+     * Write data into the stream.
+     *
+     * @param aBuf the buffer containing the data to be written
+     * @param aCount the maximum number of bytes to be written
+     *
+     * @return number of bytes written
+     *
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if writing to the output stream would
+     *   block the calling thread (non-blocking mode only)
+     * @throws <other-error> on failure
      */
-    unsigned long write(in string buf, in unsigned long count);
+    unsigned long write(in string aBuf, in unsigned long aCount);
 
     /**
      * Writes data into the stream from an input stream.
-     * Implementer's note: This method is defined by this interface in order
-     * to allow the output stream to efficiently copy the data from the input
-     * stream into its internal buffer (if any). If this method was provide
-     * as an external facility, a separate char* buffer would need to be used
-     * in order to call the output stream's other Write method.
-     * @param fromStream the stream from which the data is read
-     * @param count the maximun number of bytes to write
-     * @return aWriteCount out parameter to hold the number of
-     *         bytes written. if an error occurs, the writecount
-     *         is undefined
+     *
+     * @param aFromStream the stream containing the data to be written
+     * @param aCount the maximum number of bytes to be written
+     *
+     * @return number of bytes written
+     *
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if writing to the output stream would
+     *    block the calling thread (non-blocking mode only)
+     * @throws <other-error> on failure
+     *
+     * NOTE: This method is defined by this interface in order to allow the
+     * output stream to efficiently copy the data from the input stream into
+     * its internal buffer (if any). If this method was provided as an external
+     * facility, a separate char* buffer would need to be used in order to call
+     * the output stream's other Write method.
      */
-    unsigned long writeFrom(in nsIInputStream inStr,
-                            in unsigned long count);
+    unsigned long writeFrom(in nsIInputStream aFromStream,
+                            in unsigned long aCount);
 
     /**
      * Low-level write method that has access to the stream's underlying buffer. The
      * reader function may be called multiple times for segmented buffers.
+     *
+     * @param aReader the "provider" of the data to be written
+     * @param aClosure opaque parameter passed to reader
+     * @param aCount the maximum number of bytes to be written
+     *
+     * @return number of bytes written
+     *
+     * @throws NS_BASE_STREAM_WOULD_BLOCK if writing to the output stream would
+     *    block the calling thread (non-blocking mode only)
+     * @throws <other-error> on failure
+     *
+     * NOTE: this function may be unimplemented if a stream has no underlying
+     * buffer (e.g., socket output stream).
      */
-    [noscript] unsigned long writeSegments(in nsReadSegmentFun reader,
-                                           in voidPtr closure,
-                                           in unsigned long count);
-    /**
-     * Set this attribute to put the stream in non-blocking mode.
-     */
-    attribute boolean nonBlocking;
+    [noscript] unsigned long writeSegments(in nsReadSegmentFun aReader,
+                                           in voidPtr aClosure,
+                                           in unsigned long aCount);
 
     /**
-     * Allows users to set an observer on an output stream to receive notifications
-     * about the producer writing data into the output stream, or filling the buffer.
-     * This is necessary for non-blocking streams so that the consumer can suspend
-     * itself until more data is available.
+     * @return true if stream is non-blocking
      */
-    attribute nsIOutputStreamObserver observer;
-};
-
-[scriptable, uuid(12314194-61b4-11d4-9877-00c04fa0cf4a)]
-interface nsIOutputStreamObserver : nsISupports
-{
-    /**
-     * Called when the output stream's producer has written more data into the stream.
-     */
-    void onWrite(in nsIOutputStream outStr, 
-                 in unsigned long amount);
-
-    /**
-     * Called when the stream's underlying buffer becomes full.
-     */
-    void onFull(in nsIOutputStream outStr);
+    boolean isNonBlocking();
 };

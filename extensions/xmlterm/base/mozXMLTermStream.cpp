@@ -560,22 +560,8 @@ mozXMLTermStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint3
 }
 
 NS_IMETHODIMP
-mozXMLTermStream::GetNonBlocking(PRBool *aNonBlocking)
+mozXMLTermStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-mozXMLTermStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-mozXMLTermStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_TRUE;
+    return NS_OK;
 }

@@ -101,14 +101,8 @@ public:
         mLastError = rv;
         return rv;
     }
-    NS_IMETHOD GetNonBlocking(PRBool *aValue) {
-        return mSource->GetNonBlocking(aValue);
-    }
-    NS_IMETHOD GetObserver(nsIInputStreamObserver **aObserver) {
-        return mSource->GetObserver(aObserver);
-    }
-    NS_IMETHOD SetObserver(nsIInputStreamObserver *aObserver) {
-        return mSource->SetObserver(aObserver);
+    NS_IMETHOD IsNonBlocking(PRBool *aValue) {
+        return mSource->IsNonBlocking(aValue);
     }
 
     //
@@ -182,17 +176,8 @@ public:
         mLastError = rv;
         return rv;
     }
-    NS_IMETHOD GetNonBlocking(PRBool *aValue) {
-        return mSink->GetNonBlocking(aValue);
-    }
-    NS_IMETHOD SetNonBlocking(PRBool aValue) {
-        return mSink->SetNonBlocking(aValue);
-    }
-    NS_IMETHOD GetObserver(nsIOutputStreamObserver **aObserver) {
-        return mSink->GetObserver(aObserver);
-    }
-    NS_IMETHOD SetObserver(nsIOutputStreamObserver *aObserver) {
-        return mSink->SetObserver(aObserver);
+    NS_IMETHOD IsNonBlocking(PRBool *aValue) {
+        return mSink->IsNonBlocking(aValue);
     }
 
     //
