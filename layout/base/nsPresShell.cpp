@@ -2158,33 +2158,32 @@ nsresult PresShell::SetPrefColorRules(void)
             nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
             if (NS_SUCCEEDED(result)) {
               PRUint32 index = 0;
-              nsAutoString strRule,strColor;
+              nsAutoString strColor, strBackgroundColor;
 
-              // create a rule for each color and add it to the style sheet
-              // - the rules are !important so they override all but author
+              // create a rule for background and foreground color and
+              // add it to the style sheet              
+              // - the rule is !important so it overrides all but author
               //   important rules (when put into a backstop stylesheet) and 
               //   all (even author important) when put into an override stylesheet
 
               ///////////////////////////////////////////////////////////////
-              // - default color: ':root {color:#RRGGBB !important;}'
+              // - default colors: ':root {color:#RRGGBB !important;
+              //                           background: #RRGGBB !important;}'
               ColorToString(textColor,strColor);
-              strRule.Append(NS_LITERAL_STRING(":root {color:"));
-              strRule.Append(strColor);
-              strRule.Append(NS_LITERAL_STRING(" !important;} "));
+              ColorToString(bgColor,strBackgroundColor);
+              result = sheet->InsertRule(NS_LITERAL_STRING(":root {color:") +
+                                         strColor +
+                                         NS_LITERAL_STRING(" !important; ") +
+                                         NS_LITERAL_STRING("background:") +
+                                         strBackgroundColor +
+                                         NS_LITERAL_STRING(" !important; }"),
+                                         0,&index);
+              NS_ENSURE_SUCCESS(result, result);
 
               ///////////////////////////////////////////////////////////////
-              // - default background color: ':root {background:#RRGGBB !important;}'
-              ColorToString(bgColor,strColor);
-              strRule.Append(NS_LITERAL_STRING(":root {background:"));
-              strRule.Append(strColor);
-              strRule.Append(NS_LITERAL_STRING(" !important;} "));
-              
-              ///////////////////////////////////////////////////////////////
               // - everything else inherits the color, and has transparent background
-              strRule.Append(NS_LITERAL_STRING("* {color: inherit !important; background: transparent !important;} "));
-              
-              // now insert the rule
-              result = sheet->InsertRule(strRule,0,&index);
+              result = sheet->InsertRule(NS_LITERAL_STRING("* {color: inherit !important; background: transparent !important;} "),
+                                         0,&index);
             }
           }
         }
@@ -2352,18 +2351,23 @@ nsresult PresShell::SetPrefFocusRules(void)
         strRule.AppendInt(focusRingWidth);
         strRule.Append(NS_LITERAL_STRING("px dotted WindowText !important; } "));     // For example 3px dotted WindowText
         // insert the rules
+        result = sheet->InsertRule(strRule,0,&index);
+        NS_ENSURE_SUCCESS(result, result);
         if (focusRingWidth != 1) {
           // If the focus ring width is different from the default, fix buttons with rings
-          strRule.Append(NS_LITERAL_STRING("button:-moz-focus-inner, input[type=\"reset\"]:-moz-focus-inner,"));
+          strRule.Assign(NS_LITERAL_STRING("button:-moz-focus-inner, input[type=\"reset\"]:-moz-focus-inner,"));
           strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:-moz-focus-inner, "));
           strRule.Append(NS_LITERAL_STRING("input[type=\"submit\"]:-moz-focus-inner { padding: 1px 2px 1px 2px; border: "));
           strRule.AppendInt(focusRingWidth);
           strRule.Append(NS_LITERAL_STRING("px dotted transparent !important; } "));
-          strRule.Append(NS_LITERAL_STRING("button:focus:-moz-focus-inner, input[type=\"reset\"]:focus:-moz-focus-inner,"));
+          result = sheet->InsertRule(strRule,0,&index);
+          NS_ENSURE_SUCCESS(result, result);
+          
+          strRule.Assign(NS_LITERAL_STRING("button:focus:-moz-focus-inner, input[type=\"reset\"]:focus:-moz-focus-inner,"));
           strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:focus:-moz-focus-inner, input[type=\"submit\"]:focus:-moz-focus-inner {"));
           strRule.Append(NS_LITERAL_STRING("border-color: ButtonText !important; }"));
-          }
-        result     = sheet->InsertRule(strRule,0,&index);
+          result = sheet->InsertRule(strRule,0,&index);
+        }
       }
     }
   }
