@@ -15,6 +15,23 @@
 
 DEPTH=.
 IGNORE_MANIFEST=1
+THIS_MAKEFILE=raptor.mak
+THAT_MAKEFILE=makefile.win
+
+include <$(DEPTH)\config\config.mak>
+
+# This section is copied from rules.mak
+
+!if "$(WINOS)" == "WIN95"
+W95MAKE=$(MOZ_SRC)\ns\config\w95make.exe
+W32OBJS = $(OBJS:.obj=.obj, )
+W32LOBJS = $(OBJS: .= +-.)
+!endif
+
+######################################################################
+
+# This makefile is designed to make building the raptor viewer
+# application easy.
 
 #
 # Command macro defines
@@ -35,10 +52,11 @@ CVSCO_NETLIB = $(CVSCO) -r $(NETLIB_BRANCH)
 CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 
-# The list of directories that need to be built to build the standalone
-# raptor test program. The order is important.
-!ifndef RAPTOR_PASS2
-DIRS =				\
+# The list of directories that need to be built to build the
+# standalone raptor test program. The order is important. The
+# DIST_DIRS need to be built before the RAPTOR_DIRS.
+
+DIST_DIRS =			\
   nsprpub			\
   include			\
   jpeg				\
@@ -53,10 +71,13 @@ DIRS =				\
   modules\libpref		\
   modules\libimg		\
   lib\xp			\
-  lib\libnet
-!else
-DIRS =				\
-  base				\
+  lib\libnet			\
+  base
+
+# The list of directories to build the raptor layout engine and
+# related libraries.
+
+RAPTOR_DIRS =			\
   htmlparser			\
   dom				\
   gfx				\
@@ -64,78 +85,49 @@ DIRS =				\
   widget			\
   layout			\
   webshell
-!endif
 
-include <$(DEPTH)\config\config.mak>
+# Main rules
 
-#
-# NOTE: Don't use make all with this makefile; it won't work!
-# NOTE: Don't use make export with this makefile; it won't work!
-# NOTE: Don't use make libs with this makefile; it won't work!
-# NOTE: Don't use make clobber with this makefile; it won't work!
-#
+all:: all_dist all_raptor
 
-THIS_MAKEFILE = raptor.mak
+export:: export_dist export_raptor
 
-real_all: pass1_all pass2_all
+libs:: libs_dist libs_raptor
 
-pass1_all:
-    cd $(MOZ_SRC)\ns
-    $(NMAKE) -f $(THIS_MAKEFILE) export
-    cd $(MOZ_SRC)\ns\base
-    $(NMAKE) -f makefile.win export
-    cd $(MOZ_SRC)\ns
-    $(NMAKE) -f $(THIS_MAKEFILE) libs
-    $(NMAKE) -f $(THIS_MAKEFILE) install
+install:: install_dist install_raptor
 
-pass2_all: 
-    cd $(MOZ_SRC)\ns
-    $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 export
-    $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 libs
-    $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 install
+depend:: depend_dist depend_raptor
 
-real_export:
-    cd $(MOZ_SRC)\ns
-    $(NMAKE) -f $(THIS_MAKEFILE) export
-    $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 export
-
-real_libs:
-    cd $(MOZ_SRC)\ns
-    $(NMAKE) -f $(THIS_MAKEFILE) libs
-    $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 libs
-
-real_install:
-    cd $(MOZ_SRC)\ns
-    $(NMAKE) -f $(THIS_MAKEFILE) install
-    $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 install
-
-real_clobber:
-    cd $(MOZ_SRC)\ns
-    $(NMAKE) -f $(THIS_MAKEFILE) clobber
-    $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 clobber
-    $(NMAKE) -f $(THIS_MAKEFILE) final_clobber
-
-final_clobber:
+clobber:: clobber_dist clobber_raptor
 	cd $(MOZ_SRC)\ns
 	-rd /s /q dist
 
-real_depend:
-    cd $(MOZ_SRC)\ns
-    $(NMAKE) -f $(THIS_MAKEFILE) depend
-    $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 depend
+clobber_all:: clobber_all_dist clobber_all_raptor
+	cd $(MOZ_SRC)\ns
+	-rd /s /q dist
 
-include <$(DEPTH)\config\rules.mak>
+######################################################################
 
-#
+# Rule to build subdirectories
+
+$(DIST_DIRS) $(RAPTOR_DIRS)::
+!if "$(WINOS)" == "WIN95"
+    @echo +++ make: cannot recursively make on win95 using command.com, use w95make.
+!else
+    @echo +++ make: %MAKE_ARGS% in $(MAKEDIR)\$@
+	@cd $@
+	@$(NMAKE) -f $(THAT_MAKEFILE) %%MAKE_ARGS%%
+    @cd $(MAKEDIR) 
+!endif
+
+######################################################################
+
 # Rules for pulling the source from the cvs repository
-#
 
 pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_raptor 
 
 pull_lizard:
 	@cd $(MOZ_SRC)\.
-	$(CVSCO_LIZARD) ns/LEGAL
-	$(CVSCO_LIZARD) ns/LICENSE
 	$(CVSCO_LIZARD) ns/config
 	$(CVSCO_LIZARD) ns/lib/liblayer
 	$(CVSCO_LIZARD) ns/modules/zlib
@@ -145,12 +137,12 @@ pull_lizard:
 	$(CVSCO_LIZARD) ns/nav-java
 	$(CVSCO_LIZARD) ns/js
 	$(CVSCO_LIZARD) ns/modules/security/freenav
+	$(CVSCO_LIZARD) ns/modules/libpref
 
 pull_xpcom:
 	@cd $(MOZ_SRC)\.
 	$(CVSCO_XPCOM) ns/modules/libreg 
 	$(CVSCO_XPCOM) ns/xpcom
-	$(CVSCO_XPCOM) ns/modules/libpref
 
 pull_imglib:
 	@cd $(MOZ_SRC)\.
@@ -174,11 +166,178 @@ pull_raptor:
 	$(CVSCO_RAPTOR) ns/view
 	$(CVSCO_RAPTOR) ns/webshell
 	$(CVSCO_RAPTOR) ns/widget
-#
+
+######################################################################
+
+# Build rules for the "dist" portion. The "dist" contains those things
+# which are imported by the raptor test programs.
+
+all_dist:
+    @cd $(MOZ_SRC)\ns
+    $(NMAKE) -f $(THIS_MAKEFILE) export_dist
+    $(NMAKE) -f $(THIS_MAKEFILE) libs_dist
+    $(NMAKE) -f $(THIS_MAKEFILE) install_dist
+
+export_dist::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) export $(MAKEDIR) $(DIST_DIRS)
+!else
+    @set MAKE_ARGS=export
+
+export_dist:: $(DIST_DIRS)
+!endif
+
+libs_dist::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) libs $(MAKEDIR) $(DIST_DIRS)
+!else
+    @set MAKE_ARGS=libs
+
+libs_dist:: $(DIST_DIRS)
+!endif
+
+install_dist::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) install $(MAKEDIR) $(DIST_DIRS)
+!else
+    @set MAKE_ARGS=install
+
+install_dist:: $(DIST_DIRS)
+!endif
+
+depend_dist::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) depend $(MAKEDIR) $(DIST_DIRS)
+!else
+    @set MAKE_ARGS=depend
+
+depend_dist:: $(DIST_DIRS)
+!endif
+
+clobber_dist::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) clobber $(MAKEDIR) $(DIST_DIRS)
+!else
+    @set MAKE_ARGS=clobber
+
+clobber_dist:: $(DIST_DIRS)
+!endif
+
+clobber_all_dist::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) clobber_all $(MAKEDIR) $(DIST_DIRS)
+!else
+    @set MAKE_ARGS=clobber_all
+
+clobber_all_dist:: $(DIST_DIRS)
+!endif
+
+######################################################################
+
+# Build rules for the "raptor" portion. This builds the raptor software
+# including the sample webshell viewer application.
+
+all_raptor:
+    cd $(MOZ_SRC)\ns
+    $(NMAKE) -f $(THIS_MAKEFILE) export_raptor
+    $(NMAKE) -f $(THIS_MAKEFILE) libs_raptor
+    $(NMAKE) -f $(THIS_MAKEFILE) install_raptor
+
+export_raptor::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) export $(MAKEDIR) $(RAPTOR_DIRS)
+!else
+    @set MAKE_ARGS=export
+
+export_raptor:: $(RAPTOR_DIRS)
+!endif
+
+libs_raptor::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) libs $(MAKEDIR) $(RAPTOR_DIRS)
+!else
+    @set MAKE_ARGS=libs
+
+libs_raptor:: $(RAPTOR_DIRS)
+!endif
+
+install_raptor::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) install $(MAKEDIR) $(RAPTOR_DIRS)
+!else
+    @set MAKE_ARGS=install
+
+install_raptor:: $(RAPTOR_DIRS)
+!endif
+
+depend_raptor::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) depend $(MAKEDIR) $(RAPTOR_DIRS)
+!else
+    @set MAKE_ARGS=depend
+
+depend_raptor:: $(RAPTOR_DIRS)
+!endif
+
+clobber_raptor::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) clobber $(MAKEDIR) $(RAPTOR_DIRS)
+!else
+    @set MAKE_ARGS=clobber
+
+clobber_raptor:: $(RAPTOR_DIRS)
+!endif
+
+clobber_all_raptor::
+!if "$(WINOS)" == "WIN95"
+    @$(W95MAKE) clobber_all $(MAKEDIR) $(RAPTOR_DIRS)
+!else
+    @set MAKE_ARGS=clobber_all
+
+clobber_all_raptor:: $(RAPTOR_DIRS)
+!endif
+
+######################################################################
+
 # Build raptor Doc++ documentation
-#
+DOCXX = $(MOZ_TOOLS)\bin\docxx
+DOCXX_RAPTOR = $(DOCXX) -H -A -p -f -B c:\fake_banner-file_name -j -a
+DOCXX_DESTDIR = $(MOZ_SRC)\ns\dist\documentation
 
 doc_raptor:
-	-@mkdir $(MOZ_SRC)\ns\dist\documentation
-	@for %d in (raptor xpcom img dom) do @docxx -H -A -p -f -B c:\fake_banner-file_name -j -a -d $(MOZ_SRC)\ns\dist\documentation\%d $(MOZ_SRC)\ns\dist\public\%d\*.h
-	@echo Documentation written to $(MOZ_SRC)\ns\dist\documentation
+    -rm -rf $(DOCXX_DESTDIR)
+    -@mkdir $(DOCXX_DESTDIR)
+    @for %d in (raptor xpcom img dom) do \
+      $(DOCXX_RAPTOR) -d $(DOCXX_DESTDIR)\%d $(MOZ_SRC)\ns\dist\public\%d\*.h
+    @echo Documentation written to $(DOCXX_DESTDIR)
+
+######################################################################
+
+# Build tarball
+
+TAR = tar
+ZIP = $(MOZ_TOOLS)\bin\zip
+GZIP = gzip
+
+TARBALL = $(MOZ_SRC)\raptor-win-src-04-15-98.tar
+TARBALL_ZIP = $(MOZ_SRC)\raptor-win-src-04-15-98.zip
+TARBALL_GZIP = $(MOZ_SRC)\raptor-win-src-04-15-98.gz
+
+tarball:
+    @echo Making $(TARBALL)
+    cd $(MOZ_SRC)\.
+    rm -f $(TARBALL)
+    $(TAR) cf $(TARBALL) ns
+
+tarball_zip:
+    @echo Making $(TARBALL_ZIP)
+    cd $(MOZ_SRC)\.
+    $(ZIP) -9 -r -q $(TARBALL_ZIP) ns
+
+tarball_gz:
+    @echo Making $(TARBALL_GZIP)
+    cd $(MOZ_SRC)\.
+    $(GZIP) -9 -q $(TARBALL_GZIP) ns
+
+prepare_for_tarballing:
+    $(NMAKE) -f $(THIS_MAKEFILE) clobber clobber_all
