@@ -367,7 +367,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   // next-in-flows
   if (NS_SUCCEEDED(result) && NS_FRAME_IS_COMPLETE(aStatus)) {
     nsIFrame* kidNextInFlow;
-    aKidFrame->GetNextInFlow(kidNextInFlow);
+    aKidFrame->GetNextInFlow(&kidNextInFlow);
     if (nsnull != kidNextInFlow) {
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
@@ -400,7 +400,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   nsIFrame*         nextInFlow;
   nsContainerFrame* parent;
    
-  aChild->GetNextInFlow(nextInFlow);
+  aChild->GetNextInFlow(&nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
   nextInFlow->GetParent((nsIFrame**)&parent);
 
@@ -408,7 +408,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   // delete it first).
   nsIFrame* nextNextInFlow;
 
-  nextInFlow->GetNextInFlow(nextNextInFlow);
+  nextInFlow->GetNextInFlow(&nextNextInFlow);
   if (nsnull != nextNextInFlow) {
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
@@ -424,7 +424,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   nextInFlow->DeleteFrame(aPresContext);
 
 #ifdef NS_DEBUG
-  aChild->GetNextInFlow(nextInFlow);
+  aChild->GetNextInFlow(&nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
 }

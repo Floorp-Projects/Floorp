@@ -2765,7 +2765,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     // Get the parent frame's last-in-flow
     nsIFrame* nextInFlow = parentFrame;
     while (nsnull != nextInFlow) {
-      parentFrame->GetNextInFlow(nextInFlow);
+      parentFrame->GetNextInFlow(&nextInFlow);
       if (nsnull != nextInFlow) {
         parentFrame = nextInFlow;
       }
@@ -2852,7 +2852,7 @@ FindPreviousSibling(nsIPresShell* aPresShell,
       // The frame may have a next-in-flow. Get the last-in-flow
       nsIFrame* nextInFlow;
       do {
-        prevSibling->GetNextInFlow(nextInFlow);
+        prevSibling->GetNextInFlow(&nextInFlow);
         if (nsnull != nextInFlow) {
           prevSibling = nextInFlow;
         }
@@ -2886,7 +2886,7 @@ FindNextSibling(nsIPresShell* aPresShell,
       // The frame may have a next-in-flow. Get the last-in-flow
       nsIFrame* nextInFlow;
       do {
-        nextSibling->GetNextInFlow(nextInFlow);
+        nextSibling->GetNextInFlow(&nextInFlow);
         if (nsnull != nextInFlow) {
           nextSibling = nextInFlow;
         }
@@ -3137,7 +3137,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     viewManager->SetViewOpacity(view, color->mOpacity);
     viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
 
-    aFrame->GetNextInFlow(aFrame);
+    aFrame->GetNextInFlow(&aFrame);
   }
 
   if (nsnull != viewManager) {

@@ -867,7 +867,7 @@ nsGenericElement::RenderFrame()
       NS_RELEASE(vm);
 
       // If frame has a next-in-flow, repaint it too
-      frame->GetNextInFlow(frame);
+      frame->GetNextInFlow(&frame);
     }
     NS_RELEASE(shell);
   }

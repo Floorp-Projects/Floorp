@@ -3584,7 +3584,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         nsIFrame* kidNextInFlow;
          
-        kidFrame->GetNextInFlow(kidNextInFlow);
+        kidFrame->GetNextInFlow(&kidNextInFlow);
         if (nsnull == kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a continuing
           // frame. This hooks the child into the flow
@@ -3675,7 +3675,7 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
         kidFrame = nextInFlow->mFrames.FirstChild();
       } else {
         // We've pulled up all the children, so move to the next-in-flow.
-        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
+        nextInFlow->GetNextInFlow((nsIFrame**)&nextInFlow);
         continue;
       }
     }
@@ -3737,7 +3737,7 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
       // No the child isn't complete
       nsIFrame* kidNextInFlow;
        
-      kidFrame->GetNextInFlow(kidNextInFlow);
+      kidFrame->GetNextInFlow(&kidNextInFlow);
       if (nsnull == kidNextInFlow) {
         // The child doesn't have a next-in-flow so create a
         // continuing frame. The creation appends it to the flow and

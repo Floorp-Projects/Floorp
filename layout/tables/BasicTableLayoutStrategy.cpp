@@ -112,7 +112,7 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize, PRInt32 aNu
 {
 #ifdef NS_DEBUG
   nsIFrame *tablePIF=nsnull;
-  mTableFrame->GetPrevInFlow(tablePIF);
+  mTableFrame->GetPrevInFlow(&tablePIF);
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
 #endif
 
@@ -175,7 +175,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
 {
 #ifdef NS_DEBUG
   nsIFrame *tablePIF=nsnull;
-  mTableFrame->GetPrevInFlow(tablePIF);
+  mTableFrame->GetPrevInFlow(&tablePIF);
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
 #endif
 
@@ -1700,7 +1700,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
 {
 #ifdef NS_DEBUG
   nsIFrame *tablePIF=nsnull;
-  mTableFrame->GetPrevInFlow(tablePIF);
+  mTableFrame->GetPrevInFlow(&tablePIF);
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
 #endif
 

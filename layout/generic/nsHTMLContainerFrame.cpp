@@ -155,7 +155,7 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
   aNextInFlowResult = nsnull;
 
   nsIFrame* nextInFlow;
-  aFrame->GetNextInFlow(nextInFlow);
+  aFrame->GetNextInFlow(&nextInFlow);
   if (nsnull == nextInFlow) {
     // Create a continuation frame for the child frame and insert it
     // into our lines child list.

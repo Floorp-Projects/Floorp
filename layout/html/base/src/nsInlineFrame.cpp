@@ -700,7 +700,7 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
       nsInlineFrame* start = this;
       while (start != flow) {
         frames.AppendFrames(anonymousBlock, start->mFrames);
-        start->GetNextInFlow((nsIFrame*&) start);
+        start->GetNextInFlow((nsIFrame**) &start);
       }
       anonymousBlock->InsertFrames2(aPresContext, aPresShell, nsnull,
                                     nsnull, frames.FirstChild());
@@ -742,10 +742,10 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
         // inline frames that contain them.
         nsFrameList frames;
         nsInlineFrame* start;
-        flow->GetNextInFlow((nsIFrame*&) start);   // start after anon block
+        flow->GetNextInFlow((nsIFrame**) &start);   // start after anon block
         while (start != prevFrameParent) {
           frames.AppendFrames(anonymousBlock, start->mFrames);
-          start->GetNextInFlow((nsIFrame*&) start);
+          start->GetNextInFlow((nsIFrame**) &start);
         }
 
         // Now append the frames just before and including aPrevFrame
@@ -792,10 +792,10 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
 
           // Gather up all of the inline frames from all of the flow
           // between the insertion point and the anonymous block.
-          start->GetNextInFlow((nsIFrame*&) start);
+          start->GetNextInFlow((nsIFrame**) &start);
           while (start != flow) {
             frames.AppendFrames(anonymousBlock, start->mFrames);
-            start->GetNextInFlow((nsIFrame*&) start);
+            start->GetNextInFlow((nsIFrame**) &start);
           }
 
           // Now update the anonymous block
@@ -878,7 +878,7 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
       nsIFrame* nextSibling;
       aPrevFrame->GetNextSibling(&nextSibling);
       nsIFrame* anonymousBlockNextInFlow;
-      prevFrameParent->GetNextInFlow(anonymousBlockNextInFlow);
+      prevFrameParent->GetNextInFlow(&anonymousBlockNextInFlow);
       if ((nsnull != nextSibling) || (nsnull != anonymousBlockNextInFlow)) {
         // Easy case: there are more frames following aPrevFrame which
         // means that this insertion lies in the anonymous block.
@@ -996,14 +996,14 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
       if (nsLineLayout::TreatFrameAsBlock(aOldFrame)) {
         // It is possible that we are removing the first block in the
         // anonymous block or the last block. See if its so.
-        anonymousBlock->GetPrevInFlow(prevInFlow);
+        anonymousBlock->GetPrevInFlow(&prevInFlow);
         nsIFrame* prevSib;
         if ((nsnull != prevInFlow) ||
             (nsnull != (prevSib = blockKids.GetPrevSiblingFor(aOldFrame)))) {
           // There is a block in the anonymous block prior to the
           // block that we are removing. See if we are removing the
           // last block in the anonymous block.
-          anonymousBlock->GetNextInFlow(nextInFlow);
+          anonymousBlock->GetNextInFlow(&nextInFlow);
           nsIFrame* nextSib;
           aOldFrame->GetNextSibling(&nextSib);
           if ((nsnull != nextInFlow) || (nsnull != nextSib)) {
@@ -1038,7 +1038,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
               }
               ab->RemoveFirstFrame();
               nsIFrame* nextNextInFlow;
-              nextInFlow->GetNextInFlow(nextNextInFlow);
+              nextInFlow->GetNextInFlow(&nextNextInFlow);
               nextInFlow->DeleteFrame(aPresContext);
               nextInFlow = nextNextInFlow;
             }
@@ -1072,7 +1072,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
                   inlines.InsertFrames(nsnull, nsnull, kids);
                 }
               }
-              anonymousBlock->GetPrevInFlow((nsIFrame*&) anonymousBlock);
+              anonymousBlock->GetPrevInFlow((nsIFrame**) &anonymousBlock);
             }
 
             // Now we have all of the inline frames that need to be
@@ -1104,7 +1104,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
           nsInlineFrame* anonymousBlockParent;
           anonymousBlock->GetParent((nsIFrame**) &anonymousBlockParent);
           anonymousBlock->RemoveFirstFrame();
-          aOldFrame->GetNextInFlow(nextInFlow);
+          aOldFrame->GetNextInFlow(&nextInFlow);
           aOldFrame->DeleteFrame(aPresContext);
           while (nsnull != nextInFlow) {
             nsIFrame* nextParent;
@@ -1114,7 +1114,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
             }
             anonymousBlock->RemoveFirstFrame();
             nsIFrame* nextNextInFlow;
-            nextInFlow->GetNextInFlow(nextNextInFlow);
+            nextInFlow->GetNextInFlow(&nextNextInFlow);
             nextInFlow->DeleteFrame(aPresContext);
             nextInFlow = nextNextInFlow;
           }
@@ -1136,14 +1136,14 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
               frames.AppendFrame(nsnull, kid);
               kid = next;
             }
-            anonymousBlock->GetNextInFlow((nsIFrame*&) anonymousBlock);
+            anonymousBlock->GetNextInFlow((nsIFrame**) &anonymousBlock);
           }
 
           if (frames.NotEmpty()) {
             // If the anonymousBlockParent has a prev-in-flow then
             // append the inline frames there, otherwise insert them
             // before the anonymousBlock.
-            anonymousBlockParent->GetPrevInFlow(prevInFlow);
+            anonymousBlockParent->GetPrevInFlow(&prevInFlow);
             if (nsnull != prevInFlow) {
               anonymousBlockParent = (nsInlineFrame*) prevInFlow;
               anonymousBlockParent->mFrames.AppendFrames(anonymousBlockParent,
