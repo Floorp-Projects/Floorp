@@ -1654,6 +1654,7 @@ function GenericSendMessage( msgType )
           var dlgText = sComposeMsgsBundle.getString("12553");  // NS_ERROR_MSG_MULTILINGUAL_SEND
           if (!gPromptService.confirm(window, dlgTitle, dlgText))
             return;
+          fallbackCharset.value = "UTF-8";
         }
         if (fallbackCharset && 
             fallbackCharset.value && fallbackCharset.value != "")
