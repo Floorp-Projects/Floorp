@@ -3540,7 +3540,7 @@ MOZ_ARG_ENABLE_BOOL(perf-metrics,
 dnl ========================================================
 dnl = Enable trace malloc
 dnl ========================================================
-NS_TRACE_MALLOC=
+NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
 MOZ_ARG_ENABLE_BOOL(trace-malloc,
 [  --enable-trace-malloc   Enable malloc tracing],
     NS_TRACE_MALLOC=1 )
@@ -4289,6 +4289,12 @@ AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_REORDER)
 AC_SUBST(MOZ_TIMELINE)
+
+dnl win32 options
+AC_SUBST(MOZ_PROFILE)
+AC_SUBST(MOZ_COVERAGE)
+AC_SUBST(MOZ_MAPINFO)
+AC_SUBST(MOZ_BROWSE_INFO)
 
 dnl Disable profile at startup, hack for tinderbox.
 if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
