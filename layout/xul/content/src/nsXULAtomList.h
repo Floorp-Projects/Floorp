@@ -72,7 +72,6 @@ XUL_ATOM(xpmenu, "xpmenu") // Represents an XP menu
 XUL_ATOM(xpmenubutton, "xpmenubutton") // A titled button (with improved behavior) inside an XP menu.
 XUL_ATOM(xpmenuchildren, "xpmenuchildren") // The XP menu's children.
 XUL_ATOM(menuactive, "menuactive") // Whether or not a menu is active (without necessarily being open)
-XUL_ATOM(dropDownMenuPseudo, "-moz-dropdown-menu") // A pseudo for the visibility state of popup menus
 XUL_ATOM(progressmeter, "progressmeter")
 XUL_ATOM(titledbutton, "titledbutton")
 
