@@ -86,11 +86,15 @@
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,    NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
 
-static const char kURINC_SearchRoot[] = "NC:SearchEngineRoot";
-static const char kURINC_SearchResultsSitesRoot[] = "NC:SearchResultsSitesRoot";
-static const char kURINC_LastSearchRoot[] = "NC:LastSearchRoot";
-static const char kURINC_SearchResultsAnonymous[] = "NC:SearchResultsAnonymous";
+static const char kURINC_SearchEngineRoot[]           = "NC:SearchEngineRoot";
+static const char kURINC_SearchResultsSitesRoot[]     = "NC:SearchResultsSitesRoot";
+static const char kURINC_LastSearchRoot[]             = "NC:LastSearchRoot";
+static const char kURINC_SearchCategoryRoot[]         = "NC:SearchCategoryRoot";
+static const char kURINC_SearchCategoryPrefix[]       = "NC:SearchCategory?category=";
+static const char kURINC_SearchCategoryEnginePrefix[] = "NC:SearchCategory?engine=";
+static const char kURINC_SearchResultsAnonymous[]     = "NC:SearchResultsAnonymous";
 
 
 
@@ -169,8 +173,9 @@ private:
 	PRBool				mEngineListBuilt;
 
     // pseudo-constants
-	static nsIRDFResource		*kNC_SearchRoot;
+	static nsIRDFResource		*kNC_SearchEngineRoot;
 	static nsIRDFResource		*kNC_LastSearchRoot;
+	static nsIRDFResource		*kNC_SearchCategoryRoot;
 	static nsIRDFResource		*kNC_SearchResultsSitesRoot;
 	static nsIRDFResource		*kNC_Ref;
 	static nsIRDFResource		*kNC_Child;
@@ -187,14 +192,20 @@ private:
 protected:
 	static nsIRDFDataSource		*mInner;
 
+	static nsCOMPtr<nsIRDFDataSource>	categoryDataSource;
+
 friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 	// helper methods
 	PRBool		isEngineURI(nsIRDFResource* aResource);
 	PRBool		isSearchURI(nsIRDFResource* aResource);
+	PRBool		isSearchCategoryURI(nsIRDFResource* aResource);
+	PRBool		isSearchCategoryEngineURI(nsIRDFResource* aResource);
+	nsresult	resolveSearchCategoryEngineURI(nsIRDFResource *source, nsIRDFResource **trueEngine);
 	nsresult	BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);
 	nsresult	DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsString text);
 	nsresult	GetSearchEngineList(nsFileSpec spec);
+	nsresult	GetCategoryList();
 	nsresult	GetSearchFolder(nsFileSpec &spec);
 	nsresult	ReadFileContents(nsFileSpec baseFilename, nsString & sourceContents);
 static	nsresult	GetData(nsString data, char *sectionToFind, char *attribToFind, nsString &value);
@@ -282,9 +293,11 @@ static	InternetSearchDataSource	*gInternetSearchDataSource = nsnull;
 
 PRInt32				InternetSearchDataSource::gRefCnt;
 nsIRDFDataSource		*InternetSearchDataSource::mInner = nsnull;
+nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::categoryDataSource;
 
-nsIRDFResource			*InternetSearchDataSource::kNC_SearchRoot;
+nsIRDFResource			*InternetSearchDataSource::kNC_SearchEngineRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_LastSearchRoot;
+nsIRDFResource			*InternetSearchDataSource::kNC_SearchCategoryRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchResultsSitesRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_Ref;
 nsIRDFResource			*InternetSearchDataSource::kNC_Child;
@@ -352,6 +365,65 @@ InternetSearchDataSource::isSearchURI(nsIRDFResource *r)
 
 
 
+PRBool
+InternetSearchDataSource::isSearchCategoryURI(nsIRDFResource *r)
+{
+	PRBool		isSearchCategoryURIFlag = PR_FALSE;
+	const char	*uri = nsnull;
+	
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kURINC_SearchCategoryPrefix, sizeof(kURINC_SearchCategoryPrefix) - 1)))
+	{
+		isSearchCategoryURIFlag = PR_TRUE;
+	}
+	return(isSearchCategoryURIFlag);
+}
+
+
+
+PRBool
+InternetSearchDataSource::isSearchCategoryEngineURI(nsIRDFResource *r)
+{
+	PRBool		isSearchCategoryEngineURIFlag = PR_FALSE;
+	const char	*uri = nsnull;
+	
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kURINC_SearchCategoryEnginePrefix, sizeof(kURINC_SearchCategoryEnginePrefix) - 1)))
+	{
+		isSearchCategoryEngineURIFlag = PR_TRUE;
+	}
+	return(isSearchCategoryEngineURIFlag);
+}
+
+
+
+nsresult
+InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine, nsIRDFResource **trueEngine)
+{
+	*trueEngine = nsnull;
+
+	if ((!categoryDataSource) || (!mInner))	return(NS_ERROR_UNEXPECTED);
+
+	nsresult		rv;
+	nsCOMPtr<nsIRDFNode>	catNode;
+	rv = categoryDataSource->GetTarget(engine, kNC_Name, PR_TRUE, getter_AddRefs(catNode));
+	if (NS_FAILED(rv))	return(rv);
+
+	nsCOMPtr<nsIRDFLiteral>	catName = do_QueryInterface(catNode);
+	if (!catName)		return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIRDFResource>	catSrc;
+	rv = mInner->GetSource(kNC_Name, catName, PR_TRUE, getter_AddRefs(catSrc));
+	if (NS_FAILED(rv))	return(rv);
+	if (!catSrc)		return(NS_ERROR_UNEXPECTED);
+	
+	*trueEngine = catSrc;
+	NS_IF_ADDREF(*trueEngine);
+	return(NS_OK);
+}
+
+
+
 InternetSearchDataSource::InternetSearchDataSource(void)
 {
 	NS_INIT_REFCNT();
@@ -363,20 +435,21 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
-		gRDFService->GetResource(kURINC_SearchRoot,                   &kNC_SearchRoot);
-		gRDFService->GetResource(kURINC_LastSearchRoot,               &kNC_LastSearchRoot);
-		gRDFService->GetResource(kURINC_SearchResultsSitesRoot,       &kNC_SearchResultsSitesRoot);
-		gRDFService->GetResource(NC_NAMESPACE_URI "ref",              &kNC_Ref);
-		gRDFService->GetResource(NC_NAMESPACE_URI "child",            &kNC_Child);
-		gRDFService->GetResource(NC_NAMESPACE_URI "data",             &kNC_Data);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Name",             &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI "URL",              &kNC_URL);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",      &kRDF_InstanceOf);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "type",            &kRDF_type);
-		gRDFService->GetResource(NC_NAMESPACE_URI "loading",          &kNC_loading);
-		gRDFService->GetResource(NC_NAMESPACE_URI "HTML",             &kNC_HTML);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Icon",             &kNC_Icon);
-		gRDFService->GetResource(NC_NAMESPACE_URI "StatusIcon",       &kNC_StatusIcon);
+		gRDFService->GetResource(kURINC_SearchEngineRoot,               &kNC_SearchEngineRoot);
+		gRDFService->GetResource(kURINC_LastSearchRoot,                 &kNC_LastSearchRoot);
+		gRDFService->GetResource(kURINC_SearchResultsSitesRoot,         &kNC_SearchResultsSitesRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "SearchCategoryRoot", &kNC_SearchCategoryRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "ref",                &kNC_Ref);
+		gRDFService->GetResource(NC_NAMESPACE_URI "child",              &kNC_Child);
+		gRDFService->GetResource(NC_NAMESPACE_URI "data",               &kNC_Data);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Name",               &kNC_Name);
+		gRDFService->GetResource(NC_NAMESPACE_URI "URL",                &kNC_URL);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",        &kRDF_InstanceOf);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "type",              &kRDF_type);
+		gRDFService->GetResource(NC_NAMESPACE_URI "loading",            &kNC_loading);
+		gRDFService->GetResource(NC_NAMESPACE_URI "HTML",               &kNC_HTML);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Icon",               &kNC_Icon);
+		gRDFService->GetResource(NC_NAMESPACE_URI "StatusIcon",         &kNC_StatusIcon);
 
 		gInternetSearchDataSource = this;
 	}
@@ -388,8 +461,9 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 {
 	if (--gRefCnt == 0)
 	{
-		NS_IF_RELEASE(kNC_SearchRoot);
+		NS_IF_RELEASE(kNC_SearchEngineRoot);
 		NS_IF_RELEASE(kNC_LastSearchRoot);
+		NS_IF_RELEASE(kNC_SearchCategoryRoot);
 		NS_IF_RELEASE(kNC_SearchResultsSitesRoot);
 		NS_IF_RELEASE(kNC_Ref);
 		NS_IF_RELEASE(kNC_Child);
@@ -515,7 +589,31 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 	// we only have positive assertions in the internet search data source.
 	if (! tv)
 		return(rv);
-	
+
+	if ((isSearchCategoryURI(source)) && (categoryDataSource))
+	{
+		const char	*uri = nsnull;
+		source->GetValueConst(&uri);
+		if (!uri)	return(NS_ERROR_UNEXPECTED);
+		nsAutoString	catURI(uri);
+
+		nsCOMPtr<nsIRDFResource>	category;
+		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
+			getter_AddRefs(category))))
+			return(rv);
+
+		rv = categoryDataSource->GetTarget(category, property, tv, target);
+		return(rv);
+	}
+
+	if (isSearchCategoryEngineURI(source))
+	{
+		nsCOMPtr<nsIRDFResource>	trueEngine;
+		rv = resolveSearchCategoryEngineURI(source, getter_AddRefs(trueEngine));
+		if (NS_FAILED(rv))	return(rv);
+		source = trueEngine;
+	}
+
 	if (mInner)
 	{
 		rv = mInner->GetTarget(source, property, tv, target);
@@ -549,18 +647,47 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 	if (! tv)
 		return(rv);
 
+	if ((isSearchCategoryURI(source)) && (categoryDataSource))
+	{
+		const char	*uri = nsnull;
+		source->GetValueConst(&uri);
+		if (!uri)	return(NS_ERROR_UNEXPECTED);
+		nsAutoString	catURI(uri);
+
+		nsCOMPtr<nsIRDFResource>	category;
+		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
+			getter_AddRefs(category))))
+			return(rv);
+
+		rv = categoryDataSource->GetTargets(category, property, tv, targets);
+		return(rv);
+	}
+
+	if (isSearchCategoryEngineURI(source))
+	{
+		nsCOMPtr<nsIRDFResource>	trueEngine;
+		rv = resolveSearchCategoryEngineURI(source, getter_AddRefs(trueEngine));
+		if (NS_FAILED(rv))	return(rv);
+		source = trueEngine;
+	}
+
 	if (mInner)
 	{	
 		// defer search engine discovery until needed; small startup time improvement
-		if (((source == kNC_SearchRoot) || isSearchURI(source)) && (property == kNC_Child)
+		if (((source == kNC_SearchEngineRoot) || isSearchURI(source)) && (property == kNC_Child)
 			&& (mEngineListBuilt == PR_FALSE))
 		{
+			mEngineListBuilt = PR_TRUE;
+
 			// get available search engines
 			nsFileSpec			nativeDir;
 			if (NS_SUCCEEDED(rv = GetSearchFolder(nativeDir)))
 			{
 				rv = GetSearchEngineList(nativeDir);
-				mEngineListBuilt = PR_TRUE;
+				
+				// read in category list
+				rv = GetCategoryList();
+
 #ifdef	XP_MAC
 				// on Mac, use system's search files too
 				nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
@@ -591,6 +718,40 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 			BeginSearchRequest(source, doNetworkRequest);
 		}
 	}
+	return(rv);
+}
+
+
+
+nsresult
+InternetSearchDataSource::GetCategoryList()
+{
+	nsIRDFDataSource	*ds = nsnull;
+	nsresult rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+			nsnull, NS_GET_IID(nsIRDFDataSource), (void**) &ds);
+	if (NS_FAILED(rv))	return(rv);
+	if (!ds)		return(NS_ERROR_UNEXPECTED);
+
+	categoryDataSource = do_QueryInterface(ds);
+	NS_RELEASE(ds);
+	ds = nsnull;
+	if (!categoryDataSource)	return(NS_ERROR_UNEXPECTED);
+
+	nsCOMPtr<nsIRDFRemoteDataSource>	remoteCategoryDataSource = do_QueryInterface(categoryDataSource);
+	if (!remoteCategoryDataSource)	return(NS_ERROR_UNEXPECTED);
+
+	// XXX should check in user's profile directory first,
+	//     and fallback to the default file
+
+	nsFileSpec			searchDir;
+	if (NS_FAILED(rv = GetSearchFolder(searchDir)))	return(rv);
+	searchDir += "category.rdf";
+
+	nsFileURL	fileURL(searchDir);
+	if (NS_FAILED(rv = remoteCategoryDataSource->Init(fileURL.GetURLString())))	return(rv);
+
+	// synchronous read
+	rv = remoteCategoryDataSource->Refresh(PR_TRUE);
 	return(rv);
 }
 
@@ -703,7 +864,7 @@ InternetSearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 
 	nsresult rv;
 
-	if ((source == kNC_SearchRoot) || (source == kNC_LastSearchRoot) || isSearchURI(source))
+	if ((source == kNC_SearchEngineRoot) || (source == kNC_LastSearchRoot) || isSearchURI(source))
 	{
             nsCOMPtr<nsISupportsArray> array;
             rv = NS_NewISupportsArray(getter_AddRefs(array));
@@ -719,7 +880,31 @@ InternetSearchDataSource::ArcLabelsOut(nsIRDFResource *source,
             *labels = result;
             return(NS_OK);
 	}
-	
+
+	if ((isSearchCategoryURI(source)) && (categoryDataSource))
+	{
+		const char	*uri = nsnull;
+		source->GetValueConst(&uri);
+		if (!uri)	return(NS_ERROR_UNEXPECTED);
+		nsAutoString	catURI(uri);
+
+		nsCOMPtr<nsIRDFResource>	category;
+		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
+			getter_AddRefs(category))))
+			return(rv);
+
+		rv = categoryDataSource->ArcLabelsOut(category, labels);
+		return(rv);
+	}
+
+	if (isSearchCategoryEngineURI(source))
+	{
+		nsCOMPtr<nsIRDFResource>	trueEngine;
+		rv = resolveSearchCategoryEngineURI(source, getter_AddRefs(trueEngine));
+		if (NS_FAILED(rv) || (!trueEngine))	return(rv);
+		source = trueEngine;
+	}
+
 	if (mInner)
 	{
 		rv = mInner->ArcLabelsOut(source, labels);
@@ -877,6 +1062,31 @@ InternetSearchDataSource::ClearResultSearchSites(void)
 
 
 
+NS_IMETHODIMP
+InternetSearchDataSource::GetCategoryDataSource(nsIRDFDataSource **ds)
+{
+	nsresult	rv;
+
+	if (!categoryDataSource)
+	{
+		if (NS_FAILED(rv = GetCategoryList()))
+		{
+			*ds = nsnull;
+			return(rv);
+		}
+	}
+	if (categoryDataSource)
+	{
+		*ds = categoryDataSource.get();
+		NS_IF_ADDREF(*ds);
+		return(NS_OK);
+	}
+	*ds = nsnull;
+	return(NS_ERROR_FAILURE);
+}
+
+
+
 nsresult
 InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest)
 {
@@ -1006,7 +1216,8 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		{
 			if (attrib.EqualsIgnoreCase("engine"))
 			{
-				if (value.Find(kEngineProtocol) == 0)
+				if ((value.Find(kEngineProtocol) == 0) ||
+					(value.Find(kURINC_SearchCategoryEnginePrefix) == 0))
 				{
 					char	*val = value.ToNewCString();
 					if (val)
@@ -1038,6 +1249,18 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		nsCRT::free(baseFilename);
 		baseFilename = nsnull;
 		if (!engine)	continue;
+
+		// if its a engine from a search category, then get its "#Name",
+		// and map from that back to the real engine reference; if an
+		// error occurs, finish processing the rest of the engines,
+		// don't just break/return out
+		if (isSearchCategoryEngineURI(engine))
+		{
+			nsCOMPtr<nsIRDFResource>	trueEngine;
+			rv = resolveSearchCategoryEngineURI(engine, getter_AddRefs(trueEngine));
+			if (NS_FAILED(rv) || (!trueEngine))	continue;			
+			engine = trueEngine;
+		}
 
 		// mark this as a search site
 		if (mInner)
@@ -1318,7 +1541,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 					uri.Left(temp, uri.Length()-4);
 					temp += ".gif";
 					const	nsFileSpec	gifIconFile(temp);
-					if ((gifIconFile.Exists()) && (gifIconFile.IsFile()))
+					if (gifIconFile.IsFile())
 					{
 						nsFileURL	gifIconFileURL(gifIconFile);
 						iconURL = gifIconFileURL.GetURLString();
@@ -1326,7 +1549,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 					uri.Left(temp, uri.Length()-4);
 					temp += ".jpg";
 					const	nsFileSpec	jpgIconFile(temp);
-					if ((jpgIconFile.Exists()) && (jpgIconFile.IsFile()))
+					if (jpgIconFile.IsFile())
 					{
 						nsFileURL	jpgIconFileURL(jpgIconFile);
 						iconURL = jpgIconFileURL.GetURLString();
@@ -1334,7 +1557,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 					uri.Left(temp, uri.Length()-4);
 					temp += ".jpeg";
 					const	nsFileSpec	jpegIconFile(temp);
-					if ((jpegIconFile.Exists()) && (jpegIconFile.IsFile()))
+					if (jpegIconFile.IsFile())
 					{
 						nsFileURL	jpegIconFileURL(jpegIconFile);
 						iconURL = jpegIconFileURL.GetURLString();
@@ -1342,7 +1565,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 					uri.Left(temp, uri.Length()-4);
 					temp += ".png";
 					const	nsFileSpec	pngIconFile(temp);
-					if ((pngIconFile.Exists()) && (pngIconFile.IsFile()))
+					if (pngIconFile.IsFile())
 					{
 						nsFileURL	pngIconFileURL(pngIconFile);
 						iconURL = pngIconFileURL.GetURLString();
@@ -1430,7 +1653,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir)
 								}
 
 								// Note: add the child relationship last
-								mInner->Assert(kNC_SearchRoot, kNC_Child, searchRes, PR_TRUE);
+								mInner->Assert(kNC_SearchEngineRoot, kNC_Child, searchRes, PR_TRUE);
 							}
 							nsCRT::free(searchURI);
 							searchURI = nsnull;

@@ -12,6 +12,8 @@ function onLoadInternetResults()
 	return(true);
 }
 
+
+
 function doEngineClick(node)
 {
 	dump("doEngineClick entered.\n");
@@ -66,7 +68,7 @@ function doEngineClick(node)
 		}
 	}
 
-	if (html != "")
+	if ((html) && (html != ""))
 	{
 		var doc = window.frames[0].document;
 		doc.open("text/html", "replace");
@@ -79,6 +81,8 @@ function doEngineClick(node)
 	}
 
 }
+
+
 
 function doResultClick(node)
 {

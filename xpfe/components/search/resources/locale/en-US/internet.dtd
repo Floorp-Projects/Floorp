@@ -19,7 +19,10 @@
    - Contributor(s):
   --> 
 
-<!ENTITY words.label                 "Words: ">
+<!ENTITY search.label                 "Search the ">
+<!ENTITY for.label                    " category for ">
+
+<!ENTITY allengines.label             "All Engines">
 
 <!ENTITY checkbox.column.label       "On">
 <!ENTITY engine.column.label         "Search Engines">

@@ -24,6 +24,7 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
+	category.rdf			\
 	AOL_NetFind.gif			\
 	AOL_NetFind.src			\
 	Excite.gif			\

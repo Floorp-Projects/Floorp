@@ -27,6 +27,7 @@
 */
 
 #include "nsISupports.idl"
+#include "nsIRDFDataSource.idl"
 
 [scriptable, uuid(1222e6f0-a5e3-11d2-8b7c-00805f8a7db6)]
 interface nsILocalSearchService : nsISupports
@@ -36,7 +37,8 @@ interface nsILocalSearchService : nsISupports
 [scriptable, uuid(6bd1d803-1c67-11d3-9820-ed1b357eb3c4)]
 interface nsIInternetSearchService : nsISupports
 {
-	void	ClearResultSearchSites();
+	void			ClearResultSearchSites();
+	nsIRDFDataSource	GetCategoryDataSource();
 };
 
 %{C++
