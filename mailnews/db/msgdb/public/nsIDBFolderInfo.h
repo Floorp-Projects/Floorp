@@ -34,7 +34,7 @@ class nsIDBFolderInfo : public nsISupports {
 public:
     static const nsIID& IID() { static nsIID iid = NS_IDBFOLDERINFO_IID; return iid; }
 
-    NS_IMETHOD			GetFlags(PRInt32 *result) ;
+    NS_IMETHOD			GetFlags(PRInt32 *result) = 0 ;
     NS_IMETHOD			SetFlags(PRInt32 flags) = 0;
     NS_IMETHOD			OrFlags(PRInt32 flags, PRInt32 *result) = 0;
     NS_IMETHOD			AndFlags(PRInt32 flags, PRInt32 *result) = 0;
