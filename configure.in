@@ -5778,6 +5778,19 @@ dnl NECKO_ configuration options are not global
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES NECKO_"
 
 dnl ========================================================
+dnl string api compatibility
+dnl ========================================================
+MOZ_V1_STRING_ABI=1
+MOZ_ARG_DISABLE_BOOL(v1-string-abi,
+[  --disable-v1-string-abi   Disable binary compatibility layer for strings],
+    MOZ_V1_STRING_ABI=,
+    MOZ_V1_STRING_ABI=1)
+AC_SUBST(MOZ_V1_STRING_ABI)
+if test "$MOZ_V1_STRING_ABI"; then
+    AC_DEFINE(MOZ_V1_STRING_ABI)
+fi
+
+dnl ========================================================
 dnl =
 dnl = Cleanup section for misc ordering snafus
 dnl =
@@ -6224,6 +6237,7 @@ HAVE_SYS_MOUNT_H
 HAVE_SYS_VFS_H
 HAVE_WCRTOMB
 ENABLE_STATIC_COMPONENT_LOADER
+MOZ_V1_STRING_ABI
 "
 
 AC_CONFIG_HEADER(

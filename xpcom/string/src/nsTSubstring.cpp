@@ -175,6 +175,13 @@ nsTSubstring_CharT::Finalize()
     // mData, mLength, and mFlags are purposefully left dangling
   }
 
+#ifndef MOZ_V1_STRING_ABI
+nsTSubstring_CharT::~nsTSubstring_CharT()
+  {
+    Finalize();
+  }
+#endif
+
 void
 nsTSubstring_CharT::ReplacePrep( index_type cutStart, size_type cutLen, size_type fragLen )
   {
@@ -383,6 +390,7 @@ nsTSubstring_CharT::Assign( const substring_tuple_type& tuple )
   }
 
   // this is non-inline to reduce codesize at the callsite
+#ifdef MOZ_V1_STRING_ABI
 void
 nsTSubstring_CharT::Assign( const abstract_string_type& readable )
   {
@@ -392,6 +400,7 @@ nsTSubstring_CharT::Assign( const abstract_string_type& readable )
     else
       Assign(readable.ToSubstring());
   }
+#endif
 
 
 void
@@ -491,11 +500,13 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const sub
       tuple.WriteTo(mData + cutStart, length);
   }
 
+#ifdef MOZ_V1_STRING_ABI
 void
 nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const abstract_string_type& readable )
   {
     Replace(cutStart, cutLength, readable.ToSubstring());
   }
+#endif
 
 void
 nsTSubstring_CharT::SetCapacity( size_type capacity )
@@ -572,6 +583,7 @@ nsTSubstring_CharT::Equals( const self_type& str, const comparator_type& comp ) 
     return mLength == str.mLength && comp(mData, str.mData, mLength) == 0;
   }
 
+#ifdef MOZ_V1_STRING_ABI
 PRBool
 nsTSubstring_CharT::Equals( const abstract_string_type& readable ) const
   {
@@ -589,6 +601,7 @@ nsTSubstring_CharT::Equals( const abstract_string_type& readable, const comparat
 
     return mLength == length && comp(mData, data, mLength) == 0;
   }
+#endif
 
 PRBool
 nsTSubstring_CharT::Equals( const char_type* data ) const

@@ -39,9 +39,11 @@
 void
 nsTPromiseFlatString_CharT::Init(const substring_type& str)
   {
+#ifdef MOZ_V1_STRING_ABI
     // we have to manually set this here since we are being called on an
     // unitialized object.
     mVTable = nsTObsoleteAString_CharT::sCanonicalVTable;
+#endif
 
     if (str.IsTerminated())
       {
@@ -56,6 +58,7 @@ nsTPromiseFlatString_CharT::Init(const substring_type& str)
   }
 
   // this function is non-inline to minimize codesize
+#ifdef MOZ_V1_STRING_ABI
 void
 nsTPromiseFlatString_CharT::Init(const abstract_string_type& readable)
   {
@@ -64,3 +67,4 @@ nsTPromiseFlatString_CharT::Init(const abstract_string_type& readable)
     else
       Init(readable.ToSubstring());
   }
+#endif

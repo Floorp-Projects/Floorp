@@ -48,10 +48,14 @@
 #endif
 
   // convert fragment to |const substring_type&|
+#ifdef MOZ_V1_STRING_ABI
 #define TO_SUBSTRING(_v)                                        \
     ( (_v)->mVTable == obsolete_string_type::sCanonicalVTable   \
         ? *(_v)->AsSubstring()                                   \
         :  (_v)->ToSubstring() )
+#else
+#define TO_SUBSTRING(_v) (*(_v))
+#endif
 
   // define nsSubstringTuple
 #include "string-template-def-unichar.h"

@@ -62,7 +62,18 @@ class nsTSubstring_CharT : public nsTAString_CharT
       typedef char_type*            char_iterator;
       typedef const char_type*      const_char_iterator;
 
+#ifdef MOZ_V1_STRING_ABI
+      typedef nsTAString_CharT      base_string_type;
+#else
+      typedef nsTSubstring_CharT    base_string_type;
+#endif
+
     public:
+
+#ifndef MOZ_V1_STRING_ABI
+        // this acts like a virtual destructor
+      NS_COM NS_FASTCALL ~nsTSubstring_CharT();
+#endif
 
         /**
          * reading iterators
@@ -209,8 +220,10 @@ class nsTSubstring_CharT : public nsTAString_CharT
       NS_COM PRBool NS_FASTCALL Equals( const self_type& ) const;
       NS_COM PRBool NS_FASTCALL Equals( const self_type&, const comparator_type& ) const;
 
+#ifdef MOZ_V1_STRING_ABI
       NS_COM PRBool NS_FASTCALL Equals( const abstract_string_type& readable ) const;
       NS_COM PRBool NS_FASTCALL Equals( const abstract_string_type& readable, const comparator_type& comp ) const;
+#endif
 
       NS_COM PRBool NS_FASTCALL Equals( const char_type* data ) const;
       NS_COM PRBool NS_FASTCALL Equals( const char_type* data, const comparator_type& comp ) const;
@@ -291,7 +304,9 @@ class nsTSubstring_CharT : public nsTAString_CharT
       NS_COM void NS_FASTCALL Assign( const char_type* data, size_type length = size_type(-1) );
       NS_COM void NS_FASTCALL Assign( const self_type& );
       NS_COM void NS_FASTCALL Assign( const substring_tuple_type& );
+#ifdef MOZ_V1_STRING_ABI
       NS_COM void NS_FASTCALL Assign( const abstract_string_type& );
+#endif
 
       NS_COM void NS_FASTCALL AssignASCII( const char* data, size_type length );
       NS_COM void NS_FASTCALL AssignASCII( const char* data );
@@ -315,7 +330,9 @@ class nsTSubstring_CharT : public nsTAString_CharT
       self_type& operator=( const char_type* data )                                             { Assign(data);     return *this; }
       self_type& operator=( const self_type& str )                                              { Assign(str);      return *this; }
       self_type& operator=( const substring_tuple_type& tuple )                                 { Assign(tuple);    return *this; }
+#ifdef MOZ_V1_STRING_ABI
       self_type& operator=( const abstract_string_type& readable )                              { Assign(readable); return *this; }
+#endif
 
       NS_COM void NS_FASTCALL Adopt( char_type* data, size_type length = size_type(-1) );
 
@@ -328,7 +345,9 @@ class nsTSubstring_CharT : public nsTAString_CharT
       NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) );
              void Replace( index_type cutStart, size_type cutLength, const self_type& str )      { Replace(cutStart, cutLength, str.Data(), str.Length()); }
       NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
+#ifdef MOZ_V1_STRING_ABI
       NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const abstract_string_type& readable );
+#endif
 
       NS_COM void NS_FASTCALL ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length = size_type(-1) );
 
@@ -336,7 +355,9 @@ class nsTSubstring_CharT : public nsTAString_CharT
       void Append( const char_type* data, size_type length = size_type(-1) )                     { Replace(mLength, 0, data, length); }
       void Append( const self_type& str )                                                        { Replace(mLength, 0, str); }
       void Append( const substring_tuple_type& tuple )                                           { Replace(mLength, 0, tuple); }
+#ifdef MOZ_V1_STRING_ABI
       void Append( const abstract_string_type& readable )                                        { Replace(mLength, 0, readable); }
+#endif
 
       void AppendASCII( const char* data, size_type length = size_type(-1) )                     { ReplaceASCII(mLength, 0, data, length); }
 
@@ -359,13 +380,17 @@ class nsTSubstring_CharT : public nsTAString_CharT
       self_type& operator+=( const char_type* data )                                             { Append(data);     return *this; }
       self_type& operator+=( const self_type& str )                                              { Append(str);      return *this; }
       self_type& operator+=( const substring_tuple_type& tuple )                                 { Append(tuple);    return *this; }
+#ifdef MOZ_V1_STRING_ABI
       self_type& operator+=( const abstract_string_type& readable )                              { Append(readable); return *this; }
+#endif
 
       void Insert( char_type c, index_type pos )                                                 { Replace(pos, 0, c); }
       void Insert( const char_type* data, index_type pos, size_type length = size_type(-1) )     { Replace(pos, 0, data, length); }
       void Insert( const self_type& str, index_type pos )                                        { Replace(pos, 0, str); }
       void Insert( const substring_tuple_type& tuple, index_type pos )                           { Replace(pos, 0, tuple); }
+#ifdef MOZ_V1_STRING_ABI
       void Insert( const abstract_string_type& readable, index_type pos )                        { Replace(pos, 0, readable); }
+#endif
 
       void Cut( index_type cutStart, size_type cutLength )                                       { Replace(cutStart, cutLength, char_traits::sEmptyBuffer, 0); }
 
@@ -410,7 +435,13 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * base type, which helps avoid converting to nsTAString.
          */
       nsTSubstring_CharT(const substring_tuple_type& tuple)
+#ifdef MOZ_V1_STRING_ABI
         : abstract_string_type(nsnull, 0, F_NONE)
+#else
+        : mData(nsnull),
+          mLength(0),
+          mFlags(F_NONE)
+#endif
         {
           Assign(tuple);
         }
@@ -422,7 +453,13 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * inside the string implementation.
          */
       nsTSubstring_CharT( char_type *data, size_type length, PRUint32 flags )
+#ifdef MOZ_V1_STRING_ABI
         : abstract_string_type(data, length, flags) {}
+#else
+        : mData(data),
+          mLength(length),
+          mFlags(flags) {}
+#endif
 
 
     protected:
@@ -434,21 +471,42 @@ class nsTSubstring_CharT : public nsTAString_CharT
       // XXX GCC 3.4 needs this :-(
       friend class nsTPromiseFlatString_CharT;
 
+#ifndef MOZ_V1_STRING_ABI
+      char_type*  mData;
+      size_type   mLength;
+      PRUint32    mFlags;
+#endif
+
         // default initialization 
       nsTSubstring_CharT()
+#ifdef MOZ_V1_STRING_ABI
         : abstract_string_type(
               NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer), 0, F_TERMINATED) {}
+#else
+        : mData(NS_CONST_CAST(char_type*, char_traits::sEmptyBuffer)),
+          mLength(0),
+          mFlags(F_TERMINATED) {}
+#endif
 
         // version of constructor that leaves mData and mLength uninitialized
       explicit
       nsTSubstring_CharT( PRUint32 flags )
+#ifdef MOZ_V1_STRING_ABI
         : abstract_string_type(flags) {}
+#else
+        : mFlags(flags) {}
+#endif
 
         // copy-constructor, constructs as dependent on given object
         // (NOTE: this is for internal use only)
       nsTSubstring_CharT( const self_type& str )
-        : abstract_string_type(
-              str.mData, str.mLength, str.mFlags & (F_TERMINATED | F_VOIDED)) {}
+#ifdef MOZ_V1_STRING_ABI
+        : abstract_string_type(str.mData, str.mLength, str.mFlags & (F_TERMINATED | F_VOIDED)) {}
+#else
+        : mData(str.mData),
+          mLength(str.mLength),
+          mFlags(str.mFlags & (F_TERMINATED | F_VOIDED)) {}
+#endif
 
         /**
          * this function releases mData and does not change the value of
@@ -589,3 +647,43 @@ class nsTSubstring_CharT : public nsTAString_CharT
       //   mutually exclusive with F_SHARED, F_OWNED, and F_FIXED.
       //
   };
+
+NS_COM
+int NS_FASTCALL Compare( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs, const nsTStringComparator_CharT& = nsTDefaultStringComparator_CharT() );
+
+
+inline
+PRBool operator!=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+  {
+    return !lhs.Equals(rhs);
+  }
+
+inline
+PRBool operator< ( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+  {
+    return Compare(lhs, rhs)< 0;
+  }
+
+inline
+PRBool operator<=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+  {
+    return Compare(lhs, rhs)<=0;
+  }
+
+inline
+PRBool operator==( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+  {
+    return lhs.Equals(rhs);
+  }
+
+inline
+PRBool operator>=( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+  {
+    return Compare(lhs, rhs)>=0;
+  }
+
+inline
+PRBool operator> ( const nsTSubstring_CharT::base_string_type& lhs, const nsTSubstring_CharT::base_string_type& rhs )
+  {
+    return Compare(lhs, rhs)> 0;
+  }

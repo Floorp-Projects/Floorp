@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+//* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -55,20 +55,22 @@ class nsTSubstringTuple_CharT
 
       typedef nsTSubstringTuple_CharT    self_type;
       typedef nsTSubstring_CharT         substring_type;
-      typedef nsTString_CharT            string_type;
-      typedef nsTAString_CharT           abstract_string_type;
+#ifdef MOZ_V1_STRING_ABI
+      typedef nsTAString_CharT           base_string_type;
       typedef nsTObsoleteAString_CharT   obsolete_string_type;
-
+#else
+      typedef nsTSubstring_CharT         base_string_type;
+#endif
       typedef PRUint32                   size_type;
 
     public:
 
-      nsTSubstringTuple_CharT(const abstract_string_type* a, const abstract_string_type* b)
+      nsTSubstringTuple_CharT(const base_string_type* a, const base_string_type* b)
         : mHead(nsnull)
         , mFragA(a)
         , mFragB(b) {}
 
-      nsTSubstringTuple_CharT(const self_type& head, const abstract_string_type* b)
+      nsTSubstringTuple_CharT(const self_type& head, const base_string_type* b)
         : mHead(&head)
         , mFragA(nsnull) // this fragment is ignored when head != nsnull
         , mFragB(b) {}
@@ -93,21 +95,21 @@ class nsTSubstringTuple_CharT
 
     private:
 
-      const self_type*            mHead;
-      const abstract_string_type* mFragA;
-      const abstract_string_type* mFragB;
+      const self_type*        mHead;
+      const base_string_type* mFragA;
+      const base_string_type* mFragB;
   };
 
 inline
 const nsTSubstringTuple_CharT
-operator+(const nsTAString_CharT& a, const nsTAString_CharT& b)
+operator+(const nsTSubstringTuple_CharT::base_string_type& a, const nsTSubstringTuple_CharT::base_string_type& b)
   {
     return nsTSubstringTuple_CharT(&a, &b);
   }
 
 inline
 const nsTSubstringTuple_CharT
-operator+(const nsTSubstringTuple_CharT& head, const nsTAString_CharT& b)
+operator+(const nsTSubstringTuple_CharT& head, const nsTSubstringTuple_CharT::base_string_type& b)
   {
     return nsTSubstringTuple_CharT(head, &b);
   }
