@@ -1969,7 +1969,10 @@ nsSocketBS::ReleaseSocket(PRFileDesc *sock)
     nsSocketTransport *transport = nsnull;
     GetTransport(&transport);
     if (transport)
+    {
         transport->ReleaseSocket(sock);
+        NS_RELEASE(transport);
+    }
 }
 
 nsresult
