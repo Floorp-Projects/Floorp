@@ -6,6 +6,7 @@ classic.jar:
 messenger.jar:
 *+  content/messenger/messengercompose/messengercompose.xul        (content/messengercompose.xul)
 *+  content/messenger/messengercompose/MsgComposeCommands.js       (content/MsgComposeCommands.js)
++   content/editor/images/tag-anchor.gif                           (content/icons/tag-anchor.gif)
 +   content/editor/images/smile_n.gif                              (content/icons/smile_n.gif)
 +   content/editor/images/frown_n.gif                              (content/icons/frown_n.gif)
 +   content/editor/images/wink_n.gif                               (content/icons/wink_n.gif)
