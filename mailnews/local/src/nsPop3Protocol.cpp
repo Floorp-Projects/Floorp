@@ -559,7 +559,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 		// Pick up pref setting regarding leave messages on server, message size
 		// limit, for now do the following
 
-#if 0 // for now
+#if 1 // for now
 		m_pop3ConData->leave_on_server = PR_TRUE;
         // ** jefft - bug 16338 -- POP3- large file attachment do not download
         // with the msg
@@ -2077,8 +2077,6 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         }
     }
     
-    PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
-
     if (m_pop3ConData->msg_closure)	/* not done yet */
     {
         if (!m_pop3ConData->obuffer)
@@ -2093,6 +2091,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 		status = buffer_size;
 		do
 		{
+            PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
 			BufferInput(line, buffer_size);
 			// BufferInput(CRLF, 2);
       BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
@@ -2101,9 +2100,6 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 			PR_FREEIF(line);
 			line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size, pauseForMoreData);
 			status += buffer_size;
-
-      PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
-
 		} while (/* !pauseForMoreData && */ line);
 
 		//PRUint32 size = 0;
