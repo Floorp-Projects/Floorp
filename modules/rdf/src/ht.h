@@ -92,6 +92,7 @@ typedef struct _HT_PaneStruct {
 	struct _HT_ViewStruct		*viewList;
 	struct _HT_ViewStruct		*selectedView;
 	struct _HT_URLSiteMapAssoc	*smp;
+	struct _HT_URLSiteMapAssoc	*sbp;
 	uint32				viewListCount;
 	PRBool				autoFlushFlag;
 	SBProvider			smartBrowsingProviders;
@@ -99,6 +100,7 @@ typedef struct _HT_PaneStruct {
 	PRBool				personaltoolbar;
 	PRBool				bookmarkmenu;
 	PRBool				special;
+    char*               windowURL;
 } HT_PaneStruct;
 
 typedef	struct HT_ColumnStruct {
@@ -202,8 +204,9 @@ typedef struct	_htmlElement	{
 typedef struct _HT_URLSiteMapAssoc {
 	uint8				siteToolType;
     uint8               origin;
+    uint8               onDisplayp;
 	char				*url;
-	RDF_Resource			sitemap;
+	RDF_Resource		sitemap;
     char*               name;
     char*               sitemapUrl;
 	struct _HT_URLSiteMapAssoc	*next;
@@ -287,7 +290,7 @@ HT_DropAction			copyRDFLinkURLAt (HT_Resource dropx, char* objURL, char *objTitl
 HT_DropAction			uploadLFSURL (HT_Resource dropTarget, char* objURL);
 HT_DropAction			uploadRDFFileURL (HT_Resource dropTarget, char* objURL);
 HT_DropAction			esfsCopyMoveContentURL (HT_Resource dropTarget, char* objURL);
-HT_URLSiteMapAssoc *		makeNewSMP (HT_Pane htPane, char* pUrl, RDF_Resource u);
+HT_URLSiteMapAssoc *		makeNewSMP (HT_Pane htPane, char* pUrl, char* sitemapurl);
 void				populateSBProviders (HT_Pane htPane);
 SBProvider			SBProviderOfNode (HT_Resource node);
 PRBool				implicitDomainURL (char* url);

@@ -1514,8 +1514,8 @@ destroyViewInt (HT_Resource r, PRBool saveOpenState)
 		if (HT_IsContainer(child) && (child->view->pane->special == PR_FALSE))
 		{
 			openState = nlocalStoreHasAssertion(gLocalStore, child->node,
-				gCoreVocab->RDF_instanceOf, gNavCenter->RDF_AutoOpen,
-				RDF_RESOURCE_TYPE, 1);
+                                                            gNavCenter->RDF_AutoOpen, "yes",
+				RDF_STRING_TYPE, 1);
 			if ((!openState) && (HT_IsContainerOpen(child)) &&
 				(!startsWith("ftp:", resourceID(child->node))) &&
 				(!startsWith("es:", resourceID(child->node))) &&
@@ -1523,15 +1523,15 @@ destroyViewInt (HT_Resource r, PRBool saveOpenState)
 			{
 				/* make assertion */
 				nlocalStoreAssert(gLocalStore, child->node,
-				gCoreVocab->RDF_instanceOf, gNavCenter->RDF_AutoOpen,
-				RDF_RESOURCE_TYPE, 1);
+				gNavCenter->RDF_AutoOpen, "yes",
+				RDF_STRING_TYPE, 1);
 			}
 			else if (openState && (!HT_IsContainerOpen(child)))
 			{
 				/* remove assertion */
 				nlocalStoreUnassert(gLocalStore, child->node,
-				gCoreVocab->RDF_instanceOf, gNavCenter->RDF_AutoOpen,
-				RDF_RESOURCE_TYPE);
+				gNavCenter->RDF_AutoOpen, "yes",
+				RDF_STRING_TYPE);
 			}
 		}
 		if (child->child)
@@ -2160,8 +2160,8 @@ HT_NewCursor (HT_Resource node)
 		if (node->view->inited == PR_TRUE)		return(NULL);
 		if (node->view->pane->special == PR_TRUE)	return(NULL);
 		if (nlocalStoreHasAssertion(gLocalStore, node->node,
-			gCoreVocab->RDF_instanceOf, gNavCenter->RDF_AutoOpen,
-			RDF_RESOURCE_TYPE, 1))
+			gNavCenter->RDF_AutoOpen, "yes",
+			RDF_STRING_TYPE, 1))
 		{
 			node->flags |= HT_OPEN_FLAG;
 		}
@@ -6723,21 +6723,19 @@ RDF_GetNavCenterDB()
 
 
 HT_URLSiteMapAssoc *
-makeNewSMP (HT_Pane htPane, char* pUrl, RDF_Resource u)
+makeNewSMP (HT_Pane htPane, char* pUrl, char* sitemapUrl)
 {
 	HT_URLSiteMapAssoc	*nm;
         HT_URLSiteMapAssoc *nsmp = htPane->smp;
 	while (nsmp != NULL) {
-       if (stringEquals(nsmp->url, pUrl) && (nsmp->sitemap == u)) return nsmp;
+       if (stringEquals(nsmp->url, pUrl) && stringEquals(nsmp->url, sitemapUrl)) return nsmp;
 	   nsmp = nsmp->next;
 	}
 
 	if ((nm = (HT_URLSiteMapAssoc*)getMem(sizeof(HT_URLSiteMapAssoc))) != NULL)
 	{
-		nm->sitemap = u;
+		nm->sitemapUrl = copyString(sitemapUrl);
 		nm->url = copyString(pUrl);
-                nm->next = htPane->smp;
-                htPane->smp = nm;
 
 	}
 	return(nm);
@@ -6756,7 +6754,10 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 	
 	sp = htPane->db->translators[5];
 	nu = RDF_GetResource(htPane->db, pSitemapUrl, 1);
-	nsmp = makeNewSMP(htPane, pUrl, nu);
+	nsmp = makeNewSMP(htPane, pUrl, pSitemapUrl);
+        nsmp->sitemap = nu;
+        nsmp->next = htPane->smp;
+        htPane->smp = nsmp;
 	if (name != NULL) {
 		nm = copyString(name);
 	}
@@ -6770,63 +6771,67 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 	setContainerp(nu, 1);
     
         nsmp->origin =  FROM_PAGE;
+        nsmp->onDisplayp = 1;
 	SCookAssert3(sp, nu, gCoreVocab->RDF_name, nm,  RDF_STRING_TYPE, 1);
 	SCookAssert3(sp, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Sitemaps, 
                      RDF_RESOURCE_TYPE, 1);
-	ExitPageInt (htPane, pUrl, 1) ;
+	 
 
 }
-
-
-void ExitPageInt (HT_Pane htPane, char *pUrl, PRBool guessp) {
-  HT_URLSiteMapAssoc	*nsmp;
-  RDF_Resource		r;
-  RDFT			sp;
-  
-  sp = htPane->db->translators[5];
-  nsmp = htPane->smp;
-	while (nsmp != NULL) {
-          if ((stringEquals(nsmp->url, pUrl) && 
-              (!guessp || (nsmp->origin == GUESS_FROM_PREVIOUS_PAGE))) ||
-			  (startsWith(nsmp->url, pUrl) && (nsmp->origin == GUESS_FROM_PREVIOUS_PAGE)))
-            {
-              r = nsmp->sitemap;
-              SCookUnassert(sp, r, gCoreVocab->RDF_parent,
-                            gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE);
-            }
-          nsmp = nsmp->next;
-	}
-}
-
 
 void RetainOldSitemaps (HT_Pane htPane, char *pUrl) {
   HT_URLSiteMapAssoc	*nsmp;
-  RDF_Resource		r;
   RDFT			sp;
   
   sp = htPane->db->translators[5];
   nsmp = htPane->smp;
-	while (nsmp != NULL) {
-          if ((nsmp->siteToolType == RDF_SITEMAP) && (startsWith(nsmp->url, pUrl)))
-            {	
-              RDF_Resource nu = RDF_GetResource(htPane->db, nsmp->sitemapUrl, 1);
-              nsmp->sitemap = nu;
-              nsmp->origin =  GUESS_FROM_PREVIOUS_PAGE;
-              SCookAssert3(sp, nu, gCoreVocab->RDF_name, copyString(nsmp->name),  
-                           RDF_STRING_TYPE, 1);
-              SCookAssert3(sp, nu, gCoreVocab->RDF_parent, 
-                           gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE, 1);
-            }
-          nsmp = nsmp->next;
-	}
+  while (nsmp != NULL) {
+    if ((nsmp->siteToolType == RDF_SITEMAP)) {
+      if (startsWith(nsmp->url, pUrl)) 
+        { 
+          if (!nsmp->onDisplayp) {	
+            RDF_Resource nu = RDF_GetResource(htPane->db, nsmp->sitemapUrl, 1);
+            nsmp->sitemap = nu;
+            nsmp->origin =  GUESS_FROM_PREVIOUS_PAGE;
+            nsmp->onDisplayp = 1;
+            SCookAssert3(sp, nu, gCoreVocab->RDF_name, copyString(nsmp->name),  
+                         RDF_STRING_TYPE, 1);
+            SCookAssert3(sp, nu, gCoreVocab->RDF_parent, 
+                         gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE, 1);
+          }
+        } else if (nsmp->onDisplayp) {
+          SCookUnassert(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
+                        gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE);
+          nsmp->onDisplayp = 0;
+        }
+    }
+    nsmp = nsmp->next;
+  }
 }
-
 
 
 PR_PUBLIC_API(void)
 HT_ExitPage(HT_Pane htPane, char *pUrl)
 {
-  ExitPageInt(htPane, pUrl, 0);
+  HT_URLSiteMapAssoc	*nsmp;
+  RDFT			sp;
+  
+  sp = htPane->db->translators[5];
+  nsmp = htPane->sbp;
+  while (nsmp != NULL) {    
+    HT_URLSiteMapAssoc *next;
+    SCookUnassert(sp, nsmp->sitemap, gCoreVocab->RDF_parent,
+                  gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE);      
+    next = nsmp->next;
+    freeMem(nsmp->url);
+    freeMem(nsmp->sitemapUrl);
+    freeMem(nsmp);
+    nsmp = next;
+  }
+
+  freeMem(htPane->windowURL);
+  htPane->windowURL = NULL;
+  htPane->sbp = NULL;
 }
 
 void
@@ -7019,13 +7024,17 @@ HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl)
 		sprintf(buffer, "%s%s", prov->url,  &pUrl[7]);
 		nu = RDF_GetResource(htPane->db, buffer, 1);
 		setContainerp(nu, prov->containerp);
-		nsmp = makeNewSMP(htPane, pUrl, nu);
+		nsmp = makeNewSMP(htPane, pUrl, buffer);
+                nsmp->sitemap = nu;
+                nsmp->next = htPane->sbp;
+                htPane->sbp = nsmp;
 		nsmp->siteToolType = RDF_RELATED_LINKS;
 		SCookAssert3(sp, nu, gCoreVocab->RDF_name, copyString(prov->name), RDF_STRING_TYPE, 1);
 		SCookAssert3(sp, nu, gCoreVocab->RDF_parent, gNavCenter->RDF_Sitemaps, RDF_RESOURCE_TYPE, 1);
 		prov = prov->next;
 		freeMem(buffer);
 	}
+        htPane->windowURL = copyString(pUrl);
 	RetainOldSitemaps(htPane, pUrl);
 
 }
