@@ -50,6 +50,11 @@ public:
 	NS_IMETHOD    	Show(PRBool aState);
 	NS_IMETHODIMP		SetFont(const nsFont &aFont);
 
+	// Mac string utilities
+	// (they really should be elsewhere but, well, only the Mac controls use them)
+	static void 		StringToStr255(const nsString& aText, Str255& aStr255);
+	static void 		Str255ToString(const Str255& aStr255, nsString& aText);
+
 protected:
 	
 	NS_METHOD				CreateOrReplaceMacControl(short inControlType);
@@ -63,8 +68,8 @@ protected:
 	PRInt32					mValue;
 	PRInt32					mMin;
 	PRInt32					mMax;
-	ControlHandle			mControl;
-	short					mControlType;
+	ControlHandle		mControl;
+	short						mControlType;
 
 	nsString				mLastLabel;
 	nsRect					mLastBounds;

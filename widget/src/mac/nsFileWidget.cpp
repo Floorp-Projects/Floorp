@@ -19,6 +19,7 @@
 #include "nsFileWidget.h"
 #include "nsStringUtil.h"
 #include <StandardFile.h>
+#include "nsMacControl.h"
 
 #include "nsFileSpec.h"
 
@@ -147,8 +148,8 @@ PRBool nsFileWidget::Show()
 
   Str255 title;
   Str255 defaultName;
-  StringToStr255(mTitle,title);
-  StringToStr255(mDefault,defaultName);
+  nsMacControl::StringToStr255(mTitle,title);
+  nsMacControl::StringToStr255(mDefault,defaultName);
     
   FSSpec theFile;
   PRBool userClicksOK = PR_FALSE;
