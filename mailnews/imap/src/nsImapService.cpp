@@ -48,7 +48,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
-static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 
 static const char *sequenceString = "SEQUENCE";
 static const char *uidString = "UID";
@@ -2082,20 +2081,16 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 
     nsresult rv = NS_OK;
     nsCOMPtr<nsIImapMockChannel> mockChannel;
-    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aURI);
+    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aURI, &rv);
 
-    rv = nsComponentManager::CreateInstance(kCImapMockChannel, nsnull, NS_GET_IID(nsIImapMockChannel), getter_AddRefs(mockChannel));
-    if (mockChannel)
-    {
-        mockChannel->SetLoadGroup(aGroup);
-        mockChannel->SetURI(aURI);
-        if (imapUrl)
-            imapUrl->SetMockChannel(mockChannel);
-        *_retval = mockChannel;
-        NS_IF_ADDREF(*_retval);
-    }
-    else
-        rv = NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) return rv;
+
+    rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
+    if (NS_FAILED(rv) || !mockChannel) return rv;
+
+    mockChannel->SetLoadGroup(aGroup);
+    *_retval = mockChannel;
+    NS_IF_ADDREF(*_retval);
 
     return rv;
 }

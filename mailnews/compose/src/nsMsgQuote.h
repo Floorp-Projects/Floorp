@@ -24,6 +24,8 @@
 #include "nsIMsgMessageService.h"
 #include "nsIStreamListener.h"
 #include "nsIMimeStreamConverter.h"
+#include "nsIChannel.h"
+#include "nsCOMPtr.h"
 
 #define NS_MSGQUOTE_CID \
   {0x1C7ABF0C, 0x21E5, 0x11d3, \
@@ -55,17 +57,16 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGQUOTE
 
+  nsresult CreateStartupUrl(char *uri, nsIURI** aUrl);
   // 
   // Implementation data...
   //
-  nsFileSpec      *mTmpFileSpec;
-  nsIFileSpec     *mTmpIFileSpec;
-//  nsCOMPtr<nsIStreamListener> mStreamListener;
   nsIStreamListener* mStreamListener;
   char            *mURI;
   nsIMsgMessageService    *mMessageService;
   PRBool			mQuoteHeaders;
   nsMsgQuoteListener *mQuoteListener;
+  nsCOMPtr<nsIChannel> mQuoteChannel;
 };
 
 // Will be used by factory to generate a nsMsgQuote class...

@@ -17,18 +17,22 @@
 */
 #include "nsISupports.idl"
 #include "nsIStreamListener.idl"
+#include "nsIChannel.idl"
 
 %{ C++
 %}
 
+interface nsIMimeStreamConverterListener;
+
 [scriptable, uuid(1C7ABF0C-21E5-11d3-8EF1-00A024A7D144)]
-
-
 interface nsIMsgQuote : nsISupports {
 	/*
 	 * This is the primary interface for quoting a particular message specified
 	 * by a URI
 	 */
-	void		QuoteMessage(in wstring msgURI, in boolean quoteHeaders, in nsIStreamListener aStreamListener);
+	void		QuoteMessage(in wstring msgURI, in boolean quoteHeaders, in
+                             nsIStreamListener aStreamListener);
+    readonly attribute nsIMimeStreamConverterListener quoteListener;
+    readonly attribute nsIChannel quoteChannel;
 };
 

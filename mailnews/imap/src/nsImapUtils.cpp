@@ -241,11 +241,17 @@ nsresult nsParseImapMessageURI(const char* uri, nsCString& folderURI, PRUint32 *
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
+    PRInt32 keyEndSeparator = uriStr.FindCharInSet("?&", 
+                                                   keySeparator); 
 		nsAutoString folderPath;
 		uriStr.Left(folderURI, keySeparator);
 		folderURI.Cut(4, 8);	// cut out the _message part of imap_message:
 		nsCAutoString keyStr;
-		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
+    if (keyEndSeparator != -1)
+        uriStr.Mid(keyStr, keySeparator+1, 
+                   keyEndSeparator-(keySeparator+1));
+    else
+        uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
 		PRInt32 errorCode;
 		*key = keyStr.ToInteger(&errorCode);
 

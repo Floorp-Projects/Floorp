@@ -39,6 +39,7 @@
 #include "nsMimeStringResources.h"
 #include "nsIPref.h"
 #include "nsIIOService.h"
+#include "nsIMsgQuote.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -238,8 +239,9 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
 
       char *ptr2 = PL_strcasestr ("only", (header+lenOfHeader));
       char *ptr3 = PL_strcasestr ("quote", (header+lenOfHeader));
-      char *ptr4 = PL_strcasestr ("none", (header+lenOfHeader));
-      if (ptr4)
+      char *ptr4 = PL_strcasestr ("quotebody", (header+lenOfHeader));
+      char *ptr5 = PL_strcasestr ("none", (header+lenOfHeader));
+      if (ptr5)
       {
         PR_FREEIF(mOutputFormat);
         mOutputFormat = PL_strdup("text/html");
@@ -256,6 +258,12 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
         PR_FREEIF(mOutputFormat);
         mOutputFormat = PL_strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageQuoting;
+      }
+      else if (ptr4)
+      {
+        PR_FREEIF(mOutputFormat);
+        mOutputFormat = PL_strdup("text/html");
+        *aNewType = nsMimeOutput::nsMimeMessageBodyQuoting;
       }
     }
     else
@@ -722,7 +730,22 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
                                    nsIStreamListener *aListener, nsISupports *aCtxt) 
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aCtxt, &rv);
+  nsCOMPtr<nsIMsgQuote> aMsgQuote = do_QueryInterface(aCtxt, &rv);
+	nsCOMPtr<nsIChannel> aChannel;
+  
+  if (aMsgQuote)
+  {
+    nsCOMPtr<nsIMimeStreamConverterListener> quoteListener;
+    rv = aMsgQuote->GetQuoteListener(getter_AddRefs(quoteListener));
+    if (quoteListener)
+      SetMimeHeadersListener(quoteListener);
+    rv = aMsgQuote->GetQuoteChannel(getter_AddRefs(aChannel));
+  }
+  else
+  {
+    aChannel = do_QueryInterface(aCtxt, &rv);
+  }
+
 	NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
 	if (NS_FAILED(rv)) return rv;
 

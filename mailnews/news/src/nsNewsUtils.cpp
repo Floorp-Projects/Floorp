@@ -235,10 +235,17 @@ nsParseNewsMessageURI(const char* uri, nsCString& messageUriWithoutKey, PRUint32
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
+    PRInt32 keyEndSeparator = uriStr.FindCharInSet("?&", 
+                                                   keySeparator); 
+
 		uriStr.Left(messageUriWithoutKey, keySeparator);
 
 		nsCAutoString keyStr;
-		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
+    if (keyEndSeparator != -1)
+        uriStr.Mid(keyStr, keySeparator+1, 
+                   keyEndSeparator-(keySeparator+1));
+    else
+        uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
 		PRInt32 errorCode;
 		*key = keyStr.ToInteger(&errorCode);
 

@@ -37,6 +37,7 @@
 #include "nsImapUtils.h"
 #include "nsXPIDLString.h"
 
+static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
 
@@ -74,6 +75,11 @@ nsresult nsImapUrl::Initialize(const char * aUserName)
 		m_userName = PL_strdup(aUserName);
 	else
 		rv = NS_ERROR_NULL_POINTER;
+
+    rv = nsComponentManager::CreateInstance(kCImapMockChannel, nsnull, NS_GET_IID(nsIImapMockChannel), getter_AddRefs(m_mockChannel));
+    if (NS_SUCCEEDED(rv) && m_mockChannel)
+        m_mockChannel->SetURI(this);
+   
 	return rv;
 }
  

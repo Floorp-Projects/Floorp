@@ -514,7 +514,10 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         if (m_mockChannel)
         {   
             // if we have a listener from a mock channel, over-ride the consumer that was passed in
-            m_mockChannel->GetChannelListener(getter_AddRefs(aRealStreamListener));
+            nsCOMPtr<nsIStreamListener> channelListener;
+            m_mockChannel->GetChannelListener(getter_AddRefs(channelListener));
+            if (channelListener) // only over-ride if we have a non null channel listener
+                aRealStreamListener = channelListener;
             m_mockChannel->GetChannelContext(getter_AddRefs(m_channelContext));
         }
 
@@ -1938,7 +1941,7 @@ void nsImapProtocol::BeginMessageDownLoad(
             // if we have a mock channel, that means we have a channel listener who wants the
             // message. So set up a pipe. We'll write the messsage into one end of the pipe
             // and they will read it out of the other end.
-            else if (m_mockChannel)
+            else if (m_channelListener)
             {
 	           // create a pipe to pump the message into...the output will go to whoever
 	           // is consuming the message display

@@ -218,7 +218,8 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
 }
 
 /* parses LocalMessageURI
- * mailbox://folder1/folder2#123
+ * mailbox://folder1/folder2#123?header=none or
+ * mailbox://folder1/folder2#1234&part=1.2
  *
  * puts folder path in folderURI
  * message key number in key
@@ -234,11 +235,17 @@ nsresult nsParseLocalMessageURI(const char* uri,
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
+    PRInt32 keyEndSeparator = uriStr.FindCharInSet("?&", 
+                                                   keySeparator); 
 		nsAutoString folderPath;
 		uriStr.Left(folderURI, keySeparator);
 
 		nsCAutoString keyStr;
-		uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
+    if (keyEndSeparator != -1)
+        uriStr.Mid(keyStr, keySeparator+1, 
+                   keyEndSeparator-(keySeparator+1));
+    else
+        uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
 		PRInt32 errorCode;
 		*key = keyStr.ToInteger(&errorCode);
 

@@ -24,9 +24,8 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamConverter.h"
+#include "nsIStreamConverterService.h"
 #include "nsIMimeStreamConverter.h"
-#include "nsFileStream.h"
-#include "nsFileSpec.h"
 #include "nsMimeTypes.h"
 #include "nsIPref.h"
 #include "nsICharsetConverterManager.h"
@@ -37,12 +36,23 @@
 #include "nsMsgUtils.h"
 #include "nsMsgDeliveryListener.h"
 #include "nsIIOService.h"
-#include "nsIChannel.h"
 #include "nsMsgMimeCID.h"
-#include "nsCOMPtr.h"
 #include "nsMsgCompose.h"
+#include "nsMsgMailNewsUrl.h"
+#include "nsIImapUrl.h"
+#include "nsIMailboxUrl.h"
+#include "nsINntpUrl.h"
+#include "nsMsgNewsCID.h"
+#include "nsMsgLocalCID.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgImapCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
+static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
+static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
+static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
 
 
 NS_IMPL_ISUPPORTS(nsMsgQuoteListener, nsCOMTypeInfo<nsIMimeStreamConverterListener>::GetIID())
@@ -95,8 +105,6 @@ nsMsgQuote::nsMsgQuote()
 {
 	NS_INIT_REFCNT();
 
-  mTmpFileSpec = nsnull;
-  mTmpIFileSpec = nsnull;
   mURI = nsnull;
   mMessageService = nsnull;
   mQuoteHeaders = PR_FALSE;
@@ -137,204 +145,45 @@ NS_NewMsgQuote(const nsIID &aIID, void ** aInstancePtrResult)
 }
 
 
-// stream converter
-static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
-
-////////////////////////////////////////////////////////////////////////////////////
-// THIS IS A TEMPORARY CLASS THAT MAKES A DISK FILE LOOK LIKE A nsIInputStream 
-// INTERFACE...this may already exist, but I didn't find it. Eventually, you would
-// just plugin a Necko stream when they are all rewritten to be new style streams
-////////////////////////////////////////////////////////////////////////////////////
-class FileInputStreamImpl : public nsIInputStream
+nsresult 
+nsMsgQuote::CreateStartupUrl(char *uri, nsIURI** aUrl)
 {
-public:
-  FileInputStreamImpl(void) 
-  { 
-    NS_INIT_REFCNT(); 
-    mBufLen = 0;
-    mInFile = nsnull;
-  }
-  virtual ~FileInputStreamImpl(void) 
-  {
-    if (mInFile) delete mInFile;
-  }
-  
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-    
-  // nsIBaseStream interface
-  NS_IMETHOD Close(void) 
-  {
-    if (mInFile)
-      mInFile->close();  
-    return NS_OK;
-  }
-  
-  // nsIInputStream interface
-  NS_IMETHOD Available(PRUint32 *_retval)
-  {
-    *_retval = mBufLen;
-    return NS_OK;
-  }
-  
-  /* unsigned long Read (in charStar buf, in unsigned long count); */
-  NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *_retval)
-  {
-    nsCRT::memcpy(buf, mBuf, mBufLen);
-    *_retval = mBufLen;
-    return NS_OK;
-  }
-  
-  NS_IMETHOD OpenDiskFile(nsFileSpec fs);
-  NS_IMETHOD PumpFileStream();
-
-private:
-  PRUint32        mBufLen;
-  char            mBuf[8192];
-  nsIOFileStream  *mInFile;
-};
-
-nsresult
-FileInputStreamImpl::OpenDiskFile(nsFileSpec fs)
-{
-  mInFile = new nsIOFileStream(fs);
-  if (!mInFile)
-    return NS_ERROR_NULL_POINTER;
-  mInFile->seek(0);
-  return NS_OK;
-}
-
-nsresult
-FileInputStreamImpl::PumpFileStream()
-{
-  if (mInFile->eof())
-    return NS_ERROR_FAILURE;
-  
-  mBufLen = mInFile->read(mBuf, sizeof(mBuf));
-  if (mBufLen > 0)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMPL_ISUPPORTS(FileInputStreamImpl, nsCOMTypeInfo<nsIInputStream>::GetIID());
-
-////////////////////////////////////////////////////////////////////////////////////
-// End of FileInputStreamImpl()
-////////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData)
-{
-  nsresult        rv = NS_OK;
-
-  if (!tagData)
-  {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsMsgQuote *ptr = (nsMsgQuote *) tagData;
-  if (ptr->mMessageService)
-  {
-    ReleaseMessageServiceFromURI(ptr->mURI, ptr->mMessageService);
-    ptr->mMessageService = nsnull;
-  }
-
-  /* mscott - the NS_BINDING_ABORTED is a hack to get around a problem I have
-     with the necko code...it returns this and treats it as an error when
-	 it really isn't an error! I'm trying to get them to change this.
-   */
-  if (NS_FAILED(aExitCode) && aExitCode != NS_BINDING_ABORTED)
-  {
-    NS_RELEASE(ptr);
-    return aExitCode;
-  }
-
-  // Create a mime parser (nsIStreamConverter)!
-  nsCOMPtr<nsIStreamConverter> mimeParser;
-  rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-                                          NULL, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), 
-                                          (void **) getter_AddRefs(mimeParser)); 
-  if (NS_FAILED(rv) || !mimeParser)
-  {
-    NS_RELEASE(ptr);
-    printf("Failed to create MIME stream converter...\n");
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!uri || !*uri || !aUrl) return rv;
+    *aUrl = nsnull;
+    if (PL_strncasecmp(uri, "imap", 4) == 0)
+    {
+        nsCOMPtr<nsIImapUrl> imapUrl;
+        rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
+                                                nsIImapUrl::GetIID(),
+                                                getter_AddRefs(imapUrl));
+        if (NS_SUCCEEDED(rv) && imapUrl)
+            rv = imapUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+                                         (void**) aUrl);
+    }
+    else if (PL_strncasecmp(uri, "mailbox", 7) == 0)
+    {
+        nsCOMPtr<nsIMailboxUrl> mailboxUrl;
+        rv = nsComponentManager::CreateInstance(kCMailboxUrl, nsnull,
+                                                nsIMailboxUrl::GetIID(),
+                                                getter_AddRefs(mailboxUrl));
+        if (NS_SUCCEEDED(rv) && mailboxUrl)
+            rv = mailboxUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+                                            (void**) aUrl);
+    }
+    else if (PL_strncasecmp(uri, "news", 4) == 0)
+    {
+        nsCOMPtr<nsINntpUrl> nntpUrl;
+        rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull,
+                                                nsINntpUrl::GetIID(),
+                                                getter_AddRefs(nntpUrl));
+        if (NS_SUCCEEDED(rv) && nntpUrl)
+            rv = nntpUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
+                                         (void**) aUrl);
+    }
+    if (*aUrl)
+        (*aUrl)->SetSpec(uri);
     return rv;
-  }
-  
-  // This is the producer stream that will deliver data from the disk file...
-  // ...someday, we'll just get streams from Necko.
-  // mscott --> the type for a nsCOMPtr needs to be an interface.
-  // but this class (which is only temporary anyway) is mixing and matching
-  // interface calls and implementation calls....so you really can't use a
-  // com ptr. to get around it, I'm using fileStream to make calls on the
-  // methods that aren't supported by the nsIInputStream and "in" for
-  // methods that are supported as part of the interface...
-  FileInputStreamImpl * fileStream = new FileInputStreamImpl();
-  nsCOMPtr<nsIInputStream> in = do_QueryInterface(fileStream);
-  if (!in || !fileStream)
-  {
-    NS_RELEASE(ptr);
-    printf("Failed to create nsIInputStream\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (NS_FAILED(fileStream->OpenDiskFile(*(ptr->mTmpFileSpec))))
-  {
-    NS_RELEASE(ptr);
-    printf("Unable to open input file\n");
-    return NS_ERROR_FAILURE;
-  }
-  
-  // Set us as the output stream for HTML data from libmime...
-  nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
-  if (mimeConverter)
-  {
-	  if (ptr->mQuoteHeaders)
-		mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageQuoting);
-	  else
-	  {
-		mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageBodyQuoting);
-		
-		ptr->mQuoteListener = new nsMsgQuoteListener();
-		if (ptr->mQuoteListener)
-		{
-			NS_ADDREF(ptr->mQuoteListener);
-			ptr->mQuoteListener->SetMsgQuote(ptr);
-			mimeConverter->SetMimeHeadersListener(ptr->mQuoteListener);
-		}
-	  }
-  }
-
-  nsCOMPtr<nsIChannel> dummyChannel;
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-  rv = netService->NewInputStreamChannel(aURL, nsnull, nsnull, getter_AddRefs(dummyChannel));
-  if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, ptr->mStreamListener, dummyChannel)))
-  {
-    NS_RELEASE(ptr);
-    printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Assuming this is an RFC822 message...
-  mimeParser->OnStartRequest(nsnull, aURL);
-
-  // Just pump all of the data from the file into libmime...
-  while (NS_SUCCEEDED(fileStream->PumpFileStream()))
-  {
-    PRUint32    len;
-    in->Available(&len);
-    mimeParser->OnDataAvailable(nsnull, aURL, in, 0, len);
-  }
-
-  mimeParser->OnStopRequest(nsnull, aURL, NS_OK, nsnull);
-  in->Close();
-  ptr->mTmpFileSpec->Delete(PR_FALSE);
-  NS_RELEASE(ptr);
-  return NS_OK;
 }
 
 nsresult
@@ -348,15 +197,13 @@ nsresult  rv;
   mQuoteHeaders = quoteHeaders;
   mStreamListener = aQuoteMsgStreamListener;
 
-  mTmpFileSpec = nsMsgCreateTempFileSpec("nsquot.tmp"); 
-	if (!mTmpFileSpec)
-    return NS_ERROR_FAILURE;
-
-  NS_NewFileSpecWithSpec(*mTmpFileSpec, &mTmpIFileSpec);
-	if (!mTmpIFileSpec)
-    return NS_ERROR_FAILURE;
-
   nsString                convertString(msgURI);
+
+  if (quoteHeaders)
+      convertString += "?header=quote";
+  else
+      convertString += "?header=quotebody";
+
   mURI = convertString.ToNewCString();
 
   if (!mURI)
@@ -368,20 +215,74 @@ nsresult  rv;
     return rv;
   }
 
-  NS_ADDREF(this);
-  nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(SaveQuoteMessageCompleteCallback, 
-                                                                  nsFileSaveDelivery, this);
-  if (!sendListener)
-  {
-    ReleaseMessageServiceFromURI(mURI, mMessageService);
-    mMessageService = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  // NS_ADDREF(this);
+  AddRef();
 
-  rv = mMessageService->SaveMessageToDisk(mURI, mTmpIFileSpec, PR_FALSE, sendListener, nsnull);
+  NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, 
+                  kIStreamConverterServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsAutoString from, to;
+  from = "message/rfc822";
+  to = "text/xul";
+
+  nsCOMPtr<nsIURI> aURL;
+  rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
+
+  mQuoteChannel = null_nsCOMPtr();
+  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  rv = netService->NewInputStreamChannel(aURL, nsnull, nsnull,
+                                         getter_AddRefs(mQuoteChannel));
+
+  NS_ASSERTION(!mQuoteListener, "Oops quote listener exists\n");
+
+  if (mQuoteListener)
+      delete mQuoteListener;
+      
+  mQuoteListener = new nsMsgQuoteListener();
+  if (mQuoteListener)
+  {
+      NS_ADDREF(mQuoteListener);
+      mQuoteListener->SetMsgQuote(this);
+  }
+  nsCOMPtr<nsISupports> quoteSupport;
+  rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
+                      getter_AddRefs(quoteSupport));
+  
+  nsCOMPtr<nsIStreamListener> convertedListener;
+  rv = streamConverterService->AsyncConvertData(from.GetUnicode(),
+                                                to.GetUnicode(),
+                                                mStreamListener,
+                                                quoteSupport,
+                                      getter_AddRefs(convertedListener));
+  if (NS_SUCCEEDED(rv))
+      rv = mMessageService->DisplayMessage(mURI, convertedListener, nsnull,
+                                           nsnull);
+  ReleaseMessageServiceFromURI(mURI, mMessageService);
+  mMessageService = nsnull;
+  Release();
 
 	if (NS_FAILED(rv))
     return rv;    
   else
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgQuote::GetQuoteListener(nsIMimeStreamConverterListener** aQuoteListener)
+{
+    if (!aQuoteListener || !mQuoteListener)
+        return NS_ERROR_NULL_POINTER;
+    *aQuoteListener = mQuoteListener;
+    NS_ADDREF(*aQuoteListener);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgQuote::GetQuoteChannel(nsIChannel** aQuoteChannel)
+{
+    if (!aQuoteChannel || !mQuoteChannel)
+        return NS_ERROR_NULL_POINTER;
+    *aQuoteChannel = mQuoteChannel;
+    NS_ADDREF(*aQuoteChannel);
     return NS_OK;
 }
