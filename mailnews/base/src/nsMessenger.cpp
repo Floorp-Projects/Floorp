@@ -1606,7 +1606,9 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     rv = prefs->GetIntPref("mail.forward_message_mode", &type);
-    if (NS_FAILED(rv)) return rv;
+    // use forward as attachment if failed
+    if (NS_FAILED(rv))
+      type = 0;
   }
 
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
@@ -1630,6 +1632,7 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
   
   switch (type)
   {
+      default:
       case 0: // forward as attachments
       {
           if (NS_SUCCEEDED(rv))
@@ -1682,7 +1685,8 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
                                      nsIMsgCompFormat::Default, compFields);
           break;
       }
-      case 1: // forward as inline
+      case 1: // forward as quoted; obsolete, treat it as inline
+      case 2: // forward as inline
       {
           for (i=0; i<cnt; i++)
           {
@@ -1708,12 +1712,6 @@ nsMessenger::ForwardMessages(nsIDOMNodeList *domNodeList,
                   }
               }
           }
-          break;
-      }
-
-      default:
-      {
-          rv = NS_ERROR_FAILURE;
           break;
       }
   }
