@@ -39,7 +39,7 @@
 #include "nsCOMPtr.h"
 
 #ifdef STREAM_CONVERTER_HACK
-#include "nsIStreamConverter2.h"
+#include "nsIStreamConverter.h"
 #include "nsXPIDLString.h"
 #endif
 
@@ -128,8 +128,8 @@ protected:
     nsCOMPtr<nsIStreamListener> mRealListener;
 
 #ifdef STREAM_CONVERTER_HACK
-	nsCOMPtr<nsIStreamConverter2> mStreamConverter;
-	nsXPIDLCString				 mStreamConverterOutType;
+	nsCOMPtr<nsIStreamConverter> mStreamConverter;
+	nsCString					mStreamConverterOutType;
 #endif
 };
 
