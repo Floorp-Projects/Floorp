@@ -65,7 +65,7 @@ void nsMsgIdentity::InitializeIdentity()
 	#define PREF_LENGTH 128 
 	char prefValue[PREF_LENGTH];
 	PRInt32 prefLength = PREF_LENGTH;
-	nsIPref* prefs;
+	nsIPref* prefs = nsnull;
 	nsresult rv;
 	rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
     if (prefs && NS_SUCCEEDED(rv))
@@ -124,6 +124,8 @@ void nsMsgIdentity::InitializeIdentity()
 
 		nsServiceManager::ReleaseService(kPrefCID, prefs);
 	}
+	else
+		NS_ASSERTION(0, "unable to create the prefs service!!");
 }
 
 nsresult nsMsgIdentity::GetPopName(const char ** aUserName)
