@@ -122,11 +122,12 @@
 <keyset>
   <key id="delete_key" keycode="VK_DELETE" observes="delete_command_no_confirm"/>
   <key id="new_event_key" key="N" modifiers="control" observes="new_command"/>
-  <key id="new_todo_key" key="M" modifiers="control" observes="new_todo_command"/>
+  <key id="new_todo_key" key="T" modifiers="control" observes="new_todo_command"/>
   <key id="modify_event_key" key="E" modifiers="control" observes="modify_command"/>
   <key id="print_key" key="P" modifiers="control" observes="print_command"/>
   <key id="import_key" key="I" modifiers="control" observes="import_command"/>
   <key id="export_key" key="O" modifiers="control" observes="export_command"/>
+  <key id="send_event_key" key="M" modifiers="control" observes="send_event_command"/>
   
   <key id="key_selectAll" key="A" modifiers="control" observes="select_all_command"/>
   <key id="key_cut" key="X" modifiers="control" observes="cut_command"/>
@@ -139,7 +140,7 @@
   
   <key id="go_forward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
   <key id="go_backward_key" keycode="VK_PAGE_DOWN" observes="next_command"/>
-  <key id="go_to_today_key"   key="T" modifiers="control" observes="go_today_command"/>
+  <key id="go_to_today_key"   keycode="VK_DOWN" modifiers="control" observes="go_today_command"/>
   
   <key id="key_close" key="W" modifiers="control" observes="close_calendar_command"/>
 </keyset>
