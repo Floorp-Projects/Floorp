@@ -75,7 +75,9 @@ public:
     Cancel(nsresult status) {
       if (NS_SUCCEEDED(mAbortStatus)) {
         mAbortStatus = status;
-        return mEventQueueStreamListener->OnStopRequest(mChannel, mContext, status, nsnull);
+        return mEventQueueStreamListener ?
+            mEventQueueStreamListener->OnStopRequest(mChannel, mContext, status, nsnull):
+            status;
       } else {
         // Cancel has already been called...  Do not fire another OnStopRequest!
         return NS_OK;
