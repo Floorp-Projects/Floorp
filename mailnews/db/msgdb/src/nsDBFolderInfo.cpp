@@ -106,7 +106,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	{
 		mdb_err err;
 
-		mdb->AddRef();
+//		mdb->AddRef();
 		m_mdb = mdb;
 		err = m_mdb->GetStore()->StringToToken(mdb->GetEnv(), kDBFolderInfoScope, &m_rowScopeToken); 
 		if (err == NS_OK)
@@ -130,7 +130,8 @@ nsDBFolderInfo::~nsDBFolderInfo()
 			m_mdbTable->CutStrongRef(m_mdb->GetEnv());
 		if (m_mdbRow)
 			m_mdbRow->CutStrongRef(m_mdb->GetEnv());
-		m_mdb->Release();
+		// nsMsgDatabase strictly owns nsDBFolderInfo, so don't ref-count db.
+//		m_mdb->Release();
 	}
 }
 
