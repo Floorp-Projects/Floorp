@@ -587,8 +587,10 @@ public abstract class ScriptableObject implements Scriptable {
         }
         Object arg = typeHint == null ? "undefined" : typeHint.toString();
         Object[] args = { arg };
-        throw Context.reportRuntimeError(Context.getMessage
-                                         ("msg.default.value", args));
+        throw NativeGlobal.constructError(
+                    Context.getContext(), "TypeError",
+                    ScriptRuntime.getMessage("msg.default.value", args),
+                    this);
     }
 
     /**

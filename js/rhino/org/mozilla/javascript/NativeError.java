@@ -60,11 +60,13 @@ public class NativeError extends ScriptableObject {
     }
     
     public String getName() {
-        return ScriptRuntime.toString(ScriptRuntime.getProp(this, "name", this));
+        return ScriptRuntime.toString(
+                ScriptRuntime.getProp(this, "name", this));
     }
     
     public String getMessage() {
-        return ScriptRuntime.toString(ScriptRuntime.getProp(this, "message", this));
+        return ScriptRuntime.toString(
+                ScriptRuntime.getProp(this, "message", this));
     }    
     
     public static void finishInit(Scriptable scope, FunctionObject ctor,
@@ -72,9 +74,9 @@ public class NativeError extends ScriptableObject {
         throws PropertyException
     {
         ((ScriptableObject) proto).defineProperty("message", "", 
-                                                    ScriptableObject.EMPTY);
+                                                  ScriptableObject.EMPTY);
         ((ScriptableObject) proto).defineProperty("name", "Error", 
-                                                    ScriptableObject.EMPTY);
+                                                  ScriptableObject.EMPTY);
     }
 
 }
