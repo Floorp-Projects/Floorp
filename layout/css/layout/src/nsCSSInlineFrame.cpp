@@ -43,7 +43,7 @@ nsCSSInlineReflowState::nsCSSInlineReflowState(nsCSSLineLayout& aLineLayout,
                                                nsIStyleContext* aInlineSC,
                                                const nsReflowState& aRS,
                                                PRBool aComputeMaxElementSize)
-  : nsReflowState(aInlineFrame, *aRS.parentReflowState, aRS.maxSize),
+  : nsReflowState(aRS),
     mInlineLayout(aLineLayout, aInlineFrame, aInlineSC)
 {
   // While we skip around the reflow state that our parent gave us so
