@@ -2475,16 +2475,6 @@ _PR_MD_SOCKETAVAILABLE(PRFileDesc *fd)
     return result;
 }
 
-PRInt32
-_PR_MD_PIPEAVAILABLE(PRFileDesc *fd)
-{
-    if (NULL == fd)
-		PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
-	else
-		PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
-    return -1;
-}
-
 PROffset32
 _PR_MD_LSEEK(PRFileDesc *fd, PROffset32 offset, int whence)
 {

@@ -245,7 +245,6 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_SOCKET                    _PR_MD_SOCKET
 extern PRInt32 _MD_SocketAvailable(PRFileDesc *fd);
 #define _MD_SOCKETAVAILABLE           _MD_SocketAvailable
-#define _MD_PIPEAVAILABLE             _PR_MD_PIPEAVAILABLE
 #define _MD_CONNECT                   _PR_MD_CONNECT
 extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
         PRIntervalTime timeout);
