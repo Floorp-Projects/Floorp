@@ -418,8 +418,8 @@ class Frame : public JS2Object {
 public:
     enum Plurality { Singular, Plural };
 
-    Frame(ObjectKind kind) : JS2Object(kind), temps(NULL), nextFrame(NULL), pluralFrame(NULL) { }
-    Frame(ObjectKind kind, Frame *pluralFrame) : JS2Object(kind), temps(NULL), nextFrame(NULL), pluralFrame(pluralFrame) { }
+    Frame(ObjectKind kind) : JS2Object(kind), temps(NULL), pluralFrame(NULL) { }
+    Frame(ObjectKind kind, Frame *pluralFrame) : JS2Object(kind), temps(NULL), pluralFrame(pluralFrame) { }
 
     StaticBindingMap staticReadBindings;        // Map of qualified names to readable static members defined in this frame
     StaticBindingMap staticWriteBindings;       // Map of qualified names to writable static members defined in this frame
@@ -429,8 +429,7 @@ public:
 
     virtual void instantiate(Environment * /*env*/)  { ASSERT(false); }
 
-    Frame *nextFrame;
-    Frame *pluralFrame;                         // for a singular frame, this the plural frame from which it will be instantiated
+    Frame *pluralFrame;                         // for a singular frame, this is the plural frame from which it will be instantiated
 
     virtual void markChildren();
     virtual ~Frame()            { }
@@ -867,20 +866,25 @@ public:
 // a list of two or more frames. Each frame corresponds to a scope. More specific frames are listed first
 // -each frame's scope is directly contained in the following frame's scope. The last frame is always the
 // SYSTEMFRAME. The next-to-last frame is always a PACKAGE or GLOBAL frame.
+typedef std::deque<Frame *> FrameList;
+typedef FrameList::iterator FrameListIterator;
+
 class Environment {
 public:
-    Environment(SystemFrame *systemFrame, Frame *nextToLast) : firstFrame(nextToLast) { nextToLast->nextFrame = systemFrame; }
+    Environment(SystemFrame *systemFrame, Frame *nextToLast) { frameList.push_back(nextToLast); frameList.push_back(systemFrame);  }
 
     JS2Class *getEnclosingClass();
-    Frame *getRegionalFrame();
-    Frame *getTopFrame()                { return firstFrame; }
+    FrameListIterator getRegionalFrame();
+    Frame *getTopFrame()                    { return frameList.front(); }
+    FrameListIterator getBegin()            { return frameList.begin(); }
+    FrameListIterator getEnd()              { return frameList.end(); }
     Frame *getPackageOrGlobalFrame();
-    Frame *getSystemFrame()             { return getPackageOrGlobalFrame()->nextFrame; }
+    Frame *getSystemFrame()                 { return frameList.back(); }
 
-    void setTopFrame(Frame *f)          { firstFrame = f; }
+    void setTopFrame(Frame *f)              { while (frameList.front() != f) frameList.pop_front(); }
 
-    void addFrame(Frame *f)             { f->nextFrame = firstFrame; firstFrame = f; }
-    void removeTopFrame()               { firstFrame = firstFrame->nextFrame; }
+    void addFrame(Frame *f)                 { frameList.push_front(f); }
+    void removeTopFrame()                   { frameList.pop_front(); }
 
     js2val findThis(bool allowPrototypeThis);
     js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
@@ -892,7 +896,7 @@ public:
     void mark();
 
 private:
-    Frame *firstFrame;
+    FrameList frameList;
 };
 
 

@@ -524,7 +524,7 @@ namespace MetaData {
                     }
                 
                     VariableBinding *vb = vs->bindings;
-                    Frame *regionalFrame = env->getRegionalFrame();
+                    Frame *regionalFrame = *(env->getRegionalFrame());
                     while (vb)  {
                         const StringAtom *name = vb->name;
                         if (vb->type)
@@ -2094,8 +2094,9 @@ doUnary:
                 // a frame that supports dynamic properties - the identifier could be
                 // created at runtime without us finding it here.
                 Multiname *multiname = ((LexicalReference *)returnRef)->variableMultiname;
-                Frame *pf = env->getTopFrame();
-                while (pf) {
+                FrameListIterator fi = env->getBegin();
+                while (fi != env->getEnd()) {
+                    Frame *pf = *fi;
                     if (pf->kind != ClassKind) {
                         StaticMember *m = findFlatMember(pf, multiname, ReadAccess, CompilePhase);
                         if (m && m->kind == Member::Variable) {
@@ -2128,7 +2129,7 @@ doUnary:
                             break;
                             // XXX ok to keep going? Suppose the class allows dynamic properties?
                     }
-                    pf = pf->nextFrame;
+                    fi++;
                 }
             }
             break;
@@ -2353,34 +2354,34 @@ doUnary:
     // innermost such class; otherwise, it returns none.
     JS2Class *Environment::getEnclosingClass()
     {
-        Frame *pf = firstFrame;
-        while (pf && (pf->kind != ClassKind))
-            pf = pf->nextFrame;
-        return checked_cast<JS2Class *>(pf);
-    }
-
-    // returns the most specific regional frame.
-    Frame *Environment::getRegionalFrame()
-    {
-        Frame *pf = firstFrame;
-        Frame *prev = NULL;
-        while (pf->kind == BlockKind) { 
-            prev = pf;
-            pf = pf->nextFrame;
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
+            if ((*fi)->kind == ClassKind)
+                return checked_cast<JS2Class *>(*fi);
+            fi++;
         }
-        if ((pf != firstFrame) && (pf->kind == ClassKind))
-            pf = prev;
-        return pf;
+        return NULL;
     }
 
-    // XXX makes the argument for vector instead of linked list...
+    // Returns the most specific regional frame. A regional frame is either any frame other than 
+    // a local block frame or a local block frame whose immediate enclosing frame is a class.
+    FrameListIterator Environment::getRegionalFrame()
+    {
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
+            if ((*fi)->kind != BlockKind)
+                break;
+            fi++;
+        }
+        if ((fi != getEnd()) && ((*fi)->kind == ClassKind))
+            fi--;
+        return fi;
+    }
+
     // Returns the penultimate frame, either Package or Global
     Frame *Environment::getPackageOrGlobalFrame()
     {
-        Frame *pf = firstFrame;
-        while (pf && (pf->nextFrame) && (pf->nextFrame->nextFrame))
-            pf = pf->nextFrame;
-        return pf;
+        return *(getEnd() - 1);
     }
 
     // findThis returns the value of this. If allowPrototypeThis is true, allow this to be defined 
@@ -2388,13 +2389,14 @@ doUnary:
     // false, allow this to be defined only by an instance member of a class.
     js2val Environment::findThis(bool allowPrototypeThis)
     {
-        Frame *pf = firstFrame;
-        while (pf) {
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
+            Frame *pf = *fi;
             if ((pf->kind == ParameterKind)
                     && !JS2VAL_IS_NULL(checked_cast<ParameterFrame *>(pf)->thisObject))
                 if (allowPrototypeThis || !checked_cast<ParameterFrame *>(pf)->prototype)
                     return checked_cast<ParameterFrame *>(pf)->thisObject;
-            pf = pf->nextFrame;
+            fi++;
         }
         return JS2VAL_VOID;
     }
@@ -2407,12 +2409,12 @@ doUnary:
     js2val Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
-        Frame *pf = firstFrame;
-        while (pf) {
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
             js2val rval;    // XXX gc?
-            if (meta->readProperty(pf, multiname, &lookup, phase, &rval))
+            if (meta->readProperty(*fi, multiname, &lookup, phase, &rval))
                 return rval;
-            pf = pf->nextFrame;
+            fi++;
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
         return JS2VAL_VOID;
@@ -2423,14 +2425,14 @@ doUnary:
     void Environment::lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
-        Frame *pf = firstFrame;
-        while (pf) {
-            if (meta->writeProperty(pf, multiname, &lookup, false, newValue, phase))
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
+            if (meta->writeProperty(*fi, multiname, &lookup, false, newValue, phase))
                 return;
-            pf = pf->nextFrame;
+            fi++;
         }
         if (createIfMissing) {
-            pf = getPackageOrGlobalFrame();
+            Frame *pf = getPackageOrGlobalFrame();
             if (pf->kind == GlobalObjectKind) {
                 if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase))
                     return;
@@ -2444,12 +2446,12 @@ doUnary:
     bool Environment::lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
         LookupKind lookup(true, findThis(false));
-        Frame *pf = firstFrame;
-        while (pf) {
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
             bool result;
-            if (meta->deleteProperty(pf, multiname, &lookup, phase, &result))
+            if (meta->deleteProperty(*fi, multiname, &lookup, phase, &result))
                 return result;
-            pf = pf->nextFrame;
+            fi++;
         }
         return true;
     }
@@ -2494,10 +2496,10 @@ doUnary:
     // from finding frames further down the list.
     void Environment::mark()
     { 
-        Frame *pf = firstFrame;
-        while (pf) {
-            GCMARKOBJECT(pf)
-            pf = pf->nextFrame;
+        FrameListIterator fi = getBegin();
+        while (fi != getEnd()) {
+            GCMARKOBJECT(*fi)
+            fi++;
         }
     }
 
@@ -2571,7 +2573,8 @@ doUnary:
     {
         NamespaceList publicNamespaceList;
 
-        Frame *localFrame = env->getTopFrame();
+        FrameListIterator fi = env->getBegin();
+        Frame *localFrame = *fi;
         if ((overrideMod != Attribute::NoOverride) || (xplicit && localFrame->kind != PackageKind))
             reportError(Exception::definitionError, "Illegal definition", pos);
         if ((namespaces == NULL) || namespaces->empty()) {
@@ -2589,16 +2592,16 @@ doUnary:
         
 
         // Check all frames below the current - up to the RegionalFrame - for a non-forbidden definition
-        Frame *regionalFrame = env->getRegionalFrame();
+        Frame *regionalFrame = *(env->getRegionalFrame());
         if (localFrame != regionalFrame) {
-            Frame *fr = localFrame->nextFrame;
+            Frame *fr = *++fi;
             while (fr != regionalFrame) {
                 for (b = fr->staticReadBindings.lower_bound(*id),
                         end = fr->staticReadBindings.upper_bound(*id); (b != end); b++) {
                     if (mn->matches(b->second->qname) && (b->second->content->kind != StaticMember::Forbidden))
                         reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
                 }
-                fr = fr->nextFrame;
+                fr = *++fi;
             }
         }
         if (regionalFrame->kind == GlobalObjectKind) {
@@ -2619,7 +2622,7 @@ doUnary:
         }
         
         if (localFrame != regionalFrame) {
-            Frame *fr = localFrame->nextFrame;
+            Frame *fr = *++fi;
             while (fr != regionalFrame) {
                 for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
                     QualifiedName qName(*nli, *id);
@@ -2630,7 +2633,7 @@ doUnary:
                     if (access & WriteAccess)
                         fr->staticWriteBindings.insert(e);
                 }
-                fr = fr->nextFrame;
+                fr = *++fi;
             }
         }
         return mn;
@@ -2811,8 +2814,9 @@ doUnary:
     {
         HoistedVar *result = NULL;
         QualifiedName qName(publicNamespace, *id);
-        Frame *regionalFrame = env->getRegionalFrame();
-        ASSERT((env->getTopFrame()->kind == GlobalObjectKind) || (env->getTopFrame()->kind == ParameterKind));
+        FrameListIterator regionalFrameMark = env->getRegionalFrame();
+        Frame *regionalFrame = *regionalFrameMark;
+        ASSERT((regionalFrame->kind == GlobalObjectKind) || (regionalFrame->kind == ParameterKind));
     
         // run through all the existing bindings, both read and write, to see if this
         // variable already exists.
@@ -2823,8 +2827,10 @@ doUnary:
                 if (b->second->content->kind != StaticMember::HoistedVariable)
                     reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                 else {
-                    result = checked_cast<HoistedVar *>(b->second->content);
-                    break;
+                    if (result)
+                        reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+                    else
+                        result = checked_cast<HoistedVar *>(b->second->content);
                 }
             }
         }
@@ -2835,8 +2841,10 @@ doUnary:
                     if (b->second->content->kind != StaticMember::HoistedVariable)
                         reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                     else {
-                        result = checked_cast<HoistedVar *>(b->second->content);
-                        break;
+                        if (result)
+                            reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+                        else
+                            result = checked_cast<HoistedVar *>(b->second->content);
                     }
                 }
             }
@@ -2848,16 +2856,51 @@ doUnary:
                 if (dp != gObj->dynamicProperties.end())
                     reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
             }
-            // XXX ok to use same binding in read & write maps?
-            result = new HoistedVar();
-            StaticBinding *sb = new StaticBinding(qName, result);
-            const StaticBindingMap::value_type e(*id, sb);
+            else { // ParameterFrame didn't have any bindings, scan the preceding 
+                   // frame (should be the outermost function local block)
+                regionalFrame = *(regionalFrameMark - 1);
+                for (b = regionalFrame->staticReadBindings.lower_bound(*id),
+                        end = regionalFrame->staticReadBindings.upper_bound(*id); (b != end); b++) {
+                    if (b->second->qname == qName) {
+                        if (b->second->content->kind != StaticMember::HoistedVariable)
+                            reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+                        else {
+                            if (result)
+                                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+                            else
+                                result = checked_cast<HoistedVar *>(b->second->content);
+                        }
+                    }
+                }
+                if (result == NULL) {
+                    for (b = regionalFrame->staticWriteBindings.lower_bound(*id),
+                            end = regionalFrame->staticWriteBindings.upper_bound(*id); (b != end); b++) {
+                        if (b->second->qname == qName) {
+                            if (b->second->content->kind != StaticMember::HoistedVariable)
+                                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+                            else {
+                                if (result)
+                                    reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+                                else
+                                    result = checked_cast<HoistedVar *>(b->second->content);
+                            }
+                        }
+                    }
+                }
+            }
+            if (result == NULL) {
+                // XXX ok to use same binding in read & write maps?
+                result = new HoistedVar();
+                StaticBinding *sb = new StaticBinding(qName, result);
+                const StaticBindingMap::value_type e(*id, sb);
 
-            // XXX ok to use same value_type in different multimaps?
-            regionalFrame->staticReadBindings.insert(e);
-            regionalFrame->staticWriteBindings.insert(e);
+                // XXX ok to use same value_type in different multimaps?
+                regionalFrame->staticReadBindings.insert(e);
+                regionalFrame->staticWriteBindings.insert(e);
+            }
         }
-        //else A hoisted binding of the same var already exists, so there is no need to create another one
+        //... A hoisted binding of the same var already exists, so there is no need to create another one
+        //    The initial value of function variables will be set by the caller to the 'most recent' value.
         return result;
     }
 
@@ -4280,7 +4323,6 @@ deleteClassProperty:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void Frame::markChildren()
     {
-        GCMARKOBJECT(nextFrame)
         GCMARKOBJECT(pluralFrame)
         StaticBindingIterator sbi, end;
         for (sbi = staticReadBindings.begin(), end = staticReadBindings.end(); (sbi != end); sbi++) {
