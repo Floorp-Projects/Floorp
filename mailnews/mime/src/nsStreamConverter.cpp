@@ -918,6 +918,30 @@ const char output[] = "\
   readLen = aLength;
   aIStream->Read(buf, aLength, &readLen);
 
+  // We need to filter out any null characters else we will have a lot of trouble
+  // as we use c string everywhere in mime
+  char * readPtr;
+  char * endPtr = buf + readLen;
+
+  // First let see if the stream contains null characters
+  for (readPtr = buf; *readPtr && readPtr < endPtr; readPtr ++)
+    ;
+
+  // Did we find a null character? Then, we need to cleanup the stream
+  if (readPtr < endPtr)
+  {
+    char * writePtr = readPtr;
+    for (readPtr ++; readPtr < endPtr; readPtr ++)
+    {
+      if (!*readPtr)
+        continue;
+
+      *writePtr = *readPtr;
+      writePtr ++;
+    }
+    readLen = writePtr - buf;
+  }
+
   if (mOutputType == nsMimeOutput::nsMimeMessageSource)
   {
     rc = NS_OK;
