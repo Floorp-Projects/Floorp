@@ -775,7 +775,21 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteRow(PRInt32 aValue)
 {
-  return NS_OK; // XXX write me
+  nsIDOMHTMLCollection *rows;
+  GetRows(&rows);
+  nsIDOMNode *row=nsnull;
+  rows->Item(aValue, &row);
+  if (nsnull!=row)
+  {
+    nsIDOMNode *parent=nsnull;
+    row->GetParentNode(&parent);
+    if (nsnull!=parent)
+    {
+      parent->RemoveChild(row, &row);
+    }
+  }
+  NS_RELEASE(rows);
+  return NS_OK;
 }
 
 static nsGenericHTMLElement::EnumTable kFrameTable[] = {
