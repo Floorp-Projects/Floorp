@@ -140,7 +140,7 @@ INSTALL_FILE_LIST=	\
 	jsosdep.h	\
 	jsotypes.h	\
 	jsparse.h	\
-        jsprf.h         \
+	jsprf.h		\
 	jsprvtd.h	\
 	jspubtd.h	\
 	jsregexp.h	\
@@ -149,8 +149,9 @@ INSTALL_FILE_LIST=	\
 	jsscript.h	\
 	jsstr.h		\
 	jstypes.h	\
-        jsutil.h        \
+	jsutil.h	\
 	jsxdrapi.h	\
+	jsstddef.h \
 	$(NULL)
 
 #//------------------------------------------------------------------------
