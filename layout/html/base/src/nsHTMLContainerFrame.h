@@ -54,18 +54,29 @@ public:
                             nsIContent*     aChild,
                             PRInt32         aIndexInParent);
 
-  virtual PRBool DeleteNextInFlowsFor(nsIPresContext& aPresContext,
-                                      nsIFrame* aChild);
+  nsresult WrapFrames(nsIPresContext& aPresContext,
+                      nsIFrame* aPrevFrame, nsIFrame* aFrame);
 
-  nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
+  nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame);
+
+  // Helper method to create next-in-flows if necessary
+  static nsresult CreateNextInFlow(nsIPresContext& aPresContext,
+                                   nsIFrame* aOuterFrame,
+                                   nsIFrame* aFrame,
+                                   nsIFrame*& aNextInFlowResult);
+
+  // Helper method to wrap views around frames. Used by containers
+  // under special circumstances (can be used by leaf frames as well)
+  static nsresult CreateViewForFrame(nsIPresContext& aPresContext,
+                                     nsIFrame* aFrame,
+                                     nsIStyleContext* aStyleContext,
+                                     PRBool aForce);
 
 protected:
   virtual ~nsHTMLContainerFrame();
 
   virtual PRIntn GetSkipSides() const = 0;
-
-  nsresult ProcessInitialReflow(nsIPresContext* aPresContext);
 };
 
 #endif /* nsHTMLContainerFrame_h___ */
