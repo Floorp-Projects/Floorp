@@ -107,6 +107,7 @@ CMfcEmbedApp::CMfcEmbedApp() :
 
     m_iStartupPage = 0; 
 
+    m_bChrome = FALSE;
 }
 
 CMfcEmbedApp theApp;
@@ -149,6 +150,8 @@ void CMfcEmbedApp::ParseCmdLine()
     // Show Debug Console?
     if(IsCmdLineSwitch("-console"))
         ShowDebugConsole();
+    if(IsCmdLineSwitch("-chrome"))
+        m_bChrome = TRUE;
 }
 
 /* Some Gecko interfaces are implemented as components, automatically

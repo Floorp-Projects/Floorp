@@ -95,6 +95,7 @@ public:
 
 	CObList m_FrameWndLst;
 
+    BOOL m_bChrome;
     CString m_strHomePage;
     inline BOOL GetHomePage(CString& strHomePage) {
         strHomePage = m_strHomePage;
