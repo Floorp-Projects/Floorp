@@ -177,7 +177,7 @@ nsresult TestConsumer::Write(const char * writeData)
 	NS_PRECONDITION(m_outputStream && m_outputConsumer, "transport not configured for output");
 	if (writeData && *writeData)
 	{
-		rv = m_outputStream->Write(writeData, 0, PL_strlen(writeData), &numBytes);
+		rv = m_outputStream->Write(writeData, PL_strlen(writeData), &numBytes);
 		if (NS_SUCCEEDED(rv))
 		{
 			nsIInputStream * inputStream = NULL;
@@ -252,7 +252,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStre
         PRUint32 i;
 
 		PRUint32 numToRead = length > 1000 ? 1000 : length;
-        err = pIStream->Read(buffer, 0, numToRead, &len);
+        err = pIStream->Read(buffer, numToRead, &len);
 		totalBytesRead += len;
         if (err == NS_OK) {
             for (i=0; i<len; i++) {
@@ -292,7 +292,7 @@ nsresult ReadStreamSynchronously(nsIInputStream* aIn)
         do {
             PRUint32 i;
 
-            rv = aIn->Read(buffer, 0, sizeof(buffer), &len);
+            rv = aIn->Read(buffer, sizeof(buffer), &len);
             for (i=0; i<len; i++) {
                 putchar(buffer[i]);
             }
