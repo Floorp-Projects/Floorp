@@ -55,12 +55,14 @@
 
   <binding id="bookmarks-toolbar">
 
-    <implementation>
+    <implementation implements="nsIRDFObserver">
 
       <constructor><![CDATA[
+        var hbox = (document.getAnonymousNodes(this))[0].firstChild;
         this.toolbar.controllers.appendController(this.commandController);
         var theToolbar = this;
-        var resizeFunc = function(event) { 
+        this.resizeFunc = function(event) { 
+          theToolbar._overflowTimerInEffect = false;
           var buttons = (document.getAnonymousNodes(theToolbar))[0].firstChild;
           var menu = buttons.nextSibling.childNodes[1];
           var width = window.innerWidth;
@@ -87,11 +89,14 @@
             }
           }
         };
-        window.addEventListener("resize", resizeFunc, false);
+        window.addEventListener("resize", this.resizeFunc, false);
+        hbox.database.AddObserver(this);
       ]]></constructor>
 
       <destructor>
+        var hbox = (document.getAnonymousNodes(this))[0].firstChild;
         this.toolbar.controllers.removeController(this.commandController);
+        hbox.database.RemoveObserver(this);
       </destructor>
 
       <property name="toolbar">
@@ -100,6 +105,7 @@
         ]]></getter>
       </property>
 
+      <field name="resizeFunc">null</field>
       <field name="_selection">  null</field>
       <field name="_target">     null</field>
       <field name="_orientation">null</field>
@@ -350,6 +356,87 @@
         ]]></body>
       </method>
        
+  <!--Implement nsIRDFObserver so we can update our overflow state when items get added/removed from
+      the toolbar -->
+      <field name="_overflowTimerInEffect">false</field>
+      <method name="setOverflowTimeout">
+        <body><![CDATA[
+          if (this._overflowTimerInEffect)
+            return;
+          this._overflowTimerInEffect = true;
+          setTimeout("document.getElementById('bookmarks-toolbar').resizeFunc(null)", 0);
+        ]]>
+        </body>
+      </method>
+
+      <method name="onAssert">
+        <parameter name="aDataSource"/>
+        <parameter name="aSource"/>
+        <parameter name="aProperty"/>
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          if (aSource.Value != "NC:PersonalToolbarFolder" || aProperty.Value == "http://home.netscape.com/WEB-rdf#LastModifiedDate")
+            return;
+          this.setOverflowTimeout();
+        ]]>
+        </body>
+      </method>
+
+      <method name="onUnassert">
+        <parameter name="aDataSource"/>
+        <parameter name="aSource"/>
+        <parameter name="aProperty"/>
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          if (aSource.Value != "NC:PersonalToolbarFolder" || aProperty.Value == "http://home.netscape.com/WEB-rdf#LastModifiedDate")
+            return;
+          this.setOverflowTimeout();
+        ]]>
+        </body>
+      </method>
+
+      <method name="onChange">
+        <parameter name="aDataSource"/>
+        <parameter name="aSource"/>
+        <parameter name="aProperty"/>
+        <parameter name="aOldTarget"/>
+        <parameter name="aNewTarget"/>
+        <body><![CDATA[
+          if (aSource.Value != "NC:PersonalToolbarFolder" || aProperty.Value == "http://home.netscape.com/WEB-rdf#LastModifiedDate")
+            return;
+          this.setOverflowTimeout();
+        ]]>
+        </body>
+      </method>
+
+      <method name="onMove">
+        <parameter name="aDataSource"/>
+        <parameter name="aOldSource"/>
+        <parameter name="aNewSource"/>
+        <parameter name="aProperty"/>
+        <parameter name="aTarget"/>
+        <body><![CDATA[
+          if (aSource.Value != "NC:PersonalToolbarFolder")
+            return;
+          this.setOverflowTimeout();
+        ]]>
+        </body>
+      </method>
+
+      <method name="beginUpdateBatch">
+        <parameter name="aDataSource"/>
+        <body><![CDATA[
+        ]]>
+        </body>
+      </method>
+
+      <method name="endUpdateBatch">
+        <parameter name="aDataSource"/>
+        <body><![CDATA[
+        ]]>
+        </body>
+      </method>
+
   <!--/////////////////////////////////////////////////////////////////////////////
       // Command controller -->
       <field name="commandController" readonly="true"><![CDATA[
