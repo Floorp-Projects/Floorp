@@ -1963,8 +1963,10 @@ dnl = Enable stripping of libs and executables
 dnl = 
 dnl ========================================================
 AC_ARG_ENABLE(strip,
-[  --enable-strip          Enable stripping of shared libs and programs],
-  [ ENABLE_STRIP=1 ])
+    [  --enable-strip          Enable stripping of shared libs and programs],
+    [ if test "$enableval" = "yes"; then
+	    ENABLE_STRIP=1
+      fi ])
 
 dnl Check for hpux options
 case "${target_os}" in
