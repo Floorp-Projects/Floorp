@@ -123,7 +123,13 @@ function PREF_ParsePref( elementID, elementObject )
             // gleanable idxes as radio buttons do.
             elementObject.prefindex = elementObject.value;  
           }
-          whp.SetIntPref( elementObject.prefstring, elementObject.prefindex );  // integer pref
+          if( !elementObject.prefindex ) {
+            var prefvalue = elementObject.value;
+          }
+          else {
+            var prefvalue = elementObject.prefindex;
+          }
+          whp.SetIntPref( elementObject.prefstring, prefvalue );  // integer pref
         }
         break;
       case "string":
