@@ -862,6 +862,7 @@ lo_SmallSquishSubDocToCell(MWContext *context, lo_DocState *state,
 
         cell->cell_bg_layer = NULL;
         cell->cell_inflow_layer = NULL;
+	*/
 
 	/*
 	cell->border_width = subdoc->border_width;
