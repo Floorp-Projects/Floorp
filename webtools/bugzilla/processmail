@@ -271,10 +271,14 @@ sub ProcessOneBug {
     # only need one entry per person
     my @allEmail = ();
     my %AlreadySeen = ();
+    my $checkperson = "";
     foreach my $person (@emailList) {
-        if ( !($AlreadySeen{$person}) ) {
+        # don't modify the original so it sends out with the right case
+        # based on who came first.
+        $checkperson = lc($person);
+        if ( !($AlreadySeen{$checkperson}) ) {
             push(@allEmail,$person);
-            $AlreadySeen{$person}++;
+            $AlreadySeen{$checkperson}++;
         }
     }
 
@@ -366,7 +370,7 @@ sub filterExcludeList ($$) {
         foreach my $included (@allEmail) {
 
             # match found, so we remove the entry
-            if ($included eq $excluded) {
+            if (lc($included) eq lc($excluded)) {
                 pop(@result);
                 last;
             }
@@ -374,10 +378,13 @@ sub filterExcludeList ($$) {
     }
 
     # only need one entry per person
+    my $checkperson = "";
+
     foreach my $person (@result) {
-        if ( !($alreadySeen{$person}) ) {
+        $checkperson = lc($person);
+        if ( !($alreadySeen{$checkperson}) ) {
             push(@uniqueResult,$person);
-            $alreadySeen{$person}++;
+            $alreadySeen{$checkperson}++;
         }
     }
 
