@@ -272,12 +272,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
             nextNode->GetParentNode(getter_AddRefs(parent));
             res = GetChildOffset(nextNode, parent, offsetInParent);
             if (NS_SUCCEEDED(res)) {
-              selection->Collapse(parent, offsetInParent+1, SELECTION_NORMAL);  // +1 to insert just after the break
+              selection->Collapse(parent, offsetInParent+1);  // +1 to insert just after the break
             }
           }
           else
           {
-            selection->Collapse(nextNode, offsetInParent, SELECTION_NORMAL);
+            selection->Collapse(nextNode, offsetInParent);
           }
         }
       }
@@ -499,7 +499,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation)
 #endif
   }
 
-  res = selection->Collapse(newNode, 0, SELECTION_NORMAL);
+  res = selection->Collapse(newNode, 0);
   if (NS_FAILED(res))
   {
 #ifdef DEBUG_akkana
@@ -580,7 +580,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
 
     // Get the first range in the selection, for context:
   nsCOMPtr<nsIDOMRange> range;
-  res = selection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(range));
+  res = selection->GetRangeAt(0, getter_AddRefs(range));
   if (NS_FAILED(res))
     return res;
 
@@ -618,7 +618,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
   // set the selection back there after the insert.
   // Unfortunately this doesn't work right yet.
   nsCOMPtr<nsIDOMRange> saverange;
-  res = selection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(saverange));
+  res = selection->GetRangeAt(0, getter_AddRefs(saverange));
 
   // Insert the node:
   res = InsertNode(fragmentAsNode, parentNode, offsetOfNewNode);
@@ -631,10 +631,10 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
     PRInt32 offset;
     if (NS_SUCCEEDED(saverange->GetEndParent(getter_AddRefs(parent))))
       if (NS_SUCCEEDED(saverange->GetEndOffset(&offset)))
-        selection->Collapse(parent, offset, SELECTION_NORMAL);
+        selection->Collapse(parent, offset);
   }
   else
-    selection->Collapse(parentNode, 0/*offsetOfNewNode*/, SELECTION_NORMAL);
+    selection->Collapse(parentNode, 0/*offsetOfNewNode*/);
 #else /* INSERT_FRAGMENT_DIRECTLY */
   // Loop over the contents of the fragment:
   nsCOMPtr<nsIDOMNode> child;
@@ -711,7 +711,7 @@ nsHTMLEditor::GetParagraphStyle(nsStringArray *aTagList)
   if ((NS_SUCCEEDED(res)) && selection)
   {
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
@@ -842,7 +842,7 @@ nsHTMLEditor::ReplaceBlockParent(nsString& aParentTag)
     // set the block parent for all selected ranges
     nsAutoEditBatch beginBatching(this);
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
@@ -1233,7 +1233,7 @@ nsHTMLEditor::RemoveParagraphStyle()
     nsAutoSelectionReset selectionResetter(selection);
     nsAutoEditBatch beginBatching(this);
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
@@ -1353,7 +1353,7 @@ nsHTMLEditor::RemoveParent(const nsString &aParentTag)
     nsAutoSelectionReset selectionResetter(selection);
     nsAutoEditBatch beginBatching(this);
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
@@ -1488,7 +1488,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
   PRBool isCollapsed;
-  res = selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res)) return res;
 
   res = GetStartNodeAndOffset(selection, &node, &offset);
@@ -1530,7 +1530,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
       res = CreateNode(bq, parent, offset, getter_AddRefs(newBQ));
       if (NS_FAILED(res)) return res;
       // put a space in it so layout will draw the list item
-      res = selection->Collapse(newBQ,0, SELECTION_NORMAL);
+      res = selection->Collapse(newBQ,0);
       if (NS_FAILED(res)) return res;
       nsAutoString theText(" ");
       res = InsertText(theText);
@@ -1538,7 +1538,7 @@ nsHTMLEditor::Indent(const nsString& aIndent)
       // reposition selection to before the space character
       res = GetStartNodeAndOffset(selection, &node, &offset);
       if (NS_FAILED(res)) return res;
-      res = selection->Collapse(node,0, SELECTION_NORMAL);
+      res = selection->Collapse(node,0);
       if (NS_FAILED(res)) return res;
     }
   }
@@ -1604,7 +1604,7 @@ nsHTMLEditor::InsertList(const nsString& aListType)
   if (NS_FAILED(res) || !selection) return res;
 
   PRBool isCollapsed;
-  res = selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIDOMNode> node;
@@ -1651,7 +1651,7 @@ nsHTMLEditor::InsertList(const nsString& aListType)
     if (NS_FAILED(res)) return res;
     // put a space in it so layout will draw the list item
     // XXX - revisit when layout is fixed
-    res = selection->Collapse(newItem,0, SELECTION_NORMAL);
+    res = selection->Collapse(newItem,0);
     if (NS_FAILED(res)) return res;
     nsAutoString theText(" ");
     res = InsertText(theText);
@@ -1659,7 +1659,7 @@ nsHTMLEditor::InsertList(const nsString& aListType)
     // reposition selection to before the space character
     res = GetStartNodeAndOffset(selection, &node, &offset);
     if (NS_FAILED(res)) return res;
-    res = selection->Collapse(node,0, SELECTION_NORMAL);
+    res = selection->Collapse(node,0);
     if (NS_FAILED(res)) return res;
   }
 
@@ -1689,7 +1689,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
     return res;
   }
   PRBool isCollapsed;
-  res = selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res))
     isCollapsed = PR_TRUE;
 
@@ -1737,7 +1737,7 @@ nsHTMLEditor::InsertLink(nsString& aURL)
 #endif
     return res;
   }
-  res = selection->Collapse(newNode, 0, SELECTION_NORMAL);
+  res = selection->Collapse(newNode, 0);
   if (NS_FAILED(res))
   {
 #ifdef DEBUG_akkana
@@ -1857,7 +1857,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
     return res;
 
   PRBool isCollapsed;
-  selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  selection->GetIsCollapsed(&isCollapsed);
   nsCOMPtr<nsIDOMElement> selectedElement;
   PRBool bNodeFound = PR_FALSE;
 
@@ -1865,7 +1865,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   if (!isCollapsed)
   {
     nsCOMPtr<nsIEnumerator> enumerator;
-    res = selection->GetEnumerator(SELECTION_NORMAL,getter_AddRefs(enumerator));
+    res = selection->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(res) && enumerator)
     {
       enumerator->First(); 
@@ -2190,14 +2190,14 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     if (collapseAfter)
     {
       // Default behavior is to collapse to the end of the selection
-      selection->ClearSelection(SELECTION_NORMAL);
+      selection->ClearSelection();
     } else {
       // Collapse to the start of the selection,
       // We must explore the first range and find
       //   its parent and starting offset of selection
       // TODO: Move this logic to a new method nsIDOMSelection::CollapseToStart()???
       nsCOMPtr<nsIDOMRange> firstRange;
-      res = selection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(firstRange));
+      res = selection->GetRangeAt(0, getter_AddRefs(firstRange));
       if (NS_SUCCEEDED(res) && firstRange)
       {
         nsCOMPtr<nsIDOMNode> parent;
@@ -2206,10 +2206,10 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
         {
           PRInt32 startOffset;
           firstRange->GetStartOffset(&startOffset);
-          selection->Collapse(parent, startOffset, SELECTION_NORMAL);
+          selection->Collapse(parent, startOffset);
         } else {
           // Very unlikely, but collapse to the end if we failed above
-          selection->ClearSelection(SELECTION_NORMAL);
+          selection->ClearSelection();
         }
       }
     }
@@ -2378,7 +2378,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
     goto DELETE_ANCHOR;
 
   PRBool isCollapsed;
-  res = selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res))
     isCollapsed = PR_TRUE;
   
@@ -2470,9 +2470,9 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
         if (NS_SUCCEEDED(res))
         {
           // Collapse selection to just before desired element,
-          selection->Collapse(parent, offsetInParent, SELECTION_NORMAL);
+          selection->Collapse(parent, offsetInParent);
           //  then extend it to just after
-          selection->Extend(parent, offsetInParent+1, SELECTION_NORMAL);
+          selection->Extend(parent, offsetInParent+1);
         }
       }
     }
@@ -2542,7 +2542,7 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement, PRBool* caretIsSet)
       res = nsEditor::GetSelection(getter_AddRefs(selection));
       if (NS_SUCCEEDED(res) && selection)
       {
-        res = selection->Collapse(parent, offset, SELECTION_NORMAL);
+        res = selection->Collapse(parent, offset);
         if (NS_SUCCEEDED(res) && caretIsSet)
           *caretIsSet = PR_TRUE;
       }
@@ -2581,7 +2581,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
         if (NS_SUCCEEDED(res))
         {
           // Collapse selection to just after desired element,
-          selection->Collapse(parent, offsetInParent+1, SELECTION_NORMAL);
+          selection->Collapse(parent, offsetInParent+1);
         }
       }
     }

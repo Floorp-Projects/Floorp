@@ -760,15 +760,10 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
     }
 
     if (NS_SUCCEEDED(result) && shell){
-      result = shell->GetSelection(getter_AddRefs(selection));
-      if (NS_SUCCEEDED(result) && selection){
-        frameSelection = do_QueryInterface(selection);
-        nsCOMPtr<nsIContent> content;
-        result = GetContent(getter_AddRefs(content));
-        if (NS_SUCCEEDED(result)){
-          result = frameSelection->LookUpSelection(newContent, offset, 
-                                1, &details);// last param notused
-        }
+      result = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+      if (NS_SUCCEEDED(result) && frameSelection){
+        result = frameSelection->LookUpSelection(newContent, offset, 
+                              1, &details);// last param notused
       }
     }
   //}
@@ -818,11 +813,8 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
     nsCOMPtr<nsIPresShell> shell;
     nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv)){
-      nsCOMPtr<nsIDOMSelection> selection;
-      if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
-        nsCOMPtr<nsIFrameSelection> frameselection;
-        frameselection = do_QueryInterface(selection);
-        if (frameselection) {
+      nsCOMPtr<nsIFrameSelection> frameselection;
+      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
           PRBool mouseDown = PR_FALSE;
           if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && mouseDown) {
 
@@ -865,7 +857,6 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
 //--------------------------------------------------- 
 #endif             
             
-          }
         }
       }
     }
@@ -903,16 +894,10 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
     nsCOMPtr<nsIContent> newContent;
     if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x, getter_AddRefs(newContent), 
                                  startPos, contentOffsetEnd))){
-      nsCOMPtr<nsIDOMSelection> selection;
-      if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
-        nsCOMPtr<nsIFrameSelection> frameselection;
-        frameselection = do_QueryInterface(selection);
-        if (frameselection) {
-          if (NS_SUCCEEDED( rv )){
-            frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-            frameselection->TakeFocus(newContent, startPos , contentOffsetEnd , inputEvent->isShift, inputEvent->isControl);
-          }
-        }
+      nsCOMPtr<nsIFrameSelection> frameselection;
+      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
+        frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
+        frameselection->TakeFocus(newContent, startPos , contentOffsetEnd , inputEvent->isShift, inputEvent->isControl);
       }
       //no release 
     }
@@ -948,16 +933,9 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
     nsCOMPtr<nsIContent> newContent;
     if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x, getter_AddRefs(newContent), 
                                  startPos, contentOffsetEnd))){
-      nsIDOMSelection *selection = nsnull;
-      if (NS_SUCCEEDED(shell->GetSelection(&selection))){
-        nsIFrameSelection* frameselection;
-        if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
-          if (NS_SUCCEEDED( rv )){
-            frameselection->TakeFocus(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE); //TRUE IS THE DIFFERENCE for continue selection
-          }
-          NS_RELEASE(frameselection);
-        }
-        NS_RELEASE(selection);
+      nsCOMPtr<nsIFrameSelection> frameselection;
+      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
+        frameselection->TakeFocus(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE); //TRUE IS THE DIFFERENCE for continue selection
       }
       //no release 
     }

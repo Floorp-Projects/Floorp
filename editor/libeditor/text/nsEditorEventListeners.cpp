@@ -865,7 +865,7 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
   nsCOMPtr<nsIDOMSelection> selection;
   if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
-    (void)selection->Collapse(parent, offset, SELECTION_NORMAL);
+    (void)selection->Collapse(parent, offset);
 
   // If the ctrl key is pressed, we'll do paste as quotation.
   // Would've used the alt key, but the kde wmgr treats alt-middle specially. 

@@ -482,7 +482,7 @@ nsEditor::GetSelection(nsIDOMSelection **aSelection)
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
   *aSelection = nsnull;
-  nsresult result = mPresShell->GetSelection(aSelection);  // does an addref
+  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, aSelection);  // does an addref
   return result;
 }
 
@@ -523,7 +523,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   
   /* Show the caret */
   nsCOMPtr<nsICaret>	caret;
-  if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret))))
+  if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret))) && caret)
   {
   	caret->SetCaretVisible(PR_TRUE);
   	caret->SetCaretReadOnly(PR_FALSE);
@@ -1040,7 +1040,7 @@ NS_IMETHODIMP nsEditor::SelectAll()
   if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     result = SelectEntireDocument(selection);
@@ -1059,7 +1059,7 @@ NS_IMETHODIMP nsEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
     nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
     if (bodyNode)
     {
-      result = aSelection->Collapse(bodyNode, 0, SELECTION_NORMAL);
+      result = aSelection->Collapse(bodyNode, 0);
       if (NS_SUCCEEDED(result))
       {
         PRInt32 numBodyChildren=0;
@@ -1068,7 +1068,7 @@ NS_IMETHODIMP nsEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
         if ((NS_SUCCEEDED(result)) && lastChild)
         {
           GetChildOffset(lastChild, bodyNode, numBodyChildren);
-          result = aSelection->Extend(bodyNode, numBodyChildren+1, SELECTION_NORMAL);
+          result = aSelection->Extend(bodyNode, numBodyChildren+1);
         }
       }
     }
@@ -1121,7 +1121,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -1140,7 +1140,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
         nsCOMPtr<nsIDOMNode> firstNode = GetDeepFirstChild(bodyNode);
         if (firstNode)
         {
-          result = selection->Collapse(firstNode, 0, SELECTION_NORMAL);
+          result = selection->Collapse(firstNode, 0);
           ScrollIntoView(PR_TRUE);
         }
       }
@@ -1199,7 +1199,7 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
   if (!mDoc || !mPresShell) { return NS_ERROR_NOT_INITIALIZED; }
 
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult result = mPresShell->GetSelection(getter_AddRefs(selection));
+  nsresult result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -1225,7 +1225,7 @@ NS_IMETHODIMP nsEditor::EndOfDocument()
             if (text)
               text->GetLength(&offset);
           }
-          result = selection->Collapse(lastChild, offset, SELECTION_NORMAL);
+          result = selection->Collapse(lastChild, offset);
           ScrollIntoView(PR_FALSE);
         }
       }
@@ -1244,12 +1244,12 @@ NS_IMETHODIMP nsEditor::Cut()
 #endif // ENABLE_JS_EDITOR_LOG
 
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = mPresShell->GetSelection(getter_AddRefs(selection));
+  nsresult res = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res))
     return res;
 
   PRBool isCollapsed;
-  if (NS_SUCCEEDED(selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed)) && isCollapsed)
+  if (NS_SUCCEEDED(selection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
     return NS_ERROR_NOT_AVAILABLE;
 
   res = Copy();
@@ -1744,11 +1744,11 @@ NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, 
     // Get current selection and setup txn to delete it,
     //  but only if selection exists (is not a collapsed "caret" state)
     nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection)
     {
       PRBool collapsed;
-      result = selection->GetIsCollapsed(SELECTION_NORMAL, &collapsed);
+      result = selection->GetIsCollapsed(&collapsed);
       if (NS_SUCCEEDED(result) && !collapsed) {
         EditAggregateTxn *delSelTxn;
         result = CreateTxnForDeleteSelection(nsIEditor::eDoNothing,
@@ -1803,8 +1803,8 @@ nsEditor::InsertText(const nsString& aStringToInsert)
       {
         nsCOMPtr<nsIDOMNode> selectedNode;
         PRInt32 offset;
-        result = selection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(selectedNode));
-        if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && selectedNode)
+        result = selection->GetAnchorNode(getter_AddRefs(selectedNode));
+        if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
         {
           nsCOMPtr<nsIDOMNode> newNode;
           result = CreateNode(GetTextNodeTag(), selectedNode, offset, 
@@ -1817,8 +1817,8 @@ nsEditor::InsertText(const nsString& aStringToInsert)
             {
               nsAutoString placeholderText(" ");
               newTextNode->SetData(placeholderText);
-              selection->Collapse(newNode, 0, SELECTION_NORMAL);
-              selection->Extend(newNode, 1, SELECTION_NORMAL);
+              selection->Collapse(newNode, 0);
+              selection->Extend(newNode, 1);
               result = InsertText(aStringToInsert);
             }
           }
@@ -1846,7 +1846,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
   else
   {
     nsCOMPtr<nsIDOMSelection> selection;
-    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
     if ((NS_SUCCEEDED(result)) && selection)
     {
 #if 0
@@ -1868,7 +1868,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
 #endif
       result = NS_ERROR_UNEXPECTED; 
       nsCOMPtr<nsIEnumerator> enumerator;
-      result = selection->GetEnumerator(SELECTION_NORMAL,getter_AddRefs(enumerator));
+      result = selection->GetEnumerator(getter_AddRefs(enumerator));
       if (NS_SUCCEEDED(result) && enumerator)
       {
         enumerator->First(); 
@@ -2030,7 +2030,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag,
   nsCOMPtr<nsIDOMSelection> selection;
   result = GetSelection(getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
-    selection->Collapse(parentSelectedNode, offsetOfNewNode+1, SELECTION_NORMAL);
+    selection->Collapse(parentSelectedNode, offsetOfNewNode+1);
 
   return result;
 }
@@ -2043,7 +2043,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
   if ((NS_SUCCEEDED(result)) && selection)
   {
     PRBool collapsed;
-    result = selection->GetIsCollapsed(SELECTION_NORMAL, &collapsed);
+    result = selection->GetIsCollapsed(&collapsed);
     if (NS_SUCCEEDED(result) && !collapsed) 
     {
       result = DeleteSelection(nsIEditor::eDoNothing);
@@ -2057,13 +2057,13 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
       }
 #ifdef NS_DEBUG
       nsCOMPtr<nsIDOMNode>testSelectedNode;
-      nsresult debugResult = selection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(testSelectedNode));
+      nsresult debugResult = selection->GetAnchorNode(getter_AddRefs(testSelectedNode));
       // no selection is ok.
       // if there is a selection, it must be collapsed
       if (testSelectedNode)
       {
         PRBool testCollapsed;
-        debugResult = selection->GetIsCollapsed(SELECTION_NORMAL, &testCollapsed);
+        debugResult = selection->GetIsCollapsed(&testCollapsed);
         NS_ASSERTION((NS_SUCCEEDED(result)), "couldn't get a selection after deletion");
         NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");
       }
@@ -2071,8 +2071,8 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
     }
     // split the selected node
     PRInt32 offsetOfSelectedNode;
-    result = selection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(parentSelectedNode));
-    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(SELECTION_NORMAL, &offsetOfSelectedNode)) && parentSelectedNode)
+    result = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
+    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offsetOfSelectedNode)) && parentSelectedNode)
     {
       nsCOMPtr<nsIDOMNode> selectedNode;
       PRUint32 selectedNodeContentCount=0;
@@ -2224,12 +2224,12 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelecti
 
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
-  result = mPresShell->GetSelection(getter_AddRefs(selection));
+  result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
   if ((NS_SUCCEEDED(result)) && selection)
   {
     // Check whether the selection is collapsed and we should do nothing:
     PRBool isCollapsed;
-    result = (selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed));
+    result = (selection->GetIsCollapsed(&isCollapsed));
     if (NS_SUCCEEDED(result) && isCollapsed && aAction == eDoNothing)
       return NS_OK;
 
@@ -2240,7 +2240,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelecti
     }
 
     nsCOMPtr<nsIEnumerator> enumerator;
-    result = selection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+    result = selection->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(result) && enumerator)
     {
       for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
@@ -3491,12 +3491,12 @@ nsEditor::BeginComposition(void)
 	nsCOMPtr<nsIDOMSelection> selection;
 	nsCOMPtr<nsIDOMCharacterData> nodeAsText;
 	
-	result = mPresShell->GetSelection(getter_AddRefs(selection));
+	result = mPresShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
 	if ((NS_SUCCEEDED(result)) && selection)
 	{
 		result = NS_ERROR_UNEXPECTED; 
 		nsCOMPtr<nsIEnumerator> enumerator;
-    result = selection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+    result = selection->GetEnumerator(getter_AddRefs(enumerator));
     if (NS_SUCCEEDED(result) && enumerator)
 		{
 			enumerator->First(); 
@@ -3770,8 +3770,8 @@ nsEditor::SetInputMethodText(const nsString& aStringToInsert,nsIDOMTextRangeList
 		{
 			nsCOMPtr<nsIDOMNode> selectedNode;
 			PRInt32 offset;
-			result = selection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(selectedNode));
-			if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && selectedNode)
+			result = selection->GetAnchorNode(getter_AddRefs(selectedNode));
+			if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
 			{
 				nsCOMPtr<nsIDOMNode> newNode;
 				result = CreateNode(GetTextNodeTag(), selectedNode, offset+1,getter_AddRefs(newNode));
@@ -3783,8 +3783,8 @@ nsEditor::SetInputMethodText(const nsString& aStringToInsert,nsIDOMTextRangeList
 					{
 						nsAutoString placeholderText(" ");
 						newTextNode->SetData(placeholderText);
-						selection->Collapse(newNode, 0, SELECTION_NORMAL);
-						selection->Extend(newNode, 1, SELECTION_NORMAL);
+						selection->Collapse(newNode, 0);
+						selection->Extend(newNode, 1);
 						result = SetInputMethodText(aStringToInsert,aTextRangeList);
 					}
 				}
@@ -4196,7 +4196,7 @@ nsEditor::GetStartNodeAndOffset(nsIDOMSelection *aSelection,
     
   nsCOMPtr<nsIEnumerator> enumerator;
   nsresult result;
-  result = aSelection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+  result = aSelection->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(result) || !enumerator)
     return NS_ERROR_FAILURE;
     
@@ -4231,7 +4231,7 @@ nsEditor::GetEndNodeAndOffset(nsIDOMSelection *aSelection,
     return NS_ERROR_NULL_POINTER;
     
   nsCOMPtr<nsIEnumerator> enumerator;
-  nsresult result = aSelection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+  nsresult result = aSelection->GetEnumerator(getter_AddRefs(enumerator));
   if (NS_FAILED(result) || !enumerator)
     return NS_ERROR_FAILURE;
     
@@ -4575,10 +4575,10 @@ nsAutoSelectionReset::nsAutoSelectionReset(nsIDOMSelection *aSel)
   mSel = do_QueryInterface(aSel);
   if (mSel)
   {
-    mSel->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(mStartNode));
-    mSel->GetAnchorOffset(SELECTION_NORMAL, &mStartOffset);
-    mSel->GetFocusNode(SELECTION_NORMAL, getter_AddRefs(mEndNode));
-    mSel->GetFocusOffset(SELECTION_NORMAL, &mEndOffset);
+    mSel->GetAnchorNode(getter_AddRefs(mStartNode));
+    mSel->GetAnchorOffset(&mStartOffset);
+    mSel->GetFocusNode(getter_AddRefs(mEndNode));
+    mSel->GetFocusOffset(&mEndOffset);
     if (mStartNode && mEndNode)
       mInitialized = PR_TRUE;
   }
@@ -4589,8 +4589,8 @@ nsAutoSelectionReset::~nsAutoSelectionReset()
   if (mSel && mInitialized)
   {
     // restore original selection
-    mSel->Collapse(mStartNode, mStartOffset, SELECTION_NORMAL);
-    mSel->Extend(mEndNode, mEndOffset, SELECTION_NORMAL);
+    mSel->Collapse(mStartNode, mStartOffset);
+    mSel->Extend(mEndNode, mEndOffset);
   }
 }
 

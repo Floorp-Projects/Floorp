@@ -88,7 +88,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetAnchorNode(SELECTION_NORMAL, &prop)) {
+        if (NS_OK == a->GetAnchorNode(&prop)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -105,7 +105,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetAnchorOffset(SELECTION_NORMAL, &prop)) {
+        if (NS_OK == a->GetAnchorOffset(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -121,7 +121,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetFocusNode(SELECTION_NORMAL, &prop)) {
+        if (NS_OK == a->GetFocusNode(&prop)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -138,7 +138,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetFocusOffset(SELECTION_NORMAL, &prop)) {
+        if (NS_OK == a->GetFocusOffset(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -154,7 +154,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetIsCollapsed(SELECTION_NORMAL, &prop)) {
+        if (NS_OK == a->GetIsCollapsed(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -170,7 +170,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetRangeCount(SELECTION_NORMAL, &prop)) {
+        if (NS_OK == a->GetRangeCount(&prop)) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -295,7 +295,7 @@ SelectionGetRangeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->GetRangeAt(b0, SELECTION_NORMAL, &nativeRet)) {
+    if (NS_OK != nativeThis->GetRangeAt(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
@@ -342,7 +342,7 @@ SelectionClearSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   if (argc >= 0) {
 
-    if (NS_OK != nativeThis->ClearSelection(SELECTION_NORMAL)) {
+    if (NS_OK != nativeThis->ClearSelection()) {
       return JS_FALSE;
     }
 
@@ -404,7 +404,7 @@ SelectionCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->Collapse(b0, b1, SELECTION_NORMAL)) {
+    if (NS_OK != nativeThis->Collapse(b0, b1)) {
       return JS_FALSE;
     }
 
@@ -466,7 +466,7 @@ SelectionExtend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->Extend(b0, b1, SELECTION_NORMAL)) {
+    if (NS_OK != nativeThis->Extend(b0, b1)) {
       return JS_FALSE;
     }
 
@@ -569,7 +569,7 @@ SelectionAddRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->AddRange(b0, SELECTION_NORMAL)) {
+    if (NS_OK != nativeThis->AddRange(b0)) {
       return JS_FALSE;
     }
 

@@ -196,12 +196,9 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       nsCOMPtr<nsIPresShell> shell;
       nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
-        nsCOMPtr<nsIDOMSelection> selection;
-        rv = shell->GetSelection(getter_AddRefs(selection));
-        if (NS_SUCCEEDED(rv) && selection){
-          nsCOMPtr<nsIFrameSelection> frameSel;
-          frameSel = do_QueryInterface(selection);
-          if (frameSel)
+        nsCOMPtr<nsIFrameSelection> frameSel;
+        rv = shell->GetFrameSelection(getter_AddRefs(frameSel));
+        if (NS_SUCCEEDED(rv) && frameSel){
             frameSel->SetMouseDownState(PR_FALSE);
         }
       }

@@ -35,7 +35,6 @@
 #include "nsIEditProperty.h"
 
 static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if (mFlags & TEXT_EDITOR_FLAG_READONLY || mFlags & TEXT_EDITOR_FLAG_DISABLED) \
@@ -195,7 +194,7 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
     mEditor->DeleteNode(mBogusNode);
     mBogusNode = do_QueryInterface(nsnull);
     // there is no longer any legit selection, so clear it.
-    aSelection->ClearSelection(SELECTION_NORMAL);
+    aSelection->ClearSelection();
   }
 
   return NS_OK;
@@ -338,8 +337,8 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
   // Otherwise, create the text node and the new inline style parents.
   nsCOMPtr<nsIDOMNode>anchor;
   PRInt32 offset;
-  nsresult result = aSelection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(anchor));
-  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && anchor)
+  nsresult result = aSelection->GetAnchorNode( getter_AddRefs(anchor));
+  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
   {
     nsCOMPtr<nsIDOMCharacterData>anchorAsText;
     anchorAsText = do_QueryInterface(anchor);
@@ -526,7 +525,7 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode,
       result = mEditor->InsertNode(aNode, *aNewNode, 0);
       if (NS_SUCCEEDED(result)) {
         if (aSelection) {
-          aSelection->Collapse(aNode, 0, SELECTION_NORMAL);
+          aSelection->Collapse(aNode, 0);
         }
       }
     }
@@ -547,8 +546,8 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
   {
     nsCOMPtr<nsIDOMNode>anchor;
     PRInt32 offset;
-    result = aSelection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(anchor));
-    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && anchor)
+    result = aSelection->GetAnchorNode(getter_AddRefs(anchor));
+    if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
     {
       nsCOMPtr<nsIDOMCharacterData>anchorAsText;
       anchorAsText = do_QueryInterface(anchor);
@@ -572,7 +571,7 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode, nsIAtom *aTa
     if (NS_SUCCEEDED(result)) 
     {
       if (aSelection) {
-        aSelection->Collapse(newTextNode, 0, SELECTION_NORMAL);
+        aSelection->Collapse(newTextNode, 0);
       }
     }
   }
@@ -667,7 +666,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
   nsresult result = aResult;  // if aResult is an error, we just return it
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   PRBool isCollapsed;
-  aSelection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
+  aSelection->GetIsCollapsed(&isCollapsed);
   NS_ASSERTION(PR_TRUE==isCollapsed, "selection not collapsed after delete selection.");
   // if the delete selection resulted in no content 
   // insert a special bogus text node with a &nbsp; character in it.
@@ -679,8 +678,8 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
     {
       nsCOMPtr<nsIDOMNode>anchor;
       PRInt32 offset;
-		  result = aSelection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(anchor));
-		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && anchor)
+		  result = aSelection->GetAnchorNode(getter_AddRefs(anchor));
+		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && anchor)
       {
         nsCOMPtr<nsIDOMNodeList> anchorChildren;
         result = anchor->GetChildNodes(getter_AddRefs(anchorChildren));
@@ -727,7 +726,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
                 result = mEditor->JoinNodes(selectedNode, siblingNode, parentNode);
                 // selectedNode will remain after the join, siblingNode is removed
                 // set selection
-                aSelection->Collapse(siblingNode, selectedNodeLength, SELECTION_NORMAL);
+                aSelection->Collapse(siblingNode, selectedNodeLength);
               }
             }
           }
@@ -767,8 +766,8 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
     {
       nsCOMPtr<nsIDOMNode>node;
       PRInt32 offset;
-		  result = aSelection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(node));
-		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && node)
+		  result = aSelection->GetAnchorNode(getter_AddRefs(node));
+		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && node)
       {
         nsCOMPtr<nsIDOMElement>element;
         element = do_QueryInterface(node);
@@ -814,8 +813,8 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
     {
       nsCOMPtr<nsIDOMNode>node;
       PRInt32 offset;
-		  result = aSelection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(node));
-		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && node)
+		  result = aSelection->GetAnchorNode(getter_AddRefs(node));
+		  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(aSelection->GetAnchorOffset(&offset)) && node)
       {
         nsCOMPtr<nsIDOMElement>element;
         element = do_QueryInterface(node);
@@ -917,7 +916,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
               nsAutoString data;
               data += 160;
               newNodeAsText->SetData(data);
-              aSelection->Collapse(newTNode, 0, SELECTION_NORMAL);
+              aSelection->Collapse(newTNode, 0);
             }
           }
           // make sure we know the PNode is bogus
@@ -966,7 +965,7 @@ nsTextEditRules::PinSelectionInPRE(nsIDOMSelection *aSelection)
   if (NS_FAILED(res)) return res;
 
   // there should only be one selection range in text docs
-  res = aSelection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(selectionRange));
+  res = aSelection->GetRangeAt(0, getter_AddRefs(selectionRange));
   if (NS_FAILED(res)) return res;
   res = selectionRange->Clone(getter_AddRefs(pinRange));
   if (NS_FAILED(res)) return res;
@@ -1020,9 +1019,9 @@ nsTextEditRules::PinSelectionInPRE(nsIDOMSelection *aSelection)
     if (NS_FAILED(res)) return res;
     res = pinRange->GetEndOffset(&endOffset);
     if (NS_FAILED(res)) return res;
-    res = aSelection->Collapse(startNode,startOffset, SELECTION_NORMAL);
+    res = aSelection->Collapse(startNode,startOffset);
     if (NS_FAILED(res)) return res;
-    res = aSelection->Extend(endNode,endOffset, SELECTION_NORMAL);
+    res = aSelection->Extend(endNode,endOffset);
     if (NS_FAILED(res)) return res;
   }
   

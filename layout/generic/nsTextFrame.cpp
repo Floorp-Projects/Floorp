@@ -947,18 +947,16 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       }
       SelectionDetails *details = nsnull;
       nsCOMPtr<nsIPresShell> shell;
-      nsCOMPtr<nsIDOMSelection> selection;
       nsCOMPtr<nsIFrameSelection> frameSelection;
       PRBool drawSelected = PR_FALSE;
 
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
-        rv = shell->GetSelection(getter_AddRefs(selection));
-        if (NS_SUCCEEDED(rv) && selection){
-          frameSelection = do_QueryInterface(selection);
+        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
           rv = GetContent(getter_AddRefs(content));
-          if (NS_SUCCEEDED(rv)){
+          if (NS_SUCCEEDED(rv) && content){
             rv = frameSelection->LookUpSelection(content, mContentOffset, 
                                   mContentLength , &details);// last param notused
           }
@@ -1405,14 +1403,12 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       PRInt32 selectionStartOffset = 0;//frame coordinates
       PRInt32 selectionEndOffset = 0;//frame coordinates
       nsCOMPtr<nsIPresShell> shell;
-      nsCOMPtr<nsIDOMSelection> selection;
       nsCOMPtr<nsIFrameSelection> frameSelection;
       PRBool drawSelected = PR_FALSE;
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
-        rv = shell->GetSelection(getter_AddRefs(selection));
-        if (NS_SUCCEEDED(rv) && selection){
-          frameSelection = do_QueryInterface(selection);
+        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
           rv = GetContent(getter_AddRefs(content));
           if (NS_SUCCEEDED(rv)){
@@ -1521,14 +1517,12 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       PRInt32 selectionStartOffset = 0;//frame coordinates
       PRInt32 selectionEndOffset = 0;//frame coordinates
       nsCOMPtr<nsIPresShell> shell;
-      nsCOMPtr<nsIDOMSelection> selection;
       nsCOMPtr<nsIFrameSelection> frameSelection;
       PRBool drawSelected = PR_FALSE;
       nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
       if (NS_SUCCEEDED(rv) && shell){
-        rv = shell->GetSelection(getter_AddRefs(selection));
-        if (NS_SUCCEEDED(rv) && selection){
-          frameSelection = do_QueryInterface(selection);
+        rv = shell->GetFrameSelection(getter_AddRefs(frameSelection));
+        if (NS_SUCCEEDED(rv) && frameSelection){
           nsCOMPtr<nsIContent> content;
           rv = GetContent(getter_AddRefs(content));
           if (NS_SUCCEEDED(rv)){
@@ -2254,11 +2248,11 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
           return rv;
 
         nsCOMPtr<nsIDOMSelection> selection;
-        if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
-          rv = selection->Collapse(startNode,startOffset, SELECTION_NORMAL);
+        if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
+          rv = selection->Collapse(startNode,startOffset);
           if (NS_FAILED(rv))
             return rv;
-          rv = selection->Extend(endNode,endOffset, SELECTION_NORMAL);
+          rv = selection->Extend(endNode,endOffset);
           if (NS_FAILED(rv))
             return rv;
         }

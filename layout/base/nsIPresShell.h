@@ -21,6 +21,7 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsCoord.h"
+#include "nsIDomSelection.h"
 
 class nsIContent;
 class nsIDocument;
@@ -33,11 +34,11 @@ class nsIReflowCommand;
 class nsIDeviceContext;
 class nsIRenderingContext;
 class nsIPageSequenceFrame;
-class nsIDOMSelection;
 class nsString;
 class nsStringArray;
 class nsICaret;
 class nsIStyleContext;
+class nsIFrameSelection;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -94,7 +95,13 @@ public:
    *
    * @param aSelection will hold the return value
    */
-  NS_IMETHOD GetSelection(nsIDOMSelection** aSelection) = 0;
+  NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection** aSelection) = 0;
+
+  /**
+   * GetFrameSelection will return the Frame based selection API you 
+   *  cannot go back and forth anymore with QI with nsIDOM sel and nsIFrame sel.
+   */
+  NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection) = 0;
 
   NS_IMETHOD EnterReflowLock() = 0;
 

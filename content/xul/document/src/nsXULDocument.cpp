@@ -174,7 +174,7 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
-static NS_DEFINE_CID(kRangeListCID,              NS_RANGELIST_CID);
+static NS_DEFINE_CID(kFrameSelectionCID,         NS_FRAMESELECTION_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
@@ -836,12 +836,12 @@ XULDocumentImpl::XULDocumentImpl(void)
     nsresult rv;
 
     // construct a selection object
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRangeListCID,
+/*    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRangeListCID,
                                                     nsnull,
                                                     kIDOMSelectionIID,
                                                     (void**) &mSelection))) {
         NS_ERROR("unable to create DOM selection");
-    }
+    }*/
 
     if (gRefCnt++ == 0) {
         kIdAtom        = NS_NewAtom("id");

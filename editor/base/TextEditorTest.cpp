@@ -112,10 +112,10 @@ nsresult TextEditorTest::TestInsertBreak()
   TEST_RESULT(result);
   TEST_POINTER(selection.get());
   nsCOMPtr<nsIDOMNode>anchor;
-  result = selection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(anchor));
+  result = selection->GetAnchorNode(getter_AddRefs(anchor));
   TEST_RESULT(result);
   TEST_POINTER(anchor.get());
-  selection->Collapse(anchor, 0, SELECTION_NORMAL);
+  selection->Collapse(anchor, 0);
   // insert one break
   printf("inserting a break\n");
   result = mTextEditor->InsertBreak();
@@ -160,8 +160,8 @@ nsresult TextEditorTest::TestTextProperties()
   textData = do_QueryInterface(textNode);
   PRUint32 length;
   textData->GetLength(&length);
-  selection->Collapse(textNode, 0, SELECTION_NORMAL);
-  selection->Extend(textNode, length, SELECTION_NORMAL);
+  selection->Collapse(textNode, 0);
+  selection->Extend(textNode, length);
   PRBool any = PR_FALSE;
   PRBool all = PR_FALSE;
   PRBool first=PR_FALSE;
@@ -192,8 +192,8 @@ nsresult TextEditorTest::TestTextProperties()
 
   // set all but the first and last character to bold
   printf("set the first text node (1, length-1) to bold and italic, and (2, length-1) to underline.\n");
-  selection->Collapse(textNode, 1, SELECTION_NORMAL);
-  selection->Extend(textNode, length-1, SELECTION_NORMAL);
+  selection->Collapse(textNode, 1);
+  selection->Extend(textNode, length-1);
   result = mTextEditor->SetTextProperty(nsIEditProperty::b, nsnull, nsnull);
   TEST_RESULT(result);
   result = mTextEditor->GetTextProperty(nsIEditProperty::b, nsnull, nsnull, first, any, all);
@@ -229,8 +229,8 @@ nsresult TextEditorTest::TestTextProperties()
   textData = do_QueryInterface(textNode);
   textData->GetLength(&length);
   NS_ASSERTION(length==249, "wrong text node");
-  selection->Collapse(textNode, 1, SELECTION_NORMAL);
-  selection->Extend(textNode, length-2, SELECTION_NORMAL);
+  selection->Collapse(textNode, 1);
+  selection->Extend(textNode, length-2);
   result = mTextEditor->SetTextProperty(nsIEditProperty::u, nsnull, nsnull);
   TEST_RESULT(result);
   result = mTextEditor->GetTextProperty(nsIEditProperty::u, nsnull, nsnull, first, any, all);
