@@ -95,7 +95,8 @@ public:
   NS_IMETHOD SetRetentionSettings(nsIMsgRetentionSettings *settings);
   NS_IMETHOD GetDownloadSettings(nsIMsgDownloadSettings **settings);
   NS_IMETHOD SetDownloadSettings(nsIMsgDownloadSettings *settings);
-
+  NS_IMETHOD GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
+  NS_IMETHOD GetOfflineStoreInputStream(nsIInputStream **outputStream);
 protected:
   virtual nsresult ReadDBFolderInfo(PRBool force);
   virtual nsresult FlushToFolderCache();
@@ -110,8 +111,6 @@ protected:
   nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
   nsresult NotifyStoreClosedAllHeaders();
 
-  virtual nsresult GetOfflineStoreInputStream(nsIInputStream **inputStream);
-  virtual nsresult GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
   // offline support methods.
   nsresult StartNewOfflineMessage();
   nsresult WriteStartOfNewLocalMessage();

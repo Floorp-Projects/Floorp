@@ -476,18 +476,11 @@ NS_IMETHODIMP nsMsgDBFolder:: DownloadAllForOffline(nsIUrlListener *listener, ns
   return NS_OK;
 }
 
-nsresult nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
+NS_IMETHODIMP nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   if (mPath)
-  {
-    nsFileSpec pathFileSpec;
-    mPath->GetFileSpec(&pathFileSpec);
-    nsCOMPtr<nsISupports>  supports;
-    rv = NS_NewIOFileStream(getter_AddRefs(supports), pathFileSpec, PR_CREATE_FILE, 00700);
-    if (NS_SUCCEEDED(rv))
-      rv = supports->QueryInterface(NS_GET_IID(nsIInputStream), (void**)stream);
-  }
+    rv = mPath->GetInputStream(stream);
   return rv;
 }
 
@@ -534,7 +527,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *
   return rv;
 }
 
-nsresult nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStream)
+NS_IMETHODIMP nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStream)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   if (mPath)
