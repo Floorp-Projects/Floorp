@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "XP_PC" /D "MINI_NSPR" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "XP_PC" /D "MINI_NSPR" /D "NSPR20" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -69,7 +69,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "XP_PC" /D "MINI_NSPR" /YX /FD /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /Zi /Od /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "XP_PC" /D "MINI_NSPR" /D "NSPR20" /YX /FD /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /o NUL /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -89,35 +89,35 @@ LINK32=link.exe
 # Name "miniNSPR - Win32 Debug"
 # Begin Source File
 
-SOURCE=.\mininspr\plhash.c
+SOURCE=.\plhash.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mininspr\prdtoa.c
+SOURCE=.\prdtoa.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mininspr\prlog.c
+SOURCE=.\prlog.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mininspr\prlog2.c
+SOURCE=.\prlog2.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mininspr\prlong.c
+SOURCE=.\prlong.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mininspr\prmem.c
+SOURCE=.\prmem.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mininspr\prprf.c
+SOURCE=.\prprf.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mininspr\prstubs.c
+SOURCE=.\prstubs.c
 # End Source File
 # End Target
 # End Project
