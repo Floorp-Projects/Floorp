@@ -28,18 +28,27 @@ CPPSRCS = \
 	nsBrowserWindow.cpp     \
 	nsEditorMode.cpp        \
 	nsEditorInterfaces.cpp  \
-	nsMotifMenu.cpp         \
 	nsSetupRegistry.cpp     \
-	nsUnixMain.cpp          \
 	nsViewerApp.cpp         \
 	nsWebCrawler.cpp        \
 	nsStubs.cpp             \
 	$(NULL)
 
+ifeq ($(USE_NGLAYOUT_GTK),1)
+CPPSRCS += nsGTKMain.cpp
+else
+CPPSRCS += nsMotifMenu.cpp         \
+	   nsUnixMain.cpp
+endif
+
 INCLUDES+= -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom  -I$(PUBLIC)/dom \
 	-I$(PUBLIC)/netlib -I$(PUBLIC)/js -I$(PUBLIC)/pref -I$(PUBLIC)/network -I$(PUBLIC)/xp
 
 INCLUDES += $(FE_X_CFLAGS)
+
+ifeq ($(USE_NGLAYOUT_GTK),1)
+INCLUDES += $(shell gtk-config --cflags)
+endif
 
 OBJS    = $(CPPSRCS:.cpp=.o)
 
@@ -50,7 +59,6 @@ EX_LIBS = \
 	$(DIST)/bin/libraptorbase.so \
 	$(DIST)/bin/libwidgetunix.so \
 	$(DIST)/bin/libraptorgfx.so \
-	$(DIST)/bin/libgfxunix.so \
 	$(DIST)/bin/libraptorhtml.so \
 	$(DIST)/bin/libgmbaseunix.so \
 	$(DIST)/bin/libraptorhtmlpars.so \
@@ -67,6 +75,12 @@ EX_LIBS = \
 	$(DIST)/bin/libjsdom.so
 ifdef MOZ_OJI
 	EX_LIBS += $(DIST)/bin/libjsj.so
+endif
+
+ifeq ($(USE_NGLAYOUT_GTK),1)
+EX_LIBS += $(DIST)/bin/libgfxgtk.so
+else
+EX_LIBS += $(DIST)/bin/libgfxunix.so
 endif
 
 EX_LIBS += \
@@ -111,6 +125,10 @@ endif
 PROGS = main
 
 TARGETS = $(PROGS)
+
+ifeq ($(USE_NGLAYOUT_GTK),1)
+XLIBS += $(shell gtk-config --libs)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
