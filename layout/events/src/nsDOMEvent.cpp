@@ -50,8 +50,8 @@ static char* mEventNames[] = {
   "mouseout", "mousemove", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "unload", "abort", "error",
   "submit", "reset", "change", "select", "input", "paint" ,"text",
-  "create", "destroy", "command", "broadcast", "commandupdate", "dragenter", "dragover", "dragexit",
-  "dragdrop", "draggesture"
+  "create", "close", "destroy", "command", "broadcast", "commandupdate",
+  "dragenter", "dragover", "dragexit", "dragdrop", "draggesture"
 }; 
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
@@ -855,6 +855,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_focus];
   case NS_BLUR_CONTENT:
     return mEventNames[eDOMEvents_blur];
+  case NS_XUL_CLOSE:
+    return mEventNames[eDOMEvents_close];
   case NS_PAGE_LOAD:
   case NS_IMAGE_LOAD:
     return mEventNames[eDOMEvents_load];

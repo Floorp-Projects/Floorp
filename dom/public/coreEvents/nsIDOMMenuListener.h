@@ -37,6 +37,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMENULISTENER_IID)
 
   NS_IMETHOD Create(nsIDOMEvent* aEvent) = 0;
+  NS_IMETHOD Close(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Destroy(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Action(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) = 0;

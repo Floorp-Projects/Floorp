@@ -206,6 +206,7 @@ nsXULContentUtils::kEventHandlerMap[] = {
     { "onerror",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
 
     { "oncreate",        nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "onclose",         nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "ondestroy",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "oncommand",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
     { "onbroadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },

@@ -244,18 +244,20 @@ enum nsDragDropEventStatus {
 
 // Widget is being created
 #define NS_CREATE                       (NS_WINDOW_START)
+// Widget may be destroyed
+#define NS_XUL_CLOSE                    (NS_WINDOW_START + 1)
 // Widget is being destroyed
-#define NS_DESTROY                      (NS_WINDOW_START + 1)
+#define NS_DESTROY                      (NS_WINDOW_START + 2)
 // Widget was resized
-#define NS_SIZE                         (NS_WINDOW_START + 2)
+#define NS_SIZE                         (NS_WINDOW_START + 3)
 // Widget gained focus
-#define NS_GOTFOCUS                     (NS_WINDOW_START + 3)
+#define NS_GOTFOCUS                     (NS_WINDOW_START + 4)
 // Widget lost focus
-#define NS_LOSTFOCUS                    (NS_WINDOW_START + 4)
+#define NS_LOSTFOCUS                    (NS_WINDOW_START + 5)
 // Widget got activated
-#define NS_ACTIVATE                     (NS_WINDOW_START + 5)
+#define NS_ACTIVATE                     (NS_WINDOW_START + 6)
 // Widget got deactivated
-#define NS_DEACTIVATE                   (NS_WINDOW_START + 6)
+#define NS_DEACTIVATE                   (NS_WINDOW_START + 7)
 // Widget needs to be repainted
 #define NS_PAINT                        (NS_WINDOW_START + 30)
 // Key is pressed within a window
