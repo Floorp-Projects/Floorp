@@ -73,7 +73,7 @@ public:
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
                      const nsSize& size,
-                     nsIFrame* incrementalChild);
+                     nsIFrame*& incrementalChild);
 
 
     NS_IMETHOD  Init(nsIPresContext&  aPresContext,

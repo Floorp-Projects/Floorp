@@ -161,7 +161,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
                      const nsSize& size,
-                     nsIFrame* incrementalChild)
+                     nsIFrame*& incrementalChild)
 {
       // subtract out the childs margin and border 
       const nsStyleSpacing* spacing;
@@ -187,12 +187,11 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
       nsReflowReason reason = aReflowState.reason;
       PRBool shouldReflow = PR_TRUE;
 
-      // if no incremental child. And we are incremental make us
-      // make our reflow reason resize.
-      if (nsnull == incrementalChild && reason == eReflowReason_Incremental)
-           reason = eReflowReason_Resize;
-
-      if (nsnull != incrementalChild && incrementalChild != childFrame) {
+      // if we are incrementally reflowing and the incremental child has already been flowed or
+      // this is not the incremental child check to see if its size has changed. If not
+      // don't worry about it.
+      if (reason == eReflowReason_Incremental)
+         if (incrementalChild == nsnull || incrementalChild != childFrame) {
               // if we are flowing because of incremental and this is not
               // the child then see if the size is already what we want.
               // if it is then keep it and don't bother reflowing.
@@ -208,23 +207,16 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
               // area. So yes we need to reflow. Make sure we change the reason
               // so we don't lose the incremental reflow path.
 
-              /*
-              PRBool wsame = (mHorizontal && NS_INTRINSICSIZE == size.width);
-              PRBool hsame = (!mHorizontal && NS_INTRINSICSIZE == size.height);
-
-              if ((NS_INTRINSICSIZE == size.height && NS_INTRINSICSIZE == size.width) || (wsame || currentSize.width == size.width) && (hsame || currentSize.height == size.height))
-                    shouldReflow = PR_FALSE;
-              else 
-                    reason = eReflowReason_StyleChange;
-                    */
              if (currentSize.width == size.width && currentSize.height == size.height)
-                    shouldReflow = PR_FALSE;
-              else 
-                    reason = eReflowReason_Resize;
+                 shouldReflow = PR_FALSE;
+           
+             reason = eReflowReason_Resize;
+         } 
 
-      } 
       
       if (shouldReflow) {
+
+      //  printf("Actually had to flow child %d\n", childFrame);
 
         desiredSize.width = 0;
         desiredSize.height = 0;
@@ -275,6 +267,10 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
         // add the margin back in. The child should add its border automatically
         desiredSize.height += (margin.top + margin.bottom);
         desiredSize.width += (margin.left + margin.right);
+
+        // clear out the incremental child
+        if (incrementalChild == childFrame)
+             incrementalChild = nsnull;
       }
 
    
@@ -378,7 +374,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
     maxSize.width = NS_INTRINSICSIZE;
     maxSize.height = NS_INTRINSICSIZE;
 
-    springs[count].wasFlowed = PR_FALSE;
+    //springs[count].wasFlowed = PR_FALSE;
 
     // if this is not incremental reflow or it is incremental reflow
     // and this child is the one we need to reflow then
@@ -518,7 +514,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
       
       if (springs[count].springConstant == 0.0 && (wunit != eStyleUnit_Coord || hunit != eStyleUnit_Coord)) 
       {
-            FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, flexSize, nsnull);
+            FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, flexSize, incrementalChild);
 
             // if it got bigger that expected set that as our min size
             if (mHorizontal) {
@@ -650,15 +646,9 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
  
         // if we are on a second pass or we were need reflow
         // flow us.
-        if (passes > 0 || springs[count].wasFlowed == PR_FALSE) {
+        if (1) { //passes > 0 || springs[count].wasFlowed == PR_FALSE) {
          
-          // do not do incremental reflow on a second pass
-          nsIFrame* ichild = nsnull;
-
-          if (passes == 0)
-             ichild = incrementalChild;
-
-          FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, size, ichild);
+          FlowChildAt(childFrame,aPresContext, desiredSize, aReflowState, aStatus, size, incrementalChild);
           springs[count].wasFlowed = PR_TRUE;
 
           // if its height greater than the max. Set the max to this height and set a flag
