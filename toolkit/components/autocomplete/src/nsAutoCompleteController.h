@@ -98,7 +98,8 @@ protected:
   
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITreeSelection> mSelection;
-  
+  nsCOMPtr<nsITreeBoxObject> mTree;
+
   nsString mSearchString;
   PRPackedBool mEnterAfterSearch;
   PRPackedBool mNeedToComplete;
