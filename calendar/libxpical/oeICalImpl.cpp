@@ -1188,7 +1188,7 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
         for ( unsigned int i=0; i<num; i++ ) {
             oeIICalEvent* tmpevent;
             eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
-            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( now );
+            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( now, nsnull );
             if( !icaltime_is_null_time( next ) )
                 continue;
             icaltimetype previous = ((oeICalEventImpl *)tmpevent)->GetPreviousOccurrence( checkdate );
@@ -1203,7 +1203,7 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
             for ( unsigned int i=0; i<num; i++ ) {
                 oeIICalEvent* tmpevent;
                 eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
-                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( now );
+                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( now, nsnull  );
                 if( !icaltime_is_null_time( next ) )
                     continue;
                 icaltimetype previous = ((oeICalEventImpl *)tmpevent)->GetPreviousOccurrence( checkdate );
@@ -1228,7 +1228,8 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
         for ( unsigned int i=0; i<num; i++ ) {
             oeIICalEvent* tmpevent;
             eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
-            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull  );
+            next.is_date = false;
             if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
                 soonest = next;
             }
@@ -1241,7 +1242,8 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
             for ( unsigned int i=0; i<num; i++ ) {
                 oeIICalEvent* tmpevent;
                 eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
-                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull  );
+                next.is_date = false;
                 if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
                     eventEnum->AddEvent( tmpevent );
 //                    PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
@@ -1337,51 +1339,56 @@ oeICalImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **datelist, nsIS
     return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
 }
 
-void oeICalImpl::ChopAndAddEventToEnum( struct icaltimetype initialdisplaydate,
-                                        struct icaltimetype checkenddate,
-                                        nsISimpleEnumerator **eventlist, oeICalEventImpl* event ) {
+void oeICalImpl::ChopAndAddEventToEnum( struct icaltimetype startdate,
+                                        nsISimpleEnumerator **eventlist, oeICalEventImpl* event, bool isallday, bool isbeginning ) {
 
     nsCOMPtr<oeEventEnumerator> eventEnum;
     eventEnum = (oeEventEnumerator *)*eventlist;
 
-    oeIDateTime *start;
-    oeIDateTime *end;
-    event->GetStart( &start );
-    event->GetEnd( &end );
+    oeIICalEventDisplay* eventDisplay;
+    nsresult rv = NS_NewICalEventDisplay( event, &eventDisplay );
+    if( NS_FAILED( rv ) ) {
+    #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::ChopAndAddEventToEnum() : WARNING Cannot create oeIICalEventDisplay instance: %x\n", rv );
+    #endif
+        return;
+    }
+    eventEnum->AddEvent( eventDisplay );
 
-    struct icaltimetype startdate = initialdisplaydate;
-    struct icaldurationtype eventlength = icaltime_subtract( ((oeDateTimeImpl *)end)->m_datetime, ((oeDateTimeImpl *)start)->m_datetime );
-    struct icaltimetype eventenddate = icaltime_add( startdate, eventlength );
+    PRTime startdateinms = ConvertToPrtime( startdate );
+    eventDisplay->SetDisplayDate( startdateinms );
 
-    do {
-        struct icaltimetype endofday = startdate;
-        endofday.hour = 23; endofday.minute = 59; endofday.second = 59;
-        oeIICalEventDisplay* eventDisplay;
-        nsresult rv = NS_NewICalEventDisplay( event, &eventDisplay );
-        if( NS_FAILED( rv ) ) {
-        #ifdef ICAL_DEBUG
-            printf( "oeICalImpl::ChopAndAddEventToEnum() : WARNING Cannot create oeIICalEventDisplay instance: %x\n", rv );
-        #endif
-            return;
-        }
-        eventEnum->AddEvent( eventDisplay );
-        PRTime startdateinms = ConvertToPrtime( startdate );
-        eventDisplay->SetDisplayDate( startdateinms );
-        PRTime enddateinms;
-        
-        if( icaltime_compare( endofday, eventenddate ) < 0 ) {
-            enddateinms = ConvertToPrtime( endofday );
-            eventDisplay->SetDisplayEndDate( enddateinms );
-            startdate = endofday;
-            icaltime_adjust( &startdate, 0, 0, 0, 1 );
-            if( icaltime_compare( startdate, checkenddate ) >= 0 )
-                break;
+    struct icaltimetype endofday = startdate;
+    endofday.hour = 23; endofday.minute = 59; endofday.second = 59;
+
+    PRTime enddateinms;
+    if( isallday ) {
+        enddateinms = ConvertToPrtime( endofday );
+        eventDisplay->SetDisplayEndDate( enddateinms );
+    } else {
+        oeIDateTime *end;
+        event->GetEnd( &end );
+        if( isbeginning ) {
+            oeIDateTime *start;
+            event->GetStart( &start );
+
+            struct icaldurationtype eventlength = icaltime_subtract( ((oeDateTimeImpl *)end)->m_datetime, ((oeDateTimeImpl *)start)->m_datetime );
+            struct icaltimetype eventenddate = icaltime_add( startdate, eventlength );
+
+            if( icaltime_compare( endofday, eventenddate ) < 0 ) {
+                enddateinms = ConvertToPrtime( endofday );
+            } else {
+                enddateinms = ConvertToPrtime( eventenddate );
+            }
         } else {
+            struct icaltimetype eventenddate = endofday;
+            eventenddate.hour = ((oeDateTimeImpl *)end)->m_datetime.hour;
+            eventenddate.minute = ((oeDateTimeImpl *)end)->m_datetime.minute;
+            eventenddate.second = ((oeDateTimeImpl *)end)->m_datetime.second;
             enddateinms = ConvertToPrtime( eventenddate );
-            eventDisplay->SetDisplayEndDate( enddateinms );
-            break;
         }
-    } while ( 0 );
+        eventDisplay->SetDisplayEndDate( enddateinms );
+    }
 }
 
 NS_IMETHODIMP
@@ -1423,9 +1430,12 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
             while( tmplistptr ) {
                 if( tmplistptr->event ) {
                     oeIICalEvent* tmpevent = tmplistptr->event;
-                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                    bool isbeginning;
+                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
+                    bool isallday = next.is_date;
+                    next.is_date = false;
                     if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
-                        ChopAndAddEventToEnum( nextcheckdate, checkenddate, eventlist, (oeICalEventImpl *)tmpevent );
+                        ChopAndAddEventToEnum( nextcheckdate, eventlist, (oeICalEventImpl *)tmpevent, isallday, isbeginning );
                         PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
                         dateEnum->AddDate( nextdateinms );
                     }
@@ -1481,7 +1491,8 @@ oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinm
         for ( unsigned int i=0; i<num; i++ ) {
             oeIICalEvent* tmpevent;
             eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
-            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull );
+            next.is_date = false;
             if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
                 soonest = next;
             }
@@ -1497,7 +1508,8 @@ oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinm
             for ( unsigned int i=0; i<num; i++ ) {
                 oeIICalEvent* tmpevent;
                 eventArray->GetElementAt( i, (nsISupports **)&tmpevent );
-                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull );
+                next.is_date = false;
                 if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
                     eventEnum->AddEvent( tmpevent );
 //                    PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
@@ -1527,7 +1539,8 @@ icaltimetype oeICalImpl::GetNextEvent( icaltimetype starting ) {
     while( tmplistptr ) {
         if( tmplistptr->event ) {
             oeIICalEvent* tmpevent = tmplistptr->event;
-            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( starting );
+            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( starting, nsnull );
+            next.is_date = false;
             if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
                 soonest = next;
             }
@@ -1565,7 +1578,8 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
             while( tmplistptr && count<maxcount ) {
                 if( tmplistptr->event ) {
                     oeIICalEvent* tmpevent = tmplistptr->event;
-                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull );
+                    next.is_date = false;
                     if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
                         eventEnum->AddEvent( tmpevent );
                         PRTime nextdateinms = ConvertToPrtime( nextcheckdate );

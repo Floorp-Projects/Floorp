@@ -863,7 +863,8 @@ NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, 
 #endif
     *isvalid = false;
     icaltimetype begindate,result;
-    result = GetNextRecurrence( begindate );
+    result = GetNextRecurrence( begindate, nsnull );
+    result.is_date = false;
     if( icaltime_is_null_time( result ) )
         return NS_OK;
     *retval = ConvertToPrtime( result );
@@ -939,7 +940,11 @@ NS_IMETHODIMP oeICalEventImpl::GetPreviousOccurrence( PRTime beforethis, PRTime 
     return NS_OK;
 }
 
-icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin ) {
+icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin, bool *isbeginning ) {
+
+    if( isbeginning ) {
+        *isbeginning = true;
+    }
 
     icaltimetype result = icaltime_null_time();
 
@@ -955,8 +960,17 @@ icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin ) {
         struct icaltimetype nextday = begin;
         nextday.hour = 0; nextday.minute = 0; nextday.second = 0;
         icaltime_adjust( &nextday, 1, 0, 0, 0 );
-        if( icaltime_compare( nextday, m_end->m_datetime ) < 0 )
+        if( icaltime_compare( nextday, m_end->m_datetime ) < 0 ) {
+            struct icaltimetype afternextday = nextday;
+            icaltime_adjust( &afternextday, 1, 0, 0, 0 );
+            if( icaltime_compare( afternextday, m_end->m_datetime ) < 0 ) {
+                nextday.is_date = true;
+            }
+            if( isbeginning ) {
+                *isbeginning = false;
+            }
             return nextday;
+        }
         return result;
     }
 
@@ -977,6 +991,7 @@ icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin ) {
         struct icalrecurrencetype recur = icalproperty_get_rrule(prop);
         //printf("#### %s\n",icalrecurrencetype_as_string(&recur));
         icalrecur_iterator* ritr = icalrecur_iterator_new(recur,m_start->m_datetime);
+        bool nextpropagationisdate = false;
         for(next = icalrecur_iterator_next(ritr);
             !icaltime_is_null_time(next);
             next = icalrecur_iterator_next(ritr)){
@@ -1020,6 +1035,11 @@ icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin ) {
                     PRTime nextdayinms = ConvertToPrtime( nextday );
                      if( !IsExcepted( nextdayinms ) ) {
                         nextpropagation = nextday;
+                        struct icaltimetype afternextday = nextday;
+                        icaltime_adjust( &afternextday, 1, 0, 0, 0 );
+                        if( icaltime_compare( afternextday, end ) < 0 ) {
+                            nextpropagationisdate = true;
+                        }
                      }
                 }
             }
@@ -1029,7 +1049,17 @@ icaltimetype oeICalEventImpl::GetNextRecurrence( icaltimetype begin ) {
             if( !icaltime_is_null_time( nextpropagation ) ) {
                 if( icaltime_compare( nextpropagation , result ) < 0 ) {
                     result = nextpropagation;
+                    result.is_date = nextpropagationisdate;
+                    if( isbeginning ) {
+                        *isbeginning = false;
+                    }
                 }
+            }
+        } else if( !icaltime_is_null_time( nextpropagation ) ) {
+            result = nextpropagation;
+            result.is_date = nextpropagationisdate;
+            if( isbeginning ) {
+                *isbeginning = false;
             }
         }
     }
@@ -1068,7 +1098,8 @@ icaltimetype oeICalEventImpl::GetNextAlarmTime( icaltimetype begin ) {
 
     icaltimetype checkloop = starting;
     do {
-        checkloop = GetNextRecurrence( checkloop );
+        checkloop = GetNextRecurrence( checkloop, nsnull );
+        checkloop.is_date = false;
         result = checkloop;
         if( icaltime_is_null_time( checkloop ) ) {
             break;

@@ -633,7 +633,8 @@ oeICalContainerImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleE
                 while( tmplistptr && count<maxcount ) {
                     if( tmplistptr->event ) {
                         oeIICalEvent* tmpevent = tmplistptr->event;
-                        icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
+                        icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull  );
+                        next.is_date = false;
                         if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
                             eventEnum->AddEvent( tmpevent );
                             PRTime nextdateinms = ConvertToPrtime( nextcheckdate );

@@ -112,7 +112,7 @@ public:
     icalcomponent *AsIcalComponent();
     icaltimetype GetNextAlarmTime( icaltimetype begin );
     bool matchId( const char *id );
-    icaltimetype GetNextRecurrence( icaltimetype begin );
+    icaltimetype GetNextRecurrence( icaltimetype begin, bool *isbeginning );
     icaltimetype GetPreviousOccurrence( icaltimetype beforethis );
     NS_IMETHODIMP SetParent( oeIICal *parent );
     icaltimetype CalculateEventTime( icaltimetype alarmtime );
