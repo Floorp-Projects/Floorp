@@ -136,7 +136,15 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  mPixelSize = NSToIntRound(app2dev * mFont->size);
+  gchar* factorStr = g_getenv("GECKO_FONT_SIZE_FACTOR");
+  double factor;
+  if (factorStr) {
+    factor = atof(factorStr);
+  }
+  else {
+    factor = 1.0;
+  }
+  mPixelSize = NSToIntRound(app2dev * factor * mFont->size);
   mStretchIndex = 4; // normal
   mStyleIndex = mFont->style;
 
@@ -882,7 +890,8 @@ ISO88591GenerateMap(nsFontCharSetInfo* aSelf)
 static nsFontCharSetInfo ISO88591 =
   { ISO88591Convert, ISO88591GenerateMap, nsnull };
 
-#if 0
+#undef JAPANESE
+#ifdef JAPANESE
 
 #define TEMPORARY_CONVERTERS
 #ifdef TEMPORARY_CONVERTERS
@@ -1072,7 +1081,7 @@ JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
 static nsFontCharSetInfo JISX02081983 =
   { JISX02081983Convert, JISX02081983GenerateMap, nsnull };
 
-#endif /* 0 */
+#endif /* JAPANESE */
 
 /*
  * Normally, the charset of an X font can be determined simply by looking at
@@ -1151,7 +1160,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "iso8859-9",          &Ignore        },
   { "jisx0201.1976-0",    &Ignore        },
   { "jisx0201.1976-1",    &Ignore        },
-#if 0
+#ifdef JAPANESE
   { "jisx0208.1983-0",    &JISX02081983  },
 #else
   { "jisx0208.1983-0",    &Ignore        },
@@ -1670,7 +1679,9 @@ TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily)
 {
   // XXX Should process charsets in reasonable order, instead of randomly
   // enumerating the hash table.
-  PL_HashTableEnumerateEntries(aFamily->mCharSets, SearchCharSet, aSearch);
+  if (aFamily->mCharSets) {
+    PL_HashTableEnumerateEntries(aFamily->mCharSets, SearchCharSet, aSearch);
+  }
 }
 
 static PRIntn
