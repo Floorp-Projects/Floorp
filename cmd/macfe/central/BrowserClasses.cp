@@ -24,7 +24,6 @@
 
 // еее PowerPlant Classes
 	#include <URegistrar.h>
-	#include <LActiveScroller.h>
 	#include <LButton.h>
 	#include <LCaption.h>
 	#include <LDialogBox.h>
@@ -35,7 +34,6 @@
 	#include <LPicture.h>
 	#include <LPlaceHolder.h>
 	#include <LPrintout.h>
-	#include <LScroller.h>
 	#include <LStdControl.h>
 	#include <LTable.h>
 	#include <LTextEdit.h>
@@ -54,11 +52,19 @@
 	#include <LPushButton.h>
 	#include <LAMPushButtonImp.h>
 	#include <LAMControlImp.h>
+	#include <LAMTrackActionImp.h>
+	#include <LGAProgressBarImp.h>
+	#include <LScrollBar.h>
+	#include <LScrollerView.h>
+	#include <LStdScrollBarImp.h>
 
 #if 0
 // еее Things that will go away after appearance conversion complete
 	#include "CProgressBar.h"
 	#include "CPatternProgressBar.h"
+	#include "CConfigActiveScroller.h"
+	#include <LScroller.h>					// outdated, replaced by LScrollerView
+	#include <LActiveScroller.h>			// outdated, replaced by LScrollerView
 #endif
 	
 // еее General Purpose UI Classes
@@ -118,7 +124,6 @@
 	#include "CNavCenterScroller.h"
 	#include "CInlineEditField.h"
 
-	#include "CConfigActiveScroller.h"
 	#include "CTSMEditField.h"
 //	#include "CSimpleTextView.h"
 	
@@ -189,7 +194,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LPicture);
 	RegisterClass_(LPlaceHolder);
 	RegisterClass_(LPrintout);
-	RegisterClass_(LScroller);
 	RegisterClass_(LStdControl);
 	RegisterClass_(LStdButton);
 	RegisterClass_(LStdCheckBox);
@@ -200,7 +204,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LWindow);
 	RegisterClass_(LRadioGroup);
 	RegisterClass_(LTabGroup);
-	RegisterClass_(LActiveScroller);
 
 #ifdef PP_NewClasses
 	#include <LCicnButton.h>
@@ -225,14 +228,21 @@ void RegisterAllBrowserClasses(void)
 	// еее PowerPlant appearance manager classes and their implementations
 	RegisterClass_(LProgressBar);
 	RegisterClassID_(LAMControlImp, LProgressBar::imp_class_ID);
+	RegisterClass_(LScrollBar);
+	RegisterClassID_(LAMTrackActionImp, LScrollBar::imp_class_ID);
 	RegisterClass_(LPushButton);
 	RegisterClassID_(LAMPushButtonImp, LPushButton::imp_class_ID);
 
+	RegisterClass_(LScrollerView);
+	
 #if 0
 	// еее Things that will go away after appearance port complete
 	RegisterClass_(CProgressBar);
 	RegisterClass_(CPatternProgressBar);
 	RegisterClass_(CPatternProgressCaption);
+	RegisterClass_(CConfigActiveScroller);
+	RegisterClass_(LScroller);
+	RegisterClass_(LActiveScroller);
 #endif
 
 	// еее General Purpose UI Classes
@@ -293,7 +303,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CToolbarPatternBevelView);
 	RegisterClass_(CPersonalToolbarTable);
 	
-	RegisterClass_(CConfigActiveScroller);
 	RegisterClass_(CTSMEditField);
 	
 	RegisterClass_(CDownloadProgressWindow);
