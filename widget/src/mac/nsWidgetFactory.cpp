@@ -30,8 +30,8 @@
 #include "nsCheckButton.h"
 #include "nsTextWidget.h"
 #include "nsFileWidget.h"
+#include "nsScrollbar.h"
 
-//#include "nsScrollbar.h"
 //#include "nsTextAreaWidget.h"
 //#include "nsListBox.h"
 //#include "nsComboBox.h"
@@ -59,7 +59,7 @@ static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIAppShellIID,   NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
 static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
-//static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
+static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
 //static NS_DEFINE_IID(kIFileWidget,    NS_IFILEWIDGET_IID);
 //static NS_DEFINE_IID(kIListBox,       NS_ILISTBOX_IID);
 
@@ -182,7 +182,13 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCFileWidgetCID)) {
         inst = new nsFileWidget();
     }
-    
+    else if (mClassID.Equals(kCVertScrollbarCID)) {
+        inst = new nsScrollbar(PR_TRUE);
+    }
+    else if (mClassID.Equals(kCHorzScrollbarCID)) {
+        inst = new nsScrollbar(PR_FALSE);
+    }
+   
     
     
 #ifdef NOTNOW

@@ -18,23 +18,27 @@
 
 #ifndef nsScrollbar_h__
 #define nsScrollbar_h__
-
 #include "nsWindow.h"
 
 #include "nsIScrollbar.h"
+#include <quickdraw.h>
+
 
 /**
- * Native Motif scrollbar wrapper. 
+ * Mac Scrollbar. 
  */
 
-class nsScrollbar : public nsWindow
+class nsScrollbar : public nsWindow, public nsIScrollbar
 {
 
 public:
-  nsScrollbar(nsISupports *aOuter, PRBool aIsVertical);
+  nsScrollbar(PRBool aIsVertical);
   virtual ~nsScrollbar();
 
-  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
+	// nsISupports
+	NS_IMETHOD_(nsrefcnt) AddRef();
+	NS_IMETHOD_(nsrefcnt) Release();
+	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -54,58 +58,37 @@ public:
 
 
   // nsIScrollbar part
-  virtual void      SetMaxRange(PRUint32 aEndRange);
-  virtual PRUint32  GetMaxRange();
-  virtual void      SetPosition(PRUint32 aPos);
-  virtual PRUint32  GetPosition();
-  virtual void      SetThumbSize(PRUint32 aSize);
-  virtual PRUint32  GetThumbSize();
-  virtual void      SetLineIncrement(PRUint32 aSize);
-  virtual PRUint32  GetLineIncrement();
-  virtual void      SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
+  NS_IMETHOD      SetMaxRange(PRUint32 aEndRange);
+  NS_IMETHOD  		GetMaxRange(PRUint32& aMaxRange);
+  NS_IMETHOD      SetPosition(PRUint32 aPos);
+  NS_IMETHOD  		GetPosition(PRUint32& aPos);
+  NS_IMETHOD      SetThumbSize(PRUint32 aSize);
+  NS_IMETHOD  		GetThumbSize(PRUint32& aSize);
+  NS_IMETHOD      SetLineIncrement(PRUint32 aSize);
+  NS_IMETHOD  		GetLineIncrement(PRUint32& aSize);
+  NS_IMETHOD     	SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                   PRUint32 aPosition, PRUint32 aLineIncrement);
 
     virtual PRBool    OnPaint(nsPaintEvent & aEvent);
     virtual PRBool    OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
     virtual PRBool    OnResize(nsSizeEvent &aEvent);
+    virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
+
 
 private:
 
-  PRUint32 mLineIncrement;
-  int      mOrientation;
+	PRUint32			mMaxRange;
+	PRUint32			mPosition;
+	PRUint32			mThumbSize;
+  PRUint32 			mLineIncrement;
+  int      			mIsVertical;
+  PRBool				mMouseDownInButton;
+  PRBool				mWidgetArmed;
+  
+
 
   int AdjustScrollBarPosition(int aPosition);
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsScrollbar,mAggWidget);
-  }
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIButton interface to nsButton w/o using multiple
-  // inheritance.
-  class AggScrollbar : public nsIScrollbar {
-  public:
-    AggScrollbar();
-    virtual ~AggScrollbar();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsIScrollbar part
-    virtual void      SetMaxRange(PRUint32 aEndRange);
-    virtual PRUint32  GetMaxRange();
-    virtual void      SetPosition(PRUint32 aPos);
-    virtual PRUint32  GetPosition();
-    virtual void      SetThumbSize(PRUint32 aSize);
-    virtual PRUint32  GetThumbSize();
-    virtual void      SetLineIncrement(PRUint32 aSize);
-    virtual PRUint32  GetLineIncrement();
-    virtual void      SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
-                                  PRUint32 aPosition, PRUint32 aLineIncrement);
-  };
-  AggScrollbar mAggWidget;
-  friend class AggScrollbar;
-
+  void DrawWidget();
 
 };
 
