@@ -475,7 +475,7 @@ sub display_build_table_footer {
         }
         close FOOTER;
     }
-    print "<a href=admintree.cgi?tree=$tree>Administrate Tinderbox Trees</a><br>";
+    print "<p><a href=admintree.cgi?tree=$tree>Administrate Tinderbox Trees</a><br>";
 
     print "<br><br>";
 }
