@@ -180,6 +180,7 @@ struct JSAtomState {
     JSAtom              *inputAtom;
     JSAtom              *lengthAtom;
     JSAtom              *nameAtom;
+    JSAtom              *noSuchMethodAtom;
     JSAtom              *parentAtom;
     JSAtom              *protoAtom;
     JSAtom              *setAtom;
@@ -259,6 +260,7 @@ extern const char   js_index_str[];
 extern const char   js_input_str[];
 extern const char   js_length_str[];
 extern const char   js_name_str[];
+extern const char   js_noSuchMethod_str[];
 extern const char   js_parent_str[];
 extern const char   js_proto_str[];
 extern const char   js_setter_str[];

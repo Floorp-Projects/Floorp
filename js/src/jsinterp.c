@@ -630,48 +630,121 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
 JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, uintN flags)
 {
+    void *mark;
     JSStackFrame *fp, frame;
     jsval *sp, *newsp, *limit;
     jsval *vp, v;
     JSObject *funobj, *parent, *thisp;
+    JSBool ok;
     JSClass *clasp;
     JSObjectOps *ops;
-    JSBool ok;
     JSNative native;
     JSFunction *fun;
     JSScript *script;
     uintN minargs, nvars;
-    void *mark;
     intN nslots, nalloc, surplus;
     JSInterpreterHook hook;
     void *hookData;
 
-    /* Reach under args and this to find the callee on the stack. */
+    /* Mark the top of stack and load frequently-used registers. */
+    mark = JS_ARENA_MARK(&cx->stackPool);
     fp = cx->fp;
     sp = fp->sp;
 
     /*
      * Set vp to the callee value's stack slot (it's where rval goes).
-     * Once vp is set, control must flow through label out2: to return.
+     * Once vp is set, control should flow through label out2: to return.
      * Set frame.rval early so native class and object ops can throw and
      * return false, causing a goto out2 with ok set to false.  Also set
-     * frame.flags to 0 or to JSFRAME_CONSTRUCTING so we may test it
-     * anywhere below.
+     * frame.flags to flags so that ComputeThis can test bits in it.
      */
     vp = sp - (2 + argc);
     v = *vp;
     frame.rval = JSVAL_VOID;
     frame.flags = flags;
-
-    /* A callee must be an object reference. */
-    if (JSVAL_IS_PRIMITIVE(v))
-        goto bad;
-    funobj = JSVAL_TO_OBJECT(v);
-
-    /* Load callee parent and this parameter for later. */
-    parent = OBJ_GET_PARENT(cx, funobj);
     thisp = JSVAL_TO_OBJECT(vp[1]);
 
+    /*
+     * A callee must be an object reference, unless its |this| parameter
+     * implements the __noSuchMethod__ method, in which case that method will
+     * be called like so:
+     *
+     *   thisp.__noSuchMethod__(id, args)
+     *
+     * where id is the name of the method that this invocation attempted to
+     * call by name, and args is an Array containing this invocation's actual
+     * parameters.
+     */
+    if (JSVAL_IS_PRIMITIVE(v)) {
+#if JS_HAS_NO_SUCH_METHOD
+        jsbytecode *pc;
+        jsatomid atomIndex;
+        JSAtom *atom;
+        JSObject *argsobj;
+
+        if (!fp->script || (flags & JSINVOKE_INTERNAL))
+            goto bad;
+        ok = OBJ_GET_PROPERTY(cx, thisp,
+                              (jsid)cx->runtime->atomState.noSuchMethodAtom,
+                              &v);
+        if (!ok)
+            goto out2;
+        if (JSVAL_IS_PRIMITIVE(v))
+            goto bad;
+
+        pc = (jsbytecode *) vp[-(intN)fp->script->depth];
+        switch ((JSOp) *pc) {
+          case JSOP_NAME:
+          case JSOP_GETPROP:
+            atomIndex = GET_ATOM_INDEX(pc);
+            atom = js_GetAtom(cx, &fp->script->atomMap, atomIndex);
+            argsobj = js_NewArrayObject(cx, argc, vp + 2);
+            if (!argsobj) {
+                ok = JS_FALSE;
+                goto out2;
+            }
+
+            sp = vp + 4;
+            if (argc < 2) {
+                limit = (jsval *) cx->stackPool.current->limit;
+                if (sp > limit) {
+                    /*
+                     * Arguments must be contiguous, and must include argv[-1]
+                     * and argv[-2], so allocate more stack, advance sp, and
+                     * set newsp[1] to thisp (vp[1]).  The other argv elements
+                     * will be set below, using negative indexing from sp.
+                     */
+                    newsp = js_AllocRawStack(cx, 4, NULL);
+                    if (!newsp) {
+                        ok = JS_FALSE;
+                        goto out2;
+                    }
+                    newsp[1] = OBJECT_TO_JSVAL(thisp);
+                    sp = newsp + 4;
+                } else {
+                    if (cx->stackPool.current->avail < (jsuword)sp)
+                        cx->stackPool.current->avail = (jsuword)sp;
+                }
+            }
+
+            sp[-4] = v;
+            JS_ASSERT(sp[-3] == OBJECT_TO_JSVAL(thisp));
+            sp[-2] = ATOM_KEY(atom);
+            sp[-1] = OBJECT_TO_JSVAL(argsobj);
+            fp->sp = sp;
+            argc = 2;
+            break;
+
+          default:
+            goto bad;
+        }
+#else
+        goto bad;
+#endif
+    }
+
+    funobj = JSVAL_TO_OBJECT(v);
+    parent = OBJ_GET_PARENT(cx, funobj);
     clasp = OBJ_GET_CLASS(cx, funobj);
     if (clasp != &js_FunctionClass) {
         /* Function is inlined, all other classes use object ops. */
@@ -747,7 +820,6 @@ have_fun:
 
     /* From here on, control must flow through label out: to return. */
     cx->fp = &frame;
-    mark = JS_ARENA_MARK(&cx->stackPool);
 
     /* Init these now in case we goto out before first hook call. */
     hook = cx->runtime->callHook;
@@ -878,11 +950,13 @@ out:
         ok &= js_PutArgsObject(cx, &frame);
 #endif
 
-    /* Pop everything off the stack and restore cx->fp. */
-    JS_ARENA_RELEASE(&cx->stackPool, mark);
+    /* Restore cx->fp now that we're done releasing frame objects. */
     cx->fp = fp;
 
 out2:
+    /* Pop everything we may have allocated off the stack. */
+    JS_ARENA_RELEASE(&cx->stackPool, mark);
+
     /* Store the return value and restore sp just above it. */
     *vp = frame.rval;
     fp->sp = vp + 1;
@@ -897,7 +971,7 @@ out2:
     return ok;
 
 bad:
-    js_ReportIsNotFunction(cx, vp, (flags & JSINVOKE_CONSTRUCT) != 0);
+    js_ReportIsNotFunction(cx, vp, flags & JSINVOKE_CONSTRUCT);
     ok = JS_FALSE;
     goto out2;
 }
@@ -2434,7 +2508,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 !obj2->map->ops->construct)
             {
                 SAVE_SP(fp);
-                fun = js_ValueToFunction(cx, vp, JS_TRUE);
+                fun = js_ValueToFunction(cx, vp, JSV2F_CONSTRUCT);
                 if (!fun) {
                     ok = JS_FALSE;
                     goto out;

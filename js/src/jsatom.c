@@ -113,6 +113,7 @@ const char js_index_str[]           = "index";
 const char js_input_str[]           = "input";
 const char js_length_str[]          = "length";
 const char js_name_str[]            = "name";
+const char js_noSuchMethod_str[]    = "__noSuchMethod__";
 const char js_parent_str[]          = "__parent__";
 const char js_proto_str[]           = "__proto__";
 const char js_setter_str[]          = "setter";
@@ -300,6 +301,7 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(inputAtom,               js_input_str);
     FROB(lengthAtom,              js_length_str);
     FROB(nameAtom,                js_name_str);
+    FROB(noSuchMethodAtom,        js_noSuchMethod_str);
     FROB(parentAtom,              js_parent_str);
     FROB(protoAtom,               js_proto_str);
     FROB(setAtom,                 js_set_str);

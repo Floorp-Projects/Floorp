@@ -1221,7 +1221,7 @@ obj_watch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsid propid;
     uintN attrs;
 
-    fun = js_ValueToFunction(cx, &argv[1], JS_FALSE);
+    fun = js_ValueToFunction(cx, &argv[1], 0);
     if (!fun)
         return JS_FALSE;
     argv[1] = OBJECT_TO_JSVAL(fun->object);
@@ -1948,7 +1948,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     if (!FindConstructor(cx, parent, clasp->name, &cval))
         return NULL;
     if (JSVAL_IS_PRIMITIVE(cval)) {
-        js_ReportIsNotFunction(cx, &cval, JS_TRUE);
+        js_ReportIsNotFunction(cx, &cval, JSV2F_CONSTRUCT | JSV2F_SEARCH_STACK);
         return NULL;
     }
 
@@ -3289,7 +3289,7 @@ js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 #endif
 
 static void
-ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
+ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
 {
     /*
      * The decompiler may need to access the args of the function in
@@ -3306,7 +3306,7 @@ ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
         cx->fp = fp->down;
     }
 
-    js_ReportIsNotFunction(cx, vp, constructing);
+    js_ReportIsNotFunction(cx, vp, flags);
 
     if (fp->down) {
         JS_ASSERT(cx->dormantFrameChain == fp);
@@ -3323,7 +3323,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->call) {
-        ReportIsNotFunction(cx, &argv[-2], JS_FALSE);
+        ReportIsNotFunction(cx, &argv[-2], 0);
         return JS_FALSE;
     }
     return clasp->call(cx, obj, argc, argv, rval);
@@ -3337,7 +3337,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->construct) {
-        ReportIsNotFunction(cx, &argv[-2], JS_TRUE);
+        ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
         return JS_FALSE;
     }
     return clasp->construct(cx, obj, argc, argv, rval);
