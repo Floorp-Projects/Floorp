@@ -1687,7 +1687,7 @@ PresShell::Init(nsIDocument* aDocument,
   mViewManager = aViewManager;
 
   // Create our frame constructor.
-  mFrameConstructor = new nsCSSFrameConstructor(mDocument);
+  mFrameConstructor = new nsCSSFrameConstructor(mDocument, this);
   NS_ENSURE_TRUE(mFrameConstructor, NS_ERROR_OUT_OF_MEMORY);
 
   // The document viewer owns both view manager and pres shell.
@@ -2547,6 +2547,8 @@ PresShell::BeginObservingDocument()
 NS_IMETHODIMP
 PresShell::EndObservingDocument()
 {
+  // XXXbz do we need to tell the frame constructor that the document
+  // is gone, perhaps?  Except for printing it's NOT gone, sometimes.
   mIsDocumentGone = PR_TRUE;
   if (mDocument) {
     mDocument->RemoveObserver(this);
@@ -2711,14 +2713,13 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     if (!rootFrame) {
       // Have style sheet processor construct a frame for the
       // precursors to the root content object's frame
-      mFrameConstructor->ConstructRootFrame(this, mPresContext,
-                                            root, rootFrame);
+      mFrameConstructor->ConstructRootFrame(root, &rootFrame);
       FrameManager()->SetRootFrame(rootFrame);
     }
 
     // Have the style sheet processor construct frame for the root
     // content object down
-    mFrameConstructor->ContentInserted(mPresContext, nsnull, nsnull, root, 0,
+    mFrameConstructor->ContentInserted(nsnull, nsnull, root, 0,
                                        nsnull, PR_FALSE);
     VERIFY_STYLE_TREE;
     MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n",
@@ -3764,7 +3765,7 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
 
   NS_ASSERTION(mViewManager, "Should have view manager");
   mViewManager->BeginUpdateViewBatch();
-  nsresult rv = mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+  nsresult rv = mFrameConstructor->ProcessRestyledFrames(changeList);
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   return rv;
 }
@@ -5035,8 +5036,11 @@ PresShell::CharacterDataChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,
                                 PRBool aAppend)
 {
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+
   WillCauseReflow();
-  mFrameConstructor->CharacterDataChanged(mPresContext, aContent, aAppend);
+  mFrameConstructor->CharacterDataChanged(aContent, aAppend);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 }
@@ -5047,9 +5051,11 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
                                 nsIContent* aContent2,
                                 PRInt32 aStateMask)
 {
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentStatesChanged");
+  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+
   WillCauseReflow();
-  mFrameConstructor->ContentStatesChanged(mPresContext, aContent1, aContent2,
-                                          aStateMask);
+  mFrameConstructor->ContentStatesChanged(aContent1, aContent2, aStateMask);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 }
@@ -5062,12 +5068,15 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
                             nsIAtom*     aAttribute,
                             PRInt32      aModType)
 {
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+
   // XXXwaterson it might be more elegant to wait until after the
   // initial reflow to begin observing the document. That would
   // squelch any other inappropriate notifications as well.
   if (mDidInitialReflow) {
     WillCauseReflow();
-    mFrameConstructor->AttributeChanged(mPresContext, aContent, aNameSpaceID,
+    mFrameConstructor->AttributeChanged(aContent, aNameSpaceID,
                                         aAttribute, aModType);
     VERIFY_STYLE_TREE;
     DidCauseReflow();
@@ -5079,6 +5088,9 @@ PresShell::ContentAppended(nsIDocument *aDocument,
                            nsIContent* aContainer,
                            PRInt32     aNewIndexInContainer)
 {
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+  
   if (!mDidInitialReflow) {
     return;
   }
@@ -5087,8 +5099,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   MOZ_TIMER_DEBUGLOG(("Start: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_START(mFrameCreationWatch);
 
-  mFrameConstructor->ContentAppended(mPresContext, aContainer,
-                                     aNewIndexInContainer);
+  mFrameConstructor->ContentAppended(aContainer, aNewIndexInContainer);
   VERIFY_STYLE_TREE;
 
   MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
@@ -5102,12 +5113,15 @@ PresShell::ContentInserted(nsIDocument* aDocument,
                            nsIContent*  aChild,
                            PRInt32      aIndexInContainer)
 {
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+
   if (!mDidInitialReflow) {
     return;
   }
   
   WillCauseReflow();
-  mFrameConstructor->ContentInserted(mPresContext, aContainer, nsnull, aChild,
+  mFrameConstructor->ContentInserted(aContainer, nsnull, aChild,
                                      aIndexInContainer, nsnull, PR_FALSE);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
@@ -5119,12 +5133,15 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
                           nsIContent* aChild,
                           PRInt32     aIndexInContainer)
 {
+  NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
+  NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");
+
   // Notify the ESM that the content has been removed, so that
   // it can clean up any state related to the content.
   mPresContext->EventStateManager()->ContentRemoved(aChild);
 
   WillCauseReflow();
-  mFrameConstructor->ContentRemoved(mPresContext, aContainer, aChild,
+  mFrameConstructor->ContentRemoved(aContainer, aChild,
                                     aIndexInContainer, PR_FALSE);
 
   // If we have no root content node at this point, be sure to reset
@@ -5145,7 +5162,7 @@ PresShell::ReconstructFrames(void)
   nsresult rv = NS_OK;
           
   WillCauseReflow();
-  rv = mFrameConstructor->ReconstructDocElementHierarchy(mPresContext);
+  rv = mFrameConstructor->ReconstructDocElementHierarchy();
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 
@@ -5167,7 +5184,7 @@ nsIPresShell::ReconstructStyleDataInternal()
 
   NS_ASSERTION(mViewManager, "Should have view manager");
   mViewManager->BeginUpdateViewBatch();
-  mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+  mFrameConstructor->ProcessRestyledFrames(changeList);
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   VERIFY_STYLE_TREE;
@@ -6606,7 +6623,7 @@ PresShell::Observe(nsISupports* aSubject,
       nsStyleChangeList changeList;
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
                                     ReframeImageBoxes, &changeList);
-      mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+      mFrameConstructor->ProcessRestyledFrames(changeList);
 
       mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
     }

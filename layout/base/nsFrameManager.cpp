@@ -397,10 +397,6 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
 
     // Give the frame construction code the opportunity to return the
     // frame that maps the content object
-    nsPresContext *presContext = mPresShell->GetPresContext();
-    if (!presContext) {
-      return nsnull;
-    }
 
     // if the prev sibling of aContent has a cached primary frame,
     // pass that data in to the style set to speed things up
@@ -437,7 +433,7 @@ nsFrameManager::GetPrimaryFrameFor(nsIContent* aContent)
     nsIFrame *result;
 
     mPresShell->FrameConstructor()->
-      FindPrimaryFrameFor(presContext, this, aContent, &result, 
+      FindPrimaryFrameFor(this, aContent, &result, 
                           hint.mPrimaryFrameForPrevSibling ? &hint : nsnull);
 
     return result;
@@ -875,8 +871,7 @@ nsFrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
   // Notify the style system and then process any reflow commands that
   // are generated
   nsIPresShell *shell = frameManager->mPresShell;
-  shell->FrameConstructor()->
-    CantRenderReplacedElement(shell, shell->GetPresContext(), aEvent->mFrame);
+  shell->FrameConstructor()->CantRenderReplacedElement(aEvent->mFrame);
 
 #ifdef NOISY_EVENTS
   printf("nsFrameManager::HandlePLEvent() end for FM %p\n", aEvent->owner);

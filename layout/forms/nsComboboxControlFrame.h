@@ -203,9 +203,6 @@ public:
   NS_IMETHOD ShouldRollupOnMouseActivate(PRBool *aShouldRollup)
     { *aShouldRollup = PR_FALSE; return NS_OK;}
 
-  NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
-    { mFrameConstructor = aConstructor; return NS_OK;} // not owner - do not addref!
-
   // nsIScrollableViewProvider
   virtual nsIScrollableView* GetScrollableView();
 
@@ -286,7 +283,6 @@ protected:
 
   nscoord               mItemDisplayWidth;
   //nscoord               mItemDisplayHeight;
-  nsCSSFrameConstructor* mFrameConstructor;
 
   PRPackedBool          mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   PRPackedBool          mGoodToGo;

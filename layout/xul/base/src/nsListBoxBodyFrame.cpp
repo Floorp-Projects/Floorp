@@ -1457,7 +1457,7 @@ void
 nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
                                      nsIFrame         *aFrame)
 {
-  mFrameConstructor->RemoveMappingsForFrameSubtree(mPresContext, aFrame, nsnull);
+  mFrameConstructor->RemoveMappingsForFrameSubtree(aFrame, nsnull);
 
   mFrames.RemoveFrame(aFrame);
   if (mLayoutManager)

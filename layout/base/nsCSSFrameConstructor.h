@@ -75,7 +75,7 @@ class nsFrameConstructorSaveState;
 class nsCSSFrameConstructor
 {
 public:
-  nsCSSFrameConstructor(nsIDocument *aDocument);
+  nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor(void) {}
 
   // Maintain global objects - gXBLService
@@ -92,44 +92,37 @@ private:
   nsCSSFrameConstructor& operator=(const nsCSSFrameConstructor& aCopy); 
 
 public:
-  nsresult ConstructRootFrame(nsIPresShell*   aPresShell, 
-                              nsPresContext* aPresContext,
-                              nsIContent*     aDocElement,
-                              nsIFrame*&      aNewFrame);
+  // XXXbz this method needs to actually return errors!
+  nsresult ConstructRootFrame(nsIContent*     aDocElement,
+                              nsIFrame**      aNewFrame);
 
-  nsresult ReconstructDocElementHierarchy(nsPresContext* aPresContext);
+  nsresult ReconstructDocElementHierarchy();
 
-  nsresult ContentAppended(nsPresContext* aPresContext,
-                           nsIContent*     aContainer,
+  nsresult ContentAppended(nsIContent*     aContainer,
                            PRInt32         aNewIndexInContainer);
 
-  nsresult ContentInserted(nsPresContext*        aPresContext,
-                           nsIContent*            aContainer,
+  nsresult ContentInserted(nsIContent*            aContainer,
                            nsIFrame*              aContainerFrame,
                            nsIContent*            aChild,
                            PRInt32                aIndexInContainer,
                            nsILayoutHistoryState* aFrameState,
                            PRBool                 aInReinsertContent);
 
-  nsresult ContentRemoved(nsPresContext* aPresContext,
-                          nsIContent*     aContainer,
+  nsresult ContentRemoved(nsIContent*     aContainer,
                           nsIContent*     aChild,
                           PRInt32         aIndexInContainer,
                           PRBool          aInReinsertContent);
 
-  nsresult CharacterDataChanged(nsPresContext* aPresContext,
-                                nsIContent*     aContent,
+  nsresult CharacterDataChanged(nsIContent*     aContent,
                                 PRBool          aAppend);
 
-  nsresult ContentStatesChanged(nsPresContext* aPresContext, 
-                                nsIContent*     aContent1,
+  nsresult ContentStatesChanged(nsIContent*     aContent1,
                                 nsIContent*     aContent2,
                                 PRInt32         aStateMask);
 
   void GeneratedContentFrameRemoved(nsIFrame* aFrame);
 
-  nsresult AttributeChanged(nsPresContext*  aPresContext,
-                            nsIContent*     aContent,
+  nsresult AttributeChanged(nsIContent*     aContent,
                             PRInt32         aNameSpaceID,
                             nsIAtom*        aAttribute,
                             PRInt32         aModType);
@@ -139,20 +132,16 @@ public:
 
   void WillDestroyFrameTree();
 
-  nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
-                                 nsPresContext*    aPresContext);
+  nsresult ProcessRestyledFrames(nsStyleChangeList& aRestyleArray);
 
-  void ProcessOneRestyle(nsIPresShell* aShell, nsPresContext* aContext,
-                         nsIContent* aContent, nsReStyleHint aRestyleHint,
+  void ProcessOneRestyle(nsIContent* aContent, nsReStyleHint aRestyleHint,
                          nsChangeHint aChangeHint);
   void ProcessPendingRestyles();
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint);
 
   // Notification that we were unable to render a replaced element.
-  nsresult CantRenderReplacedElement(nsIPresShell*    aPresShell, 
-                                     nsPresContext*  aPresContext,
-                                     nsIFrame*        aFrame);
+  nsresult CantRenderReplacedElement(nsIFrame* aFrame);
 
   // Request to create a continuing frame
   nsresult CreateContinuingFrame(nsPresContext* aPresContext,
@@ -163,15 +152,13 @@ public:
   // Request to find the primary frame associated with a given content object.
   // This is typically called by the pres shell when there is no mapping in
   // the pres shell hash table
-  nsresult FindPrimaryFrameFor(nsPresContext*  aPresContext,
-                               nsFrameManager*  aFrameManager,
+  nsresult FindPrimaryFrameFor(nsFrameManager*  aFrameManager,
                                nsIContent*      aContent,
                                nsIFrame**       aFrame,
                                nsFindFrameHint* aHint);
 
   // Get the XBL insertion point for a child
-  nsresult GetInsertionPoint(nsIPresShell* aPresShell,
-                             nsIFrame*     aParentFrame,
+  nsresult GetInsertionPoint(nsIFrame*     aParentFrame,
                              nsIContent*   aChildContent,
                              nsIFrame**    aInsertionPoint,
                              PRBool*       aMultiple = nsnull);
@@ -185,16 +172,14 @@ public:
                                 PRBool          aIsScrollbar,
                                 nsILayoutHistoryState* aFrameState);
 
-  nsresult RemoveMappingsForFrameSubtree(nsPresContext*        aParentFrame,
-                                         nsIFrame*              aRemovedFrame,
+  nsresult RemoveMappingsForFrameSubtree(nsIFrame*              aRemovedFrame,
                                          nsILayoutHistoryState* aFrameState);
 
   nsIFrame* GetInitialContainingBlock() { return mInitialContainingBlock; }
 
 private:
 
-  nsresult ReinsertContent(nsPresContext* aPresContext,
-                           nsIContent*    aContainer,
+  nsresult ReinsertContent(nsIContent*    aContainer,
                            nsIContent*    aChild);
 
   nsresult ConstructPageFrame(nsIPresShell*  aPresShell, 
@@ -204,79 +189,61 @@ private:
                               nsIFrame*&     aPageFrame,
                               nsIFrame*&     aPageContentFrame);
 
-  void DoContentStateChanged(nsPresContext* aPresContext,
-                             nsIContent*     aContent,
+  void DoContentStateChanged(nsIContent*     aContent,
                              PRInt32         aStateMask);
 
-public:
+private:
   /* aMinHint is the minimal change that should be made to the element */
-  void RestyleElement(nsPresContext* aPresContext,
-                      nsIContent*     aContent,
+  void RestyleElement(nsIContent*     aContent,
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint);
 
-  void RestyleLaterSiblings(nsPresContext* aPresContext,
-                            nsIContent*     aContent);
+  void RestyleLaterSiblings(nsIContent*     aContent);
 
-private:
-  nsresult InitAndRestoreFrame (nsPresContext*          aPresContext,
-                                nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
-                                nsIFrame*                aParentFrame,
-                                nsStyleContext*          aStyleContext,
-                                nsIFrame*                aPrevInFlow,
-                                nsIFrame*                aNewFrame);
+  nsresult InitAndRestoreFrame (const nsFrameConstructorState& aState,
+                                nsIContent*                    aContent,
+                                nsIFrame*                      aParentFrame,
+                                nsStyleContext*                aStyleContext,
+                                nsIFrame*                      aPrevInFlow,
+                                nsIFrame*                      aNewFrame);
 
   already_AddRefed<nsStyleContext>
-  ResolveStyleContext(nsPresContext*   aPresContext,
-                      nsIFrame*         aParentFrame,
+  ResolveStyleContext(nsIFrame*         aParentFrame,
                       nsIContent*       aContent);
 
-  nsresult ConstructFrame(nsIPresShell*            aPresShell,
-                          nsPresContext*          aPresContext,
-                          nsFrameConstructorState& aState,
+  nsresult ConstructFrame(nsFrameConstructorState& aState,
                           nsIContent*              aContent,
                           nsIFrame*                aParentFrame,
                           nsFrameItems&            aFrameItems);
 
-  nsresult ConstructDocElementFrame(nsIPresShell*            aPresShell, 
-                                    nsPresContext*          aPresContext,
-                                    nsFrameConstructorState& aState,
+  nsresult ConstructDocElementFrame(nsFrameConstructorState& aState,
                                     nsIContent*              aDocElement,
                                     nsIFrame*                aParentFrame,
-                                    nsIFrame*&               aNewFrame);
+                                    nsIFrame**               aNewFrame);
 
-  nsresult ConstructDocElementTableFrame(nsIPresShell*          aPresShell, 
-                                         nsPresContext*        aPresContext,
-                                         nsIContent*            aDocElement,
+  nsresult ConstructDocElementTableFrame(nsIContent*            aDocElement,
                                          nsIFrame*              aParentFrame,
-                                         nsIFrame*&             aNewTableFrame,
+                                         nsIFrame**             aNewTableFrame,
                                          nsFrameConstructorState& aState);
 
-  nsresult CreateGeneratedFrameFor(nsPresContext*       aPresContext,
-                                   nsIDocument*          aDocument,
-                                   nsIFrame*             aParentFrame,
+  nsresult CreateGeneratedFrameFor(nsIFrame*             aParentFrame,
                                    nsIContent*           aContent,
                                    nsStyleContext*       aStyleContext,
                                    const nsStyleContent* aStyleContent,
                                    PRUint32              aContentIndex,
                                    nsIFrame**            aFrame);
 
-  PRBool CreateGeneratedContentFrame(nsIPresShell*            aPresShell, 
-                                     nsPresContext*          aPresContext,
-                                     nsFrameConstructorState& aState,
+  PRBool CreateGeneratedContentFrame(nsFrameConstructorState& aState,
                                      nsIFrame*                aFrame,
                                      nsIContent*              aContent,
                                      nsStyleContext*          aStyleContext,
                                      nsIAtom*                 aPseudoElement,
                                      nsIFrame**               aResult);
 
-  nsresult AppendFrames(nsPresContext*  aPresContext,
-                        nsIPresShell*    aPresShell,
-                        nsFrameManager*  aFrameManager,
-                        nsIContent*      aContainer,
-                        nsIFrame*        aParentFrame,
-                        nsIFrame*        aFrameList);
+  nsresult AppendFrames(const nsFrameConstructorState& aState,
+                        nsIContent*                    aContainer,
+                        nsIFrame*                      aParentFrame,
+                        nsIFrame*                      aFrameList);
 
   // BEGIN TABLE SECTION
   /**
@@ -287,9 +254,7 @@ private:
    * in aChildItems or a descendant of a pseudo in aChildItems (unless it's
    * positioned, in which case its placeholder will be in aChildItems).
    */ 
-  nsresult ConstructTableFrame(nsIPresShell*            aPresShell, 
-                               nsPresContext*           aPresContext,
-                               nsFrameConstructorState& aState,
+  nsresult ConstructTableFrame(nsFrameConstructorState& aState,
                                nsIContent*              aContent,
                                nsIFrame*                aContentParent,
                                nsStyleContext*          aStyleContext,
@@ -299,9 +264,7 @@ private:
                                nsIFrame*&               aNewOuterFrame,
                                nsIFrame*&               aNewInnerFrame);
 
-  nsresult ConstructTableCaptionFrame(nsIPresShell*            aPresShell, 
-                                      nsPresContext*          aPresContext,
-                                      nsFrameConstructorState& aState,
+  nsresult ConstructTableCaptionFrame(nsFrameConstructorState& aState,
                                       nsIContent*              aContent,
                                       nsIFrame*                aParent,
                                       nsStyleContext*          aStyleContext,
@@ -310,9 +273,7 @@ private:
                                       nsIFrame*&               aNewFrame,
                                       PRBool&                  aIsPseudoParent);
 
-  nsresult ConstructTableRowGroupFrame(nsIPresShell*            aPresShell, 
-                                       nsPresContext*          aPresContext,
-                                       nsFrameConstructorState& aState,
+  nsresult ConstructTableRowGroupFrame(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
                                        nsIFrame*                aParent,
                                        nsStyleContext*          aStyleContext,
@@ -322,9 +283,7 @@ private:
                                        nsIFrame*&               aNewFrame,
                                        PRBool&                  aIsPseudoParent);
 
-  nsresult ConstructTableColGroupFrame(nsIPresShell*            aPresShell, 
-                                       nsPresContext*          aPresContext,
-                                       nsFrameConstructorState& aState,
+  nsresult ConstructTableColGroupFrame(nsFrameConstructorState& aState,
                                        nsIContent*              aContent,
                                        nsIFrame*                aParent,
                                        nsStyleContext*          aStyleContext,
@@ -334,9 +293,7 @@ private:
                                        nsIFrame*&               aNewFrame,
                                        PRBool&                  aIsPseudoParent);
 
-  nsresult ConstructTableRowFrame(nsIPresShell*            aPresShell, 
-                                  nsPresContext*          aPresContext,
-                                  nsFrameConstructorState& aState,
+  nsresult ConstructTableRowFrame(nsFrameConstructorState& aState,
                                   nsIContent*              aContent,
                                   nsIFrame*                aParent,
                                   nsStyleContext*          aStyleContext,
@@ -346,9 +303,7 @@ private:
                                   nsIFrame*&               aNewFrame,
                                   PRBool&                  aIsPseudoParent);
 
-  nsresult ConstructTableColFrame(nsIPresShell*            aPresShell, 
-                                  nsPresContext*          aPresContext,
-                                  nsFrameConstructorState& aState,
+  nsresult ConstructTableColFrame(nsFrameConstructorState& aState,
                                   nsIContent*              aContent,
                                   nsIFrame*                aParent,
                                   nsStyleContext*          aStyleContext,
@@ -358,9 +313,7 @@ private:
                                   nsIFrame*&               aNewFrame,
                                   PRBool&                  aIsPseudoParent);
 
-  nsresult ConstructTableCellFrame(nsIPresShell*            aPresShell, 
-                                   nsPresContext*          aPresContext,
-                                   nsFrameConstructorState& aState,
+  nsresult ConstructTableCellFrame(nsFrameConstructorState& aState,
                                    nsIContent*              aContent,
                                    nsIFrame*                aParentFrame,
                                    nsStyleContext*          aStyleContext,
@@ -371,9 +324,7 @@ private:
                                    nsIFrame*&               aNewCellInnerFrame,
                                    PRBool&                  aIsPseudoParent);
 
-  PRBool MustGeneratePseudoParent(nsPresContext*  aPresContext,
-                                  nsIFrame*        aParentFrame,
-                                  nsIAtom*         aTag,
+  PRBool MustGeneratePseudoParent(nsIAtom*         aTag,
                                   nsIContent*      aContent,
                                   nsStyleContext*  aContext);
 
@@ -384,78 +335,54 @@ private:
    * list automatically, create placeholders for it in the right places as
    * needed, etc (hence does not return the new frame).
    */
-  nsresult ConstructTableForeignFrame(nsIPresShell*            aPresShell, 
-                                      nsPresContext*          aPresContext,
-                                      nsFrameConstructorState& aState,
+  nsresult ConstructTableForeignFrame(nsFrameConstructorState& aState,
                                       nsIContent*              aContent,
                                       nsIFrame*                aParentFrameIn,
                                       nsStyleContext*          aStyleContext,
                                       nsTableCreator&          aTableCreator,
                                       nsFrameItems&            aChildItems);
 
-  nsresult CreatePseudoTableFrame(nsIPresShell*            aPresShell,
-                                  nsPresContext*          aPresContext,
-                                  nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoTableFrame(nsTableCreator&          aTableCreator,
                                   nsFrameConstructorState& aState, 
                                   nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult CreatePseudoRowGroupFrame(nsIPresShell*            aPresShell,
-                                     nsPresContext*          aPresContext,
-                                     nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoRowGroupFrame(nsTableCreator&          aTableCreator,
                                      nsFrameConstructorState& aState, 
                                      nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult CreatePseudoColGroupFrame(nsIPresShell*            aPresShell,
-                                     nsPresContext*          aPresContext,
-                                     nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoColGroupFrame(nsTableCreator&          aTableCreator,
                                      nsFrameConstructorState& aState, 
                                      nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult CreatePseudoRowFrame(nsIPresShell*            aPresShell,
-                                nsPresContext*          aPresContext,
-                                nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoRowFrame(nsTableCreator&          aTableCreator,
                                 nsFrameConstructorState& aState, 
                                 nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult CreatePseudoCellFrame(nsIPresShell*            aPresShell,
-                                 nsPresContext*          aPresContext,
-                                 nsTableCreator&          aTableCreator,
+  nsresult CreatePseudoCellFrame(nsTableCreator&          aTableCreator,
                                  nsFrameConstructorState& aState, 
                                  nsIFrame*                aParentFrameIn = nsnull);
 
-  nsresult GetPseudoTableFrame(nsIPresShell*            aPresShell, 
-                               nsPresContext*          aPresContext, 
-                               nsTableCreator&          aTableCreator,
+  nsresult GetPseudoTableFrame(nsTableCreator&          aTableCreator,
                                nsFrameConstructorState& aState, 
                                nsIFrame&                aParentFrameIn);
 
-  nsresult GetPseudoColGroupFrame(nsIPresShell*            aPresShell, 
-                                  nsPresContext*          aPresContext, 
-                                  nsTableCreator&          aTableCreator,
+  nsresult GetPseudoColGroupFrame(nsTableCreator&          aTableCreator,
                                   nsFrameConstructorState& aState, 
                                   nsIFrame&                aParentFrameIn);
 
-  nsresult GetPseudoRowGroupFrame(nsIPresShell*            aPresShell, 
-                                  nsPresContext*          aPresContext, 
-                                  nsTableCreator&          aTableCreator,
+  nsresult GetPseudoRowGroupFrame(nsTableCreator&          aTableCreator,
                                   nsFrameConstructorState& aState, 
                                   nsIFrame&                aParentFrameIn);
 
-  nsresult GetPseudoRowFrame(nsIPresShell*            aPresShell, 
-                             nsPresContext*          aPresContext, 
-                             nsTableCreator&          aTableCreator,
+  nsresult GetPseudoRowFrame(nsTableCreator&          aTableCreator,
                              nsFrameConstructorState& aState, 
                              nsIFrame&                aParentFrameIn);
 
-  nsresult GetPseudoCellFrame(nsIPresShell*            aPresShell, 
-                              nsPresContext*          aPresContext, 
-                              nsTableCreator&          aTableCreator,
+  nsresult GetPseudoCellFrame(nsTableCreator&          aTableCreator,
                               nsFrameConstructorState& aState, 
                               nsIFrame&                aParentFrameIn);
 
-  nsresult GetParentFrame(nsIPresShell*            aPresShell,
-                          nsPresContext*          aPresContext,
-                          nsTableCreator&          aTableCreator,
+  nsresult GetParentFrame(nsTableCreator&          aTableCreator,
                           nsIFrame&                aParentFrameIn, 
                           nsIAtom*                 aChildFrameType, 
                           nsFrameConstructorState& aState, 
@@ -490,18 +417,14 @@ private:
                              nsFrameConstructorSaveState& aSaveState,
                              PRBool& aCreatedPseudo);
   
-  nsresult TableProcessChildren(nsIPresShell*            aPresShell, 
-                                nsPresContext*          aPresContext,
-                                nsFrameConstructorState& aState,
+  nsresult TableProcessChildren(nsFrameConstructorState& aState,
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,
                                 nsTableCreator&          aTableCreator,
                                 nsFrameItems&            aChildItems,
                                 nsIFrame*&               aCaption);
 
-  nsresult TableProcessChild(nsIPresShell*            aPresShell, 
-                             nsPresContext*          aPresContext,
-                             nsFrameConstructorState& aState,
+  nsresult TableProcessChild(nsFrameConstructorState& aState,
                              nsIContent*              aChildContent,
                              nsIContent*              aParentContent,
                              nsIFrame*                aParentFrame,
@@ -526,31 +449,25 @@ protected:
                                             nsIFrame**       aPlaceholderFrame);
 
 private:
-  nsresult ConstructAlternateFrame(nsIPresShell*    aPresShell, 
-                                   nsPresContext*  aPresContext,
-                                   nsIContent*      aContent,
+  nsresult ConstructAlternateFrame(nsIContent*      aContent,
                                    nsStyleContext*  aStyleContext,
                                    nsIFrame*        aGeometricParent,
                                    nsIFrame*        aContentParent,
                                    nsIFrame*&       aFrame);
 
-  nsresult ConstructRadioControlFrame(nsIPresShell*      aPresShell, 
-                                      nsPresContext*    aPresContext,
-                                      nsIFrame*&         aNewFrame,
+  // @param OUT aNewFrame the new radio control frame
+  nsresult ConstructRadioControlFrame(nsIFrame**         aNewFrame,
                                       nsIContent*        aContent,
                                       nsStyleContext*    aStyleContext);
 
-  nsresult ConstructCheckboxControlFrame(nsIPresShell*    aPresShell, 
-                                         nsPresContext*  aPresContext,
-                                         nsIFrame*&       aNewFrame,
+  // @param OUT aNewFrame the new checkbox control frame
+  nsresult ConstructCheckboxControlFrame(nsIFrame**       aNewFrame,
                                          nsIContent*      aContent,
                                          nsStyleContext*  aStyleContext);
 
   // ConstructSelectFrame puts the new frame in aFrameItems and
   // handles the kids of the select.
-  nsresult ConstructSelectFrame(nsIPresShell*            aPresShell, 
-                                nsPresContext*          aPresContext,
-                                nsFrameConstructorState& aState,
+  nsresult ConstructSelectFrame(nsFrameConstructorState& aState,
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,
                                 nsIAtom*                 aTag,
@@ -562,9 +479,7 @@ private:
 
   // ConstructFieldSetFrame puts the new frame in aFrameItems and
   // handles the kids of the fieldset
-  nsresult ConstructFieldSetFrame(nsIPresShell*            aPresShell, 
-                                  nsPresContext*          aPresContext,
-                                  nsFrameConstructorState& aState,
+  nsresult ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                   nsIContent*              aContent,
                                   nsIFrame*                aParentFrame,
                                   nsIAtom*                 aTag,
@@ -574,18 +489,14 @@ private:
                                   const nsStyleDisplay*    aStyleDisplay,
                                   PRBool&                  aFrameHasBeenInitialized);
 
-  nsresult ConstructTextFrame(nsIPresShell*            aPresShell, 
-                              nsPresContext*          aPresContext,
-                              nsFrameConstructorState& aState,
+  nsresult ConstructTextFrame(nsFrameConstructorState& aState,
                               nsIContent*              aContent,
                               nsIFrame*                aParentFrame,
                               nsStyleContext*          aStyleContext,
                               nsFrameItems&            aFrameItems,
                               PRBool                   aPseudoParent);
 
-  nsresult ConstructPageBreakFrame(nsIPresShell*            aPresShell, 
-                                   nsPresContext*          aPresContext,
-                                   nsFrameConstructorState& aState,
+  nsresult ConstructPageBreakFrame(nsFrameConstructorState& aState,
                                    nsIContent*              aContent,
                                    nsIFrame*                aParentFrame,
                                    nsStyleContext*          aStyleContext,
@@ -594,17 +505,13 @@ private:
   // Construct a page break frame if page-break-before:always is set in aStyleContext
   // and add it to aFrameItems. Return true if page-break-after:always is set on aStyleContext.
   // Don't do this for row groups, rows or cell, because tables handle those internally.
-  PRBool PageBreakBefore(nsIPresShell*            aPresShell,
-                         nsPresContext*          aPresContext,
-                         nsFrameConstructorState& aState,
+  PRBool PageBreakBefore(nsFrameConstructorState& aState,
                          nsIContent*              aContent,
                          nsIFrame*                aParentFrame,
                          nsStyleContext*          aStyleContext,
                          nsFrameItems&            aFrameItems);
 
-  nsresult ConstructHTMLFrame(nsIPresShell*            aPresShell, 
-                              nsPresContext*          aPresContext,
-                              nsFrameConstructorState& aState,
+  nsresult ConstructHTMLFrame(nsFrameConstructorState& aState,
                               nsIContent*              aContent,
                               nsIFrame*                aParentFrame,
                               nsIAtom*                 aTag,
@@ -613,9 +520,7 @@ private:
                               nsFrameItems&            aFrameItems,
                               PRBool                   aHasPseudoParent);
 
-  nsresult ConstructFrameInternal( nsIPresShell*            aPresShell, 
-                                   nsPresContext*          aPresContext,
-                                   nsFrameConstructorState& aState,
+  nsresult ConstructFrameInternal( nsFrameConstructorState& aState,
                                    nsIContent*              aContent,
                                    nsIFrame*                aParentFrame,
                                    nsIAtom*                 aTag,
@@ -624,9 +529,7 @@ private:
                                    nsFrameItems&            aFrameItems,
                                    PRBool                   aXBLBaseTag);
 
-  nsresult CreateAnonymousFrames(nsIPresShell*            aPresShell, 
-                                 nsPresContext*          aPresContext,
-                                 nsIAtom*                 aTag,
+  nsresult CreateAnonymousFrames(nsIAtom*                 aTag,
                                  nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIFrame*                aNewFrame,
@@ -634,9 +537,7 @@ private:
                                  nsFrameItems&            aChildItems,
                                  PRBool                   aIsRoot = PR_FALSE);
 
-  nsresult CreateAnonymousFrames(nsIPresShell*            aPresShell, 
-                                 nsPresContext*          aPresContext,
-                                 nsFrameConstructorState& aState,
+  nsresult CreateAnonymousFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aParent,
                                  nsIDocument*             aDocument,
                                  nsIFrame*                aNewFrame,
@@ -649,9 +550,7 @@ private:
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
-  nsresult ConstructMathMLFrame(nsIPresShell*            aPresShell,
-                                nsPresContext*          aPresContext,
-                                nsFrameConstructorState& aState,
+  nsresult ConstructMathMLFrame(nsFrameConstructorState& aState,
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,
                                 nsIAtom*                 aTag,
@@ -661,9 +560,7 @@ private:
                                 PRBool                   aHasPseudoParent);
 #endif
 
-  nsresult ConstructXULFrame(nsIPresShell*            aPresShell, 
-                             nsPresContext*          aPresContext,
-                             nsFrameConstructorState& aState,
+  nsresult ConstructXULFrame(nsFrameConstructorState& aState,
                              nsIContent*              aContent,
                              nsIFrame*                aParentFrame,
                              nsIAtom*                 aTag,
@@ -677,9 +574,7 @@ private:
 
 // XTF
 #ifdef MOZ_XTF
-  nsresult ConstructXTFFrame(nsIPresShell*               aPresShell,
-                             nsPresContext*          aPresContext,
-                             nsFrameConstructorState& aState,
+  nsresult ConstructXTFFrame(nsFrameConstructorState& aState,
                              nsIContent*              aContent,
                              nsIFrame*                aParentFrame,
                              nsIAtom*                 aTag,
@@ -696,16 +591,12 @@ private:
                              PRBool&     aHasRequiredFeatures,
                              PRBool&     aHasSystemLanguage);
  
-  nsresult SVGSwitchProcessChildren(nsIPresShell*            aPresShell,
-                                    nsPresContext*           aPresContext,
-                                    nsFrameConstructorState& aState,
+  nsresult SVGSwitchProcessChildren(nsFrameConstructorState& aState,
                                     nsIContent*              aContent,
                                     nsIFrame*                aFrame,
                                     nsFrameItems&            aFrameItems);
 
-  nsresult ConstructSVGFrame(nsIPresShell*               aPresShell,
-                             nsPresContext*          aPresContext,
-                             nsFrameConstructorState& aState,
+  nsresult ConstructSVGFrame(nsFrameConstructorState& aState,
                              nsIContent*              aContent,
                              nsIFrame*                aParentFrame,
                              nsIAtom*                 aTag,
@@ -715,9 +606,7 @@ private:
                              PRBool                   aHasPseudoParent);
 #endif
 
-  nsresult ConstructFrameByDisplayType(nsIPresShell*            aPresShell, 
-                                       nsPresContext*          aPresContext,
-                                       nsFrameConstructorState& aState,
+  nsresult ConstructFrameByDisplayType(nsFrameConstructorState& aState,
                                        const nsStyleDisplay*    aDisplay,
                                        nsIContent*              aContent,
                                        PRInt32                  aNameSpaceID,
@@ -727,9 +616,7 @@ private:
                                        nsFrameItems&            aFrameItems,
                                        PRBool                   aHasPseudoParent);
 
-  nsresult ProcessChildren(nsIPresShell*            aPresShell, 
-                           nsPresContext*          aPresContext,
-                           nsFrameConstructorState& aState,
+  nsresult ProcessChildren(nsFrameConstructorState& aState,
                            nsIContent*              aContent,
                            nsIFrame*                aFrame,
                            PRBool                   aCanHaveGeneratedContent,
@@ -737,47 +624,36 @@ private:
                            PRBool                   aParentIsBlock,
                            nsTableCreator*          aTableCreator = nsnull);
 
-  nsresult CreateInputFrame(nsIPresShell*    aPresShell,
-                            nsPresContext*  aPresContext,
-                            nsIContent*      aContent,
-                            nsIFrame*&       aFrame,
+  // @param OUT aFrame the newly created frame
+  nsresult CreateInputFrame(nsIContent*      aContent,
+                            nsIFrame**       aFrame,
                             nsStyleContext*  aStyleContext);
 
-  nsresult AddDummyFrameToSelect(nsPresContext*          aPresContext,
-                                 nsIPresShell*            aPresShell,
-                                 nsFrameConstructorState& aState,
+  nsresult AddDummyFrameToSelect(nsFrameConstructorState& aState,
                                  nsIFrame*                aListFrame,
                                  nsIFrame*                aParentFrame,
                                  nsFrameItems*            aChildItems,
                                  nsIContent*              aContainer,
                                  nsIDOMHTMLSelectElement* aSelectElement);
 
-  nsresult RemoveDummyFrameFromSelect(nsPresContext*           aPresContext,
-                                      nsIPresShell*             aPresShell,
-                                      nsIContent*               aContainer,
+  nsresult RemoveDummyFrameFromSelect(nsIContent*               aContainer,
                                       nsIContent*               aChild,
                                       nsIDOMHTMLSelectElement*  aSelectElement);
 
-  nsIFrame* GetFrameFor(nsIPresShell*   aPresShell,
-                        nsPresContext* aPresContext,
-                        nsIContent*     aContent);
+  nsIFrame* GetFrameFor(nsIContent* aContent);
 
-  nsIFrame* GetAbsoluteContainingBlock(nsPresContext* aPresContext,
-                                       nsIFrame*       aFrame);
+  nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
 
-  nsIFrame* GetFloatContainingBlock(nsPresContext* aPresContext,
-                                    nsIFrame*       aFrame);
+  nsIFrame* GetFloatContainingBlock(nsIFrame* aFrame);
 
-  nsIContent* PropagateScrollToViewport(nsPresContext* aPresContext);
+  nsIContent* PropagateScrollToViewport();
 
   // Build a scroll frame: 
   //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame.
   //  Sets the primary frame for the content to the output aNewFrame.
   // @param aNewFrame the created scrollframe --- output only
   nsresult
-  BuildScrollFrame(nsIPresShell*            aPresShell, 
-                   nsPresContext*          aPresContext,
-                   nsFrameConstructorState& aState,
+  BuildScrollFrame(nsFrameConstructorState& aState,
                    nsIContent*              aContent,
                    nsStyleContext*          aContentStyle,
                    nsIFrame*                aScrolledFrame,
@@ -788,9 +664,7 @@ private:
 
   // Builds the initial ScrollFrame
   already_AddRefed<nsStyleContext>
-  BeginBuildingScrollFrame(nsIPresShell*            aPresShell, 
-                           nsPresContext*          aPresContext,
-                           nsFrameConstructorState& aState,
+  BeginBuildingScrollFrame(nsFrameConstructorState& aState,
                            nsIContent*              aContent,
                            nsStyleContext*          aContentStyle,
                            nsIFrame*                aParentFrame,
@@ -809,9 +683,7 @@ private:
   // Creates a new GfxScrollFrame, Initializes it, and creates a scroll port for it
   //
   nsresult
-  InitGfxScrollFrame(nsIPresShell*            aPresShell, 
-                     nsPresContext*          aPresContext,
-                     nsFrameConstructorState& aState,
+  InitGfxScrollFrame(nsFrameConstructorState& aState,
                      nsIContent*              aContent,
                      nsIDocument*             aDocument,
                      nsIFrame*                aParentFrame,
@@ -824,9 +696,7 @@ private:
 
   // InitializeSelectFrame puts scrollFrame in aFrameItems if aBuildCombobox is false
   nsresult
-  InitializeSelectFrame(nsIPresShell*            aPresShell, 
-                        nsPresContext*          aPresContext,
-                        nsFrameConstructorState& aState,
+  InitializeSelectFrame(nsFrameConstructorState& aState,
                         nsIFrame*                scrollFrame,
                         nsIFrame*                scrolledFrame,
                         nsIContent*              aContent,
@@ -835,15 +705,9 @@ private:
                         PRBool                   aBuildCombobox,
                         nsFrameItems&            aFrameItems);
 
-  nsresult MaybeRecreateFramesForContent(nsPresContext*  aPresContext,
-                                         nsIContent*      aContent);
+  nsresult MaybeRecreateFramesForContent(nsIContent*      aContent);
 
-  nsresult RecreateFramesForContent(nsPresContext*  aPresContext,
-                                    nsIContent*      aContent);
-
-  nsresult RecreateFramesOnAttributeChange(nsPresContext* aPresContext,
-                                           nsIContent*     aContent,
-                                           nsIAtom*        aAttribute);
+  nsresult RecreateFramesForContent(nsIContent*      aContent);
 
   nsresult CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell, 
                                            nsPresContext*  aPresContext,
@@ -865,33 +729,24 @@ private:
 
   // Methods support creating block frames and their children
 
-  static already_AddRefed<nsStyleContext>
-  GetFirstLetterStyle(nsPresContext*  aPresContext,
-                      nsIContent*      aContent,
+  already_AddRefed<nsStyleContext>
+  GetFirstLetterStyle(nsIContent*      aContent,
                       nsStyleContext*  aStyleContext);
 
-  static already_AddRefed<nsStyleContext>
-  GetFirstLineStyle(nsPresContext*  aPresContext,
-                    nsIContent*      aContent,
+  already_AddRefed<nsStyleContext>
+  GetFirstLineStyle(nsIContent*      aContent,
                     nsStyleContext*  aStyleContext);
 
-  static PRBool HaveFirstLetterStyle(nsPresContext*  aPresContext,
-                                     nsIContent*      aContent,
-                                     nsStyleContext*  aStyleContext);
+  PRBool HaveFirstLetterStyle(nsIContent*      aContent,
+                              nsStyleContext*  aStyleContext);
 
-  static PRBool HaveFirstLineStyle(nsPresContext*  aPresContext,
-                                   nsIContent*      aContent,
-                                   nsStyleContext*  aStyleContext);
+  PRBool HaveFirstLineStyle(nsIContent*      aContent,
+                            nsStyleContext*  aStyleContext);
 
-  static void HaveSpecialBlockStyle(nsPresContext*  aPresContext,
-                                    nsIContent*      aContent,
-                                    nsStyleContext*  aStyleContext,
-                                    PRBool*          aHaveFirstLetterStyle,
-                                    PRBool*          aHaveFirstLineStyle);
-
-  PRBool ShouldCreateFirstLetterFrame(nsPresContext* aPresContext,
-                                      nsIContent*     aContent,
-                                      nsIFrame*       aFrame);
+  void HaveSpecialBlockStyle(nsIContent*      aContent,
+                             nsStyleContext*  aStyleContext,
+                             PRBool*          aHaveFirstLetterStyle,
+                             PRBool*          aHaveFirstLineStyle);
 
   // |aContentParentFrame| should be null if it's really the same as
   // |aParentFrame|.
@@ -904,9 +759,7 @@ private:
   // block
   // @param aContentParent is the parent the block would have if it
   // were in-flow
-  nsresult ConstructBlock(nsIPresShell*            aPresShell, 
-                          nsPresContext*           aPresContext,
-                          nsFrameConstructorState& aState,
+  nsresult ConstructBlock(nsFrameConstructorState& aState,
                           const nsStyleDisplay*    aDisplay,
                           nsIContent*              aContent,
                           nsIFrame*                aParentFrame,
@@ -916,9 +769,7 @@ private:
                           nsFrameItems&            aFrameItems,
                           PRBool                   aAbsPosContainer);
 
-  nsresult ConstructInline(nsIPresShell*            aPresShell, 
-                           nsPresContext*          aPresContext,
-                           nsFrameConstructorState& aState,
+  nsresult ConstructInline(nsFrameConstructorState& aState,
                            const nsStyleDisplay*    aDisplay,
                            nsIContent*              aContent,
                            nsIFrame*                aParentFrame,
@@ -926,9 +777,7 @@ private:
                            PRBool                   aIsPositioned,
                            nsIFrame*                aNewFrame);
 
-  nsresult ProcessInlineChildren(nsIPresShell*            aPresShell, 
-                                 nsPresContext*          aPresContext,
-                                 nsFrameConstructorState& aState,
+  nsresult ProcessInlineChildren(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
                                  nsIFrame*                aFrame,
                                  PRBool                   aCanHaveGeneratedContent,
@@ -937,15 +786,12 @@ private:
 
   PRBool AreAllKidsInline(nsIFrame* aFrameList);
 
-  PRBool WipeContainingBlock(nsPresContext*          aPresContext,
-                             nsFrameConstructorState& aState,
+  PRBool WipeContainingBlock(nsFrameConstructorState& aState,
                              nsIFrame*                blockContent,
                              nsIFrame*                aFrame,
                              nsIFrame*                aFrameList);
 
-  PRBool NeedSpecialFrameReframe(nsIPresShell*    aPresShell,
-                                 nsPresContext*  aPresContext,
-                                 nsIContent*      aParent1,
+  PRBool NeedSpecialFrameReframe(nsIContent*      aParent1,
                                  nsIContent*      aParent2,
                                  nsIFrame*&       aParentFrame,
                                  nsIContent*      aChild,
@@ -953,30 +799,27 @@ private:
                                  nsIFrame*&       aPrevSibling,
                                  nsIFrame*        aNextSibling);
 
-  nsresult SplitToContainingBlock(nsPresContext*          aPresContext,
-                                  nsFrameConstructorState& aState,
+  nsresult SplitToContainingBlock(nsFrameConstructorState& aState,
                                   nsIFrame*                aFrame,
                                   nsIFrame*                aLeftInlineChildFrame,
                                   nsIFrame*                aBlockChildFrame,
                                   nsIFrame*                aRightInlineChildFrame,
                                   PRBool                   aTransfer);
 
-  nsresult ReframeContainingBlock(nsPresContext* aPresContext, nsIFrame* aFrame);
+  nsresult ReframeContainingBlock(nsIFrame* aFrame);
 
-  nsresult StyleChangeReflow(nsPresContext* aPresContext, nsIFrame* aFrame, nsIAtom* aAttribute);
+  nsresult StyleChangeReflow(nsIFrame* aFrame, nsIAtom* aAttribute);
 
   /** Helper function that searches the immediate child frames 
     * (and their children if the frames are "special")
     * for a frame that maps the specified content object
     *
-    * @param aPresContext   the presentation context
     * @param aParentFrame   the primary frame for aParentContent
     * @param aContent       the content node for which we seek a frame
     * @param aParentContent the parent for aContent 
     * @param aHint          an optional hint used to make the search for aFrame faster
     */
-  nsIFrame* FindFrameWithContent(nsPresContext*  aPresContext,
-                                 nsFrameManager*  aFrameManager,
+  nsIFrame* FindFrameWithContent(nsFrameManager*  aFrameManager,
                                  nsIFrame*        aParentFrame,
                                  nsIContent*      aParentContent,
                                  nsIContent*      aContent,
@@ -986,13 +829,7 @@ private:
 
   // Methods support :first-letter style
 
-  nsIContent* FindBlockFor(nsPresContext*          aPresContext,
-                           nsFrameConstructorState& aState,
-                           nsIContent*              aContainer);
-
-  void CreateFloatingLetterFrame(nsIPresShell*            aPresShell, 
-                                 nsPresContext*          aPresContext,
-                                 nsFrameConstructorState& aState,
+  void CreateFloatingLetterFrame(nsFrameConstructorState& aState,
                                  nsIContent*              aTextContent,
                                  nsIFrame*                aTextFrame,
                                  nsIContent*              aBlockContent,
@@ -1000,23 +837,17 @@ private:
                                  nsStyleContext*          aStyleContext,
                                  nsFrameItems&            aResult);
 
-  nsresult CreateLetterFrame(nsIPresShell*            aPresShell, 
-                             nsPresContext*          aPresContext,
-                             nsFrameConstructorState& aState,
+  nsresult CreateLetterFrame(nsFrameConstructorState& aState,
                              nsIContent*              aTextContent,
                              nsIFrame*                aParentFrame,
                              nsFrameItems&            aResult);
 
-  nsresult WrapFramesInFirstLetterFrame(nsIPresShell*            aPresShell, 
-                                        nsPresContext*          aPresContext,
-                                        nsFrameConstructorState& aState,
+  nsresult WrapFramesInFirstLetterFrame(nsFrameConstructorState& aState,
                                         nsIContent*              aBlockContent,
                                         nsIFrame*                aBlockFrame,
                                         nsFrameItems&            aBlockFrames);
 
-  nsresult WrapFramesInFirstLetterFrame(nsIPresShell*            aPresShell, 
-                                        nsPresContext*          aPresContext,
-                                        nsFrameConstructorState& aState,
+  nsresult WrapFramesInFirstLetterFrame(nsFrameConstructorState& aState,
                                         nsIFrame*                aParentFrame,
                                         nsIFrame*                aParentFrameList,
                                         nsIFrame**               aModifiedParent,
@@ -1025,9 +856,7 @@ private:
                                         nsFrameItems&            aLetterFrame,
                                         PRBool*                  aStopLooking);
 
-  nsresult RecoverLetterFrames(nsIPresShell*            aPresShell, 
-                               nsPresContext*          aPresContext,
-                               nsFrameConstructorState& aState,
+  nsresult RecoverLetterFrames(nsFrameConstructorState& aState,
                                nsIFrame*                aBlockFrame);
 
   // 
@@ -1052,66 +881,54 @@ private:
 
   // Capture state for the frame tree rooted at the frame associated with the
   // content object, aContent
-  nsresult CaptureStateForFramesOf(nsPresContext* aPresContext,
-                                   nsIContent* aContent,
+  nsresult CaptureStateForFramesOf(nsIContent* aContent,
                                    nsILayoutHistoryState* aHistoryState);
 
   // Capture state for the frame tree rooted at aFrame.
-  nsresult CaptureStateFor(nsPresContext*        aPresContext,
-                           nsIFrame*              aFrame,
+  nsresult CaptureStateFor(nsIFrame*              aFrame,
                            nsILayoutHistoryState* aHistoryState);
 
   //----------------------------------------
 
   // Methods support :first-line style
 
-  nsresult WrapFramesInFirstLineFrame(nsIPresShell*            aPresShell, 
-                                      nsPresContext*          aPresContext,
-                                      nsFrameConstructorState& aState,
+  nsresult WrapFramesInFirstLineFrame(nsFrameConstructorState& aState,
                                       nsIContent*              aContent,
                                       nsIFrame*                aFrame,
                                       nsFrameItems&            aFrameItems);
 
-  nsresult AppendFirstLineFrames(nsIPresShell*            aPresShell, 
-                                 nsPresContext*          aPresContext,
-                                 nsFrameConstructorState& aState,
+  nsresult AppendFirstLineFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
                                  nsIFrame*                aBlockFrame,
                                  nsFrameItems&            aFrameItems);
 
-  nsresult InsertFirstLineFrames(nsPresContext*          aPresContext,
-                                 nsFrameConstructorState& aState,
+  nsresult InsertFirstLineFrames(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
                                  nsIFrame*                aBlockFrame,
                                  nsIFrame**               aParentFrame,
                                  nsIFrame*                aPrevSibling,
                                  nsFrameItems&            aFrameItems);
 
-  nsresult RemoveFixedItems(nsPresContext*  aPresContext,
-                            nsIPresShell*    aPresShell,
-                            nsFrameManager*  aFrameManager);
+  nsresult RemoveFixedItems(const nsFrameConstructorState& aState);
 
   // Find the ``rightmost'' frame for the content immediately preceding
   // aIndexInContainer, following continuations if necessary. If aChild is
   // not null, make sure it passes the call to IsValidSibling
-  nsIFrame* FindPreviousSibling(nsIPresShell*     aPresShell,
-                                nsIContent*       aContainer,
+  nsIFrame* FindPreviousSibling(nsIContent*       aContainer,
                                 nsIFrame*         aContainerFrame,
                                 PRInt32           aIndexInContainer,
                                 const nsIContent* aChild = nsnull);
 
   // Find the frame for the content node immediately following aIndexInContainer.
   // If aChild is not null, make sure it passes the call to IsValidSibling
-  nsIFrame* FindNextSibling(nsIPresShell*     aPresShell,
-                            nsIContent*       aContainer,
+  nsIFrame* FindNextSibling(nsIContent*       aContainer,
                             nsIFrame*         aContainerFrame,
                             PRInt32           aIndexInContainer,
                             const nsIContent* aChild = nsnull);
 
-  // see if aContent and aSibling are legimiate siblings due to restrictions
+  // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns
-  PRBool IsValidSibling(nsIPresShell&          aPresShell,
-                        nsIFrame*              aParentFrame,
+  PRBool IsValidSibling(nsIFrame*              aParentFrame,
                         const nsIFrame&        aSibling,
                         PRUint8                aSiblingDisplay,
                         nsIContent&            aContent,
@@ -1125,17 +942,13 @@ private:
   }
 
   inline NS_HIDDEN_(nsresult)
-    CreateInsertionPointChildren(nsIPresShell *aPresShell,
-                                 nsPresContext *aPresContext,
-                                 nsFrameConstructorState &aState,
+    CreateInsertionPointChildren(nsFrameConstructorState &aState,
                                  nsIFrame *aNewFrame,
                                  nsIContent *aContent,
                                  PRBool aUseInsertionFrame = PR_TRUE);
 
   NS_HIDDEN_(nsresult)
-    CreateInsertionPointChildren(nsIPresShell *aPresShell,
-                                 nsPresContext *aPresContext,
-                                 nsFrameConstructorState &aState,
+    CreateInsertionPointChildren(nsFrameConstructorState &aState,
                                  nsIFrame *aNewFrame,
                                  PRBool aUseInsertionFrame);
                                  
@@ -1167,7 +980,8 @@ protected:
   nsCOMPtr<nsIEventQueue>        mRestyleEventQueue;
   
 private:
-  nsIDocument*        mDocument;
+  nsIDocument*        mDocument;  // Weak ref
+  nsIPresShell*       mPresShell; // Weak ref
 
   nsIFrame*           mInitialContainingBlock;
   nsIFrame*           mFixedContainingBlock;

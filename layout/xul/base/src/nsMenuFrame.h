@@ -62,7 +62,6 @@ nsresult NS_NewMenuFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
-class nsCSSFrameConstructor;
 class nsIScrollableView;
 
 #define NS_STATE_ACCELTEXT_IS_DERIVED  NS_STATE_BOX_CHILD_RESERVED
@@ -181,10 +180,6 @@ public:
   }
 #endif
 
-  void SetFrameConstructor(nsCSSFrameConstructor* aFC) {
-    mFrameConstructor = aFC;
-  }
-
   static PRBool IsSizedToPopup(nsIContent* aContent, PRBool aRequireAlways);
 
 protected:
@@ -250,8 +245,6 @@ protected:
 
 public:
   static nsMenuDismissalListener* sDismissalListener; // The listener that dismisses menus.
-private:
-  nsCSSFrameConstructor* mFrameConstructor;
 }; // class nsMenuFrame
 
 #endif
