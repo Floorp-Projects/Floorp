@@ -248,6 +248,23 @@ class nsIParser : public nsISupports {
      */
     virtual nsDTDMode GetParseMode(void)=0;
 
+    /**
+     *  Call this method to determine a DTD for a DOCTYPE
+     *  
+     *  @update  harishd 05/01/00
+     *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
+     *  @param   aDocTypeStr -- A doctype for which a DTD is to be selected.
+     *  @param   aMimeType   -- A mimetype for which a DTD is to be selected.
+                                Note: aParseMode might be required.
+     *  @param   aCommand    -- A command for which a DTD is to be selected.
+     *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
+     *  @return  NS_OK if succeeded else ERROR.
+     */
+    NS_IMETHOD CreateCompatibleDTD(nsIDTD** aDTD, 
+                                   nsString* aDocTypeStr,
+                                   eParserCommands aCommand,
+                                   const nsString* aMimeType=nsnull, 
+                                   nsDTDMode aDTDMode=eDTDMode_unknown)=0;
 };
 
 /* ===========================================================*

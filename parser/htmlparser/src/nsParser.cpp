@@ -1089,11 +1089,11 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
  *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
  *  @return  NS_OK if succeeded else ERROR.
  */
-nsresult nsParser::CreateCompatibleDTD(nsIDTD** aDTD, 
-                                       nsString* aDocTypeStr, 
-                                       eParserCommands aCommand,
-                                       const nsString* aMimeType,
-                                       nsDTDMode aDTDMode)
+NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD, 
+                                            nsString* aDocTypeStr, 
+                                            eParserCommands aCommand,
+                                            const nsString* aMimeType,
+                                            nsDTDMode aDTDMode)
 {
   nsresult       result=NS_OK; 
   const nsCID*   theDTDClassID=0;
