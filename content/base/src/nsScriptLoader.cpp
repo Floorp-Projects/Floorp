@@ -664,7 +664,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
         // is one.
         nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
         if (NS_SUCCEEDED(rv)) {
-          rv = calias->GetPreferred(characterSet, preferred);
+          rv = calias->GetPreferred(charset, preferred);
           
           if(NS_SUCCEEDED(rv)) {
             characterSet = preferred;
