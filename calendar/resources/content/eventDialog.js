@@ -137,7 +137,12 @@ function loadCalendarEventDialog()
    document.getElementById( "start-datetime" ).value = gStartDate;
    
    gEndDate.setTime( gEvent.end.getTime() );
-   document.getElementById( "end-datetime" ).value = gEndDate;
+   var userEndDate = new Date(gEndDate);
+   if( gEvent.allDay ) {
+      //userland enddate == ical enddate - 1, in the case of allday events 
+      userEndDate.setDate( userEndDate.getDate() - 1 );
+   }
+   document.getElementById( "end-datetime" ).value = userEndDate;
    
    gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
    
@@ -497,18 +502,19 @@ function checkEndTime()
 
 function checkEndDate()
 {
-   var startDate = document.getElementById( "start-datetime" ).value; 
-   var endDate = document.getElementById( "end-datetime" ).value; 
-   
-   if( startDate.getFullYear() == endDate.getFullYear() &&
-       startDate.getMonth() == endDate.getMonth() &&
-       startDate.getDay() == endDate.getDay() )
-      return( 0 );
-
-   else if ( endDate < startDate)
+   if( gStartDate.getFullYear() == gEndDate.getFullYear() &&
+       gStartDate.getMonth() == gEndDate.getMonth() &&
+       gStartDate.getDay() == gEndDate.getDay() ) {
+      if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
+         return( -1 ) //from users point of view allday events end at gEndDate-1 
+      } else {
+         return( 0 );
+      }
+   } else if ( gEndDate < gStartDate) {
       return -1;
-   else if (endDate > startDate)
+   } else if ( gEndDate > gStartDate) {
       return 1;
+   }
 }
 
 function checkSetTimeDate()
@@ -549,17 +555,15 @@ function checkSetRecurTime()
 {
    var recurEndDate = document.getElementById( "repeat-end-date-picker" ).value;
 
-   var endDate = document.getElementById( "end-datetime" ).value;
-
    var recurForever = getFieldValue( "repeat-forever-radio", "selected" );
 
    var recur = getFieldValue( "repeat-checkbox", "checked" );
    
    debug(recurForever+ " and "+ recur+ "\n"); 
-   var state = ( recurEndDate.getTime() < endDate.getTime() && 
-                 ( recurEndDate.getFullYear() != endDate.getFullYear() ||
-                 recurEndDate.getMonth() != endDate.getMonth() ||
-                 recurEndDate.getDate() != endDate.getDate() )
+   var state = ( recurEndDate.getTime() < gEndDate.getTime() && 
+                 ( recurEndDate.getFullYear() != gEndDate.getFullYear() ||
+                 recurEndDate.getMonth() != gEndDate.getMonth() ||
+                 recurEndDate.getDate() != gEndDate.getDate() )
                  && !recurForever && recur) ;
    setRecurError(state);
    return(!state );
@@ -607,6 +611,10 @@ function onDateTimePick( dateTimePicker )
 
    if( dateTimePicker.id == "end-datetime" )
    {
+     if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
+       //user enddate == ical enddate - 1 (for allday events)
+       pickedDateTime.setDate( pickedDateTime.getDate() + 1 );
+     }
      gEndDate = pickedDateTime;
      // save the duration
      gDuration = gEndDate.getTime() - gStartDate.getTime();
@@ -620,8 +628,13 @@ function onDateTimePick( dateTimePicker )
      gStartDate = pickedDateTime;
      // preserve the previous duration by changing end
      gEndDate.setTime( gStartDate.getTime() + gDuration );
-         
-     document.getElementById( "end-datetime" ).value = gEndDate;
+     
+     var userEndDate =new Date(gEndDate)
+     if( getFieldValue( "all-day-event-checkbox", "checked" ) ) {
+       //user enddate == ical enddate - 1 (for allday events)
+       userEndDate.setDate( userEndDate.getDate() - 1 );
+     }
+     document.getElementById( "end-datetime" ).value = userEndDate;
    }
 
    var now = new Date();

@@ -547,15 +547,15 @@ var treeView =
             var eventLength = calendarEvent.end.getTime() - calendarEvent.start.getTime();
             var actualEndDate = eventEndDate.getTime() + eventLength;
             eventEndDate = new Date( actualEndDate );
-            var endTime = formatUnifinderEventTime( eventEndDate );
-            var endDate = formatUnifinderEventDate( eventEndDate );
-            if( calendarEvent.allDay )
-            {
-	      return(gCalendarBundle.getFormattedString("unifinderAlldayEventDate", [endDate]));
-            }
-            else
-            {
-	      return(gCalendarBundle.getFormattedString("unifinderNormalEventDate", [endDate, endTime]));
+            if( calendarEvent.allDay ) {
+               //user-enddate is ical-enddate - 1
+               eventEndDate.setDate( eventEndDate.getDate() - 1 );
+               var endDate = formatUnifinderEventDate( eventEndDate );
+               return(gCalendarBundle.getFormattedString("unifinderAlldayEventDate", [endDate]));
+            } else {
+               var endTime = formatUnifinderEventTime( eventEndDate );
+               var endDate = formatUnifinderEventDate( eventEndDate );
+               return(gCalendarBundle.getFormattedString("unifinderNormalEventDate", [endDate, endTime]));
             }
          
          case "unifinder-search-results-tree-col-categories":
@@ -783,7 +783,8 @@ function getPreviewText( calendarEvent )
        DateHtml.appendChild( DateText );
        HolderBox.appendChild( DateHtml );
        DateHtml = document.createElement( "description" );
-
+       
+       endDate.setDate( endDate.getDate() - 1 ); //allday enddate for user
        textString = gCalendarBundle.getFormattedString("tooltipEventEnd", 
 						   [gCalendarWindow.dateFormater.getFormatedDate( endDate ),
 						    ""]);
