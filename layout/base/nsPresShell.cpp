@@ -3239,6 +3239,15 @@ PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
                                           nsIStyleSheet* aStyleSheet,
                                           PRBool aDisabled)
 {
+  nsresult rv = NS_OK;
+
+  // first notify the style set that a sheet's state has changed
+  if (mStyleSet) {
+    rv = mStyleSet->NotifyStyleSheetStateChanged(aDisabled ? PR_FALSE : PR_TRUE);
+  }
+  if (NS_FAILED(rv)) return rv;
+
+  // rebuild the frame-world
   return ReconstructFrames();
 }
 
