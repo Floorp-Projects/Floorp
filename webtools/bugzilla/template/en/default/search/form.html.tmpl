@@ -413,7 +413,7 @@ function doOnSelectProduct(selectmode) {
 <table cellspacing="0" cellpadding="0">
   <tr>
     <td>
-      Any of:
+      Any one of:
     </td>
   </tr>
   <tr>
@@ -422,7 +422,7 @@ function doOnSelectProduct(selectmode) {
              id="emailassigned_to[% n %]" value="1"
              [% " checked" IF default.emailassigned_to.$n %]>
       <label for="emailassigned_to[% n %]">
-        [% terms.bug %] owner
+        the [% terms.bug %] owner
       </label>
     </td>
   </tr>
@@ -432,7 +432,7 @@ function doOnSelectProduct(selectmode) {
              id="emailreporter[% n %]" value="1"
              [% " checked" IF default.emailreporter.$n %]>
       <label for="emailreporter[% n %]">
-        reporter
+        the reporter
       </label>
     </td>
   </tr>
@@ -443,7 +443,7 @@ function doOnSelectProduct(selectmode) {
              id="emailqa_contact[% n %]" value="1"
              [% " checked" IF default.emailqa_contact.$n %]>
       <label for="emailqa_contact[% n %]">
-        QA contact
+        the QA contact
       </label>
     </td>
   </tr>
@@ -454,7 +454,7 @@ function doOnSelectProduct(selectmode) {
              id="emailcc[% n %]" value="1"
              [% " checked" IF default.emailcc.$n %]>
       <label for="emailcc[% n %]">
-        CC list member
+        a CC list member
       </label>
     </td>
   </tr>
@@ -464,7 +464,7 @@ function doOnSelectProduct(selectmode) {
                id="emaillongdesc[% n %]" value="1"
                [% " checked" IF default.emaillongdesc.$n %]>
       <label for="emaillongdesc[% n %]">
-        commenter
+        a commenter
       </label>
     </td>
   </tr>
