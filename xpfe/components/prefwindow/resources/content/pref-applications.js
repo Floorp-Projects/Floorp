@@ -33,9 +33,7 @@ function editType()
   if (gTree.selectedItems && gTree.selectedItems[0]) {
     var uri = gTree.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
-    dump("*** foopy\n");
     window.openDialog("chrome://communicator/content/pref/pref-applications-edit.xul", "appEdit", "chrome,modal=yes,resizable=no", handlerOverride);
-    dump("*** foopy\n");
     selectApplication();
   }
 }

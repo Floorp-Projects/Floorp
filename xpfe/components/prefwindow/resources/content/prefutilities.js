@@ -112,7 +112,6 @@ function prefClearUrlbarHistory()
   if ( urlBarHist )
   {
     urlBarHist.clearHistory();
-    dump("Now history should be empty. \n");
     button.setAttribute("disabled","true");
   }
 }  
