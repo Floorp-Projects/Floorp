@@ -363,6 +363,12 @@ alpha*-*-osf*)
     fi
     ;;
 
+*-sco*) 
+    if test ! "$GNU_CC"; then
+       DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    fi
+    ;;
+
 dnl the qsort routine under solaris is faulty
 *-solaris*) 
     AC_DEFINE(BROKEN_QSORT)
