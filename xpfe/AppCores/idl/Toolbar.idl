@@ -6,6 +6,7 @@ interface ToolbarCore : BaseAppCore
 	void ToolbarCore();
 
 	void SetWindow(in Window win);
+	void SetWebShellWindow(in Window win);
 	void SetStatus(in wstring msg);
 
 };
