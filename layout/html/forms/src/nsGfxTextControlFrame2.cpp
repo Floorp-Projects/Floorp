@@ -976,7 +976,7 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
 }
 
 #define DIV_STRING "user-focus: none; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
-#define DIV_STRING_SINGLELINE "user-focus: none; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
+#define DIV_STRING_SINGLELINE "user-focus: none; white-space : nowrap; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
@@ -1026,7 +1026,10 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 ////
   if (content)
   {
-    content->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING), PR_FALSE);
+    if (IsSingleLineTextControl())
+      content->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING_SINGLELINE), PR_FALSE);
+    else
+      content->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING), PR_FALSE);
     //content->SetAttribute(kNameSpaceID_None,nsXULAtoms::debug, NS_ConvertToString("true"), PR_FALSE);
     aChildList.AppendElement(content);
 
@@ -1345,7 +1348,12 @@ void    nsGfxTextControlFrame2::SetFocus(PRBool aOn , PRBool aRepaint){}
 void    nsGfxTextControlFrame2::ScrollIntoView(nsIPresContext* aPresContext){}
 void    nsGfxTextControlFrame2::MouseClicked(nsIPresContext* aPresContext){}
 
-void    nsGfxTextControlFrame2::Reset(nsIPresContext* aPresContext){}
+void    nsGfxTextControlFrame2::Reset(nsIPresContext* aPresContext)
+{
+  nsString temp;
+  SetTextControlFrameState(temp);
+}
+
 PRInt32 nsGfxTextControlFrame2::GetMaxNumValues(){return 1;}/**/
 
 PRBool  nsGfxTextControlFrame2::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
