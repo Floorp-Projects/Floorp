@@ -1762,8 +1762,14 @@ static nsresult GetExtensionForMIMEType(const char* inMIMEType, nsACString& outE
   rv = mimeInfo->FirstExtension(getter_Copies(fileExtension));
   if (NS_FAILED(rv)) return rv;
   
-  outExtension.Assign(fileExtension);
+  // the MIME service likes to give back ".htm" for text/html files,
+  // so do a special-case fix here.
+  nsCAutoString   extensionStr(fileExtension);
+  if (extensionStr.EqualsIgnoreCase("htm"))
+    extensionStr.Assign("html");
 
+  outExtension.Assign(extensionStr);
+  
   return NS_OK;
 }
 
