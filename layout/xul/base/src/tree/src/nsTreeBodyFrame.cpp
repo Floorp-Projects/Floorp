@@ -19,14 +19,15 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
+ * Contributor(s):
  *  Ben Goodger <ben@netscape.com>
  *  Joe Hewitt <hewitt@netscape.com>
  *  Jan Varga <varga@utcru.sk>
  *  Dean Tessman <dean_tessman@hotmail.com>
  *  Brian Ryner <bryner@netscape.com>
  *  Blake Ross <blaker@netscape.com>
+ *  Pierre Chanial <pierrechanial@netscape.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -100,6 +101,13 @@
 #endif
 
 #define ELLIPSIS "..."
+
+// Delay (ms) for opening spring-loaded folders.
+static const PRUint32 kOpenDelay = 1000;
+// Delay (ms) for triggering the tree scrolling.
+static const PRUint32 kLazyScrollDelay = 400;
+// Delay (ms) for scrolling the tree.
+static const PRUint32 kScrollDelay = 100;
 
 // The style context cache impl
 nsresult 
@@ -307,7 +315,6 @@ NS_INTERFACE_MAP_BEGIN(nsTreeBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsITreeBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
   NS_INTERFACE_MAP_ENTRY(nsIScrollbarMediator)
-  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIReflowCallback)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafBoxFrame)
 
@@ -319,7 +326,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
  mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
  mFocused(PR_FALSE), mColumnsDirty(PR_TRUE), mDropAllowed(PR_FALSE), mHasFixedRowCount(PR_FALSE),
  mVerticalOverflow(PR_FALSE), mImageGuard(PR_FALSE), mReflowCallbackPosted(PR_FALSE),
- mDropRow(-1), mDropOrient(-1), mOpenTimer(nsnull)
+ mDropRow(-1), mDropOrient(-1), mScrollLines(0), mTimer(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -1104,6 +1111,26 @@ nsTreeBodyFrame::AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt
   *aResultY = y;
 } // AdjustEventCoordsToBoxCoordSpace
 
+NS_IMETHODIMP nsTreeBodyFrame::GetRowAt(PRInt32 aX, PRInt32 aY, PRInt32* _retval)
+{
+  if (!mView)
+    return NS_OK;
+
+  PRInt32 x;
+  PRInt32 y;
+  AdjustEventCoordsToBoxCoordSpace (aX, aY, &x, &y);
+  
+  // Now just mod by our total inner box height and add to our top row index.
+  *_retval = (y/mRowHeight)+mTopRowIndex;
+
+  // Check if the coordinates are actually in our visible space.
+  PRInt32 rowCount;
+  mView->GetRowCount(&rowCount);
+  if (*_retval < mTopRowIndex || *_retval > PR_MIN(mTopRowIndex+mPageCount, rowCount - 1))
+    *_retval = -1;
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, PRUnichar** aColID,
                                              PRUnichar** aChildElt)
@@ -1111,8 +1138,9 @@ NS_IMETHODIMP nsTreeBodyFrame::GetCellAt(PRInt32 aX, PRInt32 aY, PRInt32* aRow, 
   if (!mView)
     return NS_OK;
 
-  PRInt32 x, y;
-  AdjustEventCoordsToBoxCoordSpace ( aX, aY, &x, &y );
+  PRInt32 x;
+  PRInt32 y;
+  AdjustEventCoordsToBoxCoordSpace (aX, aY, &x, &y);
   
   // Now just mod by our total inner box height and add to our top row index.
   *aRow = (y/mRowHeight)+mTopRowIndex;
@@ -3455,10 +3483,11 @@ nsTreeBodyFrame::OnDragExit(nsIDOMEvent* aEvent)
   mDropRow = -1;
   mDropOrient = -1;
   mDragSession = nsnull;
+  mScrollLines = 0;
 
-  if (mOpenTimer) {
-    mOpenTimer->Cancel();
-    mOpenTimer = nsnull;
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
   }
 
   return NS_OK;
@@ -3476,63 +3505,69 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
   if (! mView)
     return NS_OK;
 
-  // compute the row mouse is over and the above/below/on state. Below we'll use this
-  // to see if anything changed.
-  PRInt32 newRow = -1;
-  PRInt16 newOrient = -1;
-  ComputeDropPosition(aEvent, &newRow, &newOrient);
+  // Save last values, we will need them.
+  PRInt32 lastDropRow = mDropRow;
+  PRInt16 lastDropOrient = mDropOrient;
+  PRInt16 lastScrollLines = mScrollLines;
+
+  // Compute the row mouse is over and the above/below/on state.
+  // Below we'll use this to see if anything changed.
+  // Also check if we want to auto-scroll.
+  ComputeDropPosition(aEvent, &mDropRow, &mDropOrient, &mScrollLines);
 
   // While we're here, handle tracking of scrolling during a drag.
-  PRInt32 rowCount;
-  mView->GetRowCount(&rowCount);
-  // Don't scroll if we are already at the top or bottom of the view.
-  if (newRow > 0 && newRow < rowCount - 1) {
-    PRBool scrollUp = PR_FALSE;
-    if (IsInDragScrollRegion(aEvent, &scrollUp)) {
-      if (mDropAllowed) {
-        // invalidate primary cell at old location.
-        mDropAllowed = PR_FALSE;
-        InvalidatePrimaryCell(mDropRow + (mDropOrient == nsITreeView::inDropAfter ? 1 : 0));
-      }
-      ScrollByLines(scrollUp ? -1 : 1);
-      return NS_OK;
+  if (mScrollLines) {
+    if (mDropAllowed) {
+      // Invalidate primary cell at old location.
+      mDropAllowed = PR_FALSE;
+      InvalidatePrimaryCell(lastDropRow + (lastDropOrient == nsITreeView::inDropAfter ? 1 : 0));
     }
+#if !defined(XP_MAC) && !defined(XP_MACOSX)
+    if (!lastScrollLines) {
+      // Entering the scroll region.
+      // Set a timer to trigger the tree scrolling.
+      if (mTimer) {
+        mTimer->Cancel();
+        mTimer = nsnull;
+      }
+      NS_NewTimer(getter_AddRefs(mTimer), ScrollCallback, this,
+                  kLazyScrollDelay, PR_FALSE, NS_TYPE_REPEATING_SLACK);
+    }
+#else
+    ScrollByLines(mScrollLines);
+#endif
+    // Bail out to prevent spring loaded timer and feedback line settings.
+    return NS_OK;
   }
-  
-  // if changed from last time, invalidate primary cell at the old location and if allowed, 
+
+  // If changed from last time, invalidate primary cell at the old location and if allowed, 
   // invalidate primary cell at the new location. If nothing changed, just bail.
-  if (newRow != mDropRow || newOrient != mDropOrient) {
+  if (mDropRow != lastDropRow || mDropOrient != lastDropOrient) {
     // Invalidate row at the old location.
     if (mDropAllowed) {
       mDropAllowed = PR_FALSE;
-      InvalidatePrimaryCell(mDropRow + (mDropOrient == nsITreeView::inDropAfter ? 1 : 0));
+      InvalidatePrimaryCell(lastDropRow + (lastDropOrient == nsITreeView::inDropAfter ? 1 : 0));
     }
 
-    if (mOpenTimer) {
-      // timer is active but for a different row than the current one - kill it
-      mOpenTimer->Cancel();
-      mOpenTimer = nsnull;
+    if (mTimer) {
+      // Timer is active but for a different row than the current one, kill it.
+      mTimer->Cancel();
+      mTimer = nsnull;
     }
-
-    // cache the new row and orientation regardless so we can check if it changed
-    // for next time.
-    mDropRow = newRow;
-    mDropOrient = newOrient;
-    mDropAllowed = PR_FALSE;
 
     if (mDropRow >= 0) {
-      if (!mOpenTimer && mDropOrient == nsITreeView::inDropOn) {
-        // either there wasn't a timer running or it was just killed above.
-        // if over a folder, start up a timer to open the folder.
+      if (!mTimer && mDropOrient == nsITreeView::inDropOn) {
+        // Either there wasn't a timer running or it was just killed above.
+        // If over a folder, start up a timer to open the folder.
         PRBool isContainer = PR_FALSE;
         mView->IsContainer(mDropRow, &isContainer);
         if (isContainer) {
           PRBool isOpen = PR_FALSE;
           mView->IsContainerOpen(mDropRow, &isOpen);
           if (!isOpen) {
-            // this node isn't expanded - set a timer to expand it
-            mOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
-            mOpenTimer->Init(this, 1000, PR_FALSE);
+            // This node isn't expanded, set a timer to expand it.
+            NS_NewTimer(getter_AddRefs(mTimer), OpenCallback, this,
+                        kOpenDelay, PR_FALSE, NS_TYPE_ONE_SHOT);
           }
         }
       }
@@ -3544,7 +3579,7 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
         mView->CanDropBeforeAfter (mDropRow, mDropOrient == nsITreeView::inDropBefore ? PR_TRUE : PR_FALSE, &canDropAtNewLocation);
       
       if (canDropAtNewLocation) {
-        // Invalidate row at the new location/
+        // Invalidate row at the new location.
         mDropAllowed = canDropAtNewLocation;
         InvalidatePrimaryCell(mDropRow + (mDropOrient == nsITreeView::inDropAfter ? 1 : 0));
       }
@@ -3553,7 +3588,7 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
   
   // alert the drag session we accept the drop. We have to do this every time
   // since the |canDrop| attribute is reset before we're called.
-  if ( mDropAllowed && mDragSession )
+  if (mDropAllowed && mDragSession)
     mDragSession->SetCanDrop(PR_TRUE);
 
   // Prevent default handler to fire.
@@ -3562,9 +3597,28 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
   return NS_OK;
 } // OnDragOver
 
-// Given a dom event, figure out which row in the tree the mouse is over
-// and if we should drop before/after/on that row. Doesn't query the content
-// about if the drag is allowable, that's done elsewhere.
+PRBool
+nsTreeBodyFrame::CanAutoScroll(PRInt32 aRowIndex)
+{
+  PRInt32 rowCount;
+  mView->GetRowCount(&rowCount);
+
+  // Check first for partially visible last row.
+  if (aRowIndex == rowCount - 1) {
+    nscoord y = mInnerBox.y + (aRowIndex - mTopRowIndex) * mRowHeight;
+    if (y < mInnerBox.height && y + mRowHeight > mInnerBox.height)
+      return PR_TRUE;
+  }
+
+  if (aRowIndex > 0 && aRowIndex < rowCount - 1)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+// Given a dom event, figure out which row in the tree the mouse is over,
+// if we should drop before/after/on that row or we should auto-scroll.
+// Doesn't query the content about if the drag is allowable, that's done elsewhere.
 //
 // For containers, we break up the vertical space of the row as follows: if in
 // the topmost 25%, the drop is _before_ the row the mouse is over; if in the
@@ -3573,80 +3627,64 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
 // For non-containers, if the mouse is in the top 50% of the row, the drop is
 // _before_ and the bottom 50% _after_
 void 
-nsTreeBodyFrame::ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16* aOrient)
+nsTreeBodyFrame::ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16* aOrient,
+                                     PRInt16* aScrollLines)
 {
+  *aRow = -1;
+  *aOrient = -1;
+  *aScrollLines = 0;
+
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent (do_QueryInterface(aEvent));
   if (mouseEvent) {
-    PRInt32 x = 0, y = 0;
-    mouseEvent->GetClientX(&x); mouseEvent->GetClientY(&y);
+    PRInt32 x = 0;
+    PRInt32 y = 0;
+    mouseEvent->GetClientX(&x);
+    mouseEvent->GetClientY(&y);
     
-    nsXPIDLString colID, child;
-    GetCellAt (x, y, aRow, getter_Copies(colID), getter_Copies(child));
-    if (*aRow == -1) {
-      *aOrient = -1;
-      return;
-    }
-    
-    // Compute the top/bottom of the row in question. We need to convert
-    // our y coord to twips since |mRowHeight| is in twips.
-    PRInt32 yTwips, xTwips;
+    PRInt32 xTwips;
+    PRInt32 yTwips;
     AdjustEventCoordsToBoxCoordSpace (x, y, &xTwips, &yTwips);
-    PRInt32 yOffset = yTwips - mRowHeight * (*aRow - mTopRowIndex);
+
+    GetRowAt(x, y, aRow);
+    if (*aRow >=0) {
+      // Compute the top/bottom of the row in question.
+      PRInt32 yOffset = yTwips - mRowHeight * (*aRow - mTopRowIndex);
    
-    PRBool isContainer = PR_FALSE;
-    mView->IsContainer (*aRow, &isContainer);
-    if (isContainer) {
-      // for a container, use a 25%/50%/25% breakdown
-      if (yOffset < mRowHeight / 4)
-        *aOrient = nsITreeView::inDropBefore;
-      else if (yOffset > mRowHeight - (mRowHeight / 4))
-        *aOrient = nsITreeView::inDropAfter;
-      else
-        *aOrient = nsITreeView::inDropOn;
+      PRBool isContainer = PR_FALSE;
+      mView->IsContainer (*aRow, &isContainer);
+      if (isContainer) {
+        // for a container, use a 25%/50%/25% breakdown
+        if (yOffset < mRowHeight / 4)
+          *aOrient = nsITreeView::inDropBefore;
+        else if (yOffset > mRowHeight - (mRowHeight / 4))
+          *aOrient = nsITreeView::inDropAfter;
+        else
+          *aOrient = nsITreeView::inDropOn;
+      }
+      else {
+        // for a non-container use a 50%/50% breakdown
+        if (yOffset < mRowHeight / 2)
+          *aOrient = nsITreeView::inDropBefore;
+        else
+          *aOrient = nsITreeView::inDropAfter;
+      }
     }
-    else {
-      // for a non-container use a 50%/50% breakdown
-      if (yOffset < mRowHeight / 2)
-        *aOrient = nsITreeView::inDropBefore;
-      else
-        *aOrient = nsITreeView::inDropAfter;
+
+    if (CanAutoScroll(*aRow)) {
+      // Determine if we're w/in a margin of the top/bottom of the tree during a drag.
+      // This will ultimately cause us to scroll, but that's done elsewhere.
+      PRInt32 height = (2 * mRowHeight) / 3;
+      if (yTwips < height) {
+        // scroll up
+        *aScrollLines = -1;
+      }
+      else if (yTwips > mRect.height - height) {
+        // scroll down
+        *aScrollLines = 1;
+      }
     }
   }
 } // ComputeDropPosition
-
-// Determine if we're w/in a margin of the top/bottom of the tree during a drag.
-// This will ultimately cause us to scroll, but that's done elsewhere.
-PRBool
-nsTreeBodyFrame::IsInDragScrollRegion(nsIDOMEvent* aEvent, PRBool* aScrollUp)
-{
-  PRBool isInRegion = PR_FALSE;
-
-  float pixelsToTwips = 0.0;
-  mPresContext->GetPixelsToTwips (&pixelsToTwips);
-  const int kMarginHeight = NSToIntRound(12 * pixelsToTwips);
-  
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent (do_QueryInterface(aEvent));
-  if (mouseEvent) {
-    PRInt32 x = 0, y = 0;
-    mouseEvent->GetClientX(&x); mouseEvent->GetClientY(&y);
-  
-    PRInt32 yTwips, xTwips;
-    AdjustEventCoordsToBoxCoordSpace (x, y, &xTwips, &yTwips);
-    
-    if (yTwips < kMarginHeight) {
-      isInRegion = PR_TRUE;
-      if (aScrollUp)
-        *aScrollUp = PR_TRUE;         // scroll up
-    }
-    else if (yTwips > mRect.height - kMarginHeight) {
-      isInRegion = PR_TRUE;
-      if (aScrollUp )
-        *aScrollUp = PR_FALSE;        // scroll down
-    }    
-  }
-
-  return isInRegion;
-} // IsInDragScrollRegion
 
 // Cache several things we'll need throughout the course of our work. These
 // will all get released on a drag exit
@@ -3664,6 +3702,36 @@ nsTreeBodyFrame::OnDragEnter(nsIDOMEvent* aEvent)
   return NS_OK;
 } // OnDragEnter
 
+void
+nsTreeBodyFrame::OpenCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsTreeBodyFrame* self = NS_STATIC_CAST(nsTreeBodyFrame*, aClosure);
+  if (self) {
+    aTimer->Cancel();
+    self->mTimer = nsnull;
+
+    if (self->mDropRow >= 0)
+      self->mView->ToggleOpenState(self->mDropRow);
+  }
+}
+
+void
+nsTreeBodyFrame::ScrollCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsTreeBodyFrame* self = NS_STATIC_CAST(nsTreeBodyFrame*, aClosure);
+  if (self) {
+    // Don't scroll if we are already at the top or bottom of the view.
+    if (self->CanAutoScroll(self->mDropRow)) {
+      self->ScrollByLines(self->mScrollLines);
+      if (aTimer->GetDelay() != kScrollDelay)
+        aTimer->SetDelay(kScrollDelay);
+    }
+    else {
+      aTimer->Cancel();
+      self->mTimer = nsnull;
+    }
+  }
+}
 
 #ifdef XP_MAC
 #pragma mark - 
@@ -3756,15 +3824,3 @@ nsTreeImageListener::Invalidate()
   return NS_OK;
 }
 #endif
-
-NS_IMETHODIMP_(void)
-nsTreeBodyFrame::Notify(nsITimer* aTimer)
-{
-  if (aTimer == mOpenTimer.get()) {
-    // open the node
-    mOpenTimer->Cancel();
-    mOpenTimer = nsnull;
-    if (mDropRow >= 0)
-      mView->ToggleOpenState(mDropRow);
-  }
-}

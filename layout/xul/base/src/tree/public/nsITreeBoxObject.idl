@@ -141,6 +141,12 @@ interface nsITreeBoxObject : nsISupports
   void invalidateScrollbar();
 
   /**
+   * A hit test that can tell you what row the mouse is over.
+   * returns -1 for invalid mouse coordinates.
+   */
+  long getRowAt(in long x, in long y);
+
+  /**
    * A hit test that can tell you what cell the mouse is over.  Row is the row index
    * hit,  returns -1 for invalid mouse coordinates.  ColID is the column hit.
    * ChildElt is the pseudoelement hit: this can have values of

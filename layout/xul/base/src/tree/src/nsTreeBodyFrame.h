@@ -50,7 +50,6 @@
 #include "nsIWidget.h"
 #include "nsHashtable.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsIReflowCallback.h"
 
 #ifdef USE_IMG2
@@ -240,7 +239,7 @@ private:
 
 // The actual frame that paints the cells and rows.
 class nsTreeBodyFrame : public nsLeafBoxFrame, public nsITreeBoxObject, public nsICSSPseudoComparator,
-                        public nsIScrollbarMediator, public nsITimerCallback,
+                        public nsIScrollbarMediator,
                         public nsIReflowCallback
 {
 public:
@@ -366,9 +365,6 @@ public:
   // the column cache needs to be rebuilt.
   void InvalidateColumnCache();
 
-  // nsITimerCallback interface
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
-
   friend nsresult NS_NewTreeBodyFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame);
 
@@ -445,14 +441,21 @@ protected:
                     nscoord& aCurrentSize);
   nscoord CalcMaxRowWidth(nsBoxLayoutState& aState);
 
-  // Calc the row and above/below/on status given where the mouse currently is hovering.
-  void ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16* aOrient);
+  PRBool CanAutoScroll(PRInt32 aRowIndex);
 
-  // Calculate if we're in the region in which we want to auto-scroll the tree.
-  PRBool IsInDragScrollRegion (nsIDOMEvent* aEvent, PRBool* aScrollUp);
+  // Calc the row and above/below/on status given where the mouse currently is hovering.
+  // Also calc if we're in the region in which we want to auto-scroll the tree.
+  // A positive value of |aScrollLines| means scroll down, a negative value
+  // means scroll up, a zero value means that we aren't in drag scroll region.
+  void ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16* aOrient,
+                           PRInt16* aScrollLines);
 
   // Mark ourselves dirty if we're a select widget
   void MarkDirtyIfSelect();
+
+  static void OpenCallback(nsITimer *aTimer, void *aClosure);
+
+  static void ScrollCallback(nsITimer *aTimer, void *aClosure);
 
 protected: // Data Members
   // Our cached pres context.
@@ -522,11 +525,16 @@ protected: // Data Members
 
   // The row the mouse is hovering over during a drop.
   PRInt32 mDropRow;
+
   // Where we want to draw feedback (above/on this row/below) if allowed.
   PRInt16 mDropOrient;
+
+  // Number of lines to be scrolled.
+  PRInt16 mScrollLines;
+
   nsCOMPtr<nsIDragSession> mDragSession;
 
-  // Timer for opening spring-loaded folders.
-  nsCOMPtr<nsITimer> mOpenTimer;
+  // Timer for opening spring-loaded folders or scrolling the tree.
+  nsCOMPtr<nsITimer> mTimer;
 
 }; // class nsTreeBodyFrame
