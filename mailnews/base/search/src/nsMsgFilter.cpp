@@ -441,7 +441,6 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 #endif
         destFolderUri.Append('/');
         destFolderUri.Append(moveValue);
-
         localMailRootMsgFolder->GetChildWithURI (destFolderUri, PR_TRUE, getter_AddRefs(destIMsgFolder));
 
         if (destIMsgFolder)
@@ -460,20 +459,20 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &moveValue)
 	// set m_action.m_value.m_folderUri
 }
 
-nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *stream)
+nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *aStream)
 {
-	nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.GetUnicode());
-	err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled);
-	err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description);
-	err = m_filterList->WriteIntAttr(nsIMsgFilterList::attribType, m_type);
+	nsresult err = m_filterList->WriteWstrAttr(nsIMsgFilterList::attribName, m_filterName.GetUnicode(), aStream);
+	err = m_filterList->WriteBoolAttr(nsIMsgFilterList::attribEnabled, m_enabled, aStream);
+	err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribDescription, m_description, aStream);
+	err = m_filterList->WriteIntAttr(nsIMsgFilterList::attribType, m_type, aStream);
 	if (IsScript())
-		err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribScriptFile, m_scriptFileName);
+		err = m_filterList->WriteStrAttr(nsIMsgFilterList::attribScriptFile, m_scriptFileName, aStream);
 	else
-		err = SaveRule();
+		err = SaveRule(aStream);
 	return err;
 }
 
-nsresult nsMsgFilter::SaveRule()
+nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
 {
 	nsresult err = NS_OK;
 	nsCOMPtr<nsIMsgFilterList> filterList;
@@ -482,7 +481,7 @@ nsresult nsMsgFilter::SaveRule()
 
 	GetActionFilingStr(m_action.m_type, actionFilingStr);
 
-	err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr);
+	err = filterList->WriteStrAttr(nsIMsgFilterList::attribAction, actionFilingStr, aStream);
     NS_ENSURE_SUCCESS(err, err);
 
 	switch(m_action.m_type)
@@ -490,7 +489,7 @@ nsresult nsMsgFilter::SaveRule()
 	case nsMsgFilterAction::MoveToFolder:
 		{
 		nsCAutoString imapTargetString(m_action.m_folderUri);
-		err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString);
+		err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, imapTargetString, aStream);
 		}
 		break;
 	case nsMsgFilterAction::ChangePriority:
@@ -499,7 +498,7 @@ nsresult nsMsgFilter::SaveRule()
 			NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
       nsCAutoString cStr;
       cStr.AssignWithConversion(priority);
-			err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr);
+			err = filterList->WriteStrAttr(nsIMsgFilterList::attribActionValue, cStr, aStream);
 		}
 		break;
 	default:
@@ -542,7 +541,7 @@ nsresult nsMsgFilter::SaveRule()
 		condition += ')';
 	}
 	if (NS_SUCCEEDED(err))
-		err = filterList->WriteStrAttr(nsIMsgFilterList::attribCondition, condition);
+		err = filterList->WriteStrAttr(nsIMsgFilterList::attribCondition, condition, aStream);
 	return err;
 }
 

@@ -47,10 +47,9 @@ static const PRUnichar unicodeFormatter[] = {
 };
 
 
-nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream) :
+nsMsgFilterList::nsMsgFilterList() :
     m_fileVersion(0)
 {
-	m_fileStream = fileStream;
 	// I don't know how we're going to report this error if we failed to create the isupports array...
 	nsresult rv;
 	rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
@@ -113,9 +112,7 @@ NS_IMETHODIMP nsMsgFilterList::SaveToFile(nsIOFileStream *stream)
 {
 	if (!stream)
 		return NS_ERROR_NULL_POINTER;
-
-	m_fileStream = stream;
-	return SaveTextFilters();
+	return SaveTextFilters(stream);
 }
 
 NS_IMETHODIMP
@@ -331,11 +328,11 @@ static FilterFileAttribEntry FilterFileAttribTable[] =
 };
 
 // If we want to buffer file IO, wrap it in here.
-char nsMsgFilterList::ReadChar()
+char nsMsgFilterList::ReadChar(nsIOFileStream *aStream)
 {
 	char	newChar;
-	*m_fileStream >> newChar; 
-	return (m_fileStream->eof() ? -1 : newChar);
+	*aStream >> newChar; 
+	return (aStream->eof() ? -1 : newChar);
 }
 
 PRBool nsMsgFilterList::IsWhitespace(char ch)
@@ -343,12 +340,12 @@ PRBool nsMsgFilterList::IsWhitespace(char ch)
 	return (ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t');
 }
 
-char nsMsgFilterList::SkipWhitespace()
+char nsMsgFilterList::SkipWhitespace(nsIOFileStream *aStream)
 {
 	char ch;
 	do
 	{
-		ch = ReadChar();
+		ch = ReadChar(aStream);
 	} while (IsWhitespace(ch));
 	return ch;
 }
@@ -358,19 +355,19 @@ PRBool nsMsgFilterList::StrToBool(nsCString &str)
 	return str.Equals("yes") ;
 }
 
-char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttribValue &attrib)
+char nsMsgFilterList::LoadAttrib(nsMsgFilterFileAttribValue &attrib, nsIOFileStream *aStream)
 {
 	char	attribStr[100];
 	char	curChar;
 	
-	curChar = SkipWhitespace();
+	curChar = SkipWhitespace(aStream);
 	int i;
 	for (i = 0; i + 1 < (int)(sizeof(attribStr)); )
 	{
 		if (curChar == (char) -1 || IsWhitespace(curChar) || curChar == '=')
 			break;
 		attribStr[i++] = curChar;
-		curChar = ReadChar();
+		curChar = ReadChar(aStream);
 	}
 	attribStr[i] = '\0';
 	for (int tableIndex = 0; tableIndex < (int)(sizeof(FilterFileAttribTable) / sizeof(FilterFileAttribTable[0])); tableIndex++)
@@ -394,28 +391,28 @@ const char *nsMsgFilterList::GetStringForAttrib(nsMsgFilterFileAttribValue attri
 	return nsnull;
 }
 
-nsresult nsMsgFilterList::LoadValue(nsCString &value)
+nsresult nsMsgFilterList::LoadValue(nsCString &value, nsIOFileStream *aStream)
 {
 	nsCAutoString	valueStr;
 	char	curChar;
 	value = "";
-	curChar = SkipWhitespace();
+	curChar = SkipWhitespace(aStream);
 	if (curChar != '"')
 	{
 		NS_ASSERTION(PR_FALSE, "expecting quote as start of value");
 		return NS_MSG_FILTER_PARSE_ERROR;
 	}
-	curChar = ReadChar();
+	curChar = ReadChar(aStream);
 	do
 	{
 		if (curChar == '\\')
 		{
-			char nextChar = ReadChar();
+			char nextChar = ReadChar(aStream);
 			if (nextChar == '"')
 				curChar = '"';
 			else if (nextChar == '\\')	// replace "\\" with "\"
 			{
-				curChar = ReadChar();
+				curChar = ReadChar(aStream);
 			}
 			else
 			{
@@ -432,19 +429,19 @@ nsresult nsMsgFilterList::LoadValue(nsCString &value)
 			}
 		}
 		valueStr += curChar;
-		curChar = ReadChar();
+		curChar = ReadChar(aStream);
 	}
-	while (!m_fileStream->eof());
+	while (!aStream->eof());
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::LoadTextFilters()
+nsresult nsMsgFilterList::LoadTextFilters(nsIOFileStream *aStream)
 {
 	nsresult	err = NS_OK;
 	nsMsgFilterFileAttribValue attrib;
 
 	// We'd really like to move lot's of these into the objects that they refer to.
-	m_fileStream->seek(PR_SEEK_SET, 0);
+	aStream->seek(PR_SEEK_SET, 0);
 	do 
 	{
 		nsCAutoString	value;
@@ -452,10 +449,10 @@ nsresult nsMsgFilterList::LoadTextFilters()
 
 		char curChar;
 
-        curChar = LoadAttrib(attrib);
+        curChar = LoadAttrib(attrib, aStream);
 		if (attrib == nsIMsgFilterList::attribNone)
 			break;
-		err = LoadValue(value);
+		err = LoadValue(value, aStream);
 		if (err != NS_OK)
 			break;
 		switch(attrib)
@@ -614,15 +611,15 @@ nsresult nsMsgFilterList::ParseCondition(nsCString &value)
 	return err;
 }
 
-nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttribValue attrib, int value)
+nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttribValue attrib, int value, nsIOFileStream *aStream)
 {
 	const char *attribStr = GetStringForAttrib(attrib);
 	if (attribStr)
 	{
-		*m_fileStream << attribStr;
-		*m_fileStream << "=\"";
-		*m_fileStream << value;
-		*m_fileStream << "\"" MSG_LINEBREAK;
+		*aStream << attribStr;
+		*aStream << "=\"";
+		*aStream << value;
+		*aStream << "\"" MSG_LINEBREAK;
 	}
 //		XP_FilePrintf(fid, "%s=\"%d\"%s", attribStr, value, LINEBREAK);
 	return NS_OK;
@@ -630,9 +627,9 @@ nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttribValue attrib, int va
 
 nsresult
 nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttribValue attrib,
-                              const char *str)
+                              const char *str, nsIOFileStream *aStream)
 {
-	if (str && str[0] && m_fileStream) // only proceed if we actually have a string to write out. 
+	if (str && str[0] && aStream) // only proceed if we actually have a string to write out. 
 	{
 		char *escapedStr = nsnull;
 		if (PL_strchr(str, '"'))
@@ -641,10 +638,10 @@ nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttribValue attrib,
 		const char *attribStr = GetStringForAttrib(attrib);
 		if (attribStr)
 		{
-			*m_fileStream << attribStr;
-			*m_fileStream << "=\"";
-			*m_fileStream << ((escapedStr) ? escapedStr : (const char *) str);
-			*m_fileStream << "\"" MSG_LINEBREAK;
+			*aStream << attribStr;
+			*aStream << "=\"";
+			*aStream << ((escapedStr) ? escapedStr : (const char *) str);
+			*aStream << "\"" MSG_LINEBREAK;
 //			XP_FilePrintf(fid, "%s=\"%s\"%s", attribStr, (escapedStr) ? escapedStr : str, LINEBREAK);
 		}
 		PR_FREEIF(escapedStr);
@@ -652,21 +649,21 @@ nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttribValue attrib,
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttribValue attrib, PRBool boolVal)
+nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttribValue attrib, PRBool boolVal, nsIOFileStream *aStream)
 {
 	nsCString strToWrite((boolVal) ? "yes" : "no");
-	return WriteStrAttr(attrib, strToWrite);
+	return WriteStrAttr(attrib, strToWrite, aStream);
 }
 
 nsresult
 nsMsgFilterList::WriteWstrAttr(nsMsgFilterFileAttribValue attrib,
-                               const PRUnichar *aFilterName)
+                               const PRUnichar *aFilterName, nsIOFileStream *aStream)
 {
-    WriteStrAttr(attrib, NS_ConvertUCS2toUTF8(aFilterName).get());
+    WriteStrAttr(attrib, NS_ConvertUCS2toUTF8(aFilterName).get(), aStream);
     return NS_OK;
 }
 
-nsresult nsMsgFilterList::SaveTextFilters()
+nsresult nsMsgFilterList::SaveTextFilters(nsIOFileStream *aStream)
 {
 	nsresult	err = NS_OK;
 	const char *attribStr;
@@ -674,15 +671,15 @@ nsresult nsMsgFilterList::SaveTextFilters()
 	m_filters->Count(&filterCount);
 
 	attribStr = GetStringForAttrib(nsIMsgFilterList::attribVersion);
-	err = WriteIntAttr(nsIMsgFilterList::attribVersion, kFileVersion);
-	err = WriteBoolAttr(nsIMsgFilterList::attribLogging, m_loggingEnabled);
+	err = WriteIntAttr(nsIMsgFilterList::attribVersion, kFileVersion, aStream);
+	err = WriteBoolAttr(nsIMsgFilterList::attribLogging, m_loggingEnabled, aStream);
 	for (PRUint32 i = 0; i < filterCount; i ++)
 	{
 		nsMsgFilter *filter;
 		if (GetMsgFilterAt(i, &filter) == NS_OK && filter != nsnull)
 		{
 			filter->SetFilterList(this);
-			if ((err = filter->SaveToTextFile(m_fileStream)) != NS_OK)
+			if ((err = filter->SaveToTextFile(aStream)) != NS_OK)
 				break;
 			NS_RELEASE(filter);
 		}
@@ -694,11 +691,7 @@ nsresult nsMsgFilterList::SaveTextFilters()
 
 nsMsgFilterList::~nsMsgFilterList()
 {
-	if (m_fileStream)
-	{
-		m_fileStream->close();
-		delete m_fileStream;
-	}
+
 	// filters should be released for free, because only isupports array
 	// is holding onto them, right?
 //	PRUint32			filterCount;

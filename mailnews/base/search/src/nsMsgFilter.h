@@ -66,8 +66,8 @@ public:
                                          nsMsgFilterType::NewsJavaScript)) != 0;}
 
 	// filing routines.
-	nsresult		SaveToTextFile(nsIOFileStream *stream);
-	nsresult		SaveRule();
+	nsresult		SaveToTextFile(nsIOFileStream *aStream);
+	nsresult		SaveRule(nsIOFileStream *aStream);
 
 	PRInt16			GetVersion();
     void            SetDontFileMe(PRBool bDontFileMe) {m_dontFileMe = bDontFileMe;}

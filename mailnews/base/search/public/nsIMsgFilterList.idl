@@ -95,10 +95,11 @@ interface nsIMsgFilterList : nsISupports {
                            in nsIMsgFilterHitNotify listener);
 
 	// IO routines, used by filter object filing code.
-    void writeIntAttr(in nsMsgFilterFileAttribValue attrib, in long value);
-    void writeStrAttr(in nsMsgFilterFileAttribValue attrib, in string value);
-    void writeWstrAttr(in nsMsgFilterFileAttribValue attrib, in wstring value);
-    void writeBoolAttr(in nsMsgFilterFileAttribValue attrib, in boolean value);
+
+    void writeIntAttr(in nsMsgFilterFileAttribValue attrib, in long value, in nsIOFileStream stream);
+    void writeStrAttr(in nsMsgFilterFileAttribValue attrib, in string value, in nsIOFileStream stream);
+    void writeWstrAttr(in nsMsgFilterFileAttribValue attrib, in wstring value, in nsIOFileStream stream);
+    void writeBoolAttr(in nsMsgFilterFileAttribValue attrib, in boolean value, in nsIOFileStream stream);
 };
 
 

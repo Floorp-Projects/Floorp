@@ -50,7 +50,7 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsg
 	if (!fileStream)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	nsMsgFilterList *filterList = new nsMsgFilterList(fileStream);
+	nsMsgFilterList *filterList = new nsMsgFilterList();
 	if (!filterList)
 		return NS_ERROR_OUT_OF_MEMORY;
 	NS_ADDREF(filterList);
@@ -62,8 +62,10 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsg
     PRUint32 size;
     ret = filterFile->GetFileSize(&size);
 	if (NS_SUCCEEDED(ret) && size > 0)
-		ret = filterList->LoadTextFilters();
+		ret = filterList->LoadTextFilters(fileStream);
   fileStream->close();
+  delete fileStream;
+  fileStream =nsnull;
 	if (NS_SUCCEEDED(ret))
   {
 		*resultFilterList = filterList;
