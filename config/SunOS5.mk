@@ -155,11 +155,17 @@ endif
 
 ifeq ($(FORCE_SW_THREADS),1)
 USE_KERNEL_THREADS	= 0
+USE_PTHREADS		= 0
 endif
 
 ifeq ($(USE_KERNEL_THREADS),1)
-PORT_FLAGS		+= -D_PR_NTHREAD -D_REENTRANT
+PORT_FLAGS		+= -D_REENTRANT
 THREAD_LIB		= -lthread
+endif
+
+ifeq ($(USE_PTHREADS),1)
+PORT_FLAGS		+= -D_REENTRANT
+THREAD_LIB		= -lpthread
 endif
 
 #
