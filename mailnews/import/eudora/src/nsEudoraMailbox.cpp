@@ -127,6 +127,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 	nsCOMPtr<nsIFileSpec>	mailFile;
 	PRBool					deleteMailFile = PR_FALSE;
 	PRUint32				div = 1;
+	PRUint32				mul = 1;
 
 	if (pMsgCount)
 		*pMsgCount = 0;
@@ -155,7 +156,8 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 				if (NS_SUCCEEDED( rv)) {
 					// Read the toc and compact the mailbox into mailFile
 					rv = CompactMailbox( pBytes, pAbort, pSrc, tocFile, mailFile);
-					div = 2;
+					div = 4;
+					mul = 3;
 				}
 			}
 		}
@@ -242,7 +244,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 		while (!*pAbort && NS_SUCCEEDED( rv = ReadNextMessage( &state, readBuffer, headers, body))) {
 			
 			if (pBytes) {
-				*pBytes += ((body.m_writeOffset - 1 + headers.m_writeOffset - 1) / div);
+				*pBytes += (((body.m_writeOffset - 1 + headers.m_writeOffset - 1) / div) * mul);
 			}
 
 			compose.SetBody( body.m_pBuffer, body.m_writeOffset - 1);
@@ -361,7 +363,7 @@ nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIF
 			return( NS_ERROR_FAILURE);
 		
 		if (pBytes)
-			*pBytes += (data[1] / 2);
+			*pBytes += (data[1] / 4);
 		// Looks like everything is cool, we have a message that appears to start with a separator
 		while (data[1]) {
 			lastChar = copy.m_pBuffer[count - 1];
