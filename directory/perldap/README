@@ -50,7 +50,8 @@ On Unix (Solaris Only...HPUX, IRIX, AIX to follow):
 
 On Windows NT:
   1. Be sure that the DLL from the C SDK is installed in your system32
-     directory.
+     directory. Or alternatively, put the SDK DLLs in the same directory
+     as your Perl-5 binary.
   2. Save the file in a temporary location
   3. Unzip the file by entering the command:
       I don't have a tool for creating self-extracting archives...
