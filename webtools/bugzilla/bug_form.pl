@@ -174,7 +174,7 @@ print "
 <INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
 <INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$id>
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
-    <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
+    <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"" . Param('urlbase') . "show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
   <TD>&nbsp;</TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
     <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
