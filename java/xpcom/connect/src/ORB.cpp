@@ -22,20 +22,42 @@
 
 #include "ORB.h"
 #include "Call.h"
+#include "nsHashtable.h"
+
+
+class bcOIDKey : public nsHashKey { 
+protected:
+    bcOID key;
+public:
+    bcOIDKey(bcOID oid) {
+        key = oid;
+    }
+    virtual ~bcOIDKey() {
+    }
+    PRUint32 HashCode(void) const {                                               
+        return (PRUint32)key;                                                      
+    }                                                                             
+                                                                                
+    PRBool Equals(const nsHashKey *aKey) const {                                  
+        return (key == ((const bcOIDKey *) aKey)->key);                          
+    }  
+    nsHashKey *Clone() const {                                                    
+        return new bcOIDKey(key);                                                 
+    }                                      
+};
 
 ORB::ORB() {
     currentID = 1;
-    for (int i = 0; i < STUBS_COUNT; i++) {
-        stubs[i] = 0;
-    }
+    stubs = new nsHashtable(256,PR_TRUE);
 }
 
 
 ORB::~ORB() {
+    delete stubs;
 }
 
 bcOID ORB::RegisterStub(bcIStub *stub) {
-    stubs[currentID] = stub;
+    stubs->Put(new bcOIDKey(currentID),stub);
     return currentID++;
 }
 
@@ -58,7 +80,10 @@ int ORB::SendReceive(bcICall *call) {
 }
 
 bcIStub * ORB::GetStub(bcOID *oid) {
-    return stubs[*oid];
+    bcOIDKey *key = new bcOIDKey(*oid);
+    void *tmp = stubs->Get(key);
+    delete key;
+    return (bcIStub*)tmp;
 }
 
 

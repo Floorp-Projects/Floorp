@@ -24,7 +24,7 @@
 #define __ORB_h
 #include  "bcIORB.h"
 
-#define STUBS_COUNT (50000)
+class nsHashtable;
 class ORB : public bcIORB {
 public:
     ORB();
@@ -34,7 +34,7 @@ public:
     virtual int SendReceive(bcICall *);
 private:
     bcIStub * GetStub(bcOID *);
-    bcIStub * stubs[STUBS_COUNT]; //nb :) it's jast for now. (Mon Mar 13 16:53:03 PST 2000)
+    nsHashtable *stubs;
     int currentID;
 };
 #endif
