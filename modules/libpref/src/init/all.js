@@ -378,14 +378,6 @@ pref("mime.table.allow_add", true);
 pref("mime.table.allow_edit", true);
 pref("mime.table.allow_remove", true);
 
-//prefs for product registration/activation
-pref("browser.registration.enable", false);
-pref("browser.registration.url", "");
-pref("browser.registration.domain", "");
-pref("browser.registration.acceptdomain", "");
-pref("browser.registration.mailservername", "");
-pref("browser.registration.mailservertype", "");
-
 pref("signed.applets.codebase_principal_support", false);
 
 pref("security.policy.default.barprop.visible.write", "UniversalBrowserWrite");
