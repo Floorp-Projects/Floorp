@@ -32,6 +32,7 @@ CSRCS			= \
 REQUIRES		= \
 				XfeTest \
 				XfeToolBar \
+				XfeComboBox \
 				XfeBm \
 				XfeWidgets
 
