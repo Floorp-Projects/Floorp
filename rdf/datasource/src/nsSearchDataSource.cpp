@@ -1446,6 +1446,9 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 	PRInt32	resultListStart = htmlResults.Find(resultListStartStr /* , PR_TRUE */);
 	if (resultListStart < 0)
 	{
+#ifdef	DEBUG
+		printf("*** Unable to find start of results list.\n");
+#endif
 		return(NS_ERROR_UNEXPECTED);
 	}
 	htmlResults.Cut(0, resultListStart + resultListStartStr.Length());
@@ -1456,11 +1459,25 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 		htmlResults.Truncate(resultListEnd);
 	}
 
+#ifdef	DEBUG
+	char *html = htmlResults.ToNewCString();
+	if (html)
+	{
+		printf("-----\nHTML: %s\n-----\n", html);
+		delete [] html;
+		html = nsnull;
+	}
+#endif
+
 	PRInt32	resultItemStart;
 	while((resultItemStart = htmlResults.RFind(resultItemStartStr, PR_TRUE)) >= 0)
 	{
 		PRInt32	resultItemEnd = htmlResults.RFind(resultItemEndStr, PR_TRUE );
-		if (resultItemEnd < 0)	break;
+		if (resultItemEnd < 0)
+		{
+//			break;
+			resultItemEnd = htmlResults.Length()-1;
+		}
 		if (resultItemStart >= resultItemEnd)	break;
 
 		nsAutoString	resultItem("");
@@ -1489,12 +1506,28 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 		nsAutoString	hrefStr;
 		resultItem.Mid(hrefStr, quoteStartOffset + 1, quoteEndOffset - quoteStartOffset - 1);
 		if (hrefStr.Length() < 1)	continue;
+
+		// check to see if this needs to be an absolute URL
+		if (hrefStr[0] == PRUnichar('/'))
+		{
+			const char	*host = nsnull, *protocol = nsnull;
+			aURL->GetHost(&host);
+			aURL->GetProtocol(&protocol);
+			if (host && protocol)
+			{
+				nsAutoString	temp;
+				temp += protocol;
+				temp += "://";
+				temp += host;
+				temp += hrefStr;
+
+				hrefStr = temp;
+			}
+		}
 		
 		char	*href = hrefStr.ToNewCString();
 		if (!href)	continue;
 
-		// XXX may need to make this an absolute URL, how do we determine whether to do that or not?
-		
 		nsAutoString	site(href);
 
 #ifdef	DEBUG
