@@ -318,7 +318,7 @@ BOOL CWizardUI::SortList(WIDGET *curWidget)
 BOOL CWizardUI::SetDescription(WIDGET *w) 
 {
 	WIDGET *t = findWidget((char *) (LPCTSTR) w->target);
-	if (!t || (t->type != "Text" && t->type != "BoldText"))
+	if (!t || (t->type != "Text" && t->type != "BoldText" && t->type != "GlobalText"))
 		return FALSE;
 
 	int selected = 0;
@@ -560,6 +560,12 @@ void CWizardUI::CreateControls()
 			curWidget->control = new CStatic;
 			rv = ((CStatic*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
 		}
+		else if (widgetType == "GlobalText") {
+			curWidget->control = new CStatic;
+			curWidget->value = theInterpreter->replaceVars(curWidget->value,NULL);
+			rv = ((CStatic*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
+		}
+
 		else if (widgetType == "DynamicText") {
 			curWidget->control = new CStatic;
 			curWidget->display = theInterpreter->GetTrimFile(curWidget->value);
