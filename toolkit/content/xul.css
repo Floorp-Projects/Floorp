@@ -17,17 +17,19 @@
   display: -moz-box;
 }
 
-/* hide the content and destroy the frame */
-*[hidden="true"] {
-  display: none;
-}
-
-/* hide the content, but don't destroy the frames */
-*[collapsed="true"], 
+/* hide the content, but don't destroy the frames.  Make sure this
+comes before any rules involving "hidden"  */
+*[collapsed="true"],
 *[moz-collapsed="true"] {
   visibility: collapse;
 }
 
+/* The rule for hidden comes AFTER the rule for collapsed.  That way if
+both are specified on an element, the hidden rule wins. */
+/* hide the content and destroy the frame */
+*[hidden="true"] {
+  display: none;
+}
 
 /* ::::::::::
    :: Rules for 'hiding' portions of the chrome for special
