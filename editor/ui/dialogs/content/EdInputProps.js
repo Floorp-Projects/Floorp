@@ -243,32 +243,6 @@ function doImageProperties()
 
 function ValidateData()
 {
-  var index = gDialog.inputType.selectedIndex;
-  switch (index)
-  {
-    case 4:
-    case 5:
-      break;
-    case 8:
-      if (!globalElement.hasAttribute("src"))
-      {
-        doImageProperties();
-        if (!globalElement.hasAttribute("src"))
-          return false;
-      }
-      break;
-    case 3:
-    default:
-      if (!gDialog.inputName.value || !gDialog.inputValue.value)
-      {
-        AlertWithTitle(GetString("Alert"), GetString("FormInputError"));
-        if (!gDialog.inputName.value)
-          gDialog.inputName.focus();
-        else
-          gDialog.inputValue.focus();
-        return false;
-      }
-  }
   var attributes = {
     type: "",
     name: gDialog.inputName.value,
@@ -279,6 +253,7 @@ function ValidateData()
     maxlength: "",
     accept: ""
   };
+  var index = gDialog.inputType.selectedIndex;
   var flags = {
     checked: false,
     readonly: false,

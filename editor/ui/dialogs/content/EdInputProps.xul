@@ -99,43 +99,46 @@
             <checkbox id="InputReadOnly" label="&InputReadOnly.label;"/>
           </deck>
         </row>
-        <hbox>
-          <button id="MoreFewerButton" oncommand="onMoreFewer();" persist="more"/>
-        </hbox>
-        <rows id="MoreSection">
-          <row>
-            <spacer/>
-            <checkbox id="InputDisabled" label="&InputDisabled.label;"/>
-          </row>
-          <row align="center">
-            <label value="&tabIndex.label;"/>
-            <hbox>
-              <textbox id="InputTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <label value="&AccessKey.label;"/>
-            <hbox>
-              <textbox id="InputAccessKey" class="narrow"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <label value="&TextSize.label;"/>
-            <hbox>
-              <textbox id="InputSize" class="narrow" oninput="forceInteger(this.id);"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <label value="&TextLength.label;"/>
-            <hbox>
-              <textbox id="InputMaxLength" class="narrow" oninput="forceInteger(this.id);"/>
-            </hbox>
-          </row>
-          <row align="center">
-            <label value="&Accept.label;"/>
-            <textbox id="InputAccept"/>
-          </row>
-        </rows>
+      </rows>
+    </grid>
+    <hbox>
+      <button id="MoreFewerButton" oncommand="onMoreFewer();" persist="more"/>
+    </hbox>
+    <grid id="MoreSection" align="start">
+      <columns><column/><column/></columns>
+      <rows>
+        <row>
+          <spacer/>
+          <checkbox id="InputDisabled" label="&InputDisabled.label;"/>
+        </row>
+        <row align="center">
+          <label value="&tabIndex.label;"/>
+          <hbox>
+            <textbox id="InputTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
+          </hbox>
+        </row>
+        <row align="center">
+          <label value="&AccessKey.label;"/>
+          <hbox>
+            <textbox id="InputAccessKey" class="narrow"/>
+          </hbox>
+        </row>
+        <row align="center">
+          <label value="&TextSize.label;"/>
+          <hbox>
+            <textbox id="InputSize" class="narrow" oninput="forceInteger(this.id);"/>
+          </hbox>
+        </row>
+        <row align="center">
+          <label value="&TextLength.label;"/>
+          <hbox>
+            <textbox id="InputMaxLength" class="narrow" oninput="forceInteger(this.id);"/>
+          </hbox>
+        </row>
+        <row align="center">
+          <label value="&Accept.label;"/>
+          <textbox id="InputAccept"/>
+        </row>
       </rows>
     </grid>
   </groupbox>

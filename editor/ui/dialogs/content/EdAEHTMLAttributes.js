@@ -358,10 +358,7 @@ function UpdateHTMLAttributes()
   {
     var name = HTMLRAttrs[i];
 
-    // We can't use getAttribute to figure out if attribute already
-    //  exists for attributes that don't require a value
-    // This gets the attribute NODE from the attributes NamedNodeMap
-    if (gElement.attributes.getNamedItem(name))
+    if (gElement.hasAttribute(name))
       doRemoveAttribute(name);
   }
 

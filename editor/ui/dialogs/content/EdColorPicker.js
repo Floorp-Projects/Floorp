@@ -217,6 +217,8 @@ function SelectLastPickedColor()
   if ( onAccept() )
     //window.close();
     return true;
+
+  return false;
 }
 
 function SetCurrentColor(color)
