@@ -131,7 +131,7 @@ nsXMLMIMEDataSource::AddMapping(const char* mimeType,
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
 
     anInfo->mExtensions.AppendCString(extension);
-    anInfo->mDescription = description;
+    anInfo->mDescription.AssignWithConversion(description);
     anInfo->mURI = dataURI;
 
 		anInfo->mMacType = type;
@@ -269,7 +269,8 @@ nsXMLMIMEDataSource::RemoveExtension(const char* aExtension) {
     
     // Next remove the root MIME mapping from the array and hash
     // IFF this was the only file extension mapping left.
-    PRBool removed = info->mExtensions.RemoveCString(key.GetString());
+    nsCAutoString keyString; keyString.AssignWithConversion(key.GetString().GetUnicode());
+    PRBool removed = info->mExtensions.RemoveCString(keyString);
     NS_ASSERTION(removed, "mapping problem");
 
     if (info->GetExtCount() == 0) {
@@ -548,11 +549,12 @@ nsXMLMIMEDataSource::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retva
 NS_IMETHODIMP
 nsXMLMIMEDataSource::GetFromTypeCreator(PRUint32 aType, PRUint32 aCreator, const char* aExt,  nsIMIMEInfo **_retval)
 {	    
+      // STRING USE WARNING: this use should be examined
     PRUint32 buf[2];
     buf[0] = aType;
     buf[1] = aCreator;
-    nsAutoString keyString( (char*)buf,8 );
-    keyString+=aExt;
+    nsAutoString keyString; keyString.AssignWithConversion( (char*)buf,8 );
+    keyString.AppendWithConversion(aExt);
     nsStringKey key(  keyString );
     // Check if in cache for real quick look up of common ( html,js, xul, ...) types
 		nsIMIMEInfo *entry = (nsIMIMEInfo*)mMacCache.Get(&key);

@@ -31,8 +31,9 @@ nsMIMEInfoImpl::nsMIMEInfoImpl() {
     NS_INIT_REFCNT();
 }
 
-nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType): mMIMEType( aMIMEType ) {
+nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) {
     NS_INIT_REFCNT();
+    mMIMEType.AssignWithConversion(aMIMEType);
 }
 
 PRUint32
@@ -109,7 +110,7 @@ NS_IMETHODIMP
 nsMIMEInfoImpl::SetMIMEType(const char* aMIMEType) {
     if (!aMIMEType) return NS_ERROR_NULL_POINTER;
 
-    mMIMEType = aMIMEType;
+    mMIMEType.AssignWithConversion(aMIMEType);
     return NS_OK;
 }
 
