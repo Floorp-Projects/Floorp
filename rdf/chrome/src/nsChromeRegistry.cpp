@@ -2958,6 +2958,20 @@ nsresult nsChromeRegistry::LoadProfileDataSource()
     rv = AddToCompositeDataSource(PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
+    // XXX this sucks ASS. This is a temporary hack until we get
+    // around to fixing the skin switching bugs.
+    // Select and Remove skins based on a pref set in a previous session.
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+      nsXPIDLCString skinToSelect;
+      rv = prefBranch->GetCharPref("general.skins.selectedSkin", getter_Copies(skinToSelect));
+      if (NS_SUCCEEDED(rv)) {
+        rv = SelectSkin(skinToSelect, PR_TRUE);
+        if (NS_SUCCEEDED(rv))
+          prefBranch->DeleteBranch("general.skins.selectedSkin");
+      }
+    }
+
     // We have to flush the chrome skin cache...
     FlushSkinCaches();
   }
@@ -3271,23 +3285,7 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
     FlushAllCaches();
   }
   else if (!strcmp("profile-after-change", aTopic)) {
-    if (!mProfileInitialized) {
-      rv = LoadProfileDataSource();
-    }
-
-    // XXX this sucks ASS. This is a temporary hack until we get
-    // around to fixing the skin switching bugs.
-    // Select and Remove skins based on a pref set in a previous session.
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      nsXPIDLCString skinToSelect;
-      rv = prefBranch->GetCharPref("general.skins.selectedSkin", getter_Copies(skinToSelect));
-      if (NS_SUCCEEDED(rv)) {
-        rv = SelectSkin(skinToSelect, PR_TRUE);
-        if (NS_SUCCEEDED(rv))
-          prefBranch->DeleteBranch("general.skins.selectedSkin");
-      }
-    }
+    rv = LoadProfileDataSource();
   }
 
   return rv;
