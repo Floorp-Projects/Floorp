@@ -73,7 +73,7 @@ function onOK()
     /* look for something in our current directory */
     var nfile = sfile.clone();
     nfile.append(file.path);
-    dump(nfile.path);
+    /*    dump(nfile.path); */
     if (nfile.exists()) {
       file = nfile;
     } else {
@@ -244,7 +244,7 @@ function createTree(parentElement, dirArray)
     try {
       const p = file.permissions;
       var perms = "";
-      dump(p + " ");
+      /*      dump(p + " "); */
       if (isSymlink) {
         perms += "lrwxrwxrwx";
       } else {
@@ -258,7 +258,7 @@ function createTree(parentElement, dirArray)
         perms += (p & 00004) ? "r" : "-";
         perms += (p & 00002) ? "w" : "-";
         perms += (p & 00001) ? "x" : "-";
-        dump(perms + "\n");
+        /*        dump(perms + "\n"); */
       }
       treeCell.setAttribute("value", perms);
     } catch(ex) { }

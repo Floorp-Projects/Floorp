@@ -11,7 +11,7 @@ treecell.directory[open="true"] > .tree-button {
 treecell.file > .tree-button {
   list-style-image: url("chrome://global/skin/blank.gif");
 }
-
+/*
 treeitem.hidden > treerow > treecell > .tree-button {
   color: #CCCCCC;
 }
@@ -19,4 +19,4 @@ treeitem.hidden > treerow > treecell > .tree-button {
 treeitem.hidden > treerow > treecell > .tree-icon {
   list-style-image: url("chrome://global/skin/blank.gif");
 }
-
+*/

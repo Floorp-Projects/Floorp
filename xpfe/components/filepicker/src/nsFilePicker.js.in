@@ -63,7 +63,7 @@ nsFilePicker.prototype = {
 
   /* readonly attribute nsILocalFile file; */
   set file(a) { throw "readonly property"; },
-  get file()  { debug("getter called " + this.mFile); return this.mFile; },
+  get file()  { return this.mFile; },
 
   /* attribute wstring defaultString; */
   set defaultString(a) { this.mSelectedFilter = a; },
