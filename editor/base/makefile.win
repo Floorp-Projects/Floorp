@@ -24,12 +24,16 @@ CPPSRCS =				\
       editor.cpp			\
       editorInterfaces.cpp    \
       nsEditFactory.cpp \
+      EditTxn.cpp \
+      ChangeAttributeTxn.cpp \
 	$(NULL)
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\editor.obj		\
 	.\$(OBJDIR)\nsEditFactory.obj		\
 	.\$(OBJDIR)\editorInterfaces.obj		\
+  .\$(OBJDIR)\EditTxn.obj \
+  .\$(OBJDIR)\ChangeAttributeTxn.obj \
 	$(NULL)
 
 MODULE=editor 
@@ -40,6 +44,7 @@ LINCS=-I$(PUBLIC)\editor \
     -I$(PUBLIC)\xpcom \
     -I$(PUBLIC)\raptor \
     -I$(PUBLIC)\js \
+    -I$(PUBLIC)\txmgr \
     -I$(PUBLIC)\dom
 
 MAKE_OBJ_TYPE = DLL

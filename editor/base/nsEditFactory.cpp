@@ -119,7 +119,7 @@ nsEditFactory::nsEditFactory(const nsCID &aClass)
 
 nsEditFactory::~nsEditFactory()
 {
-  nsRepository::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
+  //nsRepository::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
 }
 
 
