@@ -101,6 +101,7 @@ public:
     PRUint32 m_unreadCount; // num unread messages we're moving
     PRBool m_streamCopy;
     char *m_dataBuffer; // temporary buffer for this copy operation
+    nsCOMPtr<nsIOutputStream> m_msgFileStream;         // temporary file (processed mail)
     PRUint32 m_dataBufferSize;
     PRUint32 m_leftOver;
     PRBool m_allowUndo;
@@ -218,6 +219,9 @@ public:
   NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow);
   NS_IMETHOD CompactAll(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray);
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
+  NS_IMETHOD CopyDataToOutputStreamForAppend(nsIInputStream *aIStream,
+                     PRInt32 aLength, nsIOutputStream *outputStream);
+  NS_IMETHOD CopyDataDone();
   NS_IMETHOD Delete ();
   NS_IMETHOD Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow);
   NS_IMETHOD RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsgFolder *oldFolder);

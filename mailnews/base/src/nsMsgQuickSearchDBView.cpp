@@ -73,7 +73,8 @@ NS_IMETHODIMP nsMsgQuickSearchDBView::DoCommand(nsMsgViewCommandTypeValue aComma
 
     nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
     if (NS_SUCCEEDED(rv) && imapFolder)
-      rv = imapFolder->StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, m_keys.GetArray(), m_keys.GetSize());
+      rv = imapFolder->StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, m_keys.GetArray(), 
+                                      m_keys.GetSize(), nsnull);
 
     m_db->SetSummaryValid(PR_TRUE);
     m_db->Commit(nsMsgDBCommitType::kLargeCommit);

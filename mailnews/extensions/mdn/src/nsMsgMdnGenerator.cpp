@@ -182,7 +182,7 @@ nsresult nsMsgMdnGenerator::StoreMDNSentFlag(nsIMsgFolder *folder,
     nsMsgKeyArray keyArray;
     keyArray.Add(key);
     return imapFolder->StoreImapFlags(kImapMsgMDNSentFlag, PR_TRUE,
-                               keyArray.GetArray(), keyArray.GetSize());
+                               keyArray.GetArray(), keyArray.GetSize(), nsnull);
 }
 
 PRBool nsMsgMdnGenerator::ProcessSendMode()

@@ -4327,6 +4327,21 @@ nsMsgDBFolder::CopyFileMessage(nsIFileSpec* fileSpec,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsMsgDBFolder::CopyDataToOutputStreamForAppend(nsIInputStream *aInStream,
+                     PRInt32 aLength, nsIOutputStream *aOutputStream)
+{
+  if (!aInStream)
+    return NS_OK;
+
+  PRUint32 uiWritten;
+  return aOutputStream->WriteFrom(aInStream, aLength, &uiWritten);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::CopyDataDone()
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBFolder::MatchName(nsString *name, PRBool *matches)
 {
   NS_ENSURE_ARG_POINTER(matches);

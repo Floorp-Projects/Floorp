@@ -3110,7 +3110,8 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
             if (num != PRInt32(nsMsgKey_None))
             {
               messageID.Add(num);
-              rv = imapFolder->StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, messageID.GetArray(), messageID.GetSize());
+              rv = imapFolder->StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, messageID.GetArray(), 
+                                                messageID.GetSize(), nsnull);
             }
           }
         }

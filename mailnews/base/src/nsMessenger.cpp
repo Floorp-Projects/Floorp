@@ -2517,15 +2517,13 @@ nsDelAttachListener::OnStopRequest(nsIRequest * aRequest, nsISupports * aContext
   // We now start to copy the processed message from the temporary file
   // back into the message store, replacing the original message.
 
+  mMessageFolder->CopyDataDone();
   if (NS_FAILED(aStatusCode))
     return aStatusCode;
 
   // called when we complete processing of the StreamMessage request.
   // This is called before OnStopRunningUrl().
   nsresult rv;
-
-  // all attachments refer to the same message
-  const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
 
   // copy the file back into the folder. Note: if we set msgToReplace then 
   // CopyFileMessage() fails, do the delete ourselves
@@ -2536,43 +2534,12 @@ nsDelAttachListener::OnStopRequest(nsIRequest * aRequest, nsISupports * aContext
   mMsgFileStream = nsnull;
   mMsgFileSpec->CloseStream();
   mNewMessageKey = PR_UINT32_MAX;
-  rv = mMessageFolder->CopyFileMessage(
+  return mMessageFolder->CopyFileMessage(
     mMsgFileSpec,         // fileSpec
     nsnull,               // msgToReplace
     PR_FALSE,             // isDraft
     mMsgWindow,           // msgWindow
     listenerCopyService); // listener
-  NS_ENSURE_SUCCESS(rv,rv);
-  // only if the currently selected message is the one that we are about to delete then we 
-  // change the selection to the new message that we just added. Failures in this code are not fatal. 
-  // Note that can only do this if we have the new message key, which we don't always get from IMAP.
-  if (mNewMessageKey != PR_UINT32_MAX && mMsgWindow)
-  {
-    nsXPIDLCString displayUri;
-    mMessenger->GetLastDisplayedMessageUri(getter_Copies(displayUri));
-    if (displayUri.Equals(messageUri))
-    {
-      mMessageFolder->GenerateMessageURI(mNewMessageKey, getter_Copies(displayUri));
-      if (displayUri)
-      {
-        mMsgWindow->SelectMessage(displayUri);
-      }
-    }
-  }
-
-  // delete the original message
-  nsCOMPtr<nsISupportsArray> messageArray;
-  rv = NS_NewISupportsArray(getter_AddRefs(messageArray));
-  NS_ENSURE_SUCCESS(rv,rv);
-  rv = messageArray->AppendElement(mOriginalMessage);
-  NS_ENSURE_SUCCESS(rv,rv);
-  return mMessageFolder->DeleteMessages( 
-    messageArray,         // messages
-    mMsgWindow,           // msgWindow
-    PR_TRUE,              // deleteStorage
-    PR_TRUE,              // isMove
-    listenerCopyService,  // listener
-    PR_FALSE);            // allowUndo
 }
 
 //
@@ -2586,13 +2553,7 @@ nsDelAttachListener::OnDataAvailable(nsIRequest * aRequest, nsISupports * aSuppo
 {
   if (!mMsgFileStream)
     return NS_ERROR_NULL_POINTER;
-  // the 'correct' way is something like creating a stream converter that calls a 
-  // mime converter which we pass stuff to and it will modify the stream for us.
-  // I haven't got that bit working yet so at the moment we just write the message
-  // out raw to the file.
-
-  PRUint32 uiWritten;
-  return mMsgFileStream->WriteFrom(aInStream, aCount, &uiWritten);
+  return mMessageFolder->CopyDataToOutputStreamForAppend(aInStream, aCount, mMsgFileStream);
 }
 
 // 
@@ -2610,6 +2571,22 @@ nsDelAttachListener::OnStartRunningUrl(nsIURI * aUrl)
 NS_IMETHODIMP
 nsDelAttachListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
+  // check if we've deleted the original message, and we know the new msg id.
+  if (!mOriginalMessage && mNewMessageKey != PR_UINT32_MAX && mMsgWindow)
+  {
+    nsXPIDLCString displayUri;
+    // all attachments refer to the same message
+    const char * messageUri = mAttach->mAttachmentArray[0].mMessageUri;
+    mMessenger->GetLastDisplayedMessageUri(getter_Copies(displayUri));
+    if (displayUri.Equals(messageUri))
+    {
+      mMessageFolder->GenerateMessageURI(mNewMessageKey, getter_Copies(displayUri));
+      if (displayUri)
+      {
+        mMsgWindow->SelectMessage(displayUri);
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -2650,8 +2627,38 @@ nsDelAttachListener::GetMessageId(nsCString * aMessageId)
 NS_IMETHODIMP
 nsDelAttachListener::OnStopCopy(nsresult aStatus)
 {
-  // never called?
-  return aStatus;
+  // only if the currently selected message is the one that we are about to delete then we 
+  // change the selection to the new message that we just added. Failures in this code are not fatal. 
+  // Note that can only do this if we have the new message key, which we don't always get from IMAP.
+  // delete the original message
+  if (NS_FAILED(aStatus))
+    return aStatus;
+
+  if (mOriginalMessage)
+  {
+
+    nsCOMPtr<nsISupportsArray> messageArray;
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(messageArray));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = messageArray->AppendElement(mOriginalMessage);
+    NS_ENSURE_SUCCESS(rv,rv);
+    nsCOMPtr<nsIMsgCopyServiceListener> listenerCopyService;
+
+    QueryInterface( NS_GET_IID(nsIMsgCopyServiceListener), getter_AddRefs(listenerCopyService) );
+
+    rv = mMessageFolder->DeleteMessages( 
+      messageArray,         // messages
+      mMsgWindow,           // msgWindow
+      PR_TRUE,              // deleteStorage
+      PR_TRUE,              // isMove
+      listenerCopyService,  // listener
+      PR_FALSE);            // allowUndo
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mOriginalMessage = nsnull;
+  }
+
+  return NS_OK;
 }
 
 // 

@@ -71,7 +71,7 @@ typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.
 typedef long nsMsgDispositionState;
 
-[scriptable, uuid(a7555ae2-78a4-40ed-b49f-744ad42b6f2d)]
+[scriptable, uuid(fb7f256b-905c-4185-ad27-31662f7d82eb)]
 interface nsIMsgFolder : nsICollection {
 
 const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
@@ -468,4 +468,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   readonly attribute boolean inVFEditSearchScope;
   void setInVFEditSearchScope(in boolean aSearchThisFolder, in boolean aSetOnSubFolders);
+  void copyDataToOutputStreamForAppend(in nsIInputStream aIStream,
+                     in long aLength, in nsIOutputStream outputStream);
+  void copyDataDone();
 };

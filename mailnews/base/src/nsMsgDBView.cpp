@@ -2499,7 +2499,7 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
     }
     
     if (flags != kNoImapMsgFlag || commandIsLabelSet)	// can't get here without thisIsImapThreadPane == TRUE
-      imapFolder->StoreImapFlags(flags, addFlags, imapUids.GetArray(), imapUids.GetSize());
+      imapFolder->StoreImapFlags(flags, addFlags, imapUids.GetArray(), imapUids.GetSize(), nsnull);
     
   }
    
@@ -4522,6 +4522,12 @@ PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex start
     {
       NS_ERROR("msgKey == parentKey, or GetMsgHdrForKey failed, this used to be an infinte loop condition");
       curMsgHdr = nsnull;
+    }
+    else
+    {
+      // need to update msgKey so the check for a msgHdr with matching 
+      // key+parentKey will work after first time through loop
+      curMsgHdr->GetMessageKey(&msgKey);
     }
   }
   return 1;
