@@ -88,6 +88,7 @@ namespace MetaData {
         retval = JS2VAL_VOID;
         baseVal = JS2VAL_VOID;
         indexVal = JS2VAL_VOID;
+        int i = 0;
         while (true) {
             try {
                 a = JS2VAL_VOID;
@@ -106,7 +107,7 @@ namespace MetaData {
                 default:
                     NOT_REACHED("Bad opcode, no biscuit");
                 }
-                JS2Object::gc(meta);        // XXX temporarily, for testing
+                if ((i++ % 200) == 0) JS2Object::gc(meta);        // XXX temporarily, for testing
             }
             catch (Exception &jsx) {
                 if (mTryStack.size() > 0) {

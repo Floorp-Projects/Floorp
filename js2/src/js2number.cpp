@@ -57,7 +57,7 @@ namespace MetaData {
 
     js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {   
-        js2val thatValue = OBJECT_TO_JS2VAL(new NumberInstance(meta->numberClass));
+        js2val thatValue = OBJECT_TO_JS2VAL(new NumberInstance(meta->numberClass->prototype, meta->numberClass));
         NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thatValue));
 
         if (argc > 0)
@@ -67,6 +67,14 @@ namespace MetaData {
         return thatValue;
     }
     
+    static js2val Number_Call(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+    {   
+        if (argc > 0)
+            return meta->engine->allocNumber(meta->toFloat64(argv[0]));
+        else
+            return JS2VAL_ZERO;
+    }
+
     static js2val Number_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
         if (meta->objectType(thisValue) != meta->numberClass)
@@ -82,6 +90,7 @@ namespace MetaData {
     void initNumberObject(JS2Metadata *meta)
     {
         meta->numberClass->construct = Number_Constructor;
+        meta->numberClass->call = Number_Call;
 
 #define N_CONSTANTS_COUNT (5)
 

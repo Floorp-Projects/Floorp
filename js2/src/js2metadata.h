@@ -588,30 +588,30 @@ public:
 
 // Date instances are simple instances created by the Date class, they have an extra field 
 // that contains the millisecond count
-class DateInstance : public SimpleInstance {
+class DateInstance : public PrototypeInstance {
 public:
-    DateInstance(JS2Class *type) : SimpleInstance(type) { }
+    DateInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
 
     float64     ms;
 };
 
 // String instances are simple instances created by the String class, they have an extra field 
 // that contains the string data
-class StringInstance : public SimpleInstance {
+class StringInstance : public PrototypeInstance {
 public:
-    StringInstance(JS2Class *type) : SimpleInstance(type), mValue(NULL) { }
+    StringInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type), mValue(NULL) { }
 
     String     *mValue;             // has been allocated by engine in the GC'able Pond
 
-    virtual void markChildren()     { if (mValue) JS2Object::mark(mValue); }
+    virtual void markChildren()     { PrototypeInstance::markChildren(); if (mValue) JS2Object::mark(mValue); }
     virtual ~StringInstance()            { }
 };
 
 // Number instances are simple instances created by the Number class, they have an extra field 
 // that contains the float64 data
-class NumberInstance : public SimpleInstance {
+class NumberInstance : public PrototypeInstance {
 public:
-    NumberInstance(JS2Class *type) : SimpleInstance(type), mValue(0.0) { }
+    NumberInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type), mValue(0.0) { }
 
     float64     mValue;
     virtual ~NumberInstance()            { }

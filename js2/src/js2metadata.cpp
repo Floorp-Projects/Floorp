@@ -126,7 +126,7 @@ namespace MetaData {
                 pCount = 0;
                 while (pb) {
                     // XXX define a static binding for each parameter
-                    Variable *v = new Variable();
+                    Variable *v = new Variable(objectClass, JS2VAL_UNDEFINED, false);
                     compileFrame->positional[pCount++] = v;
                     pb->mn = defineLocalMember(env, pb->name, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, pb->pos);
                     pb = pb->next;
@@ -3394,6 +3394,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     bool JS2Metadata::readProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         bool isSimpleInstance = false;
+        JS2Object *container;
         if (JS2VAL_IS_PRIMITIVE(containerVal)) {
 readClassProperty:
             JS2Class *c = objectType(containerVal);
@@ -3403,10 +3404,13 @@ readClassProperty:
             else {
                 // XXX Spec. would have us passing a primitive here since ES4 is 'not addressing' the issue
                 // of so-called wrapper objects.
-                return readInstanceMember(toObject(containerVal), c, (ib) ? &ib->qname : NULL, phase, rval);
+                if (!JS2VAL_IS_OBJECT(containerVal))
+                    containerVal = toObject(containerVal);
+                else
+                    return readInstanceMember(containerVal, c, (ib) ? &ib->qname : NULL, phase, rval);
             }
         }
-        JS2Object *container = JS2VAL_TO_OBJECT(containerVal);
+        container = JS2VAL_TO_OBJECT(containerVal);
         switch (container->kind) {
         case AttributeObjectKind:
         case MultinameKind:
