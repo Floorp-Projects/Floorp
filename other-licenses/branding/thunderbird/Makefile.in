@@ -35,6 +35,9 @@ export::
 		mkdir $(DEPTH)/mail/base/locale; \
 	fi
 	cp $(addprefix $(srcdir)/, thunderbird-watermark.png) $(DEPTH)/mail/base/locale
+	if [ ! -d $(DEPTH)/mail/app/icons ] ; then \
+		mkdir $(DEPTH)/mail/app/icons; \
+	fi
 	if [ ! -d $(DEPTH)/mail/app/icons/windows ] ; then \
 		mkdir $(DEPTH)/mail/app/icons/windows; \
 	fi
@@ -43,10 +46,18 @@ export::
 		mkdir $(DEPTH)/mail/app/icons/gtk; \
 	fi
 	cp $(srcdir)/mozicon50.xpm  $(DEPTH)/mail/app/icons/gtk/messengerWindow.xpm
+	if [ ! -d $(DEPTH)/mail/app/icons/os2 ] ; then \
+		mkdir $(DEPTH)/mail/app/icons/os2; \
+	fi
+	cp $(srcdir)/thunderbird-os2.ico  $(DEPTH)/mail/app/icons/os2/messengerWindow.ico
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/thunderbird.icns  $(DIST)/branding/thunderbird.icns
 endif
 	cp $(srcdir)/thunderbird.ico  $(DIST)/branding/app.ico
 	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
 	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
+ifeq ($(OS_ARCH),OS2)
+	cp $(srcdir)/thunderbird-os2.ico  $(DIST)/branding/thunderbird.ico
+	cp $(srcdir)/thunderbird-os2.ico  $(DIST)/branding/app.ico
+endif
 
