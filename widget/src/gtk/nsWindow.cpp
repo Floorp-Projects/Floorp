@@ -266,9 +266,6 @@ nsWindow::nsWindow()
   mIMECompositionUniString = nsnull;
   mIMECompositionUniStringSize = 0;
 
-  mIsTranslucent = PR_FALSE;
-  mTransparencyBitmap = nsnull;
-
 #ifdef USE_XIM
   mIMEEnable = PR_TRUE; //currently will not be used
   mIMEShellWindow = 0;
@@ -356,9 +353,6 @@ nsWindow::~nsWindow()
   // since it keeps track of when it's already been called.
 
   Destroy();
-
-  delete[] mTransparencyBitmap;
-  mTransparencyBitmap = nsnull;
 
   if (mIsUpdating)
     UnqueueDraw();
@@ -2769,10 +2763,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
          aWidth, aHeight);
 #endif
   
-  // ResizeTransparencyBitmap uses the old bounds, so pass it the new bounds
-  // before we change the old bounds.
-  ResizeTransparencyBitmap(aWidth, aHeight);
-
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
 
@@ -4265,208 +4255,15 @@ NS_IMETHODIMP nsWindow::ResetInputState()
   return NS_OK;
 }
 
-nsWindow* nsWindow::FindTopLevelWindow() {
-  if (!mShell) {
-    GtkWidget *top_mozarea = GetOwningWidget();
-    void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
-    return NS_STATIC_CAST(nsWindow *, data);
-  } else {
-    return nsnull;
-  }
-}
-
-static void
-gdk_wmspec_change_state (gboolean   add,
-                         GdkWindow *window,
-                         GdkAtom    state1,
-                         GdkAtom    state2)
-{
-  XEvent xev;
-
-#define _NET_WM_STATE_REMOVE        0    /* remove/unset property */
-#define _NET_WM_STATE_ADD           1    /* add/set property */
-#define _NET_WM_STATE_TOGGLE        2    /* toggle property  */
-
-  xev.xclient.type = ClientMessage;
-  xev.xclient.serial = 0;
-  xev.xclient.send_event = True;
-  xev.xclient.window = GDK_WINDOW_XWINDOW(window);
-  xev.xclient.message_type = gdk_atom_intern("_NET_WM_STATE", FALSE);
-  xev.xclient.format = 32;
-  xev.xclient.data.l[0] = add ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
-  xev.xclient.data.l[1] = state1;
-  xev.xclient.data.l[2] = state2;
-
-  XSendEvent(gdk_display, GDK_ROOT_WINDOW(), False,
-             SubstructureRedirectMask | SubstructureNotifyMask, &xev);
-}
-
-#ifndef MOZ_XUL
-void nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight) {
-}
-#else
-NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent) {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->SetWindowTranslucency(aTranslucent);
-  }
-
-  if (!mShell) {
-    // we must be embedded
-    NS_WARNING("Trying to use transparent chrome in an embedded context");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mIsTranslucent == aTranslucent)
-    return NS_OK;
-
-  if (!aTranslucent) {
-    delete[] mTransparencyBitmap;
-    mTransparencyBitmap = nsnull;
-    gtk_widget_reset_shapes(mShell);
-  } // else the new default alpha values are "all 1", so we don't
-    // need to change anything yet
-
-  mIsTranslucent = aTranslucent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent) {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->GetWindowTranslucency(aTranslucent);
-  }
-
-  aTranslucent = mIsTranslucent;
-  return NS_OK;
-}
-
-void nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight) {
-  if (!mTransparencyBitmap)
-    return;
-
-  PRInt32 newSize = ((aNewWidth+7)/8)*aNewHeight;
-  gchar* newBits = new gchar[newSize];
-  if (!newBits) {
-    delete[] mTransparencyBitmap;
-    mTransparencyBitmap = nsnull;
-    return;
-  }
-  // fill new mask with "opaque", first
-  memset(newBits, 255, newSize);
-
-  // Now copy the intersection of the old and new areas into the new mask
-  PRInt32 copyWidth = PR_MIN(aNewWidth, mBounds.width);
-  PRInt32 copyHeight = PR_MIN(aNewHeight, mBounds.height);
-  PRInt32 oldRowBytes = (mBounds.width+7)/8;
-  PRInt32 newRowBytes = (aNewWidth+7)/8;
-  PRInt32 copyBytes = (copyWidth+7)/8;
-  
-  PRInt32 i;
-  gchar* fromPtr = mTransparencyBitmap;
-  gchar* toPtr = newBits;
-  for (i = 0; i < copyHeight; i++) {
-    memcpy(toPtr, fromPtr, copyBytes);
-    fromPtr += oldRowBytes;
-    toPtr += newRowBytes;
-  }
-
-  delete[] mTransparencyBitmap;
-  mTransparencyBitmap = newBits;
-}
-
-static PRBool ChangedMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-                              const nsRect& aRect, PRUint8* aAlphas) {
-  PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
-  PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
-  for (y = aRect.y; y < yMax; y++) {
-    gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
-    for (x = aRect.x; x < xMax; x++) {
-      PRBool newBit = *aAlphas > 0;
-      aAlphas++;
-
-      gchar maskByte = maskBytes[x >> 3];
-      PRBool maskBit = (maskByte & (1 << (x & 7))) != 0;
-
-      if (maskBit != newBit) {
-        return PR_TRUE;
-      }
-    }
-  }
-
-  return PR_FALSE;
-}
-
-static void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
-                           const nsRect& aRect, PRUint8* aAlphas) {
-  PRInt32 x, y, xMax = aRect.XMost(), yMax = aRect.YMost();
-  PRInt32 maskBytesPerRow = (aMaskWidth + 7)/8;
-  for (y = aRect.y; y < yMax; y++) {
-    gchar* maskBytes = aMaskBits + y*maskBytesPerRow;
-    for (x = aRect.x; x < xMax; x++) {
-      PRBool newBit = *aAlphas > 0;
-      aAlphas++;
-
-      gchar mask = 1 << (x & 7);
-      gchar maskByte = maskBytes[x >> 3];
-      // Note: '-newBit' turns 0 into 00...00 and 1 into 11...11
-      maskBytes[x >> 3] = (maskByte & ~mask) | (-newBit & mask);
-    }
-  }
-}
-
-NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas) {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->UpdateTranslucentWindowAlpha(aRect, aAlphas);
-  }
-
-  NS_ASSERTION(mIsTranslucent, "Window is not transparent");
-
-  if (!mTransparencyBitmap) {
-    PRInt32 size = ((mBounds.width+7)/8)*mBounds.height;
-    mTransparencyBitmap = new gchar[size];
-    if (!mTransparencyBitmap)
-      return NS_ERROR_FAILURE;
-    memset(mTransparencyBitmap, 255, size);
-  }
-
-  NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0 
-               && aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
-               "Rect is out of window bounds");
-
-  if (!ChangedMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height, aRect, aAlphas))
-    // skip the expensive stuff if the mask bits haven't changed; hopefully
-    // this is the common case
-    return NS_OK;
-
-  UpdateMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height, aRect, aAlphas);
-
-  gtk_widget_reset_shapes(mShell);
-  GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mShell->window,
-                                                      mTransparencyBitmap,
-                                                      mBounds.width, mBounds.height);
-  if (!maskBitmap)
-    return NS_ERROR_FAILURE;
-
-  gtk_widget_shape_combine_mask(mShell, maskBitmap, 0, 0);
-  gdk_bitmap_unref(maskBitmap);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsWindow::HideWindowChrome(PRBool aShouldHide)
 {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->HideWindowChrome(aShouldHide);
-  }
-
   if (!mShell) {
-    // we must be embedded
-    NS_WARNING("Trying to hide window decorations in an embedded context");
-    return NS_ERROR_FAILURE;
+    // Pass the request to the toplevel window.
+    GtkWidget *top_mozarea = GetOwningWidget();
+    void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
+    nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
+    return mozAreaWindow->HideWindowChrome(aShouldHide);
   }
 
   // Sawfish, metacity, and presumably other window managers get
@@ -4497,18 +4294,41 @@ nsWindow::HideWindowChrome(PRBool aShouldHide)
   return NS_OK;
 }
 
+static void
+gdk_wmspec_change_state (gboolean   add,
+                         GdkWindow *window,
+                         GdkAtom    state1,
+                         GdkAtom    state2)
+{
+  XEvent xev;
+
+#define _NET_WM_STATE_REMOVE        0    /* remove/unset property */
+#define _NET_WM_STATE_ADD           1    /* add/set property */
+#define _NET_WM_STATE_TOGGLE        2    /* toggle property  */
+
+  xev.xclient.type = ClientMessage;
+  xev.xclient.serial = 0;
+  xev.xclient.send_event = True;
+  xev.xclient.window = GDK_WINDOW_XWINDOW(window);
+  xev.xclient.message_type = gdk_atom_intern("_NET_WM_STATE", FALSE);
+  xev.xclient.format = 32;
+  xev.xclient.data.l[0] = add ? _NET_WM_STATE_ADD : _NET_WM_STATE_REMOVE;
+  xev.xclient.data.l[1] = state1;
+  xev.xclient.data.l[2] = state2;
+
+  XSendEvent(gdk_display, GDK_ROOT_WINDOW(), False,
+             SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+}
+
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(PRBool aFullScreen)
 {
-  nsWindow* top = FindTopLevelWindow();
-  if (top) {
-    return top->MakeFullScreen(aFullScreen);
-  }
-
   if (!mShell) {
-    // we must be embedded
-    NS_WARNING("Trying to go fullscreen in an embedded context");
-    return NS_ERROR_FAILURE;
+    // Pass the request to the toplevel window.
+    GtkWidget *top_mozarea = GetOwningWidget();
+    void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
+    nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
+    return mozAreaWindow->MakeFullScreen(aFullScreen);
   }
 
   gdk_wmspec_change_state(aFullScreen, mShell->window,
@@ -4516,7 +4336,6 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
                           GDK_NONE);
   return NS_OK;
 }
-#endif
 
 PRBool PR_CALLBACK
 nsWindow::IconEntryMatches(PLDHashTable* aTable,

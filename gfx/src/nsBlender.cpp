@@ -75,7 +75,6 @@ NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender);
 #define BLEND_RED_SHIFT       7
 #define BLEND_GREEN_SHIFT     2
 #define BLEND_BLUE_SHIFT      3
-#define BLEND_GREEN_BITS      5
 
 #else  // XP_WIN, XP_UNIX, ???
 
@@ -88,7 +87,6 @@ NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender);
 #define BLEND_RED_SHIFT       8
 #define BLEND_GREEN_SHIFT     3
 #define BLEND_BLUE_SHIFT      3
-#define BLEND_GREEN_BITS      6
 
 #endif
 
@@ -103,10 +101,6 @@ nsBlender::Init(nsIDeviceContext *aContext)
   
   return NS_OK;
 }
-
-#define RED16(x)    (((x) & BLEND_RED_MASK) >> BLEND_RED_SHIFT)
-#define GREEN16(x)  (((x) & BLEND_GREEN_MASK) >> BLEND_GREEN_SHIFT)
-#define BLUE16(x)   (((x) & BLEND_BLUE_MASK) << BLEND_BLUE_SHIFT)
 
 static void rangeCheck(nsIDrawingSurface* surface, PRInt32& aX, PRInt32& aY, PRInt32& aWidth, PRInt32& aHeight)
 {
@@ -233,166 +227,6 @@ NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32
                aDX, aDY, aSrcOpacity, secondSrcSurface, aSrcBackColor,
                aSecondSrcBackColor);
 }
-
-#ifndef MOZ_XUL
-NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
-                                   nsDrawingSurface aWhite, PRUint8** aAlphas) {
-  NS_ERROR("GetAlphas not implemented because XUL support not built");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-#else
-/**
- * Let A be the unknown source pixel's alpha value and let C be its (unknown) color.
- * Let S be the value painted onto black and T be the value painted onto white.
- * Then S = C*(A/255) and T = 255*(1 - A/255) + C*(A/255).
- * Therefore A = 255 - (T - S)
- * This is true no matter what color component we look at.
- */
-static void ComputeAlphasByByte(PRInt32 aNumLines, PRInt32 aBytesPerLine,
-                                PRInt32 aBytesPerPixel,
-                                PRUint8 *aOnBlackImage, PRUint8 *aOnWhiteImage,
-                                PRInt32 aBytesLineSpan, PRUint8 *aAlphas)
-{
-  NS_ASSERTION(aBytesPerPixel == 3 || aBytesPerPixel == 4,
-               "Only 24 or 32 bits per pixel supported here");
-
-  PRIntn y;
-  for (y = 0; y < aNumLines; y++) {
-    // Look at component #1. It must be a real color no matter what
-    // RGBA ordering is used.
-    PRUint8 *s1 = aOnBlackImage + 1;
-    PRUint8 *s2 = aOnWhiteImage + 1;
-    
-    PRIntn i;
-    for (i = 1; i < aBytesPerLine; i += aBytesPerPixel) {
-      *aAlphas++ = (PRUint8)(255 - (*s2 - *s1));
-      s1 += aBytesPerPixel;
-      s2 += aBytesPerPixel;
-    }
-  
-    aOnBlackImage += aBytesLineSpan;
-    aOnWhiteImage += aBytesLineSpan;
-  }
-}
-
-/**  Use the green channel to work out the alpha value,
-     since green has the most bits in most divisions of 16-bit color.
-
-     The green values range from 0 to (1 << BLEND_GREEN_BITS) - 1.
-     Therefore we multiply a green value by 255/((1 << BLEND_GREEN_BITS) - 1)
-     to get a real alpha value.
-*/
-static void ComputeAlphas16(PRInt32 aNumLines, PRInt32 aBytesPerLine,
-                            PRUint8 *aOnBlackImage, PRUint8 *aOnWhiteImage,
-                            PRInt32 aBytesLineSpan, PRUint8 *aAlphas)
-{
-  PRIntn y;
-  for (y = 0; y < aNumLines; y++) {
-    PRUint16 *s1 = (PRUint16*)aOnBlackImage;
-    PRUint16 *s2 = (PRUint16*)aOnWhiteImage;
-    
-      // GREEN16 returns a value between 0 and 255 representing the
-      // green value of the pixel. It only has BLEND_GREEN_BITS of
-      // precision (so the values are typically 0, 8, 16, ..., 248). 
-      // If we just used the GREEN16 values
-      // directly in the same equations that we use for the 24-bit case,
-      // we'd lose because (e.g.) a completely transparent pixel would
-      // have GREEN16(pix1) = 0, GREEN16(pix2) = 248, and the resulting 
-      // alpha value would just be 248, but we need 255. So we need to
-      // do some rescaling.
-    const PRUint32 SCALE_DENOMINATOR =   // usually 248
-      ((1 << BLEND_GREEN_BITS) - 1) << (8 - BLEND_GREEN_BITS);
-
-    PRIntn i;
-    for (i = 0; i < aBytesPerLine; i += 2) {
-      PRUint32 pix1 = GREEN16(*s1);
-      PRUint32 pix2 = GREEN16(*s2);
-      *aAlphas++ = (PRUint8)(255 - ((pix2 - pix1)*255)/SCALE_DENOMINATOR);
-      s1++;
-      s2++;
-    }
-    
-    aOnBlackImage += aBytesLineSpan;
-    aOnWhiteImage += aBytesLineSpan;
-  }
-}
-
-static void ComputeAlphas(PRInt32 aNumLines, PRInt32 aBytesPerLine,
-                          PRInt32 aDepth,
-                          PRUint8 *aOnBlackImage, PRUint8 *aOnWhiteImage,
-                          PRInt32 aBytesLineSpan, PRUint8 *aAlphas,
-                          PRUint32 aAlphasSize)
-{
-  switch (aDepth) {
-    case 32:
-    case 24:
-      ComputeAlphasByByte(aNumLines, aBytesPerLine, aDepth/8,
-                          aOnBlackImage, aOnWhiteImage,
-                          aBytesLineSpan, aAlphas);
-      break;
-
-    case 16:
-      ComputeAlphas16(aNumLines, aBytesPerLine, aOnBlackImage, aOnWhiteImage,
-                      aBytesLineSpan, aAlphas);
-      break;
-    
-    default:
-      NS_ERROR("Unknown depth for alpha calculation");
-      // make them all opaque
-      memset(aAlphas, 255, aAlphasSize);
-  }
-}
-
-NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
-                                   nsDrawingSurface aWhite, PRUint8** aAlphas) {
-  nsresult result;
-
-  nsIDrawingSurface* blackSurface = (nsIDrawingSurface *)aBlack;
-  nsIDrawingSurface* whiteSurface = (nsIDrawingSurface *)aWhite;
-
-  nsRect r = aRect;
-
-  rangeCheck(blackSurface, r.x, r.y, r.width, r.height);
-  rangeCheck(whiteSurface, r.x, r.y, r.width, r.height);
-
-  PRUint8* blackBytes = nsnull;
-  PRUint8* whiteBytes = nsnull;
-  PRInt32 blackSpan, whiteSpan;
-  PRInt32 blackBytesPerLine, whiteBytesPerLine;
-
-  result = blackSurface->Lock(r.x, r.y, r.width, r.height,
-                              (void**)&blackBytes, &blackSpan,
-                              &blackBytesPerLine, NS_LOCK_SURFACE_READ_ONLY);
-  if (NS_SUCCEEDED(result)) {
-    result = whiteSurface->Lock(r.x, r.y, r.width, r.height,
-                                (void**)&whiteBytes, &whiteSpan,
-                                &whiteBytesPerLine, NS_LOCK_SURFACE_READ_ONLY);
-    if (NS_SUCCEEDED(result)) {
-      NS_ASSERTION(blackSpan == whiteSpan &&
-                   blackBytesPerLine == whiteBytesPerLine,
-                   "Mismatched bitmap formats (black/white) in Blender");
-      if (blackSpan == whiteSpan && blackBytesPerLine == whiteBytesPerLine) {
-        *aAlphas = new PRUint8[r.width*r.height];
-        if (*aAlphas) {
-          PRUint32 depth;
-          mContext->GetDepth(depth);
-          ComputeAlphas(r.height, blackBytesPerLine, depth,
-                        blackBytes, whiteBytes, blackSpan, 
-                        *aAlphas, r.width*r.height);
-        } else {
-          result = NS_ERROR_FAILURE;
-        }
-      }
-
-      whiteSurface->Unlock();
-    }
-
-    blackSurface->Unlock();
-  }
-  
-  return result;
-}
-#endif // MOZ_XUL
 
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h
@@ -692,6 +526,10 @@ nsBlender::Do24Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
 
 
 
+#define RED16(x)    (((x) & BLEND_RED_MASK) >> BLEND_RED_SHIFT)
+#define GREEN16(x)  (((x) & BLEND_GREEN_MASK) >> BLEND_GREEN_SHIFT)
+#define BLUE16(x)   (((x) & BLEND_BLUE_MASK) << BLEND_BLUE_SHIFT)
+
 #define MAKE16(r, g, b)                                              \
         (PRUint16)(((r) & BLEND_RED_SET_MASK) << BLEND_RED_SHIFT)    \
           | (((g) & BLEND_GREEN_SET_MASK) << BLEND_GREEN_SHIFT)      \
@@ -735,6 +573,7 @@ nsBlender::Do16Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
         *d2 = MAKE16(destPixR + (((RED16(srcPix) - destPixR)*opacity256) >> 8),
                      destPixG + (((GREEN16(srcPix) - destPixG)*opacity256) >> 8),
                      destPixB + (((BLUE16(srcPix) - destPixB)*opacity256) >> 8));
+
         d2++;
         s2++;
       }

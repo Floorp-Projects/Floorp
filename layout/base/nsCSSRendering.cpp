@@ -2615,32 +2615,14 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
  * canvas.
  */
 
-// Returns nsnull if aFrame is not a canvas frame.
-// Otherwise, it returns the frame we should look for the background on.
-// This is normally aFrame but if aFrame is the viewport, we need to
-// look for the background starting at the scroll root (which shares
-// style context with the document root) or the document root itself.
-// We need to treat the viewport as canvas because, even though
-// it does not actually paint a background, we need to get the right
-// background style so we correctly detect transparent documents.
-inline nsIFrame*
-IsCanvasFrame(nsIPresContext* aPresContext, nsIFrame *aFrame)
+inline PRBool
+IsCanvasFrame(nsIFrame *aFrame)
 {
   nsCOMPtr<nsIAtom> frameType;
   aFrame->GetFrameType(getter_AddRefs(frameType));
-  if (frameType == nsLayoutAtoms::canvasFrame ||
-      frameType == nsLayoutAtoms::rootFrame ||
-      frameType == nsLayoutAtoms::pageFrame) {
-    return aFrame;
-  } else if (frameType == nsLayoutAtoms::viewportFrame) {
-    nsIFrame* firstChild;
-    aFrame->FirstChild(aPresContext, nsnull, &firstChild);
-    if (firstChild) {
-      return firstChild;
-    }
-  }
-  
-  return nsnull;
+  return (frameType == nsLayoutAtoms::canvasFrame ||
+          frameType == nsLayoutAtoms::rootFrame ||
+          frameType == nsLayoutAtoms::pageFrame);
 }
 
 inline PRBool
@@ -2737,7 +2719,7 @@ FindElementBackground(nsIPresContext* aPresContext,
   nsIFrame *parentFrame;
   aForFrame->GetParent(&parentFrame);
   // XXXldb We shouldn't have to null-check |parentFrame| here.
-  if (parentFrame && IsCanvasFrame(aPresContext, parentFrame) == parentFrame) {
+  if (parentFrame && IsCanvasFrame(parentFrame)) {
     // Check that we're really the root (rather than in another child list).
     nsIFrame *childFrame;
     parentFrame->FirstChild(aPresContext, nsnull, &childFrame);
@@ -2779,10 +2761,10 @@ nsCSSRendering::FindBackground(nsIPresContext* aPresContext,
                                const nsStyleBackground** aBackground,
                                PRBool* aIsCanvas)
 {
-  nsIFrame* canvasFrame = IsCanvasFrame(aPresContext, aForFrame);
-  *aIsCanvas = canvasFrame != nsnull;
-  return canvasFrame
-      ? FindCanvasBackground(aPresContext, canvasFrame, aBackground)
+  PRBool isCanvas = IsCanvasFrame(aForFrame);
+  *aIsCanvas = isCanvas;
+  return isCanvas
+      ? FindCanvasBackground(aPresContext, aForFrame, aBackground)
       : FindElementBackground(aPresContext, aForFrame, aBackground);
 }
 
@@ -2854,21 +2836,11 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     vm->GetRootView(rootView);
     nsIView* rootParent;
     rootView->GetParent(rootParent);
-    if (!rootParent) {
-      PRBool widgetIsTranslucent = PR_FALSE;
-
-      nsCOMPtr<nsIWidget> rootWidget;
-      rootView->GetWidget(*getter_AddRefs(rootWidget));
-      if (rootWidget) {
-        rootWidget->GetWindowTranslucency(widgetIsTranslucent);
-      }
-      
-      if (!widgetIsTranslucent) {
-        // Ensure that we always paint a color for the root (in case there's
-        // no background at all or a partly transparent image).
-        canvasColor.mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-        aPresContext->GetDefaultBackgroundColor(&canvasColor.mBackgroundColor);
-      }
+    if (nsnull == rootParent) {
+      // Ensure that we always paint a color for the root (in case there's
+      // no background at all or a partly transparent image).
+      canvasColor.mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+      aPresContext->GetDefaultBackgroundColor(&canvasColor.mBackgroundColor);
     }
   }
 
