@@ -20,12 +20,26 @@
 
 #define NS_IMPL_IDS
 
-#include "nsWinCharset.h"
+#include "nsIPlatformCharset.h"
 #include "nsPlatformCharsetFactory.h"
 #include "pratom.h"
 
 #include "nsUConvDll.h"
 
+
+
+class nsWinCharset : public nsIPlatformCharset
+{
+  NS_DECL_ISUPPORTS
+
+public:
+
+  nsWinCharset();
+  ~nsWinCharset();
+
+  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
+
+};
 
 NS_IMPL_ISUPPORTS(nsWinCharset, kIPlatformCharsetIID);
 
