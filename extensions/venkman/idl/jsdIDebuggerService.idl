@@ -1,0 +1,130 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/ 
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License. 
+ *
+ * The Original Code is mozilla.org code
+ * 
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation
+ * Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Public License (the "GPL"), in which case the
+ * provisions of the GPL are applicable instead of those above.
+ * If you wish to allow use of your version of this file only
+ * under the terms of the GPL and not to allow others to use your
+ * version of this file under the MPL, indicate your decision by
+ * deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL.  If you do not delete
+ * the provisions above, a recipient may use your version of this
+ * file under either the MPL or the GPL.
+ *
+ * Contributor(s):
+ *  
+ *
+ */
+    
+#include "nsISupports.idl"
+
+%{ C++
+#include "jsdebug.h"
+%}
+    
+[ptr] native JSDContext(JSDContext);
+[ptr] native JSDScript(JSDScript);
+[ptr] native JSDThreadState(JSDThreadState);
+
+/*
+[scriptable, uuid(e7c8ea2c-1dd1-11b2-9242-f2768e04e92e)]
+interface jsdIHandle : nsISupports
+{
+    [noscript] readonly attribute voidPtr data;
+};
+*/
+
+[scriptable, uuid(a2dd25a4-1dd1-11b2-bda6-ed525acd4c35)]
+interface jsdIContext : nsISupports
+{
+    [noscript] readonly attribute JSDContext JSDContext;
+};
+
+[scriptable, uuid(d500e8b8-1dd1-11b2-89a1-cdf55d91cbbd)]
+interface jsdIObject : nsISupports
+{};
+
+[scriptable, uuid(b8816e56-1dd1-11b2-81dc-8ba99a833d9e)]
+interface jsdIProperty : nsISupports
+{};
+
+[scriptable, uuid(a38f65ca-1dd1-11b2-95d5-ff2947e9c920)]
+interface jsdIScript : nsISupports
+{
+    [noscript] readonly attribute JSDScript JSDScript;
+
+    readonly attribute boolean       isActive;
+    readonly attribute wstring       fileName;
+    readonly attribute wstring       functionName;
+    readonly attribute unsigned long baseLineNumber;
+    readonly attribute unsigned long lineExtent;
+};
+
+[scriptable, uuid(a47adad2-1dd1-11b2-b9e9-8e67a47beca5)]
+interface jsdISourceText : nsISupports
+{};
+
+[scriptable, uuid(b6d50784-1dd1-11b2-a932-882246c6fe45)]
+interface jsdIStackFrameInfo : nsISupports
+{};
+
+[scriptable, uuid(b6d1c006-1dd1-11b2-b9d8-b4d1ccfb74d8)]
+interface jsdIThreadState : nsISupports
+{
+    [noscript] readonly attribute JSDThreadState JSDThreadState;
+};
+
+[scriptable, uuid(b7964304-1dd1-11b2-ba20-cf4205772e9d)]
+interface jsdIValue : nsISupports
+{};
+
+[scriptable, uuid(ae89a7e2-1dd1-11b2-8c2f-af82086291a5)]
+interface jsdIScriptHook : nsISupports
+{
+    void onScriptHook (in jsdIContext aCx, in jsdIScript aScript,
+                       in boolean aCreating);
+
+};
+
+[scriptable, uuid(9a7b6ad0-1dd1-11b2-a789-fcfae96356a2)]
+interface jsdIExecutionHook : nsISupports
+{
+    const unsigned long HOOK_RETURN_HOOK_ERROR     = 0;
+    const unsigned long HOOK_RETURN_CONTINUE       = 1;
+    const unsigned long HOOK_RETURN_ABORT          = 2;
+    const unsigned long HOOK_RETURN_RET_WITH_VAL   = 3;
+    const unsigned long HOOK_RETURN_THROW_WITH_VAL = 4;
+    const unsigned long HOOK_RETURN_CONTINUE_THROW = 5;
+
+    unsigned long onExecutionHook (in jsdIContext aCx,
+                                   in jsdIThreadState aThreadState,
+                                   in unsigned long aType, out nsISupports rval);
+};
+
+[scriptable, uuid(01be7f9a-1dd2-11b2-9d55-aaf919b27c73)]
+interface jsdIDebuggerService : nsISupports
+{
+    void init ();
+
+    attribute jsdIScriptHook scriptHook;
+    attribute jsdIExecutionHook interruptHook;
+
+};
+

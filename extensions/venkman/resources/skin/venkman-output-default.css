@@ -1,0 +1,30 @@
+body.venkman-body {
+    background: black;
+    color: lightgrey;
+}
+
+#output-table {
+    margin-top: 100%;
+    width: 100%;
+}
+
+.msg {                                      /* .msg = a single message in the */
+    width: 100%;                            /* output window                  */
+    font-size: 10pt;
+    font-family: sans-serif;
+    white-space: -moz-pre-wrap;
+}
+
+.msg-data:before {
+    content: "+";
+    color: yellow;
+    margin-right: 5px;
+}
+
+.msg-data[msg-type="EVAL-IN"]:before {
+    content: "<";
+}
+
+.msg-data[msg-type="EVAL-OUT"]:before {
+    content: ">";
+}
