@@ -256,11 +256,11 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
       {
         char* pByteMem = nsnull;
 
-        if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pByteMem), nsnull, NumOfChars + 1, 
+        if (DosAllocSharedMem( NS_STATIC_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + 1, 
                                PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
-          gModuleData.ConvertFromUcs( NS_STATIC_CAST(PRUnichar*, pMozData), pByteMem, NumOfChars+1 );
-          pByteMem [NumOfChars] = '\0';
+          gModuleData.ConvertFromUcs( NS_STATIC_CAST(PRUnichar*, pMozData), pByteMem, NumOfBytes + 1 );
+          pByteMem [NumOfBytes] = '\0';
 
           WinSetClipbrdData( 0, NS_STATIC_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
         }
