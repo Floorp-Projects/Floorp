@@ -1,0 +1,531 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 34;
+	objects = {
+		089C1669FE841209C02AAC07 = {
+			buildStyles = (
+				4F9091AC011F3BD104CA0E50,
+				4F9091AD011F3BD104CA0E50,
+			);
+			isa = PBXProject;
+			mainGroup = 089C166AFE841209C02AAC07;
+			projectDirPath = "";
+			targets = (
+				089C1673FE841209C02AAC07,
+			);
+		};
+		089C166AFE841209C02AAC07 = {
+			children = (
+				F5BFB5F1029AD43001000102,
+				08FB77ADFE841716C02AAC07,
+				089C167CFE841241C02AAC07,
+				089C1671FE841209C02AAC07,
+				19C28FB4FE9D528D11CA2CBB,
+			);
+			isa = PBXGroup;
+			name = MRJPlugin;
+			refType = 4;
+		};
+		089C1671FE841209C02AAC07 = {
+			children = (
+				08EA7FFBFE8413EDC02AAC07,
+				F535746F0299A36101FE39E3,
+				F53574700299A36101FE39E3,
+				F51A400C0299CD65012FC976,
+			);
+			isa = PBXGroup;
+			name = "External Frameworks and Libraries";
+			refType = 4;
+		};
+		089C1673FE841209C02AAC07 = {
+			buildPhases = (
+				089C1674FE841209C02AAC07,
+				089C1675FE841209C02AAC07,
+				089C1676FE841209C02AAC07,
+				089C1677FE841209C02AAC07,
+				089C1679FE841209C02AAC07,
+				F5BFB5E8029AD01B01000102,
+			);
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = "";
+				HEADER_SEARCH_PATHS = "../MRJSDK/JavaFrameworks/JavaVM ../MRJSDK/JavaFrameworks/JavaEmbedding ../../../../dist/sdk/xpcom/include ../../../../dist/include/caps ../../../../dist/include/java ../../../../dist/include/js ../../../../dist/include/nspr ../../../../dist/include/oji ../../../../dist/include/plugin ../../../../dist/include/xpcom ../../../../dist/include/xpconnect /Developer/Headers/FlatCarbon";
+				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				LIBRARY_SEARCH_PATHS = /usr/lib;
+				OTHER_CFLAGS = "-DXP_MACOSX=1 -DNO_X11=1 -DUSE_SYSTEM_CONSOLE=1";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = MRJPlugin;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = plugin;
+			};
+			dependencies = (
+			);
+			isa = PBXBundleTarget;
+			name = MRJPlugin;
+			productInstallPath = "$(HOME)/Library/Bundles";
+			productName = MRJPlugin;
+			productReference = 4F9091AB011F3BD104CA0E50;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
+<plist version=\"0.9\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>MRJPlugin</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string>com.netscape.MRJPlugin</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>NSPL</string>
+	<key>CFBundleSignature</key>
+	<string>MOSS</string>
+	<key>CFBundleVersion</key>
+	<string>1.0fc2</string>
+	<key>CSResourcesFileMapped</key>
+	<true/>
+</dict>
+</plist>
+";
+			shouldUseHeadermap = 1;
+		};
+		089C1674FE841209C02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXHeadersBuildPhase;
+			name = Headers;
+		};
+		089C1675FE841209C02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				089C1680FE841241C02AAC07,
+				F5BFB5EC029AD0B901000102,
+				F5BFB5EF029AD0D001000102,
+			);
+			isa = PBXResourcesBuildPhase;
+			name = "Bundle Resources";
+		};
+		089C1676FE841209C02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				F535747C0299B28B01FE39E3,
+				F53574820299B7B201FE39E3,
+				F53574830299BAF701FE39E3,
+				F53574840299C0DB01FE39E3,
+				F53574850299C1B701FE39E3,
+				F53574860299C80701FE39E3,
+				F51A400F0299CE02012FC976,
+				F5DC13A60299D19A01403EB6,
+				F5DC13A80299D2CA01403EB6,
+				F5DC13AA0299D38E01403EB6,
+			);
+			isa = PBXSourcesBuildPhase;
+			name = Sources;
+		};
+		089C1677FE841209C02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				08EA7FFCFE8413EDC02AAC07,
+				F53574710299A36101FE39E3,
+				F53574720299A36101FE39E3,
+				F51A400D0299CD65012FC976,
+				F5BFB5F3029AD43001000102,
+			);
+			isa = PBXFrameworksBuildPhase;
+			name = "Frameworks & Libraries";
+		};
+		089C1679FE841209C02AAC07 = {
+			buildActionMask = 2147483647;
+			files = (
+				F5BFB5E6029AAC0B01000102,
+				F5BFB5E7029AAC0B01000102,
+			);
+			isa = PBXRezBuildPhase;
+			name = "ResourceManager Resources";
+		};
+		089C167CFE841241C02AAC07 = {
+			children = (
+				089C167DFE841241C02AAC07,
+				F5BFB5E4029AAC0B01000102,
+				F5BFB5E5029AAC0B01000102,
+			);
+			isa = PBXGroup;
+			name = Resources;
+			refType = 4;
+		};
+		089C167DFE841241C02AAC07 = {
+			children = (
+				089C167EFE841241C02AAC07,
+			);
+			isa = PBXVariantGroup;
+			name = InfoPlist.strings;
+			refType = 4;
+		};
+		089C167EFE841241C02AAC07 = {
+			fileEncoding = 10;
+			isa = PBXFileReference;
+			name = English;
+			path = English.lproj/InfoPlist.strings;
+			refType = 4;
+		};
+		089C1680FE841241C02AAC07 = {
+			fileRef = 089C167DFE841241C02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		08EA7FFBFE8413EDC02AAC07 = {
+			isa = PBXFrameworkReference;
+			name = Carbon.framework;
+			path = /System/Library/Frameworks/Carbon.framework;
+			refType = 0;
+		};
+		08EA7FFCFE8413EDC02AAC07 = {
+			fileRef = 08EA7FFBFE8413EDC02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		08FB77ADFE841716C02AAC07 = {
+			children = (
+				F53574730299B1E101FE39E3,
+				F53574750299B20701FE39E3,
+				F53574770299B25701FE39E3,
+				F53574780299B25701FE39E3,
+				F535747D0299B74301FE39E3,
+				F535747B0299B28B01FE39E3,
+				F51A400E0299CE02012FC976,
+				F5DC13A50299D19A01403EB6,
+				F5DC13A70299D2CA01403EB6,
+				F5DC13A90299D38E01403EB6,
+			);
+			isa = PBXGroup;
+			name = Source;
+			refType = 4;
+		};
+//080
+//081
+//082
+//083
+//084
+//190
+//191
+//192
+//193
+//194
+		19C28FB4FE9D528D11CA2CBB = {
+			children = (
+				4F9091AB011F3BD104CA0E50,
+			);
+			isa = PBXGroup;
+			name = Products;
+			refType = 4;
+		};
+//190
+//191
+//192
+//193
+//194
+//4F0
+//4F1
+//4F2
+//4F3
+//4F4
+		4F9091AB011F3BD104CA0E50 = {
+			isa = PBXBundleReference;
+			path = MRJPlugin.plugin;
+			refType = 3;
+		};
+		4F9091AC011F3BD104CA0E50 = {
+			buildRules = (
+			);
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				OPTIMIZATION_CFLAGS = "-O0";
+			};
+			isa = PBXBuildStyle;
+			name = Development;
+		};
+		4F9091AD011F3BD104CA0E50 = {
+			buildRules = (
+			);
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+			};
+			isa = PBXBuildStyle;
+			name = Deployment;
+		};
+//4F0
+//4F1
+//4F2
+//4F3
+//4F4
+//F50
+//F51
+//F52
+//F53
+//F54
+		F51A400C0299CD65012FC976 = {
+			isa = PBXFileReference;
+			name = "libstdc++.a";
+			path = "/usr/lib/libstdc++.a";
+			refType = 0;
+		};
+		F51A400D0299CD65012FC976 = {
+			fileRef = F51A400C0299CD65012FC976;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51A400E0299CE02012FC976 = {
+			isa = PBXFileReference;
+			name = LiveConnectNativeMethods.cpp;
+			path = Source/LiveConnectNativeMethods.cpp;
+			refType = 4;
+		};
+		F51A400F0299CE02012FC976 = {
+			fileRef = F51A400E0299CE02012FC976;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F535746F0299A36101FE39E3 = {
+			isa = PBXFrameworkReference;
+			name = JavaVM.framework;
+			path = /System/Library/Frameworks/JavaVM.framework;
+			refType = 0;
+		};
+		F53574700299A36101FE39E3 = {
+			isa = PBXFrameworkReference;
+			name = JavaEmbedding.framework;
+			path = /System/Library/Frameworks/JavaEmbedding.framework;
+			refType = 0;
+		};
+		F53574710299A36101FE39E3 = {
+			fileRef = F535746F0299A36101FE39E3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F53574720299A36101FE39E3 = {
+			fileRef = F53574700299A36101FE39E3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F53574730299B1E101FE39E3 = {
+			isa = PBXFileReference;
+			name = MRJPlugin.cpp;
+			path = Source/MRJPlugin.cpp;
+			refType = 4;
+		};
+		F53574750299B20701FE39E3 = {
+			isa = PBXFileReference;
+			name = MRJContext.cp;
+			path = Source/MRJContext.cp;
+			refType = 4;
+		};
+		F53574770299B25701FE39E3 = {
+			isa = PBXFileReference;
+			name = MRJMonitor.cpp;
+			path = Source/MRJMonitor.cpp;
+			refType = 4;
+		};
+		F53574780299B25701FE39E3 = {
+			isa = PBXFileReference;
+			name = MRJPage.cpp;
+			path = Source/MRJPage.cpp;
+			refType = 4;
+		};
+		F535747B0299B28B01FE39E3 = {
+			isa = PBXFileReference;
+			name = SupportsMixin.cpp;
+			path = Source/SupportsMixin.cpp;
+			refType = 4;
+		};
+		F535747C0299B28B01FE39E3 = {
+			fileRef = F535747B0299B28B01FE39E3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F535747D0299B74301FE39E3 = {
+			isa = PBXFileReference;
+			name = MRJSession.cpp;
+			path = Source/MRJSession.cpp;
+			refType = 4;
+		};
+		F53574820299B7B201FE39E3 = {
+			fileRef = F53574780299B25701FE39E3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F53574830299BAF701FE39E3 = {
+			fileRef = F535747D0299B74301FE39E3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F53574840299C0DB01FE39E3 = {
+			fileRef = F53574770299B25701FE39E3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F53574850299C1B701FE39E3 = {
+			fileRef = F53574750299B20701FE39E3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F53574860299C80701FE39E3 = {
+			fileRef = F53574730299B1E101FE39E3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFB5E4029AAC0B01000102 = {
+			isa = PBXFileReference;
+			name = Dialogs.rsrc;
+			path = Resources/Dialogs.rsrc;
+			refType = 4;
+		};
+		F5BFB5E5029AAC0B01000102 = {
+			isa = PBXFileReference;
+			name = Strings.rsrc;
+			path = Resources/Strings.rsrc;
+			refType = 4;
+		};
+		F5BFB5E6029AAC0B01000102 = {
+			fileRef = F5BFB5E4029AAC0B01000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFB5E7029AAC0B01000102 = {
+			fileRef = F5BFB5E5029AAC0B01000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFB5E8029AD01B01000102 = {
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				F5BFB5F0029AD0D101000102,
+				F5BFB5EE029AD0B901000102,
+				F5BFB5F4029AD45C01000102,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			name = "Copy Files";
+		};
+		F5BFB5E9029AD0B901000102 = {
+			isa = PBXFileReference;
+			path = MRJPlugin.policy;
+			refType = 4;
+		};
+		F5BFB5EA029AD0B901000102 = {
+			isa = PBXFileReference;
+			path = MRJPlugin.properties;
+			refType = 4;
+		};
+		F5BFB5EC029AD0B901000102 = {
+			fileRef = F5BFB5EA029AD0B901000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFB5EE029AD0B901000102 = {
+			fileRef = F5BFB5EA029AD0B901000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFB5EF029AD0D001000102 = {
+			fileRef = F5BFB5E9029AD0B901000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFB5F0029AD0D101000102 = {
+			fileRef = F5BFB5E9029AD0B901000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFB5F1029AD43001000102 = {
+			children = (
+				F5BFB5E9029AD0B901000102,
+				F5BFB5EA029AD0B901000102,
+				F5BFB5F2029AD43001000102,
+			);
+			isa = PBXGroup;
+			name = Misc;
+			refType = 4;
+		};
+		F5BFB5F2029AD43001000102 = {
+			isa = PBXFileReference;
+			path = MRJPlugin.jar;
+			refType = 4;
+		};
+		F5BFB5F3029AD43001000102 = {
+			fileRef = F5BFB5F2029AD43001000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5BFB5F4029AD45C01000102 = {
+			fileRef = F5BFB5F2029AD43001000102;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5DC13A50299D19A01403EB6 = {
+			isa = PBXFileReference;
+			name = CSecureEnv.cpp;
+			path = Source/CSecureEnv.cpp;
+			refType = 4;
+		};
+		F5DC13A60299D19A01403EB6 = {
+			fileRef = F5DC13A50299D19A01403EB6;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5DC13A70299D2CA01403EB6 = {
+			isa = PBXFileReference;
+			name = NativeMonitor.cpp;
+			path = Source/NativeMonitor.cpp;
+			refType = 4;
+		};
+		F5DC13A80299D2CA01403EB6 = {
+			fileRef = F5DC13A70299D2CA01403EB6;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5DC13A90299D38E01403EB6 = {
+			isa = PBXFileReference;
+			name = RunnableMixin.cpp;
+			path = Source/RunnableMixin.cpp;
+			refType = 4;
+		};
+		F5DC13AA0299D38E01403EB6 = {
+			fileRef = F5DC13A90299D38E01403EB6;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+	};
+	rootObject = 089C1669FE841209C02AAC07;
+}
