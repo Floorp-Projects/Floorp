@@ -5312,7 +5312,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
                                          nsIAtom*                 aTag,
                                          nsIStyleContext*         aStyleContext,
                                          nsFrameItems&            aFrameItems,
-                                         PRBool                   aXBLBaseTag,
                                          PRBool&                  aHaltProcessing)
 {
   PRBool    primaryFrameSet = PR_FALSE;
@@ -5342,42 +5341,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
   if (NS_SUCCEEDED(aContent->GetNameSpaceID(nameSpaceID)) &&
       nameSpaceID == nsXULAtoms::nameSpaceID) {
   
-    // The following code allows the user to specify the base tag
-    // of a XUL object using XBL.  XUL objects (like boxes, menus, etc.)
-    // can then be extended arbitrarily.
-    if (!aXBLBaseTag) {
-      const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
-          aStyleContext->GetStyleData(eStyleStruct_UserInterface);
-
-      // Ensure that our XBL bindings are installed.
-      if (!ui->mBehavior.IsEmpty()) {
-        // Get the XBL loader.
-        nsresult rv;
-        NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-        if (!xblService)
-          return rv;
-
-        // Load the bindings.
-        xblService->LoadBindings(aContent, ui->mBehavior);
-
-        nsCOMPtr<nsIAtom> baseTag;
-        xblService->ResolveTag(aContent, getter_AddRefs(baseTag));
-   
-        if (baseTag.get() != aTag) {
-          // Construct the frame using the XBL base tag.
-          return ConstructXULFrame( aPresShell, 
-                                    aPresContext,
-                                    aState,
-                                    aContent,
-                                    aParentFrame,
-                                    baseTag,
-                                    aStyleContext,
-                                    aFrameItems,
-                                    PR_TRUE,
-                                    aHaltProcessing );
-        }
-      }
-    }
+// was here
 
     // See if the element is absolutely positioned
     const nsStylePosition* position = (const nsStylePosition*)
@@ -5929,12 +5893,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       
 
       // if there are any anonymous children create frames for them
+      /* Not sure why we did this
         nsCOMPtr<nsIAtom> tag(aTag);
         if (aXBLBaseTag) {
           aContent->GetTag(*getter_AddRefs(tag));
         }
-          
-        CreateAnonymousFrames(aPresShell, aPresContext, tag, aState, aContent, newFrame,
+      */    
+      CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
                             childItems);
 
       // Set the frame's initial child list
@@ -7193,58 +7158,127 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresShell*        aPresShell,
     if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
       aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
     }
-    else {
-      nsIFrame* lastChild = aFrameItems.lastChild;
-
-      // Handle specific frame types
-      rv = ConstructFrameByTag(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                               tag, styleContext, aFrameItems);
-
-#ifdef INCLUDE_XUL
-      // Failing to find a matching HTML frame, try creating a specialized
-      // XUL frame. This is temporary, pending planned factoring of this
-      // whole process into separate, pluggable steps.
-      if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
-                             (lastChild == aFrameItems.lastChild))) {
-        PRBool haltProcessing = PR_FALSE;
-        rv = ConstructXULFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                               tag, styleContext, aFrameItems, PR_FALSE, haltProcessing);
-        if (haltProcessing) {
-          return rv;
-        }
-      } 
-#endif
-
-// MathML Mod - RBS
-#ifdef MOZ_MATHML
-      if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
-                               (lastChild == aFrameItems.lastChild))) {
-        rv = ConstructMathMLFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                                  tag, styleContext, aFrameItems);
-      }
-#endif
-
-// SVG
-#ifdef MOZ_SVG
-      if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
-                               (lastChild == aFrameItems.lastChild))) {
-        rv = ConstructSVGFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                                  tag, styleContext, aFrameItems);
-      }
-#endif
-
-      if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
-                               (lastChild == aFrameItems.lastChild))) {
-        // When there is no explicit frame to create, assume it's a
-        // container and let display style dictate the rest
-        rv = ConstructFrameByDisplayType(aPresShell, aPresContext, aState, display, aContent,
-                                         aParentFrame, styleContext, aFrameItems);
-      }
+    else
+    {
+      rv = ConstructFrameInternal(aPresShell,
+                                    aPresContext,
+                                    aState,
+                                    aContent,
+                                    aParentFrame,
+                                    tag,
+                                    styleContext,
+                                    aFrameItems,
+                                    PR_FALSE);
     }
   }
   
   return rv;
 }
+
+
+nsresult
+nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShell, 
+                                               nsIPresContext*          aPresContext,
+                                               nsFrameConstructorState& aState,
+                                               nsIContent*              aContent,
+                                               nsIFrame*                aParentFrame,
+                                               nsIAtom*                 aTag,
+                                               nsIStyleContext*         aStyleContext,
+                                               nsFrameItems&            aFrameItems,
+                                               PRBool                   aXBLBaseTag)
+{
+  // The following code allows the user to specify the base tag
+  // of a XUL object using XBL.  XUL objects (like boxes, menus, etc.)
+  // can then be extended arbitrarily.
+  if (!aXBLBaseTag)
+  {
+    const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
+        aStyleContext->GetStyleData(eStyleStruct_UserInterface);
+
+    // Ensure that our XBL bindings are installed.
+    if (!ui->mBehavior.IsEmpty()) {
+      // Get the XBL loader.
+      nsresult rv;
+      NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
+      if (!xblService)
+        return rv;
+
+      // Load the bindings.
+      xblService->LoadBindings(aContent, ui->mBehavior);
+
+      nsCOMPtr<nsIAtom> baseTag;
+      xblService->ResolveTag(aContent, getter_AddRefs(baseTag));
+ 
+      if (baseTag.get() != aTag) {
+        // Construct the frame using the XBL base tag.
+        return ConstructFrameInternal( aPresShell, 
+                                  aPresContext,
+                                  aState,
+                                  aContent,
+                                  aParentFrame,
+                                  baseTag,
+                                  aStyleContext,
+                                  aFrameItems,
+                                  PR_TRUE);
+      }
+    }
+  }
+
+
+  nsIFrame* lastChild = aFrameItems.lastChild;
+
+  // Handle specific frame types
+  nsresult rv = ConstructFrameByTag(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                           aTag, aStyleContext, aFrameItems);
+
+#ifdef INCLUDE_XUL
+  // Failing to find a matching HTML frame, try creating a specialized
+  // XUL frame. This is temporary, pending planned factoring of this
+  // whole process into separate, pluggable steps.
+  if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
+                         (lastChild == aFrameItems.lastChild))) {
+    PRBool haltProcessing = PR_FALSE;
+    rv = ConstructXULFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                           aTag, aStyleContext, aFrameItems, haltProcessing);
+    if (haltProcessing) {
+      return rv;
+    }
+  } 
+#endif
+
+// MathML Mod - RBS
+#ifdef MOZ_MATHML
+  if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
+                           (lastChild == aFrameItems.lastChild))) {
+    rv = ConstructMathMLFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                              tag, styleContext, aFrameItems);
+  }
+#endif
+
+// SVG
+#ifdef MOZ_SVG
+  if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
+                           (lastChild == aFrameItems.lastChild))) {
+    rv = ConstructSVGFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
+                              tag, styleContext, aFrameItems);
+  }
+#endif
+
+  if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
+                           (lastChild == aFrameItems.lastChild))) {
+    // When there is no explicit frame to create, assume it's a
+    // container and let display style dictate the rest
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
+
+    rv = ConstructFrameByDisplayType(aPresShell, aPresContext, aState, display, aContent,
+                                     aParentFrame, aStyleContext, aFrameItems);
+  }
+
+  return rv;
+}
+
+
 
 NS_IMETHODIMP
 nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresContext)

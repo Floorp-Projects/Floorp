@@ -493,6 +493,16 @@ protected:
                                nsIStyleContext*         aStyleContext,
                                nsFrameItems&            aFrameItems);
 
+  nsresult ConstructFrameInternal( nsIPresShell*            aPresShell, 
+                                   nsIPresContext*          aPresContext,
+                                   nsFrameConstructorState& aState,
+                                   nsIContent*              aContent,
+                                   nsIFrame*                aParentFrame,
+                                   nsIAtom*                 aTag,
+                                   nsIStyleContext*         aStyleContext,
+                                   nsFrameItems&            aFrameItems,
+                                   PRBool                   aXBLBaseTag);
+
   nsresult CreateAnonymousFrames(nsIPresShell*        aPresShell, 
                                  nsIPresContext*          aPresContext,
                                              nsIAtom*                 aTag,
@@ -539,7 +549,6 @@ protected:
                              nsIAtom*                 aTag,
                              nsIStyleContext*         aStyleContext,
                              nsFrameItems&            aFrameItems,
-                             PRBool                   aXBLBaseTag,
                              PRBool&                  aHaltProcessing);
 
 #endif
