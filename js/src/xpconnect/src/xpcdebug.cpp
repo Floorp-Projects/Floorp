@@ -415,11 +415,11 @@ static const int tab_width = 2;
 static void PrintObjectBasics(JSObject* obj)
 {
     if(OBJ_IS_NATIVE(obj))
-        printf("%#p 'native' <%s>",
-               obj,
+        printf("%p 'native' <%s>",
+               (void *)obj,
                ((JSClass*)(obj->slots[JSSLOT_CLASS]-1))->name);
     else
-        printf("%#p 'host'", obj);
+        printf("%p 'host'", (void *)obj);
 
 }
 

@@ -944,17 +944,23 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
 
     JSCLAutoErrorReporterSetter aers(cx, Reporter);
 
-    jsval argv[2], retval;
-    argv[0] = OBJECT_TO_JSVAL(cm_jsobj);
-    argv[1] = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, registryLocation));
-    if (!JS_CallFunctionName(cx, global, "NSGetModule", 2, argv,
-                             &retval)) {
-#ifdef DEBUG_shaver_off
-        fprintf(stderr, "mJCL: NSGetModule failed for %s\n",
-                registryLocation);
-#endif
+    jsval argv[2], retval, NSGetModule_val;
+
+    if (!JS_GetProperty(cx, global, "NSGetModule", &NSGetModule_val) ||
+        JSVAL_IS_VOID(NSGetModule_val) {
         return nsnull;
     }
+
+    if (JS_TypeOfValue(cx, NSGetModule_val) != JSTYPE_FUNCTION) {
+        JS_ReportError(cx, "%s has NSGetModule property that is not a function",
+                       registryLocation);
+        return nsnull;
+    }
+    
+    argv[0] = OBJECT_TO_JSVAL(cm_jsobj);
+    argv[1] = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, registryLocation));
+    if (!JS_CallFunctionValue(cx, global, NSGetModule_val, 2, argv, &retval))
+        return nsnull;
 
 #ifdef DEBUG_shaver_off
     JSString *s = JS_ValueToString(cx, retval);

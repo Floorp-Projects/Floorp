@@ -2939,7 +2939,7 @@ void DEBUG_ReportWrapperThreadSafetyError(XPCCallContext& ccx,
         JS_smprintf_free(wrapperDump);
     }
     else
-        printf("  %s\n  wrapper @ 0x%p\n", msg, wrapper);
+        printf("  %s\n  wrapper @ 0x%p\n", msg, (void *)wrapper);
 
     printf("  JS call stack...\n");
     xpc_DumpJSStack(ccx, JS_TRUE, JS_TRUE, JS_TRUE);

@@ -59,7 +59,7 @@ nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {
     {
         JS_DestroyRuntime(mRuntime);
         JS_ShutDown();
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_off
         fprintf(stderr, "nJRSI: destroyed runtime %p\n", (void *)mRuntime);
 #endif
     }
@@ -108,7 +108,7 @@ nsJSRuntimeServiceImpl::GetRuntime(JSRuntime **runtime)
             return NS_ERROR_OUT_OF_MEMORY;
     }
     *runtime = mRuntime;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_off
     fprintf(stderr, "nJRSI: returning %p\n", (void *)mRuntime);
 #endif
     return NS_OK;

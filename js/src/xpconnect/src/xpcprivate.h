@@ -134,7 +134,7 @@
 
 // Note that one would not normally turn *any* of these on in a non-DEBUG build.
 
-#if defined(DEBUG_jband) || defined(DEBUG_jst) || defined(DEBUG_dbradley) || defined(DEBUG_shaver) || defined(DEBUG_dbaron) || defined(DEBUG_timeless)
+#if defined(DEBUG_jband) || defined(DEBUG_jst) || defined(DEBUG_dbradley) || defined(DEBUG_shaver_no) || defined(DEBUG_dbaron) || defined(DEBUG_timeless)
 #define DEBUG_xpc_hacker
 #endif
 
