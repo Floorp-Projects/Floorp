@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.44 $ $Date: 2002/08/31 04:52:46 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.45 $ $Date: 2002/09/03 19:42:13 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1248,11 +1248,15 @@ nssTrustDomain_FindTrustForCertificate
 		if (!pkio) {
 		    pkio = nssPKIObject_Create(NULL, to, td, NULL);
 		    if (!pkio) {
+			nssToken_Destroy(token);
+			nssCryptokiObject_Destroy(to);
 			goto loser;
 		    }
 		} else {
 		    status = nssPKIObject_AddInstance(pkio, to);
 		    if (status != PR_SUCCESS) {
+			nssToken_Destroy(token);
+			nssCryptokiObject_Destroy(to);
 			goto loser;
 		    }
 		}
@@ -1270,9 +1274,6 @@ nssTrustDomain_FindTrustForCertificate
     return rvt;
 loser:
     nssSlotArray_Destroy(slots);
-    if (to) {
-	nssCryptokiObject_Destroy(to);
-    }
     if (pkio) {
 	nssPKIObject_Destroy(pkio);
     }
