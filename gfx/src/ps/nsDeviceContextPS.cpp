@@ -61,9 +61,11 @@
 #include "nsPostScriptObj.h"
 #include "nspr.h"
 #include "nsILanguageAtomService.h"
-#include "nsType8.h"
 #include "nsPrintJobPS.h"
 #include "nsPrintJobFactoryPS.h"
+#ifdef MOZ_ENABLE_FREETYPE2
+#include "nsType8.h"
+#endif
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *nsDeviceContextPSLM = PR_NewLogModule("nsDeviceContextPS");
