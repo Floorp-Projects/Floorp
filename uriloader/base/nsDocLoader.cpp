@@ -544,8 +544,7 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   // if we have a web progress listener, propagate the fact that we are starting to load a url
   if (mProgressListener)
   {
-    mProgressStatusFlags |= nsIWebProgress::flag_networkActivity;
-    mProgressStatusFlags |= nsIWebProgress::flag_windowActivity;
+    mProgressStatusFlags = nsIWebProgress::flag_net_start;
 
     if (aLoadInitiator == this)
       mProgressListener->OnStatusChange(mDocumentChannel, mProgressStatusFlags);
@@ -615,8 +614,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
   // if we have a web progress listener, propagate the fact that we are starting to load a url
   if (mProgressListener)
   {
-    mProgressStatusFlags &= ~nsIWebProgress::flag_networkActivity;
-    mProgressStatusFlags &= ~nsIWebProgress::flag_windowActivity;
+    mProgressStatusFlags = nsIWebProgress::flag_net_stop;
 
     if (aLoadInitiator == this)
       mProgressListener->OnStatusChange(mDocumentChannel, mProgressStatusFlags);
