@@ -175,4 +175,5 @@ void XXXNeverCalled()
     nsCStringArray carray;
     NS_NewUTF8StringEnumerator(nsnull, &carray);
     NS_NewAdoptingUTF8StringEnumerator(nsnull, &carray);
+    nsVoidableString str3;
 }
