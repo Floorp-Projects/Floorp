@@ -67,7 +67,7 @@
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
-static PRTime gtimeOfLastPurgeCheck = 0;    //variable to know when to check for purge_threshhold
+static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for purge_threshhold
 
 
 #define PREF_MAIL_PROMPT_PURGE_THRESHOLD "mail.prompt_purge_threshhold"
@@ -90,6 +90,7 @@ nsMsgDBFolder::nsMsgDBFolder(void)
     mFolderLoadedAtom = NS_NewAtom("FolderLoaded");
     mDeleteOrMoveMsgCompletedAtom = NS_NewAtom("DeleteOrMoveMsgCompleted");
     mDeleteOrMoveMsgFailedAtom = NS_NewAtom("DeleteOrMoveMsgFailed");
+    LL_I2L(gtimeOfLastPurgeCheck, 0);
   }
 }
 
@@ -1379,15 +1380,15 @@ nsresult
 nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow) 
 {
    NS_ENSURE_ARG_POINTER(aWindow);
-   nsresult rv = NS_OK;
-   PRTime timeNow = PR_Now();  //time in microsec
-   PRTime timeOfLastPurgeCheck = gtimeOfLastPurgeCheck;
    PRBool prompt;
-   rv = GetPromptPurgeThreshold(&prompt);
+   nsresult rv = GetPromptPurgeThreshold(&prompt);
    NS_ENSURE_SUCCESS(rv, rv);
-   timeOfLastPurgeCheck += oneHour;   
-   if ((timeOfLastPurgeCheck == oneHour || timeOfLastPurgeCheck < timeNow) && prompt)
+   PRTime timeNow = PR_Now();   //time in microseconds
+   PRTime timeAfterOneHourOfLastPurgeCheck;
+   LL_ADD(timeAfterOneHourOfLastPurgeCheck, gtimeOfLastPurgeCheck, oneHour);
+   if (LL_CMP(timeAfterOneHourOfLastPurgeCheck, <, timeNow) && prompt)
    {
+     gtimeOfLastPurgeCheck = timeNow;
      nsCOMPtr<nsIMsgAccountManager> accountMgr = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
      if (NS_SUCCEEDED(rv))
      {
@@ -1491,7 +1492,6 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
          }
        }
      }  
-     gtimeOfLastPurgeCheck = PR_Now();
   }
   return rv;
 }
