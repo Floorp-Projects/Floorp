@@ -737,6 +737,9 @@ nsPrincipal::getCertAttribute(int attrib)
 
     if (itsType == nsPrincipalType_CertChain) {
       char *attributeStr;
+      if (itsCertArray) {
+        return "Untrusted certificate (unknown attributes)";
+      }
       CERTCertificate *cert = (CERTCertificate *)itsCertArray->Get(0);
       switch (attrib) {
 #ifdef MOZ_SECURITY

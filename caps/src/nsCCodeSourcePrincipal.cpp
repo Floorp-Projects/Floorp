@@ -21,7 +21,7 @@
 #include "nsCCertPrincipal.h"
 #include "nsPrincipal.h"
 
-NS_DEFINE_IID(kICodeSourcePrincipalIID, NS_ICCODESOURCEPRINCIPAL_IID);
+NS_DEFINE_IID(kICodeSourcePrincipalIID, NS_ICODESOURCEPRINCIPAL_IID);
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports:

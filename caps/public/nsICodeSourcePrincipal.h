@@ -99,7 +99,7 @@ class nsICodeSourcePrincipal : public nsIPrincipal {
     GetURL(const char **ppCodeBaseURL) = 0;
 };
 
-#define NS_ICCODESOURCEPRINCIPAL_IID                 \
+#define NS_ICODESOURCEPRINCIPAL_IID                  \
 { /* 68cb0890-436a-11d2-b940-00805f52351a */         \
     0x68cb0890,                                      \
     0x436a,                                          \
