@@ -74,7 +74,7 @@ nsWidget::nsWidget()
 
 nsWidget::~nsWidget()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::~nsWidget (%p).\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::~nsWidget (%p)\n", this ));
 
   mIsDestroying = PR_TRUE;
   if (nsnull != mWidget) {
@@ -120,7 +120,7 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy (%p).\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy this=<%p> mRefCnt=<%d>\n",this,mRefCnt));
 
   if( !mIsDestroying )
   {
@@ -138,6 +138,8 @@ NS_IMETHODIMP nsWidget::Destroy(void)
       OnDestroy();
   }
 
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy the end  mRefCnt=<%d>\n",mRefCnt));
+
   return NS_OK;
 }
 
@@ -145,11 +147,13 @@ NS_IMETHODIMP nsWidget::Destroy(void)
 
 void nsWidget::OnDestroy()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnDestroy.\n" ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnDestroy mRefCnt=<%d>\n", mRefCnt));
 
   mOnDestroyCalled = PR_TRUE;
+
   // release references to children, device context, toolkit + app shell
   nsBaseWidget::OnDestroy();
+
   // dispatch the event
   if (!mIsDestroying) {
     // dispatching of the event may cause the reference count to drop to 0
@@ -169,14 +173,28 @@ void nsWidget::OnDestroy()
 
 nsIWidget *nsWidget::GetParent(void)
 {
+  nsIWidget *theParent = nsnull;
+  
   if( mParent )
   {
-    NS_ADDREF( mParent );
+	/* I know this is really a nsWidget so I am type casting to */
+	/* improve preformance since this function is used a lot. (kirkj) */
+    if ( ! (((nsWidget *)mParent)->mIsDestroying))
+	{
+	  NS_ADDREF( mParent );
+	  theParent = mParent;
+    }
+    else
+	{
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParent - mParent is being destroyed so return NULL!\n"));
+	}
   }
   else
+  {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParent - mParent is NULL!\n" ));
-
-  return mParent;
+  }
+  
+  return theParent;
 }
 
 
@@ -188,7 +206,7 @@ nsIWidget *nsWidget::GetParent(void)
 
 NS_METHOD nsWidget::Show(PRBool bState)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show." ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show. mRefCnt=<%d>", mRefCnt));
 
   if (!mWidget)
   {
@@ -214,6 +232,8 @@ NS_METHOD nsWidget::Show(PRBool bState)
   }
 
   mShown = bState;
+
+ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show end mRefCnt=<%d>", mRefCnt));
 
   return NS_OK;
 }
@@ -340,10 +360,9 @@ NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 //-------------------------------------------------------------------------
 PRBool nsWidget::OnResize(nsRect &aRect)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnResize.\n" ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnResize. mRefCnt=<%d>\n", mRefCnt));
 
   // call the event callback
-
   if (mEventCallback)
   {
     nsSizeEvent event;
@@ -372,14 +391,17 @@ PRBool nsWidget::OnResize(nsRect &aRect)
 
     PRBool result = DispatchWindowEvent(&event);
 
-    // XXX why does this always crash?  maybe we need to add 
-    // a ref in the dispatch code?  check the windows
-    // code for a reference
-    //NS_RELEASE(event.widget);
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnResize. widget=<%p> mRefCnt=<%d>\n", event.widget, mRefCnt));
 
+	/* Not sure if this is really needed, kirkj */
+    NS_IF_RELEASE(event.widget);
+
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::OnResize - end  mRefCnt=<%d>\n", mRefCnt));
+  
     return result;
   }
-return PR_FALSE;
+
+  return PR_FALSE;
 }
 
 //------
@@ -396,7 +418,7 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
   event.point.y = aY;
   event.eventStructType = NS_GUI_EVENT;
   PRBool result = DispatchWindowEvent(&event);
-  // NS_RELEASE(event.widget);
+  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -958,12 +980,14 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsWidgetInitData *aInitData,
                                 nsNativeWidget aNativeParent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget (%p).\n", this ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> mRefCnt=<%d>\n", this, mRefCnt));
 
   PtWidget_t *parentWidget = nsnull;
 
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget after BaseCreate  mRefCnt=<%d>\n", mRefCnt));
 
   mParent = aParent;
   NS_IF_ADDREF( mParent );
@@ -986,6 +1010,8 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 //      parentWidget = GTK_WIDGET(shellWidget);
 //  }
 
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget before GetInstance mRefCnt=<%d>\n", mRefCnt));
+
   // Find the native client widget and store for ALL non-toplevel widgets
   if( parentWidget )
   {
@@ -998,9 +1024,12 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   }
 
   mBounds = aRect;
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - bounds=(%i,%i,%i,%i)\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height ));
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - bounds=(%i,%i,%i,%i) mRefCnt=<%d>\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height, mRefCnt));
 
   CreateNative (parentWidget);
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget after CreateNative mRefCnt=<%d>\n", mRefCnt));
 
   if( mWidget )
   {
@@ -1009,6 +1038,8 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   }
 
   DispatchStandardEvent(NS_CREATE);
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget end mRefCnt=<%d>\n", mRefCnt));
 
 //  InitCallbacks();
 
@@ -1109,8 +1140,15 @@ PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
 {
 //  printf( ">>> nsWidget::DispatchWindowEvent\n" ); fflush( stdout );
   nsEventStatus status;
+  PRBool ret;
+  
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchWindowEvent  mRefCnt=<%d>\n", mRefCnt));
   DispatchEvent(event, status);
-  return ConvertStatus(status);
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchWindowEvent after DispatchEvent mRefCnt=<%d>\n", mRefCnt));
+  ret = ConvertStatus(status);
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchWindowEvent after ConvertStatus mRefCnt=<%d>\n", mRefCnt));
+  
+  return ret;
 }
 
 //-------------------------------------------------------------------------
@@ -1123,12 +1161,22 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
 {
 //  printf( ">>> nsWidget::DispatchStandardEvent\n" ); fflush( stdout );
 
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchStandardEvent aMsg=<%d> mRefCnt=<%d>\n", aMsg, mRefCnt));
+
   nsGUIEvent event;
   event.eventStructType = NS_GUI_EVENT;
   InitEvent(event, aMsg);
 
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchStandardEvent after InitEvent mRefCnt=<%d>\n", mRefCnt));
+
   PRBool result = DispatchWindowEvent(&event);
-//  NS_IF_RELEASE(event.widget);
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchStandardEvent after DispatchWindow widget=<%p> mRefCnt=<%d>\n", event.widget, mRefCnt));
+
+  NS_IF_RELEASE(event.widget);
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchStandardEvent exiting result=<%d> mRefCnt=<%d>\n", result, mRefCnt));
+
   return result;
 }
 
@@ -1142,15 +1190,40 @@ PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
 NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
                                       nsEventStatus &aStatus)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent 1 mRefCnt=<%d>\n", mRefCnt));
+
+#if 1
+  aStatus = nsEventStatus_eIgnore;
+  
+  //if (nsnull != mMenuListener)
+  //	aStatus = mMenuListener->MenuSelected(*event);
+  if (nsnull != mEventCallback) {
+    aStatus = (*mEventCallback)(event);
+  }
+
+    // Dispatch to event listener if event was not consumed
+  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+    aStatus = mEventListener->ProcessEvent(*event);
+  }
+
+  // the window can be destroyed during processing of seemingly innocuous events like, say,
+  // mousedowns due to the magic of scripting. mousedowns will return nsEventStatus_eIgnore,
+  // which causes problems with the deleted window. therefore:
+  if (mOnDestroyCalled)
+    aStatus = nsEventStatus_eConsumeNoDefault;
+#else
 //  printf( ">>> nsWidget::DispatchEvent\n" ); fflush(stdout);
+
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent 1 mRefCnt=<%d>\n", mRefCnt));
 
   if( !( event ) || !( event->widget ))
   {
-//    printf( "  event or event->widget is NULL!\n" ); fflush(stdout);
     return NS_ERROR_FAILURE;
   }
 
-  NS_ADDREF(event->widget);
+//kirkj  NS_ADDREF(event->widget);
+
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent 2  mRefCnt=<%d>\n", mRefCnt));
 
   if( nsnull != mMenuListener )
   {
@@ -1160,12 +1233,15 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
     }
   }
 
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent 3 mRefCnt=<%d>\n", mRefCnt));
+
   aStatus = nsEventStatus_eIgnore;
   if( nsnull != mEventCallback )
   {
-//printf ("kedl: real callback....\n");
     aStatus = (*mEventCallback)(event);
   }
+
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent 4 mRefCnt=<%d>\n", mRefCnt));
 
   // Dispatch to event listener if event was not consumed
   if(( aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener))
@@ -1173,7 +1249,12 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
     aStatus = mEventListener->ProcessEvent(*event);
   }
 
-  NS_RELEASE(event->widget);
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent 5  mRefCnt=<%d>\n", mRefCnt));
+
+//kirkj  NS_RELEASE(event->widget);
+#endif
+
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent end  mRefCnt=<%d>\n", mRefCnt));
 
   return NS_OK;
 }
@@ -1204,11 +1285,10 @@ PRBool nsWidget::DispatchMouseEvent( PhPoint_t &aPos, PRUint32 aEvent )
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
 
-//printf ("kedl: in dispatchmouse %lu\n",aEvent);
   // call the event callback
   if (nsnull != mEventCallback) {
-//	printf ("kedl: dispatchwindow!!!\n");
     result = DispatchWindowEvent( &event );
+    NS_IF_RELEASE(event.widget);
 
     return result;
   }
