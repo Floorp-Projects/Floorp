@@ -74,7 +74,7 @@ require "$tinderbox{tree}/treedata.pl" if -r "$tinderbox{tree}/treedata.pl";
 if (defined $warning_buildnames_pat
     and $tinderbox{build} =~ /^$warning_buildnames_pat$/
     and $tinderbox{status} eq 'success') {
-  system './warnings.pl';
+  system './warnings.pl $tinderbox{tree}';
 }
 
 # Bloat data

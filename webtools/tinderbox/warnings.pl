@@ -74,15 +74,20 @@ use FileHandle;
 #  {...}, ...
 # )
 
+sub usage {
+  warn "usage: warnings.pl <tree_directory>\n";
+}
 
 # This is for gunzip (should add a configure script to handle this).
 $ENV{PATH} .= ":/usr/local/bin";
 
-$debug = 1 if $ARGV[0] eq '--debug';
+$debug = 1, shift @ARGV if $ARGV[0] eq '--debug';
+
+&usage, die "Error: Not enough arguments\n" if $#ARGV == -1;
 
 # Load tinderbox build data.
 #   (So we can find the last successful build for the tree of intestest.)
-$tree = 'SeaMonkey';
+$tree = shift @ARGV;
 # tinderbox/tbglobals.pl uses many shameful globals
 $form{tree} = $tree;
 require 'tbglobals.pl';
