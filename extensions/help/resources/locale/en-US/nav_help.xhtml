@@ -1784,35 +1784,35 @@ search, and save web pages.</p>
     <ul>
       <li><strong>Direct connection to the Internet</strong>: Choose this if
         you don&apos;t want to use a proxy.</li>
-      <li><strong>Manual proxy configuration</strong>: Choose this if you
-        don&apos;t have a proxy location (URL).
-        <ul>
-          <li><strong>HTTP Proxy</strong>, <strong>SSL Proxy</strong>,
-            <strong>FTP Proxy, Gopher Proxy</strong>: <strong></strong>Type the
-            name or numeric IP address of the proxy server. Type the port in
-            the Ports field.</li>
-          <li><strong>SOCKS Host</strong>: Enter the name or numeric IP address
-            of the proxy server. Type the port in the Ports field.
-            <ul>
-              <li><strong>SOCKS v4, SOCKS v5</strong>: When entering a SOCK
-                Host, select <q>SOCKS v4</q> or <q>SOCKS v5</q>,
-                depending on what version of SOCKS is used for the proxy.</li>
-            </ul>
-          </li>
-          <li><strong>No Proxy for</strong>: Enter the domains that you do not
-            want to use a proxy for. Separate each domain with a comma.
-            (Example: <kbd>.yourcompany.com, .yourcompany.co.nz</kbd>)</li>
-        </ul>
-      </li>
+      <li><strong>Automatically discover the proxy configuration</strong>: Choose
+        this if you want &brandShortName; to automatically detect and configure
+        the proxy settings, using the <a href="glossary.xhtml#wpad">WPAD
+        protocol</a>.</li>
       <li><strong>Automatic proxy configuration URL</strong>: Choose this if
         you have a proxy configuration file or URL, then enter the configuration
         URL.</li>
+      <li><strong>Manual proxy configuration</strong>: Choose this if you
+        don&apos;t have a proxy location (URL), or the automatic proxy
+        discovery was unable to setup the proxy settings correctly.
+        <ul>
+          <li><strong>Proxy</strong>: Enter the name or numeric IP address of
+            the proxy server.</li>
+          <li><strong>Port</strong>: Enter the port number in the Port field.
+            Click on <q>Advanced</q> to set
+            <a href="cs_nav_prefs_advanced.xhtml#advanced_proxy_preferences">Advanced
+            Proxy Preferences</a></li>
+          <li><strong>No Proxy for</strong>: Type the domains and/or IP 
+            addresses that you do not want to use a proxy for. Separate each
+            entry with a comma. (Example: <kbd>.mozilla.org, .net.nz,
+            192.168.1.0/24</kbd>.)</li>
+        </ul>
+      </li>
     </ul>
   </li>
 </ol>
 
 <p>Domain names are the part of a URL that contains the name of an
-  organization, business, or school&mdash;such as netscape.com or
+  organization, business, or school&mdash;such as mozilla.org or
   washington.org. If you use local host names without the domain name, list
   them the same way. Use commas to separate multiple host names. The wildcard
   character [*] cannot be used.</p>
