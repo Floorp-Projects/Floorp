@@ -321,20 +321,21 @@ sub EmitDependList {
     my ($desc, $myfield, $targetfield) = (@_);
     print "<th align=right>$desc:</th><td>";
     my @list;
-    SendSQL("select dependencies.$targetfield, bugs.bug_status
+    SendSQL("select dependencies.$targetfield, bugs.bug_status, short_desc
  from dependencies, bugs
  where dependencies.$myfield = $id
    and bugs.bug_id = dependencies.$targetfield
  order by dependencies.$targetfield");
     while (MoreSQLData()) {
-        my ($i, $stat) = (FetchSQLData());
+        my ($i, $stat, $dep_desc) = (FetchSQLData());
         push(@list, $i);
         my $opened = ($stat eq "NEW" || $stat eq "ASSIGNED" ||
                       $stat eq "REOPENED");
         if (!$opened) {
             print "<strike>";
         }
-        print qq{<a href="show_bug.cgi?id=$i">$i</a>};
+        $dep_desc = value_quote($dep_desc);
+        print qq{<a href="show_bug.cgi?id=$i" title="$stat - $dep_desc">$i</a>};
         if (!$opened) {
             print "</strike>";
         }

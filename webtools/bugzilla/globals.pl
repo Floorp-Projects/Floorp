@@ -676,15 +676,23 @@ sub quoteUrls {
     while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
         my $item = $&;
         my $num = $2;
+        SendSQL("select bugs.bug_status, short_desc
+        from bugs where bugs.bug_id = $num");
+        my ($stat, $dep_desc) = (FetchSQLData());
         $item = value_quote($item); # Not really necessary, since we know
                                     # there's no special chars in it.
-        $item = qq{<A HREF="show_bug.cgi?id=$num">$item</A>};
+        $dep_desc = value_quote($dep_desc);
+        $item = qq{<A HREF="show_bug.cgi?id=$num" title="$stat - $dep_desc">$item</A>};
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
         my $item = $&;
         my $num = $1;
-        $item =~ s@\d+@<A HREF="show_bug.cgi?id=$num">$num</A>@;
+        SendSQL("select bugs.bug_status, short_desc
+        from bugs where bugs.bug_id = $num");
+        my ($stat, $dep_desc) = (FetchSQLData());
+        $dep_desc = value_quote($dep_desc);
+        $item =~ s@\d+@<A HREF="show_bug.cgi?id=$num" title="$stat - $dep_desc">$num</A>@;
         $things[$count++] = $item;
     }
     while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
