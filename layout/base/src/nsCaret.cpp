@@ -33,6 +33,7 @@
 #include "nsIFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
+#include "nsIFontMetrics.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMCharacterData.h"
@@ -876,14 +877,9 @@ void nsCaret::DrawCaret()
   
   nsRect    frameRect;
   mLastCaretFrame->GetRect(frameRect);
+  
   frameRect.x = 0;      // the origin is accounted for in GetViewForRendering()
   frameRect.y = 0;
-  
-  if (frameRect.height == 0)    // we're in a BR frame which has zero height.
-  {
-    frameRect.height = 200;
-    frameRect.y -= 200;
-  }
   
   nsPoint   viewOffset(0, 0);
   nsRect    clipRect;
@@ -923,6 +919,27 @@ void nsCaret::DrawCaret()
   // push a known good state
   mRendContext->PushState();
 
+  // if we got a zero-height frame, it's probably a BR frame at the end of a non-empty line
+  // (see BRFrame::Reflow). In that case, figure out a height. We have to do this
+  // after we've got an RC.
+  if (frameRect.height == 0)
+  {
+      const nsStyleFont* fontStyle;
+      mLastCaretFrame->GetStyleData(eStyleStruct_Font, (const nsStyleFont*&)fontStyle);
+      mRendContext->SetFont(fontStyle->mFont);
+      nsCOMPtr<nsIFontMetrics> fm;
+      mRendContext->GetFontMetrics(*getter_AddRefs(fm));
+      if (fm)
+      {
+        nscoord ascent, descent;
+        fm->GetMaxAscent(ascent);
+        fm->GetMaxDescent(descent);
+        frameRect.height = ascent + descent;
+        frameRect.y -= ascent; // BR frames sit on the baseline of the text, so we need to subtract
+                               // the ascent to account for the frame height.
+      }
+  }
+  
   // views are not refcounted
   mLastCaretView = drawingView;
 
