@@ -26,6 +26,14 @@
 #include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
 
+nsPageFrame::nsPageFrame()
+{
+}
+
+nsPageFrame::~nsPageFrame()
+{
+}
+
 NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
