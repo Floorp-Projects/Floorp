@@ -38,7 +38,7 @@
 * SUMMARY: Testing that Array.sort() doesn't crash on very large arrays
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=157652
 *
-* How big can a JavaScript array be?
+* How large can a JavaScript array be?
 * ECMA-262 Ed.3 Final, Section 15.4.2.2 : new Array(len)
 *
 * This states that |len| must be a a uint32 (unsigned 32-bit integer).
@@ -86,14 +86,19 @@ else
   expectExitCode(3);
 
 
-var a1 = Array(0x40000000);
+/*
+ * Try the largest possible array first (see above), then a couple others.
+ * Try to be good about memory by nulling each array variable afterwards.
+ * This will tell the garbage collector the memory is no longer needed.
+ */
+var a1=Array(0xFFFFFFFF);
 a1.sort();
-a1=null;
+a1 = null;
 
-var a2=Array(0x10000000/4);
+var a2 = Array(0x40000000);
 a2.sort();
 a2=null;
 
-var a3=Array(0xFFFFFFFF);
+var a3=Array(0x10000000/4);
 a3.sort();
-a3 = null;
+a3=null;
