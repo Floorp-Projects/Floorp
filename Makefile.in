@@ -164,8 +164,8 @@ endif # BUILD_MODULES == all
 
 STATIC_MAKEFILES := $(NSPRPUB_DIR) directory/c-sdk/ldap
 
-ifdef MOZ_NSS_AUTOCONF
-STATIC_MAKEFILES += security
+ifdef MOZ_PSM
+STATIC_MAKEFILES += security/nss 
 endif
 
 GARBAGE_DIRS += dist
