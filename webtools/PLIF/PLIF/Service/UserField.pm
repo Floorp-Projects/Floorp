@@ -65,7 +65,7 @@ sub init {
     $self->typeData($fieldTypeData); # change this at your peril
     $self->mode($fieldMode); # change this at your peril
     $self->data($fieldData); # this is the only thing you should be changing
-    # don't forget to update the user's 'hash' function if you add more member variables here
+    # don't forget to update the 'hash' function if you add more member variables here
     $self->{'_DELETE'} = 0;
     $self->{'_DIRTY'} = 0;
 }
@@ -76,6 +76,7 @@ sub type {
 }
 
 sub validate {
+    # should be passed candidate $data
     return 1;
 }
 
@@ -86,6 +87,10 @@ sub remove {
     $self->{'_DIRTY'} = 1;
 }
 
+sub hash {
+    my $self = shift;
+    return $self->data;
+}
 
 # Methods specifically for 'contact' category fields
 
@@ -119,6 +124,10 @@ sub prepareAddressChange {
 
 sub propertySet {
     my $self = shift;
+    my($name, $value) = @_;
+    if ($name eq 'data') {
+        $self->assert($self->validate($value), 0, 'tried to set data to invalid value'); # XXX might want to provide more debugging data
+    }
     my $result = $self->SUPER::propertySet(@_);
     $self->{'_DIRTY'} = 1;
     return $result;
