@@ -34,6 +34,7 @@
 #include "signtool.h"
 #include "prio.h"
 #include "prmem.h"
+#include "nss.h"
 
 static int is_dir (char *filename);
 

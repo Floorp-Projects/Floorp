@@ -51,6 +51,7 @@
 #include "pqgutil.h"
 #include "certxutl.h"
 #include "secrng.h"	/* for RNG_ */
+#include "nss.h"
 
 
 /* #define TEST           1 */

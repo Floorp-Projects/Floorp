@@ -35,7 +35,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.3 2001/01/06 22:08:56 relyea%netscape.com Exp $
+ * $Id: p7sign.c,v 1.4 2001/01/07 07:43:17 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -45,6 +45,7 @@
 #include "cert.h"
 #include "certdb.h"
 #include "sechash.h"	/* for HASH_GetHashObject() */
+#include "nss.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>

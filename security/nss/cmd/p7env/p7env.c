@@ -34,7 +34,7 @@
 /*
  * p7env -- A command to create a pkcs7 enveloped data.
  *
- * $Id: p7env.c,v 1.2 2001/01/06 22:08:54 relyea%netscape.com Exp $
+ * $Id: p7env.c,v 1.3 2001/01/07 07:43:15 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -43,6 +43,7 @@
 #include "secpkcs7.h"
 #include "cert.h"
 #include "certdb.h"
+#include "nss.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>

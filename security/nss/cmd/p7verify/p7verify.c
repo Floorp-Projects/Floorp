@@ -34,7 +34,7 @@
 /*
  * p7verify -- A command to do a verification of a *detached* pkcs7 signature.
  *
- * $Id: p7verify.c,v 1.3 2001/01/06 22:08:58 relyea%netscape.com Exp $
+ * $Id: p7verify.c,v 1.4 2001/01/07 07:43:24 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -45,6 +45,7 @@
 #include "certdb.h"
 #include "secoid.h"
 #include "sechash.h"	/* for HASH_GetHashObject() */
+#include "nss.h"
 
 #if defined(XP_UNIX)
 #include <unistd.h>

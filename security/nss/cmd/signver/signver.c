@@ -35,6 +35,7 @@
 #include "secmod.h"
 #include "cert.h"
 #include "secoid.h"
+#include "nss.h"
 
 /* NSPR 2.0 header files */
 #include "prinit.h"

@@ -62,6 +62,7 @@
 #include "cryptohi.h"
 #include "secoid.h"
 #include "certdb.h"
+#include "nss.h"
 
 #define MIN_KEY_BITS		512
 #define MAX_KEY_BITS		2048
