@@ -49,13 +49,23 @@
             }"
  %]
 
+[% tabs = [ { name => "account", description => "Account settings", 
+              saveable => "1" },
+            { name => "email", description => "Email settings", 
+              saveable => "1" },
+            { name => "footer", description => "Page footer", 
+              saveable => "1" },
+            { name => "permissions", description => "Permissions", 
+              saveable => "0" } ] %]
+
 <center>
   <table cellspacing="0" cellpadding="10" border="0" width="100%">
     <tr>
       <td class="spacer">&nbsp;</td>
  
       [% FOREACH tab = tabs %]
-        [% IF tab.name == current_tab.name %]
+        [% IF tab.name == current_tab_name %]
+          [% current_tab = tab %]
           <td align="center" bgcolor="lightblue" class="selected_tab">
             [% tab.description %]
           </td>

@@ -365,24 +365,7 @@ $vars->{'changes_saved'} = $::FORM{'dosave'};
 
 my $current_tab_name = $::FORM{'tab'} || "account";
 
-my @tabs = ( { name => "account", description => "Account settings", 
-               saveable => "1" },
-             { name => "email", description => "Email settings", 
-               saveable => "1" },
-             { name => "footer", description => "Page footer", 
-               saveable => "1" },
-             { name => "permissions", description => "Permissions", 
-               saveable => "0" } );
-
-# Work out the current tab
-foreach my $tab (@tabs) {
-    if ($tab->{'name'} eq $current_tab_name) {
-        $vars->{'current_tab'} = $tab;
-        last;
-    }
-}
-
-$vars->{'tabs'} = \@tabs;
+$vars->{'current_tab_name'} = $current_tab_name;
 
 # Do any saving, and then display the current tab.
 SWITCH: for ($current_tab_name) {
