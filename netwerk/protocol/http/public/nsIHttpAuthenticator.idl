@@ -31,11 +31,29 @@ interface nsIHttpAuthenticator : nsISupports
     /**
      * Called to generate the authentication credentials for a particular
      * server/proxy challenge.
+     *
+     * @param channel   - the http channel requesting credentials
+     * @param challenge - the server specified auth challenge
+     * @param username  - the username from which to generate credentials
+     * @param password  - the password from which to generate credentials
+     * @param extra     - additional information stored in the auth cache
      */
     string generateCredentials(in nsIHttpChannel channel,
                                in string challenge,
                                in wstring username,
-                               in wstring password);
+                               in wstring password,
+                               in nsISupports metadata);
+
+    /**
+     * indicates if credentials returned from GenerateCredentials can be reused
+     */
+    boolean areCredentialsReusable();
+
+    /**
+     * allocate authenticator specific metadata implementation.  implementations
+     * that don't need to store extra data in the auth cache can simply return NULL.
+     */
+    nsISupports allocateMetaData();
 };
 
 %{C++

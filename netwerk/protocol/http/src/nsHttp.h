@@ -141,4 +141,7 @@ PRTimeToSeconds(PRTime t_usec)
 #undef  CLAMP
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
+// nsCRT::strdup likes to convert nsnull to "" 
+#define strdup_if(s) (s ? nsCRT::strdup(s) : nsnull)
+
 #endif // nsHttp_h__

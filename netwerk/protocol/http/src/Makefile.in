@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  intl \
 		  exthandler \
+		  caps \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -49,6 +50,7 @@ CPPSRCS		= \
 		nsHttpChunkedDecoder.cpp \
 		nsHttpAuthCache.cpp \
 		nsHttpBasicAuth.cpp \
+		nsHttpDigestAuth.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES=-I$(srcdir)/../../../streamconv/converters
