@@ -5916,9 +5916,10 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     // if the new frame was already initialized to initialize it again.
     if (!frameHasBeenInitialized) {
 
-      InitAndRestoreFrame(aPresContext, aState, aContent, 
+      rv = InitAndRestoreFrame(aPresContext, aState, aContent, 
                       geometricParent, aStyleContext, nsnull, newFrame);
 
+      NS_ENSURE_SUCCESS(rv,rv);
       
       /*
       // if our parent is a block frame then do things the way html likes it

@@ -1227,7 +1227,8 @@ nsHTMLFrameInnerFrame::Init(nsIPresContext*  aPresContext,
   }
 
   if (shouldCreateDoc) {
-    ShowDocShell(aPresContext);
+    rv = ShowDocShell(aPresContext);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
 
   return NS_OK;
