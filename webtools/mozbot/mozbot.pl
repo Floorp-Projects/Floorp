@@ -54,10 +54,8 @@ use Carp;
 
 $|++;
 
-my $VERSION = "1.12"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.13"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
-
-
 
 my %msgcmds = (
                "url" => \&bot_urls,
@@ -70,7 +68,8 @@ my %pubcmds = (
                "up" => \&bot_up,
                "trees" => \&bot_tinderbox,
                "(slashdot|sd|\/\.)" => \&bot_slashdot,
-               "(mozillazine|zine|mz)" => \&bot_mozillazine
+               "(mozillazine|zine|mz)" => \&bot_mozillazine,
+							 "debug" => \&bot_debug,
                );
 
 my %admincmds = (
@@ -80,8 +79,6 @@ my %admincmds = (
                  "say" => \&bot_say,
                  "list" => \&bot_list,
                  );
-               
-               
 
 @::origargv = @ARGV;
 
@@ -136,12 +133,14 @@ my @greetings =
 
 my $slashdot = "http://slashdot.org/ultramode.txt";
 my @slashdot;
+my $last_slashdot = 0;
 
 # leave $mozillazine undef'd if you don't want mozillazine
 # headlines checked every eight hours
 
 my $mozillazine = "http://www.mozillazine.org/home.html";
 my @mozillazine;
+my $last_mozillazine = 0;
 
 my $irc = new Net::IRC or confess "$0: duh?";
 
@@ -371,7 +370,34 @@ sub do_headlines {
     saylongline($nick, $str, $spacer);
 }
     
+sub bot_debug
+	{
+	my ($nick, $cmd, $rest) = (@_);
+	
+	my @list;
+	my %last = 
+		(
+		"slashdot" => $last_slashdot,
+		"mozillazine" => $last_mozillazine,
+		"tinderbox" => $last_tree,
+		"moon" => $last_moon,
+		);
+	
+	foreach (keys %last)
+		{
+		if ($last{$_} != 0)
+			{
+			push @list, "$_ updated: " . &logdate ($last{$_}) . ", " . 
+				&days ($last{$_});
+			}
+		else
+			{
+			push @list, "$_ never updated!";
+			}
+		}
 
+	do_headlines ($nick, "Boring Debug Information", \@list);
+	}
 
 sub bot_slashdot {
     my ($nick, $cmd, $rest) = (@_);
@@ -706,6 +732,7 @@ sub slashdot
 	&debug ("fetching slashdot headlines");
 
   my $output = get $slashdot;
+	$last_slashdot = time;
   return if (! $output);
   my @sd = split /\n/, $output;
  
@@ -715,8 +742,8 @@ sub slashdot
     {
     push @slashdot, $sd[$i+1] if ($sd[$i] eq "%%" && $i != $#sd);
     }
-
-  $bot->schedule (60 * 60 * 2, \&slashdot);
+	push @slashdot, "last updated: " . &logdate ($last_slashdot);
+  $bot->schedule (3600, \&slashdot);
   }
 
 # fetches headlines from mozillaZine
@@ -734,6 +761,7 @@ sub mozillazine
 	
 	my $output = get $mozillazine;
 	return if (! $output);
+	$last_mozillazine = time;
 	my @mz = split /\n/, $output;
 	
 	@mozillazine = ();
