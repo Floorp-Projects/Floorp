@@ -242,33 +242,25 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         return NS_OK;
 
       while(IS_SPACE_CHARS(*httpEquivValue))
-        httpEquivValue++;
+        ++httpEquivValue;
+      // skip opening quote
+      if (*httpEquivValue == '\'' || *httpEquivValue == '\"')
+        ++httpEquivValue;
+
       while(IS_SPACE_CHARS(*contentValue))
-        contentValue++;
+        ++contentValue;
+      // skip opening quote
+      if (*contentValue == '\'' || *contentValue == '\"')
+        ++contentValue;
 
       if(
-          // first try unquoted strings
-         ((Substring(httpEquivValue,
-                     httpEquivValue+contenttype.Length()).Equals(contenttype,
-                                                                 nsCaseInsensitiveStringComparator())) ||
-          // now try "quoted" or 'quoted' strings
-          (( (httpEquivValue[0]=='\'') ||
-             (httpEquivValue[0]=='\"') ) && 
-           (Substring(httpEquivValue+1,
-                      httpEquivValue+1+contenttype.Length()).Equals(contenttype,
-                                                                    nsCaseInsensitiveStringComparator()))
-          )) &&
-          // first try unquoted strings
-         ((Substring(contentValue,
-                     contentValue+texthtml.Length()).Equals(texthtml,
-                                                            nsCaseInsensitiveStringComparator())) ||
-          // now try "quoted" or 'quoted' strings
-          (((contentValue[0]=='\'') ||
-            (contentValue[0]=='\"'))&&
-           (Substring(contentValue+1,
-                      contentValue+1+texthtml.Length()).Equals(texthtml,
-                                                               nsCaseInsensitiveStringComparator()))
-          ))
+         Substring(httpEquivValue,
+                   httpEquivValue+contenttype.Length()).Equals(contenttype,
+                                                               nsCaseInsensitiveStringComparator())
+         &&
+         Substring(contentValue,
+                   contentValue+texthtml.Length()).Equals(texthtml,
+                                                          nsCaseInsensitiveStringComparator())
         )
       {
 
@@ -276,7 +268,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
          if (nsnull == charsetValue) 
          {
-			 nsAutoString contentPart1(contentValue+10); // after "text/html;"
+			 nsAutoString contentPart1(contentValue+9); // after "text/html"
 			 PRInt32 start = contentPart1.RFind("charset=", PR_TRUE ) ;
 			 if(kNotFound != start) 
 	         {	
