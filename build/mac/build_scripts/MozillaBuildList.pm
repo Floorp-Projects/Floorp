@@ -286,51 +286,51 @@ sub ProcessJarManifests()
     
     if ($main::build{extensions})
     {
-      MozJar::CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
+      CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
       # cview needs a jar.mn file
       # transformiix needs a jar.mn file
     }
     
-    MozJar::CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:docshell:base:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:editor:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:embedding:browser:chrome:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:embedding:browser:chrome:locale:en-US:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:extensions:wallet:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:intl:uconv:src:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:layout:html:forms:src:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:mailnews:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:rdf:tests:domds:resources:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:blue:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:search:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:communicator:sidebar:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:global:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:navigator:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:messenger:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:messenger:addressbook:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:editor:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:classic:preview:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:themes:modern:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpcom:base:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:browser:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:browser:resources:content:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:communicator:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:communicator:resources:content:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:components:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:components:prefwindow:resources:content:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:global:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:global:resources:content:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
-    MozJar::CreateJarFromManifest(":mozilla:xpinstall:res:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:caps:src:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:docshell:base:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:editor:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:embedding:browser:chrome:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:embedding:browser:chrome:locale:en-US:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:extensions:wallet:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:intl:uconv:src:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:layout:html:forms:src:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:mailnews:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:rdf:tests:domds:resources:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:blue:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:communicator:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:communicator:search:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:communicator:sidebar:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:global:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:navigator:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:messenger:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:messenger:addressbook:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:editor:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:classic:preview:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:themes:modern:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpcom:base:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:browser:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:browser:resources:content:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:communicator:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:communicator:resources:content:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:components:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:components:prefwindow:resources:content:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:global:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:global:resources:content:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:global:resources:locale:en-US:mac:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpinstall:res:jar.mn", $chrome_dir, \%jars);
 
     # bad jar.mn files
-#    MozJar::CreateJarFromManifest(":mozilla:extensions:xmlterm:jar.mn", $chrome_dir, \%jars);
+#    CreateJarFromManifest(":mozilla:extensions:xmlterm:jar.mn", $chrome_dir, \%jars);
 
     WriteOutJarFiles($chrome_dir, \%jars);
 }
