@@ -55,7 +55,7 @@ bin\components\docshell.dll
 bin\components\docshell_base.xpt
 bin\components\dom.xpt
 bin\components\editor.xpt
-bin\components\ender.dll
+bin\components\editor.dll
 bin\components\evntloop.dll
 bin\components\gfx.xpt
 bin\components\gkhtml.dll

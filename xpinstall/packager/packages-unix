@@ -60,7 +60,7 @@ bin/components/libchrome.so
 bin/components/libconverters.so
 bin/components/libcookie.so
 bin/components/libdirectory.so
-bin/components/libender.so
+bin/components/libeditor.so
 bin/components/libgfxps.so
 bin/components/libhistory.so
 bin/components/libjsurl.so

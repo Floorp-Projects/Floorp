@@ -23,7 +23,7 @@ DEPTH=..\..
 
 include <$(DEPTH)/config/config.mak>
 
-LIBRARY_NAME=ender
+LIBRARY_NAME=editor
 
 CPPSRCS =				\
       nsEditor.cpp			     \
@@ -106,7 +106,7 @@ CPP_OBJS =					\
 MODULE=editor 
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = ender
+DLLNAME = editor
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 # Enable Editor API Logging!
