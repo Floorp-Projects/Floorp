@@ -73,7 +73,8 @@ public:
     int     Extract(nsComponent *aXPIEngine);
     int     Install(int aCustom, nsComponentList *aComps, char *aDestination);
 
-    static void ProgressCallback(const char* aMsg, PRInt32 aMax, PRInt32 aVal);
+    static void ProgressCallback(const char* aMsg, PRInt32 aVal, PRInt32 aMax);
+    static int  ExistAllXPIs(int aCustom, nsComponentList *aComps);
 
 private:
     int     MakeUniqueTmpDir();
@@ -82,8 +83,9 @@ private:
     int     LoadXPIStub(xpistub_t *aStub, char *aDestionation);
     int     InstallXPI(nsComponent *aComp, xpistub_t *aStub);
     int     UnloadXPIStub(xpistub_t *aStub);
+    int     CopyToTmp(int aCustom, nsComponentList *aComps);
 
-    char            *mTmp;
+    char    *mTmp;
 };
 
 #define CORE_LIB_COUNT 9
