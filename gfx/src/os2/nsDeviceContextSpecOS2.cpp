@@ -619,7 +619,7 @@ char* PRINTDLG::GetPrinter (int numPrinter)
    if (numPrinter > mQueueCount)
       return NULL;
 
-   pq = mPQBuf [numPrinter]->PQI3().pszDriverName;
+   pq = mPQBuf [numPrinter]->QueueName();
 
    return (char *)pq;
 }
