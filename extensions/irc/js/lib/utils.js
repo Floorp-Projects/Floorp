@@ -897,7 +897,7 @@ function prompt(msg, initial, parent, title)
     if (!ps.prompt (parent, title, msg, rv, null, {value: null}))
         return null;
 
-    return rv.value
+    return rv.value;
 }
 
 function promptPassword(msg, initial, parent, title)
@@ -914,5 +914,5 @@ function promptPassword(msg, initial, parent, title)
     if (!ps.promptPassword (parent, title, msg, rv, null, {value: null}))
         return null;
 
-    return rv.value
+    return rv.value;
 }

@@ -37,7 +37,8 @@ const DEFAULT_NICK = "IRCMonkey"
 
 function initPrefs()
 {
-    client.prefManager = new PrefManager("extensions.irc.");
+    client.prefManager = new PrefManager("extensions.irc.", 
+                                         client.defaultBundle);
     client.prefManagers = [client.prefManager];
 
     client.prefs = client.prefManager.prefs;
@@ -71,7 +72,9 @@ function initPrefs()
 
     var prefs =
         [
+         ["activityFlashDelay", 200],
          ["aliases",            []],
+         ["autoRejoin",         false],
          ["bugURL",           "http://bugzilla.mozilla.org/show_bug.cgi?id=%s"],
          ["channelHeader",      true],
          ["channelLog",         false],
@@ -79,13 +82,13 @@ function initPrefs()
          ["charset",            "utf-8"],
          ["clientMaxLines",     200],
          ["collapseMsgs",       false],
+         ["connectTries",       5],
          ["copyMessages",       true],
          ["debugMode",          ""],
          ["desc",               "New Now Know How"],
          ["deleteOnPart",       true],
          ["displayHeader",      true],
          ["guessCommands",      true],
-         ["focusChannelOnJoin", true],
          ["initialURLs",        []],
          ["initialScripts",     [getURLSpecFromFile(scriptPath.path)]],
          ["log",                false],
@@ -99,7 +102,20 @@ function initPrefs()
          ["motif.current",      "chrome://chatzilla/skin/output-default.css"],
          ["msgBeep",            "beep beep"],
          ["multiline",          false],
+         ["munger.bold",        true],
+         ["munger.bugzilla-link", true],
+         ["munger.channel-link",true],
          ["munger.colorCodes",  true],
+         ["munger.ctrl-char",   true],
+         ["munger.ear",         false],
+         ["munger.face",        true],
+         ["munger.italic",      true],
+         ["munger.link",        true],
+         ["munger.mailto",      true],
+         ["munger.quote",       true],
+         ["munger.rheet",       true],
+         ["munger.underline",   true],
+         ["munger.word-hyphenator", true],
          ["networkHeader",      true],
          ["networkLog",         false],
          ["networkMaxLines",    200],
@@ -111,12 +127,13 @@ function initPrefs()
          ["outputWindowURL",   "chrome://chatzilla/content/output-window.html"],
          ["sortUsersByMode",    true],
          ["queryBeep",          "beep"],
-         ["raiseNewTab",        false],
          ["reconnect",          true],
          ["showModeSymbols",    false],
          ["stalkBeep",          "beep"],
          ["stalkWholeWords",    true],
          ["stalkWords",         []],
+         ["timestamps",         false],
+         ["timestampFormat",    "[%h:%n]"],
          ["username",           "chatzilla"],
          ["usermode",           "+i"],
          ["userHeader",         true],
@@ -128,6 +145,7 @@ function initPrefs()
     client.prefManager.onPrefChanged = onPrefChanged;
 
     CIRCNetwork.prototype.stayingPower  = client.prefs["reconnect"];
+    CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = client.prefs["connectTries"];
     CIRCNetwork.prototype.INITIAL_NICK  = client.prefs["nickname"];
     CIRCNetwork.prototype.INITIAL_NAME  = client.prefs["username"];
     CIRCNetwork.prototype.INITIAL_DESC  = client.prefs["desc"];
@@ -164,16 +182,21 @@ function getNetworkPrefManager(network)
 
     var prefs =
         [
+         ["autoRejoin",       defer],
          ["charset",          defer],
          ["collapseMsgs",     defer],
+         ["connectTries",     defer],
          ["desc",             defer],
          ["displayHeader",    client.prefs["networkHeader"]],
          ["log",              client.prefs["networkLog"]],
          ["logFileName",      logDefault.path],
          ["motif.current",    defer],
          ["nickname",         defer],
+         ["notifyList",       []],
          ["outputWindowURL",  defer],
          ["reconnect",        defer],
+         ["timestamps",       defer],
+         ["timestampFormat",  defer],
          ["username",         defer],
          ["usermode",         defer],
          ["autoperform",      []]
@@ -181,7 +204,7 @@ function getNetworkPrefManager(network)
 
     var branch = "extensions.irc.networks." + pref_mungeName(network.name) +
         ".";
-    var prefManager = new PrefManager(branch);
+    var prefManager = new PrefManager(branch, client.defaultBundle);
     prefManager.addPrefs(prefs);
     prefManager.onPrefChanged = onPrefChanged;
 
@@ -202,6 +225,7 @@ function getNetworkPrefManager(network)
         network.INITIAL_UMODE = value;
 
     network.stayingPower  = prefManager.prefs["reconnect"];
+    network.MAX_CONNECT_ATTEMPTS = prefManager.prefs["connectTries"];
 
     client.prefManagers.push(prefManager);
 
@@ -230,18 +254,21 @@ function getChannelPrefManager(channel)
 
     var prefs =
         [
+         ["autoRejoin",       defer],
          ["charset",          defer],
          ["collapseMsgs",     defer],
          ["displayHeader",    client.prefs["channelHeader"]],
          ["log",              client.prefs["channelLog"]],
          ["logFileName",      logDefault.path],
          ["motif.current",    defer],
+         ["timestamps",       defer],
+         ["timestampFormat",  defer],
          ["outputWindowURL",  defer]
         ];
     
     var branch = "extensions.irc.networks." + pref_mungeName(network.name) +
         ".channels." + pref_mungeName(channel.normalizedName) + "."
-    var prefManager = new PrefManager(branch);
+    var prefManager = new PrefManager(branch, client.defaultBundle);
     prefManager.addPrefs(prefs);
     prefManager.onPrefChanged = onPrefChanged;
 
@@ -277,12 +304,14 @@ function getUserPrefManager(user)
          ["motif.current",    defer],
          ["outputWindowURL",  defer],
          ["log",              client.prefs["userLog"]],
-         ["logFileName",      logDefault.path]
+         ["logFileName",      logDefault.path],
+         ["timestamps",       defer],
+         ["timestampFormat",  defer]
         ];
     
     var branch = "extensions.irc.networks." + pref_mungeName(network.name) +
         ".users." + pref_mungeName(user.nick) + ".";
-    var prefManager = new PrefManager(branch);
+    var prefManager = new PrefManager(branch, client.defaultBundle);
     prefManager.addPrefs(prefs);
     prefManager.onPrefChanged = onPrefChanged;
 
@@ -314,6 +343,10 @@ function onPrefChanged(prefName, newValue, oldValue)
 
         case "clientMaxLines":
             client.MAX_MESSAGES = newValue;
+            break;
+            
+        case "connectTries":
+            CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = newValue;
             break;
             
         case "showModeSymbols":
@@ -380,6 +413,11 @@ function onPrefChanged(prefName, newValue, oldValue)
             dispatch("sync-headers");
             break;
 
+        case "timestamps":
+        case "timestampFormat":
+            dispatch("sync-timestamps");
+            break;
+
         case "log":
             dispatch("sync-logs");
             break;
@@ -440,8 +478,17 @@ function onNetworkPrefChanged(network, prefName, newValue, oldValue)
             dispatch("sync-headers");
             break;
 
+        case "timestamps":
+        case "timestampFormat":
+            dispatch("sync-timestamps");
+            break;
+
         case "log":
             dispatch("sync-logs");
+            break;
+
+        case "connectTries":
+            network.MAX_CONNECT_ATTEMPTS = newValue;
             break;
     }
 }
@@ -472,6 +519,11 @@ function onChannelPrefChanged(channel, prefName, newValue, oldValue)
 
         case "displayHeader":
             dispatch("sync-headers");
+            break;
+
+        case "timestamps":
+        case "timestampFormat":
+            dispatch("sync-timestamps");
             break;
 
         case "log":
@@ -506,6 +558,11 @@ function onUserPrefChanged(user, prefName, newValue, oldValue)
 
         case "displayHeader":
             dispatch("sync-headers");
+            break;
+
+        case "timestamps":
+        case "timestampFormat":
+            dispatch("sync-timestamps");
             break;
 
         case "log":

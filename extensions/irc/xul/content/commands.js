@@ -53,6 +53,9 @@ function initCommands()
          ["channel-charset",   cmdCharset,         CMD_NEED_CHAN | CMD_CONSOLE],
          ["channel-motif",     cmdMotif,           CMD_NEED_CHAN | CMD_CONSOLE],
          ["channel-pref",      cmdPref,            CMD_NEED_CHAN | CMD_CONSOLE],
+         ["cmd-copy",          cmdCopy,                                      0],
+         ["cmd-copy-link-url", cmdCopyLinkURL,                               0],
+         ["cmd-selectall",     cmdSelectAll,                                 0],
          ["op",                cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["deop",              cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["hop",               cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
@@ -112,8 +115,11 @@ function initCommands()
          ["sync-headers",      cmdSync,                                      0],
          ["sync-logs",         cmdSync,                                      0],
          ["sync-motifs",       cmdSync,                                      0],
+         ["sync-timestamps",   cmdSync,                                      0],
          ["sync-windows",      cmdSync,                                      0],
          ["testdisplay",       cmdTestDisplay,                     CMD_CONSOLE],
+         ["timestamps",        cmdTimestamps,                      CMD_CONSOLE],
+         ["timestamp-format",  cmdTimestampFormat,                 CMD_CONSOLE],
          ["toggle-ui",         cmdToggleUI,                        CMD_CONSOLE],
          ["toggle-pref",       cmdTogglePref,                                0],
          ["topic",             cmdTopic,           CMD_NEED_CHAN | CMD_CONSOLE],
@@ -140,6 +146,7 @@ function initCommands()
          ["toggle-copy",      "toggle-pref copyMessages",                    0],
          ["toggle-usort",     "toggle-pref sortUsersByMode",                 0],
          ["toggle-umode",     "toggle-pref showModeSymbols",                 0],
+         ["toggle-timestamps","timestamps toggle",                           0],
          ["motif-dark",       "motif dark",                                  0],
          ["motif-light",      "motif light",                                 0],
          ["motif-default",    "motif default",                               0],
@@ -642,6 +649,14 @@ function cmdSync(e)
                   };
             break;
             
+        case "sync-timestamps":
+            fun = function () 
+                  {
+                      view.changeCSS(view.getTimestampCSS("data"), 
+                                     "cz-timestamp-format");
+                  };
+            break;
+            
         case "sync-windows":
             fun = function () 
                   {
@@ -1025,11 +1040,14 @@ function cmdHideView(e)
         {
             client.deck.removeChild(e.view.frame);
             delete e.view.frame;
-            if (i >= client.viewsArray.length)
-                i = client.viewsArray.length - 1;
 
-            client.currentObject = null;
-            setCurrentObject (client.viewsArray[i].source);
+            if (client.currentObject == e.view)
+            {
+                if (i >= client.viewsArray.length)
+                    i = client.viewsArray.length - 1;
+                client.currentObject = null;
+                setCurrentObject (client.viewsArray[i].source);
+            }
         }
     }
 }
@@ -1049,12 +1067,10 @@ function cmdClearView(e)
 
 function cmdNames(e)
 {
-    var name;
-    
     if (e.channelName)
     {
         var encodedName = fromUnicode(e.channelName, e.network);
-        name = encodedName;
+        e.channel = new CIRCChannel (e.server, encodedName, e.channelName);
     }
     else
     {
@@ -1063,12 +1079,10 @@ function cmdNames(e)
             display(getMsg(MSG_ERR_REQUIRED_PARAM, "channel-name"), MT_ERROR);
             return;
         }
-
-        name = e.channel.encodedName;
     }
     
     e.channel.pendingNamesReply = true;
-    e.server.sendData ("NAMES " + name + "\n");
+    e.server.sendData ("NAMES " + e.channel.encodedName + "\n");
 }
 
 function cmdTogglePref (e)
@@ -1423,6 +1437,22 @@ function cmdJoin(e)
         return null;
     }
 
+    if (e.channelName && (e.channelName.search(",") != -1))
+    {
+        // We can join multiple channels! Woo!
+        var chan;
+        var chans = e.channelName.split(",");
+        var keys = [];
+        if (e.key)
+            keys = e.key.split(",");
+        for (var c in chans)
+        {
+            chan = dispatch("join", { charset: e.charset, 
+                                      channelName: chans[c], 
+                                      key: keys.shift() });
+        }
+        return chan;
+    }
     if (!e.channelName)
     {
         var channel = e.channel;
@@ -1447,14 +1477,19 @@ function cmdJoin(e)
     
     e.channel.join(e.key);
     
-    if (!("messages" in e.channel))
+    /* !-channels are "safe" channels, and get a server-generated prefix. For
+     * this reason, we shouldn't do anything client-side until the server 
+     * replies (since the reply will have the appropriate prefix). */
+    if (e.channelName[0] != "!")
     {
-        e.channel.displayHere(getMsg(MSG_CHANNEL_OPENED, e.channel.unicodeName),
-                              MT_INFO);
-    }
+        if (!("messages" in e.channel))
+        {
+            e.channel.displayHere(getMsg(MSG_CHANNEL_OPENED, 
+                                         e.channel.unicodeName), MT_INFO);
+        }
 
-    if (!e.isInteractive || client.prefs["focusChannelOnJoin"])
         setCurrentObject(e.channel);
+    }
 
     return e.channel;
 }
@@ -1490,14 +1525,25 @@ function cmdLeave(e)
         e.channelName = e.channel.encodedName;
     }
 
-    if (e.channel && e.noDelete)
-        e.channel.noDelete = true;
+    /* If it's not active, we're not actually in it, even though the view is
+     * still here.
+     */
+    if (e.channel && e.channel.active)
+    {
+        if (e.noDelete)
+            e.channel.noDelete = true;
 
-    if (!e.reason)
-        e.reason = "";
-    
-    e.server.sendData("PART " + e.channelName + " :" +
-                      fromUnicode(e.reason, e.channel) + "\n");
+        if (!e.reason)
+            e.reason = "";
+        
+        e.server.sendData("PART " + e.channelName + " :" +
+                          fromUnicode(e.reason, e.channel) + "\n");
+    }
+    else
+    {
+        if (!e.noDelete && client.prefs["deleteOnPart"])
+            e.channel.dispatch("delete");
+    }
 }
 
 function cmdLoad (e)
@@ -1898,7 +1944,7 @@ function cmdNotify(e)
     
     if (!e.nickname)
     {
-        if ("notifyList" in net && net.notifyList.length > 0)
+        if (net.prefs["notifyList"].length > 0)
         {
             /* delete the lists and force a ISON check, this will
              * print the current online/offline status when the server
@@ -1917,23 +1963,22 @@ function cmdNotify(e)
         var adds = new Array();
         var subs = new Array();
         
-        if (!("notifyList" in net))
-            net.notifyList = new Array();
         for (var i in e.nicknameList)
         {
-            var nickname = e.nicknameList[i];
-            var idx = arrayIndexOf (net.notifyList, nickname);
+            var nickname = e.nicknameList[i].toLowerCase();
+            var idx = arrayIndexOf (net.prefs["notifyList"], nickname);
             if (idx == -1)
             {
-                net.notifyList.push (nickname);
+                net.prefs["notifyList"].push (nickname);
                 adds.push(nickname);
             }
             else
             {
-                arrayRemoveAt (net.notifyList, idx);
+                arrayRemoveAt (net.prefs["notifyList"], idx);
                 subs.push(nickname);
             }
         }
+        net.prefs["notifyList"].update();
 
         var msgname;
         
@@ -2098,4 +2143,50 @@ function cmdSupports(e)
     display(getMsg(MSG_SUPPORTS_FLAGSON, listB1.join(MSG_COMMASP)));
     display(getMsg(MSG_SUPPORTS_FLAGSOFF, listB2.join(MSG_COMMASP)));
     display(getMsg(MSG_SUPPORTS_MISCOPTIONS, listN.join(MSG_COMMASP)));
+}
+
+function cmdCopy(e)
+{
+    doCommand("cmd_copy");
+}
+
+function cmdSelectAll(e)
+{
+    doCommand("cmd_selectAll");
+}
+
+function cmdCopyLinkURL(e)
+{
+    doCommand("cmd_copyLink");
+}
+
+function cmdTimestamps(e)
+{
+    var view = e.sourceObject;
+
+    if (e.toggle != null)
+    {
+        e.toggle = getToggle(e.toggle, view.prefs["timestamps"])
+        view.prefs["timestamps"] = e.toggle;
+    }
+    else
+    {
+        display(getMsg(MSG_FMT_PREF, ["timestamps", 
+                                      view.prefs["timestamps"]]));
+    }
+}
+
+function cmdTimestampFormat(e)
+{
+    var view = e.sourceObject;
+
+    if (e.format != null)
+    {
+        view.prefs["timestampFormat"] = e.format;
+    }
+    else
+    {
+        display(getMsg(MSG_FMT_PREF, ["timestampFormat", 
+                                      view.prefs["timestampFormat"]]));
+    }
 }

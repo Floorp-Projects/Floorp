@@ -31,6 +31,7 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://chatzilla/content/scripts.xul"?>
+<?xul-overlay href="chrome://chatzilla/content/popups.xul"?>
 <?xul-overlay href="chrome://chatzilla/content/menus.xul"?>
 
 <window id="chatzilla-window"
@@ -41,6 +42,7 @@
   persist="width height screenX screenY sizemode" windowtype="irc:chatzilla">
 
   <overlaytarget id="scripts-overlay-target"/>
+  <overlaytarget id="popup-overlay-target"/>
   <overlaytarget id="menu-overlay-target"/>
 
   <vbox id="outer-box" flex="1">
@@ -122,7 +124,8 @@
       <text id="server-nick" value=""/>
       <hbox id="multiline-box" flex="1" collapsed="true">
         <textbox id="multiline-input" multiline="true" flex="1" height="100px"
-          class="multiline-input-widget" onfocus="onInputFocus();"/>
+          class="multiline-input-widget" onfocus="onInputFocus();"
+          onkeypress="onInputKeypress(this)"/>
         <vbox>
           <toolbarbutton id="button-input" flex="1"
             oncommand="onMultilineSend(event);"
@@ -134,7 +137,7 @@
       </hbox>
       <hbox id="singleline-box" flex="1" collapsed="true">
         <textbox id="input" class="input-widget" flex="1" autostretch="true"
-          onfocus="onInputFocus();"/>
+          onfocus="onInputFocus();" onkeypress="onInputKeypress(this)"/>
         <toolbarbutton id="button-multiline-expand" 
           oncommand="dispatch('pref multiline true');" 
           tooltiptext="&multiline-expand.tooltip;"/>

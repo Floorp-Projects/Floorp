@@ -71,7 +71,7 @@ window {
 }
 
 .view-button {
-    color: black;
+	/* do NOT set colour, at least not without background. :) */
 }
 
 .view-button[state="current"] {
@@ -214,3 +214,18 @@ treechildren::-moz-tree-image(op-true) {
     list-style-image: url(chrome://chatzilla/skin/images/op-graphic.png);
 }
 
+.colorGrid
+{
+    width: 24px;
+    height: 16px;
+    border: 1px solid black;
+    -moz-box-align: center;
+    -moz-box-pack: center;
+}
+
+#colorTooltip
+{
+    padding: 0px;
+    -moz-box-align: center;
+    -moz-box-pack: center;
+}

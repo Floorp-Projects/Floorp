@@ -37,7 +37,16 @@ const PREF_RELOAD = true;
 const PREF_WRITETHROUGH = true;
 const PREF_CHARSET = "utf-8";   // string prefs stored in this charset
 
-function PrefManager (branchName)
+function PrefRecord (name, defaultValue, label, help)
+{
+    this.name = name;
+    this.defaultValue = defaultValue;
+    this.help = help;
+    this.label = label ? label : name;
+    this.realValue = null;
+}
+
+function PrefManager (branchName, defaultBundle)
 {
     var prefManager = this;
     
@@ -69,6 +78,8 @@ function PrefManager (branchName)
     this.prefBranchInternal =
         this.prefBranch.QueryInterface(nsIPrefBranchInternal);
     this.prefBranchInternal.addObserver("", this.observer, false);
+    
+    this.defaultBundle = defaultBundle;
 
     this.valid = true;
 }
@@ -301,7 +312,12 @@ function pm_setpref(prefName, value)
     if (!ASSERT(record, "Unknown pref: " + prefName))
         return null;
     
-    if ((record.realValue == null && value == record.defaultValue) ||
+    var defaultValue = record.defaultValue;
+
+    if (typeof defaultValue == "function")
+        defaultValue = defaultValue(prefName);
+    
+    if ((record.realValue == null && value == defaultValue) ||
         record.realValue == value)
     {
         // no realvalue, and value is the same as default value ... OR ...
@@ -309,16 +325,11 @@ function pm_setpref(prefName, value)
         return record.realValue;
     }
 
-    if (value == record.defaultValue)
+    if (value == defaultValue)
     {
         this.clearPref(prefName);
         return value;
     }
-    
-    var defaultValue = record.defaultValue;
-
-    if (typeof defaultValue == "function")
-        defaultValue = defaultValue(prefName);
     
     if (typeof defaultValue == "boolean")
     {
@@ -355,9 +366,11 @@ function pm_reset(prefName)
 }
 
 PrefManager.prototype.addPref =
-function pm_addpref(prefName, defaultValue, setter)
+function pm_addpref(prefName, defaultValue, setter, bundle)
 {
     var prefManager = this;
+    if (!bundle)
+        bundle = this.defaultBundle;
 
     function updateArrayPref() { prefManager.updateArrayPref(prefName); };
     function prefGetter() { return prefManager.getPref(prefName); };
@@ -375,7 +388,12 @@ function pm_addpref(prefName, defaultValue, setter)
     if (defaultValue instanceof Array)
         defaultValue.update = updateArrayPref;
 
-    this.prefRecords[prefName] = {defaultValue: defaultValue, realValue: null};
+    var label = getMsgFrom(bundle, "pref." + prefName + ".label", null, name);
+    var help  = getMsgFrom(bundle, "pref." + prefName + ".help", null, 
+                           MSG_NO_HELP);
+
+    this.prefRecords[prefName] = new PrefRecord (prefName, defaultValue, 
+                                                 label, help);
 
     this.prefNames.push(prefName);
     this.prefNames.sort();

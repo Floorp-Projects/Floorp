@@ -34,7 +34,7 @@
  *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
-const __cz_version   = "0.9.52B";
+const __cz_version   = "0.9.54";
 const __cz_condition = "green";
 
 var warn;
@@ -176,6 +176,11 @@ function initStatic()
     client.sound =
         Components.classes["@mozilla.org/sound;1"].createInstance(nsISound);
 
+    const nsIGlobalHistory = Components.interfaces.nsIGlobalHistory;
+    const GHIST_CONTRACTID = "@mozilla.org/browser/global-history;1";
+    client.globalHistory =
+        Components.classes[GHIST_CONTRACTID].getService(nsIGlobalHistory);
+
     multilineInputMode(client.prefs["multiline"]);
     if (client.prefs["showModeSymbols"])
         setListMode("symbol");
@@ -183,7 +188,7 @@ function initStatic()
         setListMode("graphic");
     setDebugMode(client.prefs["debugMode"]);
     
-    var ary = navigator.userAgent.match (/;\s*([^;\s]+\s*)\).*\/(\d+)/);
+    var ary = navigator.userAgent.match (/(rv:[^;)\s]+).*?Gecko\/(\d+)/);
     if (ary)
     {
         client.userAgent = "ChatZilla " + __cz_version + " [Mozilla " + 
@@ -986,8 +991,37 @@ function mainStep()
 function openQueryTab (server, nick)
 {
     var user = server.addUser(nick);
+    client.globalHistory.addPage(user.getURL());
     if (!("messages" in user))
+    {
+        var value = "";
+        var same = true;
+        for (var c in server.channels)
+        {
+            var chan = server.channels[c];
+            if (!(user.nick in chan.users))
+                continue;
+            /* This takes a boolean value for each channel (true - channel has 
+             * same value as first), and &&-s them all together. Thus, |same|
+             * will tell us, at the end, if all the channels found have the
+             * same value for charset.
+             */
+            if (value)
+                same = same && (value == chan.prefs["charset"]);
+            else
+                value = chan.prefs["charset"];
+        }
+        /* If we've got a value, and it's the same accross all channels,
+         * we use it as the *default* for the charset pref. If not, it'll
+         * just keep the "defer" default which pulls it off the network.
+         */
+        if (value && same)
+        {
+            user.prefManager.prefRecords["charset"].defaultValue = value;
+        }
+        
         user.displayHere (getMsg(MSG_QUERY_OPENED, user.properNick));
+    }
     server.sendData ("WHOIS " + nick + "\n");
     return user;
 }
@@ -1124,6 +1158,33 @@ function addDynamicRule (rule)
 
     var pos = rules.cssRules.length;
     rules.insertRule (rule, pos);
+}
+
+function getCommandEnabled(command)
+{
+    try {
+        var dispatcher = top.document.commandDispatcher;
+        var controller = dispatcher.getControllerForCommand(command);
+        
+        return controller.isCommandEnabled(command);
+    }
+    catch (e)
+    {
+        return false;
+    }
+}
+
+function doCommand(command)
+{
+    try {
+        var dispatcher = top.document.commandDispatcher;
+        var controller = dispatcher.getControllerForCommand(command);
+        if (controller && controller.isCommandEnabled(command))
+            controller.doCommand(command);
+    }
+    catch (e)
+    {
+    }
 }
 
 var testURLs =
@@ -1484,7 +1545,8 @@ function updateNetwork()
 
 function updateTitle (obj)
 {
-    if (!("currentObject" in client) || (obj && obj != client.currentObject))
+    if (!(("currentObject" in client) && client.currentObject) || 
+        (obj && obj != client.currentObject))
         return;
 
     var tstring;
@@ -1534,7 +1596,9 @@ function updateTitle (obj)
             if (!mode)
                 mode = MSG_TITLE_NO_MODE;
             topic = o.channel.topic ? o.channel.topic : MSG_TITLE_NO_TOPIC;
-
+            var re = /\x1f|\x02|\x0f|\x16|\x03([0-9]{1,2}(,[0-9]{1,2})?)?/g;
+            topic = topic.replace(re, "");
+            
             tstring = getMsg(MSG_TITLE_CHANNEL, [nick, chan, mode, topic]);
             break;
 
@@ -1775,7 +1839,12 @@ function scrollDown(frame, force)
 function setTabState (source, what)
 {
     if (typeof source != "object")
+    {
+        if (!ASSERT(source in client.viewsArray, 
+                    "INVALID SOURCE passed to setTabState"))
+            return;
         source = client.viewsArray[source].source;
+    }
     
     var tb = getTabForObject (source, true);
     var vk = Number(tb.getAttribute("viewKey"));
@@ -1787,8 +1856,12 @@ function setTabState (source, what)
         {
             /* if the tab state has an equal priority to what we are setting
              * then blink it */
-            tb.setAttribute ("state", "normal");
-            setTimeout (setTabState, 200, vk, what);
+            if (client.prefs["activityFlashDelay"] > 0)
+            {
+                tb.setAttribute ("state", "normal");
+                setTimeout (setTabState, client.prefs["activityFlashDelay"], 
+                            vk, what);
+            }
         }
         else
         {
@@ -1815,8 +1888,13 @@ function setTabState (source, what)
                 /* the current state of the tab has a higher priority than the
                  * new state.
                  * blink the new lower state quickly, then back to the old */
-                tb.setAttribute ("state", what);
-                setTimeout (setTabState, 200, vk, state);
+                if (client.prefs["activityFlashDelay"] > 0)
+                {
+                    tb.setAttribute ("state", what);
+                    setTimeout (setTabState, 
+                                client.prefs["activityFlashDelay"], vk, 
+                                state);
+                }
             }
         }
     }
@@ -1917,6 +1995,34 @@ function getFrameForDOMWindow(window)
     return undefined;
 } 
 
+function replaceColorCodes(msg)
+{
+    // mIRC codes: underline, bold, Original (reset), colors, reverse colors.
+    msg = msg.replace(/(^|[^%])%U/g, "$1\x1f");
+    msg = msg.replace(/(^|[^%])%B/g, "$1\x02");
+    msg = msg.replace(/(^|[^%])%O/g, "$1\x0f");
+    msg = msg.replace(/(^|[^%])%C/g, "$1\x03");
+    msg = msg.replace(/(^|[^%])%R/g, "$1\x16");
+    // %%[UBOCR] --> %[UBOCR].
+    msg = msg.replace(/%(%[UBOCR])/g, "$1");
+    
+    return msg;
+}
+
+function decodeColorCodes(msg)
+{
+    // %[UBOCR] --> %%[UBOCR].
+    msg = msg.replace(/(%[UBOCR])/g, "%$1");
+    // Put %-codes back in place of special character codes.
+    msg = msg.replace(/\x1f/g, "%U");
+    msg = msg.replace(/\x02/g, "%B");
+    msg = msg.replace(/\x0f/g, "%O");
+    msg = msg.replace(/\x03/g, "%C");
+    msg = msg.replace(/\x16/g, "%R");
+    
+    return msg;
+}
+
 client.progressListener = new Object();
  
 client.progressListener.QueryInterface = 
@@ -1958,6 +2064,8 @@ function client_statechange (webProgress, request, stateFlags, status)
         {
             cwin.getMsg = getMsg;
             cwin.initOutputWindow(client, frame.source, onMessageViewClick);
+            cwin.changeCSS(frame.source.getTimestampCSS("data"), 
+                           "cz-timestamp-format");
             scrollDown(frame, true);
             webProgress.removeProgressListener(this);
         }
@@ -2485,6 +2593,45 @@ function display (message, msgtype, sourceObj, destObj)
     client.currentObject.display (message, msgtype, sourceObj, destObj);
 }
 
+client.getTimestampCSS =
+CIRCNetwork.prototype.getTimestampCSS =
+CIRCChannel.prototype.getTimestampCSS =
+CIRCUser.prototype.getTimestampCSS =
+function this_getTimestampCSS(format)
+{
+    /* Wow, this is cool. We just put together a CSS-rule string based on the
+     * "timestampFormat" preferences. *This* is what CSS is all about. :)
+     * We also provide a "data: URL" format, to simplify other code.
+     */
+    var css;
+    
+    if (this.prefs["timestamps"])
+    {
+        /* Hack. To get around a Mozilla bug, we must force the display back 
+         * to a displayed value.
+         */
+        css = ".msg-timestamp { display: table-cell; } " +
+              ".msg-timestamp:before { content: '" + 
+              this.prefs["timestampFormat"] + "'; }";
+        
+        var letters = new Array('y', 'm', 'd', 'h', 'n', 's');
+        for (var i = 0; i < letters.length; i++)
+        {
+            css = css.replace("%" + letters[i], "' attr(time-" + 
+                              letters[i] + ") '");
+        }
+    }
+    else
+    {
+        /* Completely remove the <td>s if they're off, neatens display. */
+        css = ".msg-timestamp { display: none; }";
+    }
+    
+    if (format == "data")
+        return "data:text/css," + encodeURIComponent(css);
+    return css;
+}
+
 client.display =
 client.displayHere =
 CIRCNetwork.prototype.displayHere =
@@ -2515,7 +2662,15 @@ function __display(message, msgtype, sourceObj, destObj)
             else
                 obj.setAttribute ("msg-source", fromAttr);
         }
-   }
+    };
+    
+    function formatTimeNumber (num, digits)
+    {
+        var rv = num.toString();
+        while (rv.length < digits)
+            rv = "0" + rv;
+        return rv;
+    };
 
     if (!msgtype)
         msgtype = MT_INFO;
@@ -2599,6 +2754,22 @@ function __display(message, msgtype, sourceObj, destObj)
         statusString = getMsg(MSG_FMT_STATUS, [d.getMonth() + 1, d.getDate(),
                                                d.getHours(), mins, name]);
     }
+    
+    var msgTimestamp = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                                "html:td");
+    var atts = { statusText: statusString,
+                 "time-y": formatTimeNumber(d.getFullYear(), 4), 
+                 "time-m": formatTimeNumber(d.getMonth() + 1, 2), 
+                 "time-d": formatTimeNumber(d.getDate(), 2), 
+                 "time-h": formatTimeNumber(d.getHours(), 2), 
+                 "time-n": formatTimeNumber(d.getMinutes(), 2), 
+                 "time-s": formatTimeNumber(d.getSeconds(), 2),
+               };
+    setAttribs (msgTimestamp, "msg-timestamp", atts);
+    if (isImportant)
+        msgTimestamp.setAttribute ("important", "true");
+    
+    var msgSource, msgType, msgData;
     
     if (fromType.search(/IRC.*User/) != -1 &&
         msgtype.search(/PRIVMSG|ACTION|NOTICE/) != -1)
@@ -2685,8 +2856,8 @@ function __display(message, msgtype, sourceObj, destObj)
             this.mark = (this.mark == "even") ? "odd" : "even";
         }
 
-        var msgSource = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                                 "html:td");
+        msgSource = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                             "html:td");
         setAttribs (msgSource, "msg-user", {statusText: statusString});
         if (isImportant)
             msgSource.setAttribute ("important", "true");
@@ -2706,7 +2877,6 @@ function __display(message, msgtype, sourceObj, destObj)
         {
             msgSource.appendChild (newInlineText (nick));
         }
-        msgRow.appendChild (msgSource);
         canMergeData = this.prefs["collapseMsgs"];
     }
     else
@@ -2725,19 +2895,18 @@ function __display(message, msgtype, sourceObj, destObj)
         }
         
         /* Display the message code */
-        var msgType = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                               "html:td");
+        msgType = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                           "html:td");
         setAttribs (msgType, "msg-type", {statusText: statusString});
 
         msgType.appendChild (newInlineText (code));
-        msgRow.appendChild (msgType);
         logText += code + " ";
     }
              
     if (message)
     {
-        var msgData = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                               "html:td");
+        msgData = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                           "html:td");
         setAttribs(msgData, "msg-data", {statusText: statusString, 
                                          colspan: client.INITIAL_COLSPAN,
                                          timeStamp: timeStamp});
@@ -2757,13 +2926,18 @@ function __display(message, msgtype, sourceObj, destObj)
             msgData.appendChild (message);
             logText += message.innerHTML.replace(/<[^<]*>/g, "");
         }
-
-        msgRow.appendChild (msgData);
     }
 
     if (isImportant)
         msgRow.setAttribute ("important", "true");
 
+    if (msgSource)
+        msgRow.appendChild (msgSource);
+    else
+        msgRow.appendChild (msgType);
+    if (msgData)
+        msgRow.appendChild (msgData);
+    
     if (blockLevel)
     {
         /* putting a div here crashes mozilla, so fake it with nested tables
@@ -2791,6 +2965,8 @@ function __display(message, msgtype, sourceObj, destObj)
         msgRow = tr;
         canMergeData = false;
     }
+    
+    msgRow.insertBefore (msgTimestamp, msgRow.firstChild);
 
     addHistory (this, msgRow, canMergeData);
     if (isImportant || getAttention)
@@ -2871,7 +3047,7 @@ function addHistory (source, obj, mergeData)
             }
             /* message is from the same person as last time,
              * strip the nick first... */
-            obj.removeChild(obj.firstChild);
+            obj.removeChild(obj.childNodes[1]);
             /* Adjust height of previous cells, maybe. */
             for (i = 0; i < rowExtents.length - 1; ++i)
             {
@@ -2952,13 +3128,13 @@ function findPreviousColumnInfo (table)
 {
     var extents = new Array();
     var tr = table.firstChild.lastChild;
-    var className = tr ? tr.firstChild.getAttribute("class") : "";
+    var className = tr ? tr.childNodes[1].getAttribute("class") : "";
     while (tr && className.search(/msg-user|msg-type|msg-nested-td/) == -1)
     {
         extents.push(tr);
         tr = tr.previousSibling;
         if (tr)
-            className = tr.firstChild.getAttribute("class");
+            className = tr.childNodes[1].getAttribute("class");
     }
     
     if (!tr || className != "msg-user")
@@ -2971,7 +3147,7 @@ function findPreviousColumnInfo (table)
     {
         if (nickCol.getAttribute("class") == "msg-user")
             nickCols.push (nickCol);
-        nickCol = nickCol.nextSibling.nextSibling;
+        nickCol = nickCol.nextSibling;
     }
 
     return {extents: extents, nickColumns: nickCols};

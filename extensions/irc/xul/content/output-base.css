@@ -83,6 +83,10 @@
  *  + .msg is used as the class for the surrounding <TR>.  This means that
  *    any styles applied here will affect the entire message.
  *
+ *  + .msg-timestamp is used as the class for the <TD> that has all the time
+ *    information on it. Styles on this class will affect the time stamps
+ *    against messages (but not the format of the time).
+ *
  *  + .msg-type is used as the class for the <TD> surrounding the message type
  *    portion of messages.  Styles applied here will only affect message
  *    types.  ie. "-->|", or "[HELP]".
@@ -395,6 +399,12 @@ a.chatzilla-link:hover {
 .msg {                                      /* .msg = a single message in the */
     width: 100%;                            /* output window                  */
     font-size: 10pt;
+}
+
+.msg-timestamp {                            /* .msg-timestamp = timestamp for */
+	font-style: normal !important;          /* the message, done using        */
+	vertical-align: top;                    /* :before and content.           */
+	white-space: nowrap;
 }
 
 .msg-type {                                 /* .msg-type = message type       */

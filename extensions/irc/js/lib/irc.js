@@ -1472,10 +1472,13 @@ CIRCServer.prototype.onPart =
 function serv_part (e)
 {
     e.channel = new CIRCChannel (this, e.params[1]);
-    e.reason = (e.params.length > 1) ? e.decodeParam(2, e.channel) : "";
+    e.reason = (e.params.length > 2) ? e.decodeParam(2, e.channel) : "";
     e.user = new CIRCChanUser (e.channel, e.user.nick);
     if (userIsMe(e.user))
+    {
         e.channel.active = false;
+        e.channel.joined = false;
+    }
     e.channel.removeUser(e.user.nick);
     e.destObject = e.channel;
     e.set = "channel";
@@ -1490,7 +1493,10 @@ function serv_kick (e)
     e.lamer = new CIRCChanUser (e.channel, e.params[2]);
     delete e.channel.users[e.lamer.nick];
     if (userIsMe(e.lamer))
+    {
         e.channel.active = false;
+        e.channel.joined = false;
+    }
     e.reason = e.decodeParam(3, e.channel);
     e.destObject = e.channel;
     e.set = "channel"; 
@@ -1507,7 +1513,10 @@ function serv_join (e)
                            "BANS " + e.channel.encodedName + "\n" */);
     e.user = new CIRCChanUser (e.channel, e.user.nick);
     if (userIsMe(e.user))
+    {
         e.channel.active = true;
+        e.channel.joined = true;
+    }
 
     e.destObject = e.channel;
     e.set = "channel";
@@ -1536,7 +1545,7 @@ function serv_pong (e)
     if (this.lastPingSent)
         this.lag = roundTo ((new Date() - this.lastPingSent) / 1000, 2);
 
-    delete this.lastPingSent;
+    this.lastPingSent = null;
     
     e.destObject = this.parent;
     e.set = "network";
@@ -1830,7 +1839,15 @@ function CIRCChannel (parent, encodedName, unicodeName)
     this.bans = new Object();
     this.mode = new CIRCChanMode (this);
     this.usersStable = true;
+    /* These next two flags represent a subtle difference in state:
+     *   active - in the channel, from the server's point of view.
+     *   joined - in the channel, from the user's point of view.
+     * e.g. parting the channel clears both, but being disconnected only 
+     * clears |active| - the user still wants to be in the channel, even 
+     * though they aren't physically able to until we've reconnected.
+     */
     this.active = false;
+    this.joined = false;
     
     this.parent.channels[this.normalizedName] = this;
     if ("onInit" in this)
@@ -1915,8 +1932,14 @@ function chan_amop()
     return this.users[this.parent.me.nick].isOp;
 }
 
+CIRCChannel.prototype.iAmHalfOp =
+function chan_amhalfop()
+{
+    return this.users[this.parent.me.nick].isHalfOp;
+}
+
 CIRCChannel.prototype.iAmVoice =
-function chan_amop()
+function chan_amvoice()
 {
     return this.parent.users[this.parent.parent.me.nick].isVoice;
 }
@@ -2038,9 +2061,6 @@ function chan_modestr (f)
 CIRCChanMode.prototype.setMode = 
 function chanm_mode (modestr)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-
     this.parent.parent.sendData ("MODE " + this.parent.encodedName + " " +
                                  modestr + "\n");
 
@@ -2050,9 +2070,6 @@ function chanm_mode (modestr)
 CIRCChanMode.prototype.setLimit = 
 function chanm_limit (n)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-
     if ((typeof n == "undefined") || (n <= 0))
     {
         this.parent.parent.sendData("MODE " + this.parent.encodedName +
@@ -2070,9 +2087,6 @@ function chanm_limit (n)
 CIRCChanMode.prototype.lock = 
 function chanm_lock (k)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-    
     this.parent.parent.sendData("MODE " + this.parent.encodedName + " +k " +
                                 k + "\n");
     return true;
@@ -2081,9 +2095,6 @@ function chanm_lock (k)
 CIRCChanMode.prototype.unlock = 
 function chan_unlock (k)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-    
     this.parent.parent.sendData("MODE " + this.parent.encodedName + " -k " +
                                 k + "\n");
     return true;
@@ -2092,9 +2103,6 @@ function chan_unlock (k)
 CIRCChanMode.prototype.setModerated = 
 function chan_moderate (f)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-
     var modifier = (f) ? "+" : "-";
     
     this.parent.parent.sendData("MODE " + this.parent.encodedName + " " +
@@ -2105,9 +2113,6 @@ function chan_moderate (f)
 CIRCChanMode.prototype.setPublicMessages = 
 function chan_pmessages (f)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-
     var modifier = (f) ? "-" : "+";
     
     this.parent.parent.sendData("MODE " + this.parent.encodedName + " " +
@@ -2118,9 +2123,6 @@ function chan_pmessages (f)
 CIRCChanMode.prototype.setPublicTopic = 
 function chan_ptopic (f)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-    
     var modifier = (f) ? "-" : "+";
     
     this.parent.parent.sendData("MODE " + this.parent.encodedName + " " +
@@ -2131,9 +2133,6 @@ function chan_ptopic (f)
 CIRCChanMode.prototype.setInvite = 
 function chan_invite (f)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-
     var modifier = (f) ? "+" : "-";
     
     this.parent.parent.sendData("MODE " + this.parent.encodedName + " " +
@@ -2144,9 +2143,6 @@ function chan_invite (f)
 CIRCChanMode.prototype.setPvt = 
 function chan_pvt (f)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-
     var modifier = (f) ? "+" : "-";
     
     this.parent.parent.sendData("MODE " + this.parent.encodedName + " " +
@@ -2157,9 +2153,6 @@ function chan_pvt (f)
 CIRCChanMode.prototype.setSecret = 
 function chan_secret (f)
 {
-    if (!this.parent.users[this.parent.parent.me.nick].isOp)
-        return false;
-
     var modifier = (f) ? "+" : "-";
     
     this.parent.parent.sendData("MODE " + this.parent.encodedName + " " +
@@ -2356,9 +2349,6 @@ function cusr_setop (f)
     var server = this.parent.parent;
     var me = server.me;
 
-    if (!this.parent.users[me.nick].isOp)
-        return false;
-
     var modifier = (f) ? " +o " : " -o ";
     server.sendData("MODE " + this.parent.name + modifier + this.nick + "\n");
 
@@ -2369,9 +2359,6 @@ function cusr_sethalfop (f)
 {
     var server = this.parent.parent;
     var me = server.me;
-
-    if (!this.parent.users[me.nick].isOp)
-        return false;
 
     var modifier = (f) ? " +h " : " -h ";
     server.sendData("MODE " + this.parent.name + modifier + this.nick + "\n");
@@ -2384,9 +2371,6 @@ function cusr_setvoice (f)
     var server = this.parent.parent;
     var me = server.me;
 
-    if (!this.parent.users[me.nick].isOp)
-        return false;
-    
     var modifier = (f) ? " +v " : " -v ";
     server.sendData("MODE " + this.parent.name + modifier + this.nick + "\n");
 
@@ -2399,8 +2383,6 @@ function cusr_kick (reason)
     var me = server.me;
 
     reason = typeof reason == "string" ? reason : "";
-    if (!this.parent.users[me.nick].isOp)
-        return false;
     
     server.sendData("KICK " + this.parent.encodedName + " " + this.nick + " :" +
                     fromUnicode(reason, this) + "\n");
@@ -2412,9 +2394,6 @@ function cusr_setban (f)
 {
     var server = this.parent.parent;
     var me = server.me;
-
-    if (!this.parent.users[me.nick].isOp)
-        return false;
 
     if (!this.host)
         return false;
@@ -2431,9 +2410,6 @@ function cusr_kban (reason)
 {
     var server = this.parent.parent;
     var me = server.me;
-
-    if (!this.parent.users[me.nick].isOp)
-        return false;
 
     if (!this.host)
         return false;

@@ -106,3 +106,10 @@
 <!ENTITY PopupKick.aKey              "K">
 
 <!ENTITY StatusText.label "Welcome to ChatZilla!">
+
+<!ENTITY Underline.label             "Underline">
+<!ENTITY Bold.label                  "Bold">
+<!ENTITY Reverse.label               "Reverse video">
+<!ENTITY Normal.label                "Normal">
+<!ENTITY Color.label                 "Colour">
+<!ENTITY ForeBack.label              "xx=Fore yy=Back">

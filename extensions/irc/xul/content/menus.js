@@ -129,7 +129,10 @@ function initMenus()
                   checkedif: "client.prefs['collapseMsgs']"}],
          ["toggle-copy",
                  {type: "checkbox",
-                  checkedif: "client.prefs['copyMessages']"}]
+                  checkedif: "client.prefs['copyMessages']"}],
+         ["toggle-timestamps",
+                 {type: "checkbox",
+                  checkedif: "cx.sourceObject.prefs['timestamps']"}]
         ]
     };
 
@@ -163,18 +166,20 @@ function initMenus()
 
         ]
     };
+    
+    var isopish = "(cx.channel.iAmOp() || cx.channel.iAmHalfOp())";
 
     client.menuSpecs["popup:opcommands"] = {
         label: MSG_MNU_OPCOMMANDS,
         items:
         [
-         ["op",         {enabledif: "cx.channel.iAmOp() && !cx.user.isOp"}],
-         ["deop",       {enabledif: "cx.channel.iAmOp() && cx.user.isOp"}],
-         ["voice",      {enabledif: "cx.channel.iAmOp() && !cx.user.isVoice"}],
-         ["devoice",    {enabledif: "cx.channel.iAmOp() && cx.user.isVoice"}],
+         ["op",         {enabledif: isopish + " && !cx.user.isOp"}],
+         ["deop",       {enabledif: isopish + " && cx.user.isOp"}],
+         ["voice",      {enabledif: isopish + " && !cx.user.isVoice"}],
+         ["devoice",    {enabledif: isopish + " && cx.user.isVoice"}],
          ["-"],
-         ["kick",       {enabledif: "cx.channel.iAmOp()"}],
-         ["kick-ban",       {enabledif: "cx.channel.iAmOp()"}]
+         ["kick",       {enabledif: isopish}],
+         ["kick-ban",       {enabledif: isopish}]
         ]
     };
 
@@ -195,15 +200,20 @@ function initMenus()
         ]
     };
 
-    var urlenabled = "has('url') && cx.url.search(/^irc:/i) == -1";
+    var urlenabled = "has('url')";
+    var urlexternal = "has('url') && cx.url.search(/^irc:/i) == -1";
+    var textselected = "getCommandEnabled('cmd_copy')";
     
     client.menuSpecs["context:messages"] = {
         getContext: getMessagesContext,
         items:
         [
-         ["goto-url", {enabledif: urlenabled}],
-         ["goto-url-newwin", {enabledif: urlenabled}],
-         ["goto-url-newtab", {enabledif: urlenabled}],
+         ["goto-url", {visibleif: urlenabled}],
+         ["goto-url-newwin", {visibleif: urlexternal}],
+         ["goto-url-newtab", {visibleif: urlexternal}],
+         ["cmd-copy-link-url", {visibleif: urlenabled}],
+         ["cmd-copy", {visibleif: "!" + urlenabled, enabledif: textselected }],
+         ["cmd-selectall", {visibleif: "!" + urlenabled }],
          ["-"],
          ["leave", 
                  {enabledif: "cx.TYPE == 'IRCChannel'"}],

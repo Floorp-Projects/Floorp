@@ -489,19 +489,15 @@ function onInputCompleteLine(e)
     
     if (e.line[0] == client.COMMAND_CHAR)
     {
+        if (client.prefs["outgoing.colorCodes"])
+            e.line = replaceColorCodes(e.line);
         dispatch(e.line.substr(1), null, true);
     }
     else /* plain text */
     {
         /* color codes */
         if (client.prefs["outgoing.colorCodes"])
-        {
-            e.line = e.line.replace(/%U/g, "\x1f");
-            e.line = e.line.replace(/%B/g, "\x02");
-            e.line = e.line.replace(/%O/g, "\x0f");
-            e.line = e.line.replace(/%C/g, "\x03");
-            e.line = e.line.replace(/%R/g, "\x16");
-        }
+            e.line = replaceColorCodes(e.line);
         client.sayToCurrentTarget (e.line);
     }
 }
@@ -512,10 +508,9 @@ function onNotifyTimeout ()
     {
         var net = client.networks[n];
         if (net.isConnected()) {
-            if ("notifyList" in net && net.notifyList.length > 0) {
-                net.primServ.sendData ("ISON " +
-                                       client.networks[n].notifyList.join(" ")
-                                       + "\n");
+            if (net.prefs["notifyList"].length > 0) {
+                var isonList = client.networks[n].prefs["notifyList"];
+                net.primServ.sendData ("ISON " + isonList.join(" ") + "\n");
             } else {
                 /* if the notify list is empty, just send a ping to see if we're
                  * alive. */
@@ -523,6 +518,48 @@ function onNotifyTimeout ()
             }
         }
     }
+}
+
+function onInputKeypress (el)
+{
+    if (client.prefs["outgoing.colorCodes"])
+        setTimeout(onInputKeypressCallback, 100, el);
+}
+
+function onInputKeypressCallback (el)
+{
+    function doPopup(popup)
+    {
+        if (client.inputPopup && client.inputPopup != popup)
+            client.inputPopup.hidePopup();
+        
+        client.inputPopup = popup;
+        if (popup)
+        {
+            var box = el.boxObject;
+            if (!box)
+                box = el.ownerDocument.getBoxObjectFor(el);
+            if (el.nodeName == "textbox")
+                pos = { x: box.screenX, 
+                        y: box.screenY - box.height - popup.boxObject.height };
+            else
+                pos = { x: box.screenX + 5, 
+                        y: box.screenY + box.height + 25 };
+            popup.moveTo(pos.x, pos.y);
+            popup.showPopup(el, 0, 0, "tooltip");
+        }
+    }
+    
+    var text = " " + el.value.substr(0, el.selectionStart);
+    if (el.selectionStart != el.selectionEnd)
+        text = "";
+    
+    if (text.match(/[^%]%C[0-9]{0,2},?[0-9]{0,2}$/))
+        doPopup(document.getElementById("colorTooltip"));
+    else if (text.match(/[^%]%$/))
+        doPopup(document.getElementById("percentTooltip"));
+    else
+        doPopup(null);
 }
 
 /* 'private' function, should only be used from inside */
@@ -604,6 +641,8 @@ function my_showtonet (e)
             break;
 
         case "001":
+            // Welcome to history.
+            client.globalHistory.addPage(this.getURL());
             updateTitle(this);
             this.updateHeader();
             client.updateHeader();
@@ -613,15 +652,13 @@ function my_showtonet (e)
             for (var i = 0; i < cmdary.length; ++i)
                 this.dispatch(cmdary[i])
 
-            for (var v in client.viewsArray)
+            if (("lastServer" in this) && this.lastServer)
             {
-                // reconnect to any existing views
-                var source = client.viewsArray[v].source;
-                var details = getObjectDetails(client.viewsArray[v].source);
-                if (source.TYPE != "IRCUser" &&
-                    "network" in details && details.network == this)
+                for (var c in this.lastServer.channels)
                 {
-                    gotoIRCURL(source.getURL());
+                    var chan = this.lastServer.channels[c];
+                    if (chan.joined)
+                        chan.join(chan.mode.key);
                 }
             }
 
@@ -677,7 +714,7 @@ function my_notice (e)
 CIRCNetwork.prototype.on303 = /* ISON (aka notify) reply */
 function my_303 (e)
 {
-    var onList = stringTrim(e.params[1].toLowerCase()).split(/\s+/);
+    var onList = stringTrim(e.params[2].toLowerCase()).split(/\s+/);
     var offList = new Array();
     var newArrivals = new Array();
     var newDepartures = new Array();
@@ -688,10 +725,12 @@ function my_303 (e)
     if ("network" in o && o.network == this && client.currentObject != this)
         displayTab = client.currentObject;
 
-    for (i in this.notifyList)
-        if (!arrayContains(onList, this.notifyList[i]))
+    for (i = 0; i < this.prefs["notifyList"].length; i++)
+    {
+        if (!arrayContains(onList, this.prefs["notifyList"][i]))
             /* user is not on */
-            offList.push (this.notifyList[i]);
+            offList.push (this.prefs["notifyList"][i]);
+    }
         
     if ("onList" in this)
     {
@@ -958,6 +997,13 @@ function my_whoisreply (e)
         e.server.parent.display(text, e.code);
 }
 
+CIRCNetwork.prototype.on330 = /* ircu's 330 numeric ("X is logged in as Y") */
+function my_330 (e)
+{
+    this.display (getMsg(MSG_FMT_LOGGED_ON, [e.params[2], e.params[3]]),
+                  "330");
+}
+
 CIRCNetwork.prototype.on341 = /* invite reply */
 function my_341 (e)
 {
@@ -1054,7 +1100,8 @@ function my_netdisconnect (e)
             
             default:
                 msg = getMsg(MSG_CLOSE_STATUS,
-                             [this.getURL(), e.server.getURL(), e.disconnectStatus]);
+                             [this.getURL(), e.server.getURL(), 
+                              e.disconnectStatus]);
                 reconnect = true;
                 break;
         }    
@@ -1082,6 +1129,13 @@ function my_netdisconnect (e)
         client.rdf.clearTargets(channel.getGraphResource(),
                                 client.rdf.resChanUser);
         channel.active = false;
+    }
+    
+    if (!this.connecting)
+    {
+        /* Make a note of the server we were on, so that the reconnect will
+         * be able to find out what we were joined. */
+        this.lastServer = this.primServ;
     }
     
     this.connecting = false;
@@ -1143,6 +1197,7 @@ CIRCChannel.prototype.onInit =
 function chan_oninit ()
 {
     this.logFile = null;
+    this.pendingNamesReply = false;
 }
 
 CIRCChannel.prototype.onPrivmsg =
@@ -1208,11 +1263,12 @@ function my_366 (e)
         /* redisplay the tree */
         client.rdf.setTreeRoot("user-list", this.getGraphResource());
     
-    if ("pendingNamesReply" in client.currentObject)
+    if (this.pendingNamesReply)
     {
-        display (e.channel.unicodeName + ": " + e.params[3], "366");
-        client.currentObject.pendingNamesReply = false;
+        this.parent.parent.display (e.channel.unicodeName + ": " + 
+                                    e.params[3], "366");
     }
+    this.pendingNamesReply = false;
 }    
 
 CIRCChannel.prototype.onTopic = /* user changed topic */
@@ -1253,8 +1309,11 @@ function my_topicinfo (e)
 CIRCChannel.prototype.on353 = /* names reply */
 function my_topic (e)
 {
-    if ("pendingNamesReply" in client.currentObject)
-        display (e.channel.unicodeName + ": " + e.params[4], "NAMES");
+    if (this.pendingNamesReply)
+    {
+        this.parent.parent.display (e.channel.unicodeName + ": " + 
+                                    e.params[4], "NAMES");
+    }
 }
 
 
@@ -1288,6 +1347,13 @@ function my_cjoin (e)
     {
         this.display (getMsg(MSG_YOU_JOINED, e.channel.unicodeName), "JOIN",
                       e.server.me, this);
+        client.globalHistory.addPage(this.getURL());
+
+        /* !-channels are "safe" channels, and get a server-generated prefix.
+         * For this reason, creating the channel is delayed until this point.
+         */
+        if (e.channel.unicodeName[0] == "!")
+            setCurrentObject(e.channel);
     }
     else
     {
@@ -1299,7 +1365,7 @@ function my_cjoin (e)
 
     this._addUserToGraph (e.user);
     updateUserList()
-    e.channel.updateHeader();
+    this.updateHeader();
 }
 
 CIRCChannel.prototype.onPart =
@@ -1344,7 +1410,7 @@ function my_cpart (e)
         }
     }
 
-    e.channel.updateHeader();
+    this.updateHeader();
 }
 
 CIRCChannel.prototype.onKick =
@@ -1356,6 +1422,10 @@ function my_ckick (e)
                              [e.channel.unicodeName, e.user.properNick,
                               e.reason]),
                       "KICK", e.user, this);
+        
+        /* Try 1 re-join attempt if allowed. */
+        if (this.prefs["autoRejoin"])
+            this.join(this.mode.key);
     }
     else
     {
@@ -1378,7 +1448,7 @@ function my_ckick (e)
     
     this._removeUserFromGraph(e.lamer);
 
-    e.channel.updateHeader();
+    this.updateHeader();
 }
 
 CIRCChannel.prototype.onChanMode =
@@ -1394,8 +1464,8 @@ function my_cmode (e)
     for (var u in e.usersAffected)
         e.usersAffected[u].updateGraphResource();
 
-    e.channel.updateHeader();
-    updateTitle(e.channel);
+    this.updateHeader();
+    updateTitle(this);
     if (client.currentObject == this)
         updateUserList();
 }
@@ -1441,7 +1511,7 @@ function my_cquit (e)
 
     this._removeUserFromGraph(e.user);
 
-    e.channel.updateHeader();
+    this.updateHeader();
 }
 
 CIRCUser.prototype.onInit =

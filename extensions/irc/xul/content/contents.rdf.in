@@ -15,6 +15,7 @@
         chrome:description="A simple, straightforward Internet Relay Chat (IRC) client."
         chrome:localeVersion="@MOZILLA_LOCALE_VERSION@"
         chrome:extension="true"
+        chrome:settingsURL=""
         chrome:name="chatzilla">
   </RDF:Description>
 
