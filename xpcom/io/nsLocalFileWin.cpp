@@ -2288,12 +2288,35 @@ nsLocalFile::Launch()
     r = (LONG) ::ShellExecute(NULL, NULL, "RUNDLL32.EXE",  shellArg.get(),
                               NULL, SW_SHOWNORMAL);
   }
-  if (r < 32) 
-    rv = NS_ERROR_FAILURE;
-	else
-    rv = NS_OK;
-
-  return rv;
+  if (r < 32) {
+    switch (r) {
+      case 0:
+      case SE_ERR_OOM:
+        return NS_ERROR_OUT_OF_MEMORY;
+      case ERROR_FILE_NOT_FOUND:
+        return NS_ERROR_FILE_NOT_FOUND;
+      case ERROR_PATH_NOT_FOUND:
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+      case ERROR_BAD_FORMAT:
+        return NS_ERROR_FILE_CORRUPTED;
+      case SE_ERR_ACCESSDENIED:
+        return NS_ERROR_FILE_ACCESS_DENIED;
+      case SE_ERR_ASSOCINCOMPLETE:
+      case SE_ERR_NOASSOC:
+        return NS_ERROR_UNEXPECTED;
+      case SE_ERR_DDEBUSY:
+      case SE_ERR_DDEFAIL:
+      case SE_ERR_DDETIMEOUT:
+        return NS_ERROR_NOT_AVAILABLE;
+      case SE_ERR_DLLNOTFOUND:
+        return NS_ERROR_FAILURE;
+      case SE_ERR_SHARE:
+        return NS_ERROR_FILE_IS_LOCKED;
+      default:
+        return NS_ERROR_FILE_EXECUTION_FAILED;
+    }
+  }
+  return NS_OK;
 }
 
 nsresult 
