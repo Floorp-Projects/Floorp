@@ -166,6 +166,7 @@ LAYOUT_ATOM(onoverflowchanged, "onoverflowchanged")
 
   // other
 LAYOUT_ATOM(wildcard, "*")
+LAYOUT_ATOM(mozdirty, "_moz_dirty")
 
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code
