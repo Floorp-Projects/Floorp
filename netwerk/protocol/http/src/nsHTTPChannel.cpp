@@ -1823,24 +1823,6 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
         }
     }
 
-    PRUint32 contentLength;
-    PRUint32 logicalLength;
-    if (mCacheEntry)
-    {
-        mCacheEntry->GetLogicalLength(&logicalLength);
-        if (logicalLength) 
-        {
-            mCacheEntry->GetStoredContentLength(&contentLength);
-            if (contentLength)
-            {
-                if (contentLength > logicalLength) 
-                {
-                    mCacheEntry->SetStoredContentLength(logicalLength);
-                }
-            }
-        }
-    }
-
     //
     // After the consumer has been notified, remove the channel from its 
     // load group...  This will trigger an OnStopRequest from the load group.
