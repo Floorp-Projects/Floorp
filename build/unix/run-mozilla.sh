@@ -388,6 +388,9 @@ then
         XSUNSMESIZE="64"
         export XSUNTRANSPORT XSUNSMESIZE
 fi
+# Font path for Xft
+FONTCONFIG_PATH="/etc/fonts:${MOZILLA_FIVE_HOME}/res/Xft"
+export FONTCONFIG_PATH
 
 if [ "$moz_debug" -eq 1 ]
 then
@@ -403,6 +406,9 @@ then
   fi
   if [ -n "$LD_LIBRARY_PATH_64" ]; then
   	echo "LD_LIBRARY_PATH_64=$LD_LIBRARY_PATH_64"
+  fi
+  if [ -n "$FONTCONFIG_PATH" ]; then
+	echo "FONTCONFIG_PATH=$FONTCONFIG_PATH"
   fi
   echo "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
   echo "     LIBRARY_PATH=$LIBRARY_PATH"
