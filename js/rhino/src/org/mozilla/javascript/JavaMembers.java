@@ -453,7 +453,7 @@ class JavaMembers
 
         // Add the new bean properties.
         for (Enumeration e = toAdd.keys(); e.hasMoreElements();) {
-            String key = (String) e.nextElement();
+            Object key = e.nextElement();
             Object value = toAdd.get(key);
             ht.put(key, value);
         }
