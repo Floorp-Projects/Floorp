@@ -409,7 +409,11 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 				goAwayFlag = false;
 				hOffset = 0;
 				vOffset = 0;
+#if TARGET_CARBON
+				wDefProcID = kWindowSimpleProc;
+#else
 				wDefProcID = plainDBox;
+#endif
         break;
 
 			case eWindowType_child:
@@ -591,7 +595,10 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   
   // Setup the live window resizing
   if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
-    ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
+    WindowAttributes removeAttributes = kWindowNoAttributes;
+    if ( mWindowType == eWindowType_invisible )
+      removeAttributes |= kWindowInWindowMenuAttribute;     
+    ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, removeAttributes );
     
     EventTypeSpec windEventList[] = { {kEventClassWindow, kEventWindowBoundsChanged},
                                       {kEventClassWindow, kEventWindowConstrain} };
