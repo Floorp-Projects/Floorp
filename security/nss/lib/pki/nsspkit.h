@@ -35,7 +35,7 @@
 #define NSSPKIT_H
 
 #ifdef DEBUG
-static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:16:14 $ $Name:  $";
+static const char NSSPKIT_CVS_ID[] = "@(#) $RCSfile: nsspkit.h,v $ $Revision: 1.2 $ $Date: 2001/07/19 20:41:38 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -255,6 +255,10 @@ typedef PRUint32 NSSOperations;
 #define NSSOperations_SIGN_RECOVER      0x0020
 #define NSSOperations_VERIFY            0x0040
 #define NSSOperations_VERIFY_RECOVER    0x0080
+
+/* Presumably, this doesn't belong here.  But for now... */
+typedef struct NSSTokenStr NSSToken;
+struct NSSPKIXCertificateStr;
 
 PR_END_EXTERN_C
 
