@@ -63,7 +63,9 @@ class nsIXBLBinding;
 // *********************************************************************/
 // The XBLPrototypeBinding class
 
-// Prototype bindings are owned by the nsXBLDocumentInfo's mBindings table.
+// References to the prototype binding are held by each nsXBLBinding instance
+// that uses this prototype binding, and also by the XBLDocumentInfo's
+// binding table (with the XUL cache disabled).
 
 class nsXBLPrototypeBinding
 {
@@ -150,7 +152,22 @@ public:
   nsXBLPrototypeBinding(const nsACString& aRef, nsIXBLDocumentInfo* aInfo, nsIContent* aElement);
   ~nsXBLPrototypeBinding();
 
-  
+  nsrefcnt AddRef() {
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsXBLPrototypeBinding", sizeof(nsXBLPrototypeBinding));
+    return mRefCnt;
+  }
+
+  nsrefcnt Release() {
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsXBLPrototypeBinding");
+    if (mRefCnt == 0) {
+      delete this;
+      return 0;
+    }
+    return mRefCnt;
+  }
+
 // Static members
   static PRUint32 gRefCnt;
  
@@ -223,6 +240,8 @@ protected:
 
   PRInt32 mBaseNameSpaceID;    // If we extend a tagname/namespace, then that information will
   nsCOMPtr<nsIAtom> mBaseTag;  // be stored in here.
+
+  nsAutoRefCnt mRefCnt;
 };
 
 #endif
