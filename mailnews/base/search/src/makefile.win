@@ -39,7 +39,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgFilter.obj\
 			.\$(OBJDIR)\nsMsgSearchTerm.obj\
 			.\$(OBJDIR)\nsMsgBodyHandler.obj\
-#			.\$(OBJDIR)\nsMsgLocalSearch.obj\
+			.\$(OBJDIR)\nsMsgLocalSearch.obj\
 			$(NULL)
 
 

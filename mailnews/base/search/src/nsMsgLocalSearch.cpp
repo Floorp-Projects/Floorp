@@ -474,10 +474,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
     nsString  recipients;
     nsString  ccList;
     nsString  matchString;
+	PRUint32 msgFlags;
 
     // Don't even bother to look at expunged messages awaiting compression
-    if (msgToMatch->GetFlags() & kExpunged)
-        err = SearchError_NotAMatch;
+    msgToMatch->GetFlags(&msgFlags);
+	if (msgFlags & MSG_FLAG_EXPUNGED)
+        err = NS_COMFALSE;
 
     // Loop over all terms, and match them all to this message. 
 
@@ -486,80 +488,112 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
   //      csid = INTL_DefaultWinCharSetID(0);
 
 
+	// ### DMB Todo - remove nsAutoCString when nsString2 lands.
     nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();  // create our expression
     if (!expression)
         return NS_ERROR_OUT_OF_MEMORY;
-    for (int i = 0; i < termList.GetSize(); i++)
+    for (int i = 0; i < termList.Count(); i++)
     {
-        nsMsgSearchTerm *pTerm = termList.GetAt(i);
-        NS_ASSERTION (pTerm->IsValid(), "invalid search term");
+        nsMsgSearchTerm *pTerm = termList.ElementAt(i);
+//        NS_ASSERTION (pTerm->IsValid(), "invalid search term");
         NS_ASSERTION (msgToMatch, "couldn't get term to match");
 
         switch (pTerm->m_attribute)
         {
         case nsMsgSearchAttribSender:
             msgToMatch->GetAuthor(matchString);
-            err = pTerm->MatchRfc822String (matchString, charset);
+            err = pTerm->MatchRfc822String (nsAutoCString(matchString), charset);
             break;
         case nsMsgSearchAttribSubject:
-            msgToMatch->GetSubject(matchString, TRUE);
-            err = pTerm->MatchString (matchString, charset);
+			{
+            msgToMatch->GetSubject(matchString /* , TRUE */);
+			nsString2 singleByteString(matchString, eOneByte); 
+            err = pTerm->MatchString (&singleByteString, charset);
+			}
             break;
         case nsMsgSearchAttribToOrCC:
         {
-            nsresult errKeepGoing = pTerm->MatchAllBeforeDeciding() ? NS_OK : SearchError_NotAMatch;
-            msgToMatch->GetRecipients(recipients, db->GetDB());
-            err = pTerm->MatchRfc822String (recipients, charset);
+            nsresult errKeepGoing = pTerm->MatchAllBeforeDeciding() ? NS_OK : NS_COMFALSE;
+            msgToMatch->GetRecipients(recipients);
+            err = pTerm->MatchRfc822String (nsAutoCString(recipients), charset);
             if (errKeepGoing == err)
             {
-                msgToMatch->GetCCList(ccList, db->GetDB());
-                err = pTerm->MatchRfc822String (ccList, charset);
+                msgToMatch->GetCCList(ccList);
+                err = pTerm->MatchRfc822String (nsAutoCString(ccList), charset);
             }
         }
             break;
         case nsMsgSearchAttribBody:
-            err = pTerm->MatchBody (scope, msgToMatch->GetArticleNum(), msgToMatch->GetLineCount(), charset, msgToMatch, db);
+			{
+				nsMsgKey messageKey;
+				PRUint32 lineCount;
+				msgToMatch->GetMessageKey(&messageKey);
+				msgToMatch->GetLineCount(&lineCount);
+	            err = pTerm->MatchBody (scope, messageKey, lineCount, charset, msgToMatch, db);
+			}
             break;
         case nsMsgSearchAttribDate:
-            err = pTerm->MatchDate (msgToMatch->GetDate());
+			{
+				time_t date;
+				msgToMatch->GetDate(&date);
+				err = pTerm->MatchDate (date);
+			}
             break;
         case nsMsgSearchAttribMsgStatus:
-            err = pTerm->MatchStatus (msgToMatch->GetFlags());
+            err = pTerm->MatchStatus (msgFlags);
             break;
         case nsMsgSearchAttribPriority:
-            err = pTerm->MatchPriority (msgToMatch->GetPriority());
+			{
+				nsMsgPriority msgPriority;
+				msgToMatch->GetPriority(&msgPriority);
+				err = pTerm->MatchPriority (msgPriority);
+			}
             break;
         case nsMsgSearchAttribSize:
-            err = pTerm->MatchSize (msgToMatch->GetByteLength());
+			{
+				PRUint32 messageSize;
+				msgToMatch->GetMessageSize(&messageSize);
+				err = pTerm->MatchSize (messageSize);
+			}
             break;
         case nsMsgSearchAttribTo:
-            msgToMatch->GetRecipients(recipients, db->GetDB());
-            err = pTerm->MatchRfc822String(recipients, charset);
+            msgToMatch->GetRecipients(recipients);
+            err = pTerm->MatchRfc822String(nsAutoCString(recipients), charset);
             break;
         case nsMsgSearchAttribCC:
-            msgToMatch->GetCCList(ccList, db->GetDB());
-            err = pTerm->MatchRfc822String (ccList, charset);
+            msgToMatch->GetCCList(ccList);
+            err = pTerm->MatchRfc822String (nsAutoCString(ccList), charset);
             break;
         case nsMsgSearchAttribAgeInDays:
-            err = pTerm->MatchAge (msgToMatch->GetDate());
+			{
+				time_t date;
+				msgToMatch->GetDate(&date);
+	            err = pTerm->MatchAge (date);
+			}
             break;
         case nsMsgSearchAttribOtherHeader:
-            err = pTerm->MatchArbitraryHeader (scope, msgToMatch->GetArticleNum(), msgToMatch->GetLineCount(),charset, 
+			{
+				PRUint32 lineCount;
+				msgToMatch->GetLineCount(&lineCount);
+				nsMsgKey messageKey;
+				msgToMatch->GetMessageKey(&messageKey);
+            err = pTerm->MatchArbitraryHeader (scope, messageKey, lineCount,charset, 
                                                 msgToMatch, db, headers, headerSize, Filtering);
+			}
             break;
 
         default:
-            err = SearchError_InvalidAttribute;
+            err = NS_ERROR_INVALID_ARG; // ### was SearchError_InvalidAttribute
         }
 
-        if (expression && (err == NS_OK || err == SearchError_NotAMatch))
+        if (expression && (err == NS_OK || err == NS_COMFALSE))
             expression = expression->AddSearchTerm(pTerm, (err == NS_OK));    // added the term and its value to the expression tree
         else
             return NS_ERROR_OUT_OF_MEMORY;
     }
     PRBool result = expression->OfflineEvaluate();
     delete expression;
-    return result ? NS_OK : SearchError_NotAMatch;
+    return result ? NS_OK : NS_COMFALSE;
 }
 
 
@@ -622,6 +656,7 @@ nsresult nsMsgSearchOfflineMail::Search ()
 
 void nsMsgSearchOfflineMail::CleanUpScope()
 {
+#ifdef HAVE_SEARCH_PORT
     // Let go of the DB when we're done with it so we don't kill the db cache
     if (m_db)
     {
@@ -636,13 +671,14 @@ void nsMsgSearchOfflineMail::CleanUpScope()
         XP_FileClose (m_scope->m_file);
     
     m_scope->m_file = nsnull;
+#endif // HAVE_SEARCH_PORT
 }
 
 nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 {
     nsresult err = NS_OK;
 
-    nsMsgSearchResultElement *newResult = new nsMsgSearchResultElement (this);
+    nsMsgResultElement *newResult = new nsMsgResultElement (this);
 
     if (newResult)
     {
@@ -654,70 +690,73 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         if (pValue)
         {
             nsString subject;
+			PRUint32 msgFlags;
+
+			// Don't even bother to look at expunged messages awaiting compression
+			pHeaders->GetFlags(&msgFlags);
             pValue->attribute = nsMsgSearchAttribSubject;
-            char *reString = (pHeaders->GetFlags() & kHasRe) ? "Re: " : "";
+            char *reString = (msgFlags & MSG_FLAG_HAS_RE) ? "Re: " : "";
             pHeaders->GetSubject(subject);
-            pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) subject); // hack. invoke cast operator by force
+            pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) nsAutoCString(subject)); // hack. invoke cast operator by force
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttribSender;
-            pValue->u.string = (char*) XP_ALLOC(64);
-            if (pValue->u.string)
-            {
-                pHeaders->GetAuthor(pValue->u.string, 64);
-                newResult->AddValue (pValue);
-            }
-            else
-                err = NS_ERROR_OUT_OF_MEMORY;
+			nsString author;
+            pHeaders->GetAuthor(author);
+			pValue->u.string = PL_strdup((const char *) nsAutoCString(author));
+            newResult->AddValue (pValue);
+            err = NS_ERROR_OUT_OF_MEMORY;
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttribDate;
-            pValue->u.date = pHeaders->GetDate();
+            pHeaders->GetDate(&pValue->u.date);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttribMsgStatus;
-            pValue->u.msgStatus = pHeaders->GetFlags();
+            pHeaders->GetFlags(&pValue->u.msgStatus);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttribPriority;
-            pValue->u.priority = pHeaders->GetPriority();
+            pHeaders->GetPriority(&pValue->u.priority);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttribLocation;
-            pValue->u.string = XP_STRDUP(m_scope->m_folder->GetName());
+#ifdef HAVE_SEARCH_PORT
+            pValue->u.string = PL_strdup(m_scope->m_folder->GetName());
+#endif
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttribMessageKey;
-            pValue->u.key = pHeaders->GetMessageKey();
+            pHeaders->GetMessageKey(&pValue->u.key);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
             pValue->attribute = nsMsgSearchAttribSize;
-            pValue->u.size = pHeaders->GetByteLength();
+            pHeaders->GetMessageSize(&pValue->u.size);
             newResult->AddValue (pValue);
         }
         if (!pValue)
             err = NS_ERROR_OUT_OF_MEMORY;
-        m_scope->m_frame->AddResultElement (newResult);
+//        m_scope->m_frame->AddResultElement (newResult);
     }
     return err;
 }
@@ -727,7 +766,7 @@ nsMsgSearchOfflineMail::Abort ()
 {
     // Let go of the DB when we're done with it so we don't kill the db cache
     if (m_db)
-        m_db->Close();
+        m_db->Close(PR_TRUE /* commit in case we downloaded new headers */);
     m_db = nsnull;
 
     // If we got aborted in the middle of parsing a mail folder, we should

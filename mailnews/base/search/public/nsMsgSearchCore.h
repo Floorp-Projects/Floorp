@@ -27,6 +27,7 @@
 class nsIMsgDatabase;
 class nsIMsgFolder;
 class nsMsgSearchAdapter;
+class nsIMsgDBHdr;
 
 typedef enum
 {
@@ -337,8 +338,8 @@ public:
 	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsIMsgDatabase * db);
 
 
-	nsresult MatchBody (nsMsgScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, nsIMessage * msg, nsIMsgDatabase * db);
-	nsresult MatchArbitraryHeader (nsMsgScopeTerm *,PRUint32 offset, PRUint32 length, const char *charset, nsIMessage * msg, nsIMsgDatabase *db,
+	nsresult MatchBody (nsMsgScopeTerm*, PRUint32 offset, PRUint32 length, const char *charset, nsIMsgDBHdr * msg, nsIMsgDatabase * db);
+	nsresult MatchArbitraryHeader (nsMsgScopeTerm *,PRUint32 offset, PRUint32 length, const char *charset, nsIMsgDBHdr * msg, nsIMsgDatabase *db,
 											char * headers, /* NULL terminated header list for msgs being filtered. Ignored unless ForFilters */
 											PRUint32 headersSize, /* size of the NULL terminated list of headers */
 											PRBool ForFilters /* true if we are filtering */);
@@ -399,11 +400,11 @@ typedef struct nsMsgSearchMenuItem
 class nsMsgBodyHandler
 {
 public:
-	nsMsgBodyHandler (nsMsgScopeTerm *, PRUint32 offset, PRUint32 length, nsIMessage * msg, nsIMsgDatabase * db);
+	nsMsgBodyHandler (nsMsgScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db);
 	
 	// we can also create a body handler when doing arbitrary header filtering...we need the list of headers and the header size as well
 	// if we are doing filtering...if ForFilters is false, headers and headersSize is ignored!!!
-	nsMsgBodyHandler (nsMsgScopeTerm *, PRUint32 offset, PRUint32 length, nsIMessage * msg, nsIMsgDatabase * db,
+	nsMsgBodyHandler (nsMsgScopeTerm *, PRUint32 offset, PRUint32 length, nsIMsgDBHdr * msg, nsIMsgDatabase * db,
 					 char * headers /* NULL terminated list of headers */, PRUint32 headersSize, PRBool ForFilters);
 
 	virtual ~nsMsgBodyHandler();
@@ -439,7 +440,7 @@ protected:
 
 	// Offline IMAP related methods & state
 	PRInt32 GetNextIMAPLine(char * buf, int bufSize);     // goes through the MessageDB 
-	nsIMessage * m_msgHdr;
+	nsIMsgDBHdr * m_msgHdr;
 	nsIMsgDatabase * m_db;
 	PRInt32 m_IMAPMessageOffset;
 	PRBool m_OfflineIMAP;		 // TRUE if we are in Offline IMAP mode, FALSE otherwise

@@ -573,7 +573,7 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 // Looks in the MessageDB for the user specified arbitrary header, if it finds the header, it then looks for a match against
 // the value for the header. 
 nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
-														nsIMessage *msg, nsIMsgDatabase* db, char * headers, PRUint32 headersSize, PRBool ForFiltering)
+														nsIMsgDBHdr *msg, nsIMsgDatabase* db, char * headers, PRUint32 headersSize, PRBool ForFiltering)
 {
 	nsresult err = NS_COMFALSE;
 	nsMsgBodyHandler * bodyHan = new nsMsgBodyHandler (scope, offset,length, msg, db, headers, headersSize, ForFiltering);
@@ -642,7 +642,7 @@ nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgScopeTerm *scope, PRUint32 
 }
 
 nsresult nsMsgSearchTerm::MatchBody (nsMsgScopeTerm *scope, PRUint32 offset, PRUint32 length /*in lines*/, const char *folderCharset,
-										   nsIMessage *msg, nsIMsgDatabase* db)
+										   nsIMsgDBHdr *msg, nsIMsgDatabase* db)
 {
 	nsresult err = NS_COMFALSE;
 
