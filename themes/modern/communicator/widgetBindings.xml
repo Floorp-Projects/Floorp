@@ -67,7 +67,7 @@
                   flex="1" ileattr="text-container" align="center">
           <xul:text class="menubutton-text" 
                     inherits="value=label,accesskey,crop,disabled,dragover-top" 
-                    ileattr="text" rootcontent="menubutton" flex="1"/>
+                    ileattr="text" rootcontent="menubutton" flex="1" crop="right"/>
         </xul:hbox>
       </xul:hbox>
       <children includes="menupopup"/>

@@ -175,8 +175,8 @@
     <content>
       <xul:hbox class="button-internal-box" align="center" flex="1">
         <xul:image class="button-icon" inherits="src"/>
-        <xul:hbox class="button-text-container" pack="center" flex="1" ileattr="text-container">
-          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top" ileattr="text" rootcontent="button"/>
+        <xul:hbox class="button-text-container" flex="1" ileattr="text-container">
+          <xul:text class="button-text" inherits="value=label,accesskey,crop,dragover-top" ileattr="text" rootcontent="button" flex="1"/>
         </xul:hbox>
       </xul:hbox>
       <children includes="menupopup"/>
