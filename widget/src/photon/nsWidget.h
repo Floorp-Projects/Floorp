@@ -74,7 +74,7 @@ class nsWidget : public nsBaseWidget
 
     NS_IMETHOD SetModal(void);
     NS_IMETHOD Show(PRBool state);
-    NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture);
+    NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
     NS_IMETHOD IsVisible(PRBool &aState);
 
     NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);

@@ -320,9 +320,9 @@ the PtRealizeWidget functions */
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
+NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidet::CaptureRollupEvents() this = %p , doCapture = %i\n", this, aDoCapture));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CaptureRollupEvents() this = %p , doCapture = %i\n", this, aDoCapture));
   
   if (aDoCapture) {
     //    gtk_grab_add(mWidget);
