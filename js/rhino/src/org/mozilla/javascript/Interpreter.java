@@ -2344,8 +2344,11 @@ public class Interpreter extends LabelTable {
          boolean left_right_order) 
     {
         if (lhs instanceof Scriptable) {
-            if (lhs == Undefined.instance) { lhs = ScriptRuntime.NaNobj; }
-            lhs = ((Scriptable)lhs).getDefaultValue(null);
+            if (lhs == Undefined.instance) { 
+                lhs = ScriptRuntime.NaNobj; 
+            } else {
+                lhs = ((Scriptable)lhs).getDefaultValue(null);
+            }
         }
         if (lhs instanceof String) {
             if (left_right_order) {
