@@ -31,6 +31,7 @@
 #include "nsMimeTypes.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIAggregatePrincipal.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -38,7 +39,6 @@ static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 static NS_DEFINE_CID(kScriptSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 #if defined(PR_LOGGING)
-#include "nsXPIDLString.h"
 //
 // Log module for SocketTransport logging...
 //
