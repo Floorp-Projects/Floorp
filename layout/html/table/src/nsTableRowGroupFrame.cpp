@@ -586,6 +586,8 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (NS_FAILED(rv) || nsnull==tableFrame)
     return;
+  nscoord cellSpacingY = tableFrame->GetCellSpacingY();
+
   PRInt32 rowGroupHeight;
   for (PRInt32 counter=0; counter<2; counter++)
   {
@@ -617,8 +619,15 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
               if (gsDebug) printf("TRGF CalcRowH:   cell %p has rowspan=%d\n", cellFrame, rowSpan);
               nscoord heightOfRowsSpanned = 0;
               PRInt32 i;
-              for ( i = 0; i < rowSpan; i++)
+              for (i = 0; i < rowSpan; i++) {
                 heightOfRowsSpanned += rowHeights[rowIndex + i];
+              }
+              // need to reduce by cell spacing, twice that if it is the top row
+              heightOfRowsSpanned -= cellSpacingY;
+              if (0 == rowIndex) {
+                heightOfRowsSpanned -= cellSpacingY;
+              }
+
               if (gsDebug) printf("TRGF CalcRowH:   heightOfRowsSpanned=%d\n", heightOfRowsSpanned);
         
               /* if the cell height fits in the rows, expand the spanning cell's height and slap it in */
