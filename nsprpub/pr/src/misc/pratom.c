@@ -39,6 +39,63 @@
  * The lock contention should be acceptable.
  */
 
+#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+/*
+ * PR_AtomicDecrement() is used in NSPR's thread-specific data
+ * destructor.  Because thread-specific data destructors may be
+ * invoked after a PR_Cleanup() call, we need an implementation
+ * of the atomic routines that doesn't need NSPR to be initialized.
+ */
+static pthread_mutex_t atomic_lock = PTHREAD_MUTEX_INITIALIZER;
+void _PR_MD_INIT_ATOMIC()
+{
+}
+
+PRInt32
+_PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
+{
+    PRInt32 rv;
+
+    pthread_mutex_lock(&atomic_lock);
+    rv = ++(*val);
+    pthread_mutex_unlock(&atomic_lock);
+    return rv;
+}
+
+PRInt32
+_PR_MD_ATOMIC_ADD(PRInt32 *ptr, PRInt32 val)
+{
+    PRInt32 rv;
+
+    pthread_mutex_lock(&atomic_lock);
+    rv = ((*ptr) += val);
+    pthread_mutex_unlock(&atomic_lock);
+    return rv;
+}
+
+PRInt32
+_PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
+{
+    PRInt32 rv;
+
+    pthread_mutex_lock(&atomic_lock);
+    rv = --(*val);
+    pthread_mutex_unlock(&atomic_lock);
+    return rv;
+}
+
+PRInt32
+_PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
+{
+    PRInt32 rv;
+
+    pthread_mutex_lock(&atomic_lock);
+    rv = *val;
+    *val = newval;
+    pthread_mutex_unlock(&atomic_lock);
+    return rv;
+}
+#else  /* _PR_PTHREADS && !_PR_DCETHREADS */
 static PRLock *atomic_lock = NULL;
 void _PR_MD_INIT_ATOMIC()
 {
@@ -103,6 +160,7 @@ _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
     PR_Unlock(atomic_lock);
     return rv;
 }
+#endif  /* _PR_PTHREADS && !_PR_DCETHREADS */
 
 #endif  /* !_PR_HAVE_ATOMIC_OPS */
 
