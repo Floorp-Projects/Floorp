@@ -2027,18 +2027,18 @@ public class ScriptRuntime {
             filename = cx.getSourcePositionFromStack(linep);
             line = linep[0];
         }
-        return constructError(error, message, filename, line, 0, null);
+        return constructError(error, message, filename, line, null, 0);
     }
 
     public static EcmaError constructError(String error,
                                            String message,
                                            String sourceName,
                                            int lineNumber,
-                                           int columnNumber,
-                                           String lineSource)
+                                           String lineSource,
+                                           int columnNumber)
     {
         return new EcmaError(error, message, sourceName,
-                             lineNumber, columnNumber, lineSource);
+                             lineNumber, lineSource, columnNumber);
     }
 
     public static EcmaError typeError0(String messageId)

@@ -317,7 +317,7 @@ public class TokenStream {
                 // We're probably in an eval. Need to throw an exception.
                 throw ScriptRuntime.constructError(
                     "SyntaxError", message, sourceName,
-                    lineno, lineOffset, line);
+                    lineno, line, lineOffset);
             } else {
                 Context.reportError(message, sourceName,
                                     lineno, line, lineOffset);

@@ -508,9 +508,9 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                            int columnNumber,
                                            String lineSource)
     {
-        return ScriptRuntime.constructError(error, message, sourceName,
-                                            lineNumber, columnNumber,
-                                            lineSource);
+        return ScriptRuntime.constructError(error, message,
+                                            sourceName, lineNumber,
+                                            lineSource, columnNumber);
     }
 
     /**
@@ -520,8 +520,10 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
     private Object new_CommonError(IdFunction ctorObj, Context cx,
                                    Scriptable scope, Object[] args)
     {
+        Scriptable proto = (Scriptable)(ctorObj.get("prototype", ctorObj));
+
         Scriptable newInstance = new NativeError();
-        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
+        newInstance.setPrototype(proto);
         newInstance.setParentScope(scope);
         if (args.length > 0)
             newInstance.put("message", newInstance, args[0]);
