@@ -51,12 +51,23 @@ const OSType kMozCreator = 'MOZZ';
 const SInt16 kNSCanRunStrArrayID = 1000;
 const SInt16 kAnotherVersionStrIndex = 1;
 
+const SInt16 kNSOSVersErrsStrArrayID = 1001;
+
+enum {
+        eOSXVersTooOldErrIndex = 1,
+        eOSXVersTooOldExplanationIndex,
+        eContinueButtonTextIndex,
+        eQuitButtonTextIndex,
+        eCarbonLibVersTooOldIndex,
+        eCarbonLibVersTooOldExplanationIndex
+     };
+
 class nsSplashScreenMac : public nsISplashScreen,
                           public nsIObserver
 {
 public:
 
-    // dialog itemse
+    // dialog items
     enum {
       eSplashPictureItem = 1,
       eSplashStatusTextItem    
@@ -194,14 +205,71 @@ static Boolean VersGreaterThan4(FSSpec *fSpec)
 
 PRBool NS_CanRun() 
 {
-  long response = 0;
-  OSErr err = ::Gestalt (gestaltSystemVersion, &response);
+  Str255 str1;
+  Str255 str2;
+  SInt16 outItemHit;
+  long   response = 0;
+  OSErr  err = ::Gestalt (gestaltSystemVersion, &response);
   // check for at least MacOS 8.5
   if ( err || response < 0x850)
   {
     ::StopAlert (5000, NULL);
     return PR_FALSE;
   }
+  
+#if TARGET_CARBON
+  // If we're running under Mac OS X check for at least Mac OS X 10.1
+  // If that fails display a StandardAlert giving the user the option
+  // to continue running the app or quitting
+  if (response >= 0x00001000 && response < 0x00001010)
+  {
+    // put up error dialog
+    Str255 continueButtonLabel;
+    Str255 quitButtonLabel;
+    ::GetIndString(str1, kNSOSVersErrsStrArrayID, eOSXVersTooOldErrIndex);
+    ::GetIndString(str2, kNSOSVersErrsStrArrayID, eOSXVersTooOldExplanationIndex);
+    ::GetIndString(continueButtonLabel, kNSOSVersErrsStrArrayID, eContinueButtonTextIndex);
+    ::GetIndString(quitButtonLabel, kNSOSVersErrsStrArrayID, eQuitButtonTextIndex);
+    if (StrLength(str1) && StrLength(str1) && StrLength(continueButtonLabel) && StrLength(quitButtonLabel))
+    {
+      AlertStdAlertParamRec pRec;
+      
+      pRec.movable      = nil;
+      pRec.filterProc 	= nil;
+      pRec.defaultText  = continueButtonLabel;
+      pRec.cancelText   = quitButtonLabel;
+      pRec.otherText    = nil;
+      pRec.helpButton   = nil;
+      pRec.defaultButton = kAlertStdAlertOKButton;
+      pRec.cancelButton  = kAlertStdAlertCancelButton;
+      pRec.position      = 0;
+      
+      ::StandardAlert(kAlertNoteAlert, str1, str2, &pRec, &outItemHit);
+      if (outItemHit == kAlertStdAlertCancelButton)
+        return PR_FALSE;
+    }
+    else
+      return PR_FALSE;
+  }
+  
+  // We also check for CarbonLib version >= 1.4 if OS vers < 10.0
+  // which is always cause for the app to quit
+  if (response < 0x00001000)
+  {
+    err = ::Gestalt (gestaltCarbonVersion, &response);
+    if (err || response < 0x00000140)
+    {
+      // put up error dialog
+      ::GetIndString(str1, kNSOSVersErrsStrArrayID, eCarbonLibVersTooOldIndex);
+      ::GetIndString(str2, kNSOSVersErrsStrArrayID, eCarbonLibVersTooOldExplanationIndex);
+      if (StrLength(str1) && StrLength(str1))
+      {
+        ::StandardAlert(kAlertStopAlert, str1, str2, nil, &outItemHit);
+      }
+      return PR_FALSE;
+    }
+  }
+#endif
 
   // Check for running instances of Mozilla or Netscape. The real issue
   // is having more than one app use the same profile directory. That would

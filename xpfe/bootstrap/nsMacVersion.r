@@ -73,3 +73,16 @@ resource 'STR#' (1000, "CanRunStrings") {
     "Ò" PACKAGE_NAME "Ó will now quit."
   }
 };
+
+resource 'STR#' (1001, "OSVersCheckStrings") {
+  {
+    "Mac OS X 10.1 or later recommended",
+    "This application will run with versions of Mac OS X prior to 10.1 but that configuration is not tested "
+    "or recommended. Proceed at your own risk.",
+    "Continue",
+    "Quit",
+    "CarbonLib 1.4 or later required",
+    "This application requires at least version 1.4 of the CarbonLib library be installed.  "
+    "It will now quit.",
+  }
+};
