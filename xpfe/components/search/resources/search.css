@@ -1,20 +1,3 @@
-window { 
- display: block;
- background-color: white; 
- width: 100%;
-} 
-
-iframe {
-  width: 100%;
-  height: 100%;
-  border: 0px;
-}
-
-box {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
 
 box.sidebartitle {
   background-color: #505888;
@@ -35,7 +18,6 @@ box.panelbar {
 box#sidebox {
   width: 100%;
   height: 100%;
-  display:block;
 }
 
 titledbutton.sidebartitle:hover { 
@@ -43,33 +25,6 @@ titledbutton.sidebartitle:hover {
   margin: 1px; 
 }
 
-titledbutton.active { 
-  color: yellow;
-  border: 0px;
-  margin: 1px; 
-  padding: 3px 2px 0px 1px
-}
-
-titledbutton[disabled] { 
-  color: black;
-}
-
-titledbutton:hover[disabled] { 
-  border: 0px;
-  margin: 1px; 
-}
-
 titledbutton.paneltitle { 
   horizontal-align: left;
-}
-
-titledbutton { 
-  color: white;
-  margin: 1px;
-  padding: 2px 1px 1px 2px
-}
-
-titledbutton:hover {
-  border: 1px outset white;
-  margin: 0px; 
 }

@@ -1,23 +1,5 @@
-window { 
- display: block;
- background-color: white; 
- width: 100%;
-}
-
 treecol[sortActive="true"] {
  background-color: lightgray;
-}
-
-titledbutton {
-  display: inline;
-  color:black; 
-  border: 0px outset white;
-  padding: 0px;
-  margin: 0px;
-  text-align: center;
-  font: inherit;
-  background-color: inherit;
-  background-image: inherit;
 }
 
 treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton {
