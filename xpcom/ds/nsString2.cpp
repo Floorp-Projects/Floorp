@@ -756,7 +756,7 @@ PRInt32 GetNumericSubstring(nsString2& aString,PRUint32& aRadix) {
     else if((*cp>='A') && (*cp<='F')) {
       continue;
     }
-    else if((*cp>='-') || (*cp>='+')){
+    else if((*cp=='-') || (*cp=='+')){
       break;
     }
     else {
@@ -794,13 +794,17 @@ PRInt32 nsString2::ToInteger(PRInt32* anErrorCode) const {
    ********************************************************************************/
 
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
-  nsAutoString2 theString(*this,eOneByte);
-  PRUint32  theRadix=10;
-  PRInt32   result=GetNumericSubstring(theString,theRadix);
+  PRInt32 result=0;
+  if(0<mLength) {
+    nsAutoString2 theString(*this,eOneByte);
+    PRUint32  theRadix=10;
+    *anErrorCode=GetNumericSubstring(theString,theRadix);
 
-  if(NS_OK==result){
-    result=_ToInteger(theString,anErrorCode,theRadix);
+    if(NS_OK==*anErrorCode){
+      result=_ToInteger(theString,anErrorCode,theRadix);
+    }
   }
+  else *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
   return result;
 }
 
@@ -2175,8 +2179,13 @@ CStringTester::CStringTester() {
   //try a few numeric conversion routines...
   {
     nsString2 str1("10000",theSize);
+    nsString2 str2("hello");
+    nsString2 str3;
     PRInt32 err;
     PRInt32 theInt=str1.ToInteger(&err);
+    theInt=str2.ToInteger(&err);
+    theInt=str3.ToInteger(&err);
+
     str1="100.100";
     float theFloat=str1.ToFloat(&err);
   }
