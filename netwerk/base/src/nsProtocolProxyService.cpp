@@ -412,7 +412,9 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
                 proxyInfo->mPort = -1;
              NS_ADDREF(*aResult = proxyInfo);
          }
-         return rv;
+         // assume errors mean direct - its better than just failing, and
+         // the js conosle will have the specific error
+         return NS_OK;
     }
     
     // Nothing below here returns failure
