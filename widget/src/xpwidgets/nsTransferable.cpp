@@ -63,9 +63,12 @@ nsTransferable::~nsTransferable()
   PRInt32 i;
   for (i=0;i<mDataArray->Count();i++) {
     DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-    NS_RELEASE(data->mFlavor);
-    if (data->mData) {
-      delete[] data->mData;
+    if (data) {
+      NS_RELEASE(data->mFlavor);
+      if (data->mData) {
+        delete[] data->mData;
+      }
+      delete data;
     }
   }
   delete mDataArray;
@@ -159,7 +162,9 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void 
     if (mimeInQuestion.Equals(mime)) {
        *aData    = data->mData;
        *aDataLen = data->mDataLen;
-       return NS_OK;
+       if (nsnull != data->mData && data->mDataLen > 0) {
+         return NS_OK;
+       }
     }
   }
 
@@ -241,6 +246,35 @@ NS_IMETHODIMP nsTransferable::AddDataFlavor(nsIDataFlavor * aDataFlavor)
   mDataArray->AppendElement((void *)data);
 
   return NS_OK;
+}
+/**
+  * 
+  *
+  */
+NS_IMETHODIMP nsTransferable::RemoveDataFlavor(nsIDataFlavor * aDataFlavor)
+{
+  if (nsnull == aDataFlavor) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoString  mimeInQuestion;
+  aDataFlavor->GetMimeType(mimeInQuestion);
+
+  // Do we have the data flavor already?
+  PRInt32 i;
+  for (i=0;i<mDataArray->Count();i++) {
+    DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
+    nsAutoString mime;
+    data->mFlavor->GetMimeType(mime);
+    if (mimeInQuestion.Equals(mime)) {
+      delete data;
+      mDataArray->RemoveElementAt(i);
+      return NS_OK;
+    }
+  }
+
+
+  return NS_ERROR_FAILURE;
 }
 
 /**
