@@ -21,6 +21,7 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
+// Define so header files for openfilename are included
 #ifdef WIN32_LEAN_AND_MEAN
 #undef WIN32_LEAN_AND_MEAN
 #endif
