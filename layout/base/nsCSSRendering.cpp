@@ -240,8 +240,8 @@ void nsCSSRendering::FillPolygon (nsIRenderingContext& aContext,
 {
 #ifdef DEBUG
   nsPenMode penMode;
-  aContext.GetPenMode(penMode);
-  if (penMode == nsPenMode_kInvert) {
+  if (NS_SUCCEEDED(aContext.GetPenMode(penMode)) &&
+      penMode == nsPenMode_kInvert) {
     NS_WARNING( "Invert mode ignored in FillPolygon" );
   }
 #endif
