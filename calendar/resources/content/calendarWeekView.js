@@ -468,9 +468,10 @@ WeekView.prototype.refreshDisplay = function( )
    var firstDayMonthName = this.calendarWindow.dateFormater.getMonthName( firstDayOfWeek.getMonth() );
    var lastDayMonthName =  this.calendarWindow.dateFormater.getMonthName( lastDayOfWeek.getMonth() );
    
-   var dateString = firstDayMonthName + " " + firstDayOfWeek.getDate() + " - " +
+   var weekNumber = this.getWeekNumber();
+
+   var dateString = "Week "+weekNumber+ ": "+firstDayMonthName + " " + firstDayOfWeek.getDate() + " - " +
                     lastDayMonthName  + " " + lastDayOfWeek.getDate();
-   
    var weekTextItem = document.getElementById( "week-title-text" );
    weekTextItem.setAttribute( "value" , dateString ); 
    
@@ -722,4 +723,23 @@ var eventStartObserver  = {
   }
 };
 
-
+WeekView.prototype.getWeekNumber = function()
+{
+	var today = new Date( this.calendarWindow.getSelectedDate() );
+	Year = today.getYear() + 1900;
+	Month = today.getMonth();
+	Day = today.getDate();
+   now = new Date(Year,Month,Day+1);
+	now = now.getTime();
+   var Firstday = new Date( this.calendarWindow.getSelectedDate() );
+	Firstday.setYear(Year);
+	Firstday.setMonth(0);
+	Firstday.setDate(1);
+	then = new Date(Year,0,1);
+   then = then.getTime();
+	var Compensation = Firstday.getDay();
+	if (Compensation > 3) Compensation -= 4;
+	else Compensation += 3;
+	NumberOfWeek =  Math.round((((now-then)/86400000)+Compensation)/7);
+	return NumberOfWeek;
+}
