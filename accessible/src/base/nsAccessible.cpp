@@ -977,9 +977,9 @@ NS_IMETHODIMP nsAccessible::AppendStringWithSpaces(nsAString *aFlatString, const
   // Insert spaces to insure that words from controls aren't jammed together
   if (!textEquivalent.IsEmpty()) {
     if (!aFlatString->IsEmpty())
-      aFlatString->Append(NS_LITERAL_STRING(" "));
+      aFlatString->Append(PRUnichar(' '));
     aFlatString->Append(textEquivalent);
-    aFlatString->Append(NS_LITERAL_STRING(" "));
+    aFlatString->Append(PRUnichar(' '));
   }
   return NS_OK;
 }
@@ -1033,17 +1033,22 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
           {
               isHTMLBlock = PR_TRUE;
               if (!aFlatString->IsEmpty())
-                aFlatString->Append(NS_LITERAL_STRING(" "));
+                aFlatString->Append(PRUnichar(' '));
           }
         }
       }
-      nsAutoString text;
-      textContent->CopyText(text);
-      text.CompressWhitespace();
-      if (text.Length()>0)
-        aFlatString->Append(text);
-      if (isHTMLBlock && !aFlatString->IsEmpty())
-        aFlatString->Append(NS_LITERAL_STRING(" "));
+
+      PRInt32 origLength;
+      textContent->GetTextLength(&origLength);
+      if (origLength > 0) {
+        nsAutoString text;
+        textContent->CopyText(text);
+        text.CompressWhitespace();
+        if (!text.IsEmpty())
+          aFlatString->Append(text);
+        if (isHTMLBlock && !aFlatString->IsEmpty())
+          aFlatString->Append(PRUnichar(' '));
+      }
     }
     return NS_OK;
   }
