@@ -603,6 +603,9 @@ xpfe/components/ucth/Makefile
 xpfe/components/ucth/public/Makefile
 xpfe/components/ucth/src/Makefile
 xpfe/components/ucth/resources/Makefile
+xpfe/components/remote/Makefile
+xpfe/components/remote/public/Makefile
+xpfe/components/remote/src/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
