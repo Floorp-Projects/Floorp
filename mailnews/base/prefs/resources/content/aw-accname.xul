@@ -31,7 +31,7 @@ Rights Reserved.
   <box class="title" align="horizontal">
     <html:div class="title">&accnameTitle.label;</html:div>
     <spring flex="100%"/>
-    <titledbutton class="plain" src="resource:/res/throbber/anims00.gif"/>
+    <titledbutton class="plain" src="chrome://navigator/skin/animthrob_single.gif"/>
   </box>
   <html:div>&accnameDesc.label;</html:div>
   <html:input type="text" name="server.prettyName" id="server.prettyName"/>
