@@ -61,7 +61,8 @@ NS_COM char *
 nsEscapeHTML(const char * string);
 
 NS_COM PRUnichar *
-nsEscapeHTML2(const PRUnichar * string);
+nsEscapeHTML2(const PRUnichar *aSourceBuffer,
+              PRInt32 aSourceBufferLen = -1);
  /*
   * Escape problem char's for HTML display 
   */

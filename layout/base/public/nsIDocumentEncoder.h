@@ -84,8 +84,8 @@ public:
     // (Probably not well tested for HTML output.)
     OutputFormatted     = 2,
 
-    // OutputNoDoctype is obsolete, flag 4 available for other uses
-    //OutputNoDoctype     = 4,
+    // OutputRaw is used by copying text from widgets
+    OutputRaw           = 4,
 
     // No html head tags
     OutputBodyOnly      = 8,
