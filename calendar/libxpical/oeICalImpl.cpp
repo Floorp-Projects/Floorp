@@ -53,7 +53,8 @@
 #include "nsEscape.h"
 #include "nsISupportsArray.h"
 #include "nsXPCOM.h"
-                             
+#include "nsComponentManagerUtils.h"
+
 extern "C" {
     #include "icalss.h"
 }
@@ -94,7 +95,7 @@ oeEventEnumerator::oeEventEnumerator( )
 :
     mCurrentIndex( 0 )
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 oeEventEnumerator::~oeEventEnumerator()
@@ -150,7 +151,7 @@ oeDateEnumerator::oeDateEnumerator( )
 :
     mCurrentIndex( 0 )
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 oeDateEnumerator::~oeDateEnumerator()
@@ -236,7 +237,7 @@ oeICalImpl::oeICalImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::oeICalImpl()\n" );
 #endif
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
 
         m_batchMode = false;
 
@@ -261,7 +262,13 @@ oeICalImpl::~oeICalImpl()
     }
     m_todoobserverlist.clear();
     if( m_alarmtimer  ) {
-        if ( m_alarmtimer->GetDelay() != 0 )
+        PRUint32 delay = 0;
+        #ifdef NS_INIT_REFCNT //A temporary way of keeping backward compatibility with Mozilla 1.0 source compile
+        delay = m_alarmtimer->GetDelay();
+        #else
+        m_alarmtimer->GetDelay( &delay );
+        #endif
+        if ( delay != 0 )
             m_alarmtimer->Cancel();
         m_alarmtimer->Release();
         m_alarmtimer = nsnull;
@@ -1673,7 +1680,13 @@ void oeICalImpl::SetupAlarmManager() {
         tmplistptr = tmplistptr->next;
     }
     if( m_alarmtimer  ) {
-        if ( m_alarmtimer->GetDelay() != 0 )
+        PRUint32 delay = 0;
+        #ifdef NS_INIT_REFCNT //A temporary way of keeping backward compatibility with Mozilla 1.0 source compile
+        delay = m_alarmtimer->GetDelay();
+        #else
+        m_alarmtimer->GetDelay( &delay );
+        #endif
+        if ( delay != 0 )
             m_alarmtimer->Cancel();
         m_alarmtimer->Release();
         m_alarmtimer = nsnull;
@@ -1690,7 +1703,11 @@ void oeICalImpl::SetupAlarmManager() {
         if( NS_FAILED( rv ) )
             m_alarmtimer = nsnull;
         else
+            #ifdef NS_INIT_REFCNT //A temporary way of keeping backward compatibility with Mozilla 1.0 source compile
             m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, PR_TRUE, NS_TYPE_ONE_SHOT );
+            #else
+            m_alarmtimer->InitWithFuncCallback( AlarmTimerCallback, this, timediff*1000, nsITimer::TYPE_ONE_SHOT );
+            #endif
     }
 }
 

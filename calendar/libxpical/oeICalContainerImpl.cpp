@@ -34,29 +34,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//#ifndef WIN32
-//#include <unistd.h>
-//#endif
-
-//#define __cplusplus__ 1
-
-//#include <vector>
-//#include "oeICalImpl.h"
-//#include "oeICalEventImpl.h"
-//#include "nsMemory.h"
-//#include "stdlib.h"   
-//#include "nsCOMPtr.h"
-//#include "nsISimpleEnumerator.h"
-//#include "nsString.h"
-//#include "nsIURL.h"
-//#include "nsNetCID.h"
-//#include "nsEscape.h"
 #include "oeICalContainerImpl.h"
 #include "nsISupportsArray.h"
+#include "nsComponentManagerUtils.h"
                              
-//extern "C" {
-//    #include "icalss.h"
-//}
 icaltimetype ConvertFromPrtime( PRTime indate );
 PRTime ConvertToPrtime ( icaltimetype indate );
 
@@ -65,7 +46,7 @@ oeICalContainerImpl::oeICalContainerImpl()
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::oeICalContainerImpl()\n" );
 #endif
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
 
         m_batchMode = false;
 
