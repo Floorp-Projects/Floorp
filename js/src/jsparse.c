@@ -1434,6 +1434,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             if (!pn4)
                 return NULL;
             pn4->pn_type = TOK_RESERVED;
+            pn4->pn_op = JSOP_NOP;
             pn4->pn_kid1 = pn1;
             pn4->pn_kid2 = pn2;
             pn4->pn_kid3 = pn3;
@@ -2992,6 +2993,43 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 }
 
+static JSBool
+ContainsVarStmt(JSParseNode *pn)
+{
+    JSParseNode *pn2;
+
+    if (!pn)
+        return JS_FALSE;
+    switch (pn->pn_arity) {
+      case PN_LIST:
+        if (pn->pn_type == TOK_VAR)
+            return JS_TRUE;
+        for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+            if (ContainsVarStmt(pn2))
+                return JS_TRUE;
+        }
+        break;
+      case PN_TERNARY:
+        return ContainsVarStmt(pn->pn_kid1) ||
+               ContainsVarStmt(pn->pn_kid2) ||
+               ContainsVarStmt(pn->pn_kid3);
+      case PN_BINARY:
+        /*
+         * Limit recursion if pn is a binary expression, which can't contain a
+         * var statement.
+         */
+        if (pn->pn_op != JSOP_NOP)
+            return JS_FALSE;
+        return ContainsVarStmt(pn->pn_left) || ContainsVarStmt(pn->pn_right);
+      case PN_UNARY:
+        if (pn->pn_op != JSOP_NOP)
+            return JS_FALSE;
+        return ContainsVarStmt(pn->pn_kid);
+      default:;
+    }
+    return JS_FALSE;
+}
+
 JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 {
@@ -3052,6 +3090,10 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
     switch (pn->pn_type) {
       case TOK_IF:
+        if (ContainsVarStmt(pn2) || ContainsVarStmt(pn3))
+            break;
+        /* FALL THROUGH */
+
       case TOK_HOOK:
         /* Reduce 'if (C) T; else E' into T for true C, E for false. */
         switch (pn1->pn_type) {
