@@ -118,7 +118,7 @@ static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 #ifdef DEBUG_bienvenu
 #define	DEFAULT_MAILBOX_PATH "/e|/raptor/mozilla/bugsplat"
 #else
-#define DEFAULT_MAILBOX_PATH "/f|mozilla/mozilla/mailnews/public/makefile.win"
+#define DEFAULT_MAILBOX_PATH "/c|/program files/netscape/users/mscott/mail/testFolder"
 #endif
 
 
@@ -191,6 +191,7 @@ public:
 	// The following are event generators. They convert all of the available user commands into
 	// URLs and then run the urls. 
 	nsresult OpenMailbox();
+	nsresult OnDisplayMessage();
 	nsresult OnExit(); 
 
 protected:
@@ -348,6 +349,9 @@ nsresult nsMailboxTestDriver::ReadAndDispatchCommand()
 	case 1:
 		status = OpenMailbox();
 		break;
+	case 2:
+		status = OnDisplayMessage();
+		break;
 	default:
 		status = OnExit();
 		break;
@@ -361,6 +365,7 @@ nsresult nsMailboxTestDriver::ListCommands()
 	printf("Commands currently available: \n");
 	printf("0) List commands. \n");
 	printf("1) Open a mailbox folder. \n");
+	printf("2) Display a message from a folder. \n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }
@@ -375,6 +380,44 @@ nsresult nsMailboxTestDriver::OnExit()
 	m_runTestHarness = PR_FALSE; // next time through the test driver loop, we'll kick out....
 	return NS_OK;
 }
+
+nsresult nsMailboxTestDriver::OnDisplayMessage()
+{
+	nsresult rv = NS_OK; 
+	char * displayString = nsnull;
+
+	PL_strcpy(m_userData, DEFAULT_MAILBOX_PATH);
+
+	displayString = PR_smprintf("Location of mailbox [%s]: ", m_userData);
+	rv = PromptForUserDataAndBuildUrl(displayString);
+	PR_FREEIF(displayString);
+ 
+	nsFilePath filePath(m_userData);
+ 
+	// now ask for the start byte
+	PL_strcpy(m_userData, "0");
+	displayString = PR_smprintf("Message Key [%s]: ", m_userData);
+	rv = PromptForUserDataAndBuildUrl(displayString);
+	PR_FREEIF(displayString);
+
+	nsMsgKey msgKey = atol(m_userData);
+	
+	// now ask the mailbox service to parse this mailbox...
+	nsIMailboxService * mailboxService = nsnull;
+	rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
+	if (NS_SUCCEEDED(rv) && mailboxService)
+	{
+		nsIURL * url = nsnull;
+		mailboxService->DisplayMessage(filePath, msgKey, nsnull, nsnull, this, nsnull);
+		if (url)
+			url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
+		NS_IF_RELEASE(url);
+
+		nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
+	}
+	return rv;
+}
+
 
 nsresult nsMailboxTestDriver::OpenMailbox()
 {
