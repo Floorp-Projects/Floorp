@@ -1685,8 +1685,9 @@ nsFontGTKNormal::GetBoundingMetrics (const PRUnichar*   aString,
   aBoundingMetrics.Clear();               
 
   if (aString && 0 < aLength) {
+    XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (mFont);
     XChar2b buf[512]; // XXX watch buffer length !!!
-    gint len = mCharSetInfo->Convert(mCharSetInfo, aString, aLength,
+    gint len = mCharSetInfo->Convert(mCharSetInfo, fontInfo, aString, aLength,
                                      (char*) buf, sizeof(buf));
     gdk_text_extents (mFont, (char*) buf, len, 
                       &aBoundingMetrics.leftBearing, 
@@ -1695,7 +1696,6 @@ nsFontGTKNormal::GetBoundingMetrics (const PRUnichar*   aString,
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent); 
     // get italic correction
-    XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (mFont);
     unsigned long pr = 0;
     if (::XGetFontProperty(fontInfo, XA_ITALIC_ANGLE, &pr)) {
       aBoundingMetrics.subItalicCorrection = (gint) pr; 
