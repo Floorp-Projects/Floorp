@@ -1016,6 +1016,9 @@ void AddressBookParser::AddLdifRowToDatabase()
 	delete [] saveCursor;
 	mDatabase->AddCardRowToDB(newRow);	
 
+	if (bIsList)
+		mDatabase->AddListDirNode(newRow);
+
 	if (mLine.Length() > 0)
 		mLine.Truncate();
 }
@@ -1179,10 +1182,8 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	  if ( -1 != colType.Find("mail") )
 		mDatabase->AddPrimaryEmail(newRow, column);
 
-//		  else if ( -1 != colType.Find("member") && list )
-//		  {
-//			this->add-list-member(list, yarn); // see also "uniquemember"
-//		  }
+	  else if ( -1 != colType.Find("member") && bIsList )
+		mDatabase->AddLdifListMember(newRow, column);
 
 //		  else if ( -1 != colType.Find("manager") )
 //			ioRow->AddColumn(ev, this->ColManager(), yarn);
@@ -1301,10 +1302,8 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	case 'u':
 
-//		  if ( -1 != colType.Find("uniquemember") && list )
-//		  {
-//			this->add-list-member(list, yarn); // see also "member"
-//		  }
+		if ( -1 != colType.Find("uniquemember") && bIsList )
+			mDatabase->AddLdifListMember(newRow, column);
 
 //		  else if ( -1 != colType.Find("uid") )
 //			ioRow->AddColumn(ev, this->ColUid(), yarn);
@@ -1328,7 +1327,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	case 'x':
 	  if ( -1 != colType.Find("xmozillanickname") )
-		mDatabase->AddNickName(newRow, column);
+	  {
+		if (bIsList)
+		  mDatabase->AddListNickName(newRow, column);
+		else
+		  mDatabase->AddNickName(newRow, column);
+	  }
 
 	  else if ( -1 != colType.Find("xmozillausehtmlmail") )
 	  {
