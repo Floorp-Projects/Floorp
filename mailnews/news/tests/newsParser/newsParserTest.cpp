@@ -78,7 +78,7 @@ nsresult newsTestDriver::RunDriver()
     rv = GetDatabase();
 
     if (NS_SUCCEEDED(rv) && m_newsDB) {
-        nsIMessage		*newMsgHdr = nsnull;
+        nsIMsgDBHdr		*newMsgHdr = nsnull;
 
         m_newsDB->CreateNewHdr(1, &newMsgHdr);
         if (NS_FAILED(rv)) {
