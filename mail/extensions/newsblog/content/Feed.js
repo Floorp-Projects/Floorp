@@ -20,9 +20,36 @@ const kNewsBlogSuccess = 0;
 const kNewsBlogInvalidFeed = 1; // usually means there was an error trying to parse the feed...
 const kNewsBlogRequestFailure = 2; // generic networking failure when trying to download the feed.
 
+
 // Hash of feeds being downloaded, indexed by URL, so the load event listener
 // can access the Feed objects after it finishes downloading the feed files.
-var gFzFeedCache = new Object();
+function FeedCache(){
+    this.nsURI = Components.classes["@mozilla.org/network/standard-url;1"].
+                            createInstance(Components.interfaces.nsIURI);
+    return this; 
+}
+
+FeedCache.prototype.putFeed =function(feed) {
+    this[this.normalizeHost(feed.url)] = feed;
+}
+
+FeedCache.prototype.getFeedWithUrl =function(url) {
+    return this[this.normalizeHost(url)];
+}
+
+FeedCache.prototype.removeFeedWithUrl = function(url) {
+    delete this[this.normalizeHost(url)];
+}
+
+FeedCache.prototype.normalizeHost = function(url){
+    this.nsURI.spec = url;    
+    this.nsURI.host = this.nsURI.host.toLowerCase();
+    return this.nsURI.spec;
+}
+
+var gFzFeedCache = new FeedCache();
+
+
 
 function Feed(resource) {
     this.resource = resource.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -81,7 +108,7 @@ Feed.prototype.download = function(parseItems, aCallback) {
 
   // Before we try to download the feed, make sure we aren't already processing the feed
   // by looking up the url in our feed cache
-  if (gFzFeedCache[this.url])
+  if (gFzFeedCache.getFeedWithUrl(this.url))
     return; // don't do anything, the feed is already in use
 
   this.request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -92,7 +119,7 @@ Feed.prototype.download = function(parseItems, aCallback) {
   this.request.overrideMimeType("text/xml");
   this.request.onload = Feed.onDownloaded;
   this.request.onerror = Feed.onDownloadError;
-  gFzFeedCache[this.url] = this;
+  gFzFeedCache.putFeed(this);
   this.request.send(null);
 }
 
@@ -100,7 +127,7 @@ Feed.onDownloaded = function(event) {
   var request = event.target;
   var url = request.channel.originalURI.spec;
   debug(url + " downloaded");
-  var feed = gFzFeedCache[url];
+  var feed = gFzFeedCache.getFeedWithUrl(url);
   if (!feed)
     throw("error after downloading " + url + ": couldn't retrieve feed from request");
   
@@ -112,7 +139,7 @@ Feed.onDownloaded = function(event) {
 Feed.onProgress = function(event) {
   var request = event.target;
   var url = request.channel.originalURI.spec;
-  var feed = gFzFeedCache[url];
+  var feed = gFzFeedCache.getFeedWithUrl(url);
 
   if (feed.downloadCallback)
     feed.downloadCallback.onProgress(feed, event.position, event.totalSize);
@@ -121,11 +148,11 @@ Feed.onProgress = function(event) {
 Feed.onDownloadError = function(event) {
   var request = event.target;
   var url = request.channel.originalURI.spec;
-  var feed = gFzFeedCache[url];
+  var feed = gFzFeedCache.getFeedWithUrl(url);
   if (feed.downloadCallback)
     feed.downloadCallback.downloaded(feed, kNewsBlogRequestFailure);
 
-  gFzFeedCache[url] = "";
+  gFzFeedCache.removeFeedWithUrl(url);
 }
 
 Feed.prototype.onParseError = function(feed) {
@@ -133,7 +160,7 @@ Feed.prototype.onParseError = function(feed) {
   {
     if (feed.downloadCallback)
       feed.downloadCallback.downloaded(feed, kNewsBlogInvalidFeed);
-    gFzFeedCache[feed.url] = "";
+    gFzFeedCache.removeFeedWithUrl(url);
   }
 }
 
@@ -563,7 +590,7 @@ Feed.prototype.storeNextItem = function()
 
 Feed.prototype.cleanupParsingState = function(feed) {
     // now that we are done parsing the feed, remove the feed from our feed cache
-  gFzFeedCache[feed.url] = "";
+  gFzFeedCache.removeFeedWithUrl(feed.url);
 
   feed.removeInvalidItems();
 
