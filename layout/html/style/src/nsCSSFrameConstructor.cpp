@@ -7023,49 +7023,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell* aPresShell,
   return rv;
 }
 
-nsresult
-nsCSSFrameConstructor::GetAdjustedParentFrame(nsIPresContext* aPresContext,
-                                              nsIFrame*       aCurrentParentFrame, 
-                                              PRUint8         aChildDisplayType, 
-                                              nsIFrame*&      aNewParentFrame)
-{
-  NS_PRECONDITION(nsnull!=aCurrentParentFrame, "bad arg aCurrentParentFrame");
-
-  nsresult rv = NS_OK;
-  // by default, the new parent frame is the given current parent frame
-  aNewParentFrame = aCurrentParentFrame;
-  if (nsnull != aCurrentParentFrame) {
-    const nsStyleDisplay* currentParentDisplay;
-    aCurrentParentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)currentParentDisplay);
-    if (NS_STYLE_DISPLAY_TABLE == currentParentDisplay->mDisplay) {
-      if (NS_STYLE_DISPLAY_TABLE_CAPTION != aChildDisplayType) {
-        nsIFrame *innerTableFrame = nsnull;
-        aCurrentParentFrame->FirstChild(aPresContext, nsnull, &innerTableFrame);
-        if (nsnull != innerTableFrame) {
-          const nsStyleDisplay* innerTableDisplay;
-          innerTableFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)innerTableDisplay);
-          if (NS_STYLE_DISPLAY_TABLE == innerTableDisplay->mDisplay) { 
-            // we were given the outer table frame, use the inner table frame
-            aNewParentFrame=innerTableFrame;
-          } // else we were already given the inner table frame
-        } // else the current parent has no children and cannot be an outer table frame       
-      } else { // else the child is a caption and really belongs to the outer table frame 
-        nsIFrame* parFrame = nsnull;
-        aCurrentParentFrame->GetParent(&parFrame);
-        const nsStyleDisplay* parDisplay;
-        aCurrentParentFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)parDisplay);
-        if (NS_STYLE_DISPLAY_TABLE == parDisplay->mDisplay) {
-          aNewParentFrame = parFrame; // aNewParentFrame was an inner frame
-        }
-      }
-    }
-  } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  NS_POSTCONDITION(nsnull!=aNewParentFrame, "bad result null aNewParentFrame");
-  return rv;
-}
 
 PRBool
 nsCSSFrameConstructor::IsScrollable(nsIPresContext*       aPresContext,
@@ -8399,6 +8356,19 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       // This handles APPLET, EMBED, and OBJECT
       return NS_OK;
     }
+    // in case the parent frame is an outer table, use the innner table
+    // as the parent. If a new child frame is a caption then the outer
+    // table frame will be used (below) as the parent.
+    if (frameType.get() == nsLayoutAtoms::tableOuterFrame) {
+      nsIFrame* innerTable = nsnull;
+      parentFrame->FirstChild(aPresContext, nsnull, &innerTable);
+      if (innerTable) {
+        parentFrame = innerTable;
+      }
+      else { // should never happen
+        return NS_ERROR_FAILURE;
+      }
+    }
 
     // Create some new frames
     PRInt32                 count;
@@ -8426,14 +8396,60 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                          state.mFrameManager, containingBlock);
     }
 
+    // if the container is a table and a caption was appended, it needs to be put in
+    // the outer table frame's additional child list. 
+    nsFrameItems captionItems; 
+
     PRInt32 i;
     aContainer->ChildCount(count);
     for (i = aNewIndexInContainer; i < count; i++) {
       nsCOMPtr<nsIContent> childContent;
       aContainer->ChildAt(i, *getter_AddRefs(childContent));
-
-      // Construct a child frame
-      ConstructFrame(shell, aPresContext, state, childContent, parentFrame, frameItems);
+      
+      // construct a child of a table frame by putting it on a temporary list and then
+      // moving it into the appropriate list. This is more efficient than checking the display
+      // type of childContent. During the construction of a caption frame, the outer 
+      // table frame will be used as its parent.
+      if (nsLayoutAtoms::tableFrame == frameType.get()) {
+        nsFrameItems tempItems;
+        ConstructFrame(shell, aPresContext, state, childContent, parentFrame, tempItems);
+        if (tempItems.childList) {
+          nsCOMPtr<nsIAtom> childFrameType;
+          tempItems.childList->GetFrameType(getter_AddRefs(childFrameType));
+          if (nsLayoutAtoms::tableCaptionFrame == childFrameType.get()) {
+            PRBool abortCaption = PR_FALSE;
+            // check if a caption already exists in captionItems, and if so, abort the caption
+            if (captionItems.childList) {
+              abortCaption = PR_TRUE;
+            }
+            else {
+              // check for a caption already appended to the outer table
+              nsIFrame* outerTable;
+              parentFrame->GetParent(&outerTable);
+              if (outerTable) { 
+                nsIFrame* existingCaption = nsnull;
+                outerTable->FirstChild(aPresContext, nsLayoutAtoms::captionList, &existingCaption); 
+                if (existingCaption) {
+                  abortCaption = PR_TRUE;
+                }
+              }
+            }
+            if (abortCaption) {
+              tempItems.childList->Destroy(aPresContext);
+            }
+            else {
+              captionItems.AddChild(tempItems.childList);
+            }
+          }
+          else {
+            frameItems.AddChild(tempItems.childList);
+          }
+        }
+      }
+      else {
+        // Construct a child frame (that does not have a table as parent)
+        ConstructFrame(shell, aPresContext, state, childContent, parentFrame, frameItems);
+      }
     }
 
     // We built some new frames.  Initialize any newly-constructed bindings.
@@ -8453,19 +8469,10 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                             frameItems); 
     }
 
-    // Adjust parent frame for table inner/outer frame.  We need to do
-    // this here because we need both the parent frame and the
-    // constructed frame
     nsresult result = NS_OK;
-    nsIFrame* adjustedParentFrame = parentFrame;
     firstAppendedFrame = frameItems.childList;
-    if (nsnull != firstAppendedFrame) {
-      const nsStyleDisplay* firstAppendedFrameDisplay;
-      firstAppendedFrame->GetStyleData(eStyleStruct_Display,
-                                       (const nsStyleStruct *&)firstAppendedFrameDisplay);
-      result = GetAdjustedParentFrame(aPresContext, parentFrame,
-                                      firstAppendedFrameDisplay->mDisplay,
-                                      adjustedParentFrame);
+    if (!firstAppendedFrame) {
+      firstAppendedFrame = captionItems.childList;
     }
 
     // Notify the parent frame passing it the list of new frames
@@ -8480,15 +8487,31 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       //
       nsCOMPtr<nsIDOMHTMLSelectElement> selectContent(do_QueryInterface(aContainer));
       if (!selectContent) {
-        if (WipeContainingBlock(aPresContext, state, blockContent, adjustedParentFrame,
+        if (WipeContainingBlock(aPresContext, state, blockContent, parentFrame,
                                 frameItems.childList)) {
           return NS_OK;
         }
       }
 
-      // Append the flowed frames to the principal child list
-      AppendFrames(aPresContext, shell, state.mFrameManager, aContainer,
-                   adjustedParentFrame, firstAppendedFrame);
+      // Append the flowed frames to the principal child list, tables need special treatment
+      if (nsLayoutAtoms::tableFrame == frameType.get()) {
+        if (captionItems.childList) { // append the caption to the outer table
+          nsIFrame* outerTable;
+          parentFrame->GetParent(&outerTable);
+          if (outerTable) { 
+            AppendFrames(aPresContext, shell, state.mFrameManager, aContainer,
+                         outerTable, captionItems.childList); 
+          }
+        }
+        if (frameItems.childList) { // append children of the inner table
+          AppendFrames(aPresContext, shell, state.mFrameManager, aContainer,
+                       parentFrame, frameItems.childList);
+        }
+      }
+      else {
+        AppendFrames(aPresContext, shell, state.mFrameManager, aContainer,
+                     parentFrame, firstAppendedFrame);
+      }
 
       // If there are new absolutely positioned child frames, then notify
       // the parent
