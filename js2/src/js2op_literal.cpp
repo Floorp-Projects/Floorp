@@ -68,8 +68,9 @@
 
     case eString: 
         {
-            push(STRING_TO_JS2VAL(allocString(BytecodeContainer::getString(pc))));
-            pc += sizeof(String *);
+            uint16 index = BytecodeContainer::getShort(pc);
+            push(STRING_TO_JS2VAL(allocString(&bCon->mStringList[index])));
+            pc += sizeof(short);
         }
         break;
 

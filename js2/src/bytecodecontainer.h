@@ -141,10 +141,9 @@ public:
     void setOffset(uint32 index, int32 v)   { *((int32 *)(mBuffer.begin() + index)) = v; }
     static int32 getOffset(void *pc)        { return *((int32 *)pc); }
     
-    void addString(const StringAtom *x, size_t pos)     { emitOp(eString, pos); addPointer(x); }
-    void addString(String &x, size_t pos)               { emitOp(eString, pos); addPointer(&x); }
-    void addString(String *x, size_t pos)               { emitOp(eString, pos); addPointer(x); }
-    static String *getString(void *pc)      { return (String *)getPointer(pc); }
+    void addString(const StringAtom *x, size_t pos)     { emitOp(eString, pos); mStringList.push_back(String(*x)); addShort((uint16)(mStringList.size() - 1)); }
+    void addString(String &x, size_t pos)               { emitOp(eString, pos); mStringList.push_back(String(x)); addShort((uint16)(mStringList.size() - 1)); }
+    void addString(String *x, size_t pos)               { emitOp(eString, pos); mStringList.push_back(String(*x)); addShort((uint16)(mStringList.size() - 1)); }
     // XXX We lose StringAtom here (and is it safe to stash the address of a StringAtom?)
     // - is there any way of keeping StringAtoms themselves in a bytecodeContainer?
     
@@ -156,6 +155,8 @@ public:
     std::vector<RegExpInstance *> mRegExpList;    // gc tracking 
     std::vector<Multiname *> mMultinameList;      // gc tracking 
     std::vector<Frame *> mFrameList;              // gc tracking 
+
+    std::vector<String> mStringList;
 
     int32 mStackTop;                // keep these as signed so as to...
     int32 mStackMax;                // ...track if they go negative.

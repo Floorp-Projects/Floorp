@@ -3528,6 +3528,8 @@ deleteClassProperty:
     // in the instance bindings. If not there, look in the super class.
     bool JS2Metadata::findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase /* phase */, MemberDescriptor *result)
     {
+        result->staticMember = NULL;
+        result->qname = NULL;
         JS2Class *s = c;
         while (s) {
             StaticBindingIterator b, end;

@@ -48,50 +48,60 @@
             }
             else {
                 if ((obj->kind == FixedInstanceKind) || (obj->kind == DynamicInstanceKind)) {
-                    FunctionWrapper *fWrap;
-                    if (obj->kind == FixedInstanceKind)
-                        fWrap = (checked_cast<FixedInstance *>(obj))->fWrap;
-                    else
-                        fWrap = (checked_cast<DynamicInstance *>(obj))->fWrap;
-                    // XXX - I made this stuff up - extract the 'prototype' property from
-                    // the function being invoked (defaulting to Object.prototype). Then 
-                    // contruct a new prototypeInstance, setting the acquired prototype
-                    // parent. Finally invoke the function, but insert the constructed
-                    // object at the bottom of the stack to be the 'return' value. 
-                    // XXX this won't last - if a non-primitive is returned from the function,
-                    // it's supposed to supplant the constructed object. XXX and I think the
-                    // stack is out of balance anyway...
-                    js2val protoVal;
-                    JS2Object *protoObj = meta->objectClass->prototype;
-                    Multiname mn(prototype_StringAtom);
-                    LookupKind lookup(false, JS2VAL_NULL);
-                    if (meta->readProperty(a, &mn, &lookup, RunPhase, &protoVal)) {
-                        if (!JS2VAL_IS_OBJECT(protoVal))
-                            meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
-                        protoObj = JS2VAL_TO_OBJECT(protoVal);
-                    }
-
-                    ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
-                    runtimeFrame->instantiate(&meta->env);
-                    PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
-                    baseVal = OBJECT_TO_JS2VAL(pInst);
-                    runtimeFrame->thisObject = baseVal;
-//                      assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                    if (!fWrap->code)
-                        jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
-                    meta->env.addFrame(runtimeFrame);
-                    if (fWrap->code) {  // native code, pass pointer to argument base
-                        a = fWrap->code(meta, a, base(argCount), argCount);
-                        meta->env.removeTopFrame();
-                        pop(argCount + 1);
-                        push(a);
+                    FunctionWrapper *fWrap = NULL;
+                    if (obj->kind == FixedInstanceKind) {
+                        FixedInstance *fInst = (checked_cast<FixedInstance *>(obj));
+                        if (fInst->type == meta->functionClass)
+                            fWrap = fInst->fWrap;
                     }
                     else {
-                        insert(baseVal, argCount + 1);
+                        DynamicInstance *dInst = (checked_cast<DynamicInstance *>(obj));
+                        if (dInst->type == meta->functionClass)
+                            fWrap = dInst->fWrap;
                     }
+                    if (fWrap) {
+                        // XXX - I made this stuff up - extract the 'prototype' property from
+                        // the function being invoked (defaulting to Object.prototype). Then 
+                        // contruct a new prototypeInstance, setting the acquired prototype
+                        // parent. Finally invoke the function, but insert the constructed
+                        // object at the bottom of the stack to be the 'return' value. 
+                        // XXX this won't last - if a non-primitive is returned from the function,
+                        // it's supposed to supplant the constructed object. XXX and I think the
+                        // stack is out of balance anyway...
+                        js2val protoVal;
+                        JS2Object *protoObj = meta->objectClass->prototype;
+                        Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
+                        LookupKind lookup(false, JS2VAL_NULL);
+                        if (meta->readProperty(a, &mn, &lookup, RunPhase, &protoVal)) {
+                            if (!JS2VAL_IS_OBJECT(protoVal))
+                                meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
+                            protoObj = JS2VAL_TO_OBJECT(protoVal);
+                        }
+
+                        ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
+                        runtimeFrame->instantiate(&meta->env);
+                        PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
+                        baseVal = OBJECT_TO_JS2VAL(pInst);
+                        runtimeFrame->thisObject = baseVal;
+    //                      assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                        if (!fWrap->code)
+                            jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                        meta->env.addFrame(runtimeFrame);
+                        if (fWrap->code) {  // native code, pass pointer to argument base
+                            a = fWrap->code(meta, a, base(argCount), argCount);
+                            meta->env.removeTopFrame();
+                            pop(argCount + 1);
+                            push(a);
+                        }
+                        else {
+                            insert(baseVal, argCount + 1);
+                        }
+                    }
+                    else
+                        meta->reportError(Exception::typeError, "object is not a constructor", errorPos());
                 }
                 else
-                    ASSERT(false);
+                    meta->reportError(Exception::typeError, "object is not a constructor", errorPos());
             }
         }
         break;

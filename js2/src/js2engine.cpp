@@ -619,6 +619,7 @@ namespace MetaData {
         JS2Object::mark(object_StringAtom);
         JS2Object::mark(Empty_StringAtom);
         JS2Object::mark(Dollar_StringAtom);
+        JS2Object::mark(prototype_StringAtom);
         JS2Object::mark(length_StringAtom);
         JS2Object::mark(toString_StringAtom);
     }
@@ -691,10 +692,10 @@ namespace MetaData {
             if (it == length) {
                 if (obj->kind == PrototypeInstanceKind) {
                     obj = (checked_cast<PrototypeInstance *>(obj))->parent;
-                    return buildNameList();
+                    if (obj)
+                        return buildNameList();
                 }
-                else
-                    return false;
+                return false;
             }
             else
                 return true;
