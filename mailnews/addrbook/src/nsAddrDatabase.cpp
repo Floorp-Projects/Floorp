@@ -1088,7 +1088,7 @@ nsresult nsAddrDatabase::InitExistingDB()
     if (err == NS_OK)
     {
         err = GetStore()->GetTable(GetEnv(), &gAddressBookTableOID, &m_mdbPabTable);
-        if (NS_SUCCEEDED(err))
+        if (NS_SUCCEEDED(err) && m_mdbPabTable)
         {
             err = GetLastRecordKey();
             if (err == NS_ERROR_NOT_AVAILABLE)
