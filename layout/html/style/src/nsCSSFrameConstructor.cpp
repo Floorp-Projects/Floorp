@@ -360,6 +360,9 @@ IsInlineFrame(nsIFrame* aFrame)
     case NS_STYLE_DISPLAY_INLINE:
     case NS_STYLE_DISPLAY_INLINE_BLOCK:
     case NS_STYLE_DISPLAY_INLINE_TABLE:
+    case NS_STYLE_DISPLAY_INLINE_BOX:
+    case NS_STYLE_DISPLAY_INLINE_GRID:
+    case NS_STYLE_DISPLAY_INLINE_STACK:
       return PR_TRUE;
     default:
       break;
@@ -5190,6 +5193,19 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 }
 
 #ifdef INCLUDE_XUL
+static
+PRBool IsXULDisplayType(const nsStyleDisplay* aDisplay)
+{
+  return (aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX || 
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID || 
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_BOX ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_STACK ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_LINE);
+}
+
 nsresult
 nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell, 
                                          nsIPresContext*          aPresContext,
@@ -5224,11 +5240,13 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
   if (aTag == nsnull)
     return NS_OK;
 
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
   
-  if (aNameSpaceID == nsXULAtoms::nameSpaceID) {
-  
-// was here
+  PRBool isXULNS = (aNameSpaceID == nsXULAtoms::nameSpaceID);
+  PRBool isXULDisplay = IsXULDisplayType(display);
 
+  if (isXULNS || isXULDisplay) {
     // See if the element is absolutely positioned
     const nsStylePosition* position = (const nsStylePosition*)
       aStyleContext->GetStyleData(eStyleStruct_Position);
@@ -5238,7 +5256,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     // Create a frame based on the tag
     // box is first because it is created the most.
       // BOX CONSTRUCTION
-    if (aTag == nsXULAtoms::box || aTag == nsXULAtoms::vbox || aTag == nsXULAtoms::hbox || aTag == nsXULAtoms::tabbox || 
+    if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX ||
+                          display->mDisplay == NS_STYLE_DISPLAY_BOX)) || 
+        aTag == nsXULAtoms::box || aTag == nsXULAtoms::vbox || aTag == nsXULAtoms::hbox || aTag == nsXULAtoms::tabbox || 
         aTag == nsXULAtoms::tabpage || aTag == nsXULAtoms::tabcontrol
         || aTag == nsXULAtoms::treecell  
         ) {
@@ -5252,9 +5272,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       // create a box. Its not root, its layout manager is default (nsnull) which is "sprocket" and
       // its default orientation is horizontal for hbox and vertical for vbox
       rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull, aTag != nsXULAtoms::vbox);
-
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-           aStyleContext->GetStyleData(eStyleStruct_Display);
 
       // Boxes can scroll.
       if (IsScrollable(aPresContext, display)) {
@@ -5432,7 +5449,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } 
 
     // ------- Begin Grid ---------
-    else if (aTag == nsXULAtoms::grid || aTag == nsXULAtoms::tree) {
+    else if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID ||
+                               display->mDisplay == NS_STYLE_DISPLAY_GRID)) ||
+              aTag == nsXULAtoms::grid || aTag == nsXULAtoms::tree) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       nsCOMPtr<nsIBoxLayout> layout;
@@ -5475,7 +5494,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } //------- End Grid ------
 
     // ------- Begin Rows/Columns ---------
-    else if (aTag == nsXULAtoms::rows || aTag == nsXULAtoms::columns
+    else if ((!aXBLBaseTag && display->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP) ||
+             aTag == nsXULAtoms::rows || aTag == nsXULAtoms::columns
              || aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treecolgroup ||
              aTag == nsXULAtoms::treehead || aTag == nsXULAtoms::treerows || 
              aTag == nsXULAtoms::treecols || aTag == nsXULAtoms::treeitem
@@ -5537,7 +5557,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     } //------- End Grid ------
 
     // ------- Begin Row/Column ---------
-    else if (aTag == nsXULAtoms::row || aTag == nsXULAtoms::column
+    else if ((!aXBLBaseTag && display->mDisplay == NS_STYLE_DISPLAY_GRID_LINE) ||
+             aTag == nsXULAtoms::row || aTag == nsXULAtoms::column
              || aTag == nsXULAtoms::treerow || aTag == nsXULAtoms::treecol
       ) {
       processChildren = PR_TRUE;
@@ -5632,7 +5653,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     // End of STACK CONSTRUCTION logic
 
     // BULLETINBOARD CONSTRUCTION
-    else if (aTag == nsXULAtoms::bulletinboard) {
+    else if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK ||
+                               display->mDisplay == NS_STYLE_DISPLAY_STACK)) ||
+             aTag == nsXULAtoms::bulletinboard) {
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
 
