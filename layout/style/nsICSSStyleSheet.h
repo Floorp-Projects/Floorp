@@ -42,16 +42,16 @@
 
 class nsICSSRule;
 class nsIDOMNode;
-class nsINameSpace;
+class nsNameSpaceMap;
 class nsCSSRuleProcessor;
 class nsIMediaList;
 class nsICSSGroupRule;
 class nsICSSImportRule;
 
 // IID for the nsICSSStyleSheet interface
-// d148e93e-7f1d-4f95-853f-ac356eba3d70
+// 37f9b0f0-5d00-4abc-9246-35473031ffd7
 #define NS_ICSS_STYLE_SHEET_IID     \
-{0xd148e93e, 0x7f1d, 0x4f95, {0x85, 0x3f, 0xac, 0x35, 0x6e, 0xba, 0x3d, 0x70}}
+{0x37f9b0f0, 0x5d00, 0x4abc, {0x92, 0x46, 0x35, 0x47, 0x30, 0x31, 0xff, 0xd7}}
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
@@ -91,8 +91,8 @@ public:
   NS_IMETHOD  SetOwnerRule(nsICSSImportRule* aOwnerRule) = 0;
   NS_IMETHOD  GetOwnerRule(nsICSSImportRule** aOwnerRule) = 0;
   
-  // get head of namespace chain for sheet
-  NS_IMETHOD  GetNameSpace(nsINameSpace*& aNameSpace) const = 0;
+  // get namespace map for sheet
+  virtual NS_HIDDEN_(nsNameSpaceMap*) GetNameSpaceMap() const = 0;
 
   NS_IMETHOD  Clone(nsICSSStyleSheet* aCloneParent,
                     nsICSSImportRule* aCloneOwnerRule,

@@ -86,7 +86,7 @@
 #include "nsRuleWalker.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsINameSpaceManager.h"
-#include "nsINameSpace.h"
+#include "nsNameSpaceMap.h"
 #include "nsITextContent.h"
 #include "prlog.h"
 #include "nsCOMPtr.h"
@@ -1225,7 +1225,6 @@ static PRBool SetStyleSheetReference(nsISupports* aElement, void* aSheet)
 nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mOrderedRules(nsnull),
-    mNameSpace(nsnull),
     mComplete(PR_FALSE)
 {
   MOZ_COUNT_CTOR(nsCSSStyleSheetInner);
@@ -1251,7 +1250,6 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
   : mSheets(),
     mSheetURI(aCopy.mSheetURI),
     mBaseURI(aCopy.mBaseURI),
-    mNameSpace(nsnull),
     mComplete(aCopy.mComplete)
 {
   MOZ_COUNT_CTOR(nsCSSStyleSheetInner);
@@ -1319,21 +1317,15 @@ CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
   rule->GetType(type);
   if (nsICSSRule::NAMESPACE_RULE == type) {
     nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)rule;
-    nsINameSpace** nameSpacePtr = (nsINameSpace**)aNameSpacePtr;
-    nsINameSpace* lastNameSpace = *nameSpacePtr;
-    nsINameSpace* newNameSpace;
+    nsNameSpaceMap *nameSpaceMap =
+      NS_STATIC_CAST(nsNameSpaceMap*, aNameSpacePtr);
 
     nsIAtom*      prefix = nsnull;
     nsAutoString  urlSpec;
     nameSpaceRule->GetPrefix(prefix);
     nameSpaceRule->GetURLSpec(urlSpec);
-    lastNameSpace->CreateChildNameSpace(prefix, urlSpec, &newNameSpace);
-    NS_IF_RELEASE(prefix);
-    if (newNameSpace) {
-      NS_RELEASE(lastNameSpace);
-      (*nameSpacePtr) = newNameSpace; // takes ref
-    }
 
+    nameSpaceMap->AddPrefix(prefix, urlSpec);
     return PR_TRUE;
   }
   // stop if not namespace, import or charset because namespace can't follow anything else
@@ -1344,11 +1336,17 @@ CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
 void 
 nsCSSStyleSheetInner::RebuildNameSpaces()
 {
-  nsContentUtils::GetNSManagerWeakRef()->
-      CreateRootNameSpace(getter_AddRefs(mNameSpace));
+  if (mNameSpaceMap) {
+    mNameSpaceMap->Clear();
+  } else {
+    mNameSpaceMap = nsNameSpaceMap::Create();
+    if (!mNameSpaceMap) {
+      return; // out of memory
+    }
+  }
 
   if (mOrderedRules) {
-    mOrderedRules->EnumerateForwards(CreateNameSpace, address_of(mNameSpace));
+    mOrderedRules->EnumerateForwards(CreateNameSpace, mNameSpaceMap);
   }
 }
 
@@ -1871,28 +1869,20 @@ nsCSSStyleSheet::AppendStyleRule(nsICSSRule* aRule)
       PRInt32 type = nsICSSRule::UNKNOWN_RULE;
       aRule->GetType(type);
       if (nsICSSRule::NAMESPACE_RULE == type) {
-        if (! mInner->mNameSpace) {
-          nsContentUtils::GetNSManagerWeakRef()->
-              CreateRootNameSpace(getter_AddRefs(mInner->mNameSpace));
+        if (!mInner->mNameSpaceMap) {
+          mInner->mNameSpaceMap = nsNameSpaceMap::Create();
+          NS_ENSURE_TRUE(mInner->mNameSpaceMap, NS_ERROR_OUT_OF_MEMORY);
         }
 
-        if (mInner->mNameSpace) {
-          nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(aRule));
-          nsCOMPtr<nsINameSpace> newNameSpace;
+        nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(aRule));
 
-          nsCOMPtr<nsIAtom> prefix;
-          nsAutoString  urlSpec;
-          nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
-          nameSpaceRule->GetURLSpec(urlSpec);
-          mInner->mNameSpace->
-              CreateChildNameSpace(prefix, urlSpec,
-                                   getter_AddRefs(newNameSpace));
-          if (newNameSpace) {
-            mInner->mNameSpace = newNameSpace;
-          }
-        }
+        nsCOMPtr<nsIAtom> prefix;
+        nsAutoString  urlSpec;
+        nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
+        nameSpaceRule->GetURLSpec(urlSpec);
+
+        mInner->mNameSpaceMap->AddPrefix(prefix, urlSpec);
       }
-        
     }
   }
   return NS_OK;
@@ -1956,17 +1946,10 @@ nsCSSStyleSheet::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
   return result;
 }
 
-NS_IMETHODIMP
-nsCSSStyleSheet::GetNameSpace(nsINameSpace*& aNameSpace) const
+nsNameSpaceMap*
+nsCSSStyleSheet::GetNameSpaceMap() const
 {
-  if (mInner) {
-    aNameSpace = mInner->mNameSpace;
-    NS_IF_ADDREF(aNameSpace);
-  }
-  else {
-    aNameSpace = nsnull;
-  }
-  return NS_OK;
+  return mInner ? mInner->mNameSpaceMap : nsnull;
 }
 
 NS_IMETHODIMP
@@ -2499,25 +2482,19 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
     PRInt32 type = nsICSSRule::UNKNOWN_RULE;
     cssRule->GetType(type);
     if (type == nsICSSRule::NAMESPACE_RULE) {
-      if (! mInner->mNameSpace) {
-        nsContentUtils::GetNSManagerWeakRef()->
-            CreateRootNameSpace(getter_AddRefs(mInner->mNameSpace));
+      if (!mInner->mNameSpaceMap) {
+        mInner->mNameSpaceMap = nsNameSpaceMap::Create();
+        NS_ENSURE_TRUE(mInner->mNameSpaceMap, NS_ERROR_OUT_OF_MEMORY);
       }
 
-      NS_ENSURE_TRUE(mInner->mNameSpace, NS_ERROR_FAILURE);
-
       nsCOMPtr<nsICSSNameSpaceRule> nameSpaceRule(do_QueryInterface(cssRule));
-      nsCOMPtr<nsINameSpace> newNameSpace;
     
       nsCOMPtr<nsIAtom> prefix;
       nsAutoString urlSpec;
       nameSpaceRule->GetPrefix(*getter_AddRefs(prefix));
       nameSpaceRule->GetURLSpec(urlSpec);
-      mInner->mNameSpace->CreateChildNameSpace(prefix, urlSpec,
-                                               getter_AddRefs(newNameSpace));
-      if (newNameSpace) {
-        mInner->mNameSpace = newNameSpace;
-      }
+
+      mInner->mNameSpaceMap->AddPrefix(prefix, urlSpec);
     }
 
     // We don't notify immediately for @import rules, but rather when
