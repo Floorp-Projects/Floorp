@@ -150,7 +150,7 @@ NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
     SET_FORMATETC(fe2, CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
     if ( mDataObject->QueryGetData(&fe2) == S_OK ) {
       STGMEDIUM stm;
-      if ( mDataObject->GetData(&fe2, &stm) ) {      
+      if ( mDataObject->GetData(&fe2, &stm) == S_OK ) {      
         HDROP hdrop = (HDROP) GlobalLock(stm.hGlobal);
         *aNumItems = ::DragQueryFile(hdrop, 0xFFFFFFFF, NULL, 0);
         ::GlobalUnlock(stm.hGlobal);
