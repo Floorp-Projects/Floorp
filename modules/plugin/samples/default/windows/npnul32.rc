@@ -52,7 +52,7 @@ END
 // Dialog
 //
 
-IDD_PLUGIN_DOWNLOAD DIALOG DISCARDABLE  0, 0, 225, 148
+IDD_PLUGIN_DOWNLOAD DIALOG DISCARDABLE  0, 0, 225, 165
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Title"
 FONT 8, "MS Sans Serif"
@@ -61,13 +61,11 @@ BEGIN
                     IDC_STATIC_INFO,7,7,211,10
     LTEXT           "Communicator can retrieve the plug-in for you from:",
                     IDC_STATIC_LOCATION,7,32,211,8
-    CTEXT           "What would you like to do?",IDC_STATIC_QUESTION,7,113,
-                    211,9
-    DEFPUSHBUTTON   "Get the Plug-in",IDC_GET_PLUGIN,41,127,64,14
-    PUSHBUTTON      "Cancel",IDC_BUTTON_CANCEL,109,127,64,14
+    DEFPUSHBUTTON   "Get the Plug-in",IDC_GET_PLUGIN,41,144,64,14
+    PUSHBUTTON      "Cancel",IDC_BUTTON_CANCEL,109,144,64,14
     CTEXT           "type/x-type",IDC_STATIC_INFOTYPE,7,18,211,8
     LTEXT           "The SmartUpdate feature makes it easy to install new plug-ins. To take advantage of SmartUpdate, you must enable Java, JavaScript and AutoInstall in the Advanced panel of the Preferences, then click the plug-in icon on the page.",
-                    IDC_STATIC_WARNING,7,74,211,35
+                    IDC_STATIC_WARNING,7,74,211,61
     LTEXT           "Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static Static ",
                     IDC_STATIC_URL,7,43,211,24
 END
@@ -144,7 +142,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 218
         TOPMARGIN, 7
-        BOTTOMMARGIN, 141
+        BOTTOMMARGIN, 158
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -165,11 +163,11 @@ BEGIN
     IDS_LOCATION            "Navigator can retrieve the plug-in for you from:"
     IDS_TITLE               "Plug-in Not Loaded"
     IDS_QUESTION            "What would you like to do?"
-    IDS_WARNING_JS          "The SmartUpdate feature makes it easy to install new plug-ins. To take advantage of SmartUpdate, you must enable Java, JavaScript and AutoInstall in the Advanced panel of the Preferences, then click the plug-in icon on the page."  //XXX Does this work in Mozilla builds?
+    IDS_WARNING_JS          "To retrieve the plug-in now, click the Get the Plug-in button and then select the plug-in you need from the page that appears. If you have trouble installing the plug-in, make sure that Java and JavaScript are enabled in Advanced preferences, and that software installation is enabled (in the Software Installation category under Advanced)."
     IDS_WARNING_OFFLINE     "However, you are currently offline. If you would like to get the plug-in, click Cancel, select ""Go Online"" from the File menu, then click the plug-in icon on the page."
-    IDS_FINDER_PAGE         "Netscape's Plug-in Finder page"
+    IDS_FINDER_PAGE         "Plug-in Finder page at Netscape.com"
     IDS_CLICK_TO_GET        "Click here to get the plugin"
-    IDS_CLICK_WHEN_DONE     "Click here after installing the plugin"
+    IDS_CLICK_WHEN_DONE     "After installing the plugin, click here."
 END
 
 #endif    // English (U.S.) resources
