@@ -28,6 +28,8 @@ PROGRAM	= viewer
 
 EXPORT_RESOURCE_SAMPLES := \
 	$(wildcard $(srcdir)/samples/test*.html) \
+	$(wildcard $(srcdir)/samples/toolbarTest*.xul) \
+	$(wildcard $(srcdir)/samples/xulTest.css) \
 	$(srcdir)/resources/find.html \
 	$(srcdir)/resources/printsetup.html \
 	$(srcdir)/resources/image_props.html \
