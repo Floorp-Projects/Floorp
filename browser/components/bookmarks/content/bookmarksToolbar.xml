@@ -382,7 +382,7 @@
           var command = aEvent.originalTarget.getAttribute("command");
           var isDisabled = aEvent.originalTarget.getAttribute("disabled")
           if (isDisabled != "true" && (command == "cmd_bm_newfolder" || command == "cmd_bm_paste")) {
-            personalToolbarDNDObserver.onDragSetFeedBack(document.popupNode, this.parentNode.parentNode._orientation);
+            personalToolbarDNDObserver.onDragSetFeedBack(document.popupNode, this.parentNode.parentNode.parentNode._orientation);
           } else {
             personalToolbarDNDObserver.onDragRemoveFeedBack(document.popupNode);
           }
@@ -409,11 +409,11 @@
                 ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
 
         <!-- context menu -->
-        <xul:menupopup onpopupshowing="this.parentNode.parentNode.createBTContextMenu(event);"
-                       onpopuphidden ="this.parentNode.parentNode.destroyBTContextMenu(event);"/>
+        <xul:menupopup onpopupshowing="this.parentNode.parentNode.parentNode.createBTContextMenu(event);"
+                       onpopuphidden ="this.parentNode.parentNode.parentNode.destroyBTContextMenu(event);"/>
 
         <xul:tooltip id="ptTooltip" noautohide="true" 
-                     onpopupshowing="return this.parentNode.parentNode.fillInBTTooltip(document.tooltipNode)">
+                     onpopupshowing="return this.parentNode.parentNode.parentNode.fillInBTTooltip(document.tooltipNode)">
           <xul:vbox id="ptTooltipTextBox" flex="1">  
             <xul:label id="ptTitleText" />
             <xul:label id="ptUrlText" />
@@ -497,9 +497,9 @@
 
         </xul:template>
       </xul:hbox>
-      <xul:hbox>
-        <xul:hbox id="overflow-padder"/>
-        <xul:toolbarbutton collapsed="true" type="menu"
+      <xul:hbox mousethrough="always">
+        <xul:hbox mousethrough="always" id="overflow-padder"/>
+        <xul:toolbarbutton mousethrough="never" collapsed="true" type="menu"
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
               oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
