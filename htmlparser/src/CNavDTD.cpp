@@ -163,7 +163,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
   PRBool result=PR_FALSE;
 
-    //tagset1 has 65 members...
+    //tagset1 has 67 members...in case anybody cares
   static char  gTagSet1[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
     eHTMLTag_bold,      eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,
@@ -187,6 +187,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_userdefined,   eHTMLTag_var,   
     eHTMLTag_whitespace,  //JUST ADDED!
     eHTMLTag_spacer,
+    eHTMLTag_blink,
     0};
 
     //tagset2 has 44 members...
