@@ -63,18 +63,17 @@ static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 //  this is just the puppeteer that pulls the webshell's strings at the
 //  right time.
 //
-//  Specifically, it fires the listener's OnStartRequest() from
-//  AsyncOpen() and adds the channel to the load group. This winds its
-//  way through webshell and causes the XUL document's
-//  StartDocumentLoad() method to be called.
+//  Specifically, when AsyncOpen() is called, it adds the channel to
+//  the load group, and queues an asychronous event to fire the
+//  listener's OnStartRequest().
 //
-//  It then queues an event, which will fire the listener's
-//  OnStopRequest() and remove the channel from the load group. This
-//  is done asynchronously to allow the stack to unwind back to the
-//  main event loop, which avoids any weird re-entrancy that occurs if
-//  we try to immediately fire the OnStopRequest(). (Some portion of
-//  the embedding dance happens after AsyncRead() is called, this
-//  allows that to proceed "normally".)
+//  After triggering OnStartRequest(), it then queues another event
+//  which will fire the listener's OnStopRequest() and remove the
+//  channel from the load group.
+//
+//  Each is done asynchronously to allbow the stack to unwind back to
+//  the main event loop. This avoids any weird re-entrancy that occurs
+//  if we try to immediately fire the On[Start|Stop]Request().
 //
 //  For logging information, NSPR_LOG_MODULES=nsCachedChromeChannel:5
 //
@@ -92,13 +91,17 @@ protected:
     nsLoadFlags                 mLoadAttributes;
     nsCOMPtr<nsISupports>       mOwner;
 
-    struct StopLoadEvent {
+    struct LoadEvent {
         PLEvent                mEvent;
         nsCachedChromeChannel* mChannel;
     };
 
+    static nsresult
+    PostLoadEvent(nsCachedChromeChannel* aChannel, PLHandleEventProc aHandler);
+
+    static void* HandleStartLoadEvent(PLEvent* aEvent);
     static void* HandleStopLoadEvent(PLEvent* aEvent);
-    static void DestroyStopLoadEvent(PLEvent* aEvent);
+    static void DestroyLoadEvent(PLEvent* aEvent);
 
 #ifdef PR_LOGGING
     static PRLogModuleInfo* gLog;
@@ -227,61 +230,24 @@ nsCachedChromeChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsIS
                ("nsCachedChromeChannel[%p]: firing OnStartRequest for %p",
                 this, listener));
 
-        rv = listener->OnStartRequest(this, ctxt);
-
         // Queue an event to ourselves to let the stack unwind before
-        // calling OnStopRequest(). This allows embedding to occur
+        // calling OnStartRequest(). This allows embedding to occur
         // before we fire OnStopRequest().
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
-            if (svc) {
-                nsCOMPtr<nsIEventQueue> queue;
-                rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-                if (NS_SUCCEEDED(rv) && queue) {
-                    rv = NS_ERROR_OUT_OF_MEMORY;
-                    StopLoadEvent* event = new StopLoadEvent;
-                    if (event) {
-                        PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
-                                     nsnull,
-                                     HandleStopLoadEvent,
-                                     DestroyStopLoadEvent);
+        rv = PostLoadEvent(this, HandleStartLoadEvent);
+        if (NS_FAILED(rv)) {
+            if (mLoadGroup) {
+                PR_LOG(gLog, PR_LOG_DEBUG,
+                       ("nsCachedChromeChannel[%p]: removing self from load group %p",
+                        this, mLoadGroup.get()));
 
-                        event->mChannel = this;
-                        NS_ADDREF(event->mChannel);
-
-                        rv = queue->EnterMonitor();
-                        if (NS_SUCCEEDED(rv)) {
-                            mContext  = ctxt;
-                            mListener = listener;
-
-                            (void) queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
-                            (void) queue->ExitMonitor();
-                            return NS_OK;
-                        }
-
-                        // If we get here, something bad happened. Clean up.
-                        NS_RELEASE(event->mChannel);
-                        delete event;
-                    }
-                }
+                (void) mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
             }
+
+            return rv;
         }
 
-        // Uh oh, something went wrong. Fire a balancing
-        // OnStopRequest() and indicate an error occurred.
-        PR_LOG(gLog, PR_LOG_DEBUG,
-               ("nsCachedChromeChannel[%p]: error 0x%x! firing on OnStopRequest for %p",
-                this, rv, mListener.get()));
-
-        (void) listener->OnStopRequest(this, ctxt, rv, nsnull);
-
-        if (mLoadGroup) {
-            PR_LOG(gLog, PR_LOG_DEBUG,
-                   ("nsCachedChromeChannel[%p]: removing self from load group %p",
-                    this, mLoadGroup.get()));
-
-            (void) mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
-        }
+        mContext  = ctxt;
+        mListener = listener;
     }
 
     return NS_OK;
@@ -376,12 +342,75 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
 }
 
 
+
+nsresult
+nsCachedChromeChannel::PostLoadEvent(nsCachedChromeChannel* aChannel,
+                                     PLHandleEventProc aHandler)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (! svc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIEventQueue> queue;
+    rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+    if (NS_FAILED(rv)) return rv;
+
+    if (! queue)
+        return NS_ERROR_UNEXPECTED;
+
+    LoadEvent* event = new LoadEvent;
+    if (! event)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
+                 nsnull,
+                 aHandler,
+                 DestroyLoadEvent);
+
+    event->mChannel = aChannel;
+    NS_ADDREF(event->mChannel);
+
+    rv = queue->EnterMonitor();
+    if (NS_SUCCEEDED(rv)) {
+        (void) queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
+        (void) queue->ExitMonitor();
+        return NS_OK;
+    }
+
+    // If we get here, something bad happened. Clean up.
+    NS_RELEASE(event->mChannel);
+    delete event;
+    return rv;
+}
+
+void*
+nsCachedChromeChannel::HandleStartLoadEvent(PLEvent* aEvent)
+{
+    // Fire the OnStartRequest() for the cached chrome channel, then
+    // queue another event to trigger the OnStopRequest()...
+    LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);
+    nsCachedChromeChannel* channel = event->mChannel;
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("nsCachedChromeChannel[%p]: firing OnStartRequest for %p",
+            channel, channel->mListener.get()));
+
+    (void) channel->mListener->OnStartRequest(channel, channel->mContext);
+    (void) PostLoadEvent(channel, HandleStopLoadEvent);
+    return nsnull;
+}
+
+
 void*
 nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
 {
     // Fire the OnStopRequest() for the cached chrome channel, and
     // remove it from the load group.
-    StopLoadEvent* event = NS_REINTERPRET_CAST(StopLoadEvent*, aEvent);
+    LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);
     nsCachedChromeChannel* channel = event->mChannel;
 
     PR_LOG(gLog, PR_LOG_DEBUG,
@@ -405,9 +434,9 @@ nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
 }
 
 void
-nsCachedChromeChannel::DestroyStopLoadEvent(PLEvent* aEvent)
+nsCachedChromeChannel::DestroyLoadEvent(PLEvent* aEvent)
 {
-    StopLoadEvent* event = NS_REINTERPRET_CAST(StopLoadEvent*, aEvent);
+    LoadEvent* event = NS_REINTERPRET_CAST(LoadEvent*, aEvent);
     NS_RELEASE(event->mChannel);
     delete event;
 }
