@@ -32,6 +32,8 @@
 #define IDD_CHOOSEPROFILE               132
 #define IDR_MENUBAR1                    133
 #define IDR_MENUBAR2                    135
+#define IDI_ICON1                       136
+#define IDM_POPUPMENU                   138
 #define MOZ_EDIT_URI                    1001
 #define IDC_GO                          1003
 #define IDC_BROWSER                     1004
@@ -44,6 +46,7 @@
 #define IDC_PROGRESS                    1010
 #define IDC_RELOAD                      1011
 #define IDC_PROFILELIST                 1011
+#define IDC_FUNCTIONS                   1012
 #define MOZ_Open                        32771
 #define MOZ_Print                       32772
 #define MOZ_NewBrowser                  32773
@@ -71,14 +74,22 @@
 #define IDS_CAP_HELP                    32801
 #define ID_FILE_QUIT                    32806
 #define ID_ABOUT                        32807
+#define IDS_CAP_MENUITEM32811           32812
+#define ID_A                            32813
+#define IDS_CAP_A                       32815
+#define ID_A_A                          32816
+#define ID_A_B                          32817
+#define IDS_CAP_C                       32819
+#define ID_C_C                          32820
+#define IDS_CAP_POPUPMENU               32822
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        136
-#define _APS_NEXT_COMMAND_VALUE         32810
+#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_COMMAND_VALUE         32823
 #define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
