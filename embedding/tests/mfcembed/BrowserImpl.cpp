@@ -64,6 +64,7 @@
   #include "stdafx.h"
 #endif
 
+#include "nsIDOMWindow.h"
 #include "BrowserImpl.h"
 
 CBrowserImpl::CBrowserImpl()
@@ -148,8 +149,14 @@ NS_IMETHODIMP CBrowserImpl::GetInterface(const nsIID &aIID, void** aInstancePtr)
 		NS_ENSURE_TRUE(mPrompter, NS_ERROR_FAILURE);
 		return mPrompter->QueryInterface(aIID, aInstancePtr);
 	}
-	else
-		return QueryInterface(aIID, aInstancePtr);
+	if(aIID.Equals(NS_GET_IID(nsIDOMWindow)))
+	{
+		if (mWebBrowser)
+			return mWebBrowser->GetContentDOMWindow((nsIDOMWindow **) aInstancePtr);
+		return NS_ERROR_NOT_INITIALIZED;
+	}
+
+	return QueryInterface(aIID, aInstancePtr);
 }
 
 //*****************************************************************************
