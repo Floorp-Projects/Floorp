@@ -69,10 +69,11 @@
 /* (Solaris 2.x) on Sol2.5, assert() does not work. Too bad...  */
 /* Therefore, we print the line where assert happened instead. */
 /* Print out a \007 to sound the bell. -mcafee */
-#define XP_AssertAtLine() fprintf(stderr, "assert: line %d, file %s%c\n", __LINE__, __FILE__, 7)
 #ifdef DEBUG
+#define XP_AssertAtLine() fprintf(stderr, "assert: line %d, file %s%c\n", __LINE__, __FILE__, 7)
 #define XP_ASSERT(X) ( (((X))!=0)? (void)0: (void)XP_AssertAtLine() )
 #else
+#define XP_AssertAtLine()
 #define XP_ASSERT(X) (void)0
 #endif
 #else
