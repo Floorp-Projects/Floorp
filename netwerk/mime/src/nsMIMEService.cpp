@@ -144,6 +144,8 @@ nsMIMEService::InitFromHack() {
     if (NS_FAILED(rv)) return rv;
     rv = AddMapping("image/png", "png", "PNG Image");
     if (NS_FAILED(rv)) return rv;
+    rv = AddMapping("image/x-jg", "art", "ART Image");
+    if (NS_FAILED(rv)) return rv;
     rv = AddMapping("image/tiff", "tiff", "TIFF Image");
     if (NS_FAILED(rv)) return rv;
     rv = AddMapping("image/tiff", "tif", "TIFF Image");

@@ -989,7 +989,7 @@ il_emit_row(
 
         PR_ASSERT(maskp);
          /* We know this mask is prescaled: */     
-        if (nsCRT::strncasecmp(ic->type, "image/art",9)==0){
+        if (nsCRT::strncasecmp(ic->type, "image/x-jg", 9)==0){
               /* No scaling needed*/
               if (len == column_count)
                   nsCRT::memcpy(maskp, cbuf, mask_header->widthBytes);
