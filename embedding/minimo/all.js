@@ -1,4 +1,4 @@
-user_pref("general.useragent.override", "Mozilla/5.0 (Linux; U; Familiar 0.72; en-US; rv:1.6) Minimo/20031220");
+pref("general.useragent.override", "Mozilla/5.0 (X11; U; Familiar 0.72; en-US; rv:1.7a) Gecko/20040218 Minimo/0.1");
 
 pref("keyword.enabled", false);
 
@@ -187,6 +187,13 @@ pref("network.http.accept-encoding" ,"gzip,deflate");
 
 pref("network.http.pipelining"      , false);
 pref("network.http.proxy.pipelining", false);
+
+// Always pipeling the very first request:  this will only work when you are
+// absolutely sure the the site or proxy you are browsing to/through support
+// pipelining; the default behavior will be that the browser will first make
+// a normal, non-pipelined request, then  examine  and remember the responce
+// and only the subsequent requests to that site will be pipeline
+pref("network.http.pipelining.firstrequest", false);
 
 // Max number of requests in the pipeline
 pref("network.http.pipelining.maxrequests" , 4);

@@ -36,13 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "icons.h"
 #include "gtkmozembed.h"
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
+#include <gdk/gdkkeysyms.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <signal.h>
 
 // mozilla specific headers
 #include "nsIDOMKeyEvent.h"
@@ -58,66 +61,67 @@
 #endif
 
 #define MINIMO_HOME_URL "http://www.mozilla.org/projects/minimo/home.html"
-#define MINIMO_THROBBER_ICON_MAX 4
+
+#define MINIMO_THROBBER_COLOR_INTERVAL 100
+#define MINIMO_THROBBER_COLOR_STEP     500
+#define MINIMO_THROBBER_COLOR_MIN      40000
+#define MINIMO_THROBBER_COLOR_MAX      65000
 
 typedef struct _MinimoBrowser {
   GtkWidget  *topLevelWindow;
   GtkWidget  *topLevelVBox;
-  GtkWidget  *toolbarHBox;
-  GtkWidget  *toolbar;
-  GtkWidget  *backButton;
-  GtkWidget  *stopReloadButton;
-  GtkWidget  *forwardButton;
-  GtkWidget  *homeButton;
+  GtkWidget  *toolbarVPaned;
   GtkWidget  *urlEntry;
   GtkWidget  *mozEmbed;
-  GtkWidget  *progressAreaHBox;
-  GtkWidget  *progressBar;
-  GtkWidget  *statusAlign;
-  GtkWidget  *statusBar;
-  GtkWidget  *backIcon;
-  GtkWidget  *forwardIcon;
-  GtkWidget  *homeIcon;
-  GtkWidget  *reloadIcon;
-  GtkWidget  *stopIcon[MINIMO_THROBBER_ICON_MAX];
-  GtkWidget  *stopReloadIcon;
+
+  bool        mouseDown;
+  guint       mouseDownTimer;
 
   const char *statusMessage;
   int         loadPercent;
   int         bytesLoaded;
   int         maxBytesLoaded;
   char       *tempMessage;
+
   int         throbberID;
+  int         throbberDirection;
+
   gboolean toolBarOn;
   gboolean locationBarOn;
   gboolean statusBarOn;
   gboolean loading;
 } MinimoBrowser;
 
+static char *g_profile_path = NULL;
+
 // the list of browser windows currently open
 GList *browser_list = g_list_alloc();
+
+// create our auto completion object 
+static GCompletion *g_AutoComplete;
+
+// populate it.
+
+
 
 static MinimoBrowser *new_gtk_browser    (guint32 chromeMask);
 static void            set_browser_visibility (MinimoBrowser *browser,
 					       gboolean visibility);
-
 static int num_browsers = 0;
 
 // callbacks from the UI
-static void     back_clicked_cb    (GtkButton   *button, 
-				    MinimoBrowser *browser);
-static void     forward_clicked_cb (GtkButton   *button,
-				    MinimoBrowser *browser);
-static void     stop_reload_clicked_cb  (GtkButton   *button,
-					 MinimoBrowser *browser);
-static void     home_clicked_cb    (GtkButton   *button,
-				    MinimoBrowser *browser);
 static void     url_activate_cb    (GtkEditable *widget, 
 				    MinimoBrowser *browser);
-static gboolean delete_cb          (GtkWidget *widget, GdkEventAny *event,
+static gboolean url_key_press_cb    (GtkEditable *widget, 
+				     GdkEventKey* event, 
+				     MinimoBrowser *browser);
+static gboolean delete_cb          (GtkWidget *widget, 
+				    GdkEventAny *event,
 				    MinimoBrowser *browser);
 static void     destroy_cb         (GtkWidget *widget,
 				    MinimoBrowser *browser);
+
+static gboolean context_menu_cb    (void *data);
 
 // callbacks from the widget
 static void location_changed_cb  (GtkMozEmbed *embed, MinimoBrowser *browser);
@@ -172,30 +176,146 @@ static void new_window_orphan_cb (GtkMozEmbedSingle *embed,
 				  GtkMozEmbed **retval, guint chromemask,
 				  gpointer data);
 
-static gboolean urlEntry_focus_in (GtkWidget *entry, GdkEventFocus *event,
-				   gpointer user_data)
-{
-  MinimoBrowser* browser = (MinimoBrowser*) user_data;
-  if (!browser->loading)
-    gtk_widget_hide(browser->toolbar);
-  return 0;
-}
- 
-static gboolean urlEntry_focus_out (GtkWidget *entry, GdkEventFocus *event,
-				    gpointer user_data)
-{
-  MinimoBrowser* browser = (MinimoBrowser*) user_data;
-  gtk_widget_show(browser->toolbar);
-  return 0;
- }
-
 // some utility functions
-static void update_toolbar          (MinimoBrowser *browser);
 static void start_throbber          (MinimoBrowser *browser);
-static void update_status_bar_text  (MinimoBrowser *browser);
 static void update_temp_message     (MinimoBrowser *browser,
 				     const char *message);
-static void update_nav_buttons      (MinimoBrowser *browser);
+
+static const gchar* gCommonCompletes[] =
+{
+  "http://",
+  "https://",
+  "www.",
+  "http://www.",
+  "https://www.",
+  NULL
+};
+
+static void init_autocomplete()
+{
+  if (!g_AutoComplete)
+    g_AutoComplete = g_completion_new(NULL);
+
+  char* full_path = g_strdup_printf("%s/%s", g_profile_path, "autocomplete.txt");
+  
+  FILE *fp;
+  char url[255];
+  GList* list = g_list_alloc();
+	 
+  if((fp = fopen(full_path, "r"))) 
+  {
+    while(fgets(url, sizeof(url) - 1, fp))
+    {
+      int length = strlen(url);
+      if (url[length-1] == '\n')
+	url[length-1] = '\0'; 
+
+      // should be smarter!
+      list->data = g_strdup(url);
+      
+      g_completion_add_items(g_AutoComplete, list);
+    }
+    fclose(fp);
+  }
+
+  for (int i=0; gCommonCompletes[i] != NULL; i++)
+  {
+    list->data = g_strdup(gCommonCompletes[i]);
+    g_completion_add_items(g_AutoComplete, list);
+  }
+
+  g_list_free(list);
+  g_free(full_path);
+  return;
+}
+
+static void add_autocomplete(const char* value)
+{
+  if (g_AutoComplete)
+  {
+      GList* list = g_list_alloc();
+      list->data = g_strdup(value);
+      g_completion_add_items(g_AutoComplete, list);
+      g_list_free(list);
+  }
+
+  char* full_path = g_strdup_printf("%s/%s", g_profile_path, "autocomplete.txt");
+  
+  FILE *fp;
+  if((fp = fopen(full_path, "a"))) 
+  {
+    fwrite(value, strlen(value), 1, fp);
+    fputc('\n', fp);
+    fclose(fp);
+  }
+  
+  g_free(full_path);
+  return;
+}
+
+/* This lets us open an URL by remote control.  Trying to mimic the
+   behavior of mosaic like dillo remote
+ */
+
+static void handle_remote(int sig)
+{
+  FILE *fp;
+  char url[256];
+	 
+  sprintf(url, "/tmp/Mosaic.%d", getpid());
+  if((fp = fopen(url, "r"))) 
+  {
+    if(fgets(url, sizeof(url) - 1, fp))
+    {
+      MinimoBrowser *bw = NULL;
+      if (strncmp(url, "goto", 4) == 0 && fgets(url, sizeof(url) - 1, fp)) 
+      {
+	GList *tmp_list = browser_list;
+	bw = (MinimoBrowser *)tmp_list->data;
+	if(!bw) return;
+      }
+      else if (strncmp(url, "newwin", 6) == 0 && fgets(url, sizeof(url) - 1, fp))
+      {
+	bw = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
+	gtk_widget_set_usize(bw->mozEmbed, 240, 320);
+	set_browser_visibility(bw, TRUE);
+      }
+      if (bw)
+	gtk_moz_embed_load_url(GTK_MOZ_EMBED(bw->mozEmbed), url);
+      fclose(fp);
+    }
+  }
+  return;
+}
+
+static void init_remote()
+{
+  gchar *file;
+  FILE *fp;
+
+  signal(SIGUSR1, SIG_IGN);
+
+  /* Write the pidfile : would be useful for automation process*/
+  file = g_strconcat(g_get_home_dir(), "/", ".mosaicpid", NULL);
+  if((fp = fopen(file, "w"))) 
+  {
+    fprintf (fp, "%d\n", getpid());
+    fclose (fp);
+    signal(SIGUSR1, handle_remote);
+  }
+  g_free(file);
+}
+
+static void cleanup_remote()
+{
+  gchar *file;
+
+  signal(SIGUSR1, SIG_IGN);
+
+  file = g_strconcat(g_get_home_dir(), "/", ".mosaicpid", NULL);
+  unlink(file);
+  g_free(file);
+}
 
 int
 main(int argc, char **argv)
@@ -208,16 +328,17 @@ main(int argc, char **argv)
   gtk_init(&argc, &argv);
 
   char *home_path;
-  char *full_path;
   home_path = PR_GetEnv("HOME");
   if (!home_path) {
     fprintf(stderr, "Failed to get HOME\n");
     exit(1);
   }
   
-  full_path = g_strdup_printf("%s/%s", home_path, ".Minimo");
+  g_profile_path = g_strdup_printf("%s/%s", home_path, ".Minimo");
   
-  gtk_moz_embed_set_profile_path(full_path, "Minimo");
+  gtk_moz_embed_set_profile_path(g_profile_path, "Minimo");
+
+  init_autocomplete();
 
   MinimoBrowser *browser = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
 
@@ -225,6 +346,8 @@ main(int argc, char **argv)
   gtk_widget_set_usize(browser->mozEmbed, 240, 320);
 
   set_browser_visibility(browser, TRUE);
+
+  init_remote();
 
   if (argc > 1)
     gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), argv[1]);
@@ -244,22 +367,8 @@ main(int argc, char **argv)
 		     GTK_SIGNAL_FUNC(new_window_orphan_cb), NULL);
 
   gtk_main();
-}
 
-static GtkWidget*
-NewIconFromXPM(GtkWidget *toolbar, gchar** icon_xpm)
-{
-  GdkBitmap *mask;
-  GdkColormap *colormap = gtk_widget_get_colormap(toolbar);
-  GtkStyle *style = gtk_widget_get_style(toolbar);
-
-  GdkPixmap *pixmap = gdk_pixmap_colormap_create_from_xpm_d(NULL, 
-							    colormap,
-							    &mask, 
-							    &style->bg[GTK_STATE_NORMAL], 
-							    icon_xpm);
-  GtkWidget* icon = gtk_pixmap_new(pixmap, mask);
-  return icon;
+  cleanup_remote();
 }
 
 static MinimoBrowser *
@@ -297,106 +406,35 @@ new_gtk_browser(guint32 chromeMask)
 
   // create our new toplevel window
   browser->topLevelWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
   // new vbox
   browser->topLevelVBox = gtk_vbox_new(FALSE, 0);
   // add it to the toplevel window
   gtk_container_add(GTK_CONTAINER(browser->topLevelWindow),
 		    browser->topLevelVBox);
 
-  // create the hbox that will contain the toolbar and the url text entry bar
-  browser->toolbarHBox = gtk_hbox_new(false, 0);
-  // add that hbox to the vbox
+  // create the paned that will contain the url text entry bar
+  browser->toolbarVPaned = gtk_vpaned_new();
+  gtk_paned_set_position(GTK_PANED(browser->toolbarVPaned), 110);
+
+  // add that paned to the vbox
   gtk_box_pack_start(GTK_BOX(browser->topLevelVBox), 
-		     browser->toolbarHBox,
+		     browser->toolbarVPaned,
 		     FALSE, // expand
 		     FALSE, // fill
 		     0);    // padding
-  // new horiz toolbar with buttons + icons
-#ifdef MOZ_WIDGET_GTK
-  browser->toolbar = gtk_toolbar_new(GTK_ORIENTATION_HORIZONTAL,
-				     GTK_TOOLBAR_ICONS);
-#endif /* MOZ_WIDGET_GTK */
-
-#ifdef MOZ_WIDGET_GTK2
-  browser->toolbar = gtk_toolbar_new();
-  gtk_toolbar_set_orientation(GTK_TOOLBAR(browser->toolbar),
-			      GTK_ORIENTATION_HORIZONTAL);
-  gtk_toolbar_set_style(GTK_TOOLBAR(browser->toolbar),
-			GTK_TOOLBAR_ICONS);
-#endif /* MOZ_WIDGET_GTK2 */
-
-
-  // setup the icons
-  browser->backIcon = NewIconFromXPM(browser->toolbar, back_xpm);
-  browser->forwardIcon = NewIconFromXPM(browser->toolbar, forward_xpm);
-  browser->homeIcon = NewIconFromXPM(browser->toolbar, home_xpm);
-  browser->reloadIcon = NewIconFromXPM(browser->toolbar, reload_xpm);
-  
-  browser->throbberID  = 0;
-  browser->stopIcon[0] = NewIconFromXPM(browser->toolbar, stop_1_xpm);
-  browser->stopIcon[1] = NewIconFromXPM(browser->toolbar, stop_2_xpm);
-  browser->stopIcon[2] = NewIconFromXPM(browser->toolbar, stop_3_xpm);
-  browser->stopIcon[3] = NewIconFromXPM(browser->toolbar, stop_4_xpm);
-
-  // This is really just an allocation
-  browser->stopReloadIcon = NewIconFromXPM(browser->toolbar, stop_1_xpm);
-
-  // add it to the hbox
-  gtk_box_pack_start(GTK_BOX(browser->toolbarHBox), browser->toolbar,
-		     FALSE, // expand
-		     FALSE, // fill
-		     0);    // padding
-  // new back button
-  browser->backButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-			    "Back",
-			    "Go Back",
-			    "Go Back",
-			    browser->backIcon,
-			    GTK_SIGNAL_FUNC(back_clicked_cb),
-			    browser);
-  // new forward button
-  browser->forwardButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-			    "Forward",
-			    "Forward",
-			    "Forward",
-			    browser->forwardIcon, 
-			    GTK_SIGNAL_FUNC(forward_clicked_cb),
-			    browser);
-  // new stop and reload button
-  browser->stopReloadButton = 
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-			    "Stop/Reload",
-			    "Stop/Reload",
-			    "Stop/Reload",
-			    browser->stopReloadIcon,
-			    GTK_SIGNAL_FUNC(stop_reload_clicked_cb),
-			    browser);
-  update_toolbar(browser);
-
-  // new home button
-  browser->homeButton = 
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->toolbar),
-			    "Home",
-			    "Home",
-			    "Home",
-			    browser->homeIcon, 
-			    GTK_SIGNAL_FUNC(home_clicked_cb),
-			    browser);
 
   // create the url text entry
   browser->urlEntry = gtk_entry_new();
-  g_signal_connect(G_OBJECT(browser->urlEntry), "focus-in-event",
-		   G_CALLBACK(urlEntry_focus_in), browser);
-  g_signal_connect(G_OBJECT(browser->urlEntry), "focus-out-event",
-		   G_CALLBACK(urlEntry_focus_out), browser);
+  browser->throbberID  = MINIMO_THROBBER_COLOR_MAX;
+  browser->throbberDirection = -1;
 
-  // add it to the hbox
-  gtk_box_pack_start(GTK_BOX(browser->toolbarHBox), browser->urlEntry,
-		     TRUE, // expand
-		     TRUE, // fill
-		     0);    // padding
+  // add it to the paned
+  gtk_paned_pack2(GTK_PANED(browser->toolbarVPaned), 
+		  browser->urlEntry,
+		  true, // resize
+		  true);
+
   // create our new gtk moz embed widget
   browser->mozEmbed = gtk_moz_embed_new();
   // add it to the toplevel vbox
@@ -404,34 +442,7 @@ new_gtk_browser(guint32 chromeMask)
 		     TRUE, // expand
 		     TRUE, // fill
 		     0);   // padding
-  // create the new hbox for the progress area
-  browser->progressAreaHBox = gtk_hbox_new(FALSE, 0);
 
-  // create our new progress bar
-  browser->progressBar = gtk_progress_bar_new();
-
-  // add it to the hbox
-  gtk_box_pack_start(GTK_BOX(browser->progressAreaHBox), browser->progressBar,
-		     FALSE, // expand
-		     FALSE, // fill
-		     0); // padding
-
-  // create our status area and the alignment object that will keep it
-  // from expanding
-  browser->statusAlign = gtk_alignment_new(0, 0, 1, 1);
-  gtk_widget_set_usize(browser->statusAlign, 1, -1);
-  // create the status bar
-  browser->statusBar = gtk_statusbar_new();
-
-  gtk_container_add(GTK_CONTAINER(browser->statusAlign), browser->statusBar);
-  // add it to the hbox
-  gtk_box_pack_start(GTK_BOX(browser->progressAreaHBox), browser->statusAlign,
-		     TRUE, // expand
-		     TRUE, // fill
-		     0);   // padding
-  // by default none of the buttons are marked as sensitive.
-  gtk_widget_set_sensitive(browser->backButton, FALSE);
-  gtk_widget_set_sensitive(browser->forwardButton, FALSE);
   
   // catch the destruction of the toplevel window
   gtk_signal_connect(GTK_OBJECT(browser->topLevelWindow), "delete_event",
@@ -440,6 +451,10 @@ new_gtk_browser(guint32 chromeMask)
   // hook up the activate signal to the right callback
   gtk_signal_connect(GTK_OBJECT(browser->urlEntry), "activate",
 		     GTK_SIGNAL_FUNC(url_activate_cb), browser);
+
+  // hook up autocomplete fudge
+  gtk_signal_connect(GTK_OBJECT(browser->urlEntry), "key_press_event",
+		     GTK_SIGNAL_FUNC(url_key_press_cb), browser);
 
   // hook up the location change to update the urlEntry
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "location",
@@ -528,14 +543,9 @@ set_browser_visibility (MinimoBrowser *browser, gboolean visibility)
   
   // since they are on the same line here...
   if (browser->toolBarOn || browser->locationBarOn)
-    gtk_widget_show_all(browser->toolbarHBox);
+    gtk_widget_show_all(browser->toolbarVPaned);
   else 
-    gtk_widget_hide_all(browser->toolbarHBox);
-
-  if (browser->statusBarOn)
-    gtk_widget_show_all(browser->progressAreaHBox);
-  else
-    gtk_widget_hide_all(browser->progressAreaHBox);
+    gtk_widget_hide_all(browser->toolbarVPaned);
 
   gtk_widget_show(browser->mozEmbed);
   gtk_widget_show(browser->topLevelVBox);
@@ -548,13 +558,8 @@ back_clicked_cb (GtkButton *button, MinimoBrowser *browser)
   gtk_moz_embed_go_back(GTK_MOZ_EMBED(browser->mozEmbed));
 }
 
-void stop_reload_clicked_cb (GtkButton *button, MinimoBrowser *browser)
+void reload_clicked_cb (GtkButton *button, MinimoBrowser *browser)
 {
-  if (browser->loading) {
-    gtk_moz_embed_stop_load(GTK_MOZ_EMBED(browser->mozEmbed));
-    return;
-  }
-
   GdkModifierType state = (GdkModifierType)0;
   gint x, y;
   gdk_window_get_pointer(NULL, &x, &y, &state);
@@ -574,15 +579,64 @@ forward_clicked_cb (GtkButton *button, MinimoBrowser *browser)
 void
 home_clicked_cb  (GtkButton *button, MinimoBrowser *browser)
 {
+  fprintf(stdout, "woot! %x\n", browser);
   gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), MINIMO_HOME_URL);
 }
+
 void
 url_activate_cb    (GtkEditable *widget, MinimoBrowser *browser)
 {
   gchar *text = gtk_editable_get_chars(widget, 0, -1);
   gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), text);
+  add_autocomplete(text);
   g_free(text);
 }
+
+gboolean
+url_key_press_cb    (GtkEditable *widget, 
+		     GdkEventKey* event, 
+		     MinimoBrowser *browser)
+{
+  gboolean result = FALSE;
+
+  if (!g_AutoComplete)
+    return result;
+ 
+  // if the user hits backspace, let them.
+  if (event->keyval == GDK_BackSpace)
+    return result;
+
+  gchar *text = gtk_editable_get_chars(widget, 0, -1);
+  gint length = strlen(text);
+  
+  gchar *newText = (gchar*) malloc(length + 2);
+  memcpy(newText, text, length);
+  memcpy(newText+length, &(event->keyval), 1);
+  newText[length+1] = '\0';
+  
+  g_free(text);
+  
+  gchar *completion = NULL;
+  g_completion_complete(g_AutoComplete, newText, &completion);
+
+  if (completion)
+  {
+    // if the completion is something more than the what is in the entry field.
+    if (strcmp(completion, newText))
+    {
+      gtk_entry_set_text(GTK_ENTRY(widget), completion);
+      gtk_editable_select_region(GTK_EDITABLE(widget), length+1, -1);
+      gtk_editable_set_position(GTK_EDITABLE(widget), -1);//length+1);
+
+      // selection is still fucked /***/
+      result = TRUE;
+    }
+    g_free(completion);
+  }
+  g_free(newText);
+  return result;
+}
+
 gboolean
 delete_cb(GtkWidget *widget, GdkEventAny *event, MinimoBrowser *browser)
 {
@@ -603,6 +657,45 @@ destroy_cb         (GtkWidget *widget, MinimoBrowser *browser)
     gtk_main_quit();
 }
 
+gboolean context_menu_cb(gpointer data)
+{
+  MinimoBrowser *browser = (MinimoBrowser*)data;
+  fprintf(stdout, "foopy! %x\n", browser);
+
+  GtkMenu *menu = (GtkMenu*) gtk_menu_new();
+
+  GtkWidget *back_item = gtk_menu_item_new_with_label ("Back");
+  GtkWidget *forward_item = gtk_menu_item_new_with_label ("Forward");
+  GtkWidget *home_item = gtk_menu_item_new_with_label ("Home");
+  GtkWidget *reload_item = gtk_menu_item_new_with_label ("Reload");
+
+  gtk_menu_append(menu, home_item);
+  gtk_menu_append(menu, back_item);
+  gtk_menu_append(menu, forward_item);
+  gtk_menu_append(menu, reload_item);
+  
+  gtk_widget_show (home_item);
+  gtk_widget_show (back_item);
+  gtk_widget_show (forward_item);
+  gtk_widget_show (reload_item);
+
+  gtk_signal_connect(GTK_OBJECT(home_item), "activate", GTK_SIGNAL_FUNC(home_clicked_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(back_item), "activate", GTK_SIGNAL_FUNC(back_clicked_cb), data);
+  gtk_signal_connect(GTK_OBJECT(forward_item), "activate", GTK_SIGNAL_FUNC(forward_clicked_cb), data);
+  gtk_signal_connect(GTK_OBJECT(reload_item), "activate", GTK_SIGNAL_FUNC(reload_clicked_cb), browser);
+
+  gtk_menu_popup(menu,
+		 NULL,
+		 NULL,
+		 NULL,
+		 NULL,
+		 0,
+		 gtk_get_current_event_time());
+
+  fprintf(stdout, "done\n");
+  return false;
+}
+
 void
 location_changed_cb (GtkMozEmbed *embed, MinimoBrowser *browser)
 {
@@ -617,12 +710,12 @@ location_changed_cb (GtkMozEmbed *embed, MinimoBrowser *browser)
     g_free(newLocation);
   }
   else
-  // always make sure to clear the tempMessage.  it might have been
-  // set from the link before a click and we wouldn't have gotten the
-  // callback to unset it.
-  update_temp_message(browser, 0);
-  // update the nav buttons on a location change
-  update_nav_buttons(browser);
+  {
+    // always make sure to clear the tempMessage.  it might have been
+    // set from the link before a click and we wouldn't have gotten the
+    // callback to unset it.
+    update_temp_message(browser, 0);
+  }
 }
 
 void
@@ -645,9 +738,7 @@ load_started_cb     (GtkMozEmbed *embed, MinimoBrowser *browser)
   browser->bytesLoaded = 0;
   browser->maxBytesLoaded = 0;
   browser->loading = true;
-  update_toolbar(browser);
   start_throbber(browser);
-  update_status_bar_text(browser);
 }
 
 void
@@ -657,15 +748,10 @@ load_finished_cb    (GtkMozEmbed *embed, MinimoBrowser *browser)
   browser->bytesLoaded = 0;
   browser->maxBytesLoaded = 0;
   browser->loading = false;
-  update_toolbar(browser);
-  update_status_bar_text(browser);
-  gtk_progress_set_percentage(GTK_PROGRESS(browser->progressBar), 0);
 }
 
-
 void
-net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status,
-		     MinimoBrowser *browser)
+net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status, MinimoBrowser *browser)
 {
   if (flags & GTK_MOZ_EMBED_FLAG_IS_REQUEST) {
     if (flags & GTK_MOZ_EMBED_FLAG_REDIRECTING)
@@ -692,8 +778,6 @@ net_state_change_cb (GtkMozEmbed *embed, gint flags, guint status,
       browser->statusMessage = "Done.";
   }
 
-  update_status_bar_text(browser);
-  
 }
 
 void net_state_change_all_cb (GtkMozEmbed *embed, const char *uri,
@@ -708,11 +792,9 @@ void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
   // avoid those pesky divide by zero errors
   if (max < 1)
   {
-    gtk_progress_set_activity_mode(GTK_PROGRESS(browser->progressBar), FALSE);
     browser->loadPercent = 0;
     browser->bytesLoaded = cur;
     browser->maxBytesLoaded = 0;
-    update_status_bar_text(browser);
   }
   else
   {
@@ -722,8 +804,6 @@ void progress_change_cb   (GtkMozEmbed *embed, gint cur, gint max,
       browser->loadPercent = 100;
     else
       browser->loadPercent = (cur * 100) / max;
-    update_status_bar_text(browser);
-    gtk_progress_set_percentage(GTK_PROGRESS(browser->progressBar), browser->loadPercent / 100.0);
   }
   
 }
@@ -764,7 +844,7 @@ void
 new_window_cb (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask, MinimoBrowser *browser)
 {
   MinimoBrowser *newBrowser = new_gtk_browser(chromemask);
-  gtk_widget_set_usize(newBrowser->mozEmbed, 400, 400);
+  gtk_widget_set_usize(newBrowser->mozEmbed, 240, 320);
   *newEmbed = GTK_MOZ_EMBED(newBrowser->mozEmbed);
 }
 
@@ -821,12 +901,16 @@ gint dom_key_up_cb        (GtkMozEmbed *embed, nsIDOMKeyEvent *event,
 gint dom_mouse_down_cb    (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
 			   MinimoBrowser *browser)
 {
+  browser->mouseDownTimer = g_timeout_add(250, 
+					  context_menu_cb, 
+					  browser);
   return NS_OK;
  }
 
 gint dom_mouse_up_cb      (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
 			   MinimoBrowser *browser)
 {
+  g_source_remove(browser->mouseDownTimer);
   return NS_OK;
 }
 
@@ -866,75 +950,49 @@ void new_window_orphan_cb (GtkMozEmbedSingle *embed,
 
 // utility functions
 
-void update_toolbar(MinimoBrowser *browser)
-{
-}
-
-
 static gboolean update_throbber(gpointer data)
 {
   MinimoBrowser *browser = (MinimoBrowser*)data;
 
-  GdkPixmap *val;
-  GdkBitmap *mask;
+  if (!browser)
+    return false;
 
   gboolean loading = browser->loading;
 
   if (loading)
   {
-    browser->throbberID++;
-    if (browser->throbberID == MINIMO_THROBBER_ICON_MAX)
-      browser->throbberID = 0;
-    
-    gtk_pixmap_get(GTK_PIXMAP(browser->stopIcon[browser->throbberID]), &val, &mask);
+    browser->throbberID += (browser->throbberDirection * MINIMO_THROBBER_COLOR_STEP);
+
+    GdkColor myColor;
+    myColor.red = myColor.green = myColor.blue = browser->throbberID;
+
+    gtk_widget_modify_base(GTK_WIDGET(browser->urlEntry),
+			   GTK_STATE_NORMAL,
+			   &myColor);
+
+    if (browser->throbberDirection < 0 && browser->throbberID <= MINIMO_THROBBER_COLOR_MIN) 
+    {
+      browser->throbberDirection = 1;
+    }
+    else if (browser->throbberDirection > 0 && browser->throbberID >= MINIMO_THROBBER_COLOR_MAX)
+    {
+      browser->throbberDirection = -1;
+    }
   }
   else
   {
-    // set the icon back to the reload icon.
-    gtk_pixmap_get(GTK_PIXMAP(browser->reloadIcon), &val, &mask);
+    browser->throbberDirection = -1;
+    browser->throbberID = MINIMO_THROBBER_COLOR_MAX;
+    gtk_widget_modify_base(GTK_WIDGET(browser->urlEntry),
+			   GTK_STATE_NORMAL,
+			   NULL);
   }
-
-  gtk_pixmap_set(GTK_PIXMAP(browser->stopReloadIcon), val, mask);
-  gtk_widget_queue_draw(browser->stopReloadIcon);
-  gtk_widget_show_now(browser->toolbar);
-  gtk_main_iteration_do(false);    
-
   return loading;
 }
 
 void start_throbber(MinimoBrowser *browser)
 {
-  g_timeout_add(500, update_throbber, (void*)browser);
-}
-
-void
-update_status_bar_text(MinimoBrowser *browser)
-{
-  gchar message[256];
-  
-  gtk_statusbar_pop(GTK_STATUSBAR(browser->statusBar), 1);
-  if (browser->tempMessage)
-    gtk_statusbar_push(GTK_STATUSBAR(browser->statusBar), 1, browser->tempMessage);
-  else
-  {
-    if (browser->loadPercent)
-    {
-      g_snprintf(message, 255, "%s (%d%% complete, %d bytes of %d loaded)", browser->statusMessage, browser->loadPercent, browser->bytesLoaded, browser->maxBytesLoaded);
-    }
-    else if (browser->bytesLoaded)
-    {
-      g_snprintf(message, 255, "%s (%d bytes loaded)", browser->statusMessage, browser->bytesLoaded);
-    }
-    else if (browser->statusMessage == NULL)
-    {
-      g_snprintf(message, 255, " ");
-    }
-    else
-    {
-      g_snprintf(message, 255, "%s", browser->statusMessage);
-    }
-    gtk_statusbar_push(GTK_STATUSBAR(browser->statusBar), 1, message);
-  }
+  g_timeout_add(MINIMO_THROBBER_COLOR_INTERVAL, update_throbber, (void*)browser);
 }
 
 void
@@ -946,25 +1004,5 @@ update_temp_message(MinimoBrowser *browser, const char *message)
     browser->tempMessage = g_strdup(message);
   else
     browser->tempMessage = 0;
-  // now that we've updated the temp message, redraw the status bar
-  update_status_bar_text(browser);
 }
-
-
-void
-update_nav_buttons      (MinimoBrowser *browser)
-{
-  gboolean can_go_back;
-  gboolean can_go_forward;
-  can_go_back = gtk_moz_embed_can_go_back(GTK_MOZ_EMBED(browser->mozEmbed));
-  can_go_forward = gtk_moz_embed_can_go_forward(GTK_MOZ_EMBED(browser->mozEmbed));
-  if (can_go_back)
-    gtk_widget_set_sensitive(browser->backButton, TRUE);
-  else
-    gtk_widget_set_sensitive(browser->backButton, FALSE);
-  if (can_go_forward)
-    gtk_widget_set_sensitive(browser->forwardButton, TRUE);
-  else
-    gtk_widget_set_sensitive(browser->forwardButton, FALSE);
- }
 
