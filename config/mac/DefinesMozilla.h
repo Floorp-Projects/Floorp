@@ -49,7 +49,7 @@
 #endif
 
 // #define JAVA 	1
-// #define OJI		1
+#define OJI		1
 
 #ifdef JAVA
 	#define UNICODE_FONTLIST 1
