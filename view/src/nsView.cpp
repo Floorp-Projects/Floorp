@@ -755,7 +755,10 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
       PRBool initDataPassedIn = PR_TRUE;
       nsWidgetInitData initData;
       if (!aWidgetInitData) {
+        // No initData, we're a child window
+        // Create initData to pass in params
         initDataPassedIn = PR_FALSE;
+        initData.clipChildren = PR_TRUE; // Clip child window's children
         aWidgetInitData = &initData;
       }
       aWidgetInitData->mContentType = aContentType;
