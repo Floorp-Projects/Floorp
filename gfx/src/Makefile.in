@@ -34,7 +34,7 @@ REQUIRES	= util img xpcom raptor netlib dom js
 DIRS		= ps
 
 # Build xlibrgb only for X toolkits
-ifneq (,$(filter gtk motif qt xlib,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= xlibrgb
 endif
 
