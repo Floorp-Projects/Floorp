@@ -38,6 +38,8 @@
 ** this software for any purpose.
 */
 
+/*This file was stolen from webtools/mozbot/uuidgen/token.c */
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

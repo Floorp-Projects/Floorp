@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* Header file for oeICalStartupHandler.cpp containing its CID and CONTRACTID.*/
+
 #ifndef __oeICalStartupHandler_h_
 #define __oeICalStartupHandler_h_
 

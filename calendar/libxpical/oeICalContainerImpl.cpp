@@ -34,6 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* This file implements the Container object for calendars. The container is the topmost object in 
+the backend and contains and interact with all calendar objects. It acts as a distributor of global
+commands to individual calendars and a collector of calculated data for global queries.
+*/
+
 #include "oeICalContainerImpl.h"
 #include "nsISupportsArray.h"
 #include "nsComponentManagerUtils.h"

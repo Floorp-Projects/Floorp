@@ -35,6 +35,8 @@
  * 
 */
 
+/* Header file for oeDateTimeImpl.cpp containing its CID and CONTRACTID.*/
+
 #ifndef __OE_DATETIMEIMPL_H__
 #define __OE_DATETIMEIMPL_H__
 

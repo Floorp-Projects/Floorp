@@ -33,6 +33,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+ /* This file implements an XPCOM object which represents a calendar object. It is a container
+ of events and prepares responses for queries made upon the calendar in whole. The task of reading from
+ and writing to the calendar data storage is currently performed by this object */
 
 #ifndef WIN32
 #include <unistd.h>

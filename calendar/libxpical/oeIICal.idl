@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* The Interface Description of all calendar objects listing various fields and methods of each */
+
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
 

@@ -33,6 +33,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+ /* Header file for oeICalImpl.cpp containing its CID and CONTRACTID. It also includes
+ the implementation for an event linked-list used throughout the code */
+ 
 #ifndef _OEICALIMPL_H_
 #define _OEICALIMPL_H_
 

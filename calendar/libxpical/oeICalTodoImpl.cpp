@@ -35,6 +35,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* This file implements an XPCOM object which represents a calendar task(todo) object. It is a derivation
+of the event object which adds fields exclusive to tasks.
+*/
+
 #ifndef WIN32
 #include <unistd.h>
 #endif

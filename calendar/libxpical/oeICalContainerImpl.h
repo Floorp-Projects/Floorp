@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* Header file for oeICalContainerImpl.cpp containing its CID and CONTRACTID.*/
+
 #include "oeIICal.h"
 #include "oeICalImpl.h"
 #include "oeICalEventImpl.h"

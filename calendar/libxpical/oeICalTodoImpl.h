@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+ /* Header file for oeICalTodoImpl.cpp containing its CID and CONTRACTID.*/
+
 #ifndef _OEICALTODOIMPL_H_
 #define _OEICALTODOIMPL_H_
 

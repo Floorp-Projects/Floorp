@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* Derived from nsICmdLineHandler this file provides the "-calendar" option 
+for launching calendar */
+
 #include "plstr.h"
 #include "nsString.h"
 #include "oeICalStartupHandler.h"

@@ -34,6 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+ /* Header file for oeICalEventImpl.cpp containing its CID and CONTRACTID.*/
+
 #ifndef _OEICALEVENTIMPL_H_
 #define _OEICALEVENTIMPL_H_
 

@@ -38,6 +38,8 @@
 ** this software for any purpose.
 */
 
+/*This file was stolen from webtools/mozbot/uuidgen/token.h */
+
 #ifndef _TOKEN_H_
 #define _TOKEN_H_
 

@@ -36,6 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* This file implements an XPCOM object which represents a calendar event. It provides access to individual 
+fields of an event and performs calculations concerning its behaviour. The code for the eventDisplay object
+which is an event with display information added to it is included here as well.
+*/
+
 #include <stdlib.h> // for atol
 
 #include "oeICalEventImpl.h"

@@ -35,6 +35,10 @@
  * 
 */
 
+/* This file implements a date-time XPCOM object used to pass date-time values between the frontend and the
+backend. It provides access to individual date-time fields from javascript and translates that data to a 
+icaltimetype structure for the backend.*/
+
 #ifndef WIN32
 #include <unistd.h>
 #endif

@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/* Factory implementation of various calendar objects */
+
 #include "oeICalImpl.h"
 #include "oeICalContainerImpl.h"
 #include "oeICalEventImpl.h"
