@@ -68,7 +68,7 @@ static NS_METHOD RegisterMimeEmitter(nsIComponentManager *aCompMgr, nsIFile *aPa
   nsXPIDLCString previous;
   
   return catman->AddCategoryEntry("mime-emitter", info->mContractID, info->mContractID,
-                                  PR_TRUE, PR_FALSE, getter_Copies(previous));
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
 }
 
 static NS_METHOD UnRegisterMimeEmitter(nsIComponentManager *aCompMgr,
