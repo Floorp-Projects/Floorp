@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+#include "prprf.h"
+#include "prmem.h"
 
 #include "nsProxyEvent.h"
 #include "nsProxyObjectManager.h"
@@ -150,9 +152,16 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     if(NS_FAILED(aObj->QueryInterface(aIID, getter_AddRefs(requestedInterface))))
         return nsnull;
     
-    
+
     // this will be our key in the hash table.  
-    nsVoidKey rootkey( (void*) GetProxyHashKey(rootObject.get(), destQueue, proxyType) );
+    
+    nsCOMPtr<nsISupports> destQRoot;
+    if(NS_FAILED(destQueue->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&destQueue)))
+        return nsnull;
+
+    char* rootKeyString = PR_sprintf_append(nsnull, "%p.%p.%d", (PRUint32)rootObject.get(), (PRUint32)destQRoot.get(), proxyType);
+    nsStringKey rootkey(rootKeyString);
+    
 
     // find in our hash table 
     if(realToProxyMap->Exists(&rootkey))
@@ -162,6 +171,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         
         if(proxy)  
         {
+            PR_FREEIF(rootKeyString);
             peo = proxy;
             NS_ADDREF(peo);
             return peo;  
@@ -178,12 +188,13 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                          requestedInterface, 
                                          clazz, 
                                          nsnull, 
-                                         rootkey.HashValue());
+                                         rootKeyString);
         
             proxy = do_QueryInterface(peo);
             
             if(proxy)
             {
+                PR_FREEIF(rootKeyString);
                 realToProxyMap->Put(&rootkey, peo);
                 peo = proxy;
                 NS_ADDREF(peo);
@@ -197,17 +208,23 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                                                       nsCOMTypeInfo<nsISupports>::GetIID()) );
             
             if (!rootClazz)
+            {
+                PR_FREEIF(rootKeyString);
                 return nsnull;
+            }
                 
             peo = new nsProxyEventObject(destQueue, 
                                          proxyType, 
                                          rootObject, 
                                          rootClazz, 
                                          nsnull, 
-                                         rootkey.HashValue());
+                                         rootKeyString);
 
             if(!peo)
+            {
+                PR_FREEIF(rootKeyString);
                 return nsnull;
+            }
 
             root = do_QueryInterface(peo);
 
@@ -225,17 +242,21 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                      requestedInterface, 
                                      clazz, 
                                      root, 
-                                     0);
+                                     "");
 
         proxy = do_QueryInterface(peo);
         
         if(!proxy)
+        {
+            PR_FREEIF(rootKeyString);
             return nsnull;
+        }
     }
 
     proxy->mNext = root->mNext;
     root->mNext = proxy;
 
+    PR_FREEIF(rootKeyString);
     peo = proxy;
     NS_ADDREF(peo);
     return peo;  
@@ -243,7 +264,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 }
 nsProxyEventObject::nsProxyEventObject()
 : mNext(nsnull),
-  mHashKey((void*)0)
+  mHashKey("")
 {
      NS_WARNING("This constructor should never be called");
 }
@@ -253,9 +274,9 @@ nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
                                        nsISupports* aObj,
                                        nsProxyEventClass* aClass,
                                        nsProxyEventObject* root,
-                                       PRUint32 hashValue)
+                                       const char * hashStr)
     : mNext(nsnull),
-      mHashKey((void*)hashValue)
+      mHashKey(hashStr)
 {
     NS_INIT_REFCNT();
     
@@ -321,18 +342,6 @@ nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     }
         
     return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
-}
-
-PRUint32 
-nsProxyEventObject::GetProxyHashKey(nsISupports *rootProxy, nsIEventQueue *destQueue, PRInt32 proxyType)
-{ // FIX I need to worry about nsCOMPtr for rootProxy, and destQueue!
-    
-    nsISupports* destQRoot;
-    if(NS_FAILED(destQueue->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&destQRoot)))
-        return 0;
-    PRInt32 value = (PRUint32)rootProxy + (PRUint32)destQRoot + proxyType;
-    NS_RELEASE(destQRoot);
-    return value;
 }
 
 nsProxyEventObject*

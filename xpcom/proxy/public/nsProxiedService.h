@@ -72,32 +72,34 @@
 
 class nsProxiedService
 {
- protected:
-   nsISupports* mProxiedService;
-   nsISupports* mService;
  public:
-   nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
-                    nsIEventQueue* pIProxyQueue, nsresult*rv)
-      : mProxiedService(nsnull)
-   {
+   
+    nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
+                     nsIEventQueue* pIProxyQueue, nsresult*rv)
+    {
        static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
-       *rv = nsServiceManager::GetService(aClass, aIID, &mService);
+
+       *rv = nsServiceManager::GetService(aClass, 
+                                          aIID, 
+                                          getter_AddRefs(mService));
        if (NS_FAILED(*rv)) return;
 
        NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
                        kProxyObjectManagerCID, rv);
        if (NS_FAILED(*rv)) return;
 
-       *rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, aIID, mService,
-                                                  PROXY_SYNC, (void**)&mProxiedService);
-   }
-    
-   ~nsProxiedService()
-   {
-       NS_IF_RELEASE(mProxiedService);
-       NS_IF_RELEASE(mService);
-   }
+       *rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, 
+                                                  aIID, 
+                                                  mService,
+                                                  PROXY_SYNC, 
+                                                  getter_AddRefs(mProxiedService));
+    }
+
+
+    ~nsProxiedService()
+    {
+    }
 
    nsISupports* operator->() const
    {
@@ -114,7 +116,12 @@ class nsProxiedService
    {
        return mProxiedService;
    }
-};
+
+ protected:
+   nsCOMPtr<nsISupports> mProxiedService;
+   nsCOMPtr<nsISupports> mService;
+ 
+ };
 
 
 #endif //__nsProxiedServiceManager_h_
