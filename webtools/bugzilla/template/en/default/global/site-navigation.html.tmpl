@@ -26,7 +26,7 @@
   #%]
   
 [% IF NOT (user_agent.match("MSIE [1-6]") OR user_agent.match("Mozilla/4")) %]
-  <link rel="Top" href="index.cgi">
+  <link rel="Top" href="[% Param('urlbase') %]">
 
   [%# *** Bug List Navigation *** %]
   [% IF bug && bug_list && bug_list.size > 0 %]
