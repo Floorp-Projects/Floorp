@@ -1872,9 +1872,14 @@
             else 
               urlValue = "about:blank";
               
-            w = openTopWin(urlValue);
-            if (groupTarget)
+            if (groupTarget) {
+              w = getTopWin();
+              w.focus();
               w.OpenBookmarkGroupFromResource(this.currentRes, this.db, this.rdf);
+            }
+            else {
+              openTopWin(urlValue);
+            }
           }
           if (aEvent) 
             aEvent.preventBubble();
