@@ -130,14 +130,6 @@ function goPageSetup()
   printOptionsService.WritePrefs();
 }
 
-function goEditCardDialog(abURI, card, okCallback, abCardURI)
-{
-  window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
-					  "",
-					  "chrome,resizeable=no,modal,titlebar",
-					  {abURI:abURI, card:card, okCallback:okCallback, abCardURI:abCardURI});
-}
-
 function goPreferences(containerID, paneURL, itemID)
 {
   var resizable;
