@@ -44,17 +44,13 @@ function onInit() {
     protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
 
     if (loginNameInput.value == "") {
-	if (protocolinfo.requiresUsername) {
-		// since we require a username, use the uid from the email address
-		var email = document.getElementById("identity.email").value;
-		var emailParts = email.split("@");
-		loginNameInput.value = emailParts[0];
-	}
-	else {
-		// leave it blank.
-	}
+      if (protocolinfo.requiresUsername) {
+        // since we require a username, use the uid from the email address
+        var email = document.getElementById("identity.email").value;
+        var emailParts = email.split("@");
+        loginNameInput.value = emailParts[0];
+      }
     }
-
 }
 
 
