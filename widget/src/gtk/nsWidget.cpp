@@ -37,8 +37,6 @@
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_keyboard_get_modifiers()
 
-//#define USE_GTK_FIXED
-
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 
@@ -430,7 +428,6 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   if (mWidget) 
   {
-#ifndef USE_GTK_FIXED
     GtkWidget *    layout = mWidget->parent;
 
     GtkAdjustment* ha = gtk_layout_get_hadjustment(GTK_LAYOUT(layout));
@@ -468,9 +465,6 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
                     mWidget, 
                     aX + x_correction, 
                     aY + y_correction);
-#else
-    gtk_fixed_move(GTK_FIXED(mWidget->parent), mWidget, aX, aY);
-#endif
   }
 
   return NS_OK;
@@ -1036,11 +1030,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   {
     if (parentWidget)
     {
-#ifndef USE_GTK_FIXED
       gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
-#else
-      gtk_fixed_put(GTK_FIXED(parentWidget), mWidget, aRect.x, aRect.y);
-#endif
     }
   }
 
