@@ -285,9 +285,8 @@ nsDocShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
    NS_ENSURE_SUCCESS(SetupNewViewer(documentViewer), NS_ERROR_FAILURE);
 
    // XXX: It would be great to get rid of this dummy channel!
-   const nsAutoString uriString = "about:blank";
    nsCOMPtr<nsIURI> uri;
-   NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), NS_ConvertASCIItoUCS2("about:blank")), NS_ERROR_FAILURE);
    NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
 
    nsCOMPtr<nsIChannel> dummyChannel;
@@ -1036,8 +1035,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
       NS_ENSURE_TRUE(stringBundle, NS_ERROR_FAILURE);
 
       nsXPIDLString messageStr;
-      nsAutoString name("protocolNotFound");
-      NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(name.GetUnicode(), 
+      NS_ENSURE_SUCCESS(stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("protocolNotFound").GetUnicode(), 
          getter_Copies(messageStr)), NS_ERROR_FAILURE);
 
       nsAutoString uriString(aURI);
@@ -1047,7 +1045,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
       uriString.Left(scheme, colon);
 
       nsAutoString dnsMsg(scheme);
-      dnsMsg.Append(' ');
+      dnsMsg.AppendWithConversion(' ');
       dnsMsg.Append(messageStr);
 
       prompter->Alert(dnsMsg.GetUnicode());
@@ -1141,8 +1139,7 @@ NS_IMETHODIMP nsDocShell::GetCurrentURI(PRUnichar** aCurrentURI)
    char* spec;
    NS_ENSURE_SUCCESS(mCurrentURI->GetSpec(&spec), NS_ERROR_FAILURE);
 
-   nsAutoString strSpec(spec);
-   *aCurrentURI = strSpec.ToNewUnicode();
+   *aCurrentURI = NS_ConvertASCIItoUCS2(spec).ToNewUnicode();
 
    if(spec)
       nsCRT::free(spec);
@@ -2329,9 +2326,9 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
 
       // insert url spec corresponding to host name
       if(hostSpec.EqualsIgnoreCase("ftp")) 
-         uriString.Insert("ftp://", 0, 6);
+         uriString.InsertWithConversion("ftp://", 0, 6);
       else 
-         uriString.Insert("http://", 0, 7);
+         uriString.InsertWithConversion("http://", 0, 7);
       } // end if colon
 
    return NS_NewURI(aURI, uriString.GetUnicode(), nsnull);
@@ -2385,7 +2382,7 @@ NS_IMETHODIMP nsDocShell::ConvertFileToStringURI(nsString& aIn, nsString& aOut)
 #endif
 
       // Build the file URL
-      aOut.Insert(FILE_PROTOCOL,0);
+      aOut.InsertWithConversion(FILE_PROTOCOL,0);
       }
 
    return NS_OK;
@@ -2398,11 +2395,11 @@ NS_IMETHODIMP nsDocShell::ConvertStringURIToFileCharset(nsString& aIn,
    aOut = "";
    // for file url, we need to convert the nsString to the file system
    // charset before we pass to NS_NewURI
-   static nsAutoString fsCharset("");
+   static nsAutoString fsCharset;
    // find out the file system charset first
    if(0 == fsCharset.Length())
       {
-      fsCharset = "ISO-8859-1"; // set the fallback first.
+      fsCharset.AssignWithConversion("ISO-8859-1"); // set the fallback first.
       nsCOMPtr<nsIPlatformCharset> plat(do_GetService(kPlatformCharsetCID));
       NS_ENSURE_TRUE(plat, NS_ERROR_FAILURE);
       NS_ENSURE_SUCCESS(plat->GetCharset(kPlatformCharsetSel_FileName, fsCharset),
@@ -2749,21 +2746,21 @@ NS_IMETHODIMP nsDocShell::ShouldAddToGlobalHistory(nsIURI* aURI,
    nsXPIDLCString scheme;
    NS_ENSURE_SUCCESS(aURI->GetScheme(getter_Copies(scheme)), NS_ERROR_FAILURE);
    
-   nsAutoString schemeStr(scheme);
+   nsAutoString schemeStr; schemeStr.AssignWithConversion(scheme);
 
    // The model is really if we don't know differently then add which basically
    // means we are suppose to try all the things we know not to allow in and
    // then if we don't bail go on and allow it in.  But here lets compare
    // against the most common case we know to allow in and go on and say yes
    // to it.
-   if(schemeStr.Equals("http") || schemeStr.Equals("https"))
+   if(schemeStr.EqualsWithConversion("http") || schemeStr.EqualsWithConversion("https"))
       {
       *aShouldAdd = PR_TRUE;
       return NS_OK;
       }
 
-   if(schemeStr.Equals("about") || schemeStr.Equals("imap") ||
-      schemeStr.Equals("news") || schemeStr.Equals("mailbox"))
+   if(schemeStr.EqualsWithConversion("about") || schemeStr.EqualsWithConversion("imap") ||
+      schemeStr.EqualsWithConversion("news") || schemeStr.EqualsWithConversion("mailbox"))
       return NS_OK;
 
    *aShouldAdd = PR_TRUE;
