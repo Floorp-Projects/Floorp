@@ -31,8 +31,11 @@
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "gui.h"
+
+#ifdef USE_CACHE
 #include "nsCacheManager.h"
 #include "nsDiskModule.h"
+#endif
 
 #ifdef XP_PC
 #include "windows.h"
