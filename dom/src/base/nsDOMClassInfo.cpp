@@ -4067,11 +4067,10 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     nsresult rv = NS_OK;
 
+    // It is not worth calling JS_ResolveStandardClass() if we are
+    // resolving for assignment, since only read-write properties
+    // get dealt with there.
     if (!(flags & JSRESOLVE_ASSIGNING)) {
-      // We're not resolving for assignment. It's not worth calling
-      // JS_ResolveStandardClass() or calling GlobalResolve() since
-      // only read-write properties are dealt with in those calls.
-
       JSContext *my_cx = (JSContext *) my_context->GetNativeContext();
       JSBool did_resolve = JS_FALSE;
 
@@ -4093,17 +4092,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         return NS_OK;
       }
 
-      rv = GlobalResolve(native, cx, obj, str, flags, &did_resolve);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (did_resolve) {
-        // GlobalResolve() resolved something, we're done here then.
-
-        *objp = obj;
-
-        return NS_OK;
-      }
-
       // We want this code to be before the child frame lookup code
       // below so that a child frame named 'constructor' doesn't
       // shadow the window's constructor property.
@@ -4112,7 +4100,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       }
     }
 
-    // Hmm, we do an aweful lot of QI's here, maybe we should add a
+    // Hmm, we do an awful lot of QIs here; maybe we should add a
     // method on an interface that would let us just call into the
     // window code directly...
 
@@ -4141,7 +4129,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       if (child_win) {
         // We found a subframe of the right name, define the property
         // on the wrapper so that ::NewResolve() doesn't get called
-        // for again for this property name.
+        // again for this property name.
 
         jsval v;
         rv = WrapNative(cx, ::JS_GetGlobalObject(cx), child_win,
@@ -4172,6 +4160,26 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           return NS_ERROR_FAILURE;
         }
 
+        *objp = obj;
+
+        return NS_OK;
+      }
+    }
+
+    // It is not worth calling GlobalResolve() if we are resolving
+    // for assignment, since only read-write properties get dealt
+    // with there.
+    if (!(flags & JSRESOLVE_ASSIGNING)) {
+      // Call GlobalResolve() after we call FindChildWithName() so
+      // that named child frames will override external properties
+      // which have been registered with the script namespace manager.
+
+      JSBool did_resolve = JS_FALSE;
+      rv = GlobalResolve(native, cx, obj, str, flags, &did_resolve);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (did_resolve) {
+        // GlobalResolve() resolved something, so we're done here.
         *objp = obj;
 
         return NS_OK;
