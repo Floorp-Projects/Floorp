@@ -49,6 +49,7 @@
 
 <dialog id="ssl_warning" title="&newserver.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  style="width: 47em;"
   onload="onLoad();"
   buttons="accept,cancel,help"
   ondialogaccept="return doOK();"
