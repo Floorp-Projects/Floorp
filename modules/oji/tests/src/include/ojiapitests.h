@@ -23,7 +23,7 @@
 
 //mozilla specific headers
 #include "nspr.h"
-#include "nsString.h"
+#include "nsString2.h"
 
 #define OJI_TEST_RESULTS "OJITestResults.txt"
 #define OJI_TESTS_LIST   "OJITests.lst"
@@ -99,8 +99,19 @@ enum StatusValue {
 class TestResult {
 public:
   
+/*
   static TestResult* PASS(nsString comment) {
     return new TestResult(PASS_value, comment); 
+  }
+*/
+
+/** added by raju */
+  static TestResult* PASS(char *comment) {
+    char *msg = (char*)calloc(1, PL_strlen(comment)+1024);
+    sprintf(msg, "Method %s", comment);
+    CBufDescriptor *bufDescr = new CBufDescriptor(msg, PR_FALSE, PL_strlen(msg)+1, PL_strlen(msg));
+    nsString *str = new nsAutoString(*bufDescr);
+    return new TestResult(PASS_value, *str); 
   }
 
   static TestResult* FAIL(nsString comment) {
@@ -110,15 +121,24 @@ public:
   static TestResult* FAIL(char *method, nsresult rc) {
     char *comment = (char*)calloc(1, PL_strlen(method)+1024);
     sprintf(comment, "Method %s returned %X", method, rc);
-    return new TestResult(FAIL_value, comment); 
+    CBufDescriptor *bufDescr = new CBufDescriptor(comment, PR_FALSE, PL_strlen(comment)+1, PL_strlen(comment));
+    nsString *str = new nsAutoString(*bufDescr);
+    return new TestResult(FAIL_value, *str); 
   }
 
   static TestResult* FAIL(char *method, char* comment, nsresult rc) {
     char *outComment = (char*)calloc(1, PL_strlen(method)+1024);
     sprintf(outComment, "Method %s returned %X: %s", method, rc, comment);
-    return new TestResult(FAIL_value, outComment); 
+    CBufDescriptor *bufDescr = new CBufDescriptor(comment, PR_FALSE, PL_strlen(comment)+1, PL_strlen(comment));
+    nsString *str = new nsAutoString(*bufDescr);
+    return new TestResult(FAIL_value, *str); 
   }
 
+  static TestResult* FAIL(char *comment) {
+      CBufDescriptor *bufDescr = new CBufDescriptor(comment, PR_FALSE, PL_strlen(comment)+1, PL_strlen(comment));
+      nsString *str = new nsAutoString(*bufDescr);
+      return new TestResult(FAIL_value, *str); 
+  }
 
   TestResult ( StatusValue status, nsString comment) {
     this->status = status;

@@ -35,10 +35,10 @@ JNI_OJIAPITest(JNIEnv_SetObjectArrayElement_5)
   jstring str1 = env->NewString(str_chars1, 8);
   jclass clazz_incor = env->FindClass("Test1");
   jobject obj_incor = env->AllocObject(clazz_incor);
-  env->SetObjectArrayElement(arr, (jsize)6, obj_incor);
+  env->SetObjectArrayElement(arr, (jsize)2, obj_incor);
   jthrowable excep  = env->ExceptionOccurred();
   if(env->IsInstanceOf(excep, clazz_exp)){
-    printf("ArrayIndexOutOfBoundsException is thrown. It is correct!\n");
+    //printf("ArrayIndexOutOfBoundsException is thrown. It is correct!\n");
      return TestResult::PASS("SetObjectArrayElement(incorrect object) returns correct value - empty array");
   }else{
      return TestResult::FAIL("SetObjectArrayElement(incorrect object) returns incorrect value");

@@ -28,7 +28,7 @@ JNI_OJIAPITest(JNIEnv_CallNonvirtualObjectMethod_4)
   IMPLEMENT_GetMethodID_METHOD("Test1", "Test1_method_string", "(ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)Ljava/lang/String;");
   char *path = "asdf";
   jstring jpath=env->NewStringUTF("sdsadasdasd");
-  jstring value = (jstring)env->CallNonvirtualObjectMethod(obj, env->GetSuperclass(clazz), MethodID, JNI_TRUE, 0, 'a', MIN_JSHORT, 123, 0, 0, MAX_JDOUBLE, NULL, NULL);
+  jstring value = (jstring)env->CallNonvirtualObjectMethod(obj, env->GetSuperclass(clazz), MethodID, (jboolean)JNI_TRUE, (jbyte)MIN_JBYTE, (jchar)0, (jshort)1, (jint)123, (jlong)20, (jfloat)10., (jdouble)100, (jobject)NULL, (jobject)NULL);
   if(value == NULL){
      return TestResult::PASS("CallNonvirtualObjectMethod for public not inherited method (sig = (ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)Ljava/lang/String;) return correct value");
   }else{

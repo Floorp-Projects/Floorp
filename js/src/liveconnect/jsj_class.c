@@ -434,7 +434,6 @@ jsj_DiscardJavaClassReflections(JNIEnv *jEnv)
             cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env,
                                                              jEnv, &err_msg);
 #endif
-	    JS_ASSERT(cx);
             if (!cx)
                 return;
         } else {

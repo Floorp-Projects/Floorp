@@ -26,7 +26,7 @@ JNI_OJIAPITest(JNIEnv_CallStaticByteMethod_4)
   GET_JNI_FOR_TEST
 
   IMPLEMENT_GetStaticMethodID_METHOD("Test1", "Test1_method_byte_static", "(ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)B");
-  jbyte value = env->CallStaticByteMethod(clazz, MethodID, JNI_TRUE, MAX_JBYTE, 'a', 1, 123, 0, 0, 100, NULL, NULL);
+  jbyte value = env->CallStaticByteMethod(clazz, MethodID, (jboolean)JNI_TRUE, (jbyte)MAX_JBYTE, (jchar)0, (jshort)1, (jint)123, (jlong)20, (jfloat)10., (jdouble)100, (jobject)NULL, (jobject)NULL);
   if(value == MAX_JBYTE){
      return TestResult::PASS("CallStaticByteMethod for public not inherited method (sig = (ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)B) return correct value");
   }else{

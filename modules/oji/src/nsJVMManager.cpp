@@ -44,6 +44,7 @@
 #include "nsIPluginHost.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIPref.h"
 #include "lcglue.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
@@ -52,6 +53,8 @@ extern "C" int XP_JAVA_NO_CLASSES;
 extern "C" int XP_JAVA_GENERAL_FAILURE;
 extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kPluginHostIID, NS_IPLUGINHOST_IID);
@@ -623,20 +626,30 @@ nsJVMManager::ShutdownJVM(PRBool fullShutdown)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+
+ * This is called when the user changes the state of the
+ * security.enable_java preference.  
+
+ */
+
 static int PR_CALLBACK
 JavaPrefChanged(const char *prefStr, void* data)
 {
     nsJVMManager* mgr = (nsJVMManager*)data;
-    PRBool prefBool = TRUE;
-#if defined(XP_MAC)
-	// beard: under Mozilla, no way to enable this right now.
-	prefBool = TRUE;
-#else
-    /*TODO: hshaw: Use the new prefs api. Get to it from service manager and use nsIPref.
-    PREF_GetBoolPref(prefStr, &prefBool);
-    */
-#endif
-    mgr->SetJVMEnabled(prefBool);
+    PRBool prefBool = PR_TRUE;
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID));
+    nsresult rv;
+    
+    // check for success
+    if (!prefs) {
+        return 0;
+    }
+    rv = prefs->GetBoolPref("security.enable_java", &prefBool);
+    if (NS_SUCCEEDED(rv)) {
+        mgr->SetJVMEnabled(prefBool);
+    }
+
     return 0;
 }
 
@@ -655,15 +668,43 @@ nsJVMManager::SetJVMEnabled(PRBool enabled)
     }
 }
 
+/**
+
+ * Called from GetJVMStatus. <P>
+
+ * We only take action once per nsJVMManager instance.  
+
+ */ 
+
 void
 nsJVMManager::EnsurePrefCallbackRegistered(void)
 {
     if (fRegisteredJavaPrefChanged != PR_TRUE) {
-        fRegisteredJavaPrefChanged = PR_TRUE;
-        /*TODO: hshaw: Use the new prefs api. Get to it from service manager.
-        PREF_RegisterCallback("security.enable_java", JavaPrefChanged, this);
-        */
-        JavaPrefChanged("security.enable_java", this);
+        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID));
+        PRBool isJavaEnabled = PR_TRUE;
+        nsresult rv;
+
+        // check for success
+        if (!prefs) {
+            return;
+        }
+
+        // step one, register the callback for the pref changing.
+        rv = prefs->RegisterCallback("security.enable_java", 
+                                     JavaPrefChanged, this);
+        if (NS_SUCCEEDED(rv)) {
+            fRegisteredJavaPrefChanged = PR_TRUE;
+        }
+
+        // step two, update our fStatus ivar with the current value of the 
+        // pref
+        rv = prefs->GetBoolPref("security.enable_java", &isJavaEnabled);
+        if (NS_SUCCEEDED(rv)) {
+            if (!isJavaEnabled) {
+                fStatus = nsJVMStatus_Disabled;
+            }
+            // else, we leave it with the value it had at construction
+        }
     }
 }
 

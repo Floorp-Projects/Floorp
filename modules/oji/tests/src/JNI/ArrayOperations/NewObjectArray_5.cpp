@@ -32,7 +32,7 @@ JNI_OJIAPITest(JNIEnv_NewObjectArray_5)
 
   jarray arr = env->NewObjectArray(5, clazz, obj_incor);
 
-  if(arr==NULL){
+  if(arr != NULL){ //NULL is returned only if OutOfMemoryException is thrown
      return TestResult::PASS("NewObjectArray(obj is incorrect) returns correct value");
   }else{
      return TestResult::FAIL("NewObjectArray(obj is incorrect) returns incorrect value");

@@ -19,8 +19,14 @@
 # Contributor(s): 
 
 LIBS = nspr4.lib xpcom.lib oji.lib plc4.lib
+
+!if defined(MOZ_DEBUG)
 LD_FLAGS = /LIBPATH:$(MOZILLA_HOME)/dist/WIN32_D.OBJ/lib \
 	/LIBPATH:$(OBJ_DIR)
+!else
+LD_FLAGS = /LIBPATH:$(MOZILLA_HOME)/dist/WIN32_O.OBJ/lib \
+	/LIBPATH:$(OBJ_DIR)
+!endif
 
 ADD_CPP=@echo
 
