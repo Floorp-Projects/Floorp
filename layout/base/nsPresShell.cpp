@@ -64,6 +64,9 @@
 #include "nsISupportsPrimitives.h"
 #include "nsILayoutHistoryState.h"
 #include "stopwatch.h"
+#ifdef RAPTOR_PERF_METRICS
+#include "nsITimeRecorder.h"
+#endif
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
