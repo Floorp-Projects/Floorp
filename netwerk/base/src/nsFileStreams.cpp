@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -31,6 +31,7 @@
 #include "nsIFile.h"
 #include "nsDirectoryIndexStream.h"
 #include "nsMimeTypes.h"
+#include "nsReadLine.h"
 
 #define NS_NO_INPUT_BUFFERING 1 // see http://bugzilla.mozilla.org/show_bug.cgi?id=41067
 
@@ -347,10 +348,11 @@ nsFileStream::Tell(PRUint32 *result)
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileInputStream
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsFileInputStream, 
+NS_IMPL_ISUPPORTS_INHERITED3(nsFileInputStream, 
                              nsFileStream,
                              nsIInputStream,
-                             nsIFileInputStream);
+                             nsIFileInputStream,
+                             nsILineInputStream);
 
 NS_METHOD
 nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -379,13 +381,18 @@ nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
         ioFlags = PR_RDONLY;
     if (perm == -1)
         perm = 0;
+
+    mLineBuffer = nsnull;
+    
     return localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
 }
 
 NS_IMETHODIMP
 nsFileInputStream::Close()
 {
-    return nsFileStream::Close();
+  PR_FREEIF(mLineBuffer);
+  mLineBuffer = 0; // prevents badness if Close() is called again after failing
+  return nsFileStream::Close();
 }
 
 NS_IMETHODIMP
@@ -414,6 +421,15 @@ nsFileInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
     }
     *result = cnt;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileInputStream::ReadLine(nsAWritableString & aLine, PRBool *_retval) {
+  if (!mLineBuffer) {
+    nsresult rv = NS_InitLineBuffer(&mLineBuffer);
+    if (NS_FAILED(rv)) return rv;
+  }
+  return NS_ReadLine(this, mLineBuffer, aLine, _retval);
 }
 
 NS_IMETHODIMP
