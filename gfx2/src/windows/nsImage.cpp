@@ -223,11 +223,14 @@ void CreateBMPFile(HWND hwnd, LPTSTR pszFile, PBITMAPINFO pbi,
 }
 
 
-/* readonly attribute PRUint8 bits; */
-NS_IMETHODIMP nsImage::GetBits(PRUint8 *aBits)
+/* void getBits([array, size_is(length)] out PRUint8 bits, out unsigned long length); */
+NS_IMETHODIMP nsImage::GetBits(PRUint8 **aBits, PRUint32 *length)
 {
   if (!mBits)
     return NS_ERROR_NOT_INITIALIZED;
+
+  *aBits = mBits;
+  *length = mBitsLength;
 
 
   HWND bg = GetDesktopWindow();
@@ -261,7 +264,7 @@ NS_IMETHODIMP nsImage::GetBits(PRUint8 *aBits)
   CreateBMPFile(bg, "c:\\whatever.bmp", (LPBITMAPINFO)mBHead, 
                 memBM, memDC) ;
 
-//  ReleaseDC(memDC);
+  ReleaseDC(NULL, memDC);
 
   DeleteObject(memBM);
 
