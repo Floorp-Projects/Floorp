@@ -4338,8 +4338,8 @@ js_Interpret(JSContext *cx, jsval *result)
              * in the same compilation unit (ECMA Program).
              *
              * However, we could be in a Program being eval'd from inside a
-             * with statement, so we need to distinguish variables object from
-             * scope chain head.  Hence the two assignments to parent below.
+             * with statement, so we need to distinguish scope chain head from
+             * variables object.  Hence the obj2 vs. parent distinction below.
              * First we make sure the function object we're defining has the
              * right scope chain.  Then we define its name in fp->varobj.
              *
@@ -4361,14 +4361,22 @@ js_Interpret(JSContext *cx, jsval *result)
              * promote compile-cost sharing and amortizing, and because Script
              * is not and will not be standardized.
              */
-            parent = fp->scopeChain;
-            if (OBJ_GET_PARENT(cx, obj) != parent) {
-                obj = js_CloneFunctionObject(cx, obj, parent);
+            obj2 = fp->scopeChain;
+            if (OBJ_GET_PARENT(cx, obj) != obj2) {
+                obj = js_CloneFunctionObject(cx, obj, obj2);
                 if (!obj) {
                     ok = JS_FALSE;
                     goto out;
                 }
             }
+
+            /*
+             * Protect obj from any GC hiding below OBJ_DEFINE_PROPERTY.  All
+             * paths from here must flow through the "Restore fp->scopeChain"
+             * code below the OBJ_DEFINE_PROPERTY call.
+             */
+            fp->scopeChain = obj;
+            rval = OBJECT_TO_JSVAL(obj);
 
             /*
              * ECMA requires functions defined when entering Global code to be
@@ -4385,8 +4393,10 @@ js_Interpret(JSContext *cx, jsval *result)
              * in the property itself, not in obj->slots.
              */
             flags = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
-            if (flags)
+            if (flags) {
                 attrs |= flags | JSPROP_SHARED;
+                rval = JSVAL_VOID;
+            }
 
             /*
              * Check for a const property of the same name -- or any kind
@@ -4396,21 +4406,23 @@ js_Interpret(JSContext *cx, jsval *result)
              */
             parent = fp->varobj;
             ok = js_CheckRedeclaration(cx, parent, id, attrs, NULL, NULL);
+            if (ok) {
+                ok = OBJ_DEFINE_PROPERTY(cx, parent, id, rval,
+                                         (flags & JSFUN_GETTER)
+                                         ? (JSPropertyOp) obj
+                                         : NULL,
+                                         (flags & JSFUN_SETTER)
+                                         ? (JSPropertyOp) obj
+                                         : NULL,
+                                         attrs,
+                                         &prop);
+            }
+
+            /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
+            fp->scopeChain = obj2;
             if (!ok)
                 goto out;
 
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, id,
-                                     flags ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
-                                     (flags & JSFUN_GETTER)
-                                     ? (JSPropertyOp) obj
-                                     : NULL,
-                                     (flags & JSFUN_SETTER)
-                                     ? (JSPropertyOp) obj
-                                     : NULL,
-                                     attrs,
-                                     &prop);
-            if (!ok)
-                goto out;
             if (attrs == (JSPROP_ENUMERATE | JSPROP_PERMANENT) &&
                 script->numGlobalVars) {
                 /*
@@ -4484,8 +4496,9 @@ js_Interpret(JSContext *cx, jsval *result)
              * of the Function object clone.
              */
             SAVE_SP(fp);
-            parent = js_ConstructObject(cx, &js_ObjectClass, NULL,
-                                        fp->scopeChain, 0, NULL);
+            obj2 = fp->scopeChain;
+            parent = js_ConstructObject(cx, &js_ObjectClass, NULL, obj2,
+                                        0, NULL);
             if (!parent) {
                 ok = JS_FALSE;
                 goto out;
@@ -4504,16 +4517,25 @@ js_Interpret(JSContext *cx, jsval *result)
             }
 
             /*
+             * Protect obj from any GC hiding below OBJ_DEFINE_PROPERTY.  All
+             * paths from here must flow through the "Restore fp->scopeChain"
+             * code below the OBJ_DEFINE_PROPERTY call.
+             */
+            fp->scopeChain = obj;
+            rval = OBJECT_TO_JSVAL(obj);
+
+            /*
              * 4. Create a property in the object Result(1).  The property's
              * name is [fun->atom, the identifier parsed by the compiler],
              * value is Result(3), and attributes are { DontDelete, ReadOnly }.
              */
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
-            if (attrs)
+            if (attrs) {
                 attrs |= JSPROP_SHARED;
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom),
-                                     attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
+                rval = JSVAL_VOID;
+            }
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
                                      (attrs & JSFUN_GETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
@@ -4524,6 +4546,9 @@ js_Interpret(JSContext *cx, jsval *result)
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                      JSPROP_READONLY,
                                      NULL);
+
+            /* Restore fp->scopeChain now that obj is defined in parent. */
+            fp->scopeChain = obj2;
             if (!ok) {
                 cx->newborn[GCX_OBJECT] = NULL;
                 goto out;
@@ -4561,14 +4586,22 @@ js_Interpret(JSContext *cx, jsval *result)
              * well-scoped function object.
              */
             SAVE_SP(fp);
-            parent = fp->scopeChain;
-            if (OBJ_GET_PARENT(cx, obj) != parent) {
-                obj = js_CloneFunctionObject(cx, obj, parent);
+            obj2 = fp->scopeChain;
+            if (OBJ_GET_PARENT(cx, obj) != obj2) {
+                obj = js_CloneFunctionObject(cx, obj, obj2);
                 if (!obj) {
                     ok = JS_FALSE;
                     goto out;
                 }
             }
+
+            /*
+             * Protect obj from any GC hiding below OBJ_DEFINE_PROPERTY.  All
+             * paths from here must flow through the "Restore fp->scopeChain"
+             * code below the OBJ_DEFINE_PROPERTY call.
+             */
+            fp->scopeChain = obj;
+            rval = OBJECT_TO_JSVAL(obj);
 
             /*
              * Make a property in fp->varobj with id fun->atom and value obj,
@@ -4577,11 +4610,12 @@ js_Interpret(JSContext *cx, jsval *result)
              */
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
-            if (attrs)
+            if (attrs) {
                 attrs |= JSPROP_SHARED;
+                rval = JSVAL_VOID;
+            }
             parent = fp->varobj;
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom),
-                                     attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom), rval,
                                      (attrs & JSFUN_GETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
@@ -4591,10 +4625,14 @@ js_Interpret(JSContext *cx, jsval *result)
                                      attrs | JSPROP_ENUMERATE
                                            | JSPROP_PERMANENT,
                                      &prop);
+
+            /* Restore fp->scopeChain now that obj is defined in fp->varobj. */
+            fp->scopeChain = obj2;
             if (!ok) {
                 cx->newborn[GCX_OBJECT] = NULL;
                 goto out;
             }
+
             if (attrs == 0 && script->numGlobalVars) {
                 /*
                  * As with JSOP_DEFVAR and JSOP_DEFCONST (above), fast globals
@@ -4860,16 +4898,16 @@ js_Interpret(JSContext *cx, jsval *result)
             goto out;
 
           case JSOP_INITCATCHVAR:
-            /* Pop the property's value into rval. */
+            /* Load the value into rval, while keeping it live on stack. */
             JS_ASSERT(sp - fp->spbase >= 2);
-            rval = POP_OPND();
+            rval = FETCH_OPND(-1);
 
             /* Get the immediate catch variable name into id. */
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
 
             /* Find the object being initialized at top of stack. */
-            lval = FETCH_OPND(-1);
+            lval = FETCH_OPND(-2);
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
             obj = JSVAL_TO_OBJECT(lval);
 
@@ -4879,6 +4917,9 @@ js_Interpret(JSContext *cx, jsval *result)
                                      JSPROP_PERMANENT, NULL);
             if (!ok)
                 goto out;
+
+            /* Now that we're done with rval, pop it. */
+            sp--;
             break;
 #endif /* JS_HAS_EXCEPTIONS */
 
