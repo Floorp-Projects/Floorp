@@ -31,7 +31,6 @@
 #include "nsCOMPtr.h"
 #include "nsRDFCID.h"
 #include "nsXULMenuListElement.h"
-#include "nsXULAtoms.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
