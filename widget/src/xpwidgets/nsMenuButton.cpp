@@ -39,7 +39,7 @@ NS_IMPL_RELEASE(nsMenuButton)
 
 
 //------------------------------------------------------------
-nsMenuButton::nsMenuButton() : nsImageButton(), nsIMenuButton()
+nsMenuButton::nsMenuButton() : nsIMenuButton(), nsImageButton()
 {
   NS_INIT_REFCNT();
 
@@ -230,8 +230,6 @@ nsresult nsMenuButton::SetBounds(const nsRect &aBounds)
 nsEventStatus nsMenuButton::OnPaint(nsIRenderingContext& aRenderingContext,
                                        const nsRect& aDirtyRect)
 {
-  const int kNumPolyPoints = 3;    // the drop-triangle poly has 3 points
-  
   // draw the button, as normal
   nsEventStatus rv = nsImageButton::OnPaint(aRenderingContext, aDirtyRect);
   
