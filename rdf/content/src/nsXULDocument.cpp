@@ -273,7 +273,7 @@ public:
             }
         }
 
-        NS_ERROR("attempt to remove an element that was never added");
+       // NS_ERROR("attempt to remove an element that was never added");
         return NS_ERROR_ILLEGAL_VALUE;
     }
 
