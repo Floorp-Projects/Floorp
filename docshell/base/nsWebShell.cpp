@@ -123,6 +123,7 @@ typedef unsigned long HMTX;
 #include "nsISelectionController.h"
 #include "nsIFileStream.h"
 #include "nsISHistoryInternal.h"
+#include "nsIHistoryEntry.h"
 
 #include "nsIHttpChannel.h" // add this to the ick include list...we need it to QI for post data interface
 #include "nsIUploadChannel.h"

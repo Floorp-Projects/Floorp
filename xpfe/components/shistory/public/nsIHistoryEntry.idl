@@ -37,28 +37,45 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * The interface to nsIHistoryEntry. Each document or subframe in 
- * Session History will have a nsIHistoryEntry associated with it which will
- * hold only public information like URI and title for that document.
- * More information like post data layout data are held in the private 
- * interface nsISHEntry
+ * An interface to individual entries in session history. Each 
+ * document or frame will have a nsIHistoryEntry associated with 
+ * it. nsIHistoryEntry provides access to information like URI, 
+ * title and frame traversal status for that document.
+ * This interface is accessible from javascript.
+ * 
  * @status FROZEN
- * @version 1.0
  */
 #include "nsISupports.idl"
-#include "nsIURI.idl"
+
+interface nsIURI;
 
 [scriptable, uuid(A41661D4-1417-11D5-9882-00C04FA02F40)]
 interface nsIHistoryEntry : nsISupports 
 {
 
-/** URI for the document */
+/** 
+ * A readonly property that returns the URI
+ * of the current entry. The object returned is
+ * of type nsIURI
+ */
 readonly attribute nsIURI URI;
 
-/** Title for the document */
+/** 
+ * A readonly property that returns the title
+ * of the current entry.  The object returned
+ * is a encoded string
+ */
 readonly attribute wstring title;
 
-/** Flag that indicates if the entry is for a subframe navigation */
+/** 
+ * A readonly property that returns a boolean
+ * flag which indicates if the entry was created as a 
+ * result of a subframe navigation. This flag will be
+ * 'false' when a frameset page is visited for
+ * the first time. This flag will be 'true' for all
+ * history entries created as a result of a subframe
+ * navigation.
+ */
 readonly attribute boolean isSubFrame;
 
 };
