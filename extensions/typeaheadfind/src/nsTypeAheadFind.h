@@ -65,7 +65,12 @@
 #define TYPEAHEADFIND_BUNDLE_URL \
         "chrome://typeaheadfind/locale/typeaheadfind.properties"
 
-enum { eRepeatingNone, eRepeatingChar, eRepeatingForward, eRepeatingReverse}; 
+enum {
+  eRepeatingNone,
+  eRepeatingChar,
+  eRepeatingForward,
+  eRepeatingReverse
+}; 
 
 class nsTypeAheadFind : public nsITypeAheadFind,
                         public nsIDOMFocusListener,
@@ -87,9 +92,8 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSITYPEAHEADFIND
   NS_DECL_NSIOBSERVER
-
-  // ----- nsIDOMEventListener --------------------------
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+  NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSISELECTIONLISTENER
 
   // ----- nsIDOMFocusListener --------------------------
   NS_IMETHOD Focus(nsIDOMEvent* aEvent);
@@ -100,17 +104,13 @@ public:
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
 
-  // ----- nsIDOMKeyListener ----------------------------
+  // ----- nsIScrollPositionListener --------------------
   NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, 
                                       nscoord aX, nscoord aY);
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, 
                                      nscoord aX, nscoord aY);
 
-  // ----- nsISelectionListener -------------------------
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel,
-                                    short aReason);
-
-  // ----- nsITimerCallback ------------------------------------
+  // ----- nsITimerCallback -----------------------------
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 
   static nsTypeAheadFind *GetInstance();
@@ -160,13 +160,13 @@ protected:
 
   // Current find state
   nsString mTypeAheadBuffer;
-  PRBool mLinksOnlyPref;
-  PRBool mStartLinksOnlyPref;
-  PRBool mLinksOnly;
-  PRBool mIsTypeAheadOn;
-  PRBool mCaretBrowsingOn;
-  PRBool mLiteralTextSearchOnly;
-  PRBool mDontTryExactMatch;
+  PRPackedBool mLinksOnlyPref;
+  PRPackedBool mStartLinksOnlyPref;
+  PRPackedBool mLinksOnly;
+  PRPackedBool mIsTypeAheadOn;
+  PRPackedBool mCaretBrowsingOn;
+  PRPackedBool mLiteralTextSearchOnly;
+  PRPackedBool mDontTryExactMatch;
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
 
