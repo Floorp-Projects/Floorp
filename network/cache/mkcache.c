@@ -39,6 +39,8 @@
 #include "secnav.h"
 #include "mcom_db.h"
 #include "prclist.h"
+#include "prmem.h"
+#include "plstr.h"
 
 #include "mkextcac.h"
 #include "fileurl.h"

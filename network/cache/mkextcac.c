@@ -33,6 +33,8 @@
 #include "secnav.h"
 #include "extcache.h"
 #include "mkextcac.h"
+#include "prmem.h"
+#include "plstr.h"
 
 /* For 197 java hookup */
 #include "jri.h"

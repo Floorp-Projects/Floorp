@@ -41,6 +41,8 @@
 #include "mkmemcac.h"
 #include "libimg.h"             /* Image Lib public API. */
 #include "prclist.h"
+#include "prmem.h"
+#include "plstr.h"
 #include "shist.h"
 #include "secnav.h"
 
