@@ -186,3 +186,9 @@ nsEventStatus nsXULCommand::MenuSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eConsumeNoDefault;
 }
 
+nsEventStatus nsXULCommand::MenuDeselected(const nsMenuEvent & aMenuEvent)
+{
+  DoCommand();
+  return nsEventStatus_eConsumeNoDefault;
+}
+
