@@ -39,8 +39,23 @@ nsMenuManager :: ~nsMenuManager()
 {
   NS_IF_RELEASE(mMenuBar);
 
-  if (mMenuContainers != nsnull) 
-  {
+  if (mMenuContainers != nsnull) {
+
+	  nsIIterator * iterator;
+
+	  mMenuContainers->CreateIterator(&iterator);
+	  iterator->Init();
+
+    nsISupports * item;
+
+	  while(!(iterator->IsDone()))
+	  {
+		  item = (nsISupports *) iterator->CurrentItem();
+		  NS_RELEASE(item);
+		  iterator->Next();
+	  }
+	  NS_RELEASE(iterator);
+
     mMenuContainers->RemoveAll();
     NS_RELEASE(mMenuContainers);
   }
@@ -69,6 +84,7 @@ nsresult nsMenuManager :: Init()
 
 nsresult nsMenuManager :: SetMenuBar(nsIXPFCMenuBar * aMenuBar)
 {
+  NS_IF_RELEASE(mMenuBar);
   mMenuBar = aMenuBar;
   NS_ADDREF(mMenuBar);
   return NS_OK ;
@@ -93,6 +109,7 @@ nsresult nsMenuManager :: SetDefaultReceiver(nsIXPFCCommandReceiver * aReceiver)
 nsresult nsMenuManager::AddMenuContainer(nsIXPFCMenuContainer * aMenuContainer)
 {
   mMenuContainers->Append(aMenuContainer);
+  NS_ADDREF(aMenuContainer);
   return NS_OK;
 }
 

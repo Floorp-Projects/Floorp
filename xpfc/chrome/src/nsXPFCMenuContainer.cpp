@@ -44,6 +44,26 @@ nsXPFCMenuContainer::nsXPFCMenuContainer() : nsXPFCMenuItem()
 
 nsXPFCMenuContainer::~nsXPFCMenuContainer()
 {
+  if (mChildMenus != nsnull) {
+
+	  nsIIterator * iterator;
+
+	  mChildMenus->CreateIterator(&iterator);
+	  iterator->Init();
+
+    nsISupports * item;
+
+	  while(!(iterator->IsDone()))
+	  {
+		  item = (nsISupports *) iterator->CurrentItem();
+		  NS_RELEASE(item);
+		  iterator->Next();
+	  }
+	  NS_RELEASE(iterator);
+
+    mChildMenus->RemoveAll();
+    NS_RELEASE(mChildMenus);
+  }
 }
 
 NS_DEFINE_IID(kIXPFCMenuContainerIID, NS_IXPFCMENUCONTAINER_IID);
@@ -124,6 +144,8 @@ nsresult nsXPFCMenuContainer :: AddMenuItem(nsIXPFCMenuItem * aMenuItem)
 
 nsresult nsXPFCMenuContainer :: AddChild(nsIXPFCMenuItem * aItem)
 {
+  NS_ADDREF(aItem);
+
   mChildMenus->Append(aItem);
 
   aItem->SetParent(this);
