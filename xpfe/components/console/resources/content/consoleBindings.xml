@@ -369,7 +369,7 @@
     </content>
 
     <handlers>
-      <handler event="click"><![CDATA[
+      <handler event="click" button="0"><![CDATA[
           var url = this.getAttribute("url");
           var line = getAttribute("line");  
           window.openDialog(
