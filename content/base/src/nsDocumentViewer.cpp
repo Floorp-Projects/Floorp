@@ -376,7 +376,7 @@ NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 // Note: operator new zeros our memory
 DocumentViewerImpl::DocumentViewerImpl()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mEnableRendering = PR_TRUE;
   mFilePointer = nsnull;
   mPrintListener = nsnull;
@@ -385,7 +385,7 @@ DocumentViewerImpl::DocumentViewerImpl()
 DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   : mPresContext(dont_QueryInterface(aPresContext))
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mHintCharsetSource = kCharsetUninitialized;
   mAllowPlugins = PR_TRUE;
   mEnableRendering = PR_TRUE;
@@ -393,100 +393,24 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
 
 }
 
-// ISupports implementation...
-NS_IMPL_ADDREF(DocumentViewerImpl)
-NS_IMPL_RELEASE(DocumentViewerImpl)
-
-nsresult
-DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIContentViewer))) {
-    nsIContentViewer* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDocumentViewer))) {
-    nsIDocumentViewer* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIMarkupDocumentViewer))) {
-    nsIMarkupDocumentViewer* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIContentViewerFile))) {
-    nsIContentViewerFile* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIContentViewerEdit))) {
-    nsIContentViewerEdit* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    nsIContentViewer* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS5(DocumentViewerImpl,
+                   nsIContentViewer,
+                   nsIDocumentViewer,
+                   nsIMarkupDocumentViewer,
+                   nsIContentViewerFile,
+                   nsIContentViewerEdit)
 
 DocumentViewerImpl::~DocumentViewerImpl()
 {
-  nsresult rv;
+  NS_ASSERTION(!mDocument, "User did not call nsIContentViewer::Destroy");
+  if (mDocument)
+    Destroy();
 
-  if (mDocument) {
-    // Break global object circular reference on the document created
-    // in the DocViewer Init
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-    if (globalObject) {
-      globalObject->SetNewDocument(nsnull);
-    }
-    // out of band cleanup of webshell
-    mDocument->SetScriptGlobalObject(nsnull);
-    if (mFocusListener) {
-      // get the DOM event receiver
-      nsCOMPtr<nsIDOMEventReceiver> erP;
-      rv = mDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
-      if(NS_SUCCEEDED(rv) && erP)
-        erP->RemoveEventListenerByIID(mFocusListener, NS_GET_IID(nsIDOMFocusListener));
-    }
- }
-
+  // clear weak references before we go away
   if (mPresContext) {
     mPresContext->SetContainer(nsnull);
     mPresContext->SetLinkHandler(nsnull);
   }
-
-  if (mDeviceContext)
-    mDeviceContext->FlushFontCache();
-
-  if (mPresShell) {
-    // Break circular reference (or something)
-    mPresShell->EndObservingDocument();
-    nsCOMPtr<nsISelection> selection;
-    rv = GetDocumentSelection(getter_AddRefs(selection));
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
-    if (NS_FAILED(rv) || !selPrivate) 
-      return;
-    if (mSelectionListener)
-      selPrivate->RemoveSelectionListener(mSelectionListener);
-  }
-  
 }
 
 /*
@@ -535,10 +459,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                          const nsRect& aBounds)
 {
   nsresult rv;
-
-  if (!mDocument) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
 
   mDeviceContext = dont_QueryInterface(aDeviceContext);
 
@@ -689,13 +610,12 @@ NS_IMETHODIMP
 DocumentViewerImpl::LoadComplete(nsresult aStatus)
 {
   nsresult rv = NS_OK;
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIScriptGlobalObject> global;
 
   // First, get the script global object from the document...
-  if (mDocument) {
-    rv = mDocument->GetScriptGlobalObject(getter_AddRefs(global));
-  }
+  rv = mDocument->GetScriptGlobalObject(getter_AddRefs(global));
 
   // Fail if no ScriptGlobalObject is available...
   NS_ASSERTION(global, "nsIScriptGlobalObject not set for document!");
@@ -718,14 +638,56 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-DocumentViewerImpl::Destroy(void)
+DocumentViewerImpl::Destroy()
 {
-  return NS_ERROR_FAILURE;
+  // All callers are supposed to call destroy to break circular
+  // references.  If we do this stuff in the destructor, the
+  // destructor might never be called (especially if we're being
+  // used from JS.
+
+  nsresult rv;
+
+  if (mDocument) {
+    // Break global object circular reference on the document created
+    // in the DocViewer Init
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+    if (globalObject) {
+      globalObject->SetNewDocument(nsnull);
+    }
+    // out of band cleanup of webshell
+    mDocument->SetScriptGlobalObject(nsnull);
+    if (mFocusListener) {
+      // get the DOM event receiver
+      nsCOMPtr<nsIDOMEventReceiver> erP;
+      rv = mDocument->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP));
+      if(NS_SUCCEEDED(rv) && erP)
+        erP->RemoveEventListenerByIID(mFocusListener, NS_GET_IID(nsIDOMFocusListener));
+    }
+ }
+
+  if (mDeviceContext)
+    mDeviceContext->FlushFontCache();
+
+  if (mPresShell) {
+    // Break circular reference (or something)
+    mPresShell->EndObservingDocument();
+    nsCOMPtr<nsISelection> selection;
+    rv = GetDocumentSelection(getter_AddRefs(selection));
+    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
+    if (NS_SUCCEEDED(rv) && selPrivate && mSelectionListener) 
+      selPrivate->RemoveSelectionListener(mSelectionListener);
+  }
+  
+  mDocument = nsnull;
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 DocumentViewerImpl::Stop(void)
 {
+  NS_ASSERTION(mDocument, "Stop called too early or too late");
   if (mDocument) {
     mDocument->StopDocumentLoad();
   }
@@ -740,6 +702,7 @@ DocumentViewerImpl::Stop(void)
 NS_IMETHODIMP
 DocumentViewerImpl::GetDOMDocument(nsIDOMDocument **aResult)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   return CallQueryInterface(mDocument.get(), aResult);
 }
 
@@ -846,6 +809,7 @@ DocumentViewerImpl::GetPresContext(nsIPresContext*& aResult)
 NS_IMETHODIMP
 DocumentViewerImpl::GetBounds(nsRect& aResult)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(mWindow, "null window");
   if (mWindow) {
     mWindow->GetBounds(aResult);
@@ -859,6 +823,7 @@ DocumentViewerImpl::GetBounds(nsRect& aResult)
 NS_IMETHODIMP
 DocumentViewerImpl::SetBounds(const nsRect& aBounds)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(mWindow, "null window");
   if (mWindow) {
     // Don't have the widget repaint. Layout will generate repaint requests
@@ -872,6 +837,7 @@ DocumentViewerImpl::SetBounds(const nsRect& aBounds)
 NS_IMETHODIMP
 DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(mWindow, "null window");
   if (mWindow) {
     mWindow->Move(aX, aY);
@@ -882,6 +848,7 @@ DocumentViewerImpl::Move(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP
 DocumentViewerImpl::Show(void)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(mWindow, "null window");
   if (mWindow) {
     mWindow->Show(PR_TRUE);
@@ -892,6 +859,7 @@ DocumentViewerImpl::Show(void)
 NS_IMETHODIMP
 DocumentViewerImpl::Hide(void)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(mWindow, "null window");
   if (mWindow) {
     mWindow->Show(PR_FALSE);
@@ -1812,6 +1780,7 @@ void DocumentViewerImpl::Notify(nsIImageGroup *aImageGroup,
 NS_IMETHODIMP
 DocumentViewerImpl::SetEnableRendering(PRBool aOn)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   mEnableRendering = aOn;
   if (mViewManager) {
     if (aOn) {
@@ -1832,6 +1801,7 @@ DocumentViewerImpl::SetEnableRendering(PRBool aOn)
 NS_IMETHODIMP
 DocumentViewerImpl::GetEnableRendering(PRBool* aResult)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(nsnull != aResult, "null OUT ptr");
   if (aResult) {
     *aResult = mEnableRendering;
@@ -2606,6 +2576,7 @@ DocumentViewerImpl::GetPrintable(PRBool *aPrintable)
 NS_IMETHODIMP DocumentViewerImpl::ScrollToNode(nsIDOMNode* aNode)
 {
    NS_ENSURE_ARG(aNode);
+   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
    nsCOMPtr<nsIPresShell> presShell;
    NS_ENSURE_SUCCESS(GetPresShell(*(getter_AddRefs(presShell))), NS_ERROR_FAILURE);
 
@@ -2844,6 +2815,8 @@ NS_IMETHODIMP DocumentViewerImpl::SetHintCharacterSet(const PRUnichar* aHintChar
 
 NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 {
+   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
+
    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mContainer));
    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
