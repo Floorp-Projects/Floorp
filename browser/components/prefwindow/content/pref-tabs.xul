@@ -39,7 +39,7 @@
     var _elementIDs = ["tabStrip", "tabBackground", "middleClick", "urlBar"];
   ]]>
   </script>
-  <groupbox id="generalTabPreferences" align="start">
+  <groupbox id="generalTabPreferences">
     <caption label="&tabDisplay.label;"/>
     <checkbox id="tabStrip"
               label="&autoHide.label;" 
@@ -49,7 +49,7 @@
               prefstring="browser.tabs.loadInBackground"/>
   </groupbox>
 
-  <groupbox id="useTabPreferences" align="start">
+  <groupbox id="useTabPreferences">
     <caption label="&openTabs.label;"/>
       <checkbox id="middleClick"
                 label="&middleClick.label;" 
