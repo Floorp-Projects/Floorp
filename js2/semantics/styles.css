@@ -1,0 +1,64 @@
+.title1 {font-family: "Times New Roman", Times, serif; font-size: 36pt; font-weight: bold; color: #000000; white-space: nowrap}
+
+.title2 {font-family: "Times New Roman", Times, serif; font-size: 18pt; font-weight: bold; color: #000000; white-space: nowrap}
+
+.top-title {color: #009900}
+
+.sub {font-size: 50%}
+
+.sub-num {font-size: smaller; font-style: normal}
+
+.syntax {margin-left: 0.5in}
+
+.issue {color: #FF0000}
+
+
+
+.grammar-rule {margin-left: 18pt; margin-top: 6pt; margin-bottom: 6pt}
+
+.grammar-lhs {}
+
+.grammar-rhs {margin-left: 9pt;}
+
+.grammar-argument {margin-left: 18pt; margin-top: 6pt; margin-bottom: 6pt}
+
+.semantics {margin-left: 9pt; margin-top: 3pt; margin-bottom: 3pt}
+
+.semantics-next {margin-left: 27pt; margin-bottom: 3pt}
+
+
+
+.symbol {font-family: "Symbol"}
+
+VAR {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: normal; font-style: italic}
+
+CODE {font-family: "Courier New", Courier, mono; color: #0000FF}
+
+PRE {font-family: "Courier New", Courier, mono; color: #0000FF; margin-left: 0.5in}
+
+.control {font-family: "Times New Roman", Times, serif; font-weight: normal; color: #000099}
+
+.terminal {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: bold; color: #009999}
+
+.terminal-keyword {font-weight: bold}
+
+.nonterminal {color: #009900}
+
+.nonterminal-attribute {font-style: normal}
+
+.nonterminal-argument {font-style: normal}
+
+.semantic-keyword {font-family: "Times New Roman", Times, serif; font-weight: bold}
+
+.type-expression {font-family: "Times New Roman", Times, serif; color: #CC0000}
+
+.type-name {font-family: "Times New Roman", Times, serif; font-variant: small-caps; color: #CC0000}
+
+.field-name {font-family: Arial, Helvetica, sans-serif; color: #FF0000}
+
+.global-variable {font-family: "Times New Roman", Times, serif; color: #006600}
+
+.local-variable {font-family: "Times New Roman", Times, serif; color: #009900}
+
+.action-name {font-family: "Zapf Chancery", "Comic Sans MS", Script, serif; color: #660066}
+

@@ -1,0 +1,1860 @@
+{\rtf1\mac\ansicpg10000\uc1\deff0\deflang2057\deflangfe2057
+{\fonttbl{\f0\froman\fcharset256\fprq2{\*\panose 02020603050405020304}Times New Roman;}
+{\f3\ftech\fcharset2\fprq2 Symbol;}{\f4\fnil\fcharset256\fprq2 Helvetica;}
+{\f5\fmodern\fcharset256\fprq2 Courier New;}{\f6\fnil\fcharset256\fprq2 Palatino;}
+{\f7\fscript\fcharset256\fprq2 Zapf Chancery;}{\f8\ftech\fcharset2\fprq2 Zapf Dingbats;}}
+{\colortbl;\red0\green0\blue0;\red0\green0\blue255;\red0\green255\blue255;\red0\green255\blue0;
+\red255\green0\blue255;\red255\green0\blue0;\red255\green255\blue0;\red255\green255\blue255;\red0
+\green0\blue128;\red0\green128\blue128;\red0\green128\blue0;\red128\green0\blue128;\red128\green0
+\blue0;\red128\green128\blue0;\red128\green128\blue128;\red192\green192\blue192;}
+{\stylesheet{\widctlpar\fs20\lang2057\snext0 Normal;}
+{\s1\qj\sa120\widctlpar\fs20\lang2057\sbasedon0\snext1 Body Text;}
+{\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057\sbasedon3\snext1 heading 3;}
+{\s3\sa30\keep\keepn\nowidctlpar\hyphpar0\level4\b\fs20\lang2057\sbasedon0\snext1 heading 4;}
+{\s10\nowidctlpar\hyphpar0\fs20\lang1024\sbasedon0\snext10 Grammar;}
+{\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057\sbasedon0\snext12 Grammar Header;}
+{\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024\sbasedon10
+\snext14 Grammar LHS;}
+{\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024\sbasedon10
+\snext12 Grammar LHS Last;}
+{\s14\fi-1260\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\sbasedon10\snext14 Grammar 
+RHS;}
+{\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024\sbasedon14\snext12 Grammar 
+RHS Last;}
+{\s16\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024\sbasedon10
+\snext12 Grammar Argument;}
+{\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024\sbasedon0\snext20 Semantics;}
+{\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024\sbasedon20\snext21 Semantics Next;}
+{\*\cs30\additive Default Paragraph Font;}
+{\*\cs31\b\f5\cf2\lang1024\additive\sbasedon30 Character Literal;}
+{\*\cs32\b0\f0\cf9\additive\sbasedon30 Character Literal Control;}
+{\*\cs33\b\f6\cf10\lang1024\additive\sbasedon30 Terminal;}
+{\*\cs34\b\f5\cf2\lang1024\additive\sbasedon33 Terminal Keyword;}
+{\*\cs35\i\f6\cf13\lang1024\additive\sbasedon30 Nonterminal;}
+{\*\cs36\i0\additive\sbasedon30 Nonterminal Attribute;}
+{\*\cs37\additive\sbasedon30 Nonterminal Argument;}
+{\*\cs40\b\f0\additive\sbasedon30 Semantic Keyword;}
+{\*\cs41\f0\cf6\lang1024\additive\sbasedon30 Type Expression;}
+{\*\cs42\scaps\f0\cf6\lang1024\additive\sbasedon41 Type Name;}
+{\*\cs43\f4\cf6\lang1024\additive\sbasedon41 Field Name;}
+{\*\cs44\i\f0\cf11\lang1024\additive\sbasedon30 Global Variable;}
+{\*\cs45\i\f0\cf4\lang1024\additive\sbasedon30 Local Variable;}
+{\*\cs46\f7\cf12\lang1024\additive\sbasedon30 Action Name;}}
+\widowctrl\ftnbj\aenddoc\fet0\formshade\viewkind4\viewscale125\pgbrdrhead\pgbrdrfoot\sectd\pard
+\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Types\par\pard\plain\s11\sb60
+\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 Value}\line   = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{\line            {\cs43\f4\cf6\lang1024 undefinedValue};
+\line            {\cs43\f4\cf6\lang1024 nullValue};\line            
+{\cs43\f4\cf6\lang1024 booleanValue}: {\cs42\scaps\f0\cf6\lang1024 Boolean};\line            
+{\cs43\f4\cf6\lang1024 doubleValue}: {\cs42\scaps\f0\cf6\lang1024 Double};\line            
+{\cs43\f4\cf6\lang1024 stringValue}: {\cs42\scaps\f0\cf6\lang1024 String};\line            
+{\cs43\f4\cf6\lang1024 objectValue}: {\cs42\scaps\f0\cf6\lang1024 Object}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 ObjectOrNull} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 nullObjectOrNull}; 
+{\cs43\f4\cf6\lang1024 objectObjectOrNull}: {\cs42\scaps\f0\cf6\lang1024 Object}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 Object}\line   = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 tuple} \{\line            {\cs43\f4\cf6\lang1024 properties}: 
+{\cs42\scaps\f0\cf6\lang1024 Property}[]
+{\field{\*\fldinst SYMBOL 173 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}};\line            
+{\cs43\f4\cf6\lang1024 typeofName}: {\cs42\scaps\f0\cf6\lang1024 String};\line            
+{\cs43\f4\cf6\lang1024 prototype}: {\cs42\scaps\f0\cf6\lang1024 ObjectOrNull};\line            
+{\cs43\f4\cf6\lang1024 get}: {\cs42\scaps\f0\cf6\lang1024 PropName} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 ValueOrException};\line            {\cs43\f4\cf6\lang1024 put}: 
+{\cs42\scaps\f0\cf6\lang1024 PropName} 
+{\field{\*\fldinst SYMBOL 180 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 Value} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 VoidOrException};\line            {\cs43\f4\cf6\lang1024 delete}: 
+{\cs42\scaps\f0\cf6\lang1024 PropName} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 BooleanOrException};\line            {\cs43\f4\cf6\lang1024 call}: 
+{\cs42\scaps\f0\cf6\lang1024 ObjectOrNull} 
+{\field{\*\fldinst SYMBOL 180 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 Value}[] 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 ReferenceOrException};\line            
+{\cs43\f4\cf6\lang1024 construct}: {\cs42\scaps\f0\cf6\lang1024 Value}[] 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 ObjectOrException};\line            
+{\cs43\f4\cf6\lang1024 defaultValue}: {\cs42\scaps\f0\cf6\lang1024 DefaultValueHint} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 ValueOrException}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 DefaultValueHint} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 noHint}; 
+{\cs43\f4\cf6\lang1024 numberHint}; {\cs43\f4\cf6\lang1024 stringHint}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 Property}\line   = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 tuple} \{\line            {\cs43\f4\cf6\lang1024 name}: 
+{\cs42\scaps\f0\cf6\lang1024 String};\line            {\cs43\f4\cf6\lang1024 readOnly}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean};\line            {\cs43\f4\cf6\lang1024 enumerable}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean};\line            {\cs43\f4\cf6\lang1024 permanent}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean};\line            {\cs43\f4\cf6\lang1024 value}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}
+{\field{\*\fldinst SYMBOL 173 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 PropName} = {\cs42\scaps\f0\cf6\lang1024 String}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 Place} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 tuple} \{{\cs43\f4\cf6\lang1024 base}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}; {\cs43\f4\cf6\lang1024 property}: 
+{\cs42\scaps\f0\cf6\lang1024 PropName}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 Reference}\line   = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 valueReference}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}; {\cs43\f4\cf6\lang1024 placeReference}: 
+{\cs42\scaps\f0\cf6\lang1024 Place}; {\cs43\f4\cf6\lang1024 virtualReference}: 
+{\cs42\scaps\f0\cf6\lang1024 PropName}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 IntegerOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}: 
+{\cs42\scaps\f0\cf6\lang1024 Integer}; {\cs43\f4\cf6\lang1024 abrupt}: 
+{\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 VoidOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}; 
+{\cs43\f4\cf6\lang1024 abrupt}: {\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 BooleanOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}; {\cs43\f4\cf6\lang1024 abrupt}: 
+{\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 DoubleOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}: 
+{\cs42\scaps\f0\cf6\lang1024 Double}; {\cs43\f4\cf6\lang1024 abrupt}: 
+{\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 StringOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}: 
+{\cs42\scaps\f0\cf6\lang1024 String}; {\cs43\f4\cf6\lang1024 abrupt}: 
+{\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 ObjectOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}; {\cs43\f4\cf6\lang1024 abrupt}: 
+{\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 ValueOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}; {\cs43\f4\cf6\lang1024 abrupt}: 
+{\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 ReferenceOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}: 
+{\cs42\scaps\f0\cf6\lang1024 Reference}; {\cs43\f4\cf6\lang1024 abrupt}: 
+{\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 ValueListOrException} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 normal}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}[]; {\cs43\f4\cf6\lang1024 abrupt}: 
+{\cs42\scaps\f0\cf6\lang1024 Exception}\}}
+\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Helper Functions\par
+\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20
+\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024
+{\cs44\i\f0\cf11\lang1024 objectOrNullToValue}({\cs45\i\f0\cf4\lang1024 o}: 
+{\cs42\scaps\f0\cf6\lang1024 ObjectOrNull}) : {\cs42\scaps\f0\cf6\lang1024 Value}\line   = 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 o} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 nullObjectOrNull}: {\cs43\f4\cf6\lang1024 nullValue};\line         
+{\cs43\f4\cf6\lang1024 objectObjectOrNull}({\cs45\i\f0\cf4\lang1024 obj}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}): {\cs43\f4\cf6\lang1024 objectValue} 
+{\cs45\i\f0\cf4\lang1024 obj}\line         {\cs40\b\f0 end}\par
+{\cs44\i\f0\cf11\lang1024 undefinedResult} : {\cs42\scaps\f0\cf6\lang1024 ValueOrException} = 
+{\cs43\f4\cf6\lang1024 normal} {\cs43\f4\cf6\lang1024 undefinedValue}\par
+{\cs44\i\f0\cf11\lang1024 nullResult} : {\cs42\scaps\f0\cf6\lang1024 ValueOrException} = 
+{\cs43\f4\cf6\lang1024 normal} {\cs43\f4\cf6\lang1024 nullValue}\par
+{\cs44\i\f0\cf11\lang1024 booleanResult}({\cs45\i\f0\cf4\lang1024 b}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}) : {\cs42\scaps\f0\cf6\lang1024 ValueOrException} = 
+{\cs43\f4\cf6\lang1024 normal} {\cs43\f4\cf6\lang1024 booleanValue} {\cs45\i\f0\cf4\lang1024 b}\par
+{\cs44\i\f0\cf11\lang1024 doubleResult}({\cs45\i\f0\cf4\lang1024 d}: 
+{\cs42\scaps\f0\cf6\lang1024 Double}) : {\cs42\scaps\f0\cf6\lang1024 ValueOrException} = 
+{\cs43\f4\cf6\lang1024 normal} {\cs43\f4\cf6\lang1024 doubleValue} {\cs45\i\f0\cf4\lang1024 d}\par
+{\cs44\i\f0\cf11\lang1024 integerResult}({\cs45\i\f0\cf4\lang1024 i}: 
+{\cs42\scaps\f0\cf6\lang1024 Integer}) : {\cs42\scaps\f0\cf6\lang1024 ValueOrException} = 
+{\cs44\i\f0\cf11\lang1024 doubleResult}({\cs44\i\f0\cf11\lang1024 rationalToDouble}(
+{\cs45\i\f0\cf4\lang1024 i}))\par{\cs44\i\f0\cf11\lang1024 stringResult}({\cs45\i\f0\cf4\lang1024 s}
+: {\cs42\scaps\f0\cf6\lang1024 String}) : {\cs42\scaps\f0\cf6\lang1024 ValueOrException} = 
+{\cs43\f4\cf6\lang1024 normal} {\cs43\f4\cf6\lang1024 stringValue} {\cs45\i\f0\cf4\lang1024 s}\par
+{\cs44\i\f0\cf11\lang1024 objectResult}({\cs45\i\f0\cf4\lang1024 o}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}) : {\cs42\scaps\f0\cf6\lang1024 ValueOrException} = 
+{\cs43\f4\cf6\lang1024 normal} {\cs43\f4\cf6\lang1024 objectValue} {\cs45\i\f0\cf4\lang1024 o}\par
+\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Exceptions\par\pard\plain
+\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60
+\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 type} 
+{\cs42\scaps\f0\cf6\lang1024 Exception} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{{\cs43\f4\cf6\lang1024 exception}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}; {\cs43\f4\cf6\lang1024 error}: 
+{\cs42\scaps\f0\cf6\lang1024 Error}\}}
+\par{\cs40\b\f0 type} {\cs42\scaps\f0\cf6\lang1024 Error}\line   = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 oneof} \{\line            
+{\cs43\f4\cf6\lang1024 coerceToPrimitiveError};\line            
+{\cs43\f4\cf6\lang1024 coerceToObjectError};\line            {\cs43\f4\cf6\lang1024 getValueError};
+\line            {\cs43\f4\cf6\lang1024 putValueError};\line            
+{\cs43\f4\cf6\lang1024 deleteError}\}}
+\par{\cs44\i\f0\cf11\lang1024 makeError}({\cs45\i\f0\cf4\lang1024 err}: 
+{\cs42\scaps\f0\cf6\lang1024 Error}) : {\cs42\scaps\f0\cf6\lang1024 Exception} = 
+{\cs43\f4\cf6\lang1024 error} {\cs45\i\f0\cf4\lang1024 err}\par\pard\plain\s2\sa60\keep\keepn
+\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Objects\par Conversions\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs44\i\f0\cf11\lang1024 referenceGetValue}(
+{\cs45\i\f0\cf4\lang1024 rv}: {\cs42\scaps\f0\cf6\lang1024 Reference}) : 
+{\cs42\scaps\f0\cf6\lang1024 ValueOrException}\line   = {\cs40\b\f0 case} 
+{\cs45\i\f0\cf4\lang1024 rv} {\cs40\b\f0 of}\line         {\cs43\f4\cf6\lang1024 valueReference}(
+{\cs45\i\f0\cf4\lang1024 v}: {\cs42\scaps\f0\cf6\lang1024 Value}): {\cs43\f4\cf6\lang1024 normal} 
+{\cs45\i\f0\cf4\lang1024 v};\line         {\cs43\f4\cf6\lang1024 placeReference}(
+{\cs45\i\f0\cf4\lang1024 r}: {\cs42\scaps\f0\cf6\lang1024 Place}): {\cs45\i\f0\cf4\lang1024 r}.
+{\cs43\f4\cf6\lang1024 base}.{\cs43\f4\cf6\lang1024 get}({\cs45\i\f0\cf4\lang1024 r}.
+{\cs43\f4\cf6\lang1024 property});\line         {\cs43\f4\cf6\lang1024 virtualReference}: 
+{\cs43\f4\cf6\lang1024 abrupt}{\sub\cs42\scaps\f0\cf6\lang1024 ValueOrException} 
+{\cs44\i\f0\cf11\lang1024 makeError}({\cs43\f4\cf6\lang1024 getValueError})\line         
+{\cs40\b\f0 end}\par{\cs44\i\f0\cf11\lang1024 referencePutValue}({\cs45\i\f0\cf4\lang1024 rv}: 
+{\cs42\scaps\f0\cf6\lang1024 Reference}, {\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}) : {\cs42\scaps\f0\cf6\lang1024 VoidOrException}\line   = 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 rv} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 valueReference}: {\cs43\f4\cf6\lang1024 abrupt}
+{\sub\cs42\scaps\f0\cf6\lang1024 VoidOrException} {\cs44\i\f0\cf11\lang1024 makeError}(
+{\cs43\f4\cf6\lang1024 putValueError});\line         {\cs43\f4\cf6\lang1024 placeReference}(
+{\cs45\i\f0\cf4\lang1024 r}: {\cs42\scaps\f0\cf6\lang1024 Place}): {\cs45\i\f0\cf4\lang1024 r}.
+{\cs43\f4\cf6\lang1024 base}.{\cs43\f4\cf6\lang1024 put}({\cs45\i\f0\cf4\lang1024 r}.
+{\cs43\f4\cf6\lang1024 property}, {\cs45\i\f0\cf4\lang1024 v});\line         
+{\cs43\f4\cf6\lang1024 virtualReference}: 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\line         {\cs40\b\f0 end}
+\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Coercions\par\pard
+\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180
+\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs44\i\f0\cf11\lang1024 coerceToBoolean}(
+{\cs45\i\f0\cf4\lang1024 v}: {\cs42\scaps\f0\cf6\lang1024 Value}) : 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}\line   = {\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 v} 
+{\cs40\b\f0 of}\line         {\cs43\f4\cf6\lang1024 undefinedValue}, 
+{\cs43\f4\cf6\lang1024 nullValue}: {\cs44\i\f0\cf11\lang1024 false};\line         
+{\cs43\f4\cf6\lang1024 booleanValue}({\cs45\i\f0\cf4\lang1024 b}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}): {\cs45\i\f0\cf4\lang1024 b};\line         
+{\cs43\f4\cf6\lang1024 doubleValue}({\cs45\i\f0\cf4\lang1024 d}: 
+{\cs42\scaps\f0\cf6\lang1024 Double}): {\cs40\b\f0 not} ({\cs44\i\f0\cf11\lang1024 doubleIsZero}(
+{\cs45\i\f0\cf4\lang1024 d}) {\cs40\b\f0 or} {\cs44\i\f0\cf11\lang1024 doubleIsNan}(
+{\cs45\i\f0\cf4\lang1024 d}));\line         {\cs43\f4\cf6\lang1024 stringValue}(
+{\cs45\i\f0\cf4\lang1024 s}: {\cs42\scaps\f0\cf6\lang1024 String}): 
+{\cs44\i\f0\cf11\lang1024 length}({\cs45\i\f0\cf4\lang1024 s}) \u8800\'AD 0;\line         
+{\cs43\f4\cf6\lang1024 objectValue}: {\cs44\i\f0\cf11\lang1024 true}\line         {\cs40\b\f0 end}
+\par{\cs44\i\f0\cf11\lang1024 coerceBooleanToDouble}({\cs45\i\f0\cf4\lang1024 b}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}) : {\cs42\scaps\f0\cf6\lang1024 Double}\line   = 
+{\cs40\b\f0 if} {\cs45\i\f0\cf4\lang1024 b}\line      {\cs40\b\f0 then} 1.0\line      
+{\cs40\b\f0 else} 0.0\par{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}) : {\cs42\scaps\f0\cf6\lang1024 DoubleOrException}\line   = 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 v} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}: {\cs43\f4\cf6\lang1024 normal} NaN;\line         
+{\cs43\f4\cf6\lang1024 nullValue}: {\cs43\f4\cf6\lang1024 normal} 0.0;\line         
+{\cs43\f4\cf6\lang1024 booleanValue}({\cs45\i\f0\cf4\lang1024 b}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}): {\cs43\f4\cf6\lang1024 normal} 
+{\cs44\i\f0\cf11\lang1024 coerceBooleanToDouble}({\cs45\i\f0\cf4\lang1024 b});\line         
+{\cs43\f4\cf6\lang1024 doubleValue}({\cs45\i\f0\cf4\lang1024 d}: 
+{\cs42\scaps\f0\cf6\lang1024 Double}): {\cs43\f4\cf6\lang1024 normal} {\cs45\i\f0\cf4\lang1024 d};
+\line         {\cs43\f4\cf6\lang1024 stringValue}: 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}};\line         
+{\cs43\f4\cf6\lang1024 objectValue}: 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\line         {\cs40\b\f0 end}
+\par{\cs44\i\f0\cf11\lang1024 coerceToUint32}({\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}) : {\cs42\scaps\f0\cf6\lang1024 IntegerOrException}\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 d}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 v})\line      {\cs40\b\f0 in} 
+{\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 doubleToUint32}({\cs45\i\f0\cf4\lang1024 d}
+)\par{\cs44\i\f0\cf11\lang1024 coerceToInt32}({\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}) : {\cs42\scaps\f0\cf6\lang1024 IntegerOrException}\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 d}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 v})\line      {\cs40\b\f0 in} 
+{\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 uint32ToInt32}(
+{\cs44\i\f0\cf11\lang1024 doubleToUint32}({\cs45\i\f0\cf4\lang1024 d}))\par
+{\cs44\i\f0\cf11\lang1024 uint32ToInt32}({\cs45\i\f0\cf4\lang1024 ui}: 
+{\cs42\scaps\f0\cf6\lang1024 Integer}) : {\cs42\scaps\f0\cf6\lang1024 Integer}\line   = 
+{\cs40\b\f0 if} {\cs45\i\f0\cf4\lang1024 ui} < 2147483648\line      {\cs40\b\f0 then} 
+{\cs45\i\f0\cf4\lang1024 ui}\line      {\cs40\b\f0 else} {\cs45\i\f0\cf4\lang1024 ui} \endash  42949
+67296\par{\cs44\i\f0\cf11\lang1024 coerceToString}({\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}) : {\cs42\scaps\f0\cf6\lang1024 StringOrException}\line   = 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 v} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}: {\cs43\f4\cf6\lang1024 normal} \ldblquote
+{\cs31\b\f5\cf2\lang1024 undefined}\rdblquote;\line         {\cs43\f4\cf6\lang1024 nullValue}: 
+{\cs43\f4\cf6\lang1024 normal} \ldblquote{\cs31\b\f5\cf2\lang1024 null}\rdblquote;\line         
+{\cs43\f4\cf6\lang1024 booleanValue}({\cs45\i\f0\cf4\lang1024 b}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}):\line               {\cs40\b\f0 if} 
+{\cs45\i\f0\cf4\lang1024 b}\line               {\cs40\b\f0 then} {\cs43\f4\cf6\lang1024 normal} 
+\ldblquote{\cs31\b\f5\cf2\lang1024 true}\rdblquote\line               {\cs40\b\f0 else} 
+{\cs43\f4\cf6\lang1024 normal} \ldblquote{\cs31\b\f5\cf2\lang1024 false}\rdblquote;\line         
+{\cs43\f4\cf6\lang1024 doubleValue}: 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}};\line         
+{\cs43\f4\cf6\lang1024 stringValue}({\cs45\i\f0\cf4\lang1024 s}: 
+{\cs42\scaps\f0\cf6\lang1024 String}): {\cs43\f4\cf6\lang1024 normal} {\cs45\i\f0\cf4\lang1024 s};
+\line         {\cs43\f4\cf6\lang1024 objectValue}: 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\line         {\cs40\b\f0 end}
+\par{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}, {\cs45\i\f0\cf4\lang1024 hint}: 
+{\cs42\scaps\f0\cf6\lang1024 DefaultValueHint}) : {\cs42\scaps\f0\cf6\lang1024 ValueOrException}
+\line   = {\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 v} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}, 
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 stringValue}: {\cs43\f4\cf6\lang1024 normal} {\cs45\i\f0\cf4\lang1024 v};
+\line         {\cs43\f4\cf6\lang1024 objectValue}({\cs45\i\f0\cf4\lang1024 o}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}):\line               {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 pv}: {\cs42\scaps\f0\cf6\lang1024 Value} = {\cs45\i\f0\cf4\lang1024 o}.
+{\cs43\f4\cf6\lang1024 defaultValue}({\cs45\i\f0\cf4\lang1024 hint})\line               
+{\cs40\b\f0 in} {\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 pv} {\cs40\b\f0 of}\line                 
+     {\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}, 
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 stringValue}:\line                            {\cs43\f4\cf6\lang1024 normal} 
+{\cs45\i\f0\cf4\lang1024 pv};\line                      {\cs43\f4\cf6\lang1024 objectValue}: 
+{\cs43\f4\cf6\lang1024 abrupt}{\sub\cs42\scaps\f0\cf6\lang1024 ValueOrException} 
+{\cs44\i\f0\cf11\lang1024 makeError}({\cs43\f4\cf6\lang1024 coerceToPrimitiveError})\line           
+           {\cs40\b\f0 end}\line         {\cs40\b\f0 end}\par
+{\cs44\i\f0\cf11\lang1024 coerceToObject}({\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}) : {\cs42\scaps\f0\cf6\lang1024 ObjectOrException}\line   = 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 v} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}: 
+{\cs43\f4\cf6\lang1024 abrupt}{\sub\cs42\scaps\f0\cf6\lang1024 ObjectOrException} 
+{\cs44\i\f0\cf11\lang1024 makeError}({\cs43\f4\cf6\lang1024 coerceToObjectError});\line         
+{\cs43\f4\cf6\lang1024 booleanValue}: 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}};\line         
+{\cs43\f4\cf6\lang1024 doubleValue}: 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}};\line         
+{\cs43\f4\cf6\lang1024 stringValue}: 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}};\line         
+{\cs43\f4\cf6\lang1024 objectValue}({\cs45\i\f0\cf4\lang1024 o}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}): {\cs43\f4\cf6\lang1024 normal} {\cs45\i\f0\cf4\lang1024 o}
+\line         {\cs40\b\f0 end}\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24
+\lang2057 Environments\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Seman
+tics\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 type} 
+{\cs42\scaps\f0\cf6\lang1024 Env} = 
+{\cs41\f0\cf6\lang1024{\cs40\b\f0 tuple} \{{\cs43\f4\cf6\lang1024 this}: 
+{\cs42\scaps\f0\cf6\lang1024 ObjectOrNull}\}}
+\par{\cs44\i\f0\cf11\lang1024 lookupIdentifier}({\cs45\i\f0\cf4\lang1024 e}: 
+{\cs42\scaps\f0\cf6\lang1024 Env}, {\cs45\i\f0\cf4\lang1024 id}: 
+{\cs42\scaps\f0\cf6\lang1024 String}) : {\cs42\scaps\f0\cf6\lang1024 ReferenceOrException} = 
+{\field{\*\fldinst SYMBOL 94 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s2\sa60\keep
+\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Terminal Actions\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 EvalIdentifier}[
+{\cs33\b\f6\cf10\lang1024 Identifier}] : {\cs42\scaps\f0\cf6\lang1024 String}\par{\cs40\b\f0 action}
+ {\cs46\f7\cf12\lang1024 EvalNumber}[{\cs33\b\f6\cf10\lang1024 Number}] : 
+{\cs42\scaps\f0\cf6\lang1024 Double}\par{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 EvalString}[
+{\cs33\b\f6\cf10\lang1024 String}] : {\cs42\scaps\f0\cf6\lang1024 String}\par\pard\plain\s2\sa60
+\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Primary Expressions\par\pard\plain\s11\sb60
+\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120\keep
+\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 PrimaryRvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024 this}\par|
+\tab{\cs34\b\f5\cf2\lang1024 null}\par|\tab{\cs34\b\f5\cf2\lang1024 true}\par|\tab
+{\cs34\b\f5\cf2\lang1024 false}\par|\tab{\cs33\b\f6\cf10\lang1024 Number}\par|\tab
+{\cs33\b\f6\cf10\lang1024 String}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720
+\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024(} 
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs36\i0 noLValue} {\cs34\b\f5\cf2\lang1024)}\par
+\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 PrimaryLvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs33\b\f6\cf10\lang1024 Identifier}
+\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 Lvalue} {\cs34\b\f5\cf2\lang1024)}\par\pard
+\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180
+\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 this}
+]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env}) = {\cs43\f4\cf6\lang1024 normal} 
+{\cs44\i\f0\cf11\lang1024 objectOrNullToValue}({\cs45\i\f0\cf4\lang1024 e}.
+{\cs43\f4\cf6\lang1024 this})\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 null}
+]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env}) = 
+{\cs44\i\f0\cf11\lang1024 nullResult}\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 true}
+]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env}) = 
+{\cs44\i\f0\cf11\lang1024 booleanResult}({\cs44\i\f0\cf11\lang1024 true})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 PrimaryRvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 false}]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env}) = 
+{\cs44\i\f0\cf11\lang1024 booleanResult}({\cs44\i\f0\cf11\lang1024 false})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 PrimaryRvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs33\b\f6\cf10\lang1024 Number}]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env}) =
+ {\cs44\i\f0\cf11\lang1024 doubleResult}({\cs46\f7\cf12\lang1024 EvalNumber}[
+{\cs33\b\f6\cf10\lang1024 Number}])\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs33\b\f6\cf10\lang1024 String}]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env}) =
+ {\cs44\i\f0\cf11\lang1024 stringResult}({\cs46\f7\cf12\lang1024 EvalString}[
+{\cs33\b\f6\cf10\lang1024 String}])\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024(} 
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs36\i0 noLValue} {\cs34\b\f5\cf2\lang1024)}] = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs36\i0 noLValue}]\par
+\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 PrimaryLvalue}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Re
+ferenceOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryLvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs33\b\f6\cf10\lang1024 Identifier}]({\cs45\i\f0\cf4\lang1024 e}: 
+{\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs44\i\f0\cf11\lang1024 lookupIdentifier}(
+{\cs45\i\f0\cf4\lang1024 e}, {\cs46\f7\cf12\lang1024 EvalIdentifier}[
+{\cs33\b\f6\cf10\lang1024 Identifier}])\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryLvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024(} 
+{\cs35\i\f6\cf13\lang1024 Lvalue} {\cs34\b\f5\cf2\lang1024)}] = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Lvalue}]\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b
+\fs24\lang2057 Left-Side Expressions\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20
+\lang2057 Syntax\par\pard\plain\s16\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0
+\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 206 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \{
+{\cs35\i\f6\cf13\lang1024\cs36\i0 anyValue}, {\cs35\i\f6\cf13\lang1024\cs36\i0 noLValue}\}\par
+{\cs35\i\f6\cf13\lang1024\cs37 MemberExprKind} 
+{\field{\*\fldinst SYMBOL 206 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \{
+{\cs35\i\f6\cf13\lang1024\cs36\i0 call}, {\cs35\i\f6\cf13\lang1024\cs36\i0 noCall}\}\par\pard\plain
+\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 noCall} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 PrimaryLvalue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024[} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024]}\par\pard
+\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024.} {\cs33\b\f6\cf10\lang1024 Identifier}\par\pard\plain\s12\fi-1440\li1800
+\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 call} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs35\i\f6\cf13\lang1024 Lvalue} 
+{\cs35\i\f6\cf13\lang1024 Arguments}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 noLValue} 
+{\cs35\i\f6\cf13\lang1024 Arguments}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 call},\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024[} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024]}\par\pard
+\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 call},\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024.} {\cs33\b\f6\cf10\lang1024 Identifier}\par\pard\plain\s12\fi-1440\li1800
+\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 noLValue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar
+\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 new} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 anyValue} 
+{\cs35\i\f6\cf13\lang1024 Arguments}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar
+\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 anyValue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 noCall}\par\pard\plain\s15\fi-1260\li1800\sa120
+\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024 new} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 anyValue} 
+{\cs35\i\f6\cf13\lang1024 Arguments}\par\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar
+\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 call},\cs36\i0 anyValue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 call}\par\pard\plain\s12\fi-1440\li1800\sb120
+\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 NewExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs37 ExprKind}\par\pard\plain\s15
+\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs34\b\f5\cf2\lang1024 new} {\cs35\i\f6\cf13\lang1024 NewExpression\super\cs36\i0 anyValue}\par
+\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 Arguments} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab{\cs34\b\f5\cf2\lang1024(} 
+{\cs34\b\f5\cf2\lang1024)}\par\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0
+\fs20\lang1024|\tab{\cs34\b\f5\cf2\lang1024(} {\cs35\i\f6\cf13\lang1024 ArgumentList} 
+{\cs34\b\f5\cf2\lang1024)}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0
+\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 ArgumentList} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 ArgumentList} {\cs34\b\f5\cf2\lang1024,} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 Lvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 call}\par\pard\plain\s15\fi-1260\li1800\sa120
+\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 noCall}\par\pard\plain\s11\sb60\keep\keepn
+\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar
+\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs37 MemberExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Re
+ferenceOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 noCall} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 PrimaryLvalue}] = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryLvalue}]\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 call} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 Lvalue} {\cs35\i\f6\cf13\lang1024 Arguments}]({\cs45\i\f0\cf4\lang1024 e}:
+ {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 functionReference}: {\cs42\scaps\f0\cf6\lang1024 Reference} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e})\line  
+    {\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 function}: 
+{\cs42\scaps\f0\cf6\lang1024 Value} = {\cs44\i\f0\cf11\lang1024 referenceGetValue}(
+{\cs45\i\f0\cf4\lang1024 functionReference})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 arguments}: {\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Value}[]} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Arguments}]({\cs45\i\f0\cf4\lang1024 e})
+\line      {\cs40\b\f0 in} {\cs40\b\f0 let} {\cs45\i\f0\cf4\lang1024 this}: 
+{\cs42\scaps\f0\cf6\lang1024 ObjectOrNull}\line              = {\cs40\b\f0 case} 
+{\cs45\i\f0\cf4\lang1024 functionReference} {\cs40\b\f0 of}\line                    
+{\cs43\f4\cf6\lang1024 valueReference}, {\cs43\f4\cf6\lang1024 virtualReference}: 
+{\cs43\f4\cf6\lang1024 nullObjectOrNull};\line                    
+{\cs43\f4\cf6\lang1024 placeReference}({\cs45\i\f0\cf4\lang1024 p}: 
+{\cs42\scaps\f0\cf6\lang1024 Place}): {\cs43\f4\cf6\lang1024 objectObjectOrNull} 
+{\cs45\i\f0\cf4\lang1024 p}.{\cs43\f4\cf6\lang1024 base}\line                    {\cs40\b\f0 end}
+\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 callObject}({\cs45\i\f0\cf4\lang1024 function},
+ {\cs45\i\f0\cf4\lang1024 this}, {\cs45\i\f0\cf4\lang1024 arguments})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 call} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 noLValue} 
+{\cs35\i\f6\cf13\lang1024 Arguments}]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env}
+)\line   = {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 function}: 
+{\cs42\scaps\f0\cf6\lang1024 Value} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs36\i0 noLValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 arguments}: {\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Value}[]} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Arguments}]({\cs45\i\f0\cf4\lang1024 e})
+\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 callObject}({\cs45\i\f0\cf4\lang1024 function},
+ {\cs43\f4\cf6\lang1024 nullObjectOrNull}, {\cs45\i\f0\cf4\lang1024 arguments})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs37 MemberExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs37 MemberExprKind},\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024[} {\cs35\i\f6\cf13\lang1024 Expression} {\cs34\b\f5\cf2\lang1024]}]\line   
+          ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 container}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs37 MemberExprKind},\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 property}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Expression}]({\cs45\i\f0\cf4\lang1024 e})
+\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 readProperty}(
+{\cs45\i\f0\cf4\lang1024 container}, {\cs45\i\f0\cf4\lang1024 property})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs37 MemberExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs37 MemberExprKind},\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024.} {\cs33\b\f6\cf10\lang1024 Identifier}]\line             (
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 container}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs37 MemberExprKind},\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 readProperty}(
+{\cs45\i\f0\cf4\lang1024 container}, {\cs43\f4\cf6\lang1024 stringValue} 
+{\cs46\f7\cf12\lang1024 EvalIdentifier}[{\cs33\b\f6\cf10\lang1024 Identifier}])\par\pard\plain\s20
+\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs37 MemberExprKind},\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue}] = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PrimaryRvalue}]\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs37 MemberExprKind},\cs36\i0 anyValue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs37 MemberExprKind}]({\cs45\i\f0\cf4\lang1024 e}: 
+{\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 ref}: 
+{\cs42\scaps\f0\cf6\lang1024 Reference} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs37 MemberExprKind}]({\cs45\i\f0\cf4\lang1024 e})
+\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 referenceGetValue}(
+{\cs45\i\f0\cf4\lang1024 ref})\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 new} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression{\super{\cs36\i0 noCall},\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs35\i\f6\cf13\lang1024 Arguments}]\line             ({\cs45\i\f0\cf4\lang1024 e}: 
+{\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 constructor}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression{\super{\cs36\i0 noCall},\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 arguments}: {\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Value}[]} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Arguments}]({\cs45\i\f0\cf4\lang1024 e})
+\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 constructObject}(
+{\cs45\i\f0\cf4\lang1024 constructor}, {\cs45\i\f0\cf4\lang1024 arguments})\par\pard\plain\s20\li180
+\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 NewExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 NewExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 noCall},\cs37 ExprKind}]\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 NewExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 new} 
+{\cs35\i\f6\cf13\lang1024 NewExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 constructor}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 NewExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 constructObject}(
+{\cs45\i\f0\cf4\lang1024 constructor}, {\b[]}{\sub\cs42\scaps\f0\cf6\lang1024 Value})\par\pard\plain
+\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Arguments}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueListOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Arguments} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024(} 
+{\cs34\b\f5\cf2\lang1024)}]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env}) = 
+{\cs43\f4\cf6\lang1024 normal} {\b[]}{\sub\cs42\scaps\f0\cf6\lang1024 Value}\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Arguments} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024(} 
+{\cs35\i\f6\cf13\lang1024 ArgumentList} {\cs34\b\f5\cf2\lang1024)}] = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ArgumentList}]\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar
+\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ArgumentList}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueListOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ArgumentList} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue}]({\cs45\i\f0\cf4\lang1024 e}:
+ {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 arg}: 
+{\cs42\scaps\f0\cf6\lang1024 Value} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue}]({\cs45\i\f0\cf4\lang1024 e})
+\line      {\cs40\b\f0 in} {\cs43\f4\cf6\lang1024 normal} {\b[}{\cs45\i\f0\cf4\lang1024 arg}{\b]}
+\par{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 ArgumentList} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 ArgumentList\b0\i0\sub 1} {\cs34\b\f5\cf2\lang1024,} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue}]({\cs45\i\f0\cf4\lang1024 e}:
+ {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 args}: 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Value}[]} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ArgumentList\b0\i0\sub 1}]({\cs45\i\f0\cf4\lang1024 e})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 arg}: 
+{\cs42\scaps\f0\cf6\lang1024 Value} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue}]({\cs45\i\f0\cf4\lang1024 e})
+\line      {\cs40\b\f0 in} {\cs43\f4\cf6\lang1024 normal} ({\cs45\i\f0\cf4\lang1024 args} 
+{\field{\*\fldinst SYMBOL 58 \\f "Zapf Dingbats" \\s 10}{\fldrslt\f8\fs20}} {\b[}
+{\cs45\i\f0\cf4\lang1024 arg}{\b]})\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0
+\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Lvalue}] :
+ 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Re
+ferenceOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Lvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 call}] = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 call}]\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Lvalue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 noCall}] = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberLvalue\super\cs36\i0 noCall}]\par\pard\plain\s20\li180\sb60\sa60
+\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs44\i\f0\cf11\lang1024 readProperty}(
+{\cs45\i\f0\cf4\lang1024 container}: {\cs42\scaps\f0\cf6\lang1024 Value}, 
+{\cs45\i\f0\cf4\lang1024 property}: {\cs42\scaps\f0\cf6\lang1024 Value}) : 
+{\cs42\scaps\f0\cf6\lang1024 ReferenceOrException}\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 obj}: {\cs42\scaps\f0\cf6\lang1024 Object} = 
+{\cs44\i\f0\cf11\lang1024 coerceToObject}({\cs45\i\f0\cf4\lang1024 container})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 name}: 
+{\cs42\scaps\f0\cf6\lang1024 PropName} = {\cs44\i\f0\cf11\lang1024 coerceToString}(
+{\cs45\i\f0\cf4\lang1024 property})\line      {\cs40\b\f0 in} {\cs43\f4\cf6\lang1024 normal} 
+{\cs43\f4\cf6\lang1024 placeReference} 
+{\b{\field{\*\fldinst SYMBOL 225 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+{\cs45\i\f0\cf4\lang1024 obj}, {\cs45\i\f0\cf4\lang1024 name}
+{\b{\field{\*\fldinst SYMBOL 241 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+{\sub\cs42\scaps\f0\cf6\lang1024 Place}\par{\cs44\i\f0\cf11\lang1024 callObject}(
+{\cs45\i\f0\cf4\lang1024 function}: {\cs42\scaps\f0\cf6\lang1024 Value}, 
+{\cs45\i\f0\cf4\lang1024 this}: {\cs42\scaps\f0\cf6\lang1024 ObjectOrNull}, 
+{\cs45\i\f0\cf4\lang1024 arguments}: {\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Value}[]}) :
+ {\cs42\scaps\f0\cf6\lang1024 ReferenceOrException}\line   = {\cs40\b\f0 case} 
+{\cs45\i\f0\cf4\lang1024 function} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}, 
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 stringValue}:\line               {\cs43\f4\cf6\lang1024 abrupt}
+{\sub\cs42\scaps\f0\cf6\lang1024 ReferenceOrException} {\cs44\i\f0\cf11\lang1024 makeError}(
+{\cs43\f4\cf6\lang1024 coerceToObjectError});\line         {\cs43\f4\cf6\lang1024 objectValue}(
+{\cs45\i\f0\cf4\lang1024 o}: {\cs42\scaps\f0\cf6\lang1024 Object}): {\cs45\i\f0\cf4\lang1024 o}.
+{\cs43\f4\cf6\lang1024 call}({\cs45\i\f0\cf4\lang1024 this}, {\cs45\i\f0\cf4\lang1024 arguments})
+\line         {\cs40\b\f0 end}\par{\cs44\i\f0\cf11\lang1024 constructObject}(
+{\cs45\i\f0\cf4\lang1024 constructor}: {\cs42\scaps\f0\cf6\lang1024 Value}, 
+{\cs45\i\f0\cf4\lang1024 arguments}: {\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Value}[]}) :
+ {\cs42\scaps\f0\cf6\lang1024 ValueOrException}\line   = {\cs40\b\f0 case} 
+{\cs45\i\f0\cf4\lang1024 constructor} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}, 
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 stringValue}:\line               {\cs43\f4\cf6\lang1024 abrupt}
+{\sub\cs42\scaps\f0\cf6\lang1024 ValueOrException} {\cs44\i\f0\cf11\lang1024 makeError}(
+{\cs43\f4\cf6\lang1024 coerceToObjectError});\line         {\cs43\f4\cf6\lang1024 objectValue}(
+{\cs45\i\f0\cf4\lang1024 o}: {\cs42\scaps\f0\cf6\lang1024 Object}):\line               
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 res}: {\cs42\scaps\f0\cf6\lang1024 Object} = 
+{\cs45\i\f0\cf4\lang1024 o}.{\cs43\f4\cf6\lang1024 construct}({\cs45\i\f0\cf4\lang1024 arguments})
+\line               {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 objectResult}(
+{\cs45\i\f0\cf4\lang1024 res})\line         {\cs40\b\f0 end}\par\pard\plain\s2\sa60\keep\keepn
+\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Postfix Expressions\par\pard\plain\s11\sb60\keep\keepn
+\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs36\i0 anyValue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 NewExpression\super\cs36\i0 anyValue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 call},\cs36\i0 anyValue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 Lvalue} {\cs34\b\f5\cf2\lang1024 ++}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 Lvalue} 
+{\cs34\b\f5\cf2\lang1024 --}\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0
+\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs36\i0 noLValue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 NewExpression\super\cs36\i0 noLValue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 Lvalue} {\cs34\b\f5\cf2\lang1024 ++}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 Lvalue} 
+{\cs34\b\f5\cf2\lang1024 --}\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20
+\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024
+{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 NewExpression\super\cs37 ExprKind}] = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 NewExpression\super\cs37 ExprKind}]\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs36\i0 anyValue} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 call},\cs36\i0 anyValue}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MemberExpression\super{\cs36\i0 call},\cs36\i0 anyValue}]\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 Lvalue} {\cs34\b\f5\cf2\lang1024 ++}]({\cs45\i\f0\cf4\lang1024 e}: 
+{\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operandReference}: {\cs42\scaps\f0\cf6\lang1024 Reference} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e})\line  
+    {\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 operandValue}: 
+{\cs42\scaps\f0\cf6\lang1024 Value} = {\cs44\i\f0\cf11\lang1024 referenceGetValue}(
+{\cs45\i\f0\cf4\lang1024 operandReference})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operand}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 operandValue})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 u}: {\cs42\scaps\f0\cf6\lang1024 Void}
+\line                   = {\cs44\i\f0\cf11\lang1024 referencePutValue}(
+{\cs45\i\f0\cf4\lang1024 operandReference}, {\cs43\f4\cf6\lang1024 doubleValue} 
+{\cs44\i\f0\cf11\lang1024 doubleAdd}({\cs45\i\f0\cf4\lang1024 operand}, 1.0))\line      
+{\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 doubleResult}({\cs45\i\f0\cf4\lang1024 operand})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 Lvalue} {\cs34\b\f5\cf2\lang1024 --}]({\cs45\i\f0\cf4\lang1024 e}: 
+{\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operandReference}: {\cs42\scaps\f0\cf6\lang1024 Reference} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e})\line  
+    {\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 operandValue}: 
+{\cs42\scaps\f0\cf6\lang1024 Value} = {\cs44\i\f0\cf11\lang1024 referenceGetValue}(
+{\cs45\i\f0\cf4\lang1024 operandReference})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operand}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 operandValue})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 u}: {\cs42\scaps\f0\cf6\lang1024 Void}
+\line                   = {\cs44\i\f0\cf11\lang1024 referencePutValue}(
+{\cs45\i\f0\cf4\lang1024 operandReference}, {\cs43\f4\cf6\lang1024 doubleValue} 
+{\cs44\i\f0\cf11\lang1024 doubleSubtract}({\cs45\i\f0\cf4\lang1024 operand}, 1.0))\line      
+{\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 doubleResult}({\cs45\i\f0\cf4\lang1024 operand})\par\pard
+\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Unary Operators\par\pard\plain
+\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800
+\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs37 ExprKind}\par|\tab
+{\cs34\b\f5\cf2\lang1024 delete} {\cs35\i\f6\cf13\lang1024 Lvalue}\par|\tab
+{\cs34\b\f5\cf2\lang1024 void} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}\par
+|\tab{\cs34\b\f5\cf2\lang1024 typeof} {\cs35\i\f6\cf13\lang1024 Lvalue}\par|\tab
+{\cs34\b\f5\cf2\lang1024 typeof} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 noLValue}
+\par|\tab{\cs34\b\f5\cf2\lang1024 ++} {\cs35\i\f6\cf13\lang1024 Lvalue}\par|\tab
+{\cs34\b\f5\cf2\lang1024 --} {\cs35\i\f6\cf13\lang1024 Lvalue}\par|\tab{\cs34\b\f5\cf2\lang1024 +} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}\par|\tab
+{\cs34\b\f5\cf2\lang1024 -} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}\par|
+\tab{\cs34\b\f5\cf2\lang1024~} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}\par
+\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs34\b\f5\cf2\lang1024!} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}\par
+\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20
+\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 PostfixExpression\super\cs37 ExprKind}]\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 delete} {\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e}: 
+{\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 rv}: 
+{\cs42\scaps\f0\cf6\lang1024 Reference} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 rv} {\cs40\b\f0 of}\line             
+{\cs43\f4\cf6\lang1024 valueReference}: {\cs43\f4\cf6\lang1024 abrupt}
+{\sub\cs42\scaps\f0\cf6\lang1024 ValueOrException} {\cs44\i\f0\cf11\lang1024 makeError}(
+{\cs43\f4\cf6\lang1024 deleteError});\line             {\cs43\f4\cf6\lang1024 placeReference}(
+{\cs45\i\f0\cf4\lang1024 r}: {\cs42\scaps\f0\cf6\lang1024 Place}):\line                   
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 b}: {\cs42\scaps\f0\cf6\lang1024 Boolean} = 
+{\cs45\i\f0\cf4\lang1024 r}.{\cs43\f4\cf6\lang1024 base}.{\cs43\f4\cf6\lang1024 delete}(
+{\cs45\i\f0\cf4\lang1024 r}.{\cs43\f4\cf6\lang1024 property})\line                   {\cs40\b\f0 in}
+ {\cs44\i\f0\cf11\lang1024 booleanResult}({\cs45\i\f0\cf4\lang1024 b});\line             
+{\cs43\f4\cf6\lang1024 virtualReference}: {\cs44\i\f0\cf11\lang1024 booleanResult}(
+{\cs44\i\f0\cf11\lang1024 true})\line             {\cs40\b\f0 end}\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 void}
+ {\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operand}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 undefinedResult}
+\par{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 typeof} {\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e}: 
+{\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 rv}: 
+{\cs42\scaps\f0\cf6\lang1024 Reference} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 rv} {\cs40\b\f0 of}\line             
+{\cs43\f4\cf6\lang1024 valueReference}({\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}): {\cs44\i\f0\cf11\lang1024 stringResult}(
+{\cs44\i\f0\cf11\lang1024 valueTypeof}({\cs45\i\f0\cf4\lang1024 v}));\line             
+{\cs43\f4\cf6\lang1024 placeReference}({\cs45\i\f0\cf4\lang1024 r}: 
+{\cs42\scaps\f0\cf6\lang1024 Place}):\line                   {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 v}: {\cs42\scaps\f0\cf6\lang1024 Value} = {\cs45\i\f0\cf4\lang1024 r}.
+{\cs43\f4\cf6\lang1024 base}.{\cs43\f4\cf6\lang1024 get}({\cs45\i\f0\cf4\lang1024 r}.
+{\cs43\f4\cf6\lang1024 property})\line                   {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 stringResult}({\cs44\i\f0\cf11\lang1024 valueTypeof}(
+{\cs45\i\f0\cf4\lang1024 v}));\line             {\cs43\f4\cf6\lang1024 virtualReference}: 
+{\cs44\i\f0\cf11\lang1024 stringResult}(\ldblquote{\cs31\b\f5\cf2\lang1024 undefined}\rdblquote)
+\line             {\cs40\b\f0 end}\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs34\b\f5\cf2\lang1024 typeof} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 noLValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 v}: {\cs42\scaps\f0\cf6\lang1024 Value} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 noLValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 stringResult}(
+{\cs44\i\f0\cf11\lang1024 valueTypeof}({\cs45\i\f0\cf4\lang1024 v}))\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 ++} 
+{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})
+\line   = {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 operandReference}: 
+{\cs42\scaps\f0\cf6\lang1024 Reference} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 operandValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 referenceGetValue}({\cs45\i\f0\cf4\lang1024 operandReference})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 operand}: 
+{\cs42\scaps\f0\cf6\lang1024 Double} = {\cs44\i\f0\cf11\lang1024 coerceToDouble}(
+{\cs45\i\f0\cf4\lang1024 operandValue})\line      {\cs40\b\f0 in} {\cs40\b\f0 let} 
+{\cs45\i\f0\cf4\lang1024 res}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 doubleAdd}({\cs45\i\f0\cf4\lang1024 operand}, 1.0)\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 u}: {\cs42\scaps\f0\cf6\lang1024 Void} 
+= {\cs44\i\f0\cf11\lang1024 referencePutValue}({\cs45\i\f0\cf4\lang1024 operandReference}, 
+{\cs43\f4\cf6\lang1024 doubleValue} {\cs45\i\f0\cf4\lang1024 res})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 doubleResult}({\cs45\i\f0\cf4\lang1024 res})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 --} 
+{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})
+\line   = {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 operandReference}: 
+{\cs42\scaps\f0\cf6\lang1024 Reference} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 operandValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 referenceGetValue}({\cs45\i\f0\cf4\lang1024 operandReference})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 operand}: 
+{\cs42\scaps\f0\cf6\lang1024 Double} = {\cs44\i\f0\cf11\lang1024 coerceToDouble}(
+{\cs45\i\f0\cf4\lang1024 operandValue})\line      {\cs40\b\f0 in} {\cs40\b\f0 let} 
+{\cs45\i\f0\cf4\lang1024 res}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 doubleSubtract}({\cs45\i\f0\cf4\lang1024 operand}, 1.0)\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 u}: {\cs42\scaps\f0\cf6\lang1024 Void} 
+= {\cs44\i\f0\cf11\lang1024 referencePutValue}({\cs45\i\f0\cf4\lang1024 operandReference}, 
+{\cs43\f4\cf6\lang1024 doubleValue} {\cs45\i\f0\cf4\lang1024 res})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 doubleResult}({\cs45\i\f0\cf4\lang1024 res})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 +} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operandValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operand}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 operandValue})\line      
+{\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 doubleResult}({\cs45\i\f0\cf4\lang1024 operand})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024 -} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operandValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operand}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 operandValue})\line      
+{\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 doubleResult}({\cs44\i\f0\cf11\lang1024 doubleNegate}(
+{\cs45\i\f0\cf4\lang1024 operand}))\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024~} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operandValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operand}: {\cs42\scaps\f0\cf6\lang1024 Integer} = 
+{\cs44\i\f0\cf11\lang1024 coerceToInt32}({\cs45\i\f0\cf4\lang1024 operandValue})\line      
+{\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 integerResult}({\cs44\i\f0\cf11\lang1024 bitwiseXor}(
+{\cs45\i\f0\cf4\lang1024 operand}, -1))\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} {\cs34\b\f5\cf2\lang1024!} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 operandValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 UnaryExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 booleanResult}(
+{\cs40\b\f0 not} {\cs44\i\f0\cf11\lang1024 coerceToBoolean}({\cs45\i\f0\cf4\lang1024 operandValue}))
+\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024
+{\cs44\i\f0\cf11\lang1024 valueTypeof}({\cs45\i\f0\cf4\lang1024 v}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}) : {\cs42\scaps\f0\cf6\lang1024 String}\line   = 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 v} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}: \ldblquote{\cs31\b\f5\cf2\lang1024 undefined}\rdblquote;
+\line         {\cs43\f4\cf6\lang1024 nullValue}: \ldblquote{\cs31\b\f5\cf2\lang1024 object}
+\rdblquote;\line         {\cs43\f4\cf6\lang1024 booleanValue}: \ldblquote
+{\cs31\b\f5\cf2\lang1024 boolean}\rdblquote;\line         {\cs43\f4\cf6\lang1024 doubleValue}: 
+\ldblquote{\cs31\b\f5\cf2\lang1024 number}\rdblquote;\line         
+{\cs43\f4\cf6\lang1024 stringValue}: \ldblquote{\cs31\b\f5\cf2\lang1024 string}\rdblquote;\line     
+    {\cs43\f4\cf6\lang1024 objectValue}({\cs45\i\f0\cf4\lang1024 o}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}): {\cs45\i\f0\cf4\lang1024 o}.
+{\cs43\f4\cf6\lang1024 typeofName}\line         {\cs40\b\f0 end}\par\pard\plain\s2\sa60\keep\keepn
+\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Multiplicative Operators\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120\keep
+\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind}\par|\tab
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024*} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}\par|
+\tab{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024/} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}\par
+\pard\plain\s15\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue} 
+{\cs34\b\f5\cf2\lang1024%} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}\par
+\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20
+\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs37 ExprKind}]\par
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024*} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}]\line  
+           ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 applyBinaryDoubleOperator}({\cs44\i\f0\cf11\lang1024 doubleMultiply}, 
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue})\par
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024/} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}]\line  
+           ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 applyBinaryDoubleOperator}({\cs44\i\f0\cf11\lang1024 doubleDivide}, 
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue})\par
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024%} {\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}]\line  
+           ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 UnaryExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 applyBinaryDoubleOperator}({\cs44\i\f0\cf11\lang1024 doubleRemainder}, 
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue})\par\pard\plain\s20\li180
+\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024
+{\cs44\i\f0\cf11\lang1024 applyBinaryDoubleOperator}({\cs45\i\f0\cf4\lang1024 operator}: 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Double} 
+{\field{\*\fldinst SYMBOL 180 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 Double} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Do
+uble}
+, {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value}, 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value})\line   : 
+{\cs42\scaps\f0\cf6\lang1024 ValueOrException}\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftNumber}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 leftValue})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 rightNumber}: 
+{\cs42\scaps\f0\cf6\lang1024 Double} = {\cs44\i\f0\cf11\lang1024 coerceToDouble}(
+{\cs45\i\f0\cf4\lang1024 rightValue})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 doubleResult}({\cs45\i\f0\cf4\lang1024 operator}(
+{\cs45\i\f0\cf4\lang1024 leftNumber}, {\cs45\i\f0\cf4\lang1024 rightNumber}))\par\pard\plain\s2\sa60
+\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Additive Operators\par\pard\plain\s11\sb60
+\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120\keep
+\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind}\par|\tab
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024 +} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue}\par\pard\plain\s15
+\fi-1260\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024 -} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue}\par\pard\plain\s11\sb60
+\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs37 ExprKind}]\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024 +} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue}]\line             (
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftPrimitive}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs43\f4\cf6\lang1024 noHint})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightPrimitive}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 rightValue}, 
+{\cs43\f4\cf6\lang1024 noHint})\line      {\cs40\b\f0 in} {\cs40\b\f0 if} 
+{\cs45\i\f0\cf4\lang1024 leftPrimitive} {\cs40\b\f0 is} {\cs43\f4\cf6\lang1024 stringValue} 
+{\cs40\b\f0 or} {\cs45\i\f0\cf4\lang1024 rightPrimitive} {\cs40\b\f0 is} 
+{\cs43\f4\cf6\lang1024 stringValue}\line          {\cs40\b\f0 then} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftString}: {\cs42\scaps\f0\cf6\lang1024 String} = 
+{\cs44\i\f0\cf11\lang1024 coerceToString}({\cs45\i\f0\cf4\lang1024 leftPrimitive})\line             
+    {\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 rightString}: 
+{\cs42\scaps\f0\cf6\lang1024 String} = {\cs44\i\f0\cf11\lang1024 coerceToString}(
+{\cs45\i\f0\cf4\lang1024 rightPrimitive})\line                 {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 stringResult}({\cs45\i\f0\cf4\lang1024 leftString} 
+{\field{\*\fldinst SYMBOL 58 \\f "Zapf Dingbats" \\s 10}{\fldrslt\f8\fs20}} 
+{\cs45\i\f0\cf4\lang1024 rightString})\line          {\cs40\b\f0 else} 
+{\cs44\i\f0\cf11\lang1024 applyBinaryDoubleOperator}({\cs44\i\f0\cf11\lang1024 doubleAdd}, 
+{\cs45\i\f0\cf4\lang1024 leftPrimitive}, {\cs45\i\f0\cf4\lang1024 rightPrimitive})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024 -} 
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue}]\line             (
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 MultiplicativeExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 applyBinaryDoubleOperator}({\cs44\i\f0\cf11\lang1024 doubleSubtract}, 
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue})\par\pard\plain\s2\sa60
+\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Bitwise Shift Operators\par\pard\plain\s11
+\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120
+\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs37 ExprKind}\par|\tab
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024<<} 
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024>>} 
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024>>>} 
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs37 ExprKind}]\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024<<} {\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 bitmapValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ShiftExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 countValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 bitmap}: {\cs42\scaps\f0\cf6\lang1024 Integer} = 
+{\cs44\i\f0\cf11\lang1024 coerceToUint32}({\cs45\i\f0\cf4\lang1024 bitmapValue})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 count}: 
+{\cs42\scaps\f0\cf6\lang1024 Integer} = {\cs44\i\f0\cf11\lang1024 coerceToUint32}(
+{\cs45\i\f0\cf4\lang1024 countValue})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 integerResult}(\line              {\cs44\i\f0\cf11\lang1024 uint32ToInt32}
+({\cs44\i\f0\cf11\lang1024 bitwiseAnd}({\cs44\i\f0\cf11\lang1024 bitwiseShift}(
+{\cs45\i\f0\cf4\lang1024 bitmap}, {\cs44\i\f0\cf11\lang1024 bitwiseAnd}(
+{\cs45\i\f0\cf4\lang1024 count}, 31)), 4294967295)))\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024>>} {\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 bitmapValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ShiftExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 countValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 bitmap}: {\cs42\scaps\f0\cf6\lang1024 Integer} = 
+{\cs44\i\f0\cf11\lang1024 coerceToInt32}({\cs45\i\f0\cf4\lang1024 bitmapValue})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 count}: 
+{\cs42\scaps\f0\cf6\lang1024 Integer} = {\cs44\i\f0\cf11\lang1024 coerceToUint32}(
+{\cs45\i\f0\cf4\lang1024 countValue})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 integerResult}({\cs44\i\f0\cf11\lang1024 bitwiseShift}(
+{\cs45\i\f0\cf4\lang1024 bitmap}, \endash{\cs44\i\f0\cf11\lang1024 bitwiseAnd}(
+{\cs45\i\f0\cf4\lang1024 count}, 31)))\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024>>>} {\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 bitmapValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ShiftExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 countValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 AdditiveExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 bitmap}: {\cs42\scaps\f0\cf6\lang1024 Integer} = 
+{\cs44\i\f0\cf11\lang1024 coerceToUint32}({\cs45\i\f0\cf4\lang1024 bitmapValue})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 count}: 
+{\cs42\scaps\f0\cf6\lang1024 Integer} = {\cs44\i\f0\cf11\lang1024 coerceToUint32}(
+{\cs45\i\f0\cf4\lang1024 countValue})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 integerResult}({\cs44\i\f0\cf11\lang1024 bitwiseShift}(
+{\cs45\i\f0\cf4\lang1024 bitmap}, \endash{\cs44\i\f0\cf11\lang1024 bitwiseAnd}(
+{\cs45\i\f0\cf4\lang1024 count}, 31)))\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3
+\b\fs24\lang2057 Relational Operators\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20
+\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0
+\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024<} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024>} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024<=} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024>=} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}\par\pard\plain\s11\sb60\keep\keepn
+\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar
+\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs37 ExprKind}]\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024<} {\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}]\line  
+           ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 orderValues}(
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue}, 
+{\cs44\i\f0\cf11\lang1024 true}, {\cs44\i\f0\cf11\lang1024 false})\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024>} {\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}]\line  
+           ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 orderValues}(
+{\cs45\i\f0\cf4\lang1024 rightValue}, {\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs44\i\f0\cf11\lang1024 true}, {\cs44\i\f0\cf11\lang1024 false})\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024<=} {\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}]\line 
+            ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 orderValues}(
+{\cs45\i\f0\cf4\lang1024 rightValue}, {\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs44\i\f0\cf11\lang1024 false}, {\cs44\i\f0\cf11\lang1024 true})\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024>=} {\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}]\line 
+            ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 RelationalExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 ShiftExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 orderValues}(
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue}, 
+{\cs44\i\f0\cf11\lang1024 false}, {\cs44\i\f0\cf11\lang1024 true})\par\pard\plain\s20\li180\sb60
+\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs44\i\f0\cf11\lang1024 orderValues}(
+{\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value}, 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value}, 
+{\cs45\i\f0\cf4\lang1024 less}: {\cs42\scaps\f0\cf6\lang1024 Boolean}, 
+{\cs45\i\f0\cf4\lang1024 greaterOrEqual}: {\cs42\scaps\f0\cf6\lang1024 Boolean})\line   : 
+{\cs42\scaps\f0\cf6\lang1024 ValueOrException}\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftPrimitive}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs43\f4\cf6\lang1024 numberHint})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightPrimitive}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 rightValue}, 
+{\cs43\f4\cf6\lang1024 numberHint})\line      {\cs40\b\f0 in} {\cs40\b\f0 if} 
+{\cs45\i\f0\cf4\lang1024 leftPrimitive} {\cs40\b\f0 is} {\cs43\f4\cf6\lang1024 stringValue} 
+{\cs40\b\f0 and} {\cs45\i\f0\cf4\lang1024 rightPrimitive} {\cs40\b\f0 is} 
+{\cs43\f4\cf6\lang1024 stringValue}\line          {\cs40\b\f0 then} 
+{\cs44\i\f0\cf11\lang1024 booleanResult}(\line                     
+{\cs44\i\f0\cf11\lang1024 compareStrings}(\line                         
+{\cs45\i\f0\cf4\lang1024 leftPrimitive}.{\cs43\f4\cf6\lang1024 stringValue},\line                   
+      {\cs45\i\f0\cf4\lang1024 rightPrimitive}.{\cs43\f4\cf6\lang1024 stringValue},\line            
+             {\cs45\i\f0\cf4\lang1024 less},\line                         
+{\cs45\i\f0\cf4\lang1024 greaterOrEqual},\line                         
+{\cs45\i\f0\cf4\lang1024 greaterOrEqual}))\line          {\cs40\b\f0 else} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftNumber}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 leftPrimitive})\line             
+   {\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 rightNumber}: 
+{\cs42\scaps\f0\cf6\lang1024 Double} = {\cs44\i\f0\cf11\lang1024 coerceToDouble}(
+{\cs45\i\f0\cf4\lang1024 rightPrimitive})\line                {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 booleanResult}(\line                        
+{\cs44\i\f0\cf11\lang1024 doubleCompare}(\line                            
+{\cs45\i\f0\cf4\lang1024 leftNumber},\line                            
+{\cs45\i\f0\cf4\lang1024 rightNumber},\line                            
+{\cs45\i\f0\cf4\lang1024 less},\line                            
+{\cs45\i\f0\cf4\lang1024 greaterOrEqual},\line                            
+{\cs45\i\f0\cf4\lang1024 greaterOrEqual},\line                            
+{\cs44\i\f0\cf11\lang1024 false}))\par{\cs44\i\f0\cf11\lang1024 compareStrings}(
+{\cs45\i\f0\cf4\lang1024 left}: {\cs42\scaps\f0\cf6\lang1024 String}, 
+{\cs45\i\f0\cf4\lang1024 right}: {\cs42\scaps\f0\cf6\lang1024 String}, 
+{\cs45\i\f0\cf4\lang1024 less}: {\cs42\scaps\f0\cf6\lang1024 Boolean}, 
+{\cs45\i\f0\cf4\lang1024 equal}: {\cs42\scaps\f0\cf6\lang1024 Boolean}, 
+{\cs45\i\f0\cf4\lang1024 greater}: {\cs42\scaps\f0\cf6\lang1024 Boolean})\line   : 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}\line   = {\cs40\b\f0 if} {\cs44\i\f0\cf11\lang1024 empty}(
+{\cs45\i\f0\cf4\lang1024 left}) {\cs40\b\f0 and} {\cs44\i\f0\cf11\lang1024 empty}(
+{\cs45\i\f0\cf4\lang1024 right})\line      {\cs40\b\f0 then} {\cs45\i\f0\cf4\lang1024 equal}\line   
+   {\cs40\b\f0 else} {\cs40\b\f0 if} {\cs44\i\f0\cf11\lang1024 empty}({\cs45\i\f0\cf4\lang1024 left}
+)\line      {\cs40\b\f0 then} {\cs45\i\f0\cf4\lang1024 less}\line      {\cs40\b\f0 else} 
+{\cs40\b\f0 if} {\cs44\i\f0\cf11\lang1024 empty}({\cs45\i\f0\cf4\lang1024 right})\line      
+{\cs40\b\f0 then} {\cs45\i\f0\cf4\lang1024 greater}\line      {\cs40\b\f0 else} {\cs40\b\f0 let} 
+{\cs45\i\f0\cf4\lang1024 leftCharCode}: {\cs42\scaps\f0\cf6\lang1024 Integer} = 
+{\cs44\i\f0\cf11\lang1024 characterToCode}({\cs44\i\f0\cf11\lang1024 first}(
+{\cs45\i\f0\cf4\lang1024 left}));\line                {\cs45\i\f0\cf4\lang1024 rightCharCode}: 
+{\cs42\scaps\f0\cf6\lang1024 Integer} = {\cs44\i\f0\cf11\lang1024 characterToCode}(
+{\cs44\i\f0\cf11\lang1024 first}({\cs45\i\f0\cf4\lang1024 right}))\line            {\cs40\b\f0 in} 
+{\cs40\b\f0 if} {\cs45\i\f0\cf4\lang1024 leftCharCode} < {\cs45\i\f0\cf4\lang1024 rightCharCode}
+\line                {\cs40\b\f0 then} {\cs45\i\f0\cf4\lang1024 less}\line                
+{\cs40\b\f0 else} {\cs40\b\f0 if} {\cs45\i\f0\cf4\lang1024 leftCharCode} > 
+{\cs45\i\f0\cf4\lang1024 rightCharCode}\line                {\cs40\b\f0 then} 
+{\cs45\i\f0\cf4\lang1024 greater}\line                {\cs40\b\f0 else} 
+{\cs44\i\f0\cf11\lang1024 compareStrings}({\cs44\i\f0\cf11\lang1024 rest}(
+{\cs45\i\f0\cf4\lang1024 left}), {\cs44\i\f0\cf11\lang1024 rest}({\cs45\i\f0\cf4\lang1024 right}), 
+{\cs45\i\f0\cf4\lang1024 less}, {\cs45\i\f0\cf4\lang1024 equal}, {\cs45\i\f0\cf4\lang1024 greater})
+\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Equality Operators
+\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind}\par|\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024==} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024!=} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}\par|\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024===} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024!==} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs37 ExprKind}]
+\par{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 EqualityExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024==} {\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 EqualityExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}
+]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 eq}: {\cs42\scaps\f0\cf6\lang1024 Boolean} = 
+{\cs44\i\f0\cf11\lang1024 compareValues}({\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs45\i\f0\cf4\lang1024 rightValue})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 booleanResult}({\cs45\i\f0\cf4\lang1024 eq})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 EqualityExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024!=} {\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 EqualityExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}
+]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 eq}: {\cs42\scaps\f0\cf6\lang1024 Boolean} = 
+{\cs44\i\f0\cf11\lang1024 compareValues}({\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs45\i\f0\cf4\lang1024 rightValue})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 booleanResult}({\cs40\b\f0 not} {\cs45\i\f0\cf4\lang1024 eq})\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 EqualityExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024===} {\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 EqualityExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}
+]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 booleanResult}(
+{\cs44\i\f0\cf11\lang1024 strictCompareValues}({\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs45\i\f0\cf4\lang1024 rightValue}))\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 EqualityExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024!==} {\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 EqualityExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 RelationalExpression\super\cs36\i0 anyValue}
+]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs44\i\f0\cf11\lang1024 booleanResult}(
+{\cs40\b\f0 not} {\cs44\i\f0\cf11\lang1024 strictCompareValues}({\cs45\i\f0\cf4\lang1024 leftValue},
+ {\cs45\i\f0\cf4\lang1024 rightValue}))\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0
+\fs20\lang1024{\cs44\i\f0\cf11\lang1024 compareValues}({\cs45\i\f0\cf4\lang1024 leftValue}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}, {\cs45\i\f0\cf4\lang1024 rightValue}: 
+{\cs42\scaps\f0\cf6\lang1024 Value}) : {\cs42\scaps\f0\cf6\lang1024 BooleanOrException}\line   = 
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 leftValue} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}:\line               
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line                  
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}: 
+{\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 true};\line                  
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 stringValue}, {\cs43\f4\cf6\lang1024 objectValue}: 
+{\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 false}\line                  
+{\cs40\b\f0 end};\line         {\cs43\f4\cf6\lang1024 booleanValue}(
+{\cs45\i\f0\cf4\lang1024 leftBool}: {\cs42\scaps\f0\cf6\lang1024 Boolean}):\line               
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line                  
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}: 
+{\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 false};\line                  
+{\cs43\f4\cf6\lang1024 booleanValue}({\cs45\i\f0\cf4\lang1024 rightBool}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}): {\cs43\f4\cf6\lang1024 normal} ({\cs40\b\f0 not} (
+{\cs45\i\f0\cf4\lang1024 leftBool} {\cs40\b\f0 xor} {\cs45\i\f0\cf4\lang1024 rightBool}));\line     
+             {\cs43\f4\cf6\lang1024 doubleValue}, {\cs43\f4\cf6\lang1024 stringValue}, 
+{\cs43\f4\cf6\lang1024 objectValue}:\line                        
+{\cs44\i\f0\cf11\lang1024 compareDoubleToValue}({\cs44\i\f0\cf11\lang1024 coerceBooleanToDouble}(
+{\cs45\i\f0\cf4\lang1024 leftBool}), {\cs45\i\f0\cf4\lang1024 rightValue})\line                  
+{\cs40\b\f0 end};\line         {\cs43\f4\cf6\lang1024 doubleValue}(
+{\cs45\i\f0\cf4\lang1024 leftNumber}: {\cs42\scaps\f0\cf6\lang1024 Double}): 
+{\cs44\i\f0\cf11\lang1024 compareDoubleToValue}({\cs45\i\f0\cf4\lang1024 leftNumber}, 
+{\cs45\i\f0\cf4\lang1024 rightValue});\line         {\cs43\f4\cf6\lang1024 stringValue}(
+{\cs45\i\f0\cf4\lang1024 leftStr}: {\cs42\scaps\f0\cf6\lang1024 String}):\line               
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line                  
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}: 
+{\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 false};\line                  
+{\cs43\f4\cf6\lang1024 booleanValue}({\cs45\i\f0\cf4\lang1024 rightBool}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}):\line                        {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftNumber}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 leftValue})\line                 
+       {\cs40\b\f0 in} {\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 doubleEqual}(
+{\cs45\i\f0\cf4\lang1024 leftNumber}, {\cs44\i\f0\cf11\lang1024 coerceBooleanToDouble}(
+{\cs45\i\f0\cf4\lang1024 rightBool}));\line                  {\cs43\f4\cf6\lang1024 doubleValue}(
+{\cs45\i\f0\cf4\lang1024 rightNumber}: {\cs42\scaps\f0\cf6\lang1024 Double}):\line                  
+      {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftNumber}: {\cs42\scaps\f0\cf6\lang1024 Double}
+ = {\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 leftValue})\line              
+          {\cs40\b\f0 in} {\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 doubleEqual}(
+{\cs45\i\f0\cf4\lang1024 leftNumber}, {\cs45\i\f0\cf4\lang1024 rightNumber});\line                  
+{\cs43\f4\cf6\lang1024 stringValue}({\cs45\i\f0\cf4\lang1024 rightStr}: 
+{\cs42\scaps\f0\cf6\lang1024 String}):\line                        {\cs43\f4\cf6\lang1024 normal} 
+{\cs44\i\f0\cf11\lang1024 compareStrings}({\cs45\i\f0\cf4\lang1024 leftStr}, 
+{\cs45\i\f0\cf4\lang1024 rightStr}, {\cs44\i\f0\cf11\lang1024 false}, 
+{\cs44\i\f0\cf11\lang1024 true}, {\cs44\i\f0\cf11\lang1024 false});\line                  
+{\cs43\f4\cf6\lang1024 objectValue}:\line                        {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightPrimitive}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 rightValue}, 
+{\cs43\f4\cf6\lang1024 noHint})\line                        {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 compareValues}({\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs45\i\f0\cf4\lang1024 rightPrimitive})\line                  {\cs40\b\f0 end};\line         
+{\cs43\f4\cf6\lang1024 objectValue}({\cs45\i\f0\cf4\lang1024 leftObj}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}):\line               {\cs40\b\f0 case} 
+{\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line                  
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}: 
+{\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 false};\line                  
+{\cs43\f4\cf6\lang1024 booleanValue}({\cs45\i\f0\cf4\lang1024 rightBool}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}):\line                        {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftPrimitive}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs43\f4\cf6\lang1024 noHint})\line                        {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 compareValues}(\line                                
+{\cs45\i\f0\cf4\lang1024 leftPrimitive},\line                                
+{\cs43\f4\cf6\lang1024 doubleValue} {\cs44\i\f0\cf11\lang1024 coerceBooleanToDouble}(
+{\cs45\i\f0\cf4\lang1024 rightBool}));\line                  {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 stringValue}:\line                        {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftPrimitive}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 leftValue}, 
+{\cs43\f4\cf6\lang1024 noHint})\line                        {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 compareValues}({\cs45\i\f0\cf4\lang1024 leftPrimitive}, 
+{\cs45\i\f0\cf4\lang1024 rightValue});\line                  {\cs43\f4\cf6\lang1024 objectValue}(
+{\cs45\i\f0\cf4\lang1024 rightObj}: {\cs42\scaps\f0\cf6\lang1024 Object}):\line                     
+   {\cs43\f4\cf6\lang1024 normal} ({\cs45\i\f0\cf4\lang1024 leftObj}.
+{\cs43\f4\cf6\lang1024 properties} 
+{\field{\*\fldinst SYMBOL 186 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs45\i\f0\cf4\lang1024 rightObj}.{\cs43\f4\cf6\lang1024 properties})\line                  
+{\cs40\b\f0 end}\line         {\cs40\b\f0 end}\par{\cs44\i\f0\cf11\lang1024 compareDoubleToValue}(
+{\cs45\i\f0\cf4\lang1024 leftNumber}: {\cs42\scaps\f0\cf6\lang1024 Double}, 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value}) : 
+{\cs42\scaps\f0\cf6\lang1024 BooleanOrException}\line   = {\cs40\b\f0 case} 
+{\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line         
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}: 
+{\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 false};\line         
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 stringValue}:\line               {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightNumber}: {\cs42\scaps\f0\cf6\lang1024 Double} = 
+{\cs44\i\f0\cf11\lang1024 coerceToDouble}({\cs45\i\f0\cf4\lang1024 rightValue})\line               
+{\cs40\b\f0 in} {\cs43\f4\cf6\lang1024 normal} {\cs44\i\f0\cf11\lang1024 doubleEqual}(
+{\cs45\i\f0\cf4\lang1024 leftNumber}, {\cs45\i\f0\cf4\lang1024 rightNumber});\line         
+{\cs43\f4\cf6\lang1024 objectValue}:\line               {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightPrimitive}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs44\i\f0\cf11\lang1024 coerceToPrimitive}({\cs45\i\f0\cf4\lang1024 rightValue}, 
+{\cs43\f4\cf6\lang1024 noHint})\line               {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 compareDoubleToValue}({\cs45\i\f0\cf4\lang1024 leftNumber}, 
+{\cs45\i\f0\cf4\lang1024 rightPrimitive})\line         {\cs40\b\f0 end}\par
+{\cs44\i\f0\cf11\lang1024 doubleEqual}({\cs45\i\f0\cf4\lang1024 x}: 
+{\cs42\scaps\f0\cf6\lang1024 Double}, {\cs45\i\f0\cf4\lang1024 y}: 
+{\cs42\scaps\f0\cf6\lang1024 Double}) : {\cs42\scaps\f0\cf6\lang1024 Boolean}\line   = 
+{\cs44\i\f0\cf11\lang1024 doubleCompare}({\cs45\i\f0\cf4\lang1024 x}, {\cs45\i\f0\cf4\lang1024 y}, 
+{\cs44\i\f0\cf11\lang1024 false}, {\cs44\i\f0\cf11\lang1024 true}, {\cs44\i\f0\cf11\lang1024 false},
+ {\cs44\i\f0\cf11\lang1024 false})\par{\cs44\i\f0\cf11\lang1024 strictCompareValues}(
+{\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value}, 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value}) : 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}\line   = {\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 leftValue}
+ {\cs40\b\f0 of}\line         {\cs43\f4\cf6\lang1024 undefinedValue}: 
+{\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 is} {\cs43\f4\cf6\lang1024 undefinedValue};\line   
+      {\cs43\f4\cf6\lang1024 nullValue}: {\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 is} 
+{\cs43\f4\cf6\lang1024 nullValue};\line         {\cs43\f4\cf6\lang1024 booleanValue}(
+{\cs45\i\f0\cf4\lang1024 leftBool}: {\cs42\scaps\f0\cf6\lang1024 Boolean}):\line               
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line                  
+{\cs43\f4\cf6\lang1024 booleanValue}({\cs45\i\f0\cf4\lang1024 rightBool}: 
+{\cs42\scaps\f0\cf6\lang1024 Boolean}): {\cs40\b\f0 not} ({\cs45\i\f0\cf4\lang1024 leftBool} 
+{\cs40\b\f0 xor} {\cs45\i\f0\cf4\lang1024 rightBool});\line                  
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}, 
+{\cs43\f4\cf6\lang1024 doubleValue}, {\cs43\f4\cf6\lang1024 stringValue}, 
+{\cs43\f4\cf6\lang1024 objectValue}: {\cs44\i\f0\cf11\lang1024 false}\line                  
+{\cs40\b\f0 end};\line         {\cs43\f4\cf6\lang1024 doubleValue}(
+{\cs45\i\f0\cf4\lang1024 leftNumber}: {\cs42\scaps\f0\cf6\lang1024 Double}):\line               
+{\cs40\b\f0 case} {\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line                  
+{\cs43\f4\cf6\lang1024 doubleValue}({\cs45\i\f0\cf4\lang1024 rightNumber}: 
+{\cs42\scaps\f0\cf6\lang1024 Double}): {\cs44\i\f0\cf11\lang1024 doubleEqual}(
+{\cs45\i\f0\cf4\lang1024 leftNumber}, {\cs45\i\f0\cf4\lang1024 rightNumber});\line                  
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}, 
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 stringValue}, 
+{\cs43\f4\cf6\lang1024 objectValue}: {\cs44\i\f0\cf11\lang1024 false}\line                  
+{\cs40\b\f0 end};\line         {\cs43\f4\cf6\lang1024 stringValue}({\cs45\i\f0\cf4\lang1024 leftStr}
+: {\cs42\scaps\f0\cf6\lang1024 String}):\line               {\cs40\b\f0 case} 
+{\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line                  
+{\cs43\f4\cf6\lang1024 stringValue}({\cs45\i\f0\cf4\lang1024 rightStr}: 
+{\cs42\scaps\f0\cf6\lang1024 String}):\line                        
+{\cs44\i\f0\cf11\lang1024 compareStrings}({\cs45\i\f0\cf4\lang1024 leftStr}, 
+{\cs45\i\f0\cf4\lang1024 rightStr}, {\cs44\i\f0\cf11\lang1024 false}, 
+{\cs44\i\f0\cf11\lang1024 true}, {\cs44\i\f0\cf11\lang1024 false});\line                  
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}, 
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 objectValue}: {\cs44\i\f0\cf11\lang1024 false}\line                  
+{\cs40\b\f0 end};\line         {\cs43\f4\cf6\lang1024 objectValue}({\cs45\i\f0\cf4\lang1024 leftObj}
+: {\cs42\scaps\f0\cf6\lang1024 Object}):\line               {\cs40\b\f0 case} 
+{\cs45\i\f0\cf4\lang1024 rightValue} {\cs40\b\f0 of}\line                  
+{\cs43\f4\cf6\lang1024 objectValue}({\cs45\i\f0\cf4\lang1024 rightObj}: 
+{\cs42\scaps\f0\cf6\lang1024 Object}): {\cs45\i\f0\cf4\lang1024 leftObj}.
+{\cs43\f4\cf6\lang1024 properties} 
+{\field{\*\fldinst SYMBOL 186 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs45\i\f0\cf4\lang1024 rightObj}.{\cs43\f4\cf6\lang1024 properties};\line                  
+{\cs43\f4\cf6\lang1024 undefinedValue}, {\cs43\f4\cf6\lang1024 nullValue}, 
+{\cs43\f4\cf6\lang1024 booleanValue}, {\cs43\f4\cf6\lang1024 doubleValue}, 
+{\cs43\f4\cf6\lang1024 stringValue}: {\cs44\i\f0\cf11\lang1024 false}\line                  
+{\cs40\b\f0 end}\line         {\cs40\b\f0 end}\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar
+\hyphpar0\level3\b\fs24\lang2057 Binary Bitwise Operators\par\pard\plain\s11\sb60\keep\keepn
+\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn
+\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024&} 
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs36\i0 anyValue}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37 ExprKind}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024^} 
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs36\i0 anyValue}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37 ExprKind}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024|} 
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs36\i0 anyValue}\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs37 ExprKind}]\par
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024&} {\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 EqualityExpression\super\cs36\i0 anyValue}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 applyBinaryBitwiseOperator}({\cs44\i\f0\cf11\lang1024 bitwiseAnd}, 
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue})\par\pard\plain\s20\li180
+\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs37 ExprKind}]
+\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024^} {\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 BitwiseAndExpression\super\cs36\i0 anyValue}
+]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 applyBinaryBitwiseOperator}({\cs44\i\f0\cf11\lang1024 bitwiseXor}, 
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue})\par\pard\plain\s20\li180
+\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs37 ExprKind}]
+\par{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37 ExprKind}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024|} {\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 BitwiseXorExpression\super\cs36\i0 anyValue}
+]({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 applyBinaryBitwiseOperator}({\cs44\i\f0\cf11\lang1024 bitwiseOr}, 
+{\cs45\i\f0\cf4\lang1024 leftValue}, {\cs45\i\f0\cf4\lang1024 rightValue})\par\pard\plain\s20\li180
+\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024
+{\cs44\i\f0\cf11\lang1024 applyBinaryBitwiseOperator}({\cs45\i\f0\cf4\lang1024 operator}: 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Integer} 
+{\field{\*\fldinst SYMBOL 180 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs42\scaps\f0\cf6\lang1024 Integer} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 In
+teger}
+, {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value}, 
+{\cs45\i\f0\cf4\lang1024 rightValue}: {\cs42\scaps\f0\cf6\lang1024 Value})\line   : 
+{\cs42\scaps\f0\cf6\lang1024 ValueOrException}\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftInt}: {\cs42\scaps\f0\cf6\lang1024 Integer} = 
+{\cs44\i\f0\cf11\lang1024 coerceToInt32}({\cs45\i\f0\cf4\lang1024 leftValue})\line      
+{\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 rightInt}: 
+{\cs42\scaps\f0\cf6\lang1024 Integer} = {\cs44\i\f0\cf11\lang1024 coerceToInt32}(
+{\cs45\i\f0\cf4\lang1024 rightValue})\line      {\cs40\b\f0 in} 
+{\cs44\i\f0\cf11\lang1024 integerResult}({\cs45\i\f0\cf4\lang1024 operator}(
+{\cs45\i\f0\cf4\lang1024 leftInt}, {\cs45\i\f0\cf4\lang1024 rightInt}))\par\pard\plain\s2\sa60\keep
+\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Binary Logical Operators\par\pard\plain\s11\sb60
+\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120\keep
+\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37 ExprKind}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024&&} 
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs36\i0 anyValue}\par\pard\plain\s12\fi-1440
+\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37 ExprKind}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024||} 
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs36\i0 anyValue}\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs37 ExprKind}]
+\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024&&} {\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 if} 
+{\cs44\i\f0\cf11\lang1024 coerceToBoolean}({\cs45\i\f0\cf4\lang1024 leftValue})\line          
+{\cs40\b\f0 then} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 BitwiseOrExpression\super\cs36\i0 anyValue}]({\cs45\i\f0\cf4\lang1024 e})
+\line          {\cs40\b\f0 else} {\cs43\f4\cf6\lang1024 normal} {\cs45\i\f0\cf4\lang1024 leftValue}
+\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs37 ExprKind}]
+\par{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37 ExprKind}
+ {\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024||} {\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs36\i0 anyValue}]
+\line             ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = 
+{\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 leftValue}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 if} 
+{\cs44\i\f0\cf11\lang1024 coerceToBoolean}({\cs45\i\f0\cf4\lang1024 leftValue})\line          
+{\cs40\b\f0 then} {\cs43\f4\cf6\lang1024 normal} {\cs45\i\f0\cf4\lang1024 leftValue}\line          
+{\cs40\b\f0 else} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 LogicalAndExpression\super\cs36\i0 anyValue}]({\cs45\i\f0\cf4\lang1024 e})
+\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Conditional Operator
+\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s12
+\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37 ExprKind}\par\pard\plain\s15\fi-1260\li1800
+\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024?} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024:} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue}\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs37 ExprKind}]
+\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs36\i0 anyValue} {\cs34\b\f5\cf2\lang1024?} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1} 
+{\cs34\b\f5\cf2\lang1024:} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression{\super\cs36\i0 anyValue}\b0\i0\sub 2}]\line          
+   ({\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 condition}: {\cs42\scaps\f0\cf6\lang1024 Value} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 LogicalOrExpression\super\cs36\i0 anyValue}]
+({\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 if} 
+{\cs44\i\f0\cf11\lang1024 coerceToBoolean}({\cs45\i\f0\cf4\lang1024 condition})\line          
+{\cs40\b\f0 then} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line          {\cs40\b\f0 else} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression{\super\cs36\i0 anyValue}\b0\i0\sub 2}](
+{\cs45\i\f0\cf4\lang1024 e})\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24
+\lang2057 Assignment Operators\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20
+\lang2057 Syntax\par\pard\plain\s12\fi-1440\li1800\sb120\keep\keepn\nowidctlpar\hyphpar0
+\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}\par\pard\plain\s14\fi-1260
+\li1800\keep\keepn\nowidctlpar\tx720\hyphpar0\fs20\lang1024\tab
+{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37 ExprKind}\par\pard\plain\s15\fi-1260
+\li1800\sa120\keep\nowidctlpar\tx720\hyphpar0\fs20\lang1024|\tab{\cs35\i\f6\cf13\lang1024 Lvalue} 
+{\cs34\b\f5\cf2\lang1024=} {\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs36\i0 anyValue}
+\par\pard\plain\s2\sa60\keep\keepn\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Expressions\par\pard
+\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s13\fi-1440
+\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37 ExprKind}\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 ConditionalExpression\super\cs37 ExprKind}]
+\par{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 Lvalue} {\cs34\b\f5\cf2\lang1024=} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e}: {\cs42\scaps\f0\cf6\lang1024 Env})\line   = {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 leftReference}: {\cs42\scaps\f0\cf6\lang1024 Reference} = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Lvalue}]({\cs45\i\f0\cf4\lang1024 e})\line  
+    {\cs40\b\f0 in} {\cs40\b\f0 letexc} {\cs45\i\f0\cf4\lang1024 rightValue}: 
+{\cs42\scaps\f0\cf6\lang1024 Value} = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression{\super\cs36\i0 anyValue}\b0\i0\sub 1}](
+{\cs45\i\f0\cf4\lang1024 e})\line      {\cs40\b\f0 in} {\cs40\b\f0 letexc} 
+{\cs45\i\f0\cf4\lang1024 u}: {\cs42\scaps\f0\cf6\lang1024 Void} = 
+{\cs44\i\f0\cf11\lang1024 referencePutValue}({\cs45\i\f0\cf4\lang1024 leftReference}, 
+{\cs45\i\f0\cf4\lang1024 rightValue})\line      {\cs40\b\f0 in} {\cs43\f4\cf6\lang1024 normal} 
+{\cs45\i\f0\cf4\lang1024 rightValue}\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar\hyphpar0
+\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs37 ExprKind}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs37 ExprKind} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37 ExprKind}]\line   = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 AssignmentExpression\super\cs37 ExprKind}]
+\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s13
+\fi-1440\li1800\sb120\sa120\keep\nowidctlpar\hyphpar0\outlinelevel4\fs20\lang1024
+{\cs35\i\f6\cf13\lang1024 Expression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs36\i0 anyValue}\par\pard\plain\s11\sb60\keep\keepn
+\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep\nowidctlpar
+\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Expression}] : 
+{\cs41\f0\cf6\lang1024{\cs42\scaps\f0\cf6\lang1024 Env} 
+{\field{\*\fldinst SYMBOL 174 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} \cs42\scaps\f0\cf6\lang1024 Va
+lueOrException}
+\par\pard\plain\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Expression} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs36\i0 anyValue}] = {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 CommaExpression\super\cs36\i0 anyValue}]\par\pard\plain\s2\sa60\keep\keepn
+\nowidctlpar\hyphpar0\level3\b\fs24\lang2057 Programs\par\pard\plain\s11\sb60\keep\keepn\nowidctlpar
+\hyphpar0\b\fs20\lang2057 Syntax\par\pard\plain\s13\fi-1440\li1800\sb120\sa120\keep\nowidctlpar
+\hyphpar0\outlinelevel4\fs20\lang1024{\cs35\i\f6\cf13\lang1024 Program} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 Expression} {\cs33\b\f6\cf10\lang1024 End}\par\pard\plain\s11\sb60\keep
+\keepn\nowidctlpar\hyphpar0\b\fs20\lang2057 Semantics\par\pard\plain\s20\li180\sb60\sa60\keep
+\nowidctlpar\hyphpar0\fs20\lang1024{\cs40\b\f0 action} {\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Program}] : {\cs42\scaps\f0\cf6\lang1024 ValueOrException}\par\pard\plain
+\s21\li540\sa60\keep\nowidctlpar\hyphpar0\fs20\lang1024{\cs46\f7\cf12\lang1024 Eval}[
+{\cs35\i\f6\cf13\lang1024 Program} 
+{\field{\*\fldinst SYMBOL 222 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}} 
+{\cs35\i\f6\cf13\lang1024 Expression} {\cs33\b\f6\cf10\lang1024 End}] = 
+{\cs46\f7\cf12\lang1024 Eval}[{\cs35\i\f6\cf13\lang1024 Expression}](
+{\b{\field{\*\fldinst SYMBOL 225 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+{\cs43\f4\cf6\lang1024 nullObjectOrNull}
+{\b{\field{\*\fldinst SYMBOL 241 \\f "Symbol" \\s 10}{\fldrslt\f3\fs20}}}
+{\sub\cs42\scaps\f0\cf6\lang1024 Env})\par}
