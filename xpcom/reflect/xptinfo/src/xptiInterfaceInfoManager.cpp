@@ -148,20 +148,23 @@ xptiInterfaceInfoManager::GetComponentsDir(nsILocalFile** aDir)
 {
     NS_ASSERTION(aDir,"loser!");
     
-    // Make a new one each time because caller *will* modify it.
+    // We must make a new nsILocalFile each time because the caller *will* 
+    // modify it.
 
-    nsCOMPtr<nsILocalFile> dir = do_CreateInstance(NS_LOCAL_FILE_PROGID);
-    if(!dir)
-        return PR_FALSE;
-
-    nsresult rv = dir->InitWithPath(
-        nsSpecialSystemDirectory(
-            nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory));
-    if(NS_FAILED(rv))
-        return PR_FALSE;
-    
-    NS_ADDREF(*aDir = dir);
-    return PR_TRUE;
+    nsCOMPtr<nsIProperties> dirService = 
+        do_GetService(NS_DIRECTORY_SERVICE_PROGID);
+    if(dirService)
+    {
+        nsCOMPtr<nsILocalFile> dir;
+        dirService->Get("xpcom.currentProcess.componentDirectory", 
+                        NS_GET_IID(nsIFile), getter_AddRefs(dir));
+        if(dir)
+        {
+            NS_ADDREF(*aDir = dir);
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
 }
 
 PRBool 
