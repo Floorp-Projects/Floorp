@@ -151,11 +151,9 @@ NS_IMETHODIMP nsICODecoder::Init(imgILoad *aLoad)
 
 NS_IMETHODIMP nsICODecoder::Close()
 {
-  if (mObserver) {
-    mObserver->OnStopContainer(nsnull, nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
-    mObserver = nsnull;
-  }
+  mObserver->OnStopContainer(nsnull, nsnull, mImage);
+  mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+  mObserver = nsnull;
 
   mImage = nsnull;
   mFrame = nsnull;
@@ -183,6 +181,13 @@ NS_IMETHODIMP nsICODecoder::Close()
 
 NS_IMETHODIMP nsICODecoder::Flush()
 {
+  // Set Data here because some ICOs don't have a complete AND Mask
+  // see bug 115357
+  if (mDecodingAndMask) {
+    SetAlphaData();
+    SetImageData();
+    mObserver->OnStopFrame(nsnull, nsnull, mFrame);
+  }
   return NS_OK;
 }
 
@@ -443,6 +448,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
       delete []mRow;
       mRow = new PRUint8[rowSize];
       mAlphaBuffer = new PRUint8[mDirEntry.mHeight*rowSize];
+      nsCRT::memset(mAlphaBuffer, 0xff, mDirEntry.mHeight*rowSize);
     }
 
     PRUint32 toCopy;
@@ -470,9 +476,6 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
             }
             
             if (mCurLine == 1) {
-              SetAlphaData();
-              SetImageData();
-              mObserver->OnStopFrame(nsnull, nsnull, mFrame);
               return NS_OK;
             }
               
