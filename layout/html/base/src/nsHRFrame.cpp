@@ -123,20 +123,14 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  nsIFrame *parent = nsnull;
-  //hack to get around lack of selection bit setting.
-  GetParent(&parent);//get the parent and check to see if its selected
+  nsIFrame *parent = GetParent();
+  // hack to get around lack of selection bit setting.
+  // get the parent and check to see if its selected
   PRBool isSelected = PR_FALSE;
   if (parent)
   {
-    nsCOMPtr<nsIContent> content;
-    parent->GetContent(getter_AddRefs(content));
-    nsFrameState  frameState;
-    if (content.get() == mContent)
-      parent->GetFrameState(&frameState);
-    else
-      GetFrameState(&frameState);
-    isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+    isSelected = (((parent->GetContent() == mContent) ? parent : this)->GetStateBits()
+       & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
   }
   if (isSelected) //check the display flags to see if we draw this frame selected.
   {
@@ -379,9 +373,7 @@ HRuleFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aPresContext,
   if (!aNewContent) return NS_ERROR_NULL_POINTER;
   if (!mContent) return NS_ERROR_NULL_POINTER;
 
-  nsRect thisRect;
-  rv = GetRect(thisRect);
-  if (NS_FAILED(rv)) return rv;
+  nsRect thisRect = GetRect();
   nsPoint offsetPoint;
   nsIView *view;
   GetOffsetFromView(aPresContext, offsetPoint, &view);

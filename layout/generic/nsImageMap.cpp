@@ -1189,22 +1189,20 @@ nsImageMap::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsImageMap::Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& aRect)
 {
-  nsCOMPtr<nsIViewManager> viewManager;
   PRUint32 flags = NS_VMREFRESH_IMMEDIATE;
   nsIView* view;
   nsRect damageRect(aRect);
 
   if (aFrame->HasView()) {
-    view = aFrame->GetView(aPresContext);
+    view = aFrame->GetView();
   }
   else {
     nsPoint offset;
     aFrame->GetOffsetFromView(aPresContext, offset, &view);
-    NS_ASSERTION(nsnull != view, "no view");
+    NS_ASSERTION(view, "no view");
     damageRect += offset;
   }
-  view->GetViewManager(*getter_AddRefs(viewManager));
-  viewManager->UpdateView(view, damageRect, flags);
+  view->GetViewManager()->UpdateView(view, damageRect, flags);
 
   return NS_OK;
 
