@@ -315,17 +315,34 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
 	  line[length-2] == '-')
 	{
 	  term_p = PR_TRUE;
-	  length -= 2;
 	}
 
+  //looks like we have a separator but first, we need to check it's not for one of the part's children.
+  MimeContainer *cont = (MimeContainer *) obj;
+  if (cont->nchildren > 0)
+  {
+    MimeObject *kid = cont->children[cont->nchildren-1];
+    if (kid)
+      if (mime_typep(kid, (MimeObjectClass*) &mimeMultipartClass))
+      {
+        //Don't ask the kid to check the boundary if it has already detected a Teminator
+        MimeMultipart *mult = (MimeMultipart *) kid;
+        if (mult->state != MimeMultipartEpilogue)
+          if (MimeMultipart_check_boundary(kid, line, length) != MimeMultipartBoundaryTypeNone)
+            return MimeMultipartBoundaryTypeNone;
+      }
+  }
+
+  if (term_p)
+    length -= 2;
+
   if (blen == length-2 && !nsCRT::strncmp(line+2, mult->boundary, length-2))
-	return (term_p
+	  return (term_p
 			? MimeMultipartBoundaryTypeTerminator
 			: MimeMultipartBoundaryTypeSeparator);
   else
-	return MimeMultipartBoundaryTypeNone;
+	  return MimeMultipartBoundaryTypeNone;
 }
-
 
 
 static int
