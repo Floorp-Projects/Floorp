@@ -1109,28 +1109,6 @@ nsMessenger::SendUnsentMessages()
 	return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMessenger::LoadFirstDraft()
-{
-	nsresult              rv = NS_ERROR_FAILURE;
-	nsCOMPtr<nsIMsgDraft> pMsgDraft; 
-
-	rv = nsComponentManager::CreateInstance(kMsgDraftCID, NULL, NS_GET_IID(nsIMsgDraft),
-																					(void **)getter_AddRefs(pMsgDraft)); 
-	if (NS_SUCCEEDED(rv) && pMsgDraft) 
-	{ 
-#ifdef DEBUG
-		printf("We succesfully obtained a nsIMsgDraft interface....\n");
-#endif
-
-
-    // This should really pass in a URI, but for now, just to test, we can pass in nsnull
-    rv = pMsgDraft->OpenDraftMsg(nsnull, nsnull, nsnull, PR_FALSE); 
-  } 
-
-  return rv;
-}
-
 NS_IMETHODIMP nsMessenger::DoPrint()
 {
 #ifdef DEBUG_MESSENGER

@@ -759,10 +759,7 @@ function MsgSendUnsentMsg()
 {
 	messenger.SendUnsentMessages();
 }
-function MsgLoadFirstDraft() 
-{
-	messenger.LoadFirstDraft();
-}
+
 function MsgUpdateMsgCount() {}
 
 function MsgRenameFolder() 

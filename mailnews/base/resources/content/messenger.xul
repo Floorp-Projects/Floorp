@@ -355,7 +355,6 @@ Rights Reserved.
               <menuitem value="&sendUnsentCmd.label;"
                         accessKey="&sendUnsentCmd.accesskey;"
                         oncommand="MsgSendUnsentMsg();"/>
-              <menuitem value="&loadFirstDraft.label;" oncommand="MsgLoadFirstDraft();"/>      
               <menuitem value="&emptyTrashCmd.label;" oncommand="MsgEmptyTrash();"/>
               <menuitem value="&subscribeCmd.label;"
                         accessKey="&subscribeCmd.accesskey;"

@@ -87,7 +87,6 @@ interface nsIMessenger : nsISupports {
     void Undo();
     void Redo();
 	void SendUnsentMessages();
-	void LoadFirstDraft();
 	void SetDocumentCharset(in wstring characterSet);
     void saveAs(in string url, in boolean asFile, in nsIMsgIdentity identity);
     void openAttachment(in string url, in string displayName, in string messageUri);
