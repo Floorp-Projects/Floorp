@@ -176,7 +176,7 @@ static REGERR vr_Init(void)
             regbuf = (char*)XP_ALLOC( 10 + XP_STRLEN(app_dir) );
             if (regbuf != NULL ) {
                 XP_STRCPY( regbuf, app_dir );
-                XP_STRCAT( regbuf, "registry" );
+                XP_STRCAT( regbuf, "/registry" );
             } 
             else {
                 err = REGERR_MEMORY;
