@@ -818,7 +818,7 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
                 value.Trim(" \t\n\r");
 
                 nsIRDFLiteral* literal;
-                if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(value, &literal))) {
+                if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(value.GetUnicode(), &literal))) {
                     rv = rdf_ContainerAppendElement(mDataSource,
                                                     GetContextElement(1),
                                                     literal);
@@ -832,7 +832,7 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
                 value.Trim(" \t\n\r");
 
                 nsCOMPtr<nsIRDFLiteral> target;
-                rv = gRDFService->GetLiteral(value, getter_AddRefs(target));
+                rv = gRDFService->GetLiteral(value.GetUnicode(), getter_AddRefs(target));
                 if (NS_FAILED(rv)) return rv;
 
                 rv = mDataSource->Assert(GetContextElement(1), GetContextElement(0), target, PR_TRUE);
@@ -985,7 +985,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             nsAutoString uri = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(uri);
 
-            return gRDFService->GetUnicodeResource(uri, aResource);
+            return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
 
         if (attr.get() == kIdAtom) {
@@ -1000,7 +1000,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
 
             rdf_PossiblyMakeAbsolute(docURI, tag);
 
-            return gRDFService->GetUnicodeResource(tag, aResource);
+            return gRDFService->GetUnicodeResource(tag.GetUnicode(), aResource);
         }
 
         if (attr.get() == kAboutEachAtom) {
@@ -1051,7 +1051,7 @@ RDFContentSinkImpl::GetResourceAttribute(const nsIParserNode& aNode,
             mDocumentURL->GetSpec(&documentURL);
             rdf_PossiblyMakeAbsolute(documentURL, uri);
 
-            return gRDFService->GetUnicodeResource(uri, aResource);
+            return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
         }
     }
     return NS_ERROR_FAILURE;
@@ -1095,11 +1095,11 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
         nsresult rv;
 
         nsCOMPtr<nsIRDFResource> property;
-        rv = gRDFService->GetUnicodeResource(k, getter_AddRefs(property));
+        rv = gRDFService->GetUnicodeResource(k.GetUnicode(), getter_AddRefs(property));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFLiteral> target;
-        rv = gRDFService->GetLiteral(v, getter_AddRefs(target));
+        rv = gRDFService->GetLiteral(v.GetUnicode(), getter_AddRefs(target));
         if (NS_FAILED(rv)) return rv;
 
         mDataSource->Assert(aSubject, property, target, PR_TRUE);
@@ -1216,7 +1216,7 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
         typeStr.Append(tag->GetUnicode());
 
         nsCOMPtr<nsIRDFResource> type;
-        rv = gRDFService->GetUnicodeResource(typeStr, getter_AddRefs(type));
+        rv = gRDFService->GetUnicodeResource(typeStr.GetUnicode(), getter_AddRefs(type));
         if (NS_FAILED(rv)) return rv;
 
         rv = mDataSource->Assert(rdfResource, kRDF_type, type, PR_TRUE);
@@ -1258,7 +1258,7 @@ RDFContentSinkImpl::OpenProperty(const nsIParserNode& aNode)
     // name. We can do this 'cause we don't need it anymore...
     ns.Append(tag->GetUnicode());
     nsCOMPtr<nsIRDFResource> property;
-    rv = gRDFService->GetUnicodeResource(ns, getter_AddRefs(property));
+    rv = gRDFService->GetUnicodeResource(ns.GetUnicode(), getter_AddRefs(property));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFResource> target;
