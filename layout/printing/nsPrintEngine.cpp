@@ -169,6 +169,9 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 
+#include "nsCDefaultURIFixup.h"
+#include "nsIURIFixup.h"
+
 //-----------------------------------------------------
 // PR LOGGING
 #ifdef MOZ_LOGGING
@@ -1822,9 +1825,17 @@ nsPrintEngine::GetDocumentTitleAndURL(nsIDocument* aDoc,
   nsIURI* url = aDoc->GetDocumentURI();
   if (!url) return;
 
+  nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID));
+  if (!urifixup) return;
+
+  nsCOMPtr<nsIURI> exposableURI;
+  urifixup->CreateExposableURI(url, getter_AddRefs(exposableURI));
+
+  if (!exposableURI) return;
+
   nsCAutoString urlCStr;
-  url->GetSpec(urlCStr);
-  *aURLStr = ToNewUnicode(NS_ConvertUTF8toUCS2(urlCStr));
+  exposableURI->GetSpec(urlCStr);
+  *aURLStr = UTF8ToNewUnicode(urlCStr);
 }
 
 //---------------------------------------------------------------------
