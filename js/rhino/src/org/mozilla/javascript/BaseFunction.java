@@ -325,21 +325,25 @@ public class BaseFunction extends IdScriptable implements Function {
                                         Object[] args)
     {
         int arglen = args.length;
-        StringBuffer funArgs = new StringBuffer();
-
-        /* Collect the arguments into a string.  */
-
-        int i;
-        for (i = 0; i < arglen - 1; i++) {
-            if (i > 0)
-                funArgs.append(',');
-            funArgs.append(ScriptRuntime.toString(args[i]));
+        StringBuffer sourceBuf = new StringBuffer();
+        sourceBuf.append("function (");
+        // Append arguments as coma separated strings
+        for (int i = 0; i < arglen - 1; i++) {
+            if (i > 0) {
+                sourceBuf.append(',');
+            }
+            sourceBuf.append(ScriptRuntime.toString(args[i]));
         }
-        String funBody = arglen == 0 ? "" : ScriptRuntime.toString(args[i]);
+        sourceBuf.append(") {");
+        if (arglen != 0) {
+            // append function body
+            String funBody = ScriptRuntime.toString(args[arglen - 1]);
+            sourceBuf.append(funBody);
+        }
+        sourceBuf.append('}');
+        String source = sourceBuf.toString();
 
-        String source = "function (" + funArgs.toString() + ") {" +
-                        funBody + "}";
-        int[] linep = { 0 };
+        int[] linep = new int[1];
         String filename = Context.getSourcePositionFromStack(linep);
         if (filename == null) {
             filename = "<eval'ed string>";
