@@ -319,6 +319,9 @@ protected:
 
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
 
+  // offline support methods.
+  nsresult StartNewOfflineMessage();
+  nsresult WriteStartOfNewLocalMessage();
 
   PRBool m_initialized;
   PRBool m_haveDiscoveredAllFolders;
@@ -332,8 +335,7 @@ protected:
   nsCOMPtr<nsIEventQueue> m_eventQueue;
   PRBool m_urlRunning;
 
-	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
-	// converter interface...
+	// this is currently used when we do a save as of an imap message..
 	nsCOMPtr<nsIOutputStream> m_tempMessageStream;
 
   // *** jt - undo move/copy trasaction support
@@ -353,6 +355,9 @@ protected:
   PRBool m_folderNeedsACLListed;
 
   nsCOMPtr<nsIMsgMailNewsUrl> mUrlToRelease;
+
+  // offline imap support
+  PRBool m_downloadMessageForOfflineUse;
 };
 
 #endif

@@ -33,7 +33,8 @@
 #include "nsIMsgAccountManager.h"
 #include "nsXPIDLString.h"
 #include "nsLocalFolderSummarySpec.h"
-
+#include "nsIFileStream.h"
+#include "nsIChannel.h"
 #if defined(XP_OS2)
 #define MAX_FILE_LENGTH_WITHOUT_EXTENSION 8
 #elif defined(XP_MAC)
@@ -510,6 +511,88 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 		return rv;
 }
 
+nsresult nsMsgDBFolder::GetOfflineStoreInputStream(nsIInputStream **stream)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  if (mPath)
+  {
+    nsFileSpec pathFileSpec;
+    mPath->GetFileSpec(&pathFileSpec);
+    nsCOMPtr<nsISupports>  supports;
+    rv = NS_NewIOFileStream(getter_AddRefs(supports), pathFileSpec, PR_CREATE_FILE, 00700);
+    if (NS_SUCCEEDED(rv))
+      rv = supports->QueryInterface(NS_GET_IID(nsIInputStream), (void**)stream);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileChannel(nsIFileChannel **aFileChannel)
+{
+  NS_ENSURE_ARG(aFileChannel);
+
+  nsresult rv;
+
+  rv = nsComponentManager::CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID, nsnull, 
+              NS_GET_IID(nsIFileChannel), (void **) aFileChannel);
+  if (*aFileChannel)
+  {
+    nsXPIDLCString nativePath;
+    mPath->GetNativePath(getter_Copies(nativePath));
+
+    nsCOMPtr <nsILocalFile> localStore;
+    rv = NS_NewLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
+    if (NS_SUCCEEDED(rv) && localStore)
+    {
+      rv = (*aFileChannel)->Init(localStore, PR_CREATE_FILE | PR_RDWR, 0);
+    }
+  }
+  return rv;
+}
+
+nsresult nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStream)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  if (mPath)
+  {
+    // the following code doesn't work for a host of reasons - the transfer offset
+    // is ignored for output streams. The buffering used by file channels does not work
+    // if transfer offsets are coerced to work, etc.
+#if 0
+    nsCOMPtr<nsIFileChannel> fileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID);
+    if (fileChannel)
+    {
+      PRUint32 fileSize = 0;
+      nsXPIDLCString nativePath;
+      mPath->GetNativePath(getter_Copies(nativePath));
+
+      mPath->GetFileSize(&fileSize);
+      nsCOMPtr <nsILocalFile> localStore;
+      rv = NS_NewLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
+      if (NS_SUCCEEDED(rv) && localStore)
+      {
+        rv = fileChannel->Init(localStore, PR_CREATE_FILE | PR_RDWR, 0);
+        if (NS_FAILED(rv)) 
+          return rv; 
+        fileChannel->SetTransferOffset(fileSize);
+        rv = fileChannel->OpenOutputStream(outputStream);
+        if (NS_FAILED(rv)) 
+          return rv; 
+      }
+    }
+#endif
+    nsCOMPtr<nsISupports>  supports;
+    nsFileSpec fileSpec;
+    mPath->GetFileSpec(&fileSpec);
+    rv = NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE, 00700);
+    supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void **) outputStream);
+
+    nsCOMPtr <nsIRandomAccessStore> randomStore = do_QueryInterface(supports);
+    if (randomStore)
+      randomStore->Seek(PR_SEEK_END, 0);
+  }
+  return rv;
+}
+
 // path coming in is the root path without the leaf name,
 // on the way out, it's the whole path.
 nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &path, char **resultName)
@@ -787,6 +870,38 @@ NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
 //	else
 //		*retval = PR_FALSE;
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result)
+{
+  NS_ENSURE_ARG(result);
+  PRUint32 flags = 0;
+  *result = PR_FALSE;
+  GetFlags(&flags);
+
+  if (flags & MSG_FOLDER_FLAG_OFFLINE)
+  {
+	  if(!mDatabase)
+		  return NS_ERROR_FAILURE;
+
+	  nsresult rv;
+	  nsCOMPtr<nsIMsgDBHdr> hdr;
+	  rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
+	  if(NS_FAILED(rv))
+		  return rv;
+
+    if (hdr)
+    {
+      PRUint32 msgFlags = 0;
+
+      hdr->GetFlags(&msgFlags);
+      // check if we already have this message body offline
+      // should also check against size limit when we have that.
+      if (! (msgFlags & MSG_FLAG_OFFLINE))
+        *result = PR_TRUE;
+    }
+  }
+  return NS_OK;
 }
 
 

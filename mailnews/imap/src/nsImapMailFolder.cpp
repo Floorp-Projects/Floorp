@@ -98,7 +98,8 @@ nsImapMailFolder::nsImapMailFolder() :
   m_explicitlyVerify(PR_FALSE),
     m_folderNeedsSubscribing(PR_FALSE),
     m_folderNeedsAdded(PR_FALSE),
-    m_folderNeedsACLListed(PR_TRUE)
+    m_folderNeedsACLListed(PR_TRUE),
+    m_downloadMessageForOfflineUse(PR_FALSE)
 {
     m_appendMsgMonitor = nsnull;  // since we're not using this (yet?) make it null.
                 // if we do start using it, it should be created lazily
@@ -2939,17 +2940,92 @@ nsImapMailFolder::SetupMsgWriteStream(const char * aNativeString, PRBool addDumm
     return rv;
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::GetNotifyDownloadedLines(PRBool *notifyDownloadedLines)
+{
+  NS_ENSURE_ARG(notifyDownloadedLines);
+  *notifyDownloadedLines = m_downloadMessageForOfflineUse;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::SetNotifyDownloadedLines(PRBool notifyDownloadedLines)
+{
+  m_downloadMessageForOfflineUse = notifyDownloadedLines;
+  return NS_OK;
+}
+
+nsresult nsImapMailFolder::StartNewOfflineMessage()
+{
+  nsresult rv = GetOfflineStoreOutputStream(getter_AddRefs(m_tempMessageStream));
+  PRUint32 statusOffset;
+  WriteStartOfNewLocalMessage();
+  return rv;
+}
+
+nsresult nsImapMailFolder::WriteStartOfNewLocalMessage()
+{
+  nsCAutoString result;
+  char *ct;
+  PRUint32 writeCount;
+  time_t now = time ((time_t*) 0);
+  ct = ctime(&now);
+  ct[24] = 0;
+  result = "From - ";
+  result += ct;
+  result += MSG_LINEBREAK;
+  
+  nsCOMPtr <nsIRandomAccessStore> randomStore;
+  PRInt32 curStorePos;
+
+  if (m_offlineHeader)
+    randomStore = do_QueryInterface(m_tempMessageStream);
+
+  if (randomStore)
+  {
+    randomStore->Tell(&curStorePos);
+    m_offlineHeader->SetMessageOffset(curStorePos);
+  }
+  m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+                             &writeCount);
+  if (randomStore)
+  {
+    randomStore->Tell(&curStorePos);
+    m_offlineHeader->SetStatusOffset(curStorePos);
+  }
+
+  result = "X-Mozilla-Status: 0001";
+  result += MSG_LINEBREAK;
+  m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+                             &writeCount);
+  result =  "X-Mozilla-Status2: 00000000";
+  result += MSG_LINEBREAK;
+  nsresult rv = m_tempMessageStream->Write(result.GetBuffer(), result.Length(),
+                             &writeCount);
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey uidOfMessage)
 {
   PRUint32 count = 0;
+  nsresult rv = NS_OK;
   // remember the uid of the message we're downloading.
   m_curMsgUid = uidOfMessage;
+  if (m_downloadMessageForOfflineUse && !m_tempMessageStream)
+  {
+    GetMessageHeader(uidOfMessage, getter_AddRefs(m_offlineHeader));
+    rv = StartNewOfflineMessage();
+  }
+
   if (m_tempMessageStream)
-     m_tempMessageStream->Write(adoptedMessageLine, 
+  {
+     rv = m_tempMessageStream->Write(adoptedMessageLine, 
                   PL_strlen(adoptedMessageLine), &count);
-                                                                                                                                                  
-     return NS_OK;                                                               
+     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to write to stream");
+  }
+                                                                                
+  return rv;
 }
     
 NS_IMETHODIMP
@@ -2957,8 +3033,18 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, PRBool markRead
 {
   nsresult res = NS_OK;
   if (m_tempMessageStream)
+  {
     m_tempMessageStream->Close();
+    m_tempMessageStream = nsnull;
+  }
 
+  if (m_offlineHeader)
+  {
+    PRUint32 newFlags;
+
+    m_offlineHeader->OrFlags(MSG_FLAG_OFFLINE, &newFlags);
+    m_offlineHeader = nsnull;
+  }
   if (markRead)
   {
     nsCOMPtr<nsIMsgDBHdr> msgHdr;
@@ -3863,15 +3949,16 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
 
 NS_IMETHODIMP nsImapMailFolder::SetPath(nsIFileSpec * aPathName)                
 {                                                                               
- if (!aPathName)
+  nsMsgFolder::SetPath(aPathName);   // call base class so mPath will get set too
+  if (!aPathName)
      return NS_ERROR_NULL_POINTER;
 
+  // not sure why imap has m_pathName and doesn't just use mPath.
   if (!m_pathName)
   {
-  m_pathName = new nsFileSpec("");
+    m_pathName = new nsFileSpec("");
     if (! m_pathName)
-         return NS_ERROR_OUT_OF_MEMORY;
-
+      return NS_ERROR_OUT_OF_MEMORY;
   }
   return aPathName->GetFileSpec(m_pathName);                                  
 }                                                                               

@@ -532,9 +532,30 @@ NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriorityValue *result)
 
 NS_IMETHODIMP nsMsgHdr::GetMessageOffset(PRUint32 *result)
 {
+  NS_ENSURE_ARG(result);
+
+  // if we have the message body offline, then return the message offset column
+  // (this will only be true for news and imap messages).
+  PRUint32 rawFlags;
+  GetRawFlags(&rawFlags);
+  if (rawFlags & MSG_FLAG_OFFLINE)
+  {
+  	return GetUInt32Column(m_mdb->m_offlineMsgOffsetColumnToken, result);
+  }
+  else
+  {
     *result = m_messageKey;
     return NS_OK;
+  }
 }
+
+NS_IMETHODIMP nsMsgHdr::SetMessageOffset(PRUint32 offset)
+{
+
+	nsresult rv = SetUInt32Column(m_mdb->m_offlineMsgOffsetColumnToken, offset);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsMsgHdr::GetMessageSize(PRUint32 *result)
 {
@@ -547,10 +568,10 @@ NS_IMETHODIMP nsMsgHdr::GetMessageSize(PRUint32 *result)
 
 NS_IMETHODIMP nsMsgHdr::GetLineCount(PRUint32 *result)
 {
-        PRUint32 linecount;
-        nsresult res = GetUInt32Column(m_mdb->m_numLinesColumnToken, &linecount);
-        *result = linecount;
-        return res;
+  PRUint32 linecount;
+  nsresult res = GetUInt32Column(m_mdb->m_numLinesColumnToken, &linecount);
+  *result = linecount;
+  return res;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetPriorityString(const char *priority)

@@ -852,9 +852,7 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted
     if (imapAction == nsIImapUrl::nsImapMsgFetch)
     {
       nsresult rv = NS_OK;
-      nsCOMPtr<nsIMsgFolder> folder;
       nsCOMPtr<nsIImapUrl> runningImapURL;
-      nsXPIDLCString msgKey;
 
       rv = GetRunningImapURL(getter_AddRefs(runningImapURL));
       if (NS_SUCCEEDED(rv) && runningImapURL)
@@ -2769,23 +2767,30 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
     }
   }
 
-  // if we have a channel listener, then just spool the message
-  // directory to the listener
-  else if (m_channelListener)
+  else 
   {
-    PRUint32 count = 0;
-    char * line = downloadLineDontDelete->adoptedMessageLine;
-    if (m_channelOutputStream)
+    PRBool echoLineToMessageSink = PR_TRUE;
+    // if we have a channel listener, then just spool the message
+    // directory to the listener
+    if (m_channelListener)
     {
-      nsresult rv = m_channelOutputStream->Write(line, PL_strlen(line), &count);
-      if (NS_SUCCEEDED(rv))
-        m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, count);   
+      PRUint32 count = 0;
+      char * line = downloadLineDontDelete->adoptedMessageLine;
+      if (m_channelOutputStream)
+      {
+        nsresult rv = m_channelOutputStream->Write(line, PL_strlen(line), &count);
+        if (NS_SUCCEEDED(rv))
+          m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, count); 
+        // here is where we should echo the line to the local folder copy of an online message
+      }
+      if (m_imapMessageSink)
+        m_imapMessageSink->GetNotifyDownloadedLines(&echoLineToMessageSink);
     }
-  }
-  else if (m_imapMessageSink && downloadLineDontDelete)
-  {
-    m_imapMessageSink->ParseAdoptedMsgLine(downloadLineDontDelete->adoptedMessageLine, 
-    downloadLineDontDelete->uidOfMessage);
+    if (m_imapMessageSink && downloadLineDontDelete && echoLineToMessageSink)
+    {
+      m_imapMessageSink->ParseAdoptedMsgLine(downloadLineDontDelete->adoptedMessageLine, 
+      downloadLineDontDelete->uidOfMessage);
+    }
   }
   // ***** We need to handle the psuedo interrupt here *****
 }
@@ -4312,28 +4317,39 @@ void nsImapProtocol::Language()
   }
 }
 
+void nsImapProtocol::EscapeUserNamePasswordString(const char *strToEscape, nsCString *resultStr)
+{
+  if (strToEscape) 
+  {
+    PRUint32 i = 0;
+    PRUint32 escapeStrlen = nsCRT::strlen(strToEscape);
+    for (i=0; i<escapeStrlen; i++)
+    {
+        if (strToEscape[i] == '\\' || strToEscape[i] == '\"') 
+        {
+            resultStr->Append('\\');
+        }
+        resultStr->Append(strToEscape[i]);
+    }
+  }
+}
+
 void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
 {
 
   ProgressEventFunctionUsingId (IMAP_STATUS_SENDING_LOGIN);
   IncrementCommandTagNumber();
   nsCString command (GetServerCommandTag());
+  nsCAutoString escapedUserName;
   command.Append(" login \"");
-  command.Append(userName);
+  EscapeUserNamePasswordString(userName, &escapedUserName);
+  command.Append((const char *) escapedUserName);
   command.Append("\" \"");
 
   // if the password contains a \, login will fail
   // turn foo\bar into foo\\bar
-  nsCString correctedPassword;
-  if (password) {
-    PRUint32 i = 0;
-    for (i=0;i<nsCRT::strlen(password);i++) {
-        if (password[i] == '\\') {
-            correctedPassword += '\\';
-        }
-        correctedPassword += password[i];
-    }
-  }
+  nsCAutoString correctedPassword;
+  EscapeUserNamePasswordString(password, &correctedPassword);
   command.Append((const char *)correctedPassword);
   command.Append("\""CRLF);
 
@@ -6891,6 +6907,42 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
       }    
     }
   }
+
+  // check if msg is in local cache.
+  PRBool useLocalCache = PR_FALSE;
+  mailnewsUrl->GetMsgIsInLocalCache(&useLocalCache);
+  if (useLocalCache)
+  {
+    // we want to create a file channel and read the msg from there.
+      nsCOMPtr<nsIChannel> fileChannel;
+      // get the file channel from the folder, somehow (through the message or
+      // folder sync?
+      if (fileChannel && NS_SUCCEEDED(rv))
+      {
+        fileChannel->SetLoadGroup(m_loadGroup);
+        // turn around and make our ref on m_url an owning ref...and force the url to remove
+        // its reference on the mock channel...this is a complicated texas two step to solve
+        // a nasty reference counting problem...
+        NS_IF_ADDREF(m_url);
+        mOwningRefToUrl = PR_TRUE;
+        imapUrl->SetMockChannel(nsnull);
+
+        // if we are going to read from the cache, then create a mock stream listener class and use it
+        nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
+        NS_ADDREF(cacheListener);
+        cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
+        rv = fileChannel->AsyncRead(cacheListener, m_channelContext);
+        NS_RELEASE(cacheListener);
+
+        if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
+        {
+          // if the msg is unread, we should mark it read on the server. This lets
+          // the code running this url we're loading from the cache, if it cares.
+          imapUrl->SetMsgLoadingFromCache(PR_TRUE);
+          return rv;
+        }
+      }    
+    }
 
   // okay, add the mock channel to the load group..
   imapUrl->AddChannelToLoadGroup();

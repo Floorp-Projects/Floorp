@@ -31,6 +31,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDBChangeListener.h"
 #include "nsIUrlListener.h"
+#include "nsIMsgHdr.h"
 
 class nsIMsgFolderCacheElement;
 
@@ -86,6 +87,9 @@ public:
   NS_IMETHOD GetGettingNewMessages(PRBool *gettingNewMessages);
   NS_IMETHOD SetGettingNewMessages(PRBool gettingNewMessages);
 
+  NS_IMETHOD ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result);
+  NS_IMETHOD GetOfflineFileChannel(nsIFileChannel **aFileChannel);
+
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
   virtual nsresult FlushToFolderCache();
@@ -99,12 +103,18 @@ protected:
 	nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
 	nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
   nsresult NotifyStoreClosedAllHeaders();
+
+  virtual nsresult GetOfflineStoreInputStream(nsIInputStream **inputStream);
+  virtual nsresult GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
+
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;
 	nsString mCharset;
 	PRBool mAddListener;
 	PRBool mNewMessages;
   PRBool mGettingNewMessages;
+
+  nsCOMPtr <nsIMsgDBHdr> m_offlineHeader;
 
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;

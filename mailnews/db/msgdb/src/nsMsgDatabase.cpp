@@ -620,6 +620,7 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_messageCharSetColumnToken(0),
 	  m_threadParentColumnToken(0),
 	  m_threadRootKeyColumnToken(0),
+    m_offlineMsgOffsetColumnToken(0),
 	  m_HeaderParser(nsnull),
 	  m_cachedHeaders(nsnull),
 	  m_headersInUse(nsnull),
@@ -1100,6 +1101,8 @@ const char *kThreadSubjectColumnName = "threadSubject";
 const char *kMessageCharSetColumnName = "msgCharSet";
 const char *kThreadParentColumnName = "threadParent";
 const char *kThreadRootColumnName = "threadRoot";
+const char *kOfflineMsgOffsetColumnName = "msgOffset";
+
 struct mdbOid gAllMsgHdrsTableOID;
 struct mdbOid gAllThreadsTableOID;
 
@@ -1213,6 +1216,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
 			err	= GetStore()->StringToToken(GetEnv(), kThreadHdrsScope, &m_threadRowScopeToken); 
 			err	= GetStore()->StringToToken(GetEnv(), kThreadParentColumnName, &m_threadParentColumnToken);
 			err	= GetStore()->StringToToken(GetEnv(), kThreadRootColumnName, &m_threadRootKeyColumnToken);
+      err = GetStore()->StringToToken(GetEnv(), kOfflineMsgOffsetColumnName, &m_offlineMsgOffsetColumnToken);
 			if (err == NS_OK)
 			{
 				// The table of all message hdrs will have table id 1.

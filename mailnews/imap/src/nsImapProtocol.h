@@ -152,6 +152,9 @@ public:
 	PRUint32		CountMessagesInIdString(const char *idString);
 	static	PRBool	HandlingMultipleMessages(const char *messageIdString);
 
+  // escape slashes and double quotes in username/passwords for insecure login.
+  static void EscapeUserNamePasswordString(const char *strToEscape, nsCString *resultStr);
+
 	// used to start fetching a message.
   PRBool GetShouldDownloadArbitraryHeaders();
   char *GetArbitraryHeadersToDownload();

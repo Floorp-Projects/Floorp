@@ -44,6 +44,7 @@ interface nsIMsgFilterList;
 
 interface nsIMsgFolderCacheElement;
 interface nsAutoString;
+interface nsIFileChannel;
 
 typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.
@@ -335,6 +336,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
     nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
     nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
 
+  boolean shouldStoreMsgOffline(in nsMsgKey msgKey);
+  readonly attribute nsIFileChannel offlineFileChannel;
+        
 	nsIMsgFolder getChildWithURI(in string uri, in boolean deep);
 
 	/**

@@ -69,6 +69,7 @@ protected:
 	PRBool	m_runningUrl;
 	PRBool	m_updatingFolder;
   PRBool  m_addContentToCache;
+  PRBool  m_msgIsInLocalCache;
 
   // the following field is really a bit of a hack to make 
   // open attachments work. The external applications code sometimes trys to figure out the right

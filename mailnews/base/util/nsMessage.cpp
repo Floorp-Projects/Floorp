@@ -449,6 +449,15 @@ NS_IMETHODIMP nsMessage::GetMessageOffset(PRUint32 *result)
 		return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMessage::SetMessageOffset(PRUint32 offset)
+{
+	if(mMsgHdr)
+		return mMsgHdr->SetMessageOffset(offset);
+	else
+		return NS_ERROR_FAILURE;
+}
+
+
 NS_IMETHODIMP nsMessage::GetStatusOffset(PRUint32 *result)
 {
 	if(mMsgHdr)

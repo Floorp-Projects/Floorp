@@ -437,6 +437,14 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
 
       PRUint32 messageSize;
       PRBool useMimePartsOnDemand = gMIMEOnDemand;
+      PRBool shouldStoreMsgOffline = PR_FALSE;
+
+      if (folder)
+        folder->ShouldStoreMsgOffline(key, &shouldStoreMsgOffline);
+
+      if (imapMessageSink)
+        imapMessageSink->SetNotifyDownloadedLines(shouldStoreMsgOffline);
+
       nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
 
       if (imapMessageSink)

@@ -68,7 +68,7 @@ interface nsIMsgHdr : nsISupports
     attribute unsigned long messageSize;
     attribute unsigned long lineCount;
     attribute unsigned long statusOffset;
-    readonly attribute unsigned long messageOffset;
+    attribute unsigned long messageOffset;
 
     /* common headers */
     attribute PRTime date;

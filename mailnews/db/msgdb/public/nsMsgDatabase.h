@@ -345,6 +345,7 @@ protected:
 	mdb_token			m_messageCharSetColumnToken;
 	mdb_token			m_threadParentColumnToken;
 	mdb_token			m_threadRootKeyColumnToken;
+	mdb_token			m_offlineMsgOffsetColumnToken;
 	nsIMsgHeaderParser	*m_HeaderParser;
 
 	// header caching stuff - MRU headers, keeps them around in memory

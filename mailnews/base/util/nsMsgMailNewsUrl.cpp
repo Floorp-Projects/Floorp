@@ -50,6 +50,7 @@ nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 	m_runningUrl = PR_FALSE;
 	m_updatingFolder = PR_FALSE;
   m_addContentToCache = PR_FALSE;
+  m_msgIsInLocalCache = PR_FALSE;
 
 	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, NS_GET_IID(nsIUrlListenerManager), (void **) getter_AddRefs(m_urlListeners));
 	nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(m_baseURL));
@@ -317,6 +318,19 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetAddToMemoryCache(PRBool *aAddToCache)
 NS_IMETHODIMP nsMsgMailNewsUrl::SetAddToMemoryCache(PRBool aAddToCache)
 {
 	m_addContentToCache = aAddToCache;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgIsInLocalCache(PRBool *aMsgIsInLocalCache)
+{
+  NS_ENSURE_ARG(aMsgIsInLocalCache); 
+	*aMsgIsInLocalCache = m_msgIsInLocalCache;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetMsgIsInLocalCache(PRBool aMsgIsInLocalCache)
+{
+	m_msgIsInLocalCache = aMsgIsInLocalCache;
 	return NS_OK;
 }
 

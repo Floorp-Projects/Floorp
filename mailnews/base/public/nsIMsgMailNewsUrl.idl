@@ -69,6 +69,8 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	attribute nsIMsgSearchSession searchSession;
 	attribute boolean updatingFolder;
 	attribute boolean addToMemoryCache; 
+  attribute boolean msgIsInLocalCache;
+
   readonly attribute nsICachedNetData memCacheEntry;
 
 	const unsigned long eCopy     = 0;

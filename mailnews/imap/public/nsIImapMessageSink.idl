@@ -38,7 +38,10 @@ interface nsIImapMessageSink : nsISupports {
     void NormalEndMsgWriteStream(in nsMsgKey uidOfMessage, in boolean markMsgRead);
     
     void AbortMsgWriteStream();
-    
+
+  attribute boolean notifyDownloadedLines;  // imap protocol doesn't notify message sink of downloaded
+                                  // lines when it has a channelListener. This forces it to,
+                                  // even if there is a channel listener.
     // message move/copy related methods
 //    void OnlineCopyReport(in ImapOnlineCopyState aCopyState);
     void BeginMessageUpload();
