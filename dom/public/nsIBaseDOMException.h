@@ -101,9 +101,6 @@ NS_DEFINE_CID(kBaseDOMException_CID_##domname, NS_BASE_DOM_EXCEPTION_CID);   \
                                                                              \
 nsresult                                                                     \
 NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
-                nsIException** aException);                                  \
-nsresult                                                                     \
-NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
                 nsIException** aException)                                   \
 {                                                                            \
   if (!(NS_ERROR_GET_MODULE(aNSResult) == module)) {                         \
