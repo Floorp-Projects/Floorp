@@ -281,22 +281,52 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
     return;
   }
   
-  ClearAllTimeouts();
+  if (mDocument) {
+    nsIDocument* doc;
+    nsIURI* docURL = 0;
+
+    if (mDocument && NS_SUCCEEDED(mDocument->QueryInterface(kIDocumentIID, (void**)&doc))) {
+      docURL = doc->GetDocumentURL();
+      NS_RELEASE(doc);
+    }
+
+    if (docURL) {
+#ifdef NECKO
+      char* str;
+      docURL->GetSpec(&str);
+#else
+      PRUnichar* str;
+      docURL->ToString(&str);
+#endif
+      nsAutoString url = str;
+
+      //about:blank URL's do not have ClearScope called on page change.
+      if (url != "about:blank") {
+        ClearAllTimeouts();
   
-  if (mListenerManager) {
-    mListenerManager->RemoveAllListeners();
+        if (mListenerManager) {
+          mListenerManager->RemoveAllListeners();
+        }
+
+        if ((nsnull != mScriptObject) && 
+            (nsnull != mContext) /* &&
+            (nsnull != aDocument) XXXbe why commented out? */ ) {
+          JS_ClearScope((JSContext *)mContext->GetNativeContext(),
+                        (JSObject *)mScriptObject);
+        }
+      }
+#ifdef NECKO
+      nsCRT::free(str);
+#else
+      delete[] str;
+#endif
+    }
   }
 
+  //XXX Should this be outside the about:blank clearscope exception?
   if (mPrincipals && mContext) {
     JSPRINCIPALS_DROP((JSContext *)mContext->GetNativeContext(), mPrincipals);
     mPrincipals = nsnull;
-  }
-
-  if ((nsnull != mScriptObject) && 
-      (nsnull != mContext) /* &&
-      (nsnull != aDocument) XXXbe why commented out? */ ) {
-    JS_ClearScope((JSContext *)mContext->GetNativeContext(),
-                  (JSObject *)mScriptObject);
   }
 
   if (nsnull != mDocument) {
