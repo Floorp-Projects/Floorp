@@ -2608,6 +2608,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
       rv = NewFullPagePluginStream(aStreamListener, instance);
 
+      // If we've got a native window, the let the plugin know about it.
+      if (window->window)
+        instance->SetWindow(window);
+
       NS_RELEASE(instance);
     }
   }
