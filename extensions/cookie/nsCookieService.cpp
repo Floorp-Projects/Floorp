@@ -20,18 +20,13 @@
  * Contributor(s): 
  */
 
-#define NS_IMPL_IDS
-
 #include "nsIServiceManager.h"
 #include "nsCookieService.h"
 #include "nsCookieHTTPNotify.h"
-#include "nsIEventQueueService.h"
 #include "nsCRT.h"
 #include "nsCookie.h"
 #include "nsIGenericFactory.h"
 #include "nsXPIDLString.h"
-
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,16 +57,10 @@ nsresult nsCookieService::Init()
     return NS_ERROR_ALREADY_INITIALIZED;
   }
     
-  nsresult rv;
-    
-  // Make sure there exists the cookie http notify service
-  nsCOMPtr<nsIHTTPNotify> cookieNotifier = do_GetService(NS_COOKIEHTTPNOTIFY_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
   COOKIE_RegisterCookiePrefCallbacks();
   COOKIE_ReadCookies();
   mInitted = PR_TRUE;
-  return rv;
+  return NS_OK;
 }
 
 
