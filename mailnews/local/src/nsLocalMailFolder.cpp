@@ -3296,3 +3296,10 @@ nsMsgLocalMailFolder::NotifyCompactCompleted()
   NotifyFolderEvent(compactCompletedAtom);
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgLocalMailFolder::Shutdown(PRBool shutdownChildren)
+{
+  mInitialized = PR_FALSE;
+  return nsMsgDBFolder::Shutdown(shutdownChildren);
+}
+
