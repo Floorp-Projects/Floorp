@@ -47,6 +47,27 @@
 
 #define ONE_BYTE_TABLE_SIZE 256
 
+#ifdef NS_DEBUG
+// {7AFC9F0A-CFE1-44ea-A755-E3B86AB1226E}
+#define NS_IBASICDECODER_IID \
+{ 0x7afc9f0a, 0xcfe1, 0x44ea, { 0xa7, 0x55, 0xe3, 0xb8, 0x6a, 0xb1, 0x22, 0x6e } }
+
+// {65968A7B-6467-4c4a-B50A-3E0C97A32F07}
+#define NS_IBASICENCODER_IID \
+{ 0x65968a7b, 0x6467, 0x4c4a, { 0xb5, 0xa, 0x3e, 0xc, 0x97, 0xa3, 0x2f, 0x7 } }
+
+class nsIBasicDecoder : public nsISupports {
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBASICDECODER_IID);
+};
+
+class nsIBasicEncoder : public nsISupports {
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBASICENCODER_IID);
+};
+
+#endif
+
 //----------------------------------------------------------------------
 // Class nsBasicDecoderSupport [declaration]
 
@@ -66,6 +87,9 @@
  * @author  Catalin Rotaru [CATA]
  */
 class nsBasicDecoderSupport : public nsIUnicodeDecoder
+#ifdef NS_DEBUG
+                              ,public nsIBasicDecoder
+#endif
 {
   NS_DECL_ISUPPORTS
 
@@ -265,6 +289,9 @@ protected:
 // Class nsBasicEncoder [declaration]
 
 class nsBasicEncoder : public nsIUnicodeEncoder, public nsICharRepresentable
+#ifdef NS_DEBUG
+                       ,public nsIBasicEncoder
+#endif
 {
   NS_DECL_ISUPPORTS
 

@@ -66,7 +66,11 @@ nsBasicDecoderSupport::~nsBasicDecoderSupport()
 
 NS_IMPL_ADDREF(nsBasicDecoderSupport);
 NS_IMPL_RELEASE(nsBasicDecoderSupport);
+#ifdef NS_DEBUG
+NS_IMPL_QUERY_INTERFACE2(nsBasicDecoderSupport, nsIUnicodeDecoder, nsIBasicDecoder);
+#else
 NS_IMPL_QUERY_INTERFACE1(nsBasicDecoderSupport, nsIUnicodeDecoder)
+#endif
 
 //----------------------------------------------------------------------
 // Interface nsIUnicodeDecoder [implementation]
@@ -366,10 +370,15 @@ nsBasicEncoder::~nsBasicEncoder()
 
 NS_IMPL_ADDREF(nsBasicEncoder);
 NS_IMPL_RELEASE(nsBasicEncoder);
+#ifdef NS_DEBUG
+NS_IMPL_QUERY_INTERFACE3(nsBasicEncoder,
+                         nsIUnicodeEncoder,
+                         nsICharRepresentable, nsIBasicEncoder)
+#else
 NS_IMPL_QUERY_INTERFACE2(nsBasicEncoder,
                          nsIUnicodeEncoder,
                          nsICharRepresentable)
-
+#endif
 //----------------------------------------------------------------------
 // Class nsEncoderSupport [implementation]
 
