@@ -96,9 +96,6 @@ class nsNodeAllocator;
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 void DebugDumpContainmentRules2(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 #endif
-PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size);
-
-
 
 /***************************************************************
   First, define the tagstack class
@@ -470,16 +467,6 @@ inline PRInt32 IndexOfTagInSet(PRInt32 aTag,const eHTMLTags* aTagSet,PRInt32 aCo
 inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags *aTagSet,PRInt32 aCount)  {
   return PRBool(-1<IndexOfTagInSet(aTag,aTagSet,aCount));
 }
-
-/******************************************************************************
-  This little structure is used to compute CRC32 values for our debug validator
- ******************************************************************************/
-
-struct CRCStruct {
-  CRCStruct(eHTMLTags aTag,PRInt32 anOp) {mTag=aTag; mOperation=anOp;}
-  eHTMLTags mTag; 
-  PRInt32   mOperation; //usually open or close
-};
 
 /**************************************************************
   This defines the topic object used by the observer service.

@@ -395,11 +395,6 @@ protected:
     PRInt32             mOpenMapCount;
 
     PRUint16            mFlags;
-
-#ifdef ENABLE_CRC
-    PRUint32            mComputedCRC32;
-    PRUint32            mExpectedCRC32;
-#endif
 };
 
 inline nsresult NS_NewNavHTMLDTD(nsIDTD** aInstancePtrResult)
