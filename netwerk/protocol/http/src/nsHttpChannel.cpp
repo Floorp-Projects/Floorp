@@ -1354,26 +1354,30 @@ nsHttpChannel::CheckCache()
         return NS_OK;
     }
 
-    // If the cached content-length is set and it does not match the data size
-    // of the cached content, then the cached response is partial...
-    // either we need to issue a byte range request or we need to refetch the
-    // entire document.
-    nsInt64 contentLength = mCachedResponseHead->ContentLength();
-    if (contentLength != nsInt64(-1)) {
-        PRUint32 size;
-        rv = mCacheEntry->GetDataSize(&size);
-        if (NS_FAILED(rv)) return rv;
+    PRUint16 isCachedRedirect = mCachedResponseHead->Status()/100 == 3;
 
-        if (nsInt64(size) != contentLength) {
-            LOG(("Cached data size does not match the Content-Length header "
-                 "[content-length=%lld size=%u]\n", PRInt64(contentLength), size));
-            if ((nsInt64(size) < contentLength) && mCachedResponseHead->IsResumable()) {
-                // looks like a partial entry.
-                rv = SetupByteRangeRequest(size);
-                if (NS_FAILED(rv)) return rv;
-                mCachedContentIsPartial = PR_TRUE;
+    if (method != nsHttp::Head && !isCachedRedirect) {
+        // If the cached content-length is set and it does not match the data
+        // size of the cached content, then the cached response is partial...
+        // either we need to issue a byte range request or we need to refetch
+        // the entire document.
+        nsInt64 contentLength = mCachedResponseHead->ContentLength();
+        if (contentLength != nsInt64(-1)) {
+            PRUint32 size;
+            rv = mCacheEntry->GetDataSize(&size);
+            if (NS_FAILED(rv)) return rv;
+
+            if (nsInt64(size) != contentLength) {
+                LOG(("Cached data size does not match the Content-Length header "
+                     "[content-length=%lld size=%u]\n", PRInt64(contentLength), size));
+                if ((nsInt64(size) < contentLength) && mCachedResponseHead->IsResumable()) {
+                    // looks like a partial entry.
+                    rv = SetupByteRangeRequest(size);
+                    if (NS_FAILED(rv)) return rv;
+                    mCachedContentIsPartial = PR_TRUE;
+                }
+                return NS_OK;
             }
-            return NS_OK;
         }
     }
 
@@ -1473,12 +1477,8 @@ nsHttpChannel::CheckCache()
         // Sites redirect back to the original URI after setting a session/tracking
         // cookie. In such cases, force revalidation so that we hit the net and do not
         // cycle thru cached responses.
-        PRInt16 status = mCachedResponseHead->Status();
-        const char* cookie = mRequestHead.PeekHeader(nsHttp::Cookie);
-        if (cookie && 
-            (status == 300 || status == 301 || status == 302 ||
-             status == 303 || status == 307))
-             doValidation = PR_TRUE;
+        if (isCachedRedirect && mRequestHead.PeekHeader(nsHttp::Cookie))
+            doValidation = PR_TRUE;
     }
 
     mCachedContentIsValid = !doValidation;
