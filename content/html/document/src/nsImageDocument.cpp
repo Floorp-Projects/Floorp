@@ -74,8 +74,8 @@ public:
 
   void StartLayout();
 
-  nsIImageRequest* mImageRequest;
-  nscolor mBlack;
+  nsIImageRequest*  mImageRequest;
+  nscolor           mBlack;
 };
 
 //----------------------------------------------------------------------
@@ -131,10 +131,13 @@ NS_IMETHODIMP
 ImageListener::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
                              nsresult status, const PRUnichar *errorMsg)
 {
+  if(mDocument){
+    mDocument->EndLayout(ctxt, status, errorMsg);
+  }
+
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  mDocument->EndLayout(ctxt, status, errorMsg);
   return mNextStream->OnStopRequest(channel, ctxt, status, errorMsg);
 }
 
@@ -338,10 +341,27 @@ nsImageDocument::EndLayout(nsISupports *ctxt,
 nsresult nsImageDocument::UpdateTitle( void )
 {
   nsString titleStr;
-  // get the title from the Document (in case there was a previously set title )
-  GetTitle( titleStr );
+
+  // XXX TEMPORARY XXX
+  // We want to display the image type, however there is no way to right now
+  // so instead we just get the image-extension
+  //  - get the URL interface, get the extension, convert to upper-case
+  //  Unless the Imagerequest or Image can tell us the type this is the best we can do.
+  nsIURL *pURL=nsnull;
+  if(NS_SUCCEEDED(mDocumentURL->QueryInterface(nsIURL::GetIID(),(void **)&pURL))){
+    char *pExtension=nsnull;
+    pURL->GetFileExtension(&pExtension);
+    if(pExtension){
+      nsString strExt(pExtension);
+      strExt.ToUpperCase();
+      titleStr.Append(strExt);
+      nsCRT::free(pExtension);
+      pExtension=nsnull;
+    }
+    NS_IF_RELEASE(pURL);
+  }
   // append the image information...
-  titleStr.Append( "Image" );
+  titleStr.Append( " Image" );
   if (mImageRequest) {
     PRUint32 width, height;
     mImageRequest->GetNaturalDimensions(&width, &height);
