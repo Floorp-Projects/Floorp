@@ -1082,13 +1082,40 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
     result = parent->AppendChildTo(content, PR_FALSE);
   }
-  NS_IF_RELEASE(content);
 
   // Special handling for certain tags
   switch (nodeType) {
   case eHTMLTag_table:
     mSink->mInMonolithicContainer--;
     break;
+
+  // XXX This is a temporary fix for option tags with null content
+  // i.e. <option></option>
+  // This makes sure that a text content node gets created if there
+  // wasn't one
+  case eHTMLTag_option:
+    {
+      PRInt32 numChildren;
+      content->ChildCount(numChildren);
+      if (0 == numChildren) {
+        nsIContent* textNodeContent;
+        nsresult rv = NS_NewTextNode(&textNodeContent);
+        if (NS_OK == rv) {
+          // Set the content's document
+          textNodeContent->SetDocument(mSink->mDocument, PR_FALSE);
+          
+          // Set the text in the text node
+          nsITextContent* text = nsnull;
+          textNodeContent->QueryInterface(kITextContentIID, (void**) &text);
+          nsAutoString str(" ");
+          text->SetText(str.GetUnicode(), 1, PR_FALSE);
+          nsCOMPtr<nsIContent> txtContent(do_QueryInterface(textNodeContent));
+          content->AppendChildTo(txtContent, PR_FALSE);
+          NS_RELEASE(text);
+
+        }
+      }
+    }
   case eHTMLTag_form:
     {
       nsHTMLTag parserNodeType = nsHTMLTag(aNode.GetNodeType());
@@ -1106,6 +1133,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     break;
   }
 
+  NS_IF_RELEASE(content);
   // Mark sink dirty if it can safely reflow something
   MaybeMarkSinkDirty();
 
