@@ -465,6 +465,8 @@ RDFServiceImpl::Init()
     if (! gLog)
         gLog = PR_NewLogModule("nsRDFService");
 #endif
+
+    return NS_OK;
 }
 
 
