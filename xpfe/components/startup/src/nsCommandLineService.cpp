@@ -77,10 +77,13 @@ nsCmdLineService::Initialize(int argc, char ** argv)
   nsresult  rv = nsnull;
 
   //Insert the program name 
-  mArgList.AppendElement((void *)PL_strdup("-progname"));
-  mArgValueList.AppendElement((void *)PL_strdup(argv[0]));
-  mArgCount++;
-  i++;
+  if (argv[0])
+  {
+    mArgList.AppendElement((void *)PL_strdup("-progname"));
+    mArgValueList.AppendElement((void *)PL_strdup(argv[0]));
+    mArgCount++;
+    i++;
+  }
 
   for(i=1; i<argc; i++) {
 
@@ -162,7 +165,7 @@ nsCmdLineService::Initialize(int argc, char ** argv)
   {
        printf("Argument: %s, ****** Value: %s\n", mArgList.ElementAt(i), mArgValueList.ElementAt(i));      
   }
-     
+
    return rv;
 	
 }

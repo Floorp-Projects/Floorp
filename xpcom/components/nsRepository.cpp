@@ -47,7 +47,7 @@
  * alpha0.20 : First time we did versioning
  * alpha0.30 : Changing autoreg to begin registration from ./components on unix
  */
-#define NS_XPCOM_REPOSITORY_VERSION_STRING "alpha0.30"
+#define NS_XPCOM_REPOSITORY_VERSION_STRING "alpha0.31"
 
 #include "NSReg.h"
 
@@ -467,8 +467,7 @@ static nsresult platformRegister(NSQuickRegisterData regd, nsDll *dll)
 	if (regd->progID)
 		NR_RegSetEntryString(hreg, key, "ProgID", (char *)(regd->progID));
 	char *libName = (char *)dll->GetFullPath();
-	NR_RegSetEntry(hreg, key, "InprocServer",  REGTYPE_ENTRY_FILE, libName,
-		strlen(libName) + 1);
+	NR_RegSetEntryString(hreg, key, "InprocServer", libName);
 
 	if (regd->progID)
 	{
@@ -621,7 +620,7 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 
 	char buf[MAXREGNAMELEN];
 	uint32 len = sizeof(buf);
-	err = NR_RegGetEntry(hreg, cidKey, "InprocServer", buf, &len);
+	err = NR_RegGetEntryString(hreg, cidKey, "InprocServer", buf, len);
 	if (err != REGERR_OK)
 	{
 		// Registry inconsistent. No File name for CLSID.
@@ -1609,6 +1608,7 @@ nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 				} while ((!err) && (catInfo.dirInfo.ioDrDirID != 2));	// 2 = root
 				if (!err)
 				{
+					Munger(pathH, GetHandleSize(pathH)-1, NULL, 0L, "/components", 11);	// append "/components"
 					HLock(pathH);
 					SyncComponentsInPathList((const char *)(*pathH));
 					HUnlock(pathH);
