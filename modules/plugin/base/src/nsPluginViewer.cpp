@@ -167,11 +167,12 @@ private:
   nsIWidget         *mWindow;       //we do not addref this...
   PluginViewerImpl  *mViewer;       //we do not addref this...
   nsCOMPtr<nsITimer> mPluginTimer;
+  PRPackedBool       mWidgetVisible;    // used on Mac to store our widget's visible state
 };
 
 #ifdef XP_MAC
-  static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY, 
-                                  nsRect& aClipRect);
+  static void GetWidgetPosClipAndVis(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY, 
+                                     nsRect& aClipRect, PRBool& aIsVisible);
 #endif
 
 class PluginViewerImpl : public nsIPluginViewer,
@@ -1070,6 +1071,7 @@ pluginInstanceOwner :: pluginInstanceOwner()
   mInstance = nsnull;
   mWindow = nsnull;
   mViewer = nsnull;
+  mWidgetVisible = PR_TRUE;
 }
 
 pluginInstanceOwner :: ~pluginInstanceOwner()
@@ -1426,9 +1428,13 @@ nsPluginPort* pluginInstanceOwner::GetPluginPort()
 
   // calculate the absolute position and clip for a widget 
   // and use other windows in calculating the clip
-static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY,
-                                nsRect& aClipRect) 
+  // also find out if we are visible or not
+static void GetWidgetPosClipAndVis(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbsY,
+                                   nsRect& aClipRect, PRBool& aIsVisible) 
 {
+  if (aIsVisible)
+    aWidget->IsVisible(aIsVisible);
+
   aWidget->GetBounds(aClipRect); 
   aAbsX = aClipRect.x; 
   aAbsY = aClipRect.y; 
@@ -1438,10 +1444,12 @@ static void GetWidgetPosAndClip(nsIWidget* aWidget,nscoord& aAbsX, nscoord& aAbs
   aClipRect.x = 0; 
   aClipRect.y = 0; 
 
-   // Gather up the absolute position of the widget 
-   // + clip window 
+  // Gather up the absolute position of the widget, clip window, and visibilty 
   nsCOMPtr<nsIWidget> widget = getter_AddRefs(aWidget->GetParent());
   while (widget != nsnull) { 
+    if (aIsVisible)
+      widget->IsVisible(aIsVisible);
+
     nsRect wrect; 
     widget->GetClientBounds(wrect); 
     nscoord wx, wy; 
@@ -1478,7 +1486,8 @@ void pluginInstanceOwner::FixUpPluginWindow()
     nscoord absWidgetX = 0;
     nscoord absWidgetY = 0;
     nsRect widgetClip(0,0,0,0);
-    GetWidgetPosAndClip(mWindow,absWidgetX,absWidgetY,widgetClip);
+    PRBool isVisible = PR_TRUE;
+    GetWidgetPosClipAndVis(mWindow,absWidgetX,absWidgetY,widgetClip,isVisible);
 
     // set the port coordinates
     mPluginWindow.x = absWidgetX;
@@ -1489,6 +1498,19 @@ void pluginInstanceOwner::FixUpPluginWindow()
     mPluginWindow.clipRect.left = widgetClip.x;
     mPluginWindow.clipRect.bottom =  mPluginWindow.clipRect.top + widgetClip.height;
     mPluginWindow.clipRect.right =  mPluginWindow.clipRect.left + widgetClip.width; 
+ 
+    // now we need to check if we've been hidden or made visible and then update the plugin 
+    // with the correct port if visible or null if hidden,
+    // if visiblity has changed, then update the plugin
+    if (isVisible != mWidgetVisible) {
+      mWidgetVisible = isVisible;
+      nsPluginWindow *window;
+      GetWindow(window);
+      if (window && mInstance) {
+        window->window = mWidgetVisible ? GetPluginPort() : nsnull;
+        mInstance->SetWindow(window);
+      }
+    }
   }
 }
 
