@@ -43,3 +43,10 @@ class nsCaseInsensitiveStringComparator
 PRUnichar ToUpperCase(PRUnichar);
 PRUnichar ToLowerCase(PRUnichar);
 
+inline PRBool IsUpperCase(PRUnichar c) {
+    return ToUpperCase(c) == c;
+}
+
+inline PRBool IsLowerCase(PRUnichar c) {
+    return ToLowerCase(c) == c;
+}
