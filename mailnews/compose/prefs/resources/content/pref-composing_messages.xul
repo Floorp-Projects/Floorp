@@ -101,7 +101,7 @@
                 pref="true" preftype="bool" prefstring="mail.strictly_mime"
                 prefattribute="checked"/>
     
-	<hbox autostretch="never">
+	<hbox autostretch="never" align="center">
 	<text class="label" value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" for="wrapLength"/>
     <textbox id="wrapLength" size="3" pref="true" preftype="int"
                prefstring="mailnews.wraplength" prefattribute="value"/>

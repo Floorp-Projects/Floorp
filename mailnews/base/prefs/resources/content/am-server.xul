@@ -104,7 +104,7 @@ Contributors:
   <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>
 -->
-  <hbox autostretch="never">
+  <hbox autostretch="never" align="center">
     <checkbox wsm_persist="true" id="server.doBiff" label="&biffStart.label;"
               oncommand="setupBiffUI();"
               pref="true" preftype="bool" prefattribute="value"

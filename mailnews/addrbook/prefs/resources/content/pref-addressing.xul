@@ -45,7 +45,7 @@
               pref="true" preftype="bool" prefstring="mail.collect_email_address_newsgroup"
               prefattribute="checked"/>
     </vbox>
-    <hbox autostretch="never">
+    <hbox autostretch="never" align="center">
       <checkbox class="small-margin" id="enableCABsizeLimit" label="&useCABSizelimitPart1.label;"
                 pref="true" preftype="bool" prefstring="mail.collect_email_address_enable_size_limit"
                 prefattribute="checked"/>
