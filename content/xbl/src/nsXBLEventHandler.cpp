@@ -54,7 +54,7 @@
 
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
-#include "nsIDOMMenuListener.h"
+#include "nsIDOMXULListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMScrollListener.h"

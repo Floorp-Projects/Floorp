@@ -168,7 +168,7 @@
                     <text id="endHourRangeLabel" class="label" 
                           value="&to.label;" for="endHourRange"/>
                     <menulist id="endHourRange">
-                      <menupopup oncreate="setEndHourRange()">
+                      <menupopup onpopupshowing="setEndHourRange()">
                         <menuitem value="1" label="&AMone.label;"/>
                         <menuitem value="2" label="&AMtwo.label;"/>
                         <menuitem value="3" label="&AMthree.label;"/>

@@ -192,8 +192,14 @@ protected:
   // Called as a hook just before the menu gets opened.
   PRBool OnCreate();
 
+  // Called as a hook just after the menu gets opened.
+  PRBool OnCreated();
+
   // Called as a hook just before the menu goes away.
   PRBool OnDestroy();
+
+  // Called as a hook just after the menu goes away.
+  PRBool OnDestroyed();
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,

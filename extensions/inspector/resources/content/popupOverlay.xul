@@ -59,7 +59,7 @@
     <menuitem label="&cmdPrefs.label;" accesskey="&cmdPrefs.accesskey;" observes="cmdShowPrefsDialog"/>
   </menupopup>
 
-  <menupopup id="mppSearch" oncreate="inspector.initPopup(this)">
+  <menupopup id="mppSearch" onpopupshowing="inspector.initPopup(this)">
     <menuseparator/>
     <menu label="&mnSearchPlugins.label;" accesskey="&mnSearchPlugins.accesskey;">
       <menupopup id="mppSearchPlugins">

@@ -33,7 +33,7 @@
 
   <script src="chrome://editor/content/sb-bookmarks.js"/>
 
-<popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+<popup id="contextual" onpopupshowing="return fillContextMenu('contextual');" >
   <menu />
 </popup>
 

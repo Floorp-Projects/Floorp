@@ -616,7 +616,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = aShowPopup ? NS_MENU_CREATE : NS_MENU_DESTROY;
+  event.message = aShowPopup ? NS_XUL_POPUP_SHOWING : NS_XUL_POPUP_HIDING;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;

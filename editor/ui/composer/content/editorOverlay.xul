@@ -285,7 +285,7 @@
       </menu>
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" label="&openFileCmd.label;"/>
-      <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" label="&fileRecentMenu.label;" oncreate="BuildRecentMenu(false)">
+      <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" label="&fileRecentMenu.label;" onpopupshowing="BuildRecentMenu(false)">
         <menupopup id="menupopup_RecentFiles"/>
           <!-- menuitems appended at runtime -->
       </menu>
@@ -320,7 +320,7 @@
 
 <!-- PasteAs not implemented yet
       <menu id="menu_pasteAs" label="&pasteAs.label;" accesskey="&pasteAs.accesskey;">
-        <menupopup oncreate="InitPasteAsMenu();">
+        <menupopup onpopupshowing="InitPasteAsMenu();">
           <menuitem id="menu_pasteText"    label="&pasteTextCmd.label;"     accesskey="&pasteText.accesskey;"/>
           <menuitem id="menu_pasteImage"   label="&pasteImageCmd.label;"    accesskey="&pasteImage.accesskey;"/>
           <menuseparator/>
@@ -358,7 +358,7 @@
   <menuitem id="viewSourceMode"   type="radio" name="1" accesskey="&HTMLSourceMode.accesskey;" observes="cmd_HTMLSourceMode" label="&HTMLSourceMode.label;"/>
   <menuitem id="viewPreviewMode"  type="radio" name="1" accesskey="&PreviewMode.accesskey;"    observes="cmd_PreviewMode"/>
 
-  <menupopup id = "composerCharsetMenuPopup"  oncreate="updateCharsetPopupMenu(this)" />
+  <menupopup id = "composerCharsetMenuPopup"  onpopupshowing="updateCharsetPopupMenu(this)" />
 
   <!-- Insert menu -->
   <menu id="insertMenu" label="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
@@ -386,11 +386,11 @@
   </menu>
 
   <!-- Format Menu -->
-  <menupopup id="formatMenuPopup" oncreate="EditorInitFormatMenu()">
+  <menupopup id="formatMenuPopup" onpopupshowing="EditorInitFormatMenu()">
     <!-- Font face submenu -->
     <menu id="fontFaceMenu" label="&fontfaceMenu.label;" accesskey="&formatfontmenu.accesskey;" 
           position="1">
-      <menupopup oncommand="doStatefulCommand('cmd_fontFace', event.target.value)" oncreate="initFontFaceMenu(this)">
+      <menupopup oncommand="doStatefulCommand('cmd_fontFace', event.target.value)" onpopupshowing="initFontFaceMenu(this)">
         <menuitem label="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    value=""    type="radio" name="1" observes="cmd_renderedHTMLEnabler"/>
         <menuitem label="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  value="tt"  type="radio" name="1" key="fontfixedwidthkb" observes="cmd_renderedHTMLEnabler"/>
         <menuseparator/>
@@ -404,7 +404,7 @@
     <menu id="fontSizeMenu" label="&fontsizeMenu.label;"
           accesskey="&formatsizemenu.accesskey;" 
           position="2">
-      <menupopup oncreate="initFontSizeMenu(this)">
+      <menupopup onpopupshowing="initFontSizeMenu(this)">
       <menuitem label="&decreaseFontSize.label;" accesskey="&decreasefontsize.accesskey;" observes="cmd_decreaseFont" type="radio" name="1" key="decreasefontsizekb"/>
       <menuitem label="&increaseFontSize.label;" accesskey="&increasefontsize.accesskey;" observes="cmd_increaseFont" type="radio" name="1" key="increasefontsizekb"/>
         <menuseparator/>
@@ -424,7 +424,7 @@
     <menu id="fontStyleMenu" label="&fontStyleMenu.label;" 
           accesskey="&formatstylemenu.accesskey;"
           position="3">
-    <menupopup oncreate="initFontStyleMenu(this)" oncommand="goDoCommand(event.target.observes)">
+    <menupopup onpopupshowing="initFontStyleMenu(this)" oncommand="goDoCommand(event.target.observes)">
       <menuitem label="&styleBoldCmd.label;"        accesskey="&stylebold.accesskey;"         observes="cmd_bold"          type="checkbox" key="boldkb"/>
       <menuitem label="&styleItalicCmd.label;"      accesskey="&styleitalic.accesskey;"       observes="cmd_italic"        type="checkbox" key="italickb" />
       <menuitem label="&styleUnderlineCmd.label;"   accesskey="&styleunderline.accesskey;"    observes="cmd_underline"     type="checkbox" key="underlinekb"/>
@@ -469,7 +469,7 @@
     <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" label="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
-          position="9" oncreate="InitParagraphMenu()">
+          position="9" onpopupshowing="InitParagraphMenu()">
       <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('value'))">
         <menuitem id="menu_bodyText"  type="radio" name="1" label="&bodyTextCmd.label;"             accesskey="&bodytext.accesskey;"            value=""      observes="cmd_renderedHTMLEnabler"/>
         <menuitem id="menu_p"         type="radio" name="1" label="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  value="p"     observes="cmd_renderedHTMLEnabler"/>
@@ -489,7 +489,7 @@
     <!-- List Style submenu -->
     <menu id="listMenu" label="&formatlistMenu.label;"
           accesskey="&formatlistmenu.accesskey;"
-          position="10" oncreate="InitListMenu()">
+          position="10" onpopupshowing="InitListMenu()">
       <menupopup>
         <menuitem id="menu_noList" type="radio" name="1" label="&noneCmd.label;"           accesskey="&none.accesskey;"           observes="cmd_removeList"/>
         <menuitem id="menu_ul"     type="radio" name="1" label="&listBulletCmd.label;"     accesskey="&listbullet.accesskey;"     observes="cmd_ul"/>
@@ -508,7 +508,7 @@
               observes="cmd_outdent"  position="13"/>
 
     <menu id="alignMenu" label="&alignMenu.label;" accesskey="&formatalignmenu.accesskey;"
-        oncreate="InitAlignMenu()"
+        onpopupshowing="InitAlignMenu()"
         position="14">
       <!-- Align submenu -->
       <menupopup oncommand="doStatefulCommand('cmd_align', event.target.getAttribute('value'))">
@@ -533,7 +533,7 @@
             oncommand="goDoCommand('cmd_colorProperties')" observes="cmd_renderedHTMLEnabler"/>
 
   <menu id="tableMenu" label="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
-    <menupopup  oncreate="EditorInitTableMenu()">
+    <menupopup  onpopupshowing="EditorInitTableMenu()">
       <!-- From EditorCommandOverlay.xul (shared with context popup) -->
       <menu id="tableInsertMenu" label="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
         <menupopup>

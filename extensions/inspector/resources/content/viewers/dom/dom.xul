@@ -49,7 +49,7 @@
   <!--============================= POPUPS ============================== -->
 
   <popupset id="psPopups">
-    <popup id="ppDOMContext" oncreate="viewer.onContextCreate(this)">
+    <popup id="ppDOMContext" onpopupshowing="viewer.onContextCreate(this)">
       <menuitem label="&cmdInspectInNewWindow.label;" observes="cmdInspectInNewWindow"/>
       <menuitem label="&cmdInspectBrowser.label;" observes="cmdInspectBrowser"/>
       <menuseparator/>

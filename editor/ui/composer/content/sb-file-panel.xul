@@ -35,7 +35,7 @@
   <script src="chrome://editor/content/sb-file-panel.js"/>
   <script src="chrome://editor/content/sb-FileWidgetFileHandler.js"/>
 
-<popup id="contextual" oncreate="return fillContextMenu('contextual',event.target.parentNode.parentNode);" >
+<popup id="contextual" onpopupshowing="return fillContextMenu('contextual',event.target.parentNode.parentNode);" >
   <menu />
 </popup>
   

@@ -66,7 +66,7 @@ enum EventArrayType {
   eEventArrayType_Paint = 8,
   eEventArrayType_Text = 9,
   eEventArrayType_Composition = 10,
-  eEventArrayType_Menu = 11,
+  eEventArrayType_XUL = 11,
   eEventArrayType_Scroll = 12,
   eEventArrayType_Mutation = 13,
   eEventArrayType_Hash,
@@ -266,14 +266,16 @@ protected:
 #define NS_EVENT_BITS_LOAD_ABORT    0x04
 #define NS_EVENT_BITS_LOAD_ERROR    0x08
 
-//nsIDOMMenuListener
-#define NS_EVENT_BITS_MENU_NONE            0x00
-#define NS_EVENT_BITS_MENU_CREATE          0x01
-#define NS_EVENT_BITS_XUL_CLOSE            0x02
-#define NS_EVENT_BITS_MENU_DESTROY         0x04
-#define NS_EVENT_BITS_MENU_ACTION          0x08
-#define NS_EVENT_BITS_XUL_BROADCAST        0x10
-#define NS_EVENT_BITS_XUL_COMMAND_UPDATE   0x20
+//nsIDOMXULListener
+#define NS_EVENT_BITS_XUL_NONE               0x00
+#define NS_EVENT_BITS_XUL_POPUP_SHOWING      0x01
+#define NS_EVENT_BITS_XUL_CLOSE              0x02
+#define NS_EVENT_BITS_XUL_POPUP_HIDING       0x04
+#define NS_EVENT_BITS_XUL_COMMAND            0x08
+#define NS_EVENT_BITS_XUL_BROADCAST          0x10
+#define NS_EVENT_BITS_XUL_COMMAND_UPDATE     0x20
+#define NS_EVENT_BITS_XUL_POPUP_SHOWN        0x40
+#define NS_EVENT_BITS_XUL_POPUP_HIDDEN       0x80
 
 //nsIScrollListener
 #define NS_EVENT_BITS_SCROLLPORT_NONE             0x00

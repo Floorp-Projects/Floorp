@@ -104,6 +104,8 @@ public:
 
   PRBool OnCreate(nsIContent* aPopupContent);
   PRBool OnDestroy();
+  PRBool OnCreated(nsIContent* aPopupContent);
+  PRBool OnDestroyed();
 
   void ActivatePopup(PRBool aActivateFlag);
   void OpenPopup(PRBool aOpenFlag);

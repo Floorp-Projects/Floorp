@@ -36,7 +36,7 @@
          
   <popupset id="bookmarksPopupset">
     <popup id="bmContext" 
-           oncreate="gBookmarksShell.createContextMenu(event);"/>
+           onpopupshowing="gBookmarksShell.createContextMenu(event);"/>
   </popupset>
 
   <commands id="commands">

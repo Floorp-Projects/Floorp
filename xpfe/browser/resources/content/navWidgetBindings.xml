@@ -117,7 +117,7 @@
       <xul:menubutton id="back-button" label="Back" buttontooltiptext="Go Back"
                       oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
                       class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
-        <xul:menupopup oncreate="BrowserBackMenu(event);"/>
+        <xul:menupopup onpopupshowing="BrowserBackMenu(event);"/>
       </xul:menubutton>
     </content>
     <handlers>

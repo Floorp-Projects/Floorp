@@ -67,7 +67,7 @@
 #include "nsIDOMPaintListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
-#include "nsIDOMMenuListener.h"
+#include "nsIDOMXULListener.h"
 #include "nsIDOMScrollListener.h"
 #include "nsIDOMContextMenuListener.h"
 #include "nsIDOMDragListener.h"
@@ -243,12 +243,14 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
     { "onabort",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
     { "onerror",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
 
-    { "oncreate",        nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "onclose",         nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "ondestroy",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "oncommand",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "onbroadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "oncommandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "onpopupshowing",    nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "onpopupshown",      nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "onpopuphiding" ,    nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "onpopuphidden",     nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "onclose",           nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "oncommand",         nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "onbroadcast",       nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "oncommandupdate",   nsnull, &NS_GET_IID(nsIDOMXULListener)        },
 
     { "onoverflow",       nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
     { "onunderflow",      nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
@@ -3563,8 +3565,9 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         // not one computed by the current mouse location.
         nsAutoString tagName;
         NodeInfo()->GetName(tagName); // Local name only
-        if (aEvent->message == NS_MENU_ACTION || aEvent->message == NS_MENU_CREATE ||
-            aEvent->message == NS_MENU_DESTROY || aEvent->message == NS_FORM_SELECTED ||
+        if (aEvent->message == NS_XUL_COMMAND || aEvent->message == NS_XUL_POPUP_SHOWING ||
+            aEvent->message == NS_XUL_POPUP_SHOWN || aEvent->message == NS_XUL_POPUP_HIDING ||
+            aEvent->message == NS_XUL_POPUP_HIDDEN || aEvent->message == NS_FORM_SELECTED ||
             aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
             aEvent->message == NS_DRAGDROP_GESTURE ||
             tagName == NS_LITERAL_STRING("menu") || tagName == NS_LITERAL_STRING("menuitem") || tagName == NS_LITERAL_STRING("menulist") ||
@@ -4535,7 +4538,7 @@ nsXULElement::Command()
       nsEventStatus status = nsEventStatus_eIgnore;
       nsMouseEvent event;
       event.eventStructType = NS_EVENT;
-      event.message = NS_MENU_ACTION;
+      event.message = NS_XUL_COMMAND;
       HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
   }

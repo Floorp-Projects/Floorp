@@ -55,12 +55,12 @@ Contributor(s): ______________________________________. -->
         <menubutton id="back-button" label="&backButton.label;" tooltiptext="&backButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
                     class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoBack">  
-          <menupopup context="" oncreate="BrowserBackMenu(event);"/>
+          <menupopup context="" onpopupshowing="BrowserBackMenu(event);"/>
         </menubutton>
         <menubutton id="forward-button" label="&forwardButton.label;" tooltiptext="&forwardButton.tooltip;"
                     oncommand="gotoHistoryIndex(event);" buttonaction="BrowserForward();" context="forwardMenu"
                     class="menubutton-dual top" crop="right" tooltip="aTooltip" observes="canGoForward">
-          <menupopup context="" oncreate="BrowserForwardMenu(event);"/>
+          <menupopup context="" onpopupshowing="BrowserForwardMenu(event);"/>
         </menubutton>
 
         <button class="button-toolbar-1 top" id="reload-button" crop="right" oncommand="if (event.shiftKey) BrowserReloadSkipCache(); else BrowserReload();" label="&reloadButton.label;" 
@@ -85,7 +85,7 @@ Contributor(s): ______________________________________. -->
                      ondraggesture="PageProxyDragGesture(event);"/>
               <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                          popupalign="topleft" popupanchor="bottomleft"
-                         oncreate="createUBHistoryMenu(event.target);" 
+                         onpopupshowing="createUBHistoryMenu(event.target);" 
                          oncommand="executeUrlBarHistoryCommand(event.target);"/>
             </textbox>
           </hbox>

@@ -51,7 +51,7 @@ static char* mEventNames[] = {
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "unload", "abort", "error",
   "submit", "reset", "change", "select", "input", "paint" ,"text",
-  "create", "close", "destroy", "command", "broadcast", "commandupdate",
+  "popupshowing", "popupshown", "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
   "scroll","overflow", "underflow", "overflowchanged",
   "DOMSubtreeModified", "DOMNodeInserted", "DOMNodeRemoved", 
@@ -1358,11 +1358,15 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_scroll];
   case NS_TEXT_EVENT:
 	  return mEventNames[eDOMEvents_text];
-  case NS_MENU_CREATE:
-    return mEventNames[eDOMEvents_create];
-  case NS_MENU_DESTROY:
-    return mEventNames[eDOMEvents_destroy];
-  case NS_MENU_ACTION:
+  case NS_XUL_POPUP_SHOWING:
+    return mEventNames[eDOMEvents_popupShowing];
+  case NS_XUL_POPUP_SHOWN:
+    return mEventNames[eDOMEvents_popupShown];
+  case NS_XUL_POPUP_HIDING:
+    return mEventNames[eDOMEvents_popupHiding];
+  case NS_XUL_POPUP_HIDDEN:
+    return mEventNames[eDOMEvents_popupHidden];
+  case NS_XUL_COMMAND:
     return mEventNames[eDOMEvents_command];
   case NS_XUL_BROADCAST:
     return mEventNames[eDOMEvents_broadcast];

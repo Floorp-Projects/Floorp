@@ -455,7 +455,7 @@ nsEventStatus nsMenuX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 	  	nsEventStatus status = nsEventStatus_eIgnore;
 	  	nsMouseEvent event;
 	  	event.eventStructType = NS_MOUSE_EVENT;
-	  	event.message = NS_MENU_ACTION;
+	  	event.message = NS_XUL_COMMAND;
 
 	  	nsCOMPtr<nsIContent> contentNode = do_QueryInterface(domElement);
 	  	if (!contentNode)
@@ -552,6 +552,9 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
         mConstructed = true;
       }	
     } 
+
+    OnCreated();  // Now that it's built, fire the popupShown event.
+
     eventStatus = nsEventStatus_eConsumeNoDefault;  
   } 
   else {
@@ -692,6 +695,8 @@ nsEventStatus nsMenuX::MenuDestruct(const nsMenuEvent & aMenuEvent)
         mNeedsRebuild = PR_TRUE;
     } 
     mMenuContent->UnsetAttribute(kNameSpaceID_None, nsWidgetAtoms::open, PR_TRUE);
+
+    OnDestroyed();
   }
   
   return nsEventStatus_eIgnore;
@@ -1000,7 +1005,7 @@ nsMenuX::OnCreate()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_CREATE;
+  event.message = NS_XUL_POPUP_SHOWING;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
@@ -1090,6 +1095,40 @@ nsMenuX::OnCreate()
   return PR_TRUE;
 }
 
+PRBool
+nsMenuX::OnCreated()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_XUL_POPUP_SHOWN;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+  
+  nsCOMPtr<nsIContent> popupContent;
+  GetMenuPopupContent(getter_AddRefs(popupContent));
+
+  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
+  if (!webShell) {
+    NS_ERROR("No web shell");
+    return PR_FALSE;
+  }
+  nsCOMPtr<nsIPresContext> presContext;
+  MenuHelpersX::WebShellToPresContext(webShell, getter_AddRefs(presContext) );
+  if ( presContext ) {
+    nsresult rv = NS_OK;
+    nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
+    rv = dispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+      return PR_FALSE;
+ }
+  
+  return PR_TRUE;
+}
 
 //
 // OnDestroy
@@ -1106,7 +1145,7 @@ nsMenuX::OnDestroy()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_DESTROY;
+  event.message = NS_XUL_POPUP_HIDING;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
@@ -1138,7 +1177,43 @@ nsMenuX::OnDestroy()
   return PR_TRUE;
 }
 
+PRBool
+nsMenuX::OnDestroyed()
+{
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_XUL_POPUP_HIDDEN;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+  
+  nsCOMPtr<nsIWebShell>  webShell = do_QueryReferent(mWebShellWeakRef);
+  if (!webShell) {
+    NS_WARNING("No web shell so can't run the OnDestroy");
+    return PR_FALSE;
+  }
 
+  nsCOMPtr<nsIContent> popupContent;
+  GetMenuPopupContent(getter_AddRefs(popupContent));
+
+  nsCOMPtr<nsIPresContext> presContext;
+  MenuHelpersX::WebShellToPresContext (webShell, getter_AddRefs(presContext) );
+  if (presContext )  {
+    nsresult rv = NS_OK;
+    nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
+    rv = dispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+
+    mDestroyHandlerCalled = PR_TRUE;
+    
+    if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
 //
 // GetMenuPopupContent
 //

@@ -64,7 +64,7 @@
 #include "nsIDOMPaintListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
-#include "nsIDOMMenuListener.h"
+#include "nsIDOMXULListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMMutationListener.h"
 #include "nsIDOMContextMenuListener.h"
@@ -188,12 +188,14 @@ nsXBLBinding::kEventHandlerMap[] = {
     { "abort",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
     { "error",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
 
-    { "create",        nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "close",         nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "destroy",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "command",       nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "broadcast",     nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
-    { "commandupdate", nsnull, &NS_GET_IID(nsIDOMMenuListener)        },
+    { "popupshowing",  nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "popupshown",    nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "popuphiding" ,  nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "popuphidden",   nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "close",         nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "command",       nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "broadcast",     nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "commandupdate", nsnull, &NS_GET_IID(nsIDOMXULListener)        },
 
     { "overflow",        nsnull, &NS_GET_IID(nsIDOMScrollListener)    },
     { "underflow",       nsnull, &NS_GET_IID(nsIDOMScrollListener)    },
@@ -974,10 +976,10 @@ nsXBLBinding::InstallEventHandlers()
           receiver->AddEventListener(type, (nsIDOMFocusListener*)focusHandler, useCapture);
           handler = focusHandler;
         }
-        else if (iid.Equals(NS_GET_IID(nsIDOMMenuListener))) {
+        else if (iid.Equals(NS_GET_IID(nsIDOMXULListener))) {
           nsXBLXULHandler* xulHandler;
           NS_NewXBLXULHandler(receiver, curr, &xulHandler);
-          receiver->AddEventListener(type, (nsIDOMMenuListener*)xulHandler, useCapture);
+          receiver->AddEventListener(type, (nsIDOMXULListener*)xulHandler, useCapture);
           handler = xulHandler;
         }
         else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener))) {
