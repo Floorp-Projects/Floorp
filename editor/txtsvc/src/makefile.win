@@ -21,8 +21,9 @@
 
 DEPTH=..\..\..
 
-
+MODULE=txtsvc
 LIBRARY_NAME=txtsvc
+MODULE_NAME=nsTextServicesModule
 
 CPPSRCS =				\
 	nsFindAndReplace.cpp	\
@@ -38,8 +39,6 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsTSDNotifier.obj	\
 	$(NULL)
 
-MODULE=txtsvc 
-
 LINCS=-I$(PUBLIC)\xpcom \
       -I$(PUBLIC)\txtsvc \
       -I$(PUBLIC)\editor \
@@ -50,24 +49,10 @@ LINCS=-I$(PUBLIC)\xpcom \
 LLIBS=					\
  $(DIST)\lib\xpcom.lib
 
-MAKE_OBJ_TYPE = LIB
-LIBRARY_NAME = txtsvc
-LIB=.\$(OBJDIR)\$(LIBRARY_NAME).lib
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-# These are the libraries we need to link with to create the dll
-LLIBS=$(DIST)\lib\xpcom.lib
-
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIB)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBRARY_NAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\components\$(LIBRARY_NAME).lib
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
