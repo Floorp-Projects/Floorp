@@ -97,7 +97,7 @@ ifeq ($(OS_ARCH), HP-UX)
 ifdef USE_PURE_32
 # build for DA1.1 (HP PA 1.1) pure 32 bit model
     DEFINES  += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
-#else
+else
 ifdef USE_64
 # this builds for DA2.0W (HP PA 2.0 Wide), the LP64 ABI, using 32-bit digits 
     MPI_SRCS += montmulf.c
@@ -109,6 +109,7 @@ else
     MPI_SRCS += montmulf.c
     DEFINES  += -DMP_USING_MONT_MULF -DMP_USE_UINT_DIGIT
     DEFINES  += -DMP_USE_LONG_LONG_MULTIPLY -DMP_NO_MP_WORD
+    OS_CFLAGS += -Aa +e +DA2.0 +DS2.0
 endif
 endif
 endif
