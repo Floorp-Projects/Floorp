@@ -32,9 +32,10 @@ REQUIRES=util img xpcom raptor netlib ps
 
 DEFINES += -D_IMPL_NS_GFXONXP 
 CXXFLAGS += $(TK_CFLAGS)
-INCLUDES += $(TK_CFLAGS)
+INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 
 CPPSRCS = \
+	nsBlenderGTK.cpp \
 	nsDrawingSurfaceGTK.cpp \
 	nsDeviceContextGTK.cpp \
 	nsDeviceContextSpecFactoryG.cpp \

@@ -221,6 +221,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetDrawingSurface(nsDrawingSurface *aSurfac
 
 NS_IMETHODIMP nsRenderingContextGTK::Reset()
 {
+  g_print("nsRenderingContextGTK::Reset() called\n");
   return NS_OK;
 }
 
