@@ -145,6 +145,7 @@ public:
 
   NS_IMETHOD MoveFocusToCaret(PRBool aCanFocusDoc, PRBool *aIsSelectionWithFocus);
   NS_IMETHOD MoveCaretToFocus();
+  NS_IMETHOD GetTabbable(PRInt32 aTabFocusType, PRBool *aIsTabbable);
 
 protected:
   friend class CurrentEventShepherd;
