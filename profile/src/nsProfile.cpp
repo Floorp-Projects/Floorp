@@ -2084,8 +2084,8 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 							if (NS_SUCCEEDED(rv)) 
 							{
 	                            // Get node name.
-		                        nsXPIDLCString profile;
-                                rv = node->GetName(getter_Copies(profile));
+		                char *profile = nsnull;
+                                rv = node->GetName(&profile);
 
 #if defined(DEBUG_profile)
                                 printf("oldProflie = %s\n", profile);
