@@ -36,6 +36,7 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/skin/pref/pref.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/pref/pref.css" type="text/css"?>
 
 <!DOCTYPE page SYSTEM "chrome://browser/locale/pref/pref-extensions.dtd" >
