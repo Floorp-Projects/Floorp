@@ -43,8 +43,7 @@ NS_IMPL_ISUPPORTS2(nsAbLDAPAutoCompFormatter,
 
 nsAbLDAPAutoCompFormatter::nsAbLDAPAutoCompFormatter() :
     mNameFormat(NS_LITERAL_STRING("[cn]")),
-    mAddressFormat(NS_LITERAL_STRING("{mail}")),
-    mCommentFormat(NS_LITERAL_STRING("[o]"))
+    mAddressFormat(NS_LITERAL_STRING("{mail}"))
 {
     NS_INIT_ISUPPORTS();
 }
@@ -126,19 +125,18 @@ nsAbLDAPAutoCompFormatter::Format(nsILDAPMessage *aMsg,
     //
     nsCAutoString comment;
     rv = ProcessFormat(mCommentFormat, aMsg, &comment, 0);
-    if (NS_FAILED(rv)) {
-        // Something went wrong lower down the stack; a messagne should have 
-        // already been logged there.  Return an error rather than
-        // trying to generate a bogus nsIAutoCompleteItem.
-        //
-        return rv;
+    if (NS_SUCCEEDED(rv)) {
+        rv = item->SetComment(NS_ConvertUTF8toUCS2(comment).get());
+        if (NS_FAILED(rv)) {
+            NS_WARNING("nsAbLDAPAutoCompFormatter::Format():"
+                       " item->SetComment() failed");
+        }
     }
 
-    rv = item->SetComment(NS_ConvertUTF8toUCS2(comment).get());
+    rv = item->SetClassName("remote-abook");
     if (NS_FAILED(rv)) {
-        NS_ERROR("nsAbLDAPAutoCompFormatter::Format():"
-                 " item->SetComment failed");
-        return rv;
+        NS_WARNING("nsAbLDAPAutoCompleteFormatter::Format():"
+                   " item->SetClassName() failed");
     }
 
     // all done; return the item
@@ -347,7 +345,7 @@ nsAbLDAPAutoCompFormatter::ProcessFormat(const nsAReadableString & aFormat,
 
                 // this character gets treated as a literal
                 //
-                (*aValue).Append(NS_STATIC_CAST(char, *iter));
+                (*aValue).Append(NS_ConvertUCS2toUTF8(*iter));
             }
         }
 

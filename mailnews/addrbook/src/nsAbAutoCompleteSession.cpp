@@ -103,9 +103,16 @@ PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCom
     return PR_FALSE;
 }
 
-void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pDisplayNameStr, const PRUnichar* pFirstNameStr,
-    const PRUnichar* pLastNameStr, const PRUnichar* pEmailStr, const PRUnichar* pNotesStr, PRBool bIsMailList, MatchType type,
-    nsIAutoCompleteResults* results)
+void 
+nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
+                                     const PRUnichar* pDisplayNameStr,
+                                     const PRUnichar* pFirstNameStr,
+                                     const PRUnichar* pLastNameStr,
+                                     const PRUnichar* pEmailStr, 
+                                     const PRUnichar* pNotesStr, 
+                                     const PRUnichar* pDirName,
+                                     PRBool bIsMailList, MatchType type,
+                                     nsIAutoCompleteResults* results)
 {
   nsresult rv;
   PRUnichar* fullAddrStr = nsnull;
@@ -180,10 +187,36 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     rv = nsComponentManager::CreateInstance(kAutoCompleteItemCID, nsnull, NS_GET_IID(nsIAutoCompleteItem), getter_AddRefs(newItem));
     if (NS_SUCCEEDED(rv))
     {
-      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pDisplayNameStr, pFirstNameStr, pLastNameStr, pEmailStr, pNotesStr, bIsMailList, type);
+      nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pDisplayNameStr, pFirstNameStr, pLastNameStr, pEmailStr, pNotesStr, pDirName, bIsMailList, type);
       NS_IF_ADDREF(param);
       newItem->SetParam(param);
       NS_IF_RELEASE(param);
+
+      // how to process the comment column, if at all.  this value
+      // comes from "mail.autoComplete.commentColumn", or, if that
+      // doesn't exist, defaults to 0
+      //
+      // 0 = none
+      // 1 = name of addressbook this card came from
+      // 2 = other per-addressbook format (currrently unused here)
+      //
+      if (mAutoCompleteCommentColumn == 1) {
+        rv = newItem->SetComment(pDirName);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("nsAbAutoCompleteSession::AddToResult():"
+                     " newItem->SetComment() failed\n");
+        }
+      }
+
+      // if this isn't a default match, set the class name so we can style 
+      // this cell with the local addressbook icon (or whatever)
+      //
+      rv = newItem->SetClassName(type == DEFAULT_MATCH ? "default-match" :
+                                 "local-abook");
+      if (NS_FAILED(rv)) {
+        NS_WARNING("nsAbAutoCompleteSession::AddToResult():"
+                   " newItem->SetClassName() failed\n");
+      }
 
       newItem->SetValue(nsDependentString(fullAddrStr));
       nsCOMPtr<nsISupportsArray> array;
@@ -374,11 +407,26 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
              	continue;
             
 					MatchType matchType;
- 					if (CheckEntry(searchStr, (const PRUnichar*)pNickNameStr, (const PRUnichar*)pDisplayNameStr,
- 					              (const PRUnichar*)pFirstNameStr, (const PRUnichar*)pLastNameStr, (const PRUnichar*)pEmailStr, &matchType))
-        		AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pDisplayNameStr, (const PRUnichar*)pFirstNameStr,
-        		            (const PRUnichar*)pLastNameStr, (const PRUnichar*)pEmailStr, (const PRUnichar*)pNotesStr, bIsMailList,
-        		            matchType, results);
+ 					if ( CheckEntry(searchStr, pNickNameStr.get(), 
+                                    pDisplayNameStr.get(), 
+                                    pFirstNameStr.get(), 
+                                    pLastNameStr.get(), pEmailStr.get(), 
+                                    &matchType)) {
+
+                      nsXPIDLString pDirName;
+                      if ( mAutoCompleteCommentColumn == 1 ) {
+                        rv = directory->GetDirName(getter_Copies(pDirName));
+                        if (NS_FAILED(rv)) {
+                          continue;
+                        }
+                      }
+
+                      AddToResult(pNickNameStr.get(), pDisplayNameStr.get(), 
+                                  pFirstNameStr.get(), pLastNameStr.get(), 
+                                  pEmailStr.get(), pNotesStr.get(), 
+                                  pDirName.get(), bIsMailList, matchType, 
+                                  results);
+                    }
 	      }
       }
     }
@@ -489,9 +537,11 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(nsAbAutoCompleteSearchSt
             
 			      MatchType matchType;
 			      if (CheckEntry(searchStr, param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress, &matchType))
-                AddToResult(param->mNickName, param->mDisplayName,  param->mFirstName,  param->mLastName, param->mEmailAddress,
-            param->mNotes, param->mIsMailList, matchType, results);
-
+                AddToResult(param->mNickName, param->mDisplayName, 
+                            param->mFirstName, param->mLastName, 
+                            param->mEmailAddress, param->mNotes, 
+                            param->mDirName, param->mIsMailList, matchType,
+                            results);
 	      }
 	      return NS_OK;
     }
@@ -518,7 +568,16 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
         listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
         return NS_OK;
     }
-    
+
+    // figure out what we're supposed to do about the comment column, and 
+    // remember it for when the results start coming back
+    //
+    rv = pPref->GetIntPref("mail.autoComplete.commentColumn", 
+                           &mAutoCompleteCommentColumn);
+    if (NS_FAILED(rv)) {
+      mAutoCompleteCommentColumn = 0;
+    }
+
     PRInt32 i;
     for (i = nsCRT::strlen(uSearchString) - 1; i >= 0; i --)
         if (uSearchString[i] == '@')
@@ -549,7 +608,9 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
         if (mDefaultDomain[0] != 0)
         {
             PRUnichar emptyStr = 0;
-            AddToResult(&emptyStr, uSearchString, &emptyStr, &emptyStr, &emptyStr, &emptyStr, PR_FALSE, DEFAULT_MATCH, results);
+            AddToResult(&emptyStr, uSearchString, &emptyStr, &emptyStr, 
+                        &emptyStr, &emptyStr, &emptyStr, PR_FALSE, 
+                        DEFAULT_MATCH, results);
             addedDefaultItem = PR_TRUE;
         }
 

@@ -82,9 +82,14 @@ public:
 protected:    
     void ResetMatchTypeConters();
     PRBool ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results);
-    void AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pDisplayNameStr, const PRUnichar* pFirstNameStr, const PRUnichar* pLastNameStr,
-      const PRUnichar* pEmailStr, const PRUnichar* pNotes, PRBool bIsMailList, MatchType type, nsIAutoCompleteResults* results);
-	  PRBool CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName,const PRUnichar* displayName, 
+    void AddToResult(const PRUnichar* pNickNameStr, 
+                     const PRUnichar* pDisplayNameStr, 
+                     const PRUnichar* pFirstNameStr,
+                     const PRUnichar* pLastNameStr, 
+                     const PRUnichar* pEmailStr, const PRUnichar* pNotes,
+                     const PRUnichar* pDirName, PRBool bIsMailList, 
+                     MatchType type, nsIAutoCompleteResults* results);
+  PRBool CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName,const PRUnichar* displayName, 
 	    const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType);
 	  nsresult SearchCards(nsIAbDirectory* directory, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results);
     nsresult SearchDirectory(nsString& fileName, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory = PR_FALSE);
@@ -93,6 +98,16 @@ protected:
     nsCOMPtr<nsIMsgHeaderParser> mParser;
     nsString mDefaultDomain;
     PRUint32 mMatchTypeConters[LAST_MATCH_TYPE];
+
+    // how to process the comment column, if at all.  this value
+    // comes from "mail.autoComplete.commentColumn", or, if that
+    // doesn't exist, defaults to 0
+    //
+    // 0 = none
+    // 1 = name of addressbook this card came from
+    // 2 = other per-addressbook format (currrently unused here)
+    //
+    PRInt32 mAutoCompleteCommentColumn;
 };
 
 
@@ -113,6 +128,7 @@ public:
                           const PRUnichar* lastName,
                           const PRUnichar* emailAddress,
                           const PRUnichar* notes,
+                          const PRUnichar* dirName,
                           PRBool isMailList,
                           nsAbAutoCompleteSession::MatchType type)
 	{
@@ -123,6 +139,7 @@ public:
 		mLastName = nsCRT::strdup(lastName ? lastName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mNotes = nsCRT::strdup(notes ? notes : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+        mDirName = nsCRT::strdup(dirName ? dirName : NS_STATIC_CAST(const PRUnichar *, NS_LITERAL_STRING("").get()));
 		mIsMailList = isMailList;
 		mType = type;
 	}
@@ -135,6 +152,7 @@ public:
     CRTFREEIF(mLastName);
     CRTFREEIF(mEmailAddress);
     CRTFREEIF(mNotes);
+    CRTFREEIF(mDirName);
 	};
 	
 protected:
@@ -144,6 +162,7 @@ protected:
     PRUnichar* mLastName;
     PRUnichar* mEmailAddress;
     PRUnichar* mNotes;
+    PRUnichar* mDirName;
     PRBool mIsMailList;
     nsAbAutoCompleteSession::MatchType  mType;
 

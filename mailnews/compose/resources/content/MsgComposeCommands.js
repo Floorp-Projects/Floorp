@@ -712,17 +712,50 @@ function setupLdapAutocompleteSession()
                 // nsAbLDAPAutoCompFormatter use its default.
             }
 
-            // override autocomplete entry comment format?
-            //
             try {
-                ldapFormatter.commentFormat = 
-                    prefs.CopyUnicharPref(autocompleteDirectory + 
-                                          ".autoComplete.commentFormat");
+                // figure out what goes in the comment column, if anything
+                //
+                // 0 = none
+                // 1 = name of addressbook this card came from
+                // 2 = other per-addressbook format
+                //
+                var showComments = 0;
+                showComments = prefs.GetIntPref(
+                    "mail.autoComplete.commentColumn");
+
+                switch (showComments) {
+
+                case 1:
+                    // use the name of this directory
+                    //
+                    ldapFormatter.commentFormat = prefs.CopyUnicharPref(
+                        autocompleteDirectory + ".description");
+                    break;
+
+                case 2:
+                    // override ldap-specific autocomplete entry?
+                    //
+                    try {
+                        ldapFormatter.commentFormat = 
+                            prefs.CopyUnicharPref(autocompleteDirectory + 
+                                                ".autoComplete.commentFormat");
+                
+                    } catch (innerException) {
+                        // if nothing has been specified, use the ldap
+                        // organization field
+                        ldapFormatter.commentFormat = "[o]";
+                    }
+                    break;
+
+                case 0:
+                default:
+                    // do nothing
+                }
             } catch (ex) {
-                // if this pref isn't there, no big deal.  just let
-                // nsAbLDAPAutoCompFormatter use its default.
+                // if something went wrong while setting up comments, try and
+                // proceed anyway
             }
-            
+
             // set the session's formatter, which also happens to
             // force a call to the formatter's getAttributes() method
             // -- which is why this needs to happen after we've set the
@@ -2074,8 +2107,22 @@ function setupAutocomplete()
       var emailAddr = gCurrentIdentity.email;
       var start = emailAddr.lastIndexOf("@");
       gAutocompleteSession.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
-    }
-    else {
+
+      // if the pref is set to turn on the comment column, honor it here.
+      // this element then gets cloned for subsequent rows, so they should 
+      // honor it as well
+      //
+      try {
+          if (prefs.GetIntPref("mail.autoComplete.commentColumn")) {
+              document.getElementById('msgRecipient#1').showCommentColumn =
+                  true;
+          }
+      } catch (ex) {
+          // if we can't get this pref, then don't show the columns (which is
+          // what the XUL defaults to)
+      }
+              
+    } else {
       gAutocompleteSession = 1;
     }
   }

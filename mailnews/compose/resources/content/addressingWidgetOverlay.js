@@ -432,6 +432,11 @@ function awAppendNewRow(setFocus)
           //this copies the autocomplete sessions list from recipient#1 
           input[0].syncSessions(document.getElementById('msgRecipient#1'));
 
+	  // also clone the showCommentColumn setting
+	  //
+	  input[0].showCommentColumn = 
+	      document.getElementById("msgRecipient#1").showCommentColumn;
+
           // We always clone the first row.  The problem is that the first row
           // could be focused.  When we clone that row, we end up with a cloned
           // XUL textbox that has a focused attribute set.  Therefore we think

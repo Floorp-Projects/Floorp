@@ -42,11 +42,12 @@ interface nsIAbLDAPAutoCompFormatter: nsILDAPAutoCompFormatter {
      * If any of these are unset, components implementing this interface 
      * are free to choose reasonable defaults.  As an example, the 
      *"@mozilla.org/ldap-autocomplete-formatter;1?type=addrbook"
-     * implementation currently happens to use the followingn defaults:
+     * implementation currently happens to use the following default
+     * strings:
      * 
-     * nameFormat: [cn]
-     * addressFormat: {mail}
-     * commentFormat: [o]
+     * nameFormat: "[cn]"
+     * addressFormat: "{mail}"
+     * commentFormat: ""
      *
      * and generates autocomplete items like this:
      *
