@@ -3046,7 +3046,7 @@ else
   echo "$ac_t""no" 1>&6
 fi
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -15000,6 +15000,8 @@ fi
 _EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
  
   sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
+  sort confdefs.h | egrep -v "$_EGREP_PATTERN" > confdefs.h.new
+  mv confdefs.h.new confdefs.h && rm -f confdefs.h.new
 
   cat >> $_CONFIG_TMP <<\EOF
 
@@ -15018,6 +15020,20 @@ EOF
     cat $_CONFIG_DEFS_H
   fi
 
+# Transform confdefs.h into DEFS.
+# Protect against shell expansion while executing Makefile rules.
+# Protect against Makefile macro expansion.
+cat > conftest.defs <<\EOF
+s%#define \([A-Za-z_][A-Za-z0-9_]*\) *\(.*\)%-D\1=\2%g
+s%[ 	`~#$^&*(){}\\|;'"<>?]%\\&%g
+s%\[%\\&%g
+s%\]%\\&%g
+s%\$%$$%g
+EOF
+DEFS=`sed -f conftest.defs confdefs.h | tr '\012' ' '`
+rm -f conftest.defs
+
+MOZ_DEFINES=$DEFS
 
 
 . ${srcdir}/allmakefiles.sh
