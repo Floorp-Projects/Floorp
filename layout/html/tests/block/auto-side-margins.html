@@ -1,0 +1,33 @@
+<HTML>
+ <HEAD>
+  <STYLE type="text/css">
+   DIV { border: 2px solid green; }
+   DIV.nowidth { margin: auto 0 auto auto; }
+   DIV.left { margin: auto 0 auto auto; width: 50%; }
+   DIV.center { margin: auto; width: 50%; }
+   DIV.right { margin: auto auto auto 0; width: 50%; }
+   BODY {
+    background: url(bluedot.gif) repeat-y center;
+   }
+  </STYLE>
+ </HEAD>
+ <BODY>
+  Demonstrate auto side margins (this also demonstrates the width property
+  as applied to a block frame):
+  <DIV CLASS=nowidth>
+   This block has width=auto therefore no auto side margins will apply
+  </DIV>
+  <DIV CLASS=left>
+   This block has width=50% therefore auto side margins will apply.
+   The left margin is auto therefore this should be right-aligned.
+  </DIV>
+  <DIV CLASS=center>
+   This block has width=50% therefore auto side margins will apply.
+   Both margins are auto therefore this should be centered.
+  </DIV>
+  <DIV CLASS=right>
+   This block has width=50% therefore auto side margins will apply.
+   The right margin is auto therefore this should be left-aligned.
+  </DIV>
+ </BODY>
+</HTML>
