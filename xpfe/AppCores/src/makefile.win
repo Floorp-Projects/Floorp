@@ -73,10 +73,10 @@ OBJS = \
     .\$(OBJDIR)\nsRDFCoreFactory.obj       \
     .\$(OBJDIR)\nsAppCoresNameSet.obj       \
     .\$(OBJDIR)\nsToolbarCore.obj       \
+    .\$(OBJDIR)\nsToolbarCoreFactory.obj       \
     .\$(OBJDIR)\nsToolkitCore.obj        \
     .\$(OBJDIR)\nsToolkitCoreFactory.obj \
     .\$(OBJDIR)\nsBrowserAppCore.obj       \
-    .\$(OBJDIR)\nsPrefsCoreFactory.obj       \
     .\$(OBJDIR)\nsPrefsCoreFactory.obj       \
     .\$(OBJDIR)\nsProfileCoreFactory.obj       \
     .\$(OBJDIR)\nsBrowserAppCoreFactory.obj       \
