@@ -56,13 +56,10 @@ function CreateProfileWizard()
 // update the display to show the additional profile
 function CreateProfile( aProfName, aProfDir )
 {
-  var profile = new Profile( aProfName, aProfDir, "yes" );
-  var item = AddItem( "profiles", profile );
+  AddItem(aProfName, "yes");
   var profileList = document.getElementById( "profiles" );
-  if( item ) {
-    profileList.selectItem( item );
-    profileList.ensureElementIsVisible( item );
-  }
+  profileList.view.selection.select(profileList.view.rowCount - 1);
+  profileList.treeBoxObject.ensureRowIsVisible(profileList.currentIndex);
 }
 
 // rename the selected profile
@@ -73,7 +70,7 @@ function RenameProfile()
   if (renameButton.getAttribute("disabled") == "true" )
     return false;
   var profileList = document.getElementById( "profiles" );
-  var selected = profileList.selectedItems[0];
+  var selected = profileList.view.getItemAtIndex(profileList.currentIndex);
   var profilename = selected.getAttribute("profile_name");
   if( selected.getAttribute("rowMigrate") == "no" ) {
     // migrate if the user wants to
@@ -100,7 +97,7 @@ function RenameProfile()
       return false;
   }
   else {
-    oldName = selected.getAttribute("rowName");
+    oldName = selected.getAttribute("profile_name");
     newName = {value:oldName};
     var dialogTitle = gProfileManagerBundle.getString("renameprofiletitle");
     var msg = gProfileManagerBundle.getString("renameProfilePrompt");
@@ -124,8 +121,7 @@ function RenameProfile()
         var migrate = selected.getAttribute("rowMigrate");
         try {
           profile.renameProfile(oldName, newName);
-          selected.setAttribute( "label", newName );
-          selected.setAttribute( "rowName", newName );
+          selected.firstChild.firstChild.setAttribute( "label", newName );
           selected.setAttribute( "profile_name", newName );
         }
         catch(e) {
@@ -151,8 +147,8 @@ function ConfirmDelete()
     return;
   var profileList = document.getElementById( "profiles" );
 
-  var selected = profileList.selectedItems[0];
-  var name = selected.getAttribute("rowName");
+  var selected = profileList.view.getItemAtIndex(profileList.currentIndex);
+  var name = selected.getAttribute("profile_name");
   
   var dialogTitle = gProfileManagerBundle.getString("deletetitle");
   var dialogText;
@@ -199,18 +195,18 @@ function ConfirmDelete()
 function DeleteProfile(deleteFiles)
 {
   var profileList = document.getElementById("profiles");
-  if (profileList.selectedItems && profileList.selectedItems.length) {
-    var selected = profileList.selectedItems[0];
-    var name = selected.getAttribute("rowName");
-    var previous = profileList.getPreviousItem(selected, 1);
+  if (profileList.view.selection.count) {
+    var selected = profileList.view.getItemAtIndex(profileList.currentIndex);
+    var name = selected.getAttribute("profile_name");
+    var previous = profileList.currentIndex - 1;
 
     try {
       profile.deleteProfile(name, deleteFiles);
-      profileList.removeChild(selected);
+      profileList.lastChild.removeChild(selected);
 
       if (previous) {
-        profileList.selectItem(previous);
-        profileList.ensureElementIsVisible(previous);
+        profileList.view.selection.select(previous);
+        profileList.treeBoxObject.ensureRowIsVisible(previous);
       }
 
       // set the button state
@@ -282,7 +278,7 @@ function ChangeCaption( aCaption )
   window.title = aCaption;
 }
 
-// do button enabling based on listbox selection
+// do button enabling based on tree selection
 function DoEnabling()
 {
   var renbutton = document.getElementById( "renbutton" );
@@ -290,8 +286,7 @@ function DoEnabling()
   var start     = document.getElementById( "ok" );
   
   var profileList = document.getElementById( "profiles" );
-  var items = profileList.selectedItems;
-  if( items.length != 1 )
+  if (profileList.view.selection.count == 0)
   {
     renbutton.setAttribute( "disabled", "true" );
     delbutton.setAttribute( "disabled", "true" );
@@ -305,7 +300,7 @@ function DoEnabling()
     
     var canDelete = true;
     if (!gStartupMode) {  
-      var selected = profileList.selectedItems[0];
+      var selected = profileList.view.getItemAtIndex(profileList.currentIndex);
       var profileName = selected.getAttribute("profile_name");
       var currentProfile = profile.currentProfile;
       if (currentProfile && (profileName == currentProfile))
@@ -321,7 +316,7 @@ function DoEnabling()
   }
 }
 
-// handle key event on listboxes
+// handle key event on tree
 function HandleKeyEvent( aEvent )
 {
   switch( aEvent.keyCode ) 
@@ -341,7 +336,7 @@ function HandleKeyEvent( aEvent )
 
 function HandleClickEvent( aEvent )
 {
-  if( aEvent.detail == 2 && aEvent.button == 0 && aEvent.target.localName == "listitem") {
+  if (aEvent.button == 0 && event.target.parentNode.view.selection.count) {
     if (!onStart())
       return false;
     window.close();

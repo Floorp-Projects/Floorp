@@ -128,11 +128,12 @@ function highlightCurrentProfile()
     var currentProfile = profile.currentProfile;
     if( !currentProfile )
       return;
-    var currentProfileItem = document.getElementById( ( "profileName_" + currentProfile ) );
     var profileList = document.getElementById( "profiles" );
+    var currentProfileItem = profileList.getElementsByAttribute("profile_name", currentProfile).item(0);
     if( currentProfileItem ) {
-      profileList.selectItem( currentProfileItem );
-      profileList.ensureElementIsVisible( currentProfileItem );
+      var currentProfileIndex = profileList.view.getIndexOfItem(currentProfileItem);
+      profileList.view.selection.select( currentProfileIndex );
+      profileList.treeBoxObject.ensureRowIsVisible( currentProfileIndex );
     }
   }
   catch(e) {
@@ -141,32 +142,24 @@ function highlightCurrentProfile()
 }
 
 // function : <profileSelection.js>::AddItem();
-// purpose  : utility function for adding items to a listbox.
-function AddItem( aChildren, aProfileObject )
+// purpose  : utility function for adding items to a tree.
+function AddItem(aName, aMigrated)
 {
-  var kids    = document.getElementById(aChildren);
-  var listitem = document.createElement("listitem");
-  listitem.setAttribute("label", aProfileObject.mName );
-  listitem.setAttribute("rowMigrate",  aProfileObject.mMigrated );
-  listitem.setAttribute("class", "listitem-iconic");
-  listitem.setAttribute("profile_name", aProfileObject.mName );
-  listitem.setAttribute("rowName", aProfileObject.mName );
-  listitem.setAttribute("id", ( "profileName_" + aProfileObject.mName ) );
-  // 23/10/99 - no roaming access yet!
-  //  var roaming = document.getElementById("roamingitem");
-  //  kids.insertBefore(item,roaming);
-  kids.appendChild(listitem);
-  return listitem;
-}
-
-function Profile ( aName, aMigrated )
-{
-  this.mName       = aName ? aName : null;
-  this.mMigrated   = aMigrated ? aMigrated : null;
+  var tree = document.getElementById("profiles");
+  var treeitem = document.createElement("treeitem");
+  var treerow = document.createElement("treerow");
+  var treecell = document.createElement("treecell");
+  treecell.setAttribute("label", aName);
+  treecell.setAttribute("properties", "rowMigrate-" + aMigrated);
+  treeitem.setAttribute("profile_name", aName);
+  treeitem.setAttribute("rowMigrate", aMigrated);
+  treerow.appendChild(treecell);
+  treeitem.appendChild(treerow);
+  tree.lastChild.appendChild(treeitem);
 }
 
 // function : <profileSelection.js>::loadElements();
-// purpose  : load profiles into listbox
+// purpose  : load profiles into tree
 function loadElements()
 {
   try {
@@ -187,7 +180,7 @@ function loadElements()
 
       var migrated = Registry.getString( node.key, "migrated" );
 
-      AddItem( "profiles", new Profile( node.name, migrated ) );
+      AddItem(node.name, migrated);
 
       regEnum.next();
     }
@@ -201,7 +194,7 @@ function loadElements()
 function onStart()
 {
   var profileList = document.getElementById("profiles");
-  var selected = profileList.selectedItems[0];
+  var selected = profileList.view.getItemAtIndex(profileList.currentIndex);
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
     getService(Components.interfaces.nsIPromptService);
 

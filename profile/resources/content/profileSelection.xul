@@ -98,14 +98,15 @@
     <separator class="thin" orient="vertical"/>
     
     <vbox flex="1">
-      <listbox id="profiles" flex="1" style="height: 0px;" seltype="single"
-            onclick="HandleClickEvent( event );"
+      <tree id="profiles" flex="1" style="height: 0px;" seltype="single"
+            hidecolumnpicker="true"
             onselect="DoEnabling();"
             onkeypress="HandleKeyEvent( event );">
-        <listhead>
-          <listheader label="&availprofiles.label;"/>
-        </listhead>
-      </listbox>
+        <treecols>
+          <treecol label="&availprofiles.label;" flex="1"/>
+        </treecols>
+        <treechildren ondblclick="HandleClickEvent(event);"/>
+      </tree>
       <vbox>
         <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
         <checkbox id="autoSelectLastProfile" label="&autoSelectLastProfile.label;" accesskey="&autoSelectLastProfile.accesskey;"/> 
