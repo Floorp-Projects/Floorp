@@ -61,9 +61,9 @@ public:
 
     virtual nsresult Visit( nsICacheVisitor * visitor );
 
-    virtual nsresult        EvictEntries(const char * clientID);
+    virtual nsresult EvictEntries(const char * clientID);
     
-    static int PR_CALLBACK MemoryCacheSizeChanged(const char * pref, void * closure);
+    void             SetCapacity(PRUint32  capacity);
  
 private:
     friend class nsMemoryCacheDeviceInfo;

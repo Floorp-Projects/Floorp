@@ -77,7 +77,7 @@
               pref="true" preftype="bool" prefstring="browser.cache.disk.enable"
               prefattribute="checked"/>
     <checkbox id="browserEnableCache" label="&debugEnableMemCache.label;"
-              pref="true" preftype="bool" prefstring="browser.enable.cache"
+              pref="true" preftype="bool" prefstring="browser.cache.memory.enable"
               prefattribute="checked"/>
 
     </vbox>

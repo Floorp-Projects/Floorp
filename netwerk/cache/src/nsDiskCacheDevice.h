@@ -64,12 +64,16 @@ public:
 
     virtual nsresult        EvictEntries(const char * clientID);
 
+    /**
+     * Preference accessors
+     */
+    void                    SetCacheParentDirectory(nsILocalFile * parentDir);
+    void                    SetCapacity(PRUint32  capacity);
+
+
 /* private: */
-    void                    setPrefsObserver(nsIObserver *  observer);
-    void                    getPrefsObserver(nsIObserver ** result);
-    void                    setCacheDirectory(nsILocalFile *  directory);
+
     void                    getCacheDirectory(nsILocalFile ** result);
-    void                    setCacheCapacity(PRUint32 capacity);
     PRUint32                getCacheCapacity();
     PRUint32                getCacheSize();
     PRUint32                getEntryCount();
@@ -86,7 +90,6 @@ private:
      *  Member variables
      */
     PRBool                  mInitialized;
-    nsCOMPtr<nsIObserver>   mPrefsObserver;     // XXX ?
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
     nsDiskCacheBindery      mBindery;
     PRUint32                mCacheCapacity;     // XXX need soft/hard limits, currentTotal

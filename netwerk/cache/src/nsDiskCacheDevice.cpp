@@ -38,226 +38,9 @@
 #include "nsXPIDLString.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsISupportsArray.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsIObserverService.h"
-#include "nsIPref.h"
 
-#include "nsQuickSort.h"
-
-static nsresult ensureCacheDirectory(nsIFile * cacheDirectory);
 
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
-
-
-/******************************************************************************
- *  nsDiskCacheObserver
- *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark nsDiskCacheObserver
-#endif
-
-// Using nsIPref will be subsumed with nsIDirectoryService when a selector
-// for the cache directory has been defined.
-
-#define CACHE_DIR_PREF "browser.newcache.directory"
-#define CACHE_DISK_CAPACITY_PREF "browser.cache.disk_cache_size"
-
-class nsDiskCacheObserver : public nsIObserver {
-    nsDiskCacheDevice* mDevice;
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-
-    nsDiskCacheObserver(nsDiskCacheDevice * device)
-        :   mDevice(device)
-    {
-        NS_INIT_ISUPPORTS();
-    }
-    
-    virtual ~nsDiskCacheObserver() {}
-};
-
-NS_IMPL_ISUPPORTS1(nsDiskCacheObserver, nsIObserver);
-
-NS_IMETHODIMP nsDiskCacheObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
-{
-    nsresult rv;
-    
-    // did a preference change?
-    if (NS_LITERAL_STRING("nsPref:changed").Equals(aTopic)) {
-        nsCOMPtr<nsIPref> prefs = do_QueryInterface(aSubject, &rv);
-        if (!prefs) {
-            prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-            if (NS_FAILED(rv)) return rv;
-        }
-        
-        // which preference changed?
-        nsDependentString prefName(someData);
-        if (prefName.Equals(NS_LITERAL_STRING(CACHE_DIR_PREF))) {
-        	nsCOMPtr<nsILocalFile> cacheDirectory;
-            rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(cacheDirectory));
-        	if (NS_SUCCEEDED(rv)) {
-                rv = ensureCacheDirectory(cacheDirectory);
-                if (NS_SUCCEEDED(rv))
-                    mDevice->setCacheDirectory(cacheDirectory);
-            }
-        } else
-        if (prefName.Equals(NS_LITERAL_STRING(CACHE_DISK_CAPACITY_PREF))) {
-            PRInt32 cacheCapacity;
-            rv = prefs->GetIntPref(CACHE_DISK_CAPACITY_PREF, &cacheCapacity);
-        	if (NS_SUCCEEDED(rv))
-                mDevice->setCacheCapacity(cacheCapacity * 1024);
-        }
-    }  else if (NS_LITERAL_STRING("profile-do-change").Equals(aTopic)) {
-        // XXX need to regenerate the cache directory. hopefully the
-        // cache service has already been informed of this change.
-        nsCOMPtr<nsIFile> profileDir;
-        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, 
-                                    getter_AddRefs(profileDir));
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsILocalFile> cacheDirectory = do_QueryInterface(profileDir);
-            if (cacheDirectory) {
-                cacheDirectory->Append("NewCache");
-                // always make sure the directory exists, we may have just switched to a new profile dir.
-                rv = ensureCacheDirectory(cacheDirectory);
-                if (NS_SUCCEEDED(rv))
-                    mDevice->setCacheDirectory(cacheDirectory);
-            }
-        }
-    }
-    
-    return NS_OK;
-}
-
-static nsresult ensureCacheDirectory(nsIFile * cacheDirectory)
-{
-    // make sure the Cache directory exists.
-    PRBool exists;
-    nsresult rv = cacheDirectory->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && !exists)
-        rv = cacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
-    return rv;
-}
-
-static nsresult installObservers(nsDiskCacheDevice* device)
-{
-	nsresult rv;
-	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-	if (NS_FAILED(rv))
-		return rv;
-
-    nsCOMPtr<nsIObserver> observer = new nsDiskCacheObserver(device);
-    if (!observer) return NS_ERROR_OUT_OF_MEMORY;
-    
-    device->setPrefsObserver(observer);
-    
-    rv = prefs->AddObserver(CACHE_DISK_CAPACITY_PREF, observer);
-	if (NS_FAILED(rv))
-		return rv;
-
-    PRInt32 cacheCapacity;
-    rv = prefs->GetIntPref(CACHE_DISK_CAPACITY_PREF, &cacheCapacity);
-    if (NS_FAILED(rv)) {
-#if DEBUG
-        const PRInt32 kTenMegabytes = 10 * 1024 * 1024;
-        rv = prefs->SetIntPref(CACHE_DISK_CAPACITY_PREF, kTenMegabytes);
-#else
-		return rv;
-#endif
-    } else {
-        // XXX note the units of the pref seems to be in kilobytes.
-        device->setCacheCapacity(cacheCapacity * 1024);
-    }
-
-    rv = prefs->AddObserver(CACHE_DIR_PREF, observer);
-	if (NS_FAILED(rv))
-		return rv;
-
-	nsCOMPtr<nsILocalFile> cacheDirectory;
-    rv = prefs->GetFileXPref(CACHE_DIR_PREF, getter_AddRefs(cacheDirectory));
-    if (NS_FAILED(rv)) {
-        // XXX no preference has been defined, use the directory service. instead.
-        nsCOMPtr<nsIFile> profileDir;
-        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, 
-                                    getter_AddRefs(profileDir));
-        if (NS_SUCCEEDED(rv)) {
-            // XXX this path will probably only succeed when running under Mozilla.
-            // store the new disk cache files in a directory called NewCache
-            // in the interim.
-            cacheDirectory = do_QueryInterface(profileDir, &rv);
-        	if (NS_FAILED(rv))
-        		return rv;
-
-            rv = cacheDirectory->Append("NewCache");
-        	if (NS_FAILED(rv))
-        		return rv;
-
-            // XXX since we didn't find a preference, we'll assume that the cache directory
-            // can only change when profiles change, so remove the prefs listener and install
-            // a profile listener.
-            prefs->RemoveObserver(CACHE_DIR_PREF, observer);
-            
-            nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-            if (observerService)
-                observerService->AddObserver(observer, NS_LITERAL_STRING("profile-do-change").get());
-        } else {
-#if DEBUG
-            // XXX use current process directory during development only.
-            nsCOMPtr<nsIFile> currentProcessDir;
-            rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
-                                        getter_AddRefs(currentProcessDir));
-        	if (NS_FAILED(rv))
-        		return rv;
-
-            cacheDirectory = do_QueryInterface(currentProcessDir, &rv);
-        	if (NS_FAILED(rv))
-        		return rv;
-
-            rv = cacheDirectory->Append("Cache");
-        	if (NS_FAILED(rv))
-        		return rv;
-#else
-            return rv;
-#endif
-        }
-    }
-
-    // always make sure the directory exists, the user may blow it away.
-    rv = ensureCacheDirectory(cacheDirectory);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // cause the preference to be set up initially.
-    device->setCacheDirectory(cacheDirectory);
-    
-    return NS_OK;
-}
-
-static nsresult removeObservers(nsDiskCacheDevice* device)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIObserver> observer;
-    device->getPrefsObserver(getter_AddRefs(observer));
-    device->setPrefsObserver(nsnull);
-    NS_ASSERTION(observer, "removePrefListeners");
-
-    if (observer) {
-    	nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    	if (prefs) {
-            prefs->RemoveObserver(CACHE_DISK_CAPACITY_PREF, observer);
-            prefs->RemoveObserver(CACHE_DIR_PREF, observer);
-        }
-        
-        nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-        if (observerService)
-            observerService->RemoveObserver(observer, NS_LITERAL_STRING("profile-do-change").get());
-    }
-    
-    return NS_OK;
-}
 
 
 /******************************************************************************
@@ -494,10 +277,6 @@ nsDiskCacheDevice::Init()
     
     rv = mBindery.Init();
     if (NS_FAILED(rv)) return rv;
-
-    // XXX examine preferences, and install observers to react to changes.
-    rv = installObservers(this);
-    if (NS_FAILED(rv)) return rv;
     
     // hold the file transport service to avoid excessive calls to the service manager.
     gFileTransportService = do_GetService("@mozilla.org/network/file-transport-service;1", &rv);
@@ -553,9 +332,6 @@ nsDiskCacheDevice::Shutdown()
         mInitialized = PR_FALSE;
     }
 
-    // disconnect observers.
-    removeObservers(this);
-    
     // release the reference to the cached file transport service.
     gFileTransportService = nsnull;
     
@@ -717,14 +493,6 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * entry)
     NS_ASSERTION(binding, "nsDiskCacheDevice::BindEntry");
     if (!binding) return NS_ERROR_OUT_OF_MEMORY;
     NS_ASSERTION(binding->mRecord.ValidRecord(), "bad cache map record");
-
-
-#if 0
-    // XXX from old code: when would we bind an entry that already has data?
-    PRUint32 dataSize = newEntry->DataSize();
-    if (dataSize)
-        OnDataSizeChange(newEntry, dataSize);
-#endif
 
     return NS_OK;
 }
@@ -1024,7 +792,7 @@ nsDiskCacheDevice::EvictDiskCacheEntries()
 {
     nsresult rv;
     
-    if (mCacheMap->TotalSize() < mCacheCapacity)  return NS_OK;
+    if (mCacheMap->TotalSize() < (PRInt32) mCacheCapacity)  return NS_OK;
 
     nsDiskCacheEvictor  evictor(this, mCacheMap, &mBindery, mCacheCapacity, nsnull);
     rv = mCacheMap->EvictRecords(&evictor);
@@ -1040,19 +808,59 @@ nsDiskCacheDevice::EvictDiskCacheEntries()
 #pragma mark -
 #pragma mark PREF METHODS
 #endif
-void nsDiskCacheDevice::setPrefsObserver(nsIObserver* observer)
-{
-    mPrefsObserver = observer;
-}
 
-void nsDiskCacheDevice::getPrefsObserver(nsIObserver** result)
+void
+nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
 {
-    NS_IF_ADDREF(*result = mPrefsObserver);
-}
-
-void nsDiskCacheDevice::setCacheDirectory(nsILocalFile* cacheDirectory)
-{
-    mCacheDirectory = cacheDirectory;
+    nsresult rv;
+    PRBool  exists;
+    NS_ASSERTION(mCacheDirectory == nsnull, "switching cache directories not supportted.");
+    
+    if (!parentDir) {
+        mCacheDirectory = nsnull;
+        return;
+    }
+    
+    // ensure parent directory exists
+    rv = parentDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+        rv = parentDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv))  return;
+    
+    // ensure cache directory exists
+    nsCOMPtr<nsIFile> directory;
+    
+    rv = parentDir->Clone(getter_AddRefs(directory));
+    if (NS_FAILED(rv))  return;
+    rv = directory->Append("Cache");
+    if (NS_FAILED(rv))  return;
+    
+    rv = directory->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+        rv = directory->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv))  return;
+    
+    mCacheDirectory = do_QueryInterface(directory);
+    
+    // clean up Cache.Trash directories
+    rv = parentDir->Clone(getter_AddRefs(directory));
+    if (NS_FAILED(rv))  return;    
+    rv = directory->Append("Cache.Trash");
+    if (NS_FAILED(rv))  return;
+    
+    rv = directory->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists)
+        (void) directory->Delete(PR_TRUE);
+    
+    // clean up obsolete NewCache directory
+    rv = parentDir->Clone(getter_AddRefs(directory));
+    if (NS_FAILED(rv))  return;    
+    rv = directory->Append("NewCache");
+    if (NS_FAILED(rv))  return;
+    
+    rv = directory->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists)
+        (void) directory->Delete(PR_TRUE);
 }
 
 
@@ -1064,15 +872,16 @@ nsDiskCacheDevice::getCacheDirectory(nsILocalFile ** result)
 }
 
 
-void nsDiskCacheDevice::setCacheCapacity(PRUint32 capacity)
+void
+nsDiskCacheDevice::SetCapacity(PRUint32  capacity)
 {
-    mCacheCapacity = capacity;
+    mCacheCapacity = capacity * 1024;
     if (mInitialized) {
         // start evicting entries if the new size is smaller!
-        // XXX need to enter cache service lock here!
         EvictDiskCacheEntries();
     }
 }
+
 
 PRUint32 nsDiskCacheDevice::getCacheCapacity()
 {

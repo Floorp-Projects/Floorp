@@ -61,7 +61,7 @@
           <text class="label" value="&memCache.label;" accesskey="&memCache.accesskey;" for="browserCacheMemoryCache"/>
           <box autostretch="never" valign="middle">
             <textbox id="browserCacheMemoryCache" size="8" pref="true" preftype="int"
-                       prefstring="browser.cache.memory_cache_size" prefattribute="value"/>
+                       prefstring="browser.cache.memory.capacity" prefattribute="value"/>
             <text class="label" value="&kbyes;"/>
           </box>
           <button class="dialog" label="&clearMemCache.label;" accesskey="&clearMemCache.accesskey;"
@@ -73,7 +73,7 @@
           <text class="label" value="&diskCache.label;" accesskey="&diskCache.accesskey;" for="browserCacheDiskCache"/>
           <box autostretch="never" valign="middle">
             <textbox id="browserCacheDiskCache" size="8" pref="true" preftype="int"
-                       prefstring="browser.cache.disk_cache_size" prefattribute="value"/>
+                       prefstring="browser.cache.disk.capacity" prefattribute="value"/>
             <text class="label" value="&kbyes;"/>
           </box>
           <button class="dialog" label="&clearDiskCache.label;" accesskey="&clearDiskCache.accesskey;"

@@ -28,8 +28,8 @@ pref("network.hosts.pop_server", "pop");
 pref("mail.check_new_mail", true);
 pref("browser.display.screen_resolution", 0); // System setting
 pref("browser.startup.license_accepted", "");
-pref("browser.cache.memory_cache_size", 4096);
-pref("browser.cache.disk_cache_size", 50000);
+pref("browser.cache.memory.capacity", 4096);
+pref("browser.cache.disk.capacity", 50000);
 pref("browser.ncols", 0);
 pref("browser.installcmap", false);
 pref("browser.drag_out_of_frame_style", 1);
