@@ -47,11 +47,10 @@ public:
   // nsIView
   NS_IMETHOD  Init(nsIViewManager* aManager,
       						 const nsRect &aBounds,
-      						 nsIView *aParent,
+                   const nsIView *aParent,
       						 const nsCID *aWindowIID = nsnull,
                    nsWidgetInitData *aWidgetInitData = nsnull,
       						 nsNativeWidget aNative = nsnull,
-      						 PRInt32 aZIndex = 0,
       						 const nsViewClip *aClip = nsnull,
       						 float aOpacity = 1.0f,
       						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
