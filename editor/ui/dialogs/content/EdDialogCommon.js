@@ -465,14 +465,18 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
 {
   var colorWell = document.getElementById(ColorWellID);
   var colorPicker = document.getElementById(ColorPickerID);
+  if (colorPicker) 
+  {
+    // Extract color from colorPicker and assign to colorWell.
+    var color = colorPicker.getAttribute('color');
+    dump("setColor to: "+color+"\n");
 
-  // Extract color from colorPicker and assign to colorWell.
-  var color = colorPicker.getAttribute('color');
-  dump("setColorWell: Color = "+color+"\n");
-
-  // Use setAttribute so colorwell can be a XUL element, such as titledbutton
-  colorWell.setAttribute("style", "background-color: " + color); 
-  //colorWell.style.backgroundColor = color;
+    if (colorWell)
+    {
+      // Use setAttribute so colorwell can be a XUL element, such as titledbutton
+      colorWell.setAttribute("style", "background-color: " + color); 
+    }
+  }
 
   return color;
 }

@@ -171,7 +171,7 @@ class nsEditorShell :   public nsIEditorShell,
     nsString   GetString(const nsString& name);
     
     // Get the text of the <title> tag
-    NS_IMETHOD GetDocumentTitle(nsString& title);
+    NS_IMETHOD GetDocumentTitleString(nsString& title);
 
     // Get the current document title an use it as part of the window title
     // Uses "(Untitled)" for empty title

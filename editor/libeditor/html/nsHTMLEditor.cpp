@@ -2744,7 +2744,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     // Note that we read the user's attributes for these from prefs (in InsertHLine JS)
     newElement->SetAttribute("align","center");
     newElement->SetAttribute("width","100%");
-    newElement->SetAttribute("height","2");
+    newElement->SetAttribute("size","2");
   } else if (TagName.Equals("table"))
   {
     newElement->SetAttribute("cellpadding","2");
@@ -2850,20 +2850,22 @@ NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 {
   NS_PRECONDITION(mDocWeak, "Missing Editor DOM Document");
   
-  // TODO: Check selection for Cell, Row, Column or table and do color on appropriate level
-  // For initial testing, just set the background on the BODY tag (the document's background)
-
-  // Set the background color attribute on the body tag
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  nsresult res = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
-  if (!bodyElement) res = NS_ERROR_NULL_POINTER;
-  if (NS_SUCCEEDED(res))
+  // Find a selected or enclosing table element to set background on
+  // TODO: Handle case of > 1 table cell or row selected
+  nsCOMPtr<nsIDOMElement> element;
+  PRBool isSelected;
+  nsAutoString tagName;
+  nsresult res = GetSelectedOrParentTableElement(element, tagName, isSelected);
+  if (NS_FAILED(res)) return res;
+  if (!element)
   {
-    // Use the editor method that goes through the transaction system
-    res = SetAttribute(bodyElement, "bgcolor", aColor);
+    // No table element -- set the background color on the body tag
+    res = nsEditor::GetBodyElement(getter_AddRefs(element));
+    if (NS_FAILED(res)) return res;
+    if (!element)       return NS_ERROR_NULL_POINTER;
   }
-  
-  return res;
+  // Use the editor method that goes through the transaction system
+  return SetAttribute(element, "bgcolor", aColor);
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const nsString& aValue)

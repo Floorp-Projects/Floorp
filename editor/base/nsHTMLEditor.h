@@ -177,6 +177,7 @@ public:
   NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD DeleteTable();
   NS_IMETHOD DeleteTableCell(PRInt32 aNumber);
+  NS_IMETHOD DeleteTableCellContents();
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber);
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber);
   NS_IMETHOD JoinTableCells();
@@ -187,6 +188,9 @@ public:
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell,
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex,
                            PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected);
+  NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, PRInt32 aDirection);
+  NS_IMETHOD GetSelectedOrParentTableElement(nsCOMPtr<nsIDOMElement> &aTableElement, nsString& aTagName, PRBool &aIsSelected);
+    
 
 // Selection and navigation
   /* obsolete
@@ -306,7 +310,7 @@ protected:
   // Table utilities
 
   NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan, PRBool aAfter);
-  NS_IMETHOD DeleteTable(nsCOMPtr<nsIDOMElement> &table, nsCOMPtr<nsIDOMSelection> &selection);
+  NS_IMETHOD DeleteTable(nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMSelection> &aSelection);
   // Helper used to get nsITableLayout interface for methods implemented in nsTableFrame
   NS_IMETHOD GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject);
   // Needed to do appropriate deleting when last cell or row is about to be deleted
@@ -322,13 +326,6 @@ protected:
   // Use the selection iterator to find the first cell in the selection
   NS_IMETHOD GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell);
 
-  
-  // Setting caret to a logical place can get tricky,
-  //  especially after deleting table stuff
-  typedef enum { eNoSearch, ePreviousColumn, ePreviousRow } SetCaretSearchDirection;
-  
-  NS_IMETHOD SetCaretAfterTableEdit(nsIDOMElement* aTable, PRInt32 aCol, PRInt32 aRow, SetCaretSearchDirection aDirection);
-    
   NS_IMETHOD ReParentContentOfNode(nsIDOMNode *aNode, 
                                    nsString   &aParentTag,
                                    BlockTransformationType aTranformation);

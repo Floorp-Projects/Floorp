@@ -294,6 +294,7 @@ interface nsIEditorShell : nsISupports
   void InsertTableColumn(in PRInt32 number, in boolean after);
   void DeleteTable();
   void DeleteTableCell(in PRInt32 number);
+  void DeleteTableCellContents();
   void DeleteTableRow(in PRInt32 number);
   void DeleteTableColumn(in PRInt32 number);
   void JoinTableCells();
