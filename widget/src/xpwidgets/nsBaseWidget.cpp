@@ -244,7 +244,7 @@ nsIEnumerator* nsBaseWidget::GetChildren()
         delete children;
         return nsnull;
       }
-      nsCOMPtr<nsIWidget> widget ( currentChild );
+      nsCOMPtr<nsIWidget> widget ( do_QueryInterface(currentChild) );
       if ( widget )
         children->Append(widget);
     }
