@@ -262,7 +262,7 @@ for ($j = 0; $j < $i; $j++) {
     if ($width + $len > 78) {
 	print CPP_FILE "\n  ";
 	$width = 2;
-    }
+    } 
     print CPP_FILE $str;
     $width = $width + $len;
 }
