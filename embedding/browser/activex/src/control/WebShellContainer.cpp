@@ -33,6 +33,7 @@ CWebShellContainer::CWebShellContainer(CMozillaBrowser *pOwner)
 	m_pOwner = pOwner;
 	m_pEvents1 = m_pOwner;
 	m_pEvents2 = m_pOwner;
+	m_pCurrentURI = nsnull;
 }
 
 
@@ -57,11 +58,12 @@ NS_INTERFACE_MAP_BEGIN(CWebShellContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 	NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 NS_INTERFACE_MAP_END
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIURIContentListener
+// nsIInterfaceRequestor
 
 NS_IMETHODIMP CWebShellContainer::GetInterface(const nsIID & uuid, void * *result)
 {
@@ -70,12 +72,191 @@ NS_IMETHODIMP CWebShellContainer::GetInterface(const nsIID & uuid, void * *resul
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// nsIWebProgressListener
+
+/* void onProgressChange (in nsIChannel channel, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
+NS_IMETHODIMP CWebShellContainer::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
+{
+	NG_TRACE(_T("CWebShellContainer::OnProgressChange(...)\n"));
+	
+	long nProgress = curTotalProgress;
+	long nProgressMax = maxTotalProgress;
+
+	if (nProgress == 0)
+	{
+	}
+	if (nProgressMax == 0)
+	{
+		nProgressMax = LONG_MAX;
+	}
+	if (nProgress > nProgressMax)
+	{
+		nProgress = nProgressMax; // Progress complete
+	}
+
+	m_pEvents1->Fire_ProgressChange(nProgress, nProgressMax);
+	m_pEvents2->Fire_ProgressChange(nProgress, nProgressMax);
+
+    return NS_OK;
+}
+
+
+/* void onChildProgressChange (in nsIChannel channel, in long curChildProgress, in long maxChildProgress); */
+NS_IMETHODIMP CWebShellContainer::OnChildProgressChange(nsIChannel *channel, PRInt32 curChildProgress, PRInt32 maxChildProgress)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/* void onStatusChange (in nsIChannel channel, in long progressStatusFlags); */
+NS_IMETHODIMP CWebShellContainer::OnStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
+{
+	NG_TRACE(_T("CWebShellContainer::OnStatusChange(...)\n"));
+
+	if (progressStatusFlags & nsIWebProgress::flag_net_start)
+	{
+		// TODO 
+	}
+
+	if (progressStatusFlags & nsIWebProgress::flag_net_stop)
+	{
+		NG_ASSERT(m_pCurrentURI);
+		nsXPIDLCString aURI;
+		m_pCurrentURI->GetSpec(getter_Copies(aURI));
+
+		// Fire a NavigateComplete event
+		USES_CONVERSION;
+		BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI));
+		m_pEvents1->Fire_NavigateComplete(bstrURI);
+
+		// Fire a NavigateComplete2 event
+		CComVariant vURI(bstrURI);
+		m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURI);
+
+		// Cleanup
+		SysFreeString(bstrURI);
+
+		nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->m_pIWebBrowser));
+
+		// Fire the new NavigateForward state
+		VARIANT_BOOL bEnableForward = VARIANT_FALSE;
+		PRBool aCanGoForward = PR_FALSE;
+		webNav->GetCanGoForward(&aCanGoForward);
+		if (aCanGoForward == PR_TRUE)
+		{
+			bEnableForward = VARIANT_TRUE;
+		}
+		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
+
+		// Fire the new NavigateBack state
+		VARIANT_BOOL bEnableBack = VARIANT_FALSE;
+		PRBool aCanGoBack = PR_FALSE;
+		webNav->GetCanGoBack(&aCanGoBack);
+		if (aCanGoBack == PR_TRUE)
+		{
+			bEnableBack = VARIANT_TRUE;
+		}
+		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
+
+		m_pOwner->m_bBusy = FALSE;
+
+		NS_RELEASE(m_pCurrentURI);
+	}
+
+    return NS_OK;
+}
+
+
+/* void onChildStatusChange (in nsIChannel channel, in long progressStatusFlags); */
+NS_IMETHODIMP CWebShellContainer::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/* void onLocationChange (in nsIURI location); */
+NS_IMETHODIMP CWebShellContainer::OnLocationChange(nsIURI *location)
+{
+//	nsXPIDLCString aPath;
+//	location->GetPath(getter_Copies(aPath));
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // nsIURIContentListener
 
 /* void onStartURIOpen (in nsIURI aURI, in string aWindowTarget, out boolean aAbortOpen); */
-NS_IMETHODIMP CWebShellContainer::OnStartURIOpen(nsIURI *aURI, const char *aWindowTarget, PRBool *aAbortOpen)
+NS_IMETHODIMP CWebShellContainer::OnStartURIOpen(nsIURI *pURI, const char *aWindowTarget, PRBool *aAbortOpen)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	USES_CONVERSION;
+	NG_TRACE(_T("CWebShellContainer::OnStartURIOpen(...)\n"));
+
+	if (m_pCurrentURI)
+	{
+		NS_RELEASE(m_pCurrentURI);
+	}
+	m_pCurrentURI = pURI;
+	NG_ASSERT(m_pCurrentURI);
+	m_pCurrentURI->AddRef();
+
+	nsXPIDLCString aURI;
+	m_pCurrentURI->GetSpec(getter_Copies(aURI));
+
+	// Setup the post data
+	CComVariant vPostDataRef;
+	CComVariant vPostData;
+	vPostDataRef.vt = VT_BYREF | VT_VARIANT;
+	vPostDataRef.pvarVal = &vPostData;
+	// TODO get the post data passed in via the original call to Navigate()
+
+	// Fire a BeforeNavigate event
+	BSTR bstrURI = SysAllocString(A2OLE((const char *)aURI));
+	BSTR bstrTargetFrameName = NULL;
+	BSTR bstrHeaders = NULL;
+	VARIANT_BOOL bCancel = VARIANT_FALSE;
+	long lFlags = 0;
+
+	m_pEvents1->Fire_BeforeNavigate(bstrURI, lFlags, bstrTargetFrameName, &vPostDataRef, bstrHeaders, &bCancel);
+
+	// Fire a BeforeNavigate2 event
+	CComVariant vURI(bstrURI);
+	CComVariant vFlags(lFlags);
+	CComVariant vTargetFrameName(bstrTargetFrameName);
+	CComVariant vHeaders(bstrHeaders);
+
+	m_pEvents2->Fire_BeforeNavigate2(m_pOwner, &vURI, &vFlags, &vTargetFrameName, &vPostDataRef, &vHeaders, &bCancel);
+
+	// Cleanup
+	SysFreeString(bstrURI);
+	SysFreeString(bstrTargetFrameName);
+	SysFreeString(bstrHeaders);
+
+	if (bCancel == VARIANT_TRUE)
+	{
+		*aAbortOpen = PR_TRUE;
+		return NS_ERROR_ABORT;
+	}
+	else
+	{
+		m_pOwner->m_bBusy = TRUE;
+	}
+
+	//NOTE:	The IE control fires a DownloadBegin after the first BeforeNavigate.  It then fires a 
+	//		DownloadComplete after the engine has made it's initial connection to the server.  It
+	//		then fires a second DownloadBegin/DownloadComplete pair around the loading of everything
+	//		on the page.  These events get fired out of CWebShellContainer::StartDocumentLoad() and
+	//		CWebShellContainer::EndDocumentLoad().
+	//		We don't appear to distinguish between the initial connection to the server and the
+	//		actual transfer of data.  Firing these events here simulates, appeasing applications
+	//		that are expecting that initial pair.
+
+	m_pEvents1->Fire_DownloadBegin();
+	m_pEvents2->Fire_DownloadBegin();
+	m_pEvents1->Fire_DownloadComplete();
+	m_pEvents2->Fire_DownloadComplete();
+
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void getProtocolHandler (in nsIURI aURI, out nsIProtocolHandler aProtocolHandler); */
@@ -84,11 +265,13 @@ NS_IMETHODIMP CWebShellContainer::GetProtocolHandler(nsIURI *aURI, nsIProtocolHa
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 /* void doContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
 NS_IMETHODIMP CWebShellContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, nsIChannel *aOpenedChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 /* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
 NS_IMETHODIMP CWebShellContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
@@ -96,27 +279,34 @@ NS_IMETHODIMP CWebShellContainer::IsPreferred(const char *aContentType, nsURILoa
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 /* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, in string aWindowTarget, out string aDesiredContentType); */
 NS_IMETHODIMP CWebShellContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, char **aDesiredContentType, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 /* attribute nsISupports loadCookie; */
 NS_IMETHODIMP CWebShellContainer::GetLoadCookie(nsISupports * *aLoadCookie)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
 NS_IMETHODIMP CWebShellContainer::SetLoadCookie(nsISupports * aLoadCookie)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 /* attribute nsIURIContentListener parentContentListener; */
 NS_IMETHODIMP CWebShellContainer::GetParentContentListener(nsIURIContentListener * *aParentContentListener)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
 NS_IMETHODIMP CWebShellContainer::SetParentContentListener(nsIURIContentListener * aParentContentListener)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -125,6 +315,7 @@ NS_IMETHODIMP CWebShellContainer::SetParentContentListener(nsIURIContentListener
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocShellTreeOwner
+
 
 NS_IMETHODIMP
 CWebShellContainer::FindItemWithName(const PRUnichar* aName,
@@ -135,12 +326,14 @@ CWebShellContainer::FindItemWithName(const PRUnichar* aName,
 	return docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aFoundItem);
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
@@ -150,6 +343,7 @@ CWebShellContainer::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 	return NS_ERROR_FAILURE;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
    PRInt32 aCX, PRInt32 aCY)
@@ -158,12 +352,14 @@ CWebShellContainer::SizeShellTo(nsIDocShellTreeItem* aShell,
 	return NS_OK;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::ShowModal()
 {
 	// Ignore request to be shown modally
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP CWebShellContainer::GetNewWindow(PRInt32 aChromeFlags, 
    nsIDocShellTreeItem** aDocShellTreeItem)
@@ -333,11 +529,13 @@ CWebShellContainer::SetJSStatus(const PRUnichar *status)
 	return NS_ERROR_FAILURE;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::SetJSDefaultStatus(const PRUnichar *status)
 {
 	return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::SetOverLink(const PRUnichar *link)
@@ -345,11 +543,13 @@ CWebShellContainer::SetOverLink(const PRUnichar *link)
 	return NS_ERROR_FAILURE;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::GetWebBrowser(nsIWebBrowser * *aWebBrowser)
 {
 	return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::SetWebBrowser(nsIWebBrowser * aWebBrowser)
@@ -357,11 +557,13 @@ CWebShellContainer::SetWebBrowser(nsIWebBrowser * aWebBrowser)
 	return NS_ERROR_FAILURE;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::GetChromeMask(PRUint32 *aChromeMask)
 {
 	return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::SetChromeMask(PRUint32 aChromeMask)
@@ -369,11 +571,13 @@ CWebShellContainer::SetChromeMask(PRUint32 aChromeMask)
 	return NS_ERROR_FAILURE;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **_retval)
 {
 	return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::FindNamedBrowserItem(const PRUnichar *aName, nsIDocShellTreeItem **_retval)
@@ -381,11 +585,13 @@ CWebShellContainer::FindNamedBrowserItem(const PRUnichar *aName, nsIDocShellTree
 	return NS_ERROR_FAILURE;
 }
 
+
 NS_IMETHODIMP
 CWebShellContainer::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
 	return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::ShowAsModal(void)
@@ -395,194 +601,9 @@ CWebShellContainer::ShowAsModal(void)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIWebShellContainer implementation
-
-
-NS_IMETHODIMP
-CWebShellContainer::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
-{
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebShellContainer::WillLoadURL(..., \"%s\", %d)\n"), W2T(aURL), (int) aReason);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
-{
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebShellContainer::BeginLoadURL(..., \"%s\")\n"), W2T(aURL));
-
-	// Setup the post data
-	CComVariant vPostDataRef;
-	CComVariant vPostData;
-	vPostDataRef.vt = VT_BYREF | VT_VARIANT;
-	vPostDataRef.pvarVal = &vPostData;
-	// TODO get the post data passed in via the original call to Navigate()
-
-	// Fire a BeforeNavigate event
-	OLECHAR *pszURL = W2OLE((WCHAR *)aURL);
-	BSTR bstrURL = SysAllocString(pszURL);
-	BSTR bstrTargetFrameName = NULL;
-	BSTR bstrHeaders = NULL;
-	VARIANT_BOOL bCancel = VARIANT_FALSE;
-	long lFlags = 0;
-
-	m_pEvents1->Fire_BeforeNavigate(bstrURL, lFlags, bstrTargetFrameName, &vPostDataRef, bstrHeaders, &bCancel);
-
-	// Fire a BeforeNavigate2 event
-	CComVariant vURL(bstrURL);
-	CComVariant vFlags(lFlags);
-	CComVariant vTargetFrameName(bstrTargetFrameName);
-	CComVariant vHeaders(bstrHeaders);
-
-	m_pEvents2->Fire_BeforeNavigate2(m_pOwner, &vURL, &vFlags, &vTargetFrameName, &vPostDataRef, &vHeaders, &bCancel);
-
-	SysFreeString(bstrURL);
-	SysFreeString(bstrTargetFrameName);
-	SysFreeString(bstrHeaders);
-
-	if (bCancel == VARIANT_TRUE)
-	{
-		return NS_ERROR_ABORT;
-	}
-	else
-	{
-		m_pOwner->m_bBusy = TRUE;
-	}
-
-	//NOTE:	The IE control fires a DownloadBegin after the first BeforeNavigate.  It then fires a 
-	//		DownloadComplete after then engine has made it's initial connection to the server.  It
-	//		then fires a second DownloadBegin/DownloadComplete pair around the loading of everything
-	//		on the page.  These events get fired out of CWebShellContainer::StartDocumentLoad() and
-	//		CWebShellContainer::EndDocumentLoad().
-	//		We don't appear to distinguish between the initial connection to the server and the
-	//		actual transfer of data.  Firing these events here simulates, appeasing applications
-	//		that are expecting that initial pair.
-	m_pEvents1->Fire_DownloadBegin();
-	m_pEvents2->Fire_DownloadBegin();
-	m_pEvents1->Fire_DownloadComplete();
-	m_pEvents2->Fire_DownloadComplete();
-
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
-{
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebShellContainer::ProgressLoadURL(..., \"%s\", %d, %d)\n"), W2T(aURL), (int) aProgress, (int) aProgressMax);
-	
-	long nProgress = aProgress;
-	long nProgressMax = aProgressMax;
-
-	if (nProgress == 0)
-	{
-	}
-	if (nProgressMax == 0)
-	{
-		nProgressMax = LONG_MAX;
-	}
-	if (nProgress > nProgressMax)
-	{
-		nProgress = nProgressMax; // Progress complete
-	}
-
-	m_pEvents1->Fire_ProgressChange(nProgress, nProgressMax);
-	m_pEvents2->Fire_ProgressChange(nProgress, nProgressMax);
-
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus)
-{
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebShellContainer::EndLoadURL(..., \"%s\", %d)\n"), W2T(aURL), (int) aStatus);
-
-	// Fire a NavigateComplete event
-	OLECHAR *pszURL = W2OLE((WCHAR *) aURL);
-	BSTR bstrURL = SysAllocString(pszURL);
-	m_pEvents1->Fire_NavigateComplete(bstrURL);
-
-	// Fire a NavigateComplete2 event
-	CComVariant vURL(bstrURL);
-	m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURL);
-
-	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->m_pIWebBrowser));
-
-	// Fire the new NavigateForward state
-	VARIANT_BOOL bEnableForward = VARIANT_FALSE;
-	PRBool aCanGoForward = PR_FALSE;
-	webNav->GetCanGoForward(&aCanGoForward);
-	if (aCanGoForward == PR_TRUE)
-	{
-		bEnableForward = VARIANT_TRUE;
-	}
-	m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
-
-	// Fire the new NavigateBack state
-	VARIANT_BOOL bEnableBack = VARIANT_FALSE;
-	PRBool aCanGoBack = PR_FALSE;
-	webNav->GetCanGoBack(&aCanGoBack);
-	if (aCanGoBack == PR_TRUE)
-	{
-		bEnableBack = VARIANT_TRUE;
-	}
-	m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
-
-	m_pOwner->m_bBusy = FALSE;
-	SysFreeString(bstrURL);
-
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::NewWebShell(PRUint32 aChromeMask, PRBool aVisible, nsIWebShell *&aNewWebShell)
-{
-	NG_TRACE_METHOD(CWebShellContainer::NewWebShell);
-	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-	return rv;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
-{
-	NG_TRACE_METHOD(CWebShellContainer::FocusAvailable);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameNode)
-{
-	NG_TRACE_METHOD(CWebShellContainer::ContentShellAdded);
-	nsresult rv = NS_OK;
-	return rv;
-}
-
-
-NS_IMETHODIMP
-CWebShellContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
-{
-	NG_TRACE_METHOD(CWebShellContainer::CreatePopup);
-	HMENU hMenu = ::CreatePopupMenu();
-    *outPopup = NULL;
-	InsertMenu(hMenu, 0, MF_BYPOSITION, 1, _T("TODO"));
-	TrackPopupMenu(hMenu, TPM_LEFTALIGN, aXPos, aYPos, NULL, NULL, NULL);
-	return NS_OK;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver implementation
+
+
 NS_IMETHODIMP
 CWebShellContainer::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 {
@@ -591,6 +612,7 @@ CWebShellContainer::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
 
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP
 CWebShellContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg)
@@ -609,13 +631,13 @@ CWebShellContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, n
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDocumentLoaderObserver implementation 
 
+
 NS_IMETHODIMP
-CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand)
+CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* pURI, const char* aCommand)
 {
-	char* wString = nsnull;    
-	aURL->GetPath(&wString);
-	USES_CONVERSION;
-	NG_TRACE(_T("CWebShellContainer::OnStartDocumentLoad(..., %s, \"%s\")\n"),A2CT(wString), A2CT(aCommand));
+	nsXPIDLCString aURI;
+	pURI->GetSpec(getter_Copies(aURI));
+	NG_TRACE(_T("CWebShellContainer::OnStartDocumentLoad(..., %s, \"%s\")\n"), A2CT(aURI), A2CT(aCommand));
 
 	//Fire a DownloadBegin
 	m_pEvents1->Fire_DownloadBegin();
@@ -623,6 +645,7 @@ CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 
 	return NS_OK; 
 } 
+
 
 // we need this to fire the document complete 
 NS_IMETHODIMP
@@ -635,26 +658,24 @@ CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCh
 	m_pEvents2->Fire_DownloadComplete();
 
 	char* aString = nsnull;    
-    nsIURI* uri = nsnull;
+    nsIURI* pURI = nsnull;
 
-    aChannel->GetURI(&uri);
-    if (uri) {
-      uri->GetSpec(&aString);
-    }
-	if (aString == NULL)
+    aChannel->GetURI(&pURI);
+	if (pURI == nsnull)
 	{
 		return NS_ERROR_NULL_POINTER;
 	}
+	nsXPIDLCString aURI;
+	pURI->GetSpec(getter_Copies(aURI));
+	NS_RELEASE(pURI);
 
 	USES_CONVERSION;
-	BSTR bstrURL = SysAllocString(A2OLE((CHAR *) aString)); 
+	BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI)); 
 		
-	delete [] aString; // clean up. 
-
 	// Fire a DocumentComplete event
-	CComVariant vURL(bstrURL);
-	m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURL);
-	SysFreeString(bstrURL);
+	CComVariant vURI(bstrURI);
+	m_pEvents2->Fire_DocumentComplete(m_pOwner, &vURI);
+	SysFreeString(bstrURI);
 
 	//Fire a StatusTextChange event
 	BSTR bstrStatus = SysAllocString(A2OLE((CHAR *) "Done"));
@@ -663,6 +684,7 @@ CWebShellContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCh
 
 	return NS_OK; 
 } 
+
 
 NS_IMETHODIMP
 CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel)
@@ -674,6 +696,7 @@ CWebShellContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChann
 	return NS_OK; 
 } 
 
+
 NS_IMETHODIMP
 CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, PRUint32 aProgress, PRUint32 aProgressMax)
 { 
@@ -682,6 +705,7 @@ CWebShellContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aCh
 
 	return NS_OK;
 } 
+
 
 NS_IMETHODIMP
 CWebShellContainer::OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* aChannel, nsString& aMsg)

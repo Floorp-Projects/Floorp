@@ -28,7 +28,7 @@
 class CWebShellContainer :
 		public nsIBaseWindow,
 		public nsIWebBrowserChrome,
-		public nsIWebShellContainer,
+		public nsIWebProgressListener,
 		public nsIStreamObserver,
 		public nsIURIContentListener,
 		public nsIDocumentLoaderObserver,
@@ -38,14 +38,16 @@ class CWebShellContainer :
 public:
 	CWebShellContainer(CMozillaBrowser *pOwner);
 
+	friend CMozillaBrowser;
+
 protected:
 	virtual ~CWebShellContainer();
 
 // Protected members
 protected:
-	nsString m_sTitle;
-	
 	CMozillaBrowser *m_pOwner;
+	nsString m_sTitle;
+	nsIURI *m_pCurrentURI;
 	CDWebBrowserEvents1 *m_pEvents1;
 	CDWebBrowserEvents2 *m_pEvents2;
 
@@ -58,23 +60,7 @@ public:
 	NS_DECL_NSISTREAMOBSERVER
 	NS_DECL_NSIDOCUMENTLOADEROBSERVER
 	NS_DECL_NSIINTERFACEREQUESTOR
-
-	// nsIWebShellContainer
-	NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
-	NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
-	NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
-	NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
-	NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-						PRBool aVisible,
-						nsIWebShell *&aNewWebShell);
-	NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
-	NS_IMETHOD ContentShellAdded(nsIWebShell* aWebShell, nsIContent* frameNode);
-	NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-						 PRInt32 aXPos, PRInt32 aYPos, 
-						 const nsString& aPopupType, const nsString& anAnchorAlignment,
-						 const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
-
+	NS_DECL_NSIWEBPROGRESSLISTENER
 };
 
 #endif
