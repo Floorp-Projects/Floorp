@@ -693,6 +693,34 @@ FullTrustSecMan::CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsIS
 
 /***************************************************************************/
 
+#if defined(XP_MAC)
+#include <SIOUX.h>
+#include <MacTypes.h>
+
+static void initConsole(StringPtr consoleName, const char* startupMessage, int *argc, char** *argv)
+{
+    SIOUXSettings.autocloseonquit = true;
+    SIOUXSettings.asktosaveonclose = false;
+    SIOUXSettings.userwindowtitle = consoleName;
+    SIOUXSettings.standalone = true;
+    SIOUXSettings.setupmenus = true;
+    SIOUXSettings.toppixel = 42;
+    SIOUXSettings.leftpixel = 6;
+    SIOUXSettings.rows = 40;
+    SIOUXSettings.columns = 100;
+    // SIOUXSettings.initializeTB = false;
+    // SIOUXSettings.showstatusline = true;
+    puts(startupMessage);
+
+    /* set up a buffer for stderr (otherwise it's a pig). */
+    setvbuf(stderr, (char *) malloc(BUFSIZ), _IOLBF, BUFSIZ);
+
+    static char* mac_argv[] = { "xpcshell", NULL };
+    *argc = 1;
+    *argv = mac_argv;
+}
+#endif
+
 int
 main(int argc, char **argv)
 {
@@ -701,6 +729,10 @@ main(int argc, char **argv)
     JSObject *glob;
     int result;
     nsresult rv;
+
+#if defined(XP_MAC)
+    initConsole("\pXPConnect Shell", "Welcome to the XPConnect Shell.\n", &argc, &argv);
+#endif
 
     gErrFile = stderr;
     gOutFile = stdout;
@@ -769,10 +801,8 @@ main(int argc, char **argv)
     if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
         return 1;
 
-#if !defined(XP_MAC)
     argc--;
     argv++;
-#endif
 
     result = ProcessArgs(jscontext, glob, argv, argc);
 
