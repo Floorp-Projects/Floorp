@@ -16696,7 +16696,7 @@ fi
 
 
 
-NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http jar keyword res viewsource"
+NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http keyword res viewsource"
 # Check whether --enable-necko-protocols or --disable-necko-protocols was given.
 if test "${enable_necko_protocols+set}" = set; then
   enableval="$enable_necko_protocols"
