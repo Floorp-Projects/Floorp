@@ -1123,7 +1123,9 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         nsAutoString theStr;
         theStr.AssignLiteral("<!");
         theStr.Append(aToken->GetStringValue());
-        theStr.AppendLiteral(">");
+        // Treat CDATA sections specially because they remember their last
+        // character and can come back malformed.
+//        theStr.AppendLiteral(">");
         result=WriteTag(mCDATATag,theStr,0,PR_TRUE);
       }
       break;
