@@ -49,7 +49,7 @@ endif
 ifeq ($(USE_NGLAYOUT_GTK),1)
 EXTRA_DSO_LDOPTS+=$(DIST)/lib/libraptorwidgetgtk_s.a
 else
-EXTRA_DSO_LDOPTS+=$(DIST)/lib/libraptorwidgetgtk_s.a
+EXTRA_DSO_LDOPTS+=$(DIST)/lib/libraptorwidgetunix_s.a
 endif
 
 EXTRA_DSO_LDOPTS+=\
