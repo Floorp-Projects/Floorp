@@ -25,7 +25,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_ISUPPORTS(nsAboutBlank, nsCOMTypeInfo<nsIAboutModule>::GetIID());
 
-static const char kBlankPage[] = "<h3>This page intentionally left blank.</h3>";
+static const char kBlankPage[] = "<html><body></body></html>";
 
 NS_IMETHODIMP
 nsAboutBlank::NewChannel(const char *verb,
