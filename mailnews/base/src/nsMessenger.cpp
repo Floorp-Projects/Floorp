@@ -1485,7 +1485,7 @@ SendLaterListener::OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint
 }
 
 NS_IMETHODIMP
-nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity)
+nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity, nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 	nsCOMPtr<nsIMsgSendLater> pMsgSendLater; 
@@ -1503,6 +1503,7 @@ nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity)
 
     NS_ADDREF(sendLaterListener);
     pMsgSendLater->AddListener(sendLaterListener);
+    pMsgSendLater->SetMsgWindow(aMsgWindow);
 
     pMsgSendLater->SendUnsentMessages(aIdentity); 
     NS_RELEASE(sendLaterListener);

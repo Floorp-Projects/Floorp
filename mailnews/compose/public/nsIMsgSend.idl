@@ -70,6 +70,7 @@ interface nsIMsgHdr;
 interface nsIDocShell;
 interface nsIFileSpec;
 interface nsIMsgComposeSecure;
+interface nsIMsgStatusFeedback;
 
 typedef long nsMsgDeliverMode;
 
@@ -213,6 +214,7 @@ interface nsIMsgSend : nsISupports
                          in nsMsgDeliverMode     mode,
                          in nsIMsgDBHdr          msgToReplace,
                          in nsIMsgSendListener   aListener,
+                         in nsIMsgStatusFeedback aStatusFeedback,
                          in string               password
                        ); 
 

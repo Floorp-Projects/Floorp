@@ -541,6 +541,9 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   // set this object for use on completion...
   sendListener->SetSendLaterObject(this);
 
+  nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
+  if (m_window)
+    m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
   NS_ADDREF(this);  //TODO: We should remove this!!!
   rv = pMsgSend->SendMessageFile(mIdentity,
                                  compFields, // nsIMsgCompFields *fields,
@@ -550,6 +553,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
                                  nsIMsgSend::nsMsgSendUnsent, // nsMsgDeliverMode mode,
                                  nsnull, // nsIMsgDBHdr *msgToReplace, 
                                  sendListener,
+                                 statusFeedback,
                                  nsnull); 
   NS_IF_RELEASE(sendListener);
   return rv;

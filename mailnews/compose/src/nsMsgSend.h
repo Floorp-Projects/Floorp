@@ -310,7 +310,7 @@ public:
   nsCOMPtr<nsIDOMWindowInternal>  mParentWindow;
   nsCOMPtr<nsIMsgProgress>        mSendProgress;
   nsCOMPtr<nsIMsgSendListener>    mListener;
-
+  nsCOMPtr<nsIMsgStatusFeedback>  mStatusFeedback;
   nsCOMPtr<nsIRequest>      mRunningRequest;
   PRBool                    mSendMailAlso;
   nsIFileSpec               *mReturnFileSpec;     // a holder for file spec's to be returned to caller

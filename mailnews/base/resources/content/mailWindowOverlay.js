@@ -1456,7 +1456,7 @@ function SendUnsentMessages()
       if(msgFolder) {
         numMessages = msgFolder.getTotalMessages(false /* include subfolders */);
         if(numMessages > 0) {
-          messenger.SendUnsentMessages(currentIdentity);
+          messenger.sendUnsentMessages(currentIdentity, msgWindow);
           // right now, all identities point to the same unsent messages
           // folder, so to avoid sending multiple copies of the
           // unsent messages, we only call messenger.SendUnsentMessages() once

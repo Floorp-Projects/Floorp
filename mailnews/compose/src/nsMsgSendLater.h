@@ -74,7 +74,7 @@ public:
 
   // nsIMsgCopyServiceListener interface
   NS_DECL_NSIMSGCOPYSERVICELISTENER
-    
+  
   NS_IMETHOD SetSendLaterObject(nsMsgSendLater *obj);
 private:
   nsMsgSendLater    *mSendLater;

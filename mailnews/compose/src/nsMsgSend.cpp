@@ -3246,6 +3246,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     mComposeBundle->GetStringByID(NS_MSG_SENDING_MESSAGE, getter_Copies(msg));
     SetStatusMessage( msg );
     nsCOMPtr<nsIMsgStatusFeedback> msgStatus (do_QueryInterface(mSendProgress));
+    // if the sendProgress isn't set, let's use the member variable.
+    if (!msgStatus)
+      msgStatus = do_QueryInterface(mStatusFeedback);
 
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
                                       mSmtpPassword.get(), uriListener, msgStatus,
@@ -3775,6 +3778,7 @@ nsMsgComposeAndSend::SendMessageFile(
               nsMsgDeliverMode                  mode,
               nsIMsgDBHdr                       *msgToReplace,
               nsIMsgSendListener                *aListener,
+              nsIMsgStatusFeedback              *aStatusFeedback,
               const char                        *password
               )
 {
@@ -3787,6 +3791,7 @@ nsMsgComposeAndSend::SendMessageFile(
   if (!fields)
     return NS_ERROR_INVALID_ARG;
 
+  mStatusFeedback = aStatusFeedback;
   //
   // First check to see if the external file we are sending is a valid file.
   //
