@@ -67,6 +67,9 @@ xml_rpc         1
 cview           1
 help            1
 
+string_debug    0      DEBUG_STRING
+string_stats    0      DEBUG_STRING_STATS
+
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
 sessionpath         ":Mozilla session path.txt"
