@@ -39,6 +39,7 @@
 
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibilityService.h"
+#include "nsIAccessibleDocument.h"
 #include "nsAccessibleWrap.h"
 #include "nsGUIEvent.h"
 #include "nsILink.h"

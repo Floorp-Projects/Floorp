@@ -915,7 +915,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode)
       if (accessNode != NS_STATIC_CAST(nsIAccessNode*, this)) { 
         void *uniqueID;
         accessNode->GetUniqueID(&uniqueID);
-        accessNode->Shutdown();
+        nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(accessNode));
+        privateAccessNode->Shutdown();
         // Remove from hash table as well
         mAccessNodeCache->Remove(uniqueID);
       }

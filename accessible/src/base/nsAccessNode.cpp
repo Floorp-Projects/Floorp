@@ -41,7 +41,14 @@
 #include "nsAccessibilityAtoms.h"
 #include "nsHashtable.h"
 #include "nsIAccessibilityService.h"
+#include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMViewCSS.h"
+#include "nsIDOMWindow.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
 #include "nsIPref.h"
 #include "nsIPresContext.h"
@@ -71,13 +78,7 @@ nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *nsAccessNode::gGlobalDocAcce
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-NS_INTERFACE_MAP_BEGIN(nsAccessNode)
-  NS_INTERFACE_MAP_ENTRY(nsIAccessNode)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsAccessNode)
-NS_IMPL_RELEASE(nsAccessNode)
+NS_IMPL_ISUPPORTS2(nsAccessNode, nsIAccessNode, nsPIAccessNode)
 
 nsAccessNode::nsAccessNode(nsIDOMNode *aNode, nsIWeakReference* aShell): 
   mDOMNode(aNode), mWeakShell(aShell), mRefCnt(0),
@@ -260,6 +261,165 @@ nsIFrame* nsAccessNode::GetFrame()
   return frame;
 }
 
+NS_IMETHODIMP
+nsAccessNode::GetDOMNode(nsIDOMNode **aNode)
+{
+  NS_IF_ADDREF(*aNode = mDOMNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetNumChildren(PRInt32 *aNumChildren)
+{
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  return content? content->ChildCount(*aNumChildren) : NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetAccessibleDocument(nsIAccessibleDocument **aDocAccessible)
+{
+  GetDocAccessibleFor(mWeakShell, aDocAccessible);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetInnerHTML(nsAString& aInnerHTML)
+{
+  aInnerHTML.Truncate();
+
+  nsCOMPtr<nsIDOMNSHTMLElement> domNSElement(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(domNSElement, NS_ERROR_NULL_POINTER);
+
+  return domNSElement->GetInnerHTML(aInnerHTML);
+}
+
+nsresult
+nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAccessNode> accessNode;
+  accService->GetCachedAccessNode(aNode, mWeakShell, getter_AddRefs(accessNode));
+
+  if (!accessNode) {
+    nsCOMPtr<nsIAccessible> accessible;
+    accService->GetAccessibleInWeakShell(aNode, mWeakShell, 
+                                         getter_AddRefs(accessible));
+    
+    accessNode = do_QueryInterface(accessible);
+  }
+
+  if (accessNode) {
+    NS_ADDREF(*aAccessNode = accessNode);
+    return NS_OK;
+  }
+
+  nsAccessNode *newAccessNode = new nsAccessNode(aNode, mWeakShell);
+  if (!newAccessNode) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_ADDREF(*aAccessNode = newAccessNode);
+  newAccessNode->Init();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetFirstChild(nsIAccessNode **aAccessNode)
+{
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIDOMNode> domNode;
+  mDOMNode->GetFirstChild(getter_AddRefs(domNode));
+  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
+
+  return MakeAccessNode(domNode, aAccessNode);
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetLastChild(nsIAccessNode **aAccessNode)
+{
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIDOMNode> domNode;
+  mDOMNode->GetLastChild(getter_AddRefs(domNode));
+  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
+
+  return MakeAccessNode(domNode, aAccessNode);
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetParent(nsIAccessNode **aAccessNode)
+{
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIDOMNode> domNode;
+  mDOMNode->GetParentNode(getter_AddRefs(domNode));
+  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
+
+  return MakeAccessNode(domNode, aAccessNode);
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetPreviousSibling(nsIAccessNode **aAccessNode)
+{
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIDOMNode> domNode;
+  mDOMNode->GetPreviousSibling(getter_AddRefs(domNode));
+  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
+
+  return MakeAccessNode(domNode, aAccessNode);
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetNextSibling(nsIAccessNode **aAccessNode)
+{
+  NS_ENSURE_TRUE(mDOMNode, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIDOMNode> domNode;
+  mDOMNode->GetNextSibling(getter_AddRefs(domNode));
+  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
+
+  return MakeAccessNode(domNode, aAccessNode);
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetChildAt(PRInt32 aChildNum, nsIAccessNode **aAccessNode)
+{
+  nsCOMPtr<nsIContent> child, content(do_QueryInterface(mDOMNode));
+  NS_ENSURE_TRUE(content, NS_ERROR_NULL_POINTER);
+
+  content->ChildAt(aChildNum, getter_AddRefs(child));
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(child));
+  NS_ENSURE_TRUE(domNode, NS_ERROR_NULL_POINTER);
+
+  return MakeAccessNode(domNode, aAccessNode);
+}
+
+NS_IMETHODIMP
+nsAccessNode::GetComputedStyleValue(const nsAString& aPseudoElt, const nsAString& aPropertyName, nsAString& aValue)
+{
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIPresContext> presContext(GetPresContext());
+  NS_ENSURE_TRUE(domElement && presContext, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISupports> container;
+  presContext->GetContainer(getter_AddRefs(container));
+  nsCOMPtr<nsIDOMWindow> domWin(do_GetInterface(container));
+  nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(domWin));
+  NS_ENSURE_TRUE(viewCSS, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDOMCSSStyleDeclaration> styleDecl;
+  viewCSS->GetComputedStyle(domElement, aPseudoElt, getter_AddRefs(styleDecl));
+  NS_ENSURE_TRUE(styleDecl, NS_ERROR_FAILURE);
+  
+  return styleDecl->GetPropertyValue(aPropertyName, aValue);
+}
+
 /***************** Hashtable of nsIAccessNode's *****************/
 
 void nsAccessNode::GetDocAccessibleFor(nsIWeakReference *aPresShell, 
@@ -296,7 +456,8 @@ void nsAccessNode::GetCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNo
 
 PLDHashOperator nsAccessNode::ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg)
 {
-  aAccessNode->Shutdown();
+  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(aAccessNode));
+  privateAccessNode->Shutdown();
 
   return PL_DHASH_REMOVE;
 }

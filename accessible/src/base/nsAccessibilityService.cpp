@@ -74,6 +74,7 @@
 #include "nsOuterDocAccessible.h"
 #include "nsRootAccessibleWrap.h"
 #include "nsTextFragment.h"
+#include "nsPIAccessNode.h"
 
 #ifdef MOZ_XUL
 #include "nsXULColorPickerAccessible.h"
@@ -111,6 +112,7 @@ nsAccessibilityService::nsAccessibilityService()
     return;
 
   observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  observerService->AddObserver(this, NS_PRESSHELL_DESTROY_TOPIC, PR_FALSE);
   nsAccessNodeWrap::InitAccessibility();
 }
 
@@ -132,8 +134,19 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
       do_GetService("@mozilla.org/observer-service;1");
     if (observerService) {
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      observerService->RemoveObserver(this, NS_PRESSHELL_DESTROY_TOPIC);
     }
     nsAccessNodeWrap::ShutdownAccessibility();
+  }
+  else if (!nsCRT::strcmp(aTopic, NS_PRESSHELL_DESTROY_TOPIC)) {
+    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aSubject));
+    if (weakShell) {
+      nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
+      nsAccessNode::GetDocAccessibleFor(weakShell, getter_AddRefs(accessibleDoc));
+      if (accessibleDoc) {
+        accessibleDoc->Destroy();
+      }
+    }
   }
   return NS_OK;
 }
@@ -251,8 +264,8 @@ nsAccessibilityService::CreateRootAccessible(nsIPresShell *aShell,
   NS_ASSERTION(eventReceiver, "Doc accessible does not receive events");
   eventReceiver->AddEventListeners();
 
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(*aRootAcc));
-  accessNode->Init();
+  nsCOMPtr<nsPIAccessNode> privateAccessNode(do_QueryInterface(*aRootAcc));
+  privateAccessNode->Init();
 
   NS_ADDREF(*aRootAcc);
 
@@ -1534,8 +1547,8 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       if (state & (nsIAccessible::STATE_INVISIBLE | nsIAccessible::STATE_OFFSCREEN))
         return NS_ERROR_FAILURE;
     }
-    accessNode = do_QueryInterface(newAcc);
-    accessNode->Init(); // Add to cache, etc.
+    nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(newAcc);
+    privateAccessNode->Init(); // Add to cache, etc.
     *aAccessible = newAcc;
     NS_ADDREF(*aAccessible);
     return NS_OK;
@@ -1627,8 +1640,8 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   if (!newAcc)
     return NS_ERROR_FAILURE;
 
-  accessNode = do_QueryInterface(newAcc);
-  accessNode->Init(); // Add to cache, etc.
+  nsCOMPtr<nsPIAccessNode> privateAccessNode = do_QueryInterface(newAcc);
+  privateAccessNode->Init(); // Add to cache, etc.
 
   *aAccessible = newAcc;
   NS_ADDREF(*aAccessible);
