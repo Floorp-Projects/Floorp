@@ -46,6 +46,7 @@
 #include "jsconfig.h"
 #include "jsexn.h"
 #include "jsfun.h"
+#include "jsnum.h"
 
 #if JS_HAS_ERROR_EXCEPTIONS
 #if !JS_HAS_EXCEPTIONS
@@ -53,7 +54,9 @@
 #endif
 
 /* XXX consider adding rt->atomState.messageAtom */
-static char js_message_str[] = "message";
+static char js_message_str[]  = "message";
+static char js_filename_str[] = "fileName";
+static char js_lineno_str[]   = "lineNumber";
 
 /* Forward declarations for ExceptionClass's initializer. */
 static JSBool
@@ -292,9 +295,11 @@ static struct JSExnSpec exceptions[] = {
 static JSBool
 Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    JSBool ok;
     jsval pval;
-    JSString *message;
-
+    int32 lineno;
+    JSString *message, *filename;
+    
     if (!cx->fp->constructing) {
         /*
          * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
@@ -320,9 +325,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (OBJ_GET_CLASS(cx, obj) == &ExceptionClass)
         OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, JSVAL_NULL);
 
-    /*
-     * Set the 'message' property.
-     */
+    /* Set the 'message' property. */
     if (argc > 0) {
         message = js_ValueToString(cx, argv[0]);
         if (!message)
@@ -330,8 +333,37 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         message = cx->runtime->emptyString;
     }
-    return JS_DefineProperty(cx, obj, js_message_str, STRING_TO_JSVAL(message),
+    ok = JS_DefineProperty(cx, obj, js_message_str, STRING_TO_JSVAL(message),
+                           NULL, NULL, JSPROP_ENUMERATE);
+    if (!ok)
+        return JS_FALSE;
+
+    /* Set the 'fileName' property. */
+    if (argc > 1) {
+        filename = js_ValueToString(cx, argv[1]);
+        if (!filename)
+            return JS_FALSE;
+    } else {
+        filename = cx->runtime->emptyString;
+    }
+    ok = JS_DefineProperty(cx, obj, js_filename_str,
+                           STRING_TO_JSVAL(filename),
+                           NULL, NULL, JSPROP_ENUMERATE);
+    if (!ok)
+        return JS_FALSE;
+
+    /* Set the 'lineNumber' property. */
+    if (argc > 2) {
+        ok = js_ValueToInt32(cx, argv[2], &lineno);
+        if (!ok)
+            return JS_FALSE;
+    } else {
+        lineno = 0;
+    }
+    return JS_DefineProperty(cx, obj, js_lineno_str,
+                             INT_TO_JSVAL(lineno),
                              NULL, NULL, JSPROP_ENUMERATE);
+    
 }
 
 /*
@@ -394,7 +426,8 @@ static JSBool
 exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval v;
-    JSString *name, *message, *result;
+    int32 lineno;
+    JSString *name, *message, *filename, *lineno_as_str, *result;
     jschar *chars, *cp;
     size_t length;
 
@@ -409,8 +442,43 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
+    if (!JS_GetProperty(cx, obj, js_filename_str, &v) ||
+        !(filename = js_ValueToString(cx, v))) {
+        return JS_FALSE;
+    }
+
+    if (!JS_GetProperty(cx, obj, js_lineno_str, &v) ||
+        !js_ValueToInt32 (cx, v, &lineno)) {
+        return JS_FALSE;
+    }
+
+    if (lineno != 0) {
+        if (!(lineno_as_str = js_ValueToString(cx, v))) {
+            return JS_FALSE;
+        }
+    } else {
+        lineno_as_str = NULL;
+    }    
+    
     length = (message->length > 0) ? name->length + message->length + 10
         : name->length + 8;
+
+    if (filename->length > 0) {
+        /* append filename as ``, "{filename}"'' */
+        length += 4 + filename->length;
+        if (lineno_as_str) {
+            /* append lineno as ``, {lineno_as_str}'' */
+            length += 2 + lineno_as_str->length;
+        }
+    } else {
+        if (lineno_as_str) {
+            /*
+             * no filename, but have line number,
+             * need to append ``, "", {lineno_as_str}''
+             */
+            length += 6 + lineno_as_str->length;
+        }
+    }
 
     cp = chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
     if (!chars)
@@ -426,6 +494,32 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         cp += message->length;
         *cp++ = '"';
     }
+
+    if (filename->length > 0) {
+        /* append filename as ``, "{filename}"'' */
+        *cp++ = ','; *cp++ = ' '; *cp++ = '"';
+        js_strncpy(cp, filename->chars, filename->length);
+        cp += filename->length;
+        *cp++ = '"';
+        if (lineno_as_str) {
+            /* append lineno as ``, {lineno_as_str}'' */
+            *cp++ = ','; *cp++ = ' ';
+            js_strncpy(cp, lineno_as_str->chars, lineno_as_str->length);
+            cp += lineno_as_str->length;
+        }
+    } else {
+        if (lineno_as_str) {
+            /*
+             * no filename, but have line number,
+             * need to append ``, "", {lineno_as_str}''
+             */
+            *cp++ = ','; *cp++ = ' '; *cp++ = '"'; *cp++ = '"';
+            *cp++ = ','; *cp++ = ' ';
+            js_strncpy(cp, lineno_as_str->chars, lineno_as_str->length);
+            cp += lineno_as_str->length;
+        }
+    }
+
     *cp++ = ')'; *cp++ = ')'; *cp = 0;
 
     result = js_NewString(cx, chars, length, 0);
@@ -514,6 +608,16 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
                            NULL, NULL, JSPROP_ENUMERATE)) {
         return NULL;
     }
+    if (!JS_DefineProperty(cx, protos[0], js_filename_str,
+                           STRING_TO_JSVAL(cx->runtime->emptyString),
+                           NULL, NULL, JSPROP_ENUMERATE)) {
+        return NULL;
+    }
+    if (!JS_DefineProperty(cx, protos[0], js_lineno_str,
+                           INT_TO_JSVAL(0),
+                           NULL, NULL, JSPROP_ENUMERATE)) {
+        return NULL;
+    }
 
     /*
      * Add methods only to Exception.prototype, because ostensibly all
@@ -549,7 +653,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     JSObject *errObject, *errProto;
     JSExnType exn;
     JSExnPrivate *privateData;
-    JSString *msgstr;
+    JSString *msgstr, *fnamestr;
 
     /* Find the exception index associated with this error. */
     JS_ASSERT(reportp);
@@ -596,6 +700,25 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         return JS_FALSE;
     }
 
+    if (reportp) {
+        if (reportp->filename) {
+            fnamestr = JS_NewStringCopyZ(cx, reportp->filename);
+            /* Store 'filename' as a javascript-visible value. */
+            if (!JS_DefineProperty(cx, errObject, js_filename_str,
+                                   STRING_TO_JSVAL(fnamestr), NULL, NULL,
+                                   JSPROP_ENUMERATE)) {
+                return JS_FALSE;
+            }
+            /* Store 'lineno' as a javascript-visible value. */
+            if (!JS_DefineProperty(cx, errObject, js_lineno_str,
+                                   INT_TO_JSVAL((int)reportp->lineno), NULL,
+                                   NULL, JSPROP_ENUMERATE)) {
+                return JS_FALSE;
+            }
+        }
+        
+    }
+    
     /*
      * Construct a new copy of the error report, and store it in the
      * exception objects' private data.  We can't use the error report
