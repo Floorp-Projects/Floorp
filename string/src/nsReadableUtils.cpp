@@ -441,6 +441,8 @@ class CopyToUpperCase
             char ch = *aSource;
             if ((ch >= 'a') && (ch <= 'z'))
               *cp = ch - ('a' - 'A');
+            else
+              *cp = ch;
             ++aSource;
             ++cp;
           }
@@ -535,6 +537,8 @@ class CopyToLowerCase
             char ch = *aSource;
             if ((ch >= 'A') && (ch <= 'Z'))
               *cp = ch + ('a' - 'A');
+            else
+              *cp = ch;
             ++aSource;
             ++cp;
           }
