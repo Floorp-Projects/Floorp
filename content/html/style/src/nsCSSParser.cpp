@@ -55,6 +55,10 @@ static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 
+#define NS_CSS_PARSER_DROP_DECLARATION \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,1)
+
+
 MOZ_DECL_CTOR_COUNTER(SelectorList);
 
 // e.g. "P B, H1 B { ... }" has a selector list with two elements,
@@ -1782,12 +1786,14 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
   nsICSSDeclaration* declaration = nsnull;
   if (NS_OK == NS_NewCSSDeclaration(&declaration)) {
     PRInt32 count = 0;
+    PRBool dropDeclaration = PR_FALSE;
     for (;;) {
       PRInt32 hint = NS_STYLE_HINT_NONE;
       if (ParseDeclaration(aErrorCode, declaration, aCheckForBraces, hint)) {
         count++;  // count declarations
       }
       else {
+      	dropDeclaration = (aErrorCode == NS_CSS_PARSER_DROP_DECLARATION);
         if (!SkipDeclaration(aErrorCode, aCheckForBraces)) {
           break;
         }
@@ -1800,7 +1806,8 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
         // the next declaration.
       }
     }
-    if (0 == count) { // didn't get any XXX is this ok with the DOM?
+    if (dropDeclaration ||
+        (0 == count)) { // didn't get any XXX is this ok with the DOM?
       NS_RELEASE(declaration);
     }
   }
@@ -2900,8 +2907,19 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kDirectionKTable);
   case eCSSProperty_display:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HOK,
-                        nsCSSProps::kDisplayKTable);
+    if (ParseVariant(aErrorCode, aValue, VARIANT_HOK, nsCSSProps::kDisplayKTable)) {
+			if (aValue.GetUnit() == eCSSUnit_Enumerated) {
+				switch (aValue.GetIntValue()) {
+					case NS_STYLE_DISPLAY_MARKER:   // bug 2055
+					case NS_STYLE_DISPLAY_RUN_IN:		// bug 2056
+					case NS_STYLE_DISPLAY_COMPACT:  // bug 14983
+						aErrorCode = NS_CSS_PARSER_DROP_DECLARATION;  // bug 15432
+						return PR_FALSE;
+				}
+			}
+      return PR_TRUE;
+		}
+    return PR_FALSE;
   case eCSSProperty_elevation:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK | VARIANT_ANGLE,
                         nsCSSProps::kElevationKTable);
