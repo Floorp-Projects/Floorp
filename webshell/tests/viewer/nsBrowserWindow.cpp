@@ -2040,7 +2040,7 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
       nsXPIDLString name;
       nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
       if (NS_OK == docShellAsItem->GetName(getter_Copies(name))) {
-        if (aNameStr.EqualsWithConversion(name)) {
+        if (aNameStr.Equals(name)) {
           aResult = webShell;
           NS_ADDREF(aResult);
           return NS_OK;
