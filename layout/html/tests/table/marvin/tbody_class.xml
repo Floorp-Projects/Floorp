@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta name="generator"
+
+content="HTML Tidy for Mac OS, see www.w3.org" />
+
+<title>tbody_class.xml</title>
+
+<!-- Modified: Changed doctype to xhtml 1.0 transitional Author: Chris Petersen Date: 1/31/01 -->
+
+<!-- 
+
+   - The contents of this file are subject to the Mozilla Public
+
+   - License Version 1.1 (the "License"); you may not use this file
+
+   - except in compliance with the License. You may obtain a copy of
+
+   - the License at http://www.mozilla.org/MPL/
+
+   - 
+
+   - Software distributed under the License is distributed on an "AS
+
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+
+   - implied. See the License for the specific language governing
+
+   - rights and limitations under the License.
+
+   - 
+
+   - The Original Code is Mozilla Communicator Test Cases.
+
+   - 
+
+   - The Initial Developer of the Original Code is Netscape Communications
+
+   - Corp.  Portions created by Netscape Communications Corp. are 
+
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+
+   - Rights Reserved.
+
+   - 
+
+   - Contributor(s):Christine Dreckman  Date: 8/22/2000
+
+
+
+  -->
+
+<style type="text/css">
+
+.one { background-color: lime }
+
+</style>
+
+</head>
+
+<body>
+
+<table border="1">
+
+<tbody class="one">
+
+<tr>
+
+<td>This tbody should have a lime background</td>
+
+<td>This tbody should have a lime background</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</body>
+
+</html>
+
+
+
