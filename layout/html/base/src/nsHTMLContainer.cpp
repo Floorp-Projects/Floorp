@@ -875,35 +875,55 @@ nsresult nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
   }
 }
 
-nsresult
-nsHTMLContainer::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
+static void
+SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
 {
-  NS_PRECONDITION(nsnull != newChild, "Null new child");
+  PRInt32 i, n;
+  n = aContent->ChildCount();
+  for (i = 0; i < n; i++) {
+    nsIContent* child = aContent->ChildAt(i);
+    if (nsnull != child) {
+      child->SetDocument(aDocument);
+      SetDocumentInChildrenOf(child, aDocument);
+    }
+  }
+}
+
+// XXX It's possible that newChild has already been inserted in the
+// tree; if this is the case then we need to remove it from where it
+// was before placing it in it's new home
+
+nsresult
+nsHTMLContainer::InsertBefore(nsIDOMNode* newChild, nsIDOMNode* refChild)
+{
+  if (nsnull == newChild) {
+    return NS_OK;/* XXX wrong error value */
+  }
 
   // Get the nsIContent interface for the new content
   nsIContent* newContent = nsnull;
-  nsresult    res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
+  nsresult res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
   NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
-
   if (NS_OK == res) {
     if (nsnull == refChild) {
       // Append the new child to the end
+      SetDocumentInChildrenOf(newContent, mDocument);
       res = AppendChild(newContent, PR_TRUE);
-    } else {
-      nsIContent* content = nsnull;
-
+    }
+    else {
       // Get the index of where to insert the new child
-      res = refChild->QueryInterface(kIContentIID, (void**)&content);
+      nsIContent* refContent = nsnull;
+      res = refChild->QueryInterface(kIContentIID, (void**)&refContent);
       NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
       if (NS_OK == res) {
-        PRInt32 pos = IndexOf(content);
+        PRInt32 pos = IndexOf(refContent);
         if (pos >= 0) {
+          SetDocumentInChildrenOf(newContent, mDocument);
           res = InsertChildAt(newContent, pos, PR_TRUE);
         }
-        NS_RELEASE(content);
+        NS_RELEASE(refContent);
       }
     }
-
     NS_RELEASE(newContent);
   }
 
