@@ -481,7 +481,7 @@ $guid = $_POST["guid"];
 $type = $_POST["type"];
 
 //Check to ensure tha the name isn't already taken, if it is, throw an error and halt.
-$sql = "SELECT `Name` from `t_main` WHERE `Name`='$name'";
+$sql = "SELECT `Name` from `t_main` WHERE `Name`='$name' and `GUID` != '$guid'";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)=="0") {
 
@@ -505,7 +505,7 @@ if ($sql_result) {echo"Updating/Adding record for $name...<br>\n";
 //Name wasn't unique, error time. :-)
     //Handle Error Case and Abort
     $failure = "true";
-    echo"<strong>Error!</strong>The Name for your extension or theme already exists in the Update database.<br>\nCannot Continue, aborting.<br>\n";
+    echo"<strong>Error!</strong> The Name for your extension or theme already exists in the Update database.<br>\nCannot Continue, aborting.<br>\n";
     include"$page_footer";
     echo"</body>\n</html>\n";
     exit;
@@ -698,7 +698,7 @@ $sql = "INSERT INTO `t_approvallog` (`ID`, `vID`, `UserID`, `action`, `date`, `c
 
 echo"Process Complete...<br><br>\n";
 echo"$name version $version has been added to the Mozilla Update database";
-if ($_SESSION["trusted"]=="FALSE") { echo"and is awaiting review by an editor, you will be notified when an editor reviews it.";
+if ($_SESSION["trusted"]=="FALSE") { echo" and is awaiting review by an editor, you will be notified when an editor reviews it.";
 } else if ($_SESSION["trusted"]=="TRUE") {
 echo" and has been auto-approved. It should be up on the website within the next half-hour.";
 }
@@ -768,6 +768,10 @@ $authors = $_POST["authors"];
 
 } else {}
 ?>
+
+
+<!-- close #mBody-->
+</div>
 
 <?php
 include"$page_footer";
