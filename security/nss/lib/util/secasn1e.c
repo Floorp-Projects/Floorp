@@ -35,7 +35,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.2 2000/06/13 21:56:37 chrisk%netscape.com Exp $
+ * $Id: secasn1e.c,v 1.3 2001/08/01 22:39:50 javi%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -473,7 +473,7 @@ sec_asn1e_which_choice
 
 static unsigned long
 sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
-			   PRBool *noheaderp)
+			   PRBool parentstreaming, PRBool *noheaderp)
 {
     unsigned long encode_kind, underlying_kind;
     PRBool explicit, optional, universal, may_stream;
@@ -509,7 +509,8 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
       src2 = (void *)((char *)src + theTemplate[indx].offset);
 
-      return sec_asn1e_contents_length(&theTemplate[indx], src2, noheaderp);
+      return sec_asn1e_contents_length(&theTemplate[indx], src2, parentstreaming,
+                                       noheaderp);
     }
 
     if ((encode_kind & (SEC_ASN1_POINTER | SEC_ASN1_INLINE)) || !universal) {
@@ -544,7 +545,8 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	src = (char *)src + theTemplate->offset;
 
 	if (explicit) {
-	    len = sec_asn1e_contents_length (theTemplate, src, noheaderp);
+	    len = sec_asn1e_contents_length (theTemplate, src, parentstreaming, 
+                                             noheaderp);
 	    if (len == 0 && optional) {
 		*noheaderp = PR_TRUE;
 	    } else if (*noheaderp) {
@@ -593,7 +595,8 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
       }
 
       src2 = (void *)((char *)src - theTemplate->offset + theTemplate[indx].offset);
-      len = sec_asn1e_contents_length(&theTemplate[indx], src2, noheaderp);
+      len = sec_asn1e_contents_length(&theTemplate[indx], src2, parentstreaming,
+                                      noheaderp);
     } else
 
     switch (underlying_kind) {
@@ -615,7 +618,9 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
 	    for (; *group != NULL; group++) {
 		sub_src = (char *)(*group) + tmpt->offset;
-		sub_len = sec_asn1e_contents_length (tmpt, sub_src, noheaderp);
+		sub_len = sec_asn1e_contents_length (tmpt, sub_src, 
+                                                     may_stream, noheaderp);
+                                                     
 		len += sub_len;
 		/*
 		 * XXX The 1 below is the presumed length of the identifier;
@@ -637,7 +642,9 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	    len = 0;
 	    for (tmpt = theTemplate + 1; tmpt->kind; tmpt++) {
 		sub_src = (char *)src + tmpt->offset;
-		sub_len = sec_asn1e_contents_length (tmpt, sub_src, noheaderp);
+		sub_len = sec_asn1e_contents_length (tmpt, sub_src, 
+                                                     may_stream, noheaderp);
+                                                     
 		len += sub_len;
 		/*
 		 * XXX The 1 below is the presumed length of the identifier;
@@ -659,8 +666,13 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
       default:
 	len = ((SECItem *)src)->len;
-	if (may_stream && len == 0)
-	    len = 1;	/* if we're streaming, we may have a secitem w/len 0 as placeholder */
+	if (may_stream && len == 0 && parentstreaming)
+	    len = 1;	/* if we're streaming, we may have a 
+                         * secitem w/len 0 as placeholder.
+                         * But if the caller says we're optional,
+                         * then we're not streaming, so we don't
+                         * need a placeholder.
+                         */
 	break;
     }
 
@@ -719,7 +731,9 @@ sec_asn1e_write_header (sec_asn1e_state *state)
      * walk the data structure to calculate the entire contents length.
      */
     contents_length = sec_asn1e_contents_length (state->theTemplate,
-						 state->src, &noheader);
+						 state->src, 
+                (state->parent) ? state->parent->may_stream : state->may_stream,
+                                                 &noheader);
     /*
      * We might be told explicitly not to put out a header.
      * But it can also be the case, via a pushed subtemplate, that
