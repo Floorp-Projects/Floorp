@@ -724,6 +724,8 @@ nsImapProtocol::ImapThreadMainLoop()
         if (err == PR_FAILURE && PR_PENDING_INTERRUPT_ERROR == PR_GetError()) 
 			break;
 
+//		m_eventQueue->ProcessPendingEvents();
+
 		if (m_nextUrlReadyToRun && m_runningUrl)
 			ProcessCurrentURL();
 
