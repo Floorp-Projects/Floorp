@@ -159,6 +159,8 @@ public:
 
 	char * m_ProxyServer;		/* proxy server hostname */
 
+	NS_IMETHOD Cancel();  // handle stop button
+
 private:
 	// over-rides from nsMsgProtocol
 	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 

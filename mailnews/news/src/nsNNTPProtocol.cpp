@@ -867,6 +867,13 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *
 	return CloseSocket();
 }
 
+NS_IMETHODIMP nsNNTPProtocol::Cancel()  // handle stop button
+{
+	m_nextState = NNTP_ERROR;
+	return nsMsgProtocol::Cancel();
+}
+
+
 /* The main news load init routine, and URL parser.
    The syntax of news URLs is:
 
