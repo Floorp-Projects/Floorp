@@ -2063,7 +2063,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // whether we did NOT reflow the previous line and thus we need to
     // recompute the carried out margin before the line if we want to
     // reflow it or if its previous margin is dirty
-  PRBool needToRecoverMargin = PR_FALSE;
+  PRBool needToRecoverState = PR_FALSE;
   
   // Reflow the lines that are already ours
   line_iterator line = begin_lines(), line_end = end_lines();
@@ -2096,13 +2096,12 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
     // Make sure |aState.mPrevBottomMargin| is at the correct position
     // before calling PropagateFloaterDamage.
-    if (needToRecoverMargin) {
-      needToRecoverMargin = PR_FALSE;
+    if (needToRecoverState &&
+        (line->IsDirty() || line->IsPreviousMarginDirty())) {
       // We need to reconstruct the bottom margin only if we didn't
       // reflow the previous line and we do need to reflow (or repair
       // the top position of) the next line.
-      if (line->IsDirty() || line->IsPreviousMarginDirty())
-        aState.ReconstructMarginAbove(line);
+      aState.ReconstructMarginAbove(line);
     }
 
     if (line->IsPreviousMarginDirty() && !line->IsDirty()) {
@@ -2127,6 +2126,16 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // line dirty.
     if (!line->IsDirty()) {
       PropagateFloaterDamage(aState, line, deltaY);
+    }
+
+    if (needToRecoverState) {
+      needToRecoverState = PR_FALSE;
+
+      // Update aState.mPrevChild as if we had reflowed all of the frames in
+      // this line.  This is expensive in some cases, since it requires
+      // walking |GetNextSibling|.
+      if (line->IsDirty())
+        aState.mPrevChild = line.prev()->LastChild();
     }
 
     // Now repair the line and update |aState.mY| by calling
@@ -2185,7 +2194,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
       // Keep mY up to date in case we're propagating reflow damage.
       aState.mY = line->mBounds.YMost();
-      needToRecoverMargin = PR_TRUE;
+      needToRecoverState = PR_TRUE;
     }
 
 #ifdef DEBUG
@@ -2204,9 +2213,14 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 #endif
   }
 
-  if (needToRecoverMargin) {
+  if (needToRecoverState) {
     // Is this expensive?
     aState.ReconstructMarginAbove(line);
+
+    // Update aState.mPrevChild as if we had reflowed all of the frames in
+    // this line.  This is expensive in some cases, since it requires
+    // walking |GetNextSibling|.
+    aState.mPrevChild = line.prev()->LastChild();
   }
 
   // Should we really have to do this?

@@ -543,12 +543,6 @@ nsBlockReflowState::RecoverStateFrom(nsLineList::iterator aLine,
   // Make the line being recovered the current line
   mCurrentLine = aLine;
 
-  // Update aState.mPrevChild as if we had reflowed all of the frames
-  // in this line.
-  // XXXldb This is expensive in some cases, since it requires walking
-  // |GetNextSibling|.
-  mPrevChild = aLine->LastChild();
-
   // Recover mKidXMost and mMaxElementSize
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > mKidXMost) {
