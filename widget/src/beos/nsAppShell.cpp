@@ -33,6 +33,8 @@
 #include <AppKit.h>
 #include <AppFileInfo.h>
 
+static int gBAppCount = 0;
+
 struct ThreadInterfaceData
 {
 	void	*data;
@@ -118,10 +120,13 @@ nsAppShell::nsAppShell()
   NS_INIT_REFCNT();
   mDispatchListener = 0;
 
-	sem_id initsem = create_sem(0, "bapp init");
-	resume_thread(spawn_thread(bapp_thread, "BApplication", B_NORMAL_PRIORITY, (void *)initsem));
-	acquire_sem(initsem);
-	delete_sem(initsem);
+	if(gBAppCount++ == 0)
+	{
+		sem_id initsem = create_sem(0, "bapp init");
+		resume_thread(spawn_thread(bapp_thread, "BApplication", B_NORMAL_PRIORITY, (void *)initsem));
+		acquire_sem(initsem);
+		delete_sem(initsem);
+	}
 }
 
 
@@ -238,8 +243,11 @@ NS_METHOD nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-	if(be_app->Lock())
-		be_app->Quit();
+	if(--gBAppCount == 0)
+	{
+		if(be_app->Lock())
+			be_app->Quit();
+	}
 }
 
 //-------------------------------------------------------------------------
@@ -277,6 +285,7 @@ NS_METHOD nsAppShell::Spindown()
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
+	aRealEvent = PR_FALSE;
 	printf("nsAppShell::GetNativeEvent - FIXME: not implemented\n");
 	return NS_OK;
 }
