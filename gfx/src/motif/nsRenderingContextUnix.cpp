@@ -939,12 +939,14 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY,
                                     nscoord aWidth)
 {
-  PRInt32 x = aX;
-  PRInt32 y = aY;
+  nscoord x = aX;
+  nscoord y = aY;
 
   // Substract xFontStruct ascent since drawing specifies baseline
-  if (mFontMetrics)
-      y += mFontMetrics->GetMaxAscent();
+  if (mFontMetrics) {	  
+	mFontMetrics->GetMaxAscent(y);
+	y+=aY;
+  }
 
   mTMatrix->TransformCoord(&x,&y);
 
@@ -962,8 +964,10 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
 
     if (deco & NS_FONT_DECORATION_UNDERLINE)
     {
-      nscoord ascent = mFontMetrics->GetMaxAscent();
-      nscoord descent = mFontMetrics->GetMaxDescent();
+      nscoord ascent,descent;
+
+	  mFontMetrics->GetMaxAscent(ascent);
+      mFontMetrics->GetMaxDescent(descent);
 
       DrawLine(aX, aY + ascent + (descent >> 1),
                aX + aWidth, aY + ascent + (descent >> 1));
@@ -971,7 +975,9 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
 
     if (deco & NS_FONT_DECORATION_LINE_THROUGH)
     {
-      nscoord height = mFontMetrics->GetHeight();
+      nscoord height;
+	  
+	  mFontMetrics->GetHeight(height);
 
       DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
     }
@@ -981,12 +987,14 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
 void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, nscoord aWidth)
 {
-  PRInt32 x = aX;
-  PRInt32 y = aY;
+  nscoord x = aX;
+  nscoord y = aY;
 
   // Substract xFontStruct ascent since drawing specifies baseline
-  if (mFontMetrics)
-      y += mFontMetrics->GetMaxAscent();
+  if (mFontMetrics) {
+    mFontMetrics->GetMaxAscent(y);
+	y+=aY;
+  }
 
   mTMatrix->TransformCoord(&x, &y);
 
@@ -1004,8 +1012,10 @@ void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLe
 
     if (deco & NS_FONT_DECORATION_UNDERLINE)
     {
-      nscoord ascent = mFontMetrics->GetMaxAscent();
-      nscoord descent = mFontMetrics->GetMaxDescent();
+      nscoord ascent,descent;
+
+	  mFontMetrics->GetMaxAscent(ascent);
+      mFontMetrics->GetMaxDescent(descent);
 
       DrawLine(aX, aY + ascent + (descent >> 1),
                aX + aWidth, aY + ascent + (descent >> 1));
@@ -1013,7 +1023,9 @@ void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLe
 
     if (deco & NS_FONT_DECORATION_LINE_THROUGH)
     {
-      nscoord height = mFontMetrics->GetHeight();
+      nscoord height;
+
+	  mFontMetrics->GetHeight(height);
 
       DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
     }
