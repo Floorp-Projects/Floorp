@@ -27,7 +27,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Linux installer needs standalone libjar
+ifeq ($(OS_ARCH),Linux)
 DIRS		= standalone
+endif
 
 MODULE		= jar
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
