@@ -1023,16 +1023,7 @@ void nsTableFrame::ListColumnLayoutData(FILE* out, PRInt32 aIndent)
         PRInt32 rowIndent;
         for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
         fprintf(out,"Cell Data [%d] \n",rowIndex);
-        for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
-        nsMargin margin;
-        cellFrame->GetMargin(margin);
-        fprintf(out,"Margin -- Top: %d Left: %d Bottom: %d Right: %d \n",  
-                NSTwipsToIntPoints(margin.top),
-                NSTwipsToIntPoints(margin.left),
-                NSTwipsToIntPoints(margin.bottom),
-                NSTwipsToIntPoints(margin.right));
-      
-        for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);
+        for (rowIndent = aIndent+2; --rowIndent >= 0; ) fputs("  ", out);      
       }
     }
   }
@@ -1874,36 +1865,6 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8       aSide,
 
 }
 
-void nsTableFrame::RecalcLayoutData(nsIPresContext& aPresContext)
-{
-  nsCellMap* cellMap = GetCellMap();
-  if (!cellMap)
-    return; // no info yet, so nothing useful to do
-
-  PRInt32 numRows = cellMap->GetRowCount();
-  PRInt32 numCols = cellMap->GetColCount();
-  PRInt32 cellSpacingX = GetCellSpacingX();
-  PRInt32 cellSpacingY = GetCellSpacingY();
-  PRInt32 highestBottom = numRows - 1;
-
-  for (PRInt32 rowX = 0; rowX < numRows; rowX++) {
-    for (PRInt32 colX = 0; colX < numCols; colX++) {
-      PRBool originates;
-      nsTableCellFrame* cell = GetCellInfoAt(rowX, colX, &originates);
-      if (originates) {
-        nscoord left = (0 == colX) ? cellSpacingX : 0;
-        nscoord top  = (rowX > highestBottom) ? 0 : cellSpacingY;
-        nsMargin margin(left, top, cellSpacingX, cellSpacingY);
-        cell->RecalcLayoutData(margin);
-        if (highestBottom > rowX) {
-          highestBottom = PR_MIN(highestBottom, rowX + cell->GetRowSpan() - 1);
-        }
-      }
-    }
-  }
-}
-
-
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
@@ -2275,7 +2236,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     if (PR_TRUE==needsRecalc)
     {
       BuildColumnCache(aPresContext, aDesiredSize, aReflowState, aStatus);
-      RecalcLayoutData(aPresContext);  // Recalculate Layout Dependencies
       // if we needed to rebuild the column cache, the data stored in the layout strategy is invalid
       if (nsnull!=mTableLayoutStrategy)
       {
@@ -4829,9 +4789,20 @@ NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin&
 {
   nsresult result = NS_ERROR_NOT_INITIALIZED;
 
-  if (nsnull != aKidFrame)
-  {
-    result = aKidFrame->GetMargin(aMargin);
+  if (aKidFrame) {
+    nscoord spacingX = GetCellSpacingX();
+    nscoord spacingY = GetCellSpacingY();
+    PRInt32 rowIndex, colIndex;
+    aKidFrame->GetRowIndex(rowIndex);
+    aKidFrame->GetColIndex(colIndex);
+    // left/top margins only apply if the cell is a left/top border cell
+    // there used to be more complicated logic (rev 3.326) dealing with rowspans 
+    // but failure to produce reasonable tests cases does not justify it.
+    aMargin.left   = (0 == colIndex) ? spacingX : 0;
+    aMargin.top    = (0 == rowIndex) ? spacingY : 0;
+    aMargin.right  = spacingX;
+    aMargin.bottom = spacingY;
+    result = NS_OK;
   }
 
   return result;

@@ -815,13 +815,11 @@ PRBool nsTableCellFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefau
   return PR_TRUE;
 }
 
-void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
+void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
 {
-  // Check to see if the table has either cell padding or 
-  // Cell spacing defined for the table. If true, then
-  // this setting overrides any specific border, margin or 
-  // padding information in the cell. If these attributes
-  // are not defined, the the cells attributes are used
+  // Check to see if the table has cell padding or defined for the table. If true, 
+  // then this setting overrides any specific border or padding information in the 
+  // cell. If these attributes are not defined, the the cells attributes are used
 
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
@@ -838,13 +836,6 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   const nsStyleSpacing* tableSpacingStyle;
   tableFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)tableSpacingStyle);
   nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
-
-  // Cache the border-spacing into margin and wipe out any previous 
-  // margins, since CSS doesn't allow margins to be set on cells
-  spacingData->mMargin.SetTop(spacingY);
-  spacingData->mMargin.SetRight(spacingX);
-  spacingData->mMargin.SetBottom(spacingY);
-  spacingData->mMargin.SetLeft(spacingX);
 
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
@@ -969,7 +960,7 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   printf("nsTableCellFrame::DidSetStyleContext \n");
 #endif
 
-  MapBorderMarginPadding(aPresContext);
+  MapBorderPadding(aPresContext);
   mStyleContext->RecalcAutomaticData(aPresContext);
   return NS_OK;
 }
@@ -1110,14 +1101,6 @@ void nsTableCellFrame::GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFram
     GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
     spacing->GetBorder(aBorder);
   }
-}
-
-void nsTableCellFrame::RecalcLayoutData(nsMargin& aMargin)
-{
-  mMargin.left   = aMargin.left;
-  mMargin.top    = aMargin.top;
-  mMargin.right  = aMargin.right;
-  mMargin.bottom = aMargin.bottom;
 }
 
 
