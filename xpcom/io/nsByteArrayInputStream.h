@@ -24,11 +24,6 @@
 
 class nsByteArrayInputStream : public nsIByteArrayInputStream
 {
-public:
-    nsByteArrayInputStream (char *buffer, PRUint32 nbytes);
-    virtual ~nsByteArrayInputStream();
-
-private:
     // nsISupports methods
     NS_DECL_ISUPPORTS
 
@@ -37,7 +32,12 @@ private:
 
     // nsIInputStream methods
     NS_DECL_NSIINPUTSTREAM
+    
+public:
+    nsByteArrayInputStream (char *buffer, PRUint32 nbytes);
+    virtual ~nsByteArrayInputStream ();
 
+private:
     char        *_buffer;
     PRUint32     _nbytes;
     PRUint32     _pos;

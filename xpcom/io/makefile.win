@@ -19,8 +19,6 @@
 #
 # Contributor(s): 
 
-
-
 DEPTH=..\..
 MODULE = xpcom 
 
@@ -40,6 +38,7 @@ EXPORTS =                          \
         nsStorageStream.h          \
         nsScriptableInputStream.h  \
         nsDirectoryService.h       \
+        nsIByteArrayInputStream.h  \
         $(NULL)                 
 
 NO_XPT_GEN=1
@@ -60,6 +59,7 @@ XPIDLSRCS =                         \
         .\nsIFile.idl               \
         .\nsILocalFile.idl          \
         .\nsIDirectoryService.idl   \
+        .\nsIByteArrayInputStream.idl  \
         $(NULL)
 
 ################################################################################
@@ -95,6 +95,7 @@ CPP_OBJS =                                       \
         .\$(OBJDIR)\nsFileSpecImpl.obj           \
         .\$(OBJDIR)\nsFileSpecStreaming.obj      \
         .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
+        .\$(OBJDIR)\nsByteArrayInputStream.obj	 \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
