@@ -70,6 +70,7 @@ LIBS := \
 	-lftpurl \
 	-lgophurl \
 	-lhttpurl \
+	-lsockstuburl \
 	-limg \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS) \
