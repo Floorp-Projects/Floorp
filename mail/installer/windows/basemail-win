@@ -14,6 +14,8 @@ thunderbird\defaults\profile\US\mimeTypes.rdf
 thunderbird\defaults\messenger\mailViews.dat
 thunderbird\defaults\profile\localstore.rdf
 thunderbird\defaults\profile\mimeTypes.rdf
+thunderbird\defaults\profile\extensions\*
+thunderbird\defaults\profile\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
 
 [xpcom]
 thunderbird\xpcom.dll
@@ -234,7 +236,7 @@ thunderbird\components\jar.xpt
 thunderbird\components\pref.xpt                     
 thunderbird\components\xppref32.dll
 
-; profile
+; profile              
 thunderbird\components\profile.xpt
 thunderbird\components\profilemigration.dll
 thunderbird\components\toolkitprofile.xpt
@@ -291,6 +293,12 @@ thunderbird\components\necko_file.xpt
 thunderbird\components\necko_cache.xpt
 thunderbird\components\necko_cookie.xpt         
 thunderbird\components\nsProxyAutoConfig.js
+ 
+; extensions
+thunderbird\components\nsExtensionManager.js
+thunderbird\components\nsBackgroundUpdateService.js
+thunderbird\components\extensions.xpt
+thunderbird\components\update.xpt
             
 ; psm2
 ; Optional - only if you need HTTPS support
