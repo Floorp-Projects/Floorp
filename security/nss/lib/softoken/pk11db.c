@@ -640,6 +640,33 @@ static void secmod_CloseDB(DB *pkcs11db) {
      (*pkcs11db->close)(pkcs11db);
 }
 
+static char *
+secmod_addEscape(const char *string, char quote)
+{
+    char *newString = 0;
+    int escapes = 0, size = 0;
+    const char *src;
+    char *dest;
+
+    for (src=string; *src ; src++) {
+	if ((*src == quote) || (*src == '\\')) escapes++;
+	size++;
+    }
+
+    newString = PORT_ZAlloc(escapes+size+1); 
+    if (newString == NULL) {
+	return NULL;
+    }
+
+    for (src=string, dest=newString; *src; src++,dest++) {
+	if ((*src == '\\') || (*src == quote)) {
+	    *dest++ = '\\';
+	}
+	*dest = *src;
+    }
+
+    return newString;
+}
 
 #define SECMOD_STEP 10
 #define PK11_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical slotParams=(1={%s askpw=any timeout=30})\""
@@ -688,8 +715,12 @@ secmod_ReadPermDB(char *dbname, char *params, PRBool rw) {
 
 done:
     if (!moduleList[0]) {
-	moduleList[0] = PR_smprintf(PK11_DEFAULT_INTERNAL_INIT,params,
+	char * newparams = secmod_addEscape(params,'"');
+	if (newparams) {
+	    moduleList[0] = PR_smprintf(PK11_DEFAULT_INTERNAL_INIT,newparams,
 						SECMOD_SLOT_FLAGS);
+	    PORT_Free(newparams);
+	}
     }
     /* deal with trust cert db here */
 
