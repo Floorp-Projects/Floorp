@@ -243,6 +243,13 @@ function registerMainKeys(winreg)
   value   = fProgram + "Plugins";
   err     = winreg.setValueString(subkey, valname, value);
 
+  subkey  = "SOFTWARE\\Mozilla\\$ProductName$ $UserAgentShort$\\bin";
+  winreg.createKey(subkey,"");
+
+  valname = "PathToExe";
+  value   = fProgram + "$MainExeFile$";
+  err     = winreg.setValueString(subkey, valname, value);
+
   // We need to set HKEY...\Software\Mozilla\Seamonkey\[ua]\Main
   // because Sun's Java installer keys off of this key to locate mozilla's
   // installation directory and populate it with java plugins.
