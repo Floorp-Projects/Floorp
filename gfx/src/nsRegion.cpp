@@ -43,8 +43,8 @@ class RgnRectMemoryAllocator
   void* AllocChunk (PRUint32 aEntries, void* aNextChunk, nsRegion::RgnRect* aTailDest)
   {
     PRUint8* pBuf = new PRUint8 [aEntries * sizeof (nsRegion::RgnRect) + sizeof (void*)];
-    *NS_STATIC_CAST (void**, pBuf) = aNextChunk;
-    nsRegion::RgnRect* pRect = NS_STATIC_CAST (nsRegion::RgnRect*, pBuf + sizeof (void*));
+    *NS_REINTERPRET_CAST (void**, pBuf) = aNextChunk;
+    nsRegion::RgnRect* pRect = NS_REINTERPRET_CAST (nsRegion::RgnRect*, pBuf + sizeof (void*));
 
     for (PRUint32 cnt = 0 ; cnt < aEntries - 1 ; cnt++)
       pRect [cnt].next = &pRect [cnt + 1];
@@ -58,7 +58,7 @@ class RgnRectMemoryAllocator
   void* NextChunk (const void* aThisChunk) const { return *NS_STATIC_CAST (void**, aThisChunk); }
 
   nsRegion::RgnRect* ChunkHead (const void* aThisChunk) const
-  {   return NS_STATIC_CAST (nsRegion::RgnRect*, NS_STATIC_CAST (PRUint8*, aThisChunk) + sizeof (void*));  }
+  {   return NS_REINTERPRET_CAST (nsRegion::RgnRect*, NS_STATIC_CAST (PRUint8*, aThisChunk) + sizeof (void*));  }
 
 public:
   RgnRectMemoryAllocator (PRUint32 aNumOfEntries);
