@@ -949,6 +949,9 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
               if (atom == nsXULAtoms::textbox || atom == nsXULAtoms::menulist) {
                 // if it's a text box or menulist, give it focus
                 element->Focus();
+              } else if (atom == nsXULAtoms::toolbarbutton) {
+                // if it's a toolbar button, just click
+                element->Click();
               } else {
                 // otherwise, focus and click in it
                 element->Focus();
