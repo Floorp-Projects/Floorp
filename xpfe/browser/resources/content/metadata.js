@@ -457,8 +457,8 @@ function isHTMLElement(node, name)
 // http://www.bath.ac.uk/~py8ieh/internet/discussion/metadata.txt
 function convertLanguageCode(abbr)
 {
+    if (!abbr) return "";
     var result;
-
     var tokens = abbr.split("-");
 
     if (tokens[0] === "x" || tokens[0] === "i")
