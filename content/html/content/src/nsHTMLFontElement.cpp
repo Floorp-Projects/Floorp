@@ -283,15 +283,15 @@ MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     // fontWeight: int, enum
     aAttributes->GetAttribute(nsHTMLAtoms::fontWeight, value);
     if (value.GetUnit() == eHTMLUnit_Integer) { // +/-
-      PRInt32 weight = parentFont->mFont.weight + value.GetIntValue();
-      font->mFont.weight =
-        ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
-      font->mFixedFont.weight =
-        ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
+      PRInt32 intValue = (value.GetIntValue() / 100);
+      PRInt32 weight = nsStyleUtil::ConstrainFontWeight(parentFont->mFont.weight + 
+                                                        (intValue * NS_STYLE_FONT_WEIGHT_BOLDER));
+      font->mFont.weight = weight;
+      font->mFixedFont.weight = weight;
     }
     else if (value.GetUnit() == eHTMLUnit_Enumerated) {
       PRInt32 weight = value.GetIntValue();
-      weight = ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
+      weight = nsStyleUtil::ConstrainFontWeight((weight / 100) * 100);
       font->mFont.weight = weight;
       font->mFixedFont.weight = weight;
     }
