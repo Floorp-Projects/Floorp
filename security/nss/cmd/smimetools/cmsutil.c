@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.45 2003/11/20 02:33:18 nelsonb%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.46 2003/11/25 23:26:39 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -200,15 +200,7 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 {
     NSSCMSDecoderContext *dcx;
     NSSCMSMessage *cmsg;
-    NSSCMSContentInfo *cinfo;
-    NSSCMSSignedData *sigd = NULL;
-    NSSCMSEnvelopedData *envd;
-    NSSCMSEncryptedData *encd;
-    int nlevels, i, nsigners, j;
-    char *signercn;
-    NSSCMSSignerInfo *si;
-    SECOidTag typetag;
-    SECItem **digests;
+    int nlevels, i;
     SECItem sitem = { 0, 0, 0 };
 
     PORT_SetError(0);
@@ -231,6 +223,9 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 
     nlevels = NSS_CMSMessage_ContentLevelCount(cmsg);
     for (i = 0; i < nlevels; i++) {
+	NSSCMSContentInfo *cinfo;
+	SECOidTag typetag;
+
 	cinfo = NSS_CMSMessage_ContentLevel(cmsg, i);
 	typetag = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
 
@@ -239,6 +234,12 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 
 	switch (typetag) {
 	case SEC_OID_PKCS7_SIGNED_DATA:
+	  {
+	    NSSCMSSignedData *sigd = NULL;
+	    SECItem **digests;
+	    int nsigners;
+	    int j;
+
 	    if (decodeOptions->headerLevel >= 0)
 		fprintf(out, "type=signedData; ");
 	    sigd = (NSSCMSSignedData *)NSS_CMSContentInfo_GetContent(cinfo);
@@ -316,16 +317,23 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 	    }
 
 	    for (j = 0; j < nsigners; j++) {
-		SECStatus bad;
-		NSSCMSVerificationStatus vs;
 		const char * svs;
+		NSSCMSSignerInfo *si;
+		NSSCMSVerificationStatus vs;
+		SECStatus bad;
 
 		si = NSS_CMSSignedData_GetSignerInfo(sigd, j);
-		signercn = NSS_CMSSignerInfo_GetSignerCommonName(si);
-		if (signercn == NULL)
-		    signercn = "";
-		if (decodeOptions->headerLevel >= 0)
+		if (decodeOptions->headerLevel >= 0) {
+		    char *signercn;
+		    static char empty[] = { "" };
+
+		    signercn = NSS_CMSSignerInfo_GetSignerCommonName(si);
+		    if (signercn == NULL)
+			signercn = empty;
 		    fprintf(out, "\n\t\tsigner%d.id=\"%s\"; ", j, signercn);
+		    if (signercn != empty)
+		        PORT_Free(signercn);
+		}
 		bad = NSS_CMSSignedData_VerifySignerInfo(sigd, j, 
 		                           decodeOptions->options->certHandle, 
 		                           decodeOptions->options->certUsage);
@@ -339,8 +347,11 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 		    goto loser;
 		}
 	    }
-	    break;
+	  }
+	  break;
 	case SEC_OID_PKCS7_ENVELOPED_DATA:
+	  {
+	    NSSCMSEnvelopedData *envd;
 	    if (decodeOptions->headerLevel >= 0)
 		fprintf(out, "type=envelopedData; ");
 	    envd = (NSSCMSEnvelopedData *)NSS_CMSContentInfo_GetContent(cinfo);
@@ -348,8 +359,11 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 		SECU_PrintError(progName, "envelopedData component missing");
 		goto loser;
 	    }
-	    break;
+	  }
+	  break;
 	case SEC_OID_PKCS7_ENCRYPTED_DATA:
+	  {
+	    NSSCMSEncryptedData *encd;
 	    if (decodeOptions->headerLevel >= 0)
 		fprintf(out, "type=encryptedData; ");
 	    encd = (NSSCMSEncryptedData *)NSS_CMSContentInfo_GetContent(cinfo);
@@ -357,7 +371,8 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 		SECU_PrintError(progName, "encryptedData component missing");
 		goto loser;
 	    }
-	    break;
+	  }
+	  break;
 	case SEC_OID_PKCS7_DATA:
 	    if (decodeOptions->headerLevel >= 0)
 		fprintf(out, "type=data; ");
