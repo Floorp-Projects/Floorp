@@ -817,9 +817,6 @@ sub BuildClientDist()
         InstallFromManifest(":mozilla:xpfe:components:$dir:public:MANIFEST_IDL",       "$distdirectory:idl:");
     }
     
-    InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST",              "$distdirectory:xpfe:");
-    InstallFromManifest(":mozilla:xpfe:components:timebomb:MANIFEST_IDL",          "$distdirectory:idl:");
-
     # directory
     InstallFromManifest(":mozilla:xpfe:components:directory:MANIFEST_IDL",         "$distdirectory:idl:");
     # regviewer

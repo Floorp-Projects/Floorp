@@ -92,9 +92,6 @@ comm.jar:
     content/communicator/sidebar/sidebarOverlay.xul             (sidebar/resources/sidebarOverlay.xul)
     content/communicator/sidebar/PageNotFound.xul               (sidebar/resources/PageNotFound.xul)
     content/communicator/sidebar/local-panels.rdf               (sidebar/resources/local-panels.rdf)
-    content/communicator/timebomb/warn.xul                      (timebomb/resources/content/warn.xul)
-    content/communicator/timebomb/expireText.xul                (timebomb/resources/content/expireText.xul)
-
 en-US.jar:
     locale/en-US/communicator/directory/directory.dtd           (directory/locale/en-US/directory.dtd)
     locale/en-US/communicator/history/history.dtd               (history/resources/locale/en-US/history.dtd)
@@ -148,7 +145,6 @@ en-US.jar:
     locale/en-US/communicator/sidebar/local-panels.dtd          (sidebar/resources/locale/en-US/local-panels.dtd)
     locale/en-US/communicator/sidebar/sidebarOverlay.dtd        (sidebar/resources/locale/en-US/sidebarOverlay.dtd)
     locale/en-US/communicator/sidebar/sidebar.properties        (sidebar/resources/locale/en-US/sidebar.properties)
-    locale/en-US/communicator/timebomb/timebomb.dtd             (timebomb/resources/locale/en-US/timebomb.dtd)
     locale/en-US/global/downloadProgress.dtd                    (xfer/resources/locale/en-US/downloadProgress.dtd)
     locale/en-US/global/downloadProgress.properties             (xfer/resources/locale/en-US/downloadProgress.properties)
     locale/en-US/global/filepicker.dtd                          (filepicker/res/locale/en-US/filepicker.dtd)

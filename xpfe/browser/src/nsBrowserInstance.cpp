@@ -154,14 +154,11 @@ static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 #define ENABLE_PAGE_CYCLER
 #endif
 
-#include "nsTimeBomb.h"
-
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID,        NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kCGlobalHistoryCID,        NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kCPrefServiceCID,          NS_PREF_CID);
-static NS_DEFINE_CID(kTimeBombCID,     NS_TIMEBOMB_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 
@@ -923,31 +920,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv;
-  static PRBool timebombChecked = PR_FALSE;
   nsAutoString args;
-
-  if (!timebombChecked) {
-    // timebomb check
-    timebombChecked = PR_TRUE;
-
-    PRBool expired;
-    nsCOMPtr<nsITimeBomb> timeBomb(do_GetService(kTimeBombCID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = timeBomb->Init();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = timeBomb->CheckWithUI(&expired);
-    if (NS_FAILED(rv)) return rv;
-
-    if (expired) {
-      nsXPIDLCString urlString;
-      rv = timeBomb->GetTimebombURL(getter_Copies(urlString));
-      if (NS_FAILED(rv)) return rv;
-
-      args.AssignWithConversion(urlString);
-    }
-  }
 
   if (args.IsEmpty()) {
     nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID));

@@ -35,7 +35,6 @@ DIRS= \
     related \
     xfer \
     shistory \
-    timebomb \
     console \
     autocomplete \
     urlbarhistory \

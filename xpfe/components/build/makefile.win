@@ -66,7 +66,6 @@ SUB_LIBRARIES=                           \
         $(DIST)\lib\appcompintl_s.lib    \
         $(DIST)\lib\related_s.lib        \
         $(DIST)\lib\search_s.lib         \
-        $(DIST)\lib\timebomb_s.lib       \
         $(DIST)\lib\urlbarhistory_s.lib  \
         $(DIST)\lib\urlwidgt_s.lib       \
         $(DIST)\lib\winhooks_s.lib       \
@@ -90,7 +89,6 @@ INCS = $(INCS)                                       \
         -I$(DEPTH)\xpfe\components\history\src       \
         -I$(DEPTH)\xpfe\components\related\src       \
         -I$(DEPTH)\xpfe\components\search\src        \
-        -I$(DEPTH)\xpfe\components\timebomb          \
         -I$(DEPTH)\xpfe\components\urlbarhistory\src \
         -I$(DEPTH)\xpfe\components\urlwidget         \
         -I$(DEPTH)\xpfe\components\winhooks          \
