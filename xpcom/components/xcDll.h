@@ -26,7 +26,11 @@
 
 #include "prio.h"
 #include "prlink.h"
-#include "nsIFileSpec.h"
+#include "nsISupports.h"
+
+class nsIFileSpec;
+class nsIModule;
+class nsIServiceManager;
 
 typedef enum nsDllStatus
 {
@@ -48,6 +52,7 @@ private:
 
 	PRLibrary *m_instance;	// Load instance
 	nsDllStatus m_status;	// holds current status
+    nsIModule *m_moduleObject;
 
     void Init(nsIFileSpec *dllSpec);
     void Init(const char *persistentDescriptor);
@@ -79,4 +84,7 @@ public:
 	PRUint32 GetLastModifiedTime(void) { return(m_modDate); }
 	PRUint32 GetSize(void) { return(m_size); }
 	PRLibrary *GetInstance(void) { return (m_instance); }
+    nsresult GetDllSpec(nsIFileSpec **dllSpec);
+
+    nsresult GetModule(nsISupports *servMgr, nsIModule **mobj);
 };
