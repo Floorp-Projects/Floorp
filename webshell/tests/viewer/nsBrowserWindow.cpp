@@ -1318,7 +1318,9 @@ nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
 {
   NS_PRECONDITION(nsnull != mWindow, "null window");
   mTitle = aTitle;
-  mWindow->SetTitle(aTitle);
+  nsAutoString newTitle(aTitle);
+  newTitle.Append(" - Raptor");
+  mWindow->SetTitle(newTitle.GetUnicode());
   return NS_OK;
 }
 
