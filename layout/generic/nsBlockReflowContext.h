@@ -118,7 +118,7 @@ public:
     * to be considered significant, a frame must have both width and height != 0
     * if aChildFrame is not in the default child list of aParentFrame, we return PR_FALSE
     */
-  PRBool nsBlockReflowContext::IsFirstSignificantChild(const nsIFrame* aParentFrame, const nsIFrame* aChildFrame) const;
+  PRBool IsFirstSignificantChild(const nsIFrame* aParentFrame, const nsIFrame* aChildFrame) const;
 
   static nscoord ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
                                            nsHTMLReflowState& aRS);
