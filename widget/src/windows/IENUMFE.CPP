@@ -1,21 +1,23 @@
-/*
- * IENUMFE.CPP
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Standard implementation of a FORMATETC enumerator with the
- * IEnumFORMATETC interface that will generally not need
- * modification.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Copyright (c)1993-1994 Microsoft Corporation, All Rights Reserved
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * Kraig Brockschmidt, Software Design Engineer
- * Microsoft Systems Developer Relations
- *
- * Internet  :  kraigb@microsoft.com
- * Compuserve:  >INTERNET:kraigb@microsoft.com
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 
-
 #include "ienumfe.h"
+#include <stdio.h>
 
 
 /*
@@ -23,30 +25,28 @@
  * CEnumFormatEtc::~CEnumFormatEtc
  *
  * Parameters (Constructor):
- *  pUnkRef         LPUNKNOWN to use for reference counting.
  *  cFE             ULONG number of FORMATETCs in pFE
  *  prgFE           LPFORMATETC to the array to enumerate.
  */
 
-CEnumFormatEtc::CEnumFormatEtc(LPUNKNOWN pUnkRef, ULONG cFE, LPFORMATETC prgFE)
-    {
-    UINT        i;
+CEnumFormatEtc::CEnumFormatEtc(ULONG aNumFEs, LPFORMATETC aFEList)
+{
+  UINT        i;
 
-    m_cRef=0;
-    m_pUnkRef=pUnkRef;
+  mRefCnt     = 0;
 
-    m_iCur   = 0;
-    m_cfe    = cFE;
-    m_maxcfe = cFE;
-    m_prgfe=new FORMATETC[(UINT)cFE];
+  mCurrentInx = 0;
+  mNumFEs     = aNumFEs;
+  mMaxNumFEs  = aNumFEs;
+  mFEList     = new FORMATETC[(UINT)aNumFEs];
 
-    if (NULL!=m_prgfe) {
-      for (i=0; i < cFE; i++)
-        m_prgfe[i]=prgFE[i];
-      }
-
-      return;
+  if (NULL!=mFEList) {
+    for (i=0; i < aNumFEs; i++) {
+      mFEList[i] = aFEList[i];
     }
+  }
+
+}
 
 /*
  * CEnumFormatEtc::CEnumFormatEtc
@@ -57,30 +57,30 @@ CEnumFormatEtc::CEnumFormatEtc(LPUNKNOWN pUnkRef, ULONG cFE, LPFORMATETC prgFE)
  *  cFE             ULONG number of FORMATETCs in pFE
  */
 
-CEnumFormatEtc::CEnumFormatEtc(LPUNKNOWN pUnkRef, ULONG cMaxFE)
+CEnumFormatEtc::CEnumFormatEtc(ULONG aMaxFE)
 {
-  //UINT        i;
+  mRefCnt     = 0;
 
-  m_cRef=0;
-  m_pUnkRef=pUnkRef;
-
-  m_iCur   = 0;
-  m_cfe    = 0;
-  m_maxcfe = cMaxFE;
-  m_prgfe=new FORMATETC[(UINT)cMaxFE];
-  }
+  mCurrentInx = 0;
+  mNumFEs     = 0;
+  mMaxNumFEs  = aMaxFE;
+  mFEList     = new FORMATETC[(UINT)aMaxFE];
+}
 
 
+//----------------------------------------------------
 CEnumFormatEtc::~CEnumFormatEtc(void)
 {
-  if (NULL!=m_prgfe)
-    delete [] m_prgfe;
+  if (NULL != mFEList) {
+    delete [] mFEList;
+  }
 
 }
 
+//----------------------------------------------------
 void CEnumFormatEtc::AddFE(LPFORMATETC aFE)
 {
-  m_prgfe[m_cfe++] = *aFE;
+  mFEList[mNumFEs++] = *aFE;
 }
 
 /*
@@ -101,53 +101,46 @@ void CEnumFormatEtc::AddFE(LPFORMATETC aFE)
 
 STDMETHODIMP CEnumFormatEtc::QueryInterface(REFIID riid, LPVOID *ppv)
 {
-    *ppv=NULL;
+  *ppv=NULL;
 
-    /*
-     * Enumerators are separate objects, not the data object, so
-     * we only need to support out IUnknown and IEnumFORMATETC
-     * interfaces here with no concern for aggregation.
-     */
-    if (IsEqualIID(riid, IID_IUnknown)
-        || IsEqualIID(riid, IID_IEnumFORMATETC))
-        *ppv=(LPVOID)this;
+  /*
+   * Enumerators are separate objects, not the data object, so
+   * we only need to support out IUnknown and IEnumFORMATETC
+   * interfaces here with no concern for aggregation.
+   */
+  if (IsEqualIID(riid, IID_IUnknown)
+      || IsEqualIID(riid, IID_IEnumFORMATETC))
+      *ppv=(LPVOID)this;
 
-    //AddRef any interface we'll return.
-    if (NULL!=*ppv)
-        {
-        ((LPUNKNOWN)*ppv)->AddRef();
-        return NOERROR;
-        }
+  //AddRef any interface we'll return.
+  if (NULL!=*ppv)
+      {
+      ((LPUNKNOWN)*ppv)->AddRef();
+      return NOERROR;
+      }
 
-    return ResultFromScode(E_NOINTERFACE);
-    }
-
+  return ResultFromScode(E_NOINTERFACE);
+}
 
 STDMETHODIMP_(ULONG) CEnumFormatEtc::AddRef(void)
-    {
-    ++m_cRef;
-    m_pUnkRef->AddRef();
-    return m_cRef;
-    }
+{
+  ++mRefCnt;
+  //printf("CEnumFormatEtc::AddRef >>>>>>>>>>>>>>>>>> %d on %p\n", mRefCnt, this);
+  return mRefCnt;
+}
 
 STDMETHODIMP_(ULONG) CEnumFormatEtc::Release(void)
-    {
-    ULONG       cRefT;
+{
+  ULONG cRefT;
 
-    cRefT=--m_cRef;
+  cRefT = --mRefCnt;
 
-    m_pUnkRef->Release();
+  if (0L == mRefCnt)
+      delete this;
 
-    if (0L==m_cRef)
-        delete this;
-
-    return cRefT;
-    }
-
-
-
-
-
+  //printf("CEnumFormatEtc::Release >>>>>>>>>>>>>>>>>> %d on %p\n", mRefCnt, this);
+  return cRefT;
+}
 
 
 /*
@@ -168,41 +161,35 @@ STDMETHODIMP_(ULONG) CEnumFormatEtc::Release(void)
  */
 
 STDMETHODIMP CEnumFormatEtc::Next(ULONG cFE, LPFORMATETC pFE, ULONG * pulFE)
-    {
-    ULONG               cReturn=0L;
+{
+  ULONG               cReturn=0L;
 
-    if (NULL==m_prgfe)
-        return ResultFromScode(S_FALSE);
+  if (NULL==mFEList)
+      return ResultFromScode(S_FALSE);
 
-    if (NULL==pulFE)
-        {
-        if (1L!=cFE)
-            return ResultFromScode(E_POINTER);
-        }
-    else
-        *pulFE=0L;
+  if (NULL==pulFE)
+      {
+      if (1L!=cFE)
+          return ResultFromScode(E_POINTER);
+      }
+  else
+      *pulFE=0L;
 
-    if (NULL==pFE || m_iCur >= m_cfe)
-        return ResultFromScode(S_FALSE);
+  if (NULL==pFE || mCurrentInx >= mNumFEs)
+      return ResultFromScode(S_FALSE);
 
-    while (m_iCur < m_cfe && cFE > 0)
-        {
-        *pFE++=m_prgfe[m_iCur++];
-        cReturn++;
-        cFE--;
-        }
+  while (mCurrentInx < mNumFEs && cFE > 0)
+      {
+      *pFE++=mFEList[mCurrentInx++];
+      cReturn++;
+      cFE--;
+      }
 
-    if (NULL!=pulFE)
-        *pulFE=cReturn;
+  if (NULL!=pulFE)
+      *pulFE=cReturn;
 
-    return NOERROR;
-    }
-
-
-
-
-
-
+  return NOERROR;
+}
 
 /*
  * CEnumFormatEtc::Skip
@@ -219,18 +206,13 @@ STDMETHODIMP CEnumFormatEtc::Next(ULONG cFE, LPFORMATETC pFE, ULONG * pulFE)
  */
 
 STDMETHODIMP CEnumFormatEtc::Skip(ULONG cSkip)
-    {
-    if (((m_iCur+cSkip) >= m_cfe) || NULL==m_prgfe)
-        return ResultFromScode(S_FALSE);
+{
+  if (((mCurrentInx+cSkip) >= mNumFEs) || NULL==mFEList)
+      return ResultFromScode(S_FALSE);
 
-    m_iCur+=cSkip;
-    return NOERROR;
-    }
-
-
-
-
-
+  mCurrentInx+=cSkip;
+  return NOERROR;
+}
 
 /*
  * CEnumFormatEtc::Reset
@@ -246,15 +228,10 @@ STDMETHODIMP CEnumFormatEtc::Skip(ULONG cSkip)
  */
 
 STDMETHODIMP CEnumFormatEtc::Reset(void)
-    {
-    m_iCur=0;
-    return NOERROR;
-    }
-
-
-
-
-
+{
+  mCurrentInx=0;
+  return NOERROR;
+}
 
 /*
  * CEnumFormatEtc::Clone
@@ -271,20 +248,20 @@ STDMETHODIMP CEnumFormatEtc::Reset(void)
  */
 
 STDMETHODIMP CEnumFormatEtc::Clone(LPENUMFORMATETC *ppEnum)
-    {
-    LPCEnumFormatEtc    pNew;
+{
+  LPCEnumFormatEtc    pNew;
 
-    *ppEnum=NULL;
+  *ppEnum=NULL;
 
-    //Create the clone
-    pNew=new CEnumFormatEtc(m_pUnkRef, m_cfe, m_prgfe);
+  //Create the clone
+  pNew = new CEnumFormatEtc(mNumFEs, mFEList);
 
-    if (NULL==pNew)
-        return ResultFromScode(E_OUTOFMEMORY);
+  if (NULL==pNew)
+      return ResultFromScode(E_OUTOFMEMORY);
 
-    pNew->AddRef();
-    pNew->m_iCur=m_iCur;
+  pNew->AddRef();
+  pNew->mCurrentInx=mCurrentInx;
 
-    *ppEnum=pNew;
-    return NOERROR;
-    }
+  *ppEnum=pNew;
+  return NOERROR;
+}
