@@ -97,14 +97,22 @@ toolbarbutton.bookmark-item[open="true"] {
 
 .bookmarks-toolbar-customize {
   display: none;
-  background: -moz-Dialog;
+  background: -moz-Dialog !important;
   max-width: 15em !important;
 }
 
 toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-customize {
   display: -moz-box;
 }
-  
+
+toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-overflow-items {
+  visibility: hidden;
+}
+
+toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
+  visibility: hidden;
+}
+
 /* ::::: bookmark menus ::::: */
 
 menu.bookmark-item,

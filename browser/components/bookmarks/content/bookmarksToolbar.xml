@@ -543,7 +543,7 @@
 
     <content>
       <xul:stack flex="1" style="min-width:0px; width:0px;">
-      <xul:hbox id="bookmarks-ptf" anonid="bookmarks-ptf" contextmenu="_child"
+      <xul:hbox id="bookmarks-ptf" class="bookmarks-toolbar-items" anonid="bookmarks-ptf" contextmenu="_child"
                 flex="1" style="min-width:0px; width:0px;margin-left: 3px;" 
                 datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
                 ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
@@ -647,7 +647,7 @@
 
         </xul:template>
       </xul:hbox>
-      <xul:hbox mousethrough="always">
+      <xul:hbox class="bookmarks-toolbar-overflow-items" mousethrough="always">
         <xul:hbox mousethrough="always" id="overflow-padder"/>
         <xul:toolbarbutton mousethrough="never" collapsed="true" type="menu" class="chevron"
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
