@@ -1,0 +1,236 @@
+#! /bin/sh
+
+########################################################################
+#
+# /u/sonmi/bin/nssqa - /u/svbld/bin/init/nss/nssqa
+#
+# this script is supposed to automatically run QA for NSS on all required
+# Unix and Windows (NT and 2000) platforms
+#
+# parameters
+# ----------
+#	nssversion  (supported: 30b, 31, tip)
+#	builddate	(default - today)
+#
+# options
+# -------
+#	-y answer all questions with y - use at your own risk...ignores warnings
+#	-s silent (only usefull with -y)
+#	-h, -? - you guessed right - displays this text
+#	-d debug
+#	-f <filename> - write the (error)output to filename
+#	-cron equivalient to -y -s -d -f $RESULTDIR/$HOST.nssqa
+#	-l <mozroot> run on a local build
+# 
+# 12/1/00
+# took out the (unused) local directory for releasebuild QA on NT
+# cleaned up 32 - 64 bit issues
+# took hardcoded machinenames out
+########################################################################
+
+O_OPTIONS=ON			# accept options (see above for listing)
+WIN_SET_LOCALDIRS=ON	# run QA in a local directory rather than accross 
+						# the net
+WIN_WAIT_FOREVER=ON		# first we wait forever for a TESTDIR to appear, than 
+						# we wait forever for the build to finish...
+
+. `dirname $0`/header	# utilities, shellfunctions etc, global to NSS QA
+
+is_running ${TMP}/nssqa	# checks if the file exists, if yes Exits, if not 
+						# creates to implement a primitive locking mechanism
+if [ $O_CRON = "OFF" ]	# if we are running from cron this has been done
+then
+	set_host			# sets the HOST and DOMSUF variables - carefull, 
+fi						# hardcoded to redplanet
+
+KILL_SELFSERV=ON		# cleanup will also kill the leftover selfserv processes
+
+#. `dirname $0`/nssqa.header	#derived from init.sh
+
+################################ check_distdir #########################
+# local shell function to check if the DIST directory exists, if not there 
+# is no use to continue the test
+########################################################################
+check_distdir()
+{
+	set_objdir
+
+	if [ ! -d "$LOCALDIST_BIN" ]
+	then
+		Debug "Dist $DIST"
+		Warning "$LOCALDIST_BIN (the dist binaries dir) does not exist"
+		return 1
+	fi
+
+	if [ ! -d "$LOCALDIST" -a ! -h "$LOCALDIST" ]
+	then
+		Debug "Dist $DIST"
+		Warning "$LOCALDIST (the dist directory) does not exist"
+		return 1
+	fi
+
+	Debug "LOCALDIST_BIN $LOCALDIST_BIN"
+	Debug "Dist $DIST"
+	return 0
+}
+
+################################ run_all ###############################
+# local shell function to start the all.sh after asking user and redirect 
+# the output apropriately
+########################################################################
+run_all()		
+{
+	check_distdir || return 1
+	kill_by_name selfserv
+	ask "Testing $OBJDIR continue with all.sh" "y" "n" || Exit
+
+	Debug "running all.sh in `pwd`... please be patient :)"
+	if [ $O_SILENT = ON ]
+	then
+		if [ $O_DEBUG = ON -a $O_FILE = ON ]
+		then
+			all.sh >>$FILENAME 2>>$FILENAME
+		else
+			all.sh >/dev/null 2>/dev/null
+		fi
+	else
+		#if [ $O_DEBUG = ON -a $O_FILE = ON ]	#FIXME - write to tmp file and copy
+		#then
+			#all.sh 2>&1 | tee $FILENAME
+		#else
+			all.sh
+		#fi
+	fi
+	Debug "Done with all.sh "
+	line
+}
+
+all_sh()
+{
+echo
+}
+
+# determine if all needed symbolic links are present, in case
+# we build on one platform and QA on another
+
+if [ $O_WIN = "OFF" ]
+then
+	if [ ! -h ${NTDIST}/WINNT5.0_DBG.OBJ -o \
+			! -h ${UXDIST}/SunOS5.8_OPT.OBJ -o \
+ 			! -h ${UXDIST}/OSF1V5.0_DBG.OBJ ]
+	then
+		# create the symbolic links
+		mksymlinks $* ||
+			glob_usage "Can't make the neccessary symbolic links"
+	fi
+fi
+
+if [ -d $TESTSCRIPTDIR ]	#the directory mozilla/security/nss/tests, 
+then			# where all.sh lives
+	cd $TESTSCRIPTDIR
+else
+	Exit "cant cd to $TESTSCRIPTDIR Exiting"
+fi
+
+Debug testing from `pwd`
+line
+
+Debug "HOST: $HOST, DOMSUF: $DOMSUF"
+
+# From the operatingsystem figure out the name of the build 
+
+case `uname -s` in
+	SunOS)
+		#first testing the 32 bit 2.6 build, even on 2.8
+		MAPPED_OS=Solaris2.6
+		;;
+	OSF1)
+		MAPPED_OS=OSF1V4.0
+		;;
+	AIX)
+		MAPPED_OS=AIX4.3
+		;;
+	Linux)
+		MAPPED_OS=Linux2.2
+		;;
+	HP-UX)
+		MAPPED_OS=HPUX11.00
+		;;
+	*)
+		if [ "$os_name" = "Windows" ]
+		then
+			MAPPED_OS=NT4.0
+		else
+			Exit "Sorry, operating system `uname -s` is not supported yet"
+		fi
+		;;
+esac
+
+OSDIR=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}/*${MAPPED_OS}*
+Debug Testing build for $MAPPED_OS in $OSDIR
+
+if [ $O_WIN = "ON" ]
+then
+	WaitForever ${OSDIR}/SVbuild.InProgress.1 0 #Wait for the build to finish...
+	OS_TARGET=WINNT;export OS_TARGET;Debug "OS_TARGET set to $OS_TARGET"
+	Echo "WINDOWS-OS-LINE: $os_name $os_full $OS_TARGET"
+else
+	Wait ${OSDIR}/SVbuild.InProgress.1 0 	#Wait for the build to finish...
+fi
+
+Debug "Dist $DIST"
+run_all
+BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
+run_all
+IS_64=""
+
+# now for the 64 bit build!
+
+case `uname -s` in
+	#OSF1) has been done already - always 64 bit
+	SunOS)
+		MAPPED_OS=Solaris*8
+		IS_64=`(isainfo -v | grep 64)>/dev/null && echo 64 bit`
+		OSDIR=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}/*${MAPPED_OS}
+		if [ -n "$IS_64" ] 
+		then #Wait for the 64 bit build to finish...
+			Debug Testing build for $MAPPED_OS in $OSDIR
+			Wait ${OSDIR}/SVbuild.InProgress.1 0 	
+		fi
+		;;
+	AIX)
+		IS_64=`lslpp -l | grep "bos.64bit"> /dev/null && echo 64 bit`
+		;;
+	HP-UX)
+		IS_64=`getconf KERNEL_BITS | grep 64 >/dev/null && echo 64 bit`
+		;;
+	*)
+		if [ "$O_WIN" = "ON" ]
+		then
+			OS_TARGET=WIN95;export OS_TARGET;Debug "OS_TARGET set to $OS_TARGET"
+			Echo "WINDOWS-OS-LINE: $os_name $os_full $OS_TARGET"
+			unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
+			run_all
+			BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
+			run_all
+			Debug "Copy results from $NT_MASTERDIR/mozilla/tests_results/security to $RESULTDIR"
+			cp -r $NT_MASTERDIR/mozilla/tests_results/security/* $RESULTDIR
+		fi
+		Exit "Done."
+		;;
+esac
+
+if [ -n "$IS_64" ] 
+then #Wait for the 64 bit build to finish...
+	Debug "This is a $IS_64 platform"
+	USE_64=1;export USE_64;Debug "Use_64 set to $USE_64"
+	unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
+
+	run_all
+	BUILD_OPT=1; export BUILD_OPT; Debug "BUILD_OPT $BUILD_OPT"
+	run_all
+else
+	Debug "This is a 32 bit platform"
+fi
+
+Exit "Done."
