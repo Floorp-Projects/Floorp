@@ -1288,7 +1288,6 @@ NS_IMETHODIMP
 nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
 {
   nsresult rv;
-  nsCOMPtr<nsIContentViewerContainer> container;
   nsCOMPtr<nsIContentViewer> viewer;
 
   ///////////////////////////////
@@ -1344,10 +1343,13 @@ nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
 
   //
   // Notify the document loader...
-  mDocLoader->GetContainer(getter_AddRefs(container));
-  if (container) {
-    container->GetContentViewer(getter_AddRefs(viewer));
-  }
+  nsCOMPtr<nsISupports> container;
+  NS_ENSURE_SUCCESS(mDocLoader->GetContainer(getter_AddRefs(container)),
+   NS_ERROR_FAILURE);
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(container));
+  NS_ENSURE_TRUE(webShell, NS_ERROR_FAILURE);
+  
+  webShell->GetContentViewer(getter_AddRefs(viewer));
 
   if (mDocLoader->IsLoadingDocument()) {
     nsLoadFlags loadAttribs;
