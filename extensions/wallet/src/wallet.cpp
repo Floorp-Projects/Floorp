@@ -556,7 +556,7 @@ char key[maxKeySize+1];
 PRUint32 keyPosition = 0;
 PRBool keyFailure = FALSE;
 
-PUBLICPRBool
+PUBLIC PRBool
 wallet_BadKey() {
   return keyFailure;
 }
