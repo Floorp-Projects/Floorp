@@ -619,14 +619,14 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      gOLEInited = TRUE;
    }
 
-   mNativeDragTarget = new nsNativeDragTarget(this);
+   /*mNativeDragTarget = new nsNativeDragTarget(this);
    if (NULL != mNativeDragTarget) {
      mNativeDragTarget->AddRef();
      if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget,TRUE,FALSE)) {
        if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget)) {
        }
      }
-   }
+   }*/
 
 
     // call the event callback to notify about creation
@@ -696,11 +696,7 @@ NS_METHOD nsWindow::Destroy()
     nsBaseWidget::Destroy();
   }
 
-  if (NULL != mNativeDragTarget) {
-    if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
-    }
-    NS_RELEASE(mNativeDragTarget);
-  }
+  EnableDragDrop(PR_FALSE);
 
   // destroy the HWND
   if (mWnd) {
@@ -1811,19 +1807,33 @@ nsresult nsWindow::MenuHasBeenSelected(
   return NS_OK;
 }
 //---------------------------------------------------------
-NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
+NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
 {
-  //::DragAcceptFiles(mWnd, (aEnable?TRUE:FALSE));
-   mNativeDragTarget = new nsNativeDragTarget(this);
-   if (NULL != mNativeDragTarget) {
-     mNativeDragTarget->AddRef();
-     if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget,TRUE,FALSE)) {
-       if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget)) {
-       }
-     }
-   }
+  nsresult rv = NS_ERROR_FAILURE;
 
-  return NS_OK;
+  if (aEnable) {
+    if (nsnull == mNativeDragTarget) {
+       mNativeDragTarget = new nsNativeDragTarget(this);
+       if (NULL != mNativeDragTarget) {
+         mNativeDragTarget->AddRef();
+         if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget,TRUE,FALSE)) {
+           if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mNativeDragTarget)) {
+             rv = NS_OK;
+           }
+         }
+       }
+    }
+  } else {
+    if (nsnull != mWnd && NULL != mNativeDragTarget) {
+      ::RevokeDragDrop(mWnd);
+      if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
+        rv = NS_OK;
+      }
+      NS_RELEASE(mNativeDragTarget);
+    }
+  }
+
+  return rv;
 }
 
 
