@@ -66,6 +66,9 @@ public class AddressBook extends GeneralFrame {
   protected DataSourceList  mDataSourceList;
   protected JComboBox       mSearchSource;
   protected JTextField      mSearchField;
+  protected boolean         mSortAscending;
+  protected String          ColumnName;
+  protected int             mColumnSorted;
 
   public static void main(String[] args) {
     AddressBook AddressBookFrame = new AddressBook();
@@ -106,7 +109,7 @@ public class AddressBook extends GeneralFrame {
        //create the query
        ITerm query = new TermEqual (new AC_Attribute ("sn", aSearchString));
    
-       String[] attributes = {"sn", "cn", "o", "mail", "city"};
+       String[] attributes = {"givenName", "sn", "cn", "o", "mail", "telephoneNumber", "city"};
    
        //query the LDAP server.
        System.out.println ("Send query" + query);
@@ -155,7 +158,7 @@ public class AddressBook extends GeneralFrame {
                mail = attr.getValue();
              }
    
-             else if (attrName.equals ("sn")) {
+             else if (attrName.equals ("telephoneNumber")) {
                phone = attr.getValue();
              }
    
@@ -256,6 +259,10 @@ public class AddressBook extends GeneralFrame {
   public AddressBook() {
     super("Address Book","0");
 
+    // Setting the default values to the variables
+    mSortAscending = true;
+    mColumnSorted = 0;
+
     setBackground(Color.lightGray);
     getContentPane().setLayout(new BorderLayout());
 
@@ -267,6 +274,11 @@ public class AddressBook extends GeneralFrame {
     // (Jeff)
 
     mMenubar = buildMenu("menus.xml",defaultActions);
+
+    Component[] menulist = mMenubar.getComponents();
+    for(int j = 0 ; j < menulist.length ; j++) {
+       System.out.println(menulist[j].getName());
+    }
 
     setJMenuBar(mMenubar);
 
@@ -303,7 +315,7 @@ public class AddressBook extends GeneralFrame {
     getContentPane().add(panel1, BorderLayout.CENTER);
 
     setSize (600, 400);
-    	
+
     //Create Local Address Book
     //myLocalAddressBook = new ACS_Personal ("MyAddressBook.nab", true);
 
@@ -412,10 +424,10 @@ public class AddressBook extends GeneralFrame {
     new ByCompany(),
     new ByCity(),
     new ByNickname(),
-    //        new SortAscending(),
-    //        new SortDescending(),
-    //        new MyAddressBookCard(),
-    //        new WrapLongLines()
+    new SortAscending(),
+    new SortDescending(),
+    // new MyAddressBookCard(),
+    // new WrapLongLines()
   };
 
   //-----------------------
@@ -538,84 +550,134 @@ public class AddressBook extends GeneralFrame {
       }
     }
   }
+    //----------------
+    // Sort Ascending
+    //----------------
+    class SortAscending extends UIAction {
+        SortAscending() {
+            super(sortAscendingTag);
+            this.setEnabled(true);
+        }
+        public void actionPerformed(ActionEvent e) {
+          if (!mSortAscending) {
+            mSortAscending = true;
+            DataModel dm = (DataModel) mTable.getModel ();
+            System.out.println("Column Name is " + ColumnName);
+            int colnumber = dm.findColumn(ColumnName);
+            System.out.println("Column Number for " + ColumnName + " is: " + colnumber);
 
-  class ResultSorter extends UIAction {
-    protected String ColumnName;
+            dm.sortData(colnumber,mSortAscending);
 
-    ResultSorter(String Tag){
-      super(Tag);
+            mTable.repaint();
+          }
+        }
     }
 
-    public void actionPerformed(ActionEvent e) {
-      DataModel dm = (DataModel) mTable.getModel ();
-      int colnumber = dm.findColumn(ColumnName);
-      System.out.println("Column Number for " + ColumnName + " is: " + colnumber);
 
-      dm.sortData(colnumber);
+    //----------------
+    // Sort Descending
+    //----------------
+    class SortDescending extends UIAction {
+        SortDescending() {
+            super(sortDescendingTag);
+            this.setEnabled(true);
+        }
+        public void actionPerformed(ActionEvent e) {
+          System.out.println("I'm in sort descending");
+          if (mSortAscending) {
+            DataModel dm = (DataModel) mTable.getModel ();
+            mSortAscending = false;
+            System.out.println("Column Name is " + ColumnName);
+            int colnumber = dm.findColumn(ColumnName);
+            System.out.println("Column Number for " + ColumnName + " is: " + colnumber);
 
-      dm.fireTableDataChanged();
-      mTable.repaint();
+            dm.sortData(colnumber,mSortAscending);
+
+            mTable.repaint();
+          }
+        }
     }
-  }
-  //-----------------------
-  //ByName action
-  //-----------------------
 
-  class ByName extends ResultSorter {
-    ByName() {
-      super(byNameTag);
-      ColumnName = new String("Name");
-      this.setEnabled(true);
+    //----------------------------------
+    // Base class for sorting the names
+    //----------------------------------
+    class ResultSorter extends UIAction {
+        String myLocalColumnName;
+        ResultSorter(String Tag){
+          super(Tag);
+        }
+
+        public void actionPerformed(ActionEvent e) {
+            DataModel dm = (DataModel) mTable.getModel ();
+            ColumnName = myLocalColumnName;
+
+            int colnumber = dm.findColumn(ColumnName);
+            System.out.println("Column Number for " + ColumnName + " is: " + colnumber);
+
+            dm.sortData(colnumber,mSortAscending);
+
+            mTable.repaint();
+        }
+    }
+    //-----------------------
+    //ByName action
+    //-----------------------
+
+    class ByName extends ResultSorter {
+        ByName() {
+            super(byNameTag);
+            myLocalColumnName = new String("Name");
+            this.setEnabled(true);
+        }
+
     }
 
-  }
+    //-----------------------
+    //ByEmailAddress action
+    //-----------------------
 
-  //-----------------------
-  //ByEmailAddress action
-  //-----------------------
-
-  class ByEmailAddress extends ResultSorter {
-    ByEmailAddress() {
-      super(byEmailAddressTag);
-      ColumnName = new String("Email Address");
-      this.setEnabled(true);
+    class ByEmailAddress extends ResultSorter {
+        ByEmailAddress() {
+            super(byEmailAddressTag);
+            myLocalColumnName = new String("Email Address");
+            this.setEnabled(true);
+        }
     }
-  }
 
-  //-----------------------
-  //ByCompany action
-  //-----------------------
+    //-----------------------
+    //ByCompany action
+    //-----------------------
 
-  class ByCompany extends ResultSorter {
-    ByCompany() {
-      super(byCompanyTag);
-      ColumnName = new String("Organization");
-      this.setEnabled(true);
+    class ByCompany extends ResultSorter {
+        ByCompany() {
+            super(byCompanyTag);
+            myLocalColumnName = new String("Organization");
+            this.setEnabled(true);
+        }
     }
-  }
 
-  //-----------------------
-  //ByCity action
-  //-----------------------
-  class ByCity extends ResultSorter {
-    ByCity() {
-      super(byCityTag);
-      ColumnName = new String("City");
-      this.setEnabled(true);
+    //-----------------------
+    //ByCity action
+    //-----------------------
+    class ByCity extends ResultSorter {
+        ByCity() {
+            super(byCityTag);
+            myLocalColumnName = new String("City");
+            this.setEnabled(true);
+        }
     }
-  }
 
-  //-----------------------
-  //ByNickname action
-  //-----------------------
+    //-----------------------
+    //ByNickname action
+    //-----------------------
 
-  class ByNickname extends ResultSorter {
-    ByNickname() {
-      super(byNicknameTag);
-      ColumnName = new String("Nickname");
-      this.setEnabled(true);
+    class ByNickname extends ResultSorter {
+        ByNickname() {
+            super(byNicknameTag);
+            myLocalColumnName = new String("Nickname");
+            this.setEnabled(true);
+        }
     }
-  }
 
   /**
    * Create a Toolbar
@@ -733,7 +795,7 @@ public class AddressBook extends GeneralFrame {
         String nickName = "";
         
         // enumerate thru the card attributes.
-        for (Enumeration attEnum = attrSet.getEnumeration(); 
+        for (Enumeration attEnum = attrSet.getEnumeration();
              attEnum.hasMoreElements(); ) {
           IAttribute attr = (IAttribute) attEnum.nextElement();
           String attrName = attr.getName();
@@ -822,20 +884,20 @@ public class AddressBook extends GeneralFrame {
       return (((Vector)mVecVec.elementAt(row)).elementAt(column));
     }
 
-    public void sortData(int column) {
+    public void sortData(int column, final boolean sortascending) {
       Object[][] ColumnValues = new String [mVecVec.size()][2];
       int row;
       int col;
 
       for(row = 0 ; row < mVecVec.size() ; ++row) {
-        ColumnValues[row][0] = 
+        ColumnValues[row][0] =
           (((Vector)mVecVec.elementAt(row)).elementAt(column));
         ColumnValues[row][1] = new Integer(row).toString();
       }
 
       System.out.println("Values before sorting");
       for(row = 0; row < ColumnValues.length ; ++row) {
-        System.out.println(ColumnValues[row][0] + " row: " 
+        System.out.println(ColumnValues[row][0] + " row: "
                            + ColumnValues[row][1]);
       }
 
@@ -848,6 +910,8 @@ public class AddressBook extends GeneralFrame {
           catch (NullPointerException e) {
             returnValue = 1;
           }
+          if (!sortascending)
+            returnValue = -1 * returnValue;
           return returnValue;
         }
       });
@@ -855,7 +919,7 @@ public class AddressBook extends GeneralFrame {
 
       System.out.println("Values after sorting");
       for(row = 0; row < ColumnValues.length ; ++row) {
-        System.out.println(ColumnValues[row][0] + " row: " 
+        System.out.println(ColumnValues[row][0] + " row: "
                            + ColumnValues[row][1]);
       }
 
@@ -864,7 +928,7 @@ public class AddressBook extends GeneralFrame {
       for(row = 0; row < ColumnValues.length ; ++row) {
         Vector thisRow = new Vector(6);
         Integer OriginalPosition = new Integer((String)ColumnValues[row][1]);
-        for(col = 0; col < ((Vector)mVecVec.elementAt(row)).size(); 
+        for(col = 0; col < ((Vector)mVecVec.elementAt(row)).size();
             ++col) {
           thisRow.addElement(((Vector)mVecVec.elementAt(OriginalPosition.intValue())).elementAt(col));
         }
@@ -872,8 +936,8 @@ public class AddressBook extends GeneralFrame {
       }
 
       mVecVec = SortedVector;
-            
-      System.out.println("Hello");
+
+      fireTableDataChanged();
     }
   }
 
