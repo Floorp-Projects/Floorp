@@ -54,8 +54,9 @@
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
+	<commandset id="clipboardEditMenuItems"/>
 
-    <commandset id="composerMenuItems"/>
+    <commandset id="commonEditorMenuItems"/>
     <commandset id="composerEditMenuItems"/>
     <commandset id="composerSaveMenuItems"/>    
   </commands>
@@ -111,7 +112,7 @@
       <button id="newButton"/>
       <button id="openButton"/>
       <button id="saveButton"/>
-      <toolbarseparator/>
+      <spring class="separator_small"/>
       <button id="printButton"/>
       <button id="findButton"/>
       <button id="spellingButton"/>

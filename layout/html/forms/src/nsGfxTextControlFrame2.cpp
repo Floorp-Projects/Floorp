@@ -93,6 +93,8 @@
 #include "nsIDOMWindow.h" //needed for notify selection changed to update the menus ect.
 #include "nsITextContent.h" //needed to create initial text control content
 
+#include "nsITransactionManager.h"
+#include "nsITransactionListener.h"
 
 #define DEFAULT_COLUMN_WIDTH 20
 
@@ -122,7 +124,12 @@ static nsresult GetElementFactoryService(nsIElementFactory **aFactory)
 
 //listen for the return key. kinda lame.
 //listen for onchange notifications
-class nsTextInputListener : public nsIDOMKeyListener, public nsSupportsWeakReference, public nsIDOMSelectionListener, public nsIDocumentObserver, public nsIDOMFocusListener
+class nsTextInputListener : public nsIDOMKeyListener,
+                            public nsIDOMSelectionListener,
+                            public nsIDOMFocusListener,
+                            public nsIDocumentObserver,
+                            public nsITransactionListener,
+                            public nsSupportsWeakReference
 {
 public:
   /** the default constructor
@@ -216,6 +223,30 @@ public:
   /* END interfaces from nsIDOMFocusListener*/
 
 
+  /** nsITransactionListener interfaces
+    */
+  
+  NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidDo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aDoResult);
+  NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aUndoResult);
+  NS_IMETHOD WillRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aRedoResult);
+  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
+  NS_IMETHOD DidBeginBatch(nsITransactionManager *aManager, nsresult aResult);
+  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
+  NS_IMETHOD DidEndBatch(nsITransactionManager *aManager, nsresult aResult);
+  NS_IMETHOD WillMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
+                       nsITransaction *aTransactionToMerge, PRBool *aInterrupt);
+  NS_IMETHOD DidMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
+                      nsITransaction *aTransactionToMerge,
+                      PRBool aDidMerge, nsresult aMergeResult);
+
+
+protected:
+
+  nsresult  UpdateTextInputCommands(const nsString& commandsToUpdate);
+
 protected:
 
   nsGfxTextControlFrame2* mFrame;  // weak reference
@@ -223,6 +254,9 @@ protected:
   
   PRPackedBool    mSelectionWasCollapsed;
   PRPackedBool    mKnowSelectionCollapsed;
+
+  PRPackedBool    mFirstDoOfFirstUndo;
+  
 };
 
 
@@ -250,7 +284,13 @@ nsTextInputListener::~nsTextInputListener()
 }
 
 
-NS_IMPL_QUERY_INTERFACE5(nsTextInputListener, nsIDOMKeyListener, nsISupportsWeakReference, nsIDOMSelectionListener, nsIDocumentObserver, nsIDOMFocusListener)
+NS_IMPL_QUERY_INTERFACE6(nsTextInputListener,
+                          nsIDOMKeyListener,
+                          nsIDOMSelectionListener,
+                          nsIDOMFocusListener,
+                          nsIDocumentObserver,
+                          nsITransactionListener,
+                          nsISupportsWeakReference)
 
 
 nsresult
@@ -326,28 +366,9 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelectio
   mSelectionWasCollapsed = collapsed;
   mKnowSelectionCollapsed = PR_TRUE;
 
-  nsCOMPtr<nsIContent> content;
-  nsresult rv = mFrame->GetContent(getter_AddRefs(content));
-  if (NS_FAILED(rv) || !content ) 
-    return rv?rv:NS_ERROR_FAILURE;
-  
-  nsCOMPtr<nsIDocument> doc;
-  rv = content->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv) || !doc ) 
-    return rv?rv:NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-  if (NS_FAILED(rv) || !scriptGlobalObject ) 
-    return rv?rv:NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject, &rv);
-  if (NS_FAILED(rv) || !domWindow ) 
-    return rv?rv:NS_ERROR_FAILURE;
-
-  return domWindow->UpdateCommands(NS_ConvertASCIItoUCS2("select"));
-
+  return UpdateTextInputCommands(NS_ConvertASCIItoUCS2("select"));
 }
+
 //DOCUMENT INTERFACE
 
 NS_IMETHODIMP nsTextInputListener::ContentChanged(nsIDocument *aDocument,
@@ -422,6 +443,7 @@ nsresult
 nsTextInputListener::Focus(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIContent> content;
+
   if (NS_SUCCEEDED(mFrame->GetContent(getter_AddRefs(content))) && content)
   {
     nsCOMPtr<nsIDocument> doc;
@@ -430,7 +452,11 @@ nsTextInputListener::Focus(nsIDOMEvent* aEvent)
       doc->AddObserver(this);
     }
   }
-  return mFrame->GetText(&mFocusedValue, PR_FALSE);
+  
+  nsresult rv = mFrame->GetText(&mFocusedValue, PR_FALSE);
+  if (NS_FAILED(rv)) return rv;
+  
+  return NS_OK;
 }
 
 nsresult
@@ -438,12 +464,14 @@ nsTextInputListener::Blur (nsIDOMEvent* aEvent)
 {
   if (!mFrame)
     return NS_OK;
+    
   nsAutoString blurValue;
   mFrame->GetText(&blurValue,PR_FALSE);
   if (mFocusedValue.Compare(blurValue))//different fire onchange
   {
-    return mFrame->CallOnChange();
+    mFrame->CallOnChange();
   }
+
   nsCOMPtr<nsIContent> content;
   if (NS_SUCCEEDED(mFrame->GetContent(getter_AddRefs(content))) && content)
   {
@@ -460,8 +488,134 @@ nsTextInputListener::Blur (nsIDOMEvent* aEvent)
 
 //END focuslistener
 
+NS_IMETHODIMP nsTextInputListener::WillDo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::DidDo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, nsresult aDoResult)
+{
+  // we only need to update if the undo count is now 1
+  PRInt32 undoCount;
+  aManager->GetNumberOfUndoItems(&undoCount);
+  if (undoCount == 1)
+  {
+    if (mFirstDoOfFirstUndo)
+      UpdateTextInputCommands(NS_ConvertASCIItoUCS2("undo"));
+
+    mFirstDoOfFirstUndo = PR_FALSE;
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::WillUndo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::DidUndo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, nsresult aUndoResult)
+{
+  PRInt32 undoCount;
+  aManager->GetNumberOfUndoItems(&undoCount);
+  if (undoCount == 0)
+    mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
+
+  UpdateTextInputCommands(NS_ConvertASCIItoUCS2("undo"));
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::WillRedo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::DidRedo(nsITransactionManager *aManager,  
+  nsITransaction *aTransaction, nsresult aRedoResult)
+{
+  UpdateTextInputCommands(NS_ConvertASCIItoUCS2("undo"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::DidBeginBatch(nsITransactionManager *aManager, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::DidEndBatch(nsITransactionManager *aManager, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::WillMerge(nsITransactionManager *aManager,
+        nsITransaction *aTopTransaction, nsITransaction *aTransactionToMerge, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTextInputListener::DidMerge(nsITransactionManager *aManager,
+      nsITransaction *aTopTransaction, nsITransaction *aTransactionToMerge,
+      PRBool aDidMerge, nsresult aMergeResult)
+{
+  return NS_OK;
+}
+
+
+
+nsresult nsTextInputListener::UpdateTextInputCommands(const nsString& commandsToUpdate)
+{
+  if (!mFrame) return NS_ERROR_NOT_INITIALIZED;
+  
+  nsCOMPtr<nsIContent> content;
+  nsresult rv = mFrame->GetContent(getter_AddRefs(content));
+  if (NS_FAILED(rv) || !content ) 
+    return rv?rv:NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDocument> doc;
+  rv = content->GetDocument(*getter_AddRefs(doc));
+  if (NS_FAILED(rv) || !doc ) 
+    return rv?rv:NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+  rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  if (NS_FAILED(rv) || !scriptGlobalObject ) 
+    return rv?rv:NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject, &rv);
+  if (NS_FAILED(rv) || !domWindow ) 
+    return rv?rv:NS_ERROR_FAILURE;
+
+  return domWindow->UpdateCommands(commandsToUpdate);
+}
+
+
 //END NSTEXTINPUTLISTENER
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
   
 class nsTextInputSelectionImpl : public nsSupportsWeakReference, public nsISelectionController, public nsIFrameSelection
 {
@@ -1014,7 +1168,7 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
     if (NS_FAILED(rv) || !shell)
       return rv?rv:NS_ERROR_FAILURE;
 
-  //get the document
+    // get the document
     nsCOMPtr<nsIDocument> doc;
     rv = shell->GetDocument(getter_AddRefs(doc));
     if (NS_FAILED(rv) || !doc)
@@ -1618,11 +1772,22 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
         domSelection->AddSelectionListener(listener);
       }
     }
-    listener = do_QueryInterface(NS_REINTERPRET_CAST(nsISupports *,mTextListener));//ambiguous
-    if (listener)
-      domSelection->AddSelectionListener(listener);
-  }
 
+    domSelection->AddSelectionListener(NS_STATIC_CAST(nsIDOMSelectionListener *, mTextListener));
+  }
+  
+  // also set up the text listener as a transaction listener on the editor
+  if (mEditor && mTextListener)
+  {
+    nsCOMPtr<nsITransactionManager> txMgr;
+    rv = mEditor->GetTransactionManager(getter_AddRefs(txMgr));
+    if (NS_FAILED(rv)) return rv;
+    if (!txMgr) return NS_ERROR_NULL_POINTER;
+
+    rv = txMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mTextListener));
+    if (NS_FAILED(rv)) rv;
+  }  
+  
   // Get the default value for the textfield.
 
   nsAutoString defaultValue;
@@ -1670,7 +1835,6 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     if (NS_FAILED(rv))
       return rv;
   }
-
 
   if (mContent)
   {
