@@ -197,11 +197,12 @@ public:
   //nsIFocusTracker interface
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame);
   // caret handling
-  NS_IMETHOD GetCaret(nsICaret **outCaret);
-  NS_IMETHOD SetCaretEnabled(PRBool inEnable);
+  NS_IMETHOD GetCaret(nsICaret **aOutCaret);
+  NS_IMETHOD SetCaretEnabled(PRBool aaInEnable);
+  NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
 
-  NS_IMETHOD SetDisplayNonTextSelection(PRBool inEnable);
-  NS_IMETHOD GetDisplayNonTextSelection(PRBool *inEnable);
+  NS_IMETHOD SetDisplayNonTextSelection(PRBool aaInEnable);
+  NS_IMETHOD GetDisplayNonTextSelection(PRBool *aOutEnable);
 
   // nsIDOMSelectionListener interface
   NS_IMETHOD NotifySelectionChanged();
@@ -975,12 +976,12 @@ nsresult PresShell::RefreshCaret(nsIView *aView, nsIRenderingContext& aRendConte
   return NS_OK;
 }
 
-NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool inEnable)
+NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 {
 	nsresult	result = NS_OK;
 	PRBool	oldEnabled = mCaretEnabled;
 	
-	mCaretEnabled = inEnable;
+	mCaretEnabled = aInEnable;
 	
 	if (mCaret && (mCaretEnabled != oldEnabled))
 	{
@@ -993,17 +994,24 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool inEnable)
 	return result;
 }
 
-NS_IMETHODIMP PresShell::SetDisplayNonTextSelection(PRBool inEnable)
+NS_IMETHODIMP PresShell::GetCaretEnabled(PRBool *aOutEnabled)
+{
+  if (!aOutEnabled) { return NS_ERROR_INVALID_ARG; }
+  *aOutEnabled = mCaretEnabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP PresShell::SetDisplayNonTextSelection(PRBool aInEnable)
 {
   mDisplayNonTextSelection = PR_TRUE;
   return NS_OK;
 }
 
-NS_IMETHODIMP PresShell::GetDisplayNonTextSelection(PRBool *inEnable)
+NS_IMETHODIMP PresShell::GetDisplayNonTextSelection(PRBool *aOutEnable)
 {
-  if (!inEnable)
-    return NS_ERROR_NULL_POINTER;
-  *inEnable = mDisplayNonTextSelection;
+  if (!aOutEnable)
+    return NS_ERROR_INVALID_ARG;
+  *aOutEnable = mDisplayNonTextSelection;
   return NS_OK;
 }
 
