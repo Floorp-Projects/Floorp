@@ -124,7 +124,8 @@ ifdef ENABLE_TESTS
 DIRS		+= xpcom/tests
 endif
 
-DIST_GARBAGE	:= dist config.cache config.log config.status config-defs.h \
+GARBAGE += dist
+DIST_GARBAGE	:= config.cache config.log config.status config-defs.h \
 		dependencies.beos config/autoconf.mk \
 		$(shell cd $(topsrcdir); . ./allmakefiles.sh; \
 			echo $${MAKEFILES})

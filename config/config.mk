@@ -168,7 +168,7 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 # Relative pathname from top-of-tree to current source directory
 #
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-REVDEPTH	:= $(CONFIG_TOOLS)/revdepth
+REVDEPTH	= $(CONFIG_TOOLS)/revdepth
 endif
 
 #
@@ -399,7 +399,7 @@ endif
 
 ######################################################################
 
-GARBAGE		= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
+GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
 ifneq ($(OS_ARCH),WINNT)
 NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
