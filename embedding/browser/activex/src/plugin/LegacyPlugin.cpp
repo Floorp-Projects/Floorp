@@ -166,7 +166,7 @@ NPError NewControl(const char *pluginType,
 {
     // Read the parameters
     CLSID clsid = CLSID_NULL;
-    nsCAutoString codebase;
+    CComBSTR codebase;
     PropertyList pl;
 
     if (strcmp(pluginType, MIME_OLEOBJECT1) != 0 &&
@@ -211,17 +211,14 @@ NPError NewControl(const char *pluginType,
         }
         else if (stricmp(argn[i], "CODEBASE") == 0)
         {
-            codebase.Assign(argv[i]);
+            codebase = argv[i];
         }
         else 
         {
-            USES_CONVERSION;
-
-            nsAutoString paramName;
-
+            CComBSTR paramName;
             if (strnicmp(argn[i], "PARAM_", 6) == 0)
             {
-                paramName.AssignWithConversion(argn[i]+6);
+                paramName = argn[i] + 6;
             }
             else if (stricmp(argn[i], "PARAM") == 0)
             {
@@ -231,11 +228,11 @@ NPError NewControl(const char *pluginType,
             }
             else
             {
-                paramName.AssignWithConversion(argn[i]);
+                paramName = argn[i];
             }
 
             // Empty parameters are ignored
-            if (paramName.IsEmpty())
+            if (!paramName.m_str || paramName.Length() == 0)
             {
                 continue;
             }
@@ -244,9 +241,9 @@ NPError NewControl(const char *pluginType,
 
             // Check for existing params with the same name
             BOOL bFound = FALSE;
-            for (PropertyList::const_iterator i = pl.begin(); i != pl.end(); i++)
+            for (PropertyList::const_iterator it = pl.begin(); it != pl.end(); it++)
             {
-                if (wcscmp((BSTR) (*i).szName, paramName.get()) == 0)
+                if (wcscmp((BSTR) (*it).szName, (BSTR) paramName) == 0)
                 {
                     bFound = TRUE;
                     break;
@@ -282,7 +279,7 @@ NPError NewControl(const char *pluginType,
 
             // Add named parameter to list
             Property p;
-            p.szName = paramName.get();
+            p.szName = paramName;
             p.vValue = vValue;
             pl.push_back(p);
         }
@@ -384,6 +381,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
 #endif
 
     // Create a plugin according to the mime type
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+    xpc_AddRef();
+#endif
 
     NPError rv = NPERR_GENERIC_ERROR;
     if (strcmp(pluginType, MIME_ACTIVESCRIPT) == 0)
@@ -404,6 +404,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
         if (pData->szUrl)
             free(pData->szUrl);
         delete pData;
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+        xpc_Release();
+#endif
         return rv;
     }
 
@@ -459,6 +462,9 @@ NPP_Destroy(NPP instance, NPSavedData** save)
     if (pData->szContentType)
         free(pData->szContentType);
     delete pData;
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+    xpc_Release();
+#endif
 
     instance->pdata = 0;
 
