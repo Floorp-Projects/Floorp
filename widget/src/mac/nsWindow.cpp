@@ -1446,25 +1446,93 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 }
 
 #pragma mark -
+
+
 //-------------------------------------------------------------------------
-//
-// 
-//
+// WidgetToScreen
+//		Walk up the parent tree, converting the given rect to global coordinates.
+//      This is similiar to CalcOffset() but we can't use GetBounds() because it
+//      only knows how to give us local coordinates.
+//		@param aLocalRect  -- rect in local coordinates of this widget
+//		@param aGlobalRect -- |aLocalRect| in global coordinates
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
-{
-	NS_NOTYETIMPLEMENTED("nsWindow::WidgetToScreen");
+NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlobalRect)
+{	
+	aGlobalRect = aLocalRect;
+	nsIWidget* theParent = this->GetParent();
+	if ( theParent ) {
+		// Recursive case
+		//
+		// Convert the local rect to global, except for this level.
+		theParent->WidgetToScreen(aLocalRect, aGlobalRect);
+	  
+		// the offset from our parent is in the x/y of our bounding rect
+		nsRect myBounds;
+		GetBounds(myBounds);
+		aGlobalRect.MoveBy(myBounds.x, myBounds.y);
+	}
+	else {
+		// Base case of recursion
+		//
+		// When there is no parent, we're at the top level window. Use
+		// the origin (shifted into global coordinates) to find the offset.
+		GrafPtr oldPort;
+		::GetPort ( &oldPort );
+		::SetPort ( mWindowPtr );
+		::SetOrigin(0,0);
+		
+		// convert origin into global coords and shift output rect by that ammount
+		Point origin = {0, 0};
+		::LocalToGlobal ( &origin );
+		aGlobalRect.MoveBy ( origin.h, origin.v );
+
+		::SetPort ( oldPort );			
+	}
+	
 	return NS_OK;
 }
 
+
+
 //-------------------------------------------------------------------------
-//
-// 
-//
+// ScreenToWidget
+//		Walk up the parent tree, converting the given rect to local coordinates.
+//		@param aGlobalRect  -- rect in screen coordinates 
+//		@param aLocalRect -- |aGlobalRect| in coordinates of this widget
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aGlobalRect, nsRect& aLocalRect)
 {
-	NS_NOTYETIMPLEMENTED("nsWindow::ScreenToWidget");
+	aLocalRect = aGlobalRect;
+	nsIWidget* theParent = this->GetParent();
+	if ( theParent ) {
+		// Recursive case
+		//
+		// Convert the local rect to global, except for this level.
+		theParent->WidgetToScreen(aGlobalRect, aLocalRect);
+	  
+		// the offset from our parent is in the x/y of our bounding rect
+		nsRect myBounds;
+		GetBounds(myBounds);
+		aLocalRect.MoveBy(myBounds.x, myBounds.y);
+	}
+	else {
+		// Base case of recursion
+		//
+		// When there is no parent, we're at the top level window. Use
+		// the origin (shifted into local coordinates) to find the offset.
+		GrafPtr oldPort;
+		::GetPort ( &oldPort );
+		::SetPort ( mWindowPtr );
+		::SetOrigin(0,0);
+		
+		// convert origin into local coords and shift output rect by that ammount
+		Point origin = {0, 0};
+		::GlobalToLocal ( &origin );
+		aLocalRect.MoveBy ( origin.h, origin.v );
+
+		::SetPort ( oldPort );			
+	}
+	
 	return NS_OK;
 } 
 
