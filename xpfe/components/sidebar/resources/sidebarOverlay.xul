@@ -6,10 +6,6 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript"
-  src="chrome://sidebar/content/sidebarOverlay.js"/>
-<html:script language="JavaScript" src="chrome://sidebar/content/flash.js"/>
-
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" align="vertical" persist="hidden width">
     <splitter id="title-box" collapse="after"
@@ -81,5 +77,10 @@
   <!-- Some splitter attritutes -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden" 
     chromeclass="extrachrome" onclick="sidebarSaveState(this)"/>
+
+  <!-- Scripts go last, because they peek at state to tweak menus -->
+  <html:script language="JavaScript"
+               src="chrome://sidebar/content/sidebarOverlay.js"/>
+  <html:script language="JavaScript" src="chrome://sidebar/content/flash.js"/>
   
 </overlay>

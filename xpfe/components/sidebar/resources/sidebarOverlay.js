@@ -76,10 +76,13 @@ function sidebarOverlayInit(usersidebar)
   }
 
   var sidebar_element = document.getElementById('sidebar-box')
+  var sidebar_menuitem = document.getElementById('menu_sidebar')
   if (sidebar_element.getAttribute('hidden') == 'true') {
     sidebar_element.setAttribute('style', 'display:none')
+    sidebar_menuitem.setAttribute('checked', 'false')
     return
   }
+  sidebar_menuitem.setAttribute('checked', 'true')
 
   //dump("sidebar = " + sidebar + "\n")
   //dump("sidebar.resource = " + sidebar.resource + "\n")
