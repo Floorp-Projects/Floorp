@@ -246,12 +246,18 @@ Feed.prototype.parseAsRSS2 = function() {
   this.itemsToStore = new Array();
   this.itemsToStoreIndex = 0; 
 
+  var converter = Components
+    .classes["@mozilla.org/intl/scriptableunicodeconverter"]
+      .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+
+  converter.charset = 'UTF-8';
+
   for ( var i=0 ; i<itemNodes.length ; i++ ) {
     var itemNode = itemNodes[i];
     var item = new FeedItem();
     item.feed = this;
 
-    item.characterSet = this.request.responseXML.characterSet ? this.request.responseXML.characterSet : "UTF-8";
+    item.characterSet = "UTF-8";
 
     var link = getNodeValue(itemNode.getElementsByTagName("link")[0]);
 
@@ -262,12 +268,20 @@ Feed.prototype.parseAsRSS2 = function() {
         guidNode.getAttribute('isPermaLink') == 'false' ? false : true;
     }
 
+    // getNodeValue returns unicode strings...
+    // we need to do the proper conversion on these before we call into
+    // item.Store();
+
     item.url = link ? link : (guid && isPermaLink) ? guid : null;
     item.id = guid;
     item.description = getNodeValue(itemNode.getElementsByTagName("description")[0]);
-    item.title = getNodeValue(itemNode.getElementsByTagName("title")[0])
+    item.title = converter.ConvertFromUnicode(getNodeValue(itemNode.getElementsByTagName("title")[0])
                  || (item.description ? item.description.substr(0, 150) : null)
-                 || item.title;
+                 || item.title);
+    // do this after we potentially assign item.description into item.title
+    // because that potential assignment assumes the value is in unicode still
+    item.description = converter.ConvertFromUnicode(item.description);
+
     item.author = getNodeValue(itemNode.getElementsByTagName("author")[0]
                                || itemNode.getElementsByTagName("creator")[0])
                   || this.title
@@ -282,7 +296,7 @@ Feed.prototype.parseAsRSS2 = function() {
 
     var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
     if (content)
-      item.content = content;
+      item.content = converter.ConvertFromUnicode(content);
 
     this.itemsToStore[i] = item;
   }
@@ -297,10 +311,12 @@ Feed.prototype.parseAsRSS1 = function() {
   var ds = Components
              .classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
                .createInstance(Components.interfaces.nsIRDFDataSource);
+
   rdfparser.parseString(ds, this.request.channel.URI, this.request.responseText);
 
   // Get information about the feed as a whole.
   var channel = ds.GetSource(RDF_TYPE, RSS_CHANNEL, true);
+
   this.title = this.title || getRDFTargetValue(ds, channel, RSS_TITLE);
   this.description = getRDFTargetValue(ds, channel, RSS_DESCRIPTION);
 
@@ -322,12 +338,18 @@ Feed.prototype.parseAsRSS1 = function() {
   this.itemsToStoreIndex = 0; 
   var index = 0; 
 
+  var converter = Components
+    .classes["@mozilla.org/intl/scriptableunicodeconverter"]
+      .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+
+  converter.charset = "UTF-8";
+
   while (items.hasMoreElements()) {
     var itemResource = items.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
     var item = new FeedItem();
     item.feed = this;
 
-    item.characterSet = this.request.responseXML.characterSet ? this.request.responseXML.characterSet : "UTF-8";
+    item.characterSet = "UTF-8";
 
     // Prefer the value of the link tag to the item URI since the URI could be
     // a relative URN.
@@ -382,7 +404,7 @@ Feed.prototype.parseAsAtom = function() {
     var item = new FeedItem();
     item.feed = this;
 
-    item.characterSet = this.request.responseXML.characterSet ? this.request.responseXML.characterSet : "UTF-8";
+    item.characterSet = "UTF-8";
 
     var url;
     var links = itemNode.getElementsByTagName("link");

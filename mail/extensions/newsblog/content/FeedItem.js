@@ -109,10 +109,26 @@ const LOCAL_CONTENT_TEMPLATE = "\n\
 const LOCAL_STYLE = "\n";
 
 FeedItem.prototype.store = function() {
+    FeedItem.unicodeConverter.charset = this.characterSet;
+
+    try {
+      if (this.title)
+        this.title = FeedItem.unicodeConverter.ConvertToUnicode(this.title);
+    } catch (ex) {}
+
+    try {
+      if (this.description)
+        this.description =  FeedItem.unicodeConverter.ConvertToUnicode(this.description);
+    } catch (ex) {}
+
     if (this.isStored()) {
       debug(this.identity + " already stored; ignoring");
     }
     else if (this.content) {
+     try {
+        this.content = FeedItem.unicodeConverter.ConvertToUnicode(this.content);
+      } catch (ex) {}
+
       debug(this.identity + " has content; storing");
       var content = MESSAGE_TEMPLATE;
       content = content.replace(/%CONTENT_TEMPLATE%/, LOCAL_CONTENT_TEMPLATE);
@@ -125,7 +141,9 @@ FeedItem.prototype.store = function() {
     }
     else if (this.feed.quickMode) {
       debug(this.identity + " in quick mode; storing");
+
       this.content = this.description || this.title;
+
       var content = MESSAGE_TEMPLATE;
       content = content.replace(/%CONTENT_TEMPLATE%/, LOCAL_CONTENT_TEMPLATE);
       content = content.replace(/%STYLE%/, LOCAL_STYLE);
@@ -145,7 +163,6 @@ FeedItem.prototype.store = function() {
       content = content.replace(/%DESCRIPTION%/, this.description || this.title);
       this.content = content; // XXX store it elsewhere, f.e. this.page
       this.writeToFolder();
-      //this.download();
     }
 }
 
