@@ -40,5 +40,9 @@ XPIDLSRCS	= \
 		nsIPrintSettings.idl \
 		$(NULL)
 
+ifeq ($(MOZ_GFX_TOOLKIT),windows)
+XPIDLSRCS += nsIPrintSettingsWin.idl
+endif
+
 include $(topsrcdir)/config/rules.mk
 
