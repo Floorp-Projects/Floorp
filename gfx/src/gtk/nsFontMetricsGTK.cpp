@@ -579,6 +579,7 @@ atomToName(nsIAtom* aAtom)
 }
 
 static PRUint32 gUserDefinedMap[2048];
+static PRUint32 gEmptyMap[2048];
 static PRUint32 gDoubleByteSpecialCharsMap[2048];
 
 //
@@ -785,6 +786,10 @@ InitGlobals(void)
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
+
+  // clear the "empty" char map
+  for (PRUint32 i=0; i<(sizeof(gEmptyMap)/sizeof(gEmptyMap[0])); i++)
+    gEmptyMap[i] = 0;
 
   // get the "disable double byte font special chars" setting
   PRBool val = PR_TRUE;
@@ -2287,6 +2292,7 @@ nsFontGTKUserDefined::Init(nsFontGTK* aFont)
   if (!aFont->GetGDKFont()) {
     aFont->LoadFont();
     if (!aFont->GetGDKFont()) {
+      mMap = gEmptyMap;
       return PR_FALSE;
     }
   }
