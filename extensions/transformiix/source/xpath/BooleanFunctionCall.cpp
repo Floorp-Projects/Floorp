@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: BooleanFunctionCall.cpp,v 1.2 2000/04/14 02:04:43 Peter.VanderBeken%pandora.be Exp $
+ * $Id: BooleanFunctionCall.cpp,v 1.3 2000/04/14 04:24:28 kvisco%ziplink.net Exp $
  */
 
 #include "FunctionLib.h"
@@ -29,10 +29,10 @@
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2000/04/14 02:04:43 $
+ * @version $Revision: 1.3 $ $Date: 2000/04/14 04:24:28 $
 **/
 BooleanFunctionCall::BooleanFunctionCall() : FunctionCall(XPathNames::FALSE_FN) {
-    this->type = FALSE;
+    this->type = TX_FALSE;
 } //-- BooleanFunctionCall
 
 /**
