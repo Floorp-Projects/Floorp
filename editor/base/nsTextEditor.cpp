@@ -1081,11 +1081,18 @@ NS_IMETHODIMP nsTextEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) c
     {
       nsIAtom *tagAtom = NS_NewAtom(tag);
       if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
-      if (tagAtom==nsIEditProperty::a    ||
-          tagAtom==nsIEditProperty::b    ||
-          tagAtom==nsIEditProperty::font ||
-          tagAtom==nsIEditProperty::i    ||
-          tagAtom==nsIEditProperty::span)
+      if (tagAtom==nsIEditProperty::a      ||
+          tagAtom==nsIEditProperty::b      ||
+          tagAtom==nsIEditProperty::big    ||
+          tagAtom==nsIEditProperty::font   ||
+          tagAtom==nsIEditProperty::i      ||
+          tagAtom==nsIEditProperty::span   ||
+          tagAtom==nsIEditProperty::small  ||
+          tagAtom==nsIEditProperty::strike ||
+          tagAtom==nsIEditProperty::sub    ||
+          tagAtom==nsIEditProperty::sup    ||
+          tagAtom==nsIEditProperty::tt     ||
+          tagAtom==nsIEditProperty::u        )
       {
         aIsInline = PR_TRUE;
       }
@@ -1777,6 +1784,21 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPro
       PRBool first = PR_FALSE;
       GetTextProperty(aPropName, first, any, all); // operates on current selection
       aTypeInState.SetItalic(!any);
+    }    
+  }
+  else if (nsIEditProperty::u==aPropName) 
+  {
+    if (PR_TRUE==aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
+    { // toggle currently set italicness
+      aTypeInState.UnSet(NS_TYPEINSTATE_UNDERLINE);
+    }
+    else
+    { // get the current style and set boldness to the opposite of the current state
+      PRBool any = PR_FALSE;
+      PRBool all = PR_FALSE;
+      PRBool first = PR_FALSE;
+      GetTextProperty(aPropName, first, any, all); // operates on current selection
+      aTypeInState.SetUnderline(!any);
     }    
   }
   else {
