@@ -917,7 +917,7 @@ Contributor(s):
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="security-button" class="statusbarpanel-iconic"
                   onclick="displayPageInfo()"/>    
-    <statusbarpanel id="statusbar-display" label="&statusText.label;" flex="1"/>
+    <statusbarpanel id="statusbar-display" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
