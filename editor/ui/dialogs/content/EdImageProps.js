@@ -100,6 +100,9 @@ function Startup()
       window.close();
     }  
   }
+
+  // Make a copy to use for AdvancedEdit
+  globalElement = imageElement.cloneNode(false);
   
   // Initialize all widgets with image attributes
   InitDialog();
@@ -107,11 +110,14 @@ function Startup()
   dialog.srcInput.focus();
 }
 
+// Set dialog widgets with attribute data
+// We get them from globalElement copy so this can be used
+//   by AdvancedEdit(), which is shared by all property dialogs
 function InitDialog() {
 
   // Set the controls to the image's attributes
 
-  str                                   = imageElement.getAttribute("src");
+  str                                   = globalElement.getAttribute("src");
   if ( str == "null" )
   {
     str                                 = "";
@@ -119,7 +125,7 @@ function InitDialog() {
 
   dialog.srcInput.value                 = str;
   
-  str                                   = imageElement.getAttribute("alt");
+  str                                   = globalElement.getAttribute("alt");
 
   if ( str == "null" )
   {
@@ -134,7 +140,7 @@ function InitDialog() {
   // set height and width
   // note: need to set actual image size if no attributes
 
-  dimvalue = imageElement.getAttribute("width");
+  dimvalue = globalElement.getAttribute("width");
 
   if ( dimvalue == "null" )
   {
@@ -142,7 +148,7 @@ function InitDialog() {
   }
   dialog.imagewidthInput.value          = dimvalue;
   
-  dimvalue                              = imageElement.getAttribute("height");
+  dimvalue                              = globalElement.getAttribute("height");
   if ( dimvalue == "null" )
   {
     dimvalue                            = "";
@@ -154,8 +160,8 @@ function InitDialog() {
   if (insertNew == false)
   {
     
-    var wdh                             = imageElement.getAttribute("width");
-    var hgt                             = imageElement.getAttribute("height");
+    var wdh                             = globalElement.getAttribute("width");
+    var hgt                             = globalElement.getAttribute("height");
     ispercentw                          = wdh.substr(wdh.length-1, 1);
     ispercenth                          = hgt.substr(hgt.length-1, 1);
 
@@ -181,7 +187,7 @@ function InitDialog() {
 
   if ( alignpopup )
   {
-    alignvalue                          = imageElement.getAttribute("align");
+    alignvalue                          = globalElement.getAttribute("align");
 
     if ( alignvalue == "" )
     {
@@ -198,13 +204,13 @@ function InitDialog() {
 
   // set spacing editfields
 
-  sizevalue                             = imageElement.getAttribute("hspace");
+  sizevalue                             = globalElement.getAttribute("hspace");
   dialog.imagelrInput.value             = sizevalue;
   
-  sizevalue                             = imageElement.getAttribute("vspace");
+  sizevalue                             = globalElement.getAttribute("vspace");
   dialog.imagetbInput.value             = sizevalue;
   
-  sizevalue                             = imageElement.getAttribute("border");
+  sizevalue                             = globalElement.getAttribute("border");
   dialog.imageborderInput.value         = sizevalue;    
 
   // force wasEnableAll to be different so everything gets updated
@@ -493,28 +499,25 @@ function constrainProportions( srcID, destID )
   oldSourceInt                          = srcElement.value;
 }
 
-function onAdvancedEdit()
+// Get data from widgets, validate, and set for the global element
+//   accessible to AdvancedEdit() [in EdDialogCommon.js]
+function ValidateData()
 {
-  dump("\n\n Need to write onAdvancedEdit for Image dialog\n\n");
-}
-
-function onOK()
-{
-  if ( !imageType )   {
-  dump("alert *** please choose an image of typ gif, jpg or png.\n\n");
-  return false;
+  if ( !imageType ) {
+    ShowInputErrorMessage(GetString("MissingImageError"));
+    return false;
   }
 
-  imageElement.setAttribute("src",dialog.srcInput.value);
-
-  // We must convert to "file:///" format else image doesn't load!
+  //TODO: WE NEED TO DO SOME URL VALIDATION HERE, E.G.:
+  // We must convert to "file:///" or "http://" format else image doesn't load!
+  globalElement.setAttribute("src",dialog.srcInput.value);
   
-  // TODO: we should confirm with user if no alt tag
-
-  imageElement.setAttribute("alt", dialog.altTextInput.value);
+  // TODO: Should we confirm with user if no alt tag? Or just set to empty string?
+  globalElement.setAttribute("alt", dialog.altTextInput.value);
   
   // set width if custom size and width is greater than 0
-
+  // Note: This accepts and empty string as meaning "don't set
+  // BUT IT ALSO ACCEPTS 0. Should use ValidateNumberString() to tell user proper range
   if ( dialog.customsizeRadio.checked 
      && ( dialog.imagewidthInput.value.length > 0 )
      && ( dialog.imageheightInput.value.length > 0 ) )
@@ -523,62 +526,73 @@ function onOK()
   }
   else
   {
-    imageElement.removeAttribute( "width" );
-    imageElement.removeAttribute( "height" );
+    //TODO: WE SHOULD ALWAYS SET WIDTH AND HEIGHT FOR FASTER IMAGE LAYOUT
+    //  IF USER DOESN'T SET IT, WE NEED TO GET VALUE FROM ORIGINAL IMAGE 
+    globalElement.removeAttribute( "width" );
+    globalElement.removeAttribute( "height" );
   }
   
   // spacing attributes
-
+  // All of these should use ValidateNumberString() to 
+  //  ensure value is within acceptable range
   if ( dialog.imagelrInput.value.length > 0 )
-    imageElement.setAttribute( "hspace", dialog.imagelrInput.value );
+    globalElement.setAttribute( "hspace", dialog.imagelrInput.value );
   else
-    imageElement.removeAttribute( "hspace" );
+    globalElement.removeAttribute( "hspace" );
   
   if ( dialog.imagetbInput.value.length > 0 )
-    imageElement.setAttribute( "vspace", dialog.imagetbInput.value );
+    globalElement.setAttribute( "vspace", dialog.imagetbInput.value );
   else
-    imageElement.removeAttribute( "vspace" );
+    globalElement.removeAttribute( "vspace" );
   
   // note this is deprecated and should be converted to stylesheets
 
   if ( dialog.imageborderInput.value.length > 0 )
-    imageElement.setAttribute( "border", dialog.imageborderInput.value );
+    globalElement.setAttribute( "border", dialog.imageborderInput.value );
   else
-    imageElement.removeAttribute( "border" );
+    globalElement.removeAttribute( "border" );
+
+// This currently triggers a "Not implemented" assertion, preventing inserting an image
+// TODO: FIX THIS!
 /*
   alignpopup = document.getElementById("image.alignType");
   if ( alignpopup )
   {
     alignpopup.getAttribute( "value", alignvalue );
     dump( "popup value = " + alignvalue + "\n" );
+    // TODO: FIX THIS!
+    // NO! DON'T DEPEND ON ENGLISH STRINGS
     if ( alignvalue == "at the bottom" )
-      imageElement.removeAttribute("align");
+      globalElement.removeAttribute("align");
     else
-      imageElement.setAttribute("align", alignvalue );
+      globalElement.setAttribute("align", alignvalue );
   }
 */
-  // handle insertion of new image
-
-  if (insertNew)
-  {
-    // 'true' means delete the selection before inserting
-
-    editorShell.InsertElement(imageElement, true);
-  }
-
   return true;
+}
+
+function onOK()
+{
+  // handle insertion of new image
+  if (ValidateData())
+  {
+    // All values are valid - copy to actual element in doc or 
+    //   element created to insert
+    editorShell.CloneAttributes(imageElement, globalElement);
+    if (insertNew)
+    {
+      // 'true' means delete the selection before inserting
+      editorShell.InsertElement(imageElement, true);
+    }
+    return true;
+  }
+  return false;
 }
 
 
 // setDimensions()
 // sets height and width attributes to inserted image
 // Brian King - XML Workshop
-// TODO: THIS NEEDS TO BE MODIFIED TO USE LOCALIZED STRING BUNDLE,
-//  e.g., this assumes "% of" 
-//  Use editorShell.GetString("name") to get a string and 
-//  define those strings in editor\ui\dialogs\content\editor.properties
-//  Note that using localized strings will break assumption about location of "% of"
-
 function setDimensions()
 {
 
@@ -586,22 +600,24 @@ function setDimensions()
   var htype                             = dialog.imageheightSelect.getAttribute("value");
 
     // width
+    // NO! this is not the way to do it! Depends on english strings
+    //  Instead, store which index is selected when popup "pixel" or "percent of..." is used
     if (wtype.substr(0,4) == "% of")
     {
       //var Iwidth = eval("dialog.imagewidthInput.value + '%';");
-      imageElement.setAttribute("width",  dialog.imagewidthInput.value + "%");
+      globalElement.setAttribute("width",  dialog.imagewidthInput.value + "%");
     }
     else
-      imageElement.setAttribute("width", dialog.imagewidthInput.value);
+      globalElement.setAttribute("width", dialog.imagewidthInput.value);
 
     //height
     if (htype.substr(0,4) == "% of")
     {
       //var Iheight = eval("dialog.imageheightInput.value + '%';");
-      imageElement.setAttribute("height", dialog.imageheightInput.value + "%");
+      globalElement.setAttribute("height", dialog.imageheightInput.value + "%");
     }
     else
-      imageElement.setAttribute("height", dialog.imageheightInput.value);
+      globalElement.setAttribute("height", dialog.imageheightInput.value);
 
 }
 

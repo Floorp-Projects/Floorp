@@ -43,18 +43,11 @@
   </script>
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <xul:broadcaster id="args" value=""/>
-  <table>
-    <tr>
-      <td>
-        <label class="spacedtext" for="nameInput"> &anchorNameEditField.label; </label><br/>
-        <input type="text" id="nameInput" size="30" maxlength="255" />
-      </td>
-    </tr>
-  </table>
+  <label class="spacedtext" for="nameInput"> &anchorNameEditField.label; </label>
+  <input type="text" id="nameInput" size="30" maxlength="255" />
   <!-- from EdDialogOverlay -->
   <xul:box id="advancedEditButton"/>
   <!-- from global dialogOverlay -->
-	<xul:box id="okCancelButtons"/> 
+  <xul:box id="okCancelButtons"/> 
 
 </xul:window>

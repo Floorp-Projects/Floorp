@@ -631,3 +631,6 @@ spring.bigspacer {
       width:                    10px;
       height:                   10px;
 }
+
+// Override any I-Beam cursors in text
+div, p, br, label, box, td { cursor: default; }

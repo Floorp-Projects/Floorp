@@ -29,6 +29,8 @@ var maxRows = 10000;
 var maxColumns = 10000;
 var percentChar = "";
 var maxPixels = 10000;
+var rows;
+var columns;
 
 // dialog initialization code
 function Startup()
@@ -53,25 +55,34 @@ function Startup()
   dialog.widthInput = document.getElementById("width");
   dialog.borderInput = document.getElementById("border");
 
+  // Make a copy to use for AdvancedEdit
+  globalElement = tableElement.cloneNode(false);
+  
+  // Initialize all widgets with image attributes
+  InitDialog();
+
+  dialog.rowsInput.focus();
+}
+
+// Set dialog widgets with attribute data
+// We get them from globalElement copy so this can be used
+//   by AdvancedEdit(), which is shared by all property dialogs
+function InitData()
+{  
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of button text and "percentChar" variable
-  dialog.widthInput.value = InitPixelOrPercentPopupButton(tableElement, "width", "pixelOrPercentButton");
-  dialog.borderInput.value = tableElement.getAttribute("border");
+  dialog.widthInput.value = InitPixelOrPercentPopupButton(globalElement, "width", "pixelOrPercentButton");
+  dialog.borderInput.value = globalElement.getAttribute("border");
 
   // Set default number to 1 row, 2 columns:
   dialog.rowsInput.value = 1;
   dialog.columnsInput.value = 2;
- 
-  dialog.rowsInput.focus();
 }
 
-function onAdvancedEdit()
-{
-  dump("\n\n Need to write onAdvancedEdit for Insert Table dialog\n\n");
-}
-
-function onOK()
+// Get and validate data from widgets.
+// Set attributes on globalElement so they can be accessed by AdvancedEdit()
+function ValidateData()
 {
   rows = ValidateNumberString(dialog.rowsInput.value, 1, maxRows);
   if (rows == "") {
@@ -86,29 +97,13 @@ function onOK()
     dialog.columnsInput.focus();
     return false;
   }
-  dump("Rows = "+rows+"  Columns = "+columns+"\n");
-  for (i = 0; i < rows; i++)
-  {
-    newRow = editorShell.CreateElementWithDefaults("tr");
-    if (newRow)
-    {
-      tableElement.appendChild(newRow);
-      for (j = 0; j < columns; j++)
-      {
-        newCell = editorShell.CreateElementWithDefaults("td");
-        if (newCell)
-        {
-          newRow.appendChild(newCell);
-        }
-      }
-    }
-  }
+
   // Set attributes: these may be empty strings
   borderText = TrimString(dialog.borderInput.value);
   if (StringExists(borderText)) {
     // Set the other attributes on the table
     if (ValidateNumberString(borderText, 0, maxPixels))
-      tableElement.setAttribute("border", borderText);
+      globalElement.setAttribute("border", borderText);
   }
 
   widthText = TrimString(dialog.widthInput.value);
@@ -125,7 +120,36 @@ function onOK()
     if (widthText != "") {
       widthText += percentChar;
       dump("Table Width="+widthText+"\n");
-      tableElement.setAttribute("width", widthText);
+      globalElement.setAttribute("width", widthText);
+    }
+  }
+  return true;
+}
+
+
+function onOK()
+{
+  if (ValidateData())
+  {
+    editorShell.CloneAttributes(tableElement, globalElement);
+
+    // Create necessary rows and cells for the table
+    dump("Rows = "+rows+"  Columns = "+columns+"\n");
+    for (i = 0; i < rows; i++)
+    {
+      newRow = editorShell.CreateElementWithDefaults("tr");
+      if (newRow)
+      {
+        tableElement.appendChild(newRow);
+        for (j = 0; j < columns; j++)
+        {
+          newCell = editorShell.CreateElementWithDefaults("td");
+          if (newCell)
+          {
+            newRow.appendChild(newCell);
+          }
+        }
+      }
     }
   }
 

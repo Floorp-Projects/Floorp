@@ -100,7 +100,7 @@ function CheckWord()
       FillSuggestedList();
     } else {
       ClearList(dialog.suggestedList);
-      AppendStringToList(dialog.suggestedList, editorShell.GetString("CorrectSpelling"));
+      AppendStringToList(dialog.suggestedList, GetString("CorrectSpelling"));
       // Suppress being able to select the message text
       allowSelectWord = false;
     }
@@ -199,7 +199,7 @@ function FillSuggestedList(firstWord)
   } while (word != "");
   if (list.length == 0) {
     // No suggestions - show a message but don't let user select it
-    AppendStringToList(list, editorShell.GetString("NoSuggestedWords"));
+    AppendStringToList(list, GetString("NoSuggestedWords"));
     allowSelectWord = false;
   } else {
     allowSelectWord = true;
