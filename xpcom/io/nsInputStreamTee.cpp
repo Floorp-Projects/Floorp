@@ -79,8 +79,11 @@ nsInputStreamTee::WriteSegmentFun(nsIInputStream *in, void *closure, const char 
     nsInputStreamTee *tee = NS_REINTERPRET_CAST(nsInputStreamTee *, closure);
 
     nsresult rv = tee->mWriter(in, tee->mClosure, fromSegment, offset, count, writeCount);
-    if (NS_FAILED(rv) || (writeCount == 0))
+    if (NS_FAILED(rv) || (*writeCount == 0)) {
+        NS_ASSERTION((NS_FAILED(rv) ? (*writeCount == 0) : PR_TRUE),
+                "writer returned an error with non-zero writeCount");
         return rv;
+    }
 
     return tee->TeeSegment(fromSegment, *writeCount);
 }
