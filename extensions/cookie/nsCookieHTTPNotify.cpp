@@ -132,7 +132,7 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
   nsCOMPtr<nsIAtom> header;
 
   // XXX:  Should cache this atom?  HTTP atoms *msut* be lower case
-  header = NS_NewAtom("cookie");
+  header = NS_NewAtom("set-cookie");
   if (!header) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   } else {
