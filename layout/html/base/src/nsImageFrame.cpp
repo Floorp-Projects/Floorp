@@ -46,6 +46,7 @@
 #include "nsIDeviceContext.h"
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
+#include "nsIDOMHTMLMapElement.h"
 
 #ifndef _WIN32
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
@@ -722,6 +723,7 @@ nsImageFrame::GetImageMap()
         if (nsnull != mImageMap) {
           mImageMap->Init(map);
         }
+        NS_IF_RELEASE(map);
       }
     }
   }
