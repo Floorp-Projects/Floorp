@@ -63,7 +63,7 @@
 #define MAXSTR   "4294967295"
 
 /*
- * Determine if the id represents an array index.
+ * Determine if the id represents an array index or an XML property index.
  *
  * An id is an array index according to ECMA by (15.4):
  *
@@ -78,8 +78,8 @@
  * that calling a standard conversion routine might allow strings such as
  * "08" or "4.0" as array indices, which they are not.
  */
-static JSBool
-IdIsIndex(jsid id, jsuint *indexp)
+JSBool
+js_IdIsIndex(jsval id, jsuint *indexp)
 {
     JSString *str;
     jschar *cp;
@@ -93,7 +93,10 @@ IdIsIndex(jsid id, jsuint *indexp)
         return JS_TRUE;
     }
 
-    /* It must be a string. */
+    /* NB: id should be a string, but jsxml.c may call us with an object id. */
+    if (!JSVAL_IS_STRING(id))
+        return JS_FALSE;
+
     str = JSVAL_TO_STRING(id);
     cp = JSSTRING_CHARS(str);
     if (JS7_ISDEC(*cp) && JSSTRING_LENGTH(str) < sizeof(MAXSTR)) {
@@ -108,9 +111,8 @@ IdIsIndex(jsid id, jsuint *indexp)
                 cp++;
             }
         }
-        /* Make sure all characters were consumed and that it couldn't
-         * have overflowed.
-         */
+
+        /* Ensure that all characters were consumed and we didn't overflow. */
         if (*cp == 0 &&
              (oldIndex < (MAXINDEX / 10) ||
               (oldIndex == (MAXINDEX / 10) && c < (MAXINDEX % 10))))
@@ -138,7 +140,7 @@ ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
         *lengthp = (jsuint) i;
         return JS_TRUE;
     }
-    
+
     if (!js_ValueToNumber(cx, v, &d)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_ARRAY_LENGTH);
@@ -164,7 +166,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     jsint i;
     jsval v;
 
-    id = (jsid) cx->runtime->atomState.lengthAtom;
+    id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
         return JS_FALSE;
 
@@ -197,7 +199,7 @@ IndexToId(JSContext *cx, jsuint length, jsid *idp)
     JSAtom *atom;
 
     if (length <= JSVAL_INT_MAX) {
-        *idp = (jsid) INT_TO_JSVAL(length);
+        *idp = INT_TO_JSID(length);
     } else {
         str = js_NumberToString(cx, (jsdouble)length);
         if (!str)
@@ -205,7 +207,7 @@ IndexToId(JSContext *cx, jsuint length, jsid *idp)
         atom = js_AtomizeString(cx, str, 0);
         if (!atom)
             return JS_FALSE;
-        *idp = (jsid)atom;
+        *idp = ATOM_TO_JSID(atom);
 
     }
     return JS_TRUE;
@@ -219,7 +221,7 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsuint length)
 
     if (!IndexToValue(cx, length, &v))
         return JS_FALSE;
-    id = (jsid) cx->runtime->atomState.lengthAtom;
+    id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     return OBJ_SET_PROPERTY(cx, obj, id, &v);
 }
 
@@ -232,7 +234,7 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     jsval v;
 
     older = JS_SetErrorReporter(cx, NULL);
-    id = (jsid) cx->runtime->atomState.lengthAtom;
+    id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     ok = OBJ_GET_PROPERTY(cx, obj, id, &v);
     JS_SetErrorReporter(cx, older);
     if (!ok)
@@ -278,7 +280,7 @@ array_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     jsuint index, length;
 
-    if (!(IdIsIndex(id, &index)))
+    if (!js_IdIsIndex(id, &index))
         return JS_TRUE;
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
@@ -404,7 +406,8 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
         if (!ok)
             goto done;
 
-        if (!literalize && (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))) {
+        if ((!literalize || cx->version == JSVERSION_1_2) &&
+            (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))) {
             str = cx->runtime->emptyString;
         } else {
             if (localeString) {
@@ -549,7 +552,7 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
 
     if (!IndexToValue(cx, length, &v))
         return JS_FALSE;
-    id = (jsid) cx->runtime->atomState.lengthAtom;
+    id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     if (!OBJ_DEFINE_PROPERTY(cx, obj, id, v,
                              array_length_getter, array_length_setter,
                              JSPROP_PERMANENT,
@@ -666,7 +669,7 @@ HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
         a = (char *)vec + (hi - 1) * elsize;
         b = (char *)vec2 + j * elsize;
 
-        /* 
+        /*
          * During sorting phase b points to a member of heap that cannot be
          * bigger then biggest of vec[0] and vec[1], and cmp(a, b, arg) <= 0
          * always holds.
@@ -704,7 +707,7 @@ HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
 }
 
 JSBool
-js_HeapSort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg) 
+js_HeapSort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
 {
     void *pivot;
     HSortArgs hsa;
@@ -877,7 +880,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             goto out;
 
         /* We know JSVAL_IS_STRING yields 0 or 1, so avoid a branch via &=. */
-        all_strings &= JSVAL_IS_STRING(vec[i]); 
+        all_strings &= JSVAL_IS_STRING(vec[i]);
     }
 
     ca.context = cx;
@@ -1242,7 +1245,8 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             aobj = JSVAL_TO_OBJECT(v);
             if (aobj && OBJ_GET_CLASS(cx, aobj) == &js_ArrayClass) {
                 if (!OBJ_GET_PROPERTY(cx, aobj,
-                                      (jsid)cx->runtime->atomState.lengthAtom,
+                                      ATOM_TO_JSID(cx->runtime->atomState
+                                                   .lengthAtom),
                                       &v)) {
                     return JS_FALSE;
                 }

@@ -919,7 +919,7 @@ js_free_sftbl_entry(void *priv, JSHashEntry *he, uintN flag)
     free(he);
 }
 
-static JSHashAllocOps table_alloc_ops = {
+static JSHashAllocOps sftbl_alloc_ops = {
     js_alloc_table_space,   js_free_table_space,
     js_alloc_sftbl_entry,   js_free_sftbl_entry
 };
@@ -930,25 +930,18 @@ js_InitRuntimeScriptState(JSContext *cx)
     JSRuntime *rt = cx->runtime;
 
 #ifdef JS_THREADSAFE
-    /* Must come through here once in primordial thread to init safely! */
-    if (!rt->scriptFilenameTableLock) {
-        rt->scriptFilenameTableLock = JS_NEW_LOCK();
-        if (!rt->scriptFilenameTableLock)
-            return JS_FALSE;
-    }
+    JS_ASSERT(!rt->scriptFilenameTableLock);
+    rt->scriptFilenameTableLock = JS_NEW_LOCK();
+    if (!rt->scriptFilenameTableLock)
+        return JS_FALSE;
 #endif
+    JS_ASSERT(!rt->scriptFilenameTable);
+    rt->scriptFilenameTable =
+        JS_NewHashTable(16, JS_HashString, js_compare_strings, NULL,
+                        &sftbl_alloc_ops, NULL);
     if (!rt->scriptFilenameTable) {
-        JS_ACQUIRE_LOCK(rt->scriptFilenameTableLock);
-        if (!rt->scriptFilenameTable) {
-            rt->scriptFilenameTable =
-                JS_NewHashTable(16, JS_HashString, js_compare_strings, NULL,
-                                &table_alloc_ops, NULL);
-        }
-        JS_RELEASE_LOCK(rt->scriptFilenameTableLock);
-        if (!rt->scriptFilenameTable) {
-            js_FinishRuntimeScriptState(cx);    /* free lock if threadsafe */
-            return JS_FALSE;
-        }
+        js_FinishRuntimeScriptState(cx);    /* free lock if threadsafe */
+        return JS_FALSE;
     }
     return JS_TRUE;
 }

@@ -61,13 +61,8 @@ struct JSObjectMap {
 };
 
 /* Shorthand macros for frequently-made calls. */
-#if defined JS_THREADSAFE && defined DEBUG
-#define OBJ_LOOKUP_PROPERTY(cx,obj,id,objp,propp)                             \
-    (obj)->map->ops->lookupProperty(cx,obj,id,objp,propp,__FILE__,__LINE__)
-#else
 #define OBJ_LOOKUP_PROPERTY(cx,obj,id,objp,propp)                             \
     (obj)->map->ops->lookupProperty(cx,obj,id,objp,propp)
-#endif
 #define OBJ_DEFINE_PROPERTY(cx,obj,id,value,getter,setter,attrs,propp)        \
     (obj)->map->ops->defineProperty(cx,obj,id,value,getter,setter,attrs,propp)
 #define OBJ_GET_PROPERTY(cx,obj,id,vp)                                        \
@@ -261,6 +256,10 @@ extern JSBool
 js_obj_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		jsval *rval);
 
+extern JSBool
+js_obj_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                      jsval *rval);
+
 extern JSObject *
 js_InitObjectClass(JSContext *cx, JSObject *obj);
 
@@ -294,6 +293,9 @@ js_DropObjectMap(JSContext *cx, JSObjectMap *map, JSObject *obj);
 
 extern JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+
+extern JSBool
+js_FindConstructor(JSContext *cx, JSObject *start, const char *name, jsval *vp);
 
 extern JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
@@ -351,29 +353,16 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
  * *objp and *propp null.  Therefore all callers who receive a non-null *propp
  * must later call OBJ_DROP_PROPERTY(cx, *objp, *propp).
  */
-#if defined JS_THREADSAFE && defined DEBUG
-extern JS_FRIEND_API(JSBool)
-_js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-		   JSProperty **propp, const char *file, uintN line);
-
-#define js_LookupProperty(cx,obj,id,objp,propp) \
-    _js_LookupProperty(cx,obj,id,objp,propp,__FILE__,__LINE__)
-#else
 extern JS_FRIEND_API(JSBool)
 js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 		  JSProperty **propp);
-#endif
 
 /*
  * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
  */
 extern JSBool
 js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
-                           JSObject **objp, JSProperty **propp
-#if defined JS_THREADSAFE && defined DEBUG
-                           , const char *file, uintN line
-#endif
-                           );
+                           JSObject **objp, JSProperty **propp);
 
 extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,

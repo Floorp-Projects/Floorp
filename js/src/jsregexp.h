@@ -65,9 +65,9 @@ struct JSRegExpStatics {
 
 /*
  * This struct holds a bitmap representation of a class from a regexp.
- * There's a list of these referenced by the classList field in the JSRegExp 
+ * There's a list of these referenced by the classList field in the JSRegExp
  * struct below. The initial state has startIndex set to the offset in the
- * original regexp source of the beginning of the class contents. The first 
+ * original regexp source of the beginning of the class contents. The first
  * use of the class converts the source representation into a bitmap.
  *
  */

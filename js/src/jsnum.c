@@ -161,7 +161,7 @@ static JSFunctionSpec number_functions[] = {
     {0,0,0,0,0}
 };
 
-static JSClass number_class = {
+JSClass js_NumberClass = {
     "Number",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
@@ -201,7 +201,7 @@ num_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     char buf[64];
     JSString *str;
 
-    if (!JS_InstanceOf(cx, obj, &number_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_NumberClass, argv))
         return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     JS_ASSERT(JSVAL_IS_NUMBER(v));
@@ -211,7 +211,7 @@ num_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
-    JS_snprintf(buf, sizeof buf, "(new %s(%s))", number_class.name, numStr);
+    JS_snprintf(buf, sizeof buf, "(new %s(%s))", js_NumberClass.name, numStr);
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
@@ -256,7 +256,7 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsint base;
     JSString *str;
 
-    if (!JS_InstanceOf(cx, obj, &number_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_NumberClass, argv))
         return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     JS_ASSERT(JSVAL_IS_NUMBER(v));
@@ -385,7 +385,7 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
 static JSBool
 num_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    if (!JS_InstanceOf(cx, obj, &number_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_NumberClass, argv))
         return JS_FALSE;
     *rval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     return JS_TRUE;
@@ -404,7 +404,7 @@ num_to(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval, JSDTo
     JSString *str;
     char buf[DTOSTR_VARIABLE_BUFFER_SIZE(MAX_PRECISION+1)], *numStr; /* Use MAX_PRECISION+1 because precisionOffset can be 1 */
 
-    if (!JS_InstanceOf(cx, obj, &number_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_NumberClass, argv))
         return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     JS_ASSERT(JSVAL_IS_NUMBER(v));
@@ -605,7 +605,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, obj, number_functions))
         return NULL;
 
-    proto = JS_InitClass(cx, obj, NULL, &number_class, Number, 1,
+    proto = JS_InitClass(cx, obj, NULL, &js_NumberClass, Number, 1,
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
@@ -679,7 +679,7 @@ js_NumberToObject(JSContext *cx, jsdouble d)
     JSObject *obj;
     jsval v;
 
-    obj = js_NewObject(cx, &number_class, NULL, NULL);
+    obj = js_NewObject(cx, &js_NumberClass, NULL, NULL);
     if (!obj)
         return NULL;
     if (!js_NewNumberValue(cx, d, &v)) {

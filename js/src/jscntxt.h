@@ -450,6 +450,7 @@ struct JSContext {
 #define JS_HAS_WERROR_OPTION(cx)        ((cx)->options & JSOPTION_WERROR)
 #define JS_HAS_COMPILE_N_GO_OPTION(cx)  ((cx)->options & JSOPTION_COMPILE_N_GO)
 #define JS_HAS_ATLINE_OPTION(cx)        ((cx)->options & JSOPTION_ATLINE)
+#define JS_HAS_XML_OPTION(cx)           ((cx)->options & JSOPTION_XML)
 
 extern JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize);

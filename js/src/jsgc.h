@@ -131,7 +131,7 @@ js_LockGCThingRT(JSRuntime *rt, void *thing);
 extern JSBool
 js_UnlockGCThingRT(JSRuntime *rt, void *thing);
 
-extern JSBool 
+extern JSBool
 js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 
 extern void

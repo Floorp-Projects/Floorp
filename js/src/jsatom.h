@@ -180,6 +180,7 @@ struct JSAtomState {
     JSAtom              *classPrototypeAtom;
     JSAtom              *constructorAtom;
     JSAtom              *countAtom;
+    JSAtom              *etagoAtom;
     JSAtom              *evalAtom;
     JSAtom              *getAtom;
     JSAtom              *getterAtom;
@@ -187,15 +188,24 @@ struct JSAtomState {
     JSAtom              *inputAtom;
     JSAtom              *lengthAtom;
     JSAtom              *nameAtom;
+    JSAtom              *namespaceAtom;
     JSAtom              *noSuchMethodAtom;
     JSAtom              *parentAtom;
     JSAtom              *protoAtom;
+    JSAtom              *ptagcAtom;
+    JSAtom              *qualifierAtom;
     JSAtom              *setAtom;
     JSAtom              *setterAtom;
+    JSAtom              *spaceAtom;
+    JSAtom              *stagoAtom;
+    JSAtom              *starAtom;
+    JSAtom              *starQualifierAtom;
+    JSAtom              *tagcAtom;
     JSAtom              *toLocaleStringAtom;
     JSAtom              *toSourceAtom;
     JSAtom              *toStringAtom;
     JSAtom              *valueOfAtom;
+    JSAtom              *xmlAtom;
 
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {
@@ -203,11 +213,16 @@ struct JSAtomState {
         JSAtom          *InfinityAtom;
         JSAtom          *InternalErrorAtom;
         JSAtom          *NaNAtom;
+        JSAtom          *NamespaceAtom;
+        JSAtom          *QNameAtom;
         JSAtom          *RangeErrorAtom;
         JSAtom          *ReferenceErrorAtom;
         JSAtom          *SyntaxErrorAtom;
         JSAtom          *TypeErrorAtom;
         JSAtom          *URIErrorAtom;
+        JSAtom          *XMLAtom;
+        JSAtom          *XMLListAtom;
+        JSAtom          *anynameAtom;
         JSAtom          *decodeURIAtom;
         JSAtom          *decodeURIComponentAtom;
         JSAtom          *defineGetterAtom;
@@ -219,6 +234,7 @@ struct JSAtomState {
         JSAtom          *isFiniteAtom;
         JSAtom          *isNaNAtom;
         JSAtom          *isPrototypeOfAtom;
+        JSAtom          *isXMLNameAtom;
         JSAtom          *lookupGetterAtom;
         JSAtom          *lookupSetterAtom;
         JSAtom          *parseFloatAtom;
@@ -267,6 +283,7 @@ extern const char   js_caller_str[];
 extern const char   js_class_prototype_str[];
 extern const char   js_constructor_str[];
 extern const char   js_count_str[];
+extern const char   js_etago_str[];
 extern const char   js_eval_str[];
 extern const char   js_getter_str[];
 extern const char   js_get_str[];
@@ -274,15 +291,24 @@ extern const char   js_index_str[];
 extern const char   js_input_str[];
 extern const char   js_length_str[];
 extern const char   js_name_str[];
+extern const char   js_namespace_str[];
 extern const char   js_noSuchMethod_str[];
 extern const char   js_parent_str[];
 extern const char   js_proto_str[];
+extern const char   js_ptagc_str[];
+extern const char   js_qualifier_str[];
 extern const char   js_setter_str[];
 extern const char   js_set_str[];
+extern const char   js_space_str[];
+extern const char   js_stago_str[];
+extern const char   js_star_str[];
+extern const char   js_starQualifier_str[];
+extern const char   js_tagc_str[];
 extern const char   js_toSource_str[];
 extern const char   js_toString_str[];
 extern const char   js_toLocaleString_str[];
 extern const char   js_valueOf_str[];
+extern const char   js_xml_str[];
 
 #ifdef NARCISSUS
 extern const char   js_call_str[];

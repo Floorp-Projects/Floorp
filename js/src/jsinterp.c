@@ -75,6 +75,10 @@
 #include "jsjit.h"
 #endif
 
+#if JS_HAS_XML_SUPPORT
+#include "jsxml.h"
+#endif
+
 #ifdef DEBUG
 #define ASSERT_CACHE_IS_EMPTY(cache)                                          \
     JS_BEGIN_MACRO                                                            \
@@ -470,7 +474,7 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
     JSString *str;
     JSBool ok;
 
-    slot = (uintN) JSVAL_TO_INT(id);
+    slot = (uintN) JSID_TO_INT(id);
     if (OBJ_GET_CLASS(cx, obj) != &js_FunctionClass) {
         /*
          * Given a non-function object obj that has a function object in its
@@ -1042,7 +1046,8 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         thisp = frame.thisp;
 
         ok = OBJ_GET_PROPERTY(cx, thisp,
-                              (jsid)cx->runtime->atomState.noSuchMethodAtom,
+                              ATOM_TO_JSID(cx->runtime->atomState
+                                           .noSuchMethodAtom),
                               &v);
         if (!ok)
             goto out2;
@@ -1180,6 +1185,7 @@ have_fun:
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
     frame.dormantNext = NULL;
+    frame.xmlNamespace = NULL;
 
     /* Compute the 'this' parameter and store it in frame as frame.thisp. */
     ok = ComputeThis(cx, thisp, &frame);
@@ -1347,14 +1353,43 @@ bad:
     goto out2;
 }
 
+static JSBool
+CallMethod(JSContext *cx, JSObject *obj, jsid id, uintN argc, jsval *vp)
+{
+    JSStackFrame *fp, frame;
+    JSXMLObjectOps *ops;
+    JSBool ok;
+
+    memset(&frame, 0, sizeof(JSStackFrame));
+    frame.argc = argc;
+    frame.argv = vp + 2;
+    frame.rval = JSVAL_VOID;
+    fp = cx->fp;
+    frame.varobj = fp->varobj;
+    frame.scopeChain = fp->scopeChain;
+    frame.down = fp;
+    frame.sp = fp->sp;
+    if (!ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), &frame))
+        return JS_FALSE;
+    cx->fp = &frame;
+    ops = (JSXMLObjectOps *) obj->map->ops;
+    ok = ops->callMethod(cx, obj, id, argc, frame.argv, &frame.rval);
+    cx->fp = fp;
+    *vp = frame.rval;
+    fp->sp = vp + 1;
+    return ok;
+}
+
 JSBool
 js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *oldfp, frame;
-    jsval *oldsp, *sp;
+    jsval *oldsp, *sp, *vp;
     void *mark;
     uintN i;
+    const char *name;
+    JSAtom *atom;
     JSBool ok;
 
     fp = oldfp = cx->fp;
@@ -1373,14 +1408,28 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     PUSH(OBJECT_TO_JSVAL(obj));
     for (i = 0; i < argc; i++)
         PUSH(argv[i]);
-    fp->sp = sp;
-    ok = js_Invoke(cx, argc, flags | JSINVOKE_INTERNAL);
+    SAVE_SP(fp);
+
+    if (flags & JSINVOKE_CALL_METHOD) {
+        name = (const char *) fval;
+        atom = js_Atomize(cx, name, strlen(name), 0);
+        if (!atom) {
+            ok = JS_FALSE;
+        } else {
+            vp = sp - (2 + argc);
+            *vp = OBJECT_TO_JSVAL(obj);
+            ok = CallMethod(cx, obj, ATOM_TO_JSID(atom), argc, vp);
+        }
+    } else {
+        ok = js_Invoke(cx, argc, flags | JSINVOKE_INTERNAL);
+    }
+
     if (ok) {
         RESTORE_SP(fp);
         *rval = POP_OPND();
     }
-
     js_FreeStack(cx, mark);
+
 out:
     fp->sp = oldsp;
     if (oldfp != fp)
@@ -1478,6 +1527,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     frame.sharpDepth = 0;
     frame.flags = flags;
     frame.dormantNext = NULL;
+    frame.xmlNamespace = NULL;
 
     /*
      * Here we wrap the call to js_Interpret with code to (conditionally)
@@ -1697,7 +1747,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
            : isFunction
            ? js_function_str
            : js_var_str;
-    name = js_AtomToPrintableString(cx, (JSAtom *)id);
+    name = js_AtomToPrintableString(cx, JSID_TO_ATOM(id));
     if (!name)
         goto bad;
     return JS_ReportErrorFlagsAndNumber(cx, report,
@@ -1870,7 +1920,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 SAVE_SP(fp);
                 for (n = -nuses; n < 0; n++) {
                     str = js_DecompileValueGenerator(cx, n, sp[n], NULL);
-                    if (str != NULL) {
+                    if (str) {
                         fprintf(tracefp, "%s %s",
                                 (n == -nuses) ? "  inputs:" : ",",
                                 JS_GetStringBytes(str));
@@ -2121,12 +2171,20 @@ js_Interpret(JSContext *cx, jsval *result)
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             break;
 
+/*
+ * If the index value at sp[n] is not an int that fits in a jsval, it could
+ * be an object (an XML QName, AttributeName, or AnyName).  Otherwise convert
+ * it to a string atom it.
+ *
+ * NB: This macro knows that int jsval and int jsid are tagged identically.
+ */
 #define FETCH_ELEMENT_ID(n, id)                                               \
     JS_BEGIN_MACRO                                                            \
-        /* If the index is not a jsint, atomize it. */                        \
         id = (jsid) FETCH_OPND(n);                                            \
         if (JSVAL_IS_INT(id)) {                                               \
             atom = NULL;                                                      \
+        } else if (JSVAL_IS_OBJECT(id)) {                                     \
+            id = OBJECT_TO_JSID(JSVAL_TO_OBJECT(id));                         \
         } else {                                                              \
             SAVE_SP(fp);                                                      \
             atom = js_ValueToStringAtom(cx, (jsval)id);                       \
@@ -2134,7 +2192,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 ok = JS_FALSE;                                                \
                 goto out;                                                     \
             }                                                                 \
-            id = (jsid)atom;                                                  \
+            id = ATOM_TO_JSID(atom);                                          \
         }                                                                     \
     JS_END_MACRO
 
@@ -2176,13 +2234,13 @@ js_Interpret(JSContext *cx, jsval *result)
              */
             lval = FETCH_OPND(-1);
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             i = -2;
             goto do_forinloop;
 
           case JSOP_FORNAME:
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
 
             /*
              * ECMA 12.6.3 says to eval the LHS after looking for properties
@@ -2423,18 +2481,37 @@ js_Interpret(JSContext *cx, jsval *result)
             goto out;                                                         \
     JS_END_MACRO
 
+#if JS_HAS_XML_SUPPORT
+#define CHECK_OBJECT_ID(n, id)                                                \
+    JS_BEGIN_MACRO                                                            \
+        if (op != JSOP_SETELEM && JSID_IS_OBJECT(id)) {                       \
+            SAVE_SP(fp);                                                      \
+            ok = js_BindXMLProperty(cx, FETCH_OPND(n-1),                      \
+                                    OBJECT_TO_JSVAL(JSID_TO_OBJECT(id)));     \
+            if (!ok)                                                          \
+                goto out;                                                     \
+        }                                                                     \
+    JS_END_MACRO
+#else
+#define CHECK_OBJECT_ID(n, id)  /* nothing */
+#endif
+
 #define ELEMENT_OP(n, call)                                                   \
     JS_BEGIN_MACRO                                                            \
         FETCH_ELEMENT_ID(n, id);                                              \
+        CHECK_OBJECT_ID(n, id);                                               \
         PROPERTY_OP(n-1, call);                                               \
     JS_END_MACRO
 
 /*
  * Direct callers, i.e. those who do not wrap CACHED_GET and CACHED_SET calls
  * in PROPERTY_OP or ELEMENT_OP macro calls must SAVE_SP(fp); beforehand, just
- * in case a getter or setter function is invoked.
+ * in case a getter or setter function is invoked.  CACHED_GET and CACHED_SET
+ * use cx, obj, id, and rval from their caller's lexical environment.
  */
-#define CACHED_GET(call)                                                      \
+#define CACHED_GET(call)        CACHED_GET_VP(call, &rval)
+
+#define CACHED_GET_VP(call,vp)                                                \
     JS_BEGIN_MACRO                                                            \
         if (!OBJ_IS_NATIVE(obj)) {                                            \
             ok = call;                                                        \
@@ -2444,14 +2521,14 @@ js_Interpret(JSContext *cx, jsval *result)
             if (sprop) {                                                      \
                 JSScope *scope_ = OBJ_SCOPE(obj);                             \
                 slot = (uintN)sprop->slot;                                    \
-                rval = (slot != SPROP_INVALID_SLOT)                           \
-                       ? LOCKED_OBJ_GET_SLOT(obj, slot)                       \
-                       : JSVAL_VOID;                                          \
+                *(vp) = (slot != SPROP_INVALID_SLOT)                          \
+                        ? LOCKED_OBJ_GET_SLOT(obj, slot)                      \
+                        : JSVAL_VOID;                                         \
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
-                ok = SPROP_GET(cx, sprop, obj, obj, &rval);                   \
+                ok = SPROP_GET(cx, sprop, obj, obj, vp);                      \
                 JS_LOCK_SCOPE(cx, scope_);                                    \
                 if (ok && SPROP_HAS_VALID_SLOT(sprop, scope_))                \
-                    LOCKED_OBJ_SET_SLOT(obj, slot, rval);                     \
+                    LOCKED_OBJ_SET_SLOT(obj, slot, *(vp));                    \
                 JS_UNLOCK_SCOPE(cx, scope_);                                  \
             } else {                                                          \
                 JS_UNLOCK_OBJ(cx, obj);                                       \
@@ -2492,7 +2569,8 @@ js_Interpret(JSContext *cx, jsval *result)
             obj = fp->varobj;
             atom = GET_ATOM(cx, script, pc);
             rval = FETCH_OPND(-1);
-            ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, rval, NULL, NULL,
+            ok = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), rval,
+                                     NULL, NULL,
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
                                      JSPROP_READONLY,
                                      NULL);
@@ -2504,7 +2582,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_BINDNAME:
             atom = GET_ATOM(cx, script, pc);
             SAVE_SP(fp);
-            obj = js_FindIdentifierBase(cx, (jsid)atom);
+            obj = js_FindIdentifierBase(cx, ATOM_TO_JSID(atom));
             if (!obj) {
                 ok = JS_FALSE;
                 goto out;
@@ -2514,7 +2592,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_SETNAME:
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             rval = FETCH_OPND(-1);
             lval = FETCH_OPND(-2);
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval));
@@ -2918,7 +2996,8 @@ js_Interpret(JSContext *cx, jsval *result)
             } else {
                 /* Get the constructor prototype object for this function. */
                 ok = OBJ_GET_PROPERTY(cx, obj2,
-                                      (jsid)rt->atomState.classPrototypeAtom,
+                                      ATOM_TO_JSID(rt->atomState
+                                                   .classPrototypeAtom),
                                       &rval);
                 if (!ok)
                     goto out;
@@ -2957,12 +3036,9 @@ js_Interpret(JSContext *cx, jsval *result)
                     break;
                 }
                 /* native [[Construct]] returning primitive is error */
-                str = js_ValueToString(cx, rval);
-                if (str) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                         JSMSG_BAD_NEW_RESULT,
-                                         JS_GetStringBytes(str));
-                }
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_NEW_RESULT,
+                                     js_ValueToPrintableString(cx, rval));
                 ok = JS_FALSE;
                 goto out;
             }
@@ -2972,7 +3048,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_DELNAME:
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
 
             SAVE_SP(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
@@ -2992,7 +3068,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_DELPROP:
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             PROPERTY_OP(-1, ok = OBJ_DELETE_PROPERTY(cx, obj, id, &rval));
             STORE_OPND(-1, rval);
             break;
@@ -3021,7 +3097,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_NAMEINC:
           case JSOP_NAMEDEC:
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
 
             SAVE_SP(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
@@ -3039,7 +3115,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_PROPINC:
           case JSOP_PROPDEC:
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             lval = POP_OPND();
             goto do_incop;
 
@@ -3048,6 +3124,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_ELEMINC:
           case JSOP_ELEMDEC:
             POP_ELEMENT_ID(id);
+            CHECK_OBJECT_ID(0, id);
             lval = POP_OPND();
 
           do_incop:
@@ -3194,7 +3271,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_GETPROP:
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             PROPERTY_OP(-1, CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval)));
             STORE_OPND(-1, rval);
             break;
@@ -3205,7 +3282,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             PROPERTY_OP(-2, CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval)));
             sp--;
             STORE_OPND(-1, rval);
@@ -3227,6 +3304,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_ENUMELEM:
             /* Funky: the value to set is under the [obj, id] pair. */
             FETCH_ELEMENT_ID(-1, id);
+            CHECK_OBJECT_ID(-1, id);
             lval = FETCH_OPND(-2);
             VALUE_TO_OBJECT(cx, lval, obj);
             rval = FETCH_OPND(-3);
@@ -3255,13 +3333,43 @@ js_Interpret(JSContext *cx, jsval *result)
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 
+#if JS_HAS_XML_SUPPORT
+          case JSOP_CALLMETHOD:
+            argc = GET_ARGC(pc);
+            vp = sp - (argc + 2);
+            lval = *vp;
+            VALUE_TO_OBJECT(cx, lval, obj);
+            pc2 = pc + ARGNO_LEN;
+            atom = GET_ATOM(cx, script, pc2);
+            id = ATOM_TO_JSID(atom);
+
+            SAVE_SP(fp);
+            if (OBJECT_IS_XML(cx, obj)) {
+                ok = CallMethod(cx, obj, id, argc, vp);
+                if (!ok)
+                    goto out;
+                RESTORE_SP(fp);
+                obj = NULL;
+                break;
+            }
+
+            CACHED_GET_VP(OBJ_GET_PROPERTY(cx, obj, id, vp), vp);
+            if (!ok)
+                goto out;
+            vp[1] = OBJECT_TO_JSVAL(obj);
+            goto try_inline_call;
+#endif
+
           case JSOP_CALL:
           case JSOP_EVAL:
             argc = GET_ARGC(pc);
             vp = sp - (argc + 2);
-            lval = *vp;
             SAVE_SP(fp);
 
+#if JS_HAS_XML_SUPPORT
+          try_inline_call:
+#endif
+            lval = *vp;
             if (JSVAL_IS_FUNCTION(cx, lval) &&
                 (obj = JSVAL_TO_OBJECT(lval),
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
@@ -3425,7 +3533,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_NAME:
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
 
             SAVE_SP(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
@@ -3835,7 +3943,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_EXPORTNAME:
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             obj  = fp->varobj;
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
             if (!ok)
@@ -3856,7 +3964,7 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_IMPORTALL:
-            id = (jsid)JSVAL_VOID;
+            id = (jsid) JSVAL_VOID;
             PROPERTY_OP(-1, ok = ImportProperty(cx, obj, id));
             sp--;
             break;
@@ -3864,7 +3972,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_IMPORTPROP:
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             PROPERTY_OP(-1, ok = ImportProperty(cx, obj, id));
             sp--;
             break;
@@ -3910,7 +4018,7 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_ARGSUB:
-            id = (jsid) INT_TO_JSVAL(GET_ARGNO(pc));
+            id = INT_TO_JSID(GET_ARGNO(pc));
             SAVE_SP(fp);
             ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
             if (!ok)
@@ -3932,7 +4040,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #undef LAZY_ARGS_THISP
 
           case JSOP_ARGCNT:
-            id = (jsid) rt->atomState.lengthAtom;
+            id = ATOM_TO_JSID(rt->atomState.lengthAtom);
             SAVE_SP(fp);
             ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
             if (!ok)
@@ -3999,7 +4107,7 @@ js_Interpret(JSContext *cx, jsval *result)
                  * as JSOP_SETNAME does, where [obj] is due to JSOP_BINDNAME.
                  */
                 atom = GET_ATOM(cx, script, pc);
-                id = (jsid)atom;
+                id = ATOM_TO_JSID(atom);
                 SAVE_SP(fp);
                 CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
                 if (!ok)
@@ -4027,7 +4135,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 attrs |= JSPROP_READONLY;
 
             /* Lookup id in order to check for redeclaration problems. */
-            id = (jsid)atom;
+            id = ATOM_TO_JSID(atom);
             ok = js_CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop);
             if (!ok)
                 goto out;
@@ -4079,7 +4187,7 @@ js_Interpret(JSContext *cx, jsval *result)
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             obj = ATOM_TO_OBJECT(atom);
             fun = (JSFunction *) JS_GetPrivate(cx, obj);
-            id = (jsid) fun->atom;
+            id = ATOM_TO_JSID(fun->atom);
 
             /*
              * We must be at top-level (either outermost block that forms a
@@ -4262,7 +4370,7 @@ js_Interpret(JSContext *cx, jsval *result)
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
             if (attrs)
                 attrs |= JSPROP_SHARED;
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom),
                                      attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
                                      (attrs & JSFUN_GETTER)
                                      ? (JSPropertyOp) obj
@@ -4329,7 +4437,7 @@ js_Interpret(JSContext *cx, jsval *result)
             if (attrs)
                 attrs |= JSPROP_SHARED;
             parent = fp->varobj;
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, ATOM_TO_JSID(fun->atom),
                                      attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
                                      (attrs & JSFUN_GETTER)
                                      ? (JSPropertyOp) obj
@@ -4369,7 +4477,7 @@ js_Interpret(JSContext *cx, jsval *result)
               case JSOP_SETNAME:
               case JSOP_SETPROP:
                 atom = GET_ATOM(cx, script, pc);
-                id   = (jsid)atom;
+                id   = ATOM_TO_JSID(atom);
                 i = -1;
                 rval = FETCH_OPND(i);
                 goto gs_pop_lval;
@@ -4389,7 +4497,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 i = -1;
                 rval = FETCH_OPND(i);
                 atom = GET_ATOM(cx, script, pc);
-                id   = (jsid)atom;
+                id   = ATOM_TO_JSID(atom);
                 goto gs_get_lval;
 
               case JSOP_INITELEM:
@@ -4477,7 +4585,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /* Get the immediate property name into id. */
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
             i = -1;
             goto do_init;
 
@@ -4515,7 +4623,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 fp->sharpArray = obj;
             }
             i = (jsint) GET_ATOM_INDEX(pc);
-            id = (jsid) INT_TO_JSVAL(i);
+            id = INT_TO_JSID(i);
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval)) {
                 char numBuf[12];
@@ -4532,7 +4640,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_USESHARP:
             i = (jsint) GET_ATOM_INDEX(pc);
-            id = (jsid) INT_TO_JSVAL(i);
+            id = INT_TO_JSID(i);
             obj = fp->sharpArray;
             if (!obj) {
                 rval = JSVAL_VOID;
@@ -4605,7 +4713,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             /* Get the immediate catch variable name into id. */
             atom = GET_ATOM(cx, script, pc);
-            id   = (jsid)atom;
+            id   = ATOM_TO_JSID(atom);
 
             /* Find the object being initialized at top of stack. */
             lval = FETCH_OPND(-1);
@@ -4678,6 +4786,306 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
           }
 #endif /* JS_HAS_DEBUGGER_KEYWORD */
+
+#if JS_HAS_XML_SUPPORT
+          case JSOP_DEFXMLNS:
+            rval = POP();
+            ok = js_SetDefaultXMLNamespace(cx, rval);
+            if (!ok)
+                goto out;
+            break;
+
+          case JSOP_ANYNAME:
+            ok = js_GetAnyName(cx, &rval);
+            if (!ok)
+                goto out;
+            PUSH_OPND(rval);
+            break;
+
+          case JSOP_QNAMEPART:
+            atom = GET_ATOM(cx, script, pc);
+            PUSH_OPND(ATOM_KEY(atom));
+            break;
+
+          case JSOP_QNAME:
+            rval = FETCH_OPND(-1);
+            lval = FETCH_OPND(-2);
+            SAVE_SP(fp);
+            obj = js_ConstructQNameObject(cx, lval, rval);
+            if (!obj) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            sp--;
+            STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+            break;
+
+          case JSOP_TOATTRNAME:
+            rval = FETCH_OPND(-1);
+            ok = js_ToAttributeName(cx, &rval);
+            if (!ok)
+                goto out;
+            STORE_OPND(-1, rval);
+            break;
+
+          case JSOP_TOATTRVAL:
+            rval = FETCH_OPND(-1);
+            JS_ASSERT(JSVAL_IS_STRING(rval));
+            str = js_EscapeAttributeValue(cx, JSVAL_TO_STRING(rval));
+            if (!str) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            STORE_OPND(-1, STRING_TO_JSVAL(str));
+            break;
+
+          case JSOP_ADDATTRNAME:
+          case JSOP_ADDATTRVAL:
+            rval = FETCH_OPND(-1);
+            lval = FETCH_OPND(-2);
+            str = JSVAL_TO_STRING(lval);
+            str2 = JSVAL_TO_STRING(rval);
+            str = js_AddAttributePart(cx, op == JSOP_ADDATTRNAME, str, str2);
+            if (!str) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            sp--;
+            STORE_OPND(-1, STRING_TO_JSVAL(str));
+            break;
+
+          case JSOP_BINDXMLPROP:
+            rval = FETCH_OPND(-1);
+            lval = FETCH_OPND(-2);
+            SAVE_SP(fp);
+            ok = js_BindXMLProperty(cx, lval, rval);
+            if (!ok)
+                goto out;
+            break;
+
+          case JSOP_BINDXMLNAME:
+            lval = FETCH_OPND(-1);
+            ok = js_FindXMLProperty(cx, lval, &obj, &rval);
+            if (!ok)
+                goto out;
+            if (JSVAL_IS_VOID(rval)) {
+                const char *printable = js_ValueToPrintableString(cx, lval);
+                if (printable)
+                    js_ReportIsNotDefined(cx, printable);
+                ok = JS_FALSE;
+                goto out;
+            }
+            STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+            PUSH_OPND(rval);
+            break;
+
+          case JSOP_SETXMLNAME:
+            obj = JSVAL_TO_OBJECT(FETCH_OPND(-3));
+            lval = FETCH_OPND(-2);
+            rval = FETCH_OPND(-1);
+            ok = js_SetXMLProperty(cx, obj, lval, &rval);
+            if (!ok)
+                goto out;
+            sp -= 2;
+            STORE_OPND(-1, rval);
+            break;
+
+          case JSOP_XMLNAME:
+            lval = FETCH_OPND(-1);
+            ok = js_FindXMLProperty(cx, lval, &obj, &rval);
+            if (!ok)
+                goto out;
+            if (!JSVAL_IS_VOID(rval)) {
+                ok = js_GetXMLProperty(cx, obj, rval, &rval);
+                if (!ok)
+                    goto out;
+            }
+            STORE_OPND(-1, rval);
+            break;
+
+          case JSOP_DESCENDANTS:
+            lval = FETCH_OPND(-2);
+            VALUE_TO_OBJECT(cx, lval, obj);
+            rval = FETCH_OPND(-1);
+            ok = js_GetXMLDescendants(cx, obj, rval, &rval);
+            if (!ok)
+                goto out;
+            sp--;
+            STORE_OPND(-1, rval);
+            break;
+
+          case JSOP_FILTER:
+            lval = FETCH_OPND(-1);
+            VALUE_TO_OBJECT(cx, lval, obj);
+            len = GET_JUMP_OFFSET(pc);
+            SAVE_SP(fp);
+            ok = js_FilterXMLList(cx, obj, pc + cs->length, len - cs->length,
+                                  &rval);
+            if (!ok)
+                goto out;
+            STORE_OPND(-1, rval);
+            break;
+
+          case JSOP_TOXML:
+            rval = FETCH_OPND(-1);
+            obj = js_ValueToXMLObject(cx, rval);
+            if (!obj) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+            break;
+
+          case JSOP_TOXMLLIST:
+            rval = FETCH_OPND(-1);
+            obj = js_ValueToXMLListObject(cx, rval);
+            if (!obj) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+            break;
+
+          case JSOP_XMLEXPR:
+            rval = FETCH_OPND(-1);
+            str = js_ValueToString(cx, rval);
+            if (!str) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            STORE_OPND(-1, STRING_TO_JSVAL(str));
+            break;
+
+          case JSOP_XMLOBJECT:
+            atom = GET_ATOM(cx, script, pc);
+            obj = js_CloneXMLObject(cx, ATOM_TO_OBJECT(atom));
+            if (!obj) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
+            obj = NULL;
+            break;
+
+          case JSOP_XMLCDATA:
+          {
+            jschar *buf;
+            size_t len, off;
+
+            /* XXXbe temporary: should construct an XML object */
+            atom = GET_ATOM(cx, script, pc);
+            str = ATOM_TO_STRING(atom);
+            len = JSSTRING_LENGTH(str);
+            buf = (jschar *) JS_malloc(cx, (9 + len + 3 + 1) * sizeof(jschar));
+            if (!buf) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            buf[0] = (jschar) '<';
+            buf[1] = (jschar) '!';
+            buf[2] = (jschar) '[';
+            buf[3] = (jschar) 'C';
+            buf[4] = (jschar) 'D';
+            buf[5] = (jschar) 'A';
+            buf[6] = (jschar) 'T';
+            buf[7] = (jschar) 'A';
+            buf[8] = (jschar) '[';
+            off = 9;
+            js_strncpy(buf + off, JSSTRING_CHARS(str), len);
+            off += len;
+            buf[off++] = (jschar) ']';
+            buf[off++] = (jschar) ']';
+            buf[off++] = (jschar) '>';
+            buf[off] = 0;
+            str = js_NewString(cx, buf, off, 0);
+            if (!str) {
+                JS_free(cx, buf);
+                ok = JS_FALSE;
+                goto out;
+            }
+            rval = STRING_TO_JSVAL(str);
+            PUSH_OPND(rval);
+            break;
+          }
+
+          case JSOP_XMLCOMMENT:
+          {
+            jschar *buf;
+            size_t len, off;
+
+            /* XXXbe temporary: should construct an XML object */
+            atom = GET_ATOM(cx, script, pc);
+            str = ATOM_TO_STRING(atom);
+            len = JSSTRING_LENGTH(str);
+            buf = (jschar *) JS_malloc(cx, (4 + len + 3 + 1) * sizeof(jschar));
+            if (!buf) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            buf[0] = (jschar) '<';
+            buf[1] = (jschar) '!';
+            buf[2] = (jschar) '-';
+            buf[3] = (jschar) '-';
+            off = 4;
+            js_strncpy(buf + off, JSSTRING_CHARS(str), len);
+            off += len;
+            buf[off++] = (jschar) '-';
+            buf[off++] = (jschar) '-';
+            buf[off++] = (jschar) '>';
+            buf[off] = 0;
+            str = js_NewString(cx, buf, off, 0);
+            if (!str) {
+                JS_free(cx, buf);
+                ok = JS_FALSE;
+                goto out;
+            }
+            rval = STRING_TO_JSVAL(str);
+            PUSH_OPND(rval);
+            break;
+          }
+
+          case JSOP_XMLPI:
+          {
+            JSAtom *atom2;
+            jschar *buf;
+            size_t len, len2, off;
+
+            /* XXXbe temporary: should construct an XML object */
+            atom = GET_ATOM(cx, script, pc);
+            str = ATOM_TO_STRING(atom);
+            len = JSSTRING_LENGTH(str);
+            atom2 = GET_ATOM(cx, script, pc + ATOM_INDEX_LEN);
+            str2 = ATOM_TO_STRING(atom2);
+            len2 = JSSTRING_LENGTH(str2);
+            buf = (jschar *) JS_malloc(cx,
+                                       (2 + len + 1 + len2 + 2 + 1)
+                                       * sizeof(jschar));
+            if (!buf) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            buf[0] = (jschar) '<';
+            buf[1] = (jschar) '?';
+            off = 2;
+            js_strncpy(buf + off, JSSTRING_CHARS(str), len);
+            off += len;
+            buf[off++] = (jschar) ' ';
+            js_strncpy(buf + off, JSSTRING_CHARS(str2), len2);
+            off += len2;
+            buf[off++] = (jschar) '?';
+            buf[off++] = (jschar) '>';
+            buf[off] = 0;
+            str = js_NewString(cx, buf, off, 0);
+            if (!str) {
+                JS_free(cx, buf);
+                ok = JS_FALSE;
+                goto out;
+            }
+            rval = STRING_TO_JSVAL(str);
+            PUSH_OPND(rval);
+            break;
+          }
+#endif /* JS_HAS_XML_SUPPORT */
 
           default: {
             char numBuf[12];

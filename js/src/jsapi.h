@@ -446,6 +446,11 @@ JS_StringToVersion(const char *string);
                                                    option supported for the
                                                    XUL preprocessor and kindred
                                                    beasts. */
+#define JSOPTION_XML            JS_BIT(6)       /* EMCAScript for XML support:
+                                                   parse <!-- --> as a token,
+                                                   not backward compatible with
+                                                   the comment-hiding hack used
+                                                   in HTML script tags. */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
@@ -707,7 +712,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing);
 
 /*
- * Add an external string finalizer, one created by JS_NewExternalString (see
+ * Add a finalizer for external strings created by JS_NewExternalString (see
  * below) using a type-code returned from this function, and that understands
  * how to free or release the memory pointed at by JS_GetStringChars(str).
  *
@@ -801,6 +806,9 @@ struct JSClass {
                                                    object in prototype chain
                                                    passed in via *objp in/out
                                                    parameter */
+#define JSCLASS_CONSTRUCT_PROTOTYPE     (1<<6)  /* call constructor on class
+                                                   prototype */
+#define JSCLASS_W3C_XML_INFO_ITEM       (1<<7)  /* W3C XML Information Item */
 
 /*
  * To reserve slots fetched and stored via JS_Get/SetReservedSlot, bitwise-or
@@ -850,6 +858,14 @@ struct JSObjectOps {
     JSSetRequiredSlotOp setRequiredSlot;
 };
 
+struct JSXMLObjectOps {
+    JSObjectOps         base;
+    JSCallMethodOp      callMethod;
+    JSEnumerateValuesOp enumerateValues;
+    JSEqualityOp        equality;
+    JSConcatenateOp     concatenate;
+};
+
 /*
  * Classes that expose JSObjectOps via a non-null getObjectOps class hook may
  * derive a property structure from this struct, return a pointer to it from
@@ -878,6 +894,37 @@ JS_ValueToId(JSContext *cx, jsval v, jsid *idp);
 extern JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 
+/*
+ * The magic XML namespace id is int-tagged, but not a valid integer jsval.
+ * Global object classes in embeddings that enable JS_HAS_XML_SUPPORT (E4X)
+ * should handle this id specially before converting id via JSVAL_TO_INT.
+ * XXXbe fix this to avoid preemption/collision
+ */
+#define JS_DEFAULT_XML_NAMESPACE_ID INT_TO_JSVAL(JSVAL_INT_MIN)
+
+#define JSID_ATOM               0x0
+#define JSID_INT                0x1
+#define JSID_OBJECT             0x2
+#define JSID_TAGMASK            0x3
+#define JSID_TAG(id)            ((id) & JSID_TAGMASK)
+#define JSID_SETTAG(id,t)       ((id) | (t))
+#define JSID_CLRTAG(id)         ((id) & ~(jsid)JSID_TAGMASK)
+
+#define JSID_IS_ATOM(id)        (JSID_TAG(id) == JSID_ATOM)
+#define JSID_TO_ATOM(id)        ((JSAtom *)(id))
+#define ATOM_TO_JSID(atom)      ((jsid)(atom))
+
+#define JSID_IS_INT(id)         ((id) & JSID_INT)
+#define JSID_TO_INT(id)         ((jsint)(id) >> 1)
+#define INT_TO_JSID(i)          (((jsint)(i) << 1) | JSID_INT)
+
+#define JSID_IS_OBJECT(id)      (JSID_TAG(id) == JSID_OBJECT)
+#define JSID_TO_OBJECT(id)      ((JSObject *) JSID_CLRTAG(id))
+#define OBJECT_TO_JSID(obj)     ((jsid)(obj) | JSID_OBJECT)
+
+/*
+ * JSNewResolveOp flag bits.
+ */
 #define JSRESOLVE_QUALIFIED     0x01    /* resolve a qualified property id */
 #define JSRESOLVE_ASSIGNING     0x02    /* resolve on the left of assignment */
 #define JSRESOLVE_DETECTING     0x04    /* 'if (o.p)...' or '(o.p) ?...:...' */

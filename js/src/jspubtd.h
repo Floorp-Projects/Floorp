@@ -84,6 +84,8 @@ typedef enum JSType {
     JSTYPE_STRING,              /* string */
     JSTYPE_NUMBER,              /* number */
     JSTYPE_BOOLEAN,             /* boolean */
+    JSTYPE_NULL,                /* null */
+    JSTYPE_XML,                 /* xml object */
     JSTYPE_LIMIT
 } JSType;
 
@@ -123,6 +125,7 @@ typedef struct JSPropertySpec    JSPropertySpec;
 typedef struct JSObject          JSObject;
 typedef struct JSObjectMap       JSObjectMap;
 typedef struct JSObjectOps       JSObjectOps;
+typedef struct JSXMLObjectOps    JSXMLObjectOps;
 typedef struct JSRuntime         JSRuntime;
 typedef struct JSRuntime         JSTaskState;	/* XXX deprecated name */
 typedef struct JSScript          JSScript;
@@ -263,12 +266,17 @@ typedef void
  * Thus JSClass (which pre-dates JSObjectOps in the API) provides a low-level
  * interface to class-specific code and data, while JSObjectOps allows for a
  * higher level of operation, which does not use the object's class except to
- * find the class's JSObjectOps struct, by calling clasp->getObjectOps.
+ * find the class's JSObjectOps struct, by calling clasp->getObjectOps, and to
+ * finalize the object.
  *
  * If this seems backwards, that's because it is!  API compatibility requires
  * a JSClass *clasp parameter to JS_NewObject, etc.  Most host objects do not
  * need to implement the larger JSObjectOps, and can share the common JSScope
  * code and data used by the native (js_ObjectOps, see jsobj.c) ops.
+ *
+ * Further extension to preserve API compatibility: if this function returns
+ * a pointer to JSXMLObjectOps.base, not to JSObjectOps, then the engine calls
+ * extended hooks needed for E4X.
  */
 typedef JSObjectOps *
 (* JS_DLL_CALLBACK JSGetObjectOps)(JSContext *cx, JSClass *clasp);
@@ -387,11 +395,7 @@ typedef void
  */
 typedef JSBool
 (* JS_DLL_CALLBACK JSLookupPropOp)(JSContext *cx, JSObject *obj, jsid id,
-                                   JSObject **objp, JSProperty **propp
-#if defined JS_THREADSAFE && defined DEBUG
-                                 , const char *file, uintN line
-#endif
-                                  );
+                                   JSObject **objp, JSProperty **propp);
 
 /*
  * Define obj[id], a direct property of obj named id, having the given initial
@@ -490,6 +494,23 @@ typedef jsval
 typedef JSBool
 (* JS_DLL_CALLBACK JSSetRequiredSlotOp)(JSContext *cx, JSObject *obj,
                                         uint32 slot, jsval v);
+
+typedef JSBool
+(* JS_DLL_CALLBACK JSCallMethodOp)(JSContext *cx, JSObject *obj, jsid id,
+                                   uintN argc, jsval *argv, jsval *rval);
+
+typedef JSBool
+(* JS_DLL_CALLBACK JSEnumerateValuesOp)(JSContext *cx, JSObject *obj,
+                                        JSIterateOp enum_op,
+                                        jsval *statep, jsval *vp);
+
+typedef JSBool
+(* JS_DLL_CALLBACK JSEqualityOp)(JSContext *cx, JSObject *obj, jsval v,
+                                 jsval *vp);
+
+typedef JSBool
+(* JS_DLL_CALLBACK JSConcatenateOp)(JSContext *cx, JSObject *obj, jsval v,
+                                    jsval *vp);
 
 /* Typedef for native functions called by the JS VM. */
 

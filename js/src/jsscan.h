@@ -107,12 +107,66 @@ typedef enum JSTokenType {
     TOK_THROW = 58,                     /* throw keyword */
     TOK_INSTANCEOF = 59,                /* instanceof keyword */
     TOK_DEBUGGER = 60,                  /* debugger keyword */
+    TOK_XMLSTAGO = 61,                  /* XML start tag open (<) */
+    TOK_XMLETAGO = 62,                  /* XML end tag open (</) */
+    TOK_XMLPTAGC = 63,                  /* XML point tag close (/>) */
+    TOK_XMLTAGC = 64,                   /* XML start or end tag close (>) */
+    TOK_XMLNAME = 65,                   /* XML start-tag non-final fragment */
+    TOK_XMLATTR = 66,                   /* XML quoted attribute value */
+    TOK_XMLSPACE = 67,                  /* XML whitespace within a tag */
+    TOK_XMLTEXT = 68,                   /* XML text */
+    TOK_XMLCOMMENT = 69,                /* XML comment */
+    TOK_XMLCDATA = 70,                  /* XML CDATA section */
+    TOK_XMLPI = 71,                     /* XML processing instruction */
+    TOK_AT = 72,                        /* XML attribute op (@) */
+    TOK_DBLCOLON = 73,                  /* namespace qualified name op (::) */
+    TOK_ANYNAME = 74,                   /* XML AnyName singleton (*) */
+    TOK_DBLDOT = 75,                    /* XML descendant op (..) */
+    TOK_FILTER = 76,                    /* XML filtering predicate op (.()) */
+    TOK_XMLELEM = 77,                   /* XML element node type (no token) */
+    TOK_XMLLIST = 78,                   /* XML list node type (no token) */
     TOK_RESERVED,                       /* reserved keywords */
     TOK_LIMIT                           /* domain size */
 } JSTokenType;
 
 #define IS_PRIMARY_TOKEN(tt) \
     ((uintN)((tt) - TOK_NAME) <= (uintN)(TOK_PRIMARY - TOK_NAME))
+
+#define TOKEN_TYPE_IS_XML(tt) \
+    (tt == TOK_AT || tt == TOK_DBLCOLON || tt == TOK_ANYNAME)
+
+struct JSStringBuffer {
+    jschar      *base;
+    jschar      *limit;         /* length limit for quick bounds check */
+    jschar      *ptr;           /* slot for next non-NUL char to store */
+    size_t      length;
+    size_t      offset;
+    JSBool      (*grow)(JSStringBuffer *sb, size_t newlength);
+    void        (*free)(JSStringBuffer *sb);
+    void        *data;
+};
+
+#define STRING_BUFFER_ERROR_BASE        ((jschar *) 1)
+#define STRING_BUFFER_OK(sb)            ((sb)->base != STRING_BUFFER_ERROR_BASE)
+#define STRING_BUFFER_OFFSET(sb)        ((sb)->ptr -(sb)->base)
+
+extern void
+js_InitStringBuffer(JSStringBuffer *sb);
+
+extern void
+js_FinishStringBuffer(JSStringBuffer *sb);
+
+extern void
+js_AppendChar(JSStringBuffer *sb, jschar c);
+
+extern void
+js_RepeatChar(JSStringBuffer *sb, jschar c, uintN count);
+
+extern void
+js_AppendCString(JSStringBuffer *sb, const char *asciiz);
+
+extern void
+js_AppendJSString(JSStringBuffer *sb, JSString *str);
 
 struct JSTokenPtr {
     uint16              index;          /* index of char in physical line */
@@ -129,16 +183,21 @@ struct JSToken {
     JSTokenPos          pos;            /* token position in file */
     jschar              *ptr;           /* beginning of token in line buffer */
     union {
-        struct {
+        struct {                        /* non-numeric literal */
             JSOp        op;             /* operator, for minimal parser */
             JSAtom      *atom;          /* atom table entry */
         } s;
+        struct {                        /* atom pair, for XML PIs */
+            JSAtom      *atom2;         /* auxiliary atom table entry */
+            JSAtom      *atom;          /* main atom table entry */
+        } p;
         jsdouble        dval;           /* floating point number */
     } u;
 };
 
 #define t_op            u.s.op
 #define t_atom          u.s.atom
+#define t_atom2         u.p.atom2
 #define t_dval          u.dval
 
 typedef struct JSTokenBuf {
@@ -164,7 +223,7 @@ struct JSTokenStream {
     ptrdiff_t           linepos;        /* linebuf offset in physical line */
     JSTokenBuf          linebuf;        /* line buffer for diagnostics */
     JSTokenBuf          userbuf;        /* user input buffer if !file */
-    JSTokenBuf          tokenbuf;       /* current token string buffer */
+    JSStringBuffer      tokenbuf;       /* current token string buffer */
     const char          *filename;      /* input filename or null */
     FILE                *file;          /* stdio stream if reading from file */
     JSPrincipals        *principals;    /* principals associated with source */
@@ -187,6 +246,9 @@ struct JSTokenStream {
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
 #define TSF_DIRTYLINE   0x80            /* non-whitespace since start of line */
 #define TSF_OWNFILENAME 0x100           /* ts->filename is malloc'd */
+#define TSF_XMLTAGMODE  0x200           /* scanning within an XML tag in E4X */
+#define TSF_XMLTEXTMODE 0x400           /* scanning XMLText terminal from E4X */
+#define TSF_XMLONLYMODE 0x800           /* don't scan {expr} within text/tag */
 
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028

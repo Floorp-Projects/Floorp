@@ -155,8 +155,8 @@ JS_BEGIN_EXTERN_C
  *                          pn_count: 1 + N (where N is number of args)
  *                          ctor is a MEMBER expr
  * TOK_DELETE   unary       pn_kid: MEMBER expr
- * TOK_DOT      name        pn_expr: MEMBER expr to left of .
- *                          pn_atom: name to right of .
+ * TOK_DOT,     name        pn_expr: MEMBER expr to left of .
+ * TOK_DBLDOT               pn_atom: name to right of .
  * TOK_LB       binary      pn_left: MEMBER expr to left of [
  *                          pn_right: expr between [ and ]
  * TOK_LP       list        pn_head: list of call, arg1, arg2, ... argN
@@ -182,6 +182,54 @@ JS_BEGIN_EXTERN_C
  *                          with pn_slot >= 0 and pn_attrs telling const-ness
  * TOK_NUMBER   dval        pn_dval: double value of numeric literal
  * TOK_PRIMARY  nullary     pn_op: JSOp bytecode
+ * TOK_AT       unary       pn_op: JSOP_TOATTRNAME; pn_kid attribute id/expr
+ * TOK_DBLCOLON binary      pn_op: JSOP_QNAME
+ *                          pn_left: TOK_STAR or TOK_NAME name node
+ *                          pn_right: TOK_STAR or TOK_NAME name node, or
+ *                                    expr between [ and ]
+ * TOK_XMLELEM  list        XML element node
+ *                          pn_head: start tag, content1, ... contentN, end tag
+ *                          pn_count: 2 + N where N is number of content nodes
+ *                                    N may be > x.length() if {expr} embedded
+ * TOK_XMLLIST  list        XML list node
+ *                          pn_head: content1, ... contentN
+ * TOK_XMLSTAGO, list       XML start, end, and point tag contents
+ * TOK_XMLETAGC,            pn_head: tag name or {expr}, ... XML attrs ...
+ * TOK_XMLPTAGO
+ * TOK_XMLNAME  nullary     pn_atom: XML name, with no {expr} embedded
+ * TOK_XMLNAME  list        pn_head: tag name or {expr}, ... name or {expr}
+ * TOK_XMLATTR, nullary     pn_atom: attribute value string; pn_op: JSOP_STRING
+ * TOK_XMLCDATA,
+ * TOK_XMLCOMMENT
+ * TOK_XMLPI    nullary     pn_atom: XML processing instruction target
+ *                          pn_atom2: XML PI content, or null if no content
+ * TOK_XMLTEXT  nullary     pn_atom: marked-up text, or null if empty string
+ * TOK_LC       unary       {expr} in XML tag or content; pn_kid is expr
+ *
+ * So an XML tag with no {expr} and three attributes is a list with the form:
+ *
+ *    (tagname attrname1 attrvalue1 attrname2 attrvalue2 attrname2 attrvalue3)
+ *
+ * An XML tag with embedded expressions like so:
+ *
+ *    <name1{expr1} name2{expr2}name3={expr3}>
+ *
+ * would have the form:
+ *
+ *    ((name1 {expr1}) (name2 {expr2} name3) {expr3})
+ *
+ * where () bracket a list with elements separated by spaces, and {expr} is a
+ * TOK_LC unary node with expr as its kid.
+ *
+ * Thus, the attribute name/value pairs occupy successive odd and even list
+ * locations, where pn_head is the TOK_XMLNAME node at list location 0.  The
+ * parser builds the same sort of structures for elements:
+ *
+ *    <a x={x}>Hi there!<b y={y}>How are you?</b><answer>{x + y}</answer></a>
+ *
+ * translates to:
+ *
+ *    ((a x {x}) 'Hi there!' ((b y {y}) 'How are you?') ((answer) {x + y}))
  */
 typedef enum JSParseNodeArity {
     PN_FUNC     = -3,
@@ -232,6 +280,10 @@ struct JSParseNode {
             jsint       slot;           /* -1 or arg or local var slot */
             uintN       attrs;          /* attributes if local var or const */
         } name;
+        struct {
+            JSAtom      *atom;          /* first atom in pair */
+            JSAtom      *atom2;         /* second atom in pair or null */
+        } apair;
         jsdouble        dval;           /* aligned numeric literal value */
     } pn_u;
     JSParseNode         *pn_next;       /* to align dval and pn_u on RISCs */
@@ -258,6 +310,7 @@ struct JSParseNode {
 #define pn_slot         pn_u.name.slot
 #define pn_attrs        pn_u.name.attrs
 #define pn_dval         pn_u.dval
+#define pn_atom2        pn_u.apair.atom2
 
 /* PN_LIST pn_extra flags. */
 #define PNX_STRCAT      0x01            /* TOK_PLUS list has string term */
@@ -266,6 +319,7 @@ struct JSParseNode {
 #define PNX_FORINVAR    0x08            /* TOK_VAR is left kid of TOK_IN node,
                                            which is left kid of TOK_FOR */
 #define PNX_ENDCOMMA    0x10            /* array literal has comma at end */
+#define PNX_XMLROOT     0x20            /* top-most node in XML literal tree */
 
 /*
  * Move pn2 into pn, preserving pn->pn_pos and pn->pn_offset and handing off
@@ -304,7 +358,7 @@ struct JSParseNode {
     JS_BEGIN_MACRO                                                            \
         (list)->pn_head = NULL;                                               \
         (list)->pn_tail = &(list)->pn_head;                                   \
-        (list)->pn_count = 0;                                                 \
+        (list)->pn_count = (list)->pn_extra = 0;                              \
     JS_END_MACRO
 
 #define PN_INIT_LIST_1(list, pn)                                              \
@@ -312,6 +366,7 @@ struct JSParseNode {
         (list)->pn_head = (pn);                                               \
         (list)->pn_tail = &(pn)->pn_next;                                     \
         (list)->pn_count = 1;                                                 \
+        (list)->pn_extra = 0;                                                 \
     JS_END_MACRO
 
 #define PN_APPEND(list, pn)                                                   \
@@ -339,6 +394,12 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun);
 
 extern JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc);
+
+#if JS_HAS_XML_SUPPORT
+JS_FRIEND_API(JSParseNode *)
+js_ParseXMLTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
+                       JSBool allowList);
+#endif
 
 JS_END_EXTERN_C
 

@@ -185,7 +185,7 @@ extern JS_PUBLIC_API(JSInt64) JSLL_Zero(void);
 /***********************************************************************
 ** MACROS:      JSLL_UDIVMOD
 ** DESCRIPTION:
-**  Produce both a quotient and a remainder given an unsigned 
+**  Produce both a quotient and a remainder given an unsigned
 ** INPUTS:      JSUint64 a: The dividend of the operation
 **              JSUint64 b: The quotient of the operation
 ** OUTPUTS:     JSUint64 *qp: pointer to quotient

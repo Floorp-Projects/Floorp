@@ -222,10 +222,10 @@ int main(int argc, char **argv)
         int big_endian = 0, little_endian = 0, ntests = 0;
 
         if (sizeof(short) == 2) {
-            /* force |volatile| here to get rid of any compiler optimisations 
-             * (var in register etc.) which may be appiled to |auto| vars - 
+            /* force |volatile| here to get rid of any compiler optimisations
+             * (var in register etc.) which may be appiled to |auto| vars -
              * even those in |union|s...
-             * (|static| is used to get the same functionality for compilers 
+             * (|static| is used to get the same functionality for compilers
              * which do not honor |volatile|...).
              */
             volatile static union {
@@ -287,7 +287,7 @@ int main(int argc, char **argv)
             printf("#undef  IS_BIG_ENDIAN\n\n");
         } else {
             fprintf(stderr, "%s: unknown byte order"
-                    "(big_endian=%d, little_endian=%d, ntests=%d)!\n", 
+                    "(big_endian=%d, little_endian=%d, ntests=%d)!\n",
                     argv[0], big_endian, little_endian, ntests);
             return EXIT_FAILURE;
         }

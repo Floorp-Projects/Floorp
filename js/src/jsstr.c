@@ -167,7 +167,7 @@ js_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
         s = (jschar *) JS_realloc(cx, ls, (ln + rn + 1) * sizeof(jschar));
         if (!s)
             return NULL;
- 
+
         /* Take care: right could depend on left! */
         lrdist = (size_t)(rs - ls);
         if (lrdist < ln)
@@ -537,7 +537,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
         str1 = js_NewDependentString(cx, str, i, 1, 0);
         if (!str1)
             return JS_FALSE;
-        if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSVAL(i),
+        if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSID(i),
                                  STRING_TO_JSVAL(str1), NULL, NULL,
                                  STRING_ELEMENT_ATTRS, NULL)) {
             return JS_FALSE;
@@ -563,7 +563,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id)
         str1 = js_NewDependentString(cx, str, (size_t)slot, 1, 0);
         if (!str1)
             return JS_FALSE;
-        if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSVAL(slot),
+        if (!OBJ_DEFINE_PROPERTY(cx, obj, INT_TO_JSID(slot),
                                  STRING_TO_JSVAL(str1), NULL, NULL,
                                  STRING_ELEMENT_ATTRS, NULL)) {
             return JS_FALSE;
@@ -572,7 +572,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id)
     return JS_TRUE;
 }
 
-static JSClass string_class = {
+JSClass js_StringClass = {
     js_String_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  str_getProperty,  JS_PropertyStub,
@@ -610,7 +610,7 @@ str_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     char buf[16];
     jschar *s, *t;
 
-    if (!JS_InstanceOf(cx, obj, &string_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_StringClass, argv))
         return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (!JSVAL_IS_STRING(v))
@@ -618,7 +618,7 @@ str_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
     if (!str)
         return JS_FALSE;
-    j = JS_snprintf(buf, sizeof buf, "(new %s(", string_class.name);
+    j = JS_snprintf(buf, sizeof buf, "(new %s(", js_StringClass.name);
     s = JSSTRING_CHARS(str);
     k = JSSTRING_LENGTH(str);
     n = j + k + 2;
@@ -648,7 +648,7 @@ str_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval v;
 
-    if (!JS_InstanceOf(cx, obj, &string_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_StringClass, argv))
         return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     if (!JSVAL_IS_STRING(v))
@@ -660,7 +660,7 @@ str_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 str_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    if (!JS_InstanceOf(cx, obj, &string_class, argv))
+    if (!JS_InstanceOf(cx, obj, &js_StringClass, argv))
         return JS_FALSE;
     *rval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     return JS_TRUE;
@@ -1172,6 +1172,7 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              * would normally be returned in *rval.
              */
             JS_ASSERT(*cx->fp->down->pc == JSOP_CALL ||
+                      *cx->fp->down->pc == JSOP_CALLMETHOD ||
                       *cx->fp->down->pc == JSOP_NEW);
             JS_ASSERT(js_CodeSpec[*cx->fp->down->pc].length == 3);
             switch (cx->fp->down->pc[3]) {
@@ -1228,7 +1229,7 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     if (!matchstr)
         return JS_FALSE;
     v = STRING_TO_JSVAL(matchstr);
-    return js_SetProperty(cx, arrayobj, INT_TO_JSVAL(count), &v);
+    return js_SetProperty(cx, arrayobj, INT_TO_JSID(count), &v);
 }
 
 static JSBool
@@ -2415,7 +2416,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, obj, string_functions))
         return NULL;
 
-    proto = JS_InitClass(cx, obj, NULL, &string_class, String, 1,
+    proto = JS_InitClass(cx, obj, NULL, &js_StringClass, String, 1,
                          string_props, string_methods,
                          NULL, string_static_methods);
     if (!proto)
@@ -2635,11 +2636,29 @@ js_StringToObject(JSContext *cx, JSString *str)
 {
     JSObject *obj;
 
-    obj = js_NewObject(cx, &string_class, NULL, NULL);
+    obj = js_NewObject(cx, &js_StringClass, NULL, NULL);
     if (!obj)
         return NULL;
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, STRING_TO_JSVAL(str));
     return obj;
+}
+
+const char *
+js_ValueToPrintableString(JSContext *cx, jsval v)
+{
+    JSString *str;
+    const char *bytes;
+
+    str = js_ValueToString(cx, v);
+    if (!str)
+        return NULL;
+    str = js_QuoteString(cx, str, 0);
+    if (!str)
+        return NULL;
+    bytes = js_GetStringBytes(str);
+    if (!bytes)
+        JS_ReportOutOfMemory(cx);
+    return bytes;
 }
 
 JSString *
@@ -2936,7 +2955,9 @@ js_GetStringBytes(JSString *str)
  *                 character code, then masking with 0x1F, then adding 10
  *                 will produce the desired numeric value
  *  5 bits      digit offset
- *  4 bits      reserved for future use
+ *  1 bit       XML 1.0 name start character
+ *  1 bit       XML 1.0 name character
+ *  2 bits      reserved for future use
  *  5 bits      character type
  */
 
@@ -4066,119 +4087,119 @@ const uint32 js_A[] = {
 0x00000016,  /*    6   Pe */
 0x00000019,  /*    7   Sm */
 0x00000014,  /*    8   Pd */
-0x00036009,  /*    9   Nd, identifier part, decimal 16 */
-0x0827FE01,  /*   10   Lu, hasLower (add 32), identifier start, supradecimal 31 */
+0x00036089,  /*    9   Nd, identifier part, decimal 16 */
+0x0827FF81,  /*   10   Lu, hasLower (add 32), identifier start, supradecimal 31 */
 0x0000001B,  /*   11   Sk */
 0x00050017,  /*   12   Pc, underscore */
-0x0817FE02,  /*   13   Ll, hasUpper (subtract 32), identifier start, supradecimal 31 */
+0x0817FF82,  /*   13   Ll, hasUpper (subtract 32), identifier start, supradecimal 31 */
 0x0000000C,  /*   14   Zs */
 0x0000001C,  /*   15   So */
-0x00070002,  /*   16   Ll, identifier start */
+0x00070182,  /*   16   Ll, identifier start */
 0x0000600B,  /*   17   No, decimal 16 */
 0x0000500B,  /*   18   No, decimal 8 */
 0x0000800B,  /*   19   No, strange */
-0x08270001,  /*   20   Lu, hasLower (add 32), identifier start */
-0x08170002,  /*   21   Ll, hasUpper (subtract 32), identifier start */
-0xE1D70002,  /*   22   Ll, hasUpper (subtract -121), identifier start */
-0x00670001,  /*   23   Lu, hasLower (add 1), identifier start */
-0x00570002,  /*   24   Ll, hasUpper (subtract 1), identifier start */
-0xCE670001,  /*   25   Lu, hasLower (add -199), identifier start */
-0x3A170002,  /*   26   Ll, hasUpper (subtract 232), identifier start */
-0xE1E70001,  /*   27   Lu, hasLower (add -121), identifier start */
-0x4B170002,  /*   28   Ll, hasUpper (subtract 300), identifier start */
-0x34A70001,  /*   29   Lu, hasLower (add 210), identifier start */
-0x33A70001,  /*   30   Lu, hasLower (add 206), identifier start */
-0x33670001,  /*   31   Lu, hasLower (add 205), identifier start */
-0x32A70001,  /*   32   Lu, hasLower (add 202), identifier start */
-0x32E70001,  /*   33   Lu, hasLower (add 203), identifier start */
-0x33E70001,  /*   34   Lu, hasLower (add 207), identifier start */
-0x34E70001,  /*   35   Lu, hasLower (add 211), identifier start */
-0x34670001,  /*   36   Lu, hasLower (add 209), identifier start */
-0x35670001,  /*   37   Lu, hasLower (add 213), identifier start */
-0x00070001,  /*   38   Lu, identifier start */
-0x36A70001,  /*   39   Lu, hasLower (add 218), identifier start */
-0x00070005,  /*   40   Lo, identifier start */
-0x36670001,  /*   41   Lu, hasLower (add 217), identifier start */
-0x36E70001,  /*   42   Lu, hasLower (add 219), identifier start */
-0x00AF0001,  /*   43   Lu, hasLower (add 2), hasTitle, identifier start */
-0x007F0003,  /*   44   Lt, hasUpper (subtract 1), hasLower (add 1), hasTitle, identifier start */
-0x009F0002,  /*   45   Ll, hasUpper (subtract 2), hasTitle, identifier start */
+0x08270181,  /*   20   Lu, hasLower (add 32), identifier start */
+0x08170182,  /*   21   Ll, hasUpper (subtract 32), identifier start */
+0xE1D70182,  /*   22   Ll, hasUpper (subtract -121), identifier start */
+0x00670181,  /*   23   Lu, hasLower (add 1), identifier start */
+0x00570182,  /*   24   Ll, hasUpper (subtract 1), identifier start */
+0xCE670181,  /*   25   Lu, hasLower (add -199), identifier start */
+0x3A170182,  /*   26   Ll, hasUpper (subtract 232), identifier start */
+0xE1E70181,  /*   27   Lu, hasLower (add -121), identifier start */
+0x4B170182,  /*   28   Ll, hasUpper (subtract 300), identifier start */
+0x34A70181,  /*   29   Lu, hasLower (add 210), identifier start */
+0x33A70181,  /*   30   Lu, hasLower (add 206), identifier start */
+0x33670181,  /*   31   Lu, hasLower (add 205), identifier start */
+0x32A70181,  /*   32   Lu, hasLower (add 202), identifier start */
+0x32E70181,  /*   33   Lu, hasLower (add 203), identifier start */
+0x33E70181,  /*   34   Lu, hasLower (add 207), identifier start */
+0x34E70181,  /*   35   Lu, hasLower (add 211), identifier start */
+0x34670181,  /*   36   Lu, hasLower (add 209), identifier start */
+0x35670181,  /*   37   Lu, hasLower (add 213), identifier start */
+0x00070181,  /*   38   Lu, identifier start */
+0x36A70181,  /*   39   Lu, hasLower (add 218), identifier start */
+0x00070185,  /*   40   Lo, identifier start */
+0x36670181,  /*   41   Lu, hasLower (add 217), identifier start */
+0x36E70181,  /*   42   Lu, hasLower (add 219), identifier start */
+0x00AF0181,  /*   43   Lu, hasLower (add 2), hasTitle, identifier start */
+0x007F0183,  /*   44   Lt, hasUpper (subtract 1), hasLower (add 1), hasTitle, identifier start */
+0x009F0182,  /*   45   Ll, hasUpper (subtract 2), hasTitle, identifier start */
 0x00000000,  /*   46   unassigned */
-0x34970002,  /*   47   Ll, hasUpper (subtract 210), identifier start */
-0x33970002,  /*   48   Ll, hasUpper (subtract 206), identifier start */
-0x33570002,  /*   49   Ll, hasUpper (subtract 205), identifier start */
-0x32970002,  /*   50   Ll, hasUpper (subtract 202), identifier start */
-0x32D70002,  /*   51   Ll, hasUpper (subtract 203), identifier start */
-0x33D70002,  /*   52   Ll, hasUpper (subtract 207), identifier start */
-0x34570002,  /*   53   Ll, hasUpper (subtract 209), identifier start */
-0x34D70002,  /*   54   Ll, hasUpper (subtract 211), identifier start */
-0x35570002,  /*   55   Ll, hasUpper (subtract 213), identifier start */
-0x36970002,  /*   56   Ll, hasUpper (subtract 218), identifier start */
-0x36570002,  /*   57   Ll, hasUpper (subtract 217), identifier start */
-0x36D70002,  /*   58   Ll, hasUpper (subtract 219), identifier start */
-0x00070004,  /*   59   Lm, identifier start */
-0x00030006,  /*   60   Mn, identifier part */
-0x09A70001,  /*   61   Lu, hasLower (add 38), identifier start */
-0x09670001,  /*   62   Lu, hasLower (add 37), identifier start */
-0x10270001,  /*   63   Lu, hasLower (add 64), identifier start */
-0x0FE70001,  /*   64   Lu, hasLower (add 63), identifier start */
-0x09970002,  /*   65   Ll, hasUpper (subtract 38), identifier start */
-0x09570002,  /*   66   Ll, hasUpper (subtract 37), identifier start */
-0x10170002,  /*   67   Ll, hasUpper (subtract 64), identifier start */
-0x0FD70002,  /*   68   Ll, hasUpper (subtract 63), identifier start */
-0x0F970002,  /*   69   Ll, hasUpper (subtract 62), identifier start */
-0x0E570002,  /*   70   Ll, hasUpper (subtract 57), identifier start */
-0x0BD70002,  /*   71   Ll, hasUpper (subtract 47), identifier start */
-0x0D970002,  /*   72   Ll, hasUpper (subtract 54), identifier start */
-0x15970002,  /*   73   Ll, hasUpper (subtract 86), identifier start */
-0x14170002,  /*   74   Ll, hasUpper (subtract 80), identifier start */
-0x14270001,  /*   75   Lu, hasLower (add 80), identifier start */
-0x0C270001,  /*   76   Lu, hasLower (add 48), identifier start */
-0x0C170002,  /*   77   Ll, hasUpper (subtract 48), identifier start */
-0x00034009,  /*   78   Nd, identifier part, decimal 0 */
-0x00000007,  /*   79   Me */
-0x00030008,  /*   80   Mc, identifier part */
-0x00037409,  /*   81   Nd, identifier part, decimal 26 */
+0x34970182,  /*   47   Ll, hasUpper (subtract 210), identifier start */
+0x33970182,  /*   48   Ll, hasUpper (subtract 206), identifier start */
+0x33570182,  /*   49   Ll, hasUpper (subtract 205), identifier start */
+0x32970182,  /*   50   Ll, hasUpper (subtract 202), identifier start */
+0x32D70182,  /*   51   Ll, hasUpper (subtract 203), identifier start */
+0x33D70182,  /*   52   Ll, hasUpper (subtract 207), identifier start */
+0x34570182,  /*   53   Ll, hasUpper (subtract 209), identifier start */
+0x34D70182,  /*   54   Ll, hasUpper (subtract 211), identifier start */
+0x35570182,  /*   55   Ll, hasUpper (subtract 213), identifier start */
+0x36970182,  /*   56   Ll, hasUpper (subtract 218), identifier start */
+0x36570182,  /*   57   Ll, hasUpper (subtract 217), identifier start */
+0x36D70182,  /*   58   Ll, hasUpper (subtract 219), identifier start */
+0x00070084,  /*   59   Lm, identifier start */
+0x00030086,  /*   60   Mn, identifier part */
+0x09A70181,  /*   61   Lu, hasLower (add 38), identifier start */
+0x09670181,  /*   62   Lu, hasLower (add 37), identifier start */
+0x10270181,  /*   63   Lu, hasLower (add 64), identifier start */
+0x0FE70181,  /*   64   Lu, hasLower (add 63), identifier start */
+0x09970182,  /*   65   Ll, hasUpper (subtract 38), identifier start */
+0x09570182,  /*   66   Ll, hasUpper (subtract 37), identifier start */
+0x10170182,  /*   67   Ll, hasUpper (subtract 64), identifier start */
+0x0FD70182,  /*   68   Ll, hasUpper (subtract 63), identifier start */
+0x0F970182,  /*   69   Ll, hasUpper (subtract 62), identifier start */
+0x0E570182,  /*   70   Ll, hasUpper (subtract 57), identifier start */
+0x0BD70182,  /*   71   Ll, hasUpper (subtract 47), identifier start */
+0x0D970182,  /*   72   Ll, hasUpper (subtract 54), identifier start */
+0x15970182,  /*   73   Ll, hasUpper (subtract 86), identifier start */
+0x14170182,  /*   74   Ll, hasUpper (subtract 80), identifier start */
+0x14270181,  /*   75   Lu, hasLower (add 80), identifier start */
+0x0C270181,  /*   76   Lu, hasLower (add 48), identifier start */
+0x0C170182,  /*   77   Ll, hasUpper (subtract 48), identifier start */
+0x00034089,  /*   78   Nd, identifier part, decimal 0 */
+0x00000087,  /*   79   Me */
+0x00030088,  /*   80   Mc, identifier part */
+0x00037489,  /*   81   Nd, identifier part, decimal 26 */
 0x00005A0B,  /*   82   No, decimal 13 */
 0x00006E0B,  /*   83   No, decimal 23 */
 0x0000740B,  /*   84   No, decimal 26 */
 0x0000000B,  /*   85   No */
-0xFE170002,  /*   86   Ll, hasUpper (subtract -8), identifier start */
-0xFE270001,  /*   87   Lu, hasLower (add -8), identifier start */
-0xED970002,  /*   88   Ll, hasUpper (subtract -74), identifier start */
-0xEA970002,  /*   89   Ll, hasUpper (subtract -86), identifier start */
-0xE7170002,  /*   90   Ll, hasUpper (subtract -100), identifier start */
-0xE0170002,  /*   91   Ll, hasUpper (subtract -128), identifier start */
-0xE4170002,  /*   92   Ll, hasUpper (subtract -112), identifier start */
-0xE0970002,  /*   93   Ll, hasUpper (subtract -126), identifier start */
-0xFDD70002,  /*   94   Ll, hasUpper (subtract -9), identifier start */
-0xEDA70001,  /*   95   Lu, hasLower (add -74), identifier start */
-0xFDE70001,  /*   96   Lu, hasLower (add -9), identifier start */
-0xEAA70001,  /*   97   Lu, hasLower (add -86), identifier start */
-0xE7270001,  /*   98   Lu, hasLower (add -100), identifier start */
-0xFE570002,  /*   99   Ll, hasUpper (subtract -7), identifier start */
-0xE4270001,  /*  100   Lu, hasLower (add -112), identifier start */
-0xFE670001,  /*  101   Lu, hasLower (add -7), identifier start */
-0xE0270001,  /*  102   Lu, hasLower (add -128), identifier start */
-0xE0A70001,  /*  103   Lu, hasLower (add -126), identifier start */
+0xFE170182,  /*   86   Ll, hasUpper (subtract -8), identifier start */
+0xFE270181,  /*   87   Lu, hasLower (add -8), identifier start */
+0xED970182,  /*   88   Ll, hasUpper (subtract -74), identifier start */
+0xEA970182,  /*   89   Ll, hasUpper (subtract -86), identifier start */
+0xE7170182,  /*   90   Ll, hasUpper (subtract -100), identifier start */
+0xE0170182,  /*   91   Ll, hasUpper (subtract -128), identifier start */
+0xE4170182,  /*   92   Ll, hasUpper (subtract -112), identifier start */
+0xE0970182,  /*   93   Ll, hasUpper (subtract -126), identifier start */
+0xFDD70182,  /*   94   Ll, hasUpper (subtract -9), identifier start */
+0xEDA70181,  /*   95   Lu, hasLower (add -74), identifier start */
+0xFDE70181,  /*   96   Lu, hasLower (add -9), identifier start */
+0xEAA70181,  /*   97   Lu, hasLower (add -86), identifier start */
+0xE7270181,  /*   98   Lu, hasLower (add -100), identifier start */
+0xFE570182,  /*   99   Ll, hasUpper (subtract -7), identifier start */
+0xE4270181,  /*  100   Lu, hasLower (add -112), identifier start */
+0xFE670181,  /*  101   Lu, hasLower (add -7), identifier start */
+0xE0270181,  /*  102   Lu, hasLower (add -128), identifier start */
+0xE0A70181,  /*  103   Lu, hasLower (add -126), identifier start */
 0x00010010,  /*  104   Cf, ignorable */
 0x0004000D,  /*  105   Zl, whitespace */
 0x0004000E,  /*  106   Zp, whitespace */
 0x0000400B,  /*  107   No, decimal 0 */
 0x0000440B,  /*  108   No, decimal 2 */
-0x0427420A,  /*  109   Nl, hasLower (add 16), identifier start, decimal 1 */
-0x0427800A,  /*  110   Nl, hasLower (add 16), identifier start, strange */
-0x0417620A,  /*  111   Nl, hasUpper (subtract 16), identifier start, decimal 17 */
-0x0417800A,  /*  112   Nl, hasUpper (subtract 16), identifier start, strange */
-0x0007800A,  /*  113   Nl, identifier start, strange */
+0x0427438A,  /*  109   Nl, hasLower (add 16), identifier start, decimal 1 */
+0x0427818A,  /*  110   Nl, hasLower (add 16), identifier start, strange */
+0x0417638A,  /*  111   Nl, hasUpper (subtract 16), identifier start, decimal 17 */
+0x0417818A,  /*  112   Nl, hasUpper (subtract 16), identifier start, strange */
+0x0007818A,  /*  113   Nl, identifier start, strange */
 0x0000420B,  /*  114   No, decimal 1 */
 0x0000720B,  /*  115   No, decimal 25 */
 0x06A0001C,  /*  116   So, hasLower (add 26) */
 0x0690001C,  /*  117   So, hasUpper (subtract 26) */
 0x00006C0B,  /*  118   No, decimal 22 */
 0x0000560B,  /*  119   No, decimal 11 */
-0x0007720A,  /*  120   Nl, identifier start, decimal 25 */
-0x0007400A,  /*  121   Nl, identifier start, decimal 0 */
+0x0007738A,  /*  120   Nl, identifier start, decimal 25 */
+0x0007418A,  /*  121   Nl, identifier start, decimal 0 */
 0x00000013,  /*  122   Cs */
 0x00000012   /*  123   Co */
 };
@@ -4493,7 +4514,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
             JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
             ucs4Char = ucs4Char<<6 | (*utf8Buffer++ & 0x3F);
         }
-        if (ucs4Char < minucs4Char || 
+        if (ucs4Char < minucs4Char ||
             ucs4Char == 0xFFFE || ucs4Char == 0xFFFF) {
             ucs4Char = 0xFFFD;
         }

@@ -119,7 +119,7 @@
 #define __P(p)  ()
 #endif
 
-#if defined _WIN32 || defined SUNOS4 
+#if defined _WIN32 || defined SUNOS4
 
 #define fd_acos acos
 #define fd_asin asin
@@ -268,7 +268,7 @@ extern double fd_atan __P((double));
 extern double fd_cos __P((double));
 extern double fd_sin __P((double));
 extern double fd_tan __P((double));
- 
+
 extern double fd_exp __P((double));
 extern double fd_log __P((double));
 extern double fd_sqrt __P((double));

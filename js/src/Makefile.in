@@ -95,6 +95,7 @@ CSRCS		= \
 		jsstr.c \
 		jsutil.c \
 		jsxdrapi.c \
+		jsxml.c \
 		prmjtime.c \
 		$(NULL)
 
@@ -136,11 +137,12 @@ EXPORTS		= \
 		jsscan.h \
 		jsscope.h \
 		jsscript.h \
+		jsstddef.h \
 		jsstr.h \
 		jstypes.h \
 		jsutil.h \
 		jsxdrapi.h \
-		jsstddef.h \
+		jsxml.h \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

@@ -1267,6 +1267,9 @@ restart:
                 GC_MARK(cx, fp->scopeChain, "scope chain", NULL);
                 if (fp->sharpArray)
                     GC_MARK(cx, fp->sharpArray, "sharp array", NULL);
+
+                if (fp->xmlNamespace)
+                    GC_MARK(cx, fp->xmlNamespace, "xmlNamespace", NULL);
             } while ((fp = fp->down) != NULL);
         }
 
