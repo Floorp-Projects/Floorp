@@ -1,6 +1,7 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="xul.css" type="text/css"?>
-<?xml-stylesheet href="pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 
 <!DOCTYPE window [
@@ -13,17 +14,13 @@
 <!ENTITY  manualTypeRadio.label "Manual proxy configuration">
 <!ENTITY  autoTypeRadio.label "Automatic proxy configuration">
 <!ENTITY  configAutoconfigText.label "Configuration location (URL):">
-
 ]>
-
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('Proxies');"  title="Sample Prefs Panel">
 
-
-<html:script language="JavaScript" src="PrefsWindow.js">
-</html:script>
+<html:script language="javascript" src="PrefsWindow.js"/>
 
 <html:div ID="top">
 		<html:SPAN ID="lefttext">&proxiesHeader.label;</html:SPAN>

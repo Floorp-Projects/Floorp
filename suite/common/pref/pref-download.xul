@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="xul.css" type="text/css"?>
-<?xml-stylesheet href="dialog.css" type="text/css"?>
-<?xml-stylesheet href="pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY  title.label "Download">
@@ -24,9 +24,6 @@
           first select them for downloading.  Use the Select... button to 
 		      select items for dowloading.">
 <!ENTITY  select "Select...">
-
-
-
 ]>
 
 
@@ -34,9 +31,7 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="return StartUp('Download');"  title="&title.label;">
 
-<html:script language="JavaScript" src="PrefsWindow.js">
-</html:script>
-
+<html:script language="javascript" src="PrefsWindow.js"/>
 
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&download;</html:SPAN>
