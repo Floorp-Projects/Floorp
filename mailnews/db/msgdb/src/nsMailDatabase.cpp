@@ -468,6 +468,31 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
     m_folderStream->seek(PR_SEEK_SET, folderStreamPos);
 }
 
+PRUint32 nsMailDatabase::GetMailboxModDate()
+{
+  PRUint32 retModTime = 0;
+  nsCOMPtr <nsILocalFile> localFile;
+  PRInt64 lastModTime;
+  nsresult rv = NS_FileSpecToIFile(m_folderSpec, getter_AddRefs(localFile));
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = localFile->GetLastModifiedTime(&lastModTime);
+    if (NS_SUCCEEDED(rv))
+    {
+
+      PRTime  temp64;
+      PRInt64 thousand;
+      LL_I2L(thousand, PR_MSEC_PER_SEC);
+      LL_DIV(temp64, lastModTime, thousand);
+      LL_L2UI(retModTime, temp64);
+    }
+  }
+  if (!retModTime)
+    m_folderSpec->GetModDate(retModTime) ;
+
+  return retModTime;
+}
+
 NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -482,7 +507,7 @@ NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
   
   if (m_folderSpec && m_dbFolderInfo)
   {
-    m_folderSpec->GetModDate(actualFolderTimeStamp) ;
+    actualFolderTimeStamp = GetMailboxModDate();
   
     m_dbFolderInfo->GetNumNewMessages(&numNewMessages);
     m_dbFolderInfo->GetFolderSize(&folderSize);
@@ -551,8 +576,7 @@ NS_IMETHODIMP nsMailDatabase::SetSummaryValid(PRBool valid)
   {
     if (valid)
     {
-      nsFileSpec::TimeStamp actualFolderTimeStamp;
-      m_folderSpec->GetModDate(actualFolderTimeStamp) ;
+      nsFileSpec::TimeStamp actualFolderTimeStamp = GetMailboxModDate();
       
       m_dbFolderInfo->SetFolderSize(m_folderSpec->GetFileSize());
       m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
@@ -795,9 +819,9 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
   }
   
   {
-    nsFileSpec::TimeStamp actualFolderTimeStamp;
-    folderName->GetModDate(actualFolderTimeStamp) ;
-    
+ 
+    pMessageDB->m_folderSpec = folderName;
+    nsFileSpec::TimeStamp actualFolderTimeStamp = pMessageDB->GetMailboxModDate();
     pMessageDB->m_dbFolderInfo->SetFolderSize(folderName->GetFileSize());
     pMessageDB->m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
     pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);

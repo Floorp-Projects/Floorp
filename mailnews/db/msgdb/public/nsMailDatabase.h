@@ -81,6 +81,7 @@ public:
 protected:
 
   nsresult        GetAllOfflineOpsTable(); // get this on demand
+  PRUint32        GetMailboxModDate(); 
 
   nsCOMPtr <nsIMdbTable>  m_mdbAllOfflineOpsTable;
   mdb_token       m_offlineOpsRowScopeToken;
