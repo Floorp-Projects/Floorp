@@ -582,8 +582,16 @@ nsGopherChannel::SendRequest(nsITransport* aTransport)
             // We require a query string here - if we don't have one,
             // then we need to ask the user
             if (!mPrompter) {
-                NS_ERROR("We need a prompter!");
-                return NS_ERROR_FAILURE;
+                if (mLoadGroup) {
+                    nsCOMPtr<nsIInterfaceRequestor> cbs;
+                    rv = mLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+                    if (NS_SUCCEEDED(rv))
+                        mPrompter = do_GetInterface(cbs);
+                }
+                if (!mPrompter) {
+                    NS_ERROR("We need a prompter!");
+                    return NS_ERROR_FAILURE;
+                }
             }
             nsXPIDLString search;
             PRBool res;

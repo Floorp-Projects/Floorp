@@ -1806,6 +1806,16 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
 
     mKeepRunning = PR_TRUE;
     mPrompter = aPrompter;
+    if (!mPrompter) {
+        nsCOMPtr<nsILoadGroup> ldGrp;
+        aChannel->GetLoadGroup(getter_AddRefs(ldGrp));
+        if (ldGrp) {
+            nsCOMPtr<nsIInterfaceRequestor> cbs;
+            rv = ldGrp->GetNotificationCallbacks(getter_AddRefs(cbs));
+            if (NS_SUCCEEDED(rv))
+                mPrompter = do_GetInterface(cbs);
+        }
+    }
     mFTPEventSink = sink;
     mAuthPrompter = aAuthPrompter;
     mCacheEntry = cacheEntry;
