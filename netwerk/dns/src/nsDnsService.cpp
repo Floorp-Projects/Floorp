@@ -825,12 +825,20 @@ nsDNSLookup::DoSyncLookup()
     PRStatus status;
     nsresult rv = NS_OK;
 
+    // must not hold the service lock while resolving, otherwise we could
+    // end up locking up the DNS service and anyone who accesses it until
+    // this function returns, which could be a while if the DNS server is
+    // unreachable. XXX is this thread-safe?
+    nsDNSService::Unlock();
+
     status = PR_GetIPNodeByName(mHostName,
                                 PR_AF_INET6,
                                 PR_AI_DEFAULT,
                                 mHostEntry.buffer,
                                 PR_NETDB_BUF_SIZE,
                                 &(mHostEntry.hostEnt));
+
+    nsDNSService::Lock();
 
     if (PR_SUCCESS != status)
         rv = NS_ERROR_UNKNOWN_HOST;

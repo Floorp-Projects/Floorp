@@ -415,6 +415,14 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 
     while (!done) {
         //
+        // Check for failure on any socket requests
+        //
+        if (mReadRequest && mReadRequest->HasFailed())
+            mReadRequest->GetStatus(&mStatus);
+        else if (mWriteRequest && mWriteRequest->HasFailed())
+            mWriteRequest->GetStatus(&mStatus);
+
+        //
         // If an error has occurred then move into the error state...
         //
         if (NS_FAILED(mStatus) && (NS_BASE_STREAM_WOULD_BLOCK != mStatus))
@@ -495,7 +503,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             // Send status message
             // only send a status if doResolveHost is going to do some
             // resolution
-            if (mStatus != NS_OK)
+            if (mStatus == NS_BASE_STREAM_WOULD_BLOCK)
                 OnStatus_Locked(NS_NET_STATUS_RESOLVING_HOST);
             break;
 
@@ -635,6 +643,12 @@ nsresult nsSocketTransport::doResolveHost(void)
 
     LOG(("nsSocketTransport: Entering doResolveHost() [host=%s:%d this=%x].\n", 
         mHostName, mPort, this));
+
+    // 
+    // The hostname is being resolved...
+    //
+    if (mDNSRequest)
+        return NS_BASE_STREAM_WOULD_BLOCK;
 
     //
     // The hostname has not been resolved yet...
@@ -1036,7 +1050,6 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
     if (mReadRequest) {
         if (mReadRequest->IsCanceled() || (mBytesExpected == 0)) {
             LOG(("nsSocketTransport: [this=%x] completing read request due to cancelation\n", this));
-            mSelectFlags &= ~PR_POLL_READ;
             mReadRequest->GetStatus(&readStatus);
             CompleteAsyncRead();
             if (NS_FAILED(readStatus))
@@ -1078,7 +1091,6 @@ nsSocketTransport::doReadWrite(PRInt16 aSelectFlags)
     if (mWriteRequest) {
         if (mWriteRequest->IsCanceled()) {
             LOG(("nsSocketTransport: [this=%x] completing write request due to cancelation\n", this));
-            mSelectFlags &= ~PR_POLL_WRITE;
             mWriteRequest->GetStatus(&writeStatus);
             CompleteAsyncWrite();
             if (NS_FAILED(writeStatus))
