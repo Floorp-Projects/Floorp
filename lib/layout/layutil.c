@@ -1941,10 +1941,10 @@ lo_RecycleElements(MWContext *context, lo_DocState *state, LO_Element *elements)
 	eptr = elements;
 	while(eptr->lo_any.next != NULL)
 	{
-		lo_ScrapeElement(context, eptr);
+		lo_ScrapeElement(context, eptr, TRUE);
 		eptr = eptr->lo_any.next;
 	}
-	lo_ScrapeElement(context, eptr);
+	lo_ScrapeElement(context, eptr, TRUE);
 #ifdef MEMORY_ARENAS
     if ( EDT_IS_EDITOR(context) ) {
 	    eptr->lo_any.next = state->top_state->recycle_list;

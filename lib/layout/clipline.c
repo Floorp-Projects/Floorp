@@ -340,7 +340,7 @@ lo_ClipLines(MWContext *context, lo_DocState *state, int32 line)
 	}
 	while ((start_clipping != NULL)&&(start_clipping != end_clipping))
 	{
-		lo_ScrapeElement(context, start_clipping);
+		lo_ScrapeElement(context, start_clipping, TRUE);
 		start_clipping = start_clipping->lo_any.next;
 	}
 
@@ -447,7 +447,7 @@ lo_ClipLines(MWContext *context, lo_DocState *state, int32 line)
 		 */
 		if ((eptr->lo_any.y - dy) < 0)
 		{
-			lo_ScrapeElement(context, eptr);
+			lo_ScrapeElement(context, eptr, TRUE);
 			eptr = eptr->lo_any.next;
 			continue;
 		}

@@ -994,7 +994,7 @@ extern void lo_FreePartialCell(MWContext *context, lo_DocState *state,
 extern void lo_FreeElement(MWContext *context, LO_Element *, Bool);
 extern void lo_FreeElementList(MWContext *, LO_Element *);
 extern void lo_FreeImageAttributes(LO_ImageAttr *image_attr);
-extern void lo_ScrapeElement(MWContext *context, LO_Element *);
+extern void lo_ScrapeElement(MWContext *context, LO_Element *, Bool);
 extern int32 lo_FreeRecycleList(MWContext *context, LO_Element *);
 extern void lo_FreeGridRec(lo_GridRec *);
 extern void lo_FreeGridCellRec(MWContext *, lo_GridRec *, lo_GridCellRec *);

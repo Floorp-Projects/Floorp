@@ -457,8 +457,12 @@ lo_remove_image(lo_DocLists *doc_lists, LO_Element *element)
 }
 
 
+/* freeTableOrCellState should should be set to TRUE to free the
+   associated lo_TableRec for the LO_TABLE layout element or the 
+   lo_TableCell for an LO_CELL layout element */
+
 void
-lo_ScrapeElement(MWContext *context, LO_Element *element)
+lo_ScrapeElement(MWContext *context, LO_Element *element, Bool freeTableOrCellState )
 {
 	if (element == NULL)
 	{
@@ -736,7 +740,7 @@ lo_ScrapeElement(MWContext *context, LO_Element *element)
                             }
 
 			    /* Free the lo_TableCell record associated with this cell */
-			    if ( element->lo_cell.table_cell != NULL )
+			    if ( freeTableOrCellState && element->lo_cell.table_cell != NULL )
 			    {
 				lo_TopState *top_state;
 				lo_DocState *state;
@@ -752,7 +756,8 @@ lo_ScrapeElement(MWContext *context, LO_Element *element)
 
 		case LO_TABLE:
 			{
-			lo_ScrapeTableElement( context, (LO_TableStruct *) element );
+			    if (freeTableOrCellState)
+				lo_ScrapeTableElement( context, (LO_TableStruct *) element );
 			}
 			break;
 
@@ -813,7 +818,7 @@ lo_FreeElement(MWContext *context, LO_Element *element, Bool do_scrape)
 
 	if (do_scrape != FALSE)
 	{
-		lo_ScrapeElement(context, element);
+		lo_ScrapeElement(context, element, FALSE);
 	}
 
 #ifdef MEMORY_ARENAS
