@@ -64,11 +64,11 @@
 #include "nsSOAPPropertyBag.h"
 #include "nsSchemaLoader.h"
 #include "nsSchemaPrivate.h"
-#ifdef MOZ_WSP
+
 #include "nsWSDLLoader.h"
 #include "nsWSDLPrivate.h"
 #include "wspprivate.h"
-#endif // MOZ_WSP
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -160,7 +160,6 @@ NS_DECL_CLASSINFO(nsSchemaFacet)
 NS_DECL_CLASSINFO(nsSOAPArray)
 NS_DECL_CLASSINFO(nsSOAPArrayType)
 
-#ifdef MOZ_WSP
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWSDLLoader, Init)
 NS_DECL_CLASSINFO(nsWSDLLoader)
 NS_DECL_CLASSINFO(nsWSDLPort)
@@ -179,7 +178,6 @@ NS_DECL_CLASSINFO(WSPException)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSPInterfaceInfoService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(WSPFactory)
 NS_DECL_CLASSINFO(WSPFactory)
-#endif // MOZ_WSP
 
 // {79998DE9-1E34-45e0-A587-F9CCC8DB00DD}
 #define NS_WSP_INTERFACE_INFO_SERVICE_CID           \
@@ -350,7 +348,7 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
                                 NS_SCHEMALOADER_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
-#ifdef MOZ_WSP
+
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "WSDLLoader",
                                 NS_WSDLLOADER_CONTRACTID,
@@ -361,7 +359,6 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
                                 NS_WEBSERVICEPROXYFACTORY_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
-#endif // MOZ_WSP
 
   return rv;
 }
@@ -562,7 +559,6 @@ static const nsModuleComponentInfo components[] = {
   { "Builtin Schema Collection", NS_BUILTINSCHEMACOLLECTION_CID,
     NS_BUILTINSCHEMACOLLECTION_CONTRACTID, 
     nsBuiltinSchemaCollectionConstructor },
-#ifdef MOZ_WSP
   { "WSDLLoader", NS_WSDLLOADER_CID, NS_WSDLLOADER_CONTRACTID,
     nsWSDLLoaderConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsWSDLLoader), nsnull,
@@ -625,7 +621,6 @@ static const nsModuleComponentInfo components[] = {
     NS_WEBSERVICEPROXYFACTORY_CONTRACTID, WSPFactoryConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(WSPFactory), nsnull, 
     &NS_CLASSINFO_NAME(WSPFactory), nsIClassInfo::DOM_OBJECT }
-#endif // MOZ_WSP
 };
 
 void PR_CALLBACK
@@ -636,9 +631,7 @@ XMLExtrasModuleDestructor(nsIModule* self)
   NS_IF_RELEASE(NS_CLASSINFO_NAME(DOMParser));
 
   nsSchemaAtoms::DestroySchemaAtoms();
-#ifdef MOZ_WSP
   nsWSDLAtoms::DestroyWSDLAtoms();
-#endif // MOZ_WSP
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsXMLExtrasModule, components, 

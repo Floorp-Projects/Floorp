@@ -63,15 +63,10 @@ SHARED_LIBRARY_LIBS = \
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrasschema_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrassoap_s.$(LIB_SUFFIX) \
-	$(NULL)
-ifdef MOZ_WSP
-SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)xmlextrasinterfaceinfo_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextraswsdl_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrasproxy_s.$(LIB_SUFFIX) \
 	$(NULL)
-DEFINES += -DMOZ_WSP
-endif
-
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
@@ -80,13 +75,9 @@ LOCAL_INCLUDES	= \
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../../soap/src \
 		-I$(srcdir)/../../schema/src \
-		$(NULL)
-ifdef MOZ_WSP
-LOCAL_INCLUDES	+= \
+		-I$(srcdir)/../../interfaceinfo/src \
 		-I$(srcdir)/../../wsdl/src \
 		-I$(srcdir)/../../proxy/src \
-		$(NULL)
-endif
 
 
 EXTRA_DSO_LDOPTS = \

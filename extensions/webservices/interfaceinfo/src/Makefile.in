@@ -32,23 +32,15 @@
 # file under either the NPL or the GPL.
 #
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= iiextras
-LIBRARY_NAME	= iiextras
-EXPORT_LIBRARY = 1
-SHORT_LIBNAME	= iiextras
-IS_COMPONENT	= 1
-MODULE_NAME	= iiextras
-ifeq ($(OS_ARCH),WINNT)
-LIBRARY_NAME	= iiextras
-SHORT_LIBNAME	= iiextras
-endif
+MODULE		= xmlextras
+LIBRARY_NAME	= xmlextrasinterfaceinfo_s
 
 REQUIRES	= xpcom \
 		  string \
@@ -60,13 +52,9 @@ CPPSRCS		= \
 	iixmodule.cpp	\
 	$(NULL)
 
-include $(topsrcdir)/config/config.mk
-
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
 EXTRA_COMPONENTS = nsInterfaceInfoToIDL.js
+
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 

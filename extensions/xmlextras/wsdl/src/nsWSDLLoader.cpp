@@ -82,6 +82,7 @@ nsIAtom* nsWSDLAtoms::sHeader_atom = nsnull;
 nsIAtom* nsWSDLAtoms::sHeaderFault_atom = nsnull;
 nsIAtom* nsWSDLAtoms::sAddress_atom = nsnull;
 
+nsIAtom* nsWSDLAtoms::sSchema_atom = nsnull;
 
 #define SET_AND_CHECK_ATOM(_atom, _val)   \
   PR_BEGIN_MACRO                          \
@@ -252,7 +253,7 @@ nsWSDLLoader::doLoad(const nsAString& wsdlURI, const nsAString& portName,
   }
 
   nsCOMPtr<nsIDOMEventListener> listener;
-  nsWSDLLoadRequest* request = new nsWSDLLoadRequest(!aListener, nsnull,
+  nsWSDLLoadRequest* request = new nsWSDLLoadRequest(!aListener, aListener,
                                                      portName);
   if (!request) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -264,7 +265,7 @@ nsWSDLLoader::doLoad(const nsAString& wsdlURI, const nsAString& portName,
 
   rv = request->LoadDefinition(NS_ConvertUTF8toUCS2(spec));
 
-  if (NS_SUCCEEDED(rv) && aListener) {
+  if (NS_SUCCEEDED(rv) && !aListener) {
     request->GetPort(_retval);
   }
 

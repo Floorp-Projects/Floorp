@@ -26,14 +26,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = base 
-
-DIRS += schema soap
-ifdef MOZ_WSP
-DIRS += wsdl proxy
-endif
-
-DIRS += build
+DIRS            = base schema soap interfaceinfo wsdl proxy build
 
 ifdef ENABLE_TESTS
 DIRS += tests
