@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,48 +13,47 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH=../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-##
-## Dont build the DSO under the 'build' directory as windows does.
-##
-## The DSOs get built in the toolkit dir itself.  Do this so that 
-## multiple implementations of widget can be built on the same
-##  source tree.
-##
+DIRS		= xpwidgets support
+
+#
+# Dont build the DSO under the 'build' directory as windows does.
+#
+# The DSOs get built in the toolkit dir itself.  Do this so that 
+# multiple implementations of widget can be built on the same
+# source tree.
+#
 ifndef MOZ_MONOLITHIC_TOOLKIT
-DIRS = xpwidgets support
 
 ifdef MOZ_ENABLE_GTK
-  DIRS += gtk
+DIRS		+= gtk
 endif
 
 ifdef MOZ_ENABLE_MOTIF
-  DIRS += motif
+DIRS		+= motif
 endif
 
 ifdef MOZ_ENABLE_XLIB
-  DIRS += xlib
+DIRS		+= xlib
 endif
 
 ifdef MOZ_ENABLE_QT
-  DIRS += qt
+DIRS		+= qt
 endif
 
-DIRS += unix_services
 else
-DIRS = xpwidgets support $(MOZ_WIDGET_TOOLKIT)
+DIRS		+= $(MOZ_WIDGET_TOOLKIT)
 endif
 
-include $(topsrcdir)/config/config.mk
-
-TARGET = $(LIBRARY)
+DIRS		+= unix_services
 
 include $(topsrcdir)/config/rules.mk
 
