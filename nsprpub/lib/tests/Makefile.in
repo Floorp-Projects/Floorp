@@ -54,7 +54,11 @@ CSRCS = \
 	string.c \
 	base64t.c
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
+CSRCS += arena.c
+endif
+
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -90,6 +94,17 @@ else
   LIBPLDS= $(DIST)/lib/libplds$(MOD_VERSION).$(LIB_SUFFIX)
   endif
 endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+  ifeq ($(MOZ_OS2_TOOLS),VACPP)
+    LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO /S:32768
+    LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
+    LIBPLC = $(DIST)/lib/plc$(MOD_VERSION).lib
+    LIBPLDS= $(DIST)/lib/plds$(MOD_VERSION).$(LIB_SUFFIX)	
+  else
+    LDOPTS += -Zomf -Zlinker /PM:VIO
+  endif
 endif
 
 ifneq ($(OS_ARCH), WINNT)
@@ -223,9 +238,12 @@ else
 	link $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) wsock32.lib -out:$@
 endif
 else
+ifeq ($(OS_ARCH),OS2)
+	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC)  $(LIBPLDS) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
+else
 	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPLDS) $(LIBPR) $(EXTRA_LIBS) -o $@
 endif
-
+endif
 endif
 
 export:: $(TARGETS)

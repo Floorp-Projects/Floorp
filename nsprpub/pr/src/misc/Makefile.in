@@ -66,11 +66,12 @@ CSRCS = \
 	prlog2.c   \
 	prlong.c   \
 	prnetdb.c  \
-	prrng.c    \
 	prolock.c  \
+	prrng.c    \
 	prsystem.c \
 	prtime.c   \
 	prthinfo.c \
+	prtpool.c \
 	prtrace.c  \
 	$(NULL)
 

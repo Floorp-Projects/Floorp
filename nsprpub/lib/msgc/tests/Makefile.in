@@ -53,7 +53,7 @@ endif
 
 CSRCS = gc1.c thrashgc.c
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
@@ -80,17 +80,21 @@ ifeq ($(OS_TARGET), WIN16)
   LIBPLC = $(DIST)/lib/plc$(NSPR_VERSION).lib
   LIBGC= $(DIST)/lib/msgc$(GC_VERSION).lib
 else
-ifeq ($(OS_TARGET),OS2)
-  LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
-  LIBPR = $(DIST)/lib/nspr$(NSPR_VERSION).lib
-  LIBPLC = $(DIST)/lib/plc$(NSPR_VERSION).lib
-  LIBGC= $(DIST)/lib/msgc$(GC_VERSION).lib
-else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
   LIBPR = $(DIST)/lib/libnspr$(NSPR_VERSION).$(LIB_SUFFIX)
   LIBPLC = $(DIST)/lib/libplc$(NSPR_VERSION).$(LIB_SUFFIX)
   LIBGC= $(DIST)/lib/libmsgc$(GC_VERSION).$(LIB_SUFFIX)
 endif
+endif
+
+ifeq ($(OS_ARCH),OS2)
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+  LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
+  LIBPR = $(DIST)/lib/nspr$(NSPR_VERSION).lib
+  LIBPLC = $(DIST)/lib/plc$(NSPR_VERSION).lib
+  LIBGC= $(DIST)/lib/msgc$(GC_VERSION).lib
+else
+  LDOPTS += -Zomf -Zlinker /PM:VIO
 endif
 endif
 
@@ -291,16 +295,14 @@ ifeq ($(OS_TARGET),WIN16)
 	echo winsock.lib     >>w16link
 	wlink @w16link.
 else
-ifeq ($(OS_TARGET),OS2)
-	$(LINK) $(LDOPTS) $< $(LIBGC) $(LIBPLC) $(LIBPR) so32dll.lib tcp32dll.lib -MAP:$(@:.exe=.map) -out:$@
-else
 	link $(LDOPTS) $< $(LIBGC) $(LIBPLC) $(LIBPR) wsock32.lib -out:$@
-endif
-endif
+else
+ifeq ($(OS_ARCH),OS2)
+	$(LINK) $(LDOPTS) $< $(LIBGC) $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS) -o $@
 else
 	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBGC) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) -o $@
 endif
-
+endif
 endif
 
 export:: $(TARGETS)

@@ -45,17 +45,18 @@ include $(topsrcdir)/config/config.mk
 ifdef USE_AUTOCONF
 DIRS = $(PR_MD_ARCH_DIR)
 else
+
 ifeq ($(OS_ARCH),WINNT)
-  ifeq ($(OS_TARGET),OS2)
+    DIRS = windows
+else
+  ifeq ($(OS_ARCH),OS2)
     DIRS = os2
   else
-    DIRS = windows
-  endif
-else
   ifeq ($(OS_ARCH),BeOS)
     DIRS = beos
   else
     DIRS = unix
+    endif
   endif
 endif
 

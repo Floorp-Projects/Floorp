@@ -57,20 +57,20 @@ ifeq ($(OS_ARCH),WINNT)
 ifeq ($(OS_TARGET),WIN16)
 CSRCS += win16gc.c
 else
-ifeq ($(OS_TARGET),OS2)
-CSRCS += os2gc.c
-else
 CSRCS += win32gc.c
 endif
-endif
+else
+ifeq ($(OS_ARCH),OS2)
+CSRCS += os2gc.c
 else
 CSRCS += unixgc.c
+endif
 endif
 
 NSPR_VERSION = $(MOD_VERSION)
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
+ifeq ($(OS_TARGET), WIN16)
 EXTRA_LIBS = $(DIST)/lib/nspr$(NSPR_VERSION).lib
 else
 DLLBASE=/BASE:0x30000000
@@ -84,8 +84,12 @@ ifdef GLOWCODE
 EXTRA_LIBS += $(GLOWDIR)/glowcode.lib
 endif
 endif
-
 endif
+
+else
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+EXTRA_LIBS = $(DIST)/lib/nspr$(NSPR_VERSION).$(LIB_SUFFIX)
+
 else
 ifeq ($(OS_ARCH), AIX)
 ifeq ($(CLASSIC_NSPR),1)
@@ -98,6 +102,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 EXTRA_LIBS = -L$(DIST)/lib -lnspr$(NSPR_VERSION)_shr
 else
 EXTRA_LIBS = -L$(DIST)/lib -lnspr$(NSPR_VERSION)
+endif
 endif
 endif
 
