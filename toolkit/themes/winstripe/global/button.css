@@ -142,6 +142,8 @@ button[type="menu-button"] {
 .button-menubutton-dropmarker {
   margin: 1px;
   background-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  background-repeat: no-repeat;
+  background-position: center center;
   min-width:11px;
   min-height:11px;
 }
