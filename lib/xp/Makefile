@@ -30,7 +30,6 @@ CSRCS		= \
 		  xp_error.c \
 		  xp_intl.c \
 		  xp_ncent.c \
-		  xp_reg.c \
 		  xp_rgb.c \
 		  xp_qsort.c \
 		  xp_str.c \
