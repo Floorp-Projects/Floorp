@@ -60,10 +60,7 @@ EXPORTS		= \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXPORTS		+= \
-          nsIPrintingContext.h \
-          nsPDECommon.h \
-          $(NULL)
+EXPORTS		+= nsIPrintingContext.h
 endif
 
 include $(topsrcdir)/config/rules.mk

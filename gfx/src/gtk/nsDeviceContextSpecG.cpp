@@ -51,9 +51,16 @@
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
 
-#include "nsPrintfCString.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIServiceManager.h"
+#include "nsIDialogParamBlock.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
+
 #include "nsReadableUtils.h"
-#include "nsIServiceManager.h" 
+#include "nsISupportsArray.h"
+
+#include "nsPrintfCString.h"
 
 #ifdef USE_XPRINT
 #include "xprintutil.h"
@@ -248,6 +255,66 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
 #endif
 
 /** -------------------------------------------------------
+ */
+static nsresult DisplayXPDialog(nsIPrintSettings* aPS,
+                                const char* aChromeURL, 
+                                PRBool& aClickedOK)
+{
+  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::DisplayXPDialog()\n"));
+  NS_ASSERTION(aPS, "Must have a print settings!");
+
+  aClickedOK = PR_FALSE;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // create a nsISupportsArray of the parameters 
+  // being passed to the window
+  nsCOMPtr<nsISupportsArray> array;
+  NS_NewISupportsArray(getter_AddRefs(array));
+  if (!array) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPrintSettings> ps = aPS;
+  nsCOMPtr<nsISupports> psSupports(do_QueryInterface(ps));
+  NS_ASSERTION(psSupports, "PrintSettings must be a supports");
+  array->AppendElement(psSupports);
+
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+  if (ioParamBlock) {
+    ioParamBlock->SetInt(0, 0);
+    nsCOMPtr<nsISupports> blkSupps(do_QueryInterface(ioParamBlock));
+    NS_ASSERTION(blkSupps, "IOBlk must be a supports");
+
+    array->AppendElement(blkSupps);
+    nsCOMPtr<nsISupports> arguments(do_QueryInterface(array));
+    NS_ASSERTION(array, "array must be a supports");
+
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch) {
+      nsCOMPtr<nsIDOMWindow> active;
+      wwatch->GetActiveWindow(getter_AddRefs(active));    
+      nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
+
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      rv = wwatch->OpenWindow(parent, aChromeURL,
+            "_blank", "chrome,modal,centerscreen", array,
+            getter_AddRefs(newWindow));
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 buttonPressed = 0;
+    ioParamBlock->GetInt(0, &buttonPressed);
+    if (buttonPressed == 1) {
+      aClickedOK = PR_TRUE;
+    } else {
+      rv = NS_ERROR_ABORT;
+    }
+  } else {
+    rv = NS_ERROR_ABORT;
+  }
+  return rv;
+}
+
+/** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecGTK
  *  @update   dc 2/15/98
  *  @update   syd 3/2/99
@@ -256,19 +323,19 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
  * toolkits including:
  * - GTK+-toolkit:
  *   file:     mozilla/gfx/src/gtk/nsDeviceContextSpecG.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init()
+ *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
  * - GTK-toolkit: 
  *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecGTK.cpp 
- *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init()
+ *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
  * - Qt-toolkit:
  *   file:     mozilla/gfx/src/qt/nsDeviceContextSpecQT.cpp
- *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init()
+ *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS)
+NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS, PRBool aQuiet)
 {
-  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::Init(aPS=%p)\n", aPS);
+  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::Init(aPS=%p. qQuiet=%d)\n", aPS, (int)aQuiet));
   nsresult rv = NS_ERROR_FAILURE;
 
   mPrintSettings = aPS;
@@ -283,76 +350,88 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS)
     }
   }
 
+  PRBool canPrint = PR_FALSE;
+
   rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
+  if (!aQuiet) {
+    rv = DisplayXPDialog(mPrintSettings, 
+                         "chrome://global/content/printdialog.xul", canPrint);
+  } else {
+    rv = NS_OK;
+    canPrint = PR_TRUE;
+  }
+  
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  if (aPS) {
-    PRBool     reversed       = PR_FALSE;
-    PRBool     color          = PR_FALSE;
-    PRBool     tofile         = PR_FALSE;
-    PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
-    PRInt32    orientation    = NS_PORTRAIT;
-    PRInt32    fromPage       = 1;
-    PRInt32    toPage         = 1;
-    PRUnichar *command        = nsnull;
-    PRInt32    copies         = 1;
-    PRUnichar *printer        = nsnull;
-    PRUnichar *papername      = nsnull;
-    PRUnichar *printfile      = nsnull;
-    double     dleft          = 0.5;
-    double     dright         = 0.5;
-    double     dtop           = 0.5;
-    double     dbottom        = 0.5; 
+  if (NS_SUCCEEDED(rv) && canPrint) {
+    if (aPS) {
+      PRBool     reversed       = PR_FALSE;
+      PRBool     color          = PR_FALSE;
+      PRBool     tofile         = PR_FALSE;
+      PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
+      PRInt32    orientation    = NS_PORTRAIT;
+      PRInt32    fromPage       = 1;
+      PRInt32    toPage         = 1;
+      PRUnichar *command        = nsnull;
+      PRInt32    copies         = 1;
+      PRUnichar *printer        = nsnull;
+      PRUnichar *papername      = nsnull;
+      PRUnichar *printfile      = nsnull;
+      double     dleft          = 0.5;
+      double     dright         = 0.5;
+      double     dtop           = 0.5;
+      double     dbottom        = 0.5; 
 
-    aPS->GetPrinterName(&printer);
-    aPS->GetPrintReversed(&reversed);
-    aPS->GetPrintInColor(&color);
-    aPS->GetPaperName(&papername);
-    aPS->GetOrientation(&orientation);
-    aPS->GetPrintCommand(&command);
-    aPS->GetPrintRange(&printRange);
-    aPS->GetToFileName(&printfile);
-    aPS->GetPrintToFile(&tofile);
-    aPS->GetStartPageRange(&fromPage);
-    aPS->GetEndPageRange(&toPage);
-    aPS->GetNumCopies(&copies);
-    aPS->GetMarginTop(&dtop);
-    aPS->GetMarginLeft(&dleft);
-    aPS->GetMarginBottom(&dbottom);
-    aPS->GetMarginRight(&dright);
+      aPS->GetPrinterName(&printer);
+      aPS->GetPrintReversed(&reversed);
+      aPS->GetPrintInColor(&color);
+      aPS->GetPaperName(&papername);
+      aPS->GetOrientation(&orientation);
+      aPS->GetPrintCommand(&command);
+      aPS->GetPrintRange(&printRange);
+      aPS->GetToFileName(&printfile);
+      aPS->GetPrintToFile(&tofile);
+      aPS->GetStartPageRange(&fromPage);
+      aPS->GetEndPageRange(&toPage);
+      aPS->GetNumCopies(&copies);
+      aPS->GetMarginTop(&dtop);
+      aPS->GetMarginLeft(&dleft);
+      aPS->GetMarginBottom(&dbottom);
+      aPS->GetMarginRight(&dright);
 
-    if (printfile)
-      strcpy(mPath,    NS_ConvertUCS2toUTF8(printfile).get());
-    if (command)
-      strcpy(mCommand, NS_ConvertUCS2toUTF8(command).get());  
-    if (printer) 
-      strcpy(mPrinter, NS_ConvertUCS2toUTF8(printer).get());        
-    if (papername) 
-      strcpy(mPaperName, NS_ConvertUCS2toUTF8(papername).get());  
+      if (printfile)
+        strcpy(mPath,    NS_ConvertUCS2toUTF8(printfile).get());
+      if (command)
+        strcpy(mCommand, NS_ConvertUCS2toUTF8(command).get());  
+      if (printer) 
+        strcpy(mPrinter, NS_ConvertUCS2toUTF8(printer).get());        
+      if (papername) 
+        strcpy(mPaperName, NS_ConvertUCS2toUTF8(papername).get());  
 
-    DO_PR_DEBUG_LOG(("margins:   %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright));
-    DO_PR_DEBUG_LOG(("printRange %d\n",   printRange));
-    DO_PR_DEBUG_LOG(("fromPage   %d\n",   fromPage));
-    DO_PR_DEBUG_LOG(("toPage     %d\n",   toPage));
-    DO_PR_DEBUG_LOG(("tofile     %d\n",   tofile));
-    DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUCS2toUTF8(printfile).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUCS2toUTF8(command).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUCS2toUTF8(printer).get():"<NULL>"));
-    DO_PR_DEBUG_LOG(("papername  '%s'\n", papername? NS_ConvertUCS2toUTF8(papername).get():"<NULL>"));
+      DO_PR_DEBUG_LOG(("margins:   %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright));
+      DO_PR_DEBUG_LOG(("printRange %d\n",   printRange));
+      DO_PR_DEBUG_LOG(("fromPage   %d\n",   fromPage));
+      DO_PR_DEBUG_LOG(("toPage     %d\n",   toPage));
+      DO_PR_DEBUG_LOG(("tofile     %d\n",   tofile));
+      DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUCS2toUTF8(printfile).get():"<NULL>"));
+      DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUCS2toUTF8(command).get():"<NULL>"));
+      DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUCS2toUTF8(printer).get():"<NULL>"));
+      DO_PR_DEBUG_LOG(("papername  '%s'\n", papername? NS_ConvertUCS2toUTF8(papername).get():"<NULL>"));
 
-    mTop         = dtop;
-    mBottom      = dbottom;
-    mLeft        = dleft;
-    mRight       = dright;
-    mFpf         = !reversed;
-    mGrayscale   = !color;
-    mOrientation = orientation;
-    mToPrinter   = !tofile;
-    mCopies      = copies;
+      mTop         = dtop;
+      mBottom      = dbottom;
+      mLeft        = dleft;
+      mRight       = dright;
+      mFpf         = !reversed;
+      mGrayscale   = !color;
+      mOrientation = orientation;
+      mToPrinter   = !tofile;
+      mCopies      = copies;
+    }
   }
 
   return rv;
@@ -914,7 +993,19 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 
 NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
 {
-  return NS_OK;
+  /* fixme: We simply ignore the |aPrinter| argument here
+   * We should get the supported printer attributes from the printer and 
+   * populate the print job options dialog with these data instead of using 
+   * the "default set" here.
+   * However, this requires changes on all platforms and is another big chunk
+   * of patches ... ;-(
+   */
+
+  PRBool pressedOK;
+  return DisplayXPDialog(aPrintSettings,
+                         "chrome://global/content/printjoboptions.xul", 
+                         pressedOK);
+
 }
 
 //----------------------------------------------------------------------

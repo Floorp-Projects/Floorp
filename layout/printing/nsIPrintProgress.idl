@@ -42,7 +42,6 @@
 #include "nsIWebProgressListener.idl"
 
 interface nsIDOMWindowInternal;
-interface nsIObserver;
 
 [scriptable, uuid(7E46BC35-FB7D-4b45-AB35-82FD61015380)]
 interface nsIPrintProgress: nsIWebProgressListener {
@@ -50,11 +49,7 @@ interface nsIPrintProgress: nsIWebProgressListener {
   /* Open the progress dialog
      you can specify parameters through an xpcom object
   */
-  void openProgressDialog(in nsIDOMWindowInternal parent, 
-                          in string dialogURL, 
-                          in nsISupports parameters, 
-                          in nsIObserver openDialogObserver,
-                          out boolean notifyOnOpen);
+  void openProgressDialog(in nsIDOMWindowInternal parent, in string dialogURL, in nsISupports parameters);
   
   /* Close the progress dialog */
   void closeProgressDialog(in boolean forceClose);

@@ -62,14 +62,14 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::Init(void)
 NS_IMETHODIMP nsDeviceContextSpecFactoryXlib::CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                       nsIPrintSettings* aPrintSettings,
                                                                       nsIDeviceContextSpec *&aNewSpec,
-                                                                      PRBool aIsPrintPreview)
+                                                                      PRBool aQuiet)
 {
   nsresult rv;
   static NS_DEFINE_CID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
   nsCOMPtr<nsIDeviceContextSpec> devSpec = do_CreateInstance(kDeviceContextSpecCID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    rv = ((nsDeviceContextSpecXlib *)devSpec.get())->Init(aPrintSettings);
+    rv = ((nsDeviceContextSpecXlib *)devSpec.get())->Init(aPrintSettings, aQuiet);
     if (NS_SUCCEEDED(rv))
     {
       aNewSpec = devSpec;

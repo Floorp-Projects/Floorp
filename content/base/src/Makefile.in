@@ -70,6 +70,8 @@ CPPSRCS		= \
 		nsDocumentEncoder.cpp \
 		nsDocumentFragment.cpp \
 		nsDocumentViewer.cpp \
+		nsPrintProgress.cpp \
+		nsPrintProgressParams.cpp \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \

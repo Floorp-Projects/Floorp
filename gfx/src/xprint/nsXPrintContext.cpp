@@ -685,7 +685,7 @@ nsXPrintContext::SetResolution( void )
 }
   
 NS_IMETHODIMP
-nsXPrintContext::BeginDocument( PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage )
+nsXPrintContext::BeginDocument( PRUnichar *aTitle )
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::BeginDocument(aTitle='%s')\n", ((aTitle)?(NS_ConvertUCS2toUTF8(aTitle).get()):("<NULL>"))));
   

@@ -64,17 +64,24 @@ public:
    * means getting information about a printer. A previously
    * returned device context spec can be passed in and used as
    * a starting point for getting a new spec (or simply returning
-   * the old spec again). 
+   * the old spec again). Additionally, if it is desirable to
+   * get the device context spec without user intervention, any
+   * dialog boxes can be supressed by passing in PR_TRUE for the
+   * aQuiet parameter.
    * @param aWidget.. this is a widget a dialog can be hosted in
    * @param aNewSpec out parameter for device context spec returned. the
    *        aOldSpec may be returned if the object is recyclable.
-   * @param aIsPrintPreview if PR_TRUE, creating Spec for PrintPreview
+   * @param aQuiet if PR_TRUE, prevent the need for user intervention
+   *        in obtaining device context spec. if nsnull is passed in for
+   *        the aOldSpec, this will typically result in getting a device
+   *        context spec for the default output device (i.e. default
+   *        printer).
    * @return error status
    */
   NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
                                      nsIPrintSettings* aPrintSettings,
                                      nsIDeviceContextSpec *&aNewSpec,
-                                     PRBool aIsPrintPreview) = 0;
+                                     PRBool aQuiet) = 0;
 };
 
 #endif

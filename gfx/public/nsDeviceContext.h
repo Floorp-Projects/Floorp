@@ -90,7 +90,6 @@ public:
 
   NS_IMETHOD  Init(nsNativeWidget aWidget);
 
-
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext){return NS_ERROR_NOT_IMPLEMENTED;}
@@ -132,8 +131,6 @@ public:
 
   NS_IMETHOD GetPaletteInfo(nsPaletteInfo& aPaletteInfo);
 
-  NS_IMETHOD PrepareDocument(PRUnichar * aTitle, 
-                             PRUnichar*  aPrintToFileName) { return NS_OK; }
   NS_IMETHOD AbortDocument(void) { return NS_OK; }
 
 #ifdef NS_PRINT_PREVIEW
