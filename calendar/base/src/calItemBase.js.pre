@@ -247,7 +247,6 @@ calItemBase.prototype = {
     { cal: "mId", ics: "uid" },
     { cal: "mTitle", ics: "summary" },
     { cal: "mPriority", ics: "priority" },
-    { cal: "mMethod", ics: "method" },
     { cal: "mStatus", ics: "status" },
     { cal: "mPrivacy", ics: "icalClass" }],
 
