@@ -512,27 +512,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::DrawLine(nscoord aX0, nscoord aY0, nscoord
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextBeOS::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) {
-	if (mTranMatrix == nsnull) return NS_ERROR_FAILURE;
-	if (mSurface == nsnull) return NS_ERROR_FAILURE;
-	
-	nscoord diffX = aX1 - aX0;
-	nscoord diffY = aY1 - aY0;
-	
-	if (0 != diffX) {
-		diffX = (diffX > 0) ? 1 : -1;
-	}
-	if (0 != diffY) {
-		diffY = (diffY > 0) ? 1 : -1;
-	}
-	
-	if (LockAndUpdateView()) {
-		mView->StrokeLine(BPoint(aX0, aY0), BPoint(aX1 - diffX, aY1 - diffY));
-		mView->UnlockLooper();
-	}	
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextBeOS::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints) {
 	if (mTranMatrix == nsnull) return NS_ERROR_FAILURE;
 	if (mSurface == nsnull) return NS_ERROR_FAILURE;

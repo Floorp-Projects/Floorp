@@ -95,7 +95,7 @@ typedef enum
 
 // IID for the nsIRenderingContext interface
 #define NS_IRENDERING_CONTEXT_IID \
- { 0x79be0166, 0x4491, 0x48e8,{0xb9, 0xe2, 0xce, 0xfb, 0xa1, 0xb1, 0x71, 0x99}}
+ { 0x0974d74c, 0x9000, 0x47ca,{0x86, 0xdb, 0x35, 0xb9, 0x05, 0xde, 0xa3, 0x5d}}
 
 //----------------------------------------------------------------------
 
@@ -349,16 +349,6 @@ public:
    */
   NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) = 0;
 
-
-  /**
-   * Draw a line without being transformed
-   * @param aXO starting horiztonal coord in twips
-   * @param aY0 starting vertical coord in twips
-   * @param aX1 end horiztonal coord in twips
-   * @param aY1 end vertical coord in twips
-   */
-  NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1) = 0;
-
   /**
    * Draw a polyline
    * @param aPoints array of endpoints
@@ -435,13 +425,6 @@ public:
    * @param aNumPonts number of points in the polygon
    */
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
-
-  /**
-   * Fill a poly in the current foreground color, without transformation taking place
-   * @param aPoints points to use for the drawing, last must equal first
-   * @param aNumPonts number of points in the polygon
-   */
-  NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
 
   /**
    * Draw an ellipse in the current foreground color

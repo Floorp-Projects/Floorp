@@ -213,7 +213,6 @@ public:
 		}
    
    NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-   NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
 
 	 inline
    NS_IMETHODIMP DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints) { return DrawPolygon( aPoints, aNumPoints ); }

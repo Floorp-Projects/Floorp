@@ -829,37 +829,6 @@ nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
-{
-  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawStdLine()\n"));
-
-  nscoord diffX, diffY;
-
-  NS_ENSURE_TRUE(mTranMatrix != nsnull, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mSurface    != nsnull, NS_ERROR_FAILURE);
-
-  mTranMatrix->TransformCoord(&aX0,&aY0);
-  mTranMatrix->TransformCoord(&aX1,&aY1);
-  
-  diffX = aX1-aX0;
-  diffY = aY1-aY0;
-
-  if (0!=diffX) {
-    diffX = (diffX>0?1:-1);
-  }
-  if (0!=diffY) {
-    diffY = (diffY>0?1:-1);
-  }
-
-  UpdateGC();
-  Drawable drawable; mSurface->GetDrawable(drawable);
-  ::XDrawLine(mDisplay, drawable,
-              *mGC, aX0, aY0, aX1 - diffX, aY1 - diffY);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawPolyLine()\n"));

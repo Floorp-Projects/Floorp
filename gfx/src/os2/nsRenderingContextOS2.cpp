@@ -917,30 +917,6 @@ NS_IMETHODIMP nsRenderingContextOS2::DrawLine( nscoord aX0, nscoord aY0, nscoord
    return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextOS2::DrawStdLine( nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
-{
-   POINTL ptls[] = { { (long) aX0, (long) aY0 },
-                     { (long) aX1, (long) aY1 } };
-   mSurface->NS2PM (ptls, 2);
-
-   if (ptls[0].x > ptls[1].x)
-      ptls[0].x--;
-   else if (ptls[1].x > ptls[0].x)
-      ptls[1].x--;
-
-   if (ptls[0].y < ptls[1].y)
-      ptls[0].y++;
-   else if (ptls[1].y < ptls[0].y)
-      ptls[1].y++;
-
-   SetupLineColorAndStyle ();
-
-   GFX (::GpiMove (mPS, ptls), FALSE);
-   GFX (::GpiLine (mPS, ptls + 1), GPI_ERROR);
-
-   return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextOS2::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
    PMDrawPoly( aPoints, aNumPoints, PR_FALSE);
@@ -956,12 +932,6 @@ NS_IMETHODIMP nsRenderingContextOS2::DrawPolygon( const nsPoint aPoints[], PRInt
 NS_IMETHODIMP nsRenderingContextOS2::FillPolygon( const nsPoint aPoints[], PRInt32 aNumPoints)
 {
    PMDrawPoly( aPoints, aNumPoints, PR_TRUE );
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextOS2::FillStdPolygon( const nsPoint aPoints[], PRInt32 aNumPoints)
-{
-   PMDrawPoly( aPoints, aNumPoints, PR_TRUE, PR_FALSE );
    return NS_OK;
 }
 

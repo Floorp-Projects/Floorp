@@ -872,29 +872,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
-{
-	SetupPortState();
-
-	// make the line one pixel shorter to match other platforms
-	nscoord diffX = aX1 - aX0;
-	if (diffX)
-		diffX -= (diffX > 0 ? 1 : -1);
-
-	nscoord diffY = aY1 - aY0;
-	if (diffY)
-		diffY -= (diffY > 0 ? 1 : -1);
-
-	// draw line
-	::MoveTo(aX0, aY0);
-	::Line(diffX, diffY);
-
-	return NS_OK;
-}
-
-
-//------------------------------------------------------------------------
-
 NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
 	SetupPortState();

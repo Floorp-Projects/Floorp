@@ -471,24 +471,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine( nscoord aX0, nscoord aY0, nscoor
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: DrawStdLine( nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1 ) 
-{
-	nscoord diffX, diffY;
-
-	diffX = aX1 - aX0;
-	diffY = aY1 - aY0;
-
-	if( diffX != 0 ) diffX = ( diffX > 0 ? 1 : -1 );
-	if( diffY != 0 ) diffY = ( diffY > 0 ? 1 : -1 );
-	
-	UpdateGC();
-	PgSetStrokeColorCx( mGC, mCurrentColor );
-	PgSetStrokeDashCx( mGC, sLineStyle[mCurrentLineStyle], sLineStyleLen[mCurrentLineStyle], 0x10000 );
-	
-	PgDrawILineCx( mSurfaceDC, aX0, aY0, aX1-diffX, aY1-diffY );
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsRenderingContextPh :: DrawRect( nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight ) 
 {
 	nscoord x,y,w,h;
