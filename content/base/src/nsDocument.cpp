@@ -124,14 +124,6 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsICharsetAlias.h"
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
-nsIDocument::~nsIDocument()
-{
-  if (mNodeInfoManager) {
-    mNodeInfoManager->DropDocumentReference();
-    NS_RELEASE(mNodeInfoManager);
-  }
-}
-
 // Helper structs for the content->subdoc map
 
 class SubDocMapEntry : public PLDHashEntryHdr
@@ -593,6 +585,11 @@ nsDocument::~nsDocument()
 
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();
+  }
+
+  if (mNodeInfoManager) {
+    mNodeInfoManager->DropDocumentReference();
+    NS_RELEASE(mNodeInfoManager);
   }
 
   if (mAttrStyleSheet) {
