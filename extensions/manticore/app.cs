@@ -37,8 +37,8 @@ namespace Silverstone.Manticore.App
 
       // Initialize default and user preferences
       mPreferences = new Preferences();
-      mPreferences.InitializeDefaults("default-prefs.xml");
-      mPreferences.LoadPreferencesFile("user-prefs.xml");
+      mPreferences.InitializeDefaults();
+      mPreferences.LoadUserPreferences();
 
       // Initialize bookmarks
       mBookmarks = new Bookmarks(this);
@@ -52,7 +52,7 @@ namespace Silverstone.Manticore.App
     public void Quit() 
     {
       // Flush preferences to disk.
-      mPreferences.FlushPreferencesFile("user-prefs.xml");
+      mPreferences.FlushUserPreferences();
       
       Application.Exit();
     }
@@ -70,11 +70,12 @@ namespace Silverstone.Manticore.App
     }
 
     // Opens and displays a new browser window
-    public void OpenNewBrowser()
+    public BrowserWindow OpenNewBrowser()
     {
       BrowserWindow window = new BrowserWindow(this);
       mBrowserWindows.Add(window.GetHashCode(), window);
       window.Show();
+      return window;
     }
 
     public static void Main(string[] args) 

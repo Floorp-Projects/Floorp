@@ -123,6 +123,18 @@ namespace Silverstone.Manticore.Browser
       this.VisibleChanged += new EventHandler(LoadStartPage);
     }
 
+    /// <summary>
+    /// The currently loaded document's URL.
+    /// </summary>
+    public String URL {
+      get {
+        return mWebBrowser.URL;
+      }
+      set {
+        mWebBrowser.URL = value;
+      }
+    }
+
     private void LoadStartPage(object sender, EventArgs e)
     {
       int startMode = mApplication.Prefs.GetIntPref("browser.homepage.mode");
@@ -160,6 +172,11 @@ namespace Silverstone.Manticore.Browser
       mApplication.Quit();
     }
 
+    public Object GetCurrentLayoutEngine()
+    {
+      return mWebBrowser.GetCurrentLayoutEngine();
+    }
+
     private int previousProgress = 0;
     public void OnProgress(int aProgress, int aProgressMax) 
     {
@@ -172,12 +189,18 @@ namespace Silverstone.Manticore.Browser
 
     public void OnTitleChange(String aTitle)
     {
-      this.Text = aTitle + " - Manticore";
+      this.Text = (aTitle == "about:blank") ? "Manticore" : aTitle + " - Manticore";
     }
 
     public void OnStatusTextChange(String aStatusText)
     {
       mStatusPanel.Text = aStatusText;
+    }
+
+    public Object OnNewWindow()
+    {
+      BrowserWindow window = mApplication.OpenNewBrowser();
+      return window.GetCurrentLayoutEngine();
     }
   
     public void DoCommand(String s) 

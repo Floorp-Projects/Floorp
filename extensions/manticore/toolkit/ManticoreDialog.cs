@@ -42,7 +42,7 @@ namespace Silverstone.Manticore.Toolkit
 	/// </summary>
 	public class ManticoreDialog : Form
 	{
-    private Form mOpener;
+    protected internal Form mOpener;
 
 		public ManticoreDialog(Form aOpener) : base()
 		{

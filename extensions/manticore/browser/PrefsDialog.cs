@@ -44,6 +44,7 @@ namespace Silverstone.Manticore.Browser
   using System.Xml;
 
   using Silverstone.Manticore.Toolkit;
+  using Silverstone.Manticore.Core;
 
 	/// <summary>
 	/// Summary description for Form1.
@@ -62,6 +63,9 @@ namespace Silverstone.Manticore.Browser
     private Hashtable mPanels = null;
     private PrefPanel mCurrentPanel = null;
 
+    // LAME find a way to do global application service. 
+    private Preferences mPrefs = null;
+
 		public PrefsDialog(Form aOpener) : base(aOpener)
 		{
 			//
@@ -69,8 +73,13 @@ namespace Silverstone.Manticore.Browser
 			//
 			InitializeComponent();
 
+      okButton.Click += new EventHandler(OnOK);
+
       mNodes = new Hashtable();
       mPanels = new Hashtable();
+
+      BrowserWindow window = mOpener as BrowserWindow;
+      mPrefs = window.mApplication.Prefs;
 
       //
       // Initialize all the preference panels.
@@ -91,6 +100,20 @@ namespace Silverstone.Manticore.Browser
       treeView1.ExpandAll();
     }
 
+    public void OnOK(object sender, EventArgs e)
+    {
+      // Call |Save| on each preferences panel...
+      IEnumerator panels = mPanels.Values.GetEnumerator();
+      while (panels.MoveNext()) {
+        PrefPanel currPanel = panels.Current as PrefPanel;
+        currPanel.Save();
+      }
+
+      // ... then flush preferences to disk for safe keepin'.
+      // XXX not just yet. 
+      // mPrefs.FlushUserPreferences();
+    }
+
     public void OnTreeSelect(Object sender, TreeViewEventArgs e) 
     {
       TreeNode selectedNode = e.Node;
@@ -99,7 +122,6 @@ namespace Silverstone.Manticore.Browser
       if (mCurrentPanel != null) 
         mCurrentPanel.Visible = false;
       if (newPanel != null) {
-        Console.WriteLine("toggling visibility of panel");
         newPanel.Visible = true;
         mCurrentPanel = newPanel;
       }
@@ -116,8 +138,9 @@ namespace Silverstone.Manticore.Browser
     /// </summary>
     public void InitializePanels() 
     {
-      BrowserDisplayPanel bdp = new BrowserDisplayPanel();
+      BrowserDisplayPanel bdp = new BrowserDisplayPanel(this, mOpener, mPrefs);
       mPanels.Add("browser-display", bdp);
+      this.Controls.Add(bdp);
     }
 
     /// <summary>
@@ -251,21 +274,9 @@ namespace Silverstone.Manticore.Browser
       this.ShowInTaskbar = false;
       this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
       this.Text = "Options";
-      this.Load += new System.EventHandler(this.PrefsDialog_Load);
       this.ResumeLayout(false);
 
     }
 		#endregion
-
-    private void restoreSessionSettingsButton_Click(object sender, System.EventArgs e)
-    {
-      RestoreSessionSettings dlg = new RestoreSessionSettings(this);
-      dlg.ShowDialog();
-    }
-
-    private void PrefsDialog_Load(object sender, System.EventArgs e)
-    {
-      
-    }
 	}
 }

@@ -1,13 +1,16 @@
-using System;
-using System.Collections;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Windows.Forms;
 
 namespace Silverstone.Manticore.Browser
 {
-	/// <summary>
+  using System;
+  using System.Collections;
+  using System.ComponentModel;
+  using System.Drawing;
+  using System.Data;
+  using System.Windows.Forms;
+
+  using Silverstone.Manticore.Core;
+
+  /// <summary>
 	/// Summary description for BrowserDisplayPanel.
 	/// </summary>
 	public class BrowserDisplayPanel : PrefPanel
@@ -28,12 +31,99 @@ namespace Silverstone.Manticore.Browser
 		/// </summary>
 		private System.ComponentModel.Container components = null;
 
-		public BrowserDisplayPanel()
+    /// <summary>
+    /// LAME - the window that invoked the preferences dialog
+    /// </summary>
+    private Form mOpener = null;
+
+    /// <summary>
+    /// Construct a BrowserDisplayPanel
+    /// </summary>
+    /// <param name="aParent"></param>
+    /// <param name="aOpener">
+    /// The window that opened the preferencs dialog. We'd really rather get rid of
+    /// this and replace it with calls to a window-mediator service.
+    /// </param>
+    /// <param name="aPrefs">
+    /// The preferences handle from the application object. We want to get rid of this
+    /// and use some kind of global preferences service. 
+    /// </param>
+		public BrowserDisplayPanel(Form aParent, Form aOpener, Preferences aPrefs) : base(aParent, aPrefs)
 		{
 			// This call is required by the Windows.Forms Form Designer.
 			InitializeComponent();
 
-      Console.WriteLine("Done initializeing browser display panel");
+      mOpener = aOpener;
+
+      restoreSessionSettingsButton.Enabled = false;
+
+      radioButton3.Click += new EventHandler(OnStartupModeRadio);
+      radioButton2.Click += new EventHandler(OnStartupModeRadio);
+      radioButton1.Click += new EventHandler(OnStartupModeRadio);
+
+      restoreSessionSettingsButton.Click += new EventHandler(OnRestoreSessionSettings);
+
+      button2.Click += new EventHandler(OnUseCurrent);
+    }
+
+    public void OnUseCurrent(object sender, EventArgs e)
+    {
+      // XXX what we really want to do here is use a window-mediator like
+      //     entity to find the most recent browser window. This will surely
+      //     fail miserably if the opening window isn't a browser. 
+      BrowserWindow window = mOpener as BrowserWindow;
+      if (window != null)
+        textBox1.Text = window.URL;
+    }
+
+    public void OnRestoreSessionSettings(object sender, EventArgs e)
+    {
+      RestoreSessionSettings dlg = new RestoreSessionSettings(mParent);
+      dlg.ShowDialog();
+
+      // XXX fill in code to remember session settings here
+    }
+
+    public void OnStartupModeRadio(object sender, EventArgs e)
+    {
+      // Enable the Restore Session Settings button when the Restore Settings
+      // startup mode is enabled. 
+      restoreSessionSettingsButton.Enabled = radioButton3.Checked;
+    }
+
+    public override void Load()
+    {
+      String homepageURL = mPrefs.GetStringPref("browser.homepage");
+      textBox1.Text = homepageURL;
+
+      int startMode = mPrefs.GetIntPref("browser.homepage.mode");
+      switch (startMode) {
+        case 0:
+          radioButton3.Checked = true;
+          restoreSessionSettingsButton.Enabled = true;
+          break;
+        case 2:
+          radioButton2.Checked = true;
+          break;
+        case 1:
+        default:
+          radioButton1.Checked = true;
+          break;
+      }
+    }
+
+    public override void Save()
+    {
+      mPrefs.SetStringPref("browser.homepage", textBox1.Text != "" ? textBox1.Text : "about:blank");
+
+      int mode = 1;
+      if (radioButton3.Checked) 
+        mode = 0;
+      else if (radioButton2.Checked)
+        mode = 2;
+      mPrefs.SetIntPref("browser.homepage.mode", mode);
+
+      // XXX need to save session setting prefs when implemented.
     }
 
 		/// <summary> 
@@ -41,14 +131,9 @@ namespace Silverstone.Manticore.Browser
 		/// </summary>
 		protected override void Dispose( bool disposing )
 		{
-			if( disposing )
-			{
-				if(components != null)
-				{
-					components.Dispose();
-				}
-			}
-			base.Dispose( disposing );
+      if (disposing && components != null)
+        components.Dispose();
+      base.Dispose(disposing);
 		}
 
 		#region Component Designer generated code
@@ -135,7 +220,7 @@ namespace Silverstone.Manticore.Browser
                                                                             this.radioButton2,
                                                                             this.radioButton1});
       this.groupBox2.Location = new System.Drawing.Point(8, 0);
-      this.groupBox2.Name = "groupBox2";
+      this.groupBox2.Name = "startupModeGroup";
       this.groupBox2.Size = new System.Drawing.Size(312, 104);
       this.groupBox2.TabIndex = 1;
       this.groupBox2.TabStop = false;
@@ -151,7 +236,7 @@ namespace Silverstone.Manticore.Browser
       // radioButton3
       // 
       this.radioButton3.Location = new System.Drawing.Point(16, 72);
-      this.radioButton3.Name = "radioButton3";
+      this.radioButton3.Name = "restoreSessionRadio";
       this.radioButton3.Size = new System.Drawing.Size(152, 16);
       this.radioButton3.TabIndex = 2;
       this.radioButton3.Text = "Restore previous session";
@@ -159,7 +244,7 @@ namespace Silverstone.Manticore.Browser
       // radioButton2
       // 
       this.radioButton2.Location = new System.Drawing.Point(16, 48);
-      this.radioButton2.Name = "radioButton2";
+      this.radioButton2.Name = "blankPageRadio";
       this.radioButton2.Size = new System.Drawing.Size(112, 16);
       this.radioButton2.TabIndex = 1;
       this.radioButton2.Text = "Show blank page";
@@ -167,7 +252,7 @@ namespace Silverstone.Manticore.Browser
       // radioButton1
       // 
       this.radioButton1.Location = new System.Drawing.Point(16, 24);
-      this.radioButton1.Name = "radioButton1";
+      this.radioButton1.Name = "homePageRadio";
       this.radioButton1.Size = new System.Drawing.Size(120, 16);
       this.radioButton1.TabIndex = 0;
       this.radioButton1.Text = "Show home page";

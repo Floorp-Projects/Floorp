@@ -124,6 +124,15 @@ namespace Silverstone.Manticore.Layout
       LoadURL(url, false);
     }
 
+    public Object GetCurrentLayoutEngine()
+    {
+      if (gecko != null) 
+        return gecko;
+      else if (trident != null)
+        return trident;
+      return null;
+    }
+
     public void LoadURL(String url, Boolean bypassCache)
     {
       // XXX - neither IE nor Mozilla implement all of the
@@ -137,6 +146,21 @@ namespace Silverstone.Manticore.Layout
         gecko.Navigate(url, ref o, ref o, ref o, ref o);
       else if (trident != null)
         trident.Navigate(url, ref o, ref o, ref o, ref o);
+    }
+
+    public String URL
+    {
+      get {
+        if (gecko != null)
+          return gecko.LocationURL;
+        else if (trident != null)
+          return trident.LocationURL;
+        return "";
+      }
+      set {
+        LoadURL(value, false);
+        // XXX why can't we return |value| here?
+      }
     }
 
     public void RefreshPage() 
@@ -189,6 +213,7 @@ namespace Silverstone.Manticore.Layout
       AddProgressListener();
       AddTitleChangeListener();
       AddStatusChangeListener();
+      AddNewWindowListener();
     }
 
     private bool mProgressChangeGecko = false;
@@ -255,6 +280,34 @@ namespace Silverstone.Manticore.Layout
     public void OnStatusChangeTrident(Object sender, AxSHDocVw.DWebBrowserEvents2_StatusTextChangeEvent e)
     {
       mBrowserWindow.OnStatusTextChange(e.text);
+    }
+
+    private bool mNewWindowGecko = false;
+    private bool mNewWindowTrident = false;
+    private void AddNewWindowListener()
+    {
+      if (gecko != null && !mNewWindowGecko) {
+        gecko.NewWindow2 += new AxMOZILLACONTROLLib.DWebBrowserEvents2_NewWindow2EventHandler(OnNewWindowGecko);
+        mNewWindowGecko = true;
+      }
+      else if (trident != null && !mNewWindowTrident) {
+        trident.NewWindow2 += new AxSHDocVw.DWebBrowserEvents2_NewWindow2EventHandler(OnNewWindowTrident);
+        mNewWindowTrident = true;
+      }
+    }
+    public void OnNewWindowGecko(Object sender, AxMOZILLACONTROLLib.DWebBrowserEvents2_NewWindow2Event e)
+    {
+      Object browser = mBrowserWindow.OnNewWindow();
+      AxMozillaBrowser webBrowser = browser as AxMozillaBrowser;
+      if (webBrowser != null)
+        e.ppDisp = webBrowser;
+    }
+    public void OnNewWindowTrident(Object sender, AxSHDocVw.DWebBrowserEvents2_NewWindow2Event e)
+    {
+      Object browser = mBrowserWindow.OnNewWindow();
+      AxWebBrowser webBrowser = browser as AxWebBrowser;
+      if (webBrowser != null)
+        e.ppDisp = webBrowser;
     }
 
   }

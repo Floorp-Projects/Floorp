@@ -12,7 +12,6 @@ namespace Silverstone.Manticore.Toolkit
 	{
 		public ManticoreProgressMeter()
 		{
-      Console.WriteLine("Progressmeter!");
       this.Style = StatusBarPanelStyle.OwnerDraw;
 		}
 

@@ -52,10 +52,11 @@ namespace Silverstone.Manticore.Core
       mPrefsDocument = new XmlDocument();
     }
 
-    public void InitializeDefaults(String aDefaults)
+    public void InitializeDefaults()
     {
       // Do we ever want to support multiple defaults files? For now, no.
-      ReadDocument(aDefaults, mDefaultsDocument);
+      // XXX need a better place for this file.
+      ReadDocument("default-prefs.xml", mDefaultsDocument);
     }
 
     private void ReadDocument(String aFile, XmlDocument aDocument)
@@ -78,19 +79,28 @@ namespace Silverstone.Manticore.Core
       mPrefsDocument.NodeInserted += new XmlNodeChangedEventHandler(OnNodeInserted);
     }
 
+    public void LoadUserPreferences()
+    {
+      // XXX this needs to go into Documents and Settings
+      LoadPreferencesFile("user-prefs.xml");
+    }
+
+    public void FlushUserPreferences()
+    {
+      // XXX this needs to go into Documents and Settings
+      FlushPreferencesFile("user-prefs.xml");
+    }
+
     public void OnNodeChanged(object sender, XmlNodeChangedEventArgs e)
     {
-      Console.WriteLine(e.ToString());
     }
 
     public void OnNodeRemoved(object sender, XmlNodeChangedEventArgs e)
     {
-      Console.WriteLine(e.ToString());
     }
 
     public void OnNodeInserted(object sender, XmlNodeChangedEventArgs e)
     {
-      Console.WriteLine(e.ToString());
     }
 
     public void FlushPreferencesFile(String aFile)

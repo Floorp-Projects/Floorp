@@ -41,6 +41,8 @@ namespace Silverstone.Manticore.Browser
   using System.Data;
   using System.Windows.Forms;
   
+  using Silverstone.Manticore.Core;
+
   /// <summary>
 	/// Summary description for UserControl1.
 	/// </summary>
@@ -51,14 +53,32 @@ namespace Silverstone.Manticore.Browser
 		/// </summary>
 		private System.ComponentModel.Container components = null;
 
+    /// <summary>
+    /// Whether or not this panel has been shown before. We defer
+    /// reading preferences and populating UI for preferences panels
+    /// that have not yet been shown. 
+    /// </summary>
     private bool mGenerated = false;
 
-		public PrefPanel()
+    /// <summary>
+    /// Preferences handle
+    /// </summary>
+    // LAME - need to use global service thingy. 
+    protected internal Preferences mPrefs;
+
+    /// <summary>
+    /// Parent window (Preferences dialog)
+    /// </summary>
+    protected internal Form mParent;
+
+		public PrefPanel(Form aParent, Preferences aPrefs)
 		{
 			// This call is required by the Windows.Forms Form Designer.
 			InitializeComponent();
- 
-      Console.WriteLine("Pref panel startup");
+
+      // LAME oh so lame.
+      mPrefs = aPrefs;
+      mParent = aParent;
 
       // All preferences panels have these properties initially.
       this.Location = new System.Drawing.Point(160, 16);
@@ -78,16 +98,30 @@ namespace Silverstone.Manticore.Browser
     /// <param name="e"></param>
     public void VisibilityChanged(Object sender, EventArgs e) 
     {
-      Console.WriteLine("Visibility changed!");
       if (!mGenerated) {
         // The first time we display the panel, read the values 
         // for UI elements from preferences and fill the controls.
+        Load();
+        mGenerated = true;
       }
     }
 
-    public void Save() 
+    /// <summary>
+    /// Implemented by derived class. Reads preferences for each UI element
+    /// the first time this panel is shown, and populates the UI appropriately.
+    /// </summary>
+    public virtual void Load()
     {
-      
+      // Implemented by derived class
+    }
+
+    /// <summary>
+    /// Implemented by derived class. Takes data from UI elements (which may
+    /// be user-manipulated) and saves preferences. 
+    /// </summary>
+    public virtual void Save() 
+    {
+      // Implemented by derived class
     }
 
 		/// <summary> 

@@ -2,5 +2,8 @@
   <browser>
     <layoutengine value="trident" />
     <bookmarksfile value="bookmarks.xml" />
+    <homepage value="http://abcnews.go.com/" xmlns="">
+      <mode value="1" />
+    </homepage>
   </browser>
 </preferences>
