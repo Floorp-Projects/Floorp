@@ -108,6 +108,10 @@ nsFilePicker.prototype = {
   set filterIndex(a) { this.mFilterIndex = a; },
   get filterIndex() { return this.mFilterIndex; },
 
+  /* members */
+  mFile: undefined,
+  mParentWindow: null,
+
   /* methods */
   init: function(parent, title, mode) {
     this.mParentWindow = parent;
@@ -172,21 +176,19 @@ nsFilePicker.prototype = {
     o.retvals = new Object();
 
     var parent;
-    try {
-      if (this.mParentWindow) {
-        parent = this.mParentWindow;
-      } else if (typeof(window) == "object" && window != null) {
-        parent = window;
-      } else {
-        try {
-          var appShellService = Components.classes[APPSHELL_SERV_CONTRACTID].getService(nsIAppShellService);
-          parent = appShellService.hiddenDOMWindow;
-        } catch(ex) {
-          debug("Can't get parent.  xpconnect hates me so we can't get one from the appShellService.\n");
-          debug(ex + "\n");
-        }
+    if (this.mParentWindow) {
+      parent = this.mParentWindow;
+    } else if (window && typeof(window) == "object") {
+      parent = window;
+    } else {
+      try {
+        var appShellService = Components.classes[APPSHELL_SERV_CONTRACTID].getService(nsIAppShellService);
+        parent = appShellService.hiddenDOMWindow;
+      } catch(ex) {
+        debug("Can't get parent.  xpconnect hates me so we can't get one from the appShellService.\n");
+        debug(ex + "\n");
       }
-    } catch(ex) { debug("fuck\n"); }
+    }
 
     try {
       parent.openDialog("chrome://global/content/filepicker.xul",
