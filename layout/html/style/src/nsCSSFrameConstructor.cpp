@@ -8343,9 +8343,23 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                               NS_REINTERPRET_CAST(const nsStyleStruct*&, display));
 
     if (NS_STYLE_DISPLAY_BLOCK != display->mDisplay) {
-      // Nope, it's an inline, so just reframe the entire stinkin'
-      // mess. We _could_ do better here with a little more work...
-      return ReframeContainingBlock(aPresContext, parentFrame);
+      // Nope, it's an inline, so just reframe the entire stinkin' mess if the
+      // content is a block. We _could_ do better here with a little more work...
+      // find out if the child is a block or inline, an inline means we don't have to reframe
+      nsCOMPtr<nsIContent> child;
+      aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(child));
+      PRBool needReframe = !child;
+      if (child && child->IsContentOfType(nsIContent::eELEMENT)) {
+        nsCOMPtr<nsIStyleContext> styleContext;
+        ResolveStyleContext(aPresContext, parentFrame, child, getter_AddRefs(styleContext)); 
+        const nsStyleDisplay* display = 
+          (const nsStyleDisplay*) styleContext->GetStyleData(eStyleStruct_Display);  
+        // XXX since the block child goes in the last inline of the sacred triad, frames would 
+        // need to be moved into the 2nd triad (block) but that is more work, for now bail.
+        needReframe = display->IsBlockLevel();
+      }
+      if (needReframe)
+        return ReframeContainingBlock(aPresContext, parentFrame);
     }
   }
 
@@ -13877,20 +13891,29 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
 static void
 DoCleanupFrameReferences(nsIPresContext*  aPresContext,
                          nsIFrameManager* aFrameManager,
-                         nsIFrame*        aFrame)
+                         nsIFrame*        aFrameIn)
 {
   nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
+  aFrameIn->GetContent(getter_AddRefs(content));
+
+  nsIFrame* frame = aFrameIn;
+  // if the frame is a placeholder use the out of flow frame
+  nsCOMPtr<nsIAtom> frameType;
+  aFrameIn->GetFrameType(getter_AddRefs(frameType));
+  if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
+    frame = ((nsPlaceholderFrame*)frame)->GetOutOfFlowFrame();
+    NS_ASSERTION(frame, "program error - null of of flow frame in placeholder");
+  }
   
   // Remove the mapping from the content object to its frame
   aFrameManager->SetPrimaryFrameFor(content, nsnull);
-  aFrame->RemovedAsPrimaryFrame(aPresContext);
+  frame->RemovedAsPrimaryFrame(aPresContext);
   aFrameManager->ClearAllUndisplayedContentIn(content);
 
   // Recursively walk the child frames.
   // Note: we only need to look at the principal child list
   nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  frame->FirstChild(aPresContext, nsnull, &childFrame);
   while (childFrame) {
     DoCleanupFrameReferences(aPresContext, aFrameManager, childFrame);
     
@@ -13953,21 +13976,6 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
       CleanupFrameReferences(aPresContext, frameManager, aFrameList);
       nsFrameList tmp(aFrameList);
       tmp.DestroyFrames(aPresContext);
-      if (aState.mAbsoluteItems.childList) {
-        CleanupFrameReferences(aPresContext, frameManager, aState.mAbsoluteItems.childList);
-        tmp.SetFrames(aState.mAbsoluteItems.childList);
-        tmp.DestroyFrames(aPresContext);
-      }
-      if (aState.mFixedItems.childList) {
-        CleanupFrameReferences(aPresContext, frameManager, aState.mFixedItems.childList);
-        tmp.SetFrames(aState.mFixedItems.childList);
-        tmp.DestroyFrames(aPresContext);
-      }
-      if (aState.mFloatedItems.childList) {
-        CleanupFrameReferences(aPresContext, frameManager, aState.mFloatedItems.childList);
-        tmp.SetFrames(aState.mFloatedItems.childList);
-        tmp.DestroyFrames(aPresContext);
-      }
 
       // Tell parent of the containing block to reformulate the
       // entire block. This is painful and definitely not optimal
