@@ -226,16 +226,25 @@
         <menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;">
           <menupopup id="menu_NewPopup">
             <!-- From globalOverlay.xul -->
+<!-- Probably won't implement these
             <menuitem id="menu_newEditorTemplate"  observes="cmd_newEditorTemplate"/>
             <menuitem id="menu_newEditorDraft"     observes="cmd_newEditorDraft"/>
             <menuseparator/>
+-->
             <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
             <menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
             <menuitem id="menu_newCard"      observes="cmd_newCard"/>
           </menupopup>
         </menu>
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
-      <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="cmd_open" value="&openFileCmd.label;"/>
+      <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" value="&openFileCmd.label;"/>
+      <menu accesskey="&filerecentmenu.accesskey;" value="&fileRecentMenu.label;" oncreate="InitRecentFilesMenu()">
+        <!-- Items appended at runtime -->
+        <menupopup id="menupopup_RecentFiles">
+          <menuitem value="(recent file menu)"/>
+        </menupopup>
+      </menu>
+      <menuitem accesskey="&filerevert.accesskey;" value="&fileRevert.label;"/>
       <menuseparator />
       <menuitem accesskey="&fileclose.accesskey;"           key="closekb"        observes="cmd_close"/>
       <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="cmd_save"/>
@@ -788,10 +797,10 @@
   <button class="button-toolbar format popup" id="AlignPopupButton" disabled="true"/>
   
   <!-- Edit Mode toolbar -->
-  <text id="NormalModeButton"  class="EditModeButton" selected="1" value="&normalMode.label;"    onclick="EditorSetDisplayMode(1)"/>
-  <text id="TagModeButton"     class="EditModeButton" selected="0" value="&showAllTags.label;"   onclick="EditorSetDisplayMode(2)"/>
-  <text id="SourceModeButton"  class="EditModeButton" selected="0" value="&sourceMode.label;"    onclick="EditorSetDisplayMode(3)"/>
-  <text id="PreviewModeButton" class="EditModeButton" selected="0" value="&previewMode.label;"   onclick="EditorSetDisplayMode(0)"/>
+  <text id="NormalModeButton"  class="EditModeButton" selected="1" value="&normalMode.label;"    onclick="SetEditMode(1)"/>
+  <text id="TagModeButton"     class="EditModeButton" selected="0" value="&showAllTags.label;"   onclick="SetEditMode(2)"/>
+  <text id="SourceModeButton"  class="EditModeButton" selected="0" value="&sourceMode.label;"    onclick="SetEditMode(3)"/>
+  <text id="PreviewModeButton" class="EditModeButton" selected="0" value="&previewMode.label;"   onclick="SetEditMode(0)"/>
   
   <!-- InsertPopupButton is used by messengercompose.xul -->
   <button class="button-toolbar format popup" id="InsertPopupButton"/>
