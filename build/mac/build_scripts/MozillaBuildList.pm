@@ -246,7 +246,6 @@ sub InstallNonChromeResources()
     MakeAlias(":mozilla:intl:locale:src:language.properties",                          "$resource_dir");
 
     MakeAlias(":mozilla:gfx:src:mac:fontEncoding.properties",                          "$resource_dir"."fonts:");
-    InstallResources(":mozilla:gfx:src:MANIFEST_RES",                                  "$resource_dir"."gfx:");
 
     my($entitytab_dir) = "$resource_dir" . "entityTables";
     InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",                      "$entitytab_dir");
