@@ -334,10 +334,10 @@ function EditorGetHTML()
   }
 }
 
-function EditorInsertText()
+function EditorInsertText(textToInsert)
 {
   if (window.editorShell) {
-    window.editorShell.InsertText("Once more into the breach, dear friends.\n");
+    window.editorShell.InsertText(textToInsert);
   }
 }
 
