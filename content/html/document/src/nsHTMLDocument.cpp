@@ -508,7 +508,15 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     char buf[100];
     PRInt64 prusec, scale;
 
+
+#ifdef XP_PC
+    LL_I2L(scale, 1L);
+#else
+    // nsIFile->GetLastModificationDate() uses stat on Unix and not
+    // PRFileInfo64() to get the modification date, untill that is changed
+    // we haveto do different scaling to get the date right.
     LL_I2L(scale, 1000000L);
+#endif
     LL_MUL(prusec, modDate, scale);
     PR_ExplodeTime(prusec, PR_LocalTimeParameters, &prtime);
 
@@ -516,7 +524,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // non-y2k with msvc; '%#c' requests that a full year be used in the
     // result string.  Other OSes just use "%c".
     PR_FormatTime(buf, sizeof buf,
-#ifdef _WIN32
+#ifdef XP_PC
                   "%#c",
 #else
                   "%c",
