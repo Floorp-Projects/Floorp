@@ -82,6 +82,10 @@ static void TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSr
 static PRBool GetBGColorForHTMLElement(nsIPresContext *aPresContext,const nsStyleColor *&aBGColor);
 static nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame);
 
+// FillRect or InvertRect depending on the renderingaInvert parameter
+static void FillOrInvertRect(nsIRenderingContext& aRC,nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aInvert);
+static void FillOrInvertRect(nsIRenderingContext& aRC,const nsRect& aRect, PRBool aInvert);
+
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
 // This services fieldset legends and only works for coords defining horizontal lines.
 void nsCSSRendering::DrawLine (nsIRenderingContext& aContext, 
@@ -115,6 +119,14 @@ void nsCSSRendering::FillPolygon (nsIRenderingContext& aContext,
                                   PRInt32 aNumPoints,
                                   nsRect* aGap)
 {
+#ifdef DEBUG
+  nsPenMode penMode;
+  aContext.GetPenMode(penMode);
+  if (penMode == nsPenMode_kInvert) {
+    NS_WARNING( "Invert mode ignored in FillPolygon" );
+  }
+#endif
+
   if (nsnull == aGap) {
     aContext.FillPolygon(aPoints, aNumPoints);
   } else if (4 == aNumPoints) {
@@ -771,6 +783,7 @@ nscoord xstart,xwidth,ystart,ywidth,temp,temp1,adjust;
 PRBool  bSolid = PR_TRUE;
 float   over = 0.0f;
 PRBool  skippedSide = PR_FALSE;
+const nscolor kBlackColor = NS_RGB(0,0,0);
 
   NS_ASSERTION((aDoOutline && aOutlineStyle) || (!aDoOutline && aBorderStyle), "null params not allowed");
   PRUint8 style = aDoOutline
@@ -821,9 +834,16 @@ PRBool  skippedSide = PR_FALSE;
         dashLength = DOT_LENGTH;
       }
 
-      nscolor sideColor;
+      nscolor sideColor(kBlackColor); // default to black in case color cannot be resolved
+                                      // (because invert is not supported on cur platform)
+      PRBool  isInvert=PR_FALSE;
       if (aDoOutline) {
-        aOutlineStyle->GetOutlineColor(sideColor);
+        // see if the outline color is 'invert'
+        if (aOutlineStyle->GetOutlineInvert()) { 
+          isInvert = PR_TRUE;
+        } else {
+          aOutlineStyle->GetOutlineColor(sideColor);
+        }
       } else {
         PRBool transparent; 
         PRBool foreground;
@@ -834,6 +854,7 @@ PRBool  skippedSide = PR_FALSE;
           continue; // side is transparent
       }
       aContext.SetColor(sideColor);  
+
       switch (whichSide) {
       case NS_SIDE_RIGHT:
       case NS_SIDE_LEFT:
@@ -863,15 +884,15 @@ PRBool  skippedSide = PR_FALSE;
           if((temp1%2)==0){
             adjust = (dashRect.height-(temp%dashRect.height))/2; // adjust back
             // draw in the left and right
-            aContext.FillRect(dashRect.x, borderOutside.y,dashRect.width, dashRect.height-adjust);
-            aContext.FillRect(dashRect.x,(borderOutside.YMost()-(dashRect.height-adjust)),dashRect.width, dashRect.height-adjust);
+            FillOrInvertRect(aContext,  dashRect.x, borderOutside.y,dashRect.width, dashRect.height-adjust,isInvert);
+            FillOrInvertRect(aContext,dashRect.x,(borderOutside.YMost()-(dashRect.height-adjust)),dashRect.width, dashRect.height-adjust,isInvert);
             currRect.y += (dashRect.height-adjust);
             temp = temp-= (dashRect.height-adjust);
           } else {
             adjust = (temp%dashRect.width)/2;                   // adjust a tad longer
             // draw in the left and right
-            aContext.FillRect(dashRect.x, borderOutside.y,dashRect.width, dashRect.height+adjust);
-            aContext.FillRect(dashRect.x,(borderOutside.YMost()-(dashRect.height+adjust)),dashRect.width, dashRect.height+adjust);
+            FillOrInvertRect(aContext, dashRect.x, borderOutside.y,dashRect.width, dashRect.height+adjust,isInvert);
+            FillOrInvertRect(aContext, dashRect.x,(borderOutside.YMost()-(dashRect.height+adjust)),dashRect.width, dashRect.height+adjust,isInvert);
             currRect.y += (dashRect.height+adjust);
             temp = temp-= (dashRect.height+adjust);
           }
@@ -891,7 +912,7 @@ PRBool  skippedSide = PR_FALSE;
           while(currRect.y<temp) {
             //draw if necessary
             if (bSolid) {
-              aContext.FillRect(currRect);
+              FillOrInvertRect(aContext, currRect,isInvert);
             }
 
             bSolid = PRBool(!bSolid);
@@ -929,15 +950,15 @@ PRBool  skippedSide = PR_FALSE;
           if((temp1%2)==0){
             adjust = (dashRect.width-(temp%dashRect.width))/2;     // even, adjust back
             // draw in the left and right
-            aContext.FillRect(borderOutside.x,dashRect.y,dashRect.width-adjust,dashRect.height);
-            aContext.FillRect((borderOutside.XMost()-(dashRect.width-adjust)),dashRect.y,dashRect.width-adjust,dashRect.height);
+            FillOrInvertRect(aContext, borderOutside.x,dashRect.y,dashRect.width-adjust,dashRect.height,isInvert);
+            FillOrInvertRect(aContext, (borderOutside.XMost()-(dashRect.width-adjust)),dashRect.y,dashRect.width-adjust,dashRect.height,isInvert);
             currRect.x += (dashRect.width-adjust);
             temp = temp-= (dashRect.width-adjust);
           } else {
             adjust = (temp%dashRect.width)/2;
             // draw in the left and right
-            aContext.FillRect(borderOutside.x,dashRect.y,dashRect.width+adjust,dashRect.height);
-            aContext.FillRect((borderOutside.XMost()-(dashRect.width+adjust)),dashRect.y,dashRect.width+adjust,dashRect.height);
+            FillOrInvertRect(aContext, borderOutside.x,dashRect.y,dashRect.width+adjust,dashRect.height,isInvert);
+            FillOrInvertRect(aContext, (borderOutside.XMost()-(dashRect.width+adjust)),dashRect.y,dashRect.width+adjust,dashRect.height,isInvert);
             currRect.x += (dashRect.width+adjust);
             temp = temp-= (dashRect.width+adjust);
           }
@@ -958,7 +979,7 @@ PRBool  skippedSide = PR_FALSE;
           while(currRect.x<temp) {
             //draw if necessary
             if (bSolid) {
-              aContext.FillRect(currRect);
+              FillOrInvertRect(aContext, currRect,isInvert);
             }
 
             bSolid = PRBool(!bSolid);
@@ -1849,13 +1870,16 @@ nscoord width;
   aPresContext->GetPixelsToTwips(&p2t);/* XXX */
   twipsPerPixel = (nscoord) p2t;/* XXX */
 
-  nscolor outlineColor;
-  PRBool  canDraw,modeChanged=PR_FALSE;
+  nscolor outlineColor(NS_RGB(0,0,0)); // default to black in case it is invert color and the platform does not support that
+  PRBool  canDraw = PR_FALSE;
+  PRBool  modeChanged=PR_FALSE;
  
   // see if the outline color is 'invert' or can invert.
-  if (aOutlineStyle.GetOutlineInvert() && NS_SUCCEEDED(aRenderingContext.SetPenMode(nsPenMode_kInvert)) ) {
+  if (aOutlineStyle.GetOutlineInvert()) {
     canDraw = PR_TRUE;
-    modeChanged=PR_TRUE;
+    if( NS_SUCCEEDED(aRenderingContext.SetPenMode(nsPenMode_kInvert)) ) {
+      modeChanged=PR_TRUE;
+     }
   } else {
     canDraw = aOutlineStyle.GetOutlineColor(outlineColor);
   }
@@ -1884,7 +1908,8 @@ nscoord width;
              outlineColor,
              bgColor->mBackgroundColor,outside, inside,aSkipSides,
              twipsPerPixel, aGap);
-    if(PR_TRUE == modeChanged ) {
+             
+    if(modeChanged ) {
       aRenderingContext.SetPenMode(nsPenMode_kNone);
     }  
   }
@@ -3342,3 +3367,22 @@ nsFloatPoint	a1;
   B->mCon.y = c2y;
   B->mAnc2 = this->mAnc2;
 }
+
+void FillOrInvertRect(nsIRenderingContext& aRC, nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aInvert)
+{
+  if (aInvert) {
+    aRC.InvertRect(aX, aY, aWidth, aHeight);
+  } else {
+    aRC.FillRect(aX, aY, aWidth, aHeight);
+  }
+}
+
+void FillOrInvertRect(nsIRenderingContext& aRC, const nsRect& aRect, PRBool aInvert)
+{
+  if (aInvert) {
+    aRC.InvertRect(aRect);
+  } else {
+    aRC.FillRect(aRect);
+  }
+}
+
