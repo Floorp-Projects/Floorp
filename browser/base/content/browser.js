@@ -2571,22 +2571,6 @@ function toJavaScriptConsole()
     toOpenWindowByType("global:console", "chrome://browser/content/console/console.xul");
 }
 
-function javaItemEnabling()
-{
-    var element = document.getElementById("java");
-    if (navigator.javaEnabled())
-      element.removeAttribute("disabled");
-    else
-      element.setAttribute("disabled", "true");
-}
-            
-function toJavaConsole()
-{
-    var jvmMgr = Components.classes['@mozilla.org/oji/jvm-mgr;1']
-                            .getService(Components.interfaces.nsIJVMManager)
-    jvmMgr.showJavaConsole();
-}
-
 function toOpenWindowByType( inType, uri )
 {
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();

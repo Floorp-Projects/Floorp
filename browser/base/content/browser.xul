@@ -515,10 +515,6 @@ Contributor(s):
             <menuseparator/>
             <menuitem label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
             <menuitem label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
-            <menuseparator/> 
-            <menuitem label="&preferencesCmd.label;"
-                      accesskey="&preferencesCmd.accesskey;"
-                      oncommand="goPreferences('navigator', 'chrome://browser/content/pref/pref-navigator.xul', 'navigator')"/>
           </menupopup>
         </menu>
     
@@ -649,9 +645,6 @@ Contributor(s):
                 </menupopup>
             </menu>
             <menuseparator/>
-            <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
-            <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
-            <menuseparator/>
               <menuitem accesskey="&fullScreenCmd.accesskey;"
                         label="&fullScreenCmd.label;" key="key_fullScreen"
                         command="View:FullScreen"/>
@@ -728,10 +721,16 @@ Contributor(s):
           </menupopup>
         </menu>
           
-      <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;" onpopupshowing="javaItemEnabling();">
+      <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
         <menupopup>
-          <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
           <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+          <menuseparator/>
+          <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>          
+          <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
+          <menuseparator/>
+          <menuitem label="&preferencesCmd.label;"
+                    accesskey="&preferencesCmd.accesskey;"
+                    oncommand="goPreferences('navigator', 'chrome://browser/content/pref/pref-navigator.xul', 'navigator')"/>
         </menupopup>
       </menu>
       
