@@ -32,7 +32,7 @@ def DumpEveryInterfaceUnderTheSun():
 
     print "Dumping every interface I can find - please wait"
     if verbose_level == 0:
-        print "(verbosity is turned off, so Im not actually going to print them)"
+        print "(verbosity is turned off, so I'm not actually going to print them)"
     enum = iim.EnumerateInterfaces()
     rc = enum.First()
     num = 0
@@ -70,19 +70,27 @@ def EnumContractIDs():
         print "Only found", n, "ContractIDs - this seems unusually low!"
     print "Enumerated all the ContractIDs"
 
-def TestSampleComponent():
+def TestSampleComponent(test_flat = 0):
     """Test the standard Netscape 'sample' sample"""
     # contractid = "mozilla.jssample.1" # the JS version
     contractid = "@mozilla.org/sample;1" # The C++ version.
-    c = xpcom.components.classes[contractid].createInstance() \
-            .queryInterface(xpcom.components.interfaces.nsISample)
+    c = xpcom.components.classes[contractid].createInstance()
+    if not test_flat:
+        c = c.queryInterface(xpcom.components.interfaces.nsISample)
     assert c.value == "initial value"
     c.value = "new value"
     assert c.value == "new value"
     c.poke("poked value")
     assert c.value == "poked value"
     c.writeValue("Python just poked:")
-    print "The netscape sample worked!"
+    if test_flat:
+        print "The netscape sample worked with interface flattening!"
+    else:
+        print "The netscape sample worked!"
+
+def TestSampleComponentFlat():
+    """Test the standard Netscape 'sample' sample using interface flattening"""
+    TestSampleComponent(1)
 
 def TestHash():
     "Test that hashing COM objects works"
@@ -140,6 +148,8 @@ def main():
     for ob in globals().values():
         if type(ob)==type(main) and ob.__doc__:
             tests.append(ob)
+    # Ensure consistent test order.
+    tests.sort(lambda a,b:cmp(a.__name__, b.__name__))
     if __name__ == '__main__': # Only process args when not running under the test suite!
         opts, args = getopt.getopt(sys.argv[1:], "hv")
         for opt, val in opts:

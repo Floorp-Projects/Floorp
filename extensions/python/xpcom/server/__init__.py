@@ -29,7 +29,7 @@ from xpcom import _xpcom
 tracer = None
 
 # Wrap an instance in an interface (via a policy)
-def WrapObject(ob, iid, policy = None):
+def WrapObject(ob, iid, policy = None, bWrapClient = 1):
     """Called by the framework to attempt to wrap
     an object in a policy.
     If iid is None, it will use the first interface the object indicates it supports.
@@ -38,7 +38,7 @@ def WrapObject(ob, iid, policy = None):
         policy = DefaultPolicy
     if tracer is not None:
         ob = tracer(ob)
-    return _xpcom.WrapObject(policy( ob, iid ), iid)
+    return _xpcom.WrapObject(policy( ob, iid ), iid, bWrapClient)
 
 # Create the main module for the Python loader.
 # This is a once only init process, and the returned object

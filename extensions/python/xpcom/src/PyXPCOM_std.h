@@ -34,12 +34,19 @@
 // Main Mozilla cross-platform declarations.
 #include "xp_core.h"
 
-#include <nsIAllocator.h>
-#include <nsIWeakReference.h>
-#include <nsXPIDLString.h>
-#include <nsCRT.h>
-#include <xptcall.h>
-#include <xpt_xdr.h>
+#include "nsIAllocator.h"
+#include "nsIWeakReference.h"
+#include "nsIInterfaceInfoManager.h"
+#include "nsIClassInfo.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsIInputStream.h"
+
+
+#include "nsXPIDLString.h"
+#include "nsCRT.h"
+#include "xptcall.h"
+#include "xpt_xdr.h"
 
 // This header is considered internal - hence
 // we can use it to trigger "exports"

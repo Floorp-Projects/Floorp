@@ -93,6 +93,25 @@ Py_nsISupports::SafeRelease(Py_nsISupports *ob)
 	}
 }
 
+/* virtual */ PyObject *
+Py_nsISupports::getattr(const char *name)
+{
+	if (strcmp(name, "IID")==0)
+		return Py_nsIID::PyObjectFromIID( m_iid );
+
+	PyXPCOM_TypeObject *this_type = (PyXPCOM_TypeObject *)ob_type;
+	return Py_FindMethodInChain(&this_type->chain, this, (char *)name);
+}
+
+/* virtual */ int
+Py_nsISupports::setattr(const char *name, PyObject *v)
+{
+	char buf[128];
+	sprintf(buf, "%s has read-only attributes", ob_type->tp_name );
+	PyErr_SetString(PyExc_TypeError, buf);
+	return -1;
+}
+
 /*static*/ Py_nsISupports *
 Py_nsISupports::Constructor(nsISupports *pInitObj, const nsIID &iid)
 {
@@ -287,7 +306,7 @@ Py_nsISupports::MakeInterfaceResult(PyObject *pyis,
 done:
 	if (PyErr_Occurred()) {
 		NS_ABORT_IF_FALSE(ret==NULL, "Have an error, but also a return val!");
-		PyXPCOM_LogError("Creating an interface object to be used as a parameter failed\n");
+		PyXPCOM_LogError("Creating an interface object to be used as a result failed\n");
 		PyErr_Clear();
 	}
 	Py_XDECREF(mod);

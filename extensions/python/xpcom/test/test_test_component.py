@@ -264,7 +264,7 @@ def test_base_interface(c):
     test_constant(i, "BigLong", 0x7FFFFFFF)
     test_constant(i, "BigULong", 0xFFFFFFFF)
 
-def test_derived_interface(c):
+def test_derived_interface(c, test_flat = 0):
     val = "Hello\0there"
     expected = val * 2
 
@@ -329,7 +329,8 @@ def test_derived_interface(c):
     test_method(c.AppendArray, ([1,2,3],), [1,2,3])
     test_method(c.AppendArray, ([1,2,3],[4,5,6]), [1,2,3,4,5,6])
 
-    c = c.queryInterface(xpcom.components.interfaces.nsIPythonTestInterfaceDOMStrings)
+    if not test_flat:
+        c = c.queryInterface(xpcom.components.interfaces.nsIPythonTestInterfaceDOMStrings)
 # NULL DOM strings don't work yet.
 #    test_method(c.GetDOMStringResult, (-1,), None)
     test_method(c.GetDOMStringResult, (3,), "PPP")
@@ -374,6 +375,13 @@ def test_all():
     c = xpcom.client.Component(contractid, xpcom.components.interfaces.nsIPythonTestInterfaceExtra)
     test_base_interface(c)
     test_derived_interface(c)
+    # Now create an instance and test interface flattening.
+    c = xpcom.components.classes[contractid].createInstance()
+    test_base_interface(c)
+    test_derived_interface(c, test_flat=1)
+    # This name is used in exceptions etc - make sure we got it from nsIClassInfo OK.
+    assert c._object_name_ == "Python.TestComponent"
+
     test_failures()
 
 try:

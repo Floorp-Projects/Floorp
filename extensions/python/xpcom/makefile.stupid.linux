@@ -117,6 +117,7 @@ XPCOM_SRC_OBJECTS = \
 	src/PyGStub.o \
 	src/PyGInputStream.o \
 	src/PyGWeakReference.o \
+	src/PyIClassInfo.o \
 	src/PyIComponentManager.o \
 	src/PyIInputStream.o \
 	src/PyIEnumerator.o \

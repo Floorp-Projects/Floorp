@@ -28,21 +28,19 @@
 // (c) 2000, ActiveState corp.
 
 #include "PyXPCOM_std.h"
-#include <nsIInterfaceInfoManager.h>
-#include <nsIFileSpec.h>
-#include <nsSpecialSystemDirectory.h>
-#include <nsIThread.h>
-#include <nsISupportsPrimitives.h>
-#include <nsIModule.h>
-#include <nsIInputStream.h>
+#include "nsIFileSpec.h"
+#include "nsSpecialSystemDirectory.h"
+#include "nsIThread.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIModule.h"
 
 #ifdef XP_WIN
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #endif
 
-#include <nsIEventQueue.h>
-#include <nsIProxyObjectManager.h>
+#include "nsIEventQueue.h"
+#include "nsIProxyObjectManager.h"
 
 PYXPCOM_EXPORT PyObject *PyXPCOM_Error = NULL;
 extern void PyXPCOM_InterpreterState_Ensure();
@@ -57,6 +55,15 @@ extern void PyXPCOM_InterpreterState_Ensure();
 #define LOADER_LINKS_WITH_PYTHON
 
 #endif // XP_WIN
+
+PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
+PyXPCOM_INTERFACE_DEFINE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfo, nsIInterfaceInfo, PyMethods_IInterfaceInfo)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIServiceManager, nsIServiceManager, PyMethods_IServiceManager)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIInputStream, nsIInputStream, PyMethods_IInputStream)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIClassInfo, nsIClassInfo, PyMethods_IClassInfo)
 
 ////////////////////////////////////////////////////////////
 // This is the main entry point called by the Python component
@@ -113,53 +120,6 @@ done:
 	Py_XDECREF(args);
 	return nr;
 }
-
-// Hrm - So we can't have templates, eh??
-// preprocessor to the rescue, I guess.
-#define PyXPCOM_INTERFACE_DEFINE(ClassName, InterfaceName, Methods )      \
-                                                                          \
-extern struct PyMethodDef Methods[];                                      \
-                                                                          \
-class ClassName : public Py_nsISupports                                   \
-{                                                                         \
-public:                                                                   \
-	static PyXPCOM_TypeObject *type;                                  \
-	static Py_nsISupports *Constructor(nsISupports *pInitObj, const nsIID &iid) { \
-		return new ClassName(pInitObj, iid);                      \
-	}                                                                 \
-	static void InitType(PyObject *iidNameDict) {                     \
-		type = new PyXPCOM_TypeObject(                            \
-				#InterfaceName,                           \
-				Py_nsISupports::type,                     \
-				sizeof(ClassName),                        \
-				Methods,                                  \
-				Constructor);                             \
-		const nsIID &iid = NS_GET_IID(InterfaceName);             \
-		RegisterInterface(iid, type);                             \
-		PyObject *iid_ob = Py_nsIID::PyObjectFromIID(iid);        \
-		PyDict_SetItemString(iidNameDict, "IID_"#InterfaceName, iid_ob); \
-		Py_DECREF(iid_ob);                                        \
-	}                                                                 \
-protected:                                                                \
-	ClassName(nsISupports *p, const nsIID &iid) :                     \
-		Py_nsISupports(p, iid, type) {                            \
-		/* The IID _must_ be the IID of the interface we are wrapping! */    \
-		NS_ABORT_IF_FALSE(iid.Equals(NS_GET_IID(InterfaceName)), "Bad IID"); \
-	}                                                                 \
-};                                                                        \
-                                                                          \
-PyXPCOM_TypeObject *ClassName::type = NULL;                               \
-                                                                          \
-// End of PyXPCOM_INTERFACE_DEFINE macro
-
-// And the classes
-PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
-PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
-PyXPCOM_INTERFACE_DEFINE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
-PyXPCOM_INTERFACE_DEFINE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)
-PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfo, nsIInterfaceInfo, PyMethods_IInterfaceInfo)
-PyXPCOM_INTERFACE_DEFINE(Py_nsIServiceManager, nsIServiceManager, PyMethods_IServiceManager)
-PyXPCOM_INTERFACE_DEFINE(Py_nsIInputStream, nsIInputStream, PyMethods_IInputStream)
 
 // "boot-strap" methods - interfaces we need to get the base
 // interface support!
@@ -302,7 +262,8 @@ static PyObject *
 PyXPCOMMethod_WrapObject(PyObject *self, PyObject *args)
 {
 	PyObject *ob, *obIID;
-	if (!PyArg_ParseTuple(args, "OO", &ob, &obIID))
+	int bWrapClient = 1;
+	if (!PyArg_ParseTuple(args, "OO|i", &ob, &obIID, &bWrapClient))
 		return NULL;
 
 	nsIID	iid;
@@ -319,7 +280,7 @@ PyXPCOMMethod_WrapObject(PyObject *self, PyObject *args)
 	AddDefaultGateway(ob, ret); // inject a weak reference to myself into the instance.
 
 	// Now wrap it in an interface.
-	return Py_nsISupports::PyObjectFromInterface(ret, iid, PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(ret, iid, PR_FALSE, bWrapClient);
 }
 
 // @pymethod int|pythoncom|_GetInterfaceCount|Retrieves the number of interface objects currently in existance
@@ -600,6 +561,7 @@ init_xpcom() {
 	REGISTER_IID(nsIFactory);
 	REGISTER_IID(nsIWeakReference);
 	REGISTER_IID(nsISupportsWeakReference);
+	REGISTER_IID(nsIClassInfo);
 	// Register our custom interfaces.
 
 	Py_nsISupports::InitType();
@@ -610,6 +572,7 @@ init_xpcom() {
 	Py_nsIInterfaceInfo::InitType(dict);
 	Py_nsIServiceManager::InitType(dict);
 	Py_nsIInputStream::InitType(dict);
+	Py_nsIClassInfo::InitType(dict);
     
     // We have special support for proxies - may as well add their constants!
     REGISTER_INT(PROXY_SYNC);
