@@ -20,6 +20,12 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
+
+/*
+
+  A protocol handler for ``chrome:''
+
+*/
  
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -27,20 +33,24 @@
 #include "nsIChannel.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
-#include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
+#include "prlog.h"
+
+//----------------------------------------------------------------------
 
 static NS_DEFINE_CID(kChromeRegistryCID,         NS_CHROMEREGISTRY_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
@@ -48,11 +58,28 @@ static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
 //----------------------------------------------------------------------
 //
-//  A channel that's used for loading cached chrome documents.
+//  A channel that's used for loading cached chrome documents. Since a
+//  cached chrome document really doesn't have anything to do to load,
+//  this is just the puppeteer that pulls the webshell's strings at the
+//  right time.
+//
+//  Specifically, it fires the listener's OnStartRequest() from
+//  AsyncOpen() and adds the channel to the load group. This winds its
+//  way through webshell and causes the XUL document's
+//  StartDocumentLoad() method to be called.
+//
+//  It then queues an event, which will fire the listener's
+//  OnStopRequest() and remove the channel from the load group. This
+//  is done asynchronously to allow the stack to unwind back to the
+//  main event loop, which avoids any weird re-entrancy that occurs if
+//  we try to immediately fire the OnStopRequest(). (Some portion of
+//  the embedding dance happens after AsyncRead() is called, this
+//  allows that to proceed "normally".)
+//
+//  For logging information, NSPR_LOG_MODULES=nsCachedChromeChannel:5
 //
 
-class nsCachedChromeChannel : public nsIChannel,
-                              public nsITimerCallback
+class nsCachedChromeChannel : public nsIChannel
 {
 protected:
     nsCachedChromeChannel(nsIURI* aURI, nsILoadGroup* aLoadGroup);
@@ -64,6 +91,18 @@ protected:
     nsCOMPtr<nsISupports>       mContext;
     nsLoadFlags                 mLoadAttributes;
     nsCOMPtr<nsISupports>       mOwner;
+
+    struct StopLoadEvent {
+        PLEvent                mEvent;
+        nsCachedChromeChannel* mChannel;
+    };
+
+    static void* HandleStopLoadEvent(PLEvent* aEvent);
+    static void DestroyStopLoadEvent(PLEvent* aEvent);
+
+#ifdef PR_LOGGING
+    static PRLogModuleInfo* gLog;
+#endif
 
 public:
     static nsresult
@@ -79,14 +118,15 @@ public:
 
     // nsIChannel    
     NS_DECL_NSICHANNEL
-
-    // nsITimerCallback
-    NS_IMETHOD_(void) Notify(nsITimer* aTimer);
 };
+
+#ifdef PR_LOGGING
+PRLogModuleInfo* nsCachedChromeChannel::gLog;
+#endif
 
 NS_IMPL_ADDREF(nsCachedChromeChannel);
 NS_IMPL_RELEASE(nsCachedChromeChannel);
-NS_IMPL_QUERY_INTERFACE3(nsCachedChromeChannel, nsIRequest, nsIChannel, nsITimerCallback);
+NS_IMPL_QUERY_INTERFACE2(nsCachedChromeChannel, nsIRequest, nsIChannel);
 
 nsresult
 nsCachedChromeChannel::Create(nsIURI* aURI, nsILoadGroup* aLoadGroup, nsIChannel** aResult)
@@ -109,11 +149,21 @@ nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI, nsILoadGroup* aLoadGr
     : mURI(aURI), mLoadGroup(aLoadGroup), mLoadAttributes (nsIChannel::LOAD_NORMAL)
 {
     NS_INIT_REFCNT();
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("nsCachedChromeChannel");
+#endif
+
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("nsCachedChromeChannel[%p]: created", this));
 }
 
 
 nsCachedChromeChannel::~nsCachedChromeChannel()
 {
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("nsCachedChromeChannel[%p]: destroyed", this));
 }
 
 
@@ -163,38 +213,73 @@ nsCachedChromeChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsIS
         nsresult rv;
 
         if (mLoadGroup) {
+            PR_LOG(gLog, PR_LOG_DEBUG,
+                   ("nsCachedChromeChannel[%p]: adding self to load group %p",
+                    this, mLoadGroup.get()));
+
             rv = mLoadGroup->AddChannel(this, nsnull);
             if (NS_FAILED(rv)) return rv;
         }
 
         // Fire the OnStartRequest(), which will cause the XUL
         // document to get embedded.
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("nsCachedChromeChannel[%p]: firing OnStartRequest for %p",
+                this, listener));
+
         rv = listener->OnStartRequest(this, ctxt);
 
-        // If that works, then set a timer to fire the
-        // OnStopRequest(). We want to do this on a callback to avoid
-        // unexpected re-entrancy problems.
+        // Queue an event to ourselves to let the stack unwind before
+        // calling OnStopRequest(). This allows embedding to occur
+        // before we fire OnStopRequest().
         if (NS_SUCCEEDED(rv)) {
-            nsITimer* timer;
-            rv = NS_NewTimer(&timer);
-            if (NS_SUCCEEDED(rv)) {
-                mContext  = ctxt;
-                mListener = listener;
-                rv = timer->Init(this, 0 /*ms*/);
-                if (NS_SUCCEEDED(rv)) {
-                    return NS_OK;
-                }
+            nsCOMPtr<nsIEventQueueService> svc = do_GetService(kEventQueueServiceCID, &rv);
+            if (svc) {
+                nsCOMPtr<nsIEventQueue> queue;
+                rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+                if (NS_SUCCEEDED(rv) && queue) {
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+                    StopLoadEvent* event = new StopLoadEvent;
+                    if (event) {
+                        PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
+                                     nsnull,
+                                     HandleStopLoadEvent,
+                                     DestroyStopLoadEvent);
 
-                // Uh oh, something went wrong. Kill the timer.
-                NS_RELEASE(timer);
+                        event->mChannel = this;
+                        NS_ADDREF(event->mChannel);
+
+                        rv = queue->EnterMonitor();
+                        if (NS_SUCCEEDED(rv)) {
+                            mContext  = ctxt;
+                            mListener = listener;
+
+                            (void) queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
+                            (void) queue->ExitMonitor();
+                            return NS_OK;
+                        }
+
+                        // If we get here, something bad happened. Clean up.
+                        NS_RELEASE(event->mChannel);
+                        delete event;
+                    }
+                }
             }
         }
 
         // Uh oh, something went wrong. Fire a balancing
         // OnStopRequest() and indicate an error occurred.
-        (void) mListener->OnStopRequest(this, mContext, rv, nsnull);
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("nsCachedChromeChannel[%p]: error 0x%x! firing on OnStopRequest for %p",
+                this, rv, mListener.get()));
+
+        (void) listener->OnStopRequest(this, ctxt, rv, nsnull);
 
         if (mLoadGroup) {
+            PR_LOG(gLog, PR_LOG_DEBUG,
+                   ("nsCachedChromeChannel[%p]: removing self from load group %p",
+                    this, mLoadGroup.get()));
+
             (void) mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
         }
     }
@@ -219,8 +304,7 @@ nsCachedChromeChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 NS_IMETHODIMP
 nsCachedChromeChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-    // XXX: NS_NOTREACHED("don't do that");
-	mLoadAttributes = aLoadAttributes;
+    mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
 
@@ -292,18 +376,40 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
 }
 
 
-NS_IMETHODIMP_(void)
-nsCachedChromeChannel::Notify(nsITimer* aTimer)
+void*
+nsCachedChromeChannel::HandleStopLoadEvent(PLEvent* aEvent)
 {
-    (void) mListener->OnStopRequest(this, mContext, NS_OK, nsnull);
+    // Fire the OnStopRequest() for the cached chrome channel, and
+    // remove it from the load group.
+    StopLoadEvent* event = NS_REINTERPRET_CAST(StopLoadEvent*, aEvent);
+    nsCachedChromeChannel* channel = event->mChannel;
 
-    if (mLoadGroup) {
-        (void) mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+    PR_LOG(gLog, PR_LOG_DEBUG,
+           ("nsCachedChromeChannel[%p]: firing OnStopRequest for %p",
+            channel, channel->mListener.get()));
+
+    (void) channel->mListener->OnStopRequest(channel, channel->mContext, NS_OK, nsnull);
+
+    if (channel->mLoadGroup) {
+        PR_LOG(gLog, PR_LOG_DEBUG,
+               ("nsCachedChromeChannel[%p]: removing self from load group %p",
+                channel, channel->mLoadGroup.get()));
+
+        (void) channel->mLoadGroup->RemoveChannel(channel, nsnull, nsnull, nsnull);
     }
 
-    mListener = nsnull;
-    mContext  = nsnull;
-    NS_RELEASE(aTimer);
+    channel->mListener = nsnull;
+    channel->mContext  = nsnull;
+
+    return nsnull;
+}
+
+void
+nsCachedChromeChannel::DestroyStopLoadEvent(PLEvent* aEvent)
+{
+    StopLoadEvent* event = NS_REINTERPRET_CAST(StopLoadEvent*, aEvent);
+    NS_RELEASE(event->mChannel);
+    delete event;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
