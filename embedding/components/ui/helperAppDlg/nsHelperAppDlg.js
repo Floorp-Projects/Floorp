@@ -228,7 +228,6 @@ nsHelperAppDialog.prototype = {
 
          // Add special debug hook.
          if ( this.debug ) {
-             var prompt = this.dialogElement( "prompt" );
              prompt.setAttribute( "onclick", "dialog.doDebug()" );
          }
 
