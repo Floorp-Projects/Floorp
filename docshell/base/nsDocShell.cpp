@@ -421,13 +421,22 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
              || aIID.Equals(NS_GET_IID(nsIHttpEventSink))
              || aIID.Equals(NS_GET_IID(nsIWebProgress))
              || aIID.Equals(NS_GET_IID(nsISecurityEventSink))) {
-        // mLoadCookie is our nsIDocumentLoader
-        nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mLoadCookie));
-        nsresult rv = NS_ERROR_FAILURE;
-        if (requestor)
-          rv = requestor->GetInterface(aIID, aSink);
-
-        return rv;
+        nsCOMPtr<nsIURILoader>
+            uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
+        NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
+        nsCOMPtr<nsIDocumentLoader> docLoader;
+        NS_ENSURE_SUCCESS(uriLoader->
+                          GetDocumentLoaderForContext(this,
+                                                      getter_AddRefs
+                                                      (docLoader)),
+                          NS_ERROR_FAILURE);
+        if (docLoader) {
+            nsCOMPtr<nsIInterfaceRequestor>
+                requestor(do_QueryInterface(docLoader));
+            return requestor->GetInterface(aIID, aSink);
+        }
+        else
+            return NS_ERROR_FAILURE;
     }
     else if (aIID.Equals(NS_GET_IID(nsISHistory))) {
         nsCOMPtr<nsISHistory> shistory;
