@@ -120,7 +120,7 @@ static const SEC_ASN1Template CERT_DNSNameTemplate[] = {
 };
 
 static const SEC_ASN1Template CERT_X400AddressTemplate[] = {
-    { SEC_ASN1_ANY | SEC_ASN1_CONTEXT_SPECIFIC | 3,
+    { SEC_ASN1_CONTEXT_SPECIFIC | 3,
           offsetof(CERTGeneralName, name.other), SEC_AnyTemplate,
           sizeof (CERTGeneralName)}
 };
@@ -133,7 +133,7 @@ static const SEC_ASN1Template CERT_DirectoryNameTemplate[] = {
 
 
 static const SEC_ASN1Template CERT_EDIPartyNameTemplate[] = {
-    { SEC_ASN1_ANY | SEC_ASN1_CONTEXT_SPECIFIC | 5,
+    { SEC_ASN1_CONTEXT_SPECIFIC | 5,
           offsetof(CERTGeneralName, name.other), SEC_AnyTemplate,
           sizeof (CERTGeneralName)}
 };
@@ -438,7 +438,7 @@ CERT_DecodeGeneralName(PRArenaPool      *arena,
     case certX400Address: 	template = CERT_X400AddressTemplate;   break;
     case certDirectoryName: 	template = CERT_DirectoryNameTemplate; break;
     default: 
-        PORT_Assert(0); goto loser;
+        goto loser;
     }
     rv = SEC_ASN1DecodeItem(arena, genName, template, encodedName);
     if (rv != SECSuccess) 
