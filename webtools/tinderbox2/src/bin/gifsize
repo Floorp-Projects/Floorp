@@ -119,10 +119,10 @@ sub convert {
     @original=split(/</, $original);
     for ($i=0; $i <= $#original; $i++) {
 
-        if (@original[$i] =~ /[^\000]*img[^\000]*src\s*=\s*"[^\000]*"[^\000]*>[^\000]*/i) {
-            @original[$i] =~ s/\s*width\s*=\s*\d*\s*/ /gi;
-            @original[$i] =~ s/\s*height\s*=\s*\d*\s*/ /gi;
-            $_ = @original[$i];
+        if ($original[$i] =~ /[^\000]*img[^\000]*src\s*=\s*"[^\000]*"[^\000]*>[^\000]*/i) {
+            $original[$i] =~ s/\s*width\s*=\s*\d*\s*/ /gi;
+            $original[$i] =~ s/\s*height\s*=\s*\d*\s*/ /gi;
+            $_ = $original[$i];
             ($one, $two, $three, $four, $five, $six, $seven) = /([^\000]*)img([^\000]*)src(\s*)=(\s*)"([^"]*)"([^\000]*)>([^\000]*)/i; #"
             print "\tProcessing GIF $five...\n";
             if ($five =~ /^\/\~.*/) {
@@ -130,24 +130,24 @@ sub convert {
                 shift(@PATH); $user = shift(@PATH) ; $rel = join ("/", @PATH);
                 $user =~ s/^\~//;
                 $size = &gifsize("$HOMEDIRS/$user/$UserDir/$rel");
-                @original[$i] = join("", $one, 'IMG', $two, " ", $size, " ", 'SRC', $three, '=', $four, '"', $five, '"', $six, '>', $seven); 
+                $original[$i] = join("", $one, 'IMG', $two, " ", $size, " ", 'SRC', $three, '=', $four, '"', $five, '"', $six, '>', $seven); 
             } elsif ($five =~ /^http:\/\/.*/) {
                 if ($SearchURLS eq 'YES') {
                     ($dummy, $dummy, $server, $url) = split(/\//, $five, 4);
                     ($them,$port) = split(/:/, $server);
                     $size = &URLsize($them,$port);
-                    @original[$i] = join("", $one, 'IMG', $two, " ", $size, " ", 'SRC', $three, '=', $four, '"', $five, '"', $six, '>', $seven); 
+                    $original[$i] = join("", $one, 'IMG', $two, " ", $size, " ", 'SRC', $three, '=', $four, '"', $five, '"', $six, '>', $seven); 
                 }
             } elsif ($five =~ /^\/.*/) {
                 $size = &gifsize("$DocumentRoot$five");
-                @original[$i] = join("", $one, 'IMG', $two, " ", $size, " ", 'SRC', $three, '=', $four, '"', $five, '"', $six, '>', $seven); 
+                $original[$i] = join("", $one, 'IMG', $two, " ", $size, " ", 'SRC', $three, '=', $four, '"', $five, '"', $six, '>', $seven); 
             } else {
                 if ($REL eq '') {
                     $size = &gifsize("$five");
                 } else {
                     $size = &gifsize("$REL/$five");
                 }
-                @original[$i] = join("", $one, 'IMG', $two, " ", $size, " ", 'SRC', $three, '=', $four, '"', $five, '"', $six, '>', $seven); 
+                $original[$i] = join("", $one, 'IMG', $two, " ", $size, " ", 'SRC', $three, '=', $four, '"', $five, '"', $six, '>', $seven); 
             }
         }
     }
