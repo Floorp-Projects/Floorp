@@ -304,11 +304,11 @@ Message=Preparing SmartUpdate, please wait...
 ;Destination=[SETUP PATH]\program
 
 ;Copy FileX sections
-[Copy File0]
-Timing=post launchapp
-Source=[WINDISK]\Progra~1\JavaSoft\JRE\1.2.2\bin\npjava*.dll
-Destination=[SETUP PATH]\components
-Fail If Exists=FALSE
+;[Copy File0]
+;Timing=post launchapp
+;Source=[WINDISK]\Progra~1\JavaSoft\JRE\1.2.2\bin\npjava*.dll
+;Destination=[SETUP PATH]\components
+;Fail If Exists=FALSE
 
 ;[Copy File1]
 ;Timing=post launchapp
@@ -346,9 +346,9 @@ Fail If Exists=FALSE
 [RunApp0]
 Timing=post launchapp
 Wait=FALSE
-Target=[SETUP PATH]\bin\apprunner.exe
+Target=[SETUP PATH]\apprunner.exe
 Parameters=-installer
-WorkingDir=[SETUP PATH]\bin
+WorkingDir=[SETUP PATH]
 
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
@@ -380,13 +380,13 @@ Timing=post download
 Show Folder=SHOW
 Program Folder=[Default Folder]
 
-;[Program Folder0-Shortcut0]
-;File=[SETUP PATH]\bin\apprunner.exe
-;Arguments=
-;Working Dir=[SETUP PATH]
-;Description=Netscape AppRunner
-;Icon Path=[SETUP PATH]\bin\apprunner.exe
-;Icon Id=0
+[Program Folder0-Shortcut0]
+File=[SETUP PATH]\apprunner.exe
+Arguments=
+Working Dir=[SETUP PATH]
+Description=Netscape AppRunner
+Icon Path=[SETUP PATH]\apprunner.exe
+Icon Id=0
 
 ;[Program Folder0-Shortcut1]
 ;File=[SETUP PATH]\bin\viewer.exe
