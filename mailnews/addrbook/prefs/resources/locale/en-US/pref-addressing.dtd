@@ -30,6 +30,3 @@ Rights Reserved.
 <!ENTITY acceptList.label "Accept what I have typed">
 <!ENTITY oneMatch.label "If there is one match in your personal address books:">
 <!ENTITY useAddress.label "Use the address and do not search in the directory">
-<!ENTITY displayFullname.label "When displaying full names:">
-<!ENTITY useDisplayName.label "Show names using display name (from address book card)">
-<!ENTITY useLastFirst.label "Show names using last name, first name">

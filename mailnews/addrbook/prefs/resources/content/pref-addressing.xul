@@ -82,21 +82,4 @@
 	
 	</html:fieldset>
 
-	<html:fieldset style="width: 100%;">
-		<html:legend align="left">
-			<html:div>&displayFullname.label;</html:div>
-		</html:legend>
-
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.addr_book.lastnamefirst" prefindex="0" id="mail.addr_book.lastnamefirst0" name="displayname" type="radio"/>
-			<html:label for="mail.addr_book.lastnamefirst0">&useDisplayName.label;</html:label>
-		</html:div>
-		
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.addr_book.lastnamefirst" prefindex="1" id="mail.addr_book.lastnamefirst1" name="displayname" type="radio"/>
-			<html:label for="mail.addr_book.lastnamefirst1">&useLastFirst.label;</html:label>
-		</html:div>
-		
-	</html:fieldset>
-
 </window>
