@@ -390,6 +390,7 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
     }
     else
     {
+#if defined(DEBUG)
         static PRBool firstWarning = PR_TRUE;
 
         if(firstWarning) {
@@ -397,6 +398,7 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
             printf("Warning: MOZILLA_FIVE_HOME not set.\n");
             firstWarning = PR_FALSE;
         }
+#endif /* DEBUG */
 
         // Fall back to current directory.
         if (getcwd(buf, sizeof(buf)))
