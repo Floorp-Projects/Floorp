@@ -88,7 +88,7 @@ nsIRDFResource* RDFContainerUtilsImpl::kRDF_Alt;
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
-NS_IMPL_ISUPPORTS(RDFContainerUtilsImpl, NS_GET_IID(nsIRDFContainerUtils));
+NS_IMPL_THREADSAFE_ISUPPORTS(RDFContainerUtilsImpl, NS_GET_IID(nsIRDFContainerUtils));
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFContainerUtils interface

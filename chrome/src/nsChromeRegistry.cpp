@@ -265,7 +265,7 @@ nsChromeRegistry::~nsChromeRegistry()
 
 }
 
-NS_IMPL_ISUPPORTS1(nsChromeRegistry, nsIChromeRegistry);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsChromeRegistry, nsIChromeRegistry);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:

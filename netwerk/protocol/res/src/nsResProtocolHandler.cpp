@@ -184,7 +184,7 @@ nsResProtocolHandler::~nsResProtocolHandler()
     mSubstitutions.Enumerate(DeleteCStringArray, nsnull);
 }
 
-NS_IMPL_ISUPPORTS2(nsResProtocolHandler, nsIResProtocolHandler, nsIProtocolHandler)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsResProtocolHandler, nsIResProtocolHandler, nsIProtocolHandler)
 
 NS_METHOD
 nsResProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
