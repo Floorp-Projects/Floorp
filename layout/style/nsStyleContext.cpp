@@ -69,8 +69,7 @@ class nsStyleContext : public nsIStyleContext
 {
 public:
   nsStyleContext(nsIStyleContext* aParent, nsIAtom* aPseudoTag, 
-                   nsRuleNode* aRuleNode, 
-                   nsIPresContext* aPresContext);
+                 nsRuleNode* aRuleNode, nsIPresContext* aPresContext);
   virtual ~nsStyleContext();
 
   void* operator new(size_t sz, nsIPresContext* aPresContext);
@@ -130,32 +129,39 @@ protected:
   nsStyleContext* mPrevSibling;
   nsStyleContext* mNextSibling;
 
-  nsIAtom*          mPseudoTag;
+  // If this style context is for a pseudo-element, the pseudo-element
+  // atom.  Otherwise, null.
+  nsCOMPtr<nsIAtom> mPseudoTag;
 
-  PRUint32                mBits; // Which structs are inherited from the parent context.
   nsRuleNode*             mRuleNode;
+
+  // |mCachedStyleData| points to both structs that are owned by this
+  // style context and structs that are owned by one of this style
+  // context's ancestors (which are indirectly owned since this style
+  // context owns a reference to its parent).  If the bit in |mBits| is
+  // set for a struct, that means that the pointer for that struct is
+  // owned by an ancestor rather than by this style context.
   nsCachedStyleData       mCachedStyleData; // Our cached style data.
+  PRUint32                mBits; // Which structs are inherited from the
+                                 // parent context.
 };
 
-static PRInt32 gLastDataCode;
-
 nsStyleContext::nsStyleContext(nsIStyleContext* aParent,
-                                   nsIAtom* aPseudoTag,
-                                   nsRuleNode* aRuleNode,
-                                   nsIPresContext* aPresContext)
+                               nsIAtom* aPseudoTag,
+                               nsRuleNode* aRuleNode,
+                               nsIPresContext* aPresContext)
   : mParent((nsStyleContext*)aParent),
     mChild(nsnull),
     mEmptyChild(nsnull),
     mPseudoTag(aPseudoTag),
-    mBits(0),
-    mRuleNode(aRuleNode)
+    mRuleNode(aRuleNode),
+    mBits(0)
 {
-  NS_INIT_REFCNT();
-  NS_IF_ADDREF(mPseudoTag);
+  NS_INIT_ISUPPORTS();
   
   mNextSibling = this;
   mPrevSibling = this;
-  if (nsnull != mParent) {
+  if (mParent) {
     NS_ADDREF(mParent);
     mParent->AppendChild(this);
   }
@@ -172,8 +178,6 @@ nsStyleContext::~nsStyleContext()
     NS_RELEASE(mParent);
   }
 
-  NS_IF_RELEASE(mPseudoTag);
-  
   // Free up our data structs.
   if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData) {
     nsCOMPtr<nsIPresContext> presContext;
@@ -184,27 +188,7 @@ nsStyleContext::~nsStyleContext()
 
 NS_IMPL_ADDREF(nsStyleContext)
 NS_IMPL_RELEASE_WITH_DESTROY(nsStyleContext, Destroy())
-
-NS_IMETHODIMP
-nsStyleContext::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(nsnull != aInstancePtr, "null pointer");
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(NS_GET_IID(nsIStyleContext))) {
-    *aInstancePtr = (void*)(nsIStyleContext*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) (nsISupports*)(nsIStyleContext*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE1(nsStyleContext, nsIStyleContext)
 
 nsIStyleContext* nsStyleContext::GetParent(void) const
 {
@@ -396,10 +380,10 @@ nsStyleContext::GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding)
   const nsStyleBorder* borderData = (const nsStyleBorder*)GetStyleData(eStyleStruct_Border);
   const nsStylePadding* paddingData = (const nsStylePadding*)GetStyleData(eStyleStruct_Padding);
   if (borderData->GetBorder(border)) {
-	  if (paddingData->GetPadding(padding)) {
-	    border += padding;
-	    aBorderPadding.SetBorderPadding(border);
-	  }
+    if (paddingData->GetPadding(padding)) {
+      border += padding;
+      aBorderPadding.SetBorderPadding(border);
+    }
   }
 
   return NS_OK;
@@ -459,15 +443,18 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct)
   nsresult result = NS_OK;
   
   PRBool isReset = mCachedStyleData.IsReset(aSID);
-  if (isReset && !mCachedStyleData.mResetData) {
-    nsCOMPtr<nsIPresContext> presContext;
-    mRuleNode->GetPresContext(getter_AddRefs(presContext));
-    mCachedStyleData.mResetData = new (presContext.get()) nsResetStyleData;
-  }
-  else if (!isReset && !mCachedStyleData.mInheritedData) {
-    nsCOMPtr<nsIPresContext> presContext;
-    mRuleNode->GetPresContext(getter_AddRefs(presContext));
-    mCachedStyleData.mInheritedData = new (presContext.get()) nsInheritedStyleData;
+  if (isReset) {
+    if (!mCachedStyleData.mResetData) {
+      nsCOMPtr<nsIPresContext> presContext;
+      mRuleNode->GetPresContext(getter_AddRefs(presContext));
+      mCachedStyleData.mResetData = new (presContext.get()) nsResetStyleData;
+    }
+  } else {
+    if (!mCachedStyleData.mInheritedData) {
+      nsCOMPtr<nsIPresContext> presContext;
+      mRuleNode->GetPresContext(getter_AddRefs(presContext));
+      mCachedStyleData.mInheritedData = new (presContext.get()) nsInheritedStyleData;
+    }
   }
 
   switch (aSID) {
@@ -597,7 +584,7 @@ nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule
       mCachedStyleData.Destroy(mBits, aPresContext);
 
     mBits = 0; // Clear all bits.
-    aRule = nsnull;
+    aRule = nsnull; // Force all structs to be blown away in the children.
   }
 
   ApplyStyleFixups(aPresContext);
@@ -910,7 +897,7 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
   PRInt32 ix;
   for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
   fprintf(out, "%p(%d) ", (void*)this, mRefCnt);
-  if (nsnull != mPseudoTag) {
+  if (mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
     fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
@@ -988,7 +975,7 @@ void nsStyleContext::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   // get the size of an empty instance and add to the sizeof handler
   aSize = sizeof(*this);
   // add in the size of the member mPseudoTag
-  if(mPseudoTag){
+  if (mPseudoTag){
     mPseudoTag->SizeOf(aSizeOfHandler, &localSize);
     aSize += localSize;
   }
