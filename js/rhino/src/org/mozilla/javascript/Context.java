@@ -130,11 +130,74 @@ public class Context
      */
     public static final int VERSION_1_5 =      150;
 
+    /**
+     * Controls behaviour of <tt>Date.prototype.getYear()</tt>.
+     * If <tt>hasFeature(FEATURE_NON_ECMA_GET_YEAR)</tt> returns true,
+     * Date.prototype.getYear subtructs 1900 only if 1900 <= date < 2000.
+     * The default behavior of {@link #hasFeature(int)} is always to subtruct
+     * 1900 as rquired by ECMAScript B.2.4.
+     */
+    public static final int FEATURE_NON_ECMA_GET_YEAR = 1;
+
+    /**
+     * Control if member expression as function name extension is available.
+     * If <tt>hasFeature(FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME)</tt> returns
+     * true, allow <tt>function memberExpression(args) { body }</tt> to be
+     * syntax sugar for <tt>memberExpression = function(args) { body }</tt>,
+     * when memberExpression is not a simple identifier.
+     * See ECMAScript-262, section 11.2 for definition of memberExpression.
+     * By default {@link #hasFeature(int)} returns false.
+     */
+    public static final int FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME = 2;
+
+    /**
+     * Control if reserved keywords are treated as identifiers.
+     * If <tt>hasFeature(RESERVED_KEYWORD_AS_IDENTIFIER)</tt> returns true,
+     * treat future reserved keyword (see  Ecma-262, section 7.5.3) as ordinary
+     * identifiers but warn about this usage.
+     *
+     * By default {@link #hasFeature(int)} returns false.
+     */
+    public static final int FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER = 3;
+
+    /**
+     * Control if <tt>toString()</tt> should returns the same result
+     * as  <tt>toSource()</tt> when applied to objects and arrays.
+     * If <tt>hasFeature(FEATURE_TO_STRING_AS_SOURCE)</tt> returns true,
+     * calling <tt>toString()</tt> on JS objects gives the same result as
+     * calling <tt>toSource()</tt>. That is it returns JS source with code
+     * to create an object with all enumeratable fields of the original object
+     * instead of printing <tt>[object <i>result of
+     * {@link Scriptable#getClassName()}</i>]</tt>.
+     *
+     * By default {@link #hasFeature(int)} returns true only if
+     * the current JS version is set to {@link #VERSION_1_2}.
+     */
+    public static final int FEATURE_TO_STRING_AS_SOURCE = 4;
+
+    /**
+     * Control if properties <tt>__proto__</tt> and <tt>__parent__</tt>
+     * are treated specially.
+     * If <tt>hasFeature(FEATURE_PARENT_PROTO_PROPRTIES)</tt> returns true,
+     * treat <tt>__parent__</tt> and <tt>__proto__</tt> as special properties.
+     * <p>
+     * The properties allow to query and set scope and prototype chains for the
+     * objects. The special meaning of the properties is available
+     * only when they are used as the right hand side of the dot operator.
+     * For example, while <tt>x.__proto__ = y</tt> changes the prototype
+     * chain of the object <tt>x</tt> to point to <tt>y</tt>,
+     * <tt>x["__proto__"] = y</tt> simply assigns a new value to the property
+     * <tt>__proto__</tt> in <tt>x</tt> even when the feature is on.
+     *
+     * By default {@link #hasFeature(int)} returns true.
+     */
+    public static final int FEATURE_PARENT_PROTO_PROPRTIES = 5;
+
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
 
     /**
-     * Convinient value to use as zero-length argument array object.
+     * Convinient value to use as zero-length array of objects.
      */
     public static final Object[] emptyArgs = ScriptRuntime.emptyArgs;
 
@@ -1951,56 +2014,6 @@ public class Context
         this.debugger = debugger;
         debuggerData = contextData;
     }
-
-    /**
-     * If <tt>hasFeature(FEATURE_NON_ECMA_GET_YEAR)</tt> returns true,
-     * Date.prototype.getYear subtructs 1900 only if 1900 <= date < 2000.
-     * The default behavior is always to subtruct 1900 as rquired
-     * by Ecma B.2.4.
-     */
-    public static final int FEATURE_NON_ECMA_GET_YEAR = 1;
-
-    /**
-     * If <tt>hasFeature(FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME)</tt> returns
-     * true, allow <tt>function memberExpression(args) { body }</tt> to be
-     * syntax sugar for <tt>memberExpression = function(args) { body }</tt>,
-     * when memberExpression is not a simple identifier.
-     * See Ecma-262, section 11.2 for definition of memberExpression.
-     */
-    public static final int FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME = 2;
-
-    /**
-     * If <tt>hasFeature(RESERVED_KEYWORD_AS_IDENTIFIER)</tt> returns true,
-     * treat future reserved keyword (see  Ecma-262, section 7.5.3) as ordinary
-     * identifiers but warn about this usage
-     */
-    public static final int FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER = 3;
-
-    /**
-     * If <tt>hasFeature(FEATURE_TO_STRING_AS_SOURCE)</tt> returns true,
-     * calling toString on JS objects gives JS source with code to create an
-     * object with all enumeratable fields of the original object instead of
-     * printing <tt>[object <object-type>]</tt>.
-     * By default {@link #hasFeature(int)} returns true only if
-     * the current JS version is set to {@link #VERSION_1_2}.
-     */
-    public static final int FEATURE_TO_STRING_AS_SOURCE = 4;
-
-    /**
-     * If <tt>hasFeature(FEATURE_PARENT_PROTO_PROPRTIES)</tt> returns true,
-     * treat <tt>__parent__</tt> and <tt>__proto__</tt> as special properties.
-     * <p>
-     * The properties allow to query and set scope and prototype chains for the
-     * objects. The special meaning of the properties is available
-     * only when they are used as the right hand side of the dot operator.
-     * For example, while <tt>x.__proto__ = y</tt> changes the prototype
-     * chain of the object <tt>x</tt> to point to <tt>y</tt>,
-     * <tt>x["__proto__"] = y</tt> simply assigns a new value to the property
-     * <tt>__proto__</tt> in <tt>x</tt> even when the feature is on.
-     *
-     * By default {@link #hasFeature(int)} returns true.
-     */
-    public static final int FEATURE_PARENT_PROTO_PROPRTIES = 5;
 
     /**
      * Controls certain aspects of script semantics.
