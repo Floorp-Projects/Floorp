@@ -395,8 +395,6 @@ nsX11AlphaBlend::GetBackground(Display *aDisplay, int aScreen,
   }
   PRInt32 copy_width  = aWidth  - x_skip;
   PRInt32 copy_height = aHeight - y_skip;
-  if ((copy_width<=0) || (copy_height<=0))
-    return nsnull; // nothing visible
 
   Window root;
   int win_x, win_y;
@@ -426,6 +424,8 @@ nsX11AlphaBlend::GetBackground(Display *aDisplay, int aScreen,
     copy_height = MIN(copy_height, (int)root_win_height - (aY+y_skip));
     any_offscreen = PR_TRUE;
   }
+  if ((copy_width<=0) || (copy_height<=0))
+    return nsnull; // nothing visible
 
   // get the background image
   // if any part is off screen XGetImage will fail, so we XCreateImage 
