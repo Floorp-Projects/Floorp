@@ -394,13 +394,13 @@ final class IRFactory
     Node initFunction(FunctionNode fnNode, int functionIndex,
                       Node statements, int functionType)
     {
-        fnNode.setFunctionType(functionType);
+        fnNode.itsFunctionType = functionType;
         fnNode.addChildToBack(statements);
 
         int functionCount = fnNode.getFunctionCount();
         if (functionCount != 0) {
             // Functions containing other functions require activation objects
-            fnNode.setRequiresActivation();
+            fnNode.itsNeedsActivation = true;
             for (int i = 0; i != functionCount; ++i) {
                 FunctionNode fn = fnNode.getFunctionNode(i);
                 // nested function expression statements overrides var
@@ -1422,7 +1422,7 @@ final class IRFactory
     private void setRequiresActivation()
     {
         if (parser.insideFunction()) {
-            ((FunctionNode)parser.currentScriptOrFn).setRequiresActivation();
+            ((FunctionNode)parser.currentScriptOrFn).itsNeedsActivation = true;
         }
     }
 
