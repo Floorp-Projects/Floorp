@@ -36,111 +36,194 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * gtkdrawing.h: GTK widget rendering utilities
+ *
+ * gtkdrawing provides an API for rendering GTK widgets in the
+ * current theme to a pixmap or window, without requiring an actual
+ * widget instantiation, similar to the Macintosh Appearance Manager
+ * or Windows XP's DrawThemeBackground() API.
+ */
+
 #ifndef _GTK_DRAWING_H_
 #define _GTK_DRAWING_H_
 
 #include <gdk/gdk.h>
 #include <gtk/gtkstyle.h>
-#include "prtypes.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/*** type definitions ***/
 typedef struct {
-  PRPackedBool active;
-  PRPackedBool focused;
-  PRPackedBool inHover;
-  PRPackedBool disabled;
-  PRPackedBool isDefault;
-  PRPackedBool canDefault;
+  guint8 active;
+  guint8 focused;
+  guint8 inHover;
+  guint8 disabled;
+  guint8 isDefault;
+  guint8 canDefault;
 } GtkWidgetState;
 
-/* flags for tab state */
-#define MOZ_GTK_TAB_FIRST           (1<<0)
-#define MOZ_GTK_TAB_BEFORE_SELECTED (1<<1)
-#define MOZ_GTK_TAB_SELECTED        (1<<2)
+/** flags for tab state **/
+typedef enum {
+  /* the first tab in the group */
+  MOZ_GTK_TAB_FIRST           = 1 << 0,
+  /* the tab just before the selected tab */
+  MOZ_GTK_TAB_BEFORE_SELECTED = 1 << 1,
+  /* the selected tab */
+  MOZ_GTK_TAB_SELECTED        = 1 << 2
+} GtkTabFlags;
 
-void
-moz_gtk_button_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                     GdkRectangle* cliprect, GtkWidgetState* state, 
-                     GtkReliefStyle relief);
+/* function type for moz_gtk_enable_style_props */
+typedef gint (*style_prop_t)(GtkStyle*, const gchar*, gint);
 
-void
+/*** result/error codes ***/
+#define MOZ_GTK_SUCCESS 0
+#define MOZ_GTK_UNKNOWN_WIDGET -1
+#define MOZ_GTK_UNSAFE_THEME -2
+
+/*** widget type constants ***/
+typedef enum {
+  /* Paints a GtkButton. flags is a GtkReliefStyle. */
+  MOZ_GTK_BUTTON,
+  /* Paints a GtkCheckButton. flags is a boolean, 1=checked, 0=not checked. */
+  MOZ_GTK_CHECKBUTTON,
+  /* Paints a GtkRadioButton. flags is a boolean, 1=checked, 0=not checked. */
+  MOZ_GTK_RADIOBUTTON,
+  /**
+   * Paints the button of a GtkScrollbar. flags is a GtkArrowType giving
+   * the arrow direction.
+   */
+  MOZ_GTK_SCROLLBAR_BUTTON,
+  /* Paints the trough (track) of a GtkScrollbar. */
+  MOZ_GTK_SCROLLBAR_TRACK,
+  /* Paints the slider (thumb) of a GtkScrollbar. */
+  MOZ_GTK_SCROLLBAR_THUMB,
+  /* Paints the gripper of a GtkHandleBox. */
+  MOZ_GTK_GRIPPER,
+  /* Paints a GtkEntry. */
+  MOZ_GTK_ENTRY,
+  /* Paints a dropdown arrow (a GtkButton containing a down GtkArrow). */
+  MOZ_GTK_DROPDOWN_ARROW,
+  /* Paints the container part of a GtkCheckButton. */
+  MOZ_GTK_CHECKBUTTON_CONTAINER,
+  /* Paints the container part of a GtkRadioButton. */
+  MOZ_GTK_RADIOBUTTON_CONTAINER,
+  /* Paints the background of a GtkHandleBox. */
+  MOZ_GTK_TOOLBAR,
+  /* Paints a GtkToolTip */
+  MOZ_GTK_TOOLTIP,
+  /* Paints a GtkFrame (e.g. a status bar panel). */
+  MOZ_GTK_FRAME,
+  /* Paints a GtkProgressBar. */
+  MOZ_GTK_PROGRESSBAR,
+  /* Paints a progress chunk of a GtkProgressBar. */
+  MOZ_GTK_PROGRESS_CHUNK,
+  /* Paints a tab of a GtkNotebook. flags is a GtkTabFlags, defined above. */
+  MOZ_GTK_TAB,
+  /* Paints the background and border of a GtkNotebook. */
+  MOZ_GTK_TABPANELS
+} GtkThemeWidgetType;
+
+/*** General library functions ***/
+/**
+ * Initializes the drawing library.  You must call this function
+ * prior to using any other functionality.
+ * returns: MOZ_GTK_SUCCESS if there were no errors
+ *          MOZ_GTK_UNSAFE_THEME if the current theme engine is known
+ *                               to crash with gtkdrawing.
+ */
+gint moz_gtk_init();
+
+/**
+ * Enable GTK+ 1.2.9+ theme enhancements. You must provide a pointer
+ * to the GTK+ 1.2.9+ function "gtk_style_get_prop_experimental".
+ * styleGetProp:  pointer to gtk_style_get_prop_experimental
+ * 
+ * returns: MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_enable_style_props(style_prop_t styleGetProp);
+
+/**
+ * Perform cleanup of the drawing library. You should call this function
+ * when your program exits, or you no longer need the library.
+ *
+ * returns: MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_shutdown();
+
+
+/*** Widget drawing ***/
+/**
+ * Paint a widget in the current theme.
+ * widget:   a constant giving the widget to paint
+ * rect:     the bounding rectangle for the widget
+ * cliprect: a clipprect rectangle for this painting operation
+ * state:    the state of the widget.  ignored for some widgets.
+ * flags:    widget-dependant flags; see the GtkThemeWidgetType definition.
+ */
+gint
+moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
+                     GdkRectangle* rect, GdkRectangle* cliprect,
+                     GtkWidgetState* state, gint flags);
+
+
+/*** Widget metrics ***/
+/**
+ * Get the border size of a widget
+ * xthickness:  [OUT] the widget's left/right border
+ * ythickness:  [OUT] the widget's top/bottom border
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
+                               gint* ythickness);
+
+/**
+ * Get the desired size of a GtkCheckButton
+ * indicator_size:     [OUT] the indicator size
+ * indicator_spacing:  [OUT] the spacing between the indicator and its
+ *                     container
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint
 moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
-void
-moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style, GdkRectangle *rect,
-                       GdkRectangle* cliprect, GtkWidgetState* state, 
-                       gboolean selected, gboolean isradio);
+/**
+ * Get the desired size of a GtkRadioButton
+ * indicator_size:     [OUT] the indicator size
+ * indicator_spacing:  [OUT] the spacing between the indicator and its
+ *                     container
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+#define moz_gtk_radio_get_metrics(x, y) moz_gtk_checkbox_get_metrics(x, y)
 
-void
-moz_gtk_scrollbar_button_paint(GdkWindow* window, GtkStyle* style,
-                               GdkRectangle* rect, GdkRectangle* cliprect,
-                               GtkWidgetState* state, GtkArrowType type);
-
-void
-moz_gtk_scrollbar_trough_paint(GdkWindow* window, GtkStyle* style,
-                               GdkRectangle* rect, GdkRectangle* cliprect,
-                               GtkWidgetState* state);
-
-void
-moz_gtk_scrollbar_thumb_paint(GdkWindow* window, GtkStyle* style,
-                              GdkRectangle* rect, GdkRectangle* cliprect,
-                              GtkWidgetState* state);
-void
+/**
+ * Get the desired metrics for a GtkScrollbar
+ * slider_width:     [OUT] the width of the slider (thumb)
+ * trough_border:    [OUT] the border of the trough (outside the thumb)
+ * stepper_size:     [OUT] the size of an arrow button
+ * stepper_spacing:  [OUT] the minimum space between the thumb and the arrow
+ * min_slider_size:  [OUT] the minimum thumb size
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint
 moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
                               gint* stepper_size, gint* stepper_spacing,
                               gint* min_slider_size);
 
-void
-moz_gtk_gripper_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                      GdkRectangle* cliprect, GtkWidgetState* state);
-
-void
-moz_gtk_entry_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                    GdkRectangle* cliprect, GtkWidgetState* state);
-
-void
-moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style,
-                             GdkRectangle* rect, GdkRectangle* cliprect, 
-                             GtkWidgetState* state);
-
-void
-moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                        GdkRectangle* cliprect, GtkWidgetState* state,
-                        gboolean isradio);
-
-void
-moz_gtk_toolbar_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                      GdkRectangle* cliprect);
-
-void
-moz_gtk_tooltip_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                      GdkRectangle* cliprect);
-
-void
-moz_gtk_frame_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                    GdkRectangle* cliprect);
-
-void
-moz_gtk_progressbar_paint(GdkWindow* window, GtkStyle* style,
-                          GdkRectangle* rect, GdkRectangle* cliprect);
-
-void
-moz_gtk_progress_chunk_paint(GdkWindow* window, GtkStyle* style,
-                             GdkRectangle* rect, GdkRectangle* cliprect);
-
-void
-moz_gtk_tab_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
-                  GdkRectangle* cliprect, gint flags);
-
-void
-moz_gtk_tabpanels_paint(GdkWindow* window, GtkStyle* style,
-                        GdkRectangle* rect, GdkRectangle* cliprect);
-
-void
-moz_gtk_shutdown();
+/**
+ * Get the desired size of a dropdown arrow button
+ * width:   [OUT] the desired width
+ * height:  [OUT] the desired height
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint moz_gtk_get_dropdown_arrow_size(gint* width, gint* height);
 
 #ifdef __cplusplus
 }
