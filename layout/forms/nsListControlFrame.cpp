@@ -3271,6 +3271,14 @@ nsListControlFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+#ifdef DEBUG
+NS_IMETHODIMP
+nsListControlFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("ListControl", aResult);
+}
+#endif
+
 //---------------------------------------------------------
 NS_IMETHODIMP 
 nsListControlFrame::GetMaximumSize(nsSize &aSize)

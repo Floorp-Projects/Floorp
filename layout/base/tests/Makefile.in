@@ -24,22 +24,30 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
+REQUIRES	= xpcom \
+		  layout \
+		  gfx \
+		  $(NULL)
+
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= TestSpaceManager
+CPPSRCS		= \
+		TestSpaceManager.cpp \
+		$(NULL)
 
-CPPSRCS		= TestSpaceManager.cpp
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
-LOCAL_INCLUDES	= -I$(srcdir)/../src
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../src \
+		$(NULL)
 
 LIBS		+= \
-			$(DIST)/lib/libgkbase_s.a \
-			-lgkgfx \
-			$(MOZ_JS_LIBS) \
-			$(XPCOM_LIBS) \
-			$(NSPR_LIBS) \
-			$(TK_LIBS) \
-			$(NULL)
+		$(DIST)/lib/libgkbase_s.a \
+		-lgkgfx \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

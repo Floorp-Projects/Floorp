@@ -82,6 +82,8 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
 
+  NS_IMETHOD IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult);
+
 protected:
   nsIFrame* mOutOfFlowFrame;
 };

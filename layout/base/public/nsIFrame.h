@@ -1116,6 +1116,21 @@ public:
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible) = 0;
+
+  /**
+   * Determine whether the frame is logically empty, i.e., whether the
+   * layout would be the same whether or not the frame is present.
+   * Placeholder frames should return true.  Block frames should be
+   * considered empty whenever margins collapse through them, even
+   * though those margins are relevant.
+   *
+   * aIsPre should be ignored by frames to which the 'white-space'
+   * property applies.
+   */
+  NS_IMETHOD IsEmpty(PRBool aIsQuirkMode,
+                     PRBool aIsPre,
+                     PRBool* aResult) = 0;
+
 #ifdef IBMBIDI
   /**
    *  retrieve and set Bidi property of this frame

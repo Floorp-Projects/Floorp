@@ -53,19 +53,20 @@ CPPSRCS		= \
 		nsAutoCopy.cpp \
 		nsCaret.cpp \
 		nsCopySupport.cpp \
-		nsImageLoader.cpp \
 		nsFrameList.cpp \
 		nsFrameTraversal.cpp \
 		nsFrameUtil.cpp \
 		nsGalleyContext.cpp \
+		nsImageLoader.cpp \
+		nsIntervalSet.cpp \
 		nsLayoutDebugger.cpp \
+		nsLayoutHistoryState.cpp \
 		nsPresContext.cpp \
 		nsPresState.cpp \
 		nsPrintContext.cpp \
 		nsPrintPreviewContext.cpp \
 		nsSpaceManager.cpp \
 		nsStyleChangeList.cpp \
-		nsLayoutHistoryState.cpp \
 		$(NULL)
 
 ifdef IBMBIDI

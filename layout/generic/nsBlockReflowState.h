@@ -57,12 +57,6 @@ public:
   ~nsBlockReflowState();
 
   /**
-   * Update our state when aLine is skipped over during incremental
-   * reflow.
-   */
-  void RecoverStateFrom(nsLineBox* aLine, PRBool aPrevLineWasClean);
-
-  /**
    * Get the available reflow space for the current y coordinate. The
    * available space is relative to our coordinate system (0,0) is our
    * upper left corner.
@@ -107,19 +101,16 @@ public:
 
   void UpdateMaximumWidth(nscoord aMaximumWidth);
 
-  void RecoverVerticalMargins(nsLineBox* aLine,
-                              PRBool aApplyTopMargin,
-                              nscoord* aTopMarginResult,
-                              nscoord* aBottomMarginResult);
+  // Reconstruct the previous bottom margin that goes above |aLine|.
+  void ReconstructMarginAbove(nsLineList::iterator aLine);
 
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               nsSplittableType aSplitType,
                               const nsStyleDisplay* aDisplay,
                               nsRect& aResult);
 
-  void RecoverStateFrom(nsLineBox* aLine,
-                        PRBool aApplyTopMargin,
-                        nsRect* aDamageRect);
+  void RecoverStateFrom(nsLineList::iterator aLine,
+                        nscoord aDeltaY);
 
   void AdvanceToNextLine() {
     mLineNumber++;
@@ -175,10 +166,8 @@ public:
   // dirty and is passed over during incremental reflow.
 
   // The current line being reflowed
-  nsLineBox* mCurrentLine;
-
-  // The previous line just reflowed
-  nsLineBox* mPrevLine;
+  // If it is mBlock->end_lines(), then it is invalid.
+  nsLineList::iterator mCurrentLine;
 
   // The current Y coordinate in the block
   nscoord mY;
@@ -213,7 +202,7 @@ public:
   nsIFrame* mNextRCFrame;
 
   // The previous child frames collapsed bottom margin value.
-  nscoord mPrevBottomMargin;
+  nsCollapsingMargin mPrevBottomMargin;
 
   // The current next-in-flow for the block. When lines are pulled
   // from a next-in-flow, this is used to know which next-in-flow to

@@ -321,6 +321,7 @@ nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
     else if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
       frameType = NS_CSS_FRAME_TYPE_FLOATING;
     }
+    // XXXldb UMR in this case (else, else) we don't initialize frameType
   }
   else {
     switch (aDisplay->mDisplay) {
@@ -826,16 +827,14 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
     // the line containing the placeholder frame
     if (aBlockFrame) {
       nsIFrame*   blockChild;
-      nsLineBox*  lineBox;
-      nsLineBox*  prevLineBox;
+      nsBlockFrame::line_iterator lineBox;
       PRBool      isFloater;
+      nsBlockFrame* blockFrame = NS_STATIC_CAST(nsBlockFrame*, aBlockFrame);
 
       // We need the immediate child of the block frame, and that may not be
       // the placeholder frame
       blockChild = FindImmediateChildOf(aBlockFrame, aPlaceholderFrame);
-      lineBox = ((nsBlockFrame*)aBlockFrame)->FindLineFor(blockChild, &prevLineBox,
-                                                          &isFloater);
-      if (lineBox) {
+      if (blockFrame->FindLineFor(blockChild, &isFloater, &lineBox)) {
         // The top of the hypothetical box is just below the line containing
         // the placeholder
         aHypotheticalBox.mTop = lineBox->mBounds.YMost();

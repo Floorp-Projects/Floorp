@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -70,20 +71,20 @@ public:
   nsresult ReflowBlock(nsIFrame* aFrame,
                        const nsRect& aSpace,
                        PRBool aApplyTopMargin,
-                       nscoord aPrevBottomMargin,
+                       nsCollapsingMargin& aPrevBottomMargin,
                        PRBool aIsAdjacentWithTop,
                        nsMargin& aComputedOffsets,
                        nsReflowStatus& aReflowStatus);
 
   PRBool PlaceBlock(PRBool aForceFit,
                     const nsMargin& aComputedOffsets,
-                    nscoord* aBottomMarginResult,
+                    nsCollapsingMargin& aBottomMarginResult /* out */,
                     nsRect& aInFlowBounds,
                     nsRect& aCombinedRect);
 
   void AlignBlockHorizontally(nscoord aWidth, nsBlockHorizontalAlign&);
 
-  nscoord GetCarriedOutBottomMargin() const {
+  nsCollapsingMargin& GetCarriedOutBottomMargin() {
     return mMetrics.mCarriedOutBottomMargin;
   }
 
@@ -111,25 +112,9 @@ public:
     return mBlockShouldInvalidateItself;
   }
 
-  // Compute the largest of two adjacent vertical margins, as per the
-  // CSS2 spec section 8.3.1
-  static nscoord MaxMargin(nscoord a, nscoord b) {
-    if (a < 0) {
-      if (b < 0) {
-        if (a < b) return a;
-        return b;
-      }
-      return b + a;
-    }
-    else if (b < 0) {
-      return a + b;
-    }
-    if (a > b) return a;
-    return b;
-  }
-
-  static nscoord ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
-                                           nsHTMLReflowState& aRS);
+  static void ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
+                                        nsHTMLReflowState& aRS,
+                           /* inout */  nsCollapsingMargin& aMargin);
 
 protected:
   nsStyleUnit GetRealMarginLeftUnit();
@@ -140,7 +125,7 @@ protected:
                          nsIFrame* aFrame,
                          const nsRect& aSpace,
                          PRBool aApplyTopMargin,
-                         nscoord aPrevBottomMargin,
+                         nsCollapsingMargin& aPrevBottomMargin,
                          PRBool aIsAdjacentWithTop,
                          nsMargin& aComputedOffsets,
                          nsReflowStatus& aReflowStatus);

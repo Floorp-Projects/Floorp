@@ -64,7 +64,7 @@
 #include "nsIStyleSet.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
+static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
 NS_IMETHODIMP
 nsHTMLContainerFrame::Paint(nsIPresContext*      aPresContext,
@@ -551,7 +551,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
       NS_ASSERTION(parentView, "no parent with view");
 
       // Create a view
-      static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+      static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
 
       nsresult result = nsComponentManager::CreateInstance(kViewCID, 
                                                      nsnull, 

@@ -291,6 +291,10 @@ public:
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
 
+  NS_IMETHOD IsEmpty(PRBool aIsQuirkMode,
+                     PRBool aIsPre,
+                     PRBool* aResult);
+
   // nsIHTMLReflow
   NS_IMETHOD  WillReflow(nsIPresContext* aPresContext);
   NS_IMETHOD  Reflow(nsIPresContext*          aPresContext,
@@ -410,7 +414,7 @@ public:
       frameDebug->GetFrameName(tmp);
     }
     fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
-    fprintf(out, "@%p", aFrame);
+    fprintf(out, "@%p", NS_STATIC_CAST(void*, aFrame));
   }
 
   static void IndentBy(FILE* out, PRInt32 aIndent) {

@@ -90,6 +90,8 @@ public:
 #endif
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
+  NS_IMETHOD IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult);
+
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,

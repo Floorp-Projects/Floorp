@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+// vim:cindent:ts=2:et:sw=2:
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -292,24 +293,22 @@ nsFrame::~nsFrame()
 
 nsresult nsFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kClassIID, NS_GET_IID(nsIFrame));
+  NS_PRECONDITION(aInstancePtr, "null out param");
 
 #ifdef DEBUG
   if (aIID.Equals(NS_GET_IID(nsIFrameDebug))) {
-    *aInstancePtr = (void*)(nsIFrameDebug*)this;
+    *aInstancePtr = NS_STATIC_CAST(void*,NS_STATIC_CAST(nsIFrameDebug*,this));
     return NS_OK;
   }
 #endif
 
-  if (aIID.Equals(kClassIID) || aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)this;
+  if (aIID.Equals(NS_GET_IID(nsIFrame)) ||
+      aIID.Equals(NS_GET_IID(nsISupports))) {
+    *aInstancePtr = NS_STATIC_CAST(void*,NS_STATIC_CAST(nsIFrame*,this));
     return NS_OK;
   }
 
+  *aInstancePtr = nsnull;
   return NS_NOINTERFACE;
 }
 
@@ -2143,7 +2142,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
-    aMetrics.mCarriedOutBottomMargin = 0;
+    aMetrics.mCarriedOutBottomMargin.Zero();
     aMetrics.mOverflowArea.x = 0;
     aMetrics.mOverflowArea.y = 0;
     aMetrics.mOverflowArea.width = 0;
@@ -2241,18 +2240,18 @@ nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
   IndentBy(out, aIndent);
   ListTag(out);
 #ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", mParent);
+  fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
 #endif
   nsIView*  view;
   GetView(aPresContext, &view);
   if (view) {
-    fprintf(out, " [view=%p]", view);
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, view));
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
-  fprintf(out, " [content=%p]", mContent);
+  fprintf(out, " [content=%p]", NS_STATIC_CAST(void*, mContent));
   fputs("\n", out);
   return NS_OK;
 }
@@ -2413,6 +2412,13 @@ nsFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool *aResult)
+{
+  *aResult = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

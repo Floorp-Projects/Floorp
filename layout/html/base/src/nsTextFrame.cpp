@@ -474,6 +474,8 @@ public:
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible);
 
+  NS_IMETHOD IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult);
+
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
@@ -5608,6 +5610,24 @@ nsTextFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTextFrame::IsEmpty(PRBool aIsQuirkMode, PRBool aIsPre, PRBool* aResult)
+{
+    // XXXldb Should this check aIsQuirkMode as well???
+  if (aIsPre) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsITextContent> textContent( do_QueryInterface(mContent) );
+  if (! textContent) {
+    NS_NOTREACHED("text frame has no text content");
+    *aResult = PR_TRUE;
+    return NS_ERROR_UNEXPECTED;
+  }
+  return textContent->IsOnlyWhitespace(aResult);
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsTextFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
@@ -5637,7 +5657,7 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
   nsIView* view;
   GetView(aPresContext, &view);
   if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
+    fprintf(out, " [view=%p]", NS_STATIC_CAST(void*, view));
   }
 
   PRInt32 totalContentLength;
@@ -5651,15 +5671,15 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
           isComplete ? 'T':'F');
   
   if (nsnull != mNextSibling) {
-    fprintf(out, " next=%p", mNextSibling);
+    fprintf(out, " next=%p", NS_STATIC_CAST(void*, mNextSibling));
   }
   nsIFrame* prevInFlow;
   GetPrevInFlow(&prevInFlow);
   if (nsnull != prevInFlow) {
-    fprintf(out, " prev-in-flow=%p", prevInFlow);
+    fprintf(out, " prev-in-flow=%p", NS_STATIC_CAST(void*, prevInFlow));
   }
   if (nsnull != mNextInFlow) {
-    fprintf(out, " next-in-flow=%p", mNextInFlow);
+    fprintf(out, " next-in-flow=%p", NS_STATIC_CAST(void*, mNextInFlow));
   }
 
   // Output the rect and state
@@ -5671,7 +5691,7 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
       fprintf(out, " [state=%08x]", mState);
     }
   }
-  fprintf(out, " sc=%p<\n", mStyleContext);
+  fprintf(out, " sc=%p<\n", NS_STATIC_CAST(void*, mStyleContext));
 
   // Output the text
   aIndent++;

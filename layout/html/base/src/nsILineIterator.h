@@ -64,12 +64,6 @@
 // clear, it means that the line contains inline elements.
 #define NS_LINE_FLAG_IS_BLOCK           0x1
 
-// This bit, when set, indicates that the line has had a trailing
-// white-space compressed. The bit is only set on lines that contain
-// inline elements, and is only set when actual white-space is
-// compressed.
-#define NS_LINE_FLAG_IS_TRIMMED         0x2
-
 // This bit is set when the line ends in some sort of break.
 #define NS_LINE_FLAG_ENDS_IN_BREAK      0x4
 

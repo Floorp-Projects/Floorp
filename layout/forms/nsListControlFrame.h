@@ -222,6 +222,11 @@ public:
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
+#ifdef DEBUG
+    // nsIFrameDebug
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
+
     // nsIFormControlFrame
   NS_IMETHOD GetType(PRInt32* aType) const;
   NS_IMETHOD GetName(nsString* aName);

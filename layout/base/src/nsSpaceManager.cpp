@@ -43,6 +43,7 @@
 #include "nsVoidArray.h"
 #include "nsIFrame.h"
 #include "nsString.h"
+#include "nsIPresShell.h"
 #ifdef DEBUG
 #include "nsIFrameDebug.h"
 #endif
@@ -81,12 +82,29 @@ nsSpaceManager::BandList::Clear()
 }
 
 /////////////////////////////////////////////////////////////////////////////
+
+// PresShell Arena allocate callback (for nsIntervalSet use below)
+static void* PSArenaAllocCB(size_t aSize, void* aClosure)
+{
+  void *rv;
+  NS_STATIC_CAST(nsIPresShell*, aClosure)->AllocateFrame(aSize, &rv);
+  return rv;
+}
+
+// PresShell Arena free callback (for nsIntervalSet use below)
+static void PSArenaFreeCB(size_t aSize, void* aPtr, void* aClosure)
+{
+  NS_STATIC_CAST(nsIPresShell*, aClosure)->FreeFrame(aSize, aPtr);
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // nsSpaceManager
 
-nsSpaceManager::nsSpaceManager(nsIFrame* aFrame)
-  : mFrame(aFrame)
+nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
+  : mFrame(aFrame),
+    mFloatDamage(PSArenaAllocCB, PSArenaFreeCB, aPresShell)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mX = mY = 0;
   mFrameInfoMap = nsnull;
 }
@@ -118,7 +136,8 @@ NS_IMPL_RELEASE_WITH_DESTROY(nsSpaceManager, LastRelease())
 
 
 // static
-nsSpaceManager *nsSpaceManager::Create(nsIFrame* aFrame)
+nsSpaceManager *nsSpaceManager::Create(nsIPresShell* aPresShell,
+                                       nsIFrame* aFrame)
 {
   if (sCachedSpaceManagerCount > 0) {
     // We have cached unused instances of this class, return a cached
@@ -129,11 +148,11 @@ nsSpaceManager *nsSpaceManager::Create(nsIFrame* aFrame)
     // Re-initialize the cached space manager by calling its
     // constructor (using placement new), the destructor was called
     // when the space manager was put in the cache.
-    return new (spaceManager) nsSpaceManager(aFrame);
+    return new (spaceManager) nsSpaceManager(aPresShell, aFrame);
   }
 
   // The cache is empty, this means we haveto create a new instance.
-  return new nsSpaceManager(aFrame);
+  return new nsSpaceManager(aPresShell, aFrame);
 }
 
 
@@ -1006,6 +1025,23 @@ nsSpaceManager::ClearRegions()
   ClearFrameInfo();
   mBandList.Clear();
   return NS_OK;
+}
+
+NS_IMETHODIMP_(PRBool) nsSpaceManager::HasFloatDamage()
+{
+  return !mFloatDamage.IsEmpty();
+}
+
+NS_IMETHODIMP_(void) nsSpaceManager::IncludeInDamage(nscoord aIntervalBegin,
+                                                     nscoord aIntervalEnd)
+{
+  mFloatDamage.IncludeInterval(aIntervalBegin + mY, aIntervalEnd + mY);
+}
+
+NS_IMETHODIMP_(PRBool) nsSpaceManager::IntersectsDamage(nscoord aIntervalBegin,
+                                                        nscoord aIntervalEnd)
+{
+  return mFloatDamage.Intersects(aIntervalBegin + mY, aIntervalEnd + mY);
 }
 
 #ifdef DEBUG
