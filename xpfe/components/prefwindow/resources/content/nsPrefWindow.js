@@ -81,19 +81,6 @@ nsPrefWindow.prototype =
           if( window.arguments[1] )
             this.closeBranches( window.arguments[1] );
 
-          // enable image blocker if "imageblocker.enabled" pref is true
-          try {
-            if (this.pref.GetBoolPref("imageblocker.enabled")) {
-              element = document.getElementById("cookiesCell");
-              valueWithImages = element.getAttribute("valueWithImages");
-              element.setAttribute("value",valueWithImages);
-            }
-          } catch(e) {
-            dump("imageblocker.enabled pref is missing from all.js");
-          }
-
-
-
         },
 
       onOK:
@@ -270,31 +257,6 @@ nsPrefWindow.prototype =
       onpageload: 
         function ( aPageTag )
           {
-  // enable image blocker if "imageblocker.enabled" pref is true
-  try {
-    if (this.pref.GetBoolPref("imageblocker.enabled")) {
-      var element;
-      if (aPageTag.indexOf("pref-cookies") != -1) {
-        element = window.frames[this.contentFrame].document.getElementById("imagesArea");
-        element.setAttribute("style","display: inline;" );
-        element = window.frames[this.contentFrame].document.getElementById("cookieHeader");
-        titleWithImages = element.getAttribute("titleWithImages");
-        element.setAttribute("title",titleWithImages);
-        descriptionWithImages = element.getAttribute("descriptionWithImages");
-        element.setAttribute
-          ("description",descriptionWithImages );
-        element = window.frames[this.contentFrame].document.getElementById("cookieWindow");
-        titleWithImages = element.getAttribute("titleWithImages");
-        element.setAttribute("title",titleWithImages);
-      } else if (aPageTag.indexOf("pref-advanced") != -1) {
-        element = window.frames[this.contentFrame].document.getElementById("advancedAlwaysLoadImages");
-        element.setAttribute("style","display: none;" );
-      }
-    }
-  } catch(e) {
-    dump("imageblocker.enabled pref is missing from all.js");
-  }
-
             if( !this.wsm.dataManager.pageData[aPageTag] )
               {
                 var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "pref", "true" );

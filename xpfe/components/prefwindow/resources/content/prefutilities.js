@@ -92,3 +92,4 @@ function setHomePageToCurrentPage(folderFieldId)
 }
 
 var bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
+
