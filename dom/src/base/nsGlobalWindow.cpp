@@ -500,7 +500,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
   }
 
   if (do_clear_scope) {
-    ::JS_ClearScope((JSContext *)mContext->GetNativeContext(), mJSObject);
+    JSContext* cx = (JSContext *)mContext->GetNativeContext();
+    ::JS_ClearScope(cx, mJSObject);
+    ::JS_ClearRegExpStatics(cx);
 
     mIsScopeClear = PR_TRUE;
   }
