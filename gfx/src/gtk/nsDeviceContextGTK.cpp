@@ -22,6 +22,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "il_util.h"
+#include "nsCRT.h"
 
 #include "nsDeviceContextGTK.h"
 #include "nsGfxCIID.h"
@@ -361,7 +362,7 @@ NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
   PR_snprintf(wildstring, namelen + 200,
              "-*-%s-*-*-normal-*-*-*-%d-%d-*-*-*-*",
              fontName, dpi, dpi);
-  delete [] fontName;
+  nsCRT::free(fontName);
   
   fnames = ::XListFontsWithInfo(GDK_DISPLAY(), wildstring, 1, &numnames, &fonts);
   
