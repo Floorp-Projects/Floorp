@@ -2497,6 +2497,10 @@ SINGSIGN_SignonViewerReturn (nsAutoString results) {
 PUBLIC void
 SINGSIGN_GetSignonListForViewer(nsAutoString& aSignonList)
 {
+  if (SI_LoadSignonData(PR_TRUE) != 0) {
+    /* don't display saved signons if user couldn't unlock the database */
+    return;
+  }
   nsAutoString buffer = "";
   int signonNum = 0;
   si_SignonURLStruct *url;
