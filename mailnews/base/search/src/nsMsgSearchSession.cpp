@@ -507,7 +507,7 @@ NS_IMETHODIMP nsMsgSearchSession::GetRunningAdapter (nsIMsgSearchAdapter **aSear
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgSearchSession::AddSearchHit(nsIMsgHdr *header, nsIMsgFolder *folder)
+NS_IMETHODIMP nsMsgSearchSession::AddSearchHit(nsIMsgDBHdr *header, nsIMsgFolder *folder)
 {
   if (m_listenerList)
   {

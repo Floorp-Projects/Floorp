@@ -25,17 +25,13 @@
 #include "nsIRDFService.h"
 #include "nsMsgRDFUtils.h"
 
+#include "nsIMessage.h"
 #include "nsIMsgHdr.h"
 #include "nsIMsgSearchSession.h"
 
-typedef struct _notifyStruct {
-    nsIRDFResource *source;
-    nsIRDFResource *property;
-    nsIRDFResource *target;
-} notifyStruct;
-
 nsCOMPtr<nsIRDFResource> nsMsgSearchDataSource::kNC_MessageChild;
 nsrefcnt nsMsgSearchDataSource::gInstanceCount = 0;
+PRUint32 nsMsgSearchDataSource::gCurrentURINum = 0;
 
 
 nsMsgSearchDataSource::nsMsgSearchDataSource()
@@ -52,6 +48,7 @@ nsMsgSearchDataSource::Init()
         getRDFService()->GetResource(NC_RDF_MESSAGECHILD, getter_AddRefs(kNC_MessageChild));
     }
 
+    mURINum = gCurrentURINum++;
     return NS_OK;
 }
 
@@ -67,14 +64,20 @@ NS_IMPL_ISUPPORTS2(nsMsgSearchDataSource,
                    nsIMsgSearchNotify)
 
     NS_IMETHODIMP
-nsMsgSearchDataSource::OnSearchHit(nsIMsgHdr* aMessage, nsIMsgFolder *folder)
+nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 {
     nsresult rv;
+
+    nsCOMPtr<nsIMessage> message;
+    folder->CreateMessageFromMsgDBHdr(aMsgHdr, getter_AddRefs(message));
+    
     // this probably wont work. Need to convert nsMsgDBHdr -> nsMessage
     // probably through a URI or something
     nsCOMPtr<nsIRDFResource> messageResource =
-      do_QueryInterface(aMessage, &rv);
+      do_QueryInterface(message, &rv);
 
+    // should probably try to cache this with an in-memory datasource
+    // or something
     NotifyObservers(mSearchRoot, kNC_MessageChild, messageResource, PR_TRUE, PR_FALSE);
     return NS_OK;
 }
@@ -95,24 +98,15 @@ nsMsgSearchDataSource::GetSearchSession(nsIMsgSearchSession** aResult)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMsgSearchDataSource::GetSearchSessionURI(char ** aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(mSearchSession, NS_ERROR_NOT_INITIALIZED);
-
-    nsCAutoString searchSessionUri("mailsearch:$");
-    searchSessionUri.AppendInt((PRInt32)mSearchSession.get(), 16);
-
-    *aResult = searchSessionUri.ToNewCString();
-    return NS_OK;
-}
 
 /* readonly attribute string URI; */
 NS_IMETHODIMP
 nsMsgSearchDataSource::GetURI(char * *aURI)
 {
-    *aURI = nsCRT::strdup("NC:msgsearch");
+    nsCAutoString uri("mailsearch:#");
+    uri.AppendInt(mURINum);
+    
+    *aURI = uri.ToNewCString();
     return NS_OK;
 }
 

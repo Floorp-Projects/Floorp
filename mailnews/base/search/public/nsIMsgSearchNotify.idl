@@ -23,7 +23,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIMsgHdr;
+interface nsIMsgDBHdr;
 interface nsIMsgSearchSession;
 interface nsIMsgFolder;
 
@@ -32,7 +32,7 @@ interface nsIMsgFolder;
 [scriptable, uuid(ca37784d-352b-4c39-8ccb-0abc1a93f681)]
 interface nsIMsgSearchNotify : nsISupports
 {
-  void onSearchHit(in nsIMsgHdr header, in nsIMsgFolder folder);
+  void onSearchHit(in nsIMsgDBHdr header, in nsIMsgFolder folder);
 
   /*
    * until we can encode searches with a URI, this will be an
@@ -45,9 +45,5 @@ interface nsIMsgSearchNotify : nsISupports
    */
   attribute nsIMsgSearchSession searchSession;
 
-  /**
-   * a unique URI that refers to the search session
-   */
-  readonly attribute string searchSessionURI;
 };
 

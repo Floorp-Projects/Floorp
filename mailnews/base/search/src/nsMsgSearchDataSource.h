@@ -58,7 +58,10 @@ private:
     nsCOMPtr<nsIRDFResource> mSearchRoot;
     nsCOMPtr<nsIMsgSearchSession> mSearchSession;
 
+    PRUint32 mURINum;
+
     static nsrefcnt gInstanceCount;
+    static PRUint32 gCurrentURINum;
     static nsCOMPtr<nsIRDFResource> kNC_MessageChild;
   
 };
