@@ -337,7 +337,7 @@ mozJSComponentLoader::ReallyInit()
         return rv;
     }
 
-    rv = wrappedCM->GetJSObject(&mCompMgrWrapper);
+    rv = holder->GetJSObject(&mCompMgrWrapper);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "failed to get JSObject for comp mgr wrapper\n");
