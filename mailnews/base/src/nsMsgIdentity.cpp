@@ -20,10 +20,8 @@
 #include "nsMsgIdentity.h"
 #include "nsIPref.h"
 
-// part of prefs hack until they become a service...
-extern "C" const nsID kIPrefIID = {0xa22ad7b0, 0xca86, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4};
-// {DC26E0E0-CA94-11d1-A9A4-00805F8A7AC4}
-extern "C" const nsID kPrefCID = {0xdc26e0e0, 0xca94, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4};
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 NS_IMPL_ISUPPORTS(nsMsgIdentity, nsIMsgIdentity::GetIID());
 
