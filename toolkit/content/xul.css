@@ -306,6 +306,10 @@ tooltip {
   margin-top: 21px;
 }
 
+window[sizemode="maximized"] resizer {
+  visibility: collapse;
+}
+
 /********** floating popups **********/
 
 /*
