@@ -22,6 +22,7 @@
 
 -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/directory/directory.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/directory/directory.dtd">
@@ -31,17 +32,19 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical">
+  orient="vertical">
 
-  <html:script src="directory.js" />
+  <script src="chrome://communicator/content/directory/directory.js"></script>
 
   <tree id="tree" datasources="rdf:files rdf:httpindex" flex="1" style="height:0px;" container="true" open="true" >
       <template>
         <treechildren>
-          <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#File-Type" persist="open"
+          <treeitem uri="..." persist="open"
+                    type="rdf:http://home.netscape.com/NC-rdf#File-Type" 
                     loading="rdf:http://home.netscape.com/NC-rdf#loading" >
             <treerow>
-              <treecell class="filename treecell-indent" indent="true"
+              <treecell class="treecell-filename treecell-indent" indent="true" 
+                        type="rdf:http://home.netscape.com/NC-rdf#File-Type"
                         value="rdf:http://home.netscape.com/NC-rdf#Name"/>
               <treecell value="rdf:http://home.netscape.com/NC-rdf#Content-Length" />
               <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" />
@@ -56,7 +59,7 @@
 
       <treehead>
         <treerow>
-          <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.filename.label;"
+          <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.filename.label;" 
           	onclick="return doSort('FilenameColumn');" observes="FilenameColumn" sortActive="true" sortDirection="ascending" />
           <treecell class="treecell-header sortDirectionIndicator" value="&directoryWindow.contentlength.label;"
           	onclick="return doSort('ContentLengthColumn');" observes="ContentLengthColumn" />
@@ -67,8 +70,7 @@
 
       <!-- Create the treechildren here so we can attach event handlers
            at this level (rather than at the tree level -->
-      <treechildren
-          onclick="OnClick(event);" />
+      <treechildren onclick="OnClick(event);" onkeypress="OnClick(event);"/>
 
   </tree>
 </window>
