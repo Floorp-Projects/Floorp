@@ -322,7 +322,7 @@ void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
 		fStartOfLineOfTokens = PL_strdup(fCurrentLine);
     fNextToken = fStartOfLineOfTokens + nextTokenOffset;
 
-		if (fStartOfLineOfTokens && ((int32) PL_strlen(fStartOfLineOfTokens) >= bytesToAdvance))
+		if (fStartOfLineOfTokens && ((int32) strlen(fStartOfLineOfTokens) >= bytesToAdvance))
 		{
 			fLineOfTokens = fStartOfLineOfTokens + bytesToAdvance  + startingDiff;
 			fCurrentTokenPlaceHolder = fLineOfTokens;
@@ -463,15 +463,15 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 		returnString.SetCharAt(0, charIndex);
 		//if ((charIndex == 0) && skipToEnd)	// it's an empty string.  Why skip to end?
 		//	skip_to_CRLF();
-		//else if (charIndex == PL_strlen(fCurrentLine))	// should we have this?
+		//else if (charIndex == strlen(fCurrentLine))	// should we have this?
 		//AdvanceToNextLine();
 		//else 
-		if (charIndex < (int) (PL_strlen(fNextToken) - 2))	// -2 because of the start and end quotes
+		if (charIndex < (int) (strlen(fNextToken) - 2))	// -2 because of the start and end quotes
 		{
 			// the quoted string was fully contained within fNextToken,
 			// and there is text after the quote in fNextToken that we
 			// still need
-//			int charDiff = PL_strlen(fNextToken) - charIndex - 1;
+//			int charDiff = strlen(fNextToken) - charIndex - 1;
 //			fCurrentTokenPlaceHolder -= charDiff;
 //			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
 //				fAtEndOfLine = PR_TRUE;
@@ -481,7 +481,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 		}
 		else
 		{
-			fCurrentTokenPlaceHolder += tokenIndex + charIndex + 1 - PL_strlen(fNextToken);
+			fCurrentTokenPlaceHolder += tokenIndex + charIndex + 1 - strlen(fNextToken);
 			if (!*fCurrentTokenPlaceHolder)
 				*fCurrentTokenPlaceHolder = ' ';	// put the token delimiter back
 			/*	if (!nsCRT::strcmp(fNextToken, CRLF))
@@ -533,7 +533,7 @@ char *nsIMAPGenericParser::CreateLiteral()
 			}
 			else
 				AdvanceToNextLine();
-			currentLineLength = PL_strlen(terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder);
+			currentLineLength = strlen(terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder);
 			bytesToCopy = (currentLineLength > numberOfCharsInMessage - charsReadSoFar ?
 						   numberOfCharsInMessage - charsReadSoFar : currentLineLength);
 			NS_ASSERTION (bytesToCopy, "0 length literal?");
@@ -563,7 +563,7 @@ char *nsIMAPGenericParser::CreateLiteral()
 					AdvanceTokenizerStartingPoint (bytesToCopy);
 				else
 					AdvanceTokenizerStartingPoint (	bytesToCopy + 
-													PL_strlen(fNextToken) + 
+													strlen(fNextToken) + 
 													2 /* CRLF */ +
 													(fNextToken - fLineOfTokens)
 													);
@@ -600,7 +600,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 	int bytesUsed = 0;
 	
 	// count the number of parens in the current token
-	int count, tokenLen = PL_strlen(fNextToken);
+	int count, tokenLen = strlen(fNextToken);
 	for (count = 1; (count < tokenLen) && (numOpenParens > 0); count++)
 	{
 		if (fNextToken[count] == '(')
@@ -621,7 +621,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 			extractReset = PR_FALSE;
 			// Go through the current line and look for the last close paren.
 			// We're not trying to parse it just yet, just separate it out.
-			int len = PL_strlen(fCurrentTokenPlaceHolder);
+			int len = strlen(fCurrentTokenPlaceHolder);
 			for (count = 0; (count < len) && (numOpenParens > 0) && !extractReset; count++)
 			{
 				if (*fCurrentTokenPlaceHolder == '{')
@@ -630,7 +630,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 					NS_ASSERTION(fNextToken, "out of memory?or invalid syntax");
 					if (fNextToken)
 					{
-						tokenLen = PL_strlen(fNextToken);
+						tokenLen = strlen(fNextToken);
 						if (fNextToken[tokenLen-1] == '}')
 						{
 							// ok, we're looking at a literal string here
