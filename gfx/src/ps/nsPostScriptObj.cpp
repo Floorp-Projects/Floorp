@@ -521,6 +521,7 @@ nsPostScriptObj::begin_document()
 int i;
 FILE *f;
 
+  XL_SET_NUMERIC_LOCALE();
   f = mPrintContext->prSetup->out;
   fprintf(f, "%%!PS-Adobe-3.0\n");
   fprintf(f, "%%%%BoundingBox: %g %g %g %g\n",
@@ -1908,6 +1909,7 @@ FILE *f;
   initlanggroup();
 
   fprintf(f, "%%%%EndProlog\n");
+  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
@@ -1931,6 +1933,7 @@ nsPostScriptObj::begin_page()
 {
 FILE *f;
 
+  XL_SET_NUMERIC_LOCALE();
   f = mPrintContext->prSetup->tmpBody;
   fprintf(f, "%%%%Page: %d %d\n", mPageNumber, mPageNumber);
   fprintf(f, "%%%%BeginPageSetup\n");
@@ -1961,6 +1964,7 @@ FILE *f;
 
   // need to reset all U2Ntable
   gLangGroups->Enumerate(ResetU2Ntable, nsnull);
+  XL_RESTORE_NUMERIC_LOCALE();
 }
 
 /** ---------------------------------------------------
