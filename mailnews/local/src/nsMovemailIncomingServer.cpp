@@ -36,24 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "prmem.h"
-#include "plstr.h"
-#include "prprf.h"
-
-//#include "nsCOMPtr.h"
-//#include "nsIPref.h"
-
-#include "nsXPIDLString.h"
-
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIFileSpec.h"
-#include "nsIPref.h"
-
 #include "nsIMsgLocalMailFolder.h"
-
 #include "nsIMovemailService.h"
-
 #include "msgCore.h" // pre-compiled headers
 #include "nsMovemailIncomingServer.h"
 
@@ -70,16 +57,12 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsMovemailIncomingServer,
 
 nsMovemailIncomingServer::nsMovemailIncomingServer()
 {    
-  m_canHaveFilters = PR_TRUE;
+    m_canHaveFilters = PR_TRUE;
 }
 
 nsMovemailIncomingServer::~nsMovemailIncomingServer()
 {
 }
-
-/*NS_IMPL_SERVERPREF_BOOL(nsMovemailIncomingServer,
-                        AdamIsASillyhead,
-                        "adam_is_a_sillyhead")*/
 
 NS_IMETHODIMP
 nsMovemailIncomingServer::GetIsSecureServer(PRBool *aIsSecureServer)
@@ -123,62 +106,64 @@ nsMovemailIncomingServer::SetFlagsOnDefaultMailboxes()
 
 NS_IMETHODIMP nsMovemailIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
-        nsresult rv;
-        PRBool exists;
-        if (!path) return NS_ERROR_NULL_POINTER;
+    nsresult rv;
+    PRBool exists;
+    if (!path) return NS_ERROR_NULL_POINTER;
 
-        rv =path->AppendRelativeUnixPath("Inbox");
+    rv = path->AppendRelativeUnixPath("Inbox");
+    if (NS_FAILED(rv)) return rv;
+    rv = path->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) {
+        rv = path->Touch();
         if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
+    }
 
-        rv =path->SetLeafName("Trash");
+    rv = path->SetLeafName("Trash");
+    if (NS_FAILED(rv)) return rv;
+    rv = path->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) {
+        rv = path->Touch();
         if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
+    }
 
-        rv = path->SetLeafName("Sent");
+    rv = path->SetLeafName("Sent");
+    if (NS_FAILED(rv)) return rv;
+    rv = path->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) {
+        rv = path->Touch();
         if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
+    }
 
-        rv = path->SetLeafName("Drafts");
+    rv = path->SetLeafName("Drafts");
+    if (NS_FAILED(rv)) return rv;
+    rv = path->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) {
+        rv = path->Touch();
         if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
+    }
 
-        rv = path->SetLeafName("Templates");
+    rv = path->SetLeafName("Templates");
+    if (NS_FAILED(rv)) return rv;
+    rv = path->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) {
+        rv = path->Touch();
         if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
+    }
 
-        rv = path->SetLeafName("Unsent Messages");
+    rv = path->SetLeafName("Unsent Messages");
+    if (NS_FAILED(rv)) return rv;
+    rv = path->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (!exists) {
+        rv = path->Touch();
         if (NS_FAILED(rv)) return rv;
-        rv = path->Exists(&exists);
-        if (NS_FAILED(rv)) return rv;
-        if (!exists) {
-                rv = path->Touch();
-                if (NS_FAILED(rv)) return rv;
-        }
-        return rv;
+    }
+    return rv;
 }
 
 
