@@ -910,7 +910,8 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda)
             goto bad;
         if (!js_AddRoot(cx, &pd[i].value, NULL))
             goto bad;
-        JS_GetPropertyDesc(cx, obj, sprop, &pd[i]);
+        if (!JS_GetPropertyDesc(cx, obj, sprop, &pd[i]))
+            goto bad;
         if ((pd[i].flags & JSPD_ALIAS) && !js_AddRoot(cx, &pd[i].alias, NULL))
             goto bad;
         if (++i == n)
