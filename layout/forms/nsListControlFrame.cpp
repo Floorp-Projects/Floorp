@@ -291,9 +291,41 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
     case eReflowReason_Incremental:printf("eReflowReason_Incremental\n");break;
     case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
-    case eReflowReason_StyleChange:printf("eReflowReason_StyleChange\n");break;
+    case eReflowReason_StyleChange:
+      printf("eReflowReason_StyleChange\n");
+      break;
   }
 #endif // DEBUG_rodsXXX
+
+#ifdef DEBUG_rodsXXX
+  {
+  nsresult rv = NS_ERROR_FAILURE; 
+  nsIDOMHTMLCollection* options = GetOptions(mContent);
+  if (nsnull != options) {
+    PRUint32 numOptions;
+    options->GetLength(&numOptions);
+    printf("--- Num of Items %d ---\n", numOptions);
+    for (PRUint32 i=0;i<numOptions;i++) {
+      nsIDOMHTMLOptionElement* optionElement = GetOption(*options, i);
+      if (nsnull != optionElement) {
+        nsAutoString text;
+        rv = optionElement->GetLabel(text);
+        if (NS_CONTENT_ATTR_HAS_VALUE != rv || 0 == text.Length()) {
+          if (NS_OK != optionElement->GetText(text)) {
+            text = "No Value";
+          }
+        } else {
+            text = "No Value";
+        }          
+        printf("[%d] - %s\n", i, text.ToNewCString());
+        NS_RELEASE(optionElement);
+      }
+    }
+    NS_RELEASE(options);
+  }
+  }
+#endif // DEBUG_rodsXXX
+
 
 
 #if 0
@@ -345,15 +377,24 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     return skiprv;
   }
 #endif
-    // XXX So this may do it too often
-    // the side effect of this is if the user has scrolled to some other place in the list and
-    // an incremental reflow comes through the list gets scrolled to the first selected item
-    // I haven't been able to make it do it, but it will do it
-    // basically the real solution is to know when all the reframes are there.
-    if (aReflowState.reason == eReflowReason_Incremental) {
-      nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
-      if (content) {
-        ScrollToFrame(content);
+
+    if (eReflowReason_Incremental == aReflowState.reason) {
+      nsIFrame* targetFrame;
+      aReflowState.reflowCommand->GetTarget(targetFrame);
+      if (targetFrame == this) {
+        // XXX So this may do it too often
+        // the side effect of this is if the user has scrolled to some other place in the list and
+        // an incremental reflow comes through the list gets scrolled to the first selected item
+        // I haven't been able to make it do it, but it will do it
+        // basically the real solution is to know when all the reframes are there.
+        nsCOMPtr<nsIContent> content = getter_AddRefs(GetOptionContent(mSelectedIndex));
+        if (content) {
+          ScrollToFrame(content);
+        }
+      } else {
+        nsresult rv = nsScrollFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+        aStatus = NS_FRAME_COMPLETE;
+        return rv;
       }
     }
 
@@ -559,8 +600,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // for the list frame and use that as the max/minimum size for the contents
   if (visibleHeight == 0) {
     nsCOMPtr<nsIFontMetrics> fontMet;
-    nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
-    if (fontMet) {
+    nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, this, getter_AddRefs(fontMet));
+    if (NS_SUCCEEDED(res) && fontMet) {
       aReflowState.rendContext->SetFont(fontMet);
       fontMet->GetHeight(visibleHeight);
       mMaxHeight = visibleHeight;
@@ -622,11 +663,10 @@ nsListControlFrame::GetFormContent(nsIContent*& aContent) const
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::GetFont(nsIPresContext*  aPresContext, 
-                            const nsFont*&   aFont)
+nsListControlFrame::GetFont(nsIPresContext* aPresContext, 
+                            const nsFont*&  aFont)
 {
-  nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-  return NS_OK;
+  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
 }
 
 
@@ -1427,10 +1467,7 @@ nsListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
     if (aSelected) {
       DisplaySelected(content);
       // Now that it is selected scroll to it
-//    nsCOMPtr<nsIContent> content(do_QueryInterface(content));
-      if (content) {
-        ScrollToFrame(content);
-      }
+      ScrollToFrame(content);
     } else {
       DisplayDeselected(content);
     }
@@ -1446,9 +1483,10 @@ nsListControlFrame::Deselect()
 {
   PRInt32 i;
   PRInt32 max = 0;
-  GetNumberOfOptions(&max);
-  for (i=0;i<max;i++) {
-    SetContentSelected(i, PR_FALSE);
+  if (NS_SUCCEEDED(GetNumberOfOptions(&max))) {
+    for (i=0;i<max;i++) {
+      SetContentSelected(i, PR_FALSE);
+    }
   }
   mSelectedIndex = kNothingSelected;
   
@@ -1721,7 +1759,7 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
         nsAutoString text;
         rv = optionElement->GetLabel(text);
         if (NS_CONTENT_ATTR_HAS_VALUE != rv || 0 == text.Length()) {
-          if (NS_CONTENT_ATTR_HAS_VALUE == optionElement->GetText(text)) {
+          if (NS_OK == optionElement->GetText(text)) {
             aStr = text;
             rv = NS_OK;
           }
@@ -1792,17 +1830,19 @@ nsListControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 NS_IMETHODIMP 
 nsListControlFrame::GetNumberOfOptions(PRInt32* aNumOptions) 
 {
-  nsIDOMHTMLCollection* options = GetOptions(mContent);
-  if (nsnull == options) {
-    *aNumOptions = 0;
-  } else {
-    PRUint32 length = 0;
-    options->GetLength(&length);
-    *aNumOptions = (PRInt32)length;
-    NS_RELEASE(options);
+  if (mContent != nsnull) {
+    nsIDOMHTMLCollection* options = GetOptions(mContent);
+    if (nsnull == options) {
+      *aNumOptions = 0;
+    } else {
+      PRUint32 length = 0;
+      options->GetLength(&length);
+      *aNumOptions = (PRInt32)length;
+      NS_RELEASE(options);
+    }
+    return NS_OK;
   }
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 //---------------------------------------------------------
@@ -2181,7 +2221,6 @@ nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStylePosit
 {
   if (IsInDropDownMode() == PR_TRUE) {
     nsWidgetInitData widgetData;
-    // aView->SetZIndex(kMaxZ);
     aView->SetFloating(PR_TRUE);
     widgetData.mWindowType  = eWindowType_popup;
     widgetData.mBorderStyle = eBorderStyle_default;
@@ -2335,7 +2374,7 @@ nsListControlFrame::GetScrollingParentView(nsIPresContext* aPresContext,
      // Using the root view as the parent
      // prevents this from happening. 
     viewManager->GetRootView(*aParentView);
-    NS_ASSERTION(aParentView, "GetRootView failed");  
+    NS_ASSERTION(aParentView, "GetRootView failed"); 
     return rv;
    } else {
      return nsScrollFrame::GetScrollingParentView(aPresContext, aParent, aParentView);
@@ -2815,7 +2854,7 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
             nsIDOMHTMLOptionElement* optionElement = GetOption(*options, selectedIndex);
             if (nsnull != optionElement) {
               nsAutoString text;
-              if (NS_CONTENT_ATTR_HAS_VALUE == optionElement->GetText(text)) {
+              if (NS_OK == optionElement->GetText(text)) {
                 char * buf = text.ToNewCString();
                 char c = buf[0];
                 delete [] buf;
