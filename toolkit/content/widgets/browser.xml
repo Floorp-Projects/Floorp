@@ -49,6 +49,24 @@
         </getter>
       </property>
 
+      <property name="autoscrollEnabled">
+        <getter>
+          <![CDATA[
+            if (this.getAttribute("autoscroll") == "false")
+              return false;
+            
+            var enabled = true;
+            try {
+              enabled = this.mPrefs.getBoolPref("general.autoScroll");
+            }
+            catch(ex) {
+            }
+            
+            return enabled;
+          ]]>
+        </getter>
+      </property>
+
       <property name="canGoBack"
                 onget="return this.webNavigation.canGoBack;"
                 readonly="true"/>
@@ -607,16 +625,17 @@
           }
         ]]>
       </handler>
-#ifdef XP_WIN
       <handler event="mouseup">
         <![CDATA[
+          if (!this.autoscrollEnabled)
+            return;
           if (!this._snapOn)
             this.stopScroll();
         ]]>        
       </handler>
       <handler event="mousedown">
         <![CDATA[
-          if (this.getAttribute("autoscroll") == "false" || this.isLink(event.originalTarget))
+          if (!this.autoscrollEnabled || this.isLink(event.originalTarget))
             return;
 
           if (!this._isScrolling) {
@@ -637,7 +656,7 @@
         ]]>
       </handler>
       <handler event="mousemove">
-        <![CDATA[
+        <![CDATA[          
           this._clientX = event.clientX;
           this._clientY = event.clientY;
         
@@ -650,7 +669,6 @@
           }
         ]]>
       </handler>
-#endif
     </handlers>
 
   </binding>

@@ -12,9 +12,9 @@
   <script type="application/x-javascript">
     <![CDATA[
       var _elementIDs = ["moveSystemCaret", "hideTabBar",
-                         "loadInBackground", "useSmoothScrolling",
-                         "enableAutoImageResizing", "useSSL2",
-                         "useSSL3", "useTLS1"];
+                         "loadInBackground", "useAutoScrolling",
+                         "useSmoothScrolling", "enableAutoImageResizing",
+                         "useSSL2", "useSSL3", "useTLS1"];
     ]]>
   </script>
 
@@ -28,6 +28,8 @@
                 prefstring="browser.tabs.autoHide"/>
       <checkbox id="loadInBackground" label="&loadInBackground.label;"
                 prefstring="browser.tabs.loadInBackground"/>
+      <checkbox id="useAutoScrolling" label="&useAutoScrolling.label;" 
+                prefstring="general.autoScroll"/>
       <checkbox id="useSmoothScrolling" label="&useSmoothScrolling.label;"
                 prefstring="general.smoothScroll"/>
     </expander>
