@@ -171,7 +171,7 @@ function selectLocale(event)
 	//dump("\n-->old_lang=" + old_lang + "--");
     chromeRegistry.selectLocale(langcode, true);
 	dump("\n-->set new lang, langcode=" + langcode + "--");
-    var sbundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
+    var sbundle = srGetStrBundle("chrome://global/locale/brand.properties");
 	var alertstr = sbundle.GetStringFromName("langAlert");
 	alert(alertstr);
   }
