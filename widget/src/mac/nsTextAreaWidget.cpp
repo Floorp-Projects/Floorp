@@ -109,6 +109,25 @@ NS_IMETHODIMP nsTextAreaWidget::Create(nsIWidget *aParent,const nsRect &aRect,EV
 	return (mTE_Data ? NS_OK : NS_ERROR_FAILURE);
 }
 
+
+//-------------------------------------------------------------------------
+//	Destroy
+//
+//-------------------------------------------------------------------------
+// The repeater in this widget needs to use out of band notification
+// to sever its ties with the nsTimer. If we just rely on the 
+// dtor to do it, it will never get called because the nsTimer holds a ref to
+// this object.
+//
+NS_IMETHODIMP
+nsTextAreaWidget::Destroy()
+{
+  Inherited::Destroy();
+  if (mRepeating) RemoveFromRepeatList();
+  if (mIdling) RemoveFromIdleList();
+  return NS_OK;
+}
+
 /**-------------------------------------------------------------------------------
  * Destuctor for the nsTextAreaWidget
  * @update  dc 08/31/98
