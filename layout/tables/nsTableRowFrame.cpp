@@ -901,6 +901,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   nsTableFrame* tableFirstInFlow = (nsTableFrame*)tableFrame->GetFirstInFlow();
   PRBool isAutoLayout = tableFrame->IsAutoLayout();
   PRBool needToNotifyTable = PR_TRUE;
+  nscoord paginatedHeight = 0;
   // If the incremental reflow command is a StyleChanged reflow and
   // it's target is the current frame, then make sure we send
   // StyleChange reflow reasons down to the children so that they
@@ -1057,17 +1058,26 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           // frames could have moved and we have no way of knowing...
           nsTableFrame::RePositionViews(aPresContext, kidFrame);
         }
-  
-        // Calculate the cell's actual size given its pass2 size. This function
-        // takes into account the specified height (in the style), and any special
-        // logic needed for backwards compatibility
-        CalculateCellActualSize(kidFrame, desiredSize.width, 
-                                desiredSize.height, availCellWidth);
+        
+        if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+          // Calculate the cell's actual size given its pass2 size. This function
+          // takes into account the specified height (in the style), and any special
+          // logic needed for backwards compatibility
+          CalculateCellActualSize(kidFrame, desiredSize.width, 
+                                  desiredSize.height, availCellWidth);
 
-        // height may have changed, adjust descent to absorb any excess difference
-        nscoord ascent = cellFrame->GetDesiredAscent();
-        nscoord descent = desiredSize.height - ascent;
-        UpdateHeight(desiredSize.height, ascent, descent, tableFrame, cellFrame);
+          // height may have changed, adjust descent to absorb any excess difference
+          nscoord ascent = cellFrame->GetDesiredAscent();
+          nscoord descent = desiredSize.height - ascent;
+          UpdateHeight(desiredSize.height, ascent, descent, tableFrame, cellFrame);
+        }
+        else {
+          PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*kidFrame);
+          if ((1 == rowSpan) && (desiredSize.height > paginatedHeight)) {
+            paginatedHeight = desiredSize.height;
+            SetContentHeight(paginatedHeight);
+          }
+        }
 
         // Place the child
         if (NS_UNCONSTRAINEDSIZE != availColWidth) {
@@ -1102,7 +1112,8 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
 
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
-  aDesiredSize.height = CalcHeight(aReflowState); 
+  aDesiredSize.height = (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) 
+                        ? CalcHeight(aReflowState) : paginatedHeight; 
 
   return rv;
 }
