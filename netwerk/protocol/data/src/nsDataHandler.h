@@ -55,9 +55,6 @@ public:
     // Define a Create method to be used with a factory:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
-    
-protected:
-    nsISupports*        mEventSinkGetter;
 };
 
 #endif /* nsDataHandler_h___ */
