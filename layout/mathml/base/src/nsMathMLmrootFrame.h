@@ -54,13 +54,13 @@ public:
   }
 
   NS_IMETHOD
-  Reflow(nsIPresContext&          aPresContext,
+  Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD 
-  Paint(nsIPresContext&      aPresContext,
+  Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);

@@ -87,7 +87,7 @@ nsMathMLmrootFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmrootFrame::Paint(nsIPresContext&      aPresContext,
+nsMathMLmrootFrame::Paint(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer)
@@ -108,7 +108,7 @@ nsMathMLmrootFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmrootFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -250,8 +250,8 @@ nsMathMLmrootFrame::Reflow(nsIPresContext&          aPresContext,
     rect[3].x += dx; // x-origin of bar
   }
  
-  child[0]->SetRect(&aPresContext, rect[0]);
-  child[1]->SetRect(&aPresContext, rect[1]);
+  child[0]->SetRect(aPresContext, rect[0]);
+  child[1]->SetRect(aPresContext, rect[1]);
   mSqrChar.SetRect(rect[2]);
   mBarChar.SetRect(rect[3]);
 
