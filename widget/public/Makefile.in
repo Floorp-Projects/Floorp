@@ -53,6 +53,7 @@ EXPORTS		= \
 		nsIDragSessionXlib.h \
 		nsIDragSessionMac.h \
 		nsIXRemoteWidgetHelper.h \
+		nsIPluginWidget.h \
 		$(NULL)
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
