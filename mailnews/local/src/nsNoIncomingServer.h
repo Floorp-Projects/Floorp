@@ -44,8 +44,6 @@ public:
     virtual ~nsNoIncomingServer();
     
     NS_IMETHOD GetLocalStoreType(char * *type);
-private:
-
 };
 
 
