@@ -71,14 +71,14 @@ PRInt32	bufferdepth;
 
 		switch(aDepth){
 			case 8:
-				mThePixelmap.pixelType = chunky;
+				mThePixelmap.pixelType = 0;
 				mThePixelmap.cmpCount = 1;
 				mThePixelmap.cmpSize = 8;
 				mThePixelmap.pmTable = GetCTable(8);
 				bufferdepth = 8;
 				break;
 			case 16:
-				mThePixelmap.pixelType = chunky;
+				mThePixelmap.pixelType = 16;
 				mThePixelmap.cmpCount = 3;
 				mThePixelmap.cmpSize = 5;
 				mThePixelmap.pmTable = 0;
@@ -86,7 +86,7 @@ PRInt32	bufferdepth;
 				break;
 			case 24:			// 24 and 32 bit are basically the same
 			case 32:
-				mThePixelmap.pixelType = chunky;
+				mThePixelmap.pixelType = 16;
 				mThePixelmap.cmpCount = 3;
 				mThePixelmap.cmpSize = 8;
 				mThePixelmap.pmTable = 0;
