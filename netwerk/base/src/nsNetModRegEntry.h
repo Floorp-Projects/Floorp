@@ -20,6 +20,7 @@
 #define ___nsNetModRegEntry_h___
 
 #include "nsINetModRegEntry.h"
+#include "nsIEventQueue.h"
 
 class nsNetModRegEntry : nsINetModRegEntry {
 public:
