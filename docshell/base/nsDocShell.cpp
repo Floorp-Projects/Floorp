@@ -193,21 +193,6 @@ nsIURIFixup *nsDocShell::sURIFixup = 0;
 // The value arbitrary as long as it doesn't conflict with
 // any of the other values in the errors in DisplayLoadError
 #define NS_ERROR_DOCUMENT_IS_PRINTMODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL,2001)
-//
-// Local function prototypes
-//
-
-/**
-
- * Used in AddHeadersToChannel
-
- */
-
-static NS_METHOD AHTC_WriteFunc(nsIInputStream * in,
-                                void *closure,
-                                const char *fromRawSegment,
-                                PRUint32 toOffset,
-                                PRUint32 count, PRUint32 * writeCount);
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDocShellLog;
@@ -5598,153 +5583,79 @@ nsDocShell::DoURILoad(nsIURI * aURI,
 }
 
 static NS_METHOD
-AHTC_WriteFunc(nsIInputStream * in,
-               void *closure,
-               const char *fromRawSegment,
-               PRUint32 toOffset, PRUint32 count, PRUint32 * writeCount)
+AppendSegmentToString(nsIInputStream *in,
+                      void *closure,
+                      const char *fromRawSegment,
+                      PRUint32 toOffset,
+                      PRUint32 count,
+                      PRUint32 *writeCount)
 {
-    if (nsnull == writeCount || nsnull == closure ||
-        nsnull == fromRawSegment || strlen(fromRawSegment) < 1) {
-        return NS_BASE_STREAM_CLOSED;
-    }
+    // aFromSegment now contains aCount bytes of data.
 
-    *writeCount = 0;
-    char *headersBuf = *((char **) closure);
-    // pointer to where we should start copying bytes from rawSegment
-    char *pHeadersBuf = nsnull;
-    PRUint32 headersBufLen;
-    PRUint32 rawSegmentLen = count;
+    nsCAutoString *buf = NS_STATIC_CAST(nsCAutoString *, closure);
+    buf->Append(fromRawSegment, count);
 
-    // if the buffer has no data yet
-    if (!headersBuf) {
-        headersBufLen = rawSegmentLen;
-        pHeadersBuf = headersBuf = (char *) nsMemory::Alloc(headersBufLen + 1);
-        if (!headersBuf) {
-            return NS_BASE_STREAM_WOULD_BLOCK;
-        }
-        memset(headersBuf, nsnull, headersBufLen + 1);
-    }
-    else {
-        // data has been read, reallocate
-        // store a pointer to the old full buffer
-        pHeadersBuf = headersBuf;
-
-        // create a new buffer
-        headersBufLen = strlen(headersBuf);
-        headersBuf =
-            (char *) nsMemory::Alloc(rawSegmentLen + headersBufLen + 1);
-        if (!headersBuf) {
-            headersBuf = pHeadersBuf;
-            pHeadersBuf = nsnull;
-            return NS_BASE_STREAM_WOULD_BLOCK;
-        }
-        memset(headersBuf, nsnull, rawSegmentLen + headersBufLen + 1);
-        // copy the old buffer to the beginning of the new buffer
-        memcpy(headersBuf, pHeadersBuf, headersBufLen);
-        // free the old buffer
-        nsCRT::free(pHeadersBuf);
-        // make the buffer pointer point to the writeable part
-        // of the new buffer
-        pHeadersBuf = headersBuf + headersBufLen;
-        // increment the length of the buffer
-        headersBufLen += rawSegmentLen;
-    }
-
-    // at this point, pHeadersBuf points to where we should copy bits
-    // from fromRawSegment.
-    memcpy(pHeadersBuf, fromRawSegment, rawSegmentLen);
-    // null termination
-    headersBuf[headersBufLen] = nsnull;
-    *((char **) closure) = headersBuf;
-    *writeCount = rawSegmentLen;
-
+    // Indicate that we have consumed all of aFromSegment
+    *writeCount = count;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
-                                nsIChannel * aGenericChannel)
+nsDocShell::AddHeadersToChannel(nsIInputStream *aHeadersData,
+                                nsIChannel *aGenericChannel)
 {
-    if (nsnull == aHeadersData || nsnull == aGenericChannel) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    nsCOMPtr<nsIHttpChannel> aChannel = do_QueryInterface(aGenericChannel);
-    if (!aChannel) {
-        return NS_ERROR_NULL_POINTER;
-    }
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aGenericChannel);
+    NS_ENSURE_STATE(httpChannel);
 
-    // used during the manipulation of the InputStream
-    nsresult rv = NS_ERROR_FAILURE;
-    PRUint32 available = 0;
-    PRUint32 bytesRead;
-    nsXPIDLCString headersBuf;
+    PRUint32 numRead;
+    nsCAutoString headersString;
+    nsresult rv = aHeadersData->ReadSegments(AppendSegmentToString,
+                                             &headersString,
+                                             PR_UINT32_MAX,
+                                             &numRead);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // used during the manipulation of the String from the InputStream
-    nsCAutoString headersString;
-    nsCAutoString oneHeader;
     nsCAutoString headerName;
     nsCAutoString headerValue;
-    PRInt32 crlf = 0;
-    PRInt32 colon = 0;
+    PRInt32 crlf;
+    PRInt32 colon;
 
     //
-    // Suck all the data out of the nsIInputStream into a char * buffer.
-    //
-
-    rv = aHeadersData->Available(&available);
-    if (NS_FAILED(rv) || available < 1)
-        return rv;
-
-    do {
-        aHeadersData->ReadSegments(AHTC_WriteFunc,
-                                   getter_Copies(headersBuf),
-                                   available,
-                                   &bytesRead);
-        rv = aHeadersData->Available(&available);
-        if (NS_FAILED(rv))
-            return rv;
-
-    } while (0 < available);
-
-    //
-    // Turn nsXPIDLCString into an nsString.
-    // (need to find the new string APIs so we don't do this
-    //
-    headersString = headersBuf.get();
-
-    //
-    // Iterate over the nsString: for each "\r\n" delimeted chunk,
+    // Iterate over the headersString: for each "\r\n" delimited chunk,
     // add the value as a header to the nsIHttpChannel
     //
 
-    const char *kWhitespace = "\b\t\r\n ";
+    static const char kWhitespace[] = "\b\t\r\n ";
     while (PR_TRUE) {
-        crlf = headersString.Find("\r\n", PR_TRUE);
-        if (-1 == crlf) {
+        crlf = headersString.Find("\r\n");
+        if (crlf == kNotFound)
             return NS_OK;
-        }
-        headersString.Mid(oneHeader, 0, crlf);
-        headersString.Cut(0, crlf + 2);
-        colon = oneHeader.Find(":");
-        if (-1 == colon) {
-            return NS_ERROR_NULL_POINTER;
-        }
-        oneHeader.Left(headerName, colon);
-        colon++;
-        oneHeader.Mid(headerValue, colon, oneHeader.Length() - colon);
+
+        const nsCSubstring &oneHeader = StringHead(headersString, crlf);
+
+        colon = oneHeader.FindChar(':');
+        if (colon == kNotFound)
+            return NS_ERROR_UNEXPECTED;
+
+        headerName = StringHead(oneHeader, colon);
+        headerValue = Substring(oneHeader, colon + 1);
+
         headerName.Trim(kWhitespace);
         headerValue.Trim(kWhitespace);
+
+        headersString.Cut(0, crlf + 2);
 
         //
         // FINALLY: we can set the header!
         // 
 
-        rv = aChannel->SetRequestHeader(headerName, headerValue, PR_TRUE);
-        if (NS_FAILED(rv)) {
-            return NS_ERROR_NULL_POINTER;
-        }
+        rv = httpChannel->SetRequestHeader(headerName, headerValue, PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
-    return NS_ERROR_FAILURE;
+
+    NS_NOTREACHED("oops");
+    return NS_ERROR_UNEXPECTED;
 }
 
 nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
