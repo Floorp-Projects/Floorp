@@ -1067,11 +1067,13 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     rv = newChannel->SetOriginalURI(mOriginalURI);
     if (NS_FAILED(rv)) return rv;
 
-    // convey the referrer if one was used for this channel to the next one
-    if (mReferrer) {
-        nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
-        if (httpChannel)
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
+    if (httpChannel) {
+        // convey the referrer if one was used for this channel to the next one
+        if (mReferrer)
             httpChannel->SetReferrer(mReferrer, mReferrerType);
+        // convey the mApplyConversion flag (bug 91862)
+        httpChannel->SetApplyConversion(mApplyConversion);
     }
 
     // call out to the event sink to notify it of this redirection.
