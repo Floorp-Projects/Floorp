@@ -29,6 +29,8 @@
 
 use diagnostics;
 use strict;
+use lib ".";
+
 # use Carp;                       # for confess
 
 # commented out the following snippet of code. this tosses errors into the
