@@ -198,6 +198,16 @@ NS_IMETHODIMP nsTreeBoxObject::GetIndexOfFirstVisibleRow(PRInt32 *aResult)
   return treeFrame->GetIndexOfFirstVisibleRow(aResult);
 }
 
+NS_IMETHODIMP nsTreeBoxObject::GetRowCount(PRInt32 *aResult)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+  
+  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(frame));
+  return treeFrame->GetRowCount(aResult);
+}
+
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult

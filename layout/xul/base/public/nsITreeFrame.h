@@ -45,6 +45,7 @@ public:
   NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult) = 0;
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32* aResult) = 0;
   NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32* aResult) = 0;
+  NS_IMETHOD GetRowCount(PRInt32* aResult) = 0;
 };
 
 #endif

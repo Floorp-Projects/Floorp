@@ -106,6 +106,8 @@ public:
   NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32 *aResult) {
     *aResult=mCurrentIndex; return NS_OK;
   }
+
+  NS_IMETHOD GetRowCount(PRInt32* aResult) { *aResult = GetRowCount(); return NS_OK; }
   
   NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD ScrollbarButtonPressed(PRInt32 aOldIndex, PRInt32 aNewIndex);

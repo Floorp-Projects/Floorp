@@ -37,6 +37,7 @@ interface nsITreeBoxObject : nsISupports
   long getIndexOfItem(in nsIDOMElement item);
   long getNumberOfVisibleRows();
   long getIndexOfFirstVisibleRow();
+  long getRowCount();
 };
 
 %{C++

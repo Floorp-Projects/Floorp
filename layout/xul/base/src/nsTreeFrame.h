@@ -106,6 +106,7 @@ public:
   NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult);
   NS_IMETHOD GetNumberOfVisibleRows(PRInt32* aResult);
   NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32* aResult);
+  NS_IMETHOD GetRowCount(PRInt32* aResult) { return NS_OK; }
 
   PRInt32 GetFixedRowSize() { return mFixedRows; };
   

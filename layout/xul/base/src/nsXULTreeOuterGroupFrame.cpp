@@ -581,7 +581,11 @@ nsXULTreeOuterGroupFrame::FindRowContentAtIndex(PRInt32& aIndex,
   }
 
   PRInt32 delta = (PRInt32)(point-aIndex);
-  FindPreviousRowContent(delta, startContent, nsnull, aResult);
+  if (delta == 0) {
+    *aResult = startContent;
+    NS_IF_ADDREF(*aResult);
+  }
+  else FindPreviousRowContent(delta, startContent, nsnull, aResult);
 }
 
 void 
