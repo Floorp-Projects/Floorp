@@ -25,12 +25,14 @@ CPPSRCS=                                \
  nsAppShellService.cpp                  \
  nsWebShellWindow.cpp                   \
  nsAppShellFactory.cpp                  \
+ nsCommandLineService.cpp               \
  $(NULL)
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsAppShellService.obj      \
  .\$(OBJDIR)\nsWebShellWindow.obj       \
  .\$(OBJDIR)\nsAppShellFactory.obj      \
+ .\$(OBJDIR)\nsCommandLineService.obj   \
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \
