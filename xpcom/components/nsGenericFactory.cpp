@@ -415,7 +415,7 @@ nsGenericModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
 }
 
 NS_COM nsresult
-NS_NewGenericModule(nsModuleInfo* info, nsIModule* *result)
+NS_NewGenericModule2(nsModuleInfo* info, nsIModule* *result)
 {
     nsresult rv = NS_OK;
 
@@ -434,6 +434,25 @@ NS_NewGenericModule(nsModuleInfo* info, nsIModule* *result)
         m = nsnull;
     }
     return rv;
+}
+
+NS_COM nsresult
+NS_NewGenericModule(const char* moduleName,
+                    PRUint32 componentCount,
+                    nsModuleComponentInfo* components,
+                    nsModuleDestructorProc dtor,
+                    nsIModule* *result)
+{
+    nsModuleInfo info;
+    nsCRT::memset(&info, 0, sizeof(info));
+
+    info.mVersion    = NS_MODULEINFO_VERSION;
+    info.mModuleName = moduleName;
+    info.mComponents = components;
+    info.mCount      = componentCount;
+    info.mDtor       = dtor;
+
+    return NS_NewGenericModule2(&info, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

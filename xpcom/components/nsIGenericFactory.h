@@ -125,13 +125,27 @@ struct nsModuleInfo {
 
 /**
  * Rev this if you change the nsModuleInfo, and are worried about
- * binary compatibility. (Ostensibly fix NS_NewGenericModule() to deal
+ * binary compatibility. (Ostensibly fix NS_NewGenericModule2() to deal
  * with older rev's at the same time.)
  */
 #define NS_MODULEINFO_VERSION 0x00010000UL // 1.0
 
+/**
+ * Create a new generic module. Use the NS_IMPL_NSGETMODULE macro, or
+ * one of its relatives, rather than using this directly.
+ */
 extern NS_COM nsresult
-NS_NewGenericModule(nsModuleInfo *info, nsIModule* *result);
+NS_NewGenericModule2(nsModuleInfo *info, nsIModule* *result);
+
+/**
+ * Obsolete. Use NS_NewGenericModule2() instead.
+ */
+extern NS_COM nsresult
+NS_NewGenericModule(const char* moduleName,
+                    PRUint32 componentCount,
+                    nsModuleComponentInfo* components,
+                    nsModuleDestructorProc dtor,
+                    nsIModule* *result);
 
 #if defined(XPCOM_TRANSLATE_NSGM_ENTRY_POINT)
 #  define NSMODULEINFO(_name)             _name##_gModuleInfo
@@ -144,7 +158,7 @@ NSGetModule(nsIComponentManager *servMgr,                                     \
             nsIFile* location,                                                \
             nsIModule** result)                                               \
 {                                                                             \
-    return NS_NewGenericModule(&(_info), result);                             \
+    return NS_NewGenericModule2(&(_info), result);                            \
 }
 #endif
 

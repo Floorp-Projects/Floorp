@@ -43,7 +43,7 @@ NSGETMODULE(_name) (nsIComponentManager* aCompMgr,             \
                     nsIFile*             aLocation,            \
                     nsIModule**          aResult)              \
 {                                                              \
-    return NS_NewGenericModule(&NSMODULEINFO(_name), aResult); \
+    return NS_NewGenericModule2(&NSMODULEINFO(_name), aResult);\
 }
 
 // NSGetModule entry points
