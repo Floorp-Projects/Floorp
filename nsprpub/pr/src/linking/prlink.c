@@ -1165,18 +1165,6 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     return result;
 }
 
-PR_IMPLEMENT(PRLibrary*) 
-PR_FindLibrary(const char *name)
-{
-    PRLibrary* result;
-
-    if (!_pr_initialized) _PR_ImplicitInitialization();
-    PR_EnterMonitor(pr_linker_lock);
-    result = pr_UnlockedFindLibrary(name);
-    PR_ExitMonitor(pr_linker_lock);
-    return result;
-}
-
 
 #ifdef XP_MAC
 
