@@ -367,35 +367,6 @@ nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
 nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
 nsresult NS_NewXPointerResult(nsIXPointerResult **aResult);
 
-nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
-nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
-nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
-nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
-nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
-
-nsresult NS_NewSelection(nsIFrameSelection** aResult);
-nsresult NS_NewDomSelection(nsISelection** aResult);
-nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
-nsresult NS_NewRange(nsIDOMRange** aResult);
-nsresult NS_NewRangeUtils(nsIRangeUtils** aResult);
-nsresult NS_NewContentIterator(nsIContentIterator** aResult);
-nsresult NS_NewPreContentIterator(nsIContentIterator** aResult);
-nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
-nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
-nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
-nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
-nsresult NS_NewHTMLElementFactory(nsIElementFactory** aResult);
-nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
-nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
-nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
-nsresult NS_NewXBLService(nsIXBLService** aResult);
-nsresult NS_NewBindingManager(nsIBindingManager** aResult);
-nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);
-nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
-nsresult NS_NewFrameLoader(nsIFrameLoader** aResult);
-nsresult NS_NewSyncLoadDOMService(nsISyncLoadDOMService** aResult);
-nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
-
 #ifdef MOZ_XUL
 nsresult NS_NewXULElementFactory(nsIElementFactory** aResult);
 NS_IMETHODIMP NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
