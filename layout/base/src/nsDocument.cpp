@@ -84,6 +84,7 @@
 #include "nsLayoutUtils.h"
 
 #include "nsIScriptSecurityManager.h"
+#include "nsIAggregatePrincipal.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
@@ -891,6 +892,33 @@ nsDocument::GetPrincipal(nsIPrincipal **aPrincipal)
   }
   *aPrincipal = mPrincipal;
   NS_ADDREF(*aPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::UpdatePrincipal(nsIPrincipal **aNewPrincipal)
+{
+  nsresult rv;
+  if (!mPrincipal) {
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) 
+        return rv;
+    if (NS_FAILED(rv = securityManager->GetCodebasePrincipal(mDocumentURL, 
+                                                             &mPrincipal)))
+        return rv;
+  }
+
+  nsCOMPtr<nsIAggregatePrincipal> agg =
+    do_QueryInterface(mPrincipal, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = agg->Intersect(*aNewPrincipal);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  *aNewPrincipal = mPrincipal;
+  NS_ADDREF(*aNewPrincipal);
   return NS_OK;
 }
 

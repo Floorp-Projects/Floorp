@@ -122,6 +122,12 @@ public:
   NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal) = 0;
 
   /**
+   * Update principal responsible for this document to the intersection
+   * of its previous value and aPrincipal.
+   */
+  NS_IMETHOD UpdatePrincipal(nsIPrincipal **aPrincipal) = 0;
+  
+  /**
    * Return the LoadGroup for the document. May return null.
    */
   NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup** aGroup) const = 0;
