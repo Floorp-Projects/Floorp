@@ -293,7 +293,9 @@ void CRDFCoordinator::HandleNotification(
 		case HT_EVENT_NODE_DELETED_DATA:
 		case HT_EVENT_NODE_DELETED_NODATA:
 		{
-			// delete FE data if any is there....
+			// delete the FE data for a node (will be a CTreeIcon*)
+			void* data = HT_GetNodeFEData ( node );
+			delete data;
 			break;
 		}
 
@@ -316,10 +318,10 @@ void CRDFCoordinator::HandleNotification(
 					
 		case HT_EVENT_NODE_VPROP_CHANGED:
 		{
-			//¥¥¥make sure the node has the most up to date icon
-			//¥¥¥optimization? only redraw the cell that changed
-			if ( view == mTreePane->GetHTView() )
+			if ( node == HT_TopNode(mTreePane->GetHTView()) )
 				mTreePane->Refresh();
+			else
+				mTreePane->RedrawRow(node);
 			break;
 		}
 		
