@@ -43,7 +43,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	@$(REGCHROME) content penglobal penglobal.jar
 	@$(REGCHROME) skin modern/penglobal penglobal.jar
 	@$(REGCHROME) locale en-US/penglobal penglobal.jar
