@@ -44,15 +44,26 @@ if (output.write("foo", 3) == 3)
     print("disk cache write works!");
 else
     print("disk cache write broken!");
+
+// store some metadata.
+outputEntry.setMetaDataElement("size", "3");
+
 output.close();
 outputEntry.markValid();
 outputEntry.close();
 
 var inputEntry = openCacheEntry(nsICache.ACCESS_READ);
 var input = wrapInputStream(inputEntry.transport.openInputStream(0, -1, 0));
+
 if (input.read(input.available()) == "foo")
     print("disk cache read works!");
 else
     print("disk cache read broken!");
+
+if (inputEntry.getMetaDataElement("size") == "3")
+    print("disk cache metadata works!");
+else
+    print("disk cache metadata broken!");
+
 input.close();
 inputEntry.close();
