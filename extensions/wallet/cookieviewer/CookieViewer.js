@@ -111,7 +111,6 @@ function Startup()
  
   loadCookies();
   loadPermissions();
-  doSetOKCancel(onOK, null);
   window.sizeToContent();
 }
 
@@ -502,9 +501,9 @@ function DeleteAllImagePermissions() {
 
 /*** =================== GENERAL CODE =================== ***/
 
-// function : <CookieViewer.js>::doOKButton();
+// function : <CookieViewer.js>::onAccept();
 // purpose  : saves the changed settings and closes the dialog.
-function onOK(){
+function onAccept(){
 
   var deletedCookies = [];
   deletedCookies = gone_c.split(",");

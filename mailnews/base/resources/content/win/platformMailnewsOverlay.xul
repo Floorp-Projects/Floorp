@@ -2,8 +2,7 @@
 <!-- win version of platformMailnewsOverlay.xul -->
 
 <overlay id="platformMailnewsOverlay"
-		 xmlns:html="http://www.w3.org/1999/xhtml"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 	<!-- Delete Key -->
 	<key id="cmd_shiftDelete" keycode="VK_DELETE"  xulkey="false" modifiers="shift"/>

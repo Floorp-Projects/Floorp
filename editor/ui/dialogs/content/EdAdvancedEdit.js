@@ -57,9 +57,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  // initialise the ok and cancel buttons
-  doSetOKCancel(onOK, onCancel);
-
   // Element to edit is passed in
   if (!window.arguments[1])
   {
@@ -118,7 +115,7 @@ function Startup()
  * returns    : boolean true to close the window
  * desc.      : event handler for ok button
  **/
-function onOK()
+function onAccept()
 {
   editorShell.BeginBatchChanges();
   try {
@@ -341,4 +338,5 @@ function AddTreeItem ( name, value, treeChildrenId, attArray )
 function doHelpButton()
 {
   openHelp("chrome://help/content/help.xul?advanced_property_editor");
+  return true;
 }

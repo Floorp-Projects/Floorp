@@ -32,8 +32,8 @@ Rights Reserved.
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="OnLoadImportDialog()" class="color-dialog"
-        orient="vertical" style="width: 40em;"
+        onload="OnLoadImportDialog()"
+        style="width: 40em;"
         title="&importDialog.windowTitle;">
 
   <stringbundle id="bundle_importMsgs" src="chrome://messenger/locale/importMsgs.properties"/>
@@ -47,57 +47,57 @@ Rights Reserved.
 
   <deck id="stateDeck" selectedIndex="0">
     <vbox class="wizard-box">
-      <html>&importDescription.label;</html>
-      <html>&importDescription2.label;</html>
+      <description>&importDescription.label;</description>
+      <description>&importDescription2.label;</description>
       <separator/>
-      <html>&select.label;</html>
+      <description>&select.label;</description>
       <separator class="thin"/>
-      <radiogroup id="importFields" orient="vertical" class="indent" autostretch="never">
-        <radio group="importFields" value="addressbook" id="addressbookRadio" label="&importDialog.addressbookTitle;"/>
-        <radio group="importFields" value="mail" id="mailRadio" label="&importDialog.mailTitle;"/>
-        <radio group="importFields" value="settings" id="settingsRadio" label="&importDialog.settingsTitle;"/>
+      <radiogroup id="importFields" class="indent">
+        <radio value="addressbook" id="addressbookRadio" label="&importDialog.addressbookTitle;"/>
+        <radio value="mail" id="mailRadio" label="&importDialog.mailTitle;"/>
+        <radio value="settings" id="settingsRadio" label="&importDialog.settingsTitle;"/>
       </radiogroup>
     </vbox>
     <vbox class="wizard-box">
-      <html>&selectDescription.label;</html>
-      <tree class="inset" id="moduleList" flex="3" onselect="ImportSelectionChanged(); enableAdvance();" 
+      <description>&selectDescription.label;</description>
+      <tree id="moduleList" flex="3" onselect="ImportSelectionChanged(); enableAdvance();" 
             style="height: 0px;">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
         <treechildren id="bucketBody" flex="1"/>
       </tree>
-      <html id="description" class="box-padded" flex="1"/>
+      <description id="description" class="box-padded" flex="1"/>
     </vbox>
     <vbox class="wizard-box">
       <spacer flex="1"/>
-      <groupbox orient="vertical">
+      <groupbox>
         <caption id="progressTitle" label="&title.label;"/>
-        <text class="label indent" id="progressStatus" value="&processing.label;"/>
+        <label class="indent" id="progressStatus" value="&processing.label;"/>
         <vbox class="box-padded">
           <progressmeter id="progressMeter" mode="normal" value="5"/>
         </vbox>
       </groupbox>
     </vbox>
     <vbox class="wizard-box">
-      <html id="status"/>
-      <hbox style="overflow: auto" class="inset color-window" flex="1">
-        <html id="results" flex="1"/>
+      <description id="status"/>
+      <hbox style="overflow: auto" class="inset" flex="1">
+        <description id="results" flex="1"/>
       </hbox>
     </vbox>
     <vbox class="wizard-box">
-      <html>&FieldDiscInputText1.label;</html>
-      <html>&FieldDiscInputText2.label;</html>
+      <description>&FieldDiscInputText1.label;</description>
+      <description>&FieldDiscInputText2.label;</description>
       <separator/>
       <separator class="thin"/>
-      <radiogroup id="homeorwork" orient="vertical" class="indent" autostretch="never">
-        <radio group="homeorwork" value="Home" id="homeRadio" label="&importDialog.homeTitle;"/>
-        <radio group="homeorwork" value="Work" id="workRadio" label="&importDialog.workTitle;"/>
+      <radiogroup id="homeorwork" class="indent">
+        <radio value="Home" id="homeRadio" label="&importDialog.homeTitle;"/>
+        <radio value="Work" id="workRadio" label="&importDialog.workTitle;"/>
       </radiogroup>
          <separator/>
          <separator/>
-         <html>&FieldDiscWarning.label;</html>
-         <text id="warning" flex="1"/>
+         <description>&FieldDiscWarning.label;</description>
+         <label id="warning" flex="1"/>
     </vbox>
   </deck>
 

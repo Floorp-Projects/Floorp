@@ -11,7 +11,7 @@
           <xul:image class="panelheader-grippy-icon" inherits="selected"/>
           <xul:image class="panelheader-image" inherits="src"/>
           <xul:vbox flex="1">
-            <xul:text class="panelheader-icon" inherits="value=label" crop="right"/>
+            <xul:label class="panelheader-text" inherits="value=label" crop="right"/>
           </xul:vbox>
           <xul:spacer flex="1"/>
         </xul:hbox>

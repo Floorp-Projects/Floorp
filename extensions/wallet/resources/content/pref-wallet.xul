@@ -28,11 +28,8 @@
 <!ENTITY % prefWalletDTD SYSTEM "chrome://wallet/locale/pref-wallet.dtd" >
 %prefWalletDTD;
 ]>
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel('chrome://wallet/content/pref-wallet.xul');">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://wallet/content/pref-wallet.xul');">
 
   <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>
 
@@ -56,46 +53,36 @@
         
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&walletHeader.label;"/>
-    <html>&walletDescription.label;</html>
+    <description>&walletDescription.label;</description>
 <!--
-    <hbox autostretch="never">
-      <text class="label"
-            for="walletServer"
+    <hbox align="center">
+      <label control="walletServer"
             value="&walletServer.label;"
             accesskey="&walletServer.accesskey;"/>
       <textbox id="walletServer"
-                 flex="1"
-                 pref="true"
-                 preftype="localizedstring"
-                 prefstring="wallet.Server"
-                 prefattribute="value"/>
+               preftype="localizedstring"
+               prefstring="wallet.Server"/>
     </hbox>
 -->
-    <hbox autostretch="never">
+    <hbox align="center">
       <checkbox id="walletCaptureForms"
               label="&walletEnabled.label;"
               accesskey="&walletEnabled.accesskey;"
-              pref="true"
-              preftype="bool"
-              prefstring="wallet.captureForms"
-              prefattribute="checked"/>
+              prefstring="wallet.captureForms"/>
     </hbox>
     <hbox pack="end">
-      <button class="dialog"
-              label="&viewWallet.label;"
+      <button label="&viewWallet.label;"
               accesskey="&viewWallet.accesskey;" 
               oncommand="formShow();"
-              id="viewFormButton" pref="true" preftype="bool"
-              prefstring="pref.advanced.form.disable_button.view_form" prefattribute="disabled"/>
-      <button class="dialog"
-              label="&viewWalletSites.label;"
+              id="viewFormButton"
+              prefstring="pref.advanced.form.disable_button.view_form"/>
+      <button label="&viewWalletSites.label;"
               accesskey="&viewWalletSites.accesskey;" 
               oncommand="viewWalletSites();"
-              id="viewSiteButton" pref="true" preftype="bool"
-              prefstring="pref.advanced.form.disable_button.view_sites" prefattribute="disabled"/>
+              id="viewSiteButton"
+              prefstring="pref.advanced.form.disable_button.view_sites"/>
     </hbox>
   </groupbox>
-
-</window>
+</page>

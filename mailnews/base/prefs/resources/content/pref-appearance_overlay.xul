@@ -17,7 +17,7 @@
   <groupbox id="generalStartupPreferences">
     <checkbox id="generalStartupMail" wsm_persist="true" position="2"
               label="&mesCheck.label;" accesskey="&mesCheck.accesskey;"
-              pref="true" preftype="bool" prefstring="general.startup.mail"
+              preftype="bool" prefstring="general.startup.mail"
               prefattribute="checked"/>         
   </groupbox>        
 

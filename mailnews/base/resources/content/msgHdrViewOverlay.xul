@@ -49,7 +49,7 @@ Rights Reserved.
 </popup>
 
 <popup id="attachmentTreeTooltip" class="tooltip" onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);" > 
-    <text id="attachmentTreeTooltipText"/>
+    <label id="attachmentTreeTooltipText"/>
 </popup>
 
 <hbox id="msgHeaderView" persist="state">
@@ -63,21 +63,21 @@ Rights Reserved.
       
     <column id="collapsedsubjectBox" collapsed="true" crop="right" flex="1">
       <hbox>  
-        <text class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
-        <text id="collapsedsubjectValue" class="collapsedHeaderValue" crop="right" flex="1"/>
+        <label class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
+        <label id="collapsedsubjectValue" class="collapsedHeaderValue" crop="right" flex="1"/>
       </hbox>
 	</column>
 
     <column id="collapsedfromBox" collapsed="true">
       <hbox>
-        <text class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
+        <label class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
         <mail-emailaddress id="collapsedfromValue" flex="1"/>
       </hbox>
     </column>
 
     <column id = "collapseddateBox" collapsed="true">
       <hbox style="text-align: right;">
-        <text id="collapseddateValue" class="collapsedHeaderValue"/>
+        <label id="collapseddateValue" class="collapsedHeaderValue"/>
       </hbox>
     </column>
 
@@ -108,12 +108,12 @@ Rights Reserved.
 
    <vbox id="editMessageBox" class="header-part1" collapsed="true">
      <spacer class="buttonSpacer"/> 
-     <button id="editMessageButton" label="&editMessage.label;" orient="right" onclick="MsgComposeDraftMessage()"/>
+     <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
      <spacer class="buttonSpacer"/> 
    </vbox> 
 
    <hbox id="expandedAttachmentBox" class="header-part1">
-     <text class="label" id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
+     <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
        <tree id="attachmentTree" class="inset" flex="2" onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
          <treecolgroup>
            <treecol flex="1"/>

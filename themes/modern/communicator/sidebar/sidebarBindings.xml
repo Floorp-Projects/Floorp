@@ -21,7 +21,7 @@
         </xul:vbox>
       
         <xul:vbox class="sidebar-tab-text-box">
-          <xul:text class="sidebar-tab-text" inherits="value=label" crop="right"/>
+          <xul:label class="sidebar-tab-text" inherits="value=label" crop="right"/>
         </xul:vbox>
       </xul:stack>
       
@@ -39,7 +39,7 @@
   <binding id="sidebarheader">
     <content>
       <xul:hbox class="sidebarheader-internal-box" flex="1" align="center">
-        <xul:text class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
+        <xul:label class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
         <xul:hbox>
           <children/>
         </xul:hbox>

@@ -45,8 +45,7 @@
 <?xul-overlay href="chrome://venkman/content/venkman-scripts.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
-<window id="venkman-window" orient="vertical"
-  xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="venkman-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="console.onLoad();" onunload="return console.onUnload();"
   width="640" height="480"
@@ -56,7 +55,7 @@
   <overlaytarget id="scripts-overlay-target"/>
   <overlaytarget id="menu-overlay-target"/>
 
-  <box flex="1" orient="vertical">
+  <vbox flex="1">
       <hbox flex="1" id="top-hbox" persist="height">
 
         <vbox flex="1" id="top-left-pane" persist="width">
@@ -162,7 +161,7 @@
         </vbox>
 
       </hbox>
-  </box>
+  </vbox>
 
   <overlaytarget id="statusbar-overlay-target"/>
 

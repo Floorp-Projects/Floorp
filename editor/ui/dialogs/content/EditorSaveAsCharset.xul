@@ -34,10 +34,8 @@
 <!-- WE SHOULD NOT USE ABSOLUTE WITH AND HEIGHT - USE BOXES INSTEAD? -->
 <window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
     onunload="onCancel()"
-    orient="vertical"
     style="width: 32em;">
 
     <!-- Methods common to all editor dialogs -->
@@ -49,15 +47,15 @@
     <broadcaster id="args" value=""/>
     <keyset id="dialogKeys"/>
 
-    <groupbox orient="vertical"><caption align="left" label="&documentTitleTitle.label;"/>
+    <groupbox><caption label="&documentTitleTitle.label;"/>
         <!-- Text labels filled in from editor.properties -->
-        <text id="EnterTitleLabel" class="label"/> 
+        <label id="EnterTitleLabel"/> 
         <textbox id="TitleInput" oninput="TitleChanged();"/>
-        <html id="TitleHelp" class="label wrap" style="width:1em" />
+        <description id="TitleHelp" class="wrap" style="width:1em" />
     </groupbox>
 
-    <groupbox orient="vertical" flex="1"><caption label="&documentCharsetTitle.label;"/>
-        <text class="label" value="&documentCharsetDesc.label;"/>
+    <groupbox flex="1"><caption label="&documentCharsetTitle.label;"/>
+        <label value="&documentCharsetDesc.label;"/>
         <tree class="list" id="CharsetTree" rows="7" flex="1" onselect="SelectCharset();">
             <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>

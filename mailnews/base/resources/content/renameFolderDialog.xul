@@ -32,7 +32,6 @@
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&renameFolderDialog.title;"
-        orient="vertical"
         class="dialog"
         onload="onLoad();">
 
@@ -46,7 +45,7 @@
 
     <spacer flex="100%"/>
 
-    <text value="&rename.label;" class="label" accesskey="&rename.accesskey;" for="name"/>
+    <label value="&rename.label;" accesskey="&rename.accesskey;" control="name"/>
     <textbox tabindex="0" id="name" oninput="doEnabling();"/>
 
     <spacer flex="100%"/>

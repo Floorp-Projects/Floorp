@@ -34,14 +34,14 @@
       <rows>
         <row id="rwRow1">
           <deck id="rwRow1Text">
-            <text id="txText1Id" value="Id"/>
-            <text id="txText1Tag" value="Tag"/>
-            <text id="txText1Attr" value="Attr"/>
+            <label id="txText1Id" value="Id"/>
+            <label id="txText1Tag" value="Tag"/>
+            <label id="txText1Attr" value="Attr"/>
           </deck>
           <textbox id="tfText1"/>
         </row>
         <row id="rwRow2">
-          <text id="txText2" value="Value"/>
+          <label id="txText2" value="Value"/>
           <textbox id="tfText2"/>
         </row>
       </rows>
@@ -50,17 +50,17 @@
     <hbox valign="top">
       <groupbox id="tbxType">
         <caption label="Search By"/>
-        <radiogroup id="rgType" orient="vertical">
-          <radio group="rgType" id="rdType_id" label="ID" value="id" oncommand="dialog.toggleType('id')"/>
-          <radio group="rgType" id="rdType_tag" label="Tag" value="tag" oncommand="dialog.toggleType('tag')"/>
-          <radio group="rgType" id="rdType_attr" label="Attribute" value="attr" oncommand="dialog.toggleType('attr')"/>
+        <radiogroup id="rgType">
+          <radio id="rdType_id" label="ID" value="id" oncommand="dialog.toggleType('id')"/>
+          <radio id="rdType_tag" label="Tag" value="tag" oncommand="dialog.toggleType('tag')"/>
+          <radio id="rdType_attr" label="Attribute" value="attr" oncommand="dialog.toggleType('attr')"/>
         </radiogroup>
       </groupbox>
       <groupbox id="tbxDirection" hide="true">
         <caption label="Direction"/>
-        <radiogroup id="rgDirection" orient="vertical">
-          <radio id="rdDir_up" group="rgDirection" value="up" label="Up"/>
-          <radio id="rdDir_down" group="rgDirection" value="down" label="Down"/>
+        <radiogroup id="rgDirection">
+          <radio id="rdDir_up" value="up" label="Up"/>
+          <radio id="rdDir_down" value="down" label="Down"/>
         </radiogroup>
       </groupbox>
     </hbox>

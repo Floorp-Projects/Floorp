@@ -78,6 +78,7 @@ mail-emailaddress {
   text-decoration: underline;
   cursor: pointer;
   min-height: 16px;
+  margin: 0px 0px 0px 0px;
 }
 
 .showMoreAddressesButton {
@@ -138,7 +139,7 @@ label.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
   width: 12em
 }
 
-text.collapsedHeaderDisplayName 
+label.collapsedHeaderDisplayName 
 { 
   font-weight: bold; 
   margin-left: .7em;

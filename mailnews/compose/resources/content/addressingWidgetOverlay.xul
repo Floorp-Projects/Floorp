@@ -43,7 +43,7 @@ Rights Reserved.
     <treechildren flex="1" id="addressWidgetBody">
       <treeitem>
         <treerow>
-          <treecell class="treecell-addressingWidget" allowevents="true" autostretch="always">
+          <treecell class="treecell-addressingWidget" allowevents="true">
             <menulist id="msgRecipientType#1" class="aw-menulist menulist-compact" flex="1"
                       onclick="awNotAnEmptyArea(event)" disableonsend="true"
                       oncommand="awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
@@ -58,8 +58,8 @@ Rights Reserved.
             </menulist>
           </treecell>
           <treecell class="treecell-addressingWidget" autostretch="never">
-            <textbox id="msgRecipient#1" class="plain textbox-addressingWidget"
-                     type="autocomplete" allowevents="true" flex="1" 
+            <textbox id="msgRecipient#1" class="textbox-addressingWidget"
+                     type="autocomplete" allowevents="true" flex="1"
                      searchSessions="addrbook" timeout="300" maxrows="4" 
                      autoFill="true" autoFillAfterMatch="true" forceComplete="true"
                      minResultsForPopup="3" 

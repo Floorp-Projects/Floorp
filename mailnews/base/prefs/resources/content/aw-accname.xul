@@ -26,9 +26,7 @@ Rights Reserved.
 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accname.dtd" >
-<page id="accnamepage" 
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.wizardManager.onPageLoad('accname');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
@@ -40,10 +38,10 @@ Rights Reserved.
   <separator/>
   
   <vbox class="box-wizardcontent" flex="1">
-    <html>&accnameDesc.label;</html>
+    <description>&accnameDesc.label;</description>
     <separator class="thin"/>
-    <hbox autostretch="never">
-      <text class="label" value="&accnameLabel.label;" for="prettyName" style="width: 8em;"/>
+    <hbox align="center">
+      <label value="&accnameLabel.label;" control="prettyName" style="width: 8em;"/>
       <textbox id="prettyName" size="40" wsm_persist="true" flex="1"/>
     </hbox>
   </vbox>

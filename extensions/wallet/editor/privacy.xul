@@ -31,10 +31,8 @@
 <window id="privacy"
         class="dialog"
         title="&windowtitle.label;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="TutorialURL()" 
-        orient="vertical">
+        onload="TutorialURL()" >
 <!-- 
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 -->
@@ -69,7 +67,7 @@
   <spacer style="height: 5px;"/>
   <hbox>
     <spacer flex="100%"/>
-   <button class="right dialog" id="ok" label="&ok;" default="true" oncommand="doOKButton();"/> 
+   <button class="right" id="ok" label="&ok;" default="true" oncommand="doOKButton();"/> 
   </hbox>
   <spacer style="height: 5px;"/>
 

@@ -9,12 +9,8 @@
 <window id="askSendFormat"
     title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload="Startup()"
-    orient="vertical"
-    class="dialog"
-    style="-moz-user-input: ignore"
-    >
+    class="dialog">
 
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/askSendFormat.js"/>
 
@@ -28,29 +24,29 @@
         </vbox>
         <spacer style="width:10px"/>
         <vbox flex="1">
-            <html>&recipient.label;</html>
+            <description>&recipient.label;</description>
             <deck id="mailSendFormatExplanation">
-                <vbox><html>&convertibleDefault.label;</html></vbox>  <!-- Hack: <vbox> is a workaround for bug 44513. -->
-                <vbox><html>&convertibleYes.label;</html></vbox>
-                <vbox><html>&convertibleAltering.label;</html></vbox>
-                <vbox><html>&convertibleNo.label;</html></vbox>
+                <vbox><description>&convertibleDefault.label;</description></vbox>  <!-- Hack: <vbox> is a workaround for bug 44513. -->
+                <vbox><description>&convertibleYes.label;</description></vbox>
+                <vbox><description>&convertibleAltering.label;</description></vbox>
+                <vbox><description>&convertibleNo.label;</description></vbox>
             </deck>
-            <html>&question.label;</html>
+            <description>&question.label;</description>
             <spacer style="height:1em"/>
 
-      <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never">
+      <radiogroup id="mailDefaultHTMLAction">
          <hbox>
-                <radio group="mailDefaultHTMLAction" id="SendPlainTextAndHtml" value="0" label="&plainTextAndHtml.label;"/>
-                <html id="plainTextAndHtmlRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</html>
+                <radio id="SendPlainTextAndHtml" value="0" label="&plainTextAndHtml.label;"/>
+                <description id="plainTextAndHtmlRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
                 <!-- Hack: box and html are workarounds for bug 49623 -->
                </hbox>
          <hbox>
-        <radio group="mailDefaultHTMLAction" id="SendPlainTextOnly" value="1" label="&plainTextOnly.label;"/>
-                <html id="plainTextOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</html>
+        <radio id="SendPlainTextOnly" value="1" label="&plainTextOnly.label;"/>
+                <description id="plainTextOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
                </hbox>
          <hbox>
-        <radio group="mailDefaultHTMLAction" id="SendHtmlOnly" value="2" label="&htmlOnly.label;"/>
-                <html id="htmlOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</html>
+        <radio id="SendHtmlOnly" value="2" label="&htmlOnly.label;"/>
+                <description id="htmlOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</description>
                </hbox>
       </radiogroup>
 

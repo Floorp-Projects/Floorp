@@ -31,17 +31,16 @@ Contributor(s):
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterEditor.dtd">
 
-<window class="dialog"
-  id="FilterEditor"
+<dialog id="FilterEditor"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
-  orient="vertical"
   windowtype="mailnews:filtereditor"
   width="510" height="360"
   persist="width height screenX screenY"
   onload="filterEditorOnLoad();"
-  onclose="onCancel();">
+  ondialogaccept="return onAccept();"
+  ondialogcancel="return onCancel();">
 
   <dummy class="usesMailWidgets"/>
   <stringbundleset id="stringbundleset">
@@ -53,10 +52,8 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/FilterEditor.js"/>
 
-  <keyset id="dialogKeys"/>
-  
-  <hbox autostretch="never">
-    <text class="label" value="&filterName.label;"/>
+  <hbox align="start">
+    <label value="&filterName.label;"/>
     <textbox flex="50%" id="filterName"/>
     <spacer flex="50%"/>
   </hbox>
@@ -64,15 +61,15 @@ Contributor(s):
   <separator/>
 
   <vbox flex="1">
-    <text class="label" value="&conditionDesc.label;"/>
+    <label value="&conditionDesc.label;"/>
     <vbox id="searchTermListBox" flex="1"/>
   </vbox>
 
   <separator/>
 
   <vbox>
-    <text class="label" value="&filterActionDesc.label;" autostretch="never"/>
-    <hbox autostretch="never">
+    <label value="&filterActionDesc.label;"/>
+    <hbox align="start">
       <menulist class="indent" id="actionMenu" oncommand="onActionChanged(event)">
         <menupopup>
           <menuitem value="1" actionvalueindex="0" label="&moveToFolder.label;"/>
@@ -106,7 +103,7 @@ Contributor(s):
             <menuitem value="5" label="&fifthLabelCmd.label;"/>
           </menupopup>
         </menulist>
-        <text id="actionValueNone"/>
+        <label id="actionValueNone"/>
       </deck>
       <spacer flex="100%"/>
       <button id="newFolderButton" label="&newFolderButton.label;" 
@@ -116,6 +113,4 @@ Contributor(s):
 
   <separator/>
 
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>

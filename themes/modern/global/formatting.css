@@ -40,16 +40,6 @@
 
 /* ::::: colors ::::: */
 
-.color-dialog {
-  background-color: #C7D0D9;
-  color: #000000;
-}
-  
-.color-window {
-  background-color: #C7D0D9;
-  color: #000000;
-}
-
 /* ::::: inset areas ::::: */
 
 .inset {
@@ -133,9 +123,6 @@ separator[orient="vertical"].groove-thin {
 /* ::::: text formatting rules ::::: */
 
 /* ..... label (with margins) ..... */
-text.label {
-  margin: 1px 5px 2px 5px;
-}
     
 /* reduced margin for some UI */
 .small-margin {
@@ -143,23 +130,21 @@ text.label {
 }
 
 .plain {
-  margin: 0px;
+  margin: 0px !important;
   border: none;
   padding: 0px;
 }
 
-text[disabled="true"] {
+label[disabled="true"] {
   color: #9FA6AE;
 }    
     
-html, description {
+description {
   margin: 1px 5px 4px 5px;
-  cursor: default;
 }
 
 label {
   margin: 1px 5px 2px 5px;
-  cursor: default;
 }
 
 .header {

@@ -6,30 +6,26 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-main.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      flex="1"
-      onload="parent.onPanelLoaded('am-main.xul');"
-      orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.onPanelLoaded('am-main.xul');">
 
     <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-main.js"/>
 
     <hbox class="box-smallheader" title="&accountTitle.label;"/>
     
-    <html>&accountSettingsDesc.label;</html>
-    <hbox autostretch="never">
-      <text class="label" value="&accountName.label;" for="server.prettyName"/>
-      <textbox wsm_persist="true" size="30" id="server.prettyName" flex="1"
-               pref="true" preftype="string" prefattribute="value"
+    <description>&accountSettingsDesc.label;</description>
+    <hbox align="center">
+      <label value="&accountName.label;" control="server.prettyName"/>
+      <textbox wsm_persist="true" size="30" id="server.prettyName"
                prefstring="mail.server.%serverkey%.name"/>
     </hbox>
     
     <separator class="thin"/>
     
-    <groupbox orient="vertical" flex="1" style="width: 20em !important;">
+    <groupbox flex="1" style="width: 20em !important;">
       <caption label="&identityTitle.label;"/>
-      <html>&identityDesc.label;</html>
+      <description>&identityDesc.label;</description>
       <separator class="thin"/>
       <grid flex="1">
         <columns>
@@ -37,54 +33,48 @@
           <column flex="1"/>
         </columns>
         <rows>
-          <row autostretch="never">
-            <text class="label" value="&name.label;" for="identity.fullName"/>
+          <row align="center">
+            <label value="&name.label;" control="identity.fullName"/>
             <textbox wsm_persist="true" id="identity.fullName" size="30"
-                     pref="true" preftype="string" prefattribute="value"
                      prefstring="mail.identity.%identitykey%.fullName"/>
           </row>
-          <row autostretch="never">
-            <text class="label" value="&email.label;" for="identity.email"/>
+          <row align="center">
+            <label value="&email.label;" control="identity.email"/>
             <textbox wsm_persist="true" id="identity.email" 
-                     pref="true" preftype="string" prefattribute="value"
                      prefstring="mail.identity.%identitykey%.useremail"/>
           </row>
-          <row autostretch="never">
-            <text class="label" value="&replyTo.label;" for="identity.replyTo"/>
+          <row align="center">
+            <label value="&replyTo.label;" control="identity.replyTo"/>
             <textbox wsm_persist="true" id="identity.replyTo"
-                     pref="true" preftype="string" prefattribute="value"
                      prefstring="mail.identity.%identitykey%.reply_to"/>
           </row>
-          <row autostretch="never">
-            <text class="label" value="&organization.label;" for="identity.organization"/>
+          <row align="center">
+            <label value="&organization.label;" control="identity.organization"/>
             <textbox wsm_persist="true" id="identity.organization"
-                     pref="true" preftype="string" prefattribute="value"
                      prefstring="mail.identity.%identitykey%.organization"/>
           </row>
         </rows>
       </grid>
 
-      <hbox autostretch="never">
+      <hbox align="center">
         <checkbox wsm_persist="true" id="identity.attachSignature" label="&signature.label;" flex="1"
-                  pref="true" preftype="bool" prefattribute="value"
+                  prefattribute="value"
                   prefstring="mail.identity.%identitykey%.attach_signature"/>
       </hbox>
-      <hbox autostretch="never" class="indent">
-        <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"
-                 pref="true" preftype="string" prefattribute="value"
+      <hbox align="center" class="indent">
+        <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" name="identity.signature"
                  prefstring="mail.identity.%identitykey%.sig_file"/>
-        <button class="dialog push" name="browse" type="button" label="&choose.label;"  
+        <button class="push" name="browse" label="&choose.label;"  
                 oncommand="selectFile()"
                 wsm_persist="true" id="identity.sigbrowsebutton"
-                pref="true" preftype="bool" prefattribute="disabled"
                 prefstring="mail.identity.%identitykey%.sigbrowse.disable"/>
       </hbox>
 
       <separator class="thin"/>
       
-      <hbox autostretch="never">
+      <hbox align="center">
         <checkbox wsm_persist="true" id="identity.composeHtml" label="&useHtml.label;"
-                  pref="true" preftype="bool" prefattribute="value"
+                  prefattribute="value"
                   prefstring="mail.identity.%identitykey%.compose_html"/>
       </hbox>
 
@@ -94,9 +84,8 @@
         <spacer flex="1"/>
         <button oncommand="onAdvanced();" label="&advancedButton.label;"
                 wsm_persist="true" id="identity.advancedbutton"
-                pref="true" preftype="bool" prefattribute="disabled"
                 prefstring="mail.identity.%identitykey%.advanced.disable"/>
-        <text hidden="true" wsm_persist="true" id="identity.smtpServerKey" />
+        <label hidden="true" wsm_persist="true" id="identity.smtpServerKey" />
       </hbox>
 
     </groupbox>

@@ -54,8 +54,6 @@ function Startup()
   passwordmanager = Components.classes["@mozilla.org/passwordmanager;1"].getService();
   passwordmanager = passwordmanager.QueryInterface(Components.interfaces.nsIPasswordManager);
 
-  doSetOKCancel(onOK, null);  // init ok event handler
-
   // remove wallet functions (unless overruled by the "wallet.enabled" pref)
   try {
     pref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -391,9 +389,9 @@ function DeleteAllNocaptures() {
 
 /*** =================== GENERAL CODE =================== ***/
 
-// function : <SignonViewer>::onOK()
+// function : <SignonViewer>::onAccept()
 // purpose  : dialog confirm & tidy up.
-function onOK()
+function onAccept()
 {
   var deletedSignons = [];
   deletedSignons = goneSS.split(",");

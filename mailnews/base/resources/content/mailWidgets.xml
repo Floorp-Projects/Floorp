@@ -564,7 +564,7 @@
               var node = children[i];
               var stringTag = node.getAttribute("stringTag");
               if (stringTag) {
-                var attr = (node.tagName == "text") ? "value" : "label";
+                var attr = (node.tagName == "label") ? "value" : "label";
                 node.setAttribute(attr, bundle.GetStringFromName(stringTag));
               }
             }

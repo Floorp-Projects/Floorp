@@ -26,21 +26,18 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:nc="http://home.netscape.com/NC-rdf#"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     title="&mailListWindow.title;"
-    class="dialog"
+    ondialogaccept="return MailListOKButton();"
     onload="OnLoadMailList()"
-        ondragover="return DragOverTree(event);"
-        ondragdrop="return DropOnAddressListTree(event);"
-    orient="vertical">
+    ondragover="return DragOverTree(event);"
+    ondragdrop="return DropOnAddressListTree(event);">
 
   <stringbundleset id="stringbundleset"/>
 
-  <keyset id="dialogKeys"/>
-
-  <hbox autostretch="never" valign="center">
+  <hbox align="center" valign="center">
     <label control="abPopup" value="&addToAddressBook.label;" accesskey="&addToAddressBook.accesskey;"/>
     <menulist id="abPopup">
       <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory">
@@ -58,9 +55,5 @@ Rights Reserved.
   <spacer style="height:1em"/>
 
   <vbox id="editlist"/>
-    
-  <spacer style="height:1em"/>
-    
-  <hbox id="okCancelButtons"/>
 
-</window>
+</dialog>

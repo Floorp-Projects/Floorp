@@ -141,7 +141,6 @@
              style="display:none;">
       <button class="button-toolbar-4"
               id="formPrefill"
-              crop="right"
               oncommand="formPrefill();"
               label="  &formPrefill.label;  "
               tooltip="aTooltip"
@@ -149,7 +148,6 @@
       <toolbarseparator/>
       <button class="button-toolbar-4"
               id="formCapture"
-              crop="right"
               oncommand="formCapture();"
               label="  &formCapture.label;  "
               tooltip="aTooltip"
@@ -157,7 +155,6 @@
       <toolbarseparator/>
       <button class="button-toolbar-4"
               id="formShow"
-              crop="right"
               oncommand="formShow(); initToolbarItems();"
               label="  &formView.label;  "
               tooltip="aTooltip"

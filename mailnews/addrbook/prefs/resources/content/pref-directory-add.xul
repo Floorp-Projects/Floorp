@@ -31,7 +31,6 @@
 
 <window id="addDirectory"
         class="dialog" style="width: 30em"
-        orient="vertical"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newDirectoryTitle.label;"
         onload="Startup();">
@@ -106,8 +105,8 @@
                <row>
                  <label value="&scope.label;" control="scope"/>
                  <radiogroup id="scope" orient="horizontal">
-                   <radio group="scope" id="one" value="1" label="&scopeOneLevel.label;"/>
-                   <radio group="scope" id="sub" value="2" label="&scopeSubtree.label;"/>                
+                   <radio id="one" value="1" label="&scopeOneLevel.label;"/>
+                   <radio id="sub" value="2" label="&scopeSubtree.label;"/>                
                  </radiogroup>
                </row>
                <row>

@@ -33,13 +33,13 @@
 
     <radiogroup id="booleanAndGroup" orient="horizontal"
                 selectedItem="or" oncommand="booleanChanged(event);">
-      <radio group="booleanAndGroup" value="and" label="&matchAll.label;"/>
-      <radio group="booleanAndGroup" checked="true" value="or" label="&matchAny.label;"/>
+      <radio value="and" label="&matchAll.label;"/>
+      <radio selected="true" value="or" label="&matchAny.label;"/>
     </radiogroup>
     
     <hbox flex="1">
       <hbox id="searchterms"/>
-      <tree class="inset" flex="1" id="searchTermTree">
+      <tree flex="1" id="searchTermTree">
         <treecolgroup>
           <treecol flex="1"/>
           <treecol flex="4"/>

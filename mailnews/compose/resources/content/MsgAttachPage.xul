@@ -9,7 +9,6 @@
 <window title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    orient="vertical"
     class="dialog"> 
 
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgAttachPage.js"/> 
@@ -19,7 +18,7 @@
     <spacer style="height:0.5em" />
 	<hbox>
         <spacer style="width:10px" />
-		<text value="Web Page (URL):"/>
+                <label value="Web Page (URL):"/>
 		<textbox id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
         <spacer style="width:10px" />
 	</hbox>

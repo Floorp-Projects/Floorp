@@ -23,47 +23,43 @@
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletEditor.dtd" >
 
-<window id="walleteditor"
-        class="dialog"
+<dialog id="walleteditor"
         title="&windowtitle.label;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical"
-        onload="Startup()">
+        onload="Startup()"
+        ondialogaccept="return onAccept();">
 
   <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletEditor.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
-  <keyset id="dialogKeys"/>
            
     <vbox id="system" flex="100%">
       <spacer style="height: 7px;"/>
-      <text class="label" value="&div.walletdataonsystem.label;"/>
-      <separator orient="horizontal" class="groove"/>
+      <label value="&div.walletdataonsystem.label;"/>
+      <separator class="groove"/>
       <spacer style="height: 10px;"/>
       <hbox id="system1" flex="100%">
         <spacer style="width: 7px;"/>
         <vbox>
-          <text class="label" value="&treehead.schemaname.label;"/>
-          <tree multiple="true" id="schematree" class="inset"
-             style="height: 250px;" orient="vertical" onclick="ViewEntries();">
+          <label value="&treehead.schemaname.label;"/>
+          <tree multiple="true" id="schematree"
+             style="height: 250px;" onclick="ViewEntries();">
             <treecolgroup>
               <treecol flex="1"/>
             </treecolgroup>
             <treechildren id="schemalist" flex="1"/>
           </tree>
           <hbox>
-            <button id="removeSchema" class="dialog push" disabled="true" label="&button.remove.label;" oncommand="DeleteSchema();"/>
-            <button id="addSchema" class="dialog push" disabled="false" label="&button.addschema.label;" oncommand="AddSchema();"/>
+            <button id="removeSchema" disabled="true" label="&button.remove.label;" oncommand="DeleteSchema();"/>
+            <button id="addSchema" label="&button.addschema.label;" oncommand="AddSchema();"/>
           </hbox>
         </vbox>
         <spacer style="width: 7px;"/>
         <vbox>
-          <text class="label" id="entrytext" value2="&treehead.entries.label;" value3="&treehead.entries1.label;"/>
+          <label id="entrytext" value2="&treehead.entries.label;" value3="&treehead.entries1.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
             style="height: 113px;" orient="vertical" onclick="ViewSynonyms();">
             <treecolgroup>
@@ -72,8 +68,8 @@
             <treechildren flex="1" id="entrieslist"/>
           </tree>
           <spacer style="height: 7px;"/>
-          <text class="label" id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;" value4="&treehead.synonyms1.label;"/>
-          <tree multiple="true" id="synonymtree" class="inset"
+          <label id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;" value4="&treehead.synonyms1.label;"/>
+          <tree multiple="true" id="synonymtree"
             style="height: 113px;" orient="vertical" onclick="SynonymSelected();">
             <treecolgroup>
               <treecol flex="1"/>
@@ -84,23 +80,13 @@
         <spacer style="width: 7px;"/>
         <vbox>
           <spacer style="height: 15px;"/>
-          <button id="removeEntry" class="dialog push" disabled="true" label="&button.remove.label;" oncommand="DeleteEntry();"/>
-          <button id="addEntry" class="dialog push" disabled="false" label="&button.addentry.label;" oncommand="AddEntry();"/>
+          <button id="removeEntry" disabled="true" label="&button.remove.label;" oncommand="DeleteEntry();"/>
+          <button id="addEntry" label="&button.addentry.label;" oncommand="AddEntry();"/>
           <spacer style="height: 93px;"/>
-          <button id="removeSynonym" class="dialog push" disabled="true" label="&button.remove.label;" oncommand="DeleteSynonym();"/>
-          <button id="addSynonym" class="dialog push" disabled="false" label="&button.addsynonym.label;" oncommand="AddSynonym();"/>
+          <button id="removeSynonym" disabled="true" label="&button.remove.label;" oncommand="DeleteSynonym();"/>
+          <button id="addSynonym" label="&button.addsynonym.label;" oncommand="AddSynonym();"/>
         </vbox>
         <spacer style="width: 7px;"/>
       </hbox>
     </vbox>
-    <separator orient="horizontal" class="groove"/>
-
-  <!-- from dialogOverlay.xul -->
-  <spacer style="height: 5px;"/>
-  <hbox>
-    <spacer flex="100%"/>
-    <hbox id="okCancelButtons"/>
-  </hbox>
-  <spacer style="height: 5px;"/>
-
-</window>
+</dialog>

@@ -34,24 +34,22 @@ Rights Reserved.
                      
 <window id="printEngineWin"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
-		    title="&printEngine.title;"
+        title="&printEngine.title;"
         titlemodifier="&titleModifier.label;"
         titlemenuseparator="&titleSeperator.label;"
-		    onload="OnLoadPrintEngine()"
-		    onunload="OnUnloadPrintEngine()"
-		    orient="vertical"
+        onload="OnLoadPrintEngine()"
+        onunload="OnUnloadPrintEngine()"
         width="150"
         height="250"
         screenX="10000"
         screenY="10000"
-		    windowtype="mail:printEngine">
+        windowtype="mail:printEngine">
 
 <!-- XXX: utilityOverlay.xul uses strres.js - once it is converted, this should be  removed-->
-<html:script src="chrome://global/content/strres.js"/>
-<html:script src="chrome://messenger/content/msgPrintEngine.js"/>
+<script src="chrome://global/content/strres.js"/>
+<script src="chrome://messenger/content/msgPrintEngine.js"/>
 
   <!-- The main display frame -->
-  <html:iframe id="printengine" style="height: 0px" flex="1" name="printengine" type="content" src="about:blank" />
+  <iframe id="printengine" style="height: 0px" flex="1" name="printengine" type="content" src="about:blank" />
 </window>

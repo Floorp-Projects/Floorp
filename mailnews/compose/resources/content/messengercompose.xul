@@ -54,7 +54,6 @@
         onclose="return DoCommandClose()"
         title="&msgComposeWindow.title;"
         windowtype="msgcompose"
-        orient="vertical"
         width="640" height="480"
         persist="screenX screenY width height sizemode"> 
 
@@ -384,7 +383,7 @@
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
                command="cmd_saveDefault"/>
        <spacer flex="1"/>
-       <hbox id="throbber-box" autostretch="never">
+       <hbox id="throbber-box" align="center">
          <button id="navigator-throbber" 
                oncommand="goClickThrobber('compose.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
            <observes element="broadcaster_throbber" attribute="busy"/>
@@ -396,22 +395,22 @@
     <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbalign="stretch" flex="1" grippytooltip="aTooltip" grippytooltiptext="&addressBar.tooltip;">
       <hbox id="msgheaderstoolbar-box" flex="1">
         <vbox flex="75">
-          <hbox autostretch="never">
-            <text class="label" value="&fromAddr.label;"/>
+          <hbox align="center">
+            <label value="&fromAddr.label;"/>
             <menulist id="msgIdentity" label="..." flex="1" oncommand="LoadIdentity(false);">
               <menupopup id="msgIdentityPopup"/>
             </menulist>
           </hbox> 
           <tree id="addressingWidgetTree" flex="1"/>
-          <hbox autostretch="never">
-            <text class="label" value="&subject.label;" accesskey="&subject.accesskey;"/>
+          <hbox align="center">
+            <label value="&subject.label;" accesskey="&subject.accesskey;"/>
             <textbox id="msgSubject" flex="1" class="toolbar" onkeyup="SetComposeWindowTitle(event.which);" disableonsend="true"
                        onkeypress="subjectKeyPress(event);" onchange="contentChanged=true;"/>
           </hbox>
         </vbox>
         <splitter id="attachmentbucket-sizer" collapse="after"/>
         <vbox flex="25">
-          <text class="label" id="attachmentBucketText" value="&attachments.label;" crop="right"
+          <label id="attachmentBucketText" value="&attachments.label;" crop="right"
                 accesskey="&attachments.accesskey;"/>
           <tree id="attachmentBucket" class="inset toolbar" flex="1" style="height: 0px; width: 0px;"
                 dragdroptree="true"

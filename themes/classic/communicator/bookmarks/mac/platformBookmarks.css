@@ -8,6 +8,7 @@
       border-bottom       : 1px solid #DDDDDD;
       border-left         : 1px solid #9D9D9D;
       border-right        : 1px solid #FFFFFF;
+      margin              : 0px 0px 0px 0px !important;
     }
 
   .bookmarks-window-tree > .tree-container-treerows

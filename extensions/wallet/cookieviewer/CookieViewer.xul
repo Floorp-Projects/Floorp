@@ -29,14 +29,12 @@
 <!-- CHANGE THIS WHEN MOVING FILES -->
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/CookieViewer.dtd" >
 
-<window id="cookieviewer"
-        class="dialog"
+<dialog id="cookieviewer"
         title="&windowtitle.label;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
-        orient="vertical"
-        onload="Startup()">
+        onload="Startup()"
+        ondialogaccept="onAccept();">
 
   <script src="chrome://communicator/content/wallet/CookieViewer.js"/>
   <script src="chrome://global/content/strres.js"/>
@@ -52,9 +50,9 @@
     </tabs>
     <tabpanels id="panel" flex="1">
       <vbox class="tabpanel" id="system" flex="1">
-          <text class="label" value="&div.cookiesonsystem.label;"/>
+          <label value="&div.cookiesonsystem.label;"/>
           <separator class="thin"/>
-          <tree id="cookietree" class="inset" style="height: 10em;"
+          <tree id="cookietree" style="height: 10em;"
             multiple="true" onselect="ViewCookieSelected(event);"
             onclick="ViewCookieSelected(event)" flex="1"
             onkeypress="HandleKeyPress(event)">
@@ -86,51 +84,51 @@
               </columns>
               <rows>
                 <row align="center">
-                  <text value="&props.name.label;"/>
+                  <label value="&props.name.label;"/>
                   <textbox id="ifl_name" readonly="true"/>
                 </row>
                 <row align="center">
-                  <text value="&props.value.label;"/>
+                  <label value="&props.value.label;"/>
                   <textbox id="ifl_value" readonly="true"/>
                 </row>
                 <row align="center">
-                  <text id="ifl_isDomain" value="&props.domain.label;"/>
+                  <label id="ifl_isDomain" value="&props.domain.label;"/>
                   <textbox id="ifl_host" readonly="true"/>
                 </row>
                 <row align="center">
-                  <text value="&props.path.label;"/>
+                  <label value="&props.path.label;"/>
                   <textbox id="ifl_path" readonly="true"/>
                 </row>
                 <row align="center">
-                  <text value="&props.secure.label;"/>
+                  <label value="&props.secure.label;"/>
                   <textbox id="ifl_isSecure" readonly="true"/>
                 </row>
                 <row align="center">
-                  <text value="&props.expires.label;"/>
+                  <label value="&props.expires.label;"/>
                   <textbox id="ifl_expires" readonly="true"/>
                 </row>
               </rows>
             </grid>
           </groupbox>
           <hbox>
-            <button id="removeCookies" class="dialog push" disabled="true"
+            <button id="removeCookies" disabled="true"
                           label="&button.removecookie.label;"
                           oncommand="DeleteCookieSelected();"/>
-            <button id="removeAllCookies" class="dialog push"
+            <button id="removeAllCookies"
                           label="&button.removeallcookies.label;"
                           oncommand="DeleteAllCookies();"/>
             <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" label="&button.restorecookie.label;" oncommand="RestoreCookies();"/> -->
           </hbox>
           <separator class="thin"/>
-          <hbox autostretch="never">
+          <hbox align="start">
             <checkbox id="checkbox" label="&checkbox.label;" />
           </hbox>
       </vbox>
       
-      <vbox class="tabpanel" id="servers" flex="1">
-          <text class="label" value="&div.bannedservers.label;"/>
+      <vbox id="servers" flex="1">
+          <label value="&div.bannedservers.label;"/>
           <separator class="thin"/>
-          <tree id="cookiepermissionstree" class="inset" flex="1"
+          <tree id="cookiepermissionstree" flex="1"
                 onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('cookiepermissionstree', 'permtree_', 'cookiePermList');"
                 multiple="true" onclick="ViewCookiePermissionSelected();">
             <treecolgroup>
@@ -151,19 +149,19 @@
             <treechildren flex="1" id="cookiePermList"/>
           </tree>
           <hbox>
-            <button id="removePermissions" class="dialog push" disabled="true" 
+            <button id="removePermissions" disabled="true" 
                           label="&removepermission.label;" 
                           oncommand="DeleteCookiePermissionSelected();"/>
-            <button id="removeAllPermissions" class="dialog push"
+            <button id="removeAllPermissions"
                           label="&removeallpermissions.label;" 
                           oncommand="DeleteAllCookiePermissions();"/>
           </hbox>
       </vbox>
 
-      <vbox class="tabpanel" id="images" hidden="true" flex="1">
-          <text class="label" value="&div.bannedimages.label;"/>
+      <vbox id="images" hidden="true" flex="1">
+          <label value="&div.bannedimages.label;"/>
           <separator class="thin"/>
-          <tree id="imagepermissionstree" class="inset" flex="1" style="height: 0px;"
+          <tree id="imagepermissionstree" flex="1" style="height: 0px;"
                 onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagepermisionstree', 'imgtree_', 'imagePermList');"
                 multiple="true" onclick="ViewImagePermissionSelected();">
             <treecolgroup>
@@ -184,10 +182,10 @@
             <treechildren flex="1" id="imagePermList"/>
           </tree>
           <hbox>
-            <button id="removeImages" class="dialog push" disabled="true"
+            <button id="removeImages" disabled="true"
                           label="&removeimage.label;" 
                           oncommand="DeleteImagePermissionSelected();"/>
-            <button id="removeAllImages" class="dialog push"
+            <button id="removeAllImages"
                           label="&removeallimages.label;" 
                           oncommand="DeleteAllImagePermissions();"/>
           </hbox>
@@ -195,8 +193,4 @@
 
     </tabpanels>
   </tabbox>
-  
-  <separator class="thin"/>
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>

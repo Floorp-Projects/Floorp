@@ -30,20 +30,16 @@
 /* ::::: tree ::::: */
 
 tree {
-  border: none;
-  border-spacing: 0px;
-  background-color: #FFFFFF;
-}
-
-tree.inset {
   margin: 2px 4px;
   border-top: 1px solid #BEC3D3 !important;
   border-right: 1px solid #F8FAFE !important;
   border-bottom: 1px solid #F8FAFE !important;
   border-left: 1px solid #BEC3D3 !important;
+  border-spacing: 0px;
+  background-color: #FFFFFF;
 }
 
-tree.inset > .tree-container-treerows {
+tree > .tree-container-treerows {
   border: 1px solid #5D616E;
 }
 

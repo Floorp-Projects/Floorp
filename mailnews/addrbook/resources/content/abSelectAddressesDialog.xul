@@ -30,12 +30,11 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abSelectAddressesDialog.dtd">
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&selectAddressWindow.title;"
         class="dialog"
         width="680" height="480"
-        onload="OnLoadSelectAddress()"
-        orient="vertical">
+        onload="OnLoadSelectAddress()">
 
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
   <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
@@ -72,11 +71,11 @@ Rights Reserved.
           <!-- Box that holds (to,cc,bcc buttons) -->
           <hbox id="addToBucketButtonBox">
             <spacer flex="50%"/>
-            <button id="toButton" label="&toButton.label;" class="dialog" oncommand="SelectAddressToButton()"/> 
+            <button id="toButton" label="&toButton.label;" oncommand="SelectAddressToButton()"/> 
             <spacer class="middle-button-spacer"/>
-            <button id="ccButton" label="&ccButton.label;" class="dialog" oncommand="SelectAddressCcButton()"/> 
+            <button id="ccButton" label="&ccButton.label;" oncommand="SelectAddressCcButton()"/> 
             <spacer class="middle-button-spacer"/>
-            <button id="bccButton" label="&bccButton.label;" class="dialog" oncommand="SelectAddressBccButton()"/>  
+            <button id="bccButton" label="&bccButton.label;" oncommand="SelectAddressBccButton()"/>  
             <spacer flex="50%"/>
           </hbox>
         </vbox>
@@ -100,9 +99,9 @@ Rights Reserved.
     <vbox id="rightColumnButtonBox">
       <vbox flex="50%">
         <spacer class="third-column-spacer"/>
-        <button id="new" label="&newButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
+        <button id="new" label="&newButton.label;" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard('dirTree')"/> 
         <spacer class="third-column-spacer"/>
-        <button id="edit" label="&editButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/> 
+        <button id="edit" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/> 
         <spacer flex="100%"/>
       </vbox>
       <vbox flex="50%">

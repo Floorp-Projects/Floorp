@@ -87,10 +87,9 @@ function getAccountValueIsLocked(element)
     nsPrefBranch = prefService.getBranch(null);
   }
 
-
-  if (element.getAttribute("pref") == "true" ) {
+  var prefstring = element.getAttribute("prefstring");
+  if (prefstring) {
     preftype    = element.getAttribute("preftype");
-    prefstring  = element.getAttribute("prefstring");
     prefstr = substPrefTokens(prefstring, element);
     // see if the prefstring is locked
     if (prefstr) {

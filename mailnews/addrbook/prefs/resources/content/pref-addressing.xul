@@ -4,10 +4,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-addressing.dtd">
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="onLoad();"
-      orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="onLoad();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript">
@@ -30,66 +28,54 @@
     
   <hbox class="box-smallheader" title="&pane.title;"/>
 
-  <groupbox orient="vertical" class="small-margin">
+  <groupbox>
     <caption label="&emailCollectiontitle.label;"/>
-  <html class="small-margin">&emailCollectiontext.label;</html>
-    <vbox autostretch="never" class="indent">
-    <checkbox class="small-margin" id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
-              pref="true" preftype="bool" prefstring="mail.collect_email_address_incoming"
-              prefattribute="checked"/>
-    <checkbox class="small-margin" id="emailCollectionOutgoing" label="&emailCollectionOutgoingEnable.label;"
-              pref="true" preftype="bool" prefstring="mail.collect_email_address_outgoing"
-              prefattribute="checked"/>
-    <checkbox class="small-margin" id="emailCollectionNewsgroup" label="&emailCollectionNewsgroupEnable.label;"
-              pref="true" preftype="bool" prefstring="mail.collect_email_address_newsgroup"
-              prefattribute="checked"/>
+  <description>&emailCollectiontext.label;</description>
+    <vbox align="start" class="indent">
+    <checkbox id="emailCollectionIncoming" label="&emailCollectionIncomingEnable.label;"
+              prefstring="mail.collect_email_address_incoming"/>
+    <checkbox id="emailCollectionOutgoing" label="&emailCollectionOutgoingEnable.label;"
+              prefstring="mail.collect_email_address_outgoing"/>
+    <checkbox id="emailCollectionNewsgroup" label="&emailCollectionNewsgroupEnable.label;"
+              prefstring="mail.collect_email_address_newsgroup"/>
     </vbox>
-    <hbox autostretch="never" align="center">
-      <checkbox class="small-margin" id="enableCABsizeLimit" label="&useCABSizelimitPart1.label;"
-                pref="true" preftype="bool" prefstring="mail.collect_email_address_enable_size_limit"
-                prefattribute="checked"/>
-      <textbox class="small-margin" id="CABsizeLimit" size="6" pref="true" preftype="int"
-               prefstring="mail.collect_email_address_size_limit" prefattribute="value"/>
-      <text id="useCABSizelimitPart2" class="label small-margin" value="&useCABSizelimitPart2.label;"/>
+    <hbox align="center">
+      <checkbox id="enableCABsizeLimit" label="&useCABSizelimitPart1.label;"
+                prefstring="mail.collect_email_address_enable_size_limit"/>
+      <textbox id="CABsizeLimit" size="6" preftype="int"
+               prefstring="mail.collect_email_address_size_limit"/>
+      <label id="useCABSizelimitPart2" class="small-margin" value="&useCABSizelimitPart2.label;"/>
     </hbox> 
   </groupbox>
 	
-    <groupbox class="small-margin" orient="vertical"  id="addressAutocompletion">
+    <groupbox id="addressAutocompletion">
       <caption label="&addressingTitle.label;"/>
-      <html class="small-margin">&autocompleteText.label;</html>
-      <hbox autostretch="never">
-        <checkbox class="small-margin" id="addressingAutocomplete" label="&addressingEnable.label;"
-          pref="true" preftype="bool" prefstring="mail.enable_autocomplete"
-          prefattribute="checked"/>
+      <description>&autocompleteText.label;</description>
+      <hbox align="center">
+        <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"
+                  prefstring="mail.enable_autocomplete"/>
       </hbox>
-      <hbox autostretch="never">
-        <checkbox class="small-margin" id="autocompleteLDAP" label="&directories.label;" 
-                  pref="true" preftype="bool" 
+      <hbox align="center">
+        <checkbox id="autocompleteLDAP" label="&directories.label;" 
                   prefstring="ldap_2.autoComplete.useDirectory" 
-                  prefattribute="checked" 
                   oncommand="enableAutocomplete();"/>
-        <menulist class="small-margin" id="directoriesList" flex="1"
-                  pref="true" preftype="string" 
-                  prefstring="ldap_2.autoComplete.directoryServer"
-                  prefattribute="value">
+        <menulist id="directoriesList" flex="1"
+                  preftype="string" 
+                  prefstring="ldap_2.autoComplete.directoryServer">
           <menupopup id="directoriesListPopup" 
             onpopupshowing="createDirectoriesList(true);">
           </menupopup>
        </menulist>
-       <button class="small-margin" id="editButton" label="&editDirectories.label;" 
-               pref="true" preftype="bool" 
+       <button id="editButton" label="&editDirectories.label;" 
                prefstring="pref.ldap.disable_button.edit_directories" 
-               prefattribute="disabled"
                oncommand="onEditDirectories();"/>
      </hbox>
      <!--
-     <html class="small-margin">&matchText.label;</html>
-     <hbox autostretch="never">
-       <checkbox class="small-margin" id="autocompleteSkipDirectory"
+     <description>&matchText.label;</description>
+     <hbox align="center">
+       <checkbox id="autocompleteSkipDirectory"
                  label="&skipDirectory.label;" 
-                 pref="true" preftype="bool" 
-                 prefstring="ldap_2.autoComplete.skipDirectoryIfLocalMatchFound"
-                 prefattribute="checked"/>    
+                 prefstring="ldap_2.autoComplete.skipDirectoryIfLocalMatchFound"/>    
      </hbox>
      -->
    </groupbox>

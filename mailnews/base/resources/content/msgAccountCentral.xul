@@ -31,7 +31,6 @@ Rights Reserved.
 
 
 <page
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="OnInit();">
@@ -57,38 +56,38 @@ Rights Reserved.
 
     <rows>
       <row id="acctCentralHeaderRow">
-        <text class="label" id="AccountCentralTitle"/>
+        <label id="AccountCentralTitle"/>
       </row>
       <separator/>
 
       <row id="EmailHeader" class="acctCentralTitleRow">
         <hbox class="acctCentralRowTitleBox">
-          <html>&emailSectionHdr.label;</html> 
+          <description>&emailSectionHdr.label;</description> 
         </hbox>
       </row>
       <separator id="EmailHeader.separator" class="thin"/>
       <row id="ReadMessages" class="acctCentralRow">
         <hbox> 
-          <text class="acctCentralText acctCentralLinkText" value="&readMsgsLink.label;" onclick="ReadMessages();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&readMsgsLink.label;" onclick="ReadMessages();"/> 
         </hbox>
       </row>
       <separator id="ReadMessages.separator" class="thin"/>
       <row id="ComposeMessage" class="acctCentralRow">
         <hbox> 
-          <text class="acctCentralText acctCentralLinkText" value="&composeMsgLink.label;" onclick="ComposeAMessage();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&composeMsgLink.label;" onclick="ComposeAMessage();"/> 
         </hbox> 
       </row>
       <separator id="ComposeMessage.separator" class="thin"/>
 
       <row id="NewsHeader" class="acctCentralTitleRow">
         <hbox class="acctCentralRowTitleBox">
-          <html>&newsSectionHdr.label;</html> 
+          <description>&newsSectionHdr.label;</description> 
         </hbox>
       </row>
       <separator id="NewsHeader.separator" class="thin"/>
       <row id="SubscribeNewsgroups" class="acctCentralRow">
         <hbox> 
-          <text class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" onclick="SubscribeNewsgroups();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" onclick="SubscribeNewsgroups();"/> 
         </hbox> 
       </row>
       <separator id="SubscribeNewsgroups.separator" class="thin"/>
@@ -99,19 +98,19 @@ Rights Reserved.
 
       <row id="AccountsHeader" class="acctCentralTitleRow">
         <hbox class="acctCentralRowTitleBox">
-          <html>&accountsSectionHdr.label;</html> 
+          <description>&accountsSectionHdr.label;</description> 
         </hbox>
       </row>
       <separator id="AccountsHeader.separator" class="thin"/>
       <row id="AccountSettings" class="acctCentralRow">
         <hbox> 
-          <text class="acctCentralText acctCentralLinkText" value="&settingsLink.label;" onclick="ViewSettings(null);"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&settingsLink.label;" onclick="ViewSettings(null);"/> 
         </hbox> 
       </row>
       <separator id="AccountSettings.separator" class="thin"/>
       <row id="CreateAccount" class="acctCentralRow">
         <hbox> 
-          <text class="acctCentralText acctCentralLinkText" value="&newAcctLink.label;" onclick="CreateNewAccount();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&newAcctLink.label;" onclick="CreateNewAccount();"/> 
         </hbox> 
       </row>
       <separator id="CreateAccount.separator" class="thin"/>
@@ -122,25 +121,25 @@ Rights Reserved.
 
       <row id="AdvancedFeaturesHeader" class="acctCentralTitleRow">
         <hbox class="acctCentralRowTitleBox">
-          <html>&advFeaturesSectionHdr.label;</html> 
+          <description>&advFeaturesSectionHdr.label;</description> 
         </hbox> 
       </row>
       <separator id="AdvancedFeaturesHeader.separator" class="thin"/>
       <row id="SearchMessages" class="acctCentralRow">
         <hbox> 
-          <text class="acctCentralText acctCentralLinkText" value="&searchMsgsLink.label;" onclick="SearchMessages();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&searchMsgsLink.label;" onclick="SearchMessages();"/> 
         </hbox> 
       </row>
       <separator id="SearchMessages.separator" class="thin"/>
       <row id="CreateFilters" class="acctCentralRow">
         <hbox> 
-          <text class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" onclick="CreateMsgFilters();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" onclick="CreateMsgFilters();"/> 
         </hbox> 
       </row>
       <separator id="CreateFilters.separator" class="thin"/>
       <row id="OfflineSettings" class="acctCentralRow">
         <hbox> 
-          <text class="acctCentralText acctCentralLinkText" value="&offlineLink.label;" onclick="ViewSettings('am-offline.xul');"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&offlineLink.label;" onclick="ViewSettings('am-offline.xul');"/> 
         </hbox> 
       </row>
       <separator id="OfflineSettings.separator" class="thin"/>

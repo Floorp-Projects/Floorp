@@ -25,9 +25,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-login.dtd" >
-<page id="loginpage" 
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.wizardManager.onPageLoad('login');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
@@ -39,10 +37,10 @@ Rights Reserved.
   <separator/>
   
   <vbox class="box-wizardcontent" flex="1">
-    <html>&usernameDesc.label; &usernameExample.label;</html>
+    <description>&usernameDesc.label; &usernameExample.label;</description>
     <separator class="thin"/>
-    <hbox autostretch="never">
-      <text class="label" value="&usernameLabel.label;" for="username" style="width: 8em;"/>
+    <hbox align="center">
+      <label value="&usernameLabel.label;" control="username" style="width: 8em;"/>
       <textbox id="username" wsm_persist="true" flex="1"/>
     </hbox>
 <!--
@@ -50,14 +48,14 @@ Rights Reserved.
     
     <groupbox>
       <caption label="&passwordTitle.label;"/>
-      <html>&savePasswordDesc.label;</html>
-      <html>&savePasswordLabel.label;</html>
+      <description>&savePasswordDesc.label;</description>
+      <description>&savePasswordLabel.label;</description>
       <checkbox wsm_persist="true" oncommand="onSavePassword(event.target)"
                 id="rememberPassword"/>
       <vbox class="indent">
-        <text class="label" value="&passwordDesc.label;"/>
-        <hbox autostretch="never">
-          <text class="label" value="&passwordLabel.label;" for="password"/>
+        <label value="&passwordDesc.label;"/>
+        <hbox align="center">
+          <label value="&passwordLabel.label;" control="password"/>
           <textbox type="password" id="password" wsm_persist="true"/>
         </hbox>
       </vbox>

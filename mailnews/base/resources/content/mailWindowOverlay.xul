@@ -1369,7 +1369,7 @@ Rights Reserved.
       </toolbarbutton>
       <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
       <spacer flex="1"/>
-            <hbox id="throbber-box" autostretch="never">
+            <hbox id="throbber-box" align="center">
                 <button id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
             </hbox>
     </hbox>
@@ -1377,7 +1377,7 @@ Rights Reserved.
 </toolbox>
 
 <hbox id="searchBox" persist="collapsed" align="center">
-  <text id="searchCriteria" class="label" value="&SearchSubjectOrSender.label;"/>
+  <label id="searchCriteria" value="&SearchSubjectOrSender.label;"/>
   <textbox id="searchInput" flex ="1" oninput = "onSearchInput(event);" />
   <button id="advancedButton" label="&advancedButton.label;" tooltip="aTooltip" tooltiptext="&advancedButton.tooltip;" oncommand="onAdvancedSearch();"/>
 </hbox>

@@ -187,8 +187,6 @@ function SubscribeOnLoad()
   msgWindow.statusFeedback = gStatusFeedback;
   msgWindow.SetDOMWindow(window);
 
-  doSetOKCancel(subscribeOK,subscribeCancel);
-
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0]) {
 		if ( window.arguments[0].okCallback ) {

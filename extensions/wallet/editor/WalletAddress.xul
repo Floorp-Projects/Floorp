@@ -30,11 +30,8 @@
 %walletviewerDTD;
 ]>
 
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel();">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel();">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -47,7 +44,7 @@
   <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
-  <groupbox class="tabpanel" autostretch="never">
+  <groupbox align="start">
     <caption label="&address.title;"/>
     <grid class="indent" flex="1">
 
@@ -59,7 +56,7 @@
       <rows>
 
         <row align="center">
-          <html>&addressLine1.label;</html>
+          <description>&addressLine1.label;</description>
           <menulist id="street.line1" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -69,7 +66,7 @@
         </row>
 
         <row align="center">
-          <html>&addressLine2.label;</html>
+          <description>&addressLine2.label;</description>
           <menulist id="street.line2" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -79,7 +76,7 @@
         </row>
 
         <row align="center">
-          <html>&addressLine3.label;</html>
+          <description>&addressLine3.label;</description>
           <menulist id="street.line3" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -89,7 +86,7 @@
         </row>
 
         <row align="center">
-          <html>&addressCity.label;</html>
+          <description>&addressCity.label;</description>
           <menulist id="city" editable="true" autoSelectMenuitem="false"
                      onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -99,7 +96,7 @@
         </row>
 
         <row align="center">
-          <html>&addressState.label;</html>
+          <description>&addressState.label;</description>
           <menulist id="state" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -109,7 +106,7 @@
         </row>
 
         <row align="center">
-          <html>&addressZipcode.label;</html>
+          <description>&addressZipcode.label;</description>
           <hbox>
           <menulist id="postalcode.prefix" editable="true" autoSelectMenuitem="false" flex="55%" width="0"
                     onchange="Append(this)">
@@ -117,7 +114,7 @@
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
-          <text value="__"/>
+          <label value="__"/>
           <menulist id="postalcode.suffix" editable="true" autoSelectMenuitem="false" flex="45%" width="0"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -128,7 +125,7 @@
         </row>
 
         <row align="center">
-          <html>&addressCountry.label;</html>
+          <description>&addressCountry.label;</description>
           <menulist id="country" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -138,7 +135,7 @@
         </row>
 
         <row align="center">
-          <html>&email.label;</html>
+          <description>&email.label;</description>
           <menulist id="email" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -148,7 +145,7 @@
         </row>
 
         <row align="center">
-          <html>&homepage.label;</html>
+          <description>&homepage.label;</description>
           <menulist id="uri" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
 
@@ -163,5 +160,4 @@
     </grid>
 
   </groupbox>
-
-</window>
+</page>

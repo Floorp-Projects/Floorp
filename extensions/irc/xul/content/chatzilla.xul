@@ -33,10 +33,9 @@
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 
 <window id="main-window"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical" onload="onLoad();" onunload="onUnload();"
+        onload="onLoad();" onunload="onUnload();"
         onclose="return onClose();"
         persist="width height" windowtype="irc:chatzilla">
 
@@ -138,16 +137,16 @@
 
 <popupset id="contextMenus">
     <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">
-        <menuitem label="&op.value;" accesskey="&op.accesskey;" code="/op" />
+        <menuitem label="&op.value;" accesskey="&op.accesskey;" code="/op"/>
         <menuitem label="&deop.value;" accesskey="&deop.accesskey;"
-          code="/deop" />
+          code="/deop"/>
         <menuitem label="&voice.value;" accesskey="&voice.accesskey;"
-          code="/voice" />
+          code="/voice"/>
         <menuitem label="&devoice.value;" accesskey="&devoice.accesskey;"
-          code="/devoice" />  
+          code="/devoice"/>  
         <menuitem label="&kick.value;" accesskey="&kick.accesskey;"
-          code="/kick" />
-        <menuitem label="&whois.value;" accesskey="&whois.accesskey;" code="/whois" />
+          code="/kick"/>
+        <menuitem label="&whois.value;" accesskey="&whois.accesskey;" code="/whois"/>
     </popup>
 
     <popup id="outputContext"
@@ -304,7 +303,7 @@
           <template>
             <treechildren flex="1">
               <treeitem uri="..." flex="1">
-                <treerow crop="right">
+                <treerow >
                     <treecell align="center">
                       <image class="op-image"
                         state="rdf:http://home.netscape.com/NC-irc#op"/>
@@ -314,11 +313,11 @@
                         state="rdf:http://home.netscape.com/NC-irc#voice"/>
                     </treecell>
                     <treecell flex="1">
-                      <text class="user-nick"
+                      <label class="user-nick"
                         isop="rdf:http://home.netscape.com/NC-irc#op"
                         isvoice="rdf:http://home.netscape.com/NC-irc#voice"
                         value="rdf:http://home.netscape.com/NC-irc#nick"
-                        flex="1" crop="right"/>
+                        flex="1"/>
                     </treecell>
                 </treerow>
               </treeitem>
@@ -337,7 +336,7 @@
           </treecolgroup>
   
           <treehead>
-            <treerow crop="right">
+            <treerow >
               <treecell id="usercol-op"
                 resource="http://home.netscape.com/NC-irc#op"
                 class="treecell-header" label="O"
@@ -372,12 +371,12 @@
 
     </hbox> <!-- tabpanels-contents-box -->
   
-    <hbox id="tabstrip-box" flex="0" crop="right">
+    <hbox id="tabstrip-box" flex="0" >
       <scrollbox id="view-tabs" persist="collapsed" orient="horizontal"
         flex="1">
 
         <tabs class="tabs-bottom" id="views-tbar-inner" flex="1"
-          crop="right">
+          >
           <tab collapsed="true"/> <!-- dummy tab to keep the freaking xbl from 
                                        causing an exception -->
         </tabs>
@@ -396,66 +395,65 @@
 
 </vbox> <!-- outer-box -->
 
-<toolbox id="status-bar-tbox" crop="right">
+<toolbox id="status-bar-tbox">
   <toolbar id="status-bar-tbar" class="chromeclass-status" persist="collapsed" grippytooltip="aTooltip"
-    grippytooltiptext="&statusBar.tooltip;"
-    crop="right">
-    <hbox class="status-box" flex="20%" crop="right">
-      <vbox class="status-label" crop="right">
-        <text value="&network.label;" crop="right"/>
-        <text value="&channel.label;" crop="right"/>
-        <text value="&topicBy.label;" crop="right"/>
+    grippytooltiptext="&statusBar.tooltip;">
+    <hbox class="status-box" flex="20%" >
+      <vbox class="status-label" >
+        <label value="&network.label;"/>
+        <label value="&channel.label;"/>
+        <label value="&topicBy.label;"/>
       </vbox>
-      <vbox class="status-data" crop="right">
-         <text id="net-name" value="(one)" crop="right"/> 
-         <text id="channel-name" value="(none)" crop="right"/>
-         <text id="channel-topicby" value="(nobody)" crop="right"/>
+      <vbox class="status-data" >
+         <label id="net-name" value="(one)"/> 
+         <label id="channel-name" value="(none)"/>
+         <label id="channel-topicby" value="(nobody)"/>
       </vbox>
       <spacer flex="20%"/>
-      <vbox class="status-label" crop="right">
-         <text value="&server.label;" crop="right"/>
-         <text value="&mode.label;" crop="right"/>
-         <text value="&topic.label;" crop="right"/>
+      <vbox class="status-label" >
+         <label value="&server.label;"/>
+         <label value="&mode.label;"/>
+         <label value="&topic.label;"/>
       </vbox>
-      <vbox flex="80%" crop="right">
-        <hbox flex="1" crop="right">
-          <vbox class="status-data" crop="right">
-            <text id="server-name" value="(none)" crop="right"/>
-            <text id="channel-mode" value="(none)" crop="right"/>
+      <vbox flex="80%" >
+        <hbox flex="1" >
+          <vbox class="status-data" >
+            <label id="server-name" value="(none)"/>
+            <label id="channel-mode" value="(none)"/>
           </vbox>
           <spacer flex="100%"/>
-          <vbox class="status-label" crop="right">
-            <text value="&nickname.label;" crop="right"/>
-            <text value="&users.label;" crop="right"/>
+          <vbox class="status-label" >
+            <label value="&nickname.label;"/>
+            <label value="&users.label;"/>
           </vbox>
-          <vbox class="status-data" crop="right">
-            <text id="server-nick" value="(unknown)" crop="right"/>
-            <text id="channel-users" value="(none)" crop="right"/>
-          </vbox>
-          <spacer flex="100%"/>
-          <vbox class="status-label" crop="right">
-            <text value="&lag.label;" crop="right"/>
-            <text value="&limit.label;" crop="right"/>
-          </vbox>
-          <vbox class="status-data" crop="right">
-            <text id="server-lag" value="-1" crop="right"/>
-            <text id="channel-limit" value="(none)" crop="right"/>
+          <vbox class="status-data" >
+            <label id="server-nick" value="(unknown)"/>
+            <label id="channel-users" value="(none)"/>
           </vbox>
           <spacer flex="100%"/>
-          <vbox class="status-label" crop="right"
+          <vbox class="status-label" >
+            <label value="&lag.label;"/>
+            <label value="&limit.label;"/>
+          </vbox>
+          <vbox class="status-data" >
+            <label id="server-lag" value="-1"/>
+            <label id="channel-limit" value="(none)"/>
+          </vbox>
+          <spacer flex="100%"/>
+          <vbox class="status-label" 
             collapsed="true">
-            <text value="&lastPing.label;" crop="right"/>
-            <text value="&key.label;" crop="right"/>
+            <label value="&lastPing.label;"/>
+            <label value="&key.label;"/>
           </vbox>
-          <vbox class="status-data" crop="right"
+          <vbox class="status-data" 
             collapsed="true">
-            <text id="last-ping" value="(never)" crop="right"/>
-          <text id="channel-key" value="(none)" crop="right"/>
+            <label id="last-ping" value="(never)"/>
+          <label id="channel-key" value="(none)"/>
           </vbox>
         </hbox>
-        <hbox flex="1" crop="right">
-          <vbox class="status-data" flex="1" crop="right">
-            <text id="channel-topic" value="(none)" crop="right"/>
+        <hbox flex="1">
+          <vbox class="status-data" flex="1">
+            <label id="channel-topic" value="(none)"/>
           </vbox>
         </hbox>
       </vbox>

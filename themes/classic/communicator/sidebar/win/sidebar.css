@@ -174,4 +174,8 @@
       border-right          : 1px solid ThreeDShadow;
     }  
 
+  .panelheader-text
+    {
+      margin                : 0px 0px 0px 0px !important;
+    }
     

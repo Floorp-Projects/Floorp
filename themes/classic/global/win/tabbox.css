@@ -13,7 +13,7 @@ tabs + tabpanels {
 }
 
 /* bottom tabs */
-tabbox[orient="vertical"] > tabpanels {
+tabbox > tabpanels {
   border-top: 1px solid ThreeDHighlight;
   border-bottom: none;
   border-left: 1px solid ThreeDHighlight;
@@ -49,12 +49,12 @@ tabpanels.light {
 /* tabs-spacer ========================== */
 
 /* top tabs */
-tabbox[orient="vertical"] > tabs > .tabs-spacer {
+tabbox > tabs > .tabs-spacer {
   border-bottom: 1px solid ThreeDHighlight;
 }
 
 /* bottom tabs */
-tabbox[orient="vertical"] > tabpanels + tabs > .tabs-spacer {
+tabbox > tabpanels + tabs > .tabs-spacer {
   border-top: 1px solid ThreeDShadow !important;
   border-bottom: none;
 }

@@ -48,7 +48,7 @@
 %brandDTD;
 ]> 
 
-<window id="editorWindow" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="editorWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="EditorOnLoad()"
         onunload="EditorShutdown()"
@@ -58,11 +58,9 @@
         titlemodifier="&editorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         windowtype="composer:html"
-        orient="vertical"
         width="640" height="480"
         screenX="10" screenY="10"
-        persist="screenX screenY width height sizemode"
-        >
+        persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
 <!-- 
@@ -246,7 +244,7 @@
         <editor type="content-primary" id="content-frame" src="about:blank" context="editorContentContext" flex="1"/>
       </stack>
       <vbox>
-        <text class="label" id="doctype-text" style="width:1em" crop="right"/>
+        <label id="doctype-text" style="width:1em"/>
         <textbox class="source-editor plain" id="content-source" multiline="true" rows="1"
                    flex="1" style="width:1em; height:1em;"/>
       </vbox>
@@ -267,7 +265,7 @@
     <!-- Some of this is from globarOverlay.xul -->
     <statusbar id="status-bar">
       <hbox id="component-bar"/>
-      <statusbarpanel id="statusText" label="&statusText.label;" flex="1" crop="right"/>
+      <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
       <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
     </statusbar>
     

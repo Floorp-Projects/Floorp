@@ -30,9 +30,7 @@ Contributors:
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-offline.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      xmlns:html="http://www.w3.org/1999/xhtml"
-      onload="parent.onPanelLoaded('am-offline.xul');"
-      orient="vertical">
+      onload="parent.onPanelLoaded('am-offline.xul');">
  
     <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/> 
 
@@ -44,15 +42,15 @@ Contributors:
     <broadcaster id="bc_keepMsg"/>
     <broadcaster id="bc_removeBody"/>
 
-    <text hidden="true" wsm_persist="true" id="server.type"/>  
+    <label hidden="true" wsm_persist="true" id="server.type"/>  
 
     <hbox id="headertitle" class="box-smallheader"/>
 
-    <groupbox orient="vertical" id="offline.titlebox"  hidable="true" hidefor="pop3">
+    <groupbox id="offline.titlebox"  hidable="true" hidefor="pop3">
       <caption label="&offlineGroupTitle.label;"/>
 
-    <html iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&offlineImapDesc.label;</html>
-    <html iscontrolcontainer="true" hidable="true" hidefor="pop3,imap">&offlineNntpDesc.label;</html>
+    <description iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&offlineImapDesc.label;</description>
+    <description iscontrolcontainer="true" hidable="true" hidefor="pop3,imap">&offlineNntpDesc.label;</description>
 
     <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp" 
               id="offline.downloadBodiesOnGetNewMail" wsm_persist="true" 
@@ -65,7 +63,7 @@ Contributors:
 
     <separator class="thin" hidable="true" hidefor="pop3,nntp"/>
 
-    <html iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&selectButtonDesc.label;</html>
+    <description iscontrolcontainer="true" hidable="true" hidefor="pop3,nntp">&selectButtonDesc.label;</description>
 
     <hbox iscontrolcontainer="true" hidable="true" hidefor="pop3" align="right">
         <button label="&offlineSelect.label;" oncommand="onClickSelect()" id="selectFolderButton"/>
@@ -74,42 +72,42 @@ Contributors:
     </groupbox>    
     
     <separator class="thin"/>
-    <groupbox orient="vertical" id="diskspace.titlebox">
+    <groupbox id="diskspace.titlebox">
       <caption label="&diskspaceGroupTitle.label;"/>
 
-    <html iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineMsg.label;</html>
-    <html iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&offlinePopDesc.label;</html>
+    <description iscontrolcontainer="true" hidable="true" hidefor="pop3">&offlineMsg.label;</description>
+    <description iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&offlinePopDesc.label;</description>
 
-    <hbox autostretch="never" align="center">
+    <hbox align="center">
         <checkbox  wsm_persist="true" id="offline.notDownload"
             label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;" oncommand="onCheckItem('bc_notDownload', 'offline.notDownload');"/>
         <textbox wsm_persist="true" id="offline.notDownloadMin" size="5" value="50"  observes="bc_notDownload"/> 
-        <text class="label" value="&kb.label;"/>
+        <label value="&kb.label;"/>
     </hbox>
         
     <checkbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" 
          wsm_persist="true" id="nntp.downloadUnread" label="&nntpDownloadUnread.label;" accesskey="&nntpDownloadUnread.accesskey;"/>
-    <hbox iscontrolcontainer="true" align="center" hidable="true" hidefor="pop3,imap" autostretch="never">
+    <hbox iscontrolcontainer="true" align="center" hidable="true" hidefor="pop3,imap">
         <checkbox wsm_persist="true" id="nntp.downloadMsg" label="&nntpDownloadMsg.label;" accesskey="&nntpDownloadMsg.accesskey;" oncommand="onCheckItem('bc_downloadMsg', 'nntp.downloadMsg');"/>
         <textbox wsm_persist="true" id="nntp.downloadMsgMin" size="5" value="30" observes="bc_downloadMsg"/>
-        <text class="label" value="&daysAgo.label;"/>
+        <label value="&daysAgo.label;"/>
     </hbox>
 
     <separator/>
-    <vbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap"  autostretch="never">  
-    <html class="desc">&nntpCleanup.label;</html>
+    <vbox iscontrolcontainer="true" hidable="true" hidefor="pop3,imap" align="start">  
+    <description class="desc">&nntpCleanup.label;</description>
 
-    <radiogroup orient="vertical"  wsm_persist="true" id="nntp.keepMsg" pref="true" preftype="int" prefattribute="data">
+    <radiogroup wsm_persist="true" id="nntp.keepMsg">
         <hbox flex="1" align="center">
-            <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepOldMsg" data="2" label="&nntpKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
+            <radio wsm_persist="true" id="nntp.keepOldMsg" value="2" label="&nntpKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
             <textbox wsm_persist="true" id="nntp.keepOldMsgMin" size="5" value="30" observes="bc_keepMsg"/>
-            <text class="label" value="&days.label;"/>
+            <label value="&days.label;"/>
         </hbox>
-        <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepAllMsg" data="1" label="&nntpKeepAll.label;" oncommand="onCheckKeepMsg();"/>
+        <radio wsm_persist="true" id="nntp.keepAllMsg" value="1" label="&nntpKeepAll.label;" oncommand="onCheckKeepMsg();"/>
         <hbox flex="1" align="center">
-            <radio group="nntp.keepMsg" wsm_persist="true" id="nntp.keepNewMsg" data="3" label="&nntpKeepNew.label;" oncommand="onCheckKeepMsg();"/>
+            <radio wsm_persist="true" id="nntp.keepNewMsg" value="3" label="&nntpKeepNew.label;" oncommand="onCheckKeepMsg();"/>
             <textbox wsm_persist="true" id="nntp.keepNewMsgMin" size="5" value="30" observes="bc_keepMsg"/>
-            <text class="label" value="&message.label;"/>
+            <label value="&message.label;"/>
         </hbox>
     </radiogroup>
 
@@ -117,7 +115,7 @@ Contributors:
     <hbox flex="1" align="center">
         <checkbox wsm_persist="true" id="nntp.removeBody" label="&nntpRemoveBody.label;" oncommand="onCheckItem('bc_removeBody','nntp.removeBody');"/>
         <textbox wsm_persist="true" id="nntp.removeBodyMin" size="5" value="30" observes="bc_removeBody"/>
-        <text class="label" value="&days.label;"/>
+        <label value="&days.label;"/>
     </hbox>
     </vbox>
     </groupbox>

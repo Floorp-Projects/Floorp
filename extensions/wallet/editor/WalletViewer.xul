@@ -7,11 +7,9 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletViewer.dtd" >
 
 <window id="walletViewer" 
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&windowtitle.label;" 
-        orient="vertical"
         class="dialog"
         persist="screenX screenY width height"
         screenX="24" screenY="24"
@@ -51,7 +49,7 @@
   <hbox flex="1">
     <!-- tree sidebar -->
     <vbox style="width: 0px" flex="3">
-      <tree class="inset" id="panelTree" style="width: 0px" flex="3"/>      
+      <tree id="panelTree" style="width: 0px" flex="3"/>      
       <button id="clearButton" label="&removeall.label;" oncommand="ClearAll()"/>
     </vbox>
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="7"/>

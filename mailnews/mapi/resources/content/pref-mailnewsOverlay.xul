@@ -35,7 +35,7 @@ Contributor(s):
   ]]>
 </script>         
 <script type="application/x-javascript" src="chrome://messenger/content/pref-mailnewsOverlay.js"/>
-<hbox autostretch="never" id="mapi">
+<hbox align="center" id="mapi">
   <checkbox id="mailnewsEnableMapi" label="&enableMapi.label;"
             accesskey="&enableMapi.accesskey;" 
             initFunc="mailnewsOverlayInit();"/>

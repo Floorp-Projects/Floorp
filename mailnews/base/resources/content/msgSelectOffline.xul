@@ -30,14 +30,11 @@ Contributors:
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgSynchronize.dtd" >
-<window	xmlns:nc="http://home.netscape.com/NC-rdf#"
-        xmlns:html="http://www.w3.org/1999/xhtml"
+<dialog	xmlns:nc="http://home.netscape.com/NC-rdf#"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="select-offline" 
         title="&MsgSelect.label;"
-        orient="vertical"
-        class="dialog"
         width="450" height="400"
         persist="width height"
         onload="selectOnLoad();">
@@ -53,7 +50,7 @@ Contributors:
 <script type="application/x-javascript" src="chrome://messenger/content/msgSynchronize.js"/>
 	
     <keyset id="keyset"/>
-    <html class="desc">&MsgSelectDesc.label;</html>
+    <description class="desc">&MsgSelectDesc.label;</description>
 
     <grid flex="1">
 
@@ -119,7 +116,4 @@ Contributors:
     </row>
     </rows>
     </grid>
-
-    <separator/>
-    <hbox id="okCancelButtonsRight"/>
-</window>
+</dialog>

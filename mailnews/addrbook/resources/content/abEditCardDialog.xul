@@ -25,19 +25,12 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardOverlay.xul"?>
 
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    id="abcardWindow"
-		onload="OnLoadEditCard()"
-		class="dialog"
-		orient="vertical">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="abcardWindow"
+        onload="OnLoadEditCard()">
 
   <stringbundleset id="stringbundleset"/>
+  <vbox id="editcard"/>	
 
-	<keyset id="dialogKeys"/>
-
-	<vbox id="editcard"/>
-	
-	<hbox id="okCancelButtons"/>
-
-</window>
+</dialog>
 

@@ -7,19 +7,16 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  flex="100%"
-  onload="onLoad();"
-  orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="onLoad();">
 
   <script type="application/x-javascript" src="am-smtp.js"/>
 
   <hbox class="box-smallheader" title="&smtpServer.label;"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
 
-  <html>&smtpDesc.label;</html>
+  <description>&smtpDesc.label;</description>
 
   <separator/>
 
@@ -31,7 +28,6 @@
     <spacer flex="1"/>
     <button label="&advanced.label;" oncommand="onAdvanced(event);"
             wsm_persist="true" id="smtp.advancedbutton" 
-            pref="true" preftype="bool" prefattribute="disabled" 
             prefstring="mail.smtpserver.%serverkey%.advanced.disable"/>
   </hbox>
   

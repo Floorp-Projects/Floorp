@@ -34,11 +34,9 @@
 
 <window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
     onunload="onCancel()"
-    persist="screenX screenY"
-    orient="vertical">
+    persist="screenX screenY">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -49,7 +47,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
-  <groupbox orient="vertical"><caption label="&size.label;"/>
+  <groupbox><caption label="&size.label;"/>
     <grid>
       <columns>
         <column flex="1"/>
@@ -58,17 +56,17 @@
       </columns>
       <rows>
         <row align="center">
-          <text class="label align-right" text-align="right" value="&numRowsEditField.label;" />
+          <label class="align-right" value="&numRowsEditField.label;" />
           <textbox class="narrow" id="rowsInput" oninput="ChangeRowOrColumn(this.id)" />
           <spacer/>
         </row>
         <row align="center">
-          <text class="label align-right" value="&numColumnsEditField.label;" />
+          <label class="align-right" value="&numColumnsEditField.label;" />
           <textbox class="narrow" id="columnsInput" oninput="ChangeRowOrColumn(this.id)" />
           <spacer/>
         </row>
         <row align="center">
-          <text class="label align-right" value="&widthEditField.label;" />
+          <label class="align-right" value="&widthEditField.label;" />
           <textbox class="narrow" id="widthInput" oninput="forceInteger(this.id)" />
           <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
             <!-- child elements are appended by JS -->
@@ -79,10 +77,10 @@
   </groupbox>
   <spacer class="spacer"/>
   <hbox align="center">
-    <text class="label align-right" text-align="right" value="&borderEditField.label;"
+    <label class="align-right" value="&borderEditField.label;"
         tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;" />
     <textbox class="narrow" id="borderInput" oninput="forceInteger(this.id)" />
-    <text class="label" value="&pixels.label;"/>  
+    <label value="&pixels.label;"/>  
   </hbox>
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>

@@ -28,7 +28,6 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletPreview.dtd" >
 
 <window title="&windowtitle.label;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical" class="dialog" onload="Startup()">
 
@@ -42,7 +41,7 @@
   
   <spacer/>
   
-  <hbox class="tabpanel inset" flex="1" style="overflow: auto;">
+  <hbox class="inset" flex="1">
     <grid class="indent" flex="1">
       <columns flex="1">
         <column flex="1" crop="right"/>

@@ -32,30 +32,28 @@ Contributors:
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-addressing.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      xmlns:html="http://www.w3.org/1999/xhtml"
-      onload="onLoad();"
-      orient="vertical">
+      onload="onLoad();">
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-addressing.js"/>
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
-  <text hidden="true" wsm_persist="true" id="identity.directoryServer"
+  <label hidden="true" wsm_persist="true" id="identity.directoryServer"
         pref="true" preftype="string" prefattribute="value"
         prefstring="mail.identity.%identitykey%.directoryServer"/>
-  <text hidden="true" wsm_persist="true" id="identity.overrideGlobalPref"
+  <label hidden="true" wsm_persist="true" id="identity.overrideGlobalPref"
         pref="true" preftype="bool" prefattribute="value"
         prefstring="mail.identity.%identitykey%.overrideGlobal_Pref"/>
-  <text hidden="true" wsm_persist="true" id="overrideGlobalPref" value=""/>
-  <text hidden="true" wsm_persist="true" id="directoryServer" value=""/>
+  <label hidden="true" wsm_persist="true" id="overrideGlobalPref" value=""/>
+  <label hidden="true" wsm_persist="true" id="directoryServer" value=""/>
   <hbox class="box-smallheader" title="&addressing.label;"/>
   
   <separator class="thin"/>
   <vbox flex="1">
-    <html>&addressingText.label;</html>
-	<radiogroup orient="vertical" class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
+    <description>&addressingText.label;</description>
+	<radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
       <observes element="identity.overrideGlobalPref" attribute="disabled"/>
-      <radio group="ldapAutocomplete" id="useGlobalPref" value="0" label="&useGlobal.label;"/>
-      <hbox autostretch="never">
-        <radio group="ldapAutocomplete" id="directories" value="1" label="&directories.label;"/>
+      <radio id="useGlobalPref" value="0" label="&useGlobal.label;"/>
+      <hbox align="center">
+        <radio id="directories" value="1" label="&directories.label;"/>
         <menulist id="directoriesList" wsm_persist="true" flex="1">
           <menupopup onpopupshowing="createDirectoriesList(false);" id="directoriesListPopup"/>
         </menulist>

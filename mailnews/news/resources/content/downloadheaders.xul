@@ -30,8 +30,7 @@ Contributor(s):
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/downloadheaders.dtd">
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog" style="max-width: 27em; -moz-user-focus: ignore !important"
-        orient="vertical"
+        class="dialog" style="max-width: 27em;"
         onload="OnLoad()">
 
   <stringbundle id="bundle_news" src="chrome://messenger/locale/news.properties"/>
@@ -39,20 +38,20 @@ Contributor(s):
 
   <keyset id="dialogKeys"/>
   
-  <html class="header" style="width: 25em; max-width: 25em;" id="newsgroupLabel"/> 
-  <html style="width: 25em; max-width: 25em;" id="info"/>
+  <description class="header" style="width: 25em; max-width: 25em;" id="newsgroupLabel"/> 
+  <description style="width: 25em; max-width: 25em;" id="info"/>
   <separator class="thin"/>
   <vbox class="indent">
-    <radiogroup orient="vertical" id="downloadGroup" autostretch="never">
-      <radio group="downloadGroup" id="all" label="&all.label;" oncommand="setupDownloadUI(false);"/> 
+    <radiogroup id="downloadGroup">
+      <radio id="all" label="&all.label;" oncommand="setupDownloadUI(false);"/> 
       <separator class="thin"/>
-      <hbox autostretch="never" valign="middle">
-        <radio group="downloadGroup" id="some" checked="true" label="&download.label;" oncommand="setupDownloadUI(true);"/>
+      <hbox align="center" valign="middle">
+        <radio id="some" checked="true" label="&download.label;" oncommand="setupDownloadUI(true);"/>
         <textbox id="number" size="7"/>
-        <text class="label" value="&headers.label;" />
+        <description value="&headers.label;" />
       </hbox>
     </radiogroup>
-    <hbox class="indent" autostretch="never">
+    <hbox class="indent" align="start">
       <checkbox id="markread" label="&mark.label;"/>
     </hbox>
   </vbox>

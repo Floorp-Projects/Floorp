@@ -24,7 +24,7 @@
     <content>
       <xul:hbox class="panelheader-box-1" flex="1">
         <xul:image class="panelheader-image" inherits="src"/>
-        <xul:text class="panelheader-icon" inherits="value=label,crop"/>
+        <xul:label class="panelheader-icon" inherits="value=label,crop"/>
       </xul:hbox>
     </content>
   </binding>

@@ -21,7 +21,6 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -30,11 +29,8 @@
 %walletviewerDTD;
 ]>
 
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel();">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel();">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -46,7 +42,7 @@
   <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
-  <groupbox class="tabpanel" autostretch="never">
+  <groupbox align="start">
     <caption label="&credit.title;"/>
     <grid class="indent" flex="1">
 
@@ -58,7 +54,7 @@
       <rows>
 
         <row align="center">
-          <html>&creditType.label;</html>
+          <description>&creditType.label;</description>
           <menulist id="card.type" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -68,7 +64,7 @@
         </row>
 
         <row align="center">
-          <html>&creditNumber.label;</html>
+          <description>&creditNumber.label;</description>
           <menulist id="card.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -78,16 +74,16 @@
         </row>
 
         <row align="center">
-          <html>&creditExpires.label;</html>
+          <description>&creditExpires.label;</description>
           <hbox align="center">
-            <text value="&creditExpiresMonth.label;" />
+            <label value="&creditExpiresMonth.label;" />
             <menulist id="card.expdate.month" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <text value="&creditExpiresYear.label;" />
+            <label value="&creditExpiresYear.label;" />
             <menulist id="card.expdate.year" editable="true" autoSelectMenuitem="false" flex="60%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -98,7 +94,7 @@
         </row>
 
         <row align="center">
-          <html>&creditName.label;</html>
+          <description>&creditName.label;</description>
           <menulist id="card.name" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -110,5 +106,4 @@
 
     </grid>
   </groupbox>
-
-</window>
+</page>

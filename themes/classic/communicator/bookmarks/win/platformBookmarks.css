@@ -10,6 +10,7 @@
       border-bottom       : none;
       border-left         : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
+      margin              : 0px 0px 0px 0px !important;
     }
 
   .bookmarks-window-tree > .tree-container-treerows

@@ -1,19 +1,12 @@
 <?xml version="1.0"?>
 
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
-
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/pref-composing_messages.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');"
-        orient="vertical"
-        class="color-dialog">
-
-  <popupset id="aTooltipSet"/>
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');">
     
   <script type="application/x-javascript">
   <![CDATA[
@@ -59,29 +52,27 @@
     
   <hbox class="box-smallheader" title="&pane.title;"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&forwardReply.label;"/>
     
-    <hbox autostretch="never">
-      <text class="label" value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;"/>
+    <hbox align="center">
+      <label value="&forwardMsg.label;" accesskey="&forwardMsg.accesskey;"/>
       <menulist id="forwardMessageMode" 
-                pref="true" preftype="int" prefstring="mail.forward_message_mode"
-                prefattribute="value">
+                prefstring="mail.forward_message_mode">
         <menupopup>
           <menuitem value="2" label="&inline.label;" accesskey="&inline.accesskey;"/>
           <menuitem value="0" label="&asAttachment.label;" accesskey="&asAttachment.accesskey;"/>
         </menupopup>
       </menulist>
     </hbox>
-    <hbox autostretch="never">
+    <hbox align="center">
       <checkbox id="autoQuote" label="&autoQuote.label;" 
-                pref="true" preftype="bool" prefstring="mail.auto_quote"
-                prefattribute="checked" oncommand="doEnabling();"/>
+                prefstring="mail.auto_quote"
+                oncommand="doEnabling();"/>
     </hbox>
-    <hbox class="indent" autostretch="never" id="thenBox">
-      <text class="label" value="&then.label;" accesskey="&then.accesskey;" for="replyOnTop"/>
-      <menulist id="replyOnTop" pref="true" preftype="int" prefstring="mailnews.reply_on_top"
-                prefattribute="value">
+    <hbox class="indent" align="center" id="thenBox">
+      <label value="&then.label;" accesskey="&then.accesskey;" control="replyOnTop"/>
+      <menulist id="replyOnTop" preftype="int" prefstring="mailnews.reply_on_top">
         <menupopup>
           <menuitem value="1" label="&aboveQuote.label;" accesskey="&aboveQuote.accesskey;"/>
           <menuitem value="0" label="&belowQuote.label;" accesskey="&belowQuote.accesskey;"/>
@@ -92,29 +83,26 @@
   </groupbox>
 
   <!-- Composing Mail -->
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox align="start">
     <caption label="&sendingMessagesHeader.label;"/>
         
     <checkbox id="spellCheckBeforeSend" label="&spellCheck.label;"
-              pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend"
-              prefattribute="checked"/>
+              prefstring="mail.SpellCheckBeforeSend"/>
   
-  <checkbox id="strictlyMime" label="&useMIME.label;"
-                pref="true" preftype="bool" prefstring="mail.strictly_mime"
-                prefattribute="checked"/>
+    <checkbox id="strictlyMime" label="&useMIME.label;"
+              prefstring="mail.strictly_mime"/>
     
-	<hbox autostretch="never" align="center">
-	<text class="label" value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" for="wrapLength"/>
-    <textbox id="wrapLength" size="3" pref="true" preftype="int"
+	<hbox align="center">
+        <label value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" control="wrapLength"/>
+    <textbox id="wrapLength" size="3" preftype="int"
                prefstring="mailnews.wraplength" prefattribute="value"/>
-    <text class="label" value="&char.label;"/>
+    <label value="&char.label;"/>
   </hbox>
 
-   <hbox autostretch="never">
-    <text class="label" value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" for="sendDefaultCharsetList"/>
+   <hbox align="center">
+    <label value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" page="sendDefaultCharsetList"/>
     <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
-              pref="true" preftype="localizedstring" prefstring="mailnews.send_default_charset"
-              prefattribute="value">
+              preftype="localizedstring" prefstring="mailnews.send_default_charset">
       <template>
         <menupopup>
           <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
@@ -125,14 +113,13 @@
   </groupbox>
   
 <!--
-  <groupbox orient="vertical" autostretch="never">
+  <groupbox align="start">
   <caption label="&languages.label;"/>
 
-   <hbox autostretch="never">
-    <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>
+   <hbox align="center">
+    <label value="&sendDefaultCharset.label;" control="sendDefaultCharsetList"/>
     <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
-              pref="true" preftype="localizedstring" prefstring="mailnews.send_default_charset"
-              prefattribute="value">
+              preftype="localizedstring" prefstring="mailnews.send_default_charset">
       <template>
         <menupopup>
           <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
@@ -142,8 +129,4 @@
     </hbox> 
   </groupbox>
 -->
-              
-      
-
-    
-</window>
+</page>

@@ -101,6 +101,7 @@ label.headerValue {
   min-height: 16px;
   color: #424F63;
   text-decoration: underline;
+  margin: 0px 0px 0px 0px;
 }
 
 .emailDisplayButton:hover {

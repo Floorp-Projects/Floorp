@@ -8,9 +8,9 @@
     <content>
       <xul:hbox class="box-smallheader-text-container" align="center" flex="1">
         <children/>
-        <xul:text class="box-smallheader-left" inherits="value=title"/>
+        <xul:label class="box-smallheader-left" inherits="value=title"/>
         <xul:spacer flex="1"/>
-        <xul:text class="box-smallheader-right" inherits="value=description"/>
+        <xul:label class="box-smallheader-right" inherits="value=description"/>
       </xul:hbox>
     </content>
   </binding>
@@ -20,8 +20,8 @@
       <xul:hbox class="largeheader-box" flex="1">
         <xul:vbox class="largeheader-text-container">
           <xul:spacer flex="1"/>
-          <xul:text class="largeheader-header-text" inherits="value=title" crop="right"/>
-          <xul:html class="largeheader-desc-text" inherits="value=description"/>
+          <xul:label class="largeheader-header-text" inherits="value=title" crop="right"/>
+          <xul:description class="largeheader-desc-text" inherits="value=description"/>
           <children/>
           <xul:spacer flex="1"/>
         </xul:vbox>

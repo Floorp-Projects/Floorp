@@ -28,12 +28,10 @@
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/sidebar-editor.dtd" >
-<window
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="Init('chrome://editor/content/sidebar-editor.rdf',
-               'NC:EditorSidebarRoot');" orient="vertical">
+<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Init('chrome://editor/content/sidebar-editor.rdf',
+                     'NC:EditorSidebarRoot');"
 
 <script src="chrome://communicator/content/sidebar/sidebar.js" />
 <vbox id="sidebox" flex="1">

@@ -25,9 +25,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-identity.dtd" >
-<page id="identitypage" 
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.wizardManager.onPageLoad('identity');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
@@ -38,13 +36,13 @@ Rights Reserved.
   
   <separator/>
   <vbox class="box-wizardcontent" flex="1">
-    <html>&identityDesc.label;</html>
+    <description>&identityDesc.label;</description>
     <separator/>
-    <html>&fullnameDesc.label; &fullnameExample.label;</html>
+    <description>&fullnameDesc.label; &fullnameExample.label;</description>
     <separator class="thin"/>
-    <hbox autostretch="never">
-      <text class="awIdentityLabel" for="fullName" value="&fullnameLabel.label;"/>
-      <textbox mailtype="identity" wsm_persist="true" name="fullName" id="fullName" flex="6"/>
+    <hbox align="center">
+      <label class="awIdentityLabel" control="fullName" value="&fullnameLabel.label;"/>
+      <textbox mailtype="identity" wsm_persist="true" name="fullName" id="fullName"/>
     </hbox>
     <separator/>  
     <grid>
@@ -53,14 +51,14 @@ Rights Reserved.
       </columns>
       <rows>
         <row>
-          <html id="emailDescText"/> 
+          <description id="emailDescText"/> 
         </row>
         <separator class="thin"/>
         <row>
-          <hbox autostretch="never">
-            <text class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
+          <hbox align="center">
+            <label class="awIdentityLabel" id="emailFieldLabel" value="&emailLabel.label;"/>
             <textbox wsm_persist="true" mailtype="identity" name="email" id="email" flex="6"/>
-            <text id="postEmailText"/>
+            <label id="postEmailText"/>
           </hbox>
         </row>
       </rows>

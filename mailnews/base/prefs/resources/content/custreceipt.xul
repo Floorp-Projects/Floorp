@@ -6,18 +6,15 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/custreceipt.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    title="&window.title;"
-    class="dialog"
-    orient="vertical">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&window.title;"
+        class="dialog">
 
   <vbox style="width:100%">
   <hbox style="width:100%">
       <spacer flex="1"/>
-     <text class="label" value="&notInToCc.label;" accesskey="&notInToCc.accesskey;" for="NotInToCc"/>
-      <menulist id="NotInToCc" pref="true" preftype="int" prefstring="mail.mdn.report.not_in_to_cc"
-                prefattribute="value">
+     <label value="&notInToCc.label;" accesskey="&notInToCc.accesskey;" control="NotInToCc"/>
+      <menulist id="NotInToCc" prefstring="mail.mdn.report.not_in_to_cc">
         <menupopup>
           <menuitem value="0" label="&neverSend.label;"/>
           <menuitem value="1" label="&automatically.label;"/>
@@ -28,9 +25,8 @@
 
   <hbox style="width:100%">
       <spacer flex="1"/>
-      <text class="label" value="&outside.label;" accesskey="&outside.accesskey;" for="OutsideDomain"/>
-      <menulist id="OutsideDomain" pref="true" preftype="int" prefstring="mail.mdn.report.outside_domain"
-                prefattribute="value">
+      <label value="&outside.label;" accesskey="&outside.accesskey;" control="OutsideDomain"/>
+      <menulist id="OutsideDomain" prefstring="mail.mdn.report.outside_domain">
         <menupopup>
           <menuitem value="0" label="&neverSend.label;"/>
           <menuitem value="1" label="&automatically.label;"/>
@@ -41,9 +37,8 @@
 
   <hbox style="width:100%">
       <spacer flex="1"/>
-     <text class="label" value="&other.label;" accesskey="&other.accesskey;" for="Other"/>
-      <menulist id="Other" pref="true" preftype="int" prefstring="mail.mdn.report.other"
-                prefattribute="value">
+     <label value="&other.label;" accesskey="&other.accesskey;" for="Other"/>
+      <menulist id="Other" prefstring="mail.mdn.report.other">
         <menupopup>
           <menuitem value="0" label="&neverSend.label;"/>
           <menuitem value="1" label="&automatically.label;"/>

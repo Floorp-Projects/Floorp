@@ -32,18 +32,12 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SmtpServerEdit.dtd">
 
-<window class="dialog"
-  title="&smtpEditTitle.label;"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical"
-  onload="onLoad();"
->
+<dialog title="&smtpEditTitle.label;"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad();"
+        ondialogaccept="return onAccept();">
 
 <script type="application/x-javascript" src="SmtpServerEdit.js"/>
-<keyset id="dialogKeys"/>
 <vbox id="smtpServerEditor"/>
-<separator/>
-<hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>

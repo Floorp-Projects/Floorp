@@ -122,7 +122,6 @@ function filterEditorOnLoad()
       gFilterNameElement.value = name;
     }
     gFilterNameElement.focus();
-    doSetOKCancel(onOk, onCancel);
     moveToAlertPosition();
 }
 
@@ -131,7 +130,7 @@ function onEnterInSearchTerm()
   // do nothing.  onOk() will get called since this is a dialog
 }
 
-function onOk()
+function onAccept()
 {
     if (duplicateFilterNameExists(gFilterNameElement.value))
     {
@@ -146,24 +145,24 @@ function onOk()
             );
         }
 
-        return;
+        return false;
     }
 
 
-    if (!saveFilter()) return;
+    if (!saveFilter()) return false;
 
     // parent should refresh filter list..
     // this should REALLY only happen when some criteria changes that
     // are displayed in the filter dialog, like the filter name
     window.arguments[0].refresh = true;
-    window.close();
+    return true;
 }
 
 function onCancel()
 {
   if (top.okCallback)
     top.okCallback();
-  window.close();
+  return true;
 }
 
 function duplicateFilterNameExists(filterName)
@@ -230,6 +229,7 @@ function initializeDialog(filter)
             gActionPriority.selectedItem = selectedPriority;
         }
     }
+
     else if (filter.action == nsMsgFilterAction.Label) {
       var selectedLabel;
       // initialize label
@@ -239,8 +239,6 @@ function initializeDialog(filter)
             gActionLabel.selectedItem = selectedLabel;
         }
     }
-
-
 
     var scope = getScope(filter);
     setSearchScope(scope);

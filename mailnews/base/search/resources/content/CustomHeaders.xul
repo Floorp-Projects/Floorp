@@ -27,7 +27,6 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/CustomHeaders.dtd">
 <window class="dialog" id="customHeaders"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical"
   windowtype="mailnews:customheaders"
   onload="onLoad();"
   width="300"
@@ -47,15 +46,15 @@ Original Contributor(s): Navin Gupta <naving@netscape.com>
     </columns>
     <rows>
       <row>
-        <html>&newMsgHeader.label;</html>
+        <description>&newMsgHeader.label;</description>
       </row>
       <row>
-        <textbox flex="50%" id="headerInput"/>
+        <textbox id="headerInput"/>
       </row>
 
       <row flex="1">
         <vbox>
-          <tree id="headerTree" class="inset" flex="1" onclick="updateButtons();">
+          <tree id="headerTree" flex="1" onclick="updateButtons();">
             <treechildren id="headerList" flex="1"/>
           </tree>
         </vbox>

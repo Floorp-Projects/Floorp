@@ -25,55 +25,51 @@
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorHLineProperties.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
-   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   xmlns:html="http://www.w3.org/1999/xhtml"
-   onload = "Startup()"
-   onunload="onCancel()"
-   orient="vertical">
+<dialog title="&windowTitle.label;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Startup()"
+        ondialogaccept="return onAccept();"
+        ondialogcancel="return onCancel();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <!--- Element-specific methods -->
   <script type="application/x-javascript" src="chrome://editor/content/EdHLineProps.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
-  <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
   
-  <groupbox orient="vertical"><caption label="&dimensionsBox.label;"/>
+  <groupbox><caption label="&dimensionsBox.label;"/>
     <grid>
       <columns><column/><column/><column /></columns>
       <rows>
         <row align="center">
-          <text class="label" value="&widthEditField.label;" />
+          <label value="&widthEditField.label;" />
           <textbox class="narrow" id="width" flex="1" oninput="forceInteger('width')"/>
           <menulist id="pixelOrPercentMenulist" />
           <!-- menupopup and menuitems added by JS -->
         </row>
         <row align="center">
-          <text class="label" value="&heightEditField.label;" />
+          <label value="&heightEditField.label;" />
           <textbox class="narrow" id="height" oninput="forceInteger('height')"/>
-          <text class="label" value="&pixelsPopup.value;" />
+          <label value="&pixelsPopup.value;" />
         </row>
       </rows>
     </grid>        
     <checkbox id="3dShading" label="&threeDShading.label;" />
   </groupbox>
-  <groupbox><caption align="left" label="&alignmentBox.label;"/>
+  <groupbox><caption label="&alignmentBox.label;"/>
     <radiogroup id="alignmentGroup" orient="horizontal">
       <spacer class="spacer"/>
-      <radio group="alignmentGroup" id="leftAlign" label="&leftRadio.value;" />
-      <radio group="alignmentGroup" id="centerAlign" label="&centerRadio.value;" />
-      <radio group="alignmentGroup" id="rightAlign" label="&rightRadio.value;" />
+      <radio id="leftAlign" label="&leftRadio.value;" />
+      <radio id="centerAlign" label="&centerRadio.value;" />
+      <radio id="rightAlign" label="&rightRadio.value;" />
     </radiogroup>
   </groupbox>
   <spacer class="spacer"/>
@@ -85,6 +81,4 @@
     <button id="AdvancedEditButton"/>
   </hbox>
   <separator class="groove"/>
-  <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtonsRight"/>
-</window>
+</dialog>

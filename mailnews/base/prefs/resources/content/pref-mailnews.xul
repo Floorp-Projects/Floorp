@@ -27,10 +27,8 @@ Contributor(s):
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-mailnews.dtd">
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="Init();"
-      orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="Init();">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -43,51 +41,47 @@ Contributor(s):
   
   <hbox class="box-smallheader" title="&pane.title;"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&windowSettings.label;"/>
     
-    <hbox autostretch="never">
-      <text class="label" value="&selectWindowLayout.label;"/>
+    <hbox align="center">
+      <label value="&selectWindowLayout.label;"/>
       <spacer flex="1"/>
-      <radiogroup id="mailPaneConfig" pref="true" preftype="int" prefstring="mail.pane_config" orient="horizontal"
-                  prefattribute="value">
-        <radio group="mailPaneConfig" class="iconic" value="0" id="classic"/>
-        <radio group="mailPaneConfig" class="iconic" value="1" id="wide"/>
+      <radiogroup id="mailPaneConfig" prefstring="mail.pane_config" orient="horizontal">
+        <radio class="iconic" value="0" id="classic"/>
+        <radio class="iconic" value="1" id="wide"/>
       </radiogroup>
     </hbox>
     
-    <html>&chooseExp.label;</html>
+    <description>&chooseExp.label;</description>
 
     <separator class="thin"/>
-    <hbox autostretch="never">
+    <hbox align="center">
       <checkbox id="mailnewsConfirmMoveFoldersToTrash" label="&confirmMove.label;"
-                pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
-                prefattribute="checked"/>
+                prefstring="mailnews.confirm.moveFoldersToTrash"/>
     </hbox>
-    <hbox autostretch="never" id="mapi"/>
+    <hbox align="start" id="mapi"/>
 
   </groupbox>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&messengerStartPage.label;"/>
-      <hbox autostretch="never">
-        <checkbox allowevents="true" id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
-                  pref="true" preftype="bool" prefstring="mailnews.start_page.enabled"
-                  prefattribute="checked"/>
+      <hbox align="center">
+        <checkbox id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
+                  prefstring="mailnews.start_page.enabled"/>
       </hbox>
 
       <separator class="thin"/>
 
-      <hbox autostretch="never">
-        <text class="label" value="&location.label;" accesskey="&location.accesskey;" 
-                   for="mailnews.start_page.url"/>
-        <textbox id="mailnewsStartPageUrl" flex="1" pref="true" preftype="localizedstring"
-                 prefstring="mailnews.start_page.url" prefattribute="value"/>
+      <hbox align="center">
+        <label value="&location.label;" accesskey="&location.accesskey;" 
+               control="mailnews.start_page.url"/>
+        <textbox id="mailnewsStartPageUrl" preftype="localizedstring"
+                 prefstring="mailnews.start_page.url"/>
       </hbox>
 
     <hbox pack="end">
-      <button class="dialog" label="&useDefault.label;" accesskey="&useDefault.accesskey;"
-              id="resetHomePageButton"
+      <button label="&useDefault.label;" accesskey="&useDefault.accesskey;"
               oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');">
         <observes element="mailnewsStartPageUrl" attribute="disabled"/>
       </button>
@@ -96,13 +90,12 @@ Contributor(s):
   </groupbox>
   
   <!-- Sound notification for new mail -->    
-        <groupbox orient="vertical">
+        <groupbox>
     <caption label="&newMessage.label;"/>
-    <hbox autostretch="never">
-            <checkbox allowevents="true" id="newMailNotification" label="&playSound.label;"
-                pref="true" preftype="bool" prefstring="mail.biff.play_sound"
-                prefattribute="checked" accesskey="&playSound.accesskey;" />
-          </hbox>              
-        </groupbox>
-  
+    <hbox align="center">
+      <checkbox id="newMailNotification" label="&playSound.label;"
+                prefstring="mail.biff.play_sound"
+                accesskey="&playSound.accesskey;" />
+    </hbox>              
+        </groupbox> 
 </page>

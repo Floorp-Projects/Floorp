@@ -29,20 +29,17 @@
 <!-- CHANGE THIS WHEN MOVING FILES -->
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/SignonViewer.dtd" >
 
-<window id="signonviewer"
+<dialog id="signonviewer"
         title="&windowtitle.label;"
         alttitle="&windowalttitle.label;"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        orient="vertical" style="width: 30em!important;"
-        class="dialog"
-        onload="Startup()">
+        style="width: 30em!important;"
+        onload="Startup()"
+        ondialogaccept="return onAccept();">
 
   <script src="chrome://communicator/content/wallet/SignonViewer.js"/>
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://communicator/content/wallet/nsWalletTreeUtils.js"/>
-
-  <keyset id="dialogKeys"/>
            
   <tabbox id="signonTabbox" flex="1">
     <tabs>
@@ -54,9 +51,9 @@
     <tabpanels id="panel" flex="1">
       <!-- saved signons -->
       <vbox id="savedsignons" flex="1">
-          <html>&spiel.signonsstored.label;</html>
+          <description>&spiel.signonsstored.label;</description>
           <separator class="thin"/>
-          <tree id="signonstree" class="inset" style="height: 20em;"
+          <tree id="signonstree" style="height: 20em;"
                 onclick="HandleEvent(event);" flex="1"
                 multiple="true" onkeypress="HandleEvent(event,0)">
             <treecolgroup>
@@ -78,18 +75,18 @@
           </tree>
           <separator class="thin"/>
           <hbox>
-            <button id="removeSignon" disabled="true" class="dialog push"
+            <button id="removeSignon" disabled="true"
                           label="&remove.label;" oncommand="DeleteSignon();"/>
-            <button id="removeAllSignons" class="dialog push"
+            <button id="removeAllSignons"
                           label="&removeall.label;"
                           oncommand="DeleteAllSignons();"/>
           </hbox>
       </vbox>
       <!-- ignored signon sites -->
       <vbox id="ignoredsites" flex="1">
-          <html>&spiel.signonsnotstored.label;</html>
+          <description>&spiel.signonsnotstored.label;</description>
           <separator class="thin"/>
-          <tree id="ignoretree" class="inset" style="height: 20em;"
+          <tree id="ignoretree" style="height: 20em;"
                 onclick="HandleEvent(event);" flex="1"
                 multiple="true" onkeypress="HandleEvent(event,1)">
             <treecolgroup>
@@ -106,18 +103,18 @@
           </tree>
           <separator class="thin"/>
           <hbox>
-            <button id="removeIgnoredSite" disabled="true" class="dialog push"
+            <button id="removeIgnoredSite" disabled="true"
                           label="&remove.label;" oncommand="DeleteIgnoredSite();"/>
-            <button id="removeAllSites" class="dialog push"
+            <button id="removeAllSites"
                           label="&removeall.label;"
                           oncommand="DeleteAllSites();"/>
           </hbox>
       </vbox>
       <!-- do not preview panel -->
-      <vbox class="tabpanel" id="nopreviewforms" flex="1">
-          <html>&spiel.nopreview.label;</html>
+      <vbox id="nopreviewforms" flex="1">
+          <description>&spiel.nopreview.label;</description>
           <separator class="thin"/>
-          <tree id="nopreviewtree" class="inset" style="height: 20em;" 
+          <tree id="nopreviewtree" style="height: 20em;" 
                 onclick="HandleEvent(event);" flex="1"
                 multiple="true" onkeypress="HandleEvent(event,2)">
             <treecolgroup>
@@ -135,18 +132,18 @@
           </tree>
           <separator class="thin"/>
           <hbox>
-            <button id="removeNoPreview" disabled="true" class="dialog push"
+            <button id="removeNoPreview" disabled="true"
                           label="&remove.label;" oncommand="DeleteNoPreviewForm();"/>
-            <button id="removeAllNopreviews" class="dialog push"
+            <button id="removeAllNopreviews"
                           label="&removeall.label;"
                           oncommand="DeleteAllNopreviews();"/>
           </hbox>
       </vbox>
       <!-- do not capture panel -->
-      <vbox class="tabpanel" id="nocaptureforms" flex="1">
-          <html>&spiel.nocapture.label;</html>
+      <vbox id="nocaptureforms" flex="1">
+          <description>&spiel.nocapture.label;</description>
           <separator class="thin"/>
-          <tree id="nocapturetree" class="inset" style="height: 20em;" 
+          <tree id="nocapturetree" style="height: 20em;" 
                 onclick="HandleEvent(event);" flex="1"
                 multiple="true" onkeypress="HandleEvent(event,3)">
             <treecolgroup>
@@ -163,18 +160,13 @@
           </tree>
           <separator class="thin"/>
           <hbox>
-            <button id="removeNoCapture" disabled="true" class="dialog push"
+            <button id="removeNoCapture" disabled="true"
                           label="&remove.label;" oncommand="DeleteNoCaptureForm();"/>
-            <button id="removeAllNocaptures" class="dialog push"
+            <button id="removeAllNocaptures"
                           label="&removeall.label;"
                           oncommand="DeleteAllNocaptures();"/>
           </hbox>
       </vbox>
     </tabpanels>
-  </tabbox>
-    
-  <separator class="thin"/>
-
-  <hbox id="okCancelButtonsRight"/>
- 
-</window>
+  </tabbox>   
+</dialog>

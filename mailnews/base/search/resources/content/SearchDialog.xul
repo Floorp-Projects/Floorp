@@ -27,22 +27,18 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:nc="http://home.netscape.com/NC-rdf#"
-    onload="searchOnLoad();"
-    onunload="searchOnUnload();"
-    onclose="onSearchStop();"
-    windowtype="mailnews:search"
-    title="&searchDialogTitle.label;"
-    width="640" height="470"
-    persist="screenX screenY width height"
-    class="color-dialog"
-    orient="vertical">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        onload="searchOnLoad();"
+        onunload="searchOnUnload();"
+        onclose="onSearchStop();"
+        windowtype="mailnews:search"
+        title="&searchDialogTitle.label;"
+        width="640" height="470"
+        persist="screenX screenY width height">
 
   <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
@@ -73,16 +69,16 @@ Rights Reserved.
   <dummy class="usesMailWidgets"/>
   <vbox flex="1">
     
-    <groupbox orient="vertical" flex="1">
+    <groupbox flex="1">
       <caption label="&conditions.label;"/>
-      <hbox autostretch="never">
-        <text class="label" value="&searchHeading.label;"/>
+      <hbox align="center">
+        <label value="&searchHeading.label;"/>
         <menulist id="searchableFolders" flex="2"/>
         <spacer flex="1"/>
           <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true"/>
       </hbox>
       <separator/>
-      <text class="label" value="&conditionDesc.label;"/>
+      <label value="&conditionDesc.label;"/>
 
       <hbox flex="1">
         <vbox id="searchTermListBox" flex="1"/>
@@ -183,5 +179,4 @@ Rights Reserved.
   </groupbox>
   </vbox>
   <statusbar id="status-bar"/>
-  
 </window>

@@ -32,7 +32,6 @@
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newFolderDialog.title;"
-        orient="vertical"
         class="dialog"
         onload="onLoad();">
 
@@ -46,27 +45,27 @@
 
     <spacer flex="1"/>
 
-    <text value="&name.label;" class="label" accesskey="&name.accesskey;" for="name"/>
+    <label value="&name.label;" accesskey="&name.accesskey;" for="name"/>
     <textbox tabindex="0" id="name" oninput="doEnabling();"/>
 
     <separator/>
 
-    <text value="&description.label;" class="label" accesskey="&description.accesskey;" for="msgNewFolderPicker"/>
+    <label value="&description.label;" accesskey="&description.accesskey;" for="msgNewFolderPicker"/>
 
-    <menulist id="msgNewFolderPicker" oncommand="doEnabling();" crop="right"/>
+    <menulist id="msgNewFolderPicker" oncommand="doEnabling();"/>
 
     <vbox hidden="true" id="newFolderTypeBox">
 
       <separator class="thin"/>
 
-      <text value="&folderRestriction1.label;"/>
-      <text value="&folderRestriction2.label;"/>
+      <label value="&folderRestriction1.label;"/>
+      <label value="&folderRestriction2.label;"/>
 
       <separator class="thin"/>
 
       <radiogroup id="folderGroup">
-        <radio group="folderGroup" oncommand="onFoldersOnly();" label="&foldersOnly.label;"/>
-        <radio group="folderGroup" oncommand="onMessagesOnly();" label="&messagesOnly.label;" checked="true"/>
+        <radio oncommand="onFoldersOnly();" label="&foldersOnly.label;"/>
+        <radio oncommand="onMessagesOnly();" label="&messagesOnly.label;" checked="true"/>
         <spacer flex="100%"/>
       </radiogroup>
 

@@ -26,50 +26,48 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/smtpEditOverlay.dtd">
 
-<overlay  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="smtpEditOverlay.js"/>
 
   <vbox id="smtpServerEditor">
-    <hbox autostretch="never">
-      <text class="label" value="&serverName.label;"/>
-      <textbox wsm_persist="true" id="smtp.hostname" flex="1"
-               pref="true" preftype="string" prefattribute="value"
+    <hbox align="center">
+      <label value="&serverName.label;"/>
+      <textbox id="smtp.hostname" flex="1"
+               preftype="string"
                prefstring="mail.smtpserver.%serverkey%.hostname"/>
     </hbox>
     <!-- use a grid here when it's implemented -->
     <vbox>
       <!-- This hidden one will hold the integer version
            of smtp.useUsername -->
-      <text hidden="true" id="smtp.authMethod" wsm_persist="true"/>
-      <hbox autostretch="never">
-      <checkbox id="smtp.useUsername" label="&alwaysUseUsername.label;" wsm_persist="true"
+      <label hidden="true" id="smtp.authMethod"/>
+      <hbox align="center">
+      <checkbox id="smtp.useUsername" label="&alwaysUseUsername.label;"
                 oncommand="onUseUsername(event.target,true);"
-                pref="true" preftype="bool" prefattribute="value"
+                prefattribute="value"
                 prefstring="mail.smtpserver.%serverkey%.use_username"/>
       </hbox>                
       <vbox style="margin-left: 2em">
-        <hbox autostretch="never">
-          <text id="smtpusernamelabel" class="label" value="&userName.label;"/>
-          <textbox wsm_persist="true" id="smtp.username" flex="1"
-                   pref="true" preftype="string" prefattribute="value"
+        <hbox align="center">
+          <label id="smtpusernamelabel" value="&userName.label;"/>
+          <textbox id="smtp.username" flex="1"
+                   preftype="string"
                    prefstring="mail.smtpserver.%serverkey%.username"/>
         </hbox>
       </vbox>
      </vbox>
-     <hbox autostretch="never">
-  <text class="label" value="&isSecure.label;"/>
+     <hbox align="center">
+       <label value="&isSecure.label;"/>
      </hbox>
-     <radiogroup id="smtp.trySSL" wsm_persist="true"
-                 pref="true" preftype="int" prefattribute="value"
+     <radiogroup id="smtp.trySSL"
                  prefstring="mail.smtpserver.%serverkey%.try_ssl">
        <hbox style="margin-left: 2em">
-         <radio group="smtp.trySSL" value="0" label="&neverSecure.label;" id="smtp.neverSecure"/>
-         <radio group="smtp.trySSL" value="1" label="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
-         <radio group="smtp.trySSL" value="2" label="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
+         <radio value="0" label="&neverSecure.label;" id="smtp.neverSecure"/>
+         <radio value="1" label="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
+         <radio value="2" label="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
        </hbox>
      </radiogroup>
   </vbox>
-
 </overlay>

@@ -47,8 +47,7 @@
 <!DOCTYPE window SYSTEM "chrome://venkman/locale/venkman-overlay.dtd" >
 
 <overlay id="venkmanTaskMenuID"
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script src="chrome://venkman/content/venkman-overlay.js"/>
 

@@ -29,11 +29,10 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/folderProps.dtd">
 
 <window
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&folderProps.windowtitle.label;"
   onload="folderPropsOnLoad()" style="width: 36em;"
-  class="dialog" orient="vertical">
+  class="dialog">
  
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
   <script type="application/x-javascript" src="chrome://messenger/content/folderProps.js"></script>
@@ -53,14 +52,14 @@
   </tabs>
   <tabpanels id="folderPropTabPanel">
     <vbox>
-      <hbox id="nameBox" autostretch="never">
-        <text class="label" value="&folderProps.name.label;" for="name"/>
-        <textbox flex="1" id="name" readonly="true" />
+      <hbox id="nameBox" align="center">
+        <label value="&folderProps.name.label;" for="name"/>
+        <textbox id="name" readonly="true" />
       </hbox>
       
       <vbox>
-        <hbox autostretch="never" valign="middle">
-          <text class="label" value="&folderCharsetTab.label;" for="folderCharSetList"/>
+        <hbox align="center" valign="middle">
+          <label value="&folderCharsetTab.label;" control="folderCharSetList"/>
           <menulist id="folderCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"> 
             <template>
               <menupopup>
@@ -73,7 +72,7 @@
       </vbox>
     </vbox>
  
-    <vbox hidable="true" hidefor="pop3,none" valign="top" autostretch="never">
+    <vbox hidable="true" hidefor="pop3,none" valign="top" align="start">
       <vbox>
         <checkbox iscontrolcontainer="true" hidable="true"  
                   wsm_persist="true" id="offline.selectForOfflineFolder"  
@@ -83,10 +82,10 @@
                   hidefor="imap" label="&selectofflineNewsgroup.check.label;" />
       </vbox>
       <button iscontrolcontainer="true" hidable="true" label="&offlineFolder.button.label;" 
-              class="dialog" oncommand="onOfflineFolderDownload();" 
+              oncommand="onOfflineFolderDownload();" 
               id="offline.offlineFolderDownloadButton" hidefor="nntp" orient="right"/>
       <button iscontrolcontainer="true" hidable="true" label="&offlineNewsgroup.button.label;" 
-              class="dialog" oncommand="onOfflineFolderDownload();" 
+              oncommand="onOfflineFolderDownload();" 
               id="offline.offlineNewsgroupDownloadButton" hidefor="imap" orient="right"/>
     </vbox>
   </tabpanels>

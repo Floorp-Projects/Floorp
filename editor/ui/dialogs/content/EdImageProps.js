@@ -66,8 +66,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel);
-
   gDialog.srcInput          = document.getElementById( "srcInput" );
   gDialog.altTextInput      = document.getElementById( "altTextInput" );
   gDialog.MoreFewerButton   = document.getElementById( "MoreFewerButton" );
@@ -372,7 +370,7 @@ function ChangeImageSrc()
 function doDimensionEnabling()
 {
   // Enabled only if "Custom" is checked
-  var enable = (gDialog.customSizeRadio.checked);
+  var enable = (gDialog.customSizeRadio.selected);
 
   // BUG 74145: After input field is disabled,
   //   setting it enabled causes blinking caret to appear
@@ -588,9 +586,10 @@ function ValidateData()
 function doHelpButton()
 {
   openHelp("chrome://help/content/help.xul?image_properties");
+  return true;
 }
 
-function onOK()
+function onAccept()
 {
   // Show alt text error only once
   // (we don't initialize doAltTextError=true

@@ -2,7 +2,6 @@
 
 <bindings id="globalBindings"
           xmlns="http://www.mozilla.org/xbl"
-          xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- :::/ toolbar \ ::::::::::::::::::::::::::::::::::::::::::::::::::: -->
@@ -116,7 +115,7 @@
 
         <xul:hbox class="menulist-text-box" align="center">
           <xul:image class="menulist-icon-mid" inherits="src"/>
-          <xul:text class="menulist-text-mid" inherits="value=label,crop,accesskey" crop="right" flex="1"/>
+          <xul:label class="menulist-text-mid" inherits="value=label,crop,accesskey" crop="right" flex="1"/>
         </xul:hbox>
       </xul:stack>
       
@@ -154,7 +153,7 @@
       <xul:hbox class="menulist-compact-internal-box" flex="1" align="center">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spacer flex="1"/>
-        <xul:text class="menulist-compact-text" inherits="value=label,accesskey,crop,disabled" crop="right"/>
+        <xul:label class="menulist-compact-text" inherits="value=label,accesskey,crop,disabled" crop="right"/>
       </xul:hbox>
       <children includes="menupopup"/>
     </content>
@@ -184,7 +183,7 @@
     <content>
       <xul:vbox class="treecell-header-box" flex="1" align="center">
         <xul:image class="tree-header-image" inherits="src"/>
-        <xul:text class="tree-header-text" inherits="crop,value=label" flex="1" crop="right"/>
+        <xul:label class="tree-header-text" inherits="crop,value=label" flex="1" crop="right"/>
         <xul:image class="tree-header-sortdirection"/>
       </xul:vbox>
     </content>
@@ -249,7 +248,7 @@
         <xul:spacer class="tab-mid-top" inherits="selected"/>
         <xul:hbox class="tab-mid-mid" align="center" pack="center" flex="1">
   	      <xul:image class="tab-icon"/>
-      	  <xul:text flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
+          <xul:label flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
         </xul:hbox>
         <xul:spacer class="tab-mid-btm" inherits="selected"/>
       </xul:vbox>

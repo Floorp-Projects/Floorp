@@ -30,10 +30,8 @@ Contributor(s):
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/sendProgress.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-  		  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        orient="vertical"
         title="&sendWindow.title;"
         style="width: 36em;"
         onload="onLoad()"
@@ -64,24 +62,24 @@ Contributor(s):
       <rows>
         <row>
           <hbox pack="end">
-            <text class="label" value="&status;"/>
+            <label value="&status;"/>
           </hbox>
-          <text class="label" id="dialog.status"/>
+          <label id="dialog.status"/>
         </row>
         <row class="thin-separator">             
           <hbox pack="end">
-            <text class="label" value="&progress;"/>
+            <label value="&progress;"/>
           </hbox>
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
           <hbox pack="end">
-            <text class="label" id="dialog.progressText"/>
+            <label id="dialog.progressText"/>
           </hbox>
         </row>
       </rows>
     </grid>
     <separator/>
     <hbox id="CancelButton" pack="end">
-      <button class="dialog" id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
+      <button id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
     </hbox>
 
 </window>

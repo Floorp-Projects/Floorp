@@ -45,8 +45,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel);
-
   // Message was wrapped in a <label> or <div>, so actual text is a child text node
   gDialog.linkTextCaption     = document.getElementById("linkTextCaption");
   gDialog.linkTextMessage     = document.getElementById("linkTextMessage");
@@ -464,9 +462,10 @@ function ValidateData()
 function doHelpButton()
 {
   openHelp("chrome://help/content/help.xul?link_properties");
+  return true;
 }
 
-function onOK()
+function onAccept()
 {
   if (ValidateData())
   {

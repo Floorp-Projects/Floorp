@@ -21,7 +21,6 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -30,11 +29,8 @@
 %walletviewerDTD;
 ]>
 
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel();">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel();">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -46,7 +42,7 @@
   <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
-  <groupbox class="tabpanel" autostretch="never">
+  <groupbox align="start">
     <caption label="&name.title;"/>
     <grid class="indent" flex="1">
 
@@ -58,7 +54,7 @@
       <rows>
 
         <row align="center">
-          <html>&namePrefix.label;</html>
+          <description>&namePrefix.label;</description>
           <menulist id="name.prefix" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -68,7 +64,7 @@
         </row>
 
         <row align="center">
-          <html>&nameFirst.label;</html>
+          <description>&nameFirst.label;</description>
           <menulist id="name.first" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -78,7 +74,7 @@
         </row>
 
         <row align="center">
-          <html>&nameMiddle.label;</html>
+          <description>&nameMiddle.label;</description>
           <menulist id="name.middle" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -88,7 +84,7 @@
         </row>
 
         <row align="center">
-          <html>&nameLast.label;</html>
+          <description>&nameLast.label;</description>
           <menulist id="name.last" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -98,7 +94,7 @@
         </row>
 
         <row align="center">
-          <html>&nameSuffix.label;</html>
+          <description>&nameSuffix.label;</description>
           <menulist id="name.suffix" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
 
@@ -112,5 +108,4 @@
 
     </grid>
   </groupbox>
-
-</window>
+</page>

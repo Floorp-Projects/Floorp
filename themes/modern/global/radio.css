@@ -87,16 +87,16 @@ radio[disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox
 
 /* ..... checked state ..... */
 
-radio[checked="true"] > .internal-box > .checkmark-box > .checkbox-check {
+radio[selected="true"] > .internal-box > .checkmark-box > .checkbox-check {
   list-style-image: url("chrome://global/skin/radio/radio-check.gif");
 }
   
-radio[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
-radio[checked="true"][disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check {
+radio[selected="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
+radio[selected="true"][disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-checked {
   list-style-image: url("chrome://global/skin/radio/radio-dis-check.gif");
 }
 
-radio[checked="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check {
+radio[selected="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check {
   list-style-image: url("chrome://global/skin/radio/radio-act-check.gif");  
 }
 

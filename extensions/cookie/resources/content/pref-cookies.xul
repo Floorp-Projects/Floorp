@@ -27,11 +27,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://cookie/locale/pref-cookies.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml" id="cookieWindow"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="init();">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="init();">
 
   <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
@@ -92,51 +89,47 @@
 
   <hbox class="box-smallheader" id="cookieHeader" title="&lHeader;"/>
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&cookiePolicy.label;"/>
 
-    <html>&cookieDetails;</html>
+    <description>&cookieDetails;</description>
 
-    <radiogroup id="networkCookieBehaviour" orient="vertical" autostretch="never"
-                pref="true" preftype="int" prefstring="network.cookie.cookieBehavior"
-                prefattribute="value">
-      <radio group="networkCookieBehaviour" value="2" label="&disableCookies.label;"
+    <radiogroup id="networkCookieBehaviour"
+                prefstring="network.cookie.cookieBehavior">
+      <radio value="2" label="&disableCookies.label;"
              accesskey="&disableCookies.accesskey;" oncommand="setDisables();"/>
-      <radio group="networkCookieBehaviour" value="1" label="&accOrgCookiesRadio.label;"
+      <radio value="1" label="&accOrgCookiesRadio.label;"
              accesskey="&accOrgCookiesRadio.accesskey;" oncommand="setDisables();"/>
       <hbox>
-        <radio group="networkCookieBehaviour" value="3" label="&accP3PCookiesRadio.label;"
+        <radio value="3" label="&accP3PCookiesRadio.label;"
                accesskey="&accP3PCookiesRadio.accesskey;" oncommand="setDisables();"/>
-        <button class="dialog" label="&viewP3P.label;" accesskey="&viewP3P.accesskey;" oncommand="viewP3P();"
-                id="p3pDialog" pref="true" preftype="bool"
-                prefstring="pref.advanced.cookies.disable_button.more_info" prefattribute="disabled"/>
+        <button label="&viewP3P.label;" accesskey="&viewP3P.accesskey;" oncommand="viewP3P();"
+                id="p3pDialog"
+                prefstring="pref.advanced.cookies.disable_button.more_info"/>
       </hbox>
-      <radio group="networkCookieBehaviour" value="0" label="&accAllCookiesRadio.label;"
+      <radio value="0" label="&accAllCookiesRadio.label;"
              accesskey="&accAllCookiesRadio.accesskey;" oncommand="setDisables();"/>
     </radiogroup>
 
     <separator/>
 
-    <vbox autostretch="never">
+    <vbox align="start">
       <checkbox id="networkWarnAboutCookies" label="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
-                pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
-                prefattribute="checked"/>
+                prefstring="network.cookie.warnAboutCookies"/>
       <checkbox id="lifetimeEnabled" label="&limitLifetime.label;" accesskey="&limitLifetime.accesskey;"
-                pref="true" preftype="bool" prefstring="network.cookie.lifetime.enabled"
-                prefattribute="checked" oncommand="setDisables();"/>
+                prefstring="network.cookie.lifetime.enabled"
+                oncommand="setDisables();"/>
       <hbox class="indent">
-        <radiogroup id="lifetimeBehavior" orient="vertical" autostretch="never"
-                    pref="true" preftype="int" prefstring="network.cookie.lifetime.behavior"
-                    prefattribute="value">
-          <radio group="lifetimeBehavior" value="0" label="&current.label;" 
+        <radiogroup id="lifetimeBehavior" prefstring="network.cookie.lifetime.behavior">
+          <radio value="0" label="&current.label;" 
                  accesskey="&current.accesskey;"
                  oncommand="setDisables();"/>
           <hbox>
-            <radio group="lifetimeBehavior" value="1" accesskey="&days.accesskey;"
+            <radio value="1" accesskey="&days.accesskey;"
                     oncommand="setDisables();"/>
-            <textbox id="lifetimeDays" pref="true" size="4" prefattribute="value"
+            <textbox id="lifetimeDays" pref="true" size="4"
                      preftype="int" prefstring="network.cookie.lifetime.days"/>
-            <html>&days.label;</html>
+            <description>&days.label;</description>
           </hbox>
         </radiogroup>
       </hbox>
@@ -146,13 +139,12 @@
     <separator/>
 
     <hbox pack="end">
-      <button class="dialog" label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
-              id="viewCookieButton" pref="true" preftype="bool"
-              prefstring="pref.advanced.cookies.disable_button.view_cookies" prefattribute="disabled"/>
-      <button class="dialog" label="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"
-              id="moreInformation" pref="true" preftype="bool"
-              prefstring="pref.advanced.cookies.disable_button.more_info" prefattribute="disabled"/>
+      <button label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"
+              id="viewCookieButton"
+              prefstring="pref.advanced.cookies.disable_button.view_cookies"/>
+      <button label="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"
+              id="moreInformation"
+              prefstring="pref.advanced.cookies.disable_button.more_info"/>
     </hbox>
   </groupbox>
-
-</window>
+</page>

@@ -30,13 +30,12 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertChars.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    onload = "Startup()"
-    onunload = "Unload()"
-    onfocus = "onFocus()"
-    orient="vertical">
+<dialog id="insertCharsDlg" title="&windowTitle.label;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload = "Startup()"
+        onfocus = "onFocus()"
+        ondialogaccept = "return onAccept();"
+        ondialogcancel = "return Unload();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -44,32 +43,28 @@
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
-  <keyset id="dialogKeys"/>
   <broadcaster id="args" value=""/>
 
-  <groupbox orient="vertical"><caption label="&category.label;"/>
-    <radiogroup id="CatGrp" orient="vertical" persist="category letter_index char_index">
-      <radio group="CatGrp" id="AccentUpper" label="&accentUpper.label;"   oncommand="ChangeCategory(this.id)"/>
-      <radio group="CatGrp" id="AccentLower" label="&accentLower.label;"   oncommand="ChangeCategory(this.id)"/>
-      <radio group="CatGrp" id="Upper"       label="&otherUpper.label;"    oncommand="ChangeCategory(this.id)"/>
-      <radio group="CatGrp" id="Lower"       label="&otherLower.label;"    oncommand="ChangeCategory(this.id)"/>
-      <radio group="CatGrp" id="Symbol"      label="&commonSymbols.label;" oncommand="ChangeCategory(this.id)"/>
+  <groupbox><caption label="&category.label;"/>
+    <radiogroup id="CatGrp" persist="category letter_index char_index">
+      <radio id="AccentUpper" label="&accentUpper.label;"   oncommand="ChangeCategory(this.id)"/>
+      <radio id="AccentLower" label="&accentLower.label;"   oncommand="ChangeCategory(this.id)"/>
+      <radio id="Upper"       label="&otherUpper.label;"    oncommand="ChangeCategory(this.id)"/>
+      <radio id="Lower"       label="&otherLower.label;"    oncommand="ChangeCategory(this.id)"/>
+      <radio id="Symbol"      label="&commonSymbols.label;" oncommand="ChangeCategory(this.id)"/>
     </radiogroup> 
     <spacer class="spacer"/>
   </groupbox>
   <hbox>
     <vbox flex="1">
       <!-- value is set in JS from editor.properties strings -->
-      <text class="label" id="LatinL_Label" value="&letter.label;"/>
+      <label id="LatinL_Label" value="&letter.label;"/>
       <menulist class="larger" flex="1" id="LatinL" oncommand="SelectLatinLetter()"/>
     </vbox>
     <vbox flex="1">
-      <text class="label" id="LatinM_Label" value="&character.label;"/>
+      <label id="LatinM_Label" value="&character.label;"/>
       <menulist class="larger" flex="1" id="LatinM" oncommand="SelectLatinModifier()"/>
     </vbox>
   </hbox>
-
   <separator class="groove"/>
-  <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtonsRight"/>
-</window>
+</dialog>

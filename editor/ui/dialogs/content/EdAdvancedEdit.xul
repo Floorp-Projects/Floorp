@@ -28,21 +28,19 @@
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <!-- May not need this here -->
 <!-- <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EdAdvancedEdit.dtd">
-<window class="dialog" title="&WindowTitle.label;"
+<dialog title="&WindowTitle.label;"
     style="width: 40em;"
     xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    buttonpack="end"
     onload="Startup()"
-    onunload="onCancel()"
-    orient="vertical">
+    buttons="accept,cancel,help"
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancel();"
+    ondialoghelp="return doHelpButton();">
 
-  <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
     
   <!-- Methods common to all editor dialogs -->
@@ -55,15 +53,14 @@
 
   <!-- global dialog functions -->
   <script type="application/x-javascript" src="chrome://editor/content/EdAdvancedEdit.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <broadcaster id="args" value=""/>
 
   <hbox>
-    <text class="label" value="&currentattributesfor.label;"/>
-    <text class="label header" id="tagLabel"/>
+    <label value="&currentattributesfor.label;"/>
+    <label class="header" id="tagLabel"/>
   </hbox>
   
   <separator class="thin"/>
@@ -99,7 +96,7 @@
           <treechildren id="HTMLAList" flex="1"/>
         </tree>
         <hbox align="center" flex="1">
-          <text class="label" value="&editAttribute.label;"/>
+          <label value="&editAttribute.label;"/>
           <spacer flex="1"/>
           <button label="&removeAttribute.label;" oncommand="RemoveHTMLAttribute();"/>
         </hbox>
@@ -109,8 +106,8 @@
           </columns>
           <rows>
             <row equalsize="always">
-              <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
-              <text class="label" for="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
+              <label control="AddHTMLAttributeNameInput" value="&AttName.label;"/>
+              <label control="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
             </row>
             <row align="center" equalsize="always">
               <!-- Lists are built at runtime -->
@@ -149,7 +146,7 @@
           <treechildren id="CSSAList" flex="1"/>
         </tree>
         <hbox align="center" flex="1">
-          <text class="label" value="&editAttribute.label;"/>
+          <label value="&editAttribute.label;"/>
           <spacer flex="1"/>
           <button label="&removeAttribute.label;" oncommand="RemoveCSSAttribute();"/>
         </hbox>
@@ -159,8 +156,8 @@
           </columns>
           <rows>
             <row equalsize="always">
-              <text class="label" for="AddCSSAttributeNameInput"  value="&PropertyName.label;"/>
-              <text class="label" for="AddCSSAttributeValueInput" value="&AttValue.label;"/>
+              <label value="&PropertyName.label;"/>
+              <label value="&AttValue.label;"/>
             </row>
             <row equalsize="always">
               <textbox id="AddCSSAttributeNameInput" flex="1"
@@ -194,7 +191,7 @@
           <treechildren id="JSEAList" flex="1"/>
         </tree>
         <hbox align="center" flex="1">
-          <text class="label" value="&editAttribute.label;"/>
+          <label value="&editAttribute.label;"/>
           <spacer flex="1"/>
           <button label="&removeAttribute.label;" oncommand="RemoveJSEAttribute()"/>
         </hbox>
@@ -204,8 +201,8 @@
           </columns>
           <rows>
             <row equalsize="always">
-              <text class="label" for="AddJSEAttributeNameList" value="&AttName.label;"/>
-              <text class="label" for="AddJSEAttributeValueInput" value="&AttValue.label;"/>
+              <label value="&AttName.label;"/>
+              <label value="&AttValue.label;"/>
             </row>
             <row align="center" equalsize="always">
               <!-- List is built at runtime -->
@@ -219,7 +216,4 @@
       </vbox>
     </tabpanels>
   </tabbox>
-  <spacer class="spacer"/>
-  <hbox id="okCancelHelpButtonsRight"/> 
-
-</window>
+</dialog>

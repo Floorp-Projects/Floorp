@@ -30,15 +30,14 @@
 <page
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&identityAdvanced.label;"
-  orient="vertical"
   onload="onLoad();">
 
   <script type="application/x-javascript" src="am-identity-advanced.js"/>
   
-  <html style="width: 20em; ">&smtpDesc.label;</html>
+  <description style="width: 20em; ">&smtpDesc.label;</description>
   <separator class="thin"/>
-  <hbox autostretch="never">
-    <text value="&smtpName.label;" class="label" for="smtpServerList"/>
+  <hbox align="center">
+    <label value="&smtpName.label;" control="smtpServerList"/>
     <menulist datasources="rdf:smtp"
               containment="http://home.netscape.com/NC-rdf#child"
               ref="NC:smtpservers"

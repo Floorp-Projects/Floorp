@@ -88,12 +88,13 @@ mail-emailaddress
     -moz-box-pack: end;
   }
 
-.emailDisplayButton 
+label.emailDisplayButton 
   {
     color                 : blue;
     text-decoration       : underline;
     cursor                : pointer;
-    min-height: 16px;
+    min-height            : 16px;
+    margin                : 0px !important;
   }
 
 .showMoreAddressesButton 
@@ -110,19 +111,17 @@ label.headerValue
   { 
     white-space           : normal;
     min-width             : 50px; 
-    margin                : 0px;
   }
 
-.subjectvalue  
+label.subjectvalue  
   { 
     font-weight           : bold; 
   }
 
-.headerdisplayname 
+label.headerdisplayname 
   { 
     font-weight           : bold; 
-    margin-right          : 0.5em; 
-    margin-left           : 0.5em; 
+    margin                : 0em 0.5em 0em 0.5em !important;
     min-height: 16px;
   }
   
@@ -166,10 +165,9 @@ label.headerValue
   width: 12em;
 }
 
-text.collapsedHeaderDisplayName 
+label.collapsedHeaderDisplayName 
 { 
   font-weight: bold; 
-  margin-left: .7em;
   min-height: 16px;
 }
 

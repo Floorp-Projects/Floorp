@@ -238,6 +238,7 @@ html|p {
 
 #dirTree, #resultsTree { 
   border: none;
+  margin: 0px 0px 0px 0px !important;
 }
 
 #resultsTree {

@@ -27,9 +27,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/pref-editing.dtd">
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical" 
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://editor/content/pref-editing.xul');">
 
   <script lanugage="JavaScript">
@@ -45,26 +43,24 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <vbox>
-    <text class="label small-margin" value="&authorName.label;"/>
+    <label value="&authorName.label;"/>
     <hbox>
       <textbox id="editorAuthor" flex="1"
-                 pref="true" preftype="string" prefstring="editor.author"
-                 prefattribute="value"/>
+               prefstring="editor.author"/>
       <spacer flex="1"/>
     </hbox>
   </vbox>
   <spacer class="smallspacer"/>
-  <groupbox orient="vertical" align="start">
+  <groupbox align="start">
     <caption label="&pageColorHeader;"/> 
-    <radiogroup id="useCustomColors" orient="vertical" align="start"  
-                pref="true" preftype="bool" prefstring="editor.use_custom_colors"
-                prefattribute="value">
-      <radio class="small-margin" group="useCustomColors" id="DefaultColorsRadio"
+    <radiogroup id="useCustomColors"
+                preftype="bool" prefstring="editor.use_custom_colors">
+      <radio id="DefaultColorsRadio"
           value="false" 
           label="&defaultColorsRadio.label;" 
           accesskey="&defaultColors.accesskey;"
           oncommand="UseDefaultColors();"/>
-      <radio class="small-margin" group="useCustomColors" id="CustomColorsRadio" 
+      <radio id="CustomColorsRadio" 
           value="true" label="&customColorsRadio.label;"
           accesskey="&customColors.accesskey;" 
           oncommand="UseCustomColors()"/>
@@ -74,35 +70,35 @@
         <columns><column/><column/></columns>
         <rows>
           <row align="center">
-            <text class="label" id="Text" value="&normalText.label;&colon.character;" />
+            <label id="Text" value="&normalText.label;&colon.character;" />
             <button id="TextButton" class="color-button" oncommand="GetColorAndUpdate('textCW');">
               <spacer id="textCW" class="color-well"/>
             </button>
             <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value" wsm_attributes="value"/>
           </row>
           <row align="center">
-            <text class="label" id="Link" value="&linkText.label;&colon.character;" />
+            <label id="Link" value="&linkText.label;&colon.character;" />
             <button id="LinkButton" class="color-button" oncommand="GetColorAndUpdate('linkCW');">
               <spacer id="linkCW" class="color-well"/>
             </button>
             <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
           <row align="center">
-            <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
+            <label id="Active" value="&activeLinkText.label;&colon.character;" />
             <button id="ActiveLinkButton" class="color-button" oncommand="GetColorAndUpdate('activeCW');">
               <spacer id="activeCW" class="color-well"/>
             </button>
             <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
           <row align="center">
-            <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
+            <label id="Visited" value ="&visitedLinkText.label;&colon.character;" />
             <button id="VisitedLinkButton" class="color-button" oncommand="GetColorAndUpdate('visitedCW');">
               <spacer id="visitedCW" class="color-well"/>
             </button>
             <data id="fLinkData" pref="true" preftype="color" prefstring="editor.followed_link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
           <row align="center">
-            <text class="label" id="Background" value="&background.label;" />
+            <label id="Background" value="&background.label;" />
             <button id="BackgroundButton" class="color-button" oncommand="GetColorAndUpdate('backgroundCW');">
               <spacer id="backgroundCW" class="color-well"/>
             </button>
@@ -112,19 +108,19 @@
       </grid>
       <vbox id="ColorPreview" flex="1">
         <spacer flex="1"/>
-        <text class="label larger" id="NormalText"      value="&normalText.label;"/>
+        <label class="larger" id="NormalText"      value="&normalText.label;"/>
         <spacer flex="1"/>
-        <text class="label larger" id="LinkText"        value="&linkText.label;"/>
+        <label class="larger" id="LinkText"        value="&linkText.label;"/>
         <spacer flex="1"/>
-        <text class="label larger" id="ActiveLinkText"  value="&activeLinkText.label;"/>
+        <label class="larger" id="ActiveLinkText"  value="&activeLinkText.label;"/>
         <spacer flex="1"/>
-        <text class="label larger" id="VisitedLinkText" value="&visitedLinkText.label;"/>
+        <label class="larger" id="VisitedLinkText" value="&visitedLinkText.label;"/>
         <spacer flex="1"/>
       </vbox>
       <spacer flex="1"/>
     </hbox>
     <spacer class="spacer"/>
-    <text class="label small-margin" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
+    <label value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
     <hbox align="center">
       <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width: 23em" flex="1">
         <observes element="backgroundImageData" attribute="disabled"/>
@@ -133,7 +129,7 @@
               oncommand="ChooseImageFile()">
         <observes element="backgroundImageData" attribute="disabled"/>
       </button>
-      <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>
+      <data id="backgroundImageData" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>
     </hbox>
   </groupbox>
 </page>

@@ -29,16 +29,15 @@ Rights Reserved.
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="OnLoadProgressDialog()"
-        orient="vertical">
+        onload="OnLoadProgressDialog()">
 
   <script type="application/x-javascript" src="chrome://messenger/content/importProgress.js"/>
 
 	<keyset id="dialogKeys"/>
 
-	<text class="header" id="progressTitle" value="&title.label;"/>
+        <description class="header" id="progressTitle" value="&title.label;"/>
 	
-	<text class="label" id="progressStatus" value="&processing.label;" flex="1"/>
+        <description id="progressStatus" value="&processing.label;" flex="1"/>
 				
 	<progressmeter id="progressMeter" mode="normal" value="5" flex="1"/>
 

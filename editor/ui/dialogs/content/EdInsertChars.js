@@ -41,16 +41,13 @@ function Startup()
 
   StartupLatin();
 
-  doSetOKCancel(onOK, Cancel);
-
-
   // Dialog is non-modal:
   // Change "Ok" to "Insert, change "Cancel" to "Close"
-  var okButton = document.getElementById("ok");
+  var okButton = document.getElementById("insertCharsDlg").getButton("accept");
   if (okButton)
     okButton.setAttribute("label", GetString("Insert"));
 
-  var cancelButton = document.getElementById("cancel");
+  var cancelButton = document.getElementById("insertCharsDlg").getButton("cancel");
   if (cancelButton)
     cancelButton.setAttribute("label", GetString("Close"));
 
@@ -62,7 +59,7 @@ function Startup()
   SetWindowLocation();
 }
 
-function onOK()
+function onAccept()
 {
   // Insert the character
   // Note: Assiated parent window and editorShell
@@ -74,10 +71,11 @@ function onOK()
   CategoryGroup.setAttribute("category", category);
   CategoryGroup.setAttribute("letter_index", indexL);
   CategoryGroup.setAttribute("char_index", indexM);
+  return true;
+}
 
   // Return true only for modal window
   //return true;
-}
 
 // Don't allow inserting in HTML Source Mode
 function onFocus()
@@ -93,12 +91,6 @@ function Unload()
 {
   window.opener.InsertCharWindow = null;
   SaveWindowLocation();
-}
-
-function Cancel()
-{
-  // This will trigger call to "Unload()"
-  window.close();
 }
 
 //------------------------------------------------------------------

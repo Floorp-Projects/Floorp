@@ -33,8 +33,6 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  doSetOKCancel(onOK, onCancel);
-
   // Get the selected horizontal line
   hLineElement = editorShell.GetSelectedElement(tagName);
 
@@ -193,13 +191,12 @@ function ValidateData()
   return true;
 }
 
-function onOK()
+function onAccept()
 {
   if (ValidateData())
   {
     // Copy attributes from the globalElement to the document element
     editorShell.CloneAttributes(hLineElement, globalElement);
-    SaveWindowLocation();
     return true;
   }
   return false;

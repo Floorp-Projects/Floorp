@@ -25,9 +25,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
-<page id="serverpage" 
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.wizardManager.onPageLoad('server');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
@@ -40,38 +38,38 @@ Rights Reserved.
   
   <vbox class="box-wizardcontent" flex="1">
 
-    <groupbox orient="vertical">
+    <groupbox>
       <caption label="&incomingServerTitle.label;"/>
-      <html>&incomingServerTypeDesc.label;</html>
+      <description>&incomingServerTypeDesc.label;</description>
       <separator class="thin"/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <!-- The initial value for the servertype radiogroup is set in onInit() -->
         <radiogroup id="servertype" wsm_persist="true">
-            <radio group="servertype" value="pop3" id="pop3" label="&popType.label;" wsm_persist="true"/>
-            <radio group="servertype" value="imap" id="imap" label="&imapType.label;" wsm_persist="true"/>
+            <radio value="pop3" id="pop3" label="&popType.label;" wsm_persist="true"/>
+            <radio value="imap" id="imap" label="&imapType.label;" wsm_persist="true"/>
         </radiogroup>
       </hbox>
       <separator/>
-      <html>&incomingServerNameDesc.label;</html>
+      <description>&incomingServerNameDesc.label;</description>
       <separator class="thin"/>
-      <hbox autostretch="never">
-        <text class="label" style="width: 8em;" value="&incomingServerLabel.label;" for="hostname"/>
+      <hbox align="center">
+        <label style="width: 8em;" value="&incomingServerLabel.label;" control="hostname"/>
         <textbox wsm_persist="true" id="hostname" flex="1"/>
       </hbox>
     </groupbox>
 
-    <groupbox orient="vertical" id="noSmtp">
+    <groupbox id="noSmtp">
       <caption label="&smtpServerTitle.label;"/>
-      <html>&smtpServerDesc.label;</html>
+      <description>&smtpServerDesc.label;</description>
       <separator class="thin"/>
-      <hbox autostretch="never">
-        <text class="label" value="&smtpServerLabel.label;" for="smtphostname" style="width: 8em;"/>
+      <hbox align="center">
+        <label value="&smtpServerLabel.label;" control="smtphostname" style="width: 8em;"/>
         <textbox id="smtphostname" wsm_persist="true" flex="1"/>
       </hbox>
     </groupbox>
 
-    <groupbox id="haveSmtp" orient="vertical">
-      <html id="smtpStaticText" style="width: 200px;">&haveSmtp1.label;</html>
+    <groupbox id="haveSmtp">
+      <description id="smtpStaticText" style="width: 200px;">&haveSmtp1.label;</description>
     </groupbox>
   </vbox>
   

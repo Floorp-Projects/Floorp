@@ -44,6 +44,7 @@
 .sidebarTree
   {
     border                : none;
+    margin                : 0px 0px 0px 0px !important;
   }
 
 .sidebarTree > .tree-container-treerows

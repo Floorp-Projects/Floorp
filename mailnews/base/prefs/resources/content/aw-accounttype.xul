@@ -28,8 +28,7 @@ Rights Reserved.
 <page id="accounttype" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:nc="http://home.netscape.com/NC-rdf#"
-    onload="dump('** acctype onload\n'); parent.wizardManager.onPageLoad('accounttype');"
-    orient="vertical"
+    onload="parent.wizardManager.onPageLoad('accounttype');"
     onunload="onUnload();">
 
   <script src="aw-accounttype.js"/>
@@ -40,12 +39,11 @@ Rights Reserved.
   
   <vbox class="box-wizardcontent" flex="1">
 
-    <html class="desc">&accountTypeDesc.label;</html>
-    <html class="desc">&accountTypeDirections.label;</html>
+    <description class="desc">&accountTypeDesc.label;</description>
+    <description class="desc">&accountTypeDirections.label;</description>
     <separator/>
-    <radiogroup orient="vertical" 
-                name="acctyperadio" id="acctyperadio" >
-      <radio id="mailaccount" group="acctyperadio" value="mailaccount"
+    <radiogroup name="acctyperadio" id="acctyperadio" >
+      <radio id="mailaccount" value="mailaccount"
              wsm_persist="true"
              label="&accountTypeMail.label;"/>
   
@@ -55,14 +53,13 @@ Rights Reserved.
            ref="NC:ispinfo">
         <template>
           <rule nc:wizardShow="true">
-            <radio group="acctyperadio" uri="..."
-                      wsm_persist="true"
-                      value="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
-                      label="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
+            <radio uri="..." wsm_persist="true"
+                   value="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
+                   label="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
           </rule>
        </template>
       </vbox>
-      <radio group="acctyperadio" id="newsaccount" value="newsaccount"
+      <radio descriptionid="newsaccount" value="newsaccount"
              wsm_persist="true"
              label="&accountTypeNews.label;"/>
     </radiogroup>

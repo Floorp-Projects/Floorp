@@ -32,16 +32,15 @@ Rights Reserved.
     id="abcardWindow"
     title="&editcardWindow.title;"
     onload="OnLoadNewCard()"
-    class="dialog"
-    orient="vertical">
+    class="dialog">
 
   <stringbundleset id="stringbundleset"/>
 
   <keyset id="dialogKeys"/>
 
-  <hbox autostretch="never" valign="center">
+  <hbox align="center" valign="center">
 
-    <text for="abPopup" value="&chooseAddressBook.label;"/>
+    <label control="abPopup" value="&chooseAddressBook.label;"/>
     <menulist id="abPopup">
       <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory">
         <template> 

@@ -29,26 +29,21 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SmtpServerList.dtd">
 
-<window class="dialog"
-  title="&smtpListTitle.label;"
+<dialog title="&smtpListTitle.label;"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical"
   onload="onLoad();"
-  style="width: 30em;"
->
+  style="width: 30em;">
 
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 <script type="application/x-javascript" src="SmtpServerList.js"/>
 
-<keyset id="dialogKeys"/>
-
-<html flex="1">&smtpListDesc.label;</html>
+<description flex="1">&smtpListDesc.label;</description>
 
 <separator class="thin"/>
 
 <hbox>
-  <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" flex="1" style="height: 0px;">
+  <tree id="smtpTree" onselect="onSelectionChange(event);" flex="1" style="height: 0px;">
     <treecolgroup>
       <treecol flex="1"/>
     </treecolgroup>
@@ -68,6 +63,4 @@
 
 <separator/>
 
-<hbox id="okCancelButtonsRight" />
-
-</window>
+</dialog>

@@ -8,11 +8,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-viewing_messages.dtd">
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');"
-      orient="vertical">
-  <popupset id="aTooltipSet"/>
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://messenger/content/pref-viewing_messages.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -42,27 +39,26 @@
 
   <hbox class="box-smallheader" title="&pane.title;"/>
 
-  <groupbox orient="vertical" class="small-margin">
+  <groupbox>
     <caption label="&displayWidth.label;"/>
 
-      <html class="small-margin">&plainText.label;</html>
+      <description>&plainText.label;</description>
     
     <hbox class="indent">
       <radiogroup id="mailFixedWidthMessages" 
-                  pref="true" preftype="bool" prefstring="mail.fixed_width_messages"
-                  prefattribute="value">
-        <radio class="small-margin" group="mailFixedWidthMessages" value="true" label="&fixedWidth.label;"/>
-        <radio class="small-margin"  group="mailFixedWidthMessages" value="false" label="&variableWidth.label;"/>                
+                  preftype="bool" prefstring="mail.fixed_width_messages">
+        <radio value="true" label="&fixedWidth.label;"/>
+        <radio value="false" label="&variableWidth.label;"/>                
       </radiogroup>
     </hbox>
 
     <separator class="thin"/>
 
-  <html class="small-margin">&displayText.label;</html>
-    <hbox class="indent" autostretch="never">
-      <text class="label small-margin" value="&style.label;" accesskey="&style.accesskey;" for="mailQuotedStyle"/>
-      <menulist class="small-margin" id="mailQuotedStyle" pref="true" preftype="int" prefstring="mail.quoted_style"
-                prefattribute="value" flex="1" style="width: 0px;">
+  <description>&displayText.label;</description>
+    <hbox class="indent" align="center">
+      <label value="&style.label;" accesskey="&style.accesskey;" control="mailQuotedStyle"/>
+      <menulist id="mailQuotedStyle" prefstring="mail.quoted_style"
+                flex="1">
         <menupopup>
           <menuitem value="0" label="&regular.label;"/>
           <menuitem value="1" label="&bold.label;"/>
@@ -71,9 +67,9 @@
         </menupopup>
       </menulist>
 
-      <text class="label small-margin" value="&size.label;" accesskey="&size.accesskey;" for="mailQuotedSize"/>
-      <menulist class="small-margin"  id="mailQuotedSize" pref="true" preftype="int" prefstring="mail.quoted_size"
-                prefattribute="value" flex="1" style="width: 0px;">
+      <label value="&size.label;" accesskey="&size.accesskey;" control="mailQuotedSize"/>
+      <menulist id="mailQuotedSize" prefstring="mail.quoted_size"
+                flex="1" style="width: 0px;">
         <menupopup>
           <menuitem value="0" label="&regular.label;"/>
           <menuitem value="1" label="&bigger.label;"/>
@@ -81,37 +77,34 @@
         </menupopup>
       </menulist>
       
-      <text class="label small-margin" value="&color.label;" accesskey="&color.accesskey;"/>
-      <colorpicker class="small-margin" type="button" id="citationmenu" palettename="standard" onchange="setColorWell(this);"/>
+      <label value="&color.label;" accesskey="&color.accesskey;"/>
+      <colorpicker type="button" id="citationmenu" palettename="standard" onchange="setColorWell(this);"/>
       <broadcaster id="mailCitationColor" pref="true" preftype="color" prefstring="mail.citation_color" prefattribute="value" wsm_attributes="value"/>
     </hbox>    
 
-  <html class="small-margin">&viewingPlainText.label;</html>
-    <vbox autostretch="never" class="indent">
-      <checkbox class="small-margin"  id="wrapLongLines" label="&wrapInMsg.label;"
-                pref="true" preftype="bool" prefstring="mail.wrap_long_lines" 
-                prefattribute="checked"/>
-      <checkbox class="iconic small-margin" id="displayGlyph" label="&convertEmoticons.label;"
-                pref="true" preftype="bool" prefstring="mail.display_glyph"
-                prefattribute="checked"/>   
-      <hbox autostretch="never" class="indent">
-           <text value="&example1.label;" class="label"/>
+  <description>&viewingPlainText.label;</description>
+    <vbox align="start" class="indent">
+      <checkbox id="wrapLongLines" label="&wrapInMsg.label;"
+                prefstring="mail.wrap_long_lines" />
+      <checkbox class="iconic" id="displayGlyph" label="&convertEmoticons.label;"
+                prefstring="mail.display_glyph"/>   
+      <hbox align="center" class="indent">
+           <label value="&example1.label;"/>
            <image class="smileface"/>
-           <text value="&example2.label;"/>
+           <label value="&example2.label;"/>
       </hbox>
     
     </vbox>
   </groupbox>
 
-  <groupbox orient="vertical" autostretch="never" class="small-margin">
+  <groupbox align="start">
     <caption label="&languagesTitle.label;"/>
-    <html class="small-margin">&coding.label;</html>
-    <hbox autostretch="never">
-      <text class="label"  for="sendDefaultCharsetList"
-            value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
-        <menulist class="small-margin" id="sendDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-                pref="true" preftype="localizedstring" prefstring="mailnews.view_default_charset"
-                prefattribute="value">
+    <description>&coding.label;</description>
+    <hbox align="center">
+      <label control="sendDefaultCharsetList"
+             value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
+        <menulist id="sendDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+                preftype="localizedstring" prefstring="mailnews.view_default_charset">
         <template>
           <menupopup>
             <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
@@ -119,9 +112,7 @@
         </template>
       </menulist> 
     </hbox>      
-    <checkbox class="small-margin" id="forceCharsetOverride" label="&forceCharsetOverride.label;"
-              pref="true" preftype="bool" prefstring="mailnews.force_charset_override" 
-              prefattribute="checked"/>
-  </groupbox>
-    
+    <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
+              prefstring="mailnews.force_charset_override"/>
+  </groupbox>   
 </page>

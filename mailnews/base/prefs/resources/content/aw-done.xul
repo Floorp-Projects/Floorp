@@ -26,7 +26,6 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-done.dtd" >
 <page id="done" 
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
       onload="parent.wizardManager.onPageLoad('done');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
@@ -38,7 +37,7 @@ Rights Reserved.
   
   <vbox class="box-wizardcontent" flex="1">
 
-    <html>&completionText.label;</html>
+    <description>&completionText.label;</description>
 
     <separator class="thin"/>
 
@@ -48,42 +47,42 @@ Rights Reserved.
         <column flex="1"/>
       </columns>
       <rows>
-        <row autostretch="never" id="account.name">
-          <text class="label" flex="1" id="account.name.label" value="&accountNamePrefix.label;"/>
-          <text class="label" id="account.name.text"/>
+        <row align="center" id="account.name">
+          <label flex="1" id="account.name.label" value="&accountNamePrefix.label;"/>
+          <label id="account.name.text"/>
         </row>
-        <row autostretch="never" id="server.username">
-          <text class="label" flex="1" id="server.username.label" value="&userNamePrefix.label;"/>
-          <text class="label" id="server.username.text"/>
+        <row align="center" id="server.username">
+          <label flex="1" id="server.username.label" value="&userNamePrefix.label;"/>
+          <label id="server.username.text"/>
         </row>
-        <row autostretch="never" id="identity.email">
-          <text class="label" flex="1" id="identity.email.label" value="&emailPrefix.label;"/>
-          <text class="label" id="identity.email.text"/>
+        <row align="center" id="identity.email">
+          <label flex="1" id="identity.email.label" value="&emailPrefix.label;"/>
+          <label id="identity.email.text"/>
         </row>
-        <row autostretch="never" id="server.name">
-          <text class="label" flex="1" id="server.name.label" value="&serverNamePrefix.label;"/>
-          <text class="label" id="server.name.text"/>
+        <row align="center" id="server.name">
+          <label flex="1" id="server.name.label" value="&serverNamePrefix.label;"/>
+          <label id="server.name.text"/>
         </row>
-        <row autostretch="never" id="server.type">
-          <text class="label" flex="1" id="server.type.label" value="&serverTypePrefix.label;"/>
-          <text class="label" id="server.type.text"/>
+        <row align="center" id="server.type">
+          <label flex="1" id="server.type.label" value="&serverTypePrefix.label;"/>
+          <label id="server.type.text"/>
         </row>
-        <row autostretch="never" id="newsServer.name">
-          <text class="label" flex="1" id="newsServer.name.label" value="&newsServerNamePrefix.label;"/>
-          <text class="label" id="newsServer.name.text"/>
+        <row align="center" id="newsServer.name">
+          <label flex="1" id="newsServer.name.label" value="&newsServerNamePrefix.label;"/>
+          <label id="newsServer.name.text"/>
         </row>
-        <row autostretch="never" id="smtpServer.name">
-          <text class="label" flex="1" id="smtpServer.name.label" value="&smtpServerNamePrefix.label;"/>
-          <text class="label" id="smtpServer.name.text"/>
+        <row align="center" id="smtpServer.name">
+          <label flex="1" id="smtpServer.name.label" value="&smtpServerNamePrefix.label;"/>
+          <label id="smtpServer.name.text"/>
         </row>
       </rows>
     </grid>
-    <!-- <html>&setupAnother.label;</html> -->
+    <!-- <description>&setupAnother.label;</description> -->
     <separator/>
-    <html>&clickFinish.label;</html>
+    <description>&clickFinish.label;</description>
     <!--
       <hbox>
-        <button class="dialog push" label="&setupAnotherButton.label;" oncommand="setupAnother(event);"/>
+        <button label="&setupAnotherButton.label;" oncommand="setupAnother(event);"/>
       </hbox>
     -->
   </vbox>

@@ -7,8 +7,8 @@
   <binding id="textdisabled" extends="xul:text">
     <content>
       <xul:stack>
-        <xul:text class="text-bottom" inherits="value,accesskey,crop"/>
-        <xul:text class="text-top" inherits="value,accesskey,crop"/>
+        <xul:label class="text-bottom" inherits="value,accesskey,crop"/>
+        <xul:label class="text-top" inherits="value,accesskey,crop"/>
       </xul:stack>
     </content>
   </binding>
@@ -38,12 +38,12 @@
       <xul:hbox flex="1" class="radio-internal-box" align="center">
         <xul:hbox class="radio-checkmark-box-1" align="center" inherits="disabled">
           <xul:hbox class="radio-checkmark-box-2" align="center" flex="1">
-            <xul:image class="radio-check" inherits="checked,disabled"/>
+            <xul:image class="radio-check" inherits="selected,disabled"/>
           </xul:hbox>
         </xul:hbox>
         <xul:hbox class="radio-text-container" flex="1" align="center">
           <xul:image class="radio-icon" inherits="src,disabled"/>
-          <xul:html class="radio-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
+          <xul:label class="radio-text" inherits="xbl:text=label,accesskey,crop,disabled" flex="1"/>
         </xul:hbox>          
       </xul:hbox>
     </content>
@@ -58,7 +58,7 @@
           </xul:hbox>
         </xul:hbox>
         <xul:image class="checkbox-icon" inherits="src,disabled"/>
-        <xul:html class="checkbox-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
+        <xul:label class="checkbox-text" inherits="xbl:text=label,accesskey,crop,disabled" flex="1"/>
       </xul:hbox>
     </content>
   </binding>
@@ -112,8 +112,8 @@
         <xul:image/>
       </xul:vbox>
       <xul:spacer class="menuitem-iconic-spacer"/>
-      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
+      <xul:label class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
   </binding>
 
@@ -122,8 +122,8 @@
       <xul:hbox class="largeheader-box" flex="1">
         <xul:vbox class="largeheader-text-container">
           <xul:spacer flex="1"/>
-          <xul:text class="largeheader-header-text" inherits="value=title" crop="right"/>
-          <xul:html class="largeheader-desc-text" inherits="value=description"/>
+          <xul:label class="largeheader-header-text" inherits="value=title" crop="right"/>
+          <xul:label class="largeheader-desc-text" inherits="value=description"/>
           <xul:spacer flex="1"/>
         </xul:vbox>
         <xul:spacer flex="1"/>
@@ -138,7 +138,7 @@
     <content>
       <xul:hbox flex="1" align="center">
         <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
-        <xul:text class="toolbarbutton-left-text" inherits="value=label,crop"/>
+        <xul:label class="toolbarbutton-left-text" inherits="value=label,crop"/>
       </xul:hbox>
     </content>
   </binding>  
@@ -147,7 +147,7 @@
     <content>
       <xul:vbox flex="1" align="center">
         <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
-        <xul:text class="toolbarbutton-top-text" inherits="value=label,crop"/>
+        <xul:label class="toolbarbutton-top-text" inherits="value=label,crop"/>
       </xul:vbox>
     </content>
   </binding>  
@@ -164,8 +164,8 @@
   <binding id="disabled-text" extends="xul:stack">
     <content>
       <xul:stack class="disabled-text-stack">
-        <xul:text class="disabled-text-bottom"/>
-        <xul:text class="disabled-text-top"/>
+        <xul:label class="disabled-text-bottom"/>
+        <xul:label class="disabled-text-top"/>
       </xul:stack>        
     </content>  
   </binding>

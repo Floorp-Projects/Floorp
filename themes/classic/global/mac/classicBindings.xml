@@ -7,8 +7,8 @@
   <binding id="textdisabled" extends="xul:text">
     <content>
       <xul:stack>
-        <xul:text class="text-bottom" inherits="value,accesskey,crop"/>
-        <xul:text class="text-top" inherits="value,accesskey,crop"/>
+        <xul:label class="text-bottom" inherits="value,accesskey,crop"/>
+        <xul:label class="text-top" inherits="value,accesskey,crop"/>
       </xul:stack>
     </content>
   </binding>
@@ -37,11 +37,11 @@
       <xul:hbox flex="1" class="radio-internal-box" align="center">
         <xul:hbox class="radio-checkmark-box-1" align="center" inherits="disabled">
           <xul:hbox class="radio-checkmark-box-2" align="center" flex="1">
-            <xul:image class="radio-check" inherits="checked,disabled"/>
+            <xul:image class="radio-check" inherits="selected,disabled"/>
           </xul:hbox>
         </xul:hbox>
         <xul:image class="radio-icon" inherits="src,disabled"/>
-        <xul:html class="radio-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
+        <xul:description class="radio-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
       </xul:hbox>
     </content>
   </binding>
@@ -55,7 +55,7 @@
           </xul:hbox>
         </xul:hbox>
         <xul:image class="checkbox-icon" inherits="src,disabled"/>
-        <xul:html class="checkbox-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
+        <xul:description class="checkbox-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
       </xul:hbox>
     </content>
   </binding>
@@ -146,7 +146,7 @@
     <content>
       <xul:hbox class="treeheader-box" flex="1" align="center">
         <xul:image class="treeheader-icon" inherits="src,loading"/>
-        <xul:text class="treeheader-text" inherits="value=label,crop" crop="right"/>
+        <xul:label class="treeheader-text" inherits="value=label,crop" crop="right"/>
       </xul:hbox>
     </content>
   </binding>
@@ -156,7 +156,7 @@
       <xul:spacer class="tab-image-left" inherits="selected"/>
       <xul:hbox flex="1" class="tab-image-middle" align="center" inherits="selected">
         <xul:image class="tab-left"/>
-        <xul:text flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
+        <xul:label flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
       </xul:hbox>
       <xul:spacer class="tab-image-right" inherits="selected"/>
     </content>
@@ -179,7 +179,7 @@
           <xul:image inherits="src" class="box-header-icon"/>
         </xul:hbox>
         <xul:hbox class="box-header-text-box" align="center">
-          <xul:text class="box-header-text" inherits="value=title"/>
+          <xul:label class="box-header-text" inherits="value=title"/>
         </xul:hbox>
         <xul:spacer flex="1"/>
       </xul:hbox>
@@ -190,7 +190,7 @@
     <content>
       <xul:hbox align="center" flex="1">
         <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
-        <xul:text class="toolbarbutton-left-text" inherits="value=label,crop"/>
+        <xul:label class="toolbarbutton-left-text" inherits="value=label,crop"/>
       </xul:hbox>
     </content>
   </binding>  
@@ -199,7 +199,7 @@
     <content>
       <xul:vbox flex="1" align="center">
         <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
-        <xul:text class="toolbarbutton-top-text" inherits="value=label,crop"/>
+        <xul:label class="toolbarbutton-top-text" inherits="value=label,crop"/>
       </xul:vbox>
     </content>
   </binding>  

@@ -33,8 +33,7 @@
 <!DOCTYPE window SYSTEM "chrome://cview/locale/cviewOverlay.dtd" >
 
 <overlay id="CViewTaskMenuID"
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript"
   src="chrome://cview/content/cviewOverlay.js"/>

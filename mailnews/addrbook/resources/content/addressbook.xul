@@ -38,13 +38,11 @@ Rights Reserved.
 %brandDTD;
 ]>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     id="addressbookWindow"
     height="450"
     width="750"
-    orient="vertical"
     title="&addressbookWindow.title;"
     windowtype="mail:addressbook"
     persist="width height screenX screenY sizemode"
@@ -238,7 +236,7 @@ Rights Reserved.
         <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
      </hbox>
 
-     <hbox id="throbber-box" autostretch="never">
+     <hbox id="throbber-box" align="center">
       <button id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
         <observes element="broadcaster_throbber" attribute="busy"/>
       </button>

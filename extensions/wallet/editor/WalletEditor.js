@@ -97,12 +97,11 @@ function Startup()
     return; /* user failed to unlock the database */
   }
   ViewSchema(); /* create the display of schemas */
-  doSetOKCancel(onOK, null); /* register the onOK method */
   window.sizeToContent();
 }
 
 /* routine that executes when OK button is pressed */
-function onOK(){
+function onAccept(){
   var i, j, k;
   var output = "OK" + BREAK;
   for (i=0; i<schemasLength; i++) {

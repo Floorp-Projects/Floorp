@@ -7,34 +7,30 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-serverwithnoidentities.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      xmlns:html="http://www.w3.org/1999/xhtml"
-      onload="parent.onPanelLoaded('am-serverwithnoidentities.xul');"
-      orient="vertical">
+      onload="parent.onPanelLoaded('am-serverwithnoidentities.xul');">
 
   <script src="chrome://messenger/content/am-serverwithnoidentities.js"/>
 
   <hbox class="box-smallheader" title="&accountTitle.label;"/>
 
-  <html class="secDesc">&accountSettingsDesc.label;</html>
+  <description class="secDesc">&accountSettingsDesc.label;</description>
   <grid>
     <columns>
       <column flex="1"/>
       <column flex="2"/>
     </columns>
     <rows>
-      <row  autostretch="never">
-        <text class="label" value="&accountName.label;" for="server.prettyName"/>
+      <row align="center">
+        <label value="&accountName.label;" control="server.prettyName"/>
         <textbox wsm_persist="true" size="30" id="server.prettyName"
-                 pref="true" preftype="string" prefattribute="value"
                  prefstring="mail.server.%serverkey%.name"/>
       </row>
     </rows>
   </grid>
   <spacer flex="1"/>
   <vbox>
-    <text value="&localPath.label;"/>
+    <label value="&localPath.label;"/>
     <textbox wsm_persist="true" size="60" id="server.localPath" datatype="nsIFileSpec"
-             pref="true" preftype="string" prefattribute="value"
              prefstring="mail.server.%serverkey%.directory"/>
   </vbox>
 </page>

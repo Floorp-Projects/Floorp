@@ -185,8 +185,6 @@ function OnLoadMailList()
 {
   //XXX: gAddressBookBundle is set in 2 places because of different callers
   gAddressBookBundle = document.getElementById("bundle_addressBook");
-  doSetOKCancel(MailListOKButton, 0);
-
   var selectedAB;
   if (window.arguments && window.arguments[0])
   {
@@ -246,7 +244,6 @@ function OnLoadEditList()
 {
   //XXX: gAddressBookBundle is set in 2 places because of different callers
   gAddressBookBundle = document.getElementById("bundle_addressBook");
-  doSetOKCancel(EditListOKButton, 0);
 
   parentURI  = window.arguments[0].abURI;
   var listUri  = window.arguments[0].listURI;

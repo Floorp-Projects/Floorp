@@ -106,28 +106,28 @@ popup > menuitem[menuactive="true"]
 
 .menu-iconic-text
   {
-    margin                : 2px 2px 2px 0px;
+    margin                : 2px 2px 2px 0px !important;
   }
 
 .menu-text 
   {
-    margin                : 2px 2px 2px 23px;
+    margin                : 2px 2px 2px 23px !important;
   }
 
 .menu-accel 
   {
-    margin                : 2px 14px 2px 10px;
+    margin                : 2px 14px 2px 10px !important;
   }
 
 .menu-iconic-accel 
   {
-    margin                : 2px 14px 2px 4px;
+    margin                : 2px 14px 2px 4px !important;
   }
 
 .menubar-text 
   {
     color                 : inherit;
-    margin-right          : 2px;
+    margin                : 0px 2px 0px 0px !important;
   }
 
 menuitem[checked="true"] 
@@ -205,8 +205,8 @@ menuitem[checked="true"][type="radio"][menuactive="true"]
   menulist > menupopup > menu > .menu-iconic-text,
   menulist > menupopup > menu > .menu-iconic-accel
     {
-      margin-top          : 0px;
-      margin-bottom       : 0px;
+      margin-top          : 0px !important;
+      margin-bottom       : 0px !important;
     }
 
   menulist > menupopup > menuitem[menuactive="true"]

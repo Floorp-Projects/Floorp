@@ -33,17 +33,17 @@
       list-style-image: none;
     }
 
-  radio[checked="true"] > .internal-box > .checkmark-box > image 
+  radio[selected="true"] > .internal-box > .checkmark-box > image 
     {
       list-style-image: url(chrome://global/skin/check-radio-check.gif);
     }
   
-  radio[checked="true"][disabled="true"] > .internal-box > .checkmark-box > image
+  radio[selected="true"][disabled="true"] > .internal-box > .checkmark-box > image
     {
       list-style-image: url(chrome://global/skin/check-radio-check-disable.gif);
     }
 
-  radio[checked="true"]:hover:active > .internal-box > .checkmark-box > image
+  radio[selected="true"]:hover:active > .internal-box > .checkmark-box > image
     {
   	  list-style-image: url(chrome://global/skin/check-radio-check-active.gif);  
     }

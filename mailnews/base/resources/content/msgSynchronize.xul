@@ -33,7 +33,6 @@ Contributors:
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="msg-synchronizer" 
         title="&MsgSynchronize.label;"
-        orient="vertical"
         class="dialog"
         width="380" height="295"
         onload="OnLoad();">
@@ -45,11 +44,11 @@ Contributors:
 <script type="application/x-javascript" src="chrome://messenger/content/msgSynchronize.js"/>
 
     <keyset id="keyset"/>
-    <text hidden="true" wsm_persist="true" id="server.type"/>
+    <label hidden="true" wsm_persist="true" id="server.type"/>
 
-    <html class="desc">&MsgSyncDesc.label;</html>
+    <description class="desc">&MsgSyncDesc.label;</description>
     <separator class="thin"/>
-    <text class="label" value="&MsgSyncDirections.label;"/>
+    <label value="&MsgSyncDirections.label;"/>
 
     <vbox class="indent">
         <checkbox id="syncMail" hidable="true" hidefor="pop3" label="&syncTypeMail.label;"/>
@@ -61,10 +60,10 @@ Contributors:
     </vbox>
     <separator class="thin"/>
     <hbox align="right">
-        <button id="select" class="dialog" label="&selectButton.label;"  oncommand="OnSelect();"/>
+        <button id="select" label="&selectButton.label;"  oncommand="OnSelect();"/>
     </hbox>
 
     <separator/>
-    <hbox id="okCancelButtonsRight" flex="1" autostretch="never"/>
+    <hbox id="okCancelButtonsRight" flex="1"/>
 
 </window>

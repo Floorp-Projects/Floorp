@@ -27,18 +27,16 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
 
 
-<window xmlns:NC="http://home.netscape.com/NC-rdf#" 
+<dialog xmlns:NC="http://home.netscape.com/NC-rdf#" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&subscribeDialog.title;"
-        orient="vertical"
-        class="dialog"
         width="500"
         height="400"
-        id="subscribeWindow"
         persist="width height screenX screenY"
         onload="SubscribeOnLoad()"
         onunload="SubscribeOnUnload()"
-        onclose="Stop()">
+        ondialogaccept="return subscribeOK();"
+        ondialogcancel="return subscribeCancel();">
         
 <stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
@@ -46,8 +44,6 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
-
-  <keyset id="dialogKeys"/>
 
   <grid flex="1" style="width: 40em; height: 25em;">
     <columns>
@@ -96,7 +92,7 @@ Rights Reserved.
       <row flex="1">
       <deck id="subscribedeck" selectedIndex="0">
       <hbox id="normalview">
-        <tree class="inset" flex="1"
+        <tree flex="1"
               id="subscribetree"
               datasources="rdf:null"
               multiple="true"
@@ -144,10 +140,10 @@ Rights Reserved.
      </hbox>
      </deck>
         <vbox>
-          <button id="subscribe" class="dialog" label="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
-          <button id="unsubscribe" class="dialog" label="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
-          <button id="refresh" class="dialog" label="&refreshButton.label;" oncommand="Refresh()"/>
-          <button id="stop" class="dialog" label="&stopButton.label;" oncommand="Stop()"/>
+          <button id="subscribe" label="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
+          <button id="unsubscribe" label="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
+          <button id="refresh" label="&refreshButton.label;" oncommand="Refresh()"/>
+          <button id="stop" label="&stopButton.label;" oncommand="Stop()"/>
           <spacer flex="1"/>
         </vbox>
       </row>
@@ -156,9 +152,4 @@ Rights Reserved.
       </row>
     </rows>
   </grid>
-  
-  <separator/>
-
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>

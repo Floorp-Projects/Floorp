@@ -25,9 +25,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-server.dtd" >
-<page id="serverpage" 
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.wizardManager.onPageLoad('newsserver');">
 
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
@@ -40,10 +38,10 @@ Rights Reserved.
  
   <vbox class="box-wizardcontent" flex="1">
 
-    <html>&newsServerNameDesc.label;</html>
+    <description>&newsServerNameDesc.label;</description>
     <separator class="thin"/>
-    <hbox autostretch="never">
-      <text class="label" for="hostname" value="&incomingServerLabel.label;" style="width: 8em;"/>
+    <hbox align="center">
+      <label control="hostname" value="&incomingServerLabel.label;" style="width: 8em;"/>
       <textbox id="hostname" wsm_persist="true" flex="1"/>
     </hbox>
   

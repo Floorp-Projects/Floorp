@@ -67,7 +67,7 @@
     <content>
       <xul:vbox flex="1" align="center">
         <xul:image class="simplebutton-icon" inherits="src,disabled"/>
-        <xul:text class="simplebutton-text" inherits="value=label,accesskey,crop,disabled"/>
+        <xul:label class="simplebutton-text" inherits="value=label,accesskey,crop,disabled"/>
         <children/>
       </xul:vbox>
     </content>

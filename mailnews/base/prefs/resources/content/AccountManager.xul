@@ -6,9 +6,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
 <window id="account-manager" 
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    title="&accountManagerTitle.label;"
-        orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&accountManagerTitle.label;"
         class="dialog"
         width="620" height="470"
         persist="screenX screenY width height"
@@ -28,7 +27,6 @@
       <tree datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
             containment="http://home.netscape.com/NC-rdf#Settings"
             onselect="onAccountClick(event.target)" id="accounttree"
-            class="inset"
             sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
             sortDirection="ascending"
             ref="msgaccounts:/">
@@ -52,20 +50,15 @@
         </template>
       </tree>
       <button label="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"
-              pref="true" preftype="bool" prefattribute="disabled"
               prefstring="mail.accountmanager.accounts"/>
       <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"
-              pref="true" preftype="bool" prefattribute="disabled"
               prefstring="mail.disable_button.set_default_account"/>
   
-      <hbox >
         <!-- taking out for PR2
-          <button class="dialog" disabled="true" label="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
+          <button disabled="true" label="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();"/>
         -->
-        <button class="dialog" disabled="true" label="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"
-                pref="true" preftype="bool" prefattribute="disabled"
+        <button disabled="true" label="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton"
                 prefstring="mail.disable_button.delete_account"/>
-      </hbox>
     </vbox>
   
     <iframe id="contentFrame" name="contentFrame" flex="6" style="width: 0px"/>

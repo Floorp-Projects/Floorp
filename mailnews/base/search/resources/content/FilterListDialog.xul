@@ -31,7 +31,6 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
 <window class="dialog" id="filterListDialog"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical"
   windowtype="mailnews:filterlist"
   onload="onLoad();"
   width="440"
@@ -44,8 +43,8 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
 
   <keyset id="dialogKeys"/>
 
-  <hbox autostretch="never">
-    <text class="label" value="&filtersForPrefix.label;"/>
+  <hbox align="center">
+    <label value="&filtersForPrefix.label;"/>
       <menulist oncommand="onServerClick(event);" id="serverMenu">
         <menupopup datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
                    containment="http://home.netscape.com/NC-rdf#child" ref="msgaccounts:/">
@@ -73,13 +72,13 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
         <separator/>
       </row>
       <row>
-        <html>&filterHeader.label;</html>
+        <description>&filterHeader.label;</description>
       </row>
       
       
       <row flex="1">
         <vbox>
-          <tree id="filterTree" class="inset" flex="1"
+          <tree id="filterTree" flex="1"
                 onselect="onFilterSelect(event);"
                 ondblclick="onFilterDoubleClick(event);"
                 datasources="rdf:msgfilters rdf:msgaccountmanager"

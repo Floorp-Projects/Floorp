@@ -315,7 +315,7 @@ menulist[editable="true"]:focus > .menulist-editable-box {
 }
 
 .menulist-compact-text {
-  margin-right: 3px;
+  margin: 0px 3px 0px 0px !important;
 }  
     
 .menulist-compact-internal-box {

@@ -21,7 +21,6 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -30,11 +29,8 @@
 %walletviewerDTD;
 ]>
 
-<window debug="false" xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel();">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel();">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -48,7 +44,7 @@
   <script type="application/x-javascript"
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
-  <groupbox class="tabpanel" autostretch="never">
+  <groupbox align="start">
     <caption label="&misc.title;"/>
     <grid class="indent" flex="1">
 
@@ -60,7 +56,7 @@
       <rows>
 
         <row align="center">
-          <html>&miscSS.label;</html>
+          <description>&miscSS.label;</description>
           <hbox>
             <menulist id="socsec.prefix" editable="true" autoSelectMenuitem="false" flex="33%" width="0"
                       onchange="Append(this)">
@@ -68,14 +64,14 @@
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <text value="__"/>
+            <label value="__"/>
             <menulist id="socsec.middle" editable="true" autoSelectMenuitem="false" flex="24%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <text value="__"/>
+            <label value="__"/>
             <menulist id="socsec.suffix" editable="true" autoSelectMenuitem="false" flex="43%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -86,7 +82,7 @@
         </row>
 
         <row align="center">
-          <html>&miscLicense.label;</html>
+          <description>&miscLicense.label;</description>
           <hbox align="center">
             <menulist id="license.number" editable="true" autoSelectMenuitem="false" flex="70" width="0"
                       onchange="Append(this)">
@@ -95,7 +91,7 @@
               </menupopup>
             </menulist>
             <spacer style="width: 5px;"/>
-            <text value="&miscLicenseState.label;" />
+            <label value="&miscLicenseState.label;" />
             <menulist id="license.state" editable="true" autoSelectMenuitem="false" flex="30" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -106,7 +102,7 @@
         </row>
 
         <row align="center">
-          <html>&miscMaiden.label;</html>
+          <description>&miscMaiden.label;</description>
           <menulist id="mothersmaidenname" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup onpopupshowing="Append(this.parentNode)">
@@ -116,23 +112,23 @@
         </row>
 
         <row align="center">
-          <html>&miscBirthday.label;</html>
+          <description>&miscBirthday.label;</description>
           <hbox align="center">
-            <text value="&miscBirthdayMonth.label;" />
+            <label value="&miscBirthdayMonth.label;" />
             <menulist id="bdate.month" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <text value="&miscBirthdayDay.label;" />
+            <label value="&miscBirthdayDay.label;" />
             <menulist id="bdate.day" editable="true" autoSelectMenuitem="false" flex="20%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <text value="&miscBirthdayYear.label;" />
+            <label value="&miscBirthdayYear.label;" />
             <menulist id="bdate.year" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -143,23 +139,23 @@
         </row>
 
         <row align="center">
-          <html>&miscAnniv.label;</html>
+          <description>&miscAnniv.label;</description>
           <hbox align="center">
-            <text value="&miscAnnivMonth.label;" />
+            <label value="&miscAnnivMonth.label;" />
             <menulist id="anniv.month" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <text value="&miscAnnivDay.label;" />
+            <label value="&miscAnnivDay.label;" />
             <menulist id="anniv.day" editable="true" autoSelectMenuitem="false" flex="20%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <text value="&miscAnnivYear.label;" />
+            <label value="&miscAnnivYear.label;" />
             <menulist id="anniv.year" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -173,5 +169,4 @@
 
     </grid>
   </groupbox>
-
-</window>
+</page>

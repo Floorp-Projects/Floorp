@@ -14,7 +14,8 @@ tree
     border-bottom         : 1px solid ThreeDHighlight;                          
     border-left           : 1px solid ThreeDShadow; 
     background-color      : -moz-Field;
-    color                 : -moz-FieldText;    
+    color                 : -moz-FieldText;
+    margin                : 1px 5px 2px 5px;
   }
 
 .tree-container-treerows[dragover="true"][dragdroptree="true"]
@@ -36,11 +37,6 @@ tree
     padding               : 1px;
   }  
   
-tree.inset
-  {
-    margin                : 1px 5px 2px 5px;
-  }
-
 treeitem[selected="true"] > treerow
   {
     color                 : -moz-DialogText;
@@ -113,6 +109,11 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
 .treecell-header-box
   {
     padding               : 0px 4px 0px 4px;
+  }
+
+.tree-header-text
+  {
+    margin                : 0px 0px 0px 0px !important;
   }
 
 .treecell-header-image-box 
@@ -268,3 +269,7 @@ treerow[mode="inline-edit"]
     margin-left           : 0px;
   }
 
+.tree-cell-text
+  {
+    margin: 0px 0px 0px 0px !important;
+  }

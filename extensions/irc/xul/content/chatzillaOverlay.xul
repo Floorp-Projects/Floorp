@@ -5,8 +5,7 @@
 <!-- This is the overlay that addes "Chatzilla" to the (global) task menu. -->
 
 <overlay id="ChatzillaTaskMenuID"
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://chatzilla/content/chatzillaOverlay.js"/>
 

@@ -6,19 +6,17 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-imap-advanced.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       style="padding: 10px"
       title="&imapAdvanced.label;"
-      onload="onLoad();"
-      orient="vertical">
+      onload="onLoad();">
 
 <keyset id="dialogKeys"/>
 
 <script src="am-imap-advanced.js"/>
 
 <hbox>
-  <text value="&serverDirectory.label;" class="label"/>
+  <label value="&serverDirectory.label;"/>
   <textbox imap_persist="true" id="serverDirectory"/>
 </hbox>
 
@@ -28,7 +26,7 @@
 
 <separator class="groove"/>
 
-<html>&namespaceDesc.label;</html>
+<description>&namespaceDesc.label;</description>
 <grid>
   <columns>
     <column/>
@@ -38,17 +36,17 @@
   <rows>
     <row>
       <separator class="indent"/>
-      <text for="personalNamespace" class="label" value="&personalNamespace.label;"/>
+      <label control="personalNamespace" value="&personalNamespace.label;"/>
       <textbox imap_persist="true" id="personalNamespace" />
     </row>
     <row>
       <separator class="indent"/>
-      <text for="publicNamespace" class="label" value="&publicNamespace.label;"/>
+      <label control="publicNamespace" value="&publicNamespace.label;"/>
       <textbox imap_persist="true" id="publicNamespace"/>
     </row>
     <row>
       <separator class="indent"/>
-      <text for="otherUsersNamespace" class="label" value="&otherUsersNamespace.label;"/>
+      <label control="otherUsersNamespace" value="&otherUsersNamespace.label;"/>
       <textbox imap_persist="true" id="otherUsersNamespace"/>
     </row>
   </rows>

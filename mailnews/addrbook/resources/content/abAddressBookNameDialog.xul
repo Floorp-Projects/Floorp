@@ -28,7 +28,6 @@ Rights Reserved.
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	title="&title.label;"
-        orient="vertical"
         class="dialog"
         onload="abNameOnLoad()"
         style="padding:10px"> 
@@ -41,7 +40,7 @@ Rights Reserved.
 		
 		<spacer flex="1"/>
 
-		<text for="name" style="margin-bottom:.3em" value="&name.label;"/>
+                <label control="name" style="margin-bottom:.3em" value="&name.label;"/>
 		
 		<textbox tabindex="0" id="name" style="width: 100%"/>
 		

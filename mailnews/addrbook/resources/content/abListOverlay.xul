@@ -64,7 +64,7 @@ Rights Reserved.
 	<spacer style="height:0.1em"/>
 	<hbox  flex="100%">
 		<vbox flex="80%">
-			<tree id="addressListTree" class="inset"
+			<tree id="addressListTree"
 				  rows="8"
 				  onclick="awClickEmptySpace(event.target, true)">
 

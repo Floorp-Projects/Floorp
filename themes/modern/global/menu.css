@@ -54,12 +54,12 @@ menuitem[menuactive="true"][disabled="true"] {
 .menu-iconic-left,
 .menu-iconic-text,
 .menu-iconic-accel {
-  margin: 0px 2px 0px 0px;
+  margin: 0px 2px 0px 0px !important;
   color: inherit;
 }
 
 .menu-text {
-  margin-left: 18px;
+  margin-left: 18px !important;
   font-weight: inherit;
 }
 
@@ -119,7 +119,7 @@ menubar > menu[menuactive="true"][open="true"] {
 }
 
 .menubar-text {
-  margin-right: 2px;
+  margin: 0px 2px 0px 0px !important;
   color: inherit;
 }
 

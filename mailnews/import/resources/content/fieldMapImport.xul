@@ -28,11 +28,10 @@ Rights Reserved.
 
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&fieldMapImport.title;"
-    class="dialog"
-        onload="OnLoadFieldMapImport()"
-        orient="vertical">
+        class="dialog"
+        onload="OnLoadFieldMapImport()">
 
   <script type="application/x-javascript" src="chrome://messenger/content/fieldMapImport.js"/>
 
@@ -64,13 +63,13 @@ Rights Reserved.
 
   <hbox>
     <spacer flex="50%"/>
-    <button class="dialog" id="previous" oncommand="OnPreviousRecord()" label="&fieldMapImport.previous;"/>
+    <button id="previous" oncommand="OnPreviousRecord()" label="&fieldMapImport.previous;"/>
     <spacer style="width: 2em"/>
-    <text value="&fieldMapImport.recordNumber;"/>
+    <label value="&fieldMapImport.recordNumber;"/>
     <spacer style="width: 1em"/>
-    <text id="recordNumber"/>
+    <label id="recordNumber"/>
     <spacer style="width: 2em"/>
-    <button class="dialog" id="next" oncommand="OnNextRecord()" label="&fieldMapImport.next;"/>
+    <button id="next" oncommand="OnNextRecord()" label="&fieldMapImport.next;"/>
     <spacer flex="50%"/>    
   </hbox>
 

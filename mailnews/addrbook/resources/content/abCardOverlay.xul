@@ -46,34 +46,34 @@ Rights Reserved.
 			<!-- ** Name Tab ** -->
 			<vbox index="name" flex="1">
 				
-				<groupbox orient="vertical" flex="1">
+				<groupbox flex="1">
 					<caption label="&Name.box;"/>
 		
 					<vbox style="width:100%">
 						<hbox>
 							<spacer flex="1"/>
-							<text for="FirstName" value="&FirstName.label;" class="CardEditLabel"/>
+                                                        <label control="FirstName" value="&FirstName.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="FirstName" flex="1" oninput="GenerateDisplayName()"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="LastName" value="&LastName.label;" class="CardEditLabel"/>
+                                                        <label control="LastName" value="&LastName.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="LastName" flex="1" oninput="GenerateDisplayName()"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="DisplayName" value="&DisplayName.label;" class="CardEditLabel"/>
+                                                        <label control="DisplayName" value="&DisplayName.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="DisplayName" flex="1" oninput="DisplayNameChanged()"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="NickName" value="&NickName.label;" class="CardEditLabel"/>
+                                                        <label control="NickName" value="&NickName.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="NickName" flex="1"/>
 							</hbox>
@@ -81,27 +81,27 @@ Rights Reserved.
 					</vbox>
 				</groupbox>
 
-				<groupbox orient="vertical" flex="1">
+				<groupbox flex="1">
 					<caption label="&Internet.box;"/>
 		
 					<vbox style="width:100%">
 						<hbox>
 							<spacer flex="1"/>
-							<text for="PrimaryEmail" value="&PrimaryEmail.label;" class="CardEditLabel"/>
+                                                        <label control="PrimaryEmail" value="&PrimaryEmail.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="PrimaryEmail" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="SecondEmail" value="&SecondEmail.label;" class="CardEditLabel"/>
+                                                        <label control="SecondEmail" value="&SecondEmail.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="SecondEmail" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<vbox valign="middle">
-							<text for="PreferMailFormatPopup" value="&PreferMailFormat.label;"/>
+                                                        <label control="PreferMailFormatPopup" value="&PreferMailFormat.label;"/>
 							</vbox>
 							<menulist id="PreferMailFormatPopup">
 								<menupopup>
@@ -114,41 +114,41 @@ Rights Reserved.
 					</vbox>
 				</groupbox>
 
-				<groupbox orient="vertical" flex="1">
+				<groupbox flex="1">
 					<caption label="&Phones.box;"/>
 		
 					<vbox style="width:100%">
 						<hbox>
 							<spacer flex="1"/>
-							<text for="WorkPhone" value="&WorkPhone.label;" class="CardEditLabel"/>
+                                                        <label control="WorkPhone" value="&WorkPhone.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="WorkPhone" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="HomePhone" value="&HomePhone.label;" class="CardEditLabel"/>
+                                                        <label control="HomePhone" value="&HomePhone.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="HomePhone" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="FaxNumber" value="&FaxNumber.label;" class="CardEditLabel"/>
+                                                        <label control="FaxNumber" value="&FaxNumber.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="FaxNumber" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="PagerNumber" value="&PagerNumber.label;" class="CardEditLabel"/>
+                                                        <label control="PagerNumber" value="&PagerNumber.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="PagerNumber" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="CellularNumber" value="&CellularNumber.label;" class="CardEditLabel"/>
+                                                        <label control="CellularNumber" value="&CellularNumber.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="CellularNumber" flex="1"/>
 							</hbox>
@@ -160,52 +160,52 @@ Rights Reserved.
 			<!-- ** Address Tab ** -->
 			<vbox index="address" flex="1">
 				
-				<groupbox orient="vertical" flex="1">
+				<groupbox flex="1">
 					<caption label="&Home.box;"/>
 		
 					<vbox style="width:100%">
 		
 						<hbox>
 							<spacer flex="1"/>
-							<text for="HomeAddress" value="&HomeAddress.label;" class="CardEditLabel"/>
+                                                        <label control="HomeAddress" value="&HomeAddress.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="HomeAddress" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="HomeAddress2" value="&HomeAddress2.label;" class="CardEditLabel"/>
+                                                        <label control="HomeAddress2" value="&HomeAddress2.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="HomeAddress2" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="HomeCity" value="&HomeCity.label;" class="CardEditLabel"/>
+                                                        <label control="HomeCity" value="&HomeCity.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="HomeCity" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="HomeState" value="&HomeState.label;" class="CardEditLabel"/>
+                                                        <label control="HomeState" value="&HomeState.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="HomeState" flex="1"/>
 								<spacer class="stateZipSpacer"/>
-								<text for="HomeZipCode" value="&HomeZipCode.label;" class="CardEditLabel"/>
+                                                                <label control="HomeZipCode" value="&HomeZipCode.label;" class="CardEditLabel"/>
 								<textbox id="HomeZipCode" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="HomeCountry" value="&HomeCountry.label;" class="CardEditLabel"/>
+                                                        <label control="HomeCountry" value="&HomeCountry.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="HomeCountry" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="WebPage2" value="&HomeWebPage.label;" class="CardEditLabel"/>
+                                                        <label control="WebPage2" value="&HomeWebPage.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="WebPage2" flex="1"/>
 							</hbox>
@@ -213,73 +213,73 @@ Rights Reserved.
 					</vbox>
 				</groupbox>
 
-				<groupbox orient="vertical" style="width:100%">
+				<groupbox style="width:100%">
 					<caption label="&Work.box;"/>
 		
 					<vbox style="width:100%">
 		
 						<hbox>
 							<spacer flex="1"/>
-							<text for="JobTitle" value="&JobTitle.label;" class="CardEditLabel"/>
+                                                        <label control="JobTitle" value="&JobTitle.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="JobTitle" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="Department" value="&Department.label;" class="CardEditLabel"/>
+                                                        <label control="Department" value="&Department.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="Department" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="Company" value="&Company.label;" class="CardEditLabel"/>
+                                                        <label control="Company" value="&Company.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="Company" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="WorkAddress" value="&WorkAddress.label;" class="CardEditLabel"/>
+                                                        <label control="WorkAddress" value="&WorkAddress.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="WorkAddress" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="WorkAddress2" value="&WorkAddress2.label;" class="CardEditLabel"/>
+                                                        <label control="WorkAddress2" value="&WorkAddress2.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="WorkAddress2" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="WorkCity" value="&WorkCity.label;" class="CardEditLabel"/>
+                                                        <label control="WorkCity" value="&WorkCity.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="WorkCity" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="WorkState" value="&WorkState.label;" class="CardEditLabel"/>
+                                                        <label control="WorkState" value="&WorkState.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="WorkState" flex="1"/>
 								<spacer class="stateZipSpacer"/>
-								<text for="WorkZipCode" value="&WorkZipCode.label;" class="CardEditLabel"/>
+                                                                <label control="WorkZipCode" value="&WorkZipCode.label;" class="CardEditLabel"/>
 								<textbox id="WorkZipCode" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="WorkCountry" value="&WorkCountry.label;" class="CardEditLabel"/>
+                                                        <label control="WorkCountry" value="&WorkCountry.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="WorkCountry" flex="1"/>
 							</hbox>
 						</hbox>
 						<hbox>
 							<spacer flex="1"/>
-							<text for="WebPage1" value="&WorkWebPage.label;" class="CardEditLabel"/>
+                                                        <label control="WebPage1" value="&WorkWebPage.label;" class="CardEditLabel"/>
 							<hbox class="CardEditWidth">
 								<textbox id="WebPage1" flex="1"/>
 							</hbox>
@@ -294,24 +294,24 @@ Rights Reserved.
 				
 				<vbox class="alignBoxWithFieldset">
 					<hbox flex="1">
-						<text for="Custom1" value="&Custom1.label;" class="CardEditLabel"/>
+                                                <label control="Custom1" value="&Custom1.label;" class="CardEditLabel"/>
 						<textbox id="Custom1" flex="1"/>
 					</hbox>
 					<hbox flex="1">
-						<text for="Custom2" value="&Custom2.label;" class="CardEditLabel"/>
+                                                <label control="Custom2" value="&Custom2.label;" class="CardEditLabel"/>
 						<textbox id="Custom2" flex="1"/>
 					</hbox>
 					<hbox flex="1">
-						<text for="Custom3" value="&Custom3.label;" class="CardEditLabel"/>
+                                                <label control="Custom3" value="&Custom3.label;" class="CardEditLabel"/>
 						<textbox id="Custom3" flex="1"/>
 					</hbox>
 					<hbox flex="1">
-						<text for="Custom4" value="&Custom4.label;" class="CardEditLabel"/>
+                                                <label control="Custom4" value="&Custom4.label;" class="CardEditLabel"/>
 						<textbox id="Custom4" flex="1"/>
 					</hbox>
 				</vbox>
 
-				<groupbox orient="vertical" style="width:100%">
+				<groupbox style="width:100%">
 					<caption label="&Notes.box;"/>
 		
 					<vbox style="width:100%">

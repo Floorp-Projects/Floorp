@@ -292,7 +292,6 @@ function onInitEditDirectories()
   if (directoriesTree_root) {
     LoadDirectoriesTree(directoriesTree_root);
   }
-  doSetOKCancel(onOK, cancel);
 }
 
 function LoadDirectoriesTree(tree)
@@ -430,7 +429,7 @@ function removeDirectory()
 //  remove all the directories that are selected for deletion from preferences
 //  check if the deleted directory is selected for autocompletion in global
 //  or identity prefs. If so change the pref to ""
-function onOK()
+function onAccept()
 {
   var len = gDeletedDirectories.length;
   if (len) {
@@ -472,10 +471,5 @@ function onOK()
     }
   }
   window.opener.gRefresh = true;
-  window.close();
-}
-
-function cancel()
-{
-  window.close();
+  return true;
 }

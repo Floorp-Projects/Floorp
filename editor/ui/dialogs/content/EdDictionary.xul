@@ -26,10 +26,8 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPersonalDictionary.dtd">
 <window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    onunload="Close()"
-    orient="vertical">
+    onunload="Close()">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -47,15 +45,15 @@
     <columns><column style="width: 15em" flex="1"/><column flex="1"/></columns>
     <rows>
       <row>
-        <text class="label" value="&wordEditField.label;"/>
+        <label value="&wordEditField.label;"/>
         <spacer/>
       </row>
       <row>
         <textbox id="WordInput" flex="1"/>
-        <button flex="1" id="AddWord" oncommand="AddWord()" label="&AddButton.label;"/>
+        <button id="AddWord" oncommand="AddWord()" label="&AddButton.label;"/>
       </row>
       <row>
-        <text class="label" value="&DictionaryList.label;"/>
+        <label value="&DictionaryList.label;"/>
         <spacer/>
       </row>
       <row>

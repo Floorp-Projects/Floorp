@@ -51,8 +51,6 @@ function onLoad(event)
     var server = window.arguments[0].server;
  
     initializeDialog(server);
-
-    doSetOKCancel(onOk, 0);
 }
 
 function initializeDialog(server)
@@ -62,7 +60,7 @@ function initializeDialog(server)
     initSmtpSettings(server);
 }
 
-function onOk()
+function onAccept()
 {
     // if we didn't have an SMTP server to initialize with,
     // we must be creating one.
@@ -76,5 +74,5 @@ function onOk()
     }
 
     window.arguments[0].result = true;
-    window.close();
+    return true;
 }

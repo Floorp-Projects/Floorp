@@ -4,11 +4,8 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/pref-formatting.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Init()"
-        orient="vertical"
-        class="color-dialog">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="Init()">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -25,13 +22,11 @@
         dualerr="&dualEntryError.label;"/>
 
   <broadcaster  id="mailhtmldomain" 
-                pref="true"
                 preftype="string" 
                 prefstring="mailnews.html_domains"
                 prefattribute="value"
                 wsm_attributes="value"/>
   <broadcaster  id="mailplaintextdomain" 
-                pref="true"
                 preftype="string" 
                 prefstring="mailnews.plaintext_domains"
                 prefattribute="value"
@@ -39,29 +34,28 @@
   
   <hbox class="box-smallheader" title="&pane.title;"/>
 
-  <html>&sendMaildesc.label;</html>
+  <description>&sendMaildesc.label;</description>
 
-  <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never"
-                pref="true" preftype="int" prefstring="mail.default_html_action"
-                prefattribute="value">
-    <radio group="mailDefaultHTMLAction" value="0" label="&askMe.label;"/>
-    <radio group="mailDefaultHTMLAction" value="1" label="&convertPlain.label;"/>                
-    <radio group="mailDefaultHTMLAction" value="2" label="&sendHTML.label;"/>
-    <radio group="mailDefaultHTMLAction" value="3" label="&sendBoth.label;"/>
+  <radiogroup id="mailDefaultHTMLAction"
+              prefstring="mail.default_html_action">
+    <radio value="0" label="&askMe.label;"/>
+    <radio value="1" label="&convertPlain.label;"/>                
+    <radio value="2" label="&sendHTML.label;"/>
+    <radio value="3" label="&sendBoth.label;"/>
   </radiogroup>
     
-  <html>&override.label;</html>
+  <description>&override.label;</description>
 
-  <groupbox orient="vertical" flex="1">
+  <groupbox flex="1">
     <caption label="&domain.title;"/>
 
-    <html>&domaindesc.label;</html>
+    <description>&domaindesc.label;</description>
 
     <hbox flex="1">
       <vbox id="html_box" flex="1">
-        <html>&HTMLdomaintitle.label;</html>
+        <description>&HTMLdomaintitle.label;</description>
         <hbox flex="1">
-          <tree class="inset" id="html_domains" flex="1"
+          <tree id="html_domains" flex="1"
             datasources="rdf:null" multiple="true"
             onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(htmlobj);">
             <treecolgroup>
@@ -70,19 +64,19 @@
             <treechildren id="html_domains_root" flex="1"/>
           </tree>
           <vbox>
-            <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(htmlobj);">
+            <button label="&AddButton.label;" oncommand="AddDomain(htmlobj);">
               <observes element="mailhtmldomain" attribute="disabled"/>
             </button>
-            <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(htmlobj);">
+            <button label="&DeleteButton.label;" oncommand="RemoveDomains(htmlobj);">
               <observes element="mailhtmldomain" attribute="disabled"/>
             </button>
           </vbox>
         </hbox>
       </vbox>
       <vbox id="plaintext_box" flex="1">
-        <html>&PlainTexttitle.label;</html>
+        <description>&PlainTexttitle.label;</description>
         <hbox flex="1">
-          <tree class="inset" id="plaintext_domains" flex="1"
+          <tree id="plaintext_domains" flex="1"
             datasources="rdf:null" multiple="true"
             onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(plainobj);">
             <treecolgroup>
@@ -91,10 +85,10 @@
             <treechildren id="plaintext_domains_root" flex="1"/>
           </tree>
           <vbox>
-            <button class="dialog" label="&AddButton.label;" oncommand="AddDomain(plainobj);">
+            <button label="&AddButton.label;" oncommand="AddDomain(plainobj);">
               <observes element="mailplaintextdomain" attribute="disabled"/>
             </button>
-            <button class="dialog" label="&DeleteButton.label;" oncommand="RemoveDomains(plainobj);">
+            <button label="&DeleteButton.label;" oncommand="RemoveDomains(plainobj);">
               <observes element="mailplaintextdomain" attribute="disabled"/>
             </button>
           </vbox>
@@ -102,4 +96,4 @@
       </vbox>
     </hbox>
   </groupbox>
-</window>
+</page>
