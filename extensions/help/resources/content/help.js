@@ -59,6 +59,10 @@ var key = {
  "?ver_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Verified_Not Encrypted",
  "?conver_noencrypt":  "chrome://help/locale/ssl_page_info_help.html#Conditionally_Verified_Not_Encrypted",
 
+ "?cookies_stored":  "chrome://help/locale/using_priv_help.html#cookies_stored",
+ "?cookie_sites":  "chrome://help/locale/using_priv_help.html#cookie_sites",
+ "?privacy_levels":  "chrome://help/locale/using_priv_help.html#privacy_levels_window",
+
  "?my_certs":  "chrome://help/locale/certs_help.html#My_Certificates",
  "?cert_backup_pwd":  "chrome://help/locale/certs_help.html#Choose_a_Certificate_Backup_Password",
  "?delete_my_certs":  "chrome://help/locale/certs_help.html#Delete_My_Certificate",
