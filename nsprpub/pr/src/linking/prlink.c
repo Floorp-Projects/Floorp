@@ -266,7 +266,7 @@ static void DLLErrorInternal(PRIntn oserr)
 
 void _PR_InitLinker(void)
 {
-#ifndef XP_MAC
+#if !defined(XP_MAC) && !defined(XP_BEOS)
     PRLibrary *lm;
 #endif
 #if defined(XP_UNIX)
@@ -335,7 +335,7 @@ void _PR_InitLinker(void)
 #endif /* HAVE_DLL */
 #endif /* XP_UNIX */
 
-#ifndef XP_MAC
+#if !defined(XP_MAC) && !defined(XP_BEOS)
     PR_LOG(_pr_linker_lm, PR_LOG_MIN, ("Loaded library %s (init)", lm?lm->name:"NULL"));
 #endif
 
