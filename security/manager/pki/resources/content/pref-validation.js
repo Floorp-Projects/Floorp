@@ -75,6 +75,8 @@ function changeURL()
   var signersMenu = document.getElementById("signingCA");
   var signersURL = document.getElementById("serviceURL");
   var CA = signersMenu.getAttribute("value");
+  var i;
+  var ocspEntry;
 
   for (i=0; i < ocspResponders.Count(); i++) {
     ocspEntry = ocspResponders.GetElementAt(i).QueryInterface(nsIOCSPResponder);
