@@ -1235,7 +1235,8 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
         { "gopher",          AllowProtocol  },
         { "datetime",        DenyProtocol   },
         { "finger",          AllowProtocol  },
-        { "res",             DenyProtocol   }
+        { "res",             DenyProtocol   },
+        { "x-jsd",           ChromeProtocol }
     };
 
     NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
