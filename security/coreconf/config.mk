@@ -56,7 +56,7 @@ include $(CORE_DEPTH)/coreconf/command.mk
 #       each OS release.                                              #
 #######################################################################
 
-ifeq (,$(filter-out NetBSD,$(OS_TARGET)))
+ifeq (,$(filter-out NetBSD OS2,$(OS_TARGET)))
 include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
 else
 include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
