@@ -227,6 +227,21 @@ struct JSParseNode {
 #define pn_attrs        pn_u.name.attrs
 #define pn_dval         pn_u.dval
 
+/* Copy pn2 over pn, preserving pn->pn_pos and pn->pn_offset. */
+#define PN_COPY_OVER(pn, pn2)                                                 \
+    JS_BEGIN_MACRO                                                            \
+        (pn)->pn_type = (pn2)->pn_type;                                       \
+        (pn)->pn_op = (pn2)->pn_op;                                           \
+        (pn)->pn_arity = (pn2)->pn_arity;                                     \
+        (pn)->pn_u = (pn2)->pn_u;                                             \
+    JS_END_MACRO
+
+/* True if pn is a parsenode representing a literal constant. */
+#define PN_IS_CONSTANT(pn)                                                    \
+    ((pn)->pn_type == TOK_NUMBER ||                                           \
+     (pn)->pn_type == TOK_STRING ||                                           \
+     ((pn)->pn_type == TOK_PRIMARY && (pn)->pn_op != JSOP_THIS))
+
 /*
  * Compute a pointer to the last JSParseNode element in a singly-linked list.
  * NB: list must be non-empty for correct PN_LAST usage!
