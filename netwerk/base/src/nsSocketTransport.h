@@ -94,7 +94,7 @@ enum nsSocketReadWriteInfo {
   eSocketWrite_Done           = 0x1000,
   eSocketWrite_Wait           = 0x2000,
   eSocketWrite_Type_Mask      = 0x0F00,
-  eSocketWrite_Flag_Mask      = 0xF000,
+  eSocketWrite_Flag_Mask      = 0xF000
 };
 
 // Forward declarations...
