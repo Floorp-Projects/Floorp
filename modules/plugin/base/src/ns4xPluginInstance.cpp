@@ -49,6 +49,10 @@
 #include "nsIPref.h" // needed for NS_TRY_SAFE_CALL_*
 #include "nsPluginLogging.h"
 
+#ifdef XP_OS2
+#include "nsILegacyPluginWrapperOS2.h"
+#endif
+
 #ifdef MOZ_WIDGET_GTK
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
@@ -1187,6 +1191,24 @@ nsresult ns4xPluginInstance::GetValueInternal(NPPVariable variable, void* value)
     NPP_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
     ("NPP GetValue called: this=%p, npp=%p, var=%d, value=%d, return=%d\n", 
     this, &fNPP, variable, value, res));
+
+#ifdef XP_OS2
+    /* Query interface for legacy Flash plugin */
+    if (res == NS_OK && variable == NPPVpluginScriptableInstance)
+    {
+      nsCOMPtr<nsILegacyPluginWrapperOS2> wrapper =
+               do_GetService(NS_LEGACY_PLUGIN_WRAPPER_CONTRACTID, &res);
+      if (res == NS_OK)
+      {
+        nsIID *iid = nsnull; 
+        res = CallNPP_GetValueProc(fCallbacks->getvalue, &fNPP, 
+                                   NPPVpluginScriptableIID, (void *)&iid);
+        if (res == NS_OK)
+          res = wrapper->MaybeWrap(*iid, *(nsISupports**)value,
+                                   (nsISupports**)value);
+      }
+    }
+#endif
   }
 
   return res;
