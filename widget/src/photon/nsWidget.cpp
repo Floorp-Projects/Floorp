@@ -1038,8 +1038,9 @@ inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbIn
 
 					// if we're a right-button-up we're trying to popup a context menu. send that event to gecko also
 					if( ptrev->buttons & Ph_BUTTON_MENU ) {
-						InitMouseEvent( ptrev, this, theMouseEvent, NS_CONTEXTMENU );
-						result = DispatchMouseEvent( theMouseEvent );
+						nsMouseEvent contextMenuEvent;
+						InitMouseEvent( ptrev, this, contextMenuEvent, NS_CONTEXTMENU );
+						result = DispatchMouseEvent( contextMenuEvent );
 						}
       	  }
 

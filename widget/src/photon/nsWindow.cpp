@@ -109,6 +109,9 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+	nsWindow *p = (nsWindow*)mParent;
+	if( p && p->mLastMenu == mWidget ) p->mLastMenu = nsnull;
+
   // always call destroy.  if it's already been called, there's no harm
   // since it keeps track of when it's already been called.
   Destroy();
@@ -188,9 +191,10 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents( nsIRollupListener * aListener, PRBo
 
 			PtWidget_t *pw = ((nsWindow*)mParent)->mLastMenu;
 
-			if( pw && ( PtWidgetFlags( pw ) & Pt_REALIZED ) )
+			if( pw && ( PtWidgetFlags( pw ) & Pt_REALIZED ) && PtWidgetRid( pw ) > 0 )
 				PtSetResource( gMenuRegion, Pt_ARG_REGION_INFRONT, PtWidgetRid( pw ), 0 );
 			else {
+				if( !PtWidgetIsRealized( mWidget ) ) PtRealizeWidget( mWidget );
 				PtSetResource( gMenuRegion, Pt_ARG_REGION_INFRONT, PtWidgetRid( mWidget ), 0 );
 				((nsWindow*)mParent)->mLastMenu = mWidget;
 				}
