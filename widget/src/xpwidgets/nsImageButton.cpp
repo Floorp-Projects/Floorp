@@ -689,6 +689,14 @@ NS_METHOD nsImageButton::SetImageDimensions(const PRInt32 & aWidth, const PRInt3
 }
 
 //----------------------------------------------------------------
+NS_METHOD nsImageButton::GetImageDimensions(PRInt32 & aWidth, PRInt32 & aHeight)
+{
+  aWidth = mImageWidth ;
+  aHeight = mImageHeight ;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------
 NS_METHOD nsImageButton::SetImageURLs(const nsString& aUpURL,
                                       const nsString& aPressedURL,
                                       const nsString& aDisabledURL,
