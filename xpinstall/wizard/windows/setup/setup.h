@@ -354,6 +354,7 @@ struct ssInfo
 {
   LPSTR szDescription;
   LPSTR szDomain;
+  LPSTR szIdentifier;
   ssi   *Next;
   ssi   *Prev;
 };

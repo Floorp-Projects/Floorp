@@ -934,77 +934,76 @@ HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSComponent, char *szSFile, c
 {
   DWORD     dwIndex1;
   DWORD     dwCounter;
+  char      szFile[MAX_BUF];
   char      szIndex1[MAX_BUF];
   char      szCounter[MAX_BUF];
   char      szBuf[MAX_BUF];
   char      szBufTemp[MAX_BUF];
   char      szBufUrl[MAX_BUF];
-  char      szKDomain[MAX_BUF];
-  char      szBufDomain[MAX_BUF];
-  char      szKServerPath[MAX_BUF];
-  char      szBufServerPath[MAX_BUF];
-  char      szArchiveName[MAX_BUF];
-  char      szDomain[MAX_BUF];
+  char      szKIdentifier[MAX_BUF];
+  char      szIdentifier[MAX_BUF];
+  char      szSection[MAX_BUF];
   ssi       *ssiSiteSelectorTemp;
-
-  ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
-  if(ssiSiteSelectorTemp != NULL)
-    if(ssiSiteSelectorTemp->szDomain != NULL)
-      lstrcpy(szDomain, ssiSiteSelectorTemp->szDomain);
-
-  lstrcpy(szArchiveName, szTempDir);
-  AppendBackSlash(szArchiveName, sizeof(szArchiveName));
-  lstrcat(szArchiveName, siCObject->szArchiveName);
 
   WritePrivateProfileString(szSFile, "desc", siCObject->szDescriptionShort, szFileIdiGetArchives);
 
-  dwIndex1  = 0;
-  dwCounter = 0;
-  itoa(dwIndex1,  szIndex1,  10);
-  itoa(dwCounter, szCounter, 10);
-  lstrcpy(szKDomain,     "Domain");
-  lstrcat(szKDomain,     szIndex1);
-  lstrcpy(szKServerPath, "Server Path");
-  lstrcat(szKServerPath, szIndex1);
-  GetPrivateProfileString(szSComponent, szKDomain,     "", szBufDomain,     MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString(szSComponent, szKServerPath, "", szBufServerPath, MAX_BUF, szFileIniConfig);
+  lstrcpy(szFile, szTempDir);
+  AppendBackSlash(szFile, sizeof(szFile));
+  lstrcat(szFile, FILE_INI_REDIRECT);
 
-  /* if the site selctor has any info, add what the user selected as the first domain to try*/
-  if((*szBufDomain != '\0') && (*szDomain != '\0'))
+  ZeroMemory(szIdentifier, MAX_BUF);
+  if(FileExists(szFile))
   {
-    ZeroMemory(szBufUrl, sizeof(szBufUrl));
-    lstrcpy(szBufUrl, szDomain);
-
-    RemoveSlash(szBufUrl);
-    lstrcat(szBufUrl, szBufServerPath);
-    AppendSlash(szBufUrl, sizeof(szBufUrl));
-    lstrcat(szBufUrl, siCObject->szArchiveName);
-
-    if(WritePrivateProfileString(szSFile, szCounter, szBufUrl, szFileIdiGetArchives) == 0)
+    lstrcpy(szSection, "Site Selector");
+    ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
+    if(ssiSiteSelectorTemp != NULL)
     {
-      char szEWPPS[MAX_BUF];
-
-      if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, MAX_BUF) == WIZ_OK)
-      {
-        wsprintf(szBufTemp, "%s\n    [%s]\n    %s=%s", szFileIdiGetArchives, szSFile, szIndex1, szBufUrl);
-        wsprintf(szBuf, szEWPPS, szBufTemp);
-        PrintError(szBuf, ERROR_CODE_SHOW);
-      }
-      return(1);
+      if(ssiSiteSelectorTemp->szIdentifier != NULL)
+        lstrcpy(szIdentifier, ssiSiteSelectorTemp->szIdentifier);
     }
-
-    ++dwCounter;
-    itoa(dwCounter, szCounter, 10);
+  }
+  else
+  {
+    lstrcpy(szSection, "General");
+    lstrcpy(szIdentifier, "url");
+    lstrcpy(szFile, szFileIniConfig);
   }
 
-  /* regardless is the site selector has any info or not, add the rest of the urls pertaining for this
-   * component here.  These will be the fail over urls. */
-  while(*szBufDomain != '\0')
+  GetPrivateProfileString(szSection, szIdentifier, "", szBufUrl, MAX_BUF, szFile);
+
+  AppendSlash(szBufUrl, sizeof(szBufUrl));
+  lstrcat(szBufUrl, siCObject->szArchiveName);
+
+  dwIndex1  = 0;
+  dwCounter = 0;
+  itoa(dwCounter, szCounter, 10);
+  itoa(dwIndex1,  szIndex1,  10);
+
+  if(WritePrivateProfileString(szSFile, szCounter, szBufUrl, szFileIdiGetArchives) == 0)
   {
-    ZeroMemory(szBufUrl, sizeof(szBufUrl));
-    lstrcpy(szBufUrl, szBufDomain);
-    RemoveSlash(szBufUrl);
-    lstrcat(szBufUrl, szBufServerPath);
+    char szEWPPS[MAX_BUF];
+
+    if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, MAX_BUF) == WIZ_OK)
+    {
+      wsprintf(szBufTemp, "%s\n    [%s]\n    %s=%s", szFileIdiGetArchives, szSFile, szIndex1, szBufUrl);
+      wsprintf(szBuf, szEWPPS, szBufTemp);
+      PrintError(szBuf, ERROR_CODE_SHOW);
+    }
+    return(1);
+  }
+
+  ++dwCounter;
+  itoa(dwCounter, szCounter, 10);
+  lstrcpy(szKIdentifier, szIdentifier);
+  lstrcat(szKIdentifier, ".");
+  lstrcat(szKIdentifier, szIndex1);
+
+  GetPrivateProfileString(szSection, szKIdentifier, "", szBufUrl, MAX_BUF, szFile);
+
+  /* regardless if the site selector has any info or not, add the rest of the urls pertaining for this
+   * component here.  These will be the fail over urls. */
+  while(*szBufUrl != '\0')
+  {
     AppendSlash(szBufUrl, sizeof(szBufUrl));
     lstrcat(szBufUrl, siCObject->szArchiveName);
 
@@ -1025,12 +1024,10 @@ HRESULT AddArchiveToIdiFile(siC *siCObject, char *szSComponent, char *szSFile, c
     ++dwCounter;
     itoa(dwIndex1,  szIndex1,  10);
     itoa(dwCounter, szCounter, 10);
-    lstrcpy(szKDomain,     "Domain");
-    lstrcat(szKDomain,     szIndex1);
-    lstrcpy(szKServerPath, "Server Path");
-    lstrcat(szKServerPath, szIndex1);
-    GetPrivateProfileString(szSComponent, szKDomain,     "", szBufDomain,     MAX_BUF, szFileIniConfig);
-    GetPrivateProfileString(szSComponent, szKServerPath, "", szBufServerPath, MAX_BUF, szFileIniConfig);
+    lstrcpy(szKIdentifier, szIdentifier);
+    lstrcat(szKIdentifier, ".");
+    lstrcat(szKIdentifier, szIndex1);
+    GetPrivateProfileString(szSection, szKIdentifier, "", szBufUrl, MAX_BUF, szFile);
   }
   return(0);
 }
@@ -1052,18 +1049,19 @@ long RetrieveRedirectFile()
   char      szBuf[MAX_BUF];
   char      szBufUrl[MAX_BUF];
   char      szBufTemp[MAX_BUF];
+  char      szDomain[MAX_BUF];
+  char      szIdentifier[MAX_BUF];
   char      szIndex0[MAX_BUF];
   char      szFileIdiGetRedirect[MAX_BUF];
-  char      szKUrl[MAX_BUF];
+  char      szKServerPath[MAX_BUF];
   char      szFileIniRedirect[MAX_BUF];
+  ssi       *ssiSiteSelectorTemp;
 
   lstrcpy(szFileIniRedirect, szTempDir);
   AppendBackSlash(szFileIniRedirect, sizeof(szFileIniRedirect));
   lstrcat(szFileIniRedirect, FILE_INI_REDIRECT);
 
-  if(FileExists(szFileIniRedirect))
-    UpdateSiteSelector();
-  else
+  if(FileExists(szFileIniRedirect) == FALSE)
   {
     GetPrivateProfileString("Redirect", "Status", "", szBuf, MAX_BUF, szFileIniConfig);
     if(lstrcmpi(szBuf, "ENABLED") != 0)
@@ -1071,6 +1069,15 @@ long RetrieveRedirectFile()
 
     if(GetTotalArchivesToDownload() == 0)
       return(0);
+
+    ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
+    if(ssiSiteSelectorTemp != NULL)
+    {
+      if(ssiSiteSelectorTemp->szDomain != NULL)
+        lstrcpy(szDomain, ssiSiteSelectorTemp->szDomain);
+      if(ssiSiteSelectorTemp->szIdentifier != NULL)
+        lstrcpy(szIdentifier, ssiSiteSelectorTemp->szIdentifier);
+    }
 
     lstrcpy(szFileIdiGetRedirect, szTempDir);
     AppendBackSlash(szFileIdiGetRedirect, sizeof(szFileIdiGetRedirect));
@@ -1081,11 +1088,13 @@ long RetrieveRedirectFile()
 
     dwIndex0  = 0;
     itoa(dwIndex0,  szIndex0,  10);
-    lstrcpy(szKUrl, "url");
-    lstrcat(szKUrl, szIndex0);
-    GetPrivateProfileString("Redirect", szKUrl, "", szBufUrl, MAX_BUF, szFileIniConfig);
-    while(*szBufUrl != '\0')
+    lstrcpy(szKServerPath, "Server Path");
+    lstrcat(szKServerPath, szIndex0);
+    GetPrivateProfileString("Redirect", szKServerPath, "", szBuf, MAX_BUF, szFileIniConfig);
+    while(*szBuf != '\0')
     {
+      lstrcpy(szBufUrl, szDomain);
+      lstrcat(szBufUrl, szBuf);
       if(WritePrivateProfileString("File0", szIndex0, szBufUrl, szFileIdiGetRedirect) == 0)
       {
         char szEWPPS[MAX_BUF];
@@ -1101,9 +1110,9 @@ long RetrieveRedirectFile()
 
       ++dwIndex0;
       itoa(dwIndex0, szIndex0, 10);
-      lstrcpy(szKUrl, "url");
-      lstrcat(szKUrl, szIndex0);
-      GetPrivateProfileString("Redirect", szKUrl, "", szBufUrl, MAX_BUF, szFileIniConfig);
+      lstrcpy(szKServerPath, "Server Path");
+      lstrcat(szKServerPath, szIndex0);
+      GetPrivateProfileString("Redirect", szKServerPath, "", szBuf, MAX_BUF, szFileIniConfig);
     }
 
     /* the existance of the getarchives.idi file determines if there are
@@ -1123,10 +1132,9 @@ long RetrieveRedirectFile()
       WritePrivateProfileString("Execution",        "exe",              siSDObject.szExe,             szFileIdiGetRedirect);
       WritePrivateProfileString("Execution",        "exe_param",        siSDObject.szExeParam,        szFileIdiGetRedirect);
 
-      if((lResult = SdArchives(szFileIdiGetRedirect, szTempDir)) != 0)
+      lResult = SdArchives(szFileIdiGetRedirect, szTempDir);
+      if((lResult != 0) && (LOWORD(lResult) != 53)) // 53 - url is valid, but file does not exist
         return(lResult);
-
-      UpdateSiteSelector();
     }
   }
 
@@ -2066,11 +2074,11 @@ ssi *CreateSsiSiteSelectorNode()
 
   if((ssiNode = NS_GlobalAlloc(sizeof(struct ssInfo))) == NULL)
     exit(1);
-
   if((ssiNode->szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
-
   if((ssiNode->szDomain = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
+  if((ssiNode->szIdentifier = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
 
   ssiNode->Next = NULL;
@@ -2107,6 +2115,7 @@ void SsiSiteSelectorNodeDelete(ssi *ssiTemp)
 
     FreeMemory(&(ssiTemp->szDescription));
     FreeMemory(&(ssiTemp->szDomain));
+    FreeMemory(&(ssiTemp->szIdentifier));
     FreeMemory(&ssiTemp);
   }
 }
@@ -3159,6 +3168,8 @@ void InitSiteSelector(char *szFileIni)
   char  szDescription[MAX_BUF];
   char  szKDomain[MAX_BUF];
   char  szDomain[MAX_BUF];
+  char  szKIdentifier[MAX_BUF];
+  char  szIdentifier[MAX_BUF];
   ssi   *ssiSiteSelectorNewNode;
 
   ssiSiteSelector = NULL;
@@ -3168,20 +3179,24 @@ void InitSiteSelector(char *szFileIni)
   itoa(dwIndex, szIndex, 10);
   lstrcpy(szKDescription, "Description");
   lstrcpy(szKDomain,      "Domain");
+  lstrcpy(szKIdentifier,  "Identifier");
   lstrcat(szKDescription, szIndex);
   lstrcat(szKDomain,      szIndex);
+  lstrcat(szKIdentifier,  szIndex);
   GetPrivateProfileString("Site Selector", szKDescription, "", szDescription, MAX_BUF, szFileIni);
   while(*szDescription != '\0')
   {
-    /* if the Domain is not set, then skip */
-    GetPrivateProfileString("Site Selector", szKDomain, "", szDomain, MAX_BUF, szFileIni);
-    if(*szDomain != '\0')
+    /* if the Domain and Identifier are not set, then skip */
+    GetPrivateProfileString("Site Selector", szKDomain,     "", szDomain,     MAX_BUF, szFileIni);
+    GetPrivateProfileString("Site Selector", szKIdentifier, "", szIdentifier, MAX_BUF, szFileIni);
+    if((*szDomain != '\0') && (*szIdentifier != '\0'))
     {
       /* create and initialize empty node */
       ssiSiteSelectorNewNode = CreateSsiSiteSelectorNode();
 
       lstrcpy(ssiSiteSelectorNewNode->szDescription, szDescription);
       lstrcpy(ssiSiteSelectorNewNode->szDomain,      szDomain);
+      lstrcpy(ssiSiteSelectorNewNode->szIdentifier,  szIdentifier);
 
       /* inserts the newly created node into the global node list */
       SsiSiteSelectorNodeInsert(&(ssiSiteSelector), ssiSiteSelectorNewNode);
@@ -3191,10 +3206,13 @@ void InitSiteSelector(char *szFileIni)
     itoa(dwIndex, szIndex, 10);
     lstrcpy(szKDescription, "Description");
     lstrcpy(szKDomain,      "Domain");
+    lstrcpy(szKIdentifier,  "Identifier");
     lstrcat(szKDescription, szIndex);
     lstrcat(szKDomain,      szIndex);
+    lstrcat(szKIdentifier,  szIndex);
     ZeroMemory(szDescription, sizeof(szDescription));
     ZeroMemory(szDomain,      sizeof(szDomain));
+    ZeroMemory(szIdentifier,  sizeof(szIdentifier));
     GetPrivateProfileString("Site Selector", szKDescription, "", szDescription, MAX_BUF, szFileIni);
   }
 }
