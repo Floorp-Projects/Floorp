@@ -30,6 +30,7 @@
 #else
 #include "nsIIOService.h"
 #include "nsIChannel.h"
+#include "nsNeckoUtil.h"
 #endif // NECKO
 
 #include "nsIURL.h"
@@ -82,7 +83,7 @@ protected:
   // functional decomposition of the funitions repeatively called 
   //
   nsresult GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in);
-  nsresult OpenInputStream(const nsString2 aURLStr, nsIInputStream*& in);
+  nsresult OpenInputStream(nsString2& aURLStr, nsIInputStream*& in);
   nsresult GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& country);
  };
  
@@ -154,33 +155,10 @@ nsStringBundle::nsStringBundle(nsIURI* aURL, nsILocale* aLocale,
     return;
   }
 
-  nsIURI *uri = nsnull;
-  rv = aURL->QueryInterface(nsIURI::GetIID(), (void**)&uri);
+  rv = NS_OpenURI(aURL, &in);
   if (NS_FAILED(rv)) {
 #ifdef NS_DEBUG
-    printf("cannot get uri\n");
-#endif
-    *aResult = rv;
-    return;
-  }
-
-  // XXX NECKO what verb? sinkGetter?
-  nsIChannel *channel = nsnull;
-  rv = pNetService->NewChannelFromURI("load", uri, nsnull, &channel);
-  NS_RELEASE(uri);
-  if (NS_FAILED(rv)) {
-#ifdef NS_DEBUG
-    printf("cannot get channel\n");
-#endif
-    *aResult = rv;
-    return;
-  }
-
-  rv = channel->OpenInputStream(0, -1, &in);
-  NS_RELEASE(channel);
-  if (NS_FAILED(rv)) {
-#ifdef NS_DEBUG
-    printf("cannot get input stream\n");
+    printf("cannot open uri\n");
 #endif
     *aResult = rv;
     return;
@@ -304,13 +282,14 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 }
 
 nsresult
-nsStringBundle::OpenInputStream(const nsString2 aURLStr, nsIInputStream*& in) 
+nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in) 
 {
+  nsresult ret;
 #ifndef NECKO
   nsINetService* pNetService = nsnull;
 
-  nsresult ret = nsServiceManager::GetService(kNetServiceCID,
-                                              kINetServiceIID, (nsISupports**) &pNetService);
+  ret = nsServiceManager::GetService(kNetServiceCID,
+                                     kINetServiceIID, (nsISupports**) &pNetService);
   /* get the url
    */
   nsIURI    *url = nsnull;
@@ -337,33 +316,12 @@ nsStringBundle::OpenInputStream(const nsString2 aURLStr, nsIInputStream*& in)
 #endif
 
 #else // NECKO
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+  nsIURI* uri;
+  ret = NS_NewURI(&uri, aURLStr);
   if (NS_FAILED(ret)) return ret;
 
-  nsIURI *uri = nsnull;
-  const char *uriStr = aURLStr.GetBuffer();
-  ret = service->NewURI(uriStr, nsnull, &uri);
-  if (NS_FAILED(ret)) 
-    return ret;
-
-  // XXX NECKO what verb? sinkGetter?
-  nsIChannel *channel = nsnull;
-  ret = pNetService->NewChannelFromURI("load", uri, nsnull, &channel);
+  ret = NS_OpenURI(uri, &in);
   NS_RELEASE(uri);
-  if (NS_FAILED(ret)) {
-#ifdef NS_DEBUG
-    printf("cannot get channel\n");
-#endif
-    return ret;
-  }
-
-  ret = channel->OpenInputStream(0, -1, &in);
-  NS_RELEASE(channel);
-  if (NS_FAILED(ret)) {
-#ifdef NS_DEBUG
-    printf("cannot get input stream\n");
-#endif
-  }
 #endif // NECKO
   return ret;
 }

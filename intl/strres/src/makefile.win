@@ -54,6 +54,11 @@ LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\plc3.lib       \
  $(LIBNSPR)  
+
+!ifdef NECKO
+LLIBS=$(LLIBS) $(DIST)\lib\netwerkutil_s.lib
+!endif
+
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 !endif
