@@ -619,6 +619,48 @@
 			refType = 4;
 			sourceTree = "<group>";
 		};
+		3F27D94A05DB2600007B543D = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = "NSSplitView+Utils.h";
+			path = "src/extensions/NSSplitView+Utils.h";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3F27D94B05DB2600007B543D = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = "NSSplitView+Utils.mm";
+			path = "src/extensions/NSSplitView+Utils.mm";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		3F27D94C05DB2600007B543D = {
+			fileRef = 3F27D94A05DB2600007B543D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F27D94D05DB2600007B543D = {
+			fileRef = 3F27D94B05DB2600007B543D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F27D94E05DB2600007B543D = {
+			fileRef = 3F27D94A05DB2600007B543D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F27D94F05DB2600007B543D = {
+			fileRef = 3F27D94B05DB2600007B543D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		3F2CF8CB042A88B7005FD42F = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -785,6 +827,7 @@
 				3F44AC2505BDFB9E00CB4B08,
 				3F44AC2605BDFB9E00CB4B08,
 				3F44AC2705BDFB9E00CB4B08,
+				3F27D94C05DB2600007B543D,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1976,6 +2019,7 @@
 				3F44ACCC05BDFB9E00CB4B08,
 				3F44ACCD05BDFB9E00CB4B08,
 				3F44ACCE05BDFB9E00CB4B08,
+				3F27D94D05DB2600007B543D,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4793,6 +4837,7 @@
 				3F44AE5E05BDFBA000CB4B08,
 				3F44AE5F05BDFBA000CB4B08,
 				3F44AE6005BDFBA000CB4B08,
+				3F27D94E05DB2600007B543D,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5985,6 +6030,7 @@
 				3F44AF0605BDFBA000CB4B08,
 				3F44AF0705BDFBA000CB4B08,
 				3F44AF0805BDFBA000CB4B08,
+				3F27D94F05DB2600007B543D,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -11515,6 +11561,7 @@
 		};
 		F5B950BA030C833301A96654 = {
 			children = (
+				3F27D94A05DB2600007B543D,
 				3FB2BA960545EA80002B9691,
 				3FB2BA920545EA80002B9691,
 				3F2CF8CB042A88B7005FD42F,
@@ -11537,6 +11584,7 @@
 		};
 		F5B950BB030C833301A96654 = {
 			children = (
+				3F27D94B05DB2600007B543D,
 				3FB2BA970545EA80002B9691,
 				3FB2BA930545EA80002B9691,
 				F5D98EB9031AC37801A96654,

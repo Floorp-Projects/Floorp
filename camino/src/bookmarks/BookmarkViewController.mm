@@ -43,6 +43,7 @@
 #import "NSString+Utils.h"
 #import "NSArray+Utils.h"
 #import "NSPasteboard+Utils.h"
+#import "NSSplitView+Utils.h"
 #import "BookmarkManager.h"
 #import "BookmarkInfoController.h"
 #import "BookmarkFolder.h"
@@ -56,6 +57,7 @@
 #import "HistoryDataSource.h"
 #import "BookmarksClient.h"
 #import "NetworkServices.h"
+#import "UserDefaults.h"
 
 #define kNoOpenAction 0
 #define kOpenBookmarkAction 1
@@ -95,6 +97,10 @@ const long kMinSearchPaneHeight = 80;
 
 - (void)dealloc
 {
+  // save the splitter width of the conatiner view
+  float width = [mContainersSplit leftWidth]; 
+  [[NSUserDefaults standardUserDefaults] setFloat: width forKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
+
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [mCachedHref release];
   [mExpandedStatus release];
@@ -174,7 +180,7 @@ const long kMinSearchPaneHeight = 80;
   [mItemPane setAutosaveTableColumns:YES];
   [mSearchPane setAutosaveTableColumns:YES];
   [mContainerPane setAutosaveTableColumns:YES];
-  
+
   mSetupComplete = YES;
 }
 
@@ -627,6 +633,17 @@ const long kMinSearchPaneHeight = 80;
 - (void) focus
 {
   [[mItemPane window] makeFirstResponder:mItemPane];
+  
+  // restore splitters to their saved positions. We have to do this here
+  // (rather than in |-completeSetup| because only at this point is the
+  // manager view resized correctly. If we did it earlier, it would resize again
+  // to stretch proportionally to the size of the browser window, destroying 
+  // the width we just set.
+  const float kDefaultSplitWidth = kMinContainerSplitWidth;
+  float savedWidth = [[NSUserDefaults standardUserDefaults] floatForKey:USER_DEFAULTS_CONTAINER_SPLITTER_WIDTH];
+  if (savedWidth < kDefaultSplitWidth)
+    savedWidth = kDefaultSplitWidth;
+  [mContainersSplit setLeftWidth:savedWidth];
 }
 
 - (void) setCanEditSelectedContainerContents:(BOOL)inCanEdit
