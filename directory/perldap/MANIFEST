@@ -8,7 +8,7 @@ constant.h
 test.pl
 typemap
 Entry.pm
-Connection.pm
+Conn.pm
 LDIF.pm
 README
 MPL-1.0.txt

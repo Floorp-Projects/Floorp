@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.3 1998/07/23 11:05:56 leif Exp $
+# $Id: Makefile.PL,v 1.4 1998/07/29 03:43:33 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -25,12 +25,72 @@
 #############################################################################
 
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
+use Config;
+
+$perlpath = $Config{'perlpath'};
+$osname   = $Config{'osname'};
+
+$include_ldap = $ENV{"LDAPINCLUDE"};
+$lib_ldap = $ENV{"LDAPLIB"};
+$sslopt = $ENV{"USESSL"};
+
+print "\n\nPerlDAP - Perl 5 Module for LDAP\n";
+print     "================================\n";
+print "\nPut all sorts of legal bits and pieces here...\n\n";
+
+if (!$include_ldap)
+{
+   print "Location of LDAP SDK 3.0 Include Files (default: /usr/include):  ";
+   chomp ($include_ldap = <>);
+   $include_ldap = "/usr/include" unless $include_ldap =~ /\S/;
+}
+
+if (!$lib_ldap)
+{
+   $def_lib = ($include_ldap =~ m%^(\S+)([/\\])include% ? "$1$2lib" : "/usr/lib");
+   print "Location of LDAP SDK 3.0 Library Files (default: $def_lib):  ";
+   chomp ($lib_ldap = <>);
+   $lib_ldap = $def_lib unless $lib_ldap =~ /\S/;
+}
+
+if (!$sslopt)
+{
+   print "Include SSL Routines (default: yes)?  ";
+   chomp ($sslopt = <>);
+}
+
+if ($sslopt =~ /^n/i)
+{
+   $ssl_def = "";
+} else {
+   $ssl_def = "-DUSE_SSL";
+}
+
+if ($osname eq 'MSWin32')
+{
+   if ($ssl_def)
+   {
+      $ldap_lib = "nsldapssl32v30";
+   } else {
+      $ldap_lib = "nsldap32v30";
+   }
+} else {
+   if ($ssl_def)
+   {
+      $ldap_lib = "ldapssl30";
+   } else {
+      $ldap_lib = "ldap30";
+   }
+}
+
 WriteMakefile(
-    'NAME'	=> 'Mozilla::LDAP::API',
-    'VERSION_FROM' => 'API.pm', # finds $VERSION
-    'LIBS'	=> ['-lldapssl30'],   # e.g., '-lm' 
-    'DEFINE'	=> '',     # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> '-I/export/source/ldapsdk/include',     # e.g., '-I' 
+	'NAME'		=> 	'Mozilla::LDAP::API',
+	'VERSION_FROM'	=> 	'API.pm',
+	($include_ldap ne "/usr/include" ? (
+	'INC'		=> 	"-I$include_ldap",
+	) : (
+	'INC'		=> 	"",
+	)),
+	'LIBS'		=> 	["-L$lib_ldap -l$ldap_lib"],
+	'DEFINE'	=> 	"$ssl_def",
 );
