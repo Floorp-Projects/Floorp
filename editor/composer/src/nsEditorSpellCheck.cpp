@@ -178,7 +178,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
 
     if (NS_SUCCEEDED(rv) && packageRegistry) {
       nsCAutoString utf8DictName;
-      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("navigator"),
+      rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("editor"),
                                               utf8DictName);
       CopyUTF8toUTF16(utf8DictName, dictName);
     }
