@@ -21,8 +21,6 @@
 #include "parser.h"
 #include "world.h"
 
-#include <algorithm>
-
 namespace JS = JavaScript;
 
 
@@ -308,47 +306,39 @@ void JS::Token::initKeywords(World &world)
 }
 
 
-// Append a description of the token to dst.
-void JS::Token::print(String &dst, bool debug) const
+// Print a description of the token to f.
+void JS::Token::print(Formatter &f, bool debug) const
 {
 	switch (getKind()) {
 	  case end:
-		dst += "[end]";
+		f << "[end]";
 		break;
 
 	  case number:
-		if (debug) {
-			dst += "[number ";
-			dst += getValue();
-			dst += ']';
-		}
-		dst += getChars();
+		if (debug)
+			f << "[number " << getValue() << ']';
+		f << getChars();
 		break;
 
 	  case unit:
 		if (debug)
-			dst += "[unit]";
+			f << "[unit]";
 	  case string:
-		dst += '"';
-		dst += getChars();
-		dst += '"';
+		f << '"' << getChars() << '"';
 		break;
 
 	  case regExp:
-		dst += '/';
-		dst += getIdentifier();
-		dst += '/';
-		dst += getChars();
+		f << '/' << getIdentifier() << '/' << getChars();
 		break;
 
 	  case identifier:
 		if (debug)
-			dst += "[identifier]";
-		dst += getIdentifier();
+			f << "[identifier]";
+		f << getIdentifier();
 		break;
 
 	  default:
-		dst += getKind();
+		f << getKind();
 	}
 }
 
@@ -460,7 +450,7 @@ void JS::Lexer::unget()
 void JS::Lexer::syntaxError(const char *message, uint backUp)
 {
 	reader.unget(backUp);
-	reader.error(Exception::SyntaxError, widenCString(message), reader.getPos());
+	reader.error(Exception::syntaxError, widenCString(message), reader.getPos());
 }
 
 
@@ -1017,7 +1007,7 @@ void JS::Parser::syntaxError(const String &message, uint backUp)
 {
 	while (backUp--)
 		lexer.unget();
-	getReader().error(Exception::SyntaxError, message, lexer.getPos());
+	getReader().error(Exception::syntaxError, message, lexer.getPos());
 }
 
 
@@ -1032,7 +1022,7 @@ const JS::Token &JS::Parser::require(bool preferRegExp, Token::Kind kind)
 
 		if (special)
 			message += '\'';
-		message += kind;
+		message += Token::kindName(kind);
 		if (special)
 			message += '\'';
 		message += " expected";
@@ -1046,27 +1036,6 @@ const JS::Token &JS::Parser::require(bool preferRegExp, Token::Kind kind)
 inline JS::String &JS::Parser::copyTokenChars(const Token &t)
 {
 	return newArenaString(arena, t.getChars());
-}
-
-
-// Parse and return a qualifiedIdentifier.  The first token has already been parsed and is in t.
-// If the first token was peeked, it should be have been done with preferRegExp set to true.
-JS::IdentifierExprNode *JS::Parser::parseQualifiedIdentifier(const Token &t)
-{
-	bool foundQualifiers;
-
-	if (Token::isIdentifierKind(t.getKind())) {
-		IdentifierExprNode *id = new(arena) IdentifierExprNode(t.getPos(), ExprNode::identifier, t.getIdentifier());
-		return static_cast<IdentifierExprNode *>(parseIdentifierQualifiers(id, foundQualifiers));
-	}
-	if (t.hasKind(Token::openParenthesis)) {
-		ExprNode *e = parseParenthesesAndIdentifierQualifiers(t, foundQualifiers);
-		if (!foundQualifiers)
-			syntaxError(":: expected", 0);
-		return static_cast<IdentifierExprNode *>(e);
-	}
-	syntaxError("Qualified identifier expected");
-	return 0;	// Unreachable code here just to shut up compiler warnings
 }
 
 
@@ -1101,6 +1070,27 @@ JS::ExprNode *JS::Parser::parseParenthesesAndIdentifierQualifiers(const Token &t
 	ExprNode *e = new(arena) UnaryExprNode(pos, ExprNode::parentheses, parseExpression(false));
 	require(false, Token::closeParenthesis);
 	return parseIdentifierQualifiers(e, foundQualifiers);
+}
+
+
+// Parse and return a qualifiedIdentifier.  The first token has already been parsed and is in t.
+// If the first token was peeked, it should be have been done with preferRegExp set to true.
+JS::IdentifierExprNode *JS::Parser::parseQualifiedIdentifier(const Token &t)
+{
+	bool foundQualifiers;
+
+	if (Token::isIdentifierKind(t.getKind())) {
+		IdentifierExprNode *id = new(arena) IdentifierExprNode(t.getPos(), ExprNode::identifier, t.getIdentifier());
+		return static_cast<IdentifierExprNode *>(parseIdentifierQualifiers(id, foundQualifiers));
+	}
+	if (t.hasKind(Token::openParenthesis)) {
+		ExprNode *e = parseParenthesesAndIdentifierQualifiers(t, foundQualifiers);
+		if (!foundQualifiers)
+			syntaxError(":: expected", 0);
+		return static_cast<IdentifierExprNode *>(e);
+	}
+	syntaxError("Identifier or '(' expected");
+	return 0;	// Unreachable code here just to shut up compiler warnings
 }
 
 
@@ -1141,7 +1131,7 @@ JS::PairListExprNode *JS::Parser::parseObjectLiteral(const Token &initialToken)
 		while (true) {
 			const Token &t = lexer.get(true);
 			ExprNode *field;
-			if (Token::isIdentifierKind(t.getKind()))
+			if (Token::isIdentifierKind(t.getKind()) || t.hasKind(Token::openParenthesis))
 				field = parseQualifiedIdentifier(t);
 			else if (t.hasKind(Token::string))
 				field = new(arena) StringExprNode(t.getPos(), ExprNode::string, copyTokenChars(t));
@@ -1254,10 +1244,23 @@ JS::ExprNode *JS::Parser::parsePrimaryExpression()
 }
 
 
-JS::ExprNode *JS::Parser::parseMember(ExprNode *target, const Token &t, ExprNode::Kind kind, ExprNode::Kind parenKind)
+// Parse a . or @ followed by a QualifiedIdentifier or ParenthesizedExpression and return
+// the resulting BinaryExprNode.  Use kind if a QualifiedIdentifier was found or parenKind
+// if a ParenthesizedExpression was found.
+// tOperator is the . or @ token.  target is the first operand.
+JS::BinaryExprNode *JS::Parser::parseMember(ExprNode *target, const Token &tOperator, ExprNode::Kind kind, ExprNode::Kind parenKind)
 {
-    // stub to get linux to link.
-    return 0;
+	uint32 pos = tOperator.getPos();
+	ExprNode *member;
+	const Token &t2 = lexer.get(true);
+	if (t2.hasKind(Token::openParenthesis)) {
+		bool foundQualifiers;
+		member = parseParenthesesAndIdentifierQualifiers(t2, foundQualifiers);
+		if (!foundQualifiers)
+			kind = parenKind;
+	} else
+		member = parseQualifiedIdentifier(t2);
+	return new(arena) BinaryExprNode(pos, kind, target, member);
 }
 
 
@@ -1276,7 +1279,7 @@ JS::InvokeExprNode *JS::Parser::parseInvoke(ExprNode *target, uint32 pos, Token:
 			ExprNode *value = parseAssignmentExpression(false);
 			if (lexer.eat(false, Token::colon)) {
 				field = value;
-				if (!ExprNode::isFieldKind(field->getKind()))
+				if (!isFieldKind(field->getKind()))
 					syntaxError("Argument name must be an identifier, string, or number");
 				hasNamedArgument = true;
 				value = parseAssignmentExpression(false);
@@ -1356,20 +1359,24 @@ JS::ExprNode *JS::Parser::parsePostfixExpression(bool newExpression)
 	}
 }
 
+
 // Parse and return a NonAssignmentExpression.
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
 JS::ExprNode *JS::Parser::parseNonAssignmentExpression(bool noIn)
 {
 	checkStackSize();
-    return 0;
+	syntaxError("***** parseNonAssignmentExpression not implemented yet *****");
+	return 0;
 }
+
 
 // Parse and return an AssignmentExpression.
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
 JS::ExprNode *JS::Parser::parseAssignmentExpression(bool noIn)
 {
 	checkStackSize();
-    return 0;
+	syntaxError("***** parseAssignmentExpression not implemented yet *****");
+	return 0;
 }
 
 
@@ -1378,6 +1385,6 @@ JS::ExprNode *JS::Parser::parseAssignmentExpression(bool noIn)
 JS::ExprNode *JS::Parser::parseExpression(bool noIn)
 {
 	checkStackSize();
-    return 0;
+	syntaxError("***** parseExpression not implemented yet *****");
+	return 0;
 }
-

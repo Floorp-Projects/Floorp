@@ -281,9 +281,8 @@ namespace JavaScript {
 		const String &getChars() const {ASSERT(valid && kind >= KindsWithCharsBegin && kind < KindsWithCharsEnd); return chars;}
 		float64 getValue() const {ASSERT(valid && kind == number); return value;}
 
-		friend String &operator+=(String &s, Kind k) {return s += kindName(k);}
-		friend String &operator+=(String &s, const Token &t) {t.print(s); return s;}
-		void print(String &dst, bool debug = false) const;
+		friend Formatter &operator<<(Formatter &f, Kind k) {f << kindName(k); return f;}
+		void print(Formatter &f, bool debug = false) const;
 		
 		friend class Lexer;
 	};
@@ -811,10 +810,10 @@ namespace JavaScript {
 
 
 	class Parser {
+	  public:
 		Lexer lexer;
 		Arena &arena;
 
-	  public:
 		Parser(World &world, Arena &arena, const String &source, const String &sourceLocation, uint32 initialLineNum = 1);
 		
 	  private:
@@ -826,16 +825,16 @@ namespace JavaScript {
 		const Token &require(bool preferRegExp, Token::Kind kind);
 		String &copyTokenChars(const Token &t);
 
-		IdentifierExprNode *parseQualifiedIdentifier(const Token &t);
 		ExprNode *parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers);
 		ExprNode *parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers);
+		IdentifierExprNode *parseQualifiedIdentifier(const Token &t);
 		PairListExprNode *parseArrayLiteral(const Token &initialToken);
 		PairListExprNode *parseObjectLiteral(const Token &initialToken);
 		ExprNode *parsePrimaryExpression();
-		ExprNode *parseMember(ExprNode *target, const Token &t, ExprNode::Kind kind, ExprNode::Kind parenKind);
+		BinaryExprNode *parseMember(ExprNode *target, const Token &tOperator, ExprNode::Kind kind, ExprNode::Kind parenKind);
 		InvokeExprNode *parseInvoke(ExprNode *target, uint32 pos, Token::Kind closingTokenKind, ExprNode::Kind invokeKind);
-		ExprNode *parsePostfixExpression(bool newExpression = false);
 	  public:
+		ExprNode *parsePostfixExpression(bool newExpression = false);
 		ExprNode *parseNonAssignmentExpression(bool noIn);
 		ExprNode *parseAssignmentExpression(bool noIn);
 		ExprNode *parseExpression(bool noIn);
