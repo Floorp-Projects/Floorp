@@ -52,7 +52,6 @@ NS_NewBodyFrame(nsIFrame*& aResult, PRUint32 aFlags)
 }
 
 nsBodyFrame::nsBodyFrame()
-  : nsBlockFrame()
 {
   mSpaceManager = new nsSpaceManager(this);
   NS_ADDREF(mSpaceManager);
