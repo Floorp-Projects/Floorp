@@ -45,12 +45,12 @@ interface nsIWebBrowserNav : nsISupports
 	/*
 	Tells the browser to navigate to the next Back session history item.
 	*/
-	void GoBack();
+	void goBack();
 
 	/*
 	Tells the browser to navigate to the next Forward session history item.
 	*/
-	void GoForward();
+	void goForward();
 
 	/*
 	Loads a given URI.  This will give priority to loading the requested URI
@@ -60,7 +60,7 @@ interface nsIWebBrowserNav : nsISupports
 
 	@param uri - The URI to load.
 	*/
-	void LoadURI(in wstring uri);
+	void loadURI(in wstring uri);
 
 	/*
 	Loads a given URI through the specified adapter.  This will give priority
@@ -71,19 +71,31 @@ interface nsIWebBrowserNav : nsISupports
 	@param uri - The URI to load.
 	@param adapterBinding - The local IP address of the adapter to bind to.
 	*/
-	void LoadURIVia(in wstring uri, in unsigned long adapterBinding);
+	void loadURIVia(in wstring uri, in unsigned long adapterBinding);
 
 
-	void Reload(); //XXX Should take a cache parameter
+	void reload(); //XXX Should take a cache parameter
 
 	/*
 	Stops a load of a URI.
 	*/
-	void Stop();
+	void stop();
 
+	/*
+	Set the document for the current webBrowser.  This will simulate the normal
+	load process of a document being loaded.
+
+	@param document - The document to be set.
+	@param contentType - This is the content type to try and render the document
+		as.  This may be null.  If this is null, the method will try to query
+		the document to identify the content type of the document.  If the query
+		fails, content type "HTML" will be assumed.
+	*/
+	void setDocument(in nsIDOMDocument document, in wstring contentType);
+	
 	/*
 	Retrieves or sets the current Document for the WebBrowser.  When setting
 	this will simulate the normal load process.
 	*/
-	attribute nsIDOMDocument document;		
+	readonly attribute nsIDOMDocument document;		
 };

@@ -24,6 +24,8 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContext.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
 
 #include "nsWebBrowser.h"
 
@@ -219,14 +221,28 @@ NS_IMETHODIMP nsWebBrowser::Stop()
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsWebBrowser::SetDocument(nsIDOMDocument* document)
+NS_IMETHODIMP nsWebBrowser::SetDocument(nsIDOMDocument* aDocument, 
+   const PRUnichar* aContentType)
 {
-   //XXX First Check
-	/*
-	Retrieves or sets the current Document for the WebBrowser.  When setting
-	this will simulate the normal load process.
-	*/
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG(aDocument);
+
+   nsAutoString contentType(aContentType);
+   if(contentType.IsEmpty())
+      {
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
+      if(doc)
+         doc->GetContentType(contentType);
+      }
+   if(contentType.IsEmpty())
+      contentType.Assign("HTML");
+      
+   NS_ENSURE_SUCCESS(CreateDocShell(contentType.GetUnicode()), 
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(mDocShell->SetDocument(aDocument, nsnull), 
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** document)
@@ -582,14 +598,11 @@ NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
 
 NS_IMETHODIMP nsWebBrowser::Repaint(PRBool fForce)
 {
-   //XXX First Check
-	/** 
-	 * Tell the window to repaint itself
-	 * @param aForce - if true, repaint immediately
-	 *                 if false, the window may defer repainting as it sees fit.
-	 */
-   return NS_ERROR_FAILURE;
-}
+   NS_ENSURE_STATE(mDocShell);
+   nsCOMPtr<nsIGenericWindow> docWnd(do_QueryInterface(mDocShell));
+   NS_ENSURE_TRUE(docWnd, NS_ERROR_FAILURE);
+   return docWnd->Repaint(fForce); // Can directly return this as it is the
+}                                     // same interface, thus same returns.
 
 NS_IMETHODIMP nsWebBrowser::GetParentWidget(nsIWidget** parentWidget)
 {
