@@ -435,8 +435,9 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     // protocol spec. A protocol spec is an alphanumeric string of 1 or
     // more characters that is terminated with a colon.
     PRBool isAbsolute = PR_FALSE;
-    char* cp;
+    char* cp = nsnull;
 	char *imapPartOfUrl = nsnull;
+
     char* ap = cSpec;
     char ch;
     while (0 != (ch = *ap)) 
@@ -521,11 +522,11 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         }
 	}
 
-    if (imapPartOfUrl)
-    {
-        m_file = PL_strdup(imapPartOfUrl);
-        ParseImapPart(imapPartOfUrl);
-    }
+	if (imapPartOfUrl)
+		m_file = PL_strdup(imapPartOfUrl);
+
+	ParseImapPart(imapPartOfUrl);
+
     delete [] cSpec;
 
     if (m_host)
