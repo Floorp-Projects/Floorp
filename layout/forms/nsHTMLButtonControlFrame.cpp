@@ -512,13 +512,12 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext =
     aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo, mStyleContext);
-  mFirstChild->Init(aPresContext, mContent, this, this, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
-  // Set the geometric and content parent for each of the child frames
+  // Set the parent for each of the child frames
   for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
-    frame->SetGeometricParent(mFirstChild);
-    frame->SetContentParent(mFirstChild);
+    frame->SetParent(mFirstChild);
   }
 
   // Queue up the frames for the inline frame

@@ -113,8 +113,7 @@ public:
   // nsIFrame
   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
                    nsIContent*      aContent,
-                   nsIFrame*        aGeometricParent,
-                   nsIFrame*        aContentParent,
+                   nsIFrame*        aParent,
                    nsIStyleContext* aContext);
   NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
                                   nsIAtom*        aListName,
@@ -129,10 +128,8 @@ public:
                            const nsStyleStruct*& aStyleStruct) const;
   NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
                                     nsIStyleContext* aParentContext);
-  NS_IMETHOD  GetContentParent(nsIFrame*& aParent) const;
-  NS_IMETHOD  SetContentParent(const nsIFrame* aParent);
-  NS_IMETHOD  GetGeometricParent(nsIFrame*& aParent) const;
-  NS_IMETHOD  SetGeometricParent(const nsIFrame* aParent);
+  NS_IMETHOD  GetParent(nsIFrame*& aParent) const;
+  NS_IMETHOD  SetParent(const nsIFrame* aParent);
   NS_IMETHOD  GetRect(nsRect& aRect) const;
   NS_IMETHOD  GetOrigin(nsPoint& aPoint) const;
   NS_IMETHOD  GetSize(nsSize& aSize) const;
@@ -345,8 +342,7 @@ protected:
   nsRect           mRect;
   nsIContent*      mContent;
   nsIStyleContext* mStyleContext;
-  nsIFrame*        mContentParent;
-  nsIFrame*        mGeometricParent;
+  nsIFrame*        mParent;
   nsIFrame*        mNextSibling;  // singly linked list of frames
   nsFrameState     mState;
   PRBool           mSelected;

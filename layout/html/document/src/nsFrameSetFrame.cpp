@@ -381,7 +381,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
         nsIAtom* tag;
         contentParent2->GetTag(tag);
         if (nsHTMLAtoms::frameset == tag) {
-          aChild->GetGeometricParent((nsIFrame*&)parent);
+          aChild->GetParent((nsIFrame*&)parent);
         }
         NS_IF_RELEASE(tag);
         NS_RELEASE(contentParent2);
@@ -936,7 +936,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
 
           if (nsHTMLAtoms::frameset == tag) {
             result = NS_NewHTMLFramesetFrame(frame);
-            frame->Init(aPresContext, child, this, this, kidSC);
+            frame->Init(aPresContext, child, this, kidSC);
 
             childTypes[mChildCount] = FRAMESET;
             nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
@@ -946,7 +946,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
             childBorderColors[mChildCount].Set(childFrame->GetBorderColor());
           } else { // frame
             result = NS_NewHTMLFrameOuterFrame(frame);
-            frame->Init(aPresContext, child, this, this, kidSC);
+            frame->Init(aPresContext, child, this, kidSC);
 
             childTypes[mChildCount] = FRAME;
             //
@@ -979,7 +979,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame;
         nsIStyleContext* pseudoStyleContext =
           aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo, mStyleContext);
-        blankFrame->Init(aPresContext, mContent, this, this, pseudoStyleContext);
+        blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
         NS_RELEASE(pseudoStyleContext);
 
         if (nsnull == lastChild) {
@@ -1017,7 +1017,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           borderFrame = new nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
           nsIStyleContext* pseudoStyleContext =
             aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo, mStyleContext);
-          borderFrame->Init(aPresContext, mContent, this, this, pseudoStyleContext);
+          borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
           NS_RELEASE(pseudoStyleContext);
 
           mChildCount++;
@@ -1042,7 +1042,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
             borderFrame = new nsHTMLFramesetBorderFrame(borderWidth, PR_TRUE, PR_FALSE);
             nsIStyleContext* pseudoStyleContext =
               aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::verticalFramesetBorderPseudo, mStyleContext);
-            borderFrame->Init(aPresContext, mContent, this, this, pseudoStyleContext);
+            borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
             NS_RELEASE(pseudoStyleContext);
 
             mChildCount++;
@@ -1590,7 +1590,7 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext,
   switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       nsHTMLFramesetFrame* parentFrame = nsnull;
-      GetGeometricParent((nsIFrame*&)parentFrame);
+      GetParent((nsIFrame*&)parentFrame);
       parentFrame->StartMouseDrag(aPresContext, this, aEvent);
       aEventStatus = nsEventStatus_eConsumeNoDefault;
 	    break;

@@ -158,21 +158,24 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   {
     // Get correct color by finding the first parent that actually
     // specifies a color.
-    nsIFrame* frame = this;
-    while (nsnull != frame) {
+    nsIStyleContext* styleContext = mStyleContext;
+    NS_ADDREF(styleContext);
+    while (nsnull != styleContext) {
       const nsStyleColor* color;
-      nsresult rv = frame->GetStyleData(eStyleStruct_Color,
-                                        (const nsStyleStruct*&) color);
-      if (NS_SUCCEEDED(rv) && (nsnull != color)) {
+      color = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
+                                    
+      if (nsnull != color) {
         if (0 == (NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags)) {
           NS_Get3DColors(colors, color->mBackgroundColor);
           break;
         }
       }
-      // Try next parent (use content parent so that style is
-      // inherited properly!)
-      frame->GetContentParent(frame);
+      // Try parent style context
+      nsIStyleContext*  lastStyleContext = styleContext;
+      styleContext = styleContext->GetParent();
+      NS_RELEASE(lastStyleContext);
     }
+    NS_IF_RELEASE(styleContext);
   }
 
   // Draw a "shadowed" box around the rule area

@@ -104,8 +104,7 @@ public:
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
-                  nsIFrame*        aGeometricParent,
-                  nsIFrame*        aContentParent,
+                  nsIFrame*        aParent,
                   nsIStyleContext* aContext);
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD Paint(nsIPresContext& aPresContext,

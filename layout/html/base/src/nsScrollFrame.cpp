@@ -48,8 +48,7 @@ class nsScrollFrame : public nsHTMLContainerFrame {
 public:
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
-                  nsIFrame*        aGeometricParent,
-                  nsIFrame*        aContentParent,
+                  nsIFrame*        aParent,
                   nsIStyleContext* aContext);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
@@ -81,13 +80,11 @@ private:
 NS_IMETHODIMP
 nsScrollFrame::Init(nsIPresContext&  aPresContext,
                     nsIContent*      aContent,
-                    nsIFrame*        aGeometricParent,
-                    nsIFrame*        aContentParent,
+                    nsIFrame*        aParent,
                     nsIStyleContext* aStyleContext)
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent,
-                                            aGeometricParent, aContentParent,
-                                            aStyleContext);
+                                            aParent, aStyleContext);
 
   // Create the scrolling view
   CreateScrollingView();

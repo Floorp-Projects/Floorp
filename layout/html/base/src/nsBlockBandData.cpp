@@ -237,7 +237,7 @@ nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
   aFrame->GetRect(r);
   nscoord y = r.y;
   nsIFrame* parent;
-  aFrame->GetGeometricParent(parent);
+  aFrame->GetParent(parent);
   PRBool done = PR_FALSE;
   while (!done && (parent != spaceFrame)) {
     // If parent has a prev-in-flow, check there for equality first
@@ -255,7 +255,7 @@ nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
     if (!done) {
       parent->GetOrigin(p);
       y += p.y;
-      parent->GetGeometricParent(parent);
+      parent->GetParent(parent);
     }
   }
 

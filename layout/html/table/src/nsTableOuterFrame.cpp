@@ -1141,7 +1141,7 @@ nsTableOuterFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, mContentParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, aStyleContext);
   cf->AppendToFlow(this);
   if (PR_TRUE==gsDebug)
     printf("nsTableOuterFrame::CCF parent = %p, this=%p, cf=%p\n", aParent, this, cf);
@@ -1190,7 +1190,7 @@ PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, n
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
   nsTableOuterFrame* parent;
    
-  nextInFlow->GetGeometricParent((nsIFrame*&)parent);
+  nextInFlow->GetParent((nsIFrame*&)parent);
 
   // If the next-in-flow has a next-in-flow then delete it too (and
   // delete it first).

@@ -319,7 +319,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
   if (nsnull == mFirstChild) {
     mFirstChild = new nsHTMLFrameInnerFrame;
     // XXX temporary! use style system to get correct style!
-    mFirstChild->Init(aPresContext, mContent, this, this, mStyleContext);
+    mFirstChild->Init(aPresContext, mContent, this, mStyleContext);
   }
  
   // nsContainerFrame::PaintBorder has some problems, kludge it here
@@ -597,7 +597,7 @@ NS_IMETHODIMP
 nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 {
   nsHTMLFrameOuterFrame* parent;
-  GetGeometricParent((nsIFrame*&)parent);
+  GetParent((nsIFrame*&)parent);
   return parent->GetContent((nsIContent*&)aContent);
 }
 

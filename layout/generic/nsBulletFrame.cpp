@@ -167,7 +167,7 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal)
   // because our parent is the list-item.
   nsHTMLValue value;
   nsIContent* parentContent;
-  mContentParent->GetContent(parentContent);
+  mParent->GetContent(parentContent);
   nsIHTMLContent* hc;
   if (NS_OK == parentContent->QueryInterface(kIHTMLContentIID, (void**) &hc)) {
     if (NS_CONTENT_ATTR_HAS_VALUE ==
