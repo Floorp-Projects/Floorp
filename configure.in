@@ -3429,6 +3429,20 @@ MOZ_ARG_ENABLE_BOOL(crypto,
 
 dnl ========================================================
 dnl =
+dnl = --enable-jsd
+dnl =
+dnl = JS Debugger XPCOM component (js/jsd)
+dnl = 
+dnl ========================================================
+
+MOZ_JSDEBUGGER=
+
+MOZ_ARG_ENABLE_BOOL(jsd,
+[  --enable-jsd            Enable JavaScript debug library],
+   MOZ_JSDEBUGGER=1)
+
+dnl ========================================================
+dnl =
 dnl = --with-extensions=extension1,extension2,
 dnl = 
 dnl = Enable compilation of specific extension modules
@@ -3457,13 +3471,14 @@ MOZ_ARG_WITH_STRING(extensions,
     done ],
   [ MOZ_EXTENSIONS="$MOZ_EXTENSIONS_DEFAULT" ] )
 
-if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c xmlterm`; then
+if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c xmlterm` -ne 0; then
     AC_MSG_WARN([Cannot build xmlterm without gtk toolkit. Removing xmlterm from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xmlterm||'`
 fi
 
-if test `echo "$MOZ_EXTENSIONS" | grep -c venkman`; then
-    MOZ_JSDEBUGGER=1
+if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
+    AC_MSG_WARN([Cannot build venkman without JavaScript debug library. Removing venkman from MOZ_EXTENSIONS.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
 fi
 
 dnl Disable jar packaging
