@@ -38,27 +38,27 @@ class nsIDOMHTMLModElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLMODELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetCite(nsString& aCite)=0;
-  NS_IMETHOD    SetCite(const nsString& aCite)=0;
+  NS_IMETHOD    GetCite(nsAWritableString& aCite)=0;
+  NS_IMETHOD    SetCite(const nsAReadableString& aCite)=0;
 
-  NS_IMETHOD    GetDateTime(nsString& aDateTime)=0;
-  NS_IMETHOD    SetDateTime(const nsString& aDateTime)=0;
+  NS_IMETHOD    GetDateTime(nsAWritableString& aDateTime)=0;
+  NS_IMETHOD    SetDateTime(const nsAReadableString& aDateTime)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLMODELEMENT   \
-  NS_IMETHOD    GetCite(nsString& aCite);  \
-  NS_IMETHOD    SetCite(const nsString& aCite);  \
-  NS_IMETHOD    GetDateTime(nsString& aDateTime);  \
-  NS_IMETHOD    SetDateTime(const nsString& aDateTime);  \
+  NS_IMETHOD    GetCite(nsAWritableString& aCite);  \
+  NS_IMETHOD    SetCite(const nsAReadableString& aCite);  \
+  NS_IMETHOD    GetDateTime(nsAWritableString& aDateTime);  \
+  NS_IMETHOD    SetDateTime(const nsAReadableString& aDateTime);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLMODELEMENT(_to)  \
-  NS_IMETHOD    GetCite(nsString& aCite) { return _to GetCite(aCite); } \
-  NS_IMETHOD    SetCite(const nsString& aCite) { return _to SetCite(aCite); } \
-  NS_IMETHOD    GetDateTime(nsString& aDateTime) { return _to GetDateTime(aDateTime); } \
-  NS_IMETHOD    SetDateTime(const nsString& aDateTime) { return _to SetDateTime(aDateTime); } \
+  NS_IMETHOD    GetCite(nsAWritableString& aCite) { return _to GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsAReadableString& aCite) { return _to SetCite(aCite); } \
+  NS_IMETHOD    GetDateTime(nsAWritableString& aDateTime) { return _to GetDateTime(aDateTime); } \
+  NS_IMETHOD    SetDateTime(const nsAReadableString& aDateTime) { return _to SetDateTime(aDateTime); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLModElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -33,11 +33,10 @@
 #include "nsIXIFConverter.h"
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
-#include "nsIHTMLDocument.h"
+#include "nsIDOMHTMLDocument.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 class nsHTMLTitleElement : public nsIDOMHTMLTitleElement,
                            public nsIJSScriptObject,
@@ -60,8 +59,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLTitleElement
-  NS_IMETHOD GetText(nsString& aType);
-  NS_IMETHOD SetText(const nsString& aType);
+  NS_DECL_IDOMHTMLTITLEELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -132,7 +130,7 @@ nsHTMLTitleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMETHODIMP
 nsHTMLTitleElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -141,7 +139,7 @@ nsHTMLTitleElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTitleElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString& aResult) const
+                                      nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
@@ -176,7 +174,7 @@ nsHTMLTitleElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFu
 
 
 NS_IMETHODIMP 
-nsHTMLTitleElement::GetText(nsString& aTitle)
+nsHTMLTitleElement::GetText(nsAWritableString& aTitle)
 {
   nsresult result = NS_OK;
   nsIDOMNode* child;
@@ -197,7 +195,7 @@ nsHTMLTitleElement::GetText(nsString& aTitle)
 }
 
 NS_IMETHODIMP 
-nsHTMLTitleElement::SetText(const nsString& aTitle)
+nsHTMLTitleElement::SetText(const nsAReadableString& aTitle)
 {
   nsresult result = NS_OK;
   nsIDOMNode* child;
@@ -205,11 +203,9 @@ nsHTMLTitleElement::SetText(const nsString& aTitle)
 
   result = GetDocument(document);
   if (NS_OK == result) {
-    nsIHTMLDocument* htmlDoc;
-    result = document->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
-    if (NS_OK == result) {
+    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(document));
+    if (htmlDoc) {
       htmlDoc->SetTitle(aTitle);
-      NS_RELEASE(htmlDoc);
     }   
     NS_RELEASE(document);
   }

@@ -12,11 +12,15 @@ class nsIPresState : public nsISupports {
 public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRESSTATE_IID)
 
-  NS_IMETHOD GetStatePropertyAsSupports(const nsString& aName, nsISupports** aResult) = 0;
-  NS_IMETHOD SetStatePropertyAsSupports(const nsString& aName, nsISupports* aValue) = 0;
+  NS_IMETHOD GetStatePropertyAsSupports(const nsAReadableString& aName,
+					nsISupports** aResult) = 0;
+  NS_IMETHOD SetStatePropertyAsSupports(const nsAReadableString& aName,
+					nsISupports* aValue) = 0;
 
-  NS_IMETHOD GetStateProperty(const nsString& aName, nsString& aResult) = 0;
-  NS_IMETHOD SetStateProperty(const nsString& aProperty, const nsString& aValue) = 0;
+  NS_IMETHOD GetStateProperty(const nsAReadableString& aName,
+			      nsAWritableString& aResult) = 0;
+  NS_IMETHOD SetStateProperty(const nsAReadableString& aProperty,
+			      const nsAReadableString& aValue) = 0;
 };
 
 extern nsresult

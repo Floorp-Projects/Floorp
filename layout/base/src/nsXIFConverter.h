@@ -33,7 +33,10 @@ class nsXIFConverter :public nsIXIFConverter
 
 private:
   PRInt32    mIndent;
-  nsString  *mBuffer;
+  // XXX This is wrong. It violates XPCOM string ownership rules.
+  // We're only getting away with this because instances of this
+  // class are restricted to single function scope.
+  nsAWritableString  *mBuffer;
     
   nsString mAttr;
   nsString mName;
@@ -73,28 +76,28 @@ public:
   nsXIFConverter();
   virtual ~nsXIFConverter();
 
-  NS_IMETHOD Init(nsString &aBuffer);
-  NS_IMETHOD BeginStartTag(const nsString& aTag);
+  NS_IMETHOD Init(nsAWritableString& aBuffer);
+  NS_IMETHOD BeginStartTag(const nsAReadableString& aTag);
   NS_IMETHOD BeginStartTag(nsIAtom* aTag);
-  NS_IMETHOD AddAttribute(const nsString& aName, const nsString& aValue);
-  NS_IMETHOD AddAttribute(const nsString& aName, nsIAtom* aValue);
-  NS_IMETHOD AddAttribute(const nsString& aName);
+  NS_IMETHOD AddAttribute(const nsAReadableString& aName, const nsAReadableString& aValue);
+  NS_IMETHOD AddAttribute(const nsAReadableString& aName, nsIAtom* aValue);
+  NS_IMETHOD AddAttribute(const nsAReadableString& aName);
   NS_IMETHOD AddAttribute(nsIAtom* aName);
 
-  //parameters normally: const nsString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE
-  NS_IMETHOD FinishStartTag(const nsString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE);  
+  //parameters normally: const nsAReadableString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE
+  NS_IMETHOD FinishStartTag(const nsAReadableString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE);  
   
   //parameters normally: nsIAtom* aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE
   NS_IMETHOD FinishStartTag(nsIAtom* aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE);  
 
   // Short-cut for starting a new tag that has no attributes
   //default aAddReturn to true
-  NS_IMETHOD AddStartTag(const nsString& aTag, PRBool aAddReturn = PR_TRUE);
+  NS_IMETHOD AddStartTag(const nsAReadableString& aTag, PRBool aAddReturn = PR_TRUE);
   //default aAddReturn to true
   NS_IMETHOD AddStartTag(nsIAtom* aTag, PRBool aAddReturn = PR_TRUE);
   
-  //parameter defaults: const nsString& aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE
-  NS_IMETHOD AddEndTag(const nsString& aTag, PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE);
+  //parameter defaults: const nsAReadableString& aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE
+  NS_IMETHOD AddEndTag(const nsAReadableString& aTag, PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE);
   //parameter defaults: nsIAtom* aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE
   NS_IMETHOD AddEndTag(nsIAtom* aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE);
   
@@ -103,19 +106,19 @@ public:
   NS_IMETHOD BeginContainer(nsIAtom* aTag);
   NS_IMETHOD EndContainer(nsIAtom* aTag);
 
-  NS_IMETHOD BeginContainer(const nsString& aTag);
-  NS_IMETHOD EndContainer(const nsString& aTag);
+  NS_IMETHOD BeginContainer(const nsAReadableString& aTag);
+  NS_IMETHOD EndContainer(const nsAReadableString& aTag);
 
-  NS_IMETHOD BeginLeaf(const nsString& aTag);
-  NS_IMETHOD EndLeaf(const nsString& aTag);
+  NS_IMETHOD BeginLeaf(const nsAReadableString& aTag);
+  NS_IMETHOD EndLeaf(const nsAReadableString& aTag);
 
-  NS_IMETHOD AddContent(const nsString& aContent);
-  NS_IMETHOD AddComment(const nsString& aComment);
-  NS_IMETHOD AddContentComment(const nsString& aComment);
+  NS_IMETHOD AddContent(const nsAReadableString& aContent);
+  NS_IMETHOD AddComment(const nsAReadableString& aComment);
+  NS_IMETHOD AddContentComment(const nsAReadableString& aComment);
   
-  NS_IMETHOD AddMarkupDeclaration(const nsString& aComment);
+  NS_IMETHOD AddMarkupDeclaration(const nsAReadableString& aComment);
 
-  NS_IMETHOD AddHTMLAttribute(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD AddHTMLAttribute(const nsAReadableString& aName, const nsAReadableString& aValue);
 
 
   NS_IMETHOD BeginCSSStyleSheet();
@@ -125,12 +128,12 @@ public:
   NS_IMETHOD EndCSSRule();
 
   NS_IMETHOD BeginCSSSelectors();
-  NS_IMETHOD AddCSSSelectors(const nsString& aSelectors);
+  NS_IMETHOD AddCSSSelectors(const nsAReadableString& aSelectors);
   NS_IMETHOD EndCSSSelectors();
 
   NS_IMETHOD BeginCSSDeclarationList();
   NS_IMETHOD BeginCSSDeclaration();
-  NS_IMETHOD AddCSSDeclaration(const nsString& aName, const nsString& aValue);
+  NS_IMETHOD AddCSSDeclaration(const nsAReadableString& aName, const nsAReadableString& aValue);
   NS_IMETHOD EndCSSDeclaration();
   NS_IMETHOD EndCSSDeclarationList();
 

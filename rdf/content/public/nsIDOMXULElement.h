@@ -46,11 +46,11 @@ class nsIDOMXULElement : public nsIDOMElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetId(nsString& aId)=0;
-  NS_IMETHOD    SetId(const nsString& aId)=0;
+  NS_IMETHOD    GetId(nsAWritableString& aId)=0;
+  NS_IMETHOD    SetId(const nsAReadableString& aId)=0;
 
-  NS_IMETHOD    GetClassName(nsString& aClassName)=0;
-  NS_IMETHOD    SetClassName(const nsString& aClassName)=0;
+  NS_IMETHOD    GetClassName(nsAWritableString& aClassName)=0;
+  NS_IMETHOD    SetClassName(const nsAReadableString& aClassName)=0;
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
 
@@ -64,9 +64,9 @@ public:
 
   NS_IMETHOD    GetBoxObject(nsIBoxObject** aBoxObject)=0;
 
-  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
+  NS_IMETHOD    AddBroadcastListener(const nsAReadableString& aAttr, nsIDOMElement* aElement)=0;
 
-  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
+  NS_IMETHOD    RemoveBroadcastListener(const nsAReadableString& aAttr, nsIDOMElement* aElement)=0;
 
   NS_IMETHOD    DoCommand()=0;
 
@@ -76,49 +76,49 @@ public:
 
   NS_IMETHOD    Click()=0;
 
-  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
+  NS_IMETHOD    GetElementsByAttribute(const nsAReadableString& aName, const nsAReadableString& aValue, nsIDOMNodeList** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMXULELEMENT   \
-  NS_IMETHOD    GetId(nsString& aId);  \
-  NS_IMETHOD    SetId(const nsString& aId);  \
-  NS_IMETHOD    GetClassName(nsString& aClassName);  \
-  NS_IMETHOD    SetClassName(const nsString& aClassName);  \
+  NS_IMETHOD    GetId(nsAWritableString& aId);  \
+  NS_IMETHOD    SetId(const nsAReadableString& aId);  \
+  NS_IMETHOD    GetClassName(nsAWritableString& aClassName);  \
+  NS_IMETHOD    SetClassName(const nsAReadableString& aClassName);  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
   NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase);  \
   NS_IMETHOD    GetBuilder(nsIXULTemplateBuilder** aBuilder);  \
   NS_IMETHOD    GetResource(nsIRDFResource** aResource);  \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers);  \
   NS_IMETHOD    GetBoxObject(nsIBoxObject** aBoxObject);  \
-  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
-  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
+  NS_IMETHOD    AddBroadcastListener(const nsAReadableString& aAttr, nsIDOMElement* aElement);  \
+  NS_IMETHOD    RemoveBroadcastListener(const nsAReadableString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    DoCommand();  \
   NS_IMETHOD    Focus();  \
   NS_IMETHOD    Blur();  \
   NS_IMETHOD    Click();  \
-  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    GetElementsByAttribute(const nsAReadableString& aName, const nsAReadableString& aValue, nsIDOMNodeList** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMXULELEMENT(_to)  \
-  NS_IMETHOD    GetId(nsString& aId) { return _to GetId(aId); } \
-  NS_IMETHOD    SetId(const nsString& aId) { return _to SetId(aId); } \
-  NS_IMETHOD    GetClassName(nsString& aClassName) { return _to GetClassName(aClassName); } \
-  NS_IMETHOD    SetClassName(const nsString& aClassName) { return _to SetClassName(aClassName); } \
+  NS_IMETHOD    GetId(nsAWritableString& aId) { return _to GetId(aId); } \
+  NS_IMETHOD    SetId(const nsAReadableString& aId) { return _to SetId(aId); } \
+  NS_IMETHOD    GetClassName(nsAWritableString& aClassName) { return _to GetClassName(aClassName); } \
+  NS_IMETHOD    SetClassName(const nsAReadableString& aClassName) { return _to SetClassName(aClassName); } \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
   NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase) { return _to GetDatabase(aDatabase); } \
   NS_IMETHOD    GetBuilder(nsIXULTemplateBuilder** aBuilder) { return _to GetBuilder(aBuilder); } \
   NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to GetResource(aResource); } \
   NS_IMETHOD    GetControllers(nsIControllers** aControllers) { return _to GetControllers(aControllers); } \
   NS_IMETHOD    GetBoxObject(nsIBoxObject** aBoxObject) { return _to GetBoxObject(aBoxObject); } \
-  NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to AddBroadcastListener(aAttr, aElement); }  \
-  NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to RemoveBroadcastListener(aAttr, aElement); }  \
+  NS_IMETHOD    AddBroadcastListener(const nsAReadableString& aAttr, nsIDOMElement* aElement) { return _to AddBroadcastListener(aAttr, aElement); }  \
+  NS_IMETHOD    RemoveBroadcastListener(const nsAReadableString& aAttr, nsIDOMElement* aElement) { return _to RemoveBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    DoCommand() { return _to DoCommand(); }  \
   NS_IMETHOD    Focus() { return _to Focus(); }  \
   NS_IMETHOD    Blur() { return _to Blur(); }  \
   NS_IMETHOD    Click() { return _to Click(); }  \
-  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
+  NS_IMETHOD    GetElementsByAttribute(const nsAReadableString& aName, const nsAReadableString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULElementClass(nsIScriptContext *aContext, void **aPrototype);

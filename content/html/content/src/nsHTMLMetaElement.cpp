@@ -54,14 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLMetaElement
-  NS_IMETHOD GetContent(nsString& aContent);
-  NS_IMETHOD SetContent(const nsString& aContent);
-  NS_IMETHOD GetHttpEquiv(nsString& aHttpEquiv);
-  NS_IMETHOD SetHttpEquiv(const nsString& aHttpEquiv);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetScheme(nsString& aScheme);
-  NS_IMETHOD SetScheme(const nsString& aScheme);
+  NS_DECL_IDOMHTMLMETAELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -138,7 +131,7 @@ NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Scheme, scheme)
 
 NS_IMETHODIMP
 nsHTMLMetaElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsString& aValue,
+                                     const nsAReadableString& aValue,
                                      nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -147,7 +140,7 @@ nsHTMLMetaElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLMetaElement::AttributeToString(nsIAtom* aAttribute,
                                      const nsHTMLValue& aValue,
-                                     nsString& aResult) const
+                                     nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

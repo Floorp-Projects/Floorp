@@ -132,14 +132,16 @@ void nsFormControlHelper::PlatformToDOMLineBreaks(nsString &aString)
   aString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"), NS_ConvertASCIItoUCS2("\n"));
 }
 
-PRBool nsFormControlHelper::GetBool(const nsString& aValue)
+PRBool nsFormControlHelper::GetBool(const nsAReadableString& aValue)
 {
-  return aValue.EqualsWithConversion(NS_STRING_TRUE);
+  return aValue.Equals(NS_STRING_TRUE);
 }
 
-void nsFormControlHelper::GetBoolString(const PRBool aValue, nsString& aResult)
+void nsFormControlHelper::GetBoolString(const PRBool aValue,
+                                        nsAWritableString& aResult)
 {
-  aResult.AssignWithConversion( aValue ? NS_STRING_TRUE : NS_STRING_FALSE );
+  aResult.Assign( aValue ? NS_STRING_TRUE :
+                  NS_STRING_FALSE );
 }
 
 

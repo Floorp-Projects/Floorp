@@ -54,10 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLModElement
-  NS_IMETHOD GetCite(nsString& aCite);
-  NS_IMETHOD SetCite(const nsString& aCite);
-  NS_IMETHOD GetDateTime(nsString& aDateTime);
-  NS_IMETHOD SetDateTime(const nsString& aDateTime);
+  NS_DECL_IDOMHTMLMODELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -131,7 +128,7 @@ NS_IMPL_STRING_ATTR(nsHTMLModElement, DateTime, datetime)
 
 NS_IMETHODIMP
 nsHTMLModElement::StringToAttribute(nsIAtom* aAttribute,
-                             const nsString& aValue,
+                             const nsAReadableString& aValue,
                              nsHTMLValue& aResult)
 {
   // XXX write me
@@ -141,7 +138,7 @@ nsHTMLModElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLModElement::AttributeToString(nsIAtom* aAttribute,
                              const nsHTMLValue& aValue,
-                             nsString& aResult) const
+                             nsAWritableString& aResult) const
 {
   // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);

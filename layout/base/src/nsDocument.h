@@ -74,7 +74,7 @@ protected:
 class nsDocHeaderData
 {
 public:
-  nsDocHeaderData(nsIAtom* aField, const nsString& aData)
+  nsDocHeaderData(nsIAtom* aField, const nsAReadableString& aData)
   {
     mField = aField;
     NS_IF_ADDREF(mField);
@@ -177,7 +177,7 @@ public:
   /**
    * Return the content (mime) type of this document.
    */
-  NS_IMETHOD GetContentType(nsString& aContentType) const;
+  NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
   /**
    * Return the LoadGroup for the document. May return null.
@@ -193,8 +193,8 @@ public:
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
-  NS_IMETHOD GetDocumentCharacterSet(nsString& oCharsetID);
-  NS_IMETHOD SetDocumentCharacterSet(const nsString& aCharSetID);
+  NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharsetID);
+  NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID);
 
   /**
    * Add an observer that gets notified whenever the charset changes.
@@ -218,8 +218,8 @@ public:
    * Access HTTP header data (this may also get set from other sources, like
    * HTML META tags).
    */
-  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const;
-  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData);
+  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsAWritableString& aData) const;
+  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsAReadableString& aData);
 
   /**
    * Create a new presentation shell that will use aContext for
@@ -350,14 +350,14 @@ public:
   /**
     * Finds text in content
    */
-  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+  NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
   /**
     * Converts the document or a selection of the 
     * document to XIF (XML Interchange Format)
     * and places the result in aBuffer.
     */
-  NS_IMETHOD   CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
+  NS_IMETHOD   CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection);
   NS_IMETHOD   ToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
   virtual void BeginConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
   virtual void ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode);
@@ -378,26 +378,26 @@ public:
   NS_IMETHOD    GetImplementation(nsIDOMDOMImplementation** aImplementation);
   NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement);
 
-  NS_IMETHOD    CreateElement(const nsString& aTagName, nsIDOMElement** aReturn);
+  NS_IMETHOD    CreateElement(const nsAReadableString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn);
-  NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);
-  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn);
-  NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
-  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMAttr** aReturn);
-  NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
-  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
-  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNodeList** aReturn);
+  NS_IMETHOD    CreateTextNode(const nsAReadableString& aData, nsIDOMText** aReturn);
+  NS_IMETHOD    CreateComment(const nsAReadableString& aData, nsIDOMComment** aReturn);
+  NS_IMETHOD    CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASection** aReturn);
+  NS_IMETHOD    CreateProcessingInstruction(const nsAReadableString& aTarget, const nsAReadableString& aData, nsIDOMProcessingInstruction** aReturn);
+  NS_IMETHOD    CreateAttribute(const nsAReadableString& aName, nsIDOMAttr** aReturn);
+  NS_IMETHOD    CreateEntityReference(const nsAReadableString& aName, nsIDOMEntityReference** aReturn);
+  NS_IMETHOD    GetElementsByTagName(const nsAReadableString& aTagname, nsIDOMNodeList** aReturn);
+  NS_IMETHOD    GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI, const nsAReadableString& aLocalName, nsIDOMNodeList** aReturn);
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
-  NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet);
+  NS_IMETHOD    GetCharacterSet(nsAWritableString& aCharacterSet);
   NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode,
                            PRBool aDeep,
                            nsIDOMNode** aReturn);
-  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, 
-                                           const nsString& aNameSpace, 
+  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, 
+                                           const nsAReadableString& aNameSpace, 
                                            nsIDOMElement** aReturn);
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
-  NS_IMETHOD    Load (const nsString& aUrl);
+  NS_IMETHOD    Load (const nsAReadableString& aUrl);
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
  
   // nsIDOMNode interface
@@ -434,9 +434,9 @@ public:
   NS_IMETHOD  IncrementModCount(PRInt32 aNumMods);
 
   // nsIDOMEventTarget interface
-  NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+  NS_IMETHOD AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
                               PRBool aUseCapture);
-  NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+  NS_IMETHOD RemoveEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, 
                                  PRBool aUseCapture);
   NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 

@@ -58,15 +58,15 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD       EvaluateString(const nsString& aScript,
+  NS_IMETHOD       EvaluateString(const nsAReadableString& aScript,
                                   void *aScopeObject,
                                   nsIPrincipal *principal,
                                   const char *aURL,
                                   PRUint32 aLineNo,
                                   const char* aVersion,
-                                  nsString& aRetValue,
+                                  nsAWritableString& aRetValue,
                                   PRBool* aIsUndefined);
-  NS_IMETHOD       EvaluateStringWithValue(const nsString& aScript,
+  NS_IMETHOD       EvaluateStringWithValue(const nsAReadableString& aScript,
                                      void *aScopeObject,
                                      nsIPrincipal *aPrincipal,
                                      const char *aURL,
@@ -85,11 +85,11 @@ public:
                                  void** aScriptObject);
   NS_IMETHOD       ExecuteScript(void* aScriptObject,
                                  void *aScopeObject,
-                                 nsString* aRetValue,
+                                 nsAWritableString* aRetValue,
                                  PRBool* aIsUndefined);
   NS_IMETHOD       CompileEventHandler(void *aTarget,
                                        nsIAtom *aName,
-                                       const nsString& aBody,
+                                       const nsAReadableString& aBody,
                                        PRBool aShared,
                                        void** aHandler);
   NS_IMETHOD       CallEventHandler(void *aTarget, void *aHandler, 
@@ -102,7 +102,7 @@ public:
                              const nsCString& aName,
                              PRUint32 aArgCount,
                              const char** aArgArray,
-                             const nsString& aBody,
+                             const nsAReadableString& aBody,
                              const char* aURL,
                              PRUint32 aLineNo,
                              PRBool aShared,

@@ -25,7 +25,7 @@
 #include "nsError.h"
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsAEUtils.h"
 #include "nsAESpyglassSuiteHandler.h"
 

@@ -23,7 +23,7 @@
 #include "nsXIFConverter.h"
 #include <fstream.h>
 #include "nsIDOMSelection.h"
-
+#include "nsReadableUtils.h"
 
 MOZ_DECL_CTOR_COUNTER(nsXIFConverter);
 
@@ -59,16 +59,16 @@ nsXIFConverter::~nsXIFConverter()
 
 
 NS_IMETHODIMP
-nsXIFConverter::Init(nsString &aBuffer)
+nsXIFConverter::Init(nsAWritableString& aBuffer)
 {
+  // XXX This is wrong. It violates XPCOM string ownership rules.
+  // We're only getting away with this because instances of this
+  // class are restricted to single function scope.
   mBuffer = &aBuffer;
   NS_ENSURE_ARG_POINTER(mBuffer);
 
-  char* prolog = "<?xml version=\"1.0\"?>\n";
-  char* doctype = "<!DOCTYPE xif>\n";
-
-  mBuffer->AppendWithConversion(prolog);
-  mBuffer->AppendWithConversion(doctype);
+  mBuffer->Append(NS_LITERAL_STRING("<?xml version=\"1.0\"?>\n"));
+  mBuffer->Append(NS_LITERAL_STRING("<!DOCTYPE xif>\n"));
   
   mAttr.AssignWithConversion("attr");
   mName.AssignWithConversion("name");
@@ -132,7 +132,7 @@ nsXIFConverter::GetSelection(nsIDOMSelection** aSelection)
 
 
 NS_IMETHODIMP
-nsXIFConverter::BeginStartTag(const nsString& aTag)
+nsXIFConverter::BeginStartTag(const nsAReadableString& aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // Make all element names lowercase
@@ -160,7 +160,7 @@ nsXIFConverter::BeginStartTag(nsIAtom* aTag)
 }
 
 NS_IMETHODIMP
-nsXIFConverter::AddAttribute(const nsString& aName, const nsString& aValue)
+nsXIFConverter::AddAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // Make all attribute names lowercase
@@ -178,7 +178,7 @@ nsXIFConverter::AddAttribute(const nsString& aName, const nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsXIFConverter::AddHTMLAttribute(const nsString& aName, const nsString& aValue)
+nsXIFConverter::AddHTMLAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   BeginStartTag(mAttr);
@@ -190,7 +190,7 @@ nsXIFConverter::AddHTMLAttribute(const nsString& aName, const nsString& aValue)
 
 
 NS_IMETHODIMP
-nsXIFConverter::AddAttribute(const nsString& aName, nsIAtom* aValue)
+nsXIFConverter::AddAttribute(const nsAReadableString& aName, nsIAtom* aValue)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString value(mNULL);
@@ -203,7 +203,7 @@ nsXIFConverter::AddAttribute(const nsString& aName, nsIAtom* aValue)
 }
 
 NS_IMETHODIMP
-nsXIFConverter::AddAttribute(const nsString& aName)
+nsXIFConverter::AddAttribute(const nsAReadableString& aName)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // A convention in XML DTD's is that ATTRIBUTE
@@ -230,7 +230,7 @@ nsXIFConverter::AddAttribute(nsIAtom* aName)
 
 
 NS_IMETHODIMP
-nsXIFConverter::FinishStartTag(const nsString& aTag, PRBool aIsEmpty, PRBool aAddReturn)
+nsXIFConverter::FinishStartTag(const nsAReadableString& aTag, PRBool aIsEmpty, PRBool aAddReturn)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   if (aIsEmpty)
@@ -261,7 +261,7 @@ nsXIFConverter::FinishStartTag(nsIAtom* aTag, PRBool aIsEmpty, PRBool aAddReturn
 }
 
 NS_IMETHODIMP
-nsXIFConverter::AddStartTag(const nsString& aTag, PRBool aAddReturn)
+nsXIFConverter::AddStartTag(const nsAReadableString& aTag, PRBool aAddReturn)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   BeginStartTag(aTag);
@@ -283,7 +283,7 @@ nsXIFConverter::AddStartTag(nsIAtom* aTag, PRBool aAddReturn)
 
 
 NS_IMETHODIMP
-nsXIFConverter::AddEndTag(const nsString& aTag, PRBool aDoIndent, PRBool aDoReturn)
+nsXIFConverter::AddEndTag(const nsAReadableString& aTag, PRBool aDoIndent, PRBool aDoReturn)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   // A convention in XML DTD's is that ELEMENT
@@ -346,7 +346,6 @@ nsXIFConverter::AddMarkupEntity(const PRUnichar aChar, PRBool *aReturn)
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_ARG_POINTER(aReturn);
   nsAutoString data;
-  PRBool  result = PR_TRUE;
 
   switch (aChar)
   {
@@ -368,7 +367,7 @@ nsXIFConverter::AddMarkupEntity(const PRUnichar aChar, PRBool *aReturn)
 
 
 NS_IMETHODIMP
-nsXIFConverter::AddContent(const nsString& aContent)
+nsXIFConverter::AddContent(const nsAReadableString& aContent)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString  tag(mContent);
@@ -412,7 +411,7 @@ nsXIFConverter::AddContent(const nsString& aContent)
 // that would be a content comment.
 //
 NS_IMETHODIMP
-nsXIFConverter::AddComment(const nsString& aContent)
+nsXIFConverter::AddComment(const nsAReadableString& aContent)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   mBuffer->Append(mBeginComment);
@@ -427,7 +426,7 @@ nsXIFConverter::AddComment(const nsString& aContent)
 // in the content sink on the other end when this is parsed.
 //
 NS_IMETHODIMP
-nsXIFConverter::AddContentComment(const nsString& aContent)
+nsXIFConverter::AddContentComment(const nsAReadableString& aContent)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString tag(mComment);
@@ -442,7 +441,7 @@ nsXIFConverter::AddContentComment(const nsString& aContent)
 // not really classified as ** tags **
 //
 NS_IMETHODIMP
-nsXIFConverter::AddMarkupDeclaration(const nsString& aContent)
+nsXIFConverter::AddMarkupDeclaration(const nsAReadableString& aContent)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString tag(mMarkupDeclarationOpen);
@@ -485,7 +484,7 @@ nsXIFConverter::EndContainer(nsIAtom* aTag)
 
 
 NS_IMETHODIMP
-nsXIFConverter::BeginContainer(const nsString& aTag)
+nsXIFConverter::BeginContainer(const nsAReadableString& aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString  container(mContainer);
@@ -495,14 +494,15 @@ nsXIFConverter::BeginContainer(const nsString& aTag)
   FinishStartTag(container,PR_FALSE,PR_FALSE);
 
   // Remember if we're inside a script tag:
-  if (aTag.EqualsWithConversion("script") || aTag.EqualsWithConversion("style"))
+  if (aTag.Equals(NS_LITERAL_STRING("script")) || 
+      aTag.Equals(NS_LITERAL_STRING("style")))
     mInScript = PR_TRUE;
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXIFConverter::EndContainer(const nsString& aTag)
+nsXIFConverter::EndContainer(const nsAReadableString& aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   nsAutoString  container(mContainer);
@@ -512,20 +512,21 @@ nsXIFConverter::EndContainer(const nsString& aTag)
   mBuffer->Append(mLF);
 
   // Remember if we're exiting a script tag:
-  if (aTag.EqualsWithConversion("script") || aTag.EqualsWithConversion("style"))
+  if (aTag.Equals(NS_LITERAL_STRING("script")) || 
+      aTag.Equals(NS_LITERAL_STRING("style")))
     mInScript = PR_FALSE;
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXIFConverter::BeginLeaf(const nsString& aTag)
+nsXIFConverter::BeginLeaf(const nsAReadableString& aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
 // XXX: Complete hack to prevent the style leaf
 // From being created until the style sheet work
 // is redone. -- gpk 1/27/99
-  if (aTag.EqualsIgnoreCase("STYLE"))
+  if (nsCRT::strcasecmp(nsPromiseFlatString(aTag), NS_LITERAL_STRING("STYLE")) == 0)
     return NS_OK;
 
 
@@ -536,13 +537,13 @@ nsXIFConverter::BeginLeaf(const nsString& aTag)
 }
 
 NS_IMETHODIMP
-nsXIFConverter::EndLeaf(const nsString& aTag)
+nsXIFConverter::EndLeaf(const nsAReadableString& aTag)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
 // XXX: Complete hack to prevent the style leaf
 // From being created until the style sheet work
 // is redone. -- gpk 1/27/99
-  if (aTag.EqualsIgnoreCase("STYLE"))
+  if (nsCRT::strcasecmp(nsPromiseFlatString(aTag), NS_LITERAL_STRING("STYLE")) == 0)
     return NS_OK;
 
 
@@ -605,7 +606,7 @@ NS_IMETHODIMP nsXIFConverter::EndCSSSelectors()
 
 
 
-NS_IMETHODIMP nsXIFConverter::AddCSSSelectors(const nsString& aSelectors)
+NS_IMETHODIMP nsXIFConverter::AddCSSSelectors(const nsAReadableString& aSelectors)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddAttribute(NS_ConvertToString("selectors"),aSelectors);
@@ -635,7 +636,7 @@ NS_IMETHODIMP nsXIFConverter::BeginCSSDeclaration()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXIFConverter::AddCSSDeclaration(const nsString& aName, const nsString& aValue)
+NS_IMETHODIMP nsXIFConverter::AddCSSDeclaration(const nsAReadableString& aName, const nsAReadableString& aValue)
 {
   NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
   AddAttribute(NS_ConvertToString("property"),aName);
@@ -671,7 +672,7 @@ NS_IMETHODIMP nsXIFConverter::WriteDebugFile() {
 #endif
 
   ofstream out(filename);
-  char* s = mBuffer->ToNewUTF8String();
+  char* s = ToNewUTF8String(mBuffer);
   if (s) {
     out << s;
     Recycle(s);

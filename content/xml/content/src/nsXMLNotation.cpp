@@ -39,9 +39,9 @@ class nsXMLNotation : public nsIDOMNotation,
                       public nsIContent
 {
 public:
-  nsXMLNotation(const nsString& aName,
-                const nsString& aPublicId,
-                const nsString& aSystemId);
+  nsXMLNotation(const nsAReadableString& aName,
+                const nsAReadableString& aPublicId,
+                const nsAReadableString& aSystemId);
   virtual ~nsXMLNotation();
 
   // nsISupports
@@ -51,8 +51,8 @@ public:
   NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMNotation
-  NS_IMETHOD    GetPublicId(nsString& aPublicId);
-  NS_IMETHOD    GetSystemId(nsString& aSystemId);
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId);
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId);
 
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -77,9 +77,9 @@ protected:
 
 nsresult
 NS_NewXMLNotation(nsIContent** aInstancePtrResult,
-                  const nsString& aName,
-                  const nsString& aPublicId,
-                  const nsString& aSystemId)
+                  const nsAReadableString& aName,
+                  const nsAReadableString& aPublicId,
+                  const nsAReadableString& aSystemId)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -93,9 +93,9 @@ NS_NewXMLNotation(nsIContent** aInstancePtrResult,
   return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
 }
 
-nsXMLNotation::nsXMLNotation(const nsString& aName,
-                             const nsString& aPublicId,
-                             const nsString& aSystemId) :
+nsXMLNotation::nsXMLNotation(const nsAReadableString& aName,
+                             const nsAReadableString& aPublicId,
+                             const nsAReadableString& aSystemId) :
   mName(aName), mPublicId(aPublicId), mSystemId(aSystemId)
 {
   NS_INIT_REFCNT();
@@ -158,17 +158,17 @@ nsXMLNotation::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_IMETHODIMP    
-nsXMLNotation::GetPublicId(nsString& aPublicId)
+nsXMLNotation::GetPublicId(nsAWritableString& aPublicId)
 {
-  aPublicId=mPublicId;
+  aPublicId.Assign(mPublicId);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsXMLNotation::GetSystemId(nsString& aSystemId)
+nsXMLNotation::GetSystemId(nsAWritableString& aSystemId)
 {
-  aSystemId=mSystemId;
+  aSystemId.Assign(mSystemId);
 
   return NS_OK;
 }
@@ -224,9 +224,9 @@ nsXMLNotation::GetNodeInfo(nsINodeInfo*& aResult) const
 }
 
 NS_IMETHODIMP
-nsXMLNotation::GetNodeName(nsString& aNodeName)
+nsXMLNotation::GetNodeName(nsAWritableString& aNodeName)
 {
-  aNodeName=mName;
+  aNodeName.Assign(mName);
   return NS_OK;
 }
 

@@ -310,7 +310,7 @@ void nsCheckboxControlFrame::SetCheckboxControlFrameState(nsIPresContext* aPresC
 
 NS_IMETHODIMP nsCheckboxControlFrame::SetProperty(nsIPresContext* aPresContext,
                                                   nsIAtom* aName,
-                                                  const nsString& aValue)
+                                                  const nsAReadableString& aValue)
 {
   if (nsHTMLAtoms::checked == aName)
     SetCheckboxControlFrameState(aPresContext, aValue);
@@ -321,7 +321,7 @@ NS_IMETHODIMP nsCheckboxControlFrame::SetProperty(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP nsCheckboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsCheckboxControlFrame::GetProperty(nsIAtom* aName, nsAReadableString& aValue)
 {
   if (nsHTMLAtoms::checked == aName)
     GetCheckboxControlFrameState(aValue);

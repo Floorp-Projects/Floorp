@@ -54,10 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLFrameSetElement
-  NS_IMETHOD GetCols(nsString& aCols);
-  NS_IMETHOD SetCols(const nsString& aCols);
-  NS_IMETHOD GetRows(nsString& aRows);
-  NS_IMETHOD SetRows(const nsString& aRows);
+  NS_DECL_IDOMHTMLFRAMESETELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -131,7 +128,7 @@ NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Rows, rows)
 
 NS_IMETHODIMP
 nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
-                                         const nsString& aValue,
+                                         const nsAReadableString& aValue,
                                          nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
@@ -156,7 +153,7 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLFrameSetElement::AttributeToString(nsIAtom* aAttribute,
                                          const nsHTMLValue& aValue,
-                                         nsString& aResult) const
+                                         nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::frameborder) {
     // XXX need to check for correct mode

@@ -114,7 +114,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
     return mInner.GetNodeInfo(aResult);
   }
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,
                                   nsIAtom*& aName,
                                   PRInt32& aNameSpaceID) {
     return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);
@@ -124,15 +124,15 @@ public:
     return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);
   }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsString& aValue, PRBool aNotify);
+                          const nsAReadableString& aValue, PRBool aNotify);
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsString& aValue, PRBool aNotify);
+                          const nsAReadableString& aValue, PRBool aNotify);
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsString& aResult) const {
+                          nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aName, aResult);
   }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsIAtom*& aPrefix, nsString& aResult) const {
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);
   }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
@@ -256,7 +256,7 @@ nsHTMLUnknownElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMETHODIMP
 nsHTMLUnknownElement::StringToAttribute(nsIAtom* aAttribute,
-                             const nsString& aValue,
+                             const nsAReadableString& aValue,
                              nsHTMLValue& aResult)
 {
   // XXX write me
@@ -266,7 +266,7 @@ nsHTMLUnknownElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLUnknownElement::AttributeToString(nsIAtom* aAttribute,
                              const nsHTMLValue& aValue,
-                             nsString& aResult) const
+                             nsAWritableString& aResult) const
 {
   // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
@@ -342,7 +342,7 @@ static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
 NS_IMETHODIMP
 nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute,
-                                   const nsString& aValue,
+                                   const nsAReadableString& aValue,
                                    PRBool aNotify)
 {
   nsresult  result = NS_OK;
@@ -449,7 +449,7 @@ nsHTMLUnknownElement::SetAttribute(PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsHTMLUnknownElement::SetAttribute(nsINodeInfo *aNodeInfo,
-                                   const nsString& aValue,
+                                   const nsAReadableString& aValue,
                                    PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);  

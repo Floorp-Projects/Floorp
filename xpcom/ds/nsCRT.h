@@ -259,6 +259,14 @@ public:
 
   static PRBool IsLower(PRUnichar aChar);
 
+  static char ToUpper(char aChar);
+
+  static char ToLower(char aChar);
+  
+  static PRBool IsUpper(char aChar);
+
+  static PRBool IsLower(char aChar);
+
   static PRBool IsAscii(PRUnichar aChar);
   static PRBool IsAscii(PRUnichar* aString);
   static PRBool IsAsciiAlpha(PRUnichar aChar);

@@ -272,8 +272,8 @@ public:
   NS_IMETHOD DoDrag(nsIDOMEvent *aDragEvent);
   NS_IMETHOD InsertFromDrop(nsIDOMEvent* aDropEvent);
 
-  NS_IMETHOD OutputToString(nsString& aOutputString,
-                            const nsString& aFormatType,
+  NS_IMETHOD OutputToString(nsAWritableString& aOutputString,
+                            const nsAReadableString& aFormatType,
                             PRUint32 aFlags);
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,

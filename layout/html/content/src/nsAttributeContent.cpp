@@ -113,7 +113,7 @@ public:
   }
 
 
-  NS_IMETHOD ParseAttributeString(const nsString& aStr, 
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr, 
                                 nsIAtom*& aName,
                                 PRInt32& aNameSpaceID) { 
     aName = nsnull;
@@ -138,13 +138,13 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsString& aValue,
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAReadableString& aValue,
                           PRBool aNotify) {  return NS_OK; }
-  NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
+  NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue,
                           PRBool aNotify) {  return NS_OK; }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsString &aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsString &aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, nsIAtom*& aName, nsIAtom*& aPrefix) const {
     aName = nsnull;
     aPrefix = nsnull;
@@ -194,10 +194,12 @@ public:
   // Implementation for nsITextContent
   NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult);
   NS_IMETHOD GetTextLength(PRInt32* aLengthResult);
-  NS_IMETHOD CopyText(nsString& aResult);
+  NS_IMETHOD CopyText(nsAWritableString& aResult);
   NS_IMETHOD SetText(const PRUnichar* aBuffer,
                    PRInt32 aLength,
                    PRBool aNotify);
+  NS_IMETHOD SetText(const nsAReadableString& aStr,
+                     PRBool aNotify);
   NS_IMETHOD SetText(const char* aBuffer,
                    PRInt32 aLength,
                    PRBool aNotify);
@@ -208,7 +210,7 @@ public:
 
   void ValidateTextFragment();
 
-  void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
+  void ToCString(nsAWritableString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
@@ -353,7 +355,7 @@ nsAttributeContent::ConvertContentToXIF(nsIXIFConverter* ) const
 }
 
 void
-nsAttributeContent::ToCString(nsString& aBuf, PRInt32 aOffset,
+nsAttributeContent::ToCString(nsAWritableString& aBuf, PRInt32 aOffset,
                                 PRInt32 aLen) const
 {
 }
@@ -471,14 +473,14 @@ nsAttributeContent::GetTextLength(PRInt32* aLengthResult)
 }
 
 nsresult
-nsAttributeContent::CopyText(nsString& aResult)
+nsAttributeContent::CopyText(nsAWritableString& aResult)
 {
   ValidateTextFragment();
   if (mText.Is2b()) {
     aResult.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aResult.AssignWithConversion(mText.Get1b(), mText.GetLength());
+    aResult.Assign(NS_ConvertASCIItoUCS2(mText.Get1b(), mText.GetLength()), mText.GetLength());
   }
   return NS_OK;
 }
@@ -497,6 +499,19 @@ nsAttributeContent::SetText(const PRUnichar* aBuffer, PRInt32 aLength,
   }
   mText.SetTo(aBuffer, aLength);
 
+  // Trigger a reflow
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->ContentChanged(mContent, nsnull);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAttributeContent::SetText(const nsAReadableString& aStr,
+                            PRBool aNotify)
+{
+  mText = aStr;
+  
   // Trigger a reflow
   if (aNotify && (nsnull != mDocument)) {
     mDocument->ContentChanged(mContent, nsnull);

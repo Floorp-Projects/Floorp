@@ -38,44 +38,44 @@ class nsIDOMCharacterData : public nsIDOMNode {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMCHARACTERDATA_IID; return iid; }
 
-  NS_IMETHOD    GetData(nsString& aData)=0;
-  NS_IMETHOD    SetData(const nsString& aData)=0;
+  NS_IMETHOD    GetData(nsAWritableString& aData)=0;
+  NS_IMETHOD    SetData(const nsAReadableString& aData)=0;
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 
-  NS_IMETHOD    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsString& aReturn)=0;
+  NS_IMETHOD    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    AppendData(const nsString& aArg)=0;
+  NS_IMETHOD    AppendData(const nsAReadableString& aArg)=0;
 
-  NS_IMETHOD    InsertData(PRUint32 aOffset, const nsString& aArg)=0;
+  NS_IMETHOD    InsertData(PRUint32 aOffset, const nsAReadableString& aArg)=0;
 
   NS_IMETHOD    DeleteData(PRUint32 aOffset, PRUint32 aCount)=0;
 
-  NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg)=0;
+  NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsAReadableString& aArg)=0;
 };
 
 
 #define NS_DECL_IDOMCHARACTERDATA   \
-  NS_IMETHOD    GetData(nsString& aData);  \
-  NS_IMETHOD    SetData(const nsString& aData);  \
+  NS_IMETHOD    GetData(nsAWritableString& aData);  \
+  NS_IMETHOD    SetData(const nsAReadableString& aData);  \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
-  NS_IMETHOD    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsString& aReturn);  \
-  NS_IMETHOD    AppendData(const nsString& aArg);  \
-  NS_IMETHOD    InsertData(PRUint32 aOffset, const nsString& aArg);  \
+  NS_IMETHOD    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsAWritableString& aReturn);  \
+  NS_IMETHOD    AppendData(const nsAReadableString& aArg);  \
+  NS_IMETHOD    InsertData(PRUint32 aOffset, const nsAReadableString& aArg);  \
   NS_IMETHOD    DeleteData(PRUint32 aOffset, PRUint32 aCount);  \
-  NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg);  \
+  NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsAReadableString& aArg);  \
 
 
 
 #define NS_FORWARD_IDOMCHARACTERDATA(_to)  \
-  NS_IMETHOD    GetData(nsString& aData) { return _to GetData(aData); } \
-  NS_IMETHOD    SetData(const nsString& aData) { return _to SetData(aData); } \
+  NS_IMETHOD    GetData(nsAWritableString& aData) { return _to GetData(aData); } \
+  NS_IMETHOD    SetData(const nsAReadableString& aData) { return _to SetData(aData); } \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsString& aReturn) { return _to SubstringData(aOffset, aCount, aReturn); }  \
-  NS_IMETHOD    AppendData(const nsString& aArg) { return _to AppendData(aArg); }  \
-  NS_IMETHOD    InsertData(PRUint32 aOffset, const nsString& aArg) { return _to InsertData(aOffset, aArg); }  \
+  NS_IMETHOD    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsAWritableString& aReturn) { return _to SubstringData(aOffset, aCount, aReturn); }  \
+  NS_IMETHOD    AppendData(const nsAReadableString& aArg) { return _to AppendData(aArg); }  \
+  NS_IMETHOD    InsertData(PRUint32 aOffset, const nsAReadableString& aArg) { return _to InsertData(aOffset, aArg); }  \
   NS_IMETHOD    DeleteData(PRUint32 aOffset, PRUint32 aCount) { return _to DeleteData(aOffset, aCount); }  \
-  NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg) { return _to ReplaceData(aOffset, aCount, aArg); }  \
+  NS_IMETHOD    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsAReadableString& aArg) { return _to ReplaceData(aOffset, aCount, aArg); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitCharacterDataClass(nsIScriptContext *aContext, void **aPrototype);

@@ -45,8 +45,6 @@ static PRInt32      gNameSpaceTableRefs;
 static nsHashtable* gURIToIDTable;
 static nsVoidArray* gURIArray;
 
-MOZ_DECL_CTOR_COUNTER(NameSpaceURIKey);
-
 static void AddRefTable()
 {
   if (0 == gNameSpaceTableRefs++) {
@@ -96,7 +94,7 @@ static void ReleaseTable()
   }
 }
 
-static PRInt32 FindNameSpaceID(const nsString& aURI)
+static PRInt32 FindNameSpaceID(const nsAReadableString& aURI)
 {
   NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
   nsStringKey key(aURI);
@@ -121,7 +119,7 @@ public:
   NameSpaceImpl(nsINameSpaceManager* aManager,
                 NameSpaceImpl* aParent, 
                 nsIAtom* aPrefix, 
-                const nsString& aURI);
+                const nsAReadableString& aURI);
   NameSpaceImpl(nsINameSpaceManager* aManager,
                 NameSpaceImpl* aParent, 
                 nsIAtom* aPrefix, 
@@ -133,7 +131,7 @@ public:
   NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager) const;
 
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const;
-  NS_IMETHOD GetNameSpaceURI(nsString& aURI) const;
+  NS_IMETHOD GetNameSpaceURI(nsAWritableString& aURI) const;
   NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aPrefix) const;
 
   NS_IMETHOD GetParentNameSpace(nsINameSpace*& aParent) const;
@@ -142,7 +140,7 @@ public:
   NS_IMETHOD FindNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID) const;
   NS_IMETHOD FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix) const;
 
-  NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, const nsString& aURI,
+  NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, const nsAReadableString& aURI,
                                   nsINameSpace*& aChildNameSpace);
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
                                   nsINameSpace*& aChildNameSpace);
@@ -162,7 +160,7 @@ public:
 NameSpaceImpl::NameSpaceImpl(nsINameSpaceManager* aManager,
                              NameSpaceImpl* aParent, 
                              nsIAtom* aPrefix, 
-                             const nsString& aURI)
+                             const nsAReadableString& aURI)
   : mManager(aManager),
     mParent(aParent),
     mPrefix(aPrefix)
@@ -217,7 +215,7 @@ NameSpaceImpl::GetNameSpaceID(PRInt32& aID) const
 }
 
 NS_IMETHODIMP
-NameSpaceImpl::GetNameSpaceURI(nsString& aURI) const
+NameSpaceImpl::GetNameSpaceURI(nsAWritableString& aURI) const
 {
   NS_ASSERTION(nsnull != mManager, "null namespace manager");
   return mManager->GetNameSpaceURI(mID, aURI);
@@ -295,7 +293,7 @@ NameSpaceImpl::FindNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix) cons
 }
 
 NS_IMETHODIMP
-NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, const nsString& aURI,
+NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, const nsAReadableString& aURI,
                                 nsINameSpace*& aChildNameSpace)
 {
   NameSpaceImpl* child = new NameSpaceImpl(mManager, this, aPrefix, aURI);
@@ -335,11 +333,11 @@ public:
 
   NS_IMETHOD CreateRootNameSpace(nsINameSpace*& aRootNameSpace);
 
-  NS_IMETHOD RegisterNameSpace(const nsString& aURI, 
+  NS_IMETHOD RegisterNameSpace(const nsAReadableString& aURI, 
 			                         PRInt32& aNameSpaceID);
 
-  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID, nsString& aURI);
-  NS_IMETHOD GetNameSpaceID(const nsString& aURI, PRInt32& aNameSpaceID);
+  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID, nsAWritableString& aURI);
+  NS_IMETHOD GetNameSpaceID(const nsAReadableString& aURI, PRInt32& aNameSpaceID);
 
 private:
   // These are not supported and are not implemented!
@@ -384,7 +382,7 @@ NameSpaceManagerImpl::CreateRootNameSpace(nsINameSpace*& aRootNameSpace)
 }
 
 NS_IMETHODIMP
-NameSpaceManagerImpl::RegisterNameSpace(const nsString& aURI, 
+NameSpaceManagerImpl::RegisterNameSpace(const nsAReadableString& aURI, 
                                         PRInt32& aNameSpaceID)
 {
   PRInt32 id = FindNameSpaceID(aURI);
@@ -401,7 +399,7 @@ NameSpaceManagerImpl::RegisterNameSpace(const nsString& aURI,
 }
 
 NS_IMETHODIMP
-NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsString& aURI)
+NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsAWritableString& aURI)
 {
   const nsString* result = FindNameSpaceURI(aNameSpaceID);
   if (nsnull != result) {
@@ -413,7 +411,7 @@ NameSpaceManagerImpl::GetNameSpaceURI(PRInt32 aNameSpaceID, nsString& aURI)
 }
 
 NS_IMETHODIMP
-NameSpaceManagerImpl::GetNameSpaceID(const nsString& aURI, PRInt32& aNameSpaceID)
+NameSpaceManagerImpl::GetNameSpaceID(const nsAReadableString& aURI, PRInt32& aNameSpaceID)
 {
   aNameSpaceID = FindNameSpaceID(aURI);
   return NS_OK;

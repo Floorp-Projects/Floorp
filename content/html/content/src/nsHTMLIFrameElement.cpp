@@ -62,28 +62,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLIFrameElement
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetFrameBorder(nsString& aFrameBorder);
-  NS_IMETHOD SetFrameBorder(const nsString& aFrameBorder);
-  NS_IMETHOD GetHeight(nsString& aHeight);
-  NS_IMETHOD SetHeight(const nsString& aHeight);
-  NS_IMETHOD GetLongDesc(nsString& aLongDesc);
-  NS_IMETHOD SetLongDesc(const nsString& aLongDesc);
-  NS_IMETHOD GetMarginHeight(nsString& aMarginHeight);
-  NS_IMETHOD SetMarginHeight(const nsString& aMarginHeight);
-  NS_IMETHOD GetMarginWidth(nsString& aMarginWidth);
-  NS_IMETHOD SetMarginWidth(const nsString& aMarginWidth);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetScrolling(nsString& aScrolling);
-  NS_IMETHOD SetScrolling(const nsString& aScrolling);
-  NS_IMETHOD GetSrc(nsString& aSrc);
-  NS_IMETHOD SetSrc(const nsString& aSrc);
-  NS_IMETHOD GetWidth(nsString& aWidth);
-  NS_IMETHOD SetWidth(const nsString& aWidth);
-  NS_IMETHOD GetContentDocument(nsIDOMDocument** aContentDocument);
-  NS_IMETHOD SetContentDocument(nsIDOMDocument* aContentDocument);
+  NS_DECL_IDOMHTMLIFRAMEELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -213,7 +192,7 @@ nsHTMLIFrameElement::SetContentDocument(nsIDOMDocument* aContentDocument)
     
 NS_IMETHODIMP
 nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsString& aValue,
+                                       const nsAReadableString& aValue,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::marginwidth) {
@@ -261,7 +240,7 @@ nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLIFrameElement::AttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
-                                       nsString& aResult) const
+                                       nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::frameborder) {
     nsGenericHTMLElement::FrameborderValueToString(PR_TRUE, aValue, aResult);

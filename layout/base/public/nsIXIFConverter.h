@@ -43,29 +43,29 @@ class nsIXIFConverter: public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IXIFCONVERTER_IID; return iid; }
 
-  NS_IMETHOD Init(nsString &aBuffer) = 0;
+  NS_IMETHOD Init(nsAWritableString &aBuffer) = 0;
 
-  NS_IMETHOD BeginStartTag(const nsString& aTag) = 0;
+  NS_IMETHOD BeginStartTag(const nsAReadableString& aTag) = 0;
   NS_IMETHOD BeginStartTag(nsIAtom* aTag) = 0;
-  NS_IMETHOD AddAttribute(const nsString& aName, const nsString& aValue) = 0;
-  NS_IMETHOD AddAttribute(const nsString& aName, nsIAtom* aValue) = 0;
-  NS_IMETHOD AddAttribute(const nsString& aName) = 0;
+  NS_IMETHOD AddAttribute(const nsAReadableString& aName, const nsAReadableString& aValue) = 0;
+  NS_IMETHOD AddAttribute(const nsAReadableString& aName, nsIAtom* aValue) = 0;
+  NS_IMETHOD AddAttribute(const nsAReadableString& aName) = 0;
   NS_IMETHOD AddAttribute(nsIAtom* aName) = 0;
 
-  //parameters normally: const nsString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE
-  NS_IMETHOD FinishStartTag(const nsString& aTag, PRBool aIsEmpty , PRBool aAddReturn) = 0;  
+  //parameters normally: const nsAReadableString& aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE
+  NS_IMETHOD FinishStartTag(const nsAReadableString& aTag, PRBool aIsEmpty , PRBool aAddReturn) = 0;  
   
   //parameters normally: nsIAtom* aTag, PRBool aIsEmpty = PR_FALSE, PRBool aAddReturn = PR_TRUE
   NS_IMETHOD FinishStartTag(nsIAtom* aTag, PRBool aIsEmpty, PRBool aAddReturn) = 0;  
 
   // Short-cut for starting a new tag that has no attributes
   //default aAddReturn to true
-  NS_IMETHOD AddStartTag(const nsString& aTag, PRBool aAddReturn) = 0;
+  NS_IMETHOD AddStartTag(const nsAReadableString& aTag, PRBool aAddReturn) = 0;
   //default aAddReturn to true
   NS_IMETHOD AddStartTag(nsIAtom* aTag, PRBool aAddReturn) = 0;
   
-  //parameter defaults: const nsString& aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE
-  NS_IMETHOD AddEndTag(const nsString& aTag,PRBool aDoIndent, PRBool aDoReturn) = 0;
+  //parameter defaults: const nsAReadableString& aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE
+  NS_IMETHOD AddEndTag(const nsAReadableString& aTag,PRBool aDoIndent, PRBool aDoReturn) = 0;
   //parameter defaults: nsIAtom* aTag,PRBool aDoIndent = PR_TRUE, PRBool aDoReturn = PR_TRUE
   NS_IMETHOD AddEndTag(nsIAtom* aTag,PRBool aDoIndent, PRBool aDoReturn) = 0;
   
@@ -74,19 +74,19 @@ public:
   NS_IMETHOD BeginContainer(nsIAtom* aTag) = 0;
   NS_IMETHOD EndContainer(nsIAtom* aTag) = 0;
 
-  NS_IMETHOD BeginContainer(const nsString& aTag) = 0;
-  NS_IMETHOD EndContainer(const nsString& aTag) = 0;
+  NS_IMETHOD BeginContainer(const nsAReadableString& aTag) = 0;
+  NS_IMETHOD EndContainer(const nsAReadableString& aTag) = 0;
 
-  NS_IMETHOD BeginLeaf(const nsString& aTag) = 0;
-  NS_IMETHOD EndLeaf(const nsString& aTag) = 0;
+  NS_IMETHOD BeginLeaf(const nsAReadableString& aTag) = 0;
+  NS_IMETHOD EndLeaf(const nsAReadableString& aTag) = 0;
 
-  NS_IMETHOD AddContent(const nsString& aContent) = 0;
-  NS_IMETHOD AddComment(const nsString& aComment) = 0;
-  NS_IMETHOD AddContentComment(const nsString& aComment) = 0;
+  NS_IMETHOD AddContent(const nsAReadableString& aContent) = 0;
+  NS_IMETHOD AddComment(const nsAReadableString& aComment) = 0;
+  NS_IMETHOD AddContentComment(const nsAReadableString& aComment) = 0;
   
-  NS_IMETHOD AddMarkupDeclaration(const nsString& aComment) = 0;
+  NS_IMETHOD AddMarkupDeclaration(const nsAReadableString& aComment) = 0;
 
-  NS_IMETHOD AddHTMLAttribute(const nsString& aName, const nsString& aValue) = 0;
+  NS_IMETHOD AddHTMLAttribute(const nsAReadableString& aName, const nsAReadableString& aValue) = 0;
 
 
   NS_IMETHOD BeginCSSStyleSheet() = 0;
@@ -96,12 +96,12 @@ public:
   NS_IMETHOD EndCSSRule() = 0;
 
   NS_IMETHOD BeginCSSSelectors() = 0;
-  NS_IMETHOD AddCSSSelectors(const nsString& aSelectors) = 0;
+  NS_IMETHOD AddCSSSelectors(const nsAReadableString& aSelectors) = 0;
   NS_IMETHOD EndCSSSelectors() = 0;
 
   NS_IMETHOD BeginCSSDeclarationList() = 0;
   NS_IMETHOD BeginCSSDeclaration() = 0;
-  NS_IMETHOD AddCSSDeclaration(const nsString& aName, const nsString& aValue) = 0;
+  NS_IMETHOD AddCSSDeclaration(const nsAReadableString& aName, const nsAReadableString& aValue) = 0;
   NS_IMETHOD EndCSSDeclaration() = 0;
   NS_IMETHOD EndCSSDeclarationList() = 0;
 

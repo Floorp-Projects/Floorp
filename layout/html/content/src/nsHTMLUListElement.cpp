@@ -58,10 +58,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLUListElement
-  NS_IMETHOD GetCompact(PRBool* aCompact);
-  NS_IMETHOD SetCompact(PRBool aCompact);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
+  NS_DECL_IDOMHTMLULISTELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -135,7 +132,7 @@ NS_IMPL_STRING_ATTR(nsHTMLUListElement, Type, type)
 
 NS_IMETHODIMP
 nsHTMLUListElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
@@ -159,7 +156,7 @@ nsHTMLUListElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLUListElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString& aResult) const
+                                      nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     PRInt32 v = aValue.GetIntValue();

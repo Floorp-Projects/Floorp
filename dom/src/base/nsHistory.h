@@ -44,13 +44,13 @@ public:
   NS_IMETHOD_(void)       SetDocShell(nsIDocShell *aDocShell);
 
   NS_IMETHOD    GetLength(PRInt32* aLength);
-  NS_IMETHOD    GetCurrent(nsString& aCurrent);
-  NS_IMETHOD    GetPrevious(nsString& aPrevious);
-  NS_IMETHOD    GetNext(nsString& aNext);
+  NS_IMETHOD    GetCurrent(nsAWritableString& aCurrent);
+  NS_IMETHOD    GetPrevious(nsAWritableString& aPrevious);
+  NS_IMETHOD    GetNext(nsAWritableString& aNext);
   NS_IMETHOD    Back();
   NS_IMETHOD    Forward();
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn);
 
 protected:
   nsIDocShell* mDocShell;

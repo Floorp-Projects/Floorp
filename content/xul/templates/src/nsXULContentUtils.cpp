@@ -149,22 +149,22 @@ public:
     GetElementRefResource(nsIContent* aElement, nsIRDFResource** aResult);
 
     NS_IMETHOD
-    GetTextForNode(nsIRDFNode* aNode, nsString& aResult);
+    GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult);
 
     NS_IMETHOD
-    GetElementLogString(nsIContent* aElement, nsString& aResult);
+    GetElementLogString(nsIContent* aElement, nsAWritableString& aResult);
 
     NS_IMETHOD
-    GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsString& aResult);
+    GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsAWritableString& aResult);
 
     NS_IMETHOD
-    MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsCString& aURI);
+    MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI);
 
     NS_IMETHOD
-    MakeElementResource(nsIDocument* aDocument, const nsString& aElementID, nsIRDFResource** aResult);
+    MakeElementResource(nsIDocument* aDocument, const nsAReadableString& aElementID, nsIRDFResource** aResult);
 
     NS_IMETHOD
-    MakeElementID(nsIDocument* aDocument, const nsString& aURI, nsString& aElementID);
+    MakeElementID(nsIDocument* aDocument, const nsAReadableString& aURI, nsAWritableString& aElementID);
 
     NS_IMETHOD_(PRBool)
     IsContainedBy(nsIContent* aElement, nsIContent* aContainer);
@@ -173,7 +173,7 @@ public:
     GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult);
 
     NS_IMETHOD
-    GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute, nsIRDFResource** aResult);
+    GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aAttribute, nsIRDFResource** aResult);
 
     NS_IMETHOD
     SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement);
@@ -536,7 +536,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
             return NS_ERROR_UNEXPECTED;
 
     		nsCAutoString uriStr;
-        uriStr.AssignWithConversion(uri);
+        uriStr.Assign(NS_ConvertUCS2toUTF8(uri));
         rv = rdf_MakeAbsoluteURI(url, uriStr);
         if (NS_FAILED(rv)) return rv;
 
@@ -556,7 +556,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
 */
 
 NS_IMETHODIMP
-nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
+nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult)
 {
     if (! aNode) {
         aResult.Truncate();
@@ -582,11 +582,13 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
         rv = dateLiteral->GetValue(&value);
         if (NS_FAILED(rv)) return rv;
 
+        nsAutoString str;
         rv = gFormat->FormatPRTime(nsnull /* nsILocale* locale */,
                                   kDateFormatShort,
                                   kTimeFormatSeconds,
                                   PRTime(value),
-                                  aResult);
+                                  str);
+        aResult.Assign(str);
 
         if (NS_FAILED(rv)) return rv;
 
@@ -600,7 +602,9 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
         if (NS_FAILED(rv)) return rv;
 
         aResult.Truncate();
-        aResult.AppendInt(value, 10);
+        nsAutoString intStr;
+        intStr.AppendInt(value, 10);
+        aResult.Append(intStr);
         return NS_OK;
     }
 
@@ -610,7 +614,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
         const char* p;
         rv = resource->GetValueConst(&p);
         if (NS_FAILED(rv)) return rv;
-        aResult.AssignWithConversion(p);
+        aResult.Assign(NS_ConvertASCIItoUCS2(p));
         return NS_OK;
     }
 
@@ -619,11 +623,11 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
 }
 
 NS_IMETHODIMP
-nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
+nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsAWritableString& aResult)
 {
     nsresult rv;
 
-    aResult.AssignWithConversion('<');
+    aResult.Assign(PRUnichar('<'));
 
     nsCOMPtr<nsINameSpace> ns;
 
@@ -632,7 +636,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
     if (NS_FAILED(rv)) return rv;
 
     if (kNameSpaceID_HTML == elementNameSpaceID) {
-        aResult.AppendWithConversion("html:");
+        aResult.Append(NS_LITERAL_STRING("html:"));
     }
     else {
         nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(aElement) );
@@ -651,7 +655,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
                 const PRUnichar *unicodeString;
                 prefix->GetUnicode(&unicodeString);
                 aResult.Append(unicodeString);
-                aResult.AppendWithConversion(':');
+                aResult.Append(NS_LITERAL_STRING(":"));
             }
         }
     }
@@ -669,7 +673,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
     if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < count; ++i) {
-        aResult.AppendWithConversion(' ');
+        aResult.Append(NS_LITERAL_STRING(" "));
 
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> name, prefix;
@@ -680,23 +684,23 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
         nsXULContentUtils::GetAttributeLogString(aElement, nameSpaceID, name, attr);
 
         aResult.Append(attr);
-        aResult.AppendWithConversion("=\"");
+        aResult.Append(NS_LITERAL_STRING("=\""));
 
         nsAutoString value;
         rv = aElement->GetAttribute(nameSpaceID, name, value);
         if (NS_FAILED(rv)) return rv;
 
         aResult.Append(value);
-        aResult.AppendWithConversion("\"");
+        aResult.Append(NS_LITERAL_STRING("\""));
     }
 
-    aResult.AppendWithConversion('>');
+    aResult.Append(NS_LITERAL_STRING(">"));
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXULContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsString& aResult)
+nsXULContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsAWritableString& aResult)
 {
     nsresult rv;
 
@@ -727,7 +731,7 @@ nsXULContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
                 const PRUnichar *unicodeString;
                 prefix->GetUnicode(&unicodeString);
                 aResult.Append(unicodeString);
-                aResult.AppendWithConversion(':');
+                aResult.Append(NS_LITERAL_STRING(":"));
             }
         }
     }
@@ -740,14 +744,14 @@ nsXULContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
 
 
 NS_IMETHODIMP
-nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsCString& aURI)
+nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI)
 {
     // Convert an element's ID to a URI that can be used to refer to
     // the element in the XUL graph.
 
     if (aElementID.FindChar(':') > 0) {
         // Assume it's absolute already. Use as is.
-        aURI.AssignWithConversion(aElementID.GetUnicode());
+        aURI.Assign(NS_ConvertUCS2toUTF8(aElementID));
     }
     else {
         nsresult rv;
@@ -791,7 +795,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
 
 
 NS_IMETHODIMP
-nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsString& aID, nsIRDFResource** aResult)
+nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAReadableString& aID, nsIRDFResource** aResult)
 {
     nsresult rv;
 
@@ -810,7 +814,7 @@ nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsString& a
 
 
 NS_IMETHODIMP
-nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, nsString& aElementID)
+nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAReadableString& aURI, nsAWritableString& aElementID)
 {
     // Convert a URI into an element ID that can be accessed from the
     // DOM APIs.
@@ -825,7 +829,9 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, n
     if (! spec)
         return NS_ERROR_FAILURE;
 
-    if (aURI.Find(spec) == 0) {
+    // XXX FIX ME to not do a copy
+    nsAutoString str(aURI);
+    if (str.Find(spec) == 0) {
 #ifdef USE_BROKEN_RELATIVE_PARSING
         static const PRInt32 kFudge = 1;  // XXX assume '#'
 #else
@@ -881,7 +887,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDF
 
 
 NS_IMETHODIMP
-nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute, nsIRDFResource** aResult)
+nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aAttribute, nsIRDFResource** aResult)
 {
     // construct a fully-qualified URI from the namespace/tag pair.
 
@@ -947,13 +953,13 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
     rv = aElement->GetAttribute(kNameSpaceID_None, kEventsAtom, events);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        events.AssignWithConversion("*");
+        events.Assign(NS_LITERAL_STRING("*"));
 
     nsAutoString targets;
     rv = aElement->GetAttribute(kNameSpaceID_None, kTargetsAtom, targets);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        targets.AssignWithConversion("*");
+        targets.Assign(NS_LITERAL_STRING("*"));
 
     nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
     NS_ASSERTION(domelement != nsnull, "not a DOM element");

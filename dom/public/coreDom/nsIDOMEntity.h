@@ -38,25 +38,25 @@ class nsIDOMEntity : public nsIDOMNode {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMENTITY_IID; return iid; }
 
-  NS_IMETHOD    GetPublicId(nsString& aPublicId)=0;
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId)=0;
 
-  NS_IMETHOD    GetSystemId(nsString& aSystemId)=0;
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId)=0;
 
-  NS_IMETHOD    GetNotationName(nsString& aNotationName)=0;
+  NS_IMETHOD    GetNotationName(nsAWritableString& aNotationName)=0;
 };
 
 
 #define NS_DECL_IDOMENTITY   \
-  NS_IMETHOD    GetPublicId(nsString& aPublicId);  \
-  NS_IMETHOD    GetSystemId(nsString& aSystemId);  \
-  NS_IMETHOD    GetNotationName(nsString& aNotationName);  \
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId);  \
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId);  \
+  NS_IMETHOD    GetNotationName(nsAWritableString& aNotationName);  \
 
 
 
 #define NS_FORWARD_IDOMENTITY(_to)  \
-  NS_IMETHOD    GetPublicId(nsString& aPublicId) { return _to GetPublicId(aPublicId); } \
-  NS_IMETHOD    GetSystemId(nsString& aSystemId) { return _to GetSystemId(aSystemId); } \
-  NS_IMETHOD    GetNotationName(nsString& aNotationName) { return _to GetNotationName(aNotationName); } \
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId) { return _to GetPublicId(aPublicId); } \
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId) { return _to GetSystemId(aSystemId); } \
+  NS_IMETHOD    GetNotationName(nsAWritableString& aNotationName) { return _to GetNotationName(aNotationName); } \
 
 
 extern "C" NS_DOM nsresult NS_InitEntityClass(nsIScriptContext *aContext, void **aPrototype);

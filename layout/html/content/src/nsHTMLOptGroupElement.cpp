@@ -57,10 +57,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLOptGroupElement
-  NS_IMETHOD GetDisabled(PRBool* aDisabled);
-  NS_IMETHOD SetDisabled(PRBool aDisabled);
-  NS_IMETHOD GetLabel(nsString& aLabel);
-  NS_IMETHOD SetLabel(const nsString& aLabel);
+  NS_DECL_IDOMHTMLOPTGROUPELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -134,7 +131,7 @@ NS_IMPL_STRING_ATTR(nsHTMLOptGroupElement, Label, label)
 
 NS_IMETHODIMP
 nsHTMLOptGroupElement::StringToAttribute(nsIAtom* aAttribute,
-                                         const nsString& aValue,
+                                         const nsAReadableString& aValue,
                                          nsHTMLValue& aResult)
 {
   // XXX write me
@@ -144,7 +141,7 @@ nsHTMLOptGroupElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLOptGroupElement::AttributeToString(nsIAtom* aAttribute,
                                          const nsHTMLValue& aValue,
-                                         nsString& aResult) const
+                                         nsAWritableString& aResult) const
 {
   // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);

@@ -180,7 +180,7 @@ nsContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-nsContentList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+nsContentList::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 {
   nsresult result = CheckDocumentExistence();
   

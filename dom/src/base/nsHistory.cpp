@@ -97,7 +97,7 @@ HistoryImpl::GetLength(PRInt32* aLength)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetCurrent(nsString& aCurrent)
+HistoryImpl::GetCurrent(nsAWritableString& aCurrent)
 {
   PRInt32 curIndex;
   const PRUnichar* curURL = nsnull;
@@ -112,7 +112,7 @@ HistoryImpl::GetCurrent(nsString& aCurrent)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetPrevious(nsString& aPrevious)
+HistoryImpl::GetPrevious(nsAWritableString& aPrevious)
 {
   PRInt32 curIndex;
   const PRUnichar* prevURL = nsnull;
@@ -127,7 +127,7 @@ HistoryImpl::GetPrevious(nsString& aPrevious)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetNext(nsString& aNext)
+HistoryImpl::GetNext(nsAWritableString& aNext)
 {
   PRInt32 curIndex;
   const PRUnichar* nextURL = nsnull;
@@ -222,7 +222,7 @@ HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
 
 
 NS_IMETHODIMP
-HistoryImpl::Item(PRUint32 aIndex, nsString& aReturn)
+HistoryImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 {
   aReturn.Truncate();
 

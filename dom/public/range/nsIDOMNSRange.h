@@ -45,9 +45,9 @@ public:
     NODE_INSIDE = 3
   };
 
-  NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, nsIDOMDocumentFragment** aReturn)=0;
+  NS_IMETHOD    CreateContextualFragment(const nsAReadableString& aFragment, nsIDOMDocumentFragment** aReturn)=0;
 
-  NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn)=0;
+  NS_IMETHOD    IsValidFragment(const nsAReadableString& aFragment, PRBool* aReturn)=0;
 
   NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aReturn)=0;
 
@@ -60,8 +60,8 @@ public:
 
 
 #define NS_DECL_IDOMNSRANGE   \
-  NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, nsIDOMDocumentFragment** aReturn);  \
-  NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn);  \
+  NS_IMETHOD    CreateContextualFragment(const nsAReadableString& aFragment, nsIDOMDocumentFragment** aReturn);  \
+  NS_IMETHOD    IsValidFragment(const nsAReadableString& aFragment, PRBool* aReturn);  \
   NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aReturn);  \
   NS_IMETHOD    ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aReturn);  \
   NS_IMETHOD    IntersectsNode(nsIDOMNode* aN, PRBool* aReturn);  \
@@ -70,8 +70,8 @@ public:
 
 
 #define NS_FORWARD_IDOMNSRANGE(_to)  \
-  NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, nsIDOMDocumentFragment** aReturn) { return _to CreateContextualFragment(aFragment, aReturn); }  \
-  NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn) { return _to IsValidFragment(aFragment, aReturn); }  \
+  NS_IMETHOD    CreateContextualFragment(const nsAReadableString& aFragment, nsIDOMDocumentFragment** aReturn) { return _to CreateContextualFragment(aFragment, aReturn); }  \
+  NS_IMETHOD    IsValidFragment(const nsAReadableString& aFragment, PRBool* aReturn) { return _to IsValidFragment(aFragment, aReturn); }  \
   NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aReturn) { return _to IsPointInRange(aParent, aOffset, aReturn); }  \
   NS_IMETHOD    ComparePoint(nsIDOMNode* aParent, PRInt32 aOffset, PRInt16* aReturn) { return _to ComparePoint(aParent, aOffset, aReturn); }  \
   NS_IMETHOD    IntersectsNode(nsIDOMNode* aN, PRBool* aReturn) { return _to IntersectsNode(aN, aReturn); }  \

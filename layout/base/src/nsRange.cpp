@@ -1559,7 +1559,7 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
 nsresult nsRange::SurroundContents(nsIDOMNode* aN)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-nsresult nsRange::ToString(nsString& aReturn)
+nsresult nsRange::ToString(nsAWritableString& aReturn)
 { 
   nsCOMPtr<nsIContent> cStart( do_QueryInterface(mStartParent) );
   nsCOMPtr<nsIContent> cEnd( do_QueryInterface(mEndParent) );
@@ -1851,7 +1851,7 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
 
 // nsIDOMNSRange interface
 NS_IMETHODIMP    
-nsRange::CreateContextualFragment(const nsString& aFragment, 
+nsRange::CreateContextualFragment(const nsAReadableString& aFragment, 
                                   nsIDOMDocumentFragment** aReturn)
 {
   nsresult result = NS_OK;
@@ -1924,7 +1924,7 @@ nsRange::CreateContextualFragment(const nsString& aFragment,
             }
             else {
               // Who're we kidding. This only works for html.
-              contentType.AssignWithConversion("text/html");
+              contentType.Assign(NS_LITERAL_STRING("text/html"));
             }
 
             result = parser->ParseFragment(aFragment, (void*)0,
@@ -1957,7 +1957,7 @@ nsRange::CreateContextualFragment(const nsString& aFragment,
 }
 
 NS_IMETHODIMP    
-nsRange::IsValidFragment(const nsString& aFragment, PRBool* aReturn)
+nsRange::IsValidFragment(const nsAReadableString& aFragment, PRBool* aReturn)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIParser> parser;

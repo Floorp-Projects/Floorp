@@ -41,7 +41,7 @@ public:
 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMPlugin** aReturn)=0;
 
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMPlugin** aReturn)=0;
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMPlugin** aReturn)=0;
 
   NS_IMETHOD    Refresh(PRBool aReloadDocuments)=0;
 };
@@ -50,7 +50,7 @@ public:
 #define NS_DECL_IDOMPLUGINARRAY   \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMPlugin** aReturn);  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMPlugin** aReturn);  \
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMPlugin** aReturn);  \
   NS_IMETHOD    Refresh(PRBool aReloadDocuments);  \
 
 
@@ -58,7 +58,7 @@ public:
 #define NS_FORWARD_IDOMPLUGINARRAY(_to)  \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMPlugin** aReturn) { return _to Item(aIndex, aReturn); }  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMPlugin** aReturn) { return _to NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMPlugin** aReturn) { return _to NamedItem(aName, aReturn); }  \
   NS_IMETHOD    Refresh(PRBool aReloadDocuments) { return _to Refresh(aReloadDocuments); }  \
 
 

@@ -272,8 +272,8 @@ public:
 
 
   /* output */
-  NS_IMETHOD OutputToString(nsString& aOutputString,
-                            const nsString& aFormatType,
+  NS_IMETHOD OutputToString(nsAWritableString& aOutputString,
+                            const nsAReadableString& aFormatType,
                             PRUint32 aFlags);
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,

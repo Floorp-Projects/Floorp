@@ -249,10 +249,13 @@ nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream()
  */
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream, 
-                                  nsString* aOutString,
+                                  nsAWritableString* aOutString,
                                   PRUint32 aFlags)
 {
   mStream = aOutStream;
+  // XXX This is wrong. It violates XPCOM string ownership rules.
+  // We're only getting away with this because instances of this
+  // class are restricted to single function scope.
   mString = aOutString;
   mFlags = aFlags;
 
@@ -304,11 +307,11 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
 }
 
 NS_IMETHODIMP
-nsHTMLToTXTSinkStream::SetCharsetOverride(const nsString* aCharset)
+nsHTMLToTXTSinkStream::SetCharsetOverride(const nsAReadableString* aCharset)
 {
   if (aCharset)
   {
-    mCharsetOverride = *aCharset;
+    mCharsetOverride.Assign(*aCharset);
     InitEncoder(mCharsetOverride);
   }
   return NS_OK;
@@ -1108,7 +1111,7 @@ void nsHTMLToTXTSinkStream::WriteSimple(nsString& aString)
     }
     if (mString != nsnull)
     {
-      mString->AppendWithConversion(mBuffer);
+      mString->Append(NS_ConvertASCIItoUCS2(mBuffer));
     }
   }
   else

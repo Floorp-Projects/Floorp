@@ -41,29 +41,29 @@ public:
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
 
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey)=0;
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey)=0;
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey)=0;
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey)=0;
 
-  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor)=0;
-  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor)=0;
+  NS_IMETHOD    GetHtmlFor(nsAWritableString& aHtmlFor)=0;
+  NS_IMETHOD    SetHtmlFor(const nsAReadableString& aHtmlFor)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLLABELELEMENT   \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey);  \
-  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor);  \
-  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor);  \
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey);  \
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey);  \
+  NS_IMETHOD    GetHtmlFor(nsAWritableString& aHtmlFor);  \
+  NS_IMETHOD    SetHtmlFor(const nsAReadableString& aHtmlFor);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLLABELELEMENT(_to)  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return _to GetHtmlFor(aHtmlFor); } \
-  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return _to SetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetHtmlFor(nsAWritableString& aHtmlFor) { return _to GetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    SetHtmlFor(const nsAReadableString& aHtmlFor) { return _to SetHtmlFor(aHtmlFor); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLLabelElementClass(nsIScriptContext *aContext, void **aPrototype);

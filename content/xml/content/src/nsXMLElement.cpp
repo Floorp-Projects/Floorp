@@ -216,7 +216,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 
 NS_IMETHODIMP 
 nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                           const nsString& aValue,
+                           const nsAReadableString& aValue,
                            PRBool aNotify)
 {
   nsresult rv;
@@ -233,13 +233,15 @@ nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 NS_IMETHODIMP 
-nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo, const nsString& aValue,
+nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue,
                            PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
 
   if (aNodeInfo->Equals(kTypeAtom, kNameSpaceID_XLink)) { 
-    if (aValue.EqualsAtom(kSimpleAtom, PR_FALSE)) {
+    const PRUnichar* simpleStr;
+    kSimpleAtom->GetUnicode(&simpleStr);
+    if (aValue.Equals(simpleStr)) {
       // NOTE: This really is a link according to the XLink spec,
       //       we do not need to check other attributes. If there
       //       is no href attribute, then this link is simply
@@ -271,10 +273,10 @@ static nsresult WebShellToPresContext(nsIWebShell *aShell, nsIPresContext **aPre
 }
 
 
-static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsString& aURI, nsIURI **aAbsURI)
+static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI, nsIURI **aAbsURI)
 {
   // XXX URL escape?
-  nsCAutoString str; str.AssignWithConversion(aURI);
+  nsCAutoString str; str.Assign(NS_ConvertUCS2toUTF8(aURI));
 
   *aAbsURI = nsnull;
 

@@ -86,13 +86,9 @@ nsCSSProps::LookupProperty(const nsCString& aProperty)
 }
 
 nsCSSProperty 
-nsCSSProps::LookupProperty(const nsString& aProperty)
-{
-  NS_ASSERTION(gPropertyTable, "no lookup table, needs addref");
-  if (gPropertyTable) {
-    return nsCSSProperty(gPropertyTable->Lookup(aProperty));
-  }  
-  return eCSSProperty_UNKNOWN;
+nsCSSProps::LookupProperty(const nsAReadableString& aProperty) {
+  nsCAutoString theProp; theProp.AssignWithConversion(aProperty);
+  return LookupProperty(theProp);
 }
 
 const nsCString& 

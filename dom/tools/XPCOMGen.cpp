@@ -319,13 +319,14 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
   for (a = 0; a < acount; a++) {
     IdlAttribute *attr = aInterface.GetAttributeAt(a);
 
-    GetVariableTypeForParameter(type_buf, *attr);
+    GetVariableTypeForReturnValue(type_buf, *attr);
     GetCapitalizedName(name_buf, *attr);
     sprintf(buf, kGetterMethodDeclStr, name_buf, type_buf,
             attr->GetType() == TYPE_STRING ? "" : "*", name_buf);
     *file << buf;
 
     if (!attr->GetReadOnly()) {
+      GetVariableTypeForParameter(type_buf, *attr);
       sprintf(buf, kSetterMethodDeclStr, name_buf, 
               attr->GetType() == TYPE_STRING ? "const " : "", type_buf, 
               name_buf);
@@ -371,7 +372,7 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
           strcpy(cur_param, kDelimiterStr);
           cur_param += strlen(kDelimiterStr);
         }
-        GetVariableTypeForParameter(type_buf, *rval);
+        GetVariableTypeForReturnValue(type_buf, *rval);
         sprintf(cur_param, kReturnStr, type_buf,
                 rval->GetType() == TYPE_STRING ? "" : "*");
       }
@@ -403,13 +404,14 @@ XPCOMGen::GenerateDeclMacro(IdlInterface &aInterface)
   for (a = 0; a < acount; a++) {
     IdlAttribute *attr = aInterface.GetAttributeAt(a);
 
-    GetVariableTypeForParameter(type_buf, *attr);
+    GetVariableTypeForReturnValue(type_buf, *attr);
     GetCapitalizedName(name_buf, *attr);
     sprintf(buf, kGetterMethodDeclNonVirtualStr, name_buf, type_buf,
             attr->GetType() == TYPE_STRING ? "" : "*", name_buf);
     *file << buf;
 
     if (!attr->GetReadOnly()) {
+      GetVariableTypeForParameter(type_buf, *attr);
       sprintf(buf, kSetterMethodDeclNonVirtualStr, name_buf, 
               attr->GetType() == TYPE_STRING ? "const " : "", type_buf, 
               name_buf);
@@ -458,7 +460,7 @@ XPCOMGen::GenerateDeclMacro(IdlInterface &aInterface)
         strcpy(cur_param, kDelimiterStr);
         cur_param += strlen(kDelimiterStr);
       }
-      GetVariableTypeForParameter(type_buf, *rval);
+      GetVariableTypeForReturnValue(type_buf, *rval);
       sprintf(cur_param, kReturnStr, type_buf,
               rval->GetType() == TYPE_STRING ? "" : "*");
     }
@@ -491,7 +493,7 @@ XPCOMGen::GenerateForwardMacro(IdlInterface &aInterface)
   for (a = 0; a < acount; a++) {
     IdlAttribute *attr = aInterface.GetAttributeAt(a);
 
-    GetVariableTypeForParameter(type_buf, *attr);
+    GetVariableTypeForReturnValue(type_buf, *attr);
     GetCapitalizedName(name_buf, *attr);
     sprintf(buf, kGetterMethodForwardStr, name_buf, type_buf,
             attr->GetType() == TYPE_STRING ? "" : "*", name_buf,
@@ -499,6 +501,7 @@ XPCOMGen::GenerateForwardMacro(IdlInterface &aInterface)
     *file << buf;
 
     if (!attr->GetReadOnly()) {
+      GetVariableTypeForParameter(type_buf, *attr);
       sprintf(buf, kSetterMethodForwardStr, name_buf, 
               attr->GetType() == TYPE_STRING ? "const " : "", type_buf, 
               name_buf, name_buf, name_buf);
@@ -559,7 +562,7 @@ XPCOMGen::GenerateForwardMacro(IdlInterface &aInterface)
         strcpy(cur_param2, kDelimiterStr);
         cur_param2 += strlen(kDelimiterStr);
       }
-      GetVariableTypeForParameter(type_buf, *rval);
+      GetVariableTypeForReturnValue(type_buf, *rval);
       sprintf(cur_param, kReturnStr, type_buf,
               rval->GetType() == TYPE_STRING ? "" : "*");
       strcpy(cur_param2, kReturnCallStr);

@@ -112,7 +112,7 @@ public:
   /**
    *  Initialize with a pointer to the document and the mime type.
    */
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsString& aMimeType, PRUint32 flags) = 0;
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsAReadableString& aMimeType, PRUint32 flags) = 0;
 
   /**
    *  If the selection is set to a non-null value, then the
@@ -130,7 +130,7 @@ public:
    *
    *  Possible result codes: NS_ERROR_NO_CHARSET_CONVERTER
    */
-  NS_IMETHOD SetCharset(const nsString& aCharset) = 0;
+  NS_IMETHOD SetCharset(const nsAReadableString& aCharset) = 0;
 
   /**
    *  Set a wrap column.  This may have no effect in some types of encoders.
@@ -145,7 +145,7 @@ public:
    *  might have been encountered.
    */
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream) = 0;
-  NS_IMETHOD EncodeToString(nsString& aOutputString) = 0;
+  NS_IMETHOD EncodeToString(nsAWritableString& aOutputString) = 0;
 };
 
 // XXXXXXXXXXXXXXXX nsITextEncoder is going away! XXXXXXXXXXXXXXXXXXXXXX

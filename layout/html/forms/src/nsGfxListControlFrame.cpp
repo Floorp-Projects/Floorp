@@ -2641,14 +2641,15 @@ nsGfxListControlFrame::OptionDisabled(nsIContent * aContent)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsGfxListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
+nsGfxListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
 {
   if (nsHTMLAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
 
   } else if (nsHTMLAtoms::selectedindex == aName) {
     PRInt32 error = 0;
-    PRInt32 selectedIndex = aValue.ToInteger(&error, 10); // Get index from aValue
+    nsAutoString str(aValue);
+    PRInt32 selectedIndex = str.ToInteger(&error, 10); // Get index from aValue
     if (error) {
       return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
     } else {
@@ -2691,13 +2692,14 @@ nsGfxListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName,
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsGfxListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+nsGfxListControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   // Get the selected value of option from local cache (optimization vs. widget)
   if (nsHTMLAtoms::selected == aName) {
     PRInt32 error = 0;
     PRBool selected = PR_FALSE;
-    PRInt32 indx = aValue.ToInteger(&error, 10); // Get index from aValue
+    nsAutoString str(aValue);
+    PRInt32 indx = str.ToInteger(&error, 10); // Get index from aValue
     if (error == 0)
        selected = IsContentSelectedByIndex(indx); 
   
@@ -2711,7 +2713,8 @@ nsGfxListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
     if ((kNothingSelected == selectedIndex) && (mComboboxFrame)) {
       selectedIndex = 0;
     }
-    aValue.AppendInt(selectedIndex, 10);
+    nsAutoString str; str.AppendInt(selectedIndex, 10);
+    aValue.Append(str);
   }
 
   return NS_OK;

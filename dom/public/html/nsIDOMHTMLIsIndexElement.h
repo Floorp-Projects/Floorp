@@ -41,22 +41,22 @@ public:
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
 
-  NS_IMETHOD    GetPrompt(nsString& aPrompt)=0;
-  NS_IMETHOD    SetPrompt(const nsString& aPrompt)=0;
+  NS_IMETHOD    GetPrompt(nsAWritableString& aPrompt)=0;
+  NS_IMETHOD    SetPrompt(const nsAReadableString& aPrompt)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLISINDEXELEMENT   \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    GetPrompt(nsString& aPrompt);  \
-  NS_IMETHOD    SetPrompt(const nsString& aPrompt);  \
+  NS_IMETHOD    GetPrompt(nsAWritableString& aPrompt);  \
+  NS_IMETHOD    SetPrompt(const nsAReadableString& aPrompt);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLISINDEXELEMENT(_to)  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD    GetPrompt(nsString& aPrompt) { return _to GetPrompt(aPrompt); } \
-  NS_IMETHOD    SetPrompt(const nsString& aPrompt) { return _to SetPrompt(aPrompt); } \
+  NS_IMETHOD    GetPrompt(nsAWritableString& aPrompt) { return _to GetPrompt(aPrompt); } \
+  NS_IMETHOD    SetPrompt(const nsAReadableString& aPrompt) { return _to SetPrompt(aPrompt); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLIsIndexElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -51,7 +51,7 @@ public:
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag,
+  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, PRBool aAugmentFlag,
                           nsIXBLBinding** aBinding) = 0;
 
   // This function clears out the bindings on a given content node.

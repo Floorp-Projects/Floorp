@@ -75,8 +75,8 @@ public:
                                        nsIStyleContext* aStyleContext);
 
     // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   virtual void Reset(nsIPresContext* aPresContext);
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
@@ -104,12 +104,12 @@ protected:
 
    // Utility methods for implementing SetProperty/GetProperty
   void SetCheckboxControlFrameState(nsIPresContext* aPresContext,
-                                    const nsString& aValue);
-  void GetCheckboxControlFrameState(nsString& aValue);  
+                                    const nsAReadableString& aValue);
+  void GetCheckboxControlFrameState(nsAWritableString& aValue);  
 
     // utility routine for converting from DOM values to internal enum
-  void CheckStateToString ( CheckState inState, nsString& outStateAsString ) ;
-  CheckState StringToCheckState ( const nsString & aStateAsString ) ;
+  void CheckStateToString ( CheckState inState, nsAWritableString& outStateAsString ) ;
+  CheckState StringToCheckState ( const nsAReadableString & aStateAsString ) ;
 
     // figure out if we're a tri-state checkbox.
   PRBool IsTristateCheckbox ( ) const { return mIsTristate; }

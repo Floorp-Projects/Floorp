@@ -126,9 +126,9 @@ public:
    virtual void   Finalize(JSContext *aContext, JSObject *aObj);
 
    // nsIDOMEventTarget
-   NS_IMETHOD AddEventListener(const nsString& aType, 
+   NS_IMETHOD AddEventListener(const nsAReadableString& aType, 
                            nsIDOMEventListener* aListener, PRBool aUseCapture);
-   NS_IMETHOD RemoveEventListener(const nsString& aType, 
+   NS_IMETHOD RemoveEventListener(const nsAReadableString& aType, 
                            nsIDOMEventListener* aListener, PRBool aUseCapture);
    NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 
@@ -321,25 +321,25 @@ public:
    NS_IMETHOD_(void)       SetDocShell(nsIDocShell *aDocShell);
 
    // nsIDOMLocation
-   NS_IMETHOD    GetHash(nsString& aHash);
-   NS_IMETHOD    SetHash(const nsString& aHash);
-   NS_IMETHOD    GetHost(nsString& aHost);
-   NS_IMETHOD    SetHost(const nsString& aHost);
-   NS_IMETHOD    GetHostname(nsString& aHostname);
-   NS_IMETHOD    SetHostname(const nsString& aHostname);
-   NS_IMETHOD    GetHref(nsString& aHref);
-   NS_IMETHOD    SetHref(const nsString& aHref);
-   NS_IMETHOD    GetPathname(nsString& aPathname);
-   NS_IMETHOD    SetPathname(const nsString& aPathname);
-   NS_IMETHOD    GetPort(nsString& aPort);
-   NS_IMETHOD    SetPort(const nsString& aPort);
-   NS_IMETHOD    GetProtocol(nsString& aProtocol);
-   NS_IMETHOD    SetProtocol(const nsString& aProtocol);
-   NS_IMETHOD    GetSearch(nsString& aSearch);
-   NS_IMETHOD    SetSearch(const nsString& aSearch);
+   NS_IMETHOD    GetHash(nsAWritableString& aHash);
+   NS_IMETHOD    SetHash(const nsAReadableString& aHash);
+   NS_IMETHOD    GetHost(nsAWritableString& aHost);
+   NS_IMETHOD    SetHost(const nsAReadableString& aHost);
+   NS_IMETHOD    GetHostname(nsAWritableString& aHostname);
+   NS_IMETHOD    SetHostname(const nsAReadableString& aHostname);
+   NS_IMETHOD    GetHref(nsAWritableString& aHref);
+   NS_IMETHOD    SetHref(const nsAReadableString& aHref);
+   NS_IMETHOD    GetPathname(nsAWritableString& aPathname);
+   NS_IMETHOD    SetPathname(const nsAReadableString& aPathname);
+   NS_IMETHOD    GetPort(nsAWritableString& aPort);
+   NS_IMETHOD    SetPort(const nsAReadableString& aPort);
+   NS_IMETHOD    GetProtocol(nsAWritableString& aProtocol);
+   NS_IMETHOD    SetProtocol(const nsAReadableString& aProtocol);
+   NS_IMETHOD    GetSearch(nsAWritableString& aSearch);
+   NS_IMETHOD    SetSearch(const nsAReadableString& aSearch);
    NS_IMETHOD    Reload(PRBool aForceget);
-   NS_IMETHOD    Replace(const nsString& aUrl);
-   NS_IMETHOD    ToString(nsString& aReturn);
+   NS_IMETHOD    Replace(const nsAReadableString& aUrl);
+   NS_IMETHOD    ToString(nsAWritableString& aReturn);
 
    // nsIDOMNSLocation
    NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc);
@@ -357,7 +357,7 @@ public:
 
 protected:
    nsresult SetURL(nsIURI* aURL);
-   nsresult SetHrefWithBase(const nsString& aHref, 
+   nsresult SetHrefWithBase(const nsAReadableString& aHref, 
                            nsIURI* aBase, 
                            PRBool aReplace);
    nsresult GetSourceURL(JSContext* cx,

@@ -59,9 +59,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLMapElement
-  NS_IMETHOD GetAreas(nsIDOMHTMLCollection** aAreas);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
+  NS_DECL_IDOMHTMLMAPELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -115,7 +113,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
     return mInner.GetNodeInfo(aResult);
   }
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    
                                   nsIAtom*& aName,                         
                                   PRInt32& aNameSpaceID) {                 
     return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);             
@@ -125,19 +123,19 @@ public:
     return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             
   }                                                                        
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            
-                          const nsString& aValue, PRBool aNotify) {        
+                          const nsAReadableString& aValue, PRBool aNotify) {        
     return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          
   }                                                                        
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsString& aValue, PRBool aNotify) {
+                          const nsAReadableString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
   }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            
-                          nsString& aResult) const {                       
+                          nsAWritableString& aResult) const {                       
     return mInner.GetAttribute(aNameSpaceID, aName, aResult);                  
   }                                                                        
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            
-                          nsIAtom*& aPrefix, nsString& aResult) const {
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);
   }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     
@@ -330,7 +328,7 @@ NS_IMPL_STRING_ATTR(nsHTMLMapElement, Name, name)
 
 NS_IMETHODIMP
 nsHTMLMapElement::StringToAttribute(nsIAtom* aAttribute,
-                                    const nsString& aValue,
+                                    const nsAReadableString& aValue,
                                     nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -339,7 +337,7 @@ nsHTMLMapElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLMapElement::AttributeToString(nsIAtom* aAttribute,
                                     const nsHTMLValue& aValue,
-                                    nsString& aResult) const
+                                    nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

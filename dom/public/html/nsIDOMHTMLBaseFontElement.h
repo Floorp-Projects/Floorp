@@ -38,34 +38,34 @@ class nsIDOMHTMLBaseFontElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLBASEFONTELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetColor(nsString& aColor)=0;
-  NS_IMETHOD    SetColor(const nsString& aColor)=0;
+  NS_IMETHOD    GetColor(nsAWritableString& aColor)=0;
+  NS_IMETHOD    SetColor(const nsAReadableString& aColor)=0;
 
-  NS_IMETHOD    GetFace(nsString& aFace)=0;
-  NS_IMETHOD    SetFace(const nsString& aFace)=0;
+  NS_IMETHOD    GetFace(nsAWritableString& aFace)=0;
+  NS_IMETHOD    SetFace(const nsAReadableString& aFace)=0;
 
-  NS_IMETHOD    GetSize(nsString& aSize)=0;
-  NS_IMETHOD    SetSize(const nsString& aSize)=0;
+  NS_IMETHOD    GetSize(nsAWritableString& aSize)=0;
+  NS_IMETHOD    SetSize(const nsAReadableString& aSize)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLBASEFONTELEMENT   \
-  NS_IMETHOD    GetColor(nsString& aColor);  \
-  NS_IMETHOD    SetColor(const nsString& aColor);  \
-  NS_IMETHOD    GetFace(nsString& aFace);  \
-  NS_IMETHOD    SetFace(const nsString& aFace);  \
-  NS_IMETHOD    GetSize(nsString& aSize);  \
-  NS_IMETHOD    SetSize(const nsString& aSize);  \
+  NS_IMETHOD    GetColor(nsAWritableString& aColor);  \
+  NS_IMETHOD    SetColor(const nsAReadableString& aColor);  \
+  NS_IMETHOD    GetFace(nsAWritableString& aFace);  \
+  NS_IMETHOD    SetFace(const nsAReadableString& aFace);  \
+  NS_IMETHOD    GetSize(nsAWritableString& aSize);  \
+  NS_IMETHOD    SetSize(const nsAReadableString& aSize);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLBASEFONTELEMENT(_to)  \
-  NS_IMETHOD    GetColor(nsString& aColor) { return _to GetColor(aColor); } \
-  NS_IMETHOD    SetColor(const nsString& aColor) { return _to SetColor(aColor); } \
-  NS_IMETHOD    GetFace(nsString& aFace) { return _to GetFace(aFace); } \
-  NS_IMETHOD    SetFace(const nsString& aFace) { return _to SetFace(aFace); } \
-  NS_IMETHOD    GetSize(nsString& aSize) { return _to GetSize(aSize); } \
-  NS_IMETHOD    SetSize(const nsString& aSize) { return _to SetSize(aSize); } \
+  NS_IMETHOD    GetColor(nsAWritableString& aColor) { return _to GetColor(aColor); } \
+  NS_IMETHOD    SetColor(const nsAReadableString& aColor) { return _to SetColor(aColor); } \
+  NS_IMETHOD    GetFace(nsAWritableString& aFace) { return _to GetFace(aFace); } \
+  NS_IMETHOD    SetFace(const nsAReadableString& aFace) { return _to SetFace(aFace); } \
+  NS_IMETHOD    GetSize(nsAWritableString& aSize) { return _to GetSize(aSize); } \
+  NS_IMETHOD    SetSize(const nsAReadableString& aSize) { return _to SetSize(aSize); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLBaseFontElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -42,56 +42,56 @@ public:
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
 
-  NS_IMETHOD    GetCode(nsString& aCode)=0;
-  NS_IMETHOD    SetCode(const nsString& aCode)=0;
+  NS_IMETHOD    GetCode(nsAWritableString& aCode)=0;
+  NS_IMETHOD    SetCode(const nsAReadableString& aCode)=0;
 
-  NS_IMETHOD    GetAlign(nsString& aAlign)=0;
-  NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign)=0;
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign)=0;
 
-  NS_IMETHOD    GetArchive(nsString& aArchive)=0;
-  NS_IMETHOD    SetArchive(const nsString& aArchive)=0;
+  NS_IMETHOD    GetArchive(nsAWritableString& aArchive)=0;
+  NS_IMETHOD    SetArchive(const nsAReadableString& aArchive)=0;
 
-  NS_IMETHOD    GetBorder(nsString& aBorder)=0;
-  NS_IMETHOD    SetBorder(const nsString& aBorder)=0;
+  NS_IMETHOD    GetBorder(nsAWritableString& aBorder)=0;
+  NS_IMETHOD    SetBorder(const nsAReadableString& aBorder)=0;
 
-  NS_IMETHOD    GetCodeBase(nsString& aCodeBase)=0;
-  NS_IMETHOD    SetCodeBase(const nsString& aCodeBase)=0;
+  NS_IMETHOD    GetCodeBase(nsAWritableString& aCodeBase)=0;
+  NS_IMETHOD    SetCodeBase(const nsAReadableString& aCodeBase)=0;
 
-  NS_IMETHOD    GetCodeType(nsString& aCodeType)=0;
-  NS_IMETHOD    SetCodeType(const nsString& aCodeType)=0;
+  NS_IMETHOD    GetCodeType(nsAWritableString& aCodeType)=0;
+  NS_IMETHOD    SetCodeType(const nsAReadableString& aCodeType)=0;
 
-  NS_IMETHOD    GetData(nsString& aData)=0;
-  NS_IMETHOD    SetData(const nsString& aData)=0;
+  NS_IMETHOD    GetData(nsAWritableString& aData)=0;
+  NS_IMETHOD    SetData(const nsAReadableString& aData)=0;
 
   NS_IMETHOD    GetDeclare(PRBool* aDeclare)=0;
   NS_IMETHOD    SetDeclare(PRBool aDeclare)=0;
 
-  NS_IMETHOD    GetHeight(nsString& aHeight)=0;
-  NS_IMETHOD    SetHeight(const nsString& aHeight)=0;
+  NS_IMETHOD    GetHeight(nsAWritableString& aHeight)=0;
+  NS_IMETHOD    SetHeight(const nsAReadableString& aHeight)=0;
 
-  NS_IMETHOD    GetHspace(nsString& aHspace)=0;
-  NS_IMETHOD    SetHspace(const nsString& aHspace)=0;
+  NS_IMETHOD    GetHspace(nsAWritableString& aHspace)=0;
+  NS_IMETHOD    SetHspace(const nsAReadableString& aHspace)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
-  NS_IMETHOD    GetStandby(nsString& aStandby)=0;
-  NS_IMETHOD    SetStandby(const nsString& aStandby)=0;
+  NS_IMETHOD    GetStandby(nsAWritableString& aStandby)=0;
+  NS_IMETHOD    SetStandby(const nsAReadableString& aStandby)=0;
 
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex)=0;
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex)=0;
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
+  NS_IMETHOD    SetType(const nsAReadableString& aType)=0;
 
-  NS_IMETHOD    GetUseMap(nsString& aUseMap)=0;
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap)=0;
+  NS_IMETHOD    GetUseMap(nsAWritableString& aUseMap)=0;
+  NS_IMETHOD    SetUseMap(const nsAReadableString& aUseMap)=0;
 
-  NS_IMETHOD    GetVspace(nsString& aVspace)=0;
-  NS_IMETHOD    SetVspace(const nsString& aVspace)=0;
+  NS_IMETHOD    GetVspace(nsAWritableString& aVspace)=0;
+  NS_IMETHOD    SetVspace(const nsAReadableString& aVspace)=0;
 
-  NS_IMETHOD    GetWidth(nsString& aWidth)=0;
-  NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth)=0;
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth)=0;
 
   NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument)=0;
   NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument)=0;
@@ -100,40 +100,40 @@ public:
 
 #define NS_DECL_IDOMHTMLOBJECTELEMENT   \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    GetCode(nsString& aCode);  \
-  NS_IMETHOD    SetCode(const nsString& aCode);  \
-  NS_IMETHOD    GetAlign(nsString& aAlign);  \
-  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
-  NS_IMETHOD    GetArchive(nsString& aArchive);  \
-  NS_IMETHOD    SetArchive(const nsString& aArchive);  \
-  NS_IMETHOD    GetBorder(nsString& aBorder);  \
-  NS_IMETHOD    SetBorder(const nsString& aBorder);  \
-  NS_IMETHOD    GetCodeBase(nsString& aCodeBase);  \
-  NS_IMETHOD    SetCodeBase(const nsString& aCodeBase);  \
-  NS_IMETHOD    GetCodeType(nsString& aCodeType);  \
-  NS_IMETHOD    SetCodeType(const nsString& aCodeType);  \
-  NS_IMETHOD    GetData(nsString& aData);  \
-  NS_IMETHOD    SetData(const nsString& aData);  \
+  NS_IMETHOD    GetCode(nsAWritableString& aCode);  \
+  NS_IMETHOD    SetCode(const nsAReadableString& aCode);  \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign);  \
+  NS_IMETHOD    GetArchive(nsAWritableString& aArchive);  \
+  NS_IMETHOD    SetArchive(const nsAReadableString& aArchive);  \
+  NS_IMETHOD    GetBorder(nsAWritableString& aBorder);  \
+  NS_IMETHOD    SetBorder(const nsAReadableString& aBorder);  \
+  NS_IMETHOD    GetCodeBase(nsAWritableString& aCodeBase);  \
+  NS_IMETHOD    SetCodeBase(const nsAReadableString& aCodeBase);  \
+  NS_IMETHOD    GetCodeType(nsAWritableString& aCodeType);  \
+  NS_IMETHOD    SetCodeType(const nsAReadableString& aCodeType);  \
+  NS_IMETHOD    GetData(nsAWritableString& aData);  \
+  NS_IMETHOD    SetData(const nsAReadableString& aData);  \
   NS_IMETHOD    GetDeclare(PRBool* aDeclare);  \
   NS_IMETHOD    SetDeclare(PRBool aDeclare);  \
-  NS_IMETHOD    GetHeight(nsString& aHeight);  \
-  NS_IMETHOD    SetHeight(const nsString& aHeight);  \
-  NS_IMETHOD    GetHspace(nsString& aHspace);  \
-  NS_IMETHOD    SetHspace(const nsString& aHspace);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
-  NS_IMETHOD    GetStandby(nsString& aStandby);  \
-  NS_IMETHOD    SetStandby(const nsString& aStandby);  \
+  NS_IMETHOD    GetHeight(nsAWritableString& aHeight);  \
+  NS_IMETHOD    SetHeight(const nsAReadableString& aHeight);  \
+  NS_IMETHOD    GetHspace(nsAWritableString& aHspace);  \
+  NS_IMETHOD    SetHspace(const nsAReadableString& aHspace);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
+  NS_IMETHOD    GetStandby(nsAWritableString& aStandby);  \
+  NS_IMETHOD    SetStandby(const nsAReadableString& aStandby);  \
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex);  \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex);  \
-  NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
-  NS_IMETHOD    GetUseMap(nsString& aUseMap);  \
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap);  \
-  NS_IMETHOD    GetVspace(nsString& aVspace);  \
-  NS_IMETHOD    SetVspace(const nsString& aVspace);  \
-  NS_IMETHOD    GetWidth(nsString& aWidth);  \
-  NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
+  NS_IMETHOD    SetType(const nsAReadableString& aType);  \
+  NS_IMETHOD    GetUseMap(nsAWritableString& aUseMap);  \
+  NS_IMETHOD    SetUseMap(const nsAReadableString& aUseMap);  \
+  NS_IMETHOD    GetVspace(nsAWritableString& aVspace);  \
+  NS_IMETHOD    SetVspace(const nsAReadableString& aVspace);  \
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth);  \
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth);  \
   NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument);  \
   NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument);  \
 
@@ -141,40 +141,40 @@ public:
 
 #define NS_FORWARD_IDOMHTMLOBJECTELEMENT(_to)  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD    GetCode(nsString& aCode) { return _to GetCode(aCode); } \
-  NS_IMETHOD    SetCode(const nsString& aCode) { return _to SetCode(aCode); } \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD    GetArchive(nsString& aArchive) { return _to GetArchive(aArchive); } \
-  NS_IMETHOD    SetArchive(const nsString& aArchive) { return _to SetArchive(aArchive); } \
-  NS_IMETHOD    GetBorder(nsString& aBorder) { return _to GetBorder(aBorder); } \
-  NS_IMETHOD    SetBorder(const nsString& aBorder) { return _to SetBorder(aBorder); } \
-  NS_IMETHOD    GetCodeBase(nsString& aCodeBase) { return _to GetCodeBase(aCodeBase); } \
-  NS_IMETHOD    SetCodeBase(const nsString& aCodeBase) { return _to SetCodeBase(aCodeBase); } \
-  NS_IMETHOD    GetCodeType(nsString& aCodeType) { return _to GetCodeType(aCodeType); } \
-  NS_IMETHOD    SetCodeType(const nsString& aCodeType) { return _to SetCodeType(aCodeType); } \
-  NS_IMETHOD    GetData(nsString& aData) { return _to GetData(aData); } \
-  NS_IMETHOD    SetData(const nsString& aData) { return _to SetData(aData); } \
+  NS_IMETHOD    GetCode(nsAWritableString& aCode) { return _to GetCode(aCode); } \
+  NS_IMETHOD    SetCode(const nsAReadableString& aCode) { return _to SetCode(aCode); } \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetArchive(nsAWritableString& aArchive) { return _to GetArchive(aArchive); } \
+  NS_IMETHOD    SetArchive(const nsAReadableString& aArchive) { return _to SetArchive(aArchive); } \
+  NS_IMETHOD    GetBorder(nsAWritableString& aBorder) { return _to GetBorder(aBorder); } \
+  NS_IMETHOD    SetBorder(const nsAReadableString& aBorder) { return _to SetBorder(aBorder); } \
+  NS_IMETHOD    GetCodeBase(nsAWritableString& aCodeBase) { return _to GetCodeBase(aCodeBase); } \
+  NS_IMETHOD    SetCodeBase(const nsAReadableString& aCodeBase) { return _to SetCodeBase(aCodeBase); } \
+  NS_IMETHOD    GetCodeType(nsAWritableString& aCodeType) { return _to GetCodeType(aCodeType); } \
+  NS_IMETHOD    SetCodeType(const nsAReadableString& aCodeType) { return _to SetCodeType(aCodeType); } \
+  NS_IMETHOD    GetData(nsAWritableString& aData) { return _to GetData(aData); } \
+  NS_IMETHOD    SetData(const nsAReadableString& aData) { return _to SetData(aData); } \
   NS_IMETHOD    GetDeclare(PRBool* aDeclare) { return _to GetDeclare(aDeclare); } \
   NS_IMETHOD    SetDeclare(PRBool aDeclare) { return _to SetDeclare(aDeclare); } \
-  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to GetHeight(aHeight); } \
-  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to SetHeight(aHeight); } \
-  NS_IMETHOD    GetHspace(nsString& aHspace) { return _to GetHspace(aHspace); } \
-  NS_IMETHOD    SetHspace(const nsString& aHspace) { return _to SetHspace(aHspace); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
-  NS_IMETHOD    GetStandby(nsString& aStandby) { return _to GetStandby(aStandby); } \
-  NS_IMETHOD    SetStandby(const nsString& aStandby) { return _to SetStandby(aStandby); } \
+  NS_IMETHOD    GetHeight(nsAWritableString& aHeight) { return _to GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(const nsAReadableString& aHeight) { return _to SetHeight(aHeight); } \
+  NS_IMETHOD    GetHspace(nsAWritableString& aHspace) { return _to GetHspace(aHspace); } \
+  NS_IMETHOD    SetHspace(const nsAReadableString& aHspace) { return _to SetHspace(aHspace); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetStandby(nsAWritableString& aStandby) { return _to GetStandby(aStandby); } \
+  NS_IMETHOD    SetStandby(const nsAReadableString& aStandby) { return _to SetStandby(aStandby); } \
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to GetTabIndex(aTabIndex); } \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
-  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to GetUseMap(aUseMap); } \
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to SetUseMap(aUseMap); } \
-  NS_IMETHOD    GetVspace(nsString& aVspace) { return _to GetVspace(aVspace); } \
-  NS_IMETHOD    SetVspace(const nsString& aVspace) { return _to SetVspace(aVspace); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsAReadableString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetUseMap(nsAWritableString& aUseMap) { return _to GetUseMap(aUseMap); } \
+  NS_IMETHOD    SetUseMap(const nsAReadableString& aUseMap) { return _to SetUseMap(aUseMap); } \
+  NS_IMETHOD    GetVspace(nsAWritableString& aVspace) { return _to GetVspace(aVspace); } \
+  NS_IMETHOD    SetVspace(const nsAReadableString& aVspace) { return _to SetVspace(aVspace); } \
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth) { return _to SetWidth(aWidth); } \
   NS_IMETHOD    GetContentDocument(nsIDOMDocument** aContentDocument) { return _to GetContentDocument(aContentDocument); } \
   NS_IMETHOD    SetContentDocument(nsIDOMDocument* aContentDocument) { return _to SetContentDocument(aContentDocument); } \
 

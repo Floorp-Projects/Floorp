@@ -55,14 +55,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLHRElement
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetNoShade(PRBool* aNoShade);
-  NS_IMETHOD SetNoShade(PRBool aNoShade);
-  NS_IMETHOD GetSize(nsString& aSize);
-  NS_IMETHOD SetSize(const nsString& aSize);
-  NS_IMETHOD GetWidth(nsString& aWidth);
-  NS_IMETHOD SetWidth(const nsString& aWidth);
+  NS_DECL_IDOMHTMLHRELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -170,7 +163,7 @@ static nsGenericHTMLElement::EnumTable kAlignTable[] = {
 
 NS_IMETHODIMP
 nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
-                                   const nsString& aValue,
+                                   const nsAReadableString& aValue,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::width) {
@@ -199,7 +192,7 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLHRElement::AttributeToString(nsIAtom* aAttribute,
                                    const nsHTMLValue& aValue,
-                                   nsString& aResult) const
+                                   nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

@@ -793,14 +793,14 @@ public:
   DOMCSSDeclarationImpl(nsICSSStyleRule *aRule);
   ~DOMCSSDeclarationImpl(void);
 
-  NS_IMETHOD RemoveProperty(const nsString& aPropertyName, 
-                            nsString& aReturn);
+  NS_IMETHOD RemoveProperty(const nsAReadableString& aPropertyName, 
+                            nsAWritableString& aReturn);
 
   virtual void DropReference(void);
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
   virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
-  virtual nsresult ParseDeclaration(const nsString& aDecl,
+  virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
                                     PRBool aParseOnlyOneDecl,
                                     PRBool aClearOldDecl);
   virtual nsresult GetParent(nsISupports **aParent);
@@ -826,8 +826,8 @@ DOMCSSDeclarationImpl::~DOMCSSDeclarationImpl(void)
 }
 
 NS_IMETHODIMP
-DOMCSSDeclarationImpl::RemoveProperty(const nsString& aPropertyName, 
-                                      nsString& aReturn)
+DOMCSSDeclarationImpl::RemoveProperty(const nsAReadableString& aPropertyName, 
+                                      nsAWritableString& aReturn)
 {
   aReturn.Truncate();
 
@@ -885,7 +885,7 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(nsICSSDeclaration *aDecl)
 }
 
 nsresult 
-DOMCSSDeclarationImpl::ParseDeclaration(const nsString& aDecl,
+DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
                                         PRBool aParseOnlyOneDecl,
                                         PRBool aClearOldDecl)
 {
@@ -3335,15 +3335,15 @@ CSSStyleRuleImpl::GetType(PRUint16* aType)
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::GetCssText(nsString& aCssText)
+CSSStyleRuleImpl::GetCssText(nsAWritableString& aCssText)
 {
-  aCssText = mSelectorText;
+  aCssText.Assign(mSelectorText);
   // XXX TBI append declaration too
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::SetCssText(const nsString& aCssText)
+CSSStyleRuleImpl::SetCssText(const nsAReadableString& aCssText)
 {
   // XXX TBI - need to re-parse rule & declaration
   return NS_OK;
@@ -3366,14 +3366,14 @@ CSSStyleRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::GetSelectorText(nsString& aSelectorText)
+CSSStyleRuleImpl::GetSelectorText(nsAWritableString& aSelectorText)
 {
-  aSelectorText = mSelectorText;
+  aSelectorText.Assign(mSelectorText);
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-CSSStyleRuleImpl::SetSelectorText(const nsString& aSelectorText)
+CSSStyleRuleImpl::SetSelectorText(const nsAReadableString& aSelectorText)
 {
   // XXX TBI - get a parser and re-parse the selectors, 
   // XXX then need to re-compute the cascade

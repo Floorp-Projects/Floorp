@@ -40,33 +40,33 @@ class nsIDOMNSDocument : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSDOCUMENT_IID; return iid; }
 
-  NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet)=0;
+  NS_IMETHOD    GetCharacterSet(nsAWritableString& aCharacterSet)=0;
 
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins)=0;
 
-  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, const nsAReadableString& aNameSpace, nsIDOMElement** aReturn)=0;
 
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn)=0;
 
-  NS_IMETHOD    Load(const nsString& aUrl)=0;
+  NS_IMETHOD    Load(const nsAReadableString& aUrl)=0;
 };
 
 
 #define NS_DECL_IDOMNSDOCUMENT   \
-  NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet);  \
+  NS_IMETHOD    GetCharacterSet(nsAWritableString& aCharacterSet);  \
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);  \
-  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, const nsAReadableString& aNameSpace, nsIDOMElement** aReturn);  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);  \
-  NS_IMETHOD    Load(const nsString& aUrl);  \
+  NS_IMETHOD    Load(const nsAReadableString& aUrl);  \
 
 
 
 #define NS_FORWARD_IDOMNSDOCUMENT(_to)  \
-  NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet) { return _to GetCharacterSet(aCharacterSet); } \
+  NS_IMETHOD    GetCharacterSet(nsAWritableString& aCharacterSet) { return _to GetCharacterSet(aCharacterSet); } \
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins) { return _to GetPlugins(aPlugins); } \
-  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
+  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, const nsAReadableString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn) { return _to CreateRange(aReturn); }  \
-  NS_IMETHOD    Load(const nsString& aUrl) { return _to Load(aUrl); }  \
+  NS_IMETHOD    Load(const nsAReadableString& aUrl) { return _to Load(aUrl); }  \
 
 
 #endif // nsIDOMNSDocument_h__

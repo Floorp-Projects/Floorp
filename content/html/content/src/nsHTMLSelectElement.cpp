@@ -147,33 +147,10 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLSelectElement
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD GetSelectedIndex(PRInt32* aSelectedIndex);
-  NS_IMETHOD SetSelectedIndex(PRInt32 aSelectedIndex);
-  NS_IMETHOD GetValue(nsString& aValue);
-  NS_IMETHOD SetValue(const nsString& aValue);
-  NS_IMETHOD GetLength(PRUint32* aLength);
-  NS_IMETHOD SetLength(PRUint32 aLength);
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD GetOptions(nsIDOMNSHTMLOptionCollection** aOptions);
-  NS_IMETHOD GetDisabled(PRBool* aDisabled);
-  NS_IMETHOD SetDisabled(PRBool aDisabled);
-  NS_IMETHOD GetMultiple(PRBool* aMultiple);
-  NS_IMETHOD SetMultiple(PRBool aMultiple);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetSize(PRInt32* aSize);
-  NS_IMETHOD SetSize(PRInt32 aSize);
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  NS_IMETHOD Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore);
-  NS_IMETHOD Remove(PRInt32 aIndex);
-  NS_IMETHOD Blur();
-  NS_IMETHOD Focus();
+  NS_DECL_IDOMHTMLSELECTELEMENT
 
   // nsIDOMNSHTMLSelectElement
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD NamedItem(const nsString& aName, nsIDOMNode** aReturn);
+  NS_DECL_IDOMNSHTMLSELECTELEMENT
 
   // nsIContent
   //NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
@@ -215,7 +192,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
     return mInner.GetNodeInfo(aResult);
   }
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,
                                   nsIAtom*& aName,
                                   PRInt32& aNameSpaceID) {
     return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);
@@ -225,19 +202,19 @@ public:
     return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);
   }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsString& aValue, PRBool aNotify) {
+                          const nsAReadableString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);
   }
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsString& aValue, PRBool aNotify) {
+                          const nsAReadableString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
   }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsString& aResult) const {
+                          nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aName, aResult);
   }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsIAtom*& aPrefix, nsString& aResult) const {
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);
   }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
@@ -580,7 +557,7 @@ nsHTMLSelectElement::GetOptions(nsIDOMNSHTMLOptionCollection** aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::GetType(nsString& aType)
+nsHTMLSelectElement::GetType(nsAWritableString& aType)
 {
   PRBool isMultiple;
   nsresult result = NS_OK;
@@ -588,10 +565,10 @@ nsHTMLSelectElement::GetType(nsString& aType)
   result = GetMultiple(&isMultiple);
   if (NS_OK == result) {
     if (isMultiple) {
-      aType.AssignWithConversion("select-multiple");
+      aType.Assign(NS_LITERAL_STRING("select-multiple"));
     }
     else {
-      aType.AssignWithConversion("select-one");
+      aType.Assign(NS_LITERAL_STRING("select-one"));
     }
   }
   
@@ -854,7 +831,7 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 
 //NS_IMPL_STRING_ATTR(nsHTMLSelectElement, Value, value)
 NS_IMETHODIMP 
-nsHTMLSelectElement::GetValue(nsString& aValue)
+nsHTMLSelectElement::GetValue(nsAWritableString& aValue)
 {
   nsresult result = NS_OK;
   PRInt32 selectedIndex;
@@ -911,7 +888,7 @@ nsHTMLSelectElement::GetValue(nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::SetValue(const nsString& aValue)
+nsHTMLSelectElement::SetValue(const nsAReadableString& aValue)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMNSHTMLOptionCollection> options;
@@ -1013,7 +990,7 @@ nsHTMLSelectElement::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-nsHTMLSelectElement::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+nsHTMLSelectElement::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 {
   if (!mOptions) {
     Init();
@@ -1188,7 +1165,7 @@ nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
 
 NS_IMETHODIMP
 nsHTMLSelectElement::StringToAttribute(nsIAtom* aAttribute,
-                              const nsString& aValue,
+                              const nsAReadableString& aValue,
                               nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::disabled) {
@@ -1215,7 +1192,7 @@ nsHTMLSelectElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLSelectElement::AttributeToString(nsIAtom* aAttribute,
                               const nsHTMLValue& aValue,
-                              nsString& aResult) const
+                              nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
@@ -1603,7 +1580,7 @@ nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-nsHTMLOptionCollection::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+nsHTMLOptionCollection::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 {
   if (mDirty && (nsnull != mSelect)) {
     GetOptions();

@@ -46,6 +46,7 @@
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIHTMLAttributes.h"
+#include "prprf.h"
 
 // XXX suppress
 
@@ -77,42 +78,10 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLAnchorElement
-  NS_IMETHOD GetAccessKey(nsString& aAccessKey);
-  NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
-  NS_IMETHOD GetCharset(nsString& aCharset);
-  NS_IMETHOD SetCharset(const nsString& aCharset);
-  NS_IMETHOD GetCoords(nsString& aCoords);
-  NS_IMETHOD SetCoords(const nsString& aCoords);
-  NS_IMETHOD GetHref(nsString& aHref);
-  NS_IMETHOD SetHref(const nsString& aHref);
-  NS_IMETHOD GetHreflang(nsString& aHreflang);
-  NS_IMETHOD SetHreflang(const nsString& aHreflang);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetRel(nsString& aRel);
-  NS_IMETHOD SetRel(const nsString& aRel);
-  NS_IMETHOD GetRev(nsString& aRev);
-  NS_IMETHOD SetRev(const nsString& aRev);
-  NS_IMETHOD GetShape(nsString& aShape);
-  NS_IMETHOD SetShape(const nsString& aShape);
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  NS_IMETHOD GetTarget(nsString& aTarget);
-  NS_IMETHOD SetTarget(const nsString& aTarget);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
-  NS_IMETHOD Blur();
-  NS_IMETHOD Focus();
+  NS_DECL_IDOMHTMLANCHORELEMENT  
 
   // nsIDOMNSHTMLAnchorElement
-  NS_IMETHOD    GetProtocol(nsString& aProtocol);
-  NS_IMETHOD    GetHost(nsString& aHost);
-  NS_IMETHOD    GetHostname(nsString& aHostname);
-  NS_IMETHOD    GetPathname(nsString& aPathname);
-  NS_IMETHOD    GetSearch(nsString& aSearch);
-  NS_IMETHOD    GetPort(nsString& aPort);
-  NS_IMETHOD    GetHash(nsString& aHash);
-  NS_IMETHOD    GetText(nsString& aText);
+  NS_DECL_IDOMNSHTMLANCHORELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -351,7 +320,7 @@ nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsString& aValue,
+                                       const nsAReadableString& aValue,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
@@ -361,7 +330,7 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
-    if (aValue.EqualsIgnoreCase("true")) {
+    if (nsCRT::strcasecmp(nsPromiseFlatString(aValue), NS_LITERAL_STRING("true"))) {
       aResult.SetEmptyValue();  // XXX? shouldn't just leave "true"
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -372,7 +341,7 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLAnchorElement::AttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
-                                       nsString& aResult) const
+                                       nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
@@ -421,13 +390,13 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::GetHref(nsString& aValue)
+nsHTMLAnchorElement::GetHref(nsAWritableString& aValue)
 {
   char *buf;
   nsresult rv = GetHrefCString(buf);
   if (NS_FAILED(rv)) return rv;
   if (buf) {
-    aValue.AssignWithConversion(buf);
+    aValue.Assign(NS_ConvertASCIItoUCS2(buf));
     nsCRT::free(buf);
   }
   // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
@@ -435,7 +404,7 @@ nsHTMLAnchorElement::GetHref(nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetHref(const nsString& aValue)
+nsHTMLAnchorElement::SetHref(const nsAReadableString& aValue)
 {
   // Clobber our "cache", so we'll recompute it the next time
   // somebody asks for it.
@@ -451,7 +420,7 @@ nsHTMLAnchorElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetProtocol(nsString& aProtocol)
+nsHTMLAnchorElement::GetProtocol(nsAWritableString& aProtocol)
 {
   nsAutoString href;
   nsIURI *url;
@@ -464,8 +433,8 @@ nsHTMLAnchorElement::GetProtocol(nsString& aProtocol)
       char* protocol;
       result = url->GetScheme(&protocol);
       if (result == NS_OK) {
-        aProtocol.AssignWithConversion(protocol);
-        aProtocol.AppendWithConversion(":");
+        aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
+        aProtocol.Append(NS_LITERAL_STRING(":"));
         nsCRT::free(protocol);
       }
       NS_RELEASE(url);
@@ -476,7 +445,7 @@ nsHTMLAnchorElement::GetProtocol(nsString& aProtocol)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHost(nsString& aHost)
+nsHTMLAnchorElement::GetHost(nsAWritableString& aHost)
 {
   nsAutoString href;
   nsIURI *url;
@@ -489,13 +458,15 @@ nsHTMLAnchorElement::GetHost(nsString& aHost)
       char* host;
       result = url->GetHost(&host);
       if (result == NS_OK) {
-        aHost.AssignWithConversion(host);
+        aHost.Assign(NS_ConvertASCIItoUCS2(host));
         nsCRT::free(host);
         PRInt32 port;
         (void)url->GetPort(&port);
         if (-1 != port) {
-          aHost.AppendWithConversion(":");
-          aHost.AppendInt(port, 10);
+          aHost.Append(NS_LITERAL_STRING(":"));
+          nsAutoString portStr;
+          portStr.AppendInt(port);
+          aHost.Append(portStr);
         }
       }
       NS_RELEASE(url);
@@ -506,7 +477,7 @@ nsHTMLAnchorElement::GetHost(nsString& aHost)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHostname(nsString& aHostname)
+nsHTMLAnchorElement::GetHostname(nsAWritableString& aHostname)
 {
   nsAutoString href;
   nsIURI *url;
@@ -519,7 +490,7 @@ nsHTMLAnchorElement::GetHostname(nsString& aHostname)
       char* host;
       result = url->GetHost(&host);
       if (result == NS_OK) {
-        aHostname.AssignWithConversion(host);
+        aHostname.Assign(NS_ConvertASCIItoUCS2(host));
         nsCRT::free(host);
       }
       NS_RELEASE(url);
@@ -530,7 +501,7 @@ nsHTMLAnchorElement::GetHostname(nsString& aHostname)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPathname(nsString& aPathname)
+nsHTMLAnchorElement::GetPathname(nsAWritableString& aPathname)
 {
   nsAutoString href;
   nsCOMPtr<nsIURI> uri;
@@ -560,14 +531,14 @@ nsHTMLAnchorElement::GetPathname(nsString& aPathname)
     return result;
   }
 
-  aPathname.AssignWithConversion(file);
+  aPathname.Assign(NS_ConvertASCIItoUCS2(file));
   nsCRT::free(file);
 
   return result;
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetSearch(nsString& aSearch)
+nsHTMLAnchorElement::GetSearch(nsAWritableString& aSearch)
 {
   nsAutoString href;
   nsIURI *uri;
@@ -585,8 +556,8 @@ nsHTMLAnchorElement::GetSearch(nsString& aSearch)
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
-        aSearch.AssignWithConversion("?");
-        aSearch.AppendWithConversion(search);
+        aSearch.Assign(NS_LITERAL_STRING("?"));
+        aSearch.Append(NS_ConvertASCIItoUCS2(search));
         nsCRT::free(search);
       }
       else {
@@ -600,7 +571,7 @@ nsHTMLAnchorElement::GetSearch(nsString& aSearch)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPort(nsString& aPort)
+nsHTMLAnchorElement::GetPort(nsAWritableString& aPort)
 {
   nsAutoString href;
   nsIURI *url;
@@ -610,11 +581,13 @@ nsHTMLAnchorElement::GetPort(nsString& aPort)
   if (NS_OK == result) {
     result = NS_NewURI(&url, href);
     if (NS_OK == result) {
-      aPort.SetLength(0);
+      aPort.Truncate(0);
       PRInt32 port;
       (void)url->GetPort(&port);
       if (-1 != port) {
-        aPort.AppendInt(port, 10);
+        nsAutoString portStr;
+        portStr.AppendInt(port);
+        aPort.Append(portStr);
       }
       NS_RELEASE(url);
     }
@@ -624,7 +597,7 @@ nsHTMLAnchorElement::GetPort(nsString& aPort)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHash(nsString& aHash)
+nsHTMLAnchorElement::GetHash(nsAWritableString& aHash)
 {
   nsAutoString href;
   nsIURI *uri;
@@ -643,8 +616,8 @@ nsHTMLAnchorElement::GetHash(nsString& aHash)
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
-        aHash.AssignWithConversion("#");
-        aHash.AppendWithConversion(ref);
+        aHash.Assign(NS_LITERAL_STRING("#"));
+        aHash.Append(NS_ConvertASCIItoUCS2(ref));
         nsCRT::free(ref);
       }
       else {
@@ -658,7 +631,7 @@ nsHTMLAnchorElement::GetHash(nsString& aHash)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetText(nsString& aText)
+nsHTMLAnchorElement::GetText(nsAWritableString& aText)
 {
   aText.Truncate();
 

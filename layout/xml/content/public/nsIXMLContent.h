@@ -75,32 +75,32 @@ NS_NewXMLElement(nsIXMLContent** aResult, nsINodeInfo* aNodeInfo);
 // XXX These belongs elsewhere
 extern nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
-                               const nsString& aTarget,
-                               const nsString& aData);
+                               const nsAReadableString& aTarget,
+                               const nsAReadableString& aData);
 
 extern nsresult
 NS_NewXMLEntity(nsIContent** aInstancePtrResult,
-                const nsString& aName,
-                const nsString& aPublicId,
-                const nsString& aSystemId,
-                const nsString aNotationName);
+                const nsAReadableString& aName,
+                const nsAReadableString& aPublicId,
+                const nsAReadableString& aSystemId,
+                const nsAReadableString& aNotationName);
 
 extern nsresult
 NS_NewXMLNotation(nsIContent** aInstancePtrResult,
-                  const nsString& aName,
-                  const nsString& aPublicId,
-                  const nsString& aSystemId);
+                  const nsAReadableString& aName,
+                  const nsAReadableString& aPublicId,
+                  const nsAReadableString& aSystemId);
 
 class nsIDOMNamedNodeMap;
 
 extern nsresult
 NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
-                      const nsString& aName,
+                      const nsAReadableString& aName,
                       nsIDOMNamedNodeMap *aEntities,
                       nsIDOMNamedNodeMap *aNotations,
-                      const nsString& aPublicId,
-                      const nsString& aSystemId,
-                      const nsString& aInternalSubset);
+                      const nsAReadableString& aPublicId,
+                      const nsAReadableString& aSystemId,
+                      const nsAReadableString& aInternalSubset);
 
 extern nsresult
 NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,

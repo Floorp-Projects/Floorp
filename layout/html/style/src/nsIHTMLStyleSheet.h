@@ -56,7 +56,8 @@ public:
   // Attribute management methods
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
                               nsIHTMLAttributes*& aAttributes) = 0;
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, 
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, 
+                             const nsAReadableString& aValue, 
                              PRBool aMappedToStyle,
                              nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes) = 0;

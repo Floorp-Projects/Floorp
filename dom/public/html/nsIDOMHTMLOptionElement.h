@@ -44,22 +44,22 @@ public:
   NS_IMETHOD    GetDefaultSelected(PRBool* aDefaultSelected)=0;
   NS_IMETHOD    SetDefaultSelected(PRBool aDefaultSelected)=0;
 
-  NS_IMETHOD    GetText(nsString& aText)=0;
-  NS_IMETHOD    SetText(const nsString& aText)=0;
+  NS_IMETHOD    GetText(nsAWritableString& aText)=0;
+  NS_IMETHOD    SetText(const nsAReadableString& aText)=0;
 
   NS_IMETHOD    GetIndex(PRInt32* aIndex)=0;
 
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
 
-  NS_IMETHOD    GetLabel(nsString& aLabel)=0;
-  NS_IMETHOD    SetLabel(const nsString& aLabel)=0;
+  NS_IMETHOD    GetLabel(nsAWritableString& aLabel)=0;
+  NS_IMETHOD    SetLabel(const nsAReadableString& aLabel)=0;
 
   NS_IMETHOD    GetSelected(PRBool* aSelected)=0;
   NS_IMETHOD    SetSelected(PRBool aSelected)=0;
 
-  NS_IMETHOD    GetValue(nsString& aValue)=0;
-  NS_IMETHOD    SetValue(const nsString& aValue)=0;
+  NS_IMETHOD    GetValue(nsAWritableString& aValue)=0;
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue)=0;
 };
 
 
@@ -67,17 +67,17 @@ public:
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
   NS_IMETHOD    GetDefaultSelected(PRBool* aDefaultSelected);  \
   NS_IMETHOD    SetDefaultSelected(PRBool aDefaultSelected);  \
-  NS_IMETHOD    GetText(nsString& aText);  \
-  NS_IMETHOD    SetText(const nsString& aText);  \
+  NS_IMETHOD    GetText(nsAWritableString& aText);  \
+  NS_IMETHOD    SetText(const nsAReadableString& aText);  \
   NS_IMETHOD    GetIndex(PRInt32* aIndex);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
-  NS_IMETHOD    GetLabel(nsString& aLabel);  \
-  NS_IMETHOD    SetLabel(const nsString& aLabel);  \
+  NS_IMETHOD    GetLabel(nsAWritableString& aLabel);  \
+  NS_IMETHOD    SetLabel(const nsAReadableString& aLabel);  \
   NS_IMETHOD    GetSelected(PRBool* aSelected);  \
   NS_IMETHOD    SetSelected(PRBool aSelected);  \
-  NS_IMETHOD    GetValue(nsString& aValue);  \
-  NS_IMETHOD    SetValue(const nsString& aValue);  \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue);  \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue);  \
 
 
 
@@ -85,17 +85,17 @@ public:
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
   NS_IMETHOD    GetDefaultSelected(PRBool* aDefaultSelected) { return _to GetDefaultSelected(aDefaultSelected); } \
   NS_IMETHOD    SetDefaultSelected(PRBool aDefaultSelected) { return _to SetDefaultSelected(aDefaultSelected); } \
-  NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
-  NS_IMETHOD    SetText(const nsString& aText) { return _to SetText(aText); } \
+  NS_IMETHOD    GetText(nsAWritableString& aText) { return _to GetText(aText); } \
+  NS_IMETHOD    SetText(const nsAReadableString& aText) { return _to SetText(aText); } \
   NS_IMETHOD    GetIndex(PRInt32* aIndex) { return _to GetIndex(aIndex); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetLabel(nsString& aLabel) { return _to GetLabel(aLabel); } \
-  NS_IMETHOD    SetLabel(const nsString& aLabel) { return _to SetLabel(aLabel); } \
+  NS_IMETHOD    GetLabel(nsAWritableString& aLabel) { return _to GetLabel(aLabel); } \
+  NS_IMETHOD    SetLabel(const nsAReadableString& aLabel) { return _to SetLabel(aLabel); } \
   NS_IMETHOD    GetSelected(PRBool* aSelected) { return _to GetSelected(aSelected); } \
   NS_IMETHOD    SetSelected(PRBool aSelected) { return _to SetSelected(aSelected); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue) { return _to GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue) { return _to SetValue(aValue); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLOptionElementClass(nsIScriptContext *aContext, void **aPrototype);

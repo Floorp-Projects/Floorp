@@ -2148,7 +2148,7 @@ nsGfxTextControlFrame2::GetFormContent(nsIContent*& aContent) const
   return rv;
 }
 
-NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
 {
   if (!mIsProcessing)//some kind of lock.
   {
@@ -2174,7 +2174,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::SetProperty(nsIPresContext* aPresContext, 
   return NS_OK;
 }      
 
-NS_IMETHODIMP nsGfxTextControlFrame2::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsGfxTextControlFrame2::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
@@ -2769,7 +2769,7 @@ nsGfxTextControlFrame2::GetCachedString()
   return mCachedState;
 }
 
-void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
+void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
 {
   aValue.SetLength(0);  // initialize out param
   
@@ -2801,7 +2801,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
 // END IMPLEMENTING NS_IFORMCONTROLFRAME
 
 void
-nsGfxTextControlFrame2::SetTextControlFrameState(const nsString& aValue)
+nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue)
 {
   if (mEditor) 
   {
@@ -2850,7 +2850,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsString& aValue)
       if (!mCachedState)
         return;
     }
-    *mCachedState = aValue; //store value for later initialization;
+    mCachedState->Assign(aValue); //store value for later initialization;
   }
 }
 

@@ -43,21 +43,21 @@ public:
 
   NS_IMETHOD    GetDetail(PRInt32* aDetail)=0;
 
-  NS_IMETHOD    InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)=0;
+  NS_IMETHOD    InitUIEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)=0;
 };
 
 
 #define NS_DECL_IDOMUIEVENT   \
   NS_IMETHOD    GetView(nsIDOMAbstractView** aView);  \
   NS_IMETHOD    GetDetail(PRInt32* aDetail);  \
-  NS_IMETHOD    InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg);  \
+  NS_IMETHOD    InitUIEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg);  \
 
 
 
 #define NS_FORWARD_IDOMUIEVENT(_to)  \
   NS_IMETHOD    GetView(nsIDOMAbstractView** aView) { return _to GetView(aView); } \
   NS_IMETHOD    GetDetail(PRInt32* aDetail) { return _to GetDetail(aDetail); } \
-  NS_IMETHOD    InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg) { return _to InitUIEvent(aTypeArg, aCanBubbleArg, aCancelableArg, aViewArg, aDetailArg); }  \
+  NS_IMETHOD    InitUIEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg) { return _to InitUIEvent(aTypeArg, aCanBubbleArg, aCancelableArg, aViewArg, aDetailArg); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitUIEventClass(nsIScriptContext *aContext, void **aPrototype);

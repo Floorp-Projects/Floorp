@@ -54,7 +54,7 @@ public:
   nsTextEncoder();
   virtual ~nsTextEncoder();
 
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsString& aMimeType, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsAReadableString& aMimeType, PRUint32 aFlags);
 
   /* Interfaces for addref and release and queryinterface */
   NS_DECL_ISUPPORTS
@@ -62,10 +62,10 @@ public:
   // Inherited methods from nsIDocumentEncoder
   NS_IMETHOD SetSelection(nsIDOMSelection* aSelection);
   NS_IMETHOD SetWrapColumn(PRUint32 aWC);
-  NS_IMETHOD SetCharset(const nsString& aCharset);
+  NS_IMETHOD SetCharset(const nsAReadableString& aCharset);
 
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
-  NS_IMETHOD EncodeToString(nsString& aOutputString);
+  NS_IMETHOD EncodeToString(nsAWritableString& aOutputString);
 
 protected:
   // Local methods to the text encoder -- used to be in nsITextEncoder,
@@ -104,7 +104,7 @@ nsTextEncoder::~nsTextEncoder()
 }
 
 NS_IMETHODIMP
-nsTextEncoder::Init(nsIDocument* aDocument, const nsString& aMimeType, PRUint32 aFlags)
+nsTextEncoder::Init(nsIDocument* aDocument, const nsAReadableString& aMimeType, PRUint32 aFlags)
 {
   if (!aDocument)
     return NS_ERROR_INVALID_ARG;
@@ -156,14 +156,14 @@ nsTextEncoder::SetSelection(nsIDOMSelection* aSelection)
 }
 
 NS_IMETHODIMP
-nsTextEncoder::SetCharset(const nsString& aCharset)
+nsTextEncoder::SetCharset(const nsAReadableString& aCharset)
 {
   mCharset = aCharset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextEncoder::EncodeToString(nsString& aOutputString)
+nsTextEncoder::EncodeToString(nsAWritableString& aOutputString)
 {
  nsresult rv;
 

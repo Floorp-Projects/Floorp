@@ -41,73 +41,73 @@ public:
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
 
-  NS_IMETHOD    GetCharset(nsString& aCharset)=0;
-  NS_IMETHOD    SetCharset(const nsString& aCharset)=0;
+  NS_IMETHOD    GetCharset(nsAWritableString& aCharset)=0;
+  NS_IMETHOD    SetCharset(const nsAReadableString& aCharset)=0;
 
-  NS_IMETHOD    GetHref(nsString& aHref)=0;
-  NS_IMETHOD    SetHref(const nsString& aHref)=0;
+  NS_IMETHOD    GetHref(nsAWritableString& aHref)=0;
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref)=0;
 
-  NS_IMETHOD    GetHreflang(nsString& aHreflang)=0;
-  NS_IMETHOD    SetHreflang(const nsString& aHreflang)=0;
+  NS_IMETHOD    GetHreflang(nsAWritableString& aHreflang)=0;
+  NS_IMETHOD    SetHreflang(const nsAReadableString& aHreflang)=0;
 
-  NS_IMETHOD    GetMedia(nsString& aMedia)=0;
-  NS_IMETHOD    SetMedia(const nsString& aMedia)=0;
+  NS_IMETHOD    GetMedia(nsAWritableString& aMedia)=0;
+  NS_IMETHOD    SetMedia(const nsAReadableString& aMedia)=0;
 
-  NS_IMETHOD    GetRel(nsString& aRel)=0;
-  NS_IMETHOD    SetRel(const nsString& aRel)=0;
+  NS_IMETHOD    GetRel(nsAWritableString& aRel)=0;
+  NS_IMETHOD    SetRel(const nsAReadableString& aRel)=0;
 
-  NS_IMETHOD    GetRev(nsString& aRev)=0;
-  NS_IMETHOD    SetRev(const nsString& aRev)=0;
+  NS_IMETHOD    GetRev(nsAWritableString& aRev)=0;
+  NS_IMETHOD    SetRev(const nsAReadableString& aRev)=0;
 
-  NS_IMETHOD    GetTarget(nsString& aTarget)=0;
-  NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget)=0;
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget)=0;
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
+  NS_IMETHOD    SetType(const nsAReadableString& aType)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLLINKELEMENT   \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
-  NS_IMETHOD    GetCharset(nsString& aCharset);  \
-  NS_IMETHOD    SetCharset(const nsString& aCharset);  \
-  NS_IMETHOD    GetHref(nsString& aHref);  \
-  NS_IMETHOD    SetHref(const nsString& aHref);  \
-  NS_IMETHOD    GetHreflang(nsString& aHreflang);  \
-  NS_IMETHOD    SetHreflang(const nsString& aHreflang);  \
-  NS_IMETHOD    GetMedia(nsString& aMedia);  \
-  NS_IMETHOD    SetMedia(const nsString& aMedia);  \
-  NS_IMETHOD    GetRel(nsString& aRel);  \
-  NS_IMETHOD    SetRel(const nsString& aRel);  \
-  NS_IMETHOD    GetRev(nsString& aRev);  \
-  NS_IMETHOD    SetRev(const nsString& aRev);  \
-  NS_IMETHOD    GetTarget(nsString& aTarget);  \
-  NS_IMETHOD    SetTarget(const nsString& aTarget);  \
-  NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
+  NS_IMETHOD    GetCharset(nsAWritableString& aCharset);  \
+  NS_IMETHOD    SetCharset(const nsAReadableString& aCharset);  \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref);  \
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref);  \
+  NS_IMETHOD    GetHreflang(nsAWritableString& aHreflang);  \
+  NS_IMETHOD    SetHreflang(const nsAReadableString& aHreflang);  \
+  NS_IMETHOD    GetMedia(nsAWritableString& aMedia);  \
+  NS_IMETHOD    SetMedia(const nsAReadableString& aMedia);  \
+  NS_IMETHOD    GetRel(nsAWritableString& aRel);  \
+  NS_IMETHOD    SetRel(const nsAReadableString& aRel);  \
+  NS_IMETHOD    GetRev(nsAWritableString& aRev);  \
+  NS_IMETHOD    SetRev(const nsAReadableString& aRev);  \
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget);  \
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
+  NS_IMETHOD    SetType(const nsAReadableString& aType);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLLINKELEMENT(_to)  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetCharset(nsString& aCharset) { return _to GetCharset(aCharset); } \
-  NS_IMETHOD    SetCharset(const nsString& aCharset) { return _to SetCharset(aCharset); } \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD    SetHref(const nsString& aHref) { return _to SetHref(aHref); } \
-  NS_IMETHOD    GetHreflang(nsString& aHreflang) { return _to GetHreflang(aHreflang); } \
-  NS_IMETHOD    SetHreflang(const nsString& aHreflang) { return _to SetHreflang(aHreflang); } \
-  NS_IMETHOD    GetMedia(nsString& aMedia) { return _to GetMedia(aMedia); } \
-  NS_IMETHOD    SetMedia(const nsString& aMedia) { return _to SetMedia(aMedia); } \
-  NS_IMETHOD    GetRel(nsString& aRel) { return _to GetRel(aRel); } \
-  NS_IMETHOD    SetRel(const nsString& aRel) { return _to SetRel(aRel); } \
-  NS_IMETHOD    GetRev(nsString& aRev) { return _to GetRev(aRev); } \
-  NS_IMETHOD    SetRev(const nsString& aRev) { return _to SetRev(aRev); } \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to SetTarget(aTarget); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetCharset(nsAWritableString& aCharset) { return _to GetCharset(aCharset); } \
+  NS_IMETHOD    SetCharset(const nsAReadableString& aCharset) { return _to SetCharset(aCharset); } \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref) { return _to SetHref(aHref); } \
+  NS_IMETHOD    GetHreflang(nsAWritableString& aHreflang) { return _to GetHreflang(aHreflang); } \
+  NS_IMETHOD    SetHreflang(const nsAReadableString& aHreflang) { return _to SetHreflang(aHreflang); } \
+  NS_IMETHOD    GetMedia(nsAWritableString& aMedia) { return _to GetMedia(aMedia); } \
+  NS_IMETHOD    SetMedia(const nsAReadableString& aMedia) { return _to SetMedia(aMedia); } \
+  NS_IMETHOD    GetRel(nsAWritableString& aRel) { return _to GetRel(aRel); } \
+  NS_IMETHOD    SetRel(const nsAReadableString& aRel) { return _to SetRel(aRel); } \
+  NS_IMETHOD    GetRev(nsAWritableString& aRev) { return _to GetRev(aRev); } \
+  NS_IMETHOD    SetRev(const nsAReadableString& aRev) { return _to SetRev(aRev); } \
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget) { return _to SetTarget(aTarget); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsAReadableString& aType) { return _to SetType(aType); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLLinkElementClass(nsIScriptContext *aContext, void **aPrototype);

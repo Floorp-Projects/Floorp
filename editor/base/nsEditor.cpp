@@ -2192,8 +2192,8 @@ nsEditor::RemoveDocumentStateListener(nsIDocumentStateListener *aListener)
 #pragma mark -
 #endif
 
-NS_IMETHODIMP nsEditor::OutputToString(nsString& aOutputString,
-                                       const nsString& aFormatType,
+NS_IMETHODIMP nsEditor::OutputToString(nsAWritableString& aOutputString,
+                                       const nsAReadableString& aFormatType,
                                        PRUint32 aFlags)
 {
   // these should be implemented by derived classes.

@@ -56,13 +56,13 @@ public:
   NS_IMETHOD    GetActive(PRBool* aActive)=0;
   NS_IMETHOD    SetActive(PRBool aActive)=0;
 
-  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets)=0;
+  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsAReadableString& aEvents, const nsAReadableString& aTargets)=0;
 
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater)=0;
 
-  NS_IMETHOD    UpdateCommands(const nsString& aEventName)=0;
+  NS_IMETHOD    UpdateCommands(const nsAReadableString& aEventName)=0;
 
-  NS_IMETHOD    GetControllerForCommand(const nsString& aCommand, nsIController** aReturn)=0;
+  NS_IMETHOD    GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aReturn)=0;
 
   NS_IMETHOD    GetControllers(nsIControllers** aReturn)=0;
 };
@@ -79,10 +79,10 @@ public:
   NS_IMETHOD    SetSuppressFocusScroll(PRBool aSuppressFocusScroll);  \
   NS_IMETHOD    GetActive(PRBool* aActive);  \
   NS_IMETHOD    SetActive(PRBool aActive);  \
-  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets);  \
+  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsAReadableString& aEvents, const nsAReadableString& aTargets);  \
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater);  \
-  NS_IMETHOD    UpdateCommands(const nsString& aEventName);  \
-  NS_IMETHOD    GetControllerForCommand(const nsString& aCommand, nsIController** aReturn);  \
+  NS_IMETHOD    UpdateCommands(const nsAReadableString& aEventName);  \
+  NS_IMETHOD    GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aReturn);  \
   NS_IMETHOD    GetControllers(nsIControllers** aReturn);  \
 
 
@@ -98,10 +98,10 @@ public:
   NS_IMETHOD    SetSuppressFocusScroll(PRBool aSuppressFocusScroll) { return _to SetSuppressFocusScroll(aSuppressFocusScroll); } \
   NS_IMETHOD    GetActive(PRBool* aActive) { return _to GetActive(aActive); } \
   NS_IMETHOD    SetActive(PRBool aActive) { return _to SetActive(aActive); } \
-  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets) { return _to AddCommandUpdater(aUpdater, aEvents, aTargets); }  \
+  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsAReadableString& aEvents, const nsAReadableString& aTargets) { return _to AddCommandUpdater(aUpdater, aEvents, aTargets); }  \
   NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater) { return _to RemoveCommandUpdater(aUpdater); }  \
-  NS_IMETHOD    UpdateCommands(const nsString& aEventName) { return _to UpdateCommands(aEventName); }  \
-  NS_IMETHOD    GetControllerForCommand(const nsString& aCommand, nsIController** aReturn) { return _to GetControllerForCommand(aCommand, aReturn); }  \
+  NS_IMETHOD    UpdateCommands(const nsAReadableString& aEventName) { return _to UpdateCommands(aEventName); }  \
+  NS_IMETHOD    GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aReturn) { return _to GetControllerForCommand(aCommand, aReturn); }  \
   NS_IMETHOD    GetControllers(nsIControllers** aReturn) { return _to GetControllers(aReturn); }  \
 
 

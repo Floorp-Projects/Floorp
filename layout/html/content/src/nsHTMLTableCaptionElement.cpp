@@ -55,8 +55,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLTableCaptionElement
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
+  NS_DECL_IDOMHTMLTABLECAPTIONELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -137,7 +136,7 @@ static nsGenericHTMLElement::EnumTable kCaptionAlignTable[] = {
 
 NS_IMETHODIMP
 nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue&    aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
@@ -151,7 +150,7 @@ nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTableCaptionElement::AttributeToString(nsIAtom*    aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString&          aResult) const
+                                      nsAWritableString&          aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

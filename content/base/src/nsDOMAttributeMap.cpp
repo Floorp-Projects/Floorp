@@ -90,7 +90,7 @@ nsDOMAttributeMap::SetScriptObject(void *aScriptObject)
 }
 
 nsresult
-nsDOMAttributeMap::GetNamedItem(const nsString &aAttrName,
+nsDOMAttributeMap::GetNamedItem(const nsAReadableString& aAttrName,
                                 nsIDOMNode** aAttribute)
 {
   NS_ENSURE_ARG_POINTER(aAttribute);
@@ -213,7 +213,7 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode, nsIDOMNode **aReturn)
 }
 
 NS_IMETHODIMP
-nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
+nsDOMAttributeMap::RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
@@ -338,8 +338,8 @@ nsDOMAttributeMap::GetLength(PRUint32 *aLength)
 }
 
 nsresult
-nsDOMAttributeMap::GetNamedItemNS(const nsString& aNamespaceURI,
-                                  const nsString& aLocalName,
+nsDOMAttributeMap::GetNamedItemNS(const nsAReadableString& aNamespaceURI,
+                                  const nsAReadableString& aLocalName,
                                   nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -452,8 +452,8 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsDOMAttributeMap::RemoveNamedItemNS(const nsString& aNamespaceURI,
-                                     const nsString& aLocalName,
+nsDOMAttributeMap::RemoveNamedItemNS(const nsAReadableString& aNamespaceURI,
+                                     const nsAReadableString& aLocalName,
                                      nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);

@@ -247,7 +247,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRBool Insert(const nsString& aBuffer);
+      PRBool Insert(const nsAReadableString& aBuffer);
 
       /**
        *  
@@ -256,7 +256,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRBool Append(const nsString& aBuffer);
+      PRBool Append(const nsAReadableString& aBuffer);
 
       /**
        *  

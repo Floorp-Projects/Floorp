@@ -70,19 +70,19 @@ public:
   /**
    * Add an entry to the ID-to-element map.
    */
-  NS_IMETHOD AddElementForID(const nsString& aID, nsIContent* aElement) = 0;
+  NS_IMETHOD AddElementForID(const nsAReadableString& aID, nsIContent* aElement) = 0;
 
   /**
    * Remove an entry from the ID-to-element map.
    */
-  NS_IMETHOD RemoveElementForID(const nsString& aID, nsIContent* aElement) = 0;
+  NS_IMETHOD RemoveElementForID(const nsAReadableString& aID, nsIContent* aElement) = 0;
 
   /**
    * Get the elements for a particular resource in the resource-to-element
    * map. The nsISupportsArray will be truncated and filled in with
    * nsIContent pointers.
    */
-  NS_IMETHOD GetElementsForID(const nsString& aID, nsISupportsArray* aElements) = 0;
+  NS_IMETHOD GetElementsForID(const nsAReadableString& aID, nsISupportsArray* aElements) = 0;
 
   NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
 

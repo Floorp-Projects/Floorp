@@ -391,28 +391,32 @@ public:
   NS_IMETHOD GetData(const nsID& aIID, nsCSSStruct** aData) = 0;
   NS_IMETHOD EnsureData(const nsID& aSID, nsCSSStruct** aData) = 0;
 
-  NS_IMETHOD AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue) = 0;
+  NS_IMETHOD AppendValue(nsCSSProperty aProperty,
+                         const nsCSSValue& aValue) = 0;
   NS_IMETHOD AppendStructValue(nsCSSProperty aProperty, void* aStruct) = 0;
   NS_IMETHOD SetValueImportant(nsCSSProperty aProperty) = 0;
-  NS_IMETHOD AppendComment(const nsString& aComment) = 0;
+  NS_IMETHOD AppendComment(const nsAReadableString& aComment) = 0;
   NS_IMETHOD RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
 
 // XXX make nscolor a struct to avoid type conflicts
   NS_IMETHOD GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
 
-  NS_IMETHOD GetValue(nsCSSProperty aProperty, nsString& aValue) = 0;
-  NS_IMETHOD GetValue(const nsString& aProperty, nsString& aValue) = 0;
+  NS_IMETHOD GetValue(nsCSSProperty aProperty, nsAWritableString& aValue) = 0;
+  NS_IMETHOD GetValue(const nsAReadableString& aProperty,
+                      nsAWritableString& aValue) = 0;
 
   NS_IMETHOD GetImportantValues(nsICSSDeclaration*& aResult) = 0;
-  NS_IMETHOD GetValueIsImportant(nsCSSProperty aProperty, PRBool& aIsImportant) = 0;
-  NS_IMETHOD GetValueIsImportant(const nsString& aProperty, PRBool& aIsImportant) = 0;
+  NS_IMETHOD GetValueIsImportant(nsCSSProperty aProperty,
+                                 PRBool& aIsImportant) = 0;
+  NS_IMETHOD GetValueIsImportant(const nsAReadableString& aProperty,
+                                 PRBool& aIsImportant) = 0;
 
   NS_IMETHOD Count(PRUint32* aCount) = 0;
-  NS_IMETHOD GetNthProperty(PRUint32 aIndex, nsString& aReturn) = 0;
+  NS_IMETHOD GetNthProperty(PRUint32 aIndex, nsAWritableString& aReturn) = 0;
 
   NS_IMETHOD GetStyleImpact(PRInt32* aHint) const = 0;
 
-  NS_IMETHOD ToString(nsString& aString) = 0;
+  NS_IMETHOD ToString(nsAWritableString& aString) = 0;
 
   NS_IMETHOD Clone(nsICSSDeclaration*& aClone) const = 0;
 

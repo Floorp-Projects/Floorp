@@ -793,7 +793,7 @@ DOMMediaListImpl::SetScriptObject(void* aScriptObject)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::GetMediaText(nsString& aMediaText)
+DOMMediaListImpl::GetMediaText(nsAWritableString& aMediaText)
 {
   aMediaText.Truncate();
 
@@ -814,7 +814,7 @@ DOMMediaListImpl::GetMediaText(nsString& aMediaText)
     medium->GetUnicode(&buffer);
     aMediaText.Append(buffer);
     if (index < count) {
-      aMediaText.AppendWithConversion(", ");
+      aMediaText.Append(NS_LITERAL_STRING(", "));
     }
   }
 
@@ -822,7 +822,7 @@ DOMMediaListImpl::GetMediaText(nsString& aMediaText)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::SetMediaText(const nsString& aMediaText)
+DOMMediaListImpl::SetMediaText(const nsAReadableString& aMediaText)
 {
   nsresult rv = Clear();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -869,7 +869,7 @@ DOMMediaListImpl::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::Item(PRUint32 aIndex, nsString& aReturn)
+DOMMediaListImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 {
   nsCOMPtr<nsISupports> tmp(dont_AddRef(ElementAt(aIndex)));
 
@@ -888,7 +888,7 @@ DOMMediaListImpl::Item(PRUint32 aIndex, nsString& aReturn)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::Delete(const nsString& aOldMedium)
+DOMMediaListImpl::Delete(const nsAReadableString& aOldMedium)
 {
   if (!aOldMedium.Length())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -908,7 +908,7 @@ DOMMediaListImpl::Delete(const nsString& aOldMedium)
 }
 
 NS_IMETHODIMP
-DOMMediaListImpl::Append(const nsString& aNewMedium)
+DOMMediaListImpl::Append(const nsAReadableString& aNewMedium)
 {
   if (!aNewMedium.Length())
     return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -2302,9 +2302,9 @@ CSSStyleSheetImpl::SetModified(PRBool aModified)
 
   // nsIDOMStyleSheet interface
 NS_IMETHODIMP    
-CSSStyleSheetImpl::GetType(nsString& aType)
+CSSStyleSheetImpl::GetType(nsAWritableString& aType)
 {
-  aType.AssignWithConversion("text/css");
+  aType.Assign(NS_LITERAL_STRING("text/css"));
   return NS_OK;
 }
 
@@ -2354,12 +2354,12 @@ CSSStyleSheetImpl::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::GetHref(nsString& aHref)
+CSSStyleSheetImpl::GetHref(nsAWritableString& aHref)
 {
   if (mInner && mInner->mURL) {
     char* str = nsnull;
     mInner->mURL->GetSpec(&str);
-    aHref.AssignWithConversion(str);
+    aHref.Assign(NS_ConvertASCIItoUCS2(str));
     if (str) {
       nsCRT::free(str);
     }
@@ -2379,9 +2379,9 @@ CSSStyleSheetImpl::GetTitle(nsString& aTitle) const
 }
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::GetTitle(nsString& aTitle)
+CSSStyleSheetImpl::GetTitle(nsAWritableString& aTitle)
 {
-  aTitle = mTitle;
+  aTitle.Assign(mTitle);
   return NS_OK;
 }
 
@@ -2436,7 +2436,7 @@ CSSStyleSheetImpl::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 }
 
 NS_IMETHODIMP    
-CSSStyleSheetImpl::InsertRule(const nsString& aRule, 
+CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule, 
                               PRUint32 aIndex, 
                               PRUint32* aReturn)
 {

@@ -55,8 +55,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLHeadingElement
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
+  NS_DECL_IDOMHTMLHEADINGELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -129,7 +128,7 @@ NS_IMPL_STRING_ATTR(nsHTMLHeadingElement, Align, align)
 
 NS_IMETHODIMP
 nsHTMLHeadingElement::StringToAttribute(nsIAtom* aAttribute,
-                                        const nsString& aValue,
+                                        const nsAReadableString& aValue,
                                         nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
@@ -143,7 +142,7 @@ nsHTMLHeadingElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLHeadingElement::AttributeToString(nsIAtom* aAttribute,
                                         const nsHTMLValue& aValue,
-                                        nsString& aResult) const
+                                        nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

@@ -39,21 +39,22 @@ public:
   NS_DECL_ISUPPORTS
 
   // NS_DECL_IDOMCSSSTYLEDECLARATION
-  NS_IMETHOD    GetCssText(nsString& aCssText);
-  NS_IMETHOD    SetCssText(const nsString& aCssText);
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText);
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText);
   NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule);
-  NS_IMETHOD    GetPropertyValue(const nsString& aPropertyName,
-                                 nsString& aReturn);
-  NS_IMETHOD    GetPropertyCSSValue(const nsString& aPropertyName,
+  NS_IMETHOD    GetPropertyValue(const nsAReadableString& aPropertyName,
+                                 nsAWritableString& aReturn);
+  NS_IMETHOD    GetPropertyCSSValue(const nsAReadableString& aPropertyName,
                                     nsIDOMCSSValue** aReturn);
-  NS_IMETHOD    RemoveProperty(const nsString& aPropertyName,
-                               nsString& aReturn) = 0;
-  NS_IMETHOD    GetPropertyPriority(const nsString& aPropertyName,
-                                    nsString& aReturn);
-  NS_IMETHOD    SetProperty(const nsString& aPropertyName,
-                            const nsString& aValue, const nsString& aPriority);
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn);
+  NS_IMETHOD    RemoveProperty(const nsAReadableString& aPropertyName,
+                               nsAWritableString& aReturn) = 0;
+  NS_IMETHOD    GetPropertyPriority(const nsAReadableString& aPropertyName,
+                                    nsAWritableString& aReturn);
+  NS_IMETHOD    SetProperty(const nsAReadableString& aPropertyName,
+                            const nsAReadableString& aValue, const nsAReadableString& aPriority);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn);
+
 
   NS_DECL_IDOMCSS2PROPERTIES
   
@@ -67,7 +68,7 @@ public:
   // Note! This will only set the declaration if a style rule already exists
   virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl) = 0;
 
-  virtual nsresult ParseDeclaration(const nsString& aDecl,
+  virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
                                     PRBool aParseOnlyOneDecl,
                                     PRBool aClearOldDecl) = 0;
   virtual nsresult GetParent(nsISupports **aParent) = 0;

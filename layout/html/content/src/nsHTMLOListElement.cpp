@@ -55,12 +55,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLOListElement
-  NS_IMETHOD GetCompact(PRBool* aCompact);
-  NS_IMETHOD SetCompact(PRBool aCompact);
-  NS_IMETHOD GetStart(PRInt32* aStart);
-  NS_IMETHOD SetStart(PRInt32 aStart);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
+  NS_DECL_IDOMHTMLOLISTELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -158,7 +153,7 @@ nsGenericHTMLElement::EnumTable kOldListTypeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
@@ -182,7 +177,7 @@ nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString& aResult) const
+                                      nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     PRInt32 v = aValue.GetIntValue();

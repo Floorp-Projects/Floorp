@@ -25,6 +25,7 @@
 
 #include "nsISupports.h"
 #include "nslayout.h"
+#include "nsAWritableString.h"
 
 class nsIAtom;
 class nsString;
@@ -70,11 +71,11 @@ public:
 
   NS_IMETHOD CreateRootNameSpace(nsINameSpace*& aRootNameSpace) = 0;
 
-  NS_IMETHOD RegisterNameSpace(const nsString& aURI, 
+  NS_IMETHOD RegisterNameSpace(const nsAReadableString& aURI, 
 			                         PRInt32& aNameSpaceID) = 0;
 
-  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID, nsString& aURI) = 0;
-  NS_IMETHOD GetNameSpaceID(const nsString& aURI, PRInt32& aNameSpaceID) = 0;
+  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID, nsAWritableString& aURI) = 0;
+  NS_IMETHOD GetNameSpaceID(const nsAReadableString& aURI, PRInt32& aNameSpaceID) = 0;
 };
 
 extern NS_LAYOUT nsresult

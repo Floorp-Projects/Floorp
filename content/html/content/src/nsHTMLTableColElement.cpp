@@ -58,18 +58,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLTableColElement
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetCh(nsString& aCh);
-  NS_IMETHOD SetCh(const nsString& aCh);
-  NS_IMETHOD GetChOff(nsString& aChOff);
-  NS_IMETHOD SetChOff(const nsString& aChOff);
-  NS_IMETHOD GetSpan(PRInt32* aSpan);
-  NS_IMETHOD SetSpan(PRInt32 aSpan);
-  NS_IMETHOD GetVAlign(nsString& aVAlign);
-  NS_IMETHOD SetVAlign(const nsString& aVAlign);
-  NS_IMETHOD GetWidth(nsString& aWidth);
-  NS_IMETHOD SetWidth(const nsString& aWidth);
+  NS_DECL_IDOMHTMLTABLECOLELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -156,7 +145,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
-                                  const nsString& aValue,
+                                  const nsAReadableString& aValue,
                                   nsHTMLValue& aResult)
 {
   /* ignore these attributes, stored simply as strings
@@ -198,7 +187,7 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
                                   const nsHTMLValue& aValue,
-                                  nsString& aResult) const
+                                  nsAWritableString& aResult) const
 {
   /* ignore these attributes, stored already as strings
      ch

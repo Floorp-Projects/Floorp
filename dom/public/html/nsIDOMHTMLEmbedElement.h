@@ -38,55 +38,55 @@ class nsIDOMHTMLEmbedElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLEMBEDELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetAlign(nsString& aAlign)=0;
-  NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign)=0;
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign)=0;
 
-  NS_IMETHOD    GetHeight(nsString& aHeight)=0;
-  NS_IMETHOD    SetHeight(const nsString& aHeight)=0;
+  NS_IMETHOD    GetHeight(nsAWritableString& aHeight)=0;
+  NS_IMETHOD    SetHeight(const nsAReadableString& aHeight)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
-  NS_IMETHOD    GetSrc(nsString& aSrc)=0;
-  NS_IMETHOD    SetSrc(const nsString& aSrc)=0;
+  NS_IMETHOD    GetSrc(nsAWritableString& aSrc)=0;
+  NS_IMETHOD    SetSrc(const nsAReadableString& aSrc)=0;
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
+  NS_IMETHOD    SetType(const nsAReadableString& aType)=0;
 
-  NS_IMETHOD    GetWidth(nsString& aWidth)=0;
-  NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth)=0;
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLEMBEDELEMENT   \
-  NS_IMETHOD    GetAlign(nsString& aAlign);  \
-  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
-  NS_IMETHOD    GetHeight(nsString& aHeight);  \
-  NS_IMETHOD    SetHeight(const nsString& aHeight);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
-  NS_IMETHOD    GetSrc(nsString& aSrc);  \
-  NS_IMETHOD    SetSrc(const nsString& aSrc);  \
-  NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
-  NS_IMETHOD    GetWidth(nsString& aWidth);  \
-  NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign);  \
+  NS_IMETHOD    GetHeight(nsAWritableString& aHeight);  \
+  NS_IMETHOD    SetHeight(const nsAReadableString& aHeight);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
+  NS_IMETHOD    GetSrc(nsAWritableString& aSrc);  \
+  NS_IMETHOD    SetSrc(const nsAReadableString& aSrc);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
+  NS_IMETHOD    SetType(const nsAReadableString& aType);  \
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth);  \
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLEMBEDELEMENT(_to)  \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD    GetHeight(nsString& aHeight) { return _to GetHeight(aHeight); } \
-  NS_IMETHOD    SetHeight(const nsString& aHeight) { return _to SetHeight(aHeight); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
-  NS_IMETHOD    GetSrc(nsString& aSrc) { return _to GetSrc(aSrc); } \
-  NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to SetSrc(aSrc); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetHeight(nsAWritableString& aHeight) { return _to GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(const nsAReadableString& aHeight) { return _to SetHeight(aHeight); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetSrc(nsAWritableString& aSrc) { return _to GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsAReadableString& aSrc) { return _to SetSrc(aSrc); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsAReadableString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth) { return _to SetWidth(aWidth); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLEmbedElementClass(nsIScriptContext *aContext, void **aPrototype);

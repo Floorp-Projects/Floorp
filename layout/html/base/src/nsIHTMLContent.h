@@ -64,10 +64,10 @@ public:
 
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsString& aResult) const = 0;
+                               nsAWritableString& aResult) const = 0;
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsString& aValue,
+                               const nsAReadableString& aValue,
                                nsHTMLValue& aResult) = 0;
 
   /**
@@ -84,7 +84,7 @@ public:
    * but certain content carries a local base for backward
    * compatibility.
    */
-  NS_IMETHOD GetBaseTarget(nsString& aBaseTarget) const = 0;
+  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const = 0;
 
   /**
    * Translate this piece of content to html. Note that this only
@@ -94,7 +94,7 @@ public:
    */
   // XXX add in output character set information so that we know how
   // to encode non 7 bit characters
-  NS_IMETHOD ToHTMLString(nsString& aResult) const = 0;
+  NS_IMETHOD ToHTMLString(nsAWritableString& aResult) const = 0;
 
   NS_IMETHOD ToHTML(FILE* out) const = 0;
 };

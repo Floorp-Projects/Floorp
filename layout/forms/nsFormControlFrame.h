@@ -209,9 +209,9 @@ public:
                             nsSize& aSize);
 
     // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
 
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   // Resize Reflow Optimiaztion Methods
   static void SetupCachedSizes(nsSize& aCacheSize,
                                nsSize& aCachedMaxElementSize,

@@ -954,6 +954,9 @@ extern "C" NS_DOM nsresult NS_InitKeyEventClass(nsIScriptContext *aContext, void
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_QUOTE);
       JS_SetProperty(jscontext, constructor, "DOM_VK_QUOTE", &vp);
 
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_META);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_META", &vp);
+
     }
 
   }

@@ -1815,7 +1815,7 @@ NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIPresContext* aPresContext, n
   return NS_OK;
 }      
 
-NS_IMETHODIMP nsGfxTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsGfxTextControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.

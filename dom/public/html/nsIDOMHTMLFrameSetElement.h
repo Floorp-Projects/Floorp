@@ -38,27 +38,27 @@ class nsIDOMHTMLFrameSetElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLFRAMESETELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetCols(nsString& aCols)=0;
-  NS_IMETHOD    SetCols(const nsString& aCols)=0;
+  NS_IMETHOD    GetCols(nsAWritableString& aCols)=0;
+  NS_IMETHOD    SetCols(const nsAReadableString& aCols)=0;
 
-  NS_IMETHOD    GetRows(nsString& aRows)=0;
-  NS_IMETHOD    SetRows(const nsString& aRows)=0;
+  NS_IMETHOD    GetRows(nsAWritableString& aRows)=0;
+  NS_IMETHOD    SetRows(const nsAReadableString& aRows)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLFRAMESETELEMENT   \
-  NS_IMETHOD    GetCols(nsString& aCols);  \
-  NS_IMETHOD    SetCols(const nsString& aCols);  \
-  NS_IMETHOD    GetRows(nsString& aRows);  \
-  NS_IMETHOD    SetRows(const nsString& aRows);  \
+  NS_IMETHOD    GetCols(nsAWritableString& aCols);  \
+  NS_IMETHOD    SetCols(const nsAReadableString& aCols);  \
+  NS_IMETHOD    GetRows(nsAWritableString& aRows);  \
+  NS_IMETHOD    SetRows(const nsAReadableString& aRows);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLFRAMESETELEMENT(_to)  \
-  NS_IMETHOD    GetCols(nsString& aCols) { return _to GetCols(aCols); } \
-  NS_IMETHOD    SetCols(const nsString& aCols) { return _to SetCols(aCols); } \
-  NS_IMETHOD    GetRows(nsString& aRows) { return _to GetRows(aRows); } \
-  NS_IMETHOD    SetRows(const nsString& aRows) { return _to SetRows(aRows); } \
+  NS_IMETHOD    GetCols(nsAWritableString& aCols) { return _to GetCols(aCols); } \
+  NS_IMETHOD    SetCols(const nsAReadableString& aCols) { return _to SetCols(aCols); } \
+  NS_IMETHOD    GetRows(nsAWritableString& aRows) { return _to GetRows(aRows); } \
+  NS_IMETHOD    SetRows(const nsAReadableString& aRows) { return _to SetRows(aRows); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLFrameSetElementClass(nsIScriptContext *aContext, void **aPrototype);

@@ -85,16 +85,18 @@ nsROCSSPrimitiveValue::SetScriptObject(void* aScriptObject)
 
 
 NS_IMETHODIMP
-nsROCSSPrimitiveValue::GetCssText(nsString& aCssText)
+nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
 {
+  nsAutoString tmpStr;
+
   aCssText.Truncate();
 
   switch (mType) {
     case CSS_PX :
       {
         PRInt32 px = NSTwipsToIntPixels(mTwips, mT2P);
-        aCssText.AppendInt(px);
-        aCssText.AppendWithConversion("px");
+        tmpStr.AppendInt(px);
+        tmpStr.AppendWithConversion("px");
 
         break;
       }
@@ -103,7 +105,7 @@ nsROCSSPrimitiveValue::GetCssText(nsString& aCssText)
         float val = NS_TWIPS_TO_CENTIMETERS(mTwips);
         char buf[64];
         PR_snprintf(buf, 63, "%.2fcm", val);
-        aCssText.AppendWithConversion("cm");
+        tmpStr.AppendWithConversion("cm");
         break;
       }
     case CSS_MM :
@@ -111,7 +113,7 @@ nsROCSSPrimitiveValue::GetCssText(nsString& aCssText)
         float val = NS_TWIPS_TO_MILLIMETERS(mTwips);
         char buf[64];
         PR_snprintf(buf, 63, "%.2fcm", val);
-        aCssText.AppendWithConversion("mm");
+        tmpStr.AppendWithConversion("mm");
         break;
       }
     case CSS_IN :
@@ -119,7 +121,7 @@ nsROCSSPrimitiveValue::GetCssText(nsString& aCssText)
         float val = NS_TWIPS_TO_INCHES(mTwips);
         char buf[64];
         PR_snprintf(buf, 63, "%.2fcm", val);
-        aCssText.AppendWithConversion("in");
+        tmpStr.AppendWithConversion("in");
         break;
       }
     case CSS_PT :
@@ -127,12 +129,12 @@ nsROCSSPrimitiveValue::GetCssText(nsString& aCssText)
         float val = NSTwipsToFloatPoints(mTwips);
         char buf[64];
         PR_snprintf(buf, 63, "%.2fcm", val);
-        aCssText.AppendWithConversion("pt");
+        tmpStr.AppendWithConversion("pt");
         break;
       }
     case CSS_STRING :
       {
-        aCssText.Append(mString);
+        tmpStr.Append(mString);
         break;
       }
     case CSS_PC :
@@ -158,12 +160,14 @@ nsROCSSPrimitiveValue::GetCssText(nsString& aCssText)
       return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
+  aCssText.Assign(tmpStr);
+
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsROCSSPrimitiveValue::SetCssText(const nsString& aCssText)
+nsROCSSPrimitiveValue::SetCssText(const nsAReadableString& aCssText)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
@@ -253,16 +257,16 @@ nsROCSSPrimitiveValue::GetFloatValue(PRUint16 aUnitType, float* aReturn)
 
 NS_IMETHODIMP
 nsROCSSPrimitiveValue::SetStringValue(PRUint16 aStringType,
-                                      const nsString& aStringValue)
+                                      const nsAReadableString& aStringValue)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 
 NS_IMETHODIMP
-nsROCSSPrimitiveValue::GetStringValue(nsString& aReturn)
+nsROCSSPrimitiveValue::GetStringValue(nsAWritableString& aReturn)
 {
-  aReturn = mString;
+  aReturn.Assign(mString);
   return NS_OK;
 }
 

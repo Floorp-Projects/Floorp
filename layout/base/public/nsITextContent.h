@@ -52,7 +52,7 @@ public:
   /**
    * Make a copy of the text content in aResult.
    */
-  NS_IMETHOD CopyText(nsString& aResult) = 0;
+  NS_IMETHOD CopyText(nsAWritableString& aResult) = 0;
 
   /**
    * Set the text to the given value. If aNotify is PR_TRUE then
@@ -60,6 +60,13 @@ public:
    */
   NS_IMETHOD SetText(const PRUnichar* aBuffer,
                      PRInt32 aLength,
+                     PRBool aNotify) = 0;
+
+  /**
+   * Set the text to the given value. If aNotify is PR_TRUE then
+   * the document is notified of the content change.
+   */
+  NS_IMETHOD SetText(const nsAReadableString& aStr,
                      PRBool aNotify) = 0;
 
   /**

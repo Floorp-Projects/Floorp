@@ -236,7 +236,7 @@ PRUint32 nsScanner::Mark(PRInt32 anIndex){
  * @update  harishd 01/12/99
  * @return  error code 
  */
-PRBool nsScanner::Insert(const nsString& aBuffer) {
+PRBool nsScanner::Insert(const nsAReadableString& aBuffer) {
 
   mBuffer.Insert(aBuffer,mOffset);
   mTotalRead+=aBuffer.Length();
@@ -250,7 +250,7 @@ PRBool nsScanner::Insert(const nsString& aBuffer) {
  * @update  gess4/3/98
  * @return  error code 
  */
-PRBool nsScanner::Append(const nsString& aBuffer) {
+PRBool nsScanner::Append(const nsAReadableString& aBuffer) {
 
   PRUint32 theLen=mBuffer.Length();
 

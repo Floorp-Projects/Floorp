@@ -61,7 +61,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD GetContentType(nsString& aContentType) const;
+  NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager,
@@ -91,17 +91,18 @@ public:
   NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
 
   NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
-  NS_IMETHOD SetBaseURL(const nsString& aURLSpec);
-  NS_IMETHOD GetBaseTarget(nsString& aTarget) const;
-  NS_IMETHOD SetBaseTarget(const nsString& aTarget);
+  NS_IMETHOD SetBaseURL(const nsAReadableString& aURLSpec);
+  NS_IMETHOD GetBaseTarget(nsAWritableString& aTarget) const;
+  NS_IMETHOD SetBaseTarget(const nsAReadableString& aTarget);
 
-  NS_IMETHOD SetLastModified(const nsString& aLastModified);
-  NS_IMETHOD SetReferrer(const nsString& aReferrer);
+  NS_IMETHOD SetLastModified(const nsAReadableString& aLastModified);
+  NS_IMETHOD SetReferrer(const nsAReadableString& aReferrer);
 
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
 
-  NS_IMETHOD SetHeaderData(nsIAtom* aHeaderField, const nsString& aData);
+  NS_IMETHOD SetHeaderData(nsIAtom* aHeaderField,
+                           const nsAReadableString& aData);
 
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer);
@@ -138,7 +139,8 @@ public:
   /**
     * Finds text in content
    */
-  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+  NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase,
+                      PRBool aSearchDown, PRBool &aIsFound);
 
   /*
    * Like nsDocument::IsInSelection except it always includes the body node
@@ -196,7 +198,7 @@ protected:
                             PRBool aInForm);
 
   void DeleteNamedItems();
-  nsIContent *MatchName(nsIContent *aContent, const nsString& aName);
+  nsIContent *MatchName(nsIContent *aContent, const nsAReadableString& aName);
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
@@ -212,7 +214,7 @@ protected:
 
   NS_IMETHOD GetDomainURI(nsIURI **uri);
 
-  nsresult WriteCommon(const nsString& aText,
+  nsresult WriteCommon(const nsAReadableString& aText,
                        PRBool aNewlineTerminate);
   nsresult ScriptWriteCommon(JSContext *cx, 
                              jsval *argv, 

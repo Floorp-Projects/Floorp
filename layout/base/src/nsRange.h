@@ -88,12 +88,12 @@ public:
 
   NS_IMETHOD    Clone(nsIDOMRange** aReturn);
 
-  NS_IMETHOD    ToString(nsString& aReturn);
+  NS_IMETHOD    ToString(nsAWritableString& aReturn);
 
 /*BEGIN nsIDOMNSRange interface implementations*/
-  NS_IMETHOD    CreateContextualFragment(const nsString& aFragment, 
+  NS_IMETHOD    CreateContextualFragment(const nsAReadableString& aFragment, 
                                          nsIDOMDocumentFragment** aReturn);
-  NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn);
+  NS_IMETHOD    IsValidFragment(const nsAReadableString& aFragment, PRBool* aReturn);
 
   NS_IMETHOD    IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset,
                                PRBool* aResult);

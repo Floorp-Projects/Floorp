@@ -55,8 +55,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLHtmlElement
-  NS_IMETHOD GetVersion(nsString& aVersion);
-  NS_IMETHOD SetVersion(const nsString& aVersion);
+  NS_DECL_IDOMHTMLHTMLELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -134,7 +133,7 @@ NS_IMPL_STRING_ATTR(nsHTMLHtmlElement, Version, version)
 
 NS_IMETHODIMP
 nsHTMLHtmlElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsString& aValue,
+                                     const nsAReadableString& aValue,
                                      nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -143,7 +142,7 @@ nsHTMLHtmlElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLHtmlElement::AttributeToString(nsIAtom* aAttribute,
                                      const nsHTMLValue& aValue,
-                                     nsString& aResult) const
+                                     nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

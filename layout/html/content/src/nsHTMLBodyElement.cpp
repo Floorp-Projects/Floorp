@@ -193,18 +193,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLBodyElement
-  NS_IMETHOD GetALink(nsString& aALink);
-  NS_IMETHOD SetALink(const nsString& aALink);
-  NS_IMETHOD GetBackground(nsString& aBackground);
-  NS_IMETHOD SetBackground(const nsString& aBackground);
-  NS_IMETHOD GetBgColor(nsString& aBgColor);
-  NS_IMETHOD SetBgColor(const nsString& aBgColor);
-  NS_IMETHOD GetLink(nsString& aLink);
-  NS_IMETHOD SetLink(const nsString& aLink);
-  NS_IMETHOD GetText(nsString& aText);
-  NS_IMETHOD SetText(const nsString& aText);
-  NS_IMETHOD GetVLink(nsString& aVLink);
-  NS_IMETHOD SetVLink(const nsString& aVLink);
+  NS_DECL_IDOMHTMLBODYELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -756,7 +745,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink)
 
 NS_IMETHODIMP 
-nsHTMLBodyElement::GetBgColor(nsString& aBgColor)
+nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
 {
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
@@ -805,14 +794,14 @@ nsHTMLBodyElement::GetBgColor(nsString& aBgColor)
 }
 
 NS_IMETHODIMP 
-nsHTMLBodyElement::SetBgColor(const nsString& aBgColor)
+nsHTMLBodyElement::SetBgColor(const nsAReadableString& aBgColor)
 {
   return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor, PR_TRUE); 
 }
 
 NS_IMETHODIMP
 nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsString& aValue,
+                                     const nsAReadableString& aValue,
                                      nsHTMLValue& aResult)
 {
   if ((aAttribute == nsHTMLAtoms::bgcolor) ||
@@ -836,7 +825,7 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLBodyElement::AttributeToString(nsIAtom* aAttribute,
                                      const nsHTMLValue& aValue,
-                                     nsString& aResult) const
+                                     nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

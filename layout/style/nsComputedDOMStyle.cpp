@@ -50,7 +50,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIComputedDOMStyle
-  NS_IMETHOD Init(nsIDOMElement *aElement, const nsString& aPseudoElt,
+  NS_IMETHOD Init(nsIDOMElement *aElement, const nsAReadableString& aPseudoElt,
                   nsIPresShell *aPresShell);
 
   // nsIDOMCSSStyleDeclaration
@@ -155,7 +155,7 @@ nsComputedDOMStyle::SetScriptObject(void* aScriptObject)
 
 
 NS_IMETHODIMP
-nsComputedDOMStyle::Init(nsIDOMElement *aElement, const nsString& aPseudoElt,
+nsComputedDOMStyle::Init(nsIDOMElement *aElement, const nsAReadableString& aPseudoElt,
                          nsIPresShell *aPresShell)
 {
   NS_ENSURE_ARG_POINTER(aElement);
@@ -181,7 +181,7 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement, const nsString& aPseudoElt,
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCssText(nsString& aCssText)
+nsComputedDOMStyle::GetCssText(nsAWritableString& aCssText)
 {
   aCssText.Truncate();
   return NS_OK;
@@ -189,7 +189,7 @@ nsComputedDOMStyle::GetCssText(nsString& aCssText)
 
 
 NS_IMETHODIMP
-nsComputedDOMStyle::SetCssText(const nsString& aCssText)
+nsComputedDOMStyle::SetCssText(const nsAReadableString& aCssText)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
@@ -215,8 +215,8 @@ nsComputedDOMStyle::GetParentRule(nsIDOMCSSRule** aParentRule)
 
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPropertyValue(const nsString& aPropertyName,
-                                     nsString& aReturn)
+nsComputedDOMStyle::GetPropertyValue(const nsAReadableString& aPropertyName,
+                                     nsAWritableString& aReturn)
 {
   nsCOMPtr<nsIDOMCSSValue> val;
 
@@ -234,7 +234,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsString& aPropertyName,
 
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPropertyCSSValue(const nsString& aPropertyName,
+nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
                                         nsIDOMCSSValue** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -246,6 +246,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsString& aPropertyName,
   nsCOMPtr<nsIDOMCSSPrimitiveValue> val;
   nsresult rv = NS_OK;
 
+  // XXX FIX THIS!!!
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
 
   switch (prop) {
@@ -278,16 +279,16 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsString& aPropertyName,
 
 
 NS_IMETHODIMP
-nsComputedDOMStyle::RemoveProperty(const nsString& aPropertyName,
-                                   nsString& aReturn)
+nsComputedDOMStyle::RemoveProperty(const nsAReadableString& aPropertyName,
+                                   nsAWritableString& aReturn)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPropertyPriority(const nsString& aPropertyName,
-                                        nsString& aReturn)
+nsComputedDOMStyle::GetPropertyPriority(const nsAReadableString& aPropertyName,
+                                        nsAWritableString& aReturn)
 {
   aReturn.Truncate();
   return NS_OK;
@@ -295,16 +296,16 @@ nsComputedDOMStyle::GetPropertyPriority(const nsString& aPropertyName,
 
 
 NS_IMETHODIMP
-nsComputedDOMStyle::SetProperty(const nsString& aPropertyName,
-                                const nsString& aValue,
-                                const nsString& aPriority)
+nsComputedDOMStyle::SetProperty(const nsAReadableString& aPropertyName,
+                                const nsAReadableString& aValue,
+                                const nsAReadableString& aPriority)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 
 NS_IMETHODIMP
-nsComputedDOMStyle::Item(PRUint32 aIndex, nsString& aReturn)
+nsComputedDOMStyle::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 {
   aReturn.Truncate();
   return NS_OK;
@@ -316,43 +317,43 @@ nsComputedDOMStyle::Item(PRUint32 aIndex, nsString& aReturn)
 #if 0
 
 NS_IMETHODIMP 
-nsComputedDOMStyle::GetAzimuth(nsString& aAzimuth)
+nsComputedDOMStyle::GetAzimuth(nsAWritableString& aAzimuth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBackground(nsString& aBackground)
+nsComputedDOMStyle::GetBackground(nsAWritableString& aBackground)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBackgroundAttachment(nsString& aBackgroundAttachment)
+nsComputedDOMStyle::GetBackgroundAttachment(nsAWritableString& aBackgroundAttachment)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBackgroundColor(nsString& aBackgroundColor)
+nsComputedDOMStyle::GetBackgroundColor(nsAWritableString& aBackgroundColor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBackgroundImage(nsString& aBackgroundImage)
+nsComputedDOMStyle::GetBackgroundImage(nsAWritableString& aBackgroundImage)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBackgroundPosition(nsString& aBackgroundPosition)
+nsComputedDOMStyle::GetBackgroundPosition(nsAWritableString& aBackgroundPosition)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBackgroundRepeat(nsString& aBackgroundRepeat)
+nsComputedDOMStyle::GetBackgroundRepeat(nsAWritableString& aBackgroundRepeat)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -400,133 +401,133 @@ nsComputedDOMStyle::GetBehavior(nsIFrame *aFrame,
 #if 0
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorder(nsString& aBorder)
+nsComputedDOMStyle::GetBorder(nsAWritableString& aBorder)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderCollapse(nsString& aBorderCollapse)
+nsComputedDOMStyle::GetBorderCollapse(nsAWritableString& aBorderCollapse)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderColor(nsString& aBorderColor)
+nsComputedDOMStyle::GetBorderColor(nsAWritableString& aBorderColor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderSpacing(nsString& aBorderSpacing)
+nsComputedDOMStyle::GetBorderSpacing(nsAWritableString& aBorderSpacing)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderStyle(nsString& aBorderStyle)
+nsComputedDOMStyle::GetBorderStyle(nsAWritableString& aBorderStyle)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderTop(nsString& aBorderTop)
+nsComputedDOMStyle::GetBorderTop(nsAWritableString& aBorderTop)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderRight(nsString& aBorderRight)
+nsComputedDOMStyle::GetBorderRight(nsAWritableString& aBorderRight)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderBottom(nsString& aBorderBottom)
+nsComputedDOMStyle::GetBorderBottom(nsAWritableString& aBorderBottom)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderLeft(nsString& aBorderLeft)
+nsComputedDOMStyle::GetBorderLeft(nsAWritableString& aBorderLeft)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderTopColor(nsString& aBorderTopColor)
+nsComputedDOMStyle::GetBorderTopColor(nsAWritableString& aBorderTopColor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderRightColor(nsString& aBorderRightColor)
+nsComputedDOMStyle::GetBorderRightColor(nsAWritableString& aBorderRightColor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderBottomColor(nsString& aBorderBottomColor)
+nsComputedDOMStyle::GetBorderBottomColor(nsAWritableString& aBorderBottomColor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderLeftColor(nsString& aBorderLeftColor)
+nsComputedDOMStyle::GetBorderLeftColor(nsAWritableString& aBorderLeftColor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderTopStyle(nsString& aBorderTopStyle)
+nsComputedDOMStyle::GetBorderTopStyle(nsAWritableString& aBorderTopStyle)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderRightStyle(nsString& aBorderRightStyle)
+nsComputedDOMStyle::GetBorderRightStyle(nsAWritableString& aBorderRightStyle)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderBottomStyle(nsString& aBorderBottomStyle)
+nsComputedDOMStyle::GetBorderBottomStyle(nsAWritableString& aBorderBottomStyle)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderLeftStyle(nsString& aBorderLeftStyle)
+nsComputedDOMStyle::GetBorderLeftStyle(nsAWritableString& aBorderLeftStyle)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderTopWidth(nsString& aBorderTopWidth)
+nsComputedDOMStyle::GetBorderTopWidth(nsAWritableString& aBorderTopWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderRightWidth(nsString& aBorderRightWidth)
+nsComputedDOMStyle::GetBorderRightWidth(nsAWritableString& aBorderRightWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderBottomWidth(nsString& aBorderBottomWidth)
+nsComputedDOMStyle::GetBorderBottomWidth(nsAWritableString& aBorderBottomWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderLeftWidth(nsString& aBorderLeftWidth)
+nsComputedDOMStyle::GetBorderLeftWidth(nsAWritableString& aBorderLeftWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetBorderWidth(nsString& aBorderWidth)
+nsComputedDOMStyle::GetBorderWidth(nsAWritableString& aBorderWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -552,79 +553,79 @@ nsComputedDOMStyle::GetBottom(nsIFrame *aFrame,
 
 #if 0
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCaptionSide(nsString& aCaptionSide)
+nsComputedDOMStyle::GetCaptionSide(nsAWritableString& aCaptionSide)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetClear(nsString& aClear)
+nsComputedDOMStyle::GetClear(nsAWritableString& aClear)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetClip(nsString& aClip)
+nsComputedDOMStyle::GetClip(nsAWritableString& aClip)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetColor(nsString& aColor)
+nsComputedDOMStyle::GetColor(nsAWritableString& aColor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetContent(nsString& aContent)
+nsComputedDOMStyle::GetContent(nsAWritableString& aContent)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCounterIncrement(nsString& aCounterIncrement)
+nsComputedDOMStyle::GetCounterIncrement(nsAWritableString& aCounterIncrement)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCounterReset(nsString& aCounterReset)
+nsComputedDOMStyle::GetCounterReset(nsAWritableString& aCounterReset)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCssFloat(nsString& aCssFloat)
+nsComputedDOMStyle::GetCssFloat(nsAWritableString& aCssFloat)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCue(nsString& aCue)
+nsComputedDOMStyle::GetCue(nsAWritableString& aCue)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCueAfter(nsString& aCueAfter)
+nsComputedDOMStyle::GetCueAfter(nsAWritableString& aCueAfter)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCueBefore(nsString& aCueBefore)
+nsComputedDOMStyle::GetCueBefore(nsAWritableString& aCueBefore)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetCursor(nsString& aCursor)
+nsComputedDOMStyle::GetCursor(nsAWritableString& aCursor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetDirection(nsString& aDirection)
+nsComputedDOMStyle::GetDirection(nsAWritableString& aDirection)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -700,61 +701,61 @@ nsComputedDOMStyle::GetDisplay(nsIFrame *aFrame,
 
 #if 0
 NS_IMETHODIMP
-nsComputedDOMStyle::GetElevation(nsString& aElevation)
+nsComputedDOMStyle::GetElevation(nsAWritableString& aElevation)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetEmptyCells(nsString& aEmptyCells)
+nsComputedDOMStyle::GetEmptyCells(nsAWritableString& aEmptyCells)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFont(nsString& aFont)
+nsComputedDOMStyle::GetFont(nsAWritableString& aFont)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFontFamily(nsString& aFontFamily)
+nsComputedDOMStyle::GetFontFamily(nsAWritableString& aFontFamily)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFontSize(nsString& aFontSize)
+nsComputedDOMStyle::GetFontSize(nsAWritableString& aFontSize)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFontSizeAdjust(nsString& aFontSizeAdjust)
+nsComputedDOMStyle::GetFontSizeAdjust(nsAWritableString& aFontSizeAdjust)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFontStretch(nsString& aFontStretch)
+nsComputedDOMStyle::GetFontStretch(nsAWritableString& aFontStretch)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFontStyle(nsString& aFontStyle)
+nsComputedDOMStyle::GetFontStyle(nsAWritableString& aFontStyle)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFontVariant(nsString& aFontVariant)
+nsComputedDOMStyle::GetFontVariant(nsAWritableString& aFontVariant)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetFontWeight(nsString& aFontWeight)
+nsComputedDOMStyle::GetFontWeight(nsAWritableString& aFontWeight)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -799,43 +800,43 @@ nsComputedDOMStyle::GetLeft(nsIFrame *aFrame,
 
 #if 0
 NS_IMETHODIMP
-nsComputedDOMStyle::GetLetterSpacing(nsString& aLetterSpacing)
+nsComputedDOMStyle::GetLetterSpacing(nsAWritableString& aLetterSpacing)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetLineHeight(nsString& aLineHeight)
+nsComputedDOMStyle::GetLineHeight(nsAWritableString& aLineHeight)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetListStyle(nsString& aListStyle)
+nsComputedDOMStyle::GetListStyle(nsAWritableString& aListStyle)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetListStyleImage(nsString& aListStyleImage)
+nsComputedDOMStyle::GetListStyleImage(nsAWritableString& aListStyleImage)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetListStylePosition(nsString& aListStylePosition)
+nsComputedDOMStyle::GetListStylePosition(nsAWritableString& aListStylePosition)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetListStyleType(nsString& aListStyleType)
+nsComputedDOMStyle::GetListStyleType(nsAWritableString& aListStyleType)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMargin(nsString& aMargin)
+nsComputedDOMStyle::GetMargin(nsAWritableString& aMargin)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -885,181 +886,181 @@ nsComputedDOMStyle::GetMarginLeft(nsIFrame *aFrame,
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMarkerOffset(nsString& aMarkerOffset)
+nsComputedDOMStyle::GetMarkerOffset(nsAWritableString& aMarkerOffset)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMarks(nsString& aMarks)
+nsComputedDOMStyle::GetMarks(nsAWritableString& aMarks)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMaxHeight(nsString& aMaxHeight)
+nsComputedDOMStyle::GetMaxHeight(nsAWritableString& aMaxHeight)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMaxWidth(nsString& aMaxWidth)
+nsComputedDOMStyle::GetMaxWidth(nsAWritableString& aMaxWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMinHeight(nsString& aMinHeight)
+nsComputedDOMStyle::GetMinHeight(nsAWritableString& aMinHeight)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetMinWidth(nsString& aMinWidth)
+nsComputedDOMStyle::GetMinWidth(nsAWritableString& aMinWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetOrphans(nsString& aOrphans)
+nsComputedDOMStyle::GetOrphans(nsAWritableString& aOrphans)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetOutline(nsString& aOutline)
+nsComputedDOMStyle::GetOutline(nsAWritableString& aOutline)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetOutlineColor(nsString& aOutlineColor)
+nsComputedDOMStyle::GetOutlineColor(nsAWritableString& aOutlineColor)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetOutlineStyle(nsString& aOutlineStyle)
+nsComputedDOMStyle::GetOutlineStyle(nsAWritableString& aOutlineStyle)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetOutlineWidth(nsString& aOutlineWidth)
+nsComputedDOMStyle::GetOutlineWidth(nsAWritableString& aOutlineWidth)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetOverflow(nsString& aOverflow)
+nsComputedDOMStyle::GetOverflow(nsAWritableString& aOverflow)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPadding(nsString& aPadding)
+nsComputedDOMStyle::GetPadding(nsAWritableString& aPadding)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPaddingTop(nsString& aPaddingTop)
+nsComputedDOMStyle::GetPaddingTop(nsAWritableString& aPaddingTop)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPaddingRight(nsString& aPaddingRight)
+nsComputedDOMStyle::GetPaddingRight(nsAWritableString& aPaddingRight)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPaddingBottom(nsString& aPaddingBottom)
+nsComputedDOMStyle::GetPaddingBottom(nsAWritableString& aPaddingBottom)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPaddingLeft(nsString& aPaddingLeft)
+nsComputedDOMStyle::GetPaddingLeft(nsAWritableString& aPaddingLeft)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPage(nsString& aPage)
+nsComputedDOMStyle::GetPage(nsAWritableString& aPage)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPageBreakAfter(nsString& aPageBreakAfter)
+nsComputedDOMStyle::GetPageBreakAfter(nsAWritableString& aPageBreakAfter)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPageBreakBefore(nsString& aPageBreakBefore)
+nsComputedDOMStyle::GetPageBreakBefore(nsAWritableString& aPageBreakBefore)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPageBreakInside(nsString& aPageBreakInside)
+nsComputedDOMStyle::GetPageBreakInside(nsAWritableString& aPageBreakInside)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPause(nsString& aPause)
+nsComputedDOMStyle::GetPause(nsAWritableString& aPause)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPauseAfter(nsString& aPauseAfter)
+nsComputedDOMStyle::GetPauseAfter(nsAWritableString& aPauseAfter)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPauseBefore(nsString& aPauseBefore)
+nsComputedDOMStyle::GetPauseBefore(nsAWritableString& aPauseBefore)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPitch(nsString& aPitch)
+nsComputedDOMStyle::GetPitch(nsAWritableString& aPitch)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPitchRange(nsString& aPitchRange)
+nsComputedDOMStyle::GetPitchRange(nsAWritableString& aPitchRange)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPlayDuring(nsString& aPlayDuring)
+nsComputedDOMStyle::GetPlayDuring(nsAWritableString& aPlayDuring)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetPosition(nsString& aPosition)
+nsComputedDOMStyle::GetPosition(nsAWritableString& aPosition)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetQuotes(nsString& aQuotes)
+nsComputedDOMStyle::GetQuotes(nsAWritableString& aQuotes)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetRichness(nsString& aRichness)
+nsComputedDOMStyle::GetRichness(nsAWritableString& aRichness)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -1085,79 +1086,79 @@ nsComputedDOMStyle::GetRight(nsIFrame *aFrame,
 
 #if 0
 NS_IMETHODIMP
-nsComputedDOMStyle::GetSize(nsString& aSize)
+nsComputedDOMStyle::GetSize(nsAWritableString& aSize)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetSpeak(nsString& aSpeak)
+nsComputedDOMStyle::GetSpeak(nsAWritableString& aSpeak)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetSpeakHeader(nsString& aSpeakHeader)
+nsComputedDOMStyle::GetSpeakHeader(nsAWritableString& aSpeakHeader)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetSpeakNumeral(nsString& aSpeakNumeral)
+nsComputedDOMStyle::GetSpeakNumeral(nsAWritableString& aSpeakNumeral)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetSpeakPunctuation(nsString& aSpeakPunctuation)
+nsComputedDOMStyle::GetSpeakPunctuation(nsAWritableString& aSpeakPunctuation)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetSpeechRate(nsString& aSpeechRate)
+nsComputedDOMStyle::GetSpeechRate(nsAWritableString& aSpeechRate)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetStress(nsString& aStress)
+nsComputedDOMStyle::GetStress(nsAWritableString& aStress)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetTableLayout(nsString& aTableLayout)
+nsComputedDOMStyle::GetTableLayout(nsAWritableString& aTableLayout)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetTextAlign(nsString& aTextAlign)
+nsComputedDOMStyle::GetTextAlign(nsAWritableString& aTextAlign)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetTextDecoration(nsString& aTextDecoration)
+nsComputedDOMStyle::GetTextDecoration(nsAWritableString& aTextDecoration)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetTextIndent(nsString& aTextIndent)
+nsComputedDOMStyle::GetTextIndent(nsAWritableString& aTextIndent)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetTextShadow(nsString& aTextShadow)
+nsComputedDOMStyle::GetTextShadow(nsAWritableString& aTextShadow)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetTextTransform(nsString& aTextTransform)
+nsComputedDOMStyle::GetTextTransform(nsAWritableString& aTextTransform)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -1183,43 +1184,43 @@ nsComputedDOMStyle::GetTop(nsIFrame *aFrame,
 
 #if 0
 NS_IMETHODIMP
-nsComputedDOMStyle::GetUnicodeBidi(nsString& aUnicodeBidi)
+nsComputedDOMStyle::GetUnicodeBidi(nsAWritableString& aUnicodeBidi)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetVerticalAlign(nsString& aVerticalAlign)
+nsComputedDOMStyle::GetVerticalAlign(nsAWritableString& aVerticalAlign)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetVisibility(nsString& aVisibility)
+nsComputedDOMStyle::GetVisibility(nsAWritableString& aVisibility)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetVoiceFamily(nsString& aVoiceFamily)
+nsComputedDOMStyle::GetVoiceFamily(nsAWritableString& aVoiceFamily)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetVolume(nsString& aVolume)
+nsComputedDOMStyle::GetVolume(nsAWritableString& aVolume)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetWhiteSpace(nsString& aWhiteSpace)
+nsComputedDOMStyle::GetWhiteSpace(nsAWritableString& aWhiteSpace)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetWidows(nsString& aWidows)
+nsComputedDOMStyle::GetWidows(nsAWritableString& aWidows)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
@@ -1322,19 +1323,19 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
 #if 0
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetWordSpacing(nsString& aWordSpacing)
+nsComputedDOMStyle::GetWordSpacing(nsAWritableString& aWordSpacing)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetZIndex(nsString& aZIndex)
+nsComputedDOMStyle::GetZIndex(nsAWritableString& aZIndex)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 NS_IMETHODIMP
-nsComputedDOMStyle::GetOpacity(nsString& aOpacity)
+nsComputedDOMStyle::GetOpacity(nsAWritableString& aOpacity)
 {
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }

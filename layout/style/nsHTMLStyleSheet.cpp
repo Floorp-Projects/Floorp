@@ -631,7 +631,8 @@ public:
   // Attribute management methods, aAttributes is an in/out param
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
                               nsIHTMLAttributes*& aAttributes);
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, 
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute,
+                             const nsAReadableString& aValue, 
                              PRBool aMappedToStyle,
                              nsIHTMLContent* aContent, 
                              nsIHTMLAttributes*& aAttributes);
@@ -1232,7 +1233,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributesFor(nsIHTMLContent* aContent, nsI
 }
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
-                                                  const nsString& aValue,
+                                                  const nsAReadableString& aValue,
                                                   PRBool aMappedToStyle,
                                                   nsIHTMLContent* aContent, 
                                                   nsIHTMLAttributes*& aAttributes)

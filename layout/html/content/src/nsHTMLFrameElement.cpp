@@ -61,24 +61,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLFrameElement
-  NS_IMETHOD GetFrameBorder(nsString& aFrameBorder);
-  NS_IMETHOD SetFrameBorder(const nsString& aFrameBorder);
-  NS_IMETHOD GetLongDesc(nsString& aLongDesc);
-  NS_IMETHOD SetLongDesc(const nsString& aLongDesc);
-  NS_IMETHOD GetMarginHeight(nsString& aMarginHeight);
-  NS_IMETHOD SetMarginHeight(const nsString& aMarginHeight);
-  NS_IMETHOD GetMarginWidth(nsString& aMarginWidth);
-  NS_IMETHOD SetMarginWidth(const nsString& aMarginWidth);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetNoResize(PRBool* aNoResize);
-  NS_IMETHOD SetNoResize(PRBool aNoResize);
-  NS_IMETHOD GetScrolling(nsString& aScrolling);
-  NS_IMETHOD SetScrolling(const nsString& aScrolling);
-  NS_IMETHOD GetSrc(nsString& aSrc);
-  NS_IMETHOD SetSrc(const nsString& aSrc);
-  NS_IMETHOD GetContentDocument(nsIDOMDocument** aContentDocument);
-  NS_IMETHOD SetContentDocument(nsIDOMDocument* aContentDocument);
+  NS_DECL_IDOMHTMLFRAMEELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -206,7 +189,7 @@ nsHTMLFrameElement::SetContentDocument(nsIDOMDocument* aContentDocument)
 
 NS_IMETHODIMP
 nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
@@ -247,7 +230,7 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString& aResult) const
+                                      nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::frameborder) {
     nsGenericHTMLElement::FrameborderValueToString(PR_FALSE, aValue, aResult);

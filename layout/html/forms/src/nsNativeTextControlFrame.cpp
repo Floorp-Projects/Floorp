@@ -581,7 +581,7 @@ void nsNativeTextControlFrame::SetTextControlFrameState(const nsString& aValue)
 
 NS_IMETHODIMP nsNativeTextControlFrame::SetProperty(nsIPresContext* aPresContext,
                                                     nsIAtom* aName,
-                                                    const nsString& aValue)
+                                                    const nsAReadableString& aValue)
 {
   nsresult rv = NS_OK;
   if (nsHTMLAtoms::value == aName) {
@@ -609,7 +609,7 @@ NS_IMETHODIMP nsNativeTextControlFrame::SetProperty(nsIPresContext* aPresContext
   return rv;
 }      
 
-NS_IMETHODIMP nsNativeTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsNativeTextControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   // Return the value of the property from the widget it is not null.
   // If widget is null, assume the widget is GFX-rendered and return a member variable instead.

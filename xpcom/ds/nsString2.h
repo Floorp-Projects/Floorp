@@ -104,7 +104,7 @@ public:
   nsString(const nsString& aString);   
 
 #ifdef NEW_STRING_APIS
-  nsString(const nsAReadableString&);
+  explicit nsString(const nsAReadableString&);
 
   nsString(const PRUnichar*);
   nsString(const PRUnichar*, PRInt32);
@@ -924,6 +924,7 @@ public:
     virtual ~nsAutoString();
     nsAutoString();
     nsAutoString(const nsAutoString& aString);
+    nsAutoString(const nsAReadableString& aString);
     nsAutoString(const nsString& aString);
     nsAutoString(const PRUnichar* aString);
     nsAutoString(const PRUnichar* aString,PRInt32 aLength);

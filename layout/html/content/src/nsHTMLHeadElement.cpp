@@ -54,8 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLHeadElement
-  NS_IMETHOD GetProfile(nsString& aProfile);
-  NS_IMETHOD SetProfile(const nsString& aProfile);
+  NS_DECL_IDOMHTMLHEADELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -128,7 +127,7 @@ NS_IMPL_STRING_ATTR(nsHTMLHeadElement, Profile, profile)
 
 NS_IMETHODIMP
 nsHTMLHeadElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsString& aValue,
+                                     const nsAReadableString& aValue,
                                      nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -137,7 +136,7 @@ nsHTMLHeadElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLHeadElement::AttributeToString(nsIAtom* aAttribute,
                                      const nsHTMLValue& aValue,
-                                     nsString& aResult) const
+                                     nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

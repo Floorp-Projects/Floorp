@@ -453,7 +453,7 @@ nsGfxCheckboxControlFrame::SetCheckboxState (nsIPresContext* aPresContext,
 }
 
 //------------------------------------------------------------
-void nsGfxCheckboxControlFrame::GetCheckboxControlFrameState(nsString& aValue)
+void nsGfxCheckboxControlFrame::GetCheckboxControlFrameState(nsAWritableString& aValue)
 {
   CheckStateToString(GetCheckboxState(), aValue);
 }       
@@ -461,7 +461,7 @@ void nsGfxCheckboxControlFrame::GetCheckboxControlFrameState(nsString& aValue)
 
 //------------------------------------------------------------
 void nsGfxCheckboxControlFrame::SetCheckboxControlFrameState(nsIPresContext* aPresContext,
-                                                          const nsString& aValue)
+                                                          const nsAReadableString& aValue)
 {
   CheckState state = StringToCheckState(aValue);
   SetCheckboxState(aPresContext, state);
@@ -470,7 +470,7 @@ void nsGfxCheckboxControlFrame::SetCheckboxControlFrameState(nsIPresContext* aPr
 //------------------------------------------------------------
 NS_IMETHODIMP nsGfxCheckboxControlFrame::SetProperty(nsIPresContext* aPresContext,
                                                   nsIAtom* aName,
-                                                  const nsString& aValue)
+                                                  const nsAReadableString& aValue)
 {
   if (nsHTMLAtoms::checked == aName)
     SetCheckboxControlFrameState(aPresContext, aValue);
@@ -482,7 +482,7 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::SetProperty(nsIPresContext* aPresContex
 
 
 //------------------------------------------------------------
-NS_IMETHODIMP nsGfxCheckboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsGfxCheckboxControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   if (nsHTMLAtoms::checked == aName)
     GetCheckboxControlFrameState(aValue);
@@ -548,19 +548,19 @@ nsGfxCheckboxControlFrame::Reset(nsIPresContext* aPresContext)
 // Converts from a CheckState to a string
 //
 void
-nsGfxCheckboxControlFrame::CheckStateToString ( CheckState inState, nsString& outStateAsString )
+nsGfxCheckboxControlFrame::CheckStateToString ( CheckState inState, nsAWritableString& outStateAsString )
 {
   switch ( inState ) {
     case eOn:
-      outStateAsString.AssignWithConversion(NS_STRING_TRUE);
+      outStateAsString.Assign(NS_STRING_TRUE);
 	  break;
 
     case eOff:
-      outStateAsString.AssignWithConversion(NS_STRING_FALSE);
+      outStateAsString.Assign(NS_STRING_FALSE);
       break;
  
     case eMixed:
-      outStateAsString.AssignWithConversion("2");
+      outStateAsString.Assign(NS_LITERAL_STRING("2"));
       break;
   }
 } // CheckStateToString
@@ -573,11 +573,11 @@ nsGfxCheckboxControlFrame::CheckStateToString ( CheckState inState, nsString& ou
 // Converts from a string to a CheckState enum
 //
 nsGfxCheckboxControlFrame::CheckState 
-nsGfxCheckboxControlFrame::StringToCheckState ( const nsString & aStateAsString )
+nsGfxCheckboxControlFrame::StringToCheckState ( const nsAReadableString & aStateAsString )
 {
-  if ( aStateAsString.EqualsWithConversion(NS_STRING_TRUE) )
+  if ( aStateAsString.Equals(NS_STRING_TRUE) )
     return eOn;
-  else if ( aStateAsString.EqualsWithConversion(NS_STRING_FALSE) )
+  else if ( aStateAsString.Equals(NS_STRING_FALSE) )
     return eOff;
 
   // not true and not false means mixed

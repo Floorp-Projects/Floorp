@@ -41,24 +41,24 @@ public:
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
 
-  NS_IMETHOD    GetLabel(nsString& aLabel)=0;
-  NS_IMETHOD    SetLabel(const nsString& aLabel)=0;
+  NS_IMETHOD    GetLabel(nsAWritableString& aLabel)=0;
+  NS_IMETHOD    SetLabel(const nsAReadableString& aLabel)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLOPTGROUPELEMENT   \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
-  NS_IMETHOD    GetLabel(nsString& aLabel);  \
-  NS_IMETHOD    SetLabel(const nsString& aLabel);  \
+  NS_IMETHOD    GetLabel(nsAWritableString& aLabel);  \
+  NS_IMETHOD    SetLabel(const nsAReadableString& aLabel);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLOPTGROUPELEMENT(_to)  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetLabel(nsString& aLabel) { return _to GetLabel(aLabel); } \
-  NS_IMETHOD    SetLabel(const nsString& aLabel) { return _to SetLabel(aLabel); } \
+  NS_IMETHOD    GetLabel(nsAWritableString& aLabel) { return _to GetLabel(aLabel); } \
+  NS_IMETHOD    SetLabel(const nsAReadableString& aLabel) { return _to SetLabel(aLabel); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLOptGroupElementClass(nsIScriptContext *aContext, void **aPrototype);

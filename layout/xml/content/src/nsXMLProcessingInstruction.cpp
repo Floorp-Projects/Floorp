@@ -47,7 +47,7 @@ class nsXMLProcessingInstruction : public nsIDOMProcessingInstruction,
                                    public nsIContent
 {
 public:
-  nsXMLProcessingInstruction(const nsString& aTarget, const nsString& aData);
+  nsXMLProcessingInstruction(const nsAReadableString& aTarget, const nsAReadableString& aData);
   virtual ~nsXMLProcessingInstruction();
 
   // nsISupports
@@ -85,8 +85,8 @@ protected:
 
 nsresult
 NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
-                               const nsString& aTarget,
-                               const nsString& aData)
+                               const nsAReadableString& aTarget,
+                               const nsAReadableString& aData)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -99,8 +99,8 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
   return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
 }
 
-nsXMLProcessingInstruction::nsXMLProcessingInstruction(const nsString& aTarget,
-                                                       const nsString& aData) :
+nsXMLProcessingInstruction::nsXMLProcessingInstruction(const nsAReadableString& aTarget,
+                                                       const nsAReadableString& aData) :
   mTarget(aTarget)
 {
   NS_INIT_REFCNT();
@@ -170,21 +170,21 @@ nsXMLProcessingInstruction::QueryInterface(REFNSIID aIID, void** aInstancePtrRes
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetTarget(nsString& aTarget)
+nsXMLProcessingInstruction::GetTarget(nsAWritableString& aTarget)
 {
-  aTarget=mTarget;
+  aTarget.Assign(mTarget);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetData(nsString& aData)
+nsXMLProcessingInstruction::GetData(nsAWritableString& aData)
 {
   return mInner.GetData(aData);
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::SetData(const nsString& aData)
+nsXMLProcessingInstruction::SetData(const nsAReadableString& aData)
 {
   // XXX Check if this is a stylesheet PI. If so, we may need
   // to parse the contents and see if anything has changed.
@@ -344,9 +344,9 @@ nsXMLProcessingInstruction::GetNodeInfo(nsINodeInfo*& aResult) const
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetNodeName(nsString& aNodeName)
+nsXMLProcessingInstruction::GetNodeName(nsAWritableString& aNodeName)
 {
-  aNodeName=mTarget;
+  aNodeName.Assign(mTarget);
   return NS_OK;
 }
 

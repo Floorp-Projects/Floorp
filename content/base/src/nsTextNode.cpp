@@ -135,9 +135,9 @@ nsTextNode::GetNodeInfo(nsINodeInfo*& aResult) const
 }
 
 NS_IMETHODIMP
-nsTextNode::GetNodeName(nsString& aNodeName)
+nsTextNode::GetNodeName(nsAWritableString& aNodeName)
 {
-  aNodeName.AssignWithConversion("#text");
+  aNodeName.Assign(NS_LITERAL_STRING("#text"));
   return NS_OK;
 }
 

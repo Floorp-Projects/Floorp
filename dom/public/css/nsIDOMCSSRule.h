@@ -50,8 +50,8 @@ public:
 
   NS_IMETHOD    GetType(PRUint16* aType)=0;
 
-  NS_IMETHOD    GetCssText(nsString& aCssText)=0;
-  NS_IMETHOD    SetCssText(const nsString& aCssText)=0;
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText)=0;
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText)=0;
 
   NS_IMETHOD    GetParentStyleSheet(nsIDOMCSSStyleSheet** aParentStyleSheet)=0;
 
@@ -61,8 +61,8 @@ public:
 
 #define NS_DECL_IDOMCSSRULE   \
   NS_IMETHOD    GetType(PRUint16* aType);  \
-  NS_IMETHOD    GetCssText(nsString& aCssText);  \
-  NS_IMETHOD    SetCssText(const nsString& aCssText);  \
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText);  \
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText);  \
   NS_IMETHOD    GetParentStyleSheet(nsIDOMCSSStyleSheet** aParentStyleSheet);  \
   NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule);  \
 
@@ -70,8 +70,8 @@ public:
 
 #define NS_FORWARD_IDOMCSSRULE(_to)  \
   NS_IMETHOD    GetType(PRUint16* aType) { return _to GetType(aType); } \
-  NS_IMETHOD    GetCssText(nsString& aCssText) { return _to GetCssText(aCssText); } \
-  NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to SetCssText(aCssText); } \
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText) { return _to GetCssText(aCssText); } \
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText) { return _to SetCssText(aCssText); } \
   NS_IMETHOD    GetParentStyleSheet(nsIDOMCSSStyleSheet** aParentStyleSheet) { return _to GetParentStyleSheet(aParentStyleSheet); } \
   NS_IMETHOD    GetParentRule(nsIDOMCSSRule** aParentRule) { return _to GetParentRule(aParentRule); } \
 

@@ -54,12 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLBaseElement
-  NS_IMETHOD GetColor(nsString& aColor);
-  NS_IMETHOD SetColor(const nsString& aColor);
-  NS_IMETHOD GetFace(nsString& aFace);
-  NS_IMETHOD SetFace(const nsString& aFace);
-  NS_IMETHOD GetSize(nsString& aSize);
-  NS_IMETHOD SetSize(const nsString& aSize);
+  NS_DECL_IDOMHTMLBASEFONTELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -134,7 +129,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Size, size)
 
 NS_IMETHODIMP
 nsHTMLBaseFontElement::StringToAttribute(nsIAtom* aAttribute,
-                                         const nsString& aValue,
+                                         const nsAReadableString& aValue,
                                          nsHTMLValue& aResult)
 {
   // XXX write me
@@ -144,7 +139,7 @@ nsHTMLBaseFontElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLBaseFontElement::AttributeToString(nsIAtom* aAttribute,
                                          const nsHTMLValue& aValue,
-                                         nsString& aResult) const
+                                         nsAWritableString& aResult) const
 {
   // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);

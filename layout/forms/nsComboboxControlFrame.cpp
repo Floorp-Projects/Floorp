@@ -2063,7 +2063,7 @@ nsComboboxControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
+nsComboboxControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();
@@ -2075,7 +2075,7 @@ nsComboboxControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName
 }
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
   nsIFrame* dropdownFrame = GetDropdownFrame();

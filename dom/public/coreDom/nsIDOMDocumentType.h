@@ -39,37 +39,37 @@ class nsIDOMDocumentType : public nsIDOMNode {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTTYPE_IID; return iid; }
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
 
   NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities)=0;
 
   NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations)=0;
 
-  NS_IMETHOD    GetPublicId(nsString& aPublicId)=0;
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId)=0;
 
-  NS_IMETHOD    GetSystemId(nsString& aSystemId)=0;
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId)=0;
 
-  NS_IMETHOD    GetInternalSubset(nsString& aInternalSubset)=0;
+  NS_IMETHOD    GetInternalSubset(nsAWritableString& aInternalSubset)=0;
 };
 
 
 #define NS_DECL_IDOMDOCUMENTTYPE   \
-  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
   NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities);  \
   NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations);  \
-  NS_IMETHOD    GetPublicId(nsString& aPublicId);  \
-  NS_IMETHOD    GetSystemId(nsString& aSystemId);  \
-  NS_IMETHOD    GetInternalSubset(nsString& aInternalSubset);  \
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId);  \
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId);  \
+  NS_IMETHOD    GetInternalSubset(nsAWritableString& aInternalSubset);  \
 
 
 
 #define NS_FORWARD_IDOMDOCUMENTTYPE(_to)  \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
   NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities) { return _to GetEntities(aEntities); } \
   NS_IMETHOD    GetNotations(nsIDOMNamedNodeMap** aNotations) { return _to GetNotations(aNotations); } \
-  NS_IMETHOD    GetPublicId(nsString& aPublicId) { return _to GetPublicId(aPublicId); } \
-  NS_IMETHOD    GetSystemId(nsString& aSystemId) { return _to GetSystemId(aSystemId); } \
-  NS_IMETHOD    GetInternalSubset(nsString& aInternalSubset) { return _to GetInternalSubset(aInternalSubset); } \
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId) { return _to GetPublicId(aPublicId); } \
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId) { return _to GetSystemId(aSystemId); } \
+  NS_IMETHOD    GetInternalSubset(nsAWritableString& aInternalSubset) { return _to GetInternalSubset(aInternalSubset); } \
 
 
 extern "C" NS_DOM nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);
