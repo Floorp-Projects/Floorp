@@ -264,7 +264,7 @@
       </menupopup>
    </menu>
    
-    <menu id="toolsMenu"
+    <menu id="tasksMenu"
          label="&toolsMenu.label;"
          accesskey="&toolsMenu.accesskey;" >                                                                                       
       <menupopup id="taskPopup">
