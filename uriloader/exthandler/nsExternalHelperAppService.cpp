@@ -782,7 +782,7 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
       nsCAutoString dispositionValue;
       dispositionValue = disp;
       PRInt32 pos = dispositionValue.Find("filename=", PR_TRUE);
-      if (pos > 0)
+      if (pos != kNotFound)
       {
         // extract everything after the filename= part and treat that as the file name...
         nsCAutoString dispFileName;
