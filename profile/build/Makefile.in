@@ -50,22 +50,9 @@ GRE_MODULE	= 1
 
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
-		  libreg \
 		  string \
-		  chrome \
-		  docshell \
-		  webbrwsr \
-		  dom \
-		  widget \
-		  necko \
 		  uriloader \
-		  intl \
-		  pref \
-		  prefmigr \
 		  appshell \
-		  uconv \
-		  windowwatcher \
-		  profdirserviceprovider \
 		  $(NULL)
 
 CPPSRCS		= \

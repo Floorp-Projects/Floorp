@@ -32,16 +32,9 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  widget \
 		  gfx \
-		  js \
-		  xpconnect \
-		  caps \
 		  content \
-		  necko \
 		  uriloader \
-		  docshell \
 		  webbrwsr \
-		  embed_base \
-		  intl \
 		  $(NULL)
 
 DIRS      = printpde

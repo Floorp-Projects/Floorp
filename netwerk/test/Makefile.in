@@ -30,7 +30,6 @@ MODULE		= test_necko
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  nkcache \
 		  util \
 		  $(NULL)
 

@@ -55,7 +55,6 @@ REQUIRES	= xpcom \
 		  shistory \
 		  plugin \
 		  windowwatcher \
-		  htmlparser \
 		  chardet \
 		  find \
 		  appshell \

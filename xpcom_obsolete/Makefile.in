@@ -36,9 +36,7 @@ GRE_MODULE	= 1
 
 DIRS            = component
 
-REQUIRES	= xpcom  \
-		  mozreg \
-		  libreg \
+REQUIRES	= xpcom \
 		  string \
 		  $(NULL)
 
@@ -56,6 +54,7 @@ CPPSRCS         = \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
+REQUIRES	+= libreg
 CPPSRCS		+= dlldeps.cpp
 endif
 

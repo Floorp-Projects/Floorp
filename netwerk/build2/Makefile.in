@@ -42,7 +42,6 @@ GRE_MODULE	= 1
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  nkcache \
 		  $(NULL)
 
 CPPSRCS		= nsNetModule2.cpp

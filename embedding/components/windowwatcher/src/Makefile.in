@@ -31,14 +31,12 @@ REQUIRES	= xpcom \
 		  dom \
 		  windowwatcher \
 		  widget \
-		  gfx \
 		  js \
 		  xpconnect \
 		  caps \
 		  content \
 		  pref \
 		  necko \
-		  uriloader \
 		  docshell \
 		  webbrwsr \
 		  embed_base \

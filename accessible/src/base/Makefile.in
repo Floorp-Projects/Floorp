@@ -32,10 +32,8 @@ REQUIRES	= commandhandler \
 		  content \
 		  docshell \
 		  dom \
-		  js \
 		  editor \
 		  gfx \
-		  htmlparser \
 		  intl \
 		  layout \
 		  locale \

@@ -30,23 +30,18 @@ IS_COMPONENT    = 1
 MODULE_NAME     = nsGfxMacModule
 GRE_MODULE	= 1
 
-REQUIRES    = xpcom \
-        string \
-        img \
-        widget \
-        view \
-        util \
-        pref \
-        js \
-        uconv \
-        necko \
-        unicharutil \
-        mozcomps \
-        content \
-        layout \
-        locale \
-        dom \
-        $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  view \
+		  pref \
+		  uconv \
+		  necko \
+		  unicharutil \
+		  content \
+		  layout \
+		  locale \
+		  $(NULL)
 
 CPPSRCS = \
         nsATSUIUtils.cpp \

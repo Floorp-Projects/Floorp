@@ -28,12 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= TestParser$(BIN_SUFFIX)
 
-REQUIRES	= \
-   xpcom \
-	 string \
-	 necko \
-   htmlparser \
-	 $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  $(NULL)
 
 CPPSRCS		= \
   TestParser.cpp\

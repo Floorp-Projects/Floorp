@@ -56,7 +56,6 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  uriloader \
 		  webbrwsr \
-		  debug \
 		  plugin \
 		  $(NULL)
 

@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  docshell \
 		  pref \
-		  htmlparser \
 		  view \
 		  necko \
 		  unicharutil \

@@ -28,8 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 XPIDL_MODULE	= proxytest
-REQUIRES	= string \
-		  $(NULL)
+REQUIRES	= $(NULL)
 
 CPPSRCS		= proxytests.cpp
 XPIDLSRCS	= nsITestProxy.idl

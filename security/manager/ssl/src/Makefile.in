@@ -101,7 +101,6 @@ REQUIRES	= nspr \
 		  widget \
 		  layout \
 		  content \
-		  pippki \
 		  xpconnect \
 		  jar \
 		  unicharutil \

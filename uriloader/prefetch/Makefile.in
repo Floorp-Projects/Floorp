@@ -29,14 +29,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= prefetch
 LIBRARY_NAME	= prefetch_s
 REQUIRES	= xpcom \
-			string \
-			necko \
-			uriloader \
-			nkcache \
-			htmlparser \
-			chardet \
-			pref \
-			$(NULL)
+		  string \
+		  necko \
+		  uriloader \
+		  nkcache \
+		  chardet \
+		  pref \
+		  $(NULL)
 
 CPPSRCS = \
 		nsPrefetchService.cpp \

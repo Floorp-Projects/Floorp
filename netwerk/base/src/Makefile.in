@@ -32,7 +32,6 @@ REQUIRES	= xpcom \
 		  string \
 		  exthandler \
 		  mimetype \
-		  intl \
 		  uconv \
 		  locale \
 		  pref \

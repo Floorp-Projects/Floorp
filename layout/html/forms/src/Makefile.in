@@ -36,11 +36,8 @@ REQUIRES	= xpcom \
 		  widget \
 		  view \
 		  dom \
-		  js \
-		  htmlparser \
 		  necko \
 		  webshell \
-		  caps \
 		  editor \
 		  intl \
 		  uconv \
@@ -48,7 +45,6 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  imglib2 \
 		  accessibility \
-		  xpconnect \
 		  unicharutil \
 		  commandhandler \
 		  $(NULL)

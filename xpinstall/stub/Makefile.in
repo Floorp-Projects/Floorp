@@ -39,7 +39,6 @@ LIBRARY_NAME	= xpistub
 REQUIRES	= xpcom \
 		  string \
 		  xpinstall \
-		  dom \
 		  $(NULL)
 
 CPPSRCS		= \

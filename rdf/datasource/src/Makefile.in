@@ -31,7 +31,6 @@ LIBRARY_NAME	= rdfdatasource_s
 REQUIRES	= xpcom \
 		  string \
 		  necko \
-		  uconv \
 		  $(NULL)
 
 CPPSRCS		= \

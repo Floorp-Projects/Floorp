@@ -41,7 +41,6 @@ REQUIRES	= xpcom \
 		  profile \
 		  dom \
 		  intl \
-		  webshell \
 		  windowwatcher \
 		  unicharutil \
 		  txmgr \

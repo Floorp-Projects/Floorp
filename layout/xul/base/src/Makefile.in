@@ -38,8 +38,6 @@ REQUIRES	= xpcom \
 		  view \
 		  docshell \
 		  necko \
-		  editor \
-		  htmlparser \
 		  webshell \
 		  pref \
 		  intl \

@@ -39,23 +39,16 @@ REQUIRES	= xpcom \
 		  content \
 		  uriloader \
 		  txmgr \
-		  htmlparser \
 		  necko \
 		  pref \
 		  webshell \
-		  intl \
 		  docshell \
 		  gfx \
 		  widget \
 		  xuldoc \
 		  txtsvc \
-		  appcomps \
-		  windowwatcher \
 		  chrome \
-		  mimetype \
 		  imglib2 \
-		  webbrwsr \
-		  unicharutil \
 		  commandhandler \
 		  composer \
 		  appshell \

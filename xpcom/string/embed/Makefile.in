@@ -53,8 +53,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../obsolete \
 		$(NULL)
 
-REQUIRES	= string \
-		  xpcom \
+REQUIRES	= xpcom \
 		  $(NULL)
 
 STRING_LCSRCS   = \

@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  xpconnect \
 		  uconv \
-		  chardet \
 		  lwbrk \
 		  exthandler \
 		  mimetype \

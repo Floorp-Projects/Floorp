@@ -32,7 +32,6 @@ REQUIRES	= xpcom \
 		  string \
 		  necko \
 		  uconv \
-		  pref \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -31,7 +31,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  content \
 		  necko \
-		  necko2 \
 		  widget \
 		  exthandler \
 		  uriloader \

@@ -30,11 +30,9 @@ MODULE		= necko
 LIBRARY_NAME	= nkftp_s
 REQUIRES	= xpcom \
 		  string \
-		  exthandler \
 		  mimetype \
 		  pref \
 		  intl \
-		  necko \
 		  nkcache \
 		  $(NULL)
 

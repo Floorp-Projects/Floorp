@@ -42,7 +42,6 @@ MODULE		= xpcshell
 SIMPLE_PROGRAMS	= xpcshell$(BIN_SUFFIX)
 REQUIRES	= xpconnect \
 		  xpcom \
-		  string \
 		  js \
 		  $(NULL)
 
