@@ -613,6 +613,8 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
       reason = eReflowReason_Resize;
   }
 
+  PRBool redrawAfterReflow = PR_FALSE;
+
   // handle or different types of reflow
   switch(reason)
   {
@@ -669,17 +671,23 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
    // if its dirty then see if the child we want to reflow is dirty. If it is then
    // mark it as needing to be reflowed.
    case eReflowReason_Dirty: {
-        // only frames that implement nsIBox seem to be able to handle a reason of Dirty. For everyone else
-        // send down a resize. 
-        reason = eReflowReason_Dirty; //eReflowReason_Resize;
+        // XXX nsBlockFrames don't seem to be able to handle a reason of Dirty. So we  
+        // send down a resize instead. If we did send down the dirty we would have wrapping problems. If you 
+        // look at the main page it will initially come up ok but will have a unneeded horizontal 
+        // scrollbar if you resize it will fix it self. The real fix is to fix block frame but
+        // this will fix it for beta3.
+        reason = eReflowReason_Resize;
 
         // get the frame state to see if it needs reflow
         needsReflow = mStyleChange || (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
 
-        // redraw
-
-        //if (needsReflow)
-        //   Redraw(aState);
+        // but of course by definition dirty reflows are supposed to redraw so
+        // lets signal that we need to do that. We want to do it after as well because
+        // the object may have changed size.
+        if (needsReflow) {
+           Redraw(aState);
+           redrawAfterReflow = PR_TRUE;
+        }
 
    } break;
 
@@ -893,6 +901,16 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
         aDesiredSize.ascent += rect.y;
 
       }
+    }
+
+    if (redrawAfterReflow) {
+       nsIFrame* frame = nsnull;
+       GetFrame(&frame);
+       nsRect r;
+       frame->GetRect(r);
+       r.width = aDesiredSize.width;
+       r.height = aDesiredSize.height;
+       Redraw(aState, &r);
     }
 
     PRBool changedSize = PR_FALSE;
