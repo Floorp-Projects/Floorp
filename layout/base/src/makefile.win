@@ -35,6 +35,8 @@ CPPSRCS =				\
 	nsDOMAttribute.cpp		\
 	nsDOMAttributeMap.cpp		\
 	nsFrameImageLoader.cpp		\
+	nsFrameList.cpp                 \
+	nsFrameTraversal.cpp            \
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
 	nsNameSpaceManager.cpp		\
@@ -70,6 +72,8 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsDOMAttribute.obj		\
 	.\$(OBJDIR)\nsDOMAttributeMap.obj	\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
+	.\$(OBJDIR)\nsFrameList.obj		\
+	.\$(OBJDIR)\nsFrameTraversal.obj        \
 	.\$(OBJDIR)\nsFrameUtil.obj		\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
 	.\$(OBJDIR)\nsNameSpaceManager.obj	\
