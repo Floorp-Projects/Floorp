@@ -1349,7 +1349,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   PRBool canHaveHorizontal = styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO
     || styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL;
   if (canHaveHorizontal) {
-    NS_NewXULElement(getter_AddRefs(content), nodeInfo);
+    NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                      NS_LITERAL_STRING("horizontal"), PR_FALSE);
     aAnonymousChildren.AppendElement(content);
@@ -1358,7 +1358,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   PRBool canHaveVertical = styles.mVertical == NS_STYLE_OVERFLOW_AUTO
     || styles.mVertical == NS_STYLE_OVERFLOW_SCROLL;
   if (canHaveVertical) {
-    NS_NewXULElement(getter_AddRefs(content), nodeInfo);
+    NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                      NS_LITERAL_STRING("vertical"), PR_FALSE);
     aAnonymousChildren.AppendElement(content);
@@ -1367,7 +1367,7 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
   if (canHaveHorizontal && canHaveVertical) {
     nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollcorner, nsnull,
                                  kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
-    NS_NewXULElement(getter_AddRefs(content), nodeInfo);
+    NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
     aAnonymousChildren.AppendElement(content);
   }
 }
