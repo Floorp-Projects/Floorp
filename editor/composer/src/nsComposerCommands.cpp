@@ -317,7 +317,26 @@ nsStyleUpdatingCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aT
   if (styleSet)
     rv = aEditorShell->RemoveTextProperty(tagName.get(), nsnull);
   else
-    rv = aEditorShell->SetTextProperty(tagName.get(), nsnull, nsnull);
+  {
+    // Superscript and Subscript styles are mutually exclusive
+    nsAutoString removeName; 
+    aEditorShell->BeginBatchChanges();
+
+    if (tagName.Equals(NS_LITERAL_STRING("sub")))
+    {
+      removeName.AssignWithConversion("sup");
+      rv = aEditorShell->RemoveTextProperty(tagName.get(), nsnull);
+    } 
+    else if (tagName.Equals(NS_LITERAL_STRING("sup")))
+    {
+      removeName.AssignWithConversion("sub");
+      rv = aEditorShell->RemoveTextProperty(tagName.get(), nsnull);
+    }
+    if (NS_SUCCEEDED(rv))
+      rv = aEditorShell->SetTextProperty(tagName.get(), nsnull, nsnull);
+
+    aEditorShell->EndBatchChanges();
+  }
 
   return rv;
 }
