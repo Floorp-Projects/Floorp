@@ -113,9 +113,8 @@ static Boolean GetExtraHTML( char *pExtra, char **newExtraHTML , int16 win_csid)
 		
 		theMessage = handler.DoDialog();
 
-		//case msg_help:		
-		//		newWindow->Help();
-		//		break;
+		if ( theMessage == msg_Help )
+			ShowHelp ( HELP_EXTRA_HTML );
 		
 	} while ( theMessage != msg_OK && theMessage != msg_Cancel );
 	
@@ -990,11 +989,19 @@ Boolean CPublish::CommitChanges( Boolean /* isAllPanes */ )
 		CPublishHistory::AddPublishHistoryEntry(BrowseLoc);
     	XP_FREE(BrowseLoc);
 	}
-			
-	// finally, show them what we've done!
-	CStr255		urlString = CPrefs::GetString( CPrefs::PublishBrowseLocation );
-	if ( urlString != CStr255::sEmptyString )
-		CFrontApp::DoGetURL( (unsigned char*)urlString );
+	
+	// Ask the user if he/she wants to browse to the page.  Only browse when the answer is "yes."
+	switch ( HandleModalDialog ( EDITDLG_BROWSE_PUBLISHED, NULL, NULL ) )
+	{
+		case msg_OK:
+			CStr255		urlString = CPrefs::GetString( CPrefs::PublishBrowseLocation );
+			if ( urlString != CStr255::sEmptyString )
+				CFrontApp::DoGetURL( (unsigned char*)urlString );
+			break;
+		
+		case msg_Cancel:
+			break;
+	}
 	
 	return TRUE;
 }
@@ -1686,9 +1693,6 @@ void CTableInsertDialog::FinishCreateSelf()
 	mImageFileName->AddListener(this);
 	mLeaveImage = (LControl *)FindPaneByID( 'LvIm' );
 
-	SetLatentSub( fNumRowsEditText );
-	fNumRowsEditText->SelectAll();
-	
 	// Set control values
 	EDT_TableData *fData = EDT_NewTableData();
 	if (fData != NULL)
@@ -1739,7 +1743,10 @@ void CTableInsertDialog::FinishCreateSelf()
 	fColorCustomColor->SetColor(macColor);
 
 	fCaptionAboveBelow->SetValue( 1 );
-
+	
+	SetLatentSub( fNumRowsEditText );
+	fNumRowsEditText->SelectAll();
+	
 	AdjustEnable();
 }
 
@@ -1747,7 +1754,6 @@ void CTableInsertDialog::FinishCreateSelf()
 void CTableInsertDialog::InitializeDialogControls()
 {
 	short 			resID;
-//	CStr255			title;
 	StringHandle	titleH;
 
 	if (EDT_IsInsertPointInTable(fContext))
@@ -1760,7 +1766,6 @@ void CTableInsertDialog::InitializeDialogControls()
 	{
 		SInt8 hstate = HGetState( (Handle)titleH );
 		HLock( (Handle)titleH );
-//		title = *titleH;
 
 		MenuHandle menuh = ((LGAPopup *)fWidthPopup)->GetMacMenuH();
 		if (menuh)
@@ -2159,7 +2164,6 @@ void CEDTableContain::PrefsFromControls()
 void CEDTableContain::ControlsFromPref()
 {
 	short 			resID;
-	CStr255			title;
 	StringHandle	titleH;
 
 	if (EDT_IsInsertPointInNestedTable(fContext))
@@ -2172,20 +2176,19 @@ void CEDTableContain::ControlsFromPref()
 	{
 		SInt8 hstate = HGetState( (Handle)titleH );
 		HLock( (Handle)titleH );
-		title = *titleH;
 		HSetState( (Handle)titleH, hstate );
 
 		MenuHandle menuh = ((LGAPopup *)fWidthPopup)->GetMacMenuH();
 		if (menuh)
 		{
-			SetMenuItemText( menuh, kPercentOfWindowItem, title );
+			SetMenuItemText( menuh, kPercentOfWindowItem, *titleH );
 			((LGAPopup *)fWidthPopup)->SetMacMenuH( menuh );	// resets menu width
 		}
 		
 		menuh = ((LGAPopup *)fHeightPopup)->GetMacMenuH();
 		if (menuh)
 		{
-			SetMenuItemText( menuh, kPercentOfWindowItem, title );
+			SetMenuItemText( menuh, kPercentOfWindowItem, *titleH );
 			((LGAPopup *)fHeightPopup)->SetMacMenuH( menuh );	// resets menu width
 		}
 	}
@@ -2628,20 +2631,19 @@ void CEDTableCellContain::ControlsFromPref()
 	{
 		SInt8 hstate = HGetState( (Handle)titleH );
 		HLock( (Handle)titleH );
-		CStr255 title = *titleH;
 		HSetState( (Handle)titleH, hstate );
 
 		MenuHandle menuh = ((LGAPopup *)fWidthPopup)->GetMacMenuH();
 		if (menuh)
 		{
-			SetMenuItemText( menuh, kPercentOfWindowItem, title );
+			SetMenuItemText( menuh, kPercentOfWindowItem, *titleH );
 			((LGAPopup *)fWidthPopup)->SetMacMenuH( menuh );	// resets menu width
 		}
 		
 		menuh = ((LGAPopup *)fHeightPopup)->GetMacMenuH();
 		if (menuh)
 		{
-			SetMenuItemText( menuh, kPercentOfWindowItem, title );
+			SetMenuItemText( menuh, kPercentOfWindowItem, *titleH );
 			((LGAPopup *)fHeightPopup)->SetMacMenuH( menuh );	// resets menu width
 		}
 	}
@@ -2836,7 +2838,6 @@ void CEDTableCellContain::ListenToMessage( MessageT inMessage, void* /* ioParam 
 						break;
 				}
 			}
-			
 			ED_MoveSelType moveDirection;
 			if (inMessage == 'PREV')
 				moveDirection = ED_MOVE_PREV;
