@@ -873,7 +873,7 @@ DOMMediaListImpl::Item(PRUint32 aIndex, nsString& aReturn)
 
     const PRUnichar *buffer;
     medium->GetUnicode(&buffer);
-    aReturn.SetString(buffer);
+    aReturn.Assign(buffer);
   } else {
     aReturn.Truncate();
   }
