@@ -38,8 +38,6 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#include <stdio.h>
 #include "nsICSSParser.h"
 #include "nsCSSProps.h"
 #include "nsCSSKeywords.h"
@@ -69,6 +67,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
 #include "nsThemeConstants.h"
+
+#include "prprf.h"
 
 // XXX TODO:
 // - rework aErrorCode stuff: switch over to nsresult
@@ -2579,14 +2579,14 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
 
       case eCSSToken_Number:
         if (tk->mIntegerValid) {
-          snprintf(buffer, sizeof(buffer), "%06d", tk->mInteger);
+          PR_snprintf(buffer, sizeof(buffer), "%06d", tk->mInteger);
           str.AssignWithConversion(buffer);
         }
         break;
 
       case eCSSToken_Dimension:
         if (tk->mIdent.Length() <= 6) {
-          snprintf(buffer, sizeof(buffer), "%06.0f", tk->mNumber);
+          PR_snprintf(buffer, sizeof(buffer), "%06.0f", tk->mNumber);
           nsAutoString temp;
           temp.AssignWithConversion(buffer);
           temp.Right(str, 6 - tk->mIdent.Length());
