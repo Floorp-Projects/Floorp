@@ -467,6 +467,8 @@ ifdef MOZILLA_OFFICIAL
 	/bin/find $(DIST) -name "*.dll" -exec splitsym {} \;
 	/bin/find $(DIST) -name "*.exe" -exec splitsym {} \;
 	/bin/find $(DIST) -name "*.EXE" -exec splitsym {} \;
+	mkdir -p $(DIST)/symbols
+	/bin/find $(DIST) -name "*.dbg" -exec mv {} $(DIST)/symbols \;
 endif # MOZILLA_OFFICIAL
 
 signnss:
