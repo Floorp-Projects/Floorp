@@ -99,7 +99,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     		if (aColor == 0xffffff)
     			aColor = NS_RGB(0x00,0x00,0x00);
     		else
-	        aColor = NS_RGB(0xff,0xff,0xff);
+				aColor = NS_RGB(0xff,0xff,0xff);
         break;
 
     //
@@ -108,40 +108,11 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     // Right now, the majority of these colors are just guesses since they are
     // modeled word for word after the win32 system colors and don't have any 
     // real counterparts in the Mac world. I'm sure we'll be tweaking these for 
-    // years to come.
+    // years to come. 
+    //
+    // Thanks to mpt26@student.canterbury.ac.nz for the hardcoded values ;)
     //
     
-    case eColor_activeborder:
-    case eColor_inactiveborder:
-        aColor = NS_RGB(0xdd,0xdd,0xdd);
-        break;
-    case eColor_activecaption:
-        aColor = NS_RGB(0x0,0x0,0x0);
-        break;
-    case eColor_appworkspace:
-        // NOTE: this is an MDI color and does not exist on macOS.
-        aColor = NS_RGB(0x0,0x0,0x0);
-        break;
-    case eColor_background:
-        // NOTE: chances are good this is a pattern, not a pure color. What do we do?
-        aColor = NS_RGB(0x0,0x0,0x0);
-        break;
-    case eColor_menu:
-    case eColor_buttonface:
-    case eColor_infobackground:
-    case eColor_threedface:
-    case eColor_window:
-    case eColor_windowframe:
-        aColor = NS_RGB(0xdd,0xdd,0xdd);
-        break;
-    case eColor_threedhighlight:
-    case eColor_buttonhighlight:
-        aColor = NS_RGB(0xa0,0xa0,0xa0);
-        break;
-    case eColor_threedlightshadow:
-    case eColor_buttonshadow:
-        aColor = NS_RGB(0x40,0x40,0x40);
-        break;
     case eColor_buttontext:
     case eColor_captiontext:
     case eColor_menutext:
@@ -149,17 +120,62 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor_windowtext:
         aColor = NS_RGB(0x0,0x0,0x0);
         break;
-    case eColor_inactivecaption:
-    case eColor_inactivecaptiontext:
-    case eColor_graytext:
+    case eColor_activecaption:
         aColor = NS_RGB(0xdd,0xdd,0xdd);
         break;
+    case eColor_activeborder:
+        aColor = NS_RGB(0xdd,0xdd,0xdd);
+        break;
+   case eColor_appworkspace:
+        // NOTE: this is an MDI color and does not exist on macOS.
+        aColor = NS_RGB(0x66,0x99,0xff);
+        break;      
+    case eColor_background:
+        // NOTE: chances are good this is a pattern, not a pure color. What do we do?
+        aColor = NS_RGB(0x66,0x99,0xff);
+        break;
+    case eColor_buttonface:
+        aColor = NS_RGB(0xde,0xde,0xde);
+        break;
+    case eColor_buttonhighlight:
+        aColor = NS_RGB(0xff,0xff,0xff);
+        break;
+    case eColor_buttonshadow:
+        aColor = NS_RGB(0x73,0x73,0x73);
+        break;
+    case eColor_graytext:
+        aColor = NS_RGB(0x76,0x76,0x76);
+        break;
+    case eColor_inactiveborder:
+        aColor = NS_RGB(0xdd,0xdd,0xdd);
+        break;
+    case eColor_inactivecaption:
+        aColor = NS_RGB(0xdd,0xdd,0xdd);
+        break;
+    case eColor_inactivecaptiontext:
+        aColor = NS_RGB(0x76,0x76,0x76);
+        break;
     case eColor_scrollbar:
-        aColor = NS_RGB(0xa0,0xa0,0xa0);
+        aColor = NS_RGB(0xad,0xad,0xad);
         break;
     case eColor_threeddarkshadow:
     case eColor_threedshadow:
-        aColor = NS_RGB(0x40,0x40,0x40);
+        aColor = NS_RGB(0x9c,0x9c,0x9c);
+        break;
+    case eColor_threedface:
+        aColor = NS_RGB(0xde,0xde,0xde);
+        break;
+    case eColor_threedhighlight:
+        aColor = NS_RGB(0xa0,0xa0,0xa0);
+        break;
+    case eColor_threedlightshadow:
+        aColor = NS_RGB(0xff,0xff,0xff);
+        break;
+    case eColor_menu:
+    case eColor_infobackground:
+    case eColor_window:
+    case eColor_windowframe:
+        aColor = NS_RGB(0xde,0xde,0xde);
         break;
 
     default:
