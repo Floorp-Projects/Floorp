@@ -75,10 +75,6 @@ CHROME_CONTENT = \
 	.\mailWidgets.xml \
       .\folderProps.xul \
       .\folderProps.js \
-      .\sendMsgs.xul \
-      .\sendMsgs.js \
-      .\downloadMsgs.xul \
-      .\downloadMsgs.js \
       .\msgSynchronize.xul \
       .\msgSynchronize.js \
       .\msgSelectOffline.xul \

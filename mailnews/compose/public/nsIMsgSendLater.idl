@@ -40,5 +40,5 @@ interface nsIMsgSendLater : nsIStreamListener
   attribute nsIMsgWindow msgWindow;
   void      RemoveListener(in nsIMsgSendLaterListener aListener); 
   void      AddListener(in  nsIMsgSendLaterListener aListener); 
-  void      GetUnsentMessagesFolder(in nsIMsgIdentity userIdentity, out nsIMsgFolder folder);
+  nsIMsgFolder getUnsentMessagesFolder(in nsIMsgIdentity userIdentity);
 };

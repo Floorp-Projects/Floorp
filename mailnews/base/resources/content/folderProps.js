@@ -1,6 +1,7 @@
 var gMsgFolder;
 var gServerTypeFolder = null;
 var gPreselectedFolderURI = null;
+var gParentMsgWindow = null;
 
 // services used
 var RDF;
@@ -70,6 +71,12 @@ function folderPropsOnLoad()
 
   dump("preselectfolder uri = "+gPreselectedFolderURI+'\n');
   dump("serverType = "+gServerTypeFolder+'\n');
+
+  if (window.arguments && window.arguments[0]) {
+    if (window.arguments[0].msgWindow) {
+      gParentMsgWindow = window.arguments[0].msgWindow;
+    }
+  }
 
   // this hex value come from nsMsgFolderFlags.h
   var folderResource = RDF.GetResource(gPreselectedFolderURI);
@@ -183,6 +190,6 @@ function getEnclosingContainer(startNode)
 function onOfflineFolderDownload()
 {
   // we need to create a progress window and pass that in as the second parameter here.
-  gMsgFolder.downloadAllForOffline(null, null);
+  gMsgFolder.downloadAllForOffline(null, gParentMsgWindow);
 }
 

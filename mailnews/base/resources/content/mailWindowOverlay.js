@@ -23,7 +23,10 @@
  */
 
 var gMessengerBundle;
+var gPromptService;
+var gOfflinePromptsBundle;
 var nsPrefBranch = null;
+var gOfflineManager;
 
 // Disable the new account menu item if the account preference is locked.
 // Two other affected areas are the account central and the account manager
@@ -336,21 +339,33 @@ function GetInboxFolder(server)
 
 function GetMessagesForInboxOnServer(server)
 {
-    var inboxFolder = GetInboxFolder(server);
-    if (!inboxFolder) return;
+  var inboxFolder = GetInboxFolder(server);
+  if (!inboxFolder) return;
 
-    var folders = new Array(1);
-    folders[0] = inboxFolder;
+  var folders = new Array(1);
+  folders[0] = inboxFolder;
 
-    var compositeDataSource = GetCompositeDataSource("GetNewMessages");
-    GetNewMessages(folders, compositeDataSource);
+  var compositeDataSource = GetCompositeDataSource("GetNewMessages");
+  GetNewMessages(folders, compositeDataSource);
 }
 
+// if offline, prompt for getting messages
 function MsgGetMessage()
 {
-    var folders = GetSelectedMsgFolders();
-    var compositeDataSource = GetCompositeDataSource("GetNewMessages");
-    GetNewMessages(folders, compositeDataSource);
+  if(CheckOnline()) {
+    GetFolderMessages();
+  }
+  else {
+    var option = PromptGetMessagesOffline();
+    if(option == 0) {
+      if (!gOfflineManager) 
+        GetOfflineMgrService();
+      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                               false /* playbackOfflineImapOperations */, 
+                               msgWindow);
+      GetFolderMessages();
+    }
+  }
 }
 
 function MsgGetMessagesForAllServers(defaultServer)
@@ -388,52 +403,73 @@ function MsgGetMessagesForAllServers(defaultServer)
   * Get messages for all those accounts which have the capability
   * of getting messages and have session password available i.e.,
   * curretnly logged in accounts.
+  * if offline, prompt for getting messages.
   */
 function MsgGetMessagesForAllAuthenticatedAccounts()
 {
-    try
-    {
-        var allServers = accountManager.allServers;
-
-        for (var i=0;i<allServers.Count();i++)
-        {
-            var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-            var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" +
-                                 currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
-            if (protocolinfo.canGetMessages && currentServer.password)
-            {
-                // Get new messages now
-                GetMessagesForInboxOnServer(currentServer);
-            }
-        }
+  if(CheckOnline()) {
+    GetMessagesForAllAuthenticatedAccounts();
+  }
+  else {
+    var option = PromptGetMessagesOffline();
+    if(option == 0) {
+      if (!gOfflineManager) 
+        GetOfflineMgrService();
+      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                               false /* playbackOfflineImapOperations */, 
+                               msgWindow);
+      GetMessagesForAllAuthenticatedAccounts();
     }
-    catch(ex)
-    {
-        dump(ex + "\n");
-    }
+  }
 }
 
 /**
   * Get messages for the account selected from Menu dropdowns.
+  * if offline, prompt for getting messages.
   */
 function MsgGetMessagesForAccount(aEvent)
 {
-    if (!aEvent)
-        return;
+  if (!aEvent)
+    return;
 
-    var uri = aEvent.target.id;
-    var server = GetServer(uri);
-    GetMessagesForInboxOnServer(server);
-    aEvent.preventBubble();
+  if(CheckOnline()) {
+    GetMessagesForAccount(aEvent);
+  }
+  else {
+    var option = PromptGetMessagesOffline();
+    if(option == 0) {
+      if (!gOfflineManager) 
+        GetOfflineMgrService();
+      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                               false /* playbackOfflineImapOperations */, 
+                               msgWindow);
+      GetMessagesForAccount(aEvent);
+    }
+  }
 }
 
+// if offline, prompt for getNextNMessages
 function MsgGetNextNMessages()
 {
+  if(CheckOnline()) {
     var folder = GetFirstSelectedMsgFolder();
-    if(folder)
-    {
-        GetNextNMessages(folder)
+    if(folder) 
+      GetNextNMessages(folder);
+  }
+  else {
+    var option = PromptGetMessagesOffline();
+    if(option == 0) {
+      if (!gOfflineManager) 
+        GetOfflineMgrService();
+      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                               false /* playbackOfflineImapOperations */, 
+                               msgWindow);
+      var folder = GetFirstSelectedMsgFolder();
+      if(folder) {
+        GetNextNMessages(folder);
+      }
     }
+  }   
 }
 
 function MsgDeleteMessage(reallyDelete, fromToolbar)
@@ -898,12 +934,23 @@ function MsgStop()
     StopUrls();
 }
 
+// if offline, prompt for sendUnsentMessages
 function MsgSendUnsentMsg()
 {
-    var folder = GetFirstSelectedMsgFolder();
-    if(folder) {
-        SendUnsentMessages(folder);
+  if(CheckOnline()) {
+    SendFolderUnsentMessages();    
+  }
+  else {
+    var option = PromptSendMessagesOffline();
+    if(option == 0) {
+      if (!gOfflineManager) 
+        GetOfflineMgrService();
+      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                               false /* playbackOfflineImapOperations */, 
+                               msgWindow);
+      SendFolderUnsentMessages();
     }
+  }
 }
 
 function PrintEnginePrint()
@@ -917,9 +964,9 @@ function PrintEnginePrint()
     }
 
     printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
-                                                        "",
-                                                        "chrome,dialog=no,all",
-                                                        numMessages, messageList, statusFeedback);
+                                          "",
+                                          "chrome,dialog=no,all",
+                                          numMessages, messageList, statusFeedback);
     return true;
 }
 
@@ -1110,16 +1157,129 @@ function SpaceHit()
   }
 }
 
-
 function IsOfflineSettingsEnabled()
 {
-    var selectedFolders = GetSelectedMsgFolders();
+  var selectedFolders = GetSelectedMsgFolders();
 
-    if (selectedFolders && (selectedFolders.length == 1))
-        return selectedFolders[0].supportsOffline;
-       
-    return false;
+  if (selectedFolders && (selectedFolders.length == 1))
+      return selectedFolders[0].supportsOffline;
+     
+  return false;
 }
+
+// init nsIPromptService and strings
+function InitPrompts()
+{
+  if(!gPromptService) {
+    gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+  }
+  if (!gOfflinePromptsBundle) 
+    gOfflinePromptsBundle = document.getElementById("bundle_offlinePrompts");
+}
+
+// prompt for getting messages when offline
+function PromptGetMessagesOffline()
+{
+  InitPrompts();
+  if (gPromptService) {
+    var buttonPressed = {value:0};
+    var checkValue = {value:false};
+    gPromptService.confirmEx(window, 
+                            gOfflinePromptsBundle.getString('getMessagesOfflineWindowTitle'), 
+                            gOfflinePromptsBundle.getString('getMessagesOfflineLabel'),
+                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
+                            (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1),
+                            gOfflinePromptsBundle.getString('getMessagesOfflineGoButtonLabel'),
+                            null, null, null, checkValue, buttonPressed);
+    if(buttonPressed) {
+      return buttonPressed.value;
+    }
+  }
+}
+
+// prompt for sending messages when offline
+function PromptSendMessagesOffline()
+{
+  InitPrompts();
+  if (gPromptService) {
+    var buttonPressed = {value:0};
+    var checkValue= {value:false};
+    gPromptService.confirmEx(window, 
+                            gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
+                            gOfflinePromptsBundle.getString('sendMessagesOfflineLabel'),
+                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
+                            (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1),
+                            gOfflinePromptsBundle.getString('sendMessagesOfflineGoButtonLabel'),
+                            null, null, null, checkValue, buttonPressed);
+    if(buttonPressed) {
+      return buttonPressed.value;
+    }
+  }
+}
+
+// gets called from MsgGetMessage()
+function GetFolderMessages()
+{
+  var folders = GetSelectedMsgFolders();
+  var compositeDataSource = GetCompositeDataSource("GetNewMessages");
+  GetNewMessages(folders, compositeDataSource);
+}
+
+// gets called from MsgSendUnsentMsg()
+function SendFolderUnsentMessages()
+{
+  var am = Components.classes["@mozilla.org/messenger/account-manager;1"]
+               .getService(Components.interfaces.nsIMsgAccountManager);
+  var msgSendlater = Components.classes["@mozilla.org/messengercompose/sendlater;1"]
+               .getService(Components.interfaces.nsIMsgSendLater);
+  var identitiesCount, allIdentities, currentIdentity, numMessages, msgFolder;
+
+  if(am) { 
+    allIdentities = am.allIdentities;
+    identitiesCount = allIdentities.Count();
+    for (var i = 0; i < identitiesCount; i++) {
+      currentIdentity = allIdentities.QueryElementAt(i, Components.interfaces.nsIMsgIdentity);
+      msgFolder = msgSendlater.getUnsentMessagesFolder(currentIdentity);
+      if(msgFolder) {
+        // if true, descends into all subfolders 
+        numMessages = msgFolder.getTotalMessages(false);
+        if(numMessages > 0) 
+          messenger.SendUnsentMessages(currentIdentity);
+      }
+    } 
+  }
+}
+
+// gets called from MsgGetMessagesForAllAuthenticatedAccounts()
+function GetMessagesForAllAuthenticatedAccounts()
+{
+   try {
+    var allServers = accountManager.allServers;
+    for (var i=0;i<allServers.Count();i++) {
+      var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+      var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" +
+                           currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
+      if (protocolinfo.canGetMessages && currentServer.password) {
+        // Get new messages now
+        GetMessagesForInboxOnServer(currentServer);
+      }
+    }
+  }
+  catch(ex) {
+    dump(ex + "\n");
+  }
+}
+
+// gets called from MsgGetMessagesForAccount(aEvent)
+function GetMessagesForAccount(aEvent)
+{
+  var uri = aEvent.target.id;
+  var server = GetServer(uri);
+  GetMessagesForInboxOnServer(server);
+  aEvent.preventBubble();
+}
+
 
 function CommandUpdate_UndoRedo()
 {

@@ -398,9 +398,9 @@ var DefaultController =
       case "cmd_close":
         return true;
       case "cmd_downloadFlagged":
-        return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
+        return(CheckOnline());
       case "cmd_downloadSelected":
-        return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline());
+        return(MailAreaHasFocus() && IsFolderSelected() && CheckOnline() && GetNumSelectedMessages() > 0);
       case "cmd_synchronizeOffline":
         return true;
       case "cmd_settingsOffline":
@@ -1072,14 +1072,6 @@ function SetFocusMessagePane()
 function is_collapsed(element) 
 {
   return (element.getAttribute('state') == 'collapsed');
-}
-
-function CheckOnline()
-{
-  var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}", "nsIIOService");
-  if(ioService.offline) return false;
-  else return true;
-	
 }
 
 function isCommandEnabled(cmd)

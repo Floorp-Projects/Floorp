@@ -259,7 +259,7 @@ function MsgFolderProperties()
                     "",
                     "chrome,centerscreen,titlebar,modal",
                     {preselectedURI:preselectedURI, serverType:serverType,
-					title:windowTitle,
+					msgWindow:msgWindow, title:windowTitle,
                     okCallback:FolderProperties, 
                     tabID:"", tabIndex:0, name:name});
 }

@@ -60,6 +60,7 @@ var gPaneConfig = null;
 
 // for checking if the folder loaded is Draft or Unsent which msg is editable
 var gIsEditableMsgFolder = false;
+var gOfflineManager;
 
 
 function OnMailWindowUnload()
@@ -489,20 +490,36 @@ function HideAccountCentral()
 }
 
 // Given the server, open the twisty and the set the selection
-// on inbox of that server
+// on inbox of that server. 
+// prompt if offline.
 function OpenInboxForServer(server)
 {
-    try {
-        HideAccountCentral();
-        OpenTwistyForServer(server);
-        var inboxFolder    = GetInboxFolder(server);
-        var folderTree     = GetFolderTree();
-        var inboxFolderUri = document.getElementById(inboxFolder.URI);
-        ChangeSelection(folderTree, inboxFolderUri);
+  try {
+    HideAccountCentral();
+    OpenTwistyForServer(server);
+    var inboxFolder    = GetInboxFolder(server);
+    var folderTree     = GetFolderTree();
+    var inboxFolderUri = document.getElementById(inboxFolder.URI);
+    ChangeSelection(folderTree, inboxFolderUri);
+
+    if(CheckOnline()) {
+      GetMessagesForInboxOnServer(server);
+    }
+    else {
+      var option = PromptGetMessagesOffline();
+      if(option == 0) {
+        if (!gOfflineManager) 
+          GetOfflineMgrService();
+
+        gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                                 false /* playbackOfflineImapOperations */, 
+                                 msgWindow);
         GetMessagesForInboxOnServer(server);
+      }
     }
-    catch (ex) {
-        dump("Error opening inbox for server -> " + ex + "\n");
-        return;
-    }
+  }
+  catch (ex) {
+    dump("Error opening inbox for server -> " + ex + "\n");
+    return;
+  }
 }

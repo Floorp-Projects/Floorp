@@ -32,12 +32,15 @@ var gRDFNamespace = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
 /* keep in sync with nsMsgFolderFlags.h */
 var MSG_FOLDER_FLAG_TRASH = 0x0100;
-var MSG_FOLDER_FLAG_SENTMAIL = 0x0200
+var MSG_FOLDER_FLAG_SENTMAIL = 0x0200;
 var MSG_FOLDER_FLAG_DRAFTS = 0x0400;
 var MSG_FOLDER_FLAG_QUEUE = 0x0800;
 var MSG_FOLDER_FLAG_TEMPLATES = 0x400000;
 
 var gPrefs;
+var gOfflinePromptsBundle;
+var gPromptService;
+var gOfflineManager;
 
 function OpenURL(url)
 {
@@ -847,73 +850,55 @@ function MailCheckBeforeOfflineChange()
                             .getService(Components.interfaces.nsIIOService);
 
   var goingOnline = ioService.offline;
-
-  offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
-
   var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
-  var offlineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"].getService(Components.interfaces.nsIMsgOfflineManager);
-  var args = {result: 0};
 
   messenger.SetWindow(window, msgWindow);
 
-  if (!gPrefs) GetPrefsService();
+  InitServices();
+
   var prefSendUnsentMessages = gPrefs.GetIntPref("offline.send.unsent_messages");
   var prefDownloadMessages   = gPrefs.GetIntPref("offline.download.download_messages");
 
-  // dump("prefSendUnsentMessages" + prefSendUnsentMessages + "\n");
-  // dump("prefDownloadMessages" + prefDownloadMessages + "\n");
-
   if(goingOnline) {
-    switch(prefSendUnsentMessages) {	
-      case 0:
-	window.openDialog("chrome://messenger/content/sendMsgs.xul", "sendUnsentMessages", 
-		"centerscreen,chrome,modal,titlebar,resizable=no", args);
-	if(args.result == 1) { 
-          offlineManager.goOnline(true, true, msgWindow);
-	}
-	else if(args.result == 2) { 
-	  offlineManager.goOnline(false, true, msgWindow);
-	}
-	else if(args.result == 3) { 
-	  return false;
-	}
-	break;
-      case 1:
-        offlineManager.goOnline(true, true, msgWindow);
-	break;
-      case 2:
-        offlineManager.goOnline(false, true, msgWindow);
-	break;
+    switch(prefSendUnsentMessages) { 
+    case 0:
+      if(CheckForUnsentMessages()) { 
+        if(! PromptSendMessages()) 
+          return false;
+      }
+      else 
+        gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                                 true /* playbackOfflineImapOperations */, 
+                                 msgWindow);
+      break;
+    case 1:
+      gOfflineManager.goOnline(CheckForUnsentMessages() /* sendUnsentMessages */, 
+                               true  /* playbackOfflineImapOperations */, 
+                               msgWindow);
+      break;
+    case 2:
+      gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                               true /* playbackOfflineImapOperations */, 
+                               msgWindow);
+      break;
     }
   }
   else {
     // going offline
-     switch(prefDownloadMessages) {	
-       case 0:
-	 window.openDialog("chrome://messenger/content/downloadMsgs.xul", "downloadMessages", 
-		"centerscreen,chrome,modal,titlebar,resizable=no", args);
-	 if(args.result == 1) { 
-	   // download news, download mail, send unsent messages, go offline when done, msg window
-	   offlineManager.synchronizeForOffline(false, true, false, true, msgWindow);
-	 }
-	 else if(args.result == 2) { 
-	   // download news, download mail, send unsent messages, go offline when done, msg window
-	   offlineManager.synchronizeForOffline(false, false, false, true, msgWindow);
-	 }
-	 else if(args.result == 3) { 
-	   return false;
-         }
-	 break;
-       case 1:
-         // download news, download mail, send unsent messages, go offline when done, msg window
-	 offlineManager.synchronizeForOffline(false, true, false, true, msgWindow);
-	 break;
-       case 2:
-         // download news, download mail, send unsent messages, go offline when done, msg window
-	 offlineManager.synchronizeForOffline(false, false, false, true, msgWindow);
-	 break;
-       }
-   }
+    switch(prefDownloadMessages) {	
+      case 0:
+        if(! PromptDownloadMessages()) return false;
+      break;
+      case 1:
+        // download news, download mail, send unsent messages, go offline when done, msg window
+        gOfflineManager.synchronizeForOffline(false, true, false, true, msgWindow);
+        break;
+      case 2:
+        // download news, download mail, send unsent messages, go offline when done, msg window
+        gOfflineManager.synchronizeForOffline(false, false, false, true, msgWindow);
+        break;
+    }
+  }
 }
 
 function MsgSettingsOffline()
@@ -921,21 +906,180 @@ function MsgSettingsOffline()
     window.parent.MsgAccountManager();
 }
 
+// Init PrefsService
 function GetPrefsService()
 {
-   // Store the prefs object
-   try {
-        var prefsService = Components.classes["@mozilla.org/preferences;1"];
-        if (prefsService)
-        prefsService = prefsService.getService();
-        if (prefsService)
-        gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
+  // Store the prefs object
+  try {
+    var prefsService = Components.classes["@mozilla.org/preferences;1"];
+    if (prefsService)
+    prefsService = prefsService.getService();
+    if (prefsService)
+    gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
 
-        if (!gPrefs)
-        dump("failed to get prefs service!\n");
-   }
-   catch(ex) {
-        dump("failed to get prefs service!\n");
-   }
+    if (!gPrefs)
+    dump("failed to get prefs service!\n");
+  }
+  catch(ex) {
+    dump("failed to get prefs service!\n");
+  }
+}
+
+// Check for unsent messages
+function CheckForUnsentMessages()
+{
+  var am = Components.classes["@mozilla.org/messenger/account-manager;1"]
+               .getService(Components.interfaces.nsIMsgAccountManager);
+  var msgSendlater = Components.classes["@mozilla.org/messengercompose/sendlater;1"]
+               .getService(Components.interfaces.nsIMsgSendLater);
+  var identitiesCount, allIdentities, currentIdentity, numMessages, msgFolder;
+
+  if(am) { 
+    allIdentities = am.allIdentities;
+    identitiesCount = allIdentities.Count();
+    for (var i = 0; i < identitiesCount; i++) {
+      currentIdentity = allIdentities.QueryElementAt(i, Components.interfaces.nsIMsgIdentity);
+      msgFolder = msgSendlater.getUnsentMessagesFolder(currentIdentity);
+      if(msgFolder) {
+        // if true, descends into all subfolders 
+        numMessages = msgFolder.getTotalMessages(false);
+        if(numMessages > 0) return true;
+      }
+    } 
+  }
+  return false;
+}
+
+// Init nsIPromptService & strings.
+function InitPrompts()
+{
+  if(!gPromptService) {
+    gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+  }
+  if (!gOfflinePromptsBundle) 
+    gOfflinePromptsBundle = document.getElementById("bundle_offlinePrompts");
+}
+
+// prompt for sending messages while going online, and go online.
+function PromptSendMessages()
+{
+  InitPrompts();
+  InitServices();
+
+  if (gPromptService) {
+    var buttonPressed = {value:0};
+    var checkValue = {value:true};
+    gPromptService.confirmEx(window, 
+                            gOfflinePromptsBundle.getString('sendMessagesWindowTitle'), 
+                            gOfflinePromptsBundle.getString('sendMessagesLabel'),
+                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
+                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_2) +
+                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_1),
+                            gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
+                            gOfflinePromptsBundle.getString('sendMessagesCancelButtonLabel'),
+                            gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
+                            gOfflinePromptsBundle.getString('sendMessagesCheckboxLabel'), 
+                            checkValue, buttonPressed);
+    if(buttonPressed) {
+      if(buttonPressed.value == 0) {
+        if(checkValue.value) 
+          gPrefs.SetIntPref("offline.send.unsent_messages", 0);
+        else 
+          gPrefs.SetIntPref("offline.send.unsent_messages", 1);
+
+        gOfflineManager.goOnline(true /* sendUnsentMessages */, 
+                                 true /* playbackOfflineImapOperations */, 
+                                 msgWindow);
+        return true;
+      }
+      else if(buttonPressed.value == 1) {
+        return false;
+      }
+      else if(buttonPressed.value == 2) {
+        if(checkValue.value) 
+          gPrefs.SetIntPref("offline.send.unsent_messages", 0);
+        else 
+          gPrefs.SetIntPref("offline.send.unsent_messages", 2);
+        gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                                 true /* playbackOfflineImapOperations */, 
+                                 msgWindow);
+        return true;
+      }
+    }
+  }
+}
+
+// prompt for downlading messages while going offline, and synchronise
+function PromptDownloadMessages()
+{
+  InitPrompts();
+  InitServices();
+
+  if(gPromptService) {
+    var buttonPressed = {value:0};
+    var checkValue = {value:true};
+    gPromptService.confirmEx(window, 
+                            gOfflinePromptsBundle.getString('downloadMessagesWindowTitle'), 
+                            gOfflinePromptsBundle.getString('downloadMessagesLabel'),
+                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_0) +
+                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_2) + 
+                            (gPromptService.BUTTON_TITLE_IS_STRING * gPromptService.BUTTON_POS_1),
+                            gOfflinePromptsBundle.getString('downloadMessagesDownloadButtonLabel'),
+                            gOfflinePromptsBundle.getString('downloadMessagesCancelButtonLabel'),
+                            gOfflinePromptsBundle.getString('downloadMessagesNoDownloadButtonLabel'), 
+                            gOfflinePromptsBundle.getString('downloadMessagesCheckboxLabel'), 
+                            checkValue, buttonPressed);
+    if(buttonPressed) {
+      if(buttonPressed.value == 0) {
+        if(checkValue.value) 
+          gPrefs.SetIntPref("offline.download.download_messages", 0);
+        else 
+          gPrefs.SetIntPref("offline.download.download_messages", 1);
+        // download news, download mail, send unsent messages, go offline when done, msg window
+        gOfflineManager.synchronizeForOffline(false, true, false, true, msgWindow);
+        return true;
+      }
+      else if(buttonPressed.value == 1) {
+        return false;
+      }
+      else if(buttonPressed.value == 2) {
+        if(checkValue.value) 
+          gPrefs.SetIntPref("offline.download.download_messages", 0);
+        else 
+          gPrefs.SetIntPref("offline.download.download_messages", 2);
+        // download news, download mail, send unsent messages, go offline when done, msg window
+        gOfflineManager.synchronizeForOffline(false, false, false, true, msgWindow);
+        return true;
+      }
+    }
+  }
+}
+
+// online?
+function CheckOnline()
+{
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                         .getService(Components.interfaces.nsIIOService);
+  return (!ioService.offline);
+}
+
+// Init Pref Service & Offline Manager
+function InitServices()
+{
+  if (!gPrefs) 
+    GetPrefsService();
+
+  if (!gOfflineManager) 
+    GetOfflineMgrService();
+}
+
+// Init Offline Manager
+function GetOfflineMgrService()
+{
+  if (!gOfflineManager) {
+    gOfflineManager = Components.classes["@mozilla.org/messenger/offline-manager;1"]                 
+        .getService(Components.interfaces.nsIMsgOfflineManager);
+  }
 }
 
