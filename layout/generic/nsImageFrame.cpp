@@ -111,14 +111,20 @@ nsImageFrame::~nsImageFrame()
 NS_METHOD
 nsImageFrame::Destroy(nsIPresContext* aPresContext)
 {
-  NS_IF_RELEASE(mImageMap);
+  // Tell our image map, if there is one, to clean up
+  // This causes the nsImageMap to unregister itself as
+  // a DOM listener.
+    if(mImageMap) {
+      mImageMap->Destroy();
+      NS_RELEASE(mImageMap);
+    }
 
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.StopAllLoadImages(aPresContext);
   if (mLowSrcImageLoader != nsnull) {
     mLowSrcImageLoader->StopAllLoadImages(aPresContext);
   }
-
+  
   return nsLeafFrame::Destroy(aPresContext);
 }
 

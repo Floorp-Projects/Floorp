@@ -68,7 +68,13 @@ public:
   PRBool IsInside(nscoord aX, nscoord aY);
 
   void Draw(nsIPresContext* aCX, nsIRenderingContext& aRC);
-
+  
+  /** 
+   * Called just before the nsImageFrame releases us. 
+   * Used to break the cycle caused by the DOM listener.
+   */
+  void Destroy(void);
+  
 #ifdef DEBUG
   void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
