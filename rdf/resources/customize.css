@@ -50,7 +50,15 @@ titledbutton.up {
   list-style-image:url(resource:/res/rdf/list-up.gif);
 }
 
+titledbutton.up[disabled="true"] {
+  list-style-image:url(resource:/res/rdf/list-up-dis.gif);
+}
+
 titledbutton.down {
   list-style-image:url(resource:/res/rdf/list-down.gif);
+}
+
+titledbutton.down[disabled="true"] {
+  list-style-image:url(resource:/res/rdf/list-down-dis.gif);
 }
 

@@ -23,13 +23,14 @@
 
     <box align="vertical">
       <spring flex="50%"/>
-      <titledbutton onclick="moveUp();"   class="borderless up" />
-      <titledbutton onclick="moveDown();" class="borderless down" />
+      <titledbutton onclick="moveUp();"   id="up"   class="borderless up" />
+      <titledbutton onclick="moveDown();" id="down" class="borderless down" />
       <spring flex="50%"/>
     </box>
 
     <html:form name="one" >
-      <html:select name="two" id="selectList" size="10">
+      <html:select name="two" id="selectList" size="10" 
+                   onchange="selectChange();">
       </html:select>
     </html:form>
 

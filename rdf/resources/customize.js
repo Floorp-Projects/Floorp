@@ -57,6 +57,7 @@ function Init()
       sideoption.appendChild(new_option);
     }
   }
+  enableUpDown();
 }
 
 function createOption(registry, service) {
@@ -120,60 +121,83 @@ function Reload(url, pollInterval)
     Schedule(url, pollInterval);
 }
 
+function selectChange() {
+  enableUpDown();
+}
+
 function moveUp() {
   var list = document.getElementById('selectList'); 
-  var listSelect = list.selectedIndex;
-  dump('selected=' + list.selectedIndex + '\n');
-  if (list.selectedIndex > 0) {
-    var listOption = list.childNodes.item(listSelect).cloneNode(true);
-    var listOptionBefore = list.childNodes.item(listSelect-1);	
-    list.remove(listSelect);
+  var index = list.selectedIndex;
+  if (index > 0) {
+    var listOption = list.childNodes.item(index).cloneNode(true);
+    var listOptionBefore = list.childNodes.item(index-1);	
+    list.remove(index);
     list.insertBefore(listOption, listOptionBefore);
     dump("\n" + listOption + "\n");
+    list.selectedIndex = index - 1;
+    enableUpDown();
   }
 }
    
 function moveDown() {
   var list = document.getElementById('selectList');	
-  var listSelect = list.selectedIndex;
-  dump('list\n' + listSelect);	
-  dump('selected=' + list.selectedIndex + '\n');
-  if (list.selectedIndex != -1) {
-    var listOption = list.childNodes.item(listSelect);
-    var listOptionBefore = list.childNodes.item(listSelect+1).cloneNode(true);
-    list.remove(listSelect+1);
-    list.insertBefore(listOptionBefore, listOption);
+  var index = list.selectedIndex;
+  if (index != -1 &&
+      index != list.options.length - 1) {
+    var listOption = list.childNodes.item(index);
+    var listOptionAfter = list.childNodes.item(index+1).cloneNode(true);
+    list.remove(index+1);
+    list.insertBefore(listOptionAfter, listOption);
     dump("\n" + listOption + "\n");
+    enableUpDown();
+  }
+}
+
+function enableUpDown() {
+  var up   = document.getElementById('up');
+  var down = document.getElementById('down');
+  var list = document.getElementById('selectList');	
+  var isFirst = list.selectedIndex == 0;
+  var isLast  = list.selectedIndex == list.options.length - 1;
+
+  if (isFirst) {
+    up.setAttribute('disabled', 'true');
+  } else {
+    up.setAttribute('disabled', '');
+  }
+  if (isLast) {
+    down.setAttribute('disabled', 'true');
+  } else {
+    down.setAttribute('disabled', '');
   }
 }
 
 function deleteOption()
 {
-  var list = document.getElementById('selectList');	
-  var listSelect = list.selectedIndex;
-  dump("selected=" + list.selectedIndex +"\n");
-  if (list.selectedIndex != -1) {
-    var list = document.getElementById('selectList');
-    var listSelect = list.selectedIndex;
-    list.remove(listSelect);
+  var list  = document.getElementById('selectList');	
+  var index = list.selectedIndex;
+  if (index != -1) {
+    //list.remove(index);
+    // XXX prompt user
+    list.options[index] = null;
   }
 }
 
 function DumpIt() {
-	var list = document.getElementById('selectList'); 
-	var listLen = list.childNodes.length;
+  var list = document.getElementById('selectList'); 
+  var listLen = list.childNodes.length;
 	
-    for (var i=0;i<listLen; ++i) {
-	   dump('length:' + listLen + '\n');
-	   dump(list.childNodes.item(i).getAttribute('title') + '\n');
+  for (var i=0;i<listLen; ++i) {
+    dump('length:' + listLen + '\n');
+    dump(list.childNodes.item(i).getAttribute('title') + '\n');
 
-	   writeRDF(list.childNodes.item(i).getAttribute('title'),list.childNodes.item(i).getAttribute('content'),list.childNodes.item(i).getAttribute('customize'),0);
-	   }
+    writeRDF(list.childNodes.item(i).getAttribute('title'),list.childNodes.item(i).getAttribute('content'),list.childNodes.item(i).getAttribute('customize'),0);
+  }
 }
 
 function save() {
-	self.close();
-	}
+  self.close();
+}
 
 // Note that there is a bug with resource: URLs right now.
 var FileURL = "file:///C:/matt/rdf/sidebar-browser.rdf";

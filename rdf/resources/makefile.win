@@ -45,7 +45,9 @@ FILES=\
         folder-open.gif                 \
         ignore-test.xul                 \
         list-down.gif                   \
+        list-down-dis.gif               \
         list-up.gif                     \
+        list-up-dis.gif                 \
         loading.gif                     \
         online.gif                      \
         sidebar.css                     \
