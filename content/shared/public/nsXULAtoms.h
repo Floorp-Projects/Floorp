@@ -58,6 +58,7 @@ public:
   static nsIAtom* treerow; // A row in the tree view
   static nsIAtom* treecell; // A cell in the tree view
   static nsIAtom* treechildren; // The children of an item in the tree viw
+  static nsIAtom* treeindentation; // Specifies that the indentation for the level should occur here.
 
   static nsIAtom* widget;
   static nsIAtom* window;

@@ -33,6 +33,7 @@ INCLUDES += \
 	-I$(srcdir)/../../../html/table/src \
 	-I$(srcdir)/../../../html/style/src \
 	-I$(srcdir)/../../../html/base/src \
+	-I$(srcdir)/../../content/src \
 	-I$(DIST)/public/raptor			\
 	$(NULL)
 
@@ -41,6 +42,7 @@ CPPSRCS =				\
 	nsToolbarFrame.cpp			\
 	nsToolboxFrame.cpp			\
 	nsTreeFrame.cpp \
+	nsTreeIndentationFrame.cpp \
 	$(NULL)
 
 EXPORTS = \
