@@ -142,7 +142,9 @@ my @namelist = sort(keys %names);
 
 my @data;
 
-push @data, \@datelist;
+my @labels = grep(s/^\d+-//, @datelist); # Strip years off of labels.
+
+push @data, \@labels;
 
 foreach my $n (@namelist) {
     my $c = [];
