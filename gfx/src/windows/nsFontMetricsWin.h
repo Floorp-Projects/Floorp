@@ -30,6 +30,7 @@
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
 #include "nsDeviceContextWin.h"
+#include "nsCOMPtr.h"
 
 #ifdef FONT_HAS_GLYPH
 #undef FONT_HAS_GLYPH
@@ -83,7 +84,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+                   nsIDeviceContext* aContext);
   NS_IMETHOD  Destroy();
 
   NS_IMETHOD  GetXHeight(nscoord& aResult);
@@ -98,12 +100,17 @@ public:
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
+  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
   virtual nsresult   GetSpaceWidth(nscoord &aSpaceWidth);
   virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindGenericFont(HDC aDC, PRUnichar aChar,
+                                   nsString* aGeneric);
+  virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar,
+                                   nsString** aGeneric);
   nsFontWin*         FindFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName);
   virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
 
   int SameAsPreviousMap(int aIndex);
@@ -116,6 +123,9 @@ public:
   PRUint16            mFontsAlloc;
   PRUint16            mFontsCount;
   PRUint16            mFontsIndex;
+
+  nsCOMPtr<nsIAtom>   mLangGroup;
+
   nscoord						  mSpaceWidth;
 
   static nsGlobalFont* gGlobalFonts;

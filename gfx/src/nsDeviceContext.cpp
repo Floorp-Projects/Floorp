@@ -40,7 +40,8 @@ public:
 
   nsresult Init(nsIDeviceContext* aContext);
   nsresult GetDeviceContext(nsIDeviceContext *&aContext) const;
-  nsresult GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMetrics);
+  nsresult GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+                         nsIFontMetrics *&aMetrics);
   nsresult Flush();
 
 protected:
@@ -228,6 +229,25 @@ nsresult DeviceContextImpl::CreateFontCache()
   return NS_OK;
 }
 
+NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont,
+  nsIAtom* aLangGroup, nsIFontMetrics*& aMetrics)
+{
+  if (nsnull == mFontCache) {
+    nsresult  rv = CreateFontCache();
+    if (NS_FAILED(rv)) {
+      aMetrics = nsnull;
+      return rv;
+    }
+  }
+
+  // XXX figure out why aLangGroup is NULL sometimes
+  if (!aLangGroup) {
+    aLangGroup = NS_NewAtom("x-western");
+  }
+
+  return mFontCache->GetMetricsFor(aFont, aLangGroup, aMetrics);
+}
+
 NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics)
 {
   if (nsnull == mFontCache) {
@@ -237,7 +257,7 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetri
       return rv;
     }
   }
-  return mFontCache->GetMetricsFor(aFont, aMetrics);
+  return mFontCache->GetMetricsFor(aFont, nsnull, aMetrics);
 }
 
 NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
@@ -614,6 +634,73 @@ NS_IMETHODIMP DeviceContextImpl::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
   return NS_OK;
 }
 
+typedef struct LangGroupEntry
+{
+  char*    mCharSet;
+  char*    mLangGroup;
+  nsIAtom* mAtom;
+} LangGroupEntry;
+
+static LangGroupEntry langGroups[] =
+{
+  { "Shift_JIS", "ja", nsnull },
+  { "Big5", "zh-TW", nsnull },
+  { "EUC-JP", "ja", nsnull },
+  { "EUC-KR", "ko", nsnull },
+  { "GB2312", "zh-CN", nsnull },
+  { "HZ-GB-2312", "zh-CN", nsnull },
+  { "ISO-2022-JP", "ja", nsnull },
+  { "ISO-2022-KR", "ko", nsnull },
+  { "ISO-8859-1", "x-western", nsnull },
+  { "ISO-8859-2", "x-central-euro", nsnull },
+  { "ISO-8859-5", "x-cyrillic", nsnull },
+  { "ISO-8859-7", "el", nsnull },
+  { "ISO-8859-9", "tr", nsnull },
+  { "KOI8-R", "x-cyrillic", nsnull },
+  { "UTF-8", "x-unicode", nsnull },
+  { "us-ascii", "x-western", nsnull },
+  { "windows-1250", "x-central-euro", nsnull },
+  { "windows-1251", "x-cyrillic", nsnull },
+  { "x-euc-tw", "zh-TW", nsnull },
+  { "x-mac-ce", "x-central-euro", nsnull },
+  { "x-mac-cyrillic", "x-cyrillic", nsnull },
+  { "x-mac-greek", "el", nsnull },
+  { "x-mac-roman", "x-western", nsnull },
+  { "x-mac-turkish", "tr", nsnull },
+
+  { nsnull, nsnull, nsnull }
+};
+
+NS_IMETHODIMP
+DeviceContextImpl::GetLangGroup(const nsString& aCharSet, nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aLangGroup = nsnull;
+
+  LangGroupEntry* p = langGroups;
+  while (p->mCharSet) {
+    if (aCharSet == p->mCharSet) {
+      if (!p->mAtom) {
+        p->mAtom = NS_NewAtom(p->mLangGroup);
+        if (p->mAtom) {
+          NS_ADDREF(p->mAtom);
+        }
+        else {
+          return NS_ERROR_FAILURE;
+        }
+      }
+      NS_ADDREF(p->mAtom);
+      *aLangGroup = p->mAtom;
+      return NS_OK;
+    }
+    p++;
+  }
+
+  return NS_OK;
+}
+
 /////////////////////////////////////////////////////////////
 
 nsFontCache :: nsFontCache()
@@ -642,7 +729,8 @@ nsresult nsFontCache :: GetDeviceContext(nsIDeviceContext *&aContext) const
   return NS_OK;
 }
 
-nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMetrics)
+nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+  nsIFontMetrics *&aMetrics)
 {
   // First check our cache
   PRInt32 n = mFontMetrics.Count();
@@ -653,7 +741,13 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMet
 
     const nsFont* font;
     aMetrics->GetFont(font);
+#ifdef XP_PC
+    nsCOMPtr<nsIAtom> langGroup;
+    aMetrics->GetLangGroup(getter_AddRefs(langGroup));
+    if (aFont.Equals(*font) && (aLangGroup == langGroup))
+#else
     if (aFont.Equals(*font))
+#endif
     {
       NS_ADDREF(aMetrics);
       return NS_OK;
@@ -672,7 +766,11 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIFontMetrics *&aMet
     return rv;
   }
 
+#ifdef XP_PC
+  rv = fm->Init(aFont, aLangGroup, mContext);
+#else
   rv = fm->Init(aFont, mContext);
+#endif
 
   if (NS_OK != rv) {
     aMetrics = nsnull;

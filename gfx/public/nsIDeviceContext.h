@@ -33,6 +33,7 @@ class nsIView;
 class nsIFontMetrics;
 class nsIWidget;
 class nsIDeviceContextSpec;
+class nsIAtom;
 
 struct nsFont;
 struct nsColor;
@@ -250,6 +251,19 @@ public:
    * @return error status
    */
   NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const = 0;
+
+  NS_IMETHOD GetLangGroup(const nsString& aCharSet, nsIAtom** aLangGroup) = 0;
+
+  /**
+   * Get the nsIFontMetrics that describe the properties of
+   * an nsFont.
+   * @param aFont font description to obtain metrics for
+   * @param aLangGroup the language group of the document
+   * @param aMetrics out parameter for font metrics
+   * @return error status
+   */
+  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+                            nsIFontMetrics*& aMetrics) = 0;
 
   /**
    * Get the nsIFontMetrics that describe the properties of

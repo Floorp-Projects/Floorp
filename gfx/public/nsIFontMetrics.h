@@ -52,6 +52,16 @@ class nsIFontMetrics : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFONT_METRICS_IID)
 
+#ifdef XP_PC
+  /**
+   * Initialize the font metrics. Call this after creating the font metrics.
+   * Font metrics you get from the font cache do NOT need to be initialized
+   *
+   * @see nsIDeviceContext#GetMetricsFor()
+   */
+  NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLangGroup,
+                   nsIDeviceContext *aContext) = 0;
+#else
   /**
    * Initialize the font metrics. Call this after creating the font metrics.
    * Font metrics you get from the font cache do NOT need to be initialized
@@ -59,6 +69,7 @@ public:
    * @see nsIDeviceContext#GetMetricsFor()
    */
   NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext *aContext) = 0;
+#endif
 
   /**
    * Destroy this font metrics. This breaks the association between
@@ -132,6 +143,13 @@ public:
    * Returns the font associated with these metrics
    */
   NS_IMETHOD  GetFont(const nsFont *&aFont) = 0;
+
+#ifdef XP_PC
+  /**
+   * Returns the language group associated with these metrics
+   */
+  NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup) = 0;
+#endif
 
   /**
    * Returns the font handle associated with these metrics
