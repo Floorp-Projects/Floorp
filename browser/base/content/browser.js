@@ -327,7 +327,7 @@ function Startup()
   appCore.startPageCycler();
 #else
   // only load url passed in when we're not page cycling
-  var uriToLoad;
+  var uriToLoad = null;
 
   // Check for window.arguments[0]. If present, use that for uriToLoad.
   if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
@@ -3284,15 +3284,6 @@ function focusSearchBar()
   }
 }
 
-/*------------------------------ nsContextMenu ---------------------------------
-|   This JavaScript "class" is used to implement the browser's content-area    |
-|   context menu.                                                              |
-|                                                                              |
-|   For usage, see references to this class in navigator.xul.                  |
-|                                                                              |
-|   Currently, this code is relatively useless for any other purpose.  In the  |
-|   longer term, this code will be restructured to make it more reusable.      |
-------------------------------------------------------------------------------*/
 const IMAGEPERMISSION = 1;
 function nsContextMenu( xulMenu ) {
     this.target         = null;
