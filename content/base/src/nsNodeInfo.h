@@ -98,6 +98,7 @@ public:
 
   NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo*& aResult);
   NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult);
+  NS_IMETHOD GetDocument(nsIDocument*& aDocument);
 
   // nsNodeInfo
   nsNodeInfo();

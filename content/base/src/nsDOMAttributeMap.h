@@ -23,7 +23,6 @@
 #define nsDOMAttributeMap_h___
 
 #include "nsIDOMNamedNodeMap.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "plhash.h"
@@ -31,8 +30,7 @@
 class nsIContent;
 
 // Helper class that implements the nsIDOMNamedNodeMap interface.
-class nsDOMAttributeMap : public nsIDOMNamedNodeMap,
-                          public nsIScriptObjectOwner
+class nsDOMAttributeMap : public nsIDOMNamedNodeMap
 {
 public:
   nsDOMAttributeMap(nsIContent* aContent);
@@ -40,21 +38,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
   // nsIDOMNamedNodeMap interface
-  NS_IMETHOD GetLength(PRUint32* aSize);
-  NS_IMETHOD GetNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
-  NS_IMETHOD SetNamedItem(nsIDOMNode* aNode, nsIDOMNode** aReturn);
-  NS_IMETHOD RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD GetNamedItemNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName, nsIDOMNode** aReturn);
-  NS_IMETHOD SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn);
-  NS_IMETHOD RemoveNamedItemNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aLocalName, 
-                               nsIDOMNode** aReturn);
+  NS_DECL_NSIDOMNAMEDNODEMAP
 
   void DropReference();
 
@@ -65,8 +50,7 @@ public:
 #endif
 
 private:
-  nsIContent* mContent;
-  void* mScriptObject;
+  nsIContent* mContent; // Weak reference
 };
 
 

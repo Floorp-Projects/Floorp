@@ -118,7 +118,7 @@ public:
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult) = 0;
   NS_IMETHOD FlushChromeBindings() = 0;
 
-  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, void* aScriptObject, REFNSIID aIID, void** aResult)=0;
+  NS_IMETHOD GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult)=0;
 
   NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult) = 0;
 };

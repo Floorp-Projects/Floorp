@@ -41,14 +41,15 @@ class nsXBLContextMenuHandler : public nsIDOMContextMenuListener,
                                 public nsXBLEventHandler
 {
 public:
-  nsXBLContextMenuHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  nsXBLContextMenuHandler(nsIDOMEventReceiver* aReceiver,
+                          nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLContextMenuHandler();
-  
+
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
-  
-  virtual nsresult ContextMenu(nsIDOMEvent* aContextMenuEvent);
-   
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+
+  NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
+
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:

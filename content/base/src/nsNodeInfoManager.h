@@ -37,7 +37,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsINodeInfoManager
-  NS_IMETHOD Init(nsINameSpaceManager *aNameSpaceManager);
+  NS_IMETHOD Init(nsIDocument *aDocument,
+                  nsINameSpaceManager *aNameSpaceManager);
+  NS_IMETHOD DropDocumentReference();
   NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
   NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, nsIAtom *aPrefix,
@@ -51,6 +53,7 @@ public:
                          const nsAReadableString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo); 
   NS_IMETHOD GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager);
+  NS_IMETHOD GetDocument(nsIDocument*& aDocument);
 
   // nsNodeInfoManager
   nsNodeInfoManager();
@@ -63,6 +66,7 @@ public:
 private:
   PLHashTable *mNodeInfoHash;
   nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
+  nsIDocument *mDocument; // WEAK
 
   /*
    * gAnonymousNodeInfoManager is a global nodeinfo manager used for nodes

@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 #include "nsGenericHTMLElement.h"
 #include "nsCOMPtr.h"
@@ -35,6 +35,8 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIEventListenerManager.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIHTMLStyleSheet.h"
@@ -43,8 +45,6 @@
 #include "nsILink.h"
 #include "nsILinkHandler.h"
 #include "nsPIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsISizeOfHandler.h"
 #include "nsIStyleContext.h"
 #include "nsIMutableStyleContext.h"
@@ -77,7 +77,6 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
 #include "prprf.h"
@@ -108,10 +107,12 @@
 #include "nsIHTMLContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
+
 static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 // XXX todo: add in missing out-of-memory checks
 
 #include "nsIPref.h" // Used by the temp pref, should be removed!
+
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
@@ -406,6 +407,65 @@ static int gGenericHTMLElementCount = 0;
 static nsILanguageAtomService* gLangService = nsnull;
 
 
+class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
+                                    public nsIDOMElementCSSInlineStyle
+{
+  NS_DECL_ISUPPORTS
+
+  nsGenericHTMLElementTearoff(nsGenericHTMLElement *aElement)
+    : mElement(aElement)
+  {
+    NS_INIT_REFCNT();
+    NS_ADDREF(mElement);
+  }
+
+  ~nsGenericHTMLElementTearoff()
+  {
+    NS_RELEASE(mElement);
+  }
+
+  NS_FORWARD_NSIDOMNSHTMLELEMENT(mElement->)
+  NS_FORWARD_NSIDOMELEMENTCSSINLINESTYLE(mElement->)
+
+private:
+  nsGenericHTMLElement *mElement;
+};
+
+
+NS_IMPL_ADDREF(nsGenericHTMLElementTearoff)
+NS_IMPL_RELEASE(nsGenericHTMLElementTearoff)
+
+NS_IMETHODIMP
+nsGenericHTMLElementTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+  nsISupports *inst = nsnull;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLElement))) {
+    inst = NS_STATIC_CAST(nsIDOMNSHTMLElement *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
+    inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *, this);
+  } else {
+    return mElement->QueryInterface(aIID, aInstancePtr);
+  }
+
+  NS_ADDREF(inst);
+
+  *aInstancePtr = inst;
+
+  return NS_OK;
+}
+
+
+// XPConnect interface list for nsGenericHTMLElement
+NS_CLASSINFO_MAP_BEGIN_EXPORTED(GenericHTMLElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+NS_CLASSINFO_MAP_END
+
+
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
   mAttributes = nsnull;
@@ -455,6 +515,17 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
     inst = NS_STATIC_CAST(nsIDOMElement *, aElement);
   } else if (aIID.Equals(NS_GET_IID(nsIDOMHTMLElement))) {
     inst = NS_STATIC_CAST(nsIDOMHTMLElement *, aElement);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLElement))) {
+    inst = NS_STATIC_CAST(nsIDOMNSHTMLElement *,
+                          new nsGenericHTMLElementTearoff(this));
+    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
+    inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *,
+                          new nsGenericHTMLElementTearoff(this));
+    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
+    inst = new nsNode3Tearoff(this);
+    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
   } else {
     return NS_NOINTERFACE;
   }
@@ -1396,8 +1467,10 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
         mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(strValue));
       if (!aValue.IsEmpty())
         mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
-      mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION :
-                                             nsIDOMMutationEvent::ADDITION;
+      if (modification)
+        mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
+      else
+        mutation.mAttrChange = nsIDOMMutationEvent::ADDITION;
       nsEventStatus status = nsEventStatus_eIgnore;
       HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);
@@ -2066,6 +2139,13 @@ nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) co
   }
 
   return NS_OK;
+}
+
+
+NS_IMETHODIMP_(PRBool)
+nsGenericHTMLElement::IsContentOfType(PRUint32 aFlags)
+{
+  return !(aFlags & ~(eELEMENT | eHTML));
 }
 
 PRUint32
@@ -3308,15 +3388,15 @@ nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   nsDOMSlots* slots = GetDOMSlots();
 
-  if (nsnull == slots->mChildNodes) {
+  if (!slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(nsnull);
-    if (nsnull == slots->mChildNodes) {
+    if (!slots->mChildNodes) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(slots->mChildNodes);
   }
 
-  return slots->mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aChildNodes);
+  return CallQueryInterface(slots->mChildNodes, aChildNodes);
 }
 
 //----------------------------------------------------------------------
@@ -3674,6 +3754,12 @@ nsGenericHTMLContainerFormElement::QueryInterface(REFNSIID aIID,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsGenericHTMLContainerFormElement::IsContentOfType(PRUint32 aFlags)
+{
+  return !(aFlags & ~(eELEMENT | eHTML | eHTML_FORM_CONTROL));
+}
+
 NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
                                            PRBool aRemoveFromForm)
@@ -3732,40 +3818,6 @@ nsGenericHTMLContainerFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLContainerFormElement::GetScriptObject(nsIScriptContext* aContext,
-                                                   void** aScriptObject)
-{
-  NS_ENSURE_ARG_POINTER(aScriptObject);
-
-  if (mDOMSlots && mDOMSlots->mScriptObject) {
-    *aScriptObject = mDOMSlots->mScriptObject;
-
-    return NS_OK;
-  }
-
-  nsresult rv = nsGenericElement::GetScriptObject(aContext, aScriptObject);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(*aScriptObject, NS_ERROR_FAILURE);
-
-  // If there's a form associated with this control we set the form as parent
-  // object for this controls script object.
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mForm));
-
-  if (owner) {
-    JSContext *ctx = (JSContext *)aContext->GetNativeContext();
-    JSObject *parent = nsnull;
-
-    rv = owner->GetScriptObject(aContext, (void **)&parent);
-
-    if (NS_SUCCEEDED(rv) && parent) {
-      ::JS_SetParent(ctx, (JSObject *)*aScriptObject, parent);
-    }
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -3927,6 +3979,12 @@ nsGenericHTMLLeafFormElement::QueryInterface(REFNSIID aIID,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsGenericHTMLLeafFormElement::IsContentOfType(PRUint32 aFlags)
+{
+  return !(aFlags & ~(eELEMENT | eHTML | eHTML_FORM_CONTROL));
+}
+
 NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
                                       PRBool aRemoveFromForm)
@@ -4032,40 +4090,6 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
 }
 
 NS_IMETHODIMP
-nsGenericHTMLLeafFormElement::GetScriptObject(nsIScriptContext* aContext,
-                                              void** aScriptObject)
-{
-  NS_ENSURE_ARG_POINTER(aScriptObject);
-
-  if (mDOMSlots && mDOMSlots->mScriptObject) {
-    *aScriptObject = mDOMSlots->mScriptObject;
-
-    return NS_OK;
-  }
-
-  nsresult rv = nsGenericElement::GetScriptObject(aContext, aScriptObject);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(*aScriptObject, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mForm));
-
-  // If there's a form associated with this control we set the form as parent
-  // object for this controls script object.
-  if (owner) {
-    JSContext *ctx = (JSContext *)aContext->GetNativeContext();
-    JSObject *parent = nsnull;
-
-    rv = owner->GetScriptObject(aContext, (void **)&parent);
-
-    if (NS_SUCCEEDED(rv) && parent) {
-      ::JS_SetParent(ctx, (JSObject *)*aScriptObject, parent);
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::SetAttribute(PRInt32 aNameSpaceID,
                                            nsIAtom* aName,
                                            const nsAReadableString& aValue,
@@ -4091,6 +4115,7 @@ nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
 }
 
 
+#if 0 // XXX
 nsresult
 nsGenericHTMLElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
 {
@@ -4296,3 +4321,4 @@ nsGenericHTMLElement::GetPluginProperty(JSContext *aContext, JSObject *aObj,
   }
   return nsGenericElement::GetProperty(aContext, aObj, aID, aVp);
 }
+#endif

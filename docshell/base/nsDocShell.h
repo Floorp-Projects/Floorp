@@ -323,6 +323,8 @@ protected:
     // Disallow popping up new windows with target=
     PRBool                     mDisallowPopupWindows;
 
+    PRBool                     mIsBeingDestroyed;
+
     // WEAK REFERENCES BELOW HERE.
     // Note these are intentionally not addrefd.  Doing so will create a cycle.
     // For that reasons don't use nsCOMPtr.

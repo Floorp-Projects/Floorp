@@ -51,7 +51,6 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
@@ -345,38 +344,89 @@ nsCheapVoidArray::SwitchToVector()
   return vector;
 }
 
-//----------------------------------------------------------------------
 
-// XXX Currently, the script object factory is global. The way we
-// obtain it should, at least, be made thread-safe later. Ideally,
-// we'd find a better way.
-nsIDOMScriptObjectFactory* nsGenericElement::gScriptObjectFactory = nsnull;
-
-static NS_DEFINE_IID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-
-nsresult
-nsGenericElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
+NS_IMETHODIMP
+nsNode3Tearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  nsresult result = NS_OK;
+  if (aIID.Equals(NS_GET_IID(nsIDOM3Node))) {
+    nsISupports *inst = this;
 
-  if (nsnull == gScriptObjectFactory) {
-    result = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                          NS_GET_IID(nsIDOMScriptObjectFactory),
-                                          (nsISupports **)&gScriptObjectFactory);
-    if (result != NS_OK) {
-      return result;
+    NS_ADDREF(inst);
+
+    *aInstancePtr = inst;
+
+    return NS_OK;
+  }
+
+  return mContent->QueryInterface(aIID, aInstancePtr);
+}
+
+
+NS_IMPL_ADDREF(nsNode3Tearoff)
+NS_IMPL_RELEASE(nsNode3Tearoff)
+
+
+NS_IMETHODIMP
+nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
+{
+  nsCOMPtr<nsIURI> uri;
+
+  nsCOMPtr<nsIDocument> doc;
+
+  mContent->GetDocument(*getter_AddRefs(doc));
+
+  nsCOMPtr<nsIXMLDocument> xmlDoc(do_QueryInterface(doc));
+
+  aURI.Truncate();
+
+  if (xmlDoc) {
+    // XML documents can use the XML Base (W3C spec) way of setting
+    // the base per element. We look at this node and its ancestors
+    // until we find the first XML content and get it's base.
+    nsCOMPtr<nsIContent> content(mContent);
+
+    while (content) {
+      nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(content));
+
+      if (xmlContent) {
+        xmlContent->GetXMLBaseURI(getter_AddRefs(uri));
+
+        break;
+      }
+
+      nsCOMPtr<nsIContent> tmp(content);
+      tmp->GetParent(*getter_AddRefs(content));
     }
   }
 
-  *aResult = gScriptObjectFactory;
-  NS_ADDREF(gScriptObjectFactory);
-  return result;
+  if (!uri && doc) {
+    // HTML document or for some reason there was no XML content in
+    // XML document
+
+    doc->GetBaseURL(*getter_AddRefs(uri));
+
+    if (!uri) {
+      uri = dont_AddRef(doc->GetDocumentURL());
+    }
+  }
+
+  if (uri) {
+    nsXPIDLCString spec;
+
+    uri->GetSpec(getter_Copies(spec));
+
+    CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+  }
+  
+  return NS_OK;
 }
+
+
+//----------------------------------------------------------------------
 
 /* static */ void
 nsGenericElement::Shutdown()
 {
-  NS_IF_RELEASE(gScriptObjectFactory); // assigns null
 }
 
 nsGenericElement::nsGenericElement() : mDocument(nsnull), mParent(nsnull),
@@ -426,7 +476,6 @@ nsGenericElement::GetDOMSlots()
     if (!mDOMSlots)
       return nsnull;
 
-    mDOMSlots->mScriptObject = nsnull;
     mDOMSlots->mChildNodes = nsnull;
     mDOMSlots->mStyle = nsnull;
     mDOMSlots->mAttributeMap = nsnull;
@@ -442,7 +491,6 @@ void
 nsGenericElement::MaybeClearDOMSlots()
 {
   if (mDOMSlots &&
-      !mDOMSlots->mScriptObject &&
       !mDOMSlots->mChildNodes &&
       !mDOMSlots->mStyle &&
       !mDOMSlots->mAttributeMap &&
@@ -481,7 +529,10 @@ nsGenericElement::GetLocalName(nsAWritableString& aLocalName)
 NS_IMETHODIMP
 nsGenericElement::GetNodeValue(nsAWritableString& aNodeValue)
 {
+  // XXX: Null string
+
   aNodeValue.Truncate();
+
   return NS_OK;
 }
 
@@ -630,7 +681,7 @@ nsGenericElement::SetPrefix(const nsAReadableString& aPrefix)
   nsINodeInfo *newNodeInfo = nsnull;
   nsCOMPtr<nsIAtom> prefix;
 
-  if (aPrefix.Length()) {
+  if (aPrefix.Length() && !DOMStringIsNull(aPrefix)) {
     prefix = dont_AddRef(NS_NewAtom(aPrefix));
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
@@ -707,48 +758,6 @@ nsGenericElement::GetXMLBaseURI(nsIURI **aURI)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsGenericElement::GetBaseURI(nsAWritableString& aURI)
-{
-  aURI.Truncate();
-  nsCOMPtr<nsIURI> uri;
-  nsCOMPtr<nsIXMLDocument> xmlDoc(do_QueryInterface(mDocument));
-  if (xmlDoc) {
-    // XML documents can use the XML Base (W3C spec) way of setting the base
-    // per element. We look at this node and its ancestors until we find
-    // the first XML content and get it's base.
-    nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIContent*,this)));
-    while (content) {
-      nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(content));
-      if (xmlContent) {
-        xmlContent->GetXMLBaseURI(getter_AddRefs(uri));
-        break;
-      }
-      nsCOMPtr<nsIContent> tmp(content);
-      tmp->GetParent(*getter_AddRefs(content));
-    }
-  }
-
-  if (!uri && mDocument) {
-    // HTML document or for some reason there was no XML content in XML document
-    mDocument->GetBaseURL(*getter_AddRefs(uri));
-    if (!uri) {
-      uri = dont_AddRef(mDocument->GetDocumentURL());
-    }
-  }
-
-  if (uri) {
-    nsXPIDLCString spec;
-    uri->GetSpec(getter_Copies(spec));
-    if (spec) {
-      CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
-    }
-  }
-  
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
@@ -791,7 +800,12 @@ nsGenericElement::GetAttribute(const nsAReadableString& aName,
   ni->GetNamespaceID(nsid);
   ni->GetNameAtom(*getter_AddRefs(nameAtom));
 
-  NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nsid, nameAtom, aReturn);
+  nsresult rv = NS_STATIC_CAST(nsIContent *,
+                               this)->GetAttribute(nsid, nameAtom, aReturn);
+
+  if (rv = NS_CONTENT_ATTR_NOT_THERE) {
+    // XXX: Null aReturn
+  }
 
   return NS_OK;
 }
@@ -1280,17 +1294,6 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     // If we were part of a document, make sure we get rid of the
     // script context reference to our script object so that our
     // script object can be freed (or collected).
-    if (mDocument && mDOMSlots && mDOMSlots->mScriptObject) {
-      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-      if (globalObject) {
-        nsCOMPtr<nsIScriptContext> context;
-        if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
-          context->RemoveReference((void *)&mDOMSlots->mScriptObject,
-                                   mDOMSlots->mScriptObject);
-        }
-      }
-    }
 
     if (mDocument && aDeep) {
       // Notify XBL- & nsIAnonymousContentCreator-generated
@@ -1312,23 +1315,6 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     }
 
     mDocument = aDocument;
-
-    // If we already have a script object and now we're being added
-    // to a document, make sure that the script context adds a
-    // reference to our script object. This will ensure that it
-    // won't be freed (or collected) out from under us.
-    if (mDocument && mDOMSlots && mDOMSlots->mScriptObject) {
-      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-      if (globalObject) {
-        nsCOMPtr<nsIScriptContext> context;
-        if (NS_OK == globalObject->GetContext(getter_AddRefs(context)) && context) {
-          context->AddNamedReference((void *)&mDOMSlots->mScriptObject,
-                                     mDOMSlots->mScriptObject,
-                                     "nsGenericElement::mScriptObject");
-        }
-      }
-    }
   }
 
   if (PR_TRUE == aDeep) {
@@ -1351,6 +1337,7 @@ nsresult
 nsGenericElement::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
+
   return NS_OK;
 }
 
@@ -1822,6 +1809,11 @@ nsGenericElement::SetBindingParent(nsIContent* aParent)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsGenericElement::IsContentOfType(PRUint32 aFlags)
+{
+  return !(aFlags & ~eELEMENT);
+}
 
 //----------------------------------------------------------------------
 
@@ -1869,125 +1861,6 @@ nsGenericElement::RenderFrame(nsIPresContext* aPresContext)
 
 //----------------------------------------------------------------------
 
-// nsIScriptObjectOwner implementation
-
-nsresult
-nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
-                                  void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsDOMSlots *slots = GetDOMSlots();
-
-  if (!slots->mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-
-    res = GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    nsAutoString tag;
-    mNodeInfo->GetName(tag);
-
-    void* scriptObject;
-    res = factory->NewScriptElement(tag, aContext,
-                                    NS_STATIC_CAST(nsIHTMLContent *, this),
-                                    mParent ? (nsISupports*)mParent : (nsISupports*)mDocument,
-                                    (void**)&scriptObject);
-    NS_RELEASE(factory);
-
-    NS_WARN_IF_FALSE(scriptObject,
-                     "Eeek! Cound't create script object!");
-
-    if (slots->mScriptObject) {
-      // We must have re-entered; discard the newly created
-      // script object and use the one created during the
-      // nesting instead.
-      JSContext* cx = (JSContext*) aContext->GetNativeContext();
-      ::JS_SetPrivate(cx, (JSObject*) scriptObject, nsnull);
-
-      // Since we've eagerly cleared the transient script
-      // object's native pointer, we now need to ``manually''
-      // balance the reference that it had to us
-      Release();
-
-      *aScriptObject = slots->mScriptObject;
-      return NS_OK;
-    }
-
-    slots->mScriptObject = scriptObject;
-
-    if (mDocument && slots->mScriptObject) {
-      aContext->AddNamedReference((void *)&slots->mScriptObject,
-                                  slots->mScriptObject,
-                                  "nsGenericElement::mScriptObject");
-
-      // See if we have a frame.
-      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
-      if (shell) {
-        nsIFrame* frame;
-        shell->GetPrimaryFrameFor(this, &frame);
-        if (!frame) {
-          // We must ensure that the XBL Binding is installed before we hand
-          // back this object.
-          nsCOMPtr<nsIBindingManager> bindingManager;
-          mDocument->GetBindingManager(getter_AddRefs(bindingManager));
-          nsCOMPtr<nsIXBLBinding> binding;
-          bindingManager->GetBinding(this, getter_AddRefs(binding));
-          if (!binding) {
-            nsCOMPtr<nsIScriptGlobalObject> global;
-            mDocument->GetScriptGlobalObject(getter_AddRefs(global));
-            nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(global));
-            if (viewCSS) {
-              nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-              nsAutoString empty;
-              nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(NS_STATIC_CAST(nsIHTMLContent *, this)));
-              viewCSS->GetComputedStyle(elt, empty, getter_AddRefs(cssDecl));
-              if (cssDecl) {
-                nsAutoString behavior; behavior.Assign(NS_LITERAL_STRING("-moz-binding"));
-                nsAutoString value;
-                cssDecl->GetPropertyValue(behavior, value);
-                if (!value.IsEmpty()) {
-                  // We have a binding that must be installed.
-                  nsresult rv;
-                  PRBool dummy;
-                  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-                  xblService->LoadBindings(this, value, PR_FALSE, getter_AddRefs(binding), &dummy);
-                  if (binding) {
-                    binding->ExecuteAttachedHandler();
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  *aScriptObject = slots->mScriptObject;
-  return res;
-}
-
-nsresult
-nsGenericElement::SetScriptObject(void *aScriptObject)
-{
-  nsDOMSlots *slots = GetDOMSlots();
-
-  slots->mScriptObject = aScriptObject;
-
-  if (!aScriptObject) {
-    if (slots->mListenerManager) {
-      slots->mListenerManager->RemoveAllListeners(PR_TRUE);
-    }
-    MaybeClearDOMSlots();
-  }
-
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
 nsresult
 nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
@@ -2008,115 +1881,6 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
 }
 
 //----------------------------------------------------------------------
-
-// nsIJSScriptObject implementation
-
-PRBool
-nsGenericElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID,
-                              jsval *aVp)
-{
-  return PR_TRUE;
-}
-
-PRBool
-nsGenericElement::DeleteProperty(JSContext *aContext, JSObject *aObj,
-                                 jsval aID, jsval *aVp)
-{
-  return PR_TRUE;
-}
-
-PRBool
-nsGenericElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
-                              jsval *aVp)
-{
-  return PR_TRUE;
-}
-
-PRBool
-nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID,
-                              jsval *aVp)
-{
-  return InternalRegisterCompileEventHandler(aContext, aID, aVp, PR_FALSE);
-}
-
-PRBool
-nsGenericElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
-{
-  return PR_TRUE;
-}
-
-PRBool
-nsGenericElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                          PRBool* aDidDefineProperty)
-{
-  *aDidDefineProperty = PR_FALSE;
-
-  return InternalRegisterCompileEventHandler(aContext, aID, nsnull, PR_TRUE);
-}
-
-PRBool
-nsGenericElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
-{
-  return PR_TRUE;
-}
-
-void
-nsGenericElement::Finalize(JSContext *aContext, JSObject *aObj)
-{
-}
-
-PRBool
-nsGenericElement::InternalRegisterCompileEventHandler(JSContext* aContext, jsval aPropName, 
-                                                      jsval *aVp, PRBool aCompile)
-{
-  //If called from resolve there is no aVp arg to check against.  Else check for function value.
-  //In both cases check for string type starting with 'on' before continuing with handler checking.
-  if ((!aVp || JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION) && JSVAL_IS_STRING(aPropName)) {
-    const PRUnichar* str = NS_REINTERPRET_CAST(const PRUnichar *, JS_GetStringChars(JS_ValueToString(aContext, aPropName)));
-
-    if (str && str[0] == 'o' && str[1] == 'n' && str[2]) {
-      nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(str)));
-
-      if (atom.get() == nsLayoutAtoms::onmousedown || atom.get() == nsLayoutAtoms::onmouseup || 
-          atom.get() ==  nsLayoutAtoms::onclick || atom.get() == nsLayoutAtoms::onmouseover || 
-          atom.get() == nsLayoutAtoms::onmouseout ||atom.get() == nsLayoutAtoms::onkeydown || 
-          atom.get() == nsLayoutAtoms::onkeyup || atom.get() == nsLayoutAtoms::onkeypress ||
-          atom.get() == nsLayoutAtoms::onmousemove || atom.get() == nsLayoutAtoms::onfocus || 
-          atom.get() == nsLayoutAtoms::onblur || atom.get() == nsLayoutAtoms::onsubmit || 
-          atom.get() == nsLayoutAtoms::onreset || atom.get() == nsLayoutAtoms::onchange ||
-          atom.get() == nsLayoutAtoms::onselect || atom.get() == nsLayoutAtoms::onload || 
-          atom.get() == nsLayoutAtoms::onunload || atom.get() == nsLayoutAtoms::onabort ||
-          atom.get() == nsLayoutAtoms::onerror || atom.get() == nsLayoutAtoms::onpaint || 
-          atom.get() == nsLayoutAtoms::onresize || atom.get() == nsLayoutAtoms::onscroll ||
-          atom.get() == nsLayoutAtoms::oncontextmenu || atom.get() == nsLayoutAtoms::onDOMAttrModified ||
-          atom.get() == nsLayoutAtoms::onDOMCharacterDataModified || atom.get() == nsLayoutAtoms::onDOMSubtreeModified ||
-          atom.get() == nsLayoutAtoms::onDOMNodeInsertedIntoDocument || atom.get() == nsLayoutAtoms::onDOMNodeRemovedFromDocument ||
-          atom.get() == nsLayoutAtoms::onDOMNodeInserted || atom.get() == nsLayoutAtoms::onDOMNodeRemoved 
-          ) {
-
-        nsCOMPtr<nsIEventListenerManager> manager;
-        GetListenerManager(getter_AddRefs(manager));
-
-        if (manager) {
-          nsCOMPtr<nsIScriptContext> scriptContext;
-          nsresult rv = nsContentUtils::GetStaticScriptContext(aContext, NS_REINTERPRET_CAST(JSObject*, GetDOMSlots()->mScriptObject),
-                                                              getter_AddRefs(scriptContext));
-          if (NS_SUCCEEDED(rv) && scriptContext) {
-            if (aCompile) {
-              rv = manager->CompileScriptEventListener(scriptContext, this, atom);
-            }
-            else {
-              rv = manager->RegisterScriptEventListener(scriptContext, this, atom);
-            }
-          }
-          if (NS_FAILED(rv))
-            return PR_FALSE;
-        }
-      }
-    }
-  }
-  return PR_TRUE;
-}
 
 // Generic DOMNode implementations
 
@@ -2285,6 +2049,10 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       return res;
     }
 
+    nsCOMPtr<nsIDocument> old_doc;
+
+    newContent->GetDocument(*getter_AddRefs(old_doc));
+
     /*
      * Remove the element from the old parent if one exists, since oldParent
      * is a nsIDOMNode this will do the right thing even if the parent of
@@ -2332,6 +2100,9 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
         }
       }
     }
+
+    nsContentUtils::ReparentContentWrapper(newContent, this, mDocument,
+                                           old_doc);
 
     res = InsertChildAt(newContent, refPos, PR_TRUE, PR_TRUE);
 
@@ -2478,6 +2249,10 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
       return res;
     }
 
+    nsCOMPtr<nsIDocument> old_doc;
+
+    newContent->GetDocument(*getter_AddRefs(old_doc));
+
     /*
      * Remove the element from the old parent if one exists, since oldParent
      * is a nsIDOMNode this will do the right thing even if the parent of
@@ -2517,6 +2292,9 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
         }
       }
     }
+
+    nsContentUtils::ReparentContentWrapper(newContent, this, mDocument,
+                                           old_doc);
 
     res = ReplaceChildAt(newContent, oldPos, PR_TRUE, PR_TRUE);
 
@@ -2596,17 +2374,13 @@ nsGenericElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     }
 
     return NS_NOINTERFACE;
-  } else if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    inst = NS_STATIC_CAST(nsIScriptObjectOwner *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
-    inst = NS_STATIC_CAST(nsIJSScriptObject *, this);
-  } 
-  else if (mDOMSlots && mDOMSlots->mScriptObject && mDocument) {
+  }
+  else if (mDocument) {
     nsCOMPtr<nsIBindingManager> manager;
     mDocument->GetBindingManager(getter_AddRefs(manager));
     if (manager)
-      return manager->GetBindingImplementation(NS_STATIC_CAST(nsIStyledContent*, this), mDOMSlots->mScriptObject, 
-                                               aIID, aInstancePtr);
+      return manager->GetBindingImplementation(this, aIID, aInstancePtr);
+
     return NS_NOINTERFACE;
   }
   else {
@@ -2719,11 +2493,8 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
     receiver->GetListenerManager(getter_AddRefs(manager));
 
     if (manager) {
-      nsCOMPtr<nsIScriptObjectOwner> objOwner(do_QueryInterface(global));
-      if (objOwner) {
-        ret = manager->AddScriptEventListener(context, objOwner, aAttribute,
-                                              aValue, PR_FALSE);
-      }
+      ret = manager->AddScriptEventListener(context, global, aAttribute,
+                                            aValue, PR_FALSE);
     }
   }
   else {
@@ -2884,16 +2655,15 @@ nsGenericContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
   nsDOMSlots *slots = GetDOMSlots();
 
-  if (nsnull == slots->mChildNodes) {
+  if (!slots->mChildNodes) {
     slots->mChildNodes = new nsChildContentList(this);
-    if (nsnull == slots->mChildNodes) {
+    if (!slots->mChildNodes) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(slots->mChildNodes);
   }
 
-  return slots->mChildNodes->QueryInterface(NS_GET_IID(nsIDOMNodeList),
-                                            (void **)aChildNodes);
+  return CallQueryInterface(slots->mChildNodes, aChildNodes);
 }
 
 nsresult
@@ -3101,8 +2871,10 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
         mutation.mPrevAttrValue = getter_AddRefs(NS_NewAtom(oldValue));
       if (!aValue.IsEmpty())
         mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(aValue));
-      mutation.mAttrChange = modification ? nsIDOMMutationEvent::MODIFICATION :
-                                             nsIDOMMutationEvent::ADDITION;
+      if (modification)
+        mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
+      else
+        mutation.mAttrChange = nsIDOMMutationEvent::ADDITION;
       nsEventStatus status = nsEventStatus_eIgnore;
       HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);

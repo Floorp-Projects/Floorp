@@ -32,7 +32,7 @@
  * file under either the NPL or the GPL.
  */
 
-/* A namespace class for static layout utilities. */
+/* A namespace class for static content utilities. */
 
 #ifndef nsContentUtils_h___
 #define nsContentUtils_h___
@@ -40,13 +40,24 @@
 #include "nslayout.h"
 #include "jspubtd.h"
 #include "nsAReadableString.h"
+#include "nsIDOMScriptObjectFactory.h"
 
 class nsIScriptContext;
 class nsIScriptGlobalObject;
+class nsIXPConnect;
+class nsIContent;
+class nsIDocument;
+
 
 class nsContentUtils
 {
 public:
+  static nsresult Init();
+
+  static nsresult ReparentContentWrapper(nsIContent *aContent,
+                                         nsIContent *aNewParent,
+                                         nsIDocument *aNewDocument,
+                                         nsIDocument *aOldDocument);
 
   // These are copied from nsJSUtils.h
 
@@ -70,6 +81,51 @@ public:
                                                  PRUint32 aLength);
 
   static PRUint32 CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAWritableString& aDest);
+
+  static nsISupports *
+  GetClassInfoInstance(nsDOMClassInfoID aID, GetDOMClassIIDsFnc aGetIIDsFptr,
+                       const char *aName);
+
+  static void Shutdown();
+
+private:
+  static nsresult doReparentContentWrapper(nsIContent *aChild,
+                                           nsIDocument *aNewDocument,
+                                           nsIDocument *aOldDocument,
+                                           JSContext *cx,
+                                           JSObject *parent_obj);
+
+
+  static nsIDOMScriptObjectFactory *sDOMScriptObjectFactory;
+
+  static nsIXPConnect *sXPConnect;
 };
+
+#define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(_class)                      \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
+    foundInterface =                                                          \
+      nsContentUtils::GetClassInfoInstance(eDOMClassInfo_##_class##_id,       \
+                                           Get##_class##IIDs,                 \
+                                           #_class);                          \
+    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);                   \
+                                                                              \
+    *aInstancePtr = foundInterface;                                           \
+                                                                              \
+    return NS_OK;                                                             \
+  } else
+
+#define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_WITH_NAME(_class, _name)     \
+  if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
+    foundInterface =                                                          \
+      nsContentUtils::GetClassInfoInstance(eDOMClassInfo_##_class##_id,       \
+                                           Get##_class##IIDs,                 \
+                                           #_name);                           \
+    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);                   \
+                                                                              \
+    *aInstancePtr = foundInterface;                                           \
+                                                                              \
+    return NS_OK;                                                             \
+  } else
+
 
 #endif /* nsContentUtils_h___ */

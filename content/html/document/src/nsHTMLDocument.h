@@ -28,7 +28,6 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsHashtable.h"
@@ -126,25 +125,19 @@ public:
   NS_IMETHOD FlushPendingNotifications(PRBool aFlushReflows = PR_TRUE);
 
   // nsIDOMDocument interface
-  NS_DECL_IDOMDOCUMENT
+  NS_DECL_NSIDOMDOCUMENT
 
   // nsIDOMNode interface
-  NS_DECL_IDOMNODE
+  NS_DECL_NSIDOMNODE
+
+  // nsIDOM3Node interface
+  NS_DECL_NSIDOM3NODE
 
   // nsIDOMHTMLDocument interface
-  NS_DECL_IDOMHTMLDOCUMENT
-  NS_DECL_IDOMNSHTMLDOCUMENT
+  NS_DECL_NSIDOMHTMLDOCUMENT
 
-  // the following is not part of nsIDOMHTMLDocument but allows the
-  // content sink to add forms
-  NS_IMETHOD AddForm(nsIDOMHTMLFormElement* aForm);
-
-  // From nsIScriptObjectOwner interface, implemented by nsDocument
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  
-  // From nsJSScriptObject interface, implemented by nsDocument
-  virtual PRBool Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                         PRBool *aDidDefineProperty);
+  // nsIDOMNSHTMLDocument interface
+  NS_DECL_NSIDOMNSHTMLDOCUMENT
 
   /*
    * Returns true if document.domain was set for this document
@@ -194,10 +187,6 @@ protected:
 
   nsresult WriteCommon(const nsAReadableString& aText,
                        PRBool aNewlineTerminate);
-  nsresult ScriptWriteCommon(JSContext *cx, 
-                             jsval *argv, 
-                             PRUint32 argc,
-                             PRBool aNewlineTerminate);
   nsresult OpenCommon(nsIURI* aUrl);
 
   nsIHTMLStyleSheet*    mAttrStyleSheet;

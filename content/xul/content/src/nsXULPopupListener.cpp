@@ -104,27 +104,27 @@ public:
     NS_IMETHOD Init(nsIDOMElement* aElement, const XULPopupType& popupType);
 
     // nsIDOMMouseListener
-    virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
-    virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
-    virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-    virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-    virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
-    virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) ;
+    NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
+    NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent);
+    NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+    NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+    NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+    NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) ;
 
     // nsIDOMMouseMotionListener
-    virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-    virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; };
+    NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
+    NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; };
 
     // nsIDOMContextMenuListener
-    virtual nsresult ContextMenu(nsIDOMEvent* aContextMenuEvent);
+    NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent);
 
     // nsIDOMKeyListener
-    virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent) ;
-    virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent) ;
-    virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent) ;
+    NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent) ;
+    NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent) ;
+    NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent) ;
 
     // nsIDOMEventListener
-    virtual nsresult HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
+    NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
 
 protected:
 

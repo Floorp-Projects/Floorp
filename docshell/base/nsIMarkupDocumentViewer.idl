@@ -33,7 +33,8 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
+
+interface nsIDOMNode;
 
 
 [scriptable, uuid(69E5DE03-7B8B-11d3-AF61-00A024FFC08C)]

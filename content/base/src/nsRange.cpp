@@ -36,13 +36,14 @@
 #include "nsDOMError.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIParser.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIHTMLFragmentContentSink.h"
 // XXX Temporary inclusion to deal with fragment parsing
 #include "nsHTMLParts.h"
+
+#include "nsContentUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
@@ -76,7 +77,6 @@ class nsAutoRangeLock
     nsAutoRangeLock()  { nsRange::Lock(); }
     ~nsAutoRangeLock() { nsRange::Unlock(); }
 };
-
 
 
 // Returns -1 if point1 < point2, 1, if point1 > point2,
@@ -392,8 +392,7 @@ nsRange::nsRange() :
   mStartOffset(0),
   mEndOffset(0),
   mStartParent(),
-  mEndParent(),
-  mScriptObject(nsnull)
+  mEndParent()
 {
   NS_INIT_REFCNT();
 } 
@@ -429,44 +428,27 @@ void nsRange::Shutdown()
 /******************************************************
  * nsISupports
  ******************************************************/
- 
+
+
+// XPConnect interface list for nsRange
+NS_CLASSINFO_MAP_BEGIN(Range)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMRange)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSRange)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsRange
+NS_INTERFACE_MAP_BEGIN(nsRange)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMRange)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSRange)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMRange)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Range)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(nsRange)
 NS_IMPL_RELEASE(nsRange)
 
-nsresult nsRange::QueryInterface(const nsIID& aIID,
-                                     void** aInstancePtrResult)
-{
-  NS_PRECONDITION(aInstancePtrResult, "null pointer");
-  if (!aInstancePtrResult) 
-  {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) 
-  {
-    *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMRange *)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMRange))) 
-  {
-    *aInstancePtrResult = (void*)(nsIDOMRange*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNSRange)))
-  {
-    *aInstancePtrResult = (void*)(nsIDOMNSRange*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;    
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 /********************************************************
  * Utilities for comparing points: API from nsIDOMNSRange
@@ -2214,31 +2196,6 @@ nsRange::SetBeforeAndAfter(PRBool aBefore, PRBool aAfter)
   mBeforeGenContent = aAfter;
   return NS_OK;
 }
-
-// BEGIN nsIScriptObjectOwner interface implementations
-NS_IMETHODIMP
-nsRange::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsIScriptGlobalObject *globalObj = aContext->GetGlobalObject();
-
-  if (!mScriptObject) {
-    res = NS_NewScriptRange(aContext, (nsISupports *)(nsIDOMRange *)this, globalObj, (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  NS_RELEASE(globalObj);
-  return res;
-}
-
-NS_IMETHODIMP
-nsRange::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-// END nsIScriptObjectOwner interface implementations
 
 nsresult
 nsRange::Lock()

@@ -35,7 +35,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMFocusListener.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsWeakReference.h"
 #include "nsIDOMNode.h"
 #include "nsString.h"
@@ -45,7 +44,6 @@ class nsPIDOMWindow;
 class nsIFocusController;
 
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
-                               public nsIScriptObjectOwner,
                                public nsSupportsWeakReference
 {
 protected:
@@ -63,17 +61,11 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIDOMXULCommandDispatcher interface
-    NS_DECL_IDOMXULCOMMANDDISPATCHER
-
-    // nsIScriptObjectOwner interface
-    NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-    NS_IMETHOD SetScriptObject(void *aScriptObject);
+    NS_DECL_NSIDOMXULCOMMANDDISPATCHER
 
 protected:
     nsIFocusController* mFocusController; // Weak. We always die before the focus controller does.
     nsIDocument* mDocument; // Weak.
-
-    void* mScriptObject;
 
     class Updater {
     public:

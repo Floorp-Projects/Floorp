@@ -49,7 +49,7 @@ class nsINodeInfo;
 // is supported by all content objects.
 class nsIContent : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICONTENT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const = 0;
 
@@ -295,6 +295,22 @@ public:
    */
   NS_IMETHOD SetBindingParent(nsIContent* aContent) = 0;
   NS_IMETHOD GetBindingParent(nsIContent** aContent) = 0;
+
+  /**
+   * Bit-flags to pass (or'ed together) to IsContentOfType()
+   */
+  enum {
+    eTEXT                = 0x00000001,
+    eELEMENT             = 0x00000002,
+    eHTML                = 0x00000004,
+    eHTML_FORM_CONTROL   = 0x00000008
+  };
+
+  /**
+   * API for doing a quick check if a content object is of a given
+   * type, such as HTML, XUL, Text, ...
+   */
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) = 0;
 };
 
 // nsresult codes for GetAttribute

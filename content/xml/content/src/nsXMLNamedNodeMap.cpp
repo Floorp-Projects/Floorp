@@ -22,22 +22,14 @@
 
 
 #include "nsIDOMNamedNodeMap.h"
-#include "nsIScriptObjectOwner.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIContent.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsGenericElement.h"
-#include "nsIDOMScriptObjectFactory.h"
-#include "nsLayoutAtoms.h"
 #include "nsString.h"
-#include "nsIXMLContent.h"
 
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
+#include "nsContentUtils.h"
 
-
-class nsXMLNamedNodeMap : public nsIDOMNamedNodeMap,
-                          public nsIScriptObjectOwner
+class nsXMLNamedNodeMap : public nsIDOMNamedNodeMap
 {
 public:
   nsXMLNamedNodeMap(nsISupportsArray *aArray);
@@ -48,9 +40,11 @@ public:
 
   // nsIDOMNamedNodeMap
   NS_IMETHOD    GetLength(PRUint32* aLength);
-  NS_IMETHOD    GetNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD    GetNamedItem(const nsAReadableString& aName,
+                             nsIDOMNode** aReturn);
   NS_IMETHOD    SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn);
-  NS_IMETHOD    RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD    RemoveNamedItem(const nsAReadableString& aName,
+                                nsIDOMNode** aReturn);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
   NS_IMETHOD    GetNamedItemNS(const nsAReadableString& aNamespaceURI,
                                const nsAReadableString& aLocalName,
@@ -60,35 +54,30 @@ public:
                                   const nsAReadableString&aLocalName,
                                   nsIDOMNode** aReturn);
 
-  // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
 protected:
   nsISupportsArray *mArray;
-
-  void* mScriptObject;
 };
 
 nsresult
 NS_NewXMLNamedNodeMap(nsIDOMNamedNodeMap** aInstancePtrResult,
                       nsISupportsArray *aArray)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+
   nsIDOMNamedNodeMap* it = new nsXMLNamedNodeMap(aArray);
-  if (nsnull == it) {
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIDOMNamedNodeMap), (void **) aInstancePtrResult);
+
+  *aInstancePtrResult = it;
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 nsXMLNamedNodeMap::nsXMLNamedNodeMap(nsISupportsArray *aArray)
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
 
   mArray = aArray;
 
@@ -100,37 +89,22 @@ nsXMLNamedNodeMap::~nsXMLNamedNodeMap()
   NS_IF_RELEASE(mArray);
 }
 
+// XPConnect interface list for nsXMLNamedNodeMap
+NS_CLASSINFO_MAP_BEGIN(NamedNodeMap)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNamedNodeMap)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsXMLNamedNodeMap
+NS_INTERFACE_MAP_BEGIN(nsXMLNamedNodeMap)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNamedNodeMap)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NamedNodeMap)
+NS_INTERFACE_MAP_END
+
 NS_IMPL_ADDREF(nsXMLNamedNodeMap)
 NS_IMPL_RELEASE(nsXMLNamedNodeMap)
 
-nsresult 
-nsXMLNamedNodeMap::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  if (NULL == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {                          
-    nsIDOMNamedNodeMap* tmp = this;                                
-    nsISupports* tmp2 = tmp;                                
-    *aInstancePtrResult = (void*) tmp2;                                  
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }                                                         
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {                 
-    nsIScriptObjectOwner* tmp = this;                      
-    *aInstancePtrResult = (void*) tmp;                                   
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }                                                         
-  if (aIID.Equals(NS_GET_IID(nsIDOMNamedNodeMap))) {
-    nsIDOMNamedNodeMap* tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 NS_IMETHODIMP    
 nsXMLNamedNodeMap::GetLength(PRUint32* aLength)
@@ -144,7 +118,8 @@ nsXMLNamedNodeMap::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP    
-nsXMLNamedNodeMap::GetNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+nsXMLNamedNodeMap::GetNamedItem(const nsAReadableString& aName,
+                                nsIDOMNode** aReturn)
 {
   if (!aReturn)
     return NS_ERROR_NULL_POINTER;
@@ -154,12 +129,13 @@ nsXMLNamedNodeMap::GetNamedItem(const nsAReadableString& aName, nsIDOMNode** aRe
   if (!mArray)
     return NS_OK;
 
+  nsCOMPtr<nsIDOMNode> node;
   PRUint32 i, count;
+
   mArray->Count(&count);
 
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> supports_node(dont_AddRef(mArray->ElementAt(i)));
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(supports_node));
+    mArray->QueryElementAt(i, NS_GET_IID(nsIDOMNode), getter_AddRefs(node));
 
     if (!node)
       break;
@@ -190,12 +166,13 @@ nsXMLNamedNodeMap::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
   aArg->GetNodeName(argName);
 
   if (mArray) {
+    nsCOMPtr<nsIDOMNode> node;
     PRUint32 i, count;
+
     mArray->Count(&count);
 
     for (i = 0; i < count; i++) {
-      nsCOMPtr<nsISupports> supports_node(dont_AddRef(mArray->ElementAt(i)));
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(supports_node));
+      mArray->QueryElementAt(i, NS_GET_IID(nsIDOMNode), getter_AddRefs(node));
 
       if (!node)
         break;
@@ -226,22 +203,22 @@ nsXMLNamedNodeMap::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP    
-nsXMLNamedNodeMap::RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+nsXMLNamedNodeMap::RemoveNamedItem(const nsAReadableString& aName,
+                                   nsIDOMNode** aReturn)
 {
-  if (!aReturn)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aReturn);
 
   *aReturn = 0;
 
   if (!mArray)
     return NS_OK;
 
+  nsCOMPtr<nsIDOMNode> node;
   PRUint32 i, count;
   mArray->Count(&count);
 
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> supports_node(dont_AddRef(mArray->ElementAt(i)));
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(supports_node));
+    mArray->QueryElementAt(i, NS_GET_IID(nsIDOMNode), getter_AddRefs(node));
 
     if (!node)
       break;
@@ -265,17 +242,19 @@ nsXMLNamedNodeMap::RemoveNamedItem(const nsAReadableString& aName, nsIDOMNode** 
 NS_IMETHODIMP    
 nsXMLNamedNodeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  PRUint32 count;
+  NS_ENSURE_ARG_POINTER(aReturn);
 
-  if (!aReturn)
-    return NS_ERROR_NULL_POINTER;
+  PRUint32 count;
 
   mArray->Count(&count);
   if (mArray && aIndex < count) {
-    nsCOMPtr<nsISupports> supports_node(dont_AddRef(mArray->ElementAt(aIndex)));
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(supports_node));
+    nsCOMPtr<nsIDOMNode> node;
 
-    *aReturn = domNode;
+    mArray->QueryElementAt(aIndex, NS_GET_IID(nsIDOMNode),
+                           getter_AddRefs(node));
+
+    *aReturn = node;
+    NS_IF_ADDREF(*aReturn);
   } else
     *aReturn = 0;
 
@@ -303,36 +282,3 @@ nsXMLNamedNodeMap::RemoveNamedItemNS(const nsAReadableString& aNamespaceURI,
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_IMETHODIMP 
-nsXMLNamedNodeMap::GetScriptObject(nsIScriptContext* aContext, 
-                                   void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-    
-    res = factory->NewScriptNamedNodeMap(aContext, 
-                                         (nsISupports*)(nsIDOMNamedNodeMap*)this,
-                                         nsnull /*mInner.mParent*/, 
-                                         (void**)&mScriptObject);
-
-    NS_RELEASE(factory);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-NS_IMETHODIMP 
-nsXMLNamedNodeMap::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-

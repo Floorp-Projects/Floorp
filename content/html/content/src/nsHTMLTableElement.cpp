@@ -20,10 +20,9 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMHTMLTableCaptionElement.h"
-#include "nsIDOMHTMLTableSectionElement.h"
+#include "nsIDOMHTMLTableCaptionElem.h"
+#include "nsIDOMHTMLTableSectionElem.h"
 #include "nsCOMPtr.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "GenericElementCollection.h"
 #include "nsIHTMLContent.h"
@@ -57,16 +56,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLTableElement
-  NS_DECL_IDOMHTMLTABLEELEMENT
+  NS_DECL_NSIDOMHTMLTABLEELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -353,9 +352,20 @@ nsHTMLTableElement::~nsHTMLTableElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLTableElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLTableElement,
-                       nsGenericHTMLContainerElement,
-                       nsIDOMHTMLTableElement);
+
+// XPConnect interface list for nsHTMLTableElement
+NS_CLASSINFO_MAP_BEGIN(HTMLTableElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTableElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLTableElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

@@ -32,14 +32,15 @@
 #include "jsdbgapi.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsHashtable.h"
-#include "nsDOMPropEnums.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "nsISecurityPref.h"
 #include "nsIJSContextStack.h"
+#include "nsIObserver.h"
 
 class nsIDocShell;
 class nsString;
+class nsIClassInfo;
 
 /////////////////////
 // nsIPrincipalKey //
@@ -62,9 +63,9 @@ public:
         return hash;
     }
     
-    PRBool Equals(const nsHashKey *aKey) const {
+    PRBool Equals(const nsHashKey* aKey) const {
         PRBool eq;
-        mKey->Equals(((nsIPrincipalKey *) aKey)->mKey, &eq);
+        mKey->Equals(((nsIPrincipalKey*) aKey)->mKey, &eq);
         return eq;
     }
     
@@ -80,8 +81,7 @@ protected:
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
-class nsScriptSecurityManager : public nsIScriptSecurityManager,
-                                public nsIXPCSecurityManager
+class nsScriptSecurityManager : public nsIScriptSecurityManager, public nsIObserver
 {
 public:
     nsScriptSecurityManager();
@@ -92,100 +92,116 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTSECURITYMANAGER
     NS_DECL_NSIXPCSECURITYMANAGER
+    NS_DECL_NSIOBSERVER
 
-    static nsScriptSecurityManager *
+    static nsScriptSecurityManager*
     GetScriptSecurityManager();
 
-    JSContext * GetCurrentContextQuick();
+    JSContext* GetCurrentContextQuick();
 
 private:
+
+    static PRBool IsDOMClass(nsIClassInfo* aClassInfo);
+
     static nsresult 
     ReportErrorToConsole(nsIURI* aTarget);
 
-	nsresult
-	GetRootDocShell(JSContext *cx, nsIDocShell **result);
+    nsresult
+    GetRootDocShell(JSContext* cx, nsIDocShell **result);
 
-    NS_IMETHOD
-    CheckScriptAccessInternal(JSContext *cx, 
-                              void* obj, const char* aObjUrlStr, PRInt32 domPropInt, 
-                              PRBool isWrite);
+    nsresult
+    CheckPropertyAccessImpl(PRUint32 aAction, nsIXPCNativeCallContext* aCallContext,
+                            JSContext* aJSContext, JSObject* aJSObject,
+                            nsISupports* aObj, nsIClassInfo* aClassInfo,
+                            jsval aName, const char* aClassName, 
+                            const char* aProperty, PRBool skipFrame, void** aPolicy);
 
-    NS_IMETHOD
-    CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
-
-    NS_IMETHOD
-    GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
-
-    NS_IMETHOD
-    GetObjectPrincipal(JSContext *aCx, JSObject *aObj, nsIPrincipal **result);
-
-    NS_IMETHOD
-    CheckPermissions(JSContext *aCx, nsIPrincipal* aObjectPrincipal, const char *aCapability);
+    nsresult
+    CheckSameOrigin(JSContext* aCx, nsIPrincipal* aSubject, 
+                    nsIPrincipal* aObject, PRUint32 aAction, PRBool aSkipFrame);
     
     PRInt32 
-    GetSecurityLevel(nsIPrincipal *principal, nsDOMProp domProp, 
-                     PRBool isWrite, nsCString &capability);
+    GetSecurityLevel(JSContext* aCx, nsIPrincipal *principal,
+                     nsIClassInfo* aClassInfo,
+                     const char* aClassName, const char* aProperty,
+                     PRUint32 aAction, nsCString &capability, void** aPolicy);
 
-    NS_IMETHOD
-    GetPrefName(nsIPrincipal *principal, nsDOMProp domProp, 
-                nsCString &result);
+    nsresult
+    GetPrefName(nsIPrincipal* principal,
+                const char* aClassName, const char* aPropertyName,
+                void* aClassPolicy, nsCString &result);
 
-    nsresult 
-    CheckXPCCapability(JSContext *aJSContext, const char *aCapability);
- 
-    NS_IMETHOD
-    CheckXPCPermissions(JSContext *cx, nsISupports* aObj);
+    nsresult
+    CreateCodebasePrincipal(nsIURI* aURI, nsIPrincipal** result);
 
-    NS_IMETHOD
-    GetFramePrincipal(JSContext *cx, JSStackFrame *fp, nsIPrincipal **result);
+    nsresult
+    GetSubjectPrincipal(JSContext* aCx, nsIPrincipal** result);
+
+    nsresult
+    GetObjectPrincipal(JSContext* aCx, JSObject* aObj, nsIPrincipal** result);
+
+    nsresult
+    GetFramePrincipal(JSContext* cx, JSStackFrame* fp, nsIPrincipal** result);
                                                      
-    NS_IMETHOD
-    GetScriptPrincipal(JSContext *cx, JSScript *script, nsIPrincipal **result);
+    nsresult
+    GetScriptPrincipal(JSContext* cx, JSScript* script, nsIPrincipal** result);
 
-    NS_IMETHOD
-    GetFunctionObjectPrincipal(JSContext *cx, JSObject *obj, 
-                               nsIPrincipal **result);
+    nsresult
+    GetCallingPrincipal(JSContext* cx, nsIPrincipal** result);
 
-    NS_IMETHOD
-    GetPrincipalAndFrame(JSContext *cx, nsIPrincipal **result, 
-                         JSStackFrame **frameResult);
+    nsresult
+    GetFunctionObjectPrincipal(JSContext* cx, JSObject* obj, 
+                               nsIPrincipal** result);
 
-    NS_IMETHOD
+    nsresult
+    GetPrincipalAndFrame(JSContext *cx, PRBool skipInnerFrame,
+                         nsIPrincipal** result,
+                         JSStackFrame** frameResult);
+
+    nsresult
     SavePrincipal(nsIPrincipal* aToSave);
 
-    NS_IMETHOD
-    InitPrefs();
+    nsresult IsCapabilityEnabledImpl(const char *capability,
+                                     PRBool skipFrame,
+                                     PRBool *result);
 
-    PRBool
-    EnsureNameSetRegistered();
+    nsresult
+    CheckXPCPermissions(JSContext* cx, nsISupports* aObj,
+                        const char* aObjectSecurityLevel, PRBool skipFrame, const char* aErrorMsg);
+
+    nsresult
+    InitPrefs();
 
     static nsresult 
     PrincipalPrefNames(const char* pref, char** grantedPref, char** deniedPref);
 
-    static void
-    EnumeratePolicyCallback(const char *prefName, void *data);
+    nsresult
+    InitPolicies(PRUint32 prefCount, const char** prefNames);
 
-    static void
-    EnumeratePrincipalsCallback(const char *prefName, void *data);
+    nsresult
+    InitPrincipals(PRUint32 prefCount, const char** prefNames);
 
-    static int PR_CALLBACK
-    JSEnabledPrefChanged(const char *pref, void *data);
+    inline void
+    JSEnabledPrefChanged();
 
-    static int PR_CALLBACK
-    PrincipalPrefChanged(const char *pref, void *data);
+    static const char* sJSEnabledPrefName;
+    static const char* sJSMailEnabledPrefName;
+    static const char* sPrincipalPrefix;
 
-    nsObjectHashtable *mOriginToPolicyMap;
-    nsCOMPtr<nsIPref> mPrefs;
+    nsObjectHashtable* mOriginToPolicyMap;
+    nsHashtable* mClassPolicies;
+    nsCOMPtr<nsIPrefService> mPrefService;
+    nsCOMPtr<nsIPrefBranch> mPrefs;
     nsCOMPtr<nsISecurityPref> mSecurityPrefs;
-    nsIPrincipal *mSystemPrincipal;
+    nsIPrincipal* mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
-    nsSupportsHashtable *mPrincipals;
+    nsSupportsHashtable* mPrincipals;
     PRBool mIsJavaScriptEnabled;
     PRBool mIsMailJavaScriptEnabled;
     PRBool mIsWritingPrefs;
-    unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
     nsCOMPtr<nsIJSContextStack> mThreadJSContextStack;
     PRBool mNameSetRegistered;
 };
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/
+

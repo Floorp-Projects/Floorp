@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -32,13 +31,10 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIHTMLAttributes.h"
-#include "nsIJSScriptObject.h"
 #include "nsSize.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -62,13 +58,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -122,7 +118,19 @@ nsHTMLSpacerElement::~nsHTMLSpacerElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLSpacerElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLSpacerElement, nsGenericElement);
 
-NS_IMPL_HTMLCONTENT_QI0(nsHTMLSpacerElement, nsGenericHTMLLeafElement);
+
+// XPConnect interface list for nsHTMLSpacerElement
+NS_CLASSINFO_MAP_BEGIN(HTMLSpacerElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLSpacerElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSpacerElement,
+                                    nsGenericHTMLLeafElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLSpacerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

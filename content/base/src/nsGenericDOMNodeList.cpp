@@ -21,68 +21,33 @@
  */
 
 #include "nsGenericDOMNodeList.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsGenericElement.h"
 
 nsGenericDOMNodeList::nsGenericDOMNodeList() 
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
 }
 
 nsGenericDOMNodeList::~nsGenericDOMNodeList()
 {
 }
 
-nsresult 
-nsGenericDOMNodeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNodeList))) {
-    *aInstancePtr = (void*)(nsIDOMNodeList*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMNodeList*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 NS_IMPL_ADDREF(nsGenericDOMNodeList)
 NS_IMPL_RELEASE(nsGenericDOMNodeList)
 
-NS_IMETHODIMP
-nsGenericDOMNodeList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
 
-    res = factory->NewScriptNodeList(aContext, (nsISupports *)(nsIDOMNodeList *)this, nsnull, (void**)&mScriptObject);
-    NS_RELEASE(factory);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
+// XPConnect interface list for nsGenericDOMNodeList
+NS_CLASSINFO_MAP_BEGIN(NodeList)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+NS_CLASSINFO_MAP_END
 
-NS_IMETHODIMP
-nsGenericDOMNodeList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
+
+// QueryInterface implementation for nsGenericDOMNodeList
+NS_INTERFACE_MAP_BEGIN(nsGenericDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
+NS_INTERFACE_MAP_END
+
+

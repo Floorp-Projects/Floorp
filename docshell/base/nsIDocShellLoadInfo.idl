@@ -22,7 +22,6 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 
 /**
  * The nsIDocShellLoadInfo interface defines an interface for specifying

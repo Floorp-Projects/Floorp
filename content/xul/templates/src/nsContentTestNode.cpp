@@ -26,6 +26,7 @@
 #include "nsISupportsArray.h"
 #include "nsIXULDocument.h"
 #include "nsIRDFResource.h"
+#include "nsIAtom.h"
 #include "nsXULContentUtils.h"
 
 #include "prlog.h"

@@ -37,16 +37,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLObjectElement
-  NS_DECL_IDOMHTMLOBJECTELEMENT
+  NS_DECL_NSIDOMHTMLOBJECTELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -59,14 +59,6 @@ public:
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32& aHint) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
-                             void** aScriptObject);
-
-  // nsIJSScriptObject
-  virtual PRBool GetProperty(JSContext *aContext, JSObject *aObj, 
-                             jsval aID, jsval *aVp);
 };
 
 nsresult
@@ -108,8 +100,20 @@ nsHTMLObjectElement::~nsHTMLObjectElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLObjectElement, nsGenericHTMLContainerElement,
-                       nsIDOMHTMLObjectElement);
+
+// XPConnect interface list for nsHTMLObjectElement
+NS_CLASSINFO_MAP_BEGIN(HTMLObjectElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLObjectElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLObjectElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLObjectElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLObjectElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
@@ -268,6 +272,7 @@ nsHTMLObjectElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP
 nsHTMLObjectElement::GetScriptObject(nsIScriptContext* aContext,
                                      void** aScriptObject)
@@ -281,3 +286,4 @@ nsHTMLObjectElement::GetProperty(JSContext *aContext, JSObject *aObj,
 {
   return GetPluginProperty(aContext, aObj, aID, aVp);
 }
+#endif

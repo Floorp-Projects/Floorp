@@ -26,6 +26,8 @@
 
 #include "nsRuleNetwork.h"
 #include "nsFixedSizeAllocator.h"
+#include "nsIAtom.h"
+
 class nsIXULDocument;
 class nsConflictSet;
 

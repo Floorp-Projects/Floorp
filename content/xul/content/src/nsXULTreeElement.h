@@ -48,16 +48,16 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     // nsIDOMNode interface
-    NS_FORWARD_IDOMNODE(mOuter->);
+    NS_FORWARD_NSIDOMNODE(mOuter->);
 
     // nsIDOMElement interface
-    NS_FORWARD_IDOMELEMENT(mOuter->);
+    NS_FORWARD_NSIDOMELEMENT(mOuter->);
 
     // nsIDOMXULElement interface
-    NS_FORWARD_IDOMXULELEMENT(mOuter->);
+    NS_FORWARD_NSIDOMXULELEMENT(mOuter->);
 
     // nsIDOMXULTreeElement interface
-    NS_DECL_IDOMXULTREEELEMENT
+    NS_DECL_NSIDOMXULTREEELEMENT
    
     // nsIXULTreeContent interface
     NS_IMETHOD FireOnSelectHandler();

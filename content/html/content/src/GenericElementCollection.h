@@ -27,6 +27,7 @@
 
 class nsIContent;
 class nsIAtom;
+class nsISizeOfHandler;
 
 /**
  * This class provides a late-bound collection of elements that are

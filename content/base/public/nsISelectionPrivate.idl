@@ -21,15 +21,12 @@
  */
 
 #include "nsISupports.idl"
-#include "domstubs.idl"
 #include "nsISelectionListener.idl"
 #include "nsIEnumerator.idl"
 
-%{C++
-class nsIDOMNode;
-class nsIDOMRange;
-class nsISelectionListener;
-%}
+interface nsIDOMRange;
+interface nsISelectionListener;
+
 
 [scriptable, uuid(2d5535e2-1dd2-11b2-8e38-d53ec833adf6)]
 interface nsISelectionPrivate : nsISupports

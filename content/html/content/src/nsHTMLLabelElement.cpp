@@ -22,7 +22,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -53,10 +52,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMElement, because of the "htmlFor" attribute handling we can't
-  // use the NS_FORWARD_IDOMHTMLELEMENT macro here...
+  // use the NS_FORWARD_NSIDOMHTMLELEMENT macro here...
   NS_IMETHOD GetTagName(nsAWritableString& aTagName) {
     return nsGenericHTMLContainerFormElement::GetTagName(aTagName);
   }
@@ -149,10 +148,10 @@ public:
   }
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMHTMLLabelElement
-  NS_DECL_IDOMHTMLLABELELEMENT
+  NS_DECL_NSIDOMHTMLLABELELEMENT
 
   // nsIFormControl
   NS_IMETHOD GetType(PRInt32* aType);
@@ -207,8 +206,20 @@ nsHTMLLabelElement::~nsHTMLLabelElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLLabelElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLLabelElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLLabelElement, nsGenericHTMLContainerFormElement,
-                       nsIDOMHTMLLabelElement);
+
+// XPConnect interface list for nsHTMLLabelElement
+NS_CLASSINFO_MAP_BEGIN(HTMLLabelElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLabelElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLLabelElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLabelElement,
+                                    nsGenericHTMLContainerFormElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLLabelElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLLabelElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 // nsIDOMHTMLLabelElement

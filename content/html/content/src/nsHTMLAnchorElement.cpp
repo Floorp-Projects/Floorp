@@ -23,7 +23,6 @@
 #include "nsHTMLUtils.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMNSHTMLAnchorElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLDocument.h"
@@ -46,7 +45,6 @@
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIHTMLAttributes.h"
-#include "prprf.h"
 
 // XXX suppress
 
@@ -66,19 +64,19 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLAnchorElement
-  NS_DECL_IDOMHTMLANCHORELEMENT  
+  NS_DECL_NSIDOMHTMLANCHORELEMENT  
 
   // nsIDOMNSHTMLAnchorElement
-  NS_DECL_IDOMNSHTMLANCHORELEMENT
+  NS_DECL_NSIDOMNSHTMLANCHORELEMENT
 
   // nsILink
   NS_IMETHOD GetLinkState(nsLinkState &aState);
@@ -102,7 +100,9 @@ protected:
 
   // The cached visited state
   nsLinkState mLinkState;
+
 };
+
 
 nsresult
 NS_NewHTMLAnchorElement(nsIHTMLContent** aInstancePtrResult,
@@ -145,9 +145,23 @@ nsHTMLAnchorElement::~nsHTMLAnchorElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI3(nsHTMLAnchorElement, nsGenericHTMLContainerElement,
-                        nsIDOMHTMLAnchorElement, nsIDOMNSHTMLAnchorElement,
-                        nsILink)
+
+// XPConnect interface list for nsHTMLAnchorElement
+NS_CLASSINFO_MAP_BEGIN(HTMLAnchorElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAnchorElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLAnchorElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAnchorElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAnchorElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
+  NS_INTERFACE_MAP_ENTRY(nsILink)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLAnchorElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
@@ -645,6 +659,12 @@ nsHTMLAnchorElement::GetText(nsAWritableString& aText)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::ToString(nsAWritableString& aSource)
+{
+  return GetHref(aSource);
 }
 
 NS_IMETHODIMP

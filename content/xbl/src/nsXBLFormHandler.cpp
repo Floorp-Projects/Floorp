@@ -28,7 +28,6 @@
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"

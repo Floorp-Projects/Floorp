@@ -44,7 +44,7 @@ public:
   virtual ~nsXBLXULHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
   NS_IMETHOD Create(nsIDOMEvent* aEvent);
   NS_IMETHOD Close(nsIDOMEvent* aEvent);

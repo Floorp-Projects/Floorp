@@ -40,10 +40,10 @@ public:
   virtual ~nsXBLWindowKeyHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
-  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
-  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
    
   NS_DECL_ISUPPORTS
 

@@ -140,7 +140,14 @@ nsXULPrototypeCache::~nsXULPrototypeCache()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsXULPrototypeCache, nsIXULPrototypeCache);
+NS_IMPL_THREADSAFE_ADDREF(nsXULPrototypeCache)
+NS_IMPL_THREADSAFE_RELEASE(nsXULPrototypeCache)
+
+
+NS_INTERFACE_MAP_BEGIN(nsXULPrototypeCache)
+    NS_INTERFACE_MAP_ENTRY(nsISupports)
+    NS_INTERFACE_MAP_ENTRY(nsIXULPrototypeCache)
+NS_INTERFACE_MAP_END
 
 
 NS_IMETHODIMP

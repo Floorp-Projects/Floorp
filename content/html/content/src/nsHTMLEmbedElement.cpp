@@ -37,16 +37,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLEmbedElement
-  NS_DECL_IDOMHTMLEMBEDELEMENT
+  NS_DECL_NSIDOMHTMLEMBEDELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -59,14 +59,6 @@ public:
   NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
                                           nsMapAttributesFunc& aMapFunc) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
-                             void** aScriptObject);
-
-  // nsIJSScriptObject
-  virtual PRBool GetProperty(JSContext *aContext, JSObject *aObj, 
-                             jsval aID, jsval *aVp);
 };
 
 nsresult
@@ -107,8 +99,20 @@ nsHTMLEmbedElement::~nsHTMLEmbedElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLEmbedElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLEmbedElement, nsGenericElement);
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLEmbedElement, nsGenericHTMLLeafElement,
-                       nsIDOMHTMLEmbedElement);
+
+// XPConnect interface list for nsHTMLEmbedElement
+NS_CLASSINFO_MAP_BEGIN(HTMLEmbedElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLEmbedElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLEmbedElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLEmbedElement,
+                                    nsGenericHTMLLeafElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLEmbedElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLEmbedElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
@@ -228,6 +232,7 @@ nsHTMLEmbedElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
 /***************************************************************************/
 
+#if 0
 NS_IMETHODIMP
 nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
                                     void** aScriptObject)
@@ -241,6 +246,7 @@ nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj,
 {
   return GetPluginProperty(aContext, aObj, aID, aVp);
 }
+#endif
 
 /////////////////////////////////////////////
 // Implement nsIDOMHTMLEmbedElement interface

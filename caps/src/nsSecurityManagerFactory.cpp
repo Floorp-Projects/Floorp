@@ -28,8 +28,295 @@
 #include "nsScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsCodebasePrincipal.h"
+#include "nsIScriptNameSpaceManager.h"
+#include "nsIScriptExternalNameSet.h"
+#include "nsIScriptContext.h"
+#include "nsICategoryManager.h"
+#include "nsXPIDLString.h"
+#include "nsCOMPtr.h"
+
+///////////////////////
+// nsSecurityNameSet //
+///////////////////////
+
+#define NS_SECURITYNAMESET_CID \
+ { 0x7c02eadc, 0x76, 0x4d03, \
+ { 0x99, 0x8d, 0x80, 0xd7, 0x79, 0xc4, 0x85, 0x89 } }
+#define NS_SECURITYNAMESET_CONTRACTID "@mozilla.org/security/script/nameset;1"
+
+class nsSecurityNameSet : public nsIScriptExternalNameSet 
+{
+public:
+    nsSecurityNameSet();
+    virtual ~nsSecurityNameSet();
+    
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD InitializeNameSet(nsIScriptContext* aScriptContext);
+};
+
+nsSecurityNameSet::nsSecurityNameSet()
+{
+    NS_INIT_REFCNT();
+}
+
+nsSecurityNameSet::~nsSecurityNameSet()
+{
+}
+
+NS_IMPL_ISUPPORTS(nsSecurityNameSet, NS_GET_IID(nsIScriptExternalNameSet));
+
+static char *
+getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, uintN argc, jsval *argv)
+{
+    if (argc <= argNum || !JSVAL_IS_STRING(argv[argNum])) {
+        JS_ReportError(cx, "String argument expected");
+        return nsnull;
+    }
+    /*
+     * We don't want to use JS_ValueToString because we want to be able
+     * to have an object to represent a target in subsequent versions.
+     */
+    JSString *str = JSVAL_TO_STRING(argv[argNum]);
+    if (!str)
+        return nsnull;
+
+    return JS_GetStringBytes(str);
+}
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
+                                     jsval *argv, jsval *rval)
+{
+    JSBool result = JS_FALSE;
+    char *cap = getStringArgument(cx, obj, 0, argc, argv);
+    if (cap) {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                        NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+
+
+
+            //            NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+
+
+
+            rv = securityManager->IsCapabilityEnabled(cap, &result);
+            if (NS_FAILED(rv)) 
+                result = JS_FALSE;
+        }
+    }
+    *rval = BOOLEAN_TO_JSVAL(result);
+    return JS_TRUE;
+}
+
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
+                                  jsval *argv, jsval *rval)
+{
+    char *cap = getStringArgument(cx, obj, 0, argc, argv);
+    if (!cap)
+        return JS_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
+
+
+
+
+    //    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+
+
+
+
+    if (NS_FAILED(securityManager->EnableCapability(cap)))
+        return JS_FALSE;
+    return JS_TRUE;
+}
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
+                                   jsval *argv, jsval *rval)
+{
+    char *cap = getStringArgument(cx, obj, 0, argc, argv);
+    if (!cap)
+        return JS_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
+
+
+
+
+    //    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+
+
+
+
+
+    if (NS_FAILED(securityManager->DisableCapability(cap)))
+        return JS_FALSE;
+    return JS_TRUE;
+}
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
+                                  jsval *argv, jsval *rval)
+{
+    char *cap = getStringArgument(cx, obj, 0, argc, argv);
+    if (!cap)
+        return JS_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
+
+
+
+    //    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+
+
+
+
+    if (NS_FAILED(securityManager->RevertCapability(cap)))
+        return JS_FALSE;
+    return JS_TRUE;
+}
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
+                                        jsval *argv, jsval *rval)
+{
+    if (argc < 2) return JS_FALSE;
+    char *principalID = getStringArgument(cx, obj, 0, argc, argv);
+    char *cap = getStringArgument(cx, obj, 1, argc, argv);
+    if (!principalID || !cap)
+        return JS_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
+
+
+
+
+    //    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+
+
+
+
+    if (NS_FAILED(securityManager->SetCanEnableCapability(principalID, cap, 
+                                                          nsIPrincipal::ENABLE_GRANTED)))
+        return JS_FALSE;
+    return JS_TRUE;
+}
+
+PR_STATIC_CALLBACK(JSBool)
+netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
+                             jsval *argv, jsval *rval)
+{
+    char *principalID = getStringArgument(cx, obj, 0, argc, argv);
+    if (!principalID)
+        return JS_FALSE;
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                    NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) 
+        return JS_FALSE;
+
+
+
+
+    //    NS_ASSERTION(cx == GetCurrentContext(), "unexpected context");
+
+
+
+
+    if (NS_FAILED(securityManager->SetCanEnableCapability(principalID, 
+                                                          nsBasePrincipal::Invalid,
+                                                          nsIPrincipal::ENABLE_GRANTED)))
+        return JS_FALSE;
+    return JS_TRUE;
+}
+
+static JSFunctionSpec PrivilegeManager_static_methods[] = {
+    { "isPrivilegeEnabled", netscape_security_isPrivilegeEnabled,   1},
+    { "enablePrivilege",    netscape_security_enablePrivilege,      1},
+    { "disablePrivilege",   netscape_security_disablePrivilege,     1},
+    { "revertPrivilege",    netscape_security_revertPrivilege,      1},
+    //-- System Cert Functions
+    { "setCanEnablePrivilege", netscape_security_setCanEnablePrivilege,   2},
+    { "invalidate",            netscape_security_invalidate,              1},
+    {0}
+};
+
+/*
+ * "Steal" calls to netscape.security.PrivilegeManager.enablePrivilege,
+ * et. al. so that code that worked with 4.0 can still work.
+ */
+NS_IMETHODIMP 
+nsSecurityNameSet::InitializeNameSet(nsIScriptContext* aScriptContext)
+{
+    JSContext *cx = (JSContext *) aScriptContext->GetNativeContext();
+    JSObject *global = JS_GetGlobalObject(cx);
+
+    /*
+     * Find Object.prototype's class by walking up the global object's
+     * prototype chain.
+     */
+    JSObject *obj = global;
+    JSObject *proto;
+    while ((proto = JS_GetPrototype(cx, obj)) != nsnull)
+        obj = proto;
+    JSClass *objectClass = JS_GetClass(cx, obj);
+
+    jsval v;
+    if (!JS_GetProperty(cx, global, "netscape", &v))
+        return NS_ERROR_FAILURE;
+    JSObject *securityObj;
+    if (JSVAL_IS_OBJECT(v)) {
+        /*
+         * "netscape" property of window object exists; must be LiveConnect
+         * package. Get the "security" property.
+         */
+        obj = JSVAL_TO_OBJECT(v);
+        if (!JS_GetProperty(cx, obj, "security", &v) || !JSVAL_IS_OBJECT(v))
+            return NS_ERROR_FAILURE;
+        securityObj = JSVAL_TO_OBJECT(v);
+    } else {
+        /* define netscape.security object */
+        obj = JS_DefineObject(cx, global, "netscape", objectClass, nsnull, 0);
+        if (obj == nsnull)
+            return NS_ERROR_FAILURE;
+        securityObj = JS_DefineObject(cx, obj, "security", objectClass,
+                                      nsnull, 0);
+        if (securityObj == nsnull)
+            return NS_ERROR_FAILURE;
+    }
+
+    /* Define PrivilegeManager object with the necessary "static" methods. */
+    obj = JS_DefineObject(cx, securityObj, "PrivilegeManager", objectClass,
+                          nsnull, 0);
+    if (obj == nsnull)
+        return NS_ERROR_FAILURE;
+
+    return JS_DefineFunctions(cx, obj, PrivilegeManager_static_methods)
+           ? NS_OK
+           : NS_ERROR_FAILURE;
+}
+
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCodebasePrincipal)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecurityNameSet)
 
 static NS_IMETHODIMP
 Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID, 
@@ -48,18 +335,50 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
 	return NS_OK;
 }
 
+static NS_METHOD 
+RegisterSecurityNameSet(nsIComponentManager *aCompMgr,
+                        nsIFile *aPath,
+                        const char *registryLocation,
+                        const char *componentType,
+                        const nsModuleComponentInfo *info)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsICategoryManager> catman =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString previous;
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_STATIC_NAMESET_CATEGORY,
+                                "PrivilegeManager",
+                                NS_SECURITYNAMESET_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return rv;
+}
+
 static nsModuleComponentInfo components[] =
 {
     { NS_SCRIPTSECURITYMANAGER_CLASSNAME, 
       NS_SCRIPTSECURITYMANAGER_CID, 
       NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-      Construct_nsIScriptSecurityManager 
+      Construct_nsIScriptSecurityManager,
+      RegisterSecurityNameSet
     },
 
     { NS_CODEBASEPRINCIPAL_CLASSNAME, 
       NS_CODEBASEPRINCIPAL_CID, 
       NS_CODEBASEPRINCIPAL_CONTRACTID,
       nsCodebasePrincipalConstructor
+    },
+
+    { "Security Script Name Set",
+      NS_SECURITYNAMESET_CID,
+      NS_SECURITYNAMESET_CONTRACTID,
+      nsSecurityNameSetConstructor
     }
 };
 

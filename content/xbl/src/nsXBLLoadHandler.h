@@ -44,12 +44,12 @@ public:
   virtual ~nsXBLLoadHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
-  virtual nsresult Load(nsIDOMEvent* aEvent);
-  virtual nsresult Unload(nsIDOMEvent* aEvent);
-  virtual nsresult Abort(nsIDOMEvent* aEvent);
-  virtual nsresult Error(nsIDOMEvent* aEvent);
+  NS_IMETHOD Load(nsIDOMEvent* aEvent);
+  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
+  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
+  NS_IMETHOD Error(nsIDOMEvent* aEvent);
    
   NS_DECL_ISUPPORTS_INHERITED
 

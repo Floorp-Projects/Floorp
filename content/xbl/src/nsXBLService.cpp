@@ -201,11 +201,11 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
 
-  nsresult Load(nsIDOMEvent* aEvent);
-  nsresult Unload(nsIDOMEvent* aEvent) { return NS_OK; };
-  nsresult Abort(nsIDOMEvent* aEvent) { return NS_OK; };
-  nsresult Error(nsIDOMEvent* aEvent) { return NS_OK; };
-  nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD Load(nsIDOMEvent* aEvent);
+  NS_IMETHOD Unload(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD Abort(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD Error(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
 
   static nsIXULPrototypeCache* gXULCache;
   static PRInt32 gRefCnt;

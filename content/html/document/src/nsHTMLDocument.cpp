@@ -66,13 +66,12 @@
 #include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIXPConnect.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
 #include "nsICodebasePrincipal.h"
 #include "nsIAggregatePrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsJSUtils.h"
-#include "nsDOMPropEnums.h"
 #include "nsIScrollableView.h"
 
 #include "nsIIOService.h"
@@ -110,7 +109,9 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsIXMLContent.h" //for createelementNS
 #include "nsHTMLParts.h" //for createelementNS
-#include "nsLayoutCID.h"
+#include "nsIJSContextStack.h"
+#include "nsContentUtils.h"
+
 #include "nsContentCID.h"
 #include "nsIPrompt.h"
 //AHMED 12-2 
@@ -283,49 +284,35 @@ nsHTMLDocument::~nsHTMLDocument()
   InvalidateHashTables();
 }
 
+NS_IMPL_ADDREF_INHERITED(nsHTMLDocument, nsDocument)
+NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
+
+
+// XPConnect interface list for nsHTMLDocument
+NS_CLASSINFO_MAP_BEGIN(HTMLDocument)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLAnchorElement
+NS_INTERFACE_MAP_BEGIN(nsHTMLDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLDocument)
+  NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDocument)
+NS_INTERFACE_MAP_END_INHERITING(nsDocument)
+
+
 NS_IMETHODIMP
-nsHTMLDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(nsnull != aInstancePtr, "null ptr");
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIHTMLDocument))) {
-    NS_ADDREF_THIS();
-    *aInstancePtr = (void**) (nsIHTMLDocument *)this;
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLDocument))) {
-    NS_ADDREF_THIS();
-    *aInstancePtr = (void**) (nsIDOMHTMLDocument *)this;
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLDocument))) {
-    NS_ADDREF_THIS();
-    *aInstancePtr = (void**) (nsIDOMNSHTMLDocument *)this;
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIHTMLContentContainer))) {
-    NS_ADDREF_THIS();
-    *aInstancePtr = (void**) (nsIHTMLContentContainer *)this;
-    return NS_OK;
-  }
-  return nsDocument::QueryInterface(aIID, aInstancePtr);
-}
-
-nsrefcnt
-nsHTMLDocument::AddRef()
-{
-  return nsDocument::AddRef();
-}
-
-nsrefcnt
-nsHTMLDocument::Release()
-{
-  return nsDocument::Release();
-}
-
-NS_IMETHODIMP 
 nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
@@ -554,35 +541,34 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     nsCOMPtr<nsIFile> file;
     rv = fileChannel->GetFile(getter_AddRefs(file));
-    if (NS_SUCCEEDED(rv)) 
-    { 
-        // if we failed to get a last modification date, then we don't want to necessarily
-        // fail to create a document for this file. Just don't set the last modified date on it...
-        rv = file->GetLastModificationDate(&modDate);
-        if (NS_SUCCEEDED(rv))
-        {
-          PRExplodedTime prtime;
-          char buf[100];
-          PRInt64 intermediateValue;
+    if (NS_SUCCEEDED(rv)) {
+      // if we failed to get a last modification date, then we don't
+      // want to necessarily fail to create a document for this
+      // file. Just don't set the last modified date on it...
+      rv = file->GetLastModificationDate(&modDate);
+      if (NS_SUCCEEDED(rv)) {
+        PRExplodedTime prtime;
+        char buf[100];
+        PRInt64 intermediateValue;
 
-          LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-          LL_MUL(usecs, modDate, intermediateValue);
-          PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
+        LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
+        LL_MUL(usecs, modDate, intermediateValue);
+        PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
 
-          // Use '%#c' for windows, because '%c' is backward-compatible and
-          // non-y2k with msvc; '%#c' requests that a full year be used in the
-          // result string.  Other OSes just use "%c".
-          PR_FormatTime(buf, sizeof buf,
-    #if defined(XP_PC) && !defined(XP_OS2)
+        // Use '%#c' for windows, because '%c' is backward-compatible and
+        // non-y2k with msvc; '%#c' requests that a full year be used in the
+        // result string.  Other OSes just use "%c".
+        PR_FormatTime(buf, sizeof buf,
+#if defined(XP_PC) && !defined(XP_OS2)
                       "%#c",
-    #else
+#else
                       "%c",
-    #endif
+#endif
                       &prtime);
-          lastModified.AssignWithConversion(buf);
-          SetLastModified(lastModified);
-        }
+        lastModified.AssignWithConversion(buf);
+        SetLastModified(lastModified);
       }
+    }
   }
 
   if (needsParser) {
@@ -933,31 +919,7 @@ nsHTMLDocument::EndLoad()
 NS_IMETHODIMP
 nsHTMLDocument::SetTitle(const nsAReadableString& aTitle)
 {
-  if (nsnull == mDocumentTitle) {
-    mDocumentTitle = new nsString(aTitle);
-  }
-  else {
-    mDocumentTitle->Assign(aTitle);
-  }
-
-  // Pass on to any interested containers
-  PRInt32 i, n = mPresShells.Count();
-  for (i = 0; i < n; i++) {
-    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(i);
-    nsCOMPtr<nsIPresContext> cx;
-    shell->GetPresContext(getter_AddRefs(cx));
-    nsCOMPtr<nsISupports> container;
-    if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
-      if (container) {
-        nsCOMPtr<nsIBaseWindow> docShell(do_QueryInterface(container));
-        if(docShell) {
-          docShell->SetTitle(mDocumentTitle->GetUnicode());
-        }
-      }
-    }
-  }
-
-  return NS_OK;
+  return nsDocument::SetTitle(aTitle);
 }
 
 NS_IMETHODIMP
@@ -1705,7 +1667,6 @@ nsHTMLDocument::IsSupported(const nsAReadableString& aFeature,
   return nsDocument::IsSupported(aFeature, aVersion, aReturn);
 }
 
-#if 0
 NS_IMETHODIMP
 nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
 {
@@ -1720,7 +1681,6 @@ nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
   }
   return NS_OK;
 }
-#endif
 
 //
 // nsIDOMHTMLDocument interface implementation
@@ -1731,12 +1691,7 @@ nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
 NS_IMETHODIMP
 nsHTMLDocument::GetTitle(nsAWritableString& aTitle)
 {
-  if (nsnull != mDocumentTitle) {
-    aTitle.Assign(*mDocumentTitle);
-  } else {
-    aTitle.Truncate();
-  }
-  return NS_OK;
+  return nsDocument::GetTitle(aTitle);
 }
 
 NS_IMETHODIMP    
@@ -2283,30 +2238,32 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 NS_IMETHODIMP    
 nsHTMLDocument::Open()
 {
-  nsresult result = NS_OK;
-  nsIURI* sourceURL;
-
-  // XXX For the non-script Open case, we have to make
-  // up a URL.
-  result = NS_NewURI(&sourceURL, "about:blank");
-
-  if (NS_SUCCEEDED(result)) {
-    result = OpenCommon(sourceURL);
-    NS_RELEASE(sourceURL);
-  }
-
-  return result;
+  nsCOMPtr<nsIDOMDocument> doc;
+  return Open(getter_AddRefs(doc));
 }
 
 NS_IMETHODIMP    
-nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc,
-                     nsIDOMDocument** aReturn)
+nsHTMLDocument::Open(nsIDOMDocument** aReturn)
 {
   nsresult result = NS_OK;
   nsIURI* sourceURL;
 
   // XXX The URL of the newly created document will match
   // that of the source document. Is this right?
+
+  // XXX: This service should be cached.
+  nsCOMPtr<nsIJSContextStack>
+    stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", &result));
+
+  if (NS_FAILED(result))
+    return NS_ERROR_FAILURE;
+
+  JSContext *cx;
+
+  if (NS_FAILED(stack->Peek(&cx)))
+    return NS_ERROR_FAILURE;
+
+
   result = GetSourceDocumentURL(cx, &sourceURL);
   // Recover if we had a problem obtaining the source URL
   if (nsnull == sourceURL) {
@@ -2326,7 +2283,7 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc,
 #define NS_GENERATE_PARSER_KEY() (void*)((mIsWriting << 31) | (mWriteLevel & 0x7fffffff))
 
 NS_IMETHODIMP    
-nsHTMLDocument::Clear(JSContext* cx, jsval* argv, PRUint32 argc)
+nsHTMLDocument::Clear()
 {
   // This method has been deprecated
   return NS_OK;
@@ -2355,76 +2312,46 @@ nsresult
 nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
                             PRBool aNewlineTerminate)
 {
-  nsresult result = NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
 
-  if (nsnull == mParser) {
-    result = Open();
-    if (NS_FAILED(result)) {
-      return result;
-    }
+  nsCOMPtr<nsIXPCNativeCallContext> ncc;
+
+  if (xpc) {
+    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  
-  nsAutoString str(aText);
-
-  if (aNewlineTerminate) {
-    str.AppendWithConversion('\n');
-  }
-
-  mWriteLevel++;
-  result = mParser->Parse(str, NS_GENERATE_PARSER_KEY(), 
-                          NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, 
-                          (!mIsWriting || (mWriteLevel > 1)));
-  mWriteLevel--;
-  
-  return result;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::Write(const nsAReadableString& aText)
-{
-  return WriteCommon(aText, PR_FALSE);
-}
-
-NS_IMETHODIMP    
-nsHTMLDocument::Writeln(const nsAReadableString& aText)
-{
-  return WriteCommon(aText, PR_TRUE);
-}
-
-nsresult
-nsHTMLDocument::ScriptWriteCommon(JSContext *cx, 
-                                  jsval *argv, 
-                                  PRUint32 argc,
-                                  PRBool aNewlineTerminate)
-{
-  nsresult result = NS_OK;
 
   nsXPIDLCString spec;
-  if (!mDocumentURL ||
-      (NS_SUCCEEDED(mDocumentURL->GetSpec(getter_Copies(spec))) &&
-       nsCRT::strcasecmp(spec, "about:blank") == 0)) 
-  {
+
+  if (mDocumentURL) {
+    rv = mDocumentURL->GetSpec(getter_Copies(spec));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!mDocumentURL || nsCRT::strcasecmp(spec, "about:blank") == 0) {
     // The current document's URL and principal are empty or "about:blank".
     // By writing to this document, the script acquires responsibility for the
     // document for security purposes. Thus a document.write of a script tag
     // ends up producing a script with the same principals as the script
     // that performed the write.
-    nsIScriptContext *context = (nsIScriptContext*)JS_GetContextPrivate(cx);
-    JSObject* obj;
-    if (NS_FAILED(GetScriptObject(context, (void**)&obj))) 
-      return NS_ERROR_FAILURE;
-    nsIScriptSecurityManager *sm = nsJSUtils::nsGetSecurityManager(cx, nsnull);
-    if (!sm)
-      return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIPrincipal> subject;
-    if (NS_FAILED(sm->GetSubjectPrincipal(getter_AddRefs(subject))))
-      return NS_ERROR_FAILURE;
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     if (subject) {
       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(subject);
       if (codebase) {
         nsCOMPtr<nsIURI> subjectURI;
-        if (NS_FAILED(codebase->GetURI(getter_AddRefs(subjectURI))))
-          return NS_ERROR_FAILURE;
+        rv = codebase->GetURI(getter_AddRefs(subjectURI));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         NS_IF_RELEASE(mDocumentURL);
         mDocumentURL = subjectURI;
@@ -2437,53 +2364,77 @@ nsHTMLDocument::ScriptWriteCommon(JSContext *cx,
     }
   }
 
-  if (!mParser) {
-    nsCOMPtr<nsIDOMDocument> doc;
+  const nsAReadableString *text_to_write = &aText;
+  nsAutoString string_buffer;
 
-    result = Open(cx, argv, argc, getter_AddRefs(doc));
-    if (NS_FAILED(result)) {
-      return result;
-    }
-  }
+  if (ncc) {
+    // We're called from C++, concatenate the extra arguments into
+    // string_buffer
+    PRUint32 i, argc;
 
-  if (argc > 0) {
-    PRUint32 index;
-    nsAutoString str;
+    ncc->GetArgc(&argc);
 
-    for (index = 0; index < argc; index++) {
-      JSString *jsstring = JS_ValueToString(cx, argv[index]);
-      
-      if (jsstring) {
-        str.Append(NS_REINTERPRET_CAST(const PRUnichar*,
-                                       JS_GetStringChars(jsstring)),
-                   JS_GetStringLength(jsstring));
+    if (argc > 1) {
+      string_buffer.Assign(aText);
+      text_to_write = &string_buffer;
+
+      JSContext *cx = nsnull;
+      rv = ncc->GetJSContext(&cx);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      jsval *argv = nsnull;
+      ncc->GetArgvPtr(&argv);
+      NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
+
+      for (i = 1; i < argc; i++) {
+
+        JSString *str = JS_ValueToString(cx, argv[i]);
+        NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+
+        string_buffer.Append(NS_REINTERPRET_CAST(const PRUnichar *,
+                                                 ::JS_GetStringChars(str)),
+                             ::JS_GetStringLength(str));
       }
     }
+  }
 
-    if (aNewlineTerminate) {
-      str.AppendWithConversion('\n');
+  if (!mParser) {
+    rv = Open();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+
+  if (aNewlineTerminate) {
+    if (string_buffer.IsEmpty()) {
+      string_buffer.Assign(aText);
     }
 
-    mWriteLevel++;
-    result = mParser->Parse(str, NS_GENERATE_PARSER_KEY(), 
-                            NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, 
-                            (!mIsWriting || (mWriteLevel > 1)));
-    mWriteLevel--;
+    text_to_write = &string_buffer;
+
+    string_buffer.Append((PRUnichar)'\n');
   }
-  
-  return result;
+
+  mWriteLevel++;
+  rv = mParser->Parse(*text_to_write, NS_GENERATE_PARSER_KEY(),
+                      NS_ConvertASCIItoUCS2("text/html"), PR_FALSE,
+                      (!mIsWriting || (mWriteLevel > 1)));
+  mWriteLevel--;
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::Write(const nsAReadableString& aText)
+{
+  return WriteCommon(aText, PR_FALSE);
 }
 
 NS_IMETHODIMP    
-nsHTMLDocument::Write(JSContext *cx, jsval *argv, PRUint32 argc)
+nsHTMLDocument::Writeln(const nsAReadableString& aText)
 {
-  return ScriptWriteCommon(cx, argv, argc, PR_FALSE);
-}
-
-NS_IMETHODIMP    
-nsHTMLDocument::Writeln(JSContext *cx, jsval *argv, PRUint32 argc)
-{
-  return ScriptWriteCommon(cx, argv, argc, PR_TRUE);
+  return WriteCommon(aText, PR_TRUE);
 }
 
 nsIContent *
@@ -2722,7 +2673,7 @@ nsHTMLDocument::GetHeight(PRInt32* aHeight)
   return result;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsHTMLDocument::GetAlinkColor(nsAWritableString& aAlinkColor)
 {
   nsresult result = NS_OK;
@@ -2746,7 +2697,7 @@ nsHTMLDocument::GetAlinkColor(nsAWritableString& aAlinkColor)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsHTMLDocument::SetAlinkColor(const nsAReadableString& aAlinkColor)
 {
   nsresult result = NS_OK;
@@ -3502,137 +3453,6 @@ nsHTMLDocument::ResolveName(const nsAReadableString& aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsHTMLDocument::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, 
-                          jsval* aReturn)
-{
-  nsresult rv = NS_OK;
-
-  if (argc < 1) 
-    return NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR;
-
-  JSString *jsstr = ::JS_ValueToString(cx, argv[0]);
-  PRUnichar *ustr = NS_REINTERPRET_CAST(PRUnichar *, JS_GetStringChars(jsstr));
-
-  nsCOMPtr<nsISupports> item;
-
-  rv = ResolveName(nsLiteralString(ustr, ::JS_GetStringLength(jsstr)),
-                   nsnull, getter_AddRefs(item));
-
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(item));
-
-  nsIScriptContext *context = (nsIScriptContext*)::JS_GetContextPrivate(cx);
-  JSObject *scriptObject;
-  rv = GetScriptObject(context, (void **)&scriptObject);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (owner) {
-    nsIScriptSecurityManager *sm =
-      nsJSUtils::nsGetSecurityManager(cx, scriptObject);
-
-    rv = sm->CheckScriptAccess(cx, scriptObject, 
-                               NS_DOM_PROP_NSHTMLFORMELEMENT_NAMEDITEM,
-                               PR_FALSE);
-    if (NS_SUCCEEDED(rv)) {
-      JSObject* obj;
-
-      rv = owner->GetScriptObject(context, (void**)&obj);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      *aReturn = OBJECT_TO_JSVAL(obj);
-    }
-
-    return rv;
-  }
-
-  nsCOMPtr<nsISupports> supports;
-  rv = this->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports));
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = nsJSUtils::nsCallJSScriptObjectGetProperty(supports, cx, scriptObject,
-                                                    argv[0], aReturn);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext,
-                                void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIScriptGlobalObject> global;
-
-  if (nsnull == mScriptObject) {
-    // XXX We make the (possibly erroneous) assumption that the first
-    // presentation shell represents the "primary view" of the document
-    // and that the JS parent chain should incorporate just that view.
-    // This is done for lack of a better model when we have multiple
-    // views.
-    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
-    if (shell) {
-      nsCOMPtr<nsIPresContext> cx;
-      shell->GetPresContext(getter_AddRefs(cx));
-      nsCOMPtr<nsISupports> container;
-      
-      res = cx->GetContainer(getter_AddRefs(container));
-      if (NS_SUCCEEDED(res) && container) {
-        global = do_GetInterface(container);
-      }
-    }
-    // XXX If we can't find a view, parent to the calling context's
-    // global object. This may not be right either, but we need
-    // something.
-    else {
-      global = getter_AddRefs(aContext->GetGlobalObject());
-    }
-    
-    if (NS_SUCCEEDED(res)) {
-      res = NS_NewScriptHTMLDocument(aContext, 
-                                     (nsISupports *)(nsIDOMHTMLDocument *)this,
-                                     (nsISupports *)global, 
-                                     (void**)&mScriptObject);
-    }
-  }
-  
-  *aScriptObject = mScriptObject;
-
-  return res;
-}
-
-PRBool    
-nsHTMLDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                        PRBool *aDidDefineProperty)
-{
-  *aDidDefineProperty = PR_FALSE;
-
-  if (!JSVAL_IS_STRING(aID)) {
-    return PR_TRUE;
-  }
-
-  nsresult result;
-  PRBool ret = PR_TRUE;
-  jsval val = 0;
-
-  result = NamedItem(aContext, &aID, 1, &val);
-  if (NS_SUCCEEDED(result) && val) {
-    JSString *str = JSVAL_TO_STRING(aID);
-    ret = ::JS_DefineUCProperty(aContext, aObj,JS_GetStringChars(str),
-                                JS_GetStringLength(str), val, nsnull,
-                                nsnull, 0);
-
-    *aDidDefineProperty = PR_TRUE;
-  }
-  if (NS_FAILED(result)) {
-    ret = PR_FALSE;
-  }
-
-  return ret;
-}
-
 //----------------------------
 
 PRBool
@@ -3682,35 +3502,6 @@ nsHTMLDocument::GetBodyElement(nsIDOMHTMLBodyElement** aBody)
 }
 
 // forms related stuff
-
-NS_IMETHODIMP 
-nsHTMLDocument::AddForm(nsIDOMHTMLFormElement *aForm)
-{
-#if 0
-  // Not necessary anymore since forms are real content now
-  NS_PRECONDITION(nsnull != aForm, "null ptr");
-  if (nsnull == aForm) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsIContent* iContent = nsnull;
-  nsresult result = aForm->QueryInterface(NS_GET_IID(nsIContent), (void**)&iContent);
-  if ((NS_OK == result) && iContent) {
-    nsIDOMHTMLCollection* forms = nsnull;
-    
-    // Initialize mForms if necessary...
-    if (nsnull == mForms) {
-      mForms = new nsContentList(this, nsHTMLAtoms::form, kNameSpaceID_Unknown);
-      NS_ADDREF(mForms);
-    }
-
-    mForms->Add(iContent);
-    NS_RELEASE(iContent);
-  }
-  return result;
-#endif
-  return NS_OK;
-}
 
 NS_IMETHODIMP    
 nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)

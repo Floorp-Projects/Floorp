@@ -47,7 +47,7 @@
 class nsIAtom;
 class nsINodeInfoManager;
 class nsINameSpaceManager;
-class nsString;
+class nsIDocument;
 
 
 // IID for the nsINodeInfo interface
@@ -191,6 +191,11 @@ public:
    * only by prefix from the one this is called on.
    */
   NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult) = 0;
+
+  /*
+   * Retrieve a pointer to the document that owns this node info.
+   */
+  NS_IMETHOD GetDocument(nsIDocument*& aDocument) = 0;
 };
 
 
@@ -203,7 +208,14 @@ public:
    * Initialize the nodeinfo manager with a namespace manager, this should
    * allways be done.
    */
-  NS_IMETHOD Init(nsINameSpaceManager *aNameSpaceManager) = 0;
+  NS_IMETHOD Init(nsIDocument *aDocument,
+                  nsINameSpaceManager *aNameSpaceManager) = 0;
+
+  /*
+   * Release the reference to the document, this will be called when
+   * the document is going away.
+   */
+  NS_IMETHOD DropDocumentReference() = 0;
 
   /*
    * Methods for creating nodeinfo's from atoms and/or strings.
@@ -227,6 +239,12 @@ public:
    * Getter for the namespace manager used by this nodeinfo manager.
    */
   NS_IMETHOD GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager) = 0;
+
+  /*
+   * Retrieve a pointer to the document that owns this node info
+   * manager.
+   */
+  NS_IMETHOD GetDocument(nsIDocument*& aDocument) = 0;
 };
 
 extern nsresult NS_NewNodeInfoManager(nsINodeInfoManager** aResult);

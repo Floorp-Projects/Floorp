@@ -136,6 +136,7 @@
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
+#include "nsContentUtils.h"
 
 
 //----------------------------------------------------------------------
@@ -400,7 +401,6 @@ PlaceHolderRequest::~PlaceHolderRequest()
 nsXULDocument::nsXULDocument(void)
     : mParentDocument(nsnull),
       mScriptGlobalObject(nsnull),
-      mScriptObject(nsnull),
       mNextSrcLoadWaiter(nsnull),
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
@@ -501,6 +501,10 @@ nsXULDocument::~nsXULDocument()
             gXULCache = nsnull;
         }
     }
+
+    if (mNodeInfoManager) {
+        mNodeInfoManager->DropDocumentReference();
+    }
 }
 
 
@@ -533,75 +537,46 @@ NS_NewXULDocument(nsIXULDocument** result)
 // nsISupports interface
 //
 
-NS_IMETHODIMP
-nsXULDocument::QueryInterface(REFNSIID iid, void** result)
-{
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
+NS_IMPL_ADDREF(nsXULDocument) 
+NS_IMPL_RELEASE(nsXULDocument) 
 
-    *result = nsnull;
-    if (iid.Equals(NS_GET_IID(nsIDocument)) ||
-        iid.Equals(NS_GET_IID(nsISupports))) {
-        *result = NS_STATIC_CAST(nsIDocument*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIXULDocument)) ||
-             iid.Equals(NS_GET_IID(nsIXMLDocument))) {
-        *result = NS_STATIC_CAST(nsIXULDocument*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMXULDocument)) ||
-             iid.Equals(NS_GET_IID(nsIDOMDocument)) ||
-             iid.Equals(NS_GET_IID(nsIDOMNode))) {
-        *result = NS_STATIC_CAST(nsIDOMXULDocument*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMNSDocument))) {
-        *result = NS_STATIC_CAST(nsIDOMNSDocument*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMDocumentEvent))) {
-        *result = NS_STATIC_CAST(nsIDOMDocumentEvent*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMDocumentView))) {
-        *result = NS_STATIC_CAST(nsIDOMDocumentView*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMDocumentXBL))) {
-        *result = NS_STATIC_CAST(nsIDOMDocumentXBL*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIJSScriptObject))) {
-        *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-        *result = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIHTMLContentContainer))) {
-        *result = NS_STATIC_CAST(nsIHTMLContentContainer*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
-        *result = NS_STATIC_CAST(nsIDOMEventReceiver*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMEventTarget))) {
-        *result = NS_STATIC_CAST(nsIDOMEventTarget*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMEventCapturer))) {
-        *result = NS_STATIC_CAST(nsIDOMEventCapturer*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsISupportsWeakReference))) {
-        *result = NS_STATIC_CAST(nsISupportsWeakReference*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIStreamLoaderObserver))) {
-        *result = NS_STATIC_CAST(nsIStreamLoaderObserver*, this);
-    }
-    else if (iid.Equals(NS_GET_IID(nsIDOMDocumentStyle))) {
-        *result = NS_STATIC_CAST(nsIDOMDocumentStyle*, this);
-    }
-    else {
-        *result = nsnull;
-        return NS_NOINTERFACE;
-    }
-    NS_ADDREF(this);
-    return NS_OK;
-}
 
-NS_IMPL_ADDREF(nsXULDocument);
-NS_IMPL_RELEASE(nsXULDocument);
+// XPConnect interface list for nsXULDocument
+NS_CLASSINFO_MAP_BEGIN(XULDocument)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMXULDocument)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLAnchorElement
+NS_INTERFACE_MAP_BEGIN(nsXULDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIDocument)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIXULDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIXMLDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMXULDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+    NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMNSDocument)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentEvent)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentView)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentStyle)
+    NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMEventCapturer)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULDocument)
+NS_INTERFACE_MAP_END
+
 
 //----------------------------------------------------------------------
 //
@@ -1427,6 +1402,13 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 
             shell->ReleaseAnonymousContent();
         }
+
+#ifdef DEBUG_jst
+    printf ("Content wrapper hash had %d entries.\n",
+            mContentWrapperHash.Count());
+#endif
+
+        mContentWrapperHash.Reset();
     }
 
     mScriptGlobalObject = aScriptGlobalObject;
@@ -1928,6 +1910,28 @@ nsXULDocument::GetNodeInfoManager(class nsINodeInfoManager *&aNodeInfoManager)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULDocument::AddReference(void *aKey, nsISupports *aReference)
+{
+  nsVoidKey key(aKey);
+
+  if (mScriptGlobalObject) {
+      mContentWrapperHash.Put(&key, aReference);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::RemoveReference(void *aKey, nsISupports **aOldReference)
+{
+  nsVoidKey key(aKey);
+
+  mContentWrapperHash.Remove(&key, aOldReference);
+
+  return NS_OK;
+}
+
 void
 nsXULDocument::SetDisplaySelection(PRInt8 aToggle)
 {
@@ -2018,9 +2022,7 @@ nsXULDocument::SetDefaultStylesheets(nsIURI* aUrl)
 NS_IMETHODIMP
 nsXULDocument::SetTitle(const PRUnichar *aTitle)
 {
-    NS_ASSERTION(0,"not implemented");
-    NS_NOTREACHED("nsXULDocument::SetTitle");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return SetTitle(nsLiteralString(aTitle));
 }
 
 //----------------------------------------------------------------------
@@ -2818,7 +2820,7 @@ nsXULDocument::GetAnonymousNodes(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP    
-nsXULDocument::GetLocation(jsval* aLocation)
+nsXULDocument::GetLocation(nsIDOMLocation** aLocation)
 {
   if (mScriptGlobalObject) {
     nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(mScriptGlobalObject));
@@ -2829,16 +2831,42 @@ nsXULDocument::GetLocation(jsval* aLocation)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsXULDocument::SetLocation(jsval aLocation)
+NS_IMETHODIMP
+nsXULDocument::GetTitle(nsAWritableString& aTitle)
 {
-  if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(mScriptGlobalObject));
-    if(window) {
-      return window->SetLocation(aLocation);
+    aTitle.Assign(mDocumentTitle);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetTitle(const nsAReadableString& aTitle)
+{
+    for (PRInt32 i = mPresShells.Count() - 1; i >= 0; --i) {
+        nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+
+        nsCOMPtr<nsIPresContext> context;
+        nsresult rv = shell->GetPresContext(getter_AddRefs(context));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsISupports> container;
+        rv = context->GetContainer(getter_AddRefs(container));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!container)
+            continue;
+
+        nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
+        if(!docShellWin)
+            continue;
+
+        rv = docShellWin->SetTitle(PromiseFlatString(aTitle).get());
+        NS_ENSURE_SUCCESS(rv, rv);
     }
-  }
-  return NS_OK;
+
+    mDocumentTitle.Assign(aTitle);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2858,7 +2886,7 @@ nsXULDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
 NS_IMETHODIMP
 nsXULDocument::GetDir(nsAWritableString& aDirection)
 {
-  aDirection.Assign(NS_LITERAL_STRING("ltr") );
+  aDirection.Assign(NS_LITERAL_STRING("ltr"));
   return NS_OK;
 }
 
@@ -3322,7 +3350,8 @@ nsXULDocument::GetNodeName(nsAWritableString& aNodeName)
 NS_IMETHODIMP
 nsXULDocument::GetNodeValue(nsAWritableString& aNodeValue)
 {
-    aNodeValue.Truncate();
+    SetDOMStringToNull(aNodeValue);
+
     return NS_OK;
 }
 
@@ -3503,36 +3532,40 @@ nsXULDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP
 nsXULDocument::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 { 
-  aNamespaceURI.Truncate();
-  return NS_OK;
+    SetDOMStringToNull(aNamespaceURI);
+
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsXULDocument::GetPrefix(nsAWritableString& aPrefix)
 {
-  aPrefix.Truncate();
-  return NS_OK;
+    SetDOMStringToNull(aPrefix);
+
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsXULDocument::SetPrefix(const nsAReadableString& aPrefix)
 {
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 
 NS_IMETHODIMP
 nsXULDocument::GetLocalName(nsAWritableString& aLocalName)
 {
-  aLocalName.Truncate();
-  return NS_OK;
+    SetDOMStringToNull(aLocalName);
+
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsXULDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
+nsXULDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                            nsIDOMNode** aReturn)
 {
     NS_NOTREACHED("nsXULDocument::InsertBefore");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -3540,7 +3573,8 @@ nsXULDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOM
 
 
 NS_IMETHODIMP
-nsXULDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+nsXULDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                            nsIDOMNode** aReturn)
 {
     NS_NOTREACHED("nsXULDocument::ReplaceChild");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -3589,7 +3623,6 @@ nsXULDocument::IsSupported(const nsAReadableString& aFeature,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#if 0
 NS_IMETHODIMP
 nsXULDocument::GetBaseURI(nsAWritableString &aURI)
 {
@@ -3603,152 +3636,6 @@ nsXULDocument::GetBaseURI(nsAWritableString &aURI)
   }
   return NS_OK;
 }
-#endif
-
-
-//----------------------------------------------------------------------
-//
-// nsIJSScriptObject interface
-//
-
-PRBool
-nsXULDocument::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_TRUE;
-}
-
-
-PRBool
-nsXULDocument::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_TRUE;
-}
-
-
-PRBool
-nsXULDocument::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-    return PR_TRUE;
-}
-
-
-PRBool
-nsXULDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-    nsresult rv;
-
-    if (JSVAL_IS_STRING(aID)) {
-        char* s = JS_GetStringBytes(JS_ValueToString(aContext, aID));
-        if (PL_strcmp("title", s) == 0) {
-            JSString* jsString = JS_ValueToString(aContext, *aVp);
-            if (!jsString)
-                return PR_FALSE;
-            nsAutoString title(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsString)));
-            for (PRInt32 i = mPresShells.Count() - 1; i >= 0; --i) {
-                nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
-                nsCOMPtr<nsIPresContext> context;
-                rv = shell->GetPresContext(getter_AddRefs(context));
-                if (NS_FAILED(rv)) return PR_FALSE;
-
-                nsCOMPtr<nsISupports> container;
-                rv = context->GetContainer(getter_AddRefs(container));
-                if (NS_FAILED(rv)) return PR_FALSE;
-
-                if (! container) continue;
-
-                nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
-                if(!docShellWin) continue;
-
-                rv = docShellWin->SetTitle(title.GetUnicode());
-                if (NS_FAILED(rv)) return PR_FALSE;
-            }
-        }
-    }
-    return PR_TRUE;
-}
-
-
-PRBool
-nsXULDocument::EnumerateProperty(JSContext *aContext, JSObject *aObj)
-{
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_TRUE;
-}
-
-
-PRBool
-nsXULDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                       PRBool *aDidDefineProperty)
-{
-    *aDidDefineProperty = PR_FALSE;
-
-    return PR_TRUE;
-}
-
-
-PRBool
-nsXULDocument::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
-{
-    NS_NOTYETIMPLEMENTED("write me");
-    return PR_TRUE;
-}
-
-
-void
-nsXULDocument::Finalize(JSContext *aContext, JSObject *aObj)
-{
-    NS_NOTYETIMPLEMENTED("write me");
-}
-
-
-
-//----------------------------------------------------------------------
-//
-// nsIScriptObjectOwner interface
-//
-
-NS_IMETHODIMP
-nsXULDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-    if (! mScriptObject) {
-        // ...we need to instantiate our script object for the first
-        // time.
-
-        // Make sure that we've got our script context owner; this
-        // assertion will fire if we've tried to get the script object
-        // before our scope has been set up.
-        NS_ASSERTION(mScriptGlobalObject != nsnull, "no script object");
-        if (! mScriptGlobalObject)
-            return NS_ERROR_NOT_INITIALIZED;
-
-        nsresult rv;
-
-        // Use the global object from our script context owner (the
-        // window) as the parent of our own script object. (Using the
-        // global object from aContext would make our script object
-        // dynamically scoped in the first context that ever tried to
-        // use us!)
-
-        rv = NS_NewScriptXULDocument(aContext,
-                                     NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDOMXULDocument*, this)),
-                                     mScriptGlobalObject, &mScriptObject);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    *aScriptObject = mScriptObject;
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULDocument::SetScriptObject(void *aScriptObject)
-{
-    mScriptObject = aScriptObject;
-    return NS_OK;
-}
-
 
 //----------------------------------------------------------------------
 //
@@ -3794,34 +3681,6 @@ nsXULDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
 // Implementation methods
 //
 
-nsIContent*
-nsXULDocument::FindContent(const nsIContent* aStartNode,
-                             const nsIContent* aTest1,
-                             const nsIContent* aTest2) const
-{
-    PRInt32 count;
-    aStartNode->ChildCount(count);
-
-    PRInt32 i;
-    for(i = 0; i < count; i++) {
-        nsIContent* child;
-        aStartNode->ChildAt(i, child);
-        nsIContent* content = FindContent(child,aTest1,aTest2);
-        if (content != nsnull) {
-            NS_IF_RELEASE(child);
-            return content;
-        }
-        if (child == aTest1 || child == aTest2) {
-            NS_IF_RELEASE(content);
-            return child;
-        }
-        NS_IF_RELEASE(child);
-        NS_IF_RELEASE(content);
-    }
-    return nsnull;
-}
-
-
 nsresult
 nsXULDocument::Init()
 {
@@ -3844,7 +3703,7 @@ nsXULDocument::Init()
 
     if (NS_FAILED(rv)) return rv;
 
-    mNodeInfoManager->Init(mNameSpaceManager);
+    mNodeInfoManager->Init(this, mNameSpaceManager);
 
     // Create our command dispatcher and hook it up.
     rv = nsXULCommandDispatcher::Create(this, getter_AddRefs(mCommandDispatcher));
@@ -4968,9 +4827,9 @@ nsXULDocument::ResumeWalk()
                     if (blocked)
                         return NS_OK;
                 }
-                else if (scriptproto->mScriptObject) {
+                else if (scriptproto->mJSObject) {
                     // An inline script
-                    rv = ExecuteScript(scriptproto->mScriptObject);
+                    rv = ExecuteScript(scriptproto->mJSObject);
                     if (NS_FAILED(rv)) return rv;
                 }
             }
@@ -5137,8 +4996,8 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
     // Load a transcluded script
     nsresult rv;
 
-    if (aScriptProto->mScriptObject) {
-        rv = ExecuteScript(aScriptProto->mScriptObject);
+    if (aScriptProto->mJSObject) {
+        rv = ExecuteScript(aScriptProto->mJSObject);
 
         // Ignore return value from execution, and don't block
         *aBlock = PR_FALSE;
@@ -5233,8 +5092,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
                                   scriptProto->mSrcURI, 1,
                                   this, mMasterPrototype);
         aStatus = rv;
-        if (NS_SUCCEEDED(rv) && scriptProto->mScriptObject) {
-            rv = ExecuteScript(scriptProto->mScriptObject);
+        if (NS_SUCCEEDED(rv) && scriptProto->mJSObject) {
+            rv = ExecuteScript(scriptProto->mJSObject);
         }
         // ignore any evaluation errors
     }
@@ -5261,8 +5120,8 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         doc->mNextSrcLoadWaiter = nsnull;
 
         // Execute only if we loaded and compiled successfully, then resume
-        if (NS_SUCCEEDED(aStatus) && scriptProto->mScriptObject) {
-            doc->ExecuteScript(scriptProto->mScriptObject);
+        if (NS_SUCCEEDED(aStatus) && scriptProto->mJSObject) {
+            doc->ExecuteScript(scriptProto->mJSObject);
         }
         doc->ResumeWalk();
         NS_RELEASE(doc);

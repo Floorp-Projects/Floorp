@@ -21,7 +21,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsIDOMHTMLAppletElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -61,19 +60,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLAppletElement
-  NS_DECL_IDOMHTMLAPPLETELEMENT
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
-                             void** aScriptObject);
+  NS_DECL_NSIDOMHTMLAPPLETELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -130,8 +126,20 @@ nsHTMLAppletElement::~nsHTMLAppletElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLAppletElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLAppletElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLAppletElement, nsGenericHTMLContainerElement,
-                       nsIDOMHTMLAppletElement)
+
+// XPConnect interface list for nsHTMLAppletElement
+NS_CLASSINFO_MAP_BEGIN(HTMLAppletElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLAppletElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLAppletElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAppletElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAppletElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLAppletElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
@@ -262,6 +270,7 @@ nsHTMLAppletElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
  * object. That way, if the Java applet has public fields that shadow
  * the tag attributes, the applet's fields take precedence.
  */
+#if 0
 NS_IMETHODIMP
 nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
                                      void** aScriptObject)
@@ -364,6 +373,7 @@ nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
 
   return rv;
 }
+#endif
 
 NS_IMETHODIMP
 nsHTMLAppletElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const

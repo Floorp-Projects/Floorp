@@ -244,7 +244,7 @@ nsresult nsHTMLFragmentContentSink::Init()
   rv = NS_NewNameSpaceManager(getter_AddRefs(nsmgr));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mNodeInfoManager->Init(nsmgr);
+  return mNodeInfoManager->Init(nsnull, nsmgr);
 }
 
 

@@ -24,12 +24,13 @@
 
 #include "nslayout.h"
 #include "nsIModule.h"
+#include "nsIObserverService.h"
 
 class nsICSSStyleSheet;
-class nsIScriptNameSetRegistry;
 
 // Module implementation for the content library
-class nsContentModule : public nsIModule
+class nsContentModule : public nsIModule,
+                        public nsIObserver
 {
 public:
   nsContentModule();
@@ -38,6 +39,9 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIMODULE
+
+  // nsIObserver
+  NS_DECL_NSIOBSERVER
 
   nsresult Initialize();
 
@@ -51,8 +55,6 @@ protected:
                                    nsIFile* aPath);
 
   PRBool mInitialized;
-//  static nsIFactory* gFactory;
-  static nsIScriptNameSetRegistry* gRegistry;
 
 public:
   static nsICSSStyleSheet* gUAStyleSheet;

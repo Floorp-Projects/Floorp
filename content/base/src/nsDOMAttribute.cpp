@@ -23,27 +23,25 @@
 #include "nsDOMAttribute.h"
 #include "nsGenericElement.h"
 #include "nsIContent.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsITextContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
+#include "nsContentUtils.h"
+
 
 //----------------------------------------------------------------------
 
-nsDOMAttribute::nsDOMAttribute(nsIContent* aContent,
-                               nsINodeInfo *aNodeInfo,
+nsDOMAttribute::nsDOMAttribute(nsIContent* aContent, nsINodeInfo *aNodeInfo,
                                const nsAReadableString& aValue)
-  : mNodeInfo(aNodeInfo), mValue(aValue)
+  : mNodeInfo(aNodeInfo), mValue(aValue), mContent(aContent), mChild(nsnull),
+    mChildList(nsnull)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");
 
   NS_INIT_REFCNT();
+
   // We don't add a reference to our content. It will tell us
   // to drop our reference when it goes away.
-  mContent = aContent;
-  mScriptObject = nsnull;
-  mChild = nsnull;
-  mChildList = nsnull;
 }
 
 nsDOMAttribute::~nsDOMAttribute()
@@ -52,48 +50,27 @@ nsDOMAttribute::~nsDOMAttribute()
   NS_IF_RELEASE(mChildList);
 }
 
-nsresult
-nsDOMAttribute::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMAttr))) {
-    nsIDOMAttr* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMAttributePrivate))) {
-    nsIDOMAttributePrivate* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-    nsIDOMNode* tmp = this;
-    *aInstancePtr = (void*)tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    nsIDOMAttr* tmp1 = this;
-    nsISupports* tmp2 = tmp1;
-    *aInstancePtr = (void*)tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+
+// XPConnect interface list for nsDOMAttribute
+NS_CLASSINFO_MAP_BEGIN(Attr)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMAttr)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsDOMAttribute
+NS_INTERFACE_MAP_BEGIN(nsDOMAttribute)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMAttr)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMAttributePrivate)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMAttr)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Attr)
+NS_INTERFACE_MAP_END
+
 
 NS_IMPL_ADDREF(nsDOMAttribute)
 NS_IMPL_RELEASE(nsDOMAttribute)
+
 
 NS_IMETHODIMP
 nsDOMAttribute::DropReference()
@@ -121,36 +98,6 @@ nsDOMAttribute::GetContent(nsIContent** aContent)
 }
 
 nsresult
-nsDOMAttribute::GetScriptObject(nsIScriptContext *aContext,
-                                void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    nsIDOMScriptObjectFactory *factory;
-    
-    res = nsGenericElement::GetScriptObjectFactory(&factory);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    res = factory->NewScriptAttr(aContext, 
-                                 (nsISupports *)(nsIDOMAttr *)this, 
-                                 (nsISupports *)mContent,
-                                 (void **)&mScriptObject);
-    NS_RELEASE(factory);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-nsresult
-nsDOMAttribute::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-nsresult
 nsDOMAttribute::GetName(nsAWritableString& aName)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
@@ -164,7 +111,7 @@ nsDOMAttribute::GetValue(nsAWritableString& aValue)
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
   nsresult result = NS_OK;
-  if (nsnull != mContent) {
+  if (mContent) {
     nsresult attrResult;
     PRInt32 nameSpaceID;
     nsCOMPtr<nsIAtom> name;
@@ -188,7 +135,7 @@ nsDOMAttribute::SetValue(const nsAReadableString& aValue)
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
   nsresult result = NS_OK;
-  if (nsnull != mContent) {
+  if (mContent) {
     result = mContent->SetAttribute(mNodeInfo, aValue, PR_TRUE);
   }
   mValue=aValue;
@@ -280,27 +227,26 @@ nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
 NS_IMETHODIMP
 nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  if (nsnull == mChildList) {
+  if (!mChildList) {
     mChildList = new nsAttributeChildList(this);
-    if (nsnull == mChildList) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    NS_ENSURE_TRUE(mChildList, NS_ERROR_OUT_OF_MEMORY);
+
     NS_ADDREF(mChildList);
   }
 
-  return mChildList->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void**)aChildNodes);
+  return CallQueryInterface(mChildList, aChildNodes);
 }
 
 NS_IMETHODIMP
 nsDOMAttribute::HasChildNodes(PRBool* aHasChildNodes)
 {
   *aHasChildNodes = PR_FALSE;
-  if (nsnull != mChild) {
+  if (mChild) {
     *aHasChildNodes = PR_TRUE;
   }
-  else if (nsnull != mContent) {
+  else if (mContent) {
     nsAutoString value;
-    
+
     GetValue(value);
     if (0 < value.Length()) {
       *aHasChildNodes = PR_TRUE;
@@ -331,7 +277,7 @@ nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
     return result;
   }
   if (0 < value.Length()) {
-    if (nsnull == mChild) {      
+    if (!mChild) {      
       nsIContent* content;
 
       result = NS_NewTextNode(&content);
@@ -412,7 +358,7 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsDOMAttribute* newAttr;
 
-  if (nsnull != mContent) {
+  if (mContent) {
     nsAutoString value;
     PRInt32 nameSpaceID;
     nsCOMPtr<nsIAtom> name;
@@ -427,7 +373,7 @@ nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     newAttr = new nsDOMAttribute(nsnull, mNodeInfo, mValue); 
   }
 
-  if (nsnull == newAttr) {
+  if (!newAttr) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -438,7 +384,7 @@ NS_IMETHODIMP
 nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   nsresult result = NS_OK;
-  if (nsnull != mContent) {
+  if (mContent) {
     nsIDOMNode* node;
     result = mContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&node);
     if (NS_SUCCEEDED(result)) {
@@ -477,7 +423,7 @@ nsDOMAttribute::SetPrefix(const nsAReadableString& aPrefix)
   nsCOMPtr<nsIAtom> prefix;
   nsresult rv = NS_OK;
 
-  if (aPrefix.Length())
+  if (aPrefix.Length() && !DOMStringIsNull(aPrefix))
     prefix = dont_AddRef(NS_NewAtom(aPrefix));
 
   rv = mNodeInfo->PrefixChanged(prefix, *getter_AddRefs(newNodeInfo));
@@ -527,18 +473,16 @@ nsDOMAttribute::IsSupported(const nsAReadableString& aFeature,
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
-#if 0
 NS_IMETHODIMP
 nsDOMAttribute::GetBaseURI(nsAWritableString &aURI)
 {
   aURI.Truncate();
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(mContent));
   if (node)
     rv = node->GetBaseURI(aURI);
   return rv;
 }
-#endif
 
 //----------------------------------------------------------------------
 
@@ -559,7 +503,7 @@ nsAttributeChildList::GetLength(PRUint32* aLength)
   nsAutoString value;
   
   *aLength = 0;
-  if (nsnull != mAttribute) {
+  if (mAttribute) {
     mAttribute->GetValue(value);
     if (0 < value.Length()) {
       *aLength = 1;
@@ -573,7 +517,7 @@ NS_IMETHODIMP
 nsAttributeChildList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   *aReturn = nsnull;
-  if ((nsnull != mAttribute) && (0 == aIndex)) {
+  if (mAttribute && 0 == aIndex) {
     mAttribute->GetFirstChild(aReturn);
   }
 

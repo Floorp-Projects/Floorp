@@ -25,18 +25,15 @@
 
 #include "nsIDOMNodeList.h"
 #include "nsIRDFNodeList.h"
-#include "nsIScriptObjectOwner.h"
 class nsIDOMNode;
 class nsISupportsArray;
 
 class nsRDFDOMNodeList : public nsIDOMNodeList,
-                         public nsIRDFNodeList,
-                         public nsIScriptObjectOwner
+                         public nsIRDFNodeList
 {
 private:
     //nsISupports* mInner; Not being used?
     nsISupportsArray* mElements;
-    void* mScriptObject;
 
     nsRDFDOMNodeList(void);
     nsresult Init(void);
@@ -51,11 +48,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIDOMNodeList interface
-    NS_DECL_IDOMNODELIST
-
-    // nsIScriptObjectOwner interface
-    NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-    NS_IMETHOD SetScriptObject(void* aScriptObject);
+    NS_DECL_NSIDOMNODELIST
 
     // Implementation methods
     NS_IMETHOD AppendNode(nsIDOMNode* aNode);

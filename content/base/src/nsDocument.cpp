@@ -46,13 +46,13 @@
 #include "nsIEventStateManager.h"
 #include "nsContentList.h"
 #include "nsIObserver.h"
+#include "nsIBaseWindow.h"
 
 #include "nsIDOMEventListener.h"
 
 #include "nsIDOMStyleSheet.h"
 #include "nsDOMAttribute.h"
 #include "nsDOMCID.h"
-#include "nsIDOMScriptObjectFactory.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMAbstractView.h"
@@ -127,7 +127,6 @@ nsDOMStyleSheetList::nsDOMStyleSheetList(nsIDocument *aDocument)
   // The document will tell us when its going away.
   mDocument = aDocument;
   mDocument->AddObserver(this);
-  mScriptObject = nsnull;
 }
 
 nsDOMStyleSheetList::~nsDOMStyleSheetList()
@@ -138,15 +137,27 @@ nsDOMStyleSheetList::~nsDOMStyleSheetList()
   mDocument = nsnull;
 }
 
+
+// XXX couldn't we use the GetIIDs method from CSSStyleSheetList here?
+// XPConnect interface list for nsDOMStyleSheetList
+NS_CLASSINFO_MAP_BEGIN(DocumentStyleSheetList)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsDOMStyleSheetList
+NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetList)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStyleSheetList)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_WITH_NAME(DocumentStyleSheetList,
+                                                     StyleSheetList)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(nsDOMStyleSheetList)
 NS_IMPL_RELEASE(nsDOMStyleSheetList)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetList)
-   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
-   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
-   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStyleSheetList)
-NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP    
 nsDOMStyleSheetList::GetLength(PRUint32* aLength)
@@ -208,33 +219,6 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
 }
 
 NS_IMETHODIMP 
-nsDOMStyleSheetList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptObject) {
-    nsISupports *supports = (nsISupports *)(nsIDOMStyleSheetList *)this;
-    nsISupports *parent = (nsISupports *)mDocument;
-
-    // XXX Should be done through factory
-    res = NS_NewScriptStyleSheetList(aContext, 
-                                     supports,
-                                     parent,
-                                     (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  return res;
-}
-
-NS_IMETHODIMP 
-nsDOMStyleSheetList::SetScriptObject(void* aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
 nsDOMStyleSheetList::StyleSheetAdded(nsIDocument *aDocument,
                                      nsIStyleSheet* aStyleSheet)
 {
@@ -277,7 +261,6 @@ nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 // ==================================================================
 
 class nsDOMImplementation : public nsIDOMDOMImplementation,
-                            public nsIScriptObjectOwner,
                             public nsIPrivateDOMImplementation
 {
 public:
@@ -300,15 +283,10 @@ public:
                                nsIDOMDocumentType* aDoctype,
                                nsIDOMDocument** aReturn);
 
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
   //nsIPrivateDOMImplementation
   NS_IMETHOD Init(nsIURI* aBaseURI);
 
 protected:
-  void *mScriptObject;
   nsCOMPtr<nsIURI> mBaseURI;
 };
 
@@ -325,7 +303,6 @@ NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
 nsDOMImplementation::nsDOMImplementation(nsIURI* aBaseURI)
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
   mBaseURI = aBaseURI;
 }
 
@@ -333,7 +310,24 @@ nsDOMImplementation::~nsDOMImplementation()
 {
 }
 
-NS_IMPL_ISUPPORTS4(nsDOMImplementation, nsIDOMDOMImplementation, nsIPrivateDOMImplementation, nsIScriptObjectOwner, nsIDOMDOMImplementation)
+
+// XPConnect interface list for nsDOMImplementation
+NS_CLASSINFO_MAP_BEGIN(DOMImplementation)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMDOMImplementation)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsDOMImplementation
+NS_INTERFACE_MAP_BEGIN(nsDOMImplementation)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMImplementation)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMImplementation)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDOMImplementation)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DOMImplementation)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsDOMImplementation);
+NS_IMPL_RELEASE(nsDOMImplementation);
 
 
 NS_IMETHODIMP    
@@ -362,40 +356,12 @@ nsDOMImplementation::CreateDocument(const nsAReadableString& aNamespaceURI,
                                     nsIDOMDocumentType* aDoctype, 
                                     nsIDOMDocument** aReturn)
 {  
-  NS_ENSURE_ARG_POINTER(aReturn);    
+  NS_ENSURE_ARG_POINTER(aReturn);
   
   *aReturn = nsnull;
 
   return NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype,
                            mBaseURI);
-}
-
-NS_IMETHODIMP 
-nsDOMImplementation::GetScriptObject(nsIScriptContext *aContext, 
-                                     void** aScriptObject)
-{
-  nsresult result = NS_OK;
-
-  if (!mScriptObject) {
-    nsCOMPtr<nsIDOMScriptObjectFactory> factory(do_GetService(kDOMScriptObjectFactoryCID, &result));
-
-    if (NS_OK == result) {
-      nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(aContext->GetGlobalObject()));
-
-      result = factory->NewScriptDOMImplementation(aContext, (nsISupports*)(nsIDOMDOMImplementation*)this,
-                                                   global, &mScriptObject);
-    }
-  }
-  
-  *aScriptObject = mScriptObject;
-  return result;
-}
-
-NS_IMETHODIMP 
-nsDOMImplementation::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = nsnull;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -409,8 +375,6 @@ nsDOMImplementation::Init(nsIURI* aBaseURI)
 // =
 // ==================================================================
 
-MOZ_DECL_CTOR_COUNTER(nsDocumentChildNodes)
-
 nsDocumentChildNodes::nsDocumentChildNodes(nsIDocument* aDocument)
 {
   MOZ_COUNT_CTOR(nsDocumentChildNodes);
@@ -419,7 +383,7 @@ nsDocumentChildNodes::nsDocumentChildNodes(nsIDocument* aDocument)
   // references). We'll be told when the document goes away.
   mDocument = aDocument;
 }
- 
+
 nsDocumentChildNodes::~nsDocumentChildNodes()
 {
   MOZ_COUNT_DTOR(nsDocumentChildNodes);
@@ -472,12 +436,10 @@ nsDocument::nsDocument()
   NS_INIT_REFCNT();
 
   mArena = nsnull;
-  mDocumentTitle = nsnull;
   mDocumentURL = nsnull;
   mCharacterSet.AssignWithConversion("ISO-8859-1");
   mParentDocument = nsnull;
   mRootContent = nsnull;
-  mScriptObject = nsnull;
   mListenerManager = nsnull;
   mInDestructor = PR_FALSE;
   mNameSpaceManager = nsnull;
@@ -519,10 +481,6 @@ nsDocument::~nsDocument()
     }
   }
 
-  if (nsnull != mDocumentTitle) {
-    delete mDocumentTitle;
-    mDocumentTitle = nsnull;
-  }
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mPrincipal);
   mDocumentLoadGroup = null_nsCOMPtr();
@@ -571,6 +529,10 @@ nsDocument::~nsDocument()
   NS_IF_RELEASE(mDTD);
     
   delete mBoxObjectTable;
+
+  if (mNodeInfoManager) {
+    mNodeInfoManager->DropDocumentReference();
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN(nsDocument)
@@ -580,13 +542,13 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentStyle)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentView)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentRange)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptObjectOwner)
-  NS_INTERFACE_MAP_ENTRY(nsIJSScriptObject)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY(nsIDiskDocument)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
@@ -615,7 +577,7 @@ nsresult nsDocument::Init()
   mNodeInfoManager = new nsNodeInfoManager();
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
 
-  mNodeInfoManager->Init(mNameSpaceManager);
+  mNodeInfoManager->Init(this, mNameSpaceManager);
 
   return rv;
 }
@@ -633,10 +595,8 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsresult rv = NS_OK;
 
-  if (nsnull != mDocumentTitle) {
-    delete mDocumentTitle;
-    mDocumentTitle = nsnull;
-  }
+  mDocumentTitle.Truncate();
+
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mPrincipal);
   mDocumentLoadGroup = null_nsCOMPtr();
@@ -757,7 +717,7 @@ nsDocument::StopDocumentLoad()
 
 const nsString* nsDocument::GetDocumentTitle() const
 {
-  return mDocumentTitle;
+  return &mDocumentTitle;
 }
 
 nsIURI* nsDocument::GetDocumentURL() const
@@ -1403,6 +1363,13 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 
       shell->ReleaseAnonymousContent();
     }
+
+#ifdef DEBUG_jst
+    printf ("Content wrapper hash had %d entries.\n",
+            mContentWrapperHash.Count());
+#endif
+
+    mContentWrapperHash.Reset();
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
@@ -1734,55 +1701,6 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRul
 }
 
 
-nsresult nsDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIScriptGlobalObject> global;
-
-  if (nsnull == mScriptObject) {
-    // XXX We make the (possibly erroneous) assumption that the first
-    // presentation shell represents the "primary view" of the document
-    // and that the JS parent chain should incorporate just that view.
-    // This is done for lack of a better model when we have multiple
-    // views.
-    nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(0);
-    if (shell) {
-      nsCOMPtr<nsIPresContext> cx;
-      shell->GetPresContext(getter_AddRefs(cx));
-      nsCOMPtr<nsISupports> container;
-      
-      res = cx->GetContainer(getter_AddRefs(container));
-      if (NS_SUCCEEDED(res) && container) {
-        global = do_GetInterface(container);
-      }
-    }
-    // XXX If we can't find a view, parent to the calling context's
-    // global object. This may not be right either, but we need
-    // something.
-    else {
-      global = getter_AddRefs(aContext->GetGlobalObject());
-    }
-    
-    if (NS_SUCCEEDED(res)) {
-      res = NS_NewScriptDocument(aContext, 
-                                 (nsISupports *)(nsIDOMDocument *)this, 
-                                 (nsISupports *)global, 
-                                 (void**)&mScriptObject);
-    }
-  }
-  
-  *aScriptObject = mScriptObject;
-
-  return res;
-}
-
-nsresult nsDocument::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-
 //
 // nsIDOMDocument interface
 //
@@ -1863,6 +1781,15 @@ nsDocument::CreateElement(const nsAReadableString& aTagName,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP    
+nsDocument::CreateElementNS(const nsAReadableString & namespaceURI,
+                            const nsAReadableString & qualifiedName,
+                            nsIDOMElement **_retval)
+{
+  // Should be implemented by subclass
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 nsDocument::CreateTextNode(const nsAReadableString& aData, nsIDOMText** aReturn)
 {
@@ -1934,6 +1861,15 @@ nsDocument::CreateAttribute(const nsAReadableString& aName,
   return attribute->QueryInterface(NS_GET_IID(nsIDOMAttr), (void**)aReturn);
 }
 
+NS_IMETHODIMP
+nsDocument::CreateAttributeNS(const nsAReadableString & namespaceURI,
+                              const nsAReadableString & qualifiedName,
+                              nsIDOMAttr **_retval)
+{
+  // Should be implemented by subclass
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP    
 nsDocument::CreateEntityReference(const nsAReadableString& aName, 
                                   nsIDOMEntityReference** aReturn)
@@ -1981,6 +1917,14 @@ nsDocument::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
   }
 
   return list->QueryInterface(NS_GET_IID(nsIDOMNodeList), (void **)aReturn);
+}
+
+NS_IMETHODIMP    
+nsDocument::GetElementById(const nsAReadableString & elementId,
+                           nsIDOMElement **_retval)
+{
+  // Should be implemented by subclass
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
@@ -2147,30 +2091,6 @@ nsDocument::GetAnonymousNodes(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP    
-nsDocument::GetLocation(jsval* aLocation)
-{
-  if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(mScriptGlobalObject));
-    if(window) {
-      return window->GetLocation(aLocation);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsDocument::SetLocation(jsval aLocation)
-{
-  if (mScriptGlobalObject) {
-    nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(mScriptGlobalObject));
-    if(window) {
-      return window->SetLocation(aLocation);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
   return NS_NewRange(aReturn);
@@ -2247,6 +2167,59 @@ nsDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
   NS_ENSURE_TRUE(navigator, NS_OK);
 
   return navigator->GetPlugins(aPlugins);
+}
+
+NS_IMETHODIMP
+nsDocument::GetLocation(nsIDOMLocation **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+
+  nsCOMPtr<nsIDOMWindowInternal> w(do_QueryInterface(mScriptGlobalObject));
+
+  if(w) {
+    return w->GetLocation(_retval);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetTitle(nsAWritableString& aTitle)
+{
+  aTitle.Assign(mDocumentTitle);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::SetTitle(const nsAReadableString& aTitle)
+{
+  for (PRInt32 i = mPresShells.Count() - 1; i >= 0; --i) {
+    nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+
+    nsCOMPtr<nsIPresContext> context;
+    nsresult rv = shell->GetPresContext(getter_AddRefs(context));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupports> container;
+    rv = context->GetContainer(getter_AddRefs(container));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!container)
+      continue;
+
+    nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
+    if(!docShellWin)
+      continue;
+
+    rv = docShellWin->SetTitle(PromiseFlatString(aTitle).get());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mDocumentTitle.Assign(aTitle);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2377,7 +2350,7 @@ nsDocument::GetDir(nsAWritableString& aDirection)
     }
   }
 #else
-  aDirection.Assign(NS_LITERAL_STRING("ltr") );
+  aDirection.Assign(NS_LITERAL_STRING("ltr"));
 #endif // IBMBIDI
   return NS_OK;
 }
@@ -2413,6 +2386,7 @@ nsDocument::SetDir(const nsAReadableString& aDirection)
   return NS_OK;
 }
 
+
 //
 // nsIDOMNode methods
 //
@@ -2426,7 +2400,8 @@ nsDocument::GetNodeName(nsAWritableString& aNodeName)
 NS_IMETHODIMP    
 nsDocument::GetNodeValue(nsAWritableString& aNodeValue)
 {
-  aNodeValue.Truncate();
+  SetDOMStringToNull(aNodeValue);
+
   return NS_OK;
 }
 
@@ -2544,14 +2519,16 @@ nsDocument::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP
 nsDocument::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 { 
-  aNamespaceURI.Truncate();
+  SetDOMStringToNull(aNamespaceURI);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocument::GetPrefix(nsAWritableString& aPrefix)
 {
-  aPrefix.Truncate();
+  SetDOMStringToNull(aPrefix);
+
   return NS_OK;
 }
 
@@ -2564,7 +2541,8 @@ nsDocument::SetPrefix(const nsAReadableString& aPrefix)
 NS_IMETHODIMP
 nsDocument::GetLocalName(nsAWritableString& aLocalName)
 {
-  aLocalName.Truncate();
+  SetDOMStringToNull(aLocalName);
+
   return NS_OK;
 }
 
@@ -2767,7 +2745,6 @@ nsDocument::IsSupported(const nsAReadableString& aFeature,
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
-#if 0
 NS_IMETHODIMP
 nsDocument::GetBaseURI(nsAWritableString &aURI)
 {
@@ -2781,7 +2758,6 @@ nsDocument::GetBaseURI(nsAWritableString &aURI)
   }
   return NS_OK;
 }
-#endif
 
 NS_IMETHODIMP    
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
@@ -2980,6 +2956,7 @@ nsDocument::CreateEvent(const nsAReadableString& aEventType, nsIDOMEvent** aRetu
   return NS_ERROR_FAILURE;
 }
 
+#if 0
 PRBool    nsDocument::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
   return PR_TRUE;
@@ -3073,16 +3050,7 @@ PRBool  nsDocument::InternalRegisterCompileEventHandler(JSContext* aContext, jsv
   }
   return PR_TRUE;
 }
-
-/**
-  * Finds text in content
- */
-NS_IMETHODIMP nsDocument::FindNext(const nsAReadableString& aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
-{
-  aIsFound = PR_FALSE;
-  return NS_ERROR_FAILURE;
-}
-
+#endif
 
 NS_IMETHODIMP
 nsDocument::InitDiskDocument(nsIFile *aFile)
@@ -3268,39 +3236,27 @@ nsDocument::GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager)
   return NS_OK;
 }
 
-
-//
-// FindContent does a depth-first search from aStartNode
-// and returns the first of aTest1 or aTest2 which it finds.
-// I think.
-//
-nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
-                                    const nsIContent* aTest1, 
-                                    const nsIContent* aTest2) const
+NS_IMETHODIMP
+nsDocument::AddReference(void *aKey, nsISupports *aReference)
 {
-  PRInt32       count;
-  aStartNode->ChildCount(count);
-  PRInt32       indx;
+  nsVoidKey key(aKey);
 
-  for(indx = 0; indx < count;indx++)
-  {
-    nsIContent* child;
-    aStartNode->ChildAt(indx, child);
-    nsIContent* content = FindContent(child,aTest1,aTest2);
-    if (content != nsnull) {
-      NS_IF_RELEASE(child);
-      return content;
-    }
-    if (child == aTest1 || child == aTest2) {
-      NS_IF_RELEASE(content);
-      return child;
-    }
-    NS_IF_RELEASE(child);
-    NS_IF_RELEASE(content);
+  if (mScriptGlobalObject) {
+    mContentWrapperHash.Put(&key, aReference);
   }
-  return nsnull;
+
+  return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocument::RemoveReference(void *aKey, nsISupports **aOldReference)
+{
+  nsVoidKey key(aKey);
+
+  mContentWrapperHash.Remove(&key, aOldReference);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP    
 nsDocument::GetDTD(nsIDTD** aDTD) const

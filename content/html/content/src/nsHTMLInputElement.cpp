@@ -31,7 +31,6 @@
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -83,7 +82,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafFormElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafFormElement::)
 
   // nsIDOMElement
     // can't use the macro here because input type=text needs to notify up to 
@@ -170,13 +169,13 @@ public:
   }
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafFormElement::)
 
   // nsIDOMHTMLInputElement
-  NS_DECL_IDOMHTMLINPUTELEMENT
+  NS_DECL_NSIDOMHTMLINPUTELEMENT
 
   // nsIDOMNSHTMLInputElement
-  NS_DECL_IDOMNSHTMLINPUTELEMENT
+  NS_DECL_NSIDOMNSHTMLINPUTELEMENT
 
   // Overriden nsIFormControl methods
   NS_IMETHOD GetType(PRInt32* aType);
@@ -274,8 +273,22 @@ nsHTMLInputElement::~nsHTMLInputElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLInputElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI2(nsHTMLInputElement, nsGenericHTMLLeafFormElement,
-                        nsIDOMHTMLInputElement, nsIDOMNSHTMLInputElement)
+
+// XPConnect interface list for nsHTMLInputElement
+NS_CLASSINFO_MAP_BEGIN(HTMLInputElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLInputElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLInputElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLInputElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
+                                    nsGenericHTMLLeafFormElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLInputElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLInputElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLInputElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 // nsIDOMNode

@@ -25,19 +25,16 @@
 
 #include "nsISupports.h"
 #include "nsIDOMNodeList.h"
-#include "nsIScriptObjectOwner.h"
 
 /**
  * This is a base class for a generic DOM Node List. The base class
- * provides implementations for nsISupports and nsIScriptObjectOwner,
- * but it is up to the subclass to implement the core node list
- * methods:
+ * provides implementations for nsISupports, it is up to the subclass
+ * to implement the core node list methods:
+ *
  *   GetLength
  *   Item
- *
- */
-class nsGenericDOMNodeList : public nsIDOMNodeList,
-                             public nsIScriptObjectOwner 
+ * */
+class nsGenericDOMNodeList : public nsIDOMNodeList 
 {
 public:
   nsGenericDOMNodeList();
@@ -45,16 +42,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
   // The following need to be defined in the subclass
   // nsIDOMNodeList interface
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
-
-protected:
-  void*        mScriptObject;
 };
 
 #endif // nsGenericDOMNodeList_h__

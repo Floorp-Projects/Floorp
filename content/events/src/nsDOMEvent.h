@@ -32,7 +32,6 @@
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateTextRange.h"
 #include "nsIDOMEvent.h"
-#include "nsIScriptObjectOwner.h"
 
 #include "nsIPresContext.h"
 #include "nsPoint.h"
@@ -45,8 +44,8 @@ class nsDOMEvent : public nsIDOMKeyEvent,
                    public nsIDOMNSUIEvent, 
                    public nsIPrivateDOMEvent, 
                    public nsIPrivateTextEvent, 
-                   public nsIPrivateCompositionEvent,
-                   public nsIScriptObjectOwner {
+                   public nsIPrivateCompositionEvent
+{
 
 public:
   // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
@@ -100,7 +99,8 @@ public:
     eDOMEvents_characterdatamodified
   };
 
-  nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAReadableString& aEventType);
+  nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+             const nsAReadableString& aEventType);
   virtual ~nsDOMEvent();
 
   NS_DECL_ISUPPORTS
@@ -118,12 +118,15 @@ public:
   NS_IMETHOD    PreventBubble();
   NS_IMETHOD    PreventCapture();
   NS_IMETHOD    PreventDefault();
-  NS_IMETHOD    InitEvent(const nsAReadableString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg);
+  NS_IMETHOD    InitEvent(const nsAReadableString& aEventTypeArg,
+                          PRBool aCanBubbleArg, PRBool aCancelableArg);
 
   // nsIDOMUIEvent Interface
   NS_IMETHOD    GetView(nsIDOMAbstractView** aView);
   NS_IMETHOD    GetDetail(PRInt32* aDetail);
-  NS_IMETHOD    InitUIEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg);
+  NS_IMETHOD    InitUIEvent(const nsAReadableString& aTypeArg,
+                            PRBool aCanBubbleArg, PRBool aCancelableArg,
+                            nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg);
 
   // nsIDOMMouseEvent Interface and nsIDOMKeyEvent Interface
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);
@@ -138,9 +141,19 @@ public:
   NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget);
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode);
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
-  NS_IMETHOD    InitMouseEvent(const nsAReadableString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg);
-  NS_IMETHOD    InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg);
-    
+  NS_IMETHOD    InitMouseEvent(const nsAReadableString& aTypeArg,
+                               PRBool aCtrlKeyArg, PRBool aAltKeyArg,
+                               PRBool aShiftKeyArg, PRBool aMetaKeyArg,
+                               PRInt32 aScreenXArg, PRInt32 aScreenYArg,
+                               PRInt32 aClientXArg, PRInt32 aClientYArg,
+                               PRUint16 aButtonArg, PRUint16 aDetailArg);
+  NS_IMETHOD    InitKeyEvent(const nsAReadableString& aTypeArg,
+                             PRBool aCanBubbleArg, PRBool aCancelableArg,
+                             PRBool aCtrlKeyArg, PRBool aAltKeyArg,
+                             PRBool aShiftKeyArg, PRBool aMetaKeyArg,
+                             PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg,
+                             nsIDOMAbstractView* aViewArg);
+
   // nsIDOMNSUIEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY);
@@ -175,10 +188,6 @@ public:
   NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
   NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply);
 
-  // nsIScriptObjectOwner interface
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void* aScriptObject);
-
   /** Overloaded new operator. Initializes the memory to 0. 
    *  Relies on a recycler to perform the allocation, 
    *  optionally from a pool.
@@ -206,7 +215,8 @@ protected:
   static PRBool gEventPoolInUse;
 
   //Internal helper funcs
-  nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T, float* aT2P);
+  nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
+                         float* aT2P);
   nsresult SetEventType(const nsAReadableString& aEventTypeArg);
   const char* GetEventName(PRUint32 aEventType);
 

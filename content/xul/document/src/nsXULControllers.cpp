@@ -37,6 +37,8 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsXULControllers.h"
+#include "nsString.h"
+#include "nsContentUtils.h"
 
 //----------------------------------------------------------------------
 
@@ -84,7 +86,22 @@ NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
-NS_IMPL_ISUPPORTS2(nsXULControllers, nsIControllers, nsISecurityCheckedComponent);
+// XPConnect interface list for nsXULControllers
+NS_CLASSINFO_MAP_BEGIN(XULControllers)
+  NS_CLASSINFO_MAP_ENTRY(nsIControllers)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsXULControllers
+NS_INTERFACE_MAP_BEGIN(nsXULControllers)
+  NS_INTERFACE_MAP_ENTRY(nsIControllers)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULControllers)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsXULControllers)
+NS_IMPL_RELEASE(nsXULControllers)
 
 
 NS_IMETHODIMP
@@ -258,37 +275,4 @@ nsXULControllers::GetControllerCount(PRUint32 *_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = mControllers.Count();
     return NS_OK;
-}
-
-
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP nsXULControllers::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP nsXULControllers::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP nsXULControllers::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP nsXULControllers::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
 }

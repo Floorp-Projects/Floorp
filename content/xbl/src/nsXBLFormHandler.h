@@ -44,13 +44,13 @@ public:
   virtual ~nsXBLFormHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
-  virtual nsresult Submit(nsIDOMEvent* aEvent);
-  virtual nsresult Reset(nsIDOMEvent* aEvent);
-  virtual nsresult Change(nsIDOMEvent* aEvent);
-  virtual nsresult Select(nsIDOMEvent* aEvent);
-  virtual nsresult Input(nsIDOMEvent* aEvent);
+  NS_IMETHOD Submit(nsIDOMEvent* aEvent);
+  NS_IMETHOD Reset(nsIDOMEvent* aEvent);
+  NS_IMETHOD Change(nsIDOMEvent* aEvent);
+  NS_IMETHOD Select(nsIDOMEvent* aEvent);
+  NS_IMETHOD Input(nsIDOMEvent* aEvent);
    
   NS_DECL_ISUPPORTS_INHERITED
 

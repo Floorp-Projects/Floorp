@@ -21,7 +21,6 @@
  */
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMLinkStyle.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -53,16 +52,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLLinkElement
-  NS_DECL_IDOMHTMLLINKELEMENT
+  NS_DECL_NSIDOMHTMLLINKELEMENT
 
   // nsILink
   NS_IMETHOD    GetLinkState(nsLinkState &aState);
@@ -74,7 +73,7 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
 
   // nsIDOMLinkStyle
-  NS_DECL_IDOMLINKSTYLE
+  NS_DECL_NSIDOMLINKSTYLE
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
@@ -132,9 +131,23 @@ nsHTMLLinkElement::~nsHTMLLinkElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLLinkElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI3(nsHTMLLinkElement, nsGenericHTMLLeafElement,
-                        nsIDOMHTMLLinkElement, nsIDOMLinkStyle,
-                        nsIStyleSheetLinkingElement);
+
+// XPConnect interface list for nsHTMLLinkElement
+NS_CLASSINFO_MAP_BEGIN(HTMLLinkElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLinkElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLLinkElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLinkElement,
+                                    nsGenericHTMLLeafElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLLinkElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLLinkElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

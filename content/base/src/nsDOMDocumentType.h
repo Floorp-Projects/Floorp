@@ -24,17 +24,13 @@
 #define nsDOMDocumentType_h___
 
 #include "nsIDOMDocumentType.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIContent.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsString.h"
 #include "nsISizeOfHandler.h"
 
-class nsIDOMNamedNodeMap;
-
-class nsDOMDocumentType : public nsIDOMDocumentType,
-                          public nsIScriptObjectOwner,
-                          public nsIContent
+class nsDOMDocumentType : public nsIContent,
+                          public nsIDOMDocumentType
 {
 public:
   nsDOMDocumentType(const nsAReadableString& aName,
@@ -50,13 +46,10 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMDocumentType
-  NS_DECL_IDOMDOCUMENTTYPE
-
-  // nsIScriptObjectOwner interface
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(mInner);
+  NS_DECL_NSIDOMDOCUMENTTYPE
 
   // nsIContent
   NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
@@ -77,12 +70,13 @@ protected:
   nsString mInternalSubset;
 };
 
-extern nsresult NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                                      const nsAReadableString& aName,
-                                      nsIDOMNamedNodeMap *aEntities,
-                                      nsIDOMNamedNodeMap *aNotations,
-                                      const nsAReadableString& aPublicId,
-                                      const nsAReadableString& aSystemId,
-                                      const nsAReadableString& aInternalSubset);
+extern nsresult
+NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
+                      const nsAReadableString& aName,
+                      nsIDOMNamedNodeMap *aEntities,
+                      nsIDOMNamedNodeMap *aNotations,
+                      const nsAReadableString& aPublicId,
+                      const nsAReadableString& aSystemId,
+                      const nsAReadableString& aInternalSubset);
 
 #endif // nsDOMDocument_h___

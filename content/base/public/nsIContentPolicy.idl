@@ -21,7 +21,9 @@
 
 #include "nsISupports.idl"
 #include "nsIURL.idl"
-#include "domstubs.idl"
+
+interface nsIDOMElement;
+
 
 /**
  * Interface for content policy mechanism.  Implementations of this

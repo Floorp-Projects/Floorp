@@ -28,7 +28,6 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDocumentObserver.h"
-#include "nsIScriptObjectOwner.h"
 
 typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent,
                                          nsString* aData);
@@ -37,8 +36,7 @@ class nsIDocument;
 class nsIDOMHTMLFormElement;
 
 
-class nsBaseContentList : public nsIDOMNodeList,
-                          public nsIScriptObjectOwner
+class nsBaseContentList : public nsIDOMNodeList
 {
 public:
   nsBaseContentList();
@@ -47,12 +45,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMNodeList
-  NS_DECL_IDOMNODELIST
+  NS_DECL_NSIDOMNODELIST
 
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-  
   NS_IMETHOD AppendElement(nsIContent *aContent);
   NS_IMETHOD RemoveElement(nsIContent *aContent);
   NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex);
@@ -60,7 +54,6 @@ public:
 
 protected:
   nsVoidArray mElements;
-  void *mScriptObject;
 };
 
 
@@ -103,9 +96,6 @@ public:
   NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
   NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
-
-  // nsIScriptObjectOwner
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }

@@ -26,54 +26,16 @@
 nsGenericDOMHTMLCollection::nsGenericDOMHTMLCollection() 
 {
   NS_INIT_REFCNT();
-  mScriptObject = nsnull;
 }
 
 nsGenericDOMHTMLCollection::~nsGenericDOMHTMLCollection()
 {
 }
 
-nsresult 
-nsGenericDOMHTMLCollection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLCollection))) {
-    *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMHTMLCollection*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
 NS_IMPL_ADDREF(nsGenericDOMHTMLCollection)
 NS_IMPL_RELEASE(nsGenericDOMHTMLCollection)
 
-NS_IMETHODIMP
-nsGenericDOMHTMLCollection::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptHTMLCollection(aContext, (nsISupports *)(nsIDOMHTMLCollection *)this, nsnull, (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-NS_IMETHODIMP
-nsGenericDOMHTMLCollection::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
+NS_INTERFACE_MAP_BEGIN(nsGenericDOMHTMLCollection)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END

@@ -45,11 +45,14 @@ public:
   virtual ~nsXBLMouseMotionHandler();
   
   // nsIDOMetc.
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
-  virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-  virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { // XXX Dead event?
-                                                        return NS_OK; };
+  NS_IMETHOD MouseMove(nsIDOMEvent* aMouseEvent);
+  NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent)
+  {
+    // XXX Dead event?
+    return NS_OK;
+  };
 
   NS_DECL_ISUPPORTS_INHERITED
 

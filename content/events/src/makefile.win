@@ -32,15 +32,15 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=    nsEventListenerManager.cpp  \
 	    nsEventStateManager.cpp  \
 	    nsDOMEvent.cpp		\
-      nsDOMMutationEvent.cpp \
+	    nsDOMMutationEvent.cpp \
 	    nsDOMEventsIIDs.cpp		\
-		nsPrivateTextRange.cpp		\
+	    nsPrivateTextRange.cpp		\
 	    $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 	    .\$(OBJDIR)\nsEventStateManager.obj  \
 	    .\$(OBJDIR)\nsDOMEvent.obj	    \
-      .\$(OBJDIR)\nsDOMMutationEvent.obj \
+	    .\$(OBJDIR)\nsDOMMutationEvent.obj \
 	    .\$(OBJDIR)\nsDOMEventsIIDs.obj	    \
 	    .\$(OBJDIR)\nsPrivateTextRange.obj	    \
 	    $(NULL)
@@ -48,8 +48,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 
 EXPORTS= nsDOMEventsIIDs.h
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
-  -I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\..\html\base\src -I$(PUBLIC)\netlib -I..\..\xul\content\src
+LINCS= -I..\..\html\base\src -I..\..\xul\content\src -I..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

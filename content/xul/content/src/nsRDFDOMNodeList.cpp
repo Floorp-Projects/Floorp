@@ -34,20 +34,10 @@
 
 #include "nsDOMCID.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMScriptObjectFactory.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsRDFDOMNodeList.h"
-
-////////////////////////////////////////////////////////////////////////
-// GUID definitions
-
-static NS_DEFINE_IID(kIDOMNodeIID,                NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMNodeListIID,            NS_IDOMNODELIST_IID);
-static NS_DEFINE_IID(kIDOMScriptObjectFactoryIID, NS_IDOM_SCRIPT_OBJECT_FACTORY_IID);
-
-static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
+#include "nsContentUtils.h"
 
 ////////////////////////////////////////////////////////////////////////
 // ctors & dtors
@@ -55,8 +45,7 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,  NS_DOM_SCRIPT_OBJECT_FACTORY_C
 
 nsRDFDOMNodeList::nsRDFDOMNodeList(void)
     : //mInner(nsnull), Not being used?
-      mElements(nsnull),
-      mScriptObject(nsnull)
+      mElements(nsnull)
 {
     NS_INIT_REFCNT();
 }
@@ -91,7 +80,8 @@ nsRDFDOMNodeList::Create(nsRDFDOMNodeList** aResult)
 }
 
 nsresult
-nsRDFDOMNodeList::CreateWithArray(nsISupportsArray* aArray, nsRDFDOMNodeList** aResult)
+nsRDFDOMNodeList::CreateWithArray(nsISupportsArray* aArray,
+                                  nsRDFDOMNodeList** aResult)
 {
     nsRDFDOMNodeList* list = new nsRDFDOMNodeList();
     if (! list)
@@ -108,37 +98,25 @@ nsRDFDOMNodeList::CreateWithArray(nsISupportsArray* aArray, nsRDFDOMNodeList** a
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
 
+
+// XPConnect interface list for nsRDFDOMNodeList
+NS_CLASSINFO_MAP_BEGIN(XULNodeList)
+    NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsRDFDOMNodeList
+NS_INTERFACE_MAP_BEGIN(nsRDFDOMNodeList)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+    NS_INTERFACE_MAP_ENTRY(nsIRDFNodeList)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeList)
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_WITH_NAME(XULNodeList, NodeList)
+NS_INTERFACE_MAP_END
+
+
 NS_IMPL_ADDREF(nsRDFDOMNodeList);
 NS_IMPL_RELEASE(nsRDFDOMNodeList);
 
-nsresult
-nsRDFDOMNodeList::QueryInterface(REFNSIID aIID, void** aResult)
-{
-static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (aIID.Equals(NS_GET_IID(nsIDOMNodeList)) ||
-        aIID.Equals(kISupportsIID)) {
-        *aResult = NS_STATIC_CAST(nsIDOMNodeList*, this);
-    }
-    else if (aIID.Equals(NS_GET_IID(nsIRDFNodeList))) {
-        *aResult = NS_STATIC_CAST(nsIRDFNodeList*, this);
-    }
-    else if (aIID.Equals(kIScriptObjectOwnerIID)) {
-        *aResult = NS_STATIC_CAST(nsIScriptObjectOwner*, this);
-    }
-    else {
-        *aResult = nsnull;
-        return NS_NOINTERFACE;
-    }
-
-    NS_ADDREF(this);
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMNodeList interface
@@ -161,52 +139,11 @@ nsRDFDOMNodeList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsRDFDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-    PRUint32 cnt;
-    nsresult rv = mElements->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-
-    if (aIndex >= (PRUint32) cnt)
-        return NS_ERROR_INVALID_ARG;
+    // It's ok to access past the end of the array here, if we do that
+    // we simply return nsnull, as per the DOM spec.
 
     // Cast is okay because we're in a closed system.
     *aReturn = (nsIDOMNode*) mElements->ElementAt(aIndex);
-    return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-// nsIScriptObjectOwner interface
-
-NS_IMETHODIMP
-nsRDFDOMNodeList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-    nsresult rv = NS_OK;
-    nsIScriptGlobalObject* global = aContext->GetGlobalObject();
-
-    if (nsnull == mScriptObject) {
-        nsIDOMScriptObjectFactory *factory;
-    
-        if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kDOMScriptObjectFactoryCID,
-                                                           kIDOMScriptObjectFactoryIID,
-                                                           (nsISupports **)&factory))) {
-            rv = factory->NewScriptNodeList(aContext, 
-                                            (nsISupports*)(nsIDOMNodeList*)this, 
-                                            global, 
-                                            (void**)&mScriptObject);
-
-            nsServiceManager::ReleaseService(kDOMScriptObjectFactoryCID, factory);
-        }
-    }
-    *aScriptObject = mScriptObject;
-
-    NS_RELEASE(global);
-    return rv;
-}
-
-NS_IMETHODIMP
-nsRDFDOMNodeList::SetScriptObject(void* aScriptObject)
-{
-    mScriptObject = aScriptObject;
     return NS_OK;
 }
 

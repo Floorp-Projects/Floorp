@@ -33,6 +33,8 @@
 #include "nsIPluginHost.h"
 #include "nsCURILoader.h"
 #include "nsLayoutCID.h"
+#include "nsDOMCID.h"
+#include "nsIDOMScriptObjectFactory.h"
 #include "nsNetUtil.h"
 #include "nsRect.h"
 #include "prprf.h"
@@ -114,6 +116,8 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
+static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
+                     NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 //
 // Local function prototypes
@@ -158,6 +162,7 @@ nsDocShell::nsDocShell():
     mURIResultedInDocument(PR_FALSE),
     mUseExternalProtocolHandler(PR_FALSE),
     mDisallowPopupWindows(PR_FALSE),
+    mIsBeingDestroyed(PR_FALSE),
     mParent(nsnull),
     mTreeOwner(nsnull),
     mChromeEventHandler(nsnull)
@@ -1333,7 +1338,6 @@ NS_IMETHODIMP
 nsDocShell::GetChildAt(PRInt32 aIndex, nsIDocShellTreeItem ** aChild)
 {
     NS_ENSURE_ARG_POINTER(aChild);
-    NS_ENSURE_ARG_RANGE(aIndex, 0, mChildren.Count() - 1);
 
     *aChild = (nsIDocShellTreeItem *) mChildren.ElementAt(aIndex);
     NS_IF_ADDREF(*aChild);
@@ -1842,6 +1846,8 @@ nsDocShell::Create()
 NS_IMETHODIMP
 nsDocShell::Destroy()
 {
+    mIsBeingDestroyed = PR_TRUE;
+
     // Stop any URLs that are currently being loaded...
     Stop();
     if (mDocLoader) {
@@ -2646,6 +2652,10 @@ nsDocShell::ScrollByPages(PRInt32 numPages)
 NS_IMETHODIMP
 nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject ** aGlobal)
 {
+    if (mIsBeingDestroyed) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     NS_ENSURE_ARG_POINTER(aGlobal);
     NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
 
@@ -4824,7 +4834,15 @@ nsDocShell::EnsureScriptEnvironment()
     if (mScriptContext)
         return NS_OK;
 
-    NS_NewScriptGlobalObject(getter_AddRefs(mScriptGlobal));
+    if (mIsBeingDestroyed) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    nsCOMPtr<nsIDOMScriptObjectFactory> factory =
+        do_GetService(kDOMScriptObjectFactoryCID);
+    NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+
+    factory->NewScriptGlobalObject(getter_AddRefs(mScriptGlobal));
     NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
 
     mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell *, this));
@@ -4832,7 +4850,7 @@ nsDocShell::EnsureScriptEnvironment()
         SetGlobalObjectOwner(NS_STATIC_CAST
                              (nsIScriptGlobalObjectOwner *, this));
 
-    NS_CreateScriptContext(mScriptGlobal, getter_AddRefs(mScriptContext));
+    factory->NewScriptContext(mScriptGlobal, getter_AddRefs(mScriptContext));
     NS_ENSURE_TRUE(mScriptContext, NS_ERROR_FAILURE);
 
     return NS_OK;

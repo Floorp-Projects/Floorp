@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLQuoteElement.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -43,16 +42,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLQuoteElement
-  NS_DECL_IDOMHTMLQUOTEELEMENT
+  NS_DECL_NSIDOMHTMLQUOTEELEMENT
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
@@ -95,8 +94,20 @@ nsHTMLQuoteElement::~nsHTMLQuoteElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLQuoteElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLQuoteElement, nsGenericElement) 
 
-NS_IMPL_HTMLCONTENT_QI(nsHTMLQuoteElement, nsGenericHTMLContainerElement,
-                       nsIDOMHTMLQuoteElement);
+
+// XPConnect interface list for nsHTMLQuoteElement
+NS_CLASSINFO_MAP_BEGIN(HTMLQuoteElement)
+  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLQuoteElement)
+  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for nsHTMLQuoteElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLQuoteElement,
+                                    nsGenericHTMLContainerElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLQuoteElement)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLQuoteElement)
+NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult

@@ -29,6 +29,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFConInstanceTestNode.h"
 #include "nsResourceSet.h"
+#include "nsString.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
