@@ -454,6 +454,8 @@ void nsDeviceContextSpecWin :: SetGlobalDevMode(HGLOBAL aHGlobal)
 //----------------------------------------------------------------------------------
 void nsDeviceContextSpecWin :: SetDevMode(LPDEVMODE aDevMode)
 {
+  if (mDevMode) free(mDevMode);
+
   mDevMode = aDevMode;
   mIsDEVMODEGlobalHandle = PR_FALSE;
 }
@@ -944,25 +946,63 @@ nsresult
 nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuiet)
 {
   NS_ENSURE_ARG_POINTER(aWidget);
-
   nsresult  rv = NS_ERROR_FAILURE;
   gDialogWasExtended  = PR_FALSE;
 
-  // Create a Moveable Memory Object that holds a new DevMode
-  // from the Printer Name
-  // The PRINTDLG.hDevMode requires that it be a moveable memory object
-  // NOTE: We only need to free hGlobalDevMode when the dialog is cancelled
-  // When the user prints, it comes back in the printdlg struct and 
-  // is used and cleaned up later
+  HGLOBAL hGlobalDevMode = NULL;
+  HGLOBAL hDevNames      = NULL;
+
+  // Get the Print Name to be used
   PRUnichar * printerName;
   mPrintSettings->GetPrinterName(&printerName);
-  HGLOBAL hGlobalDevMode = NULL;
-  if (printerName && !aQuiet) {
+
+  // If there is no name then use the default printer
+  if (!printerName || (printerName && !*printerName)) {
+    LPTSTR lpPrtName;
+    GlobalPrinters::GetInstance()->GetDefaultPrinterName(lpPrtName);
+    nsString str;
+#ifdef UNICODE
+    str.AppendWithConversion((PRUnichar *)lpPrtName);
+#else 
+    str.AssignWithConversion((char*)lpPrtName);
+#endif
+    printerName = ToNewUnicode(str);
+    free(lpPrtName);
+  }
+
+  NS_ASSERTION(printerName, "We have to have a printer name");
+  if (!printerName) return NS_ERROR_FAILURE;
+
+  if (!aQuiet) {
+    // Now create a DEVNAMES struct so the the dialog is initialized correctly.
+    PRUint32 len = nsCRT::strlen(printerName);
+    PRUint32 len2 = len+sizeof(DEVNAMES);
+    hDevNames = (HGLOBAL)::GlobalAlloc(GHND, len+sizeof(DEVNAMES)+1);
+    DEVNAMES* pDevNames = (DEVNAMES*)::GlobalLock(hDevNames);
+    pDevNames->wDriverOffset = sizeof(DEVNAMES);
+    pDevNames->wDeviceOffset = sizeof(DEVNAMES);
+    pDevNames->wOutputOffset = sizeof(DEVNAMES)+len+1;
+    pDevNames->wDefault      = 0;
+    char* device = &(((char*)pDevNames)[pDevNames->wDeviceOffset]);
+    strcpy(device, (char*)NS_ConvertUCS2toUTF8(printerName).get());
+    ::GlobalUnlock(hDevNames);
+
+    // Create a Moveable Memory Object that holds a new DevMode
+    // from the Printer Name
+    // The PRINTDLG.hDevMode requires that it be a moveable memory object
+    // NOTE: We only need to free hGlobalDevMode when the dialog is cancelled
+    // When the user prints, it comes back in the printdlg struct and 
+    // is used and cleaned up later
 #ifdef UNICODE
     hGlobalDevMode = CreateGlobalDevModeAndInit(printerName, mPrintSettings);
 #else 
     hGlobalDevMode = CreateGlobalDevModeAndInit((char*)NS_ConvertUCS2toUTF8(printerName).get(), mPrintSettings);
 #endif
+  } else {
+    // For aQuiet create a LPDEVMODE from the printer name
+    // set it into the mDeviceMode
+    // then transfer the appropriate PrintSettnigs to it.
+    return GetDataFromPrinter(printerName, mPrintSettings);
   }
 
   // Prepare to Display the Print Dialog
@@ -972,7 +1012,7 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
   prntdlg.lStructSize = sizeof(prntdlg);
   prntdlg.hwndOwner   = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
   prntdlg.hDevMode    = hGlobalDevMode;
-  prntdlg.hDevNames   = NULL;
+  prntdlg.hDevNames   = hDevNames;
   prntdlg.hDC         = NULL;
   prntdlg.Flags       = PD_ALLPAGES | PD_RETURNIC | PD_HIDEPRINTTOFILE | PD_USEDEVMODECOPIESANDCOLLATE;
 
@@ -1013,7 +1053,7 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
   prntdlg.hInstance           = NULL;
   prntdlg.lpPrintTemplateName = NULL;
 
-  if (!doExtend || aQuiet) {
+  if (!doExtend) {
     prntdlg.lCustData         = NULL;
     prntdlg.lpfnPrintHook     = NULL;
   } else {
@@ -1023,21 +1063,9 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
     prntdlg.Flags            |= PD_ENABLEPRINTHOOK;
   }
 
-  if (PR_TRUE == aQuiet){
-    prntdlg.Flags = PD_ALLPAGES | PD_RETURNDEFAULT | PD_RETURNIC | PD_USEDEVMODECOPIESANDCOLLATE;
-  }
-
   BOOL result = ::PrintDlg(&prntdlg);
 
   if (TRUE == result) {
-    if (mPrintSettings && prntdlg.hDevMode != NULL) {
-      // when it is quite use the printsettings passed 
-      if (!aQuiet) {
-        LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
-        SetPrintSettingsFromDevMode(mPrintSettings, devMode);
-        ::GlobalUnlock(prntdlg.hDevMode);
-      }
-    }
     DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
     if ( NULL != devnames ) {
 
@@ -1051,10 +1079,12 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
       printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
 #endif
-      ::GlobalUnlock(prntdlg.hDevNames);
-
       // fill the print options with the info from the dialog
       if (mPrintSettings != nsnull) {
+        nsString printerName;
+        printerName.AssignWithConversion(device);
+
+        mPrintSettings->SetPrinterName(printerName.get());
 
         if (prntdlg.Flags & PD_SELECTION) {
           mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
@@ -1092,7 +1122,7 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
           mPrintSettings->SetPrintFrameType(nsIPrintSettings::kNoFrames);
         }
       }
-
+      ::GlobalUnlock(prntdlg.hDevNames);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
     PRBool  printSelection = prntdlg.Flags & PD_SELECTION;
@@ -1123,7 +1153,7 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
       // the native setup with those specified in the Page Setup
       // mainly Paper Size, Orientation
       if (aQuiet) {
-       SetupPaperInfoFromSettings();
+        SetupPaperInfoFromSettings();
       }
 
     }
@@ -1466,11 +1496,13 @@ nsDeviceContextSpecWin :: ShowNativePrintDialogEx(nsIWidget *aWidget, PRBool aQu
 
 //----------------------------------------------------------------------------------
 // Setup the object's data member with the selected printer's data
-void
-nsDeviceContextSpecWin :: GetDataFromPrinter(PRUnichar * aName)
+nsresult
+nsDeviceContextSpecWin :: GetDataFromPrinter(PRUnichar * aName, nsIPrintSettings* aPS)
 {
+  nsresult rv = NS_ERROR_FAILURE;
+
   if (!GlobalPrinters::GetInstance()->PrintersAreAllocated()) {
-    return;
+    return rv;
   }
 
   HANDLE hPrinter = NULL;
@@ -1493,7 +1525,11 @@ nsDeviceContextSpecWin :: GetDataFromPrinter(PRUnichar * aName)
     if (dwRet != IDOK) {
        free(pDevMode);
        ::ClosePrinter(hPrinter);
-       return;
+       return rv;
+    }
+
+    if (aPS) {
+      SetupDevModeFromSettings(pDevMode, aPS);
     }
 
     SetDevMode(pDevMode);
@@ -1509,9 +1545,12 @@ nsDeviceContextSpecWin :: GetDataFromPrinter(PRUnichar * aName)
     } else {
       SetDriverName(NULL);
     }
-    free(pDevMode);
     ::ClosePrinter(hPrinter);
+    rv = NS_OK;
+  } else {
+    rv = NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
   }
+  return rv;
 }
 
 //----------------------------------------------------------------------------------
@@ -1612,7 +1651,7 @@ nsDeviceContextSpecWin :: ShowXPPrintDialog(PRBool aQuiet)
 
       if (printerName != nsnull) {
         // Gets DEVMODE, Device and Driver Names
-        GetDataFromPrinter(printerName);
+        rv = GetDataFromPrinter(printerName);
 
         // Set into DevMode Paper Size and Orientation here
         SetupPaperInfoFromSettings();
