@@ -78,7 +78,13 @@ void *XpuStartJobToFile( Display *pdpy, XPContext pcontext, const char *filename
 
   XpStartJob(pdpy, XPGetData);
   handle = XpuPrintToFile(pdpy, pcontext, filename);
-    
+  
+  if (!handle)
+  {
+    /* Cancel the print job and discard all events... */
+    XpCancelJob(pdpy, True);
+  }
+
   return(handle);
 }
 

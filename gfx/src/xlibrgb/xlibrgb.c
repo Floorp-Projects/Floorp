@@ -3898,6 +3898,72 @@ xxlib_draw_indexed_image (XlibRgbHandle *handle, Drawable drawable,
                                handle->conv_indexed_d, cmap, 0, 0);
 }
 
+void
+xxlib_draw_xprint_scaled_rgb_image( XlibRgbHandle *handle,
+                                    Drawable drawable,
+                                    long paper_resolution,
+                                    long image_resolution,
+                                    GC gc,
+                                    int x,
+                                    int y,
+                                    int width,
+                                    int height,
+                                    XlibRgbDither dith,
+                                    unsigned char *rgb_buf,
+                                    int rowstride)
+{
+  long available = ((65536 < handle->max_request_size) ? 
+                    (65536 << 2):(handle->max_request_size << 2))
+		   - 512 /* SIZEOF(xPutImageReq) */;
+                
+  if (image_resolution == 0)
+    image_resolution = paper_resolution;
+
+  if( (rowstride * height) < available )
+  {
+    xxlib_draw_rgb_image(handle,
+                         drawable,
+                         gc,
+                         x, y, width, height,
+                         dith,
+                         rgb_buf, rowstride);
+  }
+  else
+  {
+    int    subimageheight = available / rowstride;
+    double scaling_factor = (double)paper_resolution / (double)image_resolution;
+
+#ifdef DEBUG    
+    printf("xxlib_draw_xprint_scaled_rgb_image: "
+           "splitting image x=%d, y=%d, width=%d, height=%d, subimageheight=%d, scaling_factor=%g\n",
+           x, y, width, height, subimageheight, scaling_factor);
+#endif /* DEBUG */
+
+    if (subimageheight == 0)
+        subimageheight = 1;
+
+      xxlib_draw_xprint_scaled_rgb_image(handle,
+                                         drawable,
+                                         paper_resolution, image_resolution,
+                                         gc,
+                                         x, y,
+                                         width, subimageheight,
+                                         dith,
+                                         rgb_buf,
+                                         rowstride);
+
+      xxlib_draw_xprint_scaled_rgb_image(handle,
+                                         drawable,
+                                         paper_resolution, image_resolution,
+                                         gc,
+                                         x, y+(int)((double)subimageheight*scaling_factor), 
+                                         width, (height-subimageheight),
+                                         dith,
+                                         (rgb_buf+(subimageheight*rowstride)),
+                                         rowstride);
+  }
+}
+
 Bool
 xxlib_rgb_ditherable (XlibRgbHandle *handle)
 {

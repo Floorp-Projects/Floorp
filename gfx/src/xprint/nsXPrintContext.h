@@ -76,6 +76,7 @@ public:
   NS_IMETHOD EndPage();
   NS_IMETHOD BeginDocument(PRUnichar *aTitle);
   NS_IMETHOD EndDocument();
+  NS_IMETHOD AbortDocument();
  
 
   int                     GetHeight() { return mHeight; }
@@ -120,6 +121,7 @@ private:
   int           mWidth;
   int           mHeight;
   XPContext     mPContext;
+  PRBool        mJobStarted;  /* |PR_TRUE| when being between XpStartJob() and XpEndJob() */
   PRBool        mIsGrayscale; /* color or grayscale ? */
   PRBool        mIsAPrinter;  /* destination: printer or file ? */
   const char   *mPrintFile;   /* file to "print" to */
@@ -131,7 +133,7 @@ private:
   nsresult SetupPrintContext(nsIDeviceContextSpecXp *aSpec);
   nsresult SetPageSize(float page_width_mm, float page_height_mm);
   nsresult SetOrientation(int landscape);
-
+  nsresult SetResolution(void);
 };
 
 

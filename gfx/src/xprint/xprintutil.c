@@ -884,13 +884,7 @@ int XpuSetDocumentCopies( Display *pdpy, XPContext pcontext, long num_copies )
   else
   {
     XPU_DEBUG_ONLY(printf("XpuSetContentOrientation: XpuCheckSupported failed for 'copy-count'\n"));
-    
-    /* We may safely assume that the device prints at least one copy if
-     * |copy-count| is not supported for this printer device.
-     */
-    if (num_copies == 1)
-      return(1);
-    
+       
     /* Failure... */
     return(0);
   }  
@@ -932,8 +926,8 @@ XpuMediumSourceSizeList XpuGetMediumSourceSizeList( Display *pdpy, XPContext pco
   for( status = XpuEnumerateMediumSourceSizes(pdpy, pcontext, &tray_name, &medium_name, &mbool,
                                               &ma1, &ma2, &ma3, &ma4, &tok_lasts) ;
        status != False ;
-       status = XpuEnumerateMediumSourceSizes(NULL, NULL,     &tray_name, &medium_name, &mbool, 
-                                            &ma1, &ma2, &ma3, &ma4, &tok_lasts) )
+       status = XpuEnumerateMediumSourceSizes(NULL, None,     &tray_name, &medium_name, &mbool, 
+                                              &ma1, &ma2, &ma3, &ma4, &tok_lasts) )
   {
     rec_count++;
     list = (XpuMediumSourceSizeRec *)realloc(list, sizeof(XpuMediumSourceSizeRec)*rec_count);
@@ -1211,9 +1205,54 @@ void XpuFreeResolutionList( XpuResolutionList list )
   }
 }
 
+/* Find resolution in resolution list.
+ * Lower resolutions are preferred over larger resolution if |dpi_a| <= |dpi_b|,
+ * otherwise larger resolutions are preferred over small resolutions 
+ */
+XpuResolutionRec *XpuFindResolution( XpuResolutionList list, int list_count, long dpi_a, long dpi_b )
+{
+  XpuResolutionRec *match = NULL;
+  int               i;
+  
+  if( dpi_a <= dpi_b )
+  {
+    /* Search list, lower resolutions are better... */
+    for( i = 0 ; i < list_count ; i++ )
+    {
+      XpuResolutionRec *curr = &list[i];
+    
+      if( curr->dpi >= dpi_a && curr->dpi <= dpi_b )
+      {
+        if( !match || (curr->dpi < match->dpi) )
+        {
+          match = curr;
+        }
+      }
+    }
+  }
+  else
+  {
+    /* Search list, higher resolutions are better... */
+    for( i = 0 ; i < list_count ; i++ )
+    {
+      XpuResolutionRec *curr = &list[i];
+    
+      if( curr->dpi >= dpi_b && curr->dpi <= dpi_a )
+      {
+        if( !match || (curr->dpi > match->dpi) )
+        {
+          match = curr;
+        }
+      }
+    }
+  }
+
+  return(match);
+}
+
 /* Get default page (if defined) or document resolution
  * this function may fail in the following conditions:
- * - Xprt misconfiguration
+ * - No default resolution set yet
  * - X DPI != Y DPI (not yet implemented in Xprt)
  */
 Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi_ptr )
