@@ -76,7 +76,11 @@ LLIBS=				\
  $(DIST)\lib\js32$(VERSION_NUMBER).lib        \
  $(DIST)\lib\util.lib           \
  $(DIST)\lib\plc3.lib       \
+!ifdef NECKO
+ $(DIST)\lib\neckoutil_s.lib       \
+!else
  $(DIST)\lib\netlib.lib       \
+!endif
  $(DIST)\lib\raptorgfx_s.lib \
 !if defined(NGLAYOUT_DDRAW)
  ole32.lib \

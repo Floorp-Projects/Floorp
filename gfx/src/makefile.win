@@ -22,7 +22,11 @@ DIRS = windows
 
 LIBRARY_NAME=raptorgfx_s
 MODULE=raptor 
+!ifdef NECKO
+REQUIRES=util img xpcom raptor necko
+!else
 REQUIRES=util img xpcom raptor netlib
+!endif
 
 DEFINES=-D_IMPL_NS_GFX -DWIN32_LEAN_AND_MEAN
 
@@ -46,7 +50,11 @@ CPP_OBJS=.\$(OBJDIR)\nsColor.obj .\$(OBJDIR)\nsColorNames.obj \
 
 LINCS=-I$(PUBLIC)\util -I$(PUBLIC)\img \
     -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+!ifdef NECKO
+    -I$(PUBLIC)\necko \
+!else
     -I$(PUBLIC)\netlib \
+!endif
 	-I$(PUBLIC)\dom \
 	-I$(PUBLIC)\js \
 	$(NULL)
