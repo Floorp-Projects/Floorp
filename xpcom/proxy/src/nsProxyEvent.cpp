@@ -136,6 +136,8 @@ nsProxyObject::~nsProxyObject()
 nsresult
 nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, nsIInterfaceInfo *interfaceInfo)            
 {
+    nsresult rv = NS_OK; 
+
     if (mDestQueue == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -148,7 +150,9 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     ///////////////////////////////////////////////////////////////////////
     // Auto-proxification
     ///////////////////////////////////////////////////////////////////////
-    nsresult rv = AutoProxyParameterList(methodIndex, methodInfo, params, interfaceInfo, convertInParameters);
+#ifdef AUTOPROXIFICATION
+    rv = AutoProxyParameterList(methodIndex, methodInfo, params, interfaceInfo, convertInParameters);
+#endif
     ///////////////////////////////////////////////////////////////////////
     
     if (NS_FAILED(rv))
@@ -204,7 +208,9 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
         ///////////////////////////////////////////////////////////////////////
         // Auto-proxification
         ///////////////////////////////////////////////////////////////////////
+#ifdef AUTOPROXIFICATION
         rv = AutoProxyParameterList(methodIndex, methodInfo, params, interfaceInfo, convertOutParameters);
+#endif
         ///////////////////////////////////////////////////////////////////////
         
         mDestQueue->ExitMonitor();
@@ -221,7 +227,7 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     return NS_ERROR_UNEXPECTED;
     
 }
-
+#ifdef AUTOPROXIFICATION
 // ssc@netscape.com wishes he could get rid of this instance of |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from here
 static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
@@ -430,7 +436,7 @@ nsProxyObject::AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *met
     }
     return rv;
 }
-
+#endif
 void DestroyHandler(PLEvent *self) 
 {
     nsProxyObjectCallInfo* owner = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
