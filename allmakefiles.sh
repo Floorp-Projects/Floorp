@@ -123,6 +123,9 @@ intl/uconv/ucvja/Makefile
 intl/uconv/ucvlatin/Makefile
 intl/uconv/ucvja2/Makefile
 intl/uconv/ucvcn/Makefile
+intl/uconv/ucvtw/Makefile
+intl/uconv/ucvtw2/Makefile
+intl/uconv/ucvko/Makefile
 intl/locale/Makefile
 intl/locale/public/Makefile
 intl/locale/src/Makefile

@@ -22,6 +22,9 @@ DIRS=public src  \
      ucvja \
      ucvja2 \
      ucvcn \
+     ucvtw \
+     ucvtw2 \
+     ucvko \
      tests
 
 include <$(DEPTH)\config\rules.mak>
