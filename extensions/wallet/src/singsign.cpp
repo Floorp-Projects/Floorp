@@ -112,14 +112,14 @@ si_PromptUsernameAndPassword(char *szMessage, char **szUsername, char **szPasswo
   nsresult res;
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
-    return NULL; /* failure value */
+    return PR_FALSE; /* failure value */
   }
   const nsString message = szMessage;
   PRUnichar* usr;
   PRUnichar* pwd;
   res = dialog->PromptUsernameAndPassword(message.GetUnicode(), &usr, &pwd, &retval);
   if (NS_FAILED(res)) {
-    return NULL; /* failure value */
+    return PR_FALSE; /* failure value */
   }
   username = usr;
   delete[] usr;
@@ -136,7 +136,7 @@ si_PromptUsernameAndPassword(char *szMessage, char **szUsername, char **szPasswo
     nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
     nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
     if (NS_FAILED(res)) {
-      return NULL; /* failure value */
+      return PR_FALSE; /* failure value */
     }
     if (dialog) {
       const nsString message = szMessage;
@@ -249,7 +249,7 @@ si_SelectDialog(const char* szMessage, char** pList, PRInt32* pCount) {
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
-    return NULL; /* failure value */
+    return PR_FALSE; /* failure value */
   }
   const nsString message = szMessage;
 #ifdef xxx
@@ -1014,12 +1014,12 @@ si_GetURLAndUserForChangeForm(char* password)
   for (PRInt32 i2=0; i2<urlCount2; i2++) {
     url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i2));
     PRInt32 userCount = LIST_COUNT(url->signonUser_list);
-    for (PRInt32 i=0; i<userCount; i++) {
-      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i));
+    for (PRInt32 i3=0; i3<userCount; i3++) {
+      user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i3));
       /* find saved password and see if it matches password user just entered */
       PRInt32 dataCount = LIST_COUNT(user->signonData_list);
-      for (PRInt32 i=0; i<dataCount; i++) {
-        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+      for (PRInt32 i4=0; i4<dataCount; i4++) {
+        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i4));
         if (data->isPassword && !PL_strcmp(data->value, password)) {
           /* passwords match so add entry to list */
           /* consider first data node to be the identifying item */
@@ -1312,8 +1312,8 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     user = NS_STATIC_CAST(si_SignonUserStruct*, url->signonUser_list->ElementAt(i2));
     PRInt32 j = 0;
     PRInt32 dataCount = LIST_COUNT(user->signonData_list);
-    for (PRInt32 i=0; i<dataCount; i++) {
-      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+    for (PRInt32 i3=0; i3<dataCount; i3++) {
+      data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i3));
 
 
       mismatch = PR_FALSE;
@@ -1365,9 +1365,9 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
 
       /* update the saved password values */
       j = 0;
-      PRInt32 dataCount = LIST_COUNT(user->signonData_list);
-      for (PRInt32 i=0; i<dataCount; i++) {
-        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
+      PRInt32 dataCount2 = LIST_COUNT(user->signonData_list);
+      for (PRInt32 i4=0; i4<dataCount2; i4++) {
+        data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i4));
 
         /* skip non text/password fields */
         while ((j < submit->value_cnt) &&
