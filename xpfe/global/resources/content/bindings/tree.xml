@@ -637,7 +637,7 @@
   <binding id="treecols" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <children includes="treecol|splitter"/>
-      <xul:treecolpicker class="treecol-image" fixed="true" ordinal="2147483647"/>
+      <xul:treecolpicker class="treecol-image" fixed="true" ordinal="2147483647" xbl:inherits="tooltiptext=pickertooltiptext"/>
     </content>
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">

@@ -37,6 +37,7 @@ Rights Reserved.
 <!ENTITY idColumn.label "ID">
 
 <!--Tooltips-->
+<!ENTITY columnChooser.tooltip "Click to select columns to display">
 <!ENTITY threadColumn.tooltip "Click to display message threads"> 
 <!ENTITY senderColumn.tooltip "Click to sort by sender">
 <!ENTITY subjectColumn.tooltip "Click to sort by subject">
