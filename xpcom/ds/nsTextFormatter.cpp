@@ -16,32 +16,36 @@
  * Reserved.
  */
 
-/* The code are copy from rev 3.7 mozilla/nsprpub/src/io/prprf.c */
-/*
-** Port from prprf.c by : Frank Yung-Fong Tang 
-*/
-/*
-** Portable safe sprintf code.
-**
-** Author: Kipp E.B. Hickman
-*/
+/* 
+ * Portable safe sprintf code.
+ *
+ * Code based on mozilla/nsprpub/src/io/prprf.c rev 3.7 
+ *
+ * Contributor(s):
+ *   Kipp E.B. Hickman  <kipp@netscape.com>  (original author)
+ *   Frank Yung-Fong Tang  <ftang@netscape.com>
+ *   Daniele Nicolodi  <daniele@grinta.net>
+ */
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include "prdtoa.h"
 #include "prlong.h"
 #include "prlog.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "nsCRT.h"
 #include "nsTextFormatter.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
-
 /*
 ** Note: on some platforms va_list is defined as an array,
 ** and requires array notation.
 */
+
 #ifdef HAVE_VA_LIST_AS_ARRAY
 #define VARARGS_ASSIGN(foo, bar)	foo[0] = bar[0]
 #else
@@ -50,10 +54,6 @@
 
 /*
 ** WARNING: This code may *NOT* call PR_LOG (because PR_LOG calls it)
-*/
-
-/*
-** XXX This needs to be internationalized!
 */
 
 typedef struct SprintfStateStr SprintfState;
@@ -77,11 +77,7 @@ struct NumArgState{
     va_list ap;			/* point to the corresponding position on ap */
 };
 
-static PRBool  l10n_debug_init = PR_FALSE;
-static PRBool  l10n_debug = PR_FALSE;
-
 #define NAS_DEFAULT_NUM 20  /* default number of NumberedArgumentState array */
-
 
 #define TYPE_INT16	0
 #define TYPE_UINT16	1
@@ -105,17 +101,137 @@ static PRBool  l10n_debug = PR_FALSE;
 
 #define ELEMENTS_OF(array_) (sizeof(array_) / sizeof(array_[0]))
 
+// Warning: if aDest isn't big enough this function returns the converted 
+// string in allocated memory which must be freed using PR_FREE().
+// May return nsnull if memory couldn't be allocated.
+static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen, 
+                             PRUnichar* aDest, PRUint32 aDestLen)
+{
+    const char *in, *inend;
+    inend = aSrc + aSrcLen;
+    PRUnichar *out;
+    PRUint32 state;
+    PRUint32 ucs4;
+    // decide the length of the UCS2 first.
+    PRUint32 needLen = 0;
+
+    for (in = aSrc, state = 0, ucs4 = 0; in < inend; in++) {
+            if (0 == state) {
+                if (0 == (0x80 & (*in))) {
+                    needLen++;
+                } else if (0xC0 == (0xE0 & (*in))) {
+                    needLen++;
+                    state = 1;
+                } else if (0xE0 == (0xF0 & (*in))) {
+                    needLen++;
+                    state = 2;
+                } else if (0xF0 == (0xF8 & (*in))) {
+                    needLen+=2;
+                    state = 3;
+                } else if (0xF8 == (0xFC & (*in))) {
+                    needLen+=2;
+                    state = 4;
+                } else if (0xFC == (0xFE & (*in))) {
+                    needLen+=2;
+                    state = 5;
+                } else {
+                    needLen++;
+                    state = 0;
+                }
+            } else {
+                NS_ASSERTION((0x80 == (0xC0 & (*in))), "The input string is not in utf8");
+                if(0x80 == (0xC0 & (*in))) {
+                    state--;
+                } else {
+                    state = 0;
+                }
+            }
+    }
+    needLen++; // add null termination.
+
+    // allocates sufficient memory if aDest is not big enough.
+    if (needLen > aDestLen) {
+        aDest = (PRUnichar*)PR_MALLOC(sizeof(PRUnichar) * needLen);
+    }
+    if (nsnull == aDest) {
+        return nsnull;
+    }
+    out = aDest;
+
+    for (in = aSrc, state = 0, ucs4 = 0; in < inend; in++) {
+        if (0 == state) {
+            if (0 == (0x80 & (*in))) {
+                // ASCII
+                *out++ = (PRUnichar)*in;
+            } else if (0xC0 == (0xE0 & (*in))) {
+                // 2 bytes UTF8
+                ucs4 = (PRUint32)(*in);
+                ucs4 = (ucs4 << 6) & 0x000007C0L;
+                state=1;
+            } else if (0xE0 == (0xF0 & (*in))) {
+                ucs4 = (PRUint32)(*in);
+                ucs4 = (ucs4 << 12) & 0x0000F000L;
+                state=2;
+            } else if (0xF0 == (0xF8 & (*in))) {
+                ucs4 = (PRUint32)(*in);
+                ucs4 = (ucs4 << 18) & 0x001F0000L;
+                state=3;
+            } else if (0xF8 == (0xFC & (*in))) {
+                ucs4 = (PRUint32)(*in);
+                ucs4 = (ucs4 << 24) & 0x03000000L;
+                state=4;
+            } else if (0xFC == (0xFE & (*in))) {
+                ucs4 = (PRUint32)(*in);
+                ucs4 = (ucs4 << 30) & 0x40000000L;
+                state=5;
+            } else {
+                NS_ASSERTION(0, "The input string is not in utf8");
+                state=0;
+                ucs4=0;
+            }
+        } else {
+            NS_ASSERTION((0x80 == (0xC0 & (*in))), "The input string is not in utf8");
+            if (0x80 == (0xC0 & (*in))) {
+                PRUint32 tmp = (*in);
+                int shift = --state * 6;
+                tmp = (tmp << shift) & (0x0000003FL << shift);
+                ucs4 |= tmp;
+                if (0 == state) {
+                    if (ucs4 >= 0x00010000) {
+                        if (ucs4 >= 0x001F0000) {
+                            *out++ = 0xFFFD;
+                        } else {
+                            ucs4 -= 0x00010000;
+                            *out++ = 0xD800 | (0x000003FF & (ucs4 >> 10));
+                            *out++ = 0xDC00 | (0x000003FF & ucs4);
+                        }
+                    } else {
+                        *out++ = ucs4;
+                    }
+                    ucs4 = 0;
+                }
+            } else {
+                state = 0;
+                ucs4 = 0;
+            }
+        }
+    }
+    *out = 0x0000;
+    return aDest;
+}
+
 /*
 ** Fill into the buffer using the data in src
 */
-static int fill2(SprintfState *ss, const PRUnichar *src, int srclen, int width,
-		int flags)
+static int fill2(SprintfState *ss, const PRUnichar *src, int srclen, 
+                 int width, int flags)
 {
     PRUnichar space = ' ';
     int rv;
-
+    
     width -= srclen;
-    if ((width > 0) && ((flags & _LEFT) == 0)) {	/* Right adjusting */
+    /* Right adjusting */
+    if ((width > 0) && ((flags & _LEFT) == 0)) {
 	if (flags & _ZEROS) {
 	    space = '0';
 	}
@@ -132,8 +248,9 @@ static int fill2(SprintfState *ss, const PRUnichar *src, int srclen, int width,
     if (rv < 0) {
 	return rv;
     }
-
-    if ((width > 0) && ((flags & _LEFT) != 0)) {	/* Left adjusting */
+    
+    /* Left adjusting */
+    if ((width > 0) && ((flags & _LEFT) != 0)) {
 	while (--width >= 0) {
 	    rv = (*ss->stuff)(ss, &space, 1);
 	    if (rv < 0) {
@@ -147,13 +264,13 @@ static int fill2(SprintfState *ss, const PRUnichar *src, int srclen, int width,
 /*
 ** Fill a number. The order is: optional-sign zero-filling conversion-digits
 */
-static int fill_n(SprintfState *ss, const PRUnichar *src, int srclen, int width,
-		  int prec, int type, int flags)
+static int fill_n(SprintfState *ss, const PRUnichar *src, int srclen, 
+                  int width, int prec, int type, int flags)
 {
-    int zerowidth = 0;
-    int precwidth = 0;
-    int signwidth = 0;
-    int leftspaces = 0;
+    int zerowidth   = 0;
+    int precwidth   = 0;
+    int signwidth   = 0;
+    int leftspaces  = 0;
     int rightspaces = 0;
     int cvtwidth;
     int rv;
@@ -177,14 +294,16 @@ static int fill_n(SprintfState *ss, const PRUnichar *src, int srclen, int width,
 
     if (prec > 0) {
 	if (prec > srclen) {
-	    precwidth = prec - srclen;		/* Need zero filling */
+            /* Need zero filling */
+	    precwidth = prec - srclen;
 	    cvtwidth += precwidth;
 	}
     }
 
     if ((flags & _ZEROS) && (prec < 0)) {
 	if (width > cvtwidth) {
-	    zerowidth = width - cvtwidth;	/* Zero filling */
+            /* Zero filling */
+	    zerowidth = width - cvtwidth;
 	    cvtwidth += zerowidth;
 	}
     }
@@ -240,8 +359,8 @@ static int fill_n(SprintfState *ss, const PRUnichar *src, int srclen, int width,
 /*
 ** Convert a long into its printable form
 */
-static int cvt_l(SprintfState *ss, long num, int width, int prec, int radix,
-		 int type, int flags, const PRUnichar *hexp)
+static int cvt_l(SprintfState *ss, long num, int width, int prec,
+                 int radix, int type, int flags, const PRUnichar *hexp)
 {
     PRUnichar cvtbuf[100];
     PRUnichar *cvt;
@@ -280,8 +399,8 @@ static int cvt_l(SprintfState *ss, long num, int width, int prec, int radix,
 /*
 ** Convert a 64-bit integer into its printable form
 */
-static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec, int radix,
-		  int type, int flags, const PRUnichar *hexp)
+static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec,
+                  int radix, int type, int flags, const PRUnichar *hexp)
 {
     PRUnichar cvtbuf[100];
     PRUnichar *cvt;
@@ -325,64 +444,198 @@ static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec, int radix,
 /*
 ** Convert a double precision floating point number into its printable
 ** form.
-**
-** XXX stop using sprintf to convert floating point
 */
-static int cvt_f(SprintfState *ss, double d, const PRUnichar *fmt0, const PRUnichar *fmt1)
+static int cvt_f(SprintfState *ss, double d, int width, int prec, 
+                 const PRUnichar type, int flags)
 {
-    char fin[20];
-    char fout[300];
-    PRUnichar fout2[300];
-    int amount = fmt1 - fmt0;
-    int i;
+    int    mode = 2;
+    int    decpt;
+    int    sign;
+    char   buf[256];
+    char * bufp = buf;
+    int    bufsz = 256;
+    char   num[256];
+    char * nump;
+    char * endnum;
+    int    numdigits = 0;
+    char   exp = 'e';
 
-    PR_ASSERT((amount > 0) && (amount < (int)sizeof(fin)));
-    if (amount >= (int)sizeof(fin)) {
-	/* Totally bogus % command to sprintf. Just ignore it */
-	return 0;
+    if (prec == -1) {
+        prec = 6;
+    } else if (prec > 50) {
+        // limit precision to avoid PR_dtoa bug 108335
+        // and to prevent buffers overflows
+        prec = 50;
     }
-    for(i=0;i<amount;i++)
-      fin[i] = (char) fmt0[i]; // cast down here
-    fin[amount] = 0;
 
-    /* Convert floating point using the native sprintf code */
-#ifdef DEBUG
-    {
-        const char *p = fin;
-        while (*p) {
-            PR_ASSERT(*p != 'L');
-            p++;
+    switch (type) {
+    case 'f':  
+        numdigits = prec;
+        mode = 3;
+        break;
+    case 'E':
+        exp = 'E';
+        // no break
+    case 'e':
+        numdigits = prec + 1;
+        mode = 2;
+        break;
+    case 'G':
+        exp = 'E';
+        // no break
+    case 'g':
+        if (prec == 0) {
+            prec = 1;
+        }
+        numdigits = prec;
+        mode = 2;
+        break;
+    default:
+        NS_ERROR("invalid type passed to cvt_f");
+    }
+    
+    if (PR_dtoa(d, mode, numdigits, &decpt, &sign, &endnum, num, bufsz) == PR_FAILURE) {
+        buf[0] = '\0';
+        return -1;
+    }
+    numdigits = endnum - num;
+    nump = num;
+
+    if (sign) {
+        *bufp++ = '-';
+    } else if (flags & _SIGNED) {
+        *bufp++ = '+';
+    }
+
+    if (decpt == 9999) {
+        while ((*bufp++ = *nump++)) { }
+    } else {
+
+        switch (type) {
+
+        case 'E':
+        case 'e':
+
+            *bufp++ = *nump++;                
+            if (prec > 0) {
+                *bufp++ = '.';
+                while (*nump) {
+                    *bufp++ = *nump++;
+                    prec--;
+                }
+                while (prec-- > 0) {
+                    *bufp++ = '0';
+                }
+            }
+            *bufp++ = exp;
+            PR_snprintf(bufp, bufsz - (bufp - buf), "%+03d", decpt-1);
+            break;
+
+        case 'f':
+
+            if (decpt < 1) {
+                *bufp++ = '0';
+                if (prec > 0) {
+                    *bufp++ = '.';
+                    while (decpt++ && prec-- > 0) {
+                        *bufp++ = '0';
+                    }
+                    while (*nump && prec-- > 0) {
+                        *bufp++ = *nump++;
+                    }
+                    while (prec-- > 0) {
+                        *bufp++ = '0';
+                    }
+                }
+            } else {
+                while (*nump && decpt-- > 0) {
+                    *bufp++ = *nump++;
+                }
+                while (decpt-- > 0) {
+                    *bufp++ = '0';
+                }
+                if (prec > 0) {
+                    *bufp++ = '.';
+                    while (*nump && prec-- > 0) {
+                        *bufp++ = *nump++;
+                    }
+                    while (prec-- > 0) {
+                        *bufp++ = '0';
+                    }
+                }
+            }
+            *bufp = '\0';
+            break;
+
+        case 'G':
+        case 'g':
+
+            if ((decpt < -3) || ((decpt - 1) >= prec)) {
+                *bufp++ = *nump++;
+                numdigits--;
+                if (numdigits > 0) {
+                    *bufp++ = '.';
+                    while (*nump) {
+                        *bufp++ = *nump++;
+                    }
+                }
+                *bufp++ = exp;
+                PR_snprintf(bufp, bufsz - (bufp - buf), "%+03d", decpt-1);
+            } else {
+                if (decpt < 1) {
+                    *bufp++ = '0';
+                    if (prec > 0) {
+                        *bufp++ = '.';
+                        while (decpt++) {
+                            *bufp++ = '0';
+                        }
+                        while (*nump) {
+                            *bufp++ = *nump++;
+                        }
+                    }
+                } else {
+                    while (*nump && decpt-- > 0) {
+                        *bufp++ = *nump++;
+                        numdigits--;
+                    }
+                    while (decpt-- > 0) {
+                        *bufp++ = '0';
+                    }
+                    if (numdigits > 0) {
+                        *bufp++ = '.';
+                        while (*nump) {
+                            *bufp++ = *nump++;
+                        }
+                    }
+                }
+                *bufp = '\0';
+            }
         }
     }
-#endif
-    sprintf(fout, fin, d);
 
-    /*
-    ** This assert will catch overflow's of fout, when building with
-    ** debugging on. At least this way we can track down the evil piece
-    ** of calling code and fix it!
-    */
-    PR_ASSERT((nsCRT::strlen(fout)*2) < sizeof(fout));
-    for(i=0; fout[i]; i++)
-        fout2[i]=fout[i];
-    fout2[i] = 0;
+    PRUnichar rbuf[256];
+    PRUnichar *rbufp = rbuf;
+    bufp = buf;
+    // cast to PRUnichar
+    while ((*rbufp++ = *bufp++)) { }
+    *rbufp = '\0';
 
-
-    return (*ss->stuff)(ss, fout2, nsCRT::strlen(fout2));
+    return fill2(ss, rbuf, nsCRT::strlen(rbuf), width, flags);
 }
 
 /*
-** Convert a string into its printable form.  "width" is the output
+** Convert a string into its printable form. "width" is the output
 ** width. "prec" is the maximum number of characters of "s" to output,
 ** where -1 means until NUL.
 */
-static int cvt_S(SprintfState *ss, const PRUnichar *s, int width, int prec,
-		 int flags)
+static int cvt_S(SprintfState *ss, const PRUnichar *s, int width,
+                 int prec, int flags)
 {
     int slen;
 
-    if (prec == 0)
+    if (prec == 0) {
 	return 0;
+    }
 
     /* Limit string length by precision value */
     slen = s ? nsCRT::strlen(s) : 6;
@@ -399,144 +652,31 @@ static int cvt_S(SprintfState *ss, const PRUnichar *s, int width, int prec,
     return fill2(ss, s ? s : nullstr.get(), slen, width, flags);
 }
 
-static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen, PRUnichar* aDest, PRUint32 aDestLen)
-{
-  const char *in, *inend;
-  inend = aSrc + aSrcLen;
-  PRUnichar *out;
-  PRUint32 state;
-  PRUint32 ucs4;
-  // decide the length of the UCS2 first.
-  PRUint32 needLen = 0;
-  for(in=aSrc,state=0,ucs4=0;in < inend; in++)
-  {
-     if(0 == state) {
-        if( 0 == (0x80 & (*in))) {
-            needLen++;
-        } else if( 0xC0 == (0xE0 & (*in))) {
-            needLen++;
-            state=1;
-        } else if( 0xE0 == (0xF0 & (*in))) {
-            needLen++;
-            state=2;
-        } else if( 0xF0 == (0xF8 & (*in))) {
-            needLen+=2;
-            state=3;
-        } else if( 0xF8 == (0xFC & (*in))) {
-            needLen+=2;
-            state=4;
-        } else if( 0xFC == (0xFE & (*in))) {
-            needLen+=2;
-            state=5;
-        } else {
-            needLen++;
-            state=0;
-        }
-    } else {
-        NS_ASSERTION( (0x80 == (0xC0 & (*in))) , "The input string is not in utf8");
-        if(0x80 == (0xC0 & (*in)))
-        {
-            state--;
-        } else {
-            state=0;
-        }
-    }
-  }
-  needLen++; // add null termination.
-  if(needLen >= aDestLen)
-     aDest = (PRUnichar*)PR_MALLOC(sizeof(PRUnichar) * needLen);
-  if(nsnull == aDest)
-     return nsnull;
-  out= aDest;
-
-  for(in=aSrc,state=0,ucs4=0;in < inend; in++)
-  {
-     if(0 == state) {
-        if( 0 == (0x80 & (*in))) {
-            // ASCII
-            *out++ = (PRUnichar)*in;
-        } else if( 0xC0 == (0xE0 & (*in))) {
-            // 2 bytes UTF8
-            ucs4 = (PRUint32)(*in);
-            ucs4 = (ucs4 << 6) & 0x000007C0L;
-            state=1;
-        } else if( 0xE0 == (0xF0 & (*in))) {
-            ucs4 = (PRUint32)(*in);
-            ucs4 = (ucs4 << 12) & 0x0000F000L;
-            state=2;
-        } else if( 0xF0 == (0xF8 & (*in))) {
-            ucs4 = (PRUint32)(*in);
-            ucs4 = (ucs4 << 18) & 0x001F0000L;
-            state=3;
-        } else if( 0xF8 == (0xFC & (*in))) {
-            ucs4 = (PRUint32)(*in);
-            ucs4 = (ucs4 << 24) & 0x03000000L;
-            state=4;
-        } else if( 0xFC == (0xFE & (*in))) {
-            ucs4 = (PRUint32)(*in);
-            ucs4 = (ucs4 << 30) & 0x40000000L;
-            state=5;
-        } else {
-            NS_ASSERTION(0, "The input string is not in utf8");
-            state=0;
-            ucs4=0;
-        }
-    } else {
-        NS_ASSERTION( (0x80 == (0xC0 & (*in))) , "The input string is not in utf8");
-        if(0x80 == (0xC0 & (*in)))
-        {
-            PRUint32 tmp = (*in);
-            int shift = (state-1) * 6;
-            tmp = (tmp << shift ) & ( 0x0000003FL << shift);
-            ucs4 |= tmp;
-            if(0 == --state)
-            {
-                if(ucs4 >= 0x00010000) {
-                   if(ucs4 >= 0x001F0000) {
-                     *out++ = 0xFFFD;
-                   } else {
-                     ucs4 -= 0x00010000;
-                     *out++ = 0xD800 | (0x000003FF & (ucs4 >> 10));
-                     *out++ = 0xDC00 | (0x000003FF & ucs4);
-                   }
-                } else {
-                   *out++ = ucs4;
-                }
-                ucs4=0;
-            }
-        } else {
-            state=0;
-            ucs4=0;
-        }
-    }
-  }
-  *out = 0x0000;
-  return aDest;
-}
 /*
 ** Convert a string into its printable form.  "width" is the output
 ** width. "prec" is the maximum number of characters of "s" to output,
 ** where -1 means until NUL.
 */
-static int cvt_s(SprintfState *ss, const char *s, int width, int prec,
-		 int flags)
+static int cvt_s(SprintfState *ss, const char *s, int width,
+                 int prec, int flags)
 {
-  // convert s from  UTF8 to PRUnichar*
-  // Fix me !!!
-  PRUnichar buf[256];
-  PRUnichar *retbuf = nsnull;
+    // convert s from UTF8 to PRUnichar*
+    // Fix me !!!
+    PRUnichar buf[256];
+    PRUnichar *retbuf = nsnull;
 
-  if (s) {
-    retbuf = UTF8ToUCS2(s, nsCRT::strlen(s), buf, 256);
-  
-    if(nsnull == retbuf)
-      return -1;
-  }
-  int ret = cvt_S(ss, retbuf, width, prec, flags);
+    if (s) {
+        retbuf = UTF8ToUCS2(s, nsCRT::strlen(s), buf, 256);        
+        if(nsnull == retbuf) {
+            return -1;
+        }
+    }
+    int ret = cvt_S(ss, retbuf, width, prec, flags);
 
-  if(retbuf != buf)
-     PR_DELETE(retbuf);
-  return ret;
+    if (retbuf != buf) {
+        PR_DELETE(retbuf);
+    }
+    return ret;
 }
 
 /*
@@ -546,55 +686,45 @@ static int cvt_s(SprintfState *ss, const char *s, int width, int prec,
 ** the number must start from 1, and no gap among them
 */
 
-static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int* rv, struct NumArgState* nasArray )
+static struct NumArgState* BuildArgArray(const PRUnichar *fmt, 
+                                         va_list ap, int * rv, 
+                                         struct NumArgState * nasArray)
 {
     int number = 0, cn = 0, i;
     const PRUnichar* p;
     PRUnichar  c;
     struct NumArgState* nas;
-    
-
-    /*
-    ** set the l10n_debug flag
-    ** this routine should be executed only once
-    ** 'cause getenv does take time
-    */
-    if( !l10n_debug_init ){
-	l10n_debug_init = PR_TRUE;
-        const char *env;
-	env = getenv( "NETSCAPE_LOCALIZATION_DEBUG" );
-	if( ( env != NULL ) && ( *env == '1' ) ){
-	    l10n_debug = PR_TRUE;
-	}
-    }
-
 
     /*
     **	first pass:
     **	detemine how many legal % I have got, then allocate space
     */
-
     p = fmt;
     *rv = 0;
     i = 0;
-    while( ( c = *p++ ) != 0 ){
-	if( c != '%' )
+    while ((c = *p++) != 0) {
+	if (c != '%') {
 	    continue;
-	if( ( c = *p++ ) == '%' )	/* skip %% case */
+        }
+        /* skip %% case */
+	if ((c = *p++) == '%') {
 	    continue;
+        }
 
 	while( c != 0 ){
-	    if( c > '9' || c < '0' ){
-		if( c == '$' ){		/* numbered argument csae */
-		    if( i > 0 ){
+	    if (c > '9' || c < '0') {
+                /* numbered argument csae */
+		if (c == '$') {
+		    if (i > 0) {
 			*rv = -1;
 			return NULL;
 		    }
 		    number++;
 		    break;
 
-		} else{			/* non-numbered argument case */
-		    if( number > 0 ){
+		} else {
+                    /* non-numbered argument case */
+		    if (number > 0) {
 			*rv = -1;
 			return NULL;
 		    }
@@ -602,19 +732,17 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 		    break;
 		}
 	    }
-
 	    c = *p++;
 	}
     }
 
-    if( number == 0 ){
+    if (number == 0) {
 	return NULL;
     }
-
     
-    if( number > NAS_DEFAULT_NUM ){
-	nas = (struct NumArgState*)PR_MALLOC( number * sizeof( struct NumArgState ) );
-	if( !nas ){
+    if (number > NAS_DEFAULT_NUM) {
+	nas = (struct NumArgState*)PR_MALLOC(number * sizeof(struct NumArgState));
+	if (!nas) {
 	    *rv = -1;
 	    return NULL;
 	}
@@ -622,37 +750,41 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 	nas = nasArray;
     }
 
-    for( i = 0; i < number; i++ ){
+    for (i = 0; i < number; i++) {
 	nas[i].type = TYPE_UNKNOWN;
     }
-
 
     /*
     ** second pass:
     ** set nas[].type
     */
-
     p = fmt;
-    while( ( c = *p++ ) != 0 ){
-    	if( c != '%' )	continue;
-	    c = *p++;
-	if( c == '%' )	continue;
-
+    while ((c = *p++) != 0) {
+    	if (c != '%') {
+            continue;
+        }
+        c = *p++;
+	if (c == '%') {
+            continue;
+        }
 	cn = 0;
-	while( c && c != '$' ){	    /* should imporve error check later */
+        /* should imporve error check later */
+	while (c && c != '$') {
 	    cn = cn*10 + c - '0';
 	    c = *p++;
 	}
 
-	if( !c || cn < 1 || cn > number ){
+	if (!c || cn < 1 || cn > number) {
 	    *rv = -1;
 	    break;
         }
 
-	/* nas[cn] starts from 0, and make sure nas[cn].type is not assigned */
+	/* nas[cn] starts from 0, and make sure 
+           nas[cn].type is not assigned */
         cn--;
-	if( nas[cn].type != TYPE_UNKNOWN )
+	if (nas[cn].type != TYPE_UNKNOWN) {
 	    continue;
+        }
 
         c = *p++;
 
@@ -713,51 +845,48 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
 	case 'e':
 	case 'f':
 	case 'g':
-	    nas[ cn ].type = TYPE_DOUBLE;
+	    nas[cn].type = TYPE_DOUBLE;
 	    break;
 
 	case 'p':
 	    /* XXX should use cpp */
 	    if (sizeof(void *) == sizeof(PRInt32)) {
-		nas[ cn ].type = TYPE_UINT32;
+		nas[cn].type = TYPE_UINT32;
 	    } else if (sizeof(void *) == sizeof(PRInt64)) {
-	        nas[ cn ].type = TYPE_UINT64;
+	        nas[cn].type = TYPE_UINT64;
 	    } else if (sizeof(void *) == sizeof(PRIntn)) {
-	        nas[ cn ].type = TYPE_UINTN;
+	        nas[cn].type = TYPE_UINTN;
 	    } else {
-	        nas[ cn ].type = TYPE_UNKNOWN;
+	        nas[cn].type = TYPE_UNKNOWN;
 	    }
 	    break;
 
 	case 'C':
-	//case 'S':
-	case 'E':
-	case 'G':
 	    /* XXX not supported I suppose */
 	    PR_ASSERT(0);
-	    nas[ cn ].type = TYPE_UNKNOWN;
+	    nas[cn].type = TYPE_UNKNOWN;
 	    break;
 
 	case 'S':
-	    nas[ cn ].type = TYPE_UNISTRING;
+	    nas[cn].type = TYPE_UNISTRING;
 	    break;
 
 	case 's':
-	    nas[ cn ].type = TYPE_STRING;
+	    nas[cn].type = TYPE_STRING;
 	    break;
 
 	case 'n':
-	    nas[ cn ].type = TYPE_INTSTR;
+	    nas[cn].type = TYPE_INTSTR;
 	    break;
 
 	default:
 	    PR_ASSERT(0);
-	    nas[ cn ].type = TYPE_UNKNOWN;
+	    nas[cn].type = TYPE_UNKNOWN;
 	    break;
 	}
 
 	/* get a legal para. */
-	if( nas[ cn ].type == TYPE_UNKNOWN ){
+	if (nas[cn].type == TYPE_UNKNOWN) {
 	    *rv = -1;
 	    break;
 	}
@@ -768,55 +897,53 @@ static struct NumArgState* BuildArgArray( const PRUnichar *fmt, va_list ap, int*
     ** third pass
     ** fill the nas[cn].ap
     */
-
-    if( *rv < 0 ){
-	if( nas != nasArray )
-	    PR_DELETE( nas );
+    if (*rv < 0) {
+	if( nas != nasArray ) {
+	    PR_DELETE(nas);
+        }
 	return NULL;
     }
 
     cn = 0;
-    while( cn < number ){
-	if( nas[cn].type == TYPE_UNKNOWN ){
+    while (cn < number) {
+	if (nas[cn].type == TYPE_UNKNOWN) {
 	    cn++;
 	    continue;
 	}
 
 	VARARGS_ASSIGN(nas[cn].ap, ap);
 
-	switch( nas[cn].type ){
+	switch (nas[cn].type) {
 	case TYPE_INT16:
 	case TYPE_UINT16:
 	case TYPE_INTN:
-	case TYPE_UINTN:		(void)va_arg( ap, PRIntn );		break;
+	case TYPE_UINTN:     (void)va_arg(ap, PRIntn);      break;
 
-	case TYPE_INT32:		(void)va_arg( ap, PRInt32 );		break;
+	case TYPE_INT32:     (void)va_arg(ap, PRInt32);     break;
 
-	case TYPE_UINT32:	(void)va_arg( ap, PRUint32 );	break;
+	case TYPE_UINT32:    (void)va_arg(ap, PRUint32);    break;
 
-	case TYPE_INT64:	(void)va_arg( ap, PRInt64 );		break;
+	case TYPE_INT64:     (void)va_arg(ap, PRInt64);     break;
 
-	case TYPE_UINT64:	(void)va_arg( ap, PRUint64 );		break;
+	case TYPE_UINT64:    (void)va_arg(ap, PRUint64);    break;
 
-	case TYPE_STRING:	(void)va_arg( ap, char* );		break;
+	case TYPE_STRING:    (void)va_arg(ap, char*);       break;
 
-	case TYPE_INTSTR:	(void)va_arg( ap, PRIntn* );		break;
+	case TYPE_INTSTR:    (void)va_arg(ap, PRIntn*);     break;
 
-	case TYPE_DOUBLE:	(void)va_arg( ap, double );		break;
+	case TYPE_DOUBLE:    (void)va_arg(ap, double);      break;
 
-	case TYPE_UNISTRING:	(void)va_arg( ap, PRUnichar* );		break;
+	case TYPE_UNISTRING: (void)va_arg(ap, PRUnichar*);  break;
 
 	default:
-	    if( nas != nasArray )
+	    if( nas != nasArray ) {
 		PR_DELETE( nas );
+            }
 	    *rv = -1;
 	    return NULL;
 	}
-
 	cn++;
     }
-
-
     return nas;
 }
 
@@ -849,18 +976,17 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
     const PRUnichar *hexp;
     int rv, i;
     struct NumArgState* nas = NULL;
-    struct NumArgState  nasArray[ NAS_DEFAULT_NUM ];
-    PRUnichar  pattern[20];
-    const PRUnichar* dolPt = NULL;  /* in "%4$.2f", dolPt will poiont to . */
+    struct NumArgState  nasArray[NAS_DEFAULT_NUM];
+    /* in "%4$.2f" dolPt will point to . */
+    const PRUnichar* dolPt = NULL;
 
 
     /*
     ** build an argument array, IF the fmt is numbered argument
     ** list style, to contain the Numbered Argument list pointers
     */
-
-    nas = BuildArgArray( fmt, ap, &rv, nasArray );
-    if( rv < 0 ){
+    nas = BuildArgArray (fmt, ap, &rv, nasArray);
+    if (rv < 0) {
 	/* the fmt contains error Numbered Argument format, jliu@netscape.com */
 	PR_ASSERT(0);
 	return rv;
@@ -891,17 +1017,19 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    continue;
 	}
 
-	if( nas != NULL ){
+	if (nas != NULL) {
 	    /* the fmt contains the Numbered Arguments feature */
 	    i = 0;
-	    while( c && c != '$' ){	    /* should imporve error check later */
-		i = ( i * 10 ) + ( c - '0' );
+	    /* should imporve error check later */
+	    while (c && c != '$') {
+		i = (i * 10) + (c - '0');
 		c = *fmt++;
 	    }
 
-	    if( nas[i-1].type == TYPE_UNKNOWN ){
-		if( nas && ( nas != nasArray ) )
-		    PR_DELETE( nas );
+	    if (nas[i-1].type == TYPE_UNKNOWN) {
+		if (nas && (nas != nasArray)) {
+		    PR_DELETE(nas);
+                }
 		return -1;
 	    }
 
@@ -976,80 +1104,81 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	/* format */
 	hexp = hex.get();
 	switch (c) {
-	  case 'd': case 'i':			/* decimal/integer */
+        case 'd': 
+        case 'i':                               /* decimal/integer */
 	    radix = 10;
 	    goto fetch_and_convert;
 
-	  case 'o':				/* octal */
+        case 'o':                               /* octal */
 	    radix = 8;
 	    type |= 1;
 	    goto fetch_and_convert;
 
-	  case 'u':				/* unsigned decimal */
+        case 'u':                               /* unsigned decimal */
 	    radix = 10;
 	    type |= 1;
 	    goto fetch_and_convert;
 
-	  case 'x':				/* unsigned hex */
+        case 'x':                               /* unsigned hex */
 	    radix = 16;
 	    type |= 1;
 	    goto fetch_and_convert;
 
-	  case 'X':				/* unsigned HEX */
+        case 'X':                               /* unsigned HEX */
 	    radix = 16;
 	    hexp = HEX.get();
 	    type |= 1;
 	    goto fetch_and_convert;
 
-	  fetch_and_convert:
+        fetch_and_convert:
 	    switch (type) {
-	      case TYPE_INT16:
+            case TYPE_INT16:
 		u.l = va_arg(ap, int);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= _NEG;
 		}
 		goto do_long;
-	      case TYPE_UINT16:
+            case TYPE_UINT16:
 		u.l = va_arg(ap, int) & 0xffff;
 		goto do_long;
-	      case TYPE_INTN:
+            case TYPE_INTN:
 		u.l = va_arg(ap, int);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= _NEG;
 		}
 		goto do_long;
-	      case TYPE_UINTN:
+            case TYPE_UINTN:
 		u.l = (long)va_arg(ap, unsigned int);
 		goto do_long;
 
-	      case TYPE_INT32:
+            case TYPE_INT32:
 		u.l = va_arg(ap, PRInt32);
 		if (u.l < 0) {
 		    u.l = -u.l;
 		    flags |= _NEG;
 		}
 		goto do_long;
-	      case TYPE_UINT32:
+            case TYPE_UINT32:
 		u.l = (long)va_arg(ap, PRUint32);
-	      do_long:
+            do_long:
 		rv = cvt_l(ss, u.l, width, prec, radix, type, flags, hexp);
 		if (rv < 0) {
 		    return rv;
 		}
 		break;
 
-	      case TYPE_INT64:
+            case TYPE_INT64:
 		u.ll = va_arg(ap, PRInt64);
 		if (!LL_GE_ZERO(u.ll)) {
 		    LL_NEG(u.ll, u.ll);
 		    flags |= _NEG;
 		}
 		goto do_longlong;
-	      case TYPE_UINT64:
+            case TYPE_UINT64:
 		u.ll = va_arg(ap, PRUint64);
-	      do_longlong:
+            do_longlong:
 		rv = cvt_ll(ss, u.ll, width, prec, radix, type, flags, hexp);
 		if (rv < 0) {
 		    return rv;
@@ -1058,27 +1187,19 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    }
 	    break;
 
-	  case 'e':
-	  case 'E':
-	  case 'f':
-	  case 'g':
+        case 'e':
+        case 'E':
+        case 'f':
+        case 'g':
+        case 'G':
 	    u.d = va_arg(ap, double);
-	    if( nas != NULL ){
-		i = fmt - dolPt;
-		if( i < (int)ELEMENTS_OF(pattern) ){
-		    pattern[0] = '%';
-		    memcpy( &pattern[1], dolPt, i*sizeof(PRUnichar) );
-		    rv = cvt_f(ss, u.d, pattern, &pattern[i+1] );
-		}
-	    } else
-		rv = cvt_f(ss, u.d, fmt0, fmt);
-
+            rv = cvt_f(ss, u.d, width, prec, c, flags);
 	    if (rv < 0) {
 		return rv;
 	    }
 	    break;
 
-	  case 'c':
+        case 'c':
 	    u.ch = va_arg(ap, int);
             if ((flags & _LEFT) == 0) {
                 while (width-- > 1) {
@@ -1102,7 +1223,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
             }
 	    break;
 
-	  case 'p':
+        case 'p':
 	    if (sizeof(void *) == sizeof(PRInt32)) {
 	    	type = TYPE_UINT32;
 	    } else if (sizeof(void *) == sizeof(PRInt64)) {
@@ -1117,16 +1238,13 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    goto fetch_and_convert;
 
 #if 0
-	  case 'C':
-	  //case 'S':
-	  case 'E':
-	  case 'G':
+        case 'C':
 	    /* XXX not supported I suppose */
 	    PR_ASSERT(0);
 	    break;
 #endif
 
-	  case 'S':
+        case 'S':
 	    u.S = va_arg(ap, const PRUnichar*);
 	    rv = cvt_S(ss, u.S, width, prec, flags);
 	    if (rv < 0) {
@@ -1134,7 +1252,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    }
 	    break;
 
-	  case 's':
+        case 's':
 	    u.s = va_arg(ap, const char*);
 	    rv = cvt_s(ss, u.s, width, prec, flags);
 	    if (rv < 0) {
@@ -1142,14 +1260,14 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    }
 	    break;
 
-	  case 'n':
+        case 'n':
 	    u.ip = va_arg(ap, int*);
 	    if (u.ip) {
 		*u.ip = ss->cur - ss->base;
 	    }
 	    break;
 
-	  default:
+        default:
 	    /* Not a % token after all... skip it */
 #if 0
 	    PR_ASSERT(0);
@@ -1193,9 +1311,8 @@ static int FuncStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
     return 0;
 }
 
-
 PRUint32 nsTextFormatter::sxprintf(PRStuffFunc func, void *arg,
-                                 const PRUnichar *fmt, ...)
+                                   const PRUnichar *fmt, ...)
 {
     va_list ap;
     int rv;
@@ -1206,12 +1323,12 @@ PRUint32 nsTextFormatter::sxprintf(PRStuffFunc func, void *arg,
     return rv;
 }
 
-PRUint32) vsxprintf(PRStuffFunc func, void *arg, 
-                                  const PRUnichar *fmt, va_list ap)
+PRUint32 vsxprintf(PRStuffFunc func, void *arg,
+                   const PRUnichar *fmt, va_list ap)
 {
     SprintfState ss;
     int rv;
-
+    
     ss.stuff = FuncStuff;
     ss.func = func;
     ss.arg = arg;
@@ -1219,7 +1336,6 @@ PRUint32) vsxprintf(PRStuffFunc func, void *arg,
     rv = dosprintf(&ss, fmt, ap);
     return (rv < 0) ? (PRUint32)-1 : ss.maxlen;
 }
-
 #endif 
 
 /*
@@ -1278,7 +1394,7 @@ PRUnichar * nsTextFormatter::smprintf(const PRUnichar *fmt, ...)
 */
 void nsTextFormatter::smprintf_free(PRUnichar *mem)
 {
-	PR_DELETE(mem);
+    PR_DELETE(mem);
 }
 
 PRUnichar * nsTextFormatter::vsmprintf(const PRUnichar *fmt, va_list ap)
@@ -1338,7 +1454,7 @@ PRUint32 nsTextFormatter::snprintf(PRUnichar *out, PRUint32 outlen, const PRUnic
 }
 
 PRUint32 nsTextFormatter::vsnprintf(PRUnichar *out, PRUint32 outlen,const PRUnichar *fmt,
-                                  va_list ap)
+                                    va_list ap)
 {
     SprintfState ss;
     PRUint32 n;
@@ -1401,26 +1517,25 @@ PRUnichar * nsTextFormatter::vsprintf_append(PRUnichar *last, const PRUnichar *f
 #ifdef DEBUG
 PRBool nsTextFormatter::SelfTest()
 { 
-   PRBool passed = PR_TRUE ;
-   nsAutoString fmt;
-   fmt.AssignWithConversion("%3$s %4$S %1$d %2$d");
+    PRBool passed = PR_TRUE ;
+    nsAutoString fmt;
+    fmt.AssignWithConversion("%3$s %4$S %1$d %2$d");
 
-   char utf8[] = "Hello";
-   PRUnichar ucs2[]={'W', 'o', 'r', 'l', 'd', 0x4e00, 0xAc00, 0xFF45, 0x0103};
-   int d=3;
+    char utf8[] = "Hello";
+    PRUnichar ucs2[]={'W', 'o', 'r', 'l', 'd', 0x4e00, 0xAc00, 0xFF45, 0x0103};
+    int d=3;
 
 
-   PRUnichar buf[256];
-   int ret;
-   ret = nsTextFormatter::snprintf(buf, 256, fmt.get(), d, 333, utf8, ucs2);
-   printf("ret = %d\n", ret);
-   nsAutoString out(buf);
-   printf("%s \n", NS_LossyConvertUCS2toASCII(out).get());
-   const PRUnichar *uout = out.get();
-   for(PRUint32 i=0;i<out.Length();i++)
-      printf("%2X ", uout[i]);
+    PRUnichar buf[256];
+    int ret;
+    ret = nsTextFormatter::snprintf(buf, 256, fmt.get(), d, 333, utf8, ucs2);
+    printf("ret = %d\n", ret);
+    nsAutoString out(buf);
+    printf("%s \n", NS_LossyConvertUCS2toASCII(out).get());
+    const PRUnichar *uout = out.get();
+    for(PRUint32 i=0;i<out.Length();i++)
+        printf("%2X ", uout[i]);
 
-   return passed;
+    return passed;
 }
 #endif
-
