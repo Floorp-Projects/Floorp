@@ -1,14 +1,15 @@
-bookmarks-tree, bookmarks-tree[type="multi-column"]
-  {
-    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree-full");
-  }
+bookmarks-toolbar {
+  -moz-binding: url("chrome://browser/content/bookmarks/bookmarksToolbar.xml#bookmarks-toolbar");
+}
   
-bookmarks-tree[type="single-column"]
-  {
-    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree-name");
-  }
+bookmarks-tree, bookmarks-tree[type="multi-column"] {
+  -moz-binding: url("chrome://browser/content/bookmarks/bookmarksTree.xml#bookmarks-tree-full");
+}
+  
+bookmarks-tree[type="single-column"] {
+  -moz-binding: url("chrome://browser/content/bookmarks/bookmarksTree.xml#bookmarks-tree-name");
+}
 
-bookmarks-tree[type="folders"]
-  {
-    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree-folders");
-  }
+bookmarks-tree[type="folders"] {
+  -moz-binding: url("chrome://browser/content/bookmarks/bookmarksTree.xml#bookmarks-tree-folders");
+}

@@ -99,11 +99,9 @@ function fillViewMenu(aEvent)
 
   if (!gConstructedViewMenuSortItems) {
     for (var i = 0; i < columns.length; ++i) {
-      var name = columns[i].name;
       var accesskey = columns[i].accesskey;
-      
-      var menuitem = document.createElement("menuitem");
-      var name = BookmarksUtils.getLocaleString("SortMenuItem", columns[i].label);
+      var menuitem  = document.createElement("menuitem");
+      var name      = BookmarksUtils.getLocaleString("SortMenuItem", columns[i].label);
       menuitem.setAttribute("label", name);
       menuitem.setAttribute("accesskey", columns[i].accesskey);
       menuitem.setAttribute("resource", columns[i].resource);

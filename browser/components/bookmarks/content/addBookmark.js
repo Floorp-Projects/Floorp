@@ -101,10 +101,6 @@ var gCB_AddGroup = null;
 
 var gBookmarkCharset = null;
 
-const kRDFSContractID = "@mozilla.org/rdf/rdf-service;1";
-const kRDFSIID = Components.interfaces.nsIRDFService;
-const kRDF = Components.classes[kRDFSContractID].getService(kRDFSIID);
-
 var gSelectItemObserver = null;
 
 var gCreateInFolder = "NC:NewBookmarkFolder";
@@ -136,7 +132,7 @@ function Startup()
       dialogElement.setAttribute("title", dialogElement.getAttribute("title-selectFolder"));
       shouldSetOKButton = false;
       if (window.arguments[2])
-        folderItem = bookmarkView.rdf.GetResource(window.arguments[2]);
+        folderItem = RDF.GetResource(window.arguments[2]);
       if (folderItem) {
         ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
         bookmarkView.treeBoxObject.selection.select(ind);
@@ -230,44 +226,41 @@ function onOK()
     window.arguments[5].selectedFolder = gCreateInFolder;
   else {
     // Otherwise add a bookmark to the selected folder. 
-
-    const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
-    const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
-    const kBMSIID = Components.interfaces.nsIBookmarksService;
-    const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
-    var rFolder = kRDF.GetResource(gCreateInFolder, true);
-    const kRDFCContractID = "@mozilla.org/rdf/container;1";
-    const kRDFIID = Components.interfaces.nsIRDFContainer;
-    const kRDFC = Components.classes[kRDFCContractID].getService(kRDFIID);
+    var rFolder = RDF.GetResource(gCreateInFolder);
     try {
-      kRDFC.Init(kBMDS, rFolder);
+      RDFC.Init(BMDS, rFolder);
     }
     catch (e) {
       // No "NC:NewBookmarkFolder" exists, just append to the root.
-      rFolder = kRDF.GetResource("NC:BookmarksRoot", true);
-      kRDFC.Init(kBMDS, rFolder);
+      rFolder = RDF.GetResource("NC:BookmarksRoot");
+      RDFC.Init(BMDS, rFolder);
     }
 
     // if no URL was provided and we're not filing as a group, do nothing
     if (!gFld_URL.value && !addingGroup())
       return;
 
-    var url;
+    var url, rSource;
     if (addingGroup()) {
-      const group = kBMS.createGroup(gFld_Name.value, rFolder);
-      const groups = window.arguments[5];
+      rSource = BMDS.createGroup(gFld_Name.value);
+      const groups  = window.arguments[5];
       for (var i = 0; i < groups.length; ++i) {
         url = getNormalizedURL(groups[i].url);
-        kBMS.createBookmarkWithDetails(groups[i].name, url,
-                                       groups[i].charset, group, -1);
+        BMDS.createBookmarkInContainer(groups[i].name, url,
+                                       groups[i].charset, rSource, -1);
       }
     } else {
       url = getNormalizedURL(gFld_URL.value);
-      var newBookmark = kBMS.createBookmarkWithDetails(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
+      rSource = BMDS.createBookmark(gFld_Name.value, url, gBookmarkCharset);
       if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
-        window.arguments[5].newBookmark = newBookmark;
+        window.arguments[5].newBookmark = rSource;
       }
     }
+    var selection, target;
+    selection = BookmarksUtils.getSelectionFromResource(rSource);
+    target    = BookmarksUtils.getSelectionFromResource(rFolder);
+    target    = BookmarksUtils.getTargetFromSelection(target);
+    BookmarksUtils.insertSelection("newbookmark", selection, target);
   }
 }
 
@@ -292,7 +285,6 @@ function getNormalizedURL(url)
   return url;
 }
 
-var gBookmarksShell = null;
 function createNewFolder ()
 {
   var bookmarksView = document.getElementById("bookmarks-view");

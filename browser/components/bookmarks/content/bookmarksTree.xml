@@ -365,7 +365,7 @@
           if (selection.item.length == 0) {
             selection = { item      : [RDF.GetResource("NC:BookmarksRoot")],
                           parent    : [null],
-                          isExpanded: [true],
+                          isExpanded: [true]
                         }
           }
           selection.length = selection.item.length;

@@ -58,7 +58,7 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
   
   <!-- Shared Bookmarks Utility Library -->
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <!-- Bookmarks Window -->
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksManager.js"/>
 
@@ -89,6 +89,7 @@
       <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
       <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
       <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
+      <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
       <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
       <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
       <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>

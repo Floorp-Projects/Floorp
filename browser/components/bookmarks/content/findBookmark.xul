@@ -29,7 +29,7 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/"?>
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/findBookmark.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/bookmarks/findBookmark.dtd">
 
 <dialog id="findBookmarkWindow" style="width: 36em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -37,9 +37,6 @@
         onload="Startup();"
         ondialogaccept="return find();">
 
-  <stringbundle id="bookmarksBundle" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
-  
-  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/findBookmark.js"/>
 
   <label value="&search.for.label;"/>
