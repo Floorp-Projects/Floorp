@@ -220,6 +220,8 @@ Rights Reserved.
 	<key id="key_markAllRead" key="&markAllReadCmd.key;"             oncommand="goDoCommand('cmd_markAllRead');" modifiers="accel, shift"/>
 	<key id="key_nextMsg" key="&nextMsgCmd.key;"                     oncommand="goDoCommand('cmd_nextMsg')"/>
 	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;"         oncommand="goDoCommand('cmd_nextUnreadMsg')"/>
+	<key id="key_expandAllThreads" key="&expandAllThreadsCmd.key;"   oncommand="goDoCommand('cmd_expandAllThreads')"/>
+	<key id="key_collapseAllThreads" key="&collapseAllThreadsCmd.key;" oncommand="goDoCommand('cmd_collapseAllThreads')"/>
 	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;"   oncommand="goDoCommand('cmd_nextUnreadThread')"/>
 	<key id="key_previousMsg" key="&previousMsgCmd.key;"             oncommand="goDoCommand('cmd_previousMsg')"/>
 	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" oncommand="goDoCommand('cmd_previousUnreadMsg')"/>
@@ -881,8 +883,8 @@ Rights Reserved.
            accesskey="&threadsMsgsCmd.accesskey;"
            observes="cmd_sortByThread"/>
           <menuseparator/>
-          <menuitem label="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" disabled="true" observes="cmd_expandAllThreads"/>
-          <menuitem label="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" disabled="true" observes="cmd_collapseAllThreads"/>
+          <menuitem label="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" key="key_expandAllThreads" disabled="true" observes="cmd_expandAllThreads"/>
+          <menuitem label="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" key="key_collapseAllThreads" disabled="true" observes="cmd_collapseAllThreads"/>
         </menupopup>
       </menu>
       <menu id="viewheadersmenu" label="&headersMenu.label;" accesskey="&headersMenu.accesskey;">
