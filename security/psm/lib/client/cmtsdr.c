@@ -43,7 +43,7 @@
 #include "rsrcids.h"
 #include <string.h>
 
-// Encrypt request
+/* Encrypt request */
 typedef struct EncryptRequestMessage
 {
   CMTItem keyid;  /* May have length 0 for default */
@@ -260,3 +260,4 @@ loser:
 
   return CMTSuccess; /* need return value */
 }
+
