@@ -22,6 +22,8 @@ DEPTH=.
 
 CVSCO = cvs -q co -P
 
+THIS_MAKEFILE = nglayout.mk
+
 # Branch tags we use
 IMGLIB_BRANCH = MODULAR_IMGLIB_BRANCH
 NETLIB_BRANCH = 
@@ -36,7 +38,6 @@ CVSCO_LIZARD = $(CVSCO)
 
 # The list of directories that need to be built to build the standalone
 # nglayout test program. The order is important.
-ifndef NGLAYOUT_PASS2
 DIRS =				\
   config			\
   dbm				\
@@ -56,9 +57,7 @@ DIRS =				\
   lib/xp			\
   lib/libpwcac			\
   network			\
-  lib/liblayer/include
-else
-DIRS =				\
+  lib/liblayer/include		\
   htmlparser			\
   dom				\
   gfx				\
@@ -66,67 +65,22 @@ DIRS =				\
   widget			\
   layout			\
   webshell
-endif
 
 include $(DEPTH)/config/config.mk
 
-#
-# NOTE: Don't use make all with this makefile; it won't work!
-# NOTE: Don't use make export with this makefile; it won't work!
-# NOTE: Don't use make libs with this makefile; it won't work!
-# NOTE: Don't use make clobber with this makefile; it won't work!
-#
-
-THIS_MAKEFILE = nglayout.mk
-
-real_all: pass1_all pass2_all
-
-pass1_all:
-	cd $(MOZ_SRC)/mozilla; \
-	$(MAKE) -f $(THIS_MAKEFILE) export
-	cd $(MOZ_SRC)/mozilla/base; \
-	$(MAKE) export
-	cd $(MOZ_SRC)/mozilla; \
-	$(MAKE) -f $(THIS_MAKEFILE) libs; \
-	$(MAKE) -f $(THIS_MAKEFILE) install
-
-pass2_all: 
-	cd $(MOZ_SRC)/mozilla; \
-	$(MAKE) -f $(THIS_MAKEFILE) NGLAYOUT_PASS2=pass2 export; \
-	$(MAKE) -f $(THIS_MAKEFILE) NGLAYOUT_PASS2=pass2 libs; \
-	$(MAKE) -f $(THIS_MAKEFILE) NGLAYOUT_PASS2=pass2 install
-
-real_export:
-	cd $(MOZ_SRC)/mozilla; \
-	$(MAKE) -f $(THIS_MAKEFILE) export; \
-	$(MAKE) -f $(THIS_MAKEFILE) NGLAYOUT_PASS2=pass2 export
-
-real_libs:
-	cd $(MOZ_SRC)/mozilla; \
-	$(MAKE) -f $(THIS_MAKEFILE) libs; \
-	$(MAKE) -f $(THIS_MAKEFILE) NGLAYOUT_PASS2=pass2 libs
-
-real_install:
-	cd $(MOZ_SRC)/mozilla; \
-	$(MAKE) -f $(THIS_MAKEFILE) install; \
-	$(MAKE) -f $(THIS_MAKEFILE) NGLAYOUT_PASS2=pass2 install
-
-real_clobber:
-	cd $(MOZ_SRC)/mozilla; \
-	$(MAKE) -f $(THIS_MAKEFILE) clobber_all; \
-	$(MAKE) -f $(THIS_MAKEFILE) NGLAYOUT_PASS2=pass2 clobber_all; \
-	$(MAKE) -f $(THIS_MAKEFILE) final_clobber
-
-final_clobber:
-	cd $(MOZ_SRC)/mozilla; \
-	$(RM) -r dist
-
-real_depend:
-	cd $(MOZ_SRC)/mozilla; \
-	$(MAKE) -f $(THIS_MAKEFILE) depend; \
-	$(MAKE) -f $(THIS_MAKEFILE) NGLAYOUT_PASS2=pass2 depend
-
 include $(DEPTH)/config/rules.mk
+
+real_all: all
+
+real_export: export
+
+real_libs: libs
+
+real_install: install
+
+real_clobber: clobber
+
+real_depend: depend
 
 #
 # Rules for pulling the source from the cvs repository
