@@ -558,7 +558,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
       parentItem->FindItemWithName(name.get(), nsnull, callerItem,
                                    getter_AddRefs(newDocShellItem));
     } else
-      FindItemWithName(name.get(), callerItem,
+      FindItemWithName(name.get(), nsnull, callerItem,
                        getter_AddRefs(newDocShellItem));
   }
 
@@ -1069,7 +1069,7 @@ nsWindowWatcher::GetWindowByName(const PRUnichar *aTargetName,
 
     docShellTreeItem = do_QueryInterface(webNav);
     if (docShellTreeItem) {
-      // XXXbz sort out original requestor?
+      // Note: original requestor is null here, per idl comments
       docShellTreeItem->FindItemWithName(aTargetName, nsnull, nsnull,
                                          getter_AddRefs(treeItem));
     }
@@ -1077,7 +1077,8 @@ nsWindowWatcher::GetWindowByName(const PRUnichar *aTargetName,
 
   // Next, see if the TargetName exists in any window hierarchy
   if (!treeItem) {
-    FindItemWithName(aTargetName, nsnull, getter_AddRefs(treeItem));
+    // Note: original requestor is null here, per idl comments
+    FindItemWithName(aTargetName, nsnull, nsnull, getter_AddRefs(treeItem));
   }
 
   if (treeItem) {
@@ -1396,8 +1397,9 @@ nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
    known open window. a failure to find the item will not
    necessarily return a failure method value. check aFoundItem.
 */
-nsresult
+NS_IMETHODIMP
 nsWindowWatcher::FindItemWithName(const PRUnichar* aName,
+                                  nsIDocShellTreeItem* aRequestor,
                                   nsIDocShellTreeItem* aOriginalRequestor,
                                   nsIDocShellTreeItem** aFoundItem)
 {
@@ -1409,10 +1411,6 @@ nsWindowWatcher::FindItemWithName(const PRUnichar* aName,
 
   nsDependentString name(aName);
   
-  if(name.LowerCaseEqualsLiteral("_blank") || name.LowerCaseEqualsLiteral("_new"))
-    return NS_OK;
-  // _content will be handled by individual windows, below
-
   nsCOMPtr<nsISimpleEnumerator> windows;
   GetWindowEnumerator(getter_AddRefs(windows));
   if (!windows)
@@ -1427,15 +1425,33 @@ nsWindowWatcher::FindItemWithName(const PRUnichar* aName,
       break;
     nsCOMPtr<nsISupports> nextSupWindow;
     windows->GetNext(getter_AddRefs(nextSupWindow));
-    if (nextSupWindow) {
-      nsCOMPtr<nsIDOMWindow> nextWindow(do_QueryInterface(nextSupWindow));
-      if (nextWindow) {
-        nsCOMPtr<nsIDocShellTreeItem> treeItem;
-        GetWindowTreeItem(nextWindow, getter_AddRefs(treeItem));
-        if (treeItem) {
-          rv = treeItem->FindItemWithName(aName, treeItem, aOriginalRequestor,
-                                          aFoundItem);
-          if (NS_FAILED(rv) || *aFoundItem)
+    nsCOMPtr<nsIDOMWindow> nextWindow(do_QueryInterface(nextSupWindow));
+    if (nextWindow) {
+      nsCOMPtr<nsIDocShellTreeItem> treeItem;
+      GetWindowTreeItem(nextWindow, getter_AddRefs(treeItem));
+      if (treeItem) {
+        // Get the root tree item of same type, since roots are the only
+        // things that call into the treeowner to look for named items.
+        nsCOMPtr<nsIDocShellTreeItem> root;
+        treeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+        NS_ASSERTION(root, "Must have root tree item of same type");
+        // Make sure not to call back into aRequestor
+        if (root != aRequestor) {
+          // Get the tree owner so we can pass it in as the requestor so
+          // the child knows not to call back up, since we're walking
+          // all windows already.
+          nsCOMPtr<nsIDocShellTreeOwner> rootOwner;
+          // Note: if we have no aRequestor, then we want to also look for
+          // "special" window names, so pass a null requestor.  This will mean
+          // that the treeitem calls back up to us, effectively (with a
+          // non-null aRequestor), so break the loop immediately after the
+          // call in that case.
+          if (aRequestor) {
+            root->GetTreeOwner(getter_AddRefs(rootOwner));
+          }
+          rv = root->FindItemWithName(aName, rootOwner, aOriginalRequestor,
+                                      aFoundItem);
+          if (NS_FAILED(rv) || *aFoundItem || !aRequestor)
             break;
         }
       }

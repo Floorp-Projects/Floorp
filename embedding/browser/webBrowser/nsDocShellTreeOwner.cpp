@@ -325,52 +325,12 @@ nsDocShellTreeOwner::FindItemWithNameAcrossWindows(const PRUnichar* aName,
                                                    nsIDocShellTreeItem** aFoundItem)
 {
   // search for the item across the list of top-level windows
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (!wwatch)
     return NS_OK;
 
-  PRBool   more;
-  nsresult rv;
-
-  nsCOMPtr<nsISimpleEnumerator> windows;
-  wwatch->GetWindowEnumerator(getter_AddRefs(windows));
-
-  rv = NS_OK;
-  do {
-    windows->HasMoreElements(&more);
-    if (!more)
-      break;
-    nsCOMPtr<nsISupports> nextSupWindow;
-    windows->GetNext(getter_AddRefs(nextSupWindow));
-    if (nextSupWindow) {
-      // it's a DOM Window. cut straight to the ScriptGlobalObject.
-      nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nextSupWindow));
-      if (sgo) {
-        nsCOMPtr<nsIDocShellTreeItem> item =
-          do_QueryInterface(sgo->GetDocShell());
-        if (item) {
-          // Get the root tree item of same type, since roots are the only
-          // things that call into the treeowner to look for named items.
-          nsCOMPtr<nsIDocShellTreeItem> root;
-          item->GetSameTypeRootTreeItem(getter_AddRefs(root));
-          NS_ASSERTION(root, "Must have root tree item of same type");
-          // Make sure not to call back into our kid if we got called from it
-          if (root != aRequestor) {
-            // Get the tree owner so we can pass it in as the
-            // requestor so the child knows not to call back up.
-            nsCOMPtr<nsIDocShellTreeOwner> rootOwner;
-            root->GetTreeOwner(getter_AddRefs(rootOwner));
-            rv = root->FindItemWithName(aName, rootOwner, aOriginalRequestor,
-                                        aFoundItem);
-            if (NS_FAILED(rv) || *aFoundItem)
-              break;
-          }
-        }
-      }
-    }
-  } while(1);
-
-  return rv;
+  return wwatch->FindItemWithName(aName, aRequestor, aOriginalRequestor,
+                                  aFoundItem);
 }
 
 void
