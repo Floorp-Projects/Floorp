@@ -20,6 +20,7 @@
 #include "nsXtEventHandler.h"
 
 #include "nsWindow.h"
+#include "nsTextWidget.h"
 #include "nsCheckButton.h"
 #include "nsRadioButton.h"
 #include "nsFileWidget.h"
@@ -619,40 +620,54 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
   if (DBG) fprintf(stderr, "In nsXtWidget_Text_Callback\n");
   nsWindow * widgetWindow = (nsWindow *) p ;
-  static char * passwd;
   char * newStr;
   int len;
 
   XmTextVerifyCallbackStruct *cbs = (XmTextVerifyCallbackStruct *) call_data;
 
-  if (cbs->reason == XmCR_ACTIVATE) {
-      //printf ("Password: %s\n", passwd);
-      return;
+  PasswordData * data;
+  XtVaGetValues(w, XmNuserData, &data, NULL);
+  if (data == NULL || data->mIgnore) {
+    return;
   }
+
+  if (cbs->reason == XmCR_ACTIVATE) {
+    printf ("Password: %s\n", data->mPassword.ToNewCString());
+    return;
+  }
+
+  printf("start %d  insert %d  len %d  end %d  ptr [%s]\n", 
+         cbs->startPos, cbs->currInsert, cbs->text->length, cbs->endPos, cbs->text->ptr);
 
   if (cbs->startPos < cbs->currInsert) {   /* backspace */
-      cbs->endPos = strlen (passwd);       /* delete from here to end */
-      passwd[cbs->startPos] = 0;           /* backspace--terminate */
+      cbs->endPos = data->mPassword.Length();       /* delete from here to end */
+      data->mPassword.SetLength(cbs->startPos);           /* backspace--terminate */
+  printf("[%s]\n", data == NULL?"<null>":data->mPassword.ToNewCString());
       return;
   }
 
-  if (cbs->text->length > 1) {
-      cbs->doit = False;  /* don't allow "paste" operations */
-      return;             /* make the user *type* the password! */
+  //if (cbs->text->length > 1) {
+      //cbs->doit = False;  /* don't allow "paste" operations */
+      //return;             /* make the user *type* the password! */
+  //}
+
+  if (cbs->startPos == cbs->currInsert && cbs->currInsert < data->mPassword.Length()) {
+    printf("Inserting [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
+    nsString insStr(cbs->text->ptr);
+    data->mPassword.Insert(insStr, cbs->currInsert, strlen(cbs->text->ptr));
+  } else if (cbs->startPos == cbs->currInsert && cbs->endPos != cbs->startPos) {
+    data->mPassword.SetLength(cbs->startPos);
+    printf("Setting Length [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
+  } else if (cbs->startPos == cbs->currInsert) {   /* backspace */
+    data->mPassword.Append(cbs->text->ptr);
+    printf("Appending [%s] at %d\n", cbs->text->ptr, cbs->currInsert);
+  } else {
+    printf("Shouldn't be here!\n");
   }
-
-  newStr = XtMalloc (cbs->endPos + 2); /* new char + NULL terminator */
-  if (passwd) {
-      strcpy (newStr, passwd);
-      XtFree (passwd);
-  } else
-      newStr[0] = 0;
-  passwd = newStr;
-  strncat (passwd, cbs->text->ptr, cbs->text->length);
-  passwd[cbs->endPos + cbs->text->length] = 0;
-
+  
   for (len = 0; len < cbs->text->length; len++)
-      cbs->text->ptr[len] = '*';
+    cbs->text->ptr[len] = '*';
+
   if (DBG) fprintf(stderr, "Out nsXtWidget_Text_Callback\n");
 }
 

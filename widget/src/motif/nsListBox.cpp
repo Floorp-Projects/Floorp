@@ -52,7 +52,7 @@ void nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 
   str = XmStringCreateLocalized(val);
 
-  XmListAddItem(mWidget, str, (int)aPosition);
+  XmListAddItem(mWidget, str, (int)aPosition+1);
   NS_FREE_STR_BUF(val);
 }
 
@@ -64,8 +64,15 @@ void nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
-  int index = 0;//::SendMessage(mWnd, LB_FINDSTRINGEXACT, (int)aStartPos, (LPARAM)(LPCTSTR)val); 
+
+  XmString str = XmStringCreate(val, XmFONTLIST_DEFAULT_TAG);
+
+  int index = XmListItemPos(mWidget, str)-1;
+  if (index < aStartPos) {
+    index = -1;
+  }
   NS_FREE_STR_BUF(val);
+  XmStringFree(str);
 
   return index;
 }
@@ -77,7 +84,10 @@ PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::GetItemCount()
 {
-  return (PRInt32)0;//::SendMessage(mWnd, LB_GETCOUNT, (int)0, (LPARAM)0); 
+  int count = 0;
+  XtVaGetValues(mWidget, XmNitemCount, &count, nsnull);
+
+  return (PRInt32)count;
 }
 
 //-------------------------------------------------------------------------
@@ -87,29 +97,38 @@ PRInt32  nsListBox::GetItemCount()
 //-------------------------------------------------------------------------
 PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 {
-  int status = 0;//::SendMessage(mWnd, LB_DELETESTRING, (int)aPosition, (LPARAM)(LPCTSTR)0); 
-  return 0;//(status != LB_ERR?PR_TRUE:PR_FALSE);
+  int count = 0;
+  XtVaGetValues(mWidget, XmNitemCount, &count, nsnull);
+  if (aPosition >= 0 && aPosition < count) {
+    XmListDeletePos(mWidget, aPosition+1);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
 //
-//  Removes an Item at a specified location
+//  
 //
 //-------------------------------------------------------------------------
 PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
   PRBool result = PR_FALSE;
-  /*int len = ::SendMessage(mWnd, LB_GETTEXTLEN, (int)aPosition, (LPARAM)0); 
-  if (len != LB_ERR) {
-    char * str = new char[len+1];
-    anItem.SetLength(0);
-    int status = ::SendMessage(mWnd, LB_GETTEXT, (int)aPosition, (LPARAM)(LPCTSTR)str); 
-    if (status != LB_ERR) {
-      anItem.Append(str);
+  XmStringTable list;
+
+  int count = 0;
+  XtVaGetValues(mWidget,  XmNitems, &list, XmNitemCount, &count, nsnull);
+
+  if (aPosition >= 0 && aPosition < count) {
+    char * text;
+    if (XmStringGetLtoR(list[aPosition], XmFONTLIST_DEFAULT_TAG, &text)) {
+      anItem.SetLength(0);
+      anItem.Append(text);
+      XtFree(text);
       result = PR_TRUE;
     }
-    delete str;
-  }*/
+  }
+
   return result;
 }
 
@@ -120,8 +139,13 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 void nsListBox::GetSelectedItem(nsString& aItem)
 {
-  int index = 0;//::SendMessage(mWnd, LB_GETCURSEL, (int)0, (LPARAM)0); 
-  GetItemAt(aItem, index); 
+  int * list;
+  int   count;
+
+  if (XmListGetSelectedPos(mWidget, &list, &count)) {
+    GetItemAt(aItem, list[0]-1); 
+    XtFree((char *)list);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -132,11 +156,21 @@ void nsListBox::GetSelectedItem(nsString& aItem)
 PRInt32 nsListBox::GetSelectedIndex()
 {  
   if (!mMultiSelect) { 
-    return 0;//::SendMessage(mWnd, LB_GETCURSEL, (int)0, (LPARAM)0);
+    int * list;
+    int   count;
+
+    if (XmListGetSelectedPos(mWidget, &list, &count)) {
+      int index = -1;
+      if (count > 0) {
+        index = list[0]-1;
+      }
+      XtFree((char *)list);
+      return index;
+    }
   } else {
     NS_ASSERTION(0, "Multi selection list box does not support GetSlectedIndex()");
   }
-  return 0;
+  return -1;
 }
 
 //-------------------------------------------------------------------------
@@ -146,10 +180,10 @@ PRInt32 nsListBox::GetSelectedIndex()
 //-------------------------------------------------------------------------
 void nsListBox::SelectItem(PRInt32 aPosition)
 {
-  if (!mMultiSelect) { 
-    //::SendMessage(mWnd, LB_SETCURSEL, (int)aPosition, (LPARAM)0); 
-  } else {
-    //::SendMessage(mWnd, LB_SETSEL, (WPARAM) (BOOL)PR_TRUE, (LPARAM)(UINT)aPosition); 
+  int count = 0;
+  XtVaGetValues(mWidget,  XmNitemCount, &count, nsnull);
+  if (aPosition >= 0 && aPosition < count) {
+    XmListSelectPos(mWidget, aPosition+1, FALSE);
   }
 }
 
@@ -160,12 +194,9 @@ void nsListBox::SelectItem(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32 nsListBox::GetSelectedCount()
 {
-  if (!mMultiSelect) { 
-    PRInt32 inx = GetSelectedIndex();
-    return (inx == -1? 0 : 1);
-  } else {
-    return 0;//::SendMessage(mWnd, LB_GETSELCOUNT, (int)0, (LPARAM)0);
-  }
+  int count = 0;
+  XtVaGetValues(mWidget,  XmNselectedItemCount, &count, nsnull);
+  return (PRInt32)count;
 }
 
 //-------------------------------------------------------------------------
@@ -175,7 +206,17 @@ PRInt32 nsListBox::GetSelectedCount()
 //-------------------------------------------------------------------------
 void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
-  //::SendMessage(mWnd, LB_GETSELITEMS, (int)aSize, (LPARAM)aIndices);
+  int * list;
+  int   count;
+
+  if (XmListGetSelectedPos(mWidget, &list, &count)) {
+    int num = aSize > count?count:aSize;
+    int i;
+    for (i=0;i<num;i++) {
+      aIndices[i] = (PRInt32)list[i]-1;
+    }
+    XtFree((char *)list);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -185,12 +226,7 @@ void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //-------------------------------------------------------------------------
 void nsListBox::Deselect()
 {
-  if (!mMultiSelect) { 
-    //::SendMessage(mWnd, LB_SETCURSEL, (WPARAM)-1, (LPARAM)0); 
-  } else {
-    //::SendMessage(mWnd, LB_SETSEL, (WPARAM) (BOOL)PR_FALSE, (LPARAM)(UINT)-1); 
-  }
-
+  XtVaSetValues(mWidget, XmNselectedItemCount, 0);
 }
 
 
@@ -269,10 +305,11 @@ void nsListBox::Create(nsIWidget *aParent,
                                     xmListWidgetClass,
                                     parentWidget,
                                     XmNitemCount, 0,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
                                     XmNx, aRect.x,
                                     XmNy, aRect.y,
+                                    XmNwidth, aRect.width,
+                                    XmNheight, aRect.height,
+                                    XmNrecomputeSize, False,
                                     nsnull);
 
   if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);

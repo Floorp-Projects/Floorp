@@ -17,6 +17,7 @@
  */
 
 #include "nsTextHelper.h"
+#include "nsTextWidget.h"
 #include "nsToolkit.h"
 #include "nsColor.h"
 #include "nsGUIEvent.h"
@@ -58,36 +59,66 @@ void nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 //-------------------------------------------------------------------------
 PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) 
 {
-  char * str = XmTextGetString(mWidget);
-  aTextBuffer.SetLength(0);
-  aTextBuffer.Append(str);
-  PRUint32 len = (PRUint32)strlen(str);
-  XtFree(str);
-  return len;
+  if (!mIsPassword) {
+    char * str = XmTextGetString(mWidget);
+    aTextBuffer.SetLength(0);
+    aTextBuffer.Append(str);
+    PRUint32 len = (PRUint32)strlen(str);
+    XtFree(str);
+    return len;
+  } else {
+    PasswordData * data;
+    XtVaGetValues(mWidget, XmNuserData, &data, NULL);
+    aTextBuffer = data->mPassword;
+    return aTextBuffer.Length();
+  }
 }
 
 //-------------------------------------------------------------------------
 PRUint32  nsTextHelper::SetText(const nsString& aText)
 { 
-  if (!mIsReadOnly) {
+  //printf("SetText Password %d\n", mIsPassword);
+  if (!mIsPassword) {
     NS_ALLOC_STR_BUF(buf, aText, 512);
     XmTextSetString(mWidget, buf);
     NS_FREE_STR_BUF(buf);
-    return(aText.Length());
+  } else {
+    PasswordData * data;
+    XtVaGetValues(mWidget, XmNuserData, &data, NULL);
+    data->mPassword = aText;
+    data->mIgnore   = True;
+    char * buf = new char[aText.Length()+1];
+    memset(buf, '*', aText.Length());
+    buf[aText.Length()] = 0;
+    //printf("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
+    XmTextSetString(mWidget, buf);
+    data->mIgnore = False;
   }
-
-  return 0;
+  return(aText.Length());
 }
 
 //-------------------------------------------------------------------------
 PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos)
 { 
-  if (!mIsReadOnly) {
+
+  if (!mIsPassword) {
     NS_ALLOC_STR_BUF(buf, aText, 512);
     XmTextInsert(mWidget, aStartPos, buf);
     NS_FREE_STR_BUF(buf);
+  } else {
+    PasswordData * data;
+    XtVaGetValues(mWidget, XmNuserData, &data, NULL);
+    data->mIgnore   = True;
+    data->mPassword.Insert(aText, aStartPos, aText.Length());
+    char * buf = new char[data->mPassword.Length()+1];
+    memset(buf, '*', data->mPassword.Length());
+    buf[data->mPassword.Length()] = 0;
+    //printf("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
+    XmTextInsert(mWidget, aStartPos, buf);
+    data->mIgnore = False;
   }
-  return(0);
+  return(aText.Length());
+
 }
 
 //-------------------------------------------------------------------------
@@ -96,9 +127,7 @@ void  nsTextHelper::RemoveText()
   char blank[2];
   blank[0] = 0;
 
-  if (!mIsReadOnly) {
-    XmTextSetString(mWidget, blank);
-  }
+  XmTextSetString(mWidget, blank);
 }
 
 //-------------------------------------------------------------------------
@@ -110,10 +139,12 @@ void  nsTextHelper::SetPassword(PRBool aIsPassword)
 //-------------------------------------------------------------------------
 PRBool  nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag)
 {
-  NS_ASSERTION(mWidget != nsnull, "SetReadOnly - Widget is NULL, Create may not have been called!");
+  NS_ASSERTION(mWidget != nsnull, 
+               "SetReadOnly - Widget is NULL, Create may not have been called!");
   PRBool oldSetting = mIsReadOnly;
   mIsReadOnly = aReadOnlyFlag;
-  XmTextSetEditable(mWidget, aReadOnlyFlag);
+  XmTextSetEditable(mWidget, aReadOnlyFlag?False:True);
+
   return(oldSetting);
 }
 
@@ -134,8 +165,8 @@ void  nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
   XmTextPosition right = (XmTextPosition)aEndSel;
 
   Time time;
-
-  XmTextSetSelection(mWidget, left, right, time);
+printf("SetSel %d %d\n", left, right);
+  XmTextSetSelection(mWidget, left, right, 0);
 }
 
 
@@ -145,9 +176,13 @@ void  nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
   XmTextPosition left;
   XmTextPosition right;
 
-  XmTextGetSelectionPosition(mWidget, &left, &right);
-  *aStartSel = left;
-  *aEndSel   = right;
+  if (XmTextGetSelectionPosition(mWidget, &left, &right)) {
+    printf("left %d right %d\n", left, right);
+    *aStartSel = (PRUint32)left;
+    *aEndSel   = (PRUint32)right;
+  } else {
+    printf("nsTextHelper::GetSelection Error getting positions\n");
+  }
 }
 
 //-------------------------------------------------------------------------
