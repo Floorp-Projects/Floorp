@@ -15,6 +15,7 @@ Description Long=Click Continue to install the following components:
 C0=Component0
 C1=Component1
 C2=Component2
+C3=Component3
 
 [Setup Type1]
 Description Short=Custom Install
@@ -22,6 +23,7 @@ Description Long=Click Continue to select the component(s) to install.
 C0=Component0
 C1=Component1
 C2=Component2
+C3=Component3
 
 [Dialog Select Components]
 Message0=Please select the components you wish to install:
@@ -51,6 +53,15 @@ Archive=mail.xpi
 Install Size=<#mail_size>
 Domain0=http://sweetlou.mcom.com/
 Server Path0=products/client/seamonkey/macos/8.x/ppc/<#buildID>/
+Attributes=SELECTED
+
+[Component3]
+Description Short=Chatzilla
+Description Long=Chatzilla IRC client
+Archive=chatzilla.xpi
+Install Size=(#chatzilla_size)
+Domain0=http://sweetlou.mcom.com/
+Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
 Attributes=SELECTED
 
 [Dialog Start Install]
