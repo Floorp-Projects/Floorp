@@ -28,6 +28,7 @@
 #include "nsIObserverService.h"
 #include "nsIPref.h"
 #include "nsICacheVisitor.h"
+#include "nsITransport.h"
 #include "signal.h"
 
 

@@ -24,56 +24,27 @@
  *    Darin Fisher    <darin@netscape.com>
  */
 
-#include "nsITransport.idl"
+#include "nsICacheVisitor.idl"
 #include "nsICache.idl"
 
 interface nsISimpleEnumerator;
 interface nsICacheListener;
+interface nsITransport;
 interface nsIFile;
 
 [scriptable, uuid(49c1a11d-f5d2-4f09-8262-551e64908ada)]
-interface nsICacheEntryDescriptor : nsISupports
+interface nsICacheEntryDescriptor : nsICacheEntryInfo
 {
     /**
-     * Get the key identifying the cache entry.
+     * Set the time at which the cache entry should be considered invalid.
      */
-    readonly attribute string key;
+    void setExpirationTime(in PRTime expirationTime);
 
     /**
-     * Get the number of times the cache entry has been opened.
+     * Set the cache entry data size.  This will fail if the cache entry
+     * IS stream based.
      */
-    readonly attribute long fetchCount;
-
-    /**
-     * Get the last time the cache entry was opened.
-     */
-    readonly attribute PRTime lastFetched;
-
-    /**
-     * Get the last time the cache entry was modified.
-     */
-    readonly attribute PRTime lastModified;
-
-    /**
-     * Get the last time the cache entry was marked valid.
-     */
-    readonly attribute PRTime lastValidated;
-
-    /**
-     * Get the expiration time of the cache entry.
-     */
-    attribute PRTime expirationTime;
-
-    /**
-     * Find out whether or not the cache entry is stream based.
-     */
-    boolean isStreamBased();
-
-    /**
-     * Get/set the cache entry data size.  This attribute can only be set if
-     * the cache entry IS NOT stream based.
-     */
-    attribute unsigned long dataSize;
+    void setDataSize(in unsigned long size);
 
     /**
      * Get a transport to the cache data.  This will fail if the cache entry
@@ -134,7 +105,7 @@ interface nsICacheEntryDescriptor : nsISupports
      *  Explicitly close the descriptor (optional).
      */
     
-    void  close();
+    void close();
 
     /**
      * Methods for accessing meta data.  Meta data is a table of key/value

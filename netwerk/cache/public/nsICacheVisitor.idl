@@ -130,12 +130,12 @@ interface nsICacheEntryInfo : nsISupports
     readonly attribute PRTime  expirationTime;
 
     /**
-     * Find out whether or not the cache entry is stream based.
-     */
-    readonly attribute boolean  streamBased;
-
-    /**
      * Get the cache entry data size.
      */
     readonly attribute unsigned long  dataSize;
+
+    /**
+     * Find out whether or not the cache entry is stream based.
+     */
+    boolean  isStreamBased();
 };

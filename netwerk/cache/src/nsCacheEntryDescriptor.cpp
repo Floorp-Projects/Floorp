@@ -69,6 +69,13 @@ nsCacheEntryDescriptor::Create(nsCacheEntry * entry, nsCacheAccessMode  accessGr
 
 
 NS_IMETHODIMP
+nsCacheEntryDescriptor::GetClientID(char ** result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
 nsCacheEntryDescriptor::GetKey(char ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
