@@ -1632,21 +1632,18 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     pi->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
     window.type  =  windowless ? nsPluginWindowType_Drawable : nsPluginWindowType_Window;
 
-    // get a few things
-    nsCOMPtr<nsIPrintSettings> printSettings;
-    if (thePrinterContext) {
-      thePrinterContext->GetPrintSettings(getter_AddRefs(printSettings));
-      NS_ENSURE_TRUE(printSettings, NS_ERROR_FAILURE);
-      printSettings->GetMarginInTwips(margin);
-    }
+    // Get the offset of the DC
+    nsTransform2D* rcTransform;
+    aRenderingContext.GetCurrentTransform(rcTransform);
+    rcTransform->GetTranslationCoord(&origin.x, &origin.y);
     
+    // Get the conversion factor between pixels and twips
     aPresContext->GetTwipsToPixels(&t2p);
-    GetOffsetFromView(aPresContext, origin, &parentWithView);
 
     // set it all up
     // XXX is windowless different?
-    window.x = NSToCoordRound((origin.x + margin.left) * t2p);
-    window.y = NSToCoordRound((origin.y + margin.top ) * t2p);
+    window.x = origin.x;
+    window.y = origin.y;
     window.width = NSToCoordRound(mRect.width * t2p);
     window.height= NSToCoordRound(mRect.height * t2p);
     window.clipRect.bottom = 0; window.clipRect.top = 0;
