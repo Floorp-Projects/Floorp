@@ -233,7 +233,7 @@ nsXMLContentSink::MaybePrettyPrint()
 NS_IMETHODIMP
 nsXMLContentSink::DidBuildModel()
 {
-  if (mDocument->GetDocumentTitle().IsVoid()) {
+  if (mDocument && mDocument->GetDocumentTitle().IsVoid()) {
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
     dom_doc->SetTitle(EmptyString());
   }
@@ -444,7 +444,7 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
   }
 
   if (aNodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML)) {
-    if (mDocument->GetDocumentTitle().IsVoid()) {
+    if (mDocument && mDocument->GetDocumentTitle().IsVoid()) {
       mInTitle = PR_TRUE; // The first title wins
     }
   }
@@ -525,7 +525,8 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
   }
   
   if (nodeInfo->Equals(nsHTMLAtoms::title, kNameSpaceID_XHTML) &&
-           mInTitle) {
+      mInTitle) {
+    NS_ASSERTION(mDocument, "How did mInTitle get to be true if mDocument is null?");
     // The first title wins
     nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
     mTitleText.CompressWhitespace();
@@ -1232,6 +1233,10 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
     }
   }
   NS_IF_RELEASE(mDocElement); 
+
+  // Clear any buffered-up text we have
+  mText = nsnull;
+  mTextLength = 0;
 
   if (mXSLTProcessor) {
     // Get rid of the XSLT processor.
