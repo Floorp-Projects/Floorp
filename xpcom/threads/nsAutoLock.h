@@ -73,11 +73,29 @@
 #include "prlock.h"
 #include "prlog.h"
 
+class NS_COM nsAutoLockBase {
+protected:
+    nsAutoLockBase() {}
+    enum nsAutoLockType {eAutoLock, eAutoMonitor, eAutoCMonitor};
+
+#ifdef DEBUG
+    nsAutoLockBase(void* addr, nsAutoLockType type);
+    ~nsAutoLockBase();
+
+    void*               mAddr;
+    nsAutoLockBase*     mDown;
+    enum nsAutoLockType mType;
+#else
+    nsAutoLockBase(void* addr, nsAutoLockType type) {}
+    ~nsAutoLockBase() {}
+#endif
+};
+
 // If you ever decide that you need to add a non-inline method to this
 // class, be sure to change the class declaration to "class NS_COM
 // nsAutoLock".
 
-class nsAutoLock {
+class NS_COM nsAutoLock : public nsAutoLockBase {
 private:
     PRLock* mLock;
 
@@ -99,7 +117,9 @@ private:
     static void operator delete(void* /*memory*/) {}
 
 public:
-    nsAutoLock(PRLock* aLock) : mLock(aLock) {
+    nsAutoLock(PRLock* aLock)
+        : nsAutoLockBase(aLock, eAutoLock),
+          mLock(aLock) {
         PR_ASSERT(mLock);
 
         // This will assert deep in the bowels of NSPR if you attempt
@@ -130,20 +150,27 @@ public:
 #include "prcmon.h"
 #include "nsError.h"
 
-class nsAutoMonitor {
+class NS_COM nsAutoMonitor : public nsAutoLockBase {
 public:
+    static PRMonitor* NewMonitor(const char* name);
+    static void       DestroyMonitor(PRMonitor* mon);
+
     nsAutoMonitor(PRMonitor* mon)
-        : mMonitor(mon)
+        : nsAutoLockBase((void*)mon, eAutoMonitor),
+          mMonitor(mon)
     {
-        NS_ASSERTION(mMonitor, "null lock object");
+        NS_ASSERTION(mMonitor, "null monitor");
         PR_EnterMonitor(mMonitor);
     }
 
     ~nsAutoMonitor() {
-        PRStatus status;
-	status = PR_ExitMonitor(mMonitor);
-        NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
+        // inline Exit to avoid imposing any penalty on Exit non-users
+        PRStatus status = PR_ExitMonitor(mMonitor);
+        NS_ASSERTION(status == PR_SUCCESS, "PR_ExitMonitor failed");
     }
+
+    void Enter();
+    void Exit();
 
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
         return PR_Wait(mMonitor, interval) == PR_SUCCESS
@@ -161,7 +188,7 @@ public:
     }
 
 private:
-    PRMonitor* mMonitor;
+    PRMonitor*  mMonitor;
 
     // Not meant to be implemented. This makes it a compiler error to
     // construct or assign an nsAutoLock object incorrectly.
@@ -189,20 +216,24 @@ private:
 #include "prcmon.h"
 #include "nsError.h"
 
-class nsAutoCMonitor {
+class NS_COM nsAutoCMonitor : public nsAutoLockBase {
 public:
     nsAutoCMonitor(void* lockObject)
-        : mLockObject(lockObject)
+        : nsAutoLockBase(lockObject, eAutoCMonitor),
+          mLockObject(lockObject)
     {
         NS_ASSERTION(lockObject, "null lock object");
         PR_CEnterMonitor(mLockObject);
     }
 
     ~nsAutoCMonitor() {
-        PRStatus status;
-	status = PR_CExitMonitor(mLockObject);
+        // inline Exit to avoid imposing any penalty on Exit non-users
+        PRStatus status = PR_CExitMonitor(mLockObject);
         NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
     }
+
+    void Enter();
+    void Exit();
 
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT) {
         return PR_CWait(mLockObject, interval) == PR_SUCCESS
@@ -241,4 +272,3 @@ private:
 };
 
 #endif // nsAutoLock_h__
-
