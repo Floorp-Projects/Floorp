@@ -363,7 +363,7 @@ ImageConsumer::OnDataAvailable(nsIChannel* channel, nsISupports* aContext, nsIIn
   }
 
   nsresult err = 0;
-  PRUint32 nb;
+  PRUint32 nb = 0;
   char* uriStr = NULL;
   nsCOMPtr<nsIURI> uri;
 
