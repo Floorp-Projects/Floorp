@@ -241,22 +241,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 
     rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
     if (child)
-    {
-      nsCOMPtr<nsIDBFolderInfo> folderInfo;
-      nsCOMPtr<nsIMsgDatabase> db; 
-      child->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
-      if (folderInfo)
-      {
-        nsAutoString mailboxName;
-        folderInfo->GetMailboxName(&mailboxName);
-        if (!mailboxName.IsEmpty())
-          child->SetPrettyName(mailboxName.get());
-        else
-          child->SetPrettyName(currentFolderNameStr.get());
-      }
-      else
-        child->SetPrettyName(currentFolderNameStr.get());
-    }
+      child->SetPrettyName(currentFolderNameStr.get());
   }
 	return rv;
 }
