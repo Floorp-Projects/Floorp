@@ -455,7 +455,7 @@ nsresult nsContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode)
     // get next sibling if there is one
     if (!NS_SUCCEEDED(cN->GetParent(*getter_AddRefs(parent))))
       return NS_ERROR_FAILURE;
-    if (!NS_SUCCEEDED(parent->IndexOf(cN, indx)))
+    if (!parent || !NS_SUCCEEDED(parent->IndexOf(cN, indx)))
       return NS_ERROR_FAILURE;
     if (NS_SUCCEEDED(parent->ChildAt(++indx,*getter_AddRefs(cSibling))) && cSibling)
     {
