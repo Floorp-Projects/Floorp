@@ -31,8 +31,10 @@ function initPanel ( aPrefTag )
   {
     if( hPrefWindow )
       hPrefWindow.onpageload( aPrefTag )
-    else
-      queuedTag = aPageTag;
+    else {
+      dump("*** queueing up a panel...\n");
+      queuedTag = aPrefTag;
+    }
   } 
  
 window.doneLoading = false; 
@@ -73,16 +75,20 @@ nsPrefWindow.prototype =
               dump("*** Failed to create prefs object\n");
               return;
             }
-          if( window.queuedTag )
-            {
-              this.onpageload( window.queuedTag );
-            }
-
-          if( window.arguments[1] )
-            this.closeBranches( window.arguments[1] );
-
         },
 
+      init: 
+        function ()
+          {        
+            if( window.queuedTag )
+              {
+                this.onpageload( window.queuedTag );
+              }
+  
+            if( window.arguments[1] )
+              this.closeBranches( window.arguments[1] );
+          },
+                  
       onOK:
         function ()
           {
@@ -304,7 +310,6 @@ nsPrefWindow.prototype =
     closeBranches:
       function ( aComponentName )
         {
-          dump("*** running closeBranches\n");
           var panelChildren = document.getElementById( "panelChildren" );
           var panelTree = document.getElementById( "prefsTree" );
           for( var i = 0; i < panelChildren.childNodes.length; i++ )
