@@ -4,8 +4,8 @@
 # mailprocessing program.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/09/22 15:13:51 $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/10/18 20:27:43 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
@@ -89,8 +89,8 @@ sub fatal_mailprocessing_error {
 
   my  @error = @_;
   foreach $_ (@error) {
-    print LOG "[$LOCALTIME] $_";
-    print STDERR "[$LOCALTIME] $_";
+    print LOG "[$main::LOCALTIME] $_";
+    print STDERR "[$main::LOCALTIME] $_";
   }
   print LOG "\n";
   print STDERR "\n";
