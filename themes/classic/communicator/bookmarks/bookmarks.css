@@ -51,6 +51,7 @@
   .bookmarkitem
     {
       list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+      cursor			  : pointer;
     }
   
   .bookmarkfolder
