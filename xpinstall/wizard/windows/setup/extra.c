@@ -1829,7 +1829,7 @@ HRESULT VerifyDiskSpace()
     ullDSTotalAvailable = ullDSAPath;
 
     if(ullDSTotalAvailable < ullDSTotalRequired)
-      return(ErrorMsgDiskSpace(ullDSAPath, ullDSRPath, sgProduct.szPath, FALSE));
+      return(ErrorMsgDiskSpace(ullDSTotalAvailable, ullDSTotalRequired, sgProduct.szPath, FALSE));
   }
   else
   {
