@@ -215,9 +215,16 @@ nsresult nsSOAPException::AddException(nsresult aStatus, const nsAString & aName
       nsCOMPtr<nsIException> old;
       if (!aClear)
         xs->GetCurrentException(getter_AddRefs(old));
-      nsCOMPtr<nsIException> exception = new nsSOAPException(aStatus, 
-        aName.IsEmpty() ? NS_LITERAL_STRING("SOAP_FAILURE") : aName, 
-        aMessage.IsEmpty() ? NS_LITERAL_STRING("No description") : aMessage, old);
+      // Need to cast the NS_LITERAL_STRING to const nsAString& to make
+      // it compile on CW on Mac.
+      const nsAString& name = aName.IsEmpty() ?
+        NS_STATIC_CAST(const nsAString&, NS_LITERAL_STRING("SOAP_FAILURE")) :
+        aName;
+      const nsAString& message = aMessage.IsEmpty() ?
+        NS_STATIC_CAST(const nsAString&, NS_LITERAL_STRING("No description")) :
+        aMessage;
+      nsCOMPtr<nsIException> exception = new nsSOAPException(aStatus, name, 
+        message, old);
       if (exception) {
         xm->SetCurrentException(exception);
       }
