@@ -552,6 +552,25 @@ PRBool nsHTMLTagContent::DivAlignParamToString(const nsHTMLValue& aValue,
   return EnumValueToString(aValue, kDivAlignTable, aResult);
 }
 
+static nsHTMLTagContent::EnumTable kTableAlignTable[] = {
+  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
+  { 0 }
+};
+
+PRBool nsHTMLTagContent::ParseTableAlignParam(const nsString& aString,
+                                              nsHTMLValue& aResult)
+{
+  return ParseEnumValue(aString, kTableAlignTable, aResult);
+}
+
+PRBool nsHTMLTagContent::TableAlignParamToString(const nsHTMLValue& aValue,
+                                                 nsString& aResult)
+{
+  return EnumValueToString(aValue, kTableAlignTable, aResult);
+}
+
 void nsHTMLTagContent::ParseValueOrPercent(const nsString& aString,
                                            nsHTMLValue& aResult, 
                                            nsHTMLUnit aValueUnit)
