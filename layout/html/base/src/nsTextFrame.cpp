@@ -5165,6 +5165,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     : NS_FRAME_NOT_COMPLETE;
   if (endsInNewline) {
     rs = NS_INLINE_LINE_BREAK_AFTER(rs);
+    lineLayout.SetLineEndsInBR(PR_TRUE);
   }
   else if ((aTextData.mOffset != contentLength) && (aTextData.mOffset == startingOffset)) {
     // Break-before a long-word that doesn't fit here
