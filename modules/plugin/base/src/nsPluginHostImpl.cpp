@@ -108,11 +108,7 @@
 #define PLUGIN_DLL "PLUGIN_DLL"
 #endif
 
-#ifdef XP_MAC
-#define REL_PLUGIN_DLL PLUGIN_DLL
-#else
 #define REL_PLUGIN_DLL "rel:" PLUGIN_DLL
-#endif
 
 //uncomment this to use netlib to determine what the
 //user agent string is. we really *want* to do this,
