@@ -346,6 +346,10 @@ nsTableCellFrame::SetSelected(nsIPresContext* aPresContext,
   }
   //return nsFrame::SetSelected(aRange,aSelected,eSpreadNone);
 #endif
+  // Must call base class to set mSelected state and trigger repaint of frame
+  // Note that in current version, aRange and aSpread are ignored,
+  //   only this frame is considered
+  nsFrame::SetSelected(aPresContext, aRange, aSelected, aSpread);
   return NS_OK;
 }
 
