@@ -575,7 +575,7 @@ function newEvent( startDate, endDate )
 
    if( selectedCalendarItem )
    {
-      server = selectedCalendarItem.calendarPath;
+      server = selectedCalendarItem.getAttribute( "calendarPath" );
    }
    
    editNewEvent( calendarEvent, server );
