@@ -458,7 +458,7 @@ ifeq ($(CPP_PROG_LINK),1)
 else
 	$(PURIFY) $(CCF) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
-
+	$(INSTALL) -m 555 $^.pure $(DIST)/bin
 
 ifneq ($(OS_ARCH),OS2)
 $(LIBRARY): $(OBJS) $(LOBJS)
