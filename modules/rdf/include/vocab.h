@@ -92,6 +92,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_HTMLType;
   RDF_Resource RDF_Command;
   RDF_Resource RDF_URLShortcut;
+  RDF_Resource RDF_Cookies;
 
   /* NavCenter appearance styles */
 

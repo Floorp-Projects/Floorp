@@ -49,7 +49,7 @@ MakeRemoteStore (char* url)
       ntr->hasAssertion = remoteStoreHasAssertion;
       ntr->nextValue = remoteStoreNextValue;
       ntr->disposeCursor = remoteStoreDisposeCursor;
-      ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ;
+     /* ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ; */
       gRemoteStore = ntr;
       ntr->url = copyString(url);
       return ntr;
@@ -250,11 +250,12 @@ possiblyAccessFile (RDFT mcf, RDF_Resource u, RDF_Resource s, PRBool inversep)
 }
 
 void RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
-  if ((resourceType(u) == RDF_RT) && (strstr(rdf->url, ".rdf") || strstr(rdf->url, ".mcf")) &&
-	  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) &&
+  if ((resourceType(u) == RDF_RT) && 
+       (strstr(rdf->url, ".rdf") || strstr(rdf->url, ".mcf")) &&
+	  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) && 
       (s == gCoreVocab->RDF_parent) && (containerp(u))) {
     RDFFile newFile = readRDFFile( resourceID(u), u, false, rdf);
-    if(newFile) newFile->lastReadTime = PR_Now();
+    /*    if(newFile) newFile->lastReadTime = PR_Now(); */
   }
 }
 
@@ -511,7 +512,7 @@ void
 SCookPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
 {
 	if ((resourceType(u) == RDF_RT) && (strcmp(rdf->url, "rdf:ht") ==0) &&
-	  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) &&
+        /*  (strstr(resourceID(u), ".rdf") || strstr(resourceID(u), ".mcf")) && */
 	     (s == gCoreVocab->RDF_parent) && 
         (containerp(u))) {
     RDFFile newFile = readRDFFile( resourceID(u), u, false, rdf);
@@ -533,7 +534,7 @@ MakeSCookDB (char* url)
     ntr->hasAssertion = remoteStoreHasAssertion;
     ntr->nextValue = remoteStoreNextValue;
     ntr->disposeCursor = remoteStoreDisposeCursor;
-    ntr->possiblyAccessFile = RDFFilePossiblyAccessFile ;
+    ntr->possiblyAccessFile = SCookPossiblyAccessFile ;
     ntr->url = copyString(url);
     return ntr;
   } else return NULL;

@@ -148,7 +148,8 @@ createNavCenterVocab () {
   gNavCenter->RDF_HTMLType = RDF_GetResource (gCoreDB, "HTMLPage", true);
   gNavCenter->RDF_Command = RDF_GetResource (gCoreDB, "Command", true);
   gNavCenter->RDF_URLShortcut = RDF_GetResource(gCoreDB, "URLShortcut", true);
-
+  gNavCenter->RDF_Cookies = createContainer("NC:Cookies");
+  
   /* NavCenter appearance styles */
 
   gNavCenter->treeFGColor = newResource("treeFGColor", RDF_FOREGROUND_COLOR_STR);

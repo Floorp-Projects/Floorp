@@ -512,3 +512,117 @@ RDFUtil_SetDefaultSelectedView(RDF_Resource container)
 {
   RDFUtil_SetFirstInstance(gNavCenter->RDF_DefaultSelectedView, container);
 }
+
+/* I am putting the cookies stuff here for now */
+
+RDFT gCookieStore = 0;
+
+void  AddCookieResource(char* name, char* path, char* host, char* expires) {
+  char* url = getMem(strlen(name) + strlen(host));
+  RDF_Resource ru;
+  sprintf(url, "%s [%s]", host, name);
+  ru = RDF_GetResource(NULL, url, 1);
+  remoteStoreAdd(gCookieStore, ru, gCoreVocab->RDF_parent, gNavCenter->RDF_Cookies, RDF_RESOURCE_TYPE, 1);  
+}
+
+#define LINE_BUFFER_SIZE 4096
+
+void
+RDF_ReadCookies(char * filename)
+{
+    XP_File fp;
+	char buffer[LINE_BUFFER_SIZE];
+	char *host, *is_domain, *path, *secure, *expires, *name, *cookie;
+	Bool added_to_list;
+
+    if(!(fp = XP_FileOpen(filename, xpHTTPCookie, XP_FILE_READ)))
+        return;
+
+
+    /* format is:
+     *
+     * host \t is_domain \t path \t secure \t expires \t name \t cookie
+     *
+	 * if this format isn't respected we move onto the next line in the file.
+     * is_domain is TRUE or FALSE	-- defaulting to FALSE
+     * secure is TRUE or FALSE   -- should default to TRUE
+     * expires is a time_t integer
+     * cookie can have tabs
+     */
+    while(XP_FileReadLine(buffer, LINE_BUFFER_SIZE, fp))
+      {
+		added_to_list = FALSE;
+
+		if (*buffer == '#' || *buffer == '\n' || *buffer == '\r' || *buffer == 0)
+		  continue;
+
+		host = buffer;
+		
+		if( !(is_domain = XP_STRCHR(host, '\t')) )
+			continue;
+		*is_domain++ = '\0';
+		if(*is_domain == CR || *is_domain == LF || *is_domain == 0)
+			continue;
+		
+		if( !(path = XP_STRCHR(is_domain, '\t')) )
+			continue;
+		*path++ = '\0';
+		if(*path == '\n' || *path == '\r' || *path == 0)
+			continue;
+
+		if( !(secure = XP_STRCHR(path, '\t')) )
+			continue;
+		*secure++ = '\0';
+		if(*secure == CR || *secure == LF || *secure == 0)
+			continue;
+
+		if( !(expires = XP_STRCHR(secure, '\t')) )
+			continue;
+		*expires++ = '\0';
+		if(*expires == '\r' || *expires == '\n' || *expires == 0)
+			continue;
+
+        if( !(name = XP_STRCHR(expires, '\t')) )
+			continue;
+		*name++ = '\0';
+		if(*name == CR || *name == LF || *name == 0)
+			continue;
+
+        if( !(cookie = XP_STRCHR(name, '\t')) )
+			continue;
+		*cookie++ = '\0';
+		if(*cookie == CR || *cookie == LF || *cookie == 0)
+			continue;
+
+		/* remove the '\n' from the end of the cookie */
+		XP_StripLine(cookie);
+
+        /* construct a new cookie resource
+         */
+        AddCookieResource(name, path, host, expires);
+      }
+    XP_FileClose(fp);
+
+}
+
+
+RDFT
+MakeCookieStore (char* url)
+{
+  if (startsWith("rdf:CookieStore", url)) {
+    if (gCookieStore == 0) {
+      RDFT ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
+      ntr->assert = NULL;
+      ntr->unassert = NULL;
+      ntr->getSlotValue = remoteStoreGetSlotValue;
+      ntr->getSlotValues = remoteStoreGetSlotValues;
+      ntr->hasAssertion = remoteStoreHasAssertion;
+      ntr->nextValue = remoteStoreNextValue;
+      ntr->disposeCursor = remoteStoreDisposeCursor;
+      gCookieStore = ntr;
+      ntr->url = copyString(url);
+      RDF_ReadCookies("");
+      return ntr;
+    } else return gCookieStore;
+  } else return NULL;
+}

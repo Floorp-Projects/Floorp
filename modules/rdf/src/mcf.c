@@ -66,7 +66,9 @@ getTranslator (char* url)
     return MakeColumnStore (url);
   } else if (startsWith("rdf:ht", url) || startsWith("rdf:scook", url)) {
     return MakeSCookDB(url);
-  } else  return NULL;
+  } else if (startsWith("rdf:CookieStore", url)) {
+    return MakeCookieStore(url);
+  } else return NULL;
 }
 
 
@@ -96,12 +98,51 @@ RDF_GetDB (const char** dataSources)
     n++;
   }
   r->numTranslators = m;
+  r->translatorArraySize = n-1;
   nrl->rdf = r;
   nrl->next = gAllDBs;
   gAllDBs = nrl;
   return r;
 }
 
+PR_PUBLIC_API(RDFT) RDF_AddDataSource(RDF rdf, char* dataSource) {
+  RDFT newDB;
+  if (rdf->numTranslators == rdf->translatorArraySize) {
+    RDFT* tmp = (RDFT*)getMem((rdf->numTranslators+5)*(sizeof(RDFT)));
+    memcpy(tmp, rdf->translators, (rdf->numTranslators * sizeof(RDFT)));
+    rdf->translatorArraySize = rdf->numTranslators + 5;
+    freeMem(rdf->translators);
+    rdf->translators = tmp;
+  }
+  newDB = getTranslator(dataSource);
+  if (!newDB) {
+    return NULL;  
+  } else {
+    RDFL rl = (RDFL)getMem(sizeof(struct RDF_ListStruct));
+    rl->rdf = rdf;
+    rl->next = newDB->rdf;
+    newDB->rdf = rl;
+    rdf->numTranslators++;
+    return newDB;
+  }	
+}
+
+PR_PUBLIC_API(RDF_Error) RDF_ReleaseDataSource(RDF rdf, RDFT dataSource) {
+  RDFT* temp = (RDFT*)getMem((rdf->numTranslators-1)*(sizeof(RDFT)));
+  int16 m = 0;
+  int16 n= 0;
+  RDFT next;
+  while (next = rdf->translators[n++]) {
+    if (next != dataSource) {
+      *(temp + m) = (RDFT) next;
+    }
+  }
+  memset(rdf->translators, '\0', sizeof(RDFT) * rdf->numTranslators);
+  memcpy(rdf->translators, temp, sizeof(RDFT) * (rdf->numTranslators -1));
+  rdf->numTranslators--;
+  deleteFromRDFList(dataSource->rdf, rdf);
+  return 0;
+}
 
 
 RDFL

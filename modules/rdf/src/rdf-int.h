@@ -142,7 +142,6 @@ struct RDF_AssertionStruct {
 
 
 typedef struct RDF_AssertionStruct *Assertion;
-typedef struct RDF_TranslatorStruct *RDFT;
 typedef struct RDF_FileStruct *RDFFile;
 
 
@@ -189,6 +188,7 @@ struct RDF_TranslatorStruct {
 extern     PLHashTable*  resourceHash;  
 struct RDF_DBStruct {
   int16 numTranslators;
+  int16 translatorArraySize;
   RDFT*  translators;
   struct RDF_FileStruct* files;
   struct RDF_NotificationStruct* notifs;
@@ -378,6 +378,9 @@ PRBool remoteStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* 
 PRBool remoteStoreHasAssertionInt (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
 PRBool  nlocalStoreAddChildAt(RDFT mcf, RDF_Resource obj, RDF_Resource ref, RDF_Resource new, 
 		      PRBool beforep);
+
+RDFT MakeCookieStore (char* url);
+
 char* advertURLOfContainer (RDF r, RDF_Resource u) ;
 RDFT RDFTNamed (RDF rdf, char* name) ;
 

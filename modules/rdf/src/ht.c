@@ -939,7 +939,7 @@ gNavCenterDataSources1[15] =
 #endif
 
 	"rdf:lfs",  "rdf:ht",
-	"rdf:columns",  NULL
+	"rdf:columns", "rdf:CookieStore", NULL
 };
 
 
@@ -7387,7 +7387,7 @@ populateSBProviders (HT_Pane htPane)
 		sb->name = RDF_GetResourceName(db, prov);
 		sb->url  = copyString(resourceID(prov));
 		sb->containerp = (!RDF_HasAssertion(db, prov, gNavCenter->RDF_resultType, 
-		              "HTML", RDF_STRING_TYPE, 1));
+		              "TEXT/HTML", RDF_STRING_TYPE, 1));
 		sb->next = htPane->smartBrowsingProviders;
 		htPane->smartBrowsingProviders = sb;
 	}
@@ -7558,6 +7558,7 @@ HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl)
 		sprintf(buffer, "%s%s", prov->url,  &pUrl[7]);
 		nu = RDF_GetResource(htPane->db, buffer, 1);
 		setContainerp(nu, prov->containerp);
+                setResourceType(nu, RDF_RT);
 		nsmp = makeNewSMP(htPane, pUrl, buffer);
                 nsmp->sitemap = nu;
                 nsmp->next = htPane->sbp;

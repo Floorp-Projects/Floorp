@@ -46,7 +46,7 @@ char * gNavCenterDataSources[15] =
 {"rdf:localStore", "rdf:remoteStore", "rdf:remoteStore", "rdf:history",
  /* "rdf:ldap", */
  "rdf:esftp",
- "rdf:lfs",
+ "rdf:lfs", "rdf:CookieStore",
  "rdf:columns",  NULL
 };
 

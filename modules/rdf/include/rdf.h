@@ -43,6 +43,7 @@ NSPR_BEGIN_EXTERN_C
 typedef struct RDF_ResourceStruct* RDF_Resource;
 typedef struct RDF_CursorStruct* RDF_Cursor;
 typedef struct RDF_DBStruct* RDF;
+typedef struct RDF_TranslatorStruct *RDFT;
 typedef uint32 RDF_EventType;
 
 #define RDF_ASSERT_NOTIFY	((RDF_EventType)0x00000001)
@@ -106,6 +107,8 @@ typedef void (*RDF_NotificationProc)(RDF_Event theEvent, void* pdata);
 
 PR_PUBLIC_API(RDF) RDF_GetDB(const char** dbs);
 PR_PUBLIC_API(RDF_Error) RDF_ReleaseDB(RDF rdf);
+PR_PUBLIC_API(RDFT) RDF_AddDataSource(RDF rdf, char* dataSource);
+PR_PUBLIC_API(RDF_Error) RDF_ReleaseDataSource(RDF rdf, RDFT dataSource);
 PR_PUBLIC_API(RDF_Resource) RDF_GetResource(RDF db, char* id, PRBool createp);
 PR_PUBLIC_API(RDF_Error) RDF_ReleaseResource(RDF db, RDF_Resource resource);
 PR_PUBLIC_API(RDF_Error) RDF_DeleteAllArcs(RDF rdfDB, RDF_Resource source);
