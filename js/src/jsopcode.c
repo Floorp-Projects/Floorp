@@ -1672,6 +1672,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	      case JSOP_NUMBER:
 	      case JSOP_STRING:
 	      case JSOP_OBJECT:
+	      case JSOP_ANONFUNOBJ:
+	      case JSOP_NAMEDFUNOBJ:
 		atom = GET_ATOM(cx, jp->script, pc);
 		key = ATOM_KEY(atom);
 		if (JSVAL_IS_INT(key)) {

@@ -248,6 +248,12 @@ OPDEF(JSOP_SETTER,    124,js_setter_str,js_setter_str,1,  0,  0,  0,  JOF_BYTE)
 /*
  * Prolog bytecodes for defining function, var, and const names.
  */
-OPDEF(JSOP_DEFFUN,    125,"deffun",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME|JOF_SET)
+OPDEF(JSOP_DEFFUN,    125,"deffun",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_SET)
 OPDEF(JSOP_DEFCONST,  126,"defconst",   NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME|JOF_SET)
 OPDEF(JSOP_DEFVAR,    127,"defvar",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME)
+
+/* Auto-clone (if needed due to re-parenting) and push an anonymous function. */
+OPDEF(JSOP_ANONFUNOBJ,  128, "anonfunobj",  NULL,     3,  0,  1, 12,  JOF_CONST)
+
+/* ECMA ed. 3 named function expression. */
+OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 12,  JOF_CONST)

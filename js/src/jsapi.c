@@ -974,7 +974,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
     /* Initialize the rest of the standard objects and functions. */
     return (array_proto = js_InitArrayClass(cx, obj)) != NULL &&
-	   js_InitArgsCallClosureClasses(cx, obj, obj_proto) &&
+	   js_InitArgsAndCallClasses(cx, obj, obj_proto) &&
 	   js_InitBooleanClass(cx, obj) &&
 	   js_InitMathClass(cx, obj) &&
 	   js_InitNumberClass(cx, obj) &&
@@ -2194,7 +2194,6 @@ JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
     JSFunction *fun;
-    JSObject *newfunobj;
 
     CHECK_REQUEST(cx);
     if (OBJ_GET_CLASS(cx, funobj) != &js_FunctionClass) {
@@ -2202,16 +2201,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 	return funobj;
     }
     fun = JS_GetPrivate(cx, funobj);
-
-    newfunobj = js_NewObject(cx, &js_FunctionClass, funobj, parent);
-    if (!newfunobj)
-	return NULL;
-    if (!js_LinkFunctionObject(cx, fun, newfunobj)) {
-	cx->newborn[GCX_OBJECT] = NULL;
-	return NULL;
-    }
-
-    return newfunobj;
+    return js_CloneFunctionObject(cx, funobj, parent);
 }
 
 JS_PUBLIC_API(JSObject *)

@@ -59,7 +59,7 @@ struct JSFunction {
 
 extern JSClass js_ArgumentsClass;
 extern JSClass js_CallClass;
-extern JSClass js_ClosureClass;
+
 /* JS_FRIEND_DATA so that JSVAL_IS_FUNCTION is callable from outside */
 extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
 
@@ -77,12 +77,15 @@ extern JSObject *
 js_InitFunctionClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_InitArgsCallClosureClasses(JSContext *cx, JSObject *obj,
+js_InitArgsAndCallClasses(JSContext *cx, JSObject *obj,
 			      JSObject *objProto);
 
 extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
 	       uintN flags, JSObject *parent, JSAtom *atom);
+
+extern JSObject *
+js_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 
 extern JSBool
 js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *object);

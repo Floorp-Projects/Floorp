@@ -577,100 +577,6 @@ JSClass js_CallClass = {
 
 #endif /* JS_HAS_CALL_OBJECT */
 
-#if JS_HAS_LEXICAL_CLOSURE
-static JSBool
-Closure(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    JSStackFrame *caller;
-    JSObject *varParent, *closureParent;
-    JSFunction *fun;
-
-    if (!cx->fp->constructing) {
-	obj = js_NewObject(cx, &js_ClosureClass, NULL, NULL);
-	if (!obj)
-	    return JS_FALSE;
-	*rval = OBJECT_TO_JSVAL(obj);
-    }
-    if (!(caller = cx->fp->down) || !caller->scopeChain)
-	return JS_TRUE;
-
-    varParent = js_FindVariableScope(cx, &fun);
-    if (!varParent)
-	return JS_FALSE;
-
-    closureParent = caller->scopeChain;
-    if (argc != 0) {
-	fun = js_ValueToFunction(cx, &argv[0], JS_FALSE);
-	if (!fun)
-	    return JS_FALSE;
-	OBJ_SET_PROTO(cx, obj, fun->object);
-	if (argc > 1) {
-	    if (!js_ValueToObject(cx, argv[1], &closureParent))
-		return JS_FALSE;
-	}
-    }
-    OBJ_SET_PARENT(cx, obj, closureParent);
-
-    /* Make sure constructor is not inherited from fun->object. */
-    return js_DefineProperty(cx, obj,
-			     (jsid)cx->runtime->atomState.constructorAtom,
-			     argv[-2], NULL, NULL,
-			     JSPROP_READONLY | JSPROP_PERMANENT,
-			     NULL);
-}
-
-static JSBool
-closure_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
-{
-    JSObject *proto;
-
-    if (type == JSTYPE_FUNCTION) {
-	proto = OBJ_GET_PROTO(cx, obj);
-	if (proto)
-	    *vp = OBJECT_TO_JSVAL(proto);
-        return JS_TRUE;
-    }
-
-    return js_TryValueOf(cx, obj, type, vp);
-}
-
-static JSBool
-closure_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    JSStackFrame *fp;
-    JSObject *closure, *callobj;
-    JSFunction *fun;
-    jsval junk;
-
-    /* Get a call object to link the closure's parent into the scope chain. */
-    fp = cx->fp;
-    closure = JSVAL_TO_OBJECT(argv[-2]);
-    JS_ASSERT(OBJ_GET_CLASS(cx, closure) == &js_ClosureClass);
-    callobj = js_GetCallObject(cx, fp, OBJ_GET_PARENT(cx, closure), NULL);
-    if (!callobj)
-	return JS_FALSE;
-    fp->scopeChain = callobj;
-
-    /* Make the function object, not its closure, available as argv[-2]. */
-    fun = fp->fun;
-    argv[-2] = OBJECT_TO_JSVAL(fun->object);
-    if (fun->call)
-	return fun->call(cx, obj, argc, argv, rval);
-    if (fun->script)
-	return js_Interpret(cx, &junk);
-    return JS_TRUE;
-}
-
-JSClass js_ClosureClass = {
-    "Closure",
-    0,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   closure_convert,  JS_FinalizeStub,
-    NULL,             NULL,             closure_call,     closure_call,
-    NULL,NULL,{0,0}
-};
-#endif /* JS_HAS_LEXICAL_CLOSURE */
-
 static JSPropertySpec function_props[] = {
     /*
      * We make fun.arguments readonly in fun_setProperty, unless it is being
@@ -1696,8 +1602,7 @@ bad:
 }
 
 JSBool
-js_InitArgsCallClosureClasses(JSContext *cx, JSObject *obj,
-			      JSObject *objProto)
+js_InitArgsAndCallClasses(JSContext *cx, JSObject *obj, JSObject *objProto)
 {
 #if JS_HAS_ARGS_OBJECT
     if (!JS_InitClass(cx, obj, objProto, &js_ArgumentsClass, Arguments, 0,
@@ -1707,15 +1612,8 @@ js_InitArgsCallClosureClasses(JSContext *cx, JSObject *obj,
 #endif
 
 #if JS_HAS_CALL_OBJECT
-    if (!JS_InitClass(cx, obj, NULL, &js_CallClass, Call, 0,
+    if (!JS_InitClass(cx, obj, objProto, &js_CallClass, Call, 0,
 		      call_props, NULL, NULL, NULL)) {
-	return JS_FALSE;
-    }
-#endif
-
-#if JS_HAS_LEXICAL_CLOSURE
-    if (!JS_InitClass(cx, obj, NULL, &js_ClosureClass, Closure, 0,
-		      NULL, NULL, NULL, NULL)) {
 	return JS_FALSE;
     }
 #endif
@@ -1767,12 +1665,30 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative call, uintN nargs,
     return fun;
 }
 
+JSObject *
+js_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
+{
+    JSObject *newfunobj;
+    JSFunction *fun;
+
+    JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
+    newfunobj = js_NewObject(cx, &js_FunctionClass, funobj, parent);
+    if (!newfunobj)
+	return NULL;
+    fun = JS_GetPrivate(cx, funobj);
+    if (!js_LinkFunctionObject(cx, fun, newfunobj)) {
+	cx->newborn[GCX_OBJECT] = NULL;
+	return NULL;
+    }
+    return newfunobj;
+}
+
 JSBool
-js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *object)
+js_LinkFunctionObject(JSContext *cx, JSFunction *fun, JSObject *funobj)
 {
     if (!fun->object)
-	fun->object = object;
-    if (!JS_SetPrivate(cx, object, fun))
+	fun->object = funobj;
+    if (!JS_SetPrivate(cx, funobj, fun))
 	return JS_FALSE;
     JS_ATOMIC_ADDREF(&fun->nrefs, 1);
     return JS_TRUE;
