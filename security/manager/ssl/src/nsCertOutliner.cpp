@@ -521,13 +521,13 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
       nsAutoString vfy;
       rv = nssComponent->GetPIPNSSBundleString(
                                 NS_LITERAL_STRING("VerifiedTrue").get(), vfy);
-      if (!NS_FAILED(rv))
+      if (NS_SUCCEEDED(rv))
         wstr = ToNewUnicode(vfy);
     } else {
       nsAutoString vfy;
       rv = nssComponent->GetPIPNSSBundleString(
                                 NS_LITERAL_STRING("VerifiedFalse").get(), vfy);
-      if (!NS_FAILED(rv))
+      if (NS_SUCCEEDED(rv))
         wstr = ToNewUnicode(vfy);
     }
     if (ocspEnabled) {
