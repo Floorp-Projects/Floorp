@@ -1,13 +1,13 @@
-titledbutton[id="wiz.back.button"] {
+#wiz-back-button {
   list-style-image            : url("chrome://global/skin/scroll-left.gif");
 }
-titledbutton[id="wiz.back.button"][disabled] {
+#wiz-back-button[disabled] {
   list-style-image            : url("chrome://global/skin/scroll-left-disabled.gif");
 }
-titledbutton[id="wiz.next.button"] {
+#wiz-next-button {
   list-style-image            : url("chrome://global/skin/scroll-right.gif");
 }
-titledbutton[id="wiz.next.button"][disabled] {
+#wiz-next-button[disabled] {
   list-style-image            : url("chrome://global/skin/scroll-right-disabled.gif");
 }
 

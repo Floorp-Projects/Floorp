@@ -29,10 +29,10 @@ function WizardHandlerSet( sMgr, wMgr )
 {
   // data mambers
   // wizard buttons
-  this.backButton         = document.getElementById("wiz.back.button");
-  this.nextButton         = document.getElementById("wiz.next.button");
-  this.finishButton       = document.getElementById("wiz.finish.button");
-  this.cancelButton       = document.getElementById("wiz.cancel.button");
+  this.backButton         = document.getElementById("wiz-back-button");
+  this.nextButton         = document.getElementById("wiz-next-button");
+  this.finishButton       = document.getElementById("wiz-finish-button");
+  this.cancelButton       = document.getElementById("wiz-cancel-button");
   // wizard handlers
   this.nextButtonFunc     = null;
   this.backButtonFunc     = null;
