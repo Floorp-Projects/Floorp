@@ -506,6 +506,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
         }
         NS_RELEASE(domWindow);
       }
+      NS_RELEASE(globalObject);
     }
   }
 
