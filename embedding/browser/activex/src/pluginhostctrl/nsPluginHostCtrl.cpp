@@ -337,7 +337,14 @@ HRESULT nsPluginHostCtrl::CreatePluginList(unsigned long ulFlags)
             {
                 *szSemiColon = _TCHAR('\0');
             }
+
+            ULONG nLen = _tcslen(szPluginsDir);
+            if (nLen > 0 && szPluginsDir[nLen - 1] == _TCHAR('\\'))
+            {
+                szPluginsDir[nLen - 1] = _TCHAR('\0');
+            }
             _tcscat(szPluginsDir, _T("\\Plugins"));
+
             keyIE.Close();
         }
         if (szPluginsDir[0])
