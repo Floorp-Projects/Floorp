@@ -305,7 +305,7 @@ nsTableFrame::nsTableFrame()
   mColumnWidthsLength = 0;  
   mColumnWidths = nsnull;
 #else
-  mColumnWidthsLength = 10;  
+  mColumnWidthsLength = 5;  
   mColumnWidths = new PRInt32[mColumnWidthsLength];
   nsCRT::memset (mColumnWidths, 0, mColumnWidthsLength*sizeof(PRInt32));
 #endif
@@ -4656,11 +4656,10 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
     result = firstInFlow->GetColumnWidth(aColIndex);
   else
   {
-    NS_ASSERTION(nsnull!=mColumnWidths, "illegal state");
-    // can't assert on IsColumnWidthsSet because we might want to call this
-    // while we're in the process of setting column widths, and we don't
-    // want to complicate IsColumnWidthsSet by making it a multiple state return value
-    // (like eNotSet, eSetting, eIsSet)
+    // Because we lazily allocate the column widths when balancing the
+    // columns, it may not be allocated yet. For example, if this is
+    // an incremental reflow. That's okay, just return 0 for the column
+    // width
 #ifdef NS_DEBUG
     NS_ASSERTION(nsnull!=mCellMap, "no cell map");
     PRInt32 numCols = mCellMap->GetColCount();
