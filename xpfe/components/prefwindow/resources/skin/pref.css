@@ -1,3 +1,44 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
+
+/* Header */
+
+.header {
+   background-color: #336699;
+   padding-left: 5px;
+   padding-right: 5px;
+   padding-top: 3px;
+   padding-bottom: 3px;
+}
+
+.left-header-text {
+   color: white;
+   font-weight: bold;
+}
+
+.right-header-text {
+   color: white;
+}
+
+/* spacing around widgets */
+
+.indent {
+	margin-left: 12px;   
+}
+
+.indent-second-label {
+	margin-left: 29px;   
+}
+
+.vertical-gap {
+	padding-top: 12px;   
+}
+
+
+
+
+/* obsolete styles - will be removed soon */
+
 #top  {
 background-color: grey
 }
@@ -12,16 +53,3 @@ background-color: grey
   height : 326;
 }
 
-box.header {
-   background-color: #336699;
-   padding: 5px;
-}
-
-titledbutton.left-header-text {
-   color: white;
-   font-weight: bold;
-}
-
-titledbutton.right-header-text {
-   color: white;
-}
