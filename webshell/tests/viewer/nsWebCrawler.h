@@ -24,6 +24,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIBrowserWindow.h"
+#include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
@@ -155,6 +156,7 @@ protected:
 
   void PerformRegressionTest(const nsString& aOutputName);
 
+  nsCOMPtr<nsIDocumentLoader> mDocLoader;
   nsIBrowserWindow* mBrowser;
   nsViewerApp* mViewer;
   nsITimer* mTimer;
