@@ -30,6 +30,7 @@ EXPORTS		= \
 	nsIUGenCategory.h \
 	nsIUGenDetailCategory.h \
 	nsUnicharUtilCIID.h \
+	nsHankakuToZenkakuCID.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -24,6 +24,7 @@ EXPORTS = \
 	nsITextTransform.h \
 	nsIUGenCategory.h \
 	nsIUGenDetailCategory.h \
+	nsHankakuToZenkakuCID.h \
 	nsUnicharUtilCIID.h \
 	$(NULL)
 
