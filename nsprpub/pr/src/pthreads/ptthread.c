@@ -940,6 +940,9 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
         _pr_sleeplock = NULL;
         _PR_CleanupLayerCache();
         _PR_CleanupEnv();
+#ifdef _PR_ZONE_ALLOCATOR
+        _PR_DestroyZones();
+#endif
         _pr_initialized = PR_FALSE;
         return PR_SUCCESS;
     }

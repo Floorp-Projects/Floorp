@@ -1792,6 +1792,23 @@ extern PRFileDesc *_pr_stdin;
 extern PRFileDesc *_pr_stdout;
 extern PRFileDesc *_pr_stderr;
 
+/* Zone allocator */
+/*
+** The zone allocator code has hardcoded pthread types and
+** functions, so it can only be used in the pthreads version.
+** This can be fixed by replacing the hardcoded pthread types
+** and functions with macros that expand to the native thread
+** types and functions on each platform.
+*/
+#if defined(_PR_PTHREADS)
+#define _PR_ZONE_ALLOCATOR
+#endif
+
+#ifdef _PR_ZONE_ALLOCATOR
+extern void _PR_InitZones(void);
+extern void _PR_DestroyZones(void);
+#endif
+
 /* Overriding malloc, free, etc. */
 #if !defined(_PR_NO_PREEMPT) && defined(XP_UNIX) \
         && !defined(_PR_PTHREADS) && !defined(_PR_GLOBAL_THREADS_ONLY) \
