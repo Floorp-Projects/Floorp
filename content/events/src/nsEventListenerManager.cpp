@@ -431,7 +431,7 @@ nsresult nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *
   return NS_OK;
 }
 
-const char *mEventArgv[] = {"event"};
+static const char *gEventArgv[] = {"event"};
 
 nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID)
 {
@@ -460,51 +460,64 @@ nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext, 
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
-                                nsIAtom *aName, const nsString& aFunc, REFNSIID aIID)
+nsresult
+nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
+                                               nsIScriptObjectOwner *aScriptObjectOwner,
+                                               nsIAtom *aName,
+                                               const nsString& aFunc,
+                                               REFNSIID aIID)
 {
-  JSObject *mScriptObject;
-  nsIScriptGlobalObject *global;
-  nsIScriptGlobalObjectData *globalData;
-  nsIPrincipal *prin = nsnull;
+  JSObject *scriptObject = nsnull;
   JSPrincipals *jsprin = nsnull;
-  global = aContext->GetGlobalObject();
-  if (global && NS_SUCCEEDED(global->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData))) {
-    if (NS_FAILED(globalData->GetPrincipal(& prin))) {
-      NS_RELEASE(global);
-      NS_RELEASE(globalData);
-      return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIScriptGlobalObject> global = getter_AddRefs(aContext->GetGlobalObject());
+  if (global) {
+    // XXXbe why the two-step QI?  speed up via aContext->GetGlobalObjectData?
+    nsCOMPtr<nsIScriptGlobalObjectData> globalData = do_QueryInterface(global);
+    if (globalData) {
+      nsCOMPtr<nsIPrincipal> prin;
+      if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(prin))))
+        return NS_ERROR_FAILURE;
+      prin->GetJSPrincipals(&jsprin);
     }
-    prin->GetJSPrincipals(&jsprin);
-    NS_RELEASE(globalData);
   }
-  NS_IF_RELEASE(global);
-  JSContext *mJSContext = (JSContext*)aContext->GetNativeContext();
-  if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)&mScriptObject)) {
-    nsString mName, mLowerName;
-    char* mCharName;
-    aName->ToString(mName);
-    mName.ToLowerCase(mLowerName);
-    mCharName = mLowerName.ToNewCString();
-    if (nsnull != mCharName) {
-      JS_CompileUCFunctionForPrincipals(mJSContext, mScriptObject, jsprin, mCharName,
-               1, mEventArgv, (jschar*)aFunc.GetUnicode(), aFunc.Length(), nsnull, 0);
-      nsCRT::free(mCharName);
-      JSPRINCIPALS_DROP(mJSContext, jsprin);
-      return SetJSEventListener(aContext, mScriptObject, aIID);
+
+  JSContext *cx = (JSContext*)aContext->GetNativeContext();
+  nsresult rv = aScriptObjectOwner->GetScriptObject(aContext,
+                                                    (void**)&scriptObject);
+  if (NS_SUCCEEDED(rv)) {
+    nsString name, lowerName;
+    aName->ToString(name);
+    name.ToLowerCase(lowerName);
+    char* charName = lowerName.ToNewCString();
+    if (!charName) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      JSBool ok = JS_CompileUCFunctionForPrincipals(cx, scriptObject, jsprin,
+                                                    charName, 1, gEventArgv,
+                                                    (jschar*)aFunc.GetUnicode(),
+                                                    aFunc.Length(),
+                                                    //XXXbe filename, lineno:
+                                                    nsnull, 0)
+                  != 0;
+      nsCRT::free(charName);
+      if (ok)
+        rv = SetJSEventListener(aContext, scriptObject, aIID);
+      else
+        rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
   if (jsprin)
-    JSPRINCIPALS_DROP(mJSContext, jsprin);
-  return NS_ERROR_FAILURE;
+    JSPRINCIPALS_DROP(cx, jsprin);
+  return rv;
 }
 
 nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
                                      REFNSIID aIID)
 {
-  JSObject *mScriptObject;
-  if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)&mScriptObject)) {
-    return SetJSEventListener(aContext, mScriptObject, aIID);
+  JSObject *scriptObject;
+  if (NS_SUCCEEDED(aScriptObjectOwner->GetScriptObject(aContext, (void**)&scriptObject))) {
+    return SetJSEventListener(aContext, scriptObject, aIID);
   }
   return NS_ERROR_FAILURE;
 }
