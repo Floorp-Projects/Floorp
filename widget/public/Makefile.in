@@ -29,7 +29,6 @@ EXPORTS = \
 	nsIFontNameIterator.h \
 	nsIFontRetrieverService.h \
 	nsIFileListTransferable.h \
-	nsIGenericTransferable.h \
 	nsIMenuBar.h	\
 	nsIMenu.h		\
 	nsIMenuItem.h	\
