@@ -35,6 +35,9 @@
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIWebShell.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -157,6 +160,73 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   return nsnull;
 }
 
+GtkWidget*
+nsMenuItem::CreateLocalized(const nsString& aLabel)
+{
+  nsresult result;
+  static nsIUnicodeEncoder* converter = nsnull;
+  static int isLatin1 = 0;
+  static int initialized = 0;
+  if (!initialized) {
+    initialized = 1;
+    result = NS_ERROR_FAILURE;
+    NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_PROGID,
+      &result);
+    if (platform && NS_SUCCEEDED(result)) {
+      nsAutoString charset("");
+      result = platform->GetCharset(kPlatformCharsetSel_Menu, charset);
+      if (NS_SUCCEEDED(result) && (charset.Length() > 0)) {
+        if (!charset.Compare("iso-8859-1", PR_TRUE)) {
+	  isLatin1 = 1;
+	}
+	NS_WITH_SERVICE(nsICharsetConverterManager, manager,
+	  NS_CHARSETCONVERTERMANAGER_PROGID, &result);
+	if (manager && NS_SUCCEEDED(result)) {
+	  result = manager->GetUnicodeEncoder(&charset, &converter);
+	  if (NS_FAILED(result) && converter) {
+	    NS_RELEASE(converter);
+	    converter = nsnull;
+	  }
+	  else if (converter) {
+	    result = converter->SetOutputErrorBehavior(
+	      nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+	  }
+	}
+      }
+    }
+  }
+
+  GtkWidget* menuItem = nsnull;
+
+  if (converter) {
+    char labelStr[128];
+    PRInt32 srcLen = aLabel.Length();
+    PRInt32 destLen = sizeof(labelStr) - 1;
+    result = converter->Convert(aLabel.GetUnicode(), &srcLen, labelStr,
+      &destLen);
+    if ((destLen > 0) && (destLen < ((PRInt32) sizeof(labelStr)))) {
+      labelStr[destLen] = 0;
+      menuItem = gtk_menu_item_new_with_label(labelStr);
+      if (menuItem && (!isLatin1)) {
+        GtkWidget* label = GTK_BIN(menuItem)->child;
+        gtk_widget_ensure_style(label);
+        GtkStyle* style = gtk_style_copy(label->style);
+        gdk_font_unref(style->font);
+        style->font = gdk_fontset_load("*");
+        gtk_widget_set_style(label, style);
+        gtk_style_unref(style);
+      }
+    }
+  }
+  else {
+    char labelStr[128];
+    aLabel.ToCString(labelStr, sizeof(labelStr));
+    menuItem = gtk_menu_item_new_with_label(labelStr);
+  }
+
+  return menuItem;
+}
+
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::Create(nsISupports *aParent, 
                              const nsString &aLabel, 
@@ -191,9 +261,7 @@ NS_METHOD nsMenuItem::Create(nsISupports *aParent,
   if(mIsSeparator) {
     mMenuItem = gtk_menu_item_new();
   } else {
-    char *nameStr = aLabel.ToNewCString();
-    mMenuItem = gtk_menu_item_new_with_label(nameStr);
-    delete[] nameStr;
+    mMenuItem = CreateLocalized(aLabel);
   }
   
   gtk_widget_show(mMenuItem);

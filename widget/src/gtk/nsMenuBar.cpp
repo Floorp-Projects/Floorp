@@ -19,6 +19,7 @@
 #include <gtk/gtk.h>
 
 #include "nsMenuBar.h"
+#include "nsMenuItem.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMNode.h"
 #include "nsIMenu.h"
@@ -130,7 +131,6 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
   nsString Label;
   GtkWidget *widget, *nmenu;
-  char *labelStr;
   void *voidData;
 
   nsISupports * supports = nsnull;
@@ -142,13 +142,9 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   
   aMenu->GetLabel(Label);
 
-  labelStr = Label.ToNewCString();
-
-  widget = gtk_menu_item_new_with_label (labelStr);
+  widget = nsMenuItem::CreateLocalized(Label);
   gtk_widget_show(widget);
   gtk_menu_bar_append (GTK_MENU_BAR (mMenuBar), widget);
-
-  delete[] labelStr;
 
   aMenu->GetNativeData(&voidData);
   nmenu = GTK_WIDGET(voidData);
