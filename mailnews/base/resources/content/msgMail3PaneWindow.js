@@ -54,6 +54,7 @@ var msgNavigationService;
 var msgComposeType;
 var msgComposeFormat;
 var Bundle;
+var BrandBundle;
 
 var gFolderTree;
 var gThreadTree;
@@ -288,31 +289,39 @@ function CreateGlobals()
 	msgComposeType = Components.interfaces.nsIMsgCompType;
 	msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
 	Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
-
-
+    BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 
 }
 
 function verifyAccounts() {
+    var openWizard = false;
+    var prefillAccount;
+    
     try {
         var am = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
 
         var accounts = am.accounts;
 
         // as long as we have some accounts, we're fine.
-        if (accounts.Count() > 0) return;
+        var accountCount = accounts.Count();
+        if (accountCount > 0) {
+            prefillAccount = getFirstInvalidAccount(accounts);
+            dump("prefillAccount = " + prefillAccount + "\n");
+        } else {
+            try {
+                messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
+                dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
+                messengerMigrator.UpgradePrefs();
+            }
+            catch (ex) {
+                // upgrade prefs failed, so open account wizard
+                openWizard = true;
+            }
+        }
 
-        try {
-			messengerMigrator = Components.classes[messengerMigratorProgID].getService(Components.interfaces.nsIMessengerMigrator);  
-            dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
-            messengerMigrator.UpgradePrefs();
-            refreshFolderPane();
+        if (openWizard || prefillAccount) {
+            MsgAccountWizard(prefillAccount);
         }
-        catch (ex) {
-            // upgrade prefs failed, so open account wizard
-            MsgAccountWizard();
-        }
-        
 
     }
     catch (ex) {

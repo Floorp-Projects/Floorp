@@ -735,18 +735,6 @@ function msgOpenAccountWizard()
                       "AccountWizard", "chrome,modal");
 }
 
-// refresh the folder tree by rerooting it
-// hack until the account manager can tell RDF that new accounts
-// have been created.
-function refreshFolderPane()
-{
-    var folderTree = GetFolderTree();
-    if (folderTree) {
-        folderTree.clearItemSelection();
-        var root = folderTree.getAttribute('ref');
-        folderTree.setAttribute('ref', root);
-    }
-}
 
 function MsgOpenAttachment() {}
 
