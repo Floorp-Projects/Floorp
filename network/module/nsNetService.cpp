@@ -933,7 +933,6 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
                                    const nsString& aSpec,
                                    nsString& aResult)
 {
-    nsString* string;
     nsIURL* base = nsnull;
     if (0 < aBaseURL.Length()) {
         nsresult err = NS_NewURL(&base, aBaseURL);
@@ -952,12 +951,8 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
     PRUnichar* str;
     err = url->ToString(&str);
     if (err) goto done;
-    string = new nsString(str);
+    aResult = str;
     delete []str;
-    if (string == NULL)
-        err = NS_ERROR_OUT_OF_MEMORY;
-    else
-        aResult = *string;
 
   done:
     NS_IF_RELEASE(url);
