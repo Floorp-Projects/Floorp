@@ -57,9 +57,10 @@ struct SelectorList {
   void Dump(void);
 #endif
 
-  nsCSSSelector* mSelectors;
-  SelectorList* mNext;
-  nsAutoString  mSourceString;
+  nsCSSSelector*  mSelectors;
+  nsAutoString    mSourceString;
+  PRInt32         mWeight;
+  SelectorList*   mNext;
 };
 
 SelectorList::SelectorList(void)
@@ -340,12 +341,6 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
     if (eCSSToken_AtKeyword == tk->mType) {
       ParseAtRule(errorCode);
       continue;
-    } else if (eCSSToken_Symbol == tk->mType) {
-      // Discard dangling semicolons. This is not part of the CSS1
-      // forward compatible parsing spec, but it makes alot of sense.
-      if (';' == tk->mSymbol) {
-        continue;
-      }
     }
     mInHead = PR_FALSE;
     UngetToken();
@@ -925,7 +920,6 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
   SelectorList* list = slist;
 
   while (nsnull != list) {
-    PRInt32 weight = list->mSelectors->CalcWeight();
     nsICSSStyleRule* rule = nsnull;
     NS_NewCSSStyleRule(&rule, *(list->mSelectors));
     if (nsnull != rule) {
@@ -935,7 +929,7 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32& aErrorCode)
         list->mSelectors->mNext = nsnull;
       }
       rule->SetDeclaration(declaration);
-      rule->SetWeight(weight);
+      rule->SetWeight(list->mWeight);
       rule->SetSourceSelectorText(list->mSourceString); // capture the original input (need this for namespace prefixes)
 //      rule->List();
       mSheet->AppendStyleRule(rule);
@@ -1000,12 +994,15 @@ PRBool CSSParserImpl::ParseSelectorList(PRInt32& aErrorCode,
 static PRBool IsPseudoClass(const nsIAtom* aAtom)
 {
   return PRBool((nsCSSAtoms::activePseudo == aAtom) || 
+                (nsCSSAtoms::disabledPseudo == aAtom) ||
+                (nsCSSAtoms::enabledPseudo == aAtom) ||
                 (nsCSSAtoms::firstChildPseudo == aAtom) ||
                 (nsCSSAtoms::focusPseudo == aAtom) ||
                 (nsCSSAtoms::hoverPseudo == aAtom) ||
                 (nsCSSAtoms::langPseudo == aAtom) ||
                 (nsCSSAtoms::linkPseudo == aAtom) ||
                 (nsCSSAtoms::outOfDatePseudo == aAtom) ||
+                (nsCSSAtoms::selectedPseudo == aAtom) ||
                 (nsCSSAtoms::visitedPseudo == aAtom));
 }
 
@@ -1025,6 +1022,9 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
 {
   nsAutoString  sourceBuffer;
   SelectorList* list = nsnull;
+  PRUnichar     combinator = PRUnichar(0);
+  PRInt32       weight = 0;
+  PRBool        havePseudoElement = PR_FALSE;
   for (;;) {
     nsCSSSelector selector;
     if (! ParseSelector(aErrorCode, selector, sourceBuffer)) {
@@ -1040,13 +1040,13 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
     sourceBuffer.Append(PRUnichar(' '));
     list->AddSelector(selector);
     nsCSSSelector* listSel = list->mSelectors;
-    // XXX parse combinator here
 
     // pull out pseudo elements here
     nsAtomList* prevList = nsnull;
     nsAtomList* pseudoClassList = listSel->mPseudoClassList;
     while (nsnull != pseudoClassList) {
       if (! IsPseudoClass(pseudoClassList->mAtom)) {
+        havePseudoElement = PR_TRUE;
         if (IsSinglePseudoClass(*listSel)) {  // convert to pseudo element selector
           nsIAtom* pseudoElement = pseudoClassList->mAtom;  // steal ref count
           pseudoClassList->mAtom = nsnull;
@@ -1058,6 +1058,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
           selector.mTag = pseudoClassList->mAtom; // steal ref count
           list->AddSelector(selector);
           pseudoClassList->mAtom = nsnull;
+          listSel->mOperator = PRUnichar('>');
           if (nsnull == prevList) { // delete list entry
             listSel->mPseudoClassList = pseudoClassList->mNext;
           }
@@ -1066,17 +1067,46 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
           }
           pseudoClassList->mNext = nsnull;
           delete pseudoClassList;
+          weight += listSel->CalcWeight(); // capture weight from remainder
         }
         break;  // only one pseudo element per selector
       }
       prevList = pseudoClassList;
       pseudoClassList = pseudoClassList->mNext;
     }
+
+    combinator = PRUnichar(0);
+    if (GetToken(aErrorCode, PR_TRUE)) {
+      if ((eCSSToken_Symbol == mToken.mType) && 
+          (('+' == mToken.mSymbol) || ('>' == mToken.mSymbol))) {
+        combinator = mToken.mSymbol;
+        list->mSelectors->SetOperator(combinator);
+        sourceBuffer.Append(combinator);
+        sourceBuffer.Append(PRUnichar(' '));
+      }
+      else {
+        UngetToken(); // give it back to selector
+      }
+    }
+
+    if (havePseudoElement) {
+      break;
+    }
+    else {
+      weight += selector.CalcWeight();
+    }
+  }
+  if (PRUnichar(0) != combinator) { // no dangling combinators
+    if (list) {
+      delete list;
+    }
+    list = nsnull;
   }
   aList = list;
   if (nsnull != list) {
     sourceBuffer.Truncate(sourceBuffer.Length() - 1); // kill trailing space
     list->mSourceString = sourceBuffer;
+    list->mWeight = weight;
   }
   return PRBool(nsnull != aList);
 }
@@ -3110,7 +3140,15 @@ PRBool CSSParserImpl::ParseFont(PRInt32& aErrorCode, nsICSSDeclaration* aDeclara
         aDeclaration->AppendValue(PROP_FONT_SIZE_ADJUST, family);
       }
       else {
-        aDeclaration->AppendValue(PROP_FONT_FAMILY, family);  // keyword value overrides everyhing else
+        aDeclaration->AppendValue(PROP_FONT_FAMILY, family);  // keyword value overrides everything else
+        nsCSSValue empty;
+        aDeclaration->AppendValue(PROP_FONT_STYLE, empty);
+        aDeclaration->AppendValue(PROP_FONT_VARIANT, empty);
+        aDeclaration->AppendValue(PROP_FONT_WEIGHT, empty);
+        aDeclaration->AppendValue(PROP_FONT_SIZE, empty);
+        aDeclaration->AppendValue(PROP_LINE_HEIGHT, empty);
+        aDeclaration->AppendValue(PROP_FONT_STRETCH, empty);
+        aDeclaration->AppendValue(PROP_FONT_SIZE_ADJUST, empty);
       }
       return PR_TRUE;
     }
