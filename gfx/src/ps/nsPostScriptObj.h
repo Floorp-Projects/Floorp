@@ -91,26 +91,26 @@ typedef struct LineRecord_struct LineRecord;
 ** Used to store state needed while translation is in progress
 */
 struct PrintInfo_ {
-  //	for table printing
-  int32	page_height;	// Size of printable area on page 
-  int32	page_width;	  // Size of printable area on page 
-  int32	page_break;	  // Current page bottom 
-  int32 page_topy;	  // Current page top 
+  /*	for table printing */
+  int32	page_height;	/* Size of printable area on page  */
+  int32	page_width;	  /* Size of printable area on page  */
+  int32	page_break;	  /* Current page bottom  */
+  int32 page_topy;	  /* Current page top  */
   int phase;
 
-	PageBreaks *pages;	// Contains extents of each page 
+	PageBreaks *pages;	/* Contains extents of each page  */
 
-  int pt_size;		    // Size of above table 
-  int n_pages;		    // # of valid entries in above table 
+  int pt_size;		    /* Size of above table  */
+  int n_pages;		    /* # of valid entries in above table */
 
 #if 0
   void (*scnatt)(MWContext*);   // SetCallNetlibAllTheTime 
   void (*ccnatt)(MWContext*);   // CLearCallNetlibAllTheTime 
 #endif
 
-  char*	doc_title;	// best guess at title 
-  int32 doc_width;	// Total document width 
-  int32 doc_height;	// Total document height 
+  char*	doc_title;	/* best guess at title */
+  int32 doc_width;	/* Total document width */
+  int32 doc_height;	/* Total document height */
 
 #ifdef LATER
   THIS IS GOING TO BE DELETED XXXXX
@@ -121,14 +121,14 @@ struct PrintInfo_ {
   XP_Bool	in_pre;		
 #endif
 
-  // These fields are used only by the text translator
-  char *line;		          // Pointer to data for the current line 
-  XP_Bool in_table;	      // True when caching lines in a table 
-  XP_Bool first_line_p;		// delete all this
+  /* These fields are used only by the text translator */
+  char *line;		          /* Pointer to data for the current line */
+  XP_Bool in_table;	      /* True when caching lines in a table */
+  XP_Bool first_line_p;		/* delete all this */
 
   int table_top,table_bottom;
-  LineRecord *saved_lines;	// cached lines for tables 
-  int last_y;		// Used to track blank lines 
+  LineRecord *saved_lines;	/* cached lines for tables  */
+  int last_y;		/* Used to track blank lines */
 };
 
 typedef struct PrintInfo_ PrintInfo;
@@ -137,51 +137,51 @@ typedef struct PrintInfo_ PrintInfo;
 ** Used to pass info into text and/or postscript translation
 */
 struct PrintSetup_ {
-  int top;                        // Margins  (PostScript Only) 
+  int top;                        /* Margins  (PostScript Only) */
   int bottom;
   int left;
   int right;
 
-  int width;                       // Paper size, # of cols for text xlate 
+  int width;                       /* Paper size, # of cols for text xlate */
   int height;
 
   char* header;
   char* footer;
 
   int *sizes;
-  XP_Bool reverse;              // Output order 
-  XP_Bool color;                // Image output 
-  XP_Bool deep_color;		        // 24 bit color output 
-  XP_Bool landscape;            // Rotated output 
-  XP_Bool underline;            // underline links 
-  XP_Bool scale_images;         // Scale unsized images which are too big 
-  XP_Bool scale_pre;		        // do the pre-scaling thing 
-  float dpi;                    // dpi for externally sized items 
-  float rules;			            // Scale factor for rulers 
-  int n_up;                     // cool page combining 
-  int bigger;                   // Used to init sizes if sizesin NULL 
-  int paper_size;               // Paper Size(letter,legal,exec,a4)
+  XP_Bool reverse;              /* Output order */
+  XP_Bool color;                /* Image output */
+  XP_Bool deep_color;		        /* 24 bit color output */
+  XP_Bool landscape;            /* Rotated output */
+  XP_Bool underline;            /* underline links */
+  XP_Bool scale_images;         /* Scale unsized images which are too big */
+  XP_Bool scale_pre;		        /* do the pre-scaling thing */
+  float dpi;                    /* dpi for externally sized items */
+  float rules;			            /* Scale factor for rulers */
+  int n_up;                     /* cool page combining */
+  int bigger;                   /* Used to init sizes if sizesin NULL */
+  int paper_size;               /* Paper Size(letter,legal,exec,a4) */
 
-  char* prefix;                 // For text xlate, prepended to each line 
-  char* eol;			              // For text translation, line terminator 
-  char* bullet;                 // What char to use for bullets 
+  char* prefix;                 /* For text xlate, prepended to each line */
+  char* eol;			              /* For text translation, line terminator  */
+  char* bullet;                 /* What char to use for bullets */
 
-  struct URL_Struct_ *url;      // url of doc being translated 
-  XP_File out;                  // Where to send the output 
-  char *filename;               // output file name, if any 
-  XL_CompletionRoutine completion; // Called when translation finished 
-  void* carg;                   // Data saved for completion routine 
-  int status;                   // Status of URL on completion 
+  struct URL_Struct_ *url;      /* url of doc being translated */
+  XP_File out;                  /* Where to send the output */
+  char *filename;               /* output file name, if any */
+  XL_CompletionRoutine completion; /* Called when translation finished */
+  void* carg;                   /* Data saved for completion routine */
+  int status;                   /* Status of URL on completion */
 #ifdef VMS
-  char *print_cmd;		// print command issued in dtor
+  char *print_cmd;		/* print command issued in dtor*/
 #endif
 
-	// "other" font is for encodings other than iso-8859-1 
+	/* "other" font is for encodings other than iso-8859-1 */
   char *otherFontName[N_FONTS];		   
-  // name of "other" PostScript font 
+  /* name of "other" PostScript font */
   PS_FontInfo *otherFontInfo[N_FONTS];	   
-  // font info parsed from "other" afm file 
-  int16 otherFontCharSetID;	    // charset ID of "other" font 
+  /* font info parsed from "other" afm file */
+  int16 otherFontCharSetID;	    /* charset ID of "other" font */
 
 };
 
@@ -189,11 +189,11 @@ typedef struct PrintSetup_ PrintSetup;
 
 struct PSContext_{
 
-    char        *url;         // URL of current document 
-    char        * name;	      // name of this context 
-    char        * title;		  // title (if supplied) of current document 
-    PrintSetup	*prSetup;	    // Info about print job 
-    PrintInfo	  *prInfo;	    // State information for printing process 
+    char        *url;         /* URL of current document */
+    char        * name;	      /* name of this context */
+    char        * title;		  /* title (if supplied) of current document */
+    PrintSetup	*prSetup;	    /* Info about print job */
+    PrintInfo	  *prInfo;	    /* State information for printing process */
 };
 typedef struct PSContext_ PSContext;
 
