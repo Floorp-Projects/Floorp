@@ -579,6 +579,81 @@ static PLHashTable *methods = NULL;
 
 #ifdef XP_WIN32
 
+/*
+ * Callback used by SymGetModuleInfoEspecial
+ */
+static BOOL CALLBACK callbackEspecial(LPSTR aModuleName, ULONG aModuleBase, ULONG aModuleSize, PVOID aUserContext)
+{
+    BOOL retval = TRUE;
+    DWORD addr = (DWORD)aUserContext;
+
+    /*
+     * You'll want to control this if we are running on an
+     *  architecture where the addresses go the other direction.
+     * Not sure this is even a realistic consideration.
+     */
+    const BOOL addressIncreases = TRUE;
+    
+    /*
+     * If it falls in side the known range, load the symbols.
+     */
+    if(addressIncreases
+       ? (addr >= aModuleBase && addr <= (aModuleBase + aModuleSize))
+       : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
+        )
+    {
+        BOOL loadRes = FALSE;
+        HANDLE process = GetCurrentProcess();
+                
+        loadRes = _SymLoadModule(process, NULL, aModuleName, NULL, aModuleBase, aModuleSize);
+        PR_ASSERT(FALSE != loadRes);
+    }
+
+    return retval;
+}
+
+/*
+ * SymGetModuleInfoEspecial
+ *
+ * Attempt to determine the module information.
+ * Bug 112196 says this DLL may not have been loaded at the time
+ *  SymInitialize was called, and thus the module information
+ *  and symbol information is not available.
+ * This code rectifies that problem.
+ */
+BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo)
+{
+    BOOL retval = FALSE;
+
+    /*
+     * Give it a go.
+     * It may already be loaded.
+     */
+    retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
+
+    if(FALSE == retval)
+    {
+        BOOL enumRes = FALSE;
+
+        /*
+         * Not loaded, here's the magic.
+         * Go through all the modules.
+         */
+        enumRes = EnumerateLoadedModules(aProcess, callbackEspecial, (PVOID)aAddr);
+        if(FALSE != enumRes)
+        {
+            /*
+             * One final go.
+             * If it fails, then well, we have other problems.
+             */
+            retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
+        }
+    }
+
+    return retval;
+}
+
+
 #define  MAX_STACKFRAMES 256
 #define  MAX_UNMANGLED_NAME_LEN 256
 
@@ -717,19 +792,18 @@ static callsite *calltree(int skip)
          * callsite info.  XXX static syms are masked by nearest lower global
          * Load up the info for the dll.
          */
-        if (!_SymGetModuleInfo(myProcess,
+        if (!SymGetModuleInfoEspecial(myProcess,
                                frame[framenum].AddrPC.Offset,
                                &imagehelp)) {
-            DWORD error = GetLastError();
-            PR_ASSERT(error);
-            library = "unknown"; /* XXX mjudge sez "ew!" */
+            library = "unknown";
         } else {
             library = imagehelp.ModuleName;
         }
 
         symbol = (PIMAGEHLP_SYMBOL) buf;
-        symbol->SizeOfStruct = sizeof(buf);
-        symbol->MaxNameLength = 512;
+        symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
+        symbol->MaxNameLength = sizeof(buf) - sizeof(IMAGEHLP_SYMBOL);
+        symbol->Name[symbol->MaxNameLength] = '\0';
 
         ok = _SymGetSymFromAddr(myProcess,
                                 frame[framenum].AddrPC.Offset,

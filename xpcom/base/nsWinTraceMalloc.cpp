@@ -80,6 +80,7 @@ static PRBool GetModuleFromAddress(uint32 addr, char* outBuf)
 
 /***************************************************************************/
 
+#ifdef VERBOSE
 // XXX This is a quick hack to show that x86 Win32 stack walking can be done
 // with this sort of loop following the bp. 
 
@@ -105,6 +106,7 @@ void dumpStack()
     }
     printf("\n");
 }
+#endif
 
 char* _stdcall call2(void* v)
 {
@@ -239,8 +241,8 @@ void * __cdecl dhw_new(size_t size)
 
 #ifdef VERBOSE
     printf("* new called to get %d bytes. returned %#x\n", size, result);
-#endif
     dumpStack(); 
+#endif
     MallocCallback(result,size);//do we need a different one for new?
 //    printf("\n");
     g_lockOut = FALSE;
@@ -263,8 +265,8 @@ void __cdecl dhw_delete(void* p)
     g_lockOut = TRUE;
 #ifdef VERBOSE
     printf("* delete called for %#x\n", p);
-#endif
     dumpStack(); 
+#endif
     FreeCallback(p);
 //    printf("\n");
     g_lockOut = FALSE;
