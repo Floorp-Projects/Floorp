@@ -28,33 +28,40 @@
 #include <limits.h>
 #include "nsError.h"
 
-#if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX) || defined(NTO)
-#include <sys/statvfs.h> /* for statvfs() */
-#define STATFS statvfs
 #if defined(SCO_SV)
-#define _SVID3/* for statvfs.h */
-#endif /* SCO_SV */
-#elif defined(HPUX) || defined(LINUX)
-#include <sys/vfs.h>      /* for statfs() */
-#define STATFS statfs
-#if defined(SUNOS4)
-  extern "C" int statfs(char *, struct statfs *);
-#endif /* SUNOS4 */
-#else
-#if defined(BSDI) || defined(NETBSD) || defined(OPENBSD) || defined(RHAPSODY) || defined(FREEBSD)
-#include <sys/mount.h>/* for statfs() */
-#define STATFS statfs
-#else
-#include <sys/statfs.h>  /* for statfs() */
-#define STATFS statfs
-  extern "C" int statfs(char *, struct statfs *);
+#define _SVID3  /* for statvfs.h */
 #endif
+
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
+
+#ifdef HAVE_SYS_VFS_H
+#include <sys/vfs.h>
+#endif
+
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
+
+#ifdef HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
+#endif
+
+#ifdef HAVE_STATVFS
+#define STATFS	statvfs
+#else
+#define STATFS	statfs
+#endif
+ 
+#if defined(SUNOS4)
+extern "C" int statfs(char *, struct statfs *);
 #endif
 
 #if defined(OSF1)
 extern "C" int statvfs(const char *, struct statvfs *);
 #endif
- 
+
 //----------------------------------------------------------------------------------------
 void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
 // Canonify, make absolute, and check whether directories exist
