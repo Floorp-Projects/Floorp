@@ -939,7 +939,7 @@ nsEditor::InsertFormattingForNode(nsIDOMNode* aNode)
   // XXX just insert a newline before and after each newly inserted tag.
   //
 
-  nsAutoString str (NS_LINEBREAK);
+  nsAutoString str ("\n");
 
   // After the close tag
   //res = InsertNoneditableTextNode(parent, offset+1, str);
@@ -2827,12 +2827,6 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
     }
   }
 
-  // this next block testing for char data is ifdef'd out
-  // because it's unclear what whitespace constitutes "not editable"
-  // it's just an optimization, which makes the assumption that
-  // scanning the text is faster than asking layout if the text has a frame
-  // the last block will do this for all content, including text
-#ifdef BUSTER_PERFORMANCE
   // it's not the bogus node, so see if it is an irrelevant text node
   if (PR_TRUE==IsTextNode(aNode))
   {
@@ -2852,14 +2846,13 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
       for (i=0; i<length; i++)
       {
         PRUnichar character = data.CharAt(i);
-        if (('\n'!=character) && ('\r'!=character)) {
+        if ('\n'!=character) {
           return PR_TRUE;
         }
       }
       return PR_FALSE;
     }
   }
-#endif
   
   // we got this far, so see if it has a frame.  If so, we'll edit it.
   nsIFrame *resultFrame;
