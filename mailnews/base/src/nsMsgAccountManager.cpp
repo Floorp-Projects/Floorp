@@ -1209,9 +1209,14 @@ NS_IMETHODIMP
 nsMsgAccountManager::FindAccountForServer(nsIMsgIncomingServer *server,
                                             nsIMsgAccount **aResult)
 {
-  NS_ENSURE_ARG_POINTER(server);
+  NS_ENSURE_ARG_POINTER(aResult);
+  
+  if (!server) {
+    (*aResult) = nsnull;
+    return NS_OK;
+  }
+  
   nsresult rv;
-  *aResult = nsnull;
 
   nsXPIDLCString key;
   rv = server->GetKey(getter_Copies(key));
