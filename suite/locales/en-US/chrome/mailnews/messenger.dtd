@@ -30,7 +30,7 @@ Rights Reserved.
 <!ENTITY newBlankPageCmd.label ".Blank Page">  
 <!ENTITY newPageFromTemplate.label ".Page from Template">  
 <!ENTITY newPageFromWizard.label ".Page from Wizard">  
-<!ENTITY newFolderCmd.label ".New Folder...">  
+<!ENTITY newFolderCmd.label "New Folder...">  
 <!ENTITY openAttachmentCmd.label ".Open Attachment">  
 <!ENTITY saveAsMenu.label "Save As"> 
 <!ENTITY saveAsFileCmd.label "File">  
@@ -39,7 +39,7 @@ Rights Reserved.
 <!ENTITY sendUnsentCmd.label "Send Unsent Messages">  
 <!ENTITY loadFirstDraft.label "Load First Draft Message">
 <!ENTITY subscribeCmd.label "Subscribe">  
-<!ENTITY renameFolder.label ".Rename Folder...">
+<!ENTITY renameFolder.label "Rename Folder...">
 <!ENTITY compactFolder.label "Compact This Folder">
 <!ENTITY emptyTrashCmd.label "Empty Trash">  
 <!ENTITY importCmd.label ".Import...">  
