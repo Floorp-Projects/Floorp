@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-/* $Id: mpi-config.h,v 1.3 2000/08/01 01:36:30 nelsonb%netscape.com Exp $ */
+/* $Id: mpi-config.h,v 1.4 2000/08/02 01:01:00 nelsonb%netscape.com Exp $ */
 
 #ifndef MPI_CONFIG_H_
 #define MPI_CONFIG_H_
@@ -97,7 +97,7 @@
 #endif
 
 #ifndef MP_MACRO
-#define MP_MACRO      1  /* use macros for frequent calls?      */
+#define MP_MACRO      0  /* use macros for frequent calls?      */
 #endif
 
 #ifndef MP_SQUARE
