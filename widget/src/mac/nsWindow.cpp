@@ -655,7 +655,7 @@ NS_IMETHODIMP	nsWindow::Update()
 				children->First();
 				do
 				{
-          if (NS_SUCCEEDED(children->CurrentItem(&child)))  {
+          if (NS_SUCCEEDED(children->CurrentItem((nsISupports **)&child)))  {
 					  child->Update();
           }
 				}
