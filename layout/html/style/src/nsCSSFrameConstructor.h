@@ -476,6 +476,17 @@ protected:
                                              nsIFrame*                aNewCellFrame,
                                              nsFrameItems&            aChildItems);
 
+//MathML Mod - RBS
+#ifdef MOZ_MATHML
+  nsresult ConstructMathMLFrame(nsIPresContext*          aPresContext,
+                                nsFrameConstructorState& aState,
+                                nsIContent*              aContent,
+                                nsIFrame*                aParentFrame,
+                                nsIAtom*                 aTag,
+                                nsIStyleContext*         aStyleContext,
+                                nsFrameItems&            aFrameItems);
+#endif
+
 #ifdef INCLUDE_XUL
   nsresult ConstructXULFrame(nsIPresContext*          aPresContext,
                              nsFrameConstructorState& aState,

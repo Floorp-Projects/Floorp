@@ -70,7 +70,7 @@
 #include "nsInlineFrame.h"
 #undef NOISY_FIRST_LETTER
 
-#ifdef INCLUDE_MATHML
+#ifdef MOZ_MATHML
 #include "nsMathMLAtoms.h"
 #include "nsMathMLParts.h"
 #endif
@@ -361,7 +361,7 @@ struct nsTableCreator {
   virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
 //MathML Mod - RBS
-#ifdef INCLUDE_MATHML
+#ifdef MOZ_MATHML
   virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
 #endif
   virtual PRBool IsTreeCreator() { return PR_FALSE; };
@@ -447,7 +447,7 @@ nsTreeCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
 #endif // INCLUDE_XUL
 
 //MathML Mod - RBS
-#ifdef INCLUDE_MATHML
+#ifdef MOZ_MATHML
 nsresult
 nsTableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
   return NS_NewTableCellInnerFrame(aNewFrame);
@@ -464,7 +464,7 @@ nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
   // only works if aNewFrame is an AreaFrame (to take care of the lineLayout logic)
   return NS_NewMathMLmtdFrame(aNewFrame);
 }
-#endif // INCLUDE_MATHML
+#endif // MOZ_MATHML
 
 // -----------------------------------------------------------
 
@@ -1736,7 +1736,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
 
   // Create an area frame that will format the cell's content
 //MathML Mod - RBS
-#ifdef INCLUDE_MATHML
+#ifdef MOZ_MATHML
   rv = aTableCreator.CreateTableCellInnerFrame(&aNewCellBodyFrame);
 #else
   rv = NS_NewTableCellInnerFrame(&aNewCellBodyFrame);
@@ -1998,7 +1998,7 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 #endif
 
 //MathML Mod - DJF
-#ifdef INCLUDE_MATHML
+#ifdef MOZ_MATHML
   if (  (nsMathMLAtoms::math          == tag.get())  ) {
     return PR_TRUE;
   }
@@ -4649,7 +4649,7 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
 }
 
 // MathML Mod - RBS
-#ifdef INCLUDE_MATHML
+#ifdef MOZ_MATHML
 nsresult
 nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresContext*          aPresContext,
                                             nsFrameConstructorState& aState,
@@ -4679,7 +4679,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresContext*          aPresContex
   rv = aContent->GetNameSpaceID(nameSpaceID);
   if (NS_FAILED(rv) || nameSpaceID != nsMathMLAtoms::nameSpaceID)
     return NS_OK;
-                
+
   // Initialize the new frame
   nsIFrame* newFrame = nsnull;
   nsIFrame* ignore = nsnull;
@@ -4829,7 +4829,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresContext*          aPresContex
   }
   return rv;
 }
-#endif // INCLUDE_MATHML
+#endif // MOZ_MATHML
 
 nsresult
 nsCSSFrameConstructor::ConstructFrame(nsIPresContext*          aPresContext,
@@ -4883,7 +4883,7 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*          aPresContext,
 #endif
 
 // MathML Mod - RBS
-#ifdef INCLUDE_MATHML
+#ifdef MOZ_MATHML
       if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                                (lastChild == aFrameItems.lastChild))) {
         rv = ConstructMathMLFrame(aPresContext, aState, aContent, aParentFrame,
