@@ -83,6 +83,7 @@
           <tree id="ignoretree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 onkeypress="HandleEvent(event,1)">
+            <treecol width="100%"/>
             <treehead>
               <treerow>
                 <treecell value="&treehead.site.label;"/>
@@ -105,6 +106,7 @@
           <tree id="nopreviewtree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 onkeypress="HandleEvent(event,2)">
+            <treecol width="100%"/>
             <treehead>
               <treerow>
                 <treecell value="&treehead.site.label;"/>
@@ -127,6 +129,7 @@
           <tree id="nocapturetree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 onkeypress="HandleEvent(event,3)">
+            <treecol width="100%"/>
             <treehead>
               <treerow>
                 <treecell value="&treehead.site.label;"/>

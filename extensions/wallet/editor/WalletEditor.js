@@ -40,16 +40,10 @@ var BREAK;
 
 /*** =================== ?? =================== ***/
 
-//?? Why do we need to call ViewEntries twice?  If we don't
-//?? then we don't get the display the first time an entry is selected.  Same
-//?? for ViewSynonyms.
-
 function ViewEntriesFromXul(){
-  ViewEntries();
   ViewEntries();
 }
 function ViewSynonymsFromXul(){
-  ViewSynonyms();
   ViewSynonyms();
 }
 
@@ -66,8 +60,6 @@ function Startup()
     return; /* user failed to unlock the database */
   }
   ViewSchema(); /* create the display of schemas */
-  ViewSchema(); /* create the display of schemas */
-  //??why do we need to do above twice?  Without it, first schema is not displayed
   doSetOKCancel(onOK, null); /* register the onOK method */
   window.sizeToContent();
 }
