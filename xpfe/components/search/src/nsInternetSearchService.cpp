@@ -4305,12 +4305,14 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
                         nsnull,
                 };
 
-                int ext_count = 0;
-                while (extensions[ext_count] != nsnull) {
+                for (int ext_count = 0; extensions[ext_count] != nsnull; ext_count++) {
                         temp = Substring(uri, 0, uri.Length()-4);
                         temp.Append(NS_ConvertASCIItoUCS2(extensions[ext_count]));
                         rv = NS_NewLocalFile(temp, PR_TRUE, getter_AddRefs(loopFile));
                         if (NS_FAILED(rv)) return rv;
+                        rv = loopFile->Exists(&foundIconFlag);
+                        if (NS_FAILED(rv)) return rv;
+                        if (!foundIconFlag) continue;
                         rv = loopFile->IsFile(&foundIconFlag);
                         if (NS_FAILED(rv)) return rv;
                         if (foundIconFlag) 
@@ -4318,7 +4320,6 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
                                 iconFile = loopFile;
                                 break;
                         } 
-                        ext_count++;
                 }
 		
 		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, isSystemSearchFile, checkMacFileType);
