@@ -77,4 +77,7 @@ typedef float float32;
 #ifdef _WIN32
  #define IS_LITTLE_ENDIAN
 #endif
+#ifdef __i386__
+ #define IS_LITTLE_ENDIAN
+#endif
 #endif
