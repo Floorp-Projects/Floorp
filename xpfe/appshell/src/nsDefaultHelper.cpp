@@ -153,10 +153,15 @@ nsDefaultProtocolHelper::Notify(nsIBlockingNotification *aCaller,
    * If no thread switch is necessary, then handle the notification
    * immediately...
    */
-  if (PR_GetCurrentThread() == aThread) {
+   PRThread* currentThread = PR_GetCurrentThread();
+ #if 0 // The mac netlib is on the same thread as the UI thread but you crash if you block right here
+  if ( currentThread == aThread) {
     rv = HandleNotification(aCaller, aUrl, aCode, (void *)aExtraInfo);
   }
-  else {
+  else 
+  #endif 
+  {
+  
     /*
      * Post a message to the appropriate thread event queue to
      * handle the notification...
@@ -227,18 +232,35 @@ nsresult nsDefaultProtocolHelper::HandleNotification(nsIBlockingNotification *aC
   nsAutoString aPass(auth_closure->pass);
 
   // create a dialog
-  nsNetSupportDialog *dialog = new nsNetSupportDialog;
-  if (!dialog) {
-    return NS_ERROR_FAILURE;
-  }
+	PRBool bResult = PR_FALSE;
+	nsString password, user;
+	nsINetSupportDialogService* dialog = NULL;
+ 	PRInt32 result;
+    /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
 
-  dialog->PromptUserAndPassword (aText, aUser, aPass);
+    static NS_DEFINE_IID( kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+    static NS_DEFINE_IID(kINetSupportDialogIID,   NS_INETSUPPORTDIALOGSERVICE_IID);
+    result = nsServiceManager::GetService(kNetSupportDialogCID,
+                                    kINetSupportDialogIID,
+                                    (nsISupports**)&dialog); 
+ 	if ( !NS_SUCCEEDED( result ) )
+ 		return NS_ERROR_FAILURE;
+   if ( dialog )
+   	dialog->PromptUserAndPassword( aText, aUser, aPass, &result );                  
+  
+  if ( result == 1 )
+  	bResult =  NS_NOTIFY_SUCCEEDED;
+  else
+  	bResult = NS_ERROR_FAILURE;
+  
+    nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
 
   auth_closure->user = aUser.ToNewCString();
   auth_closure->pass = aPass.ToNewCString();
 
   aCaller->Resume(aUrl, (void *) auth_closure);
 
+  return bResult;
   // delete aUser;
   // delete aPass;
   // delete aText;
@@ -268,7 +290,7 @@ NotificationEvent::NotificationEvent(nsDefaultProtocolHelper *aSelf,
   NS_IF_ADDREF(mSelf);
   NS_IF_ADDREF(mCaller);
   NS_IF_ADDREF(mUrl);
-  NS_IF_ADDREF(mExtraInfo);
+//  NS_IF_ADDREF(mExtraInfo);
 }
 
 
@@ -277,7 +299,7 @@ NotificationEvent::~NotificationEvent()
   NS_IF_RELEASE(mSelf);
   NS_IF_RELEASE(mCaller);
   NS_IF_RELEASE(mUrl);
-  NS_IF_RELEASE(mExtraInfo);
+ // NS_IF_RELEASE(mExtraInfo);
 }
 
 void PR_CALLBACK NotificationEvent::HandlePLEvent(PLEvent* aEvent)
