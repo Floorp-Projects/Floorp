@@ -559,9 +559,8 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     mElementFrame->GetContent(getter_AddRefs(content));
     nsAutoString property;
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
-    if (! property.EqualsWithConversion("true")) {
-    childPopup->InstallKeyboardNavigator();
-  }
+    if ( !property.EqualsWithConversion("true") && childPopup )
+      childPopup->InstallKeyboardNavigator();
   }
   else {
     if (!OnDestroy())
@@ -575,7 +574,8 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     // Remove any keyboard navigators
     nsIFrame* activeChild = GetActiveChild();
     nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
-    childPopup->RemoveKeyboardNavigator();
+    if ( childPopup )
+      childPopup->RemoveKeyboardNavigator();
 
     ActivatePopup(PR_FALSE);
   }
