@@ -64,10 +64,6 @@
 #include "rdf.h"
 #include "rdfutil.h"
 
-#include "nsILocale.h"
-#include "nsLocaleCID.h"
-#include "nsILocaleFactory.h"
-
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIScriptableDateFormat.h"
@@ -75,8 +71,6 @@
 
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kDateTimeFormatIID,    NS_IDATETIMEFORMAT_IID);
-static NS_DEFINE_CID(kLocaleCID,            NS_LOCALE_CID);
-static NS_DEFINE_CID(kLocaleFactoryCID,     NS_LOCALEFACTORY_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kTextNodeCID,          NS_TEXTNODE_CID);
