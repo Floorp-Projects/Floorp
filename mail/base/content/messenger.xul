@@ -279,7 +279,7 @@
       <hbox id="searchBox"/>
     
       <box orient="vertical" id="messagesBox" flex="1">
-        <hbox id="messengerBox" minheight="100" height="100" persist="height">
+        <hbox id="messengerBox" flex="1" minheight="100" height="100" persist="height">
           <vbox id="threadPaneBox" flex="1">          
             <tree id="threadTree" persist="lastfoldersent" flex="2" enableColumnDrag="true" _selectDelay="500" class="plain focusring" lastfoldersent="false" 
                          disableKeyNavigation="true"
@@ -357,7 +357,7 @@
         <splitter id="threadpane-splitter" collapse="after" persist="state"
                   onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"/>
 
-        <vbox id="messagepanebox" height="0" flex="1" persist="collapsed height width">
+        <vbox id="messagepanebox" flex="1" minheight="100" height="200" minwidth="100" width="200" persist="collapsed height width">
           <hbox id="junkBar"/>
           <hbox id="msgHeaderView"/>
           <browser id="messagepane" context="messagePaneContext" autofind="false"

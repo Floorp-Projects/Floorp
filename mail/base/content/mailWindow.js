@@ -496,7 +496,6 @@ function ShowAccountCentral()
         gSearchBox.collapsed = true;
         
         GetThreadTree().collapsed = true;
-        document.getElementById('messengerBox').setAttribute('flex', '1');
         document.getElementById("accountCentralBox").collapsed = false;
 
         window.frames["accountCentralPane"].location = acctCentralPage;
@@ -528,7 +527,6 @@ function HideAccountCentral()
         var threadPaneSplitter = document.getElementById("threadpane-splitter");
         threadPaneSplitter.collapsed = false;
         GetMessagePane().collapsed = threadPaneSplitter.getAttribute("state") == "collapsed";
-        document.getElementById('messengerBox').removeAttribute('flex');
         gAccountCentralLoaded = false;
     }
     catch (ex)
