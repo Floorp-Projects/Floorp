@@ -153,9 +153,13 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 
 	if(PfGenerateFontName((const uchar_t *)str, uiFlags, sizePoints, (uchar_t *)NSFullFontName) == NULL)
 	{
-		printf("Name generate failed:  %s, %d, %d\n", str, uiFlags, sizePoints);
-		PfGenerateFontName((const uchar_t *)"Courier 10 Pitch BT", 
-			uiFlags, sizePoints, (uchar_t *)NSFullFontName);
+		NS_WARNING("nsFontMetricsPh::Init Name generate failed");
+		printf("nsFontMetricsPh::Init Name generate failed:  %s, %d, %d\n", str, uiFlags, sizePoints);
+		if (PfGenerateFontName((const uchar_t *)"Courier 10 Pitch BT", uiFlags, sizePoints, (uchar_t *)NSFullFontName) == NULL)
+		{
+  		  NS_ASSERTION(0,"nsFontMetricsPh::Init Name generate failed for default font\n");
+		  printf(" nsFontMetricsPh::Init Name generate failed for default font:  %s, %d, %d\n", str, uiFlags, sizePoints);
+ 		}
 	}
 
 	/* Once the Photon Font String is built get the attributes */
@@ -347,7 +351,7 @@ nsFontMetricsPh :: GetFont(const nsFont *&aFont)
 
 NS_IMETHODIMP  nsFontMetricsPh::GetLangGroup(nsIAtom** aLangGroup)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetLangGroup - Not Implemented\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::GetLangGroup this=<%p> aLangGroup=<%p>\n", this, aLangGroup));
 
   if (!aLangGroup) {
     return NS_ERROR_NULL_POINTER;
@@ -384,24 +388,99 @@ struct nsFontFamily
 };
 
 
+
+#undef DEBUG_DUMP_TREE
+#define DEBUG_DUMP_TREE
+#ifdef DEBUG_DUMP_TREE
+
+static char* gDumpStyles[3] = { "normal", "italic", "oblique" };
+
+static PRIntn
+DumpCharSet(PLHashEntry* he, PRIntn i, void* arg)
+{
+  printf("        %s\n", (char*) he->key);
+#if 0
+  nsFontCharSet* charSet = (nsFontCharSet*) he->value;
+  for (int sizeIndex = 0; sizeIndex < charSet->mSizesCount; sizeIndex++)
+  {
+    nsFontGTK* size = &charSet->mSizes[sizeIndex];
+    printf("          %d %s\n", size->mSize, size->mName);
+  }
+#endif
+
+  return HT_ENUMERATE_NEXT;
+}
+
+static void
+DumpFamily(nsFontFamily* aFamily)
+{
+#if 0
+  for (int styleIndex = 0; styleIndex < 3; styleIndex++) {
+    nsFontStyle* style = aFamily->mStyles[styleIndex];
+    if (style) {
+      printf("  style: %s\n", gDumpStyles[styleIndex]);
+      for (int weightIndex = 0; weightIndex < 8; weightIndex++) {
+        nsFontWeight* weight = style->mWeights[weightIndex];
+        if (weight) {
+          printf("    weight: %d\n", (weightIndex + 1) * 100);
+          for (int stretchIndex = 0; stretchIndex < 9; stretchIndex++) {
+            nsFontStretch* stretch = weight->mStretches[stretchIndex];
+            if (stretch) {
+              printf("      stretch: %d\n", stretchIndex + 1);
+              PL_HashTableEnumerateEntries(stretch->mCharSets, DumpCharSet,
+                nsnull);
+            }
+          }
+        }
+      }
+    }
+  }
+#endif
+}
+
+static PRIntn
+DumpFamilyEnum(PLHashEntry* he, PRIntn i, void* arg)
+{
+  char buf[256];
+  ((nsString*) he->key)->ToCString(buf, sizeof(buf));
+  printf("family: %s\n", buf);
+  nsFontFamily* family = (nsFontFamily*) he->value;
+  DumpFamily(family);
+
+  return HT_ENUMERATE_NEXT;
+}
+
+static void
+DumpTree(void)
+{
+  PL_HashTableEnumerateEntries(gFamilies, DumpFamilyEnum, nsnull);
+}
+
+#endif /* DEBUG_DUMP_TREE */
+
 static nsFontFamily* GetFontNames(char* aPattern)
 {
   nsFontFamily* family = nsnull;
-  int         MAX_FONTDETAIL = 30;
+  int         MAX_FONTDETAIL = 60;
   FontDetails fDetails[MAX_FONTDETAIL];
   int         fontcount;
 
-    fontcount = PfQueryFonts('a', PHFONT_ALL_FONTS, fDetails, MAX_FONTDETAIL);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::GetFontNames aPattern=<%s>\n", aPattern));
+
+    fontcount = PfQueryFonts('A', PHFONT_ALL_FONTS, fDetails, MAX_FONTDETAIL);
     if (fontcount >= MAX_FONTDETAIL)
     {
       NS_WARNING("nsFontMetricsPh::GetFontNames ERROR - Font Array size should be increased!\n");
+      printf("nsFontMetricsPh::GetFontNames ERROR - Font Array size should be increased: I got %d and %d is the max\n", fontcount, MAX_FONTDETAIL);
     }
 
     if (fontcount)
     {
       int index;
-      for(index=0; index < fontcount; index++)
+      for(index=0; index < PR_MIN(fontcount,MAX_FONTDETAIL); index++)
       {
+        PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::GetFontNames Adding font <%s>\n", fDetails[index].desc));
+
         nsAutoString familyName2(fDetails[index].desc);
         family = (nsFontFamily*) PL_HashTableLookup(gFamilies, (nsString*) &familyName2);
         if (!family)
@@ -419,9 +498,13 @@ static nsFontFamily* GetFontNames(char* aPattern)
           PL_HashTableAdd(gFamilies, copy, family);
     }
 
-      
       }
     }
+
+#ifdef DEBUG_DUMP_TREE
+  DumpTree();
+#endif
+
 }
 
 
@@ -433,10 +516,21 @@ nsFontEnumeratorPh::nsFontEnumeratorPh()
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::nsFontEnumeratorPh this=<%p>\n", this));
 }
 
-NS_IMPL_ISUPPORTS(nsFontEnumeratorPh,
-                  NS_GET_IID(nsIFontEnumerator));
+NS_IMPL_ISUPPORTS(nsFontEnumeratorPh, NS_GET_IID(nsIFontEnumerator));
 
 static int gInitializedFontEnumerator = 0;
+static PLHashNumber HashKey(const void* aString)
+{
+  return (PLHashNumber)
+    nsCRT::HashValue(((const nsString*) aString)->GetUnicode());
+}
+
+static PRIntn
+CompareKeys(const void* aStr1, const void* aStr2)
+{
+  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(),
+    ((const nsString*) aStr2)->GetUnicode()) == 0;
+}
 
 static int
 InitializeFontEnumerator(void)
@@ -445,9 +539,15 @@ InitializeFontEnumerator(void)
 
   gInitializedFontEnumerator = 1;
 
-  if (!gGotAllFontNames) {
+  if (!gGotAllFontNames)
+  {
     gGotAllFontNames = 1;
-    //GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
+
+#if 0
+    gFamilies = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
+    gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, NULL, NULL, NULL);
+    GetFontNames(NULL);
+#endif
   }
 
   return 1;
@@ -462,12 +562,13 @@ typedef struct EnumerateFamilyInfo
 static PRIntn
 EnumerateFamily(PLHashEntry* he, PRIntn i, void* arg)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateFamily\n"));
-
   EnumerateFamilyInfo* info = (EnumerateFamilyInfo*) arg;
   PRUnichar** array = info->mArray;
   int j = info->mIndex;
   PRUnichar* str = ((nsString*) he->key)->ToNewUnicode();
+
+  //PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateFamily str=<%s>\n",str ));
+
   if (!str) {
     for (j = j - 1; j >= 0; j--) {
       nsAllocator::Free(array[j]);
@@ -484,10 +585,10 @@ EnumerateFamily(PLHashEntry* he, PRIntn i, void* arg)
 static int
 CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::CompareFontNames\n"));
-
   const PRUnichar* str1 = *((const PRUnichar**) aArg1);
   const PRUnichar* str2 = *((const PRUnichar**) aArg2);
+
+//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::CompareFontNames str1=<%s> str2=<%s>\n",str1,str2));
 
   // XXX add nsICollation stuff
 
@@ -541,6 +642,8 @@ nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 
     *aCount = gFamilies->nentries;
     *aResult = array;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontEnumeratorPh::EnumerateAllFonts exiting count=<%d>", *aCount));
 
     return NS_OK;
   }
