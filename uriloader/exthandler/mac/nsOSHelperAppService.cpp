@@ -109,16 +109,16 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   // first, try to see if we can find the content based on just the specified content type...
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
   rv = GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
-  if (NS_FAILED(rv) || !mimeInfo)
+  // if we didn't find a match OR if the extesnion is a .bin, then use internet config...
+  if (NS_FAILED(rv) || !mimeInfo || strcmp(aMimeContentType, APPLICATION_OCTET_STREAM) == 0)
   {
   	// if the content based search failed, then try looking up based on the file extension....    
   	if (url)
     {
       nsXPIDLCString extension;
       url->GetFileExtension(getter_Copies(extension));
-      const char * ext = (const char *) extension;
-      if (ext && *ext)
-      	rv = GetFromExtension(ext, getter_AddRefs(mimeInfo));
+      if (extension)
+      	rv = GetFromExtension(extension, getter_AddRefs(mimeInfo));
     }
   	
   }

@@ -25,6 +25,8 @@
 
 #include "nsIExternalHelperAppService.h"
 #include "nsIExternalProtocolService.h"
+#include "nsIURIContentListener.h"
+#include "nsIWebProgressListener.h"
 
 #include "nsIMIMEInfo.h"
 #include "nsIMIMEService.h"
@@ -129,13 +131,16 @@ struct nsDefaultMimeTypeEntry {
 // to write the data into the output stream representing the temp file...
 #define DATA_BUFFER_SIZE (4096*2) 
 
-class nsExternalAppHandler : public nsIStreamListener, public nsIHelperAppLauncher
+class nsExternalAppHandler : public nsIStreamListener, public nsIHelperAppLauncher, public nsIURIContentListener,
+                             public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSISTREAMOBSERVER
   NS_DECL_NSIHELPERAPPLAUNCHER
+  NS_DECL_NSIURICONTENTLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   nsExternalAppHandler();
   virtual ~nsExternalAppHandler();
@@ -144,13 +149,14 @@ public:
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
+  nsCOMPtr<nsIURI> mSourceUrl; 
   nsCString mTempFileExtension;
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...
   nsCOMPtr<nsISupports> mWindowContext; 
   // the following field is set if we were processing an http channel that had a content disposition header
   // which specified the SUGGESTED file name we should present to the user in the save to disk dialog. 
-  nsString mHTTPSuggestedFileName;
+  nsString mSuggestedFileName;
 
   // the canceled flag is set if the user canceled the launching of this application before we finished
   // saving the data to a temp file...
@@ -168,10 +174,20 @@ protected:
   char * mDataBuffer;
 
   nsresult SetUpTempFile(nsIChannel * aChannel);
+  // when we download a helper app, we are going to retarget all load notifications into our own docloader
+  // and load group instead of using the window which initiated the load....RetargetLoadNotifications contains
+  // that information...
+  nsresult RetargetLoadNotifications(nsIChannel * aChannel); 
+  // if the user tells us how they want to dispose of the content and we still haven't finished downloading while
+  // they were deciding, then throw a progress dialog so they know what's going on...
+  nsresult ShowProgressDialog();
   nsresult PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile);
-  // if the passed in channel is an nsIHTTPChannel, we'll attempt to extrace a suggested file name
+  // if the passed in channel is an nsIHTTPChannel, we'll attempt to extract a suggested file name
   // from the content disposition header...
   void ExtractSuggestedFileNameFromChannel(nsIChannel * aChannel);
+  
+  nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
+  nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
 };
 
 #endif // nsExternalHelperAppService_h__
