@@ -646,6 +646,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
                       nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsScrollFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("enter nsScrollFrame::Reflow: maxSize=%d,%d",
                       aReflowState.availableWidth,

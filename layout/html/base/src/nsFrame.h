@@ -433,6 +433,14 @@ public:
   virtual void DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent, PRBool aIncludeStyleData);
   
   nsresult MakeFrameName(const char* aKind, nsString& aResult) const;
+
+  // Display Reflow Debugging 
+  static void* DisplayReflowEnter(nsIFrame*                aFrame,
+                                  const nsHTMLReflowState& aReflowState);
+  static void  DisplayReflowExit(nsIFrame*            aFrame,
+                                 nsHTMLReflowMetrics& aMetrics,
+                                 PRUint32             aStatus,
+                                 void*                aFrameTreeNode);
 #endif
 
 protected:
@@ -486,5 +494,32 @@ protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 };
+
+// Start Display Reflow Debuggin
+#ifdef DEBUG
+
+  struct DR_cookie {
+    DR_cookie(nsIFrame*                aFrame, 
+              const nsHTMLReflowState& mReflowState,
+              nsHTMLReflowMetrics&     aMetrics,
+              nsReflowStatus&          aStatus);     
+    ~DR_cookie();
+
+    nsIFrame*                mFrame;
+    const nsHTMLReflowState& mReflowState;
+    nsHTMLReflowMetrics&     mMetrics;
+    nsReflowStatus&          mStatus;    
+    void*                    mValue;
+  };
+  
+#define DISPLAY_REFLOW(dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) \
+  DR_cookie dr_cookie(dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status); 
+
+#else
+
+#define DISPLAY_REFLOW(dr_frame, dr_rf_state, dr_rf_metrics, dr_rf_status) 
+  
+#endif
+// End Display Reflow Debugging
 
 #endif /* nsFrame_h___ */

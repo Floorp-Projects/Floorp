@@ -65,6 +65,7 @@ nsPlaceholderFrame::Reflow(nsIPresContext*          aPresContext,
                            nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsPlaceholderFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;

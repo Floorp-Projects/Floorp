@@ -299,6 +299,7 @@ nsImageControlFrame::Reflow(nsIPresContext*         aPresContext,
                            nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsImageControlFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     // add ourself as an nsIFormControlFrame

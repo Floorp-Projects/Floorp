@@ -1298,7 +1298,8 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
                         nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableRowFrame", aReflowState.reason);
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
   nsresult rv = NS_OK;
@@ -1342,7 +1343,7 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
 
-#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+#if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
   return rv;

@@ -192,6 +192,7 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
                    nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("HRuleFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   // bug 18754: In compat mode, we treat HR's as inline elements

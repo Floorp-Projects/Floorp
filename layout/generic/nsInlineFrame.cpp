@@ -328,6 +328,7 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
                       nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsInlineFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aMetrics, aStatus);
   if (nsnull == aReflowState.mLineLayout) {
     return NS_ERROR_INVALID_ARG;
   }

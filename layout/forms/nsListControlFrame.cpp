@@ -616,6 +616,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
                            nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsListControlFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
   REFLOW_COUNTER_REQUEST();
 
   aStatus = NS_FRAME_COMPLETE;

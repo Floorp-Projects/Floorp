@@ -601,6 +601,7 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
                                 nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsGfxButtonControlFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aDesiredSize, aStatus);
 
    // The mFormFrame is set in the initial reflow within nsHTMLButtonControlFrame
   nsresult rv = NS_OK;

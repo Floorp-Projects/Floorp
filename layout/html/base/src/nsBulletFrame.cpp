@@ -1329,6 +1329,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
                       nsReflowStatus& aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsBulletFrame", aReflowState.reason);
+  DISPLAY_REFLOW(this, aReflowState, aMetrics, aStatus);
   if (eReflowReason_Incremental == aReflowState.reason) {
     nsIReflowCommand::ReflowType type;
     aReflowState.reflowCommand->GetType(type);
