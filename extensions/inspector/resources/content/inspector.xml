@@ -2,6 +2,7 @@
 
 <bindings id="ViewerPaneBindings"
           xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- ***************************************************************
@@ -377,8 +378,8 @@
 
   <binding id="panel" extends="chrome://inspector/content/inspector.xml#base">
     <content orient="vertical">
-      <xul:toolbox class="viewer-pane-toolbox" inherits="disabled">
-        <xul:toolbar class="viewer-pane-header" tbalign="center" inherits="disabled">
+      <xul:toolbox class="viewer-pane-toolbox" xbl:inherits="disabled">
+        <xul:toolbar class="viewer-pane-header" tbalign="center" xbl:inherits="disabled">
           <xul:toolbarbutton type="menu" anonid="viewer-list" class="viewer-list" disabled="true"/>
           <xul:label anonid="viewer-title" class="viewer-title label toolbar" flex="1"/>
           <xul:toolbarbutton type="menu" anonid="viewer-menu" class="viewer-menu" disabled="true"/>

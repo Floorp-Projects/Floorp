@@ -4,12 +4,13 @@
 
 <bindings id="bnsEditableTree"
           xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="treeEditable" extends="chrome://global/content/bindings/tree.xml#tree">
     <content>
       <children/>
-      <xul:treerows class="tree-container-treerows" inherits="dragover,dragdroptree">
+      <xul:treerows class="tree-container-treerows" xbl:inherits="dragover,dragdroptree">
         <children includes="treehead|treechildren"/>
       </xul:treerows> 
     </content>
