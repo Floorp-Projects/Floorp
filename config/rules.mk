@@ -193,7 +193,7 @@ TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LI
 endif
 
 ifndef OBJS
-OBJS			= $(strip $(JRI_STUB_CFILES) $(addsuffix .o, $(JMC_GEN)) $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o) $(ASFILES:.$(ASM_SUFFIX)=.o))
+OBJS			= $(strip $(JRI_STUB_CFILES) $(addsuffix .$(OBJ_SUFFIX), $(JMC_GEN)) $(CSRCS:.c=.$(OBJ_SUFFIX)) $(CPPSRCS:.cpp=.$(OBJ_SUFFIX)) $(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX)))
 endif
 
 ifndef HOST_OBJS
@@ -249,7 +249,7 @@ GARBAGE			+= $(MOCSRCS)
 endif
 
 ifdef SIMPLE_PROGRAMS
-GARBAGE			+= $(SIMPLE_PROGRAMS:%=%.o)
+GARBAGE			+= $(SIMPLE_PROGRAMS:%=%.$(OBJ_SUFFIX))
 endif
 
 ifdef HOST_SIMPLE_PROGRAMS
@@ -685,7 +685,7 @@ $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
 # SIMPLE_PROGRAMS = Foo Bar
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
-$(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.o $(EXTRA_DEPS) Makefile Makefile.in
+$(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(CPP_PROG_LINK),1)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) /Out:$@ $< $(LDFLAGS) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
@@ -866,7 +866,7 @@ else
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
 
-%.o: %.c Makefile.in
+%.$(OBJ_SUFFIX): %.c Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -884,14 +884,14 @@ moc_%.cpp: %.h Makefile.in
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-%.o: %.$(ASM_SUFFIX) Makefile.in
+%.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(AS) -Fdo:./$(OBJDIR) -Feo:.o $(ASFLAGS) $(AS_DASH_C_FLAG) $<
+	$(AS) -Fdo:./$(OBJDIR) -Feo:.$(OBJ_SUFFIX) $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 else
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 endif
 
-%.o: %.S Makefile.in
+%.$(OBJ_SUFFIX): %.S Makefile.in
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
 %: %.cpp Makefile.in
@@ -901,12 +901,12 @@ endif
 #
 # Please keep the next two rules in sync.
 #
-%.o: %.cc Makefile.in
+%.$(OBJ_SUFFIX): %.cc Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
-%.o: %.cpp Makefile.in
+%.$(OBJ_SUFFIX): %.cpp Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef STRICT_CPLUSPLUS_SUFFIX
@@ -1144,7 +1144,7 @@ INCLUDES		+= -I$(JMC_GEN_DIR) -I.
 ifdef JAVA_OR_NSJVM
 JMC_HEADERS		= $(patsubst %,$(JMC_GEN_DIR)/%.h,$(JMC_GEN))
 JMC_STUBS		= $(patsubst %,$(JMC_GEN_DIR)/%.c,$(JMC_GEN))
-JMC_OBJS		= $(patsubst %,%.o,$(JMC_GEN))
+JMC_OBJS		= $(patsubst %,%.$(OBJ_SUFFIX),$(JMC_GEN))
 
 $(JMC_GEN_DIR)/M%.h: $(JMCSRCDIR)/%.class
 	$(JMC) -d $(JMC_GEN_DIR) -interface $(JMC_GEN_FLAGS) $(?F:.class=)
@@ -1152,7 +1152,7 @@ $(JMC_GEN_DIR)/M%.h: $(JMCSRCDIR)/%.class
 $(JMC_GEN_DIR)/M%.c: $(JMCSRCDIR)/%.class
 	$(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
 
-M%.o: $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
+M%.$(OBJ_SUFFIX): $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
 ifeq ($(OS_ARCH),OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) $(JMC_GEN_DIR)/M$*.c
 else
@@ -1430,7 +1430,7 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in
+.SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX)
 
 #
 # Don't delete these files if we get killed.
