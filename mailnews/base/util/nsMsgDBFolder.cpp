@@ -222,6 +222,16 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 	return rv;
 }
 
+NS_IMETHODIMP
+nsMsgDBFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
+{
+    if (!aMsgDatabase || !mDatabase)
+        return NS_ERROR_NULL_POINTER;
+    *aMsgDatabase = mDatabase;
+    NS_ADDREF(*aMsgDatabase);
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                          nsIDBChangeListener * aInstigator)
 {

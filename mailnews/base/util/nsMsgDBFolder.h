@@ -44,6 +44,8 @@ public:
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
 	NS_IMETHOD SetCharset(PRUnichar * aCharset);
 
+  NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
+
 	//nsIDBChangeListener
 	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                          nsIDBChangeListener * aInstigator);

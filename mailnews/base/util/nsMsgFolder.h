@@ -274,6 +274,7 @@ public:
 	NS_IMETHOD GetNewMessagesNotificationDescription(PRUnichar * *adescription);
 
 	NS_IMETHOD GetRootFolder(nsIMsgFolder * *aRootFolder);
+  NS_IMETHOD GetMsgDatabase(nsIMsgDatabase** aMsgDatabase);
 
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
