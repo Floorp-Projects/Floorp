@@ -237,8 +237,11 @@ nsresult PromptDlg::ConfirmEx(
     INT result = DialogBoxParam(hInstResource,
         MAKEINTRESOURCE(IDD_CONFIRMEX), hwndParent, ConfirmProc, (LPARAM) this);
 
-    *checkValue = mCheckValue;
-    *buttonPressed = result;
+    if (checkValue)
+        *checkValue = mCheckValue;
+
+    if (buttonPressed)
+        *buttonPressed = result;
 
     return NS_OK;
 }
@@ -280,12 +283,14 @@ PromptDlg::Prompt(HWND hwndParent, const PRUnichar *dialogTitle,
     {
         if (value)
         {
-            nsMemory::Free(*value);
+            if (*value)
+                nsMemory::Free(*value);
+            nsAutoString v(T2W(mValue));
+            *value = ToNewUnicode(v);
         }
 
-        nsAutoString v(T2W(mValue));
-
-        *value = ToNewUnicode(v);
+        if (checkValue)
+            *checkValue = mCheckValue;
 
         *_retval = TRUE;
     }
@@ -340,18 +345,21 @@ PromptDlg::PromptUsernameAndPassword(HWND hwndParent,
     {
         if (username)
         {
-            nsMemory::Free(*username);
+            if (*username)
+                nsMemory::Free(*username);
+            nsAutoString user(T2W(mUsername));
+            *username = ToNewUnicode(user);
         }
         if (password)
         {
-            nsMemory::Free(*password);
+            if (*password)
+                nsMemory::Free(*password);
+            nsAutoString pass(T2W(mPassword));
+            *password = ToNewUnicode(pass);
         }
 
-        nsAutoString user(T2W(mUsername));
-        nsAutoString pass(T2W(mPassword));
-
-        *username = ToNewUnicode(user);
-        *password = ToNewUnicode(pass);
+        if (checkValue)
+            *checkValue = mCheckValue;
 
         *_retval = TRUE;
     }
@@ -402,12 +410,14 @@ PromptDlg::PromptPassword(HWND hwndParent,
     {
         if (password)
         {
-            nsMemory::Free(*password);
+            if (*password)
+                nsMemory::Free(*password);
+            nsAutoString pass(T2W(mPassword));
+            *password = ToNewUnicode(pass);
         }
 
-        nsAutoString pass(T2W(mPassword));
-
-        *password = ToNewUnicode(pass);
+        if (checkValue)
+            *checkValue = mCheckValue;
 
         *_retval = TRUE;
     }
