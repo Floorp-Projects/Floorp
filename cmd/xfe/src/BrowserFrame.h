@@ -33,6 +33,8 @@
 #include "PersonalToolbar.h"
 #include <Xm/Xm.h>
 
+class XFE_EditorToolbar;
+
 class XFE_BrowserFrame : public XFE_Frame
 {
 public:
@@ -56,12 +58,22 @@ public:
   virtual void respectChrome(Chrome * chrome);
 
   static void bringToFrontOrMakeNew(Widget toplevel);
+
+  virtual XFE_Command* getCommand(CommandType);
+
+#ifdef ENDER
+  void showEditorToolbar(XFE_View*);
+  void hideEditorToolbar();
+#endif /* ENDER */
                                           
 private:
 
   XFE_PersonalToolbar *		m_personalToolbar;
   XFE_URLBar *				m_urlBar;
   XFE_BrowserDrop *			m_browserDropSite;
+#ifdef ENDER
+  XFE_EditorToolbar *			m_editorStyleToolbar;
+#endif /* ENDER */
 
   XP_Bool					m_notification_added;
 

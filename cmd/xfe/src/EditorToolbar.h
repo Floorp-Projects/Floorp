@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -22,7 +22,7 @@
  *  EditorToolbar.h --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.h,v 3.2 1998/06/22 21:19:13 spider Exp $"
+ *  RCSID: "$Id: EditorToolbar.h,v 3.3 1998/08/13 21:50:59 akkana%netscape.com Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -48,10 +48,15 @@ public:
 
 	virtual ~XFE_EditorToolbar();
 
+    virtual const char* getClassName(); // return the class name 
+
 	// contract:
 	void   update();
 	Widget findButton(const char*, EChromeTag);
 	void   updateCommand(CommandType);
+
+    XFE_Component* getCommandDispatcher()       { return m_cmdDispatcher; }
+    void setCommandDispatcher(XFE_Component* d) { m_cmdDispatcher = d; }
 
 	// local:
 	XFE_Frame* getParentFrame() { return (XFE_Frame*)m_toplevel; }
@@ -61,6 +66,7 @@ public:
 private:
 	XFE_ComponentList* m_update_list;
 	Widget             m_rowcol;
+	XFE_Component *    m_cmdDispatcher;
 };
 
 class XFE_AbstractMenuItem : public XFE_Component
@@ -70,7 +76,6 @@ public:
 	virtual void update() { };
 	virtual CommandType getCmdId() = 0;
 	virtual XP_Bool showsUpdate() { return TRUE; };
-	
 };
 
 class XFE_MenuItem : public XFE_AbstractMenuItem
@@ -102,12 +107,9 @@ public:
 	CommandType getCmdId() {
 		return m_cmd_id;
 	}
-	void doCommand(XFE_CommandInfo* info) {
-		if (m_cmd_handler != NULL)
-			m_cmd_handler->doCommand(getParentFrame(), info);
-		else
-			getParentFrame()->doCommand(m_cmd_id, NULL, info);
-	}
+    XFE_Command* getCommand(CommandType id = 0);
+    XFE_Component* getCommandDispatcher();
+	void doCommand(XFE_CommandInfo* info);
 	XP_Bool showsUpdate();
 protected:
 	// data

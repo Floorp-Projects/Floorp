@@ -40,35 +40,6 @@ extern "C" int XFE_EDITOR_NEWTABLE_COLS;
 
 #define FE_SYNTAX_ERROR() doSyntaxErrorAlert(view, info)
 
-//
-//    This acts as an encapsulator for the doCommand() method.
-//    Sub-classes impliment a reallyDoCommand(), and leave the
-//    boring maintainence work to this class. This approach
-//    saves every sub-class from calling super::doCommand(),
-//    which would really be a drag, now wouldn't it.
-//
-class XFE_EditorViewCommand : public XFE_ViewCommand
-{
-public:
-	XFE_EditorViewCommand(char* name, XFE_EditorView *v = NULL) : XFE_ViewCommand(name, v) {};
-	
-	virtual void    reallyDoCommand(XFE_View*, XFE_CommandInfo*) = 0;
-	virtual XP_Bool requiresChromeUpdate() {
-		return TRUE;
-	};
-	void            doCommand(XFE_View* v_view, XFE_CommandInfo* info) {
-		XFE_EditorView* view = (XFE_EditorView*)v_view;
-
-		if (m_view)
-			view = (XFE_EditorView *)m_view;
-
-		reallyDoCommand(view, info);
-		if (requiresChromeUpdate()) {
-			view->updateChrome();
-		}
-	}; 
-};
-
 class UndoCommand : public XFE_EditorViewCommand
 {
 public:
@@ -211,16 +182,6 @@ public:
 				fe_EditorPaste(context, now);
 		}
 	}; 
-};
-
-class AlwaysEnabledCommand : public XFE_EditorViewCommand
-{
-public:
-	AlwaysEnabledCommand(char* name, XFE_EditorView *v) : XFE_EditorViewCommand(name, v) {};
-
-	XP_Bool isEnabled(XFE_View*, XFE_CommandInfo*) {
-		return True;
-	};
 };
 
 class DeleteCommand : public AlwaysEnabledCommand
@@ -1121,24 +1082,10 @@ SetFontFaceCommand::reallyDoCommand(XFE_View* view, XFE_CommandInfo* info)
 	set(view, index);
 }
 
-class SetFontColorCommand : public AlwaysEnabledCommand
+XP_Bool SetFontColorCommand::isDeterminate(XFE_View* view, XFE_CommandInfo*)
 {
-public:
-	SetFontColorCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSetFontColor, v) {
-		m_params = NULL;
-	};
-
-	virtual XP_Bool isDynamic() { return TRUE; };
-	XP_Bool isDeterminate(XFE_View* view, XFE_CommandInfo*) {
-		return style_is_determinate(view->getContext(), TF_FONT_COLOR);
-	};
-	XFE_CommandParameters* getParameters(XFE_View* view);
-	int getParameterIndex(XFE_View* view);
-	void setParameterIndex(XFE_View* view, unsigned index);
-	void reallyDoCommand(XFE_View* view, XFE_CommandInfo* info);
-private:
-	XFE_CommandParameters* m_params;
-};
+  return style_is_determinate(view->getContext(), TF_FONT_COLOR);
+}
 
 XFE_CommandParameters*
 SetFontColorCommand::getParameters(XFE_View*)

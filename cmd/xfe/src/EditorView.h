@@ -79,5 +79,66 @@ private:
   static  void updateChromeTimeout(XtPointer closure, XtIntervalId* id);
 };
 
+// Command classes which need to be public
+// (needed by BrowserFrame for embedded editor)
+
+//    This acts as an encapsulator for the doCommand() method.
+//    Sub-classes impliment a reallyDoCommand(), and leave the
+//    boring maintainence work to this class. This approach
+//    saves every sub-class from calling super::doCommand(),
+//    which would really be a drag, now wouldn't it.
+//
+class XFE_EditorViewCommand : public XFE_ViewCommand
+{
+public:
+	XFE_EditorViewCommand(char* name, XFE_EditorView *v = NULL)
+      : XFE_ViewCommand(name, v) {};
+	
+	virtual void    reallyDoCommand(XFE_View*, XFE_CommandInfo*) = 0;
+	virtual XP_Bool requiresChromeUpdate() {
+		return TRUE;
+	};
+	void            doCommand(XFE_View* v_view, XFE_CommandInfo* info) {
+		XFE_EditorView* view = (XFE_EditorView*)v_view;
+
+		if (m_view)
+			view = (XFE_EditorView *)m_view;
+
+		reallyDoCommand(view, info);
+		if (requiresChromeUpdate()) {
+			view->updateChrome();
+		}
+	}; 
+};
+
+class AlwaysEnabledCommand : public XFE_EditorViewCommand
+{
+public:
+	AlwaysEnabledCommand(char* name, XFE_EditorView *v)
+      : XFE_EditorViewCommand(name, v) {};
+
+	XP_Bool isEnabled(XFE_View*, XFE_CommandInfo*) {
+		return True;
+	};
+};
+
+class SetFontColorCommand : public AlwaysEnabledCommand
+{
+public:
+	SetFontColorCommand(XFE_EditorView *v)
+      : AlwaysEnabledCommand(xfeCmdSetFontColor, v) {
+		m_params = NULL;
+	};
+
+	virtual XP_Bool isDynamic() { return TRUE; };
+	XP_Bool isDeterminate(XFE_View* view, XFE_CommandInfo*);
+	XFE_CommandParameters* getParameters(XFE_View* view);
+	int getParameterIndex(XFE_View* view);
+	void setParameterIndex(XFE_View* view, unsigned index);
+	void reallyDoCommand(XFE_View* view, XFE_CommandInfo* info);
+private:
+	XFE_CommandParameters* m_params;
+};
+
 #endif /* _xfe_editorview_h */
 

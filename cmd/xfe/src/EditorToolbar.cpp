@@ -22,7 +22,7 @@
  *  EditorToolbar.cpp --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.cpp,v 3.1 1998/03/28 03:26:24 ltabb Exp $"
+ *  RCSID: "$Id: EditorToolbar.cpp,v 3.2 1998/08/13 21:50:58 akkana%netscape.com Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -213,6 +213,75 @@ XFE_EditorToolbarPushButton::XFE_EditorToolbarPushButton(Widget,
 {
 }
 
+XFE_Command*
+XFE_ActionMenuItem::getCommand(CommandType id)
+{
+	XFE_Frame* frame = getParentFrame();
+    XFE_View*  view = 0;
+    XFE_Command* cmd = 0;
+
+    if (id == 0)
+      id = m_cmd_id;
+
+    // get the dispatcher from the XFE_EditorToolbar m_parent
+    if (m_parent->isClassOf("EditorToolbar"))
+    {
+      XFE_EditorToolbar* tb = (XFE_EditorToolbar*)m_parent;
+      if (tb)
+      {
+        XFE_Component* cmdDispatcher = tb->getCommandDispatcher();
+        /* See comments in Menu.cpp */
+        if (cmdDispatcher)
+        {
+          if (cmdDispatcher->isClassOf("View"))
+			view = (XFE_View *)cmdDispatcher;
+          else if (cmdDispatcher->isClassOf("Frame"))
+			frame = (XFE_Frame *)cmdDispatcher;
+        }
+      }
+    }
+
+	if (view)
+      cmd = view->getCommand(id);
+	else if (frame)
+      cmd = frame->getCommand(id);
+
+    return cmd;
+}
+
+XFE_Component *
+XFE_ActionMenuItem::getCommandDispatcher()
+{
+    // get the dispatcher from the XFE_EditorToolbar m_parent
+    if (m_parent->isClassOf("EditorToolbar"))
+    {
+      XFE_EditorToolbar* tb = (XFE_EditorToolbar*)m_parent;
+      if (tb)
+      {
+        XFE_Component* cmdDispatcher = tb->getCommandDispatcher();
+        if (cmdDispatcher)
+          return cmdDispatcher;
+      }
+    }
+    return getParentFrame();
+}
+
+void XFE_ActionMenuItem::doCommand(XFE_CommandInfo* info)
+{
+  if (m_cmd_handler != NULL)
+    m_cmd_handler->doCommand(getParentFrame(), info);
+  else
+  {
+    XFE_Component* dispatcher = getCommandDispatcher();
+    if (dispatcher && dispatcher->isClassOf("View"))
+      ((XFE_View*)dispatcher)->doCommand(m_cmd_id, NULL, info);
+    else if (dispatcher && dispatcher->isClassOf("Frame"))
+      ((XFE_Frame*)dispatcher)->doCommand(m_cmd_id, NULL, info);
+    else
+      getParentFrame()->doCommand(m_cmd_id, NULL, info);
+  }
+}
+
 void
 XFE_EditorToolbarPushButton::update()
 {
@@ -223,7 +292,7 @@ XFE_EditorToolbarPushButton::update()
 	//    Do we have a command handler?
 	//
 	if (!m_cmd_handler)
-		m_cmd_handler = getParentFrame()->getCommand(m_cmd_id);
+		m_cmd_handler = getCommand(m_cmd_id);
 
 	if (m_cmd_handler != NULL)
 		sensitive = m_cmd_handler->isEnabled(getParentFrame(), &e_info);
@@ -327,7 +396,7 @@ XFE_EditorToolbarToggleButton::update()
 	//    Do we have a command handler?
 	//
 	if (!m_cmd_handler)
-		m_cmd_handler = getParentFrame()->getCommand(m_cmd_id);
+		m_cmd_handler = getCommand(m_cmd_id);
 
 	if (m_cmd_handler != NULL) {
 		sensitive = m_cmd_handler->isEnabled(frame, &e_info);
@@ -408,7 +477,7 @@ cl_selection_cb(Widget /*widget*/, XtPointer client_data, XtPointer cb_data)
 {
 	DtComboBoxCallbackStruct* info = (DtComboBoxCallbackStruct*)cb_data;
 	XFE_ComboList*            list = (XFE_ComboList*)client_data;
-	
+
 	list->itemSelected(info->item_position);
 }
 
@@ -448,7 +517,7 @@ XFE_ComboList::XFE_ComboList(Widget parent, ToolbarSpec* spec,
 	XtSetArg(args[n], XmNmarginHeight, 0); n++;
 	XtSetArg(args[n], XmNarrowType, XmMOTIF); n++;
 	m_combo = DtCreateComboBox(m_widget,
-								(char*)spec->toolbarButtonName,
+                                (char*)spec->toolbarButtonName,
 								args, n);
 	XtManageChild(m_combo);
 
@@ -565,8 +634,8 @@ XFE_SmartComboList::update()
 	XFE_Frame* frame = getParentFrame();
 	int        index = -1;
 
-	if (!m_cmd_handler)
-		m_cmd_handler = getParentFrame()->getCommand(m_cmd_id);
+    if (!m_cmd_handler)
+      m_cmd_handler = getCommand();
 
 	if (m_cmd_handler != NULL) {
 		if (!m_params) {
@@ -1227,6 +1296,8 @@ XFE_EditorToolbar::XFE_EditorToolbar(XFE_Component* parent_frame,
 	m_toplevel = parent_frame;
 	m_update_list = NULL;
 
+    m_cmdDispatcher = 0;
+
 	m_rowcol = make_toolbar(parent_toolbox->getBaseWidget(),
 							name, spec, this, do_frame);
 
@@ -1262,6 +1333,11 @@ XFE_EditorToolbar::~XFE_EditorToolbar()
 	m_toplevel->unregisterInterest(XFE_View::commandNeedsUpdating,
 								   this,
 								   command_update_cb);
+}
+
+const char* XFE_EditorToolbar::getClassName()
+{
+	return "XFE_EditorToolbar::className";
 }
 
 Widget

@@ -81,6 +81,10 @@ public:
   static MenuSpec save_submenu_spec[];
   static MenuSpec publish_submenu_spec[];
 
+  // alignment menu spec needs to be public so BrowserFrame can
+  // use it for embedded editors:
+  static ToolbarSpec alignment_menu_spec[];
+
 private:
   XFE_EditorToolbar* m_format_toolbar;
 

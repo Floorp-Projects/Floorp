@@ -423,7 +423,7 @@ static ToolbarSpec editor_file_toolbar_spec[] = {
 	{ NULL }
 };
 
-static ToolbarSpec alignment_menu_spec[] = {
+ToolbarSpec XFE_EditorFrame::alignment_menu_spec[] = {
 	{ xfeCmdSetAlignmentStyleLeft,	 PUSHBUTTON, &ed_left_group },
 	{ xfeCmdSetAlignmentStyleCenter, PUSHBUTTON, &ed_center_group },
 	{ xfeCmdSetAlignmentStyleRight,	 PUSHBUTTON, &ed_right_group },
@@ -450,7 +450,7 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 	{ xfeCmdOutdent,	PUSHBUTTON, &ed_outdent_group },
 	{ xfeCmdIndent,	PUSHBUTTON, &ed_indent_group },
 	{ xfeCmdSetAlignmentStyle, CASCADEBUTTON, &ed_left_group, 0, 0, 0,
-	  (MenuSpec*)&alignment_menu_spec },
+	  (MenuSpec*)&XFE_EditorFrame::alignment_menu_spec },
 	{ NULL }
 };
 

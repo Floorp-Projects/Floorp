@@ -35,6 +35,12 @@
 #include "xpassert.h"
 #include "csid.h"
 
+#ifdef ENDER
+#include "EditorFrame.h"
+#include "EditorView.h"
+#include "EditorToolbar.h"
+#endif
+
 #include "DtWidgets/ComboBox.h"
 
 #include <Xfe/Xfe.h>
@@ -240,6 +246,59 @@ ToolbarSpec XFE_BrowserFrame::toolbar_spec[] = {
 	{ NULL }
 };
 
+#ifdef ENDER
+static ToolbarSpec alignment_menu_spec[] = {
+	{ xfeCmdSetAlignmentStyleLeft,	 PUSHBUTTON, &ed_left_group },
+	{ xfeCmdSetAlignmentStyleCenter, PUSHBUTTON, &ed_center_group },
+	{ xfeCmdSetAlignmentStyleRight,	 PUSHBUTTON, &ed_right_group },
+	{ NULL }
+};
+
+static ToolbarSpec goodies_menu_spec[] = {
+	{ xfeCmdInsertLink,           PUSHBUTTON, &ed_link_group   },
+	{ xfeCmdInsertTarget,         PUSHBUTTON, &ed_target_group },
+	{ xfeCmdInsertImage,          PUSHBUTTON, &ed_image_group  },
+	{ xfeCmdInsertHorizontalLine, PUSHBUTTON, &ed_hrule_group  },
+	{ xfeCmdInsertTable,          PUSHBUTTON, &ed_table_group  },
+	{ NULL }
+};
+
+static ToolbarSpec editor_style_toolbar_spec[] = {
+
+	{ xfeCmdSetParagraphStyle, COMBOBOX },
+	{ xfeCmdSetFontFace,       COMBOBOX },
+	{ xfeCmdSetFontSize,       COMBOBOX },
+	{ xfeCmdSetFontColor,      COMBOBOX },
+	TOOLBAR_SEPARATOR,
+
+	{ xfeCmdToggleCharacterStyleBold,	   TOGGLEBUTTON, &ed_bold_group },
+	{ xfeCmdToggleCharacterStyleItalic,	   TOGGLEBUTTON, &ed_italic_group },
+	{ xfeCmdToggleCharacterStyleUnderline, TOGGLEBUTTON, &ed_underline_group },
+	{ xfeCmdClearAllStyles,                PUSHBUTTON  , &ed_clear_group },
+	TOOLBAR_SEPARATOR,
+
+	{ xfeCmdInsertBulletedList,	TOGGLEBUTTON, &ed_bullet_group },
+	{ xfeCmdInsertNumberedList,	TOGGLEBUTTON, &ed_number_group },
+	TOOLBAR_SEPARATOR,
+
+	{ xfeCmdOutdent,	PUSHBUTTON, &ed_outdent_group },
+	{ xfeCmdIndent,	PUSHBUTTON, &ed_indent_group },
+	{ xfeCmdSetAlignmentStyle, CASCADEBUTTON, &ed_left_group, 0, 0, 0,
+	  (MenuSpec*)&alignment_menu_spec },
+	{ "editorGoodiesMenu", CASCADEBUTTON, &ed_insert_group, 0, 0, 0,
+	  (MenuSpec*)&goodies_menu_spec },
+	{ NULL }
+};
+#endif /* ENDER */
+
+static XFE_CommandList* my_commands;
+
+XFE_Command*
+XFE_BrowserFrame::getCommand(CommandType cmd)
+{
+	return findCommand(my_commands, cmd);
+}
+
 extern "C"  void fe_HackTranslations (MWContext *, Widget);
 
 XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
@@ -283,6 +342,21 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
                              m_toolbox,
                              "personalToolbarItem",
                              this);
+
+#ifdef ENDER
+  // Create the editor toolbars needed for embedded composer
+  m_editorStyleToolbar = new XFE_EditorToolbar(this,
+                                               m_toolbox,
+                                               "editorFormattingToolbar",
+									(ToolbarSpec*)&editor_style_toolbar_spec,
+										   True);
+
+  // don't show the editor toolbars; they will be turned on when
+  // we load a page which contains an htmlarea.
+
+  // Need to register commands which the editor toolbars will need:
+  registerCommand(my_commands, new SetFontColorCommand(0));
+#endif /* ENDER */
 
   // add notification now 'cuz frame->getURL might not get called and
   // fe_SetURLString will break.
@@ -366,6 +440,26 @@ XFE_BrowserFrame::updateToolbar()
 
 	m_toolbar->update();
 }
+
+#ifdef ENDER
+void
+XFE_BrowserFrame::showEditorToolbar(XFE_View* view)
+{
+  if (m_editorStyleToolbar)
+  {
+    m_editorStyleToolbar->show();
+    if (view)
+      m_editorStyleToolbar->setCommandDispatcher(view);
+  }
+}
+
+void
+XFE_BrowserFrame::hideEditorToolbar()
+{
+  if (m_editorStyleToolbar)
+    m_editorStyleToolbar->hide();
+}
+#endif /* ENDER */
 
 XP_Bool
 XFE_BrowserFrame::isCommandEnabled(CommandType cmd,
@@ -599,6 +693,10 @@ XFE_CALLBACK_DEFN(XFE_BrowserFrame, newPageLoading)
 		getLogo()->easterEgg(url);
 	}
 #endif /* NETSCAPE_PRIV */
+
+#ifdef ENDER
+    hideEditorToolbar();
+#endif /* ENDER */
 }
 
 XFE_CALLBACK_DEFN(XFE_BrowserFrame, updateToolbarAppearance)(XFE_NotificationCenter */*obj*/, 

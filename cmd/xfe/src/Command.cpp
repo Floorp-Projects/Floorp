@@ -273,7 +273,10 @@ XFE_ViewCommand::isDeterminate(XFE_Frame* frame, XFE_CommandInfo* info)
 	if (!view)
 		view = frame_to_view(this, frame, info);
 
-	return ((XFE_AbstractCommand*)this)->isDeterminate(view, info);
+    if (view)
+      return ((XFE_AbstractCommand*)this)->isDeterminate(view, info);
+
+    return FALSE;
 }
 
 XFE_CommandParameters*

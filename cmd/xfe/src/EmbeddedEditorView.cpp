@@ -28,6 +28,7 @@
 #include "ViewGlue.h"
 #include "il_util.h"
 #include "layers.h"
+#include "BrowserFrame.h"
 
 #ifndef NO_WEB_FONTS
 #include "Mnfrf.h"
@@ -160,6 +161,14 @@ XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
   URL_Struct* url = NET_CreateURLStruct(default_url, NET_NORMAL_RELOAD);
 
   eev->getURL(url);
+
+  // Show the editor toolbars in the containing Frame:
+  // XXX NOTE!  This needs to be redone when we support
+  // an embedded editor inside an EditorFrame.
+  XFE_BrowserFrame* bf = (XFE_BrowserFrame*)frame;
+  if (bf)
+    bf->showEditorToolbar(eev);
+
   return(w);
 }
 
