@@ -50,43 +50,34 @@
     <button label="&viewLog.label;" accesskey="&viewLog.accesskey;" oncommand="junkLog()"/>
   </hbox>
 
-  <separator/>
   <description>&info1.label;</description>
-  <separator/>
   <description>&info2.label;</description>
-  <separator/>
 
   <checkbox id="level" oncommand="conditionallyEnableUI(null);" accesskey="&level.accesskey;" label="&level.label;"/>
-
-  <separator/>
 
   <vbox align="start">
     <checkbox id="useWhiteList" oncommand="conditionallyEnableUI('useWhiteList')" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
     
     <hbox>
-    <spacer width="20px"/>
-    <menulist id="whiteListAbURI">
-     <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
-        datasources="rdf:addressdirectory">
-        <template>
-        <rule nc:IsWriteable="false"/>
-        <rule nc:IsMailList="false">
-          <menuitem uri="..."
+      <spacer width="20px"/>
+      <menulist id="whiteListAbURI">
+       <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
+          datasources="rdf:addressdirectory">
+          <template>
+          <rule nc:IsWriteable="false"/>
+            <rule nc:IsMailList="false">
+              <menuitem uri="..."
                     label="rdf:http://home.netscape.com/NC-rdf#DirName"
                     value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
-        </rule>
-        </template>
-      </menupopup>
-    </menulist>
+            </rule>
+          </template>
+        </menupopup>
+      </menulist>
     </hbox>
   </vbox>
 
-  <separator/>
-
   <vbox align="start">
-
     <checkbox id="moveOnSpam" oncommand="conditionallyEnableUI('moveOnSpam')" label="&move.label;"/>
-
     <radiogroup id="moveTargetMode">
       <grid class="specialFolderPickerGrid">
         <columns>
