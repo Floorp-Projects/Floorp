@@ -170,27 +170,8 @@ nsPrefObserver::Observe(nsISupports *subject,
 
 nsStandardURL::
 nsSegmentEncoder::nsSegmentEncoder(const char *charset)
+    : mCharset(charset)
 {
-    if (!charset || !*charset)
-        return;
-
-    // get unicode encoder (XXX cache this someplace)
-    nsresult rv;
-    if (!gCharsetMgr) {
-        nsCOMPtr<nsICharsetConverterManager> convMgr(
-                do_GetService("@mozilla.org/charset-converter-manager;1", &rv));
-        if (NS_FAILED(rv)) {
-            NS_ERROR("failed to get charset-converter-manager");
-            return;
-        }
-        NS_ADDREF(gCharsetMgr = convMgr);
-    }
-
-    rv = gCharsetMgr->GetUnicodeEncoder(charset, getter_AddRefs(mEncoder));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("failed to get unicode encoder");
-        mEncoder = 0; // just in case
-    }
 }
 
 PRInt32 nsStandardURL::
@@ -207,16 +188,21 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
         len = seg.mLen;
 
         // first honor the origin charset if appropriate. as an optimization,
-        // only do this if |str| is non-ASCII.
+        // only do this if the segment is non-ASCII.  Further, if mCharset is
+        // null or the empty string then the origin charset is UTF-8 and there
+        // is nothing to do.
         nsCAutoString encBuf;
-        if (mEncoder && !nsCRT::IsAscii(str)) {
-            NS_ConvertUTF8toUCS2 ucsBuf(Substring(str + pos, str + pos + len));
-            if (NS_SUCCEEDED(EncodeString(mEncoder, ucsBuf, encBuf))) {
-                str = encBuf.get();
-                pos = 0;
-                len = encBuf.Length();
+        if (!nsCRT::IsAscii(str + pos, len) && mCharset && *mCharset) {
+            // we have to encode this segment
+            if (mEncoder || InitUnicodeEncoder()) {
+                NS_ConvertUTF8toUCS2 ucsBuf(Substring(str + pos, str + pos + len));
+                if (NS_SUCCEEDED(EncodeString(mEncoder, ucsBuf, encBuf))) {
+                    str = encBuf.get();
+                    pos = 0;
+                    len = encBuf.Length();
+                }
+                // else some failure occured... assume UTF-8 is ok.
             }
-            // else some failure occured... assume UTF-8 is ok.
         }
 
         // escape per RFC2396 unless UTF-8 and allowed by preferences
@@ -248,6 +234,30 @@ nsSegmentEncoder::EncodeSegment(const nsASingleFragmentCString &str,
         return result;
     else
         return str;
+}
+
+PRBool nsStandardURL::
+nsSegmentEncoder::InitUnicodeEncoder()
+{
+    NS_ASSERTION(!mEncoder, "Don't call this if we have an encoder already!");
+    nsresult rv;
+    if (!gCharsetMgr) {
+        rv = CallGetService("@mozilla.org/charset-converter-manager;1",
+                            &gCharsetMgr);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("failed to get charset-converter-manager");
+            return PR_FALSE;
+        }
+    }
+
+    rv = gCharsetMgr->GetUnicodeEncoder(mCharset, getter_AddRefs(mEncoder));
+    if (NS_FAILED(rv)) {
+        NS_ERROR("failed to get unicode encoder");
+        mEncoder = 0; // just in case
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
 }
 
 #define GET_SEGMENT_ENCODER(name) \

@@ -131,6 +131,10 @@ public: /* internal -- HPUX compiler can't handle this being private */
                                         PRInt16 mask,
                                         nsAFlatCString &buf);
     private:
+        PRBool InitUnicodeEncoder();
+        
+        const char* mCharset;  // Caller should keep this alive for
+                               // the life of the segment encoder
         nsCOMPtr<nsIUnicodeEncoder> mEncoder;
     };
     friend class nsSegmentEncoder;

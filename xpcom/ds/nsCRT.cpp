@@ -470,6 +470,26 @@ PRBool nsCRT::IsAscii(const char *aString) {
   return PR_TRUE;
 }
 /**
+ *  Determine whether the given string consists of valid ascii chars
+ *  
+ *  @param   aString is null terminated
+ *  @param   aLength is the number of chars to test.  This must be at most
+ *           the number of chars in aString before the null terminator
+ *  @return  PR_TRUE if all chars are valid ASCII chars, PR_FALSE otherwise
+ */
+PRBool nsCRT::IsAscii(const char* aString, PRUnichar aLength)
+{
+    const char* end = aString + aLength;
+    while (aString < end) {
+        NS_ASSERTION(*aString, "Null byte before end of data!");
+        if (0x80 & *aString)
+            return PR_FALSE;
+        ++aString;
+    }
+    return PR_TRUE;
+}
+
+/**
  *  Determine if given char in valid alpha range
  *  
  *  @update  rickg 03.10.2000
