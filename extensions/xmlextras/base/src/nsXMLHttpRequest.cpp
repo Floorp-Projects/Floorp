@@ -155,7 +155,8 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsXMLHttpRequest, nsIXMLHttpRequest, nsIDOMLoadListener)
+NS_IMPL_ISUPPORTS3(nsXMLHttpRequest, nsIXMLHttpRequest, nsIDOMLoadListener,
+                   nsISecurityCheckedComponent)
   
 /* noscript void addEventListener (in string type, in nsIDOMEventListener listener); */
 NS_IMETHODIMP 
@@ -901,3 +902,48 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+static const char* kAllAccess = "AllAccess";
+
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP 
+nsXMLHttpRequest::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+  if (iid->Equals(NS_GET_IID(nsIXMLHttpRequest))) {
+    *_retval = nsCRT::strdup(kAllAccess);
+  }
+
+  return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP 
+nsXMLHttpRequest::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+  if (iid->Equals(NS_GET_IID(nsIXMLHttpRequest))) {
+    *_retval = nsCRT::strdup(kAllAccess);
+  }
+
+  return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP 
+nsXMLHttpRequest::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+  if (iid->Equals(NS_GET_IID(nsIXMLHttpRequest))) {
+    *_retval = nsCRT::strdup(kAllAccess);
+  }
+
+  return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP 
+nsXMLHttpRequest::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+  if (iid->Equals(NS_GET_IID(nsIXMLHttpRequest))) {
+    *_retval = nsCRT::strdup(kAllAccess);
+  }
+
+  return NS_OK;
+}

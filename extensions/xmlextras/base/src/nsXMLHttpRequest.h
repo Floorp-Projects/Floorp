@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDocument.h"
+#include "nsISecurityCheckedComponent.h"
 #include "nsIURI.h"
 #include "nsIHTTPChannel.h"
 #include "nsIDocument.h"
@@ -36,7 +37,8 @@
 #include "jsapi.h"
 
 class nsXMLHttpRequest : public nsIXMLHttpRequest,
-                         public nsIDOMLoadListener
+                         public nsIDOMLoadListener,
+                         public nsISecurityCheckedComponent
 {
 public:
   nsXMLHttpRequest();
@@ -55,6 +57,9 @@ public:
   virtual nsresult Unload(nsIDOMEvent* aEvent);
   virtual nsresult Abort(nsIDOMEvent* aEvent);
   virtual nsresult Error(nsIDOMEvent* aEvent);
+
+  // nsISecurityCheckedComponent
+  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 protected:
   nsresult MakeScriptEventListener(nsISupports* aObject,

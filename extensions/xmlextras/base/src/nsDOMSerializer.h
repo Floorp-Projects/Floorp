@@ -24,6 +24,7 @@
 #define nsDOMSerializer_h__
 
 #include "nsIDOMSerializer.h"
+#include "nsISecurityCheckedComponent.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
@@ -37,7 +38,9 @@ class nsIDOMComment;
 class nsIDOMProcessingInstruction;
 class nsIUnicodeEncoder;
 
-class nsDOMSerializer : public nsIDOMSerializer {
+class nsDOMSerializer : public nsIDOMSerializer,
+                        public nsISecurityCheckedComponent
+{
 public:
   nsDOMSerializer();
   virtual ~nsDOMSerializer();
@@ -49,6 +52,8 @@ public:
   NS_IMETHOD SerializeToStream(nsIDOMNode *root, 
                                nsIOutputStream *stream, 
                                const char *charset);
+
+  NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
 protected:
   void SerializeText(nsIDOMText* aText, nsString& aStr);
