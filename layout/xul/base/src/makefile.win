@@ -65,7 +65,6 @@ CPPSRCS=					\
         nsRepeatService.cpp        \
         nsToolbarItemFrame.cpp        \
         nsGrippyFrame.cpp        \
-        nsTabFrame.cpp        \
         nsStackFrame.cpp        \
         nsDeckFrame.cpp        \
 	nsTreeIndentationFrame.cpp \
@@ -133,7 +132,6 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsRepeatService.obj    \
         .\$(OBJDIR)\nsToolbarItemFrame.obj    \
         .\$(OBJDIR)\nsGrippyFrame.obj    \
-        .\$(OBJDIR)\nsTabFrame.obj    \
         .\$(OBJDIR)\nsDeckFrame.obj    \
         .\$(OBJDIR)\nsStackFrame.obj    \
 	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
