@@ -67,35 +67,37 @@ MISSING_X=
 MISSING_MOTIF=
 MISSING_GTK=
 
-dnl Check for invalid object directory setup.
-dnl    If the tree has already been built in topsrcdir,
-dnl    do not allow it to be built in a separate object 
-dnl    directory unless the src tree is cleaned up.
-dnl ========================================================
+dnl Do not allow a separate objdir build if a srcdir build exists.
+dnl ==============================================================
 _topsrcdir=`cd \`dirname $0\`; pwd`
 _objdir=`pwd`
 if test "$_topsrcdir" != "$_objdir"
 then
   # Check for a couple representative files in the source tree
+  _conflict_files=
   for file in $_topsrcdir/Makefile $_topsrcdir/config/autoconf.mk; do
     if test -f $file; then
-      cat 1>&2 <<-EOF
-	Error: Your source tree contains the file,
-	          $file
-	
-	       This is an indication that you previously built in the source
-	       tree. Files built in the source tree can confuse the separate
-	       objdir build.
-	
-	       You can clean up the source tree with the following steps:
-	         1. cd $_topsrcdir
-	         2. gmake realclean; build/autoconf/clean-config.sh
-	
-	EOF
-      exit 1
-      break
+      _conflict_files="$_conflict_files $file"
     fi
   done
+  if test "$_conflict_files"; then
+    echo "***"
+    echo "*   Your source tree contains these files:"
+    for file in $_conflict_files; do
+      echo "*         $file"
+    done
+    cat 1>&2 <<-EOF
+	*   This indicates that you previously built in the source tree.
+	*   A source tree build can confuse the separate objdir build.
+	*
+	*   To clean up the source tree:
+	*     1. cd $_topsrcdir
+	*     2. gmake -f client.mk cleansrcdir
+	***
+	EOF
+    exit 1
+    break
+  fi
 fi
 
 dnl Checks for programs.
