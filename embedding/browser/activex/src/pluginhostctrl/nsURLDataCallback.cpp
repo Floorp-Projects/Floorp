@@ -50,6 +50,7 @@ nsURLDataCallback::nsURLDataCallback() :
     m_szContentType(NULL),
     m_szURL(NULL),
     m_nDataPos(0),
+    m_nDataMax(0),
     m_hPostData(NULL)
 {
     memset(&m_NPStream, 0, sizeof(m_NPStream));
@@ -299,6 +300,8 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnProgress(
         }
         break;
     }
+
+    m_nDataMax = ulProgressMax;
     return S_OK;
 }
 
@@ -408,7 +411,9 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
         return S_OK;
     }
 
-    ATLTRACE(_T("Data for stream %s (%d bytes available)\n"), m_szURL, dwSize);
+    m_NPStream.end = m_nDataMax;
+
+    ATLTRACE(_T("Data for stream %s (%d of %d bytes are available)\n"), m_szURL, dwSize, m_NPStream.end);
 
     // Feed the stream data into the plugin
     HRESULT hr;
