@@ -782,6 +782,10 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
 {
   nsresult rv = NS_OK;
     
+  // clear saved message id if sending, so we don't send out the same message-id.
+  if (deliverMode == nsIMsgCompDeliverMode::Now || deliverMode == nsIMsgCompDeliverMode::Later)
+    m_compFields->SetMessageId("");
+
   if (m_compFields && identity) 
   {
     // Pref values are supposed to be stored as UTF-8, so no conversion
@@ -908,7 +912,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
                     PR_FALSE,                           // PRBool                            digest_p,
                     PR_FALSE,                           // PRBool                            dont_deliver_p,
                     (nsMsgDeliverMode)deliverMode,      // nsMsgDeliverMode                  mode,
-                    nsnull,                             // nsIMsgDBHdr *msgToReplace                        *msgToReplace, 
+                    nsnull,                             // nsIMsgDBHdr                       *msgToReplace, 
                     m_composeHTML?TEXT_HTML:TEXT_PLAIN, // const char                        *attachment1_type,
                     bodyString,                         // const char                        *attachment1_body,
                     bodyLength,                         // PRUint32                          attachment1_body_length,
@@ -2986,7 +2990,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
       else
       {  
         compose->NotifyStateListeners(eSaveInFolderDone,aStatus);
-        if (mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft)
+        if (mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft || mDeliverMode == nsIMsgSend::nsMsgSaveAsTemplate)
         { 
           // Remove the current draft msg when saving to draft is done. Also,
           // if it was a NEW comp type, it's now DRAFT comp type. Otherwise
@@ -3035,7 +3039,7 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
   nsresult    rv;
   nsCOMPtr <nsIMsgCompFields> compFields = nsnull;
 
-    rv = compObj->GetCompFields(getter_AddRefs(compFields));
+  rv = compObj->GetCompFields(getter_AddRefs(compFields));
   NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveCurrentDraftMessage can't get compose fields");
   if (NS_FAILED(rv) || !compFields)
     return rv;

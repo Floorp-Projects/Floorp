@@ -1388,7 +1388,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
       char *parm = 0;
       parm = MimeHeaders_get_parameter(draftInfo, "vcard", NULL, NULL);
       fields->SetAttachVCard(parm && !nsCRT::strcmp(parm, "1"));
-      
+   
+      fields->SetMessageId(id); // keep same message id for editing template.
       PR_FREEIF(parm);
       parm = MimeHeaders_get_parameter(draftInfo, "receipt", NULL, NULL);
       if (parm && !nsCRT::strcmp(parm, "0"))
@@ -1559,6 +1560,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
 #ifdef NS_DEBUG
         printf("RICHIE: Time to create the EDITOR with this template - HAS a body!!!!\n");
 #endif
+        fields->SetDraftId(mdd->url_name);
         CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Template, composeFormat, mdd->identity, nsnull);
       }
       else
