@@ -29,8 +29,6 @@
 
 #include "nsMsgIncomingServer.h"
 
-#include "nsIPref.h"
-
 #include "prmem.h"
 #include "plstr.h"
 #include "prprf.h"
