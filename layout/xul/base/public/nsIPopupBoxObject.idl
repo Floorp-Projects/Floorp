@@ -27,22 +27,18 @@
 interface nsIDOMElement;
 
 
-[scriptable, uuid(A56A6F82-5BE4-4c47-930B-10BDB0F4F854)]
-interface nsIPopupSetBoxObject : nsISupports
+[scriptable, uuid(33C60E14-5150-4876-9A96-2732557E6895)]
+interface nsIPopupBoxObject : nsISupports
 {
-  void createPopup(in nsIDOMElement srcContent, in nsIDOMElement popupContent,
-                   in long xpos, in long ypos,
-                   in wstring popupType, in wstring anchorAlignment, 
-                   in wstring popupAlignment);
-
+  void showPopup(in nsIDOMElement srcContent, in nsIDOMElement popupContent,
+                 in long xpos, in long ypos,
+                 in wstring popupType, in wstring anchorAlignment, 
+                 in wstring popupAlignment);
   void hidePopup();
-  void destroyPopup();
-
-  attribute nsIDOMElement activeChild;
 };
 
 %{C++
 nsresult
-NS_NewPopupSetBoxObject(nsIBoxObject** aResult);
+NS_NewPopupBoxObject(nsIBoxObject** aResult);
 
 %}

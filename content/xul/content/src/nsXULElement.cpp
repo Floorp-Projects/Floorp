@@ -2065,7 +2065,7 @@ static PRBool CanHaveBinding(nsIAtom* aTag) {
   // for display: none elts anyway, so we're getting into a real edge
   // case.
   return (aTag != nsXULAtoms::broadcaster) && (aTag != nsXULAtoms::commandset) &&
-    (aTag != nsXULAtoms::commands) && (aTag != nsXULAtoms::command) && (aTag != nsXULAtoms::popupset) &&
+    (aTag != nsXULAtoms::commands) && (aTag != nsXULAtoms::command) && (aTag != nsXULAtoms::popupgroup) &&
     (aTag != nsXULAtoms::broadcasterset) && (aTag != nsXULAtoms::templateAtom) &&
     (aTag != nsXULAtoms::box) && (aTag != nsXULAtoms::hbox) && (aTag != nsXULAtoms::vbox) &&
     (aTag != nsXULAtoms::stack) && (aTag != nsXULAtoms::spring);

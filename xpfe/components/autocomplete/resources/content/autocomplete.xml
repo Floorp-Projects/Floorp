@@ -35,8 +35,8 @@
         </xul:hbox>
       </xul:hbox>
 
-      <xul:popupset anonid="popupset" ignorekeys="true">
-        <xul:popup anonid="popup" class="autocomplete-result-popup" inherits="for=id,nomatch"/>
+      <xul:popupset anonid="popupset">
+        <xul:popup ignorekeys="true" anonid="popup" class="autocomplete-result-popup" inherits="for=id,nomatch"/>
       </xul:popupset>
 
       <children includes="menupopup"/>
@@ -860,8 +860,6 @@
       <method name="closeResultPopup">
         <body><![CDATA[
           if (this.resultsPopup && this.mMenuOpen) {
-            //var boxObject = this.mPopupSetElt.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
-            //boxObject.hidePopup();
             this.resultsPopup.closePopup();
             this.mMenuOpen = false;
           }
@@ -1367,8 +1365,7 @@
   <binding id="autocomplete-internal-box">
     <content context="_child">
       <children/>
-      <xul:popupset>
-        <xul:popup onpopupshowing="this.parentNode.parentNode.doPopupItemEnabling(this);">
+        <xul:menupopup onpopupshowing="this.parentNode.doPopupItemEnabling(this);">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"
                         oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
                                    controller.doCommand('cmd_undo');"/>
@@ -1389,8 +1386,7 @@
           <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" command="cmd_selectAll"
                         oncommand="var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
                                    controller.doCommand('cmd_selectAll');"/>
-        </xul:popup>
-      </xul:popupset>
+        </xul:menupopup>
     </content>
 
     <implementation>

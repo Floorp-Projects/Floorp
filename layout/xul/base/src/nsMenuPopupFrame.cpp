@@ -54,10 +54,38 @@
 #include "nsIScrollableView.h"
 #include "nsIFrameManager.h"
 #include "nsGUIEvent.h"
+#include "nsIRootBox.h"
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
+
+
+static nsIPopupSetFrame*
+GetPopupSetFrame(nsIPresContext* aPresContext)
+{
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIFrame* rootFrame;
+  shell->GetRootFrame(&rootFrame);
+  if (!rootFrame)
+    return nsnull;
+
+  if (rootFrame)
+    rootFrame->FirstChild(aPresContext, nsnull, &rootFrame);   
+ 
+  nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
+  if (!rootBox)
+    return NS_OK;
+
+  nsIFrame* popupSetFrame;
+  rootBox->GetPopupSetFrame(&popupSetFrame);
+  if (!popupSetFrame)
+    return nsnull;
+
+  nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
+  return popupSet;
+}
 
 
 // NS_NewMenuPopupFrame
@@ -189,6 +217,143 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
 #endif   
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::MarkStyleChange(nsBoxLayoutState& aState)
+{
+  NeedsRecalc();
+
+  if (HasStyleChange())
+    return NS_OK;
+
+  // iterate through all children making them dirty
+  MarkChildrenStyleChange();
+
+  nsCOMPtr<nsIBoxLayout> layout;
+  GetLayoutManager(getter_AddRefs(layout));
+  if (layout)
+    layout->BecameDirty(this, aState);
+
+  nsIBox* parent = nsnull;
+  GetParentBox(&parent);
+  if (parent)
+     return parent->RelayoutDirtyChild(aState, this);
+  else {
+    nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
+    nsCOMPtr<nsIBox> box(do_QueryInterface(popupSet));
+    if (box) {
+      nsBoxLayoutState state(mPresContext);
+      box->MarkDirtyChildren(state); // Mark the popupset as dirty.
+    }
+    else {
+      nsIFrame* frame = nsnull;
+      GetFrame(&frame);
+      nsIFrame* parentFrame = nsnull;
+      frame->GetParent(&parentFrame);
+      nsCOMPtr<nsIPresShell> shell;
+      aState.GetPresShell(getter_AddRefs(shell));
+      return parentFrame->ReflowDirtyChild(shell, frame);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::MarkDirty(nsBoxLayoutState& aState)
+{
+  NeedsRecalc();
+
+  nsFrameState state;
+  nsIFrame* frame;
+  GetFrame(&frame);
+  frame->GetFrameState(&state);
+
+  // only reflow if we aren't already dirty.
+  if (state & NS_FRAME_IS_DIRTY) {      
+#ifdef DEBUG_COELESCED
+    Coelesced();
+#endif
+    return NS_OK;
+  }
+
+  state |= NS_FRAME_IS_DIRTY;
+  frame->SetFrameState(state);
+
+  nsCOMPtr<nsIBoxLayout> layout;
+  GetLayoutManager(getter_AddRefs(layout));
+  if (layout)
+    layout->BecameDirty(this, aState);
+
+  if (state & NS_FRAME_HAS_DIRTY_CHILDREN) {   
+#ifdef DEBUG_COELESCED
+    Coelesced();
+#endif
+    return NS_OK;
+  }
+
+  nsIBox* parent = nsnull;
+  GetParentBox(&parent);
+  if (parent)
+     return parent->RelayoutDirtyChild(aState, this);
+  else {
+    nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
+    nsCOMPtr<nsIBox> box(do_QueryInterface(popupSet));
+    if (box) {
+      nsBoxLayoutState state(mPresContext);
+      box->MarkDirtyChildren(state); // Mark the popupset as dirty.
+    }
+    else {
+      nsIFrame* parentFrame = nsnull;
+      frame->GetParent(&parentFrame);
+      nsCOMPtr<nsIPresShell> shell;
+      aState.GetPresShell(getter_AddRefs(shell));
+      return parentFrame->ReflowDirtyChild(shell, frame);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMenuPopupFrame::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
+{
+  nsFrameState state;
+  nsIFrame* frame;
+  GetFrame(&frame);
+  frame->GetFrameState(&state);
+
+  if (aChild != nsnull) {
+    nsCOMPtr<nsIBoxLayout> layout;
+    GetLayoutManager(getter_AddRefs(layout));
+    if (layout)
+      layout->ChildBecameDirty(this, aState, aChild);
+  }
+
+  // if we are not dirty mark ourselves dirty and tell our parent we are dirty too.
+  if (!(state & NS_FRAME_HAS_DIRTY_CHILDREN)) {      
+    // Mark yourself as dirty and needing to be recalculated
+    state |= NS_FRAME_HAS_DIRTY_CHILDREN;
+    frame->SetFrameState(state);
+    NeedsRecalc();
+
+    nsIBox* parentBox = nsnull;
+    GetParentBox(&parentBox);
+    if (parentBox)
+      return parentBox->RelayoutDirtyChild(aState, this);
+    else {
+      nsIPopupSetFrame* popupSet = GetPopupSetFrame(mPresContext);
+      nsCOMPtr<nsIBox> box(do_QueryInterface(popupSet));
+      if (box) {
+        nsBoxLayoutState state(mPresContext);
+        box->MarkDirtyChildren(state); // Mark the popupset as dirty.
+      }
+      else 
+        return nsBox::RelayoutDirtyChild(aState, aChild);
+    }
+  }
+
+  return NS_OK;
 }
 
 void
@@ -1385,17 +1550,15 @@ nsMenuPopupFrame::HideChain()
   nsIFrame* frame;
   GetParent(&frame);
   if (frame) {
-    nsCOMPtr<nsIPopupSetFrame> popupSetFrame = do_QueryInterface(frame);
-    if (popupSetFrame) {
-      // Destroy the popup.
-      popupSetFrame->HidePopup();
+    nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(frame);
+    if (!menuFrame) {
+      nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
+      if (popupSetFrame)
+        // Hide the popup.
+        popupSetFrame->HidePopup(this);
       return NS_OK;
     }
-    
-    nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(frame);
-    if (!menuFrame)
-      return NS_OK;
-
+   
     menuFrame->ActivateMenu(PR_FALSE);
     menuFrame->SelectMenu(PR_FALSE);
 
@@ -1420,17 +1583,15 @@ nsMenuPopupFrame::DismissChain()
   nsIFrame* frame;
   GetParent(&frame);
   if (frame) {
-    nsCOMPtr<nsIPopupSetFrame> popupSetFrame = do_QueryInterface(frame);
-    if (popupSetFrame) {
-      // Destroy the popup.
-      popupSetFrame->DestroyPopup();
+    nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(frame);
+    if (!menuFrame) {
+      nsIPopupSetFrame* popupSetFrame = GetPopupSetFrame(mPresContext);
+      if (popupSetFrame)
+        // Destroy the popup.
+        popupSetFrame->DestroyPopup(this);
       return NS_OK;
     }
-
-    nsCOMPtr<nsIMenuFrame> menuFrame = do_QueryInterface(frame);
-    if (!menuFrame)
-      return NS_OK;
-    
+  
     menuFrame->OpenMenu(PR_FALSE);
 
     // Get the parent.

@@ -35,7 +35,7 @@ CPPSRCS=					\
         nsBrowserBoxObject.cpp \
         nsTreeBoxObject.cpp \
         nsScrollBoxObject.cpp \
-        nsPopupSetBoxObject.cpp \
+        nsPopupBoxObject.cpp \
         nsMenuBoxObject.cpp \
         nsBoxObject.cpp \
         nsGridLayout.cpp \
@@ -94,7 +94,7 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsBrowserBoxObject.obj \
   .\$(OBJDIR)\nsTreeBoxObject.obj \
   .\$(OBJDIR)\nsScrollBoxObject.obj \
-  .\$(OBJDIR)\nsPopupSetBoxObject.obj \
+  .\$(OBJDIR)\nsPopupBoxObject.obj \
   .\$(OBJDIR)\nsMenuBoxObject.obj \
   .\$(OBJDIR)\nsBoxObject.obj \
 	.\$(OBJDIR)\nsGridLayout.obj		\

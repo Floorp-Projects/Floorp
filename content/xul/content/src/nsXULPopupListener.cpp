@@ -56,7 +56,7 @@
 #include "nsIDOMEventTarget.h"
 
 #include "nsIBoxObject.h"
-#include "nsIPopupSetBoxObject.h"
+#include "nsIPopupBoxObject.h"
 #include "nsIMenuBoxObject.h"
 
 // for event firing in context menus
@@ -613,15 +613,13 @@ XULPopupListenerImpl :: ClosePopup ( )
   }
   
   if ( mPopupContent ) {
-    nsCOMPtr<nsIDOMNode> parent;
-    mPopupContent->GetParentNode(getter_AddRefs(parent));
-    nsCOMPtr<nsIDOMXULElement> popupSetElement(do_QueryInterface(parent));
+    nsCOMPtr<nsIDOMXULElement> popupElement(do_QueryInterface(mPopupContent));
     nsCOMPtr<nsIBoxObject> boxObject;
-    if (popupSetElement)
-      popupSetElement->GetBoxObject(getter_AddRefs(boxObject));
-    nsCOMPtr<nsIPopupSetBoxObject> popupSetObject(do_QueryInterface(boxObject));
-    if (popupSetObject)
-      popupSetObject->DestroyPopup();
+    if (popupElement)
+      popupElement->GetBoxObject(getter_AddRefs(boxObject));
+    nsCOMPtr<nsIPopupBoxObject> popupObject(do_QueryInterface(boxObject));
+    if (popupObject)
+      popupObject->HidePopup();
 
     mPopupContent = nsnull;  // release the popup
     
@@ -791,8 +789,12 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   nsAutoString identifier;
   mElement->GetAttribute(type, identifier);
 
-  if (identifier.IsEmpty())
-    return rv;
+  if (identifier.IsEmpty()) {
+    if (type.EqualsIgnoreCase("popup"))
+      mElement->GetAttribute(NS_LITERAL_STRING("menu"), identifier);
+    if (identifier.IsEmpty())
+      return rv;
+  }
 
   // Try to find the popup content and the document. We don't use FindDocumentForNode()
   // in this case because we need the nsIDocument interface anyway for the script 
@@ -815,18 +817,17 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   nsCOMPtr<nsIDOMElement> popupContent;
 
   if (identifier == NS_LITERAL_STRING("_child")) {
-    nsCOMPtr<nsIContent> popupset;
     nsCOMPtr<nsIContent> popup;
-    GetImmediateChild(content, nsXULAtoms::popupset, getter_AddRefs(popupset));
-    if (popupset) {
-      GetImmediateChild(popupset, nsXULAtoms::popup, getter_AddRefs(popup));
-      if (popup)
-        popupContent = do_QueryInterface(popup);
-    } else {
+    
+    nsIAtom* tag = (popupType == eXULPopupType_tooltip) ? nsXULAtoms::tooltip : nsXULAtoms::menupopup;
+
+    GetImmediateChild(content, tag, getter_AddRefs(popup));
+    if (popup)
+      popupContent = do_QueryInterface(popup);
+    else {
       nsCOMPtr<nsIDOMDocumentXBL> nsDoc(do_QueryInterface(xulDocument));
-      nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(content));
       nsCOMPtr<nsIDOMNodeList> list;
-      nsDoc->GetAnonymousNodes(xulElement, getter_AddRefs(list));
+      nsDoc->GetAnonymousNodes(mElement, getter_AddRefs(list));
       if (list) {
         PRUint32 ctr,listLength;
         nsCOMPtr<nsIDOMNode> node;
@@ -836,10 +837,8 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
           nsCOMPtr<nsIContent> childContent(do_QueryInterface(node));
           nsCOMPtr<nsIAtom> childTag;
           childContent->GetTag(*getter_AddRefs(childTag));
-          if (childTag.get() == nsXULAtoms::popupset) {
-            GetImmediateChild(childContent, nsXULAtoms::popup, getter_AddRefs(popup));
-            if (popup)
-              popupContent = do_QueryInterface(popup);
+          if (childTag.get() == tag) {
+            popupContent = do_QueryInterface(childContent);
             break;
           }
         }
@@ -879,20 +878,14 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
         if (!anchorAlignment.IsEmpty() && !popupAlignment.IsEmpty())
           xPos = yPos = -1;
 
-        nsCOMPtr<nsIDOMNode> parent;
-        mPopupContent->GetParentNode(getter_AddRefs(parent));
-        nsCOMPtr<nsIDOMXULElement> popupSetElement(do_QueryInterface(parent));
-        nsCOMPtr<nsIBoxObject> boxObject;
-        if (popupSetElement)
-          popupSetElement->GetBoxObject(getter_AddRefs(boxObject));
-        nsCOMPtr<nsIPopupSetBoxObject> popupSetObject(do_QueryInterface(boxObject));
-        nsCOMPtr<nsIMenuBoxObject> menuObject(do_QueryInterface(boxObject));
-        if (popupSetObject)
-          popupSetObject->CreatePopup(mElement, mPopupContent, xPos, yPos, 
-                                     type.get(), anchorAlignment.get(), 
-                                     popupAlignment.get());
-        else if (menuObject)
-          menuObject->OpenMenu(PR_TRUE);
+        nsCOMPtr<nsIBoxObject> popupBox;
+        nsCOMPtr<nsIDOMXULElement> xulPopupElt(do_QueryInterface(mPopupContent));
+        xulPopupElt->GetBoxObject(getter_AddRefs(popupBox));
+        nsCOMPtr<nsIPopupBoxObject> popupBoxObject(do_QueryInterface(popupBox));
+        if (popupBoxObject)
+          popupBoxObject->ShowPopup(mElement, mPopupContent, xPos, yPos, 
+                                    type.get(), anchorAlignment.get(), 
+                                    popupAlignment.get());
       }
     }
   }

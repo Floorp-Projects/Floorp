@@ -2357,8 +2357,9 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
       contractID += "-iframe";
     else if (tag.get() == nsXULAtoms::menu)
       contractID += "-menu";
-    else if (tag.get() == nsXULAtoms::popupset)
-      contractID += "-popupset";
+    else if (tag.get() == nsXULAtoms::popup || tag.get() == nsXULAtoms::menupopup ||
+             tag.get() == nsXULAtoms::tooltip)
+      contractID += "-popup";
     else if (tag.get() == nsXULAtoms::tree)
       contractID += "-tree";
     else if (tag.get() == nsXULAtoms::scrollbox)

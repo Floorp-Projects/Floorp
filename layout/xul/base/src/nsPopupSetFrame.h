@@ -43,6 +43,29 @@ nsresult NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 class nsCSSFrameConstructor;
 
+struct nsPopupFrameList {
+  nsPopupFrameList* mNextPopup;  // The next popup in the list.
+  nsIFrame* mPopupFrame;         // Our popup.
+  nsIContent* mPopupContent;     // The content element for the <popup> itself.
+  
+  nsIContent* mElementContent; // The content that is having something popped up over it <weak>
+
+  PRInt32 mXPos;                // This child's x position
+  PRInt32 mYPos;                // This child's y position
+
+  nsAutoString mPopupAnchor;        // This child's anchor.
+  nsAutoString mPopupAlign;         // This child's align.
+
+  nsAutoString mPopupType;
+  PRBool mCreateHandlerSucceeded;  // Did the create handler succeed?
+  nsSize mLastPref;
+
+public:
+  nsPopupFrameList(nsIContent* aPopupContent, nsPopupFrameList* aNext);
+  nsPopupFrameList* GetEntry(nsIContent* aPopupContent);
+  nsPopupFrameList* GetEntryByFrame(nsIFrame* aPopupFrame);
+};
+
 class nsPopupSetFrame : public nsBoxFrame, public nsIPopupSetFrame
 {
 public:
@@ -60,58 +83,28 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
 
-  // The following four methods are all overridden so that the menu children
-  // can be stored in a separate list (so that they don't impact reflow of the
-  // actual menu item at all).
-  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
-                        nsIAtom*        aListName,
-                        nsIFrame**      aFirstChild) const;
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
-                                        nsIAtom** aListName) const;
+  // Used to destroy our popup frames.
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   // Reflow methods
-  virtual void RePositionPopup(nsBoxLayoutState& aState);
+  virtual void RepositionPopup(nsPopupFrameList* aEntry, nsBoxLayoutState& aState);
 
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
+  NS_IMETHOD ShowPopup(nsIContent* aElementContent, nsIContent* aPopupContent, 
+                       PRInt32 aXPos, PRInt32 aYPos, 
+                       const nsString& aPopupType, const nsString& anAnchorAlignment,
+                       const nsString& aPopupAlignment);
+  NS_IMETHOD HidePopup(nsIFrame* aPopup);
+  NS_IMETHOD DestroyPopup(nsIFrame* aPopup);
 
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
-
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
-
-  NS_IMETHOD CreatePopup(nsIContent* aElementContent, nsIContent* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment);
-
-  NS_IMETHOD HidePopup();
-  NS_IMETHOD DestroyPopup();
-  NS_IMETHOD GetActiveChild(nsIDOMElement** aResult);
-  NS_IMETHOD SetActiveChild(nsIDOMElement* aChild);
-
+  NS_IMETHOD AddPopupFrame(nsIFrame* aPopup);
+  
   PRBool OnCreate(nsIContent* aPopupContent);
-  PRBool OnDestroy();
+  PRBool OnDestroy(nsIContent* aPopupContent);
   PRBool OnCreated(nsIContent* aPopupContent);
-  PRBool OnDestroyed();
+  PRBool OnDestroyed(nsIContent* aPopupContent);
 
-  void ActivatePopup(PRBool aActivateFlag);
-  void OpenPopup(PRBool aOpenFlag);
-
-  nsIFrame* GetActiveChild();
-  void GetActiveChildElement(nsIContent** aResult);
+  void ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag);
+  void OpenPopup(nsPopupFrameList* aEntry, PRBool aOpenFlag);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
@@ -131,20 +124,10 @@ protected:
 protected:
   nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
 
-  nsFrameList mPopupFrames;
+  nsPopupFrameList* mPopupList;
+  
   nsIPresContext* mPresContext; // Our pres context.
 
-  nsIContent* mElementContent; // The content that is having something popped up over it <weak>
-
-  PRInt32 mXPos;                // Active child's x position
-  PRInt32 mYPos;                // Active child's y position
-
-  nsString mPopupAnchor;        // Active child's anchor.
-  nsString mPopupAlign;         // Active child's align.
-
-  nsAutoString mPopupType;
-  PRBool mCreateHandlerSucceeded;  // Did the create handler succeed?
-  nsSize mLastPref;
 private:
   nsCSSFrameConstructor* mFrameConstructor;
 }; // class nsPopupSetFrame

@@ -45,17 +45,23 @@
 #include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"
+#include "nsIRootBox.h"
 
 // Interface IDs
 
 //#define DEBUG_REFLOW
 
-class nsRootBoxFrame : public nsBoxFrame {
+class nsRootBoxFrame : public nsBoxFrame, public nsIRootBox {
 public:
 
   friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   nsRootBoxFrame(nsIPresShell* aShell);
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_IMETHOD GetPopupSetFrame(nsIFrame** aResult);
+  NS_IMETHOD SetPopupSetFrame(nsIFrame* aPopupSet);
 
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
@@ -99,6 +105,8 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
+
+  nsIFrame* mPopupSetFrame;
 };
 
 //----------------------------------------------------------------------
@@ -122,6 +130,8 @@ NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell, PR_TRUE)
 {
+  mPopupSetFrame = nsnull;
+
   nsCOMPtr<nsIBoxLayout> layout;
   NS_NewStackLayout(aShell, layout);
   SetLayoutManager(layout);
@@ -261,6 +271,38 @@ nsRootBoxFrame::Paint(nsIPresContext* aPresContext,
   SetDefaultBackgroundColor(aPresContext);
   return nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
+
+NS_IMETHODIMP
+nsRootBoxFrame::GetPopupSetFrame(nsIFrame** aResult)
+{
+  *aResult = mPopupSetFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRootBoxFrame::SetPopupSetFrame(nsIFrame* aPopupSet)
+{
+  NS_ASSERTION(!mPopupSetFrame, "Popup set is already defined! Only 1 allowed.");
+  if (!mPopupSetFrame) 
+    mPopupSetFrame = aPopupSet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsRootBoxFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsRootBoxFrame::Release(void)
+{
+  return NS_OK;
+}
+
+NS_INTERFACE_MAP_BEGIN(nsRootBoxFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIRootBox)
+NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP
