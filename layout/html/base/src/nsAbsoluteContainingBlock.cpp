@@ -193,18 +193,23 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 
   nsIFrame* kidFrame;
   for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
-    // if the positioned frame has never had a reflow, change the reason to initial
-    PRBool initialReflow = PR_FALSE;
+    nsReflowReason  reason = aReflowState.reason;
+
     nsFrameState kidState;
     kidFrame->GetFrameState(&kidState);
     if (NS_FRAME_FIRST_REFLOW & kidState) {
-      initialReflow = PR_TRUE;
+      // The frame has never had a reflow, so change the reason to eReflowReason_Initial
+      reason = eReflowReason_Initial;
+
+    } else if (NS_FRAME_IS_DIRTY & kidState) {
+      // The frame is dirty so give it the correct reflow reason
+      reason = eReflowReason_Dirty;
     }
 
     // Reflow the frame
     nsReflowStatus  kidStatus;
     ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, reflowState, aContainingBlockWidth,
-                        aContainingBlockHeight, kidFrame, initialReflow, kidStatus);
+                        aContainingBlockHeight, kidFrame, reason, kidStatus);
 
     // Add in the child's bounds
     nsRect  kidBounds;
@@ -303,13 +308,16 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
         f->GetFrameState(&frameState);
         if (frameState & NS_FRAME_IS_DIRTY) {
           nsReflowStatus  status;
+          nsReflowReason  reason;
 
-          // Note: the only reason the frame would be dirty would be if it had
-          // just been inserted or appended
-          NS_ASSERTION(frameState & NS_FRAME_FIRST_REFLOW, "unexpected frame state");
+          if (frameState & NS_FRAME_FIRST_REFLOW) {
+            reason = eReflowReason_Initial;
+          } else {
+            reason = eReflowReason_Dirty;
+          }
           ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
                               aContainingBlockWidth, aContainingBlockHeight, f,
-                              PR_TRUE, status);
+                              reason, status);
         }
       }
 
@@ -334,7 +342,7 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
       nsReflowStatus  kidStatus;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
                           aContainingBlockWidth, aContainingBlockHeight, nextFrame,
-                          PR_FALSE, kidStatus);
+                          aReflowState.reason, kidStatus);
       // We don't need to invalidate anything because the frame should
       // invalidate any area within its frame that needs repainting, and
       // because it has a view if it changes size the view manager will
@@ -366,7 +374,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,
                                                nsIFrame*                aKidFrame,
-                                               PRBool                   aInitialReflow,
+                                               nsReflowReason           aReason,
                                                nsReflowStatus&          aStatus)
 {
   nsresult  rv;
@@ -377,24 +385,22 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     NS_NOTYETIMPLEMENTED("percentage border");
   }
   
+  nsFrameState        kidFrameState;
   nsSize              availSize(aReflowState.mComputedWidth, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowMetrics kidDesiredSize(nsnull);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
                                      availSize, aContainingBlockWidth,
                                      aContainingBlockHeight);
 
-  // If it's the initial reflow, then override the reflow reason. This is
-  // used when frames are inserted incrementally
-  if (aInitialReflow) {
-    kidReflowState.reason = eReflowReason_Initial;
-  }
+  // Set the reflow reason
+  kidReflowState.reason = aReason;
 
   // Send the WillReflow() notification and position the frame
   nscoord x;
 
   aKidFrame->WillReflow(aPresContext);
   if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
-    // Just current the current x-offset
+    // Just use the current x-offset
     nsPoint origin;
     aKidFrame->GetOrigin(origin);
     x = origin.x;
@@ -456,7 +462,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   // If the frame has visible overflow, then store it as a property on the
   // frame. This allows us to be able to recover it without having to reflow
   // the frame
-  nsFrameState  kidFrameState;
   aKidFrame->GetFrameState(&kidFrameState);
   if (kidFrameState & NS_FRAME_OUTSIDE_CHILDREN) {
     // Get the property (creating a rect struct if necessary)

@@ -311,6 +311,40 @@ nsAreaFrame::Reflow(nsIPresContext*          aPresContext,
 
   return rv;
 }
+  
+NS_IMETHODIMP
+nsAreaFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
+{
+  if (aChild) {
+    // See if the child is absolutely positioned
+    nsFrameState  childState;
+    aChild->GetFrameState(&childState);
+    if (childState & NS_FRAME_OUT_OF_FLOW) {
+      const nsStylePosition*  position;
+      aChild->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+
+      if (position->IsAbsolutelyPositioned()) {
+        // Generate a reflow command to reflow our dirty absolutely
+        // positioned child frames.
+        // XXX Note that we don't currently try and coalesce the reflow commands,
+        // although we should. We can't use the NS_FRAME_HAS_DIRTY_CHILDREN
+        // flag, because that's used to indicate whether in-flow children are
+        // dirty...
+        nsIReflowCommand* reflowCmd;
+        nsresult          rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                                       nsIReflowCommand::ReflowDirty);
+        if (NS_SUCCEEDED(rv)) {
+          reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
+          aPresShell->AppendReflowCommand(reflowCmd);
+          NS_RELEASE(reflowCmd);
+        }
+        return rv;
+      }
+    }
+  }
+
+  return nsBlockFrame::ReflowDirtyChild(aPresShell, aChild);
+}
 
 NS_IMETHODIMP
 nsAreaFrame::GetFrameType(nsIAtom** aType) const
