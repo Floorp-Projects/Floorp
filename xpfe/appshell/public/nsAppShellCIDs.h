@@ -19,7 +19,7 @@
 
 #ifndef nsAppShellCIDs_h__
 #define nsAppShellCIDs_h__
-
+#include "nsIFactory.h"
 
 // 43147b80-8a39-11d2-9938-0080c7cb1080
 #define NS_APPSHELL_SERVICE_CID \
@@ -36,6 +36,11 @@
 #define NS_XPCONNECTFACTORY_CID \
 { 0xa6852d40, 0xcd6f, 0x11d2, \
   {0x92, 0xb6, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} }
+
+#define NS_SESSIONHISTORY_CID \
+{ 0x68e73d52, 0x12eb, 0x11d3, { 0xbd, 0xc0, 0x00, 0x50, 0x04, 0x0a, 0x9b, 0x44 } }
+
+extern nsresult NS_NewSessionHistoryFactory(nsIFactory** aResult);
 
 #endif /* nsAppShellCIDs_h__ */
 

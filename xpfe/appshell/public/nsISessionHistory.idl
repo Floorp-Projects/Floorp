@@ -24,9 +24,6 @@
 %{C++
 #include "nscore.h"
 class nsIWebShell;
-#define NS_SESSIONHISTORY_CID \
-{ 0x68e73d52, 0x12eb, 0x11d3, { 0xbd, 0xc0, 0x00, 0x50, 0x04, 0x0a, 0x9b, 0x44 } }
-
 #define NS_ISESSIONHISTORY_PROGID "component://netscape/appshell/component/browser/sessionhistory"
 %}
 
@@ -38,37 +35,37 @@ interface nsISessionHistory: nsISupports
   /**
    * Go forward in history 
    */
-   [noscript] void goForward(in nsIWebShell aPrevPage);
+   [noscript] void goForward(in nsIWebShell aContainer);
 
   /**
    * Go Back in History
    */
-   [noscript] void goBack(in nsIWebShell aPrevPage);
+   [noscript] void goBack(in nsIWebShell aContainer);
 
   /**
    * Reload the current history entry
    */
-   [noscript] void reload(in nsIWebShell aPrevPage, in nsLoadFlags aReloadFlags);
+   [noscript] void reload(in nsIWebShell aContainer, in nsLoadFlags aReloadFlags);
 
   /**
    * Can I go forward in History
    */
-   boolean canForward();
+   boolean canGoForward();
 
   /**
    * Can I go back in History
    */
-   boolean  canBack();
+   boolean  canGoBack();
 
   /**
    * Add a new URL to the History List
    */
-   [noscript] void  add(in nsIWebShell aWebShell);
+   [noscript] void  add(in nsIWebShell aContainer);
 
   /**
    * Goto to a particular point in history 
    */
-   [noscript] void  Goto(in long aHistoryIndex, in nsIWebShell prev, in boolean aIsReloading);
+   [noscript] void  goto(in long aHistoryIndex, in nsIWebShell aContainer, in boolean aIsReloading);
 
   /**
    * Get the length of the History list
@@ -95,18 +92,18 @@ interface nsISessionHistory: nsISupports
   /**
    * Get the URL of the index
    */
-   wstring getURLForIndex(in long aIndex);
+   string getURLForIndex(in long aIndex);
 
 
   /**
    * Set the URL of the index
    */
-   void setURLForIndex(in long aIndex, in wstring aURL);
+   void setURLForIndex(in long aIndex, in string aURL);
 
   /**
    * Get the title of the index
    */
-   wstring GetTitleForIndex(in long aIndex);
+   wstring getTitleForIndex(in long aIndex);
 
  /**
    * Set the Title of the index
@@ -121,22 +118,13 @@ interface nsISessionHistory: nsISupports
   /**
    * Set the History state of the index
    */
-   void SetHistoryObjectForIndex(in long  aIndex, in nsISupports aState);
-
-  /** 
-   *  Clear all history load flags 
-   */
-   void ClearLoadingFlags();
+   void setHistoryObjectForIndex(in long  aIndex, in nsISupports aState);
 
   /**
    *   Reconcile history status with the actual page load status 
    */
-   [noscript] void UpdateStatus(in nsIWebShell aWebShell, in long aStatus);
+   [noscript] void updateStatus(in nsIWebShell aContainer, in long aStatus);
 
    const unsigned long LOAD_HISTORY     = 10;
 
 };
-
-%{C++
-extern nsresult NS_NewSessionHistoryFactory(nsIFactory** aResult);
-%}

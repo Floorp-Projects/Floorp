@@ -19,7 +19,7 @@
 
 
 #include "nsISessionHistory.h"
-
+#include "nsAppShellCIDs.h"
 #include "nsVoidArray.h"
 #include "nsIWebShell.h"
 #include "prmem.h"
@@ -49,7 +49,7 @@ class nsHistoryEntry;
 
 static nsHistoryEntry *  GenerateTree(nsIWebShell * aWebShell,nsHistoryEntry *aparent, nsISessionHistory * aSHist);
 
-#define APP_DEBUG 0
+#define APP_DEBUG 1
 
 class nsHistoryEntry
 {
@@ -97,12 +97,12 @@ public:
   /**
    * Get the URL  of the page 
    */
-  nsresult GetURL(PRUnichar ** aURL);
+  nsresult GetURL(char ** aURL);
 
   /**
    * Set the URL  of the page 
    */
-  nsresult SetURL(const PRUnichar * aURL);
+  nsresult SetURL(const char * aURL);
 
   /**
    * Get the webshell  of the page 
@@ -233,16 +233,16 @@ nsHistoryEntry::DestroyChildren() {
 
 
 nsresult
-nsHistoryEntry::GetURL(PRUnichar** aURL)
+nsHistoryEntry::GetURL(char** aURL)
 {
   //GetURlForIndex error checks aURL
   if (mURL)
-    *aURL= mURL->ToNewUnicode();
+    *aURL= mURL->ToNewCString();
   return NS_OK;
 }
 
 nsresult
-nsHistoryEntry::SetURL(const PRUnichar* aURL)
+nsHistoryEntry::SetURL(const char* aURL)
 {
 
   if (mURL)
@@ -388,7 +388,9 @@ nsHistoryEntry::Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISes
    nsAutoString urlstr(url);
 
    // save the webshell's URL in the history entry
-   SetURL(url);
+   char * urlcstr = urlstr.ToNewCString();
+   SetURL(urlcstr);
+   Recycle(urlcstr);
 
    //Save the webshell id
    SetWebShell(aWebShell);
@@ -484,7 +486,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    PRBool result = PR_FALSE;
    nsAutoString  cSURL,  pSURL;
    const PRUnichar *  pURL=nsnull;
-   PRUnichar * cURL=nsnull;   
+   char * cURL=nsnull;   
 
    cur = this;
    prev = aPrevEntry;
@@ -531,7 +533,10 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
             nsLoadType   loadType = (nsLoadType)nsIChannel::LOAD_NORMAL;
             if (!aIsReload)
               loadType = (nsLoadType) nsISessionHistory::LOAD_HISTORY;
-	    	    prev->LoadURL(cURL, nsnull, PR_FALSE,  loadType, 0, historyObject);
+			PRUnichar * uniURL = cSURL.ToNewUnicode();
+	    	prev->LoadURL(uniURL, nsnull, PR_FALSE,  loadType, 0, historyObject);
+			Recycle(uniURL);
+
             if (aIsReload && (pcount > 0)) {
               /* If this is a reload, on a page with frames, you want to return
                * true so that consecutive calls by the frame children in to 
@@ -546,7 +551,10 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 			return PR_TRUE;
          }
          else if (!isInSHist && isLoadingDoc) {
-           prev->SetURL(cURL);
+	       PRUnichar * uniURL = cSURL.ToNewUnicode();
+           prev->SetURL(uniURL);
+		   Recycle(uniURL);
+
 
 		   if (APP_DEBUG) printf("Changing URL  to %s in webshell\n", cSURL.ToNewCString());
 		   Recycle(cURL);
@@ -607,7 +615,7 @@ nsHistoryEntry::Compare(nsIWebShell * aPrevEntry, PRBool aIsReload) {
    nsIWebShell *prev=nsnull;
    PRBool result = PR_FALSE;
    const PRUnichar *  pURL=nsnull;
-   PRUnichar * cURL=nsnull;   
+   char * cURL=nsnull;   
    nsAutoString  cSURL,  pSURL;
 
    cur = this;
@@ -841,7 +849,8 @@ nsSessionHistory::Add(nsIWebShell * aWebShell)
 
      mHistoryEntries.AppendElement((void *)hEntry);
      mHistoryLength++;
-     mHistoryCurrentIndex++;        
+     mHistoryCurrentIndex++;
+	 if (APP_DEBUG) printf("nsSessionHistory::Add CurrentIndex = %d, HistoryLength = %d \n", mHistoryCurrentIndex, mHistoryLength);
      return NS_OK;
    }   // (!mParent)
 
@@ -981,15 +990,7 @@ nsSessionHistory::Add(nsIWebShell * aWebShell)
 
 
 NS_IMETHODIMP
-nsSessionHistory::ClearLoadingFlags()
-{
-   mIsLoadingDoc = PR_FALSE;
-   return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSessionHistory::UpdateStatus(nsIWebShell * aWebShell, PRInt32 aStatus) {
-
 	if (!aWebShell)
 		return NS_ERROR_NULL_POINTER;
 
@@ -1102,10 +1103,9 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
    mHistoryEntryInLoad = hCurrentEntry;
 
   //Load the page
-   PRUnichar * url;
+   char * url;
    hCurrentEntry->GetURL(&url);
-   nsAutoString  urlString(url);
-   if (APP_DEBUG) printf("nsSessionHistory::Goto, Trying to load URL %s\n", urlString.ToNewCString());
+   if (APP_DEBUG && url) printf("nsSessionHistory::Goto, Trying to load URL %s\n", url);
    Recycle (url);
   
     mHistoryCurrentIndex = aGotoIndex;
@@ -1179,7 +1179,7 @@ nsSessionHistory::GetLoadingFlag(PRBool *aFlag)
 
 
 NS_IMETHODIMP
-nsSessionHistory::CanForward(PRBool * aResult)
+nsSessionHistory::CanGoForward(PRBool * aResult)
 {
    if (!aResult)
   	 return NS_ERROR_NULL_POINTER;
@@ -1193,7 +1193,7 @@ nsSessionHistory::CanForward(PRBool * aResult)
 }
 
 NS_IMETHODIMP
-nsSessionHistory::CanBack(PRBool * aResult)
+nsSessionHistory::CanGoBack(PRBool * aResult)
 {
    if (!aResult)
 	 return NS_ERROR_NULL_POINTER;
@@ -1229,7 +1229,7 @@ nsSessionHistory::GetCurrentIndex(PRInt32 * aResult)
 
 
 NS_IMETHODIMP
-nsSessionHistory::GetURLForIndex(PRInt32 aIndex, PRUnichar** aURL)
+nsSessionHistory::GetURLForIndex(PRInt32 aIndex, char** aURL)
 {
 
   nsHistoryEntry * hist=nsnull;
@@ -1251,7 +1251,7 @@ nsSessionHistory::GetURLForIndex(PRInt32 aIndex, PRUnichar** aURL)
 }
 
 NS_IMETHODIMP
-nsSessionHistory::SetURLForIndex(PRInt32 aIndex, const PRUnichar* aURL)
+nsSessionHistory::SetURLForIndex(PRInt32 aIndex, const char* aURL)
 {
 
   nsHistoryEntry * hist=nsnull;
@@ -1313,7 +1313,7 @@ nsSessionHistory::GetHistoryObjectForIndex(PRInt32 aIndex, nsISupports** aState)
 
   if (aIndex < 0 || aIndex >= mHistoryLength)
   {
-     if (APP_DEBUG) printf("nsSessionHistory::GetURLForIndex Returning error in GetURL for Index\n");
+     if (APP_DEBUG) printf("nsSessionHistory::GetHistoryObjectForIndex Returning error \n");
      return NS_ERROR_FAILURE;
   }
 
@@ -1343,7 +1343,6 @@ nsSessionHistory::SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports* aState)
   hist->SetHistoryState(aState);
   return NS_OK;
 }
-
 
 
 NS_EXPORT nsresult NS_NewSessionHistory(nsISessionHistory** aResult)
@@ -1448,3 +1447,4 @@ NS_NewSessionHistoryFactory(nsIFactory** aFactory)
   *aFactory = inst;
   return rv;
 }
+
