@@ -851,10 +851,10 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       // this cache after certain actions.
       range->GetStartContainer(getter_AddRefs(collapsedNode));
       if (!collapsedNode) return NS_ERROR_FAILURE;
-      // refresh the cache if we need to
+/*    // refresh the cache if we need to
       if (collapsedNode != mCachedNode) CacheInlineStyles(collapsedNode);
       // cache now current, use it!  But override it with typeInState results if any...
-      PRBool isSet, theSetting;
+*/    PRBool isSet, theSetting;
       if (aAttribute)
       {
         nsString tString(*aAttribute); //MJUDGE SCC NEED HELP
@@ -873,6 +873,10 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
         *aFirst = *aAny = *aAll = theSetting;
         return NS_OK;
       }
+      nsCOMPtr<nsIDOMNode> resultNode;
+      IsTextPropertySetByContent(collapsedNode, aProperty, 0, 0, isSet, getter_AddRefs(resultNode));
+      *aFirst = *aAny = *aAll = isSet;
+      return NS_OK;
       /*
       if (aProperty == mBoldAtom.get())
       {
