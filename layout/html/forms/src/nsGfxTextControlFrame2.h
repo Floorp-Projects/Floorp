@@ -152,6 +152,7 @@ public: //for methods who access nsGfxTextControlFrame2 directly
   NS_IMETHOD InternalContentChanged();//notify that we have some kind of change.
   NS_IMETHOD CallOnChange();
 protected:
+  nsresult SetInitialValue();
   nsString *GetCachedString();
   virtual PRIntn GetSkipSides() const;
   void RemoveNewlines(nsString &aString);
@@ -243,6 +244,7 @@ private:
   nscoord      mSuggestedHeight;
   nsSize       mSize;
 
+  PRPackedBool mUseEditor;
   PRPackedBool mIsProcessing;
   PRPackedBool mNotifyOnInput;//default this to off to stop any notifications until setup is complete
 

@@ -1063,6 +1063,7 @@ nsGfxTextControlFrame2::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 nsGfxTextControlFrame2::nsGfxTextControlFrame2(nsIPresShell* aShell):nsStackFrame(aShell)
 {
+  mUseEditor=PR_FALSE;
   mIsProcessing=PR_FALSE;
   mNotifyOnInput = PR_FALSE;
   mFormFrame = nsnull;
@@ -1532,6 +1533,107 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+nsGfxTextControlFrame2::SetInitialValue()
+{
+  // This method must be called during/after the text
+  // control frame's initial reflow to avoid any unintened
+  // forced reflows that might result when the editor
+  // calls into DOM/layout code while trying to set the
+  // initial string.
+  //
+  // This code used to be called from CreateAnonymousContent(),
+  // but when the editor set the initial string, it would trigger
+  // a PresShell listener which called FlushPendingNotifications()
+  // during frame construction. This was causing other form controls
+  // to display wrong values.
+
+  if (!mEditor)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // Check if this method has been called already.
+  // If so, just return early.
+
+  if (mUseEditor)
+    return NS_OK;
+
+  // Get the default value for the textfield.
+
+  nsAutoString defaultValue;
+  nsresult rv = NS_OK;
+
+  if (mCachedState)
+    defaultValue = mCachedState->GetUnicode();
+  else
+    rv = GetText(&defaultValue, PR_TRUE);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  // If we have a default value, insert it under the div we created
+  // above, but be sure to use the editor so that '*' characters get
+  // displayed for password fields, etc. SetTextControlFrameState()
+  // will call the editor for us.
+
+  mUseEditor = PR_TRUE;
+
+  if (defaultValue.Length() > 0)
+  {
+    PRUint32 editorFlags = 0;
+
+    rv = mEditor->GetFlags(&editorFlags);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Avoid causing reentrant painting and reflowing by telling the editor
+    // that we don't want it to force immediate view refreshes or force
+    // immediate reflows during any editor calls.
+
+    rv = mEditor->SetFlags(editorFlags |
+                           nsIHTMLEditor::eEditorDisableForcedUpdatesMask |
+                           nsIHTMLEditor::eEditorDisableForcedReflowsMask);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Now call SetTextControlFrameState() which will make the
+    // neccessary editor calls to set the default value.
+    // Make sure to turn off undo before setting the default
+    // value, and turn it back on afterwards. This will make
+    // sure we can't undo past the default value.
+
+    rv = mEditor->EnableUndo(PR_FALSE);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    SetTextControlFrameState(defaultValue);
+
+    rv = mEditor->EnableUndo(PR_TRUE);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Now restore the original editor flags.
+
+    rv = mEditor->SetFlags(editorFlags);
+
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  // Free mCachedState since we don't need it anymore!
+
+  if (mCachedState)
+  {
+    delete mCachedState;
+    mCachedState = nsnull;
+  }
+   
+  return NS_OK;
+}
+
 #define DIV_STRING "-moz-user-focus: none; border: 0px !important; padding: 0px; margin:0px; "
 #define DIV_STRING_SINGLELINE "-moz-user-focus: none; white-space : nowrap; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
 
@@ -1805,67 +1907,6 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     rv = txMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mTextListener));
     if (NS_FAILED(rv)) return rv;
   }  
-  
-  // Get the default value for the textfield.
-
-  nsAutoString defaultValue;
-
-  if (mCachedState)
-    defaultValue = mCachedState->GetUnicode();
-  else
-    rv = GetText(&defaultValue, PR_TRUE);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  // If we have a default value, insert it under the div we created
-  // above, but be sure to use the editor so that '*' characters get
-  // displayed for password fields, etc. SetTextControlFrameState()
-  // will call the editor for us.
-
-  if (defaultValue.Length() > 0)
-  {
-    rv = mEditor->GetFlags(&editorFlags);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Avoid causing reentrant painting and reflowing by telling the editor
-    // that we don't want it to force immediate view refreshes or force
-    // immediate reflows during any editor calls.
-
-    rv = mEditor->SetFlags(editorFlags |
-                           nsIHTMLEditor::eEditorDisableForcedUpdatesMask |
-                           nsIHTMLEditor::eEditorDisableForcedReflowsMask);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Now call SetTextControlFrameState() which will make the
-    // neccessary editor calls to set the default value.
-    // Make sure to turn off undo before setting the default
-    // value, and turn it back on afterwards. This will make
-    // sure we can't undo past the default value.
-
-    rv = mEditor->EnableUndo(PR_FALSE);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    SetTextControlFrameState(defaultValue);
-
-    rv = mEditor->EnableUndo(PR_TRUE);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Now restore the original editor flags.
-
-    rv = mEditor->SetFlags(editorFlags);
-
-    if (NS_FAILED(rv))
-      return rv;
-  }
 
   if (mContent)
   {
@@ -1949,6 +1990,7 @@ nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
 
   // make sure the the form registers itself on the initial/first reflow
   if (mState & NS_FRAME_FIRST_REFLOW) {
+    SetInitialValue();
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
@@ -1998,12 +2040,14 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   nsSize styleSize(CSS_NOTSET,CSS_NOTSET);
   nsFormControlFrame::GetStyleSize(aPresContext, *aReflowState, styleSize);
 
-
- if (mState & NS_FRAME_FIRST_REFLOW)
-   mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
-
   if (!aReflowState)
     return NS_OK;
+
+  if (mState & NS_FRAME_FIRST_REFLOW)
+  {
+    SetInitialValue();
+    mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
+  }
 
   nsCompatibility mode;
   aPresContext->GetCompatibilityMode(&mode); 
@@ -2873,7 +2917,7 @@ nsGfxTextControlFrame2::CallOnChange()
 nsString *
 nsGfxTextControlFrame2::GetCachedString()
 {
-  if (!mCachedState && mEditor)
+  if (!mCachedState && mEditor && mUseEditor)
   {
     mCachedState = new nsString;
     if (!mCachedState)
@@ -2887,7 +2931,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
 {
   aValue.SetLength(0);  // initialize out param
   
-  if (mEditor) 
+  if (mEditor && mUseEditor) 
   {
     PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak;;
 
@@ -2908,6 +2952,8 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
 
     mEditor->OutputToString(aValue, NS_LITERAL_STRING("text/plain"), flags);
   }
+  else if (mCachedState && mCachedState->Length() > 0)
+    aValue.Assign(*mCachedState);
 }     
 
 
@@ -2916,7 +2962,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
 void
 nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue)
 {
-  if (mEditor) 
+  if (mEditor && mUseEditor) 
   {
     nsAutoString currentValue;
     nsAutoString format; format.AssignWithConversion("text/plain");
