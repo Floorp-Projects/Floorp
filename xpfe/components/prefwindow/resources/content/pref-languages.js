@@ -110,7 +110,7 @@ function AddLanguage()
 {
     //cludge: make pref string available from the popup
     document.getElementById('intlAcceptLanguages').label = pref_string;
-    window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","_blank","modal,chrome,centerscreen,resizable=yes,titlebar", "addlangwindow");
+    window.openDialog("chrome://communicator/content/pref/pref-languages-add.xul","_blank","modal,chrome,centerscreen,titlebar", "addlangwindow");
     UpdateSavePrefString();
     SelectLanguage();
 }
@@ -276,7 +276,11 @@ function isAlphaNum(mixedCase) {
 }
 
 function IsRFC1766LangTag(candidate) {
-  /* Valid language codes examples:
+
+  /* reject bogus lang strings, INCLUDING those with HTTP "q"
+     values kludged on the end of them
+
+     Valid language codes examples:
      i.e. ja-JP-kansai (Kansai dialect of Japanese)
           en-US-texas (Texas dialect)
           i-klingon-tng (did TOS Klingons speak in non-English?)
@@ -332,7 +336,10 @@ function AddAvailableLanguage()
 {
   var Languagename = new String();
   var Languageid = new String();
-
+  
+  var addThese = new Array();
+  var addTheseNames = new Array();
+  var invalidLangs = new Array();
 
   //selected languages
   for (var nodeIndex=0; nodeIndex < available_languages.selectedItems.length; nodeIndex++) {
@@ -343,43 +350,71 @@ function AddAvailableLanguage()
     Languageid      = selItem.getAttribute('id');
 
     if (!LangAlreadyActive(Languageid)) {
-
-      AddListItem(window.opener.document, active_languages, Languageid, Languagename);
-
-    }//if
-
-  } //loop selected languages
-
+      addThese[nodeIndex] = Languageid;
+      addTheseNames[nodeIndex] = Languagename;
+    }
+  }
 
   //user-defined languages
   var otherField = document.getElementById( "languages.other" );
 
+  var selCount = addThese.length;
+
   if (otherField.value) {
 
-    /* reject bogus lang strings, INCLUDING those with HTTP "q"
-       values kludged on the end of them
-    */
-    if (!IsRFC1766LangTag(otherField.value)) {
-      window.alert(prefLangBundle.GetStringFromName("illegalOtherLanguage"));
+    var LanguageidsString = otherField.value.replace(/\s/g,"").toLowerCase();
+    var Languageids = LanguageidsString.split(separatorRe);
+    for (var i = 0; i < Languageids.length; i++) {
+      Languageid = Languageids[i];
+      
+      if (IsRFC1766LangTag(Languageid)) {
+        if (!LangAlreadySelected(Languageid)) {
+          if (!LangAlreadyActive(Languageid)) {
+            Languagename = GetLanguageTitle(Languageid);
+            if (!Languagename)
+              Languagename = '[' + Languageid + ']';
+            addThese[i+selCount] = Languageid;
+            addTheseNames[i+selCount] = Languagename;
+          }
+        }
+      }
+      else {
+        invalidLangs[invalidLangs.length] = Languageid;
+      }
+    }
+    if (invalidLangs.length > 0) {
+      var errorMsg = prefLangBundle.GetStringFromName("illegalOtherLanguage") + " " +
+                     invalidLangs.join(", ");
+      var errorTitle = prefLangBundle.GetStringFromName("illegalOtherLanguageTitle");
+      
+      var prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                 .getService(Components.interfaces.nsIPromptService);
+                                 
+      prompter.alert(this.window, errorTitle, errorMsg);
+      otherField.focus();
       return false;
     }
-
-    Languageid      = otherField.value;
-    Languageid      = Languageid.toLowerCase();
-    Languagename    = GetLanguageTitle(Languageid);
-    if (!Languagename)
-       Languagename = '[' + Languageid + ']';
-
-    if (!LangAlreadyActive(Languageid)) {
-
-      AddListItem(window.opener.document, active_languages, Languageid, Languagename);
-
-    }//if
+  }
+  
+  for (var i = 0; i < addThese.length; i++) {
+    AddListItem(window.opener.document, active_languages, addThese[i], addTheseNames[i]);
   }
 
   available_languages.clearSelection();
   return true;
-} //AddAvailableLanguage
+}
+
+function LangAlreadySelected(langid) {
+  var found = false;
+
+  for (var i = 0; i < available_languages.selectedItems.length; i++) {
+    var currentLang = available_languages.selectedItems[i]; 
+    var Languageid  = currentLang.getAttribute('id');
+    if (Languageid == langid)
+      return true;
+  }
+  return false;
+}
 
 function HandleDoubleClick(node)
 {
