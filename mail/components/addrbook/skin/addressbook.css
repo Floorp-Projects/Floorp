@@ -156,10 +156,7 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/secure-remote-addrbook.gif");
 }
 
-#dirTree [sortDirection="ascending"] {
-  list-style-image: none;
-}
-
+#dirTree [sortDirection="ascending"],
 #dirTree [sortDirection="descending"] {
   list-style-image: none;
 }
@@ -275,8 +272,7 @@ html|p {
 /* ::::: Search Bar  ::::: */
 
 #searchBox {
-  border-top: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDShadow;
-  border-left: 2px solid;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  border-top: 1px solid transparent;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid transparent;
 }

@@ -891,36 +891,18 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 #folderTree {
   border-right: 1px solid;
   -moz-border-right-colors: ThreeDShadow;
-  min-width: 1px;
 }
 
-#threadTree {
-  border-bottom: 2px solid;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  min-width: 1px;
-}
-
-#threadTree,
-#accountCentralBox,
-#searchBox {
+#accountCentralBox { 
   border-left: 2px solid;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
 }
 
 #searchBox {
-  border-top: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDShadow;
+  border-top: 1px solid transparent;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid transparent;
 }
-
-/* we could set this height to 32 pixels to make it the same height as the search bar
-   but I think it makes the folder Pane header look too big.... use 28px for now 
-
-#folderPaneHeader {
-  height: 32px;
-}
-
-*/
-
 
 /* ..... message pane adjustments ..... */
 
