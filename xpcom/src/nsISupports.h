@@ -23,6 +23,7 @@
 #include "nsTraceRefcnt.h"
 #include "nsID.h"
 #include "nsError.h"
+#include "prcmon.h"
 
 /*@{*/
 
@@ -353,6 +354,162 @@ nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   NS_IMPL_ADDREF(_class)                       \
   NS_IMPL_RELEASE(_class)                      \
   NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)
+
+
+/**
+ *
+ * Threadsafe implementations of the ISupports convenience macros
+ *
+ */
+
+/**
+ * IID for the nsIsThreadsafe interface
+ * {88210890-47a6-11d2-bec3-00805f8a66dc}
+ *
+ * This interface is *only* used for debugging purposes to determine if
+ * a given component is threadsafe.
+ */
+#define NS_ISTHREADSAFE_IID      \
+{ 0x88210890, 0x47a6, 0x11d2,    \
+  {0xbe, 0xc3, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
+
+#if defined(NS_MT_SUPPORTED)
+
+#define NS_LOCK_INSTANCE()                                                  \
+  PR_CEnterMonitor((void*)this)
+
+#define NS_UNLOCK_INSTANCE()                                                \
+  PR_CExitMonitor((void*)this)
+
+/**
+ * Use this macro to implement the AddRef method for a given <i>_class</i>
+ * @param _class The name of the class implementing the method
+ */
+#define NS_IMPL_THREADSAFE_ADDREF(_class)                                   \
+nsrefcnt _class::AddRef(void)                                               \
+{                                                                           \
+  nsrefcnt count;                                                           \
+  NS_LOCK_INSTANCE();                                                       \
+  count = ++mRefCnt;                                                        \
+  NS_UNLOCK_INSTANCE();                                                     \
+  return count;                                                             \
+}
+
+/**
+ * Use this macro to implement the Release method for a given <i>_class</i>
+ * @param _class The name of the class implementing the method
+ */
+#define NS_IMPL_THREADSAFE_RELEASE(_class)             \
+nsrefcnt _class::Release(void)                         \
+{                                                      \
+  nsrefcnt count;                                      \
+  NS_PRECONDITION(0 != mRefCnt, "dup release");        \
+  NS_LOCK_INSTANCE();                                  \
+  count = --mRefCnt;                                   \
+  NS_UNLOCK_INSTANCE();                                \
+  if (0 == count) {                                    \
+    NS_DELETEXPCOM(this);                              \
+    return 0;                                          \
+  }                                                    \
+  return count;                                        \
+}
+
+//----------------------------------------------------------------------
+
+/*
+ * Some convenience macros for implementing QueryInterface
+ */
+
+/** 
+ * This implements query interface with two assumptions: First, the
+ * class in question implements nsISupports and it's own interface and
+ * nothing else. Second, the implementation of the class's primary
+ * inheritance chain leads to it's own interface.
+ *
+ * @param _class The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ */
+#if defined(NS_DEBUG)
+#define NS_VERIFY_THREADSAFE_INTERFACE(_iface)                              \
+ if (NULL != (_iface)) {                                                    \
+   nsISupports* tmp;                                                        \
+   static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);             \
+   NS_PRECONDITION((NS_OK == _iface->QueryInterface(kIsThreadsafeIID,       \
+                                                    (void**)&tmp)),         \
+                   "Interface is not threadsafe");                          \
+ }
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)          \
+nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
+{                                                                        \
+  if (NULL == aInstancePtr) {                                            \
+    return NS_ERROR_NULL_POINTER;                                        \
+  }                                                                      \
+                                                                         \
+  *aInstancePtr = NULL;                                                  \
+                                                                         \
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 \
+  static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);           \
+  static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
+  if (aIID.Equals(kClassIID)) {                                          \
+    *aInstancePtr = (void*) this;                                        \
+    NS_ADDREF_THIS();                                                    \
+    return NS_OK;                                                        \
+  }                                                                      \
+  if (aIID.Equals(kISupportsIID)) {                                      \
+    *aInstancePtr = (void*) ((nsISupports*)this);                        \
+    NS_ADDREF_THIS();                                                    \
+    return NS_OK;                                                        \
+  }                                                                      \
+  if (aIID.Equals(kIsThreadsafeIID)) {                                   \
+    return NS_OK;                                                        \
+  }                                                                      \
+  return NS_NOINTERFACE;                                                 \
+}
+
+#else   /* !NS_DEBUG */
+
+#define NS_VERIFY_THREADSAFE_INTERFACE(_iface)
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)          \
+ NS_IMPL_QUERY_INTERFACE(_class, _classiiddef)
+
+#endif /* !NS_DEBUG */
+
+/**
+ * Convenience macro for implementing all nsISupports methods for
+ * a simple class.
+ * @param _class The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+ */
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS(_class,_classiiddef) \
+  NS_IMPL_THREADSAFE_ADDREF(_class)                       \
+  NS_IMPL_THREADSAFE_RELEASE(_class)                      \
+  NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef)
+
+#else /* !NS_MT_SUPPORTED */
+
+#define NS_LOCK_INSTANCE()
+
+#define NS_UNLOCK_INSTANCE()
+
+#define NS_IMPL_THREADSAFE_ADDREF(_class)  NS_IMPL_ADDREF(_class)
+
+#define NS_IMPL_THREADSAFE_RELEASE(_class) NS_IMPL_RELEASE(_class)
+
+#define NS_VERIFY_THREADSAFE_INTERFACE(_iface)
+
+#define NS_IMPL_THREADSAFE_QUERY_INTERFACE(_class,_classiiddef) \
+ NS_IMPL_QUERY_INTERFACE(_class, _classiiddef)
+
+#define NS_IMPL_THREADSAFE_ISUPPORTS(_class,_classiiddef) \
+  NS_IMPL_ADDREF(_class)                                  \
+  NS_IMPL_RELEASE(_class)                                 \
+  NS_IMPL_QUERY_INTERFACE(_class,_classiiddef)
+
+#endif /* !NS_MT_SUPPORTED */
 
 /*@}*/
 
