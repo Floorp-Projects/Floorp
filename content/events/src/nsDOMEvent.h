@@ -82,7 +82,8 @@ public:
     eDOMEvents_dragover,
     eDOMEvents_dragexit,
     eDOMEvents_dragdrop,
-    eDOMEvents_draggesture
+    eDOMEvents_draggesture,
+    eDOMEvents_resize
   };
 
   nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsString& aEventType);
@@ -143,6 +144,7 @@ public:
   NS_IMETHOD    SetTarget(nsIDOMEventTarget* aTarget);
   NS_IMETHOD    SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget);
   NS_IMETHOD    IsDispatchStopped(PRBool* aIsDispatchStopped);
+  NS_IMETHOD    GetInternalNSEvent(nsEvent** aNSEvent);
 
   // nsIPrivateTextEvent interface
 	NS_IMETHOD GetText(nsString& aText);

@@ -48,6 +48,7 @@ public:
   NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) = 0;
   NS_IMETHOD SetCurrentTarget(nsIDOMEventTarget* aTarget) = 0;
   NS_IMETHOD IsDispatchStopped(PRBool* aIsDispatchPrevented) = 0;
+  NS_IMETHOD GetInternalNSEvent(nsEvent** aNSEvent) = 0;
 };
 
 extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);

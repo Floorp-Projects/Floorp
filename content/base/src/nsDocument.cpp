@@ -2644,10 +2644,13 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext* aPresContext,
                                     nsEventStatus* aEventStatus)
 {
   nsresult mRet = NS_OK;
-  nsIDOMEvent* mDOMEvent = nsnull;
+
+  nsIDOMEvent* domEvent = nsnull;
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
-    aDOMEvent = &mDOMEvent;
+    if (!aDOMEvent) {
+      aDOMEvent = &domEvent;
+    }
     aEvent->flags = aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
   }

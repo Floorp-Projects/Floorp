@@ -379,7 +379,9 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
 
    if(NS_EVENT_FLAG_INIT & aFlags)
       {
-      aDOMEvent = &domEvent;  
+      if (!aDOMEvent) {
+        aDOMEvent = &domEvent;
+      }
       aEvent->flags = aFlags;
       aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
       }
@@ -3767,6 +3769,21 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
          if(!scriptCX ||
             NS_OK != manager->RegisterScriptEventListener(scriptCX, this, atom,
             NS_GET_IID(nsIDOMDragListener)))
+            {
+            return PR_FALSE;
+            }
+         }
+      }
+
+   else if(aPropName.EqualsWithConversion("onresize"))
+      {
+      if(NS_OK == GetListenerManager(getter_AddRefs(manager)))
+         {
+         nsCOMPtr<nsIScriptContext> scriptCX;
+         nsJSUtils::nsGetDynamicScriptContext(aContext, getter_AddRefs(scriptCX));
+         if(!scriptCX ||
+            NS_OK != manager->RegisterScriptEventListener(scriptCX, this, atom,
+            NS_GET_IID(nsIDOMPaintListener)))
             {
             return PR_FALSE;
             }

@@ -232,5 +232,6 @@ protected:
 //nsIDOMPaintListener
 #define NS_EVENT_BITS_PAINT_NONE    0x00
 #define NS_EVENT_BITS_PAINT_PAINT   0x01
+#define NS_EVENT_BITS_PAINT_RESIZE  0x02
 
 #endif // nsEventListenerManager_h__

@@ -1781,6 +1781,17 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   
   mViewManager->CacheWidgetChanges(PR_FALSE);
 
+  //Send resize event from here.
+  nsEvent event;
+  nsEventStatus status;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_RESIZE_EVENT;
+  event.time = 0;
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj;
+	mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+  globalObj->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  
   return NS_OK; //XXX this needs to be real. MMP
 }
 

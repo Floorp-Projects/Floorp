@@ -2602,7 +2602,33 @@ void nsEventStateManager::ForceViewUpdate(nsIView* aView)
 NS_IMETHODIMP
 nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent)
 {
-  return NS_OK;
+  nsresult ret = NS_OK;
+
+  nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(aEvent));
+  if (aEvent) {
+    nsEvent* innerEvent;
+    privEvt->GetInternalNSEvent(&innerEvent);
+    if (innerEvent) {
+      nsEventStatus status;
+      nsCOMPtr<nsIScriptGlobalObject> target(do_QueryInterface(aTarget));
+      if (target) {
+        ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
+      }
+      else {
+        nsCOMPtr<nsIDocument> target(do_QueryInterface(aTarget));
+        if (target) {
+          ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
+        }
+        else {
+          nsCOMPtr<nsIContent> target(do_QueryInterface(aTarget));
+          if (target) {
+            ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
+          }
+        }
+      }
+    }
+  }
+  return ret;
 }
 
 nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
