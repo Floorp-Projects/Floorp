@@ -138,22 +138,18 @@ nsDownloadListener::OnStatusChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP 
-nsDownloadListener::OnSecurityChange(nsIWebProgress *aWebProgress, 
-					              nsIRequest *aRequest, 
-                                  PRInt32 state)
+nsDownloadListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
   return NS_OK;
 }
 
 // Implementation of nsIWebProgressListener
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP 
-nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress, 
-				      nsIRequest *aRequest, 
-				      PRInt32 aStateFlags, 
-				      PRUint32 aStatus)
+nsDownloadListener::OnStateChange(nsIWebProgress *aWebProgress,  nsIRequest *aRequest,  PRUint32 aStateFlags, 
+                                    PRUint32 aStatus)
 {
     return NS_OK;
 }

@@ -541,10 +541,10 @@ nsCocoaBrowserListener::GetSiteWindow(void * *aSiteWindow)
 // Implementation of nsIWebProgressListener
 //
 
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP 
 nsCocoaBrowserListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
-                                        PRInt32 aStateFlags, PRUint32 aStatus)
+                                        PRUint32 aStateFlags, PRUint32 aStatus)
 {
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<NSBrowserListener> obj;
@@ -613,10 +613,9 @@ nsCocoaBrowserListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest 
   return NS_OK;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP 
-nsCocoaBrowserListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
-                                          PRInt32 state)
+nsCocoaBrowserListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
   NSEnumerator* enumerator = [mListeners objectEnumerator];
   id<NSBrowserListener> obj; 
@@ -698,10 +697,8 @@ NS_IMPL_ISUPPORTS1(nsHeaderSniffer, nsIWebProgressListener)
 // Implementation of nsIWebProgressListener
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP 
-nsHeaderSniffer::OnStateChange(nsIWebProgress *aWebProgress, 
-				      nsIRequest *aRequest, 
-				      PRInt32 aStateFlags, 
-				      PRUint32 aStatus)
+nsHeaderSniffer::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, 
+                                PRUint32 aStatus)
 {
     if (aStateFlags & nsIWebProgressListener::STATE_START) {
         nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
@@ -901,11 +898,9 @@ nsHeaderSniffer::OnStatusChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP 
-nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, 
-					              nsIRequest *aRequest, 
-                                  PRInt32 state)
+nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
   return NS_OK;
 }
