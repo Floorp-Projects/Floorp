@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.8 2004/08/19 00:33:56 bryner%brianryner.com Exp $
+## $Id: mozilla.in,v 1.9 2004/08/19 21:30:51 bryner%brianryner.com Exp $
 ## 
 ## Usage:
 ##
@@ -146,7 +146,6 @@ ALREADY_RUNNING=`check_running`
 # If there's a command line argument but it doesn't begin with a -
 # it's probably a url.  Try to send it to a running instance.
 _USE_EXIST=0
-_NEW_WINDOW=
 _optOne="$1"
 case "${_optOne}" in
 	-*) 
@@ -156,25 +155,16 @@ case "${_optOne}" in
 		;;
 esac
 
-_optOthers=
 _optLast=
 for i in "$@"; do 
 	_optLast="${i}"
 done #last arg
 
-for i in "$@"; do
-	[ $i = ${_optLast} ] && break
-	_optOthers="${_optOthers} ${i}"
-done #others arg
-
-#???: needs check if othersopt begin with -* ?
 if [ `expr "${_optLast}" : '.*:/.*'` -eq 0 -a \( -f "${_optLast}" -o -d "${_optLast}" \) ]; then
 	# Last argument seems to be a local file/directory
 	# Check, if it is absolutely specified (ie. /home/foo/file vs. ./file)
 	# If it is just "relatively" (./file) specified, make it absolutely
 	[ `expr "${_optLast}" : '/.*'` -eq 0 ] && _optLast="file://`pwd`/${_optLast}"
-elif [ `expr "${_optLast}" : '.*:/.*'` -gt 0 -o -n "${_optOthers}" ]; then #???? like before...
-	_NEW_WINDOW=1
 fi
 ################################################################ Parse Arguments
 
