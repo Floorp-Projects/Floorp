@@ -506,7 +506,7 @@ float nsSVGLength::UserUnitsPerPixel()
 float nsSVGLength::mmPerPixel()
 {
   if (!mContext) {
-    NS_ERROR("no context in mmPerPixel()");
+    NS_WARNING("no context in mmPerPixel()");
     return 1.0f;
   }
   
@@ -523,7 +523,7 @@ float nsSVGLength::mmPerPixel()
 float nsSVGLength::AxisLength()
 {
   if (!mContext) {
-    NS_ERROR("no context in AxisLength()");
+    NS_WARNING("no context in AxisLength()");
     return 1.0f;
   }
 
