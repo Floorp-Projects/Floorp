@@ -585,3 +585,51 @@ DayView.prototype.hiliteTodaysDate = function( )
 {
    return;
 }
+
+
+
+var gStartDate = null;
+
+var gEndDate = null;
+
+var eventEndObserver = {
+  getSupportedFlavours : function () {
+    var flavours = new FlavourSet();
+    flavours.appendFlavour("text/unicode");
+    return flavours;
+  },
+  onDragOver: function (evt,flavour,session){
+    evt.target.setAttribute( "draggedover", "true" );    
+  },
+  onDrop: function (evt,dropdata,session){
+      gEndDate = new Date( gStartDate.getTime() );
+      gEndDate.setHours( evt.target.getAttribute( "hour" ) );
+      if( gEndDate.getTime() < gStartDate.getTime() )
+      {
+         var Temp = gEndDate;
+         gEndDate = gStartDate;
+         gStartDate = Temp;
+      }
+
+      newEvent( gStartDate, gEndDate );  
+      var allDraggedElements = document.getElementsByAttribute( "draggedover", "true" );
+      for( var i = 0; i < allDraggedElements.length; i++ )
+      {
+         allDraggedElements[i].removeAttribute( "draggedover" );
+      }
+  }
+};
+
+var eventStartObserver  = {
+  onDragStart: function (evt, transferData, action){
+     gStartDate = new Date( gCalendarWindow.getSelectedDate() );
+   
+     gStartDate.setHours( evt.target.getAttribute( "hour" ) );
+     gStartDate.setMinutes( 0 );
+     gStartDate.setSeconds( 0 );
+   
+     transferData.data=new TransferData();
+     transferData.data.addDataForFlavour("text/unicode",0);
+  }
+};
+

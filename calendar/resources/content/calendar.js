@@ -250,9 +250,9 @@ function dayEventItemDoubleClick( eventBox, event )
 *    event      - the click event, Not used yet 
 */
 
-function dayViewHourClick( hourNumber, event )
+function dayViewHourClick( event )
 {
-   gCalendarWindow.setSelectedHour( hourNumber );
+   gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
 }
 
 
@@ -260,11 +260,11 @@ function dayViewHourClick( hourNumber, event )
 * Called on double click of an hour box.
 */
 
-function dayViewHourDoubleClick( hourNumber, event )
+function dayViewHourDoubleClick( event )
 {
    // change the date selection to the clicked hour
    
-   gCalendarWindow.setSelectedHour( hourNumber );
+   gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
    
    var startDate = gCalendarWindow.dayView.getNewEventDate();
    newEvent( startDate );
@@ -425,7 +425,7 @@ function createEvent ()
 * When the user clicks OK "addEventDialogResponse" is called
 */
 
-function newEvent( startDate )
+function newEvent( startDate, endDate )
 {
    // set up a bunch of args to pass to the dialog
    
@@ -439,14 +439,18 @@ function newEvent( startDate )
    
    args.calendarEvent.start.setTime( startDate );
    
-   var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
+   if( !endDate )
+   {
+      var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
    
-   var endDate = new Date();
+      var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
    
-   var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
-
-   args.calendarEvent.end.setTime( endDateTime );
-   
+      args.calendarEvent.end.setTime( endDateTime );
+   }
+   else
+   {
+      args.calendarEvent.end.setTime( endDate.getTime() );
+   }
    // open the dialog non modally
    openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome", args );
 }

@@ -51,7 +51,7 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    >
-<script type="application/x-javascript" src="chrome://calendar/content/calendarWeekView.js"/>
+   <script type="application/x-javascript" src="chrome://calendar/content/calendarWeekView.js"/>
    
    <script type="application/x-javascript">
       var ArrayOfDayNames = new Array();
@@ -172,19 +172,19 @@
                       </box>
                    </box>
                    
-                   <box class="week-view-hours-only-box-class" id="week-tree-hour-1">
+                   <box class="week-view-hours-only-box-class" id="week-tree-hour-1" ondraggesture="startDragging( 1 )" ondragdrop="stopDragging( 1 )">
                       <box class="week-time-class" flex="1">
                          <label class="week-time-class-text" id="week-view-hour" value="&time.1; " />
                       </box>
                    </box>
                    
-                   <box class="week-view-hours-only-box-class" id="week-tree-hour-2">
+                   <box class="week-view-hours-only-box-class" id="week-tree-hour-2" ondraggesture="startDragging( 2 )" ondragdrop="stopDragging( 2 )">
                       <box class="week-time-class" flex="1">
                          <label class="week-time-class-text" id="week-view-hour" value="&time.2; " />
                       </box>
                    </box>
                    
-                   <box class="week-view-hours-only-box-class" id="week-tree-hour-3">
+                   <box class="week-view-hours-only-box-class" id="week-tree-hour-3" ondraggesture="startDragging( 3 )" ondragdrop="stopDragging( 3 )">
                       <box class="week-time-class" flex="1">
                          <label class="week-time-class-text" id="week-view-hour" value="&time.3; " />
                       </box>
@@ -315,9 +315,9 @@
                 <!-- DAY 0 -->
                 <vbox class="week-view-day-container-box" id="week-view-hour-0" left="98" top="0">
                    <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-0" onclick="weekViewHourClick( 1, 0, event  )" ondblclick="weekViewHourDoubleClick( 1, 0, event )"/>
-                   <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-1" onclick="weekViewHourClick( 1, 1, event  )" ondblclick="weekViewHourDoubleClick( 1, 1, event )" />
-                   <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-2" onclick="weekViewHourClick( 1, 2, event  )" ondblclick="weekViewHourDoubleClick( 1, 2, event )" />
-                   <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-3" onclick="weekViewHourClick( 1, 3, event  )" ondblclick="weekViewHourDoubleClick( 1, 3, event )" />
+                   <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-1" onclick="weekViewHourClick( 1, 1, event  )" ondblclick="weekViewHourDoubleClick( 1, 1, event )"/>
+                   <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-2" onclick="weekViewHourClick( 1, 2, event  )" ondblclick="weekViewHourDoubleClick( 1, 2, event )"/>
+                   <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-3" onclick="weekViewHourClick( 1, 3, event  )" ondblclick="weekViewHourDoubleClick( 1, 3, event )"/>
                    <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-4" onclick="weekViewHourClick( 1, 4, event  )" ondblclick="weekViewHourDoubleClick( 1, 4, event )" />
                    <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-5" onclick="weekViewHourClick( 1, 5, event  )" ondblclick="weekViewHourDoubleClick( 1, 5, event )" />
                    <box class="week-view-hour-box-class weekend" id="week-tree-day-0-item-6" onclick="weekViewHourClick( 1, 6, event  )" ondblclick="weekViewHourDoubleClick( 1, 6, event )" />

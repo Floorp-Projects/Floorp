@@ -58,7 +58,12 @@
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendarDayView.js"/>
    
- <vbox id="day-view-box" flex="1">
+   <script src="chrome://global/content/nsDragAndDrop.js"/>
+   <script src="chrome://global/content/nsTransferable.js"/>
+   <script src="chrome://global/content/nsJSSupportsUtils.js"/>
+   <script src="chrome://global/content/nsJSComponentManager.js"/>
+   
+   <vbox id="day-view-box" flex="1">
    
         <!-- Day View: Controls-->
            
@@ -110,154 +115,152 @@
                    <image src="chrome://calendar/skin/day_left_gradient.png" left="1" top="1" width="30" height="1199"/>           
 	       </vbox>
 	       <stack id="day-view-content-board" flex="1">
-		   <vbox id="day-hour-content-holder" flex="1">    
-
-   
-                   <box top="0" left="31" class="day-view-hour-box-class" id="day-tree-item-0" onclick="dayViewHourClick( 0, event  )" ondblclick="dayViewHourDoubleClick( 0, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.midnight; " />
-                      </box>
+		      <vbox id="day-hour-content-holder" flex="1">    
+                <box top="0" left="31" class="day-view-hour-box-class" id="day-tree-item-0" hour="0" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.midnight; " />
                    </box>
-                   
-                   <box top="50" left="31" class="day-view-hour-box-class" id="day-tree-item-1" onclick="dayViewHourClick( 1, event  )" ondblclick="dayViewHourDoubleClick( 1, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.1; " />
-                      </box>
+                </box>
+                
+                <box top="50" left="31" class="day-view-hour-box-class" id="day-tree-item-1" hour="1" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.1; " />
                    </box>
-                   
-                   <box top="100" left="31" class="day-view-hour-box-class" id="day-tree-item-2" onclick="dayViewHourClick( 2, event  )" ondblclick="dayViewHourDoubleClick( 2, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.2; " />
-                      </box>
+                </box>
+                
+                <box top="100" left="31" class="day-view-hour-box-class" id="day-tree-item-2" hour="2" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.2; " />
                    </box>
-                   
-                   <box top="150" left="31" class="day-view-hour-box-class" id="day-tree-item-3" onclick="dayViewHourClick( 3, event  )" ondblclick="dayViewHourDoubleClick( 3, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.3; " />
-                      </box>
+                </box>
+                
+                <box top="150" left="31" class="day-view-hour-box-class" id="day-tree-item-3" hour="3" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.3; " />
                    </box>
-                   
-                   <box top="200" left="31" class="day-view-hour-box-class" id="day-tree-item-4" onclick="dayViewHourClick( 4, event  )" ondblclick="dayViewHourDoubleClick( 4, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.4; " />
-                      </box>
+                </box>
+                
+                <box top="200" left="31" class="day-view-hour-box-class" id="day-tree-item-4" hour="4" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.4; " />
                    </box>
-                   
-                   <box top="250" left="31" class="day-view-hour-box-class" id="day-tree-item-5" onclick="dayViewHourClick( 5, event  )" ondblclick="dayViewHourDoubleClick( 5, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.5; " />
-                      </box>
+                </box>
+                
+                <box top="250" left="31" class="day-view-hour-box-class" id="day-tree-item-5" hour="5" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.5; " />
                    </box>
-                   
-                   <box top="300" left="31" class="day-view-hour-box-class" id="day-tree-item-6" onclick="dayViewHourClick( 6, event  )" ondblclick="dayViewHourDoubleClick( 6, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.6; " />
-                      </box>
+                </box>
+                
+                <box top="300" left="31" class="day-view-hour-box-class" id="day-tree-item-6" hour="6" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.6; " />
                    </box>
-                   
-                   <box top="350" left="31" class="day-view-hour-box-class" id="day-tree-item-7" onclick="dayViewHourClick( 7, event  )" ondblclick="dayViewHourDoubleClick( 7, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.7; " />
-                      </box>
+                </box>
+                
+                <box top="350" left="31" class="day-view-hour-box-class" id="day-tree-item-7" hour="7" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.7; " />
                    </box>
-                   
-                   <box top="400" left="31" class="day-view-hour-box-class" id="day-tree-item-8" onclick="dayViewHourClick( 8, event  )" ondblclick="dayViewHourDoubleClick( 8, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.8; " />
-                      </box>
+                </box>
+                
+                <box top="400" left="31" class="day-view-hour-box-class" id="day-tree-item-8" hour="8" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.8; " />
                    </box>
-                   
-                   <box top="450" left="31" class="day-view-hour-box-class" id="day-tree-item-9" onclick="dayViewHourClick( 9, event  )" ondblclick="dayViewHourDoubleClick( 9, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.9; " />
-                      </box>
+                </box>
+                
+                <box top="450" left="31" class="day-view-hour-box-class" id="day-tree-item-9" hour="9" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.9; " />
                    </box>
-                   
-                   <box top="500" left="31" class="day-view-hour-box-class" id="day-tree-item-10" onclick="dayViewHourClick( 10, event  )" ondblclick="dayViewHourDoubleClick( 10, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.10; " />
-                      </box>
+                </box>
+                
+                <box top="500" left="31" class="day-view-hour-box-class" id="day-tree-item-10" hour="10" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.10; " />
                    </box>
-                   
-                   <box top="550" left="31" class="day-view-hour-box-class" id="day-tree-item-11" onclick="dayViewHourClick( 11, event  )" ondblclick="dayViewHourDoubleClick( 11, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.11; " />
-                      </box>
+                </box>
+                
+                <box top="550" left="31" class="day-view-hour-box-class" id="day-tree-item-11" hour="11" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.11; " />
                    </box>
-                   
-                   <box top="600" left="31" class="day-view-hour-box-class" id="day-tree-item-12" onclick="dayViewHourClick( 12, event  )" ondblclick="dayViewHourDoubleClick( 12, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.noon; " />
-                      </box>
+                </box>
+                
+                <box top="600" left="31" class="day-view-hour-box-class" id="day-tree-item-12" hour="12" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.noon; " />
                    </box>
-                   
-                   <box top="650" left="31" class="day-view-hour-box-class" id="day-tree-item-13" onclick="dayViewHourClick( 13, event  )" ondblclick="dayViewHourDoubleClick( 13, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.13; " />
-                      </box>
+                </box>
+                
+                <box top="650" left="31" class="day-view-hour-box-class" id="day-tree-item-13" hour="13" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.13; " />
                    </box>
-                   
-                   <box top="700" left="31" class="day-view-hour-box-class" id="day-tree-item-14" onclick="dayViewHourClick( 14, event  )" ondblclick="dayViewHourDoubleClick( 14, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.14; " />
-                      </box>
+                </box>
+                
+                <box top="700" left="31" class="day-view-hour-box-class" id="day-tree-item-14" hour="14" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.14; " />
                    </box>
-                   
-                   <box top="750" left="31" class="day-view-hour-box-class" id="day-tree-item-15" onclick="dayViewHourClick( 15, event  )" ondblclick="dayViewHourDoubleClick( 15, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.15; " />
-                      </box>
+                </box>
+                
+                <box top="750" left="31" class="day-view-hour-box-class" id="day-tree-item-15" hour="15" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.15; " />
                    </box>
-                   
-                   <box top="800" left="31" class="day-view-hour-box-class" id="day-tree-item-16" onclick="dayViewHourClick( 16, event  )" ondblclick="dayViewHourDoubleClick( 16, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.16; " />
-                      </box>
+                </box>
+                
+                <box top="800" left="31" class="day-view-hour-box-class" id="day-tree-item-16" hour="16" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.16; " />
                    </box>
-                   
-                   <box top="850" left="31" class="day-view-hour-box-class" id="day-tree-item-17" onclick="dayViewHourClick( 17, event  )" ondblclick="dayViewHourDoubleClick( 17, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.17; " />
-                      </box>
+                </box>
+                
+                <box top="850" left="31" class="day-view-hour-box-class" id="day-tree-item-17" hour="17" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.17; " />
                    </box>
-                   
-                   <box top="900" left="31" class="day-view-hour-box-class" id="day-tree-item-18" onclick="dayViewHourClick( 18, event  )" ondblclick="dayViewHourDoubleClick( 18, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.18; " />
-                      </box>
+                </box>
+                
+                <box top="900" left="31" class="day-view-hour-box-class" id="day-tree-item-18" hour="18" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.18; " />
                    </box>
-                   
-                   <box top="950" left="31" class="day-view-hour-box-class" id="day-tree-item-19" onclick="dayViewHourClick( 19, event  )" ondblclick="dayViewHourDoubleClick( 19, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.19; " />
-                      </box>
+                </box>
+                
+                <box top="950" left="31" class="day-view-hour-box-class" id="day-tree-item-19" hour="19" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.19; " />
                    </box>
-                   
-                   <box top="1000" left="31" class="day-view-hour-box-class" id="day-tree-item-20" onclick="dayViewHourClick( 20, event  )" ondblclick="dayViewHourDoubleClick( 20, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.20; " />
-                      </box>
+                </box>
+                
+                <box top="1000" left="31" class="day-view-hour-box-class" id="day-tree-item-20" hour="20" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.20; " />
                    </box>
-                   
-                   <box top="1050" left="31" class="day-view-hour-box-class" id="day-tree-item-21" onclick="dayViewHourClick( 21, event  )" ondblclick="dayViewHourDoubleClick( 21, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.21; " />
-                      </box>
+                </box>
+                
+                <box top="1050" left="31" class="day-view-hour-box-class" id="day-tree-item-21" hour="21" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.21; " />
                    </box>
-                   
-                   <box top="1100" left="31" class="day-view-hour-box-class" id="day-tree-item-22" onclick="dayViewHourClick( 22, event  )" ondblclick="dayViewHourDoubleClick( 22, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.22; " />
-                      </box>
+                </box>
+                
+                <box top="1100" left="31" class="day-view-hour-box-class" id="day-tree-item-22" hour="22" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.22; " />
                    </box>
-                   
-                   <box top="1150" left="31" class="day-view-hour-box-class" id="day-tree-item-23" onclick="dayViewHourClick( 23, event  )" ondblclick="dayViewHourDoubleClick( 23, event )" flex="1" >
-                      <box class="day-time-class">
-                         <label class="day-time-class-label" id="day-view-hour" value="&time.23; " />
-                      </box>
+                </box>
+                
+                <box top="1150" left="31" class="day-view-hour-box-class" id="day-tree-item-23" hour="23" onclick="dayViewHourClick( event )" ondblclick="dayViewHourDoubleClick( event )" flex="1" ondraggesture="nsDragAndDrop.startDrag(event,eventStartObserver);" ondragover="nsDragAndDrop.dragOver(event,eventEndObserver)" ondragdrop="nsDragAndDrop.drop(event,eventEndObserver)">
+                   <box class="day-time-class">
+                      <label class="day-time-class-label" id="day-view-hour" value="&time.23; " />
                    </box>
-	       </vbox>    
-	   </stack>
+                </box>
+	            </vbox>    
+	         </stack>
          </box>   <!-- End: day-tree-content-box -->
       </vbox>
    </vbox>  <!-- End: Calendar Day View -->

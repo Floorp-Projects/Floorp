@@ -734,6 +734,10 @@
    margin-right 	: 5px;
 }
 
+.day-view-hour-box-class[draggedover="true"]
+{
+   background-color     : #2085c4;
+}
 
 #day-tree-item-0
 {
