@@ -107,6 +107,7 @@
 #include "nsXBLDragHandler.h"
 #include "nsXBLLoadHandler.h"
 #include "nsXBLContextMenuHandler.h"
+#include "nsXBLCustomHandler.h"
 
 #include "nsXBLBinding.h"
 
@@ -849,12 +850,23 @@ nsXBLBinding::InstallEventHandlers()
       nsCOMPtr<nsIAtom> eventAtom;
       curr->GetEventName(getter_AddRefs(eventAtom));
 
+      nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
+      // Figure out if we're using capturing or not.
+      PRUint8 phase;
+      curr->GetPhase(&phase);
+      PRBool useCapture = (phase == NS_PHASE_CAPTURING);
+        
+      // Create a new nsXBLEventHandler.
+      nsXBLEventHandler* handler = nsnull;
+      
+      nsAutoString type;
+      eventAtom->ToString(type);
+      
       nsIID iid;
       PRBool found = PR_FALSE;
       GetEventHandlerIID(eventAtom, &iid, &found);
 
       if (found) { 
-        nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
         /*
         // Disable ATTACHTO capability for Mozilla 1.0
         nsAutoString attachType;
@@ -880,17 +892,6 @@ nsXBLBinding::InstallEventHandlers()
           receiver = do_QueryInterface(otherElement);
         }
         */
-
-        // Figure out if we're using capturing or not.
-        PRUint8 phase;
-        curr->GetPhase(&phase);
-        PRBool useCapture = (phase == NS_PHASE_CAPTURING);
-        
-        // Create a new nsXBLEventHandler.
-        nsXBLEventHandler* handler = nsnull;
-        
-        nsAutoString type;
-        eventAtom->ToString(type);
 
         // Add the event listener.
         if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
@@ -959,27 +960,28 @@ nsXBLBinding::InstallEventHandlers()
           receiver->AddEventListener(type, (nsIDOMContextMenuListener*)menuHandler, useCapture);
           handler = menuHandler;
         }
-        else {
-          NS_WARNING("***** Non-compliant XBL event listener attached! *****");
-          // XXX Need to get the event text from the prototype handler!
-          //AddScriptEventListener(mBoundElement, eventAtom, value);
-        }
-
-        // We chain all our event handlers together for easy
-        // removal later (if/when the binding dies).
-        if (handler) {
-          if (!currHandler)
-            mFirstHandler = handler;
-          else 
-            currHandler->SetNextHandler(handler);
-
-          currHandler = handler;
-
-          // Let the listener manager hold on to the handler.
-          NS_RELEASE(handler);
-        }
+      }
+      else {
+        nsXBLCustomHandler* customHandler;
+        NS_NewXBLCustomHandler(receiver, curr, &customHandler);
+        receiver->AddEventListener(type, (nsIDOMEventListener*)customHandler, useCapture);
+        handler = customHandler;
       }
 
+      // We chain all our event handlers together for easy
+      // removal later (if/when the binding dies).
+      if (handler) {
+        if (!currHandler)
+          mFirstHandler = handler;
+        else 
+          currHandler->SetNextHandler(handler);
+        
+        currHandler = handler;
+
+        // Let the listener manager hold on to the handler.
+        NS_RELEASE(handler);
+      }
+      
       nsCOMPtr<nsIXBLPrototypeHandler> next;
       curr->GetNextHandler(getter_AddRefs(next));
       curr = next;

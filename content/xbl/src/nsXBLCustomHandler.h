@@ -16,12 +16,11 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- *
+ * Original Author: Brian Ryner <bryner@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,54 +36,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsXBLEventHandler_h__
-#define nsXBLEventHandler_h__
+#ifndef nsXBLCustomHandler_h__
+#define nsXBLCustomHandler_h__
 
-#include "nsIDOMEventReceiver.h"
-#include "nsCOMPtr.h"
-#include "nsIXBLPrototypeHandler.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMMouseListener.h"
+#include "nsXBLEventHandler.h"
 
 class nsIXBLBinding;
 class nsIDOMEvent;
 class nsIContent;
 class nsIDOMUIEvent;
-class nsIDOMKeyEvent;
-class nsIDOMMouseEvent;
 class nsIAtom;
 class nsIController;
+class nsIXBLPrototypeHandler;
 
-// XXX This should be broken up into subclasses for each listener IID type, so we
-// can cut down on the bloat of the handlers.
-class nsXBLEventHandler : public nsISupports
+class nsXBLCustomHandler : public nsIDOMEventListener, 
+                           public nsXBLEventHandler
 {
 public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
-  virtual ~nsXBLEventHandler();
+  nsXBLCustomHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
+  virtual ~nsXBLCustomHandler();
   
-  NS_DECL_ISUPPORTS
-
-public:
-  void SetNextHandler(nsXBLEventHandler* aHandler) {
-    mNextHandler = aHandler;
-  }
-
-  void RemoveEventHandlers();
-
-  void MarkForDeath() {
-    if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
-  }
-
-  static nsresult GetTextData(nsIContent *aParent, nsAWritableString& aResult);
+  NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_ISUPPORTS_INHERITED
 
 protected:
-  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
-  nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
-
-  nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
+  // Members
 };
 
 extern nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsXBLEventHandler** aResult);
+NS_NewXBLCustomHandler(nsIDOMEventReceiver* aEventReceiver,
+                       nsIXBLPrototypeHandler* aHandlerElement, 
+                       nsXBLCustomHandler** aResult);
+
+
 #endif
