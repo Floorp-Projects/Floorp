@@ -60,7 +60,8 @@ EXPORTS		= \
 		nsIStringStream.h \
 		nsIUnicharInputStream.h \
 		nsSpecialSystemDirectory.h \
-        nsScriptableInputStream.h \
+	        nsScriptableInputStream.h \
+		nsStorageStream.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
