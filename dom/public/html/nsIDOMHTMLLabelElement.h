@@ -26,7 +26,6 @@
 #include "nsIDOMHTMLElement.h"
 
 class nsIDOMHTMLFormElement;
-class nsIDOMHTMLLabelElement;
 
 #define NS_IDOMHTMLLABELELEMENT_IID \
 { 0x6f76530a,  0xee43, 0x11d1, \
@@ -44,6 +43,26 @@ public:
   NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor)=0;
   NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLLABELELEMENT   \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm);  \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey);  \
+  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor);  \
+  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLLABELELEMENT(superClass)  \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return superClass::GetForm(aForm); } \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return superClass::SetForm(aForm); } \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return superClass::GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return superClass::SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return superClass::GetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return superClass::SetHtmlFor(aHtmlFor); } \
+
 
 extern nsresult NS_InitHTMLLabelElementClass(nsIScriptContext *aContext, void **aPrototype);
 

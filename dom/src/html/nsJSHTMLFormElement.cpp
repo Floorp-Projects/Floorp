@@ -213,44 +213,6 @@ SetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case HTMLFORMELEMENT_ELEMENTS:
-      {
-        nsIDOMHTMLCollection* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIHTMLCollectionIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type HTMLCollection");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetElements(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
-      case HTMLFORMELEMENT_NAME:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetName(prop);
-        
-        break;
-      }
       case HTMLFORMELEMENT_ACCEPTCHARSET:
       {
         nsAutoString prop;
@@ -436,8 +398,8 @@ JSClass HTMLFormElementClass = {
 //
 static JSPropertySpec HTMLFormElementProperties[] =
 {
-  {"elements",    HTMLFORMELEMENT_ELEMENTS,    JSPROP_ENUMERATE},
-  {"name",    HTMLFORMELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"elements",    HTMLFORMELEMENT_ELEMENTS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"name",    HTMLFORMELEMENT_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"acceptCharset",    HTMLFORMELEMENT_ACCEPTCHARSET,    JSPROP_ENUMERATE},
   {"action",    HTMLFORMELEMENT_ACTION,    JSPROP_ENUMERATE},
   {"enctype",    HTMLFORMELEMENT_ENCTYPE,    JSPROP_ENUMERATE},

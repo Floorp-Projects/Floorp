@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLScriptElement;
 
 #define NS_IDOMHTMLSCRIPTELEMENT_IID \
 { 0x6f76531a,  0xee43, 0x11d1, \
@@ -55,6 +54,42 @@ public:
   NS_IMETHOD    GetType(nsString& aType)=0;
   NS_IMETHOD    SetType(const nsString& aType)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLSCRIPTELEMENT   \
+  NS_IMETHOD    GetText(nsString& aText);  \
+  NS_IMETHOD    SetText(const nsString& aText);  \
+  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor);  \
+  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor);  \
+  NS_IMETHOD    GetEvent(nsString& aEvent);  \
+  NS_IMETHOD    SetEvent(const nsString& aEvent);  \
+  NS_IMETHOD    GetCharset(nsString& aCharset);  \
+  NS_IMETHOD    SetCharset(const nsString& aCharset);  \
+  NS_IMETHOD    GetDefer(PRBool* aDefer);  \
+  NS_IMETHOD    SetDefer(PRBool aDefer);  \
+  NS_IMETHOD    GetSrc(nsString& aSrc);  \
+  NS_IMETHOD    SetSrc(const nsString& aSrc);  \
+  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    SetType(const nsString& aType);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLSCRIPTELEMENT(superClass)  \
+  NS_IMETHOD    GetText(nsString& aText) { return superClass::GetText(aText); } \
+  NS_IMETHOD    SetText(const nsString& aText) { return superClass::SetText(aText); } \
+  NS_IMETHOD    GetHtmlFor(nsString& aHtmlFor) { return superClass::GetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    SetHtmlFor(const nsString& aHtmlFor) { return superClass::SetHtmlFor(aHtmlFor); } \
+  NS_IMETHOD    GetEvent(nsString& aEvent) { return superClass::GetEvent(aEvent); } \
+  NS_IMETHOD    SetEvent(const nsString& aEvent) { return superClass::SetEvent(aEvent); } \
+  NS_IMETHOD    GetCharset(nsString& aCharset) { return superClass::GetCharset(aCharset); } \
+  NS_IMETHOD    SetCharset(const nsString& aCharset) { return superClass::SetCharset(aCharset); } \
+  NS_IMETHOD    GetDefer(PRBool* aDefer) { return superClass::GetDefer(aDefer); } \
+  NS_IMETHOD    SetDefer(PRBool aDefer) { return superClass::SetDefer(aDefer); } \
+  NS_IMETHOD    GetSrc(nsString& aSrc) { return superClass::GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsString& aSrc) { return superClass::SetSrc(aSrc); } \
+  NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
+
 
 extern nsresult NS_InitHTMLScriptElementClass(nsIScriptContext *aContext, void **aPrototype);
 

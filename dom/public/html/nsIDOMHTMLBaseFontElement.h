@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLBaseFontElement;
 
 #define NS_IDOMHTMLBASEFONTELEMENT_IID \
 { 0x6f7652f2,  0xee43, 0x11d1, \
@@ -43,6 +42,26 @@ public:
   NS_IMETHOD    GetSize(nsString& aSize)=0;
   NS_IMETHOD    SetSize(const nsString& aSize)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLBASEFONTELEMENT   \
+  NS_IMETHOD    GetColor(nsString& aColor);  \
+  NS_IMETHOD    SetColor(const nsString& aColor);  \
+  NS_IMETHOD    GetFace(nsString& aFace);  \
+  NS_IMETHOD    SetFace(const nsString& aFace);  \
+  NS_IMETHOD    GetSize(nsString& aSize);  \
+  NS_IMETHOD    SetSize(const nsString& aSize);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLBASEFONTELEMENT(superClass)  \
+  NS_IMETHOD    GetColor(nsString& aColor) { return superClass::GetColor(aColor); } \
+  NS_IMETHOD    SetColor(const nsString& aColor) { return superClass::SetColor(aColor); } \
+  NS_IMETHOD    GetFace(nsString& aFace) { return superClass::GetFace(aFace); } \
+  NS_IMETHOD    SetFace(const nsString& aFace) { return superClass::SetFace(aFace); } \
+  NS_IMETHOD    GetSize(nsString& aSize) { return superClass::GetSize(aSize); } \
+  NS_IMETHOD    SetSize(const nsString& aSize) { return superClass::SetSize(aSize); } \
+
 
 extern nsresult NS_InitHTMLBaseFontElementClass(nsIScriptContext *aContext, void **aPrototype);
 

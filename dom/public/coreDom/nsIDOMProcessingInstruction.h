@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
-class nsIDOMProcessingInstruction;
 
 #define NS_IDOMPROCESSINGINSTRUCTION_IID \
 { 0x6f7652ec,  0xee43, 0x11d1, \
@@ -40,6 +39,22 @@ public:
   NS_IMETHOD    GetData(nsString& aData)=0;
   NS_IMETHOD    SetData(const nsString& aData)=0;
 };
+
+
+#define NS_DECL_IDOMPROCESSINGINSTRUCTION   \
+  NS_IMETHOD    GetTarget(nsString& aTarget);  \
+  NS_IMETHOD    SetTarget(const nsString& aTarget);  \
+  NS_IMETHOD    GetData(nsString& aData);  \
+  NS_IMETHOD    SetData(const nsString& aData);  \
+
+
+
+#define NS_FORWARD_IDOMPROCESSINGINSTRUCTION(superClass)  \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return superClass::GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return superClass::SetTarget(aTarget); } \
+  NS_IMETHOD    GetData(nsString& aData) { return superClass::GetData(aData); } \
+  NS_IMETHOD    SetData(const nsString& aData) { return superClass::SetData(aData); } \
+
 
 extern nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLPreElement;
 
 #define NS_IDOMHTMLPREELEMENT_IID \
 { 0x6f765318,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
   NS_IMETHOD    SetWidth(PRInt32 aWidth)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLPREELEMENT   \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
+  NS_IMETHOD    SetWidth(PRInt32 aWidth);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLPREELEMENT(superClass)  \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth) { return superClass::GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(PRInt32 aWidth) { return superClass::SetWidth(aWidth); } \
+
 
 extern nsresult NS_InitHTMLPreElementClass(nsIScriptContext *aContext, void **aPrototype);
 

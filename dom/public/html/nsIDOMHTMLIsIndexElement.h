@@ -26,7 +26,6 @@
 #include "nsIDOMHTMLElement.h"
 
 class nsIDOMHTMLFormElement;
-class nsIDOMHTMLIsIndexElement;
 
 #define NS_IDOMHTMLISINDEXELEMENT_IID \
 { 0x6f765309,  0xee43, 0x11d1, \
@@ -41,6 +40,22 @@ public:
   NS_IMETHOD    GetPrompt(nsString& aPrompt)=0;
   NS_IMETHOD    SetPrompt(const nsString& aPrompt)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLISINDEXELEMENT   \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm);  \
+  NS_IMETHOD    GetPrompt(nsString& aPrompt);  \
+  NS_IMETHOD    SetPrompt(const nsString& aPrompt);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLISINDEXELEMENT(superClass)  \
+  NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return superClass::GetForm(aForm); } \
+  NS_IMETHOD    SetForm(nsIDOMHTMLFormElement* aForm) { return superClass::SetForm(aForm); } \
+  NS_IMETHOD    GetPrompt(nsString& aPrompt) { return superClass::GetPrompt(aPrompt); } \
+  NS_IMETHOD    SetPrompt(const nsString& aPrompt) { return superClass::SetPrompt(aPrompt); } \
+
 
 extern nsresult NS_InitHTMLIsIndexElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -26,7 +26,6 @@
 #include "nsIDOMHTMLElement.h"
 
 class nsIDOMHTMLElement;
-class nsIDOMHTMLTableRowElement;
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLTABLEROWELEMENT_IID \
@@ -64,6 +63,50 @@ public:
 
   NS_IMETHOD    DeleteCell(PRInt32 aIndex)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLTABLEROWELEMENT   \
+  NS_IMETHOD    GetRowIndex(PRInt32* aRowIndex);  \
+  NS_IMETHOD    SetRowIndex(PRInt32 aRowIndex);  \
+  NS_IMETHOD    GetSectionRowIndex(PRInt32* aSectionRowIndex);  \
+  NS_IMETHOD    SetSectionRowIndex(PRInt32 aSectionRowIndex);  \
+  NS_IMETHOD    GetCells(nsIDOMHTMLCollection** aCells);  \
+  NS_IMETHOD    SetCells(nsIDOMHTMLCollection* aCells);  \
+  NS_IMETHOD    GetAlign(nsString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+  NS_IMETHOD    GetBgColor(nsString& aBgColor);  \
+  NS_IMETHOD    SetBgColor(const nsString& aBgColor);  \
+  NS_IMETHOD    GetCh(nsString& aCh);  \
+  NS_IMETHOD    SetCh(const nsString& aCh);  \
+  NS_IMETHOD    GetChOff(nsString& aChOff);  \
+  NS_IMETHOD    SetChOff(const nsString& aChOff);  \
+  NS_IMETHOD    GetVAlign(nsString& aVAlign);  \
+  NS_IMETHOD    SetVAlign(const nsString& aVAlign);  \
+  NS_IMETHOD    InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aReturn);  \
+  NS_IMETHOD    DeleteCell(PRInt32 aIndex);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLTABLEROWELEMENT(superClass)  \
+  NS_IMETHOD    GetRowIndex(PRInt32* aRowIndex) { return superClass::GetRowIndex(aRowIndex); } \
+  NS_IMETHOD    SetRowIndex(PRInt32 aRowIndex) { return superClass::SetRowIndex(aRowIndex); } \
+  NS_IMETHOD    GetSectionRowIndex(PRInt32* aSectionRowIndex) { return superClass::GetSectionRowIndex(aSectionRowIndex); } \
+  NS_IMETHOD    SetSectionRowIndex(PRInt32 aSectionRowIndex) { return superClass::SetSectionRowIndex(aSectionRowIndex); } \
+  NS_IMETHOD    GetCells(nsIDOMHTMLCollection** aCells) { return superClass::GetCells(aCells); } \
+  NS_IMETHOD    SetCells(nsIDOMHTMLCollection* aCells) { return superClass::SetCells(aCells); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return superClass::GetBgColor(aBgColor); } \
+  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return superClass::SetBgColor(aBgColor); } \
+  NS_IMETHOD    GetCh(nsString& aCh) { return superClass::GetCh(aCh); } \
+  NS_IMETHOD    SetCh(const nsString& aCh) { return superClass::SetCh(aCh); } \
+  NS_IMETHOD    GetChOff(nsString& aChOff) { return superClass::GetChOff(aChOff); } \
+  NS_IMETHOD    SetChOff(const nsString& aChOff) { return superClass::SetChOff(aChOff); } \
+  NS_IMETHOD    GetVAlign(nsString& aVAlign) { return superClass::GetVAlign(aVAlign); } \
+  NS_IMETHOD    SetVAlign(const nsString& aVAlign) { return superClass::SetVAlign(aVAlign); } \
+  NS_IMETHOD    InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aReturn) { return superClass::InsertCell(aIndex, aReturn); }  \
+  NS_IMETHOD    DeleteCell(PRInt32 aIndex) { return superClass::DeleteCell(aIndex); }  \
+
 
 extern nsresult NS_InitHTMLTableRowElementClass(nsIScriptContext *aContext, void **aPrototype);
 

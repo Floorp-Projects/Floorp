@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
-class nsIDOMAttribute;
 
 #define NS_IDOMATTRIBUTE_IID \
 { 0x6f7652e0,  0xee43, 0x11d1, \
@@ -41,6 +40,22 @@ public:
 
   NS_IMETHOD    GetValue(nsString& aValue)=0;
 };
+
+
+#define NS_DECL_IDOMATTRIBUTE   \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    GetSpecified(PRBool* aSpecified);  \
+  NS_IMETHOD    SetSpecified(PRBool aSpecified);  \
+  NS_IMETHOD    GetValue(nsString& aValue);  \
+
+
+
+#define NS_FORWARD_IDOMATTRIBUTE(superClass)  \
+  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
+  NS_IMETHOD    GetSpecified(PRBool* aSpecified) { return superClass::GetSpecified(aSpecified); } \
+  NS_IMETHOD    SetSpecified(PRBool aSpecified) { return superClass::SetSpecified(aSpecified); } \
+  NS_IMETHOD    GetValue(nsString& aValue) { return superClass::GetValue(aValue); } \
+
 
 extern nsresult NS_InitAttributeClass(nsIScriptContext *aContext, void **aPrototype);
 

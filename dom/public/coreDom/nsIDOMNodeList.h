@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMNode;
-class nsIDOMNodeList;
 
 #define NS_IDOMNODELIST_IID \
 { 0x6f7652eb,  0xee43, 0x11d1, \
@@ -38,6 +37,18 @@ public:
 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
 };
+
+
+#define NS_DECL_IDOMNODELIST   \
+  NS_IMETHOD    GetLength(PRUint32* aLength);  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);  \
+
+
+
+#define NS_FORWARD_IDOMNODELIST(superClass)  \
+  NS_IMETHOD    GetLength(PRUint32* aLength) { return superClass::GetLength(aLength); } \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return superClass::Item(aIndex, aReturn); }  \
+
 
 extern nsresult NS_InitNodeListClass(nsIScriptContext *aContext, void **aPrototype);
 

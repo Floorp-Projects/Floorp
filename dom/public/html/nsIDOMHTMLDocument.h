@@ -28,7 +28,6 @@
 
 class nsIDOMElement;
 class nsIDOMHTMLElement;
-class nsIDOMHTMLDocument;
 class nsIDOMHTMLCollection;
 class nsIDOMNodeList;
 
@@ -84,6 +83,62 @@ public:
 
   NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLDOCUMENT   \
+  NS_IMETHOD    GetTitle(nsString& aTitle);  \
+  NS_IMETHOD    SetTitle(const nsString& aTitle);  \
+  NS_IMETHOD    GetReferrer(nsString& aReferrer);  \
+  NS_IMETHOD    GetFileSize(nsString& aFileSize);  \
+  NS_IMETHOD    GetFileCreatedDate(nsString& aFileCreatedDate);  \
+  NS_IMETHOD    GetFileModifiedDate(nsString& aFileModifiedDate);  \
+  NS_IMETHOD    GetFileUpdatedDate(nsString& aFileUpdatedDate);  \
+  NS_IMETHOD    GetDomain(nsString& aDomain);  \
+  NS_IMETHOD    GetURL(nsString& aURL);  \
+  NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody);  \
+  NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody);  \
+  NS_IMETHOD    GetImages(nsIDOMHTMLCollection** aImages);  \
+  NS_IMETHOD    GetApplets(nsIDOMHTMLCollection** aApplets);  \
+  NS_IMETHOD    GetLinks(nsIDOMHTMLCollection** aLinks);  \
+  NS_IMETHOD    GetForms(nsIDOMHTMLCollection** aForms);  \
+  NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors);  \
+  NS_IMETHOD    GetCookie(nsString& aCookie);  \
+  NS_IMETHOD    SetCookie(const nsString& aCookie);  \
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    Close();  \
+  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc);  \
+  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn);  \
+  NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLDOCUMENT(superClass)  \
+  NS_IMETHOD    GetTitle(nsString& aTitle) { return superClass::GetTitle(aTitle); } \
+  NS_IMETHOD    SetTitle(const nsString& aTitle) { return superClass::SetTitle(aTitle); } \
+  NS_IMETHOD    GetReferrer(nsString& aReferrer) { return superClass::GetReferrer(aReferrer); } \
+  NS_IMETHOD    GetFileSize(nsString& aFileSize) { return superClass::GetFileSize(aFileSize); } \
+  NS_IMETHOD    GetFileCreatedDate(nsString& aFileCreatedDate) { return superClass::GetFileCreatedDate(aFileCreatedDate); } \
+  NS_IMETHOD    GetFileModifiedDate(nsString& aFileModifiedDate) { return superClass::GetFileModifiedDate(aFileModifiedDate); } \
+  NS_IMETHOD    GetFileUpdatedDate(nsString& aFileUpdatedDate) { return superClass::GetFileUpdatedDate(aFileUpdatedDate); } \
+  NS_IMETHOD    GetDomain(nsString& aDomain) { return superClass::GetDomain(aDomain); } \
+  NS_IMETHOD    GetURL(nsString& aURL) { return superClass::GetURL(aURL); } \
+  NS_IMETHOD    GetBody(nsIDOMHTMLElement** aBody) { return superClass::GetBody(aBody); } \
+  NS_IMETHOD    SetBody(nsIDOMHTMLElement* aBody) { return superClass::SetBody(aBody); } \
+  NS_IMETHOD    GetImages(nsIDOMHTMLCollection** aImages) { return superClass::GetImages(aImages); } \
+  NS_IMETHOD    GetApplets(nsIDOMHTMLCollection** aApplets) { return superClass::GetApplets(aApplets); } \
+  NS_IMETHOD    GetLinks(nsIDOMHTMLCollection** aLinks) { return superClass::GetLinks(aLinks); } \
+  NS_IMETHOD    GetForms(nsIDOMHTMLCollection** aForms) { return superClass::GetForms(aForms); } \
+  NS_IMETHOD    GetAnchors(nsIDOMHTMLCollection** aAnchors) { return superClass::GetAnchors(aAnchors); } \
+  NS_IMETHOD    GetCookie(nsString& aCookie) { return superClass::GetCookie(aCookie); } \
+  NS_IMETHOD    SetCookie(const nsString& aCookie) { return superClass::SetCookie(aCookie); } \
+  NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc) { return superClass::Open(cx, argv, argc); }  \
+  NS_IMETHOD    Close() { return superClass::Close(); }  \
+  NS_IMETHOD    Write(JSContext *cx, jsval *argv, PRUint32 argc) { return superClass::Write(cx, argv, argc); }  \
+  NS_IMETHOD    Writeln(JSContext *cx, jsval *argv, PRUint32 argc) { return superClass::Writeln(cx, argv, argc); }  \
+  NS_IMETHOD    GetElementById(const nsString& aElementId, nsIDOMElement** aReturn) { return superClass::GetElementById(aElementId, aReturn); }  \
+  NS_IMETHOD    GetElementsByName(const nsString& aElementName, nsIDOMNodeList** aReturn) { return superClass::GetElementsByName(aElementName, aReturn); }  \
+
 
 extern nsresult NS_InitHTMLDocumentClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLAreaElement;
 
 #define NS_IDOMHTMLAREAELEMENT_IID \
 { 0x6f7652f0,  0xee43, 0x11d1, \
@@ -58,6 +57,46 @@ public:
   NS_IMETHOD    GetTarget(nsString& aTarget)=0;
   NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLAREAELEMENT   \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey);  \
+  NS_IMETHOD    GetAlt(nsString& aAlt);  \
+  NS_IMETHOD    SetAlt(const nsString& aAlt);  \
+  NS_IMETHOD    GetCoords(nsString& aCoords);  \
+  NS_IMETHOD    SetCoords(const nsString& aCoords);  \
+  NS_IMETHOD    GetHref(nsString& aHref);  \
+  NS_IMETHOD    SetHref(const nsString& aHref);  \
+  NS_IMETHOD    GetNoHref(PRBool* aNoHref);  \
+  NS_IMETHOD    SetNoHref(PRBool aNoHref);  \
+  NS_IMETHOD    GetShape(nsString& aShape);  \
+  NS_IMETHOD    SetShape(const nsString& aShape);  \
+  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex);  \
+  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex);  \
+  NS_IMETHOD    GetTarget(nsString& aTarget);  \
+  NS_IMETHOD    SetTarget(const nsString& aTarget);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLAREAELEMENT(superClass)  \
+  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return superClass::GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return superClass::SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetAlt(nsString& aAlt) { return superClass::GetAlt(aAlt); } \
+  NS_IMETHOD    SetAlt(const nsString& aAlt) { return superClass::SetAlt(aAlt); } \
+  NS_IMETHOD    GetCoords(nsString& aCoords) { return superClass::GetCoords(aCoords); } \
+  NS_IMETHOD    SetCoords(const nsString& aCoords) { return superClass::SetCoords(aCoords); } \
+  NS_IMETHOD    GetHref(nsString& aHref) { return superClass::GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsString& aHref) { return superClass::SetHref(aHref); } \
+  NS_IMETHOD    GetNoHref(PRBool* aNoHref) { return superClass::GetNoHref(aNoHref); } \
+  NS_IMETHOD    SetNoHref(PRBool aNoHref) { return superClass::SetNoHref(aNoHref); } \
+  NS_IMETHOD    GetShape(nsString& aShape) { return superClass::GetShape(aShape); } \
+  NS_IMETHOD    SetShape(const nsString& aShape) { return superClass::SetShape(aShape); } \
+  NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return superClass::GetTabIndex(aTabIndex); } \
+  NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return superClass::SetTabIndex(aTabIndex); } \
+  NS_IMETHOD    GetTarget(nsString& aTarget) { return superClass::GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsString& aTarget) { return superClass::SetTarget(aTarget); } \
+
 
 extern nsresult NS_InitHTMLAreaElementClass(nsIScriptContext *aContext, void **aPrototype);
 

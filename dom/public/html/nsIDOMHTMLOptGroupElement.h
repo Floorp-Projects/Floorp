@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLOptGroupElement;
 
 #define NS_IDOMHTMLOPTGROUPELEMENT_IID \
 { 0x6f765314,  0xee43, 0x11d1, \
@@ -40,6 +39,22 @@ public:
   NS_IMETHOD    GetLabel(nsString& aLabel)=0;
   NS_IMETHOD    SetLabel(const nsString& aLabel)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLOPTGROUPELEMENT   \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
+  NS_IMETHOD    GetLabel(nsString& aLabel);  \
+  NS_IMETHOD    SetLabel(const nsString& aLabel);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLOPTGROUPELEMENT(superClass)  \
+  NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return superClass::GetDisabled(aDisabled); } \
+  NS_IMETHOD    SetDisabled(PRBool aDisabled) { return superClass::SetDisabled(aDisabled); } \
+  NS_IMETHOD    GetLabel(nsString& aLabel) { return superClass::GetLabel(aLabel); } \
+  NS_IMETHOD    SetLabel(const nsString& aLabel) { return superClass::SetLabel(aLabel); } \
+
 
 extern nsresult NS_InitHTMLOptGroupElementClass(nsIScriptContext *aContext, void **aPrototype);
 

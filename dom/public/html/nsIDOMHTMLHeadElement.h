@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLHeadElement;
 
 #define NS_IDOMHTMLHEADELEMENT_IID \
 { 0x6f765301,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetProfile(nsString& aProfile)=0;
   NS_IMETHOD    SetProfile(const nsString& aProfile)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLHEADELEMENT   \
+  NS_IMETHOD    GetProfile(nsString& aProfile);  \
+  NS_IMETHOD    SetProfile(const nsString& aProfile);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLHEADELEMENT(superClass)  \
+  NS_IMETHOD    GetProfile(nsString& aProfile) { return superClass::GetProfile(aProfile); } \
+  NS_IMETHOD    SetProfile(const nsString& aProfile) { return superClass::SetProfile(aProfile); } \
+
 
 extern nsresult NS_InitHTMLHeadElementClass(nsIScriptContext *aContext, void **aPrototype);
 

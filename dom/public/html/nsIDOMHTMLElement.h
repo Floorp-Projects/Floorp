@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMElement.h"
 
-class nsIDOMHTMLElement;
 
 #define NS_IDOMHTMLELEMENT_IID \
 { 0x6f7652fc,  0xee43, 0x11d1, \
@@ -49,6 +48,34 @@ public:
   NS_IMETHOD    GetClassName(nsString& aClassName)=0;
   NS_IMETHOD    SetClassName(const nsString& aClassName)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLELEMENT   \
+  NS_IMETHOD    GetId(nsString& aId);  \
+  NS_IMETHOD    SetId(const nsString& aId);  \
+  NS_IMETHOD    GetTitle(nsString& aTitle);  \
+  NS_IMETHOD    SetTitle(const nsString& aTitle);  \
+  NS_IMETHOD    GetLang(nsString& aLang);  \
+  NS_IMETHOD    SetLang(const nsString& aLang);  \
+  NS_IMETHOD    GetDir(nsString& aDir);  \
+  NS_IMETHOD    SetDir(const nsString& aDir);  \
+  NS_IMETHOD    GetClassName(nsString& aClassName);  \
+  NS_IMETHOD    SetClassName(const nsString& aClassName);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLELEMENT(superClass)  \
+  NS_IMETHOD    GetId(nsString& aId) { return superClass::GetId(aId); } \
+  NS_IMETHOD    SetId(const nsString& aId) { return superClass::SetId(aId); } \
+  NS_IMETHOD    GetTitle(nsString& aTitle) { return superClass::GetTitle(aTitle); } \
+  NS_IMETHOD    SetTitle(const nsString& aTitle) { return superClass::SetTitle(aTitle); } \
+  NS_IMETHOD    GetLang(nsString& aLang) { return superClass::GetLang(aLang); } \
+  NS_IMETHOD    SetLang(const nsString& aLang) { return superClass::SetLang(aLang); } \
+  NS_IMETHOD    GetDir(nsString& aDir) { return superClass::GetDir(aDir); } \
+  NS_IMETHOD    SetDir(const nsString& aDir) { return superClass::SetDir(aDir); } \
+  NS_IMETHOD    GetClassName(nsString& aClassName) { return superClass::GetClassName(aClassName); } \
+  NS_IMETHOD    SetClassName(const nsString& aClassName) { return superClass::SetClassName(aClassName); } \
+
 
 extern nsresult NS_InitHTMLElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLImageElement;
 
 #define NS_IDOMHTMLIMAGEELEMENT_IID \
 { 0x6f765306,  0xee43, 0x11d1, \
@@ -73,6 +72,66 @@ public:
   NS_IMETHOD    GetWidth(nsString& aWidth)=0;
   NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLIMAGEELEMENT   \
+  NS_IMETHOD    GetLowSrc(nsString& aLowSrc);  \
+  NS_IMETHOD    SetLowSrc(const nsString& aLowSrc);  \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetAlign(nsString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+  NS_IMETHOD    GetAlt(nsString& aAlt);  \
+  NS_IMETHOD    SetAlt(const nsString& aAlt);  \
+  NS_IMETHOD    GetBorder(nsString& aBorder);  \
+  NS_IMETHOD    SetBorder(const nsString& aBorder);  \
+  NS_IMETHOD    GetHeight(nsString& aHeight);  \
+  NS_IMETHOD    SetHeight(const nsString& aHeight);  \
+  NS_IMETHOD    GetHspace(nsString& aHspace);  \
+  NS_IMETHOD    SetHspace(const nsString& aHspace);  \
+  NS_IMETHOD    GetIsMap(PRBool* aIsMap);  \
+  NS_IMETHOD    SetIsMap(PRBool aIsMap);  \
+  NS_IMETHOD    GetLongDesc(nsString& aLongDesc);  \
+  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc);  \
+  NS_IMETHOD    GetSrc(nsString& aSrc);  \
+  NS_IMETHOD    SetSrc(const nsString& aSrc);  \
+  NS_IMETHOD    GetUseMap(nsString& aUseMap);  \
+  NS_IMETHOD    SetUseMap(const nsString& aUseMap);  \
+  NS_IMETHOD    GetVspace(nsString& aVspace);  \
+  NS_IMETHOD    SetVspace(const nsString& aVspace);  \
+  NS_IMETHOD    GetWidth(nsString& aWidth);  \
+  NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLIMAGEELEMENT(superClass)  \
+  NS_IMETHOD    GetLowSrc(nsString& aLowSrc) { return superClass::GetLowSrc(aLowSrc); } \
+  NS_IMETHOD    SetLowSrc(const nsString& aLowSrc) { return superClass::SetLowSrc(aLowSrc); } \
+  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+  NS_IMETHOD    GetAlt(nsString& aAlt) { return superClass::GetAlt(aAlt); } \
+  NS_IMETHOD    SetAlt(const nsString& aAlt) { return superClass::SetAlt(aAlt); } \
+  NS_IMETHOD    GetBorder(nsString& aBorder) { return superClass::GetBorder(aBorder); } \
+  NS_IMETHOD    SetBorder(const nsString& aBorder) { return superClass::SetBorder(aBorder); } \
+  NS_IMETHOD    GetHeight(nsString& aHeight) { return superClass::GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(const nsString& aHeight) { return superClass::SetHeight(aHeight); } \
+  NS_IMETHOD    GetHspace(nsString& aHspace) { return superClass::GetHspace(aHspace); } \
+  NS_IMETHOD    SetHspace(const nsString& aHspace) { return superClass::SetHspace(aHspace); } \
+  NS_IMETHOD    GetIsMap(PRBool* aIsMap) { return superClass::GetIsMap(aIsMap); } \
+  NS_IMETHOD    SetIsMap(PRBool aIsMap) { return superClass::SetIsMap(aIsMap); } \
+  NS_IMETHOD    GetLongDesc(nsString& aLongDesc) { return superClass::GetLongDesc(aLongDesc); } \
+  NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return superClass::SetLongDesc(aLongDesc); } \
+  NS_IMETHOD    GetSrc(nsString& aSrc) { return superClass::GetSrc(aSrc); } \
+  NS_IMETHOD    SetSrc(const nsString& aSrc) { return superClass::SetSrc(aSrc); } \
+  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return superClass::GetUseMap(aUseMap); } \
+  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return superClass::SetUseMap(aUseMap); } \
+  NS_IMETHOD    GetVspace(nsString& aVspace) { return superClass::GetVspace(aVspace); } \
+  NS_IMETHOD    SetVspace(const nsString& aVspace) { return superClass::SetVspace(aVspace); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return superClass::GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return superClass::SetWidth(aWidth); } \
+
 
 extern nsresult NS_InitHTMLImageElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -47,5 +47,5 @@ export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
 	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
 
 install::
-	for %g in ($(IDLSRCS:.idl=.h)) do $(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM%g $(XPCOM_DESTDIR)
-	for %g in ($(IDLSRCS:.idl=.cpp)) do $(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS%g $(JSSTUB_DESTDIR)
+	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM*.h $(XPCOM_DESTDIR)
+	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS*.cpp $(JSSTUB_DESTDIR)

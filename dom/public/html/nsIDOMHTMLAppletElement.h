@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLAppletElement;
 
 #define NS_IDOMHTMLAPPLETELEMENT_IID \
 { 0x6f7652ef,  0xee43, 0x11d1, \
@@ -67,6 +66,58 @@ public:
   NS_IMETHOD    GetWidth(nsString& aWidth)=0;
   NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLAPPLETELEMENT   \
+  NS_IMETHOD    GetAlign(nsString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+  NS_IMETHOD    GetAlt(nsString& aAlt);  \
+  NS_IMETHOD    SetAlt(const nsString& aAlt);  \
+  NS_IMETHOD    GetArchive(nsString& aArchive);  \
+  NS_IMETHOD    SetArchive(const nsString& aArchive);  \
+  NS_IMETHOD    GetCode(nsString& aCode);  \
+  NS_IMETHOD    SetCode(const nsString& aCode);  \
+  NS_IMETHOD    GetCodeBase(nsString& aCodeBase);  \
+  NS_IMETHOD    SetCodeBase(const nsString& aCodeBase);  \
+  NS_IMETHOD    GetHeight(nsString& aHeight);  \
+  NS_IMETHOD    SetHeight(const nsString& aHeight);  \
+  NS_IMETHOD    GetHspace(nsString& aHspace);  \
+  NS_IMETHOD    SetHspace(const nsString& aHspace);  \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetObject(nsString& aObject);  \
+  NS_IMETHOD    SetObject(const nsString& aObject);  \
+  NS_IMETHOD    GetVspace(nsString& aVspace);  \
+  NS_IMETHOD    SetVspace(const nsString& aVspace);  \
+  NS_IMETHOD    GetWidth(nsString& aWidth);  \
+  NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLAPPLETELEMENT(superClass)  \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+  NS_IMETHOD    GetAlt(nsString& aAlt) { return superClass::GetAlt(aAlt); } \
+  NS_IMETHOD    SetAlt(const nsString& aAlt) { return superClass::SetAlt(aAlt); } \
+  NS_IMETHOD    GetArchive(nsString& aArchive) { return superClass::GetArchive(aArchive); } \
+  NS_IMETHOD    SetArchive(const nsString& aArchive) { return superClass::SetArchive(aArchive); } \
+  NS_IMETHOD    GetCode(nsString& aCode) { return superClass::GetCode(aCode); } \
+  NS_IMETHOD    SetCode(const nsString& aCode) { return superClass::SetCode(aCode); } \
+  NS_IMETHOD    GetCodeBase(nsString& aCodeBase) { return superClass::GetCodeBase(aCodeBase); } \
+  NS_IMETHOD    SetCodeBase(const nsString& aCodeBase) { return superClass::SetCodeBase(aCodeBase); } \
+  NS_IMETHOD    GetHeight(nsString& aHeight) { return superClass::GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(const nsString& aHeight) { return superClass::SetHeight(aHeight); } \
+  NS_IMETHOD    GetHspace(nsString& aHspace) { return superClass::GetHspace(aHspace); } \
+  NS_IMETHOD    SetHspace(const nsString& aHspace) { return superClass::SetHspace(aHspace); } \
+  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
+  NS_IMETHOD    GetObject(nsString& aObject) { return superClass::GetObject(aObject); } \
+  NS_IMETHOD    SetObject(const nsString& aObject) { return superClass::SetObject(aObject); } \
+  NS_IMETHOD    GetVspace(nsString& aVspace) { return superClass::GetVspace(aVspace); } \
+  NS_IMETHOD    SetVspace(const nsString& aVspace) { return superClass::SetVspace(aVspace); } \
+  NS_IMETHOD    GetWidth(nsString& aWidth) { return superClass::GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsString& aWidth) { return superClass::SetWidth(aWidth); } \
+
 
 extern nsresult NS_InitHTMLAppletElementClass(nsIScriptContext *aContext, void **aPrototype);
 

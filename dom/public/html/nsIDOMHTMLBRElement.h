@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLBRElement;
 
 #define NS_IDOMHTMLBRELEMENT_IID \
 { 0x6f7652f4,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetClear(nsString& aClear)=0;
   NS_IMETHOD    SetClear(const nsString& aClear)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLBRELEMENT   \
+  NS_IMETHOD    GetClear(nsString& aClear);  \
+  NS_IMETHOD    SetClear(const nsString& aClear);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLBRELEMENT(superClass)  \
+  NS_IMETHOD    GetClear(nsString& aClear) { return superClass::GetClear(aClear); } \
+  NS_IMETHOD    SetClear(const nsString& aClear) { return superClass::SetClear(aClear); } \
+
 
 extern nsresult NS_InitHTMLBRElementClass(nsIScriptContext *aContext, void **aPrototype);
 

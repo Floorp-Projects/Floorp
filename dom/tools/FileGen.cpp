@@ -283,6 +283,58 @@ FileGen::StrUpr(char *aBuffer)
 }
 
 void
+FileGen::CollectAllInInterface(IdlInterface &aInterface,
+                               PLHashTable *aTable)
+{
+  int a, acount = aInterface.AttributeCount();
+  for (a = 0; a < acount; a++) {
+    IdlAttribute *attr = aInterface.GetAttributeAt(a);
+    
+    if ((attr->GetType() == TYPE_OBJECT) &&
+        !PL_HashTableLookup(aTable, attr->GetTypeName())) {
+      PL_HashTableAdd(aTable, attr->GetTypeName(), (void *)1);
+    }
+  }
+  
+  int m, mcount = aInterface.FunctionCount();
+  for (m = 0; m < mcount; m++) {
+    IdlFunction *func = aInterface.GetFunctionAt(m);
+    IdlVariable *rval = func->GetReturnValue();
+
+    if ((rval->GetType() == TYPE_OBJECT) &&
+        !PL_HashTableLookup(aTable, rval->GetTypeName())) {
+      PL_HashTableAdd(aTable, rval->GetTypeName(), (void *)1);
+    }
+    
+    int p, pcount = func->ParameterCount();
+    for (p = 0; p < pcount; p++) {
+      IdlParameter *param = func->GetParameterAt(p);
+        
+      if ((param->GetType() == TYPE_OBJECT) &&
+          !PL_HashTableLookup(aTable, param->GetTypeName())) {
+        PL_HashTableAdd(aTable, param->GetTypeName(), (void *)1);
+      }
+    }
+  }
+}
+
+void
+FileGen::EnumerateAllObjects(IdlInterface &aInterface,
+                             PLHashEnumerator aEnumerator,
+                             void *aArg)
+{
+  PLHashTable *htable = PL_NewHashTable(10, PL_HashString,
+                                        PL_CompareStrings, 
+                                        PL_CompareValues,
+                                        (PLHashAllocOps *)NULL, NULL);
+  
+  CollectAllInInterface(aInterface, htable);
+
+  PL_HashTableEnumerateEntries(htable, aEnumerator, aArg);
+  PL_HashTableDestroy(htable);
+}
+                             
+void
 FileGen::EnumerateAllObjects(IdlSpecification &aSpec, 
                              PLHashEnumerator aEnumerator,
                              void *aArg,
@@ -301,37 +353,8 @@ FileGen::EnumerateAllObjects(IdlSpecification &aSpec,
         !PL_HashTableLookup(htable, iface->GetName())) {
       PL_HashTableAdd(htable, iface->GetName(), (void *)1);
     }
-
-    int a, acount = iface->AttributeCount();
-    for (a = 0; a < acount; a++) {
-      IdlAttribute *attr = iface->GetAttributeAt(a);
-      
-      if ((attr->GetType() == TYPE_OBJECT) &&
-          !PL_HashTableLookup(htable, attr->GetTypeName())) {
-        PL_HashTableAdd(htable, attr->GetTypeName(), (void *)1);
-      }
-    }
-
-    int m, mcount = iface->FunctionCount();
-    for (m = 0; m < mcount; m++) {
-      IdlFunction *func = iface->GetFunctionAt(m);
-      IdlVariable *rval = func->GetReturnValue();
-
-      if ((rval->GetType() == TYPE_OBJECT) &&
-          !PL_HashTableLookup(htable, rval->GetTypeName())) {
-        PL_HashTableAdd(htable, rval->GetTypeName(), (void *)1);
-      }
-
-      int p, pcount = func->ParameterCount();
-      for (p = 0; p < pcount; p++) {
-        IdlParameter *param = func->GetParameterAt(p);
-        
-        if ((param->GetType() == TYPE_OBJECT) &&
-            !PL_HashTableLookup(htable, param->GetTypeName())) {
-          PL_HashTableAdd(htable, param->GetTypeName(), (void *)1);
-        }
-      }
-    }
+    
+    CollectAllInInterface(*iface, htable);
   }
 
   PL_HashTableEnumerateEntries(htable, aEnumerator, aArg);

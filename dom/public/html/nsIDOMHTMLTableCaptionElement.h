@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLTableCaptionElement;
 
 #define NS_IDOMHTMLTABLECAPTIONELEMENT_IID \
 { 0x6f76531d,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetAlign(nsString& aAlign)=0;
   NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLTABLECAPTIONELEMENT   \
+  NS_IMETHOD    GetAlign(nsString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLTABLECAPTIONELEMENT(superClass)  \
+  NS_IMETHOD    GetAlign(nsString& aAlign) { return superClass::GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsString& aAlign) { return superClass::SetAlign(aAlign); } \
+
 
 extern nsresult NS_InitHTMLTableCaptionElementClass(nsIScriptContext *aContext, void **aPrototype);
 

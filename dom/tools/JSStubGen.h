@@ -47,7 +47,8 @@ protected:
   enum {
     JSSTUBGEN_PRIMARY,
     JSSTUBGEN_NONPRIMARY,
-    JSSTUBGEN_DEFAULT
+    JSSTUBGEN_DEFAULT,
+    JSSTUBGEN_NAMED_ITEM
   };
 
      void     GenerateIncludes(IdlSpecification &aSpec);

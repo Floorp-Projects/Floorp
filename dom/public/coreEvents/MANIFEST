@@ -3,6 +3,7 @@
 #
 
 nsIDOMEvent.h
+nsIDOMNSEvent.h
 nsIDOMEventListener.h
 nsIDOMEventCapturer.h
 nsIDOMEventReceiver.h

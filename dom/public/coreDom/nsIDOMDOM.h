@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMDocument;
-class nsIDOMDOM;
 
 #define NS_IDOMDOM_IID \
 { 0x6f7652e7,  0xee43, 0x11d1, \
@@ -38,6 +37,18 @@ public:
 
   NS_IMETHOD    HasFeature(const nsString& aFeature, PRBool* aReturn)=0;
 };
+
+
+#define NS_DECL_IDOMDOM   \
+  NS_IMETHOD    CreateDocument(const nsString& aType, nsIDOMDocument** aReturn);  \
+  NS_IMETHOD    HasFeature(const nsString& aFeature, PRBool* aReturn);  \
+
+
+
+#define NS_FORWARD_IDOMDOM(superClass)  \
+  NS_IMETHOD    CreateDocument(const nsString& aType, nsIDOMDocument** aReturn) { return superClass::CreateDocument(aType, aReturn); }  \
+  NS_IMETHOD    HasFeature(const nsString& aFeature, PRBool* aReturn) { return superClass::HasFeature(aFeature, aReturn); }  \
+
 
 extern nsresult NS_InitDOMClass(nsIScriptContext *aContext, void **aPrototype);
 

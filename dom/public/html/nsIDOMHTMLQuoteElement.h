@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLQuoteElement;
 
 #define NS_IDOMHTMLQUOTEELEMENT_IID \
 { 0x6f765319,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetCite(nsString& aCite)=0;
   NS_IMETHOD    SetCite(const nsString& aCite)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLQUOTEELEMENT   \
+  NS_IMETHOD    GetCite(nsString& aCite);  \
+  NS_IMETHOD    SetCite(const nsString& aCite);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLQUOTEELEMENT(superClass)  \
+  NS_IMETHOD    GetCite(nsString& aCite) { return superClass::GetCite(aCite); } \
+  NS_IMETHOD    SetCite(const nsString& aCite) { return superClass::SetCite(aCite); } \
+
 
 extern nsresult NS_InitHTMLQuoteElementClass(nsIScriptContext *aContext, void **aPrototype);
 

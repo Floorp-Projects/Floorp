@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLMetaElement;
 
 #define NS_IDOMHTMLMETAELEMENT_IID \
 { 0x6f765310,  0xee43, 0x11d1, \
@@ -46,6 +45,30 @@ public:
   NS_IMETHOD    GetScheme(nsString& aScheme)=0;
   NS_IMETHOD    SetScheme(const nsString& aScheme)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLMETAELEMENT   \
+  NS_IMETHOD    GetContent(nsString& aContent);  \
+  NS_IMETHOD    SetContent(const nsString& aContent);  \
+  NS_IMETHOD    GetHttpEquiv(nsString& aHttpEquiv);  \
+  NS_IMETHOD    SetHttpEquiv(const nsString& aHttpEquiv);  \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetScheme(nsString& aScheme);  \
+  NS_IMETHOD    SetScheme(const nsString& aScheme);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLMETAELEMENT(superClass)  \
+  NS_IMETHOD    GetContent(nsString& aContent) { return superClass::GetContent(aContent); } \
+  NS_IMETHOD    SetContent(const nsString& aContent) { return superClass::SetContent(aContent); } \
+  NS_IMETHOD    GetHttpEquiv(nsString& aHttpEquiv) { return superClass::GetHttpEquiv(aHttpEquiv); } \
+  NS_IMETHOD    SetHttpEquiv(const nsString& aHttpEquiv) { return superClass::SetHttpEquiv(aHttpEquiv); } \
+  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
+  NS_IMETHOD    GetScheme(nsString& aScheme) { return superClass::GetScheme(aScheme); } \
+  NS_IMETHOD    SetScheme(const nsString& aScheme) { return superClass::SetScheme(aScheme); } \
+
 
 extern nsresult NS_InitHTMLMetaElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLMapElement;
 class nsIDOMHTMLCollection;
 
 #define NS_IDOMHTMLMAPELEMENT_IID \
@@ -41,6 +40,22 @@ public:
   NS_IMETHOD    GetName(nsString& aName)=0;
   NS_IMETHOD    SetName(const nsString& aName)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLMAPELEMENT   \
+  NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas);  \
+  NS_IMETHOD    SetAreas(nsIDOMHTMLCollection* aAreas);  \
+  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    SetName(const nsString& aName);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLMAPELEMENT(superClass)  \
+  NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas) { return superClass::GetAreas(aAreas); } \
+  NS_IMETHOD    SetAreas(nsIDOMHTMLCollection* aAreas) { return superClass::SetAreas(aAreas); } \
+  NS_IMETHOD    GetName(nsString& aName) { return superClass::GetName(aName); } \
+  NS_IMETHOD    SetName(const nsString& aName) { return superClass::SetName(aName); } \
+
 
 extern nsresult NS_InitHTMLMapElementClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -100,6 +100,41 @@ GetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
     }
   }
+  else if (JSVAL_IS_STRING(id)) {
+    nsIDOMNode* prop;
+    nsAutoString name;
+
+    JSString *jsstring = JS_ValueToString(cx, id);
+    if (nsnull != jsstring) {
+      name.SetString(JS_GetStringChars(jsstring));
+    }
+    else {
+      name.SetString("");
+    }
+
+    if (NS_OK == a->NamedItem(name, &prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+    }
+    else {
+      return JS_FALSE;
+    }
+  }
   else {
     nsIJSScriptObject *object;
     if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {

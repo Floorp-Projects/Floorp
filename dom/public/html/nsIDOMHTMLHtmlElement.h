@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMHTMLElement.h"
 
-class nsIDOMHTMLHtmlElement;
 
 #define NS_IDOMHTMLHTMLELEMENT_IID \
 { 0x6f765304,  0xee43, 0x11d1, \
@@ -37,6 +36,18 @@ public:
   NS_IMETHOD    GetVersion(nsString& aVersion)=0;
   NS_IMETHOD    SetVersion(const nsString& aVersion)=0;
 };
+
+
+#define NS_DECL_IDOMHTMLHTMLELEMENT   \
+  NS_IMETHOD    GetVersion(nsString& aVersion);  \
+  NS_IMETHOD    SetVersion(const nsString& aVersion);  \
+
+
+
+#define NS_FORWARD_IDOMHTMLHTMLELEMENT(superClass)  \
+  NS_IMETHOD    GetVersion(nsString& aVersion) { return superClass::GetVersion(aVersion); } \
+  NS_IMETHOD    SetVersion(const nsString& aVersion) { return superClass::SetVersion(aVersion); } \
+
 
 extern nsresult NS_InitHTMLHtmlElementClass(nsIScriptContext *aContext, void **aPrototype);
 

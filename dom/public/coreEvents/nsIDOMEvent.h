@@ -25,8 +25,6 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMNode;
-class nsIDOMEvent;
-class nsIDOMNSEvent;
 
 #define NS_IDOMEVENT_IID \
 { 0x6f765329,  0xee43, 0x11d1, \
@@ -188,55 +186,65 @@ public:
   NS_IMETHOD    SetButton(PRUint32 aButton)=0;
 };
 
-#define NS_IDOMNSEVENT_IID \
-{ 0x6f76532a,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMNSEvent : public nsISupports {
-public:
-  enum {
-    EVENT_MOUSEDOWN = 1,
-    EVENT_MOUSEUP = 2,
-    EVENT_MOUSEOVER = 4,
-    EVENT_MOUSEOUT = 8,
-    EVENT_MOUSEMOVE = 16,
-    EVENT_MOUSEDRAG = 32,
-    EVENT_CLICK = 64,
-    EVENT_DBLCLICK = 128,
-    EVENT_KEYDOWN = 256,
-    EVENT_KEYUP = 512,
-    EVENT_KEYPRESS = 1024,
-    EVENT_DRAGDROP = 2048,
-    EVENT_FOCUS = 4096,
-    EVENT_BLUR = 8192,
-    EVENT_SELECT = 16384,
-    EVENT_CHANGE = 32768,
-    EVENT_RESET = 65536,
-    EVENT_SUBMIT = 131072,
-    EVENT_SCROLL = 262144,
-    EVENT_LOAD = 524288,
-    EVENT_UNLOAD = 1048576,
-    EVENT_XFER_DONE = 2097152,
-    EVENT_ABORT = 4194304,
-    EVENT_ERROR = 8388608,
-    EVENT_LOCATE = 16777216,
-    EVENT_MOVE = 33554432,
-    EVENT_RESIZE = 67108864,
-    EVENT_FORWARD = 134217728,
-    EVENT_HELP = 268435456,
-    EVENT_BACK = 536870912,
-    EVENT_ALT_MASK = 1,
-    EVENT_CONTROL_MASK = 2,
-    EVENT_SHIFT_MASK = 4,
-    EVENT_META_MASK = 8
-  };
+#define NS_DECL_IDOMEVENT   \
+  NS_IMETHOD    GetType(nsString& aType);  \
+  NS_IMETHOD    SetType(const nsString& aType);  \
+  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget);  \
+  NS_IMETHOD    SetTarget(nsIDOMNode* aTarget);  \
+  NS_IMETHOD    GetScreenX(PRInt32* aScreenX);  \
+  NS_IMETHOD    SetScreenX(PRInt32 aScreenX);  \
+  NS_IMETHOD    GetScreenY(PRInt32* aScreenY);  \
+  NS_IMETHOD    SetScreenY(PRInt32 aScreenY);  \
+  NS_IMETHOD    GetClientX(PRInt32* aClientX);  \
+  NS_IMETHOD    SetClientX(PRInt32 aClientX);  \
+  NS_IMETHOD    GetClientY(PRInt32* aClientY);  \
+  NS_IMETHOD    SetClientY(PRInt32 aClientY);  \
+  NS_IMETHOD    GetAltKey(PRBool* aAltKey);  \
+  NS_IMETHOD    SetAltKey(PRBool aAltKey);  \
+  NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey);  \
+  NS_IMETHOD    SetCtrlKey(PRBool aCtrlKey);  \
+  NS_IMETHOD    GetShiftKey(PRBool* aShiftKey);  \
+  NS_IMETHOD    SetShiftKey(PRBool aShiftKey);  \
+  NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);  \
+  NS_IMETHOD    SetMetaKey(PRBool aMetaKey);  \
+  NS_IMETHOD    GetCharCode(PRUint32* aCharCode);  \
+  NS_IMETHOD    SetCharCode(PRUint32 aCharCode);  \
+  NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);  \
+  NS_IMETHOD    SetKeyCode(PRUint32 aKeyCode);  \
+  NS_IMETHOD    GetButton(PRUint32* aButton);  \
+  NS_IMETHOD    SetButton(PRUint32 aButton);  \
 
-  NS_IMETHOD    GetLayerX(PRInt32* aLayerX)=0;
-  NS_IMETHOD    SetLayerX(PRInt32 aLayerX)=0;
 
-  NS_IMETHOD    GetLayerY(PRInt32* aLayerY)=0;
-  NS_IMETHOD    SetLayerY(PRInt32 aLayerY)=0;
-};
+
+#define NS_FORWARD_IDOMEVENT(superClass)  \
+  NS_IMETHOD    GetType(nsString& aType) { return superClass::GetType(aType); } \
+  NS_IMETHOD    SetType(const nsString& aType) { return superClass::SetType(aType); } \
+  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget) { return superClass::GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(nsIDOMNode* aTarget) { return superClass::SetTarget(aTarget); } \
+  NS_IMETHOD    GetScreenX(PRInt32* aScreenX) { return superClass::GetScreenX(aScreenX); } \
+  NS_IMETHOD    SetScreenX(PRInt32 aScreenX) { return superClass::SetScreenX(aScreenX); } \
+  NS_IMETHOD    GetScreenY(PRInt32* aScreenY) { return superClass::GetScreenY(aScreenY); } \
+  NS_IMETHOD    SetScreenY(PRInt32 aScreenY) { return superClass::SetScreenY(aScreenY); } \
+  NS_IMETHOD    GetClientX(PRInt32* aClientX) { return superClass::GetClientX(aClientX); } \
+  NS_IMETHOD    SetClientX(PRInt32 aClientX) { return superClass::SetClientX(aClientX); } \
+  NS_IMETHOD    GetClientY(PRInt32* aClientY) { return superClass::GetClientY(aClientY); } \
+  NS_IMETHOD    SetClientY(PRInt32 aClientY) { return superClass::SetClientY(aClientY); } \
+  NS_IMETHOD    GetAltKey(PRBool* aAltKey) { return superClass::GetAltKey(aAltKey); } \
+  NS_IMETHOD    SetAltKey(PRBool aAltKey) { return superClass::SetAltKey(aAltKey); } \
+  NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey) { return superClass::GetCtrlKey(aCtrlKey); } \
+  NS_IMETHOD    SetCtrlKey(PRBool aCtrlKey) { return superClass::SetCtrlKey(aCtrlKey); } \
+  NS_IMETHOD    GetShiftKey(PRBool* aShiftKey) { return superClass::GetShiftKey(aShiftKey); } \
+  NS_IMETHOD    SetShiftKey(PRBool aShiftKey) { return superClass::SetShiftKey(aShiftKey); } \
+  NS_IMETHOD    GetMetaKey(PRBool* aMetaKey) { return superClass::GetMetaKey(aMetaKey); } \
+  NS_IMETHOD    SetMetaKey(PRBool aMetaKey) { return superClass::SetMetaKey(aMetaKey); } \
+  NS_IMETHOD    GetCharCode(PRUint32* aCharCode) { return superClass::GetCharCode(aCharCode); } \
+  NS_IMETHOD    SetCharCode(PRUint32 aCharCode) { return superClass::SetCharCode(aCharCode); } \
+  NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode) { return superClass::GetKeyCode(aKeyCode); } \
+  NS_IMETHOD    SetKeyCode(PRUint32 aKeyCode) { return superClass::SetKeyCode(aKeyCode); } \
+  NS_IMETHOD    GetButton(PRUint32* aButton) { return superClass::GetButton(aButton); } \
+  NS_IMETHOD    SetButton(PRUint32 aButton) { return superClass::SetButton(aButton); } \
+
 
 extern nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype);
 

@@ -24,7 +24,6 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMNavigator;
 
 #define NS_IDOMNAVIGATOR_IID \
 { 0x6f76532b,  0xee43, 0x11d1, \
@@ -49,6 +48,30 @@ public:
 
   NS_IMETHOD    JavaEnabled(PRBool* aReturn)=0;
 };
+
+
+#define NS_DECL_IDOMNAVIGATOR   \
+  NS_IMETHOD    GetUserAgent(nsString& aUserAgent);  \
+  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName);  \
+  NS_IMETHOD    GetAppVersion(nsString& aAppVersion);  \
+  NS_IMETHOD    GetAppName(nsString& aAppName);  \
+  NS_IMETHOD    GetLanguage(nsString& aLanguage);  \
+  NS_IMETHOD    GetPlatform(nsString& aPlatform);  \
+  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);  \
+  NS_IMETHOD    JavaEnabled(PRBool* aReturn);  \
+
+
+
+#define NS_FORWARD_IDOMNAVIGATOR(superClass)  \
+  NS_IMETHOD    GetUserAgent(nsString& aUserAgent) { return superClass::GetUserAgent(aUserAgent); } \
+  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName) { return superClass::GetAppCodeName(aAppCodeName); } \
+  NS_IMETHOD    GetAppVersion(nsString& aAppVersion) { return superClass::GetAppVersion(aAppVersion); } \
+  NS_IMETHOD    GetAppName(nsString& aAppName) { return superClass::GetAppName(aAppName); } \
+  NS_IMETHOD    GetLanguage(nsString& aLanguage) { return superClass::GetLanguage(aLanguage); } \
+  NS_IMETHOD    GetPlatform(nsString& aPlatform) { return superClass::GetPlatform(aPlatform); } \
+  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy) { return superClass::GetSecurityPolicy(aSecurityPolicy); } \
+  NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return superClass::JavaEnabled(aReturn); }  \
+
 
 extern nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype);
 
