@@ -141,7 +141,7 @@ function loadCalendarEventDialog()
    if ( gEvent.recurForever ) 
    {
       var today = new Date();
-      gEvent.recurEnd.setTime( startDate );
+      gEvent.recurEnd.setTime( endDate );
    }
 
    var recurEndDate = new Date( gEvent.recurEnd.getTime() );
@@ -295,12 +295,6 @@ function onOKCommand()
    if( gEvent.recur == true )
    {
       //check that the repeat end time is later than the end time
-      if( recurEndDate.getTime() < gEvent.end.getTime() && gEvent.recurForever == false )
-      {
-         alert( neRecurErrorAlertMessage );
-         return( false );
-      }
-
       if( gEvent.recurUnits == "weeks" )
       {
          /*
@@ -326,21 +320,67 @@ function onOKCommand()
    // :TODO: REALLY only do this if the alarm or start settings change.?
    //if the end time is later than the start time... alert the user using text from the dtd.
 
-   if ( gEvent.end.getTime() < gEvent.start.getTime() && !gEvent.allDay ) 
+   // call caller's on OK function
+   gOnOkFunction( gEvent );
+      
+   // tell standard dialog stuff to close the dialog
+   return true;
+}
+
+function checkEndTime()
+{
+   var endDate = getDateTimeFieldValue( "end-time-text" );
+
+   var startDate = getDateTimeFieldValue( "start-time-text" );
+
+   var AllDayEvent = getFieldValue( "all-day-event-checkbox", "checked" );
+   
+   if( endDate.getTime() < startDate.getTime() && !AllDayEvent )
    {
-      alert( neStartTimeErrorAlertMessage );
+      document.getElementById( "end-time-warning" ).setAttribute( "collapsed", "false" );
+      
       return( false );
    }
    else
    {
-      // call caller's on OK function
-      gOnOkFunction( gEvent );
+      document.getElementById( "end-time-warning" ).setAttribute( "collapsed", "true" );
+
+      return( true );
+   }
       
-      // tell standard dialog stuff to close the dialog
-      return true;
+}
+
+
+function checkRecurTime()
+{
+   var recurEndDate = getDateTimeFieldValue( "repeat-end-date-text" );
+
+   var endDate = getDateTimeFieldValue( "end-time-text" );
+
+   var recurForever = getFieldValue( "repeat-forever-radio", "selected" );
+   
+   if( recurEndDate.getTime() < endDate.getTime() && recurForever == false )
+   {
+      document.getElementById( "repeat-time-warning" ).setAttribute( "collapsed", "false" );
+      
+      return( false );
+   }
+   else
+   {
+      document.getElementById( "repeat-time-warning" ).setAttribute( "collapsed", "true" );
+
+      return( true );
    }
 }
 
+function updateOKButton()
+{
+   var CheckEndTime = checkEndTime();
+
+   var CheckRecurTime = checkRecurTime();
+   
+   document.getElementById( "ok" ).setAttribute( "disabled", !( CheckEndTime && CheckRecurTime ) );
+}
 
 /**
 *   Called when an item with a datepicker is clicked, BEFORE the picker is shown.
@@ -392,6 +432,8 @@ function onDatePick( datepopup )
    updateAdvancedWeekRepeat();
       
    updateAdvancedRepeatDayOfMonth();
+
+   updateOKButton();
 }
 
 
@@ -438,7 +480,7 @@ function onTimePick( timepopup )
                              55,
                              0);
    }
-   formattedEndTime = formatTime( newEndDate );
+   
    if( timepopup.timeField.id != "end-time-text" )
    {
       setTimeFieldValue( "end-time-text", newEndDate );
@@ -468,6 +510,8 @@ function onTimePick( timepopup )
    // remember the new date in a property, "editDate".  we created on the time textbox
    
    timepopup.timeField.editDate = timepopup.value;
+
+   updateOKButton();
 }
 
 
@@ -489,6 +533,8 @@ function commandRepeat()
 function commandUntil()
 {
    updateUntilItemEnabled();
+
+   updateOKButton();
 }
 
 /**

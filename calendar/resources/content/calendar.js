@@ -437,11 +437,16 @@ function newEvent( startDate )
    args.calendarEvent = createEvent();
    
    args.calendarEvent.start.setTime( startDate );
-   args.calendarEvent.end.setTime( startDate );
-   args.calendarEvent.end.hour++;
+   
+   var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
+   
+   var endDate = new Date();
+   
+   var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
 
+   args.calendarEvent.end.setTime( endDateTime );
+   
    // open the dialog non modally
-            
    openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome", args );
 }
 

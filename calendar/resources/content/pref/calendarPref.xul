@@ -53,7 +53,7 @@
    <script type="application/x-javascript">
      <![CDATA[
        var _elementIDs = [
-         "alarmshow", "alarmplaysound", "dateformat", "weekstarts"
+         "alarmshow", "alarmplaysound", "dateformat", "weekstarts", "defaultlength"
        ];
      ]]>
    </script>
@@ -91,5 +91,10 @@
           </menupopup>
         </menulist>   
       </vbox>
+      <hbox align="center">
+         <description>Default Event Length: </description>
+         <textbox id="defaultlength" preftype="int" prefstring="calendar.event.defaultlength" value="90" maxlength="3" size="3"/>
+         <label value="Minutes"/>
+      </hbox>
    </groupbox>
 </page>

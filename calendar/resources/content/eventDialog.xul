@@ -141,7 +141,7 @@
                     </row>
                     
                     <!-- End Date -->    
-                    <row align="center">
+                    <row align="center" collapsed="true">
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.enddate.label;"/>
                         </hbox>
@@ -178,6 +178,7 @@
                         <hbox id="end-event-time-box" align="center">
                             <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                             <image id="end-time-button" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                            <label id="end-time-warning" class="warning-text-class" value="&newevent.endtime.warning;" collapsed="true"/>
                         </hbox>
                     </row>
                     
@@ -285,10 +286,16 @@
                               <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
                               
                               <hbox id="repeat-end-box" align="center">
-                                  <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" selected="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
-                                  <spacer id="until-spacer"/>
-                                  <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
-                                  <image id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                  <vbox>
+                                     <hbox>
+                                        <radio group="repeat-until-group" id="repeat-until-radio" disable-controller="repeat" selected="true" label="&newevent.until.label;"   oncommand="commandUntil()"/>
+                                        <spacer id="until-spacer"/>
+                                        <textbox id="repeat-end-date-text" readonly="true" value="" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                        <image id="repeat-end-date-button" onmousedown="prepareDatePicker('repeat-end-date-text')" popup="oe-date-picker-popup"  position="before_start"/>
+                                     </hbox>
+                                     <label id="repeat-time-warning" class="warning-text-class" value="&newevent.recurend.warning;" collapsed="true"/>
+                                  </vbox>
+                                  
                               </hbox>
                               
                               

@@ -75,6 +75,9 @@
 <!ENTITY newevent.repeat.label       "Repeat every" >
 <!ENTITY newevent.until.label        "Until" >
 <!ENTITY newevent.forever.label      "Forever" >
+
+<!ENTITY newevent.endtime.warning    "Your start time is after your end time.">
+<!ENTITY newevent.recurend.warning    "Your repeat time ends before your end time.">
                                        
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >        
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >

@@ -69,6 +69,7 @@ function calendarPreferences( CalendarWindow )
      this.calendarPref.setBoolPref( "alarms.playsound", false );
      this.calendarPref.setIntPref( "date.format", 0 );
      this.calendarPref.setIntPref( "week.start", 0 );
+     this.calendarPref.setIntPref( "event.defaultlength", 60 );
      this.loadPreferences();
   }
   
@@ -84,6 +85,8 @@ calendarPreferences.prototype.loadPreferences = function()
    this.arrayOfPrefs.dateformat = this.calendarPref.getIntPref( "date.format" );
    
    this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
+
+   this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
 }
 
 calendarPreferences.prototype.getPref = function( Preference )
