@@ -18,7 +18,7 @@
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s): chwu@nortelnetworks.com, timeless@mac.com,
-*                 pschwartau@netscape.com
+*                 brendan@mozilla.org, pschwartau@netscape.com
 *
 * Alternatively, the contents of this file may be used under the terms of
 * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -150,7 +150,6 @@ function addValues_2(obj)
         {
           try 
           {
-            // doing something else
             if (sum > 5)
               return sum;
             sum += 1;
@@ -296,6 +295,201 @@ status = inSection(8);
 actual = entry_menu();
 expect = 100;
 captureThis();
+
+
+
+
+function addValues_3(obj)
+{
+  var sum = 0;
+  
+  with (obj)
+  {
+    try
+    {
+      sum = arg1 + arg2;
+      with (arg3)
+      {
+        while (sum < 10)
+        {
+          try 
+          {
+            if (sum > 5)
+              return sum;
+            sum += 1;
+          }
+          catch (e)
+          {
+            sum += 1;
+            print(e);
+          }
+        }
+      }
+    }
+    finally
+    {
+      try 
+      { 
+        sum +=1;
+        print("In finally block of addValues_3() function: sum = " + sum);
+      } 
+      catch (e if e == 42) 
+      {
+        sum +=1;
+        print('In finally catch block of addValues_3() function: sum = ' + sum + ', e = ' + e);
+      } 
+      finally 
+      {
+        sum +=1;
+        print("In finally finally block of addValues_3() function: sum = " + sum);
+        return sum;
+      }
+    }
+  }
+}
+
+status = inSection(9);
+obj = new Object();
+obj.arg1 = 1;
+obj.arg2 = 2;
+obj.arg3 = new Object();
+obj.arg3.a = 10;
+obj.arg3.b = 20;
+actual = addValues_3(obj);
+expect = 8;
+captureThis();
+
+
+
+
+function addValues_4(obj)
+{
+  var sum = 0;
+
+  with (obj)
+  {
+    try
+    {
+      sum = arg1 + arg2;
+      with (arg3)
+      {
+        while (sum < 10)
+        {
+          try 
+          {
+            if (sum > 5)
+              return sum;
+            sum += 1;
+          }
+          catch (e)
+          {
+            sum += 1;
+            print(e);
+          }
+        }
+      }
+    }
+    finally
+    {
+      try 
+      {
+        sum += 1;
+        print("In finally block of addValues_4() function: sum = " + sum);
+      }
+      catch (e if e == 42)
+      {
+        sum += 1;
+        print("In 1st finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
+      } 
+      catch (e if e == 43)
+      {
+        sum += 1;
+        print("In 2nd finally catch block of addValues_4() function: sum = " + sum + ", e = " + e);
+      }
+      finally
+      {
+        sum += 1;
+        print("In finally finally block of addValues_4() function: sum = " + sum);
+        return sum;
+      }
+    }
+  }
+}
+
+status = inSection(10);
+obj = new Object();
+obj.arg1 = 1;
+obj.arg2 = 2;
+obj.arg3 = new Object();
+obj.arg3.a = 10;
+obj.arg3.b = 20;
+actual = addValues_4(obj);
+expect = 8;
+captureThis();
+
+
+
+
+function addValues_5(obj)
+{
+  var sum = 0;
+
+  with (obj)
+  {
+    try
+    {
+      sum = arg1 + arg2;
+      with (arg3)
+      {
+        while (sum < 10)
+        {
+          try 
+          {
+           if (sum > 5)
+             return sum;
+           sum += 1;
+          }
+          catch (e)
+          {
+            sum += 1;
+            print(e);
+          }
+        }
+      }
+    }
+    finally
+    {
+      try
+      {
+        sum += 1;
+        print("In finally block of addValues_5() function: sum = " + sum);
+      }
+      catch (e)
+      {
+        sum += 1;
+        print("In finally catch block of addValues_5() function: sum = " + sum + ", e = " + e);
+      }
+      finally
+      {
+        sum += 1;
+        print("In finally finally block of addValues_5() function: sum = " + sum);
+        return sum;
+      }
+    }
+  }
+}
+
+status = inSection(11);
+obj = new Object();
+obj.arg1 = 1;
+obj.arg2 = 2;
+obj.arg3 = new Object();
+obj.arg3.a = 10;
+obj.arg3.b = 20;
+actual = addValues_5(obj);
+expect = 8;
+captureThis();
+
 
 
 
