@@ -1143,12 +1143,12 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
   if (event == nsnull)
     return NS_ERROR_FAILURE;
 
-  PRInt16 res = 0;
+  PRInt16 result = 0;
   
   if (fCallbacks->event)
     {
 #ifdef XP_MAC
-      res = CallNPP_HandleEventProc(fCallbacks->event,
+      result = CallNPP_HandleEventProc(fCallbacks->event,
                                     &fNPP,
                                     (void*) event->event);
 #endif
@@ -1159,16 +1159,16 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
       npEvent.wParam = event->wParam;
       npEvent.lParam = event->lParam;
 
-      NS_TRY_SAFE_CALL_RETURN(res, CallNPP_HandleEventProc(fCallbacks->event,
+      NS_TRY_SAFE_CALL_RETURN(result, CallNPP_HandleEventProc(fCallbacks->event,
                                     &fNPP,
                                     (void*)&npEvent), fLibrary);
 #endif
 
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
       ("NPP HandleEvent called: this=%p, npp=%p, event=%d, return=%d\n", 
-      this, &fNPP, event->event, res));
+      this, &fNPP, event->event, result));
 
-      *handled = res;
+      *handled = result;
     }
 
   return NS_OK;
