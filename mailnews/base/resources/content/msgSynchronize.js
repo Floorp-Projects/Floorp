@@ -41,7 +41,6 @@ function OnLoad()
         }
     }
   	   		
-    doSetOKCancel(syncOkButton, syncCancelButton);
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gSyncMail = prefs.getBoolPref("mailnews.offline_sync_mail");
     gSyncNews = prefs.getBoolPref("mailnews.offline_sync_news");
@@ -77,12 +76,6 @@ function syncOkButton()
 
     }	
 
-    return true;
-}
-
-function syncCancelButton()
-{
-    //dump("in syncCancelButton()\n");
     return true;
 }
 
