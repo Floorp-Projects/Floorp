@@ -4,17 +4,17 @@
 interface nsIRPCTestInOut : nsISupports
 {
     void testInOut1(inout boolean bool);
-    void testInOut2(inout octet oct); //FAILED in IN (0)
-    void testInOut3(inout short s); // FAILED in IN (0)
+    void testInOut2(inout octet oct);
+    void testInOut3(inout short s); 
     void testInOut4(inout long l);
     void testInOut5(inout long long ll);
-    void testInOut6(inout unsigned short us); //FAILED in IN (0)
+    void testInOut6(inout unsigned short us);
     void testInOut7(inout unsigned long ul);
     void testInOut8(inout unsigned long long ull);
     void testInOut9(inout float f);
     void testInOut10(inout double d);
     void testInOut11(inout char c);
-    void testInOut12(inout wchar wc); //FAILED core dump
+    void testInOut12(inout wchar wc);
     void testInOut13(inout string str);
     void testInOut14(inout wstring wstr);
     void testInOut15(inout unsigned long count, [array, size_is(count)] inout char array);
