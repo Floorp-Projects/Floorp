@@ -630,22 +630,17 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
   nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
   if (uriToLoad) { // Get script principal and pass to docshell
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
+      return NS_ERROR_FAILURE;
+
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-    PRBool isChrome = PR_FALSE;
-    rv = uriToLoad->SchemeIs("chrome", &isChrome);
-    if (NS_FAILED(rv) || !isChrome) {
-      nsCOMPtr<nsIPrincipal> principal;
-      if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
-        return NS_ERROR_FAILURE;
-
-      newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-      NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
-
-      if (principal) {
-        nsCOMPtr<nsISupports> owner(do_QueryInterface(principal));
-        loadInfo->SetOwner(owner);
-      }
+    if (principal) {
+      nsCOMPtr<nsISupports> owner(do_QueryInterface(principal));
+      loadInfo->SetOwner(owner);
     }
 
     // Get the calling context off the JS context stack

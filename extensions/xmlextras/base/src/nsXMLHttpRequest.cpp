@@ -922,26 +922,10 @@ nsXMLHttpRequest::Open(const char *method, const char *url)
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIURI> targetURI;
-    rv = NS_NewURI(getter_AddRefs(targetURI), url, nsnull);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    rv = secMan->CheckConnect(cx, targetURI, "XMLHttpRequest","open");
-    if (NS_FAILED(rv))
-    {
-      // Security check failed. The above call set a JS exception. The
-      // following lines ensure that the exception is propagated.
-
-      NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-      nsCOMPtr<nsIXPCNativeCallContext> cc;
-      if(NS_SUCCEEDED(rv))
-        xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-      if (cc)
-        cc->SetExceptionWasThrown(PR_TRUE);
-      return NS_OK;
-    }
-
+ /*
+     rv = secMan->CheckScriptAccessToURL(cx, url, NS_DOM_PROP_XMLHTTPREQUEST_OPEN, PR_FALSE);
+     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+ */
     nsCOMPtr<nsIPrincipal> principal;
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
     if (NS_SUCCEEDED(rv)) {

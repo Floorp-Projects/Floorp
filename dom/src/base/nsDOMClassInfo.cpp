@@ -1108,9 +1108,9 @@ nsWindowSH::doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
   PRBool isLocation = JSVAL_IS_STRING(id) &&
     JSVAL_TO_STRING(id) == sLocation_id;
 
-  rv = sSecMan->CheckPropertyAccess(cx, obj, "Window",
-                                    isLocation ? "location" : "scriptglobals",
-                                    nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+  rv = sSecMan->CheckPropertyAccess(nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
+                                    cx, obj, native, this, "Window",
+                                    isLocation ? "location" : "scriptglobals");
 
   if (NS_SUCCEEDED(rv)) {
     return rv;
@@ -1146,9 +1146,9 @@ nsWindowSH::doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
   PRBool isLocation = JSVAL_IS_STRING(id) &&
     JSVAL_TO_STRING(id) == sLocation_id;
 
-  rv = sSecMan->CheckPropertyAccess(cx, obj, "Window",
-                                    isLocation ? "location" : "scriptglobals",
-                                    nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+  rv = sSecMan->CheckPropertyAccess(nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
+                                    cx, obj, native, this, "Window",
+                                    isLocation ? "location" : "scriptglobals");
 
   if (NS_SUCCEEDED(rv)) {
     return rv;
