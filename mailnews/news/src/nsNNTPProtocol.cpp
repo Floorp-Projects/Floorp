@@ -93,8 +93,11 @@
 #define PREF_NEWS_CANCEL_CONFIRM	"news.cancel.confirm"
 #define PREF_NEWS_CANCEL_ALERT_ON_SUCCESS "news.cancel.alert_on_success"
 #define DEFAULT_NEWS_CHUNK_SIZE -1
-#define READ_NEWS_LIST_COUNT_MAX 20 /* number of groups to process at a time when reading the list from the server */
+#define READ_NEWS_LIST_COUNT_MAX 500 /* number of groups to process at a time when reading the list from the server */
 #define READ_NEWS_LIST_TIMEOUT 50	/* uSec to wait until doing more */
+#define RATE_STR_BUF_LEN 32
+#define UPDATE_THRESHHOLD 25600 /* only update every 25 KB */
+
 
 #define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
@@ -326,7 +329,7 @@ char *XP_AppCodeName = "Mozilla";
 #else
 const char *XP_AppCodeName = "Mozilla";
 #endif
-#define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
+#define NET_IS_SPACE(x) ((x)==' ' || (x)=='\t')
 
 char * NET_SACopy (char **destination, const char *source)
 {
@@ -459,6 +462,7 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
 
 	mBytesReceived = 0;
     mBytesReceivedSinceLastStatusUpdate = 0;
+    m_startTime = PR_Now();
 
     if (aMsgWindow) {
         m_msgWindow = aMsgWindow;
@@ -2742,6 +2746,7 @@ PRInt32 nsNNTPProtocol::BeginNewsgroups()
 #else
 	mBytesReceived = 0;
     mBytesReceivedSinceLastStatusUpdate = 0;
+    m_startTime = PR_Now();
 #endif
 	return(status);
 }
@@ -2879,6 +2884,7 @@ PRInt32 nsNNTPProtocol::BeginReadNewsList()
 
     mBytesReceived = 0;
     mBytesReceivedSinceLastStatusUpdate = 0;
+    m_startTime = PR_Now();
 
 	PRInt32 status = 0;
 #ifdef UNREADY_CODE
@@ -2888,10 +2894,33 @@ PRInt32 nsNNTPProtocol::BeginReadNewsList()
     return(status);
 }
 
+#define RATE_CONSTANT 976.5625      /* PR_USEC_PER_SEC / 1024 bytes */
+
+static void ComputeRate(PRInt32 bytes, PRTime startTime, float *rate)
+{
+  // rate = (bytes / USECS since start) * RATE_CONSTANT
+
+  // compute usecs since we started.
+  PRTime timeSinceStart;
+  PRTime now = PR_Now();
+  LL_SUB(timeSinceStart, now, startTime);
+
+  // convert PRTime to PRInt32
+  PRInt32 delta;
+  LL_L2I(delta, timeSinceStart);
+
+  // compute rate
+  if (delta > 0) {
+    *rate = (bytes * RATE_CONSTANT) / delta;
+  }
+  else {
+    *rate = 0.0;
+  }
+}
+
 /* display a list of all or part of the newsgroups list
  * from the news server
  */
-
 PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 length)
 {
 	nsresult rv;
@@ -2939,10 +2968,10 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 #else
 		mBytesReceived += status;
         mBytesReceivedSinceLastStatusUpdate += status;
-
-        // only update every 10 KB
-        if ((mBytesReceivedSinceLastStatusUpdate > (1024 * 25)) && m_msgWindow) {
+        
+        if ((mBytesReceivedSinceLastStatusUpdate > UPDATE_THRESHHOLD) && m_msgWindow) {
                 mBytesReceivedSinceLastStatusUpdate = 0;
+
         	    nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
 
         	    rv = m_msgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
@@ -2959,14 +2988,20 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                                             getter_AddRefs(bundle));
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                nsString kBytesStr; 
-                kBytesStr.AppendInt(mBytesReceived / 1024);
+                nsString bytesStr; 
+                bytesStr.AppendInt(mBytesReceived / 1024);
 
-		        nsString kRateStr; 
-                // todo, fix this
-                //kRateStr.AppendFloat(0.0);
-                kRateStr.AppendWithConversion("?.?");
-                const PRUnichar *formatStrings[2] = { kBytesStr.GetUnicode(), kRateStr.GetUnicode() };
+                // compute the rate, and then convert it have one 
+                // decimal precision.
+                float rate = 0.0;
+                ComputeRate(mBytesReceived, m_startTime, &rate);
+                char rate_buf[RATE_STR_BUF_LEN];
+                PR_snprintf(rate_buf,RATE_STR_BUF_LEN,"%.1f", rate);
+
+                nsString rateStr;
+                rateStr.AppendWithConversion(rate_buf);
+
+                const PRUnichar *formatStrings[2] = { bytesStr.GetUnicode(), rateStr.GetUnicode() };
                 NS_NAMED_LITERAL_STRING(literalPropertyTag, "bytesReceived");
 				const PRUnichar *propertyTag = literalPropertyTag.get();
                 rv = bundle->FormatStringFromName(propertyTag,

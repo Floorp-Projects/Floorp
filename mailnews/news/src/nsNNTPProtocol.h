@@ -405,6 +405,7 @@ private:
 	nsresult AlertError(PRInt32 errorCode, const char *text);
 	PRInt32 mBytesReceived;
     PRInt32 mBytesReceivedSinceLastStatusUpdate;
+    PRTime m_startTime;
 };
 
 NS_BEGIN_EXTERN_C
