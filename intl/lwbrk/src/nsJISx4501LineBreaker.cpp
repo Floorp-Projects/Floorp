@@ -348,28 +348,36 @@ NS_IMPL_ISUPPORTS1(nsJISx4501LineBreaker, nsILineBreaker);
 #define IS_ASCII_DIGIT(u) ((0x0030 <= (u)) && ((u) <= 0x0039))
 
 PRInt8  nsJISx4501LineBreaker::ContextualAnalysis(
-   PRUnichar prev, PRUnichar cur, PRUnichar next
+  PRUnichar prev, PRUnichar cur, PRUnichar next
 )
 {
-   if(  U_COMMA == cur)
+   if(U_COMMA == cur)
    {
-         if( IS_ASCII_DIGIT (prev)  && 
-             IS_ASCII_DIGIT (next) )
-           return NUMERIC_CLASS;
+     if(IS_ASCII_DIGIT (prev) && IS_ASCII_DIGIT (next))
+       return NUMERIC_CLASS;
    }
-   else if( U_PERIOD == cur)
+   else if(U_PERIOD == cur)
    {
-         if( (IS_ASCII_DIGIT (prev) || (0x0020 == prev) )&& 
-             IS_ASCII_DIGIT (next) )
-           return NUMERIC_CLASS;
-         if( U_SPACE != next )
-           return CHARACTER_CLASS;
+     if((IS_ASCII_DIGIT (prev) || (0x0020 == prev)) && 
+         IS_ASCII_DIGIT (next))
+       return NUMERIC_CLASS;
+ 
+     // By assigning a full stop  character class only when it's followed by
+     // class 6 (numeric), 7, and 8 (character). Note that class 9 (Thai) 
+     // doesn't matter, either way, we prevent lines from breaking around 
+     // full stop in those cases while  still allowing it to end a line when 
+     // followed by CJK  characters. With an additional condition of it being 
+     // preceded by  class 0 or class > 5, we make sure that it does not 
+     // start a line  (see bug 164759). 
+     PRUint8 pc = GetClass(prev);
+     if((pc > 5 || pc == 0)  && GetClass(next) > 5)
+       return CHARACTER_CLASS;
    }
-   else if(  U_RIGHT_SINGLE_QUOTATION_MARK == cur)
+   else if(U_RIGHT_SINGLE_QUOTATION_MARK == cur)
    {
-        // somehow people use this as ' in "it's" sometimes...
-        if( U_SPACE != next )
-           return CHARACTER_CLASS;
+     // somehow people use this as ' in "it's" sometimes...
+     if(U_SPACE != next)
+       return CHARACTER_CLASS;
    }
    return this->GetClass(cur);
 }
