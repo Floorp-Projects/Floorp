@@ -49,7 +49,7 @@ function getTestCases() {
 
     array[item++] = new TestCase( SECTION,  "Math.max.length",              2,              Math.max.length );
 
-    array[item++] = new TestCase( SECTION,  "Math.max()",                   Number.NaN,     Math.max() );
+    array[item++] = new TestCase( SECTION,  "Math.max()",                   -Infinity,      Math.max() );
     array[item++] = new TestCase( SECTION,  "Math.max(void 0, 1)",          Number.NaN,     Math.max( void 0, 1 ) );
     array[item++] = new TestCase( SECTION,  "Math.max(void 0, void 0)",     Number.NaN,     Math.max( void 0, void 0 ) );
     array[item++] = new TestCase( SECTION,  "Math.max(null, 1)",            1,              Math.max( null, 1 ) );

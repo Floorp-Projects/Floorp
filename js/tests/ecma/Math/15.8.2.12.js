@@ -50,7 +50,7 @@ function getTestCases() {
 
     array[item++] = new TestCase( SECTION,  "Math.min.length",              2,              Math.min.length );
 
-    array[item++] = new TestCase( SECTION,  "Math.min()",                   Number.NaN,     Math.min() );
+    array[item++] = new TestCase( SECTION,  "Math.min()",                   Infinity,       Math.min() );
     array[item++] = new TestCase( SECTION,  "Math.min(void 0, 1)",          Number.NaN,     Math.min( void 0, 1 ) );
     array[item++] = new TestCase( SECTION,  "Math.min(void 0, void 0)",     Number.NaN,     Math.min( void 0, void 0 ) );
     array[item++] = new TestCase( SECTION,  "Math.min(null, 1)",            0,              Math.min( null, 1 ) );
