@@ -55,8 +55,13 @@
 #ifdef XP_MAC
 #include "nsMacRepository.h"
 #else
+/* let CFLAGS override these */
+#ifndef WIDGET_DLL
 #define WIDGET_DLL "libwidgetunix.so"
+#endif
+#ifndef GFXWIN_DLL
 #define GFXWIN_DLL "libgfxunix.so"
+#endif
 #define VIEW_DLL   "libraptorview.so"
 #define WEB_DLL    "libraptorwebwidget.so"
 #define PLUGIN_DLL "raptorplugin.so"
