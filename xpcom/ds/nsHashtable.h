@@ -55,28 +55,86 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsISupportsKey: Where keys are nsISupports objects that get refcounted.
 
-#include "nsID.h"
+#include "nsISupports.h"
 
-class nsIDKey: public nsHashKey {
+class nsISupportsKey : public nsHashKey {
 private:
-    nsID id;
+    nsISupports* mKey;
   
 public:
-    nsIDKey(const nsID &aID) {
-        id = aID;
+    nsISupportsKey(nsISupports* key) {
+        mKey = key;
+        NS_IF_ADDREF(mKey);
+    }
+  
+    ~nsISupportsKey(void) {
+        NS_IF_RELEASE(mKey);
     }
   
     PRUint32 HashValue(void) const {
-        return id.m0;
+        return (PRUint32)mKey;
     }
 
     PRBool Equals(const nsHashKey *aKey) const {
-        return (id.Equals(((const nsIDKey *) aKey)->id));
+        return (mKey == ((nsISupportsKey *) aKey)->mKey);
     }
 
     nsHashKey *Clone(void) const {
-        return new nsIDKey(id);
+        return new nsISupportsKey(mKey);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// nsVoidKey: Where keys are void* objects that don't get refcounted.
+
+class nsVoidKey : public nsHashKey {
+private:
+    const void* mKey;
+  
+public:
+    nsVoidKey(const void* key) {
+        mKey = key;
+    }
+  
+    PRUint32 HashValue(void) const {
+        return (PRUint32)mKey;
+    }
+
+    PRBool Equals(const nsHashKey *aKey) const {
+        return (mKey == ((const nsVoidKey *) aKey)->mKey);
+    }
+
+    nsHashKey *Clone(void) const {
+        return new nsVoidKey(mKey);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIDKey: Where keys are nsIDs (e.g. nsIID, nsCID).
+
+#include "nsID.h"
+
+class nsIDKey : public nsHashKey {
+private:
+    nsID mID;
+  
+public:
+    nsIDKey(const nsID &aID) {
+        mID = aID;
+    }
+  
+    PRUint32 HashValue(void) const {
+        return mID.m0;
+    }
+
+    PRBool Equals(const nsHashKey *aKey) const {
+        return (mID.Equals(((const nsIDKey *) aKey)->mID));
+    }
+
+    nsHashKey *Clone(void) const {
+        return new nsIDKey(mID);
     }
 };
 
