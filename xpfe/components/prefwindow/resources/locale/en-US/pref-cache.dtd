@@ -4,14 +4,14 @@
 <!ENTITY  lHeader                       "Cache">
 <!ENTITY  cacheTitle.label              "Set Cache Options">
 <!ENTITY  cachePara                     "The cache keeps copies of frequently visited web pages on your hard disk. (Clicking Reload always shows you the latest version of a page.)">
-<!ENTITY  diskCache.label               "Cache:">
-<!ENTITY  diskCache.accesskey           "C">
+<!ENTITY  diskCache.label               "Size:">
+<!ENTITY  diskCache.accesskey           "S">
 <!ENTITY  mbytes                        "MB">
 <!ENTITY  diskCacheFolder.label         "Cache Folder:">
 <!ENTITY  clearDiskCache.label          "Clear Cache">
 <!ENTITY  clearDiskCache.accesskey      "l">
 <!ENTITY  chooseDiskCacheFolder.label   "Choose Folder...">
-<!ENTITY  chooseDiskCacheFolder.accesskey "h">
+<!ENTITY  chooseDiskCacheFolder.accesskey "C">
 <!ENTITY  diskCacheFolderExplanation    "Cache files will be stored in a subfolder named &quot;Cache&quot; of the directory you specify. Restart &brandShortName; for changes to take effect.">
 <!ENTITY  docCache                      "Compare the page in the cache to the page on the network:">
 <!ENTITY  chooseFolder.label            "Choose Folder...">
