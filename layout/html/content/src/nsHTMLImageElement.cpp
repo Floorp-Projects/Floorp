@@ -244,6 +244,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         aContext->GetMutableStyleData(eStyleStruct_Text);
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
+
+      // XXX This should ONLY be done if the margin is auto!!!
       float p2t = aPresContext->GetPixelsToTwips();
       nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
