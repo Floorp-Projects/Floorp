@@ -21,7 +21,7 @@
 #include <LView.h>
 #include <LStream.h>
 #include <LBroadcaster.h>
-#include <LGAIconSuiteControl.h>
+
 
 const Int32 kOutsideSlop = 0x80008000;
 const MessageT msg_DividerChangedPosition = 'divc';

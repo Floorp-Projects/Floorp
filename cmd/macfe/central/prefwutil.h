@@ -25,7 +25,7 @@
 #include "MoreMixedMode.h"
 
 #include <LTable.h>
-#include <LGAEditField.h>
+
 
 class CValidEditField;
 class LArrowControl;

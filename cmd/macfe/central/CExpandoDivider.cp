@@ -22,8 +22,6 @@
 #include "macutil.h"
 #include "CDragBarDockControl.h"
 
-#include <LGADisclosureTriangle.h>
-
 #define kTwistieID 'Twst'
 #define kCaptionID 'TwCp'
 
