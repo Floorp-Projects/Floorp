@@ -81,17 +81,26 @@ nsMessageViewDataSource::QueryInterface(REFNSIID iid, void** result)
   if (iid.Equals(nsCOMTypeInfo<nsIRDFCompositeDataSource>::GetIID()) ||
     iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
 	iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-  {
-    *result = NS_STATIC_CAST(nsIRDFCompositeDataSource*, this);
-    NS_ADDREF(this);
-    return NS_OK;
-  }
+	{
+		*result = NS_STATIC_CAST(nsIRDFCompositeDataSource*, this);
+		NS_ADDREF_THIS();
+	}
 	else if(iid.Equals(nsCOMTypeInfo<nsIMessageView>::GetIID()))
 	{
-    *result = NS_STATIC_CAST(nsIMessageView*, this);
-    NS_ADDREF(this);
-    return NS_OK;
+		*result = NS_STATIC_CAST(nsIMessageView*, this);
+		NS_ADDREF_THIS();
 	}
+	else if(iid.Equals(nsCOMTypeInfo<nsIMsgWindowData>::GetIID()))
+	{
+		*result = NS_STATIC_CAST(nsIMsgWindowData*, this);
+		NS_ADDREF_THIS();
+	}
+
+	if(*result)
+	{
+	    return NS_OK;
+	}
+
   return NS_NOINTERFACE;
 }
 
@@ -101,14 +110,12 @@ nsMessageViewDataSource::nsMessageViewDataSource(void)
 	mObservers = nsnull;
 	mShowStatus = VIEW_SHOW_ALL;
 	mInitialized = PR_FALSE;
-	mShowThreads = PR_TRUE;
+	mShowThreads = PR_FALSE;
 }
 
 nsMessageViewDataSource::~nsMessageViewDataSource (void)
 {
 	mRDFService->UnregisterDataSource(this);
-
-	RemoveDataSource(mDataSource);
 
 	nsrefcnt refcnt;
 	NS_RELEASE2(kNC_MessageChild, refcnt);
@@ -209,7 +216,11 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 						PRBool tv,
 						nsISimpleEnumerator** targets)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+	nsresult rv;
+	if(!targets)
+		return NS_ERROR_NULL_POINTER;
+
+	*targets=nsnull;
 
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIMessage> message;
@@ -255,8 +266,6 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 				rv = NS_OK;
 			}
 		}
-		if(NS_SUCCEEDED(rv))
-			return rv;
 	}
 	else if (mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
 	{
@@ -292,9 +301,10 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 			}
 
 		}
-		if(NS_SUCCEEDED(rv))
-			return rv;
 	}
+
+	if(*targets)
+		return rv;
 
 	if(mDataSource)
 		return mDataSource->GetTargets(source, property, tv, targets);
@@ -618,6 +628,38 @@ NS_IMETHODIMP nsMessageViewDataSource::SetShowThreads(PRBool showThreads)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMessageViewDataSource::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback)
+{
+	if(!aStatusFeedback)
+		return NS_ERROR_NULL_POINTER;
+
+	*aStatusFeedback = mStatusFeedback;
+	NS_IF_ADDREF(*aStatusFeedback);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMessageViewDataSource::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
+{
+	mStatusFeedback = aStatusFeedback;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMessageViewDataSource::GetTransactionManager(nsITransactionManager * *aTransactionManager)
+{
+	if(!aTransactionManager)
+		return NS_ERROR_NULL_POINTER;
+
+	*aTransactionManager = mTransactionManager;
+	NS_IF_ADDREF(*aTransactionManager);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMessageViewDataSource::SetTransactionManager(nsITransactionManager * aTransactionManager)
+{
+	mTransactionManager = aTransactionManager;
+	return NS_OK;
+}
 nsresult
 nsMessageViewDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,
