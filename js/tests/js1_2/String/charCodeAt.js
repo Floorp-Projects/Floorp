@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,53 +35,36 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     charCodeAt.js
-	Description:  'This tests new String object method: charCodeAt'
 
-	Author:       Nick Lerissa
-	Date:         Fri Feb 13 09:58:28 PST 1998
+/**
+   Filename:     charCodeAt.js
+   Description:  'This tests new String object method: charCodeAt'
+
+   Author:       Nick Lerissa
+   Date:         Fri Feb 13 09:58:28 PST 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'String:charCodeAt';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'String:charCodeAt';
 
-	writeHeaderToLog('Executing script: charCodeAt.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: charCodeAt.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
-
+var aString = new String("tEs5");
 	
-	var aString = new String("tEs5");
+new TestCase( SECTION, "aString.charCodeAt(-2)", NaN, aString.charCodeAt(-2));
+new TestCase( SECTION, "aString.charCodeAt(-1)", NaN, aString.charCodeAt(-1));
+new TestCase( SECTION, "aString.charCodeAt( 0)", 116, aString.charCodeAt( 0));
+new TestCase( SECTION, "aString.charCodeAt( 1)",  69, aString.charCodeAt( 1));
+new TestCase( SECTION, "aString.charCodeAt( 2)", 115, aString.charCodeAt( 2));
+new TestCase( SECTION, "aString.charCodeAt( 3)",  53, aString.charCodeAt( 3));
+new TestCase( SECTION, "aString.charCodeAt( 4)", NaN, aString.charCodeAt( 4));
+new TestCase( SECTION, "aString.charCodeAt( 5)", NaN, aString.charCodeAt( 5));
+new TestCase( SECTION, "aString.charCodeAt( Infinity)", NaN, aString.charCodeAt( Infinity));
+new TestCase( SECTION, "aString.charCodeAt(-Infinity)", NaN, aString.charCodeAt(-Infinity));
+//new TestCase( SECTION, "aString.charCodeAt(  )", 116, aString.charCodeAt( ));
 	
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt(-2)", NaN, aString.charCodeAt(-2));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt(-1)", NaN, aString.charCodeAt(-1));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt( 0)", 116, aString.charCodeAt( 0));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt( 1)",  69, aString.charCodeAt( 1));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt( 2)", 115, aString.charCodeAt( 2));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt( 3)",  53, aString.charCodeAt( 3));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt( 4)", NaN, aString.charCodeAt( 4));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt( 5)", NaN, aString.charCodeAt( 5));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt( Infinity)", NaN, aString.charCodeAt( Infinity));
-	testcases[count++] = new TestCase( SECTION, "aString.charCodeAt(-Infinity)", NaN, aString.charCodeAt(-Infinity));
-	//testcases[count++] = new TestCase( SECTION, "aString.charCodeAt(  )", 116, aString.charCodeAt( ));
-	
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();
 

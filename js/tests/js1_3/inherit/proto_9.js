@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,83 +35,69 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          proto_9.js
-    Section:
-    Description:        Local versus Inherited Values
+   File Name:          proto_9.js
+   Section:
+   Description:        Local versus Inherited Values
 
-    This tests Object Hierarchy and Inheritance, as described in the document
-    Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
-    15:19:34 on http://devedge.netscape.com/.  Current URL:
-    http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
+   This tests Object Hierarchy and Inheritance, as described in the document
+   Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
+   15:19:34 on http://devedge.netscape.com/.  Current URL:
+   http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
 
-    This tests the syntax ObjectName.prototype = new PrototypeObject using the
-    Employee example in the document referenced above.
+   This tests the syntax ObjectName.prototype = new PrototypeObject using the
+   Employee example in the document referenced above.
 
-    This tests
+   This tests
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "proto_9";
-    var VERSION = "JS1_3";
-    var TITLE   = "Local versus Inherited Values";
+var SECTION = "proto_9";
+var VERSION = "JS1_3";
+var TITLE   = "Local versus Inherited Values";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
-
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
-     this.name = name || "";
-     this.dept = dept || "general";
+    this.name = name || "";
+    this.dept = dept || "general";
 }
 function WorkerBee ( name, dept, projs ) {
     this.projects = new Array();
 }
 WorkerBee.prototype = new Employee();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-    var pat = new WorkerBee()
+var pat = new WorkerBee()
 
     Employee.prototype.specialty = "none";
-    Employee.prototype.name = "Unknown";
+Employee.prototype.name = "Unknown";
 
-    Array.prototype.getClass = Object.prototype.toString;
+Array.prototype.getClass = Object.prototype.toString;
 
-    // Pat, the WorkerBee
+// Pat, the WorkerBee
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.name",
-                                    "",
-                                    pat.name );
+new TestCase( SECTION,
+	      "pat.name",
+	      "",
+	      pat.name );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.dept",
-                                    "general",
-                                    pat.dept );
+new TestCase( SECTION,
+	      "pat.dept",
+	      "general",
+	      pat.dept );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.projects.getClass",
-                                    "[object Array]",
-                                    pat.projects.getClass() );
+new TestCase( SECTION,
+	      "pat.projects.getClass",
+	      "[object Array]",
+	      pat.projects.getClass() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat.projects.length",
-                                    0,
-                                    pat.projects.length );
+new TestCase( SECTION,
+	      "pat.projects.length",
+	      0,
+	      pat.projects.length );
 
-    test();
+test();

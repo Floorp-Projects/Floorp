@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,74 +35,61 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     strictEquality.js
-	Description:  'This tests the operator ==='
 
-	Author:       Nick Lerissa
-	Date:         Fri Feb 13 09:58:28 PST 1998
+/**
+   Filename:     strictEquality.js
+   Description:  'This tests the operator ==='
+
+   Author:       Nick Lerissa
+   Date:         Fri Feb 13 09:58:28 PST 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'operator "==="';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'operator "==="';
 
-	writeHeaderToLog('Executing script: strictEquality.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: strictEquality.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+var count = 0;
+var testcases = new Array();
 
 
-	testcases[count++] = new TestCase( SECTION, "('8' === 8)                              ",
-	                                            false,  ('8' === 8));
+new TestCase( SECTION, "('8' === 8)                              ",
+	      false,  ('8' === 8));
 
-	testcases[count++] = new TestCase( SECTION, "(8 === 8)                                ",
-	                                            true,   (8 === 8));
+new TestCase( SECTION, "(8 === 8)                                ",
+	      true,   (8 === 8));
 
-	testcases[count++] = new TestCase( SECTION, "(8 === true)                             ",
-	                                            false,  (8 === true));
+new TestCase( SECTION, "(8 === true)                             ",
+	      false,  (8 === true));
 
-	testcases[count++] = new TestCase( SECTION, "(new String('') === new String(''))      ",
-	                                            false,  (new String('') === new String('')));
+new TestCase( SECTION, "(new String('') === new String(''))      ",
+	      false,  (new String('') === new String('')));
 
-	testcases[count++] = new TestCase( SECTION, "(new Boolean(true) === new Boolean(true))",
-	                                            false,  (new Boolean(true) === new Boolean(true)));
+new TestCase( SECTION, "(new Boolean(true) === new Boolean(true))",
+	      false,  (new Boolean(true) === new Boolean(true)));
 
-	var anObject = { one:1 , two:2 };
+var anObject = { one:1 , two:2 };
 
-	testcases[count++] = new TestCase( SECTION, "(anObject === anObject)                  ",
-	                                            true,  (anObject === anObject));
+new TestCase( SECTION, "(anObject === anObject)                  ",
+	      true,  (anObject === anObject));
 
-	testcases[count++] = new TestCase( SECTION, "(anObject === { one:1 , two:2 })         ",
-	                                            false,  (anObject === { one:1 , two:2 }));
+new TestCase( SECTION, "(anObject === { one:1 , two:2 })         ",
+	      false,  (anObject === { one:1 , two:2 }));
 
-	testcases[count++] = new TestCase( SECTION, "({ one:1 , two:2 } === anObject)         ",
-	                                            false,  ({ one:1 , two:2 } === anObject));
+new TestCase( SECTION, "({ one:1 , two:2 } === anObject)         ",
+	      false,  ({ one:1 , two:2 } === anObject));
 
-	testcases[count++] = new TestCase( SECTION, "(null === null)                          ",
-	                                            true,  (null === null));
+new TestCase( SECTION, "(null === null)                          ",
+	      true,  (null === null));
 
-	testcases[count++] = new TestCase( SECTION, "(null === 0)                             ",
-	                                            false,  (null === 0));
+new TestCase( SECTION, "(null === 0)                             ",
+	      false,  (null === 0));
 
-	testcases[count++] = new TestCase( SECTION, "(true === !false)                        ",
-	                                            true,  (true === !false));
+new TestCase( SECTION, "(true === !false)                        ",
+	      true,  (true === !false));
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();
 

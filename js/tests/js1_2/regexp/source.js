@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,69 +35,54 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     source.js
-	Description:  'Tests RegExp attribute source'
 
-	Author:       Nick Lerissa
-	Date:         March 13, 1998
+/**
+   Filename:     source.js
+   Description:  'Tests RegExp attribute source'
+
+   Author:       Nick Lerissa
+   Date:         March 13, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'RegExp: source';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'RegExp: source';
 
-	writeHeaderToLog('Executing script: source.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: source.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
 
-    // /xyz/g.source
-	testcases[count++] = new TestCase ( SECTION, "/xyz/g.source",
-	                                    "xyz", /xyz/g.source);
+// /xyz/g.source
+new TestCase ( SECTION, "/xyz/g.source",
+	       "xyz", /xyz/g.source);
 
-    // /xyz/.source
-	testcases[count++] = new TestCase ( SECTION, "/xyz/.source",
-	                                    "xyz", /xyz/.source);
+// /xyz/.source
+new TestCase ( SECTION, "/xyz/.source",
+	       "xyz", /xyz/.source);
 
-    // /abc\\def/.source
-	testcases[count++] = new TestCase ( SECTION, "/abc\\\\def/.source",
-	                                    "abc\\\\def", /abc\\def/.source);
+// /abc\\def/.source
+new TestCase ( SECTION, "/abc\\\\def/.source",
+	       "abc\\\\def", /abc\\def/.source);
 
-    // /abc[\b]def/.source
-	testcases[count++] = new TestCase ( SECTION, "/abc[\\b]def/.source",
-	                                    "abc[\\b]def", /abc[\b]def/.source);
+// /abc[\b]def/.source
+new TestCase ( SECTION, "/abc[\\b]def/.source",
+	       "abc[\\b]def", /abc[\b]def/.source);
 
-    // (new RegExp('xyz')).source
-	testcases[count++] = new TestCase ( SECTION, "(new RegExp('xyz')).source",
-	                                    "xyz", (new RegExp('xyz')).source);
+// (new RegExp('xyz')).source
+new TestCase ( SECTION, "(new RegExp('xyz')).source",
+	       "xyz", (new RegExp('xyz')).source);
 
-    // (new RegExp('xyz','g')).source
-	testcases[count++] = new TestCase ( SECTION, "(new RegExp('xyz','g')).source",
-	                                    "xyz", (new RegExp('xyz','g')).source);
+// (new RegExp('xyz','g')).source
+new TestCase ( SECTION, "(new RegExp('xyz','g')).source",
+	       "xyz", (new RegExp('xyz','g')).source);
 
-    // (new RegExp('abc\\\\def')).source
-	testcases[count++] = new TestCase ( SECTION, "(new RegExp('abc\\\\\\\\def')).source",
-	                                    "abc\\\\def", (new RegExp('abc\\\\def')).source);
+// (new RegExp('abc\\\\def')).source
+new TestCase ( SECTION, "(new RegExp('abc\\\\\\\\def')).source",
+	       "abc\\\\def", (new RegExp('abc\\\\def')).source);
 
-    // (new RegExp('abc[\\b]def')).source
-	testcases[count++] = new TestCase ( SECTION, "(new RegExp('abc[\\\\b]def')).source",
-	                                    "abc[\\b]def", (new RegExp('abc[\\b]def')).source);
+// (new RegExp('abc[\\b]def')).source
+new TestCase ( SECTION, "(new RegExp('abc[\\\\b]def')).source",
+	       "abc[\\b]def", (new RegExp('abc[\\b]def')).source);
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

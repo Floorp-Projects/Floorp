@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,65 +35,49 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     RegExp_lastIndex.js
-	Description:  'Tests RegExps lastIndex property'
 
-	Author:       Nick Lerissa
-	Date:         March 17, 1998
+/**
+   Filename:     RegExp_lastIndex.js
+   Description:  'Tests RegExps lastIndex property'
+
+   Author:       Nick Lerissa
+   Date:         March 17, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: lastIndex';
-	var BUGNUMBER="123802";
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: lastIndex';
+var BUGNUMBER="123802";
 
-	writeHeaderToLog('Executing script: RegExp_lastIndex.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: RegExp_lastIndex.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// re=/x./g; re.lastIndex=4; re.exec('xyabcdxa');
+re=/x./g;
+re.lastIndex=4;
+new TestCase ( SECTION, "re=/x./g; re.lastIndex=4; re.exec('xyabcdxa')",
+	       '["xa"]', String(re.exec('xyabcdxa')));
 
-    // re=/x./g; re.lastIndex=4; re.exec('xyabcdxa');
-    re=/x./g;
-    re.lastIndex=4;
-	testcases[count++] = new TestCase ( SECTION, "re=/x./g; re.lastIndex=4; re.exec('xyabcdxa')",
-	                                    '["xa"]', String(re.exec('xyabcdxa')));
+// re.lastIndex
+new TestCase ( SECTION, "re.lastIndex",
+	       8, re.lastIndex);
 
-    // re.lastIndex
-	testcases[count++] = new TestCase ( SECTION, "re.lastIndex",
-	                                    8, re.lastIndex);
+// re.exec('xyabcdef');
+new TestCase ( SECTION, "re.exec('xyabcdef')",
+	       null, re.exec('xyabcdef'));
 
-    // re.exec('xyabcdef');
-	testcases[count++] = new TestCase ( SECTION, "re.exec('xyabcdef')",
-	                                    null, re.exec('xyabcdef'));
+// re.lastIndex
+new TestCase ( SECTION, "re.lastIndex",
+	       0, re.lastIndex);
 
-    // re.lastIndex
-	testcases[count++] = new TestCase ( SECTION, "re.lastIndex",
-	                                    0, re.lastIndex);
+// re.exec('xyabcdef');
+new TestCase ( SECTION, "re.exec('xyabcdef')",
+	       '["xy"]', String(re.exec('xyabcdef')));
 
-    // re.exec('xyabcdef');
-	testcases[count++] = new TestCase ( SECTION, "re.exec('xyabcdef')",
-	                                    '["xy"]', String(re.exec('xyabcdef')));
+// re.lastIndex=30; re.exec('123xaxbxc456');
+re.lastIndex=30;
+new TestCase ( SECTION, "re.lastIndex=30; re.exec('123xaxbxc456')",
+	       null, re.exec('123xaxbxc456'));
 
-    // re.lastIndex=30; re.exec('123xaxbxc456');
-    re.lastIndex=30;
-	testcases[count++] = new TestCase ( SECTION, "re.lastIndex=30; re.exec('123xaxbxc456')",
-	                                    null, re.exec('123xaxbxc456'));
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,52 +35,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          12.6.3-3.js
-    ECMA Section:       for..in loops
-    Description:
+   File Name:          12.6.3-3.js
+   ECMA Section:       for..in loops
+   Description:
 
-    This verifies the fix to
-    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=112156
-    for..in should take general lvalue for first argument
+   This verifies the fix to
+   http://scopus.mcom.com/bugsplat/show_bug.cgi?id=112156
+   for..in should take general lvalue for first argument
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "12.6.3-3";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The for..in statment";
+var SECTION = "12.6.3-3";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The for..in statement";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var o = {};
 
+var result = "";
 
-    var o = {};
+for ( o.a in [1,2,3] ) { result += String( [1,2,3][o.a] ); }
 
-    var result = "";
+new TestCase( SECTION,
+	      "for ( o.a in [1,2,3] ) { result += String( [1,2,3][o.a] ); } result",
+	      "123",
+	      result );
 
-    for ( o.a in [1,2,3] ) { result += String( [1,2,3][o.a] ); }
+test();
 
-    testcases[testcases.length] = new TestCase( SECTION,
-        "for ( o.a in [1,2,3] ) { result += String( [1,2,3][o.a] ); } result",
-        "123",
-        result );
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

@@ -80,44 +80,53 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
     expectedmatch=expectedmatches[i];
     state = getState(status, pattern, string);
 
+    description = status;
 
     if(actualmatch)
     {
+      actual = formatArray(actualmatch);
       if(expectedmatch)
       {
         // expectedmatch and actualmatch are arrays -
         lExpect = expectedmatch.length;
         lActual = actualmatch.length;
  
+        expected = formatArray(expectedmatch);
+
         if (lActual != lExpect)
         {
           reportFailure(
                         state + ERR_LENGTH +
-                        MSG_EXPECT + formatArray(expectedmatch) +
-                        MSG_ACTUAL + formatArray(actualmatch) +
+                        MSG_EXPECT + expected +
+                        MSG_ACTUAL + actual +
                         CHAR_NL
                        );
           continue;
         }
 
         // OK, the arrays have same length -
-        if (formatArray(expectedmatch) != formatArray(actualmatch))
+        if (expected != actual)
         {
           reportFailure(
                         state + ERR_MATCH +
-                        MSG_EXPECT + formatArray(expectedmatch) +
-                        MSG_ACTUAL + formatArray(actualmatch) +
+                        MSG_EXPECT + expected +
+                        MSG_ACTUAL + actual +
                         CHAR_NL
                        );
+        }
+        else
+        {
+          reportCompare(expected, actual, state)
         }
 
       }
       else //expectedmatch is null - that is, we did not expect a match -
       {
+        expected = expectedmatch;
         reportFailure(
                       state + ERR_UNEXP_MATCH +
                       MSG_EXPECT + expectedmatch +
-                      MSG_ACTUAL + formatArray(actualmatch) +
+                      MSG_ACTUAL + actual +
                       CHAR_NL
                      );
       }
@@ -127,9 +136,10 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
     {
       if (expectedmatch)
       {
+        actual = actualmatch;
         reportFailure(
                       state + ERR_NO_MATCH +
-                      MSG_EXPECT + formatArray(expectedmatch) +
+                      MSG_EXPECT + expectedmatch +
                       MSG_ACTUAL + actualmatch +
                       CHAR_NL
                      );
@@ -137,6 +147,8 @@ function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
       else // we did not expect a match
       {
         // Being ultra-cautious. Presumably expectedmatch===actualmatch===null
+        expected = expectedmatch;
+        actual   = actualmatch;
         reportCompare (expectedmatch, actualmatch, state);
       }
     }
@@ -246,3 +258,4 @@ function singleQuote(text)
 {
   return CHAR_QT + text + CHAR_QT;
 }
+

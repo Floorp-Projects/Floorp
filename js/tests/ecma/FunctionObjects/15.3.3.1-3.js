@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,61 +35,43 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.3.3.1-3.js
-    ECMA Section:       15.3.3.1 Properties of the Function Constructor
-                        Function.prototype
+   File Name:          15.3.3.1-3.js
+   ECMA Section:       15.3.3.1 Properties of the Function Constructor
+   Function.prototype
 
-    Description:        The initial value of Function.prototype is the built-in
-                        Function prototype object.
+   Description:        The initial value of Function.prototype is the built-in
+   Function prototype object.
 
-                        This property shall have the attributes [DontEnum |
-                        DontDelete | ReadOnly]
+   This property shall have the attributes [DontEnum |
+   DontDelete | ReadOnly]
 
-                        This test the DontDelete property of Function.prototype.
+   This test the DontDelete property of Function.prototype.
 
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var SECTION = "15.3.3.1-3";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Function.prototype";
+var SECTION = "15.3.3.1-3";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Function.prototype";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+var FUN_PROTO = Function.prototype;
 
-    var FUN_PROTO = Function.prototype;
+new TestCase(   SECTION,
+		"delete Function.prototype",
+		false,
+		delete Function.prototype
+  );
 
-    array[item++] = new TestCase(   SECTION,
-                                    "delete Function.prototype",
-                                    false,
-                                    delete Function.prototype
-                                );
-
-    array[item++] = new TestCase(   SECTION,
-                                    "delete Function.prototype; Function.prototype",
-                                    FUN_PROTO,
-                                    eval("delete Function.prototype; Function.prototype")
-                                );
-    return ( array );
-}
-function test( array ) {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase(   SECTION,
+		"delete Function.prototype; Function.prototype",
+		FUN_PROTO,
+		eval("delete Function.prototype; Function.prototype")
+  );
+test();

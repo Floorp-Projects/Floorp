@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,74 +35,76 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.4.2.1-1.js
-    ECMA Section:       15.4.2.1 new Array( item0, item1, ... )
-    Description:        This description only applies of the constructor is
-                        given two or more arguments.
+   File Name:          15.4.2.1-1.js
+   ECMA Section:       15.4.2.1 new Array( item0, item1, ... )
+   Description:        This description only applies of the constructor is
+   given two or more arguments.
 
-                        The [[Prototype]] property of the newly constructed
-                        object is set to the original Array prototype object,
-                        the one that is the initial value of Array.prototype
-                        (15.4.3.1).
+   The [[Prototype]] property of the newly constructed
+   object is set to the original Array prototype object,
+   the one that is the initial value of Array.prototype
+   (15.4.3.1).
 
-                        The [[Class]] property of the newly constructed object
-                        is set to "Array".
+   The [[Class]] property of the newly constructed object
+   is set to "Array".
 
-                        The length property of the newly constructed object is
-                        set to the number of arguments.
+   The length property of the newly constructed object is
+   set to the number of arguments.
 
-                        The 0 property of the newly constructed object is set
-                        to item0... in general, for as many arguments as there
-                        are, the k property of the newly constructed object is
-                        set to argument k, where the first argument is
-                        considered to be argument number 0.
+   The 0 property of the newly constructed object is set
+   to item0... in general, for as many arguments as there
+   are, the k property of the newly constructed object is
+   set to argument k, where the first argument is
+   considered to be argument number 0.
 
-                        This file tests the typeof the newly constructed object.
+   This file tests the typeof the newly constructed object.
 
-    Author:             christine@netscape.com
-    Date:               7 october 1997
+   Author:             christine@netscape.com
+   Date:               7 october 1997
 */
 
-    var SECTION = "15.4.2.1-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The Array Constructor:  new Array( item0, item1, ...)";
+var SECTION = "15.4.2.1-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The Array Constructor:  new Array( item0, item1, ...)";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,	
+	      "typeof new Array(1,2)",        
+	      "object",           
+	      typeof new Array(1,2) );
 
+new TestCase( SECTION,	
+	      "(new Array(1,2)).toString",    
+	      Array.prototype.toString,    
+	      (new Array(1,2)).toString );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,
+	      "var arr = new Array(1,2,3); arr.getClass = Object.prototype.toString; arr.getClass()",
+	      "[object Array]",
+	      eval("var arr = new Array(1,2,3); arr.getClass = Object.prototype.toString; arr.getClass()") );
 
-    array[item++] = new TestCase( SECTION,	"typeof new Array(1,2)",        "object",           typeof new Array(1,2) );
-    array[item++] = new TestCase( SECTION,	"(new Array(1,2)).toString",    Array.prototype.toString,    (new Array(1,2)).toString );
-    array[item++] = new TestCase( SECTION,
-                                    "var arr = new Array(1,2,3); arr.getClass = Object.prototype.toString; arr.getClass()",
-                                    "[object Array]",
-                                    eval("var arr = new Array(1,2,3); arr.getClass = Object.prototype.toString; arr.getClass()") );
+new TestCase( SECTION,	
+	      "(new Array(1,2)).length",      
+	      2,                  
+	      (new Array(1,2)).length );
 
-    array[item++] = new TestCase( SECTION,	"(new Array(1,2)).length",      2,                  (new Array(1,2)).length );
-    array[item++] = new TestCase( SECTION,	"var arr = (new Array(1,2)); arr[0]",  1,           eval("var arr = (new Array(1,2)); arr[0]") );
-    array[item++] = new TestCase( SECTION,	"var arr = (new Array(1,2)); arr[1]",  2,           eval("var arr = (new Array(1,2)); arr[1]") );
-    array[item++] = new TestCase( SECTION,	"var arr = (new Array(1,2)); String(arr)",  "1,2",  eval("var arr = (new Array(1,2)); String(arr)") );
+new TestCase( SECTION,	
+	      "var arr = (new Array(1,2)); arr[0]",  
+	      1,           
+	      eval("var arr = (new Array(1,2)); arr[0]") );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,	
+	      "var arr = (new Array(1,2)); arr[1]",  
+	      2,           
+	      eval("var arr = (new Array(1,2)); arr[1]") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,	
+	      "var arr = (new Array(1,2)); String(arr)",  
+	      "1,2",  
+	      eval("var arr = (new Array(1,2)); String(arr)") );
+
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,77 +35,61 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     global.js
-	Description:  'Tests RegExp attribute global'
 
-	Author:       Nick Lerissa
-	Date:         March 13, 1998
+/**
+   Filename:     global.js
+   Description:  'Tests RegExp attribute global'
+
+   Author:       Nick Lerissa
+   Date:         March 13, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'RegExp: global';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'RegExp: global';
 
-	writeHeaderToLog('Executing script: global.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: global.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// /xyz/g.global
+new TestCase ( SECTION, "/xyz/g.global",
+	       true, /xyz/g.global);
 
-    // /xyz/g.global
-	testcases[count++] = new TestCase ( SECTION, "/xyz/g.global",
-	                                    true, /xyz/g.global);
+// /xyz/.global
+new TestCase ( SECTION, "/xyz/.global",
+	       false, /xyz/.global);
 
-    // /xyz/.global
-	testcases[count++] = new TestCase ( SECTION, "/xyz/.global",
-	                                    false, /xyz/.global);
+// '123 456 789'.match(/\d+/g)
+new TestCase ( SECTION, "'123 456 789'.match(/\\d+/g)",
+	       String(["123","456","789"]), String('123 456 789'.match(/\d+/g)));
 
-    // '123 456 789'.match(/\d+/g)
-	testcases[count++] = new TestCase ( SECTION, "'123 456 789'.match(/\\d+/g)",
-	                                    String(["123","456","789"]), String('123 456 789'.match(/\d+/g)));
+// '123 456 789'.match(/(\d+)/g)
+new TestCase ( SECTION, "'123 456 789'.match(/(\\d+)/g)",
+	       String(["123","456","789"]), String('123 456 789'.match(/(\d+)/g)));
 
-    // '123 456 789'.match(/(\d+)/g)
-	testcases[count++] = new TestCase ( SECTION, "'123 456 789'.match(/(\\d+)/g)",
-	                                    String(["123","456","789"]), String('123 456 789'.match(/(\d+)/g)));
+// '123 456 789'.match(/\d+/)
+new TestCase ( SECTION, "'123 456 789'.match(/\\d+/)",
+	       String(["123"]), String('123 456 789'.match(/\d+/)));
 
-    // '123 456 789'.match(/\d+/)
-	testcases[count++] = new TestCase ( SECTION, "'123 456 789'.match(/\\d+/)",
-	                                    String(["123"]), String('123 456 789'.match(/\d+/)));
+// (new RegExp('[a-z]','g')).global
+new TestCase ( SECTION, "(new RegExp('[a-z]','g')).global",
+	       true, (new RegExp('[a-z]','g')).global);
 
-    // (new RegExp('[a-z]','g')).global
-	testcases[count++] = new TestCase ( SECTION, "(new RegExp('[a-z]','g')).global",
-	                                    true, (new RegExp('[a-z]','g')).global);
+// (new RegExp('[a-z]','i')).global
+new TestCase ( SECTION, "(new RegExp('[a-z]','i')).global",
+	       false, (new RegExp('[a-z]','i')).global);
 
-    // (new RegExp('[a-z]','i')).global
-	testcases[count++] = new TestCase ( SECTION, "(new RegExp('[a-z]','i')).global",
-	                                    false, (new RegExp('[a-z]','i')).global);
+// '123 456 789'.match(new RegExp('\\d+','g'))
+new TestCase ( SECTION, "'123 456 789'.match(new RegExp('\\\\d+','g'))",
+	       String(["123","456","789"]), String('123 456 789'.match(new RegExp('\\d+','g'))));
 
-    // '123 456 789'.match(new RegExp('\\d+','g'))
-	testcases[count++] = new TestCase ( SECTION, "'123 456 789'.match(new RegExp('\\\\d+','g'))",
-	                                    String(["123","456","789"]), String('123 456 789'.match(new RegExp('\\d+','g'))));
+// '123 456 789'.match(new RegExp('(\\d+)','g'))
+new TestCase ( SECTION, "'123 456 789'.match(new RegExp('(\\\\d+)','g'))",
+	       String(["123","456","789"]), String('123 456 789'.match(new RegExp('(\\d+)','g'))));
 
-    // '123 456 789'.match(new RegExp('(\\d+)','g'))
-	testcases[count++] = new TestCase ( SECTION, "'123 456 789'.match(new RegExp('(\\\\d+)','g'))",
-	                                    String(["123","456","789"]), String('123 456 789'.match(new RegExp('(\\d+)','g'))));
+// '123 456 789'.match(new RegExp('\\d+','i'))
+new TestCase ( SECTION, "'123 456 789'.match(new RegExp('\\\\d+','i'))",
+	       String(["123"]), String('123 456 789'.match(new RegExp('\\d+','i'))));
 
-    // '123 456 789'.match(new RegExp('\\d+','i'))
-	testcases[count++] = new TestCase ( SECTION, "'123 456 789'.match(new RegExp('\\\\d+','i'))",
-	                                    String(["123"]), String('123 456 789'.match(new RegExp('\\d+','i'))));
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

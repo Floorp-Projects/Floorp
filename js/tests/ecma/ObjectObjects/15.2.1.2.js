@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,67 +35,45 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.2.1.2.js
-    ECMA Section:       15.2.1.2  The Object Constructor Called as a Function:
-                                  Object(value)
-    Description:        When Object is called as a function rather than as a
-                        constructor, the following steps are taken:
+   File Name:          15.2.1.2.js
+   ECMA Section:       15.2.1.2  The Object Constructor Called as a Function:
+   Object(value)
+   Description:        When Object is called as a function rather than as a
+   constructor, the following steps are taken:
 
-                        1.  If value is null or undefined, create and return a
-                            new object with no proerties other than internal
-                            properties exactly as if the object constructor
-                            had been called on that same value (15.2.2.1).
-                        2.  Return ToObject (value), whose rules are:
+   1.  If value is null or undefined, create and return a
+   new object with no proerties other than internal
+   properties exactly as if the object constructor
+   had been called on that same value (15.2.2.1).
+   2.  Return ToObject (value), whose rules are:
 
-                        undefined   generate a runtime error
-                        null        generate a runtime error
-                        boolean     create a new Boolean object whose default
-                                    value is the value of the boolean.
-                        number      Create a new Number object whose default
-                                    value is the value of the number.
-                        string      Create a new String object whose default
-                                    value is the value of the string.
-                        object      Return the input argument (no conversion).
+   undefined   generate a runtime error
+   null        generate a runtime error
+   boolean     create a new Boolean object whose default
+   value is the value of the boolean.
+   number      Create a new Number object whose default
+   value is the value of the number.
+   string      Create a new String object whose default
+   value is the value of the string.
+   object      Return the input argument (no conversion).
 
-    Author:             christine@netscape.com
-    Date:               17 july 1997
+   Author:             christine@netscape.com
+   Date:               17 july 1997
 */
 
-    var SECTION = "15.2.1.2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Object()";
+var SECTION = "15.2.1.2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Object()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+var MYOB = Object();
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION, "var MYOB = Object(); MYOB.valueOf()",    MYOB,      MYOB.valueOf()      );
+new TestCase( SECTION, "typeof Object()",       "object",               typeof (Object(null)) );
+new TestCase( SECTION, "var MYOB = Object(); MYOB.toString()",    "[object Object]",       eval("var MYOB = Object(); MYOB.toString()") );
 
-    var MYOB = Object();
-
-    array[item++] = new TestCase( SECTION, "var MYOB = Object(); MYOB.valueOf()",    MYOB,      MYOB.valueOf()      );
-    array[item++] = new TestCase( SECTION, "typeof Object()",       "object",               typeof (Object(null)) );
-    array[item++] = new TestCase( SECTION, "var MYOB = Object(); MYOB.toString()",    "[object Object]",       eval("var MYOB = Object(); MYOB.toString()") );
-
-    return ( array );
-}
-
-function test() {
-    for ( tc = 0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                    testcases[tc].expect,
-                    testcases[tc].actual,
-                    testcases[tc].description +" = "+
-                    testcases[tc].actual );
-
-        testcases[tc].reason +=
-                    ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

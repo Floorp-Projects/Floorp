@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,65 +35,48 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     nesting.js
-	Description:  'This tests the nesting of functions'
 
-	Author:       Nick Lerissa
-	Date:         Fri Feb 13 09:58:28 PST 1998
+/**
+   Filename:     nesting.js
+   Description:  'This tests the nesting of functions'
+
+   Author:       Nick Lerissa
+   Date:         Fri Feb 13 09:58:28 PST 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'functions: nesting';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'functions: nesting';
 
-	writeHeaderToLog('Executing script: nesting.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: nesting.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+function outer_func(x)
+{
+    var y = "outer";
 
+    new TestCase( SECTION, "outer:x    ",
+		  1111,  x);
+    new TestCase( SECTION, "outer:y    ",
+		  'outer', y);
+    function inner_func(x)
+    {
+	var y = "inner";
+	new TestCase( SECTION, "inner:x    ",
+		      2222,  x);
+	new TestCase( SECTION, "inner:y    ",
+		      'inner', y);
+    };
 
-	function outer_func(x)
-	{
-	    var y = "outer";
+    inner_func(2222);
+    new TestCase( SECTION, "outer:x    ",
+		  1111,  x);
+    new TestCase( SECTION, "outer:y    ",
+		  'outer', y);
+}
 
-	    testcases[count++] = new TestCase( SECTION, "outer:x    ",
-	                                                1111,  x);
-	    testcases[count++] = new TestCase( SECTION, "outer:y    ",
-	                                                'outer', y);
-	    function inner_func(x)
-	    {
-	        var y = "inner";
-	        testcases[count++] = new TestCase( SECTION, "inner:x    ",
-	                                                    2222,  x);
-	        testcases[count++] = new TestCase( SECTION, "inner:y    ",
-	                                                    'inner', y);
-	    };
+outer_func(1111);
 
-	    inner_func(2222);
-	    testcases[count++] = new TestCase( SECTION, "outer:x    ",
-	                                                1111,  x);
-	    testcases[count++] = new TestCase( SECTION, "outer:y    ",
-	                                                'outer', y);
-	}
-
-	outer_func(1111);
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,70 +35,75 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.4.1.1.js
-    ECMA Section:       15.4.1 Array( item0, item1,... )
+   File Name:          15.4.1.1.js
+   ECMA Section:       15.4.1 Array( item0, item1,... )
 
-    Description:        When Array is called as a function rather than as a
-                        constructor, it creates and initializes a new array
-                        object.  Thus, the function call Array(...) is
-                        equivalent to the object creation new Array(...) with
-                        the same arguments.
+   Description:        When Array is called as a function rather than as a
+   constructor, it creates and initializes a new array
+   object.  Thus, the function call Array(...) is
+   equivalent to the object creation new Array(...) with
+   the same arguments.
 
-                        An array is created and returned as if by the expression
-                        new Array( item0, item1, ... ).
+   An array is created and returned as if by the expression
+   new Array( item0, item1, ... ).
 
-    Author:             christine@netscape.com
-    Date:               7 october 1997
+   Author:             christine@netscape.com
+   Date:               7 october 1997
 */
-    var SECTION = "15.4.1.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Array Constructor Called as a Function";
+var SECTION = "15.4.1.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Array Constructor Called as a Function";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,	
+	      "typeof Array(1,2)",        
+	      "object",           
+	      typeof Array(1,2) );
+
+new TestCase( SECTION,	
+	      "(Array(1,2)).toString",    
+	      Array.prototype.toString,    
+	      (Array(1,2)).toString );
+
+new TestCase( SECTION,
+	      "var arr = Array(1,2,3); arr.toString = Object.prototype.toString; arr.toString()",
+	      "[object Array]",
+	      eval("var arr = Array(1,2,3); arr.toString = Object.prototype.toString; arr.toString()") );
+
+new TestCase( SECTION,	
+	      "(Array(1,2)).length",      
+	      2,                  
+	      (Array(1,2)).length );
+
+new TestCase( SECTION,	
+	      "var arr = (Array(1,2)); arr[0]",  
+	      1,           
+	      eval("var arr = (Array(1,2)); arr[0]") );
+
+new TestCase( SECTION,	
+	      "var arr = (Array(1,2)); arr[1]",  
+	      2,           
+	      eval("var arr = (Array(1,2)); arr[1]") );
+
+new TestCase( SECTION,	
+	      "var arr = (Array(1,2)); String(arr)",  
+	      "1,2",  
+	      eval("var arr = (Array(1,2)); String(arr)") );
+
+test();
 
 function ToUint32( n ) {
-    n = Number( n );
-    if( isNaN(n) || n == 0 || n == Number.POSITIVE_INFINITY ||
-        n == Number.NEGATIVE_INFINITY ) {
-        return 0;
-    }
-    var sign = n < 0 ? -1 : 1;
+  n = Number( n );
+  if( isNaN(n) || n == 0 || n == Number.POSITIVE_INFINITY ||
+      n == Number.NEGATIVE_INFINITY ) {
+    return 0;
+  }
+  var sign = n < 0 ? -1 : 1;
 
-    return ( sign * ( n * Math.floor( Math.abs(n) ) ) ) % Math.pow(2, 32);
+  return ( sign * ( n * Math.floor( Math.abs(n) ) ) ) % Math.pow(2, 32);
 }
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION,	"typeof Array(1,2)",        "object",           typeof Array(1,2) );
-    array[item++] = new TestCase( SECTION,	"(Array(1,2)).toString",    Array.prototype.toString,    (Array(1,2)).toString );
-    array[item++] = new TestCase( SECTION,
-                                    "var arr = Array(1,2,3); arr.toString = Object.prototype.toString; arr.toString()",
-                                    "[object Array]",
-                                    eval("var arr = Array(1,2,3); arr.toString = Object.prototype.toString; arr.toString()") );
-
-
-    array[item++] = new TestCase( SECTION,	"(Array(1,2)).length",      2,                  (Array(1,2)).length );
-    array[item++] = new TestCase( SECTION,	"var arr = (Array(1,2)); arr[0]",  1,           eval("var arr = (Array(1,2)); arr[0]") );
-    array[item++] = new TestCase( SECTION,	"var arr = (Array(1,2)); arr[1]",  2,           eval("var arr = (Array(1,2)); arr[1]") );
-    array[item++] = new TestCase( SECTION,	"var arr = (Array(1,2)); String(arr)",  "1,2",  eval("var arr = (Array(1,2)); String(arr)") );
-
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,55 +35,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     String.js
-	Description:  'This tests the function String(Object)'
 
-	Author:       Nick Lerissa
-	Date:         Fri Feb 13 09:58:28 PST 1998
+/**
+   Filename:     String.js
+   Description:  'This tests the function String(Object)'
+
+   Author:       Nick Lerissa
+   Date:         Fri Feb 13 09:58:28 PST 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'functions: String';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'functions: String';
 
-	writeHeaderToLog('Executing script: String.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: String.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+new TestCase( SECTION, "String(true)            ",
+	      'true',  (String(true)));
+new TestCase( SECTION, "String(false)           ",
+	      'false',  (String(false)));
+new TestCase( SECTION, "String(-124)           ",
+	      '-124',  (String(-124)));
+new TestCase( SECTION, "String(1.23)          ",
+	      '1.23',  (String(1.23)));
+new TestCase( SECTION, "String({p:1})           ",
+	      '{p:1}',  (String({p:1})));
+new TestCase( SECTION, "String(null)            ",
+	      'null',  (String(null)));
+new TestCase( SECTION, "String([1,2,3])            ",
+	      '[1, 2, 3]',  (String([1,2,3])));
 
-
-	testcases[count++] = new TestCase( SECTION, "String(true)            ",
-	                                            'true',  (String(true)));
-	testcases[count++] = new TestCase( SECTION, "String(false)           ",
-	                                            'false',  (String(false)));
-	testcases[count++] = new TestCase( SECTION, "String(-124)           ",
-	                                            '-124',  (String(-124)));
-	testcases[count++] = new TestCase( SECTION, "String(1.23)          ",
-	                                            '1.23',  (String(1.23)));
-	testcases[count++] = new TestCase( SECTION, "String({p:1})           ",
-	                                            '{p:1}',  (String({p:1})));
-	testcases[count++] = new TestCase( SECTION, "String(null)            ",
-	                                            'null',  (String(null)));
-	testcases[count++] = new TestCase( SECTION, "String([1,2,3])            ",
-	                                            '[1, 2, 3]',  (String([1,2,3])));
-
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();
 

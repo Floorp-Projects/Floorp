@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,50 +44,48 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "toString-001.js";
-    var VERSION = "JS1_4";
-    var TITLE   = "Regression test case for 104766";
-    var BUGNUMBER="310514";
+var SECTION = "toString-001.js";
+var VERSION = "JS1_4";
+var TITLE   = "Regression test case for 104766";
+var BUGNUMBER="310514";
 
-    startTest();
+startTest();
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+new TestCase(
+  SECTION,
+  "StripSpaces(Array.prototype.concat.toString()).substring(0,17)",
+  "functionconcat(){",
+  StripSpaces(Array.prototype.concat.toString()).substring(0,17));
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "StripSpaces(Array.prototype.concat.toString()).substring(0,17)",
-        "functionconcat(){",
-        StripSpaces(Array.prototype.concat.toString()).substring(0,17));
+test();
 
-    test();
-
-   function StripSpaces( s ) {
-        for ( var currentChar = 0, strippedString="";
-                currentChar < s.length; currentChar++ )
-        {
-            if (!IsWhiteSpace(s.charAt(currentChar))) {
-                strippedString += s.charAt(currentChar);
-            }
-        }
-        return strippedString;
+function StripSpaces( s ) {
+  for ( var currentChar = 0, strippedString="";
+        currentChar < s.length; currentChar++ )
+  {
+    if (!IsWhiteSpace(s.charAt(currentChar))) {
+	    strippedString += s.charAt(currentChar);
     }
+  }
+  return strippedString;
+}
 
-    function IsWhiteSpace( string ) {
-        var cc = string.charCodeAt(0);
-        switch (cc) {
-            case (0x0009):
-            case (0x000B):
-            case (0x000C):
-            case (0x0020):
-            case (0x000A):
-            case (0x000D):
-            case ( 59 ): // let's strip out semicolons, too
-                return true;
-                break;
-            default:
-                return false;
-        }
-    }
+function IsWhiteSpace( string ) {
+  var cc = string.charCodeAt(0);
+  switch (cc) {
+  case (0x0009):
+  case (0x000B):
+  case (0x000C):
+  case (0x0020):
+  case (0x000A):
+  case (0x000D):
+  case ( 59 ): // let's strip out semicolons, too
+    return true;
+    break;
+  default:
+    return false;
+  }
+}
 

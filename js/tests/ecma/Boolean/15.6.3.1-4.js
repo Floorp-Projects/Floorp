@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,61 +35,39 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.6.3.1-4.js
-    ECMA Section:       15.6.3.1 Properties of the Boolean Prototype Object
+   File Name:          15.6.3.1-4.js
+   ECMA Section:       15.6.3.1 Properties of the Boolean Prototype Object
 
-    Description:        The initial value of Boolean.prototype is the built-in
-                        Boolean prototype object (15.6.4).
+   Description:        The initial value of Boolean.prototype is the built-in
+   Boolean prototype object (15.6.4).
 
-                        The property shall have the attributes [DontEnum,
-                        DontDelete, ReadOnly ].
+   The property shall have the attributes [DontEnum,
+   DontDelete, ReadOnly ].
 
-                        This tests the ReadOnly property of Boolean.prototype
+   This tests the ReadOnly property of Boolean.prototype
 
-    Author:             christine@netscape.com
-    Date:               30 september 1997
+   Author:             christine@netscape.com
+   Date:               30 september 1997
 
 */
-    var SECTION = "15.6.3.1-4";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Boolean.prototype"
-    writeHeaderToLog( SECTION + TITLE );
+var SECTION = "15.6.3.1-4";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Boolean.prototype"
+writeHeaderToLog( SECTION + TITLE );
 
-    var testcases = getTestCases();
-    test();
+var BOOL_PROTO = Boolean.prototype;
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,
+	      "var BOOL_PROTO = Boolean.prototype; Boolean.prototype=null; Boolean.prototype == BOOL_PROTO",
+	      true,
+	      eval("var BOOL_PROTO = Boolean.prototype; Boolean.prototype=null; Boolean.prototype == BOOL_PROTO") );
 
-    var BOOL_PROTO = Boolean.prototype;
+new TestCase( SECTION,
+	      "var BOOL_PROTO = Boolean.prototype; Boolean.prototype=null; Boolean.prototype == null",
+	      false,
+	      eval("var BOOL_PROTO = Boolean.prototype; Boolean.prototype=null; Boolean.prototype == null") );
 
-    array[item++] = new TestCase( SECTION,
-                                 "var BOOL_PROTO = Boolean.prototype; Boolean.prototype=null; Boolean.prototype == BOOL_PROTO",
-                                 true,
-                                 eval("var BOOL_PROTO = Boolean.prototype; Boolean.prototype=null; Boolean.prototype == BOOL_PROTO") );
-
-    array[item++] = new TestCase( SECTION,
-                                 "var BOOL_PROTO = Boolean.prototype; Boolean.prototype=null; Boolean.prototype == null",
-                                 false,
-                                 eval("var BOOL_PROTO = Boolean.prototype; Boolean.prototype=null; Boolean.prototype == null") );
-
-    return ( array );
-}
-
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

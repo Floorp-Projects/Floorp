@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
     File Name:          15.7.4-1.js
     ECMA Section:       15.7.4.1 Properties of the Number Prototype Object
@@ -48,31 +50,9 @@
     startTest();
     writeHeaderToLog( SECTION + "Properties of the Number prototype object");
 
-    var testcases = getTestCases();
+    new TestCase(SECTION, "Number.prototype.valueOf()",      0,                  Number.prototype.valueOf() );
+    new TestCase(SECTION, "typeof(Number.prototype)",        "object",           typeof(Number.prototype) );
+    new TestCase(SECTION, "Number.prototype.constructor == Number",    true,     Number.prototype.constructor == Number );
+//    new TestCase(SECTION, "Number.prototype == Number.__proto__",      true,   Number.prototype == Number.__proto__ );
 
-    test();
-
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase(SECTION, "Number.prototype.valueOf()",      0,                  Number.prototype.valueOf() );
-    array[item++] = new TestCase(SECTION, "typeof(Number.prototype)",        "object",           typeof(Number.prototype) );
-    array[item++] = new TestCase(SECTION, "Number.prototype.constructor == Number",    true,     Number.prototype.constructor == Number );
-//    array[item++] = new TestCase(SECTION, "Number.prototype == Number.__proto__",      true,   Number.prototype == Number.__proto__ );
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

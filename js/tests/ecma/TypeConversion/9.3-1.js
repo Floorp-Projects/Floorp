@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,78 +35,77 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          9.3-1.js
-    ECMA Section:       9.3  Type Conversion:  ToNumber
-    Description:        rules for converting an argument to a number.
-                        see 9.3.1 for cases for converting strings to numbers.
-                        special cases:
-                        undefined           NaN
-                        Null                NaN
-                        Boolean             1 if true; +0 if false
-                        Number              the argument ( no conversion )
-                        String              see test 9.3.1
-                        Object              see test 9.3-1
+   File Name:          9.3-1.js
+   ECMA Section:       9.3  Type Conversion:  ToNumber
+   Description:        rules for converting an argument to a number.
+   see 9.3.1 for cases for converting strings to numbers.
+   special cases:
+   undefined           NaN
+   Null                NaN
+   Boolean             1 if true; +0 if false
+   Number              the argument ( no conversion )
+   String              see test 9.3.1
+   Object              see test 9.3-1
 
 
-                        This tests ToNumber applied to the object type, except
-                        if object is string.  See 9.3-2 for
-                        ToNumber( String object).
+   This tests ToNumber applied to the object type, except
+   if object is string.  See 9.3-2 for
+   ToNumber( String object).
 
-    Author:             christine@netscape.com
-    Date:               10 july 1997
+   Author:             christine@netscape.com
+   Date:               10 july 1997
 
 */
-    var SECTION = "9.3-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TYPE = "number";
-    var testcases = getTestCases();
+var SECTION = "9.3-1";
+var VERSION = "ECMA_1";
+startTest();
+var TYPE = "number";
 
-    writeHeaderToLog( SECTION + " ToNumber");
-    test();
+writeHeaderToLog( SECTION + " ToNumber");
 
+// object is Number
+new TestCase( SECTION,   "Number(new Number())",          0,              Number(new Number())  );
+new TestCase( SECTION,   "Number(new Number(Number.NaN))",Number.NaN,     Number(new Number(Number.NaN)) );
+new TestCase( SECTION,   "Number(new Number(0))",         0,              Number(new Number(0)) );
+new TestCase( SECTION,   "Number(new Number(null))",      0,              Number(new Number(null)) );
+//    new TestCase( SECTION,   "Number(new Number(void 0))",    Number.NaN,     Number(new Number(void 0)) );
+new TestCase( SECTION,   "Number(new Number(true))",      1,              Number(new Number(true)) );
+new TestCase( SECTION,   "Number(new Number(false))",     0,              Number(new Number(false)) );
+
+// object is boolean
+
+new TestCase( SECTION,   "Number(new Boolean(true))",     1,  Number(new Boolean(true)) );
+new TestCase( SECTION,   "Number(new Boolean(false))",    0,  Number(new Boolean(false)) );
+
+// object is array
+new TestCase( SECTION,   "Number(new Array(2,4,8,16,32))",      Number.NaN,     Number(new Array(2,4,8,16,32)) );
+
+
+
+
+test();
+
+// XXX bc replace test()
 function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+  for ( tc=0; tc < testcases.length; tc++ ) {
+    testcases[tc].passed = writeTestCaseResult(
+      testcases[tc].expect,
+      testcases[tc].actual,
+      testcases[tc].description +" = "+
+      testcases[tc].actual );
 
-                    testcases[tc].passed = writeTestCaseResult(
-                                TYPE,
-                                typeof(testcases[tc].actual),
-                                "typeof( " + testcases[tc].description +
-                                " ) = " + typeof(testcases[tc].actual) )
-                                ? testcases[tc].passed
-                                : false;
+    testcases[tc].passed = writeTestCaseResult(
+      TYPE,
+      typeof(testcases[tc].actual),
+      "typeof( " + testcases[tc].description +
+      " ) = " + typeof(testcases[tc].actual) )
+      ? testcases[tc].passed
+      : false;
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    // object is Number
-    array[item++] = new TestCase( SECTION,   "Number(new Number())",          0,              Number(new Number())  );
-    array[item++] = new TestCase( SECTION,   "Number(new Number(Number.NaN))",Number.NaN,     Number(new Number(Number.NaN)) );
-    array[item++] = new TestCase( SECTION,   "Number(new Number(0))",         0,              Number(new Number(0)) );
-    array[item++] = new TestCase( SECTION,   "Number(new Number(null))",      0,              Number(new Number(null)) );
-//    array[item++] = new TestCase( SECTION,   "Number(new Number(void 0))",    Number.NaN,     Number(new Number(void 0)) );
-    array[item++] = new TestCase( SECTION,   "Number(new Number(true))",      1,              Number(new Number(true)) );
-    array[item++] = new TestCase( SECTION,   "Number(new Number(false))",     0,              Number(new Number(false)) );
-
-    // object is boolean
-
-    array[item++] = new TestCase( SECTION,   "Number(new Boolean(true))",     1,  Number(new Boolean(true)) );
-    array[item++] = new TestCase( SECTION,   "Number(new Boolean(false))",    0,  Number(new Boolean(false)) );
-
-    // object is array
-    array[item++] = new TestCase( SECTION,   "Number(new Array(2,4,8,16,32))",      Number.NaN,     Number(new Array(2,4,8,16,32)) );
-
-    return ( array );
+    testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
+  }
+  stopTest();
+  return ( testcases );
 }

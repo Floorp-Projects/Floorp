@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,55 +35,35 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.5.3.1-1.js
-    ECMA Section:       15.5.3.1 Properties of the String Constructor
+   File Name:          15.5.3.1-1.js
+   ECMA Section:       15.5.3.1 Properties of the String Constructor
 
-    Description:        The initial value of String.prototype is the built-in
-                        String prototype object.
+   Description:        The initial value of String.prototype is the built-in
+   String prototype object.
 
-                        This property shall have the attributes [ DontEnum,
-                        DontDelete, ReadOnly]
+   This property shall have the attributes [ DontEnum,
+   DontDelete, ReadOnly]
 
-                        This tests the DontEnum attribute.
+   This tests the DontEnum attribute.
 
-    Author:             christine@netscape.com
-    Date:               1 october 1997
+   Author:             christine@netscape.com
+   Date:               1 october 1997
 */
 
-    var SECTION = "15.5.3.1-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Properties of the String Constructor";
+var SECTION = "15.5.3.1-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Properties of the String Constructor";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION, "String.prototype.length",   0,  String.prototype.length );
 
+new TestCase(   SECTION,
+		"var str='';for ( p in String ) { if ( p == 'prototype' ) str += p; } str",
+		"",
+		eval("var str='';for ( p in String ) { if ( p == 'prototype' ) str += p; } str") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION, "String.prototype.length",   0,  String.prototype.length );
-
-    array[item++] = new TestCase(   SECTION,
-                                    "var str='';for ( p in String ) { if ( p == 'prototype' ) str += p; } str",
-                                    "",
-                                    eval("var str='';for ( p in String ) { if ( p == 'prototype' ) str += p; } str") );
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

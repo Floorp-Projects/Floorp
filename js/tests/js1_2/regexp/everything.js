@@ -35,61 +35,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-	Filename:     everything.js
-	Description:  'Tests regular expressions'
+   Filename:     everything.js
+   Description:  'Tests regular expressions'
 
-	Author:       Nick Lerissa
-	Date:         March 24, 1998
+   Author:       Nick Lerissa
+   Date:         March 24, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp';
 
-	writeHeaderToLog('Executing script: everything.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: everything.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
 
-    // 'Sally and Fred are sure to come.'.match(/^[a-z\s]*/i)
-	testcases[count++] = new TestCase ( SECTION, "'Sally and Fred are sure to come'.match(/^[a-z\\s]*/i)",
-	                                    String(["Sally and Fred are sure to come"]), String('Sally and Fred are sure to come'.match(/^[a-z\s]*/i)));
+// 'Sally and Fred are sure to come.'.match(/^[a-z\s]*/i)
+new TestCase ( SECTION, "'Sally and Fred are sure to come'.match(/^[a-z\\s]*/i)",
+	       String(["Sally and Fred are sure to come"]), String('Sally and Fred are sure to come'.match(/^[a-z\s]*/i)));
 
-    // 'test123W+xyz'.match(new RegExp('^[a-z]*[0-9]+[A-Z]?.(123|xyz)$'))
-	testcases[count++] = new TestCase ( SECTION, "'test123W+xyz'.match(new RegExp('^[a-z]*[0-9]+[A-Z]?.(123|xyz)$'))",
-	                                    String(["test123W+xyz","xyz"]), String('test123W+xyz'.match(new RegExp('^[a-z]*[0-9]+[A-Z]?.(123|xyz)$'))));
+// 'test123W+xyz'.match(new RegExp('^[a-z]*[0-9]+[A-Z]?.(123|xyz)$'))
+new TestCase ( SECTION, "'test123W+xyz'.match(new RegExp('^[a-z]*[0-9]+[A-Z]?.(123|xyz)$'))",
+	       String(["test123W+xyz","xyz"]), String('test123W+xyz'.match(new RegExp('^[a-z]*[0-9]+[A-Z]?.(123|xyz)$'))));
 
-    // 'number one 12365 number two 9898'.match(/(\d+)\D+(\d+)/)
-	testcases[count++] = new TestCase ( SECTION, "'number one 12365 number two 9898'.match(/(\d+)\D+(\d+)/)",
-	                                    String(["12365 number two 9898","12365","9898"]), String('number one 12365 number two 9898'.match(/(\d+)\D+(\d+)/)));
+// 'number one 12365 number two 9898'.match(/(\d+)\D+(\d+)/)
+new TestCase ( SECTION, "'number one 12365 number two 9898'.match(/(\d+)\D+(\d+)/)",
+	       String(["12365 number two 9898","12365","9898"]), String('number one 12365 number two 9898'.match(/(\d+)\D+(\d+)/)));
 
-    var simpleSentence = /(\s?[^\!\?\.]+[\!\?\.])+/;
-    // 'See Spot run.'.match(simpleSentence)
-	testcases[count++] = new TestCase ( SECTION, "'See Spot run.'.match(simpleSentence)",
-	                                    String(["See Spot run.","See Spot run."]), String('See Spot run.'.match(simpleSentence)));
+var simpleSentence = /(\s?[^\!\?\.]+[\!\?\.])+/;
+// 'See Spot run.'.match(simpleSentence)
+new TestCase ( SECTION, "'See Spot run.'.match(simpleSentence)",
+	       String(["See Spot run.","See Spot run."]), String('See Spot run.'.match(simpleSentence)));
 
-    // 'I like it. What's up? I said NO!'.match(simpleSentence)
-	testcases[count++] = new TestCase ( SECTION, "'I like it. What's up? I said NO!'.match(simpleSentence)",
-	                                    String(["I like it. What's up? I said NO!",' I said NO!']), String('I like it. What\'s up? I said NO!'.match(simpleSentence)));
+// 'I like it. What's up? I said NO!'.match(simpleSentence)
+new TestCase ( SECTION, "'I like it. What's up? I said NO!'.match(simpleSentence)",
+	       String(["I like it. What's up? I said NO!",' I said NO!']), String('I like it. What\'s up? I said NO!'.match(simpleSentence)));
 
-    // 'the quick brown fox jumped over the lazy dogs'.match(/((\w+)\s*)+/)
-	testcases[count++] = new TestCase ( SECTION, "'the quick brown fox jumped over the lazy dogs'.match(/((\\w+)\\s*)+/)",
-	                                    String(['the quick brown fox jumped over the lazy dogs','dogs','dogs']),String('the quick brown fox jumped over the lazy dogs'.match(/((\w+)\s*)+/)));
+// 'the quick brown fox jumped over the lazy dogs'.match(/((\w+)\s*)+/)
+new TestCase ( SECTION, "'the quick brown fox jumped over the lazy dogs'.match(/((\\w+)\\s*)+/)",
+	       String(['the quick brown fox jumped over the lazy dogs','dogs','dogs']),String('the quick brown fox jumped over the lazy dogs'.match(/((\w+)\s*)+/)));
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

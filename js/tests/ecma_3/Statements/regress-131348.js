@@ -75,7 +75,7 @@ try
 {
   for (var i in undefined)
   {
-    print(i);
+    writeLineToLog(i);
   }
 }
 catch(e)
@@ -93,7 +93,7 @@ try
 {
   for (var i in null)
   {
-    print(i);
+    writeLineToLog(i);
   }
 }
 catch(e)
@@ -117,7 +117,7 @@ try
 {
   for (var i in this.ZZZ)
   {
-    print(i);
+    writeLineToLog(i);
   }
 }
 catch(e)
@@ -139,7 +139,7 @@ try
 {
   for (var i in 'bbb'.match(/aaa/))
   {
-    print(i);
+    writeLineToLog(i);
   }
 }
 catch(e)

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,60 +35,45 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     toString.js
-	Description:  'Tests RegExp method toString'
 
-	Author:       Nick Lerissa
-	Date:         March 13, 1998
+/**
+   Filename:     toString.js
+   Description:  'Tests RegExp method toString'
+
+   Author:       Nick Lerissa
+   Date:         March 13, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'RegExp: toString';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'RegExp: toString';
 
-	writeHeaderToLog('Executing script: toString.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: toString.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
 
-    /*
-     * var re = new RegExp(); re.toString()  For what to expect,
-     * see http://bugzilla.mozilla.org/show_bug.cgi?id=225343#c7
-     */
-	var re = new RegExp();
-	testcases[count++] = new TestCase ( SECTION, "var re = new RegExp(); re.toString()",
-	                                    '/(?:)/', re.toString());
+/*
+ * var re = new RegExp(); re.toString()  For what to expect,
+ * see http://bugzilla.mozilla.org/show_bug.cgi?id=225343#c7
+ */
+var re = new RegExp();
+new TestCase ( SECTION, "var re = new RegExp(); re.toString()",
+	       '/(?:)/', re.toString());
 
-    // re = /.+/; re.toString();
-    re = /.+/;
-	testcases[count++] = new TestCase ( SECTION, "re = /.+/; re.toString()",
-	                                    '/.+/', re.toString());
+// re = /.+/; re.toString();
+re = /.+/;
+new TestCase ( SECTION, "re = /.+/; re.toString()",
+	       '/.+/', re.toString());
 
-    // re = /test/gi; re.toString()
-    re = /test/gi;
-	testcases[count++] = new TestCase ( SECTION, "re = /test/gi; re.toString()",
-	                                    '/test/gi', re.toString());
+// re = /test/gi; re.toString()
+re = /test/gi;
+new TestCase ( SECTION, "re = /test/gi; re.toString()",
+	       '/test/gi', re.toString());
 
-    // re = /test2/ig; re.toString()
-    re = /test2/ig;
-	testcases[count++] = new TestCase ( SECTION, "re = /test2/ig; re.toString()",
-	                                    '/test2/gi', re.toString());
+// re = /test2/ig; re.toString()
+re = /test2/ig;
+new TestCase ( SECTION, "re = /test2/ig; re.toString()",
+	       '/test2/gi', re.toString());
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

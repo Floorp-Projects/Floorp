@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,72 +35,58 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          11.4.9.js
-    ECMA Section:       11.4.9 Logical NOT Operator (!)
-    Description:        if the ToBoolean( VALUE ) result is true, return
-                        true.  else return false.
-    Author:             christine@netscape.com
-    Date:               7 july 1997
+   File Name:          11.4.9.js
+   ECMA Section:       11.4.9 Logical NOT Operator (!)
+   Description:        if the ToBoolean( VALUE ) result is true, return
+   true.  else return false.
+   Author:             christine@netscape.com
+   Date:               7 july 1997
 
-    Static variables:
-        none
+   Static variables:
+   none
 */
-    var SECTION = "11.4.9";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Logical NOT operator (!)";
+var SECTION = "11.4.9";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Logical NOT operator (!)";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 //    version("130")
 
-    var testcases = new Array();
 
-    testcases[tc++] = new TestCase( SECTION,   "!(null)",                true,   !(null) );
-    testcases[tc++] = new TestCase( SECTION,   "!(var x)",               true,   !(eval("var x")) );
-    testcases[tc++] = new TestCase( SECTION,   "!(void 0)",              true,   !(void 0) );
+new TestCase( SECTION,   "!(null)",                true,   !(null) );
+new TestCase( SECTION,   "!(var x)",               true,   !(eval("var x")) );
+new TestCase( SECTION,   "!(void 0)",              true,   !(void 0) );
 
-    testcases[tc++] = new TestCase( SECTION,   "!(false)",               true,   !(false) );
-    testcases[tc++] = new TestCase( SECTION,   "!(true)",                false,  !(true) );
-    testcases[tc++] = new TestCase( SECTION,   "!()",                    true,   !(eval()) );
-    testcases[tc++] = new TestCase( SECTION,   "!(0)",                   true,   !(0) );
-    testcases[tc++] = new TestCase( SECTION,   "!(-0)",                  true,   !(-0) );
-    testcases[tc++] = new TestCase( SECTION,   "!(NaN)",                 true,   !(Number.NaN) );
-    testcases[tc++] = new TestCase( SECTION,   "!(Infinity)",            false,  !(Number.POSITIVE_INFINITY) );
-    testcases[tc++] = new TestCase( SECTION,   "!(-Infinity)",           false,  !(Number.NEGATIVE_INFINITY) );
-    testcases[tc++] = new TestCase( SECTION,   "!(Math.PI)",             false,  !(Math.PI) );
-    testcases[tc++] = new TestCase( SECTION,   "!(1)",                   false,  !(1) );
-    testcases[tc++] = new TestCase( SECTION,   "!(-1)",                  false,  !(-1) );
-    testcases[tc++] = new TestCase( SECTION,   "!('')",                  true,   !("") );
-    testcases[tc++] = new TestCase( SECTION,   "!('\t')",                false,  !("\t") );
-    testcases[tc++] = new TestCase( SECTION,   "!('0')",                 false,  !("0") );
-    testcases[tc++] = new TestCase( SECTION,   "!('string')",            false,  !("string") );
-    testcases[tc++] = new TestCase( SECTION,   "!(new String(''))",      false,  !(new String("")) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new String('string'))",    false,  !(new String("string")) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new String())",        false,  !(new String()) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new Boolean(true))",   false,   !(new Boolean(true)) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new Boolean(false))",  false,   !(new Boolean(false)) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new Array())",         false,  !(new Array()) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new Array(1,2,3)",     false,  !(new Array(1,2,3)) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new Number())",        false,  !(new Number()) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new Number(0))",       false,  !(new Number(0)) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new Number(NaN))",     false,  !(new Number(Number.NaN)) );
-    testcases[tc++] = new TestCase( SECTION,   "!(new Number(Infinity))", false, !(new Number(Number.POSITIVE_INFINITY)) );
+new TestCase( SECTION,   "!(false)",               true,   !(false) );
+new TestCase( SECTION,   "!(true)",                false,  !(true) );
+new TestCase( SECTION,   "!()",                    true,   !(eval()) );
+new TestCase( SECTION,   "!(0)",                   true,   !(0) );
+new TestCase( SECTION,   "!(-0)",                  true,   !(-0) );
+new TestCase( SECTION,   "!(NaN)",                 true,   !(Number.NaN) );
+new TestCase( SECTION,   "!(Infinity)",            false,  !(Number.POSITIVE_INFINITY) );
+new TestCase( SECTION,   "!(-Infinity)",           false,  !(Number.NEGATIVE_INFINITY) );
+new TestCase( SECTION,   "!(Math.PI)",             false,  !(Math.PI) );
+new TestCase( SECTION,   "!(1)",                   false,  !(1) );
+new TestCase( SECTION,   "!(-1)",                  false,  !(-1) );
+new TestCase( SECTION,   "!('')",                  true,   !("") );
+new TestCase( SECTION,   "!('\t')",                false,  !("\t") );
+new TestCase( SECTION,   "!('0')",                 false,  !("0") );
+new TestCase( SECTION,   "!('string')",            false,  !("string") );
+new TestCase( SECTION,   "!(new String(''))",      false,  !(new String("")) );
+new TestCase( SECTION,   "!(new String('string'))",    false,  !(new String("string")) );
+new TestCase( SECTION,   "!(new String())",        false,  !(new String()) );
+new TestCase( SECTION,   "!(new Boolean(true))",   false,   !(new Boolean(true)) );
+new TestCase( SECTION,   "!(new Boolean(false))",  false,   !(new Boolean(false)) );
+new TestCase( SECTION,   "!(new Array())",         false,  !(new Array()) );
+new TestCase( SECTION,   "!(new Array(1,2,3)",     false,  !(new Array(1,2,3)) );
+new TestCase( SECTION,   "!(new Number())",        false,  !(new Number()) );
+new TestCase( SECTION,   "!(new Number(0))",       false,  !(new Number(0)) );
+new TestCase( SECTION,   "!(new Number(NaN))",     false,  !(new Number(Number.NaN)) );
+new TestCase( SECTION,   "!(new Number(Infinity))", false, !(new Number(Number.POSITIVE_INFINITY)) );
 
-    test();
+test();
 
-function test() {
-        for ( tc = 0; tc < testcases.length; tc++ ) {
-            testcases[tc].passed = writeTestCaseResult(
-                    testcases[tc].expect,
-                    testcases[tc].actual,
-                    testcases[tc].description +" = "+ testcases[tc].actual );
-
-            testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value "
-        }
-        stopTest();
-
-    //  all tests must return a boolean value
-        return ( testcases );
-}

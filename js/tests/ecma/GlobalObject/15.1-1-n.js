@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,47 +35,34 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.1-1-n.js
-    ECMA Section:       The global object
-    Description:
+   File Name:          15.1-1-n.js
+   ECMA Section:       The global object
+   Description:
 
-    The global object does not have a [[Construct]] property; it is not
-    possible to use the global object as a constructor with the new operator.
+   The global object does not have a [[Construct]] property; it is not
+   possible to use the global object as a constructor with the new operator.
 
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.1-1-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The Global Object";
+var SECTION = "15.1-1-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The Global Object";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+DESCRIPTION = "var MY_GLOBAL = new this()";
+EXPECTED = "error";
 
-    testcases[tc] = new TestCase(   SECTION,
-                                    "var MY_GLOBAL = new this()",
-                                    "error",
-                                    "var MY_GLOBAL = new this()" );
+new TestCase(   SECTION,
+		"var MY_GLOBAL = new this()",
+		"error",
+		eval("var MY_GLOBAL = new this()") );
 
-    test();
+test();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval(testcases[tc].actual);
-
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          forin-001.js
  *  ECMA Section:
@@ -17,9 +18,6 @@
 
     startTest();
     writeHeaderToLog( SECTION + " "+ TITLE);
-
-    var tc = 0;
-    var testcases = new Array();
 
     ForIn_1( { length:4, company:"netscape", year:2000, 0:"zero" } );
     ForIn_2( { length:4, company:"netscape", year:2000, 0:"zero" } );
@@ -47,7 +45,7 @@
         }
 
         for ( var i = 0; i < PropertyArray.length; i++ ) {
-            testcases[tc++] = new TestCase(
+            new TestCase(
                 SECTION,
                 "object[" + PropertyArray[i] +"]",
                 object[PropertyArray[i]],
@@ -55,7 +53,7 @@
             );
         }
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "object.length",
             PropertyArray.length,
@@ -77,7 +75,7 @@
         }
 
         for ( i = 0; i < PropertyArray.length; i++ ) {
-            testcases[tc++] = new TestCase(
+            new TestCase(
                 SECTION,
                 "object[" + PropertyArray[i] +"]",
                 object[PropertyArray[i]],
@@ -85,7 +83,7 @@
             );
         }
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "object.length",
             PropertyArray.length,
@@ -108,19 +106,19 @@
             checkBreak = "fail";
         }
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "check break out of for...in",
             "pass",
             checkBreak );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "properties.length",
             1,
             properties.length );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "object["+properties[0]+"]",
             values[0],
@@ -149,25 +147,25 @@
             result3++;
         }
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify labeled statement is only executed once",
             true,
             result1 == 1 );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify statements in for loop are evaluated",
             true,
             result2 == i );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify break out of labeled for...in loop",
             true,
             result4 == 0 );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify break out of labeled block",
             true,
@@ -195,25 +193,25 @@
             result3++;
         }
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify labeled statement is only executed once",
             true,
             result1 == 1 );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify statements in for loop are evaluated",
             true,
             result2 == i );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify break out of labeled for...in loop",
             true,
             result4 == 0 );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify break out of labeled block",
             true,
@@ -238,19 +236,19 @@
                 result4++;
             }
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify statements in for loop are evaluated",
             true,
             result2 == i );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify break out of labeled for...in loop",
             true,
             result4 == 0 );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "verify break out of labeled block",
             true,
@@ -273,19 +271,19 @@
             checkBreak = "fail";
         }
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "check break out of for...in",
             "pass",
             checkBreak );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "properties.length",
             1,
             properties.length );
 
-        testcases[tc++] = new TestCase(
+        new TestCase(
             SECTION,
             "object["+properties[0]+"]",
             values[0],

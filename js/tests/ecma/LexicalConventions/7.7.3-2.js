@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,75 +35,56 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.7.3-2.js
-    ECMA Section:       7.7.3 Numeric Literals
+   File Name:          7.7.3-2.js
+   ECMA Section:       7.7.3 Numeric Literals
 
-    Description:
+   Description:
 
-    This is a regression test for
-    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=122884
+   This is a regression test for
+   http://scopus.mcom.com/bugsplat/show_bug.cgi?id=122884
 
-    Waldemar's comments:
+   Waldemar's comments:
 
-    A numeric literal that starts with either '08' or '09' is interpreted as a
-    decimal literal; it should be an error instead.  (Strictly speaking, according
-    to ECMA v1 such literals should be interpreted as two integers -- a zero
-    followed by a decimal number whose first digit is 8 or 9, but this is a bug in
-    ECMA that will be fixed in v2.  In any case, there is no place in the grammar
-    where two consecutive numbers would be legal.)
+   A numeric literal that starts with either '08' or '09' is interpreted as a
+   decimal literal; it should be an error instead.  (Strictly speaking, according
+   to ECMA v1 such literals should be interpreted as two integers -- a zero
+   followed by a decimal number whose first digit is 8 or 9, but this is a bug in
+   ECMA that will be fixed in v2.  In any case, there is no place in the grammar
+   where two consecutive numbers would be legal.)
 
-    Author:             christine@netscape.com
-    Date:               15 june 1998
+   Author:             christine@netscape.com
+   Date:               15 june 1998
 
 */
-    var SECTION = "7.7.3-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Numeric Literals";
-    var BUGNUMBER="122884";
+var SECTION = "7.7.3-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Numeric Literals";
+var BUGNUMBER="122884";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+new TestCase( SECTION,
+	      "9",
+	      9,
+	      9 );
 
-    testcases[tc++] = new TestCase( SECTION,
-        "9",
-        9,
-        9 );
+new TestCase( SECTION,
+	      "09",
+	      9,
+	      09 );
 
-    testcases[tc++] = new TestCase( SECTION,
-        "09",
-        9,
-        09 );
-
-    testcases[tc++] = new TestCase( SECTION,
-        "099",
-        99,
-        099 );
+new TestCase( SECTION,
+	      "099",
+	      99,
+	      099 );
 
 
-    testcases[tc++] = new TestCase( SECTION,
-        "077",
-        63,
-        077 );
+new TestCase( SECTION,
+	      "077",
+	      63,
+	      077 );
 
-    test();
-
-
-function test() {
-        for ( tc=0; tc < testcases.length; tc++ ) {
-            testcases[tc].actual = testcases[tc].actual;
-
-            testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-            testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-
-        }
-
-        stopTest();
-        return ( testcases );
-}
+test();

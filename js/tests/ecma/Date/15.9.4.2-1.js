@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -50,29 +51,29 @@
  *  Author:             christine@netscape.com
  */
 
-    var SECTION = "15.9.4.2-1";       // provide a document reference (ie, ECMA section)
-    var VERSION = "ECMA"; // Version of JavaScript or ECMA
-    var TITLE   = "Regression Test for Date.parse";       // Provide ECMA section title or a description
-    var BUGNUMBER = "http://bugzilla.mozilla.org/show_bug.cgi?id=4088";     // Provide URL to bugsplat or bugzilla report
+var SECTION = "15.9.4.2-1";       // provide a document reference (ie, ECMA section)
+var VERSION = "ECMA"; // Version of JavaScript or ECMA
+var TITLE   = "Regression Test for Date.parse";       // Provide ECMA section title or a description
+var BUGNUMBER = "http://bugzilla.mozilla.org/show_bug.cgi?id=4088";     // Provide URL to bugsplat or bugzilla report
 
-    startTest();               // leave this alone
+startTest();               // leave this alone
 
-    AddTestCase( "new Date('1/1/1999 12:30 AM').toString()",
-                new Date(1999,0,1,0,30).toString(),
-                new Date('1/1/1999 12:30 AM').toString() );
+AddTestCase( "new Date('1/1/1999 12:30 AM').toString()",
+	     new Date(1999,0,1,0,30).toString(),
+	     new Date('1/1/1999 12:30 AM').toString() );
 
-    AddTestCase( "new Date('1/1/1999 12:30 PM').toString()",
-                 new Date( 1999,0,1,12,30 ).toString(),
-                 new Date('1/1/1999 12:30 PM').toString() );
+AddTestCase( "new Date('1/1/1999 12:30 PM').toString()",
+	     new Date( 1999,0,1,12,30 ).toString(),
+	     new Date('1/1/1999 12:30 PM').toString() );
 
-    AddTestCase( "new Date('1/1/1999 13:30 AM')",
-                "Invalid Date",
-                new Date('1/1/1999 13:30 AM').toString() );
+AddTestCase( "new Date('1/1/1999 13:30 AM')",
+	     "Invalid Date",
+	     new Date('1/1/1999 13:30 AM').toString() );
 
 
-    AddTestCase( "new Date('1/1/1999 13:30 PM')",
-                "Invalid Date",
-                new Date('1/1/1999 13:30 PM').toString() );
+AddTestCase( "new Date('1/1/1999 13:30 PM')",
+	     "Invalid Date",
+	     new Date('1/1/1999 13:30 PM').toString() );
 
-    test();       // leave this alone.  this executes the test cases and
-                  // displays results.
+test();       // leave this alone.  this executes the test cases and
+// displays results.

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -47,48 +48,46 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "function-001.js";
-    var VERSION = "JS1_4";
-    var TITLE   = "Regression test case for 325843";
-    var BUGNUMBER="3258435";
-    startTest();
+var SECTION = "function-001.js";
+var VERSION = "JS1_4";
+var TITLE   = "Regression test case for 325843";
+var BUGNUMBER="3258435";
+startTest();
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+eval("function f1 (a){ var a,b; }");
 
-    eval("function f1 (a){ var a,b; }");
+function f2( a ) { var a, b; };
 
-    function f2( a ) { var a, b; };
+new TestCase(
+    SECTION,
+    "eval(\"function f1 (a){ var a,b; }\"); "+
+    "function f2( a ) { var a, b; }; typeof f1",
+    "function",
+    typeof f1 );
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "eval(\"function f1 (a){ var a,b; }\"); "+
-        "function f2( a ) { var a, b; }; typeof f1",
-        "function",
-        typeof f1 );
+// force a function decompilation
 
-    // force a function decompilation
+new TestCase(
+    SECTION,
+    "typeof f1.toString()",
+    "string",
+    typeof f1.toString() );
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "typeof f1.toString()",
-        "string",
-        typeof f1.toString() );
+new TestCase(
+    SECTION,
+    "typeof f2",
+    "function",
+    typeof f2 );
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "typeof f2",
-        "function",
-        typeof f2 );
+// force a function decompilation
 
-    // force a function decompilation
+new TestCase(
+    SECTION,
+    "typeof f2.toString()",
+    "string",
+    typeof f2.toString() );
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "typeof f2.toString()",
-        "string",
-        typeof f2.toString() );
-
-    test();
+test();
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,63 +35,55 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          11.2.3-3-n.js
-    ECMA Section:       11.2.3. Function Calls
-    Description:
+   File Name:          11.2.3-3-n.js
+   ECMA Section:       11.2.3. Function Calls
+   Description:
 
-    The production CallExpression : MemberExpression Arguments is evaluated as
-    follows:
+   The production CallExpression : MemberExpression Arguments is evaluated as
+   follows:
 
-    1.Evaluate MemberExpression.
-    2.Evaluate Arguments, producing an internal list of argument values
-        (section 0).
-    3.Call GetValue(Result(1)).
-    4.If Type(Result(3)) is not Object, generate a runtime error.
-    5.If Result(3) does not implement the internal [[Call]] method, generate a
-      runtime error.
-    6.If Type(Result(1)) is Reference, Result(6) is GetBase(Result(1)). Otherwise,
-      Result(6) is null.
-    7.If Result(6) is an activation object, Result(7) is null. Otherwise, Result(7) is
-      the same as Result(6).
-    8.Call the [[Call]] method on Result(3), providing Result(7) as the this value
-      and providing the list Result(2) as the argument values.
-    9.Return Result(8).
+   1.Evaluate MemberExpression.
+   2.Evaluate Arguments, producing an internal list of argument values
+   (section 0).
+   3.Call GetValue(Result(1)).
+   4.If Type(Result(3)) is not Object, generate a runtime error.
+   5.If Result(3) does not implement the internal [[Call]] method, generate a
+   runtime error.
+   6.If Type(Result(1)) is Reference, Result(6) is GetBase(Result(1)). Otherwise,
+   Result(6) is null.
+   7.If Result(6) is an activation object, Result(7) is null. Otherwise, Result(7) is
+   the same as Result(6).
+   8.Call the [[Call]] method on Result(3), providing Result(7) as the this value
+   and providing the list Result(2) as the argument values.
+   9.Return Result(8).
 
-    The production CallExpression : CallExpression Arguments is evaluated in
-    exactly the same manner, except that the contained CallExpression is
-    evaluated in step 1.
+   The production CallExpression : CallExpression Arguments is evaluated in
+   exactly the same manner, except that the contained CallExpression is
+   evaluated in step 1.
 
-    Note: Result(8) will never be of type Reference if Result(3) is a native
-    ECMAScript object. Whether calling a host object can return a value of
-    type Reference is implementation-dependent.
+   Note: Result(8) will never be of type Reference if Result(3) is a native
+   ECMAScript object. Whether calling a host object can return a value of
+   type Reference is implementation-dependent.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "11.2.3-3-n.js";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Function Calls";
+var SECTION = "11.2.3-3-n.js";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Function Calls";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+DESCRIPTION = "(void 0).valueOf()";
+EXPECTED = "error";
 
-    testcases[tc++] = new TestCase( SECTION, "(void 0).valueOf()", "error", (void 0).valueOf() );
-    test();
+new TestCase( SECTION, 
+              "(void 0).valueOf()", 
+              "error", 
+              eval("(void 0).valueOf()") );
+test();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

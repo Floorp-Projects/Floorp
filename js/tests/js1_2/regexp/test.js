@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,69 +35,53 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     test.js
-	Description:  'Tests regular expressions method compile'
 
-	Author:       Nick Lerissa
-	Date:         March 10, 1998
+/**
+   Filename:     test.js
+   Description:  'Tests regular expressions method compile'
+
+   Author:       Nick Lerissa
+   Date:         March 10, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: test';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: test';
 
-	writeHeaderToLog('Executing script: test.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: test.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+new TestCase ( SECTION,
+	       "/[0-9]{3}/.test('23 2 34 678 9 09')",
+	       true, /[0-9]{3}/.test('23 2 34 678 9 09'));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "/[0-9]{3}/.test('23 2 34 678 9 09')",
-	                                    true, /[0-9]{3}/.test('23 2 34 678 9 09'));
+new TestCase ( SECTION,
+	       "/[0-9]{3}/.test('23 2 34 78 9 09')",
+	       false, /[0-9]{3}/.test('23 2 34 78 9 09'));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "/[0-9]{3}/.test('23 2 34 78 9 09')",
-	                                    false, /[0-9]{3}/.test('23 2 34 78 9 09'));
+new TestCase ( SECTION,
+	       "/\w+ \w+ \w+/.test('do a test')",
+	       true, /\w+ \w+ \w+/.test("do a test"));
 
-    testcases[count++] = new TestCase ( SECTION,
-                                        "/\w+ \w+ \w+/.test('do a test')",
-                                        true, /\w+ \w+ \w+/.test("do a test"));
+new TestCase ( SECTION,
+	       "/\w+ \w+ \w+/.test('a test')",
+	       false, /\w+ \w+ \w+/.test("a test"));
 
-    testcases[count++] = new TestCase ( SECTION,
-                                        "/\w+ \w+ \w+/.test('a test')",
-                                        false, /\w+ \w+ \w+/.test("a test"));
+new TestCase ( SECTION,
+	       "(new RegExp('[0-9]{3}')).test('23 2 34 678 9 09')",
+	       true, (new RegExp('[0-9]{3}')).test('23 2 34 678 9 09'));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "(new RegExp('[0-9]{3}')).test('23 2 34 678 9 09')",
-	                                    true, (new RegExp('[0-9]{3}')).test('23 2 34 678 9 09'));
+new TestCase ( SECTION,
+	       "(new RegExp('[0-9]{3}')).test('23 2 34 78 9 09')",
+	       false, (new RegExp('[0-9]{3}')).test('23 2 34 78 9 09'));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "(new RegExp('[0-9]{3}')).test('23 2 34 78 9 09')",
-	                                    false, (new RegExp('[0-9]{3}')).test('23 2 34 78 9 09'));
+new TestCase ( SECTION,
+	       "(new RegExp('\\\\w+ \\\\w+ \\\\w+')).test('do a test')",
+	       true, (new RegExp('\\w+ \\w+ \\w+')).test("do a test"));
 
-    testcases[count++] = new TestCase ( SECTION,
-                                        "(new RegExp('\\\\w+ \\\\w+ \\\\w+')).test('do a test')",
-                                        true, (new RegExp('\\w+ \\w+ \\w+')).test("do a test"));
+new TestCase ( SECTION,
+	       "(new RegExp('\\\\w+ \\\\w+ \\\\w+')).test('a test')",
+	       false, (new RegExp('\\w+ \\w+ \\w+')).test("a test"));
 
-    testcases[count++] = new TestCase ( SECTION,
-                                        "(new RegExp('\\\\w+ \\\\w+ \\\\w+')).test('a test')",
-                                        false, (new RegExp('\\w+ \\w+ \\w+')).test("a test"));
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,56 +35,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.1-2.js
-    ECMA Section:       7.1 White Space
-    Description:        - readability
-                        - separate tokens
-                        - otherwise should be insignificant
-                        - in strings, white space characters are significant
-                        - cannot appear within any other kind of token
+   File Name:          7.1-2.js
+   ECMA Section:       7.1 White Space
+   Description:        - readability
+   - separate tokens
+   - otherwise should be insignificant
+   - in strings, white space characters are significant
+   - cannot appear within any other kind of token
 
-                        white space characters are:
-                        unicode     name            formal name     string representation
-                        \u0009      tab             <TAB>           \t
-                        \u000B      veritical tab   <VT>            ??
-                        \U000C      form feed       <FF>            \f
-                        \u0020      space           <SP>            " "
+   white space characters are:
+   unicode     name            formal name     string representation
+   \u0009      tab             <TAB>           \t
+   \u000B      veritical tab   <VT>            ??
+   \U000C      form feed       <FF>            \f
+   \u0020      space           <SP>            " "
 
-    Author:             christine@netscape.com
-    Date:               11 september 1997
+   Author:             christine@netscape.com
+   Date:               11 september 1997
 */
 
-    var SECTION = "7.1-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "White Space";
+var SECTION = "7.1-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "White Space";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,    "'var'+'\u000B'+'MYVAR1=10;MYVAR1'",   10, eval('var'+'\u000B'+'MYVAR1=10;MYVAR1') );
+new TestCase( SECTION,    "'var'+'\u0009'+'MYVAR2=10;MYVAR2'",   10, eval('var'+'\u0009'+'MYVAR2=10;MYVAR2') );
+new TestCase( SECTION,    "'var'+'\u000C'+'MYVAR3=10;MYVAR3'",   10, eval('var'+'\u000C'+'MYVAR3=10;MYVAR3') );
+new TestCase( SECTION,    "'var'+'\u0020'+'MYVAR4=10;MYVAR4'",   10, eval('var'+'\u0020'+'MYVAR4=10;MYVAR4') );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION,    "'var'+'\u000B'+'MYVAR1=10;MYVAR1'",   10, eval('var'+'\u000B'+'MYVAR1=10;MYVAR1') );
-    array[item++] = new TestCase( SECTION,    "'var'+'\u0009'+'MYVAR2=10;MYVAR2'",   10, eval('var'+'\u0009'+'MYVAR2=10;MYVAR2') );
-    array[item++] = new TestCase( SECTION,    "'var'+'\u000C'+'MYVAR3=10;MYVAR3'",   10, eval('var'+'\u000C'+'MYVAR3=10;MYVAR3') );
-    array[item++] = new TestCase( SECTION,    "'var'+'\u0020'+'MYVAR4=10;MYVAR4'",   10, eval('var'+'\u0020'+'MYVAR4=10;MYVAR4') );
-
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

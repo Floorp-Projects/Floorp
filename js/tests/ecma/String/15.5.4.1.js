@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,47 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.5.4.1.js
-    ECMA Section:       15.5.4.1 String.prototype.constructor
+   File Name:          15.5.4.1.js
+   ECMA Section:       15.5.4.1 String.prototype.constructor
 
-    Description:
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Description:
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var SECTION = "15.5.4.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "String.prototype.constructor";
+var SECTION = "15.5.4.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "String.prototype.constructor";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION, "String.prototype.constructor == String",  true, String.prototype.constructor == String );
 
+new TestCase( SECTION, "var STRING = new String.prototype.constructor('hi'); STRING.getClass = Object.prototype.toString; STRING.getClass()",
+	      "[object String]",
+	      eval("var STRING = new String.prototype.constructor('hi'); STRING.getClass = Object.prototype.toString; STRING.getClass()") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION, "String.prototype.constructor == String",  true, String.prototype.constructor == String );
-    array[item++] = new TestCase( SECTION, "var STRING = new String.prototype.constructor('hi'); STRING.getClass = Object.prototype.toString; STRING.getClass()",
-                                            "[object String]",
-                                            eval("var STRING = new String.prototype.constructor('hi'); STRING.getClass = Object.prototype.toString; STRING.getClass()") );
-    return ( array );
-}
-function test( array ) {
-        for ( ; tc < testcases.length; tc++ ) {
-            testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-            testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-        }
-
-        stopTest();
-
-    //  all tests must return an array of TestCase objects
-        return ( testcases );
-}
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,49 +35,28 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          12.7-1-n.js
-    ECMA Section:       12.7 The continue statement
-    Description:
+   File Name:          12.7-1-n.js
+   ECMA Section:       12.7 The continue statement
+   Description:
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "12.7.1-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The continue statment";
+var SECTION = "12.7.1-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The continue statement";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
+DESCRIPTION = "continue";
+EXPECTED = "error";
 
-    test();
+new TestCase(   SECTION,
+		"continue",
+		"error",
+		eval("continue") );
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-
-        testcases[tc].actual = eval( testcases[tc].actual );
-
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase(   SECTION,
-                                    "continue",
-                                    "error",
-                                    "continue" );
-
-    return ( array );
-}
+test();

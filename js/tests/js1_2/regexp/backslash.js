@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,61 +35,45 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     backslash.js
-	Description:  'Tests regular expressions containing \'
 
-	Author:       Nick Lerissa
-	Date:         March 10, 1998
+/**
+   Filename:     backslash.js
+   Description:  'Tests regular expressions containing \'
+
+   Author:       Nick Lerissa
+   Date:         March 10, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'RegExp: \\';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'RegExp: \\';
 
-	writeHeaderToLog('Executing script: backslash.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: backslash.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// 'abcde'.match(new RegExp('\e'))
+new TestCase ( SECTION, "'abcde'.match(new RegExp('\e'))",
+	       String(["e"]), String('abcde'.match(new RegExp('\e'))));
 
-    // 'abcde'.match(new RegExp('\e'))
-	testcases[count++] = new TestCase ( SECTION, "'abcde'.match(new RegExp('\e'))",
-	                                    String(["e"]), String('abcde'.match(new RegExp('\e'))));
+// 'ab\\cde'.match(new RegExp('\\\\'))
+new TestCase ( SECTION, "'ab\\cde'.match(new RegExp('\\\\'))",
+	       String(["\\"]), String('ab\\cde'.match(new RegExp('\\\\'))));
 
-    // 'ab\\cde'.match(new RegExp('\\\\'))
-	testcases[count++] = new TestCase ( SECTION, "'ab\\cde'.match(new RegExp('\\\\'))",
-	                                    String(["\\"]), String('ab\\cde'.match(new RegExp('\\\\'))));
+// 'ab\\cde'.match(/\\/) (using literal)
+new TestCase ( SECTION, "'ab\\cde'.match(/\\\\/)",
+	       String(["\\"]), String('ab\\cde'.match(/\\/)));
 
-    // 'ab\\cde'.match(/\\/) (using literal)
-	testcases[count++] = new TestCase ( SECTION, "'ab\\cde'.match(/\\\\/)",
-	                                    String(["\\"]), String('ab\\cde'.match(/\\/)));
+// 'before ^$*+?.()|{}[] after'.match(new RegExp('\^\$\*\+\?\.\(\)\|\{\}\[\]'))
+new TestCase ( SECTION,
+	       "'before ^$*+?.()|{}[] after'.match(new RegExp('\\^\\$\\*\\+\\?\\.\\(\\)\\|\\{\\}\\[\\]'))",
+	       String(["^$*+?.()|{}[]"]),
+	       String('before ^$*+?.()|{}[] after'.match(new RegExp('\\^\\$\\*\\+\\?\\.\\(\\)\\|\\{\\}\\[\\]'))));
 
-    // 'before ^$*+?.()|{}[] after'.match(new RegExp('\^\$\*\+\?\.\(\)\|\{\}\[\]'))
-	testcases[count++] = new TestCase ( SECTION,
-	                        "'before ^$*+?.()|{}[] after'.match(new RegExp('\\^\\$\\*\\+\\?\\.\\(\\)\\|\\{\\}\\[\\]'))",
-	                        String(["^$*+?.()|{}[]"]),
-	                        String('before ^$*+?.()|{}[] after'.match(new RegExp('\\^\\$\\*\\+\\?\\.\\(\\)\\|\\{\\}\\[\\]'))));
+// 'before ^$*+?.()|{}[] after'.match(/\^\$\*\+\?\.\(\)\|\{\}\[\]/) (using literal)
+new TestCase ( SECTION,
+	       "'before ^$*+?.()|{}[] after'.match(/\\^\\$\\*\\+\\?\\.\\(\\)\\|\\{\\}\\[\\]/)",
+	       String(["^$*+?.()|{}[]"]),
+	       String('before ^$*+?.()|{}[] after'.match(/\^\$\*\+\?\.\(\)\|\{\}\[\]/)));
 
-    // 'before ^$*+?.()|{}[] after'.match(/\^\$\*\+\?\.\(\)\|\{\}\[\]/) (using literal)
-	testcases[count++] = new TestCase ( SECTION,
-	                        "'before ^$*+?.()|{}[] after'.match(/\\^\\$\\*\\+\\?\\.\\(\\)\\|\\{\\}\\[\\]/)",
-	                        String(["^$*+?.()|{}[]"]),
-	                        String('before ^$*+?.()|{}[] after'.match(/\^\$\*\+\?\.\(\)\|\{\}\[\]/)));
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

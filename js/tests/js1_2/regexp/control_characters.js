@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,53 +35,38 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     control_characters.js
-	Description:  'Tests regular expressions containing .'
 
-	Author:       Nick Lerissa
-	Date:         April 8, 1998
+/**
+   Filename:     control_characters.js
+   Description:  'Tests regular expressions containing .'
+
+   Author:       Nick Lerissa
+   Date:         April 8, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'RegExp: .';
-	var BUGNUMBER="123802";
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'RegExp: .';
+var BUGNUMBER="123802";
 
-	writeHeaderToLog('Executing script: control_characters.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: control_characters.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
 
-    // '‡O– Í:i¢ÿ'.match(new RegExp('.+'))
-	testcases[count++] = new TestCase ( SECTION, "'‡O– Í:i¢ÿ'.match(new RegExp('.+'))",
-	                                    String(['‡O– Í:i¢ÿ']), String('‡O– Í:i¢ÿ'.match(new RegExp('.+'))));
+// '‡O– Í:i¢ÿ'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'‡O– Í:i¢ÿ'.match(new RegExp('.+'))",
+	       String(['‡O– Í:i¢ÿ']), String('‡O– Í:i¢ÿ'.match(new RegExp('.+'))));
 
-    // string1.match(new RegExp(string1))
-    var string1 = '‡O– Í:i¢ÿ';
-	testcases[count++] = new TestCase ( SECTION, "string1 = " + string1 + " string1.match(string1)",
-	                                    String([string1]), String(string1.match(string1)));
+// string1.match(new RegExp(string1))
+var string1 = '‡O– Í:i¢ÿ';
+new TestCase ( SECTION, "string1 = " + string1 + " string1.match(string1)",
+	       String([string1]), String(string1.match(string1)));
 
-    string1 = "";
-    for (var i = 0; i < 32; i++)
-        string1 += String.fromCharCode(i);
-	testcases[count++] = new TestCase ( SECTION, "string1 = " + string1 + " string1.match(string1)",
-	                                    String([string1]), String(string1.match(string1)));
+string1 = "";
+for (var i = 0; i < 32; i++)
+    string1 += String.fromCharCode(i);
+new TestCase ( SECTION, "string1 = " + string1 + " string1.match(string1)",
+	       String([string1]), String(string1.match(string1)));
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

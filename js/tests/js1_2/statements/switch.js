@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,109 +35,94 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-	Filename:     switch.js
-	Description:  'Tests the switch statement'
+   Filename:     switch.js
+   Description:  'Tests the switch statement'
 
-    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=323696
+   http://scopus.mcom.com/bugsplat/show_bug.cgi?id=323696
 
-	Author:       Nick Lerissa
-	Date:         March 19, 1998
+   Author:       Nick Lerissa
+   Date:         March 19, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'statements: switch';
-	var BUGNUMBER="323696";
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'statements: switch';
+var BUGNUMBER="323696";
 
-	writeHeaderToLog("Executing script: switch.js");
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog("Executing script: switch.js");
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
 
-	var var1 = "match string";
-	var match1 = false;
-	var match2 = false;
-	var match3 = false;
+var var1 = "match string";
+var match1 = false;
+var match2 = false;
+var match3 = false;
 
-	switch (var1)
-	{
-	    case "match string":
-	        match1 = true;
-	    case "bad string 1":
-	        match2 = true;
-	        break;
-	    case "bad string 2":
-	        match3 = true;
-	}
+switch (var1)
+{
+case "match string":
+    match1 = true;
+case "bad string 1":
+    match2 = true;
+    break;
+case "bad string 2":
+    match3 = true;
+}
 
-	testcases[count++] = new TestCase ( SECTION, 'switch statement',
-	                                    true, match1);
+new TestCase ( SECTION, 'switch statement',
+	       true, match1);
 
-	testcases[count++] = new TestCase ( SECTION, 'switch statement',
-	                                    true, match2);
+new TestCase ( SECTION, 'switch statement',
+	       true, match2);
 
-	testcases[count++] = new TestCase ( SECTION, 'switch statement',
-	                                    false, match3);
+new TestCase ( SECTION, 'switch statement',
+	       false, match3);
 
-	var var2 = 3;
+var var2 = 3;
 
-	var match1 = false;
-	var match2 = false;
-	var match3 = false;
-	var match4 = false;
-	var match5 = false;
+var match1 = false;
+var match2 = false;
+var match3 = false;
+var match4 = false;
+var match5 = false;
 
-	switch (var2)
-	{
-	    case 1:
+switch (var2)
+{
+case 1:
 /*	        switch (var1)
 	        {
-	            case "foo":
-	                match1 = true;
-	            break;
-	            case 3:
-	                match2 = true;
-	            break;
+		case "foo":
+		match1 = true;
+		break;
+		case 3:
+		match2 = true;
+		break;
 	        }*/
-	        match3 = true;
-	    break;
-	    case 2:
-	        match4 = true;
-	    break;
-	    case 3:
-	        match5 = true;
-	    break;
-	}
-	testcases[count++] = new TestCase ( SECTION, 'switch statement',
-	                                    false, match1);
+    match3 = true;
+    break;
+case 2:
+    match4 = true;
+    break;
+case 3:
+    match5 = true;
+    break;
+}
+new TestCase ( SECTION, 'switch statement',
+	       false, match1);
 
-	testcases[count++] = new TestCase ( SECTION, 'switch statement',
-	                                    false, match2);
+new TestCase ( SECTION, 'switch statement',
+	       false, match2);
 
-	testcases[count++] = new TestCase ( SECTION, 'switch statement',
-	                                    false, match3);
+new TestCase ( SECTION, 'switch statement',
+	       false, match3);
 
-	testcases[count++] = new TestCase ( SECTION, 'switch statement',
-	                                    false, match4);
+new TestCase ( SECTION, 'switch statement',
+	       false, match4);
 
-	testcases[count++] = new TestCase ( SECTION, 'switch statement',
-	                                    true, match5);
+new TestCase ( SECTION, 'switch statement',
+	       true, match5);
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

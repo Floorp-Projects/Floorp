@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          String/match-003.js
  *  ECMA Section:       15.6.4.9
@@ -29,14 +30,14 @@
  *  transferred to other kinds of objects for use as a method.
  */
 
-    var SECTION = "String/match-003.js";
-    var VERSION = "ECMA_2";
-    var TITLE   = "String.prototype.match( regexp )";
+var SECTION = "String/match-003.js";
+var VERSION = "ECMA_2";
+var TITLE   = "String.prototype.match( regexp )";
 
-    startTest();
+startTest();
 
-    // the regexp argument is not a RegExp object
-    // this is not a string object
+// the regexp argument is not a RegExp object
+// this is not a string object
 
 
 //  [if regexp.global is true] set the regexp.lastIndex property to 0 and
@@ -48,79 +49,79 @@
 //  of RegExp.prototype.exec.
 
 
-    // set the value of lastIndex
-    re = /([\d]{5})([-\ ]?[\d]{4})?$/g;
+// set the value of lastIndex
+re = /([\d]{5})([-\ ]?[\d]{4})?$/g;
 
 
-    s = "Boston, MA 02134";
+s = "Boston, MA 02134";
 
-    AddGlobalRegExpCases( re,
-                          "re = " + re,
-                          s,
-                          ["02134" ]);
+AddGlobalRegExpCases( re,
+		      "re = " + re,
+		      s,
+		      ["02134" ]);
 
-    re.lastIndex = 0;
+re.lastIndex = 0;
 
-    AddGlobalRegExpCases(
-                     re,
-                     "re = " + re + "; re.lastIndex = 0 ",
-                     s,
-                     ["02134"]);
+AddGlobalRegExpCases(
+  re,
+  "re = " + re + "; re.lastIndex = 0 ",
+  s,
+  ["02134"]);
 
 
-    re.lastIndex = s.length;
+re.lastIndex = s.length;
 
-    AddGlobalRegExpCases(
-                    re,
-                    "re = " + re + "; re.lastIndex = " + s.length,
-                    s,
-                    ["02134"] );
+AddGlobalRegExpCases(
+  re,
+  "re = " + re + "; re.lastIndex = " + s.length,
+  s,
+  ["02134"] );
 
-    re.lastIndex = s.lastIndexOf("0");
+re.lastIndex = s.lastIndexOf("0");
 
-    AddGlobalRegExpCases(
-                    re,
-                    "re = "+ re +"; re.lastIndex = " + s.lastIndexOf("0"),
-                    s,
-                    ["02134"]);
+AddGlobalRegExpCases(
+  re,
+  "re = "+ re +"; re.lastIndex = " + s.lastIndexOf("0"),
+  s,
+  ["02134"]);
 
-    re.lastIndex = s.lastIndexOf("0") + 1;
+re.lastIndex = s.lastIndexOf("0") + 1;
 
-    AddGlobalRegExpCases(
-                    re,
-                    "re = " +re+ "; re.lastIndex = " + (s.lastIndexOf("0") +1),
-                    s,
-                    ["02134"]);
+AddGlobalRegExpCases(
+  re,
+  "re = " +re+ "; re.lastIndex = " + (s.lastIndexOf("0") +1),
+  s,
+  ["02134"]);
 
-    test();
+test();
 
 function AddGlobalRegExpCases(
-    regexp, str_regexp, string, matches_array ) {
+  regexp, str_regexp, string, matches_array ) {
 
   // prevent a runtime error
 
-    if ( string.match(regexp) == null || matches_array == null ) {
-        AddTestCase(
-          string + ".match(" + str_regexp +")",
-          matches_array,
-          string.match(regexp) );
-
-        return;
-    }
-
+  if ( string.match(regexp) == null || matches_array == null ) {
     AddTestCase(
-        "( " + string  + " ).match(" + str_regexp +").length",
-        matches_array.length,
-        string.match(regexp).length );
+      string + ".match(" + str_regexp +")",
+      matches_array,
+      string.match(regexp) );
 
-    var limit = matches_array.length > string.match(regexp).length ?
-                matches_array.length :
-                string.match(regexp).length;
+    return;
+  }
 
-    for ( var matches = 0; matches < limit; matches++ ) {
-        AddTestCase(
-            "( " + string + " ).match(" + str_regexp +")[" + matches +"]",
-            matches_array[matches],
-            string.match(regexp)[matches] );
-    }
+  AddTestCase(
+    "( " + string  + " ).match(" + str_regexp +").length",
+    matches_array.length,
+    string.match(regexp).length );
+
+  var limit = matches_array.length > string.match(regexp).length ?
+    matches_array.length :
+    string.match(regexp).length;
+
+  for ( var matches = 0; matches < limit; matches++ ) {
+    AddTestCase(
+      "( " + string + " ).match(" + str_regexp +")[" + matches +"]",
+      matches_array[matches],
+      string.match(regexp)[matches] );
+  }
 }

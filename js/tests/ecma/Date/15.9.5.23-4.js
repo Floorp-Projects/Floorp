@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,108 +35,94 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.5.23-2.js
-    ECMA Section:       15.9.5.23
-    Description:        Date.prototype.setTime
+   File Name:          15.9.5.23-2.js
+   ECMA Section:       15.9.5.23
+   Description:        Date.prototype.setTime
 
-    1.  If the this value is not a Date object, generate a runtime error.
-    2.  Call ToNumber(time).
-    3.  Call TimeClip(Result(1)).
-    4.  Set the [[Value]] property of the this value to Result(2).
-    5.  Return the value of the [[Value]] property of the this value.
+   1.  If the this value is not a Date object, generate a runtime error.
+   2.  Call ToNumber(time).
+   3.  Call TimeClip(Result(1)).
+   4.  Set the [[Value]] property of the this value to Result(2).
+   5.  Return the value of the [[Value]] property of the this value.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.23-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.setTime()";
+var SECTION = "15.9.5.23-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.setTime()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var TZ_ADJUST = TZ_DIFF * msPerHour;
 
-    var TZ_ADJUST = TZ_DIFF * msPerHour;
+// get the current time
+var now = (new Date()).valueOf();
 
-    // get the current time
-    var now = (new Date()).valueOf();
+// calculate time for year 0
+for ( var time = 0, year = 1969; year >= 0; year-- ) {
+  time -= TimeInYear(year);
+}
+// get time for 29 feb 2000
 
-    // calculate time for year 0
-    for ( var time = 0, year = 1969; year >= 0; year-- ) {
-        time -= TimeInYear(year);
-    }
-    // get time for 29 feb 2000
+var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
 
-    var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
+// get time for 1 jan 2005
 
-    // get time for 1 jan 2005
+var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
+TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
 
-    var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
-    TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
-
-    test_times = new Array( now, time, TIME_1970, TIME_1900, TIME_2000,
-    UTC_FEB_29_2000, UTC_JAN_1_2005 );
+test_times = new Array( now, time, TIME_1970, TIME_1900, TIME_2000,
+			UTC_FEB_29_2000, UTC_JAN_1_2005 );
 
 
-    for ( var j = 0; j < test_times.length; j++ ) {
-        addTestCase( new Date(time), test_times[j] );
-    }
+for ( var j = 0; j < test_times.length; j++ ) {
+  addTestCase( new Date(time), test_times[j] );
+}
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date(NaN)).setTime()",
-                                    NaN,
-                                    (new Date(NaN)).setTime() );
+new TestCase( SECTION,
+	      "(new Date(NaN)).setTime()",
+	      NaN,
+	      (new Date(NaN)).setTime() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Date.prototype.setTime.length",
-                                    1,
-                                    Date.prototype.setTime.length );
-    test();
+new TestCase( SECTION,
+	      "Date.prototype.setTime.length",
+	      1,
+	      Date.prototype.setTime.length );
+test();
 
 function addTestCase( d, t ) {
-    testcases[tc++] = new TestCase( SECTION,
-                                    "( "+d+" ).setTime("+t+")",
-                                    t,
-                                    d.setTime(t) );
+  new TestCase( SECTION,
+		"( "+d+" ).setTime("+t+")",
+		t,
+		d.setTime(t) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "( "+d+" ).setTime("+(t+1.1)+")",
-                                    TimeClip(t+1.1),
-                                    d.setTime(t+1.1) );
+  new TestCase( SECTION,
+		"( "+d+" ).setTime("+(t+1.1)+")",
+		TimeClip(t+1.1),
+		d.setTime(t+1.1) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "( "+d+" ).setTime("+(t+1)+")",
-                                    t+1,
-                                    d.setTime(t+1) );
+  new TestCase( SECTION,
+		"( "+d+" ).setTime("+(t+1)+")",
+		t+1,
+		d.setTime(t+1) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "( "+d+" ).setTime("+(t-1)+")",
-                                    t-1,
-                                    d.setTime(t-1) );
+  new TestCase( SECTION,
+		"( "+d+" ).setTime("+(t-1)+")",
+		t-1,
+		d.setTime(t-1) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "( "+d+" ).setTime("+(t-TZ_ADJUST)+")",
-                                    t-TZ_ADJUST,
-                                    d.setTime(t-TZ_ADJUST) );
+  new TestCase( SECTION,
+		"( "+d+" ).setTime("+(t-TZ_ADJUST)+")",
+		t-TZ_ADJUST,
+		d.setTime(t-TZ_ADJUST) );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "( "+d+" ).setTime("+(t+TZ_ADJUST)+")",
-                                    t+TZ_ADJUST,
-                                    d.setTime(t+TZ_ADJUST) );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+  new TestCase( SECTION,
+		"( "+d+" ).setTime("+(t+TZ_ADJUST)+")",
+		t+TZ_ADJUST,
+		d.setTime(t+TZ_ADJUST) );
 }

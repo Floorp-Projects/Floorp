@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,49 +35,40 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-    File Name:          15.9.5.4-2-n.js
-    ECMA Section:       15.9.5.4-1 Date.prototype.getTime
-    Description:
 
-    1.  If the this value is not an object whose [[Class]] property is "Date",
-        generate a runtime error.
-    2.  Return this time value.
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+/**
+   File Name:          15.9.5.4-2-n.js
+   ECMA Section:       15.9.5.4-1 Date.prototype.getTime
+   Description:
+
+   1.  If the this value is not an object whose [[Class]] property is "Date",
+   generate a runtime error.
+   2.  Return this time value.
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
 
-    var SECTION = "15.9.5.4-2-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.getTime";
+var SECTION = "15.9.5.4-2-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.getTime";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var MYDATE = new MyDate( TIME_2000 );
 
-    var MYDATE = new MyDate( TIME_2000 );
+DESCRIPTION = "MYDATE.getTime()";
+EXPECTED = "error";
 
-    testcases[tc++] = new TestCase( SECTION,
-                      "MYDATE.getTime()",
-                      "error",
-                      MYDATE.getTime() );
+new TestCase( SECTION,
+	      "MYDATE.getTime()",
+	      "error",
+	      eval("MYDATE.getTime()") );
+
+test();
 
 function MyDate( value ) {
-    this.value = value;
-    this.getTime = Date.prototype.getTime;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+  this.value = value;
+  this.getTime = Date.prototype.getTime;
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,43 +35,22 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.6.3.1-5.js
-    ECMA Section:       15.6.3.1 Boolean.prototype
-    Description:
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   File Name:          15.6.3.1-5.js
+   ECMA Section:       15.6.3.1 Boolean.prototype
+   Description:
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var VERSION = "ECMA_2";
-    startTest();
-    var SECTION = "15.6.3.1-5";
-    var TITLE   = "Boolean.prototype"
+var VERSION = "ECMA_2";
+startTest();
+var SECTION = "15.6.3.1-5";
+var TITLE   = "Boolean.prototype"
 
-    writeHeaderToLog( SECTION + " " + TITLE );
-    var tc= 0;
-    var testcases = getTestCases();
+writeHeaderToLog( SECTION + " " + TITLE );
 
-//  all tests must call a function that returns an array of TestCase objects.
-    test();
+new TestCase( SECTION,  "Function.prototype == Boolean.__proto__",   true,   Function.prototype == Boolean.__proto__ );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION,  "Function.prototype == Boolean.__proto__",   true,   Function.prototype == Boolean.__proto__ );
-
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

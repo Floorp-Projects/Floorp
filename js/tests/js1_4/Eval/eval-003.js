@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -63,38 +64,35 @@
  * of the evalnative method.
  *
  */
-    var SECTION = "eval-003.js";
-    var VERSION = "JS1_4";
-    var TITLE   = "Calling eval indirectly should NOT fail in version 140";
-    var BUGNUMBER="38512";
+var SECTION = "eval-003.js";
+var VERSION = "JS1_4";
+var TITLE   = "Calling eval indirectly should NOT fail in version 140";
+var BUGNUMBER="38512";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
-
-    var MY_EVAL = eval;
-    var RESULT = "";
-    var EXPECT= "";
-    var h = function f(x,y){var g = function(z){return Math.exp(z);}; return g(x+y);};
+var MY_EVAL = eval;
+var RESULT = "";
+var EXPECT= "";
+var h = function f(x,y){var g = function(z){return Math.exp(z);}; return g(x+y);};
     
 
-    new EvalTest();
+new EvalTest();
 
-    test();
+test();
 
 function EvalTest() 
 {
-  with( this )
-  {
-      MY_EVAL( "RESULT = h(-1, 1)" );
-      EXPECT = 1;  //The base e to the power (-1 + 1),  i.e. the power 0,  equals 1 ....
+  with( this ) {
+    MY_EVAL( "RESULT = h(-1, 1)" );
+    EXPECT = 1;  //The base e to the power (-1 + 1),  i.e. the power 0,  equals 1 ....
 
-      testcases[tc++] = new TestCase(
-          SECTION,
-          "Call eval indirectly",
-          EXPECT,
-          RESULT );
+    new TestCase(
+      SECTION,
+      "Call eval indirectly",
+      EXPECT,
+      RESULT );
   }
 }
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,52 +35,38 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          12.2-1.js
-    ECMA Section:       The variable statement
-    Description:
+   File Name:          12.2-1.js
+   ECMA Section:       The variable statement
+   Description:
 
-    If the variable statement occurs inside a FunctionDeclaration, the
-    variables are defined with function-local scope in that function, as
-    described in section 10.1.3. Otherwise, they are defined with global
-    scope, that is, they are created as members of the global object, as
-    described in section 0. Variables are created when the execution scope
-    is entered. A Block does not define a new execution scope. Only Program and
-    FunctionDeclaration produce a new scope. Variables are initialized to the
-    undefined value when created. A variable with an Initializer is assigned
-    the value of its AssignmentExpression when the VariableStatement is executed,
-    not when the variable is created.
+   If the variable statement occurs inside a FunctionDeclaration, the
+   variables are defined with function-local scope in that function, as
+   described in section 10.1.3. Otherwise, they are defined with global
+   scope, that is, they are created as members of the global object, as
+   described in section 0. Variables are created when the execution scope
+   is entered. A Block does not define a new execution scope. Only Program and
+   FunctionDeclaration produce a new scope. Variables are initialized to the
+   undefined value when created. A variable with an Initializer is assigned
+   the value of its AssignmentExpression when the VariableStatement is executed,
+   not when the variable is created.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "12.2-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The variable statement";
+var SECTION = "12.2-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The variable statement";
 
-    writeHeaderToLog( SECTION +" "+ TITLE);
+writeHeaderToLog( SECTION +" "+ TITLE);
 
-    var testcases = new Array();
+new TestCase(    "SECTION",
+		 "var x = 3; function f() { var a = x; var x = 23; return a; }; f()",
+		 void 0,
+		 eval("var x = 3; function f() { var a = x; var x = 23; return a; }; f()") );
 
-    testcases[tc] = new TestCase(    "SECTION",
-                                    "var x = 3; function f() { var a = x; var x = 23; return a; }; f()",
-                                    void 0,
-                                    eval("var x = 3; function f() { var a = x; var x = 23; return a; }; f()") );
+test();
 
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

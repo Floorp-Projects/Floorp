@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -43,28 +44,30 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "date-001-n.js";
-    var VERSION = "JS1_4";
-    var TITLE   = "Regression test case for 299903";
-    var BUGNUMBER="299903";
+var SECTION = "date-001-n.js";
+var VERSION = "JS1_4";
+var TITLE   = "Regression test case for 299903";
+var BUGNUMBER="299903";
 
-    startTest();
+startTest();
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+function MyDate() {
+    this.foo = "bar";
+}
+MyDate.prototype = new Date();
 
-    function MyDate() {
-        this.foo = "bar";
-    }
-    MyDate.prototype = new Date();
+DESCRIPTION = 
+"function MyDate() { this.foo = \"bar\"; }; MyDate.prototype = new Date(); new MyDate().toString()";
+EXPECTED = "error";
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "function MyDate() { this.foo = \"bar\"; }; "+
-        "MyDate.prototype = new Date(); " +
-        "new MyDate().toString()",
-        "error",
-        new MyDate().toString() );
+new TestCase(
+    SECTION,
+    "function MyDate() { this.foo = \"bar\"; }; "+
+    "MyDate.prototype = new Date(); " +
+    "new MyDate().toString()",
+    "error",
+    new MyDate().toString() );
 
-    test();
+test();

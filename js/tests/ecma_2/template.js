@@ -41,14 +41,14 @@
  *  Author:             ** replace with your e-mail address **
  */
 
-    var SECTION = "";          // if ECMA test, provide section number
-    var VERSION = "ECMA_2";    // Version of JavaScript or ECMA
-    var TITLE   = "";          // Provide ECMA section title or description
-    var BUGNUMBER = "";        // Provide URL to bugsplat or bugzilla report
+var SECTION = "";          // if ECMA test, provide section number
+var VERSION = "ECMA_2";    // Version of JavaScript or ECMA
+var TITLE   = "";          // Provide ECMA section title or description
+var BUGNUMBER = "";        // Provide URL to bugsplat or bugzilla report
 
-    startTest();               // leave this alone
+startTest();               // leave this alone
 
 
-    /* Calls to AddTestCase here */
+/* Calls to AddTestCase here */
 
-    test();                    // leave this alone
+test();                    // leave this alone

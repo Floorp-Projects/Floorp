@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,50 +50,77 @@
  *      <script src="./mytest.js"></script>
  */
 
-onerror = err;
-
 var GLOBAL = "[object Window]";
 
-function startTest() {
-    writeHeaderToLog( SECTION + " "+ TITLE);
-    if ( BUGNUMBER ) {
-        writeLineToLog ("BUGNUMBER: " + BUGNUMBER );
-    }
-
-    testcases = new Array();
-    tc = 0;
-}
-
 function writeLineToLog( string ) {
-    document.write( string + "<br>\n");
+  document.write( string + "<br>\n");
 }
-function writeHeaderToLog( string ) {
-    document.write( "<h2>" + string + "</h2>" );
-}
-function stopTest() {
-    var gc;
-    if ( gc != undefined ) {
-        gc();
-    }
-    document.write( "<hr>" );
-}
-function writeFormattedResult( expect, actual, string, passed ) {
-    var s = "<tt>"+ string ;
-    s += "<b>" ;
-    s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
-                    : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
-    writeLineToLog( s + "</font></b></tt>" );
-    return passed;
-}
-function err ( msg, page, line ) {
-    writeLineToLog( "Test " + page + " failed on line " + line +" with the message: " + msg );
 
-    testcases[tc].actual = "error";
-    testcases[tc].reason = msg;
-    writeTestCaseResult( testcases[tc].expect,
-                         testcases[tc].actual,
-                         testcases[tc].description +" = "+ testcases[tc].actual +
-                         ": " + testcases[tc].reason );
-    stopTest();
-    return true;
+function writeHeaderToLog( string ) {
+  document.write( "<h2>" + string + "</h2>" );
+}
+
+function writeFormattedResult( expect, actual, string, passed ) {
+  var s = "<tt>"+ string ;
+  s += "<b>" ;
+  s += ( passed ) ? "<font color=#009900> &nbsp;" + PASSED
+    : "<font color=#aa0000>&nbsp;" +  FAILED + expect + "</tt>";
+  writeLineToLog( s + "</font></b></tt>" );
+  return passed;
+}
+
+/*
+ * The earlier versions of the test code used exceptions
+ * to terminate the test script in "negative" test cases
+ * before the failure reporting code could run. In order
+ * to be able to capture errors for the "negative" case 
+ * where the exception is a sign the test actually passed,
+ * the err online handler will assume that any error is a 
+ * failure unless gExceptionExpected is true.
+ */
+window.onerror = err;
+var gExceptionExpected = false;
+
+function err( msg, page, line ) {
+  var testcase;
+
+  if (typeof(EXPECTED) == "undefined" || EXPECTED != "error") {
+    /*
+     * an unexpected exception occured
+     */
+    writeLineToLog( "Test failed with the message: " + msg );
+    testcase = new TestCase(SECTION, "unknown", "unknown", "unknown");
+    testcase.passed = false;
+    testcase.reason = "Error: " + msg + 
+      " Source File: " + page + " Line: " + line + ".";
+    return;
+  }
+
+  if (typeof SECTION == 'undefined')
+  {
+    SECTION = 'Unknown';
+  }
+  if (typeof DESCRIPTION == 'undefined')
+  {
+    DESCRIPTION = 'Unknown';
+  }
+  if (typeof EXPECTED == 'undefined')
+  {
+    EXPECTED = 'Unknown';
+  }
+
+  testcase = new TestCase(SECTION, DESCRIPTION, EXPECTED, "error");
+  testcase.reason += "Error: " + msg + 
+    " Source File: " + page + " Line: " + line + ".";
+  stopTest();
+}
+
+var gVersion = 0;
+
+function version(v)
+{
+  if (v) { 
+    gVersion = v; 
+  } 
+  return gVersion; 
 }

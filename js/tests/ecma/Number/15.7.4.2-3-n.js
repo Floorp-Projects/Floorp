@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,50 +35,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.7.4.2-3-n.js
-    ECMA Section:       15.7.4.2.1 Number.prototype.toString()
-    Description:
-    If the radix is the number 10 or not supplied, then this number value is
-    given as an argument to the ToString operator; the resulting string value
-    is returned.
+   File Name:          15.7.4.2-3-n.js
+   ECMA Section:       15.7.4.2.1 Number.prototype.toString()
+   Description:
+   If the radix is the number 10 or not supplied, then this number value is
+   given as an argument to the ToString operator; the resulting string value
+   is returned.
 
-    If the radix is supplied and is an integer from 2 to 36, but not 10, the
-    result is a string, the choice of which is implementation dependent.
+   If the radix is supplied and is an integer from 2 to 36, but not 10, the
+   result is a string, the choice of which is implementation dependent.
 
-    The toString function is not generic; it generates a runtime error if its
-    this value is not a Number object. Therefore it cannot be transferred to
-    other kinds of objects for use as a method.
+   The toString function is not generic; it generates a runtime error if its
+   this value is not a Number object. Therefore it cannot be transferred to
+   other kinds of objects for use as a method.
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
-    var SECTION = "15.7.4.2-3-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var testcases = getTestCases();
+var SECTION = "15.7.4.2-3-n";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Number.prototype.toString()");
-    test();
+writeHeaderToLog( SECTION + " Number.prototype.toString()");
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+DESCRIPTION = "o = new String(); o.toString = Number.prototype.toString; o.toString()";
+EXPECTED = "error";
 
-    array[item++] = new TestCase(SECTION,  "o = new String(); o.toString = Number.prototype.toString; o.toString()",  "error",    "o = new String(); o.toString = Number.prototype.toString; o.toString()" );
+new TestCase(SECTION,  
+	     "o = new String(); o.toString = Number.prototype.toString; o.toString()",  
+	     "error",    
+	     eval("o = new String(); o.toString = Number.prototype.toString; o.toString()") );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

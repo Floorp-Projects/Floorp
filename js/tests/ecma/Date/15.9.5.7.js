@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,100 +35,87 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-    File Name:          15.9.5.7.js
-    ECMA Section:       15.9.5.7
-    Description:        Date.prototype.getUTCFullYear
 
-    1.Let t be this time value.
-    2.If t is NaN, return NaN.
-    3.Return YearFromTime(t).
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+/**
+   File Name:          15.9.5.7.js
+   ECMA Section:       15.9.5.7
+   Description:        Date.prototype.getUTCFullYear
+
+   1.Let t be this time value.
+   2.If t is NaN, return NaN.
+   3.Return YearFromTime(t).
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.7";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.getUTCFullYear()";
+var SECTION = "15.9.5.7";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.getUTCFullYear()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var TZ_ADJUST = TZ_DIFF * msPerHour;
 
-    var TZ_ADJUST = TZ_DIFF * msPerHour;
+// get the current time
+var now = (new Date()).valueOf();
 
-    // get the current time
-    var now = (new Date()).valueOf();
-
-    // calculate time for year 0
-    for ( var time = 0, year = 1969; year >= 0; year-- ) {
-        time -= TimeInYear(year);
-    }
-    // get time for 29 feb 2000
-
-    var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
-
-    // get time for 1 jan 2005
-
-    var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
-    TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
-
-    addTestCase( now );
-    addTestCase( time );
-    addTestCase( TIME_1970 );
-    addTestCase( TIME_1900 );
-    addTestCase( TIME_2000 );
-    addTestCase( UTC_FEB_29_2000 );
-    addTestCase( UTC_JAN_1_2005 );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date(NaN)).getUTCFullYear()",
-                                    NaN,
-                                    (new Date(NaN)).getUTCFullYear() );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Date.prototype.getUTCFullYear.length",
-                                    0,
-                                    Date.prototype.getUTCFullYear.length );
-
-    test();
-function addTestCase( t ) {
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+t+")).getUTCFullYear()",
-                                    YearFromTime(t),
-                                    (new Date(t)).getUTCFullYear() );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t+1)+")).getUTCFullYear()",
-                                    YearFromTime(t+1),
-                                    (new Date(t+1)).getUTCFullYear() );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t-1)+")).getUTCFullYear()",
-                                    YearFromTime(t-1),
-                                    (new Date(t-1)).getUTCFullYear() );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t-TZ_ADJUST)+")).getUTCFullYear()",
-                                    YearFromTime(t-TZ_ADJUST),
-                                    (new Date(t-TZ_ADJUST)).getUTCFullYear() );
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "(new Date("+(t+TZ_ADJUST)+")).getUTCFullYear()",
-                                    YearFromTime(t+TZ_ADJUST),
-                                    (new Date(t+TZ_ADJUST)).getUTCFullYear() );
+// calculate time for year 0
+for ( var time = 0, year = 1969; year >= 0; year-- ) {
+  time -= TimeInYear(year);
 }
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+// get time for 29 feb 2000
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+var UTC_FEB_29_2000 = TIME_2000 + 31*msPerDay + 28*msPerHour;
+
+// get time for 1 jan 2005
+
+var UTC_JAN_1_2005 = TIME_2000 + TimeInYear(2000)+TimeInYear(2001)+
+TimeInYear(2002)+TimeInYear(2003)+TimeInYear(2004);
+
+addTestCase( now );
+addTestCase( time );
+addTestCase( TIME_1970 );
+addTestCase( TIME_1900 );
+addTestCase( TIME_2000 );
+addTestCase( UTC_FEB_29_2000 );
+addTestCase( UTC_JAN_1_2005 );
+
+new TestCase( SECTION,
+	      "(new Date(NaN)).getUTCFullYear()",
+	      NaN,
+	      (new Date(NaN)).getUTCFullYear() );
+
+new TestCase( SECTION,
+	      "Date.prototype.getUTCFullYear.length",
+	      0,
+	      Date.prototype.getUTCFullYear.length );
+
+test();
+
+function addTestCase( t ) {
+  new TestCase( SECTION,
+		"(new Date("+t+")).getUTCFullYear()",
+		YearFromTime(t),
+		(new Date(t)).getUTCFullYear() );
+
+  new TestCase( SECTION,
+		"(new Date("+(t+1)+")).getUTCFullYear()",
+		YearFromTime(t+1),
+		(new Date(t+1)).getUTCFullYear() );
+
+  new TestCase( SECTION,
+		"(new Date("+(t-1)+")).getUTCFullYear()",
+		YearFromTime(t-1),
+		(new Date(t-1)).getUTCFullYear() );
+
+  new TestCase( SECTION,
+		"(new Date("+(t-TZ_ADJUST)+")).getUTCFullYear()",
+		YearFromTime(t-TZ_ADJUST),
+		(new Date(t-TZ_ADJUST)).getUTCFullYear() );
+
+  new TestCase( SECTION,
+		"(new Date("+(t+TZ_ADJUST)+")).getUTCFullYear()",
+		YearFromTime(t+TZ_ADJUST),
+		(new Date(t+TZ_ADJUST)).getUTCFullYear() );
 }

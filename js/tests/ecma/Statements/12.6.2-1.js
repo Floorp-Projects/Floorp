@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,57 +35,39 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          12.6.2-1.js
-    ECMA Section:       12.6.2 The for Statement
+   File Name:          12.6.2-1.js
+   ECMA Section:       12.6.2 The for Statement
 
-                        1. first expression is not present.
-                        2. second expression is not present
-                        3. third expression is not present
+   1. first expression is not present.
+   2. second expression is not present
+   3. third expression is not present
 
 
-    Author:             christine@netscape.com
-    Date:               15 september 1997
+   Author:             christine@netscape.com
+   Date:               15 september 1997
 */
 
-    var SECTION = "12.6.2-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The for statment";
+var SECTION = "12.6.2-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The for statement";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new getTestCases();
+new TestCase( "12.6.2-1", "for statement",  99,     testprogram() );
 
-    test();
+test();
 
-function getTestCases() {
-    var array = new Array();
-    array[0] = new TestCase( "12.6.2-1", "for statement",  99,     "" );
-    return ( array );
-}
 
 function testprogram() {
-    myVar = 0;
+  myVar = 0;
 
-    for ( ; ; ) {
-        if ( ++myVar == 99 )
-            break;
-    }
+  for ( ; ; ) {
+    if ( ++myVar == 99 )
+      break;
+  }
 
-    return myVar;
-}
-function test() {
-        testcases[0].actual = testprogram();
-
-        testcases[0].passed = writeTestCaseResult(
-                    testcases[0].expect,
-                    testcases[0].actual,
-                    testcases[0].description +" = "+ testcases[0].actual );
-
-        testcases[0].reason += ( testcases[0].passed ) ? "" : "wrong value ";
-
-        stopTest();
-
-        return ( testcases );
+  return myVar;
 }

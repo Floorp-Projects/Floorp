@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,136 +35,117 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          11.3.2.js
-    ECMA Section:       11.3.2 Postfix decrement operator
-    Description:
+   File Name:          11.3.2.js
+   ECMA Section:       11.3.2 Postfix decrement operator
+   Description:
 
-    11.3.2 Postfix decrement operator
+   11.3.2 Postfix decrement operator
 
-    The production MemberExpression : MemberExpression -- is evaluated as follows:
-    1.  Evaluate MemberExpression.
-    2.  Call GetValue(Result(1)).
-    3.  Call ToNumber(Result(2)).
-    4.  Subtract the value 1 from Result(3), using the same rules as for the -
-        operator (section 0).
-    5.  Call PutValue(Result(1), Result(4)).
-    6.  Return Result(3).
+   The production MemberExpression : MemberExpression -- is evaluated as follows:
+   1.  Evaluate MemberExpression.
+   2.  Call GetValue(Result(1)).
+   3.  Call ToNumber(Result(2)).
+   4.  Subtract the value 1 from Result(3), using the same rules as for the -
+   operator (section 0).
+   5.  Call PutValue(Result(1), Result(4)).
+   6.  Return Result(3).
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "11.3.2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var testcases = getTestCases();
+var SECTION = "11.3.2";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Postfix decrement operator");
-    test();
+writeHeaderToLog( SECTION + " Postfix decrement operator");
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+// special numbers
+new TestCase( SECTION,  "var MYVAR; MYVAR--",                       NaN,                            eval("var MYVAR; MYVAR--") );
+new TestCase( SECTION,  "var MYVAR= void 0; MYVAR--",               NaN,                            eval("var MYVAR=void 0; MYVAR--") );
+new TestCase( SECTION,  "var MYVAR=null; MYVAR--",                  0,                            eval("var MYVAR=null; MYVAR--") );
+new TestCase( SECTION,  "var MYVAR=true; MYVAR--",                  1,                            eval("var MYVAR=true; MYVAR--") );
+new TestCase( SECTION,  "var MYVAR=false; MYVAR--",                 0,                            eval("var MYVAR=false; MYVAR--") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+// verify return value
 
-    // special numbers
-    array[item++] = new TestCase( SECTION,  "var MYVAR; MYVAR--",                       NaN,                            eval("var MYVAR; MYVAR--") );
-    array[item++] = new TestCase( SECTION,  "var MYVAR= void 0; MYVAR--",               NaN,                            eval("var MYVAR=void 0; MYVAR--") );
-    array[item++] = new TestCase( SECTION,  "var MYVAR=null; MYVAR--",                  0,                            eval("var MYVAR=null; MYVAR--") );
-    array[item++] = new TestCase( SECTION,  "var MYVAR=true; MYVAR--",                  1,                            eval("var MYVAR=true; MYVAR--") );
-    array[item++] = new TestCase( SECTION,  "var MYVAR=false; MYVAR--",                 0,                            eval("var MYVAR=false; MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=Number.POSITIVE_INFINITY;MYVAR--", Number.POSITIVE_INFINITY,   eval("var MYVAR=Number.POSITIVE_INFINITY;MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=Number.NEGATIVE_INFINITY;MYVAR--", Number.NEGATIVE_INFINITY,   eval("var MYVAR=Number.NEGATIVE_INFINITY;MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=Number.NaN;MYVAR--",               Number.NaN,                 eval("var MYVAR=Number.NaN;MYVAR--") );
 
-    // verify return value
+// verify value of variable
 
-    array[item++] = new TestCase( SECTION,    "var MYVAR=Number.POSITIVE_INFINITY;MYVAR--", Number.POSITIVE_INFINITY,   eval("var MYVAR=Number.POSITIVE_INFINITY;MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=Number.NEGATIVE_INFINITY;MYVAR--", Number.NEGATIVE_INFINITY,   eval("var MYVAR=Number.NEGATIVE_INFINITY;MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=Number.NaN;MYVAR--",               Number.NaN,                 eval("var MYVAR=Number.NaN;MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=Number.POSITIVE_INFINITY;MYVAR--;MYVAR", Number.POSITIVE_INFINITY,   eval("var MYVAR=Number.POSITIVE_INFINITY;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=Number.NEGATIVE_INFINITY;MYVAR--;MYVAR", Number.NEGATIVE_INFINITY,   eval("var MYVAR=Number.NEGATIVE_INFINITY;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=Number.NaN;MYVAR--;MYVAR",               Number.NaN,                 eval("var MYVAR=Number.NaN;MYVAR--;MYVAR") );
 
-    // verify value of variable
+// number primitives
+new TestCase( SECTION,    "var MYVAR=0;MYVAR--",            0,          eval("var MYVAR=0;MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=0.2345;MYVAR--",       0.2345,     eval("var MYVAR=0.2345;MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=-0.2345;MYVAR--",      -0.2345,    eval("var MYVAR=-0.2345;MYVAR--") );
 
-    array[item++] = new TestCase( SECTION,    "var MYVAR=Number.POSITIVE_INFINITY;MYVAR--;MYVAR", Number.POSITIVE_INFINITY,   eval("var MYVAR=Number.POSITIVE_INFINITY;MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=Number.NEGATIVE_INFINITY;MYVAR--;MYVAR", Number.NEGATIVE_INFINITY,   eval("var MYVAR=Number.NEGATIVE_INFINITY;MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=Number.NaN;MYVAR--;MYVAR",               Number.NaN,                 eval("var MYVAR=Number.NaN;MYVAR--;MYVAR") );
+// verify value of variable
 
-    // number primitives
-    array[item++] = new TestCase( SECTION,    "var MYVAR=0;MYVAR--",            0,          eval("var MYVAR=0;MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=0.2345;MYVAR--",       0.2345,     eval("var MYVAR=0.2345;MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=-0.2345;MYVAR--",      -0.2345,    eval("var MYVAR=-0.2345;MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=0;MYVAR--;MYVAR",      -1,         eval("var MYVAR=0;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=0.2345;MYVAR--;MYVAR", -0.7655,    eval("var MYVAR=0.2345;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=-0.2345;MYVAR--;MYVAR", -1.2345,   eval("var MYVAR=-0.2345;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=0;MYVAR--;MYVAR",      -1,   eval("var MYVAR=0;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=0;MYVAR--;MYVAR",      -1,   eval("var MYVAR=0;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=0;MYVAR--;MYVAR",      -1,   eval("var MYVAR=0;MYVAR--;MYVAR") );
 
-    // verify value of variable
+// boolean values
+// verify return value
 
-    array[item++] = new TestCase( SECTION,    "var MYVAR=0;MYVAR--;MYVAR",      -1,         eval("var MYVAR=0;MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=0.2345;MYVAR--;MYVAR", -0.7655,    eval("var MYVAR=0.2345;MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=-0.2345;MYVAR--;MYVAR", -1.2345,   eval("var MYVAR=-0.2345;MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=0;MYVAR--;MYVAR",      -1,   eval("var MYVAR=0;MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=0;MYVAR--;MYVAR",      -1,   eval("var MYVAR=0;MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=0;MYVAR--;MYVAR",      -1,   eval("var MYVAR=0;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=true;MYVAR--",         1,       eval("var MYVAR=true;MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=false;MYVAR--",        0,      eval("var MYVAR=false;MYVAR--") );
+// verify value of variable
 
-    // boolean values
-    // verify return value
+new TestCase( SECTION,    "var MYVAR=true;MYVAR--;MYVAR",   0,   eval("var MYVAR=true;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=false;MYVAR--;MYVAR",  -1,   eval("var MYVAR=false;MYVAR--;MYVAR") );
 
-    array[item++] = new TestCase( SECTION,    "var MYVAR=true;MYVAR--",         1,       eval("var MYVAR=true;MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=false;MYVAR--",        0,      eval("var MYVAR=false;MYVAR--") );
-    // verify value of variable
+// boolean objects
+// verify return value
 
-    array[item++] = new TestCase( SECTION,    "var MYVAR=true;MYVAR--;MYVAR",   0,   eval("var MYVAR=true;MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=false;MYVAR--;MYVAR",  -1,   eval("var MYVAR=false;MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=new Boolean(true);MYVAR--",         1,     eval("var MYVAR=true;MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=new Boolean(false);MYVAR--",        0,     eval("var MYVAR=false;MYVAR--") );
+// verify value of variable
 
-    // boolean objects
-    // verify return value
+new TestCase( SECTION,    "var MYVAR=new Boolean(true);MYVAR--;MYVAR",   0,     eval("var MYVAR=new Boolean(true);MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=new Boolean(false);MYVAR--;MYVAR",  -1,     eval("var MYVAR=new Boolean(false);MYVAR--;MYVAR") );
 
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new Boolean(true);MYVAR--",         1,     eval("var MYVAR=true;MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new Boolean(false);MYVAR--",        0,     eval("var MYVAR=false;MYVAR--") );
-    // verify value of variable
+// string primitives
+new TestCase( SECTION,    "var MYVAR='string';MYVAR--",         Number.NaN,     eval("var MYVAR='string';MYVAR--") );
+new TestCase( SECTION,    "var MYVAR='12345';MYVAR--",          12345,          eval("var MYVAR='12345';MYVAR--") );
+new TestCase( SECTION,    "var MYVAR='-12345';MYVAR--",         -12345,         eval("var MYVAR='-12345';MYVAR--") );
+new TestCase( SECTION,    "var MYVAR='0Xf';MYVAR--",            15,             eval("var MYVAR='0Xf';MYVAR--") );
+new TestCase( SECTION,    "var MYVAR='077';MYVAR--",            77,             eval("var MYVAR='077';MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=''; MYVAR--",              0,              eval("var MYVAR='';MYVAR--") );
 
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new Boolean(true);MYVAR--;MYVAR",   0,     eval("var MYVAR=new Boolean(true);MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new Boolean(false);MYVAR--;MYVAR",  -1,     eval("var MYVAR=new Boolean(false);MYVAR--;MYVAR") );
+// verify value of variable
 
-    // string primitives
-    array[item++] = new TestCase( SECTION,    "var MYVAR='string';MYVAR--",         Number.NaN,     eval("var MYVAR='string';MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='12345';MYVAR--",          12345,          eval("var MYVAR='12345';MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='-12345';MYVAR--",         -12345,         eval("var MYVAR='-12345';MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='0Xf';MYVAR--",            15,             eval("var MYVAR='0Xf';MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='077';MYVAR--",            77,             eval("var MYVAR='077';MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=''; MYVAR--",              0,              eval("var MYVAR='';MYVAR--") );
+new TestCase( SECTION,    "var MYVAR='string';MYVAR--;MYVAR",   Number.NaN,     eval("var MYVAR='string';MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR='12345';MYVAR--;MYVAR",    12344,          eval("var MYVAR='12345';MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR='-12345';MYVAR--;MYVAR",   -12346,          eval("var MYVAR='-12345';MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR='0xf';MYVAR--;MYVAR",      14,             eval("var MYVAR='0xf';MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR='077';MYVAR--;MYVAR",      76,             eval("var MYVAR='077';MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR='';MYVAR--;MYVAR",         -1,              eval("var MYVAR='';MYVAR--;MYVAR") );
 
-    // verify value of variable
+// string objects
+new TestCase( SECTION,    "var MYVAR=new String('string');MYVAR--",         Number.NaN,     eval("var MYVAR=new String('string');MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=new String('12345');MYVAR--",          12345,          eval("var MYVAR=new String('12345');MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=new String('-12345');MYVAR--",         -12345,         eval("var MYVAR=new String('-12345');MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=new String('0Xf');MYVAR--",            15,             eval("var MYVAR=new String('0Xf');MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=new String('077');MYVAR--",            77,             eval("var MYVAR=new String('077');MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=new String(''); MYVAR--",              0,              eval("var MYVAR=new String('');MYVAR--") );
 
-    array[item++] = new TestCase( SECTION,    "var MYVAR='string';MYVAR--;MYVAR",   Number.NaN,     eval("var MYVAR='string';MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='12345';MYVAR--;MYVAR",    12344,          eval("var MYVAR='12345';MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='-12345';MYVAR--;MYVAR",   -12346,          eval("var MYVAR='-12345';MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='0xf';MYVAR--;MYVAR",      14,             eval("var MYVAR='0xf';MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='077';MYVAR--;MYVAR",      76,             eval("var MYVAR='077';MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR='';MYVAR--;MYVAR",         -1,              eval("var MYVAR='';MYVAR--;MYVAR") );
+// verify value of variable
 
-    // string objects
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('string');MYVAR--",         Number.NaN,     eval("var MYVAR=new String('string');MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('12345');MYVAR--",          12345,          eval("var MYVAR=new String('12345');MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('-12345');MYVAR--",         -12345,         eval("var MYVAR=new String('-12345');MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('0Xf');MYVAR--",            15,             eval("var MYVAR=new String('0Xf');MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('077');MYVAR--",            77,             eval("var MYVAR=new String('077');MYVAR--") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String(''); MYVAR--",              0,              eval("var MYVAR=new String('');MYVAR--") );
+new TestCase( SECTION,    "var MYVAR=new String('string');MYVAR--;MYVAR",   Number.NaN,     eval("var MYVAR=new String('string');MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=new String('12345');MYVAR--;MYVAR",    12344,          eval("var MYVAR=new String('12345');MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=new String('-12345');MYVAR--;MYVAR",   -12346,          eval("var MYVAR=new String('-12345');MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=new String('0xf');MYVAR--;MYVAR",      14,             eval("var MYVAR=new String('0xf');MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=new String('077');MYVAR--;MYVAR",      76,             eval("var MYVAR=new String('077');MYVAR--;MYVAR") );
+new TestCase( SECTION,    "var MYVAR=new String('');MYVAR--;MYVAR",         -1,              eval("var MYVAR=new String('');MYVAR--;MYVAR") );
 
-    // verify value of variable
-
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('string');MYVAR--;MYVAR",   Number.NaN,     eval("var MYVAR=new String('string');MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('12345');MYVAR--;MYVAR",    12344,          eval("var MYVAR=new String('12345');MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('-12345');MYVAR--;MYVAR",   -12346,          eval("var MYVAR=new String('-12345');MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('0xf');MYVAR--;MYVAR",      14,             eval("var MYVAR=new String('0xf');MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('077');MYVAR--;MYVAR",      76,             eval("var MYVAR=new String('077');MYVAR--;MYVAR") );
-    array[item++] = new TestCase( SECTION,    "var MYVAR=new String('');MYVAR--;MYVAR",         -1,              eval("var MYVAR=new String('');MYVAR--;MYVAR") );
-
-    return ( array );
-}
+test();

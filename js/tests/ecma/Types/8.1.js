@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,53 +35,39 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          8.1.js
-    ECMA Section:       The undefined type
-    Description:
+   File Name:          8.1.js
+   ECMA Section:       The undefined type
+   Description:
 
-    The Undefined type has exactly one value, called undefined. Any variable
-    that has not been assigned a value is of type Undefined.
+   The Undefined type has exactly one value, called undefined. Any variable
+   that has not been assigned a value is of type Undefined.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "8.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The undefined type";
+var SECTION = "8.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The undefined type";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+new TestCase( SECTION,
+	      "var x; typeof x",
+	      "undefined",
+	      eval("var x; typeof x") );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "var x; typeof x",
-                                    "undefined",
-                                    eval("var x; typeof x") );
+new TestCase( SECTION,
+	      "var x; typeof x == 'undefined",
+	      true,
+	      eval("var x; typeof x == 'undefined'") );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "var x; typeof x == 'undefined",
-                                    true,
-                                    eval("var x; typeof x == 'undefined'") );
+new TestCase( SECTION,
+	      "var x; x == void 0",
+	      true,
+	      eval("var x; x == void 0") );
+test();
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "var x; x == void 0",
-                                    true,
-                                    eval("var x; x == void 0") );
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

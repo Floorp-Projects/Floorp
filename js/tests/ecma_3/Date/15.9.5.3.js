@@ -126,7 +126,7 @@
 
 function addTestCase()
 {
-  testcases[tc++] = new TestCase( SECTION, status, expect, actual); 
+  new TestCase( SECTION, status, expect, actual); 
 }
 
 

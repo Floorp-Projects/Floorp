@@ -65,7 +65,7 @@ my @opt_test_list_files;
 my @opt_neg_list_files;
 my $opt_shell_path = "";
 my $opt_java_path = "";
-my $opt_bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id=";
+my $opt_bug_url = "https://bugzilla.mozilla.org/show_bug.cgi?id=";
 my $opt_console_failures = 0;
 my $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
 my $opt_exit_munge = ($os_type ne "MAC") ? 1 : 0;
@@ -235,7 +235,8 @@ sub execute_tests {
             # XXX This only allows 1 bugnumber per testfile, should be
             # XXX modified to allow for multiple.
             if ($line =~ /bugnumber\s*\:?\s*(.*)/i) {
-                $1 =~ /(\n+)/;
+		my $bugline = $1;
+                $bugline =~ /(\d+)/;
                 $bug_number = $1;
             }
 
@@ -328,7 +329,7 @@ sub write_results {
         print OUTPUT
           ("[ <a href='#fail_detail'>Failure Details</a> | " .
            "<a href='#retest_list'>Retest List</a> | " .
-           "<a href='menu.html'>Test Selection Page</a> ]<br>\n" .
+           "<a href='$opt_lxr_url" . "menu.html'>Test Selection Page</a> ]<br>\n" .
            "<hr>\n" .
            "<a name='fail_detail'></a>\n" .
            "<h2>Failure Details</h2><br>\n<dl>" .
@@ -895,6 +896,12 @@ sub get_test_list {
     # Don't run any shell.js files as tests; they are only utility files
     @test_list = grep (!/shell\.js$/, @test_list);
 
+    # Don't run any browser.js files as tests; they are only utility files
+    @test_list = grep (!/browser\.js$/, @test_list);
+
+    # Don't run any jsref.js files as tests; they are only utility files
+    @test_list = grep (!/jsref\.js$/, @test_list);
+
     return @test_list;
 
 }
@@ -1216,6 +1223,9 @@ sub report_failure {
     $failures_reported++;
 
     $message =~ s/\n+/\n/g;
+    $message =~ s/&/&amp;/g;
+    $message =~ s/</&lt;/g;
+    $message =~ s/>/&gt;/g;
     $test =~ s/\:/\//g;
 
     if ($opt_console_failures) {

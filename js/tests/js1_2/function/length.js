@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,75 +35,60 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.3.5.1.js
-    ECMA Section:       Function.length
-    Description:
+   File Name:          15.3.5.1.js
+   ECMA Section:       Function.length
+   Description:
 
-    The value of the length property is usually an integer that indicates the
-    "typical" number of arguments expected by the function.  However, the
-    language permits the function to be invoked with some other number of
-    arguments. The behavior of a function when invoked on a number of arguments
-    other than the number specified by its length property depends on the function.
+   The value of the length property is usually an integer that indicates the
+   "typical" number of arguments expected by the function.  However, the
+   language permits the function to be invoked with some other number of
+   arguments. The behavior of a function when invoked on a number of arguments
+   other than the number specified by its length property depends on the function.
 
-    This checks the pre-ecma behavior Function.length.
+   This checks the pre-ecma behavior Function.length.
 
-    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=104204
+   http://scopus.mcom.com/bugsplat/show_bug.cgi?id=104204
 
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "function/length.js";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Function.length";
-    var BUGNUMBER="104204";
+var SECTION = "function/length.js";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Function.length";
+var BUGNUMBER="104204";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var f = new Function( "a","b", "c", "return f.length");
 
-    var f = new Function( "a","b", "c", "return f.length");
+if ( version() <= 120 ) {
 
-    if ( version() <= 120 ) {
+    new TestCase( SECTION,
+		  'var f = new Function( "a","b", "c", "return f.length"); f()',
+		  0,
+		  f() );
 
-    testcases[tc++] = new TestCase( SECTION,
-        'var f = new Function( "a","b", "c", "return f.length"); f()',
-        0,
-        f() );
+    new TestCase( SECTION,
+		  'var f = new Function( "a","b", "c", "return f.length"); f(1,2,3,4,5)',
+		  5,
+		  f(1,2,3,4,5) );
+} else {
 
-    testcases[tc++] = new TestCase( SECTION,
-        'var f = new Function( "a","b", "c", "return f.length"); f(1,2,3,4,5)',
-        5,
-        f(1,2,3,4,5) );
-    } else {
+    new TestCase( SECTION,
+		  'var f = new Function( "a","b", "c", "return f.length"); f()',
+		  3,
+		  f() );
 
-    testcases[tc++] = new TestCase( SECTION,
-        'var f = new Function( "a","b", "c", "return f.length"); f()',
-        3,
-        f() );
-
-    testcases[tc++] = new TestCase( SECTION,
-        'var f = new Function( "a","b", "c", "return f.length"); f(1,2,3,4,5)',
-        3,
-        f(1,2,3,4,5) );
+    new TestCase( SECTION,
+		  'var f = new Function( "a","b", "c", "return f.length"); f(1,2,3,4,5)',
+		  3,
+		  f(1,2,3,4,5) );
 
 
-    }
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
 }
+test();

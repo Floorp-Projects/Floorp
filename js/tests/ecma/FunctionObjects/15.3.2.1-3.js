@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,78 +35,59 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.3.2.1-3.js
-    ECMA Section:       15.3.2.1 The Function Constructor
-                        new Function(p1, p2, ..., pn, body )
+   File Name:          15.3.2.1-3.js
+   ECMA Section:       15.3.2.1 The Function Constructor
+   new Function(p1, p2, ..., pn, body )
 
-    Description:        The last argument specifies the body (executable code)
-                        of a function; any preceeding arguments sepcify formal
-                        parameters.
+   Description:        The last argument specifies the body (executable code)
+   of a function; any preceeding arguments sepcify formal
+   parameters.
 
-                        See the text for description of this section.
+   See the text for description of this section.
 
-                        This test examples from the specification.
+   This test examples from the specification.
 
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var SECTION = "15.3.2.1-3";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The Function Constructor";
+var SECTION = "15.3.2.1-3";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The Function Constructor";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+var args = "";
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    var args = "";
-
-    for ( var i = 0; i < 2000; i++ ) {
-        args += "arg"+i;
-        if ( i != 1999 ) {
-            args += ",";
-        }
-    }
-
-    var s = "";
-
-    for ( var i = 0; i < 2000; i++ ) {
-        s += ".0005";
-        if ( i != 1999 ) {
-            s += ",";
-        }
-    }
-
-    MyFunc = new Function( args, "var r=0; for (var i = 0; i < MyFunc.length; i++ ) { if ( eval('arg'+i) == void 0) break; else r += eval('arg'+i); }; return r");
-    MyObject = new Function( args, "for (var i = 0; i < MyFunc.length; i++ ) { if ( eval('arg'+i) == void 0) break; eval('this.arg'+i +'=arg'+i); };");
-
-    array[item++] = new TestCase( SECTION, "MyFunc.length",                       2000,         MyFunc.length );
-    array[item++] = new TestCase( SECTION, "var MY_OB = eval('MyFunc(s)')",       1,            eval("var MY_OB = MyFunc("+s+"); MY_OB") );
-
-    array[item++] = new TestCase( SECTION, "MyObject.length",                       2000,         MyObject.length );
-
-    array[item++] = new TestCase( SECTION, "FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1.length",     3, eval("FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1.length") );
-    array[item++] = new TestCase( SECTION, "FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1()",          3, eval("FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1()") );
-    array[item++] = new TestCase( SECTION, "FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1(1,2,3,4,5)", 3, eval("FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1(1,2,3,4,5)") );
-
-    return ( array );
+for ( var i = 0; i < 2000; i++ ) {
+  args += "arg"+i;
+  if ( i != 1999 ) {
+    args += ",";
+  }
 }
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+var s = "";
+
+for ( var i = 0; i < 2000; i++ ) {
+  s += ".0005";
+  if ( i != 1999 ) {
+    s += ",";
+  }
 }
+
+MyFunc = new Function( args, "var r=0; for (var i = 0; i < MyFunc.length; i++ ) { if ( eval('arg'+i) == void 0) break; else r += eval('arg'+i); }; return r");
+MyObject = new Function( args, "for (var i = 0; i < MyFunc.length; i++ ) { if ( eval('arg'+i) == void 0) break; eval('this.arg'+i +'=arg'+i); };");
+
+new TestCase( SECTION, "MyFunc.length",                       2000,         MyFunc.length );
+new TestCase( SECTION, "var MY_OB = eval('MyFunc(s)')",       1,            eval("var MY_OB = MyFunc("+s+"); MY_OB") );
+
+new TestCase( SECTION, "MyObject.length",                       2000,         MyObject.length );
+
+new TestCase( SECTION, "FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1.length",     3, eval("FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1.length") );
+new TestCase( SECTION, "FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1()",          3, eval("FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1()") );
+new TestCase( SECTION, "FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1(1,2,3,4,5)", 3, eval("FUN1 = new Function( 'a','b','c', 'return FUN1.length' ); FUN1(1,2,3,4,5)") );
+
+test();

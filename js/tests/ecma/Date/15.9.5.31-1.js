@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,13 +35,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.5.31-1.js
-    ECMA Section:       15.9.5.31 Date.prototype.setUTCHours(hour [, min [, sec [, ms ]]] )
-    Description:
-    If min is not specified, this behaves as if min were specified with the value getUTCMinutes( ).
-    If sec is not specified, this behaves as if sec were specified with the value getUTCSeconds ( ).
-    If ms is not specified, this behaves as if ms were specified with the value getUTCMilliseconds( ).
+   File Name:          15.9.5.31-1.js
+   ECMA Section:       15.9.5.31 Date.prototype.setUTCHours(hour [, min [, sec [, ms ]]] )
+   Description:
+   If min is not specified, this behaves as if min were specified with the value getUTCMinutes( ).
+   If sec is not specified, this behaves as if sec were specified with the value getUTCSeconds ( ).
+   If ms is not specified, this behaves as if ms were specified with the value getUTCMilliseconds( ).
 
    1.Let t be this time value.
    2.Call ToNumber(hour).
@@ -52,176 +54,158 @@
    8.Set the [[Value]] property of the this value to TimeClip(Result(7)).
 
    1.Return the value of the [[Value]] property of the this value.
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "15.9.5.31-1";
-    var VERSION = "ECMA_1";
-    startTest();
+var SECTION = "15.9.5.31-1";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Date.prototype.setUTCHours(hour [, min [, sec [, ms ]]] )");
+writeHeaderToLog( SECTION + " Date.prototype.setUTCHours(hour [, min [, sec [, ms ]]] )");
 
-    getTestCases();
-    test();
+addNewTestCase( 0, 0, void 0, void 0, void 0,
+		"TDATE = new Date(0);(TDATE).setUTCHours(0);TDATE",
+		UTCDateFromTime(SetUTCHours(0,0,0,0)),
+		LocalDateFromTime(SetUTCHours(0,0,0,0)) );
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+addNewTestCase( 28800000, 23, 59, 999, void 0,
+		"TDATE = new Date(28800000);(TDATE).setUTCHours(23,59,999);TDATE",
+		UTCDateFromTime(SetUTCHours(28800000,23,59,999)),
+		LocalDateFromTime(SetUTCHours(28800000,23,59,999)) );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+addNewTestCase( 28800000,999,999, void 0, void 0,
+		"TDATE = new Date(28800000);(TDATE).setUTCHours(999,999);TDATE",
+		UTCDateFromTime(SetUTCHours(28800000,999,999)),
+		LocalDateFromTime(SetUTCHours(28800000,999,999)) );
 
-function getTestCases() {
-    addNewTestCase( 0, 0, void 0, void 0, void 0,
-                    "TDATE = new Date(0);(TDATE).setUTCHours(0);TDATE",
-                    UTCDateFromTime(SetUTCHours(0,0,0,0)),
-                    LocalDateFromTime(SetUTCHours(0,0,0,0)) );
+addNewTestCase( 28800000, 999, void 0, void 0, void 0,
+		"TDATE = new Date(28800000);(TDATE).setUTCHours(999);TDATE",
+		UTCDateFromTime(SetUTCHours(28800000,999,0)),
+		LocalDateFromTime(SetUTCHours(28800000,999,0)) );
 
-    addNewTestCase( 28800000, 23, 59, 999, void 0,
-                    "TDATE = new Date(28800000);(TDATE).setUTCHours(23,59,999);TDATE",
-                    UTCDateFromTime(SetUTCHours(28800000,23,59,999)),
-                    LocalDateFromTime(SetUTCHours(28800000,23,59,999)) );
+addNewTestCase( 28800000, -8670, void 0, void 0, void 0,
+		"TDATE = new Date(28800000);(TDATE).setUTCHours(-8670);TDATE",
+		UTCDateFromTime(SetUTCHours(28800000,-8670)),
+		LocalDateFromTime(SetUTCHours(28800000,-8670)) );
 
-    addNewTestCase( 28800000,999,999, void 0, void 0,
-                    "TDATE = new Date(28800000);(TDATE).setUTCHours(999,999);TDATE",
-                    UTCDateFromTime(SetUTCHours(28800000,999,999)),
-                    LocalDateFromTime(SetUTCHours(28800000,999,999)) );
+addNewTestCase( 946684800000, 1234567, void 0, void 0, void 0,
+		"TDATE = new Date(946684800000);(TDATE).setUTCHours(1234567);TDATE",
+		UTCDateFromTime(SetUTCHours(946684800000,1234567)),
+		LocalDateFromTime(SetUTCHours(946684800000,1234567)) );
 
-    addNewTestCase( 28800000, 999, void 0, void 0, void 0,
-                    "TDATE = new Date(28800000);(TDATE).setUTCHours(999);TDATE",
-                    UTCDateFromTime(SetUTCHours(28800000,999,0)),
-                    LocalDateFromTime(SetUTCHours(28800000,999,0)) );
-
-    addNewTestCase( 28800000, -8670, void 0, void 0, void 0,
-                    "TDATE = new Date(28800000);(TDATE).setUTCHours(-8670);TDATE",
-                    UTCDateFromTime(SetUTCHours(28800000,-8670)),
-                    LocalDateFromTime(SetUTCHours(28800000,-8670)) );
-
-    addNewTestCase( 946684800000, 1234567, void 0, void 0, void 0,
-                    "TDATE = new Date(946684800000);(TDATE).setUTCHours(1234567);TDATE",
-                    UTCDateFromTime(SetUTCHours(946684800000,1234567)),
-                    LocalDateFromTime(SetUTCHours(946684800000,1234567)) );
-
-    addNewTestCase( -2208988800000, 59, 999, void 0, void 0,
-                    "TDATE = new Date(-2208988800000);(TDATE).setUTCHours(59,999);TDATE",
-                    UTCDateFromTime(SetUTCHours(-2208988800000,59,999)),
-                    LocalDateFromTime(SetUTCHours(-2208988800000,59,999)) );
+addNewTestCase( -2208988800000, 59, 999, void 0, void 0,
+		"TDATE = new Date(-2208988800000);(TDATE).setUTCHours(59,999);TDATE",
+		UTCDateFromTime(SetUTCHours(-2208988800000,59,999)),
+		LocalDateFromTime(SetUTCHours(-2208988800000,59,999)) );
 /*
-    addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(123456789);TDATE",
-                    UTCDateFromTime(SetUTCMilliseconds(-2208988800000,123456789)),
-                    LocalDateFromTime(SetUTCMilliseconds(-2208988800000,123456789)) );
+  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(123456789);TDATE",
+  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,123456789)),
+  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,123456789)) );
 
-    addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(123456);TDATE",
-                    UTCDateFromTime(SetUTCMilliseconds(-2208988800000,123456)),
-                    LocalDateFromTime(SetUTCMilliseconds(-2208988800000,123456)) );
+  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(123456);TDATE",
+  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,123456)),
+  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,123456)) );
 
-    addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(-123456);TDATE",
-                    UTCDateFromTime(SetUTCMilliseconds(-2208988800000,-123456)),
-                    LocalDateFromTime(SetUTCMilliseconds(-2208988800000,-123456)) );
+  addNewTestCase( "TDATE = new Date(-2208988800000);(TDATE).setUTCMilliseconds(-123456);TDATE",
+  UTCDateFromTime(SetUTCMilliseconds(-2208988800000,-123456)),
+  LocalDateFromTime(SetUTCMilliseconds(-2208988800000,-123456)) );
 
-    addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCMilliseconds(-999);TDATE",
-                    UTCDateFromTime(SetUTCMilliseconds(0,-999)),
-                    LocalDateFromTime(SetUTCMilliseconds(0,-999)) );
+  addNewTestCase( "TDATE = new Date(0);(TDATE).setUTCMilliseconds(-999);TDATE",
+  UTCDateFromTime(SetUTCMilliseconds(0,-999)),
+  LocalDateFromTime(SetUTCMilliseconds(0,-999)) );
 */
 
-}
+test();
+
 function addNewTestCase( time, hours, min, sec, ms, DateString, UTCDate, LocalDate) {
 
-    DateCase = new Date(time);
-    if ( min == void 0 ) {
-        DateCase.setUTCHours( hours );
+  DateCase = new Date(time);
+  if ( min == void 0 ) {
+    DateCase.setUTCHours( hours );
+  } else {
+    if ( sec == void 0 ) {
+      DateCase.setUTCHours( hours, min );
     } else {
-        if ( sec == void 0 ) {
-            DateCase.setUTCHours( hours, min );
-        } else {
-            if ( ms == void 0 ) {
-                DateCase.setUTCHours( hours, min, sec );
-            } else {
-                DateCase.setUTCHours( hours, min, sec, ms );
-            }
-        }
+      if ( ms == void 0 ) {
+	DateCase.setUTCHours( hours, min, sec );
+      } else {
+	DateCase.setUTCHours( hours, min, sec, ms );
+      }
     }
+  }
 
-    var item = testcases.length;
 
 //    fixed_year = ( ExpectDate.year >=1900 || ExpectDate.year < 2000 ) ? ExpectDate.year - 1900 : ExpectDate.year;
 
-    testcases[item++] = new TestCase( SECTION, DateString+".getTime()",             UTCDate.value,       DateCase.getTime() );
-    testcases[item++] = new TestCase( SECTION, DateString+".valueOf()",             UTCDate.value,       DateCase.valueOf() );
+  new TestCase( SECTION, DateString+".getTime()",             UTCDate.value,       DateCase.getTime() );
+  new TestCase( SECTION, DateString+".valueOf()",             UTCDate.value,       DateCase.valueOf() );
 
-    testcases[item++] = new TestCase( SECTION, DateString+".getUTCFullYear()",      UTCDate.year,    DateCase.getUTCFullYear() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getUTCMonth()",         UTCDate.month,  DateCase.getUTCMonth() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getUTCDate()",          UTCDate.date,   DateCase.getUTCDate() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getUTCDay()",           UTCDate.day,    DateCase.getUTCDay() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getUTCHours()",         UTCDate.hours,  DateCase.getUTCHours() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getUTCMinutes()",       UTCDate.minutes,DateCase.getUTCMinutes() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getUTCSeconds()",       UTCDate.seconds,DateCase.getUTCSeconds() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getUTCMilliseconds()",  UTCDate.ms,     DateCase.getUTCMilliseconds() );
+  new TestCase( SECTION, DateString+".getUTCFullYear()",      UTCDate.year,    DateCase.getUTCFullYear() );
+  new TestCase( SECTION, DateString+".getUTCMonth()",         UTCDate.month,  DateCase.getUTCMonth() );
+  new TestCase( SECTION, DateString+".getUTCDate()",          UTCDate.date,   DateCase.getUTCDate() );
+  new TestCase( SECTION, DateString+".getUTCDay()",           UTCDate.day,    DateCase.getUTCDay() );
+  new TestCase( SECTION, DateString+".getUTCHours()",         UTCDate.hours,  DateCase.getUTCHours() );
+  new TestCase( SECTION, DateString+".getUTCMinutes()",       UTCDate.minutes,DateCase.getUTCMinutes() );
+  new TestCase( SECTION, DateString+".getUTCSeconds()",       UTCDate.seconds,DateCase.getUTCSeconds() );
+  new TestCase( SECTION, DateString+".getUTCMilliseconds()",  UTCDate.ms,     DateCase.getUTCMilliseconds() );
 
-    testcases[item++] = new TestCase( SECTION, DateString+".getFullYear()",         LocalDate.year,       DateCase.getFullYear() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getMonth()",            LocalDate.month,      DateCase.getMonth() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getDate()",             LocalDate.date,       DateCase.getDate() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getDay()",              LocalDate.day,        DateCase.getDay() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getHours()",            LocalDate.hours,      DateCase.getHours() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getMinutes()",          LocalDate.minutes,    DateCase.getMinutes() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getSeconds()",          LocalDate.seconds,    DateCase.getSeconds() );
-    testcases[item++] = new TestCase( SECTION, DateString+".getMilliseconds()",     LocalDate.ms,         DateCase.getMilliseconds() );
+  new TestCase( SECTION, DateString+".getFullYear()",         LocalDate.year,       DateCase.getFullYear() );
+  new TestCase( SECTION, DateString+".getMonth()",            LocalDate.month,      DateCase.getMonth() );
+  new TestCase( SECTION, DateString+".getDate()",             LocalDate.date,       DateCase.getDate() );
+  new TestCase( SECTION, DateString+".getDay()",              LocalDate.day,        DateCase.getDay() );
+  new TestCase( SECTION, DateString+".getHours()",            LocalDate.hours,      DateCase.getHours() );
+  new TestCase( SECTION, DateString+".getMinutes()",          LocalDate.minutes,    DateCase.getMinutes() );
+  new TestCase( SECTION, DateString+".getSeconds()",          LocalDate.seconds,    DateCase.getSeconds() );
+  new TestCase( SECTION, DateString+".getMilliseconds()",     LocalDate.ms,         DateCase.getMilliseconds() );
 
-    DateCase.toString = Object.prototype.toString;
+  DateCase.toString = Object.prototype.toString;
 
-    testcases[item++] = new TestCase( SECTION,
-                                      DateString+".toString=Object.prototype.toString;"+DateString+".toString()",
-                                      "[object Date]",
-                                      DateCase.toString() );
+  new TestCase( SECTION,
+		DateString+".toString=Object.prototype.toString;"+DateString+".toString()",
+		"[object Date]",
+		DateCase.toString() );
 }
 function MyDate() {
-    this.year = 0;
-    this.month = 0;
-    this.date = 0;
-    this.hours = 0;
-    this.minutes = 0;
-    this.seconds = 0;
-    this.ms = 0;
+  this.year = 0;
+  this.month = 0;
+  this.date = 0;
+  this.hours = 0;
+  this.minutes = 0;
+  this.seconds = 0;
+  this.ms = 0;
 }
 function LocalDateFromTime(t) {
-    t = LocalTime(t);
-    return ( MyDateFromTime(t) );
+  t = LocalTime(t);
+  return ( MyDateFromTime(t) );
 }
 function UTCDateFromTime(t) {
- return ( MyDateFromTime(t) );
+  return ( MyDateFromTime(t) );
 }
 function MyDateFromTime( t ) {
-    var d = new MyDate();
-    d.year = YearFromTime(t);
-    d.month = MonthFromTime(t);
-    d.date = DateFromTime(t);
-    d.hours = HourFromTime(t);
-    d.minutes = MinFromTime(t);
-    d.seconds = SecFromTime(t);
-    d.ms = msFromTime(t);
+  var d = new MyDate();
+  d.year = YearFromTime(t);
+  d.month = MonthFromTime(t);
+  d.date = DateFromTime(t);
+  d.hours = HourFromTime(t);
+  d.minutes = MinFromTime(t);
+  d.seconds = SecFromTime(t);
+  d.ms = msFromTime(t);
 
-    d.time = MakeTime( d.hours, d.minutes, d.seconds, d.ms );
-    d.value = TimeClip( MakeDate( MakeDay( d.year, d.month, d.date ), d.time ) );
-    d.day = WeekDay( d.value );
+  d.time = MakeTime( d.hours, d.minutes, d.seconds, d.ms );
+  d.value = TimeClip( MakeDate( MakeDay( d.year, d.month, d.date ), d.time ) );
+  d.day = WeekDay( d.value );
 
-    return (d);
+  return (d);
 }
 function SetUTCHours( t, hour, min, sec, ms ) {
-    var TIME = t;
-    var HOUR = Number(hour);
-    var MIN =  ( min == void 0) ? MinFromTime(TIME) : Number(min);
-    var SEC  = ( sec == void 0) ? SecFromTime(TIME) : Number(sec);
-    var MS   = ( ms == void 0 ) ? msFromTime(TIME)  : Number(ms);
-    var RESULT6 = MakeTime( HOUR,
-                            MIN,
-                            SEC,
-                            MS );
-    return ( TimeClip(MakeDate(Day(TIME), RESULT6)) );
+  var TIME = t;
+  var HOUR = Number(hour);
+  var MIN =  ( min == void 0) ? MinFromTime(TIME) : Number(min);
+  var SEC  = ( sec == void 0) ? SecFromTime(TIME) : Number(sec);
+  var MS   = ( ms == void 0 ) ? msFromTime(TIME)  : Number(ms);
+  var RESULT6 = MakeTime( HOUR,
+			  MIN,
+			  SEC,
+			  MS );
+  return ( TimeClip(MakeDate(Day(TIME), RESULT6)) );
 }

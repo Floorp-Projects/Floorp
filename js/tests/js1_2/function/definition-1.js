@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,55 +35,41 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-    File Name:          definition-1.js
-    Reference:          http://scopus.mcom.com/bugsplat/show_bug.cgi?id=111284
-    Description:        Regression test for declaring functions.
 
-    Author:             christine@netscape.com
-    Date:               15 June 1998
+/**
+   File Name:          definition-1.js
+   Reference:          http://scopus.mcom.com/bugsplat/show_bug.cgi?id=111284
+   Description:        Regression test for declaring functions.
+
+   Author:             christine@netscape.com
+   Date:               15 June 1998
 */
 
-    var SECTION = "function/definition-1.js";
-    var VERSION = "JS_12";
-    startTest();
-    var TITLE   = "Regression test for 111284";
+var SECTION = "function/definition-1.js";
+var VERSION = "JS_12";
+startTest();
+var TITLE   = "Regression test for 111284";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+f1 = function() { return "passed!" }
 
-    f1 = function() { return "passed!" }
+function f2() { f3 = function() { return "passed!" }; return f3(); }
 
-    function f2() { f3 = function() { return "passed!" }; return f3(); }
+new TestCase( SECTION,
+	      'f1 = function() { return "passed!" }; f1()',
+	      "passed!",
+	      f1() );
 
-    testcases[tc++] = new TestCase( SECTION,
-        'f1 = function() { return "passed!" }; f1()',
-        "passed!",
-        f1() );
+new TestCase( SECTION,
+	      'function f2() { f3 = function { return "passed!" }; return f3() }; f2()',
+	      "passed!",
+	      f2() );
 
-    testcases[tc++] = new TestCase( SECTION,
-        'function f2() { f3 = function { return "passed!" }; return f3() }; f2()',
-        "passed!",
-        f2() );
+new TestCase( SECTION,
+	      'f3()',
+	      "passed!",
+	      f3() );
 
-    testcases[tc++] = new TestCase( SECTION,
-        'f3()',
-        "passed!",
-        f3() );
+test();
 
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,47 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          proto_4.js
-    Section:
-    Description:        new PrototypeObject
+   File Name:          proto_4.js
+   Section:
+   Description:        new PrototypeObject
 
-    This tests Object Hierarchy and Inheritance, as described in the document
-    Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
-    15:19:34 on http://devedge.netscape.com/.  Current URL:
-    http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
+   This tests Object Hierarchy and Inheritance, as described in the document
+   Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
+   15:19:34 on http://devedge.netscape.com/.  Current URL:
+   http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
 
-    This tests the syntax ObjectName.prototype = new PrototypeObject using the
-    Employee example in the document referenced above.
+   This tests the syntax ObjectName.prototype = new PrototypeObject using the
+   Employee example in the document referenced above.
 
-    If you add a property to an object in the prototype chain, instances of
-    objects that derive from that prototype should inherit that property, even
-    if they were instatiated after the property was added to the prototype object.
+   If you add a property to an object in the prototype chain, instances of
+   objects that derive from that prototype should inherit that property, even
+   if they were instatiated after the property was added to the prototype object.
 
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "proto_3";
-    var VERSION = "JS1_3";
-    var TITLE   = "Adding properties to the prototype";
+var SECTION = "proto_3";
+var VERSION = "JS1_3";
+var TITLE   = "Adding properties to the prototype";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
-
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee () {
-     this.name = "";
-     this.dept = "general";
+    this.name = "";
+    this.dept = "general";
 }
 function Manager () {
-     this.reports = [];
+    this.reports = [];
 }
 Manager.prototype = new Employee();
 
 function WorkerBee () {
-     this.projects = new Array();
+    this.projects = new Array();
 }
 
 WorkerBee.prototype = new Employee();
@@ -92,80 +92,66 @@ function Engineer () {
 }
 Engineer.prototype = new WorkerBee();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+var jim = new Employee();
+var terry = new Engineer();
+var sean = new SalesPerson();
+var wally = new Manager();
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+Employee.prototype.specialty = "none";
 
-    var jim = new Employee();
-    var terry = new Engineer();
-    var sean = new SalesPerson();
-    var wally = new Manager();
+var pat = new Employee();
+var leslie = new Engineer();
+var bubbles = new SalesPerson();
+var furry = new Manager();
 
-    Employee.prototype.specialty = "none";
+Engineer.prototype.specialty = "code";
 
-    var pat = new Employee();
-    var leslie = new Engineer();
-    var bubbles = new SalesPerson();
-    var furry = new Manager();
-
-    Engineer.prototype.specialty = "code";
-
-    var chris = new Engineer();
+var chris = new Engineer();
 
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "jim = new Employee(); jim.specialty",
-                                    "none",
-                                    jim.specialty );
+new TestCase( SECTION,
+	      "jim = new Employee(); jim.specialty",
+	      "none",
+	      jim.specialty );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "terry = new Engineer(); terry.specialty",
-                                    "code",
-                                    terry.specialty );
+new TestCase( SECTION,
+	      "terry = new Engineer(); terry.specialty",
+	      "code",
+	      terry.specialty );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "sean = new SalesPerson(); sean.specialty",
-                                    "none",
-                                    sean.specialty );
+new TestCase( SECTION,
+	      "sean = new SalesPerson(); sean.specialty",
+	      "none",
+	      sean.specialty );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "wally = new Manager(); wally.specialty",
-                                    "none",
-                                    wally.specialty );
+new TestCase( SECTION,
+	      "wally = new Manager(); wally.specialty",
+	      "none",
+	      wally.specialty );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "furry = new Manager(); furry.specialty",
-                                    "none",
-                                    furry.specialty );
+new TestCase( SECTION,
+	      "furry = new Manager(); furry.specialty",
+	      "none",
+	      furry.specialty );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "pat = new Employee(); pat.specialty",
-                                    "none",
-                                    pat.specialty );
+new TestCase( SECTION,
+	      "pat = new Employee(); pat.specialty",
+	      "none",
+	      pat.specialty );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "leslie = new Engineer(); leslie.specialty",
-                                    "code",
-                                    leslie.specialty );
+new TestCase( SECTION,
+	      "leslie = new Engineer(); leslie.specialty",
+	      "code",
+	      leslie.specialty );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "bubbles = new SalesPerson(); bubbles.specialty",
-                                    "none",
-                                    bubbles.specialty );
+new TestCase( SECTION,
+	      "bubbles = new SalesPerson(); bubbles.specialty",
+	      "none",
+	      bubbles.specialty );
 
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "chris = new Employee(); chris.specialty",
-                                    "code",
-                                    chris.specialty );
-    test();
+new TestCase( SECTION,
+	      "chris = new Employee(); chris.specialty",
+	      "code",
+	      chris.specialty );
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,170 +35,156 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-	Filename:     switch2.js
-	Description:  'Tests the switch statement'
+   Filename:     switch2.js
+   Description:  'Tests the switch statement'
 
-    http://scopus.mcom.com/bugsplat/show_bug.cgi?id=323696
+   http://scopus.mcom.com/bugsplat/show_bug.cgi?id=323696
 
-	Author:       Norris Boyd
-	Date:         July 31, 1998
+   Author:       Norris Boyd
+   Date:         July 31, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'statements: switch';
-	var BUGNUMBER="323626";
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'statements: switch';
+var BUGNUMBER="323626";
 
-	writeHeaderToLog("Executing script: switch2.js");
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog("Executing script: switch2.js");
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+// test defaults not at the end; regression test for a bug that
+// nearly made it into 4.06
+function f0(i) {
+    switch(i) {
+    default:
+    case "a":
+    case "b":
+	return "ab*"
+	    case "c":
+	    return "c";
+    case "d":
+	return "d";
+    }
+    return "";
+}
+new TestCase(SECTION, 'switch statement',
+	     f0("a"), "ab*");
 
-	// test defaults not at the end; regression test for a bug that
-	// nearly made it into 4.06
-	function f0(i) {
-	    switch(i) {
-		default:
-		case "a":
-		case "b":
-		    return "ab*"
-		case "c":
-		    return "c";
-		case "d":
-		    return "d";
-	    }
-	    return "";
-	}
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f0("a"), "ab*");
+new TestCase(SECTION, 'switch statement',
+	     f0("b"), "ab*");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f0("b"), "ab*");
+new TestCase(SECTION, 'switch statement',
+	     f0("*"), "ab*");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f0("*"), "ab*");
+new TestCase(SECTION, 'switch statement',
+	     f0("c"), "c");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f0("c"), "c");
+new TestCase(SECTION, 'switch statement',
+	     f0("d"), "d");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f0("d"), "d");
+function f1(i) {
+    switch(i) {
+    case "a":
+    case "b":
+    default:
+	return "ab*"
+	    case "c":
+	    return "c";
+    case "d":
+	return "d";
+    }
+    return "";
+}
 
-	function f1(i) {
-	    switch(i) {
-		case "a":
-		case "b":
-		default:
-		    return "ab*"
-		case "c":
-		    return "c";
-		case "d":
-		    return "d";
-	    }
-	    return "";
-	}
+new TestCase(SECTION, 'switch statement',
+	     f1("a"), "ab*");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f1("a"), "ab*");
+new TestCase(SECTION, 'switch statement',
+	     f1("b"), "ab*");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f1("b"), "ab*");
+new TestCase(SECTION, 'switch statement',
+	     f1("*"), "ab*");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f1("*"), "ab*");
+new TestCase(SECTION, 'switch statement',
+	     f1("c"), "c");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f1("c"), "c");
+new TestCase(SECTION, 'switch statement',
+	     f1("d"), "d");
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f1("d"), "d");
+// Switch on integer; will use TABLESWITCH opcode in C engine
+function f2(i) {
+    switch (i) {
+    case 0:
+    case 1:
+	return 1;
+    case 2:
+	return 2;
+    }
+    // with no default, control will fall through
+    return 3;
+}
 
-	// Switch on integer; will use TABLESWITCH opcode in C engine
-	function f2(i) {
-	    switch (i) {
-	        case 0:
-	        case 1:
-                    return 1;
-	        case 2:
- 	            return 2;
-	    }
-	    // with no default, control will fall through
-	    return 3;
-	}
+new TestCase(SECTION, 'switch statement',
+	     f2(0), 1);
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f2(0), 1);
+new TestCase(SECTION, 'switch statement',
+	     f2(1), 1);
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f2(1), 1);
+new TestCase(SECTION, 'switch statement',
+	     f2(2), 2);
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f2(2), 2);
+new TestCase(SECTION, 'switch statement',
+	     f2(3), 3);
 
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  f2(3), 3);
+// empty switch: make sure expression is evaluated
+var se = 0;
+switch (se = 1) {
+}
+new TestCase(SECTION, 'switch statement',
+	     se, 1);
 
-	// empty switch: make sure expression is evaluated
-	var se = 0;
-	switch (se = 1) {
-	}
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  se, 1);
+// only default
+se = 0;
+switch (se) {
+default:
+    se = 1;
+}
+new TestCase(SECTION, 'switch statement',
+	     se, 1);
 
-	// only default
-	se = 0;
-	switch (se) {
-	    default:
-  	        se = 1;
-	}
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  se, 1);
+// in loop, break should only break out of switch
+se = 0;
+for (var i=0; i < 2; i++) {
+    switch (i) {
+    case 0:
+    case 1:
+	break;
+    }
+    se = 1;
+}
+new TestCase(SECTION, 'switch statement',
+	     se, 1);
 
-	// in loop, break should only break out of switch
-	se = 0;
-	for (var i=0; i < 2; i++) {
-	    switch (i) {
-	        case 0:
-	        case 1:
-	            break;
-	    }
-	    se = 1;
-	}
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  se, 1);
+// test "fall through"
+se = 0;
+i = 0;
+switch (i) {
+case 0:
+    se++;
+    /* fall through */
+case 1:
+    se++;
+    break;
+}
+new TestCase(SECTION, 'switch statement',
+	     se, 2);
+writeLineToLog("hi");
 
-	// test "fall through"
-	se = 0;
-	i = 0;
-	switch (i) {
-	    case 0:
-	        se++;
-		/* fall through */
-	    case 1:
-	        se++;
-	        break;
-	}
-	testcases[count++] = new TestCase(SECTION, 'switch statement',
-	                                  se, 2);
+test();
 
-    test();
+// Needed: tests for evaluation time of case expressions.
+// This issue was under debate at ECMA, so postponing for now.
 
-	// Needed: tests for evaluation time of case expressions.
-	// This issue was under debate at ECMA, so postponing for now.
-
-	function test()	{
-	    writeLineToLog("hi");
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}

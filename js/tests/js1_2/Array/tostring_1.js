@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,105 +36,88 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          tostring_1.js
-    ECMA Section:       Array.toString()
-    Description:
+   File Name:          tostring_1.js
+   ECMA Section:       Array.toString()
+   Description:
 
-    This checks the ToString value of Array objects under JavaScript 1.2.
+   This checks the ToString value of Array objects under JavaScript 1.2.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "JS1_2";
-    var VERSION = "JS1_2";
-    startTest();
-    var TITLE   = "Array.toString()";
+var SECTION = "JS1_2";
+var VERSION = "JS1_2";
+startTest();
+var TITLE   = "Array.toString()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var a = new Array();
 
-    var a = new Array();
+var VERSION = 0;
 
-    var VERSION = 0;
-
-    if ( typeof version == "function" ) {
-        version(120);
-        VERSION = "120";
-    } else {
-        function version() { return 0; };
-    }
-
-    testcases[tc++] = new TestCase ( SECTION,
-                        "var a = new Array(); a.toString()",
-                        ( VERSION == "120" ? "[]" : "" ),
-                        a.toString() );
-
-    a[0] = void 0;
-
-    testcases[tc++] = new TestCase ( SECTION,
-                        "a[0] = void 0; a.toString()",
-                        ( VERSION == "120" ? "[, ]" : "" ),
-                        a.toString() );
-
-
-    testcases[tc++] = new TestCase( SECTION,
-                        "a.length",
-                        1,
-                        a.length );
-
-    a[1] = void 0;
-
-    testcases[tc++] = new TestCase( SECTION,
-                        "a[1] = void 0; a.toString()",
-                        ( VERSION == "120" ? "[, , ]" : ","  ),
-                        a.toString() );
-
-    a[1] = "hi";
-
-    testcases[tc++] = new TestCase( SECTION,
-                        "a[1] = \"hi\"; a.toString()",
-                        ( VERSION == "120" ? "[, \"hi\"]" : ",hi" ),
-                        a.toString() );
-
-    a[2] = void 0;
-
-    testcases[tc++] = new TestCase( SECTION,
-                        "a[2] = void 0; a.toString()",
-                        ( VERSION == "120" ?"[, \"hi\", , ]":",hi,"),
-                        a.toString() );
-
-    var b = new Array(1000);
-    var bstring = "";
-    for ( blen=0; blen<999; blen++) {
-        bstring += ",";
-    }
-
-
-    testcases[tc++] = new TestCase ( SECTION,
-                        "var b = new Array(1000); b.toString()",
-                        ( VERSION == "120" ? "[1000]" : bstring ),
-                        b.toString() );
-
-
-    testcases[tc++] = new TestCase( SECTION,
-                        "b.length",
-                        ( VERSION == "120" ? 1 : 1000 ),
-                        b.length );
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+if ( version() == 120 ) {
+    VERSION = "120";
+} else {
+    VERSION = "";
 }
+
+new TestCase ( SECTION,
+	       "var a = new Array(); a.toString()",
+	       ( VERSION == "120" ? "[]" : "" ),
+	       a.toString() );
+
+a[0] = void 0;
+
+new TestCase ( SECTION,
+	       "a[0] = void 0; a.toString()",
+	       ( VERSION == "120" ? "[, ]" : "" ),
+	       a.toString() );
+
+
+new TestCase( SECTION,
+	      "a.length",
+	      1,
+	      a.length );
+
+a[1] = void 0;
+
+new TestCase( SECTION,
+	      "a[1] = void 0; a.toString()",
+	      ( VERSION == "120" ? "[, , ]" : ","  ),
+	      a.toString() );
+
+a[1] = "hi";
+
+new TestCase( SECTION,
+	      "a[1] = \"hi\"; a.toString()",
+	      ( VERSION == "120" ? "[, \"hi\"]" : ",hi" ),
+	      a.toString() );
+
+a[2] = void 0;
+
+new TestCase( SECTION,
+	      "a[2] = void 0; a.toString()",
+	      ( VERSION == "120" ?"[, \"hi\", , ]":",hi,"),
+	      a.toString() );
+
+var b = new Array(1000);
+var bstring = "";
+for ( blen=0; blen<999; blen++) {
+    bstring += ",";
+}
+
+
+new TestCase ( SECTION,
+	       "var b = new Array(1000); b.toString()",
+	       ( VERSION == "120" ? "[1000]" : bstring ),
+	       b.toString() );
+
+
+new TestCase( SECTION,
+	      "b.length",
+	      ( VERSION == "120" ? 1 : 1000 ),
+	      b.length );
+
+test();

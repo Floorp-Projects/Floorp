@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,47 +35,27 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.1.1.1.js
-    ECMA Section:       15.1.1.1 NaN
+   File Name:          15.1.1.1.js
+   ECMA Section:       15.1.1.1 NaN
 
-    Description:        The initial value of NaN is NaN.
+   Description:        The initial value of NaN is NaN.
 
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var SECTION = "15.1.1.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "NaN";
+var SECTION = "15.1.1.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "NaN";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
 
-    test();
+new TestCase( SECTION, "NaN",               Number.NaN,     NaN );
+new TestCase( SECTION, "this.NaN",          Number.NaN,     this.NaN );
+new TestCase( SECTION, "typeof NaN",        "number",       typeof NaN );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[array.length] = new TestCase( SECTION, "NaN",               Number.NaN,     NaN );
-    array[array.length] = new TestCase( SECTION, "this.NaN",          Number.NaN,     this.NaN );
-    array[array.length] = new TestCase( SECTION, "typeof NaN",        "number",       typeof NaN );
-
-    return ( array );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-
+test();

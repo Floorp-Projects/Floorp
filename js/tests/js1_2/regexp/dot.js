@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,77 +35,62 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     dot.js
-	Description:  'Tests regular expressions containing .'
 
-	Author:       Nick Lerissa
-	Date:         March 10, 1998
+/**
+   Filename:     dot.js
+   Description:  'Tests regular expressions containing .'
+
+   Author:       Nick Lerissa
+   Date:         March 10, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'RegExp: .';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'RegExp: .';
 
-	writeHeaderToLog('Executing script: dot.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: dot.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
 
-    // 'abcde'.match(new RegExp('ab.de'))
-	testcases[count++] = new TestCase ( SECTION, "'abcde'.match(new RegExp('ab.de'))",
-	                                    String(["abcde"]), String('abcde'.match(new RegExp('ab.de'))));
+// 'abcde'.match(new RegExp('ab.de'))
+new TestCase ( SECTION, "'abcde'.match(new RegExp('ab.de'))",
+	       String(["abcde"]), String('abcde'.match(new RegExp('ab.de'))));
 
-    // 'line 1\nline 2'.match(new RegExp('.+'))
-	testcases[count++] = new TestCase ( SECTION, "'line 1\nline 2'.match(new RegExp('.+'))",
-	                                    String(["line 1"]), String('line 1\nline 2'.match(new RegExp('.+'))));
+// 'line 1\nline 2'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'line 1\nline 2'.match(new RegExp('.+'))",
+	       String(["line 1"]), String('line 1\nline 2'.match(new RegExp('.+'))));
 
-    // 'this is a test'.match(new RegExp('.*a.*'))
-	testcases[count++] = new TestCase ( SECTION, "'this is a test'.match(new RegExp('.*a.*'))",
-	                                    String(["this is a test"]), String('this is a test'.match(new RegExp('.*a.*'))));
+// 'this is a test'.match(new RegExp('.*a.*'))
+new TestCase ( SECTION, "'this is a test'.match(new RegExp('.*a.*'))",
+	       String(["this is a test"]), String('this is a test'.match(new RegExp('.*a.*'))));
 
-    // 'this is a *&^%$# test'.match(new RegExp('.+'))
-	testcases[count++] = new TestCase ( SECTION, "'this is a *&^%$# test'.match(new RegExp('.+'))",
-	                                    String(["this is a *&^%$# test"]), String('this is a *&^%$# test'.match(new RegExp('.+'))));
+// 'this is a *&^%$# test'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'this is a *&^%$# test'.match(new RegExp('.+'))",
+	       String(["this is a *&^%$# test"]), String('this is a *&^%$# test'.match(new RegExp('.+'))));
 
-    // '....'.match(new RegExp('.+'))
-	testcases[count++] = new TestCase ( SECTION, "'....'.match(new RegExp('.+'))",
-	                                    String(["...."]), String('....'.match(new RegExp('.+'))));
+// '....'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'....'.match(new RegExp('.+'))",
+	       String(["...."]), String('....'.match(new RegExp('.+'))));
 
-    // 'abcdefghijklmnopqrstuvwxyz'.match(new RegExp('.+'))
-	testcases[count++] = new TestCase ( SECTION, "'abcdefghijklmnopqrstuvwxyz'.match(new RegExp('.+'))",
-	                                    String(["abcdefghijklmnopqrstuvwxyz"]), String('abcdefghijklmnopqrstuvwxyz'.match(new RegExp('.+'))));
+// 'abcdefghijklmnopqrstuvwxyz'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'abcdefghijklmnopqrstuvwxyz'.match(new RegExp('.+'))",
+	       String(["abcdefghijklmnopqrstuvwxyz"]), String('abcdefghijklmnopqrstuvwxyz'.match(new RegExp('.+'))));
 
-    // 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.match(new RegExp('.+'))
-	testcases[count++] = new TestCase ( SECTION, "'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.match(new RegExp('.+'))",
-	                                    String(["ABCDEFGHIJKLMNOPQRSTUVWXYZ"]), String('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.match(new RegExp('.+'))));
+// 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.match(new RegExp('.+'))",
+	       String(["ABCDEFGHIJKLMNOPQRSTUVWXYZ"]), String('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.match(new RegExp('.+'))));
 
-    // '`1234567890-=~!@#$%^&*()_+'.match(new RegExp('.+'))
-	testcases[count++] = new TestCase ( SECTION, "'`1234567890-=~!@#$%^&*()_+'.match(new RegExp('.+'))",
-	                                    String(["`1234567890-=~!@#$%^&*()_+"]), String('`1234567890-=~!@#$%^&*()_+'.match(new RegExp('.+'))));
+// '`1234567890-=~!@#$%^&*()_+'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'`1234567890-=~!@#$%^&*()_+'.match(new RegExp('.+'))",
+	       String(["`1234567890-=~!@#$%^&*()_+"]), String('`1234567890-=~!@#$%^&*()_+'.match(new RegExp('.+'))));
 
-    // '|\\[{]};:"\',<>.?/'.match(new RegExp('.+'))
-	testcases[count++] = new TestCase ( SECTION, "'|\\[{]};:\"\',<>.?/'.match(new RegExp('.+'))",
-	                                    String(["|\\[{]};:\"\',<>.?/"]), String('|\\[{]};:\"\',<>.?/'.match(new RegExp('.+'))));
+// '|\\[{]};:"\',<>.?/'.match(new RegExp('.+'))
+new TestCase ( SECTION, "'|\\[{]};:\"\',<>.?/'.match(new RegExp('.+'))",
+	       String(["|\\[{]};:\"\',<>.?/"]), String('|\\[{]};:\"\',<>.?/'.match(new RegExp('.+'))));
 
-    // '|\\[{]};:"\',<>.?/'.match(/.+/)
-	testcases[count++] = new TestCase ( SECTION, "'|\\[{]};:\"\',<>.?/'.match(/.+/)",
-	                                    String(["|\\[{]};:\"\',<>.?/"]), String('|\\[{]};:\"\',<>.?/'.match(/.+/)));
+// '|\\[{]};:"\',<>.?/'.match(/.+/)
+new TestCase ( SECTION, "'|\\[{]};:\"\',<>.?/'.match(/.+/)",
+	       String(["|\\[{]};:\"\',<>.?/"]), String('|\\[{]};:\"\',<>.?/'.match(/.+/)));
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

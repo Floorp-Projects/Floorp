@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,59 +35,44 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.6.4.js
-    ECMA Section:       Properties of the Boolean Prototype Object
-    Description:
-    The Boolean prototype object is itself a Boolean object (its [[Class]] is "
-    Boolean") whose value is false.
+   File Name:          15.6.4.js
+   ECMA Section:       Properties of the Boolean Prototype Object
+   Description:
+   The Boolean prototype object is itself a Boolean object (its [[Class]] is "
+   Boolean") whose value is false.
 
-    The value of the internal [[Prototype]] property of the Boolean prototype
-    object is the Object prototype object (15.2.3.1).
+   The value of the internal [[Prototype]] property of the Boolean prototype
+   object is the Object prototype object (15.2.3.1).
 
-    In following descriptions of functions that are properties of the Boolean
-    prototype object, the phrase "this Boolean object" refers to the object that
-    is the this value for the invocation of the function; it is an error if
-    this does not refer to an object for which the value of the internal
-    [[Class]] property is "Boolean". Also, the phrase "this boolean value"
-    refers to the boolean value represented by this Boolean object, that is,
-    the value of the internal [[Value]] property of this Boolean object.
+   In following descriptions of functions that are properties of the Boolean
+   prototype object, the phrase "this Boolean object" refers to the object that
+   is the this value for the invocation of the function; it is an error if
+   this does not refer to an object for which the value of the internal
+   [[Class]] property is "Boolean". Also, the phrase "this boolean value"
+   refers to the boolean value represented by this Boolean object, that is,
+   the value of the internal [[Value]] property of this Boolean object.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.6.4";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Properties of the Boolean Prototype Object";
+var SECTION = "15.6.4";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Properties of the Boolean Prototype Object";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+new TestCase( SECTION,
+	      "Boolean.prototype == false",
+	      true,
+	      Boolean.prototype == false );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Boolean.prototype == false",
-                                    true,
-                                    Boolean.prototype == false );
+new TestCase( SECTION,
+	      "Boolean.prototype.toString = Object.prototype.toString; Boolean.prototype.toString()",
+	      "[object Boolean]",
+	      eval("Boolean.prototype.toString = Object.prototype.toString; Boolean.prototype.toString()") );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Boolean.prototype.toString = Object.prototype.toString; Boolean.prototype.toString()",
-                                    "[object Boolean]",
-                                    eval("Boolean.prototype.toString = Object.prototype.toString; Boolean.prototype.toString()") );
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

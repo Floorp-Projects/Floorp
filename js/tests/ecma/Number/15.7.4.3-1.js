@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,54 +35,61 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.7.4.3-1.js
-    ECMA Section:       15.7.4.3.1 Number.prototype.valueOf()
-    Description:
-    Returns this number value.
+   File Name:          15.7.4.3-1.js
+   ECMA Section:       15.7.4.3.1 Number.prototype.valueOf()
+   Description:
+   Returns this number value.
 
-    The valueOf function is not generic; it generates a runtime error if its
-    this value is not a Number object. Therefore it cannot be transferred to
-    other kinds of objects for use as a method.
+   The valueOf function is not generic; it generates a runtime error if its
+   this value is not a Number object. Therefore it cannot be transferred to
+   other kinds of objects for use as a method.
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
-    var SECTION = "15.7.4.3-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var testcases = getTestCases();
-
-    writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
-    test();
+var SECTION = "15.7.4.3-1";
+var VERSION = "ECMA_1";
+startTest();
 
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+writeHeaderToLog( SECTION + " Number.prototype.valueOf()");
 
 //  the following two line causes navigator to crash -- cmb 9/16/97
-    array[item++] = new TestCase("15.7.4.1", "Number.prototype.valueOf()",        0,        "Number.prototype.valueOf()" );
+new TestCase("SECTION", 
+	     "Number.prototype.valueOf()",        
+	     0,        
+	     eval("Number.prototype.valueOf()") );
 
-    array[item++] = new TestCase("15.7.4.1", "(new Number(1)).valueOf()",         1,       "(new Number(1)).valueOf()" );
-    array[item++] = new TestCase("15.7.4.1", "(new Number(-1)).valueOf()",        -1,      "(new Number(-1)).valueOf()" );
-    array[item++] = new TestCase("15.7.4.1", "(new Number(0)).valueOf()",         0,       "(new Number(0)).valueOf()" );
-    array[item++] = new TestCase("15.7.4.1", "(new Number(Number.POSITIVE_INFINITY)).valueOf()", Number.POSITIVE_INFINITY, "(new Number(Number.POSITIVE_INFINITY)).valueOf()" );
-    array[item++] = new TestCase("15.7.4.1", "(new Number(Number.NaN)).valueOf()",  Number.NaN, "(new Number(Number.NaN)).valueOf()" );
-    array[item++] = new TestCase("15.7.4.1", "(new Number()).valueOf()",         0,       "(new Number()).valueOf()" );
+new TestCase("SECTION", 
+	     "(new Number(1)).valueOf()",         
+	     1,       
+	     eval("(new Number(1)).valueOf()") );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
+new TestCase("SECTION", 
+	     "(new Number(-1)).valueOf()",        
+	     -1,      
+	     eval("(new Number(-1)).valueOf()") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase("SECTION", 
+	     "(new Number(0)).valueOf()",         
+	     0,       
+	     eval("(new Number(0)).valueOf()") );
+
+new TestCase("SECTION", 
+	     "(new Number(Number.POSITIVE_INFINITY)).valueOf()", 
+	     Number.POSITIVE_INFINITY, 
+	     eval("(new Number(Number.POSITIVE_INFINITY)).valueOf()") );
+
+new TestCase("SECTION", 
+	     "(new Number(Number.NaN)).valueOf()",  
+	     Number.NaN, 
+	     eval("(new Number(Number.NaN)).valueOf()") );
+
+new TestCase("SECTION", 
+	     "(new Number()).valueOf()",         
+	     0,       
+	     eval("(new Number()).valueOf()") );
+
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,50 +35,33 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     do_while.js
-	Description:  'This tests the new do_while loop'
 
-	Author:       Nick Lerissa
-	Date:         Fri Feb 13 09:58:28 PST 1998
+/**
+   Filename:     do_while.js
+   Description:  'This tests the new do_while loop'
+
+   Author:       Nick Lerissa
+   Date:         Fri Feb 13 09:58:28 PST 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'statements: do_while';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'statements: do_while';
 
-	writeHeaderToLog('Executing script: do_while.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: do_while.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
-
+var done = false;
+var x = 0;
+do
+{
+    if (x++ == 3) done = true;
+} while (!done);
 	
-	var done = false;
-	var x = 0;
-	do
-	{
-	    if (x++ == 3) done = true;
-	} while (!done);
+new TestCase( SECTION, "do_while ",
+	      4, x);
 	
-	testcases[count++] = new TestCase( SECTION, "do_while ",
-	                                            4, x);
-	
-	//load('d:/javascript/tests/output/statements/do_while.js')
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+//load('d:/javascript/tests/output/statements/do_while.js')
+test();
 

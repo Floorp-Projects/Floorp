@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,72 +35,56 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     simple_form.js
-	Description:  'Tests regular expressions using simple form: re(...)'
 
-	Author:       Nick Lerissa
-	Date:         March 19, 1998
+/**
+   Filename:     simple_form.js
+   Description:  'Tests regular expressions using simple form: re(...)'
+
+   Author:       Nick Lerissa
+   Date:         March 19, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: simple form';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: simple form';
 
-	writeHeaderToLog('Executing script: simple_form.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: simple_form.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+new TestCase ( SECTION,
+	       "/[0-9]{3}/('23 2 34 678 9 09')",
+	       String(["678"]), String(/[0-9]{3}/('23 2 34 678 9 09')));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "/[0-9]{3}/('23 2 34 678 9 09')",
-	                                    String(["678"]), String(/[0-9]{3}/('23 2 34 678 9 09')));
+new TestCase ( SECTION,
+	       "/3.{4}8/('23 2 34 678 9 09')",
+	       String(["34 678"]), String(/3.{4}8/('23 2 34 678 9 09')));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "/3.{4}8/('23 2 34 678 9 09')",
-	                                    String(["34 678"]), String(/3.{4}8/('23 2 34 678 9 09')));
+new TestCase ( SECTION,
+	       "(/3.{4}8/('23 2 34 678 9 09').length",
+	       1, (/3.{4}8/('23 2 34 678 9 09')).length);
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "(/3.{4}8/('23 2 34 678 9 09').length",
-	                                    1, (/3.{4}8/('23 2 34 678 9 09')).length);
+var re = /[0-9]{3}/;
+new TestCase ( SECTION,
+	       "re('23 2 34 678 9 09')",
+	       String(["678"]), String(re('23 2 34 678 9 09')));
 
-    var re = /[0-9]{3}/;
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "re('23 2 34 678 9 09')",
-	                                    String(["678"]), String(re('23 2 34 678 9 09')));
+re = /3.{4}8/;
+new TestCase ( SECTION,
+	       "re('23 2 34 678 9 09')",
+	       String(["34 678"]), String(re('23 2 34 678 9 09')));
 
-    re = /3.{4}8/;
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "re('23 2 34 678 9 09')",
-	                                    String(["34 678"]), String(re('23 2 34 678 9 09')));
+new TestCase ( SECTION,
+	       "/3.{4}8/('23 2 34 678 9 09')",
+	       String(["34 678"]), String(/3.{4}8/('23 2 34 678 9 09')));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "/3.{4}8/('23 2 34 678 9 09')",
-	                                    String(["34 678"]), String(/3.{4}8/('23 2 34 678 9 09')));
+re =/3.{4}8/;
+new TestCase ( SECTION,
+	       "(re('23 2 34 678 9 09').length",
+	       1, (re('23 2 34 678 9 09')).length);
 
-    re =/3.{4}8/;
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "(re('23 2 34 678 9 09').length",
-	                                    1, (re('23 2 34 678 9 09')).length);
+new TestCase ( SECTION,
+	       "(/3.{4}8/('23 2 34 678 9 09').length",
+	       1, (/3.{4}8/('23 2 34 678 9 09')).length);
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "(/3.{4}8/('23 2 34 678 9 09').length",
-	                                    1, (/3.{4}8/('23 2 34 678 9 09')).length);
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

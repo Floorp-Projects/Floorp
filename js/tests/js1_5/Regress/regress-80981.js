@@ -72,7 +72,7 @@ function test()
 {
   b ();
   b4 ();
-  print('Number of errors = ' + err_num);
+  writeLineToLog('Number of errors = ' + err_num);
 }
 
 
@@ -3109,16 +3109,16 @@ function b()
 
 function check(status)
 {
-  print('k = ' + k + '    j = ' + j + '   ' + status);
+  writeLineToLog('k = ' + k + '    j = ' + j + '   ' + status);
 
   for (i = 0; i < i2; i++)
   {
     if (n[i] != 1)
     {
-      print('n[' + i + '] = ' + n[i]);
+      writeLineToLog('n[' + i + '] = ' + n[i]);
       if (i != j)
       {
-        print('Test failed');
+        writeLineToLog('Test failed');
         err_num++;
         break;
       }
@@ -3129,11 +3129,11 @@ function check(status)
 
 function b4()
 {
-  print('Visited b4');
+  writeLineToLog('Visited b4');
 }
 
 
 function b_after()
 {
-  print('Visited b_after');
+  writeLineToLog('Visited b_after');
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,83 +35,77 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          10.1.4-1.js
-    ECMA Section:       10.1.4 Scope Chain and Identifier Resolution
-    Description:
-    Every execution context has associated with it a scope chain. This is
-    logically a list of objects that are searched when binding an Identifier.
-    When control enters an execution context, the scope chain is created and
-    is populated with an initial set of objects, depending on the type of
-    code. When control leaves the execution context, the scope chain is
-    destroyed.
+   File Name:          10.1.4-1.js
+   ECMA Section:       10.1.4 Scope Chain and Identifier Resolution
+   Description:
+   Every execution context has associated with it a scope chain. This is
+   logically a list of objects that are searched when binding an Identifier.
+   When control enters an execution context, the scope chain is created and
+   is populated with an initial set of objects, depending on the type of
+   code. When control leaves the execution context, the scope chain is
+   destroyed.
 
-    During execution, the scope chain of the execution context is affected
-    only by WithStatement. When execution enters a with block, the object
-    specified in the with statement is added to the front of the scope chain.
-    When execution leaves a with block, whether normally or via a break or
-    continue statement, the object is removed from the scope chain. The object
-    being removed will always be the first object in the scope chain.
+   During execution, the scope chain of the execution context is affected
+   only by WithStatement. When execution enters a with block, the object
+   specified in the with statement is added to the front of the scope chain.
+   When execution leaves a with block, whether normally or via a break or
+   continue statement, the object is removed from the scope chain. The object
+   being removed will always be the first object in the scope chain.
 
-    During execution, the syntactic production PrimaryExpression : Identifier
-    is evaluated using the following algorithm:
+   During execution, the syntactic production PrimaryExpression : Identifier
+   is evaluated using the following algorithm:
 
-    1.  Get the next object in the scope chain. If there isn't one, go to step 5.
-    2.  Call the [[HasProperty]] method of Result(l), passing the Identifier as
-        the property.
-    3.  If Result(2) is true, return a value of type Reference whose base object
-        is Result(l) and whose property name is the Identifier.
-    4.  Go to step 1.
-    5.  Return a value of type Reference whose base object is null and whose
-        property name is the Identifier.
-    The result of binding an identifier is always a value of type Reference with
-    its member name component equal to the identifier string.
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   1.  Get the next object in the scope chain. If there isn't one, go to step 5.
+   2.  Call the [[HasProperty]] method of Result(l), passing the Identifier as
+   the property.
+   3.  If Result(2) is true, return a value of type Reference whose base object
+   is Result(l) and whose property name is the Identifier.
+   4.  Go to step 1.
+   5.  Return a value of type Reference whose base object is null and whose
+   property name is the Identifier.
+   The result of binding an identifier is always a value of type Reference with
+   its member name component equal to the identifier string.
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "10.1.4-1";
-    var VERSION = "ECMA_1";
-    startTest();
+var SECTION = "10.1.4-1";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
+writeHeaderToLog( SECTION + " Scope Chain and Identifier Resolution");
 
-    var testcases = getTestCases();
-    test();
+new TestCase( "SECTION", 
+	      "with MyObject, eval should cube INPUT:  " );
+test();
 
 function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
+  for ( tc=0; tc < testcases.length; tc++ ) {
 
-        var MYOBJECT = new MyObject();
-        var INPUT = 2;
-        testcases[tc].description += ( INPUT +"" );
+    var MYOBJECT = new MyObject();
+    var INPUT = 2;
+    testcases[tc].description += ( INPUT +"" );
 
-        with ( MYOBJECT ) {
-            eval = new Function ( "x", "return(Math.pow(Number(x),3))" );
+    with ( MYOBJECT ) {
+      eval = new Function ( "x", "return(Math.pow(Number(x),3))" );
 
-            testcases[tc].actual = eval( INPUT );
-            testcases[tc].expect = Math.pow(INPUT,3);
-        }
-
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
+      testcases[tc].actual = eval( INPUT );
+      testcases[tc].expect = Math.pow(INPUT,3);
     }
-    stopTest();
-    return ( testcases );
-}
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
 
-    array[item++] = new TestCase( "SECTION", "with MyObject, eval should cube INPUT:  " );
+    testcases[tc].passed = writeTestCaseResult(
+      testcases[tc].expect,
+      testcases[tc].actual,
+      testcases[tc].description +" = "+
+      testcases[tc].actual );
 
-    return ( array );
+    testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
+  }
+  stopTest();
+  return ( testcases );
 }
 
 function MyObject() {
-    this.eval = new Function( "x", "return(Math.pow(Number(x),2))" );
+  this.eval = new Function( "x", "return(Math.pow(Number(x),2))" );
 }

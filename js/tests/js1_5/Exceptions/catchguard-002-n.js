@@ -38,6 +38,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+DESCRIPTION = "var in catch clause should have caused an error.";
+EXPECTED = "error";
+
+test();
+
 function test()
 {
     enterFunc ("test");

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,47 +35,40 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          12.6.2-9-n.js
-    ECMA Section:       12.6.2 The for Statement
+   File Name:          12.6.2-9-n.js
+   ECMA Section:       12.6.2 The for Statement
 
-                        1. first expression is not present.
-                        2. second expression is not present
-                        3. third expression is not present
+   1. first expression is not present.
+   2. second expression is not present
+   3. third expression is not present
 
 
-    Author:             christine@netscape.com
-    Date:               15 september 1997
+   Author:             christine@netscape.com
+   Date:               15 september 1997
 */
 
 
-    var SECTION = "12.6.2-9-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The for statment";
+var SECTION = "12.6.2-9-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The for statement";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+DESCRIPTION = "for (i)";
+EXPECTED = "error";
 
-    testcases[testcases.length] = new TestCase( SECTION,
-        "for (i)",
-        "error",
-        "" );
+new TestCase( SECTION,
+	      "for (i)",
+	      "error",
+	      eval("for (i) { }") );
 
-    for (i) {
-    }
+/*
+  for (i) {
+  }
 
-    test();
+*/
+test();
 
-function test() {
-        testcases[0].passed = writeTestCaseResult(
-                    testcases[0].expect,
-                    testcases[0].actual,
-                    testcases[0].description +" = "+ testcases[0].actual );
-
-        testcases[0].reason += ( testcases[0].passed ) ? "" : "wrong value ";
-
-        stopTest();
-        return ( testcases );
-}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,47 +35,29 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.2.3-1.js
-    ECMA Section:       15.2.3 Properties of the Object Constructor
+   File Name:          15.2.3-1.js
+   ECMA Section:       15.2.3 Properties of the Object Constructor
 
-    Description:        The value of the internal [[Prototype]] property of the
-                        Object constructor is the Function prototype object.
+   Description:        The value of the internal [[Prototype]] property of the
+   Object constructor is the Function prototype object.
 
-                        Besides the call and construct propreties and the length
-                        property, the Object constructor has properties described
-                        in 15.2.3.1.
+   Besides the call and construct propreties and the length
+   property, the Object constructor has properties described
+   in 15.2.3.1.
 
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var SECTION = "15.2.3";
-    var VERSION = "ECMA_2";
-    startTest();
-    var testcases = getTestCases();
+var SECTION = "15.2.3";
+var VERSION = "ECMA_2";
+startTest();
 
-    writeHeaderToLog( SECTION + " Properties of the Object Constructor");
-    test();
+writeHeaderToLog( SECTION + " Properties of the Object Constructor");
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,  "Object.__proto__",     Function.prototype,     Object.__proto__ );
+new TestCase( SECTION,  "Object.length",        1,                      Object.length );
 
-    array[item++] = new TestCase( SECTION,  "Object.__proto__",     Function.prototype,     Object.__proto__ );
-    array[item++] = new TestCase( SECTION,  "Object.length",        1,                      Object.length );
-
-    return ( array );
-}
-function test( array ) {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

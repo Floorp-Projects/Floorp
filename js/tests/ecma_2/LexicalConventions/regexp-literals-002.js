@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          LexicalConventions/regexp-literals-002.js
  *  ECMA Section:       7.8.5
@@ -6,17 +7,17 @@
  *  Author:             christine@netscape.com
  *  Date:               19 February 1999
  */
-    var SECTION = "LexicalConventions/regexp-literals-002.js";
-    var VERSION = "ECMA_2";
-    var TITLE   = "Regular Expression Literals";
+var SECTION = "LexicalConventions/regexp-literals-002.js";
+var VERSION = "ECMA_2";
+var TITLE   = "Regular Expression Literals";
 
-    startTest();
+startTest();
 
-    // A regular expression literal represents an object of type RegExp.
+// A regular expression literal represents an object of type RegExp.
 
-    AddTestCase(
-        "// A regular expression literal represents an object of type RegExp.",
-        "true",
-        (/x*/ instanceof RegExp).toString() );
+AddTestCase(
+  "// A regular expression literal represents an object of type RegExp.",
+  "true",
+  (/x*/ instanceof RegExp).toString() );
 
-    test();
+test();

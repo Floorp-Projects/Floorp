@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,63 +35,51 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.9.5.js
-    ECMA Section:       15.9.5 Properties of the Date prototype object
-    Description:
+   File Name:          15.9.5.js
+   ECMA Section:       15.9.5 Properties of the Date prototype object
+   Description:
 
-    The Date prototype object is itself a Date object (its [[Class]] is
-    "Date") whose value is NaN.
+   The Date prototype object is itself a Date object (its [[Class]] is
+   "Date") whose value is NaN.
 
-    The value of the internal [[Prototype]] property of the Date prototype
-    object is the Object prototype object (15.2.3.1).
+   The value of the internal [[Prototype]] property of the Date prototype
+   object is the Object prototype object (15.2.3.1).
 
-    In following descriptions of functions that are properties of the Date
-    prototype object, the phrase "this Date object" refers to the object that
-    is the this value for the invocation of the function; it is an error if
-    this does not refer to an object for which the value of the internal
-    [[Class]] property is "Date". Also, the phrase "this time value" refers
-    to the number value for the time represented by this Date object, that is,
-    the value of the internal [[Value]] property of this Date object.
+   In following descriptions of functions that are properties of the Date
+   prototype object, the phrase "this Date object" refers to the object that
+   is the this value for the invocation of the function; it is an error if
+   this does not refer to an object for which the value of the internal
+   [[Class]] property is "Date". Also, the phrase "this time value" refers
+   to the number value for the time represented by this Date object, that is,
+   the value of the internal [[Value]] property of this Date object.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Properties of the Date Prototype Object";
+var SECTION = "15.9.5";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Properties of the Date Prototype Object";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
 
-    Date.prototype.getClass = Object.prototype.toString;
+Date.prototype.getClass = Object.prototype.toString;
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Date.prototype.getClass",
-                                    "[object Date]",
-                                    Date.prototype.getClass() );
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Date.prototype.valueOf()",
-                                    NaN,
-                                    Date.prototype.valueOf() );
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Date.prototype.__proto__ == Object.prototype",
-                                    true,
-                                    Date.prototype.__proto__ == Object.prototype );
-    test();
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,
+	      "Date.prototype.getClass",
+	      "[object Date]",
+	      Date.prototype.getClass() );
+new TestCase( SECTION,
+	      "Date.prototype.valueOf()",
+	      NaN,
+	      Date.prototype.valueOf() );
+new TestCase( SECTION,
+	      "Date.prototype.__proto__ == Object.prototype",
+	      true,
+	      Date.prototype.__proto__ == Object.prototype );
+test();
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

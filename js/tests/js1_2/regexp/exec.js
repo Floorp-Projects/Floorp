@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,59 +35,43 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     exec.js
-	Description:  'Tests regular expressions exec compile'
 
-	Author:       Nick Lerissa
-	Date:         March 10, 1998
+/**
+   Filename:     exec.js
+   Description:  'Tests regular expressions exec compile'
+
+   Author:       Nick Lerissa
+   Date:         March 10, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE   = 'RegExp: exec';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE   = 'RegExp: exec';
 
-	writeHeaderToLog('Executing script: exec.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: exec.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+new TestCase ( SECTION,
+	       "/[0-9]{3}/.exec('23 2 34 678 9 09')",
+	       String(["678"]), String(/[0-9]{3}/.exec('23 2 34 678 9 09')));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "/[0-9]{3}/.exec('23 2 34 678 9 09')",
-	                                    String(["678"]), String(/[0-9]{3}/.exec('23 2 34 678 9 09')));
+new TestCase ( SECTION,
+	       "/3.{4}8/.exec('23 2 34 678 9 09')",
+	       String(["34 678"]), String(/3.{4}8/.exec('23 2 34 678 9 09')));
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "/3.{4}8/.exec('23 2 34 678 9 09')",
-	                                    String(["34 678"]), String(/3.{4}8/.exec('23 2 34 678 9 09')));
+var re = new RegExp('3.{4}8');
+new TestCase ( SECTION,
+	       "re.exec('23 2 34 678 9 09')",
+	       String(["34 678"]), String(re.exec('23 2 34 678 9 09')));
 
-    var re = new RegExp('3.{4}8');
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "re.exec('23 2 34 678 9 09')",
-	                                    String(["34 678"]), String(re.exec('23 2 34 678 9 09')));
+new TestCase ( SECTION,
+	       "(/3.{4}8/.exec('23 2 34 678 9 09').length",
+	       1, (/3.{4}8/.exec('23 2 34 678 9 09')).length);
 
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "(/3.{4}8/.exec('23 2 34 678 9 09').length",
-	                                    1, (/3.{4}8/.exec('23 2 34 678 9 09')).length);
+re = new RegExp('3.{4}8');
+new TestCase ( SECTION,
+	       "(re.exec('23 2 34 678 9 09').length",
+	       1, (re.exec('23 2 34 678 9 09')).length);
 
-    re = new RegExp('3.{4}8');
-	testcases[count++] = new TestCase ( SECTION,
-	                                    "(re.exec('23 2 34 678 9 09').length",
-	                                    1, (re.exec('23 2 34 678 9 09')).length);
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,78 +35,60 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:      15.6.1.js
-    ECMA Section:   15.6.1 The Boolean Function
-                    15.6.1.1 Boolean( value )
-                    15.6.1.2 Boolean ()
-    Description:    Boolean( value ) should return a Boolean value
-                    not a Boolean object) computed by
-                    Boolean.toBooleanValue( value)
+   File Name:      15.6.1.js
+   ECMA Section:   15.6.1 The Boolean Function
+   15.6.1.1 Boolean( value )
+   15.6.1.2 Boolean ()
+   Description:    Boolean( value ) should return a Boolean value
+   not a Boolean object) computed by
+   Boolean.toBooleanValue( value)
 
-                    15.6.1.2 Boolean() returns false
+   15.6.1.2 Boolean() returns false
 
-    Author:         christine@netscape.com
-    Date:           27 jun 1997
+   Author:         christine@netscape.com
+   Date:           27 jun 1997
 
 
-    Data File Fields:
-        VALUE       Argument passed to the Boolean function
-        TYPE        typeof VALUE (not used, but helpful in understanding
-                    the data file)
-        E_RETURN    Expected return value of Boolean( VALUE )
+   Data File Fields:
+   VALUE       Argument passed to the Boolean function
+   TYPE        typeof VALUE (not used, but helpful in understanding
+   the data file)
+   E_RETURN    Expected return value of Boolean( VALUE )
 */
-    var SECTION = "15.6.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The Boolean constructor called as a function: Boolean( value ) and Boolean()";
+var SECTION = "15.6.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The Boolean constructor called as a function: Boolean( value ) and Boolean()";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
+var array = new Array();
+var item = 0;
 
-    test();
+new TestCase( SECTION,   "Boolean(1)",         true,   Boolean(1) );
+new TestCase( SECTION,   "Boolean(0)",         false,  Boolean(0) );
+new TestCase( SECTION,   "Boolean(-1)",        true,   Boolean(-1) );
+new TestCase( SECTION,   "Boolean('1')",       true,   Boolean("1") );
+new TestCase( SECTION,   "Boolean('0')",       true,   Boolean("0") );
+new TestCase( SECTION,   "Boolean('-1')",      true,   Boolean("-1") );
+new TestCase( SECTION,   "Boolean(true)",      true,   Boolean(true) );
+new TestCase( SECTION,   "Boolean(false)",     false,  Boolean(false) );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,   "Boolean('true')",    true,   Boolean("true") );
+new TestCase( SECTION,   "Boolean('false')",   true,   Boolean("false") );
+new TestCase( SECTION,   "Boolean(null)",      false,  Boolean(null) );
 
-    array[item++] = new TestCase( SECTION,   "Boolean(1)",         true,   Boolean(1) );
-    array[item++] = new TestCase( SECTION,   "Boolean(0)",         false,  Boolean(0) );
-    array[item++] = new TestCase( SECTION,   "Boolean(-1)",        true,   Boolean(-1) );
-    array[item++] = new TestCase( SECTION,   "Boolean('1')",       true,   Boolean("1") );
-    array[item++] = new TestCase( SECTION,   "Boolean('0')",       true,   Boolean("0") );
-    array[item++] = new TestCase( SECTION,   "Boolean('-1')",      true,   Boolean("-1") );
-    array[item++] = new TestCase( SECTION,   "Boolean(true)",      true,   Boolean(true) );
-    array[item++] = new TestCase( SECTION,   "Boolean(false)",     false,  Boolean(false) );
-
-    array[item++] = new TestCase( SECTION,   "Boolean('true')",    true,   Boolean("true") );
-    array[item++] = new TestCase( SECTION,   "Boolean('false')",   true,   Boolean("false") );
-    array[item++] = new TestCase( SECTION,   "Boolean(null)",      false,  Boolean(null) );
-
-    array[item++] = new TestCase( SECTION,   "Boolean(-Infinity)", true,   Boolean(Number.NEGATIVE_INFINITY) );
-    array[item++] = new TestCase( SECTION,   "Boolean(NaN)",       false,  Boolean(Number.NaN) );
-    array[item++] = new TestCase( SECTION,   "Boolean(void(0))",   false,  Boolean( void(0) ) );
-    array[item++] = new TestCase( SECTION,   "Boolean(x=0)",       false,  Boolean( x=0 ) );
-    array[item++] = new TestCase( SECTION,   "Boolean(x=1)",       true,   Boolean( x=1 ) );
-    array[item++] = new TestCase( SECTION,   "Boolean(x=false)",   false,  Boolean( x=false ) );
-    array[item++] = new TestCase( SECTION,   "Boolean(x=true)",    true,   Boolean( x=true ) );
-    array[item++] = new TestCase( SECTION,   "Boolean(x=null)",    false,  Boolean( x=null ) );
-    array[item++] = new TestCase( SECTION,   "Boolean()",          false,  Boolean() );
+new TestCase( SECTION,   "Boolean(-Infinity)", true,   Boolean(Number.NEGATIVE_INFINITY) );
+new TestCase( SECTION,   "Boolean(NaN)",       false,  Boolean(Number.NaN) );
+new TestCase( SECTION,   "Boolean(void(0))",   false,  Boolean( void(0) ) );
+new TestCase( SECTION,   "Boolean(x=0)",       false,  Boolean( x=0 ) );
+new TestCase( SECTION,   "Boolean(x=1)",       true,   Boolean( x=1 ) );
+new TestCase( SECTION,   "Boolean(x=false)",   false,  Boolean( x=false ) );
+new TestCase( SECTION,   "Boolean(x=true)",    true,   Boolean( x=true ) );
+new TestCase( SECTION,   "Boolean(x=null)",    false,  Boolean( x=null ) );
+new TestCase( SECTION,   "Boolean()",          false,  Boolean() );
 //    array[item++] = new TestCase( SECTION,   "Boolean(var someVar)",     false,  Boolean( someVar ) );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

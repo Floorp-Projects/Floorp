@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,52 +35,35 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- /**
-    File Name:          11.13.1.js
-    ECMA Section:       11.13.1 Simple assignment
-    Description:
+/**
+   File Name:          11.13.1.js
+   ECMA Section:       11.13.1 Simple assignment
+   Description:
 
-    11.13.1 Simple Assignment ( = )
+   11.13.1 Simple Assignment ( = )
 
-    The production AssignmentExpression :
-    LeftHandSideExpression = AssignmentExpression is evaluated as follows:
+   The production AssignmentExpression :
+   LeftHandSideExpression = AssignmentExpression is evaluated as follows:
 
-    1.  Evaluate LeftHandSideExpression.
-    2.  Evaluate AssignmentExpression.
-    3.  Call GetValue(Result(2)).
-    4.  Call PutValue(Result(1), Result(3)).
-    5.  Return Result(3).
+   1.  Evaluate LeftHandSideExpression.
+   2.  Evaluate AssignmentExpression.
+   3.  Call GetValue(Result(2)).
+   4.  Call PutValue(Result(1), Result(3)).
+   5.  Return Result(3).
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "11.13.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var testcases = getTestCases();
+var SECTION = "11.13.1";
+var VERSION = "ECMA_1";
+startTest();
 
-    writeHeaderToLog( SECTION + " Simple Assignment ( = )");
-    test();
+writeHeaderToLog( SECTION + " Simple Assignment ( = )");
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,    
+              "SOMEVAR = true",     
+              true,   
+              SOMEVAR = true );
 
-    array[item++] = new TestCase( SECTION,    "SOMEVAR = true",     true,   SOMEVAR = true );
+test();
 
-
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

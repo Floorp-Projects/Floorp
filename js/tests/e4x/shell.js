@@ -138,7 +138,9 @@ function TEST(section, expected, actual)
     if (output != "")
     {
         reportFailure (section, output);   
+        return false;
     }
+    return true;
 }
 
 function TEST_XML(section, expected, actual)
@@ -148,17 +150,19 @@ function TEST_XML(section, expected, actual)
 
   if (actual_t != "xml") {
     // force error on type mismatch
-    TEST(section, new XML(), actual);
-    return;
+    return TEST(section, new XML(), actual);
   }
   
   if (expected_t == "string") {
-    TEST(section, expected, actual.toXMLString());
-  } else if (expected_t == "number") {
-    TEST(section, String(expected), actual.toXMLString());
-  } else {
-    reportFailure (section, "Bad TEST_XML usage: type of expected is "+expected_t+", should be number or string");
+    return TEST(section, expected, actual.toXMLString());
   }
+
+  if (expected_t == "number") {
+    return TEST(section, String(expected), actual.toXMLString());
+  }
+
+  reportFailure (section, "Bad TEST_XML usage: type of expected is "+expected_t+", should be number or string");
+  return false;
 }
 
 function SHOULD_THROW(section)

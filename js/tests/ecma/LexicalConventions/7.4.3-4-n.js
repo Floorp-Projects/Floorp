@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,53 +36,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          7.4.3-4-n.js
-    ECMA Section:       7.4.3
+   File Name:          7.4.3-4-n.js
+   ECMA Section:       7.4.3
 
-    Description:
-    The following words are used as keywords in proposed extensions and are
-    therefore reserved to allow for the possibility of future adoption of
-    those extensions.
+   Description:
+   The following words are used as keywords in proposed extensions and are
+   therefore reserved to allow for the possibility of future adoption of
+   those extensions.
 
-    FutureReservedWord :: one of
-    case    debugger    export      super
-    catch   default     extends     switch
-    class   do          finally     throw
-    const   enum        import      try
+   FutureReservedWord :: one of
+   case    debugger    export      super
+   catch   default     extends     switch
+   class   do          finally     throw
+   const   enum        import      try
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
-    var SECTION = "7.4.3-4-n";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Future Reserved Words";
+var SECTION = "7.4.3-4-n";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Future Reserved Words";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
-
-
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION,  "var super = true",     "error",    "var super = true" );
-    return ( array );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,  
+              "var super = true",     
+              "error",    
+              eval("var super = true") );
+test();

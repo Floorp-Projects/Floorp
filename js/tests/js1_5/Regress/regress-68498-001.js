@@ -54,8 +54,9 @@ var summary ='Testing that variable statement outside any eval creates'  +
 
 
 // To be pedantic, use a variable named 'self' to capture the global object -
-var self = this;
-var actual = (delete self);
+// conflicts with window.self in browsers
+var _self = this;
+var actual = (delete _self);
 var expect =false; 
 
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          while-001
  *  ECMA Section:
@@ -9,31 +10,28 @@
  *  Author:             christine@netscape.com
  *  Date:               11 August 1998
  */
-    var SECTION = "while-001";
-    var VERSION = "ECMA_2";
-    var TITLE   = "while statement";
+var SECTION = "while-001";
+var VERSION = "ECMA_2";
+var TITLE   = "while statement";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var tc = 0;
-    var testcases = new Array();
+DoWhile();
+test();
 
-    DoWhile();
-    test();
+function DoWhile() {
+  result = "pass";
 
-    function DoWhile() {
-        result = "pass";
+  while (false) {
+    result = "fail";
+    break;
+  }
 
-        while (false) {
-            result = "fail";
-            break;
-        }
+  new TestCase(
+    SECTION,
+    "while statement: don't evaluate statement is expression is false",
+    "pass",
+    result );
 
-        testcases[tc++] = new TestCase(
-            SECTION,
-            "while statement: don't evaluate statement is expression is false",
-            "pass",
-            result );
-
-    }
+}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
     File Name:          7.5-9-n.js
     ECMA Section:       7.5 Identifiers
@@ -52,34 +54,9 @@
 
     writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+DESCRIPTION = "var 123=\"hi\"";
+EXPECTED = "error";
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,    "var 123=\"hi\"",   "error",    eval("var 123 = \"hi\";array[item] = 123;") );
 
-    array[item] = new TestCase( SECTION,    "var 123=\"hi\"",   "error",    "" );
-
-    var 123 = "hi";
-
-    array[item] = 123;
-
-    return ( array );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +":  "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : " ignored chars after line terminator of single-line comment";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

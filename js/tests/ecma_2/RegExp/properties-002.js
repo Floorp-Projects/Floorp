@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          RegExp/properties-002.js
  *  ECMA Section:       15.7.6.js
@@ -6,7 +7,7 @@
  *  Author:             christine@netscape.com
  *  Date:               19 February 1999
  */
- //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var SECTION = "RegExp/properties-002.js";
 var VERSION = "ECMA_2";
 var TITLE   = "Properties of RegExp Instances";
@@ -77,49 +78,49 @@ test();
 
 function AddRegExpCases( re, s, g, i, m, l ){
 
-    AddTestCase( re + ".test == RegExp.prototype.test",
-                 true,
-                 re.test == RegExp.prototype.test );
+  AddTestCase( re + ".test == RegExp.prototype.test",
+	       true,
+	       re.test == RegExp.prototype.test );
 
-    AddTestCase( re + ".toString == RegExp.prototype.toString",
-                 true,
-                 re.toString == RegExp.prototype.toString );
+  AddTestCase( re + ".toString == RegExp.prototype.toString",
+	       true,
+	       re.toString == RegExp.prototype.toString );
 
-    AddTestCase( re + ".contructor == RegExp.prototype.constructor",
-                 true,
-                 re.constructor == RegExp.prototype.constructor );
+  AddTestCase( re + ".contructor == RegExp.prototype.constructor",
+	       true,
+	       re.constructor == RegExp.prototype.constructor );
 
-    AddTestCase( re + ".compile == RegExp.prototype.compile",
-                 true,
-                 re.compile == RegExp.prototype.compile );
+  AddTestCase( re + ".compile == RegExp.prototype.compile",
+	       true,
+	       re.compile == RegExp.prototype.compile );
 
-    AddTestCase( re + ".exec == RegExp.prototype.exec",
-                 true,
-                 re.exec == RegExp.prototype.exec );
+  AddTestCase( re + ".exec == RegExp.prototype.exec",
+	       true,
+	       re.exec == RegExp.prototype.exec );
 
-    // properties
+  // properties
 
-    AddTestCase( re + ".source",
-                 s,
-                 re.source );
+  AddTestCase( re + ".source",
+	       s,
+	       re.source );
 
-    AddTestCase( re + ".toString()",
-                 "/" + s +"/" + (g?"g":"") + (i?"i":"") +(m?"m":""),
-                 re.toString() );
+  AddTestCase( re + ".toString()",
+	       "/" + s +"/" + (g?"g":"") + (i?"i":"") +(m?"m":""),
+	       re.toString() );
 
-    AddTestCase( re + ".global",
-                 g,
-                 re.global );
+  AddTestCase( re + ".global",
+	       g,
+	       re.global );
 
-    AddTestCase( re + ".ignoreCase",
-                 i,
-                 re.ignoreCase );
+  AddTestCase( re + ".ignoreCase",
+	       i,
+	       re.ignoreCase );
 
-    AddTestCase( re + ".multiline",
-                 m,
-                 re.multiline);
+  AddTestCase( re + ".multiline",
+	       m,
+	       re.multiline);
 
-    AddTestCase( re + ".lastIndex",
-                 l,
-                 re.lastIndex  );
+  AddTestCase( re + ".lastIndex",
+	       l,
+	       re.lastIndex  );
 }

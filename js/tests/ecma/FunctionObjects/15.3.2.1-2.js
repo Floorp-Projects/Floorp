@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,92 +36,71 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /**
-    File Name:          15.3.2.1.js
-    ECMA Section:       15.3.2.1 The Function Constructor
-                        new Function(p1, p2, ..., pn, body )
+   File Name:          15.3.2.1.js
+   ECMA Section:       15.3.2.1 The Function Constructor
+   new Function(p1, p2, ..., pn, body )
 
-    Description:
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Description:
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var SECTION = "15.3.2.1-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "The Function Constructor";
+var SECTION = "15.3.2.1-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "The Function Constructor";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
-
-    var testcases = getTestCases();
-    test();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+var myfunc1 = new Function("a","b","c", "return a+b+c" );
+var myfunc2 = new Function("a, b, c",   "return a+b+c" );
+var myfunc3 = new Function("a,b", "c",  "return a+b+c" );
 
-    var myfunc1 = new Function("a","b","c", "return a+b+c" );
-    var myfunc2 = new Function("a, b, c",   "return a+b+c" );
-    var myfunc3 = new Function("a,b", "c",  "return a+b+c" );
+myfunc1.toString = Object.prototype.toString;
+myfunc2.toString = Object.prototype.toString;
+myfunc3.toString = Object.prototype.toString;
 
-    myfunc1.toString = Object.prototype.toString;
-    myfunc2.toString = Object.prototype.toString;
-    myfunc3.toString = Object.prototype.toString;
+new TestCase( SECTION,  "myfunc1 = new Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
+	      "[object Function]",
+	      myfunc1.toString() );
 
-    array[item++] = new TestCase( SECTION,  "myfunc1 = new Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
-                                            "[object Function]",
-                                            myfunc1.toString() );
+new TestCase( SECTION,  "myfunc1.length",                            3,                      myfunc1.length );
+new TestCase( SECTION,  "myfunc1.prototype.toString()",              "[object Object]",      myfunc1.prototype.toString() );
 
-    array[item++] = new TestCase( SECTION,  "myfunc1.length",                            3,                      myfunc1.length );
-    array[item++] = new TestCase( SECTION,  "myfunc1.prototype.toString()",              "[object Object]",      myfunc1.prototype.toString() );
+new TestCase( SECTION,  "myfunc1.prototype.constructor",             myfunc1,                myfunc1.prototype.constructor );
+new TestCase( SECTION,  "myfunc1.arguments",                         null,                   myfunc1.arguments );
+new TestCase( SECTION,  "myfunc1(1,2,3)",                            6,                      myfunc1(1,2,3) );
+new TestCase( SECTION,  "var MYPROPS = ''; for ( var p in myfunc1.prototype ) { MYPROPS += p; }; MYPROPS",
+	      "",
+	      eval("var MYPROPS = ''; for ( var p in myfunc1.prototype ) { MYPROPS += p; }; MYPROPS") );
 
-    array[item++] = new TestCase( SECTION,  "myfunc1.prototype.constructor",             myfunc1,                myfunc1.prototype.constructor );
-    array[item++] = new TestCase( SECTION,  "myfunc1.arguments",                         null,                   myfunc1.arguments );
-    array[item++] = new TestCase( SECTION,  "myfunc1(1,2,3)",                            6,                      myfunc1(1,2,3) );
-    array[item++] = new TestCase( SECTION,  "var MYPROPS = ''; for ( var p in myfunc1.prototype ) { MYPROPS += p; }; MYPROPS",
-                                            "",
-                                            eval("var MYPROPS = ''; for ( var p in myfunc1.prototype ) { MYPROPS += p; }; MYPROPS") );
+new TestCase( SECTION,  "myfunc2 = new Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
+	      "[object Function]",
+	      myfunc2.toString() );
+new TestCase( SECTION,  "myfunc2.__proto__",                         Function.prototype,     myfunc2.__proto__ );
+new TestCase( SECTION,  "myfunc2.length",                            3,                      myfunc2.length );
+new TestCase( SECTION,  "myfunc2.prototype.toString()",              "[object Object]",      myfunc2.prototype.toString() );
 
-    array[item++] = new TestCase( SECTION,  "myfunc2 = new Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
-                                            "[object Function]",
-                                            myfunc2.toString() );
-    array[item++] = new TestCase( SECTION,  "myfunc2.__proto__",                         Function.prototype,     myfunc2.__proto__ );
-    array[item++] = new TestCase( SECTION,  "myfunc2.length",                            3,                      myfunc2.length );
-    array[item++] = new TestCase( SECTION,  "myfunc2.prototype.toString()",              "[object Object]",      myfunc2.prototype.toString() );
+new TestCase( SECTION,  "myfunc2.prototype.constructor",             myfunc2,                 myfunc2.prototype.constructor );
+new TestCase( SECTION,  "myfunc2.arguments",                         null,                   myfunc2.arguments );
+new TestCase( SECTION,  "myfunc2( 1000, 200, 30 )",                 1230,                    myfunc2(1000,200,30) );
+new TestCase( SECTION,  "var MYPROPS = ''; for ( var p in myfunc2.prototype ) { MYPROPS += p; }; MYPROPS",
+	      "",
+	      eval("var MYPROPS = ''; for ( var p in myfunc2.prototype ) { MYPROPS += p; }; MYPROPS") );
 
-    array[item++] = new TestCase( SECTION,  "myfunc2.prototype.constructor",             myfunc2,                 myfunc2.prototype.constructor );
-    array[item++] = new TestCase( SECTION,  "myfunc2.arguments",                         null,                   myfunc2.arguments );
-    array[item++] = new TestCase( SECTION,  "myfunc2( 1000, 200, 30 )",                 1230,                    myfunc2(1000,200,30) );
-    array[item++] = new TestCase( SECTION,  "var MYPROPS = ''; for ( var p in myfunc2.prototype ) { MYPROPS += p; }; MYPROPS",
-                                            "",
-                                            eval("var MYPROPS = ''; for ( var p in myfunc2.prototype ) { MYPROPS += p; }; MYPROPS") );
+new TestCase( SECTION,  "myfunc3 = new Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
+	      "[object Function]",
+	      myfunc3.toString() );
+new TestCase( SECTION,  "myfunc3.__proto__",                         Function.prototype,     myfunc3.__proto__ );
+new TestCase( SECTION,  "myfunc3.length",                            3,                      myfunc3.length );
+new TestCase( SECTION,  "myfunc3.prototype.toString()",              "[object Object]",      myfunc3.prototype.toString() );
+new TestCase( SECTION,  "myfunc3.prototype.valueOf() +''",           "[object Object]",      myfunc3.prototype.valueOf() +'' );
+new TestCase( SECTION,  "myfunc3.prototype.constructor",             myfunc3,                 myfunc3.prototype.constructor );
+new TestCase( SECTION,  "myfunc3.arguments",                         null,                   myfunc3.arguments );
+new TestCase( SECTION,  "myfunc3(-100,100,NaN)",                    Number.NaN,              myfunc3(-100,100,NaN) );
 
-    array[item++] = new TestCase( SECTION,  "myfunc3 = new Function('a','b','c'); myfunc.toString = Object.prototype.toString; myfunc.toString()",
-                                            "[object Function]",
-                                            myfunc3.toString() );
-    array[item++] = new TestCase( SECTION,  "myfunc3.__proto__",                         Function.prototype,     myfunc3.__proto__ );
-    array[item++] = new TestCase( SECTION,  "myfunc3.length",                            3,                      myfunc3.length );
-    array[item++] = new TestCase( SECTION,  "myfunc3.prototype.toString()",              "[object Object]",      myfunc3.prototype.toString() );
-    array[item++] = new TestCase( SECTION,  "myfunc3.prototype.valueOf() +''",           "[object Object]",      myfunc3.prototype.valueOf() +'' );
-    array[item++] = new TestCase( SECTION,  "myfunc3.prototype.constructor",             myfunc3,                 myfunc3.prototype.constructor );
-    array[item++] = new TestCase( SECTION,  "myfunc3.arguments",                         null,                   myfunc3.arguments );
-    array[item++] = new TestCase( SECTION,  "myfunc3(-100,100,NaN)",                    Number.NaN,              myfunc3(-100,100,NaN) );
-
-    array[item++] = new TestCase( SECTION,  "var MYPROPS = ''; for ( var p in myfunc3.prototype ) { MYPROPS += p; }; MYPROPS",
-                                            "",
-                                            eval("var MYPROPS = ''; for ( var p in myfunc3.prototype ) { MYPROPS += p; }; MYPROPS") );
-
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,  "var MYPROPS = ''; for ( var p in myfunc3.prototype ) { MYPROPS += p; }; MYPROPS",
+	      "",
+	      eval("var MYPROPS = ''; for ( var p in myfunc3.prototype ) { MYPROPS += p; }; MYPROPS") );
+test();

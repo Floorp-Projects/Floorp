@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,52 +35,36 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.5.4.2-1.js
-    ECMA Section:       15.5.4.2 String.prototype.toString()
+   File Name:          15.5.4.2-1.js
+   ECMA Section:       15.5.4.2 String.prototype.toString()
 
-    Description:        Returns this string value.  Note that, for a String
-                        object, the toString() method happens to return the same
-                        thing as the valueOf() method.
+   Description:        Returns this string value.  Note that, for a String
+   object, the toString() method happens to return the same
+   thing as the valueOf() method.
 
-                        The toString function is not generic; it generates a
-                        runtime error if its this value is not a String object.
-                        Therefore it connot be transferred to the other kinds of
-                        objects for use as a method.
+   The toString function is not generic; it generates a
+   runtime error if its this value is not a String object.
+   Therefore it connot be transferred to the other kinds of
+   objects for use as a method.
 
-    Author:             christine@netscape.com
-    Date:               1 october 1997
+   Author:             christine@netscape.com
+   Date:               1 october 1997
 */
 
-    var SECTION = "15.5.4.2-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "String.prototype.toString";
+var SECTION = "15.5.4.2-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "String.prototype.toString";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,   "String.prototype.toString()",        "",     String.prototype.toString() );
+new TestCase( SECTION,   "(new String()).toString()",          "",     (new String()).toString() );
+new TestCase( SECTION,   "(new String(\"\")).toString()",      "",     (new String("")).toString() );
+new TestCase( SECTION,   "(new String( String() )).toString()","",    (new String(String())).toString() );
+new TestCase( SECTION,  "(new String( \"h e l l o\" )).toString()",       "h e l l o",    (new String("h e l l o")).toString() );
+new TestCase( SECTION,   "(new String( 0 )).toString()",       "0",    (new String(0)).toString() );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION,   "String.prototype.toString()",        "",     String.prototype.toString() );
-    array[item++] = new TestCase( SECTION,   "(new String()).toString()",          "",     (new String()).toString() );
-    array[item++] = new TestCase( SECTION,   "(new String(\"\")).toString()",      "",     (new String("")).toString() );
-    array[item++] = new TestCase( SECTION,   "(new String( String() )).toString()","",    (new String(String())).toString() );
-    array[item++] = new TestCase( SECTION,  "(new String( \"h e l l o\" )).toString()",       "h e l l o",    (new String("h e l l o")).toString() );
-    array[item++] = new TestCase( SECTION,   "(new String( 0 )).toString()",       "0",    (new String(0)).toString() );
-    return ( array );
-}
-function test( array ) {
-    for ( tc = 0; tc < testcases.length; tc++ ) {
-
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

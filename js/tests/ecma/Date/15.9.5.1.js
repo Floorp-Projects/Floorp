@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,41 +35,27 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-    File Name:          15.9.5.1.js
-    ECMA Section:       15.9.5.1 Date.prototype.constructor
-    Description:
-    The initial value of Date.prototype.constructor is the built-in Date
-    constructor.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+/**
+   File Name:          15.9.5.1.js
+   ECMA Section:       15.9.5.1 Date.prototype.constructor
+   Description:
+   The initial value of Date.prototype.constructor is the built-in Date
+   constructor.
+
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "15.9.5.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Date.prototype.constructor";
+var SECTION = "15.9.5.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Date.prototype.constructor";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
-
-    testcases[tc++] = new TestCase( SECTION,
-                                    "Date.prototype.constructor == Date",
-                                    true,
-                                    Date.prototype.constructor == Date );
-    test();
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "Date.prototype.constructor == Date",
+	      true,
+	      Date.prototype.constructor == Date );
+test();

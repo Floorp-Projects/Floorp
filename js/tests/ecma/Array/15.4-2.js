@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,65 +35,78 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.4-2.js
-    ECMA Section:       15.4 Array Objects
+File Name:          15.4-2.js
+ECMA Section:       15.4 Array Objects
 
-    Description:        Whenever a property is added whose name is an array
-                        index, the length property is changed, if necessary,
-                        to be one more than the numeric value of that array
-                        index; and whenever the length property is changed,
-                        every property whose name is an array index whose value
-                        is not smaller  than the new length is automatically
-                        deleted.  This constraint applies only to the Array
-                        object itself, and is unaffected by length or array
-                        index properties that may be inherited from its
-                        prototype.
+Description:        Whenever a property is added whose name is an array
+index, the length property is changed, if necessary,
+to be one more than the numeric value of that array
+index; and whenever the length property is changed,
+every property whose name is an array index whose value
+is not smaller  than the new length is automatically
+deleted.  This constraint applies only to the Array
+object itself, and is unaffected by length or array
+index properties that may be inherited from its
+prototype.
 
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+Author:             christine@netscape.com
+Date:               28 october 1997
 
 */
-    var SECTION = "15.4-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Array Objects";
+var SECTION = "15.4-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Array Objects";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION, 
+              "var arr=new Array();  arr[Math.pow(2,16)] = 'hi'; arr.length",      
+              Math.pow(2,16)+1,   
+              eval("var arr=new Array();  arr[Math.pow(2,16)] = 'hi'; arr.length") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION, 
+              "var arr=new Array();  arr[Math.pow(2,30)-2] = 'hi'; arr.length",    
+              Math.pow(2,30)-1,   
+              eval("var arr=new Array();  arr[Math.pow(2,30)-2] = 'hi'; arr.length") );
 
-    array[item++] = new TestCase( SECTION, "var arr=new Array();  arr[Math.pow(2,16)] = 'hi'; arr.length",      Math.pow(2,16)+1,   eval("var arr=new Array();  arr[Math.pow(2,16)] = 'hi'; arr.length") );
+new TestCase( SECTION, 
+              "var arr=new Array();  arr[Math.pow(2,30)-1] = 'hi'; arr.length",    
+              Math.pow(2,30),     
+              eval("var arr=new Array();  arr[Math.pow(2,30)-1] = 'hi'; arr.length") );
 
-    array[item++] = new TestCase( SECTION, "var arr=new Array();  arr[Math.pow(2,30)-2] = 'hi'; arr.length",    Math.pow(2,30)-1,   eval("var arr=new Array();  arr[Math.pow(2,30)-2] = 'hi'; arr.length") );
-    array[item++] = new TestCase( SECTION, "var arr=new Array();  arr[Math.pow(2,30)-1] = 'hi'; arr.length",    Math.pow(2,30),     eval("var arr=new Array();  arr[Math.pow(2,30)-1] = 'hi'; arr.length") );
-    array[item++] = new TestCase( SECTION, "var arr=new Array();  arr[Math.pow(2,30)] = 'hi'; arr.length",      Math.pow(2,30)+1,   eval("var arr=new Array();  arr[Math.pow(2,30)] = 'hi'; arr.length") );
+new TestCase( SECTION, 
+              "var arr=new Array();  arr[Math.pow(2,30)] = 'hi'; arr.length",      
+              Math.pow(2,30)+1,   
+              eval("var arr=new Array();  arr[Math.pow(2,30)] = 'hi'; arr.length") );
 
-    array[item++] = new TestCase( SECTION, "var arr=new Array();  arr[Math.pow(2,31)-2] = 'hi'; arr.length",    Math.pow(2,31)-1,   eval("var arr=new Array();  arr[Math.pow(2,31)-2] = 'hi'; arr.length") );
-    array[item++] = new TestCase( SECTION, "var arr=new Array();  arr[Math.pow(2,31)-1] = 'hi'; arr.length",    Math.pow(2,31),     eval("var arr=new Array();  arr[Math.pow(2,31)-1] = 'hi'; arr.length") );
-    array[item++] = new TestCase( SECTION, "var arr=new Array();  arr[Math.pow(2,31)] = 'hi'; arr.length",      Math.pow(2,31)+1,   eval("var arr=new Array();  arr[Math.pow(2,31)] = 'hi'; arr.length") );
 
-    array[item++] = new TestCase( SECTION, "var arr = new Array(0,1,2,3,4,5); arr.length = 2; String(arr)",     "0,1",              eval("var arr = new Array(0,1,2,3,4,5); arr.length = 2; String(arr)") );
-    array[item++] = new TestCase( SECTION, "var arr = new Array(0,1); arr.length = 3; String(arr)",             "0,1,",             eval("var arr = new Array(0,1); arr.length = 3; String(arr)") );
-//    array[item++] = new TestCase( SECTION, "var arr = new Array(0,1,2,3,4,5); delete arr[0]; arr.length",       5,                  eval("var arr = new Array(0,1,2,3,4,5); delete arr[0]; arr.length") );
-//    array[item++] = new TestCase( SECTION, "var arr = new Array(0,1,2,3,4,5); delete arr[6]; arr.length",       5,                  eval("var arr = new Array(0,1,2,3,4,5); delete arr[6]; arr.length") );
+new TestCase( SECTION, 
+              "var arr=new Array();  arr[Math.pow(2,31)-2] = 'hi'; arr.length",    
+              Math.pow(2,31)-1,   
+              eval("var arr=new Array();  arr[Math.pow(2,31)-2] = 'hi'; arr.length") );
 
-    return ( array );
-}
-function test( array ) {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
+new TestCase( SECTION, 
+              "var arr=new Array();  arr[Math.pow(2,31)-1] = 'hi'; arr.length",    
+              Math.pow(2,31),     
+              eval("var arr=new Array();  arr[Math.pow(2,31)-1] = 'hi'; arr.length") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION, 
+              "var arr=new Array();  arr[Math.pow(2,31)] = 'hi'; arr.length",      
+              Math.pow(2,31)+1,   
+              eval("var arr=new Array();  arr[Math.pow(2,31)] = 'hi'; arr.length") );
+
+new TestCase( SECTION, 
+              "var arr = new Array(0,1,2,3,4,5); arr.length = 2; String(arr)",     
+              "0,1",              
+              eval("var arr = new Array(0,1,2,3,4,5); arr.length = 2; String(arr)") );
+
+new TestCase( SECTION, 
+              "var arr = new Array(0,1); arr.length = 3; String(arr)",             
+              "0,1,",             
+              eval("var arr = new Array(0,1); arr.length = 3; String(arr)") );
+
+test();
+

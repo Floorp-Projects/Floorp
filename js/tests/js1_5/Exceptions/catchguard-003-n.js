@@ -38,6 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+DESCRIPTION = "Illegally constructed catchguard should have thrown an exception.";
+EXPECTED = "error";
+
 test();
 
 function test()

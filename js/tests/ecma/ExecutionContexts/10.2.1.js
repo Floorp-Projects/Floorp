@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,64 +35,49 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          10.2.1.js
-    ECMA Section:       10.2.1 Global Code
-    Description:
+   File Name:          10.2.1.js
+   ECMA Section:       10.2.1 Global Code
+   Description:
 
-    The scope chain is created and initialized to contain the global object and
-    no others.
+   The scope chain is created and initialized to contain the global object and
+   no others.
 
-    Variable instantiation is performed using the global object as the variable
-    object and using empty property attributes.
+   Variable instantiation is performed using the global object as the variable
+   object and using empty property attributes.
 
-    The this value is the global object.
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   The this value is the global object.
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "10.2.1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Global Code";
+var SECTION = "10.2.1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Global Code";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+var THIS = this;
 
-    var THIS = this;
+new TestCase( SECTION,
+	      "this +''",
+	      GLOBAL,
+	      THIS + "" );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "this +''",
-                                    GLOBAL,
-                                    THIS + "" );
+var GLOBAL_PROPERTIES = new Array();
+var i = 0;
 
-    var GLOBAL_PROPERTIES = new Array();
-    var i = 0;
-
-    for ( p in this ) {
-        GLOBAL_PROPERTIES[i++] = p;
-    }
-
-    for ( i = 0; i < GLOBAL_PROPERTIES.length; i++ ) {
-        testcases[tc++] = new TestCase( SECTION,
-                                        GLOBAL_PROPERTIES[i] +" == void 0",
-                                        false,
-                                        eval("GLOBAL_PROPERTIES["+i+"] == void 0"));
-    }
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+for ( p in this ) {
+  GLOBAL_PROPERTIES[i++] = p;
 }
+
+for ( i = 0; i < GLOBAL_PROPERTIES.length; i++ ) {
+  new TestCase( SECTION,
+		GLOBAL_PROPERTIES[i] +" == void 0",
+		false,
+		eval("GLOBAL_PROPERTIES["+i+"] == void 0"));
+}
+
+test();

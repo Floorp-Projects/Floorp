@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,29 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.1.2.1-2.js
-    ECMA Section:       15.1.2.1 eval(x)
+   File Name:          15.1.2.1-2.js
+   ECMA Section:       15.1.2.1 eval(x)
 
-                        Parse x as an ECMAScript Program.  If the parse fails,
-                        generate a runtime error.  Evaluate the program.  If
-                        result is "Normal completion after value V", return
-                        the value V.  Else, return undefined.
-    Description:
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Parse x as an ECMAScript Program.  If the parse fails,
+   generate a runtime error.  Evaluate the program.  If
+   result is "Normal completion after value V", return
+   the value V.  Else, return undefined.
+   Description:
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
-    var SECTION = "15.1.2.1-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "eval(x)";
+var SECTION = "15.1.2.1-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "eval(x)";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
+new TestCase(    SECTION,
+		 "d = new Date(0); with (d) { x = getUTCMonth() +'/'+ getUTCDate() +'/'+ getUTCFullYear(); } x",
+		 "0/1/1970",
+		 eval( "d = new Date(0); with (d) { x = getUTCMonth() +'/'+ getUTCDate() +'/'+ getUTCFullYear(); } x" ));
 
-    test();
-
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[0] = new TestCase(    SECTION,
-                                "d = new Date(0); with (d) { x = getUTCMonth() +'/'+ getUTCDate() +'/'+ getUTCFullYear(); } x",
-                                "0/1/1970",
-                                eval( "d = new Date(0); with (d) { x = getUTCMonth() +'/'+ getUTCDate() +'/'+ getUTCFullYear(); } x" )
-                            );
-    return ( array );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

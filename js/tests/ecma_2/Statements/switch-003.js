@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /**
  *  File Name:          switch-003.js
  *  ECMA Section:
@@ -9,46 +10,43 @@
  *  Date:               11 August 1998
  *
  */
-    var SECTION = "switch-003";
-    var VERSION = "ECMA_2";
-    var TITLE   = "The switch statement";
+var SECTION = "switch-003";
+var VERSION = "ECMA_2";
+var TITLE   = "The switch statement";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var tc = 0;
-    var testcases = new Array();
-
-    SwitchTest( "a", "abc" );
-    SwitchTest( "b", "bc" );
-    SwitchTest( "c", "c" );
-    SwitchTest( "d", "*abc" );
-    SwitchTest( "v", "*abc" );
-    SwitchTest( "w", "w*abc" );
-    SwitchTest( "x", "xw*abc" );
-    SwitchTest( "y", "yxw*abc" );
-    SwitchTest( "z", "zyxw*abc" );
+SwitchTest( "a", "abc" );
+SwitchTest( "b", "bc" );
+SwitchTest( "c", "c" );
+SwitchTest( "d", "*abc" );
+SwitchTest( "v", "*abc" );
+SwitchTest( "w", "w*abc" );
+SwitchTest( "x", "xw*abc" );
+SwitchTest( "y", "yxw*abc" );
+SwitchTest( "z", "zyxw*abc" );
 //    SwitchTest( new java.lang.String("z"), "*abc" );
 
-    test();
+test();
 
-    function SwitchTest( input, expect ) {
-        var result = "";
+function SwitchTest( input, expect ) {
+  var result = "";
 
-        switch ( input ) {
-            case "z": result += "z";
-            case "y": result += "y";
-            case "x": result += "x";
-            case "w": result += "w";
-            default: result += "*";
-            case "a": result += "a";
-            case "b": result += "b";
-            case "c": result += "c";
-        }
+  switch ( input ) {
+  case "z": result += "z";
+  case "y": result += "y";
+  case "x": result += "x";
+  case "w": result += "w";
+  default: result += "*";
+  case "a": result += "a";
+  case "b": result += "b";
+  case "c": result += "c";
+  }
 
-        testcases[tc++] = new TestCase(
-            SECTION,
-            "switch with no breaks:  input is " + input,
-            expect,
-            result );
-    }
+  new TestCase(
+    SECTION,
+    "switch with no breaks:  input is " + input,
+    expect,
+    result );
+}

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -61,78 +62,76 @@
  * 1,2, giving function f2(){}. This should be legal by the testsuite's lights."
  *
  */
-    var SECTION = "function-002.js";
-    var VERSION = "JS1_4";
-    var TITLE   = "Regression test case for 325843";
-    var BUGNUMBER="330462";
+var SECTION = "function-002.js";
+var VERSION = "JS1_4";
+var TITLE   = "Regression test case for 325843";
+var BUGNUMBER="330462";
 
-    startTest();
+startTest();
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+dec1 = "function f1(x,y){++x, --y}";
+dec2 = "function f2(){var y; f1(1,2); y=new Date(); writeLineToLog(y.toString())}";
 
-    dec1 = "function f1(x,y){++x, --y}";
-    dec2 = "function f2(){var y; f1(1,2); y=new Date(); print(y.toString())}";
+eval(dec1);
+eval(dec2);
 
-    eval(dec1);
-    eval(dec2);
-
-    testcases[tc++] = new TestCase(
-        SECTION,
-         "typeof f1",
-        "function",
-        typeof f1 );
+new TestCase(
+    SECTION,
+    "typeof f1",
+    "function",
+    typeof f1 );
 
 
-    // force a function decompilation
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "f1.toString() == dec1",
-        true,
-        StripSpaces(f1.toString()) == StripSpaces(dec1));
+// force a function decompilation
+new TestCase(
+    SECTION,
+    "f1.toString() == dec1",
+    true,
+    StripSpaces(f1.toString()) == StripSpaces(dec1));
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "typeof f2",
-        "function",
-        typeof f2 );
+new TestCase(
+    SECTION,
+    "typeof f2",
+    "function",
+    typeof f2 );
 
-    // force a function decompilation
+// force a function decompilation
 
-    testcases[tc++] = new TestCase(
-        SECTION,
-        "f2.toString() == dec2",
-        true,
-        StripSpaces(f2.toString()) == StripSpaces(dec2));
+new TestCase(
+    SECTION,
+    "f2.toString() == dec2",
+    true,
+    StripSpaces(f2.toString()) == StripSpaces(dec2));
 
-    test();
+test();
 
-    function StripSpaces( s ) {
-        var strippedString = "";
-        for ( var currentChar = 0; currentChar < s.length; currentChar++ ) {
-            if (!IsWhiteSpace(s.charAt(currentChar))) {
-                strippedString += s.charAt(currentChar);
-            }
-        }
-        return strippedString;
+function StripSpaces( s ) {
+    var strippedString = "";
+    for ( var currentChar = 0; currentChar < s.length; currentChar++ ) {
+	if (!IsWhiteSpace(s.charAt(currentChar))) {
+	    strippedString += s.charAt(currentChar);
+	}
     }
+    return strippedString;
+}
 
-    function IsWhiteSpace( string ) {
-        var cc = string.charCodeAt(0);
+function IsWhiteSpace( string ) {
+    var cc = string.charCodeAt(0);
 
-        switch (cc) {
-            case (0x0009):
-            case (0x000B):
-            case (0x000C):
-            case (0x0020):
-            case (0x000A):
-            case (0x000D):
-            case ( 59 ): // let's strip out semicolons, too
-                return true;
-                break;
-            default:
-                return false;
-        }
+    switch (cc) {
+    case (0x0009):
+    case (0x000B):
+    case (0x000C):
+    case (0x0020):
+    case (0x000A):
+    case (0x000D):
+    case ( 59 ): // let's strip out semicolons, too
+	return true;
+	break;
+    default:
+	return false;
     }
+}
 

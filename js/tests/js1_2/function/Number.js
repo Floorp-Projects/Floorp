@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,65 +35,49 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     Number.js
-	Description:  'This tests the function Number(Object)'
 
-	Author:       Nick Lerissa
-	Date:         Fri Feb 13 09:58:28 PST 1998
+/**
+   Filename:     Number.js
+   Description:  'This tests the function Number(Object)'
+
+   Author:       Nick Lerissa
+   Date:         Fri Feb 13 09:58:28 PST 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'functions: Number';
-	var BUGNUMBER="123435";
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'functions: Number';
+var BUGNUMBER="123435";
 
-	writeHeaderToLog('Executing script: Number.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog('Executing script: Number.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-	var count = 0;
-	var testcases = new Array();
+date = new Date(2200);
+
+new TestCase( SECTION, "Number(new Date(2200))  ",
+	      2200,  (Number(date)));
+new TestCase( SECTION, "Number(true)            ",
+	      1,  (Number(true)));
+new TestCase( SECTION, "Number(false)           ",
+	      0,  (Number(false)));
+new TestCase( SECTION, "Number('124')           ",
+	      124,  (Number('124')));
+new TestCase( SECTION, "Number('1.23')          ",
+	      1.23,  (Number('1.23')));
+new TestCase( SECTION, "Number({p:1})           ",
+	      NaN,  (Number({p:1})));
+new TestCase( SECTION, "Number(null)            ",
+	      0,  (Number(null)));
+new TestCase( SECTION, "Number(-45)             ",
+	      -45,  (Number(-45)));
+
+// http://scopus.mcom.com/bugsplat/show_bug.cgi?id=123435
+// under js1.2, Number([1,2,3]) should return 3.
+
+new TestCase( SECTION, "Number([1,2,3])         ",
+	      3,  (Number([1,2,3])));
 
 
-	date = new Date(2200);
-
-	testcases[count++] = new TestCase( SECTION, "Number(new Date(2200))  ",
-	                                            2200,  (Number(date)));
-	testcases[count++] = new TestCase( SECTION, "Number(true)            ",
-	                                            1,  (Number(true)));
-	testcases[count++] = new TestCase( SECTION, "Number(false)           ",
-	                                            0,  (Number(false)));
-	testcases[count++] = new TestCase( SECTION, "Number('124')           ",
-	                                            124,  (Number('124')));
-	testcases[count++] = new TestCase( SECTION, "Number('1.23')          ",
-	                                            1.23,  (Number('1.23')));
-	testcases[count++] = new TestCase( SECTION, "Number({p:1})           ",
-	                                            NaN,  (Number({p:1})));
-	testcases[count++] = new TestCase( SECTION, "Number(null)            ",
-	                                            0,  (Number(null)));
-	testcases[count++] = new TestCase( SECTION, "Number(-45)             ",
-	                                            -45,  (Number(-45)));
-
-    // http://scopus.mcom.com/bugsplat/show_bug.cgi?id=123435
-    // under js1.2, Number([1,2,3]) should return 3.
-
-	testcases[count++] = new TestCase( SECTION, "Number([1,2,3])         ",
-	                                            3,  (Number([1,2,3])));
-
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();
 

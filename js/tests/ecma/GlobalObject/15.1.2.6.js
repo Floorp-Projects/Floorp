@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,109 +35,89 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.1.2.6.js
-    ECMA Section:       15.1.2.6 isNaN( x )
+   File Name:          15.1.2.6.js
+   ECMA Section:       15.1.2.6 isNaN( x )
 
-    Description:        Applies ToNumber to its argument, then returns true if
-                        the result isNaN and otherwise returns false.
+   Description:        Applies ToNumber to its argument, then returns true if
+   the result isNaN and otherwise returns false.
 
-    Author:             christine@netscape.com
-    Date:               28 october 1997
+   Author:             christine@netscape.com
+   Date:               28 october 1997
 
 */
-    var SECTION = "15.1.2.6";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "isNaN( x )";
+var SECTION = "15.1.2.6";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "isNaN( x )";
 
-    var BUGNUMBER = "77391";
+var BUGNUMBER = "77391";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
+new TestCase( SECTION, "isNaN.length",      1,                  isNaN.length );
+new TestCase( SECTION, "var MYPROPS=''; for ( var p in isNaN ) { MYPROPS+= p }; MYPROPS", "", eval("var MYPROPS=''; for ( var p in isNaN ) { MYPROPS+= p }; MYPROPS") );
+new TestCase( SECTION, "isNaN.length = null; isNaN.length", 1,      eval("isNaN.length=null; isNaN.length") );
+new TestCase( SECTION, "delete isNaN.length",               false,  delete isNaN.length );
+new TestCase( SECTION, "delete isNaN.length; isNaN.length", 1,      eval("delete isNaN.length; isNaN.length") );
 
-    test();
+//     new TestCase( SECTION, "isNaN.__proto__",   Function.prototype, isNaN.__proto__ );
 
+new TestCase( SECTION, "isNaN()",           true,               isNaN() );
+new TestCase( SECTION, "isNaN( null )",     false,              isNaN(null) );
+new TestCase( SECTION, "isNaN( void 0 )",   true,               isNaN(void 0) );
+new TestCase( SECTION, "isNaN( true )",     false,              isNaN(true) );
+new TestCase( SECTION, "isNaN( false)",     false,              isNaN(false) );
+new TestCase( SECTION, "isNaN( ' ' )",      false,              isNaN( " " ) );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION, "isNaN( 0 )",        false,              isNaN(0) );
+new TestCase( SECTION, "isNaN( 1 )",        false,              isNaN(1) );
+new TestCase( SECTION, "isNaN( 2 )",        false,              isNaN(2) );
+new TestCase( SECTION, "isNaN( 3 )",        false,              isNaN(3) );
+new TestCase( SECTION, "isNaN( 4 )",        false,              isNaN(4) );
+new TestCase( SECTION, "isNaN( 5 )",        false,              isNaN(5) );
+new TestCase( SECTION, "isNaN( 6 )",        false,              isNaN(6) );
+new TestCase( SECTION, "isNaN( 7 )",        false,              isNaN(7) );
+new TestCase( SECTION, "isNaN( 8 )",        false,              isNaN(8) );
+new TestCase( SECTION, "isNaN( 9 )",        false,              isNaN(9) );
 
-    array[item++] = new TestCase( SECTION, "isNaN.length",      1,                  isNaN.length );
-    array[item++] = new TestCase( SECTION, "var MYPROPS=''; for ( var p in isNaN ) { MYPROPS+= p }; MYPROPS", "", eval("var MYPROPS=''; for ( var p in isNaN ) { MYPROPS+= p }; MYPROPS") );
-    array[item++] = new TestCase( SECTION, "isNaN.length = null; isNaN.length", 1,      eval("isNaN.length=null; isNaN.length") );
-    array[item++] = new TestCase( SECTION, "delete isNaN.length",               false,  delete isNaN.length );
-    array[item++] = new TestCase( SECTION, "delete isNaN.length; isNaN.length", 1,      eval("delete isNaN.length; isNaN.length") );
-
-//    array[item++] = new TestCase( SECTION, "isNaN.__proto__",   Function.prototype, isNaN.__proto__ );
-
-    array[item++] = new TestCase( SECTION, "isNaN()",           true,               isNaN() );
-    array[item++] = new TestCase( SECTION, "isNaN( null )",     false,              isNaN(null) );
-    array[item++] = new TestCase( SECTION, "isNaN( void 0 )",   true,               isNaN(void 0) );
-    array[item++] = new TestCase( SECTION, "isNaN( true )",     false,              isNaN(true) );
-    array[item++] = new TestCase( SECTION, "isNaN( false)",     false,              isNaN(false) );
-    array[item++] = new TestCase( SECTION, "isNaN( ' ' )",      false,              isNaN( " " ) );
-
-    array[item++] = new TestCase( SECTION, "isNaN( 0 )",        false,              isNaN(0) );
-    array[item++] = new TestCase( SECTION, "isNaN( 1 )",        false,              isNaN(1) );
-    array[item++] = new TestCase( SECTION, "isNaN( 2 )",        false,              isNaN(2) );
-    array[item++] = new TestCase( SECTION, "isNaN( 3 )",        false,              isNaN(3) );
-    array[item++] = new TestCase( SECTION, "isNaN( 4 )",        false,              isNaN(4) );
-    array[item++] = new TestCase( SECTION, "isNaN( 5 )",        false,              isNaN(5) );
-    array[item++] = new TestCase( SECTION, "isNaN( 6 )",        false,              isNaN(6) );
-    array[item++] = new TestCase( SECTION, "isNaN( 7 )",        false,              isNaN(7) );
-    array[item++] = new TestCase( SECTION, "isNaN( 8 )",        false,              isNaN(8) );
-    array[item++] = new TestCase( SECTION, "isNaN( 9 )",        false,              isNaN(9) );
-
-    array[item++] = new TestCase( SECTION, "isNaN( '0' )",        false,              isNaN('0') );
-    array[item++] = new TestCase( SECTION, "isNaN( '1' )",        false,              isNaN('1') );
-    array[item++] = new TestCase( SECTION, "isNaN( '2' )",        false,              isNaN('2') );
-    array[item++] = new TestCase( SECTION, "isNaN( '3' )",        false,              isNaN('3') );
-    array[item++] = new TestCase( SECTION, "isNaN( '4' )",        false,              isNaN('4') );
-    array[item++] = new TestCase( SECTION, "isNaN( '5' )",        false,              isNaN('5') );
-    array[item++] = new TestCase( SECTION, "isNaN( '6' )",        false,              isNaN('6') );
-    array[item++] = new TestCase( SECTION, "isNaN( '7' )",        false,              isNaN('7') );
-    array[item++] = new TestCase( SECTION, "isNaN( '8' )",        false,              isNaN('8') );
-    array[item++] = new TestCase( SECTION, "isNaN( '9' )",        false,              isNaN('9') );
+new TestCase( SECTION, "isNaN( '0' )",        false,              isNaN('0') );
+new TestCase( SECTION, "isNaN( '1' )",        false,              isNaN('1') );
+new TestCase( SECTION, "isNaN( '2' )",        false,              isNaN('2') );
+new TestCase( SECTION, "isNaN( '3' )",        false,              isNaN('3') );
+new TestCase( SECTION, "isNaN( '4' )",        false,              isNaN('4') );
+new TestCase( SECTION, "isNaN( '5' )",        false,              isNaN('5') );
+new TestCase( SECTION, "isNaN( '6' )",        false,              isNaN('6') );
+new TestCase( SECTION, "isNaN( '7' )",        false,              isNaN('7') );
+new TestCase( SECTION, "isNaN( '8' )",        false,              isNaN('8') );
+new TestCase( SECTION, "isNaN( '9' )",        false,              isNaN('9') );
 
 
-    array[item++] = new TestCase( SECTION, "isNaN( 0x0a )",    false,              isNaN( 0x0a ) );
-    array[item++] = new TestCase( SECTION, "isNaN( 0xaa )",    false,              isNaN( 0xaa ) );
-    array[item++] = new TestCase( SECTION, "isNaN( 0x0A )",    false,              isNaN( 0x0A ) );
-    array[item++] = new TestCase( SECTION, "isNaN( 0xAA )",    false,              isNaN( 0xAA ) );
+new TestCase( SECTION, "isNaN( 0x0a )",    false,              isNaN( 0x0a ) );
+new TestCase( SECTION, "isNaN( 0xaa )",    false,              isNaN( 0xaa ) );
+new TestCase( SECTION, "isNaN( 0x0A )",    false,              isNaN( 0x0A ) );
+new TestCase( SECTION, "isNaN( 0xAA )",    false,              isNaN( 0xAA ) );
 
-    array[item++] = new TestCase( SECTION, "isNaN( '0x0a' )",    false,              isNaN( "0x0a" ) );
-    array[item++] = new TestCase( SECTION, "isNaN( '0xaa' )",    false,              isNaN( "0xaa" ) );
-    array[item++] = new TestCase( SECTION, "isNaN( '0x0A' )",    false,              isNaN( "0x0A" ) );
-    array[item++] = new TestCase( SECTION, "isNaN( '0xAA' )",    false,              isNaN( "0xAA" ) );
+new TestCase( SECTION, "isNaN( '0x0a' )",    false,              isNaN( "0x0a" ) );
+new TestCase( SECTION, "isNaN( '0xaa' )",    false,              isNaN( "0xaa" ) );
+new TestCase( SECTION, "isNaN( '0x0A' )",    false,              isNaN( "0x0A" ) );
+new TestCase( SECTION, "isNaN( '0xAA' )",    false,              isNaN( "0xAA" ) );
 
-    array[item++] = new TestCase( SECTION, "isNaN( 077 )",      false,              isNaN( 077 ) );
-    array[item++] = new TestCase( SECTION, "isNaN( '077' )",    false,              isNaN( "077" ) );
+new TestCase( SECTION, "isNaN( 077 )",      false,              isNaN( 077 ) );
+new TestCase( SECTION, "isNaN( '077' )",    false,              isNaN( "077" ) );
 
 
-    array[item++] = new TestCase( SECTION, "isNaN( Number.NaN )",   true,              isNaN(Number.NaN) );
-    array[item++] = new TestCase( SECTION, "isNaN( Number.POSITIVE_INFINITY )", false,  isNaN(Number.POSITIVE_INFINITY) );
-    array[item++] = new TestCase( SECTION, "isNaN( Number.NEGATIVE_INFINITY )", false,  isNaN(Number.NEGATIVE_INFINITY) );
-    array[item++] = new TestCase( SECTION, "isNaN( Number.MAX_VALUE )",         false,  isNaN(Number.MAX_VALUE) );
-    array[item++] = new TestCase( SECTION, "isNaN( Number.MIN_VALUE )",         false,  isNaN(Number.MIN_VALUE) );
+new TestCase( SECTION, "isNaN( Number.NaN )",   true,              isNaN(Number.NaN) );
+new TestCase( SECTION, "isNaN( Number.POSITIVE_INFINITY )", false,  isNaN(Number.POSITIVE_INFINITY) );
+new TestCase( SECTION, "isNaN( Number.NEGATIVE_INFINITY )", false,  isNaN(Number.NEGATIVE_INFINITY) );
+new TestCase( SECTION, "isNaN( Number.MAX_VALUE )",         false,  isNaN(Number.MAX_VALUE) );
+new TestCase( SECTION, "isNaN( Number.MIN_VALUE )",         false,  isNaN(Number.MIN_VALUE) );
 
-    array[item++] = new TestCase( SECTION, "isNaN( NaN )",               true,      isNaN(NaN) );
-    array[item++] = new TestCase( SECTION, "isNaN( Infinity )",          false,     isNaN(Infinity) );
+new TestCase( SECTION, "isNaN( NaN )",               true,      isNaN(NaN) );
+new TestCase( SECTION, "isNaN( Infinity )",          false,     isNaN(Infinity) );
 
-    array[item++] = new TestCase( SECTION, "isNaN( 'Infinity' )",               false,  isNaN("Infinity") );
-    array[item++] = new TestCase( SECTION, "isNaN( '-Infinity' )",              false,  isNaN("-Infinity") );
+new TestCase( SECTION, "isNaN( 'Infinity' )",               false,  isNaN("Infinity") );
+new TestCase( SECTION, "isNaN( '-Infinity' )",              false,  isNaN("-Infinity") );
 
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,87 +35,97 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          10.2.2-2.js
-    ECMA Section:       10.2.2 Eval Code
-    Description:
+   File Name:          10.2.2-2.js
+   ECMA Section:       10.2.2 Eval Code
+   Description:
 
-    When control enters an execution context for eval code, the previous
-    active execution context, referred to as the calling context, is used to
-    determine the scope chain, the variable object, and the this value. If
-    there is no calling context, then initializing the scope chain, variable
-    instantiation, and determination of the this value are performed just as
-    for global code.
+   When control enters an execution context for eval code, the previous
+   active execution context, referred to as the calling context, is used to
+   determine the scope chain, the variable object, and the this value. If
+   there is no calling context, then initializing the scope chain, variable
+   instantiation, and determination of the this value are performed just as
+   for global code.
 
-    The scope chain is initialized to contain the same objects, in the same
-    order, as the calling context's scope chain.  This includes objects added
-    to the calling context's scope chain by WithStatement.
+   The scope chain is initialized to contain the same objects, in the same
+   order, as the calling context's scope chain.  This includes objects added
+   to the calling context's scope chain by WithStatement.
 
-    Variable instantiation is performed using the calling context's variable
-    object and using empty property attributes.
+   Variable instantiation is performed using the calling context's variable
+   object and using empty property attributes.
 
-    The this value is the same as the this value of the calling context.
+   The this value is the same as the this value of the calling context.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "10.2.2-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Eval Code";
+var SECTION = "10.2.2-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Eval Code";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+//  Test Objects
 
-    //  Test Objects
+var OBJECT = new MyObject( "hello" );
+var GLOBAL_PROPERTIES = new Array();
+var i = 0;
 
-    var OBJECT = new MyObject( "hello" );
-    var GLOBAL_PROPERTIES = new Array();
-    var i = 0;
-
-    for ( p in this ) {
-        GLOBAL_PROPERTIES[i++] = p;
-    }
-
-    with ( OBJECT ) {
-        var THIS = this;
-        testcases[tc++] = new TestCase( SECTION, "eval( 'this == THIS' )",                  true,               eval("this == THIS") );
-        testcases[tc++] = new TestCase( SECTION, "this in a with() block",                  GLOBAL,  this+"" );
-        testcases[tc++] = new TestCase( SECTION, "new MyObject('hello').value",             "hello",            value );
-        testcases[tc++] = new TestCase( SECTION, "eval(new MyObject('hello').value)",       "hello",            eval("value") );
-        testcases[tc++] = new TestCase( SECTION, "new MyObject('hello').getClass()",        "[object Object]",  getClass() );
-        testcases[tc++] = new TestCase( SECTION, "eval(new MyObject('hello').getClass())",  "[object Object]",  eval("getClass()") );
-        testcases[tc++] = new TestCase( SECTION, "eval(new MyObject('hello').toString())",  "hello",  eval("toString()") );
-        testcases[tc++] = new TestCase( SECTION, "eval('getClass') == Object.prototype.toString",  true,  eval("getClass") == Object.prototype.toString );
-
-        for ( i = 0; i < GLOBAL_PROPERTIES.length; i++ ) {
-            testcases[tc++] = new TestCase( SECTION, GLOBAL_PROPERTIES[i] +
-            " == THIS["+GLOBAL_PROPERTIES[i]+"]", true,
-            eval(GLOBAL_PROPERTIES[i]) == eval( "THIS[GLOBAL_PROPERTIES[i]]") );
-        }
-
-    }
-
-    test();
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
+for ( p in this ) {
+  GLOBAL_PROPERTIES[i++] = p;
 }
+
+with ( OBJECT ) {
+  var THIS = this;
+  new TestCase( SECTION, 
+		"eval( 'this == THIS' )",                  
+		true,               
+		eval("this == THIS") );
+  new TestCase( SECTION, 
+		"this in a with() block",                  
+		GLOBAL,  
+		this+"" );
+  new TestCase( SECTION, 
+		"new MyObject('hello').value",             
+		"hello",            
+		value );
+  new TestCase( SECTION, 
+		"eval(new MyObject('hello').value)",       
+		"hello",            
+		eval("value") );
+  new TestCase( SECTION, 
+		"new MyObject('hello').getClass()",        
+		"[object Object]",  
+		getClass() );
+  new TestCase( SECTION, 
+		"eval(new MyObject('hello').getClass())",  
+		"[object Object]",  
+		eval("getClass()") );
+  new TestCase( SECTION, 
+		"eval(new MyObject('hello').toString())",  
+		"hello",  
+		eval("toString()") );
+  new TestCase( SECTION, 
+		"eval('getClass') == Object.prototype.toString",  
+		true,  
+		eval("getClass") == Object.prototype.toString );
+
+  for ( i = 0; i < GLOBAL_PROPERTIES.length; i++ ) {
+    new TestCase( SECTION, GLOBAL_PROPERTIES[i] +
+		  " == THIS["+GLOBAL_PROPERTIES[i]+"]", true,
+		  eval(GLOBAL_PROPERTIES[i]) == eval( "THIS[GLOBAL_PROPERTIES[i]]") );
+  }
+
+}
+
+test();
+
 function MyObject( value ) {
-    this.value = value;
-    this.getClass = Object.prototype.toString;
-    this.toString = new Function( "return this.value+''" );
-    return this;
+  this.value = value;
+  this.getClass = Object.prototype.toString;
+  this.toString = new Function( "return this.value+''" );
+  return this;
 }

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.7.3.3-2.js
-    ECMA Section:       15.7.3.3 Number.MIN_VALUE
-    Description:        All value properties of the Number object should have
-                        the attributes [DontEnum, DontDelete, ReadOnly]
+   File Name:          15.7.3.3-2.js
+   ECMA Section:       15.7.3.3 Number.MIN_VALUE
+   Description:        All value properties of the Number object should have
+   the attributes [DontEnum, DontDelete, ReadOnly]
 
-                        this test checks the DontDelete attribute of Number.MIN_VALUE
+   this test checks the DontDelete attribute of Number.MIN_VALUE
 
-    Author:             christine@netscape.com
-    Date:               16 september 1997
+   Author:             christine@netscape.com
+   Date:               16 september 1997
 */
 
 
-    var SECTION = "15.7.3.3-2";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Number.MIN_VALUE";
+var SECTION = "15.7.3.3-2";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Number.MIN_VALUE";
 
-    writeHeaderToLog( SECTION + " "+ TITLE );
+writeHeaderToLog( SECTION + " "+ TITLE );
 
-    var testcases = getTestCases();
-    test( testcases );
+var MIN_VAL = 5e-324;
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase(  SECTION, 
+	       "delete( Number.MIN_VALUE )",    
+	       false, 
+	       eval("delete( Number.MIN_VALUE )") );
 
-    var MIN_VAL = 5e-324;
+new TestCase(  SECTION, 
+	       "delete( Number.MIN_VALUE ); Number.MIN_VALUE", 
+	       MIN_VAL, 
+	       eval("delete( Number.MIN_VALUE );Number.MIN_VALUE") );
 
-    array[item++] = new TestCase(  SECTION, "delete( Number.MIN_VALUE )",                       false,      "delete( Number.MIN_VALUE )" );
-    array[item++] = new TestCase(  SECTION, "delete( Number.MIN_VALUE ); Number.MIN_VALUE",     MIN_VAL,    "delete( Number.MIN_VALUE );Number.MIN_VALUE" );
-    return ( array );
-}
-function test() {
-    for ( tc = 0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "delete should not be allowed "
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,67 +35,51 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/**
-	Filename:     Function_object.js
-	Description:  'Testing Function objects'
 
-	Author:       Nick Lerissa
-	Date:         April 17, 1998
+/**
+   Filename:     Function_object.js
+   Description:  'Testing Function objects'
+
+   Author:       Nick Lerissa
+   Date:         April 17, 1998
 */
 
-	var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
-	var VERSION = 'no version';
-    startTest();
-	var TITLE = 'functions: Function_object';
+var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
+var VERSION = 'no version';
+startTest();
+var TITLE = 'functions: Function_object';
 
-	writeHeaderToLog('Executing script: Function_object.js');
-	writeHeaderToLog( SECTION + " "+ TITLE);
-
-	var count = 0;
-	var testcases = new Array();
+writeHeaderToLog('Executing script: Function_object.js');
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 
-    function a_test_function(a,b,c)
-    {
-        return a + b + c;
-    }
+function a_test_function(a,b,c)
+{
+    return a + b + c;
+}
 
-    f = a_test_function;
+f = a_test_function;
 
 
-    testcases[count++] = new TestCase( SECTION, "f.name",
-                                                'a_test_function',  f.name);
+new TestCase( SECTION, "f.name",
+	      'a_test_function',  f.name);
 
-    testcases[count++] = new TestCase( SECTION, "f.length",
-                                                3,  f.length);
+new TestCase( SECTION, "f.length",
+	      3,  f.length);
 
-    testcases[count++] = new TestCase( SECTION, "f.arity",
-                                                3,  f.arity);
+new TestCase( SECTION, "f.arity",
+	      3,  f.arity);
 
-    testcases[count++] = new TestCase( SECTION, "f(2,3,4)",
-                                                9,  f(2,3,4));
+new TestCase( SECTION, "f(2,3,4)",
+	      9,  f(2,3,4));
 
-    var fnName = version() == 120 ? '' : 'anonymous';
+var fnName = (version() == 120) ? '' : 'anonymous';
 
-    testcases[count++] = new TestCase( SECTION, "(new Function()).name",
-                                                fnName, (new Function()).name);
+new TestCase( SECTION, "(new Function()).name",
+	      fnName, (new Function()).name);
 
-    testcases[count++] = new TestCase( SECTION, "(new Function()).toString()",
-                                                '\nfunction ' + fnName + '() {\n}\n',  (new Function()).toString());
+new TestCase( SECTION, "(new Function()).toString()",
+	      '\nfunction ' + fnName + '() {\n}\n',  (new Function()).toString());
 
-	function test()
-	{
-	   for ( tc=0; tc < testcases.length; tc++ ) {
-	        testcases[tc].passed = writeTestCaseResult(
-	        testcases[tc].expect,
-	        testcases[tc].actual,
-	        testcases[tc].description +" = "+
-	        testcases[tc].actual );
-	        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-	   }
-	   stopTest();
-	   return ( testcases );
-	}
-
-	test();
+test();
 

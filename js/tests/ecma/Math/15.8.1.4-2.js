@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -53,28 +54,13 @@
 
     writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION, 
+	      "delete(Math.L0G2E);Math.LOG2E", 
+	      1.4426950408889634,     
+	      eval("delete(Math.LOG2E);Math.LOG2E") );
+new TestCase( SECTION, 
+	      "delete(Math.L0G2E)",            
+	      false,                  
+	      eval("delete(Math.LOG2E)") );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-    array[item++] = new TestCase( SECTION, "delete(Math.L0G2E);Math.LOG2E", 1.4426950408889634,     "delete(Math.LOG2E);Math.LOG2E" );
-    array[item++] = new TestCase( SECTION, "delete(Math.L0G2E)",            false,                  "delete(Math.LOG2E)" );
-    return ( array );
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].actual = eval( testcases[tc].actual );
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "property should be read-only ";
-    }
-    stopTest();
-    return ( testcases );
-}
-
+test();

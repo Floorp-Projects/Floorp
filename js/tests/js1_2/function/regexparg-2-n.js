@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,48 +35,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          regexparg-1.js
-    Description:	
+   File Name:          regexparg-1.js
+   Description:	
 
-    Regression test for 
-    http://scopus/bugsplat/show_bug.cgi?id=122787
-    Passing a regular expression as the first constructor argument fails
+   Regression test for 
+   http://scopus/bugsplat/show_bug.cgi?id=122787
+   Passing a regular expression as the first constructor argument fails
 
-    Author:             christine@netscape.com
-    Date:               15 June 1998
+   Author:             christine@netscape.com
+   Date:               15 June 1998
 */
 
-    var SECTION = "JS_1.2";
-    var VERSION = "JS_1.2";
-    startTest();
-    var TITLE   = "The variable statment";
+var SECTION = "JS_1.2";
+var VERSION = "JS_1.2";
+startTest();
+var TITLE   = "The variable statement";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = new Array();
+function f(x) {return x;}
 
-    function f(x) {return x;}
+x = f(/abc/);
 
-    x = f(/abc/);
+DESCRIPTION = "function f(x) {return x;}; x = f(/abc/); x()";
+EXPECTED = "error";
 
-    testcases[tc++] = new TestCase( SECTION,
-	"function f(x) {return x;}; x = f(/abc/); x()",
-        "error",
-        x() );
+new TestCase( SECTION,
+	      "function f(x) {return x;}; x = f(/abc/); x()",
+	      "error",
+	      x() );
 
-    test();
+test();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}

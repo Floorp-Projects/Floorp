@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,56 +35,32 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          15.5.3.1.js
-    ECMA Section:       15.5.3 Properties of the String Constructor
+   File Name:          15.5.3.1.js
+   ECMA Section:       15.5.3 Properties of the String Constructor
 
-    Description:	    The value of the internal [[Prototype]] property of
-                        the String constructor is the Function prototype
-                        object.
+   Description:	    The value of the internal [[Prototype]] property of
+   the String constructor is the Function prototype
+   object.
 
-                        In addition to the internal [[Call]] and [[Construct]]
-                        properties, the String constructor also has the length
-                        property, as well as properties described in 15.5.3.1
-                        and 15.5.3.2.
+   In addition to the internal [[Call]] and [[Construct]]
+   properties, the String constructor also has the length
+   property, as well as properties described in 15.5.3.1
+   and 15.5.3.2.
 
-    Author:             christine@netscape.com
-    Date:               1 october 1997
+   Author:             christine@netscape.com
+   Date:               1 october 1997
 */
 
-    var SECTION = "15.5.3";
-    var VERSION = "ECMA_2";
-    startTest();
-    var passed = true;
-    writeHeaderToLog( SECTION + " Properties of the String Constructor" );
+var SECTION = "15.5.3";
+var VERSION = "ECMA_2";
+startTest();
+var passed = true;
+writeHeaderToLog( SECTION + " Properties of the String Constructor" );
 
-    var testcases = getTestCases();
-    var tc= 0;
+new TestCase( SECTION,	"String.prototype",             Function.prototype,     String.__proto__ );
 
-//  all tests must call a function that returns an array of TestCase objects.
-    test( testcases );
+new TestCase( SECTION,	"String.length",                1,                      String.length );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
-
-    array[item++] = new TestCase( SECTION,	"String.prototype",             Function.prototype,     String.__proto__ );
-    array[item++] = new TestCase( SECTION,	"String.length",                1,                      String.length );
-    return ( array );
-}
-function test( array ) {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+ testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-
-    stopTest();
-
-    //  all tests must return an array of TestCase objects
-        return ( testcases );
-}
-
+test();

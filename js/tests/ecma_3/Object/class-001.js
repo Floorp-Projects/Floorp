@@ -55,7 +55,7 @@ var expect= ''; var expectedvalue = [ ];
 
 status = 'the global object';
 actual = getJSClass(this);
-expect = 'global';
+expect = GLOBAL;
 addThis();
 
 status = 'new Object()';

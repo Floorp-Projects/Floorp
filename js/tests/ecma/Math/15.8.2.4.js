@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -50,54 +51,102 @@
 
 */
 
-    var SECTION = "15.8.2.4";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Math.atan()";
-    var BUGNUMBER="77391";
+var SECTION = "15.8.2.4";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Math.atan()";
+var BUGNUMBER="77391";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
+new TestCase( SECTION,
+	      "Math.atan.length",
+	      1,
+	      Math.atan.length );
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,
+	      "Math.atan()",
+	      Number.NaN,
+	      Math.atan() );
 
-    array[item++] = new TestCase( SECTION,   "Math.atan.length",        1,              Math.atan.length );
+new TestCase( SECTION,
+	      "Math.atan(void 0)",
+	      Number.NaN,
+	      Math.atan(void 0) );
 
-    array[item++] = new TestCase( SECTION,   "Math.atan()",             Number.NaN,     Math.atan() );
-    array[item++] = new TestCase( SECTION,   "Math.atan(void 0)",       Number.NaN,     Math.atan(void 0) );
-    array[item++] = new TestCase( SECTION,   "Math.atan(null)",         0,              Math.atan(null) );
-    array[item++] = new TestCase( SECTION,   "Math.atan(NaN)",          Number.NaN,     Math.atan(Number.NaN) );
+new TestCase( SECTION,
+	      "Math.atan(null)",
+	      0,
+	      Math.atan(null) );
 
-    array[item++] = new TestCase( SECTION,   "Math.atan('a string')",   Number.NaN,     Math.atan("a string") );
-    array[item++] = new TestCase( SECTION,   "Math.atan('0')",          0,              Math.atan('0') );
-    array[item++] = new TestCase( SECTION,   "Math.atan('1')",          Math.PI/4,      Math.atan('1') );
-    array[item++] = new TestCase( SECTION,   "Math.atan('-1')",         -Math.PI/4,     Math.atan('-1') );
-    array[item++] = new TestCase( SECTION,   "Math.atan('Infinity)",    Math.PI/2,      Math.atan('Infinity') );
-    array[item++] = new TestCase( SECTION,   "Math.atan('-Infinity)",   -Math.PI/2,     Math.atan('-Infinity') );
+new TestCase( SECTION,
+	      "Math.atan(NaN)",
+	      Number.NaN,
+	      Math.atan(Number.NaN) );
 
-    array[item++] = new TestCase( SECTION,   "Math.atan(0)",            0,              Math.atan(0)          );
-    array[item++] = new TestCase( SECTION,   "Math.atan(-0)",	        -0,             Math.atan(-0)         );
-    array[item++] = new TestCase( SECTION,   "Infinity/Math.atan(-0)",  -Infinity,      Infinity/Math.atan(-0) );
-    array[item++] = new TestCase( SECTION,   "Math.atan(Infinity)",     Math.PI/2,      Math.atan(Number.POSITIVE_INFINITY) );
-    array[item++] = new TestCase( SECTION,   "Math.atan(-Infinity)",    -Math.PI/2,     Math.atan(Number.NEGATIVE_INFINITY) );
-    array[item++] = new TestCase( SECTION,   "Math.atan(1)",     	    Math.PI/4,      Math.atan(1)          );
-    array[item++] = new TestCase( SECTION,   "Math.atan(-1)",           -Math.PI/4,     Math.atan(-1)         );
-    return array;
-}
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+new TestCase( SECTION,
+	      "Math.atan('a string')",
+	      Number.NaN,
+	      Math.atan("a string") );
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+new TestCase( SECTION,
+	      "Math.atan('0')",
+	      0,
+	      Math.atan('0') );
+
+new TestCase( SECTION,
+	      "Math.atan('1')",
+	      Math.PI/4,
+	      Math.atan('1') );
+
+new TestCase( SECTION,
+	      "Math.atan('-1')",
+	      -Math.PI/4,
+	      Math.atan('-1') );
+
+new TestCase( SECTION,
+	      "Math.atan('Infinity)",
+	      Math.PI/2,
+	      Math.atan('Infinity') );
+
+new TestCase( SECTION,
+	      "Math.atan('-Infinity)",
+	      -Math.PI/2,
+	      Math.atan('-Infinity') );
+
+new TestCase( SECTION,
+	      "Math.atan(0)",
+	      0,
+	      Math.atan(0)          );
+
+new TestCase( SECTION,
+	      "Math.atan(-0)",	 
+	      -0,
+	      Math.atan(-0)         );
+
+new TestCase( SECTION,
+	      "Infinity/Math.atan(-0)", 
+	      -Infinity,
+	      Infinity/Math.atan(-0) );
+
+new TestCase( SECTION,
+	      "Math.atan(Infinity)",
+	      Math.PI/2,
+	      Math.atan(Number.POSITIVE_INFINITY) );
+
+new TestCase( SECTION,
+	      "Math.atan(-Infinity)",
+	      -Math.PI/2,
+	      Math.atan(Number.NEGATIVE_INFINITY) );
+
+new TestCase( SECTION,
+	      "Math.atan(1)",
+	      Math.PI/4,
+	      Math.atan(1)          );
+
+new TestCase( SECTION,
+	      "Math.atan(-1)",
+	      -Math.PI/4,
+	      Math.atan(-1)         );
+
+test();

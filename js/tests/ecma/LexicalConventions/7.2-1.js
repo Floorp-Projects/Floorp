@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,57 +35,37 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          7.2-1.js
-    ECMA Section:       7.2 Line Terminators
-    Description:        - readability
-                        - separate tokens
-                        - may occur between any two tokens
-                        - cannot occur within any token, not even a string
-                        - affect the process of automatic semicolon insertion.
+   File Name:          7.2-1.js
+   ECMA Section:       7.2 Line Terminators
+   Description:        - readability
+   - separate tokens
+   - may occur between any two tokens
+   - cannot occur within any token, not even a string
+   - affect the process of automatic semicolon insertion.
 
-                        white space characters are:
-                        unicode     name            formal name     string representation
-                        \u000A      line feed       <LF>            \n
-                        \u000D      carriage return <CR>            \r
+   white space characters are:
+   unicode     name            formal name     string representation
+   \u000A      line feed       <LF>            \n
+   \u000D      carriage return <CR>            \r
 
-    Author:             christine@netscape.com
-    Date:               11 september 1997
+   Author:             christine@netscape.com
+   Date:               11 september 1997
 */
-    var SECTION = "7.2-1";
-    var VERSION = "ECMA_1";
-    startTest();
-    var TITLE   = "Line Terminators";
+var SECTION = "7.2-1";
+var VERSION = "ECMA_1";
+startTest();
+var TITLE   = "Line Terminators";
 
-    writeHeaderToLog( SECTION + " "+ TITLE);
+writeHeaderToLog( SECTION + " "+ TITLE);
 
-    var testcases = getTestCases();
-    test();
 
-function getTestCases() {
-    var array = new Array();
-    var item = 0;
+new TestCase( SECTION,    "var a\nb =  5; ab=10;ab;",     10,     eval("var a\nb =  5; ab=10;ab") );
+new TestCase( SECTION,    "var a\nb =  5; ab=10;b;",      5,      eval("var a\nb =  5; ab=10;b") );
+new TestCase( SECTION,    "var a\rb =  5; ab=10;ab;",     10,     eval("var a\rb =  5; ab=10;ab") );
+new TestCase( SECTION,    "var a\rb =  5; ab=10;b;",      5,      eval("var a\rb =  5; ab=10;b") );
+new TestCase( SECTION,    "var a\r\nb =  5; ab=10;ab;",     10,     eval("var a\r\nb =  5; ab=10;ab") );
+new TestCase( SECTION,    "var a\r\nb =  5; ab=10;b;",      5,      eval("var a\r\nb =  5; ab=10;b") );
 
-    array[item++] = new TestCase( SECTION,    "var a\nb =  5; ab=10;ab;",     10,     eval("var a\nb =  5; ab=10;ab") );
-    array[item++] = new TestCase( SECTION,    "var a\nb =  5; ab=10;b;",      5,      eval("var a\nb =  5; ab=10;b") );
-    array[item++] = new TestCase( SECTION,    "var a\rb =  5; ab=10;ab;",     10,     eval("var a\rb =  5; ab=10;ab") );
-    array[item++] = new TestCase( SECTION,    "var a\rb =  5; ab=10;b;",      5,      eval("var a\rb =  5; ab=10;b") );
-    array[item++] = new TestCase( SECTION,    "var a\r\nb =  5; ab=10;ab;",     10,     eval("var a\r\nb =  5; ab=10;ab") );
-    array[item++] = new TestCase( SECTION,    "var a\r\nb =  5; ab=10;b;",      5,      eval("var a\r\nb =  5; ab=10;b") );
-
-    return ( array );
-}
-
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
-
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
+test();

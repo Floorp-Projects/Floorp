@@ -1,4 +1,4 @@
-#!/tools/ns/bin/perl5
+#!/usr/bin/perl5
 #
 # simple script that executes JavaScript tests.  you have to build the
 # stand-alone, js shell executable (which is not the same as the dll that gets

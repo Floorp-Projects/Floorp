@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -34,45 +35,44 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 /**
-    File Name:          proto_12.js
-    Section:
-    Description:        new PrototypeObject
+   File Name:          proto_12.js
+   Section:
+   Description:        new PrototypeObject
 
-    This tests Object Hierarchy and Inheritance, as described in the document
-    Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
-    15:19:34 on http://devedge.netscape.com/.  Current URL:
-    http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
+   This tests Object Hierarchy and Inheritance, as described in the document
+   Object Hierarchy and Inheritance in JavaScript, last modified on 12/18/97
+   15:19:34 on http://devedge.netscape.com/.  Current URL:
+   http://devedge.netscape.com/docs/manuals/communicator/jsobj/contents.htm
 
-    No Multiple Inheritance
+   No Multiple Inheritance
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+   Author:             christine@netscape.com
+   Date:               12 november 1997
 */
 
-    var SECTION = "proto_12";
-    var VERSION = "JS1_3";
-    var TITLE   = "No Multiple Inheritance";
+var SECTION = "proto_12";
+var VERSION = "JS1_3";
+var TITLE   = "No Multiple Inheritance";
 
-    startTest();
-    writeHeaderToLog( SECTION + " "+ TITLE);
-
-    var testcases = new Array();
+startTest();
+writeHeaderToLog( SECTION + " "+ TITLE);
 
 function Employee ( name, dept ) {
-     this.name = name || "";
-     this.dept = dept || "general";
-     this.id = idCounter++;
+    this.name = name || "";
+    this.dept = dept || "general";
+    this.id = idCounter++;
 }
 function Manager () {
-     this.reports = [];
+    this.reports = [];
 }
 Manager.prototype = new Employee();
 
 function WorkerBee ( name, dept, projs ) {
     this.base = Employee;
     this.base( name, dept)
-    this.projects = projs || new Array();
+	this.projects = projs || new Array();
 }
 WorkerBee.prototype = new Employee();
 
@@ -90,7 +90,7 @@ function Engineer ( name, projs, machine, hobby ) {
     this.base1 = WorkerBee;
     this.base1( name, "engineering", projs )
 
-    this.base2 = Hobbyist;
+	this.base2 = Hobbyist;
     this.base2( hobby );
 
     this.projects = projs || new Array();
@@ -98,60 +98,47 @@ function Engineer ( name, projs, machine, hobby ) {
 }
 Engineer.prototype = new WorkerBee();
 
-function test() {
-    for ( tc=0; tc < testcases.length; tc++ ) {
-        testcases[tc].passed = writeTestCaseResult(
-                            testcases[tc].expect,
-                            testcases[tc].actual,
-                            testcases[tc].description +" = "+
-                            testcases[tc].actual );
+var idCounter = 1;
 
-        testcases[tc].reason += ( testcases[tc].passed ) ? "" : "wrong value ";
-    }
-    stopTest();
-    return ( testcases );
-}
-    var idCounter = 1;
+var les = new Engineer( "Morris, Les",  new Array("JavaScript"), "indy" );
 
-    var les = new Engineer( "Morris, Les",  new Array("JavaScript"), "indy" );
+Hobbyist.prototype.equipment = [ "horn", "mountain", "goat" ];
 
-    Hobbyist.prototype.equipment = [ "horn", "mountain", "goat" ];
+new TestCase( SECTION,
+	      "les.name",
+	      "Morris, Les",
+	      les.name );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "les.name",
-                                    "Morris, Les",
-                                    les.name );
+new TestCase( SECTION,
+	      "les.dept",
+	      "engineering",
+	      les.dept );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "les.dept",
-                                    "engineering",
-                                    les.dept );
+Array.prototype.getClass = Object.prototype.toString;
 
-    Array.prototype.getClass = Object.prototype.toString;
+new TestCase( SECTION,
+	      "les.projects.getClass()",
+	      "[object Array]",
+	      les.projects.getClass() );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "les.projects.getClass()",
-                                    "[object Array]",
-                                    les.projects.getClass() );
+new TestCase( SECTION,
+	      "les.projects[0]",
+	      "JavaScript",
+	      les.projects[0] );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "les.projects[0]",
-                                    "JavaScript",
-                                    les.projects[0] );
+new TestCase( SECTION,
+	      "les.machine",
+	      "indy",
+	      les.machine );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "les.machine",
-                                    "indy",
-                                    les.machine );
+new TestCase( SECTION,
+	      "les.hobby",
+	      "yodeling",
+	      les.hobby );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "les.hobby",
-                                    "yodeling",
-                                    les.hobby );
+new TestCase( SECTION,
+	      "les.equpment",
+	      void 0,
+	      les.equipment );
 
-    testcases[tc++] = new TestCase( SECTION,
-                                    "les.equpment",
-                                    void 0,
-                                    les.equipment );
-
-    test();
+test();
