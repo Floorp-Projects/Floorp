@@ -2118,7 +2118,8 @@ public class ScriptRuntime {
                                   getContextClassLoaderMethod.invoke(
                                     Thread.currentThread(), 
                                     new Object[0]);
-                return cl.loadClass(className);
+                if (cl != null)
+                    return cl.loadClass(className);
             }
         } catch (SecurityException e) {
             // fall through...
