@@ -91,6 +91,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsComponentManagerObsolete.h"
 #include "nsInterfaceRequestorAgg.h"
+#include "nsHashPropertyBag.h"
 
 void XXXNeverCalled()
 {
@@ -195,4 +196,5 @@ void XXXNeverCalled()
       nsServiceManager::GetGlobalServiceManager(nsnull);
     }
     NS_NewInterfaceRequestorAggregation(nsnull, nsnull, nsnull);
+    NS_NewHashPropertyBag(nsnull);
 }

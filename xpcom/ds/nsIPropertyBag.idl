@@ -67,11 +67,26 @@ interface nsIPropertyBag : nsISupports
 
     /**
      * Get a property value for the given name.
-     * @return NS_ERROR_FAILURE if a property with that name doesn't
+     * @throws NS_ERROR_FAILURE if a property with that name doesn't
      * exist.
      */
     nsIVariant getProperty(in AString name);
 };
 
-// We can add nsIWritableProperty and nsIWritablePropertyBag when we need them.
+[scriptable, uuid(96fc4671-eeb4-4823-9421-e50fb70ad353)]
+interface nsIWritablePropertyBag : nsIPropertyBag
+{
+    /**
+     * Set a property with the given name to the given value.  If
+     * a property already exists with the given name, it is
+     * overwritten.
+     */
+    void setProperty(in AString name, in nsIVariant value);
 
+    /**
+     * Delete a property with the given name.
+     * @throws NS_ERROR_FAILURE if a property with that name doesn't
+     * exist.
+     */
+    void deleteProperty(in AString name);
+};
