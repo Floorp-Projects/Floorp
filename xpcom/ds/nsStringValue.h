@@ -20,96 +20,155 @@
 
 #ifndef NSSTRINGVALUE_
 #define NSSTRINGVALUE_
-#include <string.h>
 
+#include "nsIAtom.h"
+#include "nscore.h"
+#include "nsIAllocator.h"
+#include <string.h>
+#include "nsCRT.h"
+
+#if 0
 typedef int PRInt32;
 typedef unsigned int PRUint32;
 typedef short int PRUnichar;
 typedef int nsresult;
 typedef char PRBool;
+
 #define NS_OK 0
 #define NS_MEMORY_ERROR 1000
 #define PR_TRUE 1
 #define PR_FALSE  0
-#define NS_SUCCESS(x) (NS_OK==x)
+#define NS_SUCCEEDED(x) (NS_OK==x)
 
-static const char* kWhitespace="\b\t\r\n ";
-static const char* kPossibleNull ="Possible null being inserted into string.";
+#endif
+
+
+typedef long int  _RefCountType;
 
 static const int kRadix10=10;
 static const int kRadix16=16;
 static const int kAutoDetect=100;
 static const int kRadixUnknown=kAutoDetect+1;
 
-static const int kDefaultStringSize=32;
+static const int kDefaultStringSize=64;
 static const int kNotFound=-1;
+#define IGNORE_CASE (PR_TRUE)
 
-/***************************************************************************
- *
- *  The following is the basic interface nsString searching...
- *
- *  We will merge this into nsAReadableString very soon, but I've kept it
- *  seperate until I can map and factor the original nsString methods.
- *
- ***************************************************************************/
-class nsSearchableString {
+class nsAReadableString {
 public:
-
-  //We need to decide how deep (and generic) this API can go...
+  virtual PRUint32  Length() const =0; 
 
 };
 
-/***************************************************************************
- *
- *  This isn't intended as a real class, but only to illustrate that for 
- *  nsAReadableString, we want a common access pattern to get at the underlying
- *  buffer. Iterators make perfect sense, but it will take a real implementation.
- *
- *  Note: This class is intended to replace direct calls to GetBuffer()
- *  in cases where iteration on an nsAReadableString is taking place. 
- *
- ***************************************************************************/
-class nsAReadableStringIterator {
-public:
-  nsAReadableStringIterator() { }
-};
+#define MODERN_CPP  //make this false for aix/solaris...
+
+#ifdef MODERN_CPP
+#define CONST_CAST(type,arg) const_cast<type>(arg)
+#else
+#define CONST_CAST(type,arg) (type)arg
+#endif
 
 
 /***************************************************************************
  *
- *  The following is the basic interface anyone who wants to be passed
- *  as a string should define.
+ *  The following (hack) template functions will go away, but for now they
+ *  provide basic string copying and appending for my prototype. (rickg)
  *
  ***************************************************************************/
-class nsAReadableString : public nsSearchableString {
+
+template <class T1,class T2>
+inline PRInt32 MinInt(T1 anInt1,T2 anInt2){
+  return (anInt1<(T1)anInt2) ? anInt1 : anInt2;
+}
+
+template <class T1,class T2>
+inline PRInt32 MaxInt(T1 anInt1,T2 anInt2){
+  return (anInt1<(T1)anInt2) ? anInt2 : anInt1;
+}
+
+inline size_t stringlen(const PRUnichar* theString) {
+  const PRUnichar* theEnd=theString;
+  while(*theEnd++);  //skip to end of aDest...
+  size_t result=theEnd-theString-1;
+  return result;
+}
+
+inline size_t stringlen(const char* theString) {
+  return ::strlen(theString);
+}
+
+//----------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------
+
+class NS_COM CBufDescriptor {
 public:
-  virtual PRUint32  Length() const  =0;
-  virtual size_t    GetCharSize() const =0;
+  CBufDescriptor(char* aString, PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1) {
+    mBuffer=aString;
+    mCharSize=1;
+    mStackBased=aStackBased;
+    mIsConst=PR_FALSE;
+    mLength=mCapacity=0;
+    if(aString && aCapacity>1) {
+      mCapacity=aCapacity-1;
+      mLength=(-1==aLength) ? strlen(aString) : aLength;
+      if(mLength>PRInt32(mCapacity))
+        mLength=mCapacity;
+    }
+  }
 
-//  virtual PRUnichar operator[](PRUint32) = 0;
+  CBufDescriptor(const char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1) {
+    mBuffer=(char*)aString;
+    mCharSize=1;
+    mStackBased=aStackBased;
+    mIsConst=PR_TRUE;
+    mLength=mCapacity=0;
+    if(aString && aCapacity>1) {
+      mCapacity=aCapacity-1;
+      mLength=(-1==aLength) ? stringlen(aString) : aLength;
+      if(mLength>PRInt32(mCapacity))
+        mLength=mCapacity;
+    }
+  }
 
-  virtual nsAReadableStringIterator* First() = 0; //These are here so that nsReadable strings can offer a standard mechanism for
-  virtual nsAReadableStringIterator* Last() = 0;  //callers to access underlying data. Feel free to replace with a better pattern.
+  CBufDescriptor(PRUnichar* aString, PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1) {
+    mBuffer=(char*)aString;
+    mCharSize=2;
+    mStackBased=aStackBased;
+    mLength=mCapacity=0;
+    mIsConst=PR_FALSE;
+    if(aString && aCapacity>1) {
+      mCapacity=aCapacity-1;
+      mLength=(-1==aLength) ? stringlen(aString) : aLength;
+      if(mLength>PRInt32(mCapacity))
+        mLength=mCapacity;
+    }
+  }
 
-//by moving to iterators, we can support segmented content models...
-//virtual nsStringIterator  GetIterator() = 0;
+  CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength=-1) {
+    mBuffer=(char*)aString;
+    mCharSize=2;
+    mStackBased=aStackBased;
+    mLength=mCapacity=0;
+    mIsConst=PR_TRUE;
+    if(aString && aCapacity>1) {
+      mCapacity=aCapacity-1;
+      mLength=(-1==aLength) ? stringlen(aString) : aLength;
+      if(mLength>PRInt32(mCapacity))
+        mLength=mCapacity;
+    }
+  }
 
-//virtual PRBool    IsEmpty(void) = 0;
-
-    //etc.
+  char*     mBuffer;
+  PRUint32  mCapacity;
+  PRInt32   mLength;
+  PRBool    mStackBased;
+  PRBool    mIsConst;
+  char      mCharSize;
 };
 
 
-/***************************************************************************
- *
- *  This is ABT from which the basic stringvalues are derived. (rickg)
- *
- ***************************************************************************/
-class nsStringValue  {
-public:
-  virtual void AddRef(void) =0;
-  virtual void Release(void) =0;
-};
+//----------------------------------------------------------------------------------------
+
 
 /***************************************************************************
  *
@@ -128,76 +187,91 @@ struct nsStackBuffer {
   PRUint32  mCapacity;
 };
 
+
+#if 0
+template <class CharType>
+struct RCBuffer {
+
+  void* operator new(size_t aSize) {
+    CharType* theBuf = ::new CharType[aSize+1+sizeof(_RefCountType)];
+    memset(theBuf,0xff,aSize+additionalBytes+1);
+    return theBuf;
+  }
+
+  void operator delete(void *p, size_t aSize) {
+    ::delete [] p;
+  }
+
+  _RefCountType mRefCount;
+  CharType      mBuffer[1];
+
+};
+#endif
+
+
 /***************************************************************************
  *
  *  This is the templatized base class from which stringvalues are derived. (rickg)
  *
  ***************************************************************************/
 template <class CharType>
-class nsStringValueImpl : nsStringValue {
-public:
+struct nsStringValueImpl {
 
-  nsStringValueImpl() : nsStringValue() {
-    mRefCount=1;
+  nsStringValueImpl()  {
     mBuffer=0;
     mLength=mCapacity=0;
+    mRefCount=1;
   }
 
-  nsStringValueImpl(const nsStringValueImpl& aCopy) : nsStringValue() {
-    mRefCount=1;
+  nsStringValueImpl(const nsStringValueImpl<CharType>& aCopy) {
     mBuffer=aCopy.mBuffer;
     mLength=aCopy.mLength;
     mCapacity=aCopy.mCapacity;
+    mRefCount=1;
   }
 
-  nsStringValueImpl(const nsStringValueImpl& aCopy,PRInt32 aLength) : nsStringValue() {
-    mRefCount=1;
+  nsStringValueImpl(const nsStringValueImpl<CharType>& aCopy,PRInt32 aLength){
     mBuffer=aCopy.mBuffer;
     mLength=aLength;
     mCapacity=aCopy.mCapacity;
+    mRefCount=1;
   }
 
-  nsStringValueImpl(CharType* theString,PRInt32 aLength=-1,PRInt32 aCapacity=-1) : nsStringValue() {
-    mRefCount=1;
+  nsStringValueImpl(CharType* theString,PRInt32 aLength=-1,PRUint32 aCapacity=0)  {
     if(theString) {
       mLength = (-1==aLength) ? stringlen(theString) : aLength;
-      mCapacity=mLength+1;
+      mCapacity=(0==aCapacity) ? mLength+1 : aCapacity;
       mBuffer=theString;
     }
     else {
       mBuffer=0;
       mLength=mCapacity=0;
     }
+    mRefCount=1;
   }
 
-  nsStringValueImpl(const nsStackBuffer<CharType> &aBuffer) : nsStringValue() {
-    mRefCount=2;
+  nsStringValueImpl(const nsStackBuffer<CharType> &aBuffer)  {
     mCapacity=aBuffer.mCapacity;
     mLength=aBuffer.mLength;
     mBuffer=aBuffer.mBuffer;
+    mRefCount=2; //set it to 2 so we don't try to free it.
   }
 
-  operator=(const nsStringValueImpl<CharType>& aCopy) {
-    mRefCount=1;
+  void operator=(const nsStringValueImpl<CharType>& aCopy) {
     mBuffer=aCopy.mBuffer;
     mLength=aCopy.mLength;
     mCapacity=aCopy.mCapacity;
+    mRefCount=aCopy.mRefCount;
   }
 
-  operator CharType*() {return mBuffer;}
+  void*     GetBuffer() {return mBuffer;}
+  PRUint32  GetLength() {return mLength;}
+  size_t    GetCharSize() {return sizeof(CharType);}
 
-  virtual void AddRef(void) {mRefCount++;}
-  virtual void Release(void){--mRefCount;}
-
-  virtual void*     GetBuffer() {return mBuffer;}
-  virtual PRUint32  GetLength() {return mLength;}
-  virtual size_t    GetCharSize() {return sizeof(CharType);}
-
-public:
   CharType* mBuffer;
-  PRUint32  mRefCount;
   PRUint32  mLength;
   PRUint32  mCapacity;
+  PRUint32  mRefCount;
 };
 
 

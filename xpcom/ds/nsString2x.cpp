@@ -1,9 +1,13 @@
 
-#include "nsString2x.h"
-#include "nsStringx.h"
+#include "nsString2.h"
+#include "nsString.h"
 #include "nsBufferManager.h"
 #include <stdio.h>  
-#include "nsAutoStringImpl.h"
+#include <stdlib.h>  
+#include "nsIAllocator.h"
+
+static const char* kNullPointerError = "Unexpected null pointer";
+static const char* kWhitespace="\b\t\r\n ";
 
   //******************************************
   // Ctor's
@@ -22,6 +26,16 @@ nsString::nsString(const nsCString &aString,PRInt32 aLength) : mStringValue() {
   Assign(aString,aLength);
 }
 
+  //call this version for a single char of type char...
+nsString::nsString(const nsSubsumeStr &aSubsumeString) : mStringValue(aSubsumeString.mLHS) {
+  SVAppend(mStringValue,aSubsumeString.mRHS,aSubsumeString.mRHS.mLength,0);
+}
+
+  //call this version for a single char of type char...
+nsString::nsString(nsSubsumeStr &aSubsumeString) : mStringValue(aSubsumeString.mLHS) {
+  SVAppend(mStringValue,aSubsumeString.mRHS,aSubsumeString.mRHS.mLength,0);
+}
+
   //call this version for char*'s....
 nsString::nsString(const PRUnichar* aString,PRInt32 aLength) : mStringValue() {
   Assign(aString,aLength,0);
@@ -35,7 +49,7 @@ nsString::nsString(const char aChar) : mStringValue() {
 
   //call this version for PRUnichar*'s....
 nsString::nsString(const char* aString,PRInt32 aLength) : mStringValue() {
-  nsStringValueImpl<char> theString(const_cast<char*>(aString),aLength);
+  nsStringValueImpl<char> theString(CONST_CAST(char*,aString),aLength);
   SVAssign(mStringValue,theString,theString.mLength,0);
 }
 
@@ -45,11 +59,17 @@ nsString::nsString(const nsAReadableString &aString) : mStringValue() {
 }
 
   //call this version for stack-based string buffers...
-nsString::nsString(const nsStackBuffer<PRUnichar> &aBuffer) : mStringValue(aBuffer) {
+nsString::nsString(const nsUStackBuffer &aBuffer) : mStringValue(aBuffer) {
 }
 
 nsString::~nsString() { }
 
+void nsString::Reinitialize(PRUnichar* aBuffer,PRUint32 aCapacity,PRInt32 aLength) {
+  mStringValue.mBuffer=aBuffer;
+  mStringValue.mCapacity=aCapacity;
+  mStringValue.mLength=aLength;
+  mStringValue.mRefCount=1;
+}
 
   //******************************************
   // Assigment operators
@@ -67,16 +87,22 @@ nsString& nsString::operator=(const nsCString &aString) {
   return *this;
 }
 
+nsString& nsString::operator=(const nsSubsumeStr &aSubsumeString) {
+  //XXX NOT IMPLEMENTED
+  return *this;
+}
+
+
 nsString& nsString::operator=(const PRUnichar *aString) {
   if(mStringValue.mBuffer!=aString) {
-    nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString));
+    nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString));
     Assign(aString);
   }
   return *this;
 } 
 
 nsString& nsString::operator=(const char *aString) {
-  nsStringValueImpl<char> theStringValue(const_cast<char*>(aString));
+  nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString));
   SVAssign(mStringValue,theStringValue,theStringValue.mLength,0);
   return *this;
 }
@@ -98,18 +124,10 @@ nsString& nsString::operator=(const PRUnichar aChar) {
 
 nsresult nsString::SetCapacity(PRUint32 aCapacity) {
   if(aCapacity>mStringValue.mCapacity) {
-    SVGrowCapacity<PRUnichar>(mStringValue,aCapacity);
-    SVAddNullTerminator<PRUnichar>(mStringValue);
+    SVRealloc(mStringValue,aCapacity);
   }
   return NS_OK;
 }
-
-PRUnichar& nsString::operator[](PRUint32 aOffset)  {
-  static PRUnichar gSharedChar=0;
-  return (mStringValue.mBuffer) ? mStringValue.mBuffer[aOffset] : gSharedChar;
-}
-
-//  operator const char* const() {return mStringValue.mBuffer;}
 
 
 PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex) {
@@ -121,10 +139,6 @@ PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex) {
   return result;
 }
 
-  //these aren't the real deal, but serve as a placeholder for us to implement iterators.
-nsAReadableStringIterator* nsString::First() {return new nsAReadableStringIterator(); }
-nsAReadableStringIterator* nsString::Last() {return new nsAReadableStringIterator(); }
-
 
   //******************************************
   // Here are the Assignment methods, 
@@ -132,7 +146,7 @@ nsAReadableStringIterator* nsString::Last() {return new nsAReadableStringIterato
   //******************************************
 
 nsresult nsString::Truncate(PRUint32 anOffset) {
-  SVTruncate<PRUnichar>(mStringValue,anOffset);
+  SVTruncate(mStringValue,anOffset);
   return NS_OK;
 }
 
@@ -182,7 +196,7 @@ nsresult nsString::Assign(const nsCString& aString,PRInt32 aLength,PRUint32 aSrc
 //assign from an nsAReadableString (the ABT)
 nsresult nsString::Assign(const nsAReadableString &aString,PRInt32 aLength,PRUint32 aSrcOffset) {
   Truncate();
-  return SVAppendReadable<PRUnichar>(mStringValue,aString,aLength,aSrcOffset);
+  return SVAppendReadable(mStringValue,aString,aLength,aSrcOffset);
 }
 
 //assign from a char
@@ -211,55 +225,73 @@ nsresult nsString::Assign(PRUnichar aChar) {
  *  @return this
  */
 nsresult nsString::Append(const nsString &aString,PRInt32 aLength,PRUint32 aSrcOffset) {
-  aLength = (aLength<0) ? aString.mStringValue.mLength : MinInt(aLength,aString.mStringValue.mLength);
-  return SVAppend< PRUnichar, PRUnichar > (mStringValue,aString.mStringValue,aLength,aSrcOffset);
+  aLength = (aLength<0) ? aString.mStringValue.mLength : (aLength<(PRInt32)aString.mStringValue.mLength) ? aLength: aString.mStringValue.mLength;
+  return SVAppend (mStringValue,aString.mStringValue,aLength,aSrcOffset);
 }
 
   //append from a type compatible string pointer
 nsresult nsString::Append(const char* aString,PRInt32 aLength,PRUint32 aSrcOffset) {
   nsresult result=NS_OK;
   if(aString) {
-    if(aLength<0) aLength=nsCRT::strlen(aString);
-    nsStringValueImpl<char> theStringValue(const_cast<char*>(aString),aLength);
-    result=SVAppend< PRUnichar, char > (mStringValue,theStringValue,aLength,aSrcOffset);
+    if(aLength<0) aLength=stringlen(aString);
+    nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString),aLength);
+    result=SVAppend(mStringValue,theStringValue,aLength,aSrcOffset);
   }
   return result;
 }
 
   //append from alternative type string pointer
 nsresult nsString::Append(const char aChar) {
-  char theBuffer[]={aChar,0};
-  nsStringValueImpl<char> theStringValue(theBuffer,1);
-  return SVAppend< PRUnichar, char > (mStringValue,theStringValue,1,0);
+
+  if(mStringValue.mLength==mStringValue.mCapacity) {
+    SVRealloc(mStringValue,mStringValue.mCapacity+5);
+  }
+
+  if(mStringValue.mLength<mStringValue.mCapacity) {
+    //an optimized code path when our buffer can easily contain the given char...
+    mStringValue.mBuffer[mStringValue.mLength++]=aChar;
+    mStringValue.mBuffer[mStringValue.mLength]=0;
+  }
+
+  return NS_OK;
 }
 
   //append from alternative type string pointer
 nsresult nsString::Append(const PRUnichar aChar) {
-  PRUnichar theBuffer[]={aChar,0};
-  nsStringValueImpl<PRUnichar> theStringValue(theBuffer,1);
-  return SVAppend< PRUnichar,PRUnichar> (mStringValue,theStringValue,1,0);
+
+  if(mStringValue.mLength==mStringValue.mCapacity) {
+    SVRealloc(mStringValue,mStringValue.mCapacity+5);
+  }
+
+  if(mStringValue.mLength<mStringValue.mCapacity) {
+    //an optimized code path when our buffer can easily contain the given char...
+    mStringValue.mBuffer[mStringValue.mLength++]=aChar;
+    mStringValue.mBuffer[mStringValue.mLength]=0;
+  }
+
+  return NS_OK;
 }
 
   //append from alternative type string pointer
 nsresult nsString::Append(const PRUnichar* aString,PRInt32 aLength,PRUint32 aSrcOffset) {
   nsresult result=NS_OK;
   if(aString) {
-    nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString),aLength);
-    result=SVAppend< PRUnichar,PRUnichar> (mStringValue,theStringValue,aLength,aSrcOffset);
+    nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString),aLength);
+    result=SVAppend (mStringValue,theStringValue,aLength,aSrcOffset);
   }
   return result;
 }
 
   //append from an nsCString
 nsresult nsString::Append(const nsCString &aString,PRInt32 aLength,PRUint32 aSrcOffset) {
-  aLength = (aLength<0) ? aString.mStringValue.mLength : MinInt(aLength,aString.mStringValue.mLength);
-  return SVAppend< PRUnichar, char > (mStringValue,aString.mStringValue,aLength,aSrcOffset);
+  aLength = (aLength<0) ? aString.mStringValue.mLength : (aLength<(PRInt32)aString.mStringValue.mLength) ? aLength: aString.mStringValue.mLength;
+  return SVAppend (mStringValue,aString.mStringValue,aLength,aSrcOffset);
 }
 
   //append from an nsAReadableString (the ABT)
 nsresult nsString::Append(const nsAReadableString &aString,PRInt32 aLength,PRUint32 aSrcOffset) {
   aLength = (aLength<0) ? aString.Length() : MinInt(aLength,aString.Length());
-  return SVAppendReadable<PRUnichar> (mStringValue,aString,aLength,aSrcOffset);
+  return SVAppendReadable(mStringValue,aString,aLength,aSrcOffset);
 }
 
   //append an integer
@@ -315,11 +347,11 @@ nsresult nsString::Append(float aFloat) {
   //***************************************
 
 nsresult nsString::Cut(PRUint32 anOffset,PRInt32 aCount) {
-  return SVDelete<PRUnichar>(mStringValue,anOffset,aCount);
+  return (0<aCount) ? SVDelete(mStringValue,anOffset,aCount) : NS_OK;
 }
 
 nsresult nsString::Trim(const char* aTrimSet,PRBool aEliminateLeading,PRBool aEliminateTrailing,PRBool aIgnoreQuotes) {
-  return SVTrim<PRUnichar>(mStringValue,aTrimSet,aEliminateLeading,aEliminateTrailing);
+  return SVTrim(mStringValue,aTrimSet,aEliminateLeading,aEliminateTrailing);
 }
 
 /**
@@ -333,8 +365,7 @@ nsresult nsString::Trim(const char* aTrimSet,PRBool aEliminateLeading,PRBool aEl
  *  @return  this
  */
 nsresult nsString::CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){
-  nsStringValueImpl<char> theSet(const_cast<char*>(aSet));
-  return SVCompressSet<PRUnichar>(mStringValue,theSet,aChar,aEliminateLeading,aEliminateTrailing);
+  return SVCompressSet(mStringValue,aSet,aChar,aEliminateLeading,aEliminateTrailing);
 }
 
 /**
@@ -367,7 +398,7 @@ nsresult nsString::CompressWhitespace( PRBool aEliminateLeading,PRBool aEliminat
  *  @return this
  */
 nsresult nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) {
-  return SVInsert<PRUnichar>(mStringValue,anOffset,aCopy.mStringValue,aCount,anOffset);
+  return SVInsert(mStringValue,anOffset,aCopy.mStringValue,aCount,anOffset);
 }
 
 /**
@@ -385,10 +416,10 @@ nsresult nsString::Insert(const char* aString,PRUint32 anOffset,PRInt32 aLength)
   nsresult result=NS_OK;
   if(aString){
 
-    nsStringValueImpl<char> theStringValue(const_cast<char*>(aString),aLength);
+    nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString),aLength);
     
     if(0<theStringValue.mLength){
-      result=SVInsert<PRUnichar>(mStringValue,anOffset,theStringValue,theStringValue.mLength,0);
+      result=SVInsert(mStringValue,anOffset,theStringValue,theStringValue.mLength,0);
     }
   }
   return result;  
@@ -409,10 +440,10 @@ nsresult nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aLe
   nsresult result=NS_OK;
   if(aString){
 
-    nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString),aLength);
+    nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString),aLength);
     
     if(0<theStringValue.mLength){
-      result=SVInsert<PRUnichar>(mStringValue,anOffset,theStringValue,theStringValue.mLength,0);
+      result=SVInsert(mStringValue,anOffset,theStringValue,theStringValue.mLength,0);
     }
   }
   return result;  
@@ -431,7 +462,7 @@ nsresult nsString::Insert(char aChar,PRUint32 anOffset){
   char theBuffer[]={aChar,0};
   nsStringValueImpl<char> theStringValue(theBuffer,1);
 
-  return SVInsert<PRUnichar>(mStringValue,anOffset,theStringValue,1,0);
+  return SVInsert(mStringValue,anOffset,theStringValue,1,0);
 }
 
 
@@ -445,26 +476,34 @@ nsresult nsString::Insert(char aChar,PRUint32 anOffset){
  *  @return  this
  */
 nsresult nsString::ReplaceChar(char anOldChar,char aNewChar){
-  return SVReplaceChar<PRUnichar>(mStringValue,anOldChar,aNewChar,mStringValue.mLength,0);
+  PRUnichar *root_cp=mStringValue.mBuffer;
+  PRUnichar *null_cp=root_cp+mStringValue.mLength;
+
+  while(root_cp<null_cp) {
+    if(*root_cp==anOldChar) {
+      *root_cp=aNewChar;
+    }
+    root_cp++;
+  }
+  return NS_OK;
 }
 
 nsresult nsString::ReplaceChar(const char* aSet,char aNewChar){
-  nsStringValueImpl<char> theSet(const_cast<char*>(aSet));
-  return SVReplaceCharsInSet<PRUnichar>(mStringValue,theSet,aNewChar,mStringValue.mLength,0);
+  return SVReplaceCharsInSet(mStringValue,aSet,aNewChar,mStringValue.mLength,0);
 }
 
 nsresult nsString::ReplaceSubstring( const nsString& aTarget,const nsString& aNewValue){
-  return SVReplace<PRUnichar>(mStringValue,aTarget.mStringValue,aNewValue.mStringValue,mStringValue.mLength,0);
+  return SVReplace(mStringValue,aTarget.mStringValue,aNewValue.mStringValue,mStringValue.mLength,0);
 }
 
 
 nsresult nsString::ReplaceSubstring(const char* aTarget,const char* aNewValue) {
   nsresult result=NS_OK;
 
-  const nsStringValueImpl<char> theTarget(const_cast<char*>(aTarget));
-  const nsStringValueImpl<char> theNewValue(const_cast<char*>(aNewValue));
+  const nsStringValueImpl<char> theTarget(CONST_CAST(char*,aTarget));
+  const nsStringValueImpl<char> theNewValue(CONST_CAST(char*,aNewValue));
 
-  return SVReplace<PRUnichar>(mStringValue,theTarget,theNewValue,mStringValue.mLength,0);
+  return SVReplace(mStringValue,theTarget,theNewValue,mStringValue.mLength,0);
 }
 
   //*******************************************
@@ -480,8 +519,8 @@ nsresult nsString::ReplaceSubstring(const char* aTarget,const char* aNewValue) {
  *  @param  anOffset -- where in this string to start stripping chars
  *  @return *this 
  */
-nsresult nsString::StripChar(char aChar,PRUint32 anOffset){
-  return SVStripChar<PRUnichar>(mStringValue,aChar,mStringValue.mLength,anOffset);
+nsresult nsString::StripChar(PRUnichar aChar,PRUint32 anOffset){
+  return SVStripChar(mStringValue,aChar,mStringValue.mLength,anOffset);
 }
 
 /**
@@ -494,7 +533,7 @@ nsresult nsString::StripChar(char aChar,PRUint32 anOffset){
  *  @return *this 
  */
 nsresult nsString::StripChar(PRInt32 anInt,PRUint32 anOffset){
-  return SVStripChar<PRUnichar>(mStringValue,(PRUnichar)anInt,mStringValue.mLength,anOffset);
+  return SVStripChar(mStringValue,(PRUnichar)anInt,mStringValue.mLength,anOffset);
 }
 
 /**
@@ -505,9 +544,9 @@ nsresult nsString::StripChar(PRInt32 anInt,PRUint32 anOffset){
  *  @param  aSet -- characters to be cut from this
  *  @return *this 
  */
-nsresult nsString::StripChars(const char* aSet){
-  nsStringValueImpl<char> theSet(const_cast<char*>(aSet));
-  return SVStripCharsInSet<PRUnichar>(mStringValue,aSet,mStringValue.mLength,0);
+nsresult nsString::StripChars(const char* aSet,PRInt32 aLength){
+  nsStringValueImpl<char> theSet(CONST_CAST(char*,aSet),aLength);
+  return SVStripCharsInSet(mStringValue,aSet,mStringValue.mLength,0);
 }
 
 /**
@@ -526,21 +565,44 @@ nsresult nsString::StripWhitespace() {
   //**************************************************
 
 nsresult nsString::Left(nsString& aCopy,PRInt32 aCount) const {
-  aCount = (aCount<0) ? mStringValue.mLength : MinInt(aCount,mStringValue.mLength);
+  aCount = (aCount<0) ? mStringValue.mLength : (aCount<(PRInt32)mStringValue.mLength) ? aCount : mStringValue.mLength;
   return aCopy.Assign(*this,aCount,0);
 }
 
 nsresult nsString::Mid(nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) const {
-  aCount = (aCount<0) ? mStringValue.mLength : MinInt(aCount,mStringValue.mLength);
+  aCount = (aCount<0) ? mStringValue.mLength : (aCount<(PRInt32)mStringValue.mLength) ? aCount : mStringValue.mLength;
   return aCopy.Assign(*this,aCount,anOffset);
 }
 
 nsresult nsString::Right(nsString& aCopy,PRInt32 aCount) const {
-  PRInt32 offset=MaxInt(mStringValue.mLength-aCount,0);
+  PRUint32 theLen=mStringValue.mLength-aCount;
+  PRInt32 offset=(theLen<0) ? 0 : theLen;
   return Mid(aCopy,offset,aCount);
 }
 
+  //******************************************
+  // Concatenation operators
+  //******************************************
 
+nsSubsumeStr nsString::operator+(const nsString &aString) {
+  nsSubsumeStr result(mStringValue,aString.mStringValue);
+  return result;
+}
+
+nsSubsumeStr nsString::operator+(const PRUnichar* aString) {
+  nsSubsumeStr result;  //NOT IMPLEMENTED
+  return result;
+}
+
+nsSubsumeStr nsString::operator+(const char* aCString) {
+  nsSubsumeStr result;  //NOT IMPLEMENTED
+  return result;
+}
+
+nsSubsumeStr nsString::operator+(PRUnichar aChar) {
+  nsSubsumeStr result;  //NOT IMPLEMENTED
+  return result;
+}
   //*******************************************
   //  Here come the operator+=() methods...
   //*******************************************
@@ -578,7 +640,7 @@ nsString& nsString::operator+=(const int anInt){
 }
 
 void nsString::ToLowerCase() {
-  SVToLowerCase<PRUnichar>(mStringValue);
+  SVToLowerCase(mStringValue);
 }
 
 void nsString::ToLowerCase(nsString &aString) const {
@@ -587,7 +649,7 @@ void nsString::ToLowerCase(nsString &aString) const {
 }
 
 void nsString::ToUpperCase() {
-  SVToUpperCase<PRUnichar>(mStringValue);
+  SVToUpperCase(mStringValue);
 }
 
 void nsString::ToUpperCase(nsString &aString) const {
@@ -597,52 +659,78 @@ void nsString::ToUpperCase(nsString &aString) const {
 
 
 PRInt32  nsString::Compare(const nsString &aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  return SVCompare<PRUnichar,PRUnichar>(mStringValue,aString.mStringValue,aIgnoreCase,aCount);
+  return SVCompareChars(mStringValue,aString.mStringValue,aIgnoreCase,aCount);
 }
 
 PRInt32  nsString::Compare(const nsCString &aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  return SVCompare<PRUnichar,char>(mStringValue,aString.mStringValue,aIgnoreCase,aCount);
+  return SVCompare(mStringValue,aString.mStringValue,aIgnoreCase,aCount);
 }
 
 PRInt32  nsString::Compare(const char* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  nsStringValueImpl<char> theStringValue(const_cast<char*>(aString),aCount);
-  return SVCompare<PRUnichar,char>(mStringValue,theStringValue,aIgnoreCase,aCount);
+  nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString),aCount);
+  return SVCompare(mStringValue,theStringValue,aIgnoreCase,aCount);
 }
 
 PRInt32  nsString::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString),aCount);
-  return SVCompare<PRUnichar,PRUnichar>(mStringValue,theStringValue,aIgnoreCase,aCount);
+  nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString),aCount);
+  return SVCompareChars(mStringValue,theStringValue,aIgnoreCase,aCount);
 }
 
 PRBool  nsString::Equals(const nsString &aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 result=SVCompare<PRUnichar,PRUnichar>(mStringValue,aString.mStringValue,aIgnoreCase,aCount);
-  return PRBool(0==result);
+  return PRBool(0==SVCompare(mStringValue,aString.mStringValue,aIgnoreCase,aCount));
 }
 
 PRBool  nsString::Equals(const nsCString &aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 result=SVCompare<PRUnichar,char>(mStringValue,aString.mStringValue,aIgnoreCase,aCount);
-  return PRBool(0==result);
+  return PRBool(0==SVCompare(mStringValue,aString.mStringValue,aIgnoreCase,aCount));
 }
 
 PRBool  nsString::Equals(const char* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  nsStringValueImpl<char> theStringValue(const_cast<char*>(aString),aCount);
-  PRInt32 result=SVCompare<PRUnichar,char>(mStringValue,theStringValue,aIgnoreCase,aCount);
-  return PRBool(0==result);
+  nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString),aCount);
+  return PRBool(0==SVCompare(mStringValue,theStringValue,aIgnoreCase,aCount));
 }
 
 
 PRBool  nsString::Equals(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString),aCount);
-  PRInt32 result=SVCompare<PRUnichar,PRUnichar>(mStringValue,theStringValue,aIgnoreCase,aCount);
-  return PRBool(0==result);
+  nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString),aCount);
+  return PRBool(0==SVCompareChars(mStringValue,theStringValue,aIgnoreCase,aCount));
 }
 
-PRBool nsString::EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const {
-  PRBool result=PR_FALSE;
+PRBool nsString::Equals(const PRUnichar* aLHS,const PRUnichar* aRHS,PRBool aIgnoreCase) const {
+  NS_ASSERTION(0!=aLHS,kNullPointerError);
+  NS_ASSERTION(0!=aRHS,kNullPointerError);
+  PRBool  result=PR_FALSE;
+  if((aLHS) && (aRHS)){
+
+
+//    PRInt32 cmp=(aIgnoreCase) ? nsCRT::strcasecmp(aLHS,aRHS) : nsCRT::strcmp(aLHS,aRHS);
+//    result=PRBool(0==cmp);
+
+
+  }
+
   return result;
 }
 
-  // PRBool  Equals(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const;   
+PRBool nsString::Equals(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) const{
+  NS_ASSERTION(0!=aAtom,kNullPointerError);
+  PRBool result=PR_FALSE;
+
+#if 0
+
+  if(aAtom){
+    PRInt32 cmp=0;
+    const PRUnichar* unicode;
+    if (aAtom->GetUnicode(&unicode) != NS_OK || unicode == nsnull)
+        return PR_FALSE;
+    if (aIgnoreCase)
+      cmp=nsCRT::strcasecmp(mUStr,unicode);
+    else
+      cmp=nsCRT::strcmp(mUStr,unicode);
+    result=PRBool(0==cmp);
+  }
+#endif
+  return result;
+}
 
 
 /***************************************
@@ -660,7 +748,7 @@ PRBool nsString::EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) cons
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const nsString& aTarget,PRBool aIgnoreCase,PRUint32 anOffset,PRInt32 aRepCount) const {
-  return SVFind<PRUnichar,PRUnichar>(mStringValue,aTarget.mStringValue,aIgnoreCase,aRepCount,anOffset);
+  return SVFind(mStringValue,aTarget.mStringValue,aIgnoreCase,aRepCount,anOffset);
 }
 
 /**
@@ -674,7 +762,7 @@ PRInt32 nsString::Find(const nsString& aTarget,PRBool aIgnoreCase,PRUint32 anOff
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const nsCString &aString,PRBool aIgnoreCase,PRUint32 anOffset,PRInt32 aRepCount) const {
-  return SVFind<PRUnichar,char>(mStringValue,aString.mStringValue,aIgnoreCase,aRepCount,anOffset);
+  return SVFind(mStringValue,aString.mStringValue,aIgnoreCase,aRepCount,anOffset);
 }
 
 /**
@@ -688,8 +776,8 @@ PRInt32 nsString::Find(const nsCString &aString,PRBool aIgnoreCase,PRUint32 anOf
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const char* aString,PRBool aIgnoreCase,PRUint32 anOffset,PRInt32 aRepCount) const {
-  nsStringValueImpl<char> theString(const_cast<char*>(aString));
-  return SVFind<PRUnichar,char>(mStringValue,theString,aIgnoreCase,aRepCount,anOffset);
+  nsStringValueImpl<char> theString(CONST_CAST(char*,aString));
+  return SVFind(mStringValue,theString,aIgnoreCase,aRepCount,anOffset);
 }
 
 /**
@@ -704,8 +792,8 @@ PRInt32 nsString::Find(const char* aString,PRBool aIgnoreCase,PRUint32 anOffset,
  */
 PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRUint32 anOffset,PRInt32 aRepCount) const {
 
-  nsStringValueImpl<PRUnichar> theString(const_cast<PRUnichar*>(aString));
-  return SVFind<PRUnichar,PRUnichar>(mStringValue,theString,aIgnoreCase,aRepCount,anOffset);
+  nsStringValueImpl<PRUnichar> theString(CONST_CAST(PRUnichar*,aString));
+  return SVFind(mStringValue,theString,aIgnoreCase,aRepCount,anOffset);
 }
 
 /**
@@ -718,7 +806,7 @@ PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRUint32 anOf
  *  @return  
  */
 PRInt32 nsString::FindCharInSet(const nsString& aString,PRUint32 anOffset) const{
-  return SVFindCharInSet<PRUnichar,PRUnichar>(mStringValue,aString.mStringValue,PR_FALSE,mStringValue.mLength,anOffset);
+  return SVFindCharInSet(mStringValue,aString.mStringValue,PR_FALSE,mStringValue.mLength,anOffset);
 }
 
 
@@ -733,8 +821,8 @@ PRInt32 nsString::FindCharInSet(const nsString& aString,PRUint32 anOffset) const
  */
 PRInt32 nsString::FindCharInSet(const char *aString,PRUint32 anOffset) const{
 
-  nsStringValueImpl<char> theStringValue(const_cast<char*>(aString));
-  return SVFindCharInSet<PRUnichar,char>(mStringValue,theStringValue,PR_FALSE,mStringValue.mLength,anOffset);
+  nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString));
+  return SVFindCharInSet(mStringValue,theStringValue,PR_FALSE,mStringValue.mLength,anOffset);
 }
 
 /**
@@ -748,8 +836,8 @@ PRInt32 nsString::FindCharInSet(const char *aString,PRUint32 anOffset) const{
  */
 PRInt32 nsString::FindCharInSet(const PRUnichar *aString,PRUint32 anOffset) const{
 
-  nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString));
-  return SVFindCharInSet<PRUnichar,PRUnichar>(mStringValue,theStringValue,PR_FALSE,mStringValue.mLength,anOffset);
+  nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString));
+  return SVFindCharInSet(mStringValue,theStringValue,PR_FALSE,mStringValue.mLength,anOffset);
 }
 
 /**
@@ -763,7 +851,7 @@ PRInt32 nsString::FindCharInSet(const PRUnichar *aString,PRUint32 anOffset) cons
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::FindChar(char aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const {
-  return SVFindChar<PRUnichar>(mStringValue,aChar,aIgnoreCase,aCount,anOffset);
+  return SVFindChar(mStringValue,aChar,aIgnoreCase,aCount,anOffset);
 }
 
 /**
@@ -777,7 +865,7 @@ PRInt32 nsString::FindChar(char aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt3
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::RFindChar(char aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aRepCount) const{
-  return SVRFindChar<PRUnichar>(mStringValue,aChar,aIgnoreCase,aRepCount,anOffset);
+  return SVRFindChar(mStringValue,aChar,aIgnoreCase,aRepCount,anOffset);
 }
 
 /**
@@ -795,20 +883,20 @@ PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOff
   PRInt32 result=kNotFound;
 
   if(0<=theMaxPos) {
-    result=SVRFind<PRUnichar,PRUnichar>(mStringValue,aString.mStringValue,aIgnoreCase,aRepCount,anOffset);
+    result=SVRFind(mStringValue,aString.mStringValue,aIgnoreCase,aRepCount,anOffset);
   }
   return result;
 }
 
 PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aRepCount) const{
-  nsStringValueImpl<char> theStringValue(const_cast<char*>(aString));
-  return SVRFind<PRUnichar,char>(mStringValue,theStringValue,aIgnoreCase,aRepCount,anOffset);
+  nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString));
+  return SVRFind(mStringValue,theStringValue,aIgnoreCase,aRepCount,anOffset);
 }
   
 
 PRInt32 nsString::RFind(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aRepCount) const{
-  nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString));
-  return SVRFind<PRUnichar,PRUnichar>(mStringValue,theStringValue,aIgnoreCase,aRepCount,anOffset);
+  nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString));
+  return SVRFind(mStringValue,theStringValue,aIgnoreCase,aRepCount,anOffset);
 }
 /**
  *  This method finds (in reverse) the offset of the first char in this string that is
@@ -820,7 +908,7 @@ PRInt32 nsString::RFind(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOf
  *  @return  
  */
 PRInt32 nsString::RFindCharInSet(const nsString& aString,PRInt32 anOffset) const {
-  return SVRFindCharInSet<PRUnichar,PRUnichar>(mStringValue,aString.mStringValue,PR_FALSE,mStringValue.mLength,anOffset);
+  return SVRFindCharInSet(mStringValue,aString.mStringValue,PR_FALSE,mStringValue.mLength,anOffset);
 }
 
 /**
@@ -833,8 +921,8 @@ PRInt32 nsString::RFindCharInSet(const nsString& aString,PRInt32 anOffset) const
  *  @return  
  */
 PRInt32 nsString::RFindCharInSet(const PRUnichar* aString,PRInt32 anOffset) const{
-  nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString));
-  return SVRFindCharInSet<PRUnichar,PRUnichar>(mStringValue,theStringValue,PR_FALSE,mStringValue.mLength,anOffset);
+  nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString));
+  return SVRFindCharInSet(mStringValue,theStringValue,PR_FALSE,mStringValue.mLength,anOffset);
 }
 
 /**
@@ -847,8 +935,8 @@ PRInt32 nsString::RFindCharInSet(const PRUnichar* aString,PRInt32 anOffset) cons
  *  @return  
  */
 PRInt32 nsString::RFindCharInSet(const char* aString,PRInt32 anOffset) const{
-  nsStringValueImpl<char> theStringValue(const_cast<char*>(aString));
-  return SVRFindCharInSet<PRUnichar,char>(mStringValue,theStringValue,PR_FALSE,mStringValue.mLength,anOffset);
+  nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString));
+  return SVRFindCharInSet(mStringValue,theStringValue,PR_FALSE,mStringValue.mLength,anOffset);
 }
 
 /***************************************
@@ -894,7 +982,7 @@ char* nsString::ToCString(char* aBuf,PRUint32 aBufLength,PRUint32 anOffset) cons
 
 
 PRInt32 nsString::CountChar(PRUnichar aChar) {  
-  return SVCountChar<PRUnichar>(mStringValue,aChar);
+  return SVCountChar(mStringValue,aChar);
 }
 
   //******************************************
@@ -904,7 +992,7 @@ PRInt32 nsString::CountChar(PRUnichar aChar) {
   
   //This will not work correctly for any unicode set other than ascii
 void nsString::DebugDump(void) const { 
-  SVDebugDump<PRUnichar>(mStringValue);
+  SVDebugDump(mStringValue);
 }
 
 /**
@@ -919,7 +1007,7 @@ float nsString::ToFloat(PRInt32* aErrorCode) const {
     return 0.0f;
   }
   char* cp = ToCString(buf, sizeof(buf));
-  float f = (float) PR_strtod(cp, &cp);
+  float f = (float) strtod(cp, &cp);
   if (*cp != 0) {
     *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
   }
@@ -938,7 +1026,264 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const{
 }
 
 nsresult nsString::Append(const nsStringValueImpl<char> &aString,PRInt32 aLength,PRUint32 aSrcOffset) {
-  aLength = (aLength<0) ? aString.mLength : MinInt(aLength,aString.mLength);
-  return SVAppend< PRUnichar, char> (mStringValue,aString,aLength,aSrcOffset);
+  aLength = (aLength<0) ? aString.mLength : (aLength<(PRInt32)aString.mLength) ? aLength: aString.mLength;
+  return SVAppend(mStringValue,aString,aLength,aSrcOffset);
+}
+
+/*****************************************************************
+  Now we declare the nsCSubsumeString class
+ *****************************************************************/
+
+
+nsSubsumeStr::nsSubsumeStr() {
+}
+
+
+nsSubsumeStr::nsSubsumeStr(const nsString& aString) : mLHS(aString.mStringValue), mRHS() {
+}
+
+
+nsSubsumeStr::nsSubsumeStr(const nsSubsumeStr& aSubsumeString) : 
+  mLHS(aSubsumeString.mLHS), 
+  mRHS(aSubsumeString.mRHS) {
+}
+
+
+nsSubsumeStr::nsSubsumeStr(const nsStringValueImpl<PRUnichar> &aLHS,const nsSubsumeStr& aSubsumeString) : 
+  mLHS(aLHS), 
+  mRHS(aSubsumeString.mLHS) {
+}
+
+
+nsSubsumeStr::nsSubsumeStr(const nsStringValueImpl<PRUnichar> &aLHS,const nsStringValueImpl<PRUnichar> &aRHS) : 
+  mLHS(aLHS), 
+  mRHS(aRHS) {
+}
+
+nsSubsumeStr::nsSubsumeStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) {
+}
+
+nsSubsumeStr nsSubsumeStr::operator+(const nsSubsumeStr &aSubsumeString) {
+  nsSubsumeStr result(*this);
+  return result;
+}
+
+
+nsSubsumeStr nsSubsumeStr::operator+(const nsString &aString) {
+  SVAppend(mLHS,mRHS,mRHS.mLength,0);
+  memcpy(&mRHS,&aString.mStringValue,sizeof(mRHS));
+  return *this;
+}
+
+int nsSubsumeStr::Subsume(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) {
+  //XXX NOT IMPLEMENTED
+  int result=0;
+  return result;
+}
+
+/**
+ * 
+ * @update  gess 01/04/99
+ * @param 
+ * @return
+ */
+NS_COM int fputs(const nsString& aString, FILE* out)
+{
+  char buf[100];
+  char* cp = buf;
+  PRInt32 len = aString.Length();
+  if (len >= PRInt32(sizeof(buf))) {
+    cp = aString.ToNewCString();
+  } else {
+    aString.ToCString(cp, len + 1);
+  }
+  if(len>0)
+    ::fwrite(cp, 1, len, out);
+  if (cp != buf) {
+    delete[] cp;
+  }
+  return (int) len;
+}
+
+PRUint32 HashCode(const nsString& aDest) {
+  PRUint32 h = 0;
+  PRUint32 n = aDest.Length();
+  PRUint32 m;
+  const PRUnichar* c=aDest.GetUnicode();
+
+  if (n < 16) {	/* Hash every char in a short string. */
+    for(; n; c++, n--)
+      h = (h >> 28) ^ (h << 4) ^ *c;
+  }
+  else {	/* Sample a la java.lang.String.hash(). */
+    for(m = n / 8; n >= m; c += m, n -= m)
+      h = (h >> 28) ^ (h << 4) ^ *c;
+  }
+  return h; 
+}
+
+void Recycle( PRUnichar* aBuffer) { 
+  nsAllocator::Free(aBuffer); 
+}
+
+
+/*****************************************************************
+  Now we declare the nsAutoString class
+ *****************************************************************/
+
+
+nsAutoString::nsAutoString() : nsString() {
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+  mStringValue.mCapacity=kDefaultStringSize;
+  mStringValue.mBuffer=mInternalBuffer;
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+}
+
+  //call this version nsAutoString derivatives...
+nsAutoString::nsAutoString(const nsAutoString& aString,PRInt32 aLength) : nsString() {
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+  mStringValue.mCapacity=kDefaultStringSize;
+  mStringValue.mBuffer=mInternalBuffer;
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+  Assign(aString,aLength);
+}
+
+//call this version for nsString and the autostrings
+nsAutoString::nsAutoString(const nsString& aString,PRInt32 aLength) : nsString() {
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+  mStringValue.mCapacity=kDefaultStringSize;
+  mStringValue.mBuffer=mInternalBuffer;
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+  Assign(aString,aLength);
+}
+
+  //call this version with nsCString
+nsAutoString::nsAutoString(const nsCString& aString) : nsString(aString) {
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+}
+
+  //call this version for char*'s....
+nsAutoString::nsAutoString(const char* aString,PRInt32 aLength) : nsString() {
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+
+  nsStringValueImpl<char> theString(CONST_CAST(char*,aString),aLength);
+  mStringValue.mCapacity=kDefaultStringSize;
+  mStringValue.mBuffer=mInternalBuffer;
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+  SVAssign(mStringValue,theString,aLength,0);
+}
+
+  //call this version for a single char of type char...
+nsAutoString::nsAutoString(char aChar) : nsString() {
+
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+  mStringValue.mCapacity=kDefaultStringSize;
+  mStringValue.mBuffer=mInternalBuffer;
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+
+  PRUnichar theBuffer[]={aChar,0};
+
+  Assign(theBuffer,1,0);
+}
+
+  //call this version for a single char of type char...
+nsAutoString::nsAutoString(PRUnichar aChar) : nsString() {
+
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+  mStringValue.mCapacity=kDefaultStringSize;
+  mStringValue.mBuffer=mInternalBuffer;
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+
+  PRUnichar theBuffer[]={aChar,0};
+
+  Assign(theBuffer,1,0);
+}
+
+
+  //call this version for PRUnichar*'s....
+nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString() {
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+  mStringValue.mCapacity=kDefaultStringSize;
+  mStringValue.mBuffer=mInternalBuffer;
+  nsStringValueImpl<PRUnichar> theString(CONST_CAST(PRUnichar*,aString),aLength);
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+  SVAssign(mStringValue,theString,theString.mLength,0);
+}
+
+
+  //call this version for all other ABT versions of readable strings
+nsAutoString::nsAutoString(const nsAReadableString &aString) : nsString() {
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+  mStringValue.mCapacity=kDefaultStringSize;
+  mStringValue.mBuffer=mInternalBuffer;
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+  Assign(aString);
+}
+
+nsAutoString::nsAutoString(const nsUStackBuffer &aBuffer) : nsString() {
+
+  memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+
+  mStringValue.mLength=aBuffer.mLength;
+  mStringValue.mCapacity=aBuffer.mCapacity;
+  mStringValue.mBuffer=aBuffer.mBuffer;
+  mStringValue.mRefCount++; //so we don't try to delete our internal buffer
+  
+}
+
+nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
+  mStringValue.mBuffer=(PRUnichar*)aBuffer.mBuffer;
+  mStringValue.mCapacity=aBuffer.mCapacity;
+  mStringValue.mLength=aBuffer.mLength;
+  mStringValue.mRefCount=(aBuffer.mStackBased) ? 2 : 1;
+}
+
+nsAutoString::nsAutoString(const nsSubsumeStr& aSubsumeStringX) : nsString() {
+}
+
+
+nsAutoString::~nsAutoString() { }
+
+
+nsAutoString& nsAutoString::operator=(const nsAutoString& aCopy) {
+  if(aCopy.mStringValue.mBuffer!=mStringValue.mBuffer) {
+    Assign(aCopy);
+  }
+  return *this;
+}
+
+nsAutoString& nsAutoString::operator=(const nsString& aString) {
+  Assign(aString);
+  return *this;
+}
+
+nsAutoString& nsAutoString::operator=(const nsCString& aString) {
+  Assign(aString);
+  return *this;
+}
+
+nsAutoString& nsAutoString::operator=(const PRUnichar* aString) {
+  if(mStringValue.mBuffer!=aString) {
+    nsStringValueImpl<PRUnichar> theStringValue(CONST_CAST(PRUnichar*,aString));
+    Assign(aString);
+  }
+  return *this;
+} 
+
+nsAutoString& nsAutoString::operator=(const char* aString) {
+  nsStringValueImpl<char> theStringValue(CONST_CAST(char*,aString));
+  SVAssign(mStringValue,theStringValue,theStringValue.mLength,0);
+  return *this;
+}
+
+nsAutoString& nsAutoString::operator=(const PRUnichar aChar) {
+  Assign(aChar);
+  return *this;
+} 
+
+
+nsAutoString& nsAutoString::operator=(const nsSubsumeStr &aSubsumeString) {
+  nsString::operator=(aSubsumeString);
+  return *this;
 }
 
