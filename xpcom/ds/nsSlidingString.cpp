@@ -233,7 +233,18 @@ nsSlidingSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragmen
           break;
 
         case kFragmentAt:
-          // ...work...
+          {
+              // kFragmentAt is going away; we hate this linear search
+
+            PRUint32 N;
+            result_buffer = mStart.mBuffer;
+
+            while ( result_buffer && (N = PRUint32(result_buffer->DataLength())) < aOffset )
+              {
+                aOffset -= N;
+                result_buffer = result_buffer->mNext;
+              }
+          }
           break;
       }
 
