@@ -381,6 +381,10 @@ void CMT_SavePrefs(PCMT_CONTROL cm_control, CMTItem* eventData)
 void CMT_DispatchEvent(PCMT_CONTROL cm_control, CMTItem * eventData)
 {
     CMUint32 eventType;
+    CMTItem msgCopy;
+
+    /* Init the msgCopy */
+    msgCopy.data = 0;    
 
     /* Get the event type */
     if ((eventData->type & SSM_CATEGORY_MASK) != SSM_EVENT_MESSAGE) {
@@ -399,9 +403,23 @@ void CMT_DispatchEvent(PCMT_CONTROL cm_control, CMTItem * eventData)
             UIEvent event;
             void * clientContext = NULL;
 
+	    /* Copy the message to allow a second try with the old format */
+	    msgCopy.len = eventData->len;
+	    msgCopy.data = calloc(msgCopy.len, 1);
+	    if (msgCopy.data) {
+              memcpy(msgCopy.data, eventData->data, eventData->len);
+	    }
+
             /* Get the event data first */
             if (CMT_DecodeMessage(UIEventTemplate, &event, eventData) != CMTSuccess) {
-                goto loser;
+		/* Attempt to decode using the old format.  Modal is True */
+		if (!msgCopy.data || 
+		    CMT_DecodeMessage(OldUIEventTemplate, &event, &msgCopy) != CMTSuccess) {
+                  goto loser;
+                }
+
+                /* Set default modal value */
+                event.isModal = CM_TRUE;
             }
 
             /* Convert the client context to a pointer */
@@ -456,6 +474,7 @@ void CMT_DispatchEvent(PCMT_CONTROL cm_control, CMTItem * eventData)
     }
 loser:
     free(eventData->data);
+    free(msgCopy.data);
     return;
 }
 

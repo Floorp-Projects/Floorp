@@ -84,6 +84,7 @@ OBJS=                         \
     .\$(OBJDIR)\templates.obj \
     .\$(OBJDIR)\obscure.obj \
     .\$(OBJDIR)\obspriv.obj \
+    .\$(OBJDIR)\protocolshr.obj \
     $(NULL)
 
 #//------------------------------------------------------------------------
@@ -104,6 +105,7 @@ INSTALL_FILE_LIST= protocol.h \
    protocolf.h \
    protocolport.h \
    protocolnspr20.h \
+   protocolshr.h \
    ssmdefs.h \
    rsrcids.h \
    messages.h \

@@ -135,6 +135,21 @@ CMTMessageTemplate UIEventTemplate[] =
     { CMT_DT_END }
 };
 
+/*
+ * The old UI Event was missing the modal indication.
+ * As a transition aid, we use the old template if the
+ * "modern" version doesn't work.  Model is true in that case
+ */
+CMTMessageTemplate OldUIEventTemplate[] =
+{
+    { CMT_DT_INT, offsetof(UIEvent, resourceID) },
+    { CMT_DT_INT, offsetof(UIEvent, width) },
+    { CMT_DT_INT, offsetof(UIEvent, height) },
+    { CMT_DT_STRING, offsetof(UIEvent, url) },
+    { CMT_DT_ITEM, offsetof(UIEvent, clientContext) },
+    { CMT_DT_END }
+};
+
 CMTMessageTemplate TaskCompletedEventTemplate[] =
 {
     { CMT_DT_INT, offsetof(TaskCompletedEvent, resourceID) },
@@ -595,4 +610,11 @@ CMTMessageTemplate HTMLCertInfoRequestTemplate[] =
     { CMT_DT_INT, offsetof(HTMLCertInfoRequest, showImages) },
     { CMT_DT_INT, offsetof(HTMLCertInfoRequest, showIssuer) },
     { CMT_DT_END }
+};
+
+CMTMessageTemplate EncryptRequestTemplate[] =
+{
+  { CMT_DT_ITEM, offsetof(EncryptRequestMessage, keyid) },
+  { CMT_DT_ITEM, offsetof(EncryptRequestMessage, data) },
+  { CMT_DT_END }
 };
