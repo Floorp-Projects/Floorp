@@ -97,8 +97,19 @@ nsSHTransaction::SetNext(nsISHTransaction * aNext)
 {
    if(mNext)
       {   
+	   /* We do not want to maintain the previous traversals
+	    * and make SessionHistory grow unboundewd for the 
+		* seamonkey release. We will let go off 
+		* all previous traversals. However, based on a pref
+		* previous traversals can be maintained. The Pref
+		* work will be done at a future date.Commenting off 
+		* the following lines will delete previous traversals
+		*/
+#if 0
 		// There is already a child. Move the child to the LRV list
       mLRVList = mNext;
+#endif 
+
 	   }
 
    NS_ENSURE_SUCCESS(aNext->SetPrev(this), NS_ERROR_FAILURE);
