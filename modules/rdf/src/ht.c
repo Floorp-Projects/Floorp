@@ -2325,35 +2325,6 @@ deleteHTNode(HT_Resource node)
 	}
 	node->values = NULL;
 
-	if (node->flags & HT_FREEICON_URL_FLAG)
-	{
-		if (node->url[0] != NULL)
-		{
-			freeMem(node->url[0]);
-			node->url[0] = NULL;
-		}
-		if (node->url[1] != NULL)
-		{
-			freeMem(node->url[1]);
-			node->url[1] = NULL;
-		}
-		if (node->url[2] != NULL)
-		{
-			freeMem(node->url[2]);
-			node->url[2] = NULL;
-		}
-		if (node->url[3] != NULL)
-		{
-			freeMem(node->url[3]);
-			node->url[3] = NULL;
-		}
-		if (node->url[4] != NULL)
-		{
-			freeMem(node->url[4]);
-			node->url[4] = NULL;
-		}
-	}
-
 	if ((!node->view->refreshingItemListp) && (node->view->itemList != NULL))
 	{
 		/* set node's associated entry in itemList to NULL */
@@ -2672,8 +2643,20 @@ void
 resynchItem (HT_Resource node, void *token, void *data, PRBool assertAction)
 {
 	HT_Value		*value, *nextValue, tempValue;
+	RDF_Resource		r = (RDF_Resource)token;
 
 	XP_ASSERT(node != NULL);
+
+	/* special check for handling icons... */
+
+	if (token == gNavCenter->RDF_smallIcon)
+	{
+		node->url[0] = NULL;
+	}
+	else if (token == gNavCenter->RDF_largeIcon)
+	{
+		node->url[1] = NULL;
+	}
 
 	value = &(node->values);
 	while ((*value) != NULL)
@@ -2684,10 +2667,15 @@ resynchItem (HT_Resource node, void *token, void *data, PRBool assertAction)
 			if ((*value)->tokenType == HT_COLUMN_STRING ||
 			    (*value)->tokenType == HT_COLUMN_DATE_STRING)
 			{
+
 				if ((*value)->data)
 				{
 					freeMem((*value)->data);
 					(*value)->data = NULL;
+				}
+				if ((data == NULL) || (((char *)data)[0] == '\0'))
+				{
+					assertAction = false;
 				}
 			}
 
@@ -5657,37 +5645,13 @@ HT_SetNodeData (HT_Resource node, void *token, uint32 tokenType, void *data)
 					RDF_Assert(node->view->pane->db, node->node,
 						token, data, RDF_STRING_TYPE);
 				}
-				if (token == gNavCenter->RDF_smallIcon ||
-				    token == gNavCenter->RDF_largeIcon)
+				if (token == gNavCenter->RDF_smallIcon)
 				{
-					if (node->flags & HT_FREEICON_URL_FLAG)
-					{
-						if (node->url[0] != NULL)
-						{
-							freeMem(node->url[0]);
-							node->url[0] = NULL;
-						}
-						if (node->url[1] != NULL)
-						{
-							freeMem(node->url[1]);
-							node->url[1] = NULL;
-						}
-						if (node->url[2] != NULL)
-						{
-							freeMem(node->url[2]);
-							node->url[2] = NULL;
-						}
-						if (node->url[3] != NULL)
-						{
-							freeMem(node->url[3]);
-							node->url[3] = NULL;
-						}
-						if (node->url[4] != NULL)
-						{
-							freeMem(node->url[4]);
-							node->url[4] = NULL;
-						}
-					}
+					node->url[0] = NULL;
+				}
+				else if (token == gNavCenter->RDF_largeIcon)
+				{
+					node->url[1] = NULL;
 				}
 			}
 			error = HT_NoErr;
@@ -6082,9 +6046,10 @@ char *
 getIconURL( HT_Resource node, PRBool toolbarIconFlag, PRBool workspaceFlag, int state)
 {
 
-	RDF_Resource	res;
+	RDF_Resource	res = NULL;
 	PRBool		volatileURLFlag;
 	int		iconIndex;
+	char		*iconURL = NULL;
 
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->node != NULL);
@@ -6112,40 +6077,43 @@ getIconURL( HT_Resource node, PRBool toolbarIconFlag, PRBool workspaceFlag, int 
 			break;
 	}
 
-	/* if volatile URL, flush if needed and re-create */
-
-	if (node->flags & HT_VOLATILE_URL_FLAG)
+	if ((res == gNavCenter->RDF_smallIcon) || (res == gNavCenter->RDF_largeIcon))
 	{
-		node->url[0] = NULL;
-		node->url[1] = NULL;
-		node->url[2] = NULL;
-		node->url[3] = NULL;
-		node->url[4] = NULL;
-	}
+		HT_GetNodeData(node, res, HT_COLUMN_STRING, &iconURL);
+		if (iconURL == NULL)
+		{
+			if (res == gNavCenter->RDF_smallIcon)	iconIndex = 0;
+			else					iconIndex = 1;
 
-	if (node->url[iconIndex] == NULL)
-	{
-		if ((node->url[iconIndex] = (char*)RDF_GetSlotValue(node->view->pane->db,
-				node->node, res, RDF_STRING_TYPE, false, true)) != NULL)
-		{
-			node->flags &= (~HT_VOLATILE_URL_FLAG);
-			node->flags |= HT_FREEICON_URL_FLAG;
-		}
-		else
-		{
-			node->url[iconIndex] = buildInternalIconURL(node,
-				&volatileURLFlag, false, workspaceFlag);
-			if (volatileURLFlag)
+			/* if volatile URL, flush if needed and re-create */
+
+			if (node->flags & HT_VOLATILE_URL_FLAG)
 			{
-				node->flags |= HT_VOLATILE_URL_FLAG;
+				node->url[0] = NULL;
+				node->url[1] = NULL;
 			}
-			else
+
+			if ((iconURL = node->url[iconIndex]) == NULL)
 			{
-				node->flags &= (~HT_VOLATILE_URL_FLAG);
+				node->url[iconIndex] = buildInternalIconURL(node,
+					&volatileURLFlag, false, workspaceFlag);
+				iconURL = node->url[iconIndex];
+				if (volatileURLFlag)
+				{
+					node->flags |= HT_VOLATILE_URL_FLAG;
+				}
+				else
+				{
+					node->flags &= (~HT_VOLATILE_URL_FLAG);
+				}
 			}
 		}
 	}
-	return(node->url[iconIndex]);
+	else
+	{
+		HT_GetNodeData(node, res, HT_COLUMN_STRING, &iconURL);
+	}
+	return(iconURL);
 }
 
 

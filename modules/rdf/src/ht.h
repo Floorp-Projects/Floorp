@@ -177,7 +177,6 @@ typedef	struct _HT_ValueStruct {
 #define	HT_HIDDEN_FLAG		0x0008
 #define	HT_SELECTED_FLAG	0x0010
 #define	HT_VOLATILE_URL_FLAG	0x0020
-#define	HT_FREEICON_URL_FLAG	0x0040
 #define	HT_PASSWORDOK_FLAG	0x0080
 #define	HT_INITED_FLAG		0x0100
 #define	HT_DIRTY_FLAG		0x0200
@@ -190,7 +189,7 @@ typedef struct _HT_ResourceStruct {
 	RDF_Resource			node;
 	void				*feData;
 	char				*dataSource;
-	char				*url[5];
+	char				*url[2];
 	HT_Value			values;
 	HT_Resource			child;
 	HT_Resource			*children;		/* used by sorting */
