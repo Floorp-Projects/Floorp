@@ -103,12 +103,11 @@ public class Interpreter {
         generateICodeFromTree(tree);
         if (Context.printICode) dumpICode(itsData);
 
-        InterpretedScript result = new InterpretedScript(cx, itsData);
-        setArgNames(result);
         if (cx.debugger != null) {
             cx.debugger.handleCompilationDone(cx, itsData, debugSource);
         }
-        return result;
+
+        return new InterpretedScript(cx, itsData);
     }
 
     private InterpretedFunction generateFunctionICode(Context cx,
@@ -137,20 +136,12 @@ public class Interpreter {
         itsData.itsSource = (String)theFunction.getProp(Node.SOURCE_PROP);
         if (Context.printICode) dumpICode(itsData);
 
-        InterpretedFunction result = new InterpretedFunction(cx, itsData);
-        setArgNames(result);
         if (cx.debugger != null) {
             cx.debugger.handleCompilationDone(cx, itsData, debugSource);
         }
         debugSource = savedSource;
-        return result;
-    }
 
-    private void setArgNames(NativeFunction f) {
-        String[] argNames = new String[itsVariableTable.size()];
-        itsVariableTable.getAllVariables(argNames);
-        f.argNames = argNames;
-        f.argCount = (short)itsVariableTable.getParameterCount();
+        return new InterpretedFunction(cx, itsData);
     }
 
     private void generateNestedFunctions(Context cx, Scriptable scope,
@@ -246,6 +237,10 @@ public class Interpreter {
                                    + itsData.itsMaxLocals
                                    + itsData.itsMaxTryDepth
                                    + itsData.itsMaxStack;
+
+        itsData.argNames = new String[itsVariableTable.size()];
+        itsVariableTable.getAllVariables(itsData.argNames);
+        itsData.argCount = itsVariableTable.getParameterCount();
     }
 
     private int updateLineNumber(Node node, int iCodeTop) {
@@ -1601,8 +1596,9 @@ public class Interpreter {
         }
 
         if (idata.itsFunctionType != 0) {
-            if (fnOrScript.itsClosure != null) {
-                scope = fnOrScript.itsClosure;
+            InterpretedFunction f = (InterpretedFunction)fnOrScript;
+            if (f.itsClosure != null) {
+                scope = f.itsClosure;
             } else if (!idata.itsUseDynamicScope) {
                 scope = fnOrScript.getParentScope();
             }

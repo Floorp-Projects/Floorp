@@ -45,26 +45,19 @@ final class InterpretedFunction extends NativeFunction
 
     InterpretedFunction(Context cx, InterpreterData theData) {
         itsData = theData;
-        init(cx);
-    }
-
-    void init(Context cx)
-    {
         functionName = itsData.itsName;
         source = itsData.itsSource;
         nestedFunctions = itsData.itsNestedFunctions;
-        if (cx != null)
-            version = (short)cx.getLanguageVersion();
+        version = (short)cx.getLanguageVersion();
+        argNames = itsData.argNames;
+        argCount = (short)itsData.argCount;
     }
 
     InterpretedFunction(InterpretedFunction theOther,
                         Scriptable theScope, Context cx)
     {
-        itsData = theOther.itsData;
-        this.argNames = theOther.argNames;
-        this.argCount = theOther.argCount;
+        this(cx, theOther.itsData);
         itsClosure = theScope;
-        init(cx);
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -77,5 +70,6 @@ final class InterpretedFunction extends NativeFunction
     }
 
     InterpreterData itsData;
+    Scriptable itsClosure;
 }
 

@@ -743,8 +743,6 @@ public class NativeFunction extends BaseFunction {
      */
     protected String source;
 
-    Scriptable itsClosure;
-
     /**
      * An array of NativeFunction values for each nested function.
      * Used internally, and also for decompiling nested functions.

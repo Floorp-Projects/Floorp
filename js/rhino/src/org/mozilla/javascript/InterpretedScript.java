@@ -46,6 +46,8 @@ final class InterpretedScript extends NativeScript
         functionName = "";
         nestedFunctions = itsData.itsNestedFunctions;
         version = (short)cx.getLanguageVersion();
+        argNames = itsData.argNames;
+        argCount = (short)itsData.argCount;
     }
 
     public Object exec(Context cx, Scriptable scope)

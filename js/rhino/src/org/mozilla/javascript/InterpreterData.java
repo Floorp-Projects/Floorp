@@ -81,6 +81,10 @@ final class InterpreterData implements Serializable, DebuggableScript {
     int itsMaxStack;
     int itsMaxFrameArray;
 
+    // see comments in NativeFuncion for definition of argNames and argCount
+    String[] argNames;
+    int argCount;
+
     int itsMaxCalleeArgs;
 
     Object securityDomain;
