@@ -32,7 +32,7 @@
 #include "nsCRT.h"
 #include "prprf.h"
 #include "nsIDeviceContext.h"
-#include "nsIToolbarItem.h"
+
 
 static NS_DEFINE_IID(kChildCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
@@ -40,7 +40,6 @@ static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIFactoryIID,       NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
-static NS_DEFINE_IID(kIToolbarItemIID,   NS_ITOOLBARITEM_IID);
 static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIThrobberIID,      NS_ITHROBBER_IID);
 
@@ -54,8 +53,8 @@ static nsVoidArray gThrobbers;
   ((nsThrobber*)((char*)this - offsetof(nsThrobber, mInner)))
 
 class nsThrobber : public nsIThrobber,
-                   public nsIImageRequestObserver,
-                   public nsIToolbarItem {
+                   public nsIImageRequestObserver
+{
 public:
   nsThrobber(nsISupports* aOuter);
 
@@ -76,25 +75,6 @@ public:
   NS_IMETHOD Hide();
   NS_IMETHOD Start();
   NS_IMETHOD Stop();
-
-  // nsIToolbarItem
-
-  NS_IMETHOD Repaint(PRBool aIsSynchronous);
-  NS_IMETHOD GetBounds(nsRect &aRect);
-  NS_IMETHOD SetVisible(PRBool aState);
-  NS_IMETHOD IsVisible(PRBool & aState);
-  NS_IMETHOD SetLocation(PRUint32 aX, PRUint32 aY);
-  NS_IMETHOD SetBounds(PRUint32 aWidth,
-                      PRUint32 aHeight,
-                      PRBool   aRepaint);
-  NS_IMETHOD SetBounds(PRUint32 aX,
-                       PRUint32 aY,
-                       PRUint32 aWidth,
-                       PRUint32 aHeight,
-                       PRBool   aRepaint);
-  NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-  NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
-
 
   // nsIImageRequestObserver
   virtual void Notify(nsIImageRequest *aImageRequest,
@@ -152,12 +132,6 @@ public:
     }
     if (aIID.Equals(kIThrobberIID)) {
       *aInstancePtr = (void*)(nsIThrobber*)this;
-      NS_ADDREF_THIS();
-      return NS_OK;
-    }
-    if (aIID.Equals(kIToolbarItemIID)) {
-      *aInstancePtr = (void*)(nsIToolbarItem*)this;
-      AddRef();
       NS_ADDREF_THIS();
       return NS_OK;
     }
@@ -534,94 +508,6 @@ nsThrobber::DestroyThrobberImages()
     NS_RELEASE(mImageGroup);
   }
 }
-
-//-------------------------------------------------------------------------
-NS_METHOD nsThrobber::Repaint(PRBool aIsSynchronous)
-
-{
-  if (nsnull != mWidget) {
-    mWidget->Invalidate(aIsSynchronous);
-  }
-  return NS_OK;
-}
-    
-//--------------------------------------------------------------------
-NS_METHOD nsThrobber::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
-{
-  if (nsnull != mWidget) {
-    return mWidget->GetPreferredSize(aWidth, aHeight);
-  }
-  return NS_OK;
-}
-//--------------------------------------------------------------------
-NS_METHOD nsThrobber::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
-{
-  if (nsnull != mWidget) {
-    return mWidget->SetPreferredSize(aWidth, aHeight);
-  }
-  return NS_OK;
-}
-
-//--------------------------------------------------------------------
-NS_METHOD nsThrobber::GetBounds(nsRect & aRect)
-{
-  if (nsnull != mWidget) {
-    return mWidget->GetBounds(aRect);
-  }
-  return NS_OK;
-}
-
-//--------------------------------------------------------------------
-NS_METHOD nsThrobber::SetBounds(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
-{
-  if (nsnull != mWidget) {
-    mWidget->Resize(aWidth, aHeight, aRepaint);
-  }
-  return NS_OK;
-}
-
-    
-//-------------------------------------------------------------------------
-NS_METHOD nsThrobber::SetBounds(PRUint32 aX,
-                                          PRUint32 aY,
-                                          PRUint32 aWidth,
-                                          PRUint32 aHeight,
-                                          PRBool   aRepaint)
-{
-  if (nsnull != mWidget) {
-    mWidget->Resize(aX, aY, aWidth, aHeight, aRepaint);
-  }
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsThrobber::SetVisible(PRBool aState) 
-{
-  if (nsnull != mWidget) {
-    mWidget->Show(aState);
-  }
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsThrobber::IsVisible(PRBool & aState)
-{
-  if (nsnull != mWidget) {
-    return mWidget->IsVisible(aState);
-  }
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-NS_METHOD nsThrobber::SetLocation(PRUint32 aX, PRUint32 aY) 
-{
-  if (nsnull != mWidget) {
-    mWidget->Move(aX, aY);
-  }
-  return NS_OK;
-}
-
 
 
 
