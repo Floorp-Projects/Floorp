@@ -353,7 +353,7 @@ NS_IMETHODIMP nsRssIncomingServer::OnItemUnicharPropertyChanged(nsIRDFResource *
 }
 
 
-NS_IMETHODIMP nsRssIncomingServer::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
+NS_IMETHODIMP nsRssIncomingServer::OnItemPropertyFlagChanged(nsIMsgDBHdr *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -71,7 +71,7 @@ typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.
 typedef long nsMsgDispositionState;
 
-[scriptable, uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
+[scriptable, uuid(a7555ae2-78a4-40ed-b49f-744ad42b6f2d)]
 interface nsIMsgFolder : nsICollection {
 
 const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
@@ -446,7 +446,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   void NotifyBoolPropertyChanged(in nsIAtom property,
                                  in boolean oldValue,
                                  in boolean newValue);
-  void NotifyPropertyFlagChanged(in nsISupports item,
+  void NotifyPropertyFlagChanged(in nsIMsgDBHdr item,
                                  in nsIAtom property,
                                  in unsigned long oldValue,
                                  in unsigned long newValue);

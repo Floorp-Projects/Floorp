@@ -1290,7 +1290,7 @@ nsMsgAccountManagerDataSource::OnItemRemoved(nsIRDFResource *, nsISupports *)
 }
 
 nsresult
-nsMsgAccountManagerDataSource::OnItemPropertyFlagChanged(nsISupports *, nsIAtom *, PRUint32, PRUint32)
+nsMsgAccountManagerDataSource::OnItemPropertyFlagChanged(nsIMsgDBHdr *, nsIAtom *, PRUint32, PRUint32)
 {
   return NS_OK;
 }

@@ -586,7 +586,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
   
 }
 
-nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags)
+nsresult nsMsgDBFolder::SendFlagNotifications(nsIMsgDBHdr *item, PRUint32 oldFlags, PRUint32 newFlags)
 {
   nsresult rv = NS_OK;
   
@@ -831,9 +831,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUint32 aOld
 {
   if(aHdrChanged)
   {
-    nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(aHdrChanged));
-    if(msgSupports)
-      SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
+    SendFlagNotifications(aHdrChanged, aOldFlags, aNewFlags);
     UpdateSummaryTotals(PR_TRUE);
   }
   
@@ -4429,7 +4427,7 @@ nsMsgDBFolder::NotifyBoolPropertyChanged(nsIAtom* property,
 }
 
 nsresult
-nsMsgDBFolder::NotifyPropertyFlagChanged(nsISupports *item, nsIAtom *property,
+nsMsgDBFolder::NotifyPropertyFlagChanged(nsIMsgDBHdr *item, nsIAtom *property,
                                        PRUint32 oldValue, PRUint32 newValue)
 {
   PRInt32 i;

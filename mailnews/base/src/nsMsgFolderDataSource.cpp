@@ -997,7 +997,7 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsIRDFResource *resource,
 }
 
 NS_IMETHODIMP
-nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
+nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsIMsgDBHdr *item,
                                                  nsIAtom *property,
                                                  PRUint32 oldFlag,
                                                  PRUint32 newFlag)

@@ -118,7 +118,7 @@ nsMessengerOS2Integration::OnItemRemoved(nsIRDFResource *, nsISupports *)
 }
 
 NS_IMETHODIMP
-nsMessengerOS2Integration::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
+nsMessengerOS2Integration::OnItemPropertyFlagChanged(nsIMsgDBHdr *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
   return NS_OK;
 }

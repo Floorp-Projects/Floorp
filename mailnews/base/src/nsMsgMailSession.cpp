@@ -193,7 +193,7 @@ nsMsgMailSession::OnItemBoolPropertyChanged(nsIRDFResource *item,
   
 }
 NS_IMETHODIMP
-nsMsgMailSession::OnItemPropertyFlagChanged(nsISupports *item,
+nsMsgMailSession::OnItemPropertyFlagChanged(nsIMsgDBHdr *item,
                                             nsIAtom *property,
                                             PRUint32 oldValue,
                                             PRUint32 newValue)

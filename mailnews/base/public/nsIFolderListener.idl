@@ -40,10 +40,11 @@
 
 interface nsIMsgFolder;
 interface nsIRDFResource;
+interface nsIMsgDBHdr;
 
 typedef unsigned long folderListenerNotifyFlagValue;
 
-[scriptable, uuid(d4ff86da-1dd1-11b2-a6f6-9fcd348bcc34)]
+[scriptable, uuid(1c8e6a86-ae35-4c95-8e43-b2e98d6d1574)]
 interface nsIFolderListener : nsISupports {
   const folderListenerNotifyFlagValue added = 0x1;
   void OnItemAdded(in nsIRDFResource parentItem,
@@ -78,7 +79,7 @@ interface nsIFolderListener : nsISupports {
                                     in wstring newValue);
   
   const folderListenerNotifyFlagValue propertyFlagChanged = 0x40;
-  void OnItemPropertyFlagChanged(in nsISupports item,
+  void OnItemPropertyFlagChanged(in nsIMsgDBHdr item,
                                  in nsIAtom property,
                                  in unsigned long oldFlag,
                                  in unsigned long newFlag);

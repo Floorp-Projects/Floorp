@@ -3111,7 +3111,7 @@ NS_IMETHODIMP nsMsgAccountManager::OnItemUnicharPropertyChanged(nsIRDFResource *
 }
 
 
-NS_IMETHODIMP nsMsgAccountManager::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
+NS_IMETHODIMP nsMsgAccountManager::OnItemPropertyFlagChanged(nsIMsgDBHdr *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

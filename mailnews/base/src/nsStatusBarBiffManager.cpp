@@ -267,7 +267,7 @@ nsStatusBarBiffManager::OnItemUnicharPropertyChanged(nsIRDFResource *item, nsIAt
 }
 
 NS_IMETHODIMP 
-nsStatusBarBiffManager::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
+nsStatusBarBiffManager::OnItemPropertyFlagChanged(nsIMsgDBHdr *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
 {
   return NS_OK;
 }
