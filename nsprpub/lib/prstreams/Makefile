@@ -25,6 +25,16 @@ include $(MOD_DEPTH)/config/config.mk
 ifeq ($(OS_ARCH),SunOS)
     ifeq ($(OS_RELEASE),4.1.3_U1)
         OPTIMIZER =
+    else
+        # The C++ compiler in Workshop 5.0 uses standard
+        # iostreams as default.  -library=iostream will
+        # allow Workshop 5.0 to work with classic iostreams.
+        ifndef NS_USE_GCC
+        CCC_VERSION := $(shell $(CCC) -V 2>&1)
+        ifneq (,$(findstring 5.0,$(CCC_VERSION)))
+        CCC_ONLY_FLAGS += -library=iostream
+        endif
+        endif
     endif
 endif
 
