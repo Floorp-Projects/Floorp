@@ -11,4 +11,5 @@ nsIDocumentViewer.h
 nsILinkHandler.h
 nsIThrobber.h
 nsIWebShell.h
+nsIClipboardCommands.h
 nsweb.h
