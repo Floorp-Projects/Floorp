@@ -40,7 +40,7 @@
 #include "nsStaticAtom.h"
 #include "nsMemory.h"
 
-// define storage for all atoms
+// define storage for all accessibility atoms
 #define ACCESSIBILITY_ATOM(_name, _value) nsIAtom* nsAccessibilityAtoms::_name;
 #include "nsAccessibilityAtomList.h"
 #undef ACCESSIBILITY_ATOM
