@@ -48,7 +48,8 @@
 #ifdef MOZ_NEW_CACHE
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
-#include "nsICachingChannel.h"
+#include "nsICacheListener.h"
+//#include "nsICachingChannel.h"
 #else
 #include "nsIStreamAsFile.h"
 #include "nsICachedNetData.h"
@@ -81,7 +82,8 @@ class nsHTTPChannel : public nsIHTTPChannel,
                       public nsIProgressEventSink,
                       public nsIProxy,
 #ifdef MOZ_NEW_CACHE
-                      public nsICachingChannel
+                    //public nsICachingChannel,
+                      public nsICacheListener
 #else
                       public nsIStreamAsFile
 #endif
@@ -102,7 +104,8 @@ public:
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSIPROXY
 #ifdef MOZ_NEW_CACHE
-    NS_DECL_NSICACHINGCHANNEL
+ // NS_DECL_NSICACHINGCHANNEL
+    NS_DECL_NSICACHELISTENER
 #else
 	NS_DECL_NSISTREAMASFILE
 #endif
@@ -111,7 +114,7 @@ public:
     nsresult            Authenticate(const char *iChallenge,
                                      PRBool bProxyAuth = PR_FALSE);
     nsresult            Init();
-    nsresult            Begin(PRBool bIgnoreCache=PR_FALSE);
+    nsresult            Connect();
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult, PRInt32 aStatusCode);
 
@@ -127,8 +130,6 @@ public:
 
     nsresult            Abort();
 
-    PRUint32            getChannelState();
-
     nsresult            ReportProgress(PRUint32 aProgress,
                                        PRUint32 aProgressMax);
 
@@ -136,12 +137,16 @@ public:
 
 protected:
 
-    nsresult            CacheReceivedResponse(nsIStreamListener *aListener,
-                                              nsIStreamListener* *aResult);
-    nsresult            CacheAbort(PRUint32 statusCode);
+#ifdef MOZ_NEW_CACHE
+    nsresult            OpenCacheEntry();
+#endif
 
     nsresult            CheckCache();
     nsresult            ReadFromCache();
+
+    nsresult            CacheReceivedResponse(nsIStreamListener *aListener,
+                                              nsIStreamListener* *aResult);
+    nsresult            CacheAbort(PRUint32 statusCode);
 
     nsresult            ProcessStatusCode();
     nsresult            ProcessRedirection(PRInt32 aStatusCode);
@@ -199,10 +204,10 @@ protected:
     
     // Cache stuff
 #ifdef MOZ_NEW_CACHE
-    nsCOMPtr<nsICacheSession>           mCacheSession;
     nsCOMPtr<nsICacheEntryDescriptor>   mCacheEntry;
     nsCOMPtr<nsITransport>              mCacheTransport;
     nsCOMPtr<nsIRequest>                mCacheReadRequest;
+    nsCacheAccessMode                   mCacheAccess;
 #else
     nsCOMPtr<nsICachedNetData>          mCacheEntry;
     nsCOMPtr<nsIChannel>                mCacheChannel;

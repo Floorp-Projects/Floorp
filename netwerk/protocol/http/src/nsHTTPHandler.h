@@ -17,13 +17,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
  */
 
-#ifndef _nsHTTPHandler_h_
-#define _nsHTTPHandler_h_
+#ifndef nsHTTPHandler_h__
+#define nsHTTPHandler_h__
 
 /* 
     The nsHTTPHandler class is an example implementation of how a 
@@ -48,6 +48,10 @@
 #include "prtime.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
+
+#ifdef MOZ_NEW_CACHE
+#include "nsICacheSession.h"
+#endif
 
 //Forward decl.
 class nsHashtable;
@@ -141,6 +145,10 @@ public:
 
     nsresult    GetProxySSLConnectAllowed (PRBool *a_Allowed);
 
+#ifdef MOZ_NEW_CACHE
+    nsresult    GetCacheSession(nsICacheSession **);
+#endif
+
 protected:
     virtual ~nsHTTPHandler();
     nsresult InitUserAgentComponents();
@@ -153,6 +161,10 @@ protected:
     nsCOMPtr<nsISupportsArray> mPipelinedRequests;
     // Transports that are idle (ready to be used again)
     nsCOMPtr<nsISupportsArray> mIdleTransports;
+
+#ifdef MOZ_NEW_CACHE
+    nsCOMPtr<nsICacheSession> mCacheSession;
+#endif
 
     char*               mAcceptLanguages;
     char*               mAcceptEncodings;
@@ -204,4 +216,4 @@ private:
     PRBool  mProxySSLConnectAllowed;
 };
 
-#endif /* _nsHTTPHandler_h_ */
+#endif /* !defined(nsHTTPHandler_h__) */

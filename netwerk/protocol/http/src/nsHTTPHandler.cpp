@@ -93,6 +93,11 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // remove now TODO
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
+#ifdef MOZ_NEW_CACHE
+#include "nsICacheService.h"
+static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
+#endif
+
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
 NS_IMPL_ISUPPORTS4(nsHTTPHandler,
@@ -1260,7 +1265,7 @@ nsHTTPHandler::ReleaseTransport (nsITransport* i_pTrans  ,
         PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport."
                 "\tRestarting nsHTTPChannel [%x]\n", channel));
 
-        channel->Begin();
+        channel->Connect();
     }
 
     return rv;
@@ -1732,3 +1737,36 @@ nsHTTPHandler::GetProxySSLConnectAllowed (PRBool *a_Allowed)
     *a_Allowed = mProxySSLConnectAllowed;
     return NS_OK;
 }
+
+
+#ifdef MOZ_NEW_CACHE
+
+nsresult
+nsHTTPHandler::GetCacheSession(nsICacheSession **result)
+{
+    if (!mCacheSession) {
+        nsresult rv;
+
+        nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        // Skip cache if disabled in preferences
+        PRBool useCache = PR_FALSE;
+        prefs->GetBoolPref("browser.cache.enable", &useCache);
+        if (!useCache)
+            return NS_ERROR_NOT_AVAILABLE;
+
+        nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = serv->CreateSession("HTTP",
+                                 nsICache::STORE_ANYWHERE,
+                                 nsICache::STREAM_BASED,
+                                 getter_AddRefs(mCacheSession));
+        if (NS_FAILED(rv)) return rv;
+    }
+    NS_ADDREF(*result = mCacheSession);
+    return NS_OK;
+}
+
+#endif

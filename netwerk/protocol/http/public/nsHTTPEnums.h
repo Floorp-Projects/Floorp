@@ -50,6 +50,10 @@ typedef enum
     HS_IDLE, 
     // A temporarily suspended state. 
     HS_SUSPENDED, 
+#ifdef MOZ_NEW_CACHE
+    // Waiting for access to the cache entry.
+    HS_WAITING_FOR_CACHE_ENTRY,
+#endif
     // The request has been built. Now just waiting for Open-- final call that connects.
     HS_WAITING_FOR_OPEN, 
     // Encountered a problem or a situation that requires user input.
