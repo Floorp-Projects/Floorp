@@ -489,7 +489,7 @@ function Startup()
       homepage = null;
     }
     if (homepage)
-      setTooltipText("homebutton", homepage);
+      setTooltipText("home-button", homepage);
 
     initConsoleListener();
 
