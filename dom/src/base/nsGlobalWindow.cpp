@@ -57,6 +57,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocument.h"
+#include "nsIDOMCrypto.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMFocusListener.h"
@@ -66,6 +67,7 @@
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMPaintListener.h"
+#include "nsIDOMPkcs11.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventStateManager.h"
 #include "nsIHTTPProtocolHandler.h"
@@ -88,6 +90,7 @@
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
+#include "nsDOMCID.h"
 #include "nsDOMError.h"
 
 // XXX An unfortunate dependency exists here.
@@ -102,6 +105,11 @@ static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 static NS_DEFINE_CID(kXULControllersCID, NS_XULCONTROLLERS_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+
+static const char *kCryptoProgID = NS_CRYPTO_PROGID;
+static const char *kPkcs11ProgID = NS_PKCS11_PROGID;
 
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
@@ -117,6 +125,8 @@ GlobalWindowImpl::GlobalWindowImpl() : mScriptObject(nsnull),
    mChromeEventHandler(nsnull)
 {
    NS_INIT_REFCNT();
+   mCrypto = nsnull;
+   mPkcs11 = nsnull;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -736,6 +746,30 @@ NS_IMETHODIMP GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
    *aFrames = NS_STATIC_CAST(nsIDOMWindowCollection*, mFrames);
    NS_IF_ADDREF(mFrames);
 
+   return NS_OK;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::GetCrypto(nsIDOMCrypto** aCrypto)
+{
+  nsresult rv;
+
+  if (!mCrypto)
+    {
+      mCrypto = do_CreateInstance(kCryptoProgID, &rv);
+    }
+  *aCrypto = mCrypto;
+   return NS_OK;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::GetPkcs11(nsIDOMPkcs11** aPkcs11)
+{
+  nsresult rv;
+
+  if (!mPkcs11)
+    {
+      mPkcs11 = do_CreateInstance(kPkcs11ProgID, &rv);
+    }
+  *aPkcs11 = mPkcs11;
    return NS_OK;
 }
 

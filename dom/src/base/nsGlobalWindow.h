@@ -47,6 +47,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMCrypto.h"
+#include "nsIDOMPkcs11.h"
 #include "nsISidebar.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
@@ -58,7 +60,6 @@ class nsIContent;
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIScrollableView;
-
 
 typedef struct nsTimeoutImpl nsTimeoutImpl;
 
@@ -227,6 +228,8 @@ protected:
    nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
    nsIDocShell*                  mDocShell;  // Weak Reference
    nsIChromeEventHandler*        mChromeEventHandler; // Weak Reference
+   nsCOMPtr<nsIDOMCrypto>        mCrypto;
+   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 };
 
 /* 
