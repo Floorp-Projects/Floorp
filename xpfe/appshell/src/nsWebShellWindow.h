@@ -25,6 +25,12 @@
 #include "nsIWebShell.h"  
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
+
+// can't use forward class decl's because of template bugs on Solaris 
+#include "nsIDOMDocument.h"
+#include "nsIDOMNode.h"
+#include "nsIXULCommand.h"
+
 #include "nsCOMPtr.h"
 
 /* Forward declarations.... */
@@ -32,11 +38,7 @@ class nsIURL;
 class nsIAppShell;
 class nsIWidget;
 class nsIWidgetController;
-class nsIDOMDocument;
-class nsIDOMNode;
-class nsIXULCommand;
 class nsIDOMCharacterData;
-class nsIDOMDocument;
 class nsIDOMHTMLInputElement;
 class nsIDOMHTMLImageElement;
 class nsIDOMElement;
