@@ -217,6 +217,14 @@ public:
 
   // Hook for inspector.
   virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
+
+  // hooks for DOM rule
+  virtual nsresult GetCssText(nsAString& aCssText) = 0;
+  virtual nsresult SetCssText(const nsAString& aCssText) = 0;
+  virtual nsresult GetParentStyleSheet(nsICSSStyleSheet** aSheet) = 0;
+  virtual nsresult GetParentRule(nsICSSGroupRule** aParentRule) = 0;
+  virtual nsresult GetSelectorText(nsAString& aSelectorText) = 0;
+  virtual nsresult SetSelectorText(const nsAString& aSelectorText) = 0;
 };
 
 nsresult

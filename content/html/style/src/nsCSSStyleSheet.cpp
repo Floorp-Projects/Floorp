@@ -79,7 +79,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleSheet.h"
-#include "nsIDOMCSSStyleRule.h"
+#include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSImportRule.h"
 #include "nsIDOMCSSRuleList.h"
 #include "nsIDOMMediaList.h"
@@ -833,6 +833,7 @@ public:
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocument);
   NS_IMETHOD SetOwningNode(nsIDOMNode* aOwningNode);
   NS_IMETHOD SetOwnerRule(nsICSSImportRule* aOwnerRule);
+  NS_IMETHOD GetOwnerRule(nsICSSImportRule** aOwnerRule);
 
   NS_IMETHOD GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
                                    nsIStyleRuleProcessor* aPrevProcessor);
@@ -1000,7 +1001,7 @@ CSSRuleListImpl::Item(PRUint32 aIndex, nsIDOMCSSRule** aReturn)
 
       result = mStyleSheet->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
       if (rule) {
-        result = CallQueryInterface(rule, aReturn);
+        result = rule->GetDOMRule(aReturn);
         mRulesAccessed = PR_TRUE; // signal to never share rules again
       } else if (result == NS_ERROR_ILLEGAL_VALUE) {
         result = NS_OK; // per spec: "Return Value ... null if ... not a valid index."
@@ -1999,6 +2000,14 @@ CSSStyleSheetImpl::SetOwnerRule(nsICSSImportRule* aOwnerRule)
 }
 
 NS_IMETHODIMP
+CSSStyleSheetImpl::GetOwnerRule(nsICSSImportRule** aOwnerRule)
+{
+  *aOwnerRule = mOwnerRule;
+  NS_IF_ADDREF(*aOwnerRule);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CSSStyleSheetImpl::ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleSheet** aTheChild /*=nsnull*/)
 {
   NS_PRECONDITION(nsnull != aURL, "null arg");
@@ -2571,7 +2580,7 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
 {
   if (mOwnerRule) {
-    return CallQueryInterface(mOwnerRule, aOwnerRule);
+    return mOwnerRule->GetDOMRule(aOwnerRule);
   }
 
   *aOwnerRule = nsnull;
@@ -2877,14 +2886,9 @@ CSSStyleSheetImpl::DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex)
   NS_ENSURE_SUCCESS(result, result);
   
   // check that the rule actually belongs to this sheet!
-  nsCOMPtr<nsIDOMCSSRule> domRule(do_QueryInterface(rule));
-  nsCOMPtr<nsIDOMCSSStyleSheet> ruleSheet;
-  result = domRule->GetParentStyleSheet(getter_AddRefs(ruleSheet));
-  NS_ENSURE_SUCCESS(result, result);  
-  nsCOMPtr<nsIDOMCSSStyleSheet> thisSheet;
-  this->QueryInterface(NS_GET_IID(nsIDOMCSSStyleSheet), getter_AddRefs(thisSheet));
-
-  if (thisSheet != ruleSheet) {
+  nsCOMPtr<nsIStyleSheet> ruleSheet;
+  rule->GetStyleSheet(*getter_AddRefs(ruleSheet));
+  if (this != ruleSheet) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -2921,14 +2925,9 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
   NS_ASSERTION(mInner && mInner->mComplete,
                "No inserting into an incomplete sheet!");
   // check that the group actually belongs to this sheet!
-  nsCOMPtr<nsIDOMCSSRule> domGroup(do_QueryInterface(aGroup));
-  nsCOMPtr<nsIDOMCSSStyleSheet> groupSheet;
-  result = domGroup->GetParentStyleSheet(getter_AddRefs(groupSheet));
-  NS_ENSURE_SUCCESS(result, result);  
-  nsCOMPtr<nsIDOMCSSStyleSheet> thisSheet;
-  this->QueryInterface(NS_GET_IID(nsIDOMCSSStyleSheet), getter_AddRefs(thisSheet));
-
-  if (thisSheet != groupSheet) {
+  nsCOMPtr<nsIStyleSheet> groupSheet;
+  aGroup->GetStyleSheet(*getter_AddRefs(groupSheet));
+  if (this != groupSheet) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -3017,9 +3016,8 @@ CSSStyleSheetImpl::ReplaceRuleInGroup(nsICSSGroupRule* aGroup,
                   "No replacing in an incomplete sheet!");
 #ifdef DEBUG
   {
-    nsCOMPtr<nsIDOMCSSRule> domGroup(do_QueryInterface(aGroup));
-    nsCOMPtr<nsIDOMCSSStyleSheet> groupSheet;
-    domGroup->GetParentStyleSheet(getter_AddRefs(groupSheet));
+    nsCOMPtr<nsIStyleSheet> groupSheet;
+    aGroup->GetStyleSheet(*getter_AddRefs(groupSheet));
     NS_ASSERTION(this == groupSheet, "group doesn't belong to this sheet");
   }
 #endif
@@ -3046,16 +3044,14 @@ CSSStyleSheetImpl::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
 #endif
   
   if (mDocument && aNotify) {
-    nsCOMPtr<nsIDOMCSSStyleSheet> domSheet(do_QueryInterface(aSheet));
-    NS_ENSURE_TRUE(domSheet, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsIDOMCSSRule> ownerRule;
-    domSheet->GetOwnerRule(getter_AddRefs(ownerRule));
-    NS_ENSURE_TRUE(ownerRule, NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsICSSImportRule> ownerRule;
+    aSheet->GetOwnerRule(getter_AddRefs(ownerRule));
     
     nsresult rv = mDocument->BeginUpdate();
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // XXXldb @import rules shouldn't even implement nsIStyleRule (but
+    // they do)!
     nsCOMPtr<nsIStyleRule> styleRule(do_QueryInterface(ownerRule));
     
     rv = mDocument->StyleRuleAdded(this, styleRule);

@@ -196,13 +196,11 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
 }
 
 nsresult
-nsDOMCSSAttributeDeclaration::GetParent(nsISupports **aParent)
+nsDOMCSSAttributeDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
 
-  *aParent = mContent;
-  NS_IF_ADDREF(*aParent);
-
+  *aParent = nsnull;
   return NS_OK;
 }
 

@@ -57,7 +57,23 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_DECL_NSIDOMCSSSTYLEDECLARATION
+  // Require subclasses to implement |GetParentRule|.
+  //NS_DECL_NSIDOMCSSSTYLEDECLARATION
+  NS_IMETHOD GetCssText(nsAString & aCssText);
+  NS_IMETHOD SetCssText(const nsAString & aCssText);
+  NS_IMETHOD GetPropertyValue(const nsAString & propertyName,
+                              nsAString & _retval);
+  NS_IMETHOD GetPropertyCSSValue(const nsAString & propertyName,
+                                 nsIDOMCSSValue **_retval);
+  NS_IMETHOD RemoveProperty(const nsAString & propertyName,
+                            nsAString & _retval);
+  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName,
+                                 nsAString & _retval);
+  NS_IMETHOD SetProperty(const nsAString & propertyName,
+                         const nsAString & value, const nsAString & priority);
+  NS_IMETHOD GetLength(PRUint32 *aLength);
+  NS_IMETHOD Item(PRUint32 index, nsAString & _retval);
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) = 0; 
 
   virtual void DropReference() = 0;
 protected:
@@ -66,7 +82,6 @@ protected:
   // propagate.
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate) = 0;
-  virtual nsresult GetParent(nsISupports **aParent) = 0;
   virtual nsresult DeclarationChanged() = 0;
   
   // This will only fail if it can't get a parser.  This means it can
