@@ -1868,6 +1868,7 @@ net_AddCookiePermission
 		PR_Free(cookie_permission);
 		return;
 	    }
+	    list_ptr = net_cookie_permission_list;
 	}
 
 #ifdef alphabetize
