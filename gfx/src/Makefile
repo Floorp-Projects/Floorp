@@ -29,7 +29,7 @@ LIBRARY_NAME = raptorgfx
 
 MODULE=raptor 
 
-REQUIRES=util img xpcom raptor netlib
+REQUIRES=util img xpcom raptor netlib dom js
 
 LCFLAGS=-D_IMPL_NS_GFX 
 
