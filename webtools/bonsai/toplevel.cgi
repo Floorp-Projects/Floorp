@@ -253,24 +253,20 @@ puts "
 <hr>
 <table>
 <tr>
-<th>Useful links </th><th width=10%></th><th>Help corner</th>
+<th>Useful links </th><th width=10%></th><th>Help and Documentation</th>
 </tr>
 <tr>
 <td valign=top>
 <a href=$cvsqueryurl><b>CVS Query Tool</b></a><br>
-<a href=http://warp/tinderbox/showbuilds.cgi>Tinderbox continuous builds</a><br>
+<a href=http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi>Tinderbox continuous builds</a><br>
 <a href=\"switchtree.cgi[BatchIdPart ?]\">Switch to look at a different tree or branch</a><br>
-<a href=\"news:mcom.dev.client.build.busted\">Look at the Busted Tree Newsgroup</a><br>
-<a href=http://phonebook/>Look up someone in the phonebook.</a><br>
 <a href=viewold.cgi[BatchIdPart ?]>Time warp -- view a different day's hook.</a><br>
 <a href=countcheckins.cgi[BatchIdPart ?]>See some stupid statistics about recent checkins.</a><br>
 <a href=admin.cgi[BatchIdPart ?]>Administration menu.</a><br>
 </td><td>
 </td><td valign=top>
-<a href=index.html>Introduction to Bonsai.</a><br>
-<a href=http://warp/client/dogbert/tree.html>Overview of our source tree strategy.</a><br>
-<a href=contacthelp.html>Changing someone else's contact info (yes you can!)</a><br>
-<a href=http://warp/client/dogbert/buildlore/index.html>Dogbert build lore</a>
+<a href=http://www.mozilla.org/hacking/bonsai.html>Introduction to Bonsai.</a><br>
+<a href=http://www.mozilla.org/docs/>Mozilla Documentation and Build Instructions</a>
 </td>
 </tr></table>
 "
