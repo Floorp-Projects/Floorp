@@ -90,6 +90,12 @@ SHARED_LIBRARY_LIBS += \
                 $(NSNULL)
 endif
 
+ifdef MOZ_XSL
+SHARED_LIBRARY_LIBS += \
+                $(DIST)/lib/libraptorxsldoc_s.$(LIB_SUFFIX) \
+                $(NSNULL)
+endif
+
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \

@@ -28,7 +28,7 @@
 
 class nsIAtom;
 class nsICSSLoader;
-#ifdef XSL
+#ifdef MOZ_XSL
 class nsITransformMediator;
 #endif
 
@@ -46,7 +46,7 @@ public:
   // XXX This (or a variant thereof) should be in a DOM interface.
   // Since it isn't, we add it here temporarily
   NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent)=0;
-#ifdef XSL
+#ifdef MOZ_XSL
   NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator)=0;
 #endif
 };

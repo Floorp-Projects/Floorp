@@ -64,7 +64,7 @@
 #include "prtime.h"
 #include "prlog.h"
 #include "prmem.h"
-#ifdef XSL
+#ifdef MOZ_XSL
 #include "nsXSLContentSink.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -81,7 +81,7 @@ static char kNameSpaceSeparator = ':';
 static char kNameSpaceDef[] = "xmlns";
 static char kStyleSheetPI[] = "xml-stylesheet";
 
-#ifdef XSL
+#ifdef MOZ_XSL
 static char kXSLType[] = "text/xsl";
 #endif
 
@@ -95,7 +95,7 @@ static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMCDATASectionIID, NS_IDOMCDATASECTION_IID);
-#ifdef XSL
+#ifdef MOZ_XSL
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
@@ -172,7 +172,7 @@ nsXMLContentSink::nsXMLContentSink()
   mInScript = PR_FALSE;
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
-#ifdef XSL
+#ifdef MOZ_XSL
   mXSLTransformMediator = nsnull;
 #endif
 }
@@ -204,7 +204,7 @@ nsXMLContentSink::~nsXMLContentSink()
     PR_FREEIF(mText);
   }
   NS_IF_RELEASE(mCSSLoader);
-#ifdef XSL
+#ifdef MOZ_XSL
   NS_IF_RELEASE(mXSLTransformMediator);
 #endif
 }
@@ -246,7 +246,7 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
   return aDoc->GetNodeInfoManager(*getter_AddRefs(mNodeInfoManager));
 }
 
-#ifndef XSL
+#ifndef MOZ_XSL
 
 NS_IMPL_ADDREF(nsXMLContentSink)
 NS_IMPL_RELEASE(nsXMLContentSink)
@@ -261,7 +261,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXMLContentSink)
 NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
 	NS_INTERFACE_MAP_ENTRY(nsIXMLContentSink)
 	NS_INTERFACE_MAP_ENTRY(nsIContentSink)
-#ifdef XSL
+#ifdef MOZ_XSL
 	NS_INTERFACE_MAP_ENTRY(nsIObserver)
 	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 #endif
@@ -294,7 +294,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     }
   }
 
-#ifndef XSL
+#ifndef MOZ_XSL
   StartLayoutProcess();
 #else
   nsresult rv;
@@ -326,7 +326,7 @@ nsXMLContentSink::StartLayoutProcess()
   mDocument->EndLoad();
 }
 
-#ifdef XSL
+#ifdef MOZ_XSL
 // The observe method is called on completion of the transform.  The nsISupports argument is an
 // nsIDOMElement interface to the root node of the output content model.
 NS_IMETHODIMP
@@ -768,7 +768,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
         // For XSL, we need to wait till after the transform
         // to set the root content object.  Hence, the following
         // ifndef.
-#ifndef XSL
+#ifndef MOZ_XSL
         mDocument->SetRootContent(mDocElement);
 #endif
       }
@@ -1093,7 +1093,7 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
   aType.StripWhitespace();
 }
 
-#ifdef XSL
+#ifdef MOZ_XSL
 nsresult
 nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
                                       const nsAutoString& aHref)
@@ -1295,7 +1295,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
         media.ToLowerCase();
       }
       result = GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);      
-#ifndef XSL
+#ifndef MOZ_XSL
       result = ProcessCSSStyleLink(node, href, alternate.EqualsWithConversion("yes"),
                                 title, type, media);
 #else

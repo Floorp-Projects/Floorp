@@ -26,7 +26,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = raptorxsldoc_s
 
-DEFINES += -D_IMPL_NS_HTML -DXSL
+DEFINES += -D_IMPL_NS_HTML
 
 XPIDLSRCS=				\
 	nsIDocumentTransformer.idl 	\
@@ -39,7 +39,6 @@ CPPSRCS =				\
 
 EXPORTS = \
 	nsITransformMediator.h			\
-	nsXSLContentSink.h			\
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

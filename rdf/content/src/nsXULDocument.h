@@ -304,7 +304,7 @@ public:
 
     // nsIXMLDocument interface
     NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
-#ifdef XSL
+#ifdef MOZ_XSL
     NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
 #endif
 
