@@ -344,7 +344,7 @@ sub DumpChromeToTemp($$$$)
         my($name) = $item->fileName();
         $name =~ s/\//:/g;
 #        print("+ extracting $name\n") if $verbose;
-        $item->extractToFileNamed($temp_chrome_dir . $foldername . $name);
+        die "extract error" if $item->extractToFileNamed($temp_chrome_dir . $foldername . $name) != AZ_OK;
       }
     }
   }
@@ -367,10 +367,17 @@ sub PackageEmbeddingChrome($$)
 {
   my($dist_dir, $chrome_dir) = @_;
   
-  # unzip the existing jar files and dump them in a tempdir
+  # we prefer not to use the jars when packaging, since it adds a lot of time and 
+  # effort to the build process. use the raw files if they're at all available.
+  my($must_use_jars) = !$main::options{chrome_files};
+  
   my($embed_dir) = $dist_dir . ":Embed";
+  mkdir($embed_dir, 0);
+
+  # unzip the existing jar files and dump them in a tempdir or point our
+  # tempdir at the existing chrome files.
   my($temp_chrome_dir) = "$embed_dir:tempchrome";
-  if ( $main::options{chrome_jars} ) {
+  if ( $must_use_jars ) {
     DumpChromeToTemp($dist_dir, $chrome_dir, "$temp_chrome_dir:", 1);  
   }
   else {
@@ -391,28 +398,48 @@ sub PackageEmbeddingChrome($$)
   # in the manifest are local to that location. As a result, we dump it
   # in our temp chrome dir.
   my($temp_manifest) = "$temp_chrome_dir:embed-jar.tmp.mn";
+  local(*MANIFEST);
   open(MANIFEST, ">$temp_manifest") || die "couldn't create embed jar manifest";
   GenerateManifest::GenerateManifest($top_path, $inc_path . "embed-jar.mn", $temp_chrome_dir,
                                       "en-US", *MANIFEST, ":", 1);
   close(MANIFEST);
   
-  # make embed.jar
+  # make embed.jar.
   my(%jars);
   CreateJarFromManifest($temp_manifest, "$temp_chrome_dir:", \%jars);
   if ($main::options{embedding_xulprefs}) {
     # copy over our xul-pref manifest so that it's also at the root
-    # of our chrome tree then run it through the jar machine.
-    copy("$inc_path:xulprefs.mn", "$temp_chrome_dir:xulprefs.mn") || die "can't copy xul prefs manifest";
-    CreateJarFromManifest("$inc_path:xulprefs.mn", "$temp_chrome_dir:", \%jars);
+    # of our chrome tree then run it through the jar machine. We need to
+    # use GenerateManifest to get the locales correct.
+    copy($inc_path."xulprefs.mn", "$temp_chrome_dir:xulprefs.mn") || die "can't copy xul prefs manifest";
+    my($temp_pref_manifest) = "$temp_chrome_dir:xulprefs.tmp.mn";
+    local(*PREFMANIFEST);
+    open(PREFMANIFEST, ">$temp_pref_manifest") || die "couldn't create embed jar manifest";
+    GenerateManifest::GenerateManifest($top_path, $inc_path . "xulprefs.mn", $temp_chrome_dir,
+                                        "en-US", *PREFMANIFEST, ":", 1);
+    close(PREFMANIFEST);
+
+    CreateJarFromManifest($temp_pref_manifest, "$temp_chrome_dir:", \%jars);
+
+    # clean up our temp files
+    unlink("$temp_chrome_dir:xulprefs.mn");
+    unlink($temp_pref_manifest);
   }
   WriteOutJarFiles("$temp_chrome_dir:", \%jars);
 
-  if ( $main::options{chrome_jars} ) {
+  # clean up after ourselves and move everything to the right locations. The embed.jar
+  # and resulting installed-chrome need to end up in dist/Embed in either case.
+  if ( $must_use_jars ) {
     print("deleting temp chrome dir $temp_chrome_dir\n");
     rmtree($temp_chrome_dir, 0, 0);
   }
   else {
-    unlink($temp_manifest);
+    # since we used chrome files from $dist_dir, our new jar needs to be moved and
+    # we need to clean up the copied chrome files
+    move($dist_dir . "Embed.jar", $embed_dir);
+    move($dist_dir . "installed-chrome.txt", $embed_dir);
+    rmtree($dist_dir . "embed");
+    unlink($temp_manifest);    
   }
   
 }
@@ -425,6 +452,7 @@ sub PackageEmbeddingChrome($$)
 sub BuildEmbeddingPackage
 {
   unless ($main::options{embedding_chrome}) { return; }
+  my($D) = $main::DEBUG ? "Debug" : "";
   
   my($dist_dir) = GetBinDirectory();
 
@@ -439,13 +467,17 @@ sub BuildEmbeddingPackage
   
   # final destination will be a sibling of $dist_dir in dist
   my($destination) = "$top_path:dist";  
-  my($manifest) = "$top_path:embedding:config:basebrowser-mac-cfm";
+  my($manifest) = "$top_path:embedding:config:basebrowser-mac-cfm$D";
   chop $dist_dir;             # Copy() expects the src/dest dirs not to have a ':' at the end
   Packager::Copy($dist_dir, $destination, $manifest, "mac", 0, 0, 0, () );
 
   # the Embed.jar is in the wrong place, move it into the chrome dir
   move("$destination:Embed:embed.jar", "$destination:Embed:Chrome");
   move("$destination:Embed:installed-chrome.txt", "$destination:Embed:Chrome");
+  
+  # copy PPEmbed into our new package
+  print("-- copying PPEmbed to embed package");
+  copy("$dist_dir:PPEmbed$D", "$destination:Embed");
 }
 
 
