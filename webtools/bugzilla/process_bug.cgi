@@ -230,7 +230,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
                     $defaults{'target_milestone'} = $::FORM{'target_milestone'};
                 } else {
                     SendSQL("SELECT defaultmilestone FROM products WHERE " .
-                            "product = " . SqlQuote($prod));
+                            "name = " . SqlQuote($prod));
                     $defaults{'target_milestone'} = FetchOneColumn();
                 }
             }
@@ -977,7 +977,7 @@ foreach my $id (@idlist) {
         if (!defined $value || $value eq $::dontchange) {
             $value = $oldhash{'target_milestone'};
         }
-        SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
+        SendSQL("SELECT defaultmilestone FROM products WHERE name = " .
                 SqlQuote($oldhash{'product'}));
         if ($value eq FetchOneColumn()) {
             SendSQL("UNLOCK TABLES");
