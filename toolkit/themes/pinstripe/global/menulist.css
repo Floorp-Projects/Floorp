@@ -48,7 +48,6 @@
 
 menulist {
   -moz-appearance: menulist;
-  -moz-user-focus: ignore;
   margin: 2px 4px;
   height: 20px !important;
 }

@@ -44,7 +44,6 @@
 /* ::::: radio ::::: */
 
 radiogroup {
-  -moz-user-focus: ignore;
   margin: 1px 0px 1px 0px;
 }
 
@@ -52,6 +51,7 @@ radio {
   -moz-appearance: radio-container;
   -moz-box-align: center;
   margin: 2px 2px 2px 2px;
+  -moz-user-focus: ignore;
 }
 
 .radio-label-box {
