@@ -1443,6 +1443,8 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
     if (val.EqualsIgnoreCase("submit") ||
         val.EqualsIgnoreCase("reset") ||
         val.EqualsIgnoreCase("button")) {
+      if (UseXBLForms())
+        return NS_OK;
       return ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
     }
     else if (val.EqualsIgnoreCase("checkbox")) {

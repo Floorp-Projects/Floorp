@@ -41,3 +41,4 @@ include <$(DEPTH)\config\rules.mak>
 
 chrome::
         $(REGCHROME) content forms forms.jar
+        $(REGCHROME) locale en-US/forms en-US.jar
