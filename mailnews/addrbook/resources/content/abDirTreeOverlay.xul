@@ -43,9 +43,7 @@ Rights Reserved.
     <template>
       <rule>
             <treechildren>
-        <treeitem uri="..."
-          IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"
-                                        persist="sortColumn sortKey sortDirection">
+        <treeitem uri="..." persist="sortColumn sortKey sortDirection">
           <treerow>
             <treecell indent="true" class="treecell-indent ab-directory-icon" label="rdf:http://home.netscape.com/NC-rdf#DirName"
                      IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"/>

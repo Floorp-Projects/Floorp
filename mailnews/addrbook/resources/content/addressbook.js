@@ -136,7 +136,7 @@ function GetCurrentPrefs()
 			menuitemID = 'displayNameCmd';
 			break;
 	}
-	menuitem = top.document.getElementById(menuitemID);
+	var menuitem = top.document.getElementById(menuitemID);
 	if ( menuitem )
 		menuitem.setAttribute('checked', 'true');
 }
@@ -310,20 +310,19 @@ function AbDelete()
 
 function AbDeleteDirectory()
 {
-	dump("\AbDeleteDirectory from XUL\n");
-
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
     promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
     var selArray = dirTree.selectedItems;
     var count = selArray.length;
     debugDump("selArray.length = " + count + "\n");
-    if (count == 0)
+    if (!count)
         return;
 
     var isPersonalOrCollectedAbsSelectedForDeletion = false;
     var parentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    if ( !parentArray ) return (false); 
+    if (!parentArray) 
+      return; 
 
     for ( var i = 0; i < count; ++i )
     {
@@ -338,10 +337,11 @@ function AbDeleteDirectory()
             var parent = selArray[i].parentNode.parentNode;
             if (parent)
             {
+                var parentId;
                 if (parent == dirTree)
-                    var parentId = "moz-abdirectory://";
+                    parentId = "moz-abdirectory://";
                 else	
-                    var parentId = parent.getAttribute("id");
+                    parentId = parent.getAttribute("id");
 
                 debugDump("    parentId #" + i + " = " + parentId + "\n");
                 var dirResource = rdf.GetResource(parentId);

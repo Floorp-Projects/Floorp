@@ -12,6 +12,7 @@ var ResultsPaneController =
       case "cmd_selectAll":
       case "cmd_delete":
       case "button_delete":
+      case "button_edit":
         return true;
       default:
         return false;
@@ -20,13 +21,13 @@ var ResultsPaneController =
 
   isCommandEnabled: function(command)
   {
+    var numSelected = 0
     switch (command) {
       case "cmd_selectAll":
         return true;
 
       case "cmd_delete":
       case "button_delete":
-        var numSelected = 0;
         if (resultsTree && resultsTree.selectedItems)
           numSelected = resultsTree.selectedItems.length;
         if (command == "cmd_delete") {
@@ -36,7 +37,10 @@ var ResultsPaneController =
             goSetMenuValue(command, "valueCards");
         }
         return (numSelected > 0);
-
+      case "button_edit":
+        if (resultsTree && resultsTree.selectedItems)
+          numSelected = resultsTree.selectedItems.length;
+        return (numSelected == 1);
       default:
         return false;
     }
@@ -55,6 +59,9 @@ var ResultsPaneController =
           var cardList = resultsTree.selectedItems;
           top.addressbook.deleteCards(resultsTree, resultsTree, cardList);
         }
+        break;
+      case "button_edit":
+        AbEditCard();
         break;
     }
   },
@@ -77,6 +84,7 @@ var DirPaneController =
       case "cmd_selectAll":
       case "cmd_delete":
       case "button_delete":
+      case "button_edit":
         return true;
       default:
         return false;
@@ -96,7 +104,15 @@ var DirPaneController =
           return true;
         else
           return false;
-
+      case "button_edit":
+        var selectedItems = dirTree.selectedItems;
+        if (selectedItems.length == 1) {
+          var mailingListUri = selectedItems[0].getAttribute('id');
+          var directory = rdf.GetResource(mailingListUri).QueryInterface(Components.interfaces.nsIAbDirectory);
+          if (directory.isMailList)
+             return true;
+        }
+        return false;
       default:
         return false;
     }
@@ -115,6 +131,17 @@ var DirPaneController =
         if (dirTree)
           AbDeleteDirectory();
 //        top.addressbook.deleteAddressBooks(dirTree.database, dirTree, dirTree.selectedItems);
+        break;
+      case "button_edit":
+        var selectedItems = dirTree.selectedItems;
+        if (selectedItems.length == 1) {
+          var mailingListUri = selectedItems[0].getAttribute('id');
+          var directory = rdf.GetResource(mailingListUri).QueryInterface(Components.interfaces.nsIAbDirectory);
+          if (directory.isMailList) {
+            var parentURI = selectedItems[0].parentNode.parentNode.getAttribute('id');
+            goEditListDialog(parentURI, mailingListUri);
+          }
+        }
         break;
     }
   },

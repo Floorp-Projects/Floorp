@@ -50,10 +50,10 @@ Rights Reserved.
 <!ENTITY deleteAbCmd.label                              "Delete Address Book">  
 <!ENTITY deleteCardCmd.label                            "Delete Card">  
 <!ENTITY deleteCardsCmd.label                           "Delete Selected Cards">  
-<!ENTITY cardPropertiesCmd.label                        "Card Properties...">
-<!-- LOCALIZATION NOTE (editCardCmd.accesskey) : DONT_TRANSLATE -->  
-<!ENTITY cardPropertiesCmd.accesskey                    "i">  
-<!ENTITY cardPropertiesCmd.key                          "i">  
+<!ENTITY propertiesCmd.label                            "Properties...">
+<!-- LOCALIZATION NOTE (propertiesCmd.accesskey) : DONT_TRANSLATE -->  
+<!ENTITY propertiesCmd.accesskey                    "i">  
+<!ENTITY propertiesCmd.key                          "i">  
 
 <!-- View Menu -->
 <!ENTITY showAbToolbarCmd.label                         "Address Book Toolbar">  
@@ -83,7 +83,7 @@ Rights Reserved.
 <!-- Toolbar items -->  
 <!ENTITY newcardButton.label                            "New Card">  
 <!ENTITY newlistButton.label                            "New List">  
-<!ENTITY editButton.label                               "Edit">  
+<!ENTITY editButton.label                               "Properties">  
 <!ENTITY newmsgButton.label                             "Compose">  
 <!ENTITY deleteButton.label                             "Delete">  
 <!ENTITY stopButton.label                               ".Stop">  

@@ -29,7 +29,7 @@ Rights Reserved.
 
   <vbox id="CardViewBox" flex="1">
 	
-	<vbox id="CardViewInnerBox" flex="1">
+	<vbox id="CardViewInnerBox" collapsed="true" flex="1">
 		
 		<description hide="true" id="CardTitle"/>
 

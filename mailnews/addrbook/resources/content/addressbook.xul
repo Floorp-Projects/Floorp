@@ -77,7 +77,7 @@ Rights Reserved.
     <command id="cmd_PrintCard" oncommand="AbPrintCard()"/>
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="AbClose()"/>
-    <command id="cmd_CardProperties" oncommand="AbEditCard();"/>
+    <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
     <command id='cmd_selectAll'/>
     <command id="toggleSidebar"/>
 </commandset>
@@ -105,7 +105,7 @@ Rights Reserved.
   <key id="key_delete"/>
   <key id="key_selectAll"/>
   <key id="showHideSidebar"/>
-  <key id="key_CardProperties" key="&cardPropertiesCmd.key;" command="cmd_CardProperties" modifiers="accel"/>
+  <key id="key_properties" key="&propertiesCmd.key;" command="cmd_properties" modifiers="accel"/>
 </keyset>
 
 <popupset id="aTooltipSet">
@@ -142,10 +142,10 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
-      <menuitem label="&cardPropertiesCmd.label;"
-			          accesskey="&cardPropertiesCmd.accesskey;"
-				  key="key_CardProperties"
-          command="cmd_CardProperties"/>
+      <menuitem label="&propertiesCmd.label;"
+			          accesskey="&propertiesCmd.accesskey;"
+				  key="key_properties"
+          command="cmd_properties"/>
 			<menuseparator id="menu_PrefsSeparator"/>
 			<menuitem id="menu_preferences" oncommand="goPreferences('addressbook.xul', 'chrome://messenger/content/addressbook/pref-addressing.xul')"/>
 		  </menupopup>
@@ -221,7 +221,7 @@ Rights Reserved.
         <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard('dirTree');"/>
         <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList('dirTree');"/>
             	<toolbarseparator class="toolbarseparator-primary"/>
-        <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
+        <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
         <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
         <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
