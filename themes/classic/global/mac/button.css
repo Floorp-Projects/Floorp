@@ -29,7 +29,7 @@
 
 button {
 	-moz-user-focus     : ignore;
-  margin: 4px 5px 5px 5px;
+    margin              : 4px 5px 5px 5px;
 	min-width           : 60px;
 	min-height          : 20px;
 	background-color    : transparent;
@@ -161,6 +161,10 @@ button[disabled="true"] > .box-inherit > .button-stack > .button-text-box,
 button[disabled="true"]:hover > .box-inherit > .button-stack > .button-text-box, 
 button[disabled="true"]:hover:active > .box-inherit > .button-stack > .button-text-box {
   color					: #7F8997;
+}
+
+button[disabled="true"]:hover:active > .box-inherit > .button-stack > .button-box-mid {
+	background-color    : #DDDDDD;;
 }
 
 button:hover:active > .box-inherit > .button-box-left > .button-left-top[disabled="true"],
