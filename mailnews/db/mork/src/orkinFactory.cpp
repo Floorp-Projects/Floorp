@@ -438,6 +438,7 @@ orkinFactory::ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort(
         morkStore* store = thumb->ThumbToOpenStore(ev);
         if ( store )
         {
+        	store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
           outPort = orkinStore::MakeStore(ev, store);
         }
       }
@@ -575,6 +576,7 @@ orkinFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
         morkStore* store = thumb->ThumbToOpenStore(ev);
         if ( store )
         {
+        	store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
           outStore = orkinStore::MakeStore(ev, store);
         }
       }
@@ -614,6 +616,7 @@ orkinFactory::CreateNewFileStore( // create a new db with minimal content
         
       if ( store )
       {
+      	store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
         if ( store->CreateStoreFile(ev, inFilePath, inOpenPolicy) )
           outStore = orkinStore::MakeStore(ev, store);
           
