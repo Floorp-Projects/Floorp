@@ -623,6 +623,8 @@ public:
   NS_IMETHOD SetHint(nsIFrameSelection::HINT aHint);
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
   NS_IMETHOD GetScrollableView(nsIScrollableView **aScrollableView);
+  NS_IMETHOD SetMouseDoubleDown(PRBool aDoubleDown);
+  NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown);
 #ifdef IBMBIDI
   NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                    nsIContent *aNode,
@@ -1220,6 +1222,20 @@ NS_IMETHODIMP nsTextInputSelectionImpl::GetScrollableView(nsIScrollableView **aS
 {
   if(mFrameSelection) 
     return mFrameSelection->GetScrollableView(aScrollableView);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::SetMouseDoubleDown(PRBool aDoubleDown)
+{
+  if(mFrameSelection) 
+    return mFrameSelection->SetMouseDoubleDown(aDoubleDown);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::GetMouseDoubleDown(PRBool *aDoubleDown)
+{
+  if(mFrameSelection) 
+    return mFrameSelection->GetMouseDoubleDown(aDoubleDown);
   return NS_ERROR_FAILURE;
 }
 
@@ -2193,7 +2209,11 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     {
       if (mSelCon)
       {
-        mSelCon->SetCaretEnabled(PR_FALSE);
+         //do not turn caret enabled off at this time.  the caret will behave 
+         //dependant on the focused frame it is in.  disabling it here has
+         //an adverse affect on the browser in caret display mode or the editor
+         //when a readonly/disabled text form is in the page. bug 141888
+         //mSelCon->SetCaretEnabled(PR_FALSE);
 
         if (editorFlags & nsIPlaintextEditor::eEditorDisabledMask)
           mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
