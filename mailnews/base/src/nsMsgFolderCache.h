@@ -28,7 +28,7 @@
 
 #include "nsCOMPtr.h"
 #include "mdb.h"
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 
 class FolderCachePool;
 
