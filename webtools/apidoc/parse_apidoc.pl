@@ -111,7 +111,7 @@ my $JS_COMPLETE = ("\n<script>\n" .
                    "  window.document.location.hash=entry;\n" .
                    "}\n" .
                    "function navToGroup(group) {\n" .
-                   "  var f = top.frames['toc-container'];\n" .
+                   "  var f = parent.frames['toc-container'];\n" .
                    "  if (!f)\n".
                    "    window.open ('complete-toc.html#' + group, " .
                    "'toc_container');\n" .
@@ -129,7 +129,7 @@ my $JS_SPARSE = ("\n<script>\n" .
                  "  window.document.location.href='api-' + entry + '.html';\n" .
                  "}\n" .
                  "function navToGroup(group) {\n" .
-                 "  var f = top.frames['toc-container'];\n" .
+                 "  var f = parent.frames['toc-container'];\n" .
                  "  if (!f)\n".
                  "    window.open ('sparse-toc.html#' + group, " .
                  "'toc_container');\n" .
