@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 
 interface nsICmdLineService;
+interface nsIFileSpec;
 
 %{C++
 #include "nsFileSpec.h"
@@ -45,7 +46,6 @@ interface nsICmdLineService;
 [ref] native nsStringRef(nsString);
 [scriptable, uuid(02b0625a-e7f3-11d2-9f5a-006008a6efe9)]
 interface nsIProfile : nsISupports {
-
     [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
     void startup(in string filename);
     void shutdown();
@@ -58,7 +58,9 @@ interface nsIProfile : nsISupports {
 
     readonly attribute string firstProfile;
 
+    // eventually we need to depricate getCurrentProfileDir
     [noscript] void getCurrentProfileDir(in nsFileSpec profileDir);
+    nsIFileSpec getCurrentProfileDirFromJS();
 
     [noscript] void setProfileDir(in string profileName,
                                   in nsFileSpecRef profileDir);
@@ -89,6 +91,7 @@ interface nsIProfile : nsISupports {
 
     void migrateAllProfiles();
     void CloneProfile(in string profileName);
+
 };
 
 #endif /* nsIProfile_h__ */
