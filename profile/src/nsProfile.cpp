@@ -497,7 +497,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 
 			if (NS_SUCCEEDED(rv))
 			{
-				*profileName = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);
+			//	*profileName = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);
 
 				rv = m_reg->GetString( key, "CurrentProfile", profileName );
 
@@ -930,6 +930,7 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 									char *entryName;
 									char *entryValue;
 								
+									// XXX: These allocations shouldn't be necessary.
 									entryName  = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);
 									entryValue = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);
 
