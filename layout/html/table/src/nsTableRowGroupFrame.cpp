@@ -1730,8 +1730,10 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32    aLineNumber,
 
       rv = tempFrame->GetParent(&tempParentFrame);
     
-      if(NS_FAILED(rv) || !tempParentFrame)
-        return rv?rv:NS_ERROR_FAILURE;
+      if(NS_FAILED(rv))
+        return rv;
+      if(!tempParentFrame)
+        return NS_ERROR_FAILURE;
 
       tempParentFrame->GetRect(parentRectRef);
       aX -= parentRect.x;

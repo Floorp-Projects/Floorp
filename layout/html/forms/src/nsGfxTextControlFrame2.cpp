@@ -548,22 +548,30 @@ nsresult nsTextInputListener::UpdateTextInputCommands(const nsString& commandsTo
   
   nsCOMPtr<nsIContent> content;
   nsresult rv = mFrame->GetContent(getter_AddRefs(content));
-  if (NS_FAILED(rv) || !content ) 
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) 
+    return rv;
+  if (!content) 
+    return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsIDocument> doc;
   rv = content->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv) || !doc ) 
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) 
+    return rv;
+  if (!doc)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-  if (NS_FAILED(rv) || !scriptGlobalObject ) 
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!scriptGlobalObject)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(scriptGlobalObject, &rv);
-  if (NS_FAILED(rv) || !domWindow ) 
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!domWindow)
+    return NS_ERROR_FAILURE;
 
   return domWindow->UpdateCommands(commandsToUpdate);
 }
@@ -1954,8 +1962,10 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   // Now create a DIV and add it to the anonymous content child list.
   nsCOMPtr<nsIElementFactory> elementFactory;
   rv = GetElementFactoryService(getter_AddRefs(elementFactory));
-  if (NS_FAILED(rv) || ! elementFactory)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!elementFactory)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
   rv = doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
@@ -3027,8 +3037,10 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
   {
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv) || !shell)
-      return rv?rv:NS_ERROR_FAILURE;
+    if (NS_FAILED(rv))
+      return rv;
+    if (!shell)
+      return NS_ERROR_FAILURE;
 
     rv = DoesAttributeExist(nsHTMLAtoms::disabled);
     PRUint32 flags;
@@ -3432,8 +3444,10 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     nsCOMPtr<nsIPresShell> shell;
     nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv) || !shell)
-      return rv?rv:NS_ERROR_FAILURE;
+    if (NS_FAILED(rv))
+      return rv;
+    if (!shell)
+      return NS_ERROR_FAILURE;
   }
 
   while(first)

@@ -1893,8 +1893,10 @@ nsTextFrame::GetContentAndOffsetsForSelection(nsIPresContext *aPresContext, nsIC
     {
       //we COULD check the previous sibling but I dont think that is reliable
       rv = parent->GetContent(aContent);
-      if (NS_FAILED(rv) || !*aContent)
-        return rv?rv:NS_ERROR_FAILURE;
+      if (NS_FAILED(rv))
+        return rv;
+      if(!*aContent)
+        return NS_ERROR_FAILURE;
 
       //ARE WE A BEFORE FRAME? if not then we assume we are an after frame. this may be bad later
       nsIFrame *grandParent;
@@ -4204,13 +4206,18 @@ nsTextFrame::CheckVisibility(nsIPresContext* aContext, PRInt32 aStartIndex, PRIn
   //get the presshell
     nsCOMPtr<nsIPresShell> shell;
     rv = aContext->GetShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv) || !shell)
-      return rv?rv:NS_ERROR_FAILURE;
+    if (NS_FAILED(rv))
+      return rv;
+    if (!shell) 
+      return NS_ERROR_FAILURE;
+
   //get the document
     nsCOMPtr<nsIDocument> doc;
     rv = shell->GetDocument(getter_AddRefs(doc));
+    if (NS_FAILED(rv))
+      return rv;
     if (!doc)
-      return rv?rv:NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
   //get the linebreaker
     nsCOMPtr<nsILineBreaker> lb;
     doc->GetLineBreaker(getter_AddRefs(lb));
