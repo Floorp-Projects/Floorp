@@ -69,3 +69,4 @@ nsIDOMNSHTMLDocument.h
 nsIDOMOption.h
 nsIDOMNSHTMLAnchorElement.h
 nsIDOMNSHTMLAreaElement.h
+nsIDOMNSHTMLEmbedElement.h
