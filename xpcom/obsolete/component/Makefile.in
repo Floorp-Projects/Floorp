@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= xpobsolete
-LIBRARY_NAME	= xpobsolete
+MODULE		= xpcom_compat_c
+LIBRARY_NAME	= xpcom_compat_c
 EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
 GRE_MODULE	= 1
@@ -44,10 +44,6 @@ CPPSRCS         = \
 		$(NULL)
 
 
-EXPORTS         = nsIRegistryUtils.h
-
-XPIDLSRCS	= nsIRegistry.idl
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../ \
 		$(NULL)
@@ -59,7 +55,7 @@ FORCE_SHARED_LIB = 1
 
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
-		    $(DIST)/lib/$(LIB_PREFIX)xpcom_obsolete.$(LIB_SUFFIX) \
+		    $(MOZ_XPCOM_OBSOLETE_LIBS) \
 		    $(NULL)
 
 

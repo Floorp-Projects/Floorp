@@ -38,11 +38,12 @@
 #ifndef _FILESPECIMPL_H_
 #define _FILESPECIMPL_H_
 
+#include "nscore.h"
 #include "nsIFileSpec.h" 
 #include "nsFileSpec.h"
 
 //========================================================================================
-class nsFileSpecImpl
+class NS_COM nsFileSpecImpl
 //========================================================================================
 	: public nsIFileSpec
 {
@@ -79,7 +80,7 @@ class nsFileSpecImpl
 }; // class nsFileSpecImpl
 
 //========================================================================================
-class nsDirectoryIteratorImpl
+class NS_COM nsDirectoryIteratorImpl
 //========================================================================================
 	: public nsIDirectoryIterator
 {
