@@ -8,11 +8,11 @@
 <!ENTITY incomingServerNameDesc.label "Enter the name of your incoming server. (For example, &quot;pop.netscape.net&quot;)">
 <!ENTITY incomingServerLabel.label "Server Name:">
 <!-- LOCALIZATION NOTE (newsServerNameDesc.label) : Do not translate "NNTP" or the "&quot;" entities in below line -->
-<!ENTITY newsServerNameDesc.label "Enter the name of your news (NNTP) server. (For example, &quot;news.netscape.net&quot;.)">
+<!ENTITY newsServerNameDesc.label "Enter the name of your news server (NNTP). (For example, &quot;news.netscape.net&quot;.)">
 <!-- LOCALIZATION NOTE (smtpServerTitle.label) : Do not translate "SMTP" in below line -->
-<!ENTITY smtpServerTitle.label "Outgoing (SMTP) Server">
+<!ENTITY smtpServerTitle.label "Outgoing Server (SMTP)">
 <!-- LOCALIZATION NOTE (smtpServerDesc.label) : Do not translate "SMTP" and "&quot;smtp.netscape.net&quot;" in below line -->
-<!ENTITY smtpServerDesc.label "Enter the name of your outgoing (SMTP) server. (For example, &quot;smtp.netscape.net&quot;)">
+<!ENTITY smtpServerDesc.label "Enter the name of your outgoing server (SMTP). (For example, &quot;smtp.netscape.net&quot;)">
 <!ENTITY smtpServerLabel.label "Server Name:">
 <!-- LOCALIZATION NOTE (imapType.label) : Do not translate "IMAP" in below line -->
 <!ENTITY imapType.label "IMAP Mail Server">
@@ -26,4 +26,4 @@
 	  inserting text after the "&quot;" entity in currentSmtpAfter.label, if required grammatically
 -->
 <!-- LOCALIZATION NOTE (haveSmtp1.label) : Do not translate "SMTP" in below line -->
-<!ENTITY haveSmtp1.label "'@server_name@' is set as your outgoing (SMTP) server. You need only one outgoing server, even for multiple accounts. Normally you choose the outgoing server for your most active mail account . To specify additional outgoing servers, choose Mail/News Account Settings from the Edit menu.">
+<!ENTITY haveSmtp1.label "'@server_name@' is set as your outgoing server (SMTP). You need only one outgoing server, even for multiple accounts. Normally you choose the outgoing server for your most active mail account . To specify additional outgoing servers, choose Mail/News Account Settings from the Edit menu.">
