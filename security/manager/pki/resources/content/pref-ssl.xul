@@ -88,10 +88,6 @@
     <checkbox id="warnInsecurePost" label="&warn.insecurepost;"
               pref="true" preftype="bool" prefstring="security.warn_submit_insecure"
               prefattribute="checked"/>
-    <checkbox id="warnInsecurePostFromSecure"
-              label="&warn.insecurepostfromsecure;"
-              pref="true" preftype="bool" prefstring="security.warn_insecure_post_from_secure"
-              prefattribute="checked" checked="true"  disabled="true"/>
     <checkbox id="warnSecureRedirect" label="&warn.secureredirect;"
               pref="true" preftype="bool" prefstring="security.warn_secure_redirect"
               prefattribute="checked"/>

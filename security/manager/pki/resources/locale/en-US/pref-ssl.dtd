@@ -36,8 +36,6 @@
 <!ENTITY warn.enteringweak "Entering a site that uses weak encryption">
 <!ENTITY warn.insecurepost
  "Sending form data from an insecure page to an insecure page">
-<!ENTITY warn.insecurepostfromsecure
- "Sending form data from a secure page to an insecure page">
 <!ENTITY warn.secureredirect "Redirection from one secure site to another">
 <!ENTITY warn.secureredirecttoinsecure
  "Redirection from a secure site to an insecure site">
