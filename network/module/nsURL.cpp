@@ -36,6 +36,7 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName);
 class URLImpl : public nsIURL {
 public:
   URLImpl(const nsString& aSpec);
+  URLImpl(const nsString& aSpec, nsISupports* container);
   URLImpl(const nsIURL* aURL, const nsString& aSpec);
   virtual ~URLImpl();
 
@@ -54,6 +55,7 @@ public:
   virtual const char* GetSearch() const;
   virtual const char* GetSpec() const;
   virtual PRInt32 GetPort() const;
+  virtual nsISupports* GetContainer() const;
 
   virtual void ToString(nsString& aString) const;
 
@@ -63,6 +65,7 @@ public:
   char* mFile;
   char* mRef;
   char* mSearch;
+  nsISupports* mContainer;
   PRInt32 mPort;
   PRBool mOK;
 
@@ -84,6 +87,29 @@ URLImpl::URLImpl(const nsString& aSpec)
   mSearch = nsnull;
   mPort = -1;
   mSpec = nsnull;
+  mContainer = nsnull;
+
+  ParseURL(nsnull, aSpec);
+}
+
+URLImpl::URLImpl(const nsString& aSpec, nsISupports* container)
+{
+  NS_INIT_REFCNT();
+  mProtocolUrl = nsnull;
+
+  mProtocol = nsnull;
+  mHost = nsnull;
+  mFile = nsnull;
+  mRef = nsnull;
+  mSearch = nsnull;
+  mPort = -1;
+  mSpec = nsnull;
+  if (container) {
+    mContainer = container;
+    NS_ADDREF(container);
+  } else {
+    mContainer = nsnull;
+  }
 
   ParseURL(nsnull, aSpec);
 }
@@ -100,6 +126,7 @@ URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec)
   mSearch = nsnull;
   mPort = -1;
   mSpec = nsnull;
+  mContainer = nsnull;
 
   ParseURL(aURL, aSpec);
 }
@@ -138,6 +165,7 @@ nsresult URLImpl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 URLImpl::~URLImpl()
 {
   NS_IF_RELEASE(mProtocolUrl);
+  NS_IF_RELEASE(mContainer);
 
   PR_FREEIF(mSpec);
   PR_FREEIF(mProtocol);
@@ -196,6 +224,10 @@ PRInt32 URLImpl::GetPort() const
   return mPort;
 }
 
+nsISupports* URLImpl::GetContainer() const
+{
+    return mContainer;
+}
 
 void URLImpl::ToString(nsString& aString) const
 {
@@ -586,6 +618,17 @@ NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
                           const nsString& aSpec)
 {
   URLImpl* it = new URLImpl(aURL, aSpec);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return it->QueryInterface(kURLIID, (void **) aInstancePtrResult);
+}
+
+NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
+                          const nsString& aSpec,
+                          nsISupports* container)
+{
+  URLImpl* it = new URLImpl(aSpec, container);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

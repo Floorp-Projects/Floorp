@@ -123,7 +123,6 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
                                            NET_ChunkedDecoderStream);
 
     mPollingTimer = nsnull;
-
     RL_Init();
     
     mContainer = aContainerApp;
@@ -179,7 +178,7 @@ nsNetlibService::~nsNetlibService()
         m_stubContext = NULL;
       }
     */
-   
+
     NS_IF_RELEASE(mPollingTimer);
     NS_IF_RELEASE(mContainer);
     NET_ShutdownNetLib();
@@ -204,6 +203,14 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
         return NS_FALSE;
     }
     pConn->AddRef();
+
+    /* We've got a nsConnectionInfo(), now hook it up
+     * to the nsISupports of the nsIContentViewerContainer
+     */
+    pConn->pContainer = aUrl->GetContainer();
+    if(pConn->pContainer) {
+        NS_ADDREF(pConn->pContainer);
+    }
 
     /* Create the URLStruct... */
     URL_s = NET_CreateURLStruct(aUrl->GetSpec(), NET_NORMAL_RELOAD);
@@ -298,6 +305,14 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
             goto loser;
         }
         pConn->AddRef();
+
+        /* We've got a nsConnectionInfo(), now hook it up
+         * to the nsISupports of the nsIContentViewerContainer
+         */
+        pConn->pContainer = aUrl->GetContainer();
+        if(pConn->pContainer) {
+            NS_ADDREF(pConn->pContainer);
+        }
 
         /* Create the URLStruct... */
         URL_s = NET_CreateURLStruct(aUrl->GetSpec(), NET_NORMAL_RELOAD);
@@ -457,7 +472,6 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
     return NS_OK;
 }
 
-
 void nsNetlibService::SchedulePollingTimer()
 {
     // If a timer is already active, then do not create another...
@@ -582,19 +596,7 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
              */
             if (pConn->pConsumer) {
                 nsAutoString status;
-
-                /* If we were redirected, the Data Consumer will still be
-                 * around (not released in the stream completion routine.
-                 * In this case we want to notify the consumer that the
-                 * binding completed. This leaves a hole: when we're
-                 * redirected, and we're in this if statement because
-                 * the stream was never "competed". */
-                if (pConn->redirect) {
-                    pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status);
-                } else {
-                    pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_FAILED, status);
-                }
-
+                pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_FAILED, status);
                 pConn->pConsumer->Release();
                 pConn->pConsumer = NULL;
             }

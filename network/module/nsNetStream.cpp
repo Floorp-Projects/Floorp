@@ -43,7 +43,7 @@ nsConnectionInfo::nsConnectionInfo(nsIURL *aURL,
     pURL       = aURL;
     pNetStream = aStream;
     pConsumer  = aNotify;
-    redirect   = PR_FALSE;
+    pContainer = nsnull;
 
     if (NULL != pURL) {
         pURL->AddRef();
@@ -79,9 +79,14 @@ nsConnectionInfo::~nsConnectionInfo()
         pConsumer->Release();
     }
 
+    if (nsnull != pContainer) {
+        NS_RELEASE(pContainer);
+    }
+
     pURL       = NULL;
     pNetStream = NULL;
     pConsumer  = NULL;
+    pContainer = nsnull;
 }
 
 

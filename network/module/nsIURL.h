@@ -70,6 +70,8 @@ public:
 
   /** @return ref part of the URL */
   virtual PRInt32 GetPort() const = 0;
+
+  virtual nsISupports* GetContainer() const = 0;
   //@}
 
   /** Write the URL to aString, overwriting previous contents. */
@@ -84,6 +86,11 @@ extern NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
 extern NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
                                  const nsIURL* aURL,
                                  const nsString& aSpec);
+
+/** Create a new URL from aSpec, set it's mWebShell field to webshell. */
+extern NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
+                                 const nsString& aSpec,
+                                 nsISupports* container);
 
 /**
  * Utility routine to take a url (may be nsnull) and a base url (may

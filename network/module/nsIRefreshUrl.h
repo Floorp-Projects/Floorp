@@ -40,6 +40,11 @@ struct nsIRefreshUrl : public nsISupports
       * @param repeat Do you want the url to be repeatedly refreshed every millis milliseconds.
       */
     NS_IMETHOD RefreshURL(nsIURL *url, PRInt32 millis, PRBool repeat) = 0;
+
+    /**
+      * Cancels all timer loads.
+      */
+    NS_IMETHOD CancelRefreshURLTimers(void) = 0;
 };
 
 #endif /* nsIRefreshUrl_h___ */
