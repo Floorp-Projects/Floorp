@@ -1167,12 +1167,12 @@ class BodyCodegen
             }
         }
 
-        if (fnCurrent != null && !codegen.itsUseDynamicScope
-            && directParameterCount == -1)
+        if (fnCurrent != null && directParameterCount == -1
+            && (!codegen.itsUseDynamicScope
+                || fnCurrent.getIgnoreDynamicScope()))
         {
-            // Unless we're either using dynamic scope or we're in a
-            // direct call, use the enclosing scope of the function as our
-            // variable object.
+            // Unless we're either in a direct call or using dynamic scope,
+            // use the enclosing scope of the function as our variable object.
             cfw.addALoad(funObjLocal);
             cfw.addInvoke(ByteCode.INVOKEINTERFACE,
                           "org/mozilla/javascript/Scriptable",

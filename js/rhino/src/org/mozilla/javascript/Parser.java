@@ -234,7 +234,23 @@ class Parser {
             decompiler.addAssign(Token.NOP);
         }
 
+        boolean nested = (currentScriptOrFn.type == Token.FUNCTION);
+
         FunctionNode fnNode = nf.createFunction(name);
+        if (nested) {
+            // Nested functions must check their 'this' value to insure
+            // it is not an activation object: see 10.1.6 Activation Object
+            fnNode.setCheckThis();
+        }
+        if (nested || nestingOfWith > 0) {
+            // 1. Nested functions are not affected by the dynamic scope flag
+            // as dynamic scope is already a parent of their scope.
+            // 2. Functions defined under the with statement also immune to
+            // this setup, in which case dynamic scope is ignored in favor
+            // of with object.
+            fnNode.setIgnoreDynamicScope();
+        }
+
         int functionIndex = currentScriptOrFn.addFunction(fnNode);
 
         int functionSourceStart = decompiler.markFunctionStart();
@@ -242,6 +258,8 @@ class Parser {
 
         ScriptOrFnNode savedScriptOrFn = currentScriptOrFn;
         currentScriptOrFn = fnNode;
+        int savedNestingOfWith = nestingOfWith;
+        nestingOfWith = 0;
 
         Object body;
         String source;
@@ -294,6 +312,7 @@ class Parser {
         }
         finally {
             currentScriptOrFn = savedScriptOrFn;
+            nestingOfWith = savedNestingOfWith;
         }
 
         fnNode.setEncodedSourceBounds(functionSourceStart, functionSourceEnd);
@@ -724,7 +743,13 @@ class Parser {
             decompiler.addToken(Token.RP);
             decompiler.addEOL(Token.LC);
 
-            Object body = statement(ts);
+            ++nestingOfWith;
+            Object body;
+            try {
+                body = statement(ts);
+            } finally {
+                --nestingOfWith;
+            }
 
             decompiler.addEOL(Token.RC);
 
@@ -1458,6 +1483,8 @@ class Parser {
     private boolean ok; // Did the parse encounter an error?
 
     private ScriptOrFnNode currentScriptOrFn;
+
+    private int nestingOfWith;
 
     Decompiler decompiler;
 }

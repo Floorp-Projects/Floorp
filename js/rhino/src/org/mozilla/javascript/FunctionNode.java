@@ -61,8 +61,16 @@ public class FunctionNode extends ScriptOrFnNode {
         return itsCheckThis;
     }
 
-    public void setCheckThis(boolean b) {
-        itsCheckThis = b;
+    public void setCheckThis() {
+        itsCheckThis = true;
+    }
+
+    public boolean getIgnoreDynamicScope() {
+        return itsIgnoreDynamicScope;
+    }
+
+    public void setIgnoreDynamicScope() {
+        itsIgnoreDynamicScope = true;
     }
 
     /**
@@ -98,10 +106,6 @@ public class FunctionNode extends ScriptOrFnNode {
         if (functionCount != 0) {
             for (int i = 0; i != functionCount; ++i) {
                 FunctionNode fn = getFunctionNode(i);
-
-                // Nested functions must check their 'this' value to insure
-                // it is not an activation object: see 10.1.6 Activation Object
-                fn.setCheckThis(true);
 
                 // nested function expression statements overrides var
                 if (fn.getFunctionType() == FUNCTION_EXPRESSION_STATEMENT) {
@@ -141,8 +145,9 @@ public class FunctionNode extends ScriptOrFnNode {
         }
     }
 
-    protected boolean itsNeedsActivation;
-    protected boolean itsCheckThis;
-    protected int itsFunctionType;
     private String functionName;
+    private boolean itsNeedsActivation;
+    private boolean itsCheckThis;
+    private int itsFunctionType;
+    private boolean itsIgnoreDynamicScope;
 }

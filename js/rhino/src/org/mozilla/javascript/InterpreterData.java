@@ -94,6 +94,8 @@ final class InterpreterData implements Serializable, DebuggableScript {
 
     int languageVersion;
 
+    boolean useDynamicScope;
+
     public boolean isFunction() {
         return itsFunctionType != 0;
     }

@@ -163,6 +163,11 @@ public class Interpreter
         itsData.itsFunctionType = theFunction.getFunctionType();
         itsData.itsNeedsActivation = theFunction.requiresActivation();
         itsData.itsName = theFunction.getFunctionName();
+        if (!theFunction.getIgnoreDynamicScope()) {
+            if (cx.hasCompileFunctionsWithDynamicScope()) {
+                itsData.useDynamicScope = true;
+            }
+        }
 
         generateICodeFromTree(cx, theFunction.getLastChild());
     }
@@ -301,7 +306,7 @@ public class Interpreter
             case Token.FUNCTION : {
                 int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
                 FunctionNode fn = scriptOrFn.getFunctionNode(fnIndex);
-                if (fn.itsFunctionType != FunctionNode.FUNCTION_STATEMENT) {
+                if (fn.getFunctionType() != FunctionNode.FUNCTION_STATEMENT) {
                     // Only function expressions or function expression
                     // statements needs closure code creating new function
                     // object on stack as function statements are initialized
@@ -1616,18 +1621,6 @@ public class Interpreter
         if (idata.itsRegExpLiterals != null) {
             fn.itsRegExps = wrapRegExps(cx, scope, idata);
         }
-        if (cx.hasCompileFunctionsWithDynamicScope()) {
-             // Nested functions are not affected by the dynamic scope flag
-             // as dynamic scope is already a parent of their scope
-             // Functions defined under the with statement also immune to
-             // this setup, in which case dynamic scope is ignored in favor
-             // of with object.
-             if (!(scope instanceof NativeCall
-                   || scope instanceof NativeWith))
-             {
-                 fn.itsUseDynamicScope = true;
-             }
-        }
         ScriptRuntime.initFunction(cx, scope, fn, idata.itsFunctionType,
                                    fromEvalCode);
         return fn;
@@ -1691,7 +1684,7 @@ public class Interpreter
 
         if (idata.itsFunctionType != 0) {
             InterpretedFunction f = (InterpretedFunction)fnOrScript;
-            if (!f.itsUseDynamicScope) {
+            if (!idata.useDynamicScope) {
                 scope = fnOrScript.getParentScope();
             }
 
