@@ -114,7 +114,7 @@ nsSpaceManager::YMost(nscoord& aYMost) const
 
   if (mBandList.IsEmpty()) {
     aYMost = 0;
-    result = NS_COMFALSE;
+    result = NS_ERROR_ABORT;
 
   } else {
     BandRect* lastRect = mBandList.Tail();
@@ -260,7 +260,7 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
   // band, then all the space is available
   nscoord yMost;
   
-  if ((NS_COMFALSE == YMost(yMost)) || (y >= yMost)) {
+  if ((NS_ERROR_ABORT == YMost(yMost)) || (y >= yMost)) {
     // All the requested space is available
     aBandData.mCount = 1;
     aBandData.mTrapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
@@ -611,7 +611,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
   // If there are no existing bands or this rect is below the bottommost
   // band, then add a new band
   nscoord yMost;
-  if ((NS_COMFALSE == YMost(yMost)) || (aBandRect->mTop >= yMost)) {
+  if ((NS_ERROR_ABORT == YMost(yMost)) || (aBandRect->mTop >= yMost)) {
     mBandList.Append(aBandRect);
     return;
   }
