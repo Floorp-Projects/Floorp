@@ -65,7 +65,7 @@ public:
   NS_IMETHOD PushState(void);
   NS_IMETHOD PopState(PRBool &aClipEmpty);
 
-  NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aClipEmpty);
+  NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 
   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
   NS_IMETHOD GetClipRect(nsRect &aRect, PRBool &aClipValid);
@@ -148,15 +148,20 @@ public:
   NS_IMETHOD SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
 
 protected:
-  nscolor mCurrentColor ;
-  GList                 *mStates;     // graphic state stack (GraphicsState)
   nsDrawingSurfaceGTK   *mOffscreenSurface;  
   nsDrawingSurfaceGTK   *mRenderingSurface;
-  nsIDeviceContext       *mContext;
-  nsIFontMetrics         *mFontMetrics;
-  nsTransform2D          *mTMatrix;
+  nsIDeviceContext      *mContext;
+  nsIFontMetrics        *mFontMetrics;
+  GdkRegion             *mRegion;
+  nsTransform2D         *mTMatrix;
+  float                  mP2T;
 
+ // graphic state stack (GraphicsState)
+  nsVoidArray           *mStateCache;
 
+  nscolor                mCurrentColor;
+  GdkFont               *mCurrentFont;
+  nsLineStyle            mCurrentLineStyle;
 };
 
 #endif /* nsRenderingContextGTK_h___ */

@@ -18,6 +18,8 @@
 
 #include <gtk/gtk.h>
 #include "nsRenderingContextGTK.h"
+#include "nsRegionGTK.h"
+#include "nsGfxCIID.h"
 #include <math.h>
 
 typedef unsigned char BYTE;
@@ -34,32 +36,36 @@ typedef unsigned char BYTE;
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-class GraphicsState {
- public:
-   GraphicsState(GraphicsState &gs) { 
-    gc = gdk_gc_new(NULL);
-    gdk_gc_copy(gs.gc, gc);
-    if (gs.clipRegion) {
-      GdkRegion *leak = gdk_region_new();
-      clipRegion = gdk_regions_union(leak, gs.clipRegion);
-      gdk_region_destroy(leak);
-    } else
-      clipRegion = NULL;
-    
-    mCurrentColor = gs.mCurrentColor;
-  }
+class GraphicsState 
+{
+public:
+   GraphicsState();
+  ~GraphicsState();
 
-  ~GraphicsState() { 
-    gdk_gc_unref(gc);
-    if (clipRegion)
-      gdk_region_destroy(clipRegion);
-  }
-
-  GdkGC *gc;
-  GdkRegion *clipRegion;
-  nsRect clipRect;
-  nscolor mCurrentColor;
+  nsTransform2D  *mMatrix;
+  nsRect          mLocalClip;
+  GdkRegion      *mClipRegion;
+  nscolor         mColor;
+  nsLineStyle     mLineStyle;
+  nsIFontMetrics *mFontMetrics;
+  GdkFont        *mFont;
 };
+
+GraphicsState :: GraphicsState()
+{
+  mMatrix = nsnull;  
+  mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
+  mClipRegion = nsnull;
+  mColor = NS_RGB(0, 0, 0);
+  mLineStyle = nsLineStyle_kSolid;
+  mFontMetrics = nsnull;
+  mFont = nsnull;
+}
+
+GraphicsState :: ~GraphicsState()
+{
+}
+
 
 nsRenderingContextGTK :: nsRenderingContextGTK()
 {
@@ -69,7 +75,14 @@ nsRenderingContextGTK :: nsRenderingContextGTK()
   mContext = nsnull ;
   mRenderingSurface = nsnull ;
   mOffscreenSurface = nsnull ;
+  mCurrentColor = 0;
+  mCurrentLineStyle = nsLineStyle_kSolid;
+  mCurrentFont = nsnull;
   mTMatrix = nsnull;
+  mP2T = 1.0f;
+  mStateCache = new nsVoidArray();
+  mRegion = nsnull;
+  PushState();
 }
 
 nsRenderingContextGTK :: ~nsRenderingContextGTK()
@@ -85,7 +98,7 @@ NS_IMPL_RELEASE(nsRenderingContextGTK)
 NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
                                           nsIWidget *aWindow)
 {
-
+  fprintf(stderr, "nsRenderingContextGTK::Init called\n");
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
@@ -109,12 +122,27 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 
 NS_IMETHODIMP nsRenderingContextGTK::GetHints(PRUint32& aResult)
 {
+  PRUint32 result = 0;
+
+  // Most X servers implement 8 bit text rendering alot faster than
+  // XChar2b rendering. In addition, we can avoid the PRUnichar to
+  // XChar2b conversion. So we set this bit...
+  result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
+
+  // XXX see if we are rendering to the local display or to a remote
+  // dispaly and set the NS_RENDERING_HINT_REMOTE_RENDERING accordingly
+
+  aResult = result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
-  mOffscreenSurface = mRenderingSurface;
-  mRenderingSurface = (nsDrawingSurfaceGTK *) aSurface;
+  if (nsnull == aSurface)
+    mRenderingSurface = mOffscreenSurface;
+  else
+    mRenderingSurface = (nsDrawingSurfaceGTK *)aSurface;
+
   return NS_OK;
 }
 
@@ -125,31 +153,105 @@ NS_IMETHODIMP nsRenderingContextGTK::Reset()
 
 NS_IMETHODIMP nsRenderingContextGTK::GetDeviceContext(nsIDeviceContext *&aContext)
 {
+  NS_IF_ADDREF(mContext);
+  aContext = mContext;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 {
-#if 0
-  GraphicsState state = new GraphicsState(mStates->data);
-  mStates = g_list_prepend(mStates, state);
-#endif
+  nsRect rect;
+
+  GraphicsState * state = new GraphicsState();
+
+  // Push into this state object, add to vector
+  state->mMatrix = mTMatrix;
+
+  mStateCache->AppendElement(state);
+
+  if (nsnull == mTMatrix)
+    mTMatrix = new nsTransform2D();
+  else
+    mTMatrix = new nsTransform2D(mTMatrix);
+
+  PRBool clipState;
+  GetClipRect(state->mLocalClip, clipState);
+
+  state->mClipRegion = mRegion;
+
+  if (nsnull != state->mClipRegion) {
+    GdkRegion *tRegion = ::gdk_region_new ();
+
+    GdkRectangle gdk_rect;
+    
+    gdk_rect.x = state->mLocalClip.x;
+    gdk_rect.y = state->mLocalClip.y;
+    gdk_rect.width = state->mLocalClip.width;
+    gdk_rect.height = state->mLocalClip.height;
+
+    mRegion = ::gdk_region_union_with_rect (tRegion, &gdk_rect);
+
+    gdk_region_destroy (tRegion);
+  }
+
+  state->mColor = mCurrentColor;
+  state->mLineStyle = mCurrentLineStyle;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
 {
-  GraphicsState *state = (GraphicsState *)mStates->data;
-  GList *tempList = mStates;
-  mStates = mStates->next;
-  g_list_free_1(tempList);
-  delete state;
+  PRBool bEmpty = PR_FALSE;
+
+  PRUint32 cnt = mStateCache->Count();
+  GraphicsState * state;
+
+  if (cnt > 0) {
+    state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
+    mStateCache->RemoveElementAt(cnt - 1);
+
+    // Assign all local attributes from the state object just popped
+    if (mTMatrix)
+      delete mTMatrix;
+    mTMatrix = state->mMatrix;
+
+    if (nsnull != mRegion)
+      ::gdk_region_destroy(mRegion);
+
+    mRegion = state->mClipRegion;
+
+    if (nsnull != mRegion && ::gdk_region_empty(mRegion) == True){
+      bEmpty = PR_TRUE;
+    }else{
+
+      // Select in the old region.  We probably want to set a dirty flag and only 
+      // do this IFF we need to draw before the next Pop.  We'd need to check the
+      // state flag on every draw operation.
+      if (nsnull != mRegion)
+	      ::gdk_gc_set_clip_region (mRenderingSurface->gc, mRegion);
+    }
+
+    if (state->mColor != mCurrentColor)
+      SetColor(state->mColor);
+
+    if (state->mLineStyle != mCurrentLineStyle)
+      SetLineStyle(state->mLineStyle);
+    
+
+    // Delete this graphics state object
+    delete state;
+  }
+
+  aClipEmpty = bEmpty;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::IsVisibleRect(const nsRect& aRect,
-                                                   PRBool &aClipEmpty)
+                                                   PRBool &aVisible)
 {
+  aVisible = PR_TRUE;
   return NS_OK;
 }
 
@@ -157,57 +259,127 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
                                                  nsClipCombine aCombine,
                                                  PRBool &aClipEmpty)
 {
-  return NS_OK;
+  nsRect  trect = aRect;
+
+  mTMatrix->TransformCoord(&trect.x, &trect.y,
+                           &trect.width, &trect.height);
+  return SetClipRectInPixels(trect, aCombine, aClipEmpty);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
-  aRect = ((GraphicsState *)mStates->data)->clipRect;
+  if (mRegion != nsnull) {
+    GdkRectangle gdk_rect;
+    ::gdk_region_get_clipbox(mRegion, &gdk_rect);
+    aRect.SetRect(gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height);
+  } else {
+    aRect.SetRect(0,0,0,0);
+    aClipValid = PR_TRUE;
+    return NS_OK;
+  }
+
+  if (::gdk_region_empty (mRegion))
+    aClipValid = PR_TRUE;
+  else
+    aClipValid = PR_FALSE;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
                                                    nsClipCombine aCombine,
-                                                   PRBool &aClipEmpt)
+                                                   PRBool &aClipEmpty)
 {
+  nsRect rect;
+  GdkRectangle gdk_rect;
+
+  nsRegionGTK *pRegion = (nsRegionGTK *)&aRegion;
+  GdkRegion *gdk_region = pRegion->GetGTKRegion();
+  
+  ::gdk_region_get_clipbox (gdk_region, &gdk_rect);
+
+  rect.x = gdk_rect.x;
+  rect.y = gdk_rect.y;
+  rect.width = gdk_rect.width;
+  rect.height = gdk_rect.height;
+
+  SetClipRectInPixels(rect, aCombine, aClipEmpty);
+
+  if (::gdk_region_empty(mRegion))
+    aClipEmpty = PR_TRUE;
+  else
+    aClipEmpty = PR_FALSE;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 {
+  nsIRegion * pRegion ;
+
+  static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
+  static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
+
+  nsresult rv = nsRepository::CreateInstance(kCRegionCID, 
+					     nsnull, 
+					     kIRegionIID, 
+					     (void **)aRegion);
+
+  // XXX this just gets the ClipRect as a region...
+
+  if (NS_OK == rv) {
+    nsRect rect;
+    PRBool clipState;
+    pRegion = (nsIRegion *)&aRegion;
+    pRegion->Init();    
+    GetClipRect(rect, clipState);
+    pRegion->Union(rect.x,rect.y,rect.width,rect.height);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
 {
-  GraphicsState * state = ((GraphicsState *)mStates->data);
-  state->mCurrentColor = aColor;
-
-  ::gdk_rgb_gc_set_foreground(state->gc, (guint32)aColor);
+  ::gdk_rgb_gc_set_foreground(mRenderingSurface->gc, (guint32)aColor);
+  mCurrentColor = aColor;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetColor(nscolor &aColor) const
 {
-  GraphicsState * state = ((GraphicsState *)mStates->data);
-  aColor = state->mCurrentColor;
-
+  aColor = mCurrentColor;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetFont(const nsFont& aFont)
 {
-#if 0
-  if (mFontMetrics)
-    delete mFontMetrics;
-  mFontMetrics = new nsFontMetricsGTK();
-  mFontMetrics.Init(aFont);
-#endif
-  return NS_OK;
+  nsIFontMetrics *fontMetrics;
+  mContext->GetMetricsFor(aFont, fontMetrics);
+  NS_IMETHODIMP result = SetFont(fontMetrics);
+  NS_IF_RELEASE(fontMetrics);
+
+  return result;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetFont(nsIFontMetrics *aFontMetrics)
 {
+  NS_IF_RELEASE(mFontMetrics);
+  mFontMetrics = aFontMetrics;
+  NS_IF_ADDREF(mFontMetrics);
+
+  if (mFontMetrics)
+  {  
+    nsFontHandle  fontHandle;
+    mFontMetrics->GetFontHandle(fontHandle);
+    mCurrentFont = (GdkFont *)fontHandle;
+
+    gdk_gc_set_font(mRenderingSurface->gc,
+                    mCurrentFont);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetLineStyle(nsLineStyle aLineStyle)
@@ -226,26 +398,20 @@ NS_IMETHODIMP nsRenderingContextGTK::GetFontMetrics(nsIFontMetrics *&aFontMetric
 // add the passed in translation to the current translation
 NS_IMETHODIMP nsRenderingContextGTK::Translate(nscoord aX, nscoord aY)
 {
-#if 0
-  mTMatrix->Translate((float)aX, (float)aY);
-#endif
+  mTMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
 // add the passed in scale to the current scale
 NS_IMETHODIMP nsRenderingContextGTK::Scale(float aSx, float aSy)
 {
-#if 0
-	mTMatrix->AddScale(aSx, aSy);
-#endif
+  mTMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetCurrentTransform(nsTransform2D *&aTransform)
 {
-#if 0
-  return mTMatrix;
-#endif
+  aTransform = mTMatrix;
   return NS_OK;
 }
 
@@ -253,26 +419,50 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
                                                           PRUint32 aSurfFlags,
                                                           nsDrawingSurface &aSurface)
 {
+  if (nsnull == mRenderingSurface) {
+    aSurface = nsnull;
+    return NS_ERROR_FAILURE;
+  }
 
-  GdkPixmap *pixmap = gdk_pixmap_new(mRenderingSurface->drawable, aBounds->width,
-                                     aBounds->height, -1);
+  GdkPixmap *pixmap = ::gdk_pixmap_new(mRenderingSurface->drawable, 
+                                       aBounds->width,
+                                       aBounds->height, 
+                                       -1);
 
   nsDrawingSurfaceGTK * surface = new nsDrawingSurfaceGTK();
 
   surface->drawable = pixmap ;
   surface->gc       = mRenderingSurface->gc;
 
-//  return ((nsDrawingSurface)surface);
+  aSurface = (nsDrawingSurface)surface;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
 {
+  nsDrawingSurfaceGTK * surface = (nsDrawingSurfaceGTK *) aDS;
+
+  ::gdk_pixmap_unref (surface->drawable);
+
+  delete surface;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  mTMatrix->TransformCoord(&aX0,&aY0);
+  mTMatrix->TransformCoord(&aX1,&aY1);
+
+  ::gdk_draw_line(mRenderingSurface->drawable, 
+                  mRenderingSurface->gc,
+                  aX0, aY0, aX1, aY1);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
@@ -282,58 +472,186 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawRect(const nsRect& aRect)
 {
+  return DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  ::gdk_draw_rectangle(mRenderingSurface->drawable, mRenderingSurface->gc, 
+                       FALSE, 
+                       x, y, w, h);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::FillRect(const nsRect& aRect)
 {
+  return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  ::gdk_draw_rectangle(mRenderingSurface->drawable, mRenderingSurface->gc, 
+                       TRUE, 
+                       x, y, w, h);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  GdkPoint *pts = new GdkPoint[aNumPoints];
+	for (PRInt32 i = 0; i < aNumPoints; i++)
+  {
+    nsPoint p = aPoints[i];
+		mTMatrix->TransformCoord(&p.x,&p.y);
+		pts[i].x = p.x;
+    pts[i].y = p.y;
+	}
+  ::gdk_draw_polygon(mRenderingSurface->drawable, mRenderingSurface->gc, FALSE, pts, aNumPoints);
+
+  delete[] pts;
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  GdkPoint *pts = new GdkPoint[aNumPoints];
+	for (PRInt32 i = 0; i < aNumPoints; i++)
+  {
+    nsPoint p = aPoints[i];
+		mTMatrix->TransformCoord(&p.x,&p.y);
+		pts[i].x = p.x;
+    pts[i].y = p.y;
+	}
+  ::gdk_draw_polygon(mRenderingSurface->drawable, mRenderingSurface->gc, TRUE, pts, aNumPoints);
+
+  delete[] pts;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(const nsRect& aRect)
 {
+  return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  ::gdk_draw_arc(mRenderingSurface->drawable, mRenderingSurface->gc, FALSE, 
+                 x, y, w, h,
+                 0, 360 * 64);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(const nsRect& aRect)
 {
+  return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  ::gdk_draw_arc(mRenderingSurface->drawable, mRenderingSurface->gc, TRUE, 
+                 x, y, w, h,
+                 0, 360 * 64);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawArc(const nsRect& aRect,
-                   float aStartAngle, float aEndAngle)
+                                             float aStartAngle, float aEndAngle)
 {
+  return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawArc(nscoord aX, nscoord aY,
                                              nscoord aWidth, nscoord aHeight,
                                              float aStartAngle, float aEndAngle)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  ::gdk_draw_arc(mRenderingSurface->drawable, mRenderingSurface->gc, FALSE, 
+                 x, y, w, h,
+                 NSToIntRound(aStartAngle * 64.0f),
+                 NSToIntRound(aEndAngle * 64.0f));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::FillArc(const nsRect& aRect,
                                              float aStartAngle, float aEndAngle)
 {
+  return FillArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
 }
 
 
@@ -341,35 +659,123 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
                                              nscoord aWidth, nscoord aHeight,
                                              float aStartAngle, float aEndAngle)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return NS_ERROR_FAILURE;
+  }
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
+  ::gdk_draw_arc(mRenderingSurface->drawable, mRenderingSurface->gc, TRUE, 
+                 x, y, w, h,
+                 NSToIntRound(aStartAngle * 64.0f),
+                 NSToIntRound(aEndAngle * 64.0f));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(char aC, nscoord &aWidth)
 {
+  char buf[1];
+  buf[0] = aC;
+  return GetWidth(buf, 1, aWidth);
 }
+
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(PRUnichar aC, nscoord &aWidth)
 {
+  PRUnichar buf[1];
+  buf[0] = aC;
+  return GetWidth(buf, 1, aWidth);
 }
+
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const nsString& aString, nscoord &aWidth)
 {
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
+
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString, nscoord &aWidth)
 {
+  return GetWidth(aString, strlen(aString), aWidth);
 }
+
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const char *aString,
                                               PRUint32 aLength, nscoord &aWidth)
 {
+  PRInt32     rc;
+
+  GdkFont *font = (GdkFont *)mCurrentFont;
+  rc = gdk_text_width (font, aString, aLength);
+  aWidth = nscoord(rc * mP2T);
+
+  return NS_OK;
 }
+
+
+
 NS_IMETHODIMP nsRenderingContextGTK::GetWidth(const PRUnichar *aString,
                                               PRUint32 aLength, nscoord &aWidth)
 {
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
-                                                nscoord aX, nscoord aY,
-                                                nscoord aWidth,
-                                                const nscoord* aSpacing)
+NS_IMETHODIMP 
+nsRenderingContextGTK::DrawString(const char *aString, PRUint32 aLength,
+                                  nscoord aX, nscoord aY,
+                                  nscoord aWidth,
+                                  const nscoord* aSpacing)
 {
+  nscoord x = aX;
+  nscoord y = aY;
+
+  // Substract xFontStruct ascent since drawing specifies baseline
+  if (mFontMetrics) {	  
+    mFontMetrics->GetMaxAscent(y);
+    y+=aY;
+  }
+
+  mTMatrix->TransformCoord(&x,&y);
+
+  ::gdk_draw_text (mRenderingSurface->drawable, NULL,
+                   mRenderingSurface->gc,
+                   x, y, aString, aLength);
+
+  if (mFontMetrics)
+  {
+    nsFont *font;
+    mFontMetrics->GetFont(font);
+    PRUint8 deco = font->decorations;
+
+    if (deco & NS_FONT_DECORATION_OVERLINE)
+      DrawLine(aX, aY, aX + aWidth, aY);
+
+    if (deco & NS_FONT_DECORATION_UNDERLINE)
+    {
+      nscoord ascent,descent;
+
+	  mFontMetrics->GetMaxAscent(ascent);
+      mFontMetrics->GetMaxDescent(descent);
+
+      DrawLine(aX, aY + ascent + (descent >> 1),
+               aX + aWidth, aY + ascent + (descent >> 1));
+    }
+
+    if (deco & NS_FONT_DECORATION_LINE_THROUGH)
+    {
+      nscoord height;
+	  
+	  mFontMetrics->GetHeight(height);
+
+      DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
+    }
+  }
+
+  return NS_OK;
 }
+
 NS_IMETHODIMP nsRenderingContextGTK::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                                 nscoord aX, nscoord aY,
                                                 nscoord aWidth,
@@ -386,251 +792,173 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawString(const nsString& aString,
 
 NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
+  nscoord width,height;
+  width = NSToCoordRound(mP2T * aImage->GetWidth());
+  height = NSToCoordRound(mP2T * aImage->GetHeight());
+  
+  return DrawImage(aImage,aX,aY,width,height);
 }
+
 NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                      nscoord aWidth, nscoord aHeight)
 {
-}
-NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, const nsRect& aRect)
-{
-}
-NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
-{
-}
-
-NS_IMETHODIMP nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                               const nsRect &aDestBounds, PRUint32 aCopyFlags)
-{
-}
-
-  //locals
-NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
-{
-}
-NS_IMETHODIMP nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
-{
-}
-
-
-#if 0
-void nsRenderingContextGTK :: DestroyDrawingSurface(nsDrawingSurface aDS)
-{
-  nsDrawingSurfaceGTK * surface = (nsDrawingSurfaceGTK *) aDS;
-
-  gdk_pixmap_unref(surface->drawable);
-
-  delete aDS;
-}
-
-void nsRenderingContextGTK :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
-{
-  mTMatrix->TransformCoord(&aX0, &aY0);
-  mTMatrix->TransformCoord(&aX1, &aY1);
-  gdk_draw_line(mRenderingSurface->drawable, mRenderingSurface->gc, aX0, aX1, aY0, aY1);
-}
-
-void nsRenderingContextGTK :: DrawRect(const nsRect& aRect)
-{
-  DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-void nsRenderingContextGTK :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-  gdk_draw_rect(mRenderingSurface->drawable, mRenderingSurface->gc, FALSE, aX, aY, aWidth, aHeight);
-}
-
-void nsRenderingContextGTK :: FillRect(const nsRect& aRect)
-{
-  FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-void nsRenderingContextGTK :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-  gdk_draw_rect(mRenderingSurface->drawable, mRenderingSurface->gc, TRUE, aX, aY, aWidth, aHeight);
-}
-
-
-void nsRenderingContextGTK::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
-{
-  GdkPoint *pts = new GdkPoint[aNumPoints];
-	for (PRInt32 i = 0; i < aNumPoints; i++)
-  {
-    nsPoint p = aPoints[i];
-		mTMatrix->TransformCoord(&p.x,&p.y);
-		pts[i]->x = p.x;
-    pts[i]->y = p.y;
-	}
-  gdk_draw_polygon(mRenderingSurface->drawable, mRenderingSurface->gc, FALSE, pts, aNumPoints);
-}
-
-void nsRenderingContextGTK::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
-{
-  GdkPoint *pts = new GdkPoint[aNumPoints];
-	for (PRInt32 i = 0; i < aNumPoints; i++)
-  {
-    nsPoint p = aPoints[i];
-		mTMatrix->TransformCoord(&p.x,&p.y);
-		pts[i]->x = p.x;
-    pts[i]->y = p.y;
-	}
-  /* XXXshaver common code! */
-  gdk_draw_polygon(mRenderingSurface->drawable, mRenderingSurface->gc, TRUE, pts, aNumPoints);
-}
-
-void nsRenderingContextGTK :: DrawEllipse(const nsRect& aRect)
-{
-  DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-void nsRenderingContextGTK :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-  gdk_draw_arc(mRenderingSurface->drawable, mRenderingSurface->gc, FALSE, aX, aY, aWidth, aHeight,
-               0, 360 * 64);
-}
-
-void nsRenderingContextGTK :: FillEllipse(const nsRect& aRect)
-{
-  FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-void nsRenderingContextGTK :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-  gdk_draw_arc(mRenderingSurface->drawable, mRenderingSurface->gc, TRUE, aX, aY, aWidth, aHeight,
-               0, 360 * 64);
-}
-
-void nsRenderingContextGTK :: DrawArc(const nsRect& aRect,
-                                 float aStartAngle, float aEndAngle)
-{
-  this->DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
-}
-
-void nsRenderingContextGTK :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                                 float aStartAngle, float aEndAngle)
-{
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-  gdk_draw_arc(mRenderingSurface->drawable, mRenderingSurface->gc, FALSE, aX, aY, aWidth, aHeight,
-               aStartAngle * 64, aEndAngle * 64);
-}
-
-void nsRenderingContextGTK :: FillArc(const nsRect& aRect,
-                                 float aStartAngle, float aEndAngle)
-{
-  this->FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
-}
-
-void nsRenderingContextGTK :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                                 float aStartAngle, float aEndAngle)
-{
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
-  gdk_draw_arc(mRenderingSurface->drawable, mRenderingSurface->gc, TRUE, aX, aY, aWidth, aHeight,
-               aStartAngle * 64, aEndAngle * 64);
-}
-
-void nsRenderingContextGTK :: DrawString(const char *aString, PRUint32 aLength,
-                                    nscoord aX, nscoord aY,
-                                    nscoord aWidth)
-{
-  mTMatrix->TransformCoord(&aX, &aY);
-  gdk_draw_string(mRenderingSurface->drawable, NULL, mRenderingSurface->gc, aX, aY);
-}
-
-void nsRenderingContextGTK :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                         nscoord aX, nscoord aY, nscoord aWidth)
-{
-  PR_ASSERT(0);
-}
-
-void nsRenderingContextGTK :: DrawString(const nsString& aString,
-                                         nscoord aX, nscoord aY, nscoord aWidth)
-{
-  mTMatrix->TransformCoord(&aX, &aY);
-  if (aString.Length() > 0) {
-    char * buf ;
-    
-    buf = (char *) malloc(sizeof(char) * (aString.Length()+1));
-
-    buf[aString.Length()] = '\0';
-
-    aString.ToCString(buf, aString.Length());
-
-    gdk_draw_string(mRenderingSurface->drawable, NULL, mRenderingSurface->gc,
-                    aX, aY, buf);
-
-    free(buf);
-  }
-}
-
-void nsRenderingContextGTK :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
-{
-  nscoord width, height;
-
-  width = NS_TO_INT_ROUND(mP2T * aImage->GetWidth());
-  height = NS_TO_INT_ROUND(mP2T * aImage->GetHeight());
-
-  this->DrawImage(aImage, aX, aY, width, height);
-}
-
-void nsRenderingContextGTK :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
-                                        nscoord aWidth, nscoord aHeight) 
-{
-  nsRect  tr;
+  nsRect	tr;
 
   tr.x = aX;
   tr.y = aY;
   tr.width = aWidth;
   tr.height = aHeight;
 
-  this->DrawImage(aImage, tr);
+  return DrawImage(aImage,tr);
 }
 
-void nsRenderingContextGTK :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
-{
-  nsRect	sr,dr;
-
-	sr = aSRect;
-	mTMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
-
-  dr = aDRect;
-	mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
-
-  ((nsImageGTK *)aImage)->Draw(*this, mDC, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
-}
-
-void nsRenderingContextGTK :: DrawImage(nsIImage *aImage, const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
   nsRect	tr;
 
-	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
-
-  ((nsImageGTK *)aImage)->Draw(*this, mDC, tr.x, tr.y, tr.width, tr.height);
+  tr = aRect;
+  mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+  
+  return aImage->Draw(*this,mRenderingSurface,tr.x,tr.y,tr.width,tr.height);
 }
 
-nsresult nsRenderingContextGTK :: CopyOffScreenBits(nsRect &aBounds)
+NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
-  gdk_window_copy_area(mRenderingSurface->drawable, mRenderingSurface->gc, 
-                       aBounds.x, aBounds.y, mOffScreenSurface->drawable,
-                       0, 0, aBounds.width, aBounds.height);
+  nsRect	sr,dr;
+  
+  sr = aSRect;
+  mTMatrix ->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
+
+  dr = aDRect;
+  mTMatrix->TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
+  
+  return aImage->Draw(*this,mRenderingSurface,sr.x,sr.y,sr.width,sr.height,
+                      dr.x,dr.y,dr.width,dr.height);
+}
+
+NS_IMETHODIMP 
+nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf, 
+                                         PRInt32 aSrcX, PRInt32 aSrcY,
+                                         const nsRect &aDestBounds, 
+                                         PRUint32 aCopyFlags)
+{
+  PRInt32               x = aSrcX;
+  PRInt32               y = aSrcY;
+  nsRect                drect = aDestBounds;
+  nsDrawingSurfaceGTK  *destsurf;
+
+  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
+  {
+    NS_ASSERTION(!(nsnull == mRenderingSurface), "no back buffer");
+    destsurf = mRenderingSurface;
+  }
+  else
+    destsurf = mOffscreenSurface;
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+    mTMatrix->TransformCoord(&x, &y);
+
+  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+    mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
+
+  //XXX flags are unused. that would seem to mean that there is
+  //inefficiency somewhere... MMP
+
+  ::gdk_draw_pixmap(((nsDrawingSurfaceGTK *)aSrcSurf)->drawable,
+                    ((nsDrawingSurfaceGTK *)aSrcSurf)->gc,
+                    destsurf->drawable,
+                    x, y,                   
+                    drect.x, drect.y,
+                    drect.width, drect.height);
 
   return NS_OK;
 }
-#endif /* 0 */
 
+//locals
+NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
+{
+  mContext->GetDevUnitsToAppUnits(mP2T);
+}
 
+NS_IMETHODIMP
+nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect, 
+                                           nsClipCombine aCombine,
+                                           PRBool &aClipEmpty)
+{
+  PRBool bEmpty = PR_FALSE;
 
+  nsRect  trect = aRect;
 
+  GdkRectangle gdk_rect;
+  GdkRegion *tRegion;
 
+  gdk_rect.x = trect.x;
+  gdk_rect.y = trect.y;
+  gdk_rect.width = trect.width;
+  gdk_rect.height = trect.height;
 
+  tRegion = ::gdk_region_new();
+  GdkRegion *a = ::gdk_region_union_with_rect(tRegion, &gdk_rect);
+  gdk_region_destroy (tRegion);
 
+  if (aCombine == nsClipCombine_kIntersect)
+  {
+    if (nsnull != mRegion) {
+      tRegion = gdk_regions_intersect (mRegion, a);
+      ::gdk_region_destroy(mRegion);
+      ::gdk_region_destroy(a);
+      mRegion = tRegion;
+    } else {
+      mRegion = a;
+    }
 
+  }
+  else if (aCombine == nsClipCombine_kUnion)
+  {
+    if (nsnull != mRegion) {
+      tRegion = gdk_regions_union (mRegion, a);
+      ::gdk_region_destroy(mRegion);
+      ::gdk_region_destroy(a);
+      mRegion = tRegion;
+    } else {
+      mRegion = a;
+    }
 
+  }
+  else if (aCombine == nsClipCombine_kSubtract)
+  {
+    if (nsnull != mRegion) {
+      tRegion = gdk_regions_subtract (mRegion, a);
+      ::gdk_region_destroy(mRegion);
+      ::gdk_region_destroy(a);
+      mRegion = tRegion;
+    } else {
+      mRegion = a;
+    }
 
+  }
+  else if (aCombine == nsClipCombine_kReplace)
+  {
+    if (nsnull != mRegion)
+      ::gdk_region_destroy(mRegion);
 
+    mRegion = a;
 
+  }
+  else
+    NS_ASSERTION(PR_FALSE, "illegal clip combination");
 
+  if (::gdk_region_empty(mRegion) == True) {
 
+    bEmpty = PR_TRUE;
+    ::gdk_gc_set_clip_region(mRenderingSurface->gc, NULL);
+
+  } else {
+
+    ::gdk_gc_set_clip_region(mRenderingSurface->gc, mRegion);
+  }
+
+  aClipEmpty = bEmpty;
+
+  return NS_OK;
+}
