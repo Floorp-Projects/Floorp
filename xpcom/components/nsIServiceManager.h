@@ -217,7 +217,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 // Using servicemanager with COMPtrs
 
-class NS_EXPORT nsGetServiceByCID : public nsCOMPtr_helper
+class NS_COM nsGetServiceByCID : public nsCOMPtr_helper
   {
     public:
       nsGetServiceByCID( const nsCID& aCID, nsISupports* aServiceManager, nsresult* aErrorPtr )
@@ -251,7 +251,7 @@ do_GetService( const nsCID& aCID, nsISupports* aServiceManager, nsresult* error 
     return nsGetServiceByCID(aCID, aServiceManager, error);
   }
 
-class NS_EXPORT nsGetServiceByProgID : public nsCOMPtr_helper
+class NS_COM nsGetServiceByProgID : public nsCOMPtr_helper
   {
     public:
       nsGetServiceByProgID( const char* aProgID, nsISupports* aServiceManager, nsresult* aErrorPtr )

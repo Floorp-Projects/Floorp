@@ -302,7 +302,7 @@ class nsCOMPtr_helper
       virtual nsresult operator()( const nsIID&, void** ) const = 0;
   };
 
-class NS_EXPORT nsQueryInterface : public nsCOMPtr_helper
+class NS_COM nsQueryInterface : public nsCOMPtr_helper
   {
     public:
       nsQueryInterface( nsISupports* aRawPtr, nsresult* error )

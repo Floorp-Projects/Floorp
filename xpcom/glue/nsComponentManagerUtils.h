@@ -178,7 +178,7 @@ public:
 };
 
 
-class NS_EXPORT nsCreateInstanceByCID : public nsCOMPtr_helper
+class NS_COM nsCreateInstanceByCID : public nsCOMPtr_helper
 	{
 		public:
 			nsCreateInstanceByCID( const nsCID& aCID, nsISupports* aOuter, nsresult* aErrorPtr )
@@ -197,7 +197,7 @@ class NS_EXPORT nsCreateInstanceByCID : public nsCOMPtr_helper
 			nsresult*			mErrorPtr;
 	};
 
-class NS_EXPORT nsCreateInstanceByProgID : public nsCOMPtr_helper
+class NS_COM nsCreateInstanceByProgID : public nsCOMPtr_helper
 	{
 		public:
 			nsCreateInstanceByProgID( const char* aProgID, nsISupports* aOuter, nsresult* aErrorPtr )
