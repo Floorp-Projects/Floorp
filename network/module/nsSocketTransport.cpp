@@ -87,17 +87,42 @@ NS_METHOD nsSocketTransport::Open(nsIURL *pURL)
 
 	  NS_IF_ADDREF(pURL);
 	  m_url = pURL;
-      pURL->SetHostPort(m_port);
-	  const char * hostName = nsnull;
-	  pURL->GetHost(&hostName);
-	  if (hostName)
+
+	  if (!m_isFileConnection)
 	  {
-		  PR_FREEIF(m_hostName);
-		  m_hostName = PL_strdup(hostName);
+		  pURL->SetHostPort(m_port);
+		  const char * hostName = nsnull;
+		  pURL->GetHost(&hostName);
+		  if (hostName)
+		  {
+			  PR_FREEIF(m_hostName);
+			  m_hostName = PL_strdup(hostName);
+		  }
 	  }
+
+	  // mscott --> okay here's where the fact that the transport implementation is just a hack on
+	  // the old world comes in....right now this transport class supports both socket and file based
+	  // connections. The protocol is blind to this. They just gave us a url like: news://newshost.
+	  // this particular url wants a network based socket so we need to use the sockstub hack. In order
+	  // to do this, we need to change the protocol part of the url string to sockstub....
+	  // if the url wants a file based socket connection, we change the protocol part of the url to
+	  // file:// and piggy back off of the file protocol code. Why do we do this here? Well the rest of the
+	  // app (both the app who runs the url and the protocol which is handling the url) can use protocol
+	  // url parts like imap, mailbox, http, etc. Then when they are done with it and hand it to us for
+	  // the underlying socket to be opened, we can turn around and tweek the protocol name to use the old
+	  // world technology to build it (sockstub and file).
+
+	  if (m_isFileConnection)
+		  pURL->SetProtocol("file");
+	  else // we want a network socket so use sockstub
+		  pURL->SetProtocol("sockstub");
+
+	  // now the right protocol is set for the old networking world to use to complete the task
+	  // so we can open it now..
 
 	  // running this url will cause a connection to be made on the socket.
 	  rv = NS_OpenURL(pURL, m_inputStreamConsumer);
+
 	  m_socketIsOpen = PR_TRUE;
   }
 
@@ -260,27 +285,51 @@ nsSocketTransport::nsSocketTransport(PRUint32 aPortToUse, const char * aHostName
   else
 	  m_hostName = PL_strdup("");
 
-  m_inputStream = NULL;
-  m_inputStreamConsumer = NULL;
-  m_url = NULL;
+  m_isFileConnection = PR_FALSE;
 
-  m_outStream = NULL;
-  m_outStreamSize = 0;
-  m_socketIsOpen = PR_FALSE; // initially, we have not opened the socket...
+  // common initialization code 
+  Initialize();
+}
 
-  /*
-   * Cache the EventQueueService...
-   */
-  // XXX: What if this fails?
+nsSocketTransport::nsSocketTransport(const char * fileName)
+{
+    NS_INIT_REFCNT();
+
+	NS_PRECONDITION(fileName && *fileName, "Creating a socket with an invalid file name.");
+	if (fileName)
+	{
+		m_fileName = PL_strdup(fileName);
+	}
+
+	m_isFileConnection = PR_TRUE;
+
+	// common initialization code 
+	Initialize();
+}
+
+void nsSocketTransport::Initialize()
+{
+	m_inputStream = NULL;
+	m_inputStreamConsumer = NULL;
+	m_url = NULL;
+
+	m_outStream = NULL;
+	m_outStreamSize = 0;
+	m_socketIsOpen = PR_FALSE; // initially, we have not opened the socket...
+
+	/*
+	* Cache the EventQueueService...
+	*/
+	// XXX: What if this fails?
   
-  mEventQService = nsnull;
-  m_evQueue = nsnull;
-  nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
+	mEventQService = nsnull;
+	m_evQueue = nsnull;
+	nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
 					     kIEventQueueServiceIID,
 					     (nsISupports **)&mEventQService);
 
-  if (nsnull != mEventQService) 
-    mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &m_evQueue);
+	if (nsnull != mEventQService) 
+		mEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &m_evQueue);
 }
 
 nsSocketTransport::~nsSocketTransport()

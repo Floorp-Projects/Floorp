@@ -72,7 +72,10 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsSocketTransport:
 
+	// we have two types of connections: socket and file based....
     nsSocketTransport(PRUint32 aPortToUse, const char * aHostName);
+	nsSocketTransport(const char * fileName); 
+
     virtual ~nsSocketTransport(void);
     NS_IMETHOD GetURLInfo(nsIURL* pURL, URL_Struct_ **aResult);
 
@@ -81,16 +84,21 @@ public:
 	// net lib world...
 	PRUint32 GetPort() {return m_port;}
 	const char * GetHostName() { return m_hostName;}
+	const char * GetFileName() { return m_fileName;}
 
 protected:
 
 	// use this function to close the underlying connection....
 	nsresult CloseCurrentConnection();
+	// common initialization code..
+	void Initialize();
 
 	// socket specific information...
 	PRUint32	m_port;
 	char	   *m_hostName;
+	char	   *m_fileName;
 	PRBool	    m_socketIsOpen; // set when we have opened a socket....
+	PRBool		m_isFileConnection;
 
     // the stream we write data from the socket into
     nsIInputStream * m_inputStream;  
