@@ -75,7 +75,6 @@ public:
   nsDownloadManager();
   virtual ~nsDownloadManager();
 
-  static void DownloadCallback(nsITimer *aTimer, void *aClosure);
   static PRInt32 PR_CALLBACK CancelAllDownloads(nsHashKey* aKey, void* aData, void* aClosure);
   nsresult DownloadEnded(const char* aPersistentDescriptor, const PRUnichar* aMessage); 
 

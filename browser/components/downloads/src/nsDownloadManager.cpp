@@ -70,7 +70,6 @@ static PRBool gQuitting = PR_FALSE;
 #define DOWNLOAD_MANAGER_FE_URL "chrome://browser/content/downloadmanager/downloadmanager.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://browser/locale/downloadmanager/downloadmanager.properties"
 #define INTERVAL 500
-#define DOWNLOAD_ENDED_TIMEOUT 10000
 
 nsIRDFResource* gNC_DownloadsRoot;
 nsIRDFResource* gNC_File;
@@ -115,17 +114,6 @@ nsDownloadManager::~nsDownloadManager()
   nsServiceManager::ReleaseService("@mozilla.org/observer-service;1", gObserverService);                
   gObserverService = nsnull;                                                         
 
-}
-
-void nsDownloadManager::DownloadCallback(nsITimer *aTimer, void *aClosure)
-{
-  nsDownload* download = NS_STATIC_CAST(nsDownload*, aClosure);
-
-  nsCAutoString path;
-  nsresult rv = download->mTarget->GetNativePath(path);
-  if (NS_FAILED(rv)) return;
-
-  download->mDownloadManager->DownloadEnded(path.get(), nsnull);
 }
 
 PRInt32 PR_CALLBACK nsDownloadManager::CancelAllDownloads(nsHashKey* aKey, void* aData, void* aClosure)
@@ -1009,16 +997,8 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
     nsCAutoString path;
     nsresult rv = mTarget->GetNativePath(path);
     if (NS_SUCCEEDED(rv)) {
-      gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-failed", nsnull);
-      
-      if (mTimer)
-        mTimer->Cancel();
-    
-      if (!mTimer)
-        mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-      if (NS_FAILED(rv)) return rv;
-      
-      mTimer->InitWithFuncCallback(nsDownloadManager::DownloadCallback, this, DOWNLOAD_ENDED_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
+      mDownloadManager->DownloadEnded(path.get(), nsnull);
+      gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-failed", nsnull);                     
     }
   }
 
@@ -1085,14 +1065,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       nsresult rv = mTarget->GetNativePath(path);
       if (NS_FAILED(rv)) return rv;
 
-      if (mTimer)
-        mTimer->Cancel();
-
-      if (!mTimer)
-        mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-      if (NS_FAILED(rv)) return rv;
-    
-      mTimer->InitWithFuncCallback(nsDownloadManager::DownloadCallback, this, DOWNLOAD_ENDED_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
+      mDownloadManager->DownloadEnded(path.get(), nsnull);
     }
 
     // break the cycle we created in AddDownload
