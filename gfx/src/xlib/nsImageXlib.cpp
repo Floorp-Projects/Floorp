@@ -412,7 +412,7 @@ void nsImageXlib::UpdateCachedImage()
                      XLIB_RGB_DITHER_MAX,
                      mImageBits + mRowBytes * rect->y + 3 * rect->x,
                      mRowBytes,
-                     aUpdateRect->x, aUpdateRect->y);
+                     rect->x, rect->y);
     }
   }
 
