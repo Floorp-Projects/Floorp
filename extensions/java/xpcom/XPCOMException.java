@@ -37,26 +37,28 @@
 
 package org.mozilla.xpcom;
 
+
+/**
+ * This exception is thrown whenever an internal XPCOM/Gecko error occurs.
+ * The internal Mozilla error ID is contained in the message.
+ */
 public final class XPCOMException extends RuntimeException {
 
+  /**
+   * Constructs a new XPCOMException instance.
+   */
   public XPCOMException() {
     super();
   }
 
+  /**
+   * Constructs a new XPCOMException instance.
+   *
+   * @param message  detailed message of exception
+   */
   public XPCOMException(String message) {
     super(message);
   }
 
-  /* The RuntimeException constructors that take a Throwable parameter are only
-     available starting in Java 1.4.  Commenting out for now to allow use by
-     Java 1.3
-   */
-/*  public XPCOMException(String message, Throwable cause) {
-    super(message, cause);
-  }
-
-  public XPCOMException(Throwable cause) {
-    super(cause);
-  }*/
 }
 

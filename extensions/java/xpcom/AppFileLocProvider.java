@@ -39,8 +39,33 @@ package org.mozilla.xpcom;
 
 import java.io.*;
 
+
+/**
+ * Used by XPCOM's Directory Service to get file locations.
+ *
+ * @see GeckoEmbed#initEmbedding
+ * @see XPCOM#initXPCOM
+ */
 public interface AppFileLocProvider {
 
+  /**
+   * Directory Service calls this when it gets the first request for
+   * a prop or on every request if the prop is not persistent.
+   *
+   * @param prop        the symbolic name of the file
+   * @param persistent  an array of length one used to supply the output value: <ul>
+   *                    <li><code>true</code> - The returned file will be cached
+   *                    by Directory Service. Subsequent requests for this prop
+   *                    will bypass the provider and use the cache. </li>
+   *                    <li><code>false</code> - The provider will be asked for
+   *                    this prop each time it is requested. </li>
+   * </ul>
+   *
+   * @return            the file represented by the property
+   *
+   * @see <a href="http://lxr.mozilla.org/mozilla/source/xpcom/io/nsDirectoryServiceDefs.h">
+   *      Directory Service property names </a>
+   */
   public File getFile(String prop, boolean[] persistent);
 
 }
