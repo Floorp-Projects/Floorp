@@ -71,6 +71,11 @@ NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;                                        
   }                                                  
   *aInstancePtr = NULL;
+  if (aIID.Equals(nsITimerCallback::GetIID())) {                           
+    *aInstancePtr = (void*)(nsITimerCallback*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
   return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
 
@@ -232,13 +237,20 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
       }
     }
   }
-  else if (aEvent->message == NS_MOUSE_MOVE) {
+  else if (aEvent->message == NS_MOUSE_MOVE && mMenuParent) {
     // Let the menu parent know we're the new item.
-    if (mMenuParent)
-      mMenuParent->SetCurrentMenuItem(this);
+    mMenuParent->SetCurrentMenuItem(this);
+
+    PRBool isMenuBar = PR_TRUE;
+    mMenuParent->IsMenuBar(isMenuBar);
 
     // If we're a menu (and not a menu item),
     // kick off the timer.
+    if (!isMenuBar && IsMenu() && !mMenuOpen && !mOpenTimer) {
+      // We're a menu, we're closed, and no timer has been kicked off.
+      NS_NewTimer(getter_AddRefs(mOpenTimer));
+      mOpenTimer->Init(this, 250);   // 250 ms delay
+    }
   }
   return NS_OK;
 }
@@ -441,4 +453,19 @@ nsMenuFrame::IsMenu()
   if (tag.get() == nsXULAtoms::xpmenu)
     return PR_TRUE;
   return PR_FALSE;
+}
+
+void
+nsMenuFrame::Notify(nsITimer* aTimer)
+{
+  // Our timer has fired.
+  if (!mMenuOpen && mMenuParent) {
+    nsAutoString active = "";
+    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, active);
+    if (active == "true") {
+      // We're still the active menu.
+      OpenMenu(PR_TRUE);
+    }
+  }
+  mOpenTimer = nsnull;
 }

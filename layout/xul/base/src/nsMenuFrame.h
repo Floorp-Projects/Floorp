@@ -31,19 +31,23 @@
 #include "nsFrameList.h"
 #include "nsIMenuParent.h"
 #include "nsITimer.h"
+#include "nsITimerCallback.h"
 
 nsresult NS_NewMenuFrame(nsIFrame** aResult, PRUint32 aFlags) ;
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
 
-class nsMenuFrame : public nsBoxFrame
+class nsMenuFrame : public nsBoxFrame, public nsITimerCallback
 {
 public:
   nsMenuFrame();
 
   NS_DECL_ISUPPORTS
   
+  // The nsITimerCallback interface
+  virtual void Notify(nsITimer *timer);
+
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
@@ -95,7 +99,7 @@ public:
   void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
 
   void GetMenuParent(nsIMenuParent** aResult) { NS_IF_ADDREF(mMenuParent); *aResult = mMenuParent; };
-
+ 
 protected:
   void GetMenuChildrenElement(nsIContent** aResult);
 
