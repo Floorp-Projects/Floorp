@@ -30,6 +30,8 @@ EXPORTS = \
 	nsSmtpUrl.h	\
 	nsSmtpProtocol.h \
 	nsSmtpService.h \
+	nsComposeAppCore.h \
+	nsComposer.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -41,6 +43,10 @@ CPPSRCS = \
 	nsMsgSend.cpp \
 	nsMsgSendPart.cpp \
 	nsSmtpService.cpp \
+	nsJSComposeAppCore.cpp \
+	nsComposeAppCore.cpp \
+	nsComposer.cpp \
+	nsComposerNameSet.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -26,6 +26,8 @@
 /* Include all of the interfaces our factory can generate components for */
 #include "nsISmtpService.h"
 #include "nsSmtpService.h"
+#include "nsComposer.h"
+#include "nsComposeAppCore.h"
 #include "nsMsgComposeFact.h"
 #include "nsMsgCompFieldsFact.h"
 #include "nsMsgSendFact.h"
@@ -39,6 +41,11 @@ static NS_DEFINE_CID(kCMsgComposeCID, NS_MSGCOMPOSE_CID);
 static NS_DEFINE_CID(kCMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_CID(kCMsgSendCID, NS_MSGSEND_CID);
 static NS_DEFINE_CID(kCSmtpServiceCID, NS_SMTPSERVICE_CID);
+static NS_DEFINE_CID(kCComposeAppCoreCID, NS_COMPOSEAPPCORE_CID);
+static NS_DEFINE_CID(kCComposerBootstrapCID, NS_COMPOSERBOOTSTRAP_CID);
+static NS_DEFINE_CID(kCComposerCID, NS_COMPOSER_CID);
+
+
 
 ////////////////////////////////////////////////////////////
 //
@@ -52,7 +59,10 @@ public:
 	// nsISupports methods
 	NS_DECL_ISUPPORTS 
 
-    nsMsgComposeFactory(const nsCID &aClass); 
+    nsMsgComposeFactory(const nsCID &aClass,
+               const char* aClassName,
+               const char* aProgID,
+               nsISupports*); 
 
     // nsIFactory methods   
     NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
@@ -62,18 +72,34 @@ public:
     virtual ~nsMsgComposeFactory();   
 
   private:  
-    nsCID     mClassID;
+    nsCID mClassID;
+	char* mClassName;
+	char* mProgID;
+	nsIServiceManager* mServiceManager;
 };   
 
-nsMsgComposeFactory::nsMsgComposeFactory(const nsCID &aClass)   
+nsMsgComposeFactory::nsMsgComposeFactory(const nsCID &aClass,
+                           const char* aClassName,
+                           const char* aProgID,
+                           nsISupports *compMgrSupports)   
+  : mClassID(aClass),
+    mClassName(nsCRT::strdup(aClassName)),
+    mProgID(nsCRT::strdup(aProgID))
 {   
 	NS_INIT_REFCNT();
-	mClassID = aClass;
+
+	// store a copy of the 
+  compMgrSupports->QueryInterface(nsIServiceManager::GetIID(),
+                                  (void **)&mServiceManager);
 }   
 
 nsMsgComposeFactory::~nsMsgComposeFactory()   
 {   
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+
+	NS_IF_RELEASE(mServiceManager);
+	delete[] mClassName;
+	delete[] mProgID;
 }   
 
 nsresult nsMsgComposeFactory::QueryInterface(const nsIID &aIID, void **aResult)   
@@ -121,39 +147,49 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 	// So, if you add a component here and it doesn't ref count when you create it then you might
 	// have a problem....
 	
-	if (mClassID.Equals(kCSmtpServiceCID))
-	{
+	if (mClassID.Equals(kCSmtpServiceCID)) {
 		nsSmtpService * smtpService = new nsSmtpService();
 		// okay now turn around and give inst a handle on it....
 		smtpService->QueryInterface(kISupportsIID, (void **) &inst);
 	}
 	// do they want an Message Compose interface ?
-	if (mClassID.Equals(kCMsgComposeCID))
-	{
+	else if (mClassID.Equals(kCMsgComposeCID)) {
 		res = NS_NewMsgCompose((nsIMsgCompose **) &inst);
-		if (res != NS_OK)  // was there a problem creating the object ?
-		  return res;   
+		if (res != NS_OK) return res;   
 	}
 
 	// do they want an Message Compose Fields interface ?
-	if (mClassID.Equals(kCMsgCompFieldsCID))
-	{
+	else if (mClassID.Equals(kCMsgCompFieldsCID)) {
 		res = NS_NewMsgCompFields((nsIMsgCompFields **) &inst);
-		if (res != NS_OK)  // was there a problem creating the object ?
-		  return res;   
+		if (res != NS_OK) return res;   
 	}
 
 	// do they want an Message Send interface ?
-	if (mClassID.Equals(kCMsgSendCID))
-	{
+	else if (mClassID.Equals(kCMsgSendCID)) {
 		res = NS_NewMsgSend((nsIMsgSend **) &inst);
-		if (res != NS_OK)  // was there a problem creating the object ?
-		  return res;  
+		if (res != NS_OK) return res;  
 	}
 
-	// End of checking the interface ID code....
-	if (inst)
+	// do they want an Compose AppCore interface ?
+    else if (mClassID.Equals(kCComposeAppCoreCID)) {
+        res = NS_NewComposeAppCore((nsIDOMComposeAppCore **)&inst);
+		if (res != NS_OK) return res;  
+    }
+
+	else if (mClassID.Equals(kCComposerBootstrapCID)) 
 	{
+		res = NS_NewComposerBootstrap((nsIAppShellService**)&inst, mServiceManager);
+		if (NS_FAILED(res)) return res;
+	}
+	else if (mClassID.Equals(kCComposerCID)) 
+	{
+		res = NS_NewComposer((nsIComposer**)&inst);
+		if (NS_FAILED(res)) return res;
+	}
+
+
+	// End of checking the interface ID code....
+	if (inst) {
 		// so we now have the class that supports the desired interface...we need to turn around and
 		// query for our desired interface.....
 		res = inst->QueryInterface(aIID, aResult);
@@ -187,14 +223,12 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-	// If we decide to implement multiple factories in the msg.dll, then we need to check the class
-	// type here and create the appropriate factory instead of always creating a nsMsgComposeFactory...
-	*aFactory = new nsMsgComposeFactory(aClass);
-
+	*aFactory = new nsMsgComposeFactory(aClass, aClassName, aProgID, aServMgr);
 	if (aFactory)
-		return (*aFactory)->QueryInterface(nsIFactory::GetIID(), (void**)aFactory); // they want a Factory Interface so give it to them
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
+		return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
+									   (void**)aFactory);
+		else
+			return NS_ERROR_OUT_OF_MEMORY;
 }
 
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
@@ -204,24 +238,62 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+	nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+	if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
+	nsIComponentManager* compMgr;
+	rv = servMgr->GetService(kComponentManagerCID, 
+						   nsIComponentManager::GetIID(), 
+						   (nsISupports**)&compMgr);
+	if (NS_FAILED(rv)) return rv;
 
-	rv = compMgr->RegisterComponent(kCMsgComposeCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-	rv = compMgr->RegisterComponent(kCSmtpServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-	rv = compMgr->RegisterComponent(kCMsgCompFieldsCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-	rv = compMgr->RegisterComponent(kCMsgSendCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+	// register the message compose factory
+	rv = compMgr->RegisterComponent(kCSmtpServiceCID,
+										"SMTP Service", nsnull,
+										path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kCMsgCompFieldsCID,
+										"Compose Fields",
+										nsnull, path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kCMsgSendCID,
+										"Message Send",
+										nsnull, path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kCMsgComposeCID,
+										"Message Compose",
+										nsnull,
+										path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kCComposerCID,
+										"Message Composer",
+										"component://netscape/composer/application",
+										path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kCComposerBootstrapCID,
+									   "Netscape Composer Bootstrapper",
+									   "component://netscape/composer",
+									   path,
+									   PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->RegisterComponent(kCComposeAppCoreCID,
+									   "Composer AppCore",
+									   "component://netscape/appcores/composer",
+								  	   path,
+									   PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv)) goto done;
+
+#ifdef NS_DEBUG
+  printf("composer registering from %s\n",path);
+#endif
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
@@ -231,26 +303,39 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-  nsresult rv;
+	nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+	if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
+	nsIComponentManager* compMgr;
+	rv = servMgr->GetService(kComponentManagerCID, 
+						   nsIComponentManager::GetIID(), 
+						   (nsISupports**)&compMgr);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = compMgr->UnregisterComponent(kCComposeAppCoreCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kCComposerBootstrapCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kCComposerCID, path);
+	if (NS_FAILED(rv)) goto done;
 
 	rv = compMgr->UnregisterComponent(kCMsgComposeCID, path);
-  if (NS_FAILED(rv)) goto done;
-	rv = compMgr->UnregisterComponent(kCSmtpServiceCID, path);
-  if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kCMsgCompFieldsCID, path);
-  if (NS_FAILED(rv)) goto done;
-	rv = compMgr->UnregisterComponent(kCMsgSendCID, path);
+	if (NS_FAILED(rv)) goto done;
 
-  done:
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
+	rv = compMgr->UnregisterComponent(kCMsgSendCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kCMsgCompFieldsCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	rv = compMgr->UnregisterComponent(kCSmtpServiceCID, path);
+	if (NS_FAILED(rv)) goto done;
+
+	done:
+	(void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+	return rv;
 }

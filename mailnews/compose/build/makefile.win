@@ -78,30 +78,31 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 #//------------------------------------------------------------------------
 LCFLAGS=-DNETSCAPE
 
-MSGLIBS=				\
-		$(NULL)
-
 # These are the libraries we need to link with to create the dll
 LLIBS=										\
 			$(LLIBS)						\
 			$(DIST)\lib\xpcom32.lib			\
+			$(DIST)\lib\raptorbase.lib		\
 			$(DIST)\lib\xplib.lib       	\
 			$(DIST)\lib\libplc21.lib		\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgcore.lib			\
 			$(DIST)\lib\msgcompose.lib		\
-			$(DIST)\lib\raptorbase.lib		\
 			$(DIST)\lib\secfreenav32.lib	\
+			$(DIST)\lib\appcores.lib		\
+			$(DIST)\lib\netlib.lib			\
 			$(LIBNSPR)						\
 			$(NULL)
 
 LINCS=$(LINCS) -I,							\
+			   -I$(XPDIST)\msg				\
 			   -I$(PUBLIC)\xpcom			\
 			   -I$(PUBLIC)\js				\
 			   -I$(PUBLIC)\mailnews			\
 			   -I$(PUBLIC)\pref				\
 			   -I$(PUBLIC)\raptor			\
-			   -I$(XPDIST)\msg				\
+			   -I$(PUBLIC)\dom				\
+			   -I$(PUBLIC)\appcores			\
  			     $(NULL)
 
 #//------------------------------------------------------------------------

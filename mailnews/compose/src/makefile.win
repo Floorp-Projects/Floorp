@@ -34,6 +34,10 @@ CPPSRCS=    nsMsgCompFields.cpp \
 			nsMsgSend.cpp		\
 			nsMsgSendPart.cpp	\
 			nsSmtpService.cpp	\
+			nsJSComposeAppCore.cpp	\
+			nsComposeAppCore.cpp	\
+			nsComposer.cpp \
+			nsComposerNameSet.cpp \
             $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
@@ -44,15 +48,31 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
 			.\$(OBJDIR)\nsMsgSend.obj		\
 			.\$(OBJDIR)\nsMsgSendPart.obj	\
 			.\$(OBJDIR)\nsSmtpService.obj	\
+			.\$(OBJDIR)\nsJSComposeAppCore.obj	\
+			.\$(OBJDIR)\nsComposeAppCore.obj	\
+			.\$(OBJDIR)\nsComposer.obj	\
+			.\$(OBJDIR)\nsComposerNameSet.obj	\
             $(NULL)
 
 
-EXPORTS=    nsSmtpUrl.h                 \
-            nsSmtpProtocol.h            \
-			nsSmtpService.h				\
+EXPORTS=    nsSmtpUrl.h             \
+            nsSmtpProtocol.h        \
+			nsSmtpService.h			\
+			nsComposeAppCore.h		\
+			nsComposer.h			\
             $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
+LINCS=								\
+			-I$(PUBLIC)\xpcom		\
+			-I$(PUBLIC)\mailnews	\
+			-I$(PUBLIC)\raptor		\
+			-I$(PUBLIC)\netlib		\
+			-I$(PUBLIC)\security	\
+			-I$(PUBLIC)\rdf			\
+			-I$(PUBLIC)\js			\
+			-I$(PUBLIC)\dom			\
+			-I$(PUBLIC)\appcores	\
+            $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
