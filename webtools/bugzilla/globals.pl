@@ -28,6 +28,7 @@
 
 use strict;
 
+use Bugzilla::Constants;
 use Bugzilla::Util;
 # Bring ChmodDataFile in until this is all moved to the module
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile);
@@ -682,6 +683,116 @@ sub GenerateRandomPassword {
 
     # Return the password.
     return $password;
+}
+
+#
+# This function checks if there are any entry groups defined.
+# If called with no arguments, it identifies
+# entry groups for all products.  If called with a product
+# id argument, it checks for entry groups associated with 
+# one particular product.
+sub AnyEntryGroups {
+    my $product_id = shift;
+    $product_id = 0 unless ($product_id);
+    return $::CachedAnyEntryGroups{$product_id} 
+        if defined($::CachedAnyEntryGroups{$product_id});
+    PushGlobalSQLState();
+    my $query = "SELECT 1 FROM group_control_map WHERE entry != 0";
+    $query .= " AND product_id = $product_id" if ($product_id);
+    $query .= " LIMIT 1";
+    SendSQL($query);
+    $::CachedAnyEntryGroups{$product_id} = MoreSQLData();
+    FetchSQLData();
+    PopGlobalSQLState();
+    return $::CachedAnyEntryGroups{$product_id};
+}
+
+#
+# This function checks if there are any default groups defined.
+# If so, then groups may have to be changed when bugs move from
+# one bug to another.
+sub AnyDefaultGroups {
+    return $::CachedAnyDefaultGroups if defined($::CachedAnyDefaultGroups);
+    PushGlobalSQLState();
+    SendSQL("SELECT 1 FROM group_control_map, groups WHERE " .
+            "groups.id = group_control_map.group_id " .
+            "AND isactive != 0 AND " .
+            "(membercontrol = " . CONTROLMAPDEFAULT .
+            " OR othercontrol = " . CONTROLMAPDEFAULT .
+            ") LIMIT 1");
+    $::CachedAnyDefaultGroups = MoreSQLData();
+    FetchSQLData();
+    PopGlobalSQLState();
+    return $::CachedAnyDefaultGroups;
+}
+
+#
+# This function checks if, given a product id, the user can edit
+# bugs in this product at all.
+sub CanEditProductId {
+    my ($productid) = @_;
+    my $query = "SELECT group_id FROM group_control_map " .
+                "WHERE product_id = $productid " .
+                "AND canedit != 0 "; 
+    if ((defined @{$::vars->{user}{groupids}}) 
+        && (@{$::vars->{user}{groupids}} > 0)) {
+        $query .= "AND group_id NOT IN(" . 
+                   join(',',@{$::vars->{user}{groupids}}) . ") ";
+    }
+    $query .= "LIMIT 1";
+    PushGlobalSQLState();
+    SendSQL($query);
+    my ($result) = FetchSQLData();
+    PopGlobalSQLState();
+    return (!defined($result));
+}
+
+#
+# This function determines if a user can enter bugs in the named
+# product.
+sub CanEnterProduct {
+    my ($productname) = @_;
+    my $query = "SELECT group_id IS NULL " .
+                "FROM products " .
+                "LEFT JOIN group_control_map " .
+                "ON group_control_map.product_id = products.id " .
+                "AND group_control_map.entry != 0 ";
+    if ((defined @{$::vars->{user}{groupids}}) 
+        && (@{$::vars->{user}{groupids}} > 0)) {
+        $query .= "AND group_id NOT IN(" . 
+                   join(',',@{$::vars->{user}{groupids}}) . ") ";
+    }
+    $query .= "WHERE products.name = " . SqlQuote($productname) . " LIMIT 1";
+    PushGlobalSQLState();
+    SendSQL($query);
+    my ($ret) = FetchSQLData();
+    PopGlobalSQLState();
+    return ($ret);
+}
+
+#
+# This function returns an alphabetical list of product names to which
+# the user can enter bugs.
+sub GetEnterableProducts {
+    my $query = "SELECT name " .
+                "FROM products " .
+                "LEFT JOIN group_control_map " .
+                "ON group_control_map.product_id = products.id " .
+                "AND group_control_map.entry != 0 ";
+    if ((defined @{$::vars->{user}{groupids}}) 
+        && (@{$::vars->{user}{groupids}} > 0)) {
+        $query .= "AND group_id NOT IN(" . 
+                   join(',',@{$::vars->{user}{groupids}}) . ") ";
+    }
+    $query .= "WHERE group_id IS NULL ORDER BY name";
+    PushGlobalSQLState();
+    SendSQL($query);
+    my @products = ();
+    while (MoreSQLData()) {
+        push @products,FetchOneColumn();
+    }
+    PopGlobalSQLState();
+    return (@products);
 }
 
 sub CanSeeBug {
@@ -1749,5 +1860,5 @@ $::vars =
     'VERSION' => $Bugzilla::Config::VERSION,
   };
 
-
 1;
+

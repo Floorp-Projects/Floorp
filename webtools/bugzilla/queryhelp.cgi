@@ -663,7 +663,7 @@ SendSQL("SELECT name, description FROM products ORDER BY name");
         while (MoreSQLData()) {
 
         my ($product, $productdesc) = FetchSQLData();
-        next if (Param("usebuggroups") && GroupExists($product) && !UserInGroup($product));
+        next if (!CanEnterProduct($product));  
         push (@products, $product);
 
         $line_count++;

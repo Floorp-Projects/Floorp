@@ -31,6 +31,7 @@ my $UserInCanConfirmGroupSet = -1;
 
 use lib qw(.);
 
+use Bugzilla::Constants;
 require "CGI.pl";
 require "bug_form.pl";
 
@@ -236,7 +237,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
     # If the product-specific fields need to be verified, or we need to verify
     # whether or not to add the bugs to their new product's group, display
     # a verification form.
-    if (!$vok || !$cok || !$mok || (Param('usebuggroups') && !defined($::FORM{'addtonewgroup'}))) {
+    if (!$vok || !$cok || !$mok || (AnyDefaultGroups() && !defined($::FORM{'addtonewgroup'}))) {
         $vars->{'form'} = \%::FORM;
         $vars->{'mform'} = \%::MFORM;
         
@@ -276,7 +277,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
             $vars->{"verify_fields"} = 0;
         }
         
-        $vars->{'verify_bug_group'} = (Param('usebuggroups') 
+        $vars->{'verify_bug_group'} = (AnyDefaultGroups() 
                                        && !defined($::FORM{'addtonewgroup'}));
         
         $template->process("bug/process/verify-new-product.html.tmpl", $vars)
@@ -594,11 +595,9 @@ sub ChangeResolution {
 # select lists.  This means that instead of looking for the bit-X values in
 # the form, we need to loop through all the bug groups this user has access
 # to, and for each one, see if it's selected.
-# In order to make mass changes work correctly, keep a sum of bits for groups
-# added, and another one for groups removed, and then let mysql do the bit
-# operations
 # If the form element isn't present, or the user isn't in the group, leave
 # it as-is
+
 my @groupAdd = ();
 my @groupDel = ();
 
@@ -1070,7 +1069,10 @@ foreach my $id (@idlist) {
             "bug_group_map $write, flags $write, duplicates $write," .
             "user_group_map READ, flagtypes READ, " . 
             "flaginclusions AS i READ, flagexclusions AS e READ, " .
-            "keyworddefs READ, groups READ, attachments READ");
+            "keyworddefs READ, groups READ, attachments READ, " .
+            "group_control_map AS oldcontrolmap READ, " .
+            "group_control_map AS newcontrolmap READ, " .
+            "group_control_map READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
     # Fun hack.  @::log_columns only contains the component_id,
@@ -1104,6 +1106,18 @@ foreach my $id (@idlist) {
         $i++;
     }
     $oldhash{'product'} = get_product_name($oldhash{'product_id'});
+    if (!CanEditProductId($oldhash{'product_id'})) {
+        $vars->{'product'} = $oldhash{'product'};
+        ThrowUserError("product_edit_denied");
+    }
+
+    if (defined $::FORM{'product'} 
+        && $::FORM{'product'} ne $::FORM{'dontchange'} 
+        && $::FORM{'product'} ne $oldhash{'product'}
+        && !CanEnterProduct($::FORM{'product'})) {
+        $vars->{'product'} = $::FORM{'product'};
+        ThrowUserError("entry_access_denied");
+    }
     if ($requiremilestone) {
         my $value = $::FORM{'target_milestone'};
         if (!defined $value || $value eq $::FORM{'dontchange'}) {
@@ -1268,6 +1282,7 @@ foreach my $id (@idlist) {
     if ($::comma ne "") {
         SendSQL($query);
     }
+
     # Check for duplicates if the bug is [re]open
     SendSQL("SELECT resolution FROM bugs WHERE bug_id = $id");
     my $resolution = FetchOneColumn();
@@ -1275,8 +1290,34 @@ foreach my $id (@idlist) {
         SendSQL("DELETE FROM duplicates WHERE dupe = $id");
     }
     
+    my $newproduct_id = $oldhash{'product_id'};
+    if ((defined $::FORM{'product'})
+        && ($::FORM{'product'} ne $::FORM{'dontchange'})) {
+        my $newproduct_id = get_product_id($::FORM{'product'});
+    }
+
+    my %groupsrequired = ();
+    my %groupsforbidden = ();
+    SendSQL("SELECT id, membercontrol 
+             FROM groups LEFT JOIN group_control_map
+             ON id = group_id
+             AND product_id = $newproduct_id WHERE isactive != 0");
+    while (MoreSQLData()) {
+        my ($group, $control) = FetchSQLData();
+        $control ||= 0;
+        unless ($control > &::CONTROLMAPNA)  {
+            $groupsforbidden{$group} = 1;
+        }
+        if ($control == &::CONTROLMAPMANDATORY) {
+            $groupsrequired{$group} = 1;
+        }
+    }
+
     my @groupAddNames = ();
-    foreach my $grouptoadd (@groupAdd) {
+    my @groupAddNamesAll = ();
+    foreach my $grouptoadd (@groupAdd, keys %groupsrequired) {
+        next if $groupsforbidden{$grouptoadd};
+        push(@groupAddNamesAll, GroupIdToName($grouptoadd));
         if (!BugInGroupId($id, $grouptoadd)) {
             push(@groupAddNames, GroupIdToName($grouptoadd));
             SendSQL("INSERT INTO bug_group_map (bug_id, group_id) 
@@ -1284,7 +1325,10 @@ foreach my $id (@idlist) {
         }
     }
     my @groupDelNames = ();
-    foreach my $grouptodel (@groupDel) {
+    my @groupDelNamesAll = ();
+    foreach my $grouptodel (@groupDel, keys %groupsforbidden) {
+        push(@groupDelNamesAll, GroupIdToName($grouptodel));
+        next if $groupsrequired{$grouptodel};
         if (BugInGroupId($id, $grouptodel)) {
             push(@groupDelNames, GroupIdToName($grouptodel));
         }
@@ -1399,63 +1443,117 @@ foreach my $id (@idlist) {
     # group or add it to the new one.  There are a very specific series of
     # conditions under which these activities take place, more information
     # about which can be found in comments within the conditionals below.
+    # Check if the user has changed the product to which the bug belongs;
     if ( 
-      # the "usebuggroups" parameter is on, indicating that products
-      # are associated with groups of the same name;
-      Param('usebuggroups')
-
-      # the user has changed the product to which the bug belongs;
-      && defined $::FORM{'product'} 
+      defined $::FORM{'product'} 
         && $::FORM{'product'} ne $::FORM{'dontchange'} 
           && $::FORM{'product'} ne $oldhash{'product'} 
     ) {
-        if (
-          # the user wants to add the bug to the new product's group;
-          ($::FORM{'addtonewgroup'} eq 'yes' 
-            || ($::FORM{'addtonewgroup'} eq 'yesifinold' 
-                  && BugInGroup($id, $oldhash{'product'})))  
-
-          # the new product is associated with a group;
-          && GroupExists($::FORM{'product'})
-
-          # the bug is not already in the group; (This can happen when the user
-          # goes to the "edit multiple bugs" form with a list of bugs at least
-          # one of which is in the new group.  In this situation, the user can
-          # simultaneously change the bugs to a new product and move the bugs
-          # into that product's group, which happens earlier in this script
-          # and thus is already done.  If we didn't check for this, then this
-          # situation would cause us to add the bug to the group twice, which
-          # would result in the bug being added to a totally different group.)
-          && !BugInGroup($id, $::FORM{'product'})
-
-          # the user is a member of the associated group, indicating they
-          # are authorized to add bugs to that group, *or* the "usebuggroupsentry"
-          # parameter is off, indicating that users can add bugs to a product 
-          # regardless of whether or not they belong to its associated group;
-          && (UserInGroup($::FORM{'product'}) || !Param('usebuggroupsentry'))
-
-          # the associated group is active, indicating it can accept new bugs;
-          && GroupIsActive(GroupNameToId($::FORM{'product'}))
-        ) { 
-            # Add the bug to the group associated with its new product.
-            my $groupid = GroupNameToId($::FORM{'product'});
-            if (!BugInGroupId($id, $groupid)) {
-                SendSQL("INSERT INTO bug_group_map (bug_id, group_id) VALUES ($id, $groupid)");
+        my $newproduct_id = get_product_id($::FORM{'product'});
+        # Depending on the "addtonewgroup" variable, groups with
+        # defaults will change.
+        #
+        # For each group, determine
+        # - The group id and if it is active
+        # - The control map value for the old product and this group
+        # - The control map value for the new product and this group
+        # - Is the user in this group?
+        # - Is the bug in this group?
+        SendSQL("SELECT DISTINCT groups.id, isactive, " .
+                "oldcontrolmap.membercontrol, newcontrolmap.membercontrol, " .
+                "user_group_map.user_id IS NOT NULL, " .
+                "bug_group_map.group_id IS NOT NULL " .
+                "FROM groups " .
+                "LEFT JOIN group_control_map AS oldcontrolmap " .
+                "ON oldcontrolmap.group_id = groups.id " .
+                "AND oldcontrolmap.product_id = " . $oldhash{'product_id'} .
+                " LEFT JOIN group_control_map AS newcontrolmap " .
+                "ON newcontrolmap.group_id = groups.id " .
+                "AND newcontrolmap.product_id = $newproduct_id " .
+                "LEFT JOIN user_group_map " .
+                "ON user_group_map.group_id = groups.id " .
+                "AND user_group_map.user_id = $::userid " .
+                "AND user_group_map.isbless = 0 " .
+                "LEFT JOIN bug_group_map " .
+                "ON bug_group_map.group_id = groups.id " .
+                "AND bug_group_map.bug_id = $id "
+            );
+        my @groupstoremove = ();
+        my @groupstoadd = ();
+        my @defaultstoremove = ();
+        my @defaultstoadd = ();
+        my @allgroups = ();
+        my $buginanydefault = 0;
+        my $buginanychangingdefault = 0;
+        while (MoreSQLData()) {
+            my ($groupid, $isactive, $oldcontrol, $newcontrol, 
+            $useringroup, $bugingroup) = FetchSQLData();
+            # An undefined newcontrol is none.
+            $newcontrol = CONTROLMAPNA unless $newcontrol;
+            $oldcontrol = CONTROLMAPNA unless $oldcontrol;
+            push(@allgroups, $groupid);
+            if (($bugingroup) && ($isactive)
+                && ($oldcontrol == CONTROLMAPDEFAULT)) {
+                # Bug was in a default group.
+                $buginanydefault = 1;
+                if ($newcontrol != CONTROLMAPDEFAULT) {
+                    # Bug was in a default group that no longer is.
+                    $buginanychangingdefault = 1;
+                    push (@defaultstoremove, $groupid);
+                }
+            }
+            if (($isactive) && (!$bugingroup)
+                && ($newcontrol == CONTROLMAPDEFAULT)
+                && ($useringroup)) {
+                push (@defaultstoadd, $groupid);
+            }
+            if (($bugingroup) && ($isactive) && ($newcontrol == CONTROLMAPNA)) {
+                # Group is no longer permitted.
+                push(@groupstoremove, $groupid);
+            }
+            if ((!$bugingroup) && ($isactive) 
+                && ($newcontrol == CONTROLMAPMANDATORY)) {
+                # Group is now required.
+                push(@groupstoadd, $groupid);
             }
         }
-
-        if (
-          # the old product is associated with a group;
-          GroupExists($oldhash{'product'})
-
-          # the bug is a member of that group;
-          && BugInGroup($id, $oldhash{'product'}) 
-        ) { 
-            # Remove the bug from the group associated with its old product.
-            my $groupid = GroupNameToId($oldhash{'product'});
-            SendSQL("DELETE FROM bug_group_map WHERE bug_id = $id AND group_id = $groupid");
+        # If addtonewgroups = "yes", old default groups will be removed
+        # and new default groups will be added.
+        # If addtonewgroups = "yesifinold", old default groups will be removed
+        # and new default groups will be added only if the bug was in ANY
+        # of the old default groups.
+        # If addtonewgroups = "no", old default groups will be removed and not
+        # replaced.
+        push(@groupstoremove, @defaultstoremove);
+        if (AnyDefaultGroups()
+            && (($::FORM{'addtonewgroup'} eq 'yes')
+            || (($::FORM{'addtonewgroup'} eq 'yesifinold') 
+            && ($buginanydefault)))) {
+            push(@groupstoadd, @defaultstoadd);
         }
 
+        # Now actually update the bug_group_map.
+        my @DefGroupsAdded = ();
+        my @DefGroupsRemoved = ();
+        foreach my $groupid (@allgroups) {
+            my $thisadd = grep( ($_ == $groupid), @groupstoadd);
+            my $thisdel = grep( ($_ == $groupid), @groupstoremove);
+            if ($thisadd) {
+                push(@DefGroupsAdded, GroupIdToName($groupid));
+                SendSQL("INSERT INTO bug_group_map (bug_id, group_id) VALUES " .
+                        "($id, $groupid)");
+            } elsif ($thisdel) {
+                push(@DefGroupsRemoved, GroupIdToName($groupid));
+                SendSQL("DELETE FROM bug_group_map WHERE bug_id = $id " .
+                        "AND group_id = $groupid");
+            }
+        }
+        if ((@DefGroupsAdded) || (@DefGroupsRemoved)) {
+            LogActivityEntry($id, "bug_group",
+                join(', ', @DefGroupsRemoved),
+                join(', ', @DefGroupsAdded),
+                     $whoid, $timestamp); 
+        }
     }
   
     # get a snapshot of the newly set values out of the database, 
@@ -1471,7 +1569,6 @@ foreach my $id (@idlist) {
         $newhash{$col} = $newvalues[$i];
         $i++;
     }
-
     # for passing to processmail to ensure that when someone is removed
     # from one of these fields, they get notified of that fact (if desired)
     #

@@ -405,20 +405,28 @@
   <br>
 
   [% IF groups.size > 0 %]
-    <br>
-    <b>Only users in all of the selected groups can view this bug:</b>
-    <br>
-    <font size="-1">(Unchecking all boxes makes this a public bug.)</font>
-    <br>
-    <br>
 
     [% FOREACH group = groups %]
+      [% IF NOT group.mandatory %]
+        [% IF NOT emitted_description %]
+          [% emitted_description = 1 %]
+          <br>
+          <b>Only users in all of the selected groups can view this bug:</b>
+          <br>
+          <font size="-1">
+            (Unchecking all boxes makes this a more public bug.)
+          </font>
+          <br>
+          <br>
+        [% END %]
+
       &nbsp;&nbsp;&nbsp;&nbsp;
       <input type="checkbox" name="bit-[% group.bit %]" value="1" 
         [% " checked=\"checked\"" IF group.ison %]
         [% " disabled=\"disabled\"" IF NOT group.ingroup %]>
       [% group.description %]
       <br>
+      [% END %]
     [% END %]
 
     [% IF NOT user.inallgroups %]
@@ -431,7 +439,7 @@
 
     [% IF bug.inagroup %]
       <p>
-        <b>But users in the roles selected below can always view this bug:</b>
+        <b>Users in the roles selected below can always view this bug:</b>
         <br>
         <small>
           (The assignee                                                

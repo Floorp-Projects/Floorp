@@ -26,6 +26,7 @@ use strict;
 use lib qw(.);
 
 require "CGI.pl";
+use Bugzilla::Constants;
 
 use vars qw(%FORM $unconfirmedstate);
 
@@ -263,6 +264,7 @@ CrossCheck("groups", "id",
            ["bug_group_map", "group_id"],
            ["group_group_map", "grantor_id"],
            ["group_group_map", "member_id"],
+           ["group_control_map", "group_id"],
            ["user_group_map", "group_id"]);
 
 CrossCheck("profiles", "userid",
@@ -288,6 +290,7 @@ CrossCheck("products", "id",
            ["components", "product_id", "name"],
            ["milestones", "product_id", "value"],
            ["versions", "product_id", "value"],
+           ["group_control_map", "product_id"],
            ["flaginclusions", "product_id", "type_id"],
            ["flagexclusions", "product_id", "type_id"]);
 
@@ -611,6 +614,53 @@ sub DateCheck {
     
 DateCheck("groups", "last_changed");
 DateCheck("profiles", "refreshed_when");
+
+###########################################################################
+# Control Values
+###########################################################################
+
+# Checks for values that are invalid OR
+# not among the 9 valid combinations
+Status("Checking for bad values in group_control_map");
+SendSQL("SELECT COUNT(product_id) FROM group_control_map WHERE " .
+        "membercontrol NOT IN(" . CONTROLMAPNA . "," . CONTROLMAPSHOWN .
+        "," . CONTROLMAPDEFAULT . "," . CONTROLMAPMANDATORY . ")" .
+        " OR " .
+        "othercontrol NOT IN(" . CONTROLMAPNA . "," . CONTROLMAPSHOWN .
+        "," . CONTROLMAPDEFAULT . "," . CONTROLMAPMANDATORY . ")" .
+        " OR " .
+        "( (membercontrol != othercontrol) " .
+          "AND (membercontrol != " . CONTROLMAPSHOWN . ") " .
+          "AND ((membercontrol != " . CONTROLMAPDEFAULT . ") " .
+            "OR (othercontrol = " . CONTROLMAPSHOWN . ")))");
+my $c = FetchOneColumn();
+if ($c) {
+    Alert("Found $c bad group_control_map entries");
+}
+
+Status("Checking for bugs with groups violating their product's group controls");
+BugCheck("bugs, groups, bug_group_map
+         LEFT JOIN group_control_map
+         ON group_control_map.product_id = bugs.product_id
+         AND group_control_map.group_id = bug_group_map.group_id
+         WHERE bugs.bug_id = bug_group_map.bug_id
+         AND bug_group_map.group_id = groups.id
+         AND groups.isactive != 0
+         AND ((group_control_map.membercontrol = " . CONTROLMAPNA . ")
+         OR (group_control_map.membercontrol IS NULL))",
+         "Have groups not permitted for their products");
+
+BugCheck("bugs, groups, group_control_map
+         LEFT JOIN bug_group_map
+         ON group_control_map.group_id = bug_group_map.group_id
+         AND bugs.bug_id = bug_group_map.bug_id
+         WHERE group_control_map.product_id = bugs.product_id
+         AND bug_group_map.group_id = groups.id
+         AND groups.isactive != 0
+         AND group_control_map.membercontrol = " . CONTROLMAPMANDATORY . "
+         AND bug_group_map.group_id IS NULL",
+         "Are missing groups required for their products");
+
 
 ###########################################################################
 # Unsent mail

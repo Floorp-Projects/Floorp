@@ -27,6 +27,7 @@
 use strict;
 use lib ".";
 
+use Bugzilla::Constants;
 require "CGI.pl";
 
 ConnectToDatabase();
@@ -117,9 +118,9 @@ unless ($action) {
     while (MoreSQLData()) {
         my ($groupid, $name, $desc, $regexp, $isactive, $isbuggroup) = FetchSQLData();
         print "<tr>\n";
-        print "<td>$name</td>\n";
-        print "<td>$desc</td>\n";
-        print "<td>$regexp&nbsp</td>\n";
+        print "<td>" . html_quote($name) . "</td>\n";
+        print "<td>" . html_quote($desc) . "</td>\n";
+        print "<td>" . html_quote($regexp) . "&nbsp</td>\n";
         print "<td align=center>";
         print "X" if (($isactive != 0) && ($isbuggroup != 0));
         print "&nbsp</td>\n";
@@ -185,22 +186,27 @@ if ($action eq 'changeform') {
     print "<TABLE BORDER=1 CELLPADDING=4>";
     print "<TR><TH>Group:</TH><TD>";
     if ($isbuggroup == 0) {
-        print "$name";
+        print html_quote($name);
     } else {
-        print "<INPUT TYPE=HIDDEN NAME=\"oldname\" VALUE=$name>
-        <INPUT SIZE=60 NAME=\"name\" VALUE=\"$name\">";
+        print "<INPUT TYPE=HIDDEN NAME=\"oldname\" VALUE=" . 
+        html_quote($name) . ">
+        <INPUT SIZE=60 NAME=\"name\" VALUE=\"" . html_quote($name) . "\">";
     }
     print "</TD></TR><TR><TH>Description:</TH><TD>";
     if ($isbuggroup == 0) {
-        print "$description";
+        print html_quote($description);
     } else {
-        print "<INPUT TYPE=HIDDEN NAME=\"olddesc\" VALUE=\"$description\">
-        <INPUT SIZE=70 NAME=\"desc\" VALUE=\"$description\">";
+        print "<INPUT TYPE=HIDDEN NAME=\"olddesc\" VALUE=\"" .
+        html_quote($description) . "\">
+        <INPUT SIZE=70 NAME=\"desc\" VALUE=\"" . 
+            html_quote($description) . "\">";
     }
     print "</TD></TR><TR>
            <TH>User Regexp:</TH><TD>";
-    print "<INPUT TYPE=HIDDEN NAME=\"oldrexp\" VALUE=\"$rexp\">
-           <INPUT SIZE=40 NAME=\"rexp\" VALUE=\"$rexp\"></TD></TR>";
+    print "<INPUT TYPE=HIDDEN NAME=\"oldrexp\" VALUE=\"" . 
+           html_quote($rexp) . "\">
+           <INPUT SIZE=40 NAME=\"rexp\" VALUE=\"" . 
+           html_quote($rexp) . "\"></TD></TR>";
     if ($isbuggroup == 1) {
         print "<TR><TH>Use For Bugs:</TH><TD>
         <INPUT TYPE=checkbox NAME =\"isactive\" VALUE=1 " . (($isactive == 1) ? "CHECKED" : "") . ">
@@ -252,8 +258,8 @@ if ($action eq 'changeform') {
         print "<INPUT TYPE=HIDDEN NAME=\"oldbless-$grpid\" VALUE=$blessmember></TD>";
         print "<TD><INPUT TYPE=checkbox NAME=\"grp-$grpid\" $grpchecked VALUE=1>";
         print "<INPUT TYPE=HIDDEN NAME=\"oldgrp-$grpid\" VALUE=$grpmember></TD>";
-        print "<TD><B>$grpnam</B></TD>";
-        print "<TD>$grpdesc</TD>";
+        print "<TD><B>" . html_quote($grpnam) . "</B></TD>";
+        print "<TD>" . html_quote($grpdesc) . "</TD>";
         print "</TR>\n";
     }
 
@@ -290,6 +296,10 @@ if ($action eq 'add') {
     print "<td><input size=30 name=\"regexp\"></td>\n";
     print "<td><input type=\"checkbox\" name=\"isactive\" value=\"1\" checked></td>\n";
     print "</TR></TABLE>\n<HR>\n";
+    print "<input type=\"checkbox\" name=\"insertnew\" value=\"1\"";
+    print " checked" if Param("makeproductgroups");
+    print ">\n";
+    print "Insert new group into all existing products.<P>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
     print "</FORM>";
@@ -308,9 +318,13 @@ to this group, although bugs already in the group will remain in the group.
 Doing so is a much less drastic way to stop a group from growing
 than deleting the group would be.  <b>Note: If you are creating a group, you
 probably want it to be usable for bugs, in which case you should leave this checked.</b><p>";
-    print "<b>User RegExp</b> is optional, and if filled in, will automatically
-grant membership to this group to anyone creating a new account with an
-email address that matches this regular expression.<p>";
+    print "<b>User RegExp</b> is optional, and if filled in, will ";
+    print "automatically grant membership to this group to anyone with an ";
+    print "email address that matches this regular expression.<p>\n";
+    print "By default, the new group will be associated with existing ";
+    print "products. Unchecking the \"Insert new group into all existing ";
+    print "products\" option will prevent this and make the group become ";
+    print "visible only when its controls have been added to a product.<P>\n";
 
     PutTrailer("<a href=editgroups.cgi>Back to the group list</a>");
     exit;
@@ -384,6 +398,16 @@ if ($action eq 'new') {
              VALUES ($admin, $gid, 0)");
     SendSQL("INSERT INTO group_group_map (member_id, grantor_id, isbless)
              VALUES ($admin, $gid, 1)");
+    # Permit all existing products to use the new group if makeproductgroups.
+    if ($::FORM{insertnew}) {
+        SendSQL("INSERT INTO group_control_map " .
+                "(group_id, product_id, entry, membercontrol, " .
+                "othercontrol, canedit) " .
+                "SELECT $gid, products.id, 0, " .
+                CONTROLMAPSHOWN . ", " .
+                CONTROLMAPNA . ", 0 " .
+                "FROM products");
+    }
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">Add another group</a>",
                "<a href=\"editgroups.cgi\">Back to the group list</a>");
@@ -543,6 +567,7 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM user_group_map WHERE group_id = $gid");
     SendSQL("DELETE FROM group_group_map WHERE grantor_id = $gid");
     SendSQL("DELETE FROM bug_group_map WHERE group_id = $gid");
+    SendSQL("DELETE FROM group_control_map WHERE group_id = $gid");
     SendSQL("DELETE FROM groups WHERE id = $gid");
     print "<B>Group $gid has been deleted.</B><BR>";
 

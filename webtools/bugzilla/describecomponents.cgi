@@ -42,11 +42,11 @@ if (!defined $::FORM{'product'}) {
     # Reference to a subset of %::proddesc, which the user is allowed to see
     my %products;
 
-    if (Param("usebuggroups")) {
+    if (AnyDefaultGroups()) {
         # OK, now only add products the user can see
         confirm_login() unless $::userid;
         foreach my $p (@::legal_product) {
-            if (!GroupExists($p) || UserInGroup($p)) {
+            if (CanEnterProduct($p)) {
                 $products{$p} = $::proddesc{$p};
             }
         }
@@ -88,11 +88,8 @@ if (!$product_id) {
 }
 
 # Make sure the user is authorized to access this product.
-if (Param("usebuggroups") && GroupExists($product)) {
-    confirm_login() unless $::userid;
-    UserInGroup($product)
+CanEnterProduct($product)
       || ThrowUserError("product_access_denied");
-}
 
 ######################################################################
 # End Data/Security Validation

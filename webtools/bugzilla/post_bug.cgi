@@ -26,6 +26,7 @@
 use strict;
 use lib qw(.);
 
+use Bugzilla::Constants;
 require "CGI.pl";
 require "bug_form.pl";
 
@@ -101,9 +102,8 @@ if (defined $::FORM{'maketemplate'}) {
 umask 0;
 
 # Some sanity checking
-if(Param("usebuggroupsentry") && GroupExists($product)) {
-    UserInGroup($product) || 
-      ThrowUserError("entry_access_denied", {product => $product});
+if (!CanEnterProduct($product)) {
+    ThrowUserError("entry_access_denied", {product => $product});
 }
 
 my $component_id = get_component_id($product_id, $::FORM{component});
@@ -363,13 +363,38 @@ foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
                  WHERE user_id = $::userid
                  AND group_id = $v
                  AND isbless = 0");
-        my ($member) = FetchSQLData();
-        if ($member) {
+        my ($permit) = FetchSQLData();
+        if (!$permit) {
+            SendSQL("SELECT othercontrol FROM group_control_map
+                     WHERE group_id = $v AND product_id = $product_id");
+            my ($othercontrol) = FetchSQLData();
+            $permit = (($othercontrol == CONTROLMAPSHOWN)
+                       || ($othercontrol == CONTROLMAPDEFAULT));
+        }
+        if ($permit) {
             push(@groupstoadd, $v)
         }
     }
 }
 
+SendSQL("SELECT DISTINCT groups.id, groups.name, " .
+        "membercontrol, othercontrol " .
+        "FROM groups LEFT JOIN group_control_map " .
+        "ON group_id = id AND product_id = $product_id " .
+        " WHERE isbuggroup != 0 AND isactive != 0 ORDER BY description");
+while (MoreSQLData()) {
+    my ($id, $groupname, $membercontrol, $othercontrol ) = FetchSQLData();
+    $membercontrol ||= 0;
+    $othercontrol ||= 0;
+    # Add groups required
+    if (($membercontrol == CONTROLMAPMANDATORY)
+       || (($othercontrol == CONTROLMAPMANDATORY) 
+            && (!UserInGroup($groupname)))) {
+        # User had no option, bug needs to be in this group.
+        push(@groupstoadd, $id)
+    }
+}
+        
 
 # Lock tables before inserting records for the new bug into the database
 # if we are using a shadow database to prevent shadow database corruption

@@ -230,6 +230,12 @@
     It must also not contain any of these special characters:
     <tt>\ ( ) &amp; &lt; &gt; , ; : &quot; [ ]</tt>, or any whitespace.
     
+  [% ELSIF error == "illegal_group_control_combination" %]
+    [% title = "Your Group Control Combination Is Illegal" %]
+    Your group control combination for group &quot;
+    [% groupname FILTER html %]
+    &quot; is illegal.
+
   [% ELSIF error == "illegal_is_obsolete" %]
     [% title = "Your Query Makes No Sense" %]
     The only legal values for the <em>Attachment is obsolete</em> field are
@@ -462,6 +468,10 @@
     [% title = "Access Denied" %]
     You do not have the permissions necessary to access that product.
      
+  [% ELSIF error == "product_edit_denied" %]
+    [% title = "Product Edit Access Denied" %]
+    You are not permitted to edit bugs in product [% product %].
+    
   [% ELSIF error == "query_name_missing" %]
     [% title = "No Query Name Specified" %]
     You must enter a name for your query.

@@ -244,7 +244,7 @@ sub check_netmask {
   },
 
   {
-   name => 'usebuggroups',
+   name => 'makeproductgroups',
    desc => 'If this is on, Bugzilla will associate a bug group with each ' .
            'product in the database, and use it for querying bugs.',
    type => 'b',
@@ -252,9 +252,9 @@ sub check_netmask {
   },
 
   {
-   name => 'usebuggroupsentry',
+   name => 'useentrygroupdefault',
    desc => 'If this is on, Bugzilla will use product bug groups to restrict ' .
-           'who can enter bugs.  Requires usebuggroups to be on as well.',
+           'who can enter bugs.  Requires makeproductgroups to be on as well.',
    type => 'b',
    default => 0
   },

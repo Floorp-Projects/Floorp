@@ -24,7 +24,7 @@
 use strict;
 
 use RelationSet;
-
+use Bugzilla::Constants;
 # Use the Attachment module to display attachments for the bug.
 use Attachment;
 
@@ -144,12 +144,9 @@ sub show_bug {
             next;
         }
 
-        if (Param("usebuggroupsentry")
-          && GroupExists($product)
-          && !UserInGroup($product))
-        {
+        if (!CanEnterProduct($product)) {
             # If we're using bug groups to restrict entry on products, and
-            # this product has a bug group, and the user is not in that
+            # this product has an entry group, and the user is not in that
             # group, we don't want to include that product in this list.
             next;
         }
@@ -275,7 +272,7 @@ sub show_bug {
     SendSQL("SELECT DISTINCT groups.id, name, description," .
              " bug_group_map.group_id IS NOT NULL," .
              " user_group_map.group_id IS NOT NULL," .
-             " isactive" .
+             " isactive, membercontrol, othercontrol" .
              " FROM groups" . 
              " LEFT JOIN bug_group_map" .
              " ON bug_group_map.group_id = groups.id" .
@@ -284,33 +281,48 @@ sub show_bug {
              " ON user_group_map.group_id = groups.id" .
              " AND user_id = $::userid" .
              " AND NOT isbless" .
+             " LEFT JOIN group_control_map" .
+             " ON group_control_map.group_id = groups.id" .
+             " AND group_control_map.product_id = " . $bug{'product_id'} .
              " WHERE isbuggroup");
 
     $user{'inallgroups'} = 1;
 
     while (MoreSQLData()) {
-        my ($groupid, $name, $description, $ison, $ingroup, $isactive) 
-            = FetchSQLData();
+        my ($groupid, $name, $description, $ison, $ingroup, $isactive, 
+            $membercontrol, $othercontrol) = FetchSQLData();
 
         $bug{'inagroup'} = 1 if ($ison);
+        $membercontrol ||= 0;
 
+        if ($isactive && ($membercontrol == CONTROLMAPMANDATORY)) {
+            $bug{'inagroup'} = 1;
+        }
         # For product groups, we only want to display the checkbox if either
-        # (1) The bit is already set, or
-        # (2) The user is in the group, but either:
-        #     (a) The group is a product group for the current product, or
-        #     (b) The group name isn't a product name
-        # This means that all product groups will be skipped, but 
-        # non-product bug groups will still be displayed.
-        if($ison || 
-           ($isactive && ($ingroup && (!Param("usebuggroups") || ($name eq $bug{'product'}) ||
-                         (!defined $::proddesc{$name})))))
+        # (1) The bit is set and not required, or
+        # (2) The group is Shown or Default for members and
+        #     the user is a member of the group.
+        if ($ison || 
+           ($isactive && $ingroup 
+                       && (($membercontrol == CONTROLMAPDEFAULT)
+                       || ($membercontrol == CONTROLMAPSHOWN))
+            ))
         {
             $user{'inallgroups'} &= $ingroup;
 
-            push (@groups, { "bit" => $groupid,
-                             "ison" => $ison,
-                             "ingroup" => $ingroup,
-                             "description" => $description });            
+            my $mandatory;
+            if ($isactive && ($membercontrol == CONTROLMAPMANDATORY)) {
+                $mandatory = 1;
+            } else {
+                $mandatory = 0;
+            }
+            if (($ison) || ($ingroup)) {
+                push (@groups, { "bit" => $groupid,
+                                 "ison" => $ison,
+                                 "ingroup" => $ingroup,
+                                 "mandatory" => $mandatory,
+                                 "description" => $description });            
+            }
         }
     }
 

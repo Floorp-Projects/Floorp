@@ -23,8 +23,6 @@
 # Dawn Endico <endico@mozilla.org>
 # Bryce Nesbitt <bryce@nextbus.COM>,
 # Joe Robins <jmrobins@tgix.com>,
-#    If using the usebuggroups parameter, users shouldn't be able to see
-#    reports for products they don't have access to.
 # Gervase Markham <gerv@gerv.net> and Adam Spiers <adam@spiers.net>
 #    Added ability to chart any combination of resolutions/statuses.
 #    Derive the choice of resolutions/statuses from the -All- data file
@@ -60,20 +58,11 @@ quietly_check_login();
 
 GetVersionTable();
 
-# If the usebuggroups parameter is set, we don't want to list all products.
 # We only want those products that the user has permissions for.
 my @myproducts;
-if(Param("usebuggroups")) {
-    push( @myproducts, "-All-");
-    foreach my $this_product (@legal_product) {
-        if(GroupExists($this_product) && !UserInGroup($this_product)) {
-            next;
-        } else {
-            push( @myproducts, $this_product )
-        }
-    }
-} else {
-    push( @myproducts, "-All-", @legal_product );
+push( @myproducts, "-All-");
+foreach my $this_product (@legal_product) {
+    push(@myproducts, $this_product) if CanEnterProduct($this_product);
 }
 
 if (! defined $FORM{'product'}) {
@@ -91,12 +80,11 @@ if (! defined $FORM{'product'}) {
     grep($_ eq $FORM{'product'}, @myproducts)
       || ThrowUserError("invalid_product_name", {product => $FORM{'product'}});
 
-    # If usebuggroups is on, we don't want people to be able to view
+    # We don't want people to be able to view
     # reports for products they don't have permissions for...
-    Param("usebuggroups") 
-      && GroupExists($FORM{'product'}) 
-      && !UserInGroup($FORM{'product'})
-      && ThrowUserError("report_access_denied");
+    if (!CanEnterProduct($FORM{'product'})) {
+        ThrowUserError("report_access_denied");
+    }
           
     # We've checked that the product exists, and that the user can see it
     # This means that is OK to detaint

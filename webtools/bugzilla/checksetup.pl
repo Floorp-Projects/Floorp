@@ -112,6 +112,7 @@
 
 use strict;
 use vars qw( $db_name %answer );
+use Bugzilla::Constants;
 
 ###########################################################################
 # Non-interactive override
@@ -1716,6 +1717,17 @@ $table{quips} =
      userid mediumint not null default 0, 
      quip text not null';
 
+$table{group_control_map} =
+    'group_id mediumint not null,
+     product_id mediumint not null,
+     entry tinyint not null,
+     membercontrol tinyint not null,
+     othercontrol tinyint not null,
+     canedit tinyint not null,
+     
+     unique(product_id, group_id),
+     index(group_id)';
+
 ###########################################################################
 # Create tables
 ###########################################################################
@@ -2954,7 +2966,7 @@ if (GetFieldDef("logincookies", "hostname")) {
     AddField("logincookies", "ipaddr", "varchar(40) NOT NULL");
 }
 
-# 2002-05-10 - enhanchment bug 143826
+# 2002-08-19 - bugreport@peshkin.net bug 143826
 # Add private comments and private attachments on less-private bugs
 AddField('longdescs', 'isprivate', 'tinyint not null default 0');
 AddField('attachments', 'isprivate', 'tinyint not null default 0');
@@ -3121,7 +3133,7 @@ if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
     ChangeFieldType("attachments", "creation_ts", "datetime NOT NULL");
 }
 
-# 2002-08-XX - bugreport@peshkin.net - bug 157756
+# 2002-09-22 - bugreport@peshkin.net - bug 157756
 #
 # If the whole groups system is new, but the installation isn't, 
 # convert all the old groupset groups, etc...
@@ -3464,6 +3476,54 @@ if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
     print "done.\n";
 }
 
+# 2002-11-24 - bugreport@peshkin.net - bug 147275 
+#
+if (Param('makeproductgroups')) {
+    # If makeproductgroups is enabled and group_control_map is empty,
+    # backward-compatbility usebuggroups-equivalent records should
+    # be created.
+    my $entry = Param('useentrygroupdefault');
+    $sth = $dbh->prepare("SELECT COUNT(*) FROM group_control_map");
+    $sth->execute();
+    my ($mapcnt) = $sth->fetchrow_array();
+    if ($mapcnt == 0) {
+        # Initially populate group_control_map.
+        # First, get all the existing products and their groups.
+        $sth = $dbh->prepare("SELECT groups.id, products.id, groups.name, " .
+                             "products.name FROM groups, products " .
+                             "WHERE isbuggroup != 0 AND isactive != 0");
+        $sth->execute();
+        while (my ($groupid, $productid, $groupname, $productname) 
+                = $sth->fetchrow_array()) {
+            if ($groupname eq $productname) {
+                # Product and group have same name.
+                $dbh->do("INSERT INTO group_control_map " .
+                         "(group_id, product_id, entry, membercontrol, " .
+                         "othercontrol, canedit) " .
+                         "VALUES ($groupid, $productid, $entry, " .
+                         CONTROLMAPDEFAULT . ", " .
+                         CONTROLMAPNA . ", 0)");
+            } else {
+                # See if this group is a product group at all.
+                my $sth2 = $dbh->prepare("SELECT id FROM products WHERE name = " .
+                                     $dbh->quote($groupname));
+                $sth2->execute();
+                my ($id) = $sth2->fetchrow_array();
+                if (!$id) {
+                    # If there is no product with the same name as this
+                    # group, then it is permitted for all products.
+                    $dbh->do("INSERT INTO group_control_map " .
+                             "(group_id, product_id, entry, membercontrol, " .
+                             "othercontrol, canedit) " .
+                             "VALUES ($groupid, $productid, 0, " .
+                             CONTROLMAPSHOWN . ", " .
+                             CONTROLMAPNA . ", 0)");
+                }
+            }
+        }
+    }
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
@@ -3793,3 +3853,4 @@ $dbh->do("UPDATE components SET initialowner = $adminuid WHERE initialowner = 0"
 unlink "data/versioncache";
 
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n" unless $silent;
+

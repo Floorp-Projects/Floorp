@@ -167,6 +167,16 @@ sub UpdateParams {
         delete $param{'usequip'};
     }
 
+    # Change from old product groups to controls for group_control_map
+    # 2002-10-14 bug 147275 bugreport@peshkin.net
+    if (exists $param{'usebuggroups'} && !exists $param{'makeproductgroups'}) {
+        $param{'makeproductgroups'} = $param{'usebuggroups'};
+    }
+    if (exists $param{'usebuggroupsentry'} 
+       && !exists $param{'useentrygroupdefault'}) {
+        $param{'useentrygroupdefault'} = $param{'usebuggroupsentry'};
+    }
+
     # --- DEFAULTS FOR NEW PARAMS ---
 
     foreach my $item (@param_list) {

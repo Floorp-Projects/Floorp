@@ -36,6 +36,7 @@ use strict;
 
 use lib qw(.);
 
+use Bugzilla::Constants;
 require "CGI.pl";
 
 use vars qw(
@@ -51,6 +52,7 @@ use vars qw(
   $userid
   %MFORM
   %versions
+  $proddesc
 );
 
 # We have to connect to the database, even though we don't use it in this code,
@@ -60,7 +62,7 @@ ConnectToDatabase();
 
 # If we're using bug groups to restrict bug entry, we need to know who the 
 # user is right from the start. 
-confirm_login() if (Param("usebuggroupsentry"));
+confirm_login() if AnyEntryGroups();
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
@@ -69,9 +71,7 @@ if (!defined $::FORM{'product'}) {
     my %products;
 
     foreach my $p (@enterable_products) {
-        if (!(Param("usebuggroupsentry") 
-              && GroupExists($p) 
-              && !UserInGroup($p)))
+        if (CanEnterProduct($p))
         {
             $products{$p} = $::proddesc{$p};
         }
@@ -215,13 +215,11 @@ sub pickos {
 # End of subroutines
 ##############################################################################
 
-confirm_login() if (!(Param("usebuggroupsentry")));
+confirm_login() if (!(AnyEntryGroups()));
 
-# If the usebuggroupsentry parameter is set, we need to check and make sure
+# We need to check and make sure
 # that the user has permission to enter a bug against this product.
-if(Param("usebuggroupsentry") 
-   && GroupExists($product) 
-   && !UserInGroup($product)) 
+if(!CanEnterProduct($product))
 {
     ThrowUserError("entry_access_denied", { product => $product});         
 }
@@ -309,30 +307,25 @@ if (UserInGroup("editbugs") || UserInGroup("canconfirm")) {
 $vars->{'bug_status'} = \@status; 
 $default{'bug_status'} = $status[0];
 
-# Select whether to restrict this bug to the product's bug group or not, 
-# if the usebuggroups parameter is set, and if this product has a bug group.
-# First we get the bit and description for the group.
-my $group_id = '0';
-
-if(Param("usebuggroups")) {
-    ($group_id) = GroupExists($product);
-}
-
-SendSQL("SELECT DISTINCT groups.id, groups.name, groups.description " .
-        "FROM groups, user_group_map " .
-        "WHERE user_group_map.group_id = groups.id " .
-        "AND user_group_map.user_id = $::userid " .
-        "AND isbless = 0 " .
-        "AND isbuggroup = 1 AND isactive = 1 ORDER BY description");
+SendSQL("SELECT DISTINCT groups.id, groups.name, groups.description, " .
+        "membercontrol, othercontrol " .
+        "FROM groups LEFT JOIN group_control_map " .
+        "ON group_id = id AND product_id = $product_id " .
+        "WHERE isbuggroup != 0 AND isactive != 0 ORDER BY description");
 
 my @groups;
 
 while (MoreSQLData()) {
-    my ($id, $prodname, $description) = FetchSQLData();
-    # Don't want to include product groups other than this product.
-    next unless(!Param("usebuggroups") || $prodname eq $product || 
-                !defined($::proddesc{$prodname}));
-
+    my ($id, $groupname, $description, $membercontrol, $othercontrol) 
+        = FetchSQLData();
+    # Only include groups if the entering user will have an option.
+    next if ((!$membercontrol) 
+               || ($membercontrol == CONTROLMAPNA) 
+               || ($membercontrol == CONTROLMAPMANDATORY)
+               || (($othercontrol != CONTROLMAPSHOWN) 
+                    && ($othercontrol != CONTROLMAPDEFAULT)
+                    && (!UserInGroup($groupname)))
+             );
     my $check;
 
     # If this is the group for this product, make it checked.
@@ -343,11 +336,10 @@ while (MoreSQLData()) {
         $check = formvalue("bit-$id", 0);
     }
     else {
-        # $group_bit will only have a non-zero value if we're using
-        # bug groups and have one for this product.
-        # If $group_bit is 0, it won't match the current group, so compare 
-        # it to the current bit instead of checking for non-zero.
-        $check = ($group_id == $id);
+        # Checkbox is checked by default if $control is a default state.
+        $check = (($membercontrol == CONTROLMAPDEFAULT)
+                 || (($othercontrol == CONTROLMAPDEFAULT)
+                      && (!UserInGroup($groupname))));
     }
 
     my $group = 
