@@ -895,7 +895,7 @@ public:
 
 		for (i = 0; set_font_size_params[i].name != NULL; i++) {
 			char*       name = set_font_size_params[i].name;
-			ED_FontSize size = (ED_FontSize) set_font_size_params[i].data;
+			ED_FontSize size = (ED_FontSize)(int)set_font_size_params[i].data;
 			if (XP_STRCMP(name, info->params[0]) == 0) {
 				return isSelected(view, size);
 			}
@@ -920,7 +920,7 @@ public:
 			return 2;
 
 		for (i = 0; set_font_size_params[i].name != NULL; i++) {
-			ED_FontSize match = (ED_FontSize) set_font_size_params[i].data;
+			ED_FontSize match = (ED_FontSize)(int)set_font_size_params[i].data;
 			if (match == size)
 				return i;
 		}
