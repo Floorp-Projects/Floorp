@@ -235,7 +235,7 @@ static PRBool CheckAndStrip(
 static PRInt16 CheckOrdinalAndStrip(nsString& ioString, PRInt16& outOrdinal)
 //----------------------------------------------------------------------------------------
 {
-    PRInt32 colonPos = ioString.Find(':');
+    PRInt32 colonPos = ioString.FindChar(':');
     if (colonPos <= 0)
         return PR_FALSE;
     char* intString = ioString.ToNewCString();
