@@ -1290,6 +1290,9 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
 	if (numChildren < 1)	return(NS_OK);
 
+	nsCOMPtr<nsIDocument> doc;
+	container->GetDocument(*getter_AddRefs(doc));
+
 	// Note: This is a straight allocation (not a COMPtr) so we
 	// can't return out of this routine until/unless we free it!
 	nsIContent ** flatArray = new nsIContent*[numChildren + 1];
@@ -1372,7 +1375,14 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 		// recurse on grandchildren
 		for (loop=currentElement; loop < currentElement + numElements; loop++)
 		{
-			container->InsertChildAt((nsIContent *)flatArray[loop], childPos++, PR_FALSE);
+			nsIContent* kid = NS_STATIC_CAST(nsIContent*, flatArray[loop]);
+
+			// Because InsertChildAt() only does a
+			// "shallow" SetDocument(), we need to do a
+			// "deep" one now...
+			kid->SetDocument(doc, PR_TRUE);
+
+			container->InsertChildAt(kid, childPos++, PR_FALSE);
 
 			// Bug 6665, part deux. The Big Hack.
 			nsIRDFResource	*resource;
@@ -1818,6 +1828,13 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	if (NS_FAILED(rv = treeBody->GetParent(*getter_AddRefs(treeParent))))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
 	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
+
+	// We need to do a deep SetDocument(), because AppendChildTo()
+	// only does a shallow one.
+	nsCOMPtr<nsIDocument> doc;
+	treeParent->GetDocument(*getter_AddRefs(doc));
+	treeBody->SetDocument(doc, PR_TRUE);
+
 	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
 
 	return(NS_OK);
