@@ -347,7 +347,7 @@ char * tests[] = {
 #endif
     "function fact(n) { if (n > 1) return n * fact(n-1); else return 1; } print(fact(6), \" should be 720\"); return;" ,
     "a = { f1: 1, f2: 2}; print(a.f2++, \" should be 2\"); print(a.f2 <<= 1, \" should be 6\"); return;" ,
-    "class A { static var b = 3; static function s() { return b++; }function x() { return \"Ax\"; } function y() { return \"Ay\"; } }  var a:A = new A; print(a.s(), \" should be 3\"); print(A.b, \" should be 4\"); return;",
+    "class A { static var b = 3; static function s() { return b++; }function x() { return \"Ax\"; } function y() { return \"Ay\"; } }  var a:A = new A; print(A.s(), \" should be 3\"); print(A.b, \" should be 4\"); return;",
     "class B extends A { function x() { return \"Bx\"; }  }  var b:B = new B; print(b.x(), \" should be Bx\"); print(b.y(), \" should be Ay\"); return;"
 };
 
