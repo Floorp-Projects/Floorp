@@ -1515,6 +1515,22 @@ GetFrameYMost(nsIFrame* aFrame)
   return rect.YMost();
 }
 
+nsIFrame*
+GetLastRowSibling(nsIFrame* aRowFrame)
+{
+  nsIFrame* lastRowFrame = nsnull;
+  nsIFrame* lastFrame    = aRowFrame;
+  while (lastFrame) {
+    nsCOMPtr<nsIAtom> fType;
+    lastFrame->GetFrameType(getter_AddRefs(fType));
+    if (nsLayoutAtoms::tableRowFrame == fType.get()) {
+      lastRowFrame = lastFrame;
+    }
+    lastFrame->GetNextSibling(&lastFrame);
+  }
+  return lastRowFrame;
+}
+
 NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
                                                  nsHTMLReflowMetrics& aDesiredSize,
                                                  RowGroupReflowState& aReflowState,
@@ -1562,7 +1578,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresConte
         // We don't need to do any painting. The row frame has made sure that
         // the cell is properly positioned, and done any necessary repainting.
         // Just calculate our desired height
-        aDesiredSize.height = GetFrameYMost(mFrames.LastChild());
+        aDesiredSize.height = GetFrameYMost(GetLastRowSibling(mFrames.FirstChild()));
       } else {
         // Inform the row of its new height.
         ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
@@ -1592,7 +1608,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresConte
     } else {
       if (desiredSize.mNothingChanged) { // mNothingChanges currently only works when a cell is the target
         // the cell frame did not change size. Just calculate our desired height
-        aDesiredSize.height = GetFrameYMost(mFrames.LastChild());
+        aDesiredSize.height = GetFrameYMost(GetLastRowSibling(mFrames.FirstChild()));
       } else {
         // Adjust the frames that follow...
         AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
