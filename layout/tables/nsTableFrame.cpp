@@ -2009,12 +2009,12 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
       ((nsHTMLReflowState&)aReflowState).mPercentHeightReflowInitiator = specialReflowInitiator;
       // XXX We should call SetInitiatedSpecialReflow(PR_FALSE) at some point, but it is difficult to tell when
       SetInitiatedSpecialReflow(PR_TRUE);
-      
+
       if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         // if there is an incomplete child, then set the desired height to include it but not the next one
         nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
-        aDesiredSize.height = borderPadding.top + GetCellSpacingY() +
-                              lastChildReflowed->GetSize().height;
+        aDesiredSize.height = borderPadding.bottom + GetCellSpacingY() +
+                              lastChildReflowed->GetRect().YMost();
       }
       haveDesiredHeight = PR_TRUE;
       reflowedChildren  = PR_TRUE;
@@ -3225,7 +3225,9 @@ nsTableFrame::ReflowChildren(nsPresContext*     aPresContext,
           kidReflowState.mFlags.mIsTopOfPage = PR_FALSE;
         }
         aReflowState.y += cellSpacingY;
-        
+        if (NS_UNCONSTRAINEDSIZE != aReflowState.availSize.height) {
+          aReflowState.availSize.height -= cellSpacingY;
+        }
         // record the next in flow in case it gets destroyed and the row group array
         // needs to be recomputed.
         nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();
@@ -3233,6 +3235,35 @@ nsTableFrame::ReflowChildren(nsPresContext*     aPresContext,
         rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
                          aReflowState.x, aReflowState.y, 0, aStatus);
         haveReflowedRowGroup = PR_TRUE;
+        
+        // see if the rowgroup did not fit on this page might be pushed on
+        // the next page
+        if (NS_FRAME_IS_COMPLETE(aStatus) && isPaginated &&
+            (NS_UNCONSTRAINEDSIZE != kidReflowState.availableHeight) &&
+            kidReflowState.availableHeight < desiredSize.height) {
+          // if we are on top of the page place with dataloss
+          if (kidReflowState.mFlags.mIsTopOfPage) {
+            if (childX+1 < numRowGroups) {
+              nsIFrame* nextRowGroupFrame = (nsIFrame*) rowGroups.ElementAt(childX +1);
+              if (nextRowGroupFrame) {
+                PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize);
+                aStatus = NS_FRAME_NOT_COMPLETE;
+                PushChildren(aPresContext, nextRowGroupFrame, kidFrame);
+                aLastChildReflowed = kidFrame;
+                break;
+              }
+            }
+          }
+          else { // we are not on top, push this rowgroup onto the next page
+            if (prevKidFrame) { // we had a rowgroup before so push this
+              aStatus = NS_FRAME_NOT_COMPLETE;
+              PushChildren(aPresContext, kidFrame, prevKidFrame);
+              aLastChildReflowed = prevKidFrame;
+              break;
+            }
+          }
+        }
+
         aLastChildReflowed   = kidFrame;
 
         pageBreak = PR_FALSE;
