@@ -203,6 +203,11 @@ public:
   // call if you change style data after creation
   virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;
 
+  // Change the parent of the context, only to be used for 
+  // inserting or removing pseudo contexts
+  virtual void  ReParent(nsIStyleContext* aNewParentContext,
+                         nsIPresContext* aPresContext) = 0;
+
   // debugging
   virtual void  List(FILE* out, PRInt32 aIndent) = 0;
 };
