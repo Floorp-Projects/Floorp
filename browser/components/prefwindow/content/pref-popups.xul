@@ -48,12 +48,9 @@
       onload="init()"
       headertitle="&title;">
           
-<script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
-
 <script type="application/x-javascript">
 <![CDATA[
   var _elementIDs = ["popupPolicy"];
-  var domCbox = null;
   var policyButton;
   var manageButton;
 
@@ -61,19 +58,13 @@
     parent.initPanel('chrome://browser/content/pref/pref-popups.xul');
     policyButton = document.getElementById("popupPolicy");
     manageButton = document.getElementById("popupView");
-    setButtons(true);
+    setButtons();
   }
-  function setButtons(all) {
-    manageButton.disabled = policyButton.value == 1;
+  function setButtons() {
+    manageButton.disabled = policyButton.checked;
   }
   function selectPolicy() {
-    if (!domCbox) {
-      // any selection clears the competing DOM pref
-      domCbox = document.getElementById("popupDomShadow");
-      _elementIDs.push("popupDomShadow");
-      domCbox.checked = false;
-    }
-    setButtons(true);
+    setButtons();
   }
 ]]>
 </script>
@@ -83,21 +74,14 @@
 
   <description>&popupDetails;</description>
 
-  <radiogroup id="popupPolicy" prefstring="privacy.popups.policy">
-    <radio value="1" label="&popupAllow.label;"
-            accesskey="&popupAllow.accesskey;"
-            oncommand="selectPolicy()"/>
-    <radio value="2" label="&popupReject.label;"
-            accesskey="&popupReject.accesskey;"
-            oncommand="selectPolicy()"/>
-  </radiogroup>
-
-  <checkbox id="popupDomShadow" hidden="true"
-            prefstring="dom.disable_open_during_load"/>
-
-  <hbox pack="end">
+  <hbox align="center">
+    <checkbox label="&popupAllow.label;"
+              prefstring="dom.disable_open_during_load"
+              accesskey="&popupAllow.accesskey;"
+              oncommand="selectPolicy()" id="popupPolicy"/>
+    <spacer flex="1"/>
     <button id="popupView" label="&popupView.label;"
-            accesskey="&popupView.accesskey;" oncommand="viewPopups();"/>
+              accesskey="&popupView.accesskey;" oncommand="viewPopups();"/>
   </hbox>
 
 </groupbox>
