@@ -29,14 +29,12 @@
 
 
 #include "nsBoxFrame.h"
-#include "nsIAnonymousContentCreator.h"
 
 class nsISupportsArray;
 
 nsresult NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
-class nsScrollbarFrame : public nsBoxFrame,
-                         public nsIAnonymousContentCreator
+class nsScrollbarFrame : public nsBoxFrame
 {
 public:
     nsScrollbarFrame(nsIPresShell* aShell):nsBoxFrame(aShell) {}
@@ -53,10 +51,6 @@ public:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
-
-  // nsIAnonymousConentCreator
-  NS_IMETHOD  CreateAnonymousContent(nsIPresContext* aPresContext,
-                                     nsISupportsArray& aAnonymousItems);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

@@ -49,7 +49,6 @@ nsresult NS_NewSliderFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 class nsSliderFrame : public nsHTMLContainerFrame, 
                       public nsIDOMMouseListener, 
-                      public nsIAnonymousContentCreator,
                       public nsITimerCallback
 {
 public:
@@ -83,9 +82,6 @@ public:
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
-
-       NS_IMETHOD  CreateAnonymousContent(nsIPresContext* aPresContext,
-                                          nsISupportsArray& aAnonymousItems);
 
    NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

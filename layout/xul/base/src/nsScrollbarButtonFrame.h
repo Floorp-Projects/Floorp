@@ -30,15 +30,16 @@
 #ifndef nsScrollbarButtonFrame_h___
 #define nsScrollbarButtonFrame_h___
 
-#include "nsTitledButtonFrame.h"
+#include "nsXULButtonFrame.h"
 #include "nsITimerCallback.h"
 
 class nsSliderFrame;
 
-class nsScrollbarButtonFrame : public nsTitledButtonFrame, 
+class nsScrollbarButtonFrame : public nsXULButtonFrame, 
                                public nsITimerCallback
 {
 public:
+  nsScrollbarButtonFrame(nsIPresShell* aPresShell);
 
   // Overrides
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
@@ -54,7 +55,7 @@ public:
                                   nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
   static nsresult GetParentWithTag(nsIAtom* atom, nsIFrame* start, nsIFrame*& result);
 
-   NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 

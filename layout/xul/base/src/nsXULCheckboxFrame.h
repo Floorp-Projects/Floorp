@@ -22,15 +22,14 @@
 #ifndef nsXULCheckboxFrame_h___
 #define nsXULCheckboxFrame_h___
 
-#include "nsTitledButtonFrame.h"
+#include "nsXULButtonFrame.h"
 
-class nsXULCheckboxFrame : public nsTitledButtonFrame
+class nsXULCheckboxFrame : public nsXULButtonFrame
 {
 public:
+  nsXULCheckboxFrame(nsIPresShell* aPresShell);
 
   friend nsresult NS_NewXULCheckboxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-
-  PRIntn GetDefaultAlignment();
 
 }; // class nsXULCheckboxFrame
 

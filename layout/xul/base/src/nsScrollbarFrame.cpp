@@ -251,43 +251,11 @@ NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewScrollbarFrame
 
-/**
- * Anonymous interface
- */
-NS_IMETHODIMP
-nsScrollbarFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
-                                         nsISupportsArray& aAnonymousChildren)
-{
-  // if not content the create some anonymous content
-  PRInt32 count = 0;
-  mContent->ChildCount(count); 
-
-  if (count == 0) {
- 
-    nsCOMPtr<nsIContent> content;
-    NS_CreateAnonymousNode(mContent, nsXULAtoms::scrollbarbutton, nsXULAtoms::nameSpaceID, content);
-    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, "decrement", PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
-
-    NS_CreateAnonymousNode(mContent, nsXULAtoms::slider, nsXULAtoms::nameSpaceID, content);
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
-
-    NS_CreateAnonymousNode(mContent, nsXULAtoms::scrollbarbutton, nsXULAtoms::nameSpaceID, content);
-    content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, "increment", PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
-  }
-
-
-  return NS_OK;
-}
-
 
 //
 // QueryInterface
 //
 NS_INTERFACE_MAP_BEGIN(nsScrollbarFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 

@@ -34,6 +34,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIXMLContent.h"
+#include "nsIPresContext.h"
 #include "nsDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"

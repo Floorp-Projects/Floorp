@@ -103,7 +103,6 @@ nsMenuFrame::Release(void)
 NS_INTERFACE_MAP_BEGIN(nsMenuFrame)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIMenuFrame)
-  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 //
@@ -1121,13 +1120,6 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
   } while(NS_SUCCEEDED(sib->GetNextSibling(&sib)) && sib);
 
 }
-
-NS_IMETHODIMP
-nsMenuFrame::CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousChildren)
-{
-  return NS_OK;
-}
-
 
 void 
 nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
