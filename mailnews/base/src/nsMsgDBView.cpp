@@ -4898,7 +4898,7 @@ nsresult nsMsgDBView::NavigateFromPos(nsMsgNavigationTypeValue motion, nsMsgView
             *pResultKey = m_keys.GetAt(*pResultIndex);
             break;
         case nsMsgNavigationType::previousMessage:
-            *pResultIndex = (startIndex != nsMsgViewIndex_None) ? startIndex - 1 : 0;
+            *pResultIndex = (startIndex != nsMsgViewIndex_None && startIndex > 0) ? startIndex - 1 : 0;
             *pResultKey = m_keys.GetAt(*pResultIndex);
             break;
         case nsMsgNavigationType::lastMessage:
