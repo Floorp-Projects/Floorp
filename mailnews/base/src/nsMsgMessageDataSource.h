@@ -19,15 +19,15 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsIFolderListener.h"
+#include "nsMsgRDFDataSource.h"
 
 /**
  * The mail message source.
  */
-class nsMsgMessageDataSource : public nsIRDFDataSource
+class nsMsgMessageDataSource : public nsMsgRDFDataSource, public nsIFolderListener
 {
 private:
-	char*         mURI;
-	nsVoidArray*  mObservers;
 	PRBool				mInitialized;
 
 	// The cached service managers
@@ -83,10 +83,6 @@ public:
 						  PRBool tv,
 						  PRBool* hasAssertion);
 
-	NS_IMETHOD AddObserver(nsIRDFObserver* n);
-
-	NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
-
 	NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
 						 nsISimpleEnumerator** labels);
 
@@ -109,6 +105,17 @@ public:
 					   nsIRDFResource*   aCommand,
 					   nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
+	//nsIFolderListener
+	NS_IMETHOD OnItemAdded(nsIFolder *parentFolder, nsISupports *item);
+
+	NS_IMETHOD OnItemRemoved(nsIFolder *parentFolder, nsISupports *item);
+
+	NS_IMETHOD OnItemPropertyChanged(nsISupports *item, const char *property,
+									const char *oldValue, const char *newValue);
+
+	NS_IMETHOD OnItemPropertyFlagChanged(nsISupports *item, const char *property,
+									   PRUint32 oldFlag, PRUint32 newFlag);
+
 	// caching frequently used resources
 protected:
 
@@ -128,7 +135,13 @@ protected:
 								 nsIRDFNode **target);
 	nsresult createMessageStatusNode(nsIMessage *message,
 								   nsIRDFNode **target);
+	nsresult createStatusStringFromFlag(PRUint32 flags, nsAutoString &statusStr);
 
+	nsresult DoMarkMessageRead(nsIMessage *message, PRBool markRead);
+
+	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
+								  nsIRDFResource *propertyResource,
+								  const char *oldValue, const char *newValue);
 
 	static nsresult getMessageArcLabelsOut(nsIMessage *message,
                                          nsISupportsArray **arcs);
@@ -138,5 +151,11 @@ protected:
 	static nsIRDFResource* kNC_Sender;
 	static nsIRDFResource* kNC_Date;
 	static nsIRDFResource* kNC_Status;
+
+	// commands
+	static nsIRDFResource* kNC_MarkRead;
+	static nsIRDFResource* kNC_MarkUnread;
+	static nsIRDFResource* kNC_ToggleRead;
+
 
 };

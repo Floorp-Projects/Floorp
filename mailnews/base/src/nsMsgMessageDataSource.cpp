@@ -27,10 +27,12 @@
 #include "nsIMessage.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsIMsgMailSession.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,			NS_MSGHEADERPARSER_CID); 
+static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -43,12 +45,13 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Sender;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Date;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Status;
 
-
+//commands
+nsIRDFResource* nsMsgMessageDataSource::kNC_MarkRead;
+nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnread;
+nsIRDFResource* nsMsgMessageDataSource::kNC_ToggleRead;
 
 
 nsMsgMessageDataSource::nsMsgMessageDataSource():
-  mURI(nsnull),
-  mObservers(nsnull),
   mInitialized(PR_FALSE),
   mRDFService(nsnull),
   mHeaderParser(nsnull)
@@ -64,27 +67,38 @@ nsMsgMessageDataSource::nsMsgMessageDataSource():
                                           nsIMsgHeaderParser::GetIID(), 
                                           (void **) &mHeaderParser);
 
-  PR_ASSERT(NS_SUCCEEDED(rv));
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->AddFolderListener(this);
+	PR_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 {
-  mRDFService->UnregisterDataSource(this);
+	nsresult rv;
+	mRDFService->UnregisterDataSource(this);
 
-  PL_strfree(mURI);
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 
-  delete mObservers; // we only hold a weak ref to each observer
+	if(NS_SUCCEEDED(rv))
+		mailSession->RemoveFolderListener(this);
 
-  nsrefcnt refcnt;
+	PL_strfree(mURI);
 
-  NS_RELEASE2(kNC_Subject, refcnt);
-  NS_RELEASE2(kNC_Sender, refcnt);
-  NS_RELEASE2(kNC_Date, refcnt);
-  NS_RELEASE2(kNC_Status, refcnt);
+	nsrefcnt refcnt;
 
-  nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
-  NS_IF_RELEASE(mHeaderParser);
-  mRDFService = nsnull;
+	NS_RELEASE2(kNC_Subject, refcnt);
+	NS_RELEASE2(kNC_Sender, refcnt);
+	NS_RELEASE2(kNC_Date, refcnt);
+	NS_RELEASE2(kNC_Status, refcnt);
+
+	NS_RELEASE2(kNC_MarkRead, refcnt);
+	NS_RELEASE2(kNC_MarkUnread, refcnt);
+	NS_RELEASE2(kNC_ToggleRead, refcnt);
+
+	nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); // XXX probably need shutdown listener here
+	NS_IF_RELEASE(mHeaderParser);
+	mRDFService = nsnull;
 }
 
 
@@ -94,19 +108,18 @@ NS_IMPL_RELEASE(nsMsgMessageDataSource)
 NS_IMETHODIMP
 nsMsgMessageDataSource::QueryInterface(REFNSIID iid, void** result)
 {
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
+	if (! result)
+		return NS_ERROR_NULL_POINTER;
 
-  *result = nsnull;
-  if (iid.Equals(nsIRDFDataSource::GetIID()) ||
-    iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(kISupportsIID))
-  {
-    *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-    NS_ADDREF(this);
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
+	*result = nsnull;
+	if(iid.Equals(nsIFolderListener::GetIID()))
+	{
+		*result = NS_STATIC_CAST(nsIFolderListener*, this);
+		NS_ADDREF(this);
+		return NS_OK;
+	}
+	else
+		return nsMsgRDFDataSource::QueryInterface(iid, result);
 }
 
  // nsIRDFDataSource methods
@@ -126,6 +139,10 @@ NS_IMETHODIMP nsMsgMessageDataSource::Init(const char* uri)
 	mRDFService->GetResource(NC_RDF_SENDER, &kNC_Sender);
     mRDFService->GetResource(NC_RDF_DATE, &kNC_Date);
     mRDFService->GetResource(NC_RDF_STATUS, &kNC_Status);
+
+    mRDFService->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
+    mRDFService->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
+    mRDFService->GetResource(NC_RDF_TOGGLEREAD, &kNC_ToggleRead);
     
   }
   mInitialized = PR_TRUE;
@@ -269,24 +286,6 @@ NS_IMETHODIMP nsMsgMessageDataSource::HasAssertion(nsIRDFResource* source,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgMessageDataSource::AddObserver(nsIRDFObserver* n)
-{
-  if (! mObservers) {
-    if ((mObservers = new nsVoidArray()) == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-  mObservers->AppendElement(n);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgMessageDataSource::RemoveObserver(nsIRDFObserver* n)
-{
-  if (! mObservers)
-    return NS_OK;
-  mObservers->RemoveElement(n);
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsMsgMessageDataSource::ArcLabelsIn(nsIRDFNode* node,
                                                  nsISimpleEnumerator** labels)
@@ -405,22 +404,69 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources
                                  nsIRDFResource*   aCommand,
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
-  nsresult rv = NS_OK;
+	nsresult rv = NS_OK;
 
-  // XXX need to handle batching of command applied to all sources
+	// XXX need to handle batching of command applied to all sources
 
-  PRUint32 cnt;
-  rv = aSources->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt; i++) {
-    nsISupports* source = (*aSources)[i];
-    nsCOMPtr<nsIMessage> message = do_QueryInterface(source, &rv);
-		if (NS_SUCCEEDED(rv)) {
-
-    }
-  }
+	PRUint32 cnt;
+	rv  = aSources->Count(&cnt);
+	if(NS_FAILED(rv)) return rv;
+	for (PRUint32 i = 0; i < cnt; i++)
+	{
+		nsISupports* source = (*aSources)[i];
+		nsCOMPtr<nsIMessage> message = do_QueryInterface(source, &rv);
+		if (NS_SUCCEEDED(rv))
+		{
+			if(peq(aCommand, kNC_MarkRead))
+				rv = DoMarkMessageRead(message, PR_TRUE);
+			else if(peq(aCommand, kNC_MarkUnread))
+				rv = DoMarkMessageRead(message, PR_FALSE);
+		}
+	}
   //for the moment return NS_OK, because failure stops entire DoCommand process.
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMessageDataSource::OnItemAdded(nsIFolder *parentFolder, nsISupports *item)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMessageDataSource::OnItemRemoved(nsIFolder *parentFolder, nsISupports *item)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyChanged(nsISupports *item, const char *property,
+														   const char *oldValue, const char *newValue)
+
+{
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *item, const char *property,
+									   PRUint32 oldFlag, PRUint32 newFlag)
+{
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item, &rv));
+
+	if(NS_SUCCEEDED(rv))
+	{
+		if(PL_strcmp("Status", property) == 0)
+		{
+			nsAutoString oldStatusStr, newStatusStr;
+			rv = createStatusStringFromFlag(oldFlag, oldStatusStr);
+			if(NS_FAILED(rv))
+				return rv;
+			rv = createStatusStringFromFlag(newFlag, newStatusStr);
+			if(NS_FAILED(rv))
+				return rv;
+			rv = NotifyPropertyChanged(resource, kNC_Status, nsAutoCString(oldStatusStr), 
+								  nsAutoCString(newStatusStr));
+		}
+	}
+	return rv;
 }
 
 nsresult
@@ -520,20 +566,52 @@ nsMsgMessageDataSource::createMessageStatusNode(nsIMessage *message,
                                                nsIRDFNode **target)
 {
 	nsresult rv;
-  PRUint32 flags;
-  rv = message->GetFlags(&flags);
+	PRUint32 flags;
+	nsAutoString statusStr;
+	rv = message->GetFlags(&flags);
 	if(NS_FAILED(rv))
 		return rv;
-  nsAutoString flagStr = "";
-  if(flags & MSG_FLAG_REPLIED)
-    flagStr = "replied";
-  else if(flags & MSG_FLAG_FORWARDED)
-    flagStr = "forwarded";
-  else if(flags & MSG_FLAG_NEW)
-    flagStr = "new";
-  else if(flags & MSG_FLAG_READ)
-    flagStr = "read";
-  rv = createNode(flagStr, target);
-  return rv;
+	rv = createStatusStringFromFlag(flags, statusStr);
+	if(NS_FAILED(rv))
+		return rv;
+	rv = createNode(statusStr, target);
+	return rv;
 }
-  
+
+nsresult 
+nsMsgMessageDataSource::createStatusStringFromFlag(PRUint32 flags, nsAutoString &statusStr)
+{
+	nsresult rv = NS_OK;
+	statusStr = "";
+	if(flags & MSG_FLAG_REPLIED)
+		statusStr = "replied";
+	else if(flags & MSG_FLAG_FORWARDED)
+		statusStr = "forwarded";
+	else if(flags & MSG_FLAG_NEW)
+		statusStr = "new";
+	else if(flags & MSG_FLAG_READ)
+		statusStr = "read";
+	return rv;
+}
+
+nsresult
+nsMsgMessageDataSource::DoMarkMessageRead(nsIMessage *message, PRBool markRead)
+{
+	nsresult rv;
+	rv = message->MarkRead(markRead);
+	return rv;
+}
+
+nsresult nsMsgMessageDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
+													  nsIRDFResource *propertyResource,
+													  const char *oldValue, const char *newValue)
+{
+	nsCOMPtr<nsIRDFNode> oldValueNode, newValueNode;
+	nsString oldValueStr = oldValue;
+	nsString newValueStr = newValue;
+	createNode(oldValueStr,getter_AddRefs(oldValueNode));
+	createNode(newValueStr, getter_AddRefs(newValueNode));
+	NotifyObservers(resource, propertyResource, oldValueNode, PR_FALSE);
+	NotifyObservers(resource, propertyResource, newValueNode, PR_TRUE);
+	return NS_OK;
+}
