@@ -1457,6 +1457,18 @@ nsString*
 nsFormSubmission::ProcessValue(nsIDOMHTMLElement* aSource,
                                const nsAString& aName, const nsAString& aValue)
 {
+  // Hijack _charset_ (hidden inputs only) for internationalization (bug 18643)
+  if (aName == NS_LITERAL_STRING("_charset_")) {
+    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
+    if (formControl) {
+      PRInt32 type;
+      formControl->GetType(&type);
+      if (type == NS_FORM_INPUT_HIDDEN) {
+        return new nsString(mCharset);
+      }
+    }
+  }
+
   nsString* retval = nsnull;
   if (mFormProcessor) {
     // XXX We need to change the ProcessValue interface to take nsAString
