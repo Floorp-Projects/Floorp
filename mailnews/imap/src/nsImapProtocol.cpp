@@ -223,7 +223,7 @@ nsImapProtocol::nsImapProtocol() :
   m_urlInProgress = PR_FALSE;
   m_socketIsOpen = PR_FALSE;
   m_gotFEEventCompletion = PR_FALSE;
-    m_connectionStatus = 0;
+  m_connectionStatus = 0;
   m_hostSessionList = nsnull;
   m_flagState = nsnull;
     
@@ -231,17 +231,17 @@ nsImapProtocol::nsImapProtocol() :
     GlobalInitialization();
 
     // ***** Thread support *****
-    m_thread = nsnull;
-    m_dataAvailableMonitor = nsnull;
+  m_thread = nsnull;
+  m_dataAvailableMonitor = nsnull;
   m_urlReadyToRunMonitor = nsnull;
   m_pseudoInterruptMonitor = nsnull;
   m_dataMemberMonitor = nsnull;
   m_threadDeathMonitor = nsnull;
-    m_eventCompletionMonitor = nsnull;
+  m_eventCompletionMonitor = nsnull;
   m_waitForBodyIdsMonitor = nsnull;
   m_fetchMsgListMonitor = nsnull;
   m_fetchBodyListMonitor = nsnull;
-    m_imapThreadIsRunning = PR_FALSE;
+  m_imapThreadIsRunning = PR_FALSE;
   m_currentServerCommandTagNumber = 0;
   m_active = PR_FALSE;
   m_folderNeedsSubscribing = PR_FALSE;
@@ -249,23 +249,23 @@ nsImapProtocol::nsImapProtocol() :
   m_threadShouldDie = PR_FALSE;
   m_pseudoInterrupted = PR_FALSE;
   m_nextUrlReadyToRun = PR_FALSE;
-    m_trackingTime = PR_FALSE;
-    LL_I2L(m_startTime, 0);
-    LL_I2L(m_endTime, 0);
-    LL_I2L(m_lastActiveTime, 0);
+  m_trackingTime = PR_FALSE;
+  LL_I2L(m_startTime, 0);
+  LL_I2L(m_endTime, 0);
+  LL_I2L(m_lastActiveTime, 0);
   LL_I2L(m_lastProgressTime, 0);
   ResetProgressInfo();
 
-    m_tooFastTime = 0;
-    m_idealTime = 0;
-    m_chunkAddSize = 0;
-    m_chunkStartSize = 0;
-    m_maxChunkSize = 0;
-    m_fetchByChunks = PR_FALSE;
-    m_chunkSize = 0;
-    m_chunkThreshold = 0;
-    m_fromHeaderSeen = PR_FALSE;
-    m_closeNeededBeforeSelect = PR_FALSE;
+  m_tooFastTime = 0;
+  m_idealTime = 0;
+  m_chunkAddSize = 0;
+  m_chunkStartSize = 0;
+  m_maxChunkSize = 0;
+  m_fetchByChunks = PR_FALSE;
+  m_chunkSize = 0;
+  m_chunkThreshold = 0;
+  m_fromHeaderSeen = PR_FALSE;
+  m_closeNeededBeforeSelect = PR_FALSE;
   m_needNoop = PR_FALSE;
   m_noopCount = 0;
   m_promoteNoopToCheckCount = 0;
@@ -274,9 +274,9 @@ nsImapProtocol::nsImapProtocol() :
   m_fetchBodyListIsNew = PR_FALSE;
 
   m_checkForNewMailDownloadsHeaders = PR_TRUE;  // this should be on by default
-    m_hierarchyNameState = kNoOperationInProgress;
-    m_onlineBaseFolderExists = PR_FALSE;
-    m_discoveryStatus = eContinue;
+  m_hierarchyNameState = kNoOperationInProgress;
+  m_onlineBaseFolderExists = PR_FALSE;
+  m_discoveryStatus = eContinue;
 
   // m_dataOutputBuf is used by Send Data
   m_dataOutputBuf = (char *) PR_CALLOC(sizeof(char) * OUTPUT_BUFFER_SIZE);
@@ -292,11 +292,11 @@ nsImapProtocol::nsImapProtocol() :
 
   m_progressStringId = 0;
 
-    // subscription
-    m_autoSubscribe = PR_TRUE;
-    m_autoUnsubscribe = PR_TRUE;
-    m_autoSubscribeOnOpen = PR_TRUE;
-    m_deletableChildren = nsnull;
+  // subscription
+  m_autoSubscribe = PR_TRUE;
+  m_autoUnsubscribe = PR_TRUE;
+  m_autoSubscribeOnOpen = PR_TRUE;
+  m_deletableChildren = nsnull;
 
   Configure(gTooFastTime, gIdealTime, gChunkAddSize, gChunkSize,
                     gChunkThreshold, gFetchByChunks, gMaxChunkSize);
@@ -341,13 +341,13 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 
   // Now initialize the thread for the connection and create appropriate monitors
   if (m_thread == nsnull)
-    {
-        m_dataAvailableMonitor = PR_NewMonitor();
+  {
+    m_dataAvailableMonitor = PR_NewMonitor();
     m_urlReadyToRunMonitor = PR_NewMonitor();
     m_pseudoInterruptMonitor = PR_NewMonitor();
     m_dataMemberMonitor = PR_NewMonitor();
     m_threadDeathMonitor = PR_NewMonitor();
-        m_eventCompletionMonitor = PR_NewMonitor();
+    m_eventCompletionMonitor = PR_NewMonitor();
     m_waitForBodyIdsMonitor = PR_NewMonitor();
     m_fetchMsgListMonitor = PR_NewMonitor();
     m_fetchBodyListMonitor = PR_NewMonitor();
@@ -362,7 +362,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
     }
     m_iThread->GetPRThread(&m_thread);
 
-    }
+  }
   return NS_OK;
 }
 
@@ -377,14 +377,14 @@ nsImapProtocol::~nsImapProtocol()
   if (m_inputStreamBuffer)
     delete m_inputStreamBuffer;
 
-    // **** We must be out of the thread main loop function
-    NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, "Oops, thread is still running.\n");
+  // **** We must be out of the thread main loop function
+  NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, "Oops, thread is still running.\n");
 
-    if (m_dataAvailableMonitor)
-    {
-        PR_DestroyMonitor(m_dataAvailableMonitor);
-        m_dataAvailableMonitor = nsnull;
-    }
+  if (m_dataAvailableMonitor)
+  {
+    PR_DestroyMonitor(m_dataAvailableMonitor);
+    m_dataAvailableMonitor = nsnull;
+  }
 
   if (m_urlReadyToRunMonitor)
   {
@@ -406,11 +406,11 @@ nsImapProtocol::~nsImapProtocol()
     PR_DestroyMonitor(m_threadDeathMonitor);
     m_threadDeathMonitor = nsnull;
   }
-    if (m_eventCompletionMonitor)
-    {
-        PR_DestroyMonitor(m_eventCompletionMonitor);
-        m_eventCompletionMonitor = nsnull;
-    }
+  if (m_eventCompletionMonitor)
+  {
+      PR_DestroyMonitor(m_eventCompletionMonitor);
+      m_eventCompletionMonitor = nsnull;
+  }
   if (m_waitForBodyIdsMonitor)
   {
     PR_DestroyMonitor(m_waitForBodyIdsMonitor);
@@ -461,106 +461,88 @@ nsImapProtocol::GetImapServerKey()
 void
 nsImapProtocol::SetupSinkProxy()
 {
-    if (m_runningUrl)
-    {
-        NS_ASSERTION(m_sinkEventQueue && m_thread, 
-                     "fatal... null sink event queue or thread");
-        nsresult res;
+  if (m_runningUrl)
+  {
+    NS_ASSERTION(m_sinkEventQueue && m_thread, "fatal... null sink event queue or thread");
+    nsresult res;
 
-        if (!m_imapLog)
-        {
-            nsCOMPtr<nsIImapLog> aImapLog;
-            res = m_runningUrl->GetImapLog(getter_AddRefs(aImapLog));
-            if (NS_SUCCEEDED(res) && aImapLog)
-            {
-                nsImapLogProxy * alog = new nsImapLogProxy (aImapLog, this,
-                                                m_sinkEventQueue, m_thread);
+    if (!m_imapLog)
+    {
+      nsCOMPtr<nsIImapLog> aImapLog;
+      res = m_runningUrl->GetImapLog(getter_AddRefs(aImapLog));
+      if (NS_SUCCEEDED(res) && aImapLog)
+      {
+        nsImapLogProxy * alog = new nsImapLogProxy (aImapLog, this,
+                                                    m_sinkEventQueue, m_thread);
         m_imapLog = do_QueryInterface(alog);
-            }
-        }
-                
-        if (!m_imapMailFolderSink)
-        {
-            nsCOMPtr<nsIImapMailFolderSink> aImapMailFolderSink;
-            res = m_runningUrl->GetImapMailFolderSink(getter_AddRefs(aImapMailFolderSink));
-            if (NS_SUCCEEDED(res) && aImapMailFolderSink)
-            {
-        NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &res);
-    
-        if (NS_FAILED(res)) 
-          return;
+      }
+    }
 
-        res = proxyManager->GetProxyObject(  m_sinkEventQueue,
-                             nsCOMTypeInfo<nsIImapMailFolderSink>::GetIID(),
-                             aImapMailFolderSink,
-                             PROXY_SYNC | PROXY_ALWAYS,
-                             getter_AddRefs(m_imapMailFolderSink));
-            }
-        }
-        if (!m_imapMessageSink)
-        {
-            nsCOMPtr<nsIImapMessageSink> aImapMessageSink;
-            res = m_runningUrl->GetImapMessageSink(getter_AddRefs(aImapMessageSink));
-            if (NS_SUCCEEDED(res) && aImapMessageSink)
-            {
-        NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &res);
-    
-        if (NS_FAILED(res)) 
-          return;
-
-        res = proxyManager->GetProxyObject(  m_sinkEventQueue,
-                             nsCOMTypeInfo<nsIImapMessageSink>::GetIID(),
-                             aImapMessageSink,
-                             PROXY_SYNC | PROXY_ALWAYS,
-                             getter_AddRefs(m_imapMessageSink));
-            }
-        }
-        if (!m_imapExtensionSink)
-        {
-            nsCOMPtr<nsIImapExtensionSink> aImapExtensionSink;
-            res = m_runningUrl->GetImapExtensionSink(getter_AddRefs(aImapExtensionSink));
-            if(NS_SUCCEEDED(res) && aImapExtensionSink)
-            {
-                nsImapExtensionSinkProxy * extensionSink = new nsImapExtensionSinkProxy(aImapExtensionSink,
-                                                           this,
-                                                           m_sinkEventQueue,
-                                                           m_thread);
-        m_imapExtensionSink = do_QueryInterface(extensionSink);
-            }
-        }
-        if (!m_imapMiscellaneousSink)
-        {
-            nsCOMPtr<nsIImapMiscellaneousSink> aImapMiscellaneousSink;
-            res = m_runningUrl->GetImapMiscellaneousSink(getter_AddRefs(aImapMiscellaneousSink));
-            if (NS_SUCCEEDED(res) && aImapMiscellaneousSink)
-            {
-                 nsImapMiscellaneousSinkProxy * miscSink = new
-                    nsImapMiscellaneousSinkProxy(aImapMiscellaneousSink,
-                                             this,
-                                             m_sinkEventQueue,
-                                             m_thread);
-        m_imapMiscellaneousSink = do_QueryInterface(miscSink);
-            }
-        }
-    if (!m_imapServerSink)
+    nsCOMPtr<nsIProxyObjectManager> proxyManager(do_GetService(kProxyObjectManagerCID));
+    if (proxyManager) // if we don't get one of these are as good as dead...
     {
-            nsCOMPtr<nsIImapServerSink> aImapServerSink;
-            res = m_runningUrl->GetImapServerSink(getter_AddRefs(aImapServerSink));
-            if (NS_SUCCEEDED(res) && aImapServerSink)
-            {
-        NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &res);
-    
-        if (NS_FAILED(res)) 
-          return;
-
-        res = proxyManager->GetProxyObject(  m_sinkEventQueue,
+      if (!m_imapMailFolderSink)
+      {
+        nsCOMPtr<nsIImapMailFolderSink> aImapMailFolderSink;
+        res = m_runningUrl->GetImapMailFolderSink(getter_AddRefs(aImapMailFolderSink));
+        if (NS_SUCCEEDED(res) && aImapMailFolderSink)
+          res = proxyManager->GetProxyObject(m_sinkEventQueue,
+                                             NS_GET_IID(nsIImapMailFolderSink),
+                                             aImapMailFolderSink,
+                                             PROXY_SYNC | PROXY_ALWAYS,
+                                             getter_AddRefs(m_imapMailFolderSink));
+      }
+      
+      if (!m_imapMessageSink)
+      {
+        nsCOMPtr<nsIImapMessageSink> aImapMessageSink;
+        res = m_runningUrl->GetImapMessageSink(getter_AddRefs(aImapMessageSink));
+        if (NS_SUCCEEDED(res) && aImapMessageSink)
+          res = proxyManager->GetProxyObject(m_sinkEventQueue,
+                                             NS_GET_IID(nsIImapMessageSink),
+                                             aImapMessageSink,
+                                             PROXY_SYNC | PROXY_ALWAYS,
+                                             getter_AddRefs(m_imapMessageSink));
+      }
+      if (!m_imapExtensionSink)
+      {
+        nsCOMPtr<nsIImapExtensionSink> aImapExtensionSink;
+        res = m_runningUrl->GetImapExtensionSink(getter_AddRefs(aImapExtensionSink));
+        if(NS_SUCCEEDED(res) && aImapExtensionSink)
+        {
+          nsImapExtensionSinkProxy * extensionSink = new nsImapExtensionSinkProxy(aImapExtensionSink,
+                                                     this,
+                                                     m_sinkEventQueue,
+                                                     m_thread);
+          m_imapExtensionSink = do_QueryInterface(extensionSink);
+        }
+      }
+      if (!m_imapMiscellaneousSink)
+      {
+        nsCOMPtr<nsIImapMiscellaneousSink> aImapMiscellaneousSink;
+        res = m_runningUrl->GetImapMiscellaneousSink(getter_AddRefs(aImapMiscellaneousSink));
+        if (NS_SUCCEEDED(res) && aImapMiscellaneousSink)
+        {
+           nsImapMiscellaneousSinkProxy * miscSink = new nsImapMiscellaneousSinkProxy(aImapMiscellaneousSink,
+                                                                                      this,
+                                                                                      m_sinkEventQueue,
+                                                                                      m_thread);
+           m_imapMiscellaneousSink = do_QueryInterface(miscSink);
+        }
+      }
+      if (!m_imapServerSink)
+      {
+         nsCOMPtr<nsIImapServerSink> aImapServerSink;
+         res = m_runningUrl->GetImapServerSink(getter_AddRefs(aImapServerSink));
+         if (NS_SUCCEEDED(res) && aImapServerSink)
+            res = proxyManager->GetProxyObject(  m_sinkEventQueue,
                              nsCOMTypeInfo<nsIImapServerSink>::GetIID(),
                              aImapServerSink,
                              PROXY_SYNC | PROXY_ALWAYS,
                              getter_AddRefs(m_imapServerSink));
-            }
+      }
     }
-    }
+  }
 }
 
 // Setup With Url is intended to set up data which is held on a PER URL basis and not
@@ -5109,7 +5091,7 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
         renameSucceeded = GetServerStateParser().LastCommandSuccessful();
         PR_FREEIF(currentName);
     }
-    
+                
     delete m_deletableChildren;
     m_deletableChildren = nsnull;
   }
