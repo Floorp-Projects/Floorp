@@ -6,8 +6,8 @@
 # partitions and this will require making directory structure in
 # get_filename() less regular then we have defined it here.
 
-# $Revision: 1.7 $ 
-# $Date: 2002/04/27 00:50:18 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/05/01 01:55:19 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -89,8 +89,11 @@ $URL_HTML = ($TinderConfig::URL_HTML ||
          'gunzip' => "$URL_BIN/gunzip.cgi",
 
          'treepages' => "$URL_HTML",
+         
+         'regenerate' => "$URL_BIN/regenerate.cgi",  
 
 	);
+
 
 # the full path name tinderbox will use to access the tinderbox
 # servers root data directory
