@@ -252,15 +252,6 @@ rijndael_tables:
 	         $(DEFINES) $(INCLUDES) $(OBJDIR)/libfreebl.a
 	$(OBJDIR)/make_rijndael_tab
 
-ifdef MOZILLA_BSAFE_BUILD
-
-private_export::
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
-	rm -f $(DIST)/lib/bsafe$(BSAFEVER).lib
-endif
-	$(NSINSTALL) -R $(BSAFEPATH) $(DIST)/lib
-endif
-
 ifdef USE_PURE_32 
 vpath %.h $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
 vpath %.c $(FREEBL_PARENT)/mpi:$(FREEBL_PARENT)
