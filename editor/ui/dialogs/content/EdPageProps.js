@@ -95,7 +95,7 @@ function Startup()
 function InitDialog()
 {
   gDialog.TitleInput.value = editorShell.GetDocumentTitle();
-  var author = authorElement.getAttribute("content").trimString();
+  var author = TrimString(authorElement.getAttribute("content"));
   if (author.length == 0)
   {
     // Fill in with value from editor prefs
@@ -125,9 +125,9 @@ function TextboxChanged(ID)
 
 function ValidateData()
 {
-  newTitle = gDialog.TitleInput.value.trimString();
-  author = gDialog.AuthorInput.value.trimString();
-  description = gDialog.DescriptionInput.value.trimString();
+  newTitle = TrimString(gDialog.TitleInput.value);
+  author = TrimString(gDialog.AuthorInput.value);
+  description = TrimString(gDialog.DescriptionInput.value);
   return true;
 }
 

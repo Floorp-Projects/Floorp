@@ -304,7 +304,7 @@ function ValidateData()
       else
         globalElement.removeAttribute("type");
         
-      var startingNumber = gDialog.StartingNumberInput.value.trimString();
+      var startingNumber = TrimString(gDialog.StartingNumberInput.value);
       if (startingNumber)
         globalElement.setAttribute("start",startingNumber);
       else

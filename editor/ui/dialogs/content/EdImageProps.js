@@ -418,8 +418,8 @@ function ToggleConstrain()
      && (gDialog.widthUnitsMenulist.selectedIndex == 0)
      && (gDialog.heightUnitsMenulist.selectedIndex == 0))
   {
-    constrainWidth = Number(gDialog.widthInput.value.trimString());
-    constrainHeight = Number(gDialog.heightInput.value.trimString());
+    constrainWidth = Number(TrimString(gDialog.widthInput.value));
+    constrainHeight = Number(TrimString(gDialog.heightInput.value));
   }
 }
 
@@ -494,7 +494,7 @@ function ValidateData()
 
   //TODO: WE NEED TO DO SOME URL VALIDATION HERE, E.G.:
   // We must convert to "file:///" or "http://" format else image doesn't load!
-  var src = gDialog.srcInput.value.trimString();
+  var src = TrimString(gDialog.srcInput.value);
   globalElement.setAttribute("src", src);
 
   // Note: allow typing spaces,
