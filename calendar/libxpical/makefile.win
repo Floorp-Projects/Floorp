@@ -57,6 +57,7 @@ XPIDLSRCS = .\oeIICal.idl
 
 OBJS            = \
                   .\$(OBJDIR)\oeICalEventImpl.obj \
+                  .\$(OBJDIR)\oeICalTodoImpl.obj \
                   .\$(OBJDIR)\oeICalFactory.obj \
                   .\$(OBJDIR)\oeICalImpl.obj \
 		  .\$(OBJDIR)\oeDateTimeImpl.obj \
