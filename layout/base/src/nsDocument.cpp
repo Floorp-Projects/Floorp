@@ -52,12 +52,14 @@
 #include "nsITextContent.h"
 #include "nsXIFConverter.h"
 
+
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 
 #include "nsINameSpaceManager.h"
 
 #include "nsLayoutCID.h"
+#include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsICollection.h"
 #include "nsIEnumerator.h"
@@ -1809,14 +1811,16 @@ void nsDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNod
 
 void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-  if (aConverter.GetUseSelection() == PR_TRUE)
+  nsISelection* sel = aConverter.GetSelection();
+
+  if (sel != nsnull)
   {
     nsIContent* content = nsnull;
     nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
 
     if (isContent != nsnull)
     {
-      PRBool  isInSelection = IsInSelection(content);
+      PRBool  isInSelection = IsInSelection(sel,content);
       
       if (isInSelection == PR_TRUE)
       {
@@ -1839,13 +1843,13 @@ void nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
   }
 }
 
-void nsDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
+void nsDocument::CreateXIF(nsString & aBuffer, nsISelection* aSelection)
 {
   
   nsXIFConverter  converter(aBuffer);
   // call the function
 
-  converter.SetUseSelection(aUseSelection);
+  converter.SetSelection(aSelection);
 
   converter.AddStartTag("section");
   
@@ -1919,28 +1923,59 @@ PRBool nsDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* 
 }
 
 
-PRBool nsDocument::IsInSelection(const nsIContent* aContent) const
+/**
+ *  Determines if the content is found within the selection
+ *  
+ *  @update  gpk 1/8/99
+ *  @param   param -- description
+ *  @param   param -- description
+ *  @return  PR_TRUE if the content is found within the selection
+ */
+PRBool nsDocument::IsInSelection(nsISelection* aSelection, const nsIContent* aContent) const
 {
-  return PR_FALSE;
-#if 0
-  //DEBUG MJUDGE
-  PRBool  result = PR_FALSE;
-
-  //travers through an iterator to see if the acontent is in the ranges
-  if (mSelection != nsnull)
-  {
+  PRBool          result = PR_FALSE;
+  
+  
+  if (aSelection != nsnull) {
+    //traverses through an iterator to see if the acontent is in the ranges
     nsIEnumerator *enumerator;
-    if (NS_SUCCEEDED(mSelection->QueryInterface(kIEnumeratorIID, (void **)&enumerator))){
-      for (enumerator->First();NS_COMFALSE == enumerator->IsDone(); enumerator->Next())
-      {
+    if (NS_SUCCEEDED(aSelection->QueryInterface(kIEnumeratorIID, (void **)&enumerator))) 
+    {
+      for (enumerator->First();NS_OK != enumerator->IsDone() ; enumerator->Next()) {
+        nsIDOMRange* range = nsnull;
+        if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range)))
+        {
+          nsIDOMNode* startNode = nsnull;
+          nsIDOMNode* endNode = nsnull;
 
+          range->GetStartParent(&startNode); 
+          range->GetEndParent(&endNode);
+          
+          if (startNode && endNode)
+          {
+            nsIContent* start;
+            nsIContent* end;
+
+            if (NS_SUCCEEDED(startNode->QueryInterface(kIContentIID, (void **)&start)) &&
+                NS_SUCCEEDED(endNode->QueryInterface(kIContentIID, (void **)&end)) )
+            {
+              result = IsInRange(start,end,aContent);
+            }
+            NS_IF_RELEASE(start);
+            NS_IF_RELEASE(end);
+          }
+          NS_IF_RELEASE(startNode);
+          NS_IF_RELEASE(endNode);
+          NS_RELEASE(range);
+        }
+        if (result) break;
       }
       NS_IF_RELEASE(enumerator);
     }
   }
   return result;
-#endif
 }
+
 
 
 PRBool nsDocument::IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const

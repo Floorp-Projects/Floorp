@@ -49,6 +49,7 @@ class nsIParser;
 class nsIDOMNode;
 class nsXIFConverter;
 class nsINameSpaceManager;
+class nsISelection;
 class nsIDOMDocumentFragment;
 
 // IID for the nsIDocument interface
@@ -234,7 +235,7 @@ public:
     * NOTE: we may way to place the result in a stream,
     * but we will use a string for now -- gpk
   */
-  virtual void CreateXIF(nsString & aBuffer, PRBool aUseSelection) = 0;
+  virtual void CreateXIF(nsString & aBuffer, nsISelection* aSelection = nsnull) = 0;
   virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
   virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
   virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
@@ -243,7 +244,7 @@ public:
   /* Helper methods to help determine the logical positioning of content */
   virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const = 0;
   virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const = 0;
-  virtual PRBool IsInSelection(const nsIContent *aContent) const = 0;
+  virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const = 0;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const = 0;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const = 0;
   virtual void SetDisplaySelection(PRBool aToggle) = 0;

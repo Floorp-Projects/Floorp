@@ -91,7 +91,7 @@ private:
   virtual ~nsRangeListIterator();
 
   nsRangeList *mRangeList;
-  PRUint32 mIndex;
+  PRInt32     mIndex;
 };
 
 
@@ -144,12 +144,9 @@ nsRangeListIterator::~nsRangeListIterator()
 nsresult
 nsRangeListIterator::Next()
 {
-  if (mIndex < mRangeList->mCount -1 )
-  {
-    mIndex++;
+  mIndex++;
+  if (mIndex < (PRInt32)mRangeList->mCount)
     return NS_OK;
-  }
-  mIndex = mRangeList->mCount -1;
   return NS_ERROR_FAILURE;
 }
 
@@ -158,12 +155,9 @@ nsRangeListIterator::Next()
 nsresult
 nsRangeListIterator::Prev()
 {
-  if (mIndex > 0 )
-  {
-    mIndex--;
+  mIndex--;
+  if (mIndex >= 0 )
     return NS_OK;
-  }
-  mIndex = 0;
   return NS_ERROR_FAILURE;
 }
 
@@ -185,7 +179,7 @@ nsRangeListIterator::Last()
 {
   if (!mRangeList)
     return NS_ERROR_NULL_POINTER;
-  mIndex = mRangeList->mCount -1;
+  mIndex = (PRInt32)mRangeList->mCount-1;
   return NS_OK;
 }
 
@@ -196,7 +190,7 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
 {
   if (!aItem)
     return NS_ERROR_NULL_POINTER;
-  if (mIndex >=0 && mIndex< mRangeList->mCount)
+  if (mIndex >=0 && mIndex < (PRInt32)mRangeList->mCount)
   {
     return mRangeList->mRangeArray[mIndex]->QueryInterface(kISupportsIID, (void **)aItem);
   }
@@ -208,10 +202,7 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
 nsresult
 nsRangeListIterator::IsDone()
 {
-  if ((mIndex == mRangeList->mCount -1) || !mRangeList->mCount) { //empty lists are always done
-    return NS_OK;
-  }
-  else{
+  if (mIndex >= 0 && mIndex < (PRInt32)mRangeList->mCount ) { 
     return NS_COMFALSE;
   }
   return NS_OK;

@@ -244,14 +244,15 @@ void nsMarkupDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode
 
 void nsMarkupDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-  if (aConverter.GetUseSelection() == PR_TRUE)
+  nsISelection* sel = aConverter.GetSelection();
+
+  if (sel != nsnull)
   {
     nsIContent* content = nsnull;
-    nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
 
-    if (isContent == NS_OK)
+    if (NS_SUCCEEDED(aNode->QueryInterface(kIContentIID, (void**)&content)))
     {
-      PRBool  isInSelection = IsInSelection(content);
+      PRBool  isInSelection = IsInSelection(sel,content);
       
       if (isInSelection == PR_TRUE)
       {
@@ -274,31 +275,9 @@ void nsMarkupDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
   }
 }
 
-void nsMarkupDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
+
+void nsMarkupDocument::CreateXIF(nsString & aBuffer, nsISelection* aSelection)
 {
-  
-  nsXIFConverter  converter(aBuffer);
-  // call the function
-
-  converter.SetUseSelection(aUseSelection);
-
-  converter.AddStartTag("section");
-  
-  converter.AddStartTag("section_head");
-  converter.AddEndTag("section_head");
-
-  converter.AddStartTag("section_body");
-
-  nsIDOMElement* root = nsnull;
-  if (NS_OK == GetDocumentElement(&root)) 
-  {  
-    ToXIF(converter,root);
-    NS_RELEASE(root);
-  }
-  converter.AddEndTag("section_body");
-
-  converter.AddEndTag("section");
-
-  converter.Write();
-  
+  nsDocument::CreateXIF(aBuffer,aSelection);
 }
+
