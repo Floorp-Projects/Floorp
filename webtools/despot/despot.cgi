@@ -28,8 +28,8 @@ use diagnostics;
 
 # a few configurables
 #
-my $despotOwnerMailTo = "mailto:dmose\@mozilla.org";
-my $despotOwner = "dmose";
+my $despotOwnerMailTo = "mailto:endico\@mozilla.org";
+my $despotOwner = "endico";
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
