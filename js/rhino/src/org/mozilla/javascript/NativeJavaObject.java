@@ -214,7 +214,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     {
         Function f = (Function) converterFunction;
         return f.call(Context.getContext(), f.getParentScope(),
-                      this, new Object[0]);
+                      this, ScriptRuntime.emptyArgs);
     }
 
     Object callConverter(String converterName)
@@ -222,10 +222,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     {
         Function converter = getConverter(converterName);
         if (converter == null) {
-            String className = javaObject.getClass().getName();
-            throw Context.reportRuntimeError2
-                ("msg.java.conversion.implicit_method",
-                 converterName, className);
+            return javaObject.toString();
         }
         return callConverter(converter);
     }
