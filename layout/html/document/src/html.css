@@ -533,6 +533,7 @@ noembed, noscript, param {
 
 /* emulation of non-standard HTML <marquee> tag */
 marquee {
+  display: block;
   -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-horizontal');
 }
 
