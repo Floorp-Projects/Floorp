@@ -41,15 +41,15 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 nsFileChannel::nsFileChannel()
     : mIOFlags(-1),
       mPerm(-1),
-#ifdef DEBUG
-      mInitiator(nsnull),
-#endif
       mLoadAttributes(LOAD_NORMAL),
-      mBufferSegmentSize(0),
-      mBufferMaxSize(0),
       mTransferOffset(0),
       mTransferCount(-1),
+      mBufferSegmentSize(0),
+      mBufferMaxSize(0),
       mStatus(NS_OK)
+#ifdef DEBUG
+      ,mInitiator(nsnull)
+#endif
 {
     NS_INIT_REFCNT();
 }

@@ -55,15 +55,15 @@ PRLogModuleInfo* gResChannelLog = nsnull;
 
 nsResChannel::nsResChannel()
     : mLoadAttributes(LOAD_NORMAL),
-#ifdef DEBUG
-      mInitiator(nsnull),
-#endif
       mState(QUIESCENT),
       mStartPosition(0),
       mCount(-1),
       mBufferSegmentSize(0),
       mBufferMaxSize(0),
       mStatus(NS_OK)
+#ifdef DEBUG
+      ,mInitiator(nsnull)
+#endif
 {
     NS_INIT_REFCNT();
 #if defined(PR_LOGGING)

@@ -77,16 +77,16 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler): 
     mResponse(nsnull),
-    mRequest (nsnull),
     mHandler(dont_QueryInterface(i_Handler)),
+    mRequest (nsnull),
     mHTTPServerListener(nsnull),
     mResponseContext(nsnull),
+    mCachedResponse(nsnull),
     mURI(dont_QueryInterface(i_URL)),
     mConnected(PR_FALSE),
     mState(HS_IDLE),
     mLoadAttributes(LOAD_NORMAL),
     mLoadGroup(nsnull),
-    mCachedResponse(nsnull),
     mCachedContentIsAvailable(PR_FALSE),
     mCachedContentIsValid(PR_FALSE),
     mFiredOnHeadersAvailable(PR_FALSE),
