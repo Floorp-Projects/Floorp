@@ -93,7 +93,7 @@ public:
                     PRInt32 aHeight, PRBool aRepaint);
 
   NS_IMETHOD Enable(PRBool aState);
-  NS_IMETHOD SetFocus(void);
+  NS_IMETHOD SetFocus(PRBool aRaise);
 
   virtual void LooseFocus(void);
 

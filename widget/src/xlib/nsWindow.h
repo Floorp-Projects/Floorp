@@ -94,7 +94,7 @@ class nsWindow : public nsWidget
                     PRBool   aRepaint);
 
 
-  NS_IMETHOD SetFocus(void);
+  NS_IMETHOD SetFocus(PRBool aRaise);
   virtual  PRBool OnExpose(nsPaintEvent &event);
   NS_IMETHOD GetAttention(void);
   

@@ -1634,7 +1634,7 @@ NS_METHOD nsWindow::Enable(PRBool bState)
 // Give the focus to this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetFocus(void)
+NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 {
     //
     // Switch to the "main gui thread" if necessary... This method must

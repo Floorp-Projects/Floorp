@@ -416,7 +416,7 @@ class nsIWidget : public nsISupports {
     /**
      * Give focus to this widget.
      */
-    NS_IMETHOD SetFocus(void) = 0;
+    NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE) = 0;
 
     /**
      * Get this widget's outside dimensions relative to its parent widget

@@ -491,7 +491,7 @@ NS_METHOD nsWidget::Enable( PRBool bState ) {
 // Give the focus to this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::SetFocus( void ) {
+NS_METHOD nsWidget::SetFocus(PRBool aRaise) {
 
   // call this so that any cleanup will happen that needs to...
   LooseFocus();

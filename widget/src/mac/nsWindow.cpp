@@ -522,7 +522,7 @@ static Boolean we_are_front_process()
 // Set the focus on this component
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::SetFocus(void)
+NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise)
 {
 	gEventDispatchHandler.SetFocus(this);
 	
