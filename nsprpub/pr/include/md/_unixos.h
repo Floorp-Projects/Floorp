@@ -551,11 +551,17 @@ struct stat64 {
     long st_pad4[8];
 };
 typedef struct stat64 _MDStat64;
+typedef off64_t _MDOff64_t;
 
 #elif defined(_PR_HAVE_OFF64_T)
 typedef struct stat64 _MDStat64;
-#elif defined(_PR_HAVE_LARGE_OFF_T) || defined(_PR_NO_LARGE_FILES)
+typedef off64_t _MDOff64_t;
+#elif defined(_PR_HAVE_LARGE_OFF_T)
 typedef struct stat _MDStat64;
+typedef off_t _MDOff64_t;
+#elif defined(_PR_NO_LARGE_FILES)
+typedef struct stat _MDStat64;
+typedef PRInt64 _MDOff64_t;
 #else
 #error "I don't know yet"
 #endif
@@ -563,11 +569,10 @@ typedef struct stat _MDStat64;
 typedef PRIntn (*_MD_Fstat64)(PRIntn osfd, _MDStat64 *buf);
 typedef PRIntn (*_MD_Open64)(const char *path, int oflag, ...);
 typedef PRIntn (*_MD_Stat64)(const char *path, _MDStat64 *buf);
-typedef PRInt64 (*_MD_Lseek64)(PRIntn osfd, PRInt64, PRIntn whence);
-typedef PRIntn (*_MD_Lockf64)(PRIntn osfd, PRIntn function, PRInt64 size);
+typedef _MDOff64_t (*_MD_Lseek64)(PRIntn osfd, _MDOff64_t, PRIntn whence);
 typedef void* (*_MD_Mmap64)(
     void *addr, PRSize len, PRIntn prot, PRIntn flags,
-    PRIntn fildes, PRInt64 offset);
+    PRIntn fildes, _MDOff64_t offset);
 struct _MD_IOVector
 {
     _MD_Open64 _open64;

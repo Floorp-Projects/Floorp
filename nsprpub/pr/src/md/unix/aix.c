@@ -265,6 +265,8 @@ PR_StackPush(PRStack *stack, PRStackElem *stack_elem)
 PRStackElem *addr;
 boolean_t locked = TRUE;
 
+	/* Is it safe to cast a pointer to an int? */
+	PR_ASSERT(sizeof(int) == sizeof(PRStackElem *));
 	do {
 		while ((addr = stack->prstk_head.prstk_elem_next) ==
 											(PRStackElem *)_PR_AIX_ATOMIC_LOCK)
@@ -283,6 +285,8 @@ PR_StackPop(PRStack *stack)
 PRStackElem *element;
 boolean_t locked = TRUE;
 
+	/* Is it safe to cast a pointer to an int? */
+	PR_ASSERT(sizeof(int) == sizeof(PRStackElem *));
 	do {
 		while ((element = stack->prstk_head.prstk_elem_next) ==
 										(PRStackElem *) _PR_AIX_ATOMIC_LOCK)

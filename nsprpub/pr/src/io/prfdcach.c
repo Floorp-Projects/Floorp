@@ -103,6 +103,8 @@ PRFileDesc *_PR_Getfd()
                     PR_ASSERT(0 == _pr_fd_cache.count);
                     _pr_fd_cache.tail = NULL;
                 }
+                PR_ASSERT(&_pr_faulty_methods == fd->methods);
+                PR_ASSERT(PR_INVALID_IO_LAYER == fd->identity);
                 PR_ASSERT(_PR_FILEDESC_FREED == fd->secret->state);
             }
             PR_Unlock(_pr_fd_cache.ml);
@@ -244,8 +246,8 @@ void _PR_InitFdCache()
     if (NULL != high) _pr_fd_cache.limit_high = atoi(high);
 
     /* 
-    **_low is allowed to be zero, _high is not.
-    ** IF _high is zero, we're not doing the caching.
+    ** _low is allowed to be zero, _high is not.
+    ** If _high is zero, we're not doing the caching.
     */
 
 #if defined(DEBUG)

@@ -65,6 +65,13 @@ CC		= xlC_r
 CCC		= xlC_r
 endif
 OS_CFLAGS	= -qro -qroconst
+ifeq ($(USE_64),1)
+OBJECT_MODE	= 64
+export OBJECT_MODE
+COMPILER_TAG	= _64
+else
+COMPILER_TAG	= _32
+endif
 
 CPU_ARCH	= rs6000
 
@@ -99,6 +106,11 @@ MKSHLIB		= $(LD) $(DSO_LDOPTS)
 ifeq ($(OS_RELEASE),4.3)
 OS_CFLAGS	+= -DAIX4_3
 endif
+endif
+
+# Have the socklen_t data type
+ifeq ($(OS_RELEASE),4.3)
+OS_CFLAGS	+= -DHAVE_SOCKLEN_T
 endif
 
 ifeq (,$(filter-out 4.2 4.3,$(OS_RELEASE)))
