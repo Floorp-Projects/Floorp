@@ -100,7 +100,7 @@ nsMenu::nsMenu() : nsIMenu()
 //-------------------------------------------------------------------------
 nsMenu::~nsMenu()
 {
-  g_print("nsMenu::~nsMenu() called\n");
+  //g_print("nsMenu::~nsMenu() called\n");
   NS_IF_RELEASE(mListener);
   // Free our menu items
   RemoveAll();
@@ -307,7 +307,7 @@ NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 {
   // this should be right.. does it need to be +1 ?
   aCount = g_list_length(GTK_MENU_SHELL(mMenu)->children);
-  g_print("nsMenu::GetItemCount = %i\n", aCount);
+  //g_print("nsMenu::GetItemCount = %i\n", aCount);
   return NS_OK;
 }
 
@@ -352,6 +352,7 @@ NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::RemoveAll()
 {
+  //g_print("nsMenu::RemoveAll()\n");
 #if 0
   // this doesn't work quite right, but this is about all that should really be needed
   int i=0;
@@ -368,10 +369,12 @@ NS_METHOD nsMenu::RemoveAll()
       if (NS_OK == item->QueryInterface(kIMenuItemIID, (void**)&menuitem)) {
         // we do this twice because we have to do it once for QueryInterface,
         // then we want to get rid of it.
+	//g_print("remove nsMenuItem\n");
         NS_RELEASE(menuitem);
         NS_RELEASE(item);
         menuitem = nsnull;
       } else if (NS_OK == item->QueryInterface(kIMenuIID, (void**)&menu)) {
+        //g_print("remove nsMenu\n");
         NS_RELEASE(menu);
         NS_RELEASE(item);
         menu = nsnull;
@@ -406,7 +409,7 @@ NS_METHOD nsMenu::RemoveAll()
             menu->GetNativeData(&gtkmenu);
  
             if(gtkmenu){
-              g_print("gtkmenu removed");
+              //g_print("gtkmenu removed");
  
               //gtk_menu_item_remove_submenu (GTK_MENU_ITEM (item));
             }
@@ -416,6 +419,7 @@ NS_METHOD nsMenu::RemoveAll()
     }
   }
 #endif
+//g_print("end RemoveAll\n");
   return NS_OK;
 }
 
@@ -490,7 +494,7 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
                                     void              * menuNode,
                                     void              * aWebShell)
 {
-  g_print("nsMenu::MenuConstruct called \n");
+  //g_print("nsMenu::MenuConstruct called \n");
   if(menuNode){
     SetDOMNode((nsIDOMNode*)menuNode);
   }
@@ -537,7 +541,7 @@ nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 {
-  g_print("nsMenu::MenuDestruct called \n");
+  //g_print("nsMenu::MenuDestruct called \n");
   mConstructCalled = PR_FALSE;
   RemoveAll();
   return nsEventStatus_eIgnore;
