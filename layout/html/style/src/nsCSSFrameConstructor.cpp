@@ -1257,18 +1257,18 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 #endif
 
   nsIFrame*         viewportFrame;
-  nsIStyleContext*  rootPseudoStyle;
+  nsIStyleContext*  viewportPseudoStyle;
 
   // Create the viewport frame
   NS_NewViewportFrame(viewportFrame);
 
   // Create a pseudo element style context
   // XXX Use a different pseudo style context...
-  rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
-                      nsHTMLAtoms::rootPseudo, nsnull);
+  viewportPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
+                                            nsLayoutAtoms::viewportPseudo, nsnull);
 
   // Initialize the viewport frame. It has a NULL content object
-  viewportFrame->Init(*aPresContext, nsnull, nsnull, rootPseudoStyle);
+  viewportFrame->Init(*aPresContext, nsnull, nsnull, viewportPseudoStyle);
 
   // Bind the viewport frame to the root view
   nsIPresShell*   presShell = aPresContext->GetShell();
@@ -1308,7 +1308,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   nsIFrame* scrollFrame;
   if (isScrollable) {
     NS_NewScrollFrame(scrollFrame);
-    scrollFrame->Init(*aPresContext, nsnull, viewportFrame, rootPseudoStyle);
+    // XXX should probably be a scrolled content pseudo style context
+    scrollFrame->Init(*aPresContext, nsnull, viewportFrame, viewportPseudoStyle);
   }
 
   if (aPresContext->IsPaginated()) {
@@ -1316,11 +1317,12 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
     // Create a page sequence frame
     NS_NewSimplePageSequenceFrame(pageSequenceFrame);
+    // XXX should probably be a page sequence pseudo style context
     pageSequenceFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                            viewportFrame, rootPseudoStyle);
+                            viewportFrame, viewportPseudoStyle);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
-                                               rootPseudoStyle, PR_TRUE);
+                                               viewportPseudoStyle, PR_TRUE);
     }
 
     // Create the first page
@@ -1334,10 +1336,10 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     // Initialize the page and force it to have a view. This makes printing of
     // the pages easier and faster.
     // XXX Use a PAGE style context...
-    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, rootPseudoStyle);
+    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, viewportPseudoStyle);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
-                                             rootPseudoStyle, PR_TRUE);
-    NS_RELEASE(rootPseudoStyle);
+                                             viewportPseudoStyle, PR_TRUE);
+    NS_RELEASE(viewportPseudoStyle);
 
     // The eventual parent of the document element frame
     mDocElementContainingBlock = pageFrame;
@@ -1366,13 +1368,14 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     nsIFrame* rootFrame;
     NS_NewRootFrame(rootFrame);
 
+    // XXX this should be a root pseudo style context
     rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                    viewportFrame, rootPseudoStyle);
+                    viewportFrame, viewportPseudoStyle);
     if (isScrollable) {
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
-                                               rootPseudoStyle, PR_TRUE);
+                                               viewportPseudoStyle, PR_TRUE);
     }
-    NS_RELEASE(rootPseudoStyle);
+    NS_RELEASE(viewportPseudoStyle);
 
     // The eventual parent of the document element frame
     mDocElementContainingBlock = rootFrame;
@@ -2765,9 +2768,13 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     docElement = mDocument->GetRootContent();
 
     // Create a pseudo element style context
+    nsIStyleContext* containerStyle;
+    mDocElementContainingBlock->GetStyleContext(&containerStyle);
     // XXX Use a different pseudo style context...
     rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
-                                                                 nsHTMLAtoms::rootPseudo, nsnull);
+                                                                 nsHTMLAtoms::rootPseudo, 
+                                                                 containerStyle);
+    NS_RELEASE(containerStyle);
     
     // Create frames for the document element and its child elements
     nsIFrame*       docElementFrame;
