@@ -393,8 +393,7 @@ nsHTMLContainerFrame::AttributeChanged(nsIPresShell* aShell,
 {
   if (nsHTMLAtoms::style == aAttribute) {
     ApplyStyleChangeToTree(*aPresContext, this);
-    ApplyReflowChangeToTree(*aPresContext, this);
-    ApplyRenderingChangeToTree(*aPresContext, this);
+    StyleChangeReflow(*aPresContext, this);
   }
 
   return NS_OK;
@@ -508,16 +507,17 @@ nsHTMLContainerFrame::ApplyRenderingChangeToTree(nsIPresContext& aPresContext,
 }
 
 void
-nsHTMLContainerFrame::ApplyReflowChangeToTree(nsIPresContext& aPresContext,
-                                              nsIFrame* aFrame)
+nsHTMLContainerFrame::StyleChangeReflow(nsIPresContext& aPresContext,
+                                        nsIFrame* aFrame)
 {
-  nsIContent* content;
-  nsIDocument* document;
-  aFrame->GetContent(content);
-  if (nsnull != content) {
-    content->GetDocument(document);
-    if (nsnull != document) {
-      document->ContentChanged(content, nsnull);
-    }
+  nsIPresShell* shell;
+  shell = aPresContext.GetShell();
+    
+  nsIReflowCommand* reflowCmd;
+  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+                                        nsIReflowCommand::StyleChanged);
+  if (NS_SUCCEEDED(rv)) {
+    shell->AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
   }
 }

@@ -70,8 +70,8 @@ public:
                                      nsIFrame* aFrame);
   static void ApplyRenderingChangeToTree(nsIPresContext& aPresContext,
                                          nsIFrame* aFrame);
-  static void ApplyReflowChangeToTree(nsIPresContext& aPresContext,
-                                      nsIFrame* aFrame);
+  static void StyleChangeReflow(nsIPresContext& aPresContext,
+                                nsIFrame* aFrame);
 
 protected:
   virtual ~nsHTMLContainerFrame();
