@@ -217,7 +217,7 @@ protected:
 
 	void InitializeProtocol(const char * urlSpec);
     nsresult SetupUrl(char *group); 
-	nsMailDatabase * OpenDB(nsFilePath filePath);
+	nsMailDatabase * OpenDB(nsFileSpec filePath);
 };
 
 nsresult nsMailboxTestDriver::OnStartRunningUrl(nsIURL * aUrl)
@@ -411,7 +411,7 @@ nsresult nsMailboxTestDriver::OnExit()
 	return NS_OK;
 }
 
-nsMailDatabase * nsMailboxTestDriver::OpenDB(nsFilePath filePath)
+nsMailDatabase * nsMailboxTestDriver::OpenDB(nsFileSpec filePath)
 {
 	nsMailDatabase * mailDb = nsnull;
 	nsresult rv = NS_OK;
@@ -444,7 +444,7 @@ nsresult nsMailboxTestDriver::OnDisplayMessage()
 	char * fullFolderPath = PR_smprintf("%s\\%s", folderPath ? folderPath : "", m_userData);
 	PR_FREEIF(folderPath);
 	// now turn this into a nsFilePath...
-	nsFilePath filePath(fullFolderPath);
+	nsFileSpec filePath(fullFolderPath);
 	PR_FREEIF(fullFolderPath);
 
 	nsMailDatabase * mailDb = OpenDB(filePath);
@@ -514,8 +514,8 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	// mscott: this won't work on unix.....
 	char * fullFolderPath = PR_smprintf("%s\\%s", folderPath ? folderPath : "", m_userData);
 	PR_FREEIF(folderPath);
-	// now turn this into a nsFilePath...
-	nsFilePath filePath(fullFolderPath);
+	// now turn this into a nsFileSpec...
+	nsFileSpec filePath(fullFolderPath);
 	PR_FREEIF(fullFolderPath);
 
 	// now ask the mailbox service to parse this mailbox...
@@ -530,7 +530,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 		if (url)
 			url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
 		NS_IF_RELEASE(url);
-        (void)nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService)
+        (void)nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
 	}
 	else
 		NS_ASSERTION(PR_FALSE, "unable to acquire a mailbox service...registration problem?");
@@ -558,7 +558,7 @@ int main()
     nsIEventQueueService* pEventQService;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
                                           nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pNetService);
+                                          (nsISupports**)&pEventQService);
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();
