@@ -386,11 +386,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
       
   mCurrentColor = aColor;
 
-/* as per the motif code.. probibly shouldn't set both of these in the same
- * function (pav)
- */
   ::gdk_rgb_gc_set_foreground(mRenderingSurface->gc, NS_TO_GDK_RGB(mCurrentColor));
-//  ::gdk_rgb_gc_set_background(mRenderingSurface->gc, NS_TO_GDK_RGB(mCurrentColor));
   
   return NS_OK;
 }
