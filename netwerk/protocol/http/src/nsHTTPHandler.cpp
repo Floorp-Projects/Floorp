@@ -646,39 +646,39 @@ nsHTTPHandler::InitUserAgentComponents()
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "vendor",
         getter_Copies(UAPrefVal));
     if (NS_SUCCEEDED(rv))
-        mVendor = UAPrefVal;
+        mVendor.Assign(UAPrefVal);
 
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "vendorSub",
         getter_Copies(UAPrefVal));
     if (NS_SUCCEEDED(rv))
-        mVendorSub = UAPrefVal;
+        mVendorSub.Assign(UAPrefVal);
 
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "vendorComment",
         getter_Copies(UAPrefVal));
     if (NS_SUCCEEDED(rv))
-        mVendorComment = UAPrefVal;
+        mVendorComment.Assign(UAPrefVal);
 
     // Gather product values.
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "product",
         getter_Copies(UAPrefVal));
     if (NS_SUCCEEDED(rv))
-        mProduct = UAPrefVal;
+        mProduct.Assign(UAPrefVal);
 
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "productSub",
         getter_Copies(UAPrefVal));
     if (NS_SUCCEEDED(rv))
-        mProductSub = UAPrefVal;
+        mProductSub.Assign(UAPrefVal);
 
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "productComment",
         getter_Copies(UAPrefVal));
     if (NS_SUCCEEDED(rv))
-        mProductComment = UAPrefVal;
+        mProductComment.Assign(UAPrefVal);
 
     // Gather misc value.
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "misc",
         getter_Copies(UAPrefVal));
     if (NS_SUCCEEDED(rv))
-        mAppMisc = UAPrefVal;
+        mAppMisc.Assign(UAPrefVal);
 
     // Gather Application name and Version.
     mAppName = "Mozilla";

@@ -51,7 +51,7 @@ nsKeywordProtocolHandler::Init() {
     // if we can't find a keyword.URL keywords won't work.
     if (NS_FAILED(rv) || !url || !*url) return NS_ERROR_FAILURE;
 
-    mKeywordURL = url;
+    mKeywordURL.Assign(url);
 
     return NS_OK;
 }
