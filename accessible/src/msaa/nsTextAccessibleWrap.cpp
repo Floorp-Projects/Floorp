@@ -41,6 +41,7 @@
 #include "nsTextAccessibleWrap.h"
 #include "ISimpleDOMText_i.c"
 #include "nsContentCID.h"
+#include "nsIAccessibleDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIFrame.h"
 #include "nsIPresContext.h"

@@ -190,12 +190,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
     // Clear out the cache in this subtree
   }
 
-  if (role == EVENT_OBJECT_REORDER) {
-    // Probably need to do this somewhere else so simple dom nodes get shutdown
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
-    accessNode->Shutdown();
-  }
-
   HWND hWnd = NS_REINTERPRET_CAST(HWND, mWnd);
   if (gmGetGUIThreadInfo && (aEvent == EVENT_FOCUS || 
       aEvent == EVENT_MENUPOPUPSTART ||

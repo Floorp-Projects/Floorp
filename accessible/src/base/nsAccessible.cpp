@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessible.h"
+#include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIImageDocument.h"
 #include "nsIPresShell.h"

@@ -45,6 +45,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAccessNode.h"
+#include "nsPIAccessNode.h"
 #include "nsIDOMNode.h"
 #include "nsIStringBundle.h"
 #include "nsWeakReference.h"
@@ -89,7 +90,7 @@ private:
   const void* mValue;
 };
 
-class nsAccessNode: public nsIAccessNode
+class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
 {
   public: // construction, destruction
     nsAccessNode(nsIDOMNode *, nsIWeakReference* aShell);
@@ -99,6 +100,7 @@ class nsAccessNode: public nsIAccessNode
     NS_IMETHOD_(nsrefcnt) AddRef(void);
     NS_IMETHOD_(nsrefcnt) Release(void);
     NS_DECL_NSIACCESSNODE
+    NS_DECL_NSPIACCESSNODE
 
     static void InitXPAccessibility();
     static void ShutdownXPAccessibility();
@@ -117,6 +119,7 @@ class nsAccessNode: public nsIAccessNode
                                     nsIAccessibleDocument **aDocAccessible);
 
   protected:
+    nsresult MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode);
     already_AddRefed<nsIPresShell> GetPresShell();
     already_AddRefed<nsIPresContext> GetPresContext();
     already_AddRefed<nsIAccessibleDocument> GetDocAccessible();

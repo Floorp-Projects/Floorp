@@ -37,13 +37,28 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIAccessibleDocument.idl"
+	
+interface nsIDOMNode;
+interface nsIAccessibleDocument;
 
 [scriptable, uuid(46820F9B-3088-4046-AB0F-56FDACDC7A82)]
 interface nsIAccessNode : nsISupports
 {
-  [noscript] void init();
-  [noscript] void shutdown();
+  readonly attribute nsIDOMNode DOMNode;
+
+  readonly attribute long numChildren;
+  nsIAccessNode getChildAt(in long childNum);
+  readonly attribute nsIAccessNode parent;
+  readonly attribute nsIAccessNode firstChild;
+  readonly attribute nsIAccessNode lastChild;
+  readonly attribute nsIAccessNode previousSibling;
+  readonly attribute nsIAccessNode nextSibling;
+  readonly attribute nsIAccessibleDocument accessibleDocument;
+  
+  readonly attribute DOMString innerHTML;
+
   [noscript] readonly attribute voidPtr ownerWindow;
   [noscript] readonly attribute voidPtr uniqueID;
+
+  DOMString getComputedStyleValue(in DOMString pseudoElt, in DOMString propertyName);
 };
