@@ -310,6 +310,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   // call in and clean up any of our base widget resources
   // are released
   nsBaseWidget::Destroy();
+  mParent = 0;
 
   // just to be safe. If we're going away and for some reason we're still
   // the rollup widget, rollup and turn off capture.

@@ -283,7 +283,8 @@ NS_IMETHODIMP nsWindow::Destroy()
 
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
-	
+	mParent = 0;
+
   // just to be safe. If we're going away and for some reason we're still
   // the rollup widget, rollup and turn off capture.
   if ( this == gRollupWidget ) {
@@ -2445,7 +2446,7 @@ NS_IMETHODIMP nsWindow::GetAttention()
 NS_IMETHODIMP nsWindow::ResetInputState()
 {
 	// currently, the nsMacEventHandler is owned by nsMacWindow, which is the top level window
-	// we deletgate this call to it's parent
+	// we delegate this call to its parent
   nsCOMPtr<nsIWidget> parent = getter_AddRefs(GetParent());
   NS_ASSERTION(parent, "cannot get parent");
   if(parent)
