@@ -140,7 +140,7 @@ function LoadSignons()
         Components.classes["@mozilla.org/network/standard-url;1"]
           .createInstance(Components.interfaces.nsIURI); 
       uri.spec = site; 
-      if (user.uri) {
+      if (uri.username) {
         user = uri.username;
       } else {
         user = "<>";
