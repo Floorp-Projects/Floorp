@@ -170,21 +170,58 @@ BOOL CIEPatcherDlg::CanExit()
 void CIEPatcherDlg::OnScan() 
 {
 	UpdateData();
-	if (!m_bPatchFile || m_sDestinationFile.IsEmpty())
+
+	m_lstProgress.ResetContent();
+
+	// Search file for files matching the file name
+	// in case it is a pattern
+
+	CStringList sFileList;
+	CFileFind cFileFind;
+
+	if (cFileFind.FindFile(m_sFile))
 	{
-		PatchFile(m_sFile);
+		while (cFileFind.FindNextFile())
+		{
+			sFileList.AddTail(cFileFind.GetFilePath());
+		}
+		cFileFind.Close();
+	}
+
+	if (sFileList.IsEmpty())
+	{
+		m_lstProgress.AddString("No matching files were found");
+		return;
+	}
+	else if (sFileList.GetCount() > 1)
+	{
+		m_lstProgress.AddString("More than 1 matching file was found");
+		POSITION pos = sFileList.GetHeadPosition();
+		while (pos)
+		{
+			CString sFile = sFileList.GetNext(pos);
+			PatchFile(sFile);
+		}
 	}
 	else
 	{
-		PatchFile(m_sFile, m_sDestinationFile);
+		CString sFile = sFileList.GetAt(0);
+		if (!m_bPatchFile || m_sDestinationFile.IsEmpty())
+		{
+			PatchFile(m_sFile);
+		}
+		else
+		{
+			PatchFile(m_sFile, m_sDestinationFile);
+		}
 	}
+
+	m_lstProgress.AddString("Processing completed");
 }
 
 
 BOOL CIEPatcherDlg::PatchFile(const CString & sFileFrom, const CString & sFileTo)
 {
-	m_lstProgress.ResetContent();
-
 	// Turn on patching if possible
 	BOOL bPatchOnly = TRUE;
 	if (!sFileTo.IsEmpty())
@@ -313,8 +350,6 @@ BOOL CIEPatcherDlg::PatchFile(const CString & sFileFrom, const CString & sFileTo
 
 		delete []pszFile;
 	}
-
-	m_lstProgress.AddString("Processing completed");
 
 	return FALSE;
 }
