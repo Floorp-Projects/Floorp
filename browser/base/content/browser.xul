@@ -169,6 +169,17 @@ Contributor(s):
   <command id="cmd_textZoomReduce"  oncommand="ZoomManager.prototype.getInstance().reduce();"/>
   <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
   <command id="Browser:OpenLocation" oncommand="openLocation();"/>
+  <broadcaster id="viewDownloadsSidebar" autoCheck="false" label="&downloadsButton.label;"
+               type="radio" group="sidebar" sidebarurl="chrome://browser/content/downloads/downloadPanel.xul"
+               oncommand="toggleSidebar('viewDownloadsSidebar');"/>
+
+  <broadcaster id="viewBookmarksSidebar" autoCheck="false" label="&bookmarksButton.label;"
+               type="radio" group="sidebar" sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
+               oncommand="toggleSidebar('viewBookmarksSidebar');"/>
+
+  <broadcaster id="viewHistorySidebar" autoCheck="false" label="&historyButton.label;"
+               type="radio" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
+               oncommand="toggleSidebar('viewHistorySidebar');"/>
 
   <broadcaster id="isImage"/>
 
@@ -490,14 +501,20 @@ Contributor(s):
             <menu label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;"
                   onpopupshowing="onViewToolbarsPopupShowing(event);">
               <menupopup onpopupshowing="updateToolbarStates(this);"> 
-                <menuitem id="toggle_taskbar" label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar('status-bar','toggle_taskbar');" checked="true" />
+                <menuseparator/>
+                  <menuitem label="&viewCustomizeToolbar.label;" accesskey="&viewCustomizeToolbar.accesskey;"
+                            command="cmd_CustomizeToolbars"/>             
               </menupopup>
             </menu>
-            <menuitem label="&viewCustomizeToolbar.label;" accesskey="&viewCustomizeToolbar.accesskey;"
-                      command="cmd_CustomizeToolbars"/>
-            <menuitem accesskey="&fullScreenCmd.accesskey;"
-                      label="&fullScreenCmd.label;" key="key_fullScreen"
-                      command="View:FullScreen"/>
+            <menuitem id="toggle_taskbar" label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" type="checkbox" oncommand="goToggleToolbar('status-bar','toggle_taskbar');" checked="true" />
+            <menu label="&viewSidebarMenu.label;"
+                  accesskey="&viewSidebarMenu.accesskey;">
+              <menupopup id="viewSidebarMenu">
+                <menuitem observes="viewDownloadsSidebar"/>
+                <menuitem observes="viewBookmarksSidebar"/>
+                <menuitem observes="viewHistorySidebar"/>
+              </menupopup>
+            </menu>            
             <menuseparator/>
             <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" command="Browser:Stop" key="key_stop"/>
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
@@ -608,6 +625,10 @@ Contributor(s):
             <menuseparator/>
             <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
             <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
+            <menuseparator/>
+              <menuitem accesskey="&fullScreenCmd.accesskey;"
+                        label="&fullScreenCmd.label;" key="key_fullScreen"
+                        command="View:FullScreen"/>
           </menupopup>
         </menu>
     
@@ -809,22 +830,16 @@ Contributor(s):
           <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
         </toolbaritem>
 
-        <toolbarbutton id="downloads-button" class="toolbarbutton-1" autoCheck="false"
-                       label="&downloadsButton.label;" type="radio" group="sidebar"
-                       sidebarurl="chrome://browser/content/downloads/downloadPanel.xul"
-                       oncommand="toggleSidebar(this);"
+        <toolbarbutton id="downloads-button" class="toolbarbutton-1"
+                       observes="viewDownloadsSidebar"
                        tooltiptext="&downloadsButton.tooltip;"/>
 
-        <toolbarbutton id="history-button" class="toolbarbutton-1" autoCheck="false"
-                       label="&historyButton.label;" type="radio" group="sidebar"
-                       sidebarurl="chrome://browser/content/history/history-panel.xul"
-                       oncommand="toggleSidebar(this);"
+        <toolbarbutton id="history-button" class="toolbarbutton-1"
+                       observes="viewHistorySidebar"
                        tooltiptext="&historyButton.tooltip;"/>
 
-        <toolbarbutton id="bookmarks-button" class="toolbarbutton-1" autoCheck="false"
-                       label="&bookmarksButton.label;" type="radio" group="sidebar"
-                       sidebarurl="chrome://browser/content/bookmarks/bookmarksPanel.xul"
-                       oncommand="toggleSidebar(this);"
+        <toolbarbutton id="bookmarks-button" class="toolbarbutton-1"
+                       observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"/>
     
         <toolbarbutton id="new-tab-button" class="toolbarbutton-1"

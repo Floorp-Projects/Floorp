@@ -334,9 +334,9 @@ function Startup()
       var sidebarTitle = document.getElementById("sidebar-title");
       sidebarTitle.setAttribute("value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
       sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
-      var sidebarButton = openerSidebarBox.getAttribute("button");
-      document.getElementById(sidebarButton).checked = true;
-      sidebarBox.setAttribute("button", sidebarButton);
+      var sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
+      document.getElementById(sidebarCmd).setAttribute("checked", "true");
+      sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
     }
   }
   
@@ -3243,32 +3243,37 @@ nsBrowserContentListener.prototype =
     parentContentListener: null
 }
 
-function toggleSidebar(aElt) {
+function toggleSidebar(aCommandID) {
+  var elt = document.getElementById(aCommandID);
   var sidebarBox = document.getElementById("sidebar-box");
   var sidebar = document.getElementById("sidebar");
   var sidebarTitle = document.getElementById("sidebar-title");
   var sidebarSplitter = document.getElementById("sidebar-splitter");
 
-  if (aElt.checked) {
-    aElt.checked = false;
+  if (elt.getAttribute("checked") == "true") {
+    elt.removeAttribute("checked");
     sidebarBox.hidden = true;
     sidebarSplitter.hidden = true;
     return;
   }
   
-  aElt.checked = true;
+  var elts = document.getElementsByAttribute("group", "sidebar");
+  for (var i = 0; i < elts.length; ++i)
+    elts[i].removeAttribute("checked");
+
+  elt.setAttribute("checked", "true");;
 
   if (sidebarBox.hidden) {
     sidebarBox.hidden = false;
     sidebarSplitter.hidden = false;
   }
   
-  var url = aElt.getAttribute("sidebarurl");
-  var title = aElt.getAttribute("sidebartitle");
+  var url = elt.getAttribute("sidebarurl");
+  var title = elt.getAttribute("sidebartitle");
   if (!title)
-    title = aElt.getAttribute("label");
+    title = elt.getAttribute("label");
   sidebar.setAttribute("src", url);
-  sidebarBox.setAttribute("button", aElt.id);
+  sidebarBox.setAttribute("sidebarcommand", elt.id);
   sidebarTitle.setAttribute("value", title);
 }
 
