@@ -230,7 +230,9 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable * aTransferable, PRInt32 aWhi
   if (nsnull != aTransferable) {
     return GetNativeClipboardData(aTransferable, aWhichClipboard);
   } else {
+#ifdef DEBUG_CLIPBOARD
     printf("  nsClipboard::GetData(), aTransferable is NULL.\n");
+#endif
   }
 
   return NS_ERROR_FAILURE;
@@ -288,7 +290,9 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
   // make sure we have a good transferable
   if (nsnull == transferable) {
+#ifdef DEBUG_CLIPBOARD
     printf("nsClipboard::SetNativeClipboardData(): no transferable!\n");
+#endif
     return NS_ERROR_FAILURE;
   }
 
@@ -401,7 +405,9 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 
   // make sure we have a good transferable
   if (nsnull == aTransferable) {
+#ifdef DEBUG_CLIPBOARD
     printf("  GetNativeClipboardData: Transferable is null!\n");
+#endif
     return NS_ERROR_FAILURE;
   }
 
@@ -550,8 +556,10 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     int foo;
     status = XmbTextPropertyToTextList(GDK_DISPLAY(), &prop, &tmpData, &foo);
 
+#ifdef DEBUG_CLIPBOARD
     if (foo > 1)
       printf("Got multiple strings from XmbTextPropertyToTextList.. don't know how to handle this yet\n");
+#endif
 
     PRInt32 numberOfBytes = 0;
 
@@ -601,8 +609,10 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
       if ( unicodeData ) {
         PRInt32 numberTmp = numberOfBytes;
         rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
+#ifdef DEBUG_CLIPBOARD
         if (numberTmp != numberOfBytes)
           printf("didn't consume all the bytes\n");
+#endif
 
         (unicodeData)[outUnicodeLen] = '\0';    // null terminate. Convert() doesn't do it for us
       }
@@ -641,8 +651,10 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
       if ( unicodeData ) {
         PRInt32 numberTmp = numberOfBytes;
         rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
+#ifdef DEBUG_CLIPBOARD
         if (numberTmp != numberOfBytes)
           printf("didn't consume all the bytes\n");
+#endif
 
         (unicodeData)[outUnicodeLen] = '\0';    // null terminate. Convert() doesn't do it for us
       }
@@ -1008,10 +1020,14 @@ void nsClipboard::SelectionClearCB(GtkWidget *aWidget,
                                                        "cb");
 
   if (aEvent->selection == GDK_SELECTION_PRIMARY) {
+#ifdef DEBUG_CLIPBOARD
     g_print("clearing PRIMARY clipboard\n");
+#endif
     cb->EmptyClipboard(kSelectionClipboard);
   } else if (aEvent->selection == GDK_SELECTION_CLIPBOARD) {
+#ifdef DEBUG_CLIPBOARD
     g_print("clearing CLIPBOARD clipboard\n");
+#endif
     cb->EmptyClipboard(kGlobalClipboard);
   }
 }
