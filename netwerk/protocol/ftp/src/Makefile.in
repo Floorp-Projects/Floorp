@@ -19,7 +19,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-LIBRARY_NAME = ftpprotocol
+LIBRARY_NAME = necko_ftp
 
 IS_COMPONENT = 1
 

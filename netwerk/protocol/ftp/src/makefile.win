@@ -13,18 +13,18 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-MODULE = netwerk
+MODULE = necko
 
 DEPTH = ..\..\..\..
 
 // temporary, until we land:
 !ifndef NECKO
 include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
+PUBLIC = $(DEPTH)\necko\dist\include
 !endif
 
 MAKE_OBJ_TYPE=DLL
-DLLNAME=ftpprotocol
+DLLNAME=necko_ftp
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
@@ -38,7 +38,7 @@ CPP_OBJS =                                        \
         $(NULL)
 
 LLIBS=                                \
-        $(DIST)\lib\netwerk.lib       \
+        $(DIST)\lib\necko.lib       \
         $(DIST)\lib\xpcom.lib       \
         $(DIST)\lib\plc3.lib          \
         $(LIBNSPR)  

@@ -16,17 +16,17 @@
 # Reserved.
 
 DEPTH=..\..\..\..
-MODULE=netwerk
+MODULE=necko
 
 // temporary, until we land:
 !ifndef NECKO
 include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
+PUBLIC = $(DEPTH)\necko\dist\include
 !endif
 
 IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
-DLLNAME=resourceprotocol
+DLLNAME=necko_resource
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS)                 \
@@ -46,7 +46,7 @@ LOCAL_INCLUDES=-I.
 
 INCLUDES = $(LOCAL_INCLUDES)
 
-REQUIRES= netwerk 
+REQUIRES= necko 
 
 INCS = $(INCS)                  \
         -I$(DEPTH)\dist\include \

@@ -13,19 +13,19 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-MODULE = netwerk
+MODULE = necko
 
 DEPTH = ..\..\..
 
 // temporary, until we land:
 !ifndef NECKO
 include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
+PUBLIC = $(DEPTH)\necko\dist\include
 !endif
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
-LIBRARY_NAME=netwerkdns_s
+LIBRARY_NAME=neckodns_s
 
 CPP_OBJS =                           \
         .\$(OBJDIR)\nsDnsService.obj \

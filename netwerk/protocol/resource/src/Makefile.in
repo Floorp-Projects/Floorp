@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 MODULE = netwerk
 
-LIBRARY_NAME = resourceprotocol
+LIBRARY_NAME = necko_resource
 
 IS_COMPONENT = 1
 
