@@ -274,10 +274,12 @@ class basic_nsAWritableString
         //
 
       basic_nsAWritableString<CharT>& operator=( const basic_nsAReadableString<CharT>& aReadable )  { do_AssignFromReadable(aReadable); return *this; }
+      basic_nsAWritableString<CharT>& operator=( const nsPromiseReadable<CharT>& aReadable )        { Assign(aReadable); return *this; }
       basic_nsAWritableString<CharT>& operator=( const CharT* aPtr )                                { do_AssignFromElementPtr(aPtr); return *this; }
       basic_nsAWritableString<CharT>& operator=( CharT aChar )                                      { do_AssignFromElement(aChar); return *this; }
 
       void Assign( const basic_nsAReadableString<CharT>& aReadable )                                { do_AssignFromReadable(aReadable); }
+      void Assign( const nsPromiseReadable<CharT>& aReadable )                                      { aReadable.Promises(*this) ? AssignFromPromise(aReadable) : do_AssignFromReadable(aReadable); }
 //    void Assign( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )   { do_AssignFromIterators(aStart, aEnd); }
       void Assign( const CharT* aPtr )                                                              { do_AssignFromElementPtr(aPtr); }
       void Assign( const CharT* aPtr, PRUint32 aLength )                                            { do_AssignFromElementPtrLength(aPtr, aLength); }
@@ -290,10 +292,12 @@ class basic_nsAWritableString
         //
 
       basic_nsAWritableString<CharT>& operator+=( const basic_nsAReadableString<CharT>& aReadable ) { do_AppendFromReadable(aReadable); return *this; }
+      basic_nsAWritableString<CharT>& operator+=( const nsPromiseReadable<CharT>& aReadable )       { Append(aReadable); return *this; }
       basic_nsAWritableString<CharT>& operator+=( const CharT* aPtr )                               { do_AppendFromElementPtr(aPtr); return *this; }
       basic_nsAWritableString<CharT>& operator+=( CharT aChar )                                     { do_AppendFromElement(aChar); return *this; }
 
       void Append( const basic_nsAReadableString<CharT>& aReadable )                                { do_AppendFromReadable(aReadable); }
+      void Append( const nsPromiseReadable<CharT>& aReadable )                                      { aReadable.Promises(*this) ? AppendFromPromise(aReadable) : do_AppendFromReadable(aReadable); }
 //    void Append( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )   { do_AppendFromIterators(aStart, aEnd); }
       void Append( const CharT* aPtr )                                                              { do_AppendFromElementPtr(aPtr); }
       void Append( const CharT* aPtr, PRUint32 aLength )                                            { do_AppendFromElementPtrLength(aPtr, aLength); }
@@ -307,6 +311,7 @@ class basic_nsAWritableString
         //
 
       void Insert( const basic_nsAReadableString<CharT>& aReadable, PRUint32 atPosition )                               { do_InsertFromReadable(aReadable, atPosition); }
+      void Insert( const nsPromiseReadable<CharT>& aReadable, PRUint32 atPosition )                                     { aReadable.Promises(*this) ? InsertFromPromise(aReadable, atPosition) : do_InsertFromReadable(aReadable, atPosition); }
 //    void Insert( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd, PRUint32 atPosition )  { do_InsertFromIterators(aStart, aEnd, atPosition); }
       void Insert( const CharT* aPtr, PRUint32 atPosition )                                                             { do_InsertFromElementPtr(aPtr, atPosition); }
       void Insert( const CharT* aPtr, PRUint32 atPosition, PRUint32 aLength )                                           { do_InsertFromElementPtrLength(aPtr, atPosition, aLength); }
@@ -318,8 +323,12 @@ class basic_nsAWritableString
 
 
 
-      void Replace( PRUint32 cutStart, PRUint32 cutLength, const basic_nsAReadableString<CharT>& );
-
+      void Replace( PRUint32 cutStart, PRUint32 cutLength, const basic_nsAReadableString<CharT>& aReadable )            { do_ReplaceFromReadable(cutStart, cutLength, aReadable); }
+      void Replace( PRUint32 cutStart, PRUint32 cutLength, const nsPromiseReadable<CharT>& aReadable )                  { aReadable.Promises(*this) ? ReplaceFromPromise(cutStart, cutLength, aReadable) : do_ReplaceFromReadable(cutStart, cutLength, aReadable); }
+//    void Replace( PRUint32, PRUint32, const nsReadingIterator<CharT>&, const nsReadingIterator<CharT>& );
+//    void Replace( PRUint32, PRUint32, const CharT* );
+//    void Replace( PRUint32, PRUint32, const CharT*, PRUint32 );
+//    void Replace( PRUint32, PRUint32, CharT );
 
     private:
       typedef typename nsCharTraits<CharT>::incompatible_char_type incompatible_char_type;
@@ -330,26 +339,37 @@ class basic_nsAWritableString
       void operator+= ( incompatible_char_type );
       void Append     ( incompatible_char_type );
       void Insert     ( incompatible_char_type, PRUint32 );
+//    void Replace    ( PRUint32, PRUint32, incompatible_char_type );
       
 
     protected:
       virtual void do_AssignFromReadable( const basic_nsAReadableString<CharT>& );
+              void AssignFromPromise( const nsPromiseReadable<CharT>& );
 //    virtual void do_AssignFromIterators( nsReadingIterator<CharT>, nsReadingIterator<CharT> );
       virtual void do_AssignFromElementPtr( const CharT* );
       virtual void do_AssignFromElementPtrLength( const CharT*, PRUint32 );
       virtual void do_AssignFromElement( CharT );
 
       virtual void do_AppendFromReadable( const basic_nsAReadableString<CharT>& );
+              void AppendFromPromise( const nsPromiseReadable<CharT>& );
 //    virtual void do_AppendFromIterators( nsReadingIterator<CharT>, nsReadingIterator<CharT> );
       virtual void do_AppendFromElementPtr( const CharT* );
       virtual void do_AppendFromElementPtrLength( const CharT*, PRUint32 );
       virtual void do_AppendFromElement( CharT );
 
       virtual void do_InsertFromReadable( const basic_nsAReadableString<CharT>&, PRUint32 );
+              void InsertFromPromise( const nsPromiseReadable<CharT>&, PRUint32 );
 //    virtual void do_InsertFromIterators( nsReadingIterator<CharT>, nsReadingIterator<CharT>, PRUint32 );
       virtual void do_InsertFromElementPtr( const CharT*, PRUint32 );
       virtual void do_InsertFromElementPtrLength( const CharT*, PRUint32, PRUint32 );
       virtual void do_InsertFromElement( CharT, PRUint32 );
+
+      virtual void do_ReplaceFromReadable( PRUint32, PRUint32, const basic_nsAReadableString<CharT>& );
+              void ReplaceFromPromise( PRUint32 cutStart, PRUint32 cutLength, const nsPromiseReadable<CharT>& );
+//    virtual void do_ReplaceFromIterators( ... );
+//    virtual void do_ReplaceFromElementPtr( ... );
+//    virtual void do_ReplaceFromElementPtrLength( ... );
+//    virtual void do_ReplaceFromElement( ... );
   };
 
 
@@ -410,6 +430,19 @@ basic_nsAWritableString<CharT>::do_AssignFromReadable( const basic_nsAReadableSt
     copy_string(rhs.BeginReading(), rhs.EndReading(), BeginWriting());
   }
 
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::AssignFromPromise( const nsPromiseReadable<CharT>& aReadable )
+  {
+    PRUint32 length = aReadable.Length();
+    if ( CharT* buffer = new CharT[length] )
+      {
+        copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
+        do_AssignFromElementPtrLength(buffer, length);
+        delete buffer;
+      }
+  }
+
 #if 0
 template <class CharT>
 void
@@ -454,6 +487,19 @@ basic_nsAWritableString<CharT>::do_AppendFromReadable( const basic_nsAReadableSt
     PRUint32 oldLength = Length();
     SetLength(oldLength + rhs.Length());
     copy_string(rhs.BeginReading(), rhs.EndReading(), BeginWriting(oldLength));
+  }
+
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::AppendFromPromise( const nsPromiseReadable<CharT>& aReadable )
+  {
+    PRUint32 length = aReadable.Length();
+    if ( CharT* buffer = new CharT[length] )
+      {
+        copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
+        do_AppendFromElementPtrLength(buffer, length);
+        delete buffer;
+      }
   }
 
 #if 0
@@ -513,6 +559,19 @@ basic_nsAWritableString<CharT>::do_InsertFromReadable( const basic_nsAReadableSt
 
 template <class CharT>
 void
+basic_nsAWritableString<CharT>::InsertFromPromise( const nsPromiseReadable<CharT>& aReadable, PRUint32 atPosition )
+  {
+    PRUint32 length = aReadable.Length();
+    if ( CharT* buffer = new CharT[length] )
+      {
+        copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
+        do_InsertFromElementPtrLength(buffer, atPosition, length);
+        delete buffer;
+      }
+  }
+
+template <class CharT>
+void
 basic_nsAWritableString<CharT>::do_InsertFromElementPtr( const CharT* aPtr, PRUint32 atPosition )
   {
     do_InsertFromReadable(basic_nsLiteralString<CharT>(aPtr), atPosition);
@@ -554,7 +613,7 @@ basic_nsAWritableString<CharT>::Cut( PRUint32 cutStart, PRUint32 cutLength )
 
 template <class CharT>
 void
-basic_nsAWritableString<CharT>::Replace( PRUint32 cutStart, PRUint32 cutLength, const basic_nsAReadableString<CharT>& aReplacement )
+basic_nsAWritableString<CharT>::do_ReplaceFromReadable( PRUint32 cutStart, PRUint32 cutLength, const basic_nsAReadableString<CharT>& aReplacement )
   {
     PRUint32 oldLength = Length();
 
@@ -574,6 +633,19 @@ basic_nsAWritableString<CharT>::Replace( PRUint32 cutStart, PRUint32 cutLength, 
       copy_string_backward(BeginReading(cutEnd), BeginReading(oldLength), BeginWriting(replacementEnd));
 
     copy_string(aReplacement.BeginReading(), aReplacement.EndReading(), BeginWriting(cutStart));
+  }
+
+template <class CharT>
+void
+basic_nsAWritableString<CharT>::ReplaceFromPromise( PRUint32 cutStart, PRUint32 cutLength, const nsPromiseReadable<CharT>& aReadable )
+  {
+    PRUint32 length = aReadable.Length();
+    if ( CharT* buffer = new CharT[length] )
+      {
+        copy_string(aReadable.BeginReading(), aReadable.EndReading(), buffer);
+        do_ReplaceFromReadable(cutStart, cutLength, basic_nsLiteralString<CharT>(buffer, length));
+        delete buffer;
+      }
   }
 
 
