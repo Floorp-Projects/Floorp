@@ -494,7 +494,8 @@ sub who_menu {
   my $treeflag;
   # this variable isn't doing anything, so i'm going to use it shamelessly
   $treeflag = $td->{cvs_branch};
-  $treeflag .= "&branchtype=regexp" if $td->{cvs_branch} =~ /\+|\?|\*/;
+  $treeflag = $treeflag . '&branchtype=regexp'
+    if $treeflag =~ /\+|\?|\*/;
 
   my $qr = "${rel_path}../registry/who.cgi?email=". url_encode($who)
       . "&d=$td->{cvs_module}|$treeflag|$td->{cvs_root}|$mindate|$maxdate";
