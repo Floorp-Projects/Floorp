@@ -38,6 +38,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLImageElement.h"
@@ -4720,6 +4721,32 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
           {
             if ( doPlaceCaret )
             {
+              // check if the user pressed the key to force a copy rather than a move
+              // if we run into problems here, we'll just assume the user doesn't want a copy
+              PRBool userWantsCopy = PR_FALSE;
+              nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDropEvent) );
+              if (mouseEvent)
+#ifdef XP_MAC
+                mouseEvent->GetAltKey(&userWantsCopy); // check modifiers here
+#else
+                mouseEvent->GetCtrlKey(&userWantsCopy); // check modifiers here
+#endif
+              
+              nsCOMPtr<nsIDOMDocument> srcdomdoc;
+              dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
+              if (srcdomdoc)
+              {
+                // do deletion of selection if sourcedocument is current document && appropriate modifier isn't pressed
+                nsCOMPtr<nsIDOMDocument>destdomdoc; 
+                rv = GetDocument(getter_AddRefs(destdomdoc)); 
+                if ( NS_SUCCEEDED(rv) && !userWantsCopy && (srcdomdoc == destdomdoc) )
+                {
+                  rv = DeleteSelection(eNone);
+                  if (NS_FAILED(rv))
+                    return rv;
+                }
+              }
+
               // Set the selection to the point under the mouse cursor:
               nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
 
@@ -4794,7 +4821,7 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
   nsCOMPtr<nsIDOMEventTarget> eventTarget;
   rv = aDragEvent->GetTarget(getter_AddRefs(eventTarget));
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(eventTarget);
+  nsCOMPtr<nsIDOMNode> domnode = do_QueryInterface(eventTarget);
 
   /* get the selection to be dragged */
   nsCOMPtr<nsIDOMSelection> selection;
@@ -4869,7 +4896,7 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
       // else
         flags = nsIDragService::DRAGDROP_ACTION_COPY + nsIDragService::DRAGDROP_ACTION_MOVE;
       
-      rv = dragService->InvokeDragSession( domelement, transferableArray, nsnull, flags);
+      rv = dragService->InvokeDragSession( domnode, transferableArray, nsnull, flags);
       if (NS_FAILED(rv)) return rv;
 
       aDragEvent->PreventBubble();
