@@ -396,6 +396,8 @@ if [ test "$MOZ_TOOLKIT" = "USE_DEFAULT" ]; then
     fi
 fi
 
+CFLAGS="$CFLAGS -DMOZ_TOOLKIT=$MOZ_TOOLKIT"
+
 OS_TARGET=`uname -s`
 
 AC_ARG_ENABLE(shared,
