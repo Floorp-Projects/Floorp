@@ -1328,8 +1328,6 @@ nsHTTPChannel::Open(void)
     {
         if (!mPipelinedRequest)
             mPipelinedRequest = pReq;
-        else
-            NS_RELEASE (pReq);
         
         rv = pReq -> WriteRequest ();
 
