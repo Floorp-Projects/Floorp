@@ -184,6 +184,12 @@ statusbarpanel {
   padding: 0px;
 }
 
+/* ::::: Descriptions and Labels ::::::: */
+
+description[disabled="true"], label[disabled="true"] {
+  color: #8C99AB;
+}
+
 /* ::::: miscellaneous ::::: */
 
 .tooltip-label {
