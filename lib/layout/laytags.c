@@ -39,6 +39,7 @@
 #ifdef DOM
 #include "domstyle.h"
 #include "lm_dom.h"
+#include "laydom.h"
 #endif
 #include "pics.h"
 
@@ -4164,21 +4165,6 @@ DisplayParser(const char *str, uint32 *data, void *closure)
 }
 
 #if 0 /* not ready yet */
-/* XXX -- copied struct def'n from layblock.c -- I'm going to hell for sure */
-
-#define AXIS_NONE       0
-#define AXIS_X          1
-#define AXIS_Y          2
-
-struct SSUnitContext {
-  MWContext *context;
-  uint32 enclosingVal;
-  uint8 units;
-  uint8 axisAdjust;              
-};
-
-#define STYLE_UNITS_NONE        0
-#define STYLE_UNITS_PERCENT     1
 
 static void
 lo_SetStyleSheetBoxProperties(MWContext *context, lo_DocState *state,
@@ -4202,7 +4188,7 @@ lo_SetStyleSheetBoxProperties(MWContext *context, lo_DocState *state,
     if (!DOM_StyleGetProperty(cx, db, node, DISPLAY_STYLE, &entry))
         return;
     if (entry) {
-        if (!DOM_GetCleanEntryData(cx, entry, DisplayParser, &value, NULL))
+        if (!DOM_GetCleanEntryData(cx, entry, DisplayParser, NULL, &value, NULL))
             return;
         if (value == DISPLAY_STYLE_BLOCK) {
             /* display:block */
@@ -4229,7 +4215,7 @@ lo_SetStyleSheetBoxProperties(MWContext *context, lo_DocState *state,
     if (entry) {
         arg.axisAdjust = AXIS_X;
         arg.enclosingVal = 0;   /* XXX enclosing left margin? */
-        if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData,
+        if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData, NULL,
                                    &left_margin, (void *)&arg))
             return;
         CHECK_PERCENTAGE(entry, arg);
@@ -4271,7 +4257,7 @@ lo_SetStyleSheetProperties(MWContext *context, lo_DocState *state, PA_Tag *tag)
     return;
   if (entry) {
       uint32 value;
-      if (!DOM_GetCleanEntryData(cx, entry, DisplayParser, &value, NULL))
+      if (!DOM_GetCleanEntryData(cx, entry, DisplayParser, NULL, &value, NULL))
           return;
       if (value == DISPLAY_STYLE_NONE) {
           /*

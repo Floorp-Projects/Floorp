@@ -26,7 +26,7 @@ EXPORTS		= laylayer.h layout.h lo_funcs.h
 
 # XXX Perignon hack
 ifdef DOM
-EXPORTS		+= laystyle.h
+EXPORTS		+= laydom.h laystyle.h
 endif
 
 CSRCS		= bullet.c \
@@ -66,6 +66,10 @@ CSRCS		= bullet.c \
 		  laytext.c \
 		  layutil.c \
                   $(NULL)
+
+ifdef DOM
+CSRCS		+=laydom.c
+endif
 
 REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug java hook pref libfont lay rdf network htmldlgs privacy mocha oji ojiimpl xpcom mailto
 

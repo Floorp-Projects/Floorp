@@ -56,6 +56,7 @@
 #ifdef DOM
 #include "domstyle.h"
 #include "lm_dom.h"
+#include "laydom.h"
 #endif
 
 #if defined(ENDER) && defined(MOZ_ENDER_MIME)
@@ -834,7 +835,7 @@ new_form_element(MWContext *context, lo_DocState *state, int32 type)
                     return NULL;
                 }
                 if (entry) {
-                    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData,
+                    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, NULL,
                                                (uint32 *)&col, NULL)) {
                         XP_FREE(form_element);
                         return NULL;

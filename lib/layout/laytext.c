@@ -29,6 +29,7 @@
 #ifdef DOM
 #include "domstyle.h"
 #include "lm_dom.h"
+#include "laydom.h"
 #endif
 
 /*
@@ -8470,7 +8471,7 @@ lo_GetCurrentTextAttr(lo_DocState *state, MWContext *context)
 
   styleptr = lo_FillInTextStyleInfo(state, context, tptr, isMutable);
   if (styleptr != tptr)
-    isMutable = JS_FALSE;       /* already fetched, so no need to refetch */
+        isMutable = JS_FALSE;       /* already fetched, so no need to refetch */
   tptr = styleptr;
 
   if (isMutable)
@@ -8479,72 +8480,6 @@ lo_GetCurrentTextAttr(lo_DocState *state, MWContext *context)
 
   return tptr;
 }
-
-JSBool
-lo_ColorStringToData(const char *color, uint32 *data, void *closure)
-{
-  LO_Color col;
-  if (!LO_ParseStyleSheetRGB((char *)color, &col.red, &col.green, &col.blue))
-    return JS_FALSE;
-  *data = *(uint32 *)&col;
-  return JS_TRUE;
-}
-
-#define FONT_WEIGHT_BOLDER		0x10000
-#define FONT_WEIGHT_LIGHTER		0x20000
-
-JSBool
-lo_SSUnitsToData(const char *str, uint32 *data, void *closure)
-{
-  /* XXX NYI */
-  *data = XP_ATOI(str);
-  return JS_TRUE;
-}
-
-static JSBool
-FontWeightToData(const char *str, uint32 *data, void *closure)
-{
-  uint32 weight;
-  /* XXX use proper CSS-value parsing stuff */
-  if (!strcasecomp(str, "bolder")) {
-    weight = FONT_WEIGHT_BOLDER;
-  } else if (!strcasecomp(str, "lighter")) {
-    weight = FONT_WEIGHT_LIGHTER;
-  } else if (!strcasecomp(str, "bold")) {
-    weight = 700;
-  } else if (!strcasecomp(str, "normal")) {
-    weight = 400;
-  } else {
-    weight = XP_ATOI(str);
-    weight -= weight % 100;
-  }
-  *data = weight;
-  return JS_TRUE;
-}
-
-#define SET_ATTR_BIT_IF(style, bit)                                           \
-if (!strcasecomp(decors, style))                                              \
-    attrs |= bit;
-
-static JSBool
-TextDecorationToData(const char *decors, uint32 *data, void *closure)
-{
-  uint32 attrs = 0;
-  /* XXX handle multiple tokens */
-  SET_ATTR_BIT_IF(BLINK_STYLE, LO_ATTR_BLINK)
-    else
-  SET_ATTR_BIT_IF(STRIKEOUT_STYLE, LO_ATTR_STRIKEOUT)
-    else
-  SET_ATTR_BIT_IF(UNDERLINE_STYLE, LO_ATTR_UNDERLINE)
-    else
-  if (!strcasecomp(decors, "none"))
-    attrs = 0;
-
-  *data = attrs; 
-  return JS_TRUE;
-}
-
-#undef SET_ATTR_BIT_IF
 
 #ifdef DEBUG_shaver
 /* #define DEBUG_shaver_textattr */
@@ -8650,7 +8585,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
     /* XXX report error? return NULL? */
     goto done;
   if (entry) {
-    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, (uint32*)&col,
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, NULL, (uint32*)&col,
                                NULL))
       goto done;
     if (*(uint32 *)&col != *(uint32 *)&tptr->fg) {
@@ -8664,7 +8599,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
     goto done;
   if (entry) {
     COW();
-    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, (uint32*)&col,
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ColorStringToData, NULL, (uint32*)&col,
                                NULL))
       goto done;
     newptr->bg = col;
@@ -8690,7 +8625,22 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
     }
   }
 
-  /* XXX font-size requires STYLESTRUCT_StringToSSNumber-alike */
+  /* check font-size */
+  if (!DOM_StyleGetProperty(cx, db, node, FONTSIZE_STYLE, &entry))
+    return NULL;
+  if (entry) {
+    double *fontsize;
+    struct SSUnitContext arg;
+    arg.context = context;
+
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseFontSizeToData, lo_DeleteFontSize,
+                               (uint32*)&fontsize, (void *)&arg))
+	return NULL;
+    if (newptr->point_size != *fontsize) {
+      COW();
+      newptr->point_size = *fontsize;
+    }
+  }
 
   /* check font-weight */
   if (!DOM_StyleGetProperty(cx, db, node, FONTWEIGHT_STYLE, &entry))
@@ -8701,7 +8651,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
      * For "bolder" and "lighter", we need to keep them dirty because they're
      * dependent on the enclosing state.
      */
-    if (!DOM_GetCleanEntryData(cx, entry, FontWeightToData, &weight, NULL))
+    if (!DOM_GetCleanEntryData(cx, entry, FontWeightToData, NULL, &weight, NULL))
       goto done;
     if (weight) {
       if (!newptr->font_weight) {
@@ -8748,7 +8698,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
   if (entry) {
     uint32 attrs;
 #define ATTRMASK (LO_ATTR_BLINK | LO_ATTR_STRIKEOUT | LO_ATTR_UNDERLINE)
-    if (!DOM_GetCleanEntryData(cx, entry, TextDecorationToData, &attrs, NULL))
+    if (!DOM_GetCleanEntryData(cx, entry, TextDecorationToData, NULL, &attrs, NULL))
       goto done;
     attrs = (tptr->attrmask & ~ATTRMASK) | (attrs & ATTRMASK);
     if (attrs != tptr->attrmask) {
@@ -8773,7 +8723,7 @@ lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
   return tptr;
 }
 
-#endif
+#endif /* DOM */
 
 #ifdef TEST_16BIT
 #undef XP_WIN16

@@ -30,6 +30,7 @@
 #ifdef DOM
 #include "domstyle.h"
 #include "lm_dom.h"
+#include "laydom.h"
 #endif
 
 /* This struct is used during the processing of a <LAYER> or <ILAYER>
@@ -969,74 +970,6 @@ lo_ParseStyleCoords(MWContext *context,
 }
 
 #ifdef DOM
-static JSBool
-PositionParser(const char *position, uint32 *data, void *closure)
-{
-  if (!strcasecomp(position, ABSOLUTE_STYLE))
-    *data = 0;
-  else if (!strcasecomp(position, RELATIVE_STYLE))
-    *data = 1;
-  else
-    *data = 2;
-  return JS_TRUE;
-}
-
-#define AXIS_NONE       0
-#define AXIS_X          1
-#define AXIS_Y          2
-
-struct SSUnitContext {
-  MWContext *context;
-  uint32 enclosingVal;
-  uint8 units;
-  uint8 axisAdjust;              
-};
-
-#define STYLE_UNITS_NONE        0
-#define STYLE_UNITS_PERCENT     1
-
-/* XXX finish */
-JSBool
-lo_ParseSSNum(const char *str, uint32 *num, uint8 *units)
-{
-  *num = XP_ATOI(str);
-  if (strchr(str, '%'))
-    *units = STYLE_UNITS_PERCENT;
-  else
-    *units = STYLE_UNITS_NONE;
-  return JS_TRUE;
-}
-
-JSBool
-lo_atoi(const char *str, uint32 *num, void *closure)
-{
-  *num = XP_ATOI(str);
-  return JS_TRUE;
-}
-
-JSBool
-lo_ParseSSNumToData(const char *str, uint32 *data, void *closure)
-{
-  struct SSUnitContext *argp = closure;
-  uint32 num;
-
-  if (!lo_ParseSSNum(str, &num, &argp->units))
-    return JS_FALSE;
-
-  if (argp->units == STYLE_UNITS_PERCENT) {
-    num = argp->enclosingVal * num / 100;
-  }
-
-  if (argp->axisAdjust == AXIS_X)
-    num = FEUNITS_X(num, argp->context);
-  else if (argp->axisAdjust == AXIS_Y)
-    num = FEUNITS_Y(num, argp->context);
-
-  *data = num;
-
-  return JS_TRUE;
-}
-
 void
 lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
                                 DOM_StyleDatabase *db, DOM_Node *node,
@@ -1075,7 +1008,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
     return;
 
  if (entry) {
-   if (!DOM_GetCleanEntryData(cx, entry, PositionParser,
+   if (!DOM_GetCleanEntryData(cx, entry, PositionParser, NULL,
                               (uint32 *)&inflow, NULL))
      return;
  } else {
@@ -1101,7 +1034,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (entry) {
     arg.axisAdjust = AXIS_X;
     arg.enclosingVal = 0;
-    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData,
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData, NULL,
                                &param->left, (void *)&arg))
       goto error;
     CHECK_PERCENTAGE(entry, arg);
@@ -1113,7 +1046,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (entry) {
     arg.axisAdjust = AXIS_Y;
     arg.enclosingVal = 0;
-    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData, &param->top,
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData, NULL, &param->top,
                                    (void *)&arg))
       goto error;
     CHECK_PERCENTAGE(entry, arg);
@@ -1125,7 +1058,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (entry) {
     arg.axisAdjust = AXIS_Y;
     arg.enclosingVal = lo_GetEnclosingLayerHeight(state);
-    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData,
+    if (!DOM_GetCleanEntryData(cx, entry, lo_ParseSSNumToData, NULL,
                                    &param->height, (void *)&arg))
       goto error;
     CHECK_PERCENTAGE(entry, arg);
@@ -1147,7 +1080,7 @@ lo_SetStyleSheetLayerProperties(MWContext *context, lo_DocState *state,
   if (!DOM_StyleGetProperty(cx, db, node, ZINDEX_STYLE, &entry))
     goto error;
   if (entry) {
-    if (!DOM_GetCleanEntryData(cx, entry, lo_atoi, &param->zindex, NULL))
+    if (!DOM_GetCleanEntryData(cx, entry, lo_atoi, NULL, &param->zindex, NULL))
       goto error;
     param->has_zindex = TRUE;
   } else {

@@ -35,6 +35,7 @@
 #ifdef DOM
 #include "domstyle.h"
 #include "lm_dom.h"
+#include "laydom.h"
 #endif
 
 extern int MK_OUT_OF_MEMORY;
@@ -1553,7 +1554,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
                 goto error;
             if (entry) {
                 /* XXX handle borderTop/borderBottom/borderLeft/borderRight */
-                if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData,
+                if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData, NULL,
                                            &image->border_width, context))
                     goto error;
             } else {
@@ -1568,7 +1569,7 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
                 goto error;
             if (entry) {
                 /* XXX handle paddingTop/paddingBottom/paddingLeft/paddingRight */
-                if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData,
+                if (!DOM_GetCleanEntryData(cx, entry, lo_SSUnitsToData, NULL,
                                            &image->border_vert_space, context))
                     goto error;
                 image->border_horiz_space = image->border_vert_space;

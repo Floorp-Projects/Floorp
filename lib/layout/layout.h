@@ -968,14 +968,6 @@ lo_GetCurrentTextAttr(lo_DocState *state, MWContext *context);
 extern LO_TextAttr *
 lo_FillInTextStyleInfo(lo_DocState *state, MWContext *context,
                        LO_TextAttr *tptr, JSBool isMutable);
-
-/* colour parsing function for use with DOM_GetCleanAttributeData */
-extern JSBool
-lo_ColorStringToData(const char *color, uint32 *data, void *closure);
-
-extern JSBool
-lo_SSUnitsToData(const char *units, uint32 *data, void *closure);
-
 #endif /* DOM */
 
 extern void lo_FindLineMargins(MWContext *, lo_DocState *, Bool updateFE);
