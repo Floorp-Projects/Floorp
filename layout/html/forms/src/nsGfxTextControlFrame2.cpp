@@ -206,8 +206,12 @@ public:
 
 
 protected:
+
   nsGfxTextControlFrame2* mFrame;  // weak reference
   nsString mFocusedValue;
+  
+  PRPackedBool    mSelectionWasCollapsed;
+  PRPackedBool    mKnowSelectionCollapsed;
 };
 
 
@@ -221,6 +225,9 @@ NS_IMPL_RELEASE(nsTextInputListener)
 
 
 nsTextInputListener::nsTextInputListener()
+: mFrame(nsnull)
+, mSelectionWasCollapsed(PR_TRUE)
+, mKnowSelectionCollapsed(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -298,8 +305,16 @@ NS_IMETHODIMP
 nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason)
 {
   PRBool collapsed;
-  if (!mFrame || !aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed)
-    return NS_OK;//no update if collapsed
+  if (!mFrame || !aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)))
+    return NS_OK;
+
+  // if the collapsed state did not change, don't fire notifications
+  if (mKnowSelectionCollapsed && collapsed == mSelectionWasCollapsed)
+    return NS_OK;
+    
+  mSelectionWasCollapsed = collapsed;
+  mKnowSelectionCollapsed = PR_TRUE;
+
   nsCOMPtr<nsIContent> content;
   nsresult rv = mFrame->GetContent(getter_AddRefs(content));
   if (NS_FAILED(rv) || !content ) 
@@ -2566,8 +2581,8 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
       first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
     if (scrollableFrame)
       scrollableFrame->SetScrollbarVisibility(aPresContext,PR_FALSE,PR_FALSE);
-
   }
+
   //register keylistener
   nsCOMPtr<nsIDOMEventReceiver> erP;
   if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
@@ -2581,8 +2596,8 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
     nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_FAILED(rv) || !shell)
       return rv?rv:NS_ERROR_FAILURE;
-
   }
+
   while(first)
   {
     nsIScrollableView *scrollView;
