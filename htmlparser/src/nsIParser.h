@@ -59,6 +59,8 @@ enum  eParseMode {
   eParseMode_autodetect
 };
 
+enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
+
 /**
  *  This class defines the iparser interface. This XPCOM
  *  inteface is all that parser clients ever need to see.
