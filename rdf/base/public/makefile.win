@@ -27,7 +27,6 @@ DEPTH=..\..\..
 
 EXPORTS=\
         rdf.h                           \
-        nsRDFInterfaces.h               \
         nsIRDFContentSink.h             \
 	$(NULL)
 
