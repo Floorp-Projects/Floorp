@@ -1344,7 +1344,9 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
 	case NS_MOUSE_MOVE:
 	case NS_MOUSE_ENTER:
 	case NS_MOUSE_LEFT_BUTTON_UP:
+#ifndef XP_MAC
 	case NS_MOUSE_LEFT_BUTTON_DOWN:
+#endif
 		*anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
 		break;
 		
