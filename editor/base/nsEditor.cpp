@@ -50,6 +50,9 @@
 #include "nsIStyleContext.h"
 #include "nsIEditActionListener.h"
 
+#include "nsEditorShell.h"
+#include "nsEditorShellFactory.h"
+
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsLayoutCID.h"
@@ -98,7 +101,8 @@ static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
 static NS_DEFINE_CID(kEditorCID,            NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,        NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,        NS_HTMLEDITOR_CID);
-static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kEditorShellCID,       NS_EDITORAPPCORE_CID);
+static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
 // transaction manager
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 
@@ -162,7 +166,7 @@ PRInt32 nsEditor::gInstanceCount = 0;
 
 
 
-PRMonitor *getEditorMonitor() //if more than one person asks for the monitor at the same time for the FIRST time, we are screwed
+PRMonitor *GetEditorMonitor() //if more than one person asks for the monitor at the same time for the FIRST time, we are screwed
 {
   static PRMonitor *ns_editlock = nsnull;
   if (nsnull == ns_editlock)
@@ -171,7 +175,7 @@ PRMonitor *getEditorMonitor() //if more than one person asks for the monitor at 
     ns_editlock = PR_NewMonitor();
   }
   else if ((PRMonitor *)1 == ns_editlock)
-    return getEditorMonitor();
+    return GetEditorMonitor();
   return ns_editlock;
 }
 
@@ -202,6 +206,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr,
   if (NS_FAILED(rv)) return rv;
 
   rv = NS_NOINTERFACE;
+  
   if (aClass.Equals(kEditorCID)) {
     rv = GetEditFactory(aFactory, aClass);
     if (NS_FAILED(rv)) goto done;
@@ -214,7 +219,11 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr,
     rv = GetHTMLEditFactory(aFactory, aClass);
     if (NS_FAILED(rv)) goto done;
   }
-  
+  else if (aClass.Equals(kEditorShellCID)) {
+    rv = GetEditorShellFactory(aFactory, aClass, aClassName, aProgID);
+    if (NS_FAILED(rv)) goto done;  
+  }
+
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, gCompMgr);
 
@@ -252,6 +261,17 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
   if (NS_FAILED(rv)) goto done;
   rv = compMgr->RegisterComponent(kHTMLEditorCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+  rv = compMgr->RegisterComponent(kEditorShellCID,
+                                  "Editor Shell Component",
+                                  "component://netscape/editor/editorshell",
+                                  path, PR_TRUE, PR_TRUE);
+
+  if (NS_FAILED(rv)) goto done;
+  rv = compMgr->RegisterComponent(kEditorShellCID,
+                                  "Editor Shell Spell Checker",
+                                  "component://netscape/editor/editorspellcheck",
+                                  path, PR_TRUE, PR_TRUE);
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
@@ -272,11 +292,13 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *path)
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterComponent(kIEditFactoryIID, path);
+  rv = compMgr->UnregisterComponent(kEditorCID, path);
   if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kITextEditFactoryIID, path);
+  rv = compMgr->UnregisterComponent(kTextEditorCID, path);
   if (NS_FAILED(rv)) goto done;
-  rv = compMgr->UnregisterComponent(kIHTMLEditFactoryIID, path);
+  rv = compMgr->UnregisterComponent(kHTMLEditorCID, path);
+  if (NS_FAILED(rv)) goto done;
+  rv = compMgr->UnregisterComponent(kEditorShellCID, path);
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
@@ -301,10 +323,10 @@ nsEditor::nsEditor()
   //initialize member variables here
   NS_INIT_REFCNT();
   mIMEFirstTransaction=PR_FALSE;
-  PR_EnterMonitor(getEditorMonitor());
+  PR_EnterMonitor(GetEditorMonitor());
   gInstanceCount++;
   mActionListeners = 0;
-  PR_ExitMonitor(getEditorMonitor());
+  PR_ExitMonitor(GetEditorMonitor());
   mPrefs = 0;
 }
 
