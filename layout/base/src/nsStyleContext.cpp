@@ -270,12 +270,13 @@ struct StyleTextImpl: public nsStyleText {
     mTextAlign = NS_STYLE_TEXT_ALIGN_LEFT;
     mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
     mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
-    mVerticalAlign = NS_STYLE_VERTICAL_ALIGN_BASELINE;
+    mVerticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_BASELINE;
     mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
-    mLetterSpacing = 0;
-    mLineHeight = 0;
-    mTextIndent = 0;
-    mWordSpacing = 0;
+    mLetterSpacing.coord = 0;
+    mLineHeight.coord = 0;
+    mTextIndent.coord = 0;
+    mWordSpacing.coord = 0;
+    mVerticalAlign.coord = 0;
   }
   ~StyleTextImpl() {
   }
