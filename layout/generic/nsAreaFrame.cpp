@@ -321,13 +321,13 @@ nsAreaFrame::DidReflow(nsIPresContext&   aPresContext,
 
     if (!isScrolled) {
       nsIView*  view;
-      GetView(view);
+      GetView(&view);
       if (nsnull != view) {
         // Position and size view relative to its parent, not relative to our
         // parent frame (our parent frame may not have a view).
         nsIView* parentWithView;
         nsPoint origin;
-        GetOffsetFromView(origin, parentWithView);
+        GetOffsetFromView(origin, &parentWithView);
         nsIViewManager  *vm;
         view->GetViewManager(vm);
   
@@ -459,7 +459,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
         // XXX Make sure the frame is repainted. For the time being, since we
         // have no idea what actually changed repaint it all...
         nsIView*  view;
-        nextFrame->GetView(view);
+        nextFrame->GetView(&view);
         if (nsnull != view) {
           nsIViewManager* viewMgr;
           view->GetViewManager(viewMgr);

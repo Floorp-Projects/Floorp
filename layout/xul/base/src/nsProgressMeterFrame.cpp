@@ -138,7 +138,7 @@ void StripeTimer::Notify(nsITimer *timer)
     nsRect bounds;
     frame->GetRect(bounds);
     nsIView* view;
-    frame->GetOffsetFromView(offset, view);
+    frame->GetOffsetFromView(offset, &view);
     nsIViewManager* vm;
     view->GetViewManager(vm);
     bounds.x = offset.x;

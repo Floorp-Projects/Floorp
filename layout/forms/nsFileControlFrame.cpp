@@ -131,7 +131,7 @@ nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 void nsFileControlFrame::MouseClicked(nsIPresContext* aPresContext)
 {
   nsIView* textView;
-  mTextFrame->GetView(textView);
+  mTextFrame->GetView(&textView);
   if (nsnull == textView) {
     return;
   }

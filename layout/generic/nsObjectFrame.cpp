@@ -209,8 +209,8 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
   nsIFrame* parWithView;
   nsIView *parView;
 
-  GetParentWithView(parWithView);
-  parWithView->GetView(parView);
+  GetParentWithView(&parWithView);
+  parWithView->GetView(&parView);
 
   if (NS_OK == parView->GetViewManager(viewMan))
   {
@@ -258,7 +258,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth, nscoord aHeight, PRBool aViewOnly)
     nsIView* parentWithView;
     nsPoint origin;
     view->SetVisibility(nsViewVisibility_kShow);
-    GetOffsetFromView(origin, parentWithView);
+    GetOffsetFromView(origin, &parentWithView);
     viewMan->ResizeView(view, mRect.width, mRect.height);
     viewMan->MoveViewTo(view, origin.x, origin.y);
   }
@@ -399,7 +399,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 				GetDesiredSize(&aPresContext, aReflowState, aMetrics);
 				nsIView *parentWithView;
 				nsPoint origin;
-				GetOffsetFromView(origin, parentWithView);
+				GetOffsetFromView(origin, &parentWithView);
 				// Just make the frigging widget.
 
 				float           t2p = aPresContext.GetTwipsToPixels();
@@ -553,7 +553,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
               aMetrics.maxElementSize->height = aMetrics.height;
             }
 
-            GetOffsetFromView(origin, parentWithView);
+            GetOffsetFromView(origin, &parentWithView);
 
             window->x = NSTwipsToIntPixels(origin.x, t2p);
             window->y = NSTwipsToIntPixels(origin.y, t2p);
@@ -600,7 +600,7 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
-    GetView(view);
+    GetView(&view);
     if (nsnull != view) {
       view->SetVisibility(nsViewVisibility_kShow);
     }
@@ -615,7 +615,7 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
         float             t2p = aPresContext.GetTwipsToPixels();
         nscoord           offx, offy;
 
-        GetOffsetFromView(origin, parentWithView);
+        GetOffsetFromView(origin, &parentWithView);
 
 #if 0
         parentWithView->GetScrollOffset(&offx, &offy);
@@ -1017,7 +1017,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
 
   if ((nsnull != mOwner) && (nsnull != mContext))
   {
-    rv = mOwner->GetOffsetFromView(origin, view);
+    rv = mOwner->GetOffsetFromView(origin, &view);
 
     if (NS_OK == rv)
     {
@@ -1485,7 +1485,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
   {
     // Create view if necessary
 
-    mOwner->GetView(view);
+    mOwner->GetView(&view);
 
     if (nsnull == view)
     {
@@ -1500,7 +1500,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
       {
         nsIView   *view;
 
-        mOwner->GetView(view);
+        mOwner->GetView(&view);
         view->GetWidget(mWidget);
 
         if (PR_TRUE == windowless)

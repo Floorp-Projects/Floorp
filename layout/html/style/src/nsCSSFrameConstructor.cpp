@@ -3113,11 +3113,11 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     // (adjusting r's coordinate system to reflect the nesting) and
     // update there.
     nsIView* view;
-    aFrame->GetView(view);
+    aFrame->GetView(&view);
     if (nsnull != view) {
     } else {
       nsPoint offset;
-      aFrame->GetOffsetFromView(offset, view);
+      aFrame->GetOffsetFromView(offset, &view);
       NS_ASSERTION(nsnull != view, "no view");
       r += offset;
     }

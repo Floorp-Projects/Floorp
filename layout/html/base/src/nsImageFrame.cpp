@@ -820,10 +820,10 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
 
         // XXX Event isn't in our local coordinate space like it should be...
         nsIView*  view;
-        GetView(view);
+        GetView(&view);
         if (nsnull == view) {
           nsPoint offset;
-          GetOffsetFromView(offset, view);
+          GetOffsetFromView(offset, &view);
           if (nsnull != view) {
             aEvent->point -= offset;
           }
@@ -918,10 +918,10 @@ nsImageFrame::GetCursor(nsIPresContext& aPresContext,
     // XXX Event isn't in our local coordinate space like it should be...
     nsPoint   pt = aPoint;
     nsIView*  view;
-    GetView(view);
+    GetView(&view);
     if (nsnull == view) {
       nsPoint offset;
-      GetOffsetFromView(offset, view);
+      GetOffsetFromView(offset, &view);
       if (nsnull != view) {
         pt -= offset;
       }
@@ -994,7 +994,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
         nsRect bounds;
         nsPoint offset;
         nsIView* view;
-        GetOffsetFromView(offset, view);
+        GetOffsetFromView(offset, &view);
         nsIViewManager* vm;
         view->GetViewManager(vm);
         bounds.x = offset.x;

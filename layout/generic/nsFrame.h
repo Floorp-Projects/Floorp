@@ -186,11 +186,11 @@ public:
   NS_IMETHOD  RemoveFromFlow();
   NS_IMETHOD  BreakFromPrevFlow();
   NS_IMETHOD  BreakFromNextFlow();
-  NS_IMETHOD  GetView(nsIView*& aView) const;
+  NS_IMETHOD  GetView(nsIView** aView) const;
   NS_IMETHOD  SetView(nsIView* aView);
-  NS_IMETHOD  GetParentWithView(nsIFrame*& aParent) const;
-  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const;
-  NS_IMETHOD  GetWindow(nsIWidget*&) const;
+  NS_IMETHOD  GetParentWithView(nsIFrame** aParent) const;
+  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
+  NS_IMETHOD  GetWindow(nsIWidget**) const;
   NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const;

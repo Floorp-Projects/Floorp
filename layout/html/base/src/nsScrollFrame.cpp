@@ -69,7 +69,7 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
 #ifdef NS_DEBUG
   // Verify that the scrolled frame has a view
   nsIView*  scrolledView;
-  frame->GetView(scrolledView);
+  frame->GetView(&scrolledView);
   NS_ASSERTION(nsnull != scrolledView, "no view");
 #endif
 
@@ -107,7 +107,7 @@ nsScrollFrame::DidReflow(nsIPresContext&   aPresContext,
     nsIView*        scrolledView;
 
     frame->GetSize(size);
-    frame->GetView(scrolledView);
+    frame->GetView(&scrolledView);
     scrolledView->GetViewManager(vm);
     vm->ResizeView(scrolledView, size.width, size.height);
     NS_RELEASE(vm);
@@ -123,10 +123,10 @@ nsScrollFrame::CreateScrollingView()
 
   // Get parent view
   nsIFrame* parent;
-  GetParentWithView(parent);
+  GetParentWithView(&parent);
   NS_ASSERTION(parent, "GetParentWithView failed");
   nsIView* parentView;
-  parent->GetView(parentView);
+  parent->GetView(&parentView);
   NS_ASSERTION(parentView, "GetParentWithView failed");
 
   // Get the view manager
@@ -305,7 +305,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       // width; otherwise, it's not only just an incremental reflow but also
       nsIScrollableView* scrollingView;
       nsIView*           view;
-      GetView(view);
+      GetView(&view);
       if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
         PRBool  unused;
         scrollingView->GetScrollbarVisibility(&roomForVerticalScrollbar, &unused);
@@ -541,7 +541,7 @@ nsScrollFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   nsIView * view; 
-  GetView(view); 
+  GetView(&view); 
   if (nsnull != view) { 
     view->SetVisibility((NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible) ?
                          nsViewVisibility_kHide : nsViewVisibility_kShow); 

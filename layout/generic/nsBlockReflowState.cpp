@@ -582,7 +582,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the tag
   ListTag(out);
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }

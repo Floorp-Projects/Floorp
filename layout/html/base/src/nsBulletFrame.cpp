@@ -61,7 +61,7 @@ nsBulletFrame::List(FILE* out, PRInt32 aIndent) const
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fprintf(out, "Bullet(%d)@%p ", ContentIndexInContainer(this), this);
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }

@@ -185,7 +185,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
                                          PRBool aForce)
 {
   nsIView* view;
-  aFrame->GetView(view);
+  aFrame->GetView(&view);
   // If we don't yet have a view, see if we need a view
   if (nsnull == view) {
     PRInt32 zIndex = 0;
@@ -274,11 +274,11 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       nsIFrame* parent;
       nsIView*  view;
 
-      aFrame->GetParentWithView(parent);
+      aFrame->GetParentWithView(&parent);
       NS_ASSERTION(parent, "GetParentWithView failed");
       nsIView* parentView;
    
-      parent->GetView(parentView);
+      parent->GetView(&parentView);
       NS_ASSERTION(parentView, "no parent with view");
 
       // Create a view

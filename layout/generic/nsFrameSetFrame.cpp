@@ -457,7 +457,7 @@ nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint,
 {
   //XXX Temporary to deal with event handling in both this and FramsetBorderFrame
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (view) {
     nsIViewManager* viewMan;
     view->GetViewManager(viewMan);
@@ -843,8 +843,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
 
     nsIFrame* parWithView;
 	  nsIView *parView;
-    GetParentWithView(parWithView);
-	  parWithView->GetView(parView);
+    GetParentWithView(&parWithView);
+	  parWithView->GetView(&parView);
     nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
     result = view->Init(viewMan, boundBox, parView, nsnull);
     viewMan->InsertChild(parView, view, 0);
@@ -1316,7 +1316,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext& aPresContext, nsHTMLFrameset
   NS_ASSERTION((nsnull != aBorder) && (index >= 0), "invalid dragger");
 #endif
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (view) {
     nsIViewManager* viewMan;
     view->GetViewManager(viewMan);
@@ -1417,7 +1417,7 @@ void
 nsHTMLFramesetFrame::EndMouseDrag()
 {
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (view) {
     nsIViewManager* viewMan;
     view->GetViewManager(viewMan);

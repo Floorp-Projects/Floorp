@@ -318,7 +318,7 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
   
       // Print the page
       nsIView*  view;
-      page->GetView(view);
+      page->GetView(&view);
       NS_ASSERTION(nsnull != view, "no page view");
       vm->Display(view);
   

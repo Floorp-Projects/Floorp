@@ -181,7 +181,7 @@ nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   // create our view, we need a view to grab the mouse 
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (!view) {
     nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	  nsIPresShell   *presShell = aPresContext.GetShell();     
@@ -190,8 +190,8 @@ nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
     nsIFrame* parWithView;
 	  nsIView *parView;
-    GetParentWithView(parWithView);
-	  parWithView->GetView(parView);
+    GetParentWithView(&parWithView);
+	  parWithView->GetView(&parView);
     // the view's size is not know yet, but its size will be kept in synch with our frame.
     nsRect boundBox(0, 0, 500, 500); 
     result = view->Init(viewMan, boundBox, parView, nsnull);
@@ -265,7 +265,7 @@ nsImageControlFrame::GetTranslatedRect(nsRect& aRect)
 {
   nsIView* view;
   nsPoint viewOffset(0,0);
-  GetOffsetFromView(viewOffset, view);
+  GetOffsetFromView(viewOffset, &view);
   while (nsnull != view) {
     nsPoint tempOffset;
     view->GetPosition(&tempOffset.x, &tempOffset.y);

@@ -409,7 +409,7 @@ void BlinkTimer::Notify(nsITimer *timer)
     nsRect bounds;
     text->GetRect(bounds);
     nsIView* view;
-    text->GetOffsetFromView(offset, view);
+    text->GetOffsetFromView(offset, &view);
     nsIViewManager* vm;
     view->GetViewManager(vm);
     bounds.x = offset.x;
@@ -1480,8 +1480,8 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   nsPoint origin;
   //GetOrigin(origin);
   nsIView * view;
-  GetView(view);
-  GetOffsetFromView(origin,view);
+  GetView(&view);
+  GetOffsetFromView(origin, &view);
   PRBool found = BinarySearchForPosition(aRendContext, text, origin.x, 0, 0,
                                          PRInt32(textLength),
                                          PRInt32(aEvent->point.x) , //go to local coordinates
@@ -2371,7 +2371,7 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
   // Output the tag
   ListTag(out);
   nsIView* view;
-  GetView(view);
+  GetView(&view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }

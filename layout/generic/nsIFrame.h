@@ -457,19 +457,19 @@ public:
   /**
    * Accessor functions to get/set the associated view object
    */
-  NS_IMETHOD  GetView(nsIView*& aView) const = 0;  // may be null
+  NS_IMETHOD  GetView(nsIView** aView) const = 0;  // may be null
   NS_IMETHOD  SetView(nsIView* aView) = 0;
 
   /**
    * Find the first geometric parent that has a view
    */
-  NS_IMETHOD  GetParentWithView(nsIFrame*& aParent) const = 0;
+  NS_IMETHOD  GetParentWithView(nsIFrame** aParent) const = 0;
 
   /**
    * Returns the offset from this frame to the closest geometric parent that
    * has a view. Also returns the containing view or null in case of error
    */
-  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const = 0;
+  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const = 0;
 
   /**
    * Returns the window that contains this frame. If this frame has a
@@ -477,7 +477,7 @@ public:
    * returned, otherwise this frame's geometric parent is checked
    * recursively upwards.
    */
-  NS_IMETHOD  GetWindow(nsIWidget*&) const = 0;
+  NS_IMETHOD  GetWindow(nsIWidget**) const = 0;
 
   /**
    * Get the "type" of the frame. May return a NULL atom pointer

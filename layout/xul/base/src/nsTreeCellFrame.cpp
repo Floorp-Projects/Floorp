@@ -40,7 +40,7 @@ static void ForceDrawFrame(nsIFrame * aFrame)
   nsRect    rect;
   nsIView * view;
   nsPoint   pnt;
-  aFrame->GetOffsetFromView(pnt, view);
+  aFrame->GetOffsetFromView(pnt, &view);
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;
