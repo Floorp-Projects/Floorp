@@ -72,6 +72,7 @@
 #define _PR_STAT_HAS_ST_ATIM
 #define _PR_HAVE_POSIX_SEMAPHORES
 #define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
+#define _PR_HAVE_GETIPNODEBYNAME
 
 #include "prinrval.h"
 PR_EXTERN(PRIntervalTime) _MD_Solaris_GetInterval(void);
