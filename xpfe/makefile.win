@@ -21,7 +21,7 @@
 
 DEPTH=..
 
-DIRS=appshell bootstrap browser components global communicator
+DIRS=appshell bootstrap browser components global communicator appfilelocprovider
 
 include <$(DEPTH)\config\rules.mak>
 
