@@ -40,8 +40,10 @@ MODULE = security
 
 CSRCS = \
 	nssinit.c \
+	nsssym.c\
 	$(NULL)
 
 REQUIRES = security dbm
 
 LIBRARY_NAME = nss
+LIBRARY_VERSION = 3

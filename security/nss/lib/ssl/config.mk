@@ -36,9 +36,31 @@
 #  are specifed as dependencies within rules.mk.
 #
 
-TARGETS        = $(LIBRARY)
-SHARED_LIBRARY =
-IMPORT_LIBRARY =
-PURE_LIBRARY   =
-PROGRAM        =
+#TARGETS        = $(LIBRARY)
+#SHARED_LIBRARY =
+#IMPORT_LIBRARY =
+#PURE_LIBRARY   =
+#PROGRAM        =
+
+ifeq ($(OS_ARCH), WINNT)
+
+EXTRA_LIBS += \
+	$(DIST)/lib/nss3.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
+	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
+	$(NULL)
+else
+
+
+# $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
+# $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
+EXTRA_SHARED_LIBS += \
+	-L$(DIST)/lib/ \
+	-lnss3 \
+	-lplc4 \
+	-lplds4 \
+	-lnspr4 \
+	$(NULL)
+endif
 
