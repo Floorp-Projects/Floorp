@@ -96,6 +96,8 @@ comm.jar:
     content/communicator/sidebar/local-panels.rdf               (sidebar/resources/local-panels.rdf)
     content/communicator/timebomb/warn.xul                      (timebomb/resources/content/warn.xul)
     content/communicator/timebomb/expireText.xul                (timebomb/resources/content/expireText.xul)    
+    content/communicator/alerts/alert.xul                       (alerts/resources/content/alert.xul)  
+    content/communicator/alerts/alert.js                        (alerts/resources/content/alert.js)  
 
 en-US.jar:
     locale/en-US/communicator/directory/directory.dtd           (directory/locale/en-US/directory.dtd)
