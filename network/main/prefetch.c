@@ -98,10 +98,10 @@ PRE_Fetch(MWContext* context)
 	
 	do 
 	{
-		if (found = LO_getNextTabableElement(
+		if ((found = LO_getNextTabableElement(
 			context, 
 			&tfd, 
-			1) != 0)
+			1)) != 0)
 		{
 			if (tfd.pElement && 
 					(tfd.pElement->lo_any.type == LO_TEXT ||	
