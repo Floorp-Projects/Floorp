@@ -1184,45 +1184,50 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
   aRenderingContext.PushState();
   aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect, clipState);
 
-  PRInt32 size = NSIntPixelsToTwips(ICON_SIZE, p2t);
+  PRBool dispIcon = mIconLoad ? mIconLoad->mPrefShowPlaceholders : PR_TRUE;
 
-  PRBool iconUsed = PR_FALSE;
+  // Check if we should display image placeholders
+  if (dispIcon) {
+    PRInt32 size = NSIntPixelsToTwips(ICON_SIZE, p2t);
 
-  // see if the icon images are present...
-  if (mIconLoad && mIconLoad->mIconsLoaded) {
-    // pick the correct image
-    NS_ASSERTION( aIconId == NS_ICON_LOADING_IMAGE ||
-                  aIconId == NS_ICON_BROKEN_IMAGE, "Invalid Icon ID in DisplayAltFeedback");
+    PRBool iconUsed = PR_FALSE;
 
-    nsCOMPtr<imgIContainer> imgCon;
-    if (mIconLoad->mIconLoads[aIconId].mRequest) {
-      mIconLoad->mIconLoads[aIconId].mRequest->GetImage(getter_AddRefs(imgCon));
+    // see if the icon images are present...
+    if (mIconLoad && mIconLoad->mIconsLoaded) {
+      // pick the correct image
+      NS_ASSERTION( aIconId == NS_ICON_LOADING_IMAGE ||
+                    aIconId == NS_ICON_BROKEN_IMAGE, "Invalid Icon ID in DisplayAltFeedback");
+
+      nsCOMPtr<imgIContainer> imgCon;
+      if (mIconLoad->mIconLoads[aIconId].mRequest) {
+        mIconLoad->mIconLoads[aIconId].mRequest->GetImage(getter_AddRefs(imgCon));
+      }
+      if (imgCon) { 
+        // draw it
+        nsPoint p(inner.x, inner.y);
+        nsRect r(0,0,size,size);
+        aRenderingContext.DrawImage(imgCon, &r, &p);
+        iconUsed = PR_TRUE;
+      }
     }
-    if (imgCon) { 
-      // draw it
-      nsPoint p(inner.x, inner.y);
-      nsRect r(0,0,size,size);
-      aRenderingContext.DrawImage(imgCon, &r, &p);
-      iconUsed = PR_TRUE;
-    }
+
+    // if we could not draw the image, then just draw some grafitti
+    if (!iconUsed) {
+      nscolor oldColor;
+      aRenderingContext.DrawRect(0,0,size,size);
+      aRenderingContext.GetColor(oldColor);
+      aRenderingContext.SetColor( aIconId == NS_ICON_BROKEN_IMAGE ? NS_RGB(0xFF,0,0) : NS_RGB(0,0xFF,0));
+      aRenderingContext.FillEllipse(NS_STATIC_CAST(int,size/2),NS_STATIC_CAST(int,size/2),
+                                    NS_STATIC_CAST(int,(size/2)-(2*p2t)),NS_STATIC_CAST(int,(size/2)-(2*p2t)));
+      aRenderingContext.SetColor(oldColor);
+    }  
+
+    // Reduce the inner rect by the width of the icon, and leave an
+    // additional ICON_PADDING pixels for padding
+    PRInt32 iconWidth = NSIntPixelsToTwips(ICON_SIZE + ICON_PADDING, p2t);
+    inner.x += iconWidth;
+    inner.width -= iconWidth;
   }
-
-  // if we could not draw the image, then just draw some grafitti
-  if (!iconUsed) {
-    nscolor oldColor;
-    aRenderingContext.DrawRect(0,0,size,size);
-    aRenderingContext.GetColor(oldColor);
-    aRenderingContext.SetColor( aIconId == NS_ICON_BROKEN_IMAGE ? NS_RGB(0xFF,0,0) : NS_RGB(0,0xFF,0));
-    aRenderingContext.FillEllipse(NS_STATIC_CAST(int,size/2),NS_STATIC_CAST(int,size/2),
-                                  NS_STATIC_CAST(int,(size/2)-(2*p2t)),NS_STATIC_CAST(int,(size/2)-(2*p2t)));
-    aRenderingContext.SetColor(oldColor);
-  }  
-
-  // Reduce the inner rect by the width of the icon, and leave an
-  // additional ICON_PADDING pixels for padding
-  PRInt32 iconWidth = NSIntPixelsToTwips(ICON_SIZE + ICON_PADDING, p2t);
-  inner.x += iconWidth;
-  inner.width -= iconWidth;
 
   // If there's still room, display the alt-text
   if (!inner.IsEmpty()) {
@@ -2231,6 +2236,11 @@ void nsImageFrame::IconLoad::GetPrefs(nsIPresContext *aPresContext)
       mPrefAllImagesBlocked = PR_TRUE;
     } else {
       mPrefAllImagesBlocked = PR_FALSE;
+    }
+    if (NS_SUCCEEDED(prefs->GetBoolPref("browser.display.show_image_placeholders", &boolPref))) {
+      mPrefShowPlaceholders = boolPref;
+    } else {
+      mPrefShowPlaceholders = PR_TRUE;
     }
   }
 }

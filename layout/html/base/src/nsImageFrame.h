@@ -276,6 +276,7 @@ private:
     PRPackedBool     mIconsLoaded;
     PRPackedBool     mPrefForceInlineAltText;
     PRPackedBool     mPrefAllImagesBlocked;
+    PRPackedBool     mPrefShowPlaceholders;
   };
   static IconLoad* mIconLoad; // singleton patern: one LoadIcons instance is used
 };
