@@ -28,7 +28,12 @@
 #include "nsIStyleContext.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsFrameReflowState.h"
+
+// XXX TODO:
+// append/insert/remove floater testing
+
+// Theory of operation:
+// XXX write this
 
 #ifdef NS_DEBUG
 #undef NOISY_ANON_BLOCK
@@ -36,16 +41,10 @@
 #undef NOISY_ANON_BLOCK
 #endif
 
-// XXX TODO:
-// append/insert/remove floater testing
-
 #define INLINE_FRAME_CID \
  { 0xa6cf90e0, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 static NS_DEFINE_IID(kInlineFrameCID, INLINE_FRAME_CID);
-
-// Theory of operation:
-// XXX write this
 
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
@@ -91,27 +90,18 @@ public:
                                     nscoord& aDeltaWidth);
 #endif
   NS_IMETHOD VerticalAlignFrames(nsIPresContext& aPresContext,
-                                 const nsHTMLReflowState& aState,
+                                 const nsHTMLReflowState& aParentReflowState,
                                  nscoord aLineHeight,
                                  nscoord aDistanceFromTopEdge,
                                  nsRect& aCombinedArea);
 
 protected:
-  // Reflow state used during our reflow methods
-  struct ReflowState : public nsFrameReflowState {
-    ReflowState(nsIPresContext& aPresContext,
-                const nsHTMLReflowState& aReflowState,
-                const nsHTMLReflowMetrics& aMetrics,
-                nsInlineFrame* aNextInFlow)
-      : nsFrameReflowState(aPresContext, aReflowState, aMetrics),
-        prevFrame(nsnull),
-        nextInFlow(aNextInFlow)
-    {
-    }
-
-    nsInlineReflow* inlineReflow;
-    nsIFrame* prevFrame;
-    nsInlineFrame* nextInFlow;
+  // Additional reflow state used during our reflow methods
+  struct InlineReflowState {
+    nsIFrame* mNextRCFrame;
+    nsInlineReflow* mInlineReflow;
+    nsIFrame* mPrevFrame;
+    nsInlineFrame* mNextInFlow;
   };
 
   // A helper class that knows how to take a list of frames and chop
@@ -156,8 +146,6 @@ protected:
     return PR_FALSE;
   }
 
-//XXX  nsresult MoveOutOfFlow(nsIPresContext& aPresContext, nsIFrame* aFrameList);
-
   nsAnonymousBlockFrame* FindPrevAnonymousBlock(nsInlineFrame** aBlockParent);
 
   nsAnonymousBlockFrame* FindAnonymousBlock(nsInlineFrame** aBlockParent);
@@ -181,23 +169,29 @@ protected:
                               nsIFrame* aPrevFrame,
                               nsIFrame* aFrameList);
 
-  nsresult ReflowInlineFrames(ReflowState& rs,
+  nsresult ReflowInlineFrames(nsIPresContext& aPresContext,
+                              const nsHTMLReflowState& aReflowState,
+                              InlineReflowState& rs,
                               nsHTMLReflowMetrics& aMetrics,
                               nsReflowStatus& aStatus);
 
-  nsresult ReflowInlineFrame(ReflowState& rs,
+  nsresult ReflowInlineFrame(nsIPresContext& aPresContext,
+                             const nsHTMLReflowState& aReflowState,
+                             InlineReflowState& rs,
                              nsIFrame* aFrame,
                              nsReflowStatus& aStatus);
 
-  nsIFrame* PullInlineFrame(ReflowState& rs, PRBool* aIsComplete);
+  nsIFrame* PullInlineFrame(InlineReflowState& rs, PRBool* aIsComplete);
 
-  nsIFrame* PullAnyFrame(ReflowState& rs);
+  nsIFrame* PullAnyFrame(InlineReflowState& rs);
 
   void PushFrames(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
 
   void DrainOverflow();
 
-  nsresult ReflowBlockFrame(ReflowState& rs,
+  nsresult ReflowBlockFrame(nsIPresContext& aPresContext,
+                            const nsHTMLReflowState& aReflowState,
+                            InlineReflowState& rs,
                             nsHTMLReflowMetrics& aMetrics,
                             nsReflowStatus& aStatus);
 };
@@ -1167,24 +1161,30 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
 {
   DrainOverflow();
 
-  ReflowState rs(aPresContext, aReflowState, aMetrics,
-                 (nsInlineFrame*) mNextInFlow);
-
-  // Peel off the next frame in the path if this is an incremental
-  // reflow aimed at one of the children.
+  // Set our own reflow state (additional state above and beyond
+  // aReflowState)
+  InlineReflowState irs;
+  irs.mPrevFrame = nsnull;
+  irs.mInlineReflow = nsnull;
+  irs.mNextInFlow = (nsInlineFrame*) mNextInFlow;
   if (eReflowReason_Incremental == aReflowState.reason) {
+    // Peel off the next frame in the path if this is an incremental
+    // reflow aimed at one of the children.
     nsIFrame* target;
-    rs.reflowCommand->GetTarget(target);
+    aReflowState.reflowCommand->GetTarget(target);
     if (this != target) {
-      rs.reflowCommand->GetNext(rs.mNextRCFrame);
+      aReflowState.reflowCommand->GetNext(irs.mNextRCFrame);
     }
+  }
+  else {
+    irs.mNextRCFrame = nsnull;
   }
 
   nsresult rv;
   if (mFrames.IsEmpty()) {
     // Try to pull over one frame before starting so that we know what
     // state we should be in.
-    nsIFrame* frame = PullAnyFrame(rs);
+    nsIFrame* frame = PullAnyFrame(irs);
     if (nsnull == frame) {
       // Nothing to pull, nothing to do...
       aStatus = NS_FRAME_COMPLETE;
@@ -1212,12 +1212,14 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
       rv = NS_OK;
     }
     else {
-      rv = ReflowBlockFrame(rs, aMetrics, aStatus);
+      rv = ReflowBlockFrame(aPresContext, aReflowState, irs,
+                            aMetrics, aStatus);
     }
   }
   else {
     if (nsnull != aReflowState.lineLayout) {
-      rv = ReflowInlineFrames(rs, aMetrics, aStatus);
+      rv = ReflowInlineFrames(aPresContext, aReflowState, irs,
+                              aMetrics, aStatus);
     }
     else {
       rv = NS_ERROR_NULL_POINTER;
@@ -1265,7 +1267,7 @@ nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
 // XXX relative positioning will need to be done *after* this
 NS_IMETHODIMP
 nsInlineFrame::VerticalAlignFrames(nsIPresContext& aPresContext,
-                                   const nsHTMLReflowState& aState,
+                                   const nsHTMLReflowState& aParentReflowState,
                                    nscoord aLineHeight,
                                    nscoord aDistanceFromTopEdge,
                                    nsRect& aCombinedArea)
@@ -1299,26 +1301,30 @@ nsInlineFrame::VerticalAlignFrames(nsIPresContext& aPresContext,
       PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
       if (NS_STYLE_VERTICAL_ALIGN_TOP == verticalAlignEnum) {
         nsMargin margin;
-        nsHTMLReflowState::ComputeMarginFor(frame, &aState, margin);
+        nsHTMLReflowState::ComputeMarginFor(frame, &aParentReflowState,
+                                            margin);
         nsCSSFrameType frameType =
           nsHTMLReflowState::DetermineFrameType(frame);
         bbox.y = topEdge + margin.top;
         if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
           nsMargin bp;
-          nsHTMLReflowState::ComputeBorderPaddingFor(frame, &aState, bp);
+          nsHTMLReflowState::ComputeBorderPaddingFor(frame,
+                                                     &aParentReflowState, bp);
           bbox.y -= bp.top;
         }
         frame->SetRect(bbox);
       }
       else if (NS_STYLE_VERTICAL_ALIGN_BOTTOM == verticalAlignEnum) {
         nsMargin margin;
-        nsHTMLReflowState::ComputeMarginFor(frame, &aState, margin);
+        nsHTMLReflowState::ComputeMarginFor(frame, &aParentReflowState,
+                                            margin);
         nsCSSFrameType frameType =
           nsHTMLReflowState::DetermineFrameType(frame);
         bbox.y = topEdge + aLineHeight - bbox.height - margin.bottom;
         if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
           nsMargin bp;
-          nsHTMLReflowState::ComputeBorderPaddingFor(frame, &aState, bp);
+          nsHTMLReflowState::ComputeBorderPaddingFor(frame,
+                                                     &aParentReflowState, bp);
           bbox.y += bp.bottom;
         }
         frame->SetRect(bbox);
@@ -1331,9 +1337,11 @@ nsInlineFrame::VerticalAlignFrames(nsIPresContext& aPresContext,
     nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
     if (NS_SUCCEEDED(rv)) {
       nsSize availSize(0, 0);
-      nsHTMLReflowState rs(aPresContext, frame, aState, availSize);
+      // XXX whacky: we should be passing in the childs reflow state, right?
+      nsHTMLReflowState ourReflowState(aPresContext, aParentReflowState,
+                                       this, availSize);
       nscoord distanceFromTopEdge = bbox.y - topEdge;
-      ihr->VerticalAlignFrames(aPresContext, rs, aLineHeight,
+      ihr->VerticalAlignFrames(aPresContext, ourReflowState, aLineHeight,
                                distanceFromTopEdge, childCombinedArea);
       nscoord x = childCombinedArea.x;
       if (x < x0) x0 = x;
@@ -1385,33 +1393,42 @@ nsInlineFrame::DrainOverflow()
 }
 
 nsresult
-nsInlineFrame::ReflowInlineFrames(ReflowState& rs,
+nsInlineFrame::ReflowInlineFrames(nsIPresContext& aPresContext,
+                                  const nsHTMLReflowState& aReflowState,
+                                  InlineReflowState& irs,
                                   nsHTMLReflowMetrics& aMetrics,
                                   nsReflowStatus& aStatus)
 {
   nsresult rv = NS_OK;
   aStatus = NS_FRAME_COMPLETE;
 
-  nsInlineReflow ir(*rs.lineLayout, rs, this, PR_FALSE);
-  rs.inlineReflow = &ir;
-  rs.lineLayout->PushInline(&ir);
+  nsInlineReflow ir(*aReflowState.lineLayout, aReflowState, this, PR_FALSE,
+                    nsnull != aMetrics.maxElementSize);
+  irs.mInlineReflow = &ir;
+  ir.SetNextRCFrame(irs.mNextRCFrame);
+  aReflowState.lineLayout->PushInline(&ir);
 
   // Compute available area
-  nscoord x = rs.mBorderPadding.left;
-  nscoord availableWidth = rs.availableWidth;
+  nscoord x = aReflowState.mComputedBorderPadding.left;
+  nscoord availableWidth = aReflowState.availableWidth;
   if (NS_UNCONSTRAINEDSIZE != availableWidth) {
     if (nsnull != mPrevInFlow) {
       x = 0;
-      availableWidth -= rs.mBorderPadding.right;
+      availableWidth -= aReflowState.mComputedBorderPadding.right +
+        aReflowState.computedMargin.right;
     }
     else {
-      availableWidth -= rs.mBorderPadding.left + rs.mBorderPadding.right;
+      availableWidth -= aReflowState.mComputedBorderPadding.left +
+        aReflowState.computedMargin.left +
+        aReflowState.mComputedBorderPadding.right +
+        aReflowState.computedMargin.right;
     }
   }
-  nscoord y = rs.mBorderPadding.top;
-  nscoord availableHeight = rs.availableHeight;
-  if (NS_UNCONSTRAINEDSIZE != rs.availableHeight) {
-    availableHeight -= rs.mBorderPadding.top + rs.mBorderPadding.right;
+  nscoord y = aReflowState.mComputedBorderPadding.top;
+  nscoord availableHeight = aReflowState.availableHeight;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) {
+    availableHeight -= aReflowState.mComputedBorderPadding.top +
+      aReflowState.mComputedBorderPadding.right;
   }
   ir.Init(x, y, availableWidth, availableHeight);
 
@@ -1419,12 +1436,12 @@ nsInlineFrame::ReflowInlineFrames(ReflowState& rs,
   nsIFrame* frame = mFrames.FirstChild();
   PRBool done = PR_FALSE;
   while (nsnull != frame) {
-    rv = ReflowInlineFrame(rs, frame, aStatus);
+    rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
     if (NS_FAILED(rv) || (NS_FRAME_COMPLETE != aStatus)) {
       done = PR_TRUE;
       break;
     }
-    rs.prevFrame = frame;
+    irs.mPrevFrame = frame;
     frame->GetNextSibling(&frame);
   }
 
@@ -1432,19 +1449,19 @@ nsInlineFrame::ReflowInlineFrames(ReflowState& rs,
   if (!done && (nsnull != mNextInFlow)) {
     while (!done) {
       PRBool isComplete;
-      frame = PullInlineFrame(rs, &isComplete);
+      frame = PullInlineFrame(irs, &isComplete);
       if (nsnull == frame) {
         if (!isComplete) {
           aStatus = NS_FRAME_NOT_COMPLETE;
         }
         break;
       }
-      rv = ReflowInlineFrame(rs, frame, aStatus);
+      rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
       if (NS_FAILED(rv) || (NS_FRAME_COMPLETE != aStatus)) {
         done = PR_TRUE;
         break;
       }
-      rs.prevFrame = frame;
+      irs.mPrevFrame = frame;
     }
   }
 
@@ -1452,32 +1469,35 @@ nsInlineFrame::ReflowInlineFrames(ReflowState& rs,
   if (NS_SUCCEEDED(rv)) {
 #ifdef NS_DEBUG
     if (NS_FRAME_COMPLETE == aStatus) {
+      // We can't be complete AND have overflow frames!
       NS_ASSERTION(mOverflowFrames.IsEmpty(), "whoops");
     }
 #endif
-    nsInlineReflow* ir = rs.inlineReflow;
+    nsInlineReflow* ir = irs.mInlineReflow;
     nsRect bbox;
     ir->VerticalAlignFrames(bbox, aMetrics.ascent, aMetrics.descent);
     ir->RelativePositionFrames(aMetrics.mCombinedArea);
     aMetrics.width = bbox.XMost();
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      aMetrics.width += rs.mBorderPadding.right;
+      aMetrics.width += aReflowState.mComputedBorderPadding.right;
     }
-    aMetrics.height = bbox.height + rs.mBorderPadding.top +
-      rs.mBorderPadding.bottom;
+    aMetrics.height = bbox.height + aReflowState.mComputedBorderPadding.top +
+      aReflowState.mComputedBorderPadding.bottom;
     aMetrics.mCarriedOutTopMargin = 0;
     aMetrics.mCarriedOutBottomMargin = 0;
     if (nsnull != aMetrics.maxElementSize) {
       *aMetrics.maxElementSize = ir->GetMaxElementSize();
     }
   }
-  rs.lineLayout->PopInline();
+  aReflowState.lineLayout->PopInline();
 
   return rv;
 }
 
 nsresult
-nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
+nsInlineFrame::ReflowInlineFrame(nsIPresContext& aPresContext,
+                                 const nsHTMLReflowState& aReflowState,
+                                 InlineReflowState& irs,
                                  nsIFrame* aFrame,
                                  nsReflowStatus& aStatus)
 {
@@ -1488,12 +1508,12 @@ nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
   // across a block frame its an anonymous block).
   if (nsLineLayout::TreatFrameAsBlock(aFrame)) {
     NS_ASSERTION(aFrame != mFrames.FirstChild(), "bad anon-block status");
-    PushFrames(aFrame, rs.prevFrame);
+    PushFrames(aFrame, irs.mPrevFrame);
     aStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_NOT_COMPLETE);
     return NS_OK;
   }
 
-  nsInlineReflow* ir = rs.inlineReflow;
+  nsInlineReflow* ir = irs.mInlineReflow;
   nsresult rv = ir->ReflowFrame(aFrame, PR_FALSE/* XXX */, aStatus);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1507,7 +1527,7 @@ nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
         aStatus = NS_FRAME_NOT_COMPLETE |
           NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
           (aStatus & NS_INLINE_BREAK_TYPE_MASK);
-        PushFrames(aFrame, rs.prevFrame);
+        PushFrames(aFrame, irs.mPrevFrame);
       }
       else {
         // Preserve reflow status when breaking-before our first child
@@ -1518,7 +1538,7 @@ nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
       // Break-after
       if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         nsIFrame* newFrame;
-        rv = CreateNextInFlow(rs.mPresContext, this, aFrame, newFrame);
+        rv = CreateNextInFlow(aPresContext, this, aFrame, newFrame);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -1545,7 +1565,7 @@ nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     nsIFrame* newFrame;
-    rv = CreateNextInFlow(rs.mPresContext, this, aFrame, newFrame);
+    rv = CreateNextInFlow(aPresContext, this, aFrame, newFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1559,24 +1579,24 @@ nsInlineFrame::ReflowInlineFrame(ReflowState& rs,
 }
 
 nsIFrame*
-nsInlineFrame::PullInlineFrame(ReflowState& rs, PRBool* aIsComplete)
+nsInlineFrame::PullInlineFrame(InlineReflowState& irs, PRBool* aIsComplete)
 {
   PRBool isComplete = PR_TRUE;
 
   nsIFrame* frame = nsnull;
-  nsInlineFrame* nextInFlow = rs.nextInFlow;
+  nsInlineFrame* nextInFlow = irs.mNextInFlow;
   while (nsnull != nextInFlow) {
     if (nextInFlow->HaveAnonymousBlock()) {
       isComplete = PR_FALSE;
       break;
     }
-    frame = mFrames.PullFrame(this, rs.prevFrame, nextInFlow->mFrames);
+    frame = mFrames.PullFrame(this, irs.mPrevFrame, nextInFlow->mFrames);
     if (nsnull != frame) {
       isComplete = PR_FALSE;
       break;
     }
     nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
-    rs.nextInFlow = nextInFlow;
+    irs.mNextInFlow = nextInFlow;
   }
 
   *aIsComplete = isComplete;
@@ -1584,18 +1604,18 @@ nsInlineFrame::PullInlineFrame(ReflowState& rs, PRBool* aIsComplete)
 }
 
 nsIFrame*
-nsInlineFrame::PullAnyFrame(ReflowState& rs)
+nsInlineFrame::PullAnyFrame(InlineReflowState& irs)
 {
   nsIFrame* frame = nsnull;
-  nsInlineFrame* nextInFlow = rs.nextInFlow;
+  nsInlineFrame* nextInFlow = irs.mNextInFlow;
   while (nsnull != nextInFlow) {
-    frame = mFrames.PullFrame(this, rs.prevFrame, nextInFlow->mFrames);
+    frame = mFrames.PullFrame(this, irs.mPrevFrame, nextInFlow->mFrames);
     if (nsnull != frame) {
       break;
     }
 
     nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
-    rs.nextInFlow = nextInFlow;
+    irs.mNextInFlow = nextInFlow;
   }
 
   return frame;
@@ -1622,33 +1642,38 @@ nsInlineFrame::PushFrames(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
 }
 
 nsresult
-nsInlineFrame::ReflowBlockFrame(ReflowState& rs,
+nsInlineFrame::ReflowBlockFrame(nsIPresContext& aPresContext,
+                                const nsHTMLReflowState& aReflowState,
+                                InlineReflowState& irs,
                                 nsHTMLReflowMetrics& aMetrics,
                                 nsReflowStatus& aStatus)
 {
   nsIFrame* blockFrame = mFrames.FirstChild();
 
   // Compute available area
-  nscoord x = rs.mBorderPadding.left;
-  nscoord availableWidth = rs.availableWidth;
+  nscoord x = aReflowState.mComputedBorderPadding.left;
+  nscoord availableWidth = aReflowState.availableWidth;
   if (NS_UNCONSTRAINEDSIZE != availableWidth) {
     if (nsnull != mPrevInFlow) {
       x = 0;
-      availableWidth -= rs.mBorderPadding.right;
+      availableWidth -= aReflowState.mComputedBorderPadding.right;
     }
     else {
-      availableWidth -= rs.mBorderPadding.left + rs.mBorderPadding.right;
+      availableWidth -= aReflowState.mComputedBorderPadding.left +
+        aReflowState.mComputedBorderPadding.right;
     }
   }
-  nscoord y = rs.mBorderPadding.top;
-  nscoord availableHeight = rs.availableHeight;
-  if (NS_UNCONSTRAINEDSIZE != rs.availableHeight) {
-    availableHeight -= rs.mBorderPadding.top + rs.mBorderPadding.right;
+  nscoord y = aReflowState.mComputedBorderPadding.top;
+  nscoord availableHeight = aReflowState.availableHeight;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) {
+    availableHeight -= aReflowState.mComputedBorderPadding.top +
+      aReflowState.mComputedBorderPadding.right;
   }
 
   // Reflow the block frame
-  // XXX Stop passing in line-layout to block-reflow-context
-  nsBlockReflowContext bc(rs.mPresContext, *rs.lineLayout, rs);
+  nsBlockReflowContext bc(aPresContext, aReflowState,
+                          nsnull != aMetrics.maxElementSize);
+  bc.SetNextRCFrame(irs.mNextRCFrame);
   nsRect availSpace(x, y, availableWidth, availableHeight);
   PRBool isAdjacentWithTop = PR_FALSE;
   nsMargin computedOffsets;
@@ -1683,7 +1708,7 @@ nsInlineFrame::ReflowBlockFrame(ReflowState& rs,
       if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         // When the block isn't complete create a continuation for it
         nsIFrame* newFrame;
-        rv = CreateNextInFlow(rs.mPresContext, this, blockFrame, newFrame);
+        rv = CreateNextInFlow(aPresContext, this, blockFrame, newFrame);
         if (NS_FAILED(rv)) {
           return rv;
         }
