@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
 MODULE = ical
-LIBRARY_NAME=mozical_lgpl
+LIBRARY_NAME=mozical
 
 ifeq ($(OS_ARCH),WINNT)
 MAPFILE	= $(LIBRARY_NAME).map
@@ -39,7 +39,7 @@ endif
 CSRCS		= $(ICAL_SRC_LCSRCS)
 
 EXPORTS = $(ICAL_SRC_LEXPORTS)
-FORCE_SHARED_LIB=1
+FORCE_STATIC_LIB=1
 GARBAGE += ical.h $(BUILT_COMBINEDHEADERS) $(BUILT_SOURCES)
 ifeq ($(OS_ARCH),WINNT)
 GARBAGE	+= $(LIBRARY_NAME).ilk

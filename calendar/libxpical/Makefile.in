@@ -72,8 +72,8 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
 	$(MOZ_COMPONENT_LIBS) \
-	-lmozicalss_lgpl \
-	-lmozical_lgpl \
+	-lmozicalss \
+	-lmozical \
 	$(NULL)
 
 DEFINES += -DICAL_DEBUG 

@@ -1,4 +1,4 @@
-LIBRARY         "mozical_lgpl"
+LIBRARY         "mozical"
 
 DESCRIPTION     '"""ical library"""'
 
