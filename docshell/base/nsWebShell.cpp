@@ -3402,6 +3402,8 @@ NS_IMETHODIMP nsWebShell::SetPosition(PRInt32 aX, PRInt32 aY)
 
    if(mWindow)
       mWindow->Move(aX, aY);
+   mBounds.x = aX;
+   mBounds.y = aY;
    return NS_OK;
 }
 
@@ -3457,21 +3459,14 @@ NS_IMETHODIMP nsWebShell::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
 NS_IMETHODIMP nsWebShell::GetPositionAndSize(PRInt32* aX, PRInt32* aY, 
    PRInt32* aCX, PRInt32* aCY)
 {
-   nsRect result;
-
-   if(mWindow)
-      mWindow->GetClientBounds(result);
-   else
-      result = mBounds;
-
    if(aX)
-      *aX = result.x;
+      *aX = mBounds.x;
    if(aY)
-      *aY = result.y;
+      *aY = mBounds.y;
    if(aCX)
-      *aCX = result.width;
+      *aCX = mBounds.width;
    if(aCY)
-      *aCY = result.height;
+      *aCY = mBounds.height;
 
    return NS_OK;
 }
