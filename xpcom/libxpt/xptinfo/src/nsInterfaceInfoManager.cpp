@@ -316,7 +316,7 @@ nsInterfaceInfoManager::initInterfaceTables()
     }
 
     // XXX We need to get rid of the env var on all platforms
-#ifdef XP_PC
+#ifndef XP_MAC
     // this code stolen from SetupRegistry; it might bear further
     // examination, as the code there doesn't look quite done.
     nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
