@@ -204,10 +204,11 @@ CalendarEventDataSource.prototype.search = function calEvent_search( searchText,
          {
             for ( i in fieldName ) 
             {
-               var objValue = calendarEvent[ fieldName[i] ].toLowerCase();
+               var objValue = calendarEvent[ fieldName[i] ];
          
                if( objValue )
                {
+                  objValue = objValue.toLowerCase();
                   if( objValue.indexOf( searchText ) != -1 )
                   {
                      searchEventTable[ searchEventTable.length ]  =  calendarEvent; 
