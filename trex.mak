@@ -106,7 +106,7 @@ TREX_TREX_DIR           = ns/trex
 LIBNLS_BRANCH           = -r libnls_v3_Normandy
 LIBNLS_DIR              = ns/modules/libnls
 
-JULIAN_BRANCH           = -r Nav45_BRANCH
+JULIAN_BRANCH           = -r JULIAN_TREX_BRANCH
 JULIAN_DIR              = ns/julian
 
 # $(MOZ_TOP)/LICENSE
