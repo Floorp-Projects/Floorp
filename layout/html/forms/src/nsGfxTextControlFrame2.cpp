@@ -2880,6 +2880,10 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
     }
     if (PR_FALSE==currentValue.Equals(aValue))  // this is necessary to avoid infinite recursion
     {
+      nsCOMPtr<nsIDOMSelection> domSel;
+      mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
+      if (domSel)
+        domSel->StartBatchChanges();
       // \r is an illegal character in the dom, but people use them,
       // so convert windows and mac platform linebreaks to \n:
       // Unfortunately aValue is declared const, so we have to copy
@@ -2891,8 +2895,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
       rv = mEditor->GetDocument(getter_AddRefs(domDoc));
 			if (NS_FAILED(rv)) return;
 			if (!domDoc) return;
-
-      rv = mEditor->SelectAll();
+      mSelCon->SelectAll();
       nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
 			if (!htmlEditor) return;
 
@@ -2903,10 +2906,10 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
 			flags &= ~(nsIHTMLEditor::eEditorDisabledMask);
 			flags &= ~(nsIHTMLEditor::eEditorReadonlyMask);
 			mEditor->SetFlags(flags);
-      mEditor->SelectAll();
-      mEditor->DeleteSelection(nsIEditor::eNone);
       htmlEditor->InsertText(currentValue);
       mEditor->SetFlags(savedFlags);
+      if (domSel)
+        domSel->EndBatchChanges();
     }
   }
   else
