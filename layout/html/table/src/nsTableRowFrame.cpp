@@ -1169,29 +1169,29 @@ nsTableRowFrame::SetColumnStyleFromCell(nsIPresContext*   aPresContext,
 
         // compute the width per column spanned
         PRInt32 colSpan = aCellFrame->GetColSpan();
-        // get the appropriate column frame
         nsTableFrame *tableFrame;
         mGeometricParent->GetGeometricParent((nsIFrame *&)tableFrame);
-        nsTableColFrame *colFrame;
-        tableFrame->GetColumnFrame(aCellFrame->GetColIndex(), colFrame);
-        // get the column style and set the width attribute
-        nsIStyleContextPtr colSC;
-        colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
-        nsStylePosition* colPosition = (nsStylePosition*) colSC->GetData(eStyleStruct_Position);
-        // set the column width attribute
-        colPosition->mWidth = cellPosition->mWidth;
-        /*
-        if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
+        for (PRInt32 i=0; i<colSpan; i++)
         {
-          nscoord width = cellPosition->mWidth.GetCoordValue();
-          colPosition->mWidth.SetCoordValue(width);
+          // get the appropriate column frame
+          nsTableColFrame *colFrame;
+          tableFrame->GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
+          // get the column style and set the width attribute
+          nsIStyleContextPtr colSC;
+          colFrame->GetStyleContext(aPresContext, colSC.AssignRef());
+          nsStylePosition* colPosition = (nsStylePosition*) colSC->GetData(eStyleStruct_Position);
+          // set the column width attribute
+          if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
+          {
+            nscoord width = cellPosition->mWidth.GetCoordValue();
+            colPosition->mWidth.SetCoordValue(width/colSpan);
+          }
+          else
+          {
+            float width = cellPosition->mWidth.GetPercentValue();
+            colPosition->mWidth.SetPercentValue(width/colSpan);
+          }
         }
-        else
-        {
-          float width = cellPosition->mWidth.GetPercentValue();
-          colPosition->mWidth.SetPercentValue(width);
-        }
-        */
       }
     }
   }
