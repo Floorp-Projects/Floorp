@@ -48,6 +48,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 
+#include "nsIDialogParamBlock.h"
 
 
 class nsXPInstallManager : public nsIXPINotifier, 
@@ -86,6 +87,7 @@ class nsXPInstallManager : public nsIXPINotifier,
     private:
         nsresult DownloadNext();
         void     Shutdown();
+        void     LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
         
         nsXPITriggerInfo*   mTriggers;
         nsXPITriggerItem*   mItem;
