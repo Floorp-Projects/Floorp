@@ -40,6 +40,7 @@
 <!ENTITY calendarPanel.label        "Calendar" >
 <!ENTITY calendar.accesskey         "c" >
 <!ENTITY calendar.publish.label     "Publishing">
+<!ENTITY calendar.alarms.label      "Alarms">
 
 <!ENTITY pref.mainbox.label         "General Settings" >
 <!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
