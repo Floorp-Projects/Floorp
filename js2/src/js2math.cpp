@@ -310,7 +310,7 @@ void initMathObject(JS2Metadata *meta)
     for (i = 0; i < M_CONSTANTS_COUNT; i++)
     {
         Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(MathObjectConstants[i].value), true);
-        meta->defineLocalMember(meta->env, &meta->world.identifiers[MathObjectConstants[i].name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+        meta->defineLocalMember(meta->env, &meta->world.identifiers[MathObjectConstants[i].name], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
     }
     meta->env->removeTopFrame();
 
@@ -343,7 +343,7 @@ void initMathObject(JS2Metadata *meta)
         SimpleInstance *callInst = new SimpleInstance(meta, meta->functionClass->prototype, meta->functionClass);
         callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
         Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
-        meta->defineLocalMember(meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+        meta->defineLocalMember(meta->env, &meta->world.identifiers[pf->name], publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 
         // XXX add 'length' as a dynamic property of the method
         meta->createDynamicProperty(callInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);

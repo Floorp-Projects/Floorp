@@ -249,7 +249,7 @@ namespace MetaData {
         {
             Multiname *mn = new Multiname(&meta->world.identifiers[RegExpInstanceVars[i].name], &publicNamespaceList);
             InstanceMember *m = new InstanceVariable(mn, RegExpInstanceVars[i].type, true, true, true, meta->regexpClass->slotCount++);
-            meta->defineInstanceMember(meta->regexpClass, &meta->cxt, mn->name, mn->nsList, Attribute::NoOverride, false, m, 0);
+            meta->defineInstanceMember(meta->regexpClass, &meta->cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
         }
 
     }

@@ -35,7 +35,6 @@
 #ifndef js2metadata_h___
 #define js2metadata_h___
 
-
 namespace JavaScript {
 namespace MetaData {
 
@@ -205,6 +204,7 @@ class JS2Object {
 public:
 
     JS2Object(ObjectKind kind) : kind(kind) { }
+    virtual ~JS2Object()    { }
 
     ObjectKind kind;
 
@@ -220,13 +220,14 @@ public:
                                             // Note: Not the address of a JS2VAL!
 #endif
     static uint32 gc();
+    static void clear(JS2Metadata *meta);
     static void removeRoot(RootIterator ri);
 
     static void *alloc(size_t s, bool isJS2Object);
     static void unalloc(void *p);
 
     void *operator new(size_t s)    { return alloc(s, true); }
-    void operator delete(void *p)   { unalloc(p); }
+    void operator delete(void *p)   { }
 
     virtual void markChildren()     { } // XXX !!!! XXXX these are supposed to not have vtables !!!!
     virtual void finalize()         { }
@@ -276,6 +277,7 @@ public:
 
 
     Attribute(AttributeKind akind) : JS2Object(AttributeObjectKind), attrKind(akind) { }
+    virtual ~Attribute()            { }
     virtual void markChildren()     { }
 
     static Attribute *combineAttributes(Attribute *a, Attribute *b);
@@ -318,18 +320,21 @@ typedef NamespaceList::iterator NamespaceListIterator;
 
 class Multiname : public JS2Object {
 public:    
-    Multiname() : JS2Object(MultinameKind), name(NULL) { }
-    Multiname(Namespace *ns) : JS2Object(MultinameKind), name(NULL) { nsList.push_back(ns); }
-    Multiname(const String *name) : JS2Object(MultinameKind), name(name) { }
-    Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
-    Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name)    { nsList.push_back(q.nameSpace); }
-    Multiname(const String *name, NamespaceList *ns) : JS2Object(MultinameKind), name(name) { addNamespace(ns); }
-    Multiname(const String *name, Context *cxt) : JS2Object(MultinameKind), name(name) { addNamespace(*cxt); }
+    Multiname() : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList()) { }
+    Multiname(Namespace *ns) : JS2Object(MultinameKind), name(NULL), nsList(new NamespaceList()) { nsList->push_back(ns); }
+    Multiname(const String *name) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { }
+    Multiname(const String *name, Namespace *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
+    Multiname(QualifiedName& q) : JS2Object(MultinameKind), name(q.name), nsList(new NamespaceList())    { nsList->push_back(q.nameSpace); }
+    Multiname(const String *name, NamespaceList *ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
+    Multiname(const String *name, NamespaceList &ns) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(ns); }
+    Multiname(const String *name, Context *cxt) : JS2Object(MultinameKind), name(name), nsList(new NamespaceList()) { addNamespace(*cxt); }
 
-    Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(m.nsList)    { }
+    Multiname(const Multiname& m) : JS2Object(MultinameKind), name(m.name), nsList(new NamespaceList())    { addNamespace(m.nsList); }
+    void operator =(const Multiname& m) { name = m.name; delete nsList; nsList = new NamespaceList(); addNamespace(m.nsList); }   
 
-    void addNamespace(Namespace *ns)                { nsList.push_back(ns); }
-    void addNamespace(NamespaceList *ns);
+    void addNamespace(Namespace *ns)                { nsList->push_back(ns); }
+    void addNamespace(NamespaceList &ns);
+    void addNamespace(NamespaceList *ns)            { addNamespace(*ns); }
     void addNamespace(Context &cxt);
 
     bool matches(QualifiedName &q)                  { return (*name == *q.name) && listContains(q.nameSpace); }
@@ -339,10 +344,12 @@ public:
     bool subsetOf(Multiname &mn);
 
     const String *name;
-    NamespaceList nsList;
+    NamespaceList *nsList;
 
     virtual void markChildren();
-    virtual ~Multiname()            { }
+    virtual ~Multiname()                 { nsList->clear(); delete nsList; nsList = NULL; }
+
+    virtual void finalize()              { }
 };
 
 class NamedParameter {
@@ -367,12 +374,12 @@ class Member {
 public:
     enum MemberKind { Forbidden, DynamicVariableKind, Variable, ConstructorMethod, Setter, Getter, InstanceVariableKind, InstanceMethodKind, InstanceGetterKind, InstanceSetterKind };
     
-    Member(MemberKind kind) : kind(kind) { }
-
+    Member(MemberKind kind) : kind(kind)    { }
+    virtual ~Member()                       { }
     MemberKind kind;
 
 
-    virtual void mark()                 { }
+    virtual void mark()                     { }
 };
 
 // A local member is either forbidden, a dynamic variable, a variable, a constructor method, a getter or a setter:
@@ -380,6 +387,7 @@ class LocalMember : public Member {
 public:
     LocalMember(MemberKind kind) : Member(kind), forbidden(false) { }
     LocalMember(MemberKind kind, bool forbidden) : Member(kind), forbidden(forbidden) { }
+    virtual ~LocalMember()                  { }
 
     LocalMember *cloneContent;  // Used during cloning operation to prevent cloning of duplicates (i.e. once
                                 // a clone exists for this member it's recorded here and used for any other
@@ -387,7 +395,7 @@ public:
                                 // Also used thereafter by 'assignArguments' to initialize the singular
                                 // variable instantations in a parameter frame.
 
-    virtual LocalMember *clone()       { if (forbidden) return this; ASSERT(false); return NULL; }
+    virtual LocalMember *clone()        { if (forbidden) return this; ASSERT(false); return NULL; }
     virtual void mark()                 { }
     bool forbidden;
 };
@@ -479,6 +487,7 @@ public:
 class InstanceMember : public Member {
 public:
     InstanceMember(MemberKind kind, Multiname *multiname, bool final, bool enumerable) : Member(kind), multiname(multiname), final(final), enumerable(enumerable) { }
+    virtual ~InstanceMember()   { }
 
 
     Multiname *multiname;       // The set of qualified names for this instance method
@@ -614,7 +623,7 @@ public:
     NonWithFrame *pluralFrame;                // for a singular frame, this is the plural frame from which it will be instantiated
 
     virtual void markChildren();
-    virtual ~NonWithFrame()                { }
+    virtual ~NonWithFrame();
 };
 
 // The top-level frame containing predefined constants, functions, and classes.
@@ -715,7 +724,7 @@ public:
 
     virtual void instantiate(Environment * /* env */)  { }      // nothing to do
     virtual void markChildren();
-    virtual ~JS2Class()            { }
+    virtual ~JS2Class();
 
 };
 
@@ -761,7 +770,7 @@ public:
     SimpleInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
 
     LocalBindingMap     localBindings;
-    js2val              super;              // Optional link ot the next object in this instance's prototype chain
+    js2val              super;              // Optional link to the next object in this instance's prototype chain
     bool sealed;
     JS2Class            *type;              // This instance's type
     Slot                *slots;             // A set of slots that hold this instance's fixed property values
@@ -780,6 +789,7 @@ public:
     DateInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
 
     float64     ms;
+    virtual ~DateInstance()              { }
 };
 
 // String instances are simple instances created by the String class, they have an extra field 
@@ -902,6 +912,7 @@ public:
     InstanceMethod      *method;        // The bound method
 
     virtual void markChildren();
+    virtual ~MethodClosure()            { }
 };
 
 class ReferencePool {
@@ -911,6 +922,7 @@ class ReferencePool {
 // References are generated during the eval stage (bytecode generation), but shouldn't live beyond that
 class Reference : public ArenaObject {
 public:
+    virtual ~Reference() { }
     virtual void emitReadBytecode(BytecodeContainer *, size_t)              { ASSERT(false); }
     virtual void emitWriteBytecode(BytecodeContainer *, size_t)             { ASSERT(false); }
     virtual void emitReadForInvokeBytecode(BytecodeContainer *, size_t)     { ASSERT(false); }
@@ -1057,6 +1069,7 @@ public:
 
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketDelete, pos); }
     virtual int hasStackEffect()                                            { return 2; }
+    virtual ~BracketReference()     { }
 };
 
 
@@ -1141,7 +1154,7 @@ public:
 
     virtual CompoundAttribute *toCompoundAttribute()    { return this; }
 
-    NamespaceList &namespaces;      // The set of namespaces contained in this attribute
+    NamespaceList namespaces;       // The set of namespaces contained in this attribute
     bool xplicit;                   // true if the explicit attribute has been given
     bool dynamic;                   // true if the dynamic attribute has been given
     MemberModifier memberMod;       // if one of these attributes has been given; none if not.
@@ -1173,7 +1186,7 @@ class JS2Metadata : public JS2Object {
 public:
     
     JS2Metadata(World &world);
-    virtual ~JS2Metadata()	{ }
+    virtual ~JS2Metadata();
 
     CompilationData *startCompilationUnit(BytecodeContainer *newBCon, const String &source, const String &sourceLocation);
     void restoreCompilationUnit(CompilationData *oldData);
@@ -1348,7 +1361,9 @@ inline bool operator!=(MetaData::LocalBindingEntry *s1, const String &s2) { retu
 inline bool operator==(MetaData::InstanceBindingEntry *s1, const String &s2) { return s1->name == s2;}
 inline bool operator!=(MetaData::InstanceBindingEntry *s1, const String &s2) { return s1->name != s2;}
 
-
 }; // namespace Javascript
+
+using namespace JavaScript;
+using namespace MetaData;
 
 #endif

@@ -645,7 +645,7 @@ namespace MetaData {
         JS2Object *obj = JS2VAL_TO_OBJECT(base);
 
         bool result = defaultWriteProperty(meta, base, limit, multiname, lookupKind, createIfMissing, newValue);
-        if (result && (multiname->nsList.size() == 1) && (multiname->nsList.back() == meta->publicNamespace)) {
+        if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
 
             const char16 *numEnd;        
             float64 f = stringToDouble(multiname->name->data(), multiname->name->data() + multiname->name->length(), numEnd);

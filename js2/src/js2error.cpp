@@ -158,7 +158,7 @@ void initErrorObject(JS2Metadata *meta)
     
         Multiname *mn = new Multiname(&meta->world.identifiers[pf->name], &publicNamespaceList);
         InstanceMember *m = new InstanceMethod(mn, fInst, true, false);
-        meta->defineInstanceMember(meta->errorClass, &meta->cxt, mn->name, mn->nsList, Attribute::NoOverride, false, m, 0);
+        meta->defineInstanceMember(meta->errorClass, &meta->cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
         pf++;
     }
 

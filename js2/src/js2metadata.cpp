@@ -787,6 +787,7 @@ namespace MetaData {
                     VariableStmtNode *vs = checked_cast<VariableStmtNode *>(f->initializer);
                     VariableBinding *vb = vs->bindings;
                     v = new (*referenceArena) LexicalReference(vb->name, cxt.strict);
+                    referenceArena->registerDestructor(v);
                 }
                 else {
                     if (f->initializer->getKind() == StmtNode::expression) {
@@ -1072,6 +1073,7 @@ namespace MetaData {
                         // write the exception object (on stack top) into the named
                         // local variable
                         Reference *r = new (*referenceArena) LexicalReference(&c->name, false);
+                        referenceArena->registerDestructor(r);
                         r->emitWriteBytecode(bCon, p->pos);
                         bCon->emitOp(ePop, p->pos);
                         SetupStmt(env, phase, c->stmt);
@@ -1143,6 +1145,7 @@ namespace MetaData {
                                         Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                                         if (r) r->emitReadBytecode(bCon, p->pos);
                                         LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
+                                        referenceArena->registerDestructor(lVal);
                                         lVal->emitWriteBytecode(bCon, p->pos);      
                                         bCon->emitOp(ePop, p->pos);
                                     }
@@ -1161,11 +1164,13 @@ namespace MetaData {
                                     bCon->emitOp(eCoerce, p->pos);
                                     bCon->addType(v->type);
                                     LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
+                                    referenceArena->registerDestructor(lVal);
                                     lVal->emitInitBytecode(bCon, p->pos);      
                                 }
                                 else {
                                     v->type->emitDefaultValue(bCon, p->pos);
                                     LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->mn, cxt.strict);
+                                    referenceArena->registerDestructor(lVal);
                                     lVal->emitInitBytecode(bCon, p->pos);      
                                 }
                             }
@@ -1197,6 +1202,7 @@ namespace MetaData {
                             Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                             if (r) r->emitReadBytecode(bCon, p->pos);
                             LexicalReference *lVal = new (*referenceArena) LexicalReference(vb->name, cxt.strict);
+                            referenceArena->registerDestructor(lVal);
                             lVal->variableMultiname.addNamespace(publicNamespace);
                             lVal->emitInitBytecode(bCon, p->pos);                                                        
                         }
@@ -1476,13 +1482,9 @@ namespace MetaData {
     // add the namespace to our list, but only if it's not there already
     void CompoundAttribute::addNamespace(Namespace *n)
     {
-        if (namespaces) {
-            for (NamespaceListIterator i = namespaces.begin(), end = namespaces.end(); (i != end); i++)
-                if (*i == n)
-                    return;
-        }
-        else
-            namespaces = new NamespaceList();
+        for (NamespaceListIterator i = namespaces.begin(), end = namespaces.end(); (i != end); i++)
+            if (*i == n)
+                return;
         namespaces.push_back(n);
     }
 
@@ -1519,10 +1521,8 @@ namespace MetaData {
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void CompoundAttribute::markChildren()
     {
-        if (namespaces) {
-            for (NamespaceListIterator i = namespaces.begin(), end = namespaces.end(); (i != end); i++) {
-                GCMARKOBJECT(*i)
-            }
+        for (NamespaceListIterator i = namespaces.begin(), end = namespaces.end(); (i != end); i++) {
+            GCMARKOBJECT(*i)
         }
     }
 
@@ -2049,12 +2049,14 @@ doUnary:
                 Namespace *ns = checked_cast<Namespace *>(obj);
                 
                 returnRef = new (*referenceArena) LexicalReference(&name, ns, cxt.strict);
+                referenceArena->registerDestructor(returnRef);
             }
             break;
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
                 returnRef = new (*referenceArena) LexicalReference(&i->name, cxt.strict);
+                referenceArena->registerDestructor(returnRef);
                 ((LexicalReference *)returnRef)->variableMultiname.addNamespace(cxt);
 #if 0                
                 // Try to find this identifier at compile time, we have to stop if we reach
@@ -2168,6 +2170,7 @@ doUnary:
                     ep = ep->next;
                 }
                 returnRef = new (*referenceArena) BracketReference();
+                referenceArena->registerDestructor(returnRef);
             }
             break;
         case ExprNode::dot:
@@ -2194,6 +2197,7 @@ doUnary:
 #endif
                     if (returnRef == NULL) {
                         returnRef = new (*referenceArena) DotReference(&i->name);
+                        referenceArena->registerDestructor(returnRef);
                         checked_cast<DotReference *>(returnRef)->propertyMultiname.addNamespace(cxt);
                     }
                 } 
@@ -2202,6 +2206,7 @@ doUnary:
                         Reference *rVal = SetupExprNode(env, phase, b->op2, exprType);
                         ASSERT(rVal && checked_cast<LexicalReference *>(rVal));
                         returnRef = new (*referenceArena) DotReference(&((LexicalReference *)rVal)->variableMultiname);
+                        referenceArena->registerDestructor(returnRef);
                         checked_cast<DotReference *>(returnRef)->propertyMultiname.addNamespace(cxt);
                     }
                     // XXX else bracketRef...
@@ -2663,9 +2668,9 @@ doUnary:
     // return true if the given namespace is on the namespace list
     bool Multiname::listContains(Namespace *nameSpace)
     { 
-        if (nsList.empty())
+        if (nsList->empty())
             return true;
-        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
+        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
             if (*n == nameSpace)
                 return true;
         }
@@ -2680,17 +2685,17 @@ doUnary:
 
 
     // add every namespace from the list to this Multiname
-    void Multiname::addNamespace(NamespaceList *ns)
+    void Multiname::addNamespace(NamespaceList &ns)
     {
-        for (NamespaceListIterator nli = ns->begin(), end = ns->end();
+        for (NamespaceListIterator nli = ns.begin(), end = ns.end();
                 (nli != end); nli++)
-            nsList.push_back(*nli);
+            nsList->push_back(*nli);
     }
 
     QualifiedName Multiname::selectPrimaryName(JS2Metadata *meta)
     {
-        if (nsList.size() == 1)
-            return QualifiedName(nsList.back(), name);
+        if (nsList->size() == 1)
+            return QualifiedName(nsList->back(), name);
         else {
             if (listContains(meta->publicNamespace))
                 return QualifiedName(meta->publicNamespace, name);
@@ -2704,7 +2709,7 @@ doUnary:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void Multiname::markChildren()
     {
-        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
+        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
             GCMARKOBJECT(*n)
         }
         if (name) JS2Object::mark(name);
@@ -2714,7 +2719,7 @@ doUnary:
     {
         if (*name != *mn.name)
             return false;
-        for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
+        for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
             if (!mn.listContains(*n))
                 return false;
         }
@@ -2793,7 +2798,7 @@ doUnary:
         }
         else
             lbe = *lbeP;
-        for (NamespaceListIterator nli = multiname->nsList.begin(), nlend = multiname->nsList.end(); (nli != nlend); nli++) {
+        for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
             LocalBinding *new_b = new LocalBinding(access, m, enumerable);
             lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(*nli, new_b));
         }
@@ -2805,7 +2810,7 @@ doUnary:
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
-                    for (NamespaceListIterator nli = multiname->nsList.begin(), nlend = multiname->nsList.end(); (nli != nlend); nli++) {
+                    for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
                         bool foundEntry = false;
                         LocalBindingEntry **rbeP = nwfr->localBindings[*id];
                         if (rbeP) {
@@ -2861,7 +2866,7 @@ doUnary:
         InstanceMember *mBase = NULL;
         JS2Class *s = c->super;
         if (s) {
-            for (NamespaceListIterator nli = multiname->nsList.begin(), nlend = multiname->nsList.end(); (nli != nlend); nli++) {
+            for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
                 Multiname *mn = new Multiname(multiname->name, *nli);
                 DEFINE_ROOTKEEPER(rk, mn);
                 InstanceMember *m = findBaseInstanceMember(s, mn, access);
@@ -2886,7 +2891,7 @@ doUnary:
         Multiname openMultiname(id, cxt);
         Multiname definedMultiname;
         Multiname searchedMultiname;
-        if (requestedMultiname.nsList.empty()) {
+        if (requestedMultiname.nsList->empty()) {
             definedMultiname = Multiname(id, publicNamespace);
             searchedMultiname = openMultiname;
         }
@@ -2946,7 +2951,7 @@ doUnary:
         m->multiname = new Multiname(definedMultiname);
         InstanceBinding *ib = new InstanceBinding(access, m);
         if (ibeP) {
-            for (NamespaceListIterator nli = definedMultiname.nsList.begin(), nlend = definedMultiname.nsList.end(); (nli != nlend); nli++) {
+            for (NamespaceListIterator nli = definedMultiname.nsList->begin(), nlend = definedMultiname.nsList->end(); (nli != nlend); nli++) {
                 (*ibeP)->bindingList.push_back(InstanceBindingEntry::NamespaceBinding(*nli, ib));
             }
         }
@@ -3429,6 +3434,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     }
 
+    JS2Metadata::~JS2Metadata()
+    {
+        bConList.clear();
+        targetList.clear();
+        JS2Object::clear(this); // don't blow off the contents of 'this' as the destructors for
+                                // embedded objects will get messed up (as they run on exit).
+    }
+
     JS2Class *JS2Metadata::objectType(JS2Object *obj)
     {
         switch (obj->kind) {
@@ -3898,7 +3911,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, env);
                 Multiname *mn = new Multiname(&world.identifiers[pf->name], publicNamespaceList);
                 InstanceMember *m = new InstanceMethod(mn, callInst, true, false);
-                defineInstanceMember(builtinClass, &cxt, mn->name, mn->nsList, Attribute::NoOverride, false, m, 0);
+                defineInstanceMember(builtinClass, &cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
 
                 FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
                 fInst->fWrap = callInst->fWrap;
@@ -3941,8 +3954,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             bracketDelete(defaultBracketDelete),
             slotCount(super ? super->slotCount : 0)
     {
-
     }
+
+    JS2Class::~JS2Class()            
+    {
+        for (InstanceBindingIterator rib = instanceBindings.begin(), riend = instanceBindings.end(); (rib != riend); rib++) {
+            InstanceBindingEntry *ibe = *rib;
+            for (InstanceBindingEntry::NS_Iterator i = ibe->begin(), end = ibe->end(); (i != end); i++) {
+                InstanceBindingEntry::NamespaceBinding ns = *i;
+                delete ns.second;
+            }
+            delete ibe;
+        }
+    }
+
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void JS2Class::markChildren()
@@ -4091,9 +4116,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             LocalBindingEntry *lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
-                delete ns.second->content;
+                delete ns.second;
             }
+            delete lbe;
         }
+        delete [] slots;
     }
 
  /************************************************************************************
@@ -4211,6 +4238,17 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return result;
     }
 
+    NonWithFrame::~NonWithFrame()
+    {
+        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+            LocalBindingEntry *lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceBinding ns = *i;
+                delete ns.second;
+            }
+            delete lbe;
+        }
+    }
 
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void NonWithFrame::markChildren()
@@ -4420,6 +4458,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         rootList.erase(ri);
     }
 
+    void JS2Object::clear(JS2Metadata *meta)
+    {
+        pond.resetMarks();
+        JS2Object::mark(meta);
+        pond.moveUnmarkedToFreeList();
+    }
+
     // Mark all reachable objects and put the rest back on the freelist
     uint32 JS2Object::gc()
     {
@@ -4613,6 +4658,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 if (p->isJS2Object()) {
                     JS2Object *obj = (JS2Object *)(p + 1);
                     obj->finalize();
+                    delete obj;
                 }
                 released += returnToPond(p);
             }

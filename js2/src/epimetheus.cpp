@@ -412,7 +412,7 @@ int main(int argc, char **argv)
         }
         if (doInteractive)
             result = readEvalPrint(stdin);
-
+        delete metadata;
         return result;
     }
     catch (Exception &e) {
