@@ -718,6 +718,7 @@ nsDNSLookup::MarkComplete(nsresult status)
 {
     mStatus = status;
     mState  = LOOKUP_COMPLETE;
+    if (NS_FAILED(status))  mCacheable = PR_FALSE;
 }
 
 
@@ -958,8 +959,10 @@ nsDNSService::Init()
 
 #if defined(XP_WIN)
     // sync with DNS thread to allow it to create the DNS window
-    status = PR_WaitCondVar(mDNSCondVar, PR_INTERVAL_NO_TIMEOUT);
-    NS_ASSERTION(status == PR_SUCCESS, "PR_WaitCondVar failed.");
+    while (!mDNSWindow) {
+        status = PR_WaitCondVar(mDNSCondVar, PR_INTERVAL_NO_TIMEOUT);
+        NS_ASSERTION(status == PR_SUCCESS, "PR_WaitCondVar failed.");
+    }
 #endif
 
     rv = InstallPrefObserver();
@@ -1205,7 +1208,11 @@ nsDNSService::Run()
                 lookup->ConvertHostEntry();
             }
             lookup->ProcessRequests();
-            AddToEvictionQ(lookup);
+            if (lookup->IsNotCacheable()) {
+                EvictLookup(lookup);
+            } else {
+                AddToEvictionQ(lookup);
+            }
         }
         
         PR_Unlock(mDNSServiceLock);
@@ -1229,7 +1236,11 @@ nsDNSService::Run()
             // Got a request!!
             lookup->DoSyncLookup();
             lookup->ProcessRequests();
-            AddToEvictionQ(lookup);
+            if (lookup->IsNotCacheable()) {
+                EvictLookup(lookup);
+            } else {
+                AddToEvictionQ(lookup);
+            }
         } else {
             // Woken up without a request --> shutdown
             NS_ASSERTION(mState == DNS_SHUTTING_DOWN, "bad DNS shutdown state");
@@ -1338,6 +1349,11 @@ nsDNSService::Lookup(const char*     hostName,
             if (lookup->IsNotCacheable()) {
                 // non-cacheable lookups are released here.
                 EvictLookup(lookup);
+            } else {
+#if defined(XP_OS2)  || defined(XP_BEOS)
+                if (PR_CLIST_IS_EMPTY(lookup))   // if the lookup isn't in the eviction queue
+                    AddToEvictionQ(lookup);
+#endif                        
             }
         }
 
@@ -1405,7 +1421,7 @@ nsDNSService::DequeuePendingQ()
 {
 #if defined(XP_UNIX)
     // Wait for notification of a queued request, unless  we're shutting down.
-    if (PR_CLIST_IS_EMPTY(&mPendingQ) && (mState != DNS_SHUTTING_DOWN)) {
+    while (PR_CLIST_IS_EMPTY(&mPendingQ) && (mState != DNS_SHUTTING_DOWN)) {
         PRStatus  status = PR_WaitCondVar(mDNSCondVar, PR_INTERVAL_NO_TIMEOUT);
         NS_ASSERTION(status == PR_SUCCESS, "PR_WaitCondVar failed.");
     }
@@ -1702,6 +1718,7 @@ nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code,
     	case T_DNRSTRINGTOADDRCOMPLETE:
                 // mark lookup complete and wake dns thread
                 nsresult rv = (result == kOTNoError) ? NS_OK : NS_ERROR_UNKNOWN_HOST;
+                if (NS_FAILED(rv))  lookup->mCacheable = PR_FALSE;
                 lookup->mStatus = rv;
                 lookup->mStringToAddrComplete = PR_TRUE;
                 if (thread)  PR_Mac_PostAsyncNotify(thread);
@@ -1744,6 +1761,7 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     else if (uMsg == WM_DNS_SHUTDOWN) {
         // dispose DNS EventHandler Window
         (void) DestroyWindow(nsDNSService::gService->mDNSWindow);
+        nsDNSService::gService->mDNSWindow = nsnull;
         PostQuitMessage(0);
         result = 0;
     }
@@ -1776,7 +1794,11 @@ nsDNSService::ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     PR_REMOVE_AND_INIT_LINK(lookup);
     lookup->ProcessRequests();
-    AddToEvictionQ(lookup);
+    if (lookup->IsNotCacheable()) {
+        EvictLookup(lookup);
+    } else {
+        AddToEvictionQ(lookup);
+    }
 
     return error ? -1 : 0;
 }
