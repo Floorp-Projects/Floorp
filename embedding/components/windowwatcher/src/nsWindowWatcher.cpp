@@ -628,22 +628,24 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   if (parentSGO) {
     nsCOMPtr<nsIDocShell> parentDocshell;
     parentSGO->GetDocShell(getter_AddRefs(parentDocshell));
-
-    nsCOMPtr<nsIContentViewer> parentContentViewer;
-    parentDocshell->GetContentViewer(getter_AddRefs(parentContentViewer));
-    nsCOMPtr<nsIDocumentViewer> parentDocViewer(do_QueryInterface(parentContentViewer));
-    if (parentDocViewer) {
-      nsCOMPtr<nsIDocument> doc;
-      parentDocViewer->GetDocument(*getter_AddRefs(doc));
-
-      nsCOMPtr<nsIContentViewer> newContentViewer;
-      newDocShell->GetContentViewer(getter_AddRefs(newContentViewer));
-      nsCOMPtr<nsIMarkupDocumentViewer> newMarkupDocViewer(do_QueryInterface(newContentViewer));
-      if (doc && newMarkupDocViewer) {
-        nsXPIDLString charset;
-        rv = doc->GetDocumentCharacterSet(charset);
-        if (NS_SUCCEEDED(rv))
-          newMarkupDocViewer->SetDefaultCharacterSet(charset);
+    // parentDocshell may be null if the parent got closed in the meantime
+    if (parentDocshell) {
+      nsCOMPtr<nsIContentViewer> parentContentViewer;
+      parentDocshell->GetContentViewer(getter_AddRefs(parentContentViewer));
+      nsCOMPtr<nsIDocumentViewer> parentDocViewer(do_QueryInterface(parentContentViewer));
+      if (parentDocViewer) {
+        nsCOMPtr<nsIDocument> doc;
+        parentDocViewer->GetDocument(*getter_AddRefs(doc));
+        
+        nsCOMPtr<nsIContentViewer> newContentViewer;
+        newDocShell->GetContentViewer(getter_AddRefs(newContentViewer));
+        nsCOMPtr<nsIMarkupDocumentViewer> newMarkupDocViewer(do_QueryInterface(newContentViewer));
+        if (doc && newMarkupDocViewer) {
+          nsXPIDLString charset;
+          rv = doc->GetDocumentCharacterSet(charset);
+          if (NS_SUCCEEDED(rv))
+            newMarkupDocViewer->SetDefaultCharacterSet(charset);
+        }
       }
     }
   }
