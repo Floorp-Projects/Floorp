@@ -611,19 +611,22 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 #security-button {
-  list-style-image: url("chrome://browser/skin/lock-insecure.gif");
+  display: none;
 }
 
 #security-button[level="high"] {
   list-style-image: url("chrome://browser/skin/lock-secure.gif");
+  display: -moz-box;
 }
 
 #security-button[level="low"] {
   list-style-image: url("chrome://browser/skin/lock-secure.gif");
+  display: -moz-box;
 }
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://browser/skin/lock-broken.gif");
+  display: -moz-box;
 }
 
 /* ::::: tabs ::::: */

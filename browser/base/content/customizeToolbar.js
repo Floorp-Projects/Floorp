@@ -69,6 +69,7 @@ function buildDialog()
   var newToolbar = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "toolbar");
   newToolbar.id = "cloneToolbar";
+  
   if (useSmallIcons.checked)
     newToolbar.setAttribute("iconsize", "small");
   newToolbar.setAttribute("mode", modeList.value);

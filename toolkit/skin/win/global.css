@@ -130,6 +130,7 @@ statusbarpanel {
   -moz-box-pack: end;
   -moz-appearance: resizerpanel;
   padding: 0px;
+  border: none;
 }
 
 .statusbarpanel-iconic {
