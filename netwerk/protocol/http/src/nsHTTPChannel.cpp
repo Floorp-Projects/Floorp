@@ -1248,7 +1248,11 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
   nsresult rv = NS_OK;
 
   // Null out pointers that are no longer needed...
-  mResponseContext = 0;
+
+// rjc says: don't null out mResponseContext;
+// it needs to be valid for the life of the channel
+//  mResponseContext = 0;
+
   mResponseDataListener = 0;
   NS_IF_RELEASE(mCachedResponse);
 
