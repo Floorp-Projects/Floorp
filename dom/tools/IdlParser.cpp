@@ -557,6 +557,8 @@ IdlAttribute* IdlParser::MaybeParseAttribute(IdlSpecification &aSpecification, i
     if ((token->id != READONLY_TOKEN) && (token->id != ATTRIBUTE_TOKEN)) {
       return NULL;
     }
+    mScanner->NextToken();
+    aTokenID = token->id;
   }
   
   return ParseAttribute(aSpecification, aTokenID, isNoScript);

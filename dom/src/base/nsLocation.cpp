@@ -28,10 +28,13 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "plstr.h"
 #include "prmem.h"
+#include "nsCOMPtr.h"
+#include "nsJSUtils.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMLocationIID, NS_IDOMLOCATION_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 
 LocationImpl::LocationImpl(nsIWebShell *aWebShell)
 {
@@ -62,6 +65,11 @@ LocationImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIDOMLocationIID)) {
     *aInstancePtrResult = (void*) ((nsIDOMLocation*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIJSScriptObjectIID)) {
+    *aInstancePtrResult = (void*)(nsISupports*)(nsIJSScriptObject*)this;
     AddRef();
     return NS_OK;
   }
@@ -354,8 +362,8 @@ LocationImpl::GetHref(nsString& aHref)
 NS_IMETHODIMP    
 LocationImpl::SetHref(const nsString& aHref)
 {
-  nsAutoString oldHref, newHref;
-  nsIURI *oldUrl, *newUrl;
+  nsAutoString oldHref;
+  nsIURI *oldUrl;
   nsresult result = NS_OK;
 
   result = GetHref(oldHref);
@@ -366,34 +374,48 @@ LocationImpl::SetHref(const nsString& aHref)
     result = NS_NewURI(&oldUrl, oldHref);
 #endif // NECKO
     if (NS_OK == result) {
-#ifndef NECKO
-      result = NS_NewURL(&newUrl, aHref, oldUrl);
-#else
-      result = NS_NewURI(&newUrl, aHref, oldUrl);
-#endif // NECKO
-      if (NS_OK == result) {
-#ifdef NECKO
-        char* spec;
-#else
-        const char* spec;
-#endif
-        result = newUrl->GetSpec(&spec);
-        if (NS_SUCCEEDED(result)) {
-          newHref.SetString(spec);
-#ifdef NECKO
-          nsCRT::free(spec);
-#endif
-        }
-        NS_RELEASE(newUrl);
-      }
+      result = SetHrefWithBase(aHref, oldUrl, PR_TRUE);
       NS_RELEASE(oldUrl);
     }
   }
 
-  if ((NS_OK == result) && (nsnull != mWebShell)) {
-    return mWebShell->LoadURL(newHref.GetUnicode(), nsnull, PR_TRUE);
+  return result;
+}
+
+nsresult
+LocationImpl::SetHrefWithBase(const nsString& aHref, 
+                              nsIURI* aBase,
+                              PRBool aReplace)
+{
+  nsresult result;
+  nsIURI* newUrl;
+  nsAutoString newHref;
+
+#ifndef NECKO
+  result = NS_NewURL(&newUrl, aHref, aBase);
+#else
+  result = NS_NewURI(&newUrl, aHref, aBase);
+#endif // NECKO
+  if (NS_OK == result) {
+#ifdef NECKO
+    char* spec;
+#else
+    const char* spec;
+#endif
+    result = newUrl->GetSpec(&spec);
+    if (NS_SUCCEEDED(result)) {
+      newHref.SetString(spec);
+#ifdef NECKO
+      nsCRT::free(spec);
+#endif
+    }
+    NS_RELEASE(newUrl);
   }
 
+  if ((NS_OK == result) && (nsnull != mWebShell)) {
+    result = mWebShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace);
+  }
+  
   return result;
 }
 
@@ -681,7 +703,7 @@ LocationImpl::SetSearch(const nsString& aSearch)
 }
 
 NS_IMETHODIMP    
-LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
+LocationImpl::Reload(PRBool aForceget)
 {
   nsresult result = NS_OK;
 
@@ -699,11 +721,63 @@ LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
 NS_IMETHODIMP    
 LocationImpl::Replace(const nsString& aUrl)
 {
-  if (nsnull != mWebShell) {
-    return mWebShell->LoadURL(aUrl.GetUnicode(), nsnull, PR_FALSE);
+  nsAutoString oldHref;
+  nsIURI *oldUrl;
+  nsresult result = NS_OK;
+
+  result = GetHref(oldHref);
+  if (NS_OK == result) {
+#ifndef NECKO
+    result = NS_NewURL(&oldUrl, oldHref);
+#else
+    result = NS_NewURI(&oldUrl, oldHref);
+#endif // NECKO
+    if (NS_OK == result) {
+      result = SetHrefWithBase(aUrl, oldUrl, PR_FALSE);
+      NS_RELEASE(oldUrl);
+    }
   }
 
-  return NS_OK;
+  return result;
+}
+
+NS_IMETHODIMP    
+LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
+{
+  // XXX Security manager needs to be called
+  nsresult result = NS_OK;
+  JSBool force = JS_FALSE;
+
+  if (argc > 0) {
+    JS_ValueToBoolean(cx, argv[0], &force);
+  }
+
+  return Reload(force ? PR_TRUE : PR_FALSE);
+}
+
+NS_IMETHODIMP    
+LocationImpl::Replace(JSContext *cx, jsval *argv, PRUint32 argc)
+{
+  // XXX Security manager needs to be called
+  nsresult result = NS_OK;
+
+  if (argc > 0) {
+    nsIURI* base;
+    nsAutoString href;
+
+    // Get the parameter passed in
+    nsJSUtils::nsConvertJSValToString(href, cx, argv[0]);
+    
+    // Get the source of the caller
+    result = GetSourceURL(cx, &base);
+    
+    if (NS_SUCCEEDED(result)) {
+      result = SetHrefWithBase(href, base, PR_FALSE);
+      NS_RELEASE(base);
+    }
+  }
+  
+  return result;
 }
 
 NS_IMETHODIMP    
@@ -711,4 +785,136 @@ LocationImpl::ToString(nsString& aReturn)
 {
   return GetHref(aReturn);
 }
+
+nsresult
+LocationImpl::GetSourceURL(JSContext* cx,
+                           nsIURI** sourceURL)
+{
+  // XXX Code duplicated from nsHTMLDocument
+  // XXX Tom said this reminded him of the "Six Degrees of
+  // Kevin Bacon" game. We try to get from here to there using
+  // whatever connections possible. The problem is that this
+  // could break if any of the connections along the way change.
+  // I wish there were a better way.
+  nsresult result = NS_OK;
+  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  
+  if (nsnull != context) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+
+    global = dont_AddRef(context->GetGlobalObject());
+    if (global) {
+      nsCOMPtr<nsIWebShell> webShell;
+      
+      global->GetWebShell(getter_AddRefs(webShell));
+      if (webShell) {
+        const PRUnichar* url;
+
+        // XXX Ughh - incorrect ownership rules for url?
+        webShell->GetURL(&url);
+#ifndef NECKO            
+        result = NS_NewURL(sourceURL, url);
+#else
+        result = NS_NewURI(sourceURL, url);
+#endif // NECKO
+      }
+    }
+  }
+
+  return result;
+}
+
+PRBool    
+LocationImpl::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return JS_TRUE;
+}
+
+PRBool    
+LocationImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return JS_TRUE;
+}
+
+PRBool    
+LocationImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  PRBool result = PR_TRUE;
+
+  // XXX Security manager needs to be called
+  if (JSVAL_IS_STRING(aID)) {
+    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+    if (PL_strcmp("href", cString) == 0) {
+      nsAutoString href;
+
+      if (NS_SUCCEEDED(GetHref(href))) {
+        const PRUnichar* bytes = href.GetUnicode();
+        JSString* str = JS_NewUCStringCopyZ(aContext, (const jschar*)bytes);
+        if (str) {
+          *aVp = STRING_TO_JSVAL(str);
+        }
+        else {
+          result = PR_FALSE;
+        }
+      }
+      else {
+        result = PR_FALSE;
+      }
+    }
+  }
+  return result;
+}
+
+PRBool    
+LocationImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  nsresult result = NS_OK;
+
+  // XXX Security manager needs to be called
+  if (JSVAL_IS_STRING(aID)) {
+    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+    
+    if (PL_strcmp("href", cString) == 0) {
+      nsIURI* base;
+      nsAutoString href;
+      
+      // Get the parameter passed in
+      nsJSUtils::nsConvertJSValToString(href, aContext, *aVp);
+      
+      // Get the source of the caller
+      result = GetSourceURL(aContext, &base);
+      
+      if (NS_SUCCEEDED(result)) {
+        result = SetHrefWithBase(href, base, PR_TRUE);
+        NS_RELEASE(base);
+      }
+    }
+  }
+
+  return NS_SUCCEEDED(result);
+}
+
+PRBool    
+LocationImpl::EnumerateProperty(JSContext *aContext)
+{
+  return JS_TRUE;
+}
+
+PRBool    
+LocationImpl::Resolve(JSContext *aContext, jsval aID)
+{
+  return JS_TRUE;
+}
+
+PRBool    
+LocationImpl::Convert(JSContext *aContext, jsval aID)
+{
+  return JS_TRUE;
+}
+
+void      
+LocationImpl::Finalize(JSContext *aContext)
+{
+}
+
 

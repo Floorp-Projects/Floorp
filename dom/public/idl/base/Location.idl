@@ -5,14 +5,21 @@
 	attribute wstring hash;
         attribute wstring host;
 	attribute wstring hostname;
-        attribute wstring href;
+        noscript attribute wstring href;
         attribute wstring pathname;
         attribute wstring port;
         attribute wstring protocol;
         attribute wstring search;
 
-	void reload(/* ... */);
+	noscript void reload(in boolean forceget);
         void replace(in wstring url);
 
 	wstring toString();
+      };
+
+      interface NSLocation {
+/* IID: { 0xa6cf9108, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+        void reload(/* ... */);
+        void replace(/* ... */);
       };

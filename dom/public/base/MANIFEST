@@ -18,6 +18,7 @@
 
 nsIDOMWindow.h
 nsIDOMLocation.h
+nsIDOMNSLocation.h
 nsIDOMNavigator.h
 nsIDOMWindowCollection.h
 nsIDOMScreen.h

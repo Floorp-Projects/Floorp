@@ -27,6 +27,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMLocation.h"
+#include "nsIDOMNSLocation.h"
 #include "nsIDOMScreen.h"
 #include "nsITimer.h"
 #include "nsIJSScriptObject.h"
@@ -330,7 +331,11 @@ protected:
 
 class nsIURI;
 
-class LocationImpl : public nsIScriptObjectOwner, public nsIDOMLocation {
+class LocationImpl : public nsIScriptObjectOwner, 
+                     public nsIDOMLocation, 
+                     public nsIDOMNSLocation,
+                     public nsIJSScriptObject
+{
 
 protected:
 public:
@@ -344,6 +349,7 @@ public:
 
   NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
 
+  // nsIDOMLocation
   NS_IMETHOD    GetHash(nsString& aHash);
   NS_IMETHOD    SetHash(const nsString& aHash);
   NS_IMETHOD    GetHost(nsString& aHost);
@@ -360,12 +366,31 @@ public:
   NS_IMETHOD    SetProtocol(const nsString& aProtocol);
   NS_IMETHOD    GetSearch(nsString& aSearch);
   NS_IMETHOD    SetSearch(const nsString& aSearch);
-  NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc);
+  NS_IMETHOD    Reload(PRBool aForceget);
   NS_IMETHOD    Replace(const nsString& aUrl);
   NS_IMETHOD    ToString(nsString& aReturn);
+  
+  // nsIDOMNSLocation
+  NS_IMETHOD    Reload(JSContext *cx, jsval *argv, PRUint32 argc);
+  NS_IMETHOD    Replace(JSContext *cx, jsval *argv, PRUint32 argc);
+
+  // nsIJSScriptObject
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext);
+  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, jsval aID);
+  virtual void      Finalize(JSContext *aContext);
 
 protected:
   nsresult SetURL(nsIURI* aURL);
+  nsresult SetHrefWithBase(const nsString& aHref, 
+                           nsIURI* aBase, 
+                           PRBool aReplace);
+  nsresult GetSourceURL(JSContext* cx,
+                        nsIURI** sourceURL);
 
   nsIWebShell *mWebShell;
   void *mScriptObject;
