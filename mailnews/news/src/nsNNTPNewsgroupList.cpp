@@ -584,12 +584,13 @@ nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 		nsCOMPtr <nsIDBFolderInfo> newsGroupInfo;
 		rv = m_newsDB->GetDBFolderInfo(getter_AddRefs(newsGroupInfo));
 		if (NS_SUCCEEDED(rv) && newsGroupInfo) {
-			char *output = m_knownArts.set->Output();
+			char *output;
+      status = m_knownArts.set->Output(&output);
 			if (output) {
 				nsString str; str.AssignWithConversion(output);
 				newsGroupInfo->SetKnownArtsSet(&str);
+        nsMemory::Free(output);
 			}
-			delete [] output;
 			output = nsnull;
 		}
 	}

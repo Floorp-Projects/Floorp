@@ -50,8 +50,8 @@ public:
   PRInt32 FirstNonMember();
 
   // Output() converts to a string representation suitable for writing to a
-  // .newsrc file.  (The result must be freed by the caller using delete[].)
-  char* Output();		
+  // .newsrc file.  
+  nsresult Output(char **outputStr);		
 
   // IsMember() returns whether the given article is a member of this set.
   PRBool IsMember(PRInt32 art);

@@ -768,8 +768,8 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 		if (NS_FAILED(rv)) return rv;
 	}
 	else {
-		nsXPIDLCString cachedNewsrcLine;
-        rv = GetCachedNewsrcLine(getter_Copies(cachedNewsrcLine));
+  	nsXPIDLCString cachedNewsrcLine;
+    rv = GetCachedNewsrcLine(getter_Copies(cachedNewsrcLine));
 		if (NS_FAILED(rv)) return rv;
 
 		set = nsMsgKeySet::Create((const char *)cachedNewsrcLine);
@@ -777,10 +777,15 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 
 	if (!set) return NS_ERROR_FAILURE;
 
+  char *setStr = nsnull;
 	/* First, mark all of the articles now known to be expired as read. */
 	if (oldest > 1) { 
+    nsXPIDLCString oldSet;
+    set->Output(getter_Copies(oldSet));
 		set->AddRange(1, oldest - 1);
-		newsrcHasChanged = PR_TRUE;
+		rv = set->Output(&setStr);
+    if (setStr && nsCRT::strcmp(setStr, oldSet))
+		  newsrcHasChanged = PR_TRUE;
 	}
 
 	/* Now search the newsrc line and figure out how many of these messages are marked as unread. */
@@ -822,14 +827,11 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 
 	/* re-cache the newsrc line. */
 	if (!mDatabase) {
-		char *setStr = set->Output();
 		if (setStr) {
 			nsCAutoString newsrcLine(setStr);
         	newsrcLine += MSG_LINEBREAK;
 			rv = SetCachedNewsrcLine((const char *)newsrcLine);
 			NS_ASSERTION(NS_SUCCEEDED(rv),"SetCachedNewsrcLine() failed");
-			delete [] setStr;
-			setStr = nsnull;
 
 			if (newsrcHasChanged) {
 				rv = SetNewsrcHasChanged(PR_TRUE);
@@ -837,6 +839,8 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 			}
 		}
 	}
+	delete [] setStr;
+	setStr = nsnull;
 	return rv;
 }
 

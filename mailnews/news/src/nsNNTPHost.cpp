@@ -249,7 +249,8 @@ nsNNTPHost::WriteNewsrc()
 		nsINNTPNewsgroup* newsgroup = (nsINNTPNewsgroup*) ((*m_groups)[i]);
 		// GetNewsFolderInfo will get root category for cat container.
 #ifdef HAVE_FOLDERINFO
-		char* str = newsgroup->GetNewsFolderInfo()->GetSet()->Output();
+		char* str;
+    newsgroup->GetNewsFolderInfo()->GetSet()->Output(&str);
 #else
         char *str = nsnull;
 #endif

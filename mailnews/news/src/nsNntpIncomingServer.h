@@ -80,6 +80,8 @@ protected:
     nsCOMPtr<nsISupportsArray> m_connectionCache;
 	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 	nsByteArray		mHostInfoInputStream;	
+  nsresult SetupNewsrcSaveTimer();
+  static void OnNewsrcSaveTimer(nsITimer *timer, void *voidIncomingServer);
 
 private:
 	PRInt32 mGroupsOnServerIndex;
@@ -105,6 +107,7 @@ private:
 	PRBool mPushAuth;
 	PRInt32 mVersion;
 
+  nsCOMPtr<nsITimer> mNewsrcSaveTimer;
 	nsCOMPtr <nsITimer> mUpdateTimer;
 	nsCOMPtr <nsIMsgWindow> mMsgWindow;
 };

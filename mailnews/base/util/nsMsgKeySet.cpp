@@ -281,9 +281,10 @@ nsMsgKeySet::FirstNonMember ()
 }
 
 
-char *
-nsMsgKeySet::Output()
+nsresult 
+nsMsgKeySet::Output(char **outputStr)
 {
+  NS_ENSURE_ARG(outputStr);
 	PRInt32 size;
 	PRInt32 *head;
 	PRInt32 *tail;
@@ -293,18 +294,20 @@ nsMsgKeySet::Output()
 	char *s, *s_end;
 	PRInt32 last_art = -1;
 
+  *outputStr = nsnull;
+
 	size = m_length;
 	head = m_data;
 	tail = head;
 	end = head + size;
 
 	s_size = (size * 12) + 10;	// dmb - try to make this allocation get used at least once.
-	s_head = new char [s_size];
+  s_head = (char *) nsMemory::Alloc(s_size);
 	s_head[0] = '\0';			// otherwise, s_head will contain garbage.
 	s = s_head;
 	s_end = s + s_size;
 
-	if (! s) return 0;
+	if (! s) return NS_ERROR_OUT_OF_MEMORY;
 
 	while (tail < end) {
 		PRInt32 from;
@@ -317,9 +320,9 @@ nsMsgKeySet::Output()
 			s_size += 200;
 			char* tmp = new char[s_size];
 			if (tmp) PL_strcpy(tmp, s_head);
-			delete [] s_head;
+      nsMemory::Free(s_head);
 			s_head = tmp;
-			if (!s_head) return 0;
+			if (!s_head) return NS_ERROR_OUT_OF_MEMORY;
 			s = s_head + so;
 			s_end = s_head + s_size;
 		}
@@ -356,7 +359,8 @@ nsMsgKeySet::Output()
 
 	*s = 0;
 
-	return s_head;
+	*outputStr = s_head;
+  return NS_OK;
 }
 
 PRInt32 
@@ -1165,9 +1169,10 @@ void
 nsMsgKeySet::test_decoder (const char *string)
 {
   nsMsgKeySet set(string /* , NULL */);
-  char* tmp = set.Output();
+  char* tmp;
+  set.Output(&tmp);
   printf ("\t\"%s\"\t--> \"%s\"\n", string, tmp);
-  delete [] tmp;
+  nsMemory::Free(tmp);
 }
 
 
@@ -1177,22 +1182,22 @@ nsMsgKeySet::test_decoder (const char *string)
 
 #define FROB(N,PUSHP)									\
   i = N;												\
-  if (!(s = set->Output())) abort ();					\
+  if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
   printf ("%3lu: %-58s %c %3lu =\n", (unsigned long)set->m_length, s,	\
 		  (PUSHP ? '+' : '-'), (unsigned long)i);						\
-  delete [] s;											\
+  nsMemory::Free(s);											\
   if (PUSHP												\
 	  ? set->Add(i) < 0									\
 	  : set->Remove(i) < 0)								\
 	abort ();											\
-  if (! (s = set->Output())) abort ();					\
+  if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
   printf ("%3lu: %-58s optimized =\n", (unsigned long)set->m_length, s);	\
-  delete [] s;											\
+  nsMemory::Free(s);											\
 
 #define END()							   \
-  if (!(s = set->Output())) abort ();	   \
+  if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
   printf ("%3lu: %s\n\n", (unsigned long)set->m_length, s); \
-  delete [] s;							   \
+  nsMemory::Free(s);											\
   delete set;							   \
 
 
@@ -1286,9 +1291,9 @@ nsMsgKeySet::test_adder (void)
 #define FROB(N,M)												\
   i = N;														\
   j = M;														\
-  if (!(s = set->Output())) abort ();							\
+  if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
   printf ("%3lu: %-58s + %3lu-%3lu =\n", (unsigned long)set->m_length, s, (unsigned long)i, (unsigned long)j);	\
-  delete [] s;													\
+  nsMemory::Free(s);											\
   switch (set->AddRange(i, j)) {								\
   case 0:														\
 	printf("(no-op)\n");										\
@@ -1298,15 +1303,15 @@ nsMsgKeySet::test_adder (void)
   default:														\
 	abort();													\
   }																\
-  if (!(s = set->Output())) abort ();							\
+  if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
   printf ("%3lu: %-58s\n", (unsigned long)set->m_length, s);						\
-  delete [] s;													\
+  nsMemory::Free(s);											\
 
 
 #define END()							   \
-  if (!(s = set->Output())) abort ();	   \
+  if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
   printf ("%3lu: %s\n\n", (unsigned long)set->m_length, s); \
-  delete [] s;							   \
+  nsMemory::Free(s);											\
   delete set;
 
 
@@ -1344,7 +1349,7 @@ nsMsgKeySet::test_ranges(void)
 
 #define TEST(N)									  \
   if (! with_cache) set->m_cached_value = -1;	  \
-  if (!(s = set->Output())) abort ();			  \
+  if (!(NS_SUCCEEDED(set->Output(&s)))) abort ();					\
   printf (" %3d = %s\n", N,						  \
 		  (set->IsMember(N) ? "true" : "false")); \
   delete [] s

@@ -63,6 +63,8 @@ protected:
 
 	nsresult			ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, nsMsgKey newParentKey,
 														nsIDBChangeAnnouncer *announcer);
+  nsresult      ReparentMsgsWithInvalidParent(PRUint32 numChildren, nsMsgKey threadParentKey);
+
 	nsMsgKey		m_threadKey; 
 	PRUint32		m_numChildren;		
 	PRUint32		m_numUnreadChildren;	

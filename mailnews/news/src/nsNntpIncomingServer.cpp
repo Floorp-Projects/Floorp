@@ -95,6 +95,7 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mVersion = 0;
   mGroupsOnServerIndex = 0;
   mGroupsOnServerCount = 0;
+  SetupNewsrcSaveTimer();
 }
 
 nsNntpIncomingServer::~nsNntpIncomingServer()
@@ -110,6 +111,11 @@ nsNntpIncomingServer::~nsNntpIncomingServer()
       mUpdateTimer->Cancel();
       mUpdateTimer = nsnull;
     }
+  if (mNewsrcSaveTimer)
+  {
+    mNewsrcSaveTimer->Cancel();
+    mNewsrcSaveTimer = nsnull;
+  }
 
     rv = CloseCachedConnections();
 	NS_ASSERTION(NS_SUCCEEDED(rv), "CloseCachedConnections failed");
@@ -214,6 +220,29 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
 
     rv = SetNewsrcRootPath(*aNewsrcRootPath);
     return rv;
+}
+
+/* static */ void nsNntpIncomingServer::OnNewsrcSaveTimer(nsITimer *timer, void *voidIncomingServer)
+{
+	nsNntpIncomingServer *incomingServer = (nsNntpIncomingServer*)voidIncomingServer;
+	incomingServer->WriteNewsrcFile();		
+}
+
+
+nsresult nsNntpIncomingServer::SetupNewsrcSaveTimer()
+{
+	nsInt64 ms(5000 * 60);   // hard code, 5 minutes.
+	//Convert biffDelay into milliseconds
+	PRUint32 timeInMSUint32 = (PRUint32)ms;
+	//Can't currently reset a timer when it's in the process of
+	//calling Notify. So, just release the timer here and create a new one.
+	if(mNewsrcSaveTimer)
+	{
+		mNewsrcSaveTimer->Cancel();
+	}
+  mNewsrcSaveTimer = do_CreateInstance("component://netscape/timer");
+	mNewsrcSaveTimer->Init(OnNewsrcSaveTimer, (void*)this, timeInMSUint32, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -3634,8 +3634,8 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		SetProgressBarPercent(m_newsRCListCount, m_newsRCListIndex);
 		
 		/* only update every 20 groups for speed */
-		if ((m_newsRCListCount <= NEWS_GROUP_DISPLAY_FREQ) || (m_newsRCListIndex % NEWS_GROUP_DISPLAY_FREQ) == 0 ||
-									(m_newsRCListIndex == m_newsRCListCount))
+		if ((m_newsRCListCount >= NEWS_GROUP_DISPLAY_FREQ) && ((m_newsRCListIndex % NEWS_GROUP_DISPLAY_FREQ) == 0 ||
+									(m_newsRCListIndex == m_newsRCListCount)))
 		{
 			char thisGroup[20];
 			char totalGroups[20];

@@ -23,6 +23,8 @@
 #ifndef _nsMsgDatabase_H_
 #define _nsMsgDatabase_H_
 
+// #define USE_JSD_HASHTABLE
+
 #include "nsIMsgDatabase.h"
 #include "nsMsgHdr.h"
 #include "nsVoidArray.h"
@@ -37,7 +39,9 @@
 #include "nsIMimeConverter.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
-
+#ifdef USE_JSD_HASHTABLE
+#include "jsdhash.h"
+#endif
 class ListContext;
 class nsMsgKeyArray;
 class nsMsgKeySet;
@@ -356,9 +360,26 @@ protected:
 	nsresult			ClearUseHdrCache();
 	nsresult			RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key);
 
-	nsSupportsHashtable	*m_cachedHeaders; // keeps MRU headers around
 	// all instantiated headers, but doesn't hold refs. 
+#ifdef USE_JSD_HASHTABLE
+  JSDHashTable  *m_headersInUse;
+  static const void* CRT_CALL GetKey(JSDHashTable* aTable, JSDHashEntryHdr* aEntry);
+  static JSDHashNumber CRT_CALL HashKey(JSDHashTable* aTable, const void* aKey);
+  static JSBool CRT_CALL MatchEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aEntry, const void* aKey);
+  static void CRT_CALL MoveEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aFrom, JSDHashEntryHdr* aTo);
+  static void CRT_CALL ClearEntry(JSDHashTable* aTable, JSDHashEntryHdr* aEntry);
+
+  static JSDHashTableOps gMsgDBHashTableOps;
+  struct MsgHdrHashElement {
+    JSDHashEntryHdr mHeader;
+    nsMsgKey       mKey;
+    nsIMsgDBHdr     *mHdr;
+  };
+  JSDHashTable  *m_cachedHeaders;
+#else
+	nsSupportsHashtable	*m_cachedHeaders; // keeps MRU headers around
 	nsHashtable			*m_headersInUse;  
+#endif // USE_JSD_HASHTABLE
 	PRBool				m_bCacheHeaders;
 
 };

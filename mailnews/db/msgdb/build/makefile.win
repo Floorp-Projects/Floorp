@@ -43,6 +43,7 @@ LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
 	$(DIST)\lib\msgbsutl.lib		\
 	$(DIST)\lib\msgdb_s.lib			\
+	$(DIST)\lib\js32$(VERSION_NUMBER).lib   \
     $(LIBNSPR)						\
 	$(NULL)
 

@@ -68,9 +68,10 @@ static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 
+#define MSG_HASH_SIZE 512
 
 const int kMsgDBVersion = 1;
-const PRInt32 kMaxHdrsInCache = 200;
+const PRInt32 kMaxHdrsInCache = 512;
 
 nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 {
@@ -80,9 +81,24 @@ nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 	nsresult rv = NS_ERROR_FAILURE;
 
 	*result = nsnull;
-
 	if (m_bCacheHeaders && m_cachedHeaders)
 	{
+#ifdef USE_JSD_HASHTABLE
+    JSDHashEntryHdr *entry;
+    entry = JS_DHashTableOperate(m_cachedHeaders, (const void *) key, JS_DHASH_LOOKUP);
+    if (entry && JS_DHASH_ENTRY_IS_BUSY(entry))
+    {
+      MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
+      *result = element->mHdr;
+      // need to do our own add ref because the JS_DHashTable doesn't addref.
+		  if (*result)
+		  {
+			  NS_ADDREF(*result);
+			  rv = NS_OK;
+		  }
+    }    
+
+#else
 		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
@@ -91,6 +107,7 @@ nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 		*result = (nsIMsgDBHdr *) m_cachedHeaders->Get(&hashKey);
 		if (*result)
 			rv = NS_OK;
+#endif
 	}
 	return rv;
 }
@@ -100,19 +117,37 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 	if (m_bCacheHeaders)
 	{
 		if (!m_cachedHeaders)
+#ifdef USE_JSD_HASHTABLE
+    m_cachedHeaders = JS_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache );
+#else
 			m_cachedHeaders = new nsSupportsHashtable;
-		if (m_cachedHeaders)
-		{
-			nsCOMPtr<nsISupports> supports(do_QueryInterface(hdr));
-			if (m_cachedHeaders->Count() > kMaxHdrsInCache)
-				ClearHdrCache();
-			// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
-			nsCAutoString strKey;
-			strKey.AppendInt(key, 10);
-			nsCStringKey hashKey(strKey.GetBuffer());
-			m_cachedHeaders->Put(&hashKey, hdr);
-			return NS_OK;
-		}
+#endif
+    if (m_cachedHeaders)
+    {
+#ifdef USE_JSD_HASHTABLE
+		  if (key == nsMsgKey_None)
+			  hdr->GetMessageKey(&key);
+      JSDHashEntryHdr *entry = JS_DHashTableOperate(m_cachedHeaders, (void *) key, JS_DHASH_ADD);
+      if (!entry)
+        return NS_ERROR_OUT_OF_MEMORY; // XXX out of memory
+
+      MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
+      element->mHdr = hdr;  
+      element->mKey = key;
+		  NS_ADDREF(hdr);     // make the cache hold onto the header
+      return NS_OK;
+#else
+      nsCOMPtr<nsISupports> supports(do_QueryInterface(hdr));
+		  if (m_cachedHeaders->Count() > kMaxHdrsInCache)
+			  ClearHdrCache();
+		  // it would be nice if we had an nsISupports hash table that hashed 32 bit int's
+		  nsCAutoString strKey;
+		  strKey.AppendInt(key, 10);
+		  nsCStringKey hashKey(strKey.GetBuffer());
+		  m_cachedHeaders->Put(&hashKey, hdr);
+		  return NS_OK;
+#endif
+    }
 	}
 	return NS_ERROR_FAILURE;
 }
@@ -121,7 +156,12 @@ nsresult nsMsgDatabase::ClearHdrCache()
 {
 	if (m_cachedHeaders)
 	{
+#ifdef USE_JSD_HASHTABLE
+  JS_DHashTableFinish(m_cachedHeaders);
+  JS_DHashTableInit(m_cachedHeaders, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), kMaxHdrsInCache);
+#else
 		m_cachedHeaders->Reset();
+#endif
 	}
 	return NS_OK;
 }
@@ -133,6 +173,11 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		if (key == nsMsgKey_None)
 			hdr->GetMessageKey(&key);
 
+#ifdef USE_JSD_HASHTABLE
+   JS_DHashTableOperate(m_cachedHeaders, (void *) key, JS_DHASH_REMOVE);
+   NS_RELEASE(hdr); // get rid of extra ref the cache was holding.
+
+#else
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
 		nsCStringKey hashKey(strKey.GetBuffer());
@@ -143,6 +188,7 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
              * of the reference held by the table for that object.
              */
 		m_cachedHeaders->Remove(&hashKey);
+#endif
 	}
 	return NS_OK;
 }
@@ -159,12 +205,22 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 
 	if (m_headersInUse)
 	{
+#ifdef USE_JSD_HASHTABLE
+    JSDHashEntryHdr *entry;
+    entry = JS_DHashTableOperate(m_headersInUse, (const void *) key, JS_DHASH_LOOKUP);
+    if (entry && JS_DHASH_ENTRY_IS_BUSY(entry))
+    {
+      MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
+      *result = element->mHdr;
+    }    
+#else
 		// it would be nice if we had a hash table that hashed 32 bit int's
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
 		nsCStringKey hashKey(strKey.GetBuffer());
 		// nsHashtable doesn't do an addref
 		*result = (nsIMsgDBHdr *) m_headersInUse->Get(&hashKey);
+#endif // USE_JSD_HASHTABLE
 		if (*result)
 		{
 			NS_ADDREF(*result);
@@ -174,8 +230,92 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 	return rv;
 }
 
+#ifdef USE_JSD_HASHTABLE
+JSDHashTableOps nsMsgDatabase::gMsgDBHashTableOps =
+{
+  JS_DHashAllocTable,
+  JS_DHashFreeTable,
+  GetKey,
+  HashKey,
+  MatchEntry,
+  MoveEntry,
+  ClearEntry,
+  JS_DHashFinalizeStub
+};
+
+const void* CRT_CALL
+nsMsgDatabase::GetKey(JSDHashTable* aTable, JSDHashEntryHdr* aEntry)
+{
+  MsgHdrHashElement* hdr = NS_REINTERPRET_CAST(MsgHdrHashElement*, aEntry);
+//  nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, hdr->mHdr);  // closed system, so this is ok
+  // ### could get the key from the hdr...
+//  return (const void *) msgHdr->m_messageKey;
+  return (const void *) hdr->mKey;
+}
+
+// HashKey is supposed to maximize entropy in the low order bits, and the key
+// as is, should do that.
+JSDHashNumber CRT_CALL
+nsMsgDatabase::HashKey(JSDHashTable* aTable, const void* aKey)
+{
+  return JSDHashNumber(aKey);
+}
+
+JSBool CRT_CALL
+nsMsgDatabase::MatchEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aEntry, const void* aKey)
+{
+  const MsgHdrHashElement* hdr = NS_REINTERPRET_CAST(const MsgHdrHashElement*, aEntry);
+  return aKey == (const void *) hdr->mKey; // ### or get the key from the hdr...
+}
+
+void CRT_CALL
+nsMsgDatabase::MoveEntry(JSDHashTable* aTable, const JSDHashEntryHdr* aFrom, JSDHashEntryHdr* aTo)
+{
+  const MsgHdrHashElement* from = NS_REINTERPRET_CAST(const MsgHdrHashElement*, aFrom);
+  MsgHdrHashElement* to = NS_REINTERPRET_CAST(MsgHdrHashElement*, aTo);
+  // ### eh? Why is this needed? I don't think we have a copy operator?
+  *to = *from;
+}
+
+void CRT_CALL
+nsMsgDatabase::ClearEntry(JSDHashTable* aTable, JSDHashEntryHdr* aEntry)
+{
+  MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, aEntry);
+  element->mHdr = nsnull; // eh? Need to release this or not?
+  element->mKey = nsMsgKey_None; // eh?
+}
+
+extern JS_PUBLIC_API(JSDHashNumber)
+JS_DHashStringKey(JSDHashTable *table, const void *key);
+
+extern JS_PUBLIC_API(void)
+JS_DHashFinalizeStub(JSDHashTable *table);
+
+#endif // USE_JSD_HASHTABLE
+
 nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key) 
 {
+#ifdef USE_JSD_HASHTABLE
+  if (!m_headersInUse)
+    m_headersInUse = JS_NewDHashTable(&gMsgDBHashTableOps, (void *) nsnull, sizeof(struct MsgHdrHashElement), MSG_HASH_SIZE );
+  if (m_headersInUse)
+  {
+		if (key == nsMsgKey_None)
+			hdr->GetMessageKey(&key);
+        JSDHashEntryHdr *entry = JS_DHashTableOperate(m_headersInUse, (void *) key, JS_DHASH_ADD);
+    if (!entry)
+      return NS_ERROR_OUT_OF_MEMORY; // XXX out of memory
+
+    MsgHdrHashElement* element = NS_REINTERPRET_CAST(MsgHdrHashElement*, entry);
+    element->mHdr = hdr;  
+    element->mKey = key;
+		// the hash table won't add ref, we'll do it ourselves
+		// stand for the addref that CreateMsgHdr normally does.
+		NS_ADDREF(hdr);
+    return NS_OK;
+  }
+
+#else
 	if (!m_headersInUse)
 		m_headersInUse = new nsHashtable;
 	if (m_headersInUse)
@@ -192,6 +332,7 @@ nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 
 		return NS_OK;
 	}
+#endif // USE_JSD_HASHTABLE
 	return NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -199,7 +340,12 @@ nsresult nsMsgDatabase::ClearUseHdrCache()
 {
 	if (m_headersInUse)
 	{
+#ifdef USE_JSD_HASHTABLE
+  JS_DHashTableFinish(m_headersInUse);
+  JS_DHashTableInit(m_headersInUse, &gMsgDBHashTableOps, nsnull, sizeof(struct MsgHdrHashElement), MSG_HASH_SIZE);
+#else
 		m_headersInUse->Reset();
+#endif // USE_JSD_HASHTABLE
 	}
 	return NS_OK;
 }
@@ -211,10 +357,14 @@ nsresult nsMsgDatabase::RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		if (key == nsMsgKey_None)
 			hdr->GetMessageKey(&key);
 
+#ifdef USE_JSD_HASHTABLE
+   JS_DHashTableOperate(m_headersInUse, (void *) key, JS_DHASH_REMOVE);
+#else
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
 		nsCStringKey hashKey(strKey.GetBuffer());
-		nsIMsgDBHdr *removedHdr = (nsIMsgDBHdr *) m_headersInUse->Remove(&hashKey); 
+		m_headersInUse->Remove(&hashKey); 
+#endif
 	}
 	return NS_OK;
 }
@@ -560,10 +710,10 @@ nsMsgDatabase::~nsMsgDatabase()
     if (m_newSet) {
 #ifdef DEBUG_MSGKEYSET
         char *str = nsnull;
-        str = m_newSet->Output();
-        if (str) {
+        nsresult rv = m_newSet->Output(&str);
+        if (NS_SUCCEEDED(rv) && str) {
             printf("setStr = %s on destroy\n",str);
-            delete [] str;
+            nsMemory::Free(str);
             str = nsnull;
         }
 #endif
@@ -1222,14 +1372,14 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 		msg->GetThreadParent(&threadParent);
 	}
 
-//	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
-	nsresult ret = RemoveHeaderFromDB(msgHdr);
-	
-	if (notify && NS_SUCCEEDED(ret))
+	if (notify /* && NS_SUCCEEDED(ret)*/)
 	{
 
 		NotifyKeyDeletedAll(key, threadParent, flags, instigator); // tell listeners
     }
+//	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
+	nsresult ret = RemoveHeaderFromDB(msgHdr);
+	
 
 	if (commit)
 		Commit(nsMsgDBCommitType::kLargeCommit);			// ### dmb is this a good time to commit?

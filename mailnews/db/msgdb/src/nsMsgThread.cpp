@@ -471,7 +471,10 @@ nsresult nsMsgThread::ReparentChildrenOf(nsMsgKey oldParent, nsMsgKey newParent,
 					// if the old parent was the root of the thread, then only the first child gets 
 					// promoted to root, and other children become children of the new root.
 					if (newParent == nsMsgKey_None)
+          {
+            SetThreadRootKey(curKey);
 						newParent = curKey;
+          }
 				}
 			}
 		}
@@ -591,6 +594,7 @@ protected:
 	PRInt32						mChildIndex;
     PRBool                      mDone;
 	PRBool						mNeedToPrefetch;
+  PRBool            mFoundChildren;
     nsMsgThreadEnumeratorFilter     mFilter;
     void*                       mClosure;
 };
@@ -598,7 +602,7 @@ protected:
 nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey startKey,
                                      nsMsgThreadEnumeratorFilter filter, void* closure)
     : mRowCursor(nsnull), mDone(PR_FALSE),
-      mFilter(filter), mClosure(closure)
+      mFilter(filter), mClosure(closure), mFoundChildren(PR_FALSE)
 {
     NS_INIT_REFCNT();
 	mThreadParentKey = startKey;
@@ -769,6 +773,10 @@ nsresult nsMsgThreadEnumerator::Prefetch()
 			else
 				NS_ASSERTION(PR_FALSE, "better be able to get child");
 		}
+    if (!mResultHdr && mThreadParentKey == mFirstMsgKey && !mFoundChildren && numChildren > 1)
+    {
+      mThread->ReparentMsgsWithInvalidParent(numChildren, mThreadParentKey);
+    }
 	}
 	if (!mResultHdr) 
 	{
@@ -782,6 +790,7 @@ nsresult nsMsgThreadEnumerator::Prefetch()
     }
 	else
 		mNeedToPrefetch = PR_FALSE;
+  mFoundChildren = PR_TRUE;
 
 #ifdef DEBUG_bienvenu1
 	nsMsgKey debugMsgKey;
@@ -816,17 +825,81 @@ NS_IMETHODIMP nsMsgThread::EnumerateMessages(nsMsgKey parentKey, nsISimpleEnumer
 	return ret;
 }
 
+nsresult nsMsgThread::ReparentMsgsWithInvalidParent(PRUint32 numChildren, nsMsgKey threadParentKey)
+{
+  nsresult ret = NS_OK;
+  // run through looking for messages that don't have a correct parent, 
+  // i.e., a parent that's in the thread!
+  for (PRInt32 childIndex = 0; childIndex < (PRInt32) numChildren; childIndex++)
+	{
+    nsCOMPtr <nsIMsgDBHdr> curChild;
+		ret  = GetChildHdrAt(childIndex, getter_AddRefs(curChild));
+		if (NS_SUCCEEDED(ret) && curChild)
+		{
+			nsMsgKey parentKey;
+      nsCOMPtr <nsIMsgDBHdr> parent;
+
+			curChild->GetThreadParent(&parentKey);
+
+      if (parentKey != nsMsgKey_None)
+      {
+        GetChild(parentKey, getter_AddRefs(parent));
+        if (!parent)
+          curChild->SetThreadParent(threadParentKey);
+      }
+    }
+  }
+  return ret;
+}
+
 NS_IMETHODIMP nsMsgThread::GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result)
 {
 	nsresult ret;
 	if (!result)
 		return NS_ERROR_NULL_POINTER;
 
+  *result = nsnull;
+
 	if (m_threadRootKey != nsMsgKey_None)
 	{
 		ret = GetChildHdrForKey(m_threadRootKey, result, resultIndex);
 		if (NS_SUCCEEDED(ret) && *result)
 			return ret;
+    else
+    {
+      printf("need to reset thread root key\n");
+		  PRUint32 numChildren;
+      nsMsgKey threadParentKey = nsMsgKey_None;
+		  GetNumChildren(&numChildren);
+
+      for (PRInt32 childIndex = 0; childIndex < (PRInt32) numChildren; childIndex++)
+		  {
+        nsCOMPtr <nsIMsgDBHdr> curChild;
+			  ret  = GetChildHdrAt(childIndex, getter_AddRefs(curChild));
+			  if (NS_SUCCEEDED(ret) && curChild)
+			  {
+				  nsMsgKey parentKey;
+
+				  curChild->GetThreadParent(&parentKey);
+          if (parentKey == nsMsgKey_None)
+          {
+            NS_ASSERTION(!(*result), "two top level msgs, not good");
+  				  curChild->GetMessageKey(&threadParentKey);
+            SetThreadRootKey(threadParentKey);
+            if (resultIndex)
+              *resultIndex = childIndex;
+            *result = curChild;
+            NS_ADDREF(*result);
+            ReparentMsgsWithInvalidParent(numChildren, threadParentKey);
+//            return NS_OK;
+          }
+        }
+      }
+      if (*result)
+      {
+        return NS_OK;
+      }
+    }
 		// if we can't get the thread root key, we'll just get the first hdr.
 		// there's a bug where sometimes we weren't resetting the thread root key 
 		// when removing the thread root key.

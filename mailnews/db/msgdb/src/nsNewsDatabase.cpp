@@ -351,7 +351,7 @@ NS_IMETHODIMP nsNewsDatabase::GetReadSetStr(char **setStr)
     if (!setStr) return NS_ERROR_NULL_POINTER;
     if (!m_readSet) return NS_ERROR_FAILURE;
 
-    *setStr = m_readSet->Output();
+    m_readSet->Output(setStr);
     if (!*setStr) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
