@@ -584,7 +584,12 @@ sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
     my $template = Param("newchangedmail");
     
     my $msg = PerformSubsts($template, \%substs);
-    open(SENDMAIL, "|/usr/lib/sendmail -ODeliveryMode=deferred -t") ||
+
+    my $sendmailparam = "-ODeliveryMode=deferred";
+    if (Param("sendmailnow")) {
+       my $sendmailparam = "";
+    }
+    open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t") ||
       die "Can't open sendmail";
     
     print SENDMAIL trim($msg) . "\n";
@@ -647,8 +652,12 @@ sub ProcessOneBug {
             if (!$regenerate) {
                 # Note: fixaddresses may result in a Cc: only.  This seems
                 # harmless.
+                my $sendmailparam = "-ODeliveryMode=deferred";
+                if (Param("sendmailnow")) {
+                    my $sendmailparam = "";
+                }
                 open(SENDMAIL, 
-                     "|/usr/lib/sendmail -ODeliveryMode=deferred -t") ||
+                     "|/usr/lib/sendmail $sendmailparam -t") ||
                        die "Can't open sendmail";
 
                 print SENDMAIL $msg;
