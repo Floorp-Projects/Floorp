@@ -76,12 +76,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsTimerImpl, nsITimer)
 PR_STATIC_CALLBACK(PRStatus) InitThread(void)
 {
   gThread = new TimerThread();
-  if (!gThread) return PR_FAILURE;
+  if (!gThread)
+    return PR_FAILURE;
 
-  gThread->AddRef();
+  NS_ADDREF(gThread);
 
   nsresult rv = gThread->Init();
-  if (NS_FAILED(rv)) return PR_FAILURE;
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(gThread);
+    return PR_FAILURE;
+  }
 
   return PR_SUCCESS;
 }
@@ -90,7 +94,8 @@ nsTimerImpl::nsTimerImpl() :
   mClosure(nsnull),
   mCallbackType(CALLBACK_TYPE_UNKNOWN),
   mFiring(PR_FALSE),
-  mCancelled(PR_FALSE)
+  mCancelled(PR_FALSE),
+  mTimeout(0)
 {
   NS_INIT_REFCNT();
   nsIThread::GetCurrent(getter_AddRefs(mCallingThread));
@@ -132,8 +137,7 @@ void nsTimerImpl::Shutdown()
     return;
 
   gThread->Shutdown();
-  gThread->Release();
-  gThread = nsnull;
+  NS_RELEASE(gThread);
 }
 
 
@@ -143,7 +147,8 @@ NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
                                 PRUint32 aPriority,
                                 PRUint32 aType)
 {
-  SetDelayInternal(aDelay);
+  if (!gThread)
+    return NS_ERROR_FAILURE;
 
   mCallback.c = aFunc;
   mCallbackType = CALLBACK_TYPE_FUNC;
@@ -153,8 +158,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
   mPriority = (PRUint8)aPriority;
   mType = (PRUint8)aType;
 
-  if (!gThread)
-    return NS_ERROR_FAILURE;
+  SetDelayInternal(aDelay);
 
   gThread->AddTimer(this);
 
@@ -166,7 +170,8 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
                                 PRUint32 aPriority,
                                 PRUint32 aType)
 {
-  SetDelayInternal(aDelay);
+  if (!gThread)
+    return NS_ERROR_FAILURE;
 
   mCallback.i = aCallback;
   NS_ADDREF(mCallback.i);
@@ -175,8 +180,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
   mPriority = (PRUint8)aPriority;
   mType = (PRUint8)aType;
 
-  if (!gThread)
-    return NS_ERROR_FAILURE;
+  SetDelayInternal(aDelay);
 
   gThread->AddTimer(this);
 
@@ -218,26 +222,33 @@ void nsTimerImpl::Process()
   if (mCancelled)
     return;
 
+  PRIntervalTime now = PR_IntervalNow();
 #ifdef DEBUG_TIMERS
-  PRIntervalTime now;
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    now = PR_IntervalNow();
     PRIntervalTime a = now - mStart; // actual delay in intervals
     PRUint32       b = PR_MillisecondsToInterval(mDelay); // expected delay in intervals
-    PRUint32       d = PR_IntervalToMilliseconds((a > b) ? a - b : 0); // delta in ms
+    PRUint32       d = PR_IntervalToMilliseconds((a > b) ? a - b : b - a); // delta in ms
     sDeltaSum += d;
     sDeltaSumSquared += double(d) * double(d);
     sNum++;
 
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] expected delay time %dms\n", this, mDelay));
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] actual delay time   %dms\n", this, PR_IntervalToMilliseconds(a)));
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]                     -------\n", this));
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]     delta           %dms\n", this, d));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] expected delay time %4dms\n", this, mDelay));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] actual delay time   %4dms\n", this, PR_IntervalToMilliseconds(a)));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] (mType is %d)       -------\n", this, mType));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p]     delta           %4dms\n", this, (a > b) ? (PRInt32)d : -(PRInt32)d));
 
     mStart = mStart2;
     mStart2 = 0;
   }
 #endif
+
+  PRIntervalTime timeout = mTimeout;
+  if (mType == NS_TYPE_REPEATING_PRECISE) {
+    // Precise repeating timers advance mTimeout by mDelay without fail before
+    // calling Process().
+    timeout -= mDelay;
+  }
+  gThread->UpdateFilter(mDelay, timeout, now);
 
   mFiring = PR_TRUE;
 
@@ -253,8 +264,9 @@ void nsTimerImpl::Process()
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] Took %dms to fire process timer callback\n", this,
-                                     PR_IntervalToMilliseconds(PR_IntervalNow() - now)));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG,
+           ("[this=%p] Took %dms to fire process timer callback\n",
+            this, PR_IntervalToMilliseconds(PR_IntervalNow() - now)));
   }
 #endif
 
@@ -279,8 +291,10 @@ void* handleMyEvent(MyEventType* event)
 {
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] time between Fire() and Process(): %dms\n",
-                                     event->e.owner, PR_IntervalToMilliseconds(PR_IntervalNow() - event->mInit)));
+    PRIntervalTime now = PR_IntervalNow();
+    PR_LOG(gTimerLog, PR_LOG_DEBUG,
+           ("[this=%p] time between Fire() and Process(): %dms\n",
+            event->e.owner, PR_IntervalToMilliseconds(now - event->mInit)));
   }
 #endif
   NS_STATIC_CAST(nsTimerImpl*, event->e.owner)->Process();
@@ -306,11 +320,11 @@ void nsTimerImpl::Fire()
 
   // initialize
   PL_InitEvent((PLEvent*)event, this,
-			         (PLHandleEventProc)handleMyEvent,
-			         (PLDestroyEventProc)destroyMyEvent);
+               (PLHandleEventProc)handleMyEvent,
+               (PLDestroyEventProc)destroyMyEvent);
 
-  // Since TimerThread addref'd 'this' for us, we don't need to addref here.  We will release
-  // in destroyMyEvent.
+  // Since TimerThread addref'd 'this' for us, we don't need to addref here.
+  // We will release in destroyMyEvent.
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
@@ -318,8 +332,8 @@ void nsTimerImpl::Fire()
   }
 #endif
 
-  // If this is a repeating precise timer, we need to calulate the time for the next timer to fire
-  // prior to making the callback.
+  // If this is a repeating precise timer, we need to calculate the time for
+  // the next timer to fire before we make the callback.
   if (mType == NS_TYPE_REPEATING_PRECISE) {
     SetDelayInternal(mDelay);
     if (gThread)
@@ -341,8 +355,10 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
   mDelay = aDelay;
 
   PRIntervalTime now = PR_IntervalNow();
+  if (mTimeout == 0 || mType == NS_TYPE_REPEATING_SLACK)
+    mTimeout = now;
 
-  mTimeout = now + PR_MillisecondsToInterval(mDelay);
+  mTimeout += PR_MillisecondsToInterval(aDelay);
 
   if (mTimeout < now) { // we overflowed
     mTimeout = PRIntervalTime(-1);

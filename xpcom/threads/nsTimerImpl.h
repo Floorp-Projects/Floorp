@@ -50,16 +50,8 @@
 #include "prlog.h"
 
 #if defined(PR_LOGGING)
-// stupid NS_DECL_LOG crap
-#ifdef PRLogModuleInfo
-#undef PRLogModuleInfo
-#endif
-#ifdef PR_NewLogModule
-#undef PR_NewLogModule
-#endif
-
 static PRLogModuleInfo *gTimerLog = PR_NewLogModule("nsTimerImpl");
-#define DEBUG_TIMERS
+#define DEBUG_TIMERS 1
 #else
 #undef DEBUG_TIMERS
 #endif
