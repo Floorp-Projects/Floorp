@@ -1,0 +1,22 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
+<?xml-stylesheet href="contentframe.css" type="text/css"?> 
+
+<!DOCTYPE window> 
+
+<window style="height:100%;width:100%"
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+
+<html:script src="contentframe.js" />
+
+<box id="container" align="horizontal" style="height: 100%; width: 100%">
+  <html:iframe class="sidebarframe" 
+               src="resource:/res/rdf/sidebar-browser.xul" />
+  <box align="vertical" style="height: 100%;">
+    <titledbutton id="grippy" class="grippy" open='true'
+                  onclick="resize();" flex="100%"/>
+  </box>
+  <html:iframe id="content" src="about:blank" flex="100%" />
+</box>
+</window>
