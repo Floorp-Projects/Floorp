@@ -199,6 +199,28 @@ function dumpObjectTree (o, recurse, compress, level)
     
 }
 
+function safeHTML(str)
+{
+    function replaceChars(ch)
+    {
+        switch (ch)
+        {
+            case "<":
+                return "&lt;";
+            
+            case ">":
+                return "&gt;";
+                    
+            case "&":
+                return "&amp;";
+        }
+
+        return "?";
+    };
+        
+    return String(str).replace(/[<>&]/g, replaceChars);
+}
+
 function getChildById (element, id)
 {
     var nl = element.getElementsByAttribute("id", id);

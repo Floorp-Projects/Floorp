@@ -72,6 +72,28 @@ function findDebuggerWindow ()
     return window;
 }
 
+function safeHTML(str)
+{
+    function replaceChars(ch)
+    {
+        switch (ch)
+        {
+            case "<":
+                return "&lt;";
+            
+            case ">":
+                return "&gt;";
+                    
+            case "&":
+                return "&amp;";
+        }
+
+        return "?";
+    };
+        
+    return String(str).replace(/[<>&]/g, replaceChars);
+}
+
 /* Command Line handler service */
 function CLineService()
 {}
@@ -198,7 +220,8 @@ function JSDProtocolHandler()
 
 JSDProtocolHandler.prototype.scheme = "x-jsd";
 JSDProtocolHandler.prototype.defaultPort = JSD_DEFAULT_PORT;
-JSDProtocolHandler.prototype.protocolFlags = nsIProtocolHandler.URI_NORELATIVE;
+JSDProtocolHandler.prototype.protocolFlags = nsIProtocolHandler.URI_NORELATIVE ||
+                                             nsIProtocolHandler.URI_NOAUTH;
 
 JSDProtocolHandler.prototype.allowPort =
 function jsdph_allowport (aPort, aScheme)
@@ -283,7 +306,7 @@ function jsdch_aopen (streamListener, context)
     
     var str =
         "<html><head><title>Error</title></head><body>Could not load &lt;<b>" +
-        this.URI.spec + "</b>&gt;<br>";
+        safeHTML(this.URI.spec) + "</b>&gt;<br>";
     
     if (!ary)
     {
@@ -291,8 +314,8 @@ function jsdch_aopen (streamListener, context)
     }
     else if (exception)
     {
-        str += "<b>Internal error: " + exception + "</b><br><pre>" + 
-            exception.stack;
+        str += "<b>Internal error: " + safeHTML(exception) + "</b><br><pre>" + 
+            safeHTML(exception.stack);
     }
     else
     {

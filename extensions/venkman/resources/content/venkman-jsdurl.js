@@ -184,7 +184,7 @@ function asyncOpenJSDURL (channel, streamListener, context)
         {
             response.start();
             response.append(getMsg(MSN_JSDURL_ERRPAGE,
-                                   [url,
+                                   [safeHTML(url),
                                     getMsg(MSN_ERR_JSDURL_TEMPLATE, name)]));
             response.end();
         }
@@ -220,7 +220,8 @@ function asyncOpenJSDURL (channel, streamListener, context)
     if (!parseResult)
     {
         response.start();
-        response.append(getMsg(MSN_JSDURL_ERRPAGE, [url, MSG_ERR_JSDURL_PARSE]));
+        response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(url),
+                                                    MSG_ERR_JSDURL_PARSE]));
         response.end();
         return;
     }
@@ -239,7 +240,7 @@ console.services["unknown"] =
 function svc_nosource (response, parsedURL)
 {
     response.start();
-    response.append(getMsg(MSN_JSDURL_ERRPAGE, [parsedURL.spec,
+    response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(parsedURL.spec),
                                                 MSG_ERR_JSDURL_NOSERVICE]));
     response.end();
 }
@@ -248,7 +249,7 @@ console.services["ppbuffer"] =
 function svc_nosource (response)
 {
     response.start();
-    response.append(getMsg(MSN_JSDURL_ERRPAGE, [parsedURL.spec,
+    response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(parsedURL.spec),
                                                 MSG_ERR_JSDURL_NOSOURCE]));
     response.end();
 }
@@ -860,14 +861,15 @@ function con_respondsourcetext (response, sourceText)
 
 console.services["pprint"] =
 function svc_pprint (response, parsedURL)
-{
+{    
     var err;
     
     if (!("scriptWrapper" in parsedURL))
     {
         err = getMsg(MSN_ERR_REQUIRED_PARAM, "scriptWrapper");
         response.start();
-        response.append(getMsg(MSN_JSDURL_ERRPAGE, [parsedURL.spec, err]));
+        response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(parsedURL.spec),
+                                                    err]));
         response.end();
         return;
     }
@@ -877,7 +879,8 @@ function svc_pprint (response, parsedURL)
         err = getMsg(MSN_ERR_INVALID_PARAM,
                          ["scriptWrapper", parsedURL.scriptWrapper]);
         response.start();
-        response.append(getMsg(MSN_JSDURL_ERRPAGE, [parsedURL.spec, err]));
+        response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(parsedURL.spec),
+                                                    err]));
         response.end();
         return;
     }
@@ -894,7 +897,7 @@ function svc_source (response, parsedURL)
         if (status != Components.results.NS_OK)
         {
             response.start();
-            response.append(getMsg(MSN_JSDURL_ERRPAGE, [parsedURL.spec,
+            response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(parsedURL.spec),
                                                         status]));
             response.end();
             display (getMsg (MSN_ERR_SOURCE_LOAD_FAILED,
@@ -910,7 +913,8 @@ function svc_source (response, parsedURL)
     {
         var err = getMsg(MSN_ERR_REQUIRED_PARAM, "location");
         response.start();
-        response.append(getMsg(MSN_JSDURL_ERRPAGE, [parsedURL.spec, err]));
+        response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(parsedURL.spec),
+                                                    err]));
         response.end();
         return;
     }
@@ -943,7 +947,7 @@ function svc_source (response, parsedURL)
     if (!sourceText)
     {
         response.start();
-        response.append(getMsg(MSN_JSDURL_ERRPAGE, [parsedURL.spec,
+        response.append(getMsg(MSN_JSDURL_ERRPAGE, [safeHTML(parsedURL.spec),
                                                     MSG_ERR_JSDURL_SOURCETEXT]));
         response.end();
         return;
