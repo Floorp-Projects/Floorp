@@ -85,7 +85,10 @@ void CHTMLToken::SetStringValue(const char* name){
  *  @return nsString reference to internal string value
  */
 nsString& CHTMLToken::GetStringValueXXX(void) {
-  if((eHTMLTag_unknown<mTypeID) && (eHTMLTag_userdefined!=mTypeID)) {
+
+  int x=eHTMLTag_userdefined;
+
+  if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
       mTextValue = nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID);
     }
@@ -120,7 +123,9 @@ CStartToken::CStartToken(const nsString& aString) : CHTMLToken(aString) {
 }
 
 CStartToken::CStartToken(const nsString& aName,eHTMLTags aTag) : CHTMLToken(aName,aTag) {
-  mTypeID=aTag;
+  mAttributed=PR_FALSE;
+  mEmpty=PR_FALSE;
+  mOrigin=-1;
 }
 
 /**
