@@ -172,17 +172,14 @@ static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **me
 	if(!messageView || !database)
 		return NS_ERROR_NULL_POINTER;
 
-	nsIRDFService* gRDFService = nsnull;
 	nsIRDFDataSource *view, *datasource;
 	nsresult rv;
-	rv = nsServiceManager::GetService(kRDFServiceCID,
-												nsIRDFService::GetIID(),
-												(nsISupports**) &gRDFService);
+	NS_WITH_SERVICE(nsIRDFService, gRDFService, kRDFServiceCID, &rv);
+
 	if(NS_SUCCEEDED(rv))
 	{
 		rv = gRDFService->GetDataSource("rdf:mail-messageview", &view);
 		rv = NS_SUCCEEDED(rv) && gRDFService->GetDataSource("rdf:mailnewsfolders", &datasource);
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
 	}
 
 	if(!NS_SUCCEEDED(rv))
@@ -209,8 +206,6 @@ static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **me
 	NS_IF_RELEASE(datasource);
 
 	return rv;
-
-
 }
 
 //
