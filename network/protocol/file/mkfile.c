@@ -109,7 +109,7 @@ PRIVATE int32 net_ProcessFile (ActiveEntry * cur_entry);
 
 typedef struct _FILEConData {
     XP_File           file_ptr;
-    XP_Dir            dir_ptr;
+    PRDir            *dir_ptr;
     net_FileStates    next_state;
     NET_StreamClass * stream;
     char            * filename;
@@ -126,37 +126,26 @@ typedef struct _FILEConData {
 	int32              range_length;  /* the length of the current byte range */
 } FILEConData;
 
-#define CD_FILE_PTR       connection_data->file_ptr
-#define CD_DIR_PTR        connection_data->dir_ptr
-#define CD_NEXT_STATE     connection_data->next_state
-#define CD_STREAM         connection_data->stream
-#define CD_FILENAME       connection_data->filename
-#define CD_IS_DIR         connection_data->is_dir
-#define CD_SORT_BASE      connection_data->sort_base
-#define CD_PAUSE_FOR_READ connection_data->pause_for_read
-#define CD_IS_CACHE_FILE  connection_data->is_cache_file
-
 #define CE_WINDOW_ID      cur_entry->window_id
-#define CE_URL_S          cur_entry->URL_s
 #define CE_STATUS         cur_entry->status
 #define CE_SOCK           cur_entry->socket
 #define CE_BYTES_RECEIVED cur_entry->bytes_received
 #define CE_FORMAT_OUT     cur_entry->format_out
-#define CD_DESTROY_GRAPH_PROGRESS   connection_data->destroy_graph_progress
-#define CD_ORIGINAL_CONTENT_LENGTH  connection_data->original_content_length
-#define CD_BYTERANGE_STRING         connection_data->byterange_string
-#define CD_RANGE_LENGTH             connection_data->range_length
+#define CD_DESTROY_GRAPH_PROGRESS   con_data->destroy_graph_progress
+#define CD_ORIGINAL_CONTENT_LENGTH  con_data->original_content_length
+#define CD_BYTERANGE_STRING         con_data->byterange_string
+#define CD_RANGE_LENGTH             con_data->range_length
 
-#define PUTS(s)           (*connection_data->stream->put_block) \
-                                 (connection_data->stream, s, PL_strlen(s))
-#define IS_WRITE_READY    (*connection_data->stream->is_write_ready) \
-                                 (connection_data->stream)
-#define PUTB(b,l)         (*connection_data->stream->put_block) \
-                                (connection_data->stream, b, l)
-#define COMPLETE_STREAM   (*connection_data->stream->complete) \
-                                 (connection_data->stream)
-#define ABORT_STREAM(s)   (*connection_data->stream->abort) \
-                                 (connection_data->stream, s)
+#define PUTS(s)           (*con_data->stream->put_block) \
+                                 (con_data->stream, s, PL_strlen(s))
+#define IS_WRITE_READY    (*con_data->stream->is_write_ready) \
+                                 (con_data->stream)
+#define PUTB(b,l)         (*con_data->stream->put_block) \
+                                (con_data->stream, b, l)
+#define COMPLETE_STREAM   (*con_data->stream->complete) \
+                                 (con_data->stream)
+#define ABORT_STREAM(s)   (*con_data->stream->abort) \
+                                 (con_data->stream, s)
 
 /* try and open the URL path as a normal file
  * if it fails set the next state to try and open
@@ -165,39 +154,39 @@ typedef struct _FILEConData {
 PRIVATE int
 net_check_file_type (ActiveEntry * cur_entry)
 {
-    FILEConData * connection_data = (FILEConData *) cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *) cur_entry->con_data;
     XP_StatStruct stat_entry;
 
-	TRACEMSG(("Looking for file: %s", CD_FILENAME));
+	TRACEMSG(("Looking for file: %s", con_data->filename));
 
 	/* larubbio added xpSARCache check */
-    if(-1 == XP_Stat (CD_FILENAME, 
+    if(-1 == XP_Stat (con_data->filename, 
 				&stat_entry, 
-				CD_IS_CACHE_FILE ? 
-					(CE_URL_S->ext_cache_file ? 
-					(CE_URL_S->SARCache ? xpSARCache : xpExtCache) : xpCache) : xpURL))
+				con_data->is_cache_file ? 
+					(cur_entry->URL_s->ext_cache_file ? 
+					(cur_entry->URL_s->SARCache ? xpSARCache : xpExtCache) : xpCache) : xpURL))
 	  {
-		if(CE_URL_S->method == URL_PUT_METHOD)
+		if(cur_entry->URL_s->method == URL_PUT_METHOD)
 	  	  {
-			CD_NEXT_STATE = NET_PUT_FILE;
+			con_data->next_state = NET_PUT_FILE;
 			return(0);
 	  	  }
-		else if(CE_URL_S->method == URL_MKDIR_METHOD)
+		else if(cur_entry->URL_s->method == URL_MKDIR_METHOD)
 	  	  {
-			CD_NEXT_STATE = NET_MAKE_DIRECTORY;
+			con_data->next_state = NET_MAKE_DIRECTORY;
 			return(0);
 	  	  }
 		
 
-		CE_URL_S->error_msg = NET_ExplainErrorDetails(
+		cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(
 											MK_UNABLE_TO_LOCATE_FILE,
- 											*CD_FILENAME ? CD_FILENAME : "/");
+ 											*con_data->filename ? con_data->filename : "/");
         return(MK_UNABLE_TO_LOCATE_FILE);
 	  }
 
-	if(!CD_IS_CACHE_FILE)
+	if(!con_data->is_cache_file)
 	  {
-		CE_URL_S->last_modified = stat_entry.st_mtime;
+		cur_entry->URL_s->last_modified = stat_entry.st_mtime;
 	  }
 
     if(S_ISDIR(stat_entry.st_mode))
@@ -205,36 +194,36 @@ net_check_file_type (ActiveEntry * cur_entry)
         /* if the current address doesn't end with a
          * slash, add it now.
          */
-        if(CE_URL_S->address[PL_strlen(CE_URL_S->address)-1] != '/')
-            StrAllocCat(CE_URL_S->address, "/");
+        if(cur_entry->URL_s->address[PL_strlen(cur_entry->URL_s->address)-1] != '/')
+            StrAllocCat(cur_entry->URL_s->address, "/");
 
-		CE_URL_S->is_directory = TRUE;
-        CD_IS_DIR = TRUE;
+		cur_entry->URL_s->is_directory = TRUE;
+        con_data->is_dir = TRUE;
 	  }
 	else
 	  {
-        CE_URL_S->content_length = (int32) stat_entry.st_size;
+        cur_entry->URL_s->content_length = (int32) stat_entry.st_size;
 	  }
 
-	if(CD_IS_CACHE_FILE)
+	if(con_data->is_cache_file)
 	  {
 		/* if we are looking for a cache file then
 		 * we are always looking to do a GET of
 		 * the file regardless of the method in
 		 * the URL_s
 		 */
-   		CD_NEXT_STATE = NET_FILE_SETUP_STREAM;
+   		con_data->next_state = NET_FILE_SETUP_STREAM;
 	  }
-	else switch(CE_URL_S->method)
+	else switch(cur_entry->URL_s->method)
 	  {
 		case URL_PUT_METHOD:
 			{
 			  char * msg;
-			  msg = PR_smprintf("Overwrite file %s?", CD_FILENAME);
+			  msg = PR_smprintf("Overwrite file %s?", con_data->filename);
 			  if(FE_Confirm(CE_WINDOW_ID, msg))
-				  CD_NEXT_STATE = NET_PUT_FILE;
+				  con_data->next_state = NET_PUT_FILE;
 			  else
-				  CD_NEXT_STATE = NET_FILE_DONE;
+				  con_data->next_state = NET_FILE_DONE;
 			}
 			break;
 
@@ -242,42 +231,42 @@ net_check_file_type (ActiveEntry * cur_entry)
 			/* error, can't create a directory over
 		 	 * an existing file or directory
 		 	 */
-			CE_URL_S->error_msg = NET_ExplainErrorDetails(
+			cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(
 												MK_MKDIR_FILE_ALREADY_EXISTS,
-												CD_FILENAME);
+												con_data->filename);
 			return(MK_MKDIR_FILE_ALREADY_EXISTS);
 	
 		case URL_HEAD_METHOD:
 			/* we just need the relavent file info.
 			 * it is currently filled into the URL struct
 			 */
-    		CD_NEXT_STATE = NET_FILE_DONE;
+    		con_data->next_state = NET_FILE_DONE;
 			break;
 
 		case URL_MOVE_METHOD:
-			CD_NEXT_STATE = NET_MOVE_FILE;
+			con_data->next_state = NET_MOVE_FILE;
 			break;
 
 		case URL_DELETE_METHOD:
-			CD_NEXT_STATE = NET_DELETE_FILE;
+			con_data->next_state = NET_DELETE_FILE;
 			break;
 	
 		case URL_GET_METHOD:
-    		CD_NEXT_STATE = NET_FILE_SETUP_STREAM;
+    		con_data->next_state = NET_FILE_SETUP_STREAM;
 			break;
 
         case URL_INDEX_METHOD:
-            if(!CE_URL_S->is_directory)
+            if(!cur_entry->URL_s->is_directory)
               {
-                CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_NOT_A_DIRECTORY, CD_FILENAME);
+                cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_NOT_A_DIRECTORY, con_data->filename);
                 return(MK_NOT_A_DIRECTORY);
               }
-            CD_NEXT_STATE = NET_FILE_SETUP_STREAM;
+            con_data->next_state = NET_FILE_SETUP_STREAM;
             break;
 
 		default:
 			PR_ASSERT(0);
-    		CD_NEXT_STATE = NET_FILE_DONE;
+    		con_data->next_state = NET_FILE_DONE;
 			break;
 	  }
 			
@@ -432,9 +421,9 @@ net_make_directory (ActiveEntry * ce)
 PRIVATE int
 net_file_setup_stream(ActiveEntry * cur_entry)
 {
-    FILEConData * connection_data = (FILEConData *) cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *) cur_entry->con_data;
 
-    if(CD_IS_DIR)
+    if(con_data->is_dir)
       {        
 	char * pUrl ;
 	int status;
@@ -442,32 +431,32 @@ net_file_setup_stream(ActiveEntry * cur_entry)
 	status = PREF_CopyCharPref("protocol.mimefor.file",&pUrl);
 
 	if (status >= 0 && pUrl) {
-		StrAllocCopy(CE_URL_S->content_type, pUrl);
+		StrAllocCopy(cur_entry->URL_s->content_type, pUrl);
 		PR_Free(pUrl);
 	} else {
- 		StrAllocCopy(CE_URL_S->content_type, APPLICATION_HTTP_INDEX);
+ 		StrAllocCopy(cur_entry->URL_s->content_type, APPLICATION_HTTP_INDEX);
 	}
 
-        CD_STREAM = NET_StreamBuilder(CE_FORMAT_OUT, CE_URL_S, CE_WINDOW_ID);
+        con_data->stream = NET_StreamBuilder(CE_FORMAT_OUT, cur_entry->URL_s, CE_WINDOW_ID);
 
-        if(!CD_STREAM)
+        if(!con_data->stream)
 		  {
-		    CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONVERT);
+		    cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONVERT);
             return(MK_UNABLE_TO_CONVERT);
 		  }
 
 #ifdef MOZILLA_CLIENT
-		GH_UpdateGlobalHistory(CE_URL_S);
+		GH_UpdateGlobalHistory(cur_entry->URL_s);
 #endif /* MOZILLA_CLIENT */
 
-        CD_NEXT_STATE = NET_OPEN_DIRECTORY;
+        con_data->next_state = NET_OPEN_DIRECTORY;
       }
 	else
       {
 	    /* 
 	     * don't open the stream yet for files
 	     */
-        CD_NEXT_STATE = NET_OPEN_FILE;
+        con_data->next_state = NET_OPEN_FILE;
       }
 
     return(0);  /* OK */
@@ -476,22 +465,22 @@ net_file_setup_stream(ActiveEntry * cur_entry)
 PRIVATE int
 net_open_file (ActiveEntry * cur_entry)
 {
-    FILEConData * connection_data = (FILEConData *) cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *) cur_entry->con_data;
 
-    TRACEMSG(("MKFILE: Trying to open: %s\n",CD_FILENAME));
+    TRACEMSG(("MKFILE: Trying to open: %s\n",con_data->filename));
 
-    if((CD_FILE_PTR = XP_FileOpen(CD_FILENAME, 
-								   (CD_IS_CACHE_FILE ? 
-									 (CE_URL_S->ext_cache_file ? 
-									   (CE_URL_S->SARCache ? xpSARCache : xpExtCache) : xpCache) : xpURL),
+    if((con_data->file_ptr = XP_FileOpen(con_data->filename, 
+								   (con_data->is_cache_file ? 
+									 (cur_entry->URL_s->ext_cache_file ? 
+									   (cur_entry->URL_s->SARCache ? xpSARCache : xpExtCache) : xpCache) : xpURL),
 									     XP_FILE_READ_BIN)) != NULL)
 	  {
-        CD_NEXT_STATE = NET_READ_FILE_CHUNK;
+        con_data->next_state = NET_READ_FILE_CHUNK;
 	  }
     else
 	  {
-		CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_OPEN_FILE, 
-													  CD_FILENAME);
+		cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_OPEN_FILE, 
+													  con_data->filename);
 
 		/* if errno is equal to "Too many open files"
 		 * return a special error
@@ -504,29 +493,29 @@ net_open_file (ActiveEntry * cur_entry)
         	return(MK_UNABLE_TO_OPEN_FILE);
 	  }
 
-    if (!CE_URL_S->load_background)
+    if (!cur_entry->URL_s->load_background)
         NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_READFILE));
 
-    /* CE_SOCK = XP_Fileno(CD_FILE_PTR); */
+    /* CE_SOCK = XP_Fileno(con_data->file_ptr); */
 	CE_SOCK = NULL;
     cur_entry->local_file = TRUE;
-    NET_SetFileReadSelect(CE_WINDOW_ID, XP_Fileno(CD_FILE_PTR)); 
+    NET_SetFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr)); 
 
 	/* @@@ now that we have determined that it is a local file
 	 * set URL_s->cache_file so that the streams think
 	 * that this file came from the cache
 	 */
-    StrAllocCopy(CE_URL_S->cache_file, CD_FILENAME);
+    StrAllocCopy(cur_entry->URL_s->cache_file, con_data->filename);
 
-    CD_PAUSE_FOR_READ = TRUE;
+    con_data->pause_for_read = TRUE;
 
-	CD_NEXT_STATE = NET_SETUP_FILE_STREAM;
+	con_data->next_state = NET_SETUP_FILE_STREAM;
 
-    if (!CE_URL_S->load_background) {
-        FE_GraphProgressInit(CE_WINDOW_ID, CE_URL_S, CE_URL_S->content_length);
+    if (!cur_entry->URL_s->load_background) {
+        FE_GraphProgressInit(CE_WINDOW_ID, cur_entry->URL_s, cur_entry->URL_s->content_length);
         CD_DESTROY_GRAPH_PROGRESS = TRUE;  /* we will need to destroy it */
     }
-    CD_ORIGINAL_CONTENT_LENGTH = CE_URL_S->content_length;
+    CD_ORIGINAL_CONTENT_LENGTH = cur_entry->URL_s->content_length;
 
     return(0);  /* ok */
 }
@@ -542,30 +531,30 @@ extern int IMAP_InitializeImapFeData (ActiveEntry * cur_entry);
 PRIVATE int
 net_setup_file_stream (ActiveEntry * cur_entry)
 {
-    FILEConData * connection_data = (FILEConData *) cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *) cur_entry->con_data;
 	int32 count;
 
 	/* set up the stream now
 	 */
-	TRACEMSG(("Trying to look at content type: %s",CE_URL_S->content_type));
-    if(!CE_URL_S->content_type)
+	TRACEMSG(("Trying to look at content type: %s",cur_entry->URL_s->content_type));
+    if(!cur_entry->URL_s->content_type)
 	  {
 		int img_type;
 		
 	    /* read the first chunk of the file
 	     */
-        count = XP_FileRead(NET_Socket_Buffer, NET_Socket_Buffer_Size, CD_FILE_PTR);
+        count = XP_FileRead(NET_Socket_Buffer, NET_Socket_Buffer_Size, con_data->file_ptr);
     
         if(!count)
           {
-            NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(CD_FILE_PTR));
+            NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr));
             NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_FILEZEROLENGTH));
-            XP_FileClose(CD_FILE_PTR);
+            XP_FileClose(con_data->file_ptr);
 			CE_SOCK = NULL;
-            CD_FILE_PTR = 0;
-            CD_NEXT_STATE = NET_FILE_ERROR_DONE;
-		    CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_ZERO_LENGTH_FILE, 
-												          CD_FILENAME);
+            con_data->file_ptr = 0;
+            con_data->next_state = NET_FILE_ERROR_DONE;
+		    cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_ZERO_LENGTH_FILE, 
+												          con_data->filename);
             return(MK_ZERO_LENGTH_FILE);
           }
     
@@ -576,20 +565,20 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 			switch(img_type)
 			  {
 				case IL_GIF:
-            		StrAllocCopy(CE_URL_S->content_type, IMAGE_GIF);
+            		StrAllocCopy(cur_entry->URL_s->content_type, IMAGE_GIF);
 					break;
 				case IL_XBM:
-            		StrAllocCopy(CE_URL_S->content_type, IMAGE_XBM);
+            		StrAllocCopy(cur_entry->URL_s->content_type, IMAGE_XBM);
 					break;
 				case IL_JPEG:
-            		StrAllocCopy(CE_URL_S->content_type, IMAGE_JPG);
+            		StrAllocCopy(cur_entry->URL_s->content_type, IMAGE_JPG);
 					break;
                 		case IL_PNG:
-            		StrAllocCopy(CE_URL_S->content_type, IMAGE_PNG);
+            		StrAllocCopy(cur_entry->URL_s->content_type, IMAGE_PNG);
 					break;
 
 				case IL_PPM:
-            		StrAllocCopy(CE_URL_S->content_type, IMAGE_PPM);
+            		StrAllocCopy(cur_entry->URL_s->content_type, IMAGE_PPM);
 					break;
 				default:
 					assert(0);  /* should NEVER get this!! */
@@ -604,31 +593,31 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 		  	char *	macType, *macEncoding;
 		  	Bool	useDefault;
 
-			FE_FileType(CE_URL_S->address, &useDefault, &macType, &macEncoding);
+			FE_FileType(cur_entry->URL_s->address, &useDefault, &macType, &macEncoding);
 			if (useDefault)
 			{
 #endif
-				NET_cinfo * type = NET_cinfo_find_type(CE_URL_S->address);
-				NET_cinfo * enc = NET_cinfo_find_enc(CE_URL_S->address);
+				NET_cinfo * type = NET_cinfo_find_type(cur_entry->URL_s->address);
+				NET_cinfo * enc = NET_cinfo_find_enc(cur_entry->URL_s->address);
 
 #if defined(XP_MAC) 
 				if (macType)
 					PR_Free(macType);
 #endif				
 
-				StrAllocCopy(CE_URL_S->content_type, type->type); 
-				StrAllocCopy(CE_URL_S->content_encoding, enc->encoding); 
+				StrAllocCopy(cur_entry->URL_s->content_type, type->type); 
+				StrAllocCopy(cur_entry->URL_s->content_encoding, enc->encoding); 
 				
 	
 				if(type->is_default && NET_ContainsHTML(NET_Socket_Buffer, count))
-	            	StrAllocCopy(CE_URL_S->content_type, TEXT_HTML);
+	            	StrAllocCopy(cur_entry->URL_s->content_type, TEXT_HTML);
 
 #if defined(XP_MAC)
 			}
 			else
 			{
-				CE_URL_S->content_type = macType;
-				CE_URL_S->content_encoding = macEncoding;
+				cur_entry->URL_s->content_type = macType;
+				cur_entry->URL_s->content_encoding = macEncoding;
 			}
 #endif
 		  }
@@ -687,8 +676,8 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 			 * the last bytes of a file.  For
 			 * instance  http://host/dir/foo;byterange=-500
 			 */
-			low = CE_URL_S->content_length-(atoi(CD_BYTERANGE_STRING+1));
-			high = CE_URL_S->content_length;
+			low = cur_entry->URL_s->content_length-(atoi(CD_BYTERANGE_STRING+1));
+			high = cur_entry->URL_s->content_length;
 		  }
 		else if(high < 1)
 		  {
@@ -697,23 +686,23 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 			 * till the end of the file.  For
 			 * instance  http://host/dir/foo;byterange=500-
 			 */
-			high = CE_URL_S->content_length;
+			high = cur_entry->URL_s->content_length;
 		  }
 
-		if(low >= CE_URL_S->content_length)
+		if(low >= cur_entry->URL_s->content_length)
 		  {
 			/* error to have the low byte range be larger than
 			 * the file
 			 */
 			return(0);
 		  }
-		else if(high >= CE_URL_S->content_length)
+		else if(high >= cur_entry->URL_s->content_length)
 		  {
-			high = CE_URL_S->content_length;
+			high = cur_entry->URL_s->content_length;
 		  }
 
-		CE_URL_S->low_range = low;
-		CE_URL_S->high_range = high;
+		cur_entry->URL_s->low_range = low;
+		cur_entry->URL_s->high_range = high;
 
 		CD_RANGE_LENGTH = (high-low)+1;
 
@@ -725,7 +714,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 
 	if (CLEAR_CACHE_BIT(CE_FORMAT_OUT) == FO_PRESENT)
 	{
-	  if (NET_URL_Type(CE_URL_S->address) == NEWS_TYPE_URL)
+	  if (NET_URL_Type(cur_entry->URL_s->address) == NEWS_TYPE_URL)
 	  {
 #ifdef MOZILLA_CLIENT
 #ifdef MOZ_MAIL_NEWS
@@ -741,7 +730,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 		PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
 	  }
-	  else if (!PL_strncmp(CE_URL_S->address, "IMAP://", 7))
+	  else if (!PL_strncmp(cur_entry->URL_s->address, "IMAP://", 7))
 	  {
 #ifdef MOZILLA_CLIENT
 #ifdef MOZ_MAIL_NEWS
@@ -759,16 +748,16 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 	  }
 	}
 
-    CD_STREAM = NET_StreamBuilder(CE_FORMAT_OUT, CE_URL_S, CE_WINDOW_ID);
+    con_data->stream = NET_StreamBuilder(CE_FORMAT_OUT, cur_entry->URL_s, CE_WINDOW_ID);
 
-    if(!CD_STREAM)
+    if(!con_data->stream)
 	  {
-		CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONVERT);
+		cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONVERT);
         return(MK_UNABLE_TO_CONVERT);
 	  }
 
 #ifdef MOZILLA_CLIENT
-	GH_UpdateGlobalHistory(CE_URL_S);
+	GH_UpdateGlobalHistory(cur_entry->URL_s);
 #endif /* MOZILLA_CLIENT */
 
 	/* seek back to the beginning so that
@@ -778,10 +767,10 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 	 * this also seeks to the beginning of the range that we
 	 * are going to send
  	 */
-	XP_FileSeek(CD_FILE_PTR, CE_URL_S->low_range, SEEK_SET);
+	XP_FileSeek(con_data->file_ptr, cur_entry->URL_s->low_range, SEEK_SET);
 
-	CD_NEXT_STATE = NET_READ_FILE_CHUNK;
-    CD_PAUSE_FOR_READ = TRUE;
+	con_data->next_state = NET_READ_FILE_CHUNK;
+    con_data->pause_for_read = TRUE;
 
     return(CE_STATUS);  /* ok */
 }
@@ -789,32 +778,51 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 PRIVATE int
 net_open_directory (ActiveEntry * cur_entry)
 {
-    FILEConData * connection_data = (FILEConData *) cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *) cur_entry->con_data;
+#ifdef XP_WIN
+    char *tmpDirName = NULL;
+#endif
 
-	TRACEMSG(("Trying to open directory: %s", CD_FILENAME));
+	TRACEMSG(("Trying to open directory: %s", con_data->filename));
 
-    if((CD_DIR_PTR = XP_OpenDir (CD_FILENAME, xpURL)) != NULL)
+#ifdef XP_WIN
+    /* nspr doesn't like our preceeding slash. */
+    tmpDirName = (char*) PR_Malloc(PL_strlen(con_data->filename));
+    if (!tmpDirName)
+        return MK_UNABLE_TO_OPEN_FILE;
+    PL_strcpy(tmpDirName, con_data->filename + 1);
+
+    if((con_data->dir_ptr = PR_OpenDir (tmpDirName)) != NULL)
+#else
+    if((con_data->dir_ptr = PR_OpenDir (con_data->filename)) != NULL)
+#endif
 	  {
-        CD_NEXT_STATE = NET_READ_DIRECTORY_CHUNK;
+        con_data->next_state = NET_READ_DIRECTORY_CHUNK;
 	  }
     else
 	  {
-		CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_OPEN_FILE,
-													  CD_FILENAME);
+#ifdef XP_WIN
+        PR_Free(tmpDirName);
+#endif
+		cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_OPEN_FILE,
+													  con_data->filename);
         return(MK_UNABLE_TO_OPEN_FILE);
 	  }
+#ifdef XP_WIN
+    PR_Free(tmpDirName);
+#endif
 
-    CD_IS_DIR = TRUE;
+    con_data->is_dir = TRUE;
 
-    FE_GraphProgressInit(CE_WINDOW_ID, CE_URL_S, CE_URL_S->content_length);
+    FE_GraphProgressInit(CE_WINDOW_ID, cur_entry->URL_s, cur_entry->URL_s->content_length);
     CD_DESTROY_GRAPH_PROGRESS = TRUE;  /* we will need to destroy it */
-    CD_ORIGINAL_CONTENT_LENGTH = CE_URL_S->content_length;
+    CD_ORIGINAL_CONTENT_LENGTH = cur_entry->URL_s->content_length;
     NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_READDIR));
 
     /* make sure the last character isn't a slash
      */
-    if(CD_FILENAME[PL_strlen(CD_FILENAME)-1] == '/')
-        CD_FILENAME[PL_strlen(CD_FILENAME)-1] = '\0';
+    if(con_data->filename[PL_strlen(con_data->filename)-1] == '/')
+        con_data->filename[PL_strlen(con_data->filename)-1] = '\0';
 
     return(0);  /* ok */
 }
@@ -824,14 +832,14 @@ net_open_directory (ActiveEntry * cur_entry)
 PRIVATE int
 net_read_file_chunk(ActiveEntry * cur_entry)
 {
-    FILEConData * connection_data = (FILEConData *) cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *) cur_entry->con_data;
     int count;
 	int32 read_size = IS_WRITE_READY;
 
     /* If the stream sink doesn't want any data yet, do nothing. */
     if (read_size == 0)
       {
-        CD_PAUSE_FOR_READ = TRUE;
+        con_data->pause_for_read = TRUE;
         return NET_READ_FILE_CHUNK;
       }
 
@@ -840,45 +848,45 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 	if(CD_RANGE_LENGTH)
 		read_size = MIN(read_size, CD_RANGE_LENGTH-CE_BYTES_RECEIVED);
 	
-    count = XP_FileRead(NET_Socket_Buffer, read_size, CD_FILE_PTR);
+    count = XP_FileRead(NET_Socket_Buffer, read_size, con_data->file_ptr);
 
     if(count < 1 || (CD_RANGE_LENGTH && CE_BYTES_RECEIVED >= CD_RANGE_LENGTH))
       {
-		if(CE_URL_S->real_content_length > CE_URL_S->content_length)
+		if(cur_entry->URL_s->real_content_length > cur_entry->URL_s->content_length)
 		  {
 			/* this is a case of a partial cache file.
 			 * we need to fall out of here and
 			 * get the rest of the file from the
 			 * network
 			 */
-			cur_entry->save_stream = CD_STREAM;
-			CD_STREAM = NULL;
-			NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(CD_FILE_PTR));
-            if (!CE_URL_S->load_background)
+			cur_entry->save_stream = con_data->stream;
+			con_data->stream = NULL;
+			NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr));
+            if (!cur_entry->URL_s->load_background)
                 NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_FILEDONE));
-        	XP_FileClose(CD_FILE_PTR);
+        	XP_FileClose(con_data->file_ptr);
 			CE_SOCK = NULL;
-        	CD_FILE_PTR = 0;
-        	CD_NEXT_STATE = NET_FILE_FREE;
+        	con_data->file_ptr = 0;
+        	con_data->next_state = NET_FILE_FREE;
         	return(MK_GET_REST_OF_PARTIAL_FILE_FROM_NETWORK);
 		  }
 		else if(CD_BYTERANGE_STRING && *CD_BYTERANGE_STRING)
 		  {
 			/* go get more byte ranges */
 			COMPLETE_STREAM;
-			CD_NEXT_STATE = NET_SETUP_FILE_STREAM;
-            if (!CE_URL_S->load_background)
+			con_data->next_state = NET_SETUP_FILE_STREAM;
+            if (!cur_entry->URL_s->load_background)
                 NET_Progress(CE_WINDOW_ID, XP_GetString( XP_READING_SEGMENT ) );
 			return(0);
 		  }
 
-		NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(CD_FILE_PTR));
-        if (!CE_URL_S->load_background)
+		NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr));
+        if (!cur_entry->URL_s->load_background)
             NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_FILEDONE));
-        XP_FileClose(CD_FILE_PTR);
+        XP_FileClose(con_data->file_ptr);
 		CE_SOCK = NULL;
-        CD_FILE_PTR = 0;
-        CD_NEXT_STATE = NET_FILE_DONE;
+        con_data->file_ptr = 0;
+        con_data->next_state = NET_FILE_DONE;
         return(MK_DATA_LOADED);
       }
 
@@ -886,11 +894,11 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 
     CE_STATUS = PUTB(NET_Socket_Buffer, count);
 
-    if (!CE_URL_S->load_background)
-        FE_GraphProgress(CE_WINDOW_ID, CE_URL_S, CE_BYTES_RECEIVED, count,
-                         CE_URL_S->content_length);
+    if (!cur_entry->URL_s->load_background)
+        FE_GraphProgress(CE_WINDOW_ID, cur_entry->URL_s, CE_BYTES_RECEIVED, count,
+                         cur_entry->URL_s->content_length);
 
-    CD_PAUSE_FOR_READ = TRUE;
+    con_data->pause_for_read = TRUE;
 
     return(CE_STATUS);
 }
@@ -899,55 +907,52 @@ PRIVATE int
 net_read_directory_chunk (ActiveEntry * cur_entry)
 {
 
-    FILEConData * connection_data = (FILEConData *) cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *) cur_entry->con_data;
     NET_FileEntryInfo * file_entry;
-    XP_DirEntryStruct * dir_entry;
-    XP_StatStruct       stat_entry;
+    PRDirEntry * dir_entry;
+    PRFileInfo  stat_entry;
     char *full_path=0;
 	int32 len;
 
-    CD_SORT_BASE = NET_SortInit();
+    con_data->sort_base = NET_SortInit();
 
-    while((dir_entry = XP_ReadDir(CD_DIR_PTR)) != 0)
+    while((dir_entry = PR_ReadDir(con_data->dir_ptr, PR_SKIP_BOTH)) != 0)
       {
-	
-		/* skip . and ..
-		 */
-		if(!PL_strcmp(dir_entry->d_name, "..") || !PL_strcmp(dir_entry->d_name, "."))
-			continue;
-
         file_entry = NET_CreateFileEntryInfoStruct();
         if(!file_entry)
 		  {
-		    CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
+		    cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
             return(MK_OUT_OF_MEMORY);
 		  }
 
 		/* escape and copy
 		 */
-		file_entry->filename = NET_Escape(dir_entry->d_name, URL_PATH);
+		file_entry->filename = NET_Escape(dir_entry->name, URL_PATH);
 
         /* make a full path */
-		len = PL_strlen(CD_FILENAME) + PL_strlen(dir_entry->d_name) + 30;
+		len = PL_strlen(con_data->filename) + PL_strlen(dir_entry->name) + 30;
 		PR_FREEIF(full_path);
 		full_path = (char *)PR_Malloc(len*sizeof(char));
 
 		if(!full_path)
 			return(MK_OUT_OF_MEMORY);
 
-        PL_strcpy(full_path, CD_FILENAME);
+        PL_strcpy(full_path, con_data->filename + 1);
         PL_strcat(full_path, "/");
-        PL_strcat(full_path, dir_entry->d_name);
-	memset(&stat_entry, 0, sizeof(XP_StatStruct));	/* paranoia */
+        PL_strcat(full_path, dir_entry->name);
+        memset(&stat_entry, 0, sizeof(PRFileInfo));	/* paranoia */
 
-        if(XP_Stat(full_path, &stat_entry, xpURL) != -1)
+        if(PR_GetFileInfo(full_path, &stat_entry) == PR_SUCCESS)
           {
+            PRInt64 r, u;
             TRACEMSG(("Found stat info for file %s\n",full_path));
 
-            if(S_ISDIR(stat_entry.st_mode))
+            if(PR_FILE_DIRECTORY == stat_entry.type)
 			  {
+#if 0 /* Hoping this is not an issue with PR routines :). */
 #ifdef XP_MAC
 				stat_entry.st_size = 0;		/* Mac stat gives spurious size data for folders */
+#endif
 #endif
                 file_entry->special_type = NET_DIRECTORY;
 				StrAllocCat(file_entry->filename, "/");
@@ -957,12 +962,20 @@ net_read_directory_chunk (ActiveEntry * cur_entry)
                 file_entry->cinfo = NET_cinfo_find_type(file_entry->filename);
 			  }
 
-            file_entry->size = (int32) stat_entry.st_size;
-            file_entry->date = stat_entry.st_mtime;
+            file_entry->size = (int32) stat_entry.size;
+
+            /* Convert the PRTime (64-bit int) into a time_t (32 bit int) */
+            LL_I2L(u, PR_USEC_PER_SEC);
+            LL_DIV(r, stat_entry.modifyTime, u);
+            LL_L2I(file_entry->date, r);
+
+            if (file_entry->date < 0) {
+                file_entry->date = 0;
+            }
 
             TRACEMSG(("Got file: %s, %ld",file_entry->filename, file_entry->size));
 
-            NET_SortAdd(CD_SORT_BASE, file_entry);
+            NET_SortAdd(con_data->sort_base, file_entry);
           }
       }
 
@@ -970,10 +983,10 @@ net_read_directory_chunk (ActiveEntry * cur_entry)
 
     NET_Progress(CE_WINDOW_ID, XP_GetString(XP_PROGRESS_DIRDONE));
 
-    XP_CloseDir(CD_DIR_PTR);
-    CD_DIR_PTR = 0;
+    PR_CloseDir(con_data->dir_ptr);
+    con_data->dir_ptr = 0;
 
-    CD_NEXT_STATE = NET_BEGIN_PRINT_DIRECTORY;
+    con_data->next_state = NET_BEGIN_PRINT_DIRECTORY;
 
     return(0); 
 }
@@ -1085,7 +1098,7 @@ PRIVATE int32
 net_FileLoad (ActiveEntry * cur_entry)
 {
 	char * cp;
-    FILEConData * connection_data;
+    FILEConData * con_data;
 
 #ifndef NSPR20_DISABLED
     NET_SetCallNetlibAllTheTime(CE_WINDOW_ID, "mkfile");
@@ -1096,7 +1109,7 @@ net_FileLoad (ActiveEntry * cur_entry)
     if(!cur_entry->con_data)
       {
         FE_Alert(CE_WINDOW_ID, XP_GetString(XP_ALERT_OUTMEMORY));
-		CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
+		cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
         CE_STATUS = MK_OUT_OF_MEMORY;
         return(CE_STATUS);
       }
@@ -1106,28 +1119,28 @@ net_FileLoad (ActiveEntry * cur_entry)
     memset(cur_entry->con_data, 0, sizeof(FILEConData));
 
 	/* set this to make the CD_ macros work */
-	connection_data = cur_entry->con_data;
+	con_data = cur_entry->con_data;
 
-    if(!CE_URL_S->cache_file)
+    if(!cur_entry->URL_s->cache_file)
       {
 		char *path;
 
-		if(!(path = net_return_local_file_part_from_url(CE_URL_S->address)))
+		if(!(path = net_return_local_file_part_from_url(cur_entry->URL_s->address)))
       	  {
         	PR_Free(cur_entry->con_data);
         	cur_entry->con_data = 0;
         	return(MK_USE_FTP_INSTEAD); /* use ftp */
       	  }
 
-        CD_FILENAME = path;
+        con_data->filename = path;
       }
     else
       {
-        StrAllocCopy(CD_FILENAME, CE_URL_S->cache_file);
-		CD_IS_CACHE_FILE = TRUE;
+        StrAllocCopy(con_data->filename, cur_entry->URL_s->cache_file);
+		con_data->is_cache_file = TRUE;
       }
 
-    TRACEMSG(("Load File: looking for file: %s\n",CD_FILENAME));
+    TRACEMSG(("Load File: looking for file: %s\n",con_data->filename));
 
 	/* don't cache local files or local directory listings 
 	 * if we are only looking to cache this file fail now
@@ -1138,11 +1151,11 @@ net_FileLoad (ActiveEntry * cur_entry)
 
 	/* all non-cache filenames must begin with slash
 	 */
-	if(!CD_IS_CACHE_FILE == TRUE && *CD_FILENAME != '/')
+	if(!con_data->is_cache_file == TRUE && *con_data->filename != '/')
 	  {
-		CE_URL_S->error_msg = NET_ExplainErrorDetails(
+		cur_entry->URL_s->error_msg = NET_ExplainErrorDetails(
 											MK_UNABLE_TO_LOCATE_FILE,
- 											*CD_FILENAME ? CD_FILENAME : "/");
+ 											*con_data->filename ? con_data->filename : "/");
 		CE_STATUS = MK_UNABLE_TO_LOCATE_FILE;
         return(MK_UNABLE_TO_LOCATE_FILE);
 	  }
@@ -1156,12 +1169,12 @@ net_FileLoad (ActiveEntry * cur_entry)
      * away
 	 */
 #define URL_BYTERANGE_TOKEN ";"BYTERANGE_TOKEN
-	if (CD_IS_CACHE_FILE && (cp = PL_strcasestr(CE_URL_S->address, URL_BYTERANGE_TOKEN)) != NULL)
+	if (con_data->is_cache_file && (cp = PL_strcasestr(cur_entry->URL_s->address, URL_BYTERANGE_TOKEN)) != NULL)
 	  {
 		StrAllocCopy(CD_BYTERANGE_STRING, cp+PL_strlen(URL_BYTERANGE_TOKEN));
 		strtok(CD_BYTERANGE_STRING, ";");
 	  }
-	else if ((cp = PL_strcasestr(CD_FILENAME, URL_BYTERANGE_TOKEN)) != NULL)
+	else if ((cp = PL_strcasestr(con_data->filename, URL_BYTERANGE_TOKEN)) != NULL)
 	  {
 		*cp = '\0';
 		/* remove any other weird ; stuff */
@@ -1174,16 +1187,16 @@ net_FileLoad (ActiveEntry * cur_entry)
 	 * both the URL byterange and the header
 	 * byterange methods can coexist peacefully
 	 */
-	if(CE_URL_S->range_header && !PL_strncmp(CE_URL_S->range_header, BYTERANGE_TOKEN, PL_strlen(BYTERANGE_TOKEN)))
+	if(cur_entry->URL_s->range_header && !PL_strncmp(cur_entry->URL_s->range_header, BYTERANGE_TOKEN, PL_strlen(BYTERANGE_TOKEN)))
 	  {
-		StrAllocCopy(CD_BYTERANGE_STRING, CE_URL_S->range_header+PL_strlen(BYTERANGE_TOKEN));
+		StrAllocCopy(CD_BYTERANGE_STRING, cur_entry->URL_s->range_header+PL_strlen(BYTERANGE_TOKEN));
 	  }
 
     /* lets do a local file read 
      */
     cur_entry->local_file = TRUE;  /* se we don't select on the socket id */
 
-   	CD_NEXT_STATE = NET_CHECK_FILE_TYPE;
+   	con_data->next_state = NET_CHECK_FILE_TYPE;
 
 	return(net_ProcessFile(cur_entry));
 }
@@ -1191,16 +1204,16 @@ net_FileLoad (ActiveEntry * cur_entry)
 PRIVATE int32
 net_ProcessFile (ActiveEntry * cur_entry)
 {
-    FILEConData * connection_data = (FILEConData *) cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *) cur_entry->con_data;
 
-    TRACEMSG(("Entering ProcessFile with state #%d\n",CD_NEXT_STATE));
+    TRACEMSG(("Entering ProcessFile with state #%d\n",con_data->next_state));
 
-    CD_PAUSE_FOR_READ = FALSE;
+    con_data->pause_for_read = FALSE;
 
-    while(!CD_PAUSE_FOR_READ)
+    while(!con_data->pause_for_read)
       {
 
-        switch (CD_NEXT_STATE)
+        switch (con_data->next_state)
           {
             case NET_CHECK_FILE_TYPE:
                 CE_STATUS = net_check_file_type(cur_entry);
@@ -1251,59 +1264,59 @@ net_ProcessFile (ActiveEntry * cur_entry)
                 break;
     
             case NET_PRINT_DIRECTORY:
-				if((*CD_STREAM->is_write_ready)(CD_STREAM))
+				if((*con_data->stream->is_write_ready)(con_data->stream))
 				{
-					CE_STATUS = NET_PrintDirectory(&CD_SORT_BASE, CD_STREAM, CD_FILENAME, CE_URL_S);
-					CD_NEXT_STATE = NET_FILE_DONE;
+					CE_STATUS = NET_PrintDirectory(&con_data->sort_base, con_data->stream, con_data->filename, cur_entry->URL_s);
+					con_data->next_state = NET_FILE_DONE;
 				}
 				else
 				{
 					/* come back into this state */
-                    if(!connection_data->calling_netlib_all_the_time)
+                    if(!con_data->calling_netlib_all_the_time)
                     {
-                        connection_data->calling_netlib_all_the_time = TRUE;
+                        con_data->calling_netlib_all_the_time = TRUE;
 					    NET_SetCallNetlibAllTheTime(CE_WINDOW_ID, "mkfile");
                     }
 					cur_entry->memory_file = TRUE;
 					cur_entry->socket = NULL;
-					CD_PAUSE_FOR_READ = TRUE;
+					con_data->pause_for_read = TRUE;
 				}
                 break;
     
             case NET_FILE_DONE:
-    			if(CD_STREAM)
+    			if(con_data->stream)
                		COMPLETE_STREAM;
-                CD_NEXT_STATE = NET_FILE_FREE;
+                con_data->next_state = NET_FILE_FREE;
                 break;
     
             case NET_FILE_ERROR_DONE:
-                if(CD_STREAM)
+                if(con_data->stream)
                     ABORT_STREAM(CE_STATUS);
-                if(CD_DIR_PTR)
-                    XP_CloseDir(CD_DIR_PTR);
-                if(CD_FILE_PTR)
+                if(con_data->dir_ptr)
+                    PR_CloseDir(con_data->dir_ptr);
+                if(con_data->file_ptr)
 				  {
 					CE_SOCK = NULL;
-					NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(CD_FILE_PTR));
-                    XP_FileClose(CD_FILE_PTR);
+					NET_ClearFileReadSelect(CE_WINDOW_ID, XP_Fileno(con_data->file_ptr));
+                    XP_FileClose(con_data->file_ptr);
 				  }
-                CD_NEXT_STATE = NET_FILE_FREE;
+                con_data->next_state = NET_FILE_FREE;
                 break;
     
             case NET_FILE_FREE:
-				if(connection_data->calling_netlib_all_the_time)
+				if(con_data->calling_netlib_all_the_time)
 				{
 				   NET_ClearCallNetlibAllTheTime(CE_WINDOW_ID, "mkfile");
-                   connection_data->calling_netlib_all_the_time = FALSE;
+                   con_data->calling_netlib_all_the_time = FALSE;
 				}
 
 				if(CD_DESTROY_GRAPH_PROGRESS)
                     FE_GraphProgressDestroy(CE_WINDOW_ID,
-                                            CE_URL_S,
+                                            cur_entry->URL_s,
                                             CD_ORIGINAL_CONTENT_LENGTH,
 											CE_BYTES_RECEIVED);
-				PR_Free(CD_FILENAME);
-				PR_FREEIF(CD_STREAM);
+				PR_Free(con_data->filename);
+				PR_FREEIF(con_data->stream);
 				PR_Free(cur_entry->con_data);
 
 #ifndef NSPR20_DISABLED
@@ -1313,10 +1326,10 @@ net_ProcessFile (ActiveEntry * cur_entry)
                 return(-1); /* done */
           }
     
-        if(CE_STATUS < 0 && CD_NEXT_STATE != NET_FILE_FREE)
+        if(CE_STATUS < 0 && con_data->next_state != NET_FILE_FREE)
 		  {
-    		CD_PAUSE_FOR_READ = FALSE;
-            CD_NEXT_STATE = NET_FILE_ERROR_DONE;
+    		con_data->pause_for_read = FALSE;
+            con_data->next_state = NET_FILE_ERROR_DONE;
 		  }
 
       }
@@ -1327,9 +1340,9 @@ net_ProcessFile (ActiveEntry * cur_entry)
 PRIVATE int32
 net_InterruptFile(ActiveEntry * cur_entry)
 {
-    FILEConData * connection_data = (FILEConData *)cur_entry->con_data;
+    FILEConData * con_data = (FILEConData *)cur_entry->con_data;
 
-    CD_NEXT_STATE = NET_FILE_ERROR_DONE;
+    con_data->next_state = NET_FILE_ERROR_DONE;
     CE_STATUS = MK_INTERRUPTED;
 
     return(net_ProcessFile(cur_entry));
