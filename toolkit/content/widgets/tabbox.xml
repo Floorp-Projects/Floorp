@@ -450,7 +450,7 @@
   <binding id="tab" display="xul:button"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content>
-      <xul:hbox flex="1" style="min-width: 1px;">
+      <xul:hbox class="tab-middle box-inherit" xbl:inherits="align,dir,pack,orient,selected" flex="1">
         <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
         <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
       </xul:hbox>
