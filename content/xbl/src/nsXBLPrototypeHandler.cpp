@@ -861,12 +861,11 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 
   // Button and clickcount apply only to XBL handlers and don't apply to XUL key
   // handlers.  
-  const nsDependentString button(aButton);
-  const nsDependentString clickcount(aClickCount);
-  if (!button.IsEmpty())
-    mDetail = button.First() - '0';
-  if (!clickcount.IsEmpty())
-    mMisc = clickcount.First() - '0';
+  if (aButton && *aButton)
+    mDetail = *aButton - '0';
+
+  if (aClickCount && *aClickCount)
+    mMisc = *aClickCount - '0';
 
   // Modifiers are supported by both types of handlers (XUL and XBL).  
   nsAutoString modifiers(aModifiers);
