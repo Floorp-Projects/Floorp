@@ -389,7 +389,8 @@ nsXULTooltipListener::ShowTooltip()
       xulDoc->SetTooltipNode(targetNode);
       xulDoc->SetPopupNode(targetNode);
       LaunchTooltip(mSourceNode, mMouseClientX, mMouseClientY);
-      
+      mTargetNode = nsnull;
+
       // at this point, |mCurrentTooltip| holds the content node of
       // the tooltip. If there is an attribute on the popup telling us
       // not to create the auto-hide timer, don't.
@@ -526,7 +527,6 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
     child->GetTag(*getter_AddRefs(tag));
     if (aTag == tag.get()) {
       *aResult = child;
-      NS_ADDREF(*aResult);
       return;
     }
   }
@@ -617,8 +617,10 @@ nsXULTooltipListener::DestroyTooltip()
     mCurrentTooltip->GetDocument(*getter_AddRefs(doc));
     if (doc) {
       nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-      if (xulDoc)
+      if (xulDoc) {
         xulDoc->SetTooltipNode(nsnull);
+        xulDoc->SetPopupNode(nsnull);
+      }
 
       // remove the mousedown and keydown listener from document
       nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(doc));
