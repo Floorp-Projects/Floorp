@@ -204,6 +204,9 @@ public:
   NS_IMETHOD GetNodeInfo(const nsString& aName, const nsString& aPrefix,
                          const nsString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo) = 0;
+  NS_IMETHOD GetNodeInfo(const nsString& aQualifiedName,
+                         const nsString& aNamespaceURI,
+                         nsINodeInfo*& aNodeInfo) = 0;
 
   /*
    * Getter for the namespace manager used by this nodeinfo manager.

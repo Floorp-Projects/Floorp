@@ -205,7 +205,8 @@ nsNodeInfoManager::GetNodeInfo(const nsString& aName, const nsString& aPrefix,
       return NS_ERROR_NOT_INITIALIZED;
     }
 
-    mNameSpaceManager->GetNameSpaceID(aNamespaceURI, nsid);
+    nsresult rv = mNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsid);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return GetNodeInfo(name, prefix, nsid, aNodeInfo);
@@ -213,11 +214,50 @@ nsNodeInfoManager::GetNodeInfo(const nsString& aName, const nsString& aPrefix,
 
 
 NS_IMETHODIMP
+nsNodeInfoManager::GetNodeInfo(const nsString& aQualifiedName,
+                               const nsString& aNamespaceURI,
+                               nsINodeInfo*& aNodeInfo)
+{
+  NS_ENSURE_ARG(aQualifiedName.Length());
+
+  nsAutoString name(aQualifiedName);
+  nsAutoString prefix;
+  PRInt32 nsoffset = name.FindChar(':');
+  if (-1 != nsoffset) {
+    name.Left(prefix, nsoffset);
+    name.Cut(0, nsoffset+1);
+  }
+
+  nsCOMPtr<nsIAtom> nameAtom(dont_AddRef(NS_NewAtom(name)));
+  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsIAtom> prefixAtom;
+
+  if (prefix.Length()) {
+    prefixAtom = dont_AddRef(NS_NewAtom(prefix));
+    NS_ENSURE_TRUE(prefixAtom, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  PRInt32 nsid = kNameSpaceID_None;
+
+  if (aNamespaceURI.Length()) {
+    NS_ENSURE_TRUE(mNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+
+    nsresult rv = mNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return GetNodeInfo(nameAtom, prefixAtom, nsid, aNodeInfo);
+}
+
+
+NS_IMETHODIMP
 nsNodeInfoManager::GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager)
 {
-  aNameSpaceManager = mNameSpaceManager;
+  NS_ENSURE_TRUE(mNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  NS_IF_ADDREF(aNameSpaceManager);
+  aNameSpaceManager = mNameSpaceManager;
+  NS_ADDREF(aNameSpaceManager);
 
   return NS_OK;
 }
