@@ -259,7 +259,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
     switch (aSystemSystemDirectory)
     {
-        
         case OS_DriveDirectory:
 #if defined (XP_WIN)
         {
@@ -297,8 +296,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                      aFile);
 
 #endif
-        break;
-
             
         case OS_TemporaryDirectory:
 #if defined (XP_WIN)
@@ -310,20 +307,20 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                          aFile);
         }
 #elif defined(XP_OS2)
-          {
-             char buffer[CCHMAXPATH] = "";
-             char *c = getenv( "TMP");
-             if( c) strcpy( buffer, c);
-             else
-             {
+        {
+            char buffer[CCHMAXPATH] = "";
+            char *c = getenv( "TMP");
+            if( c) strcpy( buffer, c);
+            else
+            {
                 c = getenv( "TEMP");
                 if( c) strcpy( buffer, c);
-             }
+            }
 
             return NS_NewNativeLocalFile(nsDependentCString(buffer), 
                                          PR_TRUE, 
                                          aFile);
-          } 
+        } 
 #elif defined(XP_MAC)
         return nsIFileFromOSType(kTemporaryFolderType, aFile);
 
@@ -333,26 +330,27 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         }
 
 #elif defined(XP_UNIX) || defined(XP_BEOS)
-		{
-			static const char *tPath = nsnull;
-			if (!tPath) {
-				tPath = PR_GetEnv("TMPDIR");
-				if (!tPath || !*tPath) {
-					tPath = PR_GetEnv("TMP");
-					if (!tPath || !*tPath) {
-						tPath = PR_GetEnv("TEMP");
-						if (!tPath || !*tPath) {
-							tPath = "/tmp/";
-						}
-					}
-				}
-			}
+        {
+            static const char *tPath = nsnull;
+            if (!tPath) {
+                tPath = PR_GetEnv("TMPDIR");
+                if (!tPath || !*tPath) {
+                    tPath = PR_GetEnv("TMP");
+                    if (!tPath || !*tPath) {
+                        tPath = PR_GetEnv("TEMP");
+                        if (!tPath || !*tPath) {
+                            tPath = "/tmp/";
+                        }
+                    }
+                }
+            }
             return NS_NewNativeLocalFile(nsDependentCString(tPath), 
                                          PR_TRUE, 
                                          aFile);
-		}
-#endif
+        }
+#else
         break;
+#endif
 
 #if defined(XP_MAC)
         case Mac_SystemDirectory:
@@ -384,7 +382,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case Mac_ClassicPreferencesDirectory:
         {
-        	// whether Mac OS X or pre-Mac OS X, return Classic's Prefs folder
+            // whether Mac OS X or pre-Mac OS X, return Classic's Prefs folder
             short domain;
             long response;
             err = ::Gestalt(gestaltSystemVersion, &response);
@@ -393,21 +391,19 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             if (!err) {
                 err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &mSpec);
             }
-            mError = NS_FILE_RESULT(err);
-            break;
+            return NS_FILE_RESULT(err);
         }
 
         case Mac_PreferencesDirectory:
-		{
-			// if Mac OS X, return Mac OS X's Prefs folder
-			// if pre-Mac OS X, return Mac OS's Prefs folder
+        {
+            // if Mac OS X, return Mac OS X's Prefs folder
+            // if pre-Mac OS X, return Mac OS's Prefs folder
             err = ::FindFolder(kOnSystemDisk, kPreferencesFolderType, true, &vRefNum, &dirID);
             if (!err) {
                 err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &mSpec);
             }
-            mError = NS_FILE_RESULT(err);
-            break;
-		}
+            return NS_FILE_RESULT(err);
+        }
 
         case Mac_DocumentsDirectory:
             return nsIFileFromOSType(kDocumentsFolderType, aFile);
@@ -612,9 +608,9 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case Unix_HomeDirectory:
 #ifdef VMS
-	    {
-	        char *pHome;
-	        pHome = getenv("HOME");
+        {
+            char *pHome;
+            pHome = getenv("HOME");
             if (*pHome == '/') {
                 return NS_NewNativeLocalFile(nsDependentCString(pHome), 
                                              PR_TRUE, 
@@ -622,12 +618,12 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
             }
             else
-        	{
+            {
                 return NS_NewNativeLocalFile(nsDependentCString(decc$translate_vms(pHome)), 
                                              PR_TRUE, 
                                              aFile);
             } 
-	    }
+        }
 #else
             return NS_NewNativeLocalFile(nsDependentCString(PR_GetEnv("HOME")), 
                                              PR_TRUE, 
@@ -639,11 +635,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
 #ifdef XP_BEOS
         case BeOS_SettingsDirectory:
-		{
+        {
             char path[MAXPATHLEN];
-			find_directory(B_USER_SETTINGS_DIRECTORY, 0, 0, path, MAXPATHLEN);
+            find_directory(B_USER_SETTINGS_DIRECTORY, 0, 0, path, MAXPATHLEN);
             // Need enough space to add the trailing backslash
-			int len = strlen(path);
+            int len = strlen(path);
             if (len > MAXPATHLEN-2)
                 break;
             path[len]   = '/';
@@ -651,14 +647,14 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
                                          aFile);
-		}
+        }
 
         case BeOS_HomeDirectory:
-		{
+        {
             char path[MAXPATHLEN];
-			find_directory(B_USER_DIRECTORY, 0, 0, path, MAXPATHLEN);
+            find_directory(B_USER_DIRECTORY, 0, 0, path, MAXPATHLEN);
             // Need enough space to add the trailing backslash
-			int len = strlen(path);
+            int len = strlen(path);
             if (len > MAXPATHLEN-2)
                 break;
             path[len]   = '/';
@@ -667,14 +663,14 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
                                          aFile);
-		}
+        }
 
         case BeOS_DesktopDirectory:
-		{
+        {
             char path[MAXPATHLEN];
-			find_directory(B_DESKTOP_DIRECTORY, 0, 0, path, MAXPATHLEN);
+            find_directory(B_DESKTOP_DIRECTORY, 0, 0, path, MAXPATHLEN);
             // Need enough space to add the trailing backslash
-			int len = strlen(path);
+            int len = strlen(path);
             if (len > MAXPATHLEN-2)
                 break;
             path[len]   = '/';
@@ -683,14 +679,14 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
                                          aFile);
-		}
+        }
 
         case BeOS_SystemDirectory:
-		{
+        {
             char path[MAXPATHLEN];
-			find_directory(B_BEOS_DIRECTORY, 0, 0, path, MAXPATHLEN);
+            find_directory(B_BEOS_DIRECTORY, 0, 0, path, MAXPATHLEN);
             // Need enough space to add the trailing backslash
-			int len = strlen(path);
+            int len = strlen(path);
             if (len > MAXPATHLEN-2)
                 break;
             path[len]   = '/';
@@ -699,7 +695,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
                                          aFile);
-		}
+        }
 #endif        
 #ifdef XP_OS2
         case OS2_SystemDirectory:
@@ -736,19 +732,19 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             /* If MOZILLA_HOME is not set, use GetCurrentProcessDirectory */
             /* To ensure we get a long filename system */
             if (!tPath || !*tPath) {
-               PPIB ppib;
-               PTIB ptib;
-               DosGetInfoBlocks( &ptib, &ppib);
-               DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
-               *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
-               tPath = buffer;
+                PPIB ppib;
+                PTIB ptib;
+                DosGetInfoBlocks( &ptib, &ppib);
+                DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
+                *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
+                tPath = buffer;
             }
             rv = NS_NewNativeLocalFile(nsDependentCString(tPath),
                                        PR_TRUE, 
                                        aFile);
 
             PrfWriteProfileString(HINI_USERPROFILE, "Mozilla", "Home", tPath);
-            break;
+            return rv;
         }
 
         case OS2_DesktopDirectory:
@@ -758,7 +754,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             fSuccess = WinQueryActiveDesktopPathname (szPath, sizeof(szPath));
             int len = strlen (szPath);   
             if (len > CCHMAXPATH -1)
-               break;
+                break;
             szPath[len] = '\\';     
             szPath[len + 1] = '\0';
 
@@ -777,19 +773,19 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 nsresult
 GetOSXFolderType(short aDomain, OSType aFolderType, nsILocalFile **localFile)
 {
-  OSErr err;
-  FSRef fsRef;
-	nsresult rv = NS_ERROR_FAILURE;
+    OSErr err;
+    FSRef fsRef;
+    nsresult rv = NS_ERROR_FAILURE;
 
-  err = ::FSFindFolder(aDomain, aFolderType, kCreateFolder, &fsRef);
-  if (err == noErr)
-  {
-      NS_NewLocalFile(nsString(), PR_TRUE, localFile);
-      nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(*localFile));
-      if (localMacFile)
-          rv = localMacFile->InitWithFSRef(&fsRef);
-  }
-  return rv;
+    err = ::FSFindFolder(aDomain, aFolderType, kCreateFolder, &fsRef);
+    if (err == noErr)
+    {
+        NS_NewLocalFile(nsString(), PR_TRUE, localFile);
+        nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(*localFile));
+        if (localMacFile)
+            rv = localMacFile->InitWithFSRef(&fsRef);
+    }
+    return rv;
 }                                                                      
 #endif
 
