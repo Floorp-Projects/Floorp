@@ -23,9 +23,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-EXPORTS =               	\
-	nsappshell.h		\
-	nsIAppShellService.h	\
+EXPORTS =                         \
+        nsAppShellCIDs.h          \
+        nsIAppShellService.h      \
+        nsIWidgetController.h     \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
