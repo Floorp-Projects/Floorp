@@ -62,8 +62,7 @@ if (defined $login) {
     print "A bugzilla account for <tt>$login</tt> has been created.  The\n";
     print "password has been e-mailed to that address.  When it is\n";
     print "received, you may <a href=query.cgi?GoAheadAndLogIn>click\n";
-    print "here</a> and log in.  Or, you can just <a href=\"\">go back to\n";
-    print "the top</a>.";
+    print "here</a> and log in.";
     PutFooter();
     exit;
 }
