@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.15 1999/11/23 21:59:13 endico%mozilla.org Exp $
+# $Id: source,v 1.16 2001/10/25 01:05:07 timeless%mac.com Exp $
 # source --	Present sourcecode as html, complete with references
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>
@@ -251,12 +251,22 @@ sub printfile {
 	          my $base = basename($Path->{'file'}, ".idl"); 
                   my $dir = $Path->{'virt'};
                   $dir =~ s#([^/]+)(.*)#$1#;
-                  print("<CENTER>\n");
-                  print("<IMG ALIGN=CENTER BORDER=\"0\" SRC=\"http://unstable.elemental.com/mozilla/build/latest/mozilla" . $dir . "/dox/class_" . $base . ".gif\">\n");
-                  print("<BR>");
-                  print("<A HREF=\"http://unstable.elemental.com/mozilla/build/latest/mozilla" . $dir . "/dox/class_" . $base . ".html\">\n");
-                  print($base . "Interface Reference" . "</A>\n");
-                  print("</CENTER>\n");
+                  my $doxRoot = "http://unstable.elemental.com/mozilla/build/latest/mozilla/" . $dir . "/dox/";
+                  print("<P>Inheritance diagram for " . $base . ":</P>\n");
+                  print("<P ALIGN=\"CENTER\">\n");
+                  print("<IMG SRC=\"" . $doxRoot . "interface" . $base . "__inherit__graph.gif\"");
+		  print(" ALIGN=\"CENTER\" BORDER=\"0\" ALT=\"Inheritance graph\">\n");
+                  print("</P>\n");
+                  print("<P>Collaboration diagram for " . $base . ":</P>\n");
+                  print("<P ALIGN=\"CENTER\">\n");
+                  print("<IMG SRC=\"" . $doxRoot . "interface" . $base . "__coll__graph.gif\"");
+		  print(" ALIGN=\"CENTER\" BORDER=\"0\" ALT=\"Collaboration graph\">\n");
+                  print("</P>\n");
+                  print("<P ALIGN=\"CENTER\">\n");
+                  print("[ <A HREF=\"" .$doxRoot . "interface" . $base . ".html\">\n");
+                  print("<I>" . $base . "</I> Interface Reference</A> |");
+                  print(" <a href=\"" . $doxRoot . "graph_legend.html\">Graph Legend</a> ]\n");
+                  print("</P>\n");
                 }
 		print("<pre>");
 		&markupfile(\*SRCFILE, $Path->{'virt'}, $Path->{'file'},
