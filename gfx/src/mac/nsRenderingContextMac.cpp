@@ -197,7 +197,7 @@ nsresult nsRenderingContextMac :: CommonInit()
 	((nsDeviceContextMac *)mContext)->SetDrawingSurface(mRenderingSurface);
   //((nsDeviceContextMac *)mContext)->InstallColormap();
 
-  mFontCache = mContext->GetFontCache();
+  mContext->GetFontCache(mFontCache);
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
