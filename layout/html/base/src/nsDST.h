@@ -48,7 +48,10 @@ public:
 #endif
 
 private:
+  struct Node;
   struct NodeArena;
+  friend struct Node;       // needs access to struct NodeArena
+  friend struct NodeArena;  // needs access to struct Node
 
   struct Node {
     void* mKey;
@@ -78,9 +81,6 @@ private:
   Node*       mRoot;  // root node of the tree
   NodeArena   mArena;
   PtrBits     mLevelZeroBit;
-
-  friend struct Node;       // needs access to struct NodeArena
-  friend struct NodeArena;  // needs access to struct Node
 
 private:
   // Helper functions
