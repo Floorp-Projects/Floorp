@@ -434,12 +434,7 @@ nsImapProtocol::nsImapProtocol() :
 
   // where should we do this? Perhaps in the factory object?
   if (!IMAP)
-  {
     IMAP = PR_NewLogModule("IMAP");
-#ifdef DEBUG_bienvenu
-    PR_SetLogBuffering(50000);
-#endif
-  }
 }
 
 nsresult nsImapProtocol::Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
@@ -2446,6 +2441,8 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
     if (GetServerStateParser().GetDownloadingHeaders())
     {
       m_hdrDownloadCache.StartNewHdr(getter_AddRefs(m_curHdrInfo));
+      if (m_curHdrInfo)
+        m_curHdrInfo->SetMsgSize(total_message_size);
       return NS_OK;
     }
     // if we have a mock channel, that means we have a channel listener who wants the
