@@ -195,7 +195,7 @@ JS_PopArguments(JSContext *cx, void *mark);
 #ifdef va_start
 /*
  * Add and remove a format string handler for JS_{Convert,Push}Arguments{,VA}.
- * The handler function has this signature (see jspubtd.h):
+ * The handler function has this signature:
  *
  *   JSBool MyArgumentFormatter(JSContext *cx, const char *format,
  *                              JSBool fromJS, jsval **vpp, va_list *app);
@@ -232,6 +232,16 @@ JS_PopArguments(JSContext *cx, void *mark);
  * is typically a string constant.  If format is in dynamic storage, it is up
  * to the caller to keep the string alive until Remove is called.
  */
+
+/* XXX typedef'd here rather than in jspubtd.h #ifdef va_start, to avoid bad
+ * XXX includers who grab jspubtd.h, then <stdarg.h>, then jsapi.h and unhide
+ * XXX the typedef uses below in JS_AddArgumentFormatter without exposing the
+ * XXX definition in jspubtd.h, which is of course include-idempotent.
+ */
+typedef JSBool
+(* CRT_CALL JSArgumentFormatter)(JSContext *cx, const char *format,
+				 JSBool fromJS, jsval **vpp, va_list *app);
+
 JS_PUBLIC_API(JSBool)
 JS_AddArgumentFormatter(JSContext *cx, const char *format,
 			JSArgumentFormatter formatter);
