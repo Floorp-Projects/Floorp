@@ -1341,6 +1341,20 @@ struct PRSem {
 #endif
 };
 
+/*************************************************************************/
+
+struct PRStackStr {
+    /* head MUST be at offset 0; assembly language code relies on this */
+#if defined(AIX) || defined(OSF1)
+    volatile PRStackElem prstk_head;
+#else
+    PRStackElem prstk_head;
+#endif
+
+    PRLock *prstk_lock;
+    char *prstk_name;
+};
+
 /************************************************************************/
 
 /* XXX this needs to be exported (sigh) */
