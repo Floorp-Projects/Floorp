@@ -19,6 +19,6 @@ DEPTH=..
 
 IGNORE_MANIFEST=1
 
-DIRS=src tests tools
+DIRS=public src tests tools
 
 include <$(DEPTH)\config\rules.mak>
