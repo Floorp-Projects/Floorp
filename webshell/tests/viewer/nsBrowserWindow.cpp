@@ -1744,6 +1744,21 @@ nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::CanCreateNewWebShell(PRBool& aResult)
+{
+  aResult = PR_TRUE; // We can always make a new web shell synchronously
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
+                                nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
+                                nsIWebShell** aNewShell)
+{
+  return NS_OK; // We don't care about this method, since we can make new web shells immediately.
+}
+
+NS_IMETHODIMP
 nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 {
   PRInt32 i, n = gBrowsers.Count();

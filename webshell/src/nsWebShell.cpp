@@ -240,6 +240,10 @@ public:
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
+  NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
+  NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
+                                nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
+                                nsIWebShell** aNewShell);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
@@ -1885,6 +1889,27 @@ nsWebShell::NewWebShell(PRUint32 aChromeMask,
 {
   if (nsnull != mContainer) {
     return mContainer->NewWebShell(aChromeMask, aVisible, aNewWebShell);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::CanCreateNewWebShell(PRBool& aResult)
+{
+  aResult = PR_TRUE;
+  if (nsnull != mContainer) {
+    return mContainer->CanCreateNewWebShell(aResult);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
+                                nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
+                                nsIWebShell** aNewShell)
+{
+  if (nsnull != mContainer) {
+    return mContainer->SetNewWebShellInfo(aName, anURL, aOpenerShell, aChromeMask, aNewShell);
   }
   return NS_OK;
 }
