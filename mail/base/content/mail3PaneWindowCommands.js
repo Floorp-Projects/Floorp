@@ -206,7 +206,6 @@ var DefaultController =
 			case "cmd_file":
 			case "cmd_emptyTrash":
 			case "cmd_compactFolder":
-			case "cmd_sortByThread":
   	  case "cmd_settingsOffline":
       case "cmd_close":
       case "cmd_selectAll":
@@ -369,7 +368,6 @@ var DefaultController =
       case "cmd_previousFlaggedMsg":
         return IsViewNavigationItemEnabled();
       case "cmd_viewAllMsgs":
-      case "cmd_sortByThread":
       case "cmd_viewUnreadMsgs":
       case "cmd_viewThreadsWithUnread":
       case "cmd_viewWatchedThreadsWithUnread":
@@ -514,9 +512,6 @@ var DefaultController =
 				break;
 			case "cmd_previousFlaggedMsg":
 				MsgPreviousFlaggedMessage();
-				break;
-			case "cmd_sortByThread":
-				MsgSortByThread();
 				break;
 			case "cmd_viewAllMsgs":
       case "cmd_viewThreadsWithUnread":

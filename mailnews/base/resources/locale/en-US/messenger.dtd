@@ -170,18 +170,18 @@ Rights Reserved.
 <!ENTITY sortByRecipientCmd.accesskey "c">
 <!ENTITY sortByUnreadCmd.label "Read">
 <!ENTITY sortByUnreadCmd.accesskey "R">
-<!ENTITY sortByThreadCmd.label "Thread">
-<!ENTITY sortByThreadCmd.accesskey "T">
 <!ENTITY sortByOrderReceivedCmd.label "Order Received">
 <!ENTITY sortByOrderReceivedCmd.accesskey "O">
 <!ENTITY sortAscending.label "Ascending">
 <!ENTITY sortAscending.accesskey "A">
 <!ENTITY sortDescending.label "Descending">
 <!ENTITY sortDescending.accesskey "D">
+<!ENTITY sortThreaded.label "Threaded">
+<!ENTITY sortThreaded.accesskey "T">
+<!ENTITY sortUnthreaded.label "Unthreaded">
+<!ENTITY sortUnthreaded.accesskey "h">
 <!ENTITY msgsMenu.label "Messages">
 <!ENTITY msgsMenu.accesskey "M">
-<!ENTITY viewThreaded.label "Threaded">
-<!ENTITY viewThreaded.accesskey "T">
 <!ENTITY viewAll.label "All">
 <!ENTITY viewUnread.label "Unread">
 <!ENTITY viewAll.accesskey "A">

@@ -210,7 +210,6 @@ function InitViewSortByMenu()
     setSortByMenuItemCheckState("sortBySizeMenuitem", (sortType == nsMsgViewSortType.bySize));
     setSortByMenuItemCheckState("sortByStatusMenuitem", (sortType == nsMsgViewSortType.byStatus));
     setSortByMenuItemCheckState("sortBySubjectMenuitem", (sortType == nsMsgViewSortType.bySubject));
-    setSortByMenuItemCheckState("sortByThreadMenuitem", (sortType == nsMsgViewSortType.byThread));
     setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
     setSortByMenuItemCheckState("sortByLabelMenuitem", (sortType == nsMsgViewSortType.byLabel));
     setSortByMenuItemCheckState("sortByJunkStatusMenuitem", (sortType == nsMsgViewSortType.byJunkStatus));
@@ -222,8 +221,15 @@ function InitViewSortByMenu()
     setSortByMenuItemCheckState("sortAscending", (sortOrder == nsMsgViewSortOrder.ascending));
     setSortByMenuItemCheckState("sortDescending", (sortOrder == nsMsgViewSortOrder.descending));
 
-    var threadMenuItem = document.getElementById("sortByThreadMenuitem");
-    threadMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
+    var threaded = ((gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0);
+    var sortThreadedMenuItem = document.getElementById("sortThreaded");
+    var sortUnthreadedMenuItem = document.getElementById("sortUnthreaded");
+
+    sortThreadedMenuItem.setAttribute("checked", threaded);
+    sortUnthreadedMenuItem.setAttribute("checked", !threaded);
+
+    sortThreadedMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
+    sortUnthreadedMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
 }
 
 function InitViewMessagesMenu()
@@ -254,12 +260,6 @@ function InitViewMessagesMenu()
 
 function InitViewMessageViewMenu()
 {
-  var viewFlags = gDBView ? gDBView.viewFlags : 0;
-
-	var threadedMenuItem = document.getElementById("viewThreaded");
-	if (threadedMenuItem)
-		threadedMenuItem.setAttribute("checked", (viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0);
-
   var currentViewValue = document.getElementById("viewPicker").value;
 
   var allMenuItem = document.getElementById("viewAll");

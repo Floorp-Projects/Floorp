@@ -282,10 +282,24 @@ function MsgReverseSortThreadPane()
 
 function MsgToggleThreaded()
 {
-  var dbview = GetDBView();
-  dbview.viewFlags ^= nsMsgViewFlagsType.kThreadedDisplay;
-  dbview.sort(dbview.sortType, dbview.sortOrder); // resort
-  UpdateSortIndicators(dbview.sortType, dbview.sortOrder);
+    var dbview = GetDBView();
+    dbview.viewFlags ^= nsMsgViewFlagsType.kThreadedDisplay;
+    dbview.sort(dbview.sortType, dbview.sortOrder);
+    UpdateSortIndicators(dbview.sortType, dbview.sortOrder);
+}
+
+function MsgSortThreaded()
+{
+    // Toggle if not already threaded.
+    if ((GetDBView().viewFlags & nsMsgViewFlagsType.kThreadedDisplay) == 0)
+        MsgToggleThreaded();
+}
+
+function MsgSortUnthreaded()
+{
+    // Toggle if not already unthreaded.
+    if ((GetDBView().viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0)
+        MsgToggleThreaded();
 }
 
 function MsgSortAscending()
