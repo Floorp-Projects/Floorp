@@ -250,6 +250,7 @@ do
 		fi
 	fi
 
+	echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . redir from ${REQUEST_FILE}"
 	tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
 	if [ $? -ne 0 ]; then
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
@@ -287,15 +288,16 @@ do
 	else
 	    selfserv -v -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} &
 	fi
-	echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}"
+	echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} redir from ${REQUEST_FILE}"
 	tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	if [ $? -ne 0 ]; then
     	echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+		echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} redir from ${REQUEST_FILE}"
 		tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	fi
 	#sleep 20
 	pwd
-	echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam}"
+	echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} redir from ${REQUEST_FILE}"
 	tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} < ${REQUEST_FILE}
 	ret=$?
 
@@ -354,6 +356,7 @@ do
 	tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	if [ $? -ne 0 ]; then
     	echo "<TR><TD> Wait for Server </TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+		echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} redir from ${REQUEST_FILE}"
 		tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	fi
 
