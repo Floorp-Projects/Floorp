@@ -1839,7 +1839,7 @@ int
 MimeObject_write_separator(MimeObject *obj)
 {
   if (obj->options && obj->options->state)
-  	obj->options->state->separator_queued_p = PR_TRUE;
+    obj->options->state->separator_queued_p = PR_TRUE;
   return 0;
 }
 

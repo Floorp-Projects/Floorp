@@ -158,7 +158,7 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
   if (obj->closed_p) return -1;
 
   /* If we're supposed to write this object, but aren't supposed to convert
-	 it to HTML, simply pass it through unaltered. */
+     it to HTML, simply pass it through unaltered. */
   if (obj->output_p &&
 	  obj->options &&
 	  !obj->options->write_html_p &&
@@ -168,61 +168,70 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
 
   if (mult->state == MimeMultipartEpilogue)  /* already done */
-	boundary = MimeMultipartBoundaryTypeNone;
+    boundary = MimeMultipartBoundaryTypeNone;
   else
-	boundary = ((MimeMultipartClass *)obj->clazz)->check_boundary(obj, line,
-																  length);
+    boundary = ((MimeMultipartClass *)obj->clazz)->check_boundary(obj, line,
+                                                                  length);
 
   if (boundary == MimeMultipartBoundaryTypeTerminator ||
-	  boundary == MimeMultipartBoundaryTypeSeparator)
-	{
-	  /* Match!  Close the currently-open part, move on to the next
-		 state, and discard this line.
-	   */
-	  if (mult->state != MimeMultipartPreamble)
-		status = ((MimeMultipartClass *)obj->clazz)->close_child(obj);
-	  if (status < 0) return status;
+    boundary == MimeMultipartBoundaryTypeSeparator)
+  {
+  /* Match!  Close the currently-open part, move on to the next
+     state, and discard this line.
+   */
+    PRBool endOfPart = (mult->state != MimeMultipartPreamble);
+    if (endOfPart)
+      status = ((MimeMultipartClass *)obj->clazz)->close_child(obj);
+    if (status < 0) return status;
+    
+    if (boundary == MimeMultipartBoundaryTypeTerminator)
+      mult->state = MimeMultipartEpilogue;
+    else
+    {
+      mult->state = MimeMultipartHeaders;
+      
+      /* Reset the header parser for this upcoming part. */
+      PR_ASSERT(!mult->hdrs);
+      if (mult->hdrs)
+        MimeHeaders_free(mult->hdrs);
+      mult->hdrs = MimeHeaders_new();
+      if (!mult->hdrs)
+        return MIME_OUT_OF_MEMORY;
+      if (obj->options->state->partsToStrip.Count() > 0)
+      {
+        nsCAutoString newPart(mime_part_address(obj));
+        MimeContainer *container = (MimeContainer*) obj; 
+        newPart.Append('.');
+        newPart.AppendInt(container->nchildren + 1);
+        obj->options->state->strippingPart = PR_FALSE;
+        // check if this is a sub-part of a part we're stripping.
+        for (PRInt32 partIndex = 0; partIndex < obj->options->state->partsToStrip.Count(); partIndex++)
+        {
+          if (newPart.Find(*obj->options->state->partsToStrip.CStringAt(partIndex)) == 0)
+          {
+            obj->options->state->strippingPart = PR_TRUE;
+            if (partIndex < obj->options->state->detachToFiles.Count())
+              obj->options->state->detachedFilePath = *obj->options->state->detachToFiles.CStringAt(partIndex);
+            break;
+          }
+        }
+      }
+    }
+    
+    // if stripping out attachments, write the boundary line. Otherwise, return
+    // to ignore it.
+    if (obj->options->format_out == nsMimeOutput::nsMimeMessageAttach)
+    {
+      // Because MimeMultipart_parse_child_line strips out the 
+      // the CRLF of the last line before the end of a part, we need to add that
+      // back in here.
+      if (endOfPart)
+        MimeWriteAString(obj, NS_LITERAL_CSTRING(MSG_LINEBREAK));
 
-	  if (boundary == MimeMultipartBoundaryTypeTerminator)
-		mult->state = MimeMultipartEpilogue;
-	  else
-		{
-		  mult->state = MimeMultipartHeaders;
-
-		  /* Reset the header parser for this upcoming part. */
-		  PR_ASSERT(!mult->hdrs);
-		  if (mult->hdrs)
-			MimeHeaders_free(mult->hdrs);
-		  mult->hdrs = MimeHeaders_new();
-		  if (!mult->hdrs)
-			return MIME_OUT_OF_MEMORY;
-                  if (obj->options->state->partsToStrip.Count() > 0)
-                  {
-                    nsCAutoString newPart(mime_part_address(obj));
-                    MimeContainer *container = (MimeContainer*) obj; 
-                    newPart.Append('.');
-                    newPart.AppendInt(container->nchildren + 1);
-                    obj->options->state->strippingPart = PR_FALSE;
- //                   obj->options->state->detachedFilePath.Truncate(0);
-                    // check if this is a sub-part of a part we're stripping.
-                    for (PRInt32 partIndex = 0; partIndex < obj->options->state->partsToStrip.Count(); partIndex++)
-                    {
-                      if (newPart.Find(*obj->options->state->partsToStrip.CStringAt(partIndex)) == 0)
-                      {
-                        obj->options->state->strippingPart = PR_TRUE;
-                        if (partIndex < obj->options->state->detachToFiles.Count())
-                          obj->options->state->detachedFilePath = *obj->options->state->detachToFiles.CStringAt(partIndex);
-                        break;
-                      }
-                    }
-                  }
-		}
-
-	  /* Now return, to ignore the boundary line itself. */
-          if (obj->options->format_out == nsMimeOutput::nsMimeMessageAttach)
-            return MimeObject_write(obj, line, length, PR_TRUE);
-	  return 0;
-	}
+      status = MimeObject_write(obj, line, length, PR_TRUE);
+    }
+    return 0;
+  }
 
   /* Otherwise, this isn't a boundary string.  So do whatever it is we
 	 should do with this line (parse it as a header, feed it to the
@@ -461,11 +470,11 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
     length -= 2;
 
   if (blen == length-2 && !strncmp(line+2, mult->boundary, length-2))
-	  return (term_p
-			? MimeMultipartBoundaryTypeTerminator
-			: MimeMultipartBoundaryTypeSeparator);
+    return (term_p
+      ? MimeMultipartBoundaryTypeTerminator
+      : MimeMultipartBoundaryTypeSeparator);
   else
-	  return MimeMultipartBoundaryTypeNone;
+    return MimeMultipartBoundaryTypeNone;
 }
 
 
