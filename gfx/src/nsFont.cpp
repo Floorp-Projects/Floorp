@@ -135,66 +135,53 @@ const PRUnichar kComma        = PRUnichar(',');
 
 PRBool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
 {
-  PRBool    running = PR_TRUE;
+  const PRUnichar *p, *p_end;
+  name.BeginReading(p);
+  name.EndReading(p_end);
+  nsAutoString family;
 
-  nsAutoString  familyList; familyList.Assign(name); // copy to work buffer
-  nsAutoString  familyStr;
+  while (p < p_end) {
+    while (nsCRT::IsAsciiSpace(*p))
+      if (++p == p_end)
+        return PR_TRUE;
 
-  familyList.Append(kNullCh);  // put an extra null at the end
+    PRBool generic;
+    if (*p == kSingleQuote || *p == kDoubleQuote) {
+      // quoted font family
+      PRUnichar quoteMark = *p;
+      if (++p == p_end)
+        return PR_TRUE;
+      const PRUnichar *nameStart = p;
 
-  // XXX This code is evil...
-  PRUnichar* start = familyList.BeginWriting();
-  PRUnichar* end   = start;
+      // XXX What about CSS character escapes?
+      while (*p != quoteMark)
+        if (++p == p_end)
+          return PR_TRUE;
 
-  while (running && (kNullCh != *start)) {
-    PRBool  quoted = PR_FALSE;
-    PRBool  generic = PR_FALSE;
+      family = Substring(nameStart, p);
+      generic = PR_FALSE;
 
-    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
-      start++;
+      while (++p != p_end && *p != kComma)
+        /* nothing */ ;
+
+    } else {
+      // unquoted font family
+      const PRUnichar *nameStart = p;
+      while (++p != p_end && *p != kComma)
+        /* nothing */ ;
+
+      family = Substring(nameStart, p);
+      family.CompressWhitespace(PR_FALSE, PR_TRUE);
+      generic = IsGenericFontFamily(family);
     }
 
-    if ((kSingleQuote == *start) || (kDoubleQuote == *start)) { // quoted string
-      PRUnichar quote = *start++;
-      quoted = PR_TRUE;
-      end = start;
-      while (kNullCh != *end) {
-        if (quote == *end) {  // found closing quote
-          *end++ = kNullCh;     // end string here
-          while ((kNullCh != *end) && (kComma != *end)) { // keep going until comma
-            end++;
-          }
-          break;
-        }
-        end++;
-      }
-    }
-    else {  // non-quoted string or ended
-      end = start;
+    if (!family.IsEmpty() && !(*aFunc)(family, generic, aData))
+      return PR_FALSE;
 
-      while ((kNullCh != *end) && (kComma != *end)) { // look for comma
-        end++;
-      }
-      *end = kNullCh; // end string here
-    }
-
-    familyStr = start;
-
-    if (PR_FALSE == quoted) {
-      familyStr.CompressWhitespace(PR_FALSE, PR_TRUE);
-      if (!familyStr.IsEmpty()) {
-        generic = IsGenericFontFamily(familyStr);
-      }
-    }
-
-    if (!familyStr.IsEmpty()) {
-      running = (*aFunc)(familyStr, generic, aData);
-    }
-
-    start = ++end;
+    ++p; // may advance past p_end
   }
 
-  return running;
+  return PR_TRUE;
 }
 
 static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)

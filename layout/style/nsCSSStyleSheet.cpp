@@ -3224,34 +3224,31 @@ const nsString* RuleProcessorData::GetLang(void)
 
 static const PRUnichar kNullCh = PRUnichar('\0');
 
-static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue,
+static PRBool ValueIncludes(const nsSubstring& aValueList,
+                            const nsSubstring& aValue,
                             const nsStringComparator& aComparator)
 {
-  nsAutoString  valueList(aValueList);
+  const PRUnichar *p = aValueList.BeginReading(),
+              *p_end = aValueList.EndReading();
 
-  valueList.Append(kNullCh);  // put an extra null at the end
+  while (p < p_end) {
+    // skip leading space
+    while (p != p_end && nsCRT::IsAsciiSpace(*p))
+      ++p;
 
-  PRUnichar* start = valueList.BeginWriting();
-  PRUnichar* end   = start;
+    const PRUnichar *val_start = p;
 
-  while (kNullCh != *start) {
-    while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
-      start++;
-    }
-    end = start;
+    // look for space or end
+    while (p != p_end && !nsCRT::IsAsciiSpace(*p))
+      ++p;
 
-    while ((kNullCh != *end) && (PR_FALSE == nsCRT::IsAsciiSpace(*end))) { // look for space or end
-      end++;
-    }
-    *end = kNullCh; // end string here
+    const PRUnichar *val_end = p;
 
-    if (start < end) {
-      if (aValue.Equals(nsDependentString(start, end), aComparator)) {
-        return PR_TRUE;
-      }
-    }
+    if (val_start < val_end &&
+        aValue.Equals(Substring(val_start, val_end), aComparator))
+      return PR_TRUE;
 
-    start = ++end;
+    ++p; // we know the next character is not whitespace
   }
   return PR_FALSE;
 }
