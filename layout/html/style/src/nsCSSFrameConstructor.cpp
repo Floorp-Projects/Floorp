@@ -6417,97 +6417,165 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 }
 
 static void
-UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager, nsRect& aBoundsRect)
+ApplyRenderingChangeToTree(nsIPresContext& aPresContext,
+                           nsIFrame* aFrame,
+                           nsIViewManager* aViewManager);
+
+static void
+SyncAndInvalidateView(nsIView* aView, nsIFrame* aFrame, 
+                      nsIViewManager* aViewManager)
+{
+  const nsStyleColor* color;
+  const nsStyleDisplay* disp; 
+  aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&) color);
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
+
+  aViewManager->SetViewOpacity(aView, color->mOpacity);
+  PRBool viewVisible = (NS_STYLE_VISIBILITY_VISIBLE == disp->mVisible);
+  // XXX Troy, you need to hook in the leaf node logic here.
+
+  // XXX also need to set transparency in the view
+  if (! viewVisible) {
+    nsIView* parentView = nsnull;
+    aView->GetParent(parentView);
+    if (parentView) {
+      nsRect  bounds;
+      aView->GetBounds(bounds);
+      aViewManager->UpdateView(parentView, bounds, NS_VMREFRESH_NO_SYNC);
+    }
+    else {
+      // XXX??? how to deal with this??? Do we even have to?
+    }
+    aView->SetVisibility(nsViewVisibility_kHide); 
+  }
+  else {
+    aView->SetVisibility(nsViewVisibility_kShow); 
+    aViewManager->UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
+  }
+}
+
+static void
+UpdateViewsForTree(nsIPresContext& aPresContext, nsIFrame* aFrame, 
+                   nsIViewManager* aViewManager, nsRect& aBoundsRect)
 {
   nsIView* view;
   aFrame->GetView(&view);
 
-  nsFrameState  state;
-  aFrame->GetFrameState(&state);
   if (view) {
-    const nsStyleColor* color;
-    const nsStyleDisplay* disp; 
-    aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&) color);
-    aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
-
-    view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?nsViewVisibility_kHide:nsViewVisibility_kShow); 
-
-    aViewManager->SetViewOpacity(view, color->mOpacity);
+    SyncAndInvalidateView(view, aFrame, aViewManager);
   }
 
-  // now do children fo frame
+  nsRect bounds;
+  aFrame->GetRect(bounds);
+  nsPoint parentOffset(bounds.x, bounds.y);
+  bounds.x = 0;
+  bounds.y = 0;
+
+  // now do children of frame
   PRInt32 listIndex = 0;
   nsIAtom* childList = nsnull;
+  nsIAtom* frameType = nsnull;
 
   do {
     nsIFrame* child = nsnull;
     aFrame->FirstChild(childList, &child);
     while (child) {
-      nsRect childRect;
-      if (state & NS_FRAME_OUTSIDE_CHILDREN) {  // update bounds rect to include children
+      nsFrameState  childState;
+      child->GetFrameState(&childState);
+      if (NS_FRAME_OUT_OF_FLOW != (childState & NS_FRAME_OUT_OF_FLOW)) {
+        // only do frames that are in flow
+        child->GetFrameType(&frameType);
+        if (nsLayoutAtoms::placeholderFrame == frameType) { // placeholder
+          // get out of flow frame and start over there
+          nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)child)->GetOutOfFlowFrame();
+          NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+
+          ApplyRenderingChangeToTree(aPresContext, outOfFlowFrame, aViewManager);
+        }
+        else {  // regular frame
+          nsRect  childBounds;
+          UpdateViewsForTree(aPresContext, child, aViewManager, childBounds);
+          bounds.UnionRect(bounds, childBounds);
+        }
+        NS_IF_RELEASE(frameType);
       }
-      UpdateViewsForTree(child, aViewManager, childRect);
       child->GetNextSibling(&child);
     }
     NS_IF_RELEASE(childList);
     aFrame->GetAdditionalChildListName(listIndex++, &childList);
   } while (childList);
   NS_IF_RELEASE(childList);
+  aBoundsRect = bounds;
+  aBoundsRect += parentOffset;
 }
 
 static void
-ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
-                           nsIFrame* aFrame)
+ApplyRenderingChangeToTree(nsIPresContext& aPresContext,
+                           nsIFrame* aFrame,
+                           nsIViewManager* aViewManager)
 {
-  nsIViewManager* viewManager = nsnull;
+  nsIViewManager* viewManager = aViewManager;
 
   // Trigger rendering updates by damaging this frame and any
   // continuations of this frame.
 
   // XXX this needs to detect the need for a view due to an opacity change and deal with it...
 
+  if (viewManager) {
+    NS_ADDREF(viewManager); // add local ref
+    viewManager->BeginUpdateViewBatch();
+  }
   while (nsnull != aFrame) {
     // Get the frame's bounding rect
-    nsRect r;
-    aFrame->GetRect(r);
-    r.x = 0;
-    r.y = 0;
+    nsRect invalidRect;
+    nsPoint viewOffset;
 
     // Get view if this frame has one and trigger an update. If the
     // frame doesn't have a view, find the nearest containing view
     // (adjusting r's coordinate system to reflect the nesting) and
     // update there.
-    nsIView* view;
+    nsIView* view = nsnull;
     aFrame->GetView(&view);
-    if (view) { // XXX can view have children outside it?
-    } else {
-      nsPoint offset;
-      aFrame->GetOffsetFromView(offset, &view);
-      NS_ASSERTION(nsnull != view, "no view");
-      r += offset;
+    nsIView* parentView;
+    if (! view) { // XXX can view have children outside it?
+      aFrame->GetOffsetFromView(viewOffset, &parentView);
+      NS_ASSERTION(nsnull != parentView, "no view");
+      if (! viewManager) {
+        parentView->GetViewManager(viewManager);
+        viewManager->BeginUpdateViewBatch();
+      }
     }
-    if (nsnull == viewManager) {
-      view->GetViewManager(viewManager);
+    else {
+      if (! viewManager) {
+        view->GetViewManager(viewManager);
+        viewManager->BeginUpdateViewBatch();
+      }
     }
-    UpdateViewsForTree(aFrame, viewManager, r);
+    UpdateViewsForTree(aPresContext, aFrame, viewManager, invalidRect);
 
-    // XXX Instead of calling this we should really be calling
-    // Invalidate on on the nsFrame (which does this)
-    const nsStyleSpacing* spacing;
-    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
-    nscoord width;
-    spacing->GetOutlineWidth(width);
-    if (width > 0) {
-      r.Inflate(width, width);
+    if (! view) { // if frame has view, will already be invalidated
+      // XXX Instead of calling this we should really be calling
+      // Invalidate on on the nsFrame (which does this)
+      const nsStyleSpacing* spacing;
+      aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+      nscoord width;
+      spacing->GetOutlineWidth(width);
+      if (width > 0) {
+        invalidRect.Inflate(width, width);
+      }
+      nsPoint frameOrigin;
+      aFrame->GetOrigin(frameOrigin);
+      invalidRect -= frameOrigin;
+      invalidRect += viewOffset;
+      viewManager->UpdateView(parentView, invalidRect, NS_VMREFRESH_NO_SYNC);
     }
-
-    viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
 
     aFrame->GetNextInFlow(&aFrame);
   }
 
-  if (nsnull != viewManager) {
-    viewManager->Composite();
+  if (viewManager) {
+    viewManager->EndUpdateViewBatch();
+//    viewManager->Composite();
     NS_RELEASE(viewManager);
   }
 }
@@ -6586,7 +6654,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
         StyleChangeReflow(aPresContext, frame, nsnull);
         break;
       case NS_STYLE_HINT_VISUAL:
-        ApplyRenderingChangeToTree(aPresContext, frame);
+        ApplyRenderingChangeToTree(*aPresContext, frame, nsnull);
         break;
       case NS_STYLE_HINT_CONTENT:
       default:
@@ -6812,7 +6880,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     // is there?
     if (primaryFrame) {
       PRInt32 maxHint = aHint;
-      nsIFrame* frame = primaryFrame;
       nsStyleChangeList changeList;
       // put primary frame on list to deal with, re-resolve may update or add next in flows
       changeList.AppendChange(primaryFrame, maxHint);
@@ -6901,7 +6968,7 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
       StyleChangeReflow(aPresContext, frame, nsnull);
     }
     else if (render) {
-      ApplyRenderingChangeToTree(aPresContext, frame);
+      ApplyRenderingChangeToTree(*aPresContext, frame, nsnull);
     }
   }
 
