@@ -40,6 +40,7 @@
 #include "seccomon.h"
 #include "secmod.h"
 #include "secmodi.h"
+#include "pki3hack.h"
    
 #include "pk11pars.h" 
 
