@@ -124,7 +124,7 @@
 			value="&useCurrent;" onclick="setHomePageToCurrentPage('mailnews.start_page.url');" />
 
 			<titledbutton class="dialog push" name="browse" type="button" 
-			value="&browseFile;" onclick="prefNavSelectFile('mailnews.start_page.url', 'choosehomepage')"/>
+			value="&browseFile;" onclick="prefNavSelectFile('mailnews.start_page.url', 'choosehomepage', false)"/>
 		</box>
 
 	</titledbox>

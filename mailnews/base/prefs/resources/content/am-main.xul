@@ -71,7 +71,7 @@
         <html:input name="identity.attachSignature" id="identity.attachSignature" type="checkbox"/>
         <html:label for="identity.attachSignature">&signature.label;</html:label>
         <html:input type="text" id="identity.signature" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
-        <titledbutton class="dialog push" name="browse" type="button" value="&choose.label;" onclick="prefNavSelectFile('identity.signature', 'choosefile')"/>
+        <titledbutton class="dialog push" name="browse" type="button" value="&choose.label;" onclick="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
       </html:div>
 
 <!--

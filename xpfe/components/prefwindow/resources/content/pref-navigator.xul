@@ -80,7 +80,7 @@
         <box orient="horizontal">
   				<spring flex="1"/>
   				<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="setHomePageToCurrentPage('browserStartupHomepage');" />
-  				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="prefNavSelectFile('browserStartupHomepage', 'choosehomepage');"/>
+  				<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="prefNavSelectFile('browserStartupHomepage', 'choosehomepage', false);"/>
   			</box>		
 			</box>		
 		</titledbox>  
