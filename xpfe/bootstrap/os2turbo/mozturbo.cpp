@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (do_unload) {
-    HEV hev;
+    HEV hev = NULLHANDLE;
     if (DosOpenEventSem(SEMNAME, &hev) == NO_ERROR) {
       if (DosPostEventSem(hev) == NO_ERROR) {
         if (DosCloseEventSem(hev) == NO_ERROR) {
