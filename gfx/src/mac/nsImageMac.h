@@ -180,7 +180,7 @@ protected:
                                     const PRInt32 aDepth,
                                     Handle *aMask);                                                
 	
-	static void       CopyBitsWithMask(BitMap* srcBits, BitMap* maskBits, PRInt16 maskDepth, BitMap* destBits,
+	static void       CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits, PRInt16 maskDepth, const BitMap* destBits,
 	                          const Rect& srcRect, const Rect& maskRect, const Rect& destRect);
 	
 	static PRBool     RenderingToPrinter(nsIRenderingContext &aContext);

@@ -39,11 +39,52 @@
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsCarbonHelpers.h"
+#include "nsRegionPool.h"
 
 #include <MacTypes.h>
 #include <Quickdraw.h>
 
 #include "nsGfxUtils.h"
+
+#if 0
+#if TARGET_CARBON
+// useful region debugging code.
+static OSStatus PrintRgnRectProc(UInt16 message, RgnHandle rgn, const Rect *inRect, void *refCon)
+{
+  UInt32*   rectCount = (UInt32*)refCon;
+  
+  switch (message)
+  {
+    case kQDRegionToRectsMsgInit:
+      printf("Dumping region 0x%X\n", rgn);
+      break;
+      
+    case kQDRegionToRectsMsgParse:
+      printf("Rect %d t,l,r,b: %ld, %ld, %ld, %ld\n", *rectCount, inRect->top, inRect->left, inRect->right, inRect->bottom);
+      (*rectCount)++;
+      break;
+      
+    case kQDRegionToRectsMsgTerminate:
+      printf("\n");
+      break;
+  }
+  
+  return noErr;
+}
+
+static void PrintRegionOutline(RgnHandle inRgn)
+{
+  static RegionToRectsUPP sCountRectProc = nsnull;
+  if (!sCountRectProc)
+    sCountRectProc = NewRegionToRectsUPP(PrintRgnRectProc);
+  
+  UInt32    rectCount = 0;  
+  ::QDRegionToRects(inRgn, kQDParseRegionFromTopLeft, sCountRectProc, &rectCount);
+}
+#endif // TARGET_CARBON
+#endif
+
+#pragma mark -
 
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
@@ -780,15 +821,16 @@ OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rec
 	return memFullErr;
 }
 
-void nsImageMac::CopyBitsWithMask(BitMap* srcBits, BitMap* maskBits, PRInt16 maskDepth, BitMap* destBits,
+void nsImageMac::CopyBitsWithMask(const BitMap* srcBits, const BitMap* maskBits, PRInt16 maskDepth, const BitMap* destBits,
         const Rect& srcRect, const Rect& maskRect, const Rect& destRect)
 {
   if (maskBits)
   {
-    if (maskDepth > 1)
-      ::CopyDeepMask(srcBits, maskBits, destBits, &srcRect, &maskRect, &destRect, srcCopy, nsnull);
-    else
-      ::CopyMask(srcBits, maskBits, destBits, &srcRect, &maskRect, &destRect);
+    // we need to pass in the clip region, even if it doesn't intersect the image, to avoid a bug
+    // on Mac OS X that causes bad image drawing (see bug 137295).
+    StRegionFromPool    clipRegion;
+    ::GetClip(clipRegion);
+    ::CopyDeepMask(srcBits, maskBits, destBits, &srcRect, &maskRect, &destRect, srcCopy, clipRegion);
   }
   else
   {
