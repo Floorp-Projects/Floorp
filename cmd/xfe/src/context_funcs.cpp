@@ -32,6 +32,10 @@
 #include "HTMLView.h"
 #include <Xm/XmP.h>
 
+#if XmVersion >= 2000
+extern "C" char * _XmStringGetTextConcat(XmString);
+#endif
+
 #ifdef MOZ_MAIL_NEWS
 #include "MsgFrame.h"
 #include "addrbk.h"

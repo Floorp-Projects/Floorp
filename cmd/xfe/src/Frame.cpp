@@ -83,7 +83,7 @@
 #include "xeditor.h"
 #endif /*EDITOR*/
 
-#ifndef __sgi
+#if !defined(__sgi) && !defined(__hpux)
 #include <X11/Xmu/Editres.h>	/* For editres to work on anything but Irix */
 #endif
 
@@ -1328,7 +1328,7 @@ XFE_Frame::createBaseWidgetShell(Widget parent,String name)
 
 	// This hackery must die too.  It will go away as soon as the 
 	// XfeFrameShell widget supports XmNtrackEditres
-#ifndef __sgi
+#if !defined(__sgi) && !defined(__hpux)
 	XtAddEventHandler(shell, (EventMask)0, True,
 					  (XtEventHandler)_XEditResCheckMessages, 0);
 #endif
