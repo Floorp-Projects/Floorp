@@ -416,7 +416,8 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         //  this is ugly, but so as this state machine. It's too late in doWrite to do anything; let
         //  me know if someone sees a better solution
 
-        if (mReuseCount > 0 && mReuseCount > mLastReuseCount)
+        if (mReuseCount > 0 && mReuseCount > mLastReuseCount
+            && GetWriteType() != eSocketWrite_None)
         {
             PRBool isalive = PR_FALSE;
             if (NS_SUCCEEDED (IsAlive (0, &isalive)) && !isalive)
