@@ -1691,7 +1691,7 @@ nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
   nsresult result = NS_OK;
   if (mInScript) {
     nsAutoString script;
-    script.SetString(mText, mTextLength);
+    script.Assign(mText, mTextLength);
     result = EvaluateScript(script, mScriptLineNo, mScriptLanguageVersion);
     FlushText(PR_FALSE);
     mInScript = PR_FALSE;
