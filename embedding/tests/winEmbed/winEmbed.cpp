@@ -60,6 +60,7 @@
 #include "nsIObserver.h"
 #include "nsIProfileChangeStatus.h"
 #include "nsIURI.h"
+#include "plstr.h"
 
 // Local header files
 #include "winEmbed.h"
