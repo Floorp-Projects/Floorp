@@ -17,13 +17,13 @@
 #
 
 DEPTH   =..\..\..\..\..
-MODULE=py_test_component
+MODULE=pyxpcom_test
 
 ################################################################################
 ## exports
 
 XPIDLSRCS =               \
-	py_test_component.idl \
+	.\py_test_component.idl \
         $(NULL)
 
 ################################################################################
@@ -35,6 +35,5 @@ install::
 	$(MAKE_INSTALL) ./py_test_component.py $(DIST)\bin\components
 
 clobber::
-        $(RM) py_test_component.xpt
         $(RM) $(DIST)\bin\components\py_test_component.py
-        $(RM) $(DIST)\bin\components\py_test_component.xpt
+        $(RM) $(DIST)\bin\components\pyxpcom_test.xpt
