@@ -743,7 +743,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 	if (buffer_tail > buffer + size - 1)
-		abort ();
+    return nsnull;
 
 	/* realloc it smaller... */
 	buffer = (char*)PR_REALLOC (buffer, buffer_tail - buffer + 1);
