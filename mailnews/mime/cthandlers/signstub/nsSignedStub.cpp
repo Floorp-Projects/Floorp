@@ -77,7 +77,7 @@ GenerateMessage(char** html)
   *html = nsCRT::strdup("\
 <BR><text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\
 <center><table BORDER=1 ><tr>\
-<td><CENTER>This message is possibly <B>SIGNED</B>. Mozilla Mail does not support signed mail.</CENTER></td>\
+<td><CENTER>This message is possibly signed and/or encrypted. This application does not currently support signed or encrypted messages.</CENTER></td>\
 </tr>\
 </table></center><BR>");
 
