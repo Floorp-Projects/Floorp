@@ -436,6 +436,18 @@
     {0xaa, 0xe3, 0xde, 0x6b, 0x92, 0xda, 0xb6, 0x20} \
 }
 
+#define NS_HTTPAUTHMANAGER_CLASSNAME \
+    "nsHttpAuthManager"
+#define NS_HTTPAUTHMANAGER_CONTRACTID \
+    "@mozilla.org/network/http-auth-manager;1"
+#define NS_HTTPAUTHMANAGER_CID \
+{ /* 36b63ef3-e0fa-4c49-9fd4-e065e85568f4 */         \
+    0x36b63ef3,                                      \
+    0xe0fa,                                          \
+    0x4c49,                                          \
+    {0x9f, 0xd4, 0xe0, 0x65, 0xe8, 0x55, 0x68, 0xf4} \
+}
+
 /******************************************************************************
  * netwerk/protocol/res/ classes
  */

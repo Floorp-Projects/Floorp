@@ -2035,11 +2035,12 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
     if (NS_SUCCEEDED(rv)) {
         nsXPIDLCString temp;
         const char *creds = entry->Creds();
-        if (!creds) {
+        const char *challenge = entry->Challenge();
+        if (!creds && challenge) {
             nsCAutoString foo;
-            rv = SelectChallenge(entry->Challenge(), foo, getter_AddRefs(auth));
+            rv = SelectChallenge(challenge, foo, getter_AddRefs(auth));
             if (NS_SUCCEEDED(rv)) {
-                rv = auth->GenerateCredentials(this, entry->Challenge(),
+                rv = auth->GenerateCredentials(this, challenge,
                                                entry->User(), entry->Pass(),
                                                entry->MetaData(),
                                                getter_Copies(temp));

@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsHttpResponseHead.cpp \
 		nsHttpChunkedDecoder.cpp \
 		nsHttpAuthCache.cpp \
+		nsHttpAuthManager.cpp \
 		nsHttpBasicAuth.cpp \
 		nsHttpDigestAuth.cpp \
 		nsHttpTransaction.cpp \
