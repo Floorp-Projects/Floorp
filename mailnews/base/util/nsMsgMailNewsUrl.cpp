@@ -549,7 +549,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result)
 
     rv = ioService->ExtractScheme(relativePath, &startPos, &endPos, getter_Copies(scheme));
     // if we have a fully qualified scheme then pass the relative path back as the result
-    if (NS_SUCCEEDED(rv) && scheme.get9())
+    if (NS_SUCCEEDED(rv) && scheme.get())
     {
       *result = nsCRT::strdup(relativePath);
     }
