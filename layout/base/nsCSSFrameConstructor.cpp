@@ -9042,6 +9042,7 @@ DeletingFrameSubtree(nsIPresContext*  aPresContext,
 {
   // If there's no frame manager it's probably because the pres shell is
   // being destroyed
+  NS_ENSURE_TRUE(aFrame, NS_OK); // XXXldb Remove this sometime in the future.
   if (aFrameManager) {
     nsAutoVoidArray destroyQueue;
 
@@ -9052,11 +9053,12 @@ DeletingFrameSubtree(nsIPresContext*  aPresContext,
     if (IsFrameSpecial(aFrame)) {
       nsIFrame* specialSibling;
       GetSpecialSibling(aFrameManager, aFrame, &specialSibling);
-      DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
-                           specialSibling);
+      if (specialSibling)
+        DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
+                             specialSibling);
     }
 
-    while (aFrame) {
+    do {
       DoDeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
                              destroyQueue, aFrame, aFrame);
 
@@ -9066,7 +9068,7 @@ DeletingFrameSubtree(nsIPresContext*  aPresContext,
       // found as part of the walk over the top-most frame's continuing frames.
       // Walking them again will make this an N^2/2 algorithm
       aFrame->GetNextInFlow(&aFrame);
-    }
+    } while (aFrame);
 
     // Now destroy any frames that have been enqueued for destruction.
     for (PRInt32 i = destroyQueue.Count() - 1; i >= 0; --i) {
