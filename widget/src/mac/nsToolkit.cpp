@@ -39,6 +39,7 @@
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
 #include "nsWidgetAtoms.h"
+#include "nsWidgetSupport.h"
 
 #include <Gestalt.h>
 #include <Appearance.h>
@@ -390,7 +391,9 @@ void
 nsToolkit::GetTopWidget ( WindowPtr aWindow, nsIWidget** outWidget )
 {
   nsIWidget* topLevelWidget = nsnull;
-	::GetWindowProperty ( aWindow, 'MOSS', 'GEKO', sizeof(nsIWidget*), nsnull, (void*)&topLevelWidget);
+  ::GetWindowProperty ( aWindow,
+      kTopLevelWidgetPropertyCreator, kTopLevelWidgetRefPropertyTag,
+      sizeof(nsIWidget*), nsnull, (void*)&topLevelWidget);
   if ( topLevelWidget ) {
     *outWidget = topLevelWidget;
     NS_ADDREF(*outWidget);

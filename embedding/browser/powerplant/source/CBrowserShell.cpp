@@ -64,7 +64,6 @@
 #include "nsIHistoryEntry.h"
 #include "nsISHEntry.h"
 #include "nsISHistory.h"
-#include "nsIWidget.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIMacTextInputEventSink.h"
 #include "nsCRT.h"
@@ -340,57 +339,6 @@ NS_IMETHODIMP CBrowserShell::CommonConstruct()
     return NS_OK;
 }
 
-/**
- * It is a necessary evil to create a top level window widget in order to
- * have a parent for our nsIBaseWindow. In order to not put that responsibility
- * onto the PowerPlant window which contains us, we do it ourselves here by
- * creating the widget if it does not exist and storing it as a window property.
- */
- 
-NS_IMETHODIMP CBrowserShell::EnsureTopLevelWidget(nsIWidget **aWidget)
-{
-    NS_ENSURE_ARG_POINTER(aWidget);
-    *aWidget = nsnull;
-    
-    OSStatus err;
-    nsresult rv;
-    nsIWidget *widget = nsnull;
-
-    err = ::GetWindowProperty(GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), nsnull, (void*)&widget);
-    if (err == noErr && widget) {
-        *aWidget = widget;
-        NS_ADDREF(*aWidget);
-        return NS_OK;
-    }
-
-	// Create it with huge bounds. The actual bounds that matters is that of the
-	// nsIBaseWindow. The bounds of the top level widget clips its children so
-	// we just have to make sure it is big enough to always contain the children.
-	// Under 10.2, if this rect is too large, subwidget offsets can temporarily push the
-	// bounds over 32,727 and OffsetRgn() will silently fail. In order to avoid that, we
-	// err towards a local max of the size of the gray rgn.
-    
-    nsCOMPtr<nsIWidget> newWidget(do_CreateInstance(kWindowCID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-	
-    RgnHandle grayRgn = ::GetGrayRgn();
-    Rect grayRect;
-    ::GetRegionBounds(grayRgn, &grayRect);
-    nsRect r(0, 0, grayRect.right - grayRect.left, grayRect.bottom - grayRect.top);
-    rv = newWidget->Create(GetMacWindow(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-	widget = newWidget;
-    err = ::SetWindowProperty(GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), (void*)&widget);
-    if (err == noErr) {
-        *aWidget = newWidget;
-        NS_ADDREF(*aWidget);
-        return NS_OK;
-    }
-    
-    return NS_ERROR_FAILURE;
-}
-
 
 //*****************************************************************************
 //***    CBrowserShell: LPane overrides
@@ -399,14 +347,6 @@ NS_IMETHODIMP CBrowserShell::EnsureTopLevelWidget(nsIWidget **aWidget)
 void CBrowserShell::FinishCreateSelf()
 {
 	FocusDraw();
-		
-	nsCOMPtr<nsIWidget> aWidget;
-	ThrowIfError_(EnsureTopLevelWidget(getter_AddRefs(aWidget)));
-	
-	// the widget is also our avenue for dispatching events into Gecko via
-	// nsIEventSink. Save this sink for later.
-	mEventSink = do_QueryInterface(aWidget);
-	ThrowIfNil_(mEventSink);
 
 	Rect portFrame;
 	CalcPortFrameRect(portFrame);
@@ -414,8 +354,10 @@ void CBrowserShell::FinishCreateSelf()
 	
 	nsresult rv;
 	
-    mWebBrowserAsBaseWin->InitWindow(aWidget->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
+    mWebBrowserAsBaseWin->InitWindow(GetMacWindow(), nsnull, r.x, r.y, r.width, r.height);
     mWebBrowserAsBaseWin->Create();
+    mEventSink = do_GetInterface(mWebBrowser);
+    ThrowIfNil_(mEventSink);
         
     // Hook up our progress listener
     nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference((nsIWebProgressListener *)mProgressListener)));
@@ -938,18 +880,6 @@ NS_METHOD CBrowserShell::SetWebBrowser(nsIWebBrowser* aBrowser)
 
     FocusDraw();
 
-    /*
-    CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(GetMacWindow()));
-    NS_ENSURE_TRUE(ourWindow, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIWidget>  aWidget;
-    ourWindow->GetWidget(getter_AddRefs(aWidget));
-    NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
-    */
-    
-	nsCOMPtr<nsIWidget> aWidget;
-	ThrowIfError_(EnsureTopLevelWidget(getter_AddRefs(aWidget)));
-
     mWebBrowser = aBrowser;
 
     nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(mWebBrowser));
@@ -964,8 +894,10 @@ NS_METHOD CBrowserShell::SetWebBrowser(nsIWebBrowser* aBrowser)
     CalcPortFrameRect(portFrame);
     nsRect   r(portFrame.left, portFrame.top, portFrame.right - portFrame.left, portFrame.bottom - portFrame.top);
     	
-    mWebBrowserAsBaseWin->InitWindow(aWidget->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
+    mWebBrowserAsBaseWin->InitWindow(GetMacWindow(), nsnull, r.x, r.y, r.width, r.height);
     mWebBrowserAsBaseWin->Create();
+    mEventSink = do_GetInterface(mWebBrowser);
+    ThrowIfNil_(mEventSink);
 
     AdjustFrame();   
 
