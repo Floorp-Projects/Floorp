@@ -390,8 +390,9 @@ nsTableOuterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       return NS_OK;
     }
   }
-  // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+  // This frame should never get events (it contains the margins of the
+  // table), so always pass |PR_FALSE| for |aConsiderSelf|.
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
 }
 
 NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIPresContext* aPresContext,
