@@ -371,6 +371,7 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
                                 const nsSize& aMaxSize, nsSize& aSize)
 {
+#if 0
   nsInput* input;
   GetContent((nsIContent *&) input); // this must be an nsInput
   nsStylePosition* pos = (nsStylePosition*) 
@@ -381,13 +382,16 @@ void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
   aSize.height = GetStyleDim(aPresContext, aMaxSize, 
                              pos->mHeightFlags, pos->mHeight);
   NS_RELEASE(input);
+#endif
+  aSize.width = -1;
+  aSize.height = -1;
 }
 
 PRInt32 
 nsInputFrame::GetStyleDim(nsIPresContext& aPresContext, const nsSize& aMaxSize, 
                           PRInt8 aFlags, PRInt32 aVal)
 {
-  // Peter, can you help. 
+#if 0
   PRInt32 result = 0;
   switch (aFlags) {
     case NS_STYLE_POSITION_VALUE_LENGTH:
@@ -407,6 +411,8 @@ nsInputFrame::GetStyleDim(nsIPresContext& aPresContext, const nsSize& aMaxSize,
   }
 
   return result;
+#endif
+  return -1;
 }
 
 PRInt32 
