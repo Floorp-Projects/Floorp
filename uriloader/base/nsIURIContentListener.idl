@@ -36,14 +36,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- *  nsIURIContentListener is an interface used by classes which
- *  want to know (and have a chance to handle) a particular content type.
- *  Typical useage scenarios will include running applications which register
- *  a nsIURIContentListener for each of its content windows with the uri dispatcher
- *  service. 
- * 
+ * nsIURIContentListener is an interface used by components which
+ * want to know (and have a chance to handle) a particular content type.
+ * Typical usage scenarios will include running applications which register
+ * a nsIURIContentListener for each of its content windows with the uri
+ * dispatcher service. 
+ *
  * @status UNDER_REVIEW
- */ 
+ */
 
 #include "nsISupports.idl"
 
@@ -54,77 +54,105 @@ interface nsIURI;
 [scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
 interface nsIURIContentListener : nsISupports
 {
-  /*
-    Gives the content listener first crack at stopping a load before it
-    happens.
-
-    aURI --> the uri we are going to try and open.
-    return value --> specifies if the open should be aborted.  
+ /**
+  * Gives the original content listener first crack at stopping a load before
+  * it happens.
+  *
+  * @param aURI   URI that is being opened.
+  *
+  * @return       <code>true</code> if the load can continue;
+  *               <code>false</code> if the open should be aborted.
   */
   boolean onStartURIOpen(in nsIURI aURI);
 
-  /* doContent --> When the content listener is expected to process the
-     content, the uri loader calls doContent. doContent needs to return a 
-     nsIStreamListener which the uri loader will push the content into. 
-
-     aContentType --> the content type we need to handle
-     aIsContentPreferred --> indicates whether the content is preferred by
-                             this listener.
-     aStreamListener --> the content viewer the content should be displayed in
-                        You should return null for this out parameter if you do
-                        not want to handle this content type.
-     return value --> If you want to handle the content yourself and you don't
-                      want the dispatcher to do anything else, return
-                      TRUE, else return false.
+ /**
+  * Notifies the content listener to hook up an nsIStreamListener capable of
+  * consuming the data stream.
+  *
+  * @param aContentType         Content type of the data.
+  * @param aIsContentPreferred  Indicates whether the content should be
+  *                             preferred by this listener.
+  * @param aRequest             Request that is providing the data.
+  * @param aContentHandler      nsIStreamListener that will consume the data.
+  *                             This should be set to <code>nsnull</code> if
+  *                             no consumer can handle the content type.
+  *
+  * @return                     <code>true</code> if the consumer wants to
+  *                             handle the load completely by itself.  This
+  *                             causes the URI Loader do nothing else...
+  *                             <code>false</code> if the URI Loader should
+  *                             continue handling the load.
   */
-
-  boolean doContent(in string aContentType, 
-                    in boolean aIsContentPreferred, 
-                    in nsIRequest request,
+  boolean doContent(in string aContentType,
+                    in boolean aIsContentPreferred,
+                    in nsIRequest aRequest,
                     out nsIStreamListener aContentHandler);
 
-  /* When given a uri to dispatch, if the load type is a user click,
-     then the uri loader tries to find a preferred content handler
-     for this content type. The thought is that many content
-     listeners may be able to handle the same content type if they
-     have to. i.e. the mail content window can handle text/html just
-     like a browser window content listener. However, if the user
-     clicks on a link with text/html content, we'd like the browser
-     window to handle that content and not the mail window where the
-     user may have clicked the link. That's why we have isPreferred.
-     
-     aContentType --> the content type to handle
-     aDesiredContentType --> yes, we can accept aContentType but we would
-         like it converted to aDesiredContentType. This argument can
-         be null if you want the content directly as aContentType
-     boolean --> return true if you are a preferred content handler
-                 for aContentType and false otherwise.
+ /*
+  * When given a uri to dispatch, if the URI is specified as 'preferred 
+  * content' then the uri loader tries to find a preferred content handler
+  * for the content type. The thought is that many content listeners may
+  * be able to handle the same content type if they have to. i.e. the mail
+  * content window can handle text/html just like a browser window content
+  * listener. However, if the user clicks on a link with text/html content,
+  * then the browser window should handle that content and not the mail
+  * window where the user may have clicked the link.  This is the difference
+  * between isPreferred and canHandleContent.
+  *
+  * @param aContentType         Content type of the data.
+  * @param aDesiredContentType  Indicates that aContentType must be converted
+  *                             to aDesiredContentType before processing the
+  *                             data.  This causes a stream converted to be
+  *                             inserted into the nsIStreamListener chain.
+  *                             This argument can be <code>nsnull</code> if
+  *                             the content should be consumed directly as
+  *                             aContentType.
+  *
+  * @return                     <code>true</code> if this is a preferred
+  *                             content handler for aContentType;
+  *                             <code>false<code> otherwise.
   */
   boolean isPreferred(in string aContentType, out string aDesiredContentType);
 
-  /* When given a uri to dispatch, if the load type is anything but
-     user click, the uri loader will call canHandleContent to see if
-     the content listener can handle the content. The arguments are
-     the same as isPreferred.
-
-     Note: I really envision canHandleContent as a method implemented
-     by the docshell as the implementation is generic to all doc
-     shells. The IsPreferred decision is a decision made by a top level
-     application content listener that sits at the top of the docshell
-     hiearchy.
+ /**
+  * When given a uri to dispatch, if the URI is not specified as 'preferred
+  * content' then the uri loader calls canHandleContent to see if the content
+  * listener is capable of handling the content.
+  *
+  * @param aContentType         Content type of the data.
+  * @param aIsContentPreferred  Indicates whether the content should be
+  *                             preferred by this listener.
+  * @param aDesiredContentType  Indicates that aContentType must be converted
+  *                             to aDesiredContentType before processing the
+  *                             data.  This causes a stream converted to be
+  *                             inserted into the nsIStreamListener chain.
+  *                             This argument can be <code>nsnull</code> if
+  *                             the content should be consumed directly as
+  *                             aContentType.
+  *
+  * @return                     <code>true</code> if the data can be consumed.
+  *                             <code>false</code> otherwise.
+  *
+  * Note: I really envision canHandleContent as a method implemented
+  * by the docshell as the implementation is generic to all doc
+  * shells. The isPreferred decision is a decision made by a top level
+  * application content listener that sits at the top of the docshell
+  * hiearchy.
   */
   boolean canHandleContent(in string aContentType, 
                            in boolean aIsContentPreferred, 
                            out string aDesiredContentType);
-  
-  /* Get/Set loadCookie are methods the uri loader calls on the
-   *  nsIURIContentListener in order to store / associate a load context
-   *  with this particular content listener...
-   */
+
+ /**
+  * The load context associated with a particular content listener.
+  * The URI Loader stores and accesses this value as needed.
+  */
   attribute nsISupports loadCookie;
 
-  /* if you are part of a chain of content listeners (i.e. if you are
-   * a docshell!) return your parent content listener
-   */
+ /**
+  * The parent content listener if this particular listener is part of a chain
+  * of content listeners (i.e. a docshell!)
+  */
   attribute nsIURIContentListener parentContentListener;
 };
+
