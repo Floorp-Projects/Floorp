@@ -25,6 +25,7 @@
 #include "nsICmdLineService.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
+#include "prprf.h"
 
 #if defined(XP_MAC)
 #include "macstdlibextras.h"
@@ -89,6 +90,9 @@ int main(int argc, char* argv[])
   char *   width=nsnull, *height=nsnull;
   char *  iconic_state=nsnull;
 
+  PRInt32 widthVal  = 615;
+  PRInt32 heightVal = 650;
+
   nsIAppShellService* appShell = nsnull;
 
   /*
@@ -152,10 +156,25 @@ int main(int argc, char* argv[])
   if (rv != NS_OK)
      goto done;
   else {
-    if (width)
-      fprintf(stderr, "Width is set to %s\n", width);
-    else
+    if (width) {
+      PR_sscanf(width, "%d", &widthVal);
+      fprintf(stderr, "Width is set to %d\n", widthVal);
+    } else {
       fprintf(stderr, "width was not set\n");
+    }
+  }
+  
+  // Get the value of -height option
+  rv = cmdLineArgs->GetCmdLineValue("-height", &height);
+  if (rv != NS_OK)
+     goto done;
+  else {
+    if (height) {
+      PR_sscanf(height, "%d", &heightVal);
+      fprintf(stderr, "height is set to %d\n", heightVal);
+    } else {
+      fprintf(stderr, "height was not set\n");
+    }
   }
   
    
@@ -212,9 +231,11 @@ int main(int argc, char* argv[])
    *      components this will be specified in the XUL description...
    */
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull);
+  appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull, widthVal, heightVal);
+
   NS_RELEASE(url);
-  
+
+ 
    /*
     * Start up the main event loop...
     */
