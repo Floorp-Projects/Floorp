@@ -571,7 +571,7 @@ PK11_FindSlotsByNames(const char *dllName, const char* slotName,
 }
 
 PK11SlotInfo *
-PK11_FindSlotByName(char *name)
+PK11_FindSlotByName(const char *name)
 {
    SECMODModuleList *mlp;
    SECMODModuleList *modules = SECMOD_GetDefaultModuleList();
