@@ -22,9 +22,9 @@ $PASSED_TBX_KEEP_HOURS=2;
 $IF_TBX_KEEP_HOURS=2;
 $PASSED_NEWER_DIRS=2;
 $IF_NEWER_DIRS=2;
-$verbose = 0;
+$verbose = 1;
 
-$TBX_TESTDIR="/share/builds/mccrel/nss/nsstip/tinderbox/tests_results/security";
+$TBX_TESTDIR="/share/builds/mccrel3/nss/nsstip/tinderbox/tests_results/security";
 $FTP_STAGE="/u/sonmi/tmp/ftp_stage/tinderbox";
 
 @tbx_dirs = ();  
@@ -34,7 +34,7 @@ $ePASSED_TBX_KEEP=$PASSED_TBX_KEEP_HOURS*60*60;
 $eIF_TBX_KEEP=$IF_TBX_KEEP_HOURS*60*60;
 $eNOT_FAILED_TBX_KEEP=$NOT_FAILED_TBX_KEEP_HOURS*60*60;
 
-$days, $hours, $minutes, $seconds;
+$year, $month, $days, $hours, $minutes, $seconds;
 $efulldate=0;
 
 $fulldate=0;
@@ -56,15 +56,12 @@ debug ("$seconds, $minutes, $hours, $days, $month, $year");
 
 $enow = timelocal(localtime);
 
-
-
 sub debug;
 sub warning;
 sub error;
 sub msg;
 sub init;
 sub check_tbx_dirs;
-
 
 sub check_tbx_dirs
 {
@@ -141,6 +138,7 @@ sub rm_tbx()
 
 debug ("DELETING $tbx_dir... (@_[0]) ");
 system("rm -rf $TBX_TESTDIR/$tbx_dir");
+#debug ("rm -rf $TBX_TESTDIR/$tbx_dir");
 
 }
 

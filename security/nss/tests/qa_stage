@@ -46,7 +46,7 @@ qa_stage_init()
 
     Echo "Init..."
     DAYBUILD=${QAYEAR}${BUILDDATE}.${BUILDNUMBER}
-    NSS_D0=/share/builds/mccrel/nss
+    NSS_D0=/share/builds/mccrel3/nss
     NSS_VER_DIR=${NSS_D0}/nss${NSSVER}
     NTDIST=${NSS_VER_DIR}/builds/${DAYBUILD}/blowfish_NT4.0_Win95/mozilla/dist
     UXDIST=${NSS_VER_DIR}/builds/${DAYBUILD}/booboo_Solaris8/mozilla/dist
