@@ -103,6 +103,8 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-bidi          Disable bi-directional support"
 ac_help="$ac_help
+  --enable-ctl            Enable Thai CTL support"
+ac_help="$ac_help
   --disable-accessibility Disable accessibility support"
 ac_help="$ac_help
   --enable-monolithic-toolkit
@@ -10730,6 +10732,19 @@ EOF
 
 fi
 
+SUNCTL=
+# Check whether --enable-ctl or --disable-ctl was given.
+if test "${enable_ctl+set}" = set; then
+  enableval="$enable_ctl"
+  if test "$enableval" = "yes"; then
+    SUNCTL=1
+  elif test "$enableval" = "no"; then
+    :
+  else
+    { echo "configure: error: Option, ctl, does not take an argument ($enableval)." 1>&2; exit 1; }
+  fi
+fi
+
 ACCESSIBILITY=1
 # Check whether --enable-accessibility or --disable-accessibility was given.
 if test "${enable_accessibility+set}" = set; then
@@ -11093,7 +11108,11 @@ fi
 
 
 MOZ_EXTENSIONS_DEFAULT="cookie wallet content-packs xml-rpc xmlextras help transformiix"
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin venkman" 
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT irc xmlterm inspector access-builtin venkman ctl" 
+
+if test "${enable_ctl+set}" = set; then
+  MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT ctl"
+fi
 
 # Check whether --with-extensions or --without-extensions was given.
 if test "${with_extensions+set}" = set; then
@@ -11123,6 +11142,11 @@ fi
 if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0; then
     echo "configure: warning: Cannot build venkman without JavaScript debug library. Removing venkman from MOZ_EXTENSIONS." 1>&2
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
+fi
+
+if test -z "$SUNCTL" && test `echo "$MOZ_EXTENSIONS" | grep -c ctl` -ne 0; then
+   echo "configure: warning: Cannot build ctl without glib. Removing ctl from MOZ_EXTENSIONS." 1>&2
+   MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|ctl||'`
 fi
 
 # Check whether --enable-jar-packaging or --disable-jar-packaging was given.
@@ -13420,6 +13444,7 @@ s%@MOZ_STATIC_COMPONENTS@%$MOZ_STATIC_COMPONENTS%g
 s%@MOZ_META_COMPONENTS@%$MOZ_META_COMPONENTS%g
 s%@ENABLE_TESTS@%$ENABLE_TESTS%g
 s%@IBMBIDI@%$IBMBIDI%g
+s%@SUNCTL@%$SUNCTL%g
 s%@ACCESSIBILITY@%$ACCESSIBILITY%g
 s%@MOZ_USER_DIR@%$MOZ_USER_DIR%g
 s%@BUILD_IDLC@%$BUILD_IDLC%g
