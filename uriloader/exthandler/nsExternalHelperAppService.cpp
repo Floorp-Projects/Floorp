@@ -30,6 +30,7 @@
 #include "nsIChannel.h"
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -2378,16 +2379,16 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFileExt, char **aContentType) 
 {
+  nsresult rv = NS_OK;
   // First of all, check our default entries
   for (size_t i = 0; i < NS_ARRAY_LENGTH(defaultMimeEntries); i++)
   {
     if (nsCRT::strcasecmp(defaultMimeEntries[i].mFileExtension, aFileExt) == 0) {
       *aContentType = nsCRT::strdup(defaultMimeEntries[i].mMimeType);
-      return NS_OK;
+      return rv;
     }
   }
 
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIMIMEInfo> info;
   rv = GetFromTypeAndExtension(nsnull, aFileExt, getter_AddRefs(info));
   if (NS_FAILED(rv)) {
@@ -2403,15 +2404,23 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
       }
       else 
       {
-        rv = NS_ERROR_FAILURE;
+        rv = NS_ERROR_NOT_AVAILABLE;
       }
     }
   }
-  if (NS_FAILED(rv)) {
-    return rv;
-  } // endif
+  if (NS_SUCCEEDED(rv)) {
+    rv = info->GetMIMEType(aContentType);
+  }
+  else {
+    // Let's see if an extension added something
+    nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
+    if (catMan)
+      rv = catMan->GetCategoryEntry("ext-to-type-mapping", aFileExt, aContentType);
+    else
+      rv = NS_ERROR_NOT_AVAILABLE;
 
-  return info->GetMIMEType(aContentType);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::GetPrimaryExtension(const char* aMIMEType, const char* aFileExt, char** _retval)
