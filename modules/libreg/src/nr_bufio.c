@@ -129,7 +129,6 @@ BufioFile*  bufio_Open(const char* name, PRIntn flags, PRIntn mode)
         if (!file)
         {
             PR_Close( fd );
-            fclose( fd );
             PR_SetError( PR_OUT_OF_MEMORY_ERROR, 0 );
         }
     }
