@@ -340,7 +340,6 @@ nsThread::RegisterThreadSelf()
     if (kIThreadSelfIndex == 0) {
         status = PR_NewThreadPrivateIndex(&kIThreadSelfIndex, Exit);
         if (status != PR_SUCCESS) return NS_ERROR_FAILURE;
-        NS_ASSERTION(kIThreadSelfIndex != 0, "couldn't get thread private index");
     }
 
     status = PR_SetThreadPrivate(kIThreadSelfIndex, this);
@@ -373,7 +372,6 @@ nsIThread::GetIThread(PRThread* prthread, nsIThread* *result)
     if (nsThread::kIThreadSelfIndex == 0) {
         status = PR_NewThreadPrivateIndex(&nsThread::kIThreadSelfIndex, nsThread::Exit);
         if (status != PR_SUCCESS) return NS_ERROR_FAILURE;
-        NS_ASSERTION(nsThread::kIThreadSelfIndex != 0, "couldn't get thread private index");
     }
 
     thread = (nsThread*)PR_GetThreadPrivate(nsThread::kIThreadSelfIndex);
