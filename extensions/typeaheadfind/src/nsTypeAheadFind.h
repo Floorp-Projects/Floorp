@@ -205,9 +205,9 @@ protected:
   PRPackedBool mIsIMETypeAheadActive;
   PRPackedBool mIsBackspaceProtectOn; // from accidentally going back in history
   PRInt32 mBadKeysSinceMatch;
+  PRUnichar mLastBadChar; // if taf automatically overwrites an unfound character
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
-  PRUnichar mLastBadChar; // if taf automatically overwrites an unfound character
 
   static PRInt32 sAccelKey;  // magic value of -1 indicates unitialized state
 
