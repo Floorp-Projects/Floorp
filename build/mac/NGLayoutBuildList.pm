@@ -620,7 +620,6 @@ sub MakeResourceAliases()
 		# addressbook resides within messenger
 		my($addressbook_content_chrome_dir) = "$messenger_content_chrome_dir" . "addressbook:";
 		my($addressbook_locale_chrome_dir) = "$messenger_locale_chrome_dir" . "addressbook:";
-		my($addressbook_skin_chrome_dir) = "$messenger_skin_chrome_dir" . "addressbook:";
 
 		_InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",			"$messenger_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:base:resources:content:mac:MANIFEST",		"$messenger_content_chrome_dir", 0);
@@ -653,7 +652,6 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:mailnews:compose:prefs:resources:locale:en-US:MANIFEST",	"$messengercompose_locale_chrome_dir", 0);
 
 		_InstallResources(":mozilla:mailnews:addrbook:resources:content:MANIFEST",		"$addressbook_content_chrome_dir", 0);
-		_InstallResources(":mozilla:mailnews:addrbook:resources:skin:MANIFEST",			"$addressbook_skin_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",	"$addressbook_locale_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_locale_chrome_dir", 0);
