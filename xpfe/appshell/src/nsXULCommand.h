@@ -88,6 +88,8 @@ public:
   virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
   virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
 
+  // nsIMenuListener 
+  virtual nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
 
 protected:
   NS_IMETHOD ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript);

@@ -345,6 +345,13 @@ nsresult nsXULCommand::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
 }
+  
+
+nsEventStatus nsXULCommand::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+  DoCommand();
+  return nsEventStatus_eIgnore;//nsEventStatus_eConsumeNoDefault;
+}
 
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
