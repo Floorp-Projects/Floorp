@@ -475,11 +475,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 
 		    if(!cur_entry->URL_s->post_data)
 		      {
-#if defined(__sun) && !defined(SVR4) /* sun 4.1.3 */
-			    sprintf(buf, "%lu", context);
-#else
-			    sprintf(buf, "%p", context);
-#endif
+			    PR_snprintf(buf, 64, "%p", context);
 			    StrAllocCat(data, buf);
 			    StrAllocCopy(cur_entry->URL_s->post_data, buf);
 		      }
@@ -561,7 +557,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 			content_type = PL_strdup(TEXT_HTML);
 		}
 	}
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(MODULAR_NETLIB)
 	else if (!PL_strncasecmp(which, "minibuffer", 10))
 	{
 		extern void FE_ShowMinibuffer(MWContext *);
