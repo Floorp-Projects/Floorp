@@ -43,6 +43,7 @@
 #define NSS_3_4_CODE
 #include "nsspki.h"
 #include "pkit.h"
+#include "pkitm.h"
 #include "pkinss3hack.h"
 
 /*
@@ -1042,12 +1043,14 @@ loser:
     NSSCertificate **stanChain;
     NSSCertificate *stanCert;
     PRArenaPool *arena;
+    NSSUsage nssUsage;
     int i, len;
 
     stanCert = STAN_GetNSSCertificate(cert);
-    /* XXX usage */
-    stanChain = NSSCertificate_BuildChain(stanCert, NULL, NULL, NULL, NULL,
-                                                    0, NULL, NULL);
+    nssUsage.anyUsage = PR_FALSE;
+    nssUsage.nss3usage = usage;
+    stanChain = NSSCertificate_BuildChain(stanCert, NULL, &nssUsage, NULL,
+                                                    NULL, 0, NULL, NULL);
     if (!stanChain) {
 	return NULL;
     }
