@@ -100,6 +100,7 @@ public:
 
 	void ComputeDockingSizes();
 	void UpdateTitleBar(HT_View pView);
+    virtual void PostNcDestroy();
 
 public:
     HT_Pane GetHTPane();
@@ -131,6 +132,15 @@ protected:  // control bar embedded members
 	CSelector* m_pSelector;		// the selector pane.
 	CContentView *m_nsContent;	// the content pane.
 	CNavMenuBar* m_pNavMenu;	// the embedded menu bar.
+
+    // Indicator used when being docked/undocked.
+    enum {
+        unknown,
+        docked,
+        beingDocked,
+        undocked,
+        beingUndocked
+    } m_dockingState;
 
 // Generated message map functions
 protected:

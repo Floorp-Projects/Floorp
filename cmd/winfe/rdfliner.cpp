@@ -1003,9 +1003,14 @@ void CRDFOutliner::DisplayURL()
 {
 	char* url = HT_GetNodeURL(m_Node);
 	CAbstractCX * pCX = FEU_GetLastActiveFrameContext();
-	ASSERT(pCX != NULL);
+
+    //Check for whether we need new browser window.
 	if (pCX == NULL)
+    {
+        // Fake "open in new window".
+        HT_DoMenuCmd(m_Pane, HT_CMD_OPEN_NEW_WIN);
 		return;
+    }
 
 	// Let HT handle some URLs.
 	if (HT_Launch(m_Node, pCX->GetContext()))

@@ -76,19 +76,20 @@ CNSNavFrame::CNSNavFrame()
 	m_nsContent= 0;
 	m_bDragging = FALSE;
 	m_DragWnd = 0;
+    m_dockingState = unknown;
 }
 
 CNSNavFrame::~CNSNavFrame()
 {
-	if (m_dwOverDockStyle != DOCKSTYLE_FLOATING)
-	{
-		PREF_SetIntPref(gPrefDockPercentage, m_DockSize);
-		PREF_SetIntPref(gPrefDockOrientation, m_dwOverDockStyle);
-	}
-	else
-	{
-		PREF_SetRectPref(gPrefFloatRect, (int16)m_rectFloat.left, (int16)m_rectFloat.top, (int16)m_rectFloat.right, (int16)m_rectFloat.bottom);
-	}
+    if (m_dwOverDockStyle != DOCKSTYLE_FLOATING)
+    {
+        PREF_SetIntPref(gPrefDockPercentage, m_DockSize);
+        PREF_SetIntPref(gPrefDockOrientation, m_dwOverDockStyle);
+    }
+    else
+    {
+        PREF_SetRectPref(gPrefFloatRect, (int16)m_rectFloat.left, (int16)m_rectFloat.top, (int16)m_rectFloat.right, (int16)m_rectFloat.bottom);
+    }
 
 	delete m_pNavMenu;
 }
@@ -139,7 +140,11 @@ void CNSNavFrame::CreateNewNavCenter(CNSGenFrame* pParentFrame, BOOL useViewType
 
 // Create the window there.
 	m_rectFloat.SetRect(left, top, right, bottom);
-	m_rectDrag = m_rectFloat;
+// Don't reset this if being undocked.
+    if ( m_dockingState != beingUndocked )
+    {
+	    m_rectDrag = m_rectFloat;
+    }
 
 	CString title = "Navigation Center";
 	Create( NULL, title, WS_OVERLAPPEDWINDOW, m_rectFloat, NULL);
@@ -162,11 +167,19 @@ void CNSNavFrame::CreateNewNavCenter(CNSGenFrame* pParentFrame, BOOL useViewType
 	{	
 		// create a docked window
 		DockFrame(pParentFrame, m_dwOverDockStyle);
+        m_dockingState = docked;
 	}
 	else 
 	{
 		// Create a floating window
 		m_dwOverDockStyle = DOCKSTYLE_FLOATING;
+
+        // Position to where user requested, if being undocked.
+        if ( m_dockingState == beingUndocked )
+        {
+            MoveWindow( m_rectDrag );
+        }
+        m_dockingState = undocked;
 	}
 
 // Put the selector buttons into the pane.
@@ -189,7 +202,8 @@ void CNSNavFrame::DeleteNavCenter()
 	SetParent(NULL);
 	
     // Tell ParentFrame that we are not docked anymore.
-    pLayout->RecalcLayout();
+    if (pLayout)
+        pLayout->RecalcLayout();
 
 	if (m_DragWnd)
 		m_DragWnd->DestroyWindow();
@@ -318,13 +332,13 @@ void CNSNavFrame::StartDrag(CPoint pt, BOOL mapDesktop)
   
 	CNSGenFrame* pFrame = NULL;
     CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser, FEU_FINDBROWSERANDEDITOR);
-    CFrameWnd *pBaseWnd = pGlue->GetFrameWnd();
+    CFrameWnd *pBaseWnd = pGlue ? pGlue->GetFrameWnd() : NULL;
     if(pBaseWnd && pBaseWnd->IsKindOf(RUNTIME_CLASS(CNSGenFrame))) 
-	{
+    {
        pFrame = (CNSGenFrame *)pBaseWnd;
+       CalcClientArea(&m_parentRect, pFrame);
+       pFrame->MapWindowPoints( NULL, &m_parentRect);
     }
-    CalcClientArea(&m_parentRect, pFrame);
-	pFrame->MapWindowPoints( NULL, &m_parentRect);
 
 	// Cache the offset that we wish to preserve.
 	m_nXOffset = cursorPt.x - m_dockingDragRect.left;
@@ -651,17 +665,39 @@ void CNSNavFrame::EndDrag(CPoint pt)             // drop
 		{
             pFrame = (CNSGenFrame *)pBaseWnd;
         }
-        DockFrame(pFrame, dwOverDockStyle);
-		m_nsContent->CalcChildSizes();
+
+        // see if we're being re-docked.
+        if ( m_dockingState == undocked )
+        {
+            // Indicate we need to be reborn docked.
+            m_dockingState = beingDocked;
+
+            // Destroy the old windows.
+            DeleteNavCenter();
+        } else {
+            DockFrame(pFrame, dwOverDockStyle);
+    		m_nsContent->CalcChildSizes();
+    
+        
+            ShowWindow(SW_SHOW);
+        }
 	}
 	else 
 	{
 		// Float this frame.
 		MoveWindow( m_rectDrag);
-		m_nsContent->CalcChildSizes();
-	}
 
-	ShowWindow(SW_SHOW);
+        // See if we're being undocked.
+        if ( m_dockingState == docked ) {
+            // Indicate we need to be reborn undocked.
+            m_dockingState = beingUndocked;
+
+            // Destroy the old windows.
+            DeleteNavCenter();
+        } else {
+            ShowWindow(SW_SHOW);
+        }
+	}
 }
 
 
@@ -763,12 +799,12 @@ short CNSNavFrame::CanDock(CPoint pt, BOOL mapDesktop)
 
     CNSGenFrame* pFrame = NULL;
     CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser, FEU_FINDBROWSERANDEDITOR);
-    CFrameWnd *pBaseWnd = pGlue->GetFrameWnd();
+    CFrameWnd *pBaseWnd = pGlue ? pGlue->GetFrameWnd() : NULL;
     if(pBaseWnd && pBaseWnd->IsKindOf(RUNTIME_CLASS(CNSGenFrame))) {
         pFrame = (CNSGenFrame *)pBaseWnd;
     }
 
-	if (mapDesktop) {
+	if (pFrame && mapDesktop) {
 
 		CWnd *pView = pFrame->GetDescendantWindow(AFX_IDW_PANE_FIRST, TRUE);
 		if (XP_IsNavCenterDocked(GetHTPane()))	{
@@ -780,7 +816,7 @@ short CNSNavFrame::CanDock(CPoint pt, BOOL mapDesktop)
 	}
 
 	// If the top most activated frame is not a Navigator window, do not dock.
-	if (pFrame->AllowDocking()) { 
+	if (pFrame && pFrame->AllowDocking()) { 
 		if (m_parentRect.PtInRect(pt)) {
 			if ((pt.x < (m_parentRect.left +m_DockWidth)) &&
 				pt.x > m_parentRect.left)
@@ -1144,3 +1180,37 @@ void CNSNavFrame::OnMouseMove( UINT nHitTest, CPoint point )
 	CWnd::OnNcMouseMove(nHitTest, point);
 }
 
+void CNSNavFrame::PostNcDestroy() 
+{
+    // Check to see if we need to recreate the NavCenter windows.        
+    switch ( m_dockingState ) {
+        case beingDocked:
+            // Re-create within docked-to frame.
+            {
+                CFrameGlue *pGlue = CFrameGlue::GetLastActiveFrame(MWContextBrowser, FEU_FINDBROWSERANDEDITOR);
+                CFrameWnd *pBaseWnd = pGlue ? pGlue->GetFrameWnd() : NULL;
+                if(pBaseWnd && pBaseWnd->IsKindOf(RUNTIME_CLASS(CNSGenFrame))) 
+                {
+                    CreateNewNavCenter( (CNSGenFrame*)pBaseWnd );
+                }
+                else
+                {
+                    CreateNewNavCenter(NULL);
+                }
+            }
+            break;
+
+        case beingUndocked:
+            // Re-create with no parent.
+            CreateNewNavCenter(NULL);
+            break;
+
+        case unknown:
+        case docked:
+        case undocked:
+        default:
+            // Pass on to base class (which will "delete this").
+            CFrameWnd::PostNcDestroy();
+            break;
+    }
+}
