@@ -125,7 +125,7 @@ XBLFinalize(JSContext *cx, JSObject *obj)
   c->Drop();
 }
 
-nsXBLJSClass::nsXBLJSClass(const nsCString& aClassName)
+nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName)
 {
   memset(this, 0, sizeof(nsXBLJSClass));
   next = prev = NS_STATIC_CAST(JSCList*, this);
@@ -1229,42 +1229,18 @@ nsXBLBinding::AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData,
 
 // Internal helper methods ////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP
-nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext, 
-                        nsIDocument* aDocument, void** aScriptObject, void** aClassObject)
+// static
+nsresult
+nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
+                            const nsAFlatCString& aClassName,
+                            void **aClassObject)
 {
-  *aClassObject = nsnull;
-  *aScriptObject = nsnull;
-
-  nsresult rv;
-
-  // Obtain the bound element's current script object.
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSContext* jscontext = (JSContext*)aContext->GetNativeContext();
-
-  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-
-  JSObject* global = ::JS_GetGlobalObject(jscontext);
-
-  rv = xpc->WrapNative(jscontext, global, mBoundElement,
-                       NS_GET_IID(nsISupports), getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSObject* object = nsnull;
-
-  rv = wrapper->GetJSObject(&object);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aScriptObject = object;
-
   // First ensure our JS class is initialized.
-  jsval vp;
+  jsval val;
   JSObject* proto;
 
-  if ((! ::JS_LookupProperty(jscontext, global, aClassName.get(), &vp)) ||
-      JSVAL_IS_PRIMITIVE(vp)) {
+  if ((!::JS_LookupProperty(cx, global, aClassName.get(), &val)) ||
+      JSVAL_IS_PRIMITIVE(val)) {
     // We need to initialize the class.
 
     nsXBLJSClass* c;
@@ -1285,6 +1261,7 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
       if (JS_CLIST_IS_EMPTY(&nsXBLService::gClassLRUList)) {
         // We need to create a struct for this class.
         c = new nsXBLJSClass(aClassName);
+
         if (!c)
           return NS_ERROR_OUT_OF_MEMORY;
       } else {
@@ -1306,41 +1283,88 @@ nsXBLBinding::InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
       // Add c to our table.
       (nsXBLService::gClassTable)->Put(&key, (void*)c);
     }
-    
-    // Retrieve the current prototype of the JS object.
-    JSObject* parent_proto = ::JS_GetPrototype(jscontext, object);
+
+    // Retrieve the current prototype of obj.
+    JSObject* parent_proto = ::JS_GetPrototype(cx, obj);
+
+    // The prototype holds a strong reference to its class struct.
+    c->Hold();
 
     // Make a new object prototyped by parent_proto and parented by global.
-    proto = ::JS_InitClass(jscontext,           // context
+    proto = ::JS_InitClass(cx,                  // context
                            global,              // global object
                            parent_proto,        // parent proto 
                            c,                   // JSClass
-                           NULL,                // JSNative ctor
+                           nsnull,              // JSNative ctor
                            0,                   // ctor args
                            nsnull,              // proto props
                            nsnull,              // proto funcs
                            nsnull,              // ctor props (static)
                            nsnull);             // ctor funcs (static)
     if (!proto) {
+      // This will happen if we're OOM or if the security manager
+      // denies defining the new class...
+
       (nsXBLService::gClassTable)->Remove(&key);
-      delete c;
+
+      c->Drop();
+
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // The prototype holds a strong reference to its class struct.
-    c->Hold();
     *aClassObject = (void*)proto;
   }
   else {
-    proto = JSVAL_TO_OBJECT(vp);
+    proto = JSVAL_TO_OBJECT(val);
   }
 
   // Set the prototype of our object to be the new class.
-  ::JS_SetPrototype(jscontext, object, proto);
+  if (!::JS_SetPrototype(cx, obj, proto)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXBLBinding::InitClass(const nsCString& aClassName,
+                        nsIScriptContext* aContext, 
+                        nsIDocument* aDocument, void** aScriptObject,
+                        void** aClassObject)
+{
+  *aClassObject = nsnull;
+  *aScriptObject = nsnull;
+
+  nsresult rv;
+
+  // Obtain the bound element's current script object.
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* cx = (JSContext*)aContext->GetNativeContext();
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+
+  JSObject* global = ::JS_GetGlobalObject(cx);
+
+  rv = xpc->WrapNative(cx, global, mBoundElement, NS_GET_IID(nsISupports),
+                       getter_AddRefs(wrapper));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSObject* object = nsnull;
+  rv = wrapper->GetJSObject(&object);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aScriptObject = object;
+
+  // First ensure our JS class is initialized.
+
+  rv = DoInitJSClass(cx, global, object, aClassName, aClassObject);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Root mBoundElement so that it doesn't loose it's binding
   nsCOMPtr<nsIDocument> doc;
-
   mBoundElement->GetDocument(*getter_AddRefs(doc));
 
   if (doc) {
