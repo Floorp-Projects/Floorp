@@ -969,6 +969,42 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 
 //-------------------------------------------------------------------------
 //
+// Invalidate this component visible area
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
+{
+  if (mWidget == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!XtIsRealized(mWidget)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Window  win      = XtWindow(mWidget);
+  Display *display = XtDisplay(mWidget);
+
+
+  XEvent evt;
+  evt.xgraphicsexpose.type       = GraphicsExpose;
+  evt.xgraphicsexpose.send_event = False;
+  evt.xgraphicsexpose.display    = display;
+  evt.xgraphicsexpose.drawable   = win;
+  evt.xgraphicsexpose.x          = aRect.x;
+  evt.xgraphicsexpose.y          = aRect.y;
+  evt.xgraphicsexpose.width      = aRect.width;
+  evt.xgraphicsexpose.height     = aRect.height;
+  evt.xgraphicsexpose.count      = 0;
+  XSendEvent(display, win, False, ExposureMask, &evt);
+  XFlush(display);
+  return NS_OK;
+
+  
+}
+
+//-------------------------------------------------------------------------
+//
 // Return some native data according to aDataType
 //
 //-------------------------------------------------------------------------
@@ -1190,6 +1226,8 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
+  NS_ADDREF(event.widget);
+
   aStatus = nsEventStatus_eIgnore;
   if (nsnull != mEventCallback) {
     aStatus = (*mEventCallback)(event);
@@ -1199,6 +1237,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
     aStatus = mEventListener->ProcessEvent(*event);
   }
+  NS_RELEASE(event.widget);
 
   return NS_OK;
 
