@@ -838,13 +838,13 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   PRUint16 button = 0;
   mouseEvent->GetButton(&button);
-  if((mMiddlePref && button != 1 && button != 2) ||
-     (!mMiddlePref && button != 1))
+  if((mMiddlePref && button != 0 && button != 1) ||
+     (!mMiddlePref && button != 0))
       return NS_OK;
 
   // If middle button, first place the middle of the slider thumb
   // under the click
-  if (button == 2) {
+  if (button == 1) {
 
     nscoord pos;
     nscoord pospx;

@@ -279,7 +279,7 @@ BookmarksTree.prototype = {
   isValidOpenEvent: function (aEvent)
   {  
     return !(aEvent.type == "click" && 
-             (aEvent.button != 1 || aEvent.detail != this.openClickCount))
+             (aEvent.button != 0 || aEvent.detail != this.openClickCount))
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -397,7 +397,7 @@ BookmarksTree.prototype = {
   // editable cells. 
   treeClicked: function (aEvent)
   {
-    if (this.tree.selectedItems.length > 1 || aEvent.detail > 1 || aEvent.button != 1)
+    if (this.tree.selectedItems.length > 1 || aEvent.detail > 1 || aEvent.button != 0)
       return;
     if (gSelectionTracker.currentItem == this.tree.currentItem && 
         gSelectionTracker.currentCell == aEvent.target) 
@@ -441,8 +441,12 @@ BookmarksTree.prototype = {
     else if (aEvent.keyCode == 113)
       goDoCommand("cmd_rename");
     else if (aEvent.keyCode == 13 && 
-             this.tree.currentItem.firstChild.getAttribute("inline-edit") != "true")
-      goDoCommand("cmd_open");
+             this.tree.currentItem.firstChild.getAttribute("inline-edit") != "true") {
+      if (aEvent.altKey)
+        goDoCommand("cmd_properties");
+      else
+        goDoCommand("cmd_open");
+    }
   },
   
   selectFolderItem: function (aFolderURI, aItemURI, aAdditiveFlag)

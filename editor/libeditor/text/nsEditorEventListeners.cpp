@@ -376,10 +376,10 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
    nsCOMPtr<nsIEditor> editor (do_QueryInterface(mEditor));
   if (!editor) { return NS_OK; }
 
-  PRUint16 button = 0;
+  PRUint16 button = (PRUint16)-1;
   mouseEvent->GetButton(&button);
   // middle-mouse click (paste);
-  if (button == 2)
+  if (button == 1)
   {
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefService, kPrefServiceCID, &rv);

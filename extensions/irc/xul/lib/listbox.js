@@ -64,7 +64,7 @@ function lbox_chandler (e)
 
     /* Check for the button number first */
     /* FIXME: are there constants for this stuff? */
-    if (e.event.which == 3)
+    if (e.event.button == 2)
     {
         return;
     }

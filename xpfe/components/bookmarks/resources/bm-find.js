@@ -169,7 +169,7 @@ function doEnabling()
 
 function OpenURL(event, node, root)
 {
-  if (event.button != 1 ||
+  if (event.button != 0 ||
       event.detail != 2 ||
       node.nodeName != "treeitem" ||
       node.getAttribute("container") == "true") {

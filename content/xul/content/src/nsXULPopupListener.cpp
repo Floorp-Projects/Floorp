@@ -331,7 +331,7 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
     case eXULPopupType_popup:
       // Check for left mouse button down
       mouseEvent->GetButton(&button);
-      if (button == 1) {
+      if (button == 0) {
         // Time to launch a popup menu.
         LaunchPopup(aMouseEvent);
         aMouseEvent->PreventBubble();
@@ -341,7 +341,7 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
     case eXULPopupType_context:
       // Check for right mouse button down
       mouseEvent->GetButton(&button);
-      if (button == 3) {
+      if (button == 2) {
         // Time to launch a context menu
         
         // If the context menu launches on mousedown,

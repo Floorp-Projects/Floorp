@@ -179,7 +179,7 @@
       </property>
     </implementation>
     <handlers>
-      <handler event="click" button="1">
+      <handler event="click" button="0">
       <![CDATA[
         var tabbox = this.parentNode;
         do {

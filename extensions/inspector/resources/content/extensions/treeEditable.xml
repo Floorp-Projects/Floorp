@@ -151,8 +151,8 @@
     </implementation>
     
     <handlers>
-      <handler event="mousedown"><![CDATA[
-        if (this.parentItem.getAttribute("selected") == "true" && event.button == 1)
+      <handler event="mousedown" button="0"><![CDATA[
+        if (this.parentItem.getAttribute("selected") == "true")
           this.startEdit();
       ]]></handler>
     </handlers>

@@ -193,7 +193,7 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     res = mouseEvent->GetCtrlKey(&isContextClick);
   #else
     // Right mouse button for Windows, UNIX
-    isContextClick = buttonNumber == 3;
+    isContextClick = buttonNumber == 2;
     res = mouseEvent->GetCtrlKey(&tableMode);
   #endif
     if (NS_FAILED(res)) return res;
@@ -253,7 +253,7 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
       }
     }
 
-    if (isContextClick || (buttonNumber == 1 && clickCount == 2))
+    if (isContextClick || (buttonNumber == 0 && clickCount == 2))
     {
       // Context menu or double click
       nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
@@ -281,7 +281,7 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
         mEditorShell->SelectElement(element);
       }
     }
-    else if (buttonNumber == 1)
+    else if (buttonNumber == 0)
     {
       if (tableMode && clickCount == 2)
       {

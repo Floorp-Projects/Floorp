@@ -988,7 +988,7 @@ ChromeListener::MouseDown(nsIDOMEvent* aMouseEvent)
     nsresult res = mouseEvent->GetButton(&buttonNumber);
     if (NS_FAILED(res))
         return res;
-    if (buttonNumber != 3) // 3 is the magic number
+    if (buttonNumber != 2) // 2 is the magic number
         return NS_OK;
 
     nsCOMPtr<nsIDOMEventTarget> targetNode;

@@ -28,7 +28,7 @@
 
 function clicked(event, target)
 {
-	if ((event.button != 1) || (event.detail != 2) || (target.nodeName != "treeitem"))
+	if ((event.button != 0) || (event.detail != 2) || (target.nodeName != "treeitem"))
 		return false;
 
     if (event.altKey)

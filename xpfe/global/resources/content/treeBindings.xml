@@ -536,9 +536,8 @@
 
       <!-- On a click (up+down on the same item), deselect everything
            except this item. -->
-      <handler event="click">
+      <handler event="click" button="0">
       <![CDATA[
-         if (event.button != 1) return;
          var t = event.originalTarget;
          if (t.localName == 'treecell') {
            if (event.ctrlKey || event.metaKey) {
@@ -555,24 +554,22 @@
                 in click rather than mousedown so that you can drag a
                 selected group of items */
 
-             if (event.button == 1) {
-               var selectedItems = parentNode.selectedItems;
-               var didSuppressSelect = false;
-               var i = 0;
-               while (i < selectedItems.length) {
-                 if (selectedItems[i] != t.parentNode.parentNode) {
-                   if (!didSuppressSelect) {
-                     parentNode.suppressOnSelect = true;
-                     didSuppressSelect = true;
-                   }
-                   parentNode.removeItemFromSelection(selectedItems[i]);
+             var selectedItems = parentNode.selectedItems;
+             var didSuppressSelect = false;
+             var i = 0;
+             while (i < selectedItems.length) {
+               if (selectedItems[i] != t.parentNode.parentNode) {
+                 if (!didSuppressSelect) {
+                   parentNode.suppressOnSelect = true;
+                   didSuppressSelect = true;
                  }
-                 else
-                   i++;
+                 parentNode.removeItemFromSelection(selectedItems[i]);
                }
-               if (didSuppressSelect)
-                 parentNode.suppressOnSelect = false;
+               else
+                 i++;
              }
+             if (didSuppressSelect)
+               parentNode.suppressOnSelect = false;
            }
          }
       ]]>

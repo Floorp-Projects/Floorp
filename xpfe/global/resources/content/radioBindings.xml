@@ -129,14 +129,14 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="click" button="1">
+      <handler event="click" button="0">
         <![CDATA[
             if (event.target.localName == "radio" && !event.target.disabled)
               this.selectedItem = event.target;
 
          ]]>
       </handler>
-      <handler event="mousedown" button="1">
+      <handler event="mousedown" button="0">
         <![CDATA[
             if (event.target.localName == "radio" && !event.target.disabled)
               this.focusedItem = event.target;

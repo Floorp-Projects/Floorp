@@ -77,7 +77,7 @@
       <handler event="click">
       <![CDATA[
         if (event.originalTarget.getAttribute("emattr") == "field")
-          if (event.button == 1) this.doFocus();
+          if (event.button == 0) this.doFocus();
       ]]>
       </handler>
       <handler event="blur">

@@ -813,7 +813,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mouseEvent->GetButton(&button);
 
   // only if left button
-  if (button != 1)
+  if (button != 0)
      return NS_OK;
 
   nsCOMPtr<nsIContent> content;  
