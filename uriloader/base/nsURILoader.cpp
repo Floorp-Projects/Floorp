@@ -28,7 +28,7 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIProgressEventSink.h"
 
 
@@ -42,20 +42,20 @@ static NS_DEFINE_CID(kURILoaderCID, NS_URI_LOADER_CID);
 // mscott - i ripped this event sink getter class off of the one in the old
 // webshell doc loader...
 
-class nsUriLoaderEventSinkGetter : public nsIEventSinkGetter {
+class nsUriLoaderCapabilities : public nsICapabilities {
 public:
   NS_DECL_ISUPPORTS
 
-  nsUriLoaderEventSinkGetter(nsIProgressEventSink *aProgressEventsink) {
+  nsUriLoaderCapabilities(nsIProgressEventSink *aProgressEventsink) {
     NS_INIT_REFCNT();
     mProgressEventSink = aProgressEventsink;
   }
 
-  virtual ~nsUriLoaderEventSinkGetter() {};
+  virtual ~nsUriLoaderCapabilities() {};
 
-  NS_IMETHOD GetEventSink(const char* aVerb, const nsIID& anIID, nsISupports** aSink) {
+  NS_IMETHOD QueryCapability(const nsIID& anIID, void** aSink) {
     if (mProgressEventSink) {
-        return mProgressEventSink->QueryInterface(anIID, (void**)aSink);
+        return mProgressEventSink->QueryInterface(anIID, aSink);
     }
     return NS_ERROR_FAILURE;
   }
@@ -63,7 +63,7 @@ private:
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
 };
 
-NS_IMPL_ISUPPORTS1(nsUriLoaderEventSinkGetter, nsIEventSinkGetter);
+NS_IMPL_ISUPPORTS1(nsUriLoaderCapabilities, nsICapabilities);
 
 /* 
  * The nsDocumentOpenInfo contains the state required when a single document
@@ -139,7 +139,7 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
 
   // turn the arguments we received into something we can pass into NewChannelFromURI:
   // that means turning the progress event sink into an event sink getter...
-  nsCOMPtr<nsIEventSinkGetter> aEventSinkGetter = new nsUriLoaderEventSinkGetter(aProgressEventSink);
+  nsCOMPtr<nsICapabilities> notificationCallbacks = new nsUriLoaderCapabilities(aProgressEventSink);
   // and get the load group out of the open context
   nsCOMPtr<nsILoadGroup> aLoadGroup = do_QueryInterface(aOpenContext);
   if (!aLoadGroup)
@@ -161,7 +161,8 @@ nsresult nsDocumentOpenInfo::Open(nsIURI *aURI,
   if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr<nsIChannel> m_channel;
-    rv = pNetService->NewChannelFromURI("", aURI, aLoadGroup, aEventSinkGetter, aReferringURI, getter_AddRefs(m_channel));
+    rv = pNetService->NewChannelFromURI("", aURI, aLoadGroup, notificationCallbacks,
+                                        nsIChannel::LOAD_NORMAL, aReferringURI, getter_AddRefs(m_channel));
     if (NS_FAILED(rv)) return rv; // uhoh we were unable to get a channel to handle the url!!!
     rv =  m_channel->AsyncRead(0, -1, nsnull, this);
   }
