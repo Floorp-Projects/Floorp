@@ -38,7 +38,7 @@ extern int usleep(unsigned int);
 ** we define that the build breaks long before getting here.  So
 ** put the prototype here explicitly.
 */
-int usleep(useconds_t);
+extern "C" int usleep(useconds_t);
 #endif
 #if defined(__QNX__)
 #define usleep(s)	sleep(s)

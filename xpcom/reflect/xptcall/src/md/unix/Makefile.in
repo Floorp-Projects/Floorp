@@ -64,6 +64,13 @@ endif
 # Alpha
 ######################################################################
 #
+# Tru64/Alpha
+#
+ifeq ($(OS_ARCH)$(OS_TEST),OSF1alpha)
+CPPSRCS		:= xptcinvoke_osf1_alpha.cpp xptcstubs_osf1_alpha.cpp
+ASFILES		:= xptcinvoke_asm_osf1_alpha.s xptcstubs_asm_osf1_alpha.s
+endif
+#
 # Linux/Alpha
 #
 ifneq (,$(filter Linuxalpha FreeBSDalpha NetBSDalpha,$(OS_ARCH)$(OS_TEST)))                           
