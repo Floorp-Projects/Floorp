@@ -590,6 +590,9 @@ nsJSContext::~nsJSContext()
   // Clear our entry in the JSContext, bugzilla bug 66413
   ::JS_SetContextPrivate(mContext, nsnull);
 
+  // Clear the branch callback, bugzilla bug 238218
+  ::JS_SetBranchCallback(mContext, nsnull);
+
   // Unregister our "javascript.options.*" pref-changed callback.
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
