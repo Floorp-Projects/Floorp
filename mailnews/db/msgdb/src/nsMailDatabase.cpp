@@ -92,8 +92,12 @@ nsMailDatabase::~nsMailDatabase()
 			// can pull out the transfer info for the new db.
 			if (!newFile && !statResult && !upgrading)
 			{
+				PRInt32 numNewMessages;
+
+				folderInfo->GetNumNewMessages(&numNewMessages);
+
 				if (folderInfo->m_folderSize != st.st_size ||
-						folderInfo->m_folderDate != st.st_mtime || folderInfo->GetNumNewMessages() < 0)
+						folderInfo->m_folderDate != st.st_mtime || numNewMessages < 0)
 					err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 			}
 			// compare current version of db versus filed out version info.

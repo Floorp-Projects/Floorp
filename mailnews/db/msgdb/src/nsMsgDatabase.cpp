@@ -956,7 +956,11 @@ nsresult nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 	if (numChanged > 0)	// commit every once in a while
 		Commit(kSmallCommit);
 	// force num new to 0.
-	m_dbFolderInfo->ChangeNumNewMessages(-m_dbFolderInfo->GetNumNewMessages());
+	PRInt32 numNewMessages;
+
+	dbErr = m_dbFolderInfo->GetNumNewMessages(&numNewMessages);
+	if (dbErr == NS_OK)
+		m_dbFolderInfo->ChangeNumNewMessages(-numNewMessages);
 	return dbErr;
 }
 

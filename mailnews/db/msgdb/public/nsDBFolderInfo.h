@@ -27,6 +27,7 @@
 #include "xp.h"
 #include "mdb.h"
 #include "nsMsgKeyArray.h"
+#include "nsIDBFolderInfo.h"
 
 class nsMsgDatabase;
 
@@ -37,22 +38,48 @@ class nsMsgDatabase;
 // caching the values. If this somehow turns out to be prohibitively expensive, we can invent
 // some sort of dirty mechanism, but I think it turns out that these values will be cached by 
 // the MSG_FolderInfo's anyway.
-class nsDBFolderInfo
+class nsDBFolderInfo : public nsIDBFolderInfo
 {
 public:
 	friend class nsMsgDatabase;
 
 	nsDBFolderInfo(nsMsgDatabase *mdb);
 	virtual ~nsDBFolderInfo();
-	nsrefcnt			AddRef(void);                                       
-    nsrefcnt			Release(void);
+
+    NS_DECL_ISUPPORTS
+	// interface methods.
+	NS_IMETHOD			GetFlags(PRInt32 *result);
+	NS_IMETHOD			SetFlags(PRInt32 flags);
+	NS_IMETHOD			OrFlags(PRInt32 flags, PRInt32 *result);
+	NS_IMETHOD			AndFlags(PRInt32 flags, PRInt32 *result);
+	NS_IMETHOD			SetHighWater(nsMsgKey highWater, PRBool force = FALSE) ;
+	NS_IMETHOD			GetHighWater(nsMsgKey *result) ;
+	NS_IMETHOD			SetExpiredMark(nsMsgKey expiredKey);
+	NS_IMETHOD			ChangeNumNewMessages(PRInt32 delta);
+	NS_IMETHOD			ChangeNumMessages(PRInt32 delta);
+	NS_IMETHOD			ChangeNumVisibleMessages(PRInt32 delta);
+	NS_IMETHOD			GetNumNewMessages(PRInt32 *result) ;
+	NS_IMETHOD			GetNumMessages(PRInt32 *result) ;
+	NS_IMETHOD			GetNumVisibleMessages(PRInt32 *result) ;
+	NS_IMETHOD			GetImapUidValidity(PRInt32 *result) ;
+	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity) ;
+
+	NS_IMETHOD			SetVersion(PRUint16 version) ;
+
+	NS_IMETHOD			GetLastMessageLoaded(nsMsgKey *result);
+	NS_IMETHOD			SetLastMessageLoaded(nsMsgKey lastLoaded);
+
+	NS_IMETHOD			SetFolderSize(PRUint32 size);
+	NS_IMETHOD			SetFolderDate(time_t date);
+
+	NS_IMETHOD			GetProperty(const char *propertyName, nsString &resultProperty);
+	NS_IMETHOD			SetProperty(const char *propertyName, nsString &propertyStr);
+	NS_IMETHOD			SetUint32Property(const char *propertyName, PRUint32 propertyValue);
+	NS_IMETHOD			GetUint32Property(const char *propertyName, PRUint32 &propertyValue);
 
 	// create the appropriate table and row in a new db.
 	nsresult			AddToNewMDB();
 	// accessor methods.
-	void				SetHighWater(nsMsgKey highWater, PRBool force = FALSE) ;
-	nsMsgKey			GetHighWater() ;
-	void				SetExpiredMark(nsMsgKey expiredKey);
 	int					GetDiskVersion();
 
 	PRBool				AddLaterKey(nsMsgKey key, time_t *until);
@@ -68,16 +95,6 @@ public:
 	// we would like to just store the property name we're sorted by
 	void				SetSortInfo(nsMsgSortType, nsMsgSortOrder);
 	void				GetSortInfo(nsMsgSortType *, nsMsgSortOrder *);
-	PRInt32				ChangeNumNewMessages(PRInt32 delta);
-	PRInt32				ChangeNumMessages(PRInt32 delta);
-	PRInt32				ChangeNumVisibleMessages(PRInt32 delta);
-	PRInt32				GetNumNewMessages() ;
-	PRInt32				GetNumMessages() ;
-	PRInt32				GetNumVisibleMessages() ;
-	PRInt32				GetFlags();
-	void				SetFlags(PRInt32 flags);
-	void				OrFlags(PRInt32 flags);
-	void				AndFlags(PRInt32 flags);
 	PRBool				TestFlag(PRInt32 flags);
 	PRInt16				GetCSID() ;
 	void				SetCSID(PRInt16 csid) ;
@@ -88,29 +105,15 @@ public:
 	PRInt32				GetImapUnreadPendingMessages() ;
 	void				ChangeImapUnreadPendingMessages(PRInt32 delta) ;
 	
-	PRInt32				GetImapUidValidity() ;
-	void				SetImapUidValidity(PRInt32 uidValidity) ;
-
-	void				SetVersion(PRUint16 version) {m_version = version;}
-
-	nsMsgKey			GetLastMessageLoaded();
-	void				SetLastMessageLoaded(nsMsgKey lastLoaded);
-
-	void				SetFolderSize(PRUint32 size);
-	void				SetFolderDate(time_t date);
 
 	virtual void		SetKnownArtsSet(nsString &newsArtSet);
 	virtual void		GetKnownArtsSet(nsString &newsArtSet);
 
 	// get and set arbitrary property, aka row cell value.
-	nsresult	GetProperty(const char *propertyName, nsString &resultProperty);
-	nsresult	SetProperty(const char *propertyName, nsString &propertyStr);
-	nsresult	SetUint32Property(const char *propertyName, PRUint32 propertyValue);
 	nsresult	SetPropertyWithToken(mdb_token aProperty, nsString &propertyStr);
 	nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
 	nsresult	SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue);
 	nsresult	GetPropertyWithToken(mdb_token aProperty, nsString &resultProperty);
-	nsresult	GetUint32Property(const char *propertyName, PRUint32 &propertyValue);
 	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue);
 	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue);
 
@@ -137,7 +140,6 @@ public:
 	nsMsgKeyArray m_lateredKeys;		// list of latered messages
 
 protected:
-	nsrefcnt mRefCnt;                                                         
 	
 	// initialize from appropriate table and row in existing db.
 	nsresult			InitFromExistingDB();

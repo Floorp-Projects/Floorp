@@ -30,6 +30,7 @@ EXPORTS= \
 		nsNewsDatabase.h				\
 		nsDBFolderInfo.h	    \
 		nsIDBChangeListener.h	    \
+		nsIDBFolderInfo.h \
 		nsIMessage.h	    \
 		$(NULL)
 
