@@ -630,6 +630,7 @@ MailAccount::RemoveFolder (nsIRDFMailFolder* folder)
 
 MailAccount::MailAccount (const char* uri)
 {
+	NS_INIT_REFCNT();
     mURI = PL_strdup(uri);
     InitMailAccount(uri);
 }
@@ -799,9 +800,9 @@ MailFolder::RemoveMessage (nsIRDFMailMessage* msg)
 
 MailFolder::MailFolder (const char* uri)
 {
+    NS_INIT_REFCNT();
     mURI = PL_strdup(uri);
     mStatus = eMailFolder_Uninitialized;
-    NS_INIT_REFCNT();
 }
 
 MailFolder::~MailFolder (void)
@@ -1124,8 +1125,8 @@ nsresult MailMessage::SetupMessage (MailFolder* folder,
 
 MailMessage::MailMessage (const char* uri)
 {
-    mURI = PL_strdup(uri);
     NS_INIT_REFCNT();
+    mURI = PL_strdup(uri);
 }
 
 MailMessage::~MailMessage (void) {
