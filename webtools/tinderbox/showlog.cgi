@@ -76,14 +76,14 @@ else
 {
   $brief_filename = $logfile;
   $brief_filename =~ s/.gz$/.brief.html/;
-  if (-T "$tree/$brief_filename") 
+  if (-T "$tree/$brief_filename" and -M _ > -M $tree/$logfile) 
   {
     open (BRIEFFILE, "<$tree/$brief_filename");
     print while (<BRIEFFILE>)
   }
   else
   {
-    open (BRIEFFILE, ">$tree/$brief_filename") if defined $form{cache};
+    open (BRIEFFILE, ">$tree/$brief_filename");
 
     &print_summary;
     &print_log;
