@@ -60,25 +60,21 @@
 #define COLOR_DARK_TS_FACTOR 50
 
 #define LIGHT_GRAY NS_RGB(192, 192, 192)
-#define DARK_GRAY  NS_RGB(128, 128, 128)
+#define DARK_GRAY  NS_RGB(96, 96, 96)
 #define WHITE      NS_RGB(255, 255, 255)
 #define BLACK      NS_RGB(0, 0, 0)
 
 #define MAX_BRIGHTNESS  254
 #define MAX_DARKNESS     0
  
-void NS_Get3DColors(nscolor aResult[2], nscolor aColor)
+void NS_Get3DColors(nscolor aResult[2], nscolor aBackgroundColor)
 {
-  int rb = NS_GET_R(aColor);
-  int gb = NS_GET_G(aColor);
-  int bb = NS_GET_B(aColor);
-  int intensity = (rb + gb + bb) / 3;
-  int luminosity =
-    ((RED_LUMINOSITY * rb) / 100) +
-    ((GREEN_LUMINOSITY * gb) / 100) +
-    ((BLUE_LUMINOSITY * bb) / 100);
-  int brightness = ((intensity * INTENSITY_FACTOR) +
-                    (luminosity * LUMINOSITY_FACTOR)) / 100;
+  int rb = NS_GET_R(aBackgroundColor);
+  int gb = NS_GET_G(aBackgroundColor);
+  int bb = NS_GET_B(aBackgroundColor);
+  
+  int brightness = NS_GetBrightness(rb,gb,bb);
+
   int f0, f1;
   if (brightness < COLOR_DARK_THRESHOLD) {
     f0 = COLOR_DARK_BS_FACTOR;
@@ -100,7 +96,7 @@ void NS_Get3DColors(nscolor aResult[2], nscolor aColor)
   int b = bb - (f0 * bb / 100);
   aResult[0] = NS_RGB(r, g, b);
   if ((r == rb) && (g == gb) && (b == bb)) {
-    aResult[0] = (aColor == LIGHT_GRAY) ? WHITE : LIGHT_GRAY;
+    aResult[0] = (aBackgroundColor == BLACK) ? DARK_GRAY : BLACK;
   }
 
   r = rb + (f1 * (MAX_COLOR - rb) / 100);
@@ -111,7 +107,7 @@ void NS_Get3DColors(nscolor aResult[2], nscolor aColor)
   if (b > 255) b = 255;
   aResult[1] = NS_RGB(r, g, b);
   if ((r == rb) && (g == gb) && (b == bb)) {
-    aResult[1] = (aColor == DARK_GRAY) ? BLACK : DARK_GRAY;
+    aResult[1] = (aBackgroundColor == WHITE) ? LIGHT_GRAY : WHITE;
   }
 }
 
