@@ -42,6 +42,8 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFocusableContent.h"
+#include "nsIBindableContent.h"
+#include "nsIXBLBinding.h"
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
 #include "nsLinebreakConverter.h"
@@ -59,7 +61,8 @@ class nsHTMLTextAreaElement : public nsIDOMHTMLTextAreaElement,
                               public nsIDOMEventReceiver,
                               public nsIHTMLContent,
                               public nsIFormControl,
-                              public nsIFocusableContent
+                              public nsIFocusableContent,
+                              public nsIBindableContent
 {
 public:
   nsHTMLTextAreaElement(nsIAtom* aTag);
@@ -126,10 +129,15 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
+  // nsIBindableContent
+  NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
+  NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
+
 protected:
   nsGenericHTMLContainerElement mInner;
   nsIForm*   mForm;
   nsCOMPtr<nsIControllers> mControllers;
+  nsCOMPtr<nsIXBLBinding> mBinding;
 };
 
 nsresult
@@ -186,6 +194,11 @@ nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFocusableContentIID)) {
     *aInstancePtr = (void*)(nsIFocusableContent*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIBindableContent))) {
+    *aInstancePtr = (void*)(nsIBindableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -304,6 +317,22 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
   Blur();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetBinding(nsIXBLBinding* aBinding)
+{
+  mBinding = aBinding; // COMPtr does addref
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetBinding(nsIXBLBinding** aResult)
+{
+  *aResult = mBinding;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Select() 

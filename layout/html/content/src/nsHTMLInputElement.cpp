@@ -46,6 +46,8 @@
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
 #include "nsIFocusableContent.h"
+#include "nsIBindableContent.h"
+#include "nsIXBLBinding.h"
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
 
@@ -67,7 +69,8 @@ class nsHTMLInputElement : public nsIDOMHTMLInputElement,
                            public nsIDOMEventReceiver,
                            public nsIHTMLContent,
                            public nsIFormControl,
-                           public nsIFocusableContent
+                           public nsIFocusableContent,
+                           public nsIBindableContent
 {
 public:
   nsHTMLInputElement(nsIAtom* aTag);
@@ -188,12 +191,17 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
+  // nsIBindableContent
+  NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
+  NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
+
 protected:
   nsGenericHTMLLeafElement mInner;
   nsIForm*                 mForm;
   PRInt32                  mType;
   PRBool                   mSkipFocusEvent;
   nsCOMPtr<nsIControllers> mControllers;
+  nsCOMPtr<nsIXBLBinding>  mBinding;
   PRBool                   mDidMouseDown;
 
   PRBool IsImage() const {
@@ -264,6 +272,11 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFocusableContentIID)) {
     *aInstancePtr = (void*)(nsIFocusableContent*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(NS_GET_IID(nsIBindableContent))) {
+    *aInstancePtr = (void*)(nsIBindableContent*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -632,6 +645,21 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
 {
   // XXX Should focus only this presContext
   Blur();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetBinding(nsIXBLBinding* aBinding)
+{
+  mBinding = aBinding; // COMPtr does addref
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetBinding(nsIXBLBinding** aResult)
+{
+  *aResult = mBinding;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
