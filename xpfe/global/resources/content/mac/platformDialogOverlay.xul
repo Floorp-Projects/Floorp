@@ -9,40 +9,19 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<!-- OK & Cancel Buttons -->
-        <box id="okCancelButtons" align="horizontal">
-		<spring flex="100%"/>
-		<titledbutton id="Button3"
-					  class="dialog push"
-					  value="&cancelButton.label;"
-					  style="display:none;"
-					  onclick="doButton3()"/>	
-		<spring id="Button3Spring" style="width:10px"/>
-		<titledbutton id="Button2"
-					  class="dialog push"
-					  value="&cancelButton.label;"
-					  style="display:none;"
-					  onclick="doButton2()"/>	
-		<spring id="Button2Spring" style="width:10px"/>
-		<titledbutton id="cancel"
-					  class="dialog push"
-					  value="&cancelButton.label;"
-					  onclick="doCancelButton()"/>	
-		<spring id="CancelSpring" style="width:10px"/>
-		<titledbutton id="ok"
-					  class="dialog push"
-					  value="&okButton.label;"
-					  default="true"
-					  align="right"
-					  onclick="doOKButton()"/>	
-		<spring id="OKSpring" style="width:10px"/>
-	</box>
-	
-	<keyset id="keyset">
-		<key keycode="VK_ENTER" oncommand="doOKButton()"/>
-		<key keycode="VK_RETURN" oncommand="doOKButton()"/>
-		<key keycode="VK_ESCAPE" oncommand="doCancelButton()"/>
-		<!-- key xulkey="true" charcode="." oncommand="doCancelButton()"/ -->
-	</keyset>
+  <box id="okCancelButtons" align="horizontal">
+    <spring flex="1"/>
+    <button id="Button3" value="&cancelButton.label;" style="display: none;" oncommand="doButton3();"/>
+    <button id="Button2" value="&cancelButton.label;" style="display: none;" oncommand="doButton2();"/>
+    <button id="cancel" value="&cancelButton.label;" oncommand="doCancelButton();"/>
+    <button id="ok" value="&okButton.label;" oncommand="doOKButton();"/>
+  </box>
+
+  <keyset id="keyset">
+    <key keycode="VK_ENTER" oncommand="doOKButton()"/>
+    <key keycode="VK_RETURN" oncommand="doOKButton()"/>
+    <key keycode="VK_ESCAPE" oncommand="doCancelButton()"/>
+    <!-- key xulkey="true" charcode="." oncommand="doCancelButton()"/ -->
+  </keyset>
 
 </overlay>		
