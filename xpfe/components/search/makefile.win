@@ -17,6 +17,6 @@
 
 DEPTH=..\..\..
 
-DIRS=resources
+DIRS=datasets resources
 
 include <$(DEPTH)\config\rules.mak>
