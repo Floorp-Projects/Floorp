@@ -41,6 +41,7 @@
 #include "nsIEventQueue.h"
 #include <qapplication.h>
 #include <qsocketnotifier.h>
+#include <qintdict.h>
 
 class nsQtEventQueue : public QObject
 {

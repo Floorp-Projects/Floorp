@@ -202,6 +202,7 @@ nsIWidget *nsWidget::GetParent(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::Show(PRBool bState)
 {
+    printf("Show. bState=%s, mWidget=%p\n", bState?"true":"false", mWidget);
   if (!mWidget) {
     return NS_OK; // Will be null during printing
   }

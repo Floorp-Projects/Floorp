@@ -46,6 +46,7 @@
 #include "nsReadableUtils.h"
 #include "nsClipboard.h"
 #include "nsMime.h"
+#include "nsCRT.h"
 
 #include <qapplication.h>
 #include <qclipboard.h>

@@ -1204,6 +1204,36 @@ FoundFont:
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRenderingContextQT::GetTextDimensions(const char*       aString,
+                                        PRInt32           aLength,
+                                        PRInt32           aAvailWidth,
+                                        PRInt32*          aBreaks,
+                                        PRInt32           aNumBreaks,
+                                        nsTextDimensions& aDimensions,
+                                        PRInt32&          aNumCharsFit,
+                                        nsTextDimensions& aLastWordDimensions,
+                                        PRInt32*          aFontID)
+{
+    printf("nsRenderingContextQT::GetTextDimensions SORRY\n");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP
+nsRenderingContextQT::GetTextDimensions(const PRUnichar*  aString,
+                                        PRInt32           aLength,
+                                        PRInt32           aAvailWidth,
+                                        PRInt32*          aBreaks,
+                                        PRInt32           aNumBreaks,
+                                        nsTextDimensions& aDimensions,
+                                        PRInt32&          aNumCharsFit,
+                                        nsTextDimensions& aLastWordDimensions,
+                                        PRInt32*          aFontID)
+{
+    printf("nsRenderingContextQT::GetTextDimensions SORRY\n");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP nsRenderingContextQT::DrawString(const char *aString,
                                                PRUint32 aLength,
                                                nscoord aX, nscoord aY,

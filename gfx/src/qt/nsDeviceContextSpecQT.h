@@ -44,7 +44,7 @@
 #include "nsDeviceContextSpecQT.h"
 #include "nsIDeviceContextSpecPS.h"
 #include "nsIPrintSettings.h"
-
+#include "nsCOMPtr.h"
 #include "../gtk/nsPrintdGTK.h"
 
 class nsDeviceContextSpecQT : public nsIDeviceContextSpec, 
@@ -76,7 +76,7 @@ public:
 
     NS_IMETHOD GetToPrinter(PRBool &aToPrinter);
  
-    NS_IMETHOD GetPrinterName ( char **aPrinter );
+    NS_IMETHOD GetPrinterName ( const char **aPrinter );
 
     NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);
  
@@ -90,17 +90,24 @@ public:
  
     NS_IMETHOD GetLeftMargin(float &value);
  
+    NS_IMETHOD GetCopies ( int &aCopies );
+
     NS_IMETHOD GetRightMargin(float &value);
  
-    NS_IMETHOD GetCommand(char **aCommand);
+    NS_IMETHOD GetCommand(const char **aCommand);
  
-    NS_IMETHOD GetPath(char **aPath);
+    NS_IMETHOD GetPath(const char **aPath);
  
     NS_IMETHOD GetPageDimensions(float &aWidth, float &aHeight);
  
     NS_IMETHOD GetLandscape(PRBool &aLandscape);
 
     NS_IMETHOD GetUserCancelled(PRBool &aCancel);
+
+    NS_IMETHOD GetPaperName( const char **aPaperName );
+
+    NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
+
  
 protected:
 /**
@@ -111,6 +118,7 @@ protected:
 
 protected:
     UnixPrData mPrData;	
+    nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
 
 #endif

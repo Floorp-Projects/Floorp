@@ -69,14 +69,14 @@ NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard);
 // nsClipboard constructor
 //
 //-------------------------------------------------------------------------
-nsClipboard::nsClipboard()
+nsClipboard::nsClipboard() :
+  mSelectionOwner (nsnull),
+  mGlobalOwner (nsnull),
+  mSelectionTransferable (nsnull),
+  mGlobalTransferable (nsnull),
+  mIgnoreEmptyNotification (PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
-  mIgnoreEmptyNotification = PR_FALSE;
-  mGlobalTransferable = nsnull;
-  mSelectionTransferable = nsnull;
-  mGlobalOwner = nsnull;
-  mSelectionOwner = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -87,6 +87,14 @@ nsClipboard::nsClipboard()
 nsClipboard::~nsClipboard()
 {
 }
+
+#ifdef DEBUG_timeless
+// XXX nsBaseClipboard will have an init method to allow for constructors to fail
+NS_IMETHODIMP nsClipboard::Init()
+{
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 {

@@ -40,8 +40,11 @@
 #include "nsDeviceContextSpecQT.h"
 #include "nsRenderingContextQT.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "prenv.h" /* for PR_GetEnv */
+#include "nsIServiceManagerUtils.h"
+#include "nsReadableUtils.h"
 
 #include <qapplication.h>
 
@@ -128,12 +131,13 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(nsIPrintSettings* aPS)
 
   // if there is a current selection then enable the "Selection" radio button
   if (aPS) {
+    mPrintSettings = aPS;
     PRBool isOn;
     aPS->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB,
                                   &isOn);
-    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv) && pPrefs) {
-      (void)pPrefs->SetBoolPref("print.selection_radio_enabled",isOn);
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && prefBranch) {
+      prefBranch->SetBoolPref("print.selection_radio_enabled", isOn);
     }
   }
   char *path;
@@ -190,8 +194,8 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(nsIPrintSettings* aPS)
     // as I need to make the default be "print" instead of "lpr" for OpenVMS.
     const char* kCommandStr = "print";
 #endif
+    sprintf( mPrData.command, kCommandStr );
   }
-  sprintf( mPrData.command, kCommandStr );
   mPrData.top = dtop;
   mPrData.bottom = dbottom;
   mPrData.left = dleft;
@@ -227,7 +231,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetToPrinter(PRBool &aToPrinter)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecQT::GetPrinterName (char **aPrinter)
+NS_IMETHODIMP nsDeviceContextSpecQT::GetPrinterName (const char **aPrinter)
 {
    *aPrinter = &mPrData.printer[0];
    return NS_OK;
@@ -245,6 +249,11 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetGrayscale(PRBool &aGrayscale)
   return NS_OK;
 }
  
+NS_IMETHODIMP nsDeviceContextSpecQT::GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight)
+{
+  return mPrintSettings->GetPageSizeInTwips(aWidth, aHeight);
+}
+
 NS_IMETHODIMP nsDeviceContextSpecQT::GetSize(int &aSize)
 {
   aSize = mPrData.size;
@@ -316,17 +325,34 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetLeftMargin(float &value)
   value = mPrData.left;
   return NS_OK;
 }
- 
-NS_IMETHODIMP nsDeviceContextSpecQT::GetCommand(char **aCommand)
+
+NS_IMETHODIMP nsDeviceContextSpecQT::GetCopies ( int &aCopies )
+{
+  printf("WARNING: NOT IMPLEMENTED.");
+  aCopies = 1;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecQT::GetCommand(const char **aCommand)
 {
   *aCommand = &mPrData.command[0];
   return NS_OK;
 }
  
-NS_IMETHODIMP nsDeviceContextSpecQT::GetPath(char **aPath)
+NS_IMETHODIMP nsDeviceContextSpecQT::GetPath(const char **aPath)
 {
   *aPath = &mPrData.path[0];
   return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecQT::GetPaperName( const char **aPaperName )
+{
+   /*
+    * Apparantly, this gives undefined behaviour in the GTK toolkit. I find this a little better.
+    */
+   static const char* const paperName = "Not Implemented.";
+   *aPaperName = paperName;
+   return NS_OK;
 }
  
 NS_IMETHODIMP nsDeviceContextSpecQT::GetUserCancelled(PRBool &aCancel)

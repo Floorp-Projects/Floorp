@@ -157,10 +157,34 @@ public:
     NS_IMETHOD GetWidth(const PRUnichar *aString,PRUint32 aLength,
                         nscoord &aWidth,PRInt32 *aFontID);
 
-    NS_IMETHOD GetTextDimensions(const char* aString, PRUint32 aLength,
+    NS_IMETHOD GetTextDimensions(const char* aString, 
+                                 PRUint32 aLength,
                                  nsTextDimensions& aDimensions);
-    NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
-                                 nsTextDimensions& aDimensions, PRInt32 *aFontID);
+
+    NS_IMETHOD GetTextDimensions(const PRUnichar *aString, 
+                                 PRUint32 aLength,
+                                 nsTextDimensions& aDimensions, 
+                                 PRInt32 *aFontID);
+
+    NS_IMETHOD GetTextDimensions(const char*       aString,
+                                 PRInt32           aLength,
+                                 PRInt32           aAvailWidth,
+                                 PRInt32*          aBreaks,
+                                 PRInt32           aNumBreaks,
+                                 nsTextDimensions& aDimensions,
+                                 PRInt32&          aNumCharsFit,
+                                 nsTextDimensions& aLastWordDimensions,
+                                 PRInt32*          aFontID);
+
+    NS_IMETHOD GetTextDimensions(const PRUnichar*  aString,
+                                 PRInt32           aLength,
+                                 PRInt32           aAvailWidth,
+                                 PRInt32*          aBreaks,
+                                 PRInt32           aNumBreaks,
+                                 nsTextDimensions& aDimensions,
+                                 PRInt32&          aNumCharsFit,
+                                 nsTextDimensions& aLastWordDimensions,
+                                 PRInt32*          aFontID);
 
 #ifdef MOZ_MATHML
   /* Returns metrics (in app units) of an 8-bit character string */

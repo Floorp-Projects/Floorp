@@ -42,10 +42,12 @@
 #include "nsFontMetricsQT.h"
 #include "nsFont.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISaveAsCharset.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsCOMPtr.h"
 #include "nspr.h"
 #include "nsHashtable.h"
@@ -80,7 +82,7 @@ static int gInitialized = 0;
 
 // XXX many of these statics need to be freed at shutdown time
  
-static nsIPref *gPref = nsnull;
+static nsIPrefBranch *gPrefBranch = nsnull;
 static nsIUnicodeEncoder *gUserDefinedConverter = nsnull;
 static nsICharsetConverterManager2 *gCharSetManager = nsnull;
 static PRUint32 gUserDefinedMap[2048];
@@ -94,7 +96,6 @@ static nsIAtom *gUsersLocale = nsnull;
 
 static NS_DEFINE_IID(kIFontMetricsIID,NS_IFONT_METRICS_IID);
 static NS_DEFINE_CID(kCharSetManagerCID,NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kPrefCID,NS_PREF_CID);
 static NS_DEFINE_CID(kSaveAsCharsetCID,NS_SAVEASCHARSET_CID);
 
 #define NSQ_DOUBLEBYTE 1
@@ -485,7 +486,7 @@ FreeGlobals(void)
     delete gSpecialCharSets;
     gSpecialCharSets = nsnull;
   }
-  NS_IF_RELEASE(gPref);
+  NS_IF_RELEASE(gPrefBranch);
   NS_IF_RELEASE(gUnicode);
   NS_IF_RELEASE(gUserDefined);
   NS_IF_RELEASE(gUserDefinedConverter);
@@ -502,9 +503,8 @@ InitGlobals(void)
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
-  nsServiceManager::GetService(kPrefCID,NS_GET_IID(nsIPref),
-                               (nsISupports**)&gPref);
-  if (!gPref) {
+  CallGetService(NS_PREFSERVICE_CONTRACTID, &gPrefBranch);
+  if (!gPrefBranch) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
@@ -602,30 +602,6 @@ static void ParseFontPref(nsCAutoString &aPrefValue,QString &aFontName,
   else {
     aFontFoundryName = aPrefValue.get();
   } 
-}
-
-//
-// There is a bug in QT 2.x and 3.0 when using the QFontDatabase
-// font method to obtain a specific QFont. Some QFont::CharSet
-// do not have a string mapping. Use this function after calling
-// QFontDatabase::font().
-//
-// Note: This should be fixed in QT 3.1 - JCB 2001-03-09
-//
-static QFont::CharSet getExtendedCharSet(const QString &name)
-{
-  if (name == "jisx0208.1983-0")
-    return QFont::JIS_X_0208;
-  if (name == "jisx0201.1976-0")
-    return QFont::JIS_X_0201;
-  if (name == "ksc5601.1987-0")
-    return QFont::KSC_5601;
-  if (name == "gb2312.1980-0")
-    return QFont::GB_2312;
-  if (name == "big5-0")
-    return QFont::Big5;
- 
-  return QFont::AnyCharSet;
 }
 
 nsFontMetricsQT::nsFontMetricsQT()
@@ -801,13 +777,11 @@ NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont &aFont,nsIAtom *aLangGroup,
   mWeight = mFont->weight;
 
   mFont->EnumerateFamilies(FontEnumCallback,this);
-  char *value = nsnull;
+  nsXPIDLCString value;
   if (!mGeneric) {
-    gPref->CopyCharPref("font.default",&value);
-    if (value) {
-      mDefaultFont = value;
-      nsMemory::Free(value);
-      value = nsnull;
+    res = gPrefBranch->GetCharPref("font.default", getter_Copies(value));
+    if (NS_SUCCEEDED(res)) {
+      mDefaultFont.Assign(value);
     }
     else {
       mDefaultFont = "serif";
@@ -829,9 +803,14 @@ NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont &aFont,nsIAtom *aLangGroup,
     name.AppendWithConversion(langGroup);
 
     PRInt32 minimum = 0;
-    res = gPref->GetIntPref(name.get(),&minimum);
+    res = gPrefBranch->GetIntPref(name.get(), &minimum);
     if (NS_FAILED(res)) {
-      gPref->GetDefaultIntPref(name.get(),&minimum);
+      nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(gPrefBranch);
+      nsCOMPtr<nsIPrefBranch> defaultBranch;
+      prefService->GetDefaultBranch(nsnull, getter_AddRefs(defaultBranch));
+      if (defaultBranch) {
+        defaultBranch->GetIntPref(name.get(), &minimum);
+      }
     }
     if (minimum < 0) {
       minimum = 0;
@@ -871,11 +850,9 @@ NS_IMETHODIMP nsFontMetricsQT::Init(const nsFont &aFont,nsIAtom *aLangGroup,
     name.Append(*mGeneric);
     name.Append(char('.'));
     name.Append(USER_DEFINED);
-    gPref->CopyCharPref(name.get(),&value);
-    if (value) {
-      mUserDefined = value;
-      nsMemory::Free(value);
-      value = nsnull;
+    res = gPrefBranch->GetCharPref(name.get(), getter_Copies(value));
+    if (NS_SUCCEEDED(res)) {
+      mUserDefined.Assign(value);
       mIsUserDefined = 1;
     }
   }
@@ -1097,11 +1074,11 @@ nsFontMetricsQT::LookUpFontPref(nsCAutoString &aName,PRUnichar aChar)
 nsFontQT*
 nsFontMetricsQT::LoadFont(QString &aName,PRUnichar aChar)
 {
+#if 0
   QFontDatabase *qFontDB = GetQFontDB();
-  QStringList qCharsets;
   nsFontQT *font;
 
-  qCharsets = qFontDB->charSets(aName,FALSE);
+  QStringList *qCharsets = qFontDB->charSets(aName,FALSE);
   qCharsets.sort();
   for (QStringList::Iterator csIt = qCharsets.begin();
        csIt != qCharsets.end(); ++csIt) {
@@ -1110,16 +1087,19 @@ nsFontMetricsQT::LoadFont(QString &aName,PRUnichar aChar)
       return font;
     }
   }
+#endif
   return nsnull;
 }
 
+#define USECHARSETS 1
+
 nsFontQT*
-nsFontMetricsQT::LoadFont(QString &aName,const QString &aCharSet,
-                          PRUnichar aChar)
+nsFontMetricsQT::LoadFont(QString &aName, const QString &aCharSet, PRUnichar aChar)
 {
   nsFontQT *newFont = nsnull;
   QFont *qFont;
   nsIUnicodeEncoder *converter;
+#ifdef USECHARSETS //XXX need to eventually
 
   nsCStringKey charSetKey(aCharSet.latin1());
 
@@ -1258,19 +1238,22 @@ nsFontMetricsQT::LoadFont(QString &aName,const QString &aCharSet,
       return nsnull;
     }
   }
-  qFont = LoadQFont(aName,aCharSet);
+#endif
+  qFont = LoadQFont(aName);
   if (qFont) {
     newFont = new nsFontQTNormal(qFont);
     if (!newFont) {
       delete qFont;
       return nsnull;
     }
+#if 0
     if (charSetInfo == &ISO106461) {
       if (!newFont->HasChar(aChar)) {
         delete newFont;
         return nsnull;
       }
     }
+#endif
     if (mLoadedFontsCount == mLoadedFontsAlloc) {
       int newSize;
       if (mLoadedFontsAlloc) {
@@ -1301,7 +1284,9 @@ nsFontMetricsQT::LoadFont(QString &aName,const QString &aCharSet,
       newFont = mUserDefinedFont;
     }
     else {
+#ifdef USECHARSETS
       newFont->mCharSetInfo = charSetInfo;
+#endif
     }
     mLoadedFonts[mLoadedFontsCount++] = newFont; 
   }
@@ -1309,23 +1294,14 @@ nsFontMetricsQT::LoadFont(QString &aName,const QString &aCharSet,
 }
 
 QFont*
-nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
+nsFontMetricsQT::LoadQFont(QString &aName)
 {
   QFontDatabase *qFontDB;
   QFont *qFont;
-  QFont::CharSet charset;
 
   qFontDB = GetQFontDB();
-  if (qFontDB->isSmoothlyScalable(aName,*mQStyle,aCharSet)) {
-    qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)mPixelSize,aCharSet));
-    if (qFont->charSet() == QFont::AnyCharSet) {
-      charset = getExtendedCharSet(aCharSet);
-      if (charset == QFont::AnyCharSet) {
-        delete qFont;
-        return nsnull;
-      }
-      qFont->setCharSet(charset);
-    }
+  if (qFontDB->isSmoothlyScalable(aName,*mQStyle)) {
+    qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)mPixelSize));
   }
   else {
     typedef QValueList<int> QFSList;
@@ -1333,7 +1309,7 @@ nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
     PRUint16 curSz = mPixelSize, loSz = 0;
     PRBool exactMatch = PR_FALSE, nameFound = PR_FALSE;
  
-    qSizes = qFontDB->smoothSizes(aName,*mQStyle,aCharSet);
+    qSizes = qFontDB->smoothSizes(aName,*mQStyle);
     for (QFSList::Iterator szIt = qSizes.begin(); szIt != qSizes.end();
          ++szIt) {
       nameFound = PR_TRUE;
@@ -1352,15 +1328,7 @@ nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
     }
     if (nameFound) {
       if (exactMatch) {
-        qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)mPixelSize,aCharSet));
-        if (qFont->charSet() == QFont::AnyCharSet) {
-          charset = getExtendedCharSet(aCharSet);
-          if (charset == QFont::AnyCharSet) {
-            delete qFont;
-            return nsnull;
-          }
-          qFont->setCharSet(charset);
-        }
+        qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)mPixelSize));
       }
       else {
         PRUint16 loDiff,hiDiff,pixSz;
@@ -1373,15 +1341,7 @@ nsFontMetricsQT::LoadQFont(QString &aName,const QString &aCharSet)
         else {
           pixSz = curSz;
         }
-        qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)pixSz,aCharSet));
-        if (qFont->charSet() == QFont::AnyCharSet) {
-          charset = getExtendedCharSet(aCharSet);
-          if (charset == QFont::AnyCharSet) {
-            delete qFont;
-            return nsnull;
-          }
-          qFont->setCharSet(charset);
-        }
+        qFont = new QFont(qFontDB->font(aName,*mQStyle,(int)pixSz));
       }
     }
     else {
@@ -1407,14 +1367,18 @@ nsFontMetricsQT::FamilyExists(const nsString &aName)
     return NS_ERROR_FAILURE;
   }
   QFontDatabase *qFontDB = GetQFontDB();
-  QStringList qCharsets;
 
   nsCAutoString name;
   name.AssignWithConversion(aName.get());
-  qCharsets = qFontDB->charSets(QString((char*)name.get()),FALSE);
+#if QT_VERSION < 300
+  QStringList qCharsets = qFontDB->charSets(QString((char*)name.get()),FALSE);
   if (!qCharsets.isEmpty()) {
     return NS_OK;  
   } 
+#else
+  if(qFontDB->families().contains(QString((char*)name.get())))
+    return NS_OK;
+#endif
   return NS_ERROR_FAILURE;
 }
 
@@ -1426,23 +1390,23 @@ PrefEnumCallback(const char *aName,void *aClosure)
       return;
   }
   QString fontName,foundryName,charSetName;
-  char *value = nsnull;
-  gPref->CopyCharPref(aName,&value);
+  nsXPIDLCString value;
+  nsresult res = gPrefBranch->GetCharPref(aName, getter_Copies(value));
   nsCAutoString name;
-  if (value) {
-    name = value;
-    nsMemory::Free(value);
-    value = nsnull;
-
+  if (NS_SUCCEEDED(res)) {
+    name.Assign(value.get());
     s->mFont = s->mMetrics->LookUpFontPref(name,s->mChar);
   }
   if (!s->mFont) {
-    gPref->CopyDefaultCharPref(aName,&value);
-    if (value) {
-      name = value;
-      nsMemory::Free(value);
-      value = nsnull;
-      s->mFont = s->mMetrics->LookUpFontPref(name,s->mChar);
+    nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(gPrefBranch);
+    nsCOMPtr<nsIPrefBranch> defaultBranch;
+    prefService->GetDefaultBranch(nsnull, getter_AddRefs(defaultBranch));
+    if (defaultBranch) {
+      res = defaultBranch->GetCharPref(name.get(), getter_Copies(value));
+      if (NS_SUCCEEDED(res)) {
+        name.Assign(value);
+        s->mFont = s->mMetrics->LookUpFontPref(name,s->mChar);
+      }
     }
   }
 }
@@ -1459,34 +1423,31 @@ nsFontMetricsQT::FindLangGroupPrefFont(nsIAtom *aLangGroup,
     // check user set pref
     nsCAutoString pref = prefix;
     const PRUnichar *langGroup = nsnull;
-    char *value = nsnull;
+    nsXPIDLCString value;
     nsCAutoString str;
     nsCAutoString str_user;
 
     pref.Append(char('.'));
     aLangGroup->GetUnicode(&langGroup);
     pref.AppendWithConversion(langGroup);
-    gPref->CopyCharPref(pref.get(), &value);
-    if (value) {
-      str = value;
-      str_user = value;
-      nsMemory::Free(value);
-      value = nsnull;
+    nsresult res = gPrefBranch->GetCharPref(pref.get(), getter_Copies(value));
+    if (NS_SUCCEEDED(res)) {
+      str.Assign(value);
+      str_user.Assign(value);
       font = LookUpFontPref(str,aChar);
       if (font) {
         NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
         return font;
       }
     }
-    value = nsnull;
     // check factory set pref
-    gPref->CopyDefaultCharPref(pref.get(), &value);
-    if (value) {
-      str = value;
-      // check if we already tried this name
-      if (str != str_user) {
-        nsMemory::Free(value);
-        value = nsnull;
+    nsCOMPtr<nsIPrefService> prefService = do_QueryInterface(gPrefBranch);
+    nsCOMPtr<nsIPrefBranch> defaultBranch;
+    prefService->GetDefaultBranch(nsnull, getter_AddRefs(defaultBranch));
+    if (defaultBranch) {
+      res = defaultBranch->GetCharPref(pref.get(), getter_Copies(value));
+      if (NS_SUCCEEDED(res)) {
+        str.Assign(value);
         font = LookUpFontPref(str,aChar);
         if (font) {
           NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
@@ -1524,7 +1485,16 @@ nsFontMetricsQT::FindGenericFont(PRUnichar aChar)
   nsFontSearch search = { this,aChar,nsnull };
 
   prefix.Append(*mGeneric);
-  gPref->EnumerateChildren(prefix.get(),PrefEnumCallback,&search);
+  PRUint32 childCount;
+  char**   childArray;
+  nsresult rv = gPrefBranch->GetChildList(prefix.get(), &childCount, &childArray);
+  if (NS_SUCCEEDED(rv)) {
+    for (PRUint32 i = 0; i < childCount; ++i) {
+      PrefEnumCallback(childArray[i], &search);
+    }
+
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
+  }
   if (search.mFont) {
     NS_ASSERTION(search.mFont->SupportsChar(aChar), "font supposed to support this char");
     return search.mFont;
@@ -1535,7 +1505,14 @@ nsFontMetricsQT::FindGenericFont(PRUnichar aChar)
   // find based on all prefs (no generic part (eg: sans-serif))
   nsCAutoString allPrefs("font.name.");
   search.mFont = nsnull;
-  gPref->EnumerateChildren(allPrefs.get(), PrefEnumCallback, &search);
+  rv = gPrefBranch->GetChildList(allPrefs.get(), &childCount, &childArray);
+  if (NS_SUCCEEDED(rv)) {
+    for (PRUint32 i = 0; i < childCount; ++i) {
+      PrefEnumCallback(childArray[i], &search);
+    }
+
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
+  }
   if (search.mFont) {
     NS_ASSERTION(search.mFont->SupportsChar(aChar), "font supposed to support this char");
     return search.mFont;
@@ -1562,6 +1539,7 @@ nsFontMetricsQT::FindLocalFont(PRUnichar aChar)
   return nsnull;
 }
 
+#if QT_VERSION < 300
 nsFontQT*
 nsFontMetricsQT::FindGlobalFont(PRUnichar aChar)
 {
@@ -1584,6 +1562,7 @@ nsFontMetricsQT::FindGlobalFont(PRUnichar aChar)
   }
   return nsnull;
 }
+#endif
 
 nsFontQT*
 nsFontMetricsQT::FindSubstituteFont(PRUnichar aChar)
@@ -1642,14 +1621,18 @@ nsFontMetricsQT::FindFont(PRUnichar aChar)
     if (!font) {
       font = FindGenericFont(aChar);
       if (!font) {
+#if QT_VERSION < 300
         font = FindGlobalFont(aChar);
         if (!font) {
+#endif
           font = FindSubstituteFont(aChar);
           if (font) {
             mCharSubst.insert((long)aChar,"ok");
           }
         }
+#if QT_VERSION < 300
       }
+#endif
     }
   }
   return font;
@@ -1701,7 +1684,12 @@ nsFontQT::~nsFontQT()
 
 PRUint32 *nsFontQT::GetCharSetMap()
 {
-  return mCharSetInfo->mMap;
+  return 
+#ifdef USECHARSETS
+    mCharSetInfo->mMap;
+#else
+    ISO88591;
+#endif
 }
  
 QFont*
@@ -2046,6 +2034,7 @@ struct FontEnumNode
 
 typedef struct FontEnumNode FontEnumNode;
 
+#if QT_VERSION < 300
 static nsresult EnumFonts(nsIAtom *aLangGroup,const char *aGeneric,
                           PRUint32 *aCount,PRUnichar ***aResult)
 {
@@ -2163,6 +2152,79 @@ static nsresult EnumFonts(nsIAtom *aLangGroup,const char *aGeneric,
   *aResult = array;
   return NS_OK;
 }
+#else
+static nsresult EnumFonts(nsIAtom *aLangGroup,const char *aGeneric,
+                          PRUint32 *aCount,PRUnichar ***aResult)
+{
+  QFontDatabase *qFontDB = nsFontMetricsQT::GetQFontDB();
+  QStringList qFamilies;
+  FontEnumNode *head = nsnull,*tail = nsnull;
+  int count = 0;
+
+  /* Get list of all fonts */
+  qFamilies = qFontDB->families();
+  qFamilies.sort();
+  for (QStringList::Iterator famIt = qFamilies.begin();
+       famIt != qFamilies.end(); ++famIt) {
+    nsCAutoString name((*famIt).latin1());
+    FontEnumNode *node = (FontEnumNode*)nsMemory::Alloc(sizeof(FontEnumNode));
+
+    if (!node) {
+      FontEnumNode *ptr = head,*tmp;
+      while (ptr) {
+        tmp = ptr;
+        nsMemory::Free(ptr->name);
+        ptr = ptr->next;
+        nsMemory::Free(tmp);
+      }
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    node->name = ToNewUnicode(name);
+    if (!node->name) {
+      FontEnumNode *ptr = head,*tmp;
+      while (ptr) {
+        tmp = ptr;
+        nsMemory::Free(ptr->name);
+        ptr = ptr->next;
+        nsMemory::Free(tmp);
+      }
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    node->next = nsnull;
+    if (!head) {
+      head = node;
+    }
+    else {
+      tail->next = node;
+    }
+    tail = node;
+    count++;
+  }
+  PRUnichar **array = (PRUnichar**)nsMemory::Alloc(count * sizeof(PRUnichar*));
+  if (!array) {
+    FontEnumNode *ptr = head,*tmp;
+    while (ptr) {
+      tmp = ptr;
+      nsMemory::Free(ptr->name);
+      ptr = ptr->next;
+      nsMemory::Free(tmp);
+    }
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  FontEnumNode *ptr = head,*tmp;
+  for (int i = 0; i < count; i++) {
+    tmp = ptr;
+    array[i] = ptr->name;
+    ptr = ptr->next;
+    nsMemory::Free(tmp);
+  }
+  NS_QuickSort(array,count,sizeof(PRUnichar*),CompareFontNames,nsnull);
+ 
+  *aCount = count;
+  *aResult = array;
+  return NS_OK;
+}
+#endif
 
 NS_IMETHODIMP
 nsFontEnumeratorQT::EnumerateAllFonts(PRUint32 *aCount,PRUnichar ***aResult)
