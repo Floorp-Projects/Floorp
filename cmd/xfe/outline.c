@@ -970,13 +970,16 @@ fe_GridCreate(MWContext* context, Widget parent, String name,
 					    show something no matter how wide
 					    the window gets. */
 
+#ifdef MOZ_MAIL_NEWS
     if ((context->type == MWContextMail 
 	 && fe_globalPrefs.mail_pane_style == FE_PANES_HORIZONTAL)
 	|| ((context->type == MWContextNews
 	     && fe_globalPrefs.news_pane_style == FE_PANES_HORIZONTAL))) {
       XtSetArg(av[ac], XmNhorizontalSizePolicy, XmCONSTANT); ac++;
     }
-    else {
+    else
+#endif /* MOZ_MAIL_NEWS */
+    {
       XtSetArg(av[ac], XmNhorizontalSizePolicy, XmVARIABLE); ac++;
     }
   } else {

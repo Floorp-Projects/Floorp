@@ -111,8 +111,10 @@ typedef struct _XFE_GlobalPrefs
 	/*  launch on startup */
 
 	XP_Bool startup_browser_p;    /* new for 4.0 */
+#ifdef MOZ_MAIL_NEWS
 	XP_Bool startup_mail_p;       /* new for 4.0 */
 	XP_Bool startup_news_p;       /* new for 4.0 */
+#endif /* MOZ_MAIL_NEWS */
 	XP_Bool startup_editor_p;     /* new for 4.0 */
 	XP_Bool startup_conference_p; /* new for 4.0 */
 	XP_Bool startup_netcaster_p;  /* new for 4.0 */
@@ -276,6 +278,7 @@ typedef struct _XFE_GlobalPrefs
 	char   *private_mailcap_file;
 	char   *tmp_dir;
 
+#ifdef MOZ_MAIL_NEWS
 	/*
 	 *  ----- Mail & News -----
 	 */
@@ -301,9 +304,11 @@ typedef struct _XFE_GlobalPrefs
 	 *  ----- Mail & News/Identity -----
 	 */
 
+#endif /* MOZ_MAIL_NEWS */
 	char   *real_name;
 	char   *email_address;
 	char   *organization;
+#ifdef MOZ_MAIL_NEWS
 	char   *signature_file;
 	char   *reply_to_address;
 	XP_Bool attach_address_card;
@@ -382,6 +387,7 @@ typedef struct _XFE_GlobalPrefs
 	 */
 
 	XP_Bool addr_book_lastname_first;
+#endif /* MOZ_MAIL_NEWS */
 
 	/*
 	 *  ----- Editor -----
@@ -515,6 +521,7 @@ typedef struct _XFE_GlobalPrefs
 	char *dither_images;
 	XP_Bool streaming_images;
 
+#ifdef MOZ_MAIL_NEWS
 	/* MAIL
 	 */
 
@@ -522,6 +529,7 @@ typedef struct _XFE_GlobalPrefs
 	char* mail_message_columns;
 	char* mail_sash_geometry;
 	XP_Bool movemail_warn;
+#endif /* MOZ_MAIL_NEWS */
 
 	/* NETWORK
 	 */
@@ -534,6 +542,7 @@ typedef struct _XFE_GlobalPrefs
 
 	XP_Bool email_submit;
 	
+#ifdef MOZ_MAIL_NEWS
 	/* NEWS
 	 */
 
@@ -542,6 +551,7 @@ typedef struct _XFE_GlobalPrefs
 	char    *news_folder_columns;
 	char    *news_message_columns;
 	char    *news_sash_geometry;
+#endif /* MOZ_MAIL_NEWS */
 
 	/* SECURITY
 	 */
@@ -566,6 +576,11 @@ typedef struct _XFE_GlobalPrefs
 	/* STYLES 2
 	 */
 
+#define FE_PANES_NORMAL     0
+#define FE_PANES_STACKED    1
+#define FE_PANES_HORIZONTAL 2
+
+#ifdef MOZ_MAIL_NEWS
 	/* Mail and News Organization
 	 */
 
@@ -574,15 +589,12 @@ typedef struct _XFE_GlobalPrefs
 	XP_Bool mail_thread_p;
 	XP_Bool news_thread_p;
 
-#define FE_PANES_NORMAL     0
-#define FE_PANES_STACKED    1
-#define FE_PANES_HORIZONTAL 2
-
 	int mail_pane_style;
 	int news_pane_style;
 
 	int mail_sort_style;
 	int news_sort_style;
+#endif /* MOZ_MAIL_NEWS */
 
 	/* BOOKMARK
 	 */
@@ -626,6 +638,7 @@ typedef struct _XFE_GlobalPrefs
 	XP_Bool		browser_personal_toolbar_showing;
 	XP_Bool		browser_personal_toolbar_open;
 
+#ifdef MOZ_MAIL_NEWS
 	int32		messenger_navigation_toolbar_position;
 	XP_Bool		messenger_navigation_toolbar_showing;
 	XP_Bool		messenger_navigation_toolbar_open;
@@ -657,6 +670,7 @@ typedef struct _XFE_GlobalPrefs
 	int32		compose_message_message_toolbar_position;
 	XP_Bool		compose_message_message_toolbar_showing;
 	XP_Bool		compose_message_message_toolbar_open;
+#endif /* MOZ_MAIL_NEWS */
 
 	int32		composer_composition_toolbar_position;
 	XP_Bool		composer_composition_toolbar_showing;
@@ -669,12 +683,15 @@ typedef struct _XFE_GlobalPrefs
 	int32		browser_win_width;
 	int32		browser_win_height;
 
+#ifdef MOZ_MAIL_NEWS
 	int32		mail_compose_win_width;
 	int32		mail_compose_win_height;
+#endif /* MOZ_MAIL_NEWS */
 
 	int32		editor_win_width;
 	int32		editor_win_height;
 
+#ifdef MOZ_MAIL_NEWS
 	int32		mail_folder_win_width;
 	int32		mail_folder_win_height;
 
@@ -683,6 +700,7 @@ typedef struct _XFE_GlobalPrefs
 
 	int32		mail_thread_win_width;
 	int32		mail_thread_win_height;
+#endif /* MOZ_MAIL_NEWS */
 
 } XFE_GlobalPrefs;
 

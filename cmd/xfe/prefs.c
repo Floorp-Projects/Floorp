@@ -208,8 +208,10 @@ static struct pref_map pref_map[] = {
 #endif
 
 {"general.startup.browser", FIELD_OFFSET(startup_browser_p), read_bool, write_bool},
+#ifdef MOZ_MAIL_NEWS
 {"general.startup.mail", FIELD_OFFSET(startup_mail_p), read_bool, write_bool},
 {"general.startup.news", FIELD_OFFSET(startup_news_p), read_bool, write_bool},
+#endif /* MOZ_MAIL_NEWS */
 {"general.startup.editor", FIELD_OFFSET(startup_editor_p), read_bool, write_bool},
 {"general.startup.conference", FIELD_OFFSET(startup_conference_p), read_bool, write_bool},
 {"general.startup.netcaster", FIELD_OFFSET(startup_netcaster_p), read_bool, write_bool},
@@ -231,6 +233,7 @@ static struct pref_map pref_map[] = {
 {"intl.font_spec_list", FIELD_OFFSET(font_spec_list), read_font_spec, write_font_spec},
 {"intl.accept_languages", FIELD_OFFSET(lang_regions), read_str, write_str},
 
+#ifdef MOZ_MAIL_NEWS
 {"mail.play_sound", FIELD_OFFSET(enable_biff), read_bool, write_bool},
 {"mail.strictly_mime", FIELD_OFFSET(qp_p), read_bool, write_bool},
 {"mail.file_attach_binary", FIELD_OFFSET(file_attach_binary), read_bool, write_bool},
@@ -245,9 +248,13 @@ static struct pref_map pref_map[] = {
 {"mail.quoted_style", FIELD_OFFSET(citation_font), read_int, write_int},
 {"mail.quoted_size", FIELD_OFFSET(citation_size), read_int, write_int},
 {"mail.citation_color", FIELD_OFFSET(citation_color), read_str, write_str},
+#endif /* MOZ_MAIL_NEWS */
+
 {"mail.identity.username", FIELD_OFFSET(real_name), read_str, write_str},
 {"mail.identity.useremail", FIELD_OFFSET(email_address), read_str, write_str},
 {"mail.identity.organization", FIELD_OFFSET(organization), read_str, write_str},
+
+#ifdef MOZ_MAIL_NEWS
 {"mail.identity.reply_to", FIELD_OFFSET(reply_to_address), read_str, write_str, },
 {"mail.signature_file", FIELD_OFFSET(signature_file), read_path, write_path, },
 {"mail.attach_vcard", FIELD_OFFSET(attach_address_card), read_bool, write_bool},
@@ -293,13 +300,18 @@ static struct pref_map pref_map[] = {
 {"mailnews.nicknames_only", FIELD_OFFSET(expand_addr_nicknames_only), read_bool, write_bool},
 {"mailnews.reply_on_top", FIELD_OFFSET(reply_on_top), read_int, write_int},
 {"mailnews.reply_with_extra_lines", FIELD_OFFSET(reply_with_extra_lines), read_int, write_int},
+#endif /* MOZ_MAIL_NEWS */
 
 {"network.cookie.warnAboutCookies", FIELD_OFFSET(warn_accept_cookie), read_bool, write_bool},
 {"network.cookie.cookieBehavior", FIELD_OFFSET(accept_cookie), read_int, write_int},
+#ifdef MOZ_MAIL_NEWS
 {"network.hosts.smtp_server", FIELD_OFFSET(mailhost), read_str, write_str},
+#endif /* MOZ_MAIL_NEWS */
 {"network.max_connections", FIELD_OFFSET(max_connections), read_int, write_int},
 {"network.tcpbufsize", FIELD_OFFSET(network_buffer_size), read_int, write_int},
+#ifdef MOZ_MAIL_NEWS
 {"network.hosts.nntp_server", FIELD_OFFSET(newshost), read_str, write_str},
+#endif /* MOZ_MAIL_NEWS */
 {"network.hosts.socks_server", FIELD_OFFSET(socks_host), read_str, write_str},
 {"network.hosts.socks_serverport", FIELD_OFFSET(socks_host_port), read_int, write_int},
 {"network.proxy.ftp", FIELD_OFFSET(ftp_proxy), read_str, write_str},
@@ -318,6 +330,7 @@ static struct pref_map pref_map[] = {
 {"network.proxy.type", FIELD_OFFSET(proxy_mode), read_int, write_int},
 {"network.proxy.autoconfig_url", FIELD_OFFSET(proxy_url), read_str, write_str},
 
+#ifdef MOZ_MAIL_NEWS
 {"news.default_cc", FIELD_OFFSET(news_bcc), read_str, write_str},
 {"news.default_fcc", FIELD_OFFSET(news_fcc), read_path, write_path, },
 {"news.cc_self", FIELD_OFFSET(newsbccself_p), read_bool, write_bool},
@@ -339,6 +352,7 @@ static struct pref_map pref_map[] = {
 {"news.remove_bodies.days", FIELD_OFFSET(news_remove_bodies_days), read_int, write_int},
 {"news.server_port", FIELD_OFFSET(news_server_port), read_int, write_int},
 {"news.server_is_secure", FIELD_OFFSET(news_server_secure), read_bool, write_bool},
+#endif /* MOZ_MAIL_NEWS */
 
 {"offline.startup_mode", FIELD_OFFSET(offline_startup_mode), read_int, write_int},
 {"offline.news.download.unread_only", FIELD_OFFSET(offline_news_download_unread), read_bool, write_bool},
@@ -391,6 +405,7 @@ static struct pref_map pref_map[] = {
 {"custtoolbar.Browser.Personal_Toolbar.showing", FIELD_OFFSET(browser_personal_toolbar_showing), read_bool, write_bool},
 {"custtoolbar.Browser.Personal_Toolbar.open", FIELD_OFFSET(browser_personal_toolbar_open), read_bool, write_bool},
 
+#ifdef MOZ_MAIL_NEWS
 {"custtoolbar.Messenger.Navigation_Toolbar.position", FIELD_OFFSET(messenger_navigation_toolbar_position), read_int, write_int},
 {"custtoolbar.Messenger.Navigation_Toolbar.showing", FIELD_OFFSET(messenger_navigation_toolbar_showing), read_bool, write_bool},
 {"custtoolbar.Messenger.Navigation_Toolbar.open", FIELD_OFFSET(messenger_navigation_toolbar_open), read_bool, write_bool},
@@ -422,6 +437,7 @@ static struct pref_map pref_map[] = {
 {"custtoolbar.Compose_Message.Message_Toolbar.position", FIELD_OFFSET(compose_message_message_toolbar_position), read_int, write_int},
 {"custtoolbar.Compose_Message.Message_Toolbar.showing", FIELD_OFFSET(compose_message_message_toolbar_showing), read_bool, write_bool},
 {"custtoolbar.Compose_Message.Message_Toolbar.open", FIELD_OFFSET(compose_message_message_toolbar_open), read_bool, write_bool},
+#endif /* MOZ_MAIL_NEWS */
 
 {"custtoolbar.Composer.Composition_Toolbar.position", FIELD_OFFSET(composer_composition_toolbar_position), read_int, write_int},
 {"custtoolbar.Composer.Composition_Toolbar.showing", FIELD_OFFSET(composer_composition_toolbar_showing), read_bool, write_bool},
@@ -434,12 +450,15 @@ static struct pref_map pref_map[] = {
 {"browser.win_width", FIELD_OFFSET(browser_win_width), read_int, write_int},
 {"browser.win_height",FIELD_OFFSET(browser_win_height), read_int, write_int},
 
+#ifdef MOZ_MAIL_NEWS
 {"mail.compose.win_width", FIELD_OFFSET(mail_compose_win_width), read_int, write_int},
 {"mail.compose.win_height",FIELD_OFFSET(mail_compose_win_height), read_int, write_int},
+#endif /* MOZ_MAIL_NEWS */
 
 {"editor.win_width", FIELD_OFFSET(editor_win_width), read_int, write_int},
 {"editor.win_height",FIELD_OFFSET(editor_win_height), read_int, write_int},
 
+#ifdef MOZ_MAIL_NEWS
 {"mail.folder.win_width", FIELD_OFFSET(mail_folder_win_width), read_int, write_int},
 {"mail.folder.win_height",FIELD_OFFSET(mail_folder_win_height), read_int, write_int},
 
@@ -448,6 +467,7 @@ static struct pref_map pref_map[] = {
 
 {"mail.thread.win_width", FIELD_OFFSET(mail_thread_win_width), read_int, write_int},
 {"mail.thread.win_height",FIELD_OFFSET(mail_thread_win_height), read_int, write_int},
+#endif /* MOZ_MAIL_NEWS */
 
 };
 
@@ -464,6 +484,7 @@ XFE_UpgradePrefs(char* filename, XFE_GlobalPrefs* prefs)
     char* tmp = NULL;
     void* field;
     Bool status;
+#ifdef MOZ_MAIL_NEWS
     XP_Bool passwordProtectLocalCache;
 
     PREF_GetBoolPref("mail.password_protect_local_cache",
@@ -476,6 +497,7 @@ XFE_UpgradePrefs(char* filename, XFE_GlobalPrefs* prefs)
         tmp = prefs->pop3_password;
         prefs->pop3_password = "";
     }
+#endif /* MOZ_MAIL_NEWS */
 
     split_all_proxies(prefs);
 
@@ -486,9 +508,11 @@ XFE_UpgradePrefs(char* filename, XFE_GlobalPrefs* prefs)
 
     status = ( PREF_SavePrefFileAs(filename) == PREF_NOERROR ) ? TRUE : FALSE;
 
+#ifdef MOZ_MAIL_NEWS
     if ( !prefs->rememberPswd && !passwordProtectLocalCache) {
         prefs->pop3_password = tmp;
     }
+#endif /* MOZ_MAIL_NEWS */
 
     return status;
 }
@@ -504,6 +528,7 @@ XFE_SavePrefs(char* filename, XFE_GlobalPrefs* prefs)
     char* tmp = NULL;
     void* field;
     Bool status;
+#ifdef MOZ_MAIL_NEWS
     XP_Bool passwordProtectLocalCache;
 	
     PREF_GetBoolPref("mail.password_protect_local_cache",
@@ -517,6 +542,7 @@ XFE_SavePrefs(char* filename, XFE_GlobalPrefs* prefs)
         tmp = prefs->pop3_password;
         prefs->pop3_password = "";
     }
+#endif /* MOZ_MAIL_NEWS */
 
     /* split_all_proxies(prefs); */
 
@@ -529,9 +555,11 @@ XFE_SavePrefs(char* filename, XFE_GlobalPrefs* prefs)
 
     status = ( PREF_SavePrefFileAs(filename) == PREF_NOERROR ) ? TRUE : FALSE;
 
+#ifdef MOZ_MAIL_NEWS
     if ( !prefs->rememberPswd && !passwordProtectLocalCache) {
         prefs->pop3_password = tmp;
     }
+#endif /* MOZ_MAIL_NEWS */
 
     return status;
 }
@@ -725,9 +753,12 @@ xfe_prefs_from_environment (XFE_GlobalPrefs *prefs)
    */
   char *env;
   if ((env = getenv ("WWW_HOME")))     StrAllocCopy (prefs->home_document,env);
+#ifdef MOZ_MAIL_NEWS
   if ((env = getenv ("NNTPSERVER")))   StrAllocCopy (prefs->newshost, env);
+#endif /* MOZ_MAIL_NEWS */
   if ((env = getenv ("TMPDIR")))       StrAllocCopy (prefs->tmp_dir, env);
 
+#ifdef MOZ_MAIL_NEWS
   if ((env = getenv ("NEWSRC")))
     {
       char *s;
@@ -735,6 +766,7 @@ xfe_prefs_from_environment (XFE_GlobalPrefs *prefs)
       s = strrchr (prefs->newsrc_directory, '/');
       if (s) *s = 0;
     }
+#endif /* MOZ_MAIL_NEWS */
 
   /* These damn proxy env vars *should* be set to "host:port" but apparently
      for historical reasons they tend to be set to "http://host:port/proxy/"
@@ -1268,6 +1300,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 		/* COLORS
 		 */
 	
+#ifdef MOZ_MAIL_NEWS
 		/* COMPOSITION
 		 */
 		else if (!XP_STRCASECMP("8BIT_MAIL_AND_NEWS", name))
@@ -1294,6 +1327,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 		}
 		else if (!XP_STRCASECMP("MAIL_AUTOQUOTE_REPLY", name))
 			prefs->autoquote_reply = BOOLP (value);
+#endif /* MOZ_MAIL_NEWS */
 
 		/* DIRECTORIES
 		 */
@@ -1314,12 +1348,14 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			fe_ReadFontCharSet(value);
 		else if (!XP_STRCASECMP("FONT_SPEC", name))
 			fe_ReadFontSpec(value);
+#ifdef MOZ_MAIL_NEWS
 		else if (!XP_STRCASECMP("CITATION_FONT", name))
 			prefs->citation_font = (MSG_FONT) atoi (value);
 		else if (!XP_STRCASECMP("CITATION_SIZE", name))
 			prefs->citation_size = (MSG_CITATION_SIZE) atoi (value);
 		else if (!XP_STRCASECMP("CITATION_COLOR", name))
 			StrAllocCopy (prefs->citation_color, value);
+#endif /* MOZ_MAIL_NEWS */
 
 		/* PREFERED LANGUAGE/REGION
 		 */
@@ -1345,10 +1381,12 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			StrAllocCopy (prefs->email_address, value);
 		else if (!XP_STRCASECMP("ORGANIZATION", name))
 			StrAllocCopy (prefs->organization, value);
+#ifdef MOZ_MAIL_NEWS
 		else if (!XP_STRCASECMP("SIGNATURE_FILE", name))
 			StrAllocCopy (prefs->signature_file, value);
 		else if (!XP_STRCASECMP("SIGNATURE_DATE", name))
 			prefs->signature_date = (time_t) atol (value);
+#endif /* MOZ_MAIL_NEWS */
 
 		/* IMAGES
        */
@@ -1357,6 +1395,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 		else if (!XP_STRCASECMP("STREAMING_IMAGES", name))
 			prefs->streaming_images = BOOLP (value);
 
+#ifdef MOZ_MAIL_NEWS
       /* MAIL
        */
 		else if (!XP_STRCASECMP("MAILHOST", name))
@@ -1400,6 +1439,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			prefs->mail_sort_style = atol (value);
 		else if (!XP_STRCASECMP("MOVEMAIL_WARN", name))
 			prefs->movemail_warn = BOOLP (value);
+#endif /* MOZ_MAIL_NEWS */
 
 		/* NETWORK
        */
@@ -1430,6 +1470,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			}
 		}
 
+#ifdef MOZ_MAIL_NEWS
       /* NEWS
        */
 		else if (!XP_STRCASECMP("NNTPSERVER", name))
@@ -1450,6 +1491,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			prefs->news_pane_style = atoi (value);
 		else if (!XP_STRCASECMP("NEWS_SORT_STYLE", name))
 			prefs->news_sort_style = atol (value);
+#endif /* MOZ_MAIL_NEWS */
 
       /* PROXIES
        */
@@ -1531,6 +1573,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			prefs->underline_links_p = BOOLP (value);
 		else if (!XP_STRCASECMP("HISTORY_EXPIRATION", name))
 			prefs->global_history_expiration = atoi (value);
+#ifdef MOZ_MAIL_NEWS
 		else if (!XP_STRCASECMP("FIXED_MESSAGE_FONT", name))
 			prefs->fixed_message_font_p = BOOLP (value);
 		/*** no longer valid. we need one each for mail and news - dp
@@ -1539,6 +1582,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 		  else if (!XP_STRCASECMP("THREAD_MESSAGES", name))
 		  prefs->msg_thread_p = BOOLP (value);
 ***/
+#endif /* MOZ_MAIL_NEWS */
 
       /* BOOKMARK
        */
@@ -1627,28 +1671,34 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 		prefs->toolbar_style = BROWSER_TOOLBAR_TEXT_ONLY;
 	}
 
+#ifdef MOZ_MAIL_NEWS
 	/* movemail -> mail server type */
 
 	if (prefs->use_movemail_p)
 		prefs->mail_server_type = MAIL_SERVER_MOVEMAIL;
 	else
 		prefs->mail_server_type = MAIL_SERVER_POP3;
+#endif /* MOZ_MAIL_NEWS */
 
 	/* start up mode */
 
 	prefs->startup_browser_p = 
+#ifdef MOZ_MAIL_NEWS
 		prefs->startup_mail_p = 
 		prefs->startup_news_p = 
+#endif /* MOZ_MAIL_NEWS */
 		prefs->startup_editor_p = 
 		prefs->startup_conference_p = 
 		prefs->startup_netcaster_p = 
 		prefs->startup_calendar_p = False;
 	if (prefs->startup_mode == 0)
 		prefs->startup_browser_p = True;
+#ifdef MOZ_MAIL_NEWS
 	else if (prefs->startup_mode == 1)
 		prefs->startup_mail_p = True;
 	else if (prefs->startup_mode == 2)
 		prefs->startup_news_p = True;
+#endif /* MOZ_MAIL_NEWS */
 
 	/* home document */
 
@@ -1696,8 +1746,10 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
     }
 
     FROB(cache_dir)
+#ifdef MOZ_MAIL_NEWS
     FROB(mail_fcc)
     FROB(news_fcc)
+#endif /* MOZ_MAIL_NEWS */
     FROB(tmp_dir)
     FROB(bookmark_file)
     FROB(history_file)
@@ -1709,10 +1761,12 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
     /* spider end */
     FROB(global_mailcap_file)
     FROB(private_mailcap_file)
+#ifdef MOZ_MAIL_NEWS
     FROB(signature_file)
     FROB(mail_directory)
     FROB(movemail_program)
     FROB(newsrc_directory)
+#endif /* MOZ_MAIL_NEWS */
 
 #ifdef EDITOR
     FROB(editor_html_editor);
@@ -1731,11 +1785,13 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 static void
 tweaks(XFE_GlobalPrefs* prefs)
 {
+#ifdef MOZ_MAIL_NEWS
 	/* movemail */
 	if ((prefs->mail_server_type == MAIL_SERVER_IMAP) ||
 		(prefs->mail_server_type == MAIL_SERVER_INBOX) ||
 		(prefs->mail_server_type == MAIL_SERVER_POP3))
 		prefs->use_movemail_p = FALSE;
+#endif /* MOZ_MAIL_NEWS */
 
 	/* toolbar style */
 	if (prefs->toolbar_style == BROWSER_TOOLBAR_ICONS_ONLY) {
