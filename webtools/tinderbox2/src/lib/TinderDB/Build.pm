@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.27 $ 
-# $Date: 2002/04/24 23:25:31 $ 
+# $Revision: 1.28 $ 
+# $Date: 2002/04/25 00:13:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -781,13 +781,13 @@ sub apply_db_updates {
 
    }  
 
-    # ignore updates which start too fast
+    # Keep the spacing between builds greater then our HTML grid
+    # spacing.  There can be very frequent updates for any build
+    # but different builds must be spaced apart.
+      
+    # If updates start too fast, remove older build from database.
 
     if ( defined($DATABASE{$tree}{$build}{'recs'}) ) {
-      
-      # Keep the spacing between builds greater then our HTML grid
-      # spacing.  There can be very frequent updates for any build
-      # but different builds must be spaced apart.
       
       my ($safe_separation) = ($TinderDB::TABLE_SPACING * 
                                $main::SECONDS_PER_MINUTE);
@@ -801,10 +801,16 @@ sub apply_db_updates {
       my ($different_builds) = ($record->{'starttime'} !=
                                 $previous_rec->{'starttime'});
          
-      ($different_builds) && 
-        ($separation < $safe_separation) && 
-          next;
-    }
+      if (
+          ($different_builds) && 
+          ($separation < $safe_separation) 
+          ) {
+          print LOG (
+                     "Not enough separation between builds. ".
+                     "separation: $separation tree: $tree build: $build \n".
+                     "");
+          shift @{ $DATABASE{$tree}{$build}{'recs'} };          
+      }
 
     # Is this report for the same build as the [0] entry? If so we do not
     # want two entries for the same build. Must throw out either
