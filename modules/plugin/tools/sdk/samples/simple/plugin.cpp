@@ -65,8 +65,16 @@ NPError NS_PluginInitialize()
 {
   // this is probably a good place to get the service manager
   // note that Mozilla will add reference, so do not forget to release
-  NPN_GetValue(NULL, NPNVserviceManager, &gServiceManager);
+  nsISupports * sm = NULL;
+  
+  NPN_GetValue(NULL, NPNVserviceManager, &sm);
 
+  // Mozilla returns nsIServiceManagerObsolete which can be queried for nsIServiceManager
+  if(sm) {
+    sm->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&gServiceManager);
+    NS_RELEASE(sm);
+  }
+  
   return NPERR_NO_ERROR;
 }
 
@@ -142,7 +150,7 @@ void nsPluginInstance::getVersion(char* *aVersion)
   
   if (gServiceManager) {
     // get service using its contract id and use it to allocate the memory
-    gServiceManager->GetService("@mozilla.org/xpcom/memory-service;1", NS_GET_IID(nsIMemory), (nsISupports**)&nsMemoryService);
+    gServiceManager->GetServiceByContractID("@mozilla.org/xpcom/memory-service;1", NS_GET_IID(nsIMemory), (void **)&nsMemoryService);
     if(nsMemoryService)
       version = (char *)nsMemoryService->Alloc(strlen(ua) + 1);
   }
