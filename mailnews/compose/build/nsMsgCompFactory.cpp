@@ -293,11 +293,6 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* 
 										"Xcomponent://netscape/messengercompose/smtp",
 										path, PR_TRUE, PR_TRUE);
 	if (NS_FAILED(rv)) finalResult = rv;
-   
-
-#ifdef NS_DEBUG
-  printf("Message Compose registering from %s\n",path);
-#endif
 
   return finalResult;
 }

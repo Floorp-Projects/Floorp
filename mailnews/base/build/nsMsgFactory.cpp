@@ -469,10 +469,6 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-#ifdef NS_DEBUG
-  printf("mailnews registering from %s\n",path);
-#endif
-
   return finalResult;
 }
 
