@@ -7257,6 +7257,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           // Add the generated frame to the child list 
           frameManager->AppendFrames(aPresContext, *shell, parentFrame, nsnull, generatedFrame);
         }
+        NS_IF_RELEASE(styleContext);
       } 
     } 
   }
