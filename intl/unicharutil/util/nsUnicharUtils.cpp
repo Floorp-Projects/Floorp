@@ -20,7 +20,6 @@
  * Contributor(s):
  *  Alec Flett <alecf@netscape.com>
  */
-
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtilCIID.h"
@@ -40,6 +39,8 @@ static nsresult NS_InitCaseConversion() {
 
 }
 
+// to be turned on for bug 100214
+#if 0
 class ConvertToLowerCase
 {
 public:
@@ -120,3 +121,4 @@ nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUni
       return result;
   }
 
+#endif
