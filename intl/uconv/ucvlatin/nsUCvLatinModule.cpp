@@ -897,13 +897,13 @@ static nsModuleComponentInfo components[] =
     nsUnicodeToMacUkrainianRegSelf, nsUnicodeToMacUkrainianUnRegSelf
   },
   { 
-    ENCODER_NAME_BASE "x-mac-icelandic" , NS_MACICELANDICTOUNICODE_CID, 
+    ENCODER_NAME_BASE "x-mac-icelandic" , NS_UNICODETOMACICELANDIC_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-icelandic",
     nsUnicodeToMacIcelandicConstructor, 
     nsUnicodeToMacIcelandicRegSelf, nsUnicodeToMacIcelandicUnRegSelf
   },
   { 
-    ENCODER_NAME_BASE "armscii-8" , NS_ARMSCII8TOUNICODE_CID, 
+    ENCODER_NAME_BASE "armscii-8" , NS_UNICODETOARMSCII8_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "armscii-8",
     nsUnicodeToARMSCII8Constructor, 
     nsUnicodeToARMSCII8RegSelf, nsUnicodeToARMSCII8UnRegSelf
