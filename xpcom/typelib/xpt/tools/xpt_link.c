@@ -294,7 +294,8 @@ main(int argc, char **argv)
                 trueNumberOfInterfaces--;
             } else {
                 if (!IDE_array[i].interface_descriptor ||
-                    (compare_IIDs(&IDE_array[i-1].iid, &IDE_array[i].iid) == 0)) {
+                    (compare_IIDs(&IDE_array[i-1].iid, &IDE_array[i].iid) == 0))
+                {
                     /* Shrink the IDE_array to delete the duplicate interface.
                      */
                     if (!shrink_IDE_array(IDE_array, 
@@ -315,9 +316,21 @@ main(int argc, char **argv)
                      * this loop.
                      */
                     trueNumberOfInterfaces--;
+                } else {
+                    /* Found interfaces with duplicate names but different
+                     * iids! */
+                    char *ns = IDE_array[i].name_space;
+                    fprintf(stderr,
+                            "ERROR: found duplicate definitions of interface "
+                            "%s%s%s with iids \n",
+                            ns ? ns : "", ns ? "::" : "", IDE_array[i].name);
+                    print_IID(&IDE_array[i].iid, stderr);
+                    fprintf(stderr, " and ");
+                    print_IID(&IDE_array[i-1].iid, stderr);
+                    fprintf(stderr, "\n");
+                    return 1;
                 }
             }
-            
         } else {
             /* Only increment if there was no name_space::name collision.
              */
