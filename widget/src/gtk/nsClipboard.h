@@ -57,6 +57,8 @@ protected:
 
   static void SelectionGetCB(GtkWidget *widget, 
                              GtkSelectionData *selection_data,
+                             guint      /*info*/,
+                             guint      /*time*/,
                              gpointer data);
 
   static void SelectionClearCB(GtkWidget *widget, 

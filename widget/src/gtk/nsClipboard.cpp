@@ -35,9 +35,6 @@ static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
 static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
 
-static GtkTargetEntry targets[] = {
-  { "strings n stuff", GDK_SELECTION_TYPE_STRING, GDK_SELECTION_TYPE_STRING }
-};
 
 // The class statics:
 GtkWidget* nsClipboard::sWidget = 0;
@@ -121,7 +118,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
 
   // make sure we have a good transferable
   if (nsnull == mTransferable) {
-    printf("SetNativeClipboardData: no transferable!\n");
+    printf("  SetNativeClipboardData: no transferable!\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -186,6 +183,28 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
 }
 
 
+// 
+// GTK Weirdness!
+// This is here in the hope of being able to call
+//  gtk_selection_add_targets(w, GDK_SELECTION_PRIMARY,
+//                            targets,
+//                            1);
+// instead of
+//   gtk_selection_add_target(sWidget, 
+//                            GDK_SELECTION_PRIMARY,
+//                            GDK_SELECTION_TYPE_STRING,
+//                            GDK_SELECTION_TYPE_STRING);
+// but it turns out that this changes the whole gtk selection model;
+// when calling add_targets copy uses selection_clear_event and the
+// data structure needs to be filled in in a way that we haven't
+// figured out; when using add_target copy uses selection_get and
+// the data structure is already filled in as much as it needs to be.
+// Some gtk internals wizard will need to solve this mystery before
+// we can use add_targets().
+//static GtkTargetEntry targets[] = {
+//  { "strings n stuff", GDK_SELECTION_TYPE_STRING, GDK_SELECTION_TYPE_STRING }
+//};
+//
 
 void nsClipboard::SetTopLevelWidget(GtkWidget* w)
 {
@@ -208,7 +227,7 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
     return;
   }
 
-  // Not sure what this does:
+  // Handle selection requests if we called gtk_selection_add_target:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_get",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionGetCB),
                      clipboard);
@@ -223,7 +242,8 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionReceivedCB),
                      clipboard);
 
-  // Respond to requests for the selection:
+#if 0
+  // Handle selection requests if we called gtk_selection_add_targets:
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_request_event",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionRequestCB),
                      clipboard);
@@ -232,26 +252,70 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_notify_event",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionNotifyCB),
                      clipboard);
-
+#endif
 
   // Hmm, sometimes we need this, sometimes not.  I'm not clear why.
+  // See also long comment above on why we don't register a whole target list.
+
   // Register all the target types we handle:
-  gtk_selection_add_targets(w, GDK_SELECTION_PRIMARY,
-                           targets,
-                           1);
+  gtk_selection_add_target(sWidget, 
+                           GDK_SELECTION_PRIMARY,
+                           GDK_SELECTION_TYPE_STRING,
+                           GDK_SELECTION_TYPE_STRING);
 
   // We're done with our reference to the clipboard.
   NS_IF_RELEASE(clipboard);
 }
 
-
+//
+// This is the callback which is called when another app
+// requests the selection.
+//
 void nsClipboard::SelectionGetCB(GtkWidget        *widget,
-                                 GtkSelectionData *selection_data,
-                                 //guint      /*info*/,
-                                 //guint      /*time*/,
-                                 gpointer   data) 
+                                 GtkSelectionData *aSelectionData,
+                                 guint      /*info*/,
+                                 guint      /*time*/,
+                                 gpointer   aData)
 { 
   printf("  nsClipboard::SelectionGetCB\n"); 
+
+  nsClipboard *clipboard = (nsClipboard *)aData;
+
+  void     *clipboardData;
+  PRUint32 dataLength;
+  nsresult rv;
+
+  // Make sure we have a transferable:
+  if (!clipboard->mTransferable) {
+    printf("Clipboard has no transferable!\n");
+    return;
+  }
+
+  // XXX hack, string-only for now.
+  // Create string data-flavor.
+  nsDataFlavor *dataFlavor = new nsDataFlavor();
+  // For some reason the XIF data flavor uses text/txt instead of text/plain:
+  dataFlavor->Init("text/txt", "text/txt");
+
+  // Get data out of transferable.
+  rv = clipboard->mTransferable->GetTransferData(dataFlavor, 
+                                                 &clipboardData,
+                                                 &dataLength);
+
+  // Currently we only offer the data in GDK_SELECTION_TYPE_STRING format.
+  if (NS_SUCCEEDED(rv) && clipboardData && dataLength > 0) {
+    gtk_selection_data_set(aSelectionData,
+                           GDK_SELECTION_TYPE_STRING, 8,
+                           (unsigned char *)clipboardData,
+                           dataLength-1);
+    // Need to subtract one from dataLength, passed in from the transferable,
+    // to avoid getting a bogus null char.
+    // the format arg, "8", indicates string data with no endianness
+  }
+  else
+    printf("Transferable didn't support the data flavor\n");
+
+  delete dataFlavor;
 } 
 
 
@@ -284,46 +348,6 @@ nsClipboard::SelectionRequestCB (GtkWidget *aWidget,
                                  gpointer aData) 
 { 
   printf("  nsClipboard::SelectionRequestCB\n");  
-
-  nsClipboard *clipboard = (nsClipboard *)aData;
-
-  void     *clipboardData;
-  PRUint32 dataLength;
-  nsresult rv;
-
-  // Make sure we have a transferable:
-  if (!clipboard->mTransferable) {
-    printf("Clipboard has no transferable!\n");
-    return;
-  }
-
-  // XXX hack, string-only for now.
-  // Create string data-flavor.
-  nsDataFlavor *dataFlavor = new nsDataFlavor();
-  // For some reason the XIF data flavor uses text/txt instead of text/plain:
-  dataFlavor->Init("text/txt", "text/txt");
-
-  // Get data out of transferable.
-  rv = clipboard->mTransferable->GetTransferData(dataFlavor, 
-                                                 &clipboardData,
-                                                 &dataLength);
-
-  // Currently we only offer the data in GDK_SELECTION_TYPE_STRING format.
-  if (NS_SUCCEEDED(rv) && clipboardData && dataLength > 0) {
-    //((unsigned char*)(clipboardData))[dataLength+1] = 0;
-    printf("  nsClipboard::SelectionRequestCB, data = %s, length=%d\n",
-           (char*)clipboardData, dataLength);
-    // Next call crashes!  I don't know why, still working on it.  ...Akk
-    gtk_selection_data_set(aSelectionData,
-                           GDK_SELECTION_TYPE_STRING, 8,
-                           (unsigned char *)clipboardData,
-                           dataLength);
-    // the format arg, "8", indicates string data with no endianness
-  }
-  else
-    printf("Transferable didn't support the data flavor\n");
-
-  delete dataFlavor;
 } 
 
 void 
