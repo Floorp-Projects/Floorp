@@ -311,9 +311,7 @@ sub print_table_row {
     # Build Note
     # 
     $buildname = &url_encode($buildname);
-    my $logurl = "${rel_path}showlog.cgi?logfile=$logfile\&tree=$buildtree"
-                ."&errorparser=$errorparser&buildname=$buildname"
-                ."&buildtime=$buildtime";
+    my $logurl = "${rel_path}showlog.cgi?log=$buildtree/$logfile";
 
     if ($hasnote) {
       print "<a href='$logurl' onClick=\"return ",
