@@ -58,6 +58,9 @@ nsMimeConverter::DecodeMimePartIIStr(const nsCString& header,
   char *decodedCstr = nsnull;
   nsresult res = NS_OK;
 
+  // initialize the charset buffer
+  PL_strcpy(charsetNameBuffer, "us-ascii");
+
   // apply MIME decode.
   decodedCstr = MIME_DecodeMimePartIIStr(header,
                                            charsetNameBuffer, eatContinuations);
