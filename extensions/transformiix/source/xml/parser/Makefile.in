@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifndef TX_EXE
 MODULE = transformiix
-REQUIRES = string xpcom necko dom layout widget webbrwsr js docshell appshell xpconnect
+REQUIRES = string xpcom necko dom layout widget webbrwsr js docshell appshell xpconnect caps
 endif
 
 CPPSRCS = XMLParser.cpp
