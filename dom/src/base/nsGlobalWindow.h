@@ -284,9 +284,9 @@ public:
   NS_IMETHOD    Replace(const nsString& aUrl);
 
 protected:
-  void ConcatenateAndSet(const char *aProtocol,	const char *aHost,
-                         PRInt32 aPort, const char *aFile,
-                         const char *aRef, const char *aSearch);
+  nsresult ConcatenateAndSet(const char *aProtocol,	const char *aHost,
+                             PRInt32 aPort, const char *aFile,
+                             const char *aRef, const char *aSearch);
 
   nsIWebShell *mWebShell;
   void *mScriptObject;

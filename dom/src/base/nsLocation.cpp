@@ -95,7 +95,7 @@ LocationImpl::SetWebShell(nsIWebShell *aWebShell)
   mWebShell = aWebShell;
 }
 
-void
+nsresult
 LocationImpl::ConcatenateAndSet(const char *aProtocol,
                                 const char *aHost,
                                 PRInt32 aPort,
@@ -128,7 +128,12 @@ LocationImpl::ConcatenateAndSet(const char *aProtocol,
     href.Append(aSearch);
   }
 
-  SetHref(href);
+  if (nsnull != mWebShell) {
+     return mWebShell->LoadURL(href, nsnull, PR_TRUE);
+  }
+  else {
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP    
@@ -171,9 +176,9 @@ LocationImpl::SetHash(const nsString& aHash)
     if (NS_OK == result) {
       char *buf = aHash.ToNewCString();
 
-      ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
-                        url->GetPort(), url->GetFile(),
-                        buf, url->GetSearch());
+      result = ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
+                                 url->GetPort(), url->GetFile(),
+                                 buf, url->GetSearch());
 
       delete buf;
       NS_IF_RELEASE(url);      
@@ -220,9 +225,9 @@ LocationImpl::SetHost(const nsString& aHost)
     if (NS_OK == result) {
       char *buf = aHost.ToNewCString();
 
-      ConcatenateAndSet(url->GetProtocol(), buf,
-                        -1, url->GetFile(),
-                        url->GetRef(), url->GetSearch());
+      result = ConcatenateAndSet(url->GetProtocol(), buf,
+                                 -1, url->GetFile(),
+                                 url->GetRef(), url->GetSearch());
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -263,9 +268,9 @@ LocationImpl::SetHostname(const nsString& aHostname)
     if (NS_OK == result) {
       char *buf = aHostname.ToNewCString();
 
-      ConcatenateAndSet(url->GetProtocol(), buf,
-                        url->GetPort(), url->GetFile(),
-                        url->GetRef(), url->GetSearch());
+      result = ConcatenateAndSet(url->GetProtocol(), buf,
+                                 url->GetPort(), url->GetFile(),
+                                 url->GetRef(), url->GetSearch());
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -293,11 +298,28 @@ LocationImpl::GetHref(nsString& aHref)
 NS_IMETHODIMP    
 LocationImpl::SetHref(const nsString& aHref)
 {
-  if (nsnull != mWebShell) {
-    return mWebShell->LoadURL(aHref, nsnull, PR_TRUE);
+  nsAutoString oldHref, newHref;
+  nsIURL *oldUrl, *newUrl;
+  nsresult result = NS_OK;
+
+  result = GetHref(oldHref);
+  if (NS_OK == result) {
+    result = NS_NewURL(&oldUrl, oldHref);
+    if (NS_OK == result) {
+      result = NS_NewURL(&newUrl, oldUrl, aHref);
+      if (NS_OK == result) {
+        newHref.SetString(newUrl->GetSpec());
+        NS_RELEASE(newUrl);
+      }
+      NS_RELEASE(oldUrl);
+    }
   }
 
-  return NS_OK;
+  if ((NS_OK == result) && (nsnull != mWebShell)) {
+    return mWebShell->LoadURL(newHref, nsnull, PR_TRUE);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP    
@@ -332,9 +354,9 @@ LocationImpl::SetPathname(const nsString& aPathname)
     if (NS_OK == result) {
       char *buf = aPathname.ToNewCString();
 
-      ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
-                        url->GetPort(), buf,
-                        url->GetRef(), url->GetSearch());
+      result = ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
+                                 url->GetPort(), buf,
+                                 url->GetRef(), url->GetSearch());
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -389,9 +411,9 @@ LocationImpl::SetPort(const nsString& aPort)
         }
       }
       
-      ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
-                        port, url->GetFile(),
-                        url->GetRef(), url->GetSearch());
+      result = ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
+                                 port, url->GetFile(),
+                                 url->GetRef(), url->GetSearch());
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -433,9 +455,9 @@ LocationImpl::SetProtocol(const nsString& aProtocol)
     if (NS_OK == result) {
       char *buf = aProtocol.ToNewCString();
 
-      ConcatenateAndSet(buf, url->GetHost(),
-                        url->GetPort(), url->GetFile(),
-                        url->GetRef(), url->GetSearch());
+      result = ConcatenateAndSet(buf, url->GetHost(),
+                                 url->GetPort(), url->GetFile(),
+                                 url->GetRef(), url->GetSearch());
       delete buf;
       NS_IF_RELEASE(url);      
     }
@@ -483,9 +505,9 @@ LocationImpl::SetSearch(const nsString& aSearch)
     if (NS_OK == result) {
       char *buf = aSearch.ToNewCString();
 
-      ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
-                        url->GetPort(), url->GetFile(),
-                        url->GetRef(), buf);
+      result = ConcatenateAndSet(url->GetProtocol(), url->GetHost(),
+                                 url->GetPort(), url->GetFile(),
+                                 url->GetRef(), buf);
 
       delete buf;
       NS_IF_RELEASE(url);      
