@@ -19,7 +19,7 @@
 #include "nsStringTokenizer.h"
 
 
-nsStringTokenizer::nsStringTokenizer(const char* aDataSpec,const char* aFieldSep,const char* aRecordSep) :
+nsStringTokenizer::nsStringTokenizer(const char* aFieldSep,const char* aRecordSep) :
   mDataStartDelimiter(""),
   mDataEndDelimiter(""),
   mSubstrStartDelimiter(""),
@@ -31,7 +31,6 @@ nsStringTokenizer::nsStringTokenizer(const char* aDataSpec,const char* aFieldSep
   mOffset=0;
   mValidChars[0]=mValidChars[1]=mValidChars[2]=mValidChars[3]=0;
   mInvalidChars[0]=mInvalidChars[1]=mInvalidChars[2]=mInvalidChars[3]=0;
-  ExpandDataSpecifier(aDataSpec);
   mCharSpec=eGivenChars;
 }
 
@@ -45,6 +44,19 @@ nsStringTokenizer::~nsStringTokenizer(){
  */
 void nsStringTokenizer::SetBuffer(nsString& aBuffer) {
   mBuffer=&aBuffer;
+}
+
+/**
+ * Call this to add a token specifier to this tokenizer.
+ * Ultimately -- this method will be callable any number of times 
+ * so that you can have multiple token types. 
+ *
+ * @update	gess7/10/99
+ */
+void nsStringTokenizer::AddTokenSpec(const char* aTokenSpec) {
+  if(aTokenSpec) {
+    ExpandDataSpecifier(aTokenSpec);
+  }
 }
 
 /**

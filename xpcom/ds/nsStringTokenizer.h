@@ -98,12 +98,13 @@ public:
 
 class nsStringTokenizer {
 public:
-          nsStringTokenizer(const char* aDataSpecifier="\"",const char* aFieldSep=",",const char* aRecordSep="\n");
+          nsStringTokenizer(const char* aFieldSep=",",const char* aRecordSep="\n");
           ~nsStringTokenizer();
 
 
     //Call these methods if you want to iterate the tokens yourself                
   void    SetBuffer(nsString& aBuffer);
+  void    AddTokenSpec(const char* aTokenSpec="");
   PRBool  FirstRecord(void);
   PRBool  NextRecord(void);
   PRBool  HasNextToken(void);
