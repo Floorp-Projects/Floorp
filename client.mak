@@ -72,8 +72,11 @@ CVSCO_LIBPREF = $(CVSCO) -A
 CVSCO_PLUGIN = $(CVSCO) -A
 !endif
 
-CVSCO_LAYOUT    = $(CVSCO) RaptorWin
-CVSCO_SEAMONKEY = $(CVSCO) SeaMonkeyAll
+CVSCO_XPCOM = $(CVSCO)
+CVSCO_IMGLIB = $(CVSCO)
+CVSCO_RAPTOR = $(CVSCO)
+CVSCO_LIZARD = $(CVSCO)
+CVSCO_NETWORK = $(CVSCO)
 
 ## The master target
 ############################################################
@@ -90,29 +93,12 @@ pull_all: pull_seamonkey
 
 # pull either layout only or seamonkey the browser
 pull_layout:
-	cd ..
-	$(CVSCO_LAYOUT)
+	cd $(MOZ_SRC)\.
+	$(CVSCO) RaptorWin
 
 pull_seamonkey:
-	cd ..
-	if exist cvslog.txt rm cvslog-old.txt && ren cvslog.txt cvslog-old.txt
-	@perl <<
-	  sub dblprint { print LOG @_; print STDERR @_; }
-	  open LOG, ">cvslog.txt";
-	  open CVS, '$(CVSCO_SEAMONKEY)|';
-	  dblprint 'checkout start: ', `date`;
-	  dblprint '$(CVSCO_SEAMONKEY) | tee cvslog.txt'."\n";
-	  while (<CVS>) {
-            dblprint $$_;
-	    push @conflicts, $$_ if /^C /;
-	  }
-	  if (@conflicts) {
-	    print "Error: cvs conflicts during checkout:\n";
-	    die join('', @conflicts);
-	  }
-	  close(CVS) or die "cvs error.\n";
-	  dblprint 'checkout finish: ', `date`;
-<<
+	cd $(MOZ_SRC)\.
+	$(CVSCO) SeaMonkeyAll
 
 ############################################################
 
