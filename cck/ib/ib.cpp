@@ -817,7 +817,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CString TargetDir = GetGlobal("Root");
 	CString TargetFile = TargetDir + "wizardmachine.ini";
 	CString MozBrowser = GetBrowser();
-	CreateShortcut(MozBrowser, TargetFile, "HelpLink", TargetDir, FALSE);
+//	CreateShortcut(MozBrowser, TargetFile, "HelpLink", TargetDir, FALSE);
 
 	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||");
 	newprog.DestroyWindow();
