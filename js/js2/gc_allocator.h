@@ -81,6 +81,7 @@ namespace JavaScript {
 	define_atomic_type(unsigned long)
 	define_atomic_type(float)
 	define_atomic_type(double)
+	define_atomic_type(wchar_t)
 	
 	#undef define_atomic_type
 	
