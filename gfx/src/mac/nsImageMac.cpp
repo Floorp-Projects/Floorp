@@ -740,3 +740,12 @@ nsImageMac :: ConvertFromPICT ( PicHandle inPicture )
   return NS_ERROR_FAILURE;
  
 } // ConvertFromPICT
+
+
+#ifdef USE_IMG2
+NS_IMETHODIMP nsImageMac::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
+{
+  return NS_OK;
+}
+#endif
+

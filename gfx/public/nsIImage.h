@@ -223,6 +223,20 @@ public:
   NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
 
+#ifdef USE_IMG2
+  /**
+   * BitBlit the entire (no cropping) nsIImage to another nsImage, the source and dest can be scaled
+   * @update - saari 03/08/01
+   * @param aDstImage  the nsImage to blit to
+   * @param aDX The destination horizontal location
+   * @param aDY The destination vertical location
+   * @param aDWidth The destination width of the pixelmap
+   * @param aDHeight The destination height of the pixelmap
+   * @return if TRUE, no errors
+   */
+  NS_IMETHOD DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight) = 0;
+#endif
+
   /**
    * Set the alpha level for the image
    * @update - dwc 2/1/99
