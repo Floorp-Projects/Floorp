@@ -76,6 +76,7 @@ public:
   void extract(TextOffset aOffset, PRInt32 aLength, PRUnichar*aExtractInto) const;
   void extract(TextOffset aOffset, PRInt32 aLength, char* aExtractInto) const;
 
+  UnicodeString& replaceBetween(TextOffset aStart, TextOffset aLimit, const UnicodeString& aString);
 
 public:
   PRUnichar		  operator[](TextOffset	aOffset) const;

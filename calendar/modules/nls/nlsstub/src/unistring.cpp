@@ -180,6 +180,11 @@ UnicodeString& UnicodeString::removeBetween(TextOffset aStart, TextOffset aLimit
   return (*this);
 }
 
+UnicodeString& UnicodeString::replaceBetween(TextOffset aStart, TextOffset aLimit, const UnicodeString& aString)
+{
+  return (*this);
+}
+
 PRInt8 UnicodeString::compare(const UnicodeString& aUnicodeString) const
 {
   return (mString.Equals(aUnicodeString.mString));
