@@ -37,6 +37,7 @@
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
     persist="screenX screenY"
+    style="width: 25em;"
     orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
@@ -50,7 +51,11 @@
   <popupset id="aTooltipSet" />
   <groupbox orient="vertical"><label value="&size.label;"/>
     <grid>
-      <columns><column/><column/><column/></columns>
+      <columns>
+        <column flex="1"/>
+        <column flex="1"/>
+        <column flex="6"/>
+      </columns>
       <rows>
         <row valign="middle" text-align="right" autostretch="never">
           <text class="label align-right" text-align="right" value="&numRowsEditField.label;" />
@@ -82,5 +87,7 @@
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-  <hbox id="okCancelButtons"/> 
+  <hbox id="okCancelButtonsRight"/> 
 </window>
+
+

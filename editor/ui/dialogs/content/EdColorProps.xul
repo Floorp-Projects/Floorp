@@ -133,23 +133,19 @@
   </groupbox>
   <spring class="spacer"/>
   <text class="label" value="&backgroundImage.label;"/>
-  <grid flex="1">
-    <columns><column flex="10"/><column flex="1"/></columns>
-    <rows>
-      <row autostretch="never" valign="middle" style="margin-bottom: 5px">
-        <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage()"
-         tooltip="aTooltip" tooltiptext="&backgroundImage.tooltip;" 
-         style="min-width : 21em"/>
-        <!-- from EdDialogOverlay.xul -->
-        <button class="dialog" id="ChooseFile"/>
-      </row>
-      <row autostretch="never" valign="middle">
-        <spring flex="1"/>
-        <!-- from EdDialogOverlay.xul -->
-        <button class="dialog" id="AdvancedEditButton"/>
-      </row>
-    </rows>
-  </grid>
-  <separator class="groove"/>
-  <hbox id="okCancelButtons"/> 
+  <hbox>
+    <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage()"
+      tooltip="aTooltip" tooltiptext="&backgroundImage.tooltip;" 
+      style="min-width : 21em"/>
+    <!-- from EdDialogOverlay.xul -->
+    <button class="dialog" id="ChooseFile"/>
+  </hbox>
+  <separator/>
+  <hbox>
+    <button class="dialog" id="AdvancedEditButton"/>
+    <spring flex="1"/>
+    <!-- from EdDialogOverlay.xul -->
+    <hbox id="okCancelButtonsRight"/> 
+  </hbox>
+
 </window>
