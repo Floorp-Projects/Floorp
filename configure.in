@@ -1522,15 +1522,20 @@ CXXFLAGS=`echo \
 	$_DEFINES_CXXFLAGS \
 	$CXXFLAGS`
 
-# Clean out '-O' flags if doing a debug build.
-if test "$MOZ_DEBUG"
-then
-  changequote(,)dnl
-  CFLAGS=`  echo $CFLAGS   | sed 's/ *-O[^ ]*//g;'`
-  CXXFLAGS=`echo $CXXFLAGS | sed 's/ *-O[^ ]*//g;'`
-  LDFLAGS=`echo  $LDFLAGS  | sed 's/ *-O[^ ]*//g;'`
-  changequote([,])dnl
-fi
+dnl 
+dnl It is perfectly legal to build with both -O and -g even though
+dnl some compilers/platforms might not support this.
+dnl 
+
+dnl # Clean out '-O' flags if doing a debug build.
+dnl if test "$MOZ_DEBUG"
+dnl then
+dnl   changequote(,)dnl
+dnl   CFLAGS=`  echo $CFLAGS   | sed 's/ *-O[^ ]*//g;'`
+dnl   CXXFLAGS=`echo $CXXFLAGS | sed 's/ *-O[^ ]*//g;'`
+dnl   LDFLAGS=`echo  $LDFLAGS  | sed 's/ *-O[^ ]*//g;'`
+dnl   changequote([,])dnl
+dnl fi
 
 dnl Support for X11 makedepend, if found on the system
 dnl ========================================================
