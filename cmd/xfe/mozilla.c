@@ -2899,6 +2899,16 @@ main
     }
 #endif
 
+  /* These actions have to be initialized before fe_createBookmarks()
+   * to avoid XtWarnings at startup about unknown actions.
+   */
+  fe_InitCommandActions ();
+  fe_InitMouseActions ();
+  fe_InitKeyActions ();
+#ifdef EDITOR
+  fe_EditorInitActions();
+#endif
+
 #ifdef XFE_RDF
   /* Initialize RDF */
   {
@@ -2928,13 +2938,6 @@ main
   LJ_SetConsoleShowCallback(FE_TrackJavaConsole, 0);
 #endif
   
-  fe_InitCommandActions ();
-  fe_InitMouseActions ();
-  fe_InitKeyActions ();
-#ifdef EDITOR
-  fe_EditorInitActions();
-#endif
-
 #ifdef EDITOR
   fe_EditorStaticInit();
 #endif
