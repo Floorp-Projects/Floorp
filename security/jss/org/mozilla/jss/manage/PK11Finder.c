@@ -804,7 +804,6 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     CK_OBJECT_HANDLE keyID;
     PK11SlotInfo *slot=NULL;
     char *nickChars = NULL;
-    PRBool certExists = PR_FALSE;
     jobject leafObject=NULL;
     CERTIssuerAndSN issuerAndSN;
     PRStatus decodeStatus;
@@ -899,13 +898,6 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     }
 
     /***************************************************
-     * Check to see if this certificate already exists in the database
-     ***************************************************/
-    if( PK11_KeyForDERCertExists(&theDerCert, NULL/*keyPtr*/, NULL/*wincx*/) ) {
-      certExists = PR_TRUE;
-    }
-
-    /***************************************************
      * Create a new cert structure for the leaf cert
      ***************************************************/
 
@@ -940,15 +932,6 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
         /***************************************************
          * We have a user cert, import it 
          ***************************************************/
-
-        /***************************************************
-         * Don't re-import a cert that already exists
-         ***************************************************/
-        if(certExists) {
-            /* leaf cert already exists in database */
-            JSS_throw(env, USER_CERT_CONFLICT_EXCEPTION);
-            goto finish;
-        }
 
         /***************************************************
          * Check for nickname conflicts
