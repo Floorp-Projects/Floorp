@@ -1,44 +1,57 @@
-<TITLE>Mozilla Module Owners</TITLE>
-<BODY BGCOLOR="#FFFFFF" TEXT="#000000"
-LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000"
-MARGINHEIGHT=0 MARGINWIDTH=0>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+  <head>
+    <title>Mozilla Module Owners</title>
+  </head>
+  <body>
 
-<H1 ALIGN=CENTER>module owners</H1><P>
+    <h1>Module Owners</h1>
 
-This page lists mozilla.org Module Owners and their Peers.
-<P>
-A <I>Module</I> is a collection of source files that form a coherent bundle.
-An <I>Owner</I> is the person in charge of a Module.
-A <I>Peer</I> is a person whom the Owner has designated to help maintain the
-Module.
-If a Module has an Owner, the Owner or a Peer should in general review all
-code changes that go into that module. 
-<P>
-The
-<A HREF="http://despot.mozilla.org/despot.cgi">database</A> from which this
-document is generated sometimes gets out of date.
-In order to identify the people to talk to about a particular source tree
-directory, it may be better to consult
-<A HREF="http://bonsai.mozilla.org">Bonsai</A>, to see who is regularly
-checking in changes.
-<P>
-Questions about module ownership should be directed to
-<A HREF="mailto:staff@mozilla.org">staff@mozilla.org</A>.
-<P>
+    <p>
+      This page lists mozilla.org Module Owners and their Peers.
+    </p>
 
-<form method="get" action="http://despot.mozilla.org/despot.cgi">
-  Don't know who owns the file you're hacking?  Enter its path and name
-  to jump to the module it belongs to:
-  <input type="hidden" name="command" value="FindPartition">
+    <p>
+      A <dfn>Module</dfn> is a collection of source files that form a coherent
+      bundle. An <dfn>Owner</dfn> is the person in charge of a Module. A
+      <dfn>Peer</dfn> is a person whom the Owner has designated to help
+      maintain the Module. If a Module has an Owner, the Owner or a Peer should
+      in general review all code changes that go into that module.
+    </p>
 
-  <input type="hidden" name="repid" value="3">
-  <input type="hidden" name="view" value="1">
-  <input type="text" name="file">
-  <input type="submit" value="Find Module">
-</form>
+    <p>
+      The <a href="https://despot.mozilla.org/despot.cgi">database</a> from
+      which this document is generated sometimes gets out of date. In order to
+      identify the people to talk to about a particular source tree directory,
+      it may be better to consult <a
+      href="http://bonsai.mozilla.org/cvsqueryform.cgi">Bonsai</a>, to see who
+      is regularly checking in changes.
+    </p>
 
-<P>
-(FE = Front End, BE = Back End, XP = Cross Platform)
-<P>
+    <p>
+      Questions about module ownership should be directed to <a
+      href="mailto:staff&#x40;mozilla.org">staff@mozilla.org</a>.
+    </p>
+
+    <form method="get" action="https://despot.mozilla.org/despot.cgi">
+    <p>
+      <input type="hidden" name="command" value="FindPartition" >
+      <input type="hidden" name="repid" value="3" >
+      <input type="hidden" name="view" value="1" >
+
+      Don't know who owns the file you're hacking?  Enter its path and name to
+      jump to the module it belongs to:
+
+      <input type="text" name="file" >
+      <input type="submit" value="Find Module" >
+    </p>
+    </form>
+
+    <p>
+      (FE = Front End, BE = Back End, XP = Cross Platform)
+    </p>
 
 %%DATA%%
+
+  </body>
+</html>

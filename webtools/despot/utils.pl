@@ -68,3 +68,13 @@ sub trim {
     s/\s*$//g;
     return $_;
 }
+
+
+# Turn a partition name into a valid id.
+
+sub name_to_id_token {
+    ($_) = (@_);
+    tr/A-Z/a-z/;
+    s/[^A-Za-z0-9.]+/\-/g;
+    return $_;
+}

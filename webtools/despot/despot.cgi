@@ -762,7 +762,8 @@ sub FindPartition {
             if (param("view")) {
                 # This should display modules just as they are displayed
                 # on owners.html, but that code is embedded into syncit.pl.
-                print qq|Module: <a href="http://www.mozilla.org/owners.html#$match->{name}">$match->{name}</a>
+                print qq|Module: <a href="http://www.mozilla.org/owners.html#| .
+                                 name_to_id_token($match->{name}) . qq|">$match->{name}</a>
                                  (matches pattern $match->{pattern})<br>\n|;
             }
             else {
