@@ -428,6 +428,8 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetFontHandle(nsFontHandle &aHandle)
 nsresult 
 nsFontMetricsBeOS::FamilyExists(const nsString& aName) 
 { 
+  //Do we really need it here? BeOS supports UTF-8 overall natively,
+  //including UTF-8 fonts names with non-ascii chars inside
   if (!IsASCII(aName)) 
     return NS_ERROR_FAILURE; 
  
@@ -482,6 +484,10 @@ static int
 FontMatchesGenericType(font_family family, uint32 flags, const char* aGeneric,
   const char* aLangGroup)
 {
+  //Call from EnumerateAllFonts. Matches all.
+  //Return 1 immediately, because nsnull as argument of strstr causes crashes
+  if(aGeneric == nsnull || aLangGroup == nsnull)
+    return 1;
   if (!strcmp(aLangGroup, "ja"))    
     return 1;
   if (strstr(aLangGroup, "zh"))
@@ -606,17 +612,17 @@ static nsresult EnumFonts(const char * aLangGroup, const char* aGeneric, PRUint3
     uint32 flags; 
     if (get_font_family(i, &family, &flags) == B_OK) 
     {
-      if (family &&
-          (!aLangGroup ||
-           FontMatchesGenericType(family, flags, aGeneric, aLangGroup) &&
-           MatchesLangGroup(family,  aLangGroup))) 
+      if (family && (!aLangGroup || MatchesLangGroup(family,  aLangGroup)))
       {
-        font_name.AssignWithConversion(family); 
-        if (!(array[j] = ToNewUnicode(font_name)))
-          break; 
-        ++j;
+        if(FontMatchesGenericType(family, flags, aGeneric, aLangGroup))
+        {
+          font_name.AssignWithConversion(family); 
+          if (!(array[j] = ToNewUnicode(font_name)))
+            break; 
+          ++j;
+        }
       }
-    } 
+    }
   } 
  
   NS_QuickSort(array, j, sizeof(PRUnichar*), CompareFontNames, nsnull); 
