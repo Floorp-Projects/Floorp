@@ -46,6 +46,9 @@ class nsIRDFResource;
 /**
  * RDF document extensions to nsIDocument
  */
+
+class nsIRDFDataSource;
+
 class nsIRDFDocument : public nsIXMLDocument
 {
 public:
@@ -73,6 +76,8 @@ public:
   NS_IMETHOD CreateContents(nsIContent* aElement) = 0;
 
   NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
+
+  NS_IMETHOD GetDocumentDataSource(nsIRDFDataSource** aDatasource) = 0;
 };
 
 // factory functions

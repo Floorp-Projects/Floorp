@@ -37,6 +37,8 @@
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsIXULParentDocument.h"
+#include "nsIXULChildDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMElementObserver.h"
 #include "nsIDOMNode.h"
@@ -62,6 +64,7 @@
 #include "rdfutil.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIContentViewerContainer.h"
 
 // XXX These are needed as scaffolding until we get to a more
 // DOM-based solution.
@@ -87,6 +90,7 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,          NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFMenuBuilderCID,          NS_RDFMENUBUILDER_CID);
 static NS_DEFINE_CID(kRDFToolbarBuilderCID,       NS_RDFTOOLBARBUILDER_CID);
+static NS_DEFINE_CID(kCXULDocumentCID,            NS_XULDOCUMENT_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // standard vocabulary items
@@ -127,6 +131,7 @@ private:
 
     static nsIAtom* kContainerAtom;
     static nsIAtom* kXULContentsGeneratedAtom;
+    static nsIAtom* kXULIncludeSrcAtom;
     static nsIAtom* kDataSourcesAtom;
     static nsIAtom* kIdAtom;
     static nsIAtom* kTreeAtom;
@@ -231,6 +236,7 @@ PRInt32         RDFXULBuilderImpl::kNameSpaceID_XUL = kNameSpaceID_Unknown;
 
 nsIAtom*        RDFXULBuilderImpl::kContainerAtom;
 nsIAtom*        RDFXULBuilderImpl::kXULContentsGeneratedAtom;
+nsIAtom*        RDFXULBuilderImpl::kXULIncludeSrcAtom;
 nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
 nsIAtom*        RDFXULBuilderImpl::kTreeAtom;
@@ -289,6 +295,7 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
 
         kContainerAtom            = NS_NewAtom("container");
         kXULContentsGeneratedAtom = NS_NewAtom("xulcontentsgenerated");
+        kXULIncludeSrcAtom        = NS_NewAtom("includesrc");
         kIdAtom                   = NS_NewAtom("id");
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kTreeAtom                 = NS_NewAtom("tree");
@@ -344,6 +351,7 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
 
         NS_IF_RELEASE(kContainerAtom);
         NS_IF_RELEASE(kXULContentsGeneratedAtom);
+        NS_IF_RELEASE(kXULIncludeSrcAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kDataSourcesAtom);
         NS_IF_RELEASE(kTreeAtom);
@@ -559,6 +567,80 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
 
     if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
         rv = NS_OK;
+
+    // Now that we've built the children, check to see if the includesrc attribute
+    // exists on the node.
+    nsString includeSrc;
+    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
+                                              kXULIncludeSrcAtom,
+                                              includeSrc))) {
+        NS_ERROR("unable to retrieve includeSrc attribute");
+        return rv;
+    }
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        // Build a URL object from the attribute's value.
+        nsCOMPtr<nsIURL>  includeURL;
+        NS_NewURL(getter_AddRefs(includeURL), includeSrc);
+
+        nsCOMPtr<nsIDocument> subDocument;
+        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kCXULDocumentCID,
+                                                    nsnull,
+                                                    kIDocumentIID,
+                                                    (void **)getter_AddRefs(subDocument)))) {
+            NS_ERROR("Unable to initialize a XUL fragment's subdocument.");
+            return rv;
+        }
+
+        nsCOMPtr<nsIDocument> parentDoc;
+        aElement->GetDocument(*getter_AddRefs(parentDoc));
+
+        if (parentDoc == nsnull) {
+            NS_ERROR("Unable to retrieve parent document for a subdocument.");
+            return rv;
+        }
+
+        subDocument->SetParentDocument(parentDoc);
+        nsCOMPtr<nsIStreamListener> streamListener;
+        nsCOMPtr<nsIContentViewerContainer> container;
+        nsCOMPtr<nsIXULParentDocument> xulParentDocument;
+        xulParentDocument = do_QueryInterface(parentDoc);
+        if (xulParentDocument == nsnull) {
+            NS_ERROR("Unable to turn document into a XUL parent document.");
+            return rv;
+        }
+
+        if (NS_FAILED(rv = xulParentDocument->GetContentViewerContainer(getter_AddRefs(container)))) {
+            NS_ERROR("Unable to retrieve content viewer container from parent document.");
+            return rv;
+        }
+
+        nsAutoString command;
+        if (NS_FAILED(rv = xulParentDocument->GetCommand(command))) {
+            NS_ERROR("Unable to retrieve the command from parent document.");
+            return rv;
+        }
+
+        char* commandChars = command.ToNewCString();
+
+        nsCOMPtr<nsIXULChildDocument> xulChildDocument;
+        xulChildDocument = do_QueryInterface(subDocument);
+        if (xulChildDocument == nsnull) {
+            NS_ERROR("Unable to retrieve a XUL child document.");
+            return rv;
+        }
+        
+        xulChildDocument->SetFragmentRoot(aElement);
+
+        if (NS_FAILED(rv = subDocument->StartDocumentLoad(includeURL, container, getter_AddRefs(streamListener), 
+                                                          commandChars))) {
+            NS_ERROR("Unable to kick off XUL subdocument's document load.");
+            delete [] commandChars;
+            return rv;
+        }
+
+        delete [] commandChars;
+    }
 
     return rv;
 }

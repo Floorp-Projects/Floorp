@@ -5,3 +5,6 @@ nsIDOMXULElement.h
 nsIRDFContentModelBuilder.h
 nsIRDFDocument.h
 nsIXULSortService.h
+nsIXULParentDocument.h
+nsIXULChildDocument.h
+

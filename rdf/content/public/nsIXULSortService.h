@@ -42,7 +42,7 @@ class nsIDOMNode;
 
 class nsIXULSortService : public nsISupports {
 public:
-    static const nsIID& IID() { static nsIID iid = NS_IXULSORTSERVICE_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IXULSORTSERVICE_IID; return iid; }
 
     NS_IMETHOD DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection) = 0;
     NS_IMETHOD OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *container,
