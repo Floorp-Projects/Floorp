@@ -7561,6 +7561,9 @@ void CEditBuffer::ChangeTableSelection(ED_HitType iHitType, ED_MoveSelType iMove
                 if( !pCell )
                     pCell = pTable->GetLastCellInColumn(pCurrentCell);
                 break;
+
+            default:
+                break;
         }
     } 
     else if( iMoveType == ED_MOVE_NEXT )
@@ -7587,6 +7590,9 @@ void CEditBuffer::ChangeTableSelection(ED_HitType iHitType, ED_MoveSelType iMove
                 if( !pCell )
                     // At last row end -- wrap to first cell of current column
                     pCell = pTable->GetFirstCellInColumn(pCurrentCell);
+                break;
+
+            default:
                 break;
         }
     }
@@ -8722,7 +8728,7 @@ ED_LinkId CEditBuffer::GetHREFLinkID(){
 
 char* CEditBuffer::GetHREFText(){
     CEditLeafElement *pElement = m_pCurrent;
-    ED_LinkId id;
+    ED_LinkId id=0;
     char* pBuf = 0;
 
     if( pElement && pElement->IsText() &&
@@ -13101,6 +13107,8 @@ EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, ED_PasteType iPas
                     case ED_COPY_CELLS:
                         iPasteType = ED_PASTE_COLUMN_BEFORE;
                         break;
+                    default:
+                        break;
                 }
             }
             return PasteCellsIntoTable(stream, iPasteType);
@@ -14975,7 +14983,7 @@ ED_DropType CEditBuffer::GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth,
     int32 y = *pY;
 	int32 line = lo_PointToLine(m_pContext, state, x, y);
 
-    int32 iLeft, iTop, iRight, iBottom;
+    int32 iLeft=0, iTop=0, iRight=0, iBottom=0;
     int32 left_limit, right_limit, top_limit, bottom_limit, right, bottom;
   
     lo_GetLineEnds(m_pContext, state, line, &pLoElement, &pEndLoElement);
@@ -15343,7 +15351,7 @@ XP_Bool CEditBuffer::SelectTableElement( int32 x, int32 y, LO_Element *pLoElemen
         LO_Element *pLastCellElement = NULL;
         LO_Element *pElement = lo_GetFirstCellInColumnOrRow(m_pContext, pLoElement, x, y, bSelCol, &pLastCellElement );
 
-        int32 iColLeft, iRowTop;
+        int32 iColLeft=0, iRowTop=0;
         if( !pElement )
             return FALSE;
         if( bSelCol )
