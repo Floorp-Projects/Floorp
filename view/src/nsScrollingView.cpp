@@ -1679,17 +1679,14 @@ NS_IMETHODIMP nsScrollingView::ScrollByWhole(PRBool aTop)
 
 PRBool nsScrollingView::CannotBitBlt(nsView* aScrolledView)
 {
-  PRBool    trans;
-  float     opacity;
   PRUint32  scrolledViewFlags;
 
-  HasTransparency(trans);
-  GetOpacity(opacity);
   aScrolledView->GetViewFlags(&scrolledViewFlags);
 
-  return ((trans || opacity) && !(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)) ||
-         (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
-         (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT);
+  return (mScrollProperties & NS_SCROLL_PROPERTY_NEVER_BLIT) ||
+    (scrolledViewFlags & NS_VIEW_FLAG_DONT_BITBLT) ||
+    (!(mScrollProperties & NS_SCROLL_PROPERTY_ALWAYS_BLIT)
+     && !mViewManager->CanScrollWithBitBlt(mClipView));
 }
 
 void nsScrollingView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy,
