@@ -5146,12 +5146,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
     return NS_OK;
 
 #ifdef MOZ_XTF
-  PRBool registerWithShell = PR_TRUE;
   PRBool forceBindingParent = PR_FALSE;
   nsCOMPtr<nsIXTFVisualWrapperPrivate> xtfElem = do_QueryInterface(aParent);
   if (xtfElem) {
-    // no need to track XTF anonymous content by the shell:
-    registerWithShell = PR_FALSE;
     if (xtfElem->ApplyDocumentStyleSheets()) 
       forceBindingParent = PR_TRUE;
   }
@@ -5189,9 +5186,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
       aPresShell->SetAnonymousContentFor(aParent, nsnull);
     }
 
-#ifdef MOZ_XTF
-    if (registerWithShell)
-#endif
     // Inform the pres shell about the anonymous content
     aPresShell->SetAnonymousContentFor(aParent, anonymousItems);
 
