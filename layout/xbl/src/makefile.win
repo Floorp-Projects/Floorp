@@ -34,6 +34,7 @@ CPPSRCS=					\
 
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
+  .\$(OBJDIR)\nsXBLEventHandler.obj \
   .\$(OBJDIR)\nsXBLService.obj \
 	$(NULL)
 
