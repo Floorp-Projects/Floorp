@@ -38,6 +38,24 @@ interface nsIPipe : nsISupports {
     readonly attribute nsIOutputStream outputStream;
 };
 
+[scriptable, uuid(8C39EF62-F7C9-11d4-98F5-001083010E9B)] 
+interface nsISearchableInputStream : nsISupports {
+    /**
+     * Searches for a string in the input stream. Since the stream has a notion
+     * of EOF, it is possible that the string may at some time be in the 
+     * buffer, but is is not currently found up to some offset. Consequently,
+     * both the found and not found cases return an offset:
+     *    if found, return offset where it was found
+     *    if not found, return offset of the first byte not searched
+     * In the case the stream is at EOF and the string is not found, the first
+     * byte not searched will correspond to the length of the buffer.
+     */
+    void search(in string forString, 
+                in boolean ignoreCase, 
+                out boolean found,
+                out unsigned long offsetSearchedTo);
+};
+
 %{C++
 #define NS_PIPE_DEFAULT_SEGMENT_SIZE    4096
 #define NS_PIPE_DEFAULT_BUFFER_SIZE     (1024*1024)
