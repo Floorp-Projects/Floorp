@@ -406,9 +406,9 @@ nsWSDLInterfaceInfo::GetName(char * *aName)
   return NS_OK;
 }
 
-/* readonly attribute nsIIDPtr IID; */
+/* readonly attribute nsIIDPtr InterfaceIID; */
 NS_IMETHODIMP 
-nsWSDLInterfaceInfo::GetIID(nsIID * *aIID)
+nsWSDLInterfaceInfo::GetInterfaceIID(nsIID * *aIID)
 {
   NS_ENSURE_ARG_POINTER(aIID);
 
