@@ -46,6 +46,7 @@
 #include "nsIXULSortService.h"
 #include "nsIXULDocumentInfo.h"
 #include "nsIXULPopupListener.h"
+#include "nsIXULKeyListener.h"
 #include "nsIXULFocusTracker.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -79,6 +80,7 @@ static NS_DEFINE_CID(kXULDocumentCID,                     NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,                  NS_XULSORTSERVICE_CID);
 static NS_DEFINE_CID(kXULDocumentInfoCID,                 NS_XULDOCUMENTINFO_CID);
 static NS_DEFINE_CID(kXULPopupListenerCID,                NS_XULPOPUPLISTENER_CID);
+static NS_DEFINE_CID(kXULKeyListenerCID,                  NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULFocusTrackerCID,                 NS_XULFOCUSTRACKER_CID);
 
 class RDFFactoryImpl : public nsIFactory
@@ -174,6 +176,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kXULPopupListenerCID)) {
         if (NS_FAILED(rv = NS_NewXULPopupListener((nsIXULPopupListener**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kXULKeyListenerCID)) {
+        if (NS_FAILED(rv = NS_NewXULKeyListener((nsIXULKeyListener**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kXULFocusTrackerCID)) {
@@ -478,7 +484,13 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          "XUL PopupListener",
                                          NS_RDF_PROGID "/xul-popup-listener",
                                          aPath, PR_TRUE, PR_TRUE);
-
+    
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kXULKeyListenerCID,
+                                         "XUL KeyListener",
+                                         NS_RDF_PROGID "/xul-key-listener",
+                                         aPath, PR_TRUE, PR_TRUE);
+                                         
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kXULFocusTrackerCID,
                                          "XUL FocusTracker",
