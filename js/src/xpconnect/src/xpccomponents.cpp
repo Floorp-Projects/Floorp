@@ -1920,6 +1920,13 @@ XPC_IMPL_GET_OBJ_METHOD(Constructor);
 /*******************************************/
 
 NS_IMETHODIMP
+nsXPCComponents::IsSuccessCode(nsresult result, PRBool *out)
+{
+    *out = NS_SUCCEEDED(result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents::GetStack(nsIJSStackFrameLocation * *aStack)
 {
     nsresult rv;
