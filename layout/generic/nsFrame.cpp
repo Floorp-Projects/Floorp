@@ -839,6 +839,11 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEve
   nsresult result = NS_OK;
   PRBool foundCell = PR_FALSE;
   PRBool foundTable = PR_FALSE;
+
+  // Get the limiting node to stop parent frame search
+  nsCOMPtr<nsIContent> limiter;
+  aFrameSelection->GetLimiter(getter_AddRefs(limiter));
+
   //We don't initiate row/col selection from here now,
   //  but we may in future
   //PRBool selectColumn = PR_FALSE;
@@ -871,6 +876,14 @@ nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEve
         break;
       } else {
         result = frame->GetParent(&frame);
+        // Stop if we have hit the selection's limiting content node
+        if (frame)
+        {
+          nsIContent* frameContent;
+          frame->GetContent(&frameContent);
+          if (frameContent == limiter.get())
+            break;
+        }
       }
     }
   }

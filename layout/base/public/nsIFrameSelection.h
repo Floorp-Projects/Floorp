@@ -353,6 +353,14 @@ public:
    */
   NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent)=0;
 
+
+  /** Get the content node that limits the selection
+   *  When searching up a nodes for parents, as in a text edit field
+   *    in an browser page, we must stop at this node else we reach into the 
+   *    parent page, which is very bad!
+   */
+  NS_IMETHOD GetLimiter(nsIContent **aLimiterContent)=0;
+
 };
 
 

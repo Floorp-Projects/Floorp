@@ -301,6 +301,7 @@ public:
   NS_IMETHOD GetDelayCaretOverExistingSelection(PRBool *aDelay);
   NS_IMETHOD SetDelayedCaretData(nsMouseEvent *aMouseEvent);
   NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent);
+  NS_IMETHOD GetLimiter(nsIContent **aLimiterContent);
   /*END nsIFrameSelection interfacse*/
 
 
@@ -3046,6 +3047,18 @@ nsSelection::GetDelayedCaretData(nsMouseEvent **aMouseEvent)
 
   return NS_OK;
 }
+
+// Frame needs to get the limiting content node for parent node searches
+NS_IMETHODIMP
+nsSelection::GetLimiter(nsIContent **aLimiterContent)
+{
+  if (!aLimiterContent) return NS_ERROR_NULL_POINTER;
+  *aLimiterContent = mLimiter;
+  NS_IFADDREF(*aLimiterContent);
+
+  return NS_OK;
+}
+
 
 //END nsIDOMSelection interface implementations
 

@@ -551,6 +551,7 @@ public:
   NS_IMETHOD GetDelayCaretOverExistingSelection(PRBool *aDelay);
   NS_IMETHOD SetDelayedCaretData(nsMouseEvent *aMouseEvent);
   NS_IMETHOD GetDelayedCaretData(nsMouseEvent **aMouseEvent);
+  NS_IMETHOD GetLimiter(nsIContent **aLimiterContent);
   NS_IMETHOD GetTableCellSelection(PRBool *aState);
   NS_IMETHOD GetTableCellSelectionStyleColor(const nsStyleColor **aStyleColor);
   NS_IMETHOD GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset);
@@ -847,7 +848,9 @@ nsTextInputSelectionImpl::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFr
 NS_IMETHODIMP
 nsTextInputSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent)
 {
-  return mFrameSelection->HandleTableSelection(aParentContent, aContentOffset, aTarget, aMouseEvent);
+  // We should never have a table inside a text control frame!
+  NS_ASSERTION(PR_TRUE, "Calling HandleTableSelection inside nsGfxTextControlFrame!");
+  return NS_OK;
 }
 
 
@@ -915,6 +918,12 @@ NS_IMETHODIMP
 nsTextInputSelectionImpl::GetDelayedCaretData(nsMouseEvent **aMouseEvent)
 {
   return mFrameSelection->GetDelayedCaretData(aMouseEvent);
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::GetLimiter(nsIContent **aLimiterContent)
+{
+  return mFrameSelection->GetLimiter(aLimiterContent);
 }
 
 NS_IMETHODIMP
