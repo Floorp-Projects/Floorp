@@ -85,7 +85,7 @@
 #include "nshtmlpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
-
+#include "nsParserNode.h"
 
 #define NS_INAVHTML_DTD_IID      \
   {0x5c5cce40, 0xcfd6,  0x11d1,  \
@@ -100,7 +100,6 @@ class nsParser;
 class nsDTDContext;
 class nsEntryStack;
 class nsITokenizer;
-class nsCParserNode;
 
 
 /***************************************************************
