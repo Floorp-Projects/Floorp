@@ -1,38 +1,33 @@
 #!perl -w
 
-# This script allows you to copy changes between two CVS trees. It detects
-# modified files by looking at modification dates and the CVS Entries file,
-# and copies such files over to the destination tree.
+# This script copies modified files from a source CVS tree to a destination
+# tree. Modified files are detected by comparing their modification dates
+# with the CVS Entries file.
 # 
-# Files are only copied if the CVS version of the file is identical in both
-# trees. If the destination file is modified, it is backed up.
+# Modified files are copied in their entirety to the destination tree
+# (no diffing is done). Files are only copied of the CVS version of the
+# file is the same in both trees. If the destination file is modified
+# already, it is backed up and replaced.
 # 
-# Files are copied in their entirety; no diffing is done.
+# To use this on your tree/platform, do the following:
 # 
-# To use this on your machine/platform, adjust the following:
-#
-# 1. $src_tree and $dest_tree paths, using platform directory separators.
-#
-# 2. Change $dirsep to the directory separator on your platform.
-#
-# 3. Set $dst_linebreaks to be the linebreaks you want in copied
-#    files. For example, if copying to Windows tree, change this
-#    to CRLF by commenting all but the 'DOS' line.
-#
-#
-# To use this script, both src and dest trees must be visible to
-# the OS on which the script is being run. So to copy between
-# machines, you'll have to use filesharing.
-#
-# First version: Simon Fraser <sfraser@netscape.com>
-#
-#
+# 1. Fix the !perl line, if necessary.
+# 2. Fix $dirsep to be the directory separator on your platform.
+# 3. Uncomment the appropriate $dst_linebreaks file specify what linebreaks
+#    you want for the copied files.
+# 4. Set $src_tree and $dest_tree to point to the directories you want
+#    to sync up. These don't have to point to the root of the tree,
+#    but should be equivalent directories in the two trees.
+#    
+# First version:
+#     Simon Fraser <sfraser@netscape.com>
 
 use File::stat;
 use Time::Local;
 
 # change for your platform
 $dirsep = ":";
+
 
 # $dst_linebreaks = pack("cc", 13);           # Mac
 $dst_linebreaks = pack("cc", 13, 10);       # DOS
@@ -107,13 +102,15 @@ sub _readCVSInfo($)
     while (defined ($line = <ENTRIES>))
     {
         chomp($line);
-    
+        
         #parse out the line. Format is:
         #   files:    /filename/version/date/options/tag
         #   dirs:     D/dirname////
         #   dir?      D
+        # because we might be reading an entries file from another platform, with
+        # different linebreaks, be anal about cleaning up $line.
                 
-        if ($line =~ /^\/(.+)\/(.+)\/(.+)\/(.*)\/(.*)$/)
+        if ($line =~ /^?\/(.+)\/(.+)\/(.+)\/(.*)\/(.*)?$/)
         {
             my($filename) = $1;
             my($version) = $2;
