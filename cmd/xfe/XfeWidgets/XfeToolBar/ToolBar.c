@@ -478,7 +478,7 @@ static XtResource constraint_resources[] =
 		sizeof(Boolean),
 		XtOffsetOf(XfeToolBarConstraintRec , xfe_tool_bar . force_dimension_to_max),
 		XmRImmediate,
-		(XtPointer) False
+		(XtPointer) True
     },
 };   
 
