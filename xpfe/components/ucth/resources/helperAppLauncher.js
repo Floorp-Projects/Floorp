@@ -62,11 +62,12 @@ nsHelperAppLauncherDialog.prototype= {
           document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
         }
 
+        var saveToDisk = document.getElementById("saveToDisk");
         if ( applicationDescription  && this.appLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) {
-            document.getElementById( "runApp" ).checked = true;         
+            saveToDisk.radioGroup.selectedItem = document.getElementById( "runApp" );
         } else {
             // Save to disk.
-            document.getElementById( "saveToDisk" ).checked = true;
+            saveToDisk.radioGroup.selectedItem = saveToDisk;
             // Disable choose app button.
             document.getElementById( "chooseApp" ).setAttribute( "disabled", "true" );
         }
@@ -100,7 +101,7 @@ nsHelperAppLauncherDialog.prototype= {
 
         // this.appLauncher.MIMEInfo.alwaysAskBeforeHandling = document.getElementById( "alwaysAskMe" ).checked;
     
-        if ( document.getElementById( "runApp" ).checked ) {
+        if ( document.getElementById( "runApp" ).selected ) {
             // Update preferred action if the user chose an app.
             if ( this.userChoseApp ) {
                 this.appLauncher.MIMEInfo.preferredAction = this.nsIHelperAppLauncher.useHelperApp;
@@ -126,8 +127,8 @@ nsHelperAppLauncherDialog.prototype= {
 
     // Enable pick app button if the user chooses that option.
     toggleChoice : function () {
-        // See what option is checked.
-        if ( document.getElementById( "runApp" ).checked ) {
+        // See what option is selected.
+        if ( document.getElementById( "runApp" ).selected ) {
             // We can enable the pick app button.
             document.getElementById( "chooseApp" ).removeAttribute( "disabled" );
         } else {

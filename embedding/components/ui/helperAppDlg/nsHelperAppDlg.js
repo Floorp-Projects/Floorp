@@ -319,14 +319,14 @@ nsHelperAppDialog.prototype = {
 
         if ( (applicationDescription || this.choseApp) && this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) 
         {
-          this.dialogElement( "openUsing" ).checked = true;
-          this.dialogElement( "saveToDisk" ).checked = false;         
+          var openUsing = this.dialogElement( "openUsing" );
+          openUsing.radioGroup.selectedItem = openUsing;
         }
         else 
         {
           // Save to disk.
-          this.dialogElement( "saveToDisk" ).checked = true;
-          this.dialogElement( "openUsing" ).checked = false;
+          var saveToDisk = this.dialogElement( "saveToDisk" );
+          saveToDisk.radioGroup.selectedItem = saveToDisk;
           // Disable choose app button.
           this.dialogElement( "chooseApp" ).setAttribute( "disabled", "true" );
         }
@@ -342,8 +342,8 @@ nsHelperAppDialog.prototype = {
 
     // Enable pick app button if the user chooses that option.
     toggleChoice : function () {
-        // See what option is checked.
-        if ( this.dialogElement( "openUsing" ).checked ) {
+        // See what option is selected.
+        if ( this.dialogElement( "openUsing" ).selected ) {
             // We can enable the pick app button.
             this.dialogElement( "chooseApp" ).removeAttribute( "disabled" );
         } else {
@@ -362,7 +362,7 @@ nsHelperAppDialog.prototype = {
         // we first need to rest the user action if the user selected save to disk instead of open...
         // reset the preferred action in this case...we need to do this b4 setting the always ask before handling state
 
-        if (!this.dialogElement( "openUsing" ).checked)
+        if (!this.dialogElement( "openUsing" ).selected)
         this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.saveToDisk;
          
 
@@ -371,7 +371,7 @@ nsHelperAppDialog.prototype = {
     },
     updateOKButton: function() {
         var ok = false;
-        if ( this.dialogElement( "saveToDisk" ).checked ) 
+        if ( this.dialogElement( "saveToDisk" ).selected ) 
         {
             // This is always OK.
             ok = true;
@@ -393,7 +393,7 @@ nsHelperAppDialog.prototype = {
 
       this.processAlwaysAskState(); 
 
-      if ( this.dialogElement( "openUsing" ).checked ) 
+      if ( this.dialogElement( "openUsing" ).selected ) 
       {
          // If no app "chosen" then convert input string to file.
          if (this.chosenApp)
