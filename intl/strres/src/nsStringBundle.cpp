@@ -47,6 +47,7 @@
 #include "nsIRegistry.h"
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
+#include "nsAutoLock.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -117,6 +118,7 @@ nsStringBundle::~nsStringBundle()
 nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 {
+  nsAutoCMonitor(this);
   nsAutoString name;
   name.AppendInt(aID, 10);
   nsresult ret = mProps->GetStringProperty(name, aResult);
@@ -134,6 +136,7 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
 nsresult
 nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
 {
+  nsAutoCMonitor(this);
   nsresult ret = mProps->GetStringProperty(aName, aResult);
 #ifdef DEBUG_tao
   char *s = aResult.ToNewCString(),
@@ -145,7 +148,7 @@ nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
   return ret;
 }
 
-NS_IMPL_ISUPPORTS1(nsStringBundle, nsIStringBundle)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsStringBundle, nsIStringBundle)
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
@@ -189,6 +192,7 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
 NS_IMETHODIMP
 nsStringBundle::GetEnumeration(nsIBidirectionalEnumerator** elements)
 {
+  nsAutoCMonitor(this);
 	if (!elements)
 		return NS_ERROR_INVALID_POINTER;
 
