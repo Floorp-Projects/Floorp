@@ -186,7 +186,7 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
    PR_LOG(gDebugLog, PR_LOG_ERROR, ("%s", buf));
    PR_LogFlush();
 
-   // And write it out to the stdout
+   // And write it out to the stderr
    fprintf(stderr, "%s\n", buf);
    fflush(stderr);
 
