@@ -604,34 +604,6 @@ nsRange::NSDetach()
  * Private helper routines
  ******************************************************/
 
-PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
-{
-  nsCOMPtr<nsIContent> cN1;
-  nsCOMPtr<nsIContent> cN2;
-  nsCOMPtr<nsIDocument> doc1;
-  nsCOMPtr<nsIDocument> doc2;
-  
-  nsresult res = GetContentFromDOMNode(aNode1, address_of(cN1));
-  if (NS_FAILED(res)) 
-    return PR_FALSE;
-  res = GetContentFromDOMNode(aNode2, address_of(cN2));
-  if (NS_FAILED(res)) 
-    return PR_FALSE;
-  res = cN1->GetDocument(*getter_AddRefs(doc1));
-  if (NS_FAILED(res)) 
-    return PR_FALSE;
-  res = cN2->GetDocument(*getter_AddRefs(doc2));
-  if (NS_FAILED(res)) 
-    return PR_FALSE;
-  
-  // Now compare the two documents: is direct comparison safe?
-  if (doc1 == doc2) 
-    return PR_TRUE;
-
-  return PR_FALSE;
-}
-
-
 nsresult nsRange::AddToListOf(nsIDOMNode* aNode)
 {
   if (!aNode) 
@@ -731,8 +703,8 @@ nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
 PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset)
 {
-  PRInt32 numStartAncestors = 0;
-  PRInt32 numEndAncestors = 0;
+  PRInt32 startIdx = 0;
+  PRInt32 endIdx = 0;
   PRInt32 commonNodeStartOffset = 0;
   PRInt32 commonNodeEndOffset = 0;
   
@@ -771,48 +743,55 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   mEndAncestors->Clear();
   mEndAncestorOffsets->Clear();
 
-  numStartAncestors = GetAncestorsAndOffsets(aStartN,aStartOffset,mStartAncestors,mStartAncestorOffsets);
-  numEndAncestors = GetAncestorsAndOffsets(aEndN,aEndOffset,mEndAncestors,mEndAncestorOffsets);
-  
-  --numStartAncestors; // adjusting for 0-based counting 
-  --numEndAncestors; 
+  nsContentUtils::GetAncestorsAndOffsets(aStartN, aStartOffset,
+                                         mStartAncestors, mStartAncestorOffsets);
+
+  nsContentUtils::GetAncestorsAndOffsets(aEndN, aEndOffset,
+                                         mEndAncestors, mEndAncestorOffsets);
+
+  // Get the number of ancestors, adjusting for zero-based counting.
+  startIdx = mStartAncestors->Count() - 1;
+  endIdx   = mEndAncestors->Count() - 1;
+
   // back through the ancestors, starting from the root, until first non-matching ancestor found
-  while (numStartAncestors >= 0 && numEndAncestors >= 0 &&
-         mStartAncestors->ElementAt(numStartAncestors) == mEndAncestors->ElementAt(numEndAncestors))
+  while (startIdx >= 0 && endIdx >= 0 &&
+         mStartAncestors->ElementAt(startIdx) == mEndAncestors->ElementAt(endIdx))
   {
-    --numStartAncestors;
-    --numEndAncestors;
+    --startIdx;
+    --endIdx;
     // numStartAncestors will only be <0 if one endpoint's node is the
     // common ancestor of the other
   }
   // now back up one and that's the last common ancestor from the root,
   // or the first common ancestor from the leaf perspective
-  numStartAncestors++;
-  numEndAncestors++;
+  ++startIdx;
+  ++endIdx;
   // both indexes are now >= 0
-  commonNodeStartOffset = NS_PTR_TO_INT32(mStartAncestorOffsets->ElementAt(numStartAncestors));
-  commonNodeEndOffset   = NS_PTR_TO_INT32(mEndAncestorOffsets->ElementAt(numEndAncestors));
-  
-  if (commonNodeStartOffset > commonNodeEndOffset) 
+  commonNodeStartOffset = NS_PTR_TO_INT32(mStartAncestorOffsets->ElementAt(startIdx));
+  commonNodeEndOffset   = NS_PTR_TO_INT32(mEndAncestorOffsets->ElementAt(endIdx));
+
+  if (commonNodeStartOffset > commonNodeEndOffset) {
     return PR_FALSE;
-  else if (commonNodeStartOffset < commonNodeEndOffset) 
-    return PR_TRUE;
-  else 
-  {
-    // The offsets are equal.  This can happen when one endpoint parent is the common parent
-    // of both endpoints.  In this case, we compare the depth of the ancestor tree to determine
-    // the ordering.
-    if (numStartAncestors < numEndAncestors)
-      return PR_TRUE;
-    else if (numStartAncestors > numEndAncestors)
-      return PR_FALSE;
-    else
-    {
-      // whoa nelly. shouldn't get here.
-      NS_NOTREACHED("nsRange::IsIncreasing");
-      return PR_FALSE;
-    }
   }
+
+  if (commonNodeStartOffset < commonNodeEndOffset) {
+    return PR_TRUE;
+  }
+
+  // The offsets are equal.  This can happen when one endpoint parent is the common parent
+  // of both endpoints.  In this case, we compare the depth of the ancestor tree to determine
+  // the ordering.
+
+  if (startIdx == endIdx) {
+    // whoa nelly. this shouldn't happen.
+    NS_NOTREACHED("nsRange::IsIncreasing");
+  }
+
+  if (startIdx < endIdx) {
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
 }
 
 PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
@@ -845,126 +824,6 @@ PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
     return 0;
 
   return theIndex;
-}
-
-PRInt32 nsRange::FillArrayWithAncestors(nsVoidArray* aArray, nsIDOMNode* aNode)
-{
-  PRInt32    i=0;
-  nsCOMPtr<nsIDOMNode> node(aNode);
-  nsCOMPtr<nsIDOMNode> parent;
-  // callers responsibility to make sure args are non-null and proper type
-  
-  // insert node itself
-  aArray->InsertElementAt((void*)node,i);
-  
-  // insert all the ancestors
-  // not doing all the inserts at location 0, that would make for lots of memcopys in the voidArray::InsertElementAt implementation
-  node->GetParentNode(getter_AddRefs(parent));  
-  while(parent)
-  {
-    node = parent;
-    ++i;
-    aArray->InsertElementAt(NS_STATIC_CAST(void*,node),i);
-    node->GetParentNode(getter_AddRefs(parent));
-  }
-  
-  return i;
-}
-
-PRInt32 nsRange::GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
-                        nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets)
-{
-  PRInt32    i=0;
-  PRInt32    nodeOffset;
-  nsresult   res;
-  nsCOMPtr<nsIContent> contentNode;
-  nsCOMPtr<nsIContent> contentParent;
-  
-  // callers responsibility to make sure args are non-null and proper type
-
-  res = aNode->QueryInterface(NS_GET_IID(nsIContent),getter_AddRefs(contentNode));
-  if (NS_FAILED(res)) 
-  {
-    NS_NOTREACHED("nsRange::GetAncestorsAndOffsets");
-    return -1;  // poor man's error code
-  }
-  
-  // insert node itself
-  aAncestorNodes->InsertElementAt((void*)contentNode,i);
-  aAncestorOffsets->InsertElementAt((void*)aOffset,i);
-  
-  // insert all the ancestors
-  // not doing all the inserts at location 0, that would make for lots of memcopys in the voidArray::InsertElementAt implementation
-  contentNode->GetParent(*getter_AddRefs(contentParent));
-  while(contentParent)
-  {
-    contentParent->IndexOf(contentNode, nodeOffset);
-    ++i;
-    aAncestorNodes->InsertElementAt((void*)contentParent,i);
-    aAncestorOffsets->InsertElementAt((void*)nodeOffset,i);
-    contentNode = contentParent;
-    contentNode->GetParent(*getter_AddRefs(contentParent));
-  }
-  
-  return i;
-}
-
-nsCOMPtr<nsIDOMNode> nsRange::CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
-{
-  nsCOMPtr<nsIDOMNode> theParent;
-  
-  // no null nodes please
-  if (!aNode1 || !aNode2) 
-    return theParent;  // moral equiv of nsnull
-  
-  // shortcut for common case - both nodes are the same
-  if (aNode1 == aNode2)
-  {
-    theParent = aNode1; // this forces an AddRef
-    return theParent;
-  }
-
-  // otherwise traverse the tree for the common ancestor
-  // For now, a pretty dumb hack on computing this
-  nsAutoVoidArray array1;
-  nsAutoVoidArray array2;
-  PRInt32     i=0, j=0;
-  
-  // get ancestors of each node
-  i = FillArrayWithAncestors(&array1,aNode1);
-  j = FillArrayWithAncestors(&array2,aNode2);
-  
-  // sanity test (for now) - FillArrayWithAncestors succeeded
-  if ((i==-1) || (j==-1))
-  {
-    NS_NOTREACHED("nsRange::CommonParent");
-    return theParent; // moral equiv of nsnull
-  }
-  
-  // sanity test (for now) - the end of each array
-  // should match and be the root
-  if (array1.ElementAt(i) != array2.ElementAt(j))
-  {
-    NS_NOTREACHED("nsRange::CommonParent");
-    return theParent; // moral equiv of nsnull
-  }
-  
-  // back through the ancestors, starting from the root, until
-  // first different ancestor found.  
-  while (i >= 0 && j >= 0 && array1.ElementAt(i) == array2.ElementAt(j))
-  {
-    --i;
-    --j;
-    // i < 0 will only happen if one endpoint's node is the common ancestor
-    // of the other
-  }
-  // now back up one and that's the last common ancestor from the root,
-  // or the first common ancestor from the leaf perspective
-  i++;
-  // i >= 0 now
-  nsIDOMNode *node = NS_STATIC_CAST(nsIDOMNode*, array1.ElementAt(i));
-  theParent = do_QueryInterface(node);
-  return theParent;  
 }
 
 nsresult nsRange::GetDOMNodeFromContent(nsIContent* inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode)
@@ -1142,37 +1001,32 @@ nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
-  *aCommonParent = CommonParent(mStartParent,mEndParent);
-  NS_IF_ADDREF(*aCommonParent);
-  return NS_OK;
+  return nsContentUtils::GetCommonAncestor(mStartParent, mEndParent, aCommonParent);
 }
 
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 {
+  NS_ENSURE_ARG_POINTER(aParent);
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
-  nsresult res;
-  
-  if (!aParent) return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr<nsIDOMNode>theParent( do_QueryInterface(aParent) );
-    
-  // must be in same document as endpoint, else 
-  // endpoint is collapsed to new start.
-  if (mIsPositioned && !InSameDoc(theParent,mEndParent))
-  {
-    res = DoSetRange(theParent,aOffset,theParent,aOffset);
-    return res;
+  if (mIsPositioned) {
+    // if not in the same document as the endpoint,
+    // collapse the endpoint to the new start.
+    if (!nsContentUtils::InSameDoc(aParent, mEndParent)) {
+      return DoSetRange(aParent, aOffset, aParent, aOffset);
+    }
+
+    // the start must be before the end
+    if (!IsIncreasing(aParent, aOffset, mEndParent, mEndOffset)) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
   }
-  // start must be before end
-  if (mIsPositioned && !IsIncreasing(theParent,aOffset,mEndParent,mEndOffset))
-    return NS_ERROR_ILLEGAL_VALUE;
+
   // if it's in an attribute node, end must be in or descended from same node
-  // (haven't done this one yet)
-  
-  res = DoSetRange(theParent,aOffset,mEndParent,mEndOffset);
-  return res;
+  // XXX write me!
+
+  return DoSetRange(aParent, aOffset, mEndParent, mEndOffset);
 }
 
 nsresult nsRange::SetStartBefore(nsIDOMNode* aSibling)
@@ -1216,7 +1070,7 @@ nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
   
   // must be in same document as startpoint, else 
   // endpoint is collapsed to new end.
-  if (mIsPositioned && !InSameDoc(theParent,mStartParent))
+  if (mIsPositioned && !nsContentUtils::InSameDoc(theParent,mStartParent))
   {
     res = DoSetRange(theParent,aOffset,theParent,aOffset);
     return res;
@@ -2142,8 +1996,7 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
     if (!nextNode) return NS_ERROR_FAILURE;
 
     // Get node and nextNode's common parent.
-
-    commonAncestor = CommonParent(node, nextNode);
+    nsContentUtils::GetCommonAncestor(node, nextNode, getter_AddRefs(commonAncestor));
 
     if (!commonAncestor)
       return NS_ERROR_FAILURE;

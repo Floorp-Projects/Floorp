@@ -253,9 +253,8 @@ nsNode3Tearoff::CompareTreePosition(nsIDOMNode* aOther,
   NS_ENSURE_ARG_POINTER(aOther);
   PRUint16 mask = nsIDOMNode::TREE_POSITION_DISCONNECTED;
 
-  PRBool sameNode = PR_FALSE;
-  IsSameNode(aOther, &sameNode);
-  if (sameNode) {
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
+  if (node == aOther) {
     mask |= nsIDOMNode::TREE_POSITION_SAME_NODE;
     nsCOMPtr<nsIDocument> doc;
     mContent->GetDocument(*getter_AddRefs(doc));
@@ -268,8 +267,6 @@ nsNode3Tearoff::CompareTreePosition(nsIDOMNode* aOther,
     *aReturn = mask;
     return NS_OK;
   }
-
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
 
   // If the other node is an attribute, document, or document fragment,
   // we can find the position easier by comparing this node relative to
@@ -312,69 +309,54 @@ nsNode3Tearoff::CompareTreePosition(nsIDOMNode* aOther,
   }
 #endif
 
-  nsAutoVoidArray nodeAncestorList;
-  nsAutoVoidArray otherAncestorList;
-  PRInt32 nodeAncestorIdx = 0;
-  PRInt32 otherAncestorIdx = 0;
+  nsAutoVoidArray nodeAncestors;
 
-  nodeAncestorIdx  = nsRange::FillArrayWithAncestors(&nodeAncestorList,  node);
-  otherAncestorIdx = nsRange::FillArrayWithAncestors(&otherAncestorList, aOther);
+  nsresult rv =
+    nsContentUtils::GetFirstDifferentAncestors(node, aOther, &nodeAncestors);
 
-  NS_ASSERTION(nodeAncestorIdx >= 0 && otherAncestorIdx >= 0,
-               "nsRange::FillArrayWithAncestors() failed!");
+  if (NS_FAILED(rv)) {
+    // The nodes have no common ancestor.  We're done.
+    *aReturn = mask;
+    return NS_OK;
+  }
 
-  nsIDOMNode* nodeRoot =
-    NS_STATIC_CAST(nsIDOMNode*, nodeAncestorList.ElementAt(nodeAncestorIdx));
+  nsIDOMNode* commonAncestor =
+    NS_STATIC_CAST(nsIDOMNode*, nodeAncestors.ElementAt(0));
 
-  nsIDOMNode* otherRoot =
-    NS_STATIC_CAST(nsIDOMNode*, otherAncestorList.ElementAt(otherAncestorIdx));
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
 
-  if (nodeRoot == otherRoot) {
-    // There is at least one common ancestor (the root node)
-    //
-    // First, let's find the common ancestor closest to both nodes
-    // Go back through the array starting with the root until the
-    // first different ancestor is found.  When the loop finishes
-    // iterating, the indices will both be 1 below the common ancestor.
-    while (nodeAncestorIdx >= 0 && otherAncestorIdx >= 0 &&
-           nodeAncestorList.ElementAt(nodeAncestorIdx) ==
-           otherAncestorList.ElementAt(otherAncestorIdx)) {
-      --nodeAncestorIdx;
-      --otherAncestorIdx;
+  if (commonAncestor == node) {
+    mask |= nsIDOMNode::TREE_POSITION_DESCENDANT;
+    // Should nodes in a document fragment get following/preceding?
+    // Currently we assume they can't.
+    // XXXcaa - See bug 154166.
+    if (doc) {
+      mask |= nsIDOMNode::TREE_POSITION_FOLLOWING;
     }
-    // Check that the root element is a document node.  If it is, we can have
-    // preceding and following flags.
-    PRUint16 rootType = 0;
-    nodeRoot->GetNodeType(&rootType);
-    if (nodeAncestorIdx < 0) {
-      // If we went below this node to find the common ancestor before
-      // exiting, then this node must be the common ancestor.
-      mask |= nsIDOMNode::TREE_POSITION_DESCENDANT;
-      if (rootType == nsIDOMNode::DOCUMENT_NODE) {
-        mask |= nsIDOMNode::TREE_POSITION_FOLLOWING;
-      }
+    *aReturn = mask;
+    return NS_OK;
+  }
+
+  if (commonAncestor == aOther) {
+    mask |= nsIDOMNode::TREE_POSITION_ANCESTOR;
+    // Should nodes in a document fragment get following/preceding?
+    // Currently we assume they can't.
+    // XXXcaa - See bug 154166.
+    if (doc) {
+      mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
     }
-    else if (otherAncestorIdx < 0) {
-      // If we went below the other node to find the common ancestor before
-      // exiting, then the other node must be the common ancestor.
-      mask |= nsIDOMNode::TREE_POSITION_ANCESTOR;
-      if (rootType == nsIDOMNode::DOCUMENT_NODE) {
-        mask |= nsIDOMNode::TREE_POSITION_PRECEDING;
-      }
-    }
-    else if (rootType == nsIDOMNode::DOCUMENT_NODE) {
-      // These were the first different ancestors,
-      // so grab these two, and then the parent for the common ancestor.
+    *aReturn = mask;
+    return NS_OK;
+  }
 
-      nsIDOMNode* nodeAncestor =
-        NS_STATIC_CAST(nsIDOMNode*, nodeAncestorList.ElementAt(nodeAncestorIdx));
+  if (commonAncestor && doc && nodeAncestors.Count() == 3) {
+    nsIDOMNode* nodeAncestor =
+      NS_STATIC_CAST(nsIDOMNode*, nodeAncestors.ElementAt(1));
+    nsIDOMNode* otherAncestor =
+      NS_STATIC_CAST(nsIDOMNode*, nodeAncestors.ElementAt(2));
 
-      nsIDOMNode* otherAncestor =
-        NS_STATIC_CAST(nsIDOMNode*, otherAncestorList.ElementAt(otherAncestorIdx));
-
-      nsIDOMNode* commonAncestor = 
-        NS_STATIC_CAST(nsIDOMNode*, nodeAncestorList.ElementAt(nodeAncestorIdx + 1));
-
+    if (nodeAncestor && otherAncestor) {
       // Find out which of the two nodes comes first in the document order.
       // First get the children of the common ancestor.
       nsCOMPtr<nsIDOMNodeList> children;
@@ -1804,7 +1786,6 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  PRBool intermediateCapture = PR_FALSE;
   //Capturing stage evaluation
   if (NS_EVENT_FLAG_BUBBLE != aFlags && aEvent->message != NS_PAGE_LOAD &&
       aEvent->message != NS_SCRIPT_LOAD &&

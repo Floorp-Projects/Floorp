@@ -18,7 +18,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Johnny Stenback <jst@netscape.com>
+ *   Christopher A. Aillon <christopher@aillon.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -553,6 +555,190 @@ nsContentUtils::IsCallerChrome()
   }
 
   return PR_TRUE;
+}
+
+// static
+PRBool
+nsContentUtils::InSameDoc(nsIDOMNode* aNode, nsIDOMNode* aOther)
+{
+  if (!aNode || !aOther) {
+    return PR_FALSE;
+  }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+  nsCOMPtr<nsIContent> other(do_QueryInterface(aOther));
+
+  if (content && other) {
+    nsCOMPtr<nsIDocument> contentDoc;
+    nsCOMPtr<nsIDocument> otherDoc;
+    content->GetDocument(*getter_AddRefs(contentDoc));
+    other->GetDocument(*getter_AddRefs(otherDoc));
+    if (contentDoc && contentDoc == otherDoc) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
+// static
+nsresult
+nsContentUtils::GetAncestors(nsIDOMNode* aNode,
+                             nsVoidArray* aArray)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+
+  nsCOMPtr<nsIDOMNode> node(aNode);
+  nsCOMPtr<nsIDOMNode> ancestor;
+
+  do {
+    aArray->AppendElement(node.get());
+    node->GetParentNode(getter_AddRefs(ancestor));
+    node = ancestor;
+  } while (node);
+
+  return NS_OK;
+}
+
+// static
+nsresult
+nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
+                                       PRInt32 aOffset,
+                                       nsVoidArray* aAncestorNodes,
+                                       nsVoidArray* aAncestorOffsets)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+
+  PRInt32 offset = 0;
+  nsCOMPtr<nsIContent> ancestor;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+
+  if (!content) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aAncestorNodes->Count() != 0) {
+    NS_WARNING("aAncestorNodes is not empty");
+    aAncestorNodes->Clear();
+  }
+
+  if (aAncestorOffsets->Count() != 0) {
+    NS_WARNING("aAncestorOffsets is not empty");
+    aAncestorOffsets->Clear();
+  }
+
+  // insert the node itself
+  aAncestorNodes->AppendElement(content.get());
+  aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(aOffset));
+
+  // insert all the ancestors
+  content->GetParent(*getter_AddRefs(ancestor));
+  while (ancestor) {
+    ancestor->IndexOf(content, offset);
+    aAncestorNodes->AppendElement(ancestor.get());
+    aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(offset));
+    content = ancestor;
+    content->GetParent(*getter_AddRefs(ancestor));
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
+nsContentUtils::GetCommonAncestor(nsIDOMNode *aNode,
+                                  nsIDOMNode *aOther,
+                                  nsIDOMNode** aCommonAncestor)
+{
+  *aCommonAncestor = nsnull;
+
+  nsAutoVoidArray nodeArray;
+  nsresult rv = GetFirstDifferentAncestors(aNode, aOther, &nodeArray);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIDOMNode *common =
+    NS_STATIC_CAST(nsIDOMNode*, nodeArray.ElementAt(0));
+
+  NS_ASSERTION(common, "The common ancestor is null!  Very bad!");
+
+  *aCommonAncestor = common;
+  NS_IF_ADDREF(*aCommonAncestor);
+
+  return NS_OK;
+}
+
+// static
+nsresult
+nsContentUtils::GetFirstDifferentAncestors(nsIDOMNode *aNode,
+                                           nsIDOMNode *aOther,
+                                           nsVoidArray* aDifferentNodes)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+  NS_ENSURE_ARG_POINTER(aOther);
+
+  if (aDifferentNodes->Count() != 0) {
+    NS_WARNING("The aDifferentNodes array passed in is not empty!");
+    aDifferentNodes->Clear();
+  }
+
+  // Test if both are the same node.
+  if (aNode == aOther) {
+    aDifferentNodes->AppendElement(NS_STATIC_CAST(void*, aNode));
+    return NS_OK;
+  }
+
+  nsAutoVoidArray nodeAncestors;
+  nsAutoVoidArray otherAncestors;
+
+  // Insert all the ancestors of |aNode|
+  nsCOMPtr<nsIDOMNode> node(aNode);
+  nsCOMPtr<nsIDOMNode> ancestor(node);
+  do {
+    nodeAncestors.AppendElement(node.get());
+    node->GetParentNode(getter_AddRefs(ancestor));
+    if (ancestor == aOther) {
+      aDifferentNodes->AppendElement(NS_STATIC_CAST(void*, aOther));
+      return NS_OK;
+    }
+    node = ancestor;
+  } while (ancestor);
+
+  // Insert all the ancestors of |aOther|
+  nsCOMPtr<nsIDOMNode> other(aOther);
+  ancestor = other;
+  do {
+    otherAncestors.AppendElement(other.get());
+    other->GetParentNode(getter_AddRefs(ancestor));
+    if (ancestor == aNode) {
+      aDifferentNodes->AppendElement(NS_STATIC_CAST(void*, aNode));
+      return NS_OK;
+    }
+    other = ancestor;
+  } while (ancestor);
+
+  PRInt32 nodeIdx  = nodeAncestors.Count() - 1;
+  PRInt32 otherIdx = otherAncestors.Count() - 1;
+
+  if (nodeAncestors.ElementAt(nodeIdx) != otherAncestors.ElementAt(otherIdx)) {
+    NS_ERROR("This function was called on two disconnected nodes!");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Go back through the ancestors, starting from the root,
+  // until the first different ancestor found.
+  do {
+    --nodeIdx;
+    --otherIdx;
+  } while (nodeAncestors.ElementAt(nodeIdx) == otherAncestors.ElementAt(otherIdx));
+
+  NS_ASSERTION(nodeIdx >= 0 && otherIdx >= 0,
+               "Something's wrong: our indices should not be negative here!");
+
+  aDifferentNodes->AppendElement(nodeAncestors.ElementAt(nodeIdx + 1));
+  aDifferentNodes->AppendElement(nodeAncestors.ElementAt(nodeIdx));
+  aDifferentNodes->AppendElement(otherAncestors.ElementAt(otherIdx));
+
+  return NS_OK;
 }
 
 inline PRBool
