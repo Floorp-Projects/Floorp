@@ -59,9 +59,12 @@
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
 #include "nsSprocketLayout.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 
 #define DEBUG_SLIDER PR_FALSE
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsresult
 NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -98,6 +101,13 @@ nsSliderFrame::Init(nsIPresContext*  aPresContext,
               nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  
+  nsresult  rv2;
+  mMiddlePref=PR_FALSE;
+  nsCOMPtr<nsIPref> pref = do_GetService(kPrefCID, &rv2);
+  if(NS_SUCCEEDED(rv2))
+    pref->GetBoolPref("middlemouse.scrollbarPosition", &mMiddlePref);
+
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
   GetView(aPresContext, &view);
@@ -437,6 +447,10 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
     } 
     break;
 
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+    if(!mMiddlePref)
+        break;
+
     case NS_MOUSE_LEFT_BUTTON_UP:
        // stop capturing
       //printf("stop capturing\n");
@@ -452,6 +466,67 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
 
     //return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     return NS_OK;
+  }
+  else if (mMiddlePref && aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN) {
+    // convert coord from twips to pixels
+    nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+    nscoord pospx = pos/onePixel;
+
+   // adjust so that the middle of the thumb is placed under the click
+    nsIFrame* thumbFrame = mFrames.FirstChild();
+    nsSize thumbSize;
+    thumbFrame->GetSize(thumbSize);
+    nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
+    thumbLength /= onePixel;
+    pospx -= (thumbLength/2);
+
+
+    // convert to our internal coordinate system
+    pospx = nscoord(pospx/mRatio);
+
+    // set it
+    SetCurrentPosition(scrollbar, thumbFrame, pospx);
+
+    // hack to start dragging 
+
+    nsIFrame* parent = this;
+    while(parent != nsnull)
+    {
+      // if we hit a scrollable view make sure we take into account
+      // how much we are scrolled.
+      nsIScrollableView* scrollingView;
+      nsIView*           view;
+      parent->GetView(aPresContext, &view);
+      if (view) {
+        nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+        if (NS_SUCCEEDED(result)) {
+          nscoord xoff = 0;
+          nscoord yoff = 0;
+          scrollingView->GetScrollPosition(xoff, yoff);
+          isHorizontal ? pos += xoff : pos += yoff;         
+        }
+      }
+      
+      nsRect r;
+      parent->GetRect(r);
+      isHorizontal ? pos += r.x : pos += r.y;
+      parent->GetParent(&parent);
+    }
+
+    RemoveListener();
+    DragThumb(mPresContext, PR_TRUE);
+    nsRect thumbRect;
+    thumbFrame->GetRect(thumbRect);
+    
+    if (isHorizontal)
+      mThumbStart = thumbRect.x;
+    else
+      mThumbStart = thumbRect.y;
+
+    mDragStartPx =pos/onePixel;
   }
 
   // XXX hack until handle release is actually called in nsframe.
@@ -687,10 +762,73 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
   PRUint16 button = 0;
   mouseEvent->GetButton(&button);
+  if((mMiddlePref && button != 1 && button != 2) ||
+     (!mMiddlePref && button != 1))
+      return NS_OK;
 
-  // only if left button
-  if (button != 1)
-     return NS_OK;
+  // If middle button, first place the middle of the slider thumb
+  // under the click
+  if (button == 2) {
+
+    nscoord pos;
+    nscoord pospx;
+
+    // mouseEvent has click coordinates in pixels, convert to twips first
+    isHorizontal ? mouseEvent->GetClientX(&pospx) : mouseEvent->GetClientY(&pospx);
+    float p2t;
+    // XXX hack
+    mPresContext->GetScaledPixelsToTwips(&p2t);
+    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+    pos = pospx * onePixel;
+
+    // then get it into our coordinate system by subtracting our parents offsets.
+    nsIFrame* parent = this;
+    while(parent != nsnull) {
+       // if we hit a scrollable view make sure we take into account
+       // how much we are scrolled.
+       nsIScrollableView* scrollingView;
+       nsIView*           view;
+       // XXX hack
+       parent->GetView(mPresContext, &view);
+       if (view) {
+         nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+         if (NS_SUCCEEDED(result)) {
+             nscoord xoff = 0;
+             nscoord yoff = 0;
+             scrollingView->GetScrollPosition(xoff, yoff);
+             isHorizontal ? pos += xoff : pos += yoff;
+         }
+       }
+
+      nsRect r;
+      parent->GetRect(r);
+      isHorizontal ? pos -= r.x : pos -= r.y;
+      parent->GetParent(&parent);
+    }
+
+    // now convert back into pixels
+    pospx = pos/onePixel;
+
+    // adjust so that the middle of the thumb is placed under the click
+    nsIFrame* thumbFrame = mFrames.FirstChild();
+    nsRect thumbRect;
+    thumbFrame->GetRect(thumbRect);
+    nsSize thumbSize;
+    thumbFrame->GetSize(thumbSize);
+    nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
+    thumbLength /= onePixel;
+    pospx -= (thumbLength/2);
+
+    // finally, convert to scrollbar's internal coordinate system
+    pospx = nscoord(pospx/mRatio);
+
+    nsIBox* scrollbarBox = GetScrollbar();
+    nsCOMPtr<nsIContent> scrollbar;
+    GetContentOf(scrollbarBox, getter_AddRefs(scrollbar));
+
+    // set it
+    SetCurrentPosition(scrollbar, thumbFrame, pospx);
+  }
 
   RemoveListener();
   DragThumb(mPresContext, PR_TRUE);

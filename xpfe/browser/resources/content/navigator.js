@@ -1138,6 +1138,20 @@ function BrowserEditBookmarks()
     return "";
   }
 
+   function isScrollbar(node)
+   {
+     while (node)
+     {
+       var nodeName = node.nodeName;
+       if (nodeName == "")
+         return false;
+       if (nodeName == "scrollbar")
+         return true;
+       node = node.parentNode;
+     }
+     return false;
+  }
+
   function browserHandleMiddleClick(event)
   {
     var target = event.target;
@@ -1154,6 +1168,9 @@ function BrowserEditBookmarks()
 
     if (pref.GetBoolPref("middlemouse.paste"))
     {
+      if (isScrollbar(target)) {
+         return;
+	  }
       var tagName = target.tagName;
       if (tagName) tagName = tagName.toLowerCase();
       var type = target.type;

@@ -49,6 +49,7 @@ pref("editor.dont_lock_spell_files", true);
 // Middle-mouse handling
 pref("middlemouse.paste", true);
 pref("middlemouse.openNewWindow", true);
+pref("middlemouse.scrollbarPosition", true);
 
 // Instead of "delay_images"
 pref("browser.autoload_images", true);
