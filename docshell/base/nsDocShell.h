@@ -79,6 +79,7 @@
 #include "nsIURIFixup.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIHttpChannel.h"
+#include "nsDocShellTransferableHooks.h"
 
 
 #define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
@@ -246,6 +247,7 @@ protected:
     NS_IMETHOD EnsureContentListener();
     NS_IMETHOD EnsureScriptEnvironment();
     NS_IMETHOD EnsureEditorData();
+    nsresult   EnsureTransferableHookData();
     NS_IMETHOD EnsureFind();
     NS_IMETHOD RefreshURIFromQueue();
     NS_IMETHOD DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aURL);
@@ -358,6 +360,9 @@ protected:
 
     // Editor stuff
     nsDocShellEditorData*      mEditorData;          // editor data, if any
+
+    // Transferable hooks/callbacks
+    nsTransferableHookData*    mTransferableHookData;
 
     // WEAK REFERENCES BELOW HERE.
     // Note these are intentionally not addrefd.  Doing so will create a cycle.
