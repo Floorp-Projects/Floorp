@@ -1662,7 +1662,7 @@ nsMessengerMigrator::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 #ifdef DEBUG_MIGRATOR
   PRInt32 portValue;
   rv = server->GetPort(&portValue);
-  printf("HOSTNAME = %s\n", (const char *)hostname);
+  printf("HOSTNAME = %s\n", hostname.get());
   printf("PORT = %d\n", portValue);
 #endif /* DEBUG_MIGRATOR */
 
@@ -2291,7 +2291,7 @@ nsMessengerMigrator::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 #ifdef DEBUG_MIGRATOR
 	PRInt32 portValue;
 	rv = server->GetPort(&portValue);
-	printf("HOSTNAME = %s\n", (const char *)hostname);
+	printf("HOSTNAME = %s\n", hostname.get());
 	printf("PORT = %d\n", portValue);
 #endif /* DEBUG_MIGRATOR */
 
