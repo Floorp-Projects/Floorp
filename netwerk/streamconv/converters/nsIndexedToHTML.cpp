@@ -196,7 +196,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     };
 
     rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("DirTitle").get(),
-                                       formatTitle, sizeof(formatTitle),
+                                       formatTitle,
+                                       sizeof(formatTitle)/sizeof(PRUnichar*),
                                        getter_Copies(title));
     if (NS_FAILED(rv)) return rv;
     buffer.Append(title);
@@ -223,7 +224,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     };
 
     rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("DirTitle").get(),
-                                       formatHeading, sizeof(formatHeading),
+                                       formatHeading,
+                                       sizeof(formatHeading)/sizeof(PRUnichar*),
                                        getter_Copies(title));
     if (NS_FAILED(rv)) return rv;
     
