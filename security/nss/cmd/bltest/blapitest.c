@@ -933,49 +933,22 @@ dsa_test(blapitestInfo *info)
 }
 
 static SECStatus
-md5_perf_test(blapitestInfo *info)
-{
-	SECStatus rv = SECSuccess;
-	PRInt64 time1, time2;
-	PRInt32 tdiff;
-	int i;
-	if (info->in.len == 0) {
-		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
-		CHECKERROR(rv, __LINE__);
-	}
-	info->out.len = MD5_LENGTH;
-	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
-	time1 = PR_Now();
-	for (i=info->repetitions; i>0; i--) {
-		MD5_HashBuf(info->out.data, info->in.data, info->in.len);
-	}
-	time2 = PR_Now();
-	LL_SUB(time1, time2, time1);
-	LL_L2I(tdiff, time1);
-	PR_fprintf(PR_STDOUT, "MD5 hash %d bytes: %d\n", info->in.len, tdiff / info->repetitions);
-	return rv;
-}
-
-static SECStatus
 md5_test(blapitestInfo *info)
 {
 	SECStatus rv = SECSuccess;
-	PRInt64 time1, time2;
-	PRInt32 tdiff;
+	PRIntervalTime time1, time2;
 	int i;
-	if (info->performance) return md5_perf_test(info);
 	if (info->in.len == 0) {
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
 	}
 	info->out.len = MD5_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
-	time1 = PR_Now();
-	MD5_HashBuf(info->out.data, info->in.data, info->in.len);
-	time2 = PR_Now();
-	LL_SUB(time1, time2, time1);
-	LL_L2I(tdiff, time1);
-	PR_fprintf(PR_STDOUT, "time to hash: %d\n", tdiff);
+	TIMESTART();
+	for (i=info->repetitions; i>0; i--) {
+		MD5_HashBuf(info->out.data, info->in.data, info->in.len);
+	}
+	TIMEFINISH("MD5 HASH", info->in.len);
 	return rv;
 }
 
@@ -1021,57 +994,28 @@ md5_multi_test(blapitestInfo *info)
 }
 
 static SECStatus
-md2_perf_test(blapitestInfo *info)
+md2_test(blapitestInfo *info)
 {
 	unsigned int len;
 	MD2Context *cx = MD2_NewContext();
 	SECStatus rv = SECSuccess;
-	PRInt64 time1, time2;
-	PRInt32 tdiff;
+	PRIntervalTime time1, time2;
 	int i;
 	if (info->in.len == 0) {
 		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
 		CHECKERROR(rv, __LINE__);
 	}
-	info->out.len = MD2_LENGTH;
+	info->out.len = 16;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	info->in.data[info->in.len] = '\0';
-	time1 = PR_Now();
-	for (i=info->repetitions; i>0; i--) {
+	TIMESTART();
+	for (i=0; i<info->repetitions; i++) {
 		MD2_Begin(cx);
 		MD2_Update(cx, info->in.data, info->in.len);
-		MD2_End(cx, info->out.data, &len, MD2_LENGTH);
+		MD2_End(cx, info->out.data, &len, 16);
 	}
-	time2 = PR_Now();
-	LL_SUB(time1, time2, time1);
-	LL_L2I(tdiff, time1);
-	PR_fprintf(PR_STDOUT, "MD2 hash %d bytes: %d\n", info->in.len, tdiff / info->repetitions);
+	TIMEFINISH("MD2 HASH", info->in.len);
 	MD2_DestroyContext(cx, PR_TRUE);
-	return rv;
-}
-
-static SECStatus
-md2_test(blapitestInfo *info)
-{
-	SECStatus rv = SECSuccess;
-	PRInt64 time1, time2;
-	PRInt32 tdiff = LL_Zero();
-	int i;
-	unsigned int len;
-	if (info->performance) return md2_perf_test(info);
-	if (info->in.len == 0) {
-		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
-		CHECKERROR(rv, __LINE__);
-	}
-	info->out.len = MD2_LENGTH;
-	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
-	info->in.data[info->in.len] = '\0';
-	time1 = PR_Now();
-	MD2_Hash(info->out.data, info->in.data);
-	time2 = PR_Now();
-	LL_SUB(time1, time2, time1);
-	LL_L2I(tdiff, time1);
-	PR_fprintf(PR_STDOUT, "time to hash: %d\n", tdiff);
 	return rv;
 }
 
@@ -1117,12 +1061,12 @@ md2_multi_test(blapitestInfo *info)
 }
 
 static SECStatus
-sha1_perf_test(blapitestInfo *info)
+sha1_test(blapitestInfo *info)
 {
 	unsigned int len;
 	SHA1Context *cx = SHA1_NewContext();
 	SECStatus rv = SECSuccess;
-	PRInt64 time1, time2;
+	PRIntervalTime time1, time2;
 	PRInt32 tdiff;
 	int i;
 	if (info->in.len == 0) {
@@ -1132,42 +1076,14 @@ sha1_perf_test(blapitestInfo *info)
 	info->out.len = SHA1_LENGTH;
 	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
 	info->in.data[info->in.len] = '\0';
-	time1 = PR_Now();
+	TIMESTART();
 	for (i=info->repetitions; i>0; i--) {
 		SHA1_Begin(cx);
 		SHA1_Update(cx, info->in.data, info->in.len);
 		SHA1_End(cx, info->out.data, &len, SHA1_LENGTH);
 	}
-	time2 = PR_Now();
-	LL_SUB(time1, time2, time1);
-	LL_L2I(tdiff, time1);
-	PR_fprintf(PR_STDOUT, "SHA1 hash %d bytes: %d\n", info->in.len, tdiff / info->repetitions);
+	TIMEFINISH("SHA1 HASH", info->in.len);
 	SHA1_DestroyContext(cx, PR_TRUE);
-	return rv;
-}
-
-static SECStatus
-sha1_test(blapitestInfo *info)
-{
-	SECStatus rv = SECSuccess;
-	PRInt64 time1, time2;
-	PRInt32 tdiff = LL_Zero();
-	int i;
-	unsigned int len;
-	if (info->performance) return sha1_perf_test(info);
-	if (info->in.len == 0) {
-		rv = get_and_write_random_bytes(&info->in, info->bufsize, "tmp.pt");
-		CHECKERROR(rv, __LINE__);
-	}
-	info->out.len = SHA1_LENGTH;
-	info->out.data = (unsigned char *)PORT_ZAlloc(info->out.len);
-	info->in.data[info->in.len] = '\0';
-	time1 = PR_Now();
-	SHA1_Hash(info->out.data, info->in.data);
-	time2 = PR_Now();
-	LL_SUB(time1, time2, time1);
-	LL_L2I(tdiff, time1);
-	PR_fprintf(PR_STDOUT, "time to hash: %d\n", tdiff);
 	return rv;
 }
 
@@ -1311,6 +1227,7 @@ int main(int argc, char **argv)
 	PLOptStatus status;
 	int numiter = 1;
 	PRBool dofips = PR_FALSE;
+	PRBool zerobuffer = PR_FALSE;
 	SECStatus rv;
 
 	PORT_Memset(&info, 0, sizeof(info));
@@ -1324,7 +1241,7 @@ int main(int argc, char **argv)
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
 	optstate = 
-	  PL_CreateOptState(argc, argv, "DEFHSVab:e:g:i:o:p:k:m:t:r:s:v:w:xyz:");
+	  PL_CreateOptState(argc, argv, "DEFHSVab:e:g:i:o:p:k:m:t:qr:s:v:w:xyz:");
 	while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 		switch (optstate->option) {
 		case 'D':  info.decrypt = PR_TRUE; break;
@@ -1345,6 +1262,7 @@ int main(int argc, char **argv)
 		case 'p':  info.performance = PR_TRUE; 
 			   info.repetitions = PORT_Atoi(optstate->value); 
 			   break;
+		case 'q':  zerobuffer = PR_TRUE; break;
 		case 'r':  info.rounds = PORT_Atoi(optstate->value); break;
 		case 's':  sigfile  = PR_Open(optstate->value, PR_RDONLY, 00440); break;
 		case 't':  sigseedfile=PR_Open(optstate->value, PR_RDONLY, 00440);break;
@@ -1404,6 +1322,14 @@ int main(int argc, char **argv)
 			SECITEM_CopyItem(NULL, &info.in, &asciiFile);
 		}
 		info.bufsize = info.in.len;
+	}
+
+	if (zerobuffer) {
+		info.in.len = info.bufsize;
+		info.in.data = PORT_ZAlloc(info.in.len);
+		infile = PR_Open("tmp.pt", PR_WRONLY|PR_CREATE_FILE, 00660);
+		rv = btoa_file(&info.in, infile);
+		CHECKERROR((rv < 0), __LINE__);
 	}
 
 	if (sigfile) {
