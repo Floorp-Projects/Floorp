@@ -105,25 +105,34 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   }
   
   *aStreamListener = nsnull;
-  // use InternetConfig to fill in MIMEInfo
+
+  // first, try to see if we can find the content based on just the specified content type...
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
-  if (icService)
+  rv = GetFromMIMEType(aMimeContentType, getter_AddRefs(mimeInfo));
+  if (NS_FAILED(rv) || !mimeInfo)
   {
-    if (url)
-      rv = icService->FillInMIMEInfo(aMimeContentType, url, getter_AddRefs(mimeInfo));
-    else
-      rv = icService->FillInMIMEInfo(aMimeContentType, nsnull, getter_AddRefs(mimeInfo));
-    if (NS_SUCCEEDED(rv) && mimeInfo)
+  	// if the content based search failed, then try looking up based on the file extension....    
+  	if (url)
     {
-      // this code is incomplete and just here to get things started..
-      nsXPIDLCString fileExtension;
-      mimeInfo->FirstExtension(getter_Copies(fileExtension));
-      nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
-      handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
-      rv = NS_OK;
+      nsXPIDLCString extension;
+      url->GetFileExtension(getter_Copies(extension));
+      const char * ext = (const char *) extension;
+      if (ext && *ext)
+      	rv = GetFromExtension(ext, getter_AddRefs(mimeInfo));
     }
+  	
   }
+
+  if (NS_SUCCEEDED(rv) && mimeInfo)
+  {
+    // create an app handler to handle the content...
+    nsXPIDLCString fileExtension;
+    mimeInfo->FirstExtension(getter_Copies(fileExtension));
+    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
+    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+    rv = NS_OK;
+  }
+  
   return rv;
 }
 
@@ -175,5 +184,50 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   else
     rv = NS_ERROR_FAILURE;
 
+  return rv;
+}
+///////////////////////////
+// nsIMIMEService overrides --> used to leverage internet config information for mime types.
+///////////////////////////
+
+NS_IMETHODIMP nsOSHelperAppService::GetFromExtension(const char * aFileExt, nsIMIMEInfo ** aMIMEInfo)
+{
+  // first, ask our base class. We may already have this information cached....
+  nsresult rv = nsExternalHelperAppService::GetFromExtension(aFileExt, aMIMEInfo);
+  if (NS_SUCCEEDED(rv) && *aMIMEInfo) return rv;
+  
+  // oops, we didn't find an entry....ask the internet config service to look it up for us...
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  if (icService)
+  {
+    rv = icService->GetMIMEInfoFromExtension(aFileExt, aMIMEInfo);
+    // if we got an entry, don't waste time hitting IC for this information next time, store it in our
+    // hash table....
+    if (NS_SUCCEEDED(rv) && *aMIMEInfo)
+    	AddMimeInfoToCache(*aMIMEInfo);    
+  }
+  
+  if (!*aMIMEInfo) rv = NS_ERROR_FAILURE;
+  return rv;
+}
+
+NS_IMETHODIMP nsOSHelperAppService::GetFromMIMEType(const char * aMIMEType, nsIMIMEInfo ** aMIMEInfo)
+{
+  // first, ask our base class. We may already have this information cached....
+  nsresult rv = nsExternalHelperAppService::GetFromMIMEType(aMIMEType, aMIMEInfo);
+  if (NS_SUCCEEDED(rv) && *aMIMEInfo) return rv;
+  
+  // oops, we didn't find an entry....ask the internet config service to look it up for us...
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  if (icService)
+  {
+    rv = icService->FillInMIMEInfo(aMIMEType, nsnull, aMIMEInfo);
+    // if we got an entry, don't waste time hitting IC for this information next time, store it in our
+    // hash table....
+    if (NS_SUCCEEDED(rv) && *aMIMEInfo)
+    	AddMimeInfoToCache(*aMIMEInfo);    
+  }
+  
+  if (!*aMIMEInfo) rv = NS_ERROR_FAILURE;
   return rv;
 }
