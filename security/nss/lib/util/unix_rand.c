@@ -762,12 +762,14 @@ for the small amount of entropy it provides.
 	safe_pclose(fp);
     }
 #endif
+#if 0  /* bug 108708 */
     fp = safe_popen(netstat_ni_cmd);
     if (fp != NULL) {
 	while ((bytes = fread(buf, 1, sizeof(buf), fp)) > 0)
 	    RNG_RandomUpdate(buf, bytes);
 	safe_pclose(fp);
     }
+#endif
 
     /*
      * Pass the C environment and the addresses of the pointers to the
