@@ -2016,7 +2016,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 	if (pn->pn_extra) {
 	    /* Emit a source note so we know to decompile an extra comma. */
-	    if (js_NewSrcNote(cx, cg, SRC_PCDELTA) < 0)
+	    if (js_NewSrcNote(cx, cg, SRC_CONTINUE) < 0)
 		return JS_FALSE;
 	}
 

@@ -1860,7 +1860,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		sn = js_GetSrcNote(jp->script, pc);
 		todo = Sprint(&ss->sprinter, "%s%s%c",
 			      rval,
-			      (sn && SN_TYPE(sn) == SRC_PCDELTA) ? ", " : "",
+			      (sn && SN_TYPE(sn) == SRC_CONTINUE) ? ", " : "",
 			      /* [balance */
 			      (*rval == '{') ? '}' : ']');
 		break;

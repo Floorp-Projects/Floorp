@@ -229,7 +229,9 @@ typedef enum JSSrcNoteType {
     SRC_IF_ELSE     = 2,        /* JSOP_IFEQ bytecode is from an if-then-else */
     SRC_WHILE       = 3,        /* JSOP_IFEQ is from a while loop */
     SRC_FOR         = 4,        /* JSOP_NOP or JSOP_POP in for loop head */
-    SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break */
+    SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
+                                   also used on JSOP_ENDINIT if extra comma
+                                   at end of array literal: [1,2,,] */
     SRC_VAR         = 6,        /* JSOP_NAME/FORNAME with a var declaration */
     SRC_PCDELTA     = 7,        /* offset from comma-operator to next POP,
 				   or from CONDSWITCH to first CASE opcode */
