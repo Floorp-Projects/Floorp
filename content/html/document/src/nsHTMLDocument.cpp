@@ -66,6 +66,7 @@
 #include "nsICookieService.h"
 #endif // NECKO
 
+#include "nsIParserService.h"
 #include "nsIServiceManager.h"
 #include "nsIFormManager.h"
 #include "nsIComponentManager.h"
@@ -2297,7 +2298,8 @@ IsNamedItem(nsIContent* aContent, nsIAtom *aTag,
   if ((aTag == nsHTMLAtoms::img) || (aTag == nsHTMLAtoms::form) ||
       (!aInForm && ((aTag == nsHTMLAtoms::applet) || 
                     (aTag == nsHTMLAtoms::embed)))) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aName)) {
+    if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aName)) ||
+        (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aName))) {
       return PR_TRUE;
     }
   }
@@ -2759,6 +2761,8 @@ PRBool nsHTMLDocument::SearchBlock(BlockText  & aBlockText,
   return found;
 }
 
+static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
+
 ////////////////////////////////////////////////////
 // Check to see if a Content node is a block tag
 ////////////////////////////////////////////////////
@@ -2775,7 +2779,19 @@ PRBool nsHTMLDocument::NodeIsBlock(nsIDOMNode * aNode)
   domElement->GetTagName(tagName);
   NS_RELEASE(domElement);
 
-  isBlock = IsBlockLevel(nsHTMLTags::LookupTag(tagName), mIsPreTag);
+  // XXX Should be done at a higher level than this routine
+  // since getting the service is not the cheapest operation.
+  // Waiting for mjudge to tell me where since it looks like
+  // this code is still in development.
+
+  NS_WITH_SERVICE(nsIParserService, service, kParserServiceCID, &rv);
+
+  if (NS_SUCCEEDED(rv)) {
+    PRInt32 id;
+    
+    service->HTMLStringTagToId(tagName, &id);
+    isBlock = IsBlockLevel(nsHTMLTag(id), mIsPreTag);
+  }
 
   return isBlock;
 }

@@ -410,10 +410,10 @@ nsXMLContentSink::SetParser(nsIParser* aParser)
 }
 
 // XXX Code copied from nsHTMLContentSink. It should be shared.
-static void
-GetAttributeValueAt(const nsIParserNode& aNode,
-                    PRInt32 aIndex,
-                    nsString& aResult)
+void
+nsXMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
+                                      PRInt32 aIndex,
+                                      nsString& aResult)
 {
   // Copy value
   const nsString& value = aNode.GetValueAt(aIndex);
@@ -434,102 +434,113 @@ GetAttributeValueAt(const nsIParserNode& aNode,
     }
   }
 
-  // Reduce any entities
-  // XXX Note: as coded today, this will only convert well formed
-  // entities.  This may not be compatible enough.
-  // XXX there is a table in navigator that translates some numeric entities
-  // should we be doing that? If so then it needs to live in two places (bad)
-  // so we should add a translate numeric entity method from the parser...
-  char cbuf[100];
-  PRInt32 index = 0;
-  while (index < aResult.Length()) {
-    // If we have the start of an entity (and it's not at the end of
-    // our string) then translate the entity into it's unicode value.
-    if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
-      PRInt32 start = index - 1;
-      PRUnichar e = aResult.CharAt(index);
-      if (e == '#') {
-        // Convert a numeric character reference
-        index++;
-        char* cp = cbuf;
-        char* limit = cp + sizeof(cbuf) - 1;
-        PRBool ok = PR_FALSE;
-        PRInt32 slen = aResult.Length();
-        while ((index < slen) && (cp < limit)) {
-          PRUnichar ch = aResult.CharAt(index);
-          if (ch == ';') {
+  if (mParser) {
+    nsCOMPtr<nsIDTD> dtd;
+    
+    nsresult rv = mParser->GetDTD(getter_AddRefs(dtd));
+    
+    if (NS_SUCCEEDED(rv)) {
+      
+      // Reduce any entities
+      // XXX Note: as coded today, this will only convert well formed
+      // entities.  This may not be compatible enough.
+      // XXX there is a table in navigator that translates some numeric entities
+      // should we be doing that? If so then it needs to live in two places (bad)
+      // so we should add a translate numeric entity method from the parser...
+      char cbuf[100];
+      PRInt32 index = 0;
+      while (index < aResult.Length()) {
+        // If we have the start of an entity (and it's not at the end of
+        // our string) then translate the entity into it's unicode value.
+        if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
+          PRInt32 start = index - 1;
+          PRUnichar e = aResult.CharAt(index);
+          if (e == '#') {
+            // Convert a numeric character reference
             index++;
-            ok = PR_TRUE;
-            break;
+            char* cp = cbuf;
+            char* limit = cp + sizeof(cbuf) - 1;
+            PRBool ok = PR_FALSE;
+            PRInt32 slen = aResult.Length();
+            while ((index < slen) && (cp < limit)) {
+              PRUnichar ch = aResult.CharAt(index);
+              if (ch == ';') {
+                index++;
+                ok = PR_TRUE;
+                break;
+              }
+              if ((ch >= '0') && (ch <= '9')) {
+                *cp++ = char(ch);
+                index++;
+                continue;
+              }
+              break;
+            }
+            if (!ok || (cp == cbuf)) {
+              continue;
+            }
+            *cp = '\0';
+            if (cp - cbuf > 5) {
+              continue;
+            }
+            PRInt32 ch = PRInt32( ::atoi(cbuf) );
+            if (ch > 65535) {
+              continue;
+            }
+        
+            // Remove entity from string and replace it with the integer
+            // value.
+            aResult.Cut(start, index - start);
+            aResult.Insert(PRUnichar(ch), start);
+            index = start + 1;
           }
-          if ((ch >= '0') && (ch <= '9')) {
-            *cp++ = char(ch);
+          else if (((e >= 'A') && (e <= 'Z')) ||
+                   ((e >= 'a') && (e <= 'z'))) {
+            // Convert a named entity
             index++;
-            continue;
-          }
-          break;
-        }
-        if (!ok || (cp == cbuf)) {
-          continue;
-        }
-        *cp = '\0';
-        if (cp - cbuf > 5) {
-          continue;
-        }
-        PRInt32 ch = PRInt32( ::atoi(cbuf) );
-        if (ch > 65535) {
-          continue;
-        }
+            char* cp = cbuf;
+            char* limit = cp + sizeof(cbuf) - 1;
+            *cp++ = char(e);
+            PRBool ok = PR_FALSE;
+            PRInt32 slen = aResult.Length();
+            while ((index < slen) && (cp < limit)) {
+              PRUnichar ch = aResult.CharAt(index);
+              if (ch == ';') {
+                index++;
+                ok = PR_TRUE;
+                break;
+              }
+              if (((ch >= '0') && (ch <= '9')) ||
+                  ((ch >= 'A') && (ch <= 'Z')) ||
+                  ((ch >= 'a') && (ch <= 'z'))) {
+                *cp++ = char(ch);
+                index++;
+                continue;
+              }
+              break;
+            }
+            if (!ok || (cp == cbuf)) {
+              continue;
+            }
+            *cp = '\0';
+            PRInt32 ch;
+            nsAutoString str(cbuf);
+            dtd->ConvertEntityToUnicode(str, &ch);
+            if (ch < 0) {
+              continue;
+            }
 
-        // Remove entity from string and replace it with the integer
-        // value.
-        aResult.Cut(start, index - start);
-        aResult.Insert(PRUnichar(ch), start);
-        index = start + 1;
-      }
-      else if (((e >= 'A') && (e <= 'Z')) ||
-               ((e >= 'a') && (e <= 'z'))) {
-        // Convert a named entity
-        index++;
-        char* cp = cbuf;
-        char* limit = cp + sizeof(cbuf) - 1;
-        *cp++ = char(e);
-        PRBool ok = PR_FALSE;
-        PRInt32 slen = aResult.Length();
-        while ((index < slen) && (cp < limit)) {
-          PRUnichar ch = aResult.CharAt(index);
-          if (ch == ';') {
-            index++;
-            ok = PR_TRUE;
-            break;
+            // Remove entity from string and replace it with the integer
+            // value.
+            aResult.Cut(start, index - start);
+            aResult.Insert(PRUnichar(ch), start);
+            index = start + 1;
           }
-          if (((ch >= '0') && (ch <= '9')) ||
-              ((ch >= 'A') && (ch <= 'Z')) ||
-              ((ch >= 'a') && (ch <= 'z'))) {
-            *cp++ = char(ch);
-            index++;
-            continue;
+          else if (e == '{') {
+            // Convert a script entity
+            // XXX write me!
           }
-          break;
         }
-        if (!ok || (cp == cbuf)) {
-          continue;
-        }
-        *cp = '\0';
-        PRInt32 ch = nsHTMLEntities::EntityToUnicode(nsSubsumeCStr(cbuf, PR_FALSE));
-        if (ch < 0) {
-          continue;
-        }
-
-        // Remove entity from string and replace it with the integer
-        // value.
-        aResult.Cut(start, index - start);
-        aResult.Insert(PRUnichar(ch), start);
-        index = start + 1;
-      }
-      else if (e == '{') {
-        // Convert a script entity
-        // XXX write me!
       }
     }
   }

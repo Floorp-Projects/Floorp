@@ -102,7 +102,9 @@ protected:
 
   nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                      PRBool* aDidFlush=nsnull);
-
+  void GetAttributeValueAt(const nsIParserNode& aNode,
+                           PRInt32 aIndex,
+                           nsString& aResult);
   nsresult AddAttributes(const nsIParserNode& aNode,
                          nsIContent* aContent,
                          PRBool aIsHTML);
