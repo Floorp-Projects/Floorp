@@ -428,6 +428,20 @@ library MOZILLACONTROLLib
         void OnTheaterMode([in] VARIANT_BOOL TheaterMode);
 	}
 
+	// Now a private interface for those ActiveX programmers who want to get
+	// their hands on the Mozilla internal interfaces. Note that XPCOM
+	// interfaces are cast into void * parameters but they follow
+	// the normal COM refcounting rules for in, in-out & out parameters.
+
+    [
+        uuid(D6131E69-4A89-4ab5-B916-5A581D66C84F),
+    ]
+    interface IMozControlBridge : IUnknown 
+    {
+		// Method to get the nsIWebBrowser interface (refcounted but cast into a void)
+        HRESULT GetWebBrowser([out] void **aBrowser);
+	}
+
     typedef
     [
         uuid(34A226E0-DF30-11CF-89A9-00A0C9054129),

@@ -83,7 +83,8 @@ class ATL_NO_VTABLE CMozillaBrowser :
 	public ISupportErrorInfo,
 	public IOleCommandTargetImpl<CMozillaBrowser>,
 	public IConnectionPointContainerImpl<CMozillaBrowser>,
-	public ISpecifyPropertyPagesImpl<CMozillaBrowser>
+	public ISpecifyPropertyPagesImpl<CMozillaBrowser>,
+    public IMozControlBridge
 {
 	friend CWebBrowserContainer;
 public:
@@ -93,17 +94,22 @@ public:
 DECLARE_REGISTRY_RESOURCEID(IDR_MOZILLABROWSER)
 
 BEGIN_COM_MAP(CMozillaBrowser)
-	// IE web browser interface
-	COM_INTERFACE_ENTRY(IWebBrowser2)								//CMozillaBrowser Derives from IWebBrowser2
-	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IWebBrowser2)			//Requests to IWebBrowser will actually get the vtable of IWebBrowser2
-	COM_INTERFACE_ENTRY_IID(IID_IWebBrowser, IWebBrowser2)			//ditto
-	COM_INTERFACE_ENTRY_IID(IID_IWebBrowserApp, IWebBrowser2)		//ditto
-	COM_INTERFACE_ENTRY_IMPL(IViewObjectEx)							//CMozillaBrowser derives from IViewObjectEx
-	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject2, IViewObjectEx)	//Request to IViewObject2 will actually get the vtable of IViewObjectEx
+    // Mozilla control interfaces
+	COM_INTERFACE_ENTRY(IMozControlBridge)
+  	// IE web browser interface
+	COM_INTERFACE_ENTRY(IWebBrowser2)
+	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IWebBrowser2)
+	COM_INTERFACE_ENTRY_IID(IID_IWebBrowser, IWebBrowser2)
+	COM_INTERFACE_ENTRY_IID(IID_IWebBrowserApp, IWebBrowser2)
+    // Outgoing IE event interfaces
+	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents,  CDWebBrowserEvents1)	//Requests to DWebBrowserEvents will get the vtable of CDWebBrowserEvents1
+	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2, CDWebBrowserEvents2)	//Requests to DWebBrowserEvents2 will get the vtable of CDWebBrowserEvents2
+    // Other ActiveX/OLE interfaces
+	COM_INTERFACE_ENTRY_IMPL(IViewObjectEx)
+	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject2, IViewObjectEx)
 	COM_INTERFACE_ENTRY_IMPL_IID(IID_IViewObject, IViewObjectEx)
 	COM_INTERFACE_ENTRY_IMPL(IOleInPlaceObjectWindowless)
-	COM_INTERFACE_ENTRY_IMPL_IID(IID_IOleInPlaceObject, IOleInPlaceObjectWindowless)
-	COM_INTERFACE_ENTRY_IMPL_IID(IID_IOleWindow, IOleInPlaceObjectWindowless)
+  	COM_INTERFACE_ENTRY_IMPL_IID(IID_IOleInPlaceObject, IOleInPlaceObjectWindowless)
 	COM_INTERFACE_ENTRY_IMPL(IOleInPlaceActiveObject)
 	COM_INTERFACE_ENTRY_IMPL(IOleControl)
 	COM_INTERFACE_ENTRY_IMPL(IOleObject)
@@ -117,8 +123,6 @@ BEGIN_COM_MAP(CMozillaBrowser)
 	COM_INTERFACE_ENTRY(IProvideClassInfo2)
 	COM_INTERFACE_ENTRY(ISupportErrorInfo)
 	COM_INTERFACE_ENTRY_IMPL(IConnectionPointContainer)
-	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents,  CDWebBrowserEvents1)	//Requests to DWebBrowserEvents will get the vtable of CDWebBrowserEvents1
-	COM_INTERFACE_ENTRY_IID(DIID_DWebBrowserEvents2, CDWebBrowserEvents2)	//Requests to DWebBrowserEvents2 will get the vtable of CDWebBrowserEvents2
 END_COM_MAP()
 
 // Properties supported by the control that map onto property
@@ -381,6 +385,9 @@ public:
 
 // IOleObject overrides
 	virtual HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetClientSite(IOleClientSite **ppClientSite);
+
+// IMozControlBridge implementation
+    virtual HRESULT STDMETHODCALLTYPE GetWebBrowser(/* [out] */ void __RPC_FAR *__RPC_FAR *aBrowser);
 
 // IWebBrowser implementation
     virtual HRESULT STDMETHODCALLTYPE GoBack(void);
