@@ -384,15 +384,14 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       PRInt32 treeIndex = -1;
       multiSelect->GetCurrentIndex(&treeIndex);
       if (treeIndex >= 0) {
-        // XXX todo Kyle - fix bug 201922 so that tree is responsible for keeping track
-        // of it's own accessibles. Then we'll ask the tree so we can reuse
-        // the accessibles already created.
-        nsCOMPtr<nsIWeakReference> weakEventShell(do_GetWeakReference(eventShell));
-        treeItemAccessible = new nsXULTreeitemAccessible(accessible, targetNode, 
-                                                          weakEventShell, treeIndex);
-        if (!treeItemAccessible) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
+        nsCOMPtr<nsIAccessibleTreeCache> treeCache(do_QueryInterface(accessible));
+        if (!treeCache ||
+            NS_FAILED(treeCache->GetCachedTreeitemAccessible(
+                      treeIndex,
+                      nsnull,
+                      getter_AddRefs(treeItemAccessible))) ||
+            !treeItemAccessible)
+         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
   }

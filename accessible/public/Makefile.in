@@ -64,6 +64,7 @@ XPIDLSRCS = \
       nsPIAccessibleDocument.idl \
       nsIAccessibleProvider.idl \
       nsIAccessibleSelectable.idl \
+      nsIAccessibleTreeCache.idl \
       nsIAccessNode.idl \
       nsPIAccessNode.idl \
       nsIAccessibleEvent.idl \

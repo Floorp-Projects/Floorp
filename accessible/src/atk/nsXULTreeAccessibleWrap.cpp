@@ -225,12 +225,7 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::CellRefAt(PRInt32 aRow, PRInt32 aColumn, 
   rv = treeColumns->GetColumnFor(columnElement, getter_AddRefs(treeColumn));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *_retval = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, aRow, treeColumn);
-  NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_IF_ADDREF(*_retval);
-
-  return NS_OK;
+  return GetCachedTreeitemAccessible(aRow, treeColumn, _retval);
 }
 
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetIndexAt(PRInt32 aRow, PRInt32 aColumn, PRInt32 *_retval)
@@ -257,7 +252,11 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnAtIndex(PRInt32 aIndex, PRInt32 
   rv = GetColumns(&columns);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *_retval = aIndex % columns;
+  PRInt32 treeCols;
+  nsAccessible::GetChildCount(&treeCols);
+
+  *_retval = (aIndex - treeCols) % columns;
+  
   return NS_OK;
 }
 
@@ -271,7 +270,11 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRowAtIndex(PRInt32 aIndex, PRInt32 *_r
   rv = GetColumns(&columns);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *_retval = aIndex / columns;
+  PRInt32 treeCols;
+  nsAccessible::GetChildCount(&treeCols);
+
+  *_retval = (aIndex - treeCols) / columns;
+
   return NS_OK;
 }
 

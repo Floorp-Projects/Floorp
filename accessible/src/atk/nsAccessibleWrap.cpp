@@ -869,7 +869,7 @@ getIndexInParentCB(AtkObject *aAtkObj)
 
     nsCOMPtr<nsIAccessible> accChild;
     nsCOMPtr<nsIAccessible> accTmpChild;
-    accWrap->GetFirstChild(getter_AddRefs(accChild));
+    accParent->GetFirstChild(getter_AddRefs(accChild));
 
     PRInt32 currentIndex = -1;
     void *currentAccId = nsnull;
