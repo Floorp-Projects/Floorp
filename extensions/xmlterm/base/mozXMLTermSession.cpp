@@ -1871,7 +1871,7 @@ NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
       attValue.SetLength(0);
       result = mozXMLTermUtils::GetNodeAttribute(nextChild, "class", attValue);
 
-      if (NS_FAILED(result)|| attValue.IsEmpty())) {
+      if (NS_FAILED(result) || attValue.IsEmpty()) {
         deleteNode = 1;
 
       } else {
