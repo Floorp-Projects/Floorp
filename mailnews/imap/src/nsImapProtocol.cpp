@@ -1946,53 +1946,53 @@ void nsImapProtocol::ProcessSelectedStateURL()
 
   res = CreateServerSourceFolderPathString(getter_Copies(mailboxName));
 
-    if (NS_SUCCEEDED(res) && !DeathSignalReceived())
+  if (NS_SUCCEEDED(res) && !DeathSignalReceived())
+  {
+  // OK, code here used to check explicitly for multiple connections to the inbox,
+  // but the connection pool stuff should handle this now.
+    PRBool selectIssued = PR_FALSE;
+    if (GetServerStateParser().GetIMAPstate() == nsImapServerResponseParser::kFolderSelected)
     {
-    // OK, code here used to check explicitly for multiple connections to the inbox,
-    // but the connection pool stuff should handle this now.
-      PRBool selectIssued = PR_FALSE;
-        if (GetServerStateParser().GetIMAPstate() == nsImapServerResponseParser::kFolderSelected)
-        {
-            if (GetServerStateParser().GetSelectedMailboxName() && 
-                PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
-                          mailboxName))
-            {       // we are selected in another folder
-              if (m_closeNeededBeforeSelect)
-                  Close();
-                if (GetServerStateParser().LastCommandSuccessful()) 
-                {
-                  selectIssued = PR_TRUE;
-                  AutoSubscribeToMailboxIfNecessary(mailboxName);
-                  SelectMailbox(mailboxName);
-                }
-            }
-            else if (!GetServerStateParser().GetSelectedMailboxName())
-            {       // why are we in the selected state with no box name?
-                SelectMailbox(mailboxName);
-                selectIssued = PR_TRUE;
-            }
-            else
-            {
-              // get new message counts, if any, from server
-        if (m_needNoop)
-        {
-          m_noopCount++;
-          if ((gPromoteNoopToCheckCount > 0 && (m_noopCount % gPromoteNoopToCheckCount) == 0) ||
-              CheckNeeded())
-            Check();
-          else
-            Noop(); // I think this is needed when we're using a cached connection
-          m_needNoop = PR_FALSE;
-        }
-            }
-        }
-        else
-        {
-            // go to selected state
+      if (GetServerStateParser().GetSelectedMailboxName() && 
+          PL_strcmp(GetServerStateParser().GetSelectedMailboxName(),
+                    mailboxName))
+      {       // we are selected in another folder
+        if (m_closeNeededBeforeSelect)
+            Close();
+          if (GetServerStateParser().LastCommandSuccessful()) 
+          {
+            selectIssued = PR_TRUE;
             AutoSubscribeToMailboxIfNecessary(mailboxName);
             SelectMailbox(mailboxName);
-            selectIssued = PR_TRUE;
-        }
+          }
+      }
+      else if (!GetServerStateParser().GetSelectedMailboxName())
+      {       // why are we in the selected state with no box name?
+          SelectMailbox(mailboxName);
+          selectIssued = PR_TRUE;
+      }
+      else
+      {
+        // get new message counts, if any, from server
+				if (m_needNoop)
+				{
+					m_noopCount++;
+					if ((gPromoteNoopToCheckCount > 0 && (m_noopCount % gPromoteNoopToCheckCount) == 0) ||
+							CheckNeeded())
+						Check();
+					else
+						Noop(); // I think this is needed when we're using a cached connection
+					m_needNoop = PR_FALSE;
+				}
+      }
+    }
+    else
+    {
+        // go to selected state
+        AutoSubscribeToMailboxIfNecessary(mailboxName);
+        SelectMailbox(mailboxName);
+        selectIssued = PR_TRUE;
+    }
 
     if (selectIssued)
     {
@@ -2023,7 +2023,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
           else
               HandleMemoryFailure();
           
-          PR_FREEIF(uidStruct->canonical_boxname);
+          PR_Free(uidStruct->canonical_boxname);
           PR_Free(uidStruct);
           }
           else
@@ -2033,12 +2033,33 @@ void nsImapProtocol::ProcessSelectedStateURL()
     if (GetServerStateParser().LastCommandSuccessful() && !DeathSignalReceived() && (uidValidityOk || m_imapAction == nsIImapUrl::nsImapDeleteAllMsgs))
     {
 
-      if (GetServerStateParser().CurrentFolderReadOnly() && 
-        (m_imapAction == nsIImapUrl::nsImapExpungeFolder || m_imapAction == nsIImapUrl::nsImapDeleteMsg ||
-         m_imapAction == nsIImapUrl::nsImapDeleteAllMsgs || m_imapAction == nsIImapUrl::nsImapAddMsgFlags ||
-         m_imapAction == nsIImapUrl::nsImapSubtractMsgFlags))
-        return;
+      if (GetServerStateParser().CurrentFolderReadOnly())
+			{
+				if (m_imapAction == nsIImapUrl::nsImapAddMsgFlags ||
+         m_imapAction == nsIImapUrl::nsImapSubtractMsgFlags) 
+				{
+					PRBool canChangeFlag = PR_FALSE;
+					if (GetServerStateParser().ServerHasACLCapability() && m_imapMailFolderSink)
+					{
+						PRUint32 aclFlags = 0;
 
+						if (NS_SUCCEEDED(m_imapMailFolderSink->GetAclFlags(&aclFlags)))
+						{
+							if (aclFlags != 0) // make sure we have some acl flags
+							{
+								canChangeFlag = ((msgFlags & kImapMsgSeenFlag) && (aclFlags & IMAP_ACL_STORE_SEEN_FLAG));
+							}
+						}
+					}
+					else
+						canChangeFlag = (GetServerStateParser().SettablePermanentFlags() & msgFlags) == msgFlags;
+					if (!canChangeFlag)
+						return;
+				}
+				if (m_imapAction == nsIImapUrl::nsImapExpungeFolder || m_imapAction == nsIImapUrl::nsImapDeleteMsg ||
+								m_imapAction == nsIImapUrl::nsImapDeleteAllMsgs)
+					return;
+			}
       switch (m_imapAction)
       {
       case nsIImapUrl::nsImapLiteSelectFolder:

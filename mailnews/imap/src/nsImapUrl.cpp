@@ -355,7 +355,7 @@ NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(char ** aResult)
 // this method gets called from the UI thread and the imap thread
 NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult) 
 {
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   nsCAutoString newStr;
 	if (nsnull == aResult || !m_listOfMessageIds) 
 		return  NS_ERROR_NULL_POINTER;
@@ -1087,7 +1087,7 @@ NS_IMETHODIMP  nsImapUrl::CreateServerSourceFolderPathString(char **result)
 NS_IMETHODIMP nsImapUrl::CreateCanonicalSourceFolderPathString(char **result)
 {
   NS_ENSURE_ARG_POINTER(result);
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   *result = nsCRT::strdup(m_sourceCanonicalFolderPathSubString ? m_sourceCanonicalFolderPathSubString : "");
 	return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -1096,7 +1096,7 @@ NS_IMETHODIMP nsImapUrl::CreateCanonicalSourceFolderPathString(char **result)
 NS_IMETHODIMP nsImapUrl::CreateServerDestinationFolderPathString(char **result)
 {
   NS_ENSURE_ARG_POINTER(result);
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   nsresult rv = AllocateServerPath(m_destinationCanonicalFolderPathSubString,
                                    kOnlineHierarchySeparatorUnknown,
                                    result);
@@ -1180,7 +1180,7 @@ NS_IMETHODIMP nsImapUrl::GetMimePartSelectorDetected(PRBool *mimePartSelectorDet
 // this method is only called from the UI thread.
 NS_IMETHODIMP nsImapUrl::SetCopyState(nsISupports* copyState)
 {
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   m_copyState = copyState;
   return NS_OK;
 }
@@ -1190,7 +1190,7 @@ NS_IMETHODIMP nsImapUrl::SetCopyState(nsISupports* copyState)
 NS_IMETHODIMP nsImapUrl::GetCopyState(nsISupports** copyState)
 {
   NS_ENSURE_ARG_POINTER(copyState);
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   *copyState = m_copyState;
   NS_IF_ADDREF(*copyState);
  
@@ -1201,7 +1201,7 @@ NS_IMETHODIMP
 nsImapUrl::SetMsgFileSpec(nsIFileSpec* fileSpec)
 {
   nsresult rv = NS_OK;
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   m_fileSpec = fileSpec; // ** jt - not ref counted
   return rv;
 }
@@ -1211,7 +1211,7 @@ nsImapUrl::GetMsgFileSpec(nsIFileSpec** fileSpec)
 {
   NS_ENSURE_ARG_POINTER(fileSpec);
 
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   *fileSpec = m_fileSpec;
   NS_IF_ADDREF(*fileSpec);
   return NS_OK;

@@ -116,7 +116,6 @@ interface nsIMsgImapMailFolder : nsISupports {
   attribute wchar hierarchyDelimiter;
   attribute long boxFlags;
   attribute string onlineName;
-  attribute unsigned long aclFlags;
   attribute boolean isNamespace;
   readonly attribute boolean canIOpenThisFolder;
   attribute string adminUrl;

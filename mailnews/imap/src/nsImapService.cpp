@@ -207,9 +207,6 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 							              nsIMsgWindow *aMsgWindow,
                             nsIURI ** aURL)
 {
-  // create a protocol instance to handle the request.
-  // NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
-  // just create a connection and process the request.
   NS_ASSERTION (aImapMailFolder && aClientEventQueue,
     "Oops ... null pointer");
   if (!aImapMailFolder || !aClientEventQueue)
