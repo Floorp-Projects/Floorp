@@ -205,6 +205,29 @@ function GET(url, filename)
     runEventPump();
 }
 
+function GET_string(url)
+{
+    var storageStream = createInstance("@mozilla.org/storagestream;1",
+				       "nsIStorageStream");
+    storageStream.init(4096, 0xFFFFFFFF /* PR_UINT32_MAX */, null);
+    
+    var buffered = 
+      createInstance("@mozilla.org/network/buffered-output-stream;1",
+                     "nsIBufferedOutputStream");
+
+    buffered.init(storageStream.getOutputStream(0), 64 * 1024);
+
+    davSvc.getToOutputStream(new Resource(url), buffered,
+			     new OperationListener());
+    runEventPump();
+    var scriptable = createInstance("@mozilla.org/scriptableinputstream;1",
+				    "nsIScriptableInputStream");
+    scriptable.init(storageStream.newInputStream(0));
+    
+    var str = scriptable.read(scriptable.available());
+    return str;
+}
+
 function COPY(url, target, recursive, overwrite)
 {
     davSvc.copyTo(new Resource(url), target, recursive, overwrite,
@@ -222,6 +245,15 @@ function MOVE(url, target, overwrite)
 function PUT(filename, url, contentType)
 {
     var stream = InputStreamForFile(filename);
+    davSvc.put(new Resource(url), contentType, stream, new OperationListener());
+    runEventPump();
+}
+
+function PUT_string(string, url, contentType)
+{
+    var stream = createInstance("@mozilla.org/io/string-input-stream;1",
+				"nsIStringInputStream");
+    stream.setData(string, string.length);
     davSvc.put(new Resource(url), contentType, stream, new OperationListener());
     runEventPump();
 }
