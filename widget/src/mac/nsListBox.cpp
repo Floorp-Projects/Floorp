@@ -49,7 +49,7 @@ nsListBox::nsListBox() : nsMacControl(), nsIListWidget(), nsIListBox()
 {
 	NS_INIT_REFCNT();
 	strcpy(gInstanceClassName, "nsListBox");
-	SetControlType(kControlListBoxAutoSizeProc);
+	SetControlType(kControlListBoxProc);
 
 	mListHandle	= nsnull;
 	mMultiSelect = PR_FALSE;
@@ -70,13 +70,11 @@ nsListBox::~nsListBox()
 //-------------------------------------------------------------------------
 void nsListBox::GetRectForMacControl(nsRect &outRect)
 {
-	//¥TODO: we can certainly remove this function if we
-	// implement GetDesiredSize() in nsComboboxControlFrame
 	outRect = mBounds;
-	outRect.x = 1;
-	outRect.y = 1;
-	outRect.width -= 1;
-	outRect.height -= 1;
+	outRect.x = 2;
+	outRect.y = 5;
+	outRect.width -= 4;
+	outRect.height -= 6;
 }
 
 //-------------------------------------------------------------------------
@@ -118,6 +116,7 @@ NS_IMETHODIMP nsListBox::Create(nsIWidget *aParent,
 			SetMultipleSelection(mMultiSelect);
 			::SetControlMinimum(mControl, 0);
 			::SetControlMaximum(mControl, 0);
+			::SetControlValue(mControl, 0);
 			::LSetDrawingMode(mVisible, mListHandle);
 		}
 		else
@@ -521,7 +520,13 @@ PRBool nsListBox::DispatchMouseEvent(nsMouseEvent &aEvent)
 				Point thePoint;
 				thePoint.h = aEvent.point.x;
 				thePoint.v = aEvent.point.y;
-				::TrackControl(mControl, thePoint, nil);
+//			::TrackControl(mControl, thePoint, nil);
+				if (mListHandle)
+				{
+					EventRecord* osEvent = (EventRecord*)aEvent.nativeMsg;
+					EventModifiers modifiers = (osEvent ? osEvent->modifiers : 0);
+					::LClick(thePoint, modifiers, mListHandle);
+				}
 				//¥TODO: the mouseUp event is eaten by TrackControl.
 				//¥ We must create it and dispatch it after the mouseDown;
 				eatEvent = PR_TRUE;
