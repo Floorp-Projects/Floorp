@@ -27,7 +27,7 @@ LIBRARY_NAME=nkres_s
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 CPP_OBJS=                                    \
-	.\$(OBJDIR)\nsResChannel.obj         \
+	.\$(OBJDIR)\nsResURL.obj         \
 	.\$(OBJDIR)\nsResProtocolHandler.obj \
 	$(NULL)
 
