@@ -171,7 +171,7 @@ if ((wc)->class_name.method == flag)					\
 /* Converter done macro													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define	_XfeConverertDone(value,type)			\
+#define	_XfeConverterDone(value,type)			\
 	{											\
 	    if (to->addr != NULL) {					\
 		if (to->size < sizeof(type)) {			\

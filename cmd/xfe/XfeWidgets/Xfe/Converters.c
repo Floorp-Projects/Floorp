@@ -75,7 +75,7 @@ XfeCvtStringToModifiers(Display *	dpy,
 		return False;
 	}
 
-	_XfeConverertDone(mod,Modifiers);
+	_XfeConverterDone(mod,Modifiers);
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
