@@ -333,6 +333,7 @@ PRInt16 i;
     ConvertImage(aDrawingSurface);
     CreateImage(aDrawingSurface);
     }
+  return NS_OK;
 }
 
 //------------------------------------------------------------
