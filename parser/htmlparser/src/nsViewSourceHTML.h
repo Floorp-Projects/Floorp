@@ -85,7 +85,7 @@ private:
     nsresult WriteTag(PRInt32 tagType,
                       const nsAString &aText,
                       PRInt32 attrCount,
-                      PRBool aNewlineRequired);
+                      PRBool aTagInError);
     
     nsresult WriteAttributes(PRInt32 attrCount);
     nsresult GenerateSummary();

@@ -746,11 +746,6 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
         if (NS_OK==result &&
             (!inCDATA || kGreaterThan == aChar)) {
           result=aScanner.GetChar(aChar); //strip off the >
-
-          // XXX take me out when view source isn't stupid anymore
-          if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-            mTextValue.Append(aChar);
-          }
           done=PR_TRUE;
         }
       }
@@ -763,8 +758,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
     // In order to not completely lose the entire section, treat everything
     // until the end of the document as part of the CDATA section and let
     // the DTD handle it.
-    // XXX when view source actually displays errors, we'll need to propagate
-    // the EOF down to it (i.e., not do this if we're viewing source).
+    mInError = PR_TRUE;
     result = NS_OK;
   }
 
@@ -895,6 +889,14 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
   } // while
   
   aScanner.BindSubstring(mTextValue, origin, end);
+
+  if (kEOF == result) {
+    mInError = PR_TRUE;
+    if (!aScanner.IsIncremental()) {
+      // Hide this EOF.
+      result = NS_OK;
+    }
+  }
 
   return result;
 }
@@ -1732,6 +1734,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                       mTextValue.Append(aChar);
                     } else if (result == NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL) {
                       result = NS_OK;
+                      mInError = PR_TRUE;
                     }
                     // According to spec. we ( who? ) should ignore linefeeds. But look,
                     // even the carriage return was getting stripped ( wonder why! ) -
@@ -1744,6 +1747,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                   }
                   else if (kGreaterThan==aChar){      
                     mHasEqualWithoutValue=PR_TRUE;
+                    mInError=PR_TRUE;
                   }
                   else {
                     static const nsReadEndCondition
@@ -1777,6 +1781,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
             //so let's see what it is. If it's a '"', then assume we're reading
             //from the middle of the value. Try stripping the quote and continuing...
             if (kQuote==aChar || kApostrophe==aChar){
+              mInError=PR_TRUE;
 
               if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
                 result=aScanner.SkipOver(aChar); //strip quote.
@@ -2244,6 +2249,7 @@ nsresult CInstructionToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 
 
   if (kEOF==result && !aScanner.IsIncremental()) {
     //Hide the EOF result because there is no more text coming.
+    mInError=PR_TRUE;
     result=NS_OK;
   }
 
@@ -2307,12 +2313,17 @@ nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32
       // could belong to another tag.
       aScanner.GetChar(ch);
       end.advance(1); 
+    } else {
+      NS_ASSERTION(kLessThan == ch, 
+                   "Make sure this doctype decl. is really in error.");
+      mInError = PR_TRUE;
     }
   }
   else if (!aScanner.IsIncremental()) {
     // We have reached the document end but haven't
     // found either a '<' or a '>'. Therefore use
     // whatever we have.
+    mInError = PR_TRUE;
     result = NS_OK; 
   }
   
