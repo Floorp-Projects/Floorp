@@ -145,6 +145,11 @@ void CNsIHistory::OnInterfacesNsishistory()
 			//GetEntryAtIndexTest(theSessionHistory,theHistoryEntry, theIndex);
 
 			theSessionHistory->GetEntryAtIndex(theIndex, PR_FALSE, getter_AddRefs(theHistoryEntry));
+			if (!theHistoryEntry)
+			{
+				QAOutput("We didn't get the History Entry object. No more tests performed.", 1);
+				return;
+			}
 			// nsiHistoryEntry.idl tests	
 
 			// test URI attribute in nsIHistoryEntry.idl
