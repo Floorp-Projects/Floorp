@@ -52,6 +52,11 @@
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
 #include "nsFileSpec.h"
+#include "nsMsgDBCID.h"
+
+#include "nsMsgDatabase.h"
+
+#include "nsImapFlagAndUidState.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -79,6 +84,7 @@ static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
+static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -257,6 +263,10 @@ protected:
 	PRBool m_protocolInitialized; 
     PLEventQueue *m_eventQueue;
 
+	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState);
+	void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState);
+	void PrepareToAddHeadersToMailDB(const nsMsgKeyArray &keysToFetch, mailbox_spec *boxSpec);
+
 };
 
 nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
@@ -340,14 +350,264 @@ nsIMAP4TestDriver::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
     return NS_OK;
 }
 
-    // Tell mail master about the newly selected mailbox
+// Tell msglib about the newly selected mailbox
 NS_IMETHODIMP
 nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
                                      mailbox_spec* aSpec)
 {
     printf("**** nsIMAP4TestDriver::UpdateImapMailboxInfo\r\n");
+
+	nsIMsgDatabase * mailDB = nsnull;
+	nsIMsgDatabase * mailDBFactory;
+	nsresult rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
+	nsFileSpec dbName(aSpec->allocatedPathName);
+
+	if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+		rv = mailDBFactory->Open(dbName, PR_TRUE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+	}
+//	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
+    if (NS_FAILED(rv)) 
+	{
+		if (mailDBFactory)
+			NS_RELEASE(mailDBFactory);
+		return rv;
+	}
+    
+    if (aSpec->folderSelected)
+    {
+    	nsMsgKeyArray existingKeys;
+    	nsMsgKeyArray keysToDelete;
+    	nsMsgKeyArray keysToFetch;
+		nsIDBFolderInfo *dbFolderInfo = nsnull;
+		PRInt32 imapUIDValidity = 0;
+
+		rv = mailDB->GetDBFolderInfo(&dbFolderInfo);
+
+		if (NS_SUCCEEDED(rv) && dbFolderInfo)
+			dbFolderInfo->GetImapUidValidity(&imapUIDValidity);
+    	mailDB->ListAllKeys(existingKeys);
+    	if (mailDB->ListAllOfflineDeletes(&existingKeys) > 0)
+			existingKeys.QuickSort();
+    	if ((imapUIDValidity != aSpec->folder_UIDVALIDITY)	/* &&	// if UIDVALIDITY Changed 
+    		!NET_IsOffline() */)
+    	{
+
+			nsIMsgDatabase *saveMailDB = mailDB;
+#if TRANSFER_INFO
+			TNeoFolderInfoTransfer *originalInfo = NULL;
+			originalInfo = new TNeoFolderInfoTransfer(dbFolderInfo);
+#endif // 0
+			mailDB->ForceClosed();
+			mailDB = NULL;
+				
+			// Remove summary file.
+			dbName.Delete(PR_FALSE);
+			
+			// Create a new summary file, update the folder message counts, and
+			// Close the summary file db.
+			rv = mailDBFactory->Open(dbName, PR_TRUE, &mailDB, PR_FALSE);
+			if (NS_SUCCEEDED(rv))
+			{
+#if TRANSFER_INFO
+				if (originalInfo)
+				{
+					originalInfo->TransferFolderInfo(*mailDB->m_dbFolderInfo);
+					delete originalInfo;
+				}
+				SummaryChanged();
+#endif
+			}
+			// store the new UIDVALIDITY value
+			rv = mailDB->GetDBFolderInfo(&dbFolderInfo);
+
+			if (NS_SUCCEEDED(rv) && dbFolderInfo)
+    			dbFolderInfo->SetImapUidValidity(aSpec->folder_UIDVALIDITY);
+    										// delete all my msgs, the keys are bogus now
+											// add every message in this folder
+			existingKeys.RemoveAll();
+//			keysToDelete.CopyArray(&existingKeys);
+
+			if (aSpec->flagState)
+			{
+				nsMsgKeyArray no_existingKeys;
+	  			FindKeysToAdd(no_existingKeys, keysToFetch, aSpec->flagState);
+    		}
+    	}		
+    	else if (!aSpec->flagState /*&& !NET_IsOffline() */)	// if there are no messages on the server
+    	{
+			keysToDelete.CopyArray(&existingKeys);
+    	}
+    	else /* if ( !NET_IsOffline()) */
+    	{
+    		FindKeysToDelete(existingKeys, keysToDelete, aSpec->flagState);
+
+			// if this is the result of an expunge then don't grab headers
+			if (!(aSpec->box_flags & kJustExpunged))
+				FindKeysToAdd(existingKeys, keysToFetch, aSpec->flagState);
+    	}
+    	
+    	
+    	if (keysToDelete.GetSize())
+    	{
+			PRUint32 total;
+
+    		PRBool highWaterDeleted = FALSE;
+			// It would be nice to notify RDF or whoever of a mass delete here.
+    		mailDB->DeleteMessages(&keysToDelete,NULL);
+			total = keysToDelete.GetSize();
+			nsMsgKey highWaterMark = nsMsgKey_None;
+		}
+	   	if (keysToFetch.GetSize())
+    	{			
+            PrepareToAddHeadersToMailDB(keysToFetch, aSpec);
+    	}
+    	else 
+    	{
+            // let the imap libnet module know that we don't need headers
+            m_IMAP4Protocol->NotifyHdrsToDownload(NULL, 0);
+			// wait until we can get body id monitor before continuing.
+//			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, TRUE);
+			// I think the real fix for this is to seperate the header ids from body id's.
+			// this is for fetching bodies for offline use
+//			NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
+//			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, FALSE);
+    	}
+    }
+
+
+    if (NS_FAILED(rv))
+
+    {
+        dbName.Delete(PR_FALSE);
+    }
+ 	if (mailDBFactory)
+		NS_RELEASE(mailDBFactory);
     return NS_OK;
 }
+
+
+// both of these algorithms assume that key arrays and flag states are sorted by increasing key.
+void nsIMAP4TestDriver::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsImapFlagAndUidState *flagState)
+{
+	PRBool imapDeleteIsMoveToTrash = /* DeleteIsMoveToTrash() */ PR_TRUE;
+	PRUint32 total = existingKeys.GetSize();
+	PRInt32 index;
+
+	int onlineIndex=0; // current index into flagState
+	for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
+	{
+		PRUint32 uidOfMessage;
+
+		flagState->GetNumberOfMessages(&index);
+		while ((onlineIndex < index) && 
+			   (flagState->GetUidOfMessage(onlineIndex, &uidOfMessage), (existingKeys[keyIndex] > uidOfMessage) ))
+		{
+			onlineIndex++;
+		}
+		
+		imapMessageFlagsType flags;
+		flagState->GetUidOfMessage(onlineIndex, &uidOfMessage);
+		flagState->GetMessageFlags(onlineIndex, &flags);
+		// delete this key if it is not there or marked deleted
+		if ( (onlineIndex >= index ) ||
+			 (existingKeys[keyIndex] != uidOfMessage) ||
+			 ((flags & kImapMsgDeletedFlag) && imapDeleteIsMoveToTrash) )
+		{
+			nsMsgKey doomedKey = existingKeys[keyIndex];
+			if ((PRInt32) doomedKey < 0 && doomedKey != nsMsgKey_None)
+				continue;
+			else
+				keysToDelete.Add(existingKeys[keyIndex]);
+		}
+		
+		flagState->GetUidOfMessage(onlineIndex, &uidOfMessage);
+		if (existingKeys[keyIndex] == uidOfMessage) 
+			onlineIndex++;
+	}
+}
+
+void nsIMAP4TestDriver::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState)
+{
+	PRBool showDeletedMessages = PR_FALSE /* ShowDeletedMessages() */;
+
+	int dbIndex=0; // current index into existingKeys
+	PRInt32 existTotal, numberOfKnownKeys;
+	PRInt32 index;
+	
+	existTotal = numberOfKnownKeys = existingKeys.GetSize();
+	flagState->GetNumberOfMessages(&index);
+	for (PRInt32 flagIndex=0; flagIndex < index; flagIndex++)
+	{
+		PRUint32 uidOfMessage;
+		flagState->GetUidOfMessage(flagIndex, &uidOfMessage);
+		while ( (flagIndex < numberOfKnownKeys) && (dbIndex < existTotal) &&
+				existingKeys[dbIndex] < uidOfMessage) 
+			dbIndex++;
+		
+		if ( (flagIndex >= numberOfKnownKeys)  || 
+			 (dbIndex >= existTotal) ||
+			 (existingKeys[dbIndex] != uidOfMessage ) )
+		{
+			numberOfKnownKeys++;
+
+			imapMessageFlagsType flags;
+			flagState->GetMessageFlags(flagIndex, &flags);
+			if (showDeletedMessages || ! (flags & kImapMsgDeletedFlag))
+			{
+				keysToFetch.Add(uidOfMessage);
+			}
+		}
+	}
+}
+
+void nsIMAP4TestDriver::PrepareToAddHeadersToMailDB(const nsMsgKeyArray &keysToFetch,
+                                                mailbox_spec *boxSpec)
+{
+    PRUint32 *theKeys = (PRUint32 *) PR_Malloc( keysToFetch.GetSize() * sizeof(PRUint32) );
+    if (theKeys)
+    {
+		PRUint32 total = keysToFetch.GetSize();
+
+        for (int keyIndex=0; keyIndex < total; keyIndex++)
+        	theKeys[keyIndex] = keysToFetch[keyIndex];
+        
+//        m_DownLoadState = kDownLoadingAllMessageHeaders;
+
+        nsresult res = NS_OK; /*ImapMailDB::Open(m_pathName,
+                                         TRUE, // create if necessary
+                                         &mailDB,
+                                         m_master,
+                                         &dbWasCreated); */
+
+		// don't want to download headers in a composition pane
+        if (NS_SUCCEEDED(res))
+        {
+#if 0
+			SetParseMailboxState(new ParseIMAPMailboxState(m_master, m_host, this,
+														   urlQueue,
+														   boxSpec->flagState));
+	        boxSpec->flagState = NULL;		// adopted by ParseIMAPMailboxState
+			GetParseMailboxState()->SetPane(url_pane);
+
+            GetParseMailboxState()->SetDB(mailDB);
+            GetParseMailboxState()->SetIncrementalUpdate(TRUE);
+	        GetParseMailboxState()->SetMaster(m_master);
+	        GetParseMailboxState()->SetContext(url_pane->GetContext());
+	        GetParseMailboxState()->SetFolder(this);
+	        
+	        GetParseMailboxState()->BeginParsingFolder(0);
+#endif // 0 hook up parsing later.
+	        // the imap libnet module will start downloading message headers imap.h
+	        m_IMAP4Protocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
+        }
+        else
+        {
+            m_IMAP4Protocol->NotifyHdrsToDownload(NULL, 0);
+        }
+    }
+}
+
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,

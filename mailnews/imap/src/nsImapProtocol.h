@@ -79,6 +79,10 @@ public:
 	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
 	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK;}
 
+	// This is evil, I guess, but this is used by libmsg to tell a running imap url
+	// about headers it should download to update a local database.
+	NS_IMETHOD NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyCount);
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -247,12 +251,12 @@ private:
     virtual void ProcessCurrentURL();
     virtual void ParseIMAPandCheckForNewMail(char* commandString = nsnull);
 
-	// listing header functions
+	// folder opening and listing header functions
+	void UpdatedMailboxSpec(mailbox_spec *aSpec);
 	void FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount);
 	void FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
 	void FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
 	void WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
-	void NotifyKeyList(PRUint32 *keys, PRUint32 keyCount);
 	void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString);
 	void HeaderFetchCompleted();
 

@@ -21,6 +21,40 @@
 #include "nsImapCore.h"
 #include "nsImapFlagAndUidState.h"
 
+NS_IMETHODIMP nsImapFlagAndUidState::GetNumberOfMessages(PRInt32 *result)
+{
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+	*result = fNumberOfMessagesAdded;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsImapFlagAndUidState::GetUidOfMessage(PRInt32 zeroBasedIndex, PRUint32 *result)
+{
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+	if (zeroBasedIndex < fNumberOfMessagesAdded)
+		*result = fUids[zeroBasedIndex];
+	else
+		*result = -1;	// so that value is non-zero and we don't ask for bad msgs
+	return NS_OK;
+}
+
+
+
+NS_IMETHODIMP	nsImapFlagAndUidState::GetMessageFlags(PRInt32 zeroBasedIndex, imapMessageFlagsType *result)
+{
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+	imapMessageFlagsType returnFlags = kNoImapMsgFlag;
+	if (zeroBasedIndex < fNumberOfMessagesAdded)
+		returnFlags = fFlags[zeroBasedIndex];
+
+	*result = returnFlags;
+	return NS_OK;
+}
+
+
 /* amount to expand for imap entry flags when we need more */
 
 nsImapFlagAndUidState::nsImapFlagAndUidState(PRInt32 numberOfMessages, PRUint16 flags)
@@ -146,11 +180,6 @@ void nsImapFlagAndUidState::AddUidFlagPair(PRUint32 uid, imapMessageFlagsType fl
 	}
 }
 
-
-PRInt32 nsImapFlagAndUidState::GetNumberOfMessages()
-{
-	return fNumberOfMessagesAdded;
-}
 	
 PRInt32 nsImapFlagAndUidState::GetNumberOfDeletedMessages()
 {
@@ -176,7 +205,7 @@ PRUint32  nsImapFlagAndUidState::GetHighestNonDeletedUID()
 // Has the user read the last message here ? Used when we first open the inbox to see if there
 // really is new mail there.
 
-XP_Bool nsImapFlagAndUidState::IsLastMessageUnseen()
+PRBool nsImapFlagAndUidState::IsLastMessageUnseen()
 {
 	PRUint32 index = fNumberOfMessagesAdded;
 
@@ -190,19 +219,12 @@ XP_Bool nsImapFlagAndUidState::IsLastMessageUnseen()
 }
 
 
-PRUint32 nsImapFlagAndUidState::GetUidOfMessage(PRInt32 zeroBasedIndex)
-{
-	if (zeroBasedIndex < fNumberOfMessagesAdded)
-		return fUids[zeroBasedIndex];
-	return (-1);	// so that value is non-zero and we don't ask for bad msgs
-}
-
 
 // find a message flag given a key with non-recursive binary search, since some folders
 // may have thousand of messages, once we find the key set its index, or the index of
 // where the key should be inserted
 
-imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid, XP_Bool *foundIt, PRInt32 *ndx)
+imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid, PRBool *foundIt, PRInt32 *ndx)
 {
 	PRInt32 index = 0;
 	PRInt32 hi = fNumberOfMessagesAdded - 1;
@@ -234,61 +256,4 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 	*ndx = index;
 	return 0;
 }
-
-
-
-imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlags(PRInt32 zeroBasedIndex)
-{
-	imapMessageFlagsType returnFlags = kNoImapMsgFlag;
-	if (zeroBasedIndex < fNumberOfMessagesAdded)
-		returnFlags = fFlags[zeroBasedIndex];
-
-	return returnFlags;
-}
-
-extern "C" {
-nsImapFlagAndUidState *IMAP_CreateFlagState(PRInt32 numberOfMessages)
-{
-	return new nsImapFlagAndUidState(numberOfMessages);
-}
-
-
-void IMAP_DeleteFlagState(nsImapFlagAndUidState *state)
-{
-	delete state;
-}
-
-
-PRInt32 IMAP_GetFlagStateNumberOfMessages(nsImapFlagAndUidState *state)
-{
-	return state->GetNumberOfMessages();
-}
-	
-
-PRUint32 IMAP_GetUidOfMessage(PRInt32 zeroBasedIndex, nsImapFlagAndUidState *state)
-{
-	return state->GetUidOfMessage(zeroBasedIndex);
-}
-
-
-imapMessageFlagsType IMAP_GetMessageFlags(PRInt32 zeroBasedIndex, nsImapFlagAndUidState *state)
-{
-	return state->GetMessageFlags(zeroBasedIndex);
-}
-
-
-imapMessageFlagsType IMAP_GetMessageFlagsFromUID(PRUint32 uid, XP_Bool *foundIt, nsImapFlagAndUidState *state)
-{
-	PRInt32 index = -1;
-	return state->GetMessageFlagsFromUID(uid, foundIt, &index);
-}
-
-XP_Bool IMAP_SupportMessageFlags(nsImapFlagAndUidState *state,
-								 imapMessageFlagsType flags)
-{
-	return (state->GetSupportedUserFlags() & flags);
-}
-
-
-}	// extern "C"
 

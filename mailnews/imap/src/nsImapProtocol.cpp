@@ -1405,9 +1405,9 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     	
         // make the parser record these flags
 		nsString2 fetchStr;
-		PRUint32 added = 0, deleted = 0;
+		PRInt32 added = 0, deleted = 0;
 
-		added = m_flagState.GetNumberOfMessages();
+		nsresult res = m_flagState.GetNumberOfMessages(&added);
 		deleted = m_flagState.GetNumberOfDeletedMessages();
 
 		if (!added || (added == deleted))
@@ -1438,28 +1438,15 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     mailbox_spec *new_spec = GetServerStateParser().CreateCurrentMailboxSpec();
 	if (new_spec && !DeathSignalReceived())
 	{
-#if 0
-		MWContext *ct = NULL;
-		
-		LIBNET_LOCK();
 		if (!DeathSignalReceived())
 		{
-			// if this is an expunge url, libmsg will not ask for headers
-			if (fCurrentUrl->GetIMAPurlType() == TIMAPUrl::kExpungeFolder)
+			nsIImapUrl::nsImapAction imapAction; 
+			nsresult res = m_runningUrl->GetImapAction(&imapAction);
+			if (NS_SUCCEEDED(res) && imapAction == nsIImapUrl::nsImapExpungeFolder)
 				new_spec->box_flags |= kJustExpunged;
-				
-			ct = new_spec->connection->fCurrentEntry->window_id;
-			ct->imapURLPane = MSG_FindPane(fCurrentEntry->window_id, MSG_ANYPANE);
-		}
-		LIBNET_UNLOCK();
-		if (ct)
-		{
-			if (!ct->currentIMAPfolder)
-				ct->currentIMAPfolder = (MSG_IMAPFolderInfoMail *) MSG_FindImapFolder(ct->imapURLPane, fCurrentUrl->GetUrlHost(), "INBOX"); // use real folder name
-			PR_EnterMonitor(fWaitForBodyIdsMonitor);
+			PR_EnterMonitor(m_waitForBodyIdsMonitor);
 			UpdatedMailboxSpec(new_spec);
 		}
-#endif // 0
 	}
 	else if (!new_spec)
 		HandleMemoryFailure();
@@ -1497,6 +1484,10 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
 		GetServerStateParser().ResetFlagInfo(0);
 }
 
+void nsImapProtocol::UpdatedMailboxSpec(mailbox_spec *aSpec)
+{
+	m_imapMailfolder->UpdateImapMailboxInfo(this, aSpec);
+}
 
 void nsImapProtocol::FolderHeaderDump(PRUint32 *msgUids, PRUint32 msgCount)
 {
@@ -1545,8 +1536,10 @@ void nsImapProtocol::WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRU
     PR_ExitMonitor(m_fetchMsgListMonitor);
 }
 
-
-void nsImapProtocol::NotifyKeyList(PRUint32 *keys, PRUint32 keyCount)
+// libmsg uses this to notify a running imap url about the message headers it should
+// download while opening a folder. Generally, the imap thread will be blocked 
+// in WaitForPotentialListOfMsgsToFetch waiting for this notification.
+NS_IMETHODIMP nsImapProtocol::NotifyHdrsToDownload(PRUint32 *keys, PRUint32 keyCount)
 {
     PR_EnterMonitor(m_fetchMsgListMonitor);
     m_fetchMsgIdList = keys;
@@ -1554,6 +1547,7 @@ void nsImapProtocol::NotifyKeyList(PRUint32 *keys, PRUint32 keyCount)
     m_fetchMsgListIsNew = TRUE;
     PR_Notify(m_fetchMsgListMonitor);
     PR_ExitMonitor(m_fetchMsgListMonitor);
+	return NS_OK;
 }
 
 void nsImapProtocol::FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields)

@@ -20,20 +20,23 @@
 #define nsImapFlagAndUidState_h___
 
 #include "nsMsgKeyArray.h"
+#include "nsIImapFlagAndUidState.h"
 
 const PRInt32 kImapFlagAndUidStateSize =	100;
 
-class nsImapFlagAndUidState {
+class nsImapFlagAndUidState : public nsIImapFlagAndUidState
+{
 public:
     nsImapFlagAndUidState(int numberOfMessages, PRUint16 flags = 0);
     nsImapFlagAndUidState(const nsImapFlagAndUidState& state, PRUint16 flags = 0);
     virtual				 ~nsImapFlagAndUidState();
     
-    PRInt32					 GetNumberOfMessages();
-    PRInt32					 GetNumberOfDeletedMessages();
+    NS_IMETHOD			GetNumberOfMessages(PRInt32 *result);
+    NS_IMETHOD			GetUidOfMessage(PRInt32 zeroBasedIndex, PRUint32 *result);
+    NS_IMETHOD			GetMessageFlags(PRInt32 zeroBasedIndex, imapMessageFlagsType *result);
+
+    PRInt32				GetNumberOfDeletedMessages();
     
-    PRUint32             GetUidOfMessage(PRInt32 zeroBasedIndex);
-    imapMessageFlagsType GetMessageFlags(PRInt32 zeroBasedIndex);
     imapMessageFlagsType GetMessageFlagsFromUID(PRUint32 uid, PRBool *foundIt, PRInt32 *ndx);
 	PRBool				 IsLastMessageUnseen(void);
     void				 ExpungeByIndex(PRUint32 index);

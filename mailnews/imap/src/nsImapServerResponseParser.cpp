@@ -919,6 +919,8 @@ void nsImapServerResponseParser::numeric_mailbox_data()
 
 void nsImapServerResponseParser::msg_fetch()
 {
+	nsresult res;
+
 	// we have not seen a uid response or flags for this fetch, yet
 	fCurrentResponseUID = 0;
 	fCurrentLineContainedFlagInfo = PR_FALSE;
@@ -934,7 +936,7 @@ void nsImapServerResponseParser::msg_fetch()
 		if (!PL_strcasecmp(fNextToken, "FLAGS"))
 		{
 			if (fCurrentResponseUID == 0)
-				fCurrentResponseUID = fFlagState->GetUidOfMessage(fFetchResponseIndex - 1);
+				res = fFlagState->GetUidOfMessage(fFetchResponseIndex - 1, &fCurrentResponseUID);
 
 			fNextToken = GetNextToken();
 			if (ContinueParse())
@@ -976,7 +978,7 @@ void nsImapServerResponseParser::msg_fetch()
 				 )
 		{
 			if (fCurrentResponseUID == 0)
-				fCurrentResponseUID = fFlagState->GetUidOfMessage(fFetchResponseIndex - 1);
+				 fFlagState->GetUidOfMessage(fFetchResponseIndex - 1, &fCurrentResponseUID);
 
 			if (!PL_strcasecmp(fNextToken, "RFC822.HEADER") ||
 	 			!PL_strcasecmp(fNextToken, "BODY[HEADER]"))
@@ -1112,7 +1114,7 @@ void nsImapServerResponseParser::msg_fetch()
 		else if (!PL_strcasecmp(fNextToken, "BODYSTRUCTURE"))
 		{
  			if (fCurrentResponseUID == 0)
- 				fCurrentResponseUID = fFlagState->GetUidOfMessage(fFetchResponseIndex - 1);
+ 				fFlagState->GetUidOfMessage(fFetchResponseIndex - 1, &fCurrentResponseUID);
 			bodystructure_data();
 		}
 		else if (!PL_strncasecmp(fNextToken, "BODY[", 5) && PL_strncasecmp(fNextToken, "BODY[]", 6))
