@@ -297,7 +297,7 @@ pref("dom.disable_window_open_feature.status",      false);
 
 pref("javascript.enabled",                  true);
 pref("javascript.options.strict",           false);
-pref("javascript.options.showInConsole",    true);
+pref("javascript.options.showInConsole",    false);
 
 // advanced prefs
 pref("advanced.always_load_images",         true);
