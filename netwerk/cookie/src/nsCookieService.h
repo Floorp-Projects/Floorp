@@ -212,6 +212,8 @@ class nsCookieService : public nsICookieService
 
     // cached prefs
     PRUint8                       mCookiesPermissions;   // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, P3P}
+    PRUint16                      mMaxNumberOfCookies;
+    PRUint16                      mMaxCookiesPerHost;
 
     // private static member, used to cache a ptr to nsCookieService,
     // so we can make nsCookieService a singleton xpcom object.
