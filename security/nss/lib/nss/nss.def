@@ -378,6 +378,8 @@ CERT_FindCertByNickname;
 CERT_GenTime2FormattedAscii;
 CERT_Hexify;
 CERT_CompareName;
+PK11SDR_Encrypt;
+PK11SDR_Decrypt;
 NSSBase64Decoder_Create;
 NSSBase64Decoder_Destroy;
 NSSBase64Decoder_Update;
