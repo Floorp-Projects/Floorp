@@ -405,42 +405,6 @@ int main(int argc, char **argv)
         LOG(("PR_Bind failed [%d]\n", PR_GetError()));
         return -1;
     }
-#if 0
-        //
-        // failure here indicates that another process may be bound
-        // to the socket already.  let's try connecting to that socket.
-        // if connect fails, then the socket is probably stale.
-        //
-        if (PR_Connect(listen_fd, &addr, PR_SecondsToInterval(2)) == PR_SUCCESS) {
-            //
-            // looks like another process is active.  silently exit.
-            //
-            LOG(("looks like another instance of the daemon is active; sleeping...\n"));
-            //
-            // sleep here to avoid triggering the shutdown procedure in the
-            // other daemon.  10 seconds should be long enough for the client
-            // to have established a connection.
-            //
-            PR_Sleep(PR_SecondsToInterval(10));
-            LOG(("exiting\n"));
-            PR_Close(listen_fd);
-            return 0;
-        }
-        //
-        // OK, the socket is probably stale.
-        //
-        LOG(("socket appears to be stale\n"));
-#ifdef IPC_USE_INET
-        LOG(("waiting for TIMEWAIT period to expire...\n"));
-        PR_Sleep(PR_SecondsToInterval(60));
-#else
-        LOG(("deleting socket at %s\n", socket_path));
-        PR_Delete(socket_path);
-#endif
-        PR_Close(listen_fd);
-        goto start;
-    }
-#endif
 
     InitModuleReg(argv[0]);
 
@@ -454,7 +418,6 @@ int main(int argc, char **argv)
     IPC_ShutdownModuleReg();
 
 #ifndef IPC_USE_INET
-
     ShutdownDaemonDir();
 #endif
 
