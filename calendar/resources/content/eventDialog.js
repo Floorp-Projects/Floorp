@@ -153,14 +153,12 @@ function loadCalendarEventDialog()
       gEvent.recurEnd.setTime( gEndDate );
    }
 
-   var recurEndDate = new Date( gEvent.recurEnd.getTime() );
-   
    //do the stuff for exceptions
    var ArrayOfExceptions = gEvent.getExceptions();
 
    while( ArrayOfExceptions.hasMoreElements() )
    {
-      ExceptionTime = ArrayOfExceptions.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data;
+      var ExceptionTime = ArrayOfExceptions.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data;
       
       var ExceptionDate = new Date( ExceptionTime );
 
@@ -393,7 +391,6 @@ function onOKCommand()
 
    if( gEvent.recur == true )
    {
-      //check that the repeat end time is later than the end time
       if( gEvent.recurUnits == "weeks" )
       {
          /*
@@ -544,22 +541,23 @@ function checkSetTimeDate()
  * doesn't depend on the outcome of any of the other tests
  */
 
-function checkSetRecurTime()
+function checkSetRecur()
 {
-   var recurEndDate = document.getElementById( "repeat-end-date-picker" ).value;
-
-   var recurForever = getFieldValue( "repeat-forever-radio", "selected" );
-
    var recur = getFieldValue( "repeat-checkbox", "checked" );
+   var recurUntil = getFieldValue( "repeat-until-radio", "selected" );
+   var recurUntilDate = document.getElementById("repeat-end-date-picker").value;
    
-   debug(recurForever+ " and "+ recur+ "\n"); 
-   var state = ( recurEndDate.getTime() < gEndDate.getTime() && 
-                 ( recurEndDate.getFullYear() != gEndDate.getFullYear() ||
-                 recurEndDate.getMonth() != gEndDate.getMonth() ||
-                 recurEndDate.getDate() != gEndDate.getDate() )
-                 && !recurForever && recur) ;
-   setRecurError(state);
-   return(!state );
+   var untilDateIsBeforeEndDate =
+     ( recur && recurUntil && 
+       // until date is less than end date if total milliseconds time is less
+       recurUntilDate.getTime() < gEndDate.getTime() && 
+       // if on same day, ignore time of day for now
+       // (may change in future for repeats within a day, such as hourly)
+       !( recurUntilDate.getFullYear() == gEndDate.getFullYear() &&
+          recurUntilDate.getMonth() == gEndDate.getMonth() &&
+          recurUntilDate.getDate() == gEndDate.getDate() ));
+   setRecurError(untilDateIsBeforeEndDate);
+   return(!untilDateIsBeforeEndDate);
 }
 
 function setRecurError(state)
@@ -587,7 +585,7 @@ function setOkButton(state)
 
 function updateOKButton()
 {
-   var checkRecur = checkSetRecurTime();
+   var checkRecur = checkSetRecur();
    var checkTimeDate = checkSetTimeDate();
    setOkButton(checkRecur && checkTimeDate);
    this.sizeToContent();

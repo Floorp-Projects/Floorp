@@ -157,14 +157,12 @@ function loadCalendarEventDialog()
       gEvent.recurEnd.setTime( gDueDate );
    }
 
-   var recurEndDate = new Date( gEvent.recurEnd.getTime() );
-   
    //do the stuff for exceptions
    var ArrayOfExceptions = gEvent.getExceptions();
 
    while( ArrayOfExceptions.hasMoreElements() )
    {
-      ExceptionTime = ArrayOfExceptions.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data;
+      var ExceptionTime = ArrayOfExceptions.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data;
       
       var ExceptionDate = new Date( ExceptionTime );
 
@@ -617,18 +615,41 @@ function onDateTimeCheckbox(checkbox, pickerId)
    updateOKButton();
 }
 
+
 /*
- * For TODOS this ckeck is not defined yet
- * 
- * 
+ * Check that if recur is checked, start date is checked, 
+ * and due date is before recur date.  Sets error messages if not.
  */
 
-function checkSetRecurTime()
+function checkSetRecur()
 {
-    return true;
+   var start = getFieldValue("start-checkbox", "checked");
+   var recur = getFieldValue( "repeat-checkbox", "checked" );
+
+   var recurWithoutStart = !start && recur;
+   setRecurStartError(recurWithoutStart);
+
+   var recurUntil = getFieldValue( "repeat-until-radio", "selected" );
+   var recurUntilDate = document.getElementById("repeat-end-date-picker").value;
+
+   var untilDateIsBeforeDueDate =
+     ( start && recur && recurUntil && 
+       // until date is less than end date if total milliseconds time is less
+       recurUntilDate.getTime() < gDueDate.getTime() && 
+       // if on same day, ignore time of day for now
+       // (may change in future for repeats within a day, such as hourly)
+       !( recurUntilDate.getFullYear() == gDueDate.getFullYear() &&
+          recurUntilDate.getMonth() == gDueDate.getMonth() &&
+          recurUntilDate.getDate() == gDueDate.getDate() ));
+   setRecurUntilError(untilDateIsBeforeDueDate);
+   return(!(recurWithoutStart || untilDateIsBeforeDueDate));
 }
 
-function setRecurError(state)
+function setRecurStartError(state)
+{
+   document.getElementById("repeat-start-warning" ).setAttribute( "collapsed", !state);
+}
+function setRecurUntilError(state)
 {
    document.getElementById("repeat-time-warning" ).setAttribute( "collapsed", !state);
 }
@@ -653,7 +674,7 @@ function setOkButton(state)
 
 function updateOKButton()
 {
-   var checkRecur = checkSetRecurTime();
+   var checkRecur = checkSetRecur();
    var checkTimeDate = checkSetTimeDate();
    setOkButton(checkRecur && checkTimeDate);
    this.sizeToContent();

@@ -398,6 +398,10 @@
              
             <!-- Repeat -->    
                <vbox>
+                  <label id="repeat-start-warning"
+                         class="warning-text-class"
+                         value="&newtodo.repeatstart.warning;"
+                         collapsed="true"/>
                   <hbox id="repeat-box" align="center">
                      <checkbox id="repeat-checkbox"
                                class="proper-align"
