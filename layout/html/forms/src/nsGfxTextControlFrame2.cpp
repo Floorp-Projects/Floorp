@@ -3169,29 +3169,47 @@ nsGfxTextControlFrame2::GetStateType(nsIPresContext* aPresContext, nsIStatefulFr
 NS_IMETHODIMP
 nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  // Construct a pres state.
-  NS_NewPresState(aState); // The addref happens here.
-  
-  nsString theString;
-  nsresult res = GetProperty(nsHTMLAtoms::value, theString);
-  if (NS_FAILED(res))
-    return res;
-    
-  res = nsLinebreakConverter::ConvertStringLineBreaks(theString,
-           nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
-  NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");  
-  
-  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("value"), theString);
+  NS_ENSURE_ARG_POINTER(aState);
+
+  // Get the value string
+  nsString stateString;
+  nsresult res = GetProperty(nsHTMLAtoms::value, stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // Compare to default value, and only save if needed (Bug 62713)
+  nsAutoString defaultStateString;
+  nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
+  if (formControl) {
+    formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
+  }
+
+  if (! stateString.Equals(defaultStateString)) {
+
+    // XXX Should use nsAutoString above but ConvertStringLineBreaks requires mOwnsBuffer!
+    res = nsLinebreakConverter::ConvertStringLineBreaks(stateString,
+             nsLinebreakConverter::eLinebreakPlatform, nsLinebreakConverter::eLinebreakContent);
+    NS_ASSERTION(NS_SUCCEEDED(res), "Converting linebreaks failed!");
+
+    // Construct a pres state and store value in it.
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  }
+
   return res;
 }
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
+  NS_ENSURE_ARG_POINTER(aState);
+
+  // Set the value to the stored state.
   nsAutoString stateString;
-  aState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), stateString);
-  nsresult res = SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
-  return res;
+  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
 }
 
 NS_IMETHODIMP

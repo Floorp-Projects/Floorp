@@ -609,28 +609,48 @@ NS_IMETHODIMP nsGfxCheckboxControlFrame::GetStateType(nsIPresContext* aPresConte
 NS_IMETHODIMP nsGfxCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
                                                 nsIPresState** aState)
 {
-  // Construct a pres state.
-  NS_NewPresState(aState); // The addref happens here.
-  
-  // This string will hold a single item, whether or not we're checked.
-  nsAutoString stateString;
-  GetCheckboxControlFrameState(stateString);
-  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("checked"), stateString);
+  NS_ENSURE_ARG_POINTER(aState);
 
-  return NS_OK;
+  CheckState stateCheck = GetCheckboxState();
+  PRBool defaultStateBool = PR_FALSE;
+  nsresult res = GetDefaultCheckState(&defaultStateBool);
+
+  // Compare to default value, and only save if needed (Bug 62713)
+  // eOn/eOff comparisons used to handle 'mixed' state (alway save)
+  if (!(NS_CONTENT_ATTR_HAS_VALUE == res &&
+        ((eOn == stateCheck && defaultStateBool) ||
+         (eOff == stateCheck && !defaultStateBool)))) {
+
+    // Get the value string
+    nsAutoString stateString;
+    CheckStateToString(stateCheck, stateString);
+
+    // Construct a pres state and store value in it.
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("checked"), stateString);
+  }
+
+  return res;
 }
 
 NS_IMETHODIMP nsGfxCheckboxControlFrame::RestoreState(nsIPresContext* aPresContext,
                                                    nsIPresState* aState)
 {
+  NS_ENSURE_ARG_POINTER(aState);
+
   if (!mDidInit) {
     mPresContext = aPresContext;
     InitializeControl(aPresContext);
     mDidInit = PR_TRUE;
   }
-  nsAutoString string;
-  aState->GetStateProperty(NS_ConvertASCIItoUCS2("checked"), string);
-  SetCheckboxControlFrameState(aPresContext, string);
+
+  // Set the value to the stored state.
+  nsAutoString stateString;
+  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("checked"), stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  SetCheckboxControlFrameState(aPresContext, stateString);
   return NS_OK;
 }
 

@@ -1959,7 +1959,7 @@ nsListControlFrame::Reset(nsIPresContext* aPresContext)
   // Ok, so we were restored, now set the last known selections from the restore state.
   if (hasBeenRestored) {
     nsCOMPtr<nsISupports> supp;
-    mPresState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), getter_AddRefs(supp));
+    mPresState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), getter_AddRefs(supp));
 
     nsresult res = NS_ERROR_NULL_POINTER;
     if (!supp)
@@ -2424,7 +2424,7 @@ nsresult nsListControlFrame::GetPresStateAndValueArray(nsISupportsArray ** aSupp
   nsresult res = NS_ERROR_FAILURE;
   if (mPresState) {
     nsCOMPtr<nsISupports> supp;
-    mPresState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), getter_AddRefs(supp));
+    mPresState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), getter_AddRefs(supp));
     if (supp) {
       res = supp->QueryInterface(NS_GET_IID(nsISupportsArray), (void**)aSuppArray);
       if (NS_FAILED(res)) {
@@ -2439,7 +2439,7 @@ nsresult nsListControlFrame::GetPresStateAndValueArray(nsISupportsArray ** aSupp
   if (createSupportsArray) {
     res = NS_NewISupportsArray(aSuppArray);
     if (NS_SUCCEEDED(res)) {
-      res = mPresState->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), *aSuppArray);
+      res = mPresState->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), *aSuppArray);
     }
   }
   return res;
@@ -3926,38 +3926,56 @@ nsListControlFrame::GetStateType(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsListControlFrame::SaveStateInternal(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  nsCOMPtr<nsISupportsArray> value;
-  nsresult res = NS_NewISupportsArray(getter_AddRefs(value));
-  if (NS_SUCCEEDED(res) && value) {
-    PRInt32 j=0;
-    PRInt32 length = 0;
-    GetNumberOfOptions(&length);
-    PRInt32 i;
-    for (i=0; i<length; i++) {
-      PRBool selected = PR_FALSE;
-      res = GetOptionSelected(i, &selected);
-      if (NS_SUCCEEDED(res) && selected) {
+  PRBool saveState = PR_FALSE;
+  nsresult res = NS_OK;
+
+  // Determine if we need to save state (non-default options selected)
+  PRInt32 i, numOptions = 0;
+  GetNumberOfOptions(&numOptions);
+  for (i = 0; i < numOptions; i++) {
+    nsCOMPtr<nsIContent> content = dont_AddRef(GetOptionContent(i));
+    nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(content));
+    if (option) {
+      PRBool stateBool = IsContentSelected(content);
+      PRBool defaultStateBool = PR_FALSE;
+      res = option->GetDefaultSelected(&defaultStateBool);
+      NS_ENSURE_SUCCESS(res, res);
+
+      if (stateBool != defaultStateBool) {
+        saveState = PR_TRUE;
+        break;
+      }
+    }
+  }
+
+  if (saveState) {
+    nsCOMPtr<nsISupportsArray> value;
+    nsresult res = NS_NewISupportsArray(getter_AddRefs(value));
+    NS_ENSURE_TRUE(value, res);
+
+    PRInt32 j = 0;
+    for (i = 0; i < numOptions; i++) {
+      if (IsContentSelectedByIndex(i)) {
 #ifdef FIX_FOR_BUG_50376 
         res = SetOptionIntoPresState(value, i, j++);
 #else
-        nsCOMPtr<nsISupportsPRInt32> thisVal;
-        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-	                       nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
-        if (NS_SUCCEEDED(res) && thisVal) {
-          res = thisVal->SetData(i);
-	        if (NS_SUCCEEDED(res)) {
-            PRBool okay = value->InsertElementAt((nsISupports *)thisVal, j++);
-	          if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
-          }
-	      }
+        nsCOMPtr<nsISupportsPRInt32> thisVal(do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID));
+        NS_ENSURE_TRUE(thisVal, res);
+
+        res = thisVal->SetData(i);
+        NS_ENSURE_SUCCEEDED(res, res);
+
+        PRBool okay = value->InsertElementAt((nsISupports *)thisVal, j++);
+        NS_ENSURE_TRUE(okay, NS_ERROR_OUT_OF_MEMORY);
 #endif
       }
-      if (!NS_SUCCEEDED(res)) break;
     }
+
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), value);
   }
   
-  NS_NewPresState(aState);
-  (*aState)->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), value);
   return res;
 }
 
@@ -3966,8 +3984,10 @@ NS_IMETHODIMP
 nsListControlFrame::SaveState(nsIPresContext* aPresContext,
                               nsIPresState** aState)
 {
+  NS_ENSURE_ARG_POINTER(aState);
+
   if (mComboboxFrame == nsnull) {
-    return SaveStateInternal(aPresContext, aState);\
+    return SaveStateInternal(aPresContext, aState);
   }
 
   return NS_ERROR_FAILURE;
@@ -3979,6 +3999,10 @@ nsListControlFrame::RestoreStateInternal(nsIPresContext* aPresContext,
                                          nsIPresState* aState)
 {
   mPresState = aState;
+
+  if (mHasBeenInitialized) { // Already called Reset, call again to update selection
+    Reset(aPresContext);
+  }
   return NS_OK;
 }
 
@@ -3987,6 +4011,7 @@ NS_IMETHODIMP
 nsListControlFrame::RestoreState(nsIPresContext* aPresContext,
                                  nsIPresState* aState)
 {
+  NS_ENSURE_ARG_POINTER(aState);
   // ignore requests for saving state that are made directly 
   // to the list frame by the system
   // The combobox frame will call RestoreStateInternal 

@@ -370,15 +370,26 @@ nsGfxRadioControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFr
 NS_IMETHODIMP
 nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  // Construct a pres state.
-  NS_NewPresState(aState); // The addref happens here.
-  
-  // This string will hold a single item, whether or not we're checked.
-  nsAutoString stateString;
-	nsFormControlHelper::GetBoolString(GetRadioState(), stateString);
-  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("checked"), stateString);
+  NS_ENSURE_ARG_POINTER(aState);
 
-  return NS_OK;
+  nsresult res = NS_OK;
+  PRBool stateBool = GetRadioState();
+  PRBool defaultStateBool = GetDefaultChecked();
+
+  // Compare to default value, and only save if needed (Bug 62713)
+  if (stateBool != defaultStateBool) {
+
+    // Get the value string
+    nsAutoString stateString;
+    nsFormControlHelper::GetBoolString(stateBool, stateString);
+
+    // Construct a pres state and store value in it.
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("checked"), stateString);
+  }
+
+  return res;
 }
         
 
@@ -387,6 +398,8 @@ nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** a
 NS_IMETHODIMP
 nsGfxRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
+  NS_ENSURE_ARG_POINTER(aState);
+
   if (!mDidInit) {
     mPresContext = aPresContext;
     InitializeControl(aPresContext);
@@ -394,9 +407,13 @@ nsGfxRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState*
   }
 
   mIsRestored = PR_TRUE;
-  nsAutoString string;
-  aState->GetStateProperty(NS_ConvertASCIItoUCS2("checked"), string);
-  SetProperty(aPresContext, nsHTMLAtoms::checked, string);
+  nsAutoString stateString;
+  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("checked"), stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  res = SetProperty(aPresContext, nsHTMLAtoms::checked, stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
   mRestoredChecked = mChecked;
 
   return NS_OK;

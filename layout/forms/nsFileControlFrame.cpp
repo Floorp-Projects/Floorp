@@ -679,23 +679,39 @@ nsFileControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame:
 NS_IMETHODIMP
 nsFileControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  // Construct a pres state.
-  NS_NewPresState(aState); // The addref happens here.
-  
-  // This string will hold a single item, whether or not we're checked.
-  nsAutoString stateString;
-  GetProperty(nsHTMLAtoms::value, stateString);
-  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("checked"), stateString);
+  NS_ENSURE_ARG_POINTER(aState);
 
-  return NS_OK;
+  // Get the value string
+  nsAutoString stateString;
+  nsresult res = GetProperty(nsHTMLAtoms::value, stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // Compare to default value, and only save if needed (Bug 62713)
+  nsAutoString defaultStateString;
+  nsCOMPtr<nsIDOMHTMLInputElement> formControl(do_QueryInterface(mContent));
+  if (formControl) {
+    formControl->GetDefaultValue(defaultStateString);
+  }
+
+  if (! stateString.Equals(defaultStateString)) {
+
+    // Construct a pres state and store value in it.
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  }
+
+  return res;
 }
 
 NS_IMETHODIMP
 nsFileControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  nsAutoString string;
-  aState->GetStateProperty(NS_ConvertASCIItoUCS2("checked"), string);
-  SetProperty(aPresContext, nsHTMLAtoms::value, string);
-  return NS_OK;
+  NS_ENSURE_ARG_POINTER(aState);
 
+  nsAutoString string;
+  aState->GetStateProperty(NS_LITERAL_STRING("value"), string);
+  SetProperty(aPresContext, nsHTMLAtoms::value, string);
+
+  return NS_OK;
 }
