@@ -67,7 +67,7 @@ public class StoreFactory {
     fSession.setDebug(true);
   }
 
-  public static StoreFactory Instance() {
+  public synchronized static StoreFactory Instance() {
     if (fInstance == null) {
       fInstance = new StoreFactory();
     }
@@ -78,7 +78,7 @@ public class StoreFactory {
     return fSession;
   }
 
-  public ViewedStore[] getStores() {
+  public synchronized ViewedStore[] getStores() {
     if (fStores == null) {
       updateStores();
     }
@@ -86,7 +86,7 @@ public class StoreFactory {
     return fStores;
   }
 
-  ViewedStore createStore(String storename) {
+  synchronized ViewedStore createStore(String storename) {
     ResourceBundle labels = ResourceBundle.getBundle("grendel.ui.Labels");
     URLName urlName = null;
 
@@ -163,7 +163,7 @@ public class StoreFactory {
     return null;
   }
 
-  void updateStores() {
+  synchronized void updateStores() {
     if (fSession == null) {
       getSession();
     }
@@ -200,7 +200,7 @@ public class StoreFactory {
     resVector.copyInto(fStores);
   }
 
-  public void refreshStores() {
+  public synchronized void refreshStores() {
     updateStores();
 
     Object[] listeners = fListeners.getListenerList();
