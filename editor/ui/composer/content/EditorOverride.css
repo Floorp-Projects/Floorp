@@ -43,7 +43,7 @@ a[name] {
   cursor: default;
 }
 
-a:visited, a:active, a[name], a:link img, a:visited img {
+a[name], a:link img, a:visited img {
   -moz-user-input: none;
 }
 
