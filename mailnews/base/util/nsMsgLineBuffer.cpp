@@ -19,6 +19,8 @@
 #include "msgCore.h"
 #include "nsMsgLineBuffer.h"
 
+#include "nsIInputStream.h" // used by nsMsgLineStreamBuffer
+
 nsByteArray::nsByteArray()
 {
 	m_buffer = NULL;
@@ -238,4 +240,108 @@ PRInt32 nsMsgLineBuffer::FlushLastLine()
 		return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// This is a utility class used to efficiently extract lines from an input stream by buffering
+// read but unprocessed stream data in a buffer. 
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
+nsMsgLineStreamBuffer::nsMsgLineStreamBuffer(PRUint32 aBufferSize)
+{
+	NS_PRECONDITION(aBufferSize > 0, "invalid buffer size!!!");
+	m_dataBuffer = nsnull;
+	m_startPos = nsnull;
+
+	// used to buffer incoming data by ReadNextLineFromInput
+	if (aBufferSize > 0)
+	{
+		m_dataBuffer = (char *) PR_CALLOC(sizeof(char) * aBufferSize);
+		m_startPos = m_dataBuffer;
+	}
+
+	m_dataBufferSize = aBufferSize;
+}
+
+nsMsgLineStreamBuffer::~nsMsgLineStreamBuffer()
+{
+	PR_FREEIF(m_dataBuffer); // release our buffer...
+}
+
+// the design for this method has an inherit bug: if the length of the line is greater than the size of m_dataBufferSize, 
+// then we'll never find the next line because we can't hold the whole line in memory. 
+// aInputStream - the input stream we want to read a line from
+// aPauseForMoreData is returned as PR_TRUE if the stream does not yet contain a line and we must wait for more
+// data to come into the stream.
+
+// Note to people wishing to modify this function: Be *VERY CAREFUL* this is a critical function used by all of
+// our mail protocols including imap, nntp, and pop. If you screw it up, you could break a lot of stuff.....
+
+char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRBool &aPauseForMoreData)
+{
+	// try to extract a line from m_inputBuffer. If we don't have an entire line, 
+	// then read more bytes out from the stream. If the stream is empty then wait
+	// on the monitor for more data to come in.
+
+	NS_PRECONDITION(m_startPos && m_dataBufferSize > 0, "invalid input arguments for read next line from input");
+	
+	aPauseForMoreData = PR_FALSE;
+	char * endOfLine = nsnull;
+	PRUint32 numBytesInBuffer = PL_strlen(m_startPos);
+
+	if (numBytesInBuffer > 0) // any data in our internal buffer?
+		endOfLine = PL_strstr(m_startPos, CRLF); // see if we already have a line ending...
+
+	// it's possible that we got here before the first time we receive data from the server
+	// so aInputStream will be nsnull...
+	if (!endOfLine && aInputStream) // get some more data from the server
+	{
+		PRUint32 numBytesInStream = 0;
+		PRUint32 numBytesCopied = 0;
+		aInputStream->GetLength(&numBytesInStream);
+		// if the number of bytes we want to read from the stream, is greater than the number
+		// of bytes left in our buffer, then we need to shift the start pos and its contents
+		// down to the beginning of m_dataBuffer...
+		PRUint32 numFreeBytesInBuffer = (m_dataBuffer + m_dataBufferSize) - (m_startPos + numBytesInBuffer);
+		if (numBytesInStream > numFreeBytesInBuffer)
+		{
+			nsCRT::memcpy(m_dataBuffer, m_startPos, numBytesInBuffer);
+			m_dataBuffer[numBytesInBuffer] = '\0'; // make sure the end of the buffer is terminated
+			m_startPos = m_dataBuffer; // update the new start position
+			// update the number of free bytes in the buffer
+			numFreeBytesInBuffer = m_dataBufferSize - numBytesInBuffer;
+		}
+
+		PRUint32 numBytesToCopy = PR_MIN(numFreeBytesInBuffer, numBytesInStream);
+		// read the data into the end of our data buffer
+		if (numBytesToCopy > 0)
+		{
+			aInputStream->Read(m_startPos + numBytesInBuffer, numBytesToCopy, &numBytesCopied);
+			m_startPos[numBytesInBuffer + numBytesCopied] = '\0';
+		}
+
+		// okay, now that we've tried to read in more data from the stream, look for another end of line 
+		// character 
+		endOfLine = PL_strstr(m_startPos, CRLF);
+	}
+
+	// okay, now check again for endOfLine.
+	if (endOfLine)
+	{
+		endOfLine += 2; // count for CRLF
+		// PR_CALLOC zeros out the allocated line
+		char* newLine = (char*) PR_CALLOC(endOfLine-m_startPos+1);
+		if (!newLine)
+			return nsnull;
+
+		nsCRT::memcpy(newLine, m_startPos, endOfLine-m_startPos); // copy the string into the new line buffer
+
+		// now we need to update the data buffer to go past the line we just read out. 
+		if (PL_strlen(endOfLine) <= 0) // if no more data in the buffer, then just zero out the buffer...
+			m_startPos[0] = '\0';
+		else  // advance 
+			m_startPos = endOfLine; // move us up to the end of the line
+		return newLine;
+	}
+
+	aPauseForMoreData = PR_TRUE;
+	return nsnull; // if we somehow got here. we don't have another line in the buffer yet...need to wait for more data...
+}

@@ -71,5 +71,27 @@ protected:
 	PRBool		m_convertNewlinesP;
 };
 
+// I'm adding this utility class here for lack of a better place. This utility class is similar to nsMsgLineBuffer
+// except it works from an input stream. It is geared towards efficiently parsing new lines out of a stream by storing
+// read but unprocessed bytes in a buffer. I envision the primary use of this to be our mail protocols such as imap, news and
+// pop which need to process line by line data being returned in the form of a proxied stream from the server.
+
+class nsIInputStream;
+
+class nsMsgLineStreamBuffer
+{
+public:
+	nsMsgLineStreamBuffer(PRUint32 aBufferSize); // specify the size of the buffer you want the class to use....
+	virtual ~nsMsgLineStreamBuffer();
+
+	// Caller must free the line returned using PR_Free
+	char * ReadNextLine(nsIInputStream * aInputStream, PRBool &aPauseForMoreData);
+protected:
+
+	char * m_dataBuffer;
+	char * m_startPos;
+	PRUint32 m_dataBufferSize;
+};
+
 
 #endif
