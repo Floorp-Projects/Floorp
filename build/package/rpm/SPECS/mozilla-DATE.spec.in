@@ -188,6 +188,7 @@ BUILD_OFFICIAL=1 ./configure --prefix=%{_prefix} --enable-optimize \
 	--enable-crypto \
 	--disable-xprint \
 	--without-system-nspr \
+	--with-system-zlib \
 	--disable-freetype2
 
 #BUILD_OFFICIAL=1 make -s export
@@ -631,15 +632,15 @@ fi
 %defattr(-,root,root)
 
 %files nspr-devel
-%{prefix}/include/nspr/*
 %defattr(-,root,root)
+%{prefix}/include/nspr/*
 
 %files nss -f /tmp/mozilla-nss.package
 %defattr(-,root,root)
 
 %files nss-devel
-%{prefix}/include/nss/*
 %defattr(-,root,root)
+%{prefix}/include/nss/*
 
 %files mail -f /tmp/mozilla-mail.package
 %defattr(-,root,root)
@@ -670,6 +671,13 @@ fi
 
 
 %changelog
+* Wed Mar 13 2002 Christopher Blizzard <blizzard@redhat.com>
+- Use system zlib in configure line.
+
+* Fri Mar 08 2002 Christopher Blizzard <blizzard@redhat.com>
+- Fix ordering of defattr in new -devel packages so that we don't end
+  up with files with bad permissions.
+
 * Fri Feb 22 2002 Christopher Blizzard <blizzard@redhat.com>
 - Add --disable-freetype2 so that we don't build the freetype code.
 
