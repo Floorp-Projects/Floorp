@@ -21,9 +21,6 @@ MODULE=xpfe\components
 
 DEPTH=..\..\..\..
 
-EXPORTS=\
-	$(NULL)
-
 XPIDL_MODULE=mozfind
 
 XPIDLSRCS=\
