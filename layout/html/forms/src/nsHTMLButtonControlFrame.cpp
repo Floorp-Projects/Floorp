@@ -424,7 +424,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext* aPresContext,
 {
  	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (disp->mVisible)
+	if (disp->mVisible == NS_STYLE_VISIBILITY_VISIBLE)
   {
     nsRect rect(0, 0, mRect.width, mRect.height);
     mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
@@ -453,7 +453,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext* aPresContext,
   aRenderingContext.PushState();
   PRBool clipEmpty;
 
-  aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
+  aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipEmpty);
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
