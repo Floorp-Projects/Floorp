@@ -73,7 +73,6 @@ nsAccessProxy::nsAccessProxy()
 
 nsAccessProxy::~nsAccessProxy()
 {
-  printf("%s","\n\n\n\nBYE BYE BYE BYE \n\n\n\n");
 }
 
 nsAccessProxy *nsAccessProxy::GetInstance()
