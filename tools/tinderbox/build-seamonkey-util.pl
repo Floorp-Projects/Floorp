@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.16 $ ';
+$::UtilsVersion = '$Revision: 1.17 $ ';
 
 package TinderUtils;
 
@@ -556,6 +556,7 @@ sub BuildIt {
             my $make = "$Settings::Make -f client.mk";
             my $targets = $TreeSpecific::checkout_target;
             $targets = $TreeSpecific::checkout_clobber_target unless $Settings::BuildDepend;
+            mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
 
             my $status = run_shell_command "$make $targets";
             if ($status != 0) {
