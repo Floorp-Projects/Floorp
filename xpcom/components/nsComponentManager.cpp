@@ -81,6 +81,13 @@ const char progIDValueName[]="ProgID";
 const char classNameValueName[]="ClassName";
 const char inprocServerValueName[]="InprocServer";
 
+// We define a CID that is used to indicate the non-existence of a
+// progid in the hash table.
+#define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
+    static NS_DEFINE_CID(kNoCID, NS_NO_CID);
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsFactoryEntry
 ////////////////////////////////////////////////////////////////////////////////
@@ -347,16 +354,18 @@ NS_IMPL_ISUPPORTS(nsComponentManagerImpl, nsIComponentManager::GetIID());
 nsresult
 nsComponentManagerImpl::PlatformVersionCheck()
 {
+
 	nsIRegistry::Key xpcomKey;
 	nsresult rv;
 	rv = mRegistry->AddSubtree(nsIRegistry::Common, xpcomKeyName, &xpcomKey);
+
     		
     if (NS_FAILED(rv))
     {        
         return rv;
     }
-    	
-    char *buf;
+
+	char *buf;
     nsresult err = mRegistry->GetString(xpcomKey, versionValueName, &buf);
     autoFree bufAutoFree(buf);
 
@@ -404,7 +413,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
 			}
 		}
         
-        // Recreate XPCOM and CLSID keys
+        // Recreate XPCOM and CLSID keys		
         rv = mRegistry->AddSubtree(nsIRegistry::Common,xpcomKeyName, &xpcomKey);
         if(NS_FAILED(rv))
         {
@@ -697,6 +706,42 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     return NS_OK;
 }
 
+//
+// HashProgID
+//
+nsresult
+nsComponentManagerImpl::HashProgID(const char *aProgID, const nsCID &aClass)
+{
+    if(!aProgID)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+    
+    nsCStringKey key(aProgID);
+    nsCID* cid = (nsCID*) mProgIDs->Get(&key);
+    if (cid)
+    {
+        if (cid == &kNoCID)
+        {
+            // we don't delete this ptr as it's static (ugh)
+        }
+        else
+        {
+            delete cid;
+        }
+    }
+    
+    cid = new nsCID(aClass);
+    if (!cid)
+    {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+        
+    mProgIDs->Put(&key, cid);
+    return NS_OK;
+}
+
+
 nsresult
 nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass) 
 {
@@ -949,9 +994,6 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
     // and then have the construct/destructor of the factory entry
     // keep the ProgID to CID cache up-to-date. However, doing this
     // significantly improves performance, so it'll do for now.
-
-#define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
-    static NS_DEFINE_CID(kNoCID, NS_NO_CID);
 
     nsCStringKey key(aProgID);
     nsCID* cid = (nsCID*) mProgIDs->Get(&key);
@@ -1208,13 +1250,40 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     }
     	
     PR_EnterMonitor(mMon);
-
+	
     nsIDKey key(aClass);
     nsFactoryEntry* entry = new nsFactoryEntry(aClass, aFactory);
     if (entry == NULL)
+    {
+        PR_ExitMonitor(mMon);
         return NS_ERROR_OUT_OF_MEMORY;
+    }
     mFactories->Put(&key, entry);
-    	
+
+
+    // Update the ProgID->CLSID Map
+    if (aProgID)
+    {
+        nsresult rv = HashProgID(aProgID, aClass);
+        if(NS_FAILED(rv))
+        {
+            // Adding progID mapping failed. This would result in
+            // an error in CreateInstance(..progid,..) However
+            // we have already added the mapping of CLSID -> factory
+            // and hence, a CreateInstance(..,CLSID,..) would pass.
+            //
+            // mmh! Should I pass back an error or not.
+            //
+            // thinking..ok we are passing back an error as we
+            // think for people registering with progid,
+            // CreateInstance(..progid..) is the more used one.
+            //
+            PR_ExitMonitor(mMon);
+            PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
+                   ("\t\tFactory register succeeded. PROGID->CLSID mapping failed."));
+            return (rv);
+        }
+    }
     PR_ExitMonitor(mMon);
     	
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
@@ -1306,7 +1375,26 @@ nsComponentManagerImpl::RegisterComponent(const nsCID &aClass,
         mFactories->Put(&key, entry);
     }
     	
- done:	
+ done:
+	
+    if(NS_SUCCEEDED(rv))
+    {
+        // Update the ProgID->CLSID Map if we were successful
+        // If we do this unconditionally, this map could grow into a map
+        // of all component progid. We want to populate the ProgID->CLSID mapping
+        // only if we aren't storing the mapping in the registry. If we are
+        // storing in the registry, on first creation, the mapping will get
+        // added.
+#ifdef USE_REGISTRY
+        if (aPersist != PR_TRUE)
+        {
+            rv = HashProgID(aProgID, aClass);
+        }
+#else /* USE_REGISTRY */
+        rv = HashProgID(aProgID, aClass);
+#endif /* USE_REGISTRY */
+    }
+    
     PR_ExitMonitor(mMon);
     PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
            ("\t\tFactory register %s.",
