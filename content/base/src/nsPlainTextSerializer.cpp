@@ -245,7 +245,7 @@ nsPlainTextSerializer::GetLastBool(const nsVoidArray& aStack)
   if (size == 0) {
     return PR_FALSE;
   }
-  return NS_REINTERPRET_CAST(PRBool, aStack.ElementAt(size-1));
+  return (aStack.ElementAt(size-1) != NS_REINTERPRET_CAST(void*, PR_FALSE));
 }
 
 void
@@ -272,7 +272,7 @@ nsPlainTextSerializer::PopBool(nsVoidArray& aStack)
   PRBool returnValue = PR_FALSE;
   PRUint32 size = aStack.Count();
   if (size > 0) {
-    returnValue = NS_REINTERPRET_CAST(PRBool, aStack.ElementAt(size-1));
+    returnValue = (aStack.ElementAt(size-1) != NS_REINTERPRET_CAST(void*, PR_FALSE));
     aStack.RemoveElementAt(size-1);
   }
   return returnValue;
