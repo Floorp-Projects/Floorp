@@ -438,7 +438,7 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     // We can't use that approach yet, because currently the compositor doesn't
     // support transparent views...
 #if 0
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, this, mStyleContext, PR_TRUE);
 #endif
 
     // Setup url before starting the image load
