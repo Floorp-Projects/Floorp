@@ -155,6 +155,9 @@ ptr_t p;
     PRINT_CALL_CHAIN(ohdr);
 }
 
+#include "call_tree.h"
+
+#define CALL_TREE(ohdr) ((call_tree*)ohdr->oh_ci[0].ci_pc)
 #define NEXT_WORD(ohdr) (ohdr->oh_ci[1].ci_pc)
 #define NEXT_OBJECT(ohdr) (*(oh**)&ohdr->oh_ci[1].ci_pc)
 #define IS_PLAUSIBLE_POINTER(p) ((p >= GC_least_plausible_heap_addr) && (p < GC_greatest_plausible_heap_addr))
@@ -168,6 +171,35 @@ void GC_mark_object(ptr_t p, word mark)
     }
 }
 
+void GC_print_call_tree(call_tree* tree);
+
+/**
+ * Compresses a call tree (prints it upside down as well) by assigning
+ * unique id values to each node when they are printed the first time.
+ * Uses a pseudo XML syntax:
+ *   <c id=i pid=p>function[file,offset]</c> <!-- uncompressed form. -->
+ *   <c id=i/>                               <!-- compressed form. -->
+ */
+static void print_compressed_call_tree(call_tree* tree, unsigned* next_id)
+{
+    call_tree* parent = tree->parent;
+    if (parent) {
+        if (tree->id) {
+            /* id already assigned, print compressed form. */
+            GC_err_printf1("<c id=%d/>\n", tree->id);
+        } else {
+            if (parent->id == 0) {
+                /* parent needs an id as well. */
+                print_compressed_call_tree(parent, next_id);
+            }
+            tree->id = (*next_id)++;
+            GC_err_printf2("<c id=%d pid=%d>", tree->id, parent->id);
+            GC_print_call_tree(tree);
+            GC_err_printf0("</c>\n");
+        }
+    }
+}
+
 /**
  * Starting from specified object, traces through the entire graph of reachable objects.
  * Uses extra word stored in debugging header for alignment purposes.
@@ -177,6 +209,8 @@ void GC_trace_object(ptr_t p, int verbose)
     register oh *head, *scan, *tail;
     register word *wp, *wend;
     word total = 0;
+    call_tree* tree;
+    unsigned next_id = 1;
     DCL_LOCK_STATE;
     
     DISABLE_SIGNALS();
@@ -201,7 +235,7 @@ void GC_trace_object(ptr_t p, int verbose)
             wend = (word*)((word)wp + scan->oh_sz);
             while (wp < wend) {
                 p = (ptr_t) *wp++;
-                if (verbose) GC_err_printf1("\t0x%08lX\n", p);
+                // if (verbose) GC_err_printf1("\t0x%08lX\n", p);
                 if (IS_PLAUSIBLE_POINTER(p)) {
                     p = GC_base(p);
                     if (p && GC_has_debug_info(p)) {
@@ -214,7 +248,11 @@ void GC_trace_object(ptr_t p, int verbose)
                     }
                 }
             }
-            if (verbose) PRINT_CALL_CHAIN(scan);
+            if (verbose) {
+                /* to save space, compress call trees. */
+                tree = CALL_TREE(scan);
+                if (tree) print_compressed_call_tree(tree, &next_id);
+            }
             if (NEXT_WORD(scan) == 1)
                 break;
             scan = NEXT_OBJECT(scan);
@@ -227,6 +265,11 @@ void GC_trace_object(ptr_t p, int verbose)
         while (scan) {
             tail = NEXT_OBJECT(scan);
             NEXT_WORD(scan) = 0;
+            tree = CALL_TREE(scan);
+            while (tree && tree->id) {
+                tree->id = 0;
+                tree = tree->parent;
+            }
             scan = tail;
         }
     }

@@ -835,14 +835,25 @@ void GC_print_callers(struct callinfo info[NFRAMES])
 
 #include "call_tree.h"
 
+static char symbol_name[1024], unmangled_name[1024], file_name[256];
+
+void GC_print_call_tree(call_tree* tree)
+{
+    UInt32 file_offset;
+    if (GC_address_to_source((char*)tree->pc, symbol_name, file_name, &file_offset)) {
+        MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name));
+        GC_err_printf3("%s[%s,%ld]", unmangled_name, file_name, file_offset);
+    } else {
+        pc2name((word)tree->pc, symbol_name, sizeof(symbol_name));
+        MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name));
+        GC_err_printf2("%s(%08X)", unmangled_name, tree->pc);
+    }
+}
+
 void GC_print_callers(struct callinfo info[NFRAMES])
 {
-    register int i;
     UInt32 file_offset;
-    call_tree* current_tree;
-    static char symbol_name[1024], unmangled_name[1024], file_name[256];
-    
-    current_tree = (call_tree*)info[0].ci_pc;
+    call_tree* current_tree = (call_tree*)info[0].ci_pc;
     
     GC_err_printf0("Callers at location:\n");
     while (current_tree && current_tree->pc) {
@@ -865,6 +876,17 @@ void GC_print_callers(struct callinfo info[NFRAMES])
 #define __USE_GNU
 #include <dlfcn.h>
 #include "call_tree.h"
+
+void GC_print_call_tree(call_tree* tree)
+{
+    Dl_info dlinfo;
+    if (dladdr(tree->pc, &dlinfo) >= 0) {
+	unsigned offset = (tree->pc - dlinfo.dli_fbase);
+	GC_err_printf3("%s[%s +0x%08X]", dlinfo.dli_sname, dlinfo.dli_fname, offset);
+    } else {
+	GC_err_printf2("%s(0x%08X)", "(unknown)", tree->pc);
+    }
+}
 
 void GC_print_callers(struct callinfo info[NFRAMES])
 {

@@ -2341,39 +2341,43 @@ asm stack_frame* getStackFrame()
 static call_tree* find_tree(stack_frame* frame)
 {
     /* primordial root of the call tree. */
-    static call_tree root = { 0, 0, 0, 0 };
+    static call_tree root = { 0, 0, 0, 0, 0 };
 
     if ((frame == NULL) || ((word)frame & 0x1))
         return &root;
     else {
         call_tree* parent = find_tree(frame->next);
-        call_tree** link = &parent->children;
-        call_tree* tree = *link;
-        while (tree != NULL) {
-            if (tree->pc == frame->savedLR)
-                break;
-            link = &tree->siblings;
-            tree = *link;
-        }
-        if (tree == NULL) {
-            /* no tree exists for this frame, so we create one. */
-            tree = (call_tree*) GC_scratch_alloc(sizeof(call_tree));
-            if (tree != NULL) {
-                tree->pc = frame->savedLR;
-                tree->parent = parent;
-                tree->siblings = parent->children;
-                parent->children = tree;
-                tree->children = NULL;
+        if (parent != NULL) {
+            call_tree** link = &parent->children;
+            call_tree* tree = *link;
+            while (tree != NULL) {
+                if (tree->pc == frame->savedLR)
+                    break;
+                link = &tree->siblings;
+                tree = *link;
             }
-        } else {
-            if (parent->children != tree) {
-                /* splay tree to front of list. */
-                *link = tree->siblings;
-                tree->siblings = parent->children;
-                parent->children = tree;
+            if (tree == NULL) {
+                /* no tree exists for this frame, so we create one. */
+                tree = (call_tree*) GC_scratch_alloc(sizeof(call_tree));
+                if (tree != NULL) {
+                    tree->pc = frame->savedLR;
+                    tree->id = 0;
+                    tree->parent = parent;
+                    tree->siblings = parent->children;
+                    parent->children = tree;
+                    tree->children = NULL;
+                }
+            } else {
+                if (parent->children != tree) {
+                    /* splay tree to front of list. */
+                    *link = tree->siblings;
+                    tree->siblings = parent->children;
+                    parent->children = tree;
+                }
             }
+            return tree;
         }
-        return tree;
+        return NULL;
     }
 }
 
@@ -2424,43 +2428,47 @@ static stack_frame* getStackFrame()
 
 static call_tree* find_tree(stack_frame* frame)
 {
-  /* primordial root of the call tree. */
-  static call_tree root = { 0, 0, 0, 0 };
+    /* primordial root of the call tree. */
+    static call_tree root = { 0, 0, 0, 0, 0 };
 
-  long pc = (long)frame->pc;
+    long pc = (long)frame->pc;
 
-  if ((pc < 0x08000000) || (pc > 0x7fffffff) || (frame->next < frame)) {
-    return &root;
-  } else {
-    call_tree* parent = find_tree(frame->next);
-    call_tree** link = &parent->children;
-    call_tree* tree = *link;
-    while (tree != NULL) {
-      if (tree->pc == frame->pc)
-	break;
-      link = &tree->siblings;
-      tree = *link;
-    }
-    if (tree == NULL) {
-      /* no tree exists for this frame, so we create one. */
-      tree = (call_tree*) GC_scratch_alloc(sizeof(call_tree));
-      if (tree != NULL) {
-	tree->pc = frame->pc;
-	tree->parent = parent;
-	tree->siblings = parent->children;
-	parent->children = tree;
-	tree->children = NULL;
-      }
+    if ((pc < 0x08000000) || (pc > 0x7fffffff) || (frame->next < frame)) {
+        return &root;
     } else {
-      if (parent->children != tree) {
-	/* splay tree to front of list. */
-	*link = tree->siblings;
-	tree->siblings = parent->children;
-	parent->children = tree;
-      }
+        call_tree* parent = find_tree(frame->next);
+        if (parent != NULL) {
+            call_tree** link = &parent->children;
+            call_tree* tree = *link;
+            while (tree != NULL) {
+                if (tree->pc == frame->pc)
+                    break;
+                link = &tree->siblings;
+                tree = *link;
+            }
+            if (tree == NULL) {
+                /* no tree exists for this frame, so we create one. */
+                tree = (call_tree*) GC_scratch_alloc(sizeof(call_tree));
+                if (tree != NULL) {
+                    tree->pc = frame->pc;
+                    tree->id = 0;
+                    tree->parent = parent;
+                    tree->siblings = parent->children;
+                    parent->children = tree;
+                    tree->children = NULL;
+                }
+            } else {
+                if (parent->children != tree) {
+                    /* splay tree to front of list. */
+                    *link = tree->siblings;
+                    tree->siblings = parent->children;
+                    parent->children = tree;
+                }
+            }
+            return tree;
+        }
+        return NULL;
     }
-    return tree;
-  }
 }
 
 void GC_save_callers(struct callinfo info[NFRAMES]) 
