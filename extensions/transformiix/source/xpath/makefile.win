@@ -59,7 +59,6 @@ CPPSRCS=				\
 	TextExpr.cpp			\
 	UnionExpr.cpp			\
 	VariableRefExpr.cpp		\
-	WildCardExpr.cpp		\
 	XPathNames.cpp			\
 !if defined(MOZ_XSL)
 	nsNodeSet.cpp			\
