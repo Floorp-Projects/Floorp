@@ -318,13 +318,15 @@ function weekEventItemDoubleClick( eventBox, event )
 *    event      - the click event, Not used yet 
 */
 
-function weekViewHourClick( dayIndex, hourNumber, event )
+function weekViewHourClick( event )
 {
+   var dayIndex = event.target.getAttribute( "day" );
+
    newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
 
    gCalendarWindow.setSelectedDate( newDate );
 
-   gCalendarWindow.setSelectedHour( hourNumber );
+   gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
 }
 
 
@@ -332,15 +334,17 @@ function weekViewHourClick( dayIndex, hourNumber, event )
 * Called on double click of an hour box.
 */
 
-function weekViewHourDoubleClick( dayIndex, hourNumber, event )
+function weekViewHourDoubleClick( event )
 {
+   var dayIndex = event.target.getAttribute( "day" );
+
    newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
 
    gCalendarWindow.setSelectedDate( newDate );
 
    // change the date selection to the clicked hour
    
-   gCalendarWindow.setSelectedHour( hourNumber );
+   gCalendarWindow.setSelectedHour( event.target.getAttribute( "hour" ) );
    
    var startDate = gCalendarWindow.weekView.getNewEventDate();
    newEvent( startDate );
