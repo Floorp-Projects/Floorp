@@ -1116,6 +1116,7 @@ void nsChildView::EndDraw()
 void
 nsChildView::Flash(nsPaintEvent &aEvent)
 {
+#if DEBUG
   Rect flashRect;
   if (debug_WantPaintFlashing() && aEvent.rect ) {
     ::SetRect ( &flashRect, aEvent.rect->x, aEvent.rect->y, aEvent.rect->x + aEvent.rect->width,
@@ -1126,6 +1127,7 @@ nsChildView::Flash(nsPaintEvent &aEvent)
     ::Delay(10, &endTicks);
     ::InvertRect ( &flashRect );
   }
+#endif
 }
 
 
@@ -1468,7 +1470,7 @@ void nsChildView::CalcWindowRegions()
 NS_IMETHODIMP nsChildView::CalcOffset(PRInt32 &aX,PRInt32 &aY)
 {
   aX = aY = 0;
-  NSRect bounds = {0, 0, 0, 0};
+  NSRect bounds = {{0, 0}, {0, 0}};
   bounds = [mView convertRect:bounds toView:nil];
   aX += NS_STATIC_CAST(PRInt32, bounds.origin.x);
   aY += NS_STATIC_CAST(PRInt32, bounds.origin.y);
