@@ -39,6 +39,7 @@
 <!ENTITY calendar.label             "Calendar" >
 <!ENTITY calendarPanel.label        "Calendar" >
 <!ENTITY calendar.accesskey         "c" >
+<!ENTITY calendar.publish.label     "Publishing">
 
 <!ENTITY pref.mainbox.label         "General Settings" >
 <!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
@@ -64,3 +65,9 @@
 <!ENTITY pref.categories.help.description   "Use a comma between each category you want to add.">
 
 <!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
+
+<!ENTITY pref.publish.caption        "Publishing Settings">
+<!ENTITY pref.publish.path.label     "Path To Server">
+<!ENTITY pref.publish.filename.label "Remote File Name">
+<!ENTITY pref.publish.username.label "Username">
+<!ENTITY pref.publish.password.label "Password">
