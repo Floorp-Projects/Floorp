@@ -394,6 +394,18 @@ standard_java_packages[] = {
 };
 
 /*
+ * On systems which provide strtok_r we'll use that function to avoid
+ * problems with non-thread-safety.
+ */
+#if HAVE_STRTOK_R
+# define STRTOK_1ST(str, seps, res) strtok_r (str, seps, &res)
+# define STRTOK_OTHER(seps, res) strtok_r (res, seps, &res)
+#else
+# define STRTOK_1ST(str, seps, res) strtok (str, seps)
+# define STRTOK_OTHER(seps, res) strtok (NULL, seps)
+#endif
+
+/*
  * Pre-define a hierarchy of JavaPackage objects.
  * Pre-defining a Java package at initialization time is not necessary, but
  * it will make package lookup faster and, more importantly, will avoid
@@ -414,6 +426,9 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
 
     /* Iterate over all pre-defined Java packages */
     for (package_def = predefined_packages; package_def->name; package_def++) {
+#if HAVE_STRTOK_R
+	char *nextstr;
+#endif
         package_name = path = NULL;
 
         parent_obj = global_obj;
@@ -423,7 +438,7 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
 
         /* Walk the chain of JavaPackage objects to get to the parent of the
            rightmost sub-package in the fully-qualified package name. */
-        for (simple_name = strtok(package_name, "."); simple_name /*1*/; simple_name = strtok(NULL, ".")) {
+        for (simple_name = STRTOK_1ST(package_name, ".", nextstr); simple_name /*1*/; simple_name = STRTOK_OTHER(".", nextstr)) {
             jsval v;
 
             if (!simple_name) {
@@ -444,7 +459,7 @@ pre_define_java_packages(JSContext *cx, JSObject *global_obj,
 
             /* New package objects should only be created at the terminal
                sub-package in a fully-qualified package-name */
-            if (strtok(NULL, ".")) {
+            if (STRTOK_OTHER(".", nextstr)) {
                 JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                                 JSJMSG_BAD_PACKAGE_PREDEF,
                                package_def->name);
