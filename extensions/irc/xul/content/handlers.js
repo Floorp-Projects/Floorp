@@ -1735,7 +1735,8 @@ function my_cprivmsg (e)
     
     e.user.display (e.meat, "PRIVMSG");
     
-    if (e.meat.indexOf (client.prefix) == 0)
+    if ((typeof client.prefix == "string") &&
+        e.meat.indexOf (client.prefix) == 0)
     {
         try
         {
