@@ -40,6 +40,7 @@
 #include "nsIDocument.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "jsapi.h"
@@ -424,38 +425,20 @@ nsXBLDocumentInfo::FlushSkinStylesheets()
 // nsIScriptGlobalObjectOwner methods
 //
 
-NS_IMETHODIMP
-nsXBLDocumentInfo::GetScriptGlobalObject(nsIScriptGlobalObject** _result)
+nsIScriptGlobalObject*
+nsXBLDocumentInfo::GetScriptGlobalObject()
 {
   if (!mGlobalObject) {
     
     mGlobalObject = new nsXBLDocGlobalObject();
     
-    if (!mGlobalObject) {
-      *_result = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-   
+    if (!mGlobalObject)
+      return nsnull;
+
     mGlobalObject->SetGlobalObjectOwner(this); // does not refcount
   }
 
-  *_result = mGlobalObject;
-  NS_ADDREF(*_result);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLDocumentInfo::ReportScriptError(nsIScriptError *errorObject)
-{
-  if (errorObject == nsnull)
-    return NS_ERROR_NULL_POINTER;
-
-  // Get the console service, where we're going to register the error.
-  nsCOMPtr<nsIConsoleService> consoleService  (do_GetService("@mozilla.org/consoleservice;1"));
-
-  if (!consoleService)
-    return NS_ERROR_NOT_AVAILABLE;
-  return consoleService->LogMessage(errorObject);
+  return mGlobalObject;
 }
 
 nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult)
@@ -470,4 +453,3 @@ nsresult NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aRes
   NS_ADDREF(*aResult);
   return NS_OK;
 }
-

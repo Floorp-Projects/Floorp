@@ -117,8 +117,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsISupportsUtils.h"
 #include "nsIFrame.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptGlobalObjectOwner.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsILinkHandler.h"
 #include "nsIDOMDocument.h"
 #include "nsISelectionListener.h"

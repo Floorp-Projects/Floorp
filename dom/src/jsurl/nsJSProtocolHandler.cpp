@@ -167,13 +167,12 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
     }
 
     // So far so good: get the script context from its owner.
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    rv = globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+    nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
 
-    NS_ASSERTION(NS_SUCCEEDED(rv) && global,
+    NS_ASSERTION(global,
                  "Unable to get an nsIScriptGlobalObject from the "
                  "ScriptGlobalObjectOwner!");
-    if (NS_FAILED(rv) || !global) {
+    if (!global) {
         return NS_ERROR_FAILURE;
     }
 

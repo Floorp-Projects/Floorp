@@ -1482,8 +1482,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
 
         nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner =
             do_QueryInterface(protodoc);
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+        nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
         NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
         context = global->GetContext();
@@ -4656,10 +4655,9 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     nsIScriptContext *context = nsnull;
 
     {
-        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner
-          = do_QueryInterface(aPrototypeDocument);
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner =
+            do_QueryInterface(aPrototypeDocument);
+        nsIScriptGlobalObject* global = globalOwner->GetScriptGlobalObject();
         NS_ASSERTION(global != nsnull, "prototype doc has no script global");
         if (! global)
             return NS_ERROR_UNEXPECTED;

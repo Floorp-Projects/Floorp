@@ -1,6 +1,5 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,11 +12,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla browser.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications, Inc.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998-1999
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,34 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef nsIScriptGlobalObjectOwner_h__
+#define nsIScriptGlobalObjectOwner_h__
 
-%{ C++
-#include "nscore.h"
-#include "nsIScriptGlobalObject.h"
-%}
+#include "nsISupports.h"
+
+class nsIScriptGlobalObject;
+
+#define NS_ISCRIPTGLOBALOBJECTOWNER_IID \
+  {0xfd25ca8e, 0x6b63, 0x435f, \
+    { 0xb8, 0xc6, 0xb8, 0x07, 0x68, 0xa4, 0x0a, 0xdc }}
 
 /**
  * Implemented by any object capable of supplying a nsIScriptGlobalObject.
- * The implentor may create the script global object on demand and is
- * allowed (though not expected) to throw it away on release.
+ * The implentor may create the script global object on demand.
  */
 
-interface nsIScriptGlobalObject;
-interface nsIScriptError;
-
-[scriptable, uuid(413E8400-A87F-11d3-AFC6-00A024FFC08C)]
-interface nsIScriptGlobalObjectOwner : nsISupports
+class nsIScriptGlobalObjectOwner : public nsISupports
 {
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECTOWNER_IID)
+
   /**
    * Returns the script global object
    */
-  nsIScriptGlobalObject getScriptGlobalObject();
-
-  /**
-   * Error notification method. Informs the owner that an error 
-   * occurred while a script was being evaluted.
-   *
-   */
-  void reportScriptError(in nsIScriptError aError);
+  virtual nsIScriptGlobalObject* GetScriptGlobalObject() = 0;
 };
+
+#endif /* nsIScriptGlobalObjectOwner_h__ */

@@ -38,7 +38,6 @@
 #include "nsJSEnvironment.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMNode.h"
@@ -238,18 +237,10 @@ NS_ScriptErrorReporter(JSContext *cx,
           }
 
           if (NS_SUCCEEDED(rv)) {
-            nsIScriptGlobalObjectOwner *owner =
-              globalObject->GetGlobalObjectOwner();
-            if (owner) {
-                owner->ReportScriptError(errorObject);
-            } else {
-              // We lack an owner to report this error to, so let's just
-              // report it to the console service so as to not lose it.
-              nsCOMPtr<nsIConsoleService> consoleService =
-                do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
-              if (NS_SUCCEEDED(rv)) {
-                consoleService->LogMessage(errorObject);
-              }
+            nsCOMPtr<nsIConsoleService> consoleService =
+              do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv)) {
+              consoleService->LogMessage(errorObject);
             }
           }
         }
