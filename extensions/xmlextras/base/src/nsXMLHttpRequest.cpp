@@ -955,6 +955,13 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   mContext = ctxt;
   mState |= XML_HTTP_REQUEST_PARSEBODY;
   ChangeState(XML_HTTP_REQUEST_LOADED);
+
+  if (!mDocument) {
+    // We were probably aborted. So no point in attempting to parse
+    // incoming data.
+    mState &= ~XML_HTTP_REQUEST_PARSEBODY;
+  }
+
   if (mOverrideMimeType.IsEmpty()) {
     // If we are not overriding the mime type, we can gain a huge performance
     // win by not even trying to parse non-XML data. This also protects us
@@ -962,10 +969,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     // parser, which can produce unreliable results.
     nsCAutoString type;
     mChannel->GetContentType(type);
-    nsACString::const_iterator start, end;
-    type.BeginReading(start);
-    type.EndReading(end);
-    if (!FindInReadable(NS_LITERAL_CSTRING("xml"), start, end)) {
+    if (type.Find("xml") == -1) {
       mState &= ~XML_HTTP_REQUEST_PARSEBODY;
     }
   } else {
@@ -976,20 +980,45 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
       channel->SetContentType(mOverrideMimeType);
     }
   }
+  
+  if (mState & XML_HTTP_REQUEST_PARSEBODY) {
+    nsCOMPtr<nsIStreamListener> listener;
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    
+    nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
+    if (!document) {
+      return NS_ERROR_FAILURE;
+    }
 
-  return (mState & XML_HTTP_REQUEST_PARSEBODY) ? 
-    mXMLParserStreamListener->OnStartRequest(request,ctxt) : NS_OK;
+    nsresult rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
+                                              loadGroup, nsnull, 
+                                              getter_AddRefs(listener),
+                                              PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mXMLParserStreamListener = listener;
+    return mXMLParserStreamListener->OnStartRequest(request, ctxt);
+  }
+  
+  return NS_OK;
 }
 
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
 NS_IMETHODIMP 
 nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
-  nsCOMPtr<nsIParser> parser(do_QueryInterface(mXMLParserStreamListener));
-  NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
+  nsresult rv = NS_OK;
 
-  nsresult rv = (mState & XML_HTTP_REQUEST_PARSEBODY) ? 
-    mXMLParserStreamListener->OnStopRequest(request, ctxt, status) : NS_OK;
+  nsCOMPtr<nsIParser> parser;
+
+  if (mState & XML_HTTP_REQUEST_PARSEBODY) { 
+    NS_ASSERTION(mXMLParserStreamListener, "null parser stream in parsing mode!!");
+    parser = do_QueryInterface(mXMLParserStreamListener);
+    NS_ABORT_IF_FALSE(parser, "stream listener was expected to be a parser");
+    rv = mXMLParserStreamListener->OnStopRequest(request, ctxt, status);
+  }
+
   mXMLParserStreamListener = nsnull;
   mReadRequest = nsnull;
   mContext = nsnull;
@@ -1007,11 +1036,17 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     // This matches what IE does.
     mChannel = nsnull;
     ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_FALSE); // IE also seems to set this
-  } else if (parser && parser->IsParserEnabled()) {
-    // The parser needs to be enabled for us to safely call RequestCompleted().
-    // If the parser is not enabled, it means it was blocked, by xml-stylesheet PI
-    // for example, and is still building the document. RequestCompleted() must be
-    // called later, when we get the load event from the document.
+  } else if (!parser || parser->IsParserEnabled()) {
+    // If we don't have a parser, we never attempted to parse the
+    // incoming data, and we can proceed to call RequestCompleted().
+    // Alternatively, if we do have a parser, its possible that we
+    // have given it some data and this caused it to block e.g. by a
+    // by a xml-stylesheet PI. In this case, we will have to wait till
+    // it gets enabled again and RequestCompleted() must be called
+    // later, when we get the load event from the document. If the
+    // parser is enabled, it is not blocked and we can still go ahead
+    // and call RequestCompleted() and expect everything to get
+    // cleaned up immediately.
     RequestCompleted();
   } else {
     ChangeState(XML_HTTP_REQUEST_STOPPED, PR_FALSE);
@@ -1271,12 +1306,6 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   }
 
-  // Tell the document to start loading
-  nsCOMPtr<nsIStreamListener> listener;
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(mDocument));
-  if (!document) {
-    return NS_ERROR_FAILURE;
-  }
 
   nsCOMPtr<nsIEventQueue> modalEventQueue;
 
@@ -1299,27 +1328,11 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     GetCurrentContext(getter_AddRefs(mScriptContext));
   }
 
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-
-  rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
-                                   loadGroup, nsnull, 
-                                   getter_AddRefs(listener),
-                                   PR_TRUE);
-
-  if (NS_FAILED(rv)) {
-    if (modalEventQueue) {
-      mEventQService->PopThreadEventQueue(modalEventQueue);
-    }
-    return NS_ERROR_FAILURE;
-  }
-
   // Hook us up to listen to redirects and the like
   mChannel->SetNotificationCallbacks(this);
 
   // Start reading from the channel
   ChangeState(XML_HTTP_REQUEST_SENT);
-  mXMLParserStreamListener = listener;
   rv = mChannel->AsyncOpen(this, nsnull);
 
   if (NS_FAILED(rv)) {
