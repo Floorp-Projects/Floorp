@@ -195,6 +195,10 @@ float offset;
   mDescent = -(NSToCoordRound(offset));
 
   mLeading = 0;
+  mEmHeight = mHeight;
+  mEmAscent = mAscent;
+  mEmDescent = mDescent;
+  mMaxHeight = mHeight;
   mMaxAscent = mAscent;
   mMaxDescent = mDescent;
   mMaxAdvance = mHeight;
@@ -276,6 +280,46 @@ NS_IMETHODIMP
 nsFontMetricsPS :: GetLeading(nscoord &aLeading)
 {
   aLeading = mLeading;
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsFontMetricsPS.h
+ */
+NS_IMETHODIMP
+nsFontMetricsPS :: GetEmHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight;
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsFontMetricsPS.h
+ */
+NS_IMETHODIMP
+nsFontMetricsPS :: GetEmAscent(nscoord &aAscent)
+{
+  aAscent = mEmAscent;
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsFontMetricsPS.h
+ */
+NS_IMETHODIMP
+nsFontMetricsPS :: GetEmDescent(nscoord &aDescent)
+{
+  aDescent = mEmDescent;
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsFontMetricsPS.h
+ */
+NS_IMETHODIMP
+nsFontMetricsPS :: GetMaxHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight;
   return NS_OK;
 }
 
