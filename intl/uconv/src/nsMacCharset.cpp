@@ -53,7 +53,7 @@
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt = 0;
 
-NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
+NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
 nsPlatformCharset::nsPlatformCharset()
 {

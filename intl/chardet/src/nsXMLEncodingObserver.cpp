@@ -75,15 +75,15 @@ nsXMLEncodingObserver::~nsXMLEncodingObserver()
 }
 
 //-------------------------------------------------------------------------
-NS_IMPL_ADDREF ( nsXMLEncodingObserver );
-NS_IMPL_RELEASE ( nsXMLEncodingObserver );
+NS_IMPL_ADDREF ( nsXMLEncodingObserver )
+NS_IMPL_RELEASE ( nsXMLEncodingObserver )
 
 // Use the new scheme
 NS_IMPL_QUERY_INTERFACE4(nsXMLEncodingObserver, 
                          nsIElementObserver, 
                          nsIObserver, 
                          nsIXMLEncodingService, 
-                         nsISupportsWeakReference);
+                         nsISupportsWeakReference)
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsXMLEncodingObserver::Notify(

@@ -150,9 +150,9 @@ RobotSink::~RobotSink()
   }
 }  
 
-NS_IMPL_ADDREF(RobotSink);
+NS_IMPL_ADDREF(RobotSink)
 
-NS_IMPL_RELEASE(RobotSink);
+NS_IMPL_RELEASE(RobotSink)
 
 NS_IMETHODIMP RobotSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {

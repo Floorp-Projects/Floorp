@@ -40,7 +40,7 @@
 // are still running in their own thread, and reference counting takes place within
 // that thread, we need to reference and de-reference outselves atomically.
 // See BugZilla Bug# 92793
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
 nsPlatformCharset::nsPlatformCharset()
 {

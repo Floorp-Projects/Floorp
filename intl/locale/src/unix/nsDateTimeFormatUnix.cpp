@@ -50,7 +50,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatUnix, nsIDateTimeFormat);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatUnix, nsIDateTimeFormat)
 
 // init this interface to a specified locale
 nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)

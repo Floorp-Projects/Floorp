@@ -58,7 +58,7 @@ nsULE::~nsULE() {
   // No data to cleanup.
 }
 
-NS_IMPL_ISUPPORTS1(nsULE, nsILE);
+NS_IMPL_ISUPPORTS1(nsULE, nsILE)
 
 /* Caller needs to ensure that GetEngine is called with valid state */
 PangoliteEngineShape* 

@@ -51,7 +51,7 @@
 #include "nsCharsetAlias.h"
 
 //--------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias);
+NS_IMPL_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias)
 
 //--------------------------------------------------------------
 nsCharsetAlias2::nsCharsetAlias2()

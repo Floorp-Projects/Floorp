@@ -154,7 +154,7 @@ nsImageXlib::~nsImageXlib()
   
 }
 
-NS_IMPL_ISUPPORTS1(nsImageXlib, nsIImage);
+NS_IMPL_ISUPPORTS1(nsImageXlib, nsIImage)
 
 nsresult nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
                            PRInt32 aDepth, nsMaskRequirements aMaskRequirements)

@@ -55,8 +55,8 @@ NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
-NS_IMPL_ADDREF  (  nsLWBreakerFImp );
-NS_IMPL_RELEASE (  nsLWBreakerFImp );
+NS_IMPL_ADDREF  (  nsLWBreakerFImp )
+NS_IMPL_RELEASE (  nsLWBreakerFImp )
 
 nsresult
 nsLWBreakerFImp::QueryInterface(REFNSIID aIID, void** aInstancePtr)

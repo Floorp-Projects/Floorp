@@ -325,7 +325,7 @@ nsLocaleService::~nsLocaleService(void)
 	if (mApplicationLocale) mApplicationLocale->Release();
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleService, nsILocaleService);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleService, nsILocaleService)
 
 NS_IMETHODIMP
 nsLocaleService::NewLocale(const PRUnichar *aLocale, nsILocale **_retval)

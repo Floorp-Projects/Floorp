@@ -306,7 +306,7 @@ IsLoadableDTD(const nsCatalogData* aCatalogData, nsCOMPtr<nsIURI>* aDTD)
 
 NS_IMPL_ISUPPORTS2(nsExpatDriver,
                    nsITokenizer,
-                   nsIDTD);
+                   nsIDTD)
 
 nsresult 
 NS_NewExpatDriver(nsIDTD** aResult) { 

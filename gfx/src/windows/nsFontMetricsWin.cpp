@@ -247,7 +247,7 @@ public:
   virtual ~nsFontCleanupObserver() {}
 };
 
-NS_IMPL_ISUPPORTS1(nsFontCleanupObserver, nsIObserver);
+NS_IMPL_ISUPPORTS1(nsFontCleanupObserver, nsIObserver)
 
 NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
 {

@@ -57,7 +57,7 @@ nsBlender::~nsBlender()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender);
+NS_IMPL_ISUPPORTS1(nsBlender, nsIBlender)
 
 //------------------------------------------------------------
 

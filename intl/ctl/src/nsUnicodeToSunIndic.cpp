@@ -26,8 +26,8 @@
 #include "nsULE.h"
 #include "nsUnicodeToSunIndic.h"
 
-NS_IMPL_ADDREF(nsUnicodeToSunIndic);
-NS_IMPL_RELEASE(nsUnicodeToSunIndic);
+NS_IMPL_ADDREF(nsUnicodeToSunIndic)
+NS_IMPL_RELEASE(nsUnicodeToSunIndic)
 
 PRInt32
 nsUnicodeToSunIndic::Itemize(const PRUnichar* aSrcBuf, PRInt32 aSrcLen, textRunList *aRunList) 

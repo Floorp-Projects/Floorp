@@ -82,15 +82,15 @@ nsMetaCharsetObserver::~nsMetaCharsetObserver()
 }
 
 //-------------------------------------------------------------------------
-NS_IMPL_ADDREF ( nsMetaCharsetObserver );
-NS_IMPL_RELEASE ( nsMetaCharsetObserver );
+NS_IMPL_ADDREF ( nsMetaCharsetObserver )
+NS_IMPL_RELEASE ( nsMetaCharsetObserver )
 
 // Use the new scheme
 NS_IMPL_QUERY_INTERFACE4(nsMetaCharsetObserver, 
                          nsIElementObserver, 
                          nsIObserver, 
                          nsIMetaCharsetService, 
-                         nsISupportsWeakReference);
+                         nsISupportsWeakReference)
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(

@@ -167,7 +167,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   }
 
   return NS_OK;
-};
+}
 
 
 nsresult nsCollationUnix::CompareString(const nsCollationStrength strength,

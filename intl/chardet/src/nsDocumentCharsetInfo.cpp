@@ -44,7 +44,7 @@
 
 // XXX doc me
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDocumentCharsetInfo, nsIDocumentCharsetInfo);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDocumentCharsetInfo, nsIDocumentCharsetInfo)
 
 nsDocumentCharsetInfo::nsDocumentCharsetInfo() 
 {
