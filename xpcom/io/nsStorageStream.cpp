@@ -458,9 +458,10 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
             PRUint32 available = mStorageStream->mLogicalLength - mLogicalCursor;
             if (!available)
                 goto out;
-	    
+
             mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(mSegmentNum++);
             mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize, available);
+            availableInSegment = mSegmentEnd - mReadCursor;
         }
 	
         count = PR_MIN(availableInSegment, remainingCapacity);
