@@ -18,6 +18,11 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * jce2@po.cwru.edu <Jason Eager>: Added pref to turn on/off 
+ *                                 syntax hilighting in view source
+ *                                 window.
+ *                                
+ * 
  */
 
 /**
@@ -43,7 +48,7 @@
 #endif
 
 #define VIEW_SOURCE_HTML
-//#define VIEW_SOURCE_COLORING
+#define VIEW_SOURCE_COLORING
 
 #include "nsIDTDDebug.h"
 #include "nsViewSourceHTML.h"
@@ -59,6 +64,15 @@
 #ifdef VIEW_SOURCE_HTML
 #include "nsHTMLEntities.h"
 #endif // VIEW_SOURCE_HTML
+
+#ifdef VIEW_SOURCE_COLORING
+// For Coloring pref only
+// If we aren't going to define it, then should save on bloat.
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+#endif // VIEW_SOURCE_COLORING
+
 #include "COtherDTD.h"
 
 #include "prenv.h"  //this is here for debug reasons...
@@ -982,6 +996,13 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRIn
   nsresult result=NS_OK;
 
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
+#ifdef VIEW_SOURCE_COLORING
+  // This determines the value of the boolean syntax_highlight preference.
+  PRBool syntaxHilight = PR_FALSE;
+  NS_WITH_SERVICE(nsIPref, thePrefsService, kPrefCID, &result);
+  if (NS_SUCCEEDED(result) && thePrefsService)
+      thePrefsService->GetBoolPref("browser.view_source.syntax_highlight", &syntaxHilight);
+#endif // VIEW_SOURCE_COLORING
 
 #ifdef VIEW_SOURCE_HTML
   if (kBeforeText[aTagType][0] != 0) {
@@ -992,31 +1013,35 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRIn
   }
 
 #ifdef VIEW_SOURCE_COLORING
-  nsAutoString tag;
-  tag.AssignWithConversion("SPAN");
+  nsAutoString tag (NS_LITERAL_STRING("SPAN"));
   CStartToken theTagToken(eHTMLTag_span);
-  theTagToken.SetStringValue(tag);
+  if (syntaxHilight)
+  {
+  	theTagToken.SetStringValue(tag);
+  }
 #endif // VIEW_SOURCE_COLORING
-#else
+#else  // VIEW_SOURCE_HTML *UNDEFINED*
   CToken theTagToken(theXMLTagName);
 #endif // VIEW_SOURCE_HTML
 
 #ifdef VIEW_SOURCE_COLORING
-  theContext.mStartNode.Init(&theTagToken,mLineNumber);
-
+  if (syntaxHilight)
+  {
+  	theContext.mStartNode.Init(&theTagToken,mLineNumber);
 #ifdef VIEW_SOURCE_HTML
-  nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
-  if(theAllocator) {
-    CAttributeToken* theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString(kElementStyles[aTagType]));
-    nsString& theKey=theAttr->GetKey();
-    theKey=NS_ConvertToString("style");
-    theContext.mStartNode.AddAttribute(theAttr);
-  }
+    nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
+    if(theAllocator) {
+      CAttributeToken* theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString(kElementStyles[aTagType]));
+      nsString& theKey=theAttr->GetKey();
+      theKey=NS_ConvertToString("style");
+      theContext.mStartNode.AddAttribute(theAttr);
+    }
 #endif // VIEW_SOURCE_HTML
 
   STOP_TIMER();
 
   mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
+  }
 #endif // VIEW_SOURCE_COLORING
 
 #ifdef rickgdebug
@@ -1042,11 +1067,14 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRIn
 
 #ifdef VIEW_SOURCE_HTML
 #ifdef VIEW_SOURCE_COLORING
-  theContext.mStartNode.ReleaseAll(); 
-  CEndToken theEndToken(eHTMLTag_span);
-  theEndToken.SetStringValue(tag);
-  theContext.mEndNode.Init(&theEndToken,mLineNumber);
-  mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
+  if (syntaxHilight)
+  {
+    theContext.mStartNode.ReleaseAll(); 
+    CEndToken theEndToken(eHTMLTag_span);
+    theEndToken.SetStringValue(tag);
+    theContext.mEndNode.Init(&theEndToken,mLineNumber);
+    mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
+  }
 #endif // VIEW_SOURCE_COLORING
   if (kAfterText[aTagType][0] != 0) {
     nsAutoString afterText;
