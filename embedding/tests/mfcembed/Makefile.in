@@ -54,6 +54,7 @@ REQUIRES = \
 CPPSRCS		= \
 		MfcEmbed.cpp     \
 		BrowserFrm.cpp   \
+		EditorFrm.cpp 	\
 		BrowserFrameGlue.cpp   \
 		BrowserView.cpp \
 		BrowserImpl.cpp \
