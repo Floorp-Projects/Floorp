@@ -257,7 +257,9 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
  
   nsIFileWidget *fileWidget = nsnull;
   
-  nsString title; title.AssignWithConversion("File Upload");
+  nsString title; 
+  nsFormControlHelper::GetLocalizedString("FileUpload", title);
+
   nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
   
   if (fileWidget) {
