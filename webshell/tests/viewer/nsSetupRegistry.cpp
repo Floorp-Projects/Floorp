@@ -27,7 +27,6 @@
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
-#include "nsIThrobber.h"
 
 #include "nsParserCIID.h"
 #include "nsDOMCID.h"
@@ -179,7 +178,6 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 // WEB
 static NS_DEFINE_IID(kCWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_IID(kCThrobberCID, NS_THROBBER_CID);
 
 // PREF
 static NS_DEFINE_CID(kCPrefCID, NS_PREF_CID);
@@ -381,7 +379,6 @@ NS_SetupRegistry()
   // WEB
   nsComponentManager::RegisterComponentLib(kCWebShellCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDocLoaderServiceCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCThrobberCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
 
   // PREF
   nsComponentManager::RegisterComponentLib(kCPrefCID, "Preferences Services", "component://netscape/preferences", PREF_DLL, PR_FALSE, PR_FALSE);
