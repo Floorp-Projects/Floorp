@@ -71,8 +71,13 @@ endif
 # Migrate other platforms here after testing
 #
 ifneq (,$(filter Linux,$(OS_ARCH)))
+# Linux/x86-64
+ifeq (x86_64,$(OS_TEST))
+CPPSRCS		:= xptcinvoke_x86_64_linux.cpp xptcstubs_x86_64_linux.cpp
+else
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_gcc_x86_unix.cpp xptcstubs_gcc_x86_unix.cpp
+endif
 endif
 endif
 # IA64 Linux
