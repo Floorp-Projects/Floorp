@@ -19,4 +19,30 @@ DEPTH=..\..\..\..
 
 DIRS= en-US
 
+#
+# PLS DO NOT edit the following locale block;
+#     talk to tao@netscape.com first, thanks!
+#
+# locale: begin
+CHROME_DIR          = addressbook
+CHROME_L10N_DIR     = locale
+CHROME_SOURCE_DIR   = $(srcdir)
+
+DA_DK=1
+!ifdef DA_DK
+CHROME_L10N = $(CHROME_L10N)\
+	.\da-DK\abAddressBookNameDialog.dtd \
+	.\da-DK\abCardOverlay.dtd \
+	.\da-DK\abCardViewOverlay.dtd \
+	.\da-DK\abDirTreeOverlay.dtd \
+	.\da-DK\abMainWindow.dtd \
+	.\da-DK\abNewCardDialog.dtd \
+	.\da-DK\abResultsTreeOverlay.dtd \
+	.\da-DK\abSelectAddressesDialog.dtd \
+	$(NULL)
+!endif
+#
+# locale: end
+#
+
 include <$(DEPTH)\config\rules.mak>
