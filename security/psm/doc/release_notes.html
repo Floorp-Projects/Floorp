@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.72 [en] (WinNT; I) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.73 [en] (WinNT; U) [Netscape]">
    <meta name="Author" content="Sean Cotter">
    <title>Personal Security Manager Release Notes</title>
 </head>
@@ -22,7 +22,7 @@ Release 1.2</h2></center>
 
 <center>
 <h2>
-6/19/2000</h2></center>
+6/26/2000</h2></center>
 
 <center>
 <hr WIDTH="100%"></center>
@@ -88,6 +88,14 @@ Security Certificate window.</li>
 <li>
 This release includes support for the Netscape 6 Password Manager. For
 information about this feature, see <a href="http://home.netscape.com/eng/mozilla/ns6/relnotes/pv6-2.html">http://home.netscape.com/eng/mozilla/ns6/relnotes/pv6-2.html</a>.</li>
+
+<li>
+This release works with Netscape 6 or Communicator 4.7x (but not both at
+the same time) on Windows 95/98/NT without requiring any changes to the
+directory <tt>C:\Program Files\Common Files\Netscape Shared\Security\</tt>.
+Earlier releases required an existing Security directory (created for the
+Communicator 4.7x version of Personal Security Manager) to be renamed before
+installing Netscape 6 (or PSM for Mozilla), and vice versa.</li>
 </ul>
 
 <hr WIDTH="100%">
@@ -116,37 +124,7 @@ JavaScript is turned on.</li>
 
 <h3>
 Installing on Windows 95/98/NT</h3>
-<b>Important note for Mozilla and Netscape 6 users:</b> The Personal Security
-Manager 1.2 binaries for use with Communicator 4.x differ from the Personal
-Security Manager 1.2 beta binaries available for Mozilla at <a href="http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html">Netscape
-PSM for Mozilla</a> and from the Personal Security Manager 1.01 binaries
-that ship with Netscape 6 PR1. As a result, if you are running Windows
-95/98/NT and you have already installed Netscape 6 or PSM for Mozilla,
-you should rename the Security directory containing the PSM binaries before
-you install Personal Security Manager 1.2 for Communicator 4.7x (and vice
-versa--if you have installed Netscape 6 or Personal Security Manager 1.1&nbsp;
-for Mozilla, you should rename the Security directory before installing
-Personal Security Manager 1.2 for Communicator).
-<p>On Windows systems, the Personal Security Manager files are located
-in <tt>C:\Program Files\Common Files\Netscape Shared\Security\</tt>. If
-the Security directory already exists, rename it before installing a second
-version of Personal Security Manager (whether directly or as part of a
-Netscape 6 installation). For example, if you already have Netscape 6 installed
-and you want to install Personal Security Manager for Communicator 4.7x,
-rename the Security directory before beginning installation. A new Security
-directory will be created during installation. When you are ready to run
-Communicator 4.7x again, you must rename the new Security directory and
-restore the name of the original directory to Security.
-<p>This incompatibility between releases of Personal Security Manager will
-disappear in future releases. It is not a problem on Unix platforms.
-<p><b>Important note for Personal Security Manager 1.0 users:</b> If you
-are currently using release 1.0 of Personal Security Manager, you should
-delete the <tt>psm</tt> directory before installing release 1.2. The <tt>psm</tt>
-directory required for release 1.0 and earlier was located in the Netscape
-program directory on Windows 95/98/NT (default location <tt>C:\Program
-Files\Netscape\Communicator\Program</tt>), and in the directory where the
-Netscape executable resides on Unix.
-<p>To install Personal Security Manager on Windows 95/98/NT, save the file
+To install Personal Security Manager on Windows 95/98/NT, save the file
 in a convenient location with the specified filename, then drag the file's
 icon into a Navigator window (that is, a browser window displayed by Communicator
 4.7 or later). Dropping the file's icon over the browser window initiates
@@ -157,8 +135,13 @@ the Personal Security Manager files in the directory
 <tt>C:\Program Files\Common
 Files\Netscape Shared\Security\</tt> and adds the file <tt>cmnav.dll</tt>
 in the directory <tt>C:\Program Files\Netscape\Communicator\Program</tt>.
-<p><b>Important:</b> On Windows NT, you must have administrator privileges
-to install Personal Security Manager using SmartUpdate.
+<p><b>Windows NT users:</b> On Windows NT, you must have administrator
+privileges to install Personal Security Manager using SmartUpdate.
+<p><b>Mozilla and Netscape 6 users:</b> Personal Security Manager 1.2 works
+on Windows with Mozilla, Netscape 6, and Communicator--but not when any
+of these browsers are running at the same time. For example, you must exit
+Netscape 6 before launching Communicator with Personal Security Manager
+1.2 enabled.
 <h3>
 Installing on Unix</h3>
 Before you install Personal Security Manager on Unix, you must be logged
