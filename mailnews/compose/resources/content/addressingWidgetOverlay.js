@@ -62,7 +62,14 @@ function Recipients2CompFields(msgCompFields)
 	    	fieldValue = inputField.value;
 	    	if (fieldValue != "")
 	    	{
-	    		switch (awGetPopupElement(i).selectedItem.getAttribute("data"))
+			var data = "addr_to";
+			try {
+				data = awGetPopupElement(i).selectedItem.getAttribute("data");
+			}
+			catch (ex) {
+				dump("failed: " + ex + "\n");
+			}
+			switch (data)
 	    		{
 	    			case "addr_to"			: addrTo += to_Sep + fieldValue; to_Sep = ",";					break;
 	    			case "addr_cc"			: addrCc += cc_Sep + fieldValue; cc_Sep = ",";					break;
