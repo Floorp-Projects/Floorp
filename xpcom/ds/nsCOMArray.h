@@ -53,22 +53,8 @@ protected:
     nsCOMArray_base(PRInt32 aCount) : mArray(aCount) {}
     nsCOMArray_base(const nsCOMArray_base& other);
 
-    nsISupports* ObjectAt(PRInt32 aIndex) const {
-        return NS_STATIC_CAST(nsISupports*, mArray.ElementAt(aIndex));
-    }
-    
-    nsISupports* operator[](PRInt32 aIndex) const {
-        return ObjectAt(aIndex);
-    }
-
     PRInt32 IndexOf(nsISupports* aObject) {
         return mArray.IndexOf(aObject);
-    }
-
-    // override nsVoidArray stuff so that they can be accessed by
-    // consumers of nsCOMArray
-    PRInt32 Count() const {
-        return mArray.Count();
     }
 
     PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData) {
@@ -85,7 +71,22 @@ protected:
     PRBool RemoveObject(nsISupports *aObject);
     PRBool RemoveObjectAt(PRInt32 aIndex);
 
- private:
+public:
+    // override nsVoidArray stuff so that they can be accessed by
+    // consumers of nsCOMArray
+    PRInt32 Count() const {
+        return mArray.Count();
+    }
+
+    nsISupports* ObjectAt(PRInt32 aIndex) const {
+        return NS_STATIC_CAST(nsISupports*, mArray.ElementAt(aIndex));
+    }
+    
+    nsISupports* operator[](PRInt32 aIndex) const {
+        return ObjectAt(aIndex);
+    }
+
+private:
     
     // the actual storage
     nsVoidArray mArray;

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsArray.h"
+#include "nsArrayEnumerator.h"
 
 // used by IndexOf()
 struct findIndexOfClosure
@@ -98,7 +99,7 @@ nsArray::IndexOf(PRUint32 aStartIndex, nsISupports* aElement,
 NS_IMETHODIMP
 nsArray::Enumerate(nsISimpleEnumerator **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_NewArrayEnumerator(aResult, NS_STATIC_CAST(nsIArray*, this));
 }
 
 // nsIMutableArray implementation
@@ -160,7 +161,7 @@ NS_NewArray(nsIArray** aResult)
 }
 
 nsresult
-NS_NewArray(const nsCOMArray_base& aBaseArray, nsIArray** aResult)
+NS_NewArray(nsIArray** aResult, const nsCOMArray_base& aBaseArray)
 {
     nsArray* arr = new nsArray(aBaseArray);
     if (!arr) return NS_ERROR_OUT_OF_MEMORY;

@@ -36,53 +36,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsArray_h__
-#define nsArray_h__
+#ifndef nsArrayEnumerator_h__
+#define nsArrayEnumerator_h__
+
+// enumerator implementation for nsIArray
 
 #include "nsIArray.h"
 #include "nsCOMArray.h"
+#include "nsISimpleEnumerator.h"
+#include "nsCOMPtr.h"
 
-#define NS_ARRAY_CLASSNAME \
-  "nsIArray implementation"
-
-// {35C66FD1-95E9-4e0a-80C5-C3BD2B375481}
-#define NS_ARRAY_CID \
-{ 0x35c66fd1, 0x95e9, 0x4e0a, \
-  { 0x80, 0xc5, 0xc3, 0xbd, 0x2b, 0x37, 0x54, 0x81 } }
-
-
-// create a new, empty array
-nsresult NS_COM
-NS_NewArray(nsIArray** aResult);
-
-// The resulting array will hold an owning reference to every element
-// in the original nsCOMArray<T>. This also means that any further
-// changes to the original nsCOMArray<T> will not affect the new
-// array, and that the original array can go away and the new array
-// will still hold valid elements.
-nsresult NS_COM
-NS_NewArray(nsIArray** aResult, const nsCOMArray_base& base);
-
-// adapter class to map nsIArray->nsCOMArray
-// do NOT declare this as a stack or member variable, use
-// nsCOMArray instead!
-// if you need to convert a nsCOMArray->nsIArray, see NS_NewArray above
-class nsArray : public nsIMutableArray
+class NS_COM nsSimpleArrayEnumerator : public nsISimpleEnumerator
 {
 public:
-    nsArray() { NS_INIT_ISUPPORTS(); }
-    nsArray(const nsCOMArray_base& aBaseArray) : mArray(aBaseArray)
-    { NS_INIT_ISUPPORTS(); }
-    
-    virtual ~nsArray();
-
+    // nsISupports interface
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIARRAY
-    NS_DECL_NSIMUTABLEARRAY
 
-private:
-    nsCOMArray<nsISupports> mArray;
+    // nsISimpleEnumerator interface
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    // nsSimpleArrayEnumerator methods
+    nsSimpleArrayEnumerator(nsIArray* aValueArray) :
+        mValueArray(aValueArray), mIndex(0) {}
+    virtual ~nsSimpleArrayEnumerator(void) {}
+
+protected:
+    nsCOMPtr<nsIArray> mValueArray;
+    PRUint32 mIndex;
 };
 
+
+// Create an enumerator for an existing nsIArray implementation
+// The enumerator holds an owning reference to the array.
+extern NS_COM nsresult
+NS_NewArrayEnumerator(nsISimpleEnumerator* *result,
+                      nsIArray* array);
+
+
+// create an enumerator for an existing nsCOMArray<T> implementation
+// The enumerator will hold an owning reference to each ELEMENT in
+// the array. This means that the nsCOMArray<T> can safely go away
+// without its objects going away.
+extern NS_COM nsresult
+NS_NewArrayEnumerator(nsISimpleEnumerator* *aResult,
+                      const nsCOMArray_base& aArray);
 
 #endif
