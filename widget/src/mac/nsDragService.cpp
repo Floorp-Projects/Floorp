@@ -824,10 +824,16 @@ nsDragService :: GetDataForFlavor ( nsISupportsArray* inDragItems, DragReference
               nsMemory::Free(plainTextData);
               plainTextData = nsnull;
             }
+            ScriptCodeRun *scriptCodeRuns = nsnull;
+            PRInt32 scriptRunOutLen;
             rv = nsMacNativeUnicodeConverter::ConvertUnicodetoScript(castedUnicode, 
                                                                      *outDataSize / sizeof(PRUnichar),
                                                                      &plainTextData, 
-                                                                     &plainTextLen);
+                                                                     &plainTextLen,
+                                                                     &scriptCodeRuns,
+                                                                     &scriptRunOutLen);
+            if (scriptCodeRuns)
+              nsMemory::Free(scriptCodeRuns);
           }
           
           if ( plainTextData && *outData ) {

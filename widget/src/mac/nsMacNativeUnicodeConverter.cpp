@@ -29,7 +29,6 @@
 #include <TextUtils.h>
 #include <UnicodeConverter.h>
 #include <Fonts.h>
-#include <Memory>
 
 //-------------------------------------------------------------------------
 //
@@ -103,13 +102,20 @@ nsresult nsMacNativeUnicodeConverter::ConvertScripttoUnicode(ScriptCode aScriptC
 nsresult nsMacNativeUnicodeConverter::ConvertUnicodetoScript(const PRUnichar *aUnicodeStr, 
                                                              PRInt32 aUnicodeStrLen,
                                                              char **aMultibyteStr,
-                                                             PRInt32 *aMultibyteStrlen)
+                                                             PRInt32 *aMultibyteStrlen,
+                                                             ScriptCodeRun **aScriptCodeRuns,
+                                                             PRInt32 *aScriptCodeRunLen)
 {
   NS_ENSURE_ARG(aUnicodeStr);
   NS_ENSURE_ARG(aMultibyteStr);
+  NS_ENSURE_ARG(aMultibyteStrlen);
+  NS_ENSURE_ARG(aScriptCodeRuns);
+  NS_ENSURE_ARG(aScriptCodeRunLen);
   
   *aMultibyteStr = nsnull;
   *aMultibyteStrlen = 0;
+  *aScriptCodeRuns = nsnull;
+  *aScriptCodeRunLen = 0;
   
   // Get a list of installed script.
   ItemCount numberOfScriptCodes = ::GetScriptManagerVariable(smEnabled);
@@ -132,8 +138,10 @@ nsresult nsMacNativeUnicodeConverter::ConvertUnicodetoScript(const PRUnichar *aU
                                               
   ByteCount inputRead;
   ItemCount scriptRunOutLen;
-  std::auto_ptr<ScriptCodeRun> scriptCodeRuns(new ScriptCodeRun[numberOfScriptCodes]);
-  if (!scriptCodeRuns.get()) {
+  ScriptCodeRun *scriptCodeRuns = NS_REINTERPRET_CAST(ScriptCodeRun*,
+                                                      nsMemory::Alloc(sizeof(ScriptCodeRun) * 
+                                                      aUnicodeStrLen));
+  if (!scriptCodeRuns) {
     ::DisposeUnicodeToTextRunInfo(&unicodeToTextInfo);
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -144,6 +152,7 @@ nsresult nsMacNativeUnicodeConverter::ConvertUnicodetoScript(const PRUnichar *aU
   if (!outputStr)
   {
     ::DisposeUnicodeToTextRunInfo(&unicodeToTextInfo);
+    nsMemory::Free(scriptCodeRuns);
     return NS_ERROR_OUT_OF_MEMORY;
   }
   ByteCount outputLen = 0;
@@ -151,9 +160,9 @@ nsresult nsMacNativeUnicodeConverter::ConvertUnicodetoScript(const PRUnichar *aU
   err = ::ConvertFromUnicodeToScriptCodeRun(unicodeToTextInfo,
                                             aUnicodeStrLen * sizeof(UniChar),
                                             (UniChar *) aUnicodeStr,
-                                            kUnicodeUseFallbacksBit | 
+                                            kUnicodeUseFallbacksMask | 
                                             kUnicodeLooseMappingsMask |
-                                            kUnicodeKeepSameEncodingBit,
+                                            kUnicodeTextRunMask,
                                             0,
                                             nsnull,
                                             nsnull,
@@ -162,9 +171,9 @@ nsresult nsMacNativeUnicodeConverter::ConvertUnicodetoScript(const PRUnichar *aU
                                             &inputRead,
                                             &outputLen,
                                             outputStr,
-                                            numberOfScriptCodes,
+                                            aUnicodeStrLen,
                                             &scriptRunOutLen,
-                                            scriptCodeRuns.get()); 
+                                            scriptCodeRuns);
                                                    
   if (outputLen > 0 &&
       (err == noErr ||
@@ -175,6 +184,8 @@ nsresult nsMacNativeUnicodeConverter::ConvertUnicodetoScript(const PRUnichar *aU
     // since this function is called as a fallback
     *aMultibyteStr = (char *) outputStr;
     *aMultibyteStrlen = outputLen;
+    *aScriptCodeRuns = scriptCodeRuns;
+    *aScriptCodeRunLen = scriptRunOutLen;
     err = noErr;
   }
 
