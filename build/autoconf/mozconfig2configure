@@ -74,7 +74,7 @@ ac_echo_options() {
 
 # Main
 #--------------------------------------------------
-_topsrcdir=`dirname $0`
+topsrcdir=`dirname $0`
 ac_options=
 mozconfig_ac_options=
 
@@ -86,7 +86,7 @@ do
   ac_options="$ac_options \"$_opt\""
 done
 
-MOZCONFIG=`$_AUTOCONF_TOOLS_DIR/mozconfig-find $_topsrcdir`
+MOZCONFIG=`$_AUTOCONF_TOOLS_DIR/mozconfig-find $topsrcdir`
 if [ "$MOZCONFIG" ]; then
   . $MOZCONFIG
 fi
