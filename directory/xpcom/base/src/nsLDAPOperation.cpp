@@ -61,6 +61,8 @@ NS_IMETHODIMP
 nsLDAPOperation::Init(nsILDAPConnection *aConnection,
 		      nsILDAPMessageListener *aMessageListener)
 {
+    NS_ENSURE_ARG_POINTER(aConnection);
+
     // so we know that the operation is not yet running (and therefore don't
     // try and call ldap_abandon_ext() on it) or remove it from the queue.
     //
