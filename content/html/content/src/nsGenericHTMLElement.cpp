@@ -393,8 +393,12 @@ nsGenericHTMLElement::GetLocalName(nsAWritableString& aLocalName)
 {
   mNodeInfo->GetLocalName(aLocalName);
 
-  // This doesn't work for XHTML
-  ToUpperCase(aLocalName);
+  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
+    // No namespace, this means we're dealing with a good ol' HTML
+    // element, so uppercase the local name.
+
+    ToUpperCase(aLocalName);
+  }
 
   return NS_OK;
 }
