@@ -42,7 +42,7 @@
 <keyset id="keys">
   <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK()"    />
   <key id="return-key" keycode="VK_RETURN" oncommand="doOK()"    />
-  <key id="esc-key"    keycoce="VK_ESCAPE" oncommand="doCancel()"/>
+  <key id="esc-key"    keycode="VK_ESCAPE" oncommand="doCancel()"/>
 </keyset>
 
 <box orient="vertical" style="margin: 5px;" flex="1">
