@@ -46,7 +46,7 @@ public:
 
     /**
      * Return the number of selected items. For single selection list box this
-     * @returns the number of selected items
+     * @return the number of selected items
      * can be 1 or 0. 
      *
      */
