@@ -119,6 +119,6 @@ sub BuildMozilla()
 		Moz::BuildProject(":mozilla:cmd:macfe:projects:client:Navigator.mcp",   				"Moz PPC App$D");
 	}
 
-
+1;
 
 
