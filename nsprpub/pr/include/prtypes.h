@@ -470,7 +470,11 @@ typedef enum { PR_FAILURE = -1, PR_SUCCESS = 0 } PRStatus;
  */
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
+#if defined(WIN32) || defined(XP_MAC)
+typedef wchar_t PRUnichar;
+#else
 typedef PRUint16 PRUnichar;
+#endif
 #endif
 #endif /* MOZ_UNICODE */
 

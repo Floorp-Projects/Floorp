@@ -46,8 +46,13 @@
  * includes winsock.h, with _WIN32_WINNT undefined.
  */
 
-#ifdef WINNT
+#ifdef WIN32
+#ifdef __MINGW32__
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#elif defined(WINNT)
 #include <winsock.h>
+#endif
 #endif
 
 #include "primpl.h"

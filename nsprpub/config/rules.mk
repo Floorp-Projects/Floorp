@@ -287,7 +287,7 @@ $(NFSPWD):
 
 $(PROGRAM): $(OBJS)
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),WINNT)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	$(CC) $(OBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -314,7 +314,7 @@ ifeq ($(OS_TARGET), OS2)
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	$(IMPLIB) $@ $(SHARED_LIBRARY).def
 endif
-    
+
 $(SHARED_LIBRARY): $(OBJS) $(MAPFILE)
 	@$(MAKE_OBJDIR)
 	rm -f $@
@@ -327,7 +327,7 @@ ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 	$(LD) $(XCFLAGS) -o $@ $(OBJS) -bE:$(OBJDIR)/lib$(LIBRARY_NAME)_syms \
 		-bM:SRE -bnoentry $(OS_LIBS) $(EXTRA_LIBS)
 else	# AIX 4.1
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	$(LINK_DLL) -MAP $(DLLBASE) $(DLL_LIBS) $(EXTRA_LIBS) $(OBJS)
 else
 ifeq ($(OS_ARCH),OS2)
@@ -363,7 +363,11 @@ ifeq ($(OS_TARGET),OS2)
 	$(RC) -DOS2 -r $< $@
 else
 # The resource compiler does not understand the -U option.
-	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$@ $<
+ifdef NS_USE_GCC
+	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) -o $@ $<
+else
+	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$@ $<
+endif # GCC
 endif
 	@echo $(RES) finished
 endif
@@ -377,7 +381,7 @@ endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	$(CCC) -Fo$@ -c $(CCCFLAGS) $<
 else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -392,7 +396,7 @@ WCCFLAGS2 = $(subst -I,-i=,$(WCCFLAGS1))
 WCCFLAGS3 = $(subst -D,-d,$(WCCFLAGS2))
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
 ifeq ($(MOZ_OS2_TOOLS),VACPP)

@@ -69,7 +69,11 @@ LIBRARY_VERSION	= $(MOD_MAJOR_VERSION)
 RELEASE_LIBS = $(TARGETS)
 
 ifeq ($(OS_ARCH),WINNT)
+ifdef NS_USE_GCC
+DLLBASE=-Wl,--image-base -Wl,0x30000000
+else
 DLLBASE=/BASE:0x30000000
+endif
 RES=$(OBJDIR)/plc.res
 RESNAME=plc.rc
 endif # WINNT
@@ -126,7 +130,7 @@ NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
 SH_DATE = $(shell date "+%Y-%m-%d %T")
 SH_NOW = $(shell $(NOW))
 
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	SUF = i64
 else
 	SUF = LL
@@ -146,7 +150,7 @@ $(TINC):
 
 
 $(OBJDIR)/plvrsion.$(OBJ_SUFFIX): plvrsion.c $(TINC)
-ifeq ($(OS_ARCH), WINNT)
+ifeq ($(NS_USE_GCC)_$(OS_ARCH),_WINNT)
 	$(CC) -Fo$@ -c $(CFLAGS) -I$(OBJDIR) $<
 else
 ifeq ($(MOZ_OS2_TOOLS), VACPP)

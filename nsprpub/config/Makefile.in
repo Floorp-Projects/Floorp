@@ -119,7 +119,9 @@ endif
 
 OUTOPTION = -o # end of the line
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
+ifndef NS_USE_GCC
 OUTOPTION = /Fe
+endif
 endif
 
 # Redefine MAKE_OBJDIR for just this directory
