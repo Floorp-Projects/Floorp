@@ -881,7 +881,8 @@ JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
         if(JSVAL_IS_OBJECT(v)){
             JSObject *object = JSVAL_TO_OBJECT(v);
             if(JS_InstanceOf(cx, object, &perlValueClass, NULL)){
-                newSVsv(SvRV(PVGetRef(cx, object))); //__PH__??
+                /* newSVsv(SvRV(PVGetRef(cx, object))); //__PH__?? */
+                *sv = PVGetRef(cx, object);
             }else{
                 if(JS_IsArrayObject(cx, object)){
                     sv_setref_pv(*sv, "JS::Object", (void*)object);
