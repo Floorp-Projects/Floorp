@@ -1,10 +1,11 @@
 
 #ifndef PROJ_PATH
-BASE_PATH = ../../../base
-DOM_PATH = .
+ROOT_PATH = ../../..
+BASE_PATH = $(ROOT_PATH)/base
+NET_PATH  = $(ROOT_PATH)/net 
 #endif
 
-INCLUDE_PATHS = -I$(BASE_PATH) -I. -I-
+INCLUDE_PATHS = -I$(BASE_PATH) -I$(NET_PATH) -I. -I-
 
 
 CC := $(CC) -g $(INCLUDE_PATHS)
