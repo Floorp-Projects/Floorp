@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -19,7 +20,7 @@
 #
 # Contributor(s): Dawn Endico <endico@mozilla.org>
 #                 Jacob Steenhagen <jake@bugzilla.org>
-
+#                 Jouni Heikniemi <jouni@heikniemi.net>
 
 # Keep a record of all cvs updates made from a given directory.
 #
@@ -28,16 +29,20 @@
 # out to. (Probably the second to last entry).
 
 # Because this script lives in contrib, you may want to
-#   ln -s contrib/cvs-update.sh cvs-update
+#   ln -s contrib/cvs-update.pl cvs-update.pl
 # from your bugzilla install directory so you can run
-# the script easily from there (./cvs-update)
+# the script easily from there (./cvs-update.pl)
 
 #DATE=`date +%e/%m/%Y\ %k:%M:%S\ %Z`
-DATE=`date`
-COMMAND="cvs -q update -dP" 
-echo $COMMAND -D \"$DATE\" >> cvs-update.log
-$COMMAND -A
 
+my ($second, $minute, $hour, $day, $month, $year) = gmtime;
+my $date = sprintf("%04d-%02d-%02d %d:%02d:%02dZ",
+                   $year+1900, $month+1, $day, $hour, $minute, $second);
+my $cmd = "cvs -q update -dP";
+open LOG, ">>cvs-update.log" or die("Couldn't open cvs update log!");
+print LOG "$cmd -D \"$date\"\n";
+close LOG;
+system("$cmd -A");
 
 # sample log file
 #cvs update -P -D "11/04/2000 20:22:08 PDT"
