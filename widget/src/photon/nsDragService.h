@@ -72,9 +72,12 @@ public:
 	NS_IMETHOD SetDropData( char *data, PRUint32 tmpDataLen, char *flavorStr );
 	NS_IMETHOD GetRawData( nsISupportsArray* aArrayTransferables, nsISupports **data, PRUint32 *tmpDataLen, char *aflavorStr );
 
+	PRUint32 mActionType;
+
 private:
   PtWidget_t *mDndWidget;
-	PhEvent_t *mDndEvent;
+	static char *mDndEvent;
+	static int mDndEventLen;
 
 	PtTransportCtrl_t *mNativeCtrl;
 	char *mData;
