@@ -72,15 +72,12 @@ var bookmarksDNDObserver = {
       throw Components.results.NS_OK; // don't drag treehead cells.
     if (bookmarksTree.getAttribute("sortActive") == "true")
       throw Components.results.NS_OK; 
-      
-    dump("*** pass\n");  
-      
+          
     var selItems = null;
     if (bookmarksTree.selectedItems.length <= 0)
       selItems = [aEvent.target.parentNode.parentNode];
     else 
       selItems = bookmarksTree.selectedItems;
-    
     aXferData.data = new TransferDataSet();
     for (var i = 0; i < selItems.length; ++i) {
       var currItem = selItems[i];
@@ -95,12 +92,17 @@ var bookmarksDNDObserver = {
                     type != (NC_NS + "Bookmark") && 
                     type != (NC_NS + "Folder"))) 
         throw Components.results.NS_OK;
-      var name = this.getTarget(bookmarksTree.database, currURI, NC_NS + "Name");  
-      name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-
+      var name = this.getTarget(bookmarksTree.database, currURI, NC_NS + "Name");        
       var data = new TransferData();
+      if (name) {
+        name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+        data.addDataForFlavour("text/x-moz-url", currURI + "\n" + name);
+      }
+      else {
+        data.addDataForFlavour("text/x-moz-url", currURI);
+      }
       data.addDataForFlavour("moz/rdfitem", currURI + "\n" + parentURI);
-      data.addDataForFlavour("text/x-moz-url", currURI + "\n" + name);
+
       data.addDataForFlavour("text/unicode", currURI);
       aXferData.data.push(data);
     }
@@ -247,6 +249,7 @@ var bookmarksDNDObserver = {
     for (i = 0; i < numObjects; ++i) {
       var flavourData = aXferData.dataList[i].first;
       nameRequired[i] = false;
+      name[i] = null;
       var data = flavourData.data;
       switch (flavourData.flavour.contentType) {
       case "moz/rdfitem":
