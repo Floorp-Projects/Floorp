@@ -54,7 +54,7 @@ void	 	xpicbProgress(const char* msg, PRInt32 val, PRInt32 max);
 rv = _call;						\
 if (NS_FAILED(rv))				\
 {								\
-	ErrorHandler();				\
+	ErrorHandler(rv);			\
 	return rv;					\
 }
 

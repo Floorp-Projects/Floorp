@@ -105,7 +105,7 @@ InitWelcTxt(void)
 	gControls->ww->welcTxt = TENew( &destRect, &viewRect);
 	if (!gControls->ww->welcTxt)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return;
 	}
 

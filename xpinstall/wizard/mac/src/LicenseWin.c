@@ -66,7 +66,7 @@ ShowLicenseWin(void)
 	}
 	else
 	{
-		ErrorHandler();
+		ErrorHandler(eParam);
 		return;
 	}
 	InitLicTxt();
@@ -121,7 +121,7 @@ InitLicTxt(void)
 	{
 		if (!(text = NewHandle(dataSize)))
 		{
-			ErrorHandler();
+			ErrorHandler(eMem);
 			return;
 		}
 		ERR_CHECK(FSRead(dataRef, &dataSize, *text));
@@ -251,7 +251,7 @@ ShowLogo(Boolean bEraseRect)
 	}
 	
 	if (reserr != noErr)
-		ErrorHandler();
+		ErrorHandler(reserr);
 }
 
 void
@@ -380,7 +380,7 @@ InitScrollBar(ControlHandle sb)
 			currTE = gControls->ww->welcTxt;
 			break;
 		default:
-			ErrorHandler();
+			ErrorHandler(eUnknownDlgID);
 			break;
 	}
 	
@@ -411,7 +411,7 @@ DoScrollProc(ControlHandle theControl, short part)
 				te = *(gControls->ww->welcTxt);
 				break;
 			default:
-				ErrorHandler();
+				ErrorHandler(eUnknownDlgID);
 				break;
 		}
 		

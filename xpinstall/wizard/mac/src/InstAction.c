@@ -44,10 +44,10 @@ pascal void* Install(void* unused)
 #endif /* MIW_DEBUG */
 	SDISTRUCT		sdistruct;
 	Str255			pIDIfname, pModulesDir;
-	StringPtr		coreFile;
-	THz				ourHZ;
+	StringPtr		coreFile = NULL;
+	THz				ourHZ = NULL;
 	Boolean 		isDir = false, bCoreExists = false;
-	GrafPtr			oldPort;
+	GrafPtr			oldPort = NULL;
 
 #ifndef MIW_DEBUG
 	/* get "Temporary Items" folder path */
@@ -61,7 +61,7 @@ pascal void* Install(void* unused)
 		err = FSpDirCreate(&tmpSpec, smSystemScript, &dirID);
 		if (err != noErr)
 		{
-			ErrorHandler();
+			ErrorHandler(err);
 			return (void*)0;
 		}
 	}
@@ -70,7 +70,7 @@ pascal void* Install(void* unused)
 		err = FSpGetDirectoryID( &tmpSpec, &dirID, &isDir );
 		if (!isDir || err!=noErr)
 		{
-			ErrorHandler();
+			ErrorHandler(err);
 			return (void*)0;
 		}
 	}	
@@ -79,7 +79,7 @@ pascal void* Install(void* unused)
 	err = GetCWD(&srcDirID, &srcVRefNum);
 	if (err != noErr)
 	{
-		ErrorHandler();
+		ErrorHandler(err);
 		return (void*)nil;
 	}
 	
@@ -111,7 +111,7 @@ pascal void* Install(void* unused)
 		/* generate idi */
 		if (!GenerateIDIFromOpt(pIDIfname, dirID, vRefNum, &idiSpec))
 		{
-			ErrorHandler();
+			ErrorHandler(err);
 			return (void*) nil;
 		}		
 	
@@ -129,13 +129,11 @@ pascal void* Install(void* unused)
 #else
 		dlErr = SDI_NetInstall(&sdistruct);
 #endif /* SDINST_IS_DLL */
-#ifdef MIW_DEBUG
 		if (dlErr != 0)
 		{
-			ErrorHandler();
+			ErrorHandler(dlErr);
 			return (void*) nil;
 		}
-#endif
 #endif /* MOZILLA */
 
 		SetPort(oldPort);
@@ -185,7 +183,7 @@ pascal void* Install(void* unused)
 			err = ExtractCoreFile(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr) 
 			{
-				ErrorHandler();
+				ErrorHandler(err);
 				if (coreFile)
 					DisposePtr((Ptr)coreFile);
 				return (void*) nil;
@@ -194,7 +192,7 @@ pascal void* Install(void* unused)
 			/* run all .xpi's through XPInstall */
 			err = RunAllXPIs(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr)
-				ErrorHandler();
+				ErrorHandler(err);
 				
 			CleanupExtractedFiles(vRefNum, dirID);
 		}
@@ -450,13 +448,13 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	err = FSMakeFSSpec(vRefNum, dirID, idiName, idiSpec);
 	if ((err != noErr) && (err != fnfErr))
 	{
-		ErrorHandler();
+		ErrorHandler(err);
 		return false;
 	}
 	err = FSpCreate(idiSpec, 'NSCP', 'TEXT', smSystemScript);
 	if ( (err != noErr) && (err != dupFNErr))
 	{
-		ErrorHandler();
+		ErrorHandler(err);
 		return false;
 	}
 	ERR_CHECK_RET(FSpOpenDF(idiSpec, fsRdWrPerm, &refNum), false);
@@ -466,7 +464,7 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	buf = NewPtrClear(kGenIDIFileSize);
 	if (!buf)
 	{
-		ErrorHandler();
+		ErrorHandler(eMem);
 		return false;
 	}
 	compsDone = 0;
@@ -992,7 +990,7 @@ InitSDLib(void)
 	ERR_CHECK_RET(FSMakeFSSpec(vRefNum, dirID, libName, &libSpec), false);
 	if (!LoadSDLib(libSpec, &gInstFunc, &gSDIEvtHandler, &gConnID))
 	{
-		ErrorHandler();
+		ErrorHandler(eLoadLib);
 		return false;
 	}
 
