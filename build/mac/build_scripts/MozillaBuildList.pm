@@ -246,7 +246,7 @@ sub InstallNonChromeResources()
 
     if ($main::options{inspector})
     {
-        InstallResources(":mozilla:extensions:inspector:resources:content:MANIFEST",   "$resource_dir" . "inspector:");
+        InstallResources(":mozilla:extensions:inspector:resources:content:res:MANIFEST",   "$resource_dir" . "inspector:");
     }
 
     print("--- End Resource copying ----\n");
@@ -333,10 +333,7 @@ sub ProcessJarManifests()
     }
     if ($main::options{inspector})
     {
-      CreateJarFromManifest(":mozilla:extensions:inspector:resources:content:jar.mn", $chrome_dir, \%jars);
-      CreateJarFromManifest(":mozilla:extensions:inspector:resources:locale:en-US:jar.mn", $chrome_dir, \%jars);
-      CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:classic:jar.mn", $chrome_dir, \%jars);
-      CreateJarFromManifest(":mozilla:extensions:inspector:resources:skin:modern:jar.mn", $chrome_dir, \%jars);
+      CreateJarFromManifest(":mozilla:extensions:inspector:jar.mn", $chrome_dir, \%jars);
     }
     if ($main::options{p3p})
     {
@@ -727,6 +724,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:dom:public:idl:css:MANIFEST_IDL",                "$distdirectory:idl:");
     InstallFromManifest(":mozilla:dom:public:idl:events:MANIFEST_IDL",             "$distdirectory:idl:");
     InstallFromManifest(":mozilla:dom:public:idl:html:MANIFEST_IDL",               "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:traversal:MANIFEST_IDL",          "$distdirectory:idl:");
     InstallFromManifest(":mozilla:dom:public:idl:range:MANIFEST_IDL",              "$distdirectory:idl:");
     InstallFromManifest(":mozilla:dom:public:idl:stylesheets:MANIFEST_IDL",        "$distdirectory:idl:");
     InstallFromManifest(":mozilla:dom:public:idl:views:MANIFEST_IDL",              "$distdirectory:idl:");
@@ -1079,6 +1077,7 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:dom:macbuild:dom_eventsIDL.mcp",                      "dom_events");
     BuildIDLProject(":mozilla:dom:macbuild:dom_htmlIDL.mcp",                        "dom_html");
     BuildIDLProject(":mozilla:dom:macbuild:dom_rangeIDL.mcp",                       "dom_range");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_traversalIDL.mcp",                   "dom_traversal");
     BuildIDLProject(":mozilla:dom:macbuild:dom_stylesheetsIDL.mcp",                 "dom_stylesheets");
     BuildIDLProject(":mozilla:dom:macbuild:dom_viewsIDL.mcp",                       "dom_views");
     BuildIDLProject(":mozilla:dom:macbuild:dom_xblIDL.mcp",                         "dom_xbl");
