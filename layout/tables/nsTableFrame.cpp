@@ -638,26 +638,36 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan(PRInt32                 aRowIndex,
   return cellMap->GetEffectiveRowSpan(aRowIndex, colIndex);
 }
 
-PRInt32 nsTableFrame::GetEffectiveRowSpan(const nsTableCellFrame& aCell) const
+PRInt32 nsTableFrame::GetEffectiveRowSpan(const nsTableCellFrame& aCell,
+                                          nsCellMap*              aCellMap)
 {
-  nsTableCellMap* cellMap = GetCellMap();
-  NS_PRECONDITION (nsnull != cellMap, "bad call, cellMap not yet allocated.");
+  nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT1(1);
 
   PRInt32 colIndex, rowIndex;
   aCell.GetColIndex(colIndex);
   aCell.GetRowIndex(rowIndex);
-  return cellMap->GetEffectiveRowSpan(rowIndex, colIndex);
+  PRBool ignore;
+
+  if (aCellMap) 
+    return aCellMap->GetRowSpan(*tableCellMap, rowIndex, colIndex, PR_TRUE, ignore);
+  else
+    return tableCellMap->GetEffectiveRowSpan(rowIndex, colIndex);
 }
 
-PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell) const
+PRInt32 nsTableFrame::GetEffectiveColSpan(const nsTableCellFrame& aCell,
+                                          nsCellMap*              aCellMap) const
 {
-  nsTableCellMap* cellMap = GetCellMap();
-  NS_PRECONDITION (nsnull != cellMap, "bad call, cellMap not yet allocated.");
+  nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT1(1);
 
   PRInt32 colIndex, rowIndex;
   aCell.GetColIndex(colIndex);
   aCell.GetRowIndex(rowIndex);
-  return cellMap->GetEffectiveColSpan(rowIndex, colIndex);
+  PRBool ignore;
+
+  if (aCellMap) 
+    return aCellMap->GetEffectiveColSpan(*tableCellMap, rowIndex, colIndex, ignore);
+  else
+    return tableCellMap->GetEffectiveColSpan(rowIndex, colIndex);
 }
 
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
@@ -4840,10 +4850,9 @@ BCMapCellIterator::SetInfo(nsTableRowFrame* aRow,
         aCellInfo.cell->GetParent((nsIFrame**)&aCellInfo.topRow); if (!aCellInfo.topRow) ABORT0();
         aCellInfo.rowIndex = aCellInfo.topRow->GetRowIndex();
       }
-      PRBool ignore;
       PRInt32 rgRowIndex = aCellInfo.rowIndex - mRowGroupStart;
-      aCellInfo.colSpan = mCellMap->GetEffectiveColSpan(*mTableCellMap, rgRowIndex, aColIndex, ignore); 
-      aCellInfo.rowSpan = mCellMap->GetRowSpan(*mTableCellMap, rgRowIndex, aColIndex, PR_TRUE, ignore);
+      aCellInfo.colSpan = mTableFrame.GetEffectiveColSpan(*aCellInfo.cell, aCellMap); 
+      aCellInfo.rowSpan = mTableFrame.GetEffectiveRowSpan(*aCellInfo.cell, aCellMap);
     }
   }
   if (!aCellInfo.topRow) {
@@ -4888,14 +4897,8 @@ BCMapCellIterator::SetInfo(nsTableRowFrame* aRow,
   aCellInfo.rightCol = aCellInfo.leftCol;
   if (aCellInfo.colSpan > 1) {
     for (PRInt32 spanX = 1; spanX < aCellInfo.colSpan; spanX++) {
-      nsTableColFrame* colFrame = aCellInfo.rightCol->GetNextCol();
-      if (colFrame) {
-        aCellInfo.rightCol = colFrame;
-      }
-      else {
-        NS_ASSERTION(PR_FALSE, "program error");
-        break;
-      }
+      nsTableColFrame* colFrame = mTableFrame.GetColFrame(aColIndex + spanX); if (!colFrame) ABORT0();
+      aCellInfo.rightCol = colFrame;
     }
   }
 
