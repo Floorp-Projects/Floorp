@@ -937,9 +937,9 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
+  // nsCOMPtr<nsIWordBreaker> wb;
+  // doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,nsnull);
   PrepareUnicodeText(tx, (displaySelection ? ip : nsnull),
                      paintBuf, &textLength);
   PRUnichar* text = paintBuf;
@@ -1049,9 +1049,9 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
+  //nsCOMPtr<nsIWordBreaker> wb;
+  //doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,nsnull);
   PrepareUnicodeText(tx, ip, paintBuf, &textLength);
   if (textLength <= 0)
     return NS_ERROR_FAILURE;
@@ -1375,9 +1375,9 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
+  //nsCOMPtr<nsIWordBreaker> wb;
+  //doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,nsnull);
   aTextStyle.mNumSpaces = PrepareUnicodeText(tx,
                                              displaySelection ? ip : nsnull,
                                              paintBuf, &textLength);
@@ -1496,9 +1496,9 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
+  //nsCOMPtr<nsIWordBreaker> wb;
+  //doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,nsnull);
   PrepareUnicodeText(tx, (displaySelection ? ip : nsnull),
                      rawPaintBuf, &textLength);
   // Translate unicode data into ascii for rendering
@@ -1698,9 +1698,9 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
       // Get the renderable form of the text
       nsCOMPtr<nsILineBreaker> lb;
       doc->GetLineBreaker(getter_AddRefs(lb));
-      nsCOMPtr<nsIWordBreaker> wb;
-      doc->GetWordBreaker(getter_AddRefs(wb));
-      nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
+      //nsCOMPtr<nsIWordBreaker> wb;
+      //doc->GetWordBreaker(getter_AddRefs(wb));
+      nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,nsnull);
       PrepareUnicodeText(tx, ip, paintBuf, &textLength);
       if (textLength <=0) //invalid frame to get position on
         return NS_ERROR_FAILURE;
@@ -1905,9 +1905,9 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   // Transform text from content into renderable form
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,wb);
+  //nsCOMPtr<nsIWordBreaker> wb;
+  //doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE, lb,nsnull);
   PrepareUnicodeText(tx, ip, paintBuf, &textLength);
   ip[mContentLength] = ip[mContentLength-1];
   if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
@@ -2011,20 +2011,8 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
     paintBuf = new PRUnichar[mContentLength];
   }
   PRInt32 textLength;
-
-  // Transform text from content into renderable form
   nsresult result(NS_OK);
-  nsIDocument* doc;
-  result = mContent->GetDocument(doc);
-  if (NS_FAILED(result) || !doc)
-    return result;
-  nsCOMPtr<nsILineBreaker> lb;
-  doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
-  NS_RELEASE(doc);
 
-  nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
 
   switch (aAmount){
   case eSelectNoAmount : {
@@ -2035,6 +2023,19 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
     }
     break;
   case eSelectCharacter : {
+    // Transform text from content into renderable form
+    nsIDocument* doc;
+    result = mContent->GetDocument(doc);
+    if (NS_FAILED(result) || !doc)
+      return result;
+    nsCOMPtr<nsILineBreaker> lb;
+    doc->GetLineBreaker(getter_AddRefs(lb));
+    //nsCOMPtr<nsIWordBreaker> wb;
+    //doc->GetWordBreaker(getter_AddRefs(wb));
+    NS_RELEASE(doc);
+
+    nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,nsnull);
+
     PrepareUnicodeText(tx, ip, paintBuf, &textLength);
     ip[mContentLength] = ip[mContentLength-1];
     if ((ip[mContentLength]-mContentOffset) < textLength)//must set up last one for selection beyond edge if in boundary
@@ -2091,6 +2092,20 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
   }
   break;
   case eSelectWord : {
+    // Transform text from content into renderable form
+    nsIDocument* doc;
+    result = mContent->GetDocument(doc);
+    if (NS_FAILED(result) || !doc)
+      return result;
+    nsCOMPtr<nsILineBreaker> lb;
+    doc->GetLineBreaker(getter_AddRefs(lb));
+    nsCOMPtr<nsIWordBreaker> wb;
+    doc->GetWordBreaker(getter_AddRefs(wb));
+    NS_RELEASE(doc);
+
+    nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb,wb);
+
+    PrepareUnicodeText(tx, ip, paintBuf, &textLength);
     nsIFrame *frameUsed = nsnull;
     PRBool keepSearching; //if you run out of chars before you hit the end of word, maybe next frame has more text to select?
     PRInt32 start;
@@ -2369,9 +2384,9 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   PRUnichar wordBuf[WORD_BUF_SIZE];
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
-  nsTextTransformer tx(wordBuf, WORD_BUF_SIZE,lb,wb);
+  //nsCOMPtr<nsIWordBreaker> wb;
+  //doc->GetWordBreaker(getter_AddRefs(wb));
+  nsTextTransformer tx(wordBuf, WORD_BUF_SIZE,lb,nsnull);
   nsresult rv = tx.Init(/**textRun, XXX*/ this, startingOffset);
   if (NS_OK != rv) {
     return rv;
@@ -2879,11 +2894,11 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsILineBreaker> lb;
   doc->GetLineBreaker(getter_AddRefs(lb));
-  nsCOMPtr<nsIWordBreaker> wb;
-  doc->GetWordBreaker(getter_AddRefs(wb));
+  //nsCOMPtr<nsIWordBreaker> wb;
+  //doc->GetWordBreaker(getter_AddRefs(wb));
   NS_IF_RELEASE(doc);
 
-  nsTextTransformer tx(buf, TEXT_BUF_SIZE,lb,wb);
+  nsTextTransformer tx(buf, TEXT_BUF_SIZE,lb,nsnull);
   // XXX we need the content-offset of the text frame!!! 0 won't
   // always be right when continuations are in action
   tx.Init(/**textRun, XXX*/ aTextFrame, 0);
