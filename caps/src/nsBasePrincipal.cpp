@@ -284,7 +284,7 @@ AppendCapability(nsHashKey *aKey, void *aData, void *aStr)
     capStr->Append(' ');
     capStr->AppendWithConversion(((nsStringKey *) aKey)->GetString());
     capStr->Append('=');
-    switch ((PRInt16)aData) 
+    switch ((PRInt16)(PRInt32)aData) 
     {
     case nsIPrincipal::ENABLE_GRANTED:
         capStr->Append("Granted");
