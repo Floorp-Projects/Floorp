@@ -81,6 +81,7 @@ oeICalContainerImpl::~oeICalContainerImpl()
     printf( "oeICalContainerImpl::~oeICalContainerImpl()\n" );
 #endif
 
+    m_calendarArray->Clear();
     m_calendarArray = nsnull;
     m_observerArray = nsnull;
     m_todoobserverArray = nsnull;
@@ -148,12 +149,13 @@ oeICalContainerImpl::GetCalendar( const char *server, oeIICal **calendar ) {
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* tmpcalendar;
+        nsCOMPtr<oeIICal> tmpcalendar;
         char *tmpserver;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&tmpcalendar );
+        m_calendarArray->GetElementAt( i, getter_AddRefs( tmpcalendar ) );
         tmpcalendar->GetServer( &tmpserver );
         if( strcmp( tmpserver, server ) == 0 ) {
             *calendar = tmpcalendar;
+            NS_ADDREF( *calendar );
             nsMemory::Free( tmpserver );
             return NS_OK;
         }
@@ -174,9 +176,9 @@ oeICalContainerImpl::RemoveCalendar( const char *server ) {
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* tmpcalendar;
+        nsCOMPtr<oeIICal> tmpcalendar;
         char *tmpserver;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&tmpcalendar );
+        m_calendarArray->GetElementAt( i, getter_AddRefs( tmpcalendar ) );
         tmpcalendar->GetServer( &tmpserver );
         if( strcmp( tmpserver, server ) == 0 ) {
             nsMemory::Free( tmpserver );
@@ -222,8 +224,8 @@ NS_IMETHODIMP oeICalContainerImpl::SetBatchMode(PRBool aBatchMode)
         m_calendarArray->Count( &num );
         for( i=0; i<num; i++ ) 
         {
-            oeIICal* calendar;
-            m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+            nsCOMPtr<oeIICal> calendar;
+            m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
             calendar->SetBatchMode( aBatchMode );
         }
 
@@ -321,6 +323,7 @@ NS_IMETHODIMP oeICalContainerImpl::ModifyEvent( oeIICalEvent *icalevent, char **
         return NS_ERROR_FAILURE;
     }
     nsresult rv = calendar->ModifyEvent( icalevent, retid );
+    NS_RELEASE( calendar );
     return rv;
 }
 
@@ -345,8 +348,8 @@ NS_IMETHODIMP oeICalContainerImpl::FetchEvent( const char *id, oeIICalEvent **ev
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->FetchEvent( id, ev );
         if( *ev )
             break;
@@ -385,6 +388,7 @@ oeICalContainerImpl::DeleteEvent( const char *id )
         return NS_ERROR_FAILURE;
     }
     nsresult rv = calendar->DeleteEvent( id );
+    NS_RELEASE( calendar );
 
 	return rv;
 }
@@ -408,8 +412,8 @@ oeICalContainerImpl::GetAllEvents(nsISimpleEnumerator **resultList )
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->GetAllEvents( (nsISimpleEnumerator **)&eventEnum );
     }
 
@@ -434,8 +438,8 @@ oeICalContainerImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **eve
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->GetEventsForMonth( datems, (nsISimpleEnumerator **)&eventEnum );
     }
 
@@ -460,8 +464,8 @@ oeICalContainerImpl::GetEventsForWeek( PRTime datems, nsISimpleEnumerator **even
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->GetEventsForWeek( datems, (nsISimpleEnumerator **)&eventEnum );
     }
     return NS_OK;
@@ -486,8 +490,8 @@ oeICalContainerImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **event
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->GetEventsForDay( datems, (nsISimpleEnumerator **)&eventEnum );
     }
     return NS_OK;
@@ -512,8 +516,8 @@ oeICalContainerImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddat
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->GetEventsForRange( checkdateinms, checkenddateinms, (nsISimpleEnumerator **)&eventEnum );
     }
 
@@ -539,8 +543,8 @@ oeICalContainerImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checke
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->GetFirstEventsForRange( checkdateinms, checkenddateinms, (nsISimpleEnumerator **)&eventEnum );
     }
 
@@ -559,8 +563,9 @@ icaltimetype oeICalContainerImpl::GetNextEvent( icaltimetype starting ) {
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeICalImpl* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> tmpcalendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(tmpcalendar) );
+        oeICalImpl *calendar = (oeICalImpl *)(&tmpcalendar);
         icaltimetype next = calendar->GetNextEvent( starting );
         if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
             soonest = next;
@@ -597,8 +602,9 @@ oeICalContainerImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleE
             m_calendarArray->Count( &num );
             for( i=0; i<num && count<maxcount; i++ ) 
             {
-                oeICalImpl* calendar;
-                m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+                nsCOMPtr<oeIICal> tmpcalendar;
+                m_calendarArray->GetElementAt( i, getter_AddRefs(tmpcalendar) );
+                oeICalImpl *calendar = (oeICalImpl *)(&tmpcalendar);
                 EventList *tmplistptr = calendar->GetEventList();
                 while( tmplistptr && count<maxcount ) {
                     if( tmplistptr->event ) {
@@ -637,8 +643,8 @@ oeICalContainerImpl::AddObserver(oeIICalObserver *observer)
         m_calendarArray->Count( &num );
         for( i=0; i<num; i++ ) 
         {
-            oeICalImpl* calendar;
-            m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+            nsCOMPtr<oeIICal> calendar;
+            m_calendarArray->GetElementAt( i, getter_AddRefs( calendar ) );
             calendar->AddObserver( observer );
         }
         observer->OnLoad();
@@ -658,8 +664,8 @@ oeICalContainerImpl::RemoveObserver(oeIICalObserver *observer)
         m_calendarArray->Count( &num );
         for( i=0; i<num; i++ ) 
         {
-            oeICalImpl* calendar;
-            m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+            nsCOMPtr<oeIICal> calendar;
+            m_calendarArray->GetElementAt( i, getter_AddRefs( calendar ) );
             calendar->RemoveObserver( observer );
         }
         m_observerArray->RemoveElement( observer );
@@ -683,8 +689,8 @@ oeICalContainerImpl::AddTodoObserver(oeIICalTodoObserver *observer)
         m_calendarArray->Count( &num );
         for( i=0; i<num; i++ ) 
         {
-            oeICalImpl* calendar;
-            m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+            nsCOMPtr<oeIICal> calendar;
+            m_calendarArray->GetElementAt( i, getter_AddRefs( calendar ) );
             calendar->AddTodoObserver( observer );
         }
         observer->OnLoad();
@@ -704,8 +710,8 @@ oeICalContainerImpl::RemoveTodoObserver(oeIICalTodoObserver *observer)
         m_calendarArray->Count( &num );
         for( i=0; i<num; i++ ) 
         {
-            oeICalImpl* calendar;
-            m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+            nsCOMPtr<oeIICal> calendar;
+            m_calendarArray->GetElementAt( i, getter_AddRefs( calendar ) );
             calendar->RemoveTodoObserver( observer );
         }
         m_todoobserverArray->RemoveElement( observer );
@@ -770,6 +776,7 @@ oeICalContainerImpl::DeleteTodo( const char *id )
         return NS_ERROR_FAILURE;
     }
     nsresult rv = calendar->DeleteTodo( id );
+    NS_RELEASE( calendar );
 
 	return rv;
 }
@@ -795,8 +802,8 @@ NS_IMETHODIMP oeICalContainerImpl::FetchTodo( const char *id, oeIICalTodo **ev)
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->FetchTodo( id, ev );
         if( *ev )
             break;
@@ -819,6 +826,7 @@ NS_IMETHODIMP oeICalContainerImpl::ModifyTodo(oeIICalTodo *icalevent, char **ret
         return NS_ERROR_FAILURE;
     }
     nsresult rv = calendar->ModifyTodo( icalevent, retid );
+    NS_RELEASE( calendar );
     return rv;
 }
 
@@ -841,8 +849,8 @@ oeICalContainerImpl::GetAllTodos(nsISimpleEnumerator **resultList )
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs( calendar ) );
         calendar->GetAllTodos( (nsISimpleEnumerator **)&eventEnum );
     }
     return NS_OK;
@@ -870,8 +878,8 @@ NS_IMETHODIMP oeICalContainerImpl::ResetFilter()
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
-        oeIICal* calendar;
-        m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+        nsCOMPtr<oeIICal> calendar;
+        m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
         calendar->ResetFilter();
     }
     oeIDateTime *completed;
@@ -1302,8 +1310,8 @@ void oeICalContainerFilter::UpdateAllFilters( PRInt32 icaltype )
         m_calendarArray->Count( &num );
         for( i=0; i<num; i++ ) 
         {
-            oeIICal* calendar;
-            m_calendarArray->GetElementAt( i, (nsISupports **)&calendar );
+            nsCOMPtr<oeIICal> calendar;
+            m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
             oeIICalTodo *filter;
             calendar->GetFilter( &filter );
             oeIDateTime *completed;

@@ -186,8 +186,10 @@ const char* strForceUTF8(const char * str)
 }
 
 
+#ifdef ICAL_DEBUG
 int gEventCount = 0;
 int gEventDisplayCount = 0;
+#endif
 
 //////////////////////////////////////////////////
 //   ICalEvent Factory
@@ -325,6 +327,7 @@ NS_IMETHODIMP oeICalEventImpl::GetParent( oeIICal **calendar )
     printf( "oeICalEventImpl::GetParent()\n" );
 #endif
     *calendar = m_calendar;
+    NS_ADDREF( *calendar );
     return NS_OK;
 }
 
@@ -564,7 +567,7 @@ NS_IMETHODIMP oeICalEventImpl::GetMethod(eventMethodProperty *aRetVal)
 NS_IMETHODIMP oeICalEventImpl::SetMethod(eventMethodProperty aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetMethod( %s )\n", aNewVal );
+    printf( "SetMethod( %d )\n", aNewVal );
 #endif
     m_method= aNewVal;
     return NS_OK;
@@ -691,7 +694,7 @@ NS_IMETHODIMP oeICalEventImpl::GetAlarmLength(PRUint32 *aRetVal)
 NS_IMETHODIMP oeICalEventImpl::SetAlarmLength(PRUint32 aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetAlarmLength(%lu)\n", aNewVal );
+    printf( "SetAlarmLength(%ul)\n", aNewVal );
 #endif
     m_alarmlength = aNewVal;
     return NS_OK;

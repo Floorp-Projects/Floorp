@@ -1554,11 +1554,16 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
     return NS_OK;
 }
 
+#ifdef ICAL_DEBUG_ALL
+int gObservercount=0;
+#endif
+
 NS_IMETHODIMP 
 oeICalImpl::AddObserver(oeIICalObserver *observer)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "oeICalImpl::AddObserver()\n" );
+    gObservercount++;
+    printf( "oeICalImpl::AddObserver(): %d\n", gObservercount );
 #endif
     if( observer ) {
         observer->AddRef();
@@ -1574,7 +1579,8 @@ NS_IMETHODIMP
 oeICalImpl::RemoveObserver(oeIICalObserver *observer)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "oeICalImpl::RemoveObserver()\n" );
+    gObservercount--;
+    printf( "oeICalImpl::RemoveObserver(): %d\n", gObservercount );
 #endif
     if( observer ) {
         PRUint32 observercount;
