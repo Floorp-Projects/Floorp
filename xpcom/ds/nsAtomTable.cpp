@@ -72,8 +72,7 @@ AtomImpl::AtomImpl()
 
 AtomImpl::~AtomImpl()
 {
-
-	NS_PRECONDITION(nsnull != gAtomHashTable, "null atom hashtable");
+  NS_PRECONDITION(nsnull != gAtomHashTable, "null atom hashtable");
   if (nsnull != gAtomHashTable) {
     PL_HashTableRemove(gAtomHashTable, mString);
     nsrefcnt cnt = --gAtoms;
