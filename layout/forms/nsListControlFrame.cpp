@@ -851,6 +851,41 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
+#ifdef IBMBIDI
+  nsRect parentRect, thisRect;
+  // Retrieve the scrollbar's width and height
+  float sbWidth  = 0.0;
+  float sbHeight = 0.0;;
+  nsCOMPtr<nsIDeviceContext> dc;
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
+  dc->GetScrollBarDimensions(sbWidth, sbHeight);
+  // Convert to nscoord's by rounding
+  nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
+
+  const nsStyleDisplay* display;
+  GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+
+  if (display->mDirection == NS_STYLE_DIRECTION_RTL)
+  {
+    nscoord bidiScrolledAreaWidth = scrolledAreaDesiredSize.maxElementSize->width;
+    firstPassState.reason = eReflowReason_StyleChange;
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+    if (aReflowState.mComputedWidth == NS_UNCONSTRAINEDSIZE)
+    {
+      if (needsVerticalScrollbar) {
+        bidiScrolledAreaWidth -= scrollbarWidth;
+      } else {
+        bidiScrolledAreaWidth = aReflowState.mComputedWidth - scrollbarWidth + (6 * p2t);
+        if (needsVerticalScrollbar) bidiScrolledAreaWidth -= scrollbarWidth;
+      }
+      firstPassState.mComputedWidth  = bidiScrolledAreaWidth;
+      firstPassState.availableWidth = bidiScrolledAreaWidth;
+      nsScrollFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
+    }
+  }
+#endif // IBMBIDI
+
    // Do a second reflow with the adjusted width and height settings
    // This sets up all of the frames with the correct width and height.
   secondPassState.mComputedWidth  = visibleWidth;
@@ -2978,6 +3013,16 @@ NS_IMETHODIMP nsListControlFrame::MoveTo(nsIPresContext* aPresContext, nscoord a
   }
 }
 
+#ifdef IBMBIDI
+NS_IMETHODIMP
+nsListControlFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::listControlFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+#endif // IBMBIDI
 
 //---------------------------------------------------------
 NS_IMETHODIMP 

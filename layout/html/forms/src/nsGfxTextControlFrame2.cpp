@@ -96,6 +96,11 @@
 #include "nsITransactionManager.h"
 #include "nsITransactionListener.h"
 
+#ifdef IBMBIDI
+#include "nsIBidiKeyboard.h"
+#include "nsWidgetsCID.h"
+#endif // IBMBIDI
+
 #define DEFAULT_COLUMN_WIDTH 20
 #define GUESS_INPUT_SIZE 150  // 10 pixels wide
 
@@ -612,6 +617,20 @@ public:
   NS_IMETHOD GetHint(nsIFrameSelection::HINT *aHint);
   NS_IMETHOD SetHint(nsIFrameSelection::HINT aHint);
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
+#ifdef IBMBIDI
+  NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
+                                   nsIContent *aNode,
+                                   PRUint32 aContentOffset,
+                                   nsIFrame **aPrevFrame,
+                                   nsIFrame **aNextFrame,
+                                   PRUint8 *aPrevLevel,
+                                   PRUint8 *aNextLevel);
+  NS_IMETHOD GetFrameFromLevel(nsIPresContext *aPresContext,
+                               nsIFrame *aFrameIn,
+                               nsDirection aDirection,
+                               PRUint8 aBidiLevel,
+                               nsIFrame **aFrameOut);
+#endif
   //END INTERFACES
 
 
@@ -620,6 +639,9 @@ private:
   nsCOMPtr<nsIFrameSelection> mFrameSelection;
   nsCOMPtr<nsIContent>        mLimiter;
   nsWeakPtr mPresShellWeak;
+#ifdef IBMBIDI
+  nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;
+#endif
 };
 
 // Implement our nsISupports methods
@@ -638,6 +660,9 @@ nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsIFrameSelection *aSel, nsIP
     mLimiter = aLimiter;
     mFrameSelection->Init(tracker, mLimiter);
     mPresShellWeak = getter_AddRefs( NS_GetWeakReference(aShell) );
+#ifdef IBMBIDI
+    mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
+#endif
   }
 }
 
@@ -1026,6 +1051,31 @@ NS_IMETHODIMP nsTextInputSelectionImpl::SetScrollableView(nsIScrollableView *aSc
   return NS_ERROR_FAILURE;
 }
 
+#ifdef IBMBIDI
+NS_IMETHODIMP nsTextInputSelectionImpl::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
+                                                              nsIContent *aNode,
+                                                              PRUint32 aContentOffset,
+                                                              nsIFrame **aPrevFrame,
+                                                              nsIFrame **aNextFrame,
+                                                              PRUint8 *aPrevLevel,
+                                                              PRUint8 *aNextLevel)
+{
+  if (mFrameSelection)
+    return mFrameSelection->GetPrevNextBidiLevels(aPresContext, aNode, aContentOffset, aPrevFrame, aNextFrame, aPrevLevel, aNextLevel);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::GetFrameFromLevel(nsIPresContext *aPresContext,
+                                                          nsIFrame *aFrameIn,
+                                                          nsDirection aDirection,
+                                                          PRUint8 aBidiLevel,
+                                                          nsIFrame **aFrameOut)
+{
+  if (mFrameSelection)
+    return mFrameSelection->GetFrameFromLevel(aPresContext, aFrameIn, aDirection, aBidiLevel, aFrameOut);
+  return NS_ERROR_FAILURE;
+}
+#endif // IBMBIDI
 
 
 // END   nsTextInputSelectionImpl

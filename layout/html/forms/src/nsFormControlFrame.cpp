@@ -260,6 +260,9 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
 {
 
   if (aReflowState.reason == eReflowReason_Incremental ||
+#ifdef IBMBIDI
+      aReflowState.reason == eReflowReason_StyleChange ||
+#endif
       aReflowState.reason == eReflowReason_Dirty) {
     aBailOnHeight = PR_FALSE;
     aBailOnWidth  = PR_FALSE;
