@@ -222,4 +222,16 @@ TEST(32, true, o.ignoreWhitespace);
 TEST(33, true, o.prettyPrinting);
 TEST(34, 2, o.prettyIndent);
 
+correct = new XML('');
+
+// ignoreComments
+XML.ignoreComments = true;
+x = <!-- comment -->;
+TEST(35, correct, x);
+
+// ignoreProcessingInstructions
+XML.ignoreProcessingInstructions = true;
+x = <?pi?>;
+TEST(36, correct, x);
+
 END();
