@@ -171,6 +171,4 @@ protected:
   nsVoidArray* mRunInFloaters;
 };
 
-#define IS_REFLOW_ERROR(_status) (PRInt32(_status) < 0)
-
 #endif /* nsCSSBlockFrame_h___ */

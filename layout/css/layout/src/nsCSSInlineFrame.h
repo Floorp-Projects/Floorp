@@ -15,28 +15,61 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsInlineFrame_h___
-#define nsInlineFrame_h___
+#ifndef nsCSSInlineFrame_h___
+#define nsCSSInlineFrame_h___
 
-#include "nsHTMLContainerFrame.h"
+#include "nsCSSContainerFrame.h"
+#include "nsCSSInlineLayout.h"
 #include "nsCSSLineLayout.h"
-class nsInlineState;
 
-// Inline container class. Does not support being used as a pseudo frame
-class nsInlineFrame : public nsHTMLContainerFrame, public nsIInlineReflow {
+class nsCSSInlineFrame;
+
+/**
+ * Reflow state object for managing css inline layout. Most of the state
+ * is managed by the nsCSSInlineLayout object.
+ */
+struct nsCSSInlineReflowState : public nsReflowState {
+  nsCSSInlineReflowState(nsCSSLineLayout& aLineLayout,
+                         nsCSSInlineFrame* aInlineFrame,
+                         nsIStyleContext* aInlineSC,
+                         const nsReflowState& aReflowState,
+                         nsSize* aMaxElementSize);
+  ~nsCSSInlineReflowState();
+
+  nsIPresContext* mPresContext;
+  nsCSSInlineLayout mInlineLayout;
+
+  nsIFrame* mLastChild;         // last child we have reflowed (so far)
+
+  PRInt32 mKidContentIndex;     // content index of last child reflowed
+
+  nsMargin mBorderPadding;
+  PRBool mNoWrap;
+  PRIntn mStyleSizeFlags;
+  nsSize mStyleSize;
+};
+
+//----------------------------------------------------------------------
+
+/**
+ * CSS "inline" layout class.
+ *
+ * Note: This class does not support being used as a pseudo frame.
+ */
+class nsCSSInlineFrame : public nsCSSContainerFrame,
+                         public nsIInlineReflow
+{
 public:
-  static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent);
-
   // nsISupports
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
+#if XXX_not_yet
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
+#endif
 
   // nsIInlineReflow
   NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
@@ -45,70 +78,38 @@ public:
                           const nsReflowState& aReflowState);
 
 protected:
-  nsInlineFrame(nsIContent* aContent, nsIFrame* aParent);
+  nsCSSInlineFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  virtual ~nsInlineFrame();
+  virtual ~nsCSSInlineFrame();
 
   virtual PRIntn GetSkipSides() const;
 
-  void InitializeState(nsIPresContext* aPresContext,
-                       const nsReflowState& aReflowState,
-                       nsInlineState& aState);
+  nsresult FrameAppendedReflow(nsCSSInlineReflowState& aState);
 
-  PRBool DidFitChild(nsIPresContext*  aPresContext,
-                     nsInlineState&   aState,
-                     nsIFrame*        aChildFrame,
-                     nsReflowMetrics& aChildMetrics);
+  nsresult ChildIncrementalReflow(nsCSSInlineReflowState& aState);
 
-  PRBool CanFitChild(nsIPresContext*  aPresContext,
-                     nsInlineState&   aState,
-                     nsIFrame*        aChildFrame);
+  nsresult ResizeReflow(nsCSSInlineReflowState& aState);
 
-  void ComputeFinalSize(nsIPresContext* aPresContext,
-                        nsInlineState&   aState,
-                        nsReflowMetrics& aSize);
+  void ComputeFinalSize(nsCSSInlineReflowState& aState,
+                        nsReflowMetrics& aMetrics);
 
-  PRBool ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
-                                  nsInlineState&  aState,
-                                  nsIFrame*       aChildFrame,
-                                  PRInt32         aChildIndex);
+  nsInlineReflowStatus ReflowMapped(nsCSSInlineReflowState& aState);
 
-  PRBool PullUpChildren(nsIPresContext* aPresContext,
-                        nsInlineState&  aState);
+  nsInlineReflowStatus ReflowUnmapped(nsCSSInlineReflowState& aState);
 
-  nsReflowStatus ReflowUnmappedChildren(nsIPresContext* aPresContext,
-                                        nsInlineState&  aState);
+  nsInlineReflowStatus PullUpChildren(nsCSSInlineReflowState& aState);
 
-  void PlaceChild(nsIFrame*              aChild,
-                  PRInt32                aIndex,  // in the child frame list
-                  nsInlineState&         aState,
-                  const nsReflowMetrics& aChildSize,
-                  const nsSize*          aChildMaxElementSize);
+  void PushKids(nsCSSInlineReflowState& aState,
+                nsIFrame* aPrevChild, nsIFrame* aPushedChild);
 
-  PRInt32 RecoverState(nsIPresContext* aCX,
-                       nsInlineState& aState,
-                       nsIFrame* aSkipChild);
-
-  nsresult Reflow2(nsIPresContext*      aPresContext,
-                   nsCSSLineLayout*     aLineLayout,
-                   nsReflowMetrics&     aDesiredSize,
-                   const nsReflowState& aReflowState);
-
-  nsReflowStatus IncrementalReflowFrom(nsIPresContext* aPresContext,
-                                       nsInlineState&  aState,
-                                       nsIFrame*       aChildFrame,
-                                       PRInt32         aChildIndex);
-
-  nsReflowStatus IncrementalReflowAfter(nsIPresContext* aPresContext,
-                                        nsInlineState&  aState,
-                                        nsIFrame*       aChildFrame,
-                                        PRInt32         aChildIndex);
-
-  nsInlineReflowStatus ReflowChild(nsInlineState&       aState,
-                                   nsIFrame*            aKidFrame,
-                                   nsIPresContext*      aPresContext,
-                                   nsReflowMetrics&     aDesiredSize,
-                                   const nsReflowState& aReflowState);
+  friend nsresult NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
+                                       nsIContent* aContent,
+                                       nsIFrame*   aParent);
 };
 
-#endif /* nsInlineFrame_h___ */
+extern nsresult NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
+                                     nsIContent* aContent,
+                                     nsIFrame*   aParent);
+
+
+#endif /* nsCSSInlineFrame_h___ */
