@@ -96,6 +96,7 @@ button.calendar-management-button:hover:active
 
 #calendar-new-event-button 
   {
+    margin-left:	5px;
     padding-top:	1px;
     list-style-image        : url("chrome://calendar/skin/newitem_up.gif");
   }

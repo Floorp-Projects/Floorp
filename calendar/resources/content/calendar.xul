@@ -148,7 +148,6 @@
           grippytooltip="aTooltip" grippytooltiptext="&navigationToolbar.tooltip;"
           tbalign="stretch">
           
-          <toolbarseparator class="toolbarseparator-primary"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltip="aTooltip" tooltiptext="&calendar.newevent.button.tooltip;"     oncommand="newEventCommand()"/>
           <toolbarseparator class="toolbarseparator-primary"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltip="aTooltip" tooltiptext="&calendar.choosedate.button.tooltip;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup"/>
