@@ -85,3 +85,7 @@ box#header > toolbar > .circle {
 box#reorder {
   text-align: center;
 }
+box#saveCancelButtons {
+  margin-bottom: 0.5em;
+  text-align: center;
+}
