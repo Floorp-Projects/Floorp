@@ -403,10 +403,19 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
             // make sure the pointer math we're about to do is safe.
             NS_ENSURE_TRUE(sourceValue && (strlen(sourceValue) > strlen(NC_RDF_PAGETITLE_PREFIX)), NS_ERROR_UNEXPECTED);
 
-            nsCAutoString bundleURL;
-            bundleURL = "chrome://messenger/locale/";
-            bundleURL += "am-";
+            nsCOMPtr<nsIMsgAccountManager> am =
+              do_QueryReferent(mAccountManager, &rv);
+            NS_ENSURE_SUCCESS(rv, PR_FALSE);
+            
             // turn NC#PageTitlefoobar into foobar, so we can get the am-foobar.properties bundle
+            nsXPIDLCString chromePackageName;
+            rv = am->GetChromePackageName((sourceValue + strlen(NC_RDF_PAGETITLE_PREFIX)), getter_Copies(chromePackageName));
+            NS_ENSURE_SUCCESS(rv,rv);
+
+            nsCAutoString bundleURL;
+            bundleURL = "chrome://";
+            bundleURL += chromePackageName;
+            bundleURL += "/locale/am-";
             bundleURL += (sourceValue + strlen(NC_RDF_PAGETITLE_PREFIX));
             bundleURL += ".properties";
 

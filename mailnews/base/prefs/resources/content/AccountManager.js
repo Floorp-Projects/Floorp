@@ -761,10 +761,21 @@ function onPanelLoaded(pageId) {
   pendingPageId = null;
 }
 
-
 function loadPage(pageId)
 {
-  document.getElementById("contentFrame").setAttribute("src","chrome://messenger/content/" + pageId);
+  var chromePackageName;
+  try 
+  {
+    // we could compare against "main","server","copies","offline","addressing",
+    // "smtp","advanced", and "fakeaccount" first to save the work, but don't
+    // as some of these might be turned into extensions (for thunderbird)
+    chromePackageName = accountManager.getChromePackageName(pageId.split("am-")[1].split(".xul")[0]);
+  }
+  catch (ex) 
+  {
+    chromePackageName = "messenger";
+  }
+  document.getElementById("contentFrame").setAttribute("src","chrome://" + chromePackageName + "/content/" + pageId);
 }
 
 //

@@ -79,6 +79,8 @@
 #include "nsIImapIncomingServer.h" 
 #include "nsIImapUrl.h"
 #include "nsIMessengerOSIntegration.h"
+#include "nsICategoryManager.h"
+#include "nsISupportsPrimitives.h"
 
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 #define PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT "mail.accountmanager.defaultaccount"
@@ -2341,4 +2343,50 @@ nsMsgAccountManager::SaveAccountInfo()
   NS_ENSURE_SUCCESS(rv,rv);
   return m_prefs->SavePrefFile(nsnull);
 }
+
+NS_IMETHODIMP
+nsMsgAccountManager::GetChromePackageName(const char *aExtenstionName, char **aChromePackageName)
+{
+  NS_ENSURE_ARG_POINTER(aExtenstionName);
+  NS_ENSURE_ARG_POINTER(aChromePackageName);
+ 
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsISimpleEnumerator> e;
+  rv = catman->EnumerateCategory(MAILNEWS_ACCOUNTMANAGER_EXTENSIONS, getter_AddRefs(e));
+  if(NS_SUCCEEDED(rv) && e) {
+    while (PR_TRUE) {
+      nsCOMPtr<nsISupportsCString> catEntry;
+      rv = e->GetNext(getter_AddRefs(catEntry));
+      if (NS_FAILED(rv) || !catEntry) 
+        break;
+
+      nsCAutoString entryString;
+      rv = catEntry->GetData(entryString);
+      if (NS_FAILED(rv))
+         break;
+
+      nsXPIDLCString contractidString;
+      rv = catman->GetCategoryEntry(MAILNEWS_ACCOUNTMANAGER_EXTENSIONS, entryString.get(), getter_Copies(contractidString));
+      if (NS_FAILED(rv)) 
+        break;
+
+      nsCOMPtr <nsIMsgAccountManagerExtension> extension = do_GetService(contractidString.get(), &rv);
+      if (NS_FAILED(rv) || !extension)
+        break;
+      
+      nsXPIDLCString name;
+      rv = extension->GetName(getter_Copies(name));
+      if (NS_FAILED(rv))
+        break;
+      
+      if (!strcmp(name.get(), aExtenstionName))
+        return extension->GetChromePackageName(aChromePackageName);
+    }
+  }
+  return NS_ERROR_UNEXPECTED;
+}
+
 

@@ -36,6 +36,7 @@ function MDNService()
 {}
 
 MDNService.prototype.name = "mdn";
+MDNService.prototype.chromePackageName = "messenger";
 MDNService.prototype.showPanel =
 
 function (server)

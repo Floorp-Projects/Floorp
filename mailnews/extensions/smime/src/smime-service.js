@@ -36,6 +36,7 @@ function SMIMEService()
 {}
 
 SMIMEService.prototype.name = "smime";
+SMIMEService.prototype.chromePackageName = "messenger";
 SMIMEService.prototype.showPanel =
 
 function (server)
