@@ -138,7 +138,7 @@ DEFAULT_GMAKE_FLAGS += \
 	$(NULL)
 SKIP_CHK=1
 endif
-SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile
+SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
 
 include $(topsrcdir)/config/rules.mk
 
@@ -160,6 +160,7 @@ endif
 dependclean export packages chrome::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
+	$(MAKE) -C locales $@
 ifdef MOZ_XUL
 	$(MAKE) -C pki $@
 endif
@@ -210,6 +211,7 @@ endif
 endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
+	$(MAKE) -C locales $@
 ifdef MOZ_XUL
 	$(MAKE) -C pki $@
 endif
@@ -231,6 +233,7 @@ ifdef HAVE_FREEBL_MODULES
 endif
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
+	$(MAKE) -C locales $@
 ifdef MOZ_XUL
 	$(MAKE) -C pki $@
 endif
@@ -238,6 +241,7 @@ endif
 clean clobber clobber_all realclean distclean depend::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
+	$(MAKE) -C locales $@
 ifdef MOZ_XUL
 	$(MAKE) -C pki $@
 endif
@@ -252,3 +256,4 @@ echo-requires-recursive::
 	$(MAKE) -C boot $@
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
+	$(MAKE) -C locales $@
