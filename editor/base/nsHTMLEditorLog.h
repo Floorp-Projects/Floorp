@@ -27,7 +27,6 @@
 #include "nsIEditorLogging.h"
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
-#include "nsICmdLineHandler.h"
 
 class nsEditorTxnLog;
 
@@ -35,8 +34,7 @@ class nsEditorTxnLog;
  *
  */
 class nsHTMLEditorLog : public nsHTMLEditor,
-                        public nsIEditorLogging,
-                        public nsICmdLineHandler
+                        public nsIEditorLogging
 {
 private:
 
@@ -49,9 +47,6 @@ public:
 
   // Interfaces for AddRef, Release, and QueryInterface.
   NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_NSICMDLINEHANDLER
-  CMDLINEHANDLER_REGISTERPROC_DECLS
 
            nsHTMLEditorLog();
   virtual ~nsHTMLEditorLog();
