@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = "1.060";
+$Version = "1.080";
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -79,7 +79,8 @@ sub SetupEnv {
 } #EndSub-SetupEnv
 
 sub SetupPath {
-    my($Path);
+    my($Path, $comptmp);
+    $comptmp = '';
     $Path = $ENV{PATH};
     print "Path before: $Path\n";
 
@@ -161,7 +162,9 @@ sub SetupPath {
 		$ENV{'PATH'} = '/tools/ns/workshop/bin:/usrlocal/bin:' . $ENV{'PATH'};
 		$ENV{'LD_LIBRARY_PATH'} = '/tools/ns/workshop/lib:/usrlocal/lib:' . $ENV{'LD_LIBRARY_PATH'};
 		$ConfigureEnvArgs = 'CC=cc CXX=CC';
-		$Compiler = 'cc/CC (' . `cc -V 2>&1 | head -1` . ')';
+		$comptmp = `cc -V 2>&1 | head -1`;
+		chop($comptmp);
+		$Compiler = "cc/CC \($comptmp\)";
 		$NSPRArgs .= 'NS_USE_NATIVE=1';
 	    } else {
 		$NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
@@ -297,7 +300,8 @@ sub GetSystemInfo {
 } #EndSub-GetSystemInfo
 
 sub BuildIt {
-    my ($fe, @felist, $EarlyExit, $LastTime, $StartTimeStr);
+    my ($fe, @felist, $EarlyExit, $LastTime, $StartTimeStr, $comptmp);
+    $comptmp = '';
 
     mkdir("$DirName", 0777);
     chdir("$DirName") || die "Couldn't enter $DirName";
@@ -340,7 +344,9 @@ sub BuildIt {
 	if ( $Compiler ne '' ) {
 	    print LOG "===============================\n";
 	    if ( $Compiler eq 'gcc' || $Compiler eq 'egcc' ) {
-		print LOG "Compiler is -- $Compiler \(" . `$Compiler --version` . "\)\n";
+		$comptmp = `$Compiler --version`;
+		chop($comptmp);
+		print LOG "Compiler is -- $Compiler \($comptmp\)\n";
 	    } else {
 		print LOG "Compiler is -- $Compiler\n";
 	    }
@@ -701,7 +707,7 @@ sub RunSmokeTest {
     my($fe) = @_;
     my($Binary);
     my($status) = 0;
-    my($waittime) = 30;
+    my($waittime) = 45;
     my($pid) = fork;
     $fe = 'x' if (!defined($fe));
 
