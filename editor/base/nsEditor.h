@@ -30,6 +30,7 @@
 #include "TransactionFactory.h"
 #include "nsIComponentManager.h"
 
+class nsIEditActionListener;
 class nsIDOMCharacterData;
 class nsIDOMRange;
 class nsIPresShell;
@@ -65,6 +66,8 @@ private:
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);
   static PRInt32 gInstanceCount;
+
+  nsVoidArray *mActionListeners;
 
 protected:
   nsCOMPtr<nsIDOMDocument> mDoc;
@@ -166,6 +169,10 @@ public:
   NS_IMETHOD Copy();
   
   NS_IMETHOD Paste();
+
+  NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener);
+
+  NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener);
 
 
 /*END nsIEditor interfaces*/

@@ -43,43 +43,89 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITACTIONLISTENER_IID; return iid; }
 
   /** 
-   * Called when the editor inserts a node.
+   * Called before the editor inserts a node.
    * @param aNode     The DOM Node to insert.
    * @param aParent   The node to insert the new object into
    * @param aPosition The place in aParent to insert the new node
    *                  0=first child, 1=second child, etc.
    *                  any number > number of current children = last child
    */
-  NS_IMETHOD InsertNode(nsIDOMNode * aNode,
-                        nsIDOMNode * aParent,
-                        PRInt32      aPosition)=0;
+  NS_IMETHOD WillInsertNode(nsIDOMNode *aNode,
+                            nsIDOMNode *aParent,
+                            PRInt32     aPosition)=0;
 
   /** 
-   * Called when the editor deletes a node.
+   * Called after the editor inserts a node.
+   * @param aNode     The DOM Node to insert.
+   * @param aParent   The node to insert the new object into
+   * @param aPosition The place in aParent to insert the new node
+   *                  0=first child, 1=second child, etc.
+   *                  any number > number of current children = last child
+   * @param aResult   The result of the insert node operation.
+   */
+  NS_IMETHOD DidInsertNode(nsIDOMNode *aNode,
+                           nsIDOMNode *aParent,
+                           PRInt32     aPosition,
+                           nsresult    aResult)=0;
+
+  /** 
+   * Called before the editor deletes a node.
    * @param aChild    The node to delete
    */
-  NS_IMETHOD DeleteNode(nsIDOMNode * aChild)=0;
+  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild)=0;
 
   /** 
-   * Called when the editor splits a node.
+   * Called after the editor deletes a node.
+   * @param aChild    The node to delete
+   * @param aResult   The result of the delete node operation.
+   */
+  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)=0;
+
+  /** 
+   * Called before the editor splits a node.
    * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
    * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
    * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
    */
-  NS_IMETHOD SplitNode(nsIDOMNode * aExistingRightNode,
-                       PRInt32      aOffset,
-                       nsIDOMNode * aNewLeftNode)=0;
+  NS_IMETHOD WillSplitNode(nsIDOMNode *aExistingRightNode,
+                           PRInt32     aOffset)=0;
 
   /** 
-   * Called when the editor joins 2 nodes.
-   * @param aNodeToKeep   The left node.  It will remain after the join.
-   * @param aNodeToJoin   The right node.
-   *                      There is no requirement that the two nodes be of the same type.
-   * @param aParent       The parent of aExistingRightNode
+   * Called after the editor splits a node.
+   * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
+   * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
+   * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
    */
-  NS_IMETHOD JoinNodes(nsIDOMNode  *aLeftNode,
-                       nsIDOMNode  *aRightNode,
-                       nsIDOMNode  *aParent)=0;
+  NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode,
+                          PRInt32     aOffset,
+                          nsIDOMNode *aNewLeftNode,
+                          nsresult    aResult)=0;
+
+  /** 
+   * Called before the editor joins 2 nodes.
+   * @param aLeftNode   This node will be merged into the right node
+   * @param aRightNode  The node that will be merged into.
+   *                    There is no requirement that the two nodes be of
+   *                    the same type.
+   * @param aParent     The parent of aRightNode
+   */
+  NS_IMETHOD WillJoinNodes(nsIDOMNode  *aLeftNode,
+                           nsIDOMNode  *aRightNode,
+                           nsIDOMNode  *aParent)=0;
+
+  /** 
+   * Called before the editor joins 2 nodes.
+   * @param aLeftNode   This node will be merged into the right node
+   * @param aRightNode  The node that will be merged into.
+   *                    There is no requirement that the two nodes be of
+   *                    the same type.
+   * @param aParent     The parent of aRightNode
+   * @param aResult     The result of the join operation.
+   */
+  NS_IMETHOD DidJoinNodes(nsIDOMNode  *aLeftNode,
+                          nsIDOMNode  *aRightNode,
+                          nsIDOMNode  *aParent,
+                          nsresult    aResult)=0;
   
 };
 

@@ -43,6 +43,8 @@
 #include "nsVoidArray.h"
 #include "nsICaret.h"
 
+#include "nsIEditActionListener.h"
+
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsLayoutCID.h"
@@ -293,6 +295,7 @@ nsEditor::nsEditor()
   NS_INIT_REFCNT();
   PR_EnterMonitor(getEditorMonitor());
   gInstanceCount++;
+  mActionListeners = 0;
   PR_ExitMonitor(getEditorMonitor());
 }
 
@@ -302,6 +305,21 @@ nsEditor::~nsEditor()
 {
   NS_IF_RELEASE(mPresShell);
   NS_IF_RELEASE(mViewManager);
+
+  if (mActionListeners)
+  {
+    PRInt32 i;
+    nsIEditActionListener *listener;
+
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      NS_IF_RELEASE(listener);
+    }
+
+    delete mActionListeners;
+    mActionListeners = 0;
+  }
 }
 
 
@@ -977,6 +995,49 @@ NS_IMETHODIMP nsEditor::Paste()
   return InsertText(stuffToPaste);
 }
 
+NS_IMETHODIMP
+nsEditor::AddEditActionListener(nsIEditActionListener *aListener)
+{
+  if (!aListener)
+    return NS_ERROR_NULL_POINTER;
+
+  if (!mActionListeners)
+  {
+    mActionListeners = new nsVoidArray();
+
+    if (!mActionListeners)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!mActionListeners->AppendElement((void *)aListener))
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(aListener);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::RemoveEditActionListener(nsIEditActionListener *aListener)
+{
+  if (!aListener || !mActionListeners)
+    return NS_ERROR_FAILURE;
+
+  if (!mActionListeners->RemoveElement((void *)aListener))
+    return NS_ERROR_FAILURE;
+
+  NS_IF_RELEASE(aListener);
+
+  if (mActionListeners->Count() < 1)
+  {
+    delete mActionListeners;
+    mActionListeners = 0;
+  }
+
+  return NS_OK;
+}
+
+
 nsString & nsIEditor::GetTextNodeTag()
 {
   static nsString gTextNodeTag("special text node tag");
@@ -1023,11 +1084,35 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
                                    nsIDOMNode * aParent,
                                    PRInt32      aPosition)
 {
+  PRInt32 i;
+  nsIEditActionListener *listener;
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->WillInsertNode(aNode, aParent, aPosition);
+    }
+  }
+
   InsertElementTxn *txn;
   nsresult result = CreateTxnForInsertElement(aNode, aParent, aPosition, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->DidInsertNode(aNode, aParent, aPosition, result);
+    }
+  }
+
   return result;
 }
 
@@ -1049,11 +1134,35 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
 
 NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
 {
+  PRInt32 i;
+  nsIEditActionListener *listener;
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->WillDeleteNode(aElement);
+    }
+  }
+
   DeleteElementTxn *txn;
   nsresult result = CreateTxnForDeleteElement(aElement, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->DidDeleteNode(aElement, result);
+    }
+  }
+
   return result;
 }
 
@@ -1818,6 +1927,19 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
                     PRInt32      aOffset,
                     nsIDOMNode **aNewLeftNode)
 {
+  PRInt32 i;
+  nsIEditActionListener *listener;
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->WillSplitNode(aNode, aOffset);
+    }
+  }
+
   SplitElementTxn *txn;
   nsresult result = CreateTxnForSplitNode(aNode, aOffset, &txn);
   if (NS_SUCCEEDED(result))  
@@ -1829,6 +1951,20 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
       NS_ASSERTION((NS_SUCCEEDED(result)), "result must succeeded for GetNewNode");
     }
   }
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+      {
+        nsIDOMNode *ptr = (aNewLeftNode) ? *aNewLeftNode : 0;
+        listener->DidSplitNode(aNode, aOffset, ptr, result);
+      }
+    }
+  }
+
   return result;
 }
 
@@ -1852,11 +1988,35 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
                     nsIDOMNode * aRightNode,
                     nsIDOMNode * aParent)
 {
+  PRInt32 i;
+  nsIEditActionListener *listener;
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->WillJoinNodes(aLeftNode, aRightNode, aParent);
+    }
+  }
+
   JoinElementTxn *txn;
   nsresult result = CreateTxnForJoinNode(aLeftNode, aRightNode, &txn);
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+
+  if (mActionListeners)
+  {
+    for (i = 0; i < mActionListeners->Count(); i++)
+    {
+      listener = (nsIEditActionListener *)mActionListeners->ElementAt(i);
+      if (listener)
+        listener->DidJoinNodes(aLeftNode, aRightNode, aParent, result);
+    }
+  }
+
   return result;
 }
 

@@ -44,16 +44,31 @@ public:
   NS_DECL_ISUPPORTS
 
   /* nsIEditActionListener method implementations. */
-  NS_IMETHOD InsertNode(nsIDOMNode * aNode,
-                        nsIDOMNode * aParent,
-                        PRInt32      aPosition);
-  NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
-  NS_IMETHOD SplitNode(nsIDOMNode * aExistingRightNode,
-                       PRInt32      aOffset,
-                       nsIDOMNode * aNewLeftNode);
-  NS_IMETHOD JoinNodes(nsIDOMNode  *aLeftNode,
-                       nsIDOMNode  *aRightNode,
-                       nsIDOMNode  *aParent);
+  NS_IMETHOD WillInsertNode(nsIDOMNode *aNode,
+                            nsIDOMNode *aParent,
+                            PRInt32      aPosition);
+  NS_IMETHOD DidInsertNode(nsIDOMNode *aNode,
+                           nsIDOMNode *aParent,
+                           PRInt32     aPosition,
+                           nsresult    aResult);
+
+  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild);
+  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult);
+
+  NS_IMETHOD WillSplitNode(nsIDOMNode * aExistingRightNode,
+                           PRInt32      aOffset);
+  NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode,
+                          PRInt32     aOffset,
+                          nsIDOMNode *aNewLeftNode,
+                          nsresult    aResult);
+
+  NS_IMETHOD WillJoinNodes(nsIDOMNode  *aLeftNode,
+                           nsIDOMNode  *aRightNode,
+                           nsIDOMNode  *aParent);
+  NS_IMETHOD DidJoinNodes(nsIDOMNode  *aLeftNode,
+                          nsIDOMNode  *aRightNode,
+                          nsIDOMNode  *aParent,
+                          nsresult     aResult);
 };
 
 #endif // nsTSDNotifier_h__

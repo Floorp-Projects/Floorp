@@ -79,10 +79,22 @@ nsTSDNotifier::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::InsertNode(nsIDOMNode *aNode,
-                          nsIDOMNode *aParent,
-                          PRInt32 aPosition)
+nsTSDNotifier::WillInsertNode(nsIDOMNode *aNode,
+                              nsIDOMNode *aParent,
+                              PRInt32     aPosition)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::DidInsertNode(nsIDOMNode *aNode,
+                             nsIDOMNode *aParent,
+                             PRInt32     aPosition,
+                             nsresult    aResult)
+{
+  if (NS_FAILED(aResult))
+    return NS_OK;
+
   if (!mDoc)
     return NS_ERROR_FAILURE;
 
@@ -90,8 +102,17 @@ nsTSDNotifier::InsertNode(nsIDOMNode *aNode,
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::DeleteNode(nsIDOMNode *aChild)
+nsTSDNotifier::WillDeleteNode(nsIDOMNode *aChild)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::DidDeleteNode(nsIDOMNode *aChild, nsresult aResult)
+{
+  if (NS_FAILED(aResult))
+    return NS_OK;
+
   if (!mDoc)
     return NS_ERROR_FAILURE;
 
@@ -99,10 +120,21 @@ nsTSDNotifier::DeleteNode(nsIDOMNode *aChild)
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::SplitNode(nsIDOMNode *aExistingRightNode,
-                         PRInt32 aOffset,
-                         nsIDOMNode *aNewLeftNode)
+nsTSDNotifier::WillSplitNode(nsIDOMNode *aExistingRightNode,
+                             PRInt32     aOffset)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::DidSplitNode(nsIDOMNode *aExistingRightNode,
+                            PRInt32     aOffset,
+                            nsIDOMNode *aNewLeftNode,
+                            nsresult    aResult)
+{
+  if (NS_FAILED(aResult))
+    return NS_OK;
+
   if (!mDoc)
     return NS_ERROR_FAILURE;
 
@@ -110,10 +142,22 @@ nsTSDNotifier::SplitNode(nsIDOMNode *aExistingRightNode,
 }
 
 NS_IMETHODIMP
-nsTSDNotifier::JoinNodes(nsIDOMNode  *aLeftNode,
-                         nsIDOMNode  *aRightNode,
-                         nsIDOMNode  *aParent)
+nsTSDNotifier::WillJoinNodes(nsIDOMNode  *aLeftNode,
+                             nsIDOMNode  *aRightNode,
+                             nsIDOMNode  *aParent)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::DidJoinNodes(nsIDOMNode  *aLeftNode,
+                            nsIDOMNode  *aRightNode,
+                            nsIDOMNode  *aParent,
+                            nsresult     aResult)
+{
+  if (NS_FAILED(aResult))
+    return NS_OK;
+
   if (!mDoc)
     return NS_ERROR_FAILURE;
 
