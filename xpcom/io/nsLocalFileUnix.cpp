@@ -397,10 +397,10 @@ nsresult
 nsLocalFile::GetLeafNameRaw(const char **_retval)
 {
     CHECK_mPath();
-    char *leafName = strrchr((const char *)mPath, '/');
+    const char *leafName = strrchr((const char *)mPath, '/');
     if (!leafName)
 	return NS_ERROR_FILE_INVALID_PATH;
-    *_retval = ++leafName;
+    *_retval = leafName+1;
     return NS_OK;
 }
 
