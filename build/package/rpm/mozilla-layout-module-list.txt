@@ -2,6 +2,7 @@ htmlparser
 gfx
 dom
 view
+widget/timer
 widget
 layout
 webshell
