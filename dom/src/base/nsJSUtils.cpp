@@ -445,7 +445,7 @@ nsJSUtils::nsConvertJSValToFunc(nsIDOMEventListener** aListener,
   return JS_TRUE;
 }
 
-NS_EXPORT void 
+NS_EXPORT void PR_CALLBACK
 nsJSUtils::nsGenericFinalize(JSContext* aContext,
                              JSObject* aObj)
 {
