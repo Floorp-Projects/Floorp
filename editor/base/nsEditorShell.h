@@ -158,7 +158,7 @@ class nsEditorShell :   public nsIEditorShell,
     nsresult        UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs);
 
     // Helper method which is called at the beginning of a new page load
-    nsresult        StartPageLoad();
+    nsresult        StartPageLoad(nsIChannel *aChannel);
 
     // Helper method which is called when an entire page load finishes
     nsresult        EndPageLoad(nsIDOMWindow *aDOMWindow,
@@ -174,6 +174,8 @@ class nsEditorShell :   public nsIEditorShell,
                                     nsIChannel *aChannel,
                                     nsresult aStatus);
 
+    PRBool          IsSupportedTextType(const char* aMIMEType);
+    
     // Check a preference and call NormalizeTable if pref is true
     // Use after deleting or inserting table cells to automatically 
     //  fix rowspan, colspan, and missing cells problems
@@ -234,8 +236,11 @@ class nsEditorShell :   public nsIEditorShell,
     PRPackedBool        mCloseWindowWhenLoaded; // error on load. Close window when loaded
     ECantEditReason     mCantEditReason;
     
-    EEditorType          mEditorType;
+    EEditorType         mEditorType;
     nsString            mEditorTypeString;      // string which describes which editor type will be instantiated (lowercased)
+    nsCString           mContentMIMEType;       // MIME type of the doc we are editing.
+    PRBool              mContentTypeKnown;
+    
     PRInt32             mWrapColumn;            // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
 
     nsStringArray       mSuggestedWordList;
