@@ -19,6 +19,8 @@
 #include <math.h>
 
 #include "nspr.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 #include "il_util.h"
 
 #include "nsDeviceContextGTK.h"
@@ -58,6 +60,9 @@ NS_IMPL_QUERY_INTERFACE(nsDeviceContextGTK, kDeviceContextIID)
 NS_IMPL_ADDREF(nsDeviceContextGTK)
 NS_IMPL_RELEASE(nsDeviceContextGTK)
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+
 NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
   GdkVisual *vis;
@@ -66,20 +71,36 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
   mWidget = aNativeWidget;
 
-#define IGNORE_X_SERVER_DPI
-#ifdef IGNORE_X_SERVER_DPI
-  nscoord dpi = 96;
-#else /* IGNORE_X_SERVER_DPI */
-  // Compute dpi of display
-  float screenWidth = float(::gdk_screen_width());
-  float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-  nscoord dpi = nscoord(screenWidth / screenWidthIn);
+  static nscoord dpi = 96;
+  static int initialized = 0;
+  if (!initialized) {
+    initialized = 1;
+    nsIPref* prefs = nsnull;
+    nsresult res = nsServiceManager::GetService(kPrefCID, kIPrefIID,
+      (nsISupports**) &prefs);
+    if (NS_SUCCEEDED(res) && prefs) {
+      PRInt32 intVal = 96;
+      res = prefs->GetIntPref("browser.screen_resolution", &intVal);
+      if (NS_SUCCEEDED(res)) {
+        if (intVal) {
+          dpi = intVal;
+        }
+        else {
+          // Compute dpi of display
+          float screenWidth = float(::gdk_screen_width());
+          float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
+          dpi = nscoord(screenWidth / screenWidthIn);
+        }
+      }
+    }
+  }
 
+#if 0
   // Now for some wacky heuristics. 
   if (dpi < 84) dpi = 72;
   else if (dpi < 108) dpi = 96;
   else if (dpi < 132) dpi = 120;
-#endif /* IGNORE_X_SERVER_DPI */
+#endif
 
   mTwipsToPixels = float(dpi) / float(NSIntPointsToTwips(72));
   mPixelsToTwips = 1.0f / mTwipsToPixels;
