@@ -780,6 +780,10 @@ X11R6LIBS	= $(LOC_LIB_DIR)/libSM.a $(LOC_LIB_DIR)/libICE.a
 OTHER_LIBS	+= -lipc
 endif
 
+ifeq ($(OS_RELEASE),4.0)
+X11R6LIBS	= $(LOC_LIB_DIR)/libSM.a $(LOC_LIB_DIR)/libICE.a
+endif
+
 NEED_NLS	= 1
 
 endif
