@@ -251,7 +251,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
   return NS_OK;
 }
 
-#define kXMLNS "xmlns"
+#define kXMLNS NS_LITERAL_STRING("xmlns")
 
 nsresult
 nsXMLContentSerializer::PushNameSpaceDecl(const nsAReadableString& aPrefix,
@@ -293,7 +293,7 @@ PRBool
 nsXMLContentSerializer::ConfirmPrefix(nsAWritableString& aPrefix,
                                       const nsAReadableString& aURI)
 {
-  if (aPrefix.Equals(NS_LITERAL_STRING(kXMLNS))) {
+  if (aPrefix.Equals(kXMLNS)) {
     return PR_FALSE;
   }
   if (aURI.Length() == 0) {
@@ -373,7 +373,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   nsAutoString tagPrefix, tagLocalName, tagNamespaceURI;
   nsAutoString xmlnsStr, defaultnsStr;
-  xmlnsStr.Assign(NS_LITERAL_STRING(kXMLNS));
+  xmlnsStr.Assign(kXMLNS);
   defaultnsStr.Assign(NS_LITERAL_STRING(""));
 
   aElement->GetPrefix(tagPrefix);
@@ -408,10 +408,10 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     
     content->GetAttribute(namespaceID, attrName, uriStr);
     if ((namespaceID == kNameSpaceID_XMLNS) ||
-        prefixStr.Equals(NS_LITERAL_STRING(kXMLNS))) {
+        prefixStr.Equals(kXMLNS)) {
       PushNameSpaceDecl(nameStr, uriStr, aElement);
     }
-    else if (nameStr.Equals(NS_LITERAL_STRING(kXMLNS))) {
+    else if (nameStr.Equals(kXMLNS)) {
       PushNameSpaceDecl(defaultnsStr, uriStr, aElement);
     }
   }
@@ -458,7 +458,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
     addNSAttr = PR_FALSE;
     if (kNameSpaceID_XMLNS == namespaceID) {
-      prefixStr.Assign(NS_LITERAL_STRING(kXMLNS));
+      prefixStr.Assign(kXMLNS);
     }
     else if (nsmanager) {
       nsmanager->GetNameSpaceURI(namespaceID, uriStr);
