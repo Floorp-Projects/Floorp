@@ -84,6 +84,8 @@ CBookmarksAttachment :: HandleNotification( HT_Notification /* notifyStruct*/,
 		case HT_EVENT_NODE_ADDED:
 		case HT_EVENT_VIEW_REFRESH:
 			// only update menu if the quickfile view changes
+			//¥¥¥We need a way to not update on node_added events else we add items to the
+			//¥¥¥bookmarks menu on the order of N^2 where N is # of bookmarks.
 			if ( HT_GetView(node) == sQuickfileView ) {			
 				sInvalidMenu = true;
 				UpdateMenu();
@@ -216,7 +218,7 @@ void CBookmarksAttachment::UpdateMenu()
 
 		// ¥ walk through the list, and let the submenus be inserted recursively
 		int nextMenuID = cBookmarksFirstHierMenuID;
-		FillMenuFromList( HT_TopNode(sQuickfileView), sMenu, nextMenuID, PERM_BOOKMARK_ITEMS );
+		FillMenuFromList( HT_TopNode(sQuickfileView), sMenu, nextMenuID, PERM_BOOKMARK_ITEMS, 0 );
 		
 		sInvalidMenu = false;
 	}
@@ -229,8 +231,13 @@ void CBookmarksAttachment::FillMenuFromList(
 	HT_Resource top, 
 	LMenu* newMenu,
 	int& nextMenuID,		// next menu to create
-	int whichItem )			// id of the first item to insert
+	int whichItem,			// id of the first item to insert
+	int depth )				// how deep are we?
 {
+	// keep us from infinite recursion if the data file contains an infinite loop
+	if ( depth > 4 )
+		return;
+
 	if (CFrontApp::GetApplication()->HasBookmarksMenu())
 	{
 		Try_
@@ -313,7 +320,7 @@ void CBookmarksAttachment::FillMenuFromList(
 							::SetItemCmd( mHand, whichItem, hMenuCmd );
 							::SetItemMark( mHand, whichItem, subMenu->GetMenuID() );
 							if ( currNode )
-								FillMenuFromList( currNode, subMenu, nextMenuID, 0 );
+								FillMenuFromList( currNode, subMenu, nextMenuID, 0, depth+1 );
 						}
 					}
 				}
