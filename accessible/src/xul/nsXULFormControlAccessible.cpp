@@ -517,7 +517,7 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccParent(nsIAccessible **  aAccPar
     nsCOMPtr<nsIAccessible> tempParent;
     nsAccessible::GetAccParent(getter_AddRefs(tempParent));
     if (tempParent)
-      tempParent->GetAccParent(&mParent);  // mParent is a weak pointer
+      tempParent->GetAccParent(getter_AddRefs(mParent));
   }
   NS_ASSERTION(mParent,"Whoa! This RadioButtonAcc doesn't have a parent! Better find out why.");
   *aAccParent = mParent;

@@ -400,10 +400,8 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
   mWebProgress = nsnull;
 
   if (mAccessNodeCache) {
-    nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *hashToClear = mAccessNodeCache; // Avoid reentrency
+    ClearCache(*mAccessNodeCache);
     mAccessNodeCache = nsnull;
-    ClearCache(*hashToClear);
-    delete hashToClear;
   }
 
   mDocument = nsnull;
