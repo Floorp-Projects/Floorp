@@ -206,8 +206,8 @@ ALL_TRASH = \
 else
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
-	$(HOST_PROGOBJS) $(HOST_OBJS) \
-	so_locations _gen _stubs \
+	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) $(DEF_FILE)\
+	so_locations _gen _stubs $(wildcard *.res) \
 	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
 endif
 
