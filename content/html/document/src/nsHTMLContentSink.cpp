@@ -3385,6 +3385,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       NS_RELEASE(text);
     }
   }
+  NS_RELEASE(element);
 
   // Don't include script loading and evaluation in the stopwatch
   // that is measuring content creation time
