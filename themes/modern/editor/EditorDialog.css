@@ -128,7 +128,6 @@ tree.list {
   min-width: 10em;
 }
 
-/* We use a borderless button to show misspelled word in dialog */
 #MisspelledWord {
   font-weight: bold;
 }

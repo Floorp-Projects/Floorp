@@ -34,7 +34,6 @@ iframe#content-frame {
 .source-editor, .source-editor:focus {
   margin: 0px 5px 5px 0px;
   border: 0px;
-  border-top: 1px solid black;
   /* Scroll bars are in content, 
      so we can't use right and bottom padding! */
   padding: 5px 0px 0px 5px;
