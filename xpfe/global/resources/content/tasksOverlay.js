@@ -95,7 +95,6 @@ function toOpenWindowByType( inType, uri )
 function OpenBrowserWindow()
 {
   dump("In OpenBrowserWindw()...\n");
-  dump("XXX toast\n");
   var handler = Components.classes['component://netscape/appshell/component/browser/cmdhandler'];
   handler = handler.getService();
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
