@@ -170,3 +170,4 @@ nsEntityConverterFactory::LockFactory(PRBool aLock)
 {
 	return NS_OK;
 }
+
