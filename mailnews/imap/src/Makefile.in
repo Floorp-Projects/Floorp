@@ -22,10 +22,15 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=nntp
-LIBRARY_NAME=nntp
+MODULE=imap
+LIBRARY_NAME=imap
+
+EXPORTS = \
+	nsIMAPGroupRecord.h \
+	$(NULL)
 
 CPPSRCS = \
+	nsIMAPGroupRecord.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
