@@ -488,10 +488,15 @@ RRT_HEADER:
 		nsCAutoString productSub;
 		pHTTPHandler->GetProductSub(productSub);
 
+		nsCAutoString platform;
+		pHTTPHandler->GetPlatform(platform);
+
 		userAgentString.AssignWithConversion(brandName.get());
 		userAgentString += ' ';
 		userAgentString += vendorSub;
 		userAgentString += " (";
+		userAgentString += platform;
+		userAgentString += " ";
 		userAgentString += productSub;
 		userAgentString += ")";
 	  }
