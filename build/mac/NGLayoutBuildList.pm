@@ -120,6 +120,7 @@ sub Checkout()
 		$session->checkout("mozilla/lib/liblayer") || die "checkout failure";
 		$session->checkout("mozilla/modules/zlib") || die "checkout failure";
 		$session->checkout("mozilla/modules/libutil") || die "checkout failure";
+		$session->checkout("mozilla/modules/plugin") || die "checkout failure";
 		$session->checkout("mozilla/nsprpub") || die "checkout failure";
 		$session->checkout("mozilla/sun-java") || die "checkout failure";
 		$session->checkout("mozilla/nav-java") || die "checkout failure";
@@ -234,6 +235,10 @@ sub BuildDist()
     [":mozilla:modules:libimg:png:MANIFEST", "$distdirectory:libimg:"],
     [":mozilla:modules:libimg:src:MANIFEST", "$distdirectory:libimg:"],
     [":mozilla:modules:libimg:public:MANIFEST", "$distdirectory:libimg:"],
+#PLUGIN
+    [":mozilla:modules:plugin:nglsrc:MANIFEST", "$distdirectory:plugin:"],
+    [":mozilla:modules:plugin:public:MANIFEST", "$distdirectory:plugin:"],
+    [":mozilla:modules:plugin:src:MANIFEST", "$distdirectory:plugin:"],
 #PARSE
 		[":mozilla:lib:libparse:MANIFEST",			"$distdirectory:libparse:"],
 #OLD LAYOUT
