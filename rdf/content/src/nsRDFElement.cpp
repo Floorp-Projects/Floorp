@@ -1557,7 +1557,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     // If they're changing the identity of this object, then we need to re-hash 
     // it into the document's resource-to-element map.
