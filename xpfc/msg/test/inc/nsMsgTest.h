@@ -63,6 +63,8 @@ public:
 
 private:
   NS_METHOD RegisterFactories();
+  NS_METHOD DoSMTP();
+  NS_METHOD DoMIME();
 
 private:
   nsIShellInstance * mShellInstance ;
