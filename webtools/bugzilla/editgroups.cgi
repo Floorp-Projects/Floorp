@@ -231,9 +231,9 @@ if ($action eq 'changeform') {
     print "<TR><TD ALIGN=CENTER>|</TD><TD COLSPAN=3>Members of these groups are included in this group</TD></TR>";
     print "<TR><TD ALIGN=CENTER>|</TD><TD ALIGN=CENTER>|</TD><TD COLSPAN=2></TD><TR>";
 
-    # For each group, we use left joins to establish the existance of
+    # For each group, we use left joins to establish the existence of
     # a record making that group a member of this group
-    # and the existance of a record permitting that group to bless
+    # and the existence of a record permitting that group to bless
     # this one
     SendSQL("SELECT groups.id, groups.name, groups.description," .
              " group_group_map.member_id IS NOT NULL," .

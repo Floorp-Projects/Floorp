@@ -32,6 +32,9 @@ BEGIN { # yes the indenting is off, deal with it
 @evilwords = qw(
 databasa
 arbitary
+paramater
+existance
+existant
 );
 
 $testcount = scalar(@Support::Files::testitems) * scalar(@evilwords);
@@ -60,21 +63,32 @@ my @testitems = @Support::Files::testitems;
 foreach my $file (@testitems) {
     $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
     next if (!$file); # skip null entries
-    if (! open (FILE, $file)) { # open the file for reading
-        ok(0,"could not open $file for spellcheck --WARNING");
-        next;
+
+    foreach my $word (@evilwords) { # go through the evilwords
+        
+        if (open (FILE, $file)) { # open the file for reading
+            my $found_word = 0;
+
+            while (my $file_line = <FILE>) { # and go through the file line by line
+                if ($file_line =~ /$word/i) { # found an evil word
+                    $found_word = 1;
+                    last;
+                }
+            }
+            
+            if ($found_word) {
+                ok(0,"$file: found SPELLING ERROR $word --WARNING");
+            }
+            else {
+                ok(1,"$file does not contain the spelling error $word");
+            }
+            
+            close (FILE);
+        }
+        else {
+            ok(0,"could not open $file for spellcheck --WARNING");
+        }
     }
-	foreach my $word (@evilwords) { # go through the evilwords
-		while (my $file_line = <FILE>) { # and go through the file line by line
-			if ($file_line =~ /$word/i) { # found an evil word
- 				$found_word = 1;
- 				last;
- 			}
-		}
-		if ($found_word eq 1) { ok(0,"$file: found SPELLING ERROR $word --WARNING") }
-		if ($found_word ne 1) { ok(1,"$file does not contain the spelling error $word") }
-		$found_word = 0;
-	}
 } 
 
 exit 0;

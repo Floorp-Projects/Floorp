@@ -146,7 +146,7 @@ I<Bugzilla::CGI> also includes additional functions.
 
 =item C<canonicalise_query(@exclude)>
 
-This returns a sorted string of the paramaters, suitable for use in a url.
+This returns a sorted string of the parameters, suitable for use in a url.
 Values in C<@exclude> are not included in the result.
 
 =back

@@ -72,7 +72,7 @@ sub check_shadowdb {
         return "You need to specify a host when using a shadow database";
     }
 
-    # Can't test existance of this because ConnectToDatabase uses the param,
+    # Can't test existence of this because ConnectToDatabase uses the param,
     # but we can't set this before testing....
     # This can really only be fixed after we can use the DBI more openly
     return "";
@@ -294,7 +294,7 @@ sub check_netmask {
            'This is done so that long slow read-only operations can be used ' .
            'against this db, and not lock up things for everyone else. This ' .
            'database is on the <tt>shadowdbhost</tt>, and must exist. ' .
-           'Bugzilla does not update it, if you use this paramater, then ' .
+           'Bugzilla does not update it, if you use this parameter, then ' .
            'you need to set up replication for your database',
    type => 't',
    default => '',
