@@ -15,6 +15,23 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+ 
+/**
+ * MODULE NOTES:
+ * @update	gess7/30/98
+ *
+ * Much as I hate to do it, we were using string compares wrong.
+ * Often, programmers call functions like strcmp(s1,s2), and pass
+ * one or more null strings. Rather than blow up on these, I've 
+ * added quick checks to ensure that cases like this don't cause
+ * us to fail.
+ *
+ * In general, if you pass a null into any of these string compare
+ * routines, we simply return 0.
+ */
+
+
 #include "nsCRT.h"
 
 // XXX Bug: These tables don't lowercase the upper 128 characters properly
@@ -123,137 +140,228 @@ PRUnichar nsCRT::ToLower(PRUnichar aChar)
 PRInt32 nsCRT::strlen(const PRUnichar* s)
 {
   PRInt32 len = 0;
-  while (*s++ != 0) {
-    len++;
+  if(s) {
+    while (*s++ != 0) {
+      len++;
+    }
   }
   return len;
 }
 
+
+/**
+ * Compare unichar string ptrs, stopping at the 1st null 
+ * NOTE: If both are null, we return 0.
+ * @update	gess7/30/98
+ * @param   s1 and s2 both point to unichar strings
+ * @return  1 if they match, 0 if not
+ */
 PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2)
 {
-  for (;;) {
-    PRUnichar c1 = *s1++;
-    PRUnichar c2 = *s2++;
-    if (c1 != c2) {
-      if (c1 < c2) return -1;
-      return 1;
+  if(s1 && s2) {
+    for (;;) {
+      PRUnichar c1 = *s1++;
+      PRUnichar c2 = *s2++;
+      if (c1 != c2) {
+        if (c1 < c2) return -1;
+        return 1;
+      }
+      if ((0==c1) || (0==c2)) break;
     }
-    if (c1 == 0) break;
   }
   return 0;
 }
 
-// characters following a null character are not compared
+/**
+ * Compare unichar string ptrs, stopping at the 1st null or nth char.
+ * NOTE: If either is null, we return 0.
+ * @update	gess7/30/98
+ * @param   s1 and s2 both point to unichar strings
+ * @return  1 if they match, 0 if not
+ */
 PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
 {
-  while (--n >= 0) {
-    PRUnichar c1 = *s1++;
-    PRUnichar c2 = *s2++;
-    if (c1 != c2) {
-      if (c1 < c2) return -1;
-      return 1;
+  if(s1 && s2) { 
+    if(0<n) {
+      while (--n >= 0) {
+        PRUnichar c1 = *s1++;
+        PRUnichar c2 = *s2++;
+        if (c1 != c2) {
+          if (c1 < c2) return -1;
+          return 1;
+        }
+        if ((0==c1) || (0==c2)) break;
+      }
     }
-    if (c1 == 0) break;
+    else return 1;
   }
   return 0;
 }
 
+
+/**
+ * Compare unichar string ptrs without regard to case
+ * NOTE: If both are null, we return 0.
+ * @update	gess7/30/98
+ * @param   s1 and s2 both point to unichar strings
+ * @return  1 if they match, 0 if not
+ */
 PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2)
 {
-  for (;;) {
-    PRUnichar c1 = *s1++;
-    PRUnichar c2 = *s2++;
-    if (c1 != c2) {
-      c1 = TOLOWER(c1);
-      c2 = TOLOWER(c2);
+  if(s1 && s2) {
+    for (;;) {
+      PRUnichar c1 = *s1++;
+      PRUnichar c2 = *s2++;
       if (c1 != c2) {
-        if (c1 < c2) return -1;
-        return 1;
+        c1 = TOLOWER(c1);
+        c2 = TOLOWER(c2);
+        if (c1 != c2) {
+          if (c1 < c2) return -1;
+          return 1;
+        }
       }
+      if ((0==c1) || (0==c2)) break;
     }
-    if (c1 == 0) break;
   }
   return 0;
 }
 
+/**
+ * Compare unichar string ptrs, stopping at the 1st null or nth char;
+ * also ignoring the case of characters.
+ * NOTE: If both are null, we return 0.
+ * @update	gess7/30/98
+ * @param   s1 and s2 both point to unichar strings
+ * @return  1 if they match, 0 if not
+ */
 PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
 {
-  while (--n >= 0) {
-    PRUnichar c1 = *s1++;
-    PRUnichar c2 = *s2++;
-    if (c1 != c2) {
-      c1 = TOLOWER(c1);
-      c2 = TOLOWER(c2);
-      if (c1 != c2) {
-        if (c1 < c2) return -1;
-        return 1;
+  if(s1 && s2) {
+    if(0<n){
+      while (--n >= 0) {
+        PRUnichar c1 = *s1++;
+        PRUnichar c2 = *s2++;
+        if (c1 != c2) {
+          c1 = TOLOWER(c1);
+          c2 = TOLOWER(c2);
+          if (c1 != c2) {
+            if (c1 < c2) return -1;
+            return 1;
+          }
+        }
+        if ((0==c1) || (0==c2)) break;
       }
-    }
-    if (c1 == 0) break;
+    } else return 1;
   }
   return 0;
 }
 
+
+/**
+ * Compare a unichar string ptr to cstring.
+ * NOTE: If both are null, we return 0.
+ * @update	gess7/30/98
+ * @param   s1 points to unichar string
+ * @param   s2 points to cstring
+ * @return  1 if they match, 0 if not
+ */
 PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2)
 {
-  for (;;) {
-    PRUnichar c1 = *s1++;
-    PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
-    if (c1 != c2) {
-      if (c1 < c2) return -1;
-      return 1;
+  if(s1 && s2) {
+    for (;;) {
+      PRUnichar c1 = *s1++;
+      PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
+      if (c1 != c2) {
+        if (c1 < c2) return -1;
+        return 1;
+      }
+      if ((0==c1) || (0==c2)) break;
     }
-    if (c1 == 0) break;
   }
   return 0;
 }
 
+
+/**
+ * Compare a unichar string ptr to cstring, up to N chars.
+ * NOTE: If both are null, we return 0.
+ * @update	gess7/30/98
+ * @param   s1 points to unichar string
+ * @param   s2 points to cstring
+ * @return  1 if they match, 0 if not
+ */
 PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRInt32 n)
 {
-  while (--n >= 0) {
-    PRUnichar c1 = *s1++;
-    PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
-    if (c1 != c2) {
-      if (c1 < c2) return -1;
-      return 1;
-    }
-    if (c1 == 0) break;
+  if(s1 && s2) {
+    if(0<n){
+      while (--n >= 0) {
+        PRUnichar c1 = *s1++;
+        PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
+        if (c1 != c2) {
+          if (c1 < c2) return -1;
+          return 1;
+        }
+        if ((0==c1) || (0==c2)) break;
+      }
+    } else return 1;
   }
   return 0;
 }
 
+/**
+ * Compare a unichar string ptr to cstring without regard to case
+ * NOTE: If both are null, we return 0.
+ * @update	gess7/30/98
+ * @param   s1 points to unichar string
+ * @param   s2 points to cstring
+ * @return  1 if they match, 0 if not
+ */
 PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2)
 {
-  for (;;) {
-    PRUnichar c1 = *s1++;
-    PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
-    if (c1 != c2) {
-      c1 = TOLOWER(c1);
-      c2 = TOLOWER(c2);
+  if(s1 && s2) {
+    for (;;) {
+      PRUnichar c1 = *s1++;
+      PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
       if (c1 != c2) {
-        if (c1 < c2) return -1;
-        return 1;
+        c1 = TOLOWER(c1);
+        c2 = TOLOWER(c2);
+        if (c1 != c2) {
+          if (c1 < c2) return -1;
+          return 1;
+        }
       }
+      if ((0==c1) || (0==c2)) break;
     }
-    if (c1 == 0) break;
   }
   return 0;
 }
 
+/**
+ * Caseless compare up to N chars between unichar string ptr to cstring.
+ * NOTE: If both are null, we return 0.
+ * @update	gess7/30/98
+ * @param   s1 points to unichar string
+ * @param   s2 points to cstring
+ * @return  1 if they match, 0 if not
+ */
 PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRInt32 n)
 {
-  while (--n >= 0) {
-    PRUnichar c1 = *s1++;
-    PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
-    if (c1 != c2) {
-      c1 = TOLOWER(c1);
-      c2 = TOLOWER(c2);
-      if (c1 != c2) {
-        if (c1 < c2) return -1;
-        return 1;
+  if(s1 && s2){
+    if(0<n){
+      while (--n >= 0) {
+        PRUnichar c1 = *s1++;
+        PRUnichar c2 = kIsoLatin1ToUCS2[*(const unsigned char*)s2++];
+        if (c1 != c2) {
+          c1 = TOLOWER(c1);
+          c2 = TOLOWER(c2);
+          if (c1 != c2) {
+            if (c1 < c2) return -1;
+            return 1;
+          }
+        }
+        if (c1 == 0) break;
       }
-    }
-    if (c1 == 0) break;
+    } else return 1;
   }
   return 0;
 }
@@ -261,10 +369,12 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRInt32 n)
 PRInt32 nsCRT::HashCode(const PRUnichar* us)
 {
   PRInt32 rv = 0;
-  PRUnichar ch;
-  while ((ch = *us++) != 0) {
-    // FYI: rv = rv*37 + ch
-    rv = ((rv << 5) + (rv << 2) + rv) + ch;
+  if(us) {
+    PRUnichar ch;
+    while ((ch = *us++) != 0) {
+      // FYI: rv = rv*37 + ch
+      rv = ((rv << 5) + (rv << 2) + rv) + ch;
+    }
   }
   return rv;
 }

@@ -58,10 +58,9 @@ class NS_BASE nsString {
 
   ///accessor methods
   //@{
-            PRUnichar*    GetUnicode(void) const;
+         const PRUnichar* GetUnicode(void) const;
                           operator PRUnichar*() const;
 
-            PRUnichar*    operator()() const;
             PRUnichar     operator()(PRInt32 i) const;
             PRUnichar&    operator[](PRInt32 i) const;
             PRUnichar&    CharAt(PRInt32 anIndex) const;
@@ -84,7 +83,7 @@ class NS_BASE nsString {
             char*         ToNewCString() const;
 
             char*         ToCString(char* aBuf,PRInt32 aBufLength) const;
-            void          ToString(nsString& aString) const;
+            void          Copy(nsString& aString) const;
 
             PRUnichar*    ToNewUnicode() const;
             float         ToFloat(PRInt32* aErrorCode) const;
@@ -93,18 +92,20 @@ class NS_BASE nsString {
 
   ///string manipulation methods...                
   //@{
+
+            nsString&     SetString(const PRUnichar* aStr,PRInt32 aLength=-1);
+            nsString&     SetString(const char* anISOLatin1,PRInt32 aLength=-1);
+
             nsString&     operator=(const nsString& aString);
             nsString&     operator=(const char* anISOLatin1);
             nsString&     operator=(char aChar);
             nsString&     operator=(const PRUnichar* aBuffer);
             nsString&     operator=(PRUnichar aChar);
-            nsString&     SetString(const PRUnichar* aStr,PRInt32 aLength=-1);
-            nsString&     SetString(const char* anISOLatin1,PRInt32 aLength=-1);
-
             nsString&     operator+=(const nsString& aString);
             nsString&     operator+=(const char* anISOLatin1);
             nsString&     operator+=(const PRUnichar* aBuffer);
             nsString&     operator+=(PRUnichar aChar);
+
             nsString&     Append(const nsString& aString,PRInt32 aLength=-1);
             nsString&     Append(const char* anISOLatin1,PRInt32 aLength=-1);
             nsString&     Append(char aChar);
@@ -152,35 +153,35 @@ class NS_BASE nsString {
   ///comparision methods...
   //@{
     virtual PRInt32       Compare(const nsString &S,PRBool aIgnoreCase=PR_FALSE) const;
-    virtual PRInt32       Compare(const char *anISOLatin1,PRBool aIgnoreCase=PR_FALSE) const;
-    virtual PRInt32       Compare(const PRUnichar *aString,PRBool aIgnoreCase=PR_FALSE) const;
+    virtual PRInt32       Compare(const char *anISOLatin1,PRInt32 aLength=-1,PRBool aIgnoreCase=PR_FALSE) const;
+    virtual PRInt32       Compare(const PRUnichar *aString,PRInt32 aLength=-1,PRBool aIgnoreCase=PR_FALSE) const;
 
-            PRInt32       operator==(const nsString &S) const;
-            PRInt32       operator==(const char *anISOLatin1) const;
-            PRInt32       operator==(const PRUnichar* aString) const;
-            PRInt32       operator!=(const nsString &S) const;
-            PRInt32       operator!=(const char *anISOLatin1) const;
-            PRInt32       operator!=(const PRUnichar* aString) const;
-            PRInt32       operator<(const nsString &S) const;
-            PRInt32       operator<(const char *anISOLatin1) const;
-            PRInt32       operator<(const PRUnichar* aString) const;
-            PRInt32       operator>(const nsString &S) const;
-            PRInt32       operator>(const char *anISOLatin1) const;
-            PRInt32       operator>(const PRUnichar* aString) const;
-            PRInt32       operator<=(const nsString &S) const;
-            PRInt32       operator<=(const char *anISOLatin1) const;
-            PRInt32       operator<=(const PRUnichar* aString) const;
-            PRInt32       operator>=(const nsString &S) const;
-            PRInt32       operator>=(const char *anISOLatin1) const;
-            PRInt32       operator>=(const PRUnichar* aString) const;
+            PRBool        operator==(const nsString &S) const;
+            PRBool        operator==(const char *anISOLatin1) const;
+            PRBool        operator==(const PRUnichar* aString) const;
+            PRBool        operator!=(const nsString &S) const;
+            PRBool        operator!=(const char *anISOLatin1) const;
+            PRBool        operator!=(const PRUnichar* aString) const;
+            PRBool        operator<(const nsString &S) const;
+            PRBool        operator<(const char *anISOLatin1) const;
+            PRBool        operator<(const PRUnichar* aString) const;
+            PRBool        operator>(const nsString &S) const;
+            PRBool        operator>(const char *anISOLatin1) const;
+            PRBool        operator>(const PRUnichar* aString) const;
+            PRBool        operator<=(const nsString &S) const;
+            PRBool        operator<=(const char *anISOLatin1) const;
+            PRBool        operator<=(const PRUnichar* aString) const;
+            PRBool        operator>=(const nsString &S) const;
+            PRBool        operator>=(const char *anISOLatin1) const;
+            PRBool        operator>=(const PRUnichar* aString) const;
 
             PRBool        Equals(const nsString& aString) const;
-            PRBool        Equals(const char* anISOLatin1) const;   
+            PRBool        Equals(const char* anISOLatin1,PRInt32 aLength=-1) const;   
             PRBool        Equals(const nsIAtom *aAtom) const;
             PRBool        Equals(const PRUnichar* s1, const PRUnichar* s2) const;
 
             PRBool        EqualsIgnoreCase(const nsString& aString) const;
-            PRBool        EqualsIgnoreCase(const char* anISOLatin1) const;
+            PRBool        EqualsIgnoreCase(const char* anISOLatin1,PRInt32 aLength=-1) const;
             PRBool        EqualsIgnoreCase(const nsIAtom *aAtom) const;
             PRBool        EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const;
   //@}
@@ -195,6 +196,7 @@ typedef PRUnichar chartype;
             chartype*       mStr;
             PRInt32         mLength;
             PRInt32         mCapacity;
+		static	PRBool					mSelfTested;
 };
 
 extern NS_BASE int fputs(const nsString& aString, FILE* out);
