@@ -569,8 +569,14 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 	PRBool haveParent = PR_FALSE;
     nsCOMPtr<nsIMsgImapMailFolder> hostFolder;
     nsCOMPtr<nsIMsgFolder> aFolder;
- 
-    nsCAutoString folderName = folderPath;
+    
+    if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
+    nsCAutoString dupFolderPath = folderPath;
+    if (dupFolderPath.Last() == '/')
+        dupFolderPath.SetLength(dupFolderPath.Length()-1);
+
+    nsCAutoString folderName = dupFolderPath;
+        
     nsCAutoString uri;
 	nsXPIDLCString serverUri;
 
@@ -613,7 +619,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 //	nsCString possibleName(aSpec->allocatedPathName);
 
 	uri.Append('/');
-	uri.Append(folderPath);
+	uri.Append(dupFolderPath);
 
 	a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
 
@@ -634,7 +640,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			}
 		}
 
-        hostFolder->CreateClientSubfolderInfo(folderPath, hierarchyDelimiter);
+        hostFolder->CreateClientSubfolderInfo(dupFolderPath, hierarchyDelimiter);
 		a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
     }
 	if (child)
@@ -649,8 +655,8 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			imapFolder->SetBoxFlags(boxFlags);
 			imapFolder->GetOnlineName(getter_Copies(onlineName));
 			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
-				|| nsCRT::strcmp((const char *) onlineName, folderPath))
-				imapFolder->SetOnlineName(folderPath);
+				|| nsCRT::strcmp((const char *) onlineName, dupFolderPath))
+				imapFolder->SetOnlineName(dupFolderPath);
 			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName, getter_Copies(unicodeName))))
 				child->SetName(unicodeName);
 
