@@ -60,12 +60,12 @@ GtkMozEmbedChrome::GtkMozEmbedChrome()
   mVisibility       = PR_FALSE;
   mLinkMessage      = NULL;
   mJSStatus         = NULL;
-  mLocation         = NULL;
   mTitle            = NULL;
   mChromeMask       = 0;
   mOffset           = 0;
   mDoingStream      = PR_FALSE;
   mChromeListener   = 0;
+  mContentShell     = 0;
   if (!mozEmbedLm)
     mozEmbedLm = PR_NewLogModule("GtkMozEmbedChrome");
   if (!sBrowsers)
@@ -91,7 +91,7 @@ NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
-   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 NS_INTERFACE_MAP_END
 
@@ -130,16 +130,6 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetJSStatus (char **retval)
   *retval = NULL;
   if (mJSStatus)
     *retval = nsCRT::strdup(mJSStatus);
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::GetLocation (char **retval)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetLocation\n"));
-  NS_ENSURE_ARG_POINTER(retval);
-  *retval = NULL;
-  if (mLocation)
-    *retval = nsCRT::strdup(mLocation);
   return NS_OK;
 }
 
@@ -189,8 +179,18 @@ NS_IMETHODIMP GtkMozEmbedChrome::OpenStream (const char *aBaseURI, const char *a
   // release our second reference to it.
   NS_RELEASE(newStream);
   
-  // get our hands on the docShell
-  mWebBrowser->GetDocShell(getter_AddRefs(docShell));
+  // get our hands on the primary content area of that docshell
+  // get the browser as an item
+  nsCOMPtr<nsIDocShellTreeItem> browserAsItem;
+  browserAsItem = do_QueryInterface(mWebBrowser);
+  // get the tree owner for that item
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  browserAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  // get the primary content shell as an item
+  nsCOMPtr<nsIDocShellTreeItem> contentItem;
+  treeOwner->GetPrimaryContentShell(getter_AddRefs(contentItem));
+  // QI that back to a docshell
+  docShell = do_QueryInterface(contentItem);
   if (!docShell)
     return NS_ERROR_FAILURE;
 
@@ -269,7 +269,9 @@ NS_IMETHODIMP GtkMozEmbedChrome::OpenStream (const char *aBaseURI, const char *a
 
 NS_IMETHODIMP GtkMozEmbedChrome::AppendToStream (const char *aData, gint32 aLen)
 {
-  GtkMozEmbedStream *embedStream = (GtkMozEmbedStream *)mStream.get();
+  nsIInputStream *inputStream;
+  inputStream = mStream.get();
+  GtkMozEmbedStream *embedStream = (GtkMozEmbedStream *)inputStream;
   nsresult rv;
   NS_ENSURE_STATE(mDoingStream);
   rv = embedStream->Append(aData, aLen);
@@ -387,10 +389,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask,
 					       nsIWebBrowser **_retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetNewBrowser\n"));
-  if (mChromeListener)
-    return mChromeListener->NewBrowser(chromeMask, _retval);
-  else
-    return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName, 
@@ -539,92 +538,84 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetParentContentListener(nsIURIContentListener 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// nsIWebProgressListener
+// nsIDocShellTreeOwner interface
 
-NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIWebProgress *aProgress, 
-						  nsIRequest *aRequest,
-                                                  PRInt32 curSelfProgress,
-						  PRInt32 maxSelfProgress,
-						  PRInt32 curTotalProgress,
-						  PRInt32 maxTotalProgress)
+NS_IMETHODIMP GtkMozEmbedChrome::FindItemWithName(const PRUnichar *aName,
+						  nsIDocShellTreeItem *aRequestor,
+						  nsIDocShellTreeItem **_retval)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnProgressChange\n"));
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("curTotalProgress is %d and maxTotalProgress is %d\n",
-				    curTotalProgress, maxTotalProgress));
-  // avoid those pesky divide by zero errors
-  if (maxTotalProgress > 0)
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::FindItemWithName\n"));
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+
+  PRInt32 i = 0;
+  PRInt32 numBrowsers = sBrowsers->Count();
+
+  for (i = 0; i < numBrowsers; i++)
   {
-    PRUint32 percentage = (curTotalProgress * 100) / maxTotalProgress;
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("%d%% percent\n", percentage));
+    GtkMozEmbedChrome *chrome = (GtkMozEmbedChrome *)sBrowsers->ElementAt(i);
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    NS_ENSURE_SUCCESS(chrome->GetWebBrowser(getter_AddRefs(webBrowser)),
+		      NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(webBrowser));
+    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+    docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome *, this), _retval);
+    if (*_retval)
+      break;
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::ContentShellAdded(nsIDocShellTreeItem *aContentShell,
+						   PRBool aPrimary,
+						   const PRUnichar *aID)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::ContentShellAdded\n"));
+  if (aPrimary)
+    mContentShell = aContentShell;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetPrimaryContentShell(nsIDocShellTreeItem **aPrimaryContentShell)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetPrimaryContentShell\n"));
+  NS_IF_ADDREF(mContentShell);
+  *aPrimaryContentShell = mContentShell;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SizeShellTo(nsIDocShellTreeItem *shell,
+					     PRInt32 cx, PRInt32 cy)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SizeShellTo\n"));
+  if (mChromeListener)
+    mChromeListener->SizeTo(cx, cy);
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::ShowModal(void)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::ShowModal\n"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::ExitModalLoop(nsresult aStatus)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::ExitModalLoop\n"));
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetNewWindow(PRInt32 aChromeFlags,
+					      nsIDocShellTreeItem **_retval)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetNewWindow\n"));
+  if (mChromeListener)
+    return mChromeListener->NewBrowser(aChromeFlags, _retval);
   else
-  {
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("Unknown percent\n"));
-  }
-
-  if (mChromeListener) {
-    mChromeListener->ProgressChange(aProgress, aRequest,
-				    curSelfProgress,
-				    maxSelfProgress,
-				    curTotalProgress,
-				    maxTotalProgress);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::OnStateChange(nsIWebProgress *aProgress, 
-					       nsIRequest *aRequest,
-                                               PRInt32 aStateFlags, nsresult aStatus)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnStateChange\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_start)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_start\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_redirecting)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_redirecting\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_negotiating)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_negotiating\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_transferring)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_transferring\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_stop)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_stop\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_is_request)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_is_request\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_is_document)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_is_document\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_is_network)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_is_network\n"));
-  if (aStateFlags & nsIWebProgressListener::flag_is_window)
-    PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_is_window\n"));
-
-  // let the listener know that a network event has happened
-  if (mChromeListener)
-    mChromeListener->Net(aProgress, aRequest, aStateFlags, aStatus);
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIWebProgress* aWebProgress,
-                                                  nsIRequest* aRequest,
-                                                  nsIURI *aLocation)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnLocationChange\n"));
-  char *newURIString = NULL;
-  NS_ENSURE_ARG_POINTER(aLocation);
-  aLocation->GetSpec(&newURIString);
-  mLocation = newURIString;
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("new location is %s\n", (const char *)mLocation));
-  // let the chrome listener know that the location has changed
-  if (mChromeListener)
-    mChromeListener->Message(GtkEmbedListener::MessageLocation, mLocation);
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-GtkMozEmbedChrome::OnStatusChange(nsIWebProgress* aWebProgress,
-                                  nsIRequest* aRequest,
-                                  nsresult aStatus,
-                                  const PRUnichar* aMessage)
-{
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 }
 
 // nsIBaseWindow interface

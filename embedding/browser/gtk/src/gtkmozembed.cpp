@@ -37,8 +37,34 @@
 #include "nsVoidArray.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDocShell.h"
+#include "nsISHistory.h"
+#include "jsapi.h"
+#include "nsIJSContextStack.h"
+#include "nsAppShellCIDs.h"
+#include "nsWidgetsCID.h"
+#include "nsIAppShell.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNSUIEvent.h"
+
+// freakin X headers
+#ifdef Success
+#undef Success
+#endif
+
+#ifdef KeyPress
+#undef KeyPress
+#endif
+
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMKeyListener.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 // forward declaration for our class
 class GtkMozEmbedPrivate;
@@ -49,23 +75,77 @@ public:
   GtkMozEmbedListenerImpl();
   virtual ~GtkMozEmbedListenerImpl();
   void     Init(GtkMozEmbed *aEmbed);
-  nsresult NewBrowser(PRUint32 chromeMask, 
-		      nsIWebBrowser **_retval);
+  nsresult NewBrowser(PRUint32 aChromeFlags,
+		      nsIDocShellTreeItem **_retval);
   void     Destroy(void);
   void     Visibility(PRBool aVisibility);
   void     Message(GtkEmbedListenerMessageType aType,
 		   const char *aMessage);
-  void     ProgressChange(nsIWebProgress *aProgress,
-			  nsIRequest *aRequest,
-			  PRInt32 curSelfProgress,
-			  PRInt32 maxSelfProgress,
-			  PRInt32 curTotalProgress,
-			  PRInt32 maxTotalProgress);
-  void     Net(nsIWebProgress *aProgress,
-	       nsIRequest *aRequest,
-	       PRInt32 aFlags, nsresult aStatus);
   PRBool   StartOpen(const char *aURI);
   void     SizeTo(PRInt32 width, PRInt32 height);
+private:
+  GtkMozEmbed *mEmbed;
+  GtkMozEmbedPrivate *mEmbedPrivate;
+};
+
+// this class is a progress listener for the main content area, once
+// it has been loaded.
+
+class GtkMozEmbedContentProgress : public nsIWebProgressListener
+{
+public:
+  GtkMozEmbedContentProgress();
+  virtual ~GtkMozEmbedContentProgress();
+  
+  void Init(GtkMozEmbed *aEmbed);
+
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIWEBPROGRESSLISTENER
+
+private:
+  GtkMozEmbed *mEmbed;
+  GtkMozEmbedPrivate *mEmbedPrivate;
+};
+
+// this class is a progress listener for the chrome area
+class GtkMozEmbedChromeProgress : public nsIWebProgressListener
+{
+public:
+  GtkMozEmbedChromeProgress();
+  virtual ~GtkMozEmbedChromeProgress();
+  
+  void Init(GtkMozEmbed *aEmbed);
+
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIWEBPROGRESSLISTENER
+
+private:
+  GtkMozEmbed *mEmbed;
+  GtkMozEmbedPrivate *mEmbedPrivate;
+};
+
+class GtkMozEmbedChromeKeyListener : public nsIDOMKeyListener
+{
+public:
+  GtkMozEmbedChromeKeyListener();
+  virtual ~GtkMozEmbedChromeKeyListener();
+
+  void Init (GtkMozEmbed *aEmbed);
+  
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMEventListener
+
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+
+  // nsIDOMKeyListener
+  
+  NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
+
 private:
   GtkMozEmbed *mEmbed;
   GtkMozEmbedPrivate *mEmbedPrivate;
@@ -75,16 +155,479 @@ class GtkMozEmbedPrivate
 {
 public:
   GtkMozEmbedPrivate();
-  nsCOMPtr<nsIWebBrowser>     webBrowser;
-  nsCOMPtr<nsIWebNavigation>  navigation;
-  nsCOMPtr<nsIGtkEmbed>       embed;
-  nsCString		      currentURI;
-  GtkMozEmbedListenerImpl     listener;
-  GdkWindow                  *mozWindow;
+  ~GtkMozEmbedPrivate();
+
+  nsresult    Init                (GtkMozEmbed *aEmbed);
+  nsresult    Realize             (GtkWidget *aWidget);
+  nsresult    Resize              (GtkWidget *aWidget);
+  nsresult    LoadChrome          (void);
+  void        SetCurrentURI       (nsCString &aString);
+  void        GetCurrentURI       (nsCString &aString);
+  nsresult    OnChromeStateChange (nsIWebProgress *aWebProgress,
+				   nsIRequest *aRequest,
+				   PRInt32 aStateFlags,
+				   PRUint32 aStatus);
+  void        Destroy             (void);
+  static void RequestToURIString  (nsIRequest *aRequest, char **aString);
+
+  nsCOMPtr<nsIWebBrowser>           mWebBrowser;
+  nsCOMPtr<nsIGtkEmbed>             mEmbed;
+  GtkMozEmbedListenerImpl           mListener;
+  GdkWindow                        *mMozWindow;
+  nsString                          mChromeLocation;
+  PRBool                            mChromeLoaded;
+  PRBool                            mContentLoaded;
+  nsCOMPtr<nsIWebProgressListener>  mChromeProgress;
+  nsCOMPtr<nsIWebProgressListener>  mContentProgress;
+  nsCOMPtr<nsIWebNavigation>        mContentNav;
+  nsCOMPtr<nsIWebNavigation>        mChromeNav;
+  nsCOMPtr<nsISHistory>             mSessionHistory;
+  nsCOMPtr<nsIDOMEventListener>     mEventListener;
+  PRBool                            mEventListenerAttached;
+
+private:
+  nsCString		            mCurrentURI;
 };
 
-GtkMozEmbedPrivate::GtkMozEmbedPrivate() : mozWindow(0)
+// nsEventQueueStack
+// a little utility object to push an event queue and pop it when it
+// goes out of scope. should probably be in a file of utility functions.
+class nsEventQueueStack
 {
+public:
+   nsEventQueueStack();
+   ~nsEventQueueStack();
+
+   nsresult Success();
+
+protected:
+   nsCOMPtr<nsIEventQueueService>   mService;
+   nsCOMPtr<nsIEventQueue>          mQueue;
+};
+
+GtkMozEmbedPrivate::GtkMozEmbedPrivate(void) : mMozWindow(0), 
+  mChromeLoaded(PR_FALSE), mContentLoaded(PR_FALSE),
+  mEventListenerAttached(PR_FALSE)
+{
+}
+
+GtkMozEmbedPrivate::~GtkMozEmbedPrivate(void)
+{
+}
+
+nsresult
+GtkMozEmbedPrivate::Init(GtkMozEmbed *aEmbed)
+{
+
+  // create an nsIWebBrowser object
+  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
+  NS_ENSURE_TRUE(mWebBrowser, NS_ERROR_FAILURE);
+
+  // create our glue widget
+  GtkMozEmbedChrome *chrome = new GtkMozEmbedChrome();
+  NS_ENSURE_TRUE(chrome, NS_ERROR_FAILURE);
+
+  mEmbed = do_QueryInterface((nsISupports *)(nsIGtkEmbed *) chrome);
+  NS_ENSURE_TRUE(mEmbed, NS_ERROR_FAILURE);
+
+  // hide it
+  aEmbed->data = this;
+
+  // create our content and chrome progress listener objects
+  GtkMozEmbedContentProgress *newContentProgress =
+    new GtkMozEmbedContentProgress();
+  GtkMozEmbedChromeProgress *newChromeProgress =
+    new GtkMozEmbedChromeProgress();
+
+  // we own it...
+  NS_ADDREF(newContentProgress);
+  NS_ADDREF(newChromeProgress);
+  newContentProgress->Init(aEmbed);
+  newChromeProgress->Init(aEmbed);
+  mContentProgress = do_QueryInterface(newContentProgress);
+  mChromeProgress = do_QueryInterface(newChromeProgress);
+  // and the ref in the private struct is the owning ref
+  NS_RELEASE(newChromeProgress);
+  NS_RELEASE(newContentProgress);
+
+  // create our key listener handler
+  GtkMozEmbedChromeKeyListener *newKeyListener = 
+    new GtkMozEmbedChromeKeyListener();
+
+  // we own it...
+  NS_ADDREF(newKeyListener);
+  newKeyListener->Init(aEmbed);
+  mEventListener = do_QueryInterface(newKeyListener);
+  // the ref in the private struct is the owning ref
+  NS_RELEASE(newKeyListener);
+
+  // get our hands on the browser chrome
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_QueryInterface(mEmbed);
+  NS_ENSURE_TRUE(browserChrome, NS_ERROR_FAILURE);
+  // set the toplevel window
+  mWebBrowser->SetTopLevelWindow(browserChrome);
+  // set the widget as the owner of the object
+  mEmbed->Init(GTK_WIDGET(aEmbed));
+
+  // set up the callback object so that it knows how to call back to
+  // this widget.
+  mListener.Init(aEmbed);
+  // set our listener for the chrome
+  mEmbed->SetEmbedListener(&mListener);
+
+  // so the embedding widget can find it's owning nsIWebBrowser object
+  browserChrome->SetWebBrowser(mWebBrowser);
+
+  // hang on to a copy of the navigation for the web browser
+  mChromeNav = do_QueryInterface(mWebBrowser);
+
+  // create our session history object for the inner content area
+  mSessionHistory = do_CreateInstance(NS_SHISTORY_PROGID);
+
+  return NS_OK;
+}
+
+nsresult
+GtkMozEmbedPrivate::Realize(GtkWidget *aWidget)
+{
+  // before we create the window, we have to set it up to handle
+  // chrome content.
+  nsCOMPtr<nsIDocShellTreeItem> browserAsItem = do_QueryInterface(mWebBrowser);
+  browserAsItem->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
+
+  // set ourselves up as the tree owner
+  nsCOMPtr<nsIDocShellTreeOwner> browserAsOwner;
+  browserAsOwner = do_QueryInterface(mEmbed);
+  browserAsItem->SetTreeOwner(browserAsOwner.get());
+
+  // now that we're realized, set up the nsIWebBrowser and nsIBaseWindow stuff
+  // init our window
+  nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow =
+    do_QueryInterface(mWebBrowser);
+  NS_ENSURE_TRUE(webBrowserBaseWindow, NS_ERROR_FAILURE);
+  webBrowserBaseWindow->InitWindow(aWidget, NULL, 0, 0,
+				   aWidget->allocation.width,
+				   aWidget->allocation.height);
+  webBrowserBaseWindow->Create();
+
+  // save the id of the mozilla window for later if we need it.
+  nsCOMPtr<nsIWidget> mozWidget;
+  webBrowserBaseWindow->GetMainWidget(getter_AddRefs(mozWidget));
+  // get the native drawing area
+  GdkWindow *tmp_window = (GdkWindow *)
+    mozWidget->GetNativeData(NS_NATIVE_WINDOW);
+  // and, thanks to superwin we actually need the parent of that.
+  tmp_window = gdk_window_get_parent(tmp_window);
+  mMozWindow = tmp_window;
+
+  // set our webBrowser object as the content listener object
+  nsCOMPtr<nsIURIContentListener> uriListener;
+  uriListener = do_QueryInterface(mEmbed);
+  NS_ENSURE_TRUE(uriListener, NS_ERROR_FAILURE);
+  mWebBrowser->SetParentURIContentListener(uriListener);
+
+  // get the nsIWebProgress object from the chrome docshell
+  nsCOMPtr <nsIDocShell> docShell;
+  mWebBrowser->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr <nsIWebProgress> webProgress;
+  webProgress = do_GetInterface(docShell);
+  // add our chrome listener object
+  webProgress->AddProgressListener(mChromeProgress);
+
+  nsresult rv;
+  rv = LoadChrome();
+
+  return rv;
+}
+
+nsresult
+GtkMozEmbedPrivate::Resize(GtkWidget *aWidget)
+{
+  // set the size of the base window
+  nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow =
+    do_QueryInterface(mWebBrowser);
+  webBrowserBaseWindow->SetPositionAndSize(0, 0, 
+					   aWidget->allocation.width,
+					   aWidget->allocation.height,
+					   PR_TRUE);
+  nsCOMPtr<nsIBaseWindow> embedBaseWindow = do_QueryInterface(mEmbed);
+  embedBaseWindow->SetPositionAndSize(0, 0,
+				      aWidget->allocation.width, 
+				      aWidget->allocation.height,
+				      PR_TRUE);
+  return NS_OK;
+}
+
+nsresult
+GtkMozEmbedPrivate::LoadChrome(void)
+{
+  // First push a nested event queue for event processing from netlib
+  // onto our UI thread queue stack.  This has to happen before we
+  // realize the widget so that any thread events happen on a thread
+  // event queue that isn't already in use in case we are being
+  // called from an event handler - say from necko in an onload
+  // handler.
+  nsEventQueueStack queuePusher;
+  NS_ENSURE_SUCCESS(queuePusher.Success(), NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIAppShell> subShell(do_CreateInstance(kAppShellCID));
+  NS_ENSURE_TRUE(subShell, NS_ERROR_FAILURE);
+
+  mChromeLocation.AssignWithConversion("chrome://embedding/browser/content/simple-shell.xul");
+  mChromeNav->LoadURI(mChromeLocation.GetUnicode());
+  
+  subShell->Create(0, nsnull);
+  subShell->Spinup();
+
+  // Push nsnull onto the JSContext stack before we dispatch a native event.
+  nsCOMPtr<nsIJSContextStack> stack(do_GetService("nsThreadJSContextStack"));
+  if(stack && NS_SUCCEEDED(stack->Push(nsnull)))
+  {
+    // until both the content and chrome areas are loaded, don't
+    // return.
+    nsresult looprv = NS_OK;
+    while (NS_SUCCEEDED(looprv) && !mContentLoaded)
+    {
+      // technically this is just g_main_iteration() but in the hopes
+      // of making this XP in the future...
+      void      *data;
+      PRBool    isRealEvent;
+      
+      looprv = subShell->GetNativeEvent(isRealEvent, data);
+      subShell->DispatchNativeEvent(isRealEvent, data);
+    }
+    JSContext *cx;
+    stack->Pop(&cx);
+    NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
+
+  }
+    
+  // and spindown...
+  subShell->Spindown();
+
+  return NS_OK;
+}
+
+void
+GtkMozEmbedPrivate::GetCurrentURI(nsCString &aString)
+{
+  aString.Assign(mCurrentURI);
+}
+
+void
+GtkMozEmbedPrivate::SetCurrentURI(nsCString &aString)
+{
+  mCurrentURI.Assign(aString);
+}
+
+nsresult
+GtkMozEmbedPrivate::OnChromeStateChange(nsIWebProgress *aWebProgress,
+					nsIRequest *aRequest,
+					PRInt32 aStateFlags,
+					PRUint32 aStatus)
+{
+  // XXX add shortcut here for content + chrome already loaded
+
+  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) && 
+      (aStateFlags & GTK_MOZ_EMBED_FLAG_STOP))
+  {
+    nsXPIDLCString uriString;
+    nsCString      chromeString;
+    // get the original URI for this
+    nsCOMPtr <nsIChannel> channel = do_QueryInterface(aRequest);
+    nsCOMPtr <nsIURI>     origURI;
+    channel->GetOriginalURI(getter_AddRefs(origURI));
+    origURI->GetSpec(getter_Copies(uriString));
+    chromeString.AssignWithConversion(mChromeLocation);
+    // check to see if this was our chrome that was finished loading.
+    if (chromeString.Equals(uriString))
+    {
+      if (!mChromeLoaded)
+	mChromeLoaded = PR_TRUE;
+    }
+    // if the chrome has been loaded but the content hasn't been
+    // loaded yet, try to load it.
+    if (mChromeLoaded && !mContentLoaded)
+    {
+      
+      // get the browser as an item
+      nsCOMPtr<nsIDocShellTreeItem> browserAsItem;
+      browserAsItem = do_QueryInterface(mWebBrowser);
+      if (!browserAsItem)
+      {
+	NS_ASSERTION(0, "failed to get browser as item");
+	return NS_OK;
+      }
+      // get the owner for that item
+      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+      browserAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+      if (!treeOwner)
+      {
+	NS_ASSERTION(0, "failed to get tree owner");
+	return NS_OK;
+      }
+      // get the primary content shell as an item
+      nsCOMPtr<nsIDocShellTreeItem> contentItem;
+      treeOwner->GetPrimaryContentShell(getter_AddRefs(contentItem));
+      if (!contentItem)
+      {
+	// apparently our primary content area hasn't been loaded.
+	// tis ok
+	printf("Warning: Failed to find primary content shell!  I will try again later.\n");
+	return NS_OK;
+      }
+      // if we made it this far, our primary content shell has been
+      // loaded.  Mark our flag.
+      mContentLoaded = PR_TRUE;
+      // attach our chrome object as the tree owner for the content
+      // docShell.  this is so that we get JS and link over
+      // notifications.
+      contentItem->SetTreeOwner(treeOwner);
+      // get the docshell for that item
+      nsCOMPtr <nsIDocShell> docShell;
+      docShell = do_QueryInterface(contentItem);
+      if (!docShell)
+      {
+	NS_ASSERTION(0, "failed to get docshell");
+	return NS_OK;
+      }
+      // get the nsIWebProgress object for that docshell
+      nsCOMPtr <nsIWebProgress> webProgress;
+      webProgress = do_GetInterface(docShell);
+      if (!webProgress)
+      {
+	NS_ASSERTION(0, "Failed to get webProgress object from content area docShell");
+	return NS_OK;
+      }
+      // attach the mContentProgress object to that docshell
+      webProgress->AddProgressListener(mContentProgress);
+      // get the navigation for the content area
+      mContentNav = do_QueryInterface(docShell);
+      if (!mContentNav)
+      {
+	NS_ASSERTION(0, "Failed to get mContentNav object from content area docShell");
+	return NS_OK;
+      }
+      // attach our session history object to the content area
+      mContentNav->SetSessionHistory(mSessionHistory);
+      // now that the content is loaded, attach our key listener to
+      // the chrome document
+      // XXX
+
+      // we won't do any of this stuff until after we figure out how
+      // to do key events properly.
+#if 0
+      nsCOMPtr <nsIDOMDocument> domDoc;
+      mChromeNav->GetDocument(getter_AddRefs(domDoc));
+      if (!domDoc)
+      {
+	NS_ASSERTION(0, "Failed to get docuement from mChromeNav\n");
+	return NS_OK;
+      }
+      nsCOMPtr<nsIDOMEventReceiver> eventReceiver;
+      // get the nsIDOMEventReceiver
+      eventReceiver = do_QueryInterface(domDoc);
+      if (!eventReceiver)
+      {
+	NS_ASSERTION(0, "failed to get event receiver\n");
+	return NS_OK;
+      }
+      // add ourselves as a key listener
+      nsresult rv = NS_OK;
+      rv = eventReceiver->AddEventListenerByIID(mEventListener,
+						NS_GET_IID(nsIDOMKeyListener));
+      if (NS_FAILED(rv))
+      {
+	NS_ASSERTION(0, "failed to add event receiver\n");
+	return NS_OK;
+      }
+      // XXX we need to release this, I think.
+      mEventListenerAttached = PR_TRUE;
+#endif /* 0 */
+      // check to see whether or not we should load a new uri.
+      if (mCurrentURI.Length() > 0)
+      {
+	nsString tmpString;
+	tmpString.AssignWithConversion(mCurrentURI);
+	mContentNav->LoadURI(tmpString.GetUnicode());
+      }
+    }
+  }
+  return NS_OK;
+}
+
+void
+GtkMozEmbedPrivate::Destroy(void)
+{
+  // remove ourselves as the parent URI content listener
+  mWebBrowser->SetParentURIContentListener(nsnull);
+  
+  // remove ourselves as the progress listener for the chrome object
+  nsCOMPtr <nsIDocShell> docShell;
+  mWebBrowser->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr <nsIWebProgress> webProgress;
+  webProgress = do_GetInterface(docShell);
+  webProgress->RemoveProgressListener(mChromeProgress);
+
+  // get the content item
+  // get the browser as an item
+  nsCOMPtr<nsIDocShellTreeItem> browserAsItem;
+  browserAsItem = do_QueryInterface(mWebBrowser);
+  // get the owner for that item
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  browserAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  NS_ASSERTION(treeOwner, "failed to get tree owner");
+  // get the primary content shell as an item
+  nsCOMPtr<nsIDocShellTreeItem> contentItem;
+  treeOwner->GetPrimaryContentShell(getter_AddRefs(contentItem));
+  NS_ASSERTION(contentItem, "failed to get content item");
+  // remove our chrome object as the tree owner for the content
+  // docShell.
+  contentItem->SetTreeOwner(nsnull);
+  // get the nsIWebProgress object for that docshell
+  webProgress = do_GetInterface(docShell);
+  // remove the mContentProgress object from that docshell
+  webProgress->RemoveProgressListener(mContentProgress);
+  // remove our history object from the content area
+  mContentNav->SetSessionHistory(nsnull);
+  
+  // now that we have removed ourselves as the tree owner for the
+  // content item, remove ourselves as the tree owner for the
+  // browser
+  browserAsItem = do_QueryInterface(mWebBrowser);
+  browserAsItem->SetTreeOwner(nsnull);
+  
+  // destroy the native windows
+  nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = 
+    do_QueryInterface(mWebBrowser);
+  webBrowserBaseWindow->Destroy();
+  
+  mMozWindow = 0;
+  mWebBrowser = nsnull;
+  mEmbed = nsnull;
+}
+
+/* static */
+void
+GtkMozEmbedPrivate::RequestToURIString  (nsIRequest *aRequest, char **aString)
+{
+  // is it a channel
+  nsCOMPtr<nsIChannel> channel;
+  channel = do_QueryInterface(aRequest);
+  if (!channel)
+    return;
+  
+  nsCOMPtr<nsIURI> uri;
+  channel->GetURI(getter_AddRefs(uri));
+  if (!uri)
+    return;
+  
+  nsXPIDLCString uriString;
+  uri->GetSpec(getter_Copies(uriString));
+  if (!uriString)
+    return;
+
+  *aString = nsCRT::strdup((const char *)uriString);
 }
 
 /* signals */
@@ -113,7 +656,7 @@ static GdkWindow *offscreen_window = 0;
 
 static char *component_path = 0;
 static gint  num_widgets = 0;
-static gint  io_identifier = 0;
+nsCOMPtr <nsIAppShell> gAppShell;
 
 /* class and instance initialization */
 
@@ -144,12 +687,6 @@ gtk_moz_embed_unmap(GtkWidget *widget);
 static void
 gtk_moz_embed_destroy(GtkObject *object);
 
-/* event queue callback */
-
-static void
-gtk_moz_embed_handle_event_queue(gpointer data, gint source,
-				 GdkInputCondition condition);
-
 /* startup and shutdown xpcom */
 
 static gboolean
@@ -157,11 +694,6 @@ gtk_moz_embed_startup_xpcom(void);
 
 static void
 gtk_moz_embed_shutdown_xpcom(void);
-
-/* utility functions */
-void
-gtk_moz_embed_convert_request_to_uri_string(char **aString, 
-					    nsIRequest *aRequest);
 
 void
 gtk_moz_embed_create_offscreen_window(void);
@@ -350,40 +882,11 @@ gtk_moz_embed_init(GtkMozEmbed *embed)
   // create our private struct
   embed_private = new GtkMozEmbedPrivate();
 
-  // create an nsIWebBrowser object
-  embed_private->webBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID);
-  g_return_if_fail(embed_private->webBrowser);
+  // initialize it
+  nsresult rv;
+  rv = embed_private->Init(embed);
+  g_return_if_fail(NS_SUCCEEDED(rv));
 
-  // create our glue widget
-  GtkMozEmbedChrome *chrome = new GtkMozEmbedChrome();
-  g_return_if_fail(chrome);
-  embed_private->embed = 
-    do_QueryInterface((nsISupports *)(nsIGtkEmbed *) chrome);
-  g_return_if_fail(embed_private->embed);
-  // hide it
-  embed->data = embed_private;
-
-  // get our hands on the browser chrome
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome =
-    do_QueryInterface(embed_private->embed);
-  g_return_if_fail(browserChrome);
-  // set the toplevel window
-  embed_private->webBrowser->SetTopLevelWindow(browserChrome);
-  // set the widget as the owner of the object
-  embed_private->embed->Init(GTK_WIDGET(embed));
-
-  // set up the callback object so that it knows how to call back to
-  // this widget.
-  embed_private->listener.Init(embed);
-  // set our listener for the chrome
-  embed_private->embed->SetEmbedListener(&embed_private->listener);
-
-  // so the embedding widget can find it's owning nsIWebBrowser object
-  browserChrome->SetWebBrowser(embed_private->webBrowser);
-
-  // get our hands on a copy of the nsIWebNavigation interface for later
-  embed_private->navigation = do_QueryInterface(embed_private->webBrowser);
-  g_return_if_fail(embed_private->navigation);
 }
 
 GtkWidget *
@@ -425,9 +928,7 @@ gtk_moz_embed_set_comp_path    (char *aPath)
   if (component_path)
     g_free(component_path);
   if (aPath) 
-  {
     component_path = g_strdup(aPath);
-  }
 }
 
 void
@@ -439,15 +940,18 @@ gtk_moz_embed_load_url(GtkMozEmbed *embed, const char *url)
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
-  embed_private->currentURI.Assign(url);
+  nsCString newURI;
+  newURI.Assign(url);
+  embed_private->SetCurrentURI(newURI);
 
   // If the widget isn't realized, just return.
   if (!GTK_WIDGET_REALIZED(embed))
     return;
 
   nsString uriString;
-  uriString.AssignWithConversion(embed_private->currentURI);
-  embed_private->navigation->LoadURI(uriString.GetUnicode());
+  uriString.AssignWithConversion(newURI);
+  if (embed_private->mContentNav)
+    embed_private->mContentNav->LoadURI(uriString.GetUnicode());
 }
 
 void
@@ -460,7 +964,8 @@ gtk_moz_embed_stop_load (GtkMozEmbed *embed)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  embed_private->navigation->Stop();
+  if (embed_private->mContentNav)
+    embed_private->mContentNav->Stop();
 }
 
 gboolean
@@ -474,7 +979,8 @@ gtk_moz_embed_can_go_back      (GtkMozEmbed *embed)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
   
-  embed_private->navigation->GetCanGoBack(&retval);
+  if (embed_private->mContentNav)
+    embed_private->mContentNav->GetCanGoBack(&retval);
   return retval;
 }
 
@@ -489,7 +995,8 @@ gtk_moz_embed_can_go_forward   (GtkMozEmbed *embed)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
   
-  embed_private->navigation->GetCanGoForward(&retval);
+  if (embed_private->mContentNav)
+    embed_private->mContentNav->GetCanGoForward(&retval);
   return retval;
 }
 
@@ -502,7 +1009,9 @@ gtk_moz_embed_go_back          (GtkMozEmbed *embed)
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
-  embed_private->navigation->GoBack();
+  
+  if (embed_private->mContentNav)
+    embed_private->mContentNav->GoBack();
 }
 
 void
@@ -514,7 +1023,9 @@ gtk_moz_embed_go_forward       (GtkMozEmbed *embed)
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
-  embed_private->navigation->GoForward();
+  
+  if (embed_private->mContentNav)
+    embed_private->mContentNav->GoForward();
 }
 
 void
@@ -529,9 +1040,9 @@ gtk_moz_embed_render_data      (GtkMozEmbed *embed,
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  embed_private->embed->OpenStream(base_uri, mime_type);
-  embed_private->embed->AppendToStream(data, len);
-  embed_private->embed->CloseStream();
+  embed_private->mEmbed->OpenStream(base_uri, mime_type);
+  embed_private->mEmbed->AppendToStream(data, len);
+  embed_private->mEmbed->CloseStream();
 }
 
 void
@@ -545,7 +1056,7 @@ gtk_moz_embed_open_stream (GtkMozEmbed *embed,
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
   
-  embed_private->embed->OpenStream(base_uri, mime_type);
+  embed_private->mEmbed->OpenStream(base_uri, mime_type);
 }
 
 void
@@ -558,7 +1069,7 @@ gtk_moz_embed_append_data (GtkMozEmbed *embed, const char *data, guint32 len)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
   
-  embed_private->embed->AppendToStream(data, len);
+  embed_private->mEmbed->AppendToStream(data, len);
 }
 
 void
@@ -571,7 +1082,7 @@ gtk_moz_embed_close_stream     (GtkMozEmbed *embed)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
  
-  embed_private->embed->CloseStream();
+  embed_private->mEmbed->CloseStream();
 }
 
 void
@@ -583,7 +1094,9 @@ gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 flags)
   g_return_if_fail (GTK_IS_MOZ_EMBED(embed));
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
-  embed_private->navigation->Reload(flags);
+
+  if (embed_private->mContentNav)
+    embed_private->mContentNav->Reload(flags);
 }
 
 void
@@ -596,7 +1109,7 @@ gtk_moz_embed_set_chrome_mask (GtkMozEmbed *embed, guint32 flags)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
   nsCOMPtr<nsIWebBrowserChrome> browserChrome =
-    do_QueryInterface(embed_private->embed);
+    do_QueryInterface(embed_private->mEmbed);
   g_return_if_fail(browserChrome);
   browserChrome->SetChromeMask(flags);
 }
@@ -612,7 +1125,7 @@ gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = 
-    do_QueryInterface(embed_private->embed);
+    do_QueryInterface(embed_private->mEmbed);
   g_return_val_if_fail(browserChrome, 0);
   if (browserChrome->GetChromeMask(&curMask) == NS_OK)
     return curMask;
@@ -631,7 +1144,7 @@ gtk_moz_embed_get_link_message (GtkMozEmbed *embed)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  embed_private->embed->GetLinkMessage(&retval);
+  embed_private->mEmbed->GetLinkMessage(&retval);
 
   return retval;
 }
@@ -647,7 +1160,7 @@ gtk_moz_embed_get_js_status (GtkMozEmbed *embed)
   
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  embed_private->embed->GetJSStatus(&retval);
+  embed_private->mEmbed->GetJSStatus(&retval);
 
   return retval;
 }
@@ -663,7 +1176,7 @@ gtk_moz_embed_get_title (GtkMozEmbed *embed)
   
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  embed_private->embed->GetTitleChar(&retval);
+  embed_private->mEmbed->GetTitleChar(&retval);
 
   return retval;
 }
@@ -679,7 +1192,9 @@ gtk_moz_embed_get_location     (GtkMozEmbed *embed)
   
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  embed_private->embed->GetLocation(&retval);
+  nsCString currentURI;
+  embed_private->GetCurrentURI(currentURI);
+  retval = nsCRT::strdup(currentURI.GetBuffer());
 
   return retval;
 }
@@ -695,7 +1210,7 @@ gtk_moz_embed_get_nsIWebBrowser  (GtkMozEmbed *embed, nsIWebBrowser **retval)
   
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  *retval = embed_private->webBrowser.get();
+  *retval = embed_private->mWebBrowser.get();
   NS_IF_ADDREF(*retval);
 }
 
@@ -704,8 +1219,8 @@ gtk_moz_embed_realize(GtkWidget *widget)
 {
   GtkMozEmbed        *embed;
   GtkMozEmbedPrivate *embed_private;
-  GdkWindowAttr attributes;
-  gint attributes_mask;
+  GdkWindowAttr       attributes;
+  gint                attributes_mask;
 
   g_return_if_fail (widget != NULL);
   g_return_if_fail (GTK_IS_MOZ_EMBED(widget));
@@ -741,47 +1256,16 @@ gtk_moz_embed_realize(GtkWidget *widget)
 
   // if mozWindow is set then we've already been realized once.
   // reparent the window to our widget->window and return.
-  if (embed_private->mozWindow)
+  if (embed_private->mMozWindow)
   {
-    gdk_window_reparent(embed_private->mozWindow, widget->window,
+    gdk_window_reparent(embed_private->mMozWindow, widget->window,
 			widget->allocation.x, widget->allocation.y);
     return;
   }
 
-  // now that we're realized, set up the nsIWebBrowser and nsIBaseWindow stuff
-  // init our window
-  nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow =
-    do_QueryInterface(embed_private->webBrowser);
-  g_return_if_fail(webBrowserBaseWindow);
-  webBrowserBaseWindow->InitWindow(widget, NULL, 0, 0,
-				   widget->allocation.width,
-				   widget->allocation.height);
-  webBrowserBaseWindow->Create();
-  // save the id of the mozilla window for later if we need it.
-  nsCOMPtr<nsIWidget> mozWindow;
-  webBrowserBaseWindow->GetMainWidget(getter_AddRefs(mozWindow));
-  // get the native drawing area
-  GdkWindow *tmp_window = (GdkWindow *)
-    mozWindow->GetNativeData(NS_NATIVE_WINDOW);
-  // and, thanks to superwin we actually need the parent of that.
-  tmp_window = gdk_window_get_parent(tmp_window);
-  embed_private->mozWindow = tmp_window;
-  // set our webBrowser object as the content listener object
-  nsCOMPtr<nsIURIContentListener> uriListener;
-  uriListener = do_QueryInterface(embed_private->embed);
-  g_return_if_fail(uriListener);
-  embed_private->webBrowser->SetParentURIContentListener(uriListener);
-
-  if (embed_private->currentURI.Length() > 0)
-  {
-    // we have to make a copy here since load_url will replace the
-    // string that we would be passing in and replace itself with a
-    // null.  nasty.
-    char * initialURI = 
-      g_strdup((const char *) embed_private->currentURI);
-       gtk_moz_embed_load_url (GTK_MOZ_EMBED(widget), initialURI);
-    g_free(initialURI);
-  }
+  nsresult rv;
+  rv = embed_private->Realize(widget);
+  g_return_if_fail(NS_SUCCEEDED(rv));
 }
 
 void
@@ -798,7 +1282,7 @@ gtk_moz_embed_unrealize(GtkWidget *widget)
 
   GTK_WIDGET_UNSET_FLAGS(widget, GTK_REALIZED);
   
-  gdk_window_reparent(embed_private->mozWindow,
+  gdk_window_reparent(embed_private->mMozWindow,
 		      offscreen_window, 0, 0);
 }
 
@@ -827,15 +1311,7 @@ gtk_moz_embed_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     gdk_window_move_resize(widget->window,
 			   allocation->x, allocation->y,
 			   allocation->width, allocation->height);
-    // set the size of the base window
-    nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow =
-      do_QueryInterface(embed_private->webBrowser);
-    webBrowserBaseWindow->SetPositionAndSize(0, 0, allocation->width,
-					     allocation->height, PR_TRUE);
-    nsCOMPtr<nsIBaseWindow> embedBaseWindow =
-      do_QueryInterface(embed_private->embed);
-    embedBaseWindow->SetPositionAndSize(0, 0, allocation->width, 
-					allocation->height, PR_TRUE);
+    embed_private->Resize(widget);
   }
 }
 
@@ -855,7 +1331,7 @@ gtk_moz_embed_map(GtkWidget *widget)
 
   // get our hands on the base window
   nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = 
-    do_QueryInterface(embed_private->webBrowser);
+    do_QueryInterface(embed_private->mWebBrowser);
   g_return_if_fail(webBrowserBaseWindow);
   // show it
   webBrowserBaseWindow->SetVisibility(PR_TRUE);
@@ -895,15 +1371,7 @@ gtk_moz_embed_destroy(GtkObject *object)
 
   if (embed_private)
   {
-    nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = 
-      do_QueryInterface(embed_private->webBrowser);
-    g_return_if_fail(webBrowserBaseWindow);
-    webBrowserBaseWindow->Destroy();
-    embed_private->mozWindow = 0;
-    embed_private->webBrowser = nsnull;
-    embed_private->embed = nsnull;
-    // XXX XXX delete all the members of the topLevelWindows
-    // nsVoidArray and then delete the array
+    embed_private->Destroy();
     delete embed_private;
     embed->data = NULL;
   }
@@ -917,14 +1385,6 @@ gtk_moz_embed_destroy(GtkObject *object)
       gtk_moz_embed_destroy_offscreen_window();
     gtk_moz_embed_shutdown_xpcom();
   }
-}
-
-static void
-gtk_moz_embed_handle_event_queue(gpointer data, gint source,
-				 GdkInputCondition condition)
-{
-  nsIEventQueue *eventQueue = (nsIEventQueue *)data;
-  eventQueue->ProcessPendingEvents();
 }
 
 gboolean
@@ -943,62 +1403,26 @@ gtk_moz_embed_startup_xpcom(void)
   rv = NS_InitEmbedding(binDir, nsnull);
   if (NS_FAILED(rv))
     return FALSE;
-  // set up the thread event queue
-  nsCOMPtr <nsIEventQueueService> eventQService = 
-    do_GetService(kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return FALSE;
-  // get our hands on the thread event queue
-  nsCOMPtr<nsIEventQueue> eventQueue;
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                         getter_AddRefs(eventQueue));
-  if (NS_FAILED(rv))
-    return FALSE;
 
-  io_identifier = gdk_input_add(eventQueue->GetEventQueueSelectFD(),
-				GDK_INPUT_READ,
-				gtk_moz_embed_handle_event_queue,
-				eventQueue);
+  gAppShell = do_CreateInstance(kAppShellCID);
+  NS_ENSURE_TRUE(gAppShell, NS_ERROR_FAILURE);
+
+  gAppShell->Create(0, nsnull);
+  gAppShell->Spinup();
+
   return TRUE;
 }
 
 void
 gtk_moz_embed_shutdown_xpcom(void)
 {
-  if (io_identifier)
+  if (gAppShell)
   {
-    // remove the IO handler for the thread event queue
-    gdk_input_remove(io_identifier);
-    io_identifier = 0;
+    gAppShell->Spindown();
+    gAppShell = nsnull;
     // shut down XPCOM
     NS_TermEmbedding();
   }
-}
-
-// this function takes an nsIRequest object and tries to get the
-// string for it.
-void
-gtk_moz_embed_convert_request_to_uri_string(char **aString,
-					    nsIRequest *aRequest)
-{
-  // is it a channel
-  nsCOMPtr<nsIChannel> channel;
-  channel = do_QueryInterface(aRequest);
-  if (!channel)
-    return;
-  
-  nsCOMPtr<nsIURI> uri;
-  channel->GetURI(getter_AddRefs(uri));
-  if (!uri)
-    return;
-  
-  nsXPIDLCString uriString;
-  uri->GetSpec(getter_Copies(uriString));
-  if (!uriString)
-    return;
-
-  *aString = nsCRT::strdup((const char *)uriString);
-
 }
 
 void
@@ -1043,25 +1467,38 @@ GtkMozEmbedListenerImpl::Init(GtkMozEmbed *aEmbed)
 }
 
 nsresult
-GtkMozEmbedListenerImpl::NewBrowser(PRUint32 chromeMask, 
-				    nsIWebBrowser **_retval)
+GtkMozEmbedListenerImpl::NewBrowser(PRUint32 chromeMask,
+				    nsIDocShellTreeItem **_retval)
 {
   GtkMozEmbed *newEmbed = NULL;
   gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NEW_WINDOW],
 		  &newEmbed, (guint)chromeMask);
   if (newEmbed)  {
+   // We need to create a new top level window and then enter a nested
+   // loop. Eventually the new window will be told that it has loaded,
+   // at which time we know it is safe to spin out of the nested loop
+   // and allow the opening code to proceed.
+
     // The window _must_ be realized before we pass it back to the
     // function that created it. Functions that create new windows
     // will do things like GetDocShell() and the widget has to be
     // realized before that can happen.
     gtk_widget_realize(GTK_WIDGET(newEmbed));
     GtkMozEmbedPrivate *embed_private = (GtkMozEmbedPrivate *)newEmbed->data;
-    nsIWebBrowser *webBrowser = embed_private->webBrowser.get();
-    NS_ADDREF(webBrowser);
-    *_retval = webBrowser;
-    return NS_OK;
+
+   // now that the content area has been loaded, get the
+   // nsIDocShellTreeItem for the content area
+   // get the browser as an item
+   nsCOMPtr<nsIDocShellTreeItem> browserAsItem;
+   browserAsItem = do_QueryInterface(embed_private->mWebBrowser);
+   // get the owner for that item
+   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+   browserAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+   NS_ASSERTION(treeOwner, "failed to get tree owner");
+   // get the primary content shell as an item
+   return treeOwner->GetPrimaryContentShell(_retval);
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 void
@@ -1089,11 +1526,6 @@ GtkMozEmbedListenerImpl::Message(GtkEmbedListenerMessageType aType,
   case MessageJSStatus:
     gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[JS_STATUS]);
     break;
-  case MessageLocation:
-    // update the currentURI for this
-    mEmbedPrivate->currentURI = aMessage;
-    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[LOCATION]);
-    break;
   case MessageTitle:
     gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[TITLE]);
     break;
@@ -1102,59 +1534,12 @@ GtkMozEmbedListenerImpl::Message(GtkEmbedListenerMessageType aType,
   }
 }
 
-
-void
-GtkMozEmbedListenerImpl::ProgressChange(nsIWebProgress *aProgress,
-					nsIRequest *aRequest,
-					PRInt32 curSelfProgress,
-					PRInt32 maxSelfProgress,
-					PRInt32 curTotalProgress,
-					PRInt32 maxTotalProgress)
-{
-  nsXPIDLCString uriString;
-  gtk_moz_embed_convert_request_to_uri_string(getter_Copies(uriString),
-					      aRequest);
-
-  if (mEmbedPrivate->currentURI.Equals(uriString)) {
-    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[PROGRESS],
-		    curTotalProgress, maxTotalProgress);
-  }
-  
-  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[PROGRESS_ALL],
-		  (const char *)uriString,
-		  curTotalProgress, maxTotalProgress);
-}
-
-void
-GtkMozEmbedListenerImpl::Net(nsIWebProgress *aProgress,
-			     nsIRequest *aRequest,
-			     PRInt32 aFlags, nsresult aStatus)
-{
-  // if we've got the start flag, emit the signal
-  if ((aFlags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) && 
-      (aFlags & GTK_MOZ_EMBED_FLAG_START))
-    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NET_START]);
-
-  nsXPIDLCString uriString;
-  gtk_moz_embed_convert_request_to_uri_string(getter_Copies(uriString),
-					      aRequest);
-  if (mEmbedPrivate->currentURI.Equals(uriString)) {
-    // for people who know what they are doing
-    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NET_STATE],
-		    aFlags, aStatus);
-  }
-  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NET_STATE_ALL],
-		  (const char *)uriString, aFlags, aStatus);
-  // and for stop, too
-  if ((aFlags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) && 
-      (aFlags & GTK_MOZ_EMBED_FLAG_STOP))
-    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NET_STOP]);
-
-}
-
 PRBool
 GtkMozEmbedListenerImpl::StartOpen(const char *aURI)
 {
+  // if our chrome hasn't been loaded then it's all OK.
+  if (!mEmbedPrivate->mChromeLoaded)
+    return PR_FALSE;
   gint return_val = PR_FALSE;
   gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[OPEN_URI], 
 		  aURI, &return_val);
@@ -1166,4 +1551,268 @@ GtkMozEmbedListenerImpl::SizeTo(PRInt32 width, PRInt32 height)
 {
   gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[SIZE_TO], width,
 		  height);
+}
+
+GtkMozEmbedContentProgress::GtkMozEmbedContentProgress(void)
+{
+  NS_INIT_REFCNT();
+  mEmbed = nsnull;
+  mEmbedPrivate = nsnull;
+}
+
+GtkMozEmbedContentProgress::~GtkMozEmbedContentProgress(void)
+{
+}
+
+NS_IMPL_ADDREF(GtkMozEmbedContentProgress)
+NS_IMPL_RELEASE(GtkMozEmbedContentProgress)
+NS_INTERFACE_MAP_BEGIN(GtkMozEmbedContentProgress)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+NS_INTERFACE_MAP_END
+
+void
+GtkMozEmbedContentProgress::Init(GtkMozEmbed *aEmbed)
+{
+  mEmbed = aEmbed;
+  mEmbedPrivate = (GtkMozEmbedPrivate *)aEmbed->data;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedContentProgress::OnStateChange(nsIWebProgress *aWebProgress,
+					  nsIRequest *aRequest,
+					  PRInt32 aStateFlags,
+					  PRUint32 aStatus)
+{
+    // if we've got the start flag, emit the signal
+  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) && 
+      (aStateFlags & GTK_MOZ_EMBED_FLAG_START))
+  {
+    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NET_START]);
+  }
+
+  nsXPIDLCString uriString;
+  GtkMozEmbedPrivate::RequestToURIString(aRequest, getter_Copies(uriString));
+  nsCString currentURI;
+  mEmbedPrivate->GetCurrentURI(currentURI);
+  if (currentURI.Equals(uriString))
+  {
+    // for people who know what they are doing
+    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NET_STATE],
+		    aStateFlags, aStatus);
+  }
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NET_STATE_ALL],
+		  (const char *)uriString, aStateFlags, aStatus);
+  // and for stop, too
+  if ((aStateFlags & GTK_MOZ_EMBED_FLAG_IS_DOCUMENT) && 
+      (aStateFlags & GTK_MOZ_EMBED_FLAG_STOP))
+  {
+    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NET_STOP]);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedContentProgress::OnProgressChange(nsIWebProgress *aWebProgress, 
+					     nsIRequest *aRequest, 
+					     PRInt32 aCurSelfProgress,
+					     PRInt32 aMaxSelfProgress,
+					     PRInt32 aCurTotalProgress, 
+					     PRInt32 aMaxTotalProgress)
+{
+  nsXPIDLCString uriString;
+  GtkMozEmbedPrivate::RequestToURIString(aRequest, getter_Copies(uriString));
+  nsCString currentURI;
+  mEmbedPrivate->GetCurrentURI(currentURI);
+  if (currentURI.Equals(uriString)) {
+    gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[PROGRESS],
+		    aCurTotalProgress, aMaxTotalProgress);
+  }
+  
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[PROGRESS_ALL],
+		  (const char *)uriString,
+		  aCurTotalProgress, aMaxTotalProgress);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedContentProgress::OnLocationChange(nsIWebProgress *aWebProgress,
+					     nsIRequest *aRequest,
+					     nsIURI *aLocation)
+{
+  nsXPIDLCString newURI;
+  NS_ENSURE_ARG_POINTER(aLocation);
+  aLocation->GetSpec(getter_Copies(newURI));
+  // let the chrome listener know that the location has changed
+  nsCString newURIString;
+  newURIString.Assign(newURI);
+  mEmbedPrivate->SetCurrentURI(newURIString);
+  gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[LOCATION]);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedContentProgress::OnStatusChange(nsIWebProgress *aWebProgress,
+					   nsIRequest *aRequest,
+					   nsresult aStatus, 
+					   const PRUnichar *aMessage)
+{
+  return NS_OK;
+}
+
+GtkMozEmbedChromeProgress::GtkMozEmbedChromeProgress(void)
+{
+  NS_INIT_REFCNT();
+  mEmbed = nsnull;
+  mEmbedPrivate = nsnull;
+}
+
+GtkMozEmbedChromeProgress::~GtkMozEmbedChromeProgress(void)
+{
+}
+
+NS_IMPL_ADDREF(GtkMozEmbedChromeProgress)
+NS_IMPL_RELEASE(GtkMozEmbedChromeProgress)
+NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChromeProgress)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+NS_INTERFACE_MAP_END
+
+void
+GtkMozEmbedChromeProgress::Init(GtkMozEmbed *aEmbed)
+{
+  mEmbed = aEmbed;
+  mEmbedPrivate = (GtkMozEmbedPrivate *)aEmbed->data;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeProgress::OnStateChange(nsIWebProgress *aWebProgress,
+					 nsIRequest *aRequest,
+					 PRInt32 aStateFlags,
+					 PRUint32 aStatus)
+{
+  return mEmbedPrivate->OnChromeStateChange(aWebProgress,
+					    aRequest,
+					    aStateFlags,
+					    aStatus);
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeProgress::OnProgressChange(nsIWebProgress *aWebProgress, 
+					     nsIRequest *aRequest, 
+					     PRInt32 aCurSelfProgress,
+					     PRInt32 aMaxSelfProgress,
+					     PRInt32 aCurTotalProgress, 
+					     PRInt32 aMaxTotalProgress)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeProgress::OnLocationChange(nsIWebProgress *aWebProgress,
+					    nsIRequest *aRequest,
+					    nsIURI *aLocation)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeProgress::OnStatusChange(nsIWebProgress *aWebProgress,
+					   nsIRequest *aRequest,
+					   nsresult aStatus, 
+					   const PRUnichar *aMessage)
+{
+  return NS_OK;
+}
+
+GtkMozEmbedChromeKeyListener::GtkMozEmbedChromeKeyListener(void)
+{
+  NS_INIT_REFCNT();
+  mEmbed = nsnull;
+  mEmbedPrivate = nsnull;
+}
+
+GtkMozEmbedChromeKeyListener::~GtkMozEmbedChromeKeyListener(void)
+{
+}
+
+NS_IMPL_ADDREF(GtkMozEmbedChromeKeyListener)
+NS_IMPL_RELEASE(GtkMozEmbedChromeKeyListener)
+NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChromeKeyListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
+NS_INTERFACE_MAP_END
+
+void
+GtkMozEmbedChromeKeyListener::Init(GtkMozEmbed *aEmbed)
+{
+  mEmbed = aEmbed;
+  mEmbedPrivate = (GtkMozEmbedPrivate *)aEmbed->data;
+}
+
+// All of the event listeners below return NS_OK to indicate that the
+// event should not be consumed in the default case.
+
+NS_IMETHODIMP
+GtkMozEmbedChromeKeyListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  printf("GtkMozEmbedChromeKeyListener::HandleEvent\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
+{
+  printf("GtkMozEmbedChromeKeyListener::KeyDown\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
+{
+  printf("GtkMozEmbedChromeKeyListener::KeyUp\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GtkMozEmbedChromeKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
+{
+  printf("GtkMozEmbedChromeKeyListener::KeyPress\n");
+  nsCOMPtr<nsIDOMNSUIEvent> evt = do_QueryInterface(aKeyEvent);
+  PRBool tmp;
+  evt->GetPreventDefault(&tmp);
+  printf("prevent is %d\n", tmp);
+  aKeyEvent->GetBubbles(&tmp);
+  printf("bubbles is %d\n", tmp);
+  aKeyEvent->GetCancelable(&tmp);
+  printf("get cancelable %d\n", tmp);
+  PRUint16 phase;
+  aKeyEvent->GetEventPhase(&phase);
+  printf("phase is %d\n", phase);
+  return NS_OK;
+}
+
+//*****************************************************************************
+//*** nsEventQueueStack: Object Implementation
+//*****************************************************************************   
+
+nsEventQueueStack::nsEventQueueStack() : mQueue(nsnull)
+{
+   mService = do_GetService(kEventQueueServiceCID);
+
+   if(mService)
+      mService->PushThreadEventQueue(getter_AddRefs(mQueue));
+}
+nsEventQueueStack::~nsEventQueueStack()
+{
+   if(mQueue)
+      mService->PopThreadEventQueue(mQueue);
+   mService = nsnull;
+}
+
+nsresult nsEventQueueStack::Success()
+{
+   return mQueue ? NS_OK : NS_ERROR_FAILURE; 
 }

@@ -38,6 +38,8 @@
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
 #include "nsIStreamListener.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDocShellTreeItem.h"
 
 // utility classes
 #include "nsXPIDLString.h"
@@ -51,7 +53,7 @@ class GtkMozEmbedChrome : public nsIGtkEmbed,
                           public nsIWebBrowserChrome,
                           public nsIBaseWindow,
                           public nsIURIContentListener,
-                          public nsIWebProgressListener,
+                          public nsIDocShellTreeOwner,
                           public nsIInterfaceRequestor
 {
 public:
@@ -65,7 +67,6 @@ public:
   NS_IMETHOD SetEmbedListener             (GtkEmbedListener *aListener);
   NS_IMETHOD GetLinkMessage               (char **retval);
   NS_IMETHOD GetJSStatus                  (char **retval);
-  NS_IMETHOD GetLocation                  (char **retval);
   NS_IMETHOD GetTitleChar                 (char **retval);
   NS_IMETHOD OpenStream                   (const char *aBaseURI, const char *aContentType);
   NS_IMETHOD AppendToStream               (const char *aData, gint32 aLen);
@@ -79,7 +80,7 @@ public:
 
   NS_DECL_NSIURICONTENTLISTENER
 
-  NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIDOCSHELLTREEOWNER
 
   NS_DECL_NSIBASEWINDOW
 
@@ -90,7 +91,6 @@ private:
   PRBool                     mVisibility;
   nsXPIDLCString             mLinkMessage;
   nsXPIDLCString             mJSStatus;
-  nsXPIDLCString             mLocation;
   nsXPIDLCString             mTitle;
   nsString                   mTitleUnicode;
   PRUint32                   mChromeMask;
@@ -103,6 +103,7 @@ private:
   PRUint32                   mOffset;
   PRBool                     mDoingStream;
   GtkEmbedListener          *mChromeListener;
+  nsIDocShellTreeItem       *mContentShell;
 };
 
 #endif /* __GtkMozEmbedChrome_h */
