@@ -42,6 +42,7 @@ static struct {
 	void *      cookie;
 } dnsContext;
 
+static PRBool gOTInitialized;
 
 static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
 static pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, 
@@ -111,6 +112,15 @@ void _MD_InitNetAccess()
 	dnsContext.thread = _PR_MD_CURRENT_THREAD();
 	dnsContext.cookie = NULL;
 	
+	gOTInitialized = PR_FALSE;
+	
+/* XXX Does not handle absence of open tpt and tcp yet! */
+}
+
+static void _MD_FinishInitNetAccess()
+{
+    OSStatus    errOT;
+
     dnsContext.serviceRef = OT_OPEN_INTERNET_SERVICES(kDefaultInternetServicesPath, NULL, &errOT);
     if (errOT != kOTNoError) return;    /* no network -- oh well */
     PR_ASSERT((dnsContext.serviceRef != NULL) && (errOT == kOTNoError));
@@ -122,8 +132,8 @@ void _MD_InitNetAccess()
     /* Put us into async mode */
     errOT = OTSetAsynchronous(dnsContext.serviceRef);
     PR_ASSERT(errOT == kOTNoError);
-
-/* XXX Does not handle absence of open tpt and tcp yet! */
+    
+    gOTInitialized = PR_TRUE;
 }
 
 
@@ -416,6 +426,9 @@ PRInt32 _MD_socket(int domain, int type, int protocol)
 {
     OSStatus    err;
     EndpointRef endpoint;
+    
+    if (!gOTInitialized)
+    	_MD_FinishInitNetAccess();
 
     // We only deal with internet domain
     if (domain != AF_INET) {
@@ -1586,6 +1599,9 @@ PR_IMPLEMENT(unsigned long) inet_addr(const char *cp)
     OSStatus err;
     InetHost host;    
 
+    if (!gOTInitialized)
+    	_MD_FinishInitNetAccess();
+
     err = OTInetStringToHost((char*) cp, &host);
     PR_ASSERT(err == kOTNoError);
     
@@ -1604,6 +1620,9 @@ PR_IMPLEMENT(struct hostent *) gethostbyname(const char * name)
     OSStatus err;
     PRUint32 index;
     PRThread *me = _PR_MD_CURRENT_THREAD();
+
+    if (!gOTInitialized)
+    	_MD_FinishInitNetAccess();
 
     me->io_pending       = PR_TRUE;
     me->io_fd            = NULL;
@@ -1643,6 +1662,9 @@ PR_IMPLEMENT(struct hostent *) gethostbyaddr(const void *addr, int addrlen, int 
     PR_ASSERT(type == AF_INET);
     PR_ASSERT(addrlen == sizeof(struct in_addr));
 
+    if (!gOTInitialized)
+    	_MD_FinishInitNetAccess();
+
     OTInetHostToString((InetHost)addr, sHostInfo.name);
     
     return (gethostbyname(sHostInfo.name));
@@ -1651,6 +1673,9 @@ PR_IMPLEMENT(struct hostent *) gethostbyaddr(const void *addr, int addrlen, int 
 
 PR_IMPLEMENT(char *) inet_ntoa(struct in_addr addr)
 {
+    if (!gOTInitialized)
+    	_MD_FinishInitNetAccess();
+
     OTInetHostToString((InetHost)addr.s_addr, sHostInfo.name);
     
     return sHostInfo.name;
@@ -1661,6 +1686,9 @@ PRStatus _MD_gethostname(char *name, int namelen)
 {
     OSStatus err;
     InetInterfaceInfo info;
+
+    if (!gOTInitialized)
+    	_MD_FinishInitNetAccess();
 
     /*
      *    On a Macintosh, we don't have the concept of a local host name.
