@@ -76,7 +76,7 @@
       
     </hbox>
     <hbox>
-      <button id="more" label="&more.label;" oncommand="onMore(event);" accesskey="&more.label;"/>
+      <button id="more" label="&more.label;" oncommand="onMore(event);" accesskey="&more.accesskey;"/>
       <button id="less" label="&less.label;" disabled="true" oncommand="onLess(event);" accesskey="&less.accesskey;"/>
     </hbox>
   </vbox>
