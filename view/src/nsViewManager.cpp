@@ -1545,14 +1545,27 @@ void nsViewManager::ProcessPendingUpdates(nsView* aView)
   if (nsnull == aView) {
     return;
   }
+
   PRBool hasWidget;
   aView->HasWidget(&hasWidget);
   if (hasWidget) {
+    // Check to see if the visibility matches between the view and widget.
+    // If they dont match then showing/hiding the widget was deferred.
+    nsViewVisibility viewVisibility = aView->GetVisibility();
+    nsCOMPtr<nsIWidget> widget;
+    aView->GetWidget(*getter_AddRefs(widget));
+    if (widget) {
+      PRBool widgetVisibility;
+      widget->IsVisible(widgetVisibility);
+      if (((viewVisibility == nsViewVisibility_kShow) != widgetVisibility)) {
+        // Process the deferred show/hide of the view's widget
+        widget->Show(viewVisibility == nsViewVisibility_kShow);
+      }
+    }
+
     nsCOMPtr<nsIRegion> dirtyRegion;
     aView->GetDirtyRegion(*getter_AddRefs(dirtyRegion));
     if (dirtyRegion != nsnull && !dirtyRegion->IsEmpty()) {
-      nsCOMPtr<nsIWidget> widget;
-      aView->GetWidget(*getter_AddRefs(widget));
       if (widget) {
         widget->InvalidateRegion(dirtyRegion, PR_FALSE);
       }
@@ -1655,16 +1668,6 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
   nsViewVisibility visible;
   aWidgetView->GetVisibility(visible);
   if (nsViewVisibility_kHide == visible) {
-#ifdef DEBUG
-    // Assert if view is hidden but widget is visible
-    nsCOMPtr<nsIWidget> widget;
-    GetWidgetForView(aWidgetView, getter_AddRefs(widget));
-    if (widget) {
-      PRBool visible;
-      widget->IsVisible(visible);
-      NS_ASSERTION(!visible, "View is hidden but widget is visible!");
-    }
-#endif
     return PR_FALSE;
   }
 
@@ -3314,6 +3317,12 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
 
   return NS_OK;
 }
+
+PRBool nsViewManager::IsBatchingUpdates(void)
+{ 
+  return mUpdateBatchCnt > 0;
+}
+
 
 NS_IMETHODIMP nsViewManager::BeginUpdateViewBatch(void)
 {
