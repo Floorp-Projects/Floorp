@@ -973,19 +973,36 @@ nsLocalFile::Clone(nsIFile **file)
 NS_IMETHODIMP  
 nsLocalFile::InitWithPath(const char *filePath)
 {
+	// The incoming path must be a FULL path
+
 	MakeDirty();
 	NS_ENSURE_ARG(filePath);
 	
-	// Make sure there's a colon in the path and it is not the first character
-	// so we know we got a full path, not a partial one
-	if (strchr(filePath, ':') == 0 || *filePath == ':')
-		return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-
+	// If it starts with a colon, it's invalid
+	if (*filePath == ':')
+	    return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+	
+	if (strchr(filePath, ':'))
+	{
 	// Just save the specified file path since we can't actually do anything
 	// about turniung it into an FSSpec until the Create() method is called
 	mWorkingPath.Assign(filePath);
 	
 	mInitType = eInitWithPath;
+	}
+	else
+	{
+	    // If there is no colon, it may be a volume (since we strip trailing colons)
+        Str255 volName;
+        FSSpec volSpec;
+        
+        myPLstrcpy(volName, filePath);
+        volName[++volName[0]] = ':';
+        if (::FSMakeFSSpec(0, 0, volName, &volSpec) == noErr)
+            return InitWithFSSpec(&volSpec);
+        else
+            return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+	}
 	
 	return NS_OK;
 }
@@ -2119,7 +2136,9 @@ nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
    Boolean changed;
    FSSpec resolvedSpec;
    OSErr err;
-   if ((err = ::ResolveAlias(nsnull, aliasH, &resolvedSpec, &changed)) != noErr)
+   err = ::ResolveAlias(nsnull, aliasH, &resolvedSpec, &changed);
+   if (err == fnfErr) // resolvedSpec is valid in this case
+      err = noErr;
       rv = MacErrorMapper(err);
    DisposeHandle((Handle) aliasH);
    NS_ENSURE_SUCCESS(rv, rv);
