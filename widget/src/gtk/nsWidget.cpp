@@ -567,6 +567,15 @@ NS_IMETHODIMP nsWidget::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 
 NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
+  // check if we are at right place already
+  if((aX == mBounds.x) && (aY == mBounds.y)) {
+    return NS_OK;
+  }
+     
+  mBounds.x = aX;
+  mBounds.y = aY;
+
+
   if (mMozBox) 
   {
     gtk_mozbox_set_position(GTK_MOZBOX(mMozBox), aX, aY);
