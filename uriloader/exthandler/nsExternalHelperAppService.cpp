@@ -832,24 +832,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     httpChannel->SetApplyConversion( PR_FALSE );
   }
 
-  PRBool forceAlwaysAsk = PR_TRUE;
-  nsCOMPtr<nsIPrefService> prefs = 
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefs, &rv);
-    if (NS_SUCCEEDED(rv))
-       rv = prefBranch->GetBoolPref(FORCE_ALWAYS_ASK_PREF, &forceAlwaysAsk);
-  }
-
   // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
   // they want us to do with this content...
 
   PRBool alwaysAsk = PR_TRUE;
-  if (forceAlwaysAsk)
-    alwaysAsk = PR_TRUE;
-  else
-    mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+  mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
   if (alwaysAsk)
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do
@@ -996,7 +983,7 @@ nsresult nsExternalAppHandler::ShowProgressDialog()
   return rv;
 }
 
-nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile)
+nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile, const PRUnichar * aFileExtension)
 {
   // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog request
   // XXX Convert to use file picker?
@@ -1008,7 +995,10 @@ nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, con
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = mDialog->PromptForSaveToFile(mWindowContext, aDefaultFile, NS_ConvertASCIItoUCS2(mTempFileExtension).get(), aNewFile);
+  // we want to explicitly unescape aDefaultFile b4 passing into the dialog. we can't unescape
+  // it because the dialog is implemented by a JS component which doesn't have a window so no unescape routine is defined...
+  
+  rv = mDialog->PromptForSaveToFile(mWindowContext, aDefaultFile, aFileExtension, aNewFile);
   
   return rv;
 }
@@ -1070,9 +1060,18 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
     nsCOMPtr<nsILocalFile> fileToUse;
     mTempFile->GetUnicodeLeafName(getter_Copies(leafName));
     if (mSuggestedFileName.IsEmpty())
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName);
+      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName, NS_ConvertASCIItoUCS2(mTempFileExtension).get());
     else
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName.GetUnicode());
+    {
+      nsAutoString fileExt;
+      PRInt32 pos = mSuggestedFileName.RFindChar(PRUnichar('.'));
+      if (pos >= 0)
+        mSuggestedFileName.Mid(fileExt, pos, -1);
+      if (fileExt.IsEmpty())
+        fileExt = NS_ConvertASCIItoUCS2(mTempFileExtension).get();
+
+      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName.GetUnicode(), fileExt.get());
+    }
 
     if (NS_FAILED(rv)) 
       return Cancel();
