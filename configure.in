@@ -4706,16 +4706,18 @@ MOZ_ARG_WITHOUT_BOOL(libIDL,
 
 if test "$SKIP_IDL_CHECK" = "no"
 then
+    _LIBIDL_FOUND=
     if test "$MOZ_ENABLE_GTK2"; then
-        PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0,,_LIBIDL_NOT_FOUND=1)
-    else
-        AM_PATH_LIBIDL($LIBIDL_VERSION,,_LIBIDL_NOT_FOUND=1)
+        PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1)
+    fi
+    if test -z "$_LIBIDL_FOUND"; then
+        AM_PATH_LIBIDL($LIBIDL_VERSION,_LIBIDL_FOUND=1)
     fi
     dnl
     dnl If we don't have a libIDL config program & not cross-compiling, 
     dnl     look for orbit-config instead.
     dnl
-    if test -n "$_LIBIDL_NOT_FOUND" && test -z "$CROSS_COMPILE"; then
+    if test -z "$_LIBIDL_FOUND" && test -z "$CROSS_COMPILE"; then
         AC_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
         if test -n "$ORBIT_CONFIG"; then
         	_ORBIT_CFLAGS=`${ORBIT_CONFIG} client --cflags`
@@ -4725,10 +4727,10 @@ then
             LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
             LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
             LIBIDL_CONFIG=
-            _LIBIDL_NOT_FOUND=
+            _LIBIDL_FOUND=1
         fi
     fi
-    if test -n "$_LIBIDL_NOT_FOUND"; then
+    if test -z "$_LIBIDL_FOUND"; then
         AC_MSG_ERROR([libIDL not found.
         libIDL $LIBIDL_VERSION or higher is required.])
     fi
