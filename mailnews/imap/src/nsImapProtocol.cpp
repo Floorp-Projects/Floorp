@@ -4639,7 +4639,7 @@ PRBool nsImapProtocol::MailboxIsNoSelectMailbox(const char *mailboxName)
 	if (!name)
 		return PR_FALSE;
 
-    m_imapServerSink->FolderIsNoSelect(name, &rv);
+  m_imapServerSink->FolderIsNoSelect(name, &rv);
 
 	PL_strfree(name);
 	return rv;
@@ -5878,23 +5878,22 @@ PRBool nsImapProtocol::TryToLogon()
 				InsecureLogin(userName, password);
 
 			if (!GetServerStateParser().LastCommandSuccessful())
-	        {
+	    {
 	            // login failed!
 	            // if we failed because of an interrupt, then do not bother the user
 	            if (!DeathSignalReceived())
 	            {
-					AlertUserEventUsingId(IMAP_LOGIN_FAILED);
-					// if we did get a password then remember so we don't have to prompt
-					// the user for it again
-					m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
+					      AlertUserEventUsingId(IMAP_LOGIN_FAILED);
+                m_server->SetPassword("");  // clear out the password
+					      m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
 															  GetImapUserName(), nsnull);
-					PR_FREEIF(password);
+					      PR_FREEIF(password);
 		            m_currentBiffState = nsMsgBiffState_Unknown;
 		            SendSetBiffIndicatorEvent(m_currentBiffState);
-				} // if we didn't receive the death signal...
-			} // if login failed
-	        else	// login succeeded
-	        {
+				    } // if we didn't receive the death signal...
+			    } // if login failed
+	    else	// login succeeded
+	    {
 				rv = m_hostSessionList->SetPasswordForHost(GetImapHostName(), 
 						  								   GetImapUserName(), password);
 				rv = m_hostSessionList->GetPasswordVerifiedOnline(GetImapHostName(), GetImapUserName(), imapPasswordIsNew);
