@@ -118,6 +118,13 @@ tools_p12()
   ret=$?
   html_msg $ret 0 "Importing Alice's email cert & key (pk12util -i)"
   check_tmpfile
+
+  echo "$SCRIPTNAME: Listing Alice's pk12 file -----------------"
+  echo "pk12util -l Alice.p12 -w ${R_PWFILE}"
+  pk12util -l Alice.p12 -w ${R_PWFILE} 2>&1
+  ret=$?
+  html_msg $ret 0 "Listing Alice's pk12 file (pk12util -l)"
+  check_tmpfile
 }
 
 ############################## tools_sign ##############################

@@ -260,3 +260,10 @@ SEC_PKCS7EncodeItem;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.10 {   # NSS 3.10 release
+;+    global:
+SEC_PKCS12DecoderIterateInit;
+SEC_PKCS12DecoderIterateNext;
+;+    local:
+;+       *;
+;+};
