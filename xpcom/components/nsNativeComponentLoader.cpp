@@ -516,7 +516,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
     dll->GetDisplayPath(displayPath);
 
     fprintf(stderr, 
-            "nsNativeComponentLoader: %s(%s) Load FAILED with error:%s\n", 
+            "nsNativeComponentLoader: %s(%s) Load FAILED with error: %s\n", 
             aCallerName,
             displayPath.get(), 
             errorMsg.get());
@@ -524,7 +524,7 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
     // Do NSPR log
 #ifdef PR_LOGGING
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
-           ("nsNativeComponentLoader: %s(%s) Load FAILED with error:%s", 
+           ("nsNativeComponentLoader: %s(%s) Load FAILED with error: %s", 
             aCallerName,
             displayPath.get(), 
             errorMsg.get()));
