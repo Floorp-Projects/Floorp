@@ -685,14 +685,15 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
       rv = SetMaximumConnectionsNumber(maxConnections);
   }
 
+  PRUint32 cnt;
+  rv = m_connectionCache->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+
   *aImapConnection = nsnull;
 	// iterate through the connection cache for a connection that can handle this url.
-  PRUint32 cnt;
   nsCOMPtr<nsISupports> aSupport;
   PRBool userCancelled = PR_FALSE;
 
-  rv = m_connectionCache->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
   // loop until we find a connection that can run the url, or doesn't have to wait?
   for (PRUint32 i = 0; i < cnt && !canRunUrlImmediately && !canRunButBusy; i++) 
   {
@@ -715,6 +716,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
         rv = NS_OK; // don't want to return this error, just don't use the connection
         continue;
     }
+
     // if this connection is wrong, but it's not busy, check if we should designate
     // it as the free connection.
     if (!canRunUrlImmediately && !canRunButBusy && connection)
@@ -1302,20 +1304,20 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
         //make sure rv value is not crunched, it is used to SetPrettyName
         nsXPIDLCString redirectorType;
-        GetRedirectorType(getter_Copies(redirectorType)); //Sent mail folder as per netscape webmail
-        if (redirectorType.Equals(NS_LITERAL_CSTRING("netscape")) && onlineName.Equals(NS_LITERAL_CSTRING("Sent")))
+        GetRedirectorType(getter_Copies(redirectorType)); //Sent mail folder as per aol/netscape webmail
+        if ((redirectorType.Equals(NS_LITERAL_CSTRING("aol")) && onlineName.Equals(NS_LITERAL_CSTRING("Sent Items")))
+          || (redirectorType.Equals(NS_LITERAL_CSTRING("netscape")) && onlineName.Equals(NS_LITERAL_CSTRING("Sent"))))
           //we know that we don't allowConversion for netscape webmail so just use the onlineName
           child->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
 
         else if (redirectorType.Equals(NS_LITERAL_CSTRING("netscape")) && onlineName.Equals(NS_LITERAL_CSTRING("Draft")))
           child->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
 
+        else if (redirectorType.Equals(NS_LITERAL_CSTRING("aol")) && onlineName.Equals(NS_LITERAL_CSTRING("RECYCLE")))
+          child->SetFlag(MSG_FOLDER_FLAG_TRASH);
+
         if (NS_SUCCEEDED(rv))
           child->SetPrettyName(convertedName);
-        if (onlineName.Equals("RECYCLE"))
-          child->SetFlag(MSG_FOLDER_FLAG_TRASH);
-        else if (onlineName.Equals("Sent Items"))
-          child->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
       }
     }
   }
