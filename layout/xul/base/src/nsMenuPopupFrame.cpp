@@ -207,6 +207,21 @@ nsMenuPopupFrame::GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame
   }
 }
 
+
+void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget);
+void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
+{
+  aWidget = nsnull;
+  nsIView *view = aView;
+  while (!aWidget && view)
+  {
+    view->GetWidget(aWidget);
+    if (!aWidget)
+      view->GetParent(view);
+  }
+}
+
+
 nsresult 
 nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
                                     const nsString& aPopupAnchor,
@@ -357,7 +372,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // offset that point by (|xpos|,|ypos|) to get the true screen coorindates of
   // the view. *whew*
   nsCOMPtr<nsIWidget> parentViewWidget;
-  parentView->GetWidget ( *getter_AddRefs(parentViewWidget) );
+  GetWidgetForView ( parentView, *getter_AddRefs(parentViewWidget) );
   nsRect localParentRect(0,0,0,0), screenParentRect;
   parentViewWidget->WidgetToScreen ( localParentRect, screenParentRect );
   PRInt32 screenViewLocX = screenParentRect.x + NSTwipsToIntPixels(xpos - parentPos.x, t2p);
