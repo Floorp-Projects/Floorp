@@ -50,3 +50,8 @@
    border                  : 1px solid black;   
    margin-bottom           : 3px;
 }
+
+.alarm-description
+{
+   max-width               : 45em;
+}

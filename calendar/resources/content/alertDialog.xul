@@ -55,7 +55,7 @@
 
 <window
    id="calendar-new-eventwindow"
-   title="&brandShortName; - Calendar Alarm - &event.title.alarm;"
+   title="&brandShortName; - &event.title.heading; - &event.title.alarm;"
    onload="onLoad()"
    windowtype="calendarAlarmWindow"
    persist="screenX screenY"
@@ -123,7 +123,7 @@
 		   Note: this number is arbitrary. it should be moved out
 		   into a dtd or some other place than here, like a css.
 		   -->
-                  <vbox style="max-width: 45em;">
+                  <vbox class="alarm-description">
                      <description name="Title"/>
                      <description name="Description"/>
                   </vbox>
