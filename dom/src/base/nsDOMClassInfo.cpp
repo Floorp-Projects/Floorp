@@ -2155,8 +2155,7 @@ nsWindowSH::doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
 
   nsresult rv;
 
-  PRBool isLocation = JSVAL_IS_STRING(id) &&
-    JSVAL_TO_STRING(id) == sLocation_id;
+  PRBool isLocation = (id == STRING_TO_JSVAL(sLocation_id));
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
   NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
@@ -2201,7 +2200,7 @@ nsWindowSH::doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
 
   // Don't check the Components property, since we check its
   // properties anyway. This will help performance.
-  if (JSVAL_IS_STRING(id) && JSVAL_TO_STRING(id) == sComponents_id) {
+  if (id == STRING_TO_JSVAL(sComponents_id)) {
     return NS_OK;
   }
 
