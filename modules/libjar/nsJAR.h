@@ -89,6 +89,14 @@ class nsJAR : public nsIZipReader
       else
         return PR_INTERVAL_NO_TIMEOUT;
     }
+
+    void SetReleaseTime() {
+      mReleaseTime = PR_IntervalNow();
+    }
+    
+    void ClearReleaseTime() {
+      mReleaseTime = PR_INTERVAL_NO_TIMEOUT;
+    }
     
     void SetZipReaderCache(nsZipReaderCache* cache) {
       mCache = cache;
