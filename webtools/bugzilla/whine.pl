@@ -118,11 +118,15 @@ if (open(NOMAIL, '<', "$datadir/nomail")) {
 }
 
 # get the current date and time from the database
-$sth = $dbh->prepare( 'SELECT DATE_FORMAT( NOW(), "%y,%m,%e,%w,%k,%i")');
+$sth = $dbh->prepare('SELECT ' . $dbh->sql_date_format('NOW()', '%y,%m,%d,%a,%H,%i'));
 $sth->execute;
-my ($now_year, $now_month, $now_day, $now_weekday, $now_hour, $now_minute) =
+my ($now_year, $now_month, $now_day, $now_weekdayname, $now_hour, $now_minute) =
         split(',', $sth->fetchrow_array);
 $sth->finish;
+
+# As DBs have different days numbering, use day name and convert it
+# to the range 0-6
+my $now_weekday = index("SunMonTueWedThuFriSat", $now_weekdayname) / 3;
 
 my @daysinmonth = qw(0 31 28 31 30 31 30 31 31 30 31 30 31);
 # Alter February in case of a leap year.  This simple way to do it only

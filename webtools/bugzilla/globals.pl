@@ -971,7 +971,9 @@ sub GetLongDescriptionAsText {
     my $result = "";
     my $count = 0;
     my $anyprivate = 0;
-    my ($query) = ("SELECT profiles.login_name, DATE_FORMAT(longdescs.bug_when,'%Y.%m.%d %H:%i'), " .
+    my $dbh = Bugzilla->dbh;
+    my ($query) = ("SELECT profiles.login_name, " .
+                   $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i') . ", " .
                    "       longdescs.thetext, longdescs.isprivate, " .
                    "       longdescs.already_wrapped " .
                    "FROM   longdescs, profiles " .

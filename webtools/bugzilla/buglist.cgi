@@ -505,7 +505,7 @@ DefineColumn("remaining_time"    , "bugs.remaining_time"        , "Remaining Hou
 DefineColumn("actual_time"       , "(SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id)) AS actual_time", "Actual Hours");
 DefineColumn("percentage_complete","(100*((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))/((SUM(ldtime.work_time)*COUNT(DISTINCT ldtime.bug_when)/COUNT(bugs.bug_id))+bugs.remaining_time))) AS percentage_complete", "% Complete"); 
 DefineColumn("relevance"         , "relevance"                  , "Relevance"        );
-DefineColumn("deadline"          , "DATE_FORMAT(bugs.deadline, '%Y-%m-%d')", "Deadline");
+DefineColumn("deadline"          , $dbh->sql_date_format('bugs.deadline', '%Y-%m-%d'), "Deadline");
 
 ################################################################################
 # Display Column Determination

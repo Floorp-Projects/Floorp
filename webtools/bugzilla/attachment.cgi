@@ -800,11 +800,14 @@ sub viewall
   # Retrieve the attachments from the database and write them into an array
   # of hashes where each hash represents one attachment.
     my $privacy = "";
+    my $dbh = Bugzilla->dbh;
+
     if (Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
         $privacy = "AND isprivate < 1 ";
     }
-    SendSQL("SELECT attach_id, DATE_FORMAT(creation_ts, '%Y.%m.%d %H:%i'),
-            mimetype, description, ispatch, isobsolete, isprivate,
+    SendSQL("SELECT attach_id, " .
+            $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ",
+            mimetype, description, ispatch, isobsolete, isprivate, 
             LENGTH(thedata)
             FROM attachments WHERE bug_id = $::FORM{'bugid'} $privacy 
             ORDER BY attach_id");

@@ -317,6 +317,7 @@ sub LogActivityEntry {
 sub GetBugActivity {
     my ($id, $starttime) = (@_);
     my $datepart = "";
+    my $dbh = Bugzilla->dbh;
 
     die "Invalid id: $id" unless $id=~/^\s*\d+\s*$/;
 
@@ -333,9 +334,9 @@ sub GetBugActivity {
     my $query = "
         SELECT COALESCE(fielddefs.description, bugs_activity.fieldid),
                 fielddefs.name,
-                bugs_activity.attach_id,
-                DATE_FORMAT(bugs_activity.bug_when,'%Y.%m.%d %H:%i:%s'),
-                bugs_activity.removed, bugs_activity.added,
+                bugs_activity.attach_id, " .
+                $dbh->sql_date_format('bugs_activity.bug_when', '%Y.%m.%d %H:%i:%s') .
+                ", bugs_activity.removed, bugs_activity.added,
                 profiles.login_name
         FROM bugs_activity $suppjoins LEFT JOIN fielddefs ON 
                                      bugs_activity.fieldid = fielddefs.fieldid,

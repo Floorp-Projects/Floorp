@@ -67,6 +67,8 @@ sub query
   # "attachments" variable.
   my ($bugid) = @_;
 
+  my $dbh = Bugzilla->dbh;
+
   my $in_editbugs = &::UserInGroup("editbugs");
   &::SendSQL("SELECT product_id
            FROM bugs 
@@ -76,9 +78,9 @@ sub query
 
   # Retrieve a list of attachments for this bug and write them into an array
   # of hashes in which each hash represents a single attachment.
-  &::SendSQL("
-              SELECT attach_id, DATE_FORMAT(creation_ts, '%Y.%m.%d %H:%i'),
-              mimetype, description, ispatch, isobsolete, isprivate, 
+  &::SendSQL("SELECT attach_id, " .
+             $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') .
+             ", mimetype, description, ispatch, isobsolete, isprivate, 
               submitter_id, LENGTH(thedata)
               FROM attachments WHERE bug_id = $bugid ORDER BY attach_id
             ");

@@ -144,18 +144,19 @@ sub initBug  {
       rep_platform, op_sys, bug_status, resolution, priority,
       bug_severity, bugs.component_id, components.name, assigned_to,
       reporter, bug_file_loc, short_desc, target_milestone,
-      qa_contact, status_whiteboard,
-      DATE_FORMAT(creation_ts,'%Y.%m.%d %H:%i'),
+      qa_contact, status_whiteboard, " .
+      $dbh->sql_date_format('creation_ts', '%Y.%m.%d %H:%i') . ",
       delta_ts, COALESCE(SUM(votes.vote_count), 0),
       reporter_accessible, cclist_accessible,
-      estimated_time, remaining_time, DATE_FORMAT(deadline,'%Y-%m-%d')
-    from bugs left join votes using(bug_id),
+      estimated_time, remaining_time, " .
+      $dbh->sql_date_format('deadline', '%Y-%m-%d') . ",
+    FROM bugs LEFT JOIN votes using(bug_id),
       classifications, products, components
     WHERE bugs.bug_id = ?
       AND classifications.id = products.classification_id
       AND products.id = bugs.product_id
       AND components.id = bugs.component_id
-    group by bugs.bug_id";
+    GROUP BY bugs.bug_id";
 
   my $bug_sth = $dbh->prepare($query);
   $bug_sth->execute($bug_id);
@@ -534,11 +535,11 @@ sub GetComments {
     my @comments;
     my $sth = $dbh->prepare(
             "SELECT  profiles.realname AS name, profiles.login_name AS email,
-                     date_format(longdescs.bug_when,'%Y.%m.%d %H:%i') AS time,
-                     longdescs.thetext AS body, longdescs.work_time,
+            " . $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i') . "
+               AS time, longdescs.thetext AS body, longdescs.work_time,
                      isprivate, already_wrapped,
-                     date_format(longdescs.bug_when,'%Y%m%d%H%i%s')
-            FROM     longdescs, profiles
+            " . $dbh->sql_date_format('longdescs.bug_when', '%Y%m%d%H%i%s') . "
+             FROM    longdescs, profiles
             WHERE    profiles.userid = longdescs.who
               AND    longdescs.bug_id = ?
             ORDER BY longdescs.bug_when");
