@@ -97,6 +97,7 @@ protected:
   void EnsureArrowWidget();
   void EnsureHandleBoxWidget();
   void EnsureTooltipWidget();
+  void EnsureFrameWidget();
 
 private:
   nsCOMPtr<nsIAtom> mCheckedAtom;
@@ -107,6 +108,5 @@ private:
   nsCOMPtr<nsIAtom> mInputAtom;
   nsCOMPtr<nsIAtom> mFocusedAtom;
 
-  GtkWidget* mProtoWindow;
   GtkWidget* mProtoLayout;
 };
