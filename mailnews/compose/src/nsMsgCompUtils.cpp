@@ -1824,13 +1824,22 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 // Utility to create a nsIURI object...
 nsresult 
 nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
-{  
+{ 
   nsresult rv = NS_OK;
   if (nsnull == aInstancePtrResult) 
     return NS_ERROR_NULL_POINTER;
   NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv); 
   if (NS_SUCCEEDED(rv) && pNetService)
-	rv = pNetService->NewURI(aSpec, nsnull, aInstancePtrResult);
+  {
+  	if (PL_strstr(aSpec, "://") == nsnull)
+  	{
+  		nsAutoString newSpec("http://");
+  		newSpec += aSpec;
+		rv = pNetService->NewURI(nsAutoCString(newSpec), nsnull, aInstancePtrResult);
+  	}
+  	else
+		rv = pNetService->NewURI(aSpec, nsnull, aInstancePtrResult);
+  }
   return rv;
 }
 
