@@ -75,8 +75,8 @@ Rights Reserved.
   </html:div>
 
   <html:div id="haveSmtp">
-    <html:p>&currentSmtpBefore.label;<html:span id="smtpStaticText"/>&currentSmtpAfter.label;</html:p>
-    <html:p>&haveSmtp1.label;</html:p>
-    <html:p>&haveSmtp2.label;</html:p>
+    <html:p style="width: 500px">&currentSmtpBefore.label;<html:span id="smtpStaticText"/>&currentSmtpAfter.label;</html:p>
+    <html:p style="width: 500px">&haveSmtp1.label;</html:p>
+    <html:p style="width: 500px">&haveSmtp2.label;</html:p>
   </html:div>
 </window>
