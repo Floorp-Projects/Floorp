@@ -404,7 +404,12 @@ sub parse_rcs_deltatext {
 
 
 # Reads and parses complete RCS file from already-opened RCSFILE descriptor.
+# Or if a parameter is given use the corresponding file
 sub parse_rcs_file {
+    my $path = shift;
+    if (defined $path) {
+    	open (RCSFILE, "< $path");
+    }	
     print "Reading RCS admin...\n" if ($debug >= 2);
     &parse_rcs_admin();
     print "Reading RCS revision tree topology...\n" if ($debug >= 2);
@@ -423,6 +428,7 @@ sub parse_rcs_file {
     print "Reading RCS revision deltas...\n" if ($debug >= 2);
     &parse_rcs_deltatext();
     print "Done reading RCS file...\n" if ($debug >= 2);
+    close RCSFILE if (defined $path);
 }
 
 # Map a tag to a numerical revision number.  The tag can be a symbolic

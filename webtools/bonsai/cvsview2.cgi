@@ -214,7 +214,7 @@ sub http_lastmod {
 # Create top-level frameset document.
 sub do_diff_frameset {
     chdir($dir);
-http_lastmod;
+    http_lastmod;
     print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
     print "<FRAMESET ROWS='*,90' FRAMESPACING=0 BORDER=1>\n";
 
@@ -232,7 +232,7 @@ http_lastmod;
 
 # Create links to document created by DIFF command.
 sub do_diff_links {
-http_lastmod;
+    http_lastmod;
     print qq%
         <HEAD>
         <SCRIPT $::script_type><!--
@@ -371,7 +371,7 @@ sub guess_tab_width {
 
 # Create gdiff-like output.
 sub do_diff {
-http_lastmod;
+    http_lastmod;
     print "<HTML><HEAD>";
     print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
     print "</HEAD>";
@@ -393,7 +393,7 @@ http_lastmod;
 
 # Show specified CVS log entry.
 sub do_log {
-http_lastmod;
+    http_lastmod;
     print "<TITLE>$opt_file: $opt_rev CVS log entry</TITLE>\n";
     print '<PRE>';
 
@@ -423,7 +423,7 @@ http_lastmod;
 # two of its revisions.
 #
 sub do_directory {
-
+    print $request->header();
     my $output = "<DIV ALIGN=LEFT>";
     my $link_path = "";
 
