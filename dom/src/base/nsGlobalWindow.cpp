@@ -1528,6 +1528,28 @@ NS_IMETHODIMP GlobalWindowImpl::GetLength(PRUint32* aLength)
 
 NS_IMETHODIMP GlobalWindowImpl::Dump(const nsAReadableString& aStr)
 {
+#ifndef NS_DEBUG
+  {
+    // In optimized builds we check a pref that controls if we should
+    // enable output from dump() or not, in debug builds it's always
+    // enabled.
+
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+    if (!prefs)
+      return NS_OK;
+
+    PRBool enable_dump = PR_FALSE;
+
+    // if pref doesn't exist, disable dump output.
+    nsresult rv = prefs->GetBoolPref("browser.dom.window.dump.enabled",
+                                     &enable_dump);
+
+    if (NS_FAILED(rv) || !enable_dump) {
+      return NS_OK;
+    }
+  }
+#endif
+
   char *cstr = ToNewUTF8String(aStr);
 
 #ifdef XP_MAC
