@@ -1299,7 +1299,9 @@ nsHTMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 NS_IMETHODIMP    
 nsHTMLDocument::GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn)
 { 
-  return nsDocument::GetElementsByTagName(aTagname, aReturn); 
+  nsAutoString tmp(aTagname);
+  tmp.ToLowerCase(); // HTML elements are lower case internally.
+  return nsDocument::GetElementsByTagName(tmp, aReturn); 
 }
 
 //
@@ -2139,7 +2141,9 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsString& aNamespaceURI,
                                        const nsString& aLocalName,
                                        nsIDOMNodeList** aReturn)
 {
-  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, aLocalName,
+  nsAutoString tmp(aLocalName);
+  tmp.ToLowerCase(); // HTML elements are lower case internally.
+  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, tmp,
                                             aReturn); 
 }
 
