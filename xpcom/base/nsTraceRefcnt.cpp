@@ -499,10 +499,10 @@ nsTraceRefcnt::LogRelease(void* aPtr,
 
 // This thing is exported by libiberty.a (-liberty)
 // Yes, this is a gcc only hack
-#if defined(MOZ_DEMANGLE_UNDEFINED_SYMBOLS)
+#if defined(MOZ_DEMANGLE_SYMBOLS)
 extern "C" char * cplus_demangle(const char *,int);
 #include <stdlib.h> // for free()
-#endif // MOZ_DEMANGLE_UNDEFINED_SYMBOLS
+#endif // MOZ_DEMANGLE_SYMBOLS
 
 #ifdef __linux__
 NS_COM void 
@@ -516,7 +516,7 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
 
   aBuffer[0] = '\0';
 
-#if defined(MOZ_DEMANGLE_UNDEFINED_SYMBOLS)
+#if defined(MOZ_DEMANGLE_SYMBOLS)
   /* See demangle.h in the gcc source for the voodoo */
   char * demangled = cplus_demangle(aSymbol,3);
 
@@ -526,7 +526,7 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
 
     free(demangled);
   }
-#endif // MOZ_DEMANGLE_UNDEFINED_SYMBOLS
+#endif // MOZ_DEMANGLE_SYMBOLS
 }
 #else // __linux__
 NS_COM void 

@@ -2602,6 +2602,36 @@ MOZ_ARG_ENABLE_BOOL(efence,
 
 dnl ========================================================
 dnl =
+dnl = MOZ_DEMANGLE_UNDEFINED_SYMBOLS
+dnl =
+dnl = Support for demangling undefined symbols
+dnl = 
+dnl ========================================================
+MOZ_DEMANGLE_SYMBOLS=
+
+case "$target" in
+	*-linux*)
+        # Demangle only for debug builds
+        if test "$MOZ_DEBUG"
+        then
+            MOZ_DEMANGLE_SYMBOLS=1
+            AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
+        fi
+	;;
+esac
+
+AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
+
+dnl ========================================================
+dnl =
+dnl = End MOZ_DEMANGLE_SYMBOLS
+dnl = 
+dnl ========================================================
+
+
+
+dnl ========================================================
+dnl =
 dnl = Misc. Options
 dnl = 
 dnl ========================================================
