@@ -62,10 +62,6 @@
 #include "nsIMdbFactoryFactory.h"
 #include "mdb.h"
 
-#ifdef MOZ_BRPROF
-#include "nsIBrowsingProfile.h"
-#endif
-
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h" 
 
@@ -78,11 +74,6 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kGlobalHistoryCID,     NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
-
-#ifdef MOZ_BRPROF
-static NS_DEFINE_CID(kBrowsingProfileCID,   NS_BROWSINGPROFILE_CID);
-#endif
-
 
 static nsresult
 PRInt64ToChars(PRInt64 aValue, char* aBuf, PRInt32 aSize)

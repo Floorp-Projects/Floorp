@@ -876,9 +876,6 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:rdf:build:MANIFEST",								"$distdirectory:rdf:");
 	_InstallFromManifest(":mozilla:rdf:tests:domds:MANIFEST",						"$distdirectory:idl:");
 	
-	#BRPROF
-	_InstallFromManifest(":mozilla:rdf:brprof:public:MANIFEST",						"$distdirectory:brprof:");
-	
 	#CHROME
 	_InstallFromManifest(":mozilla:rdf:chrome:public:MANIFEST",						"$distdirectory:idl:");
 	
@@ -1483,7 +1480,6 @@ sub BuildBrowserUtilsProjects()
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",	"WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
-	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"BrowsingProfile$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",						"ChomeRegistry$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	BuildOneProject(":mozilla:rdf:tests:domds:macbuild:DOMDataSource.mcp",		"DOMDataSource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);

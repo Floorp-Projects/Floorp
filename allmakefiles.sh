@@ -397,10 +397,6 @@ rdf/base/Makefile
 rdf/base/idl/Makefile
 rdf/base/public/Makefile
 rdf/base/src/Makefile
-rdf/brprof/Makefile
-rdf/brprof/public/Makefile
-rdf/brprof/src/Makefile
-rdf/brprof/build/Makefile
 rdf/chrome/Makefile
 rdf/chrome/build/Makefile
 rdf/chrome/public/Makefile

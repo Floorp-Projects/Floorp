@@ -23,8 +23,6 @@ DEPTH=..\..\..
 MODULE=rdf
 LIBRARY_NAME=rdfdatasource_s
 
-LCFLAGS=-DMOZ_BRPROF
-
 CPP_OBJS=\
         .\$(OBJDIR)\nsFileSystemDataSource.obj  \
         .\$(OBJDIR)\nsLocalStore.obj            \
