@@ -382,8 +382,10 @@ NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
       if (blackSpan == whiteSpan && blackBytesPerLine == whiteBytesPerLine) {
         *aAlphas = new PRUint8[r.width*r.height];
         if (*aAlphas) {
-          PRUint32 depth;
-          mContext->GetDepth(depth);
+          // compute depth like this to make sure it's consistent with the memory layout
+          // and work around some GTK bugs. If there are no gfx bugs, then this is correct,
+          // if there are gfx bugs, this will prevent a crash.
+          PRUint32 depth = (blackBytesPerLine/r.width)*8;
           ComputeAlphas(r.height, blackBytesPerLine, depth,
                         blackBytes, whiteBytes, blackSpan, 
                         *aAlphas, r.width*r.height);
