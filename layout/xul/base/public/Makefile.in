@@ -29,10 +29,22 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= layout
 
 EXPORTS		= \
+    nsPIBoxObject.h \
 		nsIMenuFrame.h \
 		nsIPopupSetFrame.h \
 		nsITreeFrame.h \
 		$(NULL)
+
+XPIDLSRCS=      nsIBoxObject.idl                  \
+                nsIBoxLayoutManager.idl              \
+                nsIBoxPaintManager.idl               \
+                nsITreeBoxObject.idl \
+                nsIPopupSetBoxObject.idl \
+                nsIMenuBoxObject.idl \
+                nsIBrowserBoxObject.idl \
+                nsIIFrameBoxObject.idl \
+                nsIEditorBoxObject.idl \
+                $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
