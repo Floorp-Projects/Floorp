@@ -2372,8 +2372,10 @@ nsDocument::SetTitle(const nsAReadableString& aTitle)
   // Fire a DOM event for the title change.
   nsCOMPtr<nsIDOMEvent> event;
   CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  event->InitEvent(NS_LITERAL_STRING("DOMTitleChanged"), PR_TRUE, PR_TRUE);
-  DispatchEvent(event);
+  if (event) {
+    event->InitEvent(NS_LITERAL_STRING("DOMTitleChanged"), PR_TRUE, PR_TRUE);
+    DispatchEvent(event);
+  }
 
   return NS_OK;
 }
