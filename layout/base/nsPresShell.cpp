@@ -6594,8 +6594,11 @@ PresShell::Observe(nsISupports* aSubject,
   if (!nsCRT::strcmp(aTopic, "chrome-flush-skin-caches")) {
     nsIFrame *rootFrame;
     GetRootFrame(&rootFrame);
-    WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                  &ReResolveMenusAndTrees, nsnull);
+    // Need to null-check because "chrome-flush-skin-caches" can happen
+    // at interesting times during startup.
+    if (rootFrame)
+      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                    &ReResolveMenusAndTrees, nsnull);
     return NS_OK;
   }
 #endif
