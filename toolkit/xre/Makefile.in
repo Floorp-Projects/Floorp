@@ -50,8 +50,6 @@ REQUIRES = \
 	appcomps \
 	toolkitcomps \
 	appshell \
-	appstartup \
-	chrome \
 	content \
 	docshell \
 	dom \

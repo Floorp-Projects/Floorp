@@ -86,9 +86,6 @@ public:
 
   nsresult Init();
 
-  // used by the protocol handler
-  static nsresult Canonify(nsIURI* aChromeURL);
-
 public:
   static nsresult FollowArc(nsIRDFDataSource *aDataSource,
                             nsACString& aResult,

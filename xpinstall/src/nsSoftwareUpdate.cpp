@@ -313,9 +313,28 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
     if ( !aLocalFile )
         return NS_ERROR_NULL_POINTER;
 
+    // -- grab a proxied Chrome Registry now while we can
+    nsresult rv;
+    nsIXULChromeRegistry* chromeRegistry = nsnull;
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIXULChromeRegistry,
+                                    tmpRegCR,
+                                    NS_CHROMEREGISTRY_CONTRACTID,
+                                    NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_SUCCEEDED(rv))
+        chromeRegistry = tmpRegCR;
+
+
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIExtensionManager,
+                                    extensionManager,
+                                    "@mozilla.org/extensions/manager;1",
+                                    NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_FAILED(rv))
+        extensionManager = nsnull;
+
     // we want to call this with or without a chrome registry
     nsInstallInfo *info = new nsInstallInfo( 0, aLocalFile, aURL, aArguments, aPrincipal,
-                                             flags, aListener);
+                                             flags, aListener, chromeRegistry, 
+                                             extensionManager);
 
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -337,28 +356,32 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
                                  PRBool aSelect,
                                  nsIXPIListener* aListener)
 {
+    nsresult rv;
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIXULChromeRegistry,
+                                    chromeRegistry,
+                                    NS_CHROMEREGISTRY_CONTRACTID,
+                                    NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIExtensionManager,
+                                    extensionManager,
+                                    "@mozilla.org/extensions/manager;1",
+                                    NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
     nsInstallInfo *info = new nsInstallInfo( aType,
                                              aFile,
                                              URL,
                                              aName,
                                              nsnull,
                                              (PRUint32)aSelect,
-                                             aListener);
+                                             aListener,
+                                             chromeRegistry,
+                                             extensionManager);
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    if (!info->GetChromeRegistry() ||
-#ifdef MOZ_XUL_APP
-        !info->GetExtensionManager() ||
-        !info->GetFileJARURL() ||
-        !info->GetManifestURL()
-#else
-        info->GetFileJARSpec().IsEmpty()
-#endif
-        ) {
-      delete info;
-      return NS_ERROR_FAILURE;
-    }
 
     PR_CreateThread(PR_USER_THREAD,
                     RunChromeInstallOnThread,

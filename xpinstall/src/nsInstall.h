@@ -53,7 +53,6 @@
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
-#include "nsIURI.h"
 
 #include "nsSoftwareUpdate.h"
 
@@ -71,16 +70,9 @@
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include "nsIZipReader.h"
+#include "nsIChromeRegistry.h"
 #include "nsIExtensionManager.h"
 #include "nsIPrincipal.h"
-
-#ifdef MOZ_XUL_APP
-#include "nsIToolkitChromeRegistry.h"
-#define CHROMEREG_IFACE nsIToolkitChromeRegistry
-#else
-#include "nsIChromeRegistrySea.h"
-#define CHROMEREG_IFACE nsIChromeRegistrySea
-#endif
 
 #define XPINSTALL_BUNDLE_URL "chrome://global/locale/xpinstall/xpinstall.properties"
 
@@ -103,7 +95,9 @@ class nsInstallInfo
                    const PRUnichar* aArgs,
                    nsIPrincipal*    mPrincipal,
                    PRUint32         aFlags,
-                   nsIXPIListener*  aListener);
+                   nsIXPIListener*  aListener,
+                   nsIXULChromeRegistry*   aChromeReg,
+                   nsIExtensionManager*    aExtensionManager);
 
     virtual ~nsInstallInfo();
 
@@ -113,15 +107,8 @@ class nsInstallInfo
     PRUint32            GetFlags()              { return mFlags; }
     PRUint32            GetType()               { return mType; }
     nsIXPIListener*     GetListener()           { return mListener.get(); }
-    CHROMEREG_IFACE*    GetChromeRegistry()     { return mChromeRegistry; }
-
-#ifdef MOZ_XUL_APP
-    nsIExtensionManager* GetExtensionManager()  { return mExtensionManager; }
-    nsIURI*              GetFileJARURL()        { return mFileJARURL; }
-    nsIURI*              GetManifestURL()       { return mManifestURL; }
-#else
-    const nsCString&     GetFileJARSpec()       { return mFileJARSpec; }
-#endif
+    nsIXULChromeRegistry*  GetChromeRegistry()  { return mChromeRegistry.get(); }
+    nsIExtensionManager*   GetExtensionManager(){ return mExtensionManager.get(); }
 
     nsCOMPtr<nsIPrincipal>      mPrincipal;
 
@@ -136,15 +123,8 @@ class nsInstallInfo
 
     nsCOMPtr<nsIFile>           mFile;
     nsCOMPtr<nsIXPIListener>    mListener;
-    nsCOMPtr<CHROMEREG_IFACE>   mChromeRegistry;
-
-#ifdef MOZ_XUL_APP
-    nsCOMPtr<nsIURI>              mFileJARURL;
-    nsCOMPtr<nsIURI>              mManifestURL;
+    nsCOMPtr<nsIXULChromeRegistry> mChromeRegistry;
     nsCOMPtr<nsIExtensionManager> mExtensionManager;
-#else
-    nsCString                     mFileJARSpec;
-#endif
 };
 
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -326,8 +306,8 @@ class nsInstall
 
         PRInt32    GetInstallPlatform(nsCString& aPlatform);
 
-        CHROMEREG_IFACE*    GetChromeRegistry() { return mChromeRegistry; }
-        void                SetChromeRegistry(CHROMEREG_IFACE* reg)
+        nsIXULChromeRegistry*  GetChromeRegistry() { return mChromeRegistry; }
+        void                SetChromeRegistry(nsIXULChromeRegistry* reg)
                                 { mChromeRegistry = reg; }
 
         PRUint32   GetFinalStatus() { return mFinalStatus; }
@@ -355,7 +335,7 @@ class nsInstall
         nsString            mInstallURL;
         PRUint32            mInstallFlags;
         nsCString           mInstallPlatform;
-        CHROMEREG_IFACE*    mChromeRegistry; // we don't own it, it outlives us
+        nsIXULChromeRegistry*  mChromeRegistry; // we don't own it, it outlives us
         nsInstallFolder*    mPackageFolder;
 
         PRBool              mUserCancelled;

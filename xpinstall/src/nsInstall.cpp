@@ -53,10 +53,6 @@
 #include "nsIFileChannel.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsDirectoryServiceUtils.h"
-
-#include "nsNetUtil.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -173,7 +169,9 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
                              const PRUnichar*   aArgs,
                              nsIPrincipal*      aPrincipal,
                              PRUint32           flags,
-                             nsIXPIListener*    aListener)
+                             nsIXPIListener*    aListener,
+                             nsIXULChromeRegistry* aChromeRegistry,
+                             nsIExtensionManager* aExtensionManager)
 : mPrincipal(aPrincipal),
   mError(0),
   mType(aInstallType),
@@ -181,45 +179,11 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
   mURL(aURL),
   mArgs(aArgs),
   mFile(aFile),
-  mListener(aListener)
+  mListener(aListener),
+  mChromeRegistry(aChromeRegistry),
+  mExtensionManager(aExtensionManager)
 {
     MOZ_COUNT_CTOR(nsInstallInfo);
-
-    nsresult rv;
-
-    // Failure is an option, and will occur in the stub installer.
-
-    NS_WITH_ALWAYS_PROXIED_SERVICE(CHROMEREG_IFACE, cr,
-                                   NS_CHROMEREGISTRY_CONTRACTID,
-                                   NS_UI_THREAD_EVENTQ, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      mChromeRegistry = cr;
-
-      nsCAutoString spec;
-      rv = NS_GetURLSpecFromFile(aFile, spec);
-      if (NS_SUCCEEDED(rv)) {
-        spec.Insert(NS_LITERAL_CSTRING("jar:"), 0);
-        spec.AppendLiteral("!/");
-#ifdef MOZ_XUL_APP
-        NS_NewURI(getter_AddRefs(mFileJARURL), spec);
-#else
-        mFileJARSpec.Assign(spec);
-#endif
-      }
-    }
-
-#ifdef MOZ_XUL_APP
-    NS_WITH_ALWAYS_PROXIED_SERVICE(nsIExtensionManager, em,
-                                   "@mozilla.org/extensions/manager;1",
-                                   NS_UI_THREAD_EVENTQ, &rv);
-    if (NS_SUCCEEDED(rv))
-      mExtensionManager = em;
-
-    nsCOMPtr<nsIFile> manifest;
-    rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(manifest));
-    if (NS_SUCCEEDED(rv))
-      NS_NewFileURI(getter_AddRefs(mManifestURL), manifest);
-#endif
 }
 
 

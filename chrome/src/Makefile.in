@@ -75,6 +75,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsChromeFactory.cpp \
 		nsChromeRegistry.cpp \
+		nsChromeUIDataSource.cpp \
 		nsChromeProtocolHandler.cpp \
 		$(NULL)
 

@@ -42,7 +42,7 @@
 #include "nsISupports.idl"
 #include "nsIChromeRegistry.idl"
 
-[scriptable, uuid(382370d0-a7cd-47ae-aa4e-af74f5edf652)]
+[scriptable, uuid(ed47f6b3-8b7e-4dba-8cbd-d0560274ba4a)]
 interface nsIChromeRegistrySea : nsIXULChromeRegistry
 {
   /* Applies a skin or locale to all possible packages */
@@ -89,22 +89,4 @@ interface nsIChromeRegistrySea : nsIXULChromeRegistry
                                      in boolean useProfile);
 
   ACString getSelectedSkin(in ACString packageName);
-
-  /* Installation APIs */
-  void installSkin(in string baseURL,
-                   in boolean useProfile,
-                   in boolean allowScripts);
-  
-  void uninstallSkin(in ACString skinName, in boolean useProfile);
-
-  void installLocale(in string baseURL, in boolean useProfile);
-  void uninstallLocale(in ACString localeName, in boolean useProfile);
-
-  void installPackage(in string baseURL, in boolean useProfile);
-  void uninstallPackage(in ACString packageName, in boolean useProfile);
-
-  /* Whether or not an addon package can dynamically overlay another package. 
-     You can use these APIs to effectively disable a chrome add-on without
-     uninstalling it. */
-  void setAllowOverlaysForPackage(in wstring packageName, in boolean allowOverlays);
 };

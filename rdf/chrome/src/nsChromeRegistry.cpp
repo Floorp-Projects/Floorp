@@ -440,7 +440,7 @@ GetBaseURLFile(const nsACString& aBaseURL, nsIFile** aFile)
   return NS_ERROR_FAILURE;
 }
 
-nsresult
+NS_IMETHODIMP
 nsChromeRegistry::Canonify(nsIURI* aChromeURI)
 {
   // Canonicalize 'chrome:' URLs. We'll take any 'chrome:' URL
@@ -471,10 +471,12 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsIURI* *aResult)
+nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsACString& aResult)
 {
   nsresult rv = NS_OK;
-  NS_ENSURE_ARG_POINTER(aChromeURL);
+  NS_ASSERTION(aChromeURL, "null url!");
+  if (!aChromeURL)
+      return NS_ERROR_NULL_POINTER;
 
   // No need to canonify as the SplitURL() that we
   // do is the equivalent of canonification without modifying
@@ -539,9 +541,9 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsIURI* *aResult)
     }
   }
 
-  finalURL.Append(remaining);
+  aResult = finalURL + remaining;
 
-  return NS_NewURI(aResult, finalURL);
+  return NS_OK;
 }
 
 nsresult

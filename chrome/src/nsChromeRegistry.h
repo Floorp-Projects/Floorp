@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *   Original Author: David W. Hyatt (hyatt@netscape.com)
- *   Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,36 +36,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIChromeRegistry.h"
-#include "nsIToolkitChromeRegistry.h"
-#include "nsIXULOverlayProvider.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
-
-#include "pldhash.h"
-
-#include "nsCOMArray.h"
-#include "nsString.h"
-#include "nsTHashtable.h"
-#include "nsURIHashKey.h"
-#include "nsVoidArray.h"
-
-struct PRFileDesc;
 class nsIAtom;
 class nsICSSStyleSheet;
-class nsIDOMWindowInternal;
-class nsILocalFile;
+class nsIRDFService;
 class nsIRDFDataSource;
 class nsIRDFResource;
-class nsIRDFService;
-class nsIURL;
+class nsIRDFNode;
+class nsISimpleEnumerator;
+class nsSupportsHashtable;
+class nsIRDFContainer;
+class nsIRDFContainerUtils;
+class nsIDOMWindowInternal;
+class nsIDocument;
+class nsILocalFile;
+class nsIProperties;
 
+#include "nsIChromeRegistry.h"
+#include "nsIXULOverlayProvider.h"
+#include "nsIRDFCompositeDataSource.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
+#include "nsString.h"
+#include "nsIZipReader.h"
+#include "nsCOMArray.h"
+#include "nsInterfaceHashtable.h"
+     
 // for component registration
 // {47049e42-1d87-482a-984d-56ae185e367a}
 #define NS_CHROMEREGISTRY_CID \
 { 0x47049e42, 0x1d87, 0x482a, { 0x98, 0x4d, 0x56, 0xae, 0x18, 0x5e, 0x36, 0x7a } }
 
-class nsChromeRegistry : public nsIToolkitChromeRegistry,
+class nsChromeRegistry : public nsIXULChromeRegistry,
                          public nsIXULOverlayProvider,
                          public nsIObserver,
                          public nsSupportsWeakReference
@@ -77,22 +77,48 @@ public:
   // nsIChromeRegistry methods:
   NS_DECL_NSICHROMEREGISTRY
   NS_DECL_NSIXULCHROMEREGISTRY
-  NS_DECL_NSITOOLKITCHROMEREGISTRY
   NS_DECL_NSIXULOVERLAYPROVIDER
 
   NS_DECL_NSIOBSERVER
 
   // nsChromeRegistry methods:
-  nsChromeRegistry() { }
-  ~nsChromeRegistry();
+  nsChromeRegistry();
+  virtual ~nsChromeRegistry();
 
   nsresult Init();
-  static nsresult Canonify(nsIURL* aChromeURL);
+
+public:
+  static nsresult FollowArc(nsIRDFDataSource *aDataSource,
+                            nsACString& aResult,
+                            nsIRDFResource* aChromeResource,
+                            nsIRDFResource* aProperty);
+
+  static nsresult UpdateArc(nsIRDFDataSource *aDataSource, nsIRDFResource* aSource, nsIRDFResource* aProperty, 
+                            nsIRDFNode *aTarget, PRBool aRemove);
 
 protected:
+  nsresult GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, PRBool aCreateDS, nsIRDFDataSource **aResult);
+  nsresult GetURIList(nsIRDFDataSource *aDS, nsIRDFResource *aResource, nsCOMArray<nsIURI>& aArray);
   nsresult GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
 
-  static nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
+  PRBool   IsOverlayAllowed(nsIURI *aChromeURI);
+
+  nsresult GetResource(const nsACString& aChromeType, nsIRDFResource** aResult);
+  
+  nsresult UpdateDynamicDataSource(nsIRDFDataSource *aDataSource,
+                                   nsIRDFResource *aResource,
+                                   PRBool aIsOverlay, PRBool
+                                   aUseProfile, PRBool aRemove);
+  nsresult UpdateDynamicDataSources(nsIRDFDataSource *aDataSource,
+                                    PRBool aIsOverlay,
+                                    PRBool aUseProfile, PRBool
+                                    aRemove);
+  nsresult WriteInfoToDataSource(const char *aDocURI,
+                                 const PRUnichar *aOverlayURI,
+                                 PRBool aIsOverlay, PRBool
+                                 aUseProfile, PRBool aRemove);
+ 
+  nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
 
   nsresult LoadInstallDataSource();
   nsresult LoadProfileDataSource();
@@ -101,130 +127,89 @@ protected:
   void FlushAllCaches();
 
 private:
-  static nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
-  static nsresult GetProviderAndPath(nsIURL* aChromeURL,
-                                     nsACString& aProvider, nsACString& aPath);
+  nsresult LoadDataSource(const nsACString &aFileName,
+                          nsIRDFDataSource **aResult,
+                          PRBool aUseProfileDirOnly = PR_FALSE,
+                          const char *aProfilePath = nsnull);
 
-  NS_HIDDEN_(void) ProcessProvider(PRFileDesc *fd, nsIRDFService* aRDFs,
-                                   nsIRDFDataSource* ds, nsIRDFResource* aRoot,
-                                   PRBool aIsLocale, const nsACString& aBaseURL);
-  NS_HIDDEN_(void) ProcessOverlays(PRFileDesc *fd, nsIRDFDataSource* ds,
-                                   nsIRDFResource* aRoot,
-                                   const nsCSubstring& aType);
+  static nsresult GetProfileRoot(nsACString& aFileURL);
+  static nsresult GetInstallRoot(nsIFile** aFileURL);
 
-  NS_HIDDEN_(nsresult) ProcessManifest(nsILocalFile* aManifest, PRBool aSkinOnly);
-  NS_HIDDEN_(nsresult) ProcessManifestBuffer(char *aBuffer, PRInt32 aLength, nsILocalFile* aManifest, PRBool aSkinOnly);
-  NS_HIDDEN_(nsresult) ProcessNewChromeFile(nsILocalFile *aListFile, nsIURI* aManifest);
-  NS_HIDDEN_(nsresult) ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength, nsIURI* aManifest);
+  nsresult RefreshWindow(nsIDOMWindowInternal* aWindow);
 
-public:
-  struct ProviderEntry
-  {
-    ProviderEntry(const nsACString& aProvider, nsIURI* aBase) :
-      provider(aProvider),
-      baseURI(aBase) { }
+  nsresult GetArcs(nsIRDFDataSource* aDataSource,
+                   const nsACString& aType,
+                   nsISimpleEnumerator** aResult);
 
-    nsCString        provider;
-    nsCOMPtr<nsIURI> baseURI;
-  };
+  nsresult AddToCompositeDataSource(PRBool aUseProfile);
+  
+  nsresult GetBaseURL(const nsACString& aPackage,
+                      const nsACString& aProvider, 
+                      nsACString& aBaseURL);
 
-  class nsProviderArray
-  {
-  public:
-    nsProviderArray() :
-      mArray(1) { }
-    ~nsProviderArray()
-      { Clear(); }
+  nsresult FindProvider(const nsACString& aPackage,
+                        const nsACString& aProvider,
+                        nsCOMPtr<nsIRDFResource> &aProviderResource,
+                        nsCOMPtr<nsIRDFResource> &aPackageResource);
 
-    // When looking up locales and skins, the "selected" locale is not always
-    // available. This enum identifies what kind of match is desired/found.
-    enum MatchType {
-      EXACT = 0,
-      LOCALE = 1, // "en-GB" is selected, we found "en-US"
-      SKIN = 2
-    };
+  nsresult TrySubProvider(const nsACString& aPackage,
+                          nsIRDFResource* aProviderResource,
+                          nsCOMPtr<nsIRDFResource> &aSelectedProvider);
 
-    ProviderEntry* GetProvider(const nsACString& aPreferred, MatchType aType);
-    nsIURI* GetBase(const nsACString& aPreferred, MatchType aType);
-    const nsACString& GetSelected(const nsACString& aPreferred, MatchType aType);
-    void    SetBase(const nsACString& aPreferred, nsIURI* base);
-    void    Clear();
+  nsresult FindSubProvider(const nsACString& aPackage,
+                           const nsACString& aProvider,
+                           nsCOMPtr<nsIRDFResource> &aSelectedProvider);
 
-  private:
-    nsVoidArray mArray;
-  };
+  nsresult InstallProvider(const nsACString& aProviderType,
+                             const nsACString& aBaseURL,
+                             PRBool aUseProfile, PRBool aAllowScripts, PRBool aRemove);
+  nsresult UninstallProvider(const nsACString& aProviderType, const nsACString& aProviderName, PRBool aUseProfile);
+  nsresult UninstallFromDynamicDataSource(const nsACString& aPackageName,
+                                          PRBool aIsOverlay, PRBool aUseProfile);
 
-  struct PackageEntry : public PLDHashEntryHdr
-  {
-    PackageEntry(const nsACString& package);
-    ~PackageEntry() { }
+  NS_HIDDEN_(nsresult) ProcessNewChromeFile(nsILocalFile *aListFile);
+  NS_HIDDEN_(nsresult) ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
-    // Available flags
-    enum {
-      // This is a "platform" package (e.g. chrome://global-platform/).
-      // Appends one of win/ unix/ mac/ to the base URI.
-      PLATFORM_PACKAGE = 1 << 0
-    };
+  PRBool GetProviderCount(const nsACString& aProviderType, nsIRDFDataSource* aDataSource);
 
-    nsCString        package;
-    nsCOMPtr<nsIURI> baseURI;
-    PRUint32         flags;
-    nsProviderArray  locales;
-    nsProviderArray  skins;
-  };
+protected:
+  nsCString mProfileRoot;
+  nsCString mInstallRoot;
 
-private:
-  static const void*   GetKey(PLDHashTable *table, PLDHashEntryHdr *entry);
-  static PLDHashNumber HashKey(PLDHashTable *table, const void *key);
-  static PRBool        MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                                const void *key);
-  static void          ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry);
-  static PRBool        InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                                 const void *key);
+  nsCOMPtr<nsIRDFCompositeDataSource> mChromeDataSource;
+  nsCOMPtr<nsIRDFDataSource> mInstallDirChromeDataSource;
+  nsCOMPtr<nsIRDFDataSource> mUIDataSource;
 
-  static const PLDHashTableOps kTableOps;
-
-public:
-  class OverlayListEntry : public nsURIHashKey
-  {
-  public:
-    typedef nsURIHashKey::KeyType        KeyType;
-    typedef nsURIHashKey::KeyTypePointer KeyTypePointer;
-
-    OverlayListEntry(KeyTypePointer aKey) : nsURIHashKey(aKey) { }
-    OverlayListEntry(OverlayListEntry& toCopy) : nsURIHashKey(toCopy),
-                                                 mArray(toCopy.mArray) { }
-    ~OverlayListEntry() { }
-
-    void AddURI(nsIURI* aURI);
-
-    nsCOMArray<nsIURI> mArray;
-  };
-
-  class OverlayListHash
-  {
-  public:
-    OverlayListHash() { }
-    ~OverlayListHash() { }
-
-    PRBool Init() { return mTable.Init(); }
-    void Add(nsIURI* aBase, nsIURI* aOverlay);
-    void Clear() { mTable.Clear(); }
-    const nsCOMArray<nsIURI>* GetArray(nsIURI* aBase);
-
-  private:
-    nsTHashtable<OverlayListEntry> mTable;
-  };
-
-private:
-  // Hash of package names ("global") to PackageEntry objects
-  PLDHashTable mPackagesHash;
-
-  // Hashes on the file to be overlaid (chrome://browser/content/browser.xul)
-  // to a list of overlays/stylesheets
-  OverlayListHash mOverlayHash;
-  OverlayListHash mStyleHash;
+  nsSupportsHashtable* mDataSourceTable;
+  nsIRDFService* mRDFService;
+  nsIRDFContainerUtils* mRDFContainerUtils;
 
   nsCString mSelectedLocale;
   nsCString mSelectedSkin;
+
+  nsInterfaceHashtable<nsCStringHashKey, nsIRDFResource> mSelectedLocales;
+  nsInterfaceHashtable<nsCStringHashKey, nsIRDFResource> mSelectedSkins;
+
+  // Resources
+  nsCOMPtr<nsIRDFResource> mBaseURL;
+  nsCOMPtr<nsIRDFResource> mPackages;
+  nsCOMPtr<nsIRDFResource> mPackage;
+  nsCOMPtr<nsIRDFResource> mName;
+  nsCOMPtr<nsIRDFResource> mImage;
+  nsCOMPtr<nsIRDFResource> mLocType;
+  nsCOMPtr<nsIRDFResource> mAllowScripts;
+  nsCOMPtr<nsIRDFResource> mHasOverlays;
+  nsCOMPtr<nsIRDFResource> mHasStylesheets;
+  nsCOMPtr<nsIRDFResource> mDisabled;
+  nsCOMPtr<nsIRDFResource> mPlatformPackage;
+
+  // useful atoms - these are static atoms, so don't use nsCOMPtr
+  static nsIAtom* sCPrefix;            // "c"
+  
+  PRPackedBool mInstallInitialized;
+  PRPackedBool mProfileInitialized;
+  
+  // Boolean that indicates we should batch flushes of the main
+  // chrome.rdf file.
+  PRPackedBool mBatchInstallFlushes;
 };
