@@ -53,7 +53,8 @@
         orient="vertical" title="&downloads.title;" statictitle="&downloads.title;"
         width="400" height="300" screenX="10" screenY="10"
         persist="width height screenX screenY sizeMode"
-        onload="Startup();" onunload="Shutdown();">
+        onload="Startup();" onunload="Shutdown();"
+        onclose="return closeWindow(false);">
       
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/DownloadProgressListener.js"/>
   <script type="application/x-javascript" src="chrome://mozapps/content/downloads/downloads.js"/>
@@ -75,7 +76,7 @@
     
   <keyset id="downloadKeys">
     <key id="key_cleanUp" keycode="VK_DELETE" command="cmd_cleanUp" modifiers="accel,shift"/>
-    <key id="key_close"   key="&cmd.close.commandKey;" oncommand="window.close();" modifiers="accel"/>
+    <key id="key_close"   key="&cmd.close.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
   </keyset>
   
   <vbox id="contextMenuPalette" hidden="true">

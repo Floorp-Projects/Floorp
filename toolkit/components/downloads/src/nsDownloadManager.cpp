@@ -1560,7 +1560,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
 
     gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-done", nsnull);
 
-
     // break the cycle we created in AddDownload
     if (mPersist)
       mPersist->SetProgressListener(nsnull);
