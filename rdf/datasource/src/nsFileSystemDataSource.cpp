@@ -75,7 +75,7 @@
 #include <NodeInfo.h>
 #endif
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_WIN)
 #define USE_NC_EXTENSION
 #endif
 
