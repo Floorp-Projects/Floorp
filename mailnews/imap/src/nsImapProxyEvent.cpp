@@ -307,27 +307,6 @@ nsImapMiscellaneousSinkProxy::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
     return res;
 }
 
-NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
-{
-    nsresult res = NS_OK;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        UpdateSecurityStatusProxyEvent *ev =
-            new UpdateSecurityStatusProxyEvent(this);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-            ev->PostEvent(m_eventQueue);
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->UpdateSecurityStatus(aProtocol);
-    }
-    return res;
-}
 
 NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
@@ -560,26 +539,6 @@ NS_IMETHODIMP
 HeaderFetchCompletedProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->HeaderFetchCompleted(
-        m_proxy->m_protocol);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
-UpdateSecurityStatusProxyEvent::UpdateSecurityStatusProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-}
-
-UpdateSecurityStatusProxyEvent::~UpdateSecurityStatusProxyEvent()
-{
-}
-
-NS_IMETHODIMP
-UpdateSecurityStatusProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->UpdateSecurityStatus(
         m_proxy->m_protocol);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();

@@ -4903,12 +4903,6 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
-{
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsImapMailFolder::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                         nsMsgBiffState biffState)
 {

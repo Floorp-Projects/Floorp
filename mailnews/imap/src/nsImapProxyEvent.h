@@ -108,7 +108,6 @@ public:
     NS_DECL_ISUPPORTS
 	
     NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
-    NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
     // ****
     NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                      nsMsgBiffState biffState);
@@ -195,13 +194,6 @@ struct HeaderFetchCompletedProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     HeaderFetchCompletedProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
     virtual ~HeaderFetchCompletedProxyEvent();
-    NS_IMETHOD HandleEvent();
-};
-
-struct UpdateSecurityStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    UpdateSecurityStatusProxyEvent(nsImapMiscellaneousSinkProxy* aProxy);
-    virtual ~UpdateSecurityStatusProxyEvent();
     NS_IMETHOD HandleEvent();
 };
 

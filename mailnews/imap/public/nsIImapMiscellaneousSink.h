@@ -61,7 +61,6 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAPMISCELLANEOUSSINK_IID)
     
     NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol) = 0;
-  NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol) = 0;
   // ****
   NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,  nsMsgBiffState biffState) = 0;
   NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol, PRUint32 aMsgId, const PRUnichar *extraInfo) = 0;

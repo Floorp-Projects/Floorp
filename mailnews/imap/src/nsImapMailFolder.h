@@ -323,7 +323,6 @@ public:
   NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
                          const char* searchHitLine);
   NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
-  NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
   // ****
   NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                nsMsgBiffState biffState);
