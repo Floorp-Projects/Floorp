@@ -119,12 +119,6 @@ static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
 //static PRBool gBookmarkCharset = PR_TRUE;
 
-#ifdef PCB_USE_PROTOCOL_CONNECTION
-// beard: how else would we get the referrer to a URL?
-#include "nsIProtocolConnection.h"
-#include "net.h"
-#endif
-
 #include "prmem.h"
 #include "prtime.h"
 
