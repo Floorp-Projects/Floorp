@@ -46,7 +46,11 @@ nsReplacementPolicy::~nsReplacementPolicy()
         nsMemory::Free(mRankedEntries);
     if (mMapRecordIdToEntry)
         nsMemory::Free(mMapRecordIdToEntry);
-    delete mCaches;
+    while (mCaches) {
+        CacheInfo* nextCacheInfo =  mCaches->mNext;
+        delete mCaches;
+        mCaches = nextCacheInfo;
+    } 
 }
 
 nsresult
