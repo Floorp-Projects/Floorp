@@ -68,7 +68,7 @@ NetReaderImpl::~NetReaderImpl()
 {
 }
 
-NS_IMPL_ISUPPORTS(NetReaderImpl, kINetReaderIID)
+NS_IMPL_THREADSAFE_ISUPPORTS(NetReaderImpl, kINetReaderIID)
 
 NS_IMETHODIMP
 NetReaderImpl::WriteReady(PRUint32* max_read)
