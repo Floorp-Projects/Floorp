@@ -35,6 +35,7 @@ XPIDLSRCS = \
 		nsIMsgDraft.idl	\
 		nsISmtpServer.idl	\
 		nsISmtpUrl.idl \
+		nsISmtpService.idl \
 		$(NULL)
 
 EXPORTS = \
@@ -42,7 +43,6 @@ EXPORTS = \
 		nsMsgCompFieldsFact.h	\
 		nsMsgSendFact.h \
 		nsMsgSendLaterFact.h \
-		nsISmtpService.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
