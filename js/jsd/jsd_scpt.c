@@ -101,6 +101,7 @@ _newJSDScript(JSDContext*  jsdc,
     jsdscript->function     = function;
     jsdscript->lineBase     = lineno;
     jsdscript->lineExtent   = (uintN)NOT_SET_YET;
+    jsdscript->data         = NULL;
 #ifndef LIVEWIRE
     jsdscript->url          = (char*) jsd_BuildNormalizedURL(raw_filename);
 #else
@@ -247,6 +248,20 @@ jsd_IterateScripts(JSDContext* jsdc, JSDScript **iterp)
     return jsdscript;
 }
 
+void *
+jsd_SetScriptPrivate(JSDScript *jsdscript, void *data)
+{
+    void *rval = jsdscript->data;
+    jsdscript->data = data;
+    return rval;
+}
+
+void *
+jsd_GetScriptPrivate(JSDScript *jsdscript)
+{
+    return jsdscript->data;
+}
+
 JSBool
 jsd_IsActiveScript(JSDContext* jsdc, JSDScript *jsdscript)
 {
@@ -287,7 +302,7 @@ jsd_GetScriptBaseLineNumber(JSDContext* jsdc, JSDScript *jsdscript)
 uintN
 jsd_GetScriptLineExtent(JSDContext* jsdc, JSDScript *jsdscript)
 {
-    if( NOT_SET_YET == jsdscript->lineExtent )
+    if( NOT_SET_YET == (int)jsdscript->lineExtent )
         jsdscript->lineExtent = JS_GetScriptLineExtent(jsdc->dumbContext, jsdscript->script);
     return jsdscript->lineExtent;
 }
