@@ -114,7 +114,7 @@
 // does not have a local include file, we are putting this definition
 // here rather than in nsIRegistry.h
 extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
-
+extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
@@ -454,7 +454,6 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
 
     // Category Manager
     {
-      extern nsresult NS_CategoryManagerGetFactory( nsIFactory** );
       nsCOMPtr<nsIFactory> categoryManagerFactory;
       if ( NS_FAILED(rv = NS_CategoryManagerGetFactory(getter_AddRefs(categoryManagerFactory))) )
         return rv;
