@@ -515,8 +515,6 @@ nsDNSLookup::Create(const char * hostName)
 void
 nsDNSLookup::Reset()
 {
-    PR_REMOVE_AND_INIT_LINK(this);  // remove us from eviction queue
-    
     // Initialize result holders
     mHostEntry.bufLen = PR_NETDB_BUF_SIZE;
     mHostEntry.bufPtr = mHostEntry.buffer;
@@ -1283,27 +1281,12 @@ nsDNSService::Run()
     return NS_OK;
 }
 
-#elif defined(XP_OS2)
-
-NS_IMETHODIMP
-nsDNSService::Run()
-{                   
-    return NS_ERROR_FAILURE;
-}
-
-#elif defined(XP_BEOS)
-
-NS_IMETHODIMP
-nsDNSService::Run()
-{
-    return NS_ERROR_FAILURE;
-}
-
 #else
 
 NS_IMETHODIMP
 nsDNSService::Run()
 {
+    NS_NOTREACHED("platform requires async implementation");
     return NS_ERROR_FAILURE;
 }
 
@@ -1360,7 +1343,7 @@ nsDNSService::Lookup(const char*     hostName,
 
 exit:
         if (lookup->IsNew())  EvictLookup(lookup);
-        NS_RELEASE(lookup); // it's either on the pending queue, or we're done with it
+        NS_RELEASE(lookup); // it's either on a queue, or we're done with it
     }
 
     if (NS_SUCCEEDED(rv))  *result = request;    
@@ -1381,6 +1364,8 @@ nsDNSService::FindOrCreateLookup(const char* hostName)
         lookup = ((DNSHashTableEntry *)hashEntry)->mLookup;
         if (lookup->IsComplete() && lookup->IsExpired()) {
             lookup->Reset();
+            PR_REMOVE_AND_INIT_LINK(lookup);  // remove us from eviction queue
+            --mEvictionQCount;
         }
 
         return lookup;
