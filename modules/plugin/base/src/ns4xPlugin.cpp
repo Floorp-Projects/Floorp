@@ -713,7 +713,7 @@ nsresult ns4xPlugin::CreateInstance(nsISupports *aOuter,
   nsRefPtr<ns4xPluginInstance> inst =
     new ns4xPluginInstance(&fCallbacks, fLibrary);
 
-  if (inst == NULL) 
+  if (!inst) 
     return NS_ERROR_OUT_OF_MEMORY;
 
   return inst->QueryInterface(aIID, aResult);
