@@ -19,51 +19,18 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../../../..
+DEPTH		= ../../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= unix
-
 CHROME_DIR = locales/en-US
 CHROME_L10N_DIR = communicator/locale/pref
 
 CHROME_L10N = \
-		pref-advanced.dtd \
-		pref-imageblocking.dtd \
-		pref-appearance.dtd \
-		pref-applications.dtd \
-		pref-applications.properties \
-		pref-applications-edit.dtd \
-		pref-cache.dtd \
-		pref-colors.dtd \
-		pref-themes.dtd \
-		pref-charset.dtd \
-		pref-composer.dtd \
-		pref-cookies.dtd \
-		pref-editing.dtd \
-		pref-debug.dtd \
-		pref-download.dtd \
-		pref-fonts.dtd \
-		pref-history.dtd \
-		pref-languages.dtd \
-		pref-navigator.dtd \
-		pref-offline.dtd \
-		pref-policies.dtd \
-		pref-proxies.dtd \
-		pref-proxy-manual.dtd \
-		pref-publish.dtd \
-		pref-search.dtd \
-		pref-smart_browsing.dtd \
-		pref-smartupdate.dtd \
-		pref-mousewheel.dtd	\
-		pref-wallet.dtd	\
-		prefutilities.properties	\
-		preftree.dtd \
-		pref.dtd \
+		platformPrefOverlay.dtd \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -26,7 +26,5 @@
 <!ENTITY proxies.label "Proxies">
 <!ENTITY smart.label "Software Installation">
 <!ENTITY debug.label "Debug">
-<!ENTITY mousewheel.label "Mouse Wheel">
-<!ENTITY winhooks.label "Desktop Integration">
 <!ENTITY search.label "Internet Search">
 <!ENTITY policies.label "Security Policies">
