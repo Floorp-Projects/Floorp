@@ -1,0 +1,18 @@
+<html><head>
+<title>Second Page</title>
+<script language="JavaScript">
+function doLoad()
+{
+  window.setTimeout("loadNewPage()", 5000);
+  window.print();
+}
+
+function loadNewPage()
+{
+  window.location.href = "http://www.mozilla.org";
+}
+</script>
+</head>
+<body bgcolor="#ffffff" onload="doLoad();">
+This will print this page and then 5 seconds later it will change the URL of this page while Print Dialog up.
+</body></html>
