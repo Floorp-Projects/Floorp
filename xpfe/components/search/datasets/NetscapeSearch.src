@@ -5,7 +5,7 @@
 	name="Netscape Search"
 	description = "Netscape Search"
 	method="GET"
-	action="http://search.netscape.com/cgi-bin/search"
+	action="http://info.netscape.com/fwd/sidb_ns/http://search.netscape.com/cgi-bin/search"
 >
 
 <INPUT NAME="search" user>
@@ -49,4 +49,4 @@
 
 </SEARCH>
 
-<browser alsomatch="http://search.netscape.com/search.tmpl http://google.netscape.com/netscape">
+<BROWSER alsomatch="http://search.netscape.com/cgi-bin/search http://search.netscape.com/search.tmpl http://google.netscape.com/netscape">

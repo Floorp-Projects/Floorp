@@ -5,7 +5,7 @@
 	name="CompuServe Search"
 	description="CompuServe Search"
 	method="GET"
-	action="http://cissearch.compuserve.com/search/cssearch/cssearch-results.adp"
+	action="http://info.netscape.com/fwd/sidb_cs/http://cissearch.compuserve.com/search/cssearch/cssearch-results.adp"
 >
 
 <INPUT NAME="Type" VALUE="I">
@@ -24,3 +24,5 @@
 >
 
 </SEARCH>
+
+<BROWSER alsomatch="http://cissearch.compuserve.com/search/cssearch/cssearch-results.adp">

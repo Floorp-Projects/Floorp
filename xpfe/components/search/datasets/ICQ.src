@@ -5,7 +5,7 @@
 	NAME="ICQ Search"
 	DESCRIPTION= "ICQ Search"
 	METHOD="GET"
-	ACTION="http://search.icq.com/dirsearch.adp"
+	ACTION="http://info.netscape.com/fwd/sidb_icq/http://search.icq.com/dirsearch.adp"
 >
 
 <INPUT NAME="query" user>
@@ -22,3 +22,5 @@
 >
 
 </SEARCH>
+
+<BROWSER alsomatch="http://search.icq.com/dirsearch.adp">
