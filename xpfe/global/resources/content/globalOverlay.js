@@ -301,6 +301,7 @@ function NewEditorFromDraft()
 
 function helpMenuCreate()
 {
+    //adding the brand string to the about
 	var BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
 	dump(BrandBundle.GetStringFromName("brandShortName"));
 	var BrandName = BrandBundle.GetStringFromName("brandShortName");
@@ -308,6 +309,15 @@ function helpMenuCreate()
 	var aboutName = aboutItem.getAttribute("name");
 	var aboutStrName = aboutName + " " + BrandName;
 	aboutItem.setAttribute("value", aboutStrName);
+	
+	//Adding the release url since it will change based on brand
+	var BrandRelUrl = BrandBundle.GetStringFromName("releaseUrl");	
+	var relCommand =  "openTopWin(\'" + BrandRelUrl + "\')";
+	dump("\n" + relCommand + "\n");
+	var relItem = document.getElementById( "releaseUrl" );
+	dump("\n" + relItem + "\n");
+	relItem.setAttribute("oncommand", relCommand);
+	//relItem.oncommand=relCommand;
 }
 
 function SendPage()
