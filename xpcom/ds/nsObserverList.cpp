@@ -52,8 +52,8 @@ NS_COM nsresult NS_NewObserverList(nsIObserverList** anObserverList)
 }
 
 nsObserverList::nsObserverList()
-    : mObserverList(NULL),
-	  mLock(nsnull)
+    : mLock(nsnull),
+        mObserverList(NULL)
 {
     NS_INIT_REFCNT();
     mLock = PR_NewLock();
