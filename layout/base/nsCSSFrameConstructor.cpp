@@ -4818,7 +4818,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   // so here we see if it is a select and then we get the number of options
   nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
 
-  nsresult result;
+  nsresult result = NS_ERROR_FAILURE;
   if (aContainer) {
     result = aContainer->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
                                                (void**)getter_AddRefs(selectElement));
