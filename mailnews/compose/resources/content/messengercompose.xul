@@ -198,13 +198,13 @@ Rights Reserved.
   </menubar>
 
 	<toolbar>
- 		<titledbutton src="&sendButton.img;" align="bottom" value="&sendButton.label;" onclick="SendMessage()"/>
- 		<titledbutton src="&quoteButton.img;" align="bottom" value="&quoteButton.label;" onclick="QuoteMessage()"/>
- 		<titledbutton src="&addressButton.img;" align="bottom" value="&addressButton.label;" onclick="SelectAddress()"/>
- 		<titledbutton src="&attachButton.img;" align="bottom" value="&attachButton.label;" onclick="AttachFile()"/>
- 		<titledbutton src="&spellingButton.img;" align="bottom" value="&spellingButton.label;" onclick="Spelling()"/>
- 		<titledbutton src="&saveButton.img;" align="bottom" value="&saveButton.label;" onclick="SaveAsDraft()"/>
- 		<titledbutton src="&stopButton.img;" align="bottom" value="&stopButton.label;" onclick="Stop()"/>
+ 		<titledbutton src="&sendButton.img;" align="top" value="&sendButton.label;" onclick="SendMessage()"/>
+ 		<titledbutton src="&quoteButton.img;" align="top" value="&quoteButton.label;" onclick="QuoteMessage()"/>
+ 		<titledbutton src="&addressButton.img;" align="top" value="&addressButton.label;" onclick="SelectAddress()"/>
+ 		<titledbutton src="&attachButton.img;" align="top" value="&attachButton.label;" onclick="AttachFile()"/>
+ 		<titledbutton src="&spellingButton.img;" align="top" value="&spellingButton.label;" onclick="Spelling()"/>
+ 		<titledbutton src="&saveButton.img;" align="top" value="&saveButton.label;" onclick="SaveAsDraft()"/>
+ 		<titledbutton src="&stopButton.img;" align="top" value="&stopButton.label;" onclick="Stop()"/>
 	    <spring flex="100%"/>
 		<titledbutton id="Throbber" align="bottom" onclick="MsgHome('&throbberButton.url;')"/>
 	</toolbar>
