@@ -52,11 +52,6 @@ LCFLAGS=-I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
 
 REQUIRES = xpcom raptor dom js netlib shell pref
 
-EXPORTS =				\
- nsApplicationManager.h			\
- nsShellInstance.h			\
- $(NULL)
-
 CPPSRCS=				\
  nsApplicationManager.cpp			\
  nsShellInstance.cpp			\

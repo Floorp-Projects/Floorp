@@ -24,6 +24,8 @@ MODULE=shell
 EXPORTS =			\
     nsMenuBar.h \
     nsMenuItem.h \
+    nsApplicationManager.h \
+    nsShellInstance.h \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
