@@ -185,8 +185,8 @@
         You now need to decide what content type you want your template
         served as. The content types are defined in the
         <filename>Bugzilla/Constants.pm</filename> file in the 
-        <filename>$contenttypes</filename>
-        variable. If your content type is not there, add it. Remember
+        <filename>contenttypes</filename>
+        constant. If your content type is not there, add it. Remember
         the three- or four-letter tag assigned to you content type. 
         This tag will be part of the template filename.
       </para>
