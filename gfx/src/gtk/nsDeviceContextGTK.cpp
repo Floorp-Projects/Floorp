@@ -59,6 +59,8 @@ NS_IMPL_RELEASE(nsDeviceContextGTK)
 NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
   GdkVisual *vis;
+  GtkRequisition req;
+  GtkWidget *sb;
 
   mWidget = aNativeWidget;
 
@@ -71,6 +73,16 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 
   vis = gdk_rgb_get_visual();
   mDepth = vis->depth;
+
+  sb = gtk_vscrollbar_new(NULL);
+  gtk_widget_size_request(sb,&req);
+  mScrollbarWidth = req.width;
+  gtk_widget_destroy(sb);
+  
+  sb = gtk_hscrollbar_new(NULL);
+  gtk_widget_size_request(sb,&req);
+  mScrollbarHeight = req.height;
+  gtk_widget_destroy(sb);
 
   return NS_OK;
 }
@@ -91,18 +103,8 @@ NS_IMETHODIMP nsDeviceContextGTK::SupportsNativeWidgets(PRBool &aSupportsWidgets
 
 NS_IMETHODIMP nsDeviceContextGTK::GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-  GtkRequisition req;
-  GtkWidget *sb;
-
-  sb = gtk_vscrollbar_new(NULL);
-  gtk_widget_size_request(sb,&req);
-  aWidth = req.width * mPixelsToTwips;
-  gtk_widget_destroy(sb);
-
-  sb = gtk_hscrollbar_new(NULL);
-  gtk_widget_size_request(sb,&req);
-  aHeight = req.height * mPixelsToTwips;
-  gtk_widget_destroy(sb);
+  aWidth = mScrollbarWidth * mPixelsToTwips;
+  aHeight = mScrollbarHeight * mPixelsToTwips;
  
   return NS_OK;
 }
@@ -156,24 +158,10 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     // Size
     //---------
     case eSystemAttr_Size_ScrollbarHeight:
-        {
-          GtkRequisition req;
-          GtkWidget *sb;
-          sb = gtk_hscrollbar_new(NULL);
-          gtk_widget_size_request(sb,&req);
-          aInfo->mSize = req.height;
-          gtk_widget_destroy(sb);
-	}
+        aInfo->mSize = mScrollbarHeight;
         break;
     case eSystemAttr_Size_ScrollbarWidth : 
-        {
-          GtkRequisition req;
-          GtkWidget *sb;
-          sb = gtk_vscrollbar_new(NULL);
-          gtk_widget_size_request(sb,&req);
-          aInfo->mSize = req.width;
-          gtk_widget_destroy(sb);
-	}
+        aInfo->mSize = mScrollbarWidth;
         break;
     case eSystemAttr_Size_WindowTitleHeight:
         aInfo->mSize = 0;
