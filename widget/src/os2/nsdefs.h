@@ -59,6 +59,17 @@
 #endif  // !_DEBUG
 
 #define WC_SCROLLBAR_STRING    "#8"  //string equivalent to WC_SCROLLBAR
+#define WC_FRAME_STRING        "#1"  //string equivalent to WC_FRAME
+
+
+extern "C" {
+PVOID APIENTRY WinQueryProperty(HWND hwnd, PCSZ  pszNameOrAtom);
+
+PVOID APIENTRY WinRemoveProperty(HWND hwnd, PCSZ  pszNameOrAtom);
+
+BOOL  APIENTRY WinSetProperty(HWND hwnd, PCSZ  pszNameOrAtom,
+                              PVOID pvData, ULONG ulFlags);
+}
 
 #endif  // NSDEFS_H
 

@@ -448,14 +448,6 @@ nsWindow::EventIsInsideWindow(nsWindow* aWindow)
   return PR_TRUE;
 }
 
-extern "C" {
-PVOID APIENTRY WinQueryProperty(HWND hwnd, PCSZ  pszNameOrAtom);
-
-PVOID APIENTRY WinRemoveProperty(HWND hwnd, PCSZ  pszNameOrAtom);
-
-BOOL  APIENTRY WinSetProperty(HWND hwnd, PCSZ  pszNameOrAtom,
-                              PVOID pvData, ULONG ulFlags);
-}
 
 static PCSZ GetNSWindowPropName() {
   static ATOM atom = 0;
@@ -780,7 +772,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          hwndP = HWND_DESKTOP;
       }
       // For scrollbars, the parent is the owner, for notification purposes
-      else if( !hwndOwner )
+      else if(!hwndOwner )
       {
          BOOL bHwndIsScrollBar = 
                            (!(strcmp( WindowClass(), WC_SCROLLBAR_STRING )));
@@ -1100,7 +1092,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
       default :
         mode = SWP_RESTORE;
     }
-    ::WinSetWindowPos(mWnd, NULLHANDLE, 0L, 0L, 0L, 0L, mode);
+    ::WinSetWindowPos(GetMainWindow(), NULLHANDLE, 0L, 0L, 0L, 0L, mode);
   }
   return rv;
 }
@@ -1444,6 +1436,55 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     WinSetPointer( HWND_DESKTOP, mPointer);
     mCursor = aCursor;
   //}
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide) 
+{
+  HWND hwndFrame = NULLHANDLE;
+  HWND hwndTitleBar = NULLHANDLE;
+  HWND hwndSysMenu = NULLHANDLE;
+  HWND hwndMinMax = NULLHANDLE;
+  HWND hwndParent;
+  ULONG ulStyle;
+  char className[19];
+
+  HWND hwnd = (HWND)GetNativeData(NS_NATIVE_WINDOW);
+  for ( ; hwnd != NULLHANDLE; hwnd = WinQueryWindow(hwnd, QW_PARENT)) {
+    ::WinQueryClassName(hwnd, 19, className);
+    if (strcmp(className, WC_FRAME_STRING) == 0)
+    {
+      hwndFrame = hwnd;
+      break;
+    }
+  }
+
+
+  if (aShouldHide) {
+    hwndParent = HWND_OBJECT;
+  } else {
+    hwndParent = hwndFrame;
+  }
+  hwndTitleBar = (HWND)WinQueryProperty(hwndFrame, "hwndTitleBar");
+  if (hwndTitleBar)
+    WinSetParent(hwndTitleBar, hwndParent, TRUE);
+  hwndSysMenu = (HWND)WinQueryProperty(hwndFrame, "hwndSysMenu");
+  if (hwndSysMenu)
+    WinSetParent(hwndSysMenu, hwndParent, TRUE);
+  hwndMinMax = (HWND)WinQueryProperty(hwndFrame, "hwndMinMax");
+  if (hwndMinMax)
+    WinSetParent(hwndMinMax, hwndParent, TRUE);
+  if (aShouldHide) {
+    ulStyle = (ULONG)WinQueryWindowULong(hwndFrame, QWL_STYLE);
+    WinSetWindowULong(hwndFrame, QWL_STYLE, ulStyle & ~FS_SIZEBORDER);
+    WinSetProperty(hwndFrame, "ulStyle", (PVOID)ulStyle, 0);
+    WinSendMsg(hwndFrame, WM_UPDATEFRAME, 0, 0);
+  } else {
+    ulStyle = (ULONG)WinQueryProperty(hwndFrame, "ulStyle");
+    WinSetWindowULong(hwndFrame, QWL_STYLE, ulStyle);
+    WinSendMsg(hwndFrame, WM_UPDATEFRAME, MPFROMLONG(FCF_TITLEBAR | FCF_SYSMENU | FCF_MINMAX), 0);
+  }
+
   return NS_OK;
 }
 
