@@ -24,9 +24,13 @@
 /* Include all of the interfaces our factory can generate components for */
 #include "nsMsgComposeFact.h"
 #include "nsMsgCompFieldsFact.h"
+#include "nsMsgSendFact.h"
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCMsgComposeCID, NS_MSGCOMPOSE_CID);
 static NS_DEFINE_CID(kCMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
+static NS_DEFINE_CID(kCMsgSendCID, NS_MSGSEND_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -116,6 +120,14 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
 		  return res;   
 	}
 
+	// do they want an Message Send interface ?
+	if (mClassID.Equals(kCMsgSendCID))
+	{
+		res = NS_NewMsgSend((nsIMsgSend **) &inst);
+		if (res != NS_OK)  // was there a problem creating the object ?
+		  return res;  
+	}
+
 	// End of checking the interface ID code....
 	if (inst)
 	{
@@ -124,7 +136,7 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
 		res = inst->QueryInterface(aIID, aResult);
 		NS_RELEASE(inst);
 		if (res != NS_OK)  // if the query interface failed for some reason, then the object did not get ref counted...delete it.
-			delete inst; 
+			delete inst;
 	}
 	else
 		res = NS_ERROR_OUT_OF_MEMORY;
