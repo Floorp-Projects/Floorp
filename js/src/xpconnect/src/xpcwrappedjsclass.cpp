@@ -352,7 +352,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             if(type.TagPart() == nsXPTType::T_INTERFACE)
             {
                 if(NS_FAILED(GetInterfaceInfo()->
-                                    GetIIDForParam(&param, &conditional_iid)))
+                        GetIIDForParam(methodIndex, &param, &conditional_iid)))
                 {
                     goto pre_call_clean_up;
                 }
@@ -521,7 +521,7 @@ pre_call_clean_up:
             if(type.TagPart() == nsXPTType::T_INTERFACE)
             {
                 if(NS_FAILED(GetInterfaceInfo()->
-                                    GetIIDForParam(&param, &conditional_iid)))
+                        GetIIDForParam(methodIndex, &param, &conditional_iid)))
                 {
                     break;
                 }

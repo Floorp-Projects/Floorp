@@ -99,7 +99,7 @@ int main (int argc, char **argv) {
     nsXPTParamInfo param2 = mi->GetParam(2);
     // should be IID for nsIShutdownListener
     nsIID *nsISL;
-    info5->GetIIDForParam(&param2, &nsISL);
+    info5->GetIIDForParam(7, &param2, &nsISL);
 //      const nsIID *nsISL = param2.GetInterfaceIID(info5);
     fprintf(stderr, "iid assoc'd with param 2 of method 7 of GetServiceWithListener - %s\n", nsISL->ToString());
     // if we look up the name?
@@ -111,7 +111,7 @@ int main (int argc, char **argv) {
     nsXPTParamInfo param3 = mi->GetParam(3);
     // should be IID for nsIShutdownListener
     nsIID *nsISS;
-    info5->GetIIDForParam(&param3, &nsISS);
+    info5->GetIIDForParam(7, &param3, &nsISS);
 //      const nsIID *nsISS = param3.GetInterfaceIID(info5);
     fprintf(stderr, "iid assoc'd with param 3 of method 7 of GetServiceWithListener - %s\n", nsISS->ToString());
     // if we look up the name?

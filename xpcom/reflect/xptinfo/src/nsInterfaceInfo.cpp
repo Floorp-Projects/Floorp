@@ -141,6 +141,10 @@ NS_IMETHODIMP
 nsInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
                                       const nsXPTMethodInfo** result)
 {
+    NS_PRECONDITION(methodName, "bad param");
+    NS_PRECONDITION(index, "bad param");
+    NS_PRECONDITION(result, "bad param");
+
     // XXX probably want to speed this up with a hashtable, or by at least interning
     // the names to avoid the strcmp
     for (uint16 i = mMethodBaseIndex; i < mMethodCount; i++) {
@@ -150,6 +154,9 @@ nsInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
                                    method_descriptors[i - mMethodBaseIndex]);
         if (PL_strcmp(methodName, info->name) == 0) {
 #ifdef NS_DEBUG
+            // XXX this isn't really the best place for this since it
+            // does not deal with duplicates accross inheritence boundaries
+            //
             // make sure there aren't duplicate names
             for (; i < mMethodCount; i++) {
                 const nsXPTMethodInfo* info2;
@@ -159,17 +166,22 @@ nsInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
                 NS_ASSERTION(PL_strcmp(methodName, info2->name)!= 0, "duplicate names");
             }
 #endif
+            *index = i;
             *result = info;
             return NS_OK;
         }
     }
-    return NS_ERROR_INVALID_ARG;
+    if(mParent)
+        return mParent->GetMethodInfoForName(methodName, index, result);
+    else
+        return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
 nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
 {
     NS_PRECONDITION(constant, "bad param");
+
     if (index < mConstantBaseIndex)
         return mParent->GetConstant(index, constant);
 
@@ -188,12 +200,23 @@ nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
 }
 
 NS_IMETHODIMP
-nsInterfaceInfo::GetInfoForParam(const nsXPTParamInfo *param, 
+nsInterfaceInfo::GetInfoForParam(uint16 methodIndex, 
+                                 const nsXPTParamInfo *param, 
                                  nsIInterfaceInfo** info)
 {
-    // XXX should be a soft failure?
+    NS_PRECONDITION(param, "bad pointer");
+    NS_PRECONDITION(info, "bad pointer");
     NS_PRECONDITION(param->GetType().TagPart() == nsXPTType::T_INTERFACE,
                     "not an interface");
+
+    if (methodIndex < mMethodBaseIndex)
+        return mParent->GetInfoForParam(methodIndex, param, info);
+
+    if (methodIndex >= mMethodBaseIndex + mMethodCount) {
+        NS_PRECONDITION(0, "bad param");
+        *info = NULL;
+        return NS_ERROR_INVALID_ARG;
+    }
 
     nsInterfaceRecord *paramRecord =
         *(this->mInterfaceRecord->typelibRecord->
@@ -203,10 +226,23 @@ nsInterfaceInfo::GetInfoForParam(const nsXPTParamInfo *param,
 }
 
 NS_IMETHODIMP
-nsInterfaceInfo::GetIIDForParam(const nsXPTParamInfo* param, nsIID** iid)
+nsInterfaceInfo::GetIIDForParam(uint16 methodIndex, 
+                                const nsXPTParamInfo* param, nsIID** iid)
 {
+    NS_PRECONDITION(param, "bad pointer");
+    NS_PRECONDITION(iid, "bad pointer");
     NS_PRECONDITION(param->GetType().TagPart() == nsXPTType::T_INTERFACE,
                     "not an interface");
+
+
+    if (methodIndex < mMethodBaseIndex)
+        return mParent->GetIIDForParam(methodIndex, param, iid);
+
+    if (methodIndex >= mMethodBaseIndex + mMethodCount) {
+        NS_PRECONDITION(0, "bad param");
+        *iid = NULL;
+        return NS_ERROR_INVALID_ARG;
+    }
 
     nsInterfaceRecord *paramRecord =
         *(this->mInterfaceRecord->typelibRecord->
