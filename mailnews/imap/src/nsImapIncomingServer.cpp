@@ -1015,9 +1015,16 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 			nsXPIDLString unicodeName;
 			imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
 			imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
-			imapFolder->SetBoxFlags(boxFlags);
-            imapFolder->SetExplicitlyVerify(explicitlyVerify);
-			imapFolder->GetOnlineName(getter_Copies(onlineName));
+      if (boxFlags & kImapTrash)
+      {
+        PRInt32 deleteModel;
+        GetDeleteModel(&deleteModel);
+        if (deleteModel == nsMsgImapDeleteModels::MoveToTrash)
+          child->SetFlag(MSG_FOLDER_FLAG_TRASH);
+      }
+      imapFolder->SetBoxFlags(boxFlags);
+      imapFolder->SetExplicitlyVerify(explicitlyVerify);
+      imapFolder->GetOnlineName(getter_Copies(onlineName));
 			if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
 				|| nsCRT::strcmp((const char *) onlineName, dupFolderPath))
 				imapFolder->SetOnlineName(dupFolderPath);
