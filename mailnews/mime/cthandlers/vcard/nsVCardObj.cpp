@@ -84,7 +84,7 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #include "plstr.h"
 #include "msgCore.h"
 #include "prprf.h"
-#define NOT_NULL(X)	X
+#define NOT_NULL(X) X
 
 /* debugging utilities */
 #define DBG_(x)
@@ -109,28 +109,28 @@ static void initVObjectIterator(VObjectIterator *i, VObject *o);
 
 /*----------------------------------------------------------------------
    The following functions involve with memory allocation:
-	newVObject
-	deleteVObject
-	dupStr
-	deleteString
-	newStrItem
-	deleteStrItem
+  newVObject
+  deleteVObject
+  dupStr
+  deleteString
+  newStrItem
+  deleteStrItem
    ----------------------------------------------------------------------*/
 
 static PRBool needsQuotedPrintable (const char *s)
 {
     const unsigned char *p = (const unsigned char *)s;
 
-	if (PL_strstr (s, MSG_LINEBREAK))
-		return PR_TRUE;
+  if (PL_strstr (s, MSG_LINEBREAK))
+    return PR_TRUE;
 
-	while (*p) {
-		if (*p & 0x80)
-			return PR_TRUE;
-		p++;
-	}
+  while (*p) {
+    if (*p & 0x80)
+      return PR_TRUE;
+    p++;
+  }
 
-	return PR_FALSE;
+  return PR_FALSE;
 }
 
 VObject* newVObject_(const char *id)
@@ -140,7 +140,7 @@ VObject* newVObject_(const char *id)
     p->id = id;
     p->prop = 0;
     VALUE_TYPE(p) = 0;
-	ANY_VALUE_OF(p) = 0;
+  ANY_VALUE_OF(p) = 0;
     return p;
 }
 
@@ -152,24 +152,24 @@ VObject* newVObject(const char *id)
 void deleteVObject(VObject *p)
 {
     unUseStr(p->id);
-    PR_FREEIF (p);
+    delete (p);
 }
 
 char* dupStr(const char *s, unsigned int size)
 {
     char *t;
     if  (size == 0) {
-	size = PL_strlen(s);
-	}
-    t = (char*)PR_CALLOC(size+1);
-	if (t) {
-	memcpy(t,s,size);
-	t[size] = 0;
-	return t;
-	}
+  size = PL_strlen(s);
+  }
+  t = (char*)PR_CALLOC(size+1);
+  if (t) {
+  memcpy(t,s,size);
+  t[size] = 0;
+  return t;
+  }
     else {
-	return (char*)0;
-	}
+  return (char*)0;
+  }
 }
 
 static StrItem* newStrItem(const char *s, StrItem *next)
@@ -307,32 +307,32 @@ VObject* addVObjectProp(VObject *o, VObject *p)
     /*
     o {next,id,prop,val}
                 V
-	pn {next,id,prop,val}
+  pn {next,id,prop,val}
              V
-	    ...
-	p1 {next,id,prop,val}
+      ...
+  p1 {next,id,prop,val}
              V
-	     pn
+       pn
     -->
     o {next,id,prop,val}
                 V
-	pn {next,id,prop,val}
+  pn {next,id,prop,val}
              V
-	p {next,id,prop,val}
-	    ...
-	p1 {next,id,prop,val}
+  p {next,id,prop,val}
+      ...
+  p1 {next,id,prop,val}
              V
-	     pn
+       pn
     */
 
     VObject *tail = o->prop;
     if (tail) {
-	p->next = tail->next;
-	o->prop = tail->next = p;
-	}
+  p->next = tail->next;
+  o->prop = tail->next = p;
+  }
     else {
-	o->prop = p->next = p;
-	}
+  o->prop = p->next = p;
+  }
     return p;
 }
 
@@ -350,15 +350,15 @@ void addList(VObject **o, VObject *p)
 {
     p->next = 0;
     if (*o == 0) {
-	*o = p;
-	}
+  *o = p;
+  }
     else {
-	VObject *t = *o;
-	while (t->next) {
-	   t = t->next;
-	   }
-	t->next = p;
-	}
+  VObject *t = *o;
+  while (t->next) {
+     t = t->next;
+     }
+  t->next = p;
+  }
 }
 
 VObject* nextVObjectInList(VObject *o)
@@ -377,7 +377,7 @@ VObject* setValueWithSize_(VObject *prop, void *val, unsigned int size)
 
 VObject* setValueWithSize(VObject *prop, void *val, unsigned int size)
 {
-	void *p = dupStr((const char *)val,size);
+  void *p = dupStr((const char *)val,size);
     return setValueWithSize_(prop,p,p?size:0);
 }
 
@@ -403,15 +403,15 @@ int moreIteration(VObjectIterator *i)
 VObject* nextVObject(VObjectIterator *i)
 {
     if (i->start && i->next != i->start) {
-	if (i->next == 0) {
-	    i->next = i->start->next;
-	    return i->next;
-	    }
-	else {
-	    i->next = i->next->next;
-	    return i->next;
-	    }
-	}
+  if (i->next == 0) {
+      i->next = i->start->next;
+      return i->next;
+      }
+  else {
+      i->next = i->next->next;
+      return i->next;
+      }
+  }
     else return (VObject*)0;
 }
 
@@ -420,72 +420,72 @@ VObject* isAPropertyOf(VObject *o, const char *id)
     VObjectIterator i;
     initPropIterator(&i,o);
     while (moreIteration(&i)) {
-	VObject *each = nextVObject(&i);
-	if (!PL_strcasecmp(id,each->id))
-	    return each;
-	}
+  VObject *each = nextVObject(&i);
+  if (!PL_strcasecmp(id,each->id))
+      return each;
+  }
     return (VObject*)0;
 }
 
 VObject* addGroup(VObject *o, const char *g)
 {
     /*
-	a.b.c
-	-->
-	prop(c)
-	    prop(VCGrouping=b)
-		prop(VCGrouping=a)
+  a.b.c
+  -->
+  prop(c)
+      prop(VCGrouping=b)
+    prop(VCGrouping=a)
      */
     char *dot = PL_strrchr(g,'.');
     if (dot) {
-	VObject *p, *t;
-	char *gs, *n = dot+1;
-	gs = dupStr(g,0);	/* so we can write to it. */
-	t = p = addProp_(o,lookupProp(n));
-	dot = PL_strrchr(gs,'.');
-	*dot = 0;
-	do {
-	    dot = PL_strrchr(gs,'.');
-	    if (dot) {
-		n = dot+1;
-		*dot=0;
-		}
-	    else
-		n = gs;
-	    /* property(VCGroupingProp=n);
-	     *	and the value may have VCGrouping property
-	     */
-	    t = addProp(t,VCGroupingProp);
-	    setVObjectStringZValue(t,lookupProp_(n));
-	    } while (n != gs);
-	deleteString(gs);	
-	return p;
-	}
+  VObject *p, *t;
+  char *gs, *n = dot+1;
+  gs = dupStr(g,0); /* so we can write to it. */
+  t = p = addProp_(o,lookupProp(n));
+  dot = PL_strrchr(gs,'.');
+  *dot = 0;
+  do {
+      dot = PL_strrchr(gs,'.');
+      if (dot) {
+    n = dot+1;
+    *dot=0;
+    }
+      else
+    n = gs;
+      /* property(VCGroupingProp=n);
+       *  and the value may have VCGrouping property
+       */
+      t = addProp(t,VCGroupingProp);
+      setVObjectStringZValue(t,lookupProp_(n));
+      } while (n != gs);
+  deleteString(gs); 
+  return p;
+  }
     else
-	return addProp_(o,lookupProp(g));
+  return addProp_(o,lookupProp(g));
 }
 
 VObject* addPropValue(VObject *o, const char *p, const char *v)
 {
     VObject *prop;
     prop = addProp(o,p);
-	if (v) {
-		setVObjectUStringZValue_(prop, fakeUnicode(v,0));
-		if (needsQuotedPrintable (v)) {
-			if (PL_strcasecmp (VCCardProp, vObjectName(o)) == 0) 
-				addProp (prop, VCQuotedPrintableProp);
-			else
-				addProp (o, VCQuotedPrintableProp);
-		}
-	}
-	else
-		setVObjectUStringZValue_(prop, fakeUnicode("",0));
+  if (v) {
+    setVObjectUStringZValue_(prop, fakeUnicode(v,0));
+    if (needsQuotedPrintable (v)) {
+      if (PL_strcasecmp (VCCardProp, vObjectName(o)) == 0) 
+        addProp (prop, VCQuotedPrintableProp);
+      else
+        addProp (o, VCQuotedPrintableProp);
+    }
+  }
+  else
+    setVObjectUStringZValue_(prop, fakeUnicode("",0));
 
     return prop;
 }
 
 VObject* addPropSizedValue_(VObject *o, const char *p, const char *v,
-	unsigned int size)
+  unsigned int size)
 {
     VObject *prop;
     prop = addProp(o,p);
@@ -494,7 +494,7 @@ VObject* addPropSizedValue_(VObject *o, const char *p, const char *v,
 }
 
 VObject* addPropSizedValue(VObject *o, const char *p, const char *v,
-	unsigned int size)
+  unsigned int size)
 {
     return addPropSizedValue_(o,p,dupStr(v,size),size);
 }
@@ -663,44 +663,44 @@ void cleanVObject(VObject *o)
 {
     if (o == 0) return;
     if (o->prop) {
-	/* destroy time: cannot use the iterator here.
-	   Have to break the cycle in the circular link
-	   list and turns it into regular NULL-terminated
-	   list -- since at some point of destruction,
-	   the reference entry for the iterator to work
-	   will not longer be valid.
-	   */
-	VObject *p;
-	p = o->prop->next;
-	o->prop->next = 0;
-	do {
-	   VObject *t = p->next;
-	   cleanVObject(p);
-	   p = t;
-	   } while (p);
-	}
+  /* destroy time: cannot use the iterator here.
+     Have to break the cycle in the circular link
+     list and turns it into regular NULL-terminated
+     list -- since at some point of destruction,
+     the reference entry for the iterator to work
+     will not longer be valid.
+     */
+  VObject *p;
+  p = o->prop->next;
+  o->prop->next = 0;
+  do {
+     VObject *t = p->next;
+     cleanVObject(p);
+     p = t;
+     } while (p);
+  }
     switch (VALUE_TYPE(o)) {
-	case VCVT_USTRINGZ:
-	case VCVT_STRINGZ:
-	case VCVT_RAW:
-	    /* assume they are all allocated by malloc. */
-	    if ((char*) STRINGZ_VALUE_OF(o)) 
+  case VCVT_USTRINGZ:
+  case VCVT_STRINGZ:
+  case VCVT_RAW:
+      /* assume they are all allocated by malloc. */
+      if ((char*) STRINGZ_VALUE_OF(o)) 
         PR_Free ((char*)STRINGZ_VALUE_OF(o));
-	    break;
-	case VCVT_VOBJECT:
-	    cleanVObject(VOBJECT_VALUE_OF(o));
-	    break;
-	}
+      break;
+  case VCVT_VOBJECT:
+      cleanVObject(VOBJECT_VALUE_OF(o));
+      break;
+  }
     deleteVObject(o);
 }
 
 void cleanVObjects(VObject *list)
 {
     while (list) {
-	VObject *t = list;
-	list = nextVObjectInList(list);
-	cleanVObject(t);
-	}
+  VObject *t = list;
+  list = nextVObjectInList(list);
+  cleanVObject(t);
+  }
 }
 
 /*----------------------------------------------------------------------
@@ -716,54 +716,37 @@ static unsigned int hashStr(const char *s)
     unsigned int h = 0;
     int i;
     for (i=0;s[i];i++) {
-	h += s[i]*i;
-	}
+  h += s[i]*i;
+  }
     return h % STRTBLSIZE;
 }
 
 void unUseStr(const char *s)
 {
-    StrItem *t, *p;
-    unsigned int h = hashStr(s);
-    if ((t = strTbl[h]) != 0) {
-	p = t;
-	do {
-	    if (PL_strcasecmp(t->s,s) == 0) {
-		t->refCnt--;
-		if (t->refCnt == 0) {
-		    if (p == strTbl[h]) {
-			strTbl[h] = t->next;
-			}
-		    else {
-			p->next = t->next;
-			}
-		    deleteString((char *)t->s);
-		    deleteStrItem(t);
-		    return;
-		    }
-		}
-	    p = t;
-	    t = t->next;
-	    } while (t);
-	}
+  StrItem *t, *p;
+  unsigned int h = hashStr(s);
+  if ((t = strTbl[h]) != 0) {
+    p = t;
+    do {
+      if (PL_strcasecmp(t->s,s) == 0) {
+        t->refCnt--;
+        if (t->refCnt == 0) {
+          if (t == strTbl[h]) {
+            strTbl[h] = t->next;
+          }
+          else {
+            p->next = t->next;
+          }
+          deleteString((char *)t->s);
+          deleteStrItem(t);
+          return;
+        }
+      }
+      p = t;
+      t = t->next;
+     } while (t);
+  }
 }
-
-void cleanStrTbl()
-{
-    int i;
-    for (i=0; i<STRTBLSIZE;i++) {
-	StrItem *t = strTbl[i];
-	while (t) {
-	    StrItem *p;
-	    deleteString((char *)t->s);
-	    p = t;
-	    t = t->next;
-	    deleteStrItem(p);
-	    } while (t) {}
-	strTbl[i] = 0;
-	}
-}
-
 
 struct PreDefProp {
     const char *name;
@@ -773,8 +756,8 @@ struct PreDefProp {
     };
 
 /* flags in PreDefProp */
-#define PD_BEGIN	0x1
-#define PD_INTERNAL	0x2
+#define PD_BEGIN  0x1
+#define PD_INTERNAL 0x2
 
 static const char *adrFields[] = {
     VCPostalBoxProp,
@@ -815,7 +798,7 @@ static const char *AAlarmFields[] = {
 
 static const char *coolTalkFields[] = {
     VCCooltalkAddress,
-	VCUseServer,
+  VCUseServer,
     0
     };
 
@@ -849,7 +832,7 @@ static const char *PAlarmFields[] = {
 
 static struct PreDefProp propNames[] = {
     { VC7bitProp, 0, 0, 0 },
-	{ VC8bitProp, 0, 0, 0 },
+  { VC8bitProp, 0, 0, 0 },
     { VCAAlarmProp, 0, AAlarmFields, 0 },
     { VCAdditionalNamesProp, 0, 0, 0 },
     { VCAdrProp, 0, adrFields, 0 },
@@ -857,7 +840,7 @@ static struct PreDefProp propNames[] = {
     { VCAIFFProp, 0, 0, 0 },
     { VCAOLProp, 0, 0, 0 },
     { VCAppleLinkProp, 0, 0, 0 },
-	{ VCAttachProp, 0, 0, 0 },
+  { VCAttachProp, 0, 0, 0 },
     { VCAttendeeProp, 0, 0, 0 },
     { VCATTMailProp, 0, 0, 0 },
     { VCAudioContentProp, 0, 0, 0 },
@@ -886,7 +869,7 @@ static struct PreDefProp propNames[] = {
     { VCCountryNameProp, 0, 0, 0 },
     { VCDAlarmProp, 0, DAlarmFields, 0 },
     { VCDataSizeProp, 0, 0, PD_INTERNAL },
-	{ VCDayLightProp, 0, 0 ,0 },
+  { VCDayLightProp, 0, 0 ,0 },
     { VCDCreatedProp, 0, 0, 0 },
     { VCDeliveryLabelProp, 0, 0, 0 },
     { VCDescriptionProp, 0, 0, 0 },
@@ -1006,10 +989,10 @@ static struct PreDefProp propNames[] = {
     { VCX400Prop, 0, 0, 0 },
     { VCX509Prop, 0, 0, 0 },
     { VCXRuleProp, 0, 0, 0 },
-	{ VCCooltalk, 0, coolTalkFields, 0 },
-	{ VCCooltalkAddress, 0, 0, 0 },
-	{ VCUseServer, 0, 0, 0 },
-	{ VCUseHTML, 0, 0, 0 },
+  { VCCooltalk, 0, coolTalkFields, 0 },
+  { VCCooltalkAddress, 0, 0, 0 },
+  { VCUseServer, 0, 0, 0 },
+  { VCUseHTML, 0, 0, 0 },
     { 0,0,0,0 }
     };
 
@@ -1018,11 +1001,11 @@ static struct PreDefProp* lookupPropInfo(const char* str)
 {
     /* brute force for now, could use a hash table here. */
     int i;
-	
+  
     for (i = 0; propNames[i].name; i++) 
-	if (PL_strcasecmp(str, propNames[i].name) == 0) {
-	    return &propNames[i];
-	    }
+  if (PL_strcasecmp(str, propNames[i].name) == 0) {
+      return &propNames[i];
+      }
     
     return 0;
 }
@@ -1031,13 +1014,13 @@ static struct PreDefProp* lookupPropInfo(const char* str)
 const char* lookupProp_(const char* str)
 {
     int i;
-	
+  
     for (i = 0; propNames[i].name; i++)
-	if (PL_strcasecmp(str, propNames[i].name) == 0) {
-	    const char* s;
-	    s = propNames[i].alias?propNames[i].alias:propNames[i].name;
-	    return lookupStr(s);
-	    }
+  if (PL_strcasecmp(str, propNames[i].name) == 0) {
+      const char* s;
+      s = propNames[i].alias?propNames[i].alias:propNames[i].name;
+      return lookupStr(s);
+      }
     return lookupStr(str);
 }
 
@@ -1045,14 +1028,14 @@ const char* lookupProp_(const char* str)
 const char* lookupProp(const char* str)
 {
     int i;
-	
+  
     for (i = 0; propNames[i].name; i++)
-	if (PL_strcasecmp(str, propNames[i].name) == 0) {
-	    const char *s;
-	    fieldedProp = (char **)propNames[i].fields;
-	    s = propNames[i].alias?propNames[i].alias:propNames[i].name;
-	    return lookupStr(s);
-	    }
+  if (PL_strcasecmp(str, propNames[i].name) == 0) {
+      const char *s;
+      fieldedProp = (char **)propNames[i].fields;
+      s = propNames[i].alias?propNames[i].alias:propNames[i].name;
+      return lookupStr(s);
+      }
     fieldedProp = 0;
     return lookupStr(str);
 }
@@ -1101,14 +1084,14 @@ static void appendcOFile(OFile *fp, char c)
 {
 /*  int i = 0; */
     if (c == '\n') {
-	/* write out as <CR><LF> */
-	/* for (i = 0; i < LINEBREAK_LEN; i++)
-		appendcOFile_(fp,LINEBREAK [ i ]); */
-	appendcOFile_(fp,0xd); 
-	appendcOFile_(fp,0xa); 
-	}
+  /* write out as <CR><LF> */
+  /* for (i = 0; i < LINEBREAK_LEN; i++)
+    appendcOFile_(fp,LINEBREAK [ i ]); */
+  appendcOFile_(fp,0xd); 
+  appendcOFile_(fp,0xa); 
+  }
     else
-	appendcOFile_(fp,c);
+  appendcOFile_(fp,c);
 }
 
 static void appendsOFile(OFile *fp, const char *s)
@@ -1116,8 +1099,8 @@ static void appendsOFile(OFile *fp, const char *s)
     int i, slen;
     slen  = PL_strlen (s);
     for (i=0; i<slen; i++) {
-	appendcOFile(fp,s[i]);
-	}
+  appendcOFile(fp,s[i]);
+  }
 }
 
 static void initOFile(OFile *fp, nsOutputFileStream *ofp)
@@ -1153,31 +1136,31 @@ static int writeBase64(OFile *fp, unsigned char *s, long len)
     quad[4] = 0;
 
     while (cur < len) {
-	/* collect the triplet of bytes into 'trip' */
-	trip = 0;
-	for (i = 0; i < 3; i++) {
-	    b = (cur < len) ? *(s + cur) : 0;
-	    cur++;
-	    trip = trip << 8 | b;
-	    }
-	/* fill in 'quad' with the appropriate four characters */
-	for (i = 3; i >= 0; i--) {
-	    b = (unsigned char)(trip & 0x3F);
-	    trip = trip >> 6;
-	    if ((3 - i) < (cur - len))
-		quad[i] = '='; /* pad char */
-	    else if (b < 26) quad[i] = (char)b + 'A';
-	    else if (b < 52) quad[i] = (char)(b - 26) + 'a';
-	    else if (b < 62) quad[i] = (char)(b - 52) + '0';
-	    else if (b == 62) quad[i] = '+';
-	    else quad[i] = '/';
-	    }
-	/* now output 'quad' with appropriate whitespace and line ending */
-	appendsOFile(fp, (numQuads == 0 ? "    " : ""));
-	appendsOFile(fp, quad);
-	appendsOFile(fp, ((cur >= len)?"\n" :(numQuads==PR_MAXQUADS-1?"\n" : "")));
-	numQuads = (numQuads + 1) % PR_MAXQUADS;
-	}
+  /* collect the triplet of bytes into 'trip' */
+  trip = 0;
+  for (i = 0; i < 3; i++) {
+      b = (cur < len) ? *(s + cur) : 0;
+      cur++;
+      trip = trip << 8 | b;
+      }
+  /* fill in 'quad' with the appropriate four characters */
+  for (i = 3; i >= 0; i--) {
+      b = (unsigned char)(trip & 0x3F);
+      trip = trip >> 6;
+      if ((3 - i) < (cur - len))
+    quad[i] = '='; /* pad char */
+      else if (b < 26) quad[i] = (char)b + 'A';
+      else if (b < 52) quad[i] = (char)(b - 26) + 'a';
+      else if (b < 62) quad[i] = (char)(b - 52) + '0';
+      else if (b == 62) quad[i] = '+';
+      else quad[i] = '/';
+      }
+  /* now output 'quad' with appropriate whitespace and line ending */
+  appendsOFile(fp, (numQuads == 0 ? "    " : ""));
+  appendsOFile(fp, quad);
+  appendsOFile(fp, ((cur >= len)?"\n" :(numQuads==PR_MAXQUADS-1?"\n" : "")));
+  numQuads = (numQuads + 1) % PR_MAXQUADS;
+  }
     appendcOFile(fp,'\n');
 
     return 1;
@@ -1186,112 +1169,112 @@ static int writeBase64(OFile *fp, unsigned char *s, long len)
 static void writeQPString(OFile *fp, const char *s)
 {
     const unsigned char *p = (const unsigned char *)s;
-	int current_column = 0;
-	static const char hexdigits[] = "0123456789ABCDEF";
-	PRBool white = PR_FALSE;
-	PRBool contWhite = PR_FALSE;
-	PRBool mb_p = PR_FALSE;
+  int current_column = 0;
+  static const char hexdigits[] = "0123456789ABCDEF";
+  PRBool white = PR_FALSE;
+  PRBool contWhite = PR_FALSE;
+  PRBool mb_p = PR_FALSE;
 
-	if (needsQuotedPrintable (s)) 
-	{
-		while (*p) {
-			if (*p == nsCRT::CR || *p == nsCRT::LF)
-			{
-				/* Whitespace cannot be allowed to occur at the end of the line.
-				So we encode " \n" as " =\n\n", that is, the whitespace, a
-				soft line break, and then a hard line break.
-				*/
+  if (needsQuotedPrintable (s)) 
+  {
+    while (*p) {
+      if (*p == nsCRT::CR || *p == nsCRT::LF)
+      {
+        /* Whitespace cannot be allowed to occur at the end of the line.
+        So we encode " \n" as " =\n\n", that is, the whitespace, a
+        soft line break, and then a hard line break.
+        */
 
-				if (white)
-				{
-					appendcOFile(fp,'=');
-					appendcOFile(fp,'\n');
-					appendcOFile(fp,'\t');
-					appendsOFile(fp,"=0D");
-					appendsOFile(fp,"=0A");
-					appendcOFile(fp,'=');
-					appendcOFile(fp,'\n');
-					appendcOFile(fp,'\t');
-				}
-				else
-				{
-					appendsOFile(fp,"=0D");
-					appendsOFile(fp,"=0A");
-					appendcOFile(fp,'=');
-					appendcOFile(fp,'\n');
-					appendcOFile(fp,'\t');
-					contWhite = PR_FALSE;
-				}
+        if (white)
+        {
+          appendcOFile(fp,'=');
+          appendcOFile(fp,'\n');
+          appendcOFile(fp,'\t');
+          appendsOFile(fp,"=0D");
+          appendsOFile(fp,"=0A");
+          appendcOFile(fp,'=');
+          appendcOFile(fp,'\n');
+          appendcOFile(fp,'\t');
+        }
+        else
+        {
+          appendsOFile(fp,"=0D");
+          appendsOFile(fp,"=0A");
+          appendcOFile(fp,'=');
+          appendcOFile(fp,'\n');
+          appendcOFile(fp,'\t');
+          contWhite = PR_FALSE;
+        }
 
-				/* If its CRLF, swallow two chars instead of one. */
-				if (*p == nsCRT::CR && *(p+1) == nsCRT::LF)
-					p++;
-				white = PR_FALSE;
-				current_column = 0;
-			}
-			else
-			{
-				if ((*p >= 33 && *p <= 60) ||		/* safe printing chars */
-					(*p >= 62 && *p <= 126) ||
-					(mb_p && (*p == 61 || *p == 127 || *p == 0x1B)))
-				{
-					appendcOFile(fp,*p);
-					current_column++;
-					white = PR_FALSE;
-					contWhite = PR_FALSE;
-				}
-				else if (*p == ' ' || *p == '\t')		/* whitespace */
-				{
-					if (contWhite) 
-					{
-						appendcOFile(fp,'=');
-						appendcOFile(fp,hexdigits[*p >> 4]);
-						appendcOFile(fp,hexdigits[*p & 0xF]);
-						current_column += 3;
-						contWhite = PR_FALSE;
-					}
-					else
-					{
-						appendcOFile(fp,*p);
-						current_column++;
-					}
-					white = PR_TRUE;
-				}
-				else										/* print as =FF */
-				{
-					appendcOFile(fp,'=');
-					appendcOFile(fp,hexdigits[*p >> 4]);
-					appendcOFile(fp,hexdigits[*p & 0xF]);
-					current_column += 3;
-					white = PR_FALSE;
-					contWhite = PR_FALSE;
-				}
+        /* If its CRLF, swallow two chars instead of one. */
+        if (*p == nsCRT::CR && *(p+1) == nsCRT::LF)
+          p++;
+        white = PR_FALSE;
+        current_column = 0;
+      }
+      else
+      {
+        if ((*p >= 33 && *p <= 60) ||   /* safe printing chars */
+          (*p >= 62 && *p <= 126) ||
+          (mb_p && (*p == 61 || *p == 127 || *p == 0x1B)))
+        {
+          appendcOFile(fp,*p);
+          current_column++;
+          white = PR_FALSE;
+          contWhite = PR_FALSE;
+        }
+        else if (*p == ' ' || *p == '\t')   /* whitespace */
+        {
+          if (contWhite) 
+          {
+            appendcOFile(fp,'=');
+            appendcOFile(fp,hexdigits[*p >> 4]);
+            appendcOFile(fp,hexdigits[*p & 0xF]);
+            current_column += 3;
+            contWhite = PR_FALSE;
+          }
+          else
+          {
+            appendcOFile(fp,*p);
+            current_column++;
+          }
+          white = PR_TRUE;
+        }
+        else                    /* print as =FF */
+        {
+          appendcOFile(fp,'=');
+          appendcOFile(fp,hexdigits[*p >> 4]);
+          appendcOFile(fp,hexdigits[*p & 0xF]);
+          current_column += 3;
+          white = PR_FALSE;
+          contWhite = PR_FALSE;
+        }
 
-				PR_ASSERT(current_column <= 76); /* Hard limit required by spec */
+        PR_ASSERT(current_column <= 76); /* Hard limit required by spec */
 
-				if (current_column >= 73 || ((*(p+1) == ' ') && (current_column + 3 >= 73)))		/* soft line break: "=\r\n" */
-				{
-					appendcOFile(fp,'=');
-					appendcOFile(fp,'\n');
-					appendcOFile(fp,'\t');
-					current_column = 0;
-					if (white)
-						contWhite = PR_TRUE;
-					else 
-						contWhite = PR_FALSE;
-					white = PR_FALSE;
-				}
-			}	
-			p++;
-		}  /* while */
-	}  /* if */
-	else 
-	{
-	    while (*p) {
-			appendcOFile(fp,*p);
-			p++;
-		}
-	}
+        if (current_column >= 73 || ((*(p+1) == ' ') && (current_column + 3 >= 73)))    /* soft line break: "=\r\n" */
+        {
+          appendcOFile(fp,'=');
+          appendcOFile(fp,'\n');
+          appendcOFile(fp,'\t');
+          current_column = 0;
+          if (white)
+            contWhite = PR_TRUE;
+          else 
+            contWhite = PR_FALSE;
+          white = PR_FALSE;
+        }
+      } 
+      p++;
+    }  /* while */
+  }  /* if */
+  else 
+  {
+      while (*p) {
+      appendcOFile(fp,*p);
+      p++;
+    }
+  }
 }
 
 
@@ -1299,67 +1282,67 @@ static void writeValue(OFile *fp, VObject *o, unsigned long size)
 {
     if (o == 0) return;
     switch (VALUE_TYPE(o)) {
-	case VCVT_USTRINGZ: {
-	    char *s = fakeCString(USTRINGZ_VALUE_OF(o));
-	    writeQPString(fp, s);
-	    deleteString(s);
-	    break;
-	    }
-	case VCVT_STRINGZ: {
-	    writeQPString(fp, STRINGZ_VALUE_OF(o));
-	    break;
-	    }
-	case VCVT_UINT: {
-	    char buf[16];
-	    sprintf(buf,"%u", INTEGER_VALUE_OF(o));
-	    appendsOFile(fp,buf);
-	    break;
-	    }
-	case VCVT_ULONG: {
-	    char buf[16];
-	    sprintf(buf,"%lu", LONG_VALUE_OF(o));
-	    appendsOFile(fp,buf);
-	    break;
-	    }
-	case VCVT_RAW: {
-	    appendcOFile(fp,'\n');
-	    writeBase64(fp,(unsigned char*)(ANY_VALUE_OF(o)),size);
-	    break;
-	    }
-	case VCVT_VOBJECT:
-	    appendcOFile(fp,'\n');
-	    writeVObject_(fp,VOBJECT_VALUE_OF(o));
-	    break;
-	}
+  case VCVT_USTRINGZ: {
+      char *s = fakeCString(USTRINGZ_VALUE_OF(o));
+      writeQPString(fp, s);
+      deleteString(s);
+      break;
+      }
+  case VCVT_STRINGZ: {
+      writeQPString(fp, STRINGZ_VALUE_OF(o));
+      break;
+      }
+  case VCVT_UINT: {
+      char buf[16];
+      sprintf(buf,"%u", INTEGER_VALUE_OF(o));
+      appendsOFile(fp,buf);
+      break;
+      }
+  case VCVT_ULONG: {
+      char buf[16];
+      sprintf(buf,"%lu", LONG_VALUE_OF(o));
+      appendsOFile(fp,buf);
+      break;
+      }
+  case VCVT_RAW: {
+      appendcOFile(fp,'\n');
+      writeBase64(fp,(unsigned char*)(ANY_VALUE_OF(o)),size);
+      break;
+      }
+  case VCVT_VOBJECT:
+      appendcOFile(fp,'\n');
+      writeVObject_(fp,VOBJECT_VALUE_OF(o));
+      break;
+  }
 }
 
 static void writeAttrValue(OFile *fp, VObject *o, int* length)
 {
-	int ilen = 0;
+  int ilen = 0;
     if (NAME_OF(o)) {
-	struct PreDefProp *pi;
-	pi = lookupPropInfo(NAME_OF(o));
-	if (pi && ((pi->flags & PD_INTERNAL) != 0)) return;
-	appendcOFile(fp,';');
-	if (*length != -1)
-		(*length)++;
-	appendsOFile(fp,NAME_OF(o));
-	if (*length != -1)
-		(*length) += PL_strlen (NAME_OF(o));
-	}
+  struct PreDefProp *pi;
+  pi = lookupPropInfo(NAME_OF(o));
+  if (pi && ((pi->flags & PD_INTERNAL) != 0)) return;
+  appendcOFile(fp,';');
+  if (*length != -1)
+    (*length)++;
+  appendsOFile(fp,NAME_OF(o));
+  if (*length != -1)
+    (*length) += PL_strlen (NAME_OF(o));
+  }
     else {
-		appendcOFile(fp,';');
-		(*length)++;
-	}
+    appendcOFile(fp,';');
+    (*length)++;
+  }
     if (VALUE_TYPE(o)) {
-	appendcOFile(fp,'=');
-	if (*length != -1) {
-		(*length)++;
-		for (ilen = 0; ilen < MAXMOZPROPNAMESIZE - (*length); ilen++)
-			appendcOFile(fp,' ');
-	}
-	writeValue(fp,o,0);
-	}
+  appendcOFile(fp,'=');
+  if (*length != -1) {
+    (*length)++;
+    for (ilen = 0; ilen < MAXMOZPROPNAMESIZE - (*length); ilen++)
+      appendcOFile(fp,' ');
+  }
+  writeValue(fp,o,0);
+  }
 }
 
 static void writeGroup(OFile *fp, VObject *o)
@@ -1368,11 +1351,11 @@ static void writeGroup(OFile *fp, VObject *o)
     char buf2[256];
     PL_strcpy(buf1,NAME_OF(o));
     while ((o=isAPropertyOf(o,VCGroupingProp)) != 0) {
-	PL_strcpy(buf2,STRINGZ_VALUE_OF(o));
-	PL_strcat(buf2,".");
-	PL_strcat(buf2,buf1);
-	PL_strcpy(buf1,buf2);
-	}
+  PL_strcpy(buf2,STRINGZ_VALUE_OF(o));
+  PL_strcat(buf2,".");
+  PL_strcat(buf2,buf1);
+  PL_strcpy(buf1,buf2);
+  }
     appendsOFile(fp,buf1);
 }
 
@@ -1380,66 +1363,66 @@ static int inList(const char **list, const char *s)
 {
     if (list == 0) return 0;
     while (*list) {
-	if (PL_strcasecmp(*list,s) == 0) return 1;
-	list++;
-	}
+  if (PL_strcasecmp(*list,s) == 0) return 1;
+  list++;
+  }
     return 0;
 }
 
 static void writeProp(OFile *fp, VObject *o)
 {
-	int length = -1;
-	//int ilen = 0;
+  int length = -1;
+  //int ilen = 0;
 
     if (NAME_OF(o)) {
-	struct PreDefProp *pi;
-	VObjectIterator t;
-	const char **fields_ = 0;
-	pi = lookupPropInfo(NAME_OF(o));
-	if (pi && ((pi->flags & PD_BEGIN) != 0)) {
-	    writeVObject_(fp,o);
-	    return;
-	    }
-	if (isAPropertyOf(o,VCGroupingProp))
-	    writeGroup(fp,o);
-	else 
-	    appendsOFile(fp,NAME_OF(o));
-	if (pi) fields_ = pi->fields;
-	initPropIterator(&t,o);
-	while (moreIteration(&t)) {
-	    const char *s;
-	    VObject *eachProp = nextVObject(&t);
-	    s = NAME_OF(eachProp);
-	    if (PL_strcasecmp(VCGroupingProp,s) && !inList(fields_,s))
-		writeAttrValue(fp,eachProp, &length);
-	    }
-	if (fields_) {
-	    int i = 0, n = 0;
-	    const char** fields = fields_;
-	    /* output prop as fields */
-	    appendcOFile(fp,':');
-	    while (*fields) {
-		VObject *tt = isAPropertyOf(o,*fields);
-		i++;
-		if (tt) n = i;
-		fields++;
-		}
-	    fields = fields_;
-	    for (i=0;i<n;i++) {
-		writeValue(fp,isAPropertyOf(o,*fields),0);
-		fields++;
-		if (i<(n-1)) appendcOFile(fp,';');
-		}
-	    }
-	}
-	
+  struct PreDefProp *pi;
+  VObjectIterator t;
+  const char **fields_ = 0;
+  pi = lookupPropInfo(NAME_OF(o));
+  if (pi && ((pi->flags & PD_BEGIN) != 0)) {
+      writeVObject_(fp,o);
+      return;
+      }
+  if (isAPropertyOf(o,VCGroupingProp))
+      writeGroup(fp,o);
+  else 
+      appendsOFile(fp,NAME_OF(o));
+  if (pi) fields_ = pi->fields;
+  initPropIterator(&t,o);
+  while (moreIteration(&t)) {
+      const char *s;
+      VObject *eachProp = nextVObject(&t);
+      s = NAME_OF(eachProp);
+      if (PL_strcasecmp(VCGroupingProp,s) && !inList(fields_,s))
+    writeAttrValue(fp,eachProp, &length);
+      }
+  if (fields_) {
+      int i = 0, n = 0;
+      const char** fields = fields_;
+      /* output prop as fields */
+      appendcOFile(fp,':');
+      while (*fields) {
+    VObject *tt = isAPropertyOf(o,*fields);
+    i++;
+    if (tt) n = i;
+    fields++;
+    }
+      fields = fields_;
+      for (i=0;i<n;i++) {
+    writeValue(fp,isAPropertyOf(o,*fields),0);
+    fields++;
+    if (i<(n-1)) appendcOFile(fp,';');
+    }
+      }
+  }
+  
     if (VALUE_TYPE(o)) {
-	unsigned long size = 0;
+  unsigned long size = 0;
         VObject *p = isAPropertyOf(o,VCDataSizeProp);
-	if (p) size = LONG_VALUE_OF(p);
-	appendcOFile(fp,':');
-	writeValue(fp,o,size);
-	}
+  if (p) size = LONG_VALUE_OF(p);
+  appendcOFile(fp,':');
+  writeValue(fp,o,size);
+  }
     appendcOFile(fp,'\n');
 }
 
@@ -1447,25 +1430,25 @@ void writeVObject_(OFile *fp, VObject *o)
 {
   //int ilen = 0;
     if (NAME_OF(o)) {
-	struct PreDefProp *pi;
-	pi = lookupPropInfo(NAME_OF(o));
+  struct PreDefProp *pi;
+  pi = lookupPropInfo(NAME_OF(o));
 
-	if (pi && ((pi->flags & PD_BEGIN) != 0)) {
-	    VObjectIterator t;
-	    const char *begin = NAME_OF(o);
-	    appendsOFile(fp,"begin:");
-	    appendsOFile(fp,begin);
-	    appendcOFile(fp,'\n');
-	    initPropIterator(&t,o);
-	    while (moreIteration(&t)) {
-			VObject *eachProp = nextVObject(&t);
-			writeProp(fp, eachProp);
-		}
-	    appendsOFile(fp,"end:");
-	    appendsOFile(fp,begin);
-	    appendsOFile(fp,"\n\n");
-	    }
-	}
+  if (pi && ((pi->flags & PD_BEGIN) != 0)) {
+      VObjectIterator t;
+      const char *begin = NAME_OF(o);
+      appendsOFile(fp,"begin:");
+      appendsOFile(fp,begin);
+      appendcOFile(fp,'\n');
+      initPropIterator(&t,o);
+      while (moreIteration(&t)) {
+      VObject *eachProp = nextVObject(&t);
+      writeProp(fp, eachProp);
+    }
+      appendsOFile(fp,"end:");
+      appendsOFile(fp,begin);
+      appendsOFile(fp,"\n\n");
+      }
+  }
 }
 
 void writeVObject(nsOutputFileStream *fp, VObject *o)
@@ -1494,14 +1477,14 @@ void writeVObjectsToFile(nsFileSpec *fname, VObject *list)
 #if !defined(MOZADDRSTANDALONE)
   nsOutputFileStream *fp = new nsOutputFileStream(*fname, PR_WRONLY | PR_CREATE_FILE, 00600);
     if (fp) {
-	while (list) {
-	    writeVObject(fp,list);
-	    list = nextVObjectInList(list);
-	    }
-	fp->close();
-	}
+  while (list) {
+      writeVObject(fp,list);
+      list = nextVObjectInList(list);
+      }
+  fp->close();
+  }
 #else
-	PR_ASSERT(PR_FALSE);
+  PR_ASSERT(PR_FALSE);
 #endif
 }
 
@@ -1521,9 +1504,9 @@ char * writeMemoryVObjects(char *s, int *len, VObject *list, PRBool expandSpaces
     OFile ofp;
     initMemOFile(&ofp,s,len?*len:0);
     while (list) {
-	writeVObject_(&ofp,list);
-	list = nextVObjectInList(list);
-	}
+  writeVObject_(&ofp,list);
+  list = nextVObjectInList(list);
+  }
     if (len) *len = ofp.len;
     appendcOFile(&ofp,0);
     return ofp.s;
@@ -1539,19 +1522,19 @@ vwchar_t* fakeUnicode(const char *ps, int *bytes)
 
     pw = r = (vwchar_t*)PR_CALLOC(sizeof(vwchar_t)*len);
     if (bytes)
-	*bytes = len * sizeof(vwchar_t);
+  *bytes = len * sizeof(vwchar_t);
 
     while (*ps) { 
-	if (*ps == '\n')
-	    *pw = (vwchar_t)0x2028;
-	else if (*ps == '\r')
-	    *pw = (vwchar_t)0x2029;
-	else
-	    *pw = (vwchar_t)(unsigned char)*ps;
-	ps++; pw++;
-	}				 
+  if (*ps == '\n')
+      *pw = (vwchar_t)0x2028;
+  else if (*ps == '\r')
+      *pw = (vwchar_t)0x2029;
+  else
+      *pw = (vwchar_t)(unsigned char)*ps;
+  ps++; pw++;
+  }        
     *pw = (vwchar_t)0;
-	
+  
     return r;
 }
 
@@ -1568,14 +1551,14 @@ char* fakeCString(const vwchar_t *u)
     int len = uStrLen(u) + 1;
     t = s = (char*)PR_CALLOC(len);
     while (*u) {
-	if (*u == (vwchar_t)0x2028)
-	    *t = '\n';
-	else if (*u == (vwchar_t)0x2029)
-	    *t = '\r';
-	else
-	    *t = (char)*u;
-	u++; t++;
-	}
+  if (*u == (vwchar_t)0x2028)
+      *t = '\n';
+  else if (*u == (vwchar_t)0x2029)
+      *t = '\r';
+  else
+      *t = (char)*u;
+  u++; t++;
+  }
     *t = 0;
     return s;
 }
@@ -1585,14 +1568,14 @@ const char* lookupStr(const char *s)
     StrItem *t;
     unsigned int h = hashStr(s);
     if ((t = strTbl[h]) != 0) {
-	do {
-	    if (PL_strcasecmp(t->s,s) == 0) {
-		t->refCnt++;
-		return t->s;
-		}
-	    t = t->next;
-	    } while (t);
-	}
+  do {
+      if (PL_strcasecmp(t->s,s) == 0) {
+    t->refCnt++;
+    return t->s;
+    }
+      t = t->next;
+      } while (t);
+  }
     s = dupStr(s,0);
     strTbl[h] = newStrItem(s,strTbl[h]);
     return s;
