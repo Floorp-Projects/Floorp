@@ -22,6 +22,9 @@
 #include "pratom.h"
 #include "nsString.h"
 #include "nsIComponentManager.h"
+#include "nsIRegistry.h"
+#include "nsIEnumerator.h"
+#include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterInfo.h"
 #include "nsIUnicodeEncoder.h"
@@ -206,10 +209,108 @@ nsresult nsCharsetConverterManager::CreateMapping()
 {
   mMappingDone = PR_TRUE;
 
+  nsresult res = NS_OK;
+  nsIRegistry * registry = NULL;
+  nsIEnumerator * components = NULL;
+  nsIRegistry::Key key;
+  char buff[1024];
+
+  // XXX hack; make these dynamic
+  mEncArray = new ConverterInfo [100];
+  mDecArray = new ConverterInfo [100];
+  mEncSize = mDecSize = 0;
+
+  // get the registry
+  res = nsServiceManager::GetService(NS_REGISTRY_PROGID, 
+                                     nsIRegistry::GetIID(), 
+                                     (nsISupports**)&registry);
+  if (NS_FAILED(res)) goto done;
+
+  // open the registry
+  res = registry->OpenWellKnownRegistry(
+      nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(res)) goto done;
+
+  // get subtree
+  res = registry -> GetSubtree(nsIRegistry::Common, 
+                               "software/netscape/intl/uconv", 
+                               &key);
+  if (NS_FAILED(res)) goto done;
+
+  // enumerate subtrees
+  res = registry -> EnumerateSubtrees(key, &components);
+  if (NS_FAILED(res)) goto done;
+  res = components -> First();
+  if (NS_FAILED(res)) goto done;
+
+  // XXX take these KONSTANTS out of here
+  // XXX check return values, free stuff
+  // XXX bit hacky, clean me up
+
+  while (!components -> IsDone()) {
+    nsISupports * base;
+    res = components -> CurrentItem(&base);
+    if (NS_SUCCEEDED(res)) {
+      nsIRegistryNode * node;
+      nsIID nodeIID = NS_IREGISTRYNODE_IID;
+      res = base->QueryInterface (nodeIID, (void**)&node);
+      if (NS_FAILED(res)) continue;
+
+      char *name;
+      res = node->GetName(&name);
+      if (NS_FAILED(res)) continue;
+
+      nsCID * cid = new nsCID();
+      char * src;
+      char * dest;
+      if (!cid->Parse(name)) continue;
+
+      sprintf(buff, "%s/%s", "software/netscape/intl/uconv", name);
+      res = registry -> GetSubtree(nsIRegistry::Common, buff, &key);
+
+      res = registry->GetString(key, "source", &src);
+      if (NS_FAILED(res)) continue;
+      res = registry->GetString(key, "destination", &dest);
+      if (NS_FAILED(res)) continue;
+
+      nsString * str;
+
+      if (!strcmp(src, "Unicode")) {
+        str = new nsString(dest);
+        GetCharsetName(str,&mEncArray[mEncSize].mCharset);
+        mEncArray[mEncSize].mCID = cid;
+        mEncSize++;
+      } else if (!strcmp(dest, "Unicode")) {
+        str = new nsString(src);
+        GetCharsetName(str,&mDecArray[mDecSize].mCharset);
+        mDecArray[mDecSize].mCID = cid;
+        mDecSize++;
+      }
+
+      nsCRT::free(name);
+      NS_RELEASE(node);
+      NS_RELEASE(base);
+    }
+
+    res = components->Next();
+  }
+
+done:
+  if (registry != NULL) {
+    registry -> Close();
+    nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
+  }
+
+  return res;
+
+/*  XXX old code
+  mMappingDone = PR_TRUE;
+
   nsresult res = CreateConvertersList();
   if NS_FAILED(res) return res;
 
   return GatherConvertersInfo();
+*/
 }
 
 // XXX Hack! These lists should be obtained from the Repository, in a Component 
