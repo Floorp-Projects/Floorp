@@ -88,7 +88,7 @@ public class IdFunction extends ScriptableObject implements Function
         functionType = type;
     }
     
-    public String getClassName() { return "NativeMethod"; }
+    public String getClassName() { return "Function"; }
 
     public boolean has(String name, Scriptable start) {
         return nameToId(name) != 0 || super.has(name, start);
@@ -164,7 +164,7 @@ public class IdFunction extends ScriptableObject implements Function
     }
 
     public Scriptable getPrototype() {
-        // For native functions this does not called often so it is better
+        // For native functions this is not called often so it is better
         // to run this expensive operation here and not in constructor
         return getFunctionPrototype(getParentScope());
     }
