@@ -308,7 +308,7 @@ PL_DHashTableFinish(PLDHashTable *table)
     }
 #endif
 
-    /* Call finalize before clearing entries. */
+    /* Call finalize before clearing entries, so it can enumerate them. */
     table->ops->finalize(table);
 
     /* Clear any remaining live entries. */

@@ -88,7 +88,8 @@ typedef struct PLDHashTableOps  PLDHashTableOps;
  * Each hash table sub-type should nest the PLDHashEntryHdr structure at the
  * front of its particular entry type.  The keyHash member contains the result
  * of multiplying the hash code returned from the hashKey callback (see below)
- * by PL_DHASH_GOLDEN_RATIO.  Its value is table size invariant.  keyHash is
+ * by PL_DHASH_GOLDEN_RATIO, then constraining the result to avoid the magic 0
+ * and 1 values.  The stored keyHash value is table size invariant, and it is
  * maintained automatically by PL_DHashTableOperate -- users should never set
  * it, and its only uses should be via the entry macros below.
  *
@@ -96,6 +97,11 @@ typedef struct PLDHashTableOps  PLDHashTableOps;
  * removed.  An entry may be either busy or free; if busy, it may be live or
  * removed.  Consumers of this API should not access members of entries that
  * are not live.
+ *
+ * However, use PL_DHASH_ENTRY_IS_BUSY for faster liveness testing of entries
+ * returned by PL_DHashTableOperate, as PL_DHashTableOperate never returns a
+ * non-live, busy (i.e., removed) entry pointer to its caller.  See below for
+ * more details on PL_DHashTableOperate's calling rules.
  */
 struct PLDHashEntryHdr {
     PLDHashNumber       keyHash;        /* every entry must begin like this */
@@ -162,8 +168,9 @@ struct PLDHashEntryHdr {
  * and k=2, we want alpha >= .4.  For k=4, esize could be 6, and alpha >= .5
  * would still obtain.  See the PL_DHASH_MIN_ALPHA macro further below.
  *
- * The current implementation uses a constant .25 as alpha's lower bound when
- * deciding to shrink the table (while respecting PL_DHASH_MIN_SIZE).
+ * The current implementation uses a configurable lower bound on alpha, which
+ * defaults to .25, when deciding to shrink the table (while still respecting
+ * PL_DHASH_MIN_SIZE).
  *
  * Note a qualitative difference between chaining and double hashing: under
  * chaining, entry addresses are stable across table shrinks and grows.  With
@@ -413,8 +420,8 @@ PL_DHashTableInit(PLDHashTable *table, PLDHashTableOps *ops, void *data,
  * maxAlpha must be in [0.5, 0.9375] for the default PL_DHASH_MIN_SIZE; or if
  * MinSize=PL_DHASH_MIN_SIZE <= 256, in [0.5, (float)(MinSize-1)/MinSize]; or
  * else in [0.5, 255.0/256].  minAlpha must be in [0, maxAlpha / 2), so that
- * we don't shrink on next remove after growing a table upon adding an entry
- * that brings entryCount past maxAlpha * tableSize.
+ * we don't shrink on the very next remove after growing a table upon adding
+ * an entry that brings entryCount past maxAlpha * tableSize.
  */
 PR_IMPLEMENT(void)
 PL_DHashTableSetAlphaBounds(PLDHashTable *table,
