@@ -262,4 +262,4 @@
 <!ENTITY currentDownloads.label          "Current Downloads">
 <!ENTITY openDownloadsSidebar.commandkey "E">
 
-<!ENTITY blockImageCmd.label            "Block images from this server">
+<!ENTITY blockImageCmd.label            "Block Images from this Server">
