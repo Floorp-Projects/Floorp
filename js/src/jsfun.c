@@ -701,8 +701,9 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSStackFrame *fp;
     JSObject *funobj;
     JSScope *scope;
-    JSScopeProperty *sprop;
+    JSScopeProperty *sprop, *cprop;
     JSPropertyOp getter;
+    jsval *vec;
     JSProperty *prop;
 
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
@@ -733,13 +734,19 @@ call_enumerate(JSContext *cx, JSObject *obj)
     scope = OBJ_SCOPE(funobj);
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
         getter = sprop->getter;
-        if (getter != js_GetArgument && getter != js_GetLocalVariable)
+        if (getter == js_GetArgument)
+            vec = fp->argv;
+        else if (getter == js_GetLocalVariable)
+            vec = fp->vars;
+        else
             continue;
 
         /* Trigger reflection in call_resolve by doing a lookup. */
         if (!js_LookupProperty(cx, obj, sprop->id, &obj, &prop))
             return JS_FALSE;
         JS_ASSERT(obj && prop);
+        cprop = (JSScopeProperty *)prop;
+        LOCKED_OBJ_SET_SLOT(obj, cprop->slot, vec[sprop->shortid]);
         OBJ_DROP_PROPERTY(cx, obj, prop);
     }
 
