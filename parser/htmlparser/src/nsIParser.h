@@ -128,7 +128,7 @@ class nsIParser : public nsISupports {
     virtual PRBool    EnableParser(PRBool aState) = 0;
     virtual nsresult  Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
     virtual nsresult  Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE) = 0;
-    virtual nsresult  Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify,PRBool aLastCall) = 0;
+    virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,PRBool anHTMLString,PRBool aEnableVerify,PRBool aLastCall) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
