@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.22 2001/01/05 22:37:50 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.23 2001/01/12 14:29:47 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -49,6 +49,17 @@
 #include "mplogic.h"
 #include "secmpi.h"
 #include "secitem.h"
+
+/*
+** Number of times to attempt to generate a prime (p or q) from a random
+** seed (the seed changes for each iteration).
+*/
+#define MAX_PRIME_GEN_ATTEMPTS 10
+/*
+** Number of times to attempt to generate a key.  The primes p and q change
+** for each attempt.
+*/
+#define MAX_KEY_GEN_ATTEMPTS 10
 
 /*
 ** RSABlindingParamsStr
@@ -160,6 +171,38 @@ cleanup:
     }
     return rv;
 }
+static SECStatus
+generate_prime(mp_int *prime, int primeLen)
+{
+    mp_err   err = MP_OKAY;
+    SECStatus rv = SECSuccess;
+    unsigned long counter;
+    int piter;
+    unsigned char *pb = NULL;
+    pb = PORT_Alloc(primeLen);
+    if (!pb) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	goto cleanup;
+    }
+    for (piter = 0; piter < MAX_PRIME_GEN_ATTEMPTS; piter++) {
+	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(pb, primeLen) );
+	pb[0]          |= 0xC0; /* set two high-order bits */
+	pb[primeLen-1] |= 0x01; /* set low-order bit       */
+	CHECK_MPI_OK( mp_read_unsigned_octets(prime, pb, primeLen) );
+	err = mpp_make_prime(prime, primeLen * 8, PR_FALSE, &counter);
+	if (err != MP_NO)
+	    goto cleanup;
+	/* keep going while err == MP_NO */
+    }
+cleanup:
+    if (pb)
+	PORT_ZFree(pb, primeLen);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
+    }
+    return rv;
+}
 
 /*
 ** Generate and return a new RSA public and private key.
@@ -174,10 +217,9 @@ cleanup:
 RSAPrivateKey *
 RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
 {
-    unsigned char *pb = NULL, *qb = NULL;
     unsigned int primeLen;
-    unsigned long counter;
     mp_int p, q, e;
+    int kiter;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
     int prerr = 0;
@@ -215,42 +257,30 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     /* 3.  Set the public exponent */
     SECITEM_CopyItem(arena, &key->publicExponent, publicExponent);
     SECITEM_TO_MPINT(*publicExponent, &e);
-    /* 4.  Generate primes p and q */
-    pb = PORT_Alloc(primeLen);
-    qb = PORT_Alloc(primeLen);
-    if (!pb || !qb) {
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	goto cleanup;
-    }
+    kiter = 0;
     do {
 	PORT_SetError(0);
-	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(pb, primeLen) );
-	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(qb, primeLen) );
-	pb[0]          |= 0xC0; /* set two high-order bits */
-	pb[primeLen-1] |= 0x01; /* set low-order bit       */
-	qb[0]          |= 0xC0; /* set two high-order bits */
-	qb[primeLen-1] |= 0x01; /* set low-order bit       */
-	CHECK_MPI_OK( mp_read_unsigned_octets(&p, pb, primeLen) );
-	CHECK_MPI_OK( mp_read_unsigned_octets(&q, qb, primeLen) );
-	CHECK_MPI_OK( mpp_make_prime(&p, primeLen * 8, PR_FALSE, &counter) );
-	CHECK_MPI_OK( mpp_make_prime(&q, primeLen * 8, PR_FALSE, &counter) );
+	CHECK_SEC_OK( generate_prime(&p, primeLen) );
+	CHECK_SEC_OK( generate_prime(&q, primeLen) );
+	/* Assure q < p */
 	if (mp_cmp(&p, &q) < 0)
 	    mp_exch(&p, &q);
+	/* Attempt to use these primes to generate a key */
 	rv = rsa_keygen_from_primes(&p, &q, &e, key, keySizeInBits);
 	if (rv == SECSuccess)
 	    break; /* generated two good primes */
 	prerr = PORT_GetError();
-    } while (prerr == SEC_ERROR_NEED_RANDOM); /* loop until have primes */
+	kiter++;
+	/* loop until have primes */
+    } while (prerr == SEC_ERROR_NEED_RANDOM && kiter < MAX_KEY_GEN_ATTEMPTS);
+    if (prerr)
+	goto cleanup;
     MPINT_TO_SECITEM(&p, &key->prime1, arena);
     MPINT_TO_SECITEM(&q, &key->prime2, arena);
 cleanup:
     mp_clear(&p);
     mp_clear(&q);
     mp_clear(&e);
-    if (pb)
-	PORT_ZFree(pb, primeLen);
-    if (qb)
-	PORT_ZFree(qb, primeLen);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;
