@@ -28,7 +28,7 @@ nsHttpConnectionInfo::SetOriginServer(const nsACString &host, PRInt32 port)
 
     mHashKey.AssignLiteral("..");
     mHashKey.Append(keyHost);
-    mHashKey.Append(';');
+    mHashKey.Append(':');
     mHashKey.AppendInt(keyPort);
 
     if (mUsingHttpProxy)
