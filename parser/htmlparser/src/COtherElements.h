@@ -2345,7 +2345,6 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_p].mContainsGroups.mBits.mSelf=0;
 
   CElement::InitializeLeaf(         mDfltElements[eHTMLTag_param],      eHTMLTag_param, CElement::GetEmptyGroup(), CLeafElement::GetContainedGroups());
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_parsererror],eHTMLTag_parsererror);
   CElement::Initialize(             mDfltElements[eHTMLTag_plaintext],  eHTMLTag_plaintext);
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_pre],        eHTMLTag_pre);
   mDfltElements[eHTMLTag_pre].mExcludeKids=kPreExcludeKids;
@@ -2365,7 +2364,6 @@ void CElementTable::InitializeElements() {
 
   CElement::Initialize(             mDfltElements[eHTMLTag_server],     eHTMLTag_server);
   CFontStyleElement::Initialize(    mDfltElements[eHTMLTag_small],      eHTMLTag_small);
-  CElement::Initialize(             mDfltElements[eHTMLTag_sourcetext], eHTMLTag_sourcetext);
   CElement::Initialize(             mDfltElements[eHTMLTag_spacer],     eHTMLTag_spacer);
   CSpecialElement::Initialize(      mDfltElements[eHTMLTag_span],       eHTMLTag_span);
   CFontStyleElement::Initialize(    mDfltElements[eHTMLTag_strike],     eHTMLTag_strike);
