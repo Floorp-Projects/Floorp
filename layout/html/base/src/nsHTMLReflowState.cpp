@@ -739,8 +739,11 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     NS_ASSERTION((computedMargin.right > -200000) &&
                  (computedMargin.right < 200000), "oy");
 #endif
-    ComputeBorderFor(frame, mComputedBorderPadding);
     ComputePadding(containingBlockWidth);
+    if (!mStyleSpacing->GetBorder(mComputedBorderPadding)) {
+      // CSS2 has no percentage borders
+      mComputedBorderPadding.SizeTo(0, 0, 0, 0);
+    }
     mComputedBorderPadding += mComputedPadding;
 
     nsStyleUnit widthUnit = mStylePosition->mWidth.GetUnit();
@@ -1302,79 +1305,6 @@ nsHTMLReflowState::ComputePadding(nscoord aContainingBlockWidth)
                            mStyleSpacing->mPadding.GetBottomUnit(),
                            mStyleSpacing->mPadding.GetBottom(bottom),
                            mComputedPadding.bottom);
-  }
-}
-
-void
-nsHTMLReflowState::ComputePaddingFor(nsIFrame* aFrame,
-                                     const nsReflowState* aParentRS,
-                                     nsMargin& aResult)
-{
-  const nsStyleSpacing* spacing;
-  nsresult rv;
-  rv = aFrame->GetStyleData(eStyleStruct_Spacing,
-                            (const nsStyleStruct*&) spacing);
-  if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
-    // If style can provide us the padding directly, then use it.
-    spacing->CalcPaddingFor(aFrame, aResult);
-#if 0
-    if (!spacing->GetPadding(aResult) && (nsnull != aParentRS))
-#else
-    spacing->CalcPaddingFor(aFrame, aResult);
-    if ((eStyleUnit_Percent == spacing->mPadding.GetTopUnit()) ||
-        (eStyleUnit_Percent == spacing->mPadding.GetRightUnit()) ||
-        (eStyleUnit_Percent == spacing->mPadding.GetBottomUnit()) ||
-        (eStyleUnit_Percent == spacing->mPadding.GetLeftUnit()))
-#endif
-    {
-      // We have to compute the value (because it's uncomputable by
-      // the style code).
-      const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
-      if (nsnull != rs) {
-        nsStyleCoord left, right, top, bottom;
-        nscoord containingBlockWidth = rs->computedWidth;
-        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetLeftUnit(),
-                               spacing->mPadding.GetLeft(left), aResult.left);
-        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetRightUnit(),
-                               spacing->mPadding.GetRight(right),
-                               aResult.right);
-
-        // According to the CSS2 spec, padding percentages are
-        // calculated with respect to the *width* of the containing
-        // block, even for padding-top and padding-bottom.
-        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetTopUnit(),
-                               spacing->mPadding.GetTop(top), aResult.top);
-        ComputeHorizontalValue(containingBlockWidth, spacing->mPadding.GetBottomUnit(),
-                               spacing->mPadding.GetBottom(bottom),
-                               aResult.bottom);
-      }
-      else {
-        aResult.SizeTo(0, 0, 0, 0);
-      }
-    }
-  }
-  else {
-    aResult.SizeTo(0, 0, 0, 0);
-  }
-}
-
-void
-nsHTMLReflowState::ComputeBorderFor(nsIFrame* aFrame,
-                                    nsMargin& aResult)
-{
-  const nsStyleSpacing* spacing;
-  nsresult rv;
-  rv = aFrame->GetStyleData(eStyleStruct_Spacing,
-                            (const nsStyleStruct*&) spacing);
-  if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
-    // If style can provide us the border directly, then use it.
-    if (!spacing->GetBorder(aResult)) {
-      // CSS2 has no percentage borders
-      aResult.SizeTo(0, 0, 0, 0);
-    }
-  }
-  else {
-    aResult.SizeTo(0, 0, 0, 0);
   }
 }
 
