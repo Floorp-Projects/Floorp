@@ -1918,6 +1918,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
     if ( prop != 0) {
         m_start->m_datetime = icalproperty_get_dtstart( prop );
+        m_start->m_datetime.is_utc = false; 
         if( m_start->m_datetime.is_date == true ) {
             m_allday = true;
             m_start->SetHour( 0 );
