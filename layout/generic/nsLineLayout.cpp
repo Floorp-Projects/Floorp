@@ -2992,7 +2992,7 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
     PRBool canContinue;
     top->CanContinueTextRun(canContinue);
     if (! canContinue)
-      break;
+      return nsnull;
 
     // Advance to top's next sibling
     nsIFrame* next;
@@ -3014,8 +3014,13 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
     // Save next at the top of the stack...
     stack.ReplaceElementAt(next, lastIndex);
 
-    // ...and prowl down to next's deepest child
+    // ...and prowl down to next's deepest child. We'll need to check
+    // for potential run-busters "on the way down", too.
     for (;;) {
+      next->CanContinueTextRun(canContinue);
+      if (! canContinue)
+        return nsnull;
+
       nsIFrame* child;
       next->FirstChild(aPresContext, nsnull, &child);
 
