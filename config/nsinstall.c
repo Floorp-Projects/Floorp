@@ -315,7 +315,7 @@ copydir( char *from, char *to, mode_t mode, char *group, char *owner,
 
   base = xbasename(from);
 
-  // create destination directory
+  /* create destination directory */
   destdir = xmalloc((unsigned int)(strlen(to) + 1 + strlen(base) + 1));
   sprintf(destdir, "%s%s%s", to, _DIRECTORY_SEPARATOR, base);
   if (mkdirs(destdir, mode) != 0) {
