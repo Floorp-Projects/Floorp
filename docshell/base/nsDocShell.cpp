@@ -1908,7 +1908,7 @@ nsDocShell::FindChildWithName(const PRUnichar * aName,
 
     *_retval = nsnull;          // if we don't find one, we return NS_OK and a null result 
 
-    nsAutoString name(aName);
+    nsDependentString name(aName);
     nsXPIDLString childName;
     PRInt32 i, n = mChildren.Count();
     for (i = 0; i < n; i++) {
