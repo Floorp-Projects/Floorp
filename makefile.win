@@ -60,9 +60,6 @@ DIRS =                         \
   modules\mpfilelocprovider    \
   modules\zlib                 \
   netwerk                      \
-!if defined(BUILD_PSM) || defined(BUILD_PSM2)
-  security                     \
-!endif
   widget\timer                 \
   js                           \
   modules\libjar               \
@@ -103,6 +100,9 @@ DIRS =                         \
 # the following are associated with the browser
   xpfe                         \
   xpinstall                    \
+!if defined(BUILD_PSM) || defined(BUILD_PSM2)
+  security                     \
+!endif
   extensions                   \
   themes \
 !if !defined(DISABLE_LDAP)       
