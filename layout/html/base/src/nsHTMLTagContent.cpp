@@ -1218,6 +1218,8 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
     float p2t = aPresContext->GetPixelsToTwips();
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
     // width: value
     GetAttribute(nsHTMLAtoms::width, value);
@@ -1237,6 +1239,28 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
     }
     else if (value.GetUnit() == eHTMLUnit_Percent) {
       pos->mHeight.SetPercentValue(value.GetPercentValue());
+    }
+
+    // hspace: value
+    GetAttribute(nsHTMLAtoms::hspace, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      spacing->mMargin.SetRight(nsStyleCoord(twips));
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      spacing->mMargin.SetRight(nsStyleCoord(value.GetPercentValue(),
+                                             eStyleUnit_Coord));
+    }
+
+    // vspace: value
+    GetAttribute(nsHTMLAtoms::vspace, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      spacing->mMargin.SetBottom(nsStyleCoord(twips));
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      spacing->mMargin.SetBottom(nsStyleCoord(value.GetPercentValue(),
+                                              eStyleUnit_Coord));
     }
   }
 }
