@@ -369,11 +369,11 @@ interface CSS2Properties : CSSStyleDeclaration {
                                         // raises(DOMException) on setting
 
            /* Non-DOM 2 extensions */
-           attribute DOMString        behavior;
+           attribute DOMString        MozBinding;
                                         // raises(DOMException) on setting
 
 
            /* XXX Kipp was here */
-           attribute DOMString        opacity;
+           attribute DOMString        MozOpacity;
                                         // raises(DOMException) on setting
 }; 
