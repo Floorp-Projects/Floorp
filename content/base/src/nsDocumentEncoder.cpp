@@ -301,7 +301,6 @@ nsDocumentEncoder::SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
     }
     case nsIDOMNode::CDATA_SECTION_NODE:
     {
-      NS_ERROR("aaa");
       nsCOMPtr<nsIDOMCDATASection> cdata = do_QueryInterface(node);
       mSerializer->AppendCDATASection(cdata, aStartOffset, aEndOffset, aStr);
       break;
