@@ -4012,7 +4012,7 @@ char* nsImapProtocol::CreateNewLineFromSocket()
   PRBool needMoreData = PR_FALSE;
   char * newLine = nsnull;
   PRUint32 numBytesInLine = 0;
-  nsresult rv;
+  nsresult rv = NS_OK;
   do
   {
     newLine = m_inputStreamBuffer->ReadNextLine(m_inputStream, numBytesInLine, needMoreData, &rv); 
@@ -4046,7 +4046,9 @@ char* nsImapProtocol::CreateNewLineFromSocket()
     }
   
     PR_CEnterMonitor(this);
-    Log("CreateNewLineFromSocket", nsnull, "clearing IMAP_CONNECTION_IS_OPEN");
+    nsCAutoString logMsg("clearing IMAP_CONNECTION_IS_OPEN - rv = ");
+    logMsg.AppendInt(rv, 16);
+    Log("CreateNewLineFromSocket", nsnull, logMsg.get());
     ClearFlag(IMAP_CONNECTION_IS_OPEN);
     TellThreadToDie(PR_FALSE);
     PR_CExitMonitor(this);

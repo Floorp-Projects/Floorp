@@ -331,7 +331,9 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
   // on the monitor for more data to come in.
   
   NS_PRECONDITION(m_dataBuffer && m_dataBufferSize > 0, "invalid input arguments for read next line from input");
-  
+
+  if (prv)
+    *prv = NS_OK;
   // initialize out values
   aPauseForMoreData = PR_FALSE;
   aNumBytesInLine = 0;
