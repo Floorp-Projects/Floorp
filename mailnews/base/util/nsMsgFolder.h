@@ -258,7 +258,8 @@ public:
   NS_IMETHOD GetHostName(char **hostName);
 
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
-	NS_IMETHOD DeleteMessages(nsISupportsArray *messages) = 0;
+	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
+                            nsITransactionManager *txnMgr) = 0;
 	NS_IMETHOD GetNewMessages();
 
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset) = 0;

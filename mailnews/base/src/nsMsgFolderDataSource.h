@@ -22,7 +22,7 @@
 #include "nsIFolderListener.h"
 #include "nsMsgRDFDataSource.h"
 
-
+#include "nsITransactionManager.h"
 
 /**
  * The mail data source.
@@ -143,7 +143,7 @@ protected:
                                         nsISupportsArray **arcs);
   
   nsresult DoDeleteFromFolder(nsIMsgFolder *folder,
-							  nsISupportsArray *arguments);
+							  nsISupportsArray *arguments, nsITransactionManager *txnMgr);
 
   nsresult DoNewFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments);

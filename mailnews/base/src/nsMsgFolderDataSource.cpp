@@ -442,19 +442,31 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments)
 {
   nsresult rv = NS_OK;
-
+  nsCOMPtr<nsITransactionManager> transactionManager;
+  nsCOMPtr<nsISupports> supports;
   // XXX need to handle batching of command applied to all sources
 
   PRUint32 cnt;
+  PRUint32 i = 0;
+
   rv = aSources->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
-  for (PRUint32 i = 0; i < cnt; i++) {
-		nsCOMPtr<nsISupports> supports = getter_AddRefs(aSources->ElementAt(i));
+
+  if (cnt > 1)
+  {
+    supports = getter_AddRefs(aSources->ElementAt(0));
+    transactionManager = do_QueryInterface(supports, &rv);
+    if (NS_SUCCEEDED(rv) && transactionManager)
+        i = 1;
+  }
+
+  for ( ; i < cnt; i++) {
+    supports  = getter_AddRefs(aSources->ElementAt(i));
     nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
     if (NS_SUCCEEDED(rv)) {
       if (peq(aCommand, kNC_Delete))
 	  {
-		rv = DoDeleteFromFolder(folder, aArguments);
+		rv = DoDeleteFromFolder(folder, aArguments, transactionManager);
       }
 	  else if(peq(aCommand, kNC_NewFolder)) 
 	  {
@@ -746,7 +758,9 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
 }
 
 
-nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
+nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
+    nsIMsgFolder *folder, nsISupportsArray *arguments, 
+    nsITransactionManager* txnMgr)
 {
 	nsresult rv = NS_OK;
 	PRUint32 itemCount;
@@ -777,7 +791,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupp
   rv = messageArray->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   if (cnt > 0)
-		rv = folder->DeleteMessages(messageArray);
+		rv = folder->DeleteMessages(messageArray, txnMgr);
 
 	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;

@@ -25,9 +25,11 @@
 #include "nsFileSpec.h"
 #include "nsISupportsArray.h"
 #include "nsIMessage.h"
+#include "nsITransactionManager.h"
 %}
 interface nsISupportsArray;
 interface nsIMessage;
+interface nsITransactionManager;
 
 [scriptable, uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsIFolder {
@@ -115,7 +117,7 @@ interface nsIMsgFolder : nsIFolder {
 
 	void GetExpansionArray(in nsISupportsArray expansionArray);
 
-	void DeleteMessages(in nsISupportsArray message);
+	void DeleteMessages(in nsISupportsArray message, in nsITransactionManager txnMgr);
 
     void AcquireSemaphore (in nsISupports semHolder);
     void ReleaseSemaphore (in nsISupports semHolder);

@@ -1044,7 +1044,8 @@ nsMsgLocalMailFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFold
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages)
+NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
+                                                   nsITransactionManager *txnMgr)
 {
 	nsresult rv = GetDatabase();
 	if(NS_SUCCEEDED(rv))
@@ -1058,14 +1059,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages)
 			nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
 			if(message)
 			{
-				DeleteMessage(message);
+				DeleteMessage(message, txnMgr);
 			}
 		}
 	}
 	return rv;
 }
 
-nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
+nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message,
+                                             nsITransactionManager *txnMgr)
 {
 	nsresult rv;
 	nsCOMPtr <nsIMsgDBHdr> msgDBHdr;

@@ -1062,7 +1062,8 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
 }
 
 /* this is news, so remember that DeleteMessage is really CANCEL */
-NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages)
+NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
+                                              nsITransactionManager *txnMgr)
 {
   nsresult rv = NS_OK;
   

@@ -446,6 +446,12 @@ nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 	rv = rdfService->GetResource(command, getter_AddRefs(commandResource));
 	if(NS_SUCCEEDED(rv))
 	{
+
+        // ** jt - temporary solution for pickybacking the undo manager into
+        // the nsISupportArray
+        if (mTxnMgr)
+            srcArray->InsertElementAt(mTxnMgr, 0);
+
 		rv = db->DoCommand(srcArray, commandResource, argumentArray);
 	}
 
