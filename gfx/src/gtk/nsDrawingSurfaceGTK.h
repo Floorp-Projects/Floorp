@@ -67,7 +67,7 @@ public:
   PRInt32 GetDepth() { return mDepth; }
 
 protected:
-  PRUint8 ConvertMaskToCount(unsigned long val);
+  inline PRUint8 ConvertMaskToCount(unsigned long val);
 
 private:
   /* general */
