@@ -53,6 +53,11 @@
 
 #include <stdio.h>
 
+extern "C" char *fe_GetConfigDir(void) {
+  printf("XXX: return /tmp for fe_GetConfigDir\n");
+  return strdup("/tmp");
+}
+
 char *  gLogFileName   = "selftest.txt";
 FILE *  gFD             = nsnull;
 PRInt32 gOverallStatus   = 0;
@@ -88,8 +93,12 @@ char * gFailedMsg = NULL;
 #endif
 
 #ifdef XP_UNIX
+#ifndef WIDGET_DLL
 #define WIDGET_DLL "libwidgetunix.so"
+#endif
+#ifndef GFX_DLL
 #define GFX_DLL "libgfxunix.so"
+#endif
 #define TEXT_HEIGHT 30
 #endif
 
