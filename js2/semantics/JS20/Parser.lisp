@@ -50,10 +50,6 @@
     
     
     (%heading (3 :semantics) "Attributes")
-    (deftag dynamic)
-    (deftag fixed)
-    (deftype class-modifier (tag null dynamic fixed))
-    
     (deftag static)
     (deftag constructor)
     (deftag operator)
@@ -71,7 +67,7 @@
       (local boolean)
       (extend class-opt)
       (enumerable boolean)
-      (class-mod class-modifier)
+      (dynamic boolean)
       (member-mod member-modifier)
       (override-mod override-modifier)
       (prototype boolean)
@@ -84,34 +80,34 @@
       (prototype object)
       (global-members (list-set global-member) :var)
       (instance-members (list-set instance-member) :var)
-      (class-mod class-modifier)
+      (dynamic boolean)
       (primitive boolean)
       (private-namespace namespace)
       (call invoker)
       (construct invoker))
     (deftype class-opt (union null class))
     
-    (define (make-built-in-class (superclass class-opt) (class-mod class-modifier) (primitive boolean)) class
+    (define (make-built-in-class (superclass class-opt) (dynamic boolean) (primitive boolean)) class
       (const private-namespace namespace (new namespace "private"))
       (function (call (this object :unused) (args argument-list :unused)) object
         (todo))
       (function (construct (this object :unused) (args argument-list :unused)) object
         (todo))
       (return (new class superclass null (list-set-of global-member) (list-set-of instance-member)
-                   class-mod primitive private-namespace call construct)))
+                   dynamic primitive private-namespace call construct)))
     
-    (define object-class class (make-built-in-class null dynamic true))
-    (define undefined-class class (make-built-in-class object-class fixed true))
-    (define null-class class (make-built-in-class object-class fixed true))
-    (define boolean-class class (make-built-in-class object-class fixed true))
-    (define number-class class (make-built-in-class object-class fixed true))
-    (define string-class class (make-built-in-class object-class fixed false))
-    (define character-class class (make-built-in-class string-class fixed false))
-    (define namespace-class class (make-built-in-class object-class fixed false))
-    (define attribute-class class (make-built-in-class object-class fixed false))
-    (define class-class class (make-built-in-class object-class fixed false))
-    (define function-class class (make-built-in-class object-class fixed false))
-    (define prototype-class class (make-built-in-class object-class fixed false))
+    (define object-class class (make-built-in-class null false true))
+    (define undefined-class class (make-built-in-class object-class false true))
+    (define null-class class (make-built-in-class object-class false true))
+    (define boolean-class class (make-built-in-class object-class false true))
+    (define number-class class (make-built-in-class object-class false true))
+    (define string-class class (make-built-in-class object-class false false))
+    (define character-class class (make-built-in-class string-class false false))
+    (define namespace-class class (make-built-in-class object-class false false))
+    (define attribute-class class (make-built-in-class object-class false false))
+    (define class-class class (make-built-in-class object-class false false))
+    (define function-class class (make-built-in-class object-class false false))
+    (define prototype-class class (make-built-in-class object-class true false))
     
     (%text :comment "Return an ordered list of class " (:local d) :apostrophe "s ancestors, including " (:local d) " itself.")
     (define (ancestors (c class)) (vector class)
@@ -135,15 +131,18 @@
     
     
     (%heading (4 :semantics) "Members")
+    (deftag read)
+    (deftag write)
+    (deftag read-write)
+    (deftype member-access (tag read write read-write))
     (deftype instance-category (tag abstract virtual final))
     (deftype instance-data (union slot-id method accessor))
     
     (defrecord instance-member 
       (name string)
       (namespaces (list-set namespace))
+      (access member-access)
       (category instance-category)
-      (readable boolean)
-      (writable boolean)
       (indexable boolean)
       (enumerable boolean)
       (data (union instance-data namespace)))
@@ -154,9 +153,8 @@
     (defrecord global-member
       (name string)
       (namespaces (list-set namespace))
+      (access member-access)
       (category global-category)
-      (readable boolean)
-      (writable boolean)
       (indexable boolean)
       (enumerable boolean)
       (data (union global-data namespace)))
@@ -176,7 +174,7 @@
       (type class)
       (f instance)) ;Getter or setter function code
     
-        
+    
     (%heading (3 :semantics) "Method Closures")
     (deftuple method-closure
       (this object)
@@ -189,20 +187,29 @@
       (dynamic-properties (list-set dynamic-property) :var))
     (deftype prototype-opt (union null prototype))
     
+    (defrecord dynamic-property 
+      (name string)
+      (value object :var))
+    
     
     (%heading (3 :semantics) "Class Instances")
-    (defrecord instance
+    (deftype instance (union fixed-instance dynamic-instance))
+    (deftype instance-opt (union null instance))
+    
+    (defrecord fixed-instance
+      (type class)
+      (call invoker)
+      (construct invoker)
+      (typeof-string string)
+      (slots (list-set slot) :var))
+    
+    (defrecord dynamic-instance
       (type class)
       (call invoker)
       (construct invoker)
       (typeof-string string)
       (slots (list-set slot) :var)
       (dynamic-properties (list-set dynamic-property) :var))
-    (deftype instance-opt (union null instance))
-    
-    (defrecord dynamic-property 
-      (name string)
-      (value object))
     
     (%heading (4 :semantics) "Slots")
     (defrecord slot
@@ -218,19 +225,34 @@
     (deftuple partial-name (namespaces (list-set namespace)) (name string))
     
     
+    (%heading (2 :semantics) "Objects with Limits")
+    (%text :comment (:label limited-instance instance) " must be an instance of " (:label limited-instance limit) " or one of "
+           (:label limited-instance limit) :apostrophe "s descendants.")
+    (deftuple limited-instance
+      (instance instance)
+      (limit class))
+    
+    (deftype obj-optional-limit (union object limited-instance))
+    
+    
     (%heading (2 :semantics) "References")
     (deftuple dot-reference
-      (base object)
-      (super class-opt)
+      (base obj-optional-limit)
       (prop-name partial-name))
     
     (deftuple bracket-reference
-      (base object)
-      (super class-opt)
+      (base obj-optional-limit)
       (args argument-list))
     
     (deftype reference (union dot-reference bracket-reference))
     (deftype obj-or-ref (union object reference))
+    
+    
+    (deftuple limited-obj-or-ref
+      (ref obj-or-ref)
+      (limit class))
+    
+    (deftype obj-or-ref-optional-limit (union obj-or-ref limited-obj-or-ref))
     
     
     (%heading (2 :semantics) "Signatures")
@@ -298,9 +320,9 @@
         (:select boolean (return boolean-class))
         (:select float64 (return number-class))
         (:narrow string
-          (rwhen (= (length o) 1)
-            (return character-class))
-          (return string-class))
+          (if (= (length o) 1)
+            (return character-class)
+            (return string-class)))
         (:select namespace (return namespace-class))
         (:select attribute (return attribute-class))
         (:select class (return class-class))
@@ -377,8 +399,8 @@
     
     (%heading (3 :semantics) (:global unary-plus nil))
     (%text :comment (:global-call unary-plus o) " returns the value of the unary expression " (:character-literal "+") (:local o) ".")
-    (define (unary-plus (a object)) object
-      (return (unary-dispatch plus-table null null a (new argument-list (vector-of object) (list-set-of named-argument)))))
+    (define (unary-plus (a obj-optional-limit)) object
+      (return (unary-dispatch plus-table null a (new argument-list (vector-of object) (list-set-of named-argument)))))
     
     (%heading (3 :semantics) (:global unary-not nil))
     (%text :comment (:global-call unary-not o) " returns the value of the unary expression " (:character-literal "!") (:local o) ".")
@@ -386,34 +408,76 @@
       (return (not (to-boolean a))))
     
     
-    (%heading (2 :semantics) "References")
+    (%heading (2 :semantics) "Objects with Limits")
+    (%text :comment (:global-call get-object o) " returns " (:local o) " without its limit, if any.")
+    (define (get-object (o obj-optional-limit)) object
+      (case o
+        (:narrow object (return o))
+        (:narrow limited-instance (return (& instance o)))))
     
-    (%text :comment "Read the " (:type obj-or-ref) " " (:local r) ".")
+    (%text :comment (:global-call get-object-limit o) " returns " (:local o) :apostrophe "s limit or " (:tag null) " if none is provided.")
+    (define (get-object-limit (o obj-optional-limit)) class-opt
+      (case o
+        (:narrow object (return null))
+        (:narrow limited-instance (return (& limit o)))))
+    
+    
+    (%heading (2 :semantics) "References")
+    (%text :comment "If " (:local r) " is an " (:type object) ", " (:global-call read-reference r) " returns it unchanged.  If "
+           (:local r) " is a " (:type reference) ", this function reads " (:local r) " and returns the result.")
     (define (read-reference (r obj-or-ref)) object
       (case r
         (:narrow object (return r))
-        (:narrow dot-reference (return (read-property (& base r) (& prop-name r) (& super r))))
-        (:narrow bracket-reference (return (unary-dispatch bracket-read-table (& super r) null (& base r) (& args r))))))
+        (:narrow dot-reference (return (read-property (& base r) (& prop-name r))))
+        (:narrow bracket-reference (return (unary-dispatch bracket-read-table null (& base r) (& args r))))))
     
-    (%text :comment "Write " (:local o) " into the " (:type obj-or-ref) " " (:local r) ".")
-    (define (write-reference (r obj-or-ref) (o object)) void
+    
+    (%text :comment (:global-call read-ref-with-limit r) " reads the reference, if any, inside " (:local r)
+           " and returns the result, retaining the same limit as " (:local r) ". If " (:local r)
+           " has a limit " (:local limit) ", then the object read from the reference is checked to make sure that it is an instance of " (:local limit)
+           " or one of its descendants.")
+    (define (read-ref-with-limit (r obj-or-ref-optional-limit)) obj-optional-limit
+      (case r
+        (:narrow obj-or-ref (return (read-reference r)))
+        (:narrow limited-obj-or-ref
+          (const o object (read-reference (& ref r)))
+          (const limit class (& limit r))
+          (rwhen (= o null object)
+            (return null))
+          (rwhen (or (not-in o instance :narrow-false) (not (has-type o limit)))
+            (throw type-error))
+          (return (new limited-instance o limit)))))
+    
+    
+    (%text :comment "If " (:local r) " is a reference, " (:global-call write-reference r o) " writes " (:local o) 
+           " into " (:local r) ". An error occurs if " (:local r) " is not a reference. "
+           (:local r) :apostrophe "s limit, if any, is ignored.")
+    (define (write-reference (r obj-or-ref-optional-limit) (o object)) void
       (case r
         (:select object (throw reference-error))
-        (:narrow dot-reference (write-property (& base r) (& prop-name r) (& super r) o))
+        (:narrow dot-reference (write-property (& base r) (& prop-name r) o))
         (:narrow bracket-reference
           (const args argument-list (new argument-list (append (vector o) (& positional (& args r))) (& named (& args r))))
-          (exec (unary-dispatch bracket-write-table (& super r) null (& base r) args)))))
+          (exec (unary-dispatch bracket-write-table null (& base r) args)))
+        (:narrow limited-obj-or-ref (write-reference (& ref r) o))))
     
+    
+    (%text :comment "If " (:local r) " is a " (:type reference) ", " (:global-call delete-reference r) " deletes it. If "
+           (:local r) " is an " (:type object) ", this function signals an error.")
     (define (delete-reference (r obj-or-ref)) object
       (case r
         (:select object (throw reference-error))
-        (:narrow dot-reference (return (delete-property (& base r) (& prop-name r) (& super r))))
-        (:narrow bracket-reference (return (unary-dispatch bracket-delete-table (& super r) null (& base r) (& args r))))))
+        (:narrow dot-reference (return (delete-property (& base r) (& prop-name r))))
+        (:narrow bracket-reference (return (unary-dispatch bracket-delete-table null (& base r) (& args r))))))
     
-    (define (reference-base (r obj-or-ref)) object
+    
+    (%text :comment (:global-call reference-base r) " returns " (:type reference) " " (:local r) :apostrophe "s base or"
+           (:tag null) " if there is none. " (:local r) :apostrophe "s limit and the base" :apostrophe "s limit, if any, are ignored.")
+    (define (reference-base (r obj-or-ref-optional-limit)) object
       (case r
         (:narrow object (return null))
-        (:narrow reference (return (& base r)))))
+        (:narrow reference (return (get-object (& base r))))
+        (:narrow limited-obj-or-ref (return (reference-base (& ref r))))))
     
     
     (%heading (2 :semantics) "Slots")
@@ -428,122 +492,184 @@
     
     
     (%heading (2 :semantics) "Member Lookup")
-    (%heading (3 :semantics) "Reading a Qualified Property")
+    (%heading (3 :semantics) "Reading a Property")
     
-    (define (read-qualified-property (o object) (name string) (ns namespace) (indexable-only boolean)) object
+    (define (read-property (ol obj-optional-limit) (pn partial-name)) object
+      (const ns namespace (resolve-object-namespace (get-object ol) pn (list-set-of member-access read read-write)))
+      (const qn qualified-name (new qualified-name ns (& name pn)))
+      (return (read-qualified-property ol qn false)))
+    
+    
+    (define (read-qualified-property (ol obj-optional-limit) (qn qualified-name) (indexable-only boolean)) object
+      (var d member-data-opt null) ;***** Unnecessary initialization
       (reserve p)
-      (rwhen (and (in o (union prototype instance) :narrow-true)
-                  (= ns public-namespace namespace)
-                  (some (& dynamic-properties o) p (= name (& name p) string) :define-true))
-        (return (& value p)))
-      (rwhen (and (in o prototype :narrow-true)
-                  (not-in (& parent o) (tag null)))
-        (return (read-qualified-property (& parent o) name ns indexable-only)))
-      (const d member-data-opt (if (in o class :narrow-true)
-                                 (most-specific-member o true name ns indexable-only)
-                                 (most-specific-member (object-type o) false name ns indexable-only)))
-      (case d
-        (:select (tag null)
-          (rwhen (= (& class-mod (object-type o)) dynamic class-modifier)
+      (case ol
+        (:narrow (union undefined null boolean float64 string namespace attribute method-closure fixed-instance)
+          (<- d (most-specific-member (object-type ol) false qn (list-set-of member-access read read-write) indexable-only)))
+        (:narrow class
+          (<- d (most-specific-member ol true qn (list-set-of member-access read read-write) indexable-only)))
+        (:narrow prototype
+          (cond
+           ((/= (& namespace qn) public-namespace namespace)
+            (throw property-not-found-error))
+           ((some (& dynamic-properties ol) p (= (& name p) (& name qn) string) :define-true)
+            (return (& value p)))
+           ((in (& parent ol) (tag null))
             (return undefined))
-          (throw property-not-found-error))
+           (nil (return (read-qualified-property (& parent ol) qn indexable-only)))))
+        (:narrow dynamic-instance
+          (<- d (most-specific-member (object-type ol) false qn (list-set-of member-access read read-write) indexable-only))
+          (rwhen (and (= d null member-data-opt) (= (& namespace qn) public-namespace namespace))
+            (if (some (& dynamic-properties ol) p (= (& name p) (& name qn) string) :define-true)
+              (return (& value p))
+              (return undefined))))
+        (:narrow limited-instance
+          (<- d (most-specific-member (& super (& limit ol)) false qn (list-set-of member-access read read-write) indexable-only))))
+      (const o object (get-object ol))
+      (case d
+        (:select (tag null) (throw property-not-found-error))
         (:narrow global-slot (return (& value d)))
         (:narrow slot-id (return (& value (find-slot o d))))
-        (:narrow method
-          (return (new method-closure o d)))
-        (:narrow accessor
-          (return ((& call (& f d)) o (new argument-list (vector-of object) (list-set-of named-argument)))))))
+        (:narrow method (return (new method-closure o d)))
+        (:narrow accessor (return ((& call (& f d)) o (new argument-list (vector-of object) (list-set-of named-argument)))))))
     
     
-    (define (most-specific-member (c class) (global boolean) (name string) (ns namespace) (indexable-only boolean)) member-data-opt
-      (function (test (m member)) boolean
-        (return (and (& readable m)
-                     (= name (& name m) string)
-                     (set-in ns (& namespaces m))
-                     (or (not indexable-only) (& indexable m)))))
-      (var ns2 namespace ns)
-      (const members (list-set member) (if global (& global-members c) (& instance-members c)))
-      (const matches (list-set member) (map members m m (test m)))
-      (when (nonempty matches)
-        (assert (= (length matches) 1))
-        (const d (union member-data namespace) (& data (elt-of matches)))
-        (rwhen (not-in d namespace :narrow-both)
-          (return d))
-        (<- ns2 d))
-      (const s class-opt (& super c))
-      (rwhen (not-in s (tag null) :narrow-true)
-        (return (most-specific-member s global name ns2 indexable-only)))
-      (return null))
+    (%heading (3 :semantics) "Writing a Property")
+    
+    (define (write-property (ol obj-optional-limit) (pn partial-name) (new-value object)) void
+      (const ns namespace (resolve-object-namespace (get-object ol) pn (list-set-of member-access write read-write)))
+      (const qn qualified-name (new qualified-name ns (& name pn)))
+      (write-qualified-property ol qn false new-value))
     
     
-    (define (resolve-member-namespace (c class) (global boolean) (name string) (uses (list-set namespace))) namespace-opt
-      (const s class-opt (& super c))
-      (when (not-in s (tag null) :narrow-true)
-        (const ns namespace-opt (resolve-member-namespace s global name uses))
-        (rwhen (not-in ns (tag null) :narrow-true)
-          (return ns)))
-      (function (test (m member)) boolean
-        (return (and (& readable m)
-                     (= name (& name m) string)
-                     (nonempty (set* uses (& namespaces m))))))
-      (const members (list-set member) (if global (& global-members c) (& instance-members c)))
-      (const matches (list-set member) (map members m m (test m)))
-      (rwhen (nonempty matches)
-        (rwhen (> (length matches) 1)
+    (define (write-qualified-property (ol obj-optional-limit) (qn qualified-name) (indexable-only boolean) (new-value object)) void
+      (var d member-data-opt null) ;***** Unnecessary initialization
+      (case ol
+        (:select (union undefined null boolean float64 string namespace attribute method-closure)
           (throw property-not-found-error))
-        (const matching-namespaces (list-set namespace) (set* uses (& namespaces (elt-of matches))))
-        (return (elt-of matching-namespaces)))
-      (return null))
+        (:narrow class
+          (<- d (most-specific-member ol true qn (list-set-of member-access write read-write) indexable-only)))
+        (:narrow prototype
+          (rwhen (/= (& namespace qn) public-namespace namespace)
+            (throw property-not-found-error))
+          (write-dynamic-property ol (& name qn) new-value)
+          (return))
+        (:narrow fixed-instance
+          (<- d (most-specific-member (object-type ol) false qn (list-set-of member-access write read-write) indexable-only)))
+        (:narrow dynamic-instance
+          (<- d (most-specific-member (object-type ol) false qn (list-set-of member-access write read-write) indexable-only))
+          (rwhen (and (= d null member-data-opt) (= (& namespace qn) public-namespace namespace))
+            (<- d (most-specific-member (object-type ol) false qn (list-set-of member-access read write read-write) indexable-only))
+            (rwhen (/= d null member-data-opt)
+              (throw property-not-found-error))
+            (write-dynamic-property ol (& name qn) new-value)
+            (return)))
+        (:narrow limited-instance
+          (<- d (most-specific-member (& super (& limit ol)) false qn (list-set-of member-access write read-write) indexable-only))))
+      (const o object (get-object ol))
+      (case d
+        (:select (tag null) (throw property-not-found-error))
+        (:narrow global-slot
+          (rwhen (not (relaxed-has-type new-value (& type d)))
+            (throw type-error))
+          (&= value d new-value))
+        (:narrow slot-id
+          (rwhen (not (relaxed-has-type new-value (& type d)))
+            (throw type-error))
+          (&= value (find-slot o d) new-value))
+        (:narrow method (bottom))
+        (:narrow accessor
+          (rwhen (not (relaxed-has-type new-value (& type d)))
+            (throw type-error))
+          (exec ((& call (& f d)) o (new argument-list (vector new-value) (list-set-of named-argument)))))))
     
-    (define (resolve-object-namespace (o object) (name string) (uses (list-set namespace))) namespace
-      (const ns namespace-opt (if (in o class :narrow-true)
-                                (resolve-member-namespace o true name uses)
-                                (resolve-member-namespace (object-type o) false name uses)))
-      (rwhen (not-in ns (tag null) :narrow-true)
-        (return ns))
-      (return public-namespace))
     
-    ;Add indexable-only qualifier here.  It can only be used when the only namespace given is public.
-    ;Remove read-qualified-property because it's redundant.
-    (define (read-property (o object :unused) (prop-name partial-name :unused) (limit class-opt :unused)) object
-      (todo))
-    ;(const ns namespace (resolve-object-namespace o name uses))
-    ;(return (read-qualified-property o name ns false)))
+    (define (write-dynamic-property (o (union prototype dynamic-instance)) (name string) (new-value object)) void
+      (reserve p)
+      (if (some (& dynamic-properties o) p (= (& name p) name string) :define-true)
+        (&= value p new-value)
+        (&= dynamic-properties o (set+ (& dynamic-properties o) (list-set (new dynamic-property name new-value))))))
     
-    (define (write-property (o object :unused) (prop-name partial-name :unused) (limit class-opt :unused) (new-value object :unused)) void
-      (todo))
     
-    (define (delete-property (o object :unused) (prop-name partial-name :unused) (limit class-opt :unused)) boolean
-      (todo))
-    
-    (define (write-qualified-property (o object :unused) (name string :unused) (ns namespace :unused) (indexable-only boolean :unused) (new-value object :unused)) void
+    (define (delete-property (o obj-optional-limit :unused) (pn partial-name :unused)) boolean
       (todo))
     
     (define (delete-qualified-property (o object :unused) (name string :unused) (ns namespace :unused) (indexable-only boolean :unused)) boolean
       (todo))
     
     
+    (define (most-specific-member (c class-opt) (global boolean) (qn qualified-name) (accesses (list-set member-access))
+                                  (indexable-only boolean)) member-data-opt
+      (rwhen (in c (tag null) :narrow-false)
+        (return null))
+      (var qn2 qualified-name qn)
+      (const members (list-set member) (if global (& global-members c) (& instance-members c)))
+      (reserve m)
+      (when (some members m (and (set-in (& access m) accesses)
+                                 (= (& name qn) (& name m) string)
+                                 (set-in (& namespace qn) (& namespaces m))
+                                 (or (not indexable-only) (& indexable m))) :define-true)
+        (const d (union member-data namespace) (& data m))
+        (rwhen (not-in d namespace :narrow-both)
+          (return d))
+        (<- qn2 (new qualified-name d (& name qn))))
+      (return (most-specific-member (& super c) global qn2 accesses indexable-only)))
+    
+    
+    (define (resolve-member-namespace (c class) (global boolean) (pn partial-name) (accesses (list-set member-access))) namespace-opt
+      (const s class-opt (& super c))
+      (when (not-in s (tag null) :narrow-true)
+        (const ns namespace-opt (resolve-member-namespace s global pn accesses))
+        (rwhen (not-in ns (tag null) :narrow-true)
+          (return ns)))
+      (const members (list-set member) (if global (& global-members c) (& instance-members c)))
+      (const matches (list-set member) (map members m m (and (set-in (& access m) accesses)
+                                                             (= (& name pn) (& name m) string)
+                                                             (nonempty (set* (& namespaces pn) (& namespaces m))))))
+      (rwhen (nonempty matches)
+        (rwhen (> (length matches) 1)
+          (throw property-not-found-error))
+        (const matching-namespaces (list-set namespace) (set* (& namespaces pn) (& namespaces (elt-of matches))))
+        (return (elt-of matching-namespaces)))
+      (return null))
+    
+    
+    (define (resolve-object-namespace (o object) (pn partial-name) (accesses (list-set member-access))) namespace
+      (const ns namespace-opt (if (in o class :narrow-true)
+                                (resolve-member-namespace o true pn accesses)
+                                (resolve-member-namespace (object-type o) false pn accesses)))
+      (rwhen (not-in ns (tag null) :narrow-true)
+        (return ns))
+      (rwhen (set-in public-namespace (& namespaces pn))
+        (return public-namespace))
+      (throw property-not-found-error))
+    
+    
+    
     (%heading (2 :semantics) "Operator Dispatch")
     (%heading (3 :semantics) "Unary Operators")
-    (%text :comment (:global-call unary-dispatch table limit this operand args) " dispatches the unary operator described by " (:local table)
-           " applied to the " (:character-literal "this") " value " (:local this) ", the first operand " (:local operand)
-           ", and zero or more additional positional and/or named arguments " (:local args)
-           ". If " (:local limit) " is non-" (:tag null)
-           ", lookup is restricted to operators defined on the proper ancestors of " (:local limit) ".")
-    (define (unary-dispatch (table (list-set unary-method)) (limit class-opt) (this object) (operand object) (args argument-list)) object
+    (%text :comment (:global-call unary-dispatch table this operand args) " dispatches the unary operator described by " (:local table)
+           " applied to the " (:character-literal "this") " value " (:local this) ", the operand " (:local operand)
+           ", and zero or more positional and/or named arguments " (:local args)
+           ". If " (:local operand) " has a non-" (:tag null)
+           " limit class, lookup is restricted to operators defined on the proper ancestors of that limit.")
+    (define (unary-dispatch (table (list-set unary-method)) (this object) (operand obj-optional-limit) (args argument-list)) object
       (const applicable-ops (list-set unary-method)
-        (map table m m (limited-has-type operand (& operand-type m) limit)))
+        (map table m m (limited-has-type operand (& operand-type m))))
       (reserve best)
-      (if (some applicable-ops best
-                (every applicable-ops m2 (is-ancestor (& operand-type m2) (& operand-type best))) :define-true)
-        (return ((& f best) this operand args))
-        (throw property-not-found-error)))
+      (rwhen (some applicable-ops best
+                   (every applicable-ops m2 (is-ancestor (& operand-type m2) (& operand-type best))) :define-true)
+        (return ((& f best) this (get-object operand) args)))
+      (throw property-not-found-error))
     
     
-    (%text :comment (:global-call limited-has-type o c limit) " returns " (:tag true) " if " (:local o) " is a member of class " (:local c)
-           " with the added condition that, if " (:local limit) " is non-" (:tag null) ", " (:local c) " is a proper ancestor of " (:local limit) ".")
-    (define (limited-has-type (o object) (c class) (limit class-opt)) boolean
-      (if (has-type o c)
+    (%text :comment (:global-call limited-has-type o c) " returns " (:tag true) " if " (:local o) " is a member of class " (:local c)
+           " with the added condition that, if " (:local o) " has a non-" (:tag null) " limit class " (:local limit) ", "
+           (:local c) " is a proper ancestor of " (:local limit) ".")
+    (define (limited-has-type (o obj-optional-limit) (c class)) boolean
+      (const a object (get-object o))
+      (const limit class-opt (get-object-limit o))
+      (if (has-type a c)
         (if (in limit (tag null) :narrow-false)
           (return true)
           (return (is-proper-ancestor c limit)))
@@ -557,20 +683,20 @@
       (return (and (is-ancestor (& left-type m2) (& left-type m1))
                    (is-ancestor (& right-type m2) (& right-type m1)))))
     
-    (%text :comment (:global-call binary-dispatch table left-limit right-limit left right) " dispatch the binary operator described by " (:local table)
-           " applied to the operands " (:local left) " and " (:local right) ". If " (:local left-limit) " is non-" (:tag null)
-           ", the lookup is restricted to operator definitions with an ancestor of " (:local left-limit)
-           " for the left operand. Similarly, if " (:local right-limit) " is non-" (:tag null)
+    (%text :comment (:global-call binary-dispatch table left right) " dispatches the binary operator described by " (:local table)
+           " applied to the operands " (:local left) " and " (:local right) ". If " (:local left) " has a non-" (:tag null)
+           " limit " (:local left-limit) ", the lookup is restricted to operator definitions with an ancestor of " (:local left-limit)
+           " for the left operand. Similarly, if " (:local right) " has a non-" (:tag null) " limit " (:local right-limit)
            ", the lookup is restricted to operator definitions with an ancestor of " (:local right-limit) " for the right operand.")
-    (define (binary-dispatch (table (list-set binary-method)) (left-limit class-opt) (right-limit class-opt) (left object) (right object)) object
+    (define (binary-dispatch (table (list-set binary-method)) (left obj-optional-limit) (right obj-optional-limit)) object
       (const applicable-ops (list-set binary-method)
-        (map table m m (and (limited-has-type left (& left-type m) left-limit)
-                            (limited-has-type right (& right-type m) right-limit))))
+        (map table m m (and (limited-has-type left (& left-type m))
+                            (limited-has-type right (& right-type m)))))
       (reserve best)
-      (if (some applicable-ops best
-                (every applicable-ops m2 (is-binary-descendant best m2)) :define-true)
-        (return ((& f best) left right))
-        (throw property-not-found-error)))
+      (rwhen (some applicable-ops best
+                   (every applicable-ops m2 (is-binary-descendant best m2)) :define-true)
+        (return ((& f best) (get-object left) (get-object right))))
+      (throw property-not-found-error))
     
     
     (%heading (2 :semantics) "Validation Environments")
@@ -851,31 +977,29 @@
     
     
     (%heading 2 "Super Expressions")
-    (rule :super-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) object)) (super (-> (dynamic-env) class)))
+    (rule :super-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production :super-expression (super) super-expression-super
         ((validate v)
          (rwhen (not (inside-class v))
            (throw syntax-error)))
-        ((eval e) (return (lookup-this e)))
-        ((super e) (return (lexical-class e))))
+        ((eval e)
+         (const this object (lookup-this e))
+         (const limit class (lexical-class e))
+         (return (new limited-obj-or-ref this limit))))
       (production :super-expression (:full-super-expression) super-expression-full-super-expression
         ((validate v) ((validate :full-super-expression) v))
-        ((eval e) (return ((eval :full-super-expression) e)))
-        ((super e) (return ((super :full-super-expression) e)))))
+        ((eval e) (return ((eval :full-super-expression) e)))))
     
-    (rule :full-super-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) object)) (super (-> (dynamic-env) class)))
+    (rule :full-super-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production :full-super-expression (super :paren-expression) full-super-expression-super-paren-expression
         ((validate v)
          (rwhen (not (inside-class v))
            (throw syntax-error))
          ((validate :paren-expression) v))
         ((eval e)
-         (const a object (read-reference ((eval :paren-expression) e)))
-         (const c class (lexical-class e))
-         (rwhen (not (has-type a c))
-           (throw type-error))
-         (return a))
-        ((super e) (return (lexical-class e)))))
+         (const r obj-or-ref ((eval :paren-expression) e))
+         (const limit class (lexical-class e))
+         (return (new limited-obj-or-ref r limit)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -891,15 +1015,13 @@
         (validate (validate :short-new-expression))
         (eval (eval :short-new-expression))))
     
-    (rule :postfix-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule :postfix-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production :postfix-expression-or-super (:postfix-expression) postfix-expression-or-super-postfix-expression
         (validate (validate :postfix-expression))
-        (eval (eval :postfix-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :postfix-expression)))
       (production :postfix-expression-or-super (:super-expression) postfix-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     
     (rule :attribute-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :attribute-expression (:simple-qualified-identifier) attribute-expression-simple-qualified-identifier
@@ -921,7 +1043,7 @@
          (const f object (read-reference r))
          (const base object (reference-base r))
          (const args argument-list ((eval :arguments) e))
-         (return (unary-dispatch call-table null base f args)))))
+         (return (unary-dispatch call-table base f args)))))
     
     (rule :full-postfix-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :full-postfix-expression (:primary-expression) full-postfix-expression-primary-expression
@@ -945,9 +1067,8 @@
          ((validate :super-expression) v)
          ((validate :dot-operator) v))
         ((eval e)
-         (const a object ((eval :super-expression) e))
-         (const sa class ((super :super-expression) e))
-         (return ((eval :dot-operator) e a sa))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :super-expression) e)))
+         (return ((eval :dot-operator) e a))))
       (production :full-postfix-expression (:full-postfix-expression :arguments) full-postfix-expression-call
         ((validate v)
          ((validate :full-postfix-expression) v)
@@ -957,34 +1078,33 @@
          (const f object (read-reference r))
          (const base object (reference-base r))
          (const args argument-list ((eval :arguments) e))
-         (return (unary-dispatch call-table null base f args))))
+         (return (unary-dispatch call-table base f args))))
       (production :full-postfix-expression (:full-super-expression :arguments) full-postfix-expression-super-call
         ((validate v)
          ((validate :full-super-expression) v)
          ((validate :arguments) v))
         ((eval e)
-         (const f object ((eval :full-super-expression) e))
-         (const sf class ((super :full-super-expression) e))
+         (const r obj-or-ref-optional-limit ((eval :full-super-expression) e))
+         (const f obj-optional-limit (read-ref-with-limit r))
+         (const base object (reference-base r))
          (const args argument-list ((eval :arguments) e))
-         (return (unary-dispatch call-table sf null f args))))
+         (return (unary-dispatch call-table base f args))))
       (production :full-postfix-expression (:postfix-expression-or-super :no-line-break ++) full-postfix-expression-increment
         ((validate v) ((validate :postfix-expression-or-super) v))
         ((eval e)
-         (const r obj-or-ref ((eval :postfix-expression-or-super) e))
-         (const a object (read-reference r))
-         (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object (unary-dispatch increment-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))
+         (const r obj-or-ref-optional-limit ((eval :postfix-expression-or-super) e))
+         (const a obj-optional-limit (read-ref-with-limit r))
+         (const b object (unary-dispatch increment-table null a (new argument-list (vector-of object) (list-set-of named-argument))))
          (write-reference r b)
-         (return a)))
+         (return (get-object a))))
       (production :full-postfix-expression (:postfix-expression-or-super :no-line-break --) full-postfix-expression-decrement
         ((validate v) ((validate :postfix-expression-or-super) v))
         ((eval e)
-         (const r obj-or-ref ((eval :postfix-expression-or-super) e))
-         (const a object (read-reference r))
-         (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object (unary-dispatch decrement-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))
+         (const r obj-or-ref-optional-limit ((eval :postfix-expression-or-super) e))
+         (const a obj-optional-limit (read-ref-with-limit r))
+         (const b object (unary-dispatch decrement-table null a (new argument-list (vector-of object) (list-set-of named-argument))))
          (write-reference r b)
-         (return a))))
+         (return (get-object a)))))
     
     (rule :full-new-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :full-new-expression (new :full-new-subexpression :arguments) full-new-expression-new
@@ -994,16 +1114,15 @@
         ((eval e)
          (const f object (read-reference ((eval :full-new-subexpression) e)))
          (const args argument-list ((eval :arguments) e))
-         (return (unary-dispatch construct-table null null f args))))
+         (return (unary-dispatch construct-table null f args))))
       (production :full-new-expression (new :full-super-expression :arguments) full-new-expression-super-new
         ((validate v)
          ((validate :full-super-expression) v)
          ((validate :arguments) v))
         ((eval e)
-         (const f object ((eval :full-super-expression) e))
-         (const sf class ((super :full-super-expression) e))
+         (const f obj-optional-limit (read-ref-with-limit ((eval :full-super-expression) e)))
          (const args argument-list ((eval :arguments) e))
-         (return (unary-dispatch construct-table sf null f args)))))
+         (return (unary-dispatch construct-table null f args)))))
     
     (rule :full-new-subexpression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :full-new-subexpression (:primary-expression) full-new-subexpression-primary-expression
@@ -1027,22 +1146,20 @@
          ((validate :super-expression) v)
          ((validate :dot-operator) v))
         ((eval e)
-         (const a object ((eval :super-expression) e))
-         (const sa class ((super :super-expression) e))
-         (return ((eval :dot-operator) e a sa)))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :super-expression) e)))
+         (return ((eval :dot-operator) e a)))))
     
     (rule :short-new-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :short-new-expression (new :short-new-subexpression) short-new-expression-new
         ((validate v) ((validate :short-new-subexpression) v))
         ((eval e)
          (const f object (read-reference ((eval :short-new-subexpression) e)))
-         (return (unary-dispatch construct-table null null f (new argument-list (vector-of object) (list-set-of named-argument))))))
+         (return (unary-dispatch construct-table null f (new argument-list (vector-of object) (list-set-of named-argument))))))
       (production :short-new-expression (new :super-expression) short-new-expression-super-new
         ((validate v) ((validate :super-expression) v))
         ((eval e)
-         (const f object ((eval :super-expression) e))
-         (const sf class ((super :super-expression) e))
-         (return (unary-dispatch construct-table sf null f (new argument-list (vector-of object) (list-set-of named-argument)))))))
+         (const f obj-optional-limit (read-ref-with-limit ((eval :super-expression) e)))
+         (return (unary-dispatch construct-table null f (new argument-list (vector-of object) (list-set-of named-argument)))))))
     
     (rule :short-new-subexpression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :short-new-subexpression (:full-new-subexpression) short-new-subexpression-new-full
@@ -1058,22 +1175,22 @@
     (rule :member-operator ((validate (-> (validation-env) void)) (eval (-> (dynamic-env object) obj-or-ref)))
       (production :member-operator (:dot-operator) member-operator-dot-operator
         ((validate v) ((validate :dot-operator) v))
-        ((eval e a) (return ((eval :dot-operator) e a null))))
+        ((eval e base) (return ((eval :dot-operator) e base))))
       (production :member-operator (\. :paren-expression) member-operator-indirect
         ((validate v) ((validate :paren-expression) v))
-        ((eval (e :unused) (a :unused)) (todo))))
+        ((eval (e :unused) (base :unused)) (todo))))
     
-    (rule :dot-operator ((validate (-> (validation-env) void)) (eval (-> (dynamic-env object class-opt) obj-or-ref)))
+    (rule :dot-operator ((validate (-> (validation-env) void)) (eval (-> (dynamic-env obj-optional-limit) obj-or-ref)))
       (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier
         ((validate v) ((validate :qualified-identifier) v))
-        ((eval e a sa)
+        ((eval e base)
          (const n partial-name ((name :qualified-identifier) e))
-         (return (new dot-reference a sa n))))
+         (return (new dot-reference base n))))
       (production :dot-operator (:brackets) dot-operator-brackets
         ((validate v) ((validate :brackets) v))
-        ((eval e a sa)
+        ((eval e base)
          (const args argument-list ((eval :brackets) e))
-         (return (new bracket-reference a sa args)))))
+         (return (new bracket-reference base args)))))
     
     (rule :brackets ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) argument-list)))
       (production :brackets ([ ]) brackets-none
@@ -1166,54 +1283,47 @@
       (production :unary-expression (++ :postfix-expression-or-super) unary-expression-increment
         ((validate v) ((validate :postfix-expression-or-super) v))
         ((eval e)
-         (const r obj-or-ref ((eval :postfix-expression-or-super) e))
-         (const a object (read-reference r))
-         (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object (unary-dispatch increment-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))
+         (const r obj-or-ref-optional-limit ((eval :postfix-expression-or-super) e))
+         (const a obj-optional-limit (read-ref-with-limit r))
+         (const b object (unary-dispatch increment-table null a (new argument-list (vector-of object) (list-set-of named-argument))))
          (write-reference r b)
          (return b)))
       (production :unary-expression (-- :postfix-expression-or-super) unary-expression-decrement
         ((validate v) ((validate :postfix-expression-or-super) v))
         ((eval e)
-         (const r obj-or-ref ((eval :postfix-expression-or-super) e))
-         (const a object (read-reference r))
-         (const sa class-opt ((super :postfix-expression-or-super) e))
-         (const b object (unary-dispatch decrement-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))
+         (const r obj-or-ref-optional-limit ((eval :postfix-expression-or-super) e))
+         (const a obj-optional-limit (read-ref-with-limit r))
+         (const b object (unary-dispatch decrement-table null a (new argument-list (vector-of object) (list-set-of named-argument))))
          (write-reference r b)
          (return b)))
       (production :unary-expression (+ :unary-expression-or-super) unary-expression-plus
         ((validate v) ((validate :unary-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :unary-expression-or-super) e)))
-         (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch plus-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :unary-expression-or-super) e)))
+         (return (unary-plus a))))
       (production :unary-expression (- :unary-expression-or-super) unary-expression-minus
         ((validate v) ((validate :unary-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :unary-expression-or-super) e)))
-         (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch minus-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :unary-expression-or-super) e)))
+         (return (unary-dispatch minus-table null a (new argument-list (vector-of object) (list-set-of named-argument))))))
       (production :unary-expression (~ :unary-expression-or-super) unary-expression-bitwise-not
         ((validate v) ((validate :unary-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :unary-expression-or-super) e)))
-         (const sa class-opt ((super :unary-expression-or-super) e))
-         (return (unary-dispatch bitwise-not-table sa null a (new argument-list (vector-of object) (list-set-of named-argument))))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :unary-expression-or-super) e)))
+         (return (unary-dispatch bitwise-not-table null a (new argument-list (vector-of object) (list-set-of named-argument))))))
       (production :unary-expression (! :unary-expression) unary-expression-logical-not
         ((validate v) ((validate :unary-expression) v))
         ((eval e)
          (const a object (read-reference ((eval :unary-expression) e)))
          (return (unary-not a)))))
     
-    (rule :unary-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule :unary-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production :unary-expression-or-super (:unary-expression) unary-expression-or-super-unary-expression
         (validate (validate :unary-expression))
-        (eval (eval :unary-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :unary-expression)))
       (production :unary-expression-or-super (:super-expression) unary-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -1227,41 +1337,33 @@
          ((validate :multiplicative-expression-or-super) v)
          ((validate :unary-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :multiplicative-expression-or-super) e)))
-         (const b object (read-reference ((eval :unary-expression-or-super) e)))
-         (const sa class-opt ((super :multiplicative-expression-or-super) e))
-         (const sb class-opt ((super :unary-expression-or-super) e))
-         (return (binary-dispatch multiply-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :multiplicative-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :unary-expression-or-super) e)))
+         (return (binary-dispatch multiply-table a b))))
       (production :multiplicative-expression (:multiplicative-expression-or-super / :unary-expression-or-super) multiplicative-expression-divide
         ((validate v)
          ((validate :multiplicative-expression-or-super) v)
          ((validate :unary-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :multiplicative-expression-or-super) e)))
-         (const b object (read-reference ((eval :unary-expression-or-super) e)))
-         (const sa class-opt ((super :multiplicative-expression-or-super) e))
-         (const sb class-opt ((super :unary-expression-or-super) e))
-         (return (binary-dispatch divide-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :multiplicative-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :unary-expression-or-super) e)))
+         (return (binary-dispatch divide-table a b))))
       (production :multiplicative-expression (:multiplicative-expression-or-super % :unary-expression-or-super) multiplicative-expression-remainder
         ((validate v)
          ((validate :multiplicative-expression-or-super) v)
          ((validate :unary-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :multiplicative-expression-or-super) e)))
-         (const b object (read-reference ((eval :unary-expression-or-super) e)))
-         (const sa class-opt ((super :multiplicative-expression-or-super) e))
-         (const sb class-opt ((super :unary-expression-or-super) e))
-         (return (binary-dispatch remainder-table sa sb a b)))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :multiplicative-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :unary-expression-or-super) e)))
+         (return (binary-dispatch remainder-table a b)))))
     
-    (rule :multiplicative-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule :multiplicative-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production :multiplicative-expression-or-super (:multiplicative-expression) multiplicative-expression-or-super-multiplicative-expression
         (validate (validate :multiplicative-expression))
-        (eval (eval :multiplicative-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :multiplicative-expression)))
       (production :multiplicative-expression-or-super (:super-expression) multiplicative-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -1275,31 +1377,25 @@
          ((validate :additive-expression-or-super) v)
          ((validate :multiplicative-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :additive-expression-or-super) e)))
-         (const b object (read-reference ((eval :multiplicative-expression-or-super) e)))
-         (const sa class-opt ((super :additive-expression-or-super) e))
-         (const sb class-opt ((super :multiplicative-expression-or-super) e))
-         (return (binary-dispatch add-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :additive-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :multiplicative-expression-or-super) e)))
+         (return (binary-dispatch add-table a b))))
       (production :additive-expression (:additive-expression-or-super - :multiplicative-expression-or-super) additive-expression-subtract
         ((validate v)
          ((validate :additive-expression-or-super) v)
          ((validate :multiplicative-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :additive-expression-or-super) e)))
-         (const b object (read-reference ((eval :multiplicative-expression-or-super) e)))
-         (const sa class-opt ((super :additive-expression-or-super) e))
-         (const sb class-opt ((super :multiplicative-expression-or-super) e))
-         (return (binary-dispatch subtract-table sa sb a b)))))
-     
-    (rule :additive-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :additive-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :multiplicative-expression-or-super) e)))
+         (return (binary-dispatch subtract-table a b)))))
+    
+    (rule :additive-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production :additive-expression-or-super (:additive-expression) additive-expression-or-super-additive-expression
         (validate (validate :additive-expression))
-        (eval (eval :additive-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :additive-expression)))
       (production :additive-expression-or-super (:super-expression) additive-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -1313,41 +1409,33 @@
          ((validate :shift-expression-or-super) v)
          ((validate :additive-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :shift-expression-or-super) e)))
-         (const b object (read-reference ((eval :additive-expression-or-super) e)))
-         (const sa class-opt ((super :shift-expression-or-super) e))
-         (const sb class-opt ((super :additive-expression-or-super) e))
-         (return (binary-dispatch shift-left-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :shift-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :additive-expression-or-super) e)))
+         (return (binary-dispatch shift-left-table a b))))
       (production :shift-expression (:shift-expression-or-super >> :additive-expression-or-super) shift-expression-right-signed
         ((validate v)
          ((validate :shift-expression-or-super) v)
          ((validate :additive-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :shift-expression-or-super) e)))
-         (const b object (read-reference ((eval :additive-expression-or-super) e)))
-         (const sa class-opt ((super :shift-expression-or-super) e))
-         (const sb class-opt ((super :additive-expression-or-super) e))
-         (return (binary-dispatch shift-right-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :shift-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :additive-expression-or-super) e)))
+         (return (binary-dispatch shift-right-table a b))))
       (production :shift-expression (:shift-expression-or-super >>> :additive-expression-or-super) shift-expression-right-unsigned
         ((validate v)
          ((validate :shift-expression-or-super) v)
          ((validate :additive-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :shift-expression-or-super) e)))
-         (const b object (read-reference ((eval :additive-expression-or-super) e)))
-         (const sa class-opt ((super :shift-expression-or-super) e))
-         (const sb class-opt ((super :additive-expression-or-super) e))
-         (return (binary-dispatch shift-right-unsigned-table sa sb a b)))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :shift-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :additive-expression-or-super) e)))
+         (return (binary-dispatch shift-right-unsigned-table a b)))))
     
-    (rule :shift-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule :shift-expression-or-super ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production :shift-expression-or-super (:shift-expression) shift-expression-or-super-shift-expression
         (validate (validate :shift-expression))
-        (eval (eval :shift-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :shift-expression)))
       (production :shift-expression-or-super (:super-expression) shift-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -1361,41 +1449,33 @@
          ((validate :relational-expression-or-super) v)
          ((validate :shift-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :relational-expression-or-super) e)))
-         (const b object (read-reference ((eval :shift-expression-or-super) e)))
-         (const sa class-opt ((super :relational-expression-or-super) e))
-         (const sb class-opt ((super :shift-expression-or-super) e))
-         (return (binary-dispatch less-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :relational-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :shift-expression-or-super) e)))
+         (return (binary-dispatch less-table a b))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) > :shift-expression-or-super) relational-expression-greater
         ((validate v)
          ((validate :relational-expression-or-super) v)
          ((validate :shift-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :relational-expression-or-super) e)))
-         (const b object (read-reference ((eval :shift-expression-or-super) e)))
-         (const sa class-opt ((super :relational-expression-or-super) e))
-         (const sb class-opt ((super :shift-expression-or-super) e))
-         (return (binary-dispatch less-table sb sa b a))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :relational-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :shift-expression-or-super) e)))
+         (return (binary-dispatch less-table b a))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) <= :shift-expression-or-super) relational-expression-less-or-equal
         ((validate v)
          ((validate :relational-expression-or-super) v)
          ((validate :shift-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :relational-expression-or-super) e)))
-         (const b object (read-reference ((eval :shift-expression-or-super) e)))
-         (const sa class-opt ((super :relational-expression-or-super) e))
-         (const sb class-opt ((super :shift-expression-or-super) e))
-         (return (binary-dispatch less-or-equal-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :relational-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :shift-expression-or-super) e)))
+         (return (binary-dispatch less-or-equal-table a b))))
       (production (:relational-expression :beta) ((:relational-expression-or-super :beta) >= :shift-expression-or-super) relational-expression-greater-or-equal
         ((validate v)
          ((validate :relational-expression-or-super) v)
          ((validate :shift-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :relational-expression-or-super) e)))
-         (const b object (read-reference ((eval :shift-expression-or-super) e)))
-         (const sa class-opt ((super :relational-expression-or-super) e))
-         (const sb class-opt ((super :shift-expression-or-super) e))
-         (return (binary-dispatch less-or-equal-table sb sa b a))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :relational-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :shift-expression-or-super) e)))
+         (return (binary-dispatch less-or-equal-table b a))))
       (production (:relational-expression :beta) ((:relational-expression :beta) is :shift-expression) relational-expression-is
         ((validate v)
          ((validate :relational-expression) v)
@@ -1417,15 +1497,13 @@
          ((validate :shift-expression) v))
         ((eval (e :unused)) (todo))))
     
-    (rule (:relational-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule (:relational-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production (:relational-expression-or-super :beta) ((:relational-expression :beta)) relational-expression-or-super-relational-expression
         (validate (validate :relational-expression))
-        (eval (eval :relational-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :relational-expression)))
       (production (:relational-expression-or-super :beta) (:super-expression) relational-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -1439,51 +1517,41 @@
          ((validate :equality-expression-or-super) v)
          ((validate :relational-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :equality-expression-or-super) e)))
-         (const b object (read-reference ((eval :relational-expression-or-super) e)))
-         (const sa class-opt ((super :equality-expression-or-super) e))
-         (const sb class-opt ((super :relational-expression-or-super) e))
-         (return (binary-dispatch equal-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :equality-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :relational-expression-or-super) e)))
+         (return (binary-dispatch equal-table a b))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) != (:relational-expression-or-super :beta)) equality-expression-not-equal
         ((validate v)
          ((validate :equality-expression-or-super) v)
          ((validate :relational-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :equality-expression-or-super) e)))
-         (const b object (read-reference ((eval :relational-expression-or-super) e)))
-         (const sa class-opt ((super :equality-expression-or-super) e))
-         (const sb class-opt ((super :relational-expression-or-super) e))
-         (return (unary-not (binary-dispatch equal-table sa sb a b)))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :equality-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :relational-expression-or-super) e)))
+         (return (unary-not (binary-dispatch equal-table a b)))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) === (:relational-expression-or-super :beta)) equality-expression-strict-equal
         ((validate v)
          ((validate :equality-expression-or-super) v)
          ((validate :relational-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :equality-expression-or-super) e)))
-         (const b object (read-reference ((eval :relational-expression-or-super) e)))
-         (const sa class-opt ((super :equality-expression-or-super) e))
-         (const sb class-opt ((super :relational-expression-or-super) e))
-         (return (binary-dispatch strict-equal-table sa sb a b))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :equality-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :relational-expression-or-super) e)))
+         (return (binary-dispatch strict-equal-table a b))))
       (production (:equality-expression :beta) ((:equality-expression-or-super :beta) !== (:relational-expression-or-super :beta)) equality-expression-strict-not-equal
         ((validate v)
          ((validate :equality-expression-or-super) v)
          ((validate :relational-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :equality-expression-or-super) e)))
-         (const b object (read-reference ((eval :relational-expression-or-super) e)))
-         (const sa class-opt ((super :equality-expression-or-super) e))
-         (const sb class-opt ((super :relational-expression-or-super) e))
-         (return (unary-not (binary-dispatch strict-equal-table sa sb a b))))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :equality-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :relational-expression-or-super) e)))
+         (return (unary-not (binary-dispatch strict-equal-table a b))))))
     
-    (rule (:equality-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule (:equality-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production (:equality-expression-or-super :beta) ((:equality-expression :beta)) equality-expression-or-super-equality-expression
         (validate (validate :equality-expression))
-        (eval (eval :equality-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :equality-expression)))
       (production (:equality-expression-or-super :beta) (:super-expression) equality-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -1497,11 +1565,9 @@
          ((validate :bitwise-and-expression-or-super) v)
          ((validate :equality-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :bitwise-and-expression-or-super) e)))
-         (const b object (read-reference ((eval :equality-expression-or-super) e)))
-         (const sa class-opt ((super :bitwise-and-expression-or-super) e))
-         (const sb class-opt ((super :equality-expression-or-super) e))
-         (return (binary-dispatch bitwise-and-table sa sb a b)))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :bitwise-and-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :equality-expression-or-super) e)))
+         (return (binary-dispatch bitwise-and-table a b)))))
     
     (rule (:bitwise-xor-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production (:bitwise-xor-expression :beta) ((:bitwise-and-expression :beta)) bitwise-xor-expression-bitwise-and
@@ -1512,11 +1578,9 @@
          ((validate :bitwise-xor-expression-or-super) v)
          ((validate :bitwise-and-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :bitwise-xor-expression-or-super) e)))
-         (const b object (read-reference ((eval :bitwise-and-expression-or-super) e)))
-         (const sa class-opt ((super :bitwise-xor-expression-or-super) e))
-         (const sb class-opt ((super :bitwise-and-expression-or-super) e))
-         (return (binary-dispatch bitwise-xor-table sa sb a b)))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :bitwise-xor-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :bitwise-and-expression-or-super) e)))
+         (return (binary-dispatch bitwise-xor-table a b)))))
     
     (rule (:bitwise-or-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production (:bitwise-or-expression :beta) ((:bitwise-xor-expression :beta)) bitwise-or-expression-bitwise-xor
@@ -1527,42 +1591,34 @@
          ((validate :bitwise-or-expression-or-super) v)
          ((validate :bitwise-xor-expression-or-super) v))
         ((eval e)
-         (const a object (read-reference ((eval :bitwise-or-expression-or-super) e)))
-         (const b object (read-reference ((eval :bitwise-xor-expression-or-super) e)))
-         (const sa class-opt ((super :bitwise-or-expression-or-super) e))
-         (const sb class-opt ((super :bitwise-xor-expression-or-super) e))
-         (return (binary-dispatch bitwise-or-table sa sb a b)))))
+         (const a obj-optional-limit (read-ref-with-limit ((eval :bitwise-or-expression-or-super) e)))
+         (const b obj-optional-limit (read-ref-with-limit ((eval :bitwise-xor-expression-or-super) e)))
+         (return (binary-dispatch bitwise-or-table a b)))))
     
     
-    (rule (:bitwise-and-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule (:bitwise-and-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production (:bitwise-and-expression-or-super :beta) ((:bitwise-and-expression :beta)) bitwise-and-expression-or-super-bitwise-and-expression
         (validate (validate :bitwise-and-expression))
-        (eval (eval :bitwise-and-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :bitwise-and-expression)))
       (production (:bitwise-and-expression-or-super :beta) (:super-expression) bitwise-and-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     
-    (rule (:bitwise-xor-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule (:bitwise-xor-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production (:bitwise-xor-expression-or-super :beta) ((:bitwise-xor-expression :beta)) bitwise-xor-expression-or-super-bitwise-xor-expression
         (validate (validate :bitwise-xor-expression))
-        (eval (eval :bitwise-xor-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :bitwise-xor-expression)))
       (production (:bitwise-xor-expression-or-super :beta) (:super-expression) bitwise-xor-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     
-    (rule (:bitwise-or-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (super (-> (dynamic-env) class-opt)))
+    (rule (:bitwise-or-expression-or-super :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref-optional-limit)))
       (production (:bitwise-or-expression-or-super :beta) ((:bitwise-or-expression :beta)) bitwise-or-expression-or-super-bitwise-or-expression
         (validate (validate :bitwise-or-expression))
-        (eval (eval :bitwise-or-expression))
-        ((super (e :unused)) (return null)))
+        (eval (eval :bitwise-or-expression)))
       (production (:bitwise-or-expression-or-super :beta) (:super-expression) bitwise-or-expression-or-super-super
         (validate (validate :super-expression))
-        (eval (eval :super-expression))
-        ((super e) (return ((super :super-expression) e)))))
+        (eval (eval :super-expression))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -1651,15 +1707,13 @@
          ((validate :postfix-expression-or-super) v)
          ((validate :assignment-expression) v))
         ((eval e)
-         (return (eval-assignment-op (table :compound-assignment) ((super :postfix-expression-or-super) e) null
-                                     (eval :postfix-expression-or-super) (eval :assignment-expression) e))))
+         (return (eval-assignment-op (table :compound-assignment) (eval :postfix-expression-or-super) (eval :assignment-expression) e))))
       (production (:assignment-expression :beta) (:postfix-expression-or-super :compound-assignment :super-expression) assignment-expression-compound-super
         ((validate v)
          ((validate :postfix-expression-or-super) v)
          ((validate :super-expression) v))
         ((eval e)
-         (return (eval-assignment-op (table :compound-assignment) ((super :postfix-expression-or-super) e) ((super :super-expression) e)
-                                     (eval :postfix-expression-or-super) (eval :super-expression) e))))
+         (return (eval-assignment-op (table :compound-assignment) (eval :postfix-expression-or-super) (eval :super-expression) e))))
       (production (:assignment-expression :beta) (:postfix-expression :logical-assignment (:assignment-expression :beta)) assignment-expression-logical-compound
         ((validate v)
          ((validate :postfix-expression) v)
@@ -1684,12 +1738,14 @@
     (production :logical-assignment (\|\|=) logical-assignment-logical-or)
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
-    (define (eval-assignment-op (table (list-set binary-method)) (left-limit class-opt) (right-limit class-opt)
-                                (left-eval (-> (dynamic-env) obj-or-ref)) (right-eval (-> (dynamic-env) obj-or-ref)) (e dynamic-env)) obj-or-ref
-      (const r-left obj-or-ref (left-eval e))
-      (const o-left object (read-reference r-left))
-      (const o-right object (read-reference (right-eval e)))
-      (const result object (binary-dispatch table left-limit right-limit o-left o-right))
+    (define (eval-assignment-op (table (list-set binary-method))
+                                (left-eval (-> (dynamic-env) obj-or-ref-optional-limit))
+                                (right-eval (-> (dynamic-env) obj-or-ref-optional-limit))
+                                (e dynamic-env)) obj-or-ref
+      (const r-left obj-or-ref-optional-limit (left-eval e))
+      (const o-left obj-optional-limit (read-ref-with-limit r-left))
+      (const o-right obj-optional-limit (read-ref-with-limit (right-eval e)))
+      (const result object (binary-dispatch table o-left o-right))
       (write-reference r-left result)
       (return result))
     
@@ -2272,11 +2328,11 @@
     
     (define (increment-object (this object :unused) (a object) (args argument-list :unused)) object
       (const x object (unary-plus a))
-      (return (binary-dispatch add-table null null x 1.0)))
+      (return (binary-dispatch add-table x 1.0)))
     
     (define (decrement-object (this object :unused) (a object) (args argument-list :unused)) object
       (const x object (unary-plus a))
-      (return (binary-dispatch subtract-table null null x 1.0)))
+      (return (binary-dispatch subtract-table x 1.0)))
     
     (define (call-object (this object) (a object) (args argument-list)) object
       (case a
@@ -2293,14 +2349,14 @@
       (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
         (throw argument-mismatch-error))
       (const name string (to-string (nth (& positional args) 0)))
-      (return (read-qualified-property a name public-namespace true)))
+      (return (read-qualified-property a (new qualified-name public-namespace name) true)))
     
     (define (bracket-write-object (this object :unused) (a object) (args argument-list)) object
       (rwhen (or (/= (length (& positional args)) 2) (nonempty (& named args)))
         (throw argument-mismatch-error))
       (const new-value object (nth (& positional args) 0))
       (const name string (to-string (nth (& positional args) 1)))
-      (write-qualified-property a name public-namespace true new-value)
+      (write-qualified-property a (new qualified-name public-namespace name) true new-value)
       (return undefined))
     
     (define (bracket-delete-object (this object :unused) (a object) (args argument-list)) object
