@@ -92,7 +92,6 @@ NPP_GetJavaClass()
 void
 NPP_Shutdown(void)
 {
-  destroyPixmap();
 }
 
 NPError 

@@ -436,11 +436,3 @@ makePixmap(PluginInstance *This)
     setCursor(This);
     addXtEventHandler(This);
 }
-
-void destroyPixmap()
-{
-  if (nullPluginGdkPixmap)
-  {
-     gdk_pixmap_unref(nullPluginGdkPixmap);
-  }
-}
