@@ -78,7 +78,7 @@ function Startup()
     return;
   }
 
-  window.title = GetString("TransferProgressCaption");
+  document.title = GetString("TransferProgressCaption");
 
   var directionString = gTransfer.download
                         ? GetString("TransferFromSite")
