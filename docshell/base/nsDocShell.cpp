@@ -145,6 +145,17 @@ static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
 #if defined(DEBUG_rods) || defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
 #endif
+
+#include "plevent.h"
+
+// Number of documents currently loading
+static PRInt32 gNumberOfDocumentsLoading = 0;
+
+// Hint for native dispatch of plevents on how long to delay after 
+// all documents have loaded in milliseconds before favoring normal
+// native event dispatch priorites over performance
+#define NS_EVENT_STARVATION_DELAY_HINT 2000
+
 //
 // Local function prototypes
 //
@@ -4118,6 +4129,14 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         mContentViewer->LoadComplete(aStatus);
 
         mEODForCurrentDocument = PR_TRUE;
+
+        // If all documents have completed their loading
+        // favor native event dispatch priorities
+        // over performance
+        if (--gNumberOfDocumentsLoading == 0) {
+          // Hint to use normal native event dispatch priorities 
+          PL_FavorPerformanceHint(PR_FALSE, NS_EVENT_STARVATION_DELAY_HINT);
+        }
     }
     /* Check if the httpChannel has any cache-control related response headers,
      * like no-store, no-cache. If so, update SHEntry so that 
@@ -4321,6 +4340,16 @@ nsDocShell::CreateContentViewer(const char *aContentType,
 
     mEODForCurrentDocument = PR_FALSE;
 
+    // Give hint to native plevent dispatch mechanism. If a document
+    // is loading the native plevent dispatch mechanism should favor
+    // performance over normal native event dispatch priorities.
+    if (++gNumberOfDocumentsLoading == 1) {
+      // Hint to favor performance for the plevent notification mechanism.
+      // We want the pages to load as fast as possible even if its means 
+      // native messages might be starved.
+      PL_FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
+    }
+  
     return NS_OK;
 }
 

@@ -458,6 +458,22 @@ PL_DestroyEvent(PLEvent* self);
 PR_EXTERN(void)
 PL_DequeueEvent(PLEvent* self, PLEventQueue* queue);
 
+
+/*
+ * Give hint to native PL_Event notification mechanism. If the native 
+ * platform needs to tradeoff performance vs. native event starvation
+ * this hint tells the native dispatch code which to favor.
+ * The default is to prevent event starvation.
+ *
+ * The starvationDelay arg is only used when 
+ * favorPerformanceOverEventStarvation is PR_FALSE. It is the
+ * amount of time in milliseconds to wait before the PR_FALSE actually 
+ * takes effect.
+ */
+PR_EXTERN(void)
+PL_FavorPerformanceHint(PRBool favorPerformanceOverEventStarvation, PRUint32 starvationDelay);
+
+
 /*******************************************************************************
  * Private Stuff
  ******************************************************************************/
