@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -160,8 +161,6 @@ nsDownloadManager::Init()
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_FAILED(rv)) return rv;
   
-  obsService->AddObserver(this, "profile-before-change", PR_FALSE);
-  obsService->AddObserver(this, "profile-approve-change", PR_FALSE);
 
   rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
@@ -189,7 +188,19 @@ nsDownloadManager::Init()
   nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   
-  return bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(mBundle));
+  rv =  bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(mBundle));
+  if (NS_FAILED(rv))
+    return rv;
+
+  // The following two AddObserver calls must be the last lines in this function,
+  // because otherwise, this function may fail (and thus, this object would be not
+  // completely initialized), but the observerservice would still keep a reference
+  // to us and notify us about shutdown, which may cause crashes.
+  // failure to add an observer is not critical
+  obsService->AddObserver(this, "profile-before-change", PR_FALSE);
+  obsService->AddObserver(this, "profile-approve-change", PR_FALSE);
+
+  return NS_OK;
 }
 
 nsresult
