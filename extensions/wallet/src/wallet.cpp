@@ -712,6 +712,16 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
 
   /* use SecretDecoderRing if crypt doesn't starts with prefix */
   if (crypt[0] != PREFIX[0]) {
+    if (!SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
+      /*
+       * User's data is encrypted but pref says it's not.
+       * This should never occur but it has been observed.
+       * Consequence of it happening is that user will be asked for master password
+       * when doing such mundane things as opening edit menu or context menu.
+       */
+      NS_ASSERTION(PR_FALSE, "wallet.crypto pref is set incorrectly");
+      return NS_ERROR_FAILURE;
+    }
     nsresult rv = wallet_CryptSetup();
     if (NS_SUCCEEDED(rv)) {
       rv = gSecretDecoderRing->DecryptString(crypt, &text);
