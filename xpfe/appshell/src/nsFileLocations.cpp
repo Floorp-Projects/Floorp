@@ -297,7 +297,16 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
     cwd += ".mozilla";
     if (!cwd.Exists())
         cwd.CreateDir();
+#elif defined(XP_OS2)
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::OS2_OS2Directory);
 
+    cwd += "Mozilla";
+    if (!cwd.Exists())
+        cwd.CreateDir();
+
+    cwd += "Users50";
+    if (!cwd.Exists())
+        cwd.CreateDir();
 #elif defined(XP_PC)
     // set its directory an aunt of the moz bin directory
     nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Win_Appdata);
