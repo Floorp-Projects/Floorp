@@ -2537,7 +2537,7 @@ UINT nsWindow::MapFromNativeToDOM(UINT aNativeKeyCode)
 // OnKey
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode)
+PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, LPARAM aKeyData)
 {
   nsKeyEvent event;
   nsPoint point;
@@ -2590,10 +2590,8 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
       break;
   }
 
-  pluginEvent.wParam = 0;
-  pluginEvent.wParam |= (event.isShift) ? MK_SHIFT : 0;
-  pluginEvent.wParam |= (event.isControl) ? MK_CONTROL : 0;
-  pluginEvent.lParam = aVirtualCharCode;
+  pluginEvent.wParam = aVirtualCharCode;
+  pluginEvent.lParam = aKeyData;
 
   event.nativeMsg = (void *)&pluginEvent;
 
@@ -2618,7 +2616,7 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
                             )
 #define NO_WM_CHAR_LATER(vk) (! WM_CHAR_LATER(vk))
 
-BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
+BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
   WORD asciiKey;
 
@@ -2630,7 +2628,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
 #endif
 
-  BOOL result = DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode);
+  BOOL result = DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode, aKeyData);
 
   // XXX: this is a special case hack, should probably use IsSpecialChar and
   //      do the right thing for all SPECIAL_KEY codes
@@ -2638,13 +2636,13 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   // this is a special case for the delete key
   if (aVirtualKeyCode==VK_DELETE) 
   {
-    DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
+    DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode, aKeyData);
   } 
   else if (mIsControlDown && aVirtualKeyCode == NS_VK_TAB) {
-    DispatchKeyEvent(NS_KEY_PRESS, 0, NS_VK_TAB);
+    DispatchKeyEvent(NS_KEY_PRESS, 0, NS_VK_TAB, aKeyData);
   }
   else if (mIsControlDown && aVirtualKeyCode == NS_VK_SUBTRACT) {
-    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode-64, 0);
+    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode-64, 0, aKeyData);
   }
   else if (mIsControlDown && 
            ((( NS_VK_0 <= aVirtualKeyCode) && (aVirtualKeyCode <= NS_VK_9)) ||
@@ -2657,7 +2655,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
           )
   {
     // put the 0 - 9 in charcode instead of keycode.
-    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode, 0);
+    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode, 0, aKeyData);
   }
   else if (NO_WM_CHAR_LATER(aVirtualKeyCode) &&  
             (aVirtualKeyCode != NS_VK_SEMICOLON)  &&
@@ -2666,7 +2664,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
             (aVirtualKeyCode != NS_VK_PERIOD)  &&
             (aVirtualKeyCode != NS_VK_SLASH))
   {
-    DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
+    DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode, aKeyData);
   } 
 
   return result;
@@ -2676,10 +2674,10 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 //
 //
 //-------------------------------------------------------------------------
-BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
+BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
   aVirtualKeyCode = !mIMEIsComposing?MapFromNativeToDOM(aVirtualKeyCode):aVirtualKeyCode;
-  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode);
+  BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode, aKeyData);
   return result;
 }
 
@@ -2727,7 +2725,7 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
       mIsShiftDown = PR_FALSE;
     }
   }
-  return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode);
+  return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode, 0);
 
   //return FALSE;
 }
@@ -3320,7 +3318,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //  translating ALT+number key combinations.
 
             if (!mIMEIsComposing)
-              result = OnKeyUp(wParam, (HIWORD(lParam) ));
+              result = OnKeyUp(wParam, (HIWORD(lParam)), lParam);
 			      else
 				      result = PR_FALSE;
             break;
@@ -3359,7 +3357,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	             result = PR_FALSE;
             }
             else if (!mIMEIsComposing)
-               result = OnKeyDown(wParam, (HIWORD(lParam)));
+               result = OnKeyDown(wParam, (HIWORD(lParam)), lParam);
 	          else
 	             result = PR_FALSE;
             }
@@ -5552,7 +5550,7 @@ BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)
       mIsShiftDown = PR_FALSE;
       mIsControlDown = PR_FALSE;
       mIsAltDown = PR_TRUE;
-      DispatchKeyEvent(NS_KEY_PRESS, 0, 192);// XXX hack hack hack
+      DispatchKeyEvent(NS_KEY_PRESS, 0, 192, 0);// XXX hack hack hack
       if (aIMN == IMN_SETOPENSTATUS)
         mIMEIsStatusChanged = PR_TRUE;
   }
