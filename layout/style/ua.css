@@ -98,7 +98,7 @@ LI {
 }
 
 UL LI, OL LI {
-  list-style-position: inside;
+  list-style-position: outside;
   padding-left: 40px;		/* nav4's value */
 }
 
