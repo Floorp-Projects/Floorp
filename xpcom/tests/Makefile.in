@@ -23,7 +23,34 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= dynamic
 
-CPPSRCS		= RegFactory.cpp TestFactory.cpp TestCOMPtr.cpp TestID.cpp TestXPIDLString.cpp
+TESTS_NOT_COMPILING	=	\
+	TestArray.cpp		\
+	TestServMgr.cpp		\
+	$(NULL)
+
+CPPSRCS		=		\
+	RegFactory.cpp		\
+	TestFactory.cpp		\
+	TestCOMPtr.cpp		\
+	TestID.cpp		\
+	TestXPIDLString.cpp	\
+	TestAtoms.cpp		\
+	TestCRT.cpp		\
+	CvtURL.cpp		\
+	FilesTest.cpp		\
+	PropertiesTest.cpp	\
+	TestAutoLock.cpp	\
+	TestObserverService.cpp	\
+	SizeTest01.cpp		\
+	SizeTest02.cpp		\
+	SizeTest03.cpp		\
+	SizeTest04.cpp		\
+	SizeTest05.cpp		\
+	SizeTest06.cpp		\
+	TestBuffers.cpp		\
+	TestPipes.cpp		\
+	TestThreads.cpp		\
+	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
@@ -50,33 +77,30 @@ NETLIB_LIBS =	      \
 	$(NULL)
 
 LIBS		= \
-	-lpref \
-	-l$(MOZ_LIB_JS_PREFIX)js \
-	-lsecfree \
-	-lxp \
-	-labouturl    \
-	-lfileurl     \
-	-lftpurl      \
-	-lgophurl     \
-	-lhttpurl     \
-	-lremoturl    \
+	-lraptorgfx	\
+	-lgfx$(MOZ_TOOLKIT) \
+	-lgfxps \
+	-lnetlib \
+	-labouturl \
+	-lfileurl \
+	-lremoturl \
+	-lgophurl \
+	-lnetcnvts \
 	-lsockstuburl \
-	-lmimetype    \
-	-lnetcache    \
-	-lnetcnvts    \
-	-lnetlib      \
-	-lnetwork     \
-	-lxp	      \
-	-lxpcom       \
-	-lreg       \
-	-ljsurl	      \
-	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
-	-lpwcac	      \
+	-lftpurl \
+	-lmimetype \
+	-lpwcac \
+	-lhttpurl \
+	-lnetwork \
+	-lnetcache \
 	$(TK_LIBS) \
-	-limg	     \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS)  \
-	-l$(MOZ_LIB_UTIL_PREFIX)util    \
+	-lpref \
+	-lsecfree \
+	-l$(MOZ_LIB_JS_PREFIX)js \
+	-limg \
+	-l$(MOZ_LIB_UTIL_PREFIX)util \
+	-lxp \
+	-lxpcom \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
