@@ -89,7 +89,6 @@ public:
 #ifdef MOZ_MATHML
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
-                     float              aItalicSlope,
                      const PRUnichar*   aString,
                      PRUint32           aLength,
                      nsBoundingMetrics& aBoundingMetrics) = 0;
@@ -130,9 +129,6 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    NS_IMETHOD Destroy();
 
    // Metrics
-#ifdef MOZ_MATHML
-  NS_IMETHOD  GetItalicSlope(float& aResult);
-#endif
    NS_IMETHOD  GetXHeight( nscoord &aResult);
    NS_IMETHOD  GetSuperscriptOffset( nscoord &aResult);
    NS_IMETHOD  GetSubscriptOffset( nscoord &aResult);
@@ -192,9 +188,6 @@ class nsFontMetricsOS2 : public nsIFontMetrics
    nscoord  mSpaceWidth;
    nscoord  mXHeight;
   nscoord             mAveCharWidth;
-#ifdef MOZ_MATHML
-  float               mItalicSlope;
-#endif
 
    nsFontHandleOS2    *mFontHandle;
    nsDeviceContextOS2 *mDeviceContext;
