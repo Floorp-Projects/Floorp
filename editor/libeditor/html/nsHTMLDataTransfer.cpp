@@ -197,10 +197,17 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTMLWithCharset(const nsAReadableString & aInput
   res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   
-  // Delete Selection
-  res = DeleteSelection(eNone);
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
   if (NS_FAILED(res)) return res;
-  
+
+  // Delete Selection, but only if it isn't collapsed, see bug #106269
+  if (!isCollapsed) 
+  {
+    res = DeleteSelection(eNone);
+    if (NS_FAILED(res)) return res;
+  }
+
   // Get the first range in the selection, for context:
   nsCOMPtr<nsIDOMRange> range, clone;
   res = selection->GetRangeAt(0, getter_AddRefs(range));
