@@ -79,10 +79,12 @@ NS_IMETHODIMP nsAddrBookSession::RemoveAddressBookListener(nsIAbListener * liste
   PRInt32 index;
   nsresult rv = mListeners->GetIndexOf(listener, &index);
   NS_ENSURE_SUCCESS(rv,rv);
-
-  mListenerNotifyFlags.RemoveAt(index);
-
-  mListeners->RemoveElement(listener);
+  NS_ASSERTION(index >= 0, "removing non-existent listener");
+  if (index >= 0)
+  {
+    mListenerNotifyFlags.RemoveAt(index);
+    mListeners->RemoveElement(listener);
+  }
   return NS_OK;
 }
 
