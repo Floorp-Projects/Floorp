@@ -130,7 +130,7 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 		"scheme,user,hostname.edu,80,/pathname",
 		"http,username:password,hostname,80,/pathname",
 		"resource,,,-1,/pathname",
-		"ftp,uname%here.com:pwd,there.com,21,/aPath/a.html",
+		"ftp,uname%here.com:pwd,there.com,-1,/aPath/a.html",
 		"http,,www.inf.bme.hu,-1,/?foo=bar",
 		"http,,test.com,-1,/aPath/a.html#/1/2"
 	};
@@ -146,7 +146,7 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 		PR_FALSE,
 		PR_TRUE,
 		PR_TRUE,
-		PR_TRUE,
+		PR_FALSE, // we now have mailbox: 
 		PR_TRUE,
 		PR_FALSE,
 		PR_FALSE,
@@ -321,6 +321,7 @@ void printusage(void)
 
 int main(int argc, char **argv)
 {
+    int rv = -1;
     nsresult result = NS_OK;
 
     if (argc < 2) {
@@ -328,7 +329,6 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    
     result = NS_AutoregisterComponents();
 	if (NS_FAILED(result)) return result;
 
@@ -364,12 +364,20 @@ int main(int argc, char **argv)
             url = argv[i];
         }
 	}
+    PRTime startTime = PR_Now();
     if (bMakeAbs)
     {
-        return bTestAll ? doMakeAbsTest() : doMakeAbsTest(url, relativePath); 
+        rv = bTestAll ? doMakeAbsTest() : doMakeAbsTest(url, relativePath); 
     }
     else
     {
-	    return bTestAll ? testURL(0, bStdTest) : testURL(url, bStdTest);
+	    rv = bTestAll ? testURL(0, bStdTest) : testURL(url, bStdTest);
     }
+    if (bTestAll)
+    {
+        PRTime endTime = PR_Now();
+        printf("Elapsed time: %d micros.\n", (PRInt32) 
+            (endTime - startTime));
+    }
+    return rv;
 }
