@@ -664,7 +664,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_insertBefore
 {
   nsIDOMNode* node = (nsIDOMNode*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!node || !jnewChild || !jrefChild) {
+  if (!node || !jnewChild) {
     JavaDOMGlobals::ThrowException(env,
       "Node.insertBefore: NULL pointer");
     return NULL;
@@ -678,12 +678,15 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_insertBefore
     return NULL;
   }
 
-  nsIDOMNode* refChild = (nsIDOMNode*) 
-      env->GetLongField(jrefChild, JavaDOMGlobals::nodePtrFID);
-  if (!refChild) {
-    JavaDOMGlobals::ThrowException(env,
+  nsIDOMNode* refChild = NULL;
+  if (jrefChild) {
+    refChild = (nsIDOMNode*) 
+        env->GetLongField(jrefChild, JavaDOMGlobals::nodePtrFID);
+    if (!refChild) {
+      JavaDOMGlobals::ThrowException(env,
 	"Node.insertBefore: NULL refChild pointer");
-    return NULL;
+      return NULL;
+    }
   }
 
   nsIDOMNode* ret = nsnull;

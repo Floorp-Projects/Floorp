@@ -246,7 +246,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_removeAttribute
 {
   nsIDOMElement* element = (nsIDOMElement*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!element) {
+  if (!element || !jname) {
     JavaDOMGlobals::ThrowException(env,
       "Element.removeAttribute: NULL pointer");
     return;
@@ -406,7 +406,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
 
   nsIDOMAttr* ret = nsnull;
   nsresult rv = element->SetAttributeNode(newAttr, &ret);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
         (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
@@ -418,6 +418,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_ElementImpl_setAttributeNode
       "Element.setAttributeNode: failed", rv, exceptionType);
     return NULL;
   }
+  if (!ret)
+    return NULL;
 
   jobject jattr = env->AllocObject(JavaDOMGlobals::attrClass);
   if (!jattr) {

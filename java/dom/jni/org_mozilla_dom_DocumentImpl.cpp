@@ -507,15 +507,16 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_getDoctype
 
   nsIDOMDocumentType* docType = nsnull;
   nsresult rv = doc->GetDoctype(&docType);
-  if (NS_FAILED(rv) || !docType) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Document.getDoctype: failed", rv);
     return NULL;
   }
+  if (!docType)
+    return NULL;
 
   jobject jDocType = env->AllocObject(JavaDOMGlobals::documentTypeClass);
-  jobject jret = env->AllocObject(JavaDOMGlobals::attrClass);
-  if (!jret) {
+  if (!jDocType) {
     JavaDOMGlobals::ThrowException(env,
       "Document.getDoctype: failed to allocate object");
     return NULL;

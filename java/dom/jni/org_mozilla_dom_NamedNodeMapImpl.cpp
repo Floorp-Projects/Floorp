@@ -64,7 +64,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
 {
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!map) {
+  if (!map || !jname) {
     JavaDOMGlobals::ThrowException(env,
       "NodeMap.getNamedItem: NULL pointer");
     return NULL;
@@ -115,11 +115,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_item
   
   nsIDOMNode* node = nsnull;
   nsresult rv = map->Item((PRUint32) jindex, &node);
-  if (NS_FAILED(rv) || !node) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "NodeMap.item: failed", rv);
     return NULL;
   }
+  if (!node)
+    return NULL;
 
   return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
@@ -134,7 +136,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
 {
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!map) {
+  if (!map || !jname) {
     JavaDOMGlobals::ThrowException(env,
       "NodeMap.removeNamedItem: NULL pointer");
     return NULL;
@@ -175,7 +177,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_setNamedItem
 {
   nsIDOMNamedNodeMap* map = (nsIDOMNamedNodeMap*) 
     env->GetLongField(jthis, JavaDOMGlobals::nodePtrFID);
-  if (!map) {
+  if (!map || !jarg) {
     JavaDOMGlobals::ThrowException(env,
       "NodeMap.setNamedItem: NULL pointer");
     return NULL;
