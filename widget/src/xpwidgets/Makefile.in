@@ -32,7 +32,6 @@ CPPSRCS= \
     nsBaseWidget.cpp         \
 	nsMenuButton.cpp         \
 	nsImageButton.cpp        \
-	nsDataFlavor.cpp         \
 	nsTransferable.cpp       \
 	nsXIFFormatConverter.cpp \
 	nsBaseDragService.cpp    \
