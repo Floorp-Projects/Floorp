@@ -114,7 +114,7 @@
     [% LAST IF loop.index() >= maxrows %]
     [% vis_bug_ids.push(bug.id) %]      
 
-    <tr>
+    <tr [% "class='resolved'" IF bug.resolution != "" %]>
       <td>
         <center>
           [% "<strike>" IF bug.resolution != "" %]
