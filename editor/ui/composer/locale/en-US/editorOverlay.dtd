@@ -670,6 +670,14 @@
 <!ENTITY PreviewMode.accesskey "p">
 <!ENTITY PreviewMode.tooltip "Display as WYSIWYG (as in Navigator)">
 
+<!-- LOCALIZATION NOTE: Do NOT translate text for 'SourceTabDirection'
+     Use latin "ltr" if you want the <html> image to left of the 
+     'SourceMode.label' text defined above,
+     or use latin "rtl" if you want this image to the right of text
+     This is the value of the HTML 'dir' attribute
+-->
+<!ENTITY SourceTabDirection "ltr">
+
 <!-- Smiley Menu items -->
 <!ENTITY smiley1Cmd.label "Smile">
 <!ENTITY smiley2Cmd.label "Frown">
