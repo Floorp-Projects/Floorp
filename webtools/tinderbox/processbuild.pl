@@ -235,7 +235,7 @@ sub compress_log_file {
 sub build_html_from_log {
   if ($tbx{status} eq 'busted') {
     my $buildname = url_encode($tbx{build});
-    system("QUERY_STRING='tree=$tbx{tree}&errorparser=$tbx{errorparser}&buildname=$buildname&buildtime=$builddate&logfile=$logfile&cache=1' showlog.cgi >/dev/null");
+    system("QUERY_STRING='tree=$tbx{tree}&errorparser=$tbx{errorparser}&buildname=$buildname&buildtime=$builddate&logfile=$logfile&cache=1' showlog.cgi > process.$$.log 2>&1");
   }
 }
 
