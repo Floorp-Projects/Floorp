@@ -360,7 +360,7 @@ AC_CACHE_VAL(ac_cv_int16_t,
                  [ac_int16_t=true],
                  [ac_int16_t=false])
   ac_cv_int16_t=$ac_int16_t])
-if test $ac_int16_t = true ; then
+if test "$ac_int16_t" = true ; then
   AC_DEFINE(HAVE_INT16_T)
   AC_MSG_RESULT(yes)
 else
@@ -374,7 +374,7 @@ AC_CACHE_VAL(ac_cv_int32_t,
                  [ac_int32_t=true],
                  [ac_int32_t=false])
   ac_cv_int32_t=$ac_int32_t])
-if test $ac_int32_t = true ; then
+if test "$ac_int32_t" = true ; then
   AC_DEFINE(HAVE_INT32_T)
   AC_MSG_RESULT(yes)
 else
@@ -388,7 +388,7 @@ AC_CACHE_VAL(ac_cv_uint16_t,
                  [ac_uint16_t=true],
                  [ac_uint16_t=false])
   ac_cv_uint16_t=$ac_uint16_t])
-if test $ac_uint16_t = true ; then
+if test "$ac_uint16_t" = true ; then
   AC_DEFINE(HAVE_UINT16_T)
   AC_MSG_RESULT(yes)
 else
@@ -785,8 +785,10 @@ MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 MOZ_ARG_ENABLE_BOOL(md,
 [  --enable-md             Use compiler-based dependencies ],
     [  COMPILER_DEPEND=1
-       _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(*D)/.deps/$(*F).pp)' ]
+       MDDEPDIR='.deps'
+       _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)' ]
 )
+AC_SUBST(MDDEPDIR)
 
 dnl Make pedantic a flag for now since the builds currently choke on it.
 MOZ_ARG_ENABLE_BOOL(pedantic,
@@ -1368,6 +1370,11 @@ fi
 dnl End of nspr tests
 dnl ========================================================
 
+LDFLAGS=`echo \
+	$_WARNINGS_CFLAGS \
+	$LDFLAGS \
+	$CFLAGS`
+
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
 	$_WARNINGS_CFLAGS \
@@ -1391,6 +1398,7 @@ then
   changequote(,)dnl
   CFLAGS=`  echo $CFLAGS   | sed 's/ *-O[^ ]*//g;'`
   CXXFLAGS=`echo $CXXFLAGS | sed 's/ *-O[^ ]*//g;'`
+  LDFLAGS=`echo  $LDFLAGS  | sed 's/ *-O[^ ]*//g;'`
   changequote([,])dnl
 fi
 
