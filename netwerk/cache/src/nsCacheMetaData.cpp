@@ -153,7 +153,8 @@ nsCacheMetaData::FlattenMetaData(char ** data, PRUint32 * size)
     if (PL_DHashTableEnumerate(&table, CalculateSize, size) != 0 && data) {
         *data = new char[*size];
         if (*data == nsnull) return NS_ERROR_OUT_OF_MEMORY;
-        PL_DHashTableEnumerate(&table, AccumulateElements, data);
+        char* state = *data;
+        PL_DHashTableEnumerate(&table, AccumulateElements, &state);
     }
 
     return NS_OK;
@@ -253,7 +254,7 @@ nsCacheMetaData::CalculateSize(PLDHashTable *table,
                                void *arg)
 {
     nsCacheMetaDataHashTableEntry* hashEntry = (nsCacheMetaDataHashTableEntry *)hdr;
-    *(PRUint32*)arg += hashEntry->key->Length() + hashEntry->value->Length();
+    *(PRUint32*)arg += (2 + hashEntry->key->Length() + hashEntry->value->Length());
     return PL_DHASH_NEXT;
 }
 
