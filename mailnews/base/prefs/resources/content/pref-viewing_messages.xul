@@ -11,9 +11,27 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
+    var _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle",
+                       "mailQuotedSize", "mailCitationColor",
+                       "wrapLongLines", "displayGlyph",
+                       "markMessagesRead", "markMessagesReadAfter",
+                       "sendDefaultCharsetList", "forceCharsetOverride"];
     var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     observerService.notifyObservers(null, "charsetmenu-selected", "other");
+    var gMarkMessagesReadAfter;
+
+    function Startup() {
+      gMarkMessagesReadAfter = document.getElementById("markMessagesReadAfter");
+      enableTextbox(document.getElementById("markMessagesRead"), gMarkMessagesReadAfter, true);
+    }
+
+    function enableTextbox(checkbox, textbox, startingUp) {
+      textbox.disabled = (!checkbox.checked ||
+                          parent.hPrefWindow.getPrefIsLocked(textbox.getAttribute("prefstring")));
+
+      if (!textbox.disabled && !startingUp)
+        textbox.focus();
+    }
   ]]>
   </script>
 
@@ -23,7 +41,7 @@
       <description>&plainText.label;</description>
     
     <hbox class="indent">
-      <radiogroup id="mailFixedWidthMessages" 
+      <radiogroup id="mailFixedWidthMessages" orient="horizontal"
                   preftype="bool" prefstring="mail.fixed_width_messages">
         <radio value="true" label="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
         <radio value="false" label="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
@@ -67,8 +85,17 @@
   </groupbox>
 
   <groupbox align="start">
-    <caption label="&languagesTitle.label;"/>
-    <description>&encoding.label;</description>
+    <caption label="&viewingMessages.label;"/>
+    <hbox align="center">
+      <checkbox id="markMessagesRead" label="&markMessagesRead.label;"
+                accesskey="&markMessagesRead.accesskey;"
+                prefstring="mailnews.mark_message_read.delay"
+                oncommand="enableTextbox(this, gMarkMessagesReadAfter, false);"/>
+      <textbox id="markMessagesReadAfter" size="3" value="5" preftype="int"
+               prefstring="mailnews.mark_message_read.delay.interval"/>
+      <label value="&seconds.label;"/>
+    </hbox>
+
     <hbox align="center">
       <label control="sendDefaultCharsetList"
              value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
@@ -81,6 +108,7 @@
         </template>
       </menulist> 
     </hbox>      
+
     <checkbox id="forceCharsetOverride" label="&forceCharsetOverride.label;"
               prefstring="mailnews.force_charset_override"
               accesskey="&forceCharsetOverride.accesskey;"/>
