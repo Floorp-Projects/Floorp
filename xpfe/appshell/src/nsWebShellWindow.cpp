@@ -29,6 +29,7 @@
 #include "nsIPref.h"
 
 #include "nsINameSpaceManager.h"
+#include "nsEscape.h"
 #include "nsVoidArray.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
@@ -266,25 +267,13 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 {
   nsresult rv;
 
-  nsString urlString;
   nsIWidget *parentWidget;
-  const char *tmpStr = NULL;
   
   // XXX: need to get the default window size from prefs...
 	// Doesn't come from prefs... will come from CSS/XUL/RDF
   nsRect r(0, 0, aInitialWidth, aInitialHeight);
   
   nsWidgetInitData initData;
-
-
-  //if (nsnull == aUrl) {
-  //  rv = NS_ERROR_NULL_POINTER;
-  //  goto done;
-  //}
-  if (nsnull != aUrl)  {
-    aUrl->GetSpec(&tmpStr);
-    urlString = tmpStr;
-  }
 
   // Create top level window
   rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
@@ -352,6 +341,11 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   NS_IF_ADDREF(mCallbacks);
 
   if (nsnull != aUrl)  {
+    const char *tmpStr = NULL;
+    nsString urlString;
+
+    aUrl->GetSpec(&tmpStr);
+    urlString = tmpStr;
     mWebShell->LoadURL(urlString.GetUnicode());
   }
                      
@@ -1407,6 +1401,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   SetSizeFromXUL();
   SetTitleFromXUL();
   ShowAppropriateChrome();
+  LoadContentAreas();
 
 #if 0
   nsCOMPtr<nsIDOMDocument> toolbarDOMDoc(GetNamedDOMDoc(nsAutoString("browser.toolbar")));
@@ -1902,6 +1897,70 @@ void nsWebShellWindow::ShowAppropriateChrome()
               domElement->SetAttribute("chromehidden", "");
           }
         }
+      }
+    }
+  }
+}
+
+// if the main document URL specified URLs for any content areas, start them loading
+void nsWebShellWindow::LoadContentAreas() {
+
+  nsAutoString searchSpec;
+
+  // fetch the chrome document URL
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  mWebShell->GetContentViewer(getter_AddRefs(contentViewer));
+  if (contentViewer) {
+    nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(contentViewer);
+    if (docViewer) {
+      nsCOMPtr<nsIDocument> doc;
+      docViewer->GetDocument(*getter_AddRefs(doc));
+      nsCOMPtr<nsIURL> mainURL = getter_AddRefs(doc->GetDocumentURL());
+      if (mainURL) {
+        const char *search;
+        mainURL->GetSearch(&search);
+        searchSpec = search;
+      }
+    }
+  }
+
+  // content URLs are specified in the search part of the URL
+  // as <contentareaID>=<escapedURL>[;(repeat)]
+  if (searchSpec.Length() > 0) {
+    PRInt32     begPos,
+                eqPos,
+                endPos;
+    nsString    contentAreaID,
+                contentURL;
+    char        *urlChar;
+    nsIWebShell *contentShell;
+    nsresult rv;
+    for (endPos = 0; endPos < searchSpec.Length(); ) {
+      // extract contentAreaID and URL substrings
+      begPos = endPos;
+      eqPos = searchSpec.Find('=', begPos);
+      if (eqPos < 0)
+        break;
+
+      endPos = searchSpec.Find(';', eqPos);
+      if (endPos < 0)
+        endPos = searchSpec.Length();
+      searchSpec.Mid(contentAreaID, begPos, eqPos-begPos);
+      searchSpec.Mid(contentURL, eqPos+1, endPos-eqPos-1);
+      endPos++;
+
+      // see if we have a webshell with a matching contentAreaID
+      rv = GetContentShellById(contentAreaID, &contentShell);
+      if (NS_SUCCEEDED(rv)) {
+        urlChar = contentURL.ToNewCString();
+        if (urlChar) {
+          PRInt32 colonPos;
+          nsUnescape(urlChar);
+          contentURL = urlChar;
+          contentShell->LoadURL(contentURL.GetUnicode());
+          delete [] urlChar;
+        }
+        NS_RELEASE(contentShell);
       }
     }
   }
