@@ -290,7 +290,7 @@
 -->
 
   <hbox flex="1">
-    <hbox id="sidebar-box" class="chromeclass-extrachrome"/>
+    <vbox id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
     <hbox flex="1"/>
   </hbox>
