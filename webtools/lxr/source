@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.14 1999/04/26 19:52:54 endico%mozilla.org Exp $
+# $Id: source,v 1.15 1999/11/23 21:59:13 endico%mozilla.org Exp $
 # source --	Present sourcecode as html, complete with references
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>
@@ -27,6 +27,7 @@ use lib 'lib/';
 use SimpleParse;
 use LXR::Common;
 use LXR::Config;
+use File::Basename;
 
 sub diricon {
     my $img, $link;
@@ -246,6 +247,17 @@ sub printfile {
                 print(markupstring($string, $Path->{'virt'}));
 		print("</PRE>");
 	    } else {
+	        if (($Path->{'file'} =~ /nsI\w*\.idl$/)) {
+	          my $base = basename($Path->{'file'}, ".idl"); 
+                  my $dir = $Path->{'virt'};
+                  $dir =~ s#([^/]+)(.*)#$1#;
+                  print("<CENTER>\n");
+                  print("<IMG ALIGN=CENTER BORDER=\"0\" SRC=\"http://unstable.elemental.com/mozilla/build/latest/mozilla" . $dir . "/dox/class_" . $base . ".gif\">\n");
+                  print("<BR>");
+                  print("<A HREF=\"http://unstable.elemental.com/mozilla/build/latest/mozilla" . $dir . "/dox/class_" . $base . ".html\">\n");
+                  print($base . "Interface Reference" . "</A>\n");
+                  print("</CENTER>\n");
+                }
 		print("<pre>");
 		&markupfile(\*SRCFILE, $Path->{'virt'}, $Path->{'file'},
                              sub { print shift });
