@@ -181,11 +181,10 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   }
 
   nsIFrame* kidFrame;
-  for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
+  for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
     nsReflowReason  reason = reflowState.reason;
 
-    nsFrameState kidState;
-    kidFrame->GetFrameState(&kidState);
+    nsFrameState kidState = kidFrame->GetStateBits();
     if (NS_FRAME_FIRST_REFLOW & kidState) {
       // The frame has never had a reflow, so change the reason to eReflowReason_Initial
       reason = eReflowReason_Initial;
@@ -202,14 +201,11 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 
     if (aChildBounds) {
       // Add in the child's bounds
-      nsRect  kidBounds;
-      kidFrame->GetRect(kidBounds);
+      nsRect  kidBounds = kidFrame->GetRect();
       aChildBounds->UnionRect(*aChildBounds, kidBounds);
 
       // If the frame has visible overflow, then take it into account, too.
-      nsFrameState  kidFrameState;
-      kidFrame->GetFrameState(&kidFrameState);
-      if (kidFrameState & NS_FRAME_OUTSIDE_CHILDREN) {
+      if (kidFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
         // Get the property
         nsRect* overflowArea =  kidFrame->GetOverflowAreaProperty(aPresContext);
 
@@ -234,16 +230,13 @@ nsAbsoluteContainingBlock::CalculateChildBounds(nsIPresContext* aPresContext,
   // Initialize the OUT parameters
   aChildBounds.SetRect(0, 0, 0, 0);
 
-  for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f->GetNextSibling(&f)) {
+  for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f = f->GetNextSibling()) {
     // Add in the child's bounds
-    nsRect  bounds;
-    f->GetRect(bounds);
+    nsRect  bounds = f->GetRect();
     aChildBounds.UnionRect(aChildBounds, bounds);
   
     // If the frame has visible overflow, then take it into account, too.
-    nsFrameState  frameState;
-    f->GetFrameState(&frameState);
-    if (frameState & NS_FRAME_OUTSIDE_CHILDREN) {
+    if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
       // Get the property
       nsRect* overflowArea = f->GetOverflowAreaProperty(aPresContext);
   
@@ -292,10 +285,9 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
       NS_ASSERTION(type == eReflowType_ReflowDirty, "unexpected reflow type");
 
       // Walk the positioned frames and reflow the dirty frames
-      for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f->GetNextSibling(&f)) {
-        nsFrameState  frameState;
+      for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f = f->GetNextSibling()) {
+        nsFrameState  frameState = f->GetStateBits();
 
-        f->GetFrameState(&frameState);
         if (frameState & NS_FRAME_IS_DIRTY) {
           nsReflowStatus  status;
           nsReflowReason  reason;
@@ -422,7 +414,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     NS_NOTYETIMPLEMENTED("percentage border");
   }
 
-  nsFrameState        kidFrameState;
   nsSize              availSize(aReflowState.mComputedWidth, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowMetrics kidDesiredSize(nsnull);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
@@ -438,14 +429,11 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nscoord x;
   if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.left) {
     // Just use the current x-offset
-    nsPoint origin;
-    aKidFrame->GetOrigin(origin);
-    x = origin.x;
+    x = aKidFrame->GetPosition().x;
   } else {
     x = border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left;
   }
-  aKidFrame->MoveTo(aPresContext, 
-                    x, border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top);
+  aKidFrame->SetPosition(nsPoint(x, border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top));
 
   // Position its view, but don't bother it doing it now if we haven't
   // yet determined the left offset
@@ -488,20 +476,19 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nsRect  rect(border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
                kidDesiredSize.width, kidDesiredSize.height);
-  aKidFrame->SetRect(aPresContext, rect);
+  aKidFrame->SetRect(rect);
 
   // Size and position the view and set its opacity, visibility, content
   // transparency, and clip
   nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame,
-                                             aKidFrame->GetView(aPresContext),
+                                             aKidFrame->GetView(),
                                              &kidDesiredSize.mOverflowArea);
   aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
 
   // If the frame has visible overflow, then store it as a property on the
   // frame. This allows us to be able to recover it without having to reflow
   // the frame
-  aKidFrame->GetFrameState(&kidFrameState);
-  if (kidFrameState & NS_FRAME_OUTSIDE_CHILDREN) {
+  if (aKidFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
     // Get the property (creating a rect struct if necessary)
     nsRect* overflowArea = aKidFrame->GetOverflowAreaProperty(aPresContext, PR_TRUE);
 

@@ -351,8 +351,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (isPaginated) {
     // allow scrollbars if this is the child of the viewport, because
     // we must be the scrollbars for the print preview window
-    nsIFrame* parent;
-    GetParent(&parent);
+    nsIFrame* parent = GetParent();
     nsCOMPtr<nsIAtom> parentType;
     if (parent)
       parent->GetFrameType(getter_AddRefs(parentType));
@@ -372,10 +371,7 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   nsCOMPtr<nsITextControlFrame> textFrame(do_QueryInterface(mParent));
   if (textFrame) {
     // Make sure we are not a text area.
-    nsCOMPtr<nsIContent> content;
-
-    mParent->GetContent(getter_AddRefs(content));
-    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(content));
+    nsCOMPtr<nsIDOMHTMLTextAreaElement> textAreaElement(do_QueryInterface(mParent->GetContent()));
     if (!textAreaElement) {
       SetScrollbarVisibility(aPresContext, PR_FALSE, PR_FALSE);
       return NS_OK;
@@ -472,8 +468,7 @@ void nsGfxScrollFrame::ReloadChildFrames(nsIPresContext* aPresContext)
         mInner->mScrollAreaBox = box;
         understood = PR_TRUE;
       } else {
-        nsCOMPtr<nsIContent> content;
-        frame->GetContent(getter_AddRefs(content));
+        nsIContent* content = frame->GetContent();
         if (content) {
           nsAutoString value;
           if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None,
@@ -494,7 +489,7 @@ void nsGfxScrollFrame::ReloadChildFrames(nsIPresContext* aPresContext)
 
     NS_ASSERTION(understood, "What is this frame doing here?");
 
-    frame->GetNextSibling(&frame);
+    frame = frame->GetNextSibling();
   }
 }
   
