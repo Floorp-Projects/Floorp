@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
-LIBRARY_NAME	= gfxxprt
+LIBRARY_NAME	= gfxxprint
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= gkgfx
@@ -45,7 +45,7 @@ CPPSRCS		= \
 		nsRenderingContextXP.cpp \
 		nsGfxFactoryXP.cpp \
 		nsXPrintContext.cpp \
-		nsRegionXP.cpp \
+		../xlib/nsRegionXlib.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -78,5 +78,6 @@ EXTRA_DSO_LDOPTS += \
 
 INCLUDES	+= \
 		-I$(srcdir)/../gtk \
+		-I$(srcdir)/../xlib \
 		-I$(srcdir)/../xlibrgb \
 		$(NULL)

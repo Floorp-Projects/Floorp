@@ -32,14 +32,15 @@
 #include "nsDeviceContextXP.h"
 #include "nsGfxXPrintCID.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextXP)
-
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextXp)
+ 
 static nsModuleComponentInfo components[] =
 {
-  { "GFX Postscript Device Context",
+  { "GFX Xprint Device Context",
     NS_DEVICECONTEXTXP_CID,
-    "@mozilla.org/gfx/decidecontext/xprt;1",
-    nsDeviceContextXPConstructor }  
+    "@mozilla.org/gfx/decidecontext/xprint;1",
+    nsDeviceContextXpConstructor }  
 };
+ 
+NS_IMPL_NSGETMODULE(nsGfxXprintModule, components)
 
-NS_IMPL_NSGETMODULE(nsGfxXPModule, components)

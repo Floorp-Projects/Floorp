@@ -43,7 +43,7 @@ public:
   nsXPrintContext();
   virtual ~nsXPrintContext();
   
-  NS_IMETHOD Init(nsIDeviceContextSpecXP *aSpec);
+  NS_IMETHOD Init(nsIDeviceContextSpecXp *aSpec);
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();
   NS_IMETHOD BeginDocument(PRUnichar * aTitle);
@@ -60,7 +60,6 @@ public:
   
   Display *  GetDisplay() { return mPDisplay; }
   NS_IMETHOD GetPrintResolution(int &aPrintResolution) const;
-  NS_IMETHOD GetTextZoom(float &aTextZoom) const { aTextZoom = mTextZoom; return NS_OK; }
 
   NS_IMETHOD DrawImage(nsIImage *aImage,
                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
@@ -78,23 +77,21 @@ private:
   Screen       *mScreen;
   Visual       *mVisual;
   GC            mGC;
-  Drawable      mDrawable;
+  Drawable      mDrawable; /* window */
   XImage       *mImage;
   int           mDepth;
   int           mScreenNumber;
-  Pixmap        mAlphaPixmap;
-  Pixmap        mImagePixmap;
   int           mWidth;
   int           mHeight;
   XPContext     mPContext;
-  PRBool        mIsAPrinter;
-  char         *mPrintFile; /* file to "print" to */
+  PRBool        mIsGrayscale; /* color or grayscale ? */
+  PRBool        mIsAPrinter;  /* destination: printer or file ? */
+  char         *mPrintFile;   /* file to "print" to */
   void         *mXpuPrintToFileHandle; /* handle for XpuPrintToFile/XpuWaitForPrintFileChild when printing to file */
   long          mPrintResolution;
-  float         mTextZoom;
 
   NS_IMETHOD SetupWindow(int x, int y, int width, int height);
-  NS_IMETHOD SetupPrintContext(nsIDeviceContextSpecXP *aSpec);
+  NS_IMETHOD SetupPrintContext(nsIDeviceContextSpecXp *aSpec);
 };
 
 

@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *
  */
 
 #ifndef nsDeviceContextSpecXlib_h___
@@ -26,18 +28,16 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecXlib.h"
 #include "nsIDeviceContextSpecPS.h"
-
 #ifdef USE_XPRINT
 #include "nsIDeviceContextSpecXPrint.h"
-#endif
-
+#endif /* USE_XPRINT */
 #include "nsPrintdXlib.h"
 
 class nsDeviceContextSpecXlib : public nsIDeviceContextSpec,
                                 public nsIDeviceContextSpecPS
 #ifdef USE_XPRINT
-                              , public nsIDeviceContextSpecXP
-#endif
+                              , public nsIDeviceContextSpecXp
+#endif /* USE_XPRINT */
 {
 public:
   nsDeviceContextSpecXlib();
@@ -45,8 +45,8 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(PRBool        aQuiet);
-  NS_IMETHOD ClosePrintManager();
-protected:
+  NS_IMETHOD ClosePrintManager(); 
+
   NS_IMETHOD GetToPrinter(PRBool &aToPrinter); 
   NS_IMETHOD GetFirstPageFirst(PRBool &aFpf);     
   NS_IMETHOD GetGrayscale(PRBool &aGrayscale);   
@@ -59,12 +59,11 @@ protected:
   NS_IMETHOD GetPath (char **aPath);    
   NS_IMETHOD GetPageDimensions(float &aWidth, float &aHeight);
   NS_IMETHOD GetUserCancelled(PRBool &aCancel);      
-
 #ifdef USE_XPRINT
   NS_IMETHOD GetPrintMethod(int &aMethod); 
-#endif
-
+#endif /* USE_XPRINT */
   virtual ~nsDeviceContextSpecXlib();
+protected:
   UnixPrData mPrData;
 };
 

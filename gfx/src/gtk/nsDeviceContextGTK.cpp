@@ -34,7 +34,6 @@
 
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
-
 #ifdef USE_XPRINT
 #include "nsGfxXPrintCID.h"
 #include "nsIDeviceContextXPrint.h"
@@ -357,13 +356,13 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     //---------
     // Fonts
     //---------
-    case eSystemAttr_Font_Caption: 		// css2
+    case eSystemAttr_Font_Caption:      // css2
     case eSystemAttr_Font_Icon: 
     case eSystemAttr_Font_Menu: 
     case eSystemAttr_Font_MessageBox: 
     case eSystemAttr_Font_SmallCaption: 
     case eSystemAttr_Font_StatusBar: 
-    case eSystemAttr_Font_Window:			// css3
+    case eSystemAttr_Font_Window:       // css3
     case eSystemAttr_Font_Document:
     case eSystemAttr_Font_Workspace:
     case eSystemAttr_Font_Desktop:
@@ -373,7 +372,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     case eSystemAttr_Font_PullDownMenu:
     case eSystemAttr_Font_List:
     case eSystemAttr_Font_Field:
-    case eSystemAttr_Font_Tooltips:		// moz
+    case eSystemAttr_Font_Tooltips:     // moz
     case eSystemAttr_Font_Widget:
         status = GetSystemFontInfo(style->font, anID, aInfo->mFont);
       break;
@@ -465,34 +464,28 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
 {
 #ifdef USE_XPRINT
   int method=-1;
-  nsDeviceContextSpecGTK* spec=(nsDeviceContextSpecGTK*)aDevice;
+  nsDeviceContextSpecGTK *spec = NS_STATIC_CAST(nsDeviceContextSpecGTK *, aDevice);
   spec->GetPrintMethod(method);
 
   if (method == 1) { // XPRINT
-    static NS_DEFINE_CID(kCDeviceContextXP, NS_DEVICECONTEXTXP_CID);
+    static NS_DEFINE_CID(kCDeviceContextXp, NS_DEVICECONTEXTXP_CID);
     nsresult rv;
-    nsIDeviceContextXP *dcxp;
-  
-    rv = nsComponentManager::CreateInstance(kCDeviceContextXP,
-                                            nsnull,
-                                            NS_GET_IID(nsIDeviceContextXP),
-                                            (void **)&dcxp);
+    nsCOMPtr<nsIDeviceContextXp> dcxp(do_CreateInstance(kCDeviceContextXp, &rv));
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create XP Device context");
-  
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create Xp Device context");    
+    if (NS_FAILED(rv)) 
+      return rv;
+
     dcxp->SetSpec(aDevice);
     dcxp->InitDeviceContextXP((nsIDeviceContext*)aContext,
-                              (nsIDeviceContext*)this);
-
+                                (nsIDeviceContext*)this);
+  
     rv = dcxp->QueryInterface(NS_GET_IID(nsIDeviceContext),
                               (void **)&aContext);
-
-    NS_RELEASE(dcxp);
-  
     return rv;
   }
   // default/PS
-#endif
+#endif /* USE_XPRINT */
   static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
   
   // Create a Postscript device context 

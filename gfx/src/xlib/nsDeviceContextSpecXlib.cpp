@@ -17,13 +17,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *
  */
 
 #include "nsDeviceContextSpecXlib.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
 
 #include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
@@ -34,15 +38,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
-static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
-
-#ifdef USE_XPRINT
-static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
-#endif
-
-NS_IMPL_ADDREF(nsDeviceContextSpecXlib)
-NS_IMPL_RELEASE(nsDeviceContextSpecXlib)
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 nsDeviceContextSpecXlib::nsDeviceContextSpecXlib()
 {
@@ -52,6 +48,12 @@ nsDeviceContextSpecXlib::nsDeviceContextSpecXlib()
 nsDeviceContextSpecXlib::~nsDeviceContextSpecXlib()
 {
 }
+
+static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
+static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
+#ifdef USE_XPRINT
+static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
+#endif
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::QueryInterface(REFNSIID aIID, void **aInstancePtr)
 {
@@ -77,11 +79,12 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::QueryInterface(REFNSIID aIID, void **aIns
 #ifdef USE_XPRINT
   if (aIID.Equals(kIDeviceContextSpecXPIID))
   {
-    *aInstancePtr = (void *) (nsIDeviceContextSpecXP *) this;
+    nsIDeviceContextSpecXp *tmp = this;
+    *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#endif
+#endif /* USE_XPRINT */
 
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -96,91 +99,161 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::QueryInterface(REFNSIID aIID, void **aIns
 
   return NS_NOINTERFACE;
 }
+ 
+NS_IMPL_ADDREF(nsDeviceContextSpecXlib)
+NS_IMPL_RELEASE(nsDeviceContextSpecXlib)
 
+/** -------------------------------------------------------
+ *  Initialize the nsDeviceContextSpecGTK
+ *  @update   dc 2/15/98
+ *  @update   syd 3/2/99
+ *
+ * gisburn: Please note that this function exists as 1:1 copy in other
+ * toolkits including:
+ * - GTK+-toolkit:
+ *   file:     mozilla/gfx/src/gtk/nsDeviceContextSpecG.cpp
+ *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
+ * - Xlib-toolkit: 
+ *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecXlib.cpp 
+ *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
+ * - Qt-toolkit:
+ *   file:     mozilla/gfx/src/qt/nsDeviceContextSpecQT.cpp
+ *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
+ * 
+ * ** Please update the other toolkits when changing this function.
+ */
 NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
 {
-  char *path;
-  
-  PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE;
-  PRBool tofile = PR_FALSE;
-  PRInt32 paper_size = NS_LETTER_SIZE;
-  int ileft = 500, iright = 0, itop = 500, ibottom = 0; 
-  char *command;
-  char *printfile = nsnull;
-
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
 
-  nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
-  if (ioParamBlock)
-    paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-
-  if (paramBlockWrapper) {
-    paramBlockWrapper->SetData(ioParamBlock);
-    paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    if (wwatch) {
-      nsCOMPtr<nsIDOMWindow> newWindow;
-      rv = wwatch->OpenWindow(0, "chrome://global/content/printdialog.xul",
-		    "_blank", "chrome,modal", paramBlockWrapper,
-		    getter_AddRefs(newWindow));
+  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
+  NS_ASSERTION(nsnull != printService, "No print service.");
+  
+  // if there is a current selection then enable the "Selection" radio button
+  if (NS_SUCCEEDED(rv) && printService) {
+    PRBool isOn;
+    printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
+    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && pPrefs) {
+      (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
     }
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    PRInt32 buttonPressed = 0;
-    ioParamBlock->GetInt(0, &buttonPressed);
-    if (buttonPressed == 0) {
-      nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv) && pPrefs) {
-	(void) pPrefs->GetBoolPref("print.print_reversed", &reversed);
-	(void) pPrefs->GetBoolPref("print.print_color", &color);
-	(void) pPrefs->GetBoolPref("print.print_landscape", &landscape);
-	(void) pPrefs->GetIntPref("print.print_paper_size", &paper_size);
-	(void) pPrefs->CopyCharPref("print.print_command", (char **) &command);
-	(void) pPrefs->GetIntPref("print.print_margin_top", &itop);
-	(void) pPrefs->GetIntPref("print.print_margin_left", &ileft);
-	(void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom);
-	(void) pPrefs->GetIntPref("print.print_margin_right", &iright);
-	(void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile);
-	(void) pPrefs->GetBoolPref("print.print_tofile", &tofile);
-	sprintf(mPrData.command, command);
-	sprintf(mPrData.path, printfile);
-      } else {
-#ifndef VMS
-	sprintf(mPrData.command, "lpr");
+  char      *path;
+  PRBool     canPrint       = PR_FALSE;
+  PRBool     reversed       = PR_FALSE;
+  PRBool     color          = PR_FALSE;
+  PRBool     tofile         = PR_FALSE;
+  PRInt16    printRange     = nsIPrintOptions::kRangeAllPages;
+  PRInt32    paper_size     = NS_LETTER_SIZE;
+  PRInt32    fromPage       = 1;
+  PRInt32    toPage         = 1;
+  PRUnichar *command        = nsnull;
+  PRUnichar *printfile      = nsnull;
+  double     dleft          = 0.5;
+  double     dright         = 0.5;
+  double     dtop           = 0.5;
+  double     dbottom        = 0.5; 
+
+  if (PR_FALSE == aQuiet ) {
+    rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+
+    nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
+    if (ioParamBlock)
+      paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
+
+    if (paramBlockWrapper) {
+      paramBlockWrapper->SetData(ioParamBlock);
+      paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch) {
+        nsCOMPtr<nsIDOMWindow> newWindow;
+        rv = wwatch->OpenWindow(0, "chrome://global/content/printdialog.xul",
+                      "_blank", "chrome,modal", paramBlockWrapper,
+                      getter_AddRefs(newWindow));
+      }
+    }
+    if (NS_SUCCEEDED(rv)) {
+      PRInt32 buttonPressed = 0;
+      ioParamBlock->GetInt(0, &buttonPressed);
+      if (buttonPressed == 0) {
+        canPrint = PR_TRUE;
+      }
+    }
+  } else {
+    canPrint = PR_TRUE;
+  }
+
+  if (canPrint) {
+    if (printService) {
+      printService->GetPrintReversed(&reversed);
+      printService->GetPrintInColor(&color);
+      printService->GetPaperSize(&paper_size);
+      printService->GetPrintCommand(&command);
+      printService->GetPrintRange(&printRange);
+      printService->GetToFileName(&printfile);
+      printService->GetPrintToFile(&tofile);
+      printService->GetStartPageRange(&fromPage);
+      printService->GetEndPageRange(&toPage);
+      printService->GetMarginTop(&dtop);
+      printService->GetMarginLeft(&dleft);
+      printService->GetMarginBottom(&dbottom);
+      printService->GetMarginRight(&dright);
+
+      if (command != nsnull && printfile != nsnull) {
+        // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
+        strcpy(mPrData.command, NS_ConvertUCS2toUTF8(command).get());  
+        strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
+      }
+#ifdef DEBUG_rods
+      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+      printf("printRange     %d\n", printRange);
+      printf("fromPage       %d\n", fromPage);
+      printf("toPage         %d\n", toPage);
+#endif /* DEBUG_rods */
+    } else {
+#ifdef VMS
+      // Note to whoever puts the "lpr" into the prefs file. Please contact me
+      // as I need to make the default be "print" instead of "lpr" for OpenVMS.
+      strcpy(mPrData.command, "print");
 #else
-	// Note to whoever puts the "lpr" into the prefs file. Please contact me
-	// as I need to make the default be "print" instead of "lpr" for OpenVMS.
-	sprintf(mPrData.command, "print");
-#endif
-      }
-
-      mPrData.top       = itop / 1000.0; 
-      mPrData.bottom    = ibottom / 1000.0;
-      mPrData.left      = ileft / 1000.0;
-      mPrData.right     = iright / 1000.0;
-      mPrData.fpf       = !reversed;
-      mPrData.grayscale = !color;
-      mPrData.size      = paper_size;
-      mPrData.toPrinter = !tofile;
-
-      // PWD, HOME, or fail 
-    
-      if (!printfile) {
-	if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
-	  if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-	    strcpy( mPrData.path, "mozilla.ps" );
-	if ( path != (char *) NULL )
-	  sprintf( mPrData.path, "%s/mozilla.ps", path );
-	else
-	  return NS_ERROR_FAILURE;
-      }
-
-      return NS_OK;
+      strcpy(mPrData.command, "lpr");
+#endif /* VMS */
     }
+
+    mPrData.top       = dtop;
+    mPrData.bottom    = dbottom;
+    mPrData.left      = dleft;
+    mPrData.right     = dright;
+    mPrData.fpf       = !reversed;
+    mPrData.grayscale = !color;
+    mPrData.size      = paper_size;
+    mPrData.toPrinter = !tofile;
+
+    // PWD, HOME, or fail 
+    
+    if (!printfile) {
+      if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) nsnull ) 
+        if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) nsnull )
+          strcpy(mPrData.path, "mozilla.ps");
+          
+      if ( path != (char *) nsnull )
+        sprintf(mPrData.path, "%s/mozilla.ps", path);
+      else
+        return NS_ERROR_FAILURE;
+    }
+    if (command != nsnull) {
+      nsMemory::Free(command);
+    }
+    if (printfile != nsnull) {
+      nsMemory::Free(printfile);
+    }
+
+    return NS_OK;
   }
+
   return NS_ERROR_FAILURE;
 }
 
@@ -283,7 +356,7 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::GetPrintMethod(int &aMethod)
   }
   return NS_OK;
 }
-#endif
+#endif /* USE_XPRINT */
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::ClosePrintManager()
 {

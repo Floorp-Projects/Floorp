@@ -44,6 +44,7 @@ CPPSRCS		= \
 		nsRenderingContextXlib.cpp \
 		nsScreenXlib.cpp \
 		nsScreenManagerXlib.cpp \
+        	nsPrintOptionsXlib.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -66,6 +67,10 @@ DEFINES		+= -D_IMPL_NS_GFXNONXP
 
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
+endif
+
+ifdef MOZ_ENABLE_XPRINT
+DEFINES         += -DUSE_XPRINT
 endif
 
 INCLUDES	+= \

@@ -30,6 +30,8 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
+
+#include "xprintutil.h"
  
 #include <stdlib.h>
 #include <string.h>
@@ -40,17 +42,12 @@
 #include <time.h>
 #include <pthread.h>
 #else
+#ifdef __sun
 #include <wait.h>
+#endif /* __sun */
 #endif /* XPU_USE_THREADS */
 #include <unistd.h>
 #include <sys/time.h>
-
-#define NeedFunctionPrototypes (1) /* is this legal from within an app. !? */
-#include <X11/Xlibint.h>
-#include <X11/extensions/Print.h>
-#include <X11/Intrinsic.h>
-
-#include "xprintutil.h"
 
 /* local prototypes */
 #ifdef DEBUG

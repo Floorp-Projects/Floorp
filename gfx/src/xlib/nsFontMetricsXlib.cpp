@@ -58,7 +58,9 @@ static NS_DEFINE_CID(kCharSetManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
+#ifdef PR_LOGGING 
 static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
+#endif /* PR_LOGGING */
 
 static int gFontMetricsXlibCount = 0;
 static int gInitialized = 0;
