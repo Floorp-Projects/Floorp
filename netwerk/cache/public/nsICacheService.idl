@@ -23,31 +23,52 @@
  *    Darin Fisher    <darin@netscape.com>
  */
 
-
 #include "nsISupports.idl"
-
 
 interface nsISimpleEnumerator;
 interface nsICacheListener;
 interface nsICacheSession;
 interface nsICacheVisitor;
 
-
 [scriptable, uuid(0ebec4c7-742f-4f27-8e7b-7c8a0cc76348)]
 interface nsICacheService : nsISupports
 {
+    /**
+     * Initialize the cache service.
+     */
     void init();
+
+    /**
+     * Shutdown the cache service.
+     */
     void shutdown();
 
     /*
-     * Create Session
+     * Create a cache session
+     *
+     * A cache session represents a client's access into the cache.  The cache
+     * session is not "owned" by the cache service.  Hence, it is possible to
+     * create duplicate cache sessions.  Entries created by a cache session
+     * are invisible to other cache sessions, unless the cache sessions are
+     * equivalent.
+     *
+     * @param clientID - Specifies the name of the client using the cache.
+     * @param storagePolicy - Limits the storage policy for all entries
+     *   accessed via the returned session.  As a result, devices excluded
+     *   by the storage policy will not be searched when opening entries
+     *   from the returned session.
+     * @param streamBased - Indicates whether or not the data being cached
+     *   can be represented as a stream.  The storagePolicy must be 
+     *   consistent with the value of this field.  For example, a non-stream-
+     *   based cache entry can only have a storage policy of STORE_IN_MEMORY.
+     * @return new cache session.
      */
-    nsICacheSession createSession(in string   clientID,
-                                  in long     storagePolicy,
-                                  in boolean  streamBased);
+    nsICacheSession createSession(in string  clientID,
+                                  in long    storagePolicy,
+                                  in boolean streamBased);
 
     /*
-     * methods for implementing about:cache
+     * Visit entries stored in the cache.  Used to implement about:cache.
      */
     void visitEntries(in nsICacheVisitor visitor);
 };
