@@ -64,6 +64,8 @@
 /* *             - added speed-modifier to timing routine                   * */
 /* *             0.5.3 - 06/22/2000 - G.Juyn                                * */
 /* *             - added support for PPLT chunk processing                  * */
+/* *             0.5.3 - 06/29/2000 - G.Juyn                                * */
+/* *             - swapped refresh parameters                               * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -105,8 +107,8 @@ mng_retcode display_progressive_refresh (mng_datap  pData,
   if ((pData->iUpdatetop < pData->iUpdatebottom) && (pData->iUpdateleft < pData->iUpdateright))
   {
     if (!pData->fRefresh (((mng_handle)pData),
-                          pData->iUpdatetop,    pData->iUpdateleft,
-                          pData->iUpdatebottom, pData->iUpdateright))
+                          pData->iUpdateleft,  pData->iUpdatetop,
+                          pData->iUpdateright, pData->iUpdatebottom))
       MNG_ERROR (pData, MNG_APPMISCERROR)
 
     pData->iUpdateleft   = 0;          /* reset update-region */
@@ -153,8 +155,8 @@ mng_retcode interframe_delay (mng_datap pData)
   {
     if ((pData->iUpdatetop < pData->iUpdatebottom) && (pData->iUpdateleft < pData->iUpdateright))
       if (!pData->fRefresh (((mng_handle)pData),
-                            pData->iUpdatetop,    pData->iUpdateleft,
-                            pData->iUpdatebottom, pData->iUpdateright))
+                            pData->iUpdateleft,  pData->iUpdatetop,
+                            pData->iUpdateright, pData->iUpdatebottom))
         MNG_ERROR (pData, MNG_APPMISCERROR)
 
     pData->iUpdateleft   = 0;          /* reset update-region */

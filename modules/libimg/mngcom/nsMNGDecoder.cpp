@@ -163,15 +163,15 @@ il_mng_getcanvasline(mng_handle handle, mng_uint32 iLinenr)
 
 static mng_bool
 il_mng_refresh(mng_handle handle,
-	       mng_uint32 top, mng_uint32 left,
-	       mng_uint32 bottom, mng_uint32 right)
+	       mng_uint32 left, mng_uint32 top,
+	       mng_uint32 right, mng_uint32 bottom)
 {
 //  dprintf((stderr, "=== refresh(top=%d left=%d bottom=%d right=%d)\n",
 //           top, left, bottom, right));
 
   EXTRACT_STRUCTS;
 
-  for (int y=top; y<bottom; y++) {
+  for (int y=top; y<=bottom; y++) {
     memcpy(imng_p->rowbuf, 
            imng_p->image+y*CHANNELS*imng_p->width,
            CHANNELS*imng_p->width);
