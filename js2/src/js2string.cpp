@@ -75,7 +75,7 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
 static js2val String_Call(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
 {   
     if (argc > 0)
-        return STRING_TO_JS2VAL(meta->engine->allocStringPtr(meta->toString(argv[0])));
+        return STRING_TO_JS2VAL(meta->toString(argv[0]));
     else
         return STRING_TO_JS2VAL(meta->engine->allocStringPtr(""));
 }

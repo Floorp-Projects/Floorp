@@ -393,6 +393,7 @@ namespace MetaData {
                   INIT_STRINGATOM(private),
                   INIT_STRINGATOM(Function),
                   INIT_STRINGATOM(Object),
+                  INIT_STRINGATOM(object),
                   Empty_StringAtom(&world.identifiers[""]),
                   Dollar_StringAtom(&world.identifiers["$"]),
                   INIT_STRINGATOM(prototype),
@@ -890,6 +891,7 @@ namespace MetaData {
         JS2Object::mark(private_StringAtom);
         JS2Object::mark(Function_StringAtom);
         JS2Object::mark(Object_StringAtom);
+        JS2Object::mark(object_StringAtom);
         JS2Object::mark(Empty_StringAtom);
         JS2Object::mark(Dollar_StringAtom);
         JS2Object::mark(prototype_StringAtom);
@@ -954,9 +956,9 @@ namespace MetaData {
                 nameList = new const String *[dMap->size()];
                 length = 0;
                 for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
-                    nameList[length++] = &i->first;
+                    if (i->second.flags & DynamicPropertyValue::ENUMERATE)
+                        nameList[length++] = &i->first;
                 }
-                ASSERT(length == dMap->size());
                 it = 0;
                 return (length != 0);
             }

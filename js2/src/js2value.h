@@ -63,7 +63,7 @@
                                             that a variable has to have it's initializer run */
 #define JS2VAL_IS_FUTURE(v)      (v == JS2VAL_FUTUREVALUE)
 
-#define JS2VAL_IS_SPECIALREF(v)     ( (v & ~0xF0) == 0 )
+#define JS2VAL_IS_SPECIALREF(v)     (v &&  ((v | 0xF0) == 0xF0))
 
 /* Type tag bitfield length and derived macros. */
 #define JS2VAL_TAGBITS           4

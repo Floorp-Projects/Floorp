@@ -87,7 +87,7 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 length)
             }
         }
 */
-        const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(result));
+        const DynamicPropertyMap::value_type e(*meta->engine->length_StringAtom, DynamicPropertyValue(result, DynamicPropertyValue::PERMANENT));
         checked_cast<PrototypeInstance *>(obj)->dynamicProperties.insert(e);
     }
     else {
@@ -300,8 +300,10 @@ static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * 
     JS2Object *thisObj = JS2VAL_TO_OBJECT(thisValue);
     uint32 length = getLength(meta, thisObj);
 
-    Multiname mn1(NULL, meta->publicNamespace);
-    Multiname mn2(NULL, meta->publicNamespace);
+    Multiname *mn1 = new Multiname(NULL, meta->publicNamespace);
+    Multiname *mn2 = new Multiname(NULL, meta->publicNamespace);
+    JS2Object::RootIterator ri1 = JS2Object::addRoot(&mn1);
+    JS2Object::RootIterator ri2 = JS2Object::addRoot(&mn2);
     LookupKind lookup(false, JS2VAL_NULL);
 
     uint32 halfway = length / 2;
@@ -310,35 +312,37 @@ static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * 
         bool deleteResult;
         js2val result1 = JS2VAL_UNDEFINED;
         js2val result2 = JS2VAL_UNDEFINED;
-        mn1.name = meta->engine->numberToString(k);
-        mn2.name = meta->engine->numberToString(length - k - 1);
+        mn1->name = meta->engine->numberToString(k);
+        mn2->name = meta->engine->numberToString(length - k - 1);
 
-        if (meta->hasOwnProperty(thisObj, mn1.name)) {
-            if (meta->hasOwnProperty(thisObj, mn2.name)) {
-                meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &result1);
-                meta->readDynamicProperty(thisObj, &mn2, &lookup, RunPhase, &result2);
-                meta->writeDynamicProperty(thisObj, &mn1, true, result2, RunPhase);
-                meta->writeDynamicProperty(thisObj, &mn2, true, result1, RunPhase);
+        if (meta->hasOwnProperty(thisObj, mn1->name)) {
+            if (meta->hasOwnProperty(thisObj, mn2->name)) {
+                meta->readDynamicProperty(thisObj, mn1, &lookup, RunPhase, &result1);
+                meta->readDynamicProperty(thisObj, mn2, &lookup, RunPhase, &result2);
+                meta->writeDynamicProperty(thisObj, mn1, true, result2, RunPhase);
+                meta->writeDynamicProperty(thisObj, mn2, true, result1, RunPhase);
             }
             else {
-                meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &result1);
-                meta->writeDynamicProperty(thisObj, &mn2, true, result1, RunPhase);
-                meta->deleteProperty(thisValue, &mn1, &lookup, RunPhase, &deleteResult);
+                meta->readDynamicProperty(thisObj, mn1, &lookup, RunPhase, &result1);
+                meta->writeDynamicProperty(thisObj, mn2, true, result1, RunPhase);
+                meta->deleteProperty(thisValue, mn1, &lookup, RunPhase, &deleteResult);
             }
         }
         else {
-            if (meta->hasOwnProperty(thisObj, mn2.name)) {
-                meta->readDynamicProperty(thisObj, &mn2, &lookup, RunPhase, &result2);
-                meta->writeDynamicProperty(thisObj, &mn1, true, result2, RunPhase);
-                meta->deleteProperty(thisValue, &mn2, &lookup, RunPhase, &deleteResult);
+            if (meta->hasOwnProperty(thisObj, mn2->name)) {
+                meta->readDynamicProperty(thisObj, mn2, &lookup, RunPhase, &result2);
+                meta->writeDynamicProperty(thisObj, mn1, true, result2, RunPhase);
+                meta->deleteProperty(thisValue, mn2, &lookup, RunPhase, &deleteResult);
             }
             else {
-                meta->deleteProperty(thisValue, &mn1, &lookup, RunPhase, &deleteResult);
-                meta->deleteProperty(thisValue, &mn2, &lookup, RunPhase, &deleteResult);
+                meta->deleteProperty(thisValue, mn1, &lookup, RunPhase, &deleteResult);
+                meta->deleteProperty(thisValue, mn2, &lookup, RunPhase, &deleteResult);
             }
         }
     }
-
+    
+    JS2Object::removeRoot(ri1);
+    JS2Object::removeRoot(ri2);
     return thisValue;
 }
 

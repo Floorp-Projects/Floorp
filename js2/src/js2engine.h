@@ -248,6 +248,7 @@ public:
     const String *private_StringAtom;
     const String *Function_StringAtom;
     const String *Object_StringAtom;
+    const String *object_StringAtom;
     const String *Empty_StringAtom;
     const String *Dollar_StringAtom;
     const String *prototype_StringAtom;

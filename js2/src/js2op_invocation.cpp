@@ -337,7 +337,7 @@
             else {
                 ASSERT(JS2VAL_IS_OBJECT(a));
                 if (JS2VAL_IS_NULL(a))
-                    a = STRING_TO_JS2VAL(Object_StringAtom);
+                    a = STRING_TO_JS2VAL(object_StringAtom);
                 else {
                     JS2Object *obj = JS2VAL_TO_OBJECT(a);
                     switch (obj->kind) {
@@ -355,11 +355,11 @@
                         if (checked_cast<PrototypeInstance *>(obj)->type == meta->functionClass)
                             a = STRING_TO_JS2VAL(Function_StringAtom);
                         else
-                            a = STRING_TO_JS2VAL(Object_StringAtom);
+                            a = STRING_TO_JS2VAL(object_StringAtom);
                         break;
                     case PackageKind:
                     case GlobalObjectKind:
-                        a = STRING_TO_JS2VAL(Object_StringAtom);
+                        a = STRING_TO_JS2VAL(object_StringAtom);
                         break;
                     case SimpleInstanceKind:
                         a = STRING_TO_JS2VAL(checked_cast<SimpleInstance *>(obj)->type->getName());

@@ -2539,6 +2539,7 @@ doUnary:
         for (NamespaceListIterator n = nsList->begin(), end = nsList->end(); (n != end); n++) {
             GCMARKOBJECT(*n)
         }
+        JS2Object::mark(name);
     }
 
 /************************************************************************************
