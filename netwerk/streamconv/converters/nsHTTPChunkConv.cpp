@@ -27,8 +27,7 @@
 #include "nsIChannel.h"
 #include "nsISocketTransport.h"
 #include "nsCOMPtr.h"
-#include "nsIStringStream.h"
-#include "nsIStreamListener.h"
+#include "nsIByteArrayInputStream.h"
 #include "nsIStringStream.h"
 
 #include <ctype.h>
@@ -134,12 +133,14 @@ nsHTTPChunkConv::OnDataAvailable (
 		mChunkBufferLength = mChunkBufferPos;
 
 	    nsIInputStream * convertedStream = nsnull; 
-		nsCString convertedString (mChunkBuffer);
-		nsISupports	* convertedStreamSup = nsnull;
+		nsIByteArrayInputStream	* convertedStreamSup = nsnull;
 
-		rv = NS_NewStringInputStream (&convertedStreamSup, convertedString);
+		rv = NS_NewByteArrayInputStream (&convertedStreamSup, mChunkBuffer, mChunkBufferPos);
 		if (NS_FAILED (rv)) 
 			return rv;
+
+        mChunkBuffer = NULL;
+        mChunkBufferPos = 0;
 
 		rv = convertedStreamSup -> QueryInterface (NS_GET_IID (nsIInputStream), (void**)&convertedStream);
 		NS_RELEASE (convertedStreamSup);
@@ -180,18 +181,19 @@ nsHTTPChunkConv::OnDataAvailable (
 					{
                         if (mChunkBufferLength > 0)
                         {
-						    nsIInputStream * convertedStream = nsnull; 
-						    nsCString convertedString (mChunkBuffer);
-						    nsISupports	* convertedStreamSup = nsnull;
+						    nsIInputStream * convertedStream = nsnull;
+						    nsIByteArrayInputStream * convertedStreamSup = nsnull;
 
-						    rv = NS_NewStringInputStream (&convertedStreamSup, convertedString);
+						    rv = NS_NewByteArrayInputStream (&convertedStreamSup, mChunkBuffer, mChunkBufferLength);
 						    if (NS_FAILED (rv)) 
 							    return rv;
 
-						    rv = convertedStreamSup -> QueryInterface (NS_GET_IID(nsIInputStream), (void**)&convertedStream);
-						    NS_RELEASE (convertedStreamSup);
+                            mChunkBuffer = NULL;
+
+                		    rv = convertedStreamSup -> QueryInterface (NS_GET_IID (nsIInputStream), (void**)&convertedStream);
+		                    NS_RELEASE (convertedStreamSup);
  
-						    if (NS_FAILED (rv)) 
+						    if (NS_FAILED (rv))
 							    return rv;
 
 						    rv = mListener -> OnDataAvailable (aChannel, aContext, convertedStream, aSourceOffset, mChunkBufferLength);
