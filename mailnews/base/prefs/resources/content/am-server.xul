@@ -181,6 +181,9 @@ Contributors:
     <checkbox hidden="true" wsm_persist="true" id="imap.usingSubscription"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.using_subscription"/>
+    <checkbox hidden="true" wsm_persist="true" id="imap.useIdle"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.use_idle"/>
     <label hidden="true" wsm_persist="true" id="imap.maximumConnectionsNumber"/>
     <label hidden="true" wsm_persist="true" id="imap.personalNamespace"/>
     <label hidden="true" wsm_persist="true" id="imap.publicNamespace"/>

@@ -87,6 +87,10 @@
                 label="&dualUseFolders.label;"
                 accesskey="&dualUseFolders.accesskey;"/>
 
+      <checkbox amsa_persist="true" id="useIdle"
+                label="&useIdle.label;"
+                accesskey="&useIdle.accesskey;"/>
+
       <separator class="groove"/>
       <row>
         <hbox align="center">

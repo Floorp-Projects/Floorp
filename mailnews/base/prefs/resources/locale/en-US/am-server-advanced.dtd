@@ -12,6 +12,8 @@
 <!ENTITY usingSubscription.accesskey "w">
 <!ENTITY dualUseFolders.label "Server supports folders that contain sub-folders and messages">
 <!ENTITY dualUseFolders.accesskey "f">
+<!ENTITY useIdle.label "Use IDLE command if the server supports it">
+<!ENTITY useIdle.accesskey "I">
 <!ENTITY maximumConnectionsNumber.label "Maximum number of server connections to cache">
 <!ENTITY maximumConnectionsNumber.accesskey "M">
 <!-- LOCALIZATION NOTE (namespaceDesc.label): DONT_TRANSLATE "IMAP" -->
