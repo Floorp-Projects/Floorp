@@ -178,7 +178,9 @@ private:
                                    nsISupportsArray *accounts);
 
   nsresult Convert4XUri(const char *old_uri, const char *default_folder_name, char **new_uri);
-  
+ 
+  nsresult SetSendLaterUriPref(nsIMsgIncomingServer *server);
+ 
   nsresult getPrefService();
   nsIPref *m_prefs;
 };

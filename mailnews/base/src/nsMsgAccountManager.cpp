@@ -91,8 +91,11 @@ static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 #define PREF_PREMIGRATION_MAIL_DIRECTORY "premigration.mail.directory"
 #define PREF_PREMIGRATION_NEWS_DIRECTORY "premigration.news.directory"
 #define PREF_IMAP_DIRECTORY "mail.imap.root_dir"
+#define PREF_MAIL_DEFAULT_SENDLATER_URI "mail.default_sendlater_uri"
 
-// TODO:  these need to be put into a string bundle
+/* TODO:  these need to be put into a string bundle
+ * see bug #18364
+ */
 #define LOCAL_MAIL_FAKE_HOST_NAME "Local Mail"
 #define LOCAL_MAIL_FAKE_USER_NAME "nobody"
 #define NEW_MAIL_DIR_NAME	"Mail"
@@ -101,6 +104,7 @@ static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 #define DEFAULT_4X_DRAFTS_FOLDER_NAME "Drafts"
 #define DEFAULT_4X_SENT_FOLDER_NAME "Sent"
 #define DEFAULT_4X_TEMPLATES_FOLDER_NAME "Templates"
+#define UNSENT_MESSAGES_FOLDER_NAME "Unsent Messages"
 
 /* we are going to clear these after migration */
 #define PREF_4X_MAIL_IDENTITY_USEREMAIL "mail.identity.useremail"
@@ -1696,7 +1700,10 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
     mailDir->CreateDir();
   }
   
-  return NS_OK;
+  // pass the "Local Mail" server so the send later uri pref 
+  // will be "mailbox://nobody@Local Mail/Unsent Messages"
+  rv = SetSendLaterUriPref(server);
+  return rv;
 }
 
 nsresult
@@ -1802,7 +1809,38 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
     mailDir->CreateDir();
   }
     
-  return NS_OK;
+  // pass the pop server so the send later uri pref 
+  // will be something like "mailbox://sspitzer@tintin/Unsent Messages"
+  rv = SetSendLaterUriPref(server);
+  return rv;
+}
+
+nsresult 
+nsMsgAccountManager::SetSendLaterUriPref(nsIMsgIncomingServer *server)
+{
+	nsresult rv;
+
+	// set "mail.default_sendlater_uri" to something like
+	// mailbox://nobody@Local Mail/Unsent Messages"
+	// mailbox://sspitzer@tintin/Unsent Messages"
+	//
+	// note, the schema is mailbox:/ 
+	// Unsent is an off-line thing, and that needs to be
+	// on the disk, not on an imap server.
+	nsXPIDLCString username;
+	rv = server->GetUsername(getter_Copies(username));
+	if (NS_FAILED(rv)) return rv;
+
+	nsXPIDLCString hostname;
+	rv = server->GetHostName(getter_Copies(hostname));
+	if (NS_FAILED(rv)) return rv;
+
+	char *sendLaterUriStr = nsnull;
+	sendLaterUriStr = PR_smprintf("%s/%s@%s/%s", MAILBOX_SCHEMA, (const char *)username, (const char *)hostname, UNSENT_MESSAGES_FOLDER_NAME);
+	m_prefs->SetCharPref(PREF_MAIL_DEFAULT_SENDLATER_URI, sendLaterUriStr);
+	PR_FREEIF(sendLaterUriStr);
+
+	return NS_OK;
 }
 
 nsresult
