@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include "nsICSSParser.h"
 #include "nsIStyleSheet.h"
+#include "nsIStyleRule.h"
 #include "nsIURL.h"
 #include "nsIInputStream.h"
 #include "nsIUnicharInputStream.h"
@@ -25,74 +26,105 @@
 
 static void Usage(void)
 {
-  printf("usage: TestCSSParser [-v] url\n");
+  printf("usage: TestCSSParser [-v] [-s string | url1 ...]\n");
 }
 
 int main(int argc, char** argv)
 {
-  if (argc < 2 || argc > 3) {
-    Usage();
-    return -1;
-  }
-
   PRBool verbose = PR_FALSE;
-  char* urlName;
-  if (argc == 3) {
-    if (strcmp(argv[1], "-v") == 0) {
-      verbose = PR_TRUE;
-    } else {
-      Usage();
-      return -1;
+  nsString* string = nsnull;
+  int i;
+  for (i = 1; i < argc; i++) {
+    if (argv[i][0] == '-') {
+      if (strcmp(argv[i], "-v") == 0) {
+        verbose = PR_TRUE;
+      }
+      else if (strcmp(argv[i], "-s") == 0) {
+        if ((nsnull != string) || (i == argc - 1)) {
+          Usage();
+          return -1;
+        }
+        string = new nsString(argv[++i]);
+      }
+      else {
+        Usage();
+        return -1;
+      }
     }
-    urlName = argv[2];
-  } else {
-    urlName = argv[1];
+    else
+      break;
   }
 
-  // Create url object
-  nsIURL* url;
-  nsresult rv = NS_NewURL(&url, nsnull, urlName);
-  if (NS_OK != rv) {
-    printf("invalid URL: '%s'\n", urlName);
-    return -1;
-  }
-
-  // Get an input stream from the url
-  PRInt32 ec;
-  nsIInputStream* in = url->Open(&ec);
-  if (nsnull == in) {
-    printf("open of url('%s') failed: error=%x\n", urlName, ec);
-    return -1;
-  }
-
-  // Translate the input using the argument character set id into unicode
-  nsIUnicharInputStream* uin;
-  rv = NS_NewConverterStream(&uin, nsnull, in);
-  if (NS_OK != rv) {
-    printf("can't create converter input stream: %d\n", rv);
-    return -1;
-  }
-
-  // Create parser and set it up to process the input file
+  // Create parser
   nsICSSParser* css;
-  rv = NS_NewCSSParser(&css);
+  nsresult rv = NS_NewCSSParser(&css);
   if (NS_OK != rv) {
     printf("can't create css parser: %d\n", rv);
     return -1;
   }
-  printf("CSS parser supports %x\n", css->GetInfoMask());
+  PRUint32 infoMask;
+  css->GetInfoMask(infoMask);
+  printf("CSS parser supports %x\n", infoMask);
 
-  // Parse the input and produce a style set
-  nsIStyleSheet* sheet = css->Parse(&ec, uin, url);
-  if (verbose) {
-    sheet->List();
+  if (nsnull != string) {
+    nsIStyleRule* rule;
+    rv = css->ParseDeclarations(*string, nsnull, rule);
+    if (NS_OK == rv) {
+      if (verbose && (nsnull != rule)) {
+        rule->List();
+      }
+    }
+    else {
+      printf("ParseDeclarations failed: rv=%d\n", rv);
+    }
+  }
+  else {
+    for (; i < argc; i++) {
+      char* urlName = argv[i];
+      // Create url object
+      nsIURL* url;
+      rv = NS_NewURL(&url, nsnull, urlName);
+      if (NS_OK != rv) {
+        printf("invalid URL: '%s'\n", urlName);
+        return -1;
+      }
+
+      // Get an input stream from the url
+      PRInt32 ec;
+      nsIInputStream* in = url->Open(&ec);
+      if (nsnull == in) {
+        printf("open of url('%s') failed: error=%x\n", urlName, ec);
+        continue;
+      }
+
+      // Translate the input using the argument character set id into unicode
+      nsIUnicharInputStream* uin;
+      rv = NS_NewConverterStream(&uin, nsnull, in);
+      if (NS_OK != rv) {
+        printf("can't create converter input stream: %d\n", rv);
+        return -1;
+      }
+
+      // Parse the input and produce a style set
+      nsIStyleSheet* sheet;
+      rv = css->Parse(uin, url, sheet);
+      if (NS_OK == rv) {
+        if (verbose) {
+          sheet->List();
+        }
+      }
+      else {
+        printf("parse failed: %d\n", rv);
+      }
+
+      url->Release();
+      in->Release();
+      uin->Release();
+      sheet->Release();
+    }
   }
 
-  url->Release();
-  in->Release();
-  uin->Release();
   css->Release();
-  sheet->Release();
 
   return 0;
 }
