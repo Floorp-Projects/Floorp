@@ -40,6 +40,6 @@
 /**
  * XPCOM constructor for nsIOThreadPool
  */
-nsresult net_NewIOThreadPool(nsISupports *outer, REFNSIID iid, void **result);
+NS_CALLBACK(net_NewIOThreadPool)(nsISupports *outer, REFNSIID iid, void **result);
 
 #endif // nsIOThreadPool_h__
