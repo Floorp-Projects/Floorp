@@ -1303,7 +1303,7 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSupressLoggin
     if (!aSupressLogging)
       Log("SendData", nsnull, dataBuffer);
     else
-      Log("SendData", nsnull, "Logging supressed for this command (it probably contained authentication information");
+      Log("SendData", nsnull, "Logging suppressed for this command (it probably contained authentication information)");
     rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
     if (NS_FAILED(rv))
     {
