@@ -30,8 +30,6 @@
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % platformDTD SYSTEM "chrome://communicator/locale/downloadmanager/platformStrings.ent" >
-%platformDTD;
 <!ENTITY % downloadManagerDTD SYSTEM "chrome://communicator/locale/downloadmanager/downloadmanager.ent">
 %downloadManagerDTD;
 <!ENTITY % downloadProgressDTD SYSTEM "chrome://global/locale/nsProgressDialog.dtd" >
@@ -57,6 +55,9 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"/>
 
+  <stringbundle id="dlMgrBundle"
+                src="chrome://communicator/locale/downloadmanager/downloadmanager.properties"/>
+
  <data id="strings.confirmCancel">&confirmCancel;</data>
  <data id="strings.progressMsgNoRate">&progressMsgNoRate;</data>
  <data id="strings.rateMsg">&rateMsg;</data>
@@ -75,22 +76,16 @@
 
     <commandset id="downloadCommands">
       <command id="cmd_properties"
-               label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
                oncommand="goDoCommand('cmd_properties');"/>
       <command id="cmd_pause"
-               label="&cmd.pause.label;" accesskey="&cmd.pause.accesskey;"
                oncommand="goDoCommand('cmd_pause');"/>
       <command id="cmd_cancel"
-               label="&cmd.cancel.label;" accesskey="&cmd.cancel.accesskey;"
                oncommand="goDoCommand('cmd_cancel');"/>
       <command id="cmd_remove"
-               label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
                oncommand="goDoCommand('cmd_remove');"/>
       <command id="cmd_openfile"
-               label="&cmd.openfile.label;" accesskey="&cmd.openfile.accesskey;"
                oncommand="goDoCommand('cmd_openfile');"/>
       <command id="cmd_showinshell"
-               label="&cmd.showinshell.label;" accesskey="&cmd.showinshell.accesskey;"
                oncommand="goDoCommand('cmd_showinshell');"/>
     </commandset>
 
@@ -119,14 +114,19 @@
 
   <toolbox>
     <toolbar id="download-toolbar" class="chromeclass-toolbar" persist="collapsed">
-      <toolbarbutton command="cmd_properties"/>
-      <toolbarbutton command="cmd_pause"/>
+      <toolbarbutton label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
+                     command="cmd_properties"/>
+      <toolbarbutton label="&cmd.pause.label;" accesskey="&cmd.pause.accesskey;"
+                     command="cmd_pause"/>
       <toolbarseparator class="toolbarseparator-standard"/>
-      <toolbarbutton command="cmd_cancel"/>
-      <toolbarbutton command="cmd_remove"/>
+      <toolbarbutton label="&cmd.cancel.label;" accesskey="&cmd.cancel.accesskey;"
+                     command="cmd_cancel"/>
+      <toolbarbutton label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
+                     command="cmd_remove"/>
       <toolbarseparator class="toolbarseparator-standard"/>
-      <toolbarbutton command="cmd_openfile"/>
-      <toolbarbutton command="cmd_showinshell"/>
+      <toolbarbutton label="&cmd.openfile.label;" accesskey="&cmd.openfile.accesskey;"
+                     command="cmd_openfile"/>
+      <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
     </toolbar>
   </toolbox>
 
@@ -195,7 +195,8 @@
               <treecell>
                 <downloadstatus state="rdf:http://home.netscape.com/NC-rdf#DownloadState"
                                 value="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"
-                                statustext="rdf:http://home.netscape.com/NC-rdf#StatusText"/>
+                                statustext="rdf:http://home.netscape.com/NC-rdf#StatusText"
+                                mode="normal"/>
               </treecell>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#ProgressPercent"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#TimeRemaining"/>
@@ -263,7 +264,7 @@
   </tree>
 
   <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="statusbar-text" flex="1"/>
+    <statusbarpanel id="statusbar-text" label="" flex="1"/>
   </statusbar>
 
 </window>

@@ -6,7 +6,7 @@
 
   <binding id="status-progress">
     <content>
-      <xul:progressmeter class="tree-progressmeter" inherits="value" mode="normal"/>
+      <xul:progressmeter class="tree-progressmeter" inherits="value,mode"/>
     </content>
   </binding>
   
