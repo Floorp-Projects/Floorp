@@ -30,7 +30,9 @@
 #
 # Contributor(s):
 #  Robert Ginda <rginda@netscape.com>, Initial development.
+#  Pavel Hlavnicka <pavel@gingerall.cz>, seperate tocs, param linking.
 #
+
 use strict;
 use XML::Parser;
 
@@ -114,8 +116,10 @@ my $JS_COMPLETE = ("\n<script>\n" .
                    "    window.open ('complete-toc.html#' + group, " .
                    "'toc_container');\n" .
                    "  else {\n" .
-                   "    f.document.location.href = 'complete-toc.html';\n" .
-                   "    f.document.location.hash = group;\n" .
+                   "    if (f.location.href.search('abc') != -1)\n" .
+                   "        f.location.href = 'complete-toc.html#' + group;\n" .
+                   "    else\n" .
+                   "        f.location.hash = group;\n" .
                    "  }\n" .
                    "}\n" .
                    "</script>\n");
@@ -130,8 +134,10 @@ my $JS_SPARSE = ("\n<script>\n" .
                  "    window.open ('sparse-toc.html#' + group, " .
                  "'toc_container');\n" .
                  "  else {\n" .
-                 "    f.document.location.href = 'sparse-toc.html';\n" .
-                 "    f.document.location.hash = group;\n" .
+                 "    if (f.location.href.search('abc') != -1)\n" .
+                 "        f.location.href = 'sparse-toc.html#' + group;\n" .
+                 "    else\n" .
+                 "        f.location.hash = group;\n" .
                  "  }\n" .
                  "}\n" .
                  "</script>\n");
@@ -140,8 +146,20 @@ open (COMPLETE, ">" . $outdir . "/complete.html") ||
   die ("Couldn't open $outdir/complete.html.\n");
 open (COMPLETE_TOC, ">" . $outdir . "/complete-toc.html") ||
   die ("Couldn't open $outdir/complete-toc.html.\n");
+#_PH_
+open (COMPLETE_TOC_ABC, ">" . $outdir . "/complete-toc-abc.html") ||
+  die ("Couldn't open $outdir/complete-toc-abc.html.\n");
+open (COMPLETE_TOC_GRP, ">" . $outdir . "/complete-toc-grp.html") ||
+  die ("Couldn't open $outdir/complete-toc-grp.html.\n");
+
 open (SPARSE_TOC, ">" . $outdir . "/sparse-toc.html") ||
   die ("Couldn't open $outdir/sparse-toc.html.\n");
+#_PH_
+open (SPARSE_TOC_ABC, ">" . $outdir . "/sparse-toc-abc.html") ||
+  die ("Couldn't open $outdir/sparse-toc-abc.html.\n");
+open (SPARSE_TOC_GRP, ">" . $outdir . "/sparse-toc-grp.html") ||
+  die ("Couldn't open $outdir/sparse-toc-grp.html.\n");
+
 
 &main();
 
@@ -172,10 +190,17 @@ sub main {
         $html = &get_entry_html();
         &add_entry_complete($html);
         &add_entry_sparse($html);
-        &add_toc_complete();
-        &add_toc_sparse();
+        &add_toc_complete(*COMPLETE_TOC);
+        &add_toc_complete(*COMPLETE_TOC_ABC);
+        &add_toc_sparse(*SPARSE_TOC); #_PH_
+        &add_toc_sparse(*SPARSE_TOC_ABC); #_PH_
         #&debug_write_entry();
     }
+
+    &end_abc(*SPARSE_TOC);
+    &end_abc(*SPARSE_TOC_ABC);
+    &end_abc(*COMPLETE_TOC);
+    &end_abc(*COMPLETE_TOC_ABC);
 
     &write_toc_groups();
 
@@ -202,7 +227,7 @@ sub p1_Start {
 
     my $value = $pending_attrs{"value"};
     my $id = $pending_attrs{"id"};
-    
+
     if ($tagname eq $TAGS[$ENTRY]) {
         if ($id) {
             $c = $entries{$id} = {$TAGS[$ENTRY] => $id};
@@ -284,7 +309,7 @@ sub StartTag {
     $_ =~ /<([^\s>]*)/;
     my $lasttagname = $tagname;
     $tagname = $1;
-    
+
     push (@tag_stack, $lasttagname);
     push (@text_stack, $pending_text);
     my $s = $#attr_stack + 1;
@@ -292,20 +317,20 @@ sub StartTag {
     for (keys (%pending_attrs)) {
         $attr_stack[$s]{$_} = $pending_attrs{$_};
     }
-    
+
     $pending_text = "";
     %pending_attrs = %_;
-    
+
     if (!grep(/^$tagname$/, @TAGS)) {
         $expat->xpcroak ("Unknown tag '$tagname'");
     }
-    
+
     #    print ("opening: ");
     #    &debug_dump_c();
-    
+
     my $value = $pending_attrs{"value"};
     my $id = $pending_attrs{"id"};
-    
+
     if ($tagname eq $TAGS[$API]) {
         if ($inited) {
             $expat->xpcroak ("Only one '$tagname' tag allowed");
@@ -451,17 +476,17 @@ sub EndTag {
         # combine with previous pendingtext
         $pending_text = pop(@text_stack) . $pending_text;
     } elsif ($iscontainer) {
-        # not a formatting tag, store the accumulated pendingtext in the 
+        # not a formatting tag, store the accumulated pendingtext in the
         # right place, after some whitespace trimming
         my @lines = split ("\n", $pending_text);
         my $iscode = grep (/^$tagname$/, @CODE_TAGS);
         my $i;
         my $line;
         my $result_text = "";
-        
+
         for $i (0 ... $#lines) {
             $line = $lines[$i];
-            if ((($i != 0) && ($i != $#lines)) || ($line =~ /[\S\N]/)) {
+            if ((($i != 0) && ($i != $#lines)) || ($line =~ /[\S\n]/)) {
                 if ($iscode) {
                     $line = &add_leading_nbsp($line);
                 } else {
@@ -527,6 +552,31 @@ sub Text {
 sub EndDocument {
 }
 
+sub get_type_links {
+    my @types = split /\s*,\s*/, shift;
+    foreach my $type (@types) {
+	$type =~ m|(&\s*)*(\S+)(\s*\*)*|;
+	my ($pre, $realtype, $post) = ($1, $2, $3);
+	if (exists $entries{$realtype}) {
+	    if (!grep (/^$realtype$/, @{$c->{$TAGS[$SEE_ALSO]}})) {
+		push (@{$c->{$TAGS[$SEE_ALSO]}}, $realtype);
+	    }
+	    $realtype = &get_link($realtype) ;
+	    $type = "$pre$realtype$post";
+	}
+    }
+    return join ", ", @types;
+}
+
+sub get_param_links {
+    my $html = shift;
+    if ($html =~ m|class='(param-type'><code>)(.*?)(</code>)|g) {
+	my $new_param = &get_type_links($2);
+	$html =~ s|class='(param-type'><code>)(.*?)(</code>)|$1$new_param$3|;
+    }
+    return $html;
+}
+
 sub get_entry_html {
     # get html for the current entry ($c)
     my $html = "";
@@ -576,6 +626,8 @@ sub get_entry_html {
                     $html .= "<tr class='param-row-odd'>";
                 }
                 $param = $_;
+		#_PH_ 
+		$param = &get_param_links($param);
                 $even *= -1;
                 $html .= $param . "</tr>\n";
                 $param = shift (@{$c->{$TAGS[$PARAM]}});
@@ -613,7 +665,7 @@ sub get_entry_html {
         $html .= $sa;
         $html .= "</td></tr>\n";
     }
-    
+
     $html .= "</table></center><br>\n";
     return $html;
 
@@ -650,31 +702,30 @@ sub get_seealso {
         s/$URLVAR_ENTRY/$c->{$TAGS[$ENTRY]}/g;
         push (@links, "<a href='$_' target='other_window'>$k</a>");
     }
-    
+
     if ($#links != -1) {
         $html .= "<tr class='seealso-externals'><td>Documents</td>\n";
         $html .= "<td>[ " . join (" | ", sort(@links)) . " ]</td></tr>\n";
     }
-    
+
     @links = ();
-    
+
     for $k (@{$c->{$TAGS[$SEE_ALSO]}}) {
         push (@links, &get_link($k));
     }
-    
+
     if ($#links != -1) {
         $html .= "<tr class='seealso-internals'><td>Entries</td>\n";
         $html .= "<td>[ " . join (" | ", sort(@links)) . " ]</td></tr>\n";
     }
-    
+
     if ($html) {
         $html = "<table class='seealso-table'>\n" . $html . "\n</table>\n";
     }
-    
-    return $html;
-    
-}   
 
+    return $html;
+
+}
 
 sub add_entry_complete {
     # add html for the current entry to the "complete" page
@@ -708,18 +759,24 @@ sub add_entry_sparse {
     close SPARSE;
 }
 
+sub end_abc {
+    local (*G) = shift;
+    print G "</table></center></td></tr>\n";
+}
+
 sub write_toc_groups {
     # Write the groups section of the toc to both the sparse and complete
     # toc files
     my @groups = sort(keys (%groups));
     my $g;
     my $even = 1;
-    my $head = "</table></center></td></tr>\n" .
-      "<tr class='toc-title'><th><br><h3>Grouped Listing</h3></th>" .
+    my $head = "<tr class='toc-title'><th><br><h3>Grouped Listing</h3></th>" .
         "</tr>\n";
 
     print COMPLETE_TOC $head;
-    print SPARSE_TOC $head;
+    print COMPLETE_TOC_GRP $head;
+    print SPARSE_TOC $head; #_PH_
+    print SPARSE_TOC_GRP $head; #_PH_
 
     for $g (@groups) {
         $head = "<tr><td class='";
@@ -732,29 +789,39 @@ sub write_toc_groups {
           "width='100%'>\n";
         $head .= "<tr><th><a name='GROUP_$g'>$g</a></th><td>&nbsp;</td></tr>\n";
         print COMPLETE_TOC $head;
-        print SPARSE_TOC $head;
+        print COMPLETE_TOC_GRP $head;
+        print SPARSE_TOC $head; #_PH_
+        print SPARSE_TOC_GRP $head; #_PH_
         my $e;
         for $e (sort(@{$groups{$g}})) {
             $c = $entries{$e};
-            &add_toc_complete();
-            &add_toc_sparse();
-        }            
+            &add_toc_complete(*COMPLETE_TOC);
+            &add_toc_complete(*COMPLETE_TOC_GRP);
+            &add_toc_sparse(*SPARSE_TOC);
+            &add_toc_sparse(*SPARSE_TOC_GRP);
+        }
         $head = "</table></center><br></td></tr>\n";
         print COMPLETE_TOC $head;
-        print SPARSE_TOC $head;
+        print COMPLETE_TOC_GRP $head;
+        print SPARSE_TOC $head; #_PH_
+        print SPARSE_TOC_GRP $head; #_PH_
         $even *= -1;
     }
 
 }
 
 sub add_toc_complete {
+    local (*G) = shift; #_PH_
     # add the current entry ($c) to the complete toc
-    print COMPLETE_TOC &add_toc(0);
+    #print COMPLETE_TOC &add_toc(0);
+    print G &add_toc(0);
 }
 
 sub add_toc_sparse {
+    local (*G) = shift; #_PH_
     # add the current entry ($c) to the sparse toc
-    print SPARSE_TOC &add_toc(1);
+    #print SPARSE_TOC &add_toc(1);
+    print G &add_toc(1);
 }
 
 sub add_toc {
@@ -803,6 +870,32 @@ sub get_toc_link {
     }
 }
 
+sub get_menu {
+    my $type = shift;
+    my %menu = 
+      ('full-sparse' => [['alphabetical listing' => 'sparse-toc-abc.html'],
+			 ['grouped listing' => 'sparse-toc-grp.html']],
+       'abc-sparse' => [['full listing' => 'sparse-toc.html'],
+			['grouped listing' => 'sparse-toc-grp.html']],
+       'grp-sparse' => [['full listing' => 'sparse-toc.html'],
+			['alphabetical listing' => 'sparse-toc-abc.html']],
+       'full-compl' => [['alphabetical listing' => 'complete-toc-abc.html'],
+			 ['grouped listing' => 'complete-toc-grp.html']],
+       'abc-compl' => [['full listing' => 'complete-toc.html'],
+			['grouped listing' => 'complete-toc-grp.html']],
+       'grp-compl' => [['full listing' => 'complete-toc.html'],
+			['alphabetical listing' => 'complete-toc-abc.html']],
+      );
+    my $menu = $menu{$type};
+    my $ret;
+
+    foreach my $item (@$menu) {
+	$ret .= "<a href='" . $$item[1] . "'>" . $$item[0] . "</a><br>\n";
+    }
+
+    return $ret;
+}
+
 sub init_files {
     # initialize the complete content and toc files.
     my $headstr = "<html><head><link rel=StyleSheet href='api-content.css' " .
@@ -812,22 +905,59 @@ sub init_files {
 
     print COMPLETE $headstr;
 
-    my $tocstr = 
+    my $tocstr1 = 
       ("<html><head><link rel=StyleSheet href='api-toc.css' " .
        "TYPE='text/css' MEDIA='screen'>" .
        "<title>$apiid table of contents</title>" .
        "</head>\n<body bgcolor='white'>\n$WARNING" .
-       "<h1 class='title'>$apiid Reference</h1><h4>Table of Contents</h4>\n" .
-       "<center><table class='toc-table' border='1' cellpadding='0' " .
-       "cellspacing='0' width='100%'>\n" .
-       "<tr class='toc-title'><th><br><h3>Alphabetical Listing</h3></th>" .
+       "<h1 class='title'>$apiid Reference</h1><h4>Table of Contents</h4>\n");
+    my $tocstr2 = 
+      ("<center><table class='toc-table' border='1' cellpadding='0' " .
+       "cellspacing='0' width='100%'>\n");
+    my $abcstr = 
+      ("<tr class='toc-title'><th><br><h3>Alphabetical Listing</h3></th>" .
        "</tr>\n<tr><td>\n" .
        "<center><table class='toc-abc' border='0' cellspacing='0' " .
        "cellpadding='0' width='100%'>\n");
 
-    print COMPLETE_TOC $tocstr;
+    print COMPLETE_TOC $tocstr1;
+    print COMPLETE_TOC &get_menu("full-compl");
+    print COMPLETE_TOC $tocstr2;
+    print COMPLETE_TOC $abcstr;
 
-    print SPARSE_TOC $tocstr;
+    print COMPLETE_TOC_ABC $tocstr1;
+    print COMPLETE_TOC_ABC &get_menu("abc-compl");
+    print COMPLETE_TOC_ABC $tocstr2;
+    print COMPLETE_TOC_ABC $abcstr;
+
+    print COMPLETE_TOC_GRP $tocstr1;
+    print COMPLETE_TOC_GRP &get_menu("grp-compl");
+    print COMPLETE_TOC_GRP $tocstr2;
+
+    print SPARSE_TOC $tocstr1;
+    print SPARSE_TOC &get_menu("full-sparse");
+    print SPARSE_TOC $tocstr2;
+    print SPARSE_TOC $abcstr;
+
+    print SPARSE_TOC_ABC $tocstr1; #_PH_
+    print SPARSE_TOC_ABC &get_menu("abc-sparse");
+    print SPARSE_TOC_ABC $tocstr2; #_PH_
+    print SPARSE_TOC_ABC $abcstr; #_PH_
+
+    print SPARSE_TOC_GRP $tocstr1; #_PH_
+    print SPARSE_TOC_GRP &get_menu("grp-sparse");
+    print SPARSE_TOC_GRP $tocstr2; #_PH_
+
+}
+
+sub close_toc {
+    local (*G) = shift;
+    my $menu = shift;
+
+    print G "</table></center>" . $user_foot;
+    print G &get_menu($menu) . "<p>\n";
+    print G $footstr;
+    close G;
 
 }
 
@@ -838,13 +968,12 @@ sub close_files {
     print COMPLETE $footstr;
     close COMPLETE;
 
-    print COMPLETE_TOC "</table></center>" . $user_foot;
-    print COMPLETE_TOC $footstr;
-    close COMPLETE_TOC;
-
-    print SPARSE_TOC "</table></center>" . $user_foot;
-    print SPARSE_TOC $footstr;
-    close SPARSE_TOC;
+    &close_toc(*COMPLETE_TOC, "full-compl");
+    &close_toc(*COMPLETE_TOC_ABC, "abc-compl");
+    &close_toc(*COMPLETE_TOC_GRP, "grp-compl");
+    &close_toc(*SPARSE_TOC, "full-sparse");
+    &close_toc(*SPARSE_TOC_ABC, "abc-sparse");
+    &close_toc(*SPARSE_TOC_GRP, "grp-sparse");
 
 }
 
@@ -893,7 +1022,7 @@ sub debug_write_entry {
         } else {
             $str = $c->{$i};
         }
-          
+
         print ("$i : $str\n");
     }
     print ("===\n");
