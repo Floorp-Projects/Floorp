@@ -51,7 +51,6 @@
 #include "nsIFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
-#include "nsIStringService.h"
 #endif
 
 nsGenericFactory::nsGenericFactory(const nsModuleComponentInfo *info)
@@ -297,29 +296,10 @@ nsGenericModule::Initialize(nsIComponentManager *compMgr)
     rv = dirService->Get(NS_XPCOM_LIBRARY_FILE, NS_GET_IID(nsIFile), getter_AddRefs(xpcomDll));
     if (NS_FAILED(rv))
         return rv;
-    
-    nsCOMPtr<nsIStringService> stringService;
-    rv = servMgr->GetServiceByContractID("@mozilla.org/stringService;1", 
-                                         NS_GET_IID(nsIStringService), 
-                                         getter_AddRefs(stringService));
-    if (NS_FAILED(rv))
-        return rv;
 
-    nsACString *path;
-    stringService->CreateACString("", 0, &path);
-
-    rv = xpcomDll->GetNativePath(*path);
-    if (NS_FAILED(rv))
-        return rv;
-
-    char* cPath;
-    rv = stringService->GetString(*path, &cPath);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = XPCOMGlueStartup(cPath);
-
-    nsMemory::Free(cPath);
+    nsCAutoString path;
+    xpcomDll->GetNativePath(path);
+    rv = XPCOMGlueStartup(path.get());
 
     if (NS_FAILED(rv))
         return rv;
