@@ -135,7 +135,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
                                               const nsHTMLReflowState& aReflowState,
                                               nscoord                  aMaxWidthIn)
 {
-  //mTableFrame->Dump(PR_TRUE, PR_TRUE);
+  //mTableFrame->Dump(PR_TRUE, PR_FALSE);
   ContinuingFrameCheck();
   if (!aTableStyle) {
     NS_ASSERTION(aTableStyle, "bad style arg");
@@ -548,18 +548,19 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
         cellWidths[FIX] = PR_MAX(cellWidths[FIX], cellWidths[MIN_CON]);
       }
 
-      // set MIN_ADJ, DES_ADJ
+      // set MIN_ADJ, DES_ADJ, FIX_ADJ
       nscoord spanCellSpacing = 0;
       for (widthX = 0; widthX < NUM_MAJOR_WIDTHS; widthX++) {
         // skip des if there is a fix
         if ((DES_CON == widthX) && (cellWidths[FIX] > 0)) 
-          continue;
+          continue; // FIX will take into account DES_CON
         nscoord spanTotal = 0;
         nscoord divisor   = 0;
         PRInt32 spanX;
         for (spanX = 0; spanX < colSpan; spanX++) {
           nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-          nscoord colWidth = colFrame->GetWidth(widthX);
+          nscoord colWidth = PR_MAX(colFrame->GetWidth(widthX), 
+                                    colFrame->GetWidth(widthX + NUM_MAJOR_WIDTHS));
           // need to get a contribution for every cell 
           colWidth = PR_MAX(colWidth, colFrame->GetMinWidth());
           spanTotal += colWidth;
@@ -587,7 +588,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
         if ((cellWidth > 0) && !((widthX == MIN_CON) && (cellWidth <= spanTotal))) {
           for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
             nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
-            nscoord colWidth = colFrame->GetWidth(widthX);
+            nscoord colWidth = PR_MAX(colFrame->GetWidth(widthX), 
+                                      colFrame->GetWidth(widthX + NUM_MAJOR_WIDTHS));
             nscoord minWidth = colFrame->GetMinWidth();
             // accumulate numerator similarly to divisor
             colWidth = PR_MAX(colWidth, colFrame->GetMinWidth());
@@ -612,14 +614,16 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
               newColAdjWidth = PR_MAX(newColAdjWidth, minWidth);
               if (FIX != widthX)
                 colFrame->SetWidth(widthX + NUM_MAJOR_WIDTHS, newColAdjWidth);
-              // the following ensures that a spanned cell will reach its full desired width
-              // in an auto table, since allocations are done on fixed cols before auto cols  
+              // The next two conditions allows BalanceColumnWidths to assume that 
+              // fixed allocations are a stopping point.
+              // if new DES_CON exceeds FIX, set FIX_ADJ to DES_CON. 
               if (DES_CON == widthX) {
                 nscoord fixWidth = colFrame->GetFixWidth();
                 if ((fixWidth > 0) && (newColAdjWidth > fixWidth) && (newColAdjWidth > 0)) {
                   colFrame->SetWidth(FIX_ADJ, newColAdjWidth);
                 }
               }
+              // if new FIX_ADJ exceeds desired, set DES_ADJ to FIX_ADJ. 
               else if (FIX == widthX) {
                 nscoord desWidth = colFrame->GetDesWidth();
                 if ((newColAdjWidth > desWidth) && (newColAdjWidth > 0)) {
@@ -632,6 +636,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
       }
     }
   }
+  // if DES_ADJ exceeds FIX, pretend that FIX is not set. This allows 
+  // BalanceColumnWidths to assume that fixed allocations are a stopping point.
   for (colX = 0; colX < mNumCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     nscoord desAdjWidth = colFrame->GetWidth(DES_ADJ);
