@@ -453,7 +453,7 @@ BookmarksService::MoveBookmarkToFolder(nsIDOMElement* aBookmark, nsIDOMElement* 
 void
 BookmarksService::DeleteBookmark(nsIDOMElement* aBookmark)
 {
-  if (!aBookmark) return;
+  if (!aBookmark || aBookmark == gToolbarRoot) return;
   
   nsCOMPtr<nsIDOMNode> oldParent;
   aBookmark->GetParentNode(getter_AddRefs(oldParent));
