@@ -42,7 +42,7 @@ var docWasModified = false;  // Check if clean document, if clean then unload wh
 var contentWindow = 0;
 var sourceContentWindow = 0;
 
-var prefs;
+var gPrefs;
 // These must be kept in synch with the XUL <options> lists
 var gParagraphTagNames = new Array("","P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
 var gFontFaceNames = new Array("","tt","Arial, Helvetica","Times","Courier");
@@ -142,22 +142,9 @@ function EditorStartup(editorType, editorElement)
   // add a listener to be called when document is really done loading
   editorShell.RegisterDocumentStateListener( DocumentStateListener );
  
-  // Store the prefs object
-  try {
-    prefs = Components.classes['component://netscape/preferences'];
-    if (prefs) prefs = prefs.getService();
-    if (prefs) prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-    if (prefs)
-      return prefs;
-    else
-      dump("failed to get prefs service!\n");
-
-  }
-  catch(ex)
-  {
-	  dump("failed to get prefs service!\n");
-  }
- 
+  // set up our global prefs object
+  GetPrefsService();
+   
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
@@ -1073,18 +1060,6 @@ function EditorSetDefaultPrefs()
   else
     dump("doctype not added");
   
-  // try to get preferences service
-  var prefs = null;
-  try {
-    prefs = Components.classes['component://netscape/preferences'];
-    prefs = prefs.getService();
-    prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-  }
-  catch (ex) {
-    dump("failed to get prefs service!\n");
-    prefs = null;
-  }
-
   // search for head; we'll need this for meta tag additions
   var headelement = 0;
   var headnodelist = domdoc.getElementsByTagName("head");
@@ -1126,7 +1101,7 @@ function EditorSetDefaultPrefs()
     var prefAuthorString = 0;
     try
     {
-      prefAuthorString = prefs.CopyCharPref("editor.author");
+      prefAuthorString = gPrefs.CopyCharPref("editor.author");
     }
     catch (ex) {}
     if ( prefAuthorString && prefAuthorString != 0)
@@ -1148,7 +1123,7 @@ function EditorSetDefaultPrefs()
     var prefCharsetString = 0;
     try
     {
-      prefCharsetString = prefs.CopyCharPref("intl.charset.default");
+      prefCharsetString = gPrefs.CopyCharPref("intl.charset.default");
     }
     catch (ex) {}
     if ( prefCharsetString && prefCharsetString != 0)
@@ -1167,7 +1142,7 @@ function EditorSetDefaultPrefs()
   // color prefs
   var use_custom_colors = false;
   try {
-    use_custom_colors = prefs.GetBoolPref("editor.use_custom_colors");
+    use_custom_colors = gPrefs.GetBoolPref("editor.use_custom_colors");
     dump("pref use_custom_colors:" + use_custom_colors + "\n");
   }
   catch (ex) {
@@ -1191,11 +1166,11 @@ function EditorSetDefaultPrefs()
     // try to get the default color values.  ignore them if we don't have them.
     var text_color = link_color = active_link_color = followed_link_color = background_color = "";
 
-    try { text_color = prefs.CopyCharPref("editor.text_color"); } catch (e) {}
-    try { link_color = prefs.CopyCharPref("editor.link_color"); } catch (e) {}
-    try { active_link_color = prefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
-    try { followed_link_color = prefs.CopyCharPref("editor.followed_link_color"); } catch (e) {}
-    try { background_color = prefs.CopyCharPref("editor.background_color"); } catch(e) {}
+    try { text_color = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
+    try { link_color = gPrefs.CopyCharPref("editor.link_color"); } catch (e) {}
+    try { active_link_color = gPrefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
+    try { followed_link_color = gPrefs.CopyCharPref("editor.followed_link_color"); } catch (e) {}
+    try { background_color = gPrefs.CopyCharPref("editor.background_color"); } catch(e) {}
 
     // add the color attributes to the body tag.
     // FIXME:  use the check boxes for each color somehow..
@@ -1591,3 +1566,23 @@ function HideInapplicableUIElements()
 
 }
 
+
+//-----------------------------------------------------------------------------------
+function GetPrefsService()
+{
+  // Store the prefs object
+  try {
+    var prefsService = Components.classes['component://netscape/preferences'];
+    if (prefsService) 
+      prefsService = prefsService.getService();
+    if (prefsService)
+      gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);    
+
+    if (!gPrefs)
+      dump("failed to get prefs service!\n");
+  }
+  catch(ex)
+  {
+	  dump("failed to get prefs service!\n");
+  }
+}

@@ -1136,35 +1136,38 @@ nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
 NS_IMETHODIMP    
 nsEditorShell::LoadUrl(const PRUnichar *url)
 {
-  if(!mContentAreaDocShell || !mEditor)
+  if(!mContentAreaDocShell)
     return NS_ERROR_NOT_INITIALIZED;
 
-  // Always unload all the override style sheets before loading
-  //  a url in case we're replacing an existing document that used them
-  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
-  if (!styleSheets) return NS_NOINTERFACE;
+  if (mEditor)
+  {
+    // Always unload all the override style sheets before loading
+    //  a url in case we're replacing an existing document that used them
+    nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
+    if (!styleSheets) return NS_NOINTERFACE;
 
-  if (mBaseStyleSheet)
-  {
-    styleSheets->RemoveOverrideStyleSheet(mBaseStyleSheet);
-    mBaseStyleSheet = nsnull;
+    if (mBaseStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mBaseStyleSheet);
+      mBaseStyleSheet = nsnull;
+    }
+    if (mEditModeStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
+      mEditModeStyleSheet = nsnull;
+    }
+    if (mAllTagsModeStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
+      mAllTagsModeStyleSheet = nsnull;
+    }
+    if (mParagraphMarksStyleSheet)
+    {
+      styleSheets->RemoveOverrideStyleSheet(mParagraphMarksStyleSheet);
+      mParagraphMarksStyleSheet = nsnull;  
+    }
   }
-  if (mEditModeStyleSheet)
-  {
-    styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
-    mEditModeStyleSheet = nsnull;
-  }
-  if (mAllTagsModeStyleSheet)
-  {
-    styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
-    mAllTagsModeStyleSheet = nsnull;
-  }
-  if (mParagraphMarksStyleSheet)
-  {
-    styleSheets->RemoveOverrideStyleSheet(mParagraphMarksStyleSheet);
-    mParagraphMarksStyleSheet = nsnull;  
-  }
-
+  
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
   NS_ENSURE_SUCCESS(webNav->LoadURI(url), NS_ERROR_FAILURE);
 
