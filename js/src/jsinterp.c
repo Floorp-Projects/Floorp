@@ -97,11 +97,16 @@ static void
 prop_iterator_finalize(JSContext *cx, JSObject *obj)
 {
     jsval iter_state;
+    jsval iteratee;
 
     /* Protect against stillborn iterators. */
     iter_state = obj->slots[JSSLOT_ITR_STATE];
-    if (iter_state != JSVAL_NULL)
-	OBJ_ENUMERATE(cx, obj, JSENUMERATE_DESTROY, &iter_state, NULL);
+    iteratee = obj->slots[JSSLOT_PARENT];
+    if (iter_state != JSVAL_NULL && !JSVAL_IS_PRIMITIVE(iteratee)) {
+	OBJ_ENUMERATE(cx, JSVAL_TO_OBJECT(iteratee), JSENUMERATE_DESTROY, 
+	              &iter_state, NULL);
+    }
+    js_RemoveRoot(cx, &obj->slots[JSSLOT_PARENT]);
 }
 
 static JSClass prop_iterator_class = {
@@ -1320,6 +1325,8 @@ js_Interpret(JSContext *cx, jsval *result)
 		    ok = JS_FALSE;
 		    goto out;
 		}
+
+		js_AddRoot(cx, &propobj->slots[JSSLOT_PARENT], NULL);
 
 		/*
 		 * Rewrite the iterator so we know to do the next case.
