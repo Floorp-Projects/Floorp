@@ -622,10 +622,22 @@ sort_compare(const void *a, const void *b, void *arg)
 	ok = js_CallFunctionValue(cx,
 				  OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fval)),
 				  fval, 2, argv, &rval);
-	if (ok)
+	if (ok) {
 	    ok = js_ValueToNumber(cx, rval, &cmp);
-	if (!ok)
+            /* Clamp cmp to -1, 0, 1. */
+            if (JSDOUBLE_IS_NaN(cmp)) {
+                /* XXX report some kind of error here?  ECMA talks about
+                 * 'consistent compare functions' that don't return NaN, but is
+                 * silent about what the result should be.  So we currently
+                 * ignore it.
+                 */
+                cmp = 0;
+            } else if (cmp != 0) {
+                cmp = cmp > 0 ? 1 : -1;
+            }
+        } else {
 	    ca->status = ok;
+        }
     }
     return (int)cmp;
 }
