@@ -1368,7 +1368,6 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     widget->SetBackgroundColor(NS_RGB(255, 255, 255));
     PRUint32 size;
     mLocation->SetText("",size);
-    widget->EnableFileDrop(PR_TRUE);
 	 NS_RELEASE(widget);
   }
 
