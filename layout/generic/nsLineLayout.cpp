@@ -1538,9 +1538,16 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       nsHTMLReflowState::CalcLineHeight(mPresContext, parentFrame);
     nscoord contentHeight = parentPFD->mBounds.height -
       parentPFD->mBorderPadding.top - parentPFD->mBorderPadding.bottom;
-    nscoord leading = logicalHeight - contentHeight;
-    psd->mTopLeading = leading / 2;
-    psd->mBottomLeading = leading - psd->mTopLeading;
+    if (logicalHeight > 0) {
+      nscoord leading = logicalHeight - contentHeight;
+      psd->mTopLeading = leading / 2;
+      psd->mBottomLeading = leading - psd->mTopLeading;
+    }
+    else {
+      psd->mTopLeading = 0;
+      psd->mBottomLeading = 0;
+      logicalHeight = contentHeight;
+    }
     psd->mLogicalHeight = logicalHeight;
 
     // The initial values for the min and max Y values are in the spans
