@@ -2026,6 +2026,10 @@ nsXULDocument::CreateFromPrototype(const char* aCommand,
     if (NS_FAILED(rv)) return rv;
 
     {
+        // This scope restricts the lifetime of our reference to the
+        // loadgroup. Specifically, we don't want to have a reference
+        // to the load group on the stack when we call
+        // ResumeWalk().
         nsCOMPtr<nsILoadGroup> loadgroup;
         rv = nsComponentManager::CreateInstance(kLoadGroupCID,
                                                 nsnull,
@@ -2033,15 +2037,23 @@ nsXULDocument::CreateFromPrototype(const char* aCommand,
                                                 getter_AddRefs(loadgroup));
         if (NS_FAILED(rv)) return rv;
 
-        CachedChromeLoader* loader = new CachedChromeLoader(this);
-        if (! loader)
-            return NS_ERROR_OUT_OF_MEMORY;
+        // Create our own "document loader" that will fire the onload
+        // handlers when everything is finished. When this scope is
+        // closed, the loadgroup will be the only object with a
+        // reference to the loader.
+        nsCOMPtr<nsIStreamObserver> loader;
 
-        NS_ADDREF(loader);
-        nsCOMPtr<nsIStreamObserver> anchor = do_QueryInterface(loader, &rv);
-        NS_RELEASE(loader);
+        {
+            CachedChromeLoader* l = new CachedChromeLoader(this);
+            if (! l)
+                return NS_ERROR_OUT_OF_MEMORY;
 
-        if (NS_FAILED(rv)) return rv;
+            NS_ADDREF(l);
+            loader = do_QueryInterface(l, &rv);
+            NS_RELEASE(l);
+
+            if (NS_FAILED(rv)) return rv;
+        }
 
         rv = loadgroup->Init(loader);
         if (NS_FAILED(rv)) return rv;
@@ -2057,7 +2069,8 @@ nsXULDocument::CreateFromPrototype(const char* aCommand,
         if (NS_FAILED(rv)) return rv;
 
         // Closing this scope will result in the placeholder channel
-        // being the only reference to the load group.
+        // created in PrepareToWalk() being the only reference to the
+        // load group.
     }
 
     rv = ResumeWalk();
