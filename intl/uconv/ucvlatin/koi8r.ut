@@ -26,9 +26,9 @@
               Table in Debug form 
 Begin of Item 0000
  Format 0
-  srcBegin = 0020
+  srcBegin = 0000
   srcEnd = 007E
-  destBegin = 0020
+  destBegin = 0000
 End of Item 0000 
 
 Begin of Item 0001
@@ -117,7 +117,7 @@ End of Item 0007
 0x0000, 0x1210, 0x0000, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0007   Start of MapCell Array */ 
-/* 0000 */    0x0020, 0x007E, 0x0020, 
+/* 0000 */    0x0000, 0x007E, 0x0000, 
 /* 0001 */    0x00A4, 0x00B2, 0x2553, 
 /* 0002 */    0x00B4, 0x00BE, 0x2562, 
 /* 0003 */    0x00C9, 0x00D0, 0x0438, 
