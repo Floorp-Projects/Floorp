@@ -173,8 +173,7 @@ static void DEBUG_TrackShutdownWrapper(XPCWrappedNative* wrapper)
                DEBUG_WrappedNativeTotalCalls,
                DEBUG_WrappedNativeMethodCalls,
                DEBUG_WrappedNativeGetterCalls,
-               DEBUG_WrappedNativeSetterCalls,
-               DEBUG_WrappedNativeMethodCalls);
+               DEBUG_WrappedNativeSetterCalls);
 
         printf("(wrappers / tearoffs): (");
         int i;
