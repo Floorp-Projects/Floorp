@@ -410,6 +410,9 @@ JS_StringToVersion(const char *string);
 /*
  * JS options are orthogonal to version, and may be freely composed with one
  * another as well as with version.
+ *
+ * JSOPTION_VAROBJFIX is recommended -- see the comments associated with the
+ * prototypes for JS_ExecuteScript, JS_EvaluateScript, etc.
  */
 #define JSOPTION_STRICT         JS_BIT(0)       /* warn on dubious practice */
 #define JSOPTION_WERROR         JS_BIT(1)       /* convert warning to error */
