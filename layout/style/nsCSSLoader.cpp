@@ -31,13 +31,9 @@
 
 #include "nsHashtable.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
-#else
-#include "nsIURLGroup.h"
-#endif // NECKO
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
@@ -63,20 +59,11 @@ public:
     NS_ADDREF(mURL);
     mHashValue = 0;
 
-#ifdef NECKO
     char* urlStr;
     mURL->GetSpec(&urlStr);
-#else
-    PRUnichar*  urlStr;
-    mURL->ToString(&urlStr);
-#endif
     if (urlStr) {
       mHashValue = nsCRT::HashValue(urlStr);
-#ifdef NECKO
       nsCRT::free(urlStr);
-#else
-      delete [] urlStr;
-#endif
     }
   }
 
@@ -101,13 +88,9 @@ public:
   virtual PRBool Equals(const nsHashKey* aKey) const
   {
     URLKey* key = (URLKey*)aKey;
-#ifdef NECKO
     PRBool equals = PR_FALSE;
     nsresult result = mURL->Equals(key->mURL, &equals);
     return (NS_SUCCEEDED(result) && equals);
-#else
-    return mURL->Equals(key->mURL);
-#endif
   }
 
   virtual nsHashKey *Clone(void) const
@@ -794,22 +777,11 @@ CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
   else {  // load failed or document now gone, cleanup    
     if (mDocument && NS_FAILED(aStatus)) {  // still have doc, must have failed
       // Dump error message to console.
-#ifdef NECKO
       char *url;
-#else
-      const char *url;
-#endif
-      if (nsnull != aLoadData->mURL) {
-        aLoadData->mURL->GetSpec(&url);
-      }
-      else {
-        url = "";      
-      }
+      aLoadData->mURL->GetSpec(&url);
       cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
            << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
-#ifdef NECKO
       nsCRT::free(url);
-#endif
     }
 
     URLKey  key(aLoadData->mURL);
@@ -1031,30 +1003,6 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
-#ifndef NECKO
-static nsIURI* CloneURL(nsIURI* aURL)
-{
-  nsIURI* result = nsnull;
-
-  PRUnichar*  urlStr;
-  aURL->ToString(&urlStr);
-  if (urlStr) {
-    nsAutoString buffer(urlStr);
-    delete [] urlStr;
-    nsILoadGroup* LoadGroup = nsnull;
-    aURL->GetLoadGroup(&LoadGroup);
-    if (LoadGroup) {
-      LoadGroup->CreateURL(&result, aURL, buffer, nsnull);
-      NS_RELEASE(LoadGroup);
-    }
-    else {
-      NS_NewURL(&result, buffer, aURL);
-    }
-  }
-  return result;
-}
-#endif
-
 nsresult
 CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
 {
@@ -1068,51 +1016,45 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
     loadingData->mNext = aData;
   }
   else {  // not loading, go load it
-    nsIUnicharStreamLoader* loader;
-#ifdef NECKO
-    nsIURI* urlClone;
-    result = aKey.mURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
-    if (NS_SUCCEEDED(result)) {
-#else
-    nsIURI* urlClone = CloneURL(aKey.mURL); // don't give the key to netlib, it munges it
-    if (urlClone) {
-#endif
-#ifdef NS_DEBUG
-      mSyncCallback = PR_TRUE;
-#endif
-      result = NS_NewUnicharStreamLoader(&loader, urlClone, 
-#ifdef NECKO
-                                         nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
-#endif
-                                         DoneLoadingStyle, aData);
-#ifdef NS_DEBUG
-      mSyncCallback = PR_FALSE;
-#endif
-      NS_RELEASE(urlClone);
+    if (mDocument) {  // we're still live
+      nsIUnicharStreamLoader* loader;
+      nsIURI* urlClone;
+      result = aKey.mURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
       if (NS_SUCCEEDED(result)) {
-        mLoadingSheets.Put(&aKey, aData);
-        // grab any pending alternates that have this URL
-        loadingData = aData;
-        PRInt32 index = 0;
-        while (index < mPendingAlternateSheets.Count()) {
-          SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(index);
-#ifdef NECKO
-          PRBool equals = PR_FALSE;
-          result = aKey.mURL->Equals(data->mURL, &equals);
-          if (NS_SUCCEEDED(result) && equals)
-#else
-          if (aKey.mURL->Equals(data->mURL))
+#ifdef NS_DEBUG
+        mSyncCallback = PR_TRUE;
 #endif
-          {
-            mPendingAlternateSheets.RemoveElementAt(index);
-            loadingData->mNext = data;
-            loadingData = data;
-          }
-          else {
-            index++;
+        result = NS_NewUnicharStreamLoader(&loader, urlClone, 
+                                           nsCOMPtr<nsILoadGroup>(mDocument->GetDocumentLoadGroup()),
+                                           DoneLoadingStyle, aData);
+#ifdef NS_DEBUG
+        mSyncCallback = PR_FALSE;
+#endif
+        NS_RELEASE(urlClone);
+        if (NS_SUCCEEDED(result)) {
+          mLoadingSheets.Put(&aKey, aData);
+          // grab any pending alternates that have this URL
+          loadingData = aData;
+          PRInt32 index = 0;
+          while (index < mPendingAlternateSheets.Count()) {
+            SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(index);
+            PRBool equals = PR_FALSE;
+            result = aKey.mURL->Equals(data->mURL, &equals);
+            if (NS_SUCCEEDED(result) && equals)
+            {
+              mPendingAlternateSheets.RemoveElementAt(index);
+              loadingData->mNext = data;
+              loadingData = data;
+            }
+            else {
+              index++;
+            }
           }
         }
       }
+    }
+    else { // document gone,  no point in starting the load
+      delete aData;
     }
   }
   return result;
@@ -1206,12 +1148,12 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
         result = NS_OK;
       }
       else {
+        if (aParserToUnblock) {
+          data->mDidBlockParser = PR_TRUE;
+        }
         result = LoadSheet(key, data);
       }
       aCompleted = PR_FALSE;
-      if (aParserToUnblock) {
-        data->mDidBlockParser = PR_TRUE;
-      }
     }
   }
   return result;
@@ -1255,13 +1197,9 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
 
         // verify that sheet doesn't have new child as a parent 
         do {
-#ifdef NECKO
           PRBool equals;
           result = parentData->mURL->Equals(aURL, &equals);
           if (NS_SUCCEEDED(result) && equals) { // houston, we have a loop, blow off this child
-#else
-          if (parentData->mURL->Equals(aURL)) { // houston, we have a loop, blow off this child
-#endif
             data->mParentData = nsnull;
             delete data;
             return NS_OK;
@@ -1288,19 +1226,10 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
   if (aURL) {
     // Get an input stream from the url
     nsIInputStream* in;
-#ifdef NECKO
     nsIURI* urlClone;
     result = aURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
     if (NS_SUCCEEDED(result)) {
-#else
-    nsIURI* urlClone = CloneURL(aURL);  // dont give key URL to netlib, it gets munged
-    if (urlClone) {
-#endif
-#ifdef NECKO
       result = NS_OpenURI(&in, urlClone);
-#else
-      result = NS_OpenURL(urlClone, &in);
-#endif
       NS_RELEASE(urlClone);
       if (NS_SUCCEEDED(result)) {
         // Translate the input using the argument character set id into unicode
@@ -1320,20 +1249,11 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
       }
       else {
         // Dump an error message to the console
-#ifdef NECKO
         char *url;
-#else
-        const char *url;
-#endif
-        if (nsnull != aURL) 
-          aURL->GetSpec(&url);
-        else
-          url = "";      
+        aURL->GetSpec(&url);
         cerr << "CSSLoaderImpl::LoadAgentSheet: Load of URL '" << url 
              << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
-#ifdef NECKO
         nsCRT::free(url);
-#endif
       }
     }
   }
