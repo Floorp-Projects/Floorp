@@ -522,7 +522,7 @@ function make_query_URL(url, input, searchLong) {
                     }
                 }
         }
-
+        and = 0;
         or = 0;
     }
 
