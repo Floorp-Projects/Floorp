@@ -31,6 +31,7 @@
  * GPL.
  */
 
+#include "prprf.h"
 #include "cert.h"
 #include "xconst.h"
 #include "genname.h"
@@ -616,6 +617,116 @@ CERT_RFC1485_EscapeAndQuote(char *dst, int dstlen, char *src, int srclen)
     return SECSuccess;
 }
 
+/* convert an OID to dotted-decimal representation */
+static char *
+get_oid_string
+(
+    SECItem *oid
+)
+{
+    PRUint8 *end;
+    PRUint8 *d;
+    PRUint8 *e;
+    char *a;
+    char *b;
+
+    a = (char *)NULL;
+
+    /* d will point to the next sequence of bytes to decode */
+    d = (PRUint8 *)oid->data;
+    /* end points to one past the legitimate data */
+    end = &d[ oid->len ];
+
+    /*
+     * Check for our pseudo-encoded single-digit OIDs
+     */
+    if( (*d == 0x80) && (2 == oid->len) ) {
+	/* Funky encoding.  The second byte is the number */
+	a = PR_smprintf("%lu", (PRUint32)d[1]);
+	if( (char *)NULL == a ) {
+	    PORT_SetError(SEC_ERROR_NO_MEMORY);
+	    return (char *)NULL;
+	}
+	return a;
+    }
+
+    for( ; d < end; d = &e[1] ) {
+    
+	for( e = d; e < end; e++ ) {
+	    if( 0 == (*e & 0x80) ) {
+		break;
+	    }
+	}
+    
+	if( ((e-d) > 4) || (((e-d) == 4) && (*d & 0x70)) ) {
+	    /* More than a 32-bit number */
+	} else {
+	    PRUint32 n = 0;
+      
+	    switch( e-d ) {
+	    case 4:
+		n |= ((PRUint32)(e[-4] & 0x0f)) << 28;
+	    case 3:
+		n |= ((PRUint32)(e[-3] & 0x7f)) << 21;
+	    case 2:
+		n |= ((PRUint32)(e[-2] & 0x7f)) << 14;
+	    case 1:
+		n |= ((PRUint32)(e[-1] & 0x7f)) <<  7;
+	    case 0:
+		n |= ((PRUint32)(e[-0] & 0x7f))      ;
+	    }
+      
+	    if( (char *)NULL == a ) {
+		/* This is the first number.. decompose it */
+		PRUint32 one = PR_MIN(n/40, 2); /* never > 2 */
+		PRUint32 two = n - one * 40;
+        
+		a = PR_smprintf("%lu.%lu", one, two);
+		if( (char *)NULL == a ) {
+		    PORT_SetError(SEC_ERROR_NO_MEMORY);
+		    return (char *)NULL;
+		}
+	    } else {
+		b = PR_smprintf("%s.%lu", a, n);
+		if( (char *)NULL == b ) {
+		    PR_smprintf_free(a);
+		    PORT_SetError(SEC_ERROR_NO_MEMORY);
+		    return (char *)NULL;
+		}
+        
+		PR_smprintf_free(a);
+		a = b;
+	    }
+	}
+    }
+
+    return a;
+}
+
+/* convert DER-encoded hex to a string */
+static SECItem *
+get_hex_string(SECItem *data)
+{
+    SECItem *rv;
+    unsigned int i, j;
+    static const char hex[] = { "0123456789ABCDEF" };
+
+    /* '#' + 2 chars per octet + terminator */
+    rv = SECITEM_AllocItem(NULL, NULL, data->len*2 + 2);
+    if (!rv) {
+	return NULL;
+    }
+    rv->data[0] = '#';
+    rv->len = 1 + 2 * data->len;
+    for (i=0; i<data->len; i++) {
+	j = data->data[i];
+	rv->data[2*i+1] = hex[j >> 4];
+	rv->data[2*i+2] = hex[j & 15];
+    }
+    rv->data[rv->len] = 0;
+    return rv;
+}
+
 static SECStatus
 AppendAVA(stringBuf *bufp, CERTAVA *ava)
 {
@@ -625,6 +736,7 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
     int tag;
     SECStatus rv;
     SECItem *avaValue = NULL;
+    char *unknownTag = NULL;
 
     tag = CERT_GetAVATag(ava);
     switch (tag) {
@@ -673,22 +785,25 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
 	maxLen = 256;
 	break;
       default:
-#if 0
-	PORT_SetError(SEC_ERROR_INVALID_AVA);
-	return SECFailure;
-#else
-	rv = AppendStr(bufp, "ERR=Unknown AVA");
-	return rv;
-#endif
+	/* handle unknown attribute types per RFC 2253 */
+	tagName = unknownTag = get_oid_string(&ava->type);
+	maxLen = 256;
+	break;
     }
 
     avaValue = CERT_DecodeAVAValue(&ava->value);
     if(!avaValue) {
-	return SECFailure;
+	/* the attribute value is not recognized, get the hex value */
+	avaValue = get_hex_string(&ava->value);
+	if(!avaValue) {
+	    if (unknownTag) PR_smprintf_free(unknownTag);
+	    return SECFailure;
+	}
     }
 
     /* Check value length */
     if (avaValue->len > maxLen) {
+	if (unknownTag) PR_smprintf_free(unknownTag);
 	PORT_SetError(SEC_ERROR_INVALID_AVA);
 	return SECFailure;
     }
@@ -701,6 +816,7 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
     rv = CERT_RFC1485_EscapeAndQuote(tmpBuf+len, sizeof(tmpBuf)-len, 
 		    		     (char *)avaValue->data, avaValue->len);
     SECITEM_FreeItem(avaValue, PR_TRUE);
+    if (unknownTag) PR_smprintf_free(unknownTag);
     if (rv) return SECFailure;
     
     rv = AppendStr(bufp, tmpBuf);
