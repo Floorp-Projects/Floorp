@@ -623,6 +623,8 @@ nsPop3GetMailChainer::~nsPop3GetMailChainer()
 nsresult nsPop3GetMailChainer::GetNewMailForServers(nsISupportsArray *servers, nsIMsgWindow *msgWindow,
                                 nsIMsgFolder *folderToDownloadTo, nsIUrlListener *listener)
 {
+  NS_ENSURE_ARG_POINTER(folderToDownloadTo);
+
   m_serversToGetNewMailFor = servers;
   m_folderToDownloadTo = folderToDownloadTo;
   m_downloadingMsgWindow = msgWindow;
