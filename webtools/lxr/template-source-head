@@ -17,7 +17,7 @@
  <TR>
   <TD ALIGN=LEFT VALIGN=CENTER>
    <NOBR><FONT SIZE="+2"><B>
-    <A HREF="/webtools/lxr/">Mozilla Cross Reference:</A>
+    <A HREF="$baseurl">Mozilla Cross Reference:</A>
    </B></FONT></NOBR>
    <BR><B>$banner</B>
   </TD>
