@@ -522,26 +522,42 @@ nsPrintingPromptService::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest 
     return NS_OK;
 }
 
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-    return mWebProgressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+    if (mWebProgressListener) {
+      return mWebProgressListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+    }
+    return NS_OK;
 }
 
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
 {
-    return mWebProgressListener->OnLocationChange(aWebProgress, aRequest, location);
+    if (mWebProgressListener) {
+        return mWebProgressListener->OnLocationChange(aWebProgress, aRequest, location);
+    }
+    return NS_OK;
 }
 
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
-    return mWebProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+    if (mWebProgressListener) {
+        return mWebProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+    }
+    return NS_OK;
 }
 
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP 
 nsPrintingPromptService::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
-    return mWebProgressListener->OnSecurityChange(aWebProgress, aRequest, state);
+    if (mWebProgressListener) {
+        return mWebProgressListener->OnSecurityChange(aWebProgress, aRequest, state);
+    }
+    return NS_OK;
 }
