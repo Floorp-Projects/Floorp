@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/04/26 22:42:42 $ 
+# $Revision: 1.13 $ 
+# $Date: 2002/04/27 00:31:09 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -56,6 +56,7 @@ package HTMLPopUp;
 use lib '#tinder_libdir#';
 
 use Utils;
+use FileStructure;
 
 # Pick how you wish to the Tinderbox popup windows to be implemented:
 # Uncomment only one HTMLPopUp implementation.
