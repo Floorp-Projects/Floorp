@@ -20,6 +20,10 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
+#include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
+#include "nsIFloaterContainer.h"
+#include "nsHTMLIIDs.h"
 
 static NS_DEFINE_IID(kIReflowCommandIID, NS_IREFLOWCOMMAND_IID);
 
@@ -59,16 +63,53 @@ nsHTMLReflowCommand::~nsHTMLReflowCommand()
 
 NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, kIReflowCommandIID);
 
-NS_METHOD nsHTMLReflowCommand::Dispatch(nsIPresContext&  aPresContext,
-                                        nsReflowMetrics& aDesiredSize,
-                                        const nsSize&    aMaxSize)
+nsIFrame* nsHTMLReflowCommand::GetContainingBlock(nsIFrame* aFloater)
+{
+  nsIFrame*             containingBlock = nsnull;
+  nsIFloaterContainer*  container = nsnull;
+
+  for (aFloater->GetContentParent(containingBlock);
+       nsnull != containingBlock;
+       containingBlock->GetContentParent(containingBlock))
+  {
+    if (NS_OK == containingBlock->QueryInterface(kIFloaterContainerIID, (void**)&container)) {
+      break;
+    }
+  }
+
+  return containingBlock;
+}
+
+void nsHTMLReflowCommand::BuildPath()
+{
+  mPath.Clear();
+
+  // Floating frames are handled differently. The path goes from the target
+  // frame to the containing block, and then up the hierarchy
+  nsStyleDisplay* display;
+  mTargetFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+  if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+    mPath.AppendElement((void*)mTargetFrame);
+
+    for (nsIFrame* f = GetContainingBlock(mTargetFrame);
+         nsnull != f;
+         f->GetGeometricParent(f)) {
+      mPath.AppendElement((void*)f);
+    }
+
+  } else {
+    for (nsIFrame* f = mTargetFrame; nsnull != f; f->GetGeometricParent(f)) {
+      mPath.AppendElement((void*)f);
+    }
+  }
+}
+
+NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&  aPresContext,
+                                            nsReflowMetrics& aDesiredSize,
+                                            const nsSize&    aMaxSize)
 {
   // Build the path from the target frame (index 0) to the root frame
-  mPath.Clear();
-  for (nsIFrame* f = (nsIFrame*)mTargetFrame; nsnull != f;
-       f->GetGeometricParent(f)) {
-    mPath.AppendElement((void*)f);
-  }
+  BuildPath();
 
   // Send an incremental reflow notification to the root frame
   nsIFrame* root = (nsIFrame*)mPath[mPath.Count() - 1];
@@ -92,7 +133,7 @@ NS_METHOD nsHTMLReflowCommand::Dispatch(nsIPresContext&  aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsHTMLReflowCommand::GetNext(nsIFrame*& aNextFrame)
+NS_IMETHODIMP nsHTMLReflowCommand::GetNext(nsIFrame*& aNextFrame)
 {
   PRInt32 count = mPath.Count();
 
@@ -104,19 +145,19 @@ NS_METHOD nsHTMLReflowCommand::GetNext(nsIFrame*& aNextFrame)
   return NS_OK;
 }
 
-NS_METHOD nsHTMLReflowCommand::GetTarget(nsIFrame*& aTargetFrame) const
+NS_IMETHODIMP nsHTMLReflowCommand::GetTarget(nsIFrame*& aTargetFrame) const
 {
   aTargetFrame = mTargetFrame;
   return NS_OK;
 }
 
-NS_METHOD nsHTMLReflowCommand::GetType(ReflowType& aReflowType) const
+NS_IMETHODIMP nsHTMLReflowCommand::GetType(ReflowType& aReflowType) const
 {
   aReflowType = mType;
   return NS_OK;
 }
 
-NS_METHOD nsHTMLReflowCommand::GetChildFrame(nsIFrame*& aChildFrame) const
+NS_IMETHODIMP nsHTMLReflowCommand::GetChildFrame(nsIFrame*& aChildFrame) const
 {
   aChildFrame = mChildFrame;
   return NS_OK;
