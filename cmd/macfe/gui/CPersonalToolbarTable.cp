@@ -57,7 +57,7 @@ Uint32 CPersonalToolbarTable :: mMinToolbarButtonChars = LArray::index_Last;
 CPersonalToolbarTable :: CPersonalToolbarTable ( LStream* inStream )
 	: LSmallIconTable(inStream), LDragAndDrop ( GetMacPort(), this ),
 		mDropCol(LArray::index_Bad), mHiliteCol(LArray::index_Bad), mDropOn(false), mButtonList(NULL),
-		mIsInitialized(false)
+		mIsInitialized(false), mInlineFeedbackOn(true)
 {
 	// setup our window into the RDF world and register this class as the one to be notified
 	// when the personal toolbar changes.
@@ -418,6 +418,9 @@ CPersonalToolbarTable :: FillInToolbar ( )
 void 
 CPersonalToolbarTable :: MouseLeave ( ) 
 {
+	if ( !IsActive() )
+		return;
+
 	STableCell refresh(1, mHiliteCol);
 	mHiliteCol = LArray::index_Bad;
 	
@@ -438,6 +441,9 @@ CPersonalToolbarTable :: MouseLeave ( )
 void 
 CPersonalToolbarTable :: MouseWithin ( Point inPortPt, const EventRecord& ) 
 {
+	if ( !IsActive() )
+		return;
+
 	// get the previous selection
 	STableCell old(1, mHiliteCol);
 	SPoint32 imagePt;	
@@ -577,9 +583,11 @@ CPersonalToolbarTable :: ClickCell(const STableCell &inCell, const SMouseDownEve
 		if ( data.IsFolder() ) {
 			SysBeep(1);
 		}
-		else
-			CFrontApp::DoGetURL( data.GetURL().c_str() );
-		
+		else {
+			if ( !URDFUtilities::LaunchNode(data.GetHTResource()) )
+				CFrontApp::DoGetURL( data.GetURL().c_str() );
+		}
+
 	} // else just a click
 	
 } // ClickCell
@@ -595,13 +603,16 @@ CPersonalToolbarTable :: ClickCell(const STableCell &inCell, const SMouseDownEve
 void
 CPersonalToolbarTable :: RedrawCellWithHilite ( const STableCell inCell, bool inHiliteOn )
 {
+	if ( inCell.col == LArray::index_Bad )
+		return;
+		
 	Rect localCellRect;
 	GetLocalCellRect ( inCell, localCellRect );
 	
 	// since mDropOn is used as the flag in DrawCell() for whether or not we want to 
 	// draw the hiliting on the cell, save its value and set it to what was passed in
 	// before calling DrawCell().
-	StValueChanger<Boolean> oldHilite(mDropOn, inHiliteOn);	//¥¥¥ won't link with bool type =(
+	StValueChanger<bool> oldHilite(mDropOn, inHiliteOn);
 	
 	// if the hiliting is being turned off, erase the cell so it draws normally again
 	if ( !inHiliteOn ) {
@@ -618,8 +629,8 @@ CPersonalToolbarTable :: RedrawCellWithHilite ( const STableCell inCell, bool in
 //
 // DrawCell
 //
-// Override to draw differently when this is the selected cell. Otherwise, pass it back
-// to the inherited routine to draw normally. 
+// Override to draw differently when this is the selected cell and for drop feedback
+// during a drop on a folder.
 //
 void 
 CPersonalToolbarTable :: DrawCell ( const STableCell &inCell, const Rect &inLocalRect )
@@ -683,21 +694,26 @@ CPersonalToolbarTable :: DoDragSendData( FlavorType inFlavor, ItemReference inIt
 //
 // HiliteDropArea
 //
-// Show that this toolbar is a drop site for urls
+// Show that this toolbar is a drop site for urls, but only if there aren't any items
+// in the bar already. If there are, the drop feedback should take care of it.
 //
 void
 CPersonalToolbarTable :: HiliteDropArea ( DragReference inDragRef )
 {
+	if ( mCols && mInlineFeedbackOn )		// let in-line drop feedback do the job
+		return;
+
 	Rect frame;
 	CalcLocalFrameRect ( frame );
 	
 	// show the drag hilite in drop area
-	RgnHandle rgn = ::NewRgn();
-	ThrowIfNil_(rgn);
-	::RectRgn ( rgn, &frame );
-	::ShowDragHilite ( inDragRef, rgn, true );
-	::DisposeRgn ( rgn );	
-
+	try {
+		StRegion rgn;
+		::RectRgn ( rgn, &frame );
+		::ShowDragHilite ( inDragRef, rgn, true );
+	}
+	catch ( ... ) { }
+	
 } // HiliteDropArea
 
 
@@ -706,11 +722,22 @@ CPersonalToolbarTable :: HiliteDropArea ( DragReference inDragRef )
 //
 // Called repeatedly while mouse is inside this during a drag. For each column, the cell
 // can be divided into several sections.
-// 
+//
 void
 CPersonalToolbarTable :: InsideDropArea ( DragReference inDragRef )
 {
 	FocusDraw();
+	
+#if 0
+	// If the container is sorted, don't let the user drop in any given location. Just
+	// hilight the entire area
+	//¥¥¥can't do this here, else you won't be able to drop on folders!
+	if ( ! HT_ContainerSupportsNaturalOrderSort(HT_TopNode(GetHTView())) ) {
+		StValueChanger<bool> old ( mInlineFeedbackOn, false );
+		HiliteDropArea(inDragRef);
+		return;
+	} // if container is sorted
+#endif
 	
 	Point mouseLoc;
 	SPoint32 imagePt;
@@ -752,6 +779,20 @@ CPersonalToolbarTable :: InsideDropArea ( DragReference inDragRef )
  		newDropCol = mCols + 1;
 	}
 	
+	// we now know where the drop SHOULD go, now check if it CAN go there
+	HT_Resource targetNode = NULL;
+	if ( newDropOn ) {
+		const CUserButtonInfo & info = GetInfoForPPColumn(newDropCol);
+		targetNode = info.GetHTResource();
+	}
+	else
+		targetNode = HT_TopNode(GetHTView());
+	mCanAcceptCurrentDrag = NodeCanAcceptDrop ( inDragRef, targetNode );
+	if ( !mCanAcceptCurrentDrag ) {
+		newDropOn = false;
+		newDropCol = LArray::index_Bad;
+	}
+
 	// if something has changed, redraw as necessary
 	if ( newDropCol != mDropCol || newDropOn != mDropOn ) {
 	
@@ -766,8 +807,8 @@ CPersonalToolbarTable :: InsideDropArea ( DragReference inDragRef )
 		mDropOn = newDropOn;
 		
 		// hilight new one
-		if ( mDropOn )
-			RedrawCellWithHilite ( STableCell(1, mDropCol), true );
+		if ( newDropOn )
+			RedrawCellWithHilite ( STableCell(1, newDropCol), true );
 		else
 			DrawDividingLine ( newDropCol );
 		
@@ -853,6 +894,9 @@ CPersonalToolbarTable :: ComputeFolderDropAreas ( const Rect & inLocalCellRect, 
 void
 CPersonalToolbarTable :: DrawDividingLine( TableIndexT inCol )
 {
+	if ( inCol == LArray::index_Bad )
+		return;
+		
 	Uint32 numItems = mButtonList->size();
 	if ( !numItems )			// don't draw anything if toolbar empty
 		return;
@@ -882,11 +926,11 @@ CPersonalToolbarTable :: DrawDividingLine( TableIndexT inCol )
 	if ( FocusDraw() && CalcLocalFrameRect( theFrame ) ) {
 
 		// Save the draw state and clip the list view rect.
-		StColorPenState	theDrawState;
-		StClipRgnState	theClipState( theFrame );
+		StColorPenState theDrawState;
+		StColorState::Normalize();
+		StClipRgnState theClipState( theFrame );
 
 		// Setup the color and pen state then draw the line
-		::ForeColor( blackColor );
 		::PenMode( patXor );
 		::PenSize( 2, 2 );
 		::MoveTo( cellBounds.left, cellBounds.top );
@@ -914,14 +958,20 @@ CPersonalToolbarTable :: ReceiveDragItem ( DragReference inDragRef, DragAttribut
 //
 // ItemIsAcceptable
 //
-// If FindBestFlavor() finds an acceptable flavor, then this item can be accepted. If not, it
-// can't. We don't really care at this point what that flavor is.
+// Determine if the current item can be dropped in this pane. Check to see if the 
+// pane as a whole accepts drops (history, for example, will not). The data, at this
+// point, is fairly moot and will be checked in RowCanAcceptDrop*() routines.
+//
 //
 Boolean
 CPersonalToolbarTable :: ItemIsAcceptable ( DragReference inDragRef, ItemReference inItemRef )
 {
 	FlavorType ignored;
-	return FindBestFlavor ( inDragRef, inItemRef, ignored );
+	
+	bool paneAllowsDrop = HT_CanDropURLOn ( HT_TopNode(GetHTView()), "http://foo.com" );
+	bool acceptableFlavorFound = FindBestFlavor ( inDragRef, inItemRef, ignored );
+	
+	return paneAllowsDrop && acceptableFlavorFound;
 	
 } // ItemIsAcceptable
 

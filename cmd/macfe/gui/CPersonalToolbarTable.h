@@ -154,6 +154,7 @@ class CPersonalToolbarTable : public LSmallIconTable, public LDragAndDrop,
 		bool		mDropOn;			// are they on a folder?
 		Rect		mTextHiliteRect;	// cached rect drawn behind selected folder title
 		TableIndexT mHiliteCol;			// which column is mouse hovering over?
+		bool		mInlineFeedbackOn;	// do we draw the inline feedback or frame entire area?
 
 		HT_View		mToolbarView;
 		HT_Resource	mToolbarRoot;
