@@ -57,7 +57,7 @@ see the nsIEnumerator for more details*/
 
   virtual nsresult CurrentItem(nsISupports **aRange);
 
-  virtual nsresult IsDone(PRBool *adone);
+  virtual nsresult IsDone();
 
 /*END nsIEnumerator interfaces*/
 
@@ -180,14 +180,14 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
 
 
 nsresult
-nsRangeListIterator::IsDone(PRBool *aDone)
+nsRangeListIterator::IsDone()
 {
-  if (!aDone)
-    return NS_ERROR_NULL_POINTER;
-  if ((mIndex == mRangeList->mCount -1) || !mRangeList->mCount) //empty lists are always done
-    *aDone = PR_TRUE;
-  else
-    *aDone = PR_FALSE;
+  if ((mIndex == mRangeList->mCount -1) || !mRangeList->mCount) { //empty lists are always done
+    return NS_OK;
+  }
+  else{
+    return NS_COMFALSE;
+  }
   return NS_OK;
 }
 

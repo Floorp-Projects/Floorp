@@ -54,6 +54,13 @@
 #include "nsIDOMText.h"
 #include "nsDocumentFragment.h"
 
+#if XP_NEW_SELECTION
+#include "nsLayoutCID.h"
+#include "nsIDOMRange.h"
+#include "nsICollection.h"
+#include "nsIEnumerator.h"
+#endif //XP_NEW_SELECTION
+
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
@@ -70,6 +77,14 @@ static NS_DEFINE_IID(kIDOMStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_I
 static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
+
+#if XP_NEW_SELECTION
+static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
+static NS_DEFINE_IID(kIDOMRange, NS_IDOMRANGE_IID);
+static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
+static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
+static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
+#endif //XP_NEW_SELECION
 
 class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
                                   public nsIScriptObjectOwner,
@@ -400,7 +415,11 @@ nsDocument::nsDocument()
   mListenerManager = nsnull;
   mDisplaySelection = PR_FALSE;
   mInDestructor = PR_FALSE;
+#if XP_NEW_SELECTION
+  if (!NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeListCID, nsnull, kICollectionIID, (void **)&mSelection))){
+#else
   if (NS_OK != NS_NewSelection(&mSelection)) {
+#endif
     printf("*************** Error: nsDocument::nsDocument - Creation of Selection failed!\n");
   }
   mDOMStyleSheets = nsnull;
@@ -1513,6 +1532,20 @@ void      nsDocument::Finalize(JSContext *aContext)
 /**
   * Returns the Selection Object
  */
+#if XP_NEW_SELECTION
+NS_IMETHODIMP nsDocument::GetSelection(nsICollection ** aSelection) {
+  if (!aSelection)
+    return NS_ERROR_NULL_POINTER;
+  if (mSelection != nsnull) {
+    NS_ADDREF(mSelection);
+    *aSelection = mSelection;
+    return NS_OK;
+  } else {
+    *aSelection = nsnull;
+  }
+  return NS_ERROR_FAILURE;
+}
+#else
 NS_IMETHODIMP nsDocument::GetSelection(nsISelection *& aSelection) {
   if (mSelection != nsnull) {
     NS_ADDREF(mSelection);
@@ -1523,7 +1556,7 @@ NS_IMETHODIMP nsDocument::GetSelection(nsISelection *& aSelection) {
   }
   return NS_ERROR_FAILURE;
 }
-
+#endif //XP_NEW_SELECTION
 
 /**
   * Selects all the Content
@@ -1584,12 +1617,38 @@ NS_IMETHODIMP nsDocument::SelectAll() {
 
   //NS_RELEASE(start);
   //NS_RELEASE(end);
-
+#if XP_NEW_SELECTION
+  mSelection->Clear();//clear all old selection
+  nsIDOMRange *range = nsnull;
+  if (NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeCID, nsnull, kIDOMRange, (void **)&range))){ //create an irange
+    nsIDOMDocument *domDoc;
+    if (NS_SUCCEEDED(QueryInterface(kIDOMDocumentIID, (void **)&domDoc))){//get the dom doc from this
+      nsIDOMElement *domElement = nsnull;
+      if (NS_SUCCEEDED(domDoc->GetDocumentElement(&domElement))) {//get the first element from the dom
+        nsIDOMNode *domNode;
+        if (NS_SUCCEEDED(domElement->QueryInterface(kIDOMNodeIID,(void **)&domNode))) {//get the node interface for the range object
+          range->SetStart(domNode,0);
+          range->SetEnd(domNode,0);
+          nsISupports *rangeISupports;
+          if (NS_SUCCEEDED(range->QueryInterface(kISupportsIID,(void **)&rangeISupports))) {
+            mSelection->AddItem(rangeISupports);
+            NS_IF_RELEASE(rangeISupports);
+          }
+          NS_IF_RELEASE(domNode);
+        }
+        NS_IF_RELEASE(domElement);
+      }
+      NS_IF_RELEASE(domDoc);
+    }
+    NS_IF_RELEASE(range);//allready referenced in the selection now.
+  }
+#else
   nsSelectionRange * range    = mSelection->GetRange();
   nsSelectionPoint * startPnt = range->GetStartPoint();
   nsSelectionPoint * endPnt   = range->GetEndPoint();
   startPnt->SetPoint(start, -1, PR_TRUE);
   endPnt->SetPoint(end, -1, PR_FALSE);
+#endif
   SetDisplaySelection(PR_TRUE);
 
   return NS_OK;
@@ -1773,6 +1832,20 @@ PRBool nsDocument::IsInSelection(const nsIContent* aContent) const
 {
   PRBool  result = PR_FALSE;
 
+#if XP_NEW_SELECTION
+  //travers through an iterator to see if the acontent is in the ranges
+  if (mSelection != nsnull)
+  {
+    nsIEnumerator *enumerator;
+    if (NS_SUCCEEDED(mSelection->QueryInterface(kIEnumeratorIID, (void **)&enumerator))){
+      for (enumerator->First();NS_COMFALSE == enumerator->IsDone(); enumerator->Next())
+      {
+
+      }
+      NS_IF_RELEASE(enumerator);
+    }
+  }
+#else
   if (mSelection != nsnull)
   {
     nsSelectionRange* range = mSelection->GetRange();
@@ -1788,6 +1861,7 @@ PRBool nsDocument::IsInSelection(const nsIContent* aContent) const
       NS_IF_RELEASE(endContent);
     }
   }
+#endif
   return result;
 
 }

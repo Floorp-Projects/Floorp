@@ -19,6 +19,9 @@ DEPTH=..\..\..
 
 LIBRARY_NAME=raptorlayout_s 
 DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
+!if defined(XP_NEW_SELECTION)
+DEFINES = $(DEFINES) -DXP_NEW_SELECTION
+!endif
 
 CPPSRCS =				\
 	nsGenericElement.cpp		\
@@ -41,6 +44,7 @@ CPPSRCS =				\
 	nsXIFConverter.cpp		\
 	nsRangeList.cpp		\
 	nsLayoutAtoms.cpp		\
+	nsRange.cpp		\
 	$(NULL)
 
 MODULE=raptor 
@@ -68,6 +72,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsXIFConverter.obj		\
 	.\$(OBJDIR)\nsRangeList.obj		\
 	.\$(OBJDIR)\nsLayoutAtoms.obj		\
+	.\$(OBJDIR)\nsRange.obj		\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
