@@ -25,6 +25,7 @@
 #include "rdfparse.h"
 #include "mcf.h"
 #include "mcff2mcf.h"
+#include "plstr.h"
 
 #define wsCharp(c) ((c == '\r') || (c == '\t') || (c == ' ') || (c == '\n'))
 
@@ -397,7 +398,9 @@ parseNextRDFToken (RDFFile f, char* token)
 }	
 
 
-
+/* XXX this doesn't handle single-quotes (e.g., foo='bar'). Nor does
+   it handle backslash-esacped quotes withing a string (e.g.,
+   foo="\"bar\""). */
 void
 tokenizeElement (char* attr, char** attlist, char** elementName)
 {
@@ -448,6 +451,41 @@ tokenizeElement (char* attr, char** attlist, char** elementName)
       c = attr[n++];
     }
     inAttrNamep = (inAttrNamep ? 0 : 1);
+  }
+
+  /* Now iterate through each value and do ampersand-escape sequence
+     substitution */
+  for (n = 0; n < MAX_ATTRIBUTES; ++n) {
+    char *p, *q;
+    p = q = attlist[(2 * n) + 1];
+    if (! p)
+      break;
+
+    while (*p) {
+      if (*p == '&') {
+        if (PL_strncasecmp(p, "&lt;", 4) == 0) {
+          p += 3;
+          *p = '<';
+        }
+        else if (PL_strncasecmp(p, "&gt;", 4) == 0) {
+          p += 3;
+          *p = '>';
+        }
+        else if (PL_strncasecmp(p, "&amp;", 5) == 0) {
+          p += 4;
+          *p = '&';
+        }
+        else {
+          /* XXX An invalid ampersand, or a sequence that we don't
+             understand. Just copy as is */
+        }
+      }
+
+      *(q++) = *(p++);
+    }
+
+    /* Null terminate the copy */
+    *q = 0;
   }
 }
 
