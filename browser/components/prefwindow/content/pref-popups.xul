@@ -63,7 +63,7 @@
     setButtons();
   }
   function setButtons() {
-    manageButton.disabled = policyButton.checked;
+    manageButton.disabled = !policyButton.checked;
   }
   function selectPolicy() {
     setButtons();
@@ -77,9 +77,9 @@
   <description>&popupDetails;</description>
 
   <hbox align="center">
-    <checkbox label="&popupAllow.label;"
+    <checkbox label="&popupReject.label;"
               prefstring="dom.disable_open_during_load"
-              accesskey="&popupAllow.accesskey;"
+              accesskey="&popupReject.accesskey;"
               oncommand="selectPolicy()" id="popupPolicy"/>
     <spacer flex="1"/>
     <button id="popupView" label="&popupView.label;"
