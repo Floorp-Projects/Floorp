@@ -4363,8 +4363,8 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
       (nsnull == mBullet)) {
     // Resolve style for the bullet frame
     nsIStyleContext* kidSC;
-    kidSC = aPresContext.ResolvePseudoStyleContextFor(mContent, 
-                nsHTMLAtoms::bulletPseudo, mStyleContext);
+    aPresContext.ResolvePseudoStyleContextFor(mContent, 
+                nsHTMLAtoms::bulletPseudo, mStyleContext, &kidSC);
 
     // Create bullet frame
     mBullet = new nsBulletFrame;

@@ -307,7 +307,8 @@ NS_IMETHODIMP nsComboboxControlFrame::Reflow(nsIPresContext&          aPresConte
   //nsIFrame* childFrame;
   if (1 == numChildren) {
     nsIAtom * textBlockContentPseudo = NS_NewAtom(":COMBOBOX-TEXT");
-    mBlockTextStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, textBlockContentPseudo, mStyleContext);
+    aPresContext.ResolvePseudoStyleContextFor(mContent, textBlockContentPseudo,
+                                              mStyleContext, &mBlockTextStyle);
     NS_RELEASE(textBlockContentPseudo);
 
     // XXX This code should move to Init(), someday when the frame construction

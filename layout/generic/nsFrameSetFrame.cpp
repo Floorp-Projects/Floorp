@@ -934,9 +934,10 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         nsIAtom* tag;
         child->GetTag(tag);
         if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
-          nsIStyleContext* kidSC = aPresContext.ResolveStyleContextFor(child, mStyleContext);
+          nsIStyleContext* kidSC;
           nsresult         result;
 
+          aPresContext.ResolveStyleContextFor(child, mStyleContext, &kidSC);
           if (nsHTMLAtoms::frameset == tag) {
             result = NS_NewHTMLFramesetFrame(frame);
             frame->Init(aPresContext, child, this, kidSC);
@@ -980,8 +981,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
       for (int blankX = mChildCount; blankX < numCells; blankX++) {
         // XXX the blank frame is using the content of its parent - at some point it should just have null content
         nsHTMLFramesetBlankFrame* blankFrame = new nsHTMLFramesetBlankFrame;
-        nsIStyleContext* pseudoStyleContext =
-          aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo, mStyleContext);
+        nsIStyleContext* pseudoStyleContext;
+        aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
+                                                  mStyleContext, &pseudoStyleContext);
         blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
         NS_RELEASE(pseudoStyleContext);
 
@@ -1018,8 +1020,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
       if ((borderWidth > 0) && (eFrameborder_No != frameborder)) {
         if (firstTime) { // create horizontal border
           borderFrame = new nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
-          nsIStyleContext* pseudoStyleContext =
-            aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo, mStyleContext);
+          nsIStyleContext* pseudoStyleContext;
+          aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo,
+                                                    mStyleContext, &pseudoStyleContext);
           borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
           NS_RELEASE(pseudoStyleContext);
 
@@ -1043,8 +1046,9 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         if (0 == cellIndex.y) { // in 1st row
           if (firstTime) { // create vertical border
             borderFrame = new nsHTMLFramesetBorderFrame(borderWidth, PR_TRUE, PR_FALSE);
-            nsIStyleContext* pseudoStyleContext =
-              aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::verticalFramesetBorderPseudo, mStyleContext);
+            nsIStyleContext* pseudoStyleContext;
+            aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::verticalFramesetBorderPseudo,
+                                                      mStyleContext, &pseudoStyleContext);
             borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext);
             NS_RELEASE(pseudoStyleContext);
 

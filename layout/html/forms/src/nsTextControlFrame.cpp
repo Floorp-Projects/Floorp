@@ -696,10 +696,12 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
       // Scrollbars
       const nsStyleColor* myColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
       nsIAtom * sbAtom = NS_NewAtom(":SCROLLBAR-LOOK");
-      nsIStyleContext* scrollbarStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext);
+      nsIStyleContext* scrollbarStyle;
+      aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, &scrollbarStyle);
       NS_RELEASE(sbAtom);
       sbAtom = NS_NewAtom(":SCROLLBAR-ARROW-LOOK");
-      nsIStyleContext* arrowStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext);
+      nsIStyleContext* arrowStyle;
+      aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, &arrowStyle);
       NS_RELEASE(sbAtom);
 
       nsRect srect(mRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, mRect.height-(onePixel*4)-scrollbarScaledWidth);

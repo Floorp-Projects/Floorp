@@ -720,10 +720,11 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
           parentFrame->GetParent(&parentFrame);
       }
       // now we have a ref-counted "lastColGroupElement" content object
-      nsIStyleContext* colGroupStyleContext =
-        aPresContext.ResolvePseudoStyleContextFor (lastColGroupElement, 
-                                                   nsHTMLAtoms::tableColGroupPseudo,
-                                                   mStyleContext);             // colGroupStyleContext: REFCNT++
+      nsIStyleContext* colGroupStyleContext;
+      aPresContext.ResolvePseudoStyleContextFor (lastColGroupElement, 
+                                                 nsHTMLAtoms::tableColGroupPseudo,
+                                                 mStyleContext,
+                                                 &colGroupStyleContext);        // colGroupStyleContext: REFCNT++
       // Create a col group frame
       nsIFrame* newFrame;
       NS_NewTableColGroupFrame(newFrame);
@@ -753,11 +754,12 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       // Create a new col frame
       nsIFrame* colFrame;
       // note we pass in PR_TRUE here to force unique style contexts.
-      nsIStyleContext* colStyleContext =
-        aPresContext.ResolvePseudoStyleContextFor (lastColGroupElement, 
-                                                   nsHTMLAtoms::tableColPseudo,
-                                                   lastColGroupStyle, 
-                                                   PR_TRUE);             // colStyleContext: REFCNT++
+      nsIStyleContext* colStyleContext;
+      aPresContext.ResolvePseudoStyleContextFor (lastColGroupElement, 
+                                                 nsHTMLAtoms::tableColPseudo,
+                                                 lastColGroupStyle,
+                                                 &colStyleContext,
+                                                 PR_TRUE);             // colStyleContext: REFCNT++
       NS_NewTableColFrame(colFrame);
       colFrame->Init(aPresContext, lastColGroupElement, lastColGroupFrame,
                      colStyleContext);
@@ -4433,8 +4435,9 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
     {
       printf("found a head or foot in continuing frame\n");
       // Resolve style for the child
-      nsIStyleContext* kidStyleContext =
-        aPresContext.ResolveStyleContextFor(content, aStyleContext);     // kidStyleContext: REFCNT++
+      nsIStyleContext* kidStyleContext;
+      aPresContext.ResolveStyleContextFor(content, aStyleContext,
+                                          &kidStyleContext);     // kidStyleContext: REFCNT++
 
       nsIFrame* duplicateFrame;
       NS_NewTableRowGroupFrame(duplicateFrame);
