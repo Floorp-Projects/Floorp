@@ -66,7 +66,6 @@ OBJS=                                   \
         .\$(OBJDIR)\nsNetThread.obj     \
         .\$(OBJDIR)\nsNetStream.obj     \
         .\$(OBJDIR)\nsNetStreamLoader.obj \
-        .\$(OBJDIR)\nsRelatedLinks.obj  \
         .\$(OBJDIR)\nsHttpUrl.obj       \
         .\$(OBJDIR)\nsStubContext.obj   \
         .\$(OBJDIR)\nsNetStubs.obj      \
