@@ -264,6 +264,10 @@ bin/liblber50.so
 bin/components/libmozldap.so
 bin/components/mozldap.xpt
 
+; Roaming
+bin/components/libsroaming.so
+bin/chrome/sroaming.jar
+
 ; p3p
 bin/components/p3p.xpt
 bin/components/libp3p.so
