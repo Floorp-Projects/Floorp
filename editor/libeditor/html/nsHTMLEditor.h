@@ -84,12 +84,18 @@ public:
   NS_IMETHOD Paste();
 
 // Input/Output
-  NS_IMETHOD Insert(nsIInputStream *aInputStream);
+  NS_IMETHOD Insert(nsString& aInputString);
   NS_IMETHOD OutputText(nsString& aOutputString);
   NS_IMETHOD OutputHTML(nsString& aOutputString);
 
 //=====================================
 // HTML Editing methods
+  NS_IMETHOD InsertLink(nsString& aURL);
+  NS_IMETHOD InsertImage(nsString& aURL,
+                         nsString& aWidth, nsString& aHeight,
+                         nsString& aHspace, nsString& aVspace,
+                         nsString& aBorder,
+                         nsString& aAlt, nsString& aAlignment);
 
 // Table Editing (implemented in EditTable.cpp)
   NS_IMETHOD CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn);

@@ -254,7 +254,7 @@ public:
 
 // Input/Output
   // nsString will be a stream, as soon as I can figure out what kind of stream we should be using
-  NS_IMETHOD Insert(nsIInputStream *aInputStream)=0;
+  NS_IMETHOD Insert(nsString& aInputString)=0;
   NS_IMETHOD OutputText(nsString& aOutputString)=0;
   NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
 

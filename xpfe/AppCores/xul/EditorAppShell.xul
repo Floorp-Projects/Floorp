@@ -180,6 +180,28 @@
     }
   }
 
+  function EditorInsertLink()
+  {
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    if (appCore != null) {
+      dump("Inserting link\n");
+      appCore.insertLink();
+    } else {
+      dump("EditorAppCore has not been created!\n");
+    }
+  }
+
+  function EditorInsertImage()
+  {
+    appCore = XPAppCoresManager.Find("EditorAppCore");  
+    if (appCore != null) {
+      dump("Inserting image\n");
+      appCore.insertImage();
+    } else {
+      dump("EditorAppCore has not been created!\n");
+    }
+  }
+
   function EditorExit()
   {
     appCore = XPAppCoresManager.Find("EditorAppCore");  
@@ -243,9 +265,9 @@
     </menu>
  
     <menu name="Insert">
-      <menuitem name="Link..." onclick=""/>
+      <menuitem name="Link..." onclick="EditorInsertLink()"/>
       <menuitem name="Target..." onclick=""/>
-      <menuitem name="Image..." onclick=""/>
+      <menuitem name="Image..." onclick="EditorInsertImage()"/>
       <menuitem name="Horizontal Line" onclick=""/>
       <menuitem name="Table" onclick=""/>
       <menuitem name="HTML Tag..." onclick=""/>

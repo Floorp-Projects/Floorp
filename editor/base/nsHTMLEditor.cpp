@@ -25,6 +25,8 @@
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLImageElement.h"
 #include "nsEditorCID.h"
 
 #include "nsIComponentManager.h"
@@ -311,9 +313,9 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
   return nsTextEditor::Paste();
 }
 
-NS_IMETHODIMP nsHTMLEditor::Insert(nsIInputStream *aInputStream)
+NS_IMETHODIMP nsHTMLEditor::Insert(nsString& aInputString)
 {
-  return nsTextEditor::Insert(aInputStream);
+  return nsTextEditor::Insert(aInputString);
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputText(nsString& aOutputString)
@@ -331,3 +333,149 @@ NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsString& aOutputString)
 //
 // Note: Table Editing methods are implemented in EditTable.cpp
 //
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertLink(nsString& aURL)
+{
+  nsresult res = nsEditor::BeginTransaction();
+
+  // Find out if the selection is collapsed:
+  nsCOMPtr<nsIDOMSelection> selection;
+  res = GetSelection(getter_AddRefs(selection));
+  if (!NS_SUCCEEDED(res) || !selection)
+  {
+#ifdef DEBUG_akkana
+    printf("Can't get selection!");
+#endif
+    return res;
+  }
+  PRBool isCollapsed;
+  res = selection->IsCollapsed(&isCollapsed);
+  if (!NS_SUCCEEDED(res))
+    isCollapsed = PR_TRUE;
+
+  // Temporary: we need to save the contents of the selection,
+  // then insert them back in as the child of the newly created
+  // anchor node in order to put the link around the selection.
+  // This will require copying the selection into a document fragment,
+  // then splicing the document fragment back into the tree after the
+  // new anchor node has been put in place.  As a temporary solution,
+  // Copy/Paste does this for us in the text case
+  // (and eventually in all cases).
+  if (!isCollapsed)
+    (void)Copy();
+
+  nsCOMPtr<nsIDOMNode> newNode;
+  nsAutoString tag("A");
+  res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+  if (!NS_SUCCEEDED(res) || !newNode)
+    return res;
+
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(newNode));
+  if (!anchor)
+  {
+#ifdef DEBUG_akkana
+    printf("Not an anchor element\n");
+#endif
+    return NS_NOINTERFACE;
+  }
+
+  res = anchor->SetHref(aURL);
+  if (!NS_SUCCEEDED(res))
+  {
+#ifdef DEBUG_akkana
+    printf("SetHref failed");
+#endif
+    return res;
+  }
+
+  // Set the selection to the node we just inserted:
+  res = GetSelection(getter_AddRefs(selection));
+  if (!NS_SUCCEEDED(res) || !selection)
+  {
+#ifdef DEBUG_akkana
+    printf("Can't get selection!");
+#endif
+    return res;
+  }
+  res = selection->Collapse(newNode, 0);
+  if (!NS_SUCCEEDED(res))
+  {
+#ifdef DEBUG_akkana
+    printf("Couldn't collapse");
+#endif
+    return res;
+  }
+
+  // If we weren't collapsed, paste the old selection back in under the link:
+  if (!isCollapsed)
+    (void)Paste();
+  // Otherwise (we were collapsed) insert some bogus text in
+  // so the link will be visible
+  else
+  {
+    nsString link("[***]");
+    (void) InsertText(link);   // ignore return value -- we don't care
+  }
+
+  nsEditor::EndTransaction();  // don't return this result!
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertImage(nsString& aURL,
+                          nsString& aWidth, nsString& aHeight,
+                          nsString& aHspace, nsString& aVspace,
+                          nsString& aBorder,
+                          nsString& aAlt,
+                          nsString& aAlignment)
+{
+  nsresult res = nsEditor::BeginTransaction();
+
+  nsCOMPtr<nsIDOMNode> newNode;
+  nsAutoString tag("IMG");
+  res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+  if (!NS_SUCCEEDED(res) || !newNode)
+    return res;
+
+  nsCOMPtr<nsIDOMHTMLImageElement> image (do_QueryInterface(newNode));
+  if (!image)
+  {
+#ifdef DEBUG_akkana
+    printf("Not an image element\n");
+#endif
+    return NS_NOINTERFACE;
+  }
+
+  res = image->SetSrc(aURL);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  res = image->SetWidth(aWidth);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  res = image->SetHeight(aHeight);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  res = image->SetHspace(aHspace);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  res = image->SetVspace(aVspace);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  res = image->SetBorder(aBorder);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  res = image->SetAlt(aAlt);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  res = image->SetAlign(aAlignment);
+  if (!NS_SUCCEEDED(res))
+    return res;
+
+  nsEditor::EndTransaction();  // don't return this result!
+
+  return NS_OK;
+}
+
+

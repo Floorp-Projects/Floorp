@@ -79,6 +79,9 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    ShowClipboard();
 
     NS_IMETHOD		InsertText(const nsString& textToInsert);
+
+    NS_IMETHOD		InsertLink();
+    NS_IMETHOD		InsertImage();
     
     NS_IMETHOD    NewWindow();
     NS_IMETHOD    PrintPreview();

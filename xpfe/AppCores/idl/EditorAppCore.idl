@@ -21,6 +21,9 @@ interface EditorAppCore : BaseAppCore
 	void showClipboard();
 	
 	void insertText(in wstring textToInsert);
+
+	void insertLink();
+	void insertImage();
 	
 	void exit();
 

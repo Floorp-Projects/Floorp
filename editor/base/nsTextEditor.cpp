@@ -625,8 +625,9 @@ NS_IMETHODIMP nsTextEditor::Paste()
   return nsEditor::Paste();
 }
 
-NS_IMETHODIMP nsTextEditor::Insert(nsIInputStream *aInputStream)
+NS_IMETHODIMP nsTextEditor::Insert(nsString& aInputString)
 {
+  printf("nsTextEditor::Insert not yet implemented\n");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

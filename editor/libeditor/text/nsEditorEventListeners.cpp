@@ -322,17 +322,9 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
           if (mEditor)
           {
             nsString nsstr ("<b>This is bold <em>and emphasized</em></b>");
-            nsCOMPtr<nsISupports> supp;
-            nsresult res = NS_NewStringInputStream(getter_AddRefs(supp),
-                                                   nsstr);
-            if (NS_SUCCEEDED(res))
-            {
-              nsCOMPtr<nsIInputStream> stream = do_QueryInterface(supp);
-              res = mEditor->Insert(stream);
-              if (!NS_SUCCEEDED(res))
-                printf("nsTextEditor::Insert(stream) failed\n");
-            }
-            else printf("Couldn't create the input stream\n");
+            nsresult res = mEditor->Insert(nsstr);
+            if (!NS_SUCCEEDED(res))
+              printf("nsTextEditor::Insert(string) failed\n");
           }
         }
         break;

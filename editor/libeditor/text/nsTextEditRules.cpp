@@ -64,7 +64,7 @@ PRBool nsTextEditRules::IsEditable(nsIDOMNode *aNode)
   {
     nsAutoString att(kMOZEditorBogusNodeAttr);
     nsAutoString val;
-    nsresult result = element->GetAttribute(att, val);
+    (void)element->GetAttribute(att, val);
     if (val.Equals(kMOZEditorBogusNodeValue)) {
       return PR_FALSE;
     }
@@ -392,7 +392,7 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
         {
           nsAutoString att(kMOZEditorBogusNodeAttr);
           nsAutoString val;
-          nsresult result = element->GetAttribute(att, val);
+          (void)element->GetAttribute(att, val);
           if (val.Equals(kMOZEditorBogusNodeValue)) {
             mBogusNode = do_QueryInterface(element);
           }
@@ -438,7 +438,7 @@ nsTextEditRules::DidRedo(nsIDOMSelection *aSelection, nsresult aResult)
         {
           nsAutoString att(kMOZEditorBogusNodeAttr);
           nsAutoString val;
-          nsresult result = element->GetAttribute(att, val);
+          (void)element->GetAttribute(att, val);
           if (val.Equals(kMOZEditorBogusNodeValue)) {
             mBogusNode = do_QueryInterface(element);
           }

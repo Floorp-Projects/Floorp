@@ -76,7 +76,7 @@ public:
   NS_IMETHOD Copy()=0;
   NS_IMETHOD Paste()=0;
 
-  NS_IMETHOD Insert(nsIInputStream *aInputStream)=0;
+  NS_IMETHOD Insert(nsString &aInputString)=0;
   NS_IMETHOD OutputText(nsString& aOutputString)=0;
   NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
 
@@ -92,6 +92,12 @@ public:
    * trigger off of ContentChanged notifications.
    */
 
+  NS_IMETHOD InsertLink(nsString& aURL)=0;
+  NS_IMETHOD InsertImage(nsString& aURL,
+                         nsString& aWidth, nsString& aHeight,
+                         nsString& aHspace, nsString& aVspace,
+                         nsString& aBorder,
+                         nsString& aAlt, nsString& aAlignment)=0;
 
 // Table editing Methods
   NS_IMETHOD InsertTable()=0;
