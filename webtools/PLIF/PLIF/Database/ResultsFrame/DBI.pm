@@ -59,8 +59,9 @@ sub rowsAffected {
 sub row {
     my $self = shift;
     $self->assert($self->executed, 1, 'Tried to fetch data from an unexecuted statement');
+    my $wantarray = wantarray; # to propagate it into the try block below
     my @result = try {
-        if (wantarray) {
+        if ($wantarray) {
             return $self->handle->fetchrow_array();
         } else {
             my $array = $self->handle->fetchrow_arrayref();
@@ -84,7 +85,7 @@ sub row {
             raise $exception;
         }
     };
-    return @result;
+    return $wantarray ? @result : $result[0];
 }
 
 sub rows {
