@@ -44,6 +44,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsILookAndFeel.h"
+#include "nsRepository.h"
 
 #ifdef SingleSignon
 #include "nsIDocument.h"
