@@ -13,6 +13,8 @@
 <!ENTITY savePageCmd.label "Save Page As...">
 <!ENTITY savePageCmd.accesskey "A">
 <!ENTITY savePageCmd.commandkey "S">
+<!ENTITY pageSetupCmd.label "Page Setup...">
+<!ENTITY pageSetupCmd.accesskey "u">
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.commandkey "P">
