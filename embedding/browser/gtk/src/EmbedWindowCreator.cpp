@@ -23,9 +23,6 @@
 #include "EmbedPrivate.h"
 #include "EmbedWindow.h"
 
-// in order to create orphaned windows
-#include "gtkmozembedprivate.h"
-
 EmbedWindowCreator::EmbedWindowCreator(void)
 {
   NS_INIT_REFCNT();
@@ -46,25 +43,16 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
 
   GtkMozEmbed *newEmbed = nsnull;
 
-  // No parent?  Ask via the singleton object instead.
-  if (!aParent) {
-    gtk_moz_embed_single_create_window(&newEmbed,
-				       (guint)aChromeFlags);
-  }
-  else {
-    // Find the EmbedPrivate object for this web browser chrome object.
-    EmbedPrivate *embedPrivate = EmbedPrivate::FindPrivateForBrowser(aParent);
-    
-    if (!embedPrivate)
-      return NS_ERROR_FAILURE;
-    
-    gtk_signal_emit(GTK_OBJECT(embedPrivate->mOwningWidget),
-		    moz_embed_signals[NEW_WINDOW],
-		    &newEmbed, (guint)aChromeFlags);
-    
-  }
+  // Find the EmbedPrivate object for this web browser chrome object.
+  EmbedPrivate *embedPrivate = EmbedPrivate::FindPrivateForBrowser(aParent);
 
-  // check to make sure that we made a new window
+  if (!embedPrivate)
+    return NS_ERROR_FAILURE;
+
+  gtk_signal_emit(GTK_OBJECT(embedPrivate->mOwningWidget),
+		  moz_embed_signals[NEW_WINDOW],
+		  &newEmbed, (guint)aChromeFlags);
+
   if (!newEmbed)
     return NS_ERROR_FAILURE;
 
@@ -76,11 +64,6 @@ EmbedWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
   
   EmbedPrivate *newEmbedPrivate = NS_STATIC_CAST(EmbedPrivate *,
 						 newEmbed->data);
-
-  // set the chrome flag on the new window if it's a chrome open
-  if (aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)
-    newEmbedPrivate->mIsChrome = PR_TRUE;
-
   *_retval = NS_STATIC_CAST(nsIWebBrowserChrome *,
   			    (newEmbedPrivate->mWindow));
   

@@ -144,11 +144,6 @@ static gint dom_mouse_over_cb    (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
 static gint dom_mouse_out_cb     (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
 				  TestGtkBrowser *browser);
 
-// callbacks from the singleton object
-static void new_window_orphan_cb (GtkMozEmbedSingle *embed,
-				  GtkMozEmbed **retval, guint chromemask,
-				  gpointer data);
-
 // some utility functions
 static void update_status_bar_text  (TestGtkBrowser *browser);
 static void update_temp_message     (TestGtkBrowser *browser,
@@ -182,20 +177,6 @@ main(int argc, char **argv)
 
   if (argc > 1)
     gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), argv[1]);
-
-  // get the singleton object and hook up to its new window callback
-  // so we can create orphaned windows.
-
-  GtkMozEmbedSingle *single;
-
-  single = gtk_moz_embed_single_get();
-  if (!single) {
-    fprintf(stderr, "Failed to get singleton embed object!\n");
-    exit(1);
-  }
-
-  gtk_signal_connect(GTK_OBJECT(single), "new_window_orphan",
-		     GTK_SIGNAL_FUNC(new_window_orphan_cb), NULL);
 
   gtk_main();
 }
@@ -922,17 +903,6 @@ gint dom_mouse_out_cb     (GtkMozEmbed *embed, nsIDOMMouseEvent *event,
 {
   //g_print("dom_mouse_out_cb\n");
   return NS_OK;
-}
-
-void new_window_orphan_cb (GtkMozEmbedSingle *embed,
-			   GtkMozEmbed **retval, guint chromemask,
-			   gpointer data)
-{
-  g_print("new_window_orphan_cb\n");
-  g_print("chromemask is %d\n", chromemask);
-  TestGtkBrowser *newBrowser = new_gtk_browser(chromemask);
-  *retval = GTK_MOZ_EMBED(newBrowser->mozEmbed);
-  g_print("new browser is %p\n", (void *)*retval);
 }
 
 // utility functions
