@@ -22,7 +22,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.14 $
+ *  npapi.h $Revision: 3.15 $
  *  Netscape client plug-in API spec
  */
 
@@ -315,7 +315,7 @@ typedef enum {
   NPNVasdEnabledBool,
   NPNVisOfflineBool,
 
-  // 10 and over are available on Mozilla builds starting with 0.9.4
+  /* 10 and over are available on Mozilla builds starting with 0.9.4 */
   NPNVserviceManager = 10
 } NPNVariable;
 
