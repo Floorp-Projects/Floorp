@@ -497,6 +497,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
     // The scrollbar will need to be updated.
     InvalidateScrollbar();
 
+    // Reset scrollbar position.
+    UpdateScrollbar();
+
     PRInt32 rowCount;
     mView->GetRowCount(&rowCount);
     SetVisibleScrollbar((rowCount >= mPageCount));
