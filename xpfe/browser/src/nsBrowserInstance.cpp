@@ -480,8 +480,8 @@ nsBrowserInstance::ReinitializeContentVariables()
 nsresult nsBrowserInstance::GetContentAreaDocShell(nsIDocShell** outDocShell)
 {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContentAreaDocShellWeak));
-  if (docShell) {
-    // the docshell still exists, but has it been destroyed?
+  if (!mIsClosed && docShell) {
+    // we're still alive and the docshell still exists. but has it been destroyed?
     nsCOMPtr<nsIBaseWindow> hack = do_QueryInterface(docShell);
     if (hack) {
       nsCOMPtr<nsIWidget> parent;
@@ -491,7 +491,7 @@ nsresult nsBrowserInstance::GetContentAreaDocShell(nsIDocShell** outDocShell)
         docShell = 0;
     }
   }
-  if (!docShell)
+  if (!mIsClosed && !docShell)
     ReinitializeContentVariables();
 
   docShell = do_QueryReferent(mContentAreaDocShellWeak);
