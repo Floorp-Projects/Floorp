@@ -314,9 +314,9 @@ if test -z "$ZIP" || test "$ZIP" = ":"; then
 fi
 AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
 AC_PATH_PROG(XARGS, xargs)
-if test -z "$XARGS" || test "$XARGS" = ":"; then
-    AC_MSG_ERROR([xargs not found in \$PATH .])
-fi
+dnl if test -z "$XARGS" || test "$XARGS" = ":"; then
+dnl     AC_MSG_ERROR([xargs not found in \$PATH .])
+dnl fi
 
 dnl Be sure the make we use is GNU make.
 AC_PATH_PROGS(MAKE, gmake make, :)
