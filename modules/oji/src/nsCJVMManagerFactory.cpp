@@ -40,12 +40,20 @@
 #include "nsIGenericFactory.h"
 #include "nsJVMAuthTools.h"
 #include "nsJVMManager.h"
+#include "nsJVMConfigManager.h"
+
+#ifdef XP_UNIX
+#include "nsJVMConfigManagerUnix.h"
+#endif
 
 /*
  * Note:  In revision 1.17 of this file (and earlier) there was a
  * commented out implementation of nsCJVMManagerFactory, a hand-crafted
  * implementation of nsIFactory.
  */
+#ifdef XP_UNIX
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJVMConfigManagerUnix)
+#endif
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -61,6 +69,13 @@ static const nsModuleComponentInfo components[] =
       "@mozilla.org/oji/jvm-auth-tools;1", 
       nsJVMAuthTools::Create
     },
+#ifdef XP_UNIX
+    { "JVM Config Manager",
+      NS_JVMCONFIGMANAGER_CID,
+      "@mozilla.org/oji/jvm-config-mgr;1",
+      nsJVMConfigManagerUnixConstructor
+    },
+#endif
 };
 
 NS_IMPL_NSGETMODULE(nsCJVMManagerModule, components);

@@ -33,6 +33,7 @@ XPIDLSRCS	= \
 		nsIJVMManager.idl \
 		nsIJVMPluginInstance.idl \
 		nsIJVMAuthTools.idl \
+		nsIJVMConfigManager.idl \
 		$(NULL)
 
 EXPORTS		= \
