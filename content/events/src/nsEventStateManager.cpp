@@ -2648,12 +2648,11 @@ nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
     // the document view
 
     sf = GetParentSelfScrollingFrame(aTargetFrame);
-    if (sf) {
 #ifdef DEBUG_scroll
+    if (sf)
       printf("GetScrollableFrameOrView: Found a SelfScrollingFrame: sf = %p\n", sf);
 #endif
-      focusView = aView;
-    } else {
+    if (!sf) {
       focusFrame = GetDocumentFrame(aPresContext);
       focusFrame->GetView(aPresContext, &focusView);
       
