@@ -38,10 +38,6 @@
 * SUMMARY: JS shouldn't crash on extraneous args to str.match(), str.replace()
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=179524
 *
-* String.prototype.match() only takes one argument, so providing any
-* more arguments is syntactically incorrect. But JS shouldn't crash,
-* it should just ignore the extra arguments -
-*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -102,6 +98,73 @@ actual = str.replace(re, 'Z', 'z', new Object(), new Date());
 expect = str;
 addThis();
 
+
+/*
+ * Now test the case where str.match()'s first argument is not a regexp object.
+ * In that case, JS follows ECMA-262 Ed.3 by converting the 1st argument to a
+ * regexp object using the string as a regexp pattern, but then extends ECMA
+ * by taking any optional 2nd argument to be a regexp flag string (e.g.'g').
+ *
+ * Reference: http://bugzilla.mozilla.org/show_bug.cgi?id=179524#c10
+ */
+str = 'ABC abc';
+
+status = inSection(9);
+actual = str.match('a').toString();
+expect = str.match(/a/).toString();
+addThis();
+
+status = inSection(10);
+actual = str.match('a', 'i').toString();
+expect = str.match(/a/i).toString();
+addThis();
+
+status = inSection(11);
+actual = str.match('a', 'ig').toString();
+expect = str.match(/a/ig).toString();
+addThis();
+
+status = inSection(12);
+actual = str.match('\\s', 'm').toString();
+expect = str.match(/\s/m).toString();
+addThis();
+
+
+/*
+ * Now try the previous three cases with extraneous parameters
+ */
+status = inSection(13);
+actual = str.match('a', 'i', 'g').toString();
+expect = str.match(/a/i).toString();
+addThis();
+
+status = inSection(14);
+actual = str.match('a', 'ig', new Object()).toString();
+expect = str.match(/a/ig).toString();
+addThis();
+
+status = inSection(15);
+actual = str.match('\\s', 'm', 999).toString();
+expect = str.match(/\s/m).toString();
+addThis();
+
+
+/*
+ * Try an invalid second parameter (i.e. an invalid regexp flag)
+ */
+status = inSection(16);
+try
+{
+  actual = str.match('a', 'z').toString();
+  expect = 'SHOULD HAVE FALLEN INTO CATCH-BLOCK!';
+  addThis();
+}
+catch (e)
+{
+  actual = e instanceof SyntaxError;
+  expect = true;
+  addThis();
+}
 
 
 
