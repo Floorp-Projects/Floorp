@@ -26,11 +26,10 @@ MODULE		= network
 LIBRARY_NAME	= netutil
 
 CSRCS		= \
-	mkreg.c	\
 	mkbuf.c	\
 	$(NULL)
 
-EXPORTS=mkreg.h mkbuf.h
+EXPORTS=mkbuf.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
