@@ -19,3 +19,14 @@
 /* entry point wrappers. */
 
 #include "xptcprivate.h"
+
+// This method is never called and is only here so the compiler
+// will generate a vtbl for this class. 
+// *Needed by the Irix implementation.*
+NS_IMETHODIMP nsXPTCStubBase::QueryInterface(REFNSIID aIID,
+                                             void** aInstancePtr)
+{
+   NS_ASSERTION(0,"wowa! nsXPTCStubBase::QueryInterface called");
+   return NS_ERROR_FAILURE;
+}
+

@@ -109,6 +109,12 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
 class nsXPTCStubBase : public nsISupports
 {
 public:
+    // We are going to implement this to force the compiler to generate a 
+    // vtbl for this class. Since this is overridden in the inheriting class
+    // we expect it to never be called. 
+    // *This is needed by the Irix implementation.*
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
     // Include generated vtbl stub declarations.
     // These are virtual and *also* implemented by this class..
 #include "xptcstubsdecl.inc"
