@@ -211,6 +211,7 @@ Usage(const char *progName)
 "-S means disable SSL v2\n"
 "-3 means disable SSL v3\n"
 "-D means disable Nagle delays in TCP\n"
+"-E means disable export ciphersuites and SSL step down key gen\n"
 "-T means disable TLS\n"
 "-R means disable detection of rollback from TLS to SSL3\n"
 "-b means try binding to the port and exit\n"
@@ -297,6 +298,7 @@ errExit(char * funcString)
 **
 **************************************************************************/
 
+/* disable all the SSL cipher suites */
 void
 disableAllSSLCiphers(void)
 {
@@ -304,17 +306,57 @@ disableAllSSLCiphers(void)
     int             i            = SSL_NumImplementedCiphers;
     SECStatus       rv;
 
-    /* disable all the SSL3 cipher suites */
     while (--i >= 0) {
 	PRUint16 suite = cipherSuites[i];
         rv = SSL_CipherPrefSetDefault(suite, PR_FALSE);
 	if (rv != SECSuccess) {
-	    printf("SSL_CipherPrefSetDefault didn't like value 0x%04x (i = %d)\n",
+	    printf("SSL_CipherPrefSetDefault rejected suite 0x%04x (i = %d)\n",
 	    	   suite, i);
 	    errWarn("SSL_CipherPrefSetDefault");
-	    exit(2);
 	}
     }
+}
+
+/* disable all the export SSL cipher suites */
+SECStatus
+disableExportSSLCiphers(void)
+{
+    const PRUint16 *cipherSuites = SSL_ImplementedCiphers;
+    int             i            = SSL_NumImplementedCiphers;
+    SECStatus       rv           = SECSuccess;
+    SSLCipherSuiteInfo info;
+
+    while (--i >= 0) {
+	PRUint16 suite = cipherSuites[i];
+	SECStatus status;
+	status = SSL_GetCipherSuiteInfo(suite, &info, sizeof info);
+	if (status != SECSuccess) {
+	    printf("SSL_GetCipherSuiteInfo rejected suite 0x%04x (i = %d)\n",
+		   suite, i);
+	    errWarn("SSL_GetCipherSuiteInfo");
+	    rv = SECFailure;
+	    continue;
+	}
+	if (info.cipherSuite != suite) {
+	    printf(
+"SSL_GetCipherSuiteInfo returned wrong suite! Wanted 0x%04x, Got 0x%04x\n",
+		   suite, i);
+	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	    rv = SECFailure;
+	    continue;
+	}
+	/* should check here that info.length >= offsetof isExportable */
+	if (info.isExportable) {
+	    status = SSL_CipherPolicySet(suite, SSL_NOT_ALLOWED);
+	    if (status != SECSuccess) {
+		printf("SSL_CipherPolicySet rejected suite 0x%04x (i = %d)\n",
+		       suite, i);
+		errWarn("SSL_CipherPolicySet");
+		rv = SECFailure;
+	    }
+	}
+    }
+    return rv;
 }
 
 static SECStatus
@@ -644,9 +686,10 @@ PRBool useModelSocket  = PR_FALSE;
 PRBool disableSSL2     = PR_FALSE;
 PRBool disableSSL3     = PR_FALSE;
 PRBool disableTLS      = PR_FALSE;
-PRBool disableRollBack  = PR_FALSE;
+PRBool disableRollBack = PR_FALSE;
 PRBool NoReuse         = PR_FALSE;
 PRBool hasSidCache     = PR_FALSE;
+PRBool disableStepDown = PR_FALSE;
 
 static const char stopCmd[] = { "GET /stop " };
 static const char getCmd[]  = { "GET " };
@@ -1359,6 +1402,12 @@ server_main(
     if (rv != SECSuccess) {
 	errExit("error enabling RollBack detection ");
     }
+    if (disableStepDown) {
+	rv = SSL_OptionSet(model_sock, SSL_NO_STEP_DOWN, PR_TRUE);
+	if (rv != SECSuccess) {
+	    errExit("error disabling SSL StepDown ");
+	}
+    }
 
     for (kea = kt_rsa; kea < kt_kea_size; kea++) {
 	if (cert[kea] != NULL) {
@@ -1601,7 +1650,7 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-    	"2:3DL:M:NP:RSTbc:d:e:f:hi:lmn:op:rt:vw:xy");
+    	"2:3DEL:M:NP:RSTbc:d:e:f:hi:lmn:op:rt:vw:xy");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1610,6 +1659,7 @@ main(int argc, char **argv)
 	case '3': disableSSL3 = PR_TRUE; break;
 
 	case 'D': noDelay = PR_TRUE; break;
+	case 'E': disableStepDown = PR_TRUE; break;
 
         case 'L':
             logStats = PR_TRUE;
@@ -1809,10 +1859,22 @@ main(int argc, char **argv)
     }
 
     /* set the policy bits true for all the cipher suites. */
-    if (useExportPolicy)
+    if (useExportPolicy) {
 	NSS_SetExportPolicy();
-    else
+	if (disableStepDown) {
+	    fputs("selfserv: -x and -E options may not be used together\n", 
+	          stderr);
+	    exit(98);
+	}
+    } else {
 	NSS_SetDomesticPolicy();
+	if (disableStepDown) {
+	    rv = disableExportSSLCiphers();
+	    if (rv != SECSuccess) {
+		errExit("error disabling export ciphersuites ");
+	    }
+    	}
+    }
 
     /* all the SSL2 and SSL3 cipher suites are enabled by default. */
     if (cipherString) {
