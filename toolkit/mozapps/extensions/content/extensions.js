@@ -371,7 +371,8 @@ var gExtensionsViewController = {
       var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                               .getService(Components.interfaces.nsIUpdateService);
       updates.checkForUpdates(items, items.length, nsIUpdateItem.TYPE_EXTENSION, 
-                              Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER);
+                              Components.interfaces.nsIUpdateService.SOURCE_EVENT_USER,
+                              window);
     },
 
     cmd_uninstall: function ()

@@ -41,6 +41,7 @@
 
 const nsIUpdateItem                     = Components.interfaces.nsIUpdateItem;
 const nsIUpdateService                  = Components.interfaces.nsIUpdateService;
+const nsIExtensionManager               = Components.interfaces.nsIExtensionManager;
 
 const PREF_APP_ID                       = "app.id";
 const PREF_UPDATE_APP_UPDATESAVAILABLE  = "update.app.updatesAvailable";
@@ -60,6 +61,8 @@ var gUpdateWizard = {
 
   shouldSuggestAutoChecking: false,
   shouldAutoCheck: false,
+  
+  updatingApp: false,
   
   init: function ()
   {
@@ -92,6 +95,34 @@ var gUpdateWizard = {
       var pref = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
       pref.setBoolPref("update.extensions.enabled", this.shouldAutoCheck); 
+    }
+    
+    if (this.updatingApp) {
+      var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                              .getService(Components.interfaces.nsIUpdateService);
+# If we're not a browser, use the external protocol service to load the URI.
+#ifndef MOZ_PHOENIX
+      var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                          .createInstance(Components.interfaces.nsIURI);
+      uri.spec = updates.appUpdateURL;
+
+      var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                                  .getService(Components.interfaces.nsIExternalProtocolService);
+      if (protocolSvc.isExposedProtocol(uri.scheme))
+        protocolSvc.loadUrl(uri);
+# If we're a browser, open a new browser window instead.    
+#else
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                        .getService(Components.interfaces.nsIWindowWatcher);
+      var ary = Components.classes["@mozilla.org/supports-array;1"]
+                          .createInstance(Components.interfaces.nsISupportsArray);
+      var url = Components.classes["@mozilla.org/supports-string;1"]
+                          .createInstance(Components.interfaces.nsISupportsString);
+      url.data = updates.appUpdateURL;
+      ary.AppendElement(url);
+      ww.openWindow(null, "chrome://browser/content/browser.xul",
+                    "_blank", "chrome,all,dialog=no", ary);
+#endif
     }
   },
   
@@ -168,7 +199,8 @@ var gUpdatePage = {
 
     var updates = Components.classes["@mozilla.org/updates/update-service;1"]
                             .getService(Components.interfaces.nsIUpdateService);
-    updates.checkForUpdatesInternal(gUpdateWizard.items, gUpdateWizard.items.length, gUpdateTypes);
+    updates.checkForUpdatesInternal(gUpdateWizard.items, gUpdateWizard.items.length, 
+                                    gUpdateTypes, gSourceEvent);
 
     this._updateState = nsIUpdateService.UPDATED_NONE;
   },
@@ -273,6 +305,7 @@ var gFoundPage = {
         this._appUpdateExists = true;
         this._appSelected = true;
         this._appItem = updateitem;
+        document.getElementById("found").setAttribute("next", "appupdate");
       }
       else  {
         updateitem.checked = !this._appUpdateExists;
@@ -293,9 +326,11 @@ var gFoundPage = {
           var nonAppItem = this._nonAppItems[i];
           nonAppItem.checked = !aEvent.target.checked;
         }
+        document.getElementById("found").setAttribute("next", "appupdate");
       }
       else {
         this._appItem.checked = false;
+        document.getElementById("found").setAttribute("next", "installing");
       }
     }
     
@@ -309,6 +344,18 @@ var gFoundPage = {
         break;
       }
     }
+  }
+};
+
+var gAppUpdatePage = {
+  onPageShow: function ()
+  {
+    gUpdateWizard.setButtonLabels(null, true, 
+                                  null, true, 
+                                  null, true);
+    gUpdateWizard.updatingApp = true;
+
+    document.documentElement.getButton("finish").focus();
   }
 };
 
@@ -355,7 +402,7 @@ var gFinishedPage = {
       fEC.hidden = true;
     }
     
-    if (gSourceEvent == nsIUpdateService.SOURCE_EVENT_MISMATCH) {
+    if (gSourceEvent == nsIExtensionManager.SOURCE_EVENT_MISMATCH) {
       document.getElementById("finishedMismatch").hidden = false;
       document.getElementById("incompatibleAlert").hidden = false;
     }

@@ -123,6 +123,8 @@ function nsExtensionManager()
 
 nsExtensionManager.prototype = {
 
+  
+  /////////////////////////////////////////////////////////////////////////////
   // nsIObserver
   observe: function (aSubject, aTopic, aData)
   {
@@ -153,8 +155,11 @@ nsExtensionManager.prototype = {
             // Now disable the extension so it won't hurt anything. 
             this.disableExtension(items[i].id);
           }
-          this.update(items, items.length, 
-                      Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH);
+          var updates = Components.classes["@mozilla.org/updates/update-service;1"]
+                                  .getService(Components.interfaces.nsIUpdateService);
+          updates.checkForUpdates(items, items.length, Components.interfaces.nsIUpdateItem.TYPE_ADDON, 
+                                  Components.interfaces.nsIExtensionManager.SOURCE_EVENT_MISMATCH,
+                                  null);
         }
       }
       

@@ -67,7 +67,7 @@ function nsBackgroundUpdateService()
 nsBackgroundUpdateService.prototype = {
   _timer: null,
   _pref: null,
-
+  
   /////////////////////////////////////////////////////////////////////////////
   // nsIUpdateService
   watchForUpdates: function ()
@@ -83,15 +83,17 @@ nsBackgroundUpdateService.prototype = {
     var interval = this._pref.getIntPref(PREF_UPDATE_INTERVAL);
     var lastUpdateTime = this._pref.getIntPref(PREF_UPDATE_LASTUPDATEDATE);
     var timeSinceLastCheck = Date.UTC() - lastUpdateTime;
-    this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY);  /// XXXben
+    this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
+                                 nsIUpdateService.SOURCE_EVENT_BACKGROUND);  /// XXXben
     
     if (timeSinceLastCheck > interval)
-      this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY);
+      this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
+                                   nsIUpdateService.SOURCE_EVENT_BACKGROUND);
     else
       this._makeTimer(interval - timeSinceLastCheck);
   },
   
-  checkForUpdates: function (aItems, aItemCount, aUpdateTypes, aSourceEvent)
+  checkForUpdates: function (aItems, aItemCount, aUpdateTypes, aSourceEvent, aParentWindow)
   {
     switch (aSourceEvent) {
     case Components.interfaces.nsIExtensionManager.SOURCE_EVENT_MISMATCH:
@@ -110,7 +112,7 @@ nsBackgroundUpdateService.prototype = {
       ary.AppendElement(sourceEvent);
       for (var i = 0; i < aItems.length; ++i)
         ary.AppendElement(aItems[i]);
-      ww.openWindow(null, "chrome://mozapps/content/update/update.xul", 
+      ww.openWindow(aParentWindow, "chrome://mozapps/content/update/update.xul", 
                     "", "chrome,modal,centerscreen", ary);
       break;
     case nsIUpdateService.SOURCE_EVENT_BACKGROUND:
@@ -127,18 +129,17 @@ nsBackgroundUpdateService.prototype = {
     }  
   },
   
-  checkForUpdatesInternal: function (aItems, aItemCount, aUpdateTypes)
+  checkForUpdatesInternal: function (aItems, aItemCount, aUpdateTypes, aSourceEvent)
   {
     // Listen for notifications sent out by the app updater (implemented here) and the
     // extension updater (implemented in nsExtensionItemUpdater)
+    var updateObserver = new nsUpdateObserver(aUpdateTypes, aSourceEvent);
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
-    os.addObserver(this, "Update:Extension:Item-Ended", false);
-    os.addObserver(this, "Update:Extension:Ended", false);
-    os.addObserver(this, "Update:App:Ended", false);
+    os.addObserver(updateObserver, "Update:Extension:Item-Ended", false);
+    os.addObserver(updateObserver, "Update:Extension:Ended", false);
+    os.addObserver(updateObserver, "Update:App:Ended", false);
     
-    this._updateState = 0;
-
     var appUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED);
     var extUpdatesEnabled = this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED);
 
@@ -176,65 +177,28 @@ nsBackgroundUpdateService.prototype = {
   
   get appUpdateVersion()
   {
-    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEVERSION, Components.interfaces.nsISupportsString).data;
+    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEVERSION, 
+                                      Components.interfaces.nsISupportsString).data;
   },
   
   get appUpdateDescription()
   {
-    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEDESCRIPTION, Components.interfaces.nsISupportsString).data;
+    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEDESCRIPTION, 
+                                      Components.interfaces.nsISupportsString).data;
   },
   
   get appUpdateURL()
   {
-    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEURL, Components.interfaces.nsISupportsString).data;
-  },
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // nsIObserver
-  _updateState: 0,
-  get _doneUpdating()
-  {
-    var test = 0;
-    if (this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED))
-      test |= UPDATED_APP;
-    if (this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
-      test |= UPDATED_EXTENSIONS;
-    return (this._updateState & test) == test;
-  },
-  
-  observe: function (aSubject, aTopic, aData)
-  {
-    switch (aTopic) {
-    case "Update:Extension:Item-Ended":
-      this._pref.setIntPref(PREF_UPDATE_EXTENSIONS_COUNT, 
-                            this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_COUNT) + 1);
-      break;
-    case "Update:Extension:Ended":
-      this._updateState |= UPDATED_EXTENSIONS;
-      break;
-    case "Update:App:Ended":
-      this._updateState |= UPDATED_APP;
-      break;
-    }
-    
-    if (this._doneUpdating) {
-      // The Inline Browser Update UI uses this notification to refresh its update 
-      // UI if necessary.
-      var os = Components.classes["@mozilla.org/observer-service;1"]
-                        .getService(Components.interfaces.nsIObserverService);
-      os.notifyObservers(null, "Update:Ended", "");
-      
-      os.removeObserver(this, "Update:Extension:Item-Ended");
-      os.removeObserver(this, "Update:Extension:Ended");
-      os.removeObserver(this, "Update:App:Ended");
-    }
+    return this._pref.getComplexValue(PREF_UPDATE_APP_UPDATEURL, 
+                                      Components.interfaces.nsISupportsString).data;
   },
   
   /////////////////////////////////////////////////////////////////////////////
   // nsITimerCallback
   notify: function (aTimer)
   {
-    this.checkForUpdatesNow();
+    this.checkForUpdatesInternal([], 0, nsIUpdateItem.TYPE_ANY, 
+                                 nsIUpdateService.SOURCE_EVENT_BACKGROUND);
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -258,6 +222,66 @@ nsBackgroundUpdateService.prototype = {
         !aIID.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
+  }
+};
+
+function nsUpdateObserver(aUpdateTypes, aSourceEvent)
+{
+  this._pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+  this._updateTypes = aUpdateTypes;
+  this._sourceEvent = aSourceEvent;
+}
+
+nsUpdateObserver.prototype = {
+  _updateTypes: 0,
+  _sourceEvent: 0,
+  _updateState: 0,
+  get _doneUpdating()
+  {
+    var test = 0;
+    var updatingApp = this._updateTypes == nsIUpdateItem.TYPE_ANY || 
+                      this._updateTypes == nsIUpdateItem.TYPE_APP;
+    var updatingExt = this._updateTypes != nsIUpdateItem.TYPE_APP;
+    
+    if (this._pref.getBoolPref(PREF_UPDATE_APP_ENABLED) && 
+        updatingApp)
+      test |= UPDATED_APP;
+    if (this._pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED) && 
+        updatingExt)
+      test |= UPDATED_EXTENSIONS;
+    
+    return (this._updateState & test) == test;
+  },
+  
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIObserver
+  observe: function (aSubject, aTopic, aData)
+  {
+    switch (aTopic) {
+    case "Update:Extension:Item-Ended":
+      this._pref.setIntPref(PREF_UPDATE_EXTENSIONS_COUNT, 
+                            this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_COUNT) + 1);
+      break;
+    case "Update:Extension:Ended":
+      this._updateState |= UPDATED_EXTENSIONS;
+      break;
+    case "Update:App:Ended":
+      this._updateState |= UPDATED_APP;
+      break;
+    }
+    
+    if (this._doneUpdating) {
+      // The Inline Browser Update UI uses this notification to refresh its update 
+      // UI if necessary.
+      var os = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+      os.notifyObservers(null, "Update:Ended", this._sourceEvent.toString());
+      
+      os.removeObserver(this, "Update:Extension:Item-Ended");
+      os.removeObserver(this, "Update:Extension:Ended");
+      os.removeObserver(this, "Update:App:Ended");
+    }
   }
 };
 

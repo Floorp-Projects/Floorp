@@ -49,3 +49,11 @@
 <!ENTITY  finished.mismatch.label         "Click Finish to continue starting &brandShortName;.">
 
 <!ENTITY  appInfo.label                   "This update must be installed separately from any others.">
+
+<!ENTITY  appupdate.title                 "&brandShortName; Update">
+<!ENTITY  appupdate.intro.label           "&brandShortName; Update will now close and take you to the
+                                           web site where you can download the latest version of 
+                                           &brandShortName;.">
+                                           
+
+

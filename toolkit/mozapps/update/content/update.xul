@@ -113,6 +113,20 @@
     
   </wizardpage>
 
+  <wizardpage id="appupdate" pageid="appupdate"
+              label="&appupdate.title;"
+              onpageshow="gAppUpdatePage.onPageShow();">
+    
+    <hbox>
+      <label flex="1">&appupdate.intro.label;</label>
+      <separator/>
+      <image src="chrome://mozapps/skin/update/icon32.png"/>
+    </hbox>
+    
+    <separator/>
+    
+  </wizardpage>
+
   <wizardpage id="installing" pageid="installing" next="finished"
               label="&installing.title;"
               onpageshow="gInstallingPage.onPageShow();">
