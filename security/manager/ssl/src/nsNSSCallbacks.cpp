@@ -260,3 +260,22 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     }
 }
 
+SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
+                                              PRBool checksig, PRBool isServer) {
+  // first the default action
+  SECStatus rv = SSL_AuthCertificate(CERT_GetDefaultCertDB(), fd, checksig, isServer);
+
+  if (SECSuccess == rv) {
+    nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+    if (infoObject) {
+      CERTCertificate *serverCert = SSL_PeerCertificate(fd);
+      if (serverCert) {
+        CERTCertList *certList = CERT_GetCertChainFromCert(serverCert, PR_Now(), certUsageSSLCA);
+        infoObject->RememberCAChain(certList);
+        CERT_DestroyCertificate(serverCert);
+      }
+    }
+  }
+
+  return rv;
+}

@@ -26,6 +26,7 @@
 
 #include "prtypes.h"
 #include "prio.h"
+#include "certt.h"
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -72,6 +73,8 @@ public:
   nsresult GetTLSIntolerant(PRBool *aTLSIntolerant);
   nsresult SetTLSIntolerant(PRBool aTLSIntolerant);
 
+  nsresult RememberCAChain(CERTCertList *aCertList);
+
   /* Set SSL Status values */
   nsresult SetSSLStatus(nsISSLStatus *aSSLStatus);  
 
@@ -86,6 +89,7 @@ protected:
   PRBool mTLSIntolerant;
   PRInt32 mPort;
   nsXPIDLCString mHostName;
+  CERTCertList *mCAChain;
 
   /* SSL Status */
   nsCOMPtr<nsISSLStatus> mSSLStatus;
