@@ -296,6 +296,9 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* request)
             offset = str.Find("<SCRIPT", PR_TRUE);
             if (offset < 0) {
               offset = str.Find("<BODY", PR_TRUE);
+              if (offset < 0) {
+                offset = str.Find("<A HREF", PR_TRUE);
+              }
             }
           }
         }
