@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef nsICDETObserver_h__
-#define nsICDDETObserver_h__
+#define nsICDETObserver_h__
 
 #include "nsISupports.h"
 #include "nsDetectionConfident.h"
