@@ -2271,8 +2271,18 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
   {
     if (!mCitePrefix.IsEmpty())
     {
-      nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(aEditor));
-      htmlEditor->InsertHTML(mCitePrefix);
+      if (aHTMLEditor)
+      {
+        nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(aEditor));
+        if (htmlEditor)
+          htmlEditor->InsertHTML(mCitePrefix);
+      }
+      else
+      {
+        nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(aEditor));
+        if (textEditor)
+          textEditor->InsertText(mCitePrefix);
+      }
     }
 
     nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(aEditor));
