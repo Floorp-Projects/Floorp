@@ -14,6 +14,7 @@ EXPORTS = \
 
 PRIVATE_EXPORTS = \
     nsSMTPService.h \
+    nsMIMEService.h \
 	$(NULL)
 
 MODULE = xpfc
