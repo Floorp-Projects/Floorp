@@ -1062,49 +1062,43 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   nsRect rr(0, 0, aWidth, aHeight);
   nsIWidget* locationWidget = nsnull;
 
-  if (NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&locationWidget))
-  {
-    // position location bar (it's stretchy)
-    if (mLocation) {
-      if (mChromeMask & NS_CHROME_TOOL_BAR_ON) {
-        if (mThrobber) {
-          locationWidget->Resize(2*BUTTON_WIDTH, 0,
-                            aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
-                            BUTTON_HEIGHT,
-                            PR_TRUE);
-          mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
-        }
-        else {
-          locationWidget->Resize(2*BUTTON_WIDTH, 0,
-                            aWidth - 2*BUTTON_WIDTH,
-                            BUTTON_HEIGHT,
-                            PR_TRUE);
-        }
-        rr.y += BUTTON_HEIGHT;
-        rr.height -= BUTTON_HEIGHT;
-        locationWidget->Show(PR_TRUE);
+  // position location bar (it's stretchy)
+  if (mLocation && NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&locationWidget)) {
+    if (mChromeMask & NS_CHROME_TOOL_BAR_ON) {
+      if (mThrobber) {
+        locationWidget->Resize(2*BUTTON_WIDTH, 0,
+                          aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
+                          BUTTON_HEIGHT,
+                          PR_TRUE);
+        mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
       }
       else {
-        locationWidget->Show(PR_FALSE);
+        locationWidget->Resize(2*BUTTON_WIDTH, 0,
+                          aWidth - 2*BUTTON_WIDTH,
+                          BUTTON_HEIGHT,
+                          PR_TRUE);
       }
+      rr.y += BUTTON_HEIGHT;
+      rr.height -= BUTTON_HEIGHT;
+      locationWidget->Show(PR_TRUE);
+    }
+    else {
+      locationWidget->Show(PR_FALSE);
     }
   }
   
   nsIWidget* statusWidget = nsnull;
 
-  if (NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&statusWidget))
-  {
-    if (mStatus) {
-      if (mChromeMask & NS_CHROME_STATUS_BAR_ON) {
-        statusWidget->Resize(0, aHeight - txtHeight,
-                        aWidth, txtHeight,
-                        PR_TRUE);
-        rr.height -= txtHeight;
-        statusWidget->Show(PR_TRUE);
-      }
-      else {
-        statusWidget->Show(PR_FALSE);
-      }
+  if (mStatus && NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
+    if (mChromeMask & NS_CHROME_STATUS_BAR_ON) {
+      statusWidget->Resize(0, aHeight - txtHeight,
+                      aWidth, txtHeight,
+                      PR_TRUE);
+      rr.height -= txtHeight;
+      statusWidget->Show(PR_TRUE);
+    }
+    else {
+      statusWidget->Show(PR_FALSE);
     }
   }
 
