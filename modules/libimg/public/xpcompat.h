@@ -32,7 +32,7 @@
 #ifndef xpcompat_h___
 #define xpcompat_h___
 
-#include "platform.h"
+#include "xp_core.h"
 #include "prtypes.h"
 #include "nsCom.h"
 

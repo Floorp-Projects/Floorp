@@ -27,8 +27,6 @@
 
 #include "xp_core.h"
 #include "xp_file.h"
-#include "ntypes.h"
-#include "net.h"
 #ifdef __cplusplus
 #include "nsColor.h"
 #include "nsCoord.h"
