@@ -735,6 +735,14 @@ function GetFolderOutliner()
     return gFolderOutliner;
 }
 
+function GetSearchInput()
+{
+    if (gSearchInput) return gSearchInput;
+    gSearchInput = document.getElementById("searchInput");
+    return gSearchInput;
+}
+
+
 function GetMessagePane()
 {
     if (gMessagePane) return gMessagePane;

@@ -716,35 +716,18 @@ function FocusRingUpdate_Mail()
   var currentFocusedElement = WhichPaneHasFocus();
   if (!currentFocusedElement)
     return;
-    
+  
 	if (currentFocusedElement != gLastFocusedElement) {
-        if( currentFocusedElement == GetThreadOutliner()) {
-            // XXX fix me
-            GetThreadOutliner().setAttribute("focusring","true");
-            GetMessagePane().setAttribute("focusring","false");
-        }
+    currentFocusedElement.setAttribute("focusring", "true");
+    
+    if (gLastFocusedElement)
+      gLastFocusedElement.removeAttribute("focusring");
 
-        else if(currentFocusedElement==GetFolderOutliner()) {
-            // XXX fix me
-            GetThreadOutliner().setAttribute("focusring","false");
-            GetMessagePane().setAttribute("focusring","false");
-        }
-        else if(currentFocusedElement==GetMessagePane()){
-            // mscott --> fix me!!
-            GetThreadOutliner().setAttribute("focusring","false");
-            GetMessagePane().setAttribute("focusring","true");
-        }
-        else {
-            // XXX fix me
-            GetThreadOutliner().setAttribute("focusring","false");
-            GetMessagePane().setAttribute("focusring","false");
-        }
-        
-        gLastFocusedElement = currentFocusedElement;
+    gLastFocusedElement = currentFocusedElement;
 
-        // since we just changed the pane with focus we need to update the toolbar to reflect this
-        UpdateMailToolbar("focus");
-    }
+    // since we just changed the pane with focus we need to update the toolbar to reflect this
+    UpdateMailToolbar("focus");
+  }
 }
 
 function MessagePaneHasFocus()
@@ -788,18 +771,18 @@ function IsSubWindowOf(search, wind)
 
 function WhichPaneHasFocus()
 {
-	var currentNode = top.document.commandDispatcher.focusedElement;	
-  if (!currentNode) 
-    return null;
-  
   var threadOutliner = GetThreadOutliner();
+  var searchInput = GetSearchInput();
   var folderOutliner = GetFolderOutliner();
-  var messagePane = GetMessagePane();
     
+  if (top.document.commandDispatcher.focusedWindow == GetMessagePaneFrame())
+    return GetMessagePane();
+
+	var currentNode = top.document.commandDispatcher.focusedElement;	
 	while (currentNode) {
     if (currentNode === threadOutliner ||
-        currentNode === folderOutliner ||
-        currentNode === messagePane)
+        currentNode === searchInput || 
+        currentNode === folderOutliner)
       return currentNode;
 					
 		currentNode = currentNode.parentNode;
