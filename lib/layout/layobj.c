@@ -693,9 +693,18 @@ lo_PopObject(lo_DocState* state)
 	/* Unlink from stack */
 	top_state->object_stack = top->next;
 
+#if 0
 	/* Add to cache */
 	top->next = top_state->object_cache;
 	top_state->object_cache = top;
+#else
+	/*
+	 * beard: This cache never gets invalidated when the real_tag field gets freed by
+	 * PA_FreeTag. Therefore, we're leaving stale cache entries around. Until this is
+	 * fixed, don't bother caching these stack items.
+	 */
+	 lo_DeleteObjectStack(top);
+#endif
 }
 
 
@@ -811,7 +820,7 @@ lo_ProcessObjectTag(MWContext* context, lo_DocState* state, PA_Tag* tag, XP_Bool
 
 		/*
 		 * If we have started loading an OBJECT we are
-		 * out if the HEAD section of the HTML
+		 * out of the HEAD section of the HTML
 		 * and into the BODY
 		 */
 		if (blocked == FALSE)
