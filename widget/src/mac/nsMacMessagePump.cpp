@@ -369,9 +369,6 @@ PRBool nsMacMessagePump::BrowserIsBusy()
 
 PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 {
-  const UInt32  kWNECallIntervalTicks = 4;
-  static UInt32 sNextWNECall = 0;
-  
   // Make sure we call WNE if we have user events, or the mouse is down
   EventRecord tempEvent;
   // When checking btnState make sure to test if we're in the background
@@ -379,26 +376,17 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
     ::EventAvail(kEventAvailMask, &tempEvent) ||
     (!(tempEvent.modifiers & btnState) && nsToolkit::IsAppInForeground());
   
-  // don't call more than once every 4 ticks
-  if (!havePendingEvent && (::TickCount() < sNextWNECall))
-    return PR_FALSE;
-    
   // when in the background, we don't want to chew up time processing mouse move
   // events, so set the mouse region to null. If we're in the fg, however,
   // we want every mouseMove event we can get our grubby little hands on, so set
   // it to a 1x1 rect.
   RgnHandle mouseRgn = nsToolkit::IsAppInForeground() ? mMouseRgn : nsnull;
 
-  PRBool  browserBusy = BrowserIsBusy();
-  SInt32  sleepTime = (havePendingEvent || browserBusy) ? 0 : 2;
+  SInt32  sleepTime = (havePendingEvent) ? 0 : 5;
   
   ::SetEventMask(everyEvent); // we need keyUp events
   PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mouseRgn);
   
-  // if we are not busy, call WNE as often as possible to yield time to
-  // other apps (especially important on Mac OS X)
-  sNextWNECall = browserBusy ? (::TickCount() + kWNECallIntervalTicks) : 0;
-
 #if !TARGET_CARBON
   if (haveEvent && ::TSMEvent(&theEvent) )
     haveEvent = PR_FALSE;

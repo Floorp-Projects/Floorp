@@ -54,6 +54,7 @@
 
 #if defined(XP_MAC)
 #include <AppleEvents.h>
+#include <Processes.h>
 #if !defined(DARWIN)
 #include "pprthred.h"
 #endif
@@ -112,6 +113,8 @@ struct PLEventQueue {
     PRBool       removeMsg;
 #elif defined(XP_BEOS)
     port_id      eventport;
+#elif defined(XP_MAC)
+    ProcessSerialNumber psn;
 #endif
 };
 
@@ -170,6 +173,9 @@ static PLEventQueue * _pl_CreateEventQueue(char *name,
     self->removeMsg = PR_TRUE;
 #endif
     self->notified = PR_FALSE;
+#if defined (XP_MAC)
+    self->psn.lowLongOfPSN = kNoProcess;
+#endif
 
     PR_INIT_CLIST(&self->queue);
     if ( qtype == EventQueueIsNative ) {
@@ -901,7 +907,7 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_NativeNotify(PLEventQueue* self)
 {
-#pragma unused (self)
+    WakeUpProcess(&self->psn);
     return PR_SUCCESS;    /* XXX can fail? */
 }
 #endif /* XP_MAC */
@@ -1188,15 +1194,12 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 } /* end _md_CreateEventQueue() */
 #endif /* XP_OS2 */
 
-#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS)
 /*
 ** _md_CreateEventQueue() -- ModelDependent initializer
 */
 static void _md_CreateEventQueue( PLEventQueue *eventQueue )
 {
-#ifdef XP_MAC 
-#pragma unused(eventQueue) 
-#endif 
     /* there's really nothing special to do here,
     ** the guts of the unix stuff is in the setupnativenotify
     ** and related functions.
@@ -1204,6 +1207,17 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     return;    
 } /* end _md_CreateEventQueue() */
 #endif /* XP_UNIX */
+
+#if defined(XP_MAC)
+/*
+** _md_CreateEventQueue() -- ModelDependent initializer
+*/
+static void _md_CreateEventQueue( PLEventQueue *eventQueue )
+{
+    OSErr err = GetCurrentProcess(&eventQueue->psn);
+    PR_ASSERT(err == noErr);
+} /* end _md_CreateEventQueue() */
+#endif /* XP_MAC */
 
 /* extra functions for unix */
 
