@@ -75,6 +75,8 @@ public:
   NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
 
   NS_IMETHOD DoFragment(PRBool aFlag);
+  NS_IMETHOD BeginContext(PRInt32 aPosition){ return NS_OK; }
+  NS_IMETHOD EndContext(PRInt32 aPosition){ return NS_OK; }
 
   // nsIRobotSink
   NS_IMETHOD Init(nsIURL* aDocumentURL);
