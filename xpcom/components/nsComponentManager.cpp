@@ -1278,7 +1278,8 @@ ClassIDWriter(PLDHashTable *table,
     return PL_DHASH_NEXT;
 }
 
-static PRBool AutoRegEntryWriter(void* aElement, void *aData)
+PR_STATIC_CALLBACK(PRBool)
+AutoRegEntryWriter(void* aElement, void *aData)
 {
     PRFileDesc* fd = (PRFileDesc*) aData;
     AutoRegEntry* entry = (AutoRegEntry*) aElement;
