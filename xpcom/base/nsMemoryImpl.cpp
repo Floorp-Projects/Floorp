@@ -159,7 +159,6 @@ nsMemoryImpl::RegisterObserver(nsIMemoryPressureObserver* obs)
 NS_IMETHODIMP
 nsMemoryImpl::UnregisterObserver(nsIMemoryPressureObserver* obs)
 {
-    NS_ASSERTION(mObservers, "never called nsIMemory::RegisterObserver or called after nsIMemory::Shutdown");
     if (!mObservers)
         return NS_OK;
     return mObservers->RemoveElement(obs);
