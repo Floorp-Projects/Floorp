@@ -42,14 +42,33 @@ catch (ex) {
   var defaultStatus = "default status text";
   var explicitURL = false;
 
+  //
+  // Determine if d&d is on or not, off by default for beta but we want mozilla
+  // folks to be able to turn it on if they so desire.
+  //
+  var gDragDropEnabled = false;
+  try {
+    gDragDropEnabled = pref.GetBoolPref("xpfe.dragdrop.enable");
+  }
+  catch (ex) {
+    dump("failed to get the xpfe.dragdrop.enable pref, assuming it is off\n");
+  }  
+
 
   function GeneralDrag ( event )
   {
-    dump("****** GENERAL DRAG ********\n");
+    if ( !gDragDropEnabled )
+      return;
+    
+    dump("****** DRAG MADE IT TO TOPLEVEL WINDOW ********\n");
   }
+
   
   function BeginDragPersonalToolbar ( event )
   {
+    if ( !gDragDropEnabled )
+      return;
+    
     //XXX we rely on a capturer to already have determined which item the mouse was over
     //XXX and have set an attribute.
     
@@ -148,6 +167,9 @@ this doesn't work anymore (target is null), not sure why.
   
   function DropPersonalToolbar ( event )
   { 
+    if ( !gDragDropEnabled )
+      return;
+    
     var dropAccepted = false;
     
     var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
@@ -230,6 +252,9 @@ this doesn't work anymore (target is null), not sure why.
   
   function DragOverPersonalToolbar ( event )
   {
+    if ( !gDragDropEnabled )
+      return;
+    
     var validFlavor = false;
     var dragSession = null;
 
@@ -266,6 +291,9 @@ this doesn't work anymore (target is null), not sure why.
   //
   function DragOverContentArea ( event )
   {
+    if ( !gDragDropEnabled )
+      return;
+    
     var validFlavor = false;
     var dragSession = null;
 
@@ -302,6 +330,9 @@ this doesn't work anymore (target is null), not sure why.
   //
   function DropOnContentArea ( event )
   { 
+    if ( !gDragDropEnabled )
+      return;
+    
     var dropAccepted = false;
     
     var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
@@ -362,6 +393,9 @@ this doesn't work anymore (target is null), not sure why.
   // 
   function DragProxyIcon ( event )
   {
+    if ( !gDragDropEnabled )
+      return;
+    
     var dragStarted = false;
     var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
     if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
