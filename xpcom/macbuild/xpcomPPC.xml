@@ -1753,7 +1753,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsRecylingAllocator.cpp</PATH>
+                    <PATH>nsRecyclingAllocator.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -2422,7 +2422,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsRecylingAllocator.cpp</PATH>
+                    <PATH>nsRecyclingAllocator.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -4229,7 +4229,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsRecylingAllocator.cpp</PATH>
+                    <PATH>nsRecyclingAllocator.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -4903,7 +4903,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsRecylingAllocator.cpp</PATH>
+                    <PATH>nsRecyclingAllocator.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -5239,7 +5239,7 @@
             <FILEREF>
                 <TARGETNAME>xpcom.shlb</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
-                <PATH>nsRecylingAllocator.cpp</PATH>
+                <PATH>nsRecyclingAllocator.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
