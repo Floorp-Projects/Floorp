@@ -15,6 +15,10 @@ titledbutton {
   background-image: inherit;
 }
 
+treecol[sortActive="true"] {
+ background-color: lightgray;
+}
+
 treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }

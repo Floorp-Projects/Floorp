@@ -3,6 +3,10 @@ window {
  background-color: white; 
 }
 
+treecol[sortActive="true"] {
+ background-color: lightgray;
+}
+
 titledbutton {
   display: inline;
   color:black; 
