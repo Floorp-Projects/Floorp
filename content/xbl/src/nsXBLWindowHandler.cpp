@@ -132,7 +132,7 @@ nsXBLWindowHandler :: IsEditor()
 // scan through the list to find something to handle the event and then make it
 // so.
 //
-NS_IMETHODIMP
+nsresult
 nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventType, 
                                             nsIXBLPrototypeHandler* aHandler)
 {
@@ -214,7 +214,7 @@ nsXBLWindowHandler::GetHandlers(nsIXBLDocumentInfo* aInfo, const nsAReadableCStr
 //
 // Lazily load the XP and platform-specific bindings
 //
-NS_IMETHODIMP
+nsresult
 nsXBLWindowHandler::EnsureHandlers()
 {
   if (!sXBLSpecialDocInfo)

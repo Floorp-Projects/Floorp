@@ -77,7 +77,7 @@ NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler, nsIDOMKeyListener)
 // Lazily load the XBL handlers. Overridden to handle being attached
 // to a particular element rather than the document
 //
-NS_IMETHODIMP
+nsresult
 nsXBLWindowKeyHandler::EnsureHandlers()
 {
   nsresult rv = NS_ERROR_FAILURE;
