@@ -316,8 +316,15 @@ HTML_ENTITY(lsaquo, 8249)
 HTML_ENTITY(rsaquo, 8250)
 HTML_ENTITY(euro, 8364)
 
-// Navigator entity extensions; apos is from XML
+// Navigator entity extensions
+// This block of entities needs to be at the bottom of the list since it
+// contains duplicate Unicode codepoints.  The codepoint to entity name
+// mapping (used by Composer) must ignores them, which occurs only
+// because they are listed later.
+
+// apos is from XML
 HTML_ENTITY(apos, 39) 
+// The capitalized versions are required to handle non-standard input.
 HTML_ENTITY(AMP, 38)
 HTML_ENTITY(COPY, 169)
 HTML_ENTITY(GT, 62)
