@@ -32,6 +32,12 @@ Rights Reserved.
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<!-- Context menu -->
+<script language="javascript">
+  // Global variable that holds the nsContextMenu instance.
+  var contextMenu = null;
+</script>
+
 <script src="chrome://messenger/content/mailCommands.js"/>
 <script src="chrome://messenger/content/mailWindowOverlay.js"/>
 
@@ -386,7 +392,7 @@ Rights Reserved.
 	</popup>
 
 	<popup id="messagePaneContext"   
-	 oncreate="return fillMessagePaneContextMenu(this);" 
+	 oncreate="contextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(contextMenu);" 
 	 ondestroy="contextMenu.onDestroy(); contextMenu = null;">
         <menuitem id="context-openlink"
                   value="&openLinkCmd.label;"

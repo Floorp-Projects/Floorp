@@ -321,10 +321,8 @@ function SetMenuItemAccessKey(id, accessKey)
 
 }
 
-function fillMessagePaneContextMenu(contextMenuNode)
+function fillMessagePaneContextMenu(contextMenu)
 {
-	var contextMenu = new nsContextMenu(contextMenuNode);
-
 	var message = GetLoadedMessage();
 	var numSelected = (message) ? 1 : 0;
 
