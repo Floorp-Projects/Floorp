@@ -770,7 +770,7 @@ function IsCardViewAndAbResultsPaneSplitterCollapsed()
 function LaunchUrl(url)
 {
   var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
-  messenger.SetWindow(window,null);
+  messenger.SetWindow(window, null);
   messenger.OpenURL(url);
 }
 
