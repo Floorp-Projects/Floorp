@@ -852,7 +852,8 @@ PR_STATIC_CALLBACK(PRBool) set_animation_mode(nsHashKey *aKey, void *aData, void
   nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, sup);
   nsCOMPtr<imgIRequest> imgReq;
   loader->GetRequest(getter_AddRefs(imgReq));
-  SetImgAnimModeOnImgReq(imgReq, (PRUint16)closure);
+  PRUint32 mode = (PRUint32)closure;
+  SetImgAnimModeOnImgReq(imgReq, (PRUint16)mode);
   return PR_TRUE;
 }
 
