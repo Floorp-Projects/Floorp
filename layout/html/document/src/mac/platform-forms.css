@@ -36,116 +36,117 @@
 
 @import url("resource://gre/res/forms.css");
 
+/* makes sure enabled and disabled input and text area fields are drawn */
 input,
-textarea {
+textarea,
+input[disabled],
+textarea[disabled] {
   border-width: 2px;
-  padding: 0 2px 0 1px;
+  padding: 0px 1px 0px 1px;
   font-size: 11px;
+  margin: 1px 1px 1px 1px;
   background-color: transparent;
-  margin: 2px 1px;
 }
 
 select {
   -moz-appearance: menulist;
-  margin: 2px;
+  margin: 1px 1px 1px 1px;
   background-color: transparent !important;
   color: -moz-FieldText !important;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 /* Need the "select[size][multiple]" selector to override the settings on
-   'select[size="1"]', eg if one has <select size="1" multiple> */
-
+  'select[size="1"]', eg if one has <select size="1" multiple> */
 select[size],
 select[multiple],
 select[size][multiple] {
   -moz-appearance: listbox;
-  margin: 2px;
+  margin: 1px 1px 1px 1px;
   background-color: -moz-Field !important;
 }
 
 select[size="0"],
 select[size="1"] {
   -moz-appearance: menulist;
-  margin: 1px;
+  margin: 1px 1px 1px 1px;
   background-color: transparent !important;
 }
 
-select > input[type="button"] {
-  /* make sure nothing paints for the menulist button, since the button is
-     painted as part of the menulist. */
-  background-image: none !important;
-}
-
+/* make sure nothing paints for the menulist button, since the button is
+  painted as part of the menulist. */
+select > input[type="button"],
 select > input[type="button"]:active {
   background-image: none !important;
 }
 
-input[disabled],
-textarea[disabled],
 option[disabled],
 optgroup[disabled],
 select[disabled] {
   color: GrayText !important;
 }
 
+/* margins makes sure they are aligned with the text baseline */
 input[type="checkbox"] {
   -moz-appearance: checkbox-small;
   width: 15px;
   height: 15px;
+  margin: 1px 2px 0px 3px;
 }
 
 input[type="radio"] {
   -moz-appearance: radio-small;
   width: 15px;
   height: 16px;
+  margin: 1px 2px -3px 3px;
 }
 
 input[type="reset"],
 input[type="button"],
-input[type="submit"] {
-  -moz-appearance: button-small;
-  font-size: 11px;
-  margin: 2px 2px;
-  padding: 0px;
-  border-width: 2px 8px 2px 8px;
-  color: -moz-FieldText ! important;
-  min-width: 24px;
-}
-
-button,
-button[disabled],
-button[disabled]:active {
-  -moz-appearance: button-bevel;
-  padding: 0px;
-  margin: 2px 2px;
-  border-width: 4px;
-  min-width: 24px;
-  min-height: 17px;
-}
-
-button:active:hover,
+input[type="submit"],
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
-  padding: 0px;
-}
-
-button::-moz-focus-inner,
-input[type="reset"]::-moz-focus-inner,
-input[type="button"]::-moz-focus-inner,
-input[type="submit"]::-moz-focus-inner,
-input[type="file"] > input[type="button"]::-moz-focus-inner {
+  -moz-appearance: button-small;
+  font-size: 11px;
+  margin: 2px 1px 2px 1px;
   padding: 0;
-  border: 0;
+  border-width: 2px 8px 2px 8px;
+  color: -moz-FieldText !important;
+  min-width: 24px;
 }
 
+/* makes sure diabled buttons have the same style as enabled buttons */
 input[type="reset"][disabled]:active,
 input[type="reset"][disabled],
 input[type="button"][disabled]:active,
 input[type="button"][disabled],
 input[type="submit"][disabled]:active,
 input[type="submit"][disabled] {
+  margin: 2px 1px 2px 1px;
+  padding: 0;
   border-width: 2px 8px 2px 8px;
+  min-width: 24px;
   color: GrayText !important;
 }
+
+/* this draws the square button */
+button,
+button[disabled],
+button:active:hover,
+button[disabled]:active {
+  -moz-appearance: button-bevel;
+  margin: 5px 2px 0px 2px;
+  padding: 0px;
+  border-width: 2px 4px 4px 4px;
+}
+
+/* this turns off the mozilla focus ring shown inside clicked or selecetd buttons */
+button::-moz-focus-inner,
+input[type="reset"]::-moz-focus-inner,
+input[type="button"]::-moz-focus-inner,
+input[type="submit"]::-moz-focus-inner,
+input[type="file"] > input[type="button"]::-moz-focus-inner {
+  border: 0;
+}
+
