@@ -63,59 +63,6 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID,  NS_IDOMEVENTRECEIVER_IID);
 #include "nsISupportsArray.h"
 
 
-class nsToolboxFrame::DragListenerDelegate : public nsIDOMDragListener
-{
-protected:
-  nsToolboxFrame* mFrame;
-
-public:
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMEventListener interface
-  virtual nsresult HandleEvent(nsIDOMEvent* aEvent)
-  {
-    return mFrame ? mFrame->HandleEvent(aEvent) : NS_OK;
-  }
-  
-  virtual nsresult DragGesture(nsIDOMEvent* aEvent)
-  {
-    return mFrame ? mFrame->DragGesture(aEvent) : NS_OK;
-  }
-
-  // nsIDOMDragListener interface
-  virtual nsresult DragEnter(nsIDOMEvent* aMouseEvent)
-  {
-    return mFrame ? mFrame->DragEnter(aMouseEvent) : NS_OK;
-  }
-
-  virtual nsresult DragOver(nsIDOMEvent* aMouseEvent)
-  {
-    return mFrame ? mFrame->DragOver(aMouseEvent) : NS_OK;
-  }
-
-  virtual nsresult DragExit(nsIDOMEvent* aMouseEvent)
-  {
-    return mFrame ? mFrame->DragExit(aMouseEvent) : NS_OK;
-  }
-
-  virtual nsresult DragDrop(nsIDOMEvent* aMouseEvent)
-  {
-    return mFrame ? mFrame->DragDrop(aMouseEvent) : NS_OK;
-  }
-
-  // Implementation methods
-  DragListenerDelegate(nsToolboxFrame* aFrame) : mFrame(aFrame)
-  {
-    NS_INIT_REFCNT();
-  }
-
-  virtual ~DragListenerDelegate() {}
-
-  void NotifyFrameDestroyed() { mFrame = nsnull; }
-};
-
-
 NS_IMPL_ADDREF(nsToolboxFrame::DragListenerDelegate);
 NS_IMPL_RELEASE(nsToolboxFrame::DragListenerDelegate);
 
