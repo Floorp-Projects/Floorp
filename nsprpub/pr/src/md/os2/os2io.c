@@ -144,7 +144,7 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
     HFILE file;
     PRInt32 access = OPEN_SHARE_DENYNONE;
     PRInt32 flags = 0L;
-    PRInt32 rc;
+    APIRET rc = 0;
     PRUword actionTaken;
 
     ULONG CurMaxFH = 0;
@@ -180,24 +180,33 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
     }
 
     if (isxdigit(mode) == 0) /* file attribs are hex, UNIX modes octal */
-      fattr = ((ULONG)mode == FILE_HIDDEN) ? FILE_HIDDEN : FILE_NORMAL;
+        fattr = ((ULONG)mode == FILE_HIDDEN) ? FILE_HIDDEN : FILE_NORMAL;
     else fattr = FILE_NORMAL;
 
-    /* OS/2 sets the Max file handles per process to 20 by default */
-    DosSetRelMaxFH(&ReqCount, &CurMaxFH);
+    do {
+        rc = DosOpen((char*)name,
+                     &file,            /* file handle if successful */
+                     &actionTaken,     /* reason for failure        */
+                     0,                /* initial size of new file  */
+                     fattr,            /* file system attributes    */
+                     flags,            /* Open flags                */
+                     access,           /* Open mode and rights      */
+                     0);               /* OS/2 Extended Attributes  */
+        if (rc == ERROR_TOO_MANY_OPEN_FILES) {
+            ULONG CurMaxFH = 0;
+            LONG ReqCount = 20;
+            APIRET rc2;
+            rc2 = DosSetRelMaxFH(&ReqCount, &CurMaxFH);
+            if (rc2 != NO_ERROR) {
+                break;
+            }
+        }
+    } while (rc == ERROR_TOO_MANY_OPEN_FILES);
 
-    rc = DosOpen((char*)name,
-                 &file,            /* file handle if successful */
-                 &actionTaken,     /* reason for failure        */
-                 0,                /* initial size of new file  */
-                 fattr,            /* file system attributes    */
-                 flags,            /* Open flags                */
-                 access,           /* Open mode and rights      */
-                 0);               /* OS/2 Extended Attributes  */
     if (rc != NO_ERROR) {
-		_PR_MD_MAP_OPEN_ERROR(rc);
-      return -1; 
-	}
+        _PR_MD_MAP_OPEN_ERROR(rc);
+        return -1; 
+    }
 
     return (PRInt32)file;
 }
