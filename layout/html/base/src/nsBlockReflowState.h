@@ -1839,6 +1839,9 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     PRInt32 n = line->ChildCount();
     while (--n >= 0) {
       frame->SetParent(this);
+      // When pushing and pulling frames we need to check for whether any
+      // views need to be reparented
+      nsHTMLContainerFrame::ReparentFrameView(frame, mNextInFlow, this);
       lastFrame = frame;
       frame->GetNextSibling(&frame);
     }
@@ -2070,8 +2073,16 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 
     // Change geometric parents
     if (aUpdateGeometricParent) {
+      // Before we set the new parent frame get the current parent
+      nsIFrame* oldParentFrame;
+      frame->GetParent(&oldParentFrame);
       frame->SetParent(this);
 
+      // When pushing and pulling frames we need to check for whether any
+      // views need to be reparented
+      NS_ASSERTION(oldParentFrame != this, "unexpected parent frame");
+      nsHTMLContainerFrame::ReparentFrameView(frame, oldParentFrame, this);
+      
       // The frame is being pulled from a next-in-flow; therefore we
       // need to add it to our sibling list.
       if (nsnull != aState.mPrevChild) {
@@ -3451,6 +3462,12 @@ nsBlockFrame::DrainOverflowLines()
       nsIFrame* frame = line->mFirstChild;
       while (nsnull != frame) {
         frame->SetParent(this);
+
+        // When pushing and pulling frames we need to check for whether any
+        // views need to be reparented
+        nsHTMLContainerFrame::ReparentFrameView(frame, prevBlock, this);
+
+        // Get the next frame
         lastFrame = frame;
         frame->GetNextSibling(&frame);
       }

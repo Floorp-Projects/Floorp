@@ -123,6 +123,91 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+static nsresult
+ReparentFrameViewTo(nsIFrame* aFrame,
+                    nsIView*  aNewParentView,
+                    nsIView*  aOldParentView)
+{
+  nsIView*  view;
+
+  // Does aFrame have a view?
+  aFrame->GetView(&view);
+  if (view) {
+    nsIViewManager* viewManager;
+
+#ifdef NS_DEBUG
+    // Verify that the current parent view is what we think it is
+    nsIView*  parentView;
+
+    view->GetParent(parentView);
+    NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
+#endif
+
+    // Get the view manager
+    aNewParentView->GetViewManager(viewManager);
+    NS_ASSERTION(nsnull != viewManager, "null view manager");
+    
+    // Change the parent view.
+    PRInt32 zIndex;
+    view->GetZIndex(zIndex);
+    viewManager->RemoveChild(aOldParentView, view);
+    
+    // XXX We need to insert this view in the correct place within its z-order...
+    viewManager->InsertChild(aNewParentView, view, zIndex);
+    NS_RELEASE(viewManager);
+
+  } else {
+    // Iterate the child frames, and check each child frame to see if it has
+    // a view
+    nsIFrame* childFrame;
+
+    aFrame->FirstChild(nsnull, &childFrame);
+    while (childFrame) {
+      ReparentFrameViewTo(childFrame, aNewParentView, aOldParentView);
+      childFrame->GetNextSibling(&childFrame);
+    }
+  }
+
+  return NS_OK;
+}
+
+static nsIView*
+GetViewFor(nsIFrame* aFrame)
+{
+  nsIView*  view;
+
+  aFrame->GetView(&view);
+  if (!view) {
+    nsPoint offset;
+    aFrame->GetOffsetFromView(offset, &view);
+  }
+
+  NS_POSTCONDITION(view, "no containing view");
+  return view;
+}
+
+nsresult
+nsHTMLContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
+                                        nsIFrame* aOldParentFrame,
+                                        nsIFrame* aNewParentFrame)
+{
+  NS_PRECONDITION(aChildFrame, "null child frame pointer");
+  NS_PRECONDITION(aOldParentFrame, "null old parent frame pointer");
+  NS_PRECONDITION(aNewParentFrame, "null new parent frame pointer");
+  NS_PRECONDITION(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
+
+  // First see if the old parent frame and the new parent frame are in the
+  // same view sub-hierarchy
+  nsIView*  oldParentView = GetViewFor(aOldParentFrame);
+  nsIView*  newParentView = GetViewFor(aNewParentFrame);
+
+  if (oldParentView != newParentView) {
+    return ReparentFrameViewTo(aChildFrame, newParentView, oldParentView);
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
                                          nsIFrame* aFrame,
