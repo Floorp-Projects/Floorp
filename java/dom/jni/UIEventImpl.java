@@ -55,7 +55,7 @@ public class UIEventImpl extends EventImpl implements UIEvent {
    * Specifies some detail information about the <code>Event</code>, depending 
    * on the type of event.
    */
-  public short              getDetail() {
+  public int              getDetail() {
     throw new UnsupportedOperationException();
   }
 
@@ -73,7 +73,7 @@ public class UIEventImpl extends EventImpl implements UIEvent {
                                         boolean canBubbleArg, 
                                         boolean cancelableArg, 
                                         AbstractView viewArg, 
-                                        short detailArg) {
+                                        int detailArg) {
     throw new UnsupportedOperationException();
   }
 }

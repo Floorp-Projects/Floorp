@@ -35,15 +35,11 @@ public class DocumentTypeImpl  extends NodeImpl implements DocumentType {
     
     //since DOM level 2
 
-    // latest declaration:
-    //    public String             getPublicId() {
-    public String             getPublicID() {
+    public String             getPublicId() {
         throw new UnsupportedOperationException();
     }
     
-    // latest declaration:
-    //    public String             getSystemId() {
-    public String             getSystemID() {
+    public String             getSystemId() {
         throw new UnsupportedOperationException();
     }
 

@@ -49,8 +49,7 @@ CPPSRCS		= \
 	org_mozilla_dom_TextImpl.cpp \
 	org_mozilla_dom_events_EventImpl.cpp \
 	org_mozilla_dom_events_UIEventImpl.cpp \
-	org_mozilla_dom_events_MouseEventImpl.cpp \
-	org_mozilla_dom_events_KeyEventImpl.cpp 
+	org_mozilla_dom_events_MouseEventImpl.cpp 
 
 include $(topsrcdir)/config/config.mk
 

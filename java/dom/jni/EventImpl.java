@@ -127,6 +127,18 @@ public class EventImpl implements Event {
   public native void               preventDefault();
 
   /**
+   * The <code>stopPropagation</code> method is used prevent further 
+   * propagation of an event during event flow. If this method is called by 
+   * any <code>EventListener</code> the event will cease propagating 
+   * through the tree.  The event will complete dispatch to all listeners 
+   * on the current <code>EventTarget</code> before event flow stops.  This 
+   * method may be used during any stage of event flow.
+   */
+  public void         stopPropagation() {
+    throw new UnsupportedOperationException();
+  }
+
+  /**
    * 
    * @param eventTypeArg Specifies the event type.  This type may be any event 
    *   type currently defined in this specification or a new event type.  Any 
