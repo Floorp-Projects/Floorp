@@ -33,7 +33,6 @@ EXPORTS =			\
 	nsIRDFObserver.h        \
         nsIRDFResourceManager.h \
         nsIRDFXMLSource.h       \
-        nsRDFBaseCID.h          \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

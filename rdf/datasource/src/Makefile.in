@@ -24,11 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = rdf
+LIBRARY_NAME = rdfdatasource_s
 
 CPPSRCS =				\
         nsBookmarkDataSource.cpp	\
-	nsRDFDataSourceFactory.cpp	\
 	$(NULL)
 
 EXPORTS = \
@@ -40,13 +39,11 @@ MODULE = rdf
 
 REQUIRES = dom js netlib rdf raptor xpcom
 
+MKSHLIB :=
+
+# we don't want the shared lib
+NO_SHARED_LIB=1
+
 include $(topsrcdir)/config/rules.mk
 
-
-export::
-
-install:: $(TARGETS)
-
-
-clobber::
 

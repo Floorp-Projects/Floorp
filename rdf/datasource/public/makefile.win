@@ -21,7 +21,6 @@ MODULE=rdf
 DEPTH=..\..\..
 
 EXPORTS	= \
-        nsRDFDataSourceCID.h    \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

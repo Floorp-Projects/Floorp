@@ -16,25 +16,16 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=rdfdatasource
-
-MAKE_OBJ_TYPE=DLL
-DLLNAME=$(MODULE)
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MODULE=rdf
+LIBRARY_NAME=rdfdatasource_s
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsBookmarkDataSource.obj    \
-        .\$(OBJDIR)\nsRDFDataSourceFactory.obj  \
 	$(NULL)
 
-LLIBS=\
- $(DIST)\lib\rdfbase.lib        \
- $(DIST)\lib\xpcom32.lib        \
- $(DIST)\lib\raptorbase.lib     \
- $(DIST)\lib\raptorgfxwin.lib   \
- $(DIST)\lib\netlib.lib         \
- $(DIST)\lib\libplc21.lib       \
- $(LIBNSPR)  
+# XXX Note the dependency on $(DEPTH)\rdf\base\src: we use rdfutil.h over
+# in this library: this'll go away once we formalize utilities into an
+# "real live" XPCOM interface.
 
 LINCS=  -I$(PUBLIC)\rdf         \
         -I$(PUBLIC)\xpcom       \
@@ -47,9 +38,11 @@ LINCS=  -I$(PUBLIC)\rdf         \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+libs:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
 
 

@@ -38,7 +38,7 @@
 #include "nsIRDFNode.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "nsRDFBaseCID.h"
+#include "nsRDFCID.h"
 #include "nsString.h"
 #include "rdfutil.h"
 #include "plhash.h"
