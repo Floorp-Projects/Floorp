@@ -133,11 +133,6 @@ private:
   nsICharsetConverterInfo * GetICharsetConverterInfo(ConverterInfo * ci, 
       PRInt32 aIndex, PRInt32 * aSize);
 
-  /**
-   * General method for finding and instantiating a Converter.
-   */
-  nsresult GetCharsetConverter(const nsString * aSrc, void ** aResult, 
-      const nsCID * aCID, const ConverterInfo * aArray, PRInt32 aSize);
 
 public:
 
@@ -381,31 +376,6 @@ reduceArray:
   return NULL;
 }
 
-nsresult nsCharsetConverterManager::GetCharsetConverter(
-                                    const nsString * aSrc, 
-                                    void ** aResult,
-                                    const nsCID * aCID,
-                                    const ConverterInfo * aArray,
-                                    PRInt32 aSize)
-{
-  nsresult res = NS_ERROR_UCONV_NOCONV;
-  nsString * str;
-  GetCharsetName(aSrc, &str);
-
-  *aResult = NULL;
-  for (PRInt32 i=0; i<aSize; i++) if (str->EqualsIgnoreCase(*(aArray[i].mCharset))) {
-    res = nsComponentManager::CreateInstance(*(aArray[i].mCID),NULL,*aCID,aResult);
-    break;
-  }
-
-  delete str;
-
-  // well, we didn't found any converter. Damn, life sucks!
-  if ((*aResult == NULL) && (NS_SUCCEEDED(res))) 
-    res = NS_ERROR_UCONV_NOCONV;
-
-  return res;
-}
 
 //----------------------------------------------------------------------
 // Interface nsICharsetConverterManager [implementation]
@@ -414,28 +384,42 @@ NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeEncoder(
                                          const nsString * aDest, 
                                          nsIUnicodeEncoder ** aResult)
 {
+  *aResult= nsnull;
+  nsIComponentManager* comMgr;
   nsresult res;
-  if (!mMappingDone) {
-    res = CreateMapping();
-    if NS_FAILED(res) return res;
-  }
-
-  return GetCharsetConverter(aDest, (void **) aResult, &kIUnicodeEncoderIID, 
-      mEncArray, mEncSize);
+  res = NS_GetGlobalComponentManager(&comMgr);
+  if(NS_FAILED(res))
+     return res;
+  PRInt32 baselen = nsCRT::strlen(NS_UNICODEENCODER_PROGID_BASE);
+  char progid[256];
+  PL_strncpy(progid, NS_UNICODEENCODER_PROGID_BASE, 256);
+  aDest->ToCString(progid + baselen, 256 - baselen);
+  res = comMgr->CreateInstanceByProgID(progid,NULL,
+                 kIUnicodeEncoderIID ,(void**)aResult);
+  if(NS_FAILED(res))
+    res = NS_ERROR_UCONV_NOCONV;
+  return res;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetUnicodeDecoder(
                                          const nsString * aSrc, 
                                          nsIUnicodeDecoder ** aResult)
 {
+  *aResult= nsnull;
+  nsIComponentManager* comMgr;
   nsresult res;
-  if (!mMappingDone) {
-    res = CreateMapping();
-    if NS_FAILED(res) return res;
-  }
-
-  return GetCharsetConverter(aSrc, (void **) aResult, &kIUnicodeDecoderIID, 
-      mDecArray, mDecSize);
+  res = NS_GetGlobalComponentManager(&comMgr);
+  if(NS_FAILED(res))
+     return res;
+  PRInt32 baselen = nsCRT::strlen(NS_UNICODEDECODER_PROGID_BASE);
+  char progid[256];
+  PL_strncpy(progid, NS_UNICODEDECODER_PROGID_BASE, 256);
+  aSrc->ToCString(progid + baselen, 256 - baselen);
+  res = comMgr->CreateInstanceByProgID(progid,NULL,
+                 kIUnicodeDecoderIID,(void**)aResult);
+  if(NS_FAILED(res))
+    res = NS_ERROR_UCONV_NOCONV;
+  return res;
 }
 
 NS_IMETHODIMP nsCharsetConverterManager::GetEncodableCharsets(
