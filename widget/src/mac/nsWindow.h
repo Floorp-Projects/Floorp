@@ -130,6 +130,7 @@ public:
 
     NS_IMETHOD            	Enable(PRBool bState);
     NS_IMETHOD            	SetFocus(void);
+    NS_IMETHOD              SetBounds(const nsRect &aRect);
     NS_IMETHOD            	GetBounds(nsRect &aRect);
 
     virtual nsIFontMetrics* GetFont(void);
