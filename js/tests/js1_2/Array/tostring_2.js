@@ -37,25 +37,28 @@
 
     var a = [];
 
+
     if ( typeof version == "function" ) {
+        writeLineToLog("version 120");
         version(120);
+        VERSION = "120";
     } else {
         function version() { return 0; };
     }
 
     testcases[tc++] = new TestCase ( SECTION,
         "a.toString()",
-        ( version() == 120 ? "[]" : "" ),
-        a.toString() );
+        ( VERSION == "120" ? "[]" : "" ),
+            a.toString() );
 
     testcases[tc++] = new TestCase ( SECTION,
         "String( a )",
-        ( version() == 120 ? "[]" : "" ),
+        ( VERSION == "120" ? "[]" : "" ),
         String( a ) );
 
     testcases[tc++] = new TestCase ( SECTION,
         "a +''",
-        ( version() == 120 ? "[]" : "" ),
+        ( VERSION == "120" ? "[]" : "" ),
         a+"" );
 
     test();

@@ -29,11 +29,7 @@ var FAILED = " FAILED! expected: ";
 
 startTest();
 
-if ( typeof version == "function") {
     version(120);
-} else {
-    function version() { "return 0;" };
-}
 
 function test() {
     for ( tc=0; tc < testcases.length; tc++ ) {

@@ -40,23 +40,25 @@
 
     var version;
 
+    var VERSION = 0;
+
     if ( typeof version == "function" ) {
-        writeLineToLog("version 120");
         version(120);
+        VERSION = "120";
     } else {
         function version() { return 0; };
     }
 
     testcases[tc++] = new TestCase ( SECTION,
                         "var a = new Array(); a.toString()",
-                        ( version() == 120 ? "[]" : "" ),
+                        ( VERSION == "120" ? "[]" : "" ),
                         a.toString() );
 
     a[0] = void 0;
 
     testcases[tc++] = new TestCase ( SECTION,
                         "a[0] = void 0; a.toString()",
-                        ( version() == 120 ? "[, ]" : "" ),
+                        ( VERSION == "120" ? "[, ]" : "" ),
                         a.toString() );
 
 
@@ -69,21 +71,21 @@
 
     testcases[tc++] = new TestCase( SECTION,
                         "a[1] = void 0; a.toString()",
-                        ( version() == 120 ? "[, , ]" : ","  ),
+                        ( VERSION == "120" ? "[, , ]" : ","  ),
                         a.toString() );
 
     a[1] = "hi";
 
     testcases[tc++] = new TestCase( SECTION,
                         "a[1] = \"hi\"; a.toString()",
-                        ( version() == 120 ? "[, \"hi\"]" : ",hi" ),
+                        ( VERSION == "120" ? "[, \"hi\"]" : ",hi" ),
                         a.toString() );
 
     a[2] = void 0;
 
     testcases[tc++] = new TestCase( SECTION,
                         "a[2] = void 0; a.toString()",
-                        ( version() == 120 ?"[, \"hi\", , ]":",hi,"),
+                        ( VERSION == "120" ?"[, \"hi\", , ]":",hi,"),
                         a.toString() );
 
     var b = new Array(1000);
@@ -95,13 +97,13 @@
 
     testcases[tc++] = new TestCase ( SECTION,
                         "var b = new Array(1000); b.toString()",
-                        ( version() == 120 ? "[1000]" : bstring ),
+                        ( VERSION == "120" ? "[1000]" : bstring ),
                         b.toString() );
 
 
     testcases[tc++] = new TestCase( SECTION,
                         "b.length",
-                        ( version() == 120 ? 1 : 1000 ),
+                        ( VERSION == "120" ? 1 : 1000 ),
                         b.length );
 
     test();
