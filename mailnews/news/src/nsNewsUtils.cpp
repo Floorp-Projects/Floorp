@@ -20,6 +20,7 @@
 #include "nsNewsUtils.h"
 #include "nsIServiceManager.h"
 #include "prsystem.h"
+#include "nsCOMPtr.h"
 
 // stuff for temporary root folder hack
 #include "nsIMsgMailSession.h"
@@ -38,31 +39,17 @@ nsGetNewsRoot(nsFileSpec &result)
   nsresult rv = NS_OK;
 
   if (gNewsRoot == nsnull) {
-    nsIMsgMailSession *session;
-    rv = nsServiceManager::GetService(kMsgMailSessionCID,
-                                      nsIMsgMailSession::GetIID(),
-                                      (nsISupports **)&session);
+    NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
     
     if (NS_SUCCEEDED(rv)) {
-      nsIMsgIncomingServer *server;
-      rv = session->GetCurrentServer(&server);
-      if (NS_FAILED(rv)) printf("nsGetNewsRoot: Couldn't get current server\n");
-      if (NS_SUCCEEDED(rv)) {
-        nsINntpIncomingServer *nntpServer;
-        rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
-                                    (void **)&nntpServer);
-        if (NS_FAILED(rv)) printf("nsGetNewsRoot: Couldn't get nntp server\n");
-        if (NS_SUCCEEDED(rv)) {
-          rv = nntpServer->GetRootFolderPath(&gNewsRoot);
-          if (NS_FAILED(rv)) printf("nsGetNewsRoot: Couldn't get root\n");
-          NS_RELEASE(nntpServer);
-        }
-        NS_RELEASE(server);
-        
-      }
-      nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = session->GetCurrentServer(getter_AddRefs(server));
+      
+      if (NS_SUCCEEDED(rv))
+          rv = server->GetLocalPath(&gNewsRoot);
     }
   } /* if (gNewsRoot == nsnull) .. */
+  
   result = gNewsRoot;
   return rv;
 }
