@@ -52,6 +52,14 @@ protected:
   GtkStyle *mStyle;
   GtkWidget *mWidget;
   nsCOMPtr<nsILookAndFeel> mXPLookAndFeel;
+
+  // Cached colors, we have to create a dummy widget to actually
+  // get the style
+  static PRBool sHaveInfoColors;
+  static nscolor sInfoBackground;
+  static nscolor sInfoText;
+
+  static void GetInfoColors();
 };
 
 #endif

@@ -28,6 +28,9 @@
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
 
+nscolor nsLookAndFeel::sInfoText = 0;
+nscolor nsLookAndFeel::sInfoBackground = 0;
+PRBool nsLookAndFeel::sHaveInfoColors = PR_FALSE;
 
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 
@@ -139,10 +142,14 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
     break;
   case eColor_infobackground:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
+    if (!sHaveInfoColors)
+      GetInfoColors();
+    aColor = sInfoBackground;
     break;
   case eColor_infotext:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
+    if (!sHaveInfoColors)
+      GetInfoColors();
+    aColor = sInfoText;
     break;
   case eColor_menu:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
@@ -340,6 +347,22 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
     res = NS_ERROR_FAILURE;
   }
   return res;
+}
+
+void
+nsLookAndFeel::GetInfoColors()
+{
+  GtkTooltips *tooltips = gtk_tooltips_new();
+  gtk_tooltips_force_window(tooltips);
+  GtkWidget *tip_window = tooltips->tip_window;
+  gtk_widget_set_rc_style(tip_window);
+
+  GtkStyle *tipstyle = gtk_widget_get_style(tip_window);
+  sInfoBackground = GDK_COLOR_TO_NS_RGB(tipstyle->bg[GTK_STATE_NORMAL]);
+  sInfoText = GDK_COLOR_TO_NS_RGB(tipstyle->fg[GTK_STATE_NORMAL]);
+  sHaveInfoColors = PR_TRUE;
+
+  gtk_object_unref(GTK_OBJECT(tooltips));
 }
 
 #ifdef NS_DEBUG
