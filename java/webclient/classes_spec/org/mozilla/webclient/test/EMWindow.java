@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.35 2001/07/27 17:24:25 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.36 2002/05/08 21:55:10 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -112,7 +112,6 @@ private UniversalDialog           uniDialog = null;
     private MenuItem popup_ViewSource, popup_SelectAll;
     private PopupActionListener contextListener;
 
-    private ProfileManager profileManager = null;
     private String myBinDir;
 
   public static void main(String [] arg)
@@ -139,7 +138,6 @@ private UniversalDialog           uniDialog = null;
 		Menu viewMenu = new Menu("View");
        		Menu searchMenu = new Menu("Search");
 		Menu editMenu = new Menu("Edit");
-        Menu profileMenu = new Menu("Profile");
        		MenuItem newItem = new MenuItem("New Window");
        		MenuItem closeItem = new MenuItem("Close");
        		MenuItem findItem = new MenuItem("Find");
@@ -148,18 +146,11 @@ private UniversalDialog           uniDialog = null;
 		MenuItem pageInfoItem = new MenuItem("View Page Info");
 		MenuItem selectAllItem = new MenuItem("Select All");
         MenuItem copyItem = new MenuItem("Copy");
-        MenuItem createProfileItem = new MenuItem("Create Profile");
-        MenuItem deleteProfileItem = new MenuItem("Delete Profile");
        		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
        		menuBar.add(searchMenu);
 
 		menuBar.add(editMenu);
-        menuBar.add(profileMenu);
-        profileMenu.add(createProfileItem);
-        createProfileItem.addActionListener(this);
-        profileMenu.add(deleteProfileItem);
-        deleteProfileItem.addActionListener(this);
 
        		fileMenu.add(newItem);
        		newItem.addActionListener(this);
@@ -479,20 +470,6 @@ public void actionPerformed (ActionEvent evt)
         else if (command.equals("Copy")) {
             currentPage.copyCurrentSelectionToSystemClipboard();
         }
-        else if (command.equals("Create Profile")) {
-            if (profileManager == null) {
-                profileManager = (ProfileManager)
-                    browserControl.queryInterface(BrowserControl.PROFILE_MANAGER_NAME);
-            }
-            profileManager.CreateNewProfile("Tester", myBinDir, null, true); 
-        }
-        else if (command.equals("Delete Profile")) {
-            if (profileManager == null) {
-                profileManager = (ProfileManager)
-                    browserControl.queryInterface(BrowserControl.PROFILE_MANAGER_NAME);
-            }
-            profileManager.DeleteProfile("Tester", true);  
-        }
 	    else if(command.equals("Stop")) {
             navigation.stop();
         }
@@ -797,10 +774,10 @@ public void mouseClicked(java.awt.event.MouseEvent e)
     }
     if (0 != (modifiers & InputEvent.BUTTON2_MASK)) {
         System.out.println("Button2 ");
+        popup.show(this, e.getX(), e.getY());
     }
     if (0 != (modifiers & InputEvent.BUTTON3_MASK)) {
         System.out.println("Button3 ");
-	popup.show(this, e.getX(), e.getY());
     }
 }
 

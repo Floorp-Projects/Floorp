@@ -466,7 +466,7 @@ static void event_processor_callback(gpointer data,
 void DoMozInitialization(WebShellInitContext * initContext)
 {    
     if (gFirstTime) {
-        // PENDING(edburns): figure out why we need this
+        // PENDING(edburns): We need this for rdf_getChildCount
         PR_SetEnv("XPCOM_CHECK_THREADSAFE=0");
         
         nsILocalFile * pathFile = nsnull;

@@ -37,7 +37,6 @@ public class WrapperFactoryImpl extends WrapperFactory
 
     final String [] stubsImplementedInterfaces = 
         {
-        BrowserControl.PROFILE_MANAGER_NAME
         };
 
 //
@@ -248,7 +247,7 @@ public static void main(String [] args)
     WrapperFactory me = new WrapperFactoryImpl();
     Log.setApplicationName("WrapperFactoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.5 2001/05/24 21:13:34 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: WrapperFactoryImpl.java,v 1.6 2002/05/08 21:55:12 edburns%acm.org Exp $");
 
     
 }

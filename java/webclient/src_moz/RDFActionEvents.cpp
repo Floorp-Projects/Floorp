@@ -292,7 +292,7 @@ wsRDFInsertElementAtEvent::handleEvent ()
     PR_ASSERT(gComponentManager);
 
     // get a container in order to create a child
-    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
                                            nsnull,
                                            NS_GET_IID(nsIRDFContainer),
                                            getter_AddRefs(container));
@@ -470,7 +470,7 @@ wsRDFNewFolderEvent::handleEvent ()
     // http://lxr.mozilla.org/mozilla/source/xpfe/components/bookmarks/resources/bookmarks.js#1190
     
     // set up selection nsISupportsArray
-    rv = gComponentManager->CreateInstance(kSupportsArrayCID,
+    rv = nsComponentManager::CreateInstance(kSupportsArrayCID,
                                            nsnull,
                                            NS_GET_IID(nsISupportsArray),
                                            getter_AddRefs(selectionArray));
@@ -481,7 +481,7 @@ wsRDFNewFolderEvent::handleEvent ()
     }
     
     // set up arguments nsISupportsArray
-    rv = gComponentManager->CreateInstance(kSupportsArrayCID,
+    rv = nsComponentManager::CreateInstance(kSupportsArrayCID,
                                            nsnull,
                                            NS_GET_IID(nsISupportsArray),
                                            getter_AddRefs(argumentsArray));
@@ -751,7 +751,7 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
     PR_ASSERT(gComponentManager);
     
     // get a container in order to get the enum
-    rv = gComponentManager->CreateInstance(kRDFContainerCID,
+    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
                                            nsnull,
                                            NS_GET_IID(nsIRDFContainer),
                                            getter_AddRefs(container));
