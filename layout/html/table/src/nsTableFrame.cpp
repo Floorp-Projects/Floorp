@@ -570,7 +570,7 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
   nsCellMap *cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
-  PRInt32 colCount = mCellMap->GetColCount();
+  PRInt32 colCount = GetColCount();
   NS_PRECONDITION (0<=aColIndex && aColIndex<colCount, "bad col index arg");
 
   PRInt32 result;
@@ -939,14 +939,14 @@ void nsTableFrame::SetMinColSpanForTable()
   PRInt32 colCount = mCellMap->GetColCount();
   for (PRInt32 colIndex=0; colIndex<colCount; colIndex++)
   {
-    PRInt32 minColSpan;
+    PRInt32 minColSpan=0;
     for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
     {
       nsTableCellFrame *cellFrame = mCellMap->GetCellFrameAt(rowIndex, colIndex);
       if (nsnull!=cellFrame)
       {
         PRInt32 colSpan = cellFrame->GetColSpan();
-        if (0==rowIndex)
+        if (0==minColSpan)
           minColSpan = colSpan;
         else
           minColSpan = PR_MIN(minColSpan, colSpan);
@@ -2813,7 +2813,7 @@ void nsTableFrame::SetTableWidth(nsIPresContext& aPresContext)
     printf ("SetTableWidth with cellSpacing = %d ", cellSpacing);
   PRInt32 tableWidth = cellSpacing;
 
-  PRInt32 numCols = mCellMap->GetColCount();
+  PRInt32 numCols = GetColCount();
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   {
     nscoord totalColWidth = mColumnWidths[colIndex];

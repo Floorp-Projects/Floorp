@@ -456,7 +456,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   nscoord     maxCellBottomMargin = 0;
   nscoord cellSpacing = aReflowState.tableFrame->GetCellSpacing();
   PRInt32 cellColSpan=1;  // must be defined here so it's set properly for non-cell kids
-  if (PR_TRUE==gsDebug) printf("%p: RR\n", this);
+  if (PR_TRUE==gsDebug) printf("Row %p: Resize Reflow\n", this);
   // Reflow each of our existing cell frames
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) 
   {
@@ -481,12 +481,12 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
           aReflowState.x += aReflowState.tableFrame->GetColumnWidth(colIndex);
           aReflowState.x += cellSpacing;
           if (PR_TRUE==gsDebug)
-            printf("  in loop, aReflowState.x set to %d from cellSpacing %d and col width\n", 
+            printf("  Row: in loop, aReflowState.x set to %d from cellSpacing %d and col width\n", 
                     aReflowState.x, aReflowState.tableFrame->GetColumnWidth(colIndex), cellSpacing);
         }
       }
       aReflowState.x += cellSpacing;
-      if (PR_TRUE==gsDebug) printf("  past loop, aReflowState.x set to %d\n", aReflowState.x);
+      if (PR_TRUE==gsDebug) printf("  Row: past loop, aReflowState.x set to %d\n", aReflowState.x);
 
       // at this point, we know the column widths.  
       // so we get the avail width from the known column widths
@@ -501,10 +501,10 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
           availWidth += cellSpacing;
         }
         if (PR_TRUE==gsDebug) 
-          printf("  in loop, availWidth set to %d from colIndex %d width %d and cellSpacing\n", 
+          printf("  Row: in loop, availWidth set to %d from colIndex %d width %d and cellSpacing\n", 
                   availWidth, cellColIndex, aReflowState.tableFrame->GetColumnWidth(cellColIndex+numColSpan), cellSpacing);
       }
-      if (PR_TRUE==gsDebug) printf("  availWidth for this cell is %d\n", availWidth);
+      if (PR_TRUE==gsDebug) printf("  Row: availWidth for this cell is %d\n", availWidth);
 
       prevColIndex = cellColIndex + (cellColSpan-1);  // remember the rightmost column this cell spans into
       nsHTMLReflowMetrics desiredSize(pKidMaxElementSize);
@@ -524,10 +524,10 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
                                          aReflowState.reflowState, kidAvailSize,
                                          eReflowReason_Resize);
-        if (gsDebug) printf ("%p RR: avail=%d\n", this, availWidth);
+        if (gsDebug) printf ("Row %p RR: avail=%d\n", this, availWidth);
         nsReflowStatus status;
         rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, status);
-        if (gsDebug) printf ("%p RR: desired=%d\n", this, desiredSize.width);
+        if (gsDebug) printf ("Row %p RR: desired=%d\n", this, desiredSize.width);
 #ifdef NS_DEBUG
         if (desiredSize.width > availWidth)
         {
@@ -540,12 +540,12 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         if (gsDebug)
         {
           if (nsnull!=pKidMaxElementSize)
-            printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
+            printf("Row: reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
                     NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
                     desiredSize.width, desiredSize.height, 
                     pKidMaxElementSize->width, pKidMaxElementSize->height);
           else
-            printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
+            printf("Row: reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
                     NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
                     desiredSize.width, desiredSize.height);
         }
@@ -594,14 +594,14 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
                  pKidMaxElementSize);
 
-      if (PR_TRUE==gsDebug) printf("  past PlaceChild, aReflowState.x set to %d\n", aReflowState.x);
+      if (PR_TRUE==gsDebug) printf("Row: past PlaceChild, aReflowState.x set to %d\n", aReflowState.x);
     }
     else
     {// it's an unknown frame type, give it a generic reflow and ignore the results
       nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState.reflowState,
                                        nsSize(0,0), eReflowReason_Resize);
       nsHTMLReflowMetrics desiredSize(nsnull);
-      if (PR_TRUE==gsDebug) printf("\nTIF : Reflow Pass 2 of unknown frame %p of type %d with reason=%d\n", 
+      if (PR_TRUE==gsDebug) printf("\nRow: Resize Reflow of unknown frame %p of type %d with reason=%d\n", 
                                      kidFrame, kidDisplay->mDisplay, eReflowReason_Resize);
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
     }
@@ -622,14 +622,14 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   aDesiredSize.height = aReflowState.maxCellVertSpace;  
 
   if (gsDebug)
-    printf("rr -- row %p width = %d from maxSize %d\n", 
+    printf("Row: RR -- row %p width = %d from maxSize %d\n", 
            this, aDesiredSize.width, aReflowState.reflowState.maxSize.width);
   
   if (aDesiredSize.width > aReflowState.reflowState.maxSize.width) 
   {
     if (gsDebug)
     {
-      printf ("%p error case, desired width = %d, maxSize=%d\n",
+      printf ("Row %p error case, desired width = %d, maxSize=%d\n",
               this, aDesiredSize.width, aReflowState.reflowState.maxSize.width);
       fflush (stdout);
     }
