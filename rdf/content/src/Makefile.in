@@ -56,7 +56,7 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = rdf
 
-REQUIRES = dom js netlib rdf raptor xpcom
+REQUIRES = dom js netlib rdf raptor xpcom locale
 
 # XXX This is a dependency on rdfutil.h: it'll go away once that becomes
 # a first-class XPCOM interface.
