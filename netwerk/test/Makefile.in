@@ -45,14 +45,9 @@ CPPSRCS		= \
 		TestRes.cpp \
 		TestCallbacks.cpp \
 		TestDBMAccess.cpp \
+		TestMCTransport.cpp \
 		TestPageLoad.cpp \
 		$(NULL)
-
-ifdef MOZ_NEW_CACHE
-CPPSRCS += \
-		TestMCTransport.cpp \
-		$(NULL)
-endif
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 

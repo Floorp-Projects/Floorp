@@ -38,9 +38,7 @@ DIRS	+= \
 	$(NULL)
 endif
 
-ifdef MOZ_NEW_CACHE
 DIRS    += src
-endif
 
 include $(topsrcdir)/config/rules.mk
 

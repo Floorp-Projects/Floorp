@@ -23,8 +23,6 @@
 
 #include <limits.h>
 
-#ifdef MOZ_NEW_CACHE
-
 #include "nsAboutCacheEntry.h"
 #include "nsICacheService.h"
 #include "nsICacheEntryDescriptor.h"
@@ -547,6 +545,4 @@ nsAboutCacheEntry::VisitMetaDataElement(const char * key,
     *keepGoing = PR_TRUE;
     return NS_OK;
 }
-
-#endif // MOZ_NEW_CACHE
 

@@ -3930,18 +3930,6 @@ AC_ARG_ENABLE(verbose-config-defs,
 	VERBOSE_CONFIG_DEFS=
     fi])
 
-dnl New cache is now enabled by default.
-MOZ_NEW_CACHE=1
-dnl The new cache may be optionally disabled in favor of the old cache
-dnl for performance testing.
-MOZ_ARG_DISABLE_BOOL(new-cache,
-[  --disable-new-cache     Disable new cache],
-   MOZ_NEW_CACHE=0)
-if test "$MOZ_NEW_CACHE" = "1"; then
-  AC_DEFINE(MOZ_NEW_CACHE)
-fi
-AC_SUBST(MOZ_NEW_CACHE)
-
 dnl libpr0n on by default
 USE_IMG2=1
 dnl Turn off the new image library.  Soon to go away.
