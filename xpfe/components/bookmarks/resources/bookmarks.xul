@@ -49,18 +49,18 @@
     </menu>
     <menu value="&menu.edit.label;">
 	  <menupopup>
-      <menuitem value="x&menuitem.undo.label;"/>
-      <menuitem value="x&menuitem.redo.label;"/>
+      <menuitem value="&menuitem.undo.label;" disabled="true" />
+      <menuitem value="&menuitem.redo.label;" disabled="true" />
       <menuseparator/>
-      <menuitem value="x&menuitem.cut.label;"/>
-      <menuitem value="x&menuitem.copy.label;"/>
-      <menuitem value="x&menuitem.paste.label;"/>
-      <menuitem value="x&menuitem.delete.label;"/>
-      <menuitem value="x&menuitem.selectAll.label;"/>
+      <menuitem value="&menuitem.cut.label;" oncommand="return doCut()" />
+      <menuitem value="&menuitem.copy.label;" oncommand="return doCopy()" />
+      <menuitem value="&menuitem.paste.label;" oncommand="return doPaste()" />
+      <menuitem value="&menuitem.delete.label;" oncommand="return doDelete()" />
+      <menuitem value="&menuitem.selectAll.label;" oncommand="return doSelectAll()" />
       <menuseparator/>
-      <menuitem value="&menuitem.find.label;" oncommand="OpenSearch('find');"/>
+      <menuitem value="&menuitem.find.label;" oncommand="return OpenSearch('find');"/>
       <menuseparator/>
-      <menuitem value="&menuitem.properties.label;" oncommand="BookmarkProperties();"/>
+      <menuitem value="&menuitem.properties.label;" oncommand="return BookmarkProperties();"/>
 	  </menupopup>
     </menu>
   </menubar>
