@@ -662,8 +662,11 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	att = pk11_NewTokenAttribute(type,label,PORT_Strlen(label), PR_TRUE);
 	PORT_Free(label);
 	return att;
-    default:
+    case CKA_KEY_TYPE:
+    case CKA_VALUE:
 	break;
+    default:
+	return NULL;
     }
 
     key = pk11_GetPrivateKey(object);
@@ -852,10 +855,12 @@ pk11_FindSMIMEAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_NETSCAPE_EMAIL:
 	return pk11_NewTokenAttribute(type,object->dbKey.data,
 						object->dbKey.len-1, PR_FALSE);
-    case CKA_SENSITIVE:
-	return NULL;
-    default:
+    case CKA_NETSCAPE_SMIME_TIMESTAMP:
+    case CKA_SUBJECT:
+    case CKA_VALUE:
 	break;
+    default:
+	return NULL;
     }
     entry = pk11_getSMime(object);
     if (entry == NULL) {
@@ -889,10 +894,15 @@ pk11_FindTrustAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	return (PK11Attribute *) &pk11_StaticFalseAttr;
     case CKA_MODIFIABLE:
 	return (PK11Attribute *) &pk11_StaticTrueAttr;
-    case CKA_SENSITIVE:
-	return NULL;
-    default:
+    case CKA_CERT_SHA1_HASH:
+    case CKA_CERT_MD5_HASH:
+    case CKA_TRUST_CLIENT_AUTH:
+    case CKA_TRUST_SERVER_AUTH:
+    case CKA_TRUST_EMAIL_PROTECTION:
+    case CKA_TRUST_CODE_SIGNING:
 	break;
+    default:
+	return NULL;
     }
     trust = pk11_getTrust(object);
     if (trust == NULL) {
@@ -981,8 +991,11 @@ pk11_FindCrlAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_SUBJECT:
 	return pk11_NewTokenAttribute(type,object->dbKey.data,
 						object->dbKey.len, PR_FALSE);	
-    default:
+    case CKA_NETSCAPE_URL:
+    case CKA_VALUE:
 	break;
+    default:
+	return NULL;
     }
     crl =  pk11_getCrl(object);
     switch (type) {
@@ -1017,10 +1030,16 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_CERTIFICATE_TYPE:
         /* hardcoding X.509 into here */
         return (PK11Attribute *)&pk11_StaticX509Attr;
-    case CKA_SENSITIVE:
-	return NULL;
-    default:
+    case CKA_VALUE:
+    case CKA_ID:
+    case CKA_LABEL:
+    case CKA_SUBJECT:
+    case CKA_ISSUER:
+    case CKA_SERIAL_NUMBER:
+    case CKA_NETSCAPE_EMAIL:
 	break;
+    default:
+	return NULL;
     }
     cert = pk11_getCert(object);
     if (cert == NULL) {
