@@ -46,5 +46,8 @@ interface nsIDocumentLoader : nsISupports
   nsILoadGroup getLoadGroup();
 
   void destroy();
+  // this should really be in a private interface as it is only
+  // called between a parent doc loader and it's child.
+  void clearParentDocLoader();
 };
 

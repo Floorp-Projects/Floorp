@@ -110,6 +110,12 @@ nsDocLoaderImpl::Init()
     return rv;
 }
 
+NS_IMETHODIMP nsDocLoaderImpl::ClearParentDocLoader()
+{
+  SetDocLoaderParent(nsnull);
+  return NS_OK;
+}
+
 nsDocLoaderImpl::~nsDocLoaderImpl()
 {
 		/*
@@ -128,11 +134,22 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: deleted.\n", this));
 
-#ifdef DEBUG
   PRUint32 count=0;
   mChildList->Count(&count);
-  NS_PRECONDITION((0 == count), "Document loader has children...");
-#endif
+  // if the doc loader still has children...we need to enumerate the children and make
+  // them null out their back ptr to the parent doc loader
+  if (count > 0) 
+  {
+    for (PRUint32 i=0; i<count; i++) 
+    {
+      nsCOMPtr<nsIDocumentLoader> loader;
+      loader = getter_AddRefs(NS_STATIC_CAST(nsIDocumentLoader*, mChildList->ElementAt(i)));
+
+      if (loader) 
+        loader->ClearParentDocLoader();
+    }    
+    mChildList->Clear();
+  } 
 }
 
 
