@@ -80,6 +80,8 @@
 #include "nsIMdbFactoryFactory.h"
 
 #include "nsIPref.h"
+#include "nsIPrefBranchInternal.h"
+
 #include "nsIObserverService.h"
 
 PRInt32 nsGlobalHistory::gRefCnt;
@@ -101,6 +103,7 @@ nsIMdbFactory* nsGlobalHistory::gMdbFactory = nsnull;
 
 #define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED "browser.history.last_page_visited"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS "browser.history_expire_days"
+#define PREF_AUTOCOMPLETE_ONLY_TYPED "browser.urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED "browser.urlbar.autocomplete.enabled"
 
 #define FIND_BY_AGEINDAYS_PREFIX "find:datasource=history&match=AgeInDays&method="
@@ -306,6 +309,18 @@ nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
 {
   nsresult rv;
   
+  // hidden and typed urls always match because they're invalid,
+  // so we want to expire them asap.  (if they were valid, they'd
+  // have been unhidden -- see AddExistingPageToDatabase)
+  PRInt32 isTyped = 0;
+  rv = GetRowValue(row, kToken_TypedColumn, &isTyped);
+  if (NS_SUCCEEDED(rv) && isTyped) {
+    PRInt32 isHidden = 0;
+    rv = GetRowValue(row, kToken_HiddenColumn, &isHidden);
+    if (NS_SUCCEEDED(rv) && isHidden)
+      return PR_TRUE;
+  }
+
   PRInt64 lastVisitedTime;
   rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastVisitedTime);
 
@@ -500,6 +515,7 @@ nsGlobalHistory::nsGlobalHistory()
   : mExpireDays(9), // make default be nine days
     mNowValid(PR_FALSE),
     mBatchesInProgress(0),
+    mAutocompleteOnlyTyped(PR_FALSE),
     mDirty(PR_FALSE),
     mEnv(nsnull),
     mStore(nsnull),
@@ -686,6 +702,14 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
 {
 
   nsresult rv;
+  
+  // if the page was typed, unhide it now because it's
+  // known to be valid
+  PRInt32 isTyped;
+  rv = GetRowValue(row, kToken_TypedColumn, &isTyped);
+  if (NS_SUCCEEDED(rv) && isTyped)
+    SetRowValue(row, kToken_HiddenColumn, 0);
+
   // Update last visit date.
   // First get the old date so we can update observers...
   rv = GetRowValue(row, kToken_LastVisitDateColumn, aOldDate);
@@ -1247,6 +1271,11 @@ nsGlobalHistory::MarkPageAsTyped(const char* aURL)
     rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
     if (NS_FAILED(rv)) return rv;
   }
+  
+  // hide the page for now in case the url turns out to be invalid
+  // we'll unhide it in AddExistingPageToDatabase
+  rv = SetRowValue(row, kToken_HiddenColumn, 1);
+  if (NS_FAILED(rv)) return rv;
 
   return SetRowValue(row, kToken_TypedColumn, 1);
 }
@@ -2267,11 +2296,18 @@ nsGlobalHistory::Init()
   nsresult rv;
 
   // we'd like to get this pref when we need it, but at that point,
-  // we can't get the pref service. This means if the user changes
-  // this pref, we won't notice until the next time we run.
+  // we can't get the pref service. register a pref observer so we update
+  // if the pref changes
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-  if (NS_SUCCEEDED(rv))
-    rv = prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+  if (NS_SUCCEEDED(rv)) {
+    prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+    prefs->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefs, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      prefInternal->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
+      prefInternal->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
+    }
+  }
 
   if (gRefCnt++ == 0) {
     rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -2889,13 +2925,13 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
 }
 
 //
-// this is just generates static list of find-style queries
+// this just generates a static list of find-style queries
+// only returns queries that currently have matches in global history
 // 
 nsresult
 nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
 {
   nsresult rv;
-  
   nsCOMPtr<nsISupportsArray> dayArray;
   NS_NewISupportsArray(getter_AddRefs(dayArray));
   
@@ -2904,12 +2940,18 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
   nsDependentCString
     prefix(FIND_BY_AGEINDAYS_PREFIX "is" "&text=");
   nsCAutoString uri;
+  nsCOMPtr<nsISimpleEnumerator> findEnumerator;
+  PRBool hasMore = PR_FALSE;
   for (i=0; i<7; i++) {
     uri = prefix;
     uri.AppendInt(i);
     uri.Append("&groupby=Hostname");
     rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
-    if (NS_SUCCEEDED(rv))
+    if (NS_FAILED(rv)) continue;
+    rv = CreateFindEnumerator(finduri, getter_AddRefs(findEnumerator));
+    if (NS_FAILED(rv)) continue;
+    rv = findEnumerator->HasMoreElements(&hasMore);
+    if (NS_SUCCEEDED(rv) && hasMore)
       dayArray->AppendElement(finduri);
   }
 
@@ -2917,9 +2959,14 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
   uri.AppendInt(i-1);
   uri.Append("&groupby=Hostname");
   rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
-
-  if (NS_SUCCEEDED(rv))
-    rv = dayArray->AppendElement(finduri);
+  if (NS_SUCCEEDED(rv)) {
+    rv = CreateFindEnumerator(finduri, getter_AddRefs(findEnumerator));
+    if (NS_SUCCEEDED(rv)) {
+      rv = findEnumerator->HasMoreElements(&hasMore);
+      if (NS_SUCCEEDED(rv) && hasMore)
+        dayArray->AppendElement(finduri);
+    }
+  }
 
   return NS_NewArrayEnumerator(aResult, dayArray);
 }
@@ -3370,7 +3417,6 @@ nsGlobalHistory::Observe(nsISupports *aSubject,
                          const PRUnichar *aSomeData)
 {
   nsresult rv;
-
   // pref changing - update member vars
   if (!nsCRT::strcmp(aTopic, "nsPref:changed")) {
 
@@ -3380,7 +3426,11 @@ nsGlobalHistory::Observe(nsISupports *aSubject,
       if (NS_SUCCEEDED(rv))
         prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
     }
-
+    else if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING(PREF_AUTOCOMPLETE_ONLY_TYPED).get())) {
+      nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+      if (NS_SUCCEEDED(rv))
+        prefs->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
+    }
   }
   else if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     rv = CloseDB();    
@@ -3791,8 +3841,10 @@ nsGlobalHistory::AutoCompleteEnumerator::~AutoCompleteEnumerator()
 PRBool
 nsGlobalHistory::AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 {
-  if (HasCell(mEnv, aRow, mHiddenColumn) && !HasCell(mEnv, aRow, mTypedColumn))
-    return PR_FALSE;
+  if (!HasCell(mEnv, aRow, mTypedColumn)) {
+    if (mMatchOnlyTyped || HasCell(mEnv, aRow, mHiddenColumn))
+      return PR_FALSE;
+  }
 
   nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
@@ -3974,6 +4026,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
                                             kToken_NameColumn,
                                             kToken_HiddenColumn,
                                             kToken_TypedColumn,
+                                            mAutocompleteOnlyTyped,
                                             aSearchString, aExclude);
     rv = enumerator->Init(mEnv, mTable);
     if (NS_FAILED(rv)) return rv;
