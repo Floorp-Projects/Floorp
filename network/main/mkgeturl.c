@@ -3322,8 +3322,10 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type) {
             } /* end while() */
 
 			if(!ready_fd) {
-                /* couldn't find the active socket.  Shouldn't ever happen */
-                PR_ASSERT(0);
+#ifdef DEBUG
+                printf("couldn't find the active socket.  Shouldn't ever happen");
+#endif
+		//PR_ASSERT(0);
                 LIBNET_UNLOCK_AND_RETURN(XP_ListIsEmpty(net_EntryList) ? 0 : 1);
             }
         } /* end if(fd_type == NET_SOCKET_FD) */
