@@ -31,18 +31,18 @@ PROGRAM		= testimap$(BIN_SUFFIX)
 
 CPPSRCS		= imapProtocolTest.cpp
 
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS	= msgbutil
-else
-EXTRA_DSO_LIBS	= msgbaseutil
-endif
+EXTRA_DSO_LIBS	= msgimap_s rdfutil_s
 
-EXTRA_DSO_LIBS	+= msgimap_s rdfutil_s
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	+= msgbutil
+else
+EXTRA_DSO_LIBS	+= msgbaseutil
+endif
 
 LIBS =	\
 		-L$(DIST)/bin \
-		$(XPCOM_LIBS) \
 		$(EXTRA_DSO_LIBS) \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
 		$(NULL)
