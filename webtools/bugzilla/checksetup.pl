@@ -1446,6 +1446,22 @@ sub DropField ($$)
               DROP COLUMN $field");
 }
 
+# this uses a mysql specific command. 
+sub TableExists ($)
+{
+   my ($table) = @_;
+   my @tables;
+   my $dbtable;
+   my $exists = 0;
+   my $sth = $dbh->prepare("SHOW TABLES");
+   $sth->execute;
+   while ( ($dbtable) = $sth->fetchrow_array ) {
+      if ($dbtable eq $table) {
+         $exists = 1;
+      } 
+   } 
+   return $exists;
+}   
 
 $::regenerateshadow = 0;
 
@@ -2120,6 +2136,19 @@ unless (-d 'graphs') {
 #
 if (!GetFieldDef('profiles', 'emailflags')) {
     AddField('profiles', 'emailflags', 'mediumtext');
+}
+
+# http://bugzilla.mozilla.org/show_bug.cgi?id=61637
+# upgrade older versions of bugzilla that have the old comments table
+if (&TableExists('comments')) {
+    RenameField ('comments', 'when', 'bug_when');
+    ChangeFieldType('comments', 'bug_id', 'mediumint not null');
+    ChangeFieldType('comments', 'who', 'mediumint not null');
+    ChangeFieldType('comments', 'bug_when', 'datetime not null');
+    RenameField('comments','comment','thetext');
+    # Here we rename comments to longdescs
+    $dbh->do("DROP TABLE longdescs");
+    $dbh->do("ALTER TABLE comments RENAME longdescs");
 }
 
 #
