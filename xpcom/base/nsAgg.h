@@ -21,34 +21,6 @@
 
 #include "nsISupports.h"
 
-/**
- * Outer objects can implement nsIOuter if they choose, allowing them to 
- * get notification if their inner objects (children) are effectively freed.
- * This allows them to reset any state associated with the inner object and
- * potentially unload it.
- */
-class nsIOuter : public nsISupports {
-public:
-
-    /**
-     * This method is called whenever an inner object's refcount is about to
-     * become zero and the inner object should be released by the outer. This
-     * allows the outer to clean up any state associated with the inner and 
-     * potentially unload the inner object. This method should call 
-     * inner->Release().
-     */
-    NS_IMETHOD
-    ReleaseInner(nsISupports* inner) = 0;
-
-};
-
-#define NS_IOUTER_IID                                \
-{ /* ea0bf9f0-3d67-11d2-8163-006008119d7a */         \
-    0xea0bf9f0,                                      \
-    0x3d67,                                          \
-    0x11d2,                                          \
-    {0x81, 0x63, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,12 +28,14 @@ public:
 #define NS_DECL_AGGREGATED                                                  \
     NS_DECL_ISUPPORTS                                                       \
                                                                             \
-protected:                                                                  \
+public:                                                                  \
                                                                             \
     /* You must implement this operation instead of the nsISupports */      \
     /* methods if you inherit from nsAggregated. */                         \
     NS_IMETHOD                                                              \
     AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr);       \
+                                                                            \
+protected:                                                                  \
                                                                             \
     class Internal : public nsISupports {                                   \
     public:                                                                 \
@@ -89,7 +63,7 @@ public:                                                                     \
 #define NS_INIT_AGGREGATED(outer)                                           \
   PR_BEGIN_MACRO                                                            \
     NS_INIT_REFCNT();                                                       \
-    fOuter = outer;                                                         \
+    fOuter = outer ? outer : &fAggregated;                                  \
   PR_END_MACRO
 
 
@@ -98,48 +72,19 @@ public:                                                                     \
 NS_IMETHODIMP                                                               \
 _class::QueryInterface(const nsIID& aIID, void** aInstancePtr)              \
 {                                                                           \
-    /* try our own interfaces first before delegating to outer */           \
-    nsresult rslt = AggregatedQueryInterface(aIID, aInstancePtr);           \
-    if (rslt != NS_OK && fOuter)                                            \
-        return fOuter->QueryInterface(aIID, aInstancePtr);                  \
-    else                                                                    \
-        return rslt;                                                        \
+    return fOuter->QueryInterface(aIID, aInstancePtr);                      \
 }                                                                           \
                                                                             \
 NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::AddRef(void)                                                        \
 {                                                                           \
-    ++mRefCnt; /* keep track of our refcount as well as outer's */          \
-    if (fOuter)                                                             \
-        return NS_ADDREF(fOuter);                                           \
-    else                                                                    \
-        return mRefCnt;                                                     \
+    return fOuter->AddRef();                                                \
 }                                                                           \
                                                                             \
 NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Release(void)                                                       \
 {                                                                           \
-    if (fOuter) {                                                           \
-        nsISupports* outer = fOuter;    /* in case we release ourself */    \
-        nsIOuter* outerIntf;                                                \
-        static NS_DEFINE_IID(kIOuterIID, NS_IOUTER_IID);                    \
-        if (mRefCnt == 1 &&                                                 \
-            outer->QueryInterface(kIOuterIID,                               \
-                                  (void**)&outerIntf) == NS_OK) {           \
-            outerIntf->ReleaseInner(GetInner());                            \
-            outerIntf->Release();                                           \
-        }                                                                   \
-        else                                                                \
-            --mRefCnt; /* keep track of our refcount as well as outer's */  \
-        return outer->Release();                                            \
-    }                                                                       \
-    else {                                                                  \
-        if (--mRefCnt == 0) {                                               \
-            delete this;                                                    \
-            return 0;                                                       \
-        }                                                                   \
-        return mRefCnt;                                                     \
-    }                                                                       \
+	return fOuter->Release();                                                \
 }                                                                           \
                                                                             \
 NS_IMETHODIMP                                                               \

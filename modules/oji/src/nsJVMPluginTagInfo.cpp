@@ -26,7 +26,6 @@
 #include "xp.h"
 #include "xp_str.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJVMPluginTagInfoIID, NS_IJVMPLUGINTAGINFO_IID);
 static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
 
@@ -54,13 +53,20 @@ NS_IMPL_AGGREGATED(nsJVMPluginTagInfo);
 NS_METHOD
 nsJVMPluginTagInfo::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    if (aIID.Equals(kIJVMPluginTagInfoIID) ||
-        aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = this;
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
+	 if(!aInstancePtr)
+	     return NS_ERROR_INVALID_POINTER;
+
+    if (aIID.Equals(kIJVMPluginTagInfoIID))
+	     *aInstancePtr = NS_STATIC_CAST(nsIJVMPluginTagInfo*, this);
+	 else if (aIID.Equals(NS_GET_IID(nsISupports)))
+	     *aInstancePtr = GetInner();
+	 else	{
+	     *aInstancePtr = nsnull;
+		  return NS_NOINTERFACE;
+	 }
+	 
+	 NS_ADDREF((nsISupports*)aInstancePtr);
+	 return NS_OK;
 }
 
 
@@ -194,19 +200,22 @@ NS_METHOD
 nsJVMPluginTagInfo::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr,
                            nsIPluginTagInfo2* info)
 {
-    if (outer && !aIID.Equals(kISupportsIID))
-        return NS_NOINTERFACE;   // XXX right error?
+	 if(!aInstancePtr)
+	     return NS_ERROR_INVALID_POINTER;
+
+    if (outer && !aIID.Equals(NS_GET_IID(nsISupports)))
+        return NS_ERROR_INVALID_ARG;
 
     nsJVMPluginTagInfo* jvmTagInfo = new nsJVMPluginTagInfo(outer, info);
     if (jvmTagInfo == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    jvmTagInfo->AddRef();
-    *aInstancePtr = jvmTagInfo->GetInner();
 
-    nsresult result = outer->QueryInterface(kIPluginTagInfo2IID,
+	 nsresult result = jvmTagInfo->AggregatedQueryInterface(aIID, aInstancePtr);
+	 if (NS_FAILED(result)) goto error;
+
+    result = jvmTagInfo->QueryInterface(kIPluginTagInfo2IID,
                                             (void**)&jvmTagInfo->fPluginTagInfo);
-    if (result != NS_OK) goto error;
-    outer->Release();   // no need to AddRef outer
+    if (NS_FAILED(result)) goto error;
     return result;
 
   error:

@@ -50,15 +50,19 @@ NS_IMPL_AGGREGATED(nsSimpleURI);
 NS_IMETHODIMP
 nsSimpleURI::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(kThisSimpleURIImplementationCID) ||        // used by Equals
-        aIID.Equals(nsIURI::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
+    NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+	 if (aIID.Equals(kISupportsIID))
+	     *aInstancePtr = GetInner();
+    else if (aIID.Equals(kThisSimpleURIImplementationCID) ||        // used by Equals
+        aIID.Equals(nsIURI::GetIID()))
         *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE; 
+	 else {
+	     *aInstancePtr = nsnull;
+		  return NS_NOINTERFACE;
+	 }
+    NS_ADDREF((nsISupports*)*aInstancePtr);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,12 +221,17 @@ nsSimpleURI::Clone(nsIURI* *result)
 NS_METHOD
 nsSimpleURI::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+	 NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
+
     nsSimpleURI* url = new nsSimpleURI(aOuter);
     if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(url);
-    nsresult rv = url->QueryInterface(aIID, aResult);
-    NS_RELEASE(url);
+
+    nsresult rv = url->AggregatedQueryInterface(aIID, aResult);
+
+	 if (NS_FAILED(rv))
+	     delete url;
     return rv;
 }
 

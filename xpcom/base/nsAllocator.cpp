@@ -37,32 +37,36 @@ NS_IMPL_AGGREGATED(nsAllocatorImpl);
 NS_METHOD
 nsAllocatorImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
-    if (NULL == aInstancePtr) {                                            
-        return NS_ERROR_NULL_POINTER;                                        
-    }                                                                      
-    if (aIID.Equals(nsIAllocator::GetIID()) || 
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = (void*) this; 
-        AddRef(); 
-        return NS_OK; 
-    } 
-    return NS_NOINTERFACE;
+    NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+	 if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+	     *aInstancePtr = GetInner();
+    else if (aIID.Equals(nsIAllocator::GetIID()))
+        *aInstancePtr = NS_STATIC_CAST(nsIAllocator*, this);
+	 else { 
+        *aInstancePtr = nsnull; 
+        return NS_NOINTERFACE; 
+    }
+	 
+	 NS_ADDREF((nsISupports*)*aInstancePtr); 
+    return NS_OK;
 }
 
 NS_METHOD
 nsAllocatorImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-    if (outer && !aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-        return NS_NOINTERFACE;   // XXX right error?
+    NS_ENSURE_ARG_POINTER(aInstancePtr);
+	 NS_ENSURE_PROPER_AGGREGATION(outer, aIID);
+
     nsAllocatorImpl* mm = new nsAllocatorImpl(outer);
     if (mm == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    mm->AddRef();
-    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-        *aInstancePtr = mm->GetInner();
-    else
-        *aInstancePtr = mm;
-    return NS_OK;
+
+	 nsresult rv = mm->AggregatedQueryInterface(aIID, aInstancePtr);
+	 
+	 if (NS_FAILED(rv))
+	     delete mm;
+	 return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -85,12 +85,18 @@ nsLoadGroup::~nsLoadGroup()
 NS_METHOD
 nsLoadGroup::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+	 NS_ENSURE_PROPER_AGGREGATION(aOuter, aIID);
+
     nsLoadGroup* group = new nsLoadGroup(aOuter);
     if (group == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(group);
-    nsresult rv = group->QueryInterface(aIID, aResult);
-    NS_RELEASE(group);
+
+    nsresult rv = group->AggregatedQueryInterface(aIID, aResult);
+
+	 if (NS_FAILED(rv))
+	     delete group;
+
     return rv;
 }
 
@@ -99,16 +105,22 @@ NS_IMPL_AGGREGATED(nsLoadGroup);
 NS_IMETHODIMP
 nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(kLoadGroupCID) ||   // for internal use only (to set parent)
+    NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+	 if (aIID.Equals(NS_GET_IID(nsISupports)))
+	     *aInstancePtr = GetInner();
+    else if (aIID.Equals(kLoadGroupCID) ||   // for internal use only (to set parent)
         aIID.Equals(nsCOMTypeInfo<nsILoadGroup>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsIRequest>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) 
         *aInstancePtr = NS_STATIC_CAST(nsILoadGroup*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
+	 else {
+        *aInstancePtr = nsnull;
+        return NS_NOINTERFACE;
     }
-    return NS_NOINTERFACE; 
+
+	 NS_ADDREF((nsISupports*)*aInstancePtr);
+    return NS_OK; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////

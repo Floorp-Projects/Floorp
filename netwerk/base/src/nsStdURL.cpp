@@ -128,15 +128,21 @@ NS_IMETHODIMP
 nsStdURL::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(kThisStdURLImplementationCID) ||        // used by Equals
+	 if(!aInstancePtr)
+	     return NS_ERROR_INVALID_POINTER;
+
+	 if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+	     *aInstancePtr = GetInner();
+    else if (aIID.Equals(kThisStdURLImplementationCID) ||   // used by Equals
         aIID.Equals(nsCOMTypeInfo<nsIURL>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsIURI>::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsIURI>::GetIID()))
         *aInstancePtr = NS_STATIC_CAST(nsIURL*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
+	 else {
+	     *aInstancePtr = nsnull;
+		  return NS_NOINTERFACE;
     }
-    return NS_NOINTERFACE; 
+	 NS_ADDREF((nsISupports*)*aInstancePtr);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -619,10 +625,22 @@ nsStdURL::Create(nsISupports *aOuter,
 	REFNSIID aIID, 
 	void **aResult)
 {
+    if (!aResult)
+	     return NS_ERROR_INVALID_POINTER;
+
+	 if (aOuter && !aIID.Equals(NS_GET_IID(nsISupports)))
+	     return NS_ERROR_INVALID_ARG;
+
     nsStdURL* url = new nsStdURL(nsnull, aOuter);
     if (url == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = url->QueryInterface(aIID, aResult);
+
+    nsresult rv = url->AggregatedQueryInterface(aIID, aResult);
+	 if (NS_FAILED(rv)) {
+	     delete url;
+		  return rv;
+	 }
+	     
     return rv;
 }
 
