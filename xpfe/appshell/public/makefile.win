@@ -45,6 +45,7 @@ EXPORTS =                         \
         nsFileLocations.h         \
         nsINetSupportDialogService.h \
         nsISplashScreen.h         \
+        nsINativeAppSupport.h     \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
