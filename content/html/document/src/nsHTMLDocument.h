@@ -130,7 +130,7 @@ protected:
   nsIContent ** mChildStack;
   PRInt32       mStackInx;
 
-  nsString     mSearchStr;
+  nsString   * mSearchStr;
   PRInt32      mSearchDirection;
 
   PRInt32      mLastBlockSearchOffset;
