@@ -673,12 +673,16 @@ nsHTMLInputElement::SetWidget(nsIWidget* aWidget)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP 
 nsHTMLInputElement::GetStyleHintForAttributeChange(
     const nsIContent * aNode,
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  if (nsHTMLAtoms::checked == aAttribute) {
+    *aHint = (nsnull != mWidget ? NS_STYLE_HINT_CONTENT : NS_STYLE_HINT_REFLOW);
+  } else {
+    nsGenericHTMLElement::SetStyleHintForCommonAttributes(aNode, aAttribute, aHint);
+  }
   return NS_OK;
 }
