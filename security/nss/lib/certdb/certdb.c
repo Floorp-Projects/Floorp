@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.56 2003/11/15 00:09:49 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.57 2003/12/06 06:52:53 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2245,7 +2245,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
     unsigned int fcerts = 0;
 
     if ( ncerts ) {
-	certs = (CERTCertificate**)PORT_ZAlloc(sizeof(CERTCertificate *) * ncerts );
+	certs = PORT_ZNewArray(CERTCertificate*, ncerts);
 	if ( certs == NULL ) {
 	    return(SECFailure);
 	}
@@ -2306,18 +2306,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 	}
     }
 
-    return(SECSuccess);
-    
-#if 0	/* dead code here - why ?? XXX */
-loser:
-    if ( retCerts ) {
-	*retCerts = NULL;
-    }
-    if ( certs ) {
-	CERT_DestroyCertArray(certs, ncerts);
-    }    
-    return(SECFailure);
-#endif
+    return (fcerts ? SECSuccess : SECFailure);
 }
 
 /*
