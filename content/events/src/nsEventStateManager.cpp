@@ -154,7 +154,9 @@ enum {
 
 nsEventStateManager::nsEventStateManager()
   : mGestureDownPoint(0,0),
-    m_haveShutdown(PR_FALSE)
+    m_haveShutdown(PR_FALSE),
+    mDOMEventLevel(0),
+    mClearedFrameRefsDuringEvent(PR_FALSE)
 {
   mLastMouseOverFrame = nsnull;
   mLastDragOverFrame = nsnull;
@@ -2187,6 +2189,9 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
     }
     mCurrentTarget = nsnull;
   }
+  if (mDOMEventLevel > 0) {
+    mClearedFrameRefsDuringEvent = PR_TRUE;
+  }
   
 
   return NS_OK;
@@ -2382,6 +2387,15 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLock
 }
 
 void
+nsEventStateManager::AfterDispatchEvent()
+{
+  mDOMEventLevel--;
+  if (mClearedFrameRefsDuringEvent && mDOMEventLevel == 0) {
+    mClearedFrameRefsDuringEvent = PR_FALSE;
+  }
+}
+
+void
 nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
                                         nsGUIEvent* aEvent, PRUint32 aMessage,
                                         nsIContent* aTargetContent,
@@ -2405,16 +2419,14 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
   mCurrentTargetContent = aTargetContent;
   mCurrentRelatedContent = aRelatedContent;
 
+  mDOMEventLevel++;
+  BeforeDispatchEvent();
   nsIFrame* targetFrame = aTargetFrame;
   if (aTargetContent) {
     aTargetContent->HandleDOMEvent(aPresContext, &event, nsnull,
                                    NS_EVENT_FLAG_INIT, &status); 
-    if (!mCurrentTarget) {
-      // If current target frame is removed, it's pretty likely something has
-      // happened to our target frame as well (since it's either a parent or the
-      // same frame), so we need to re-resolve it.  Conversely, if nothing has
-      // happened to our current target frame, our frame is guaranteed to still
-      // be around, so we don't need to re-resolve it.  (Bug 185850)
+    // If frame refs were cleared, we need to re-resolve the frame
+    if (mClearedFrameRefsDuringEvent) {
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
       shell->GetPrimaryFrameFor(aTargetContent, &targetFrame);
@@ -2423,6 +2435,7 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
   if (targetFrame) {
     targetFrame->HandleEvent(aPresContext, &event, &status);   
   }
+  AfterDispatchEvent();
 
   mCurrentTargetContent = nsnull;
   mCurrentRelatedContent = nsnull;
