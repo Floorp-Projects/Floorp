@@ -621,9 +621,8 @@ nsHTMLEditorLog:: DeleteTableRow(PRInt32 aNumber)
   return nsHTMLEditor::DeleteTableRow(aNumber);
 }
 
-
 NS_IMETHODIMP
-nsHTMLEditorLog:: JoinTableCells()
+nsHTMLEditorLog:: JoinTableCells(PRBool aMergeNonContiguousContents)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -633,7 +632,7 @@ nsHTMLEditorLog:: JoinTableCells()
     Flush();
   }
 
-  return nsHTMLEditor::JoinTableCells();
+  return nsHTMLEditor::JoinTableCells(aMergeNonContiguousContents);
 }
 
 NS_IMETHODIMP
@@ -666,6 +665,20 @@ nsHTMLEditorLog:: NormalizeTable(nsIDOMElement *aTable)
   return nsHTMLEditor::NormalizeTable(aTable);
 }
 
+NS_IMETHODIMP
+nsHTMLEditorLog::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell)
+{
+  nsAutoHTMLEditorLogLock logLock(this);
+
+  if (!mLocked && mFileSpec)
+  {
+    Write("window.editorShell.SwitchTableCellHeaderType(\"");
+    Write("\");\n");
+    Flush();
+  }
+
+  return nsHTMLEditor::SwitchTableCellHeaderType(aSourceCell, aNewCell);
+}
 
 NS_IMETHODIMP
 nsHTMLEditorLog::MakeOrChangeList(const nsString& aListType)

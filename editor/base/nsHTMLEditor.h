@@ -201,7 +201,7 @@ public:
   NS_IMETHOD SelectTable();
   NS_IMETHOD SelectAllTableCells();
   NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell);
-  NS_IMETHOD JoinTableCells();
+  NS_IMETHOD JoinTableCells(PRBool aMergeNonContiguousContents);
   NS_IMETHOD SplitTableCell();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
   NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell, PRInt32& aRowIndex, PRInt32& aColIndex);
@@ -218,6 +218,9 @@ public:
                                         PRInt32 aDirection, PRBool aSelected);
   NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRInt32 &aSelectedCount);
   NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 &aSelectionType);
+
+  nsresult GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell);
+
   // Finds the first selected cell in first range of selection
   // This is in the *order of selection*, not order in the table
   // (i.e., each cell added to selection is added in another range 
@@ -380,10 +383,15 @@ protected:
   NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan,
                         PRBool aAfter, PRBool aIsHeader, nsIDOMElement **aNewCell);
 
+  // Helpers that don't touch the selection or do batch transactions
+  NS_IMETHOD DeleteRow(nsIDOMElement *aTable, PRInt32 aRowIndex);
+  NS_IMETHOD DeleteColumn(nsIDOMElement *aTable, PRInt32 aColIndex);
+  NS_IMETHOD DeleteCellContents(nsIDOMElement *aCell);
+
   // Move all contents from aCellToMerge into aTargetCell (append at end)
   NS_IMETHOD MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell, nsCOMPtr<nsIDOMElement> aCellToMerge, PRBool aDeleteCellToMerge);
 
-  NS_IMETHOD DeleteTable2(nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMSelection> &aSelection);
+  NS_IMETHOD DeleteTable2(nsIDOMElement *aTable, nsIDOMSelection *aSelection);
   NS_IMETHOD SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan);
   NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan);
 
@@ -418,7 +426,9 @@ protected:
   NS_IMETHOD SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aColIndex,
                                PRInt32 aRowSpanAbove, PRInt32 aRowSpanBelow, nsIDOMElement **aNewCell);
 
+  // Reduce rowspan/colspan when cells span into non-existent rows/columns
   NS_IMETHOD FixBadRowSpan(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32& aNewRowCount);
+  NS_IMETHOD FixBadColSpan(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32& aNewColCount);
 
   // Fallback method: Call this after using ClearSelection() and you
   //  failed to set selection to some other content in the document

@@ -2184,7 +2184,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
           {
             // Didn't find one above: Create a new one
             nsCOMPtr<nsIDOMElement>titleElement;
-            res = domDoc->CreateElement(NS_ConvertASCIItoUCS2("title"),getter_AddRefs(titleElement));
+            res = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"), NS_LITERAL_STRING("title"), getter_AddRefs(titleElement));
             if (NS_SUCCEEDED(res) && titleElement)
             {
               titleNode = do_QueryInterface(titleElement);
@@ -2902,7 +2902,26 @@ void nsEditorShell::GetBundleString(const nsString& name, nsString &outString)
   }
 }
 
-// Utility to bring up a Yes/No/Cancel dialog.
+// Utilities to bring up a Yes/No/Cancel dialog.
+
+// For JavaScript:
+NS_IMETHODIMP    
+nsEditorShell::ConfirmWithTitle(const PRUnichar *aTitle, const PRUnichar *aQuestion,
+                                const PRUnichar *aYesButtonText, const PRUnichar *aNoButtonText, PRInt32 *_retval)
+{
+  if (!aTitle || !aQuestion || !aYesButtonText || !_retval)
+    return NS_ERROR_NULL_POINTER;
+
+  nsAutoString title(aTitle);
+  nsAutoString question(aQuestion);
+  nsAutoString yesString(aYesButtonText);
+  nsAutoString noString(aNoButtonText);
+
+  *_retval = ConfirmWithCancel(title, question, &yesString, &noString);
+  
+  return NS_OK;
+}
+
 nsEditorShell::EConfirmResult
 nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuestion, 
                                  const nsString *aYesString, const nsString *aNoString)
@@ -3777,7 +3796,12 @@ nsEditorShell::DeleteTable()
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
+        {
           result = tableEditor->DeleteTable();
+          // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+          //  to JavaScript
+          if(NS_SUCCEEDED(result)) return NS_OK;
+        }
       }
       break;
     default:
@@ -3796,7 +3820,12 @@ nsEditorShell::DeleteTableCell(PRInt32 aNumber)
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
+        {
           result = tableEditor->DeleteTableCell(aNumber);
+          // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+          //  to JavaScript
+          if(NS_SUCCEEDED(result)) return NS_OK;
+        }
       }
       break;
     default:
@@ -3815,7 +3844,12 @@ nsEditorShell::DeleteTableCellContents()
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
+        {
           result = tableEditor->DeleteTableCellContents();
+          // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+          //  to JavaScript
+          if(NS_SUCCEEDED(result)) return NS_OK;
+        }
       }
       break;
     default:
@@ -3834,7 +3868,12 @@ nsEditorShell::DeleteTableRow(PRInt32 aNumber)
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
+        {
           result = tableEditor->DeleteTableRow(aNumber);
+          // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+          //  to JavaScript
+          if(NS_SUCCEEDED(result)) return NS_OK;
+        }
       }
       break;
     default:
@@ -3854,7 +3893,12 @@ nsEditorShell::DeleteTableColumn(PRInt32 aNumber)
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
+        {
           result = tableEditor->DeleteTableColumn(aNumber);
+          // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
+          //  to JavaScript
+          if(NS_SUCCEEDED(result)) return NS_OK;
+        }
       }
       break;
     default:
@@ -3884,7 +3928,7 @@ nsEditorShell::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMEleme
 
 
 NS_IMETHODIMP    
-nsEditorShell::JoinTableCells()
+nsEditorShell::JoinTableCells(PRBool aMergeNonContiguousContents)
 {
   nsresult  result = NS_NOINTERFACE;
   switch (mEditorType)
@@ -3893,7 +3937,7 @@ nsEditorShell::JoinTableCells()
       {
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         if (tableEditor)
-          result = tableEditor->JoinTableCells();
+          result = tableEditor->JoinTableCells(aMergeNonContiguousContents);
       }
       break;
     default:

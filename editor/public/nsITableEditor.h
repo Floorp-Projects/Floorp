@@ -74,8 +74,23 @@ public:
     * @param aNumber    Number of items to insert/delete
     */
   NS_IMETHOD DeleteTable()=0;
-  NS_IMETHOD DeleteTableCell(PRInt32 aNumber)=0;
+
+  /** Delete just the cell contents
+    * This is what should happen when Delete key is used
+    *   for selected cells, to minimize upsetting the table layout
+    */
   NS_IMETHOD DeleteTableCellContents()=0;
+
+  /** Delete cell elements as well as contents
+    * @param aNumber   Number of contiguous cells, rows, or columns
+    *
+    * When there are more than 1 selected cells, aNumber is ignored.
+    * For Delete Rows or Columns, the complete columns or rows are 
+    *  determined by the selected cells. E.g., to delete 2 complete rows,
+    *  user simply selects a cell in each, and they don't
+    *  have to be contiguous.
+    */
+  NS_IMETHOD DeleteTableCell(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableColumn(PRInt32 aNumber)=0;
   NS_IMETHOD DeleteTableRow(PRInt32 aNumber)=0;
 
@@ -117,15 +132,20 @@ public:
     * The resulting cell is in the location of the 
     *   cell at the upper-left corner of the adjacent
     *   block of selected cells
-    * Non-adjacent cells are not deleted,
-    *   but their contents are still moved 
-    *   to the upper-left cell
+    *
+    * @param aMergeNonContiguousContents:  
+    *       If true: 
+    *         Non-contiguous cells are not deleted,
+    *         but their contents are still moved 
+    *         to the upper-left cell
+    *       If false: contiguous cells are ignored
+    *
     * If there are no selected cells,
     *   and selection or caret is in a cell,
     *   that cell and the one to the right 
     *   are merged
     */
-  NS_IMETHOD JoinTableCells()=0;
+  NS_IMETHOD JoinTableCells(PRBool aMergeNonContiguousContents)=0;
 
   /** Split a cell that has rowspan and/or colspan > 0
     *   into cells such that all new cells have 
