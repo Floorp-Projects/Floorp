@@ -81,6 +81,20 @@ public:
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult) = 0;
 
   /**
+   * Return the font's strikeout offset (the distance from the 
+   * baseline to where a strikeout should be placed) and size
+   * Positive values are above the baseline, negative below.
+   */
+  NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize) = 0;
+
+  /**
+   * Return the font's underline offset (the distance from the 
+   * baseline to where a underline should be placed) and size.
+   * Positive values are above the baseline, negative below.
+   */
+  NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize) = 0;
+
+  /**
    * Returns the width (in app units) of an 8-bit character
    */
   NS_IMETHOD  GetWidth(char aC, nscoord &aWidth) = 0;
