@@ -153,12 +153,12 @@
     </toolbar>
   </hbox>
 -->
-  <menupopup id="taskPopup" onpopupshowing="initWalletMenuItems();">
+  <menupopup id="taskPopup">
     <menu label="&walletFormManager.label;"
           accesskey="&walletFormManager.accesskey;"
           id="wallet"
           insertbefore="navBeginGlobalItems">
-      <menupopup>
+      <menupopup onpopupshowing="initWalletMenuItems();">
         <menuitem command="cmd_walletPrefill"/>
         <menuitem command="cmd_walletCapture"/>
         <menuseparator/>
