@@ -66,6 +66,9 @@
    </xsl:if>
 </xsl:template>
 
+<!-- empty variable for named template test -->
+<xsl:variable name="dummy-param" />
+
 <!-- supress non-selected nodes-->
 <xsl:template match="*"/>
 
