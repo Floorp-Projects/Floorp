@@ -10,8 +10,15 @@
       <xul:box class="toolbar-primary" autostretch="never" flex="1">
         <xul:text class="box-smallheader-left" inherits="title:value"/>
         <xul:spring flex="1"/>
+        <xul:text class="box-smallheader-right" inherits="description:value"/>
       </xul:box>
     </content>
+    <interface>
+      <property name="title" onset="this.setAttribute('title',val); return val;"
+                             onget="return this.getAttribute('title');"/>
+      <property name="description" onset="this.setAttribute('description',val); return val;"
+                             onget="return this.getAttribute('description');"/>
+    </interface>
   </binding>
 
   <binding id="largeheader">
