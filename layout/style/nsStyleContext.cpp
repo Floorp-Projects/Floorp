@@ -757,11 +757,13 @@ PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
         return NS_STYLE_HINT_VISUAL;
       }
     }
+    if (mBorderRadius != aOther.mBorderRadius) {
+      return NS_STYLE_HINT_VISUAL;
+    }
     if ((mOutlineWidth != aOther.mOutlineWidth) ||
         (mOutlineStyle != aOther.mOutlineStyle) ||
-        (mOutlineColor != aOther.mOutlineColor) ||
-        (mBorderRadius != aOther.mBorderRadius)) {
-      return NS_STYLE_HINT_VISUAL;
+        (mOutlineColor != aOther.mOutlineColor)) {
+      return NS_STYLE_HINT_REFLOW;	// XXX: should be VISUAL: see bugs 9809 and 9816
     }
     return NS_STYLE_HINT_NONE;
   }
