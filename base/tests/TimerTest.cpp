@@ -28,7 +28,7 @@
 
 static char* class1Name = "TimerTest";
 
-static HANDLE gInstance, gPrevInstance;
+static HINSTANCE gInstance, gPrevInstance;
 static nsVoidArray *gTimeouts = NULL;
 
 static void CreateRepeat(PRUint32 aDelay);
@@ -163,7 +163,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,
 }
 
 int PASCAL
-WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
+WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
   gInstance = instance;
 
