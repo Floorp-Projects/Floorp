@@ -172,6 +172,12 @@ public:
 
   NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
 
+  /* formatting within the dom tree */
+  NS_IMETHOD InsertNoneditableTextNode(nsIDOMNode* aParent,
+                                       PRInt32 aOffset,
+                                       nsString& aStr);
+  NS_IMETHOD InsertFormattingForNode(nsIDOMNode* aNode);
+
 
   /* output */
   NS_IMETHOD OutputToString(nsString& aOutputString,
