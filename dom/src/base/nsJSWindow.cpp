@@ -1306,49 +1306,6 @@ WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
 //
-// Native method Close
-//
-PR_STATIC_CALLBACK(JSBool)
-WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
-  nsresult result = NS_OK;
-
-  *rval = JSVAL_NULL;
-
-  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
-  }
-  {
-    PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.close",PR_FALSE , &ok);
-    if (!ok) {
-      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-  }
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  {
-
-    result = nativeThis->Close();
-    if (NS_FAILED(result)) {
-      return nsJSUtils::nsReportError(cx, result);
-    }
-
-    *rval = JSVAL_VOID;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method Back
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2536,6 +2493,49 @@ WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
 
 //
+// Native method Close
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.close",PR_FALSE , &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+    result = nativeThis->Close(cx, argv+0, argc-0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method AddEventListener
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2736,7 +2736,6 @@ static JSFunctionSpec WindowMethods[] =
   {"prompt",          WindowPrompt,     0},
   {"focus",          WindowFocus,     0},
   {"blur",          WindowBlur,     0},
-  {"close",          WindowClose,     0},
   {"back",          WindowBack,     0},
   {"forward",          WindowForward,     0},
   {"home",          WindowHome,     0},
@@ -2761,6 +2760,7 @@ static JSFunctionSpec WindowMethods[] =
   {"createPopup",          WindowCreatePopup,     7},
   {"open",          WindowOpen,     0},
   {"openDialog",          WindowOpenDialog,     0},
+  {"close",          WindowClose,     0},
   {"addEventListener",          EventTargetAddEventListener,     3},
   {"removeEventListener",          EventTargetRemoveEventListener,     3},
   {0}

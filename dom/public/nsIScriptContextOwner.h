@@ -30,6 +30,7 @@ class nsIScriptContext;
  0xa94ec640, 0x0bba, 0x11d2,                 \
   {0xb3, 0x26, 0x00, 0x80, 0x5f, 0x8a, 0x38, 0x59} }
 
+
 /**
  * Implemented by any object capable of supplying a nsIScriptContext.
  * The implentor may create the script context on demand and is

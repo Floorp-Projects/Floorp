@@ -101,6 +101,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
 	mNumEvaluations = 0;
   mSecurityManager = nsnull;
   mOwner = nsnull;
+  mTerminationFunc = nsnull;
 }
 
 nsJSContext::~nsJSContext()
@@ -174,6 +175,8 @@ nsJSContext::EvaluateString(const nsString& aScript,
   PRBool canExecute;
   if (NS_FAILED(securityManager->CanExecuteScripts(principal, &canExecute)))
     return NS_ERROR_FAILURE;
+  mRef = 0;
+  mTerminationFunc = nsnull;
   PRBool ret = PR_FALSE;
   if (canExecute) {
     ret = ::JS_EvaluateUCScriptForPrincipals(mContext, 
@@ -223,6 +226,9 @@ nsJSContext::CallFunction(void *aObj, void *aFunction, PRUint32 argc,
     return NS_ERROR_FAILURE;
   if (NS_FAILED(stack->Push(mContext))) 
     return NS_ERROR_FAILURE;
+
+  mRef = 0;
+  mTerminationFunc = nsnull;
 
   jsval val;
   PRBool ret = canExecute &&
@@ -405,6 +411,12 @@ nsJSContext::GC()
 NS_IMETHODIMP
 nsJSContext::ScriptEvaluated(void)
 {
+  if (mTerminationFunc) {
+    (*mTerminationFunc)(mRef);
+    mRef = 0;
+    mTerminationFunc = nsnull;
+  }
+
 	mNumEvaluations++;
 	
 	if (mNumEvaluations > 20) {
@@ -473,6 +485,16 @@ nsJSContext::GetOwner(nsIScriptContextOwner** owner)
 {
   *owner = mOwner;
   NS_IF_ADDREF(mOwner);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                    nsISupports* aRef)
+{
+  mTerminationFunc = aFunc;
+  mRef = aRef;
 
   return NS_OK;
 }

@@ -41,7 +41,6 @@
         DOMString  prompt(/* ... */);
         void  focus();
         void  blur();
-        void  close();
         void  back();
         void  forward();
         void  home();
@@ -74,6 +73,8 @@
 
         Window open(/* ... */);
         Window openDialog(/* ... */);
+        noscript void  close();
+        void  close(/* ... */);
       };
 
      interface EventTarget {

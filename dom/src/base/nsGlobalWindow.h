@@ -148,7 +148,6 @@ public:
   NS_IMETHOD    Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aReturn);
   NS_IMETHOD    Focus();
   NS_IMETHOD    Blur();
-  NS_IMETHOD    Close();
   NS_IMETHOD    Forward();
   NS_IMETHOD    Back();
   NS_IMETHOD    Home();
@@ -174,6 +173,8 @@ public:
                             nsIDOMWindow** aReturn);
   NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, 
                             nsIDOMWindow** aReturn);
+  NS_IMETHOD    Close();
+  NS_IMETHOD    Close(JSContext* cx, jsval* argv, PRUint32 argc);
 
   NS_IMETHOD    CaptureEvents(PRInt32 aEventFlags);
   NS_IMETHOD    ReleaseEvents(PRInt32 aEventFlags);
@@ -224,6 +225,8 @@ public:
   NS_IMETHOD        GetPrivateParent(nsPIDOMWindow** aResult);
 
   friend void nsGlobalWindow_RunTimeout(nsITimer *aTimer, void *aClosure);
+
+  static void CloseWindow(nsISupports* aWindow);
 
 protected:
   PRBool        RunTimeout(nsTimeoutImpl *aTimeout);
