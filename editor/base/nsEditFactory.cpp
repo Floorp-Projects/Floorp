@@ -112,13 +112,6 @@ nsEditFactory::nsEditFactory(nsIFactory **aFactory)
   if (aFactory)
   {
     err = this->QueryInterface(kIFactoryIID, (void**)aFactory); 
-    //this is to be sure we have at least one
-    //reference to the factory
-    if ( (err == NS_OK) && (*aFactory != NULL) )
-    {
-      nsRepository::RegisterFactory(kIEditFactoryIID, *aFactory,
-        PR_TRUE);
-    }
   }
 }
 
