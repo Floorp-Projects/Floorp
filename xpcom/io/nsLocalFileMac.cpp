@@ -2473,7 +2473,7 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
              PRBool dir;
              rv = IsDirectory(&dir);
              NS_ASSERTION(NS_SUCCEEDED(rv), "Cannot tell if this is a directory");
-             if (NS_SUCCEEDED(rv) && dir && ) {
+             if (NS_SUCCEEDED(rv) && dir) {
                // make sure we have a trailing slash
                escPath += "/";
              }             
