@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+
+<bindings id="toolbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   
+  <binding id="toolbar-primary" extends="chrome://global/content/toolbarBindings.xml#toolbar">
+    <content>
+      <xul:toolbargrippy inherits="tooltiptext=grippytooltiptext,tooltip=grippytooltip,last-toolbar"
+          tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
+      <xul:box class="toolbar-primary-image-left" orient="vertical">
+        <xul:spring class="toolbar-primary-image-left-top"/> 
+        <xul:spring class="toolbar-primary-image-left-mid" flex="1"/> 
+        <xul:spring class="toolbar-primary-image-left-btm"/> 
+      </xul:box>
+      <xul:box class="toolbar-primary-image-mid toolbar-holder" orient="vertical" flex="1"
+        inherits="collapsed,last-toolbar,orient=tborient,autostretch=tbautostretch">
+        <xul:box class="toolbar-primary-image-mid-mid" flex="1" autostretch="never">
+          <children/>
+        </xul:box>
+        <xul:spring class="toolbar-primary-image-mid-btm"/>
+      </xul:box>
+      <xul:box class="toolbar-primary-image-right" orient="vertical">
+        <xul:spring class="toolbar-primary-image-right-top"/> 
+        <xul:spring class="toolbar-primary-image-right-mid" flex="1"/> 
+        <xul:spring class="toolbar-primary-image-right-btm"/> 
+      </xul:box>
+    </content>
+  </binding>
+  
+</bindings>
