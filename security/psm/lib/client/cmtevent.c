@@ -223,7 +223,7 @@ PCMT_EVENT CMT_GetNextEventHandler(PCMT_CONTROL control, PCMT_EVENT e)
 void CMT_ProcessEvent(PCMT_CONTROL cm_control)
 {
     CMTSocket sock; 
-    CMTItem eventData={ 0 };
+    CMTItem eventData={ 0, NULL, 0 };
 
     /* Get the control socket */
     sock = cm_control->sock;
@@ -269,7 +269,7 @@ void
 CMT_PromptUser(PCMT_CONTROL cm_control, CMTItem *eventData)
 {
     char *promptReply  = NULL;
-    CMTItem   response={ 0 };
+    CMTItem   response={ 0, NULL, 0 };
     PromptRequest request;
     PromptReply reply;
     void * clientContext;
@@ -317,7 +317,7 @@ CMT_PromptUser(PCMT_CONTROL cm_control, CMTItem *eventData)
 void CMT_GetFilePath(PCMT_CONTROL cm_control, CMTItem * eventData)
 {
     char *fileName=NULL;
-    CMTItem response = { 0 };
+    CMTItem response = { 0, NULL, 0 };
     FilePathRequest request;
     FilePathReply reply;
 

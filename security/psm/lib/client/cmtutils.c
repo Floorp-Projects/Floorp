@@ -345,12 +345,12 @@ loser:
 CMTStatus CMT_ReceiveMessage(PCMT_CONTROL control, CMTItem * response)
 {
     CMTMessageHeader header;
-    CMUint32 read, rv;
+    CMUint32 numread, rv;
 
     /* Get the obscured message header */
-    read = CMT_ReadThisMany(control, control->sock, 
+    numread = CMT_ReadThisMany(control, control->sock, 
                             (void *)&header, sizeof(CMTMessageHeader));
-    if (read != sizeof(CMTMessageHeader)) {
+    if (numread != sizeof(CMTMessageHeader)) {
         goto loser;
     }
 
@@ -361,9 +361,9 @@ CMTStatus CMT_ReceiveMessage(PCMT_CONTROL control, CMTItem * response)
         goto loser;
     }
 
-    read = CMT_ReadThisMany(control, control->sock, 
+    numread = CMT_ReadThisMany(control, control->sock, 
                             (void *)(response->data), response->len); 
-    if (read != response->len) {
+    if (numread != response->len) {
         goto loser;
     }
 
@@ -402,7 +402,7 @@ CMUint32 CMT_WriteThisMany(PCMT_CONTROL control, CMTSocket sock,
 	CMUint32 total = 0;
   
 	while (total < thisMany) {
-		CMUint32 got;
+		CMInt32 got;
 		got = control->sockFuncs.send(sock, (void*)((char*)buffer+total), 
                                       thisMany-total);
 		if (got < 0) {
