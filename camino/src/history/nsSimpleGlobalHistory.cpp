@@ -1780,7 +1780,7 @@ nsSimpleGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *file
     NS_WARNING("Could not get meta row\n");
 
 #ifdef DEBUG_HISTORY
-    fprintf(stderr, "HISTORY DEBUG: GetMetaRow failed (err 0x%08x\n", err);
+    fprintf(stderr, "HISTORY DEBUG: GetMetaRow return err 0x%08x\n", err);
 #endif
 
   CheckHostnameEntries();
@@ -2159,7 +2159,7 @@ nsSimpleGlobalHistory::CloseDB()
   ExpireEntries(PR_FALSE /* don't notify */);
   err = Commit(kSessionCommit);
 #ifdef DEBUG_HISTORY
-  fprintf(stderr, "HISTORY DEBUG: Commit() in CloseDB() returned error 0x%08x\n", err);
+  fprintf(stderr, "HISTORY DEBUG: Commit() in CloseDB() returned err 0x%08x\n", err);
 #endif
 
   // order is important here - logically smallest objects first
