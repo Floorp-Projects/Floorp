@@ -3087,7 +3087,7 @@ nsGfxTextControlFrame2::InvalidateCachedState()
 
 void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
 {
-  aValue.SetLength(0);  // initialize out param
+  aValue.Truncate();  // initialize out param
   
   if (mEditor && mUseEditor) 
   {
@@ -3110,7 +3110,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
 
     mEditor->OutputToString(aValue, NS_LITERAL_STRING("text/plain"), flags);
   }
-  else if (mCachedState && mCachedState->Length() > 0)
+  else if (mCachedState)
     aValue.Assign(*mCachedState);
 }     
 
@@ -3302,6 +3302,11 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
+
+  // Don't save state before we are initialized
+  if (!mUseEditor) {
+    return NS_OK;
+  }
 
   // Get the value string
   nsString stateString;

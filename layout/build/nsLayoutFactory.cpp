@@ -88,6 +88,7 @@ static NS_DEFINE_CID(kIFrameBoxObjectCID, NS_IFRAMEBOXOBJECT_CID);
 static NS_DEFINE_CID(kOutlinerBoxObjectCID, NS_OUTLINERBOXOBJECT_CID);
 
 static NS_DEFINE_CID(kAutoCopyServiceCID, NS_AUTOCOPYSERVICE_CID);
+static NS_DEFINE_CID(kLayoutHistoryStateCID, NS_LAYOUT_HISTORY_STATE_CID);
 
 extern nsresult NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 #ifdef NS_DEBUG
@@ -115,6 +116,7 @@ extern nsresult NS_NewPrintContext(nsIPrintContext** aResult);
 
 extern nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 extern nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
+extern nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
 
 //----------------------------------------------------------------------
 
@@ -311,6 +313,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewScrollBoxObject((nsIBoxObject**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewScrollBoxObject", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kLayoutHistoryStateCID)) {
+    res = NS_NewLayoutHistoryState((nsILayoutHistoryState**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewLayoutHistoryState", res);
       return res;
     }
   }

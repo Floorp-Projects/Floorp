@@ -655,12 +655,15 @@ NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
-  // Return the value of the property from the widget it is not null.
-  // If widget is null, assume the widget is GFX-rendered and return a member variable instead.
+  aValue.Truncate();  // initialize out param
 
   if (nsHTMLAtoms::value == aName) {
-    if (mTextFrame)
+    if (mTextFrame) {
       mTextFrame->GetTextControlFrameState(aValue);
+    }
+    else if (mCachedState) {
+      aValue.Assign(*mCachedState);
+    }
   }
   return NS_OK;
 }
@@ -698,6 +701,11 @@ NS_IMETHODIMP
 nsFileControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
+
+  // Don't save state before we are initialized
+  if (!mTextFrame && !mCachedState) {
+    return NS_OK;
+  }
 
   // Get the value string
   nsAutoString stateString;
