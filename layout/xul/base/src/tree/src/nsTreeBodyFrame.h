@@ -466,6 +466,9 @@ protected: // Data Members
 
   PRPackedBool mVerticalOverflow;
 
+  // A guard that prevents us from recursive painting.
+  PRPackedBool mImageGuard;
+
   // The row the mouse is hovering over during a drop.
   PRInt32 mDropRow;
   // Where we want to draw feedback (above/on this row/below) if allowed.
