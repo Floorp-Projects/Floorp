@@ -32,7 +32,9 @@
 #define ZIP_TABSIZE   256
 #define ZIP_BUFLEN    32767
 
-
+#ifdef STANDALONE
+#define nsZipArchive nsZipArchiveStandalone
+#endif
 
 class nsZipFind;
 class nsZipRead;
@@ -254,10 +256,6 @@ private:
 class nsZipFind
 {
   friend class nsZipArchive;
-#ifdef STANDALONE
-  friend PRInt32 ZIP_FindNext( void*, char*, PRUint16 );
-  friend PRInt32 ZIP_FindFree( void* );
-#endif
 
 public:
   const PRInt32       kMagic;

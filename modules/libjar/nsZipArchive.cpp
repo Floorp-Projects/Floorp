@@ -234,7 +234,7 @@ PR_PUBLIC_API(PRInt32) ZIP_FindNext( void* hFind, char * outbuf, PRUint16 bufsiz
 
   /*--- return next filename file ---*/
   nsZipItem* item;
-  status = find->mArchive->FindNext( find, &item );
+  status = find->GetArchive()->FindNext( find, &item );
   if ( status == ZIP_OK )
   {
     if ( bufsize > item->namelen ) 
@@ -268,7 +268,7 @@ PR_PUBLIC_API(PRInt32) ZIP_FindFree( void* hFind )
     return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
 
   /* free the find structure */
-  return find->mArchive->FindFree( find );
+  return find->GetArchive()->FindFree( find );
 }
 
 #endif /* STANDALONE */
