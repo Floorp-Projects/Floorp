@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,6 +20,13 @@
  *
  * Contributor(s): 
  *     Henry Sobotka <sobotka@axess.com>
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 05/26/2000       IBM Corp.      Make more like Windows.
  */
 
 #ifndef _nsLocalFileOS2_H_
@@ -40,6 +47,7 @@
 #define INCL_DOSMODULEMGR
 #include <os2.h>
 
+#if 0 // OLDWAY
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -57,7 +65,7 @@
 inline nsresult
 nsresultForErrno(int err)
 {
-#ifdef DEBUG_sobotka
+#ifdef DEBUG
     if (err)
         fprintf(stderr, "errno %d\n", err);
 #endif
@@ -77,6 +85,7 @@ nsresultForErrno(int err)
 }
 
 #define NSRESULT_FOR_ERRNO() nsresultForErrno(errno)
+#endif
 
 class NS_COM nsLocalFile : public nsILocalFile
 {
@@ -99,33 +108,31 @@ public:
 
 private:
 
-    // String guaranteed to be native path
-    nsCString   mPath;
-    nsresult    CheckDrive(const char* inPath);
+    // this is the flag which indicates if I can used cached information about the file
+    PRBool mDirty;
+    PRBool mLastResolution;
 
-    // Filehandling method
-    nsresult    CopyMove(nsIFile *newParentDir, const char *newName, PRBool move);
+    // this string will alway be in native format!
+    nsCString mWorkingPath;
+    
+    // this will be the resolve path which will *NEVER* be return to the user
+    nsCString mResolvedPath;
 
-    // stat caching members and inline methods
-    PRBool      mHaveStatCached;
-    struct stat mStatCache;
-   
-    void        SetNoStatCache() { mHaveStatCached = PR_FALSE; }
-
-    nsresult    LoadStatCache() {
-        if (stat((const char*)mPath, &mStatCache) == -1) {
-#ifdef DEBUG_sobotka
-            fprintf(stderr, "stat(%s) failed; errno: %d\n", (const char *)mPath, errno);
+#if defined(XP_PC) && !defined(XP_OS2)    
+    IPersistFile* mPersistFile; 
+    IShellLink*   mShellLink;
 #endif
-            return NS_ERROR_FAILURE;
-        }
-        mHaveStatCached = PR_TRUE;
-        return NS_OK;
-    }
+    
+    PRFileInfo64  mFileInfo64;
+    
+    void MakeDirty();
+    nsresult ResolveAndStat(PRBool resolveTerminal);
+    nsresult ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath);
+    
+    nsresult CopyMove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move);
+    nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const char * newName, PRBool followSymlinks, PRBool move);
 
-    // Check path for system-reserved chars (inPath = whatever follows drive colon, if any)
-    PRBool      ValidatePath(const char* inPath) {
-        return ((strpbrk(inPath, "<>:\"|") == NULL) ? PR_TRUE : PR_FALSE);
-    }
+    nsresult SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal);
 };
-#endif  // _nsLocalFileOS2_H_
+
+#endif
