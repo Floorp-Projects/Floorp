@@ -19,11 +19,10 @@
 # 
 # Contributor(s): 
   
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
-
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-fonts.dtd" >
+<!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref-fonts.dtd" >
 
 <window id="calibrateScreen"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -32,8 +31,8 @@
         onload="Init();"
         persist="screenX screenY">
 
-  <script type="application/x-javascript" 
-          src="chrome://communicator/content/pref/pref-fonts.js"/>
+  <script type="application/x-javascript"
+          src="chrome://browser/content/pref/pref-fonts.js"/>
 
   <vbox align="center">
 
