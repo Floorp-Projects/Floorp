@@ -29,7 +29,7 @@ static char* tagTable[] = {
   "FORM", "FRAME", "FRAMESET", "H1", "H2", "H3", "H4", "H5", "H6", "HEAD", 
   "HR", "HTML", "I", "IFRAME", "ILAYER", "IMG", "INPUT", "INS", "ISINDEX", 
   "KBD", "KEYGEN", "LABEL", "LAYER", "LEGEND", "LI", "LINK", "LISTING", 
-  "MAP", "MENU", "META", "MULTICOL", "NEXTID", "NOBR", "NOEMBED", "NOFRAMES", 
+  "MAP", "MENU", "META", "MULTICOL", "NOBR", "NOEMBED", "NOFRAMES", 
   "NOLAYER", "NOSCRIPT", "OBJECT", "OL", "OPTGROUP", "OPTION", "P", "PARAM", 
   "PLAINTEXT", "PRE", "Q", "S", "SAMP", "SCRIPT", "SELECT", "SERVER", 
   "SMALL", "SOUND", "SPACER", "SPAN", "STRIKE", "STRONG", "STYLE", "SUB", 

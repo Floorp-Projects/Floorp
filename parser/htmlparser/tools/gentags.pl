@@ -88,7 +88,6 @@ $tags[$i++] = "map";
 $tags[$i++] = "menu";
 $tags[$i++] = "meta";
 $tags[$i++] = "multicol";
-$tags[$i++] = "nextid";
 $tags[$i++] = "nobr";
 $tags[$i++] = "noembed";
 $tags[$i++] = "noframes";

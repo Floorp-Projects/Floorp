@@ -43,28 +43,27 @@ enum nsHTMLTag {
   eHTMLTag_keygen=55, eHTMLTag_label=56, eHTMLTag_layer=57, 
   eHTMLTag_legend=58, eHTMLTag_li=59, eHTMLTag_link=60, eHTMLTag_listing=61, 
   eHTMLTag_map=62, eHTMLTag_menu=63, eHTMLTag_meta=64, eHTMLTag_multicol=65, 
-  eHTMLTag_nextid=66, eHTMLTag_nobr=67, eHTMLTag_noembed=68, 
-  eHTMLTag_noframes=69, eHTMLTag_nolayer=70, eHTMLTag_noscript=71, 
-  eHTMLTag_object=72, eHTMLTag_ol=73, eHTMLTag_optgroup=74, 
-  eHTMLTag_option=75, eHTMLTag_p=76, eHTMLTag_param=77, 
-  eHTMLTag_plaintext=78, eHTMLTag_pre=79, eHTMLTag_q=80, eHTMLTag_s=81, 
-  eHTMLTag_samp=82, eHTMLTag_script=83, eHTMLTag_select=84, 
-  eHTMLTag_server=85, eHTMLTag_small=86, eHTMLTag_sound=87, 
-  eHTMLTag_spacer=88, eHTMLTag_span=89, eHTMLTag_strike=90, 
-  eHTMLTag_strong=91, eHTMLTag_style=92, eHTMLTag_sub=93, eHTMLTag_sup=94, 
-  eHTMLTag_table=95, eHTMLTag_tbody=96, eHTMLTag_td=97, eHTMLTag_textarea=98, 
-  eHTMLTag_tfoot=99, eHTMLTag_th=100, eHTMLTag_thead=101, eHTMLTag_title=102, 
-  eHTMLTag_tr=103, eHTMLTag_tt=104, eHTMLTag_u=105, eHTMLTag_ul=106, 
-  eHTMLTag_var=107, eHTMLTag_wbr=108, eHTMLTag_xmp=109, 
+  eHTMLTag_nobr=66, eHTMLTag_noembed=67, eHTMLTag_noframes=68, 
+  eHTMLTag_nolayer=69, eHTMLTag_noscript=70, eHTMLTag_object=71, 
+  eHTMLTag_ol=72, eHTMLTag_optgroup=73, eHTMLTag_option=74, eHTMLTag_p=75, 
+  eHTMLTag_param=76, eHTMLTag_plaintext=77, eHTMLTag_pre=78, eHTMLTag_q=79, 
+  eHTMLTag_s=80, eHTMLTag_samp=81, eHTMLTag_script=82, eHTMLTag_select=83, 
+  eHTMLTag_server=84, eHTMLTag_small=85, eHTMLTag_sound=86, 
+  eHTMLTag_spacer=87, eHTMLTag_span=88, eHTMLTag_strike=89, 
+  eHTMLTag_strong=90, eHTMLTag_style=91, eHTMLTag_sub=92, eHTMLTag_sup=93, 
+  eHTMLTag_table=94, eHTMLTag_tbody=95, eHTMLTag_td=96, eHTMLTag_textarea=97, 
+  eHTMLTag_tfoot=98, eHTMLTag_th=99, eHTMLTag_thead=100, eHTMLTag_title=101, 
+  eHTMLTag_tr=102, eHTMLTag_tt=103, eHTMLTag_u=104, eHTMLTag_ul=105, 
+  eHTMLTag_var=106, eHTMLTag_wbr=107, eHTMLTag_xmp=108, 
 
   /* The remaining enums are not for tags */
-  eHTMLTag_text=110, eHTMLTag_whitespace=111, eHTMLTag_newline=112, 
-  eHTMLTag_comment=113, eHTMLTag_entity=114, eHTMLTag_userdefined=115, 
-  eHTMLTag_secret_h1style=116, eHTMLTag_secret_h2style=117, 
-  eHTMLTag_secret_h3style=118, eHTMLTag_secret_h4style=119, 
-  eHTMLTag_secret_h5style=120, eHTMLTag_secret_h6style=121
+  eHTMLTag_text=109, eHTMLTag_whitespace=110, eHTMLTag_newline=111, 
+  eHTMLTag_comment=112, eHTMLTag_entity=113, eHTMLTag_userdefined=114, 
+  eHTMLTag_secret_h1style=115, eHTMLTag_secret_h2style=116, 
+  eHTMLTag_secret_h3style=117, eHTMLTag_secret_h4style=118, 
+  eHTMLTag_secret_h5style=119, eHTMLTag_secret_h6style=120
 };
-#define NS_HTML_TAG_MAX 109
+#define NS_HTML_TAG_MAX 108
 
 extern NS_HTMLPARS nsHTMLTag NS_TagToEnum(const char* aTag);
 extern NS_HTMLPARS const char* NS_EnumToTag(nsHTMLTag aEnum);
