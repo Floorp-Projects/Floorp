@@ -588,7 +588,6 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
       // nsHTMLButtonControlFrame::Reflow registers it for Standard Mode
       // and sets up mPresContext
       if (eReflowReason_Initial == aReflowState.reason) {
-        mPresContext = aPresContext;
         nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
       }
       // Do NavQuirks Sizing and layout
