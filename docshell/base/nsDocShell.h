@@ -33,8 +33,10 @@
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
 #include "nsIPref.h"
+#include "nsVoidArray.h"
 
 #include "nsCDocShell.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIContentViewerContainer.h"
 
 #include "nsIDocumentLoader.h"
@@ -46,7 +48,6 @@
 
 #include "nsDSURIContentListener.h"
 
-#include "nsVoidArray.h"
 
 class nsDocShellInitInfo
 {
@@ -151,7 +152,8 @@ protected:
    parent thus a cycle.  A weak reference would work, but not required as the
    interface states a requirement to zero out the parent when the parent is
    releasing the interface.*/
-   nsIDocShellTreeItem*       mParent;
+   nsIDocShellTreeItem*       mParent;  // Weak Reference
+   nsIDocShellTreeOwner*      mTreeOwner; // Weak Reference
    
 };
 
