@@ -7,11 +7,11 @@
     <TH WIDTH="96%" NOWRAP ALIGN=LEFT>Description</TH>
   </TR>
   $files{
-  <tr BGCOLOR="$bgcolor" valign=top>
-    <td nowrap>$iconlink</td>
-    <td nowrap>$namelink</td>
-    <td nowrap align=right>$filesize{$kbytes}&nbsp;</td>
-    <td nowrap><font size=-1>$modtime</font></td>
-    <td class="date">&nbsp; $description{<i>$desctext</i>}}</td>
-  </tr>
-</table>
+  <TR BGCOLOR="$bgcolor" VALIGN=TOP>
+    <TD NOWRAP VALIGN=TOP ALIGN=RIGHT>$iconlink</TD>
+    <TD NOWRAP VALIGN=TOP ALIGN=LEFT>$namelink </TD>
+    <TD NOWRAP VALIGN=TOP ALIGN=RIGHT>$filesize{$kbytes} </TD>
+    <TD NOWRAP VALIGN=TOP ALIGN=RIGHT><FONT SIZE="-1">$modtime</FONT> </TD>
+    <TD VALIGN=TOP ALIGN=LEFT>&nbsp;$description{<i>$desctext</i>}}</TD>
+  </TR>
+</TABLE>
