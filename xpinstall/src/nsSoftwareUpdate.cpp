@@ -267,6 +267,7 @@ nsSoftwareUpdate::SetActiveNotifier(nsIXPINotifier *notifier)
 
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
+                               const PRUnichar* aURL,
                                const PRUnichar* aArguments,
                                long flags,
                                nsIXPINotifier* aNotifier)
@@ -275,7 +276,7 @@ nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
         return NS_ERROR_NULL_POINTER;
 
     nsInstallInfo *info =
-        new nsInstallInfo( aLocalFile, aArguments, flags, aNotifier );
+        new nsInstallInfo( aLocalFile, aURL, aArguments, flags, aNotifier );
     
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -326,10 +327,14 @@ nsSoftwareUpdate::RunNextInstall()
                 RunInstall( info );
             }
             else
+                // XXX leaks any nsInstallInfos left in queue
                 rv = NS_ERROR_NULL_POINTER;
         }
         else
-            ; // nothing more to do
+        {
+            // nothing more to do
+            VR_Close();
+        }
     }
     PR_Unlock(mLock);
 

@@ -72,10 +72,10 @@ nsTopProgressNotifier::UnregisterNotifier(long id)
 
 
 NS_IMETHODIMP
-nsTopProgressNotifier::BeforeJavascriptEvaluation()
+nsTopProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     if (mActive)
-        mActive->BeforeJavascriptEvaluation();
+        mActive->BeforeJavascriptEvaluation(URL);
 
     if (mNotifiers)
     {
@@ -84,7 +84,7 @@ nsTopProgressNotifier::BeforeJavascriptEvaluation()
         {
             nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
             if (element != NULL)
-                element->BeforeJavascriptEvaluation();
+                element->BeforeJavascriptEvaluation(URL);
         }
     }
     
@@ -92,10 +92,10 @@ nsTopProgressNotifier::BeforeJavascriptEvaluation()
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::AfterJavascriptEvaluation(void)
+nsTopProgressNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
     if (mActive)
-        mActive->AfterJavascriptEvaluation();
+        mActive->AfterJavascriptEvaluation(URL);
 
     if (mNotifiers)
     {
@@ -104,17 +104,17 @@ nsTopProgressNotifier::AfterJavascriptEvaluation(void)
         {
             nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
             if (element != NULL)
-                element->AfterJavascriptEvaluation();
+                element->AfterJavascriptEvaluation(URL);
         }
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::InstallStarted(const char* UIPackageName)
+nsTopProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
     if (mActive)
-        mActive->InstallStarted(UIPackageName);
+        mActive->InstallStarted(URL, UIPackageName);
 
     if (mNotifiers)
     {
@@ -123,19 +123,19 @@ nsTopProgressNotifier::InstallStarted(const char* UIPackageName)
         {
             nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
             if (element != NULL)
-                element->InstallStarted(UIPackageName);
+                element->InstallStarted(URL, UIPackageName);
         }
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::ItemScheduled( const char* message )
+nsTopProgressNotifier::ItemScheduled( const PRUnichar* message )
 {
     long rv = 0;
 
-    if (mActive && mActive->ItemScheduled( message ) != 0 )
-        rv = -1;
+    if (mActive)
+        mActive->ItemScheduled( message );
 
     if (mNotifiers)
     {
@@ -144,8 +144,7 @@ nsTopProgressNotifier::ItemScheduled( const char* message )
         {
             nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
             if (element != NULL)
-                if (element->ItemScheduled( message ) != 0)
-                    rv = -1;
+                element->ItemScheduled( message );
         }
     }
 
@@ -153,10 +152,10 @@ nsTopProgressNotifier::ItemScheduled( const char* message )
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::InstallFinalization( const char* message, PRInt32 itemNum, PRInt32 totNum )
+nsTopProgressNotifier::FinalizeProgress( const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
     if (mActive)
-        mActive->InstallFinalization( message, itemNum, totNum );
+        mActive->FinalizeProgress( message, itemNum, totNum );
 
     if (mNotifiers)
     {
@@ -165,17 +164,17 @@ nsTopProgressNotifier::InstallFinalization( const char* message, PRInt32 itemNum
         {
             nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
             if (element != NULL)
-                element->InstallFinalization( message, itemNum, totNum );
+                element->FinalizeProgress( message, itemNum, totNum );
         }
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::InstallAborted(void)
+nsTopProgressNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
 {
     if (mActive)
-        mActive->InstallAborted();
+        mActive->FinalStatus(URL, status);
 
     if (mNotifiers)
     {
@@ -184,15 +183,18 @@ nsTopProgressNotifier::InstallAborted(void)
         {
             nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
             if (element != NULL)
-                element->InstallAborted();
+                element->FinalStatus(URL,status);
         }
     }
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::LogComment(const char* comment)
+nsTopProgressNotifier::LogComment(const PRUnichar* comment)
 {
+    if (mActive)
+        mActive->LogComment(comment);
+
    if (mNotifiers)
     {
         PRUint32 i=0;

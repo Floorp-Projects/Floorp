@@ -57,14 +57,14 @@ static JSClass global_class =
 };
 
 
-extern PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const char* args);
+extern PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const PRUnichar* url, const PRUnichar* args);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static nsresult GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(const char* jarFile, const char* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
+static nsresult SetupInstallContext(const char* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime **jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
@@ -208,13 +208,15 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
 // Description	    : Creates a Javascript runtime and adds our xpinstall objects to it.
 // Return type		: static nsresult
 // Argument         : const char* jarFile - native filepath to where jar exists on disk 
-// Argument         : const char* args    - any arguments passed into the javascript context
+// Argument         : const PRUnichar* url  - URL of where this package came from
+// Argument         : const PRUnichar* args    - any arguments passed into the javascript context
 // Argument         : JSRuntime **jsRT   - Must be deleted via JS_DestroyRuntime
 // Argument         : JSContext **jsCX   - Must be deleted via JS_DestroyContext
 // Argument         : JSObject **jsGlob
 ///////////////////////////////////////////////////////////////////////////////////////////////
-static nsresult SetupInstallContext(const char* jarFile, 
-                                    const char* args, 
+static nsresult SetupInstallContext(const char* jarFile,
+                                    const PRUnichar* url,
+                                    const PRUnichar* args, 
                                     JSRuntime **jsRT, 
                                     JSContext **jsCX, 
                                     JSObject **jsGlob)
@@ -250,7 +252,7 @@ static nsresult SetupInstallContext(const char* jarFile,
     JS_InitStandardClasses(cx, glob);
 
     // Add our Install class to this context
-    InitXPInstallObjects(cx, glob, jarFile, args);
+    InitXPInstallObjects(cx, glob, jarFile, url, args);
     InitInstallVersionClass(cx, glob, nsnull);
     InitInstallTriggerGlobalClass(cx, glob, nsnull);
 
@@ -323,12 +325,14 @@ extern "C" void RunInstallOnThread(void *data)
     softwareUpdate->SetActiveNotifier( installInfo->GetNotifier() );
     softwareUpdate->GetMasterNotifier(&notifier);
     
+    nsString url;
+    installInfo->GetURL(url);
+
     if(notifier)
-        notifier->BeforeJavascriptEvaluation();
+        notifier->BeforeJavascriptEvaluation( url.GetUnicode() );
     
     nsString args;
     installInfo->GetArguments(args);
-
 
     char *jarpath;
     installInfo->GetLocalFile(&jarpath);
@@ -345,7 +349,8 @@ extern "C" void RunInstallOnThread(void *data)
         goto bail;
 
     rv = SetupInstallContext(   jarpath, 
-                                nsAutoCString( args ), 
+                                url.GetUnicode(),
+                                args.GetUnicode(), 
                                 &rt, &cx, &glob);
     if (NS_FAILED(rv))
         goto bail;
@@ -366,7 +371,7 @@ extern "C" void RunInstallOnThread(void *data)
 
 bail:
     if(notifier) 
-        notifier->AfterJavascriptEvaluation();
+        notifier->AfterJavascriptEvaluation( url.GetUnicode() );
 
     if (scriptBuffer) delete [] scriptBuffer;
     if (jarpath) nsCRT::free(jarpath);

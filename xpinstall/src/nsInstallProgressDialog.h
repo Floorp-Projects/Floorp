@@ -41,23 +41,24 @@
 
 
 class nsInstallProgressDialog : public nsIXPINotifier,
-    public nsIXULWindowCallbacks, public nsIXPIProgressDlg
+                                public nsIXULWindowCallbacks, 
+                                public nsIXPIProgressDlg
 {
     public: 
 
-        nsInstallProgressDialog();
+        nsInstallProgressDialog(nsIXULWindowCallbacks* aManager);
         virtual ~nsInstallProgressDialog();
         
         NS_DECL_ISUPPORTS
 
         // implement nsIXPINotifier  
-        NS_IMETHOD BeforeJavascriptEvaluation();
-        NS_IMETHOD AfterJavascriptEvaluation();
-        NS_IMETHOD InstallStarted(const char *UIPackageName);
-        NS_IMETHOD ItemScheduled(const char *message);
-        NS_IMETHOD InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum);
-        NS_IMETHOD InstallAborted();
-        NS_IMETHOD LogComment(const char* comment);
+        NS_IMETHOD BeforeJavascriptEvaluation(const PRUnichar *URL);
+        NS_IMETHOD AfterJavascriptEvaluation(const PRUnichar *URL);
+        NS_IMETHOD InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName);
+        NS_IMETHOD ItemScheduled(const PRUnichar *message);
+        NS_IMETHOD FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum);
+        NS_IMETHOD FinalStatus(const PRUnichar* URL, PRInt32 status);
+        NS_IMETHOD LogComment(const PRUnichar* comment);
 
         // implement nsIXPIProgressDlg
         NS_IMETHOD Open();
@@ -70,14 +71,14 @@ class nsInstallProgressDialog : public nsIXPINotifier,
 
         // Declare implementations of nsIXULWindowCallbacks interface functions.
         NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
-        NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell) { return NS_OK; }
+        NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell);
 
     protected:
         nsresult setDlgAttribute(const char *id, const char *name, const nsString &value);
         nsresult getDlgAttribute(const char *id, const char *name, nsString &value);
 
     private:
-
+        nsIXULWindowCallbacks*       mManager;
         nsCOMPtr<nsIDOMXULDocument>  mDocument;		// why is this owned?
         nsCOMPtr<nsIWebShellWindow>  mWindow;			// why is this owned?
 };

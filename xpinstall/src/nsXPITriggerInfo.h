@@ -28,9 +28,23 @@
 #include "nsString.h"
 #include "nsVector.h"
 #include "nsCOMPtr.h"
+#include "nsISupportsUtils.h"
 #include "nsIXPINotifier.h"
 #include "nsIFileSpec.h"
 #include "jsapi.h"
+#include "prthread.h"
+#include "plevent.h"
+
+
+
+typedef struct XPITriggerEvent {
+    PLEvent     e;
+    nsString    URL;
+    PRInt32     status;
+    JSContext*  cx;
+    jsval       global;
+    jsval       cbval;
+} XPITriggerEvent;
 
 
 
@@ -66,21 +80,25 @@ class nsXPITriggerInfo
     nsXPITriggerInfo();
     virtual ~nsXPITriggerInfo();
 
-    void    Add( nsXPITriggerItem *aItem ) 
-            { if ( aItem ) mItems.Add( (void*)aItem ); }
+    void                Add( nsXPITriggerItem *aItem ) 
+                        { if ( aItem ) mItems.Add( (void*)aItem ); }
 
     nsXPITriggerItem*   Get( PRUint32 aIndex )
-            { return NS_STATIC_CAST(nsXPITriggerItem*,mItems.Get(aIndex));}
+                        { return (nsXPITriggerItem*)mItems.Get(aIndex);}
 
     void                SaveCallback( JSContext *aCx, jsval aVal );
+
     PRUint32            Size() { return mItems.GetSize(); }
-    
+
+    void                SendStatus(const PRUnichar* URL, PRInt32 status);
+
+  private:
     nsVector mItems;
     JSContext *mCx;
     jsval     mGlobal;
     jsval     mCbval;
+    PRThread* mThread;
 
-  private:
     //-- prevent inadvertent copies and assignments
     nsXPITriggerInfo& operator=(const nsXPITriggerInfo& rhs);
     nsXPITriggerInfo(const nsXPITriggerInfo& rhs);

@@ -46,7 +46,8 @@ enum Install_slots
   INSTALL_SILENT          = -3,
   INSTALL_JARFILE         = -4,
   INSTALL_FORCE           = -5,
-  INSTALL_ARGUMENTS       = -6
+  INSTALL_ARGUMENTS       = -6,
+  INSTALL_URL             = -7
 };
 
 /***********************************************************************/
@@ -104,9 +105,19 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
       case INSTALL_ARGUMENTS:
       {
-        nsAutoString prop;
+        nsString prop;
         
         a->GetInstallArguments(prop); 
+        *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length()) );
+        
+        break;
+      }
+        
+      case INSTALL_URL:
+      {
+        nsString prop;
+        
+        a->GetInstallURL(prop); 
         *vp = STRING_TO_JSVAL( JS_NewUCStringCopyN(cx, prop.GetUnicode(), prop.Length()) );
         
         break;
@@ -2316,6 +2327,7 @@ static JSPropertySpec InstallProperties[] =
   {"force",             INSTALL_FORCE,              JSPROP_ENUMERATE | JSPROP_READONLY},
   {"jarfile",           INSTALL_JARFILE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"url",               INSTALL_URL,                JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -2334,6 +2346,7 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::USER_CANCELLED,             "USER_CANCELLED"               },
     { nsInstall::INSTALL_NOT_STARTED,        "INSTALL_NOT_STARTED"          },
     { nsInstall::SILENT_MODE_DENIED,         "SILENT_MODE_DENIED"           },
+    { nsInstall::NO_SUCH_COMPONENT,          "NO_SUCH_COMPONENT"            },
     { nsInstall::FILE_DOES_NOT_EXIST,        "FILE_DOES_NOT_EXIST"          },
     { nsInstall::FILE_READ_ONLY,             "FILE_READ_ONLY"               },
     { nsInstall::FILE_IS_DIRECTORY,          "FILE_IS_DIRECTORY"            },
@@ -2347,10 +2360,14 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::PACKAGE_FOLDER_NOT_SET,     "PACKAGE_FOLDER_NOT_SET"       },
     { nsInstall::EXTRACTION_FAILED,          "EXTRACTION_FAILED"            },
     { nsInstall::FILENAME_ALREADY_USED,      "FILENAME_ALREADY_USED"        },
+    { nsInstall::ABORT_INSTALL,              "ABORT_INSTALL"                },
+
     { nsInstall::GESTALT_UNKNOWN_ERR,        "GESTALT_UNKNOWN_ERR"          },
     { nsInstall::GESTALT_INVALID_ARGUMENT,   "GESTALT_INVALID_ARGUMENT"     },
+
     { nsInstall::SUCCESS,                    "SUCCESS"                      },
     { nsInstall::REBOOT_NEEDED,              "REBOOT_NEEDED"                },
+
     { nsInstall::LIMITED_INSTALL,            "LIMITED_INSTALL"              },
     { nsInstall::FULL_INSTALL,               "FULL_INSTALL"                 },
     { nsInstall::NO_STATUS_DLG ,             "NO_STATUS_DLG"                },
@@ -2412,6 +2429,7 @@ static JSFunctionSpec InstallMethods[] =
 
 
 
+#if 0
 //
 // Install constructor
 //
@@ -2477,11 +2495,15 @@ PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, co
 
   return NS_OK;
 }
+#endif
 
 
 
-
-PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const char* args)
+PRInt32 InitXPInstallObjects(JSContext *jscontext, 
+                             JSObject *global, 
+                             const char* jarfile, 
+                             const PRUnichar* url,
+                             const PRUnichar* args)
 {
   JSObject *installObject       = nsnull;
   JSObject *winRegPrototype     = nsnull;
@@ -2511,6 +2533,7 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char*
 
   nativeInstallObject->SetJarFileLocation(jarfile);
   nativeInstallObject->SetInstallArguments(args);
+  nativeInstallObject->SetInstallURL(url);
 
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);

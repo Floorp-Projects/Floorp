@@ -28,11 +28,11 @@
 [uuid(eea90d40-b059-11d2-915e-c12b696c9333)]
 interface nsIXPINotifier : nsISupports
 {
-        void BeforeJavascriptEvaluation();
-        void AfterJavascriptEvaluation();
-        void InstallStarted([const] in string UIPackageName);
-        void ItemScheduled([const] in string message );
-        void InstallFinalization([const] in string message, in long itemNum, in long totNum );
-        void InstallAborted();
-        void LogComment([const] in string comment);
+        void    BeforeJavascriptEvaluation(in wstring URL);
+        void    AfterJavascriptEvaluation(in wstring URL);
+        void    InstallStarted(in wstring URL, in wstring UIPackageName);
+        void    ItemScheduled(in wstring message );
+        void    FinalizeProgress(in wstring message, in long itemNum, in long totNum );
+        void    FinalStatus(in wstring URL, in long status);
+        void    LogComment(in wstring comment);
 };

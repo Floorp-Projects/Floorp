@@ -63,10 +63,17 @@ class nsInstallInfo
 {
   public:
     
-    nsInstallInfo(nsIFileSpec* aFile, const PRUnichar* aArgs, long flags, nsIXPINotifier* aNotifier);
+    nsInstallInfo( nsIFileSpec*     aFile, 
+                   const PRUnichar* aURL, 
+                   const PRUnichar* aArgs, 
+                   long             aFlags, 
+                   nsIXPINotifier*  aNotifier);
+
     virtual ~nsInstallInfo();
 
     void GetLocalFile(char** aPath);
+
+    void GetURL(nsString& aURL) { aURL = mURL; }
 
     void GetArguments(nsString& aArgs) { aArgs = mArgs; }
     
@@ -79,6 +86,7 @@ class nsInstallInfo
     nsresult  mError;
 
     long       mFlags;
+    nsString   mURL;
     nsString   mArgs;
 
     nsCOMPtr<nsIFileSpec>       mFile;
@@ -123,6 +131,8 @@ class nsInstall
             PACKAGE_FOLDER_NOT_SET      = -224,
             EXTRACTION_FAILED           = -225,
             FILENAME_ALREADY_USED       = -226,
+            ABORT_INSTALL               = -227,
+
             GESTALT_UNKNOWN_ERR         = -5550,
             GESTALT_INVALID_ARGUMENT    = -5551,
             
@@ -221,6 +231,9 @@ class nsInstall
         void       GetInstallArguments(nsString& args);
         void       SetInstallArguments(const nsString& args);
 
+        void       GetInstallURL(nsString& url);
+        void       SetInstallURL(const nsString& url);
+
 
     private:
         JSObject*           mScriptObject;
@@ -232,6 +245,7 @@ class nsInstall
         nsIJAR*             mJarFileData;
         
         nsString            mInstallArguments;
+        nsString            mInstallURL;
         nsString            mPackageFolder;
 
         PRBool              mUserCancelled;
@@ -263,6 +277,7 @@ class nsInstall
         PRBool      BadRegName(const nsString& regName);
         PRInt32     SaveError(PRInt32 errcode);
 
+        void        InternalAbort(PRInt32 errcode);
         void        CleanUp();
 
         PRInt32     OpenJARFile(void);

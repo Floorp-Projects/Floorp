@@ -52,7 +52,9 @@
 
 
 
-class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
+class nsXPInstallManager : public nsIXPINotifier, 
+                           public nsIStreamListener,
+                           public nsIXULWindowCallbacks
 {
     public:
         nsXPInstallManager();
@@ -83,24 +85,26 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
 #endif
         
         // IXPINotifier methods
-        NS_IMETHOD BeforeJavascriptEvaluation();
-        NS_IMETHOD AfterJavascriptEvaluation();
-        NS_IMETHOD InstallStarted(const char *UIPackageName);
-        NS_IMETHOD ItemScheduled(const char *message);
-        NS_IMETHOD InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum);
-        NS_IMETHOD InstallAborted();
-        NS_IMETHOD LogComment(const char *comment);
+        NS_IMETHOD BeforeJavascriptEvaluation(const PRUnichar *URL);
+        NS_IMETHOD AfterJavascriptEvaluation(const PRUnichar *URL);
+        NS_IMETHOD InstallStarted(const PRUnichar *URL, const PRUnichar *UIPackageName);
+        NS_IMETHOD ItemScheduled(const PRUnichar *message);
+        NS_IMETHOD FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum);
+        NS_IMETHOD FinalStatus(const PRUnichar* URL, PRInt32 status);
+        NS_IMETHOD LogComment(const PRUnichar *comment);
 
         // IXULWindowCallbacks methods
-//        NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
-//        NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell) { return NS_OK; }
+        NS_IMETHOD ConstructBeforeJavaScript(nsIWebShell *aWebShell);
+        NS_IMETHOD ConstructAfterJavaScript(nsIWebShell *aWebShell);
 
     private:
         nsresult DownloadNext();
+        void     Shutdown();
         
         nsXPITriggerInfo*   mTriggers;
         nsXPITriggerItem*   mItem;
         PRUint32            mNextItem;
+        PRInt32             mNumJars;
         PRBool              mFinalizing;
 
         nsCOMPtr<nsIXPIProgressDlg>  mDlg;

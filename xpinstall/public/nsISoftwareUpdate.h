@@ -51,6 +51,7 @@ class nsISoftwareUpdate : public nsISupports
         	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
             
             NS_IMETHOD InstallJar(nsIFileSpec* localFile,
+                                  const PRUnichar* URL,
                                   const PRUnichar* arguments,
                                   long  flags,
                                   nsIXPINotifier* notifier = 0) = 0; 

@@ -22,6 +22,7 @@
  *     Daniel Veditz <dveditz@netscape.com>
  */
 
+#include "nsString.h"
 #include "nsStubNotifier.h"
 
 
@@ -40,54 +41,54 @@ NS_IMPL_ISUPPORTS(nsStubNotifier, NS_IXPINOTIFIER_IID);
 
 
 NS_IMETHODIMP
-nsStubNotifier::BeforeJavascriptEvaluation(void)
+nsStubNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     // we're not interested in this one
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubNotifier::AfterJavascriptEvaluation(void)
+nsStubNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
     // we're not interested in this one
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubNotifier::InstallStarted(const char* UIPackageName)
+nsStubNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
     if (m_start)
-        m_start(UIPackageName);
+        m_start(nsCAutoString(URL), nsCAutoString(UIPackageName));
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubNotifier::ItemScheduled(const char* message )
+nsStubNotifier::ItemScheduled(const PRUnichar* message )
 {
     if (m_progress)
-        return m_progress( message, 0, 0 );
-    else
-        return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStubNotifier::InstallFinalization(const char* message, PRInt32 itemNum, PRInt32 totNum )
-{
-    if (m_progress)
-        return m_progress( message, itemNum, totNum );
-    else
-        return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStubNotifier::InstallAborted(void)
-{
-    // XXX need to hook this one to m_final
+        m_progress( nsCAutoString(message), 0, 0 );
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubNotifier::LogComment(const char* comment)
+nsStubNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+{
+    if (m_progress)
+        m_progress( nsCAutoString(message), itemNum, totNum );
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStubNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
+{
+    if (m_final)
+        m_final( nsCAutoString(URL), status );
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStubNotifier::LogComment(const PRUnichar* comment)
 {
     // we're not interested in this one
     return NS_OK;

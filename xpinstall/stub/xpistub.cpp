@@ -119,11 +119,14 @@ PR_PUBLIC_API(nsresult) XPI_Install(
     nsString                args(aArgs);
     nsCOMPtr<nsIFileSpec>   iFile;
     nsFileSpec              file(aFile);
+    nsFileURL               URL(file);
+    nsString                URLstr(URL.GetURLString());
 
     NS_NewFileSpecWithSpec( file, getter_AddRefs(iFile) );
 
     if (iFile && gXPI)
-        rv = gXPI->InstallJar( iFile, args.GetUnicode(), aFlags, gNotifier );
+        rv = gXPI->InstallJar( iFile, URLstr.GetUnicode(), args.GetUnicode(), 
+                               aFlags, gNotifier );
 
     return rv;
 }
