@@ -3115,6 +3115,10 @@ nsDocShell::Stop(PRUint32 aStopFlags)
     if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
         if (mContentViewer)
             mContentViewer->Stop();
+        nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mScriptGlobal);
+        if (ourWindow) {
+            ourWindow->ClearAllTimeouts();
+        }
     }
 
     if (nsIWebNavigation::STOP_NETWORK & aStopFlags) {

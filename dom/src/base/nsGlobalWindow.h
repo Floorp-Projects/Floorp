@@ -198,6 +198,8 @@ public:
   virtual NS_HIDDEN_(PopupControlState) GetPopupControlState() const;
   virtual NS_HIDDEN_(OpenAllowValue) GetOpenAllow(const nsAString &aName);
 
+  virtual NS_HIDDEN_(void) ClearAllTimeouts();
+  
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
 
@@ -238,7 +240,6 @@ protected:
   nsresult SetTimeoutOrInterval(PRBool aIsInterval, PRInt32* aReturn);
   void RunTimeout(nsTimeout *aTimeout);
   nsresult ClearTimeoutOrInterval();
-  void ClearAllTimeouts();
   void InsertTimeoutIntoList(nsTimeout **aInsertionPoint, nsTimeout *aTimeout);
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
 
