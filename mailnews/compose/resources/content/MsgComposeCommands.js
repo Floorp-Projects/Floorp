@@ -464,10 +464,14 @@ function GetCharsetUIString()
     }
 
     // get a localized string
-    var charsetAtom = ccm.GetCharsetAtom(charset);
-    charsetTitle = ccm.GetCharsetTitle(charsetAtom);
-    dump(charsetTitle);
-
+    try {
+      var charsetAtom = ccm.GetCharsetAtom(charset);
+      charsetTitle = ccm.GetCharsetTitle(charsetAtom);
+    }
+    catch (ex) {
+      dump("failed to get a charset title of " + charset + "!\n");
+      charsetTitle = "";
+    }
     return " - " + charsetTitle;
   }
 
