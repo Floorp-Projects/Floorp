@@ -111,6 +111,7 @@ NS_IMPL_RELEASE(CViewSourceHTML)
 
 
 
+static
 void SetFont(const char* aFace,const char* aSize,PRBool aEnable,nsIContentSink& aSink) {
   if(aEnable){
     CStartToken theFont(eHTMLTag_font);  
@@ -128,6 +129,7 @@ void SetFont(const char* aFace,const char* aSize,PRBool aEnable,nsIContentSink& 
   }
 }
 
+static
 void SetColor(const char* aColor,PRBool aEnable,nsIContentSink& aSink) {
   if(aEnable){
     CStartToken theFont(eHTMLTag_font);  
@@ -143,6 +145,7 @@ void SetColor(const char* aColor,PRBool aEnable,nsIContentSink& aSink) {
   }
 }
 
+static
 void SetStyle(eHTMLTags theTag,PRBool aEnable,nsIContentSink& aSink) {
   if(aEnable){
     CStartToken theToken(theTag);  
@@ -445,6 +448,7 @@ PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
  *  @param   
  *  @return  result status
  */
+static
 nsresult WriteNewline(nsIContentSink& aSink) {
   nsresult result=NS_OK;
   CStartToken theBRToken(eHTMLTag_br);
@@ -461,6 +465,7 @@ nsresult WriteNewline(nsIContentSink& aSink) {
  *  @param   
  *  @return  result status
  */
+static
 nsresult WriteNBSP(PRInt32 aCount, nsIContentSink& aSink) {
   nsresult result=NS_OK;
 
@@ -529,6 +534,7 @@ nsresult CViewSourceHTML::WriteText(const nsString& aTextString,nsIContentSink& 
  *  @param   
  *  @return  result status
  */
+static
 PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRBool aIsHTML) {
   static nsString     theString;
   static nsAutoString theLTEntity("lt");
