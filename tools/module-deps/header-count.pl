@@ -12,9 +12,9 @@
 # 
 # The Original Code is header-count.pl.
 # 
-# The Initial Developer of the Original Code is L. David Baron
-# Communications Corporation.  Portions created by L. David Baron are 
-# Copyright (C) 2000 L. David Baron.  All Rights Reserved.
+# The Initial Developer of the Original Code is L. David Baron.
+# Portions created by L. David Baron are Copyright (C) 2000 L. David
+# Baron.  All Rights Reserved.
 # 
 # Contributor(s):
 #   L. David Baron <dbaron@fas.harvard.edu> (original author)
