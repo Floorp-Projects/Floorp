@@ -24,6 +24,7 @@
 #include "prnetdb.h"
 
 #include "nsIChannel.h"
+#include "nsIBuffer.h"
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
 
@@ -64,9 +65,9 @@ enum nsSocketOperation {
 
 // Forward declarations...
 class nsSocketTransportService;
-class nsSocketTransportStream;
 
-class nsSocketTransport : public nsIChannel
+class nsSocketTransport : public nsIChannel, 
+                          public nsIBufferObserver
 {
 public:
   // nsISupports methods:
@@ -90,6 +91,10 @@ public:
                         nsISupports *ctxt,
                         nsIEventQueue *eventQueue,
                         nsIStreamObserver *observer);
+
+  // nsIBufferObserver methods:
+  NS_IMETHOD OnFull();
+  NS_IMETHOD OnEmpty();
 
   // nsSocketTransport methods:
   nsSocketTransport();
@@ -121,7 +126,8 @@ protected:
   PRLock*           mLock;
   nsSocketState     mCurrentState;
   nsSocketOperation mOperation;
-  
+
+  PRBool            mIsWaitingForRead;
   PRInt32           mSuspendCount;
 
   PRFileDesc*   mSocketFD;
@@ -133,7 +139,8 @@ protected:
 
   nsISupports*              mReadContext;
   nsIStreamListener*        mReadListener;
-  nsSocketTransportStream*  mReadStream;
+  nsIBufferInputStream*     mReadStream;
+  nsIBuffer*                mReadBuffer;
 
   nsISupports*              mWriteContext;
   nsIStreamObserver*        mWriteObserver;
