@@ -165,6 +165,9 @@ function OnLoadAddressBook()
   var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
   // this listener only cares when a directory is removed
   addrbookSession.addAddressBookListener(gAddressBookAbListener, Components.interfaces.nsIAbListener.directoryRemoved);
+
+  var dirTree = GetDirTree();
+  dirTree.addEventListener("click",DirPaneClick,true);
 }
 
 function OnLoadDirTree() {

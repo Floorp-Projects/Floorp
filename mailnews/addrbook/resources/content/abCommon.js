@@ -640,8 +640,10 @@ function DirPaneClick(event)
     return;
 
   // if the user clicks on the header / trecol, do nothing
-  if (event.originalTarget.localName == "treecol")
+  if (event.originalTarget.localName == "treecol") {
+    event.preventBubble();
     return;
+  }
 
   var searchInput = document.getElementById("searchInput");
   // if there is a searchInput element, and it's not blank 
@@ -655,9 +657,16 @@ function DirPaneClick(event)
 
 function DirPaneDoubleClick(event)
 {
-  // if the user clicks on the header / trecol, do nothing
-  if (event.originalTarget.localName == "treecol")
+  // we only care about left button events
+  if (event.button != 0)
     return;
+
+  var row = {}, colID = {}, childElt = {};
+  dirTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+  if (row.value == -1 || row.value > dirTree.view.rowCount-1) {
+    // double clicking on a non valid row should not open the dir properties dialog
+    return;
+  }
 
   if (dirTree && dirTree.treeBoxObject.selection && dirTree.treeBoxObject.selection.count == 1)
     AbEditSelectedDirectory();
