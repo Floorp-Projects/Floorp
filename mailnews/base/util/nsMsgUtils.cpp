@@ -811,3 +811,29 @@ nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32
 
 }
 
+
+// digest needs to be a pointer to a DIGEST_LENGTH (16) byte buffer
+nsresult MSGApopMD5(const char *text, PRInt32 text_len, const char *password, PRInt32 password_len, unsigned char *digest)
+{
+  nsresult rv;
+  unsigned char result[DIGEST_LENGTH];
+  unsigned char *presult = result;
+
+  nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+
+  HASHContextStr      *context;
+  PRUint32 resultLen;
+
+  rv = verifier->HashBegin(nsISignatureVerifier::MD5, &context);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = verifier->HashUpdate(context, text, text_len);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = verifier->HashUpdate(context, password, password_len);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);
+  NS_ENSURE_SUCCESS(rv, rv);
+  memcpy(digest, result, DIGEST_LENGTH);
+  return rv;
+}

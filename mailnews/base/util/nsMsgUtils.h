@@ -97,5 +97,6 @@ NS_MSG_BASE nsresult GetOrCreateFolder(const nsACString & aURI, nsIUrlListener *
 #define DIGEST_LENGTH 16
 
 NS_MSG_BASE nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32 key_len, unsigned char *digest);
+NS_MSG_BASE nsresult MSGApopMD5(const char *text, PRInt32 text_len, const char *password, PRInt32 password_len, unsigned char *digest);
 #endif
 
