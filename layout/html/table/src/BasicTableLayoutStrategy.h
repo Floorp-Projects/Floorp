@@ -90,6 +90,8 @@ public:
     */
   virtual PRBool AssignPreliminaryColumnWidths();
 
+  virtual void SetMinAndMaxTableWidths();
+
   /** assign widths for each column that has proportional width inside a table that 
     * has auto width (width set by the content and available space.)
     * Sets mColumnWidths as a side effect.

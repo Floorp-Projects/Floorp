@@ -393,7 +393,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
 
   // Initialize our local reflow state
   OuterTableReflowState state(&aPresContext, aReflowState);
-
   if (eReflowReason_Incremental == aReflowState.reason) {
     IncrementalReflow(&aPresContext, state, aDesiredSize, aReflowState, aStatus);
 

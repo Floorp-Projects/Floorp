@@ -68,6 +68,9 @@ public:
   nscoord GetEffectiveMinColWidth();
   void SetEffectiveMinColWidth(nscoord aMinColWidth);
 
+  nscoord GetAdjustedMinColWidth();
+  void SetAdjustedMinColWidth(nscoord aMinColWidth);
+
   PRInt32 GetWidthSource();
   void SetWidthSource(PRInt32 aMinColWidth);
 
@@ -86,11 +89,13 @@ protected:
   /** the number of columns that the attributes of this column extend to */
   PRInt32  mRepeat;
 
-  nscoord  mMaxColWidth;
-  nscoord  mMinColWidth;
+  nscoord mMaxColWidth;
+  nscoord mMinColWidth;
 
   nscoord mMaxEffectiveColWidth;
   nscoord mMinEffectiveColWidth;
+
+  nscoord mMinAdjustedColWidth;
 
   PRInt32 mWidthSource;
 
@@ -136,8 +141,14 @@ inline void nsTableColFrame::SetEffectiveMaxColWidth(nscoord aMaxColWidth)
 inline nscoord nsTableColFrame::GetEffectiveMinColWidth()
 { return mMinEffectiveColWidth; }
 
-inline void nsTableColFrame::SetEffectiveMinColWidth(nscoord aMinColWidth)
-{ mMinEffectiveColWidth = aMinColWidth; }
+inline void nsTableColFrame::SetEffectiveMinColWidth(nscoord aMinEffectiveColWidth)
+{ mMinEffectiveColWidth = aMinEffectiveColWidth; }
+
+inline nscoord nsTableColFrame::GetAdjustedMinColWidth()
+{ return mMinAdjustedColWidth; }
+
+inline void nsTableColFrame::SetAdjustedMinColWidth(nscoord aMinAdjustedColWidth)
+{ mMinAdjustedColWidth = aMinAdjustedColWidth; }
 
 inline PRInt32 nsTableColFrame::GetWidthSource()
 { return mWidthSource; }
