@@ -377,11 +377,11 @@ function onAccept()
 
   if (gPrintSettings != null) {
     var print_howToEnableUI = gPrintSetInterface.kFrameEnableNone;
+    var stringBundle = srGetStrBundle("chrome://global/locale/printing.properties");
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                        .getService(Components.interfaces.nsIPromptService);
 
     if (dialog.fileRadio.selected && dialog.fileInput.value == "") {
-      var stringBundle = srGetStrBundle("chrome://global/locale/printing.properties");
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-      promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService)
       var titleText = stringBundle.GetStringFromName("noPrintFilename.title");
       var alertText = stringBundle.GetStringFromName("noPrintFilename.alert");
       promptService.alert(this.window, titleText, alertText);
@@ -395,6 +395,20 @@ function onAccept()
     // save these out so they can be picked up by the device spec
     gPrintSettings.toFileName   = dialog.fileInput.value;
     gPrintSettings.printerName  = dialog.printerList.value;
+
+    var sfile = Components.classes["@mozilla.org/file/local;1"]
+                .createInstance(Components.interfaces.nsILocalFile);
+    sfile.initWithPath(gPrintSettings.toFileName);
+    if (sfile.exists() &&
+        gPrintSettings.printToFile &&
+        gPrintSettings.toFileName != gFileFromPicker) {
+      var desc = stringBundle.formatStringFromName("fileConfirm.exists",
+                                                   [gPrintSettings.toFileName],
+                                                   1);
+      if (!promptService.confirm(this.window, null, desc)) {
+        return false;
+      }
+    }
 
     if (dialog.allpagesRadio.selected) {
       gPrintSettings.printRange = gPrintSetInterface.kRangeAllPages;
@@ -484,6 +498,7 @@ function onChooseFile()
     fp.show();
     if (fp.file && fp.file.path.length > 0) {
       dialog.fileInput.value = fp.file.path;
+      gFileFromPicker = dialog.fileInput.value;
     }
   } catch(ex) {
     dump(ex);
