@@ -536,7 +536,7 @@ static SECStatus DecodePointer(void* dest,
 {
     const SEC_ASN1Template* ptrTemplate = 
         SEC_ASN1GetSubtemplate (templateEntry, dest, PR_FALSE);
-    void* subdata = PORT_ArenaZAlloc(pool->arena, ptrTemplate->size);
+    void* subdata = QuickZAlloc(pool, ptrTemplate->size);
     *(void**)((char*)dest + templateEntry->offset) = subdata;
     if (subdata)
     {
