@@ -50,6 +50,10 @@ use base qw(Exporter);
     LOGOUT_ALL
     LOGOUT_CURRENT
     LOGOUT_KEEP_CURRENT
+
+    GRANT_DIRECT
+    GRANT_DERIVED
+    GRANT_REGEXP
 );
 
 @Bugzilla::Constants::EXPORT_OK = qw(contenttypes);
@@ -113,5 +117,9 @@ use constant contenttypes =>
    "png" => "image/png" ,
    "ics" => "text/calendar" ,
   };
+
+use constant GRANT_DIRECT => 0;
+use constant GRANT_DERIVED => 1;
+use constant GRANT_REGEXP => 2;
 
 1;

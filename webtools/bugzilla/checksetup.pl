@@ -1894,16 +1894,17 @@ $table{tokens} =
 # directly or due to regexp and which groups can be blessed
 # by a user. 
 #
-# isderived: 
-# if 0 - record was explicitly granted
-# if 1 - record was created by evaluating a regexp or group hierarchy
+# grant_type: 
+# if GRANT_DIRECT - record was explicitly granted
+# if GRANT_DERIVED - record was derived from expanding a group hierarchy
+# if GRANT_REGEXP - record was created by evaluating a regexp
 $table{user_group_map} =
     'user_id mediumint not null,
      group_id mediumint not null,
      isbless tinyint not null default 0,
-     isderived tinyint not null default 0,
+     grant_type tinyint not null default 0,
 
-     unique(user_id, group_id, isderived, isbless)';
+     unique(user_id, group_id, grant_type, isbless)';
 
 $table{group_group_map} =
     'member_id mediumint not null,
@@ -3455,8 +3456,8 @@ if (GetFieldDef("profiles", "groupset")) {
             $sth3->execute();
             if ( !$sth3->fetchrow_array() ) {
                 $dbh->do("INSERT INTO user_group_map
-                       (user_id, group_id, isbless, isderived)
-                       VALUES($uid, $gid, 0, 0)");
+                       (user_id, group_id, isbless, grant_type)
+                       VALUES($uid, $gid, 0, " . GRANT_DIRECT . ")");
             }
         }
         # Create user can bless group grants for old groupsets.
@@ -3466,8 +3467,8 @@ if (GetFieldDef("profiles", "groupset")) {
         $sth2->execute();
         while (my ($uid) = $sth2->fetchrow_array) {
             $dbh->do("INSERT INTO user_group_map
-                   (user_id, group_id, isbless, isderived)
-                   VALUES($uid, $gid, 1, 0)");
+                   (user_id, group_id, isbless, grant_type)
+                   VALUES($uid, $gid, 1, " . GRANT_DIRECT . ")");
         }
         # Create bug_group_map records for old groupsets.
         # Get each bug with the old group bit set.
@@ -3899,6 +3900,36 @@ if (!$series_exists) {
 
 AddFDef("owner_idle_time", "Time Since Owner Touched", 0);
 
+# 2004-04-12 - Keep regexp-based group permissions up-to-date - Bug 240325
+if (GetFieldDef("user_group_map", "isderived")) {
+    AddField('user_group_map', 'grant_type', 'tinyint not null default 0');
+    $dbh->do("UPDATE user_group_map SET grant_type = " .
+                             "IF(isderived, " . GRANT_DERIVED . ", " .
+                             GRANT_DIRECT . ")");
+    $dbh->do("DELETE FROM user_group_map 
+              WHERE isbless = 0 AND grant_type != " . GRANT_DIRECT);
+    DropField("user_group_map", "isderived");
+    DropIndexes("user_group_map");
+    $dbh->do("ALTER TABLE user_group_map 
+              ADD UNIQUE (user_id, group_id, grant_type, isbless)");
+    # Evaluate regexp-based group memberships
+    my $sth = $dbh->prepare("SELECT profiles.userid, profiles.login_name,
+                             groups.id, groups.userregexp 
+                             FROM profiles, groups
+                             WHERE userregexp != ''");
+    $sth->execute();
+    my $sth2 = $dbh->prepare("INSERT IGNORE INTO user_group_map 
+                           (user_id, group_id, isbless, grant_type) 
+                           VALUES(?, ?, 0, " . GRANT_REGEXP . ")");
+    while (my ($uid, $login, $gid, $rexp) = $sth->fetchrow_array()) {
+        if ($login =~ m/$rexp/i) {
+            $sth2->execute($uid, $gid);
+        }
+    }
+}
+
+    
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
@@ -3927,8 +3958,8 @@ if (!GroupDoesExist("editbugs")) {
     $sth->execute();
     while (my ($userid) = $sth->fetchrow_array()) {
         $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $id, 0, 0)");
+            (user_id, group_id, isbless, grant_type) 
+            VALUES ($userid, $id, 0, " . GRANT_DIRECT . ")");
     }
 }
 
@@ -3938,8 +3969,8 @@ if (!GroupDoesExist("canconfirm")) {
     $sth->execute();
     while (my ($userid) = $sth->fetchrow_array()) {
         $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $id, 0, 0)");
+            (user_id, group_id, isbless, grant_type) 
+            VALUES ($userid, $id, 0, " . GRANT_DIRECT . ")");
     }
 
 }
@@ -3965,15 +3996,15 @@ if (@admins) {
     my ($adminid) = $sth->fetchrow_array();
     foreach my $userid (@admins) {
         $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $adminid, 0, 0)");
+            (user_id, group_id, isbless, grant_type) 
+            VALUES ($userid, $adminid, 0, " . GRANT_DIRECT . ")");
         # Existing administrators are made blessers of group "admin"
         # but only explitly defined blessers can bless group admin.
         # Other groups can be blessed by any admin (by default) or additional
         # defined blessers.
         $dbh->do("INSERT INTO user_group_map 
-            (user_id, group_id, isbless, isderived) 
-            VALUES ($userid, $adminid, 1, 0)");
+            (user_id, group_id, isbless, grant_type) 
+            VALUES ($userid, $adminid, 1, " . GRANT_DIRECT . ")");
     }
     $sth = $dbh->prepare("SELECT id FROM groups");
     $sth->execute();
@@ -4167,8 +4198,8 @@ if ($sth->rows == 0) {
         $sth->execute();
         if ( !$sth->fetchrow_array() ) {
             $dbh->do("INSERT INTO user_group_map 
-                (user_id, group_id, isbless, isderived) 
-                VALUES ($userid, $group, 0, 0)");
+                (user_id, group_id, isbless, grant_type) 
+                VALUES ($userid, $group, 0, " . GRANT_DIRECT . ")");
         }
     }
     # the admin also gets an explicit bless capability for the admin group
@@ -4177,8 +4208,8 @@ if ($sth->rows == 0) {
     $sth->execute();
     my ($id) = $sth->fetchrow_array();
     $dbh->do("INSERT INTO user_group_map 
-        (user_id, group_id, isbless, isderived) 
-        VALUES ($userid, $id, 1, 0)");
+        (user_id, group_id, isbless, grant_type) 
+        VALUES ($userid, $id, 1, " . GRANT_DIRECT . ")");
     foreach my $group ( @groups ) {
         $dbh->do("INSERT INTO group_group_map
             (member_id, grantor_id, isbless)
@@ -4261,6 +4292,11 @@ if (GetFieldDef('bugs', 'short_desc')->[2]) { # if it allows nulls
     $dbh->do("UPDATE bugs SET short_desc = '' WHERE short_desc IS NULL");
     ChangeFieldType('bugs', 'short_desc', 'mediumtext not null');
 }
+
+# 2004-04-12 - Keep regexp-based group permissions up-to-date - Bug 240325
+# Make sure groups get rederived
+$dbh->do("UPDATE groups SET last_changed = NOW() WHERE name = 'admin'");
+
 
 #
 # Final checks...

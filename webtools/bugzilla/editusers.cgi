@@ -138,8 +138,9 @@ sub EmitFormElements ($$$$)
     if($user ne "") {
         print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
         SendSQL("SELECT groups.id, groups.name, groups.description, " .
-                "COUNT(user_id), " .
-                "MAX(isderived) " .
+                "MAX(grant_type = " . GRANT_DIRECT . "), " .
+                "MAX(grant_type = " . GRANT_DERIVED . "), " .
+                "MAX(grant_type = " . GRANT_REGEXP . ") " .
                 "FROM groups " .
                 "LEFT JOIN user_group_map " .
                 "ON user_group_map.group_id = groups.id " .
@@ -153,10 +154,8 @@ sub EmitFormElements ($$$$)
             }
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
             while (MoreSQLData()) {
-                my ($groupid, $name, $description, $member, $isderived) = FetchSQLData();
+                my ($groupid, $name, $description, $checked, $isderived, $isregexp) = FetchSQLData();
                 next if (!$editall && !UserCanBlessGroup($name));
-                $isderived = $isderived || 0;
-                my $checked = $member - $isderived;
                 PushGlobalSQLState();
                 SendSQL("SELECT user_id " .
                         "FROM user_group_map " .
@@ -174,7 +173,7 @@ sub EmitFormElements ($$$$)
                 my $derivedbless = FetchOneColumn();
                 PopGlobalSQLState();
                 print "</TR><TR";
-                print ' bgcolor=#cccccc' if ($isderived);
+                print ' bgcolor=#cccccc' if ($isderived || $isregexp);
                 print ">\n";
                 print "<INPUT TYPE=HIDDEN NAME=\"oldgroup_$groupid\" VALUE=\"$checked\">\n";
                 print "<INPUT TYPE=HIDDEN NAME=\"oldbless_$groupid\" VALUE=\"$blchecked\">\n";
@@ -189,8 +188,10 @@ sub EmitFormElements ($$$$)
                 $checked = ($checked) ? "CHECKED" : "";
                 print "<TD ALIGN=CENTER>";
                 print '[' if ($isderived);
+                print '*' if ($isregexp);
                 print "<INPUT TYPE=CHECKBOX NAME=\"group_$groupid\" $checked VALUE=\"$groupid\">";
                 print ']' if ($isderived);
+                print '*' if ($isregexp);
                 print "</TD><TD><B>";
                 print ucfirst($name) . "</B>: $description</TD>\n";
             }
@@ -704,13 +705,13 @@ if ($action eq 'edit') {
         value_quote($disabledtext) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
-    print "<BR>User is a member of any groups shown with grey bars and
-           marked with brackets surrounding the membership checkbox as a 
-           result of a regular expression match 
-           or membership in another group.
-           User can bless any group 
-           marked with brackets surrounding the bless checkbox as a 
-           result of membership in another group.
+    print "<BR>User is a member of any groups shown with a check or grey bar.
+           A grey bar indicates indirect membership, either derived from other
+           groups (marked with square brackets) or via regular expression
+           (marked with '*').<p> 
+           Square brackets around the bless checkbox indicate the ability
+           to bless users (grant them membership in the group) as a result
+           of membership in another group.
        <BR>";
 
     print "</FORM>";
@@ -761,11 +762,11 @@ if ($action eq 'update') {
                      WHERE user_id = $thisuserid
                      AND group_id = $groupid
                      AND isbless = 0
-                     AND isderived = 0");
+                     AND grant_type = " . GRANT_DIRECT);
             if ($::FORM{"group_$groupid"}) {
                 SendSQL("INSERT INTO user_group_map 
-                         (user_id, group_id, isbless, isderived)
-                         VALUES ($thisuserid, $groupid, 0, 0)");
+                         (user_id, group_id, isbless, grant_type)
+                         VALUES ($thisuserid, $groupid, 0," . GRANT_DIRECT . ")");
                 print "Added user to group $name<BR>\n";
                 push(@grpadd, $name);
             } else {
@@ -781,11 +782,11 @@ if ($action eq 'update') {
                      WHERE user_id = $thisuserid
                      AND group_id = $groupid
                      AND isbless = 1
-                     AND isderived = 0");
+                     AND grant_type = " . GRANT_DIRECT);
             if ($::FORM{"bless_$groupid"}) {
                 SendSQL("INSERT INTO user_group_map 
-                         (user_id, group_id, isbless, isderived)
-                         VALUES ($thisuserid, $groupid, 1, 0)");
+                         (user_id, group_id, isbless, grant_type)
+                         VALUES ($thisuserid, $groupid, 1," . GRANT_DIRECT . ")");
                 print "Granted user permission to bless group $name<BR>\n";
             } else {
                 print "Revoked user's permission to bless group $name<BR>\n";

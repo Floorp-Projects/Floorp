@@ -35,6 +35,7 @@ package Bugzilla::User;
 use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bugzilla::Constants;
 
 ################################################################################
 # Functions
@@ -246,9 +247,10 @@ sub derive_groups {
     # first remove any old derived stuff for this user
     $dbh->do(q{DELETE FROM user_group_map
                       WHERE user_id = ?
-                        AND isderived = 1},
+                        AND grant_type != ?},
              undef,
-             $id);
+             $id,
+             GRANT_DIRECT);
 
     my %groupidsadded = ();
     # add derived records for any matching regexps
@@ -260,10 +262,10 @@ sub derive_groups {
     while (my $row = $sth->fetch) {
         if ($self->{login} =~ m/$row->[1]/i) {
             $group_insert ||= $dbh->prepare(q{INSERT INTO user_group_map
-                                              (user_id, group_id, isbless, isderived)
-                                              VALUES (?, ?, 0, 1)});
+                                              (user_id, group_id, isbless, grant_type)
+                                              VALUES (?, ?, 0, ?)});
             $groupidsadded{$row->[0]} = 1;
-            $group_insert->execute($id, $row->[0]);
+            $group_insert->execute($id, $row->[0], GRANT_REGEXP);
         }
     }
 
@@ -294,9 +296,9 @@ sub derive_groups {
                 if (!$groupidsadded{$groupid}) {
                     $groupidsadded{$groupid} = 1;
                     $group_insert ||= $dbh->prepare(q{INSERT INTO user_group_map
-                                                      (user_id, group_id, isbless, isderived)
-                                                      VALUES (?, ?, 0, 1)});
-                    $group_insert->execute($id, $groupid);
+                                                      (user_id, group_id, isbless, grant_type)
+                                                      VALUES (?, ?, 0, ?)});
+                    $group_insert->execute($id, $groupid, GRANT_DERIVED);
                 }
             }
         }

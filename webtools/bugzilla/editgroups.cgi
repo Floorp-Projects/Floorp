@@ -49,6 +49,30 @@ if (!UserInGroup("creategroups")) {
 
 my $action  = trim($::FORM{action} || '');
 
+# RederiveRegexp: update user_group_map with regexp-based grants
+sub RederiveRegexp ($$)
+{
+    my $regexp = shift;
+    my $gid = shift;
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare("SELECT userid, login_name FROM profiles");
+    my $sthadd = $dbh->prepare("INSERT IGNORE INTO user_group_map
+                               (user_id, group_id, grant_type, isbless)
+                               VALUES (?, ?, ?, 0)");
+    my $sthdel = $dbh->prepare("DELETE FROM user_group_map
+                                WHERE user_id = ? AND group_id = ?
+                                AND grant_type = ? and isbless = 0");
+    $sth->execute();
+    while (my ($uid, $login) = $sth->fetchrow_array()) {
+        if ($login =~ m/$regexp/i)
+        {
+            $sthadd->execute($uid, $gid, GRANT_REGEXP);
+        } else {
+            $sthdel->execute($uid, $gid, GRANT_REGEXP);
+        }
+    }
+}
+
 # TestGroup: check if the group name exists
 sub TestGroup ($)
 {
@@ -384,6 +408,7 @@ if ($action eq 'new') {
                 CONTROLMAPNA . ", 0 " .
                 "FROM products");
     }
+    RederiveRegexp($regexp, $gid);
     print "OK, done.<p>\n";
     PutTrailer("<a href=\"editgroups.cgi?action=add\">add</a> another group",
                "back to the <a href=\"editgroups.cgi\">group list</a>");
@@ -625,9 +650,9 @@ if (($action eq 'remove_all_regexp') || ($action eq 'remove_all')) {
                              FROM user_group_map, profiles
                              WHERE user_group_map.user_id = profiles.userid
                              AND user_group_map.group_id = ?
-                             AND isderived = 0
+                             AND grant_type = ?
                              AND isbless = 0");
-    $sth->execute($gid);
+    $sth->execute($gid, GRANT_DIRECT);
     my $sth2 = $dbh->prepare("DELETE FROM user_group_map
                               WHERE user_id = ?
                               AND isbless = 0
@@ -739,6 +764,7 @@ sub doGroupChanges {
         }
         SendSQL("UPDATE groups SET userregexp = " . 
             SqlQuote($::FORM{"rexp"}) . " WHERE id = $gid");
+        RederiveRegexp($::FORM{"rexp"}, $gid);
     }
     if (($isbuggroup == 1) && ($::FORM{"oldisactive"} ne $::FORM{"isactive"})) {
         $chgs = 1;
