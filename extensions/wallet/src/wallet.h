@@ -48,7 +48,7 @@ extern void
 WLLT_ChangePassword();
 
 extern void
-WLLT_ReencryptAll();
+WLLT_DeleteAll();
 
 extern void
 WLLT_PreEdit(nsString& walletList);

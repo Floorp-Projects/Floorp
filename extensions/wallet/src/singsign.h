@@ -98,6 +98,9 @@ SI_InSequence(const nsString& sequence, int number);
 extern PRUnichar*
 SI_FindValueInArgs(const nsString& results, const nsString& name);
 
+extern void
+SI_DeleteAll();
+
 extern PRBool
 SINGSIGN_ReencryptAll();
 

@@ -1113,6 +1113,17 @@ SI_RemoveAllSignonData() {
   }
 }
 
+PUBLIC void
+SI_DeleteAll() {
+  if (si_PartiallyLoaded) {
+    /* repeatedly remove first user node of first URL node */
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE)) {
+    }
+  }
+  si_PartiallyLoaded = PR_FALSE;
+  si_SaveSignonDataLocked();
+}
+
 /****************************
  * Managing the Reject List *
  ****************************/

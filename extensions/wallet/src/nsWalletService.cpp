@@ -80,8 +80,8 @@ NS_IMETHODIMP nsWalletlibService::WALLET_ChangePassword() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_ReencryptAll() {
-  ::WLLT_ReencryptAll();
+NS_IMETHODIMP nsWalletlibService::WALLET_DeleteAll() {
+  ::WLLT_DeleteAll();
   return NS_OK;
 }
 

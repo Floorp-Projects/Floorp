@@ -1913,6 +1913,17 @@ wallet_GetHostFile(nsIURI * url, nsString& outHostFile)
   urlName.Left(outHostFile, stringEnd);
 }
 
+static nsString&
+Strip(const nsString& text, nsString& stripText) {
+  for (PRUint32 i=0; i<text.Length(); i++) {
+    PRUnichar c = text.CharAt(i);
+    if ((c>='0' && c<='9') || (c>='A' && c<='Z') || (c>='a' && c<='z') || c>'~') {
+      stripText += c;
+    }
+  }
+  return stripText;
+}
+
 /*
  * given a field name, get the value
  */
@@ -1930,9 +1941,10 @@ static PRInt32 FieldToValue(
 
   /* if no schema name is given, fetch schema name from field/schema tables */
   nsVoidArray* dummy;
+  nsString stripField;
   if ((schema.Length() > 0) ||
       wallet_ReadFromList(field, schema, dummy, wallet_specificURLFieldToSchema_list, PR_FALSE) ||
-      wallet_ReadFromList(field, schema, dummy, wallet_FieldToSchema_list, PR_FALSE)) {
+      wallet_ReadFromList(Strip(field, stripField), schema, dummy, wallet_FieldToSchema_list, PR_FALSE)) {
     /* schema name found, now fetch value from schema/value table */ 
     PRInt32 index2 = index;
     if ((index >= 0) &&
@@ -2618,9 +2630,10 @@ wallet_Capture(nsIDocument* doc, const nsString& field, const nsString& value, c
   /* is there a mapping from this field name to a schema name */
   nsAutoString schema(vcard);
   nsVoidArray* dummy;
+  nsString stripField;
   if (schema.Length() ||
       (wallet_ReadFromList(field, schema, dummy, wallet_specificURLFieldToSchema_list, PR_FALSE)) ||
-      (wallet_ReadFromList(field, schema, dummy, wallet_FieldToSchema_list, PR_FALSE))) {
+      (wallet_ReadFromList(Strip(field, stripField), schema, dummy, wallet_FieldToSchema_list, PR_FALSE))) {
 
     /* field to schema mapping already exists */
 
@@ -2845,7 +2858,17 @@ WLLT_PreEdit(nsString& walletList)
 }
 
 PUBLIC void
-WLLT_ReencryptAll() {
+WLLT_DeleteAll() {
+  PRUnichar * message;
+  message = Wallet_Localize("AllDataWillBeCleared");
+  if (Wallet_Confirm(message)) {
+    wallet_Initialize(PR_FALSE);
+    wallet_Clear(&wallet_SchemaToValue_list);
+    wallet_WriteToFile(schemaValueFileName, wallet_SchemaToValue_list);
+    SI_DeleteAll();
+    SI_SetBoolPref(pref_Crypto, PR_FALSE);
+  }
+  Recycle(message);
 }
 
 MODULE_PRIVATE int PR_CALLBACK
@@ -3447,9 +3470,10 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                           wallet_InitializeCurrentURL(doc);
                           nsAutoString schema;
                           nsVoidArray* dummy;
+                          nsString stripField;
                           if (schema.Length() ||
                               (wallet_ReadFromList(field, schema, dummy, wallet_specificURLFieldToSchema_list, PR_FALSE)) ||
-                              (wallet_ReadFromList(field, schema, dummy, wallet_FieldToSchema_list, PR_FALSE))) {
+                              (wallet_ReadFromList(Strip(field, stripField), schema, dummy, wallet_FieldToSchema_list, PR_FALSE))) {
                           }
                           /* see if schema is in distinguished list */
                           schema.ToLowerCase();
