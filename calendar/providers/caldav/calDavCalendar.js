@@ -66,6 +66,8 @@ const nsIWebDavOperationListener =
     Components.interfaces.nsIWebDavOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
 const nsISupportsCString = Components.interfaces.nsISupportsCString;
+const calIEvent = Components.interfaces.calIEvent;
+const calEventClass = Components.classes["@mozilla.org/calendar/event;1"];
 
 function makeOccurrence(item, start, end)
 {
@@ -272,12 +274,12 @@ calDavCalendar.prototype = {
         // XXX we really should use DASL SEARCH or CalDAV REPORT, but the only
         // server we can possibly test against doesn't yet support those
 
-        function searchItemsLocally(aAllItems) {
+        function searchItemsLocally(calendarToReturn, aAllItems) {
             var item = aAllItems[aId];
             var iid = null;
 
-            if (item.QueryInterface(Components.interfaces.calIEvent)) {
-                iid = Components.interfaces.calIEvent;
+            if (item.QueryInterface(calIEvent)) {
+                iid = calIEvent;
             } else if (item.QueryInterface(Components.interfaces.calITodo)) {
                 iid = Components.interfaces.calITodo;
             } else {
@@ -318,7 +320,6 @@ calDavCalendar.prototype = {
         // this code copy-pasted from calMemoryCalendar.getItems()
         function searchItemsLocally(calendarToReturn, aAllItems){
             const calIItemBase = Components.interfaces.calIItemBase;
-            const calIEvent = Components.interfaces.calIEvent;
             const calITodo = Components.interfaces.calITodo;
             const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
 
@@ -418,7 +419,6 @@ calDavCalendar.prototype = {
                                            aListener.GET,
                                            null,
                                            null);
-            dump("searchItems called\n");
             return;
         };
 
@@ -439,7 +439,7 @@ calDavCalendar.prototype = {
         }
 
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
-        .getService(Components.interfaces.nsIWebDAVService);
+            .getService(Components.interfaces.nsIWebDAVService);
 
         // So we need a list of items to iterate over.  Should theoretically 
         // use search to find this out
@@ -471,19 +471,28 @@ calDavCalendar.prototype = {
             getListener.onOperationDetail = function(aStatusCode, aResource,
                                                      aOperation, aDetail,
                                                      aClosure) {
+
                 dump("getListener.onOperationDetail called\n");
                 if (aStatusCode == 200) {
 
-
-                    // XXX add to local results array
-                    //item = foo
-                    //allItems[item.uuid] = item
-
+                    // turn the detail item into a datatype we can deal with
                     aDetail.QueryInterface(nsISupportsCString);
-                    // dump("aDetail.data = " + aDetail.data + "\n");
+
+                    // create a local event item
+                    item = calEventClass.createInstance(calIEvent);
+
+                    // cause returned data to be parsed into the event item
+                    item.icalString = aDetail.data;
+
+                    // add the event to the array of all items
+                    allItems[item.id] = item;
+                    dump("getListener.onOperationDetail: item " + item.id +
+                         " added\n");
 
                 } else {
-                    // XXX handle error here
+                    // XXX do real error handling here
+                    dump("getListener.onOperationDetail: aStatusCode = " +
+                         aStatusCode + "\n");
                 }
 
             };
@@ -511,6 +520,15 @@ calDavCalendar.prototype = {
                     aInternalCallback(this, allItems);
                 }
             };
+
+            // we don't care about the directory itself, only the children
+            // (think of the children!!)  This is a gross hack, but it'll go
+            // away once we start using REPORT or SEARCH
+            // 
+            if (aResource.path == 
+                eventDirUri.path.substr(0, eventDirUri.path.length-1)) {
+                return;
+            }
 
             // make a note that this request is pending
             ++itemsPending;
