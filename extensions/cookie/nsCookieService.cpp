@@ -254,18 +254,13 @@ NS_IMETHODIMP
 nsCookieService::SetCookieString(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, nsIHttpChannel *aHttpChannel)
 {
   nsCOMPtr<nsIURI> firstURI;
-  nsresult rv;
 
   if (aHttpChannel) {
     nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
-    if (!httpInternal) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "unable to QueryInterface httpInternal");
-      return rv;
-    }
-    rv = httpInternal->GetDocumentURI(getter_AddRefs(firstURI));
-    if (NS_FAILED(rv)) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "unable to determine first URL");
-      return rv;
+    if (!httpInternal ||
+        NS_FAILED(httpInternal->GetDocumentURI(getter_AddRefs(firstURI)))) {
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader, "unable to determine first URI");
+      return NS_OK;
     }
   }
 
