@@ -273,6 +273,8 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget\n"));
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
+  nsresult res;
+  
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
@@ -286,16 +288,24 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
   }
 
   PhRid_t    rid = PtWidgetRid( mWidget );
-//  PhRid_t    rid = PtWidgetRid( PtFindDisjoint(mWidget) );
+  //PhRid_t    rid = PtWidgetRid( PtFindDisjoint(mWidget) );
 
   if( !rid )
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("Widget (%p) does not have a Rid!\n", mWidget ));
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init Widget (%p) does not have a Rid!\n", mWidget ));
+  }
 
-  mGC = PgCreateGC( 4096 );
+   NS_ASSERTION(rid, "nsRenderingContextPh::Init PtWidgetRid returned 0");
+
+   mGC = PgCreateGC( 4096 );
 
   if( !mGC )
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("PgCreateGC() failed!\n" ));
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init PgCreateGC() failed!\n" ));
+  }
 
+  NS_ASSERTION(mGC, "nsRenderingContextPh::Init PgCreateGC() failed!");
+  
   PgSetGC( mGC );
   PgDefaultGC( mGC );
   PgSetRegion( rid );
@@ -305,7 +315,13 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
 
   mSurface = new nsDrawingSurfacePh();
 //printf ("create1: %p\n",mSurface);
-  mSurface->Init(mGC);
+  res = mSurface->Init(mGC);
+  if (res != NS_OK)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init  mSurface->Init(mGC) failed\n"));
+    return NS_ERROR_FAILURE;
+  }
+  
 //  mSurface->Init(mGC,640,480,0);
 //  SELECT(mSurface);
   mOffscreenSurface = mSurface;
