@@ -790,7 +790,7 @@ nsXMLContentSink::ProcessBASETag()
   return rv;
 }
 
-static IsAlternateHTTPStyleSheetHeader(const nsAString& aRel)
+static PRBool IsAlternateHTTPStyleSheetHeader(const nsAString& aRel)
 {
   nsStringArray linkTypes;
   nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
