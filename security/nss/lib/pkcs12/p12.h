@@ -90,6 +90,8 @@ struct sec_PKCS12PublicKeyModeInfo {
     int keySize;
 };
 
+SEC_BEGIN_PROTOS
+
 SEC_PKCS12SafeInfo *
 SEC_PKCS12CreatePubKeyEncryptedSafe(SEC_PKCS12ExportContext *p12ctxt,
 				    CERTCertDBHandle *certDb,
@@ -177,5 +179,7 @@ SEC_PKCS12DecoderImportBags(SEC_PKCS12DecoderContext *p12dcx);
 
 CERTCertList *
 SEC_PKCS12DecoderGetCerts(SEC_PKCS12DecoderContext *p12dcx);
+
+SEC_END_PROTOS
 
 #endif
