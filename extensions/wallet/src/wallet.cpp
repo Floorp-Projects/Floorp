@@ -1096,7 +1096,7 @@ WLLT_ExpirePassword() {
   }
   PRUnichar * message;
   if (NS_FAILED(rv)) {
-    message = Wallet_Localize("PasswordNotExired");
+    message = Wallet_Localize("PasswordNotExpired");
   } else {
     message = Wallet_Localize("PasswordExpired");
   }
