@@ -1210,7 +1210,7 @@ BOOL CNetscapeApp::InitInstance()
 	{
 		// only show splash if not embedded
 	m_splash.Create(NULL);
-#if !defined(DEBUG_chouck) && !defined(DEBUG_warren) && !defined(DEBUG_phil) && !defined(DEBUG_hyatt) && !defined(DEBUG_hshaw)
+#if !defined(DEBUG_chouck) && !defined(DEBUG_warren) && !defined(DEBUG_phil) && !defined(DEBUG_hyatt) && !defined(DEBUG_hshaw) && !defined(DEBUG_law)
 	m_splash.ShowWindow(SW_SHOW);
 #endif
 	m_splash.UpdateWindow();
