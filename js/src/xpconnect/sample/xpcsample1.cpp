@@ -290,7 +290,7 @@ nsXPCSample_HookerUpper::CreateSampleObjectAtGlobalScope(const char *name, PRInt
         return NS_ERROR_FAILURE;
 
     // Build an xpconnect wrapper around the object
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
     rv = xpc->WrapNative(cx, globalJSObject, classA,
                          NS_GET_IID(nsXPCSample_ClassA),
                          getter_AddRefs(wrapper));

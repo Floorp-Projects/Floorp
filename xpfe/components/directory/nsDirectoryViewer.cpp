@@ -350,7 +350,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
     NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
     rv = xpc->WrapNative(jscontext,                       
                          global,
                          httpindex,

@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -37,7 +38,9 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
+NS_IMPL_THREADSAFE_ADDREF(nsXPCWrappedJSClass)
+NS_IMPL_THREADSAFE_RELEASE(nsXPCWrappedJSClass)
+NS_IMPL_QUERY_INTERFACE1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
 // the value of this variable is never used - we use its address as a sentinel
 static uint32 zero_methods_descriptor;
@@ -168,6 +171,9 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     if(!OBJ_GET_PROPERTY(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
         return nsnull;
 
+    // XXX we should install an error reporter that will sent reports to 
+    // some as yet non-existent JS error console via a service.
+
     jsval e;
     JSBool hadExpection = JS_GetPendingException(cx, &e);
     JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
@@ -286,20 +292,9 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     {
         AutoPushCompatibleJSContext autoContext(mRuntime->GetJSRuntime());
         JSContext* cx = autoContext.GetJSContext();
-        if(cx)
-        {
-            XPCContext* xpcc = nsXPConnect::GetContext(cx);
-            if(xpcc)
-            {
-                nsXPCWrappedJS* wrapper =
-                    nsXPCWrappedJS::GetNewOrUsedWrapper(xpcc, jsobj, aIID);
-                if(wrapper)
-                {
-                    *aInstancePtr = (void*) wrapper;
-                    return NS_OK;
-                }
-            }
-        }
+        if(cx && XPCConvert::JSObject2NativeInterface(cx, aInstancePtr,
+                                                      jsobj, &aIID, nsnull))
+            return NS_OK;
     }
 
     // else...
@@ -552,6 +547,14 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                 type.TagPart() == nsXPTType::T_PSTRING_SIZE_IS ||
                 type.TagPart() == nsXPTType::T_PWSTRING_SIZE_IS;
 
+
+        // verify that null was not passed for 'out' param
+        if(param.IsOut() && !nativeParams[i].val.p)
+        {
+            retval = NS_ERROR_INVALID_ARG;
+            goto pre_call_clean_up;
+        }
+
         if(isArray)
         {
             if(NS_FAILED(mInfo->GetTypeForParam(methodIndex, &param, 1, 
@@ -569,7 +572,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
                 pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
             else
                 pv = &nativeParams[i];
-
 
             if(datum_type.IsInterfacePointer() &&
                !GetInterfaceTypeFromParam(cx, info, param, methodIndex, 
@@ -622,6 +624,12 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         {
             // create an 'out' object
             JSObject* out_obj = NewOutObject(cx);
+            if(!out_obj)
+            {
+                retval = NS_ERROR_OUT_OF_MEMORY;
+                goto pre_call_clean_up;
+            }
+
             if(param.IsIn())
             {
                 if(!OBJ_SET_PROPERTY(cx, out_obj, 
@@ -762,6 +770,33 @@ pre_call_clean_up:
         {
             if(NS_FAILED(e_result))
             {
+                // XXX we should send the error string to some as yet 
+                // non-existent JS error console via a service.
+                // Below is a quick hack to show the error/exception text
+                // via printf in debug builds only
+#ifdef DEBUG
+                static const char line[] = 
+                    "************************************************************\n";
+                static const char disclaimer[] = 
+                    "** NOTE: This report will only be printed in DEBUG builds.**\n";
+                static const char preamble[] = 
+                    "* Call to xpconnect wrapped JSObject produced this error:  *\n";
+                static const char cant_get_text[] = 
+                    "FAILED TO GET TEXT FROM EXCEPTION\n";
+                printf(line);
+                printf(disclaimer);     
+                printf(preamble);
+                char* text;
+                if(NS_SUCCEEDED(xpc_exception->ToString(&text)) && text)
+                {
+                    printf(text);     
+                    printf("\n");
+                    nsAllocator::Free(text);        
+                }
+                else
+                    printf(cant_get_text);     
+                printf(line);     
+#endif
                 xpc->SetPendingException(xpc_exception);
                 retval = e_result;
             }

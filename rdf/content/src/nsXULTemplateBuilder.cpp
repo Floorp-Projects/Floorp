@@ -3081,7 +3081,7 @@ RDFGenericBuilderImpl::AddDatabasePropertyToHTMLElement(nsIContent* aElement, ns
 
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
     rv = xpc->WrapNative(jscontext,                       
                          jselement,
                          aDataBase,

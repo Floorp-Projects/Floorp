@@ -43,7 +43,6 @@
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
-#include "nsIXPCSecurityManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIPref.h"
@@ -901,10 +900,6 @@ nsIScriptContext* nsJSEnvironment::GetNewContext()
   return context;
 }
 
-#define XPC_HOOK_VALUE (nsIXPCSecurityManager::HOOK_CREATE_WRAPPER  |   \
-                        nsIXPCSecurityManager::HOOK_CREATE_INSTANCE |   \
-                        nsIXPCSecurityManager::HOOK_GET_SERVICE)
-
 extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
                                                   nsIScriptContext **aContext)
 {
@@ -917,25 +912,10 @@ extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal
     return NS_ERROR_OUT_OF_MEMORY;
   *aContext = scriptContext;
 
-  // Hook up Security Manager to XPConnect
-  nsresult rv;
-  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
-  if (NS_SUCCEEDED(rv)) {
-    JSContext *cx = (JSContext*) scriptContext->GetNativeContext();
-    nsCOMPtr<nsIScriptSecurityManager> mgr;
-    rv = scriptContext->GetSecurityManager(getter_AddRefs(mgr));
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIXPCSecurityManager> xpcSecurityManager = do_QueryInterface(mgr, &rv);
-      if (NS_SUCCEEDED(rv))
-        xpc->SetSecurityManagerForJSContext(cx, xpcSecurityManager, XPC_HOOK_VALUE);
-    }
-  }
-
   // Bind the script context and the global object
   scriptContext->InitContext(aGlobal);
   aGlobal->SetContext(scriptContext);
 
-  // XXX suppress XPConnect Security Manager setup failures for now?
   return NS_OK;
 }
 

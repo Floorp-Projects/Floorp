@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -52,7 +53,48 @@ const char* XPCJSRuntime::mStrings[] = {
 
 XPCJSRuntime::~XPCJSRuntime()
 {
-    // XXX cleanup maps here!
+    // clean up and destroy maps...
+
+    if(mContextMap)
+    {
+        SyncXPCContextList();
+#ifdef DEBUG_jband
+        uint32 count = mContextMap->Count();
+        if(count)
+            printf("deleting XPCJSRuntime with %d live JSContexts\n", (int)count);        
+#endif
+        delete mContextMap;
+    }
+
+    if(mWrappedJSMap)
+    {
+#ifdef DEBUG_jband
+        uint32 count = mWrappedJSMap->Count();
+        if(count)
+            printf("deleting XPCJSRuntime with %d live wrapped JSObjects\n", (int)count);        
+#endif
+        delete mWrappedJSMap;
+    }
+
+    if(mWrappedJSClassMap)
+    {
+#ifdef DEBUG_jband
+        uint32 count = mWrappedJSClassMap->Count();
+        if(count)
+            printf("deleting XPCJSRuntime with %d live xpcwrappedjsclasses\n", (int)count);        
+#endif
+        delete mWrappedJSClassMap;
+    }
+
+    if(mWrappedNativeClassMap)
+    {
+#ifdef DEBUG_jband
+        uint32 count = mWrappedNativeClassMap->Count();
+        if(count)
+            printf("deleting XPCJSRuntime with %d live xpcwrappednativeclasses\n", (int)count);        
+#endif
+        delete mWrappedNativeClassMap;
+    }
 
     if(mMapLock)
         PR_DestroyLock(mMapLock);

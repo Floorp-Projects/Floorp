@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -53,7 +54,6 @@ class nsXPCWrappedNative;
 class nsXPCWrappedJSClass;
 class nsXPCWrappedNativeClass;
 class nsXPCWrappedNativeScope;
-class nsXPCWrappedJSMethods;
 class XPCJSThrower;
 class XPCJSStack;
 class XPCNativeMemberDescriptor;

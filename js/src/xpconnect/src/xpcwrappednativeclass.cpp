@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -43,7 +44,9 @@ XPCNativeMemberDescriptor::XPCNativeMemberDescriptor()
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-NS_IMPL_ISUPPORTS1(nsXPCWrappedNativeClass, nsIXPCWrappedNativeClass)
+NS_IMPL_THREADSAFE_ADDREF(nsXPCWrappedNativeClass)
+NS_IMPL_THREADSAFE_RELEASE(nsXPCWrappedNativeClass)
+NS_IMPL_QUERY_INTERFACE1(nsXPCWrappedNativeClass, nsIXPCWrappedNativeClass)
 
 #define SET_ERROR_CODE(_y) if(pErr) *pErr = _y
 
@@ -534,7 +537,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     nsID* conditional_iid = nsnull;
     uintN err;
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
-    nsIXPCSecurityManager* securityManager;
+    nsIXPCSecurityManager* sm;
     JSBool foundDependentParam;
     nsISupports* callee = wrapper->GetNative();
     NativeCallContextData ccdata;
@@ -563,19 +566,15 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
     // set up the method index and do the security check if needed
     NS_WARN_IF_FALSE(xpcc->CallerTypeIsKnown(),"missing caller type set somewhere");
-    securityManager = xpcc->GetSecurityManager();
     switch(callMode)
     {
         case CALL_METHOD:
             vtblIndex = desc->index;
 
-            if(securityManager &&
-               (xpcc->GetSecurityManagerFlags() &
-                nsIXPCSecurityManager::HOOK_CALL_METHOD) &&
-               xpcc->CallerTypeIsJavaScript() &&
-               NS_OK !=
-                securityManager->CanCallMethod(cx, mIID, callee,
-                                               mInfo, vtblIndex, desc->id))
+            sm = xpcc->GetAppropriateSecurityManager(
+                                nsIXPCSecurityManager::HOOK_CALL_METHOD);
+            if(sm && NS_OK != sm->CanCallMethod(cx, mIID, callee,
+                                                mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
                 goto done;
@@ -585,13 +584,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         case CALL_GETTER:
             vtblIndex = desc->index;
 
-            if(securityManager &&
-               (xpcc->GetSecurityManagerFlags() &
-                nsIXPCSecurityManager::HOOK_GET_PROPERTY) &&
-               xpcc->CallerTypeIsJavaScript() &&
-               NS_OK !=
-                securityManager->CanGetProperty(cx, mIID, callee,
-                                                mInfo, vtblIndex, desc->id))
+            sm = xpcc->GetAppropriateSecurityManager(
+                                nsIXPCSecurityManager::HOOK_GET_PROPERTY);
+            if(sm && NS_OK != sm->CanGetProperty(cx, mIID, callee,
+                                                 mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
                 goto done;
@@ -599,18 +595,16 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             break;
 
         case CALL_SETTER:
-            // fail silently if trying to write a readonly attribute
+            // XXX fail silently if trying to write a readonly attribute
+            // XXX throw?
             if(!desc->IsWritableAttribute())
                 goto done;
             vtblIndex = desc->index2;
 
-            if(securityManager &&
-               (xpcc->GetSecurityManagerFlags() &
-                nsIXPCSecurityManager::HOOK_SET_PROPERTY) &&
-               xpcc->CallerTypeIsJavaScript() &&
-               NS_OK !=
-                securityManager->CanSetProperty(cx, mIID, callee,
-                                                mInfo, vtblIndex, desc->id))
+            sm = xpcc->GetAppropriateSecurityManager(
+                                nsIXPCSecurityManager::HOOK_SET_PROPERTY);
+            if(sm && NS_OK != sm->CanSetProperty(cx, mIID, callee,
+                                                 mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
                 goto done;
@@ -1253,9 +1247,18 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(XPCContext* xpcc,
     JSClass* jsclazz = self->GetDynamicScriptable() ?
                             &WrappedNativeWithCall_class :
                             &WrappedNative_class;
-    JSObject* jsobj = JS_NewObject(cx, jsclazz, nsnull, aGlobalObject);
-    if(!jsobj || !JS_SetPrivate(cx, jsobj, self))
+
+    // shaver@mozilla.org sez:
+    // We set the prototype to be the global object, then set it back to null
+    // after creation.  If we just pass nsnull as the prototype argument, the
+    // engine will do a scope search for the class name to find the constructor,
+    // which is an expense we don't need, and will always fail anyway.
+
+    JSObject* jsobj = JS_NewObject(cx, jsclazz, aGlobalObject, aGlobalObject);
+    if(!jsobj || !JS_SetPrototype(cx, jsobj, nsnull) ||
+       !JS_SetPrivate(cx, jsobj, self))
         return nsnull;
+
     // wrapper is responsible for calling DynamicScriptable->Create
     return jsobj;
 }

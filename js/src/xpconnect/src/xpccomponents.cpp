@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the
@@ -256,31 +257,29 @@ nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
        (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != nsnull &&
        property_name[0] != '{') // we only allow interfaces by name here
     {
-        nsJSIID* nsid = nsJSIID::NewID(property_name);
-        nsIXPConnectWrappedNative* nsid_wrapper;
+        nsCOMPtr<nsIJSIID> nsid = 
+            dont_AddRef(NS_STATIC_CAST(nsIJSIID*,nsJSIID::NewID(property_name)));
         if(nsid)
         {
-            nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+            nsCOMPtr<nsXPConnect> xpc = dont_AddRef(nsXPConnect::GetXPConnect());
             if(xpc)
             {
+                nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                                NS_STATIC_CAST(nsIJSID*,nsid),
+                                                NS_STATIC_CAST(nsIJSIID*,nsid),
                                                 NS_GET_IID(nsIJSIID),
-                                                &nsid_wrapper)))
+                                                getter_AddRefs(holder))))
                 {
                     JSObject* idobj;
-                    if(NS_SUCCEEDED(nsid_wrapper->GetJSObject(&idobj)))
+                    if(holder && NS_SUCCEEDED(holder->GetJSObject(&idobj)))
                     {
                         JSBool retval;
                         jsval val = OBJECT_TO_JSVAL(idobj);
                         arbitrary->SetProperty(cx, obj, id, &val, wrapper,
                                                nsnull, &retval);
                     }
-                    NS_RELEASE(nsid_wrapper);
                 }
-                NS_RELEASE(xpc);
             }
-            NS_RELEASE(nsid);
         }
     }
 }
@@ -493,31 +492,29 @@ nsXPCClasses::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
        (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != nsnull &&
        property_name[0] != '{') // we only allow progids here
     {
-        nsJSCID* nsid = nsJSCID::NewID(property_name);
-        nsIXPConnectWrappedNative* nsid_wrapper;
+        nsCOMPtr<nsIJSCID> nsid = 
+            dont_AddRef(NS_STATIC_CAST(nsIJSCID*,nsJSCID::NewID(property_name)));
         if(nsid)
         {
-            nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+            nsCOMPtr<nsXPConnect> xpc = dont_AddRef(nsXPConnect::GetXPConnect());
             if(xpc)
             {
+                nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                                NS_STATIC_CAST(nsIJSID*,nsid),
+                                                NS_STATIC_CAST(nsIJSCID*,nsid),
                                                 NS_GET_IID(nsIJSCID),
-                                                &nsid_wrapper)))
+                                                getter_AddRefs(holder))))
                 {
                     JSObject* idobj;
-                    if(NS_SUCCEEDED(nsid_wrapper->GetJSObject(&idobj)))
+                    if(holder && NS_SUCCEEDED(holder->GetJSObject(&idobj)))
                     {
                         JSBool retval;
                         jsval val = OBJECT_TO_JSVAL(idobj);
                         arbitrary->SetProperty(cx, obj, id, &val, wrapper,
                                                nsnull, &retval);
                     }
-                    NS_RELEASE(nsid_wrapper);
                 }
-                NS_RELEASE(xpc);
             }
-            NS_RELEASE(nsid);
         }
     }
 }
@@ -769,31 +766,29 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
             if(!IsCanonicalFormOfRegisteredCLSID(property_name))
                 return;
 
-        nsJSCID* nsid = nsJSCID::NewID(property_name);
-        nsIXPConnectWrappedNative* nsid_wrapper;
+        nsCOMPtr<nsIJSCID> nsid = 
+            dont_AddRef(NS_STATIC_CAST(nsIJSCID*,nsJSCID::NewID(property_name)));
         if(nsid)
         {
-            nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+            nsCOMPtr<nsXPConnect> xpc = dont_AddRef(nsXPConnect::GetXPConnect());
             if(xpc)
             {
+                nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
-                                                NS_STATIC_CAST(nsIJSID*,nsid),
+                                                NS_STATIC_CAST(nsIJSCID*,nsid),
                                                 NS_GET_IID(nsIJSCID),
-                                                &nsid_wrapper)))
+                                                getter_AddRefs(holder))))
                 {
                     JSObject* idobj;
-                    if(NS_SUCCEEDED(nsid_wrapper->GetJSObject(&idobj)))
+                    if(holder && NS_SUCCEEDED(holder->GetJSObject(&idobj)))
                     {
                         JSBool retval;
                         jsval val = OBJECT_TO_JSVAL(idobj);
                         arbitrary->SetProperty(cx, obj, id, &val, wrapper,
                                                nsnull, &retval);
                     }
-                    NS_RELEASE(nsid_wrapper);
                 }
-                NS_RELEASE(xpc);
             }
-            NS_RELEASE(nsid);
         }
     }
 }

@@ -41,6 +41,8 @@
 #include "nsIScriptExternalNameSet.h"
 #include "jsdbgapi.h"
 #include "nsDOMPropNames.h"
+#include "nsIXPConnect.h"
+#include "nsIXPCSecurityManager.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCScriptNameSetRegistryCID, 
@@ -901,12 +903,34 @@ nsScriptSecurityManager::GetScriptSecurityManager()
     static nsScriptSecurityManager *ssecMan = NULL;
     if (!ssecMan) {
         ssecMan = new nsScriptSecurityManager();
+        if (!ssecMan)
+            return NULL;
 	    nsresult rv;
 	    NS_WITH_SERVICE(nsIScriptNameSetRegistry, registry, 
                         kCScriptNameSetRegistryCID, &rv);
         if (NS_SUCCEEDED(rv)) {
             nsSecurityNameSet* nameSet = new nsSecurityNameSet();
             registry->AddExternalNameSet(nameSet);
+        }
+
+        NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+        if (NS_SUCCEEDED(rv) && xpc) {
+            rv = xpc->SetDefaultSecurityManager(
+                            NS_STATIC_CAST(nsIXPCSecurityManager*, ssecMan), 
+                            nsIXPCSecurityManager::HOOK_CREATE_WRAPPER  |
+                            nsIXPCSecurityManager::HOOK_CREATE_INSTANCE |
+                            nsIXPCSecurityManager::HOOK_GET_SERVICE);
+            if (NS_FAILED(rv)) {
+                NS_WARNING("failed to install xpconnect security manager!");    
+            } 
+#ifdef DEBUG_jband
+            else {
+                printf("!!!!! xpc security manager registered\n");
+            }
+#endif
+        }
+        else {
+            NS_WARNING("can't get xpconnect to install security manager!");    
         }
     }
     return ssecMan;

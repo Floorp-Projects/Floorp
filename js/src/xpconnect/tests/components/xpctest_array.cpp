@@ -19,6 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   John Bandhauer <jband@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -67,6 +68,13 @@ NS_IMETHODIMP xpcarraytest::SetReceiver(nsIXPCTestArray* aReceiver)
     NS_IF_ADDREF(aReceiver);
     NS_IF_RELEASE(mReceiver);
     mReceiver = aReceiver;
+
+    // a test that forces a QI to some other arbitrary type.
+    if(mReceiver)
+    {
+        nsCOMPtr<nsIEcho> echo = do_QueryInterface(mReceiver);
+    }
+
     return NS_OK;
 }
 
