@@ -47,11 +47,12 @@ struct nsRect;
 #define NS_CHROME_PERSONAL_TOOLBAR_ON 0x00000100
 #define NS_CHROME_SCROLLBARS_ON       0x00000200
 #define NS_CHROME_TITLEBAR_ON         0x00000400
+#define NS_CHROME_EXTRACHROME_ON	  0x00000800
 #define NS_CHROME_DEPENDENT           0x10000000
 #define NS_CHROME_MODAL               0x20000000
 #define NS_CHROME_OPEN_AS_DIALOG      0x40000000
 #define NS_CHROME_OPEN_AS_CHROME      0x80000000
-#define NS_CHROME_ALL_CHROME          0x000007FE
+#define NS_CHROME_ALL_CHROME          0x00000FFE
 
 /**
  * API to a "browser window". A browser window contains a toolbar, a web shell
