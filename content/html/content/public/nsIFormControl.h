@@ -46,7 +46,6 @@ class nsString;
 class nsIFormProcessor;
 class nsIFormSubmission;
 
-#define NS_FORM_BROWSE          0
 #define NS_FORM_BUTTON_BUTTON   1
 #define NS_FORM_BUTTON_RESET    2
 #define NS_FORM_BUTTON_SUBMIT   3

@@ -1714,7 +1714,6 @@ nsHTMLInputElement::SetParent(nsIContent* aParent)
 // nsIHTMLContent
 
 static const nsHTMLValue::EnumTable kInputTypeTable[] = {
-  { "browse", NS_FORM_BROWSE }, // XXX not valid html, but it is convenient
   { "button", NS_FORM_INPUT_BUTTON },
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
   { "file", NS_FORM_INPUT_FILE },
