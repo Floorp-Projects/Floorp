@@ -1353,6 +1353,9 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   if (NS_FAILED(rv))
     return rv;
 
+  // Save old listener so we can unregister it
+  nsCOMPtr<nsIDOMFocusListener> mOldFocusListener = mFocusListener;
+
   // focus listener
   //
   // now register ourselves as a focus listener, so that we get called
@@ -1374,6 +1377,11 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     rv = erP->AddEventListenerByIID(mFocusListener,
                                     NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
+    if (mOldFocusListener) {
+      rv = erP->RemoveEventListenerByIID(mOldFocusListener,
+                                      NS_GET_IID(nsIDOMFocusListener));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to remove focus listener");
+    }
   }
 
   return NS_OK;
@@ -6794,7 +6802,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
   if (!presShell) {
     // A frame that's not displayed can't be printed!
-
+    PRINT_DEBUG_MSG1("Printing Stopped - PreShell was NULL!");
     return NS_OK;
   }
 
@@ -6823,6 +6831,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   
   mPrt = new PrintData(PrintData::eIsPrinting);
   if (!mPrt) {
+    PRINT_DEBUG_MSG1("NS_ERROR_OUT_OF_MEMORY - Creating PrintData");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -6842,6 +6851,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
   if (NS_FAILED(rv)) {
     delete mPrt;
+    PRINT_DEBUG_MSG1("NS_ERROR_FAILURE - CheckForPrinters for Printers failed");
     mPrt = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -6876,6 +6886,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       mIsDoingPrinting = PR_FALSE;
       delete mPrt;
       mPrt = nsnull;
+      PRINT_DEBUG_MSG1("NS_ERROR_FAILURE - Couldn't create mPrintDocList");
       return NS_ERROR_FAILURE;
     }
   } else {
@@ -7004,6 +7015,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       }
       delete mPrt;
       mPrt = nsnull;
+      PRINT_DEBUG_MSG1("**** Printing Stopped before CreateDeviceContextSpec");
       return rv;
     }
 
@@ -7021,6 +7033,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
       if (rv != NS_ERROR_ABORT) {
         ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED);
       }
+      PRINT_DEBUG_MSG2("**** mDocWasToBeDestroyed - %s", rv != NS_ERROR_ABORT?"NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED":"NS_ERROR_ABORT");
       return NS_ERROR_ABORT;
     }
 
@@ -7194,6 +7207,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     if (rv != NS_ERROR_ABORT) {
       ShowPrintErrorDialog(rv);
     }
+    PRINT_DEBUG_MSG2("**** Printing Failed - rv 0x%X", rv);
   }
 
   return rv;
