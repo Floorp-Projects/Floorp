@@ -84,9 +84,12 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 	if (nProgressMax == 0)
 		nProgressMax = LONG_MAX;
 
-	if (curSelfProgress > maxSelfProgress)
+	if (curSelfProgress == maxSelfProgress)
 	{
 		QAOutput("nsIWebProgLstnr::OnProgressChange(): Self progress complete!", 1);
+
+		FormatAndPrintOutput("OnProgressChange(): curSelfProgress value = ", curSelfProgress, 1); 
+		FormatAndPrintOutput("OnProgressChange(): maxSelfProgress value = ", maxSelfProgress, 1);
 
 		// web progress DOMWindow test
 		WebProgDOMWindowTest(progress, "OnProgressChange()", 1);
@@ -95,7 +98,11 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 	if (nProgress > nProgressMax)
 	{
 		nProgress = nProgressMax; // Progress complete
+
 		QAOutput("nsIWebProgLstnr::OnProgressChange(): Progress Update complete!", 1);
+
+		FormatAndPrintOutput("OnProgressChange(): curTotalProgress value = ", nProgress, 1); 
+		FormatAndPrintOutput("OnProgressChange(): maxTotalProgress value = ", nProgressMax, 1);
 	}
 
 	m_pBrowserFrameGlue->UpdateProgress(nProgress, nProgressMax);
@@ -252,9 +259,9 @@ NS_IMETHODIMP CBrowserImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 	else
 		QAOutput("Good result for GetSpec().");
 
-	FormatAndPrintOutput("The location url = ", uriSpec, 1);
+	FormatAndPrintOutput("OnLocationChange(): The location url = ", uriSpec, 1);
  
-//	RequestName(aRequest, stringMsg);
+//	RequestName(aRequest, stringMsg);  // because of crash bug bugzilla 86521
 
 	PRBool isSubFrameLoad = PR_FALSE; // Is this a subframe load
 	if (aWebProgress) {
@@ -290,10 +297,10 @@ CBrowserImpl::OnStatusChange(nsIWebProgress* aWebProgress,
 
 	RequestName(aRequest, stringMsg);
 
-			// status result test
-	FormatAndPrintOutput("OnStatusChange(): Status = ", aStatus, 1);
+			// status result test (id number)
+	FormatAndPrintOutput("OnStatusChange(): Status id = ", aStatus, 1);
 
-			// web progress DOMWindow test
+			// web progress DOMWindow test (typically the host name)
 	WebProgDOMWindowTest(aWebProgress, "OnStatusChange(): web prog DOM window test", 1);
 
 	m_pBrowserFrameGlue->UpdateStatusBarText(aMessage);
@@ -314,6 +321,13 @@ CBrowserImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 	QAOutput("Entering nsIWebProgLstnr::OnSecurityChange().");
 
 	RequestName(aRequest, stringMsg);
+
+	if (state & STATE_IS_SECURE)
+		QAOutput("OnSecurityChange():STATE_IS_SECURE. All docs & subdocs are https.");
+	else if (state & STATE_IS_BROKEN)
+		QAOutput("OnSecurityChange():STATE_IS_BROKEN. Mixed: some docs are https.");
+	else if (state & STATE_IS_INSECURE)
+		QAOutput("OnSecurityChange():STATE_IS_INSECURE. Nothing is https.");
 
 				// web progress DOMWindow test
 	WebProgDOMWindowTest(aWebProgress, "OnSecurityChange()", 1);
