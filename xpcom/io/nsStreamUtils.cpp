@@ -59,22 +59,27 @@ public:
     virtual ~nsInputStreamReadyEvent()
     {
         if (mNotify) {
+            nsresult rv;
             //
-            // whoa!! looks like we never posted this event. take care not to
-            // delete mNotify on the calling thread (which might be the wrong
-            // thread).
+            // whoa!!  looks like we never posted this event.  take care to
+            // release mNotify on the correct thread.  if mEventQ lives on the
+            // calling thread, then we are ok.  otherwise, we have to try to 
+            // proxy the Release over the right thread.  if that thread is dead,
+            // then there's nothing we can do... better to leak than crash.
             //
-            nsCOMPtr<nsIInputStreamNotify> event;
-            NS_NewInputStreamReadyEvent(getter_AddRefs(event), mNotify, mEventQ);
-            mNotify = 0;
-            if (event) {
-                nsresult rv = event->OnInputStreamReady(nsnull);
-                if (NS_FAILED(rv)) {
-                    // PostEvent failed, we must be shutting down.  better to
-                    // leak than crash!
-                    NS_NOTREACHED("leaking stream event");
-                    nsISupports *sup = event;
-                    NS_ADDREF(sup);
+            PRBool val;
+            rv = mEventQ->IsQueueOnCurrentThread(&val);
+            if (NS_FAILED(rv) || !val) {
+                nsCOMPtr<nsIInputStreamNotify> event;
+                NS_NewInputStreamReadyEvent(getter_AddRefs(event), mNotify, mEventQ);
+                mNotify = 0;
+                if (event) {
+                    rv = event->OnInputStreamReady(nsnull);
+                    if (NS_FAILED(rv)) {
+                        NS_NOTREACHED("leaking stream event");
+                        nsISupports *sup = event;
+                        NS_ADDREF(sup);
+                    }
                 }
             }
         }
@@ -142,22 +147,27 @@ public:
     virtual ~nsOutputStreamReadyEvent()
     {
         if (mNotify) {
+            nsresult rv;
             //
-            // whoa!! looks like we never posted this event. take care not to
-            // delete mNotify on the calling thread (which might be the wrong
-            // thread).
+            // whoa!!  looks like we never posted this event.  take care to
+            // release mNotify on the correct thread.  if mEventQ lives on the
+            // calling thread, then we are ok.  otherwise, we have to try to 
+            // proxy the Release over the right thread.  if that thread is dead,
+            // then there's nothing we can do... better to leak than crash.
             //
-            nsCOMPtr<nsIOutputStreamNotify> event;
-            NS_NewOutputStreamReadyEvent(getter_AddRefs(event), mNotify, mEventQ);
-            mNotify = 0;
-            if (event) {
-                nsresult rv = event->OnOutputStreamReady(nsnull);
-                if (NS_FAILED(rv)) {
-                    // PostEvent failed, we must be shutting down.  better to
-                    // leak than crash!
-                    NS_NOTREACHED("leaking stream event");
-                    nsISupports *sup = event;
-                    NS_ADDREF(sup);
+            PRBool val;
+            rv = mEventQ->IsQueueOnCurrentThread(&val);
+            if (NS_FAILED(rv) || !val) {
+                nsCOMPtr<nsIOutputStreamNotify> event;
+                NS_NewOutputStreamReadyEvent(getter_AddRefs(event), mNotify, mEventQ);
+                mNotify = 0;
+                if (event) {
+                    rv = event->OnOutputStreamReady(nsnull);
+                    if (NS_FAILED(rv)) {
+                        NS_NOTREACHED("leaking stream event");
+                        nsISupports *sup = event;
+                        NS_ADDREF(sup);
+                    }
                 }
             }
         }
