@@ -46,8 +46,12 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.InvocationTargetException;
+import java.io.Serializable;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
-public class FunctionObject extends NativeFunction {
+public class FunctionObject extends NativeFunction implements Serializable {
 
     static final long serialVersionUID = -4074285335521944312L;
 
@@ -575,6 +579,137 @@ public class FunctionObject extends NativeFunction {
         }
     }
 
+    private void writeObject(ObjectOutputStream out) 
+        throws IOException
+    {
+        out.defaultWriteObject();
+        boolean hasConstructor = ctor != null;
+        Member member = hasConstructor ? (Member)ctor : (Member)method;
+        writeMember(out, member);
+    }
+
+    private void readObject(ObjectInputStream in)
+        throws IOException, ClassNotFoundException
+    {
+        in.defaultReadObject();
+        Member member = readMember(in);
+        if (member instanceof Method) {
+            method = (Method) member;
+            types = method.getParameterTypes();
+        } else {
+            ctor = (Constructor) member;
+            types = ctor.getParameterTypes();
+        }
+    }
+
+    /**
+     * Writes a Constructor or Method object.
+     * 
+     * Methods and Constructors are not serializable, so we must serialize
+     * information about the class, the name, and the parameters and
+     * recreate upon deserialization.
+     */
+    static void writeMember(ObjectOutputStream out, Member member) 
+        throws IOException 
+    {
+        if (member == null) {
+            out.writeBoolean(false);
+            return;
+        }
+        out.writeBoolean(true);
+        if (!(member instanceof Method || member instanceof Constructor))
+            throw new IllegalArgumentException("not Method or Constructor");
+        out.writeBoolean(member instanceof Method);
+        out.writeObject(member.getName());
+        out.writeObject(member.getDeclaringClass());
+        if (member instanceof Method) {
+            writeParameters(out, ((Method) member).getParameterTypes());
+        } else {
+            writeParameters(out, ((Constructor) member).getParameterTypes());
+        }
+    }
+
+    /**
+     * Reads a Method or a Constructor from the stream.
+     */
+    static Member readMember(ObjectInputStream in) 
+        throws IOException, ClassNotFoundException
+    {
+        if (!in.readBoolean())
+            return null;
+        boolean isMethod = in.readBoolean();
+        String name = (String) in.readObject();
+        Class declaring = (Class) in.readObject();
+        Class[] parms = readParameters(in);
+        try {
+            if (isMethod) {
+                return declaring.getMethod(name, parms);
+            } else {
+                return declaring.getConstructor(parms);
+            }
+        } catch (NoSuchMethodException e) {
+            throw new IOException("Cannot find member: " + e);
+        }
+    }
+
+    private static final Class[] primitives = {
+        Boolean.TYPE,
+        Byte.TYPE,
+        Character.TYPE,
+        Double.TYPE,
+        Float.TYPE,
+        Integer.TYPE,
+        Long.TYPE,
+        Short.TYPE,
+        Void.TYPE
+    };
+
+    /**
+     * Writes an array of parameter types to the stream.
+     *
+     * Requires special handling because primitive types cannot be 
+     * found upon deserialization by the default Java implementation.
+     */
+    static void writeParameters(ObjectOutputStream out, Class[] parms)
+        throws IOException 
+    {
+        out.writeShort(parms.length);
+    outer:
+        for (int i=0; i < parms.length; i++) {
+            Class parm = parms[i];
+            out.writeBoolean(parm.isPrimitive());
+            if (!parm.isPrimitive()) {
+                out.writeObject(parm);
+                continue;
+            }
+            for (int j=0; j < primitives.length; j++) {
+                if (parm.equals(primitives[j])) {
+                    out.writeByte(j);
+                    continue outer;
+                }
+            }
+            throw new IllegalArgumentException("Primitive " + parm + 
+                                               " not found");
+        }
+    }
+
+    /**
+     * Reads an array of parameter types from the stream.
+     */
+    static Class[] readParameters(ObjectInputStream in) 
+        throws IOException, ClassNotFoundException 
+    {
+        Class[] result = new Class[in.readShort()];
+        for (int i=0; i < result.length; i++) {
+            if (!in.readBoolean()) {
+                result[i] = (Class) in.readObject();
+                continue;
+            }
+            result[i] = primitives[in.readByte()];
+        }
+        return result;
+    }
+
     /** Get default master implementation or null if not available */
     private static Invoker newInvokerMaster() {
         try {
@@ -600,10 +735,10 @@ public class FunctionObject extends NativeFunction {
 
     static Method[] methodsCache;
 
-    Method method;
-    Constructor ctor;
-    private Class[] types;
-    Invoker invoker;
+    transient Method method;
+    transient Constructor ctor;
+    transient Invoker invoker;
+    transient private Class[] types;
     private short parmsLength;
     private short lengthPropertyValue;
     private boolean hasVoidReturn;

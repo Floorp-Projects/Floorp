@@ -42,6 +42,7 @@ package org.mozilla.javascript;
 import java.lang.reflect.*;
 import java.util.Hashtable;
 import java.io.*;
+import org.mozilla.javascript.debug.DebuggableObject;
 
 /**
  * This is the default implementation of the Scriptable interface. This
@@ -57,7 +58,9 @@ import java.io.*;
  * @author Norris Boyd
  */
 
-public abstract class ScriptableObject implements Scriptable, Serializable {
+public abstract class ScriptableObject implements Scriptable, Serializable,
+                                                  DebuggableObject
+{
 
     static final long serialVersionUID = 2762574228534679611L;
 
@@ -1841,11 +1844,27 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
         byte wasDeleted;
     }
 
-    private static class GetterSlot extends Slot {
+    static class GetterSlot extends Slot implements Serializable {
         Object delegateTo;  // OPT: merge with "value"
-        Method getter;
-        Method setter;
+        transient Method getter;
+        transient Method setter;
         boolean setterReturnsValue;
+
+        private void writeObject(ObjectOutputStream out) 
+            throws IOException
+        {
+            out.defaultWriteObject();
+            FunctionObject.writeMember(out, getter);
+            FunctionObject.writeMember(out, setter);
+        }
+
+        private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException
+        {
+            in.defaultReadObject();
+            getter = (Method) FunctionObject.readMember(in);
+            setter = (Method) FunctionObject.readMember(in);
+        }
     }
 
     private static final Class ContextClass = Context.class;
