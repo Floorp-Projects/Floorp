@@ -235,6 +235,18 @@
        I could not figure out what you wanted to do.
     [% END %]
 
+  [% ELSIF error == "nested_transaction" %]
+    Attempted to start a new transaction without finishing previous one first.
+
+  [% ELSIF error == "not_in_transaction" %]
+    Attempted to end transaction without starting one first.
+
+  [% ELSIF error == "already_locked" %]
+    Attempted to lock a table without releasing previous lock first.
+
+  [% ELSIF error == "no_matching_lock" %]
+    Attempted to unlock tables without locking them first.
+
   [% ELSE %]
     [% title = "Internal error" %]
     An internal error has occured, but [% terms.Bugzilla %] doesn't know
