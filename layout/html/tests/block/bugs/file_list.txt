@@ -208,6 +208,9 @@ file:///s:/mozilla/layout/html/tests/block/bugs/185411-1.html
 file:///s:/mozilla/layout/html/tests/block/bugs/185411-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/185411-3.html
 file:///s:/mozilla/layout/html/tests/block/bugs/196919.html
+file:///s:/mozilla/layout/html/tests/block/bugs/199673-1.html
+file:///s:/mozilla/layout/html/tests/block/bugs/199673-2.html
+file:///s:/mozilla/layout/html/tests/block/bugs/199673-3.html
 file:///s:/mozilla/layout/html/tests/block/bugs/215857.html
 file:///s:/mozilla/layout/html/tests/block/bugs/215857-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/215857-3.html
