@@ -1,10 +1,10 @@
 Name:        mozilla
 Summary:     Web browser and mail reader
-Version:     DATE
+Version:     VERSION
 Release:     0_rh7
 Serial:      35
 Copyright:   MPL
-Source0:     mozilla-source-DATE.tar.gz
+Source0:     mozilla-source-VERSION.tar.gz
 Source1:     mozilla.sh
 Source2:     mozilla-icon.png
 Source4:     mozilla.desktop
@@ -127,9 +127,9 @@ BUILD_OFFICIAL=1 ./configure --prefix=%{_prefix} --enable-optimize \
 	--enable-nspr-autoconf --with-extensions --without-mng \
 	--enable-crypto --disable-xprint
 
-#BUILD_OFFICIAL=1 make -j$CPUS -s export
-#BUILD_OFFICIAL=1 make -j$CPUS -s install
-BUILD_OFFICIAL=1 make -s
+BUILD_OFFICIAL=1 make -s export
+BUILD_OFFICIAL=1 make -j$CPUS -s install
+#BUILD_OFFICIAL=1 make -s
 
 %install
 /bin/rm -rf $RPM_BUILD_ROOT
