@@ -1451,20 +1451,30 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && !mouseDown)
       return NS_OK;            
 
-    frameselection->StopAutoScrollTimer();
+    // check whether style allows selection
+    // if not, don't tell selection the mouse event even occurred.  
+    PRBool  selectable;
+    PRUint8 selectStyle;
+    result = IsSelectable(&selectable, &selectStyle);
+    if (NS_FAILED(result)) 
+      return result;
 
-    // Check if we are dragging in a table cell
-    nsCOMPtr<nsIContent> parentContent;
-    PRInt32 contentOffset;
-    PRInt32 target;
-    nsMouseEvent *me = (nsMouseEvent *)aEvent;
-    result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
-    if (NS_SUCCEEDED(result) && parentContent)
-      frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
-    else
-      frameselection->HandleDrag(aPresContext, this, aEvent->point);
-
-    frameselection->StartAutoScrollTimer(aPresContext, this, aEvent->point, 30);
+    // check for select: none
+    if (selectable)
+    {
+      frameselection->StopAutoScrollTimer();
+      // Check if we are dragging in a table cell
+      nsCOMPtr<nsIContent> parentContent;
+      PRInt32 contentOffset;
+      PRInt32 target;
+      nsMouseEvent *me = (nsMouseEvent *)aEvent;
+      result = GetDataForTableSelection(frameselection, me, getter_AddRefs(parentContent), &contentOffset, &target);
+      if (NS_SUCCEEDED(result) && parentContent)
+        frameselection->HandleTableSelection(parentContent, contentOffset, target, me);
+      else
+        frameselection->HandleDrag(aPresContext, this, aEvent->point);
+      frameselection->StartAutoScrollTimer(aPresContext, this, aEvent->point, 30);
+    }
   }
 
   return NS_OK;
@@ -1700,8 +1710,8 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
 
       if (yDistance <= closestYDistance && rect.width > 0 && rect.height > 0)
       {
-        if (yDistance < closestYDistance)
-          closestXDistance = HUGE_DISTANCE;
+//        if (yDistance < closestYDistance)
+//          closestXDistance = HUGE_DISTANCE;
 
         nscoord xa = rect.x;
         nscoord xb = rect.x + rect.width;
@@ -3725,7 +3735,9 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   nsRect testRect;
 #ifdef IBMBIDI
   nsIFrame *newFrame;
-  while (testRect.IsEmpty()) {
+  PRBool selectable =  PR_TRUE; //usually fine
+
+  while (testRect.IsEmpty() || !selectable) {
     if (lineIsRTL && lineJump) 
       if (aPos->mDirection == eDirPrevious)
         result = frameTraversal->Next();
@@ -3820,12 +3832,11 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
         newFrame = lastFrame;
       }
     }
+    newFrame->IsSelectable(&selectable, nsnull);
+    if (!selectable)
+      lineJump = PR_FALSE;
   }
 #endif // IBMBIDI
-  PRBool selectable;
-  newFrame->IsSelectable(&selectable, nsnull);
-  if (!selectable)
-    return NS_ERROR_FAILURE;
   if (aPos->mDirection == eDirNext)
     aPos->mStartOffset = 0;
   else

@@ -4827,7 +4827,6 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   nsReflowStatus frameReflowStatus;
   nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0, isAdjacentWithTop,
                                 aComputedOffsetsResult, frameReflowStatus);
-
   if (NS_SUCCEEDED(rv) && isAutoWidth) {
     nscoord maxElementWidth = brc.GetMaxElementSize().width;
     if (maxElementWidth > availSpace.width) {
@@ -5416,9 +5415,12 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
         }
         nsCOMPtr<nsIFrameSelection> frameselection;
         shell->GetFrameSelection(getter_AddRefs(frameselection));
+        PRBool mouseDown = aEvent->message == NS_MOUSE_MOVE;
         if (frameselection)
+        {
           result = frameselection->HandleClick(pos.mResultContent, pos.mContentOffset, 
-                                               pos.mContentOffsetEnd, me->isShift, PR_FALSE, pos.mPreferLeft);
+                                               pos.mContentOffsetEnd, mouseDown || me->isShift, PR_FALSE, pos.mPreferLeft);
+        }
       }
       else
         result = resultFrame->HandleEvent(aPresContext, aEvent, aEventStatus);//else let the frame/container do what it needs
