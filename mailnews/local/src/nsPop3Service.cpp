@@ -44,7 +44,6 @@
 #define POP3_PORT 110 // The IANA port for Pop3
 
 #define PREF_MAIL_ROOT_POP3 "mail.root.pop3"
-#define PREF_MAIL_ROOT_NONE "mail.root.none"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
@@ -290,18 +289,7 @@ nsPop3Service::SetDefaultLocalPath(nsIFileSpec *aPath)
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-	/*
-	there is no nsNoService, so in the MsgLocalFactory, we
-	registered the nsPop3Service with both
-	"component://netscape/messenger/protocol/info;type=none"
-	"component://netscape/messenger/protocol/info;type=pop3"
-	on disk, both roots (mail.root.none and mail.root.pop3)                         should point to <profile>/Mail or "mail.directory"
-	so we set both here to the same value 
-	*/
     rv = prefs->SetFilePref(PREF_MAIL_ROOT_POP3, aPath, PR_FALSE /* set default */);
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = prefs->SetFilePref(PREF_MAIL_ROOT_NONE, aPath, PR_FALSE /* set default */);
     return rv;
 }     
 
@@ -348,3 +336,19 @@ nsPop3Service::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNa
         *aPreflightPrettyNameWithEmailAddress = PR_TRUE;
         return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPop3Service::GetCanDelete(PRBool *aCanDelete)
+{
+        NS_ENSURE_ARG_POINTER(aCanDelete);
+        *aCanDelete = PR_TRUE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPop3Service::GetCanDuplicate(PRBool *aCanDuplicate)
+{
+        NS_ENSURE_ARG_POINTER(aCanDuplicate);
+        *aCanDuplicate = PR_TRUE;
+        return NS_OK;
+}        

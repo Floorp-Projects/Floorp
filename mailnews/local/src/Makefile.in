@@ -45,6 +45,7 @@ CPPSRCS		= \
 		nsLocalUndoTxn.cpp \
 		nsLocalStringBundle.cpp \
 		nsNoIncomingServer.cpp \
+		nsNoneService.cpp	\
 		$(NULL)
 
 EXPORTS		= \
@@ -60,6 +61,7 @@ EXPORTS		= \
 		nsPop3IncomingServer.h \
 		nsLocalMessage.h \
 		nsLocalStringBundle.h \
+		nsNoneService.h	\
 		nsNoIncomingServer.h \
 		$(NULL)
 

@@ -17,21 +17,30 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s):
- * Alec Flett <alecf@netscape.com>
+ * Contributor(s): 
  * Seth Spitzer <sspitzer@netscape.com>
  */
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
+#ifndef nsNoneService_h___
+#define nsNoneService_h___
 
-function validate() {
-  var servername = document.getElementById("server.hostName").value;
-  var smtpserver = document.getElementById("smtp.hostname").value;
+#include "nscore.h"
 
-  if (!servername || !smtpserver || servername == "" || smtpserver=="") {
-    var alertText = Bundle.GetStringFromName("enterValidHostname");
-    window.alert(alertText);
-    return false;
-  }
-  return true;
-}
+#include "nsFileSpec.h"
+#include "nsIMsgProtocolInfo.h"
+#include "nsINoneService.h"
+
+class nsNoneService : public nsIMsgProtocolInfo, public nsINoneService
+{
+public:
+
+	nsNoneService();
+	virtual ~nsNoneService();
+	
+	NS_DECL_ISUPPORTS
+    NS_DECL_NSIMSGPROTOCOLINFO
+	NS_DECL_NSINONESERVICE
+
+};
+
+#endif /* nsNoneService_h___ */

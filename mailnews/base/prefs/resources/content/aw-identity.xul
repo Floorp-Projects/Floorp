@@ -28,7 +28,9 @@ Rights Reserved.
     align="vertical"
     class="dialog"
     onload="parent.wizardPageLoaded('identity');">
-  <html:script src="aw-identity.js"/>
+
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
 
   <box class="title" align="horizontal">
     <html:div class="title">&identityTitle.label;</html:div>

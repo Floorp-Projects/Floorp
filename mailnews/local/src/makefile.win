@@ -41,6 +41,7 @@ EXPORTS=				\
 	nsLocalMailFolder.h \
 	nsLocalUtils.h		\
 	nsLocalStringBundle.h \
+	nsNoneService.h		\
 	nsNoIncomingServer.h \
 	$(NULL)
 
@@ -58,6 +59,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMailboxProtocol.obj		\
 	.\$(OBJDIR)\nsMailboxService.obj		\
 	.\$(OBJDIR)\nsPop3Service.obj			\
+	.\$(OBJDIR)\nsNoneService.obj			\
 	.\$(OBJDIR)\nsLocalMailFolder.obj		\
 	.\$(OBJDIR)\nsPop3IncomingServer.obj	\
 	.\$(OBJDIR)\nsLocalMessage.obj			\

@@ -2387,3 +2387,19 @@ nsImapService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNa
 	*aPreflightPrettyNameWithEmailAddress = PR_TRUE;
 	return NS_OK;
 }
+
+NS_IMETHODIMP
+nsImapService::GetCanDelete(PRBool *aCanDelete)
+{
+        NS_ENSURE_ARG_POINTER(aCanDelete);
+        *aCanDelete = PR_TRUE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapService::GetCanDuplicate(PRBool *aCanDuplicate)
+{
+        NS_ENSURE_ARG_POINTER(aCanDuplicate);
+        *aCanDuplicate = PR_TRUE;
+        return NS_OK;
+}        

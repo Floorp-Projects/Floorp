@@ -42,9 +42,10 @@
 
 
 var accountArray;
-
+var accounttree;
 var lastServerId;
 var lastPageId;
+var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 // services used
 var RDF;
@@ -67,13 +68,7 @@ function onLoad() {
 
   smtpService =
     Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
-  var tree = document.getElementById("accounttree");
-  var items = tree.getElementsByTagName("treeitem");
-  
-  if (items && items.length>0) {
-    // skip the template?
-    tree.selectItem(items[1]);
-  }
+  accounttree = document.getElementById("accounttree");
   
   doSetOKCancel(onOk, 0);
 
@@ -82,6 +77,21 @@ function onLoad() {
   deleteButton = document.getElementById("deleteButton");
   setDefaultButton = document.getElementById("setDefaultButton");
   
+  selectFirstAccount()
+}
+
+function selectFirstAccount()
+{ 
+  //dump("selectFirstAccount\n");
+  var items = accounttree.getElementsByTagName("treeitem");
+  if (items && items.length>0) {
+    // skip the template?
+    accounttree.selectItem(items[1]);
+    var result = getServerIdAndPageIdFromTree(accounttree);
+	if (result) {
+		updateButtons(accounttree,result.serverId);
+	}
+  }
 }
 
 function onOk() {
@@ -114,21 +124,88 @@ function onNewAccount() {
   window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome,modal", result);
   if (result.refresh) {
     refreshAccounts();
-    
-    // propagate refresh if it's not already on
-    // i.e. we'll never turn off refresh once it's on.
-    window.arguments[0].refresh = true;
   }
 
+}
+
+function onDuplicateAccount() {
+    //dump("onDuplicateAccount\n");
+
+    if (duplicateButton.getAttribute("disabled") == "true") return;
+
+    var result = getServerIdAndPageIdFromTree(accounttree);
+    if (result) {
+        var canDuplicate = true;
+        var account = getAccountFromServerId(result.serverId);
+        if (account) {
+            var server = account.incomingServer;
+            var type = server.type;
+
+			var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+			canDuplicate = protocolinfo.canDuplicate;
+        }
+        else {
+            canDuplicate = false;
+        }
+
+        if (canDuplicate) {
+			try {
+              accountManager.duplicateAccount(account);
+              refreshAccounts();
+            }
+			catch (ex) {
+				var alertText = Bundle.GetStringFromName("failedDuplicateAccount");
+                window.alert(alertText); 
+			}
+        }
+    }
+}         
+
+function onDeleteAccount() {
+    //dump("onDeleteAccount\n");
+
+    if (deleteButton.getAttribute("disabled") == "true") return;
+
+	var result = getServerIdAndPageIdFromTree(accounttree);
+	if (result) {
+		var canDelete = true;
+		var account = getAccountFromServerId(result.serverId);
+		if (account) {
+			var server = account.incomingServer;
+			var type = server.type; 
+
+			var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+            canDelete = protocolinfo.canDelete;
+		}
+		else {
+			canDelete = false;
+		}
+
+		if (canDelete) {
+			try {
+				accountManager.removeAccount(account);
+				refreshAccounts();
+				selectFirstAccount();
+			}
+			catch (ex) {
+				var alertText = Bundle.GetStringFromName("failedDeleteAccount");
+				window.alert(alertText);
+			}
+		}
+	}
 }
 
 // another temporary hack until the account manager
 // can refresh the account list itself.
 function refreshAccounts()
 {
-  var tree = document.getElementById("accounttree");
-  tree.clearItemSelection();
-  tree.setAttribute('ref', tree.getAttribute('ref'));
+  //dump("refreshAccounts\n");
+  accounttree.clearItemSelection();
+  accounttree.setAttribute('ref', accounttree.getAttribute('ref'));
+
+  // propagate refresh if it's not already on
+  // i.e. we'll never turn off refresh once it's on.
+  window.arguments[0].refresh = true;
 }
 
 function saveAccount(accountValues, account)
@@ -190,12 +267,49 @@ function onPageLoad(event, name) {
 }
 
 
-function updateButtons(tree) {
-  if (tree.selectedItems.length > 0) {
-    if (duplicateButton) duplicateButton.removeAttribute("disabled");
-    if (setDefaultButton) setDefaultButton.removeAttribute("disabled");
-    if (deleteButton) deleteButton.removeAttribute("disabled");
+function updateButtons(tree,serverId) {
+  var canDuplicate = true;
+  var canDelete = true;
 
+  //dump("updateButtons\n");
+  //dump("serverId = " + serverId + "\n");
+  var account = getAccountFromServerId(serverId);
+  //dump("account = " + account + "\n");
+
+  if (account) {
+	var server = account.incomingServer;
+	var type = server.type;
+
+	//dump("servertype = " + type + "\n");
+
+	var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+    canDuplicate = protocolinfo.canDuplicate;
+	canDelete = protocolinfo.canDelete;
+  }
+  else {
+	// HACK
+	// if account is null, we have either selected a SMTP server, or there is a problem
+	// either way, we don't want the user to be able to delete it or duplicate it
+	canDelete = false;
+	canDuplicate = false;
+  }
+
+  if (tree.selectedItems.length > 0) {
+    if (canDuplicate) {
+      if (duplicateButton) duplicateButton.removeAttribute("disabled");
+    }
+    else { 
+      if (duplicateButton) duplicateButton.setAttribute("disabled", "true");
+    }
+
+    if (setDefaultButton) setDefaultButton.removeAttribute("disabled");
+
+    if (canDelete) {
+      if (deleteButton) deleteButton.removeAttribute("disabled");
+    }
+    else { 
+      if (deleteButton) deleteButton.setAttribute("disabled", "true");
+    }
   } else {
     if (duplicateButton) duplicateButton.setAttribute("disabled", "true");
     if (setDefaultButton) setDefaultButton.setAttribute("disabled", "true");
@@ -208,31 +322,14 @@ function updateButtons(tree) {
 // figure out context by what they clicked on
 //
 function onAccountClick(tree) {
-
-  if (tree.selectedItems.length < 1) return;
-  var node = tree.selectedItems[0];
+  //dump("onAccountClick\n");
+  var result = getServerIdAndPageIdFromTree(tree);
   
-  updateButtons(tree);
-  
-  // get the page to load
-  // (stored in the PageTag attribute of this node)
-  var pageId = node.getAttribute('PageTag');
-
-
-  // get the server's ID
-  // (stored in the ID attribute of the server node)
-  var servernode = node.parentNode.parentNode;
-  
-  // for toplevel treeitems, we just use the current treeitem
-  //  dump("servernode is " + servernode + "\n");
-  if (servernode.tagName != "treeitem") {
-    servernode = node;
+  if (result) {
+	  // dump("before showPage(" + result.serverId + "," + result.pageId + ");\n");
+	  showPage(result.serverId, result.pageId);
+	  updateButtons(tree,result.serverId);
   }
-  var serverid = servernode.getAttribute('id');
-  
-  //dump("before showPage(" + serverid + "," + pageId + ");\n");
-  showPage(serverid, pageId);
-
 }
 
 // show the page for the given server:
@@ -469,7 +566,7 @@ function getAccountFromServerId(serverId) {
   var serverFolder =
     serverResource.QueryInterface(Components.interfaces.nsIMsgFolder);
   } catch (ex) {
-    return;
+    return null;
   }
   var incomingServer = serverFolder.server;
 
@@ -506,3 +603,27 @@ function getValueArrayFor(serverId) {
   return accountArray[serverId];
 }
 
+function getServerIdAndPageIdFromTree(tree)
+{
+  var serverId = null;
+
+  if (tree.selectedItems.length < 1) return null;
+  var node = tree.selectedItems[0];
+
+  // get the page to load
+  // (stored in the PageTag attribute of this node)
+  var pageId = node.getAttribute('PageTag');
+
+  // get the server's Id
+  // (stored in the Id attribute of the server node)
+  var servernode = node.parentNode.parentNode;
+
+  // for toplevel treeitems, we just use the current treeitem
+  //  dump("servernode is " + servernode + "\n");
+  if (servernode.tagName != "treeitem") {
+    servernode = node;
+  }
+  serverId = servernode.getAttribute('id');  
+
+  return {"serverId": serverId, "pageId": pageId }
+}

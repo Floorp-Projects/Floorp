@@ -35,7 +35,8 @@ interface nsIMsgAccountManager : nsISupports {
   nsIMsgAccount createAccount();
   nsIMsgAccount getAccount(in string key);
     
-  void RemoveAccount(in nsIMsgAccount account);
+  void removeAccount(in nsIMsgAccount account);
+  void duplicateAccount(in nsIMsgAccount account);
 
   /*
    * creates a new identity and assigns it a new, unique "key"

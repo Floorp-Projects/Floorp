@@ -28,7 +28,9 @@ Rights Reserved.
     align="vertical"
     class="dialog"
     onload="parent.wizardPageLoaded('server');">
-  <html:script src="aw-server.js"/>
+
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/aw-server.js"/>
 
   <box class="title" align="horizontal">
     <html:div class="title">&serverTitle.label;</html:div>

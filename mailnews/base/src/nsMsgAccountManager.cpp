@@ -694,10 +694,17 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgAccountManager::DuplicateAccount(nsIMsgAccount *aAccount)
+{ 
+  NS_ENSURE_ARG_POINTER(aAccount);
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
 {
+  NS_ENSURE_ARG_POINTER(aAccount);
   nsresult rv;
   rv = LoadAccounts();
   if (NS_FAILED(rv)) return rv;

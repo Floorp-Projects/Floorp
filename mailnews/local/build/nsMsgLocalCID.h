@@ -122,6 +122,7 @@
 //
 // nsPop3Service
 //
+
 #define NS_POP3SERVICE_PROGID1 \
   "component://netscape/messenger/popservice"
 
@@ -131,13 +132,25 @@
 #define NS_POP3PROTOCOLINFO_PROGID \
   NS_MSGPROTOCOLINFO_PROGID_PREFIX "pop3"
 
+#define NS_POP3SERVICE_CID								\
+{ /* 3BB459E3-D746-11d2-806A-006008128C4E */			\
+ 0x3bb459e3, 0xd746, 0x11d2,							\
+  { 0x80, 0x6a, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e }}
+
+//
+// nsNoneService
+//
+
+#define NS_NONESERVICE_PROGID \
+  "component://netscape/messenger/noneservice"
+
 #define NS_NONEPROTOCOLINFO_PROGID \
   NS_MSGPROTOCOLINFO_PROGID_PREFIX "none"
 
-#define NS_POP3SERVICE_CID								\
-{ /* 3BB459E3-D746-11d2-806A-006008128C4E} */			\
- 0x3bb459e3, 0xd746, 0x11d2,							\
-  { 0x80, 0x6a, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e }}
+#define NS_NONESERVICE_CID								\
+{ /* 75b63b46-1dd2-11b2-9873-bb375e1550fa */			\
+ 0x75b63b46, 0x1dd2, 0x11b2,							\
+ { 0x98, 0x73, 0xbb, 0x37, 0x5e, 0x15, 0x50, 0xfa }}
 
 //
 // nsParseMailMsgState

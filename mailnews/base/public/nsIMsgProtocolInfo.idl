@@ -36,5 +36,7 @@ interface nsIMsgProtocolInfo : nsISupports
     readonly attribute nsIIDPtr serverIID;
     readonly attribute boolean requiresUsername;
     readonly attribute boolean preflightPrettyNameWithEmailAddress;
+    readonly attribute boolean canDelete;
+    readonly attribute boolean canDuplicate;
 };
 

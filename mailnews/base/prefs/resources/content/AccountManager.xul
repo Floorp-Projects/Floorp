@@ -12,7 +12,8 @@
         class="dialog"
         onload="onLoad(event);">
 
-    <html:script src="chrome://messenger/content/AccountManager.js"/>
+<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
+<html:script src="chrome://messenger/content/AccountManager.js"/>
 
 	<keyset id="keyset"/>
 
@@ -65,8 +66,8 @@
             <titledbutton class="dialog push" value="&newAccountButton.label;" onclick="onNewAccount();" id="newAccountButton"/>
             <titledbutton class="dialog push" value="&setDefaultButton.label;" disabled="true" id="setDefaultButton"/>
             <box align="horizontal">
-              <titledbutton class="dialog push" disabled="true" value="&duplicateButton.label;" id="duplicateButton" flex="50%"/>
-              <titledbutton class="dialog push" disabled="true" value="&deleteButton.label;" id="deleteButton" flex="50%"/>
+              <titledbutton class="dialog push" disabled="true" value="&duplicateButton.label;" id="duplicateButton" onclick="onDuplicateAccount();" flex="50%"/>
+              <titledbutton class="dialog push" disabled="true" value="&deleteButton.label;" onclick="onDeleteAccount();" id="deleteButton" flex="50%"/>
             </box>
 		</box>
         <box flex="75%">

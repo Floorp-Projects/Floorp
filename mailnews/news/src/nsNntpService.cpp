@@ -1093,3 +1093,19 @@ nsNntpService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNa
         *aPreflightPrettyNameWithEmailAddress = PR_FALSE;
         return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNntpService::GetCanDelete(PRBool *aCanDelete)
+{
+        NS_ENSURE_ARG_POINTER(aCanDelete);
+        *aCanDelete = PR_TRUE;
+        return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpService::GetCanDuplicate(PRBool *aCanDuplicate)
+{
+        NS_ENSURE_ARG_POINTER(aCanDuplicate);
+        *aCanDuplicate = PR_TRUE;
+        return NS_OK;
+}        

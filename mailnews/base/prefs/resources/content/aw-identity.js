@@ -19,7 +19,10 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
+ * Seth Spitzer <sspitzer@netscape.com>
  */
+
+var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 function validate(data)
 {
@@ -27,7 +30,8 @@ function validate(data)
   var name = document.getElementById("identity.fullName").value;
 
   if (! name || name=="") {
-    window.alert("Please enter your name.");
+    var alertText = Bundle.GetStringFromName("enterName");
+    window.alert(alertText);
     return false;
   }
 
@@ -35,7 +39,8 @@ function validate(data)
   if (emailArray.length != 2 ||
       emailArray[0] == "" ||
       emailArray[1] == "") {
-    window.alert("Please enter a valid email address.");
+    var alertText = Bundle.GetStringFromName("enterValidEmail");
+    window.alert(alertText);
     return false;
   }
   dump("emailArray[0] = '" + emailArray[0] + "'\n");
