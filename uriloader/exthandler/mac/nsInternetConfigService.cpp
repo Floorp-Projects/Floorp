@@ -83,7 +83,7 @@ nsInternetConfigService::nsInternetConfigService()
   long  version;
   OSErr err;
   mRunningOSX = ((err = ::Gestalt(gestaltSystemVersion, &version)) == noErr && version >= 0x00001000);
-  mRunningJaguar = (err == noErr && version >= 0x00001200);
+  mRunningJaguar = (err == noErr && version >= 0x00001020);
 }
 
 nsInternetConfigService::~nsInternetConfigService()
