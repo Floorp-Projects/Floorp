@@ -253,16 +253,21 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
   PRInt32  theLength=(PRInt32)aLength;
 
   if(aIgnoreCase) {
-    PRUnichar theChar=nsCRT::ToUpper(aChar);
-    for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
-      if(nsCRT::ToUpper(aDest[theIndex])==theChar)
-        return theIndex;
+    char theChar=(char)nsCRT::ToUpper(aChar);
+    const char* ptr=aDest+(anOffset-1);
+    const char* last=aDest+aLength;
+    while(++ptr<last){
+      if(nsCRT::ToUpper(*ptr)==theChar)
+        return ptr-aDest;
     }
   }
   else {
-    for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
-      if(aDest[theIndex]==aChar)
-        return theIndex;
+
+    const char* ptr = aDest+anOffset;
+    char theChar=(char)aChar;
+    const char* result=(const char*)memchr(ptr, theChar,aLength-anOffset);
+    if(result) {
+      return result-aDest;
     }
   }
   return kNotFound;
@@ -280,21 +285,23 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  *  @return  index of pos if found, else -1 (kNotFound)
  */
 inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
-  PRInt32     theIndex=0;
-  PRInt32     theLength=(PRInt32)aLength;
-  PRUnichar*  theBuf=(PRUnichar*)aDest;
+  PRInt32           theIndex=0;
+  PRInt32           theLength=(PRInt32)aLength;
+  const PRUnichar*  root=(PRUnichar*)aDest;
+  const PRUnichar*  ptr=root+(anOffset-1);
+  const PRUnichar*  last=root+aLength;
 
   if(aIgnoreCase) {
     PRUnichar theChar=nsCRT::ToUpper(aChar);
-    for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
-      if(nsCRT::ToUpper(theBuf[theIndex])==theChar)
-        return theIndex;
+    while(++ptr<last){
+      if(nsCRT::ToUpper(*ptr)==theChar)
+        return ptr-root;
     }
   }
   else {
-    for(theIndex=(PRInt32)anOffset;theIndex<theLength;theIndex++){
-      if(theBuf[theIndex]==aChar)
-        return theIndex;
+    while(++ptr<last){
+      if(*ptr==aChar)
+        return (ptr-root);
     }
   }
 
@@ -514,15 +521,14 @@ static nsICaseConversion * gCaseConv = 0;
 NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown3, kIShutdownListenerIID);
 
 nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service) {
-    nsresult rv = NS_OK;
     if (cid.Equals(kUnicharUtilCID)) {
         NS_ASSERTION(service == gCaseConv, "wrong service!");
-        if (gCaseConv) {
-          rv = nsServiceManager::ReleaseService(kUnicharUtilCID, gCaseConv);
-          gCaseConv = nsnull;
+        if(gCaseConv){
+          gCaseConv->Release();
+          gCaseConv = 0;
         }
     }
-    return rv;
+    return NS_OK;
 }
 
 
@@ -532,9 +538,7 @@ public:
     mListener = new HandleCaseConversionShutdown3();
     if(mListener){
       mListener->AddRef();
-      nsresult rv = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
-                                                 (nsISupports**) &gCaseConv, mListener);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "can't get case conversion service");
+      nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,(nsISupports**) &gCaseConv, mListener);
     }
   }
 protected:
@@ -689,5 +693,70 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){
 typedef PRInt32 (*CompressChars)(char* aString,PRUint32 aCount,const char* aSet);
 CompressChars gCompressChars[]={&CompressChars1,&CompressChars2};
 
+/**
+ * This method strips chars in a given set from the given buffer 
+ *
+ * @update	gess 01/04/99
+ * @param   aString is the buffer to be manipulated
+ * @param   aLength is the length of the buffer
+ * @param   aSet tells us which chars to compress from given buffer
+ * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
+ * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+ * @return  the new length of the given buffer
+ */
+PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){ 
+
+  typedef char  chartype;
+  chartype*  to   = aString;
+  chartype*  from = aString-1;
+  chartype*  end  = aString + aLength;
+
+  if(aSet && aString && (0 < aLength)){
+    PRUint32 aSetLen=strlen(aSet);
+    while (++from < end) {
+      chartype theChar = *from;
+      if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+        *to++ = theChar;
+      }
+    }
+    *to = 0;
+  }
+  return to - (chartype*)aString;
+}
+
+
+/**
+ * This method strips chars in a given set from the given buffer 
+ *
+ * @update	gess 01/04/99
+ * @param   aString is the buffer to be manipulated
+ * @param   aLength is the length of the buffer
+ * @param   aSet tells us which chars to compress from given buffer
+ * @param   aEliminateLeading tells us whether to strip chars from the start of the buffer
+ * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
+ * @return  the new length of the given buffer
+ */
+PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet){ 
+
+  typedef PRUnichar  chartype;
+  chartype*  to   = (chartype*)aString;
+  chartype*  from = (chartype*)aString-1;
+  chartype*  end  = to + aLength;
+
+  if(aSet && aString && (0 < aLength)){
+    PRUint32 aSetLen=strlen(aSet);
+    while (++from < end) {
+      chartype theChar = *from;
+      if(kNotFound==FindChar1(aSet,aSetLen,0,theChar,PR_FALSE)){
+        *to++ = theChar;
+      }
+    }
+    *to = 0;
+  }
+  return to - (chartype*)aString;
+}
+
+typedef PRInt32 (*StripChars)(char* aString,PRUint32 aCount,const char* aSet);
+StripChars gStripChars[]={&StripChars1,&StripChars2};
 
 #endif

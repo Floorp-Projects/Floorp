@@ -82,8 +82,7 @@ friend class nsDequeIterator;
    * @param 
    * @return  int contains element count
    */
-  PRInt32 GetSize() const;
-  
+  inline PRInt32 GetSize() const { return mSize;}  
 
   /**
    * Pushes new member onto the end of the deque
