@@ -686,7 +686,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
   if(url && NS_FAILED(aStatus)) {
     if (aStatus == NS_ERROR_FILE_NOT_FOUND) {
-      DisplayLoadError(aStatus, url, nsnull);
+      DisplayLoadError(aStatus, url, nsnull, channel);
       return NS_OK;
     }  
 
@@ -819,7 +819,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
          aStatus == NS_ERROR_UNKNOWN_PROXY_HOST || 
          aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED) &&
             (isTopFrame || mUseErrorPages)) {
-      DisplayLoadError(aStatus, url, nsnull);
+      DisplayLoadError(aStatus, url, nsnull, channel);
     }
     // Errors to be shown for any frame
     else if (aStatus == NS_ERROR_NET_TIMEOUT ||
@@ -827,7 +827,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
              aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
              aStatus == NS_ERROR_NET_INTERRUPT ||
              aStatus == NS_ERROR_NET_RESET) {
-      DisplayLoadError(aStatus, url, nsnull);
+      DisplayLoadError(aStatus, url, nsnull, channel);
     }
     else if (aStatus == NS_ERROR_DOCUMENT_NOT_CACHED) {
       /* A document that was requested to be fetched *only* from
@@ -925,7 +925,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         }
       }
       else {
-        DisplayLoadError(aStatus, url, nsnull);
+        DisplayLoadError(aStatus, url, nsnull, channel);
       }
     }
   } // if we have a host

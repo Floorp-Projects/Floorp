@@ -86,7 +86,7 @@
   ]]></style>
 </head>
 
-<body style="font: message-box;" onload="fillIn();">
+<body style="font: message-box;">
 
   <!-- ERROR TITLE -->
   <div id="errorTitle">
@@ -162,6 +162,12 @@
   </div>
 
   <p><a id="retry" href="#" onclick="retryThis();">&retry.label;</a></p>
+  <!--
+    - Note: It is important to run fillIn using this way, instead of using
+    - an onload handler. This is because error pages are loaded as
+    - LOAD_BACKGROUND, which means that onload handlers will not be executed.
+    -->
+  <script type="application/x-javascript">fillIn();</script>
 </body>
 
 </html>
