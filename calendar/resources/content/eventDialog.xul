@@ -371,11 +371,11 @@
                         <menupopup id="event-status-menulist-menupopup">
                           <menuitem label="None"/>
                           <menuitem label="&newevent.status.tentative.label;"
-                                    value="ICAL_STATUS_TENTATIVE"/>
+                                    value="TENTATIVE"/>
                           <menuitem label="&newevent.status.confirmed.label;"
-                                    value="ICAL_STATUS_CONFIRMED"/>
+                                    value="CONFIRMED"/>
                           <menuitem label="&newevent.status.cancelled.label;"
-                                    value="ICAL_STATUS_CANCELLED"/>
+                                    value="CANCELLED"/>
                         </menupopup>
                       </menulist>
                       <menulist id="todo-status-field"
@@ -386,13 +386,13 @@
                           <menuitem label="None"
                                     value="None"/>
                           <menuitem label="Cancelled"
-                                    value="CAL_ITEM_STATUS_CANCELLED"/>
+                                    value="CANCELLED"/>
                           <menuitem label="Completed on"
-                                    value="CAL_TODO_STATUS_COMPLETED"/>
+                                    value="COMPLETED"/>
                           <menuitem label="In Process"
-                                    value="CAL_TODO_STATUS_INPROCESS"/>
+                                    value="IN-PROCESS"/>
                           <menuitem label="Needs Action"
-                                    value="CAL_TODO_STATUS_NEEDSACTION"/>
+                                    value="NEEDS-ACTION"/>
                         </menupopup>
                       </menulist>
                       <spacer/>
@@ -431,6 +431,7 @@
                   </row>
 
                   <!-- Alarm -->
+                  <!-- XXX Should support alarm firing on absolute date/time - rfc2245 does -->
                   <row>
                     <hbox pack="end" align="center">
                       <label id="alarm-label"
@@ -449,58 +450,68 @@
                       </menulist>
                       <textbox id="alarm-length-field" size="5" maxlength="3" 
                                oninput="alarmLengthKeyDown( this )"/>
-                      <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
+                      <menulist id="alarm-length-units"
+                                crop="none"
+                                labelnumber="label2">
                         <menupopup>
-                          <menuitem label="minutes before this begins"
-                                    labelplural="minutes before this begins"
-                                    labelsingular="minute before this begins"
+                          <menuitem label="minutes"
+                                    label1="minute"
+                                    label2="minutes"
                                     value="minutes"/>
-                          <menuitem label="hours before this begins"
-                                    labelplural="hours before this begins"
-                                    labelsingular="hour before this begins"
-                                    value="hours" />
-                          <menuitem label="days before this begins"
-                                    labelplural="days before this begins"
-                                    labelsingular="day before this begins"
-                                    value="days"/>
-                          <menuitem label="minutes before this ends"
-                                    labelplural="minutes before this ends"
-                                    labelsingular="minute before this ends"
-                                    value="minutes"/>
-                          <menuitem label="hours before this ends"
-                                    labelplural="hours before this ends"
-                                    labelsingular="hour before this ends"
-                                    value="hours" />
-                          <menuitem label="days before this ends"
-                                    labelplural="days before this ends"
-                                    labelsingular="day before this ends"
+                          <menuitem label="hours"
+                                    label1="hour"
+                                    label2="hours"
+                                    value="hours"/>
+                          <menuitem label="days"
+                                    label1="day"
+                                    label2="days"
                                     value="days"/>
                           <!-- XXX original code for fixing localization 
                           <menuitem label="&alarm.units.minutes;"
-                                    labelplural="&alarm.units.minutes;"
-                                    labelsingular="&alarm.units.minutes.singular;"
+                                    label1="&alarm.units.minutes;"
+                                    label2="&alarm.units.minutes.singular;"
                                     value="minutes"/>
                           <menuitem label="&alarm.units.hours;"
-                                    labelplural="&alarm.units.hours;"
-                                    labelsingular="&alarm.units.hours.singular;"
+                                    label1="&alarm.units.hours;"
+                                    label2="&alarm.units.hours.singular;"
                                     value="hours" />
                           <menuitem label="&alarm.units.days;"
-                                    labelplural="&alarm.units.days;"
-                                    labelsingular="&alarm.units.days.singular;"
+                                    label1="&alarm.units.days;"
+                                    label2="&alarm.units.days.singular;"
                                     value="days"/>
-                          <menuitem label="&newevent.beforealarm.label;"
-                                    value="ICAL_RELATED_START"/>
-                          <menuitem label="&newevent.beforealarmends.label;"
-                                    value="ICAL_RELATED_END"/>
                           -->
                         </menupopup>
                       </menulist>
-                      <menulist id="alarm-trigger-relation" crop="none" hidden="true">
+                      <label id="before-this-event-label"
+                             value="before this event"
+                             hidden-controller="event"
+                             hidden="true"/>
+                      <label id="before-this-todo-label"
+                             value="before this task"
+                             hidden-controller="todo"
+                             hidden="true"/>
+                      <!-- Here we're reusing the plural/singular code to
+                           switch the text for events vs. todos.
+                           Event text is plural (2), Todo is singular (1). -->
+                      <textbox id="alarm-trigger-text-kludge"
+                               maxlength="1" value="2" hidden="true"/>
+                      <menulist id="alarm-trigger-relation"
+                                crop="none"
+                                labelnumber="label2">
                         <menupopup>
-                          <menuitem label="&newtodo.beforealarm.label;"
-                                    value="ICAL_RELATED_START"/>
-                          <menuitem label="&newtodo.beforealarmends.label;"
-                                    value="ICAL_RELATED_END"/>
+                          <menuitem label="begins"
+                                    label1="begins"
+                                    label2="begins"
+                                    value="START"/>
+                          <menuitem label="ends"
+                                    label1="is due"
+                                    label2="ends"
+                                    value="END"/>
+                          <!-- XXX original code for fixing localization 
+                          <menuitem label="&newevent.beforealarm.label;">
+                          <menuitem label="&newevent.beforealarmends.label;">
+                          <menuitem label="&newtodo.beforealarm.label;">
+                          <menuitem label="&newtodo.beforealarmends.label;">-->
                         </menupopup>
                       </menulist>
                     </hbox>
@@ -514,7 +525,7 @@
                              class="field-label-box-class"
                              for="alarm-email-field"
                              value="Send email to:"/>
-                      <!-- XXX oncommand="commandAlarmEmail()"/> -->
+                      <!-- XXX oncommand="commandAlarmEmail()" -->
                       <textbox id="alarm-email-field"
 #ifndef MOZ_SUNBIRD
                                type="autocomplete"

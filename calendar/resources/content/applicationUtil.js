@@ -39,16 +39,16 @@ const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
 
 function toOpenWindowByType( inType, uri )
 {
-        var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
 
-        var     windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
+    var windowManagerInterface = windowManager.QueryInterface(nsIWindowMediator);
 
-        var topWindow = windowManagerInterface.getMostRecentWindow( inType );
-        
-        if ( topWindow )
-                topWindow.focus();
-        else
-                window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
+    var topWindow = windowManagerInterface.getMostRecentWindow( inType );
+
+    if ( topWindow )
+            topWindow.focus();
+    else
+            window.open(uri, "_blank", "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
 }
 
 function toBrowser()
@@ -63,17 +63,17 @@ function toJavaScriptConsole()
 
 function toMessengerWindow()
 {
-  toOpenWindowByType("mail:3pane", "chrome://messenger/content/messenger.xul");
+    toOpenWindowByType("mail:3pane", "chrome://messenger/content/messenger.xul");
 }
     
 function toAddressBook() 
 {
-  toOpenWindowByType("mail:addressbook", "chrome://messenger/content/addressbook/addressbook.xul");
+    toOpenWindowByType("mail:addressbook", "chrome://messenger/content/addressbook/addressbook.xul");
 }
 
 function launchBrowser( UrlToGoTo )
 {
-   if( navigator.vendor != "Thunderbird") {
+   if( navigator.vendor != "Mozilla Sunbird" ) {
      var navWindow;
 
      // if not, get the most recently used browser window
@@ -81,8 +81,9 @@ function launchBrowser( UrlToGoTo )
          var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
            .getService(Components.interfaces.nsIWindowMediator);
          navWindow = wm.getMostRecentWindow("navigator:browser");
+       } catch (e) {
+         dump("launchBrowser: Exception: "+e+"\n");
        }
-       catch (ex) { }
      
      if (navWindow) {
        if ("delayedOpenTab" in navWindow)
@@ -104,10 +105,12 @@ function launchBrowser( UrlToGoTo )
    else
      {
        try {
-            var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
-            messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
-            messenger.launchExternalURL(UrlToGoTo);  
-       } catch (ex) {}
+         var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
+         messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+         messenger.launchExternalURL(UrlToGoTo);  
+       } catch (e) {
+         dump("launchBrowser: Exception: "+e+"\n");
+       }
      }
    //window.open(UrlToGoTo, "_blank", "chrome,menubar,toolbar,resizable,dialog=no");
    //window.open( UrlToGoTo, "calendar-opened-window" );
@@ -130,7 +133,7 @@ function goToggleToolbar( id, elementID )
 }
 
 
-function openExtensions(aOpenMode)
+function goOpenExtensions(aOpenMode)
 {
     const EMTYPE = "Extension:Manager";
 
@@ -151,6 +154,7 @@ function openExtensions(aOpenMode)
     if (needToOpen) {
         const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
         const EMFEATURES = "chrome,dialog=no,resizable";
+        debug("EMURL: "+EMURL+"\n");
         window.openDialog(EMURL, "", EMFEATURES);
     }
 }
@@ -217,7 +221,7 @@ function processEnableCheckbox( checkboxId, elementId )
  *   Update plural singular menu items
  */
 
-function updateMenuPlural( lengthFieldId, menuId )
+function updateMenuLabels( lengthFieldId, menuId )
 {
     var field = document.getElementById( lengthFieldId );
     var menu = document.getElementById( menuId );
@@ -229,9 +233,9 @@ function updateMenuPlural( lengthFieldId, menuId )
 
     // XXX This assumes that "0 days, minutes, etc." is plural in other languages.
     if( ( Number( length ) == 0 ) || ( Number( length ) > 1 ) )
-        newLabelNumber = "labelplural"
+        newLabelNumber = "label2"
     else
-        newLabelNumber = "labelsingular"
+        newLabelNumber = "label1"
 
     // see what we currently show and change it if required
     var oldLabelNumber = menu.getAttribute( "labelnumber" );
@@ -258,9 +262,48 @@ function updateMenuPlural( lengthFieldId, menuId )
 }
 
 
+/** Select value in menuList.  Throws string if no such value. **/
+
+function menuListSelectItem(menuListId, value)
+{
+    var menuList = document.getElementById(menuListId);
+    var index = menuListIndexOf(menuList, value);
+    if (index != -1) {
+        menuList.selectedIndex = index;
+    } else {
+        throw "menuListSelectItem: No such Element: "+value;
+    }
+}
+
+
+/** Find index of menuitem with the given value, or return -1 if not found. **/
+
+function menuListIndexOf(menuList, value)
+{
+    var items = menuList.menupopup.childNodes;
+    var index = -1;
+    for (var i = 0; i < items.length; i++) {
+        var element = items[i];
+        if (element.nodeName == "menuitem")
+            index++;
+        if (element.getAttribute("value") == value)
+            return index;
+    }
+    return -1; // not found
+}
+
+
 function debug( text )
 {
     if( gDebugEnabled )
         dump( text + "\n");
 }
+
+
+function debugVar( variable )
+{
+    if( gDebugEnabled )
+        dump( variable + ": " + variable + "\n");
+}
+
 

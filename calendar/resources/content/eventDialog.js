@@ -125,10 +125,13 @@ function loadCalendarEventDialog()
     event = args.calendarEvent;
 
     // Set up dialog as event or todo
+    var componentType;
     if (isEvent(event)) {
         processComponentType("event");
+        componentType = "event";
     } else if (isToDo(event)) {
         processComponentType("todo");
+        componentType = "todo";
     } else {
         dump("loadCalendarEventDialog: ERROR! Got a bogus event! Not event or todo!\n");
         // close the dialog before we screw anything else up
@@ -142,7 +145,8 @@ function loadCalendarEventDialog()
     debug("-----");
 
     // fill in fields from the event
-    if (isEvent(event)) {
+    switch(componentType) {
+    case "event":
         gStartDate = event.startDate.jsDate;
         document.getElementById("start-datetime").value = gStartDate;
 
@@ -161,19 +165,20 @@ function loadCalendarEventDialog()
 
         // event status fields
         switch(event.status) {
-        case event.CAL_ITEM_STATUS_TENTATIVE:
-            setFieldValue("event-status-field", "ICAL_STATUS_TENTATIVE");
+        case "TENTATIVE":
+            setFieldValue("event-status-field", "TENTATIVE");
             break;
-        case event.CAL_ITEM_STATUS_CONFIRMED:
-            setFieldValue("event-status-field", "ICAL_STATUS_CONFIRMED");
+        case "CONFIRMED":
+            setFieldValue("event-status-field", "CONFIRMED");
             break;
-        case event.CAL_ITEM_STATUS_CANCELLED:
-            setFieldValue("event-status-field", "ICAL_STATUS_CANCELLED");
+        case "CANCELLED":
+            setFieldValue("event-status-field", "CANCELLED");
             break;
         }
-    setFieldValue("all-day-event-checkbox", event.isAllDay, "checked");
-
-    } else if (isToDo(event)) {
+        
+        setFieldValue("all-day-event-checkbox", event.isAllDay, "checked");
+        break;
+    case "todo":
         var hasStart = event.start && event.start.isSet;
         if (hasStart) 
             gStartDate = event.startDate.jsDate;
@@ -213,9 +218,10 @@ function loadCalendarEventDialog()
             completedDatePicker.value = null;
         }
 
-        if (event.percentComplete && event.status == "CAL_TODO_STATUS_INPROCESS" ) {
+        if (event.percentComplete && event.status == "IN-PROCESS" ) {
             setFieldValue( "percent-complete-menulist", event.percentComplete );
         }
+        break;
     }
 
 
@@ -246,19 +252,14 @@ function loadCalendarEventDialog()
 
     // PRIORITY ----------------------------------------------------------
     var priorityInteger = parseInt( event.priority );
-    var priorityMenu = document.getElementById( "priority-levels" );
     if( priorityInteger == 0 ) {
-        // Priority: NONE
-        priorityMenu.selectedIndex = 0;
+        menuListSelectItem("priority-levels", "0"); // not defined
     } else if( priorityInteger >= 1 || priorityInteger <= 4 ) {
-        // Priority: HIGH
-        priorityMenu.selectedIndex = 3;
-    } else if( priorityInteger = 5 ) {
-        // Priority: MEDIUM
-        priorityMenu.selectedIndex = 2;
+        menuListSelectItem("priority-levels", "1"); // high priority
+    } else if( priorityInteger == 5 ) {
+        menuListSelectItem("priority-levels", "5"); // medium priority
     } else if( priorityInteger >= 6 || priorityInteger <= 9 ) {
-        // Priority: LOW
-        priorityMenu.selectedIndex = 1;
+        menuListSelectItem("priority-levels", "9"); // low priority
     } else {
         dump("loadCalendarEventDialog: ERROR! Event has invalid priority: " + event.priority +"\n");
     }
@@ -268,24 +269,45 @@ function loadCalendarEventDialog()
     // XXX Need to handle todo "before task starts/before task is due" 
     if (!event.hasAlarm) {
         // If the event has no alarm
-        setFieldValue("alarm-type", "none");
+        menuListSelectItem("alarm-type", "none");
     } else {
         setFieldValue("alarm-length-field",     event.getProperty("alarmLength"));
         setFieldValue("alarm-length-units",     event.getProperty("alarmUnits"));
-        setFieldValue("alarm-trigger-relation", event.getProperty("ICAL_RELATED_PARAMETER"));
-        // If the event has an alarm email address, assume email alarm type
-        var alarmEmailAddress = event.getProperty("alarmEmailAddress");
-        if (alarmEmailAddress && alarmEmailAddress != "") {
-            setFieldValue("alarm-type", "email");
-            setFieldValue("alarm-email-field", alarmEmailAddress);
-        } else {
-            setFieldValue("alarm-type", "popup");
-            /* XXX lilmatt: finish this by selection between popup and 
-               popupAndSound by checking pref "calendar.alarms.playsound" */
+        if (componentType == "event" ||
+           (componentType == "todo" && !(startPicker.disabled && duePicker.disabled) ) ) {
+            // If the event has an alarm email address, assume email alarm type
+            var alarmEmailAddress = event.getProperty("alarmEmailAddress");
+            if (alarmEmailAddress && alarmEmailAddress != "") {
+                menuListSelectItem("alarm-type", "email");
+                setFieldValue("alarm-email-field", alarmEmailAddress);
+            } else {
+                menuListSelectItem("alarm-type", "popup");
+                /* XXX lilmatt: finish this by selection between popup and 
+                   popupAndSound by checking pref "calendar.alarms.playsound" */
+            }
+            var alarmRelated = event.getProperty("alarmRelated");
+            if (alarmRelated && alarmRelated != "") {
+                // if only one picker is enabled, check that the appropriate related
+                // parameter is chosen
+                if ( (componentType == "event") ||
+                     (componentType == "todo" && !startPicker.disabled &&
+                         duePicker.disabled && alarmRelated == "START") ||
+                     (componentType == "todo" && startPicker.disabled &&
+                         !duePicker.disabled && alarmRelated == "END")  ||
+                     (componentType == "todo" && !startPicker.disabled && !duePicker.disabled) )
+                {
+                     setFieldValue("alarm-trigger-relation", alarmRelated);
+                } else {
+                     dump("loadCalendarEventDialog: ERROR! alarmRelated: " +
+                          alarmRelated + " is invalid! (trying to set " +
+                          "START/END when the necessary datepicker isn't " +
+                          "enabled?)\n");
+                }
+            }
         }
+        // hide/show fields and widgets for alarm type
+        processAlarmType();
     }
-    // hide/show fields and widgets for alarm type
-    processAlarmType();
 
 
     // RECURRENCE --------------------------------------------------------
@@ -363,7 +385,7 @@ function loadCalendarEventDialog()
     processInviteCheckbox();
 
     // handle attendees
-    attendeeList = event.getAttendees({});
+    var attendeeList = event.getAttendees({});
     for (var i = 0; i < attendeeList.length; i++) {
         attendee = attendeeList[i];
         addAttendee(attendee.id);
@@ -589,12 +611,13 @@ function onOKCommand()
 
 
     // other properties
-    event.setProperty('categories',  getFieldValue("categories-field", "value"));
-    event.setProperty('description', getFieldValue("description-field"));
-    event.setProperty('location',    getFieldValue("location-field"));
-    event.setProperty('url',         getFieldValue("uri-field"));
+    event.setProperty('categories',   getFieldValue("categories-field", "value"));
+    event.setProperty('description',  getFieldValue("description-field"));
+    event.setProperty('location',     getFieldValue("location-field"));
+    event.setProperty('url',          getFieldValue("uri-field"));
 
-    event.setProperty("ICAL_RELATED_PARAMETER", getFieldValue("alarm-trigger-relation", "value"));
+    if (getFieldValue("alarm-type") != "none" )
+        event.setProperty("alarmRelated", getFieldValue("alarm-trigger-relation", "value"));
 
     if (getFieldValue("alarm-type") == "email" )
         event.setProperty('alarmEmailAddress', getFieldValue("alarm-email-field", "value"));
@@ -740,7 +763,7 @@ function onDateTimeCheckbox(checkbox, pickerId)
     var picker = document.getElementById( pickerId );
     picker.disabled = !checkbox.checked;
 
-    updateAlarmItemEnabled();
+    processAlarmType();
     updateOKButton();
 }
 
@@ -978,7 +1001,7 @@ function updateRepeatItemEnabled()
 
 function updateRepeatPlural()
 {
-    updateMenuPlural( "repeat-length-field", "repeat-length-units" );
+    updateMenuLabels( "repeat-length-field", "repeat-length-units" );
 }
 
 
@@ -988,7 +1011,7 @@ function updateRepeatPlural()
 
 function updateAlarmPlural()
 {
-    updateMenuPlural( "alarm-length-field", "alarm-length-units" );
+    updateMenuLabels( "alarm-length-field", "alarm-length-units" );
 }
 
 
@@ -1584,48 +1607,122 @@ function processTextboxWithButton( textboxId, buttonId )
 function processAlarmType()
 {
     var alarmMenu = document.getElementById("alarm-type");
+    var componentType = getFieldValue("component-type");
     if( alarmMenu.selectedItem ) {
-        debug("processAlarmType: " + alarmMenu.selectedItem.value );
-        switch( alarmMenu.selectedItem.value ) {
-        case "none":
-            disableElement("alarm-length-field");
-            disableElement("alarm-length-units");
-            disableElement("alarm-email-field-label");
-            disableElement("alarm-email-field");
-            break;
-        //case "popupAndSound":
-        case "popup":
-            enableElement("alarm-length-field");
-            enableElement("alarm-length-units");
-            disableElement("alarm-email-field-label");
-            disableElement("alarm-email-field");
-            break;
-        case "email":
-            enableElement("alarm-length-field");
-            enableElement("alarm-length-units");
-            enableElement("alarm-email-field-label");
-            enableElement("alarm-email-field");
-            break;
-        }
+        if( componentType == "event" ) {
+            debug("processAlarmType: EVENT " + alarmMenu.selectedItem.value );
+            switch( alarmMenu.selectedItem.value ) {
+            case "none":
+                disableElement("alarm-length-field");
+                disableElement("alarm-length-units");
+                disableElement("alarm-trigger-relation");
+                disableElement("before-this-event-label");
+                disableElement("alarm-email-field-label");
+                disableElement("alarm-email-field");
+                break;
+            //case "popupAndSound":
+            case "popup":
+                enableElement("alarm-length-field");
+                enableElement("alarm-length-units");
+                enableElement("alarm-trigger-relation");
+                enableElement("before-this-event-label");
+                disableElement("alarm-email-field-label");
+                disableElement("alarm-email-field");
+                break;
+            case "email":
+                enableElement("alarm-length-field");
+                enableElement("alarm-length-units");
+                enableElement("alarm-trigger-relation");
+                enableElement("before-this-event-label");
+                enableElement("alarm-email-field-label");
+                enableElement("alarm-email-field");
+                break;
+            }
+        } else if( componentType == "todo" ) {
+            debug("processAlarmType: TODO " + alarmMenu.selectedItem.value );
+            var startChecked = getFieldValue("start-checkbox", "checked");
+            var dueChecked = getFieldValue("due-checkbox", "checked");
+
+            // disable alarms if and only if neither checked
+            if ( (!startChecked && !dueChecked) ) {
+                menuListSelectItem("alarm-type", "none");
+                disableElement("alarm-length-field");
+                disableElement("alarm-length-units");
+                disableElement("alarm-trigger-relation");
+                disableElement("before-this-todo-label");
+                disableElement("alarm-email-field-label");
+                disableElement("alarm-email-field");
+                disableElement("alarm-type");
+            } else {
+                enableElement("alarm-type")
+                switch( alarmMenu.selectedItem.value ) {
+                case "none":
+                    disableElement("alarm-length-field");
+                    disableElement("alarm-length-units");
+                    disableElement("alarm-trigger-relation");
+                    disableElement("before-this-todo-label");
+                    disableElement("alarm-email-field-label");
+                    disableElement("alarm-email-field");
+                    break;
+                //case "popupAndSound":
+                case "popup":
+                    enableElement("alarm-length-field");
+                    enableElement("alarm-length-units");
+                    enableElement("before-this-todo-label");
+                    disableElement("alarm-email-field-label");
+                    disableElement("alarm-email-field");
+                    if (startChecked && !dueChecked) {
+                        menuListSelectItem("alarm-trigger-relation", "START");
+                        disableElement("alarm-trigger-relation");
+                    } else if (!startChecked && dueChecked) {
+                        menuListSelectItem("alarm-trigger-relation", "END");
+                        disableElement("alarm-trigger-relation");
+                    } else {
+                        enableElement("alarm-trigger-relation");
+                    }
+                    break;
+                case "email":
+                    enableElement("alarm-length-field");
+                    enableElement("alarm-length-units");
+                    enableElement("before-this-todo-label");
+                    enableElement("alarm-email-field-label");
+                    enableElement("alarm-email-field");
+                    if (startChecked && !dueChecked) {
+                        menuListSelectItem("alarm-trigger-relation", "START");
+                        disableElement("alarm-trigger-relation");
+                    } else if (!startChecked && dueChecked) {
+                        menuListSelectItem("alarm-trigger-relation", "END");
+                        disableElement("alarm-trigger-relation");
+                    } else {
+                        enableElement("alarm-trigger-relation");
+                    }
+                    break;
+                }
+            }
+        } else
+            dump("processAlarmType: ERROR! Invalid componentType passed: \n");
     } else
-        dump("processAlarmType: no alarmMenu.selectedItem!\n");
+        dump("processAlarmType: ERROR! No alarmMenu.selectedItem!\n");
 }
 
 
 function processComponentType(componentType)
 {
-    var componentMenu = document.getElementById("component-type");
     debug("processComponentType: " + componentType );
     switch( componentType ) {
     case "event":
          // Hide and show the appropriate fields and widgets
         changeMenuState("todo", "event");
          // Set the menu properly if it isn't already
-        componentMenu.selectedIndex = 0;
+        menuListSelectItem("component-type", "event");
          // calling just enableElement _should_ work here, but it doesn't
         document.getElementById("start-datetime").setAttribute( "disabled", "false" );
         enableElement("start-datetime");
         enableElement("end-datetime");
+         // Set alarm trigger menulist text correctly (using singular/plural code)
+        setFieldValue("alarm-trigger-text-kludge", "2"); // event text is "plural"
+        updateMenuLabels("alarm-trigger-text-kludge", "alarm-trigger-relation");
+        enableElement("alarm-type")
          // Set menubar title correctly
         changeTitleBar("event");
         break;
@@ -1633,10 +1730,13 @@ function processComponentType(componentType)
          // Hide and show the appropriate fields and widgets
         changeMenuState("event", "todo");
          // Set the menu properly if it isn't already
-        componentMenu.selectedIndex = 1;
+        menuListSelectItem("component-type", "todo");
          // Enable/disable date/time pickers as need be
         onDateTimeCheckbox("start-checkbox", "start-datetime");
         onDateTimeCheckbox("due-checkbox", "due-datetime");
+         // Set alarm trigger menulist text correctly (using singular/plural code)
+        setFieldValue("alarm-trigger-text-kludge", "1"); // todo text is "singular"
+        updateMenuLabels("alarm-trigger-text-kludge", "alarm-trigger-relation");
         // Set menubar title correctly
         changeTitleBar("todo");
         break;
@@ -1646,6 +1746,7 @@ function processComponentType(componentType)
         dump("processComponentType: ERROR! Tried to select invalid component type: "+componentType+"\n");
         break;
     }
+    processAlarmType();
 }
 
 
@@ -1705,38 +1806,37 @@ function changeTitleBar(componentType)
 
 function processToDoStatus(status)
 {
-    var toDoStatusMenu = document.getElementById( "todo-status-field" );
     var completedDatePicker = document.getElementById( "completed-date-picker" );
     switch(status) {
     case "":
     case "None":
-        toDoStatusMenu.selectedIndex = 0;
+        menuListSelectItem("component-type", "None");
         disableElement( "completed-date-picker" );
         disableElement( "percent-complete-menulist" );
         disableElement( "percent-complete-label" );
         break;
-    case "CAL_ITEM_STATUS_CANCELLED":
-        toDoStatusMenu.selectedIndex = 1;
+    case "CANCELLED":
+        menuListSelectItem("component-type", "CANCELLED");
         disableElement( "completed-date-picker" );
         disableElement( "percent-complete-menulist" );
         disableElement( "percent-complete-label" );
         break;
-    case "CAL_TODO_STATUS_COMPLETED":
-        toDoStatusMenu.selectedIndex = 2;
+    case "COMPLETED":
+        menuListSelectItem("component-type", "COMPLETED");
         enableElement( "completed-date-picker" );
         enableElement( "percent-complete-menulist" );
         enableElement( "percent-complete-label" );
         completedDatePicker.value = new Date();
         setFieldValue( "percent-complete-menulist", "100" );
         break;
-    case "CAL_TODO_STATUS_INPROCESS":
-        toDoStatusMenu.selectedIndex = 3;
+    case "IN-PROCESS":
+        menuListSelectItem("component-type", "IN-PROCESS");
         enableElement( "completed-date-picker" );
         enableElement( "percent-complete-menulist" );
         enableElement( "percent-complete-label" );
         break;
-    case "CAL_TODO_STATUS_NEEDSACTION":
-        toDoStatusMenu.selectedIndex = 4;
+    case "NEEDS-ACTION":
+        menuListSelectItem("component-type", "NEEDS-ACTION");
         enableElement( "percent-complete-menulist" );
         enableElement( "percent-complete-label" );
         break;
@@ -1761,87 +1861,6 @@ function addAttendee(email)
     treeItem.appendChild(treeRow);
     treeRow.appendChild(treeCell);
     document.getElementById("bucketBody").appendChild(treeItem);
-}
-
-
-/** THIS IS FOR TODOS ONLY
-    Enable/Disable Alarm options with alarm checked.
-
-    Enables/disables alarm trigger relations menulist depending on whether
-    start/due dates are enabled.
-    If both disabled, alarm menulist is disabled.
-    If one disabled, other relation is selected and menulist is disabled.
-    (Prevents crash that occurs if alarm checked but no corresponding date.) **/
-    
-function updateAlarmItemEnabled()
-{
-    var startChecked = getFieldValue("start-checkbox", "checked");
-    var dueChecked = getFieldValue("due-checkbox", "checked");
-
-    // disable alarms if and only if neither checked
-    if ( !(startChecked && dueChecked) )
-        setFieldValue("alarm-type", "none");
-
-/*    var alarmChecked = getFieldValue("alarm-checkbox", "checked" );
-    setFieldValue( "alarm-length-field", !alarmChecked, "disabled" );
-    setFieldValue( "alarm-length-units", !alarmChecked, "disabled" );
-    setFieldValue( "alarm-email-field", !alarmChecked, "disabled" );
-    setFieldValue( "alarm-email-checkbox", !alarmChecked, "disabled" );
-*/
-
-    // if exactly one checked, select its relation
-    if (startChecked && !dueChecked)
-        menuListFieldSelectItem("alarm-trigger-relation", "ICAL_RELATED_START");
-    else if (!startChecked && dueChecked)
-        menuListFieldSelectItem("alarm-trigger-relation", "ICAL_RELATED_END");
-
-    // choice enabled if alarm on and both dates checked,
-    var alarmEnabled
-    if ( getFieldValue("alarm-type") != "none")
-        alarmEnabled = true
-    else
-        alarmEnabled = false
-
-    var triggerChoiceEnabled = alarmEnabled && startChecked && dueChecked;
-    setFieldValue("alarm-trigger-relation", !triggerChoiceEnabled, "disabled");
-}
-
-
-/** Select value in menuList with id menuListId **/
-
-function menuListFieldSelectItem(menuListId, value)
-{
-    menuListSelectItem(document.getElementById(menuListId), value);
-}
-
-
-/** Select value in menuList.  Throws string if no such value. **/
-
-function menuListSelectItem(menuList, value)
-{
-    var index = menuListIndexOf(menuList, value);
-    if (index != -1) {
-        menuList.selectedIndex = index;
-    } else {
-        throw "No such Element: "+value;
-    }
-}
-
-
-/** Find index of menuitem with the given value, or return -1 if not found. **/
-
-function menuListIndexOf(menuList, value)
-{
-    var items = menuList.menupopup.childNodes;
-    var index = -1;
-    for (var i = 0; i < items.length; i++) {
-        var element = items[i];
-        if (element.nodeName == "menuitem")
-            index++;
-        if (element.getAttribute("value") == value)
-            return index;
-    }
-    return -1; // not found
 }
 
 
