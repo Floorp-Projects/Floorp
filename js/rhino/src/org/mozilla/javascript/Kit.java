@@ -367,7 +367,17 @@ public class Kit
      * Convinient way to throw IllegalArgumentException to indicate bad
      * argument.
      */
-    public static void badArg()
+    public static void argBug()
+        throws IllegalArgumentException
+    {
+        throw new IllegalArgumentException();
+    }
+
+    /**
+     * Convinient way to throw IllegalStateException to indicate bad
+     * state.
+     */
+    public static void stateBug()
         throws IllegalArgumentException
     {
         throw new IllegalArgumentException();
