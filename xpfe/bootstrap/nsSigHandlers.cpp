@@ -67,8 +67,12 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
+#elif defined(LINUX)
+#if defined(__GLIBC_PREREQ) && __GLIBC_PREREQ(2,3)
+#include <string.h>
 #else
 extern "C" char * strsignal(int);
+#endif
 #endif
 
 #ifdef MOZ_WIDGET_PHOTON
