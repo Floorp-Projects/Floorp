@@ -33,6 +33,8 @@
 #include "nsCRT.h"
 #include "ImageLogging.h"
 
+#include "jerror.h"
+
 NS_IMPL_ISUPPORTS1(nsJPEGDecoder, imgIDecoder)
 
 #if defined(PR_LOGGING)
@@ -210,11 +212,20 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   }
   // else no input stream.. Flush() ?
 
-
-  nsresult error_code = NS_ERROR_FAILURE;
   /* Return here if there is a fatal error. */
+  nsresult error_code;
   if ((error_code = setjmp(mErr.setjmp_buffer)) != 0) {
-    return error_code;
+    mState = JPEG_SINK_NON_JPEG_TRAILER;
+    if (error_code == NS_ERROR_FAILURE) {
+      /* Error due to corrupt stream - return NS_OK so that libpr0n
+         doesn't throw away a partial image load */
+      return NS_OK;
+    } else {
+      /* Error due to reasons external to the stream (probably out of
+         memory) - let libpr0n attempt to clean up, even though
+         mozilla is seconds away from falling flat on its face. */
+      return error_code;
+    }
   }
 
   PR_LOG(gJPEGlog, PR_LOG_DEBUG,
@@ -348,6 +359,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
     mState = JPEG_START_DECOMPRESS;
   }
+
   case JPEG_START_DECOMPRESS:
   {
     LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_START_DECOMPRESS case");
@@ -372,7 +384,6 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     } else {
       mState = JPEG_DECOMPRESS_SEQUENTIAL;
     }
-
   }
 
   case JPEG_DECOMPRESS_SEQUENTIAL:
@@ -380,61 +391,54 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     if (mState == JPEG_DECOMPRESS_SEQUENTIAL)
     {
       LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_SEQUENTIAL case");
-
-      if (OutputScanlines(-1) == PR_FALSE)
+      
+      if (OutputScanlines() == PR_FALSE)
         return NS_OK; /* I/O suspension */
-
+      
       /* If we've completed image output ... */
       NS_ASSERTION(mInfo.output_scanline == mInfo.output_height, "We didn't process all of the data!");
-      mState = JPEG_DONE;    
+      mState = JPEG_DONE;
     }
   }
-
 
   case JPEG_DECOMPRESS_PROGRESSIVE:
   {
     if (mState == JPEG_DECOMPRESS_PROGRESSIVE)
     {
       LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_PROGRESSIVE case");
-
-      int status;
-      do {
-        status = jpeg_consume_input(&mInfo);
-      } while (!((status == JPEG_SUSPENDED) ||
-                 (status == JPEG_REACHED_EOI)));
-
-      switch (status) {
-        case JPEG_REACHED_EOI:
-          // End of image
-          mState = JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT;
-          break;
-        case JPEG_SUSPENDED:
-          PR_LOG(gJPEGlog, PR_LOG_DEBUG,
-                 ("[this=%p] nsJPEGDecoder::WriteFrom -- suspending\n", this));
-
-          return NS_OK; /* I/O suspension */
-        default:
+    
+      while (!jpeg_input_complete(&mInfo)) {
+        if (mInfo.output_scanline == mInfo.output_height)
         {
-#ifdef DEBUG
-            printf("got someo other state!?\n");
-#endif
+          if (!jpeg_finish_output(&mInfo))
+            return NS_OK; /* I/O suspension */
+
+          if (jpeg_input_complete(&mInfo) &&
+              (mInfo.input_scan_number == mInfo.output_scan_number))
+            break;
+
+          mInfo.output_scanline = 0;
+        }
+
+        if (mInfo.output_scanline == 0) {
+          jpeg_consume_input(&mInfo);
+          if (!jpeg_start_output(&mInfo, mInfo.input_scan_number))
+            return NS_OK; /* I/O suspension */
+        }
+
+        if (mInfo.output_scanline == 0xffffff)
+          mInfo.output_scanline = 0;
+
+        if (OutputScanlines() == PR_FALSE) {
+          if (mInfo.output_scanline == 0) {
+            /* didn't manage to read any lines - flag so we don't call
+               jpeg_start_output() multiple times for the same scan */
+            mInfo.output_scanline = 0xffffff;
+          }
+          return NS_OK; /* I/O suspension */
         }
       }
-    }
-  }
 
-  case JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT:
-  {
-    if (mState == JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT)
-    {
-      LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- entering JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT case");
-
-      // XXX progressive? ;)
-      // not really progressive according to the state machine... -saari
-      jpeg_start_output(&mInfo, mInfo.input_scan_number);
-      if (OutputScanlines(-1) == PR_FALSE)
-        return NS_OK; /* I/O suspension */
-      jpeg_finish_output(&mInfo);
       mState = JPEG_DONE;
     }
   }
@@ -471,14 +475,14 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
 
 int
-nsJPEGDecoder::OutputScanlines(int num_scanlines)
+nsJPEGDecoder::OutputScanlines()
 {
   PRUint32 top = mInfo.output_scanline;
   PRBool rv = PR_TRUE;
 
-  while ((mInfo.output_scanline < mInfo.output_height) && num_scanlines--) {
+  while ((mInfo.output_scanline < mInfo.output_height)) {
       JSAMPROW samples;
-      
+
       /* Request one scanline.  Returns 0 or 1 scanlines. */
       int ns = jpeg_read_scanlines(&mInfo, mSamples, 1);
       
@@ -567,36 +571,23 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
 void PR_CALLBACK
 my_error_exit (j_common_ptr cinfo)
 {
-  nsresult error_code = NS_ERROR_FAILURE;
+  nsresult error_code;
   decoder_error_mgr *err = (decoder_error_mgr *) cinfo->err;
 
-#if 0
-#ifdef DEBUG
-/*ptn fix later */
-  if (il_debug >= 1) {
-      char buffer[JMSG_LENGTH_MAX];
-
-      /* Create the message */
-      (*cinfo->err->format_message) (cinfo, buffer);
-
-      ILTRACE(1,("%s\n", buffer));
-  }
-#endif
-
-
   /* Convert error to a browser error code */
-  if (cinfo->err->msg_code == JERR_OUT_OF_MEMORY)
-      error_code = MK_OUT_OF_MEMORY;
-  else
-      error_code = MK_IMAGE_LOSSAGE;
-#endif
+  switch (cinfo->err->msg_code) {
+  case JERR_OUT_OF_MEMORY:
+      error_code = NS_ERROR_OUT_OF_MEMORY;
+  default:
+      error_code = NS_ERROR_FAILURE;
+  }
 
+#ifdef DEBUG
   char buffer[JMSG_LENGTH_MAX];
 
   /* Create the message */
   (*cinfo->err->format_message) (cinfo, buffer);
 
-#ifdef DEBUG
   fprintf(stderr, "JPEG decoding error:\n%s\n", buffer);
 #endif
 
