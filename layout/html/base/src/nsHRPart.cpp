@@ -113,7 +113,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   float p2t = aPresContext.GetPixelsToTwips();
-  nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->GetThickness());
+  nscoord thickness = NSIntPixelsToTwips(((HRulePart*)mContent)->GetThickness(), p2t);
 
   // Get style data
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)
@@ -188,8 +188,8 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   if (!noShadeAttribute && ((printing && bevel) || !printing)) {
     // Lines render inclusively on the both the starting and ending
     // coordinate, so reduce the end coordinates by one pixel.
-    nscoord x1 = nscoord(x0 + width - p2t);
-    nscoord y1 = nscoord(y0 + height - p2t);
+    nscoord x1 = nscoord(x0 + width - NSIntPixelsToTwips(1, p2t));
+    nscoord y1 = nscoord(y0 + height - NSIntPixelsToTwips(1, p2t));
 
     // Draw bottom and right lines
     aRenderingContext.SetColor (colors[1]);
@@ -205,7 +205,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
     // draw half-circles on the end points.
     aRenderingContext.SetColor (colors[0]);
     nscoord diameter = height;
-    if ((diameter > width) || (diameter < nscoord(p2t * 3))) {
+    if ((diameter > width) || (diameter < NSIntPixelsToTwips(3, p2t))) {
       // The half-circles on the ends of the rule aren't going to
       // look right so don't bother drawing them.
       aRenderingContext.FillRect(x0, y0, width, height);
@@ -238,7 +238,7 @@ HRuleFrame::Reflow(nsIPresContext&      aPresContext,
   // HR's do not impact the max-element-size, otherwise tables behave
   // badly. This makes sense they are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
-    nscoord onePixel = nscoord(aPresContext.GetPixelsToTwips());
+    nscoord onePixel = NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips());
     aDesiredSize.maxElementSize->width = onePixel;
     aDesiredSize.maxElementSize->height = onePixel;
   }
@@ -278,11 +278,11 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // Get the thickness of the rule (this is not css's height property)
   float p2t = aPresContext->GetPixelsToTwips();
-  nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->GetThickness());
+  nscoord thickness = NSIntPixelsToTwips(((HRulePart*)mContent)->GetThickness(), p2t);
 
   // Compute height of "line" that hrule will layout within. Use the
   // default font to do this.
-  lineHeight = thickness + nscoord(p2t * 2);
+  lineHeight = thickness + NSIntPixelsToTwips(2, p2t);
   const nsFont& defaultFont = aPresContext->GetDefaultFont();
   nsIFontMetrics* fm = aPresContext->GetMetricsFor(defaultFont);
   nscoord defaultLineHeight = fm->GetHeight();
@@ -414,7 +414,7 @@ HRulePart::MapAttributesInto(nsIStyleContext* aContext,
       aContext->GetMutableStyleData(eStyleStruct_Position);
     GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       pos->mWidth.SetCoordValue(twips);
     }
     else if (value.GetUnit() == eHTMLUnit_Percent) {

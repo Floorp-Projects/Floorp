@@ -202,10 +202,10 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     // Convert the rect from pixels to twips
     p2t = mPresContext->GetPixelsToTwips();
     changeRect = (const nsRect*)aParam3;
-    damageRect.x = nscoord(p2t * changeRect->x);
-    damageRect.y = nscoord(p2t * changeRect->y);
-    damageRect.width = nscoord(p2t * changeRect->width);
-    damageRect.height = nscoord(p2t * changeRect->height);
+    damageRect.x = NSIntPixelsToTwips(changeRect->x, p2t);
+    damageRect.y = NSIntPixelsToTwips(changeRect->y, p2t);
+    damageRect.width = NSIntPixelsToTwips(changeRect->width, p2t);
+    damageRect.height = NSIntPixelsToTwips(changeRect->height, p2t);
     DamageRepairFrame(&damageRect);
     break;
 

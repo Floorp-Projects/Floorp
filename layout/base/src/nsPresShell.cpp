@@ -1041,7 +1041,6 @@ PresShell::VerifyIncrementalReflow()
   // Create a new presentation shell to view the document
   rv = mDocument->CreateShell(cx, vm, ss, &sh);
   NS_ASSERTION(NS_OK == rv, "failed to create presentation shell");
-  float p2t = cx->GetPixelsToTwips();
   sh->ResizeReflow(r.width, r.height);
 
   // Now that the document has been reflowed, use its frame tree to

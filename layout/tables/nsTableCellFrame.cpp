@@ -362,7 +362,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
       grandChild->ChildCount(childCount);
       if (0!=childCount)
       {
-        nscoord one = ((nscoord)(NS_INT_PIXELS_TO_TWIPS(1, aPresContext.GetPixelsToTwips())));
+        nscoord one = ((nscoord)(NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips())));
         cellWidth = 1;
         if (gsDebug) 
           printf ("setting cellWidth=1 because it was 0 but there's some content\n");
@@ -502,8 +502,6 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   nscoord   spacing = 0;
   nscoord   border  = 1;
 
-  float     p2t = aPresContext->GetPixelsToTwips();
-
   nsTableFrame*  tableFrame = GetTableFrame();
   tableFrame->GetGeometricParent((nsIFrame *&)tableFrame); // get the outer frame
   NS_ASSERTION(tableFrame,"Table Must not be null");
@@ -539,7 +537,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     if (0!=borderWidth.GetCoordValue())
     {
       // in HTML, cell borders are always 1 pixel by default
-      border = (nscoord)(1*(aPresContext->GetPixelsToTwips()));
+      border = NSIntPixelsToTwips(1, aPresContext->GetPixelsToTwips());
       MapHTMLBorderStyle(aPresContext, *spacingData, border);
     }
   }
@@ -1063,10 +1061,10 @@ void nsTableCellFrame::List(FILE* out, PRInt32 aIndent) const
     */
     for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
     fprintf(out,"Margin -- Top: %d Left: %d Bottom: %d Right: %d \n",  
-                NS_TWIPS_TO_POINTS_INT(mMargin.top),
-                NS_TWIPS_TO_POINTS_INT(mMargin.left),
-                NS_TWIPS_TO_POINTS_INT(mMargin.bottom),
-                NS_TWIPS_TO_POINTS_INT(mMargin.right));
+                NSTwipsToIntPoints(mMargin.top),
+                NSTwipsToIntPoints(mMargin.left),
+                NSTwipsToIntPoints(mMargin.bottom),
+                NSTwipsToIntPoints(mMargin.right));
 
 
     for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
@@ -1080,10 +1078,10 @@ void nsTableCellFrame::List(FILE* out, PRInt32 aIndent) const
 
 
     fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  
-                NS_TWIPS_TO_POINTS_INT(top),
-                NS_TWIPS_TO_POINTS_INT(left),
-                NS_TWIPS_TO_POINTS_INT(bottom),
-                NS_TWIPS_TO_POINTS_INT(right));
+                NSTwipsToIntPoints(top),
+                NSTwipsToIntPoints(left),
+                NSTwipsToIntPoints(bottom),
+                NSTwipsToIntPoints(right));
 
 
 

@@ -257,10 +257,10 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // XXX this needs to be changed from (200,200) to a better default for inline frames
   if (0 == (ss & NS_SIZE_HAS_WIDTH)) {
-    size.width = (nscoord)(200.0 * p2t + 0.5);
+    size.width = NSIntPixelsToTwips(200, p2t);
   }
   if (0 == (ss & NS_SIZE_HAS_HEIGHT)) {
-    size.height = (nscoord)(200 * p2t + 0.5);
+    size.height = NSIntPixelsToTwips(200, p2t);
   }
 
   aDesiredSize.width  = size.width;
@@ -550,8 +550,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   nsIWidget* widget = view->GetWidget();
   NS_RELEASE(view);
-  nsRect webBounds(0, 0, NS_TO_INT_ROUND(aSize.width * t2p), 
-                   NS_TO_INT_ROUND(aSize.height * t2p));
+  nsRect webBounds(0, 0, NSToCoordRound(aSize.width * t2p), 
+                   NSToCoordRound(aSize.height * t2p));
 
   mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), webBounds, 
                    content->GetScrolling());
@@ -613,8 +613,8 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
   float t2p = aPresContext.GetTwipsToPixels();
   nsRect subBounds;
   mWebShell->GetBounds(subBounds);
-  subBounds.width  = NS_TO_INT_ROUND(aDesiredSize.width * t2p);
-  subBounds.height = NS_TO_INT_ROUND(aDesiredSize.height * t2p);
+  subBounds.width  = NSToCoordRound(aDesiredSize.width * t2p);
+  subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
   mWebShell->SetBounds(subBounds);
 
   aStatus = NS_FRAME_COMPLETE;

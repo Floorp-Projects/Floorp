@@ -60,8 +60,8 @@ public:
 
   virtual const nsIID& GetIID();
 
-  virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
-  virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
+  virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
+  virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 
@@ -163,12 +163,12 @@ nsSelectFrame::~nsSelectFrame()
 }
 
 
-PRInt32 nsSelectFrame::GetVerticalBorderWidth(float aPixToTwip) const
+nscoord nsSelectFrame::GetVerticalBorderWidth(float aPixToTwip) const
 {
-   return (int)(1 * aPixToTwip + 0.5);
+   return NSIntPixelsToTwips(1, aPixToTwip);
 }
 
-PRInt32 nsSelectFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+nscoord nsSelectFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 {
   return GetVerticalBorderWidth(aPixToTwip);
 }
@@ -177,10 +177,10 @@ nscoord nsSelectFrame::GetVerticalInsidePadding(float aPixToTwip,
                                                nscoord aInnerHeight) const
 {
 #ifdef XP_PC
-  return (nscoord)((aInnerHeight * .15) + 0.5);
+  return (nscoord)NSToIntRound(float(aInnerHeight) * 0.15f);
 #endif
 #ifdef XP_UNIX
-  return (nscoord)(1 * aPixToTwip + 0.5); // XXX this is probably wrong
+  return NSIntPixelsToTwips(1, aPixToTwip); // XXX this is probably wrong
 #endif
 }
 
@@ -189,8 +189,8 @@ PRInt32 nsSelectFrame::GetHorizontalInsidePadding(float aPixToTwip,
                                                  nscoord aCharWidth) const
 {
 #ifdef XP_PC
-  nscoord padding = (nscoord)((aCharWidth * .40) + 0.5);
-  nscoord min = (nscoord)((3 * aPixToTwip) + 0.5);
+  nscoord padding = (nscoord)NSToIntRound(float(aCharWidth) * 0.40f);
+  nscoord min = NSIntPixelsToTwips(3, aPixToTwip);
   if (padding > min) {
     return padding;
   } else {
@@ -198,7 +198,7 @@ PRInt32 nsSelectFrame::GetHorizontalInsidePadding(float aPixToTwip,
   }
 #endif
 #ifdef XP_UNIX
-  return (nscoord)(7 * aPixToTwip + 0.5); // XXX this is probably wrong
+  return NSIntPixelsToTwips(7, aPixToTwip); // XXX this is probably wrong
 #endif
 }
 
@@ -303,7 +303,7 @@ nsSelectFrame::GetWidgetInitData(nsIPresContext& aPresContext)
   if (select->mIsComboBox) {
     nsComboBoxInitData* initData = new nsComboBoxInitData();
     float twipToPix = aPresContext.GetTwipsToPixels();
-    initData->mDropDownHeight = NS_TO_INT_ROUND(mWidgetSize.height * twipToPix);
+    initData->mDropDownHeight = NSTwipsToIntPixels(mWidgetSize.height, twipToPix);
     return initData;
   }
   else {

@@ -36,12 +36,12 @@ nsPresContext::nsPresContext()
                  NS_FONT_VARIANT_NORMAL,
                  NS_FONT_WEIGHT_NORMAL,
                  0,
-                 NS_POINTS_TO_TWIPS_INT(12)),
+                 NSIntPointsToTwips(12)),
     mDefaultFixedFont("Courier", NS_FONT_STYLE_NORMAL,
                       NS_FONT_VARIANT_NORMAL,
                       NS_FONT_WEIGHT_NORMAL,
                       0,
-                      NS_POINTS_TO_TWIPS_INT(10))
+                      NSIntPointsToTwips(10))
 {
   NS_INIT_REFCNT();
   mShell = nsnull;
@@ -138,13 +138,13 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
       mDefaultFont.name = prefChar;
     }
     if (NS_OK == mPrefs->GetIntPref("intl.font2.win.prop_size", &prefInt)) {
-      mDefaultFont.size = NS_POINTS_TO_TWIPS_INT(prefInt);
+      mDefaultFont.size = NSIntPointsToTwips(prefInt);
     }
     if (NS_OK == mPrefs->GetCharPref("intl.font2.win.fixed_font", &(prefChar[0]), &charSize)) {
       mDefaultFixedFont.name = prefChar;
     }
     if (NS_OK == mPrefs->GetIntPref("intl.font2.win.fixed_size", &prefInt)) {
-      mDefaultFixedFont.size = NS_POINTS_TO_TWIPS_INT(prefInt);
+      mDefaultFixedFont.size = NSIntPointsToTwips(prefInt);
     }
   }
 

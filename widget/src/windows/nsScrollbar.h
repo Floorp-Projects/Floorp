@@ -72,7 +72,7 @@ protected:
 private:
     DWORD   mPositionFlag;
     int     mLineIncrement;
-    double  mScaleFactor;
+    float   mScaleFactor;
 };
 
 #endif // nsButton_h__

@@ -1309,7 +1309,7 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
     // width: value
     GetAttribute(nsHTMLAtoms::width, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       pos->mWidth.SetCoordValue(twips);
     }
     else if (value.GetUnit() == eHTMLUnit_Percent) {
@@ -1319,7 +1319,7 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
     // height: value
     GetAttribute(nsHTMLAtoms::height, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       pos->mHeight.SetCoordValue(twips);
     }
     else if (value.GetUnit() == eHTMLUnit_Percent) {
@@ -1329,7 +1329,7 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
     // hspace: value
     GetAttribute(nsHTMLAtoms::hspace, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       spacing->mMargin.SetRight(nsStyleCoord(twips));
     }
     else if (value.GetUnit() == eHTMLUnit_Percent) {
@@ -1340,7 +1340,7 @@ nsHTMLTagContent::MapImagePropertiesInto(nsIStyleContext* aContext,
     // vspace: value
     GetAttribute(nsHTMLAtoms::vspace, value);
     if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
       spacing->mMargin.SetBottom(nsStyleCoord(twips));
     }
     else if (value.GetUnit() == eHTMLUnit_Percent) {
@@ -1370,7 +1370,7 @@ nsHTMLTagContent::MapImageBorderInto(nsIStyleContext* aContext,
     }
 
     float p2t = aPresContext->GetPixelsToTwips();
-    nscoord twips = nscoord(p2t * value.GetPixelValue());
+    nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
 
     // Fixup border-padding sums: subtract out the old size and then
     // add in the new size.

@@ -322,29 +322,29 @@ nscoord nsCSSValue::GetLengthTwips(void) const
   if (IsFixedLengthUnit()) {
     switch (mUnit) {
     case eCSSUnit_Inch:        
-      return (nscoord)NS_INCHES_TO_TWIPS(mValue.mFloat);
+      return NS_INCHES_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Foot:        
-      return (nscoord)NS_FEET_TO_TWIPS(mValue.mFloat);
+      return NS_FEET_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Mile:        
-      return (nscoord)NS_MILES_TO_TWIPS(mValue.mFloat);
+      return NS_MILES_TO_TWIPS(mValue.mFloat);
 
     case eCSSUnit_Millimeter:
-      return (nscoord)NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
+      return NS_MILLIMETERS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Centimeter:
-      return (nscoord)NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
+      return NS_CENTIMETERS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Meter:
-      return (nscoord)NS_METERS_TO_TWIPS(mValue.mFloat);
+      return NS_METERS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Kilometer:
-      return (nscoord)NS_KILOMETERS_TO_TWIPS(mValue.mFloat);
+      return NS_KILOMETERS_TO_TWIPS(mValue.mFloat);
 
     case eCSSUnit_Point:
-      return (nscoord)NS_POINTS_TO_TWIPS_FLOAT(mValue.mFloat);
+      return NSFloatPointsToTwips(mValue.mFloat);
     case eCSSUnit_Pica:
-      return (nscoord)NS_PICAS_TO_TWIPS(mValue.mFloat);
+      return NS_PICAS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Didot:
-      return (nscoord)NS_DIDOTS_TO_TWIPS(mValue.mFloat);
+      return NS_DIDOTS_TO_TWIPS(mValue.mFloat);
     case eCSSUnit_Cicero:
-      return (nscoord)NS_CICEROS_TO_TWIPS(mValue.mFloat);
+      return NS_CICEROS_TO_TWIPS(mValue.mFloat);
     }
   }
   return 0;

@@ -109,7 +109,7 @@ nsresult nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
   {
     mTwipsToPixels = (((float)::XDisplayWidth(XtDisplay((Widget)mNativeWidget), DefaultScreen(XtDisplay((Widget)mNativeWidget)))) /
   		    ((float)::XDisplayWidthMM(XtDisplay((Widget)mNativeWidget),DefaultScreen(XtDisplay((Widget)mNativeWidget)) )) * 25.4) / 
-      NS_POINTS_TO_TWIPS_FLOAT(72.0f);
+      (float)NSIntPointsToTwips(72);
     
     mPixelsToTwips = 1.0f / mTwipsToPixels;
   }*/

@@ -101,7 +101,7 @@ nsObjectContent::MapAttributesInto(nsIStyleContext* aContext,
       nsStyleSpacing* spacing = (nsStyleSpacing*)
         aContext->GetMutableStyleData(eStyleStruct_Spacing);
       float p2t = aPresContext->GetPixelsToTwips();
-      nsStyleCoord three(nscoord(p2t*3));
+      nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         display->mFloats = NS_STYLE_FLOAT_LEFT;

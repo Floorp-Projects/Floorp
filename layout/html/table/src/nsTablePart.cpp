@@ -678,7 +678,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
       break;
 
     case eHTMLUnit_Pixel:
-      position->mWidth.SetCoordValue(nscoord(p2t * (float)value.GetPixelValue()));
+      position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
       break;
     }
   }
@@ -707,7 +707,7 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   GetAttribute(nsHTMLAtoms::cellpadding, value);
   if (value.GetUnit() != eHTMLUnit_Null) {
     tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-    tableStyle->mCellPadding.SetCoordValue((nscoord)(p2t*(float)(value.GetPixelValue())));
+    tableStyle->mCellPadding.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
   }
 
   // cellspacing  (reuses tableStyle if already resolved)
@@ -715,13 +715,13 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   if (value.GetUnit() != eHTMLUnit_Null) {
     if (nsnull==tableStyle)
       tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-    tableStyle->mCellSpacing.SetCoordValue((nscoord)(p2t*(float)(value.GetPixelValue())));
+    tableStyle->mCellSpacing.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
   }
   else
   { // XXX: remove me as soon as we get this from the style sheet
     if (nsnull==tableStyle)
       tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
-    tableStyle->mCellSpacing.SetCoordValue((nscoord)(p2t*(float)2));
+    tableStyle->mCellSpacing.SetCoordValue(NSIntPixelsToTwips(2, p2t));
   }
 
   // cols
@@ -757,14 +757,14 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
     float p2t = aPresContext->GetPixelsToTwips();
     nsStyleCoord twips;
     if (value.GetUnit() == eHTMLUnit_Empty) {
-      twips.SetCoordValue(nscoord(NS_INT_PIXELS_TO_TWIPS(1, p2t)));
+      twips.SetCoordValue(NSIntPixelsToTwips(1, p2t));
     }
     else {
-      twips.SetCoordValue(nscoord(NS_INT_PIXELS_TO_TWIPS(value.GetPixelValue(), p2t)));
+      twips.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
     }
 
 #if 0
-    nsStyleCoord  two(nscoord(NS_INT_PIXELS_TO_TWIPS(2,p2t)));
+    nsStyleCoord  two(NSIntPixelsToTwips(2, p2t));
 
     spacing->mPadding.SetTop(two);
     spacing->mPadding.SetRight(two);

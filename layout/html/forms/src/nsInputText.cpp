@@ -49,8 +49,8 @@ public:
 
   virtual const nsIID& GetIID();
 
-  virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
-  virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
+  virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
+  virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 
@@ -78,12 +78,12 @@ nsInputTextFrame::~nsInputTextFrame()
 {
 }
 
-PRInt32 nsInputTextFrame::GetVerticalBorderWidth(float aPixToTwip) const
+nscoord nsInputTextFrame::GetVerticalBorderWidth(float aPixToTwip) const
 {
-   return (int)(4 * aPixToTwip + 0.5);
+   return NSIntPixelsToTwips(4, aPixToTwip);
 }
 
-PRInt32 nsInputTextFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+nscoord nsInputTextFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 {
   return GetVerticalBorderWidth(aPixToTwip);
 }
@@ -96,13 +96,13 @@ nscoord nsInputTextFrame::GetVerticalInsidePadding(float aPixToTwip,
   nsAutoString type;
   ((nsInput*)mContent)->GetType(type);
   if (type.EqualsIgnoreCase("textarea")) {
-    return (nscoord)((aInnerHeight * .40) + 0.5);
+    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.40f);
   } else {
-    return (nscoord)((aInnerHeight * .25) + 0.5);
+    return (nscoord)NSToIntRound(float(aInnerHeight) * 0.25f);
   }
 #endif
 #ifdef XP_UNIX
-  return (nscoord)(10 * aPixToTwip + 0.5); // XXX this is probably wrong
+  return NSIntPixelsToTwips(10, aPixToTwip); // XXX this is probably wrong
 #endif
 }
 
@@ -119,7 +119,7 @@ nscoord nsInputTextFrame::GetHorizontalInsidePadding(float aPixToTwip,
   } else {
     padding = (nscoord)(55 * aCharWidth / 100);
   }
-  nscoord min = (nscoord)((3 * aPixToTwip) + 0.5);
+  nscoord min = NSIntPixelsToTwips(3, aPixToTwip);
   if (padding > min) {
     return padding;
   } else {
@@ -127,7 +127,7 @@ nscoord nsInputTextFrame::GetHorizontalInsidePadding(float aPixToTwip,
   }
 #endif
 #ifdef XP_UNIX
-  return (nscoord)(6 * aPixToTwip + 0.5);  // XXX this is probably wrong
+  return NSIntPixelsToTwips(6, aPixToTwip);  // XXX this is probably wrong
 #endif
 }
 
@@ -210,7 +210,7 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   if (kInputText_Area == textType) {
     float p2t = aPresContext->GetPixelsToTwips();
-    PRInt32 scrollbarWidth = GetScrollbarWidth(p2t);
+    nscoord scrollbarWidth = GetScrollbarWidth(p2t);
 
     if (!heightExplicit) {
       size.height += scrollbarWidth;

@@ -141,21 +141,21 @@ SpacerFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
   switch (type) {
   case TYPE_WORD:
     if (0 != width) {
-      aMetrics.width = nscoord(width * p2t);
+      aMetrics.width = NSIntPixelsToTwips(width, p2t);
     }
     break;
 
   case TYPE_LINE:
     if (0 != width) {
       rv = NS_INLINE_LINE_BREAK_AFTER(0);
-      aMetrics.height = nscoord(width * p2t);
+      aMetrics.height = NSIntPixelsToTwips(width, p2t);
       aMetrics.ascent = aMetrics.height;
     }
     break;
 
   case TYPE_IMAGE:
-    aMetrics.width = nscoord(width * p2t);
-    aMetrics.height = nscoord(height * p2t);
+    aMetrics.width = NSIntPixelsToTwips(width, p2t);
+    aMetrics.height = NSIntPixelsToTwips(height, p2t);
     aMetrics.ascent = aMetrics.height;
     break;
   }

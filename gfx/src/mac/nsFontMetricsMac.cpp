@@ -54,7 +54,7 @@ nsresult nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
   int         numnames = 0;
   char        altitalicization = 0;
   XFontStruct *fonts;
-  PRInt32     dpi = NS_TO_INT_ROUND(aCX->GetTwipsToDevUnits() * 1440);
+  PRInt32     dpi = NSToIntRound(aCX->GetTwipsToDevUnits() * 1440);
   Display     *dpy = XtDisplay((Widget)aCX->GetNativeWidget());
 
   if (nsnull == wildstring)
@@ -166,7 +166,7 @@ nsresult nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 /*char * nsFontMetricsMac::PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired)
 {
   int         idx;
-  PRInt32     desiredpix = NS_TO_INT_ROUND(mContext->GetAppUnitsToDevUnits() * desired);
+  PRInt32     desiredpix = NSToIntRound(mContext->GetAppUnitsToDevUnits() * desired);
   XFontStruct *curfont;
   PRInt32     closestmin = -1, minidx;
 

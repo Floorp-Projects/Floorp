@@ -152,6 +152,30 @@ void nsRect::Deflate(const nsMargin &aMargin)
   height -= aMargin.top + aMargin.bottom;
 }
 
+// scale the rect but round to smallest containing rect
+nsRect& nsRect::ScaleRoundOut(const float aScale) 
+{
+  nscoord right = NSToCoordCeil(float(x + width) * aScale);
+  nscoord bottom = NSToCoordCeil(float(y + height) * aScale);
+  x = NSToCoordFloor(float(x) * aScale);
+  y = NSToCoordFloor(float(y) * aScale);
+  width = (right - x);
+  height = (bottom - y);
+  return *this;
+}
+
+// scale the rect but round to largest contained rect
+nsRect& nsRect::ScaleRoundIn(const float aScale) 
+{
+  nscoord right = NSToCoordFloor(float(x + width) * aScale);
+  nscoord bottom = NSToCoordFloor(float(y + height) * aScale);
+  x = NSToCoordCeil(float(x) * aScale);
+  y = NSToCoordCeil(float(y) * aScale);
+  width = (right - x);
+  height = (bottom - y);
+  return *this;
+}
+
 // Diagnostics
 
 FILE* operator<<(FILE* out, const nsRect& rect)
@@ -160,13 +184,13 @@ FILE* operator<<(FILE* out, const nsRect& rect)
 
   // Output the coordinates in fractional points so they're easier to read
   tmp.Append("{");
-  tmp.Append(NS_TWIPS_TO_POINTS_FLOAT(rect.x));
+  tmp.Append(NSTwipsToFloatPoints(rect.x));
   tmp.Append(", ");
-  tmp.Append(NS_TWIPS_TO_POINTS_FLOAT(rect.y));
+  tmp.Append(NSTwipsToFloatPoints(rect.y));
   tmp.Append(", ");
-  tmp.Append(NS_TWIPS_TO_POINTS_FLOAT(rect.width));
+  tmp.Append(NSTwipsToFloatPoints(rect.width));
   tmp.Append(", ");
-  tmp.Append(NS_TWIPS_TO_POINTS_FLOAT(rect.height));
+  tmp.Append(NSTwipsToFloatPoints(rect.height));
   tmp.Append("}");
   fputs(tmp, out);
   return out;

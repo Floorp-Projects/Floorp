@@ -752,8 +752,8 @@ void nsRenderingContextMac :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, ns
   ::XDrawArc(mRenderingSurface->display, 
 	     mRenderingSurface->drawable,
 	     mRenderingSurface->gc,
-	     x,y,w,h, NS_TO_INT_ROUND(aStartAngle * 64.0f),
-             NS_TO_INT_ROUND(aEndAngle * 64.0f));
+	     x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
+             NSToIntRound(aEndAngle * 64.0f));
 }
 
 void nsRenderingContextMac :: FillArc(const nsRect& aRect,
@@ -777,8 +777,8 @@ void nsRenderingContextMac :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, ns
   ::XFillArc(mRenderingSurface->display, 
 	     mRenderingSurface->drawable,
 	     mRenderingSurface->gc,
-	     x,y,w,h, NS_TO_INT_ROUND(aStartAngle * 64.0f),
-             NS_TO_INT_ROUND(aEndAngle * 64.0f));
+	     x,y,w,h, NSToIntRound(aStartAngle * 64.0f),
+             NSToIntRound(aEndAngle * 64.0f));
 }
 
 void nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
@@ -875,8 +875,8 @@ void nsRenderingContextMac :: DrawString(const nsString& aString,
 void nsRenderingContextMac :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
   nscoord width,height;
-  width = NS_TO_INT_ROUND(mP2T * aImage->GetWidth());
-  height = NS_TO_INT_ROUND(mP2T * aImage->GetHeight());
+  width = NSToCoordRound(mP2T * aImage->GetWidth());
+  height = NSToCoordRound(mP2T * aImage->GetHeight());
   
   this->DrawImage(aImage,aX,aY,width,height);8?
 }

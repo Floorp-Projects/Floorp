@@ -336,7 +336,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     aContext->GetMutableStyleData(eStyleStruct_Position);
   GetAttribute(nsHTMLAtoms::width, widthValue);
   if (widthValue.GetUnit() == eHTMLUnit_Pixel) {
-    nscoord twips = nscoord(p2t * widthValue.GetPixelValue());
+    nscoord twips = NSIntPixelsToTwips(widthValue.GetPixelValue(), p2t);
     pos->mWidth.SetCoordValue(twips);
   }
   else if (widthValue.GetUnit() == eHTMLUnit_Percent) {
@@ -346,7 +346,7 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
   // height: pixel
   GetAttribute(nsHTMLAtoms::height, value);
   if (value.GetUnit() == eHTMLUnit_Pixel) {
-    nscoord twips = nscoord(p2t * value.GetPixelValue());
+    nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
     pos->mHeight.SetCoordValue(twips);
   }
 

@@ -324,15 +324,15 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
 
   GetWindowOffsets(&xoff, &yoff);
 
-  region->Offset(NS_TO_INT_ROUND(-xoff * scale), NS_TO_INT_ROUND(-yoff * scale));
+  region->Offset(NSTwipsToIntPixels(-xoff, scale), NSTwipsToIntPixels(-yoff, scale));
 //  localcx->SetClipRegion(*region, nsClipCombine_kIntersect);
   localcx->SetClipRegion(*region, nsClipCombine_kReplace);
-  region->Offset(NS_TO_INT_ROUND(xoff * scale), NS_TO_INT_ROUND(yoff * scale));
+  region->Offset(NSTwipsToIntPixels(xoff, scale), NSTwipsToIntPixels(yoff, scale));
 
   nsRect trect;
 
   region->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
-  trect *= mContext->GetPixelsToTwips();
+  trect.ScaleRoundOut(mContext->GetPixelsToTwips());
 
   aView->Paint(*localcx, trect, 0);
 
@@ -439,7 +439,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
   {
     nsRect pixrect = trect;
 
-    pixrect *= mContext->GetTwipsToPixels();
+    pixrect.ScaleRoundIn(mContext->GetTwipsToPixels());
     mDirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
   }
 
@@ -553,7 +553,7 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
         rrect = mDirtyRect;
 #else
         mDirtyRegion->GetBoundingBox(&rrect.x, &rrect.y, &rrect.width, &rrect.height);
-        rrect *= mContext->GetPixelsToTwips();
+        rrect.ScaleRoundOut(mContext->GetPixelsToTwips());
 #endif
         rrect.IntersectRect(rrect, vrect);
 
@@ -1040,7 +1040,7 @@ void nsViewManager :: AddRectToDirtyRegion(nsRect &aRect)
 
   nsRect  trect = aRect;
 
-  trect *= mContext->GetTwipsToPixels();
+  trect.ScaleRoundOut(mContext->GetTwipsToPixels());
   mDirtyRegion->Union(trect.x, trect.y, trect.width, trect.height);
 }
 

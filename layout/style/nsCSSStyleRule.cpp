@@ -438,7 +438,7 @@ nscoord CSSStyleRuleImpl::CalcLength(const nsCSSValue& aValue,
       return ((aFont->mFont.size / 3) * 2); // XXX HACK!
 
     case eCSSUnit_Pixel:
-      return (nscoord)(aPresContext->GetPixelsToTwips() * aValue.GetFloatValue());
+      return NSFloatPixelsToTwips(aValue.GetFloatValue(), aPresContext->GetPixelsToTwips());
   }
   return 0;
 }

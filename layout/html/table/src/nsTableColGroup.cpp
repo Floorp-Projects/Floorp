@@ -321,7 +321,7 @@ void nsTableColGroup::MapAttributesInto(nsIStyleContext* aContext,
 
       case eHTMLUnit_Pixel:
         p2t = aPresContext->GetPixelsToTwips();
-        position->mWidth.SetCoordValue(nscoord(p2t * (float)value.GetPixelValue()));
+        position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
         break;
       }
     }

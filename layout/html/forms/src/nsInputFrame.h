@@ -171,9 +171,9 @@ public:
 
   // XXX similar functionality needs to be added to widget library and these
   //     need to change to use it.
-  static  PRInt32 GetScrollbarWidth(float aPixToTwip);
-  virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
-  virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
+  static  nscoord GetScrollbarWidth(float aPixToTwip);
+  virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
+  virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 

@@ -48,7 +48,7 @@ float nsStyleUtil::GetScalingFactor(PRInt32 aScaler)
     scale *= mult;
   }
 
-  return scale;
+  return (float)scale;
 }
 
 /*

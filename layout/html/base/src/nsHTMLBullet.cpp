@@ -557,12 +557,12 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   case NS_STYLE_LIST_STYLE_BASIC:
   case NS_STYLE_LIST_STYLE_SQUARE:
     t2p = aCX->GetTwipsToPixels();
-    bulletSize = nscoord(t2p * .8 * (fm->GetMaxAscent() / 2));
+    bulletSize = NSTwipsToIntPixels((nscoord)NSToIntRound(0.8f * (float(fm->GetMaxAscent()) / 2.0f)), t2p);
     if (bulletSize < 1) {
       bulletSize = MIN_BULLET_SIZE;
     }
     p2t = aCX->GetPixelsToTwips();
-    bulletSize = nscoord(p2t * bulletSize);
+    bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
     mPadding.bottom = (fm->GetMaxAscent() / 8);
     if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
       mPadding.right = bulletSize / 2;

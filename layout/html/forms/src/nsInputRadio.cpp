@@ -87,8 +87,8 @@ nsInputRadioFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                   nsSize& aDesiredWidgetSize)
 {
   float p2t = aPresContext->GetPixelsToTwips();
-  aDesiredWidgetSize.width  = (int)(12 * p2t);
-  aDesiredWidgetSize.height = (int)(12 * p2t);
+  aDesiredWidgetSize.width  = NSIntPixelsToTwips(12, p2t);
+  aDesiredWidgetSize.height = NSIntPixelsToTwips(12, p2t);
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
@@ -139,7 +139,7 @@ void nsInputRadio::MapAttributesInto(nsIStyleContext* aContext,
                                      nsIPresContext* aPresContext)
 {
   float p2t = aPresContext->GetPixelsToTwips();
-  nscoord pad = (int)(3 * p2t + 0.5);
+  nscoord pad = NSIntPixelsToTwips(3, p2t);
 
   // add left and right padding around the radio button via css
   nsStyleSpacing* spacing = (nsStyleSpacing*) aContext->GetMutableStyleData(eStyleStruct_Spacing);
@@ -148,7 +148,7 @@ void nsInputRadio::MapAttributesInto(nsIStyleContext* aContext,
     spacing->mMargin.SetLeft(left);
   }
   if (eStyleUnit_Null == spacing->mMargin.GetRightUnit()) {
-    nsStyleCoord right((int)(5 * p2t + 0.5));
+    nsStyleCoord right(NSIntPixelsToTwips(5, p2t));
     spacing->mMargin.SetRight(right);
   }
   // add bottom padding if backward mode

@@ -616,13 +616,13 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
       GetAttribute(nsHTMLAtoms::pointSize, value);
       if (value.GetUnit() == eHTMLUnit_Integer) {
         // XXX should probably sanitize value
-        font->mFont.size = parentFont->mFont.size + NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
-        font->mFixedFont.size = parentFont->mFixedFont.size + NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
+        font->mFont.size = parentFont->mFont.size + NSIntPointsToTwips(value.GetIntValue());
+        font->mFixedFont.size = parentFont->mFixedFont.size + NSIntPointsToTwips(value.GetIntValue());
         font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
       }
       else if (value.GetUnit() == eHTMLUnit_Enumerated) {
-        font->mFont.size = NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
-        font->mFixedFont.size = NS_POINTS_TO_TWIPS_INT(value.GetIntValue());
+        font->mFont.size = NSIntPointsToTwips(value.GetIntValue());
+        font->mFixedFont.size = NSIntPointsToTwips(value.GetIntValue());
         font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
       }
       else {

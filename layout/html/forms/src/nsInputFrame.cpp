@@ -78,17 +78,17 @@ nsFormRenderingMode nsInputFrame::GetMode() const
   }
 }
 
-PRInt32 nsInputFrame::GetScrollbarWidth(float aPixToTwip)
+nscoord nsInputFrame::GetScrollbarWidth(float aPixToTwip)
 {
-   return (PRInt32)((19 * aPixToTwip) + 0.5);  // XXX this is windows
+   return NSIntPixelsToTwips(19, aPixToTwip);  // XXX this is windows
 }
 
-PRInt32 nsInputFrame::GetVerticalBorderWidth(float aPixToTwip) const
+nscoord nsInputFrame::GetVerticalBorderWidth(float aPixToTwip) const
 {
-   return (int)(3 * aPixToTwip + 0.5);
+   return NSIntPixelsToTwips(3, aPixToTwip);
 }
 
-PRInt32 nsInputFrame::GetHorizontalBorderWidth(float aPixToTwip) const
+nscoord nsInputFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 {
   return GetVerticalBorderWidth(aPixToTwip);
 }
@@ -96,7 +96,7 @@ PRInt32 nsInputFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 nscoord nsInputFrame::GetVerticalInsidePadding(float aPixToTwip, 
                                                nscoord aInnerHeight) const
 {
-   return (nscoord)(3 * aPixToTwip + 0.5);
+   return NSIntPixelsToTwips(3, aPixToTwip);
 }
 
 nscoord nsInputFrame::GetHorizontalInsidePadding(float aPixToTwip, 
@@ -398,9 +398,9 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
 		    widget->SetFocus();
 		    NS_RELEASE(widget);
 	      NS_RELEASE(view); */
-        float conv = aPresContext.GetTwipsToPixels();
-        ((nsInput*)mContent)->SetClickPoint(NS_TO_INT_ROUND(conv * aEvent->point.x),
-                                            NS_TO_INT_ROUND(conv * aEvent->point.y));   
+        float t2p = aPresContext.GetTwipsToPixels();
+        ((nsInput*)mContent)->SetClickPoint(NSTwipsToIntPixels(aEvent->point.x, t2p),
+                                            NSTwipsToIntPixels(aEvent->point.y, t2p));   
  		    MouseClicked(&aPresContext);
 		    //return PR_FALSE;
 	    } 
@@ -495,7 +495,7 @@ nsInputFrame::CalculateSize (nsIPresContext* aPresContext, nsInputFrame* aFrame,
   // determine the width
   if (eContentAttr_HasValue == colStatus) {  // col attr will provide width
     if (aSpec.mColSizeAttrInPixels) {
-      aBounds.width = (int) (((float)colAttr.GetPixelValue()) * p2t);
+      aBounds.width = NSIntPixelsToTwips(colAttr.GetPixelValue(), p2t);
     }
     else {
       PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());

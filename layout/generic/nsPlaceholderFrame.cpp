@@ -161,10 +161,10 @@ nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
   if (nsIFrame::GetShowFrameBorders()) {
     float p2t = aPresContext.GetPixelsToTwips();
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
-    nscoord x = nscoord(-5 * p2t);
-    aRenderingContext.FillRect(x, 0, nscoord(13 * p2t), nscoord(3 * p2t));
-    nscoord y = nscoord(-10 * p2t);
-    aRenderingContext.FillRect(0, y, nscoord(3 * p2t), nscoord(10 * p2t));
+    nscoord x = NSIntPixelsToTwips(-5, p2t);
+    aRenderingContext.FillRect(x, 0, NSIntPixelsToTwips(13, p2t), NSIntPixelsToTwips(3, p2t));
+    nscoord y = NSIntPixelsToTwips(-10, p2t);
+    aRenderingContext.FillRect(0, y, NSIntPixelsToTwips(3, p2t), NSIntPixelsToTwips(10, p2t));
   }
   return NS_OK;
 }
