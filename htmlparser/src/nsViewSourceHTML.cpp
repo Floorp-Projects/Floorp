@@ -412,7 +412,10 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult CViewSourceHTML::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
+NS_IMETHODIMP_(eAutoDetectResult)
+CViewSourceHTML::CanParse(CParserContext& aParserContext,
+                          const nsString& aBuffer, PRInt32 aVersion)
+{
   eAutoDetectResult result=eUnknownDetect;
 
   if(eViewSource==aParserContext.mParserCommand) {
@@ -789,7 +792,8 @@ NS_IMETHODIMP CViewSourceHTML::WillInterruptParse(void){
  * @param 
  * @return
  */
-void CViewSourceHTML::SetVerification(PRBool aEnabled){
+void CViewSourceHTML::SetVerification(PRBool aEnabled)
+{
 }
 
 /**
@@ -810,21 +814,32 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  * Give rest of world access to our tag enums, so that CanContain(), etc,
  * become useful.
  */
-NS_IMETHODIMP CViewSourceHTML::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
+NS_IMETHODIMP
+CViewSourceHTML::StringTagToIntTag(const nsAReadableString &aTag,
+                                   PRInt32* aIntTag) const
 {
   *aIntTag = nsHTMLTags::LookupTag(aTag);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
+NS_IMETHODIMP_(const PRUnichar *)
+CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag) const
 {
-  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag).get());
-  return NS_OK;
+  const PRUnichar *str_ptr = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
+
+  NS_ASSERTION(str_ptr, "Bad tag enum passed to COtherDTD::IntTagToStringTag()"
+               "!!");
+
+  return str_ptr;
 }
 
-NS_IMETHODIMP CViewSourceHTML::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
+NS_IMETHODIMP
+CViewSourceHTML::ConvertEntityToUnicode(const nsAReadableString& aEntity,
+                                        PRInt32* aUnicode) const
 {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+
   return NS_OK;
 }
 
@@ -1032,11 +1047,13 @@ void CViewSourceHTML::AddContainmentError(eHTMLTags aChildTag,eHTMLTags aParentT
       char theChildMsg[100];
       if(eHTMLTag_text==aChildTag) 
         strcpy(theChildMsg,"text");
-      else sprintf(theChildMsg,"<%s>",nsHTMLTags::GetCStringValue(aChildTag));
+      else sprintf(theChildMsg,"<%s>",
+                   NS_ConvertUCS2toUTF8(nsHTMLTags::GetStringValue(aChildTag)).get());
 
       char theMsg[256];
       sprintf(theMsg,"\n -- Line (%i) error: %s is not a legal child of <%s>",
-              aLineNumber,theChildMsg,nsHTMLTags::GetCStringValue(aParentTag));
+              aLineNumber, theChildMsg,
+              NS_ConvertUCS2toUTF8(nsHTMLTags::GetStringValue(aParentTag)).get());
 
       mErrors.AppendWithConversion(theMsg);
     }

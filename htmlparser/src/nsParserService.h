@@ -34,11 +34,14 @@ public:
 
   NS_IMETHOD HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const;
 
-  NS_IMETHOD HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const;
+  NS_IMETHOD HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const;
 
-  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const;
+  NS_IMETHOD HTMLStringTagToId(const nsAReadableString &aTagName,
+                               PRInt32* aId) const;
+
+  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, const PRUnichar **aTagName) const;
   
-  NS_IMETHOD HTMLConvertEntityToUnicode(const nsString& aEntity, 
+  NS_IMETHOD HTMLConvertEntityToUnicode(const nsAReadableString& aEntity, 
                                         PRInt32* aUnicode) const;
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
                                         nsCString& aEntity) const;

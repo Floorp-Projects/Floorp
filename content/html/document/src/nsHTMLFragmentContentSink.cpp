@@ -503,19 +503,26 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
              do_GetService(kParserServiceCID, &result);
     NS_ENSURE_SUCCESS(result, result);
 
-    nsAutoString tmpName;
+    nsCOMPtr<nsINodeInfo> nodeInfo;
 
     if (nodeType == eHTMLTag_userdefined) {
-      tmpName.Assign(aNode.GetText());
+      result =
+        mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
+                                      kNameSpaceID_None,
+                                      *getter_AddRefs(nodeInfo));
     } else {
-      result = parserService->HTMLIdToStringTag(nodeType, tmpName);
-      NS_ENSURE_SUCCESS(result, result);
+      const PRUnichar *name = nsnull;
+
+      parserService->HTMLIdToStringTag(nodeType, &name);
+      NS_ASSERTION(name, "This should not happen!");
+
+      result =
+        mNodeInfoManager->GetNodeInfo(nsDependentString(name), nsnull,
+                                      kNameSpaceID_None,
+                                      *getter_AddRefs(nodeInfo));
     }
 
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    result =
-      mNodeInfoManager->GetNodeInfo(tmpName, nsnull, kNameSpaceID_None,
-                                    *getter_AddRefs(nodeInfo));
+    NS_ENSURE_SUCCESS(result, result);
 
     result = NS_CreateHTMLElement(&content, nodeInfo, PR_FALSE);
 
@@ -579,18 +586,25 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
 
         NS_ENSURE_SUCCESS(result, result);
 
-        nsAutoString tmpName;
+        nsCOMPtr<nsINodeInfo> nodeInfo;
 
-        if (nodeType == eHTMLTag_userdefined) {
-          tmpName.Assign(aNode.GetText());
+        if (nodeType == eHTMLTag_userdefined) { 
+          result =
+            mNodeInfoManager->GetNodeInfo(aNode.GetText(), nsnull,
+                                          kNameSpaceID_None,
+                                          *getter_AddRefs(nodeInfo));
         } else {
-          result = parserService->HTMLIdToStringTag(nodeType, tmpName);
-          NS_ENSURE_SUCCESS(result, result);
+          const PRUnichar *name = nsnull;
+          result = parserService->HTMLIdToStringTag(nodeType, &name);
+          NS_ASSERTION(name, "This should not happen!");
+
+          result =
+            mNodeInfoManager->GetNodeInfo(nsDependentString(name), nsnull,
+                                          kNameSpaceID_None,
+                                          *getter_AddRefs(nodeInfo));
         }
 
-        nsCOMPtr<nsINodeInfo> nodeInfo;
-        result = mNodeInfoManager->GetNodeInfo(tmpName, nsnull, kNameSpaceID_None,
-                                               *getter_AddRefs(nodeInfo));
+        NS_ENSURE_SUCCESS(result, result);
 
         if(NS_SUCCEEDED(result)) {
           result = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo, PR_FALSE);
@@ -893,8 +907,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
     const nsAReadableString& key = aNode.GetKeyAt(i);
-    k.Truncate();
-    k.Append(key);
+    k.Assign(key);
     k.ToLowerCase();
 
     nsIAtom*  keyAtom = NS_NewAtom(k);

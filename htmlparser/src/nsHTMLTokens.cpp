@@ -52,7 +52,8 @@
 #include "nsScanner.h"
 
 
-static const char*  gUserdefined = "userdefined";
+static const PRUnichar sUserdefined[] = {'u', 's', 'e', 'r', 'd', 'e', 'f',
+                                         'i', 'n', 'e', 'd'};
 
 static const PRUnichar kAttributeTerminalChars[] = {
   PRUnichar('&'), PRUnichar('\b'), PRUnichar('\t'), 
@@ -268,7 +269,7 @@ const nsAReadableString& CStartToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
-      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID).get());
+      mTextValue.Assign(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID));
     }
   }
   return mTextValue;
@@ -292,7 +293,7 @@ void CStartToken::GetSource(nsString& anOutputString){
     if(mTextValue.Length()>0)
       anOutputString.Append(mTextValue);
     else
-     anOutputString.AssignWithConversion(GetTagName(mTypeID));
+     anOutputString.Assign(GetTagName(mTypeID));
     anOutputString.AppendWithConversion('>');
   }
 }
@@ -315,7 +316,7 @@ void CStartToken::AppendSource(nsString& anOutputString){
     if(mTextValue.Length()>0)
       anOutputString+=mTextValue;
     else
-     anOutputString.AppendWithConversion(GetTagName(mTypeID));
+     anOutputString.Append(GetTagName(mTypeID));
     anOutputString.AppendWithConversion('>');
   }
 }
@@ -455,7 +456,7 @@ const nsAReadableString& CEndToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
-      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID).get());
+      mTextValue.Assign(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID));
     }
   }
   return mTextValue;
@@ -473,7 +474,7 @@ void CEndToken::GetSource(nsString& anOutputString){
   if(mTextValue.Length()>0)
     anOutputString.Append(mTextValue);
   else
-    anOutputString.AppendWithConversion(GetTagName(mTypeID));
+    anOutputString.Append(GetTagName(mTypeID));
   anOutputString.AppendWithConversion(">");
 }
 
@@ -489,7 +490,7 @@ void CEndToken::AppendSource(nsString& anOutputString){
   if(mTextValue.Length()>0)
     anOutputString.Append(mTextValue);
   else
-    anOutputString.AppendWithConversion(GetTagName(mTypeID));
+    anOutputString.Append(GetTagName(mTypeID));
   anOutputString.AppendWithConversion(">");
 }
 
@@ -643,8 +644,9 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
   // 5. If the end of the document is reached and if we still don't have the condition in step 4. then
   //    assume that the prematured terminal string is the actual terminal string and goto step 1. This
   //    will be our last iteration.
-  nsAutoString theTerminalString(aEndTagName);
-  theTerminalString.InsertWithConversion("</",0,2);
+
+  const NS_NAMED_LITERAL_STRING(ltslash, "</");
+  const nsAString& theTerminalString = ltslash + aEndTagName;
 
   PRUint32 termStrLen=theTerminalString.Length();
   while((result == NS_OK) && !done) {
@@ -2266,15 +2268,18 @@ const nsAReadableString& CStyleToken::GetStringValue(void)
  * @param 
  * @return
  */
-const char* GetTagName(PRInt32 aTag) {
-  const nsAFlatCString& result =
-    nsHTMLTags::GetStringValue((nsHTMLTag) aTag);
-  if (0 == result.Length()) {
-    if(aTag>=eHTMLTag_userdefined)
-      return gUserdefined;
-    else return 0;
+const PRUnichar* GetTagName(PRInt32 aTag)
+{
+  const PRUnichar *result = nsHTMLTags::GetStringValue((nsHTMLTag) aTag);
+
+  if (result) {
+    return result;
   }
-  return result.get();
+
+  if(aTag >= eHTMLTag_userdefined)
+    return sUserdefined;
+
+  return 0;
 }
 
 

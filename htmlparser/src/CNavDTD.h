@@ -1,5 +1,4 @@
-
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -118,17 +117,20 @@ class nsTokenAllocator;
 #pragma warning( disable : 4275 )
 #endif
 
-class CNavDTD : public nsIDTD {
+class CNavDTD : public nsIDTD
+{
 
 #if defined(XP_PC)
 #pragma warning( default : 4275 )
 #endif
 
-  public:
+public:
+    NS_DECL_ISUPPORTS
+
     /**
       *  Common constructor for navdtd. You probably want to call
-  	  *  NS_NewNavHTMLDTD().
-	    * 
+      *  NS_NewNavHTMLDTD().
+      *
       *  @update  gess 7/9/98
       */
     CNavDTD();
@@ -139,7 +141,7 @@ class CNavDTD : public nsIDTD {
      */
     virtual ~CNavDTD();
 
-    virtual const nsIID&  GetMostDerivedIID(void) const;
+    NS_IMETHOD_(const nsIID&) GetMostDerivedIID(void) const;
 
     /**
      * Call this method if you want the DTD to construct a clone of itself.
@@ -147,10 +149,7 @@ class CNavDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual nsresult CreateNewInstance(nsIDTD** aInstancePtrResult);
-
-
-    NS_DECL_ISUPPORTS
+    NS_IMETHOD CreateNewInstance(nsIDTD** aInstancePtrResult);
 
     /**
      * This method is called to determine if the given DTD can parse
@@ -164,7 +163,9 @@ class CNavDTD : public nsIDTD {
    	 *			being asked to parse).
      * @return  TRUE if this DTD parse the given type; FALSE otherwise.
      */
-    virtual eAutoDetectResult CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion);
+    NS_IMETHOD_(eAutoDetectResult) CanParse(CParserContext& aParserContext,
+                                            const nsString& aBuffer,
+                                            PRInt32 aVersion);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
@@ -175,7 +176,8 @@ class CNavDTD : public nsIDTD {
       * @param	aSink
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink);
+    NS_IMETHOD WillBuildModel(const CParserContext& aParserContext,
+                              nsIContentSink* aSink);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
@@ -185,7 +187,9 @@ class CNavDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver=0,nsIContentSink* aSink=0);
+    NS_IMETHOD BuildModel(nsIParser* aParser, nsITokenizer* aTokenizer,
+                          nsITokenObserver* anObserver = nsnull,
+                          nsIContentSink* aSink = nsnull);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
@@ -195,11 +199,13 @@ class CNavDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode, PRBool aNotifySink,
+                             nsIParser* aParser,
+                             nsIContentSink* aSink = nsnull);
 
     /**
      *  This method is called by the parser, once for each token
-	   *	that has been constructed during the tokenization phase.
+     *	that has been constructed during the tokenization phase.
      *  @update  gess 3/25/98
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
@@ -220,7 +226,7 @@ class CNavDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual  nsTokenAllocator* GetTokenAllocator(void);
+    NS_IMETHOD_(nsTokenAllocator *) GetTokenAllocator(void);
 
     /**
      * If the parse process gets interrupted, this method gets called
@@ -247,7 +253,7 @@ class CNavDTD : public nsIDTD {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanContain(PRInt32 aParent,PRInt32 aChild) const;
+    NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;
 
     /**
      *  This method is called to determine whether or not a tag
@@ -258,7 +264,8 @@ class CNavDTD : public nsIDTD {
      *  @param   aChild -- int tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanPropagate(eHTMLTags aParent,eHTMLTags aChild,PRBool aParentContains) ;
+    NS_IMETHOD_(PRBool) CanPropagate(eHTMLTags aParent, eHTMLTags aChild,
+                                     PRBool aParentContains) ;
 
     /**
      *  This method gets called to determine whether a given 
@@ -270,7 +277,8 @@ class CNavDTD : public nsIDTD {
      *  @param   aParentContains -- can be 0,1,-1 (false,true, unknown)
      *  @return  PR_TRUE if given tag can be omitted
      */
-    virtual PRBool CanOmit(eHTMLTags aParent,eHTMLTags aChild,PRBool& aParentContains) ;
+    NS_IMETHOD_(PRBool) CanOmit(eHTMLTags aParent, eHTMLTags aChild,
+                                PRBool& aParentContains);
 
     /**
      *  This method gets called to determine whether a given 
@@ -280,7 +288,7 @@ class CNavDTD : public nsIDTD {
      *  @param   aTag -- tag to test for containership
      *  @return  PR_TRUE if given tag can contain other tags
      */
-    virtual PRBool IsContainer(PRInt32 aTag) const;
+    NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;
 
     /**
      * This method tries to design a context map (without actually
@@ -292,7 +300,9 @@ class CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool ForwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag);
+    NS_IMETHOD_(PRBool) ForwardPropagate(nsString& aSequence,
+                                         eHTMLTags aParentTag,
+                                         eHTMLTags aChildTag);
 
     /**
      * This method tries to design a context map (without actually
@@ -303,7 +313,9 @@ class CNavDTD : public nsIDTD {
      * @param   aChild -- tag type of child
      * @return  True if closure was achieved -- other false
      */
-    virtual PRBool BackwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTMLTags aChildTag) const;
+    NS_IMETHOD_(PRBool) BackwardPropagate(nsString& aSequence,
+                                          eHTMLTags aParentTag,
+                                          eHTMLTags aChildTag) const;
 
     /**
      * Attempt forward and/or backward propagation for the given
@@ -365,20 +377,29 @@ class CNavDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual nsresult  Terminate(nsIParser* aParser=nsnull) { return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING; }
+    NS_IMETHOD Terminate(nsIParser* aParser = nsnull)
+    {
+        mDTDState = NS_ERROR_HTMLPARSER_STOPPARSING;
+
+        return mDTDState;
+    }
 
     /**
      * Give rest of world access to our tag enums, so that CanContain(), etc,
      * become useful.
      */
-    NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const;
+    NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag,
+                                 PRInt32* aIntTag) const;
 
-    NS_IMETHOD IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const;
+    NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const;
 
-    NS_IMETHOD ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const;
+    NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity,
+                                      PRInt32* aUnicode) const;
 
-    virtual PRBool IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;
-    virtual PRBool IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
+    NS_IMETHOD_(PRBool) IsBlockElement(PRInt32 aTagID,
+                                       PRInt32 aParentID) const;
+    NS_IMETHOD_(PRBool) IsInlineElement(PRInt32 aTagID,
+                                        PRInt32 aParentID) const;
 
     /**
      * The following set of methods are used to partially construct 
@@ -388,7 +409,8 @@ class CNavDTD : public nsIDTD {
      * @return  error code representing construction state; usually 0.
      */
     nsresult    HandleStartToken(CToken* aToken);
-    nsresult    HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode *aNode);
+    nsresult    HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
+                                        nsCParserNode *aNode);
     nsresult    HandleEndToken(CToken* aToken);
     nsresult    HandleEntityToken(CToken* aToken);
     nsresult    HandleCommentToken(CToken* aToken);

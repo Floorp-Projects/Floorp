@@ -224,8 +224,8 @@ nsLoggingSink::CloseContainer(const nsIParserNode& aNode) {
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = nsHTMLTags::GetStringValue(nodeType).get();
-    theResult=CloseNode(tag);
+    const PRUnichar* tag = nsHTMLTags::GetStringValue(nodeType);
+    theResult = CloseNode(NS_ConvertUCS2toUTF8(tag).get());
   }
   else theResult= CloseNode("???");
 
@@ -548,8 +548,8 @@ nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode) {
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = nsHTMLTags::GetStringValue(nodeType).get();
-    PR_fprintf(mOutput, "\"%s\"", tag);
+    const PRUnichar* tag = nsHTMLTags::GetStringValue(nodeType);
+    PR_fprintf(mOutput, "\"%s\"", NS_ConvertUCS2toUTF8(tag).get());
   }
   else {
     char* text;
@@ -660,10 +660,10 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 
   if ((nodeType >= eHTMLTag_unknown) &&
       (nodeType <= nsHTMLTag(NS_HTML_TAG_MAX))) {
-    const char* tag = nsHTMLTags::GetStringValue(nodeType).get();
+    const PRUnichar* tag = nsHTMLTags::GetStringValue(nodeType);
 
 		if(tag)
-      PR_fprintf(mOutput, "<leaf tag=\"%s\"", tag);
+      PR_fprintf(mOutput, "<leaf tag=\"%s\"", NS_ConvertUCS2toUTF8(tag).get());
     else PR_fprintf(mOutput, "<leaf tag=\"???\"");
 
     if (WillWriteAttributes(aNode)) {

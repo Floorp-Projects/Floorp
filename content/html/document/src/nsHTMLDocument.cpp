@@ -1338,8 +1338,9 @@ nsHTMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
     rv = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo, PR_FALSE);
     content = do_QueryInterface(htmlContent);
   }
-  else
+  else {
     rv = NS_NewXMLElement(getter_AddRefs(content), nodeInfo);
+  }
 
   NS_ENSURE_SUCCESS(rv, rv);
 

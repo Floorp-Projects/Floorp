@@ -239,7 +239,9 @@ nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult) {
  * @param 
  * @return
  */
-nsresult COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
+NS_IMETHODIMP
+COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult)
+{
   nsresult result=NS_NewOtherHTMLDTD(aInstancePtrResult);
 
   if(aInstancePtrResult) {
@@ -264,7 +266,10 @@ nsresult COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param    
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
-eAutoDetectResult COtherDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
+NS_IMETHODIMP_(eAutoDetectResult)
+COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
+                    PRInt32 aVersion)
+{
   eAutoDetectResult result=eUnknownDetect;
 
   if(mEnableStrict) {
@@ -887,18 +892,32 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  * Give rest of world access to our tag enums, so that CanContain(), etc,
  * become useful.
  */ 
-NS_IMETHODIMP COtherDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const {
+NS_IMETHODIMP
+COtherDTD::StringTagToIntTag(const nsAReadableString &aTag,
+                             PRInt32* aIntTag) const
+{
   *aIntTag = nsHTMLTags::LookupTag(aTag);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP COtherDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const {
-  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag).get());
-  return NS_OK;
+NS_IMETHODIMP_(const PRUnichar *)
+COtherDTD::IntTagToStringTag(PRInt32 aIntTag) const
+{
+  const PRUnichar *str_ptr = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
+
+  NS_ASSERTION(str_ptr, "Bad tag enum passed to COtherDTD::IntTagToStringTag()"
+               "!!");
+
+  return str_ptr;
 }  
 
-NS_IMETHODIMP COtherDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const {
+NS_IMETHODIMP
+COtherDTD::ConvertEntityToUnicode(const nsAReadableString& aEntity,
+                                  PRInt32* aUnicode) const
+{
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+
   return NS_OK;
 }
  

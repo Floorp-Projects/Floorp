@@ -71,20 +71,25 @@ class nsIParserService : public nsISupports {
  public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSERSERVICE_IID)
 
-  NS_IMETHOD HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const=0;
+  NS_IMETHOD HTMLAtomTagToId(nsIAtom* aAtom, PRInt32* aId) const = 0;
 
-  NS_IMETHOD HTMLStringTagToId(const nsString &aTag, PRInt32* aId) const =0;
+  NS_IMETHOD HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom,
+                                          PRInt32* aId) const = 0;
 
-  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId, nsString& aTag) const =0;
+  NS_IMETHOD HTMLStringTagToId(const nsAReadableString &aTagName,
+                               PRInt32* aId) const = 0;
+
+  NS_IMETHOD HTMLIdToStringTag(PRInt32 aId,
+                               const PRUnichar **aTagName) const = 0;
   
-  NS_IMETHOD HTMLConvertEntityToUnicode(const nsString& aEntity, 
-                                        PRInt32* aUnicode) const =0;
+  NS_IMETHOD HTMLConvertEntityToUnicode(const nsAReadableString& aEntity, 
+                                        PRInt32* aUnicode) const = 0;
 
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
-                                        nsCString& aEntity) const =0;
+                                        nsCString& aEntity) const = 0;
 
-  NS_IMETHOD IsContainer(PRInt32 aId, PRBool& aIsContainer) const =0;
-  NS_IMETHOD IsBlock(PRInt32 aId, PRBool& aIsBlock) const =0;
+  NS_IMETHOD IsContainer(PRInt32 aId, PRBool& aIsContainer) const = 0;
+  NS_IMETHOD IsBlock(PRInt32 aId, PRBool& aIsBlock) const = 0;
 
   // Observer mechanism
   NS_IMETHOD RegisterObserver(nsIElementObserver* aObserver,

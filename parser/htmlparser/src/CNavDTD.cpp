@@ -317,7 +317,10 @@ nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @param   
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */ 
-eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
+NS_IMETHODIMP_(eAutoDetectResult)
+CNavDTD::CanParse(CParserContext& aParserContext,
+                  const nsString& aBuffer, PRInt32 aVersion)
+{
   eAutoDetectResult result=eUnknownDetect;
 
   if(eViewSource==aParserContext.mParserCommand) {
@@ -2514,18 +2517,31 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  * Give rest of world access to our tag enums, so that CanContain(), etc,
  * become useful.
  */
-NS_IMETHODIMP CNavDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const {
+NS_IMETHODIMP CNavDTD::StringTagToIntTag(const nsAReadableString &aTag,
+                                         PRInt32* aIntTag) const
+{
   *aIntTag = nsHTMLTags::LookupTag(aTag);
+
   return NS_OK;
 }
 
-NS_IMETHODIMP CNavDTD::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const {
-  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag).get());
-  return NS_OK;
+NS_IMETHODIMP_(const PRUnichar *)
+CNavDTD::IntTagToStringTag(PRInt32 aIntTag) const
+{
+  const PRUnichar *str_ptr = nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag);
+
+  NS_ASSERTION(str_ptr, "Bad tag enum passed to CNavDTD::IntTagToStringTag()"
+               "!!");
+
+  return str_ptr;
 }
 
-NS_IMETHODIMP CNavDTD::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const {
+NS_IMETHODIMP
+CNavDTD::ConvertEntityToUnicode(const nsAReadableString& aEntity,
+                                PRInt32* aUnicode) const
+{
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+
   return NS_OK;
 }
 
@@ -3918,7 +3934,9 @@ nsresult CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
  * @param 
  * @return
  */
-nsTokenAllocator* CNavDTD::GetTokenAllocator(void){
+NS_IMETHODIMP_(nsTokenAllocator *)
+CNavDTD::GetTokenAllocator(void)
+{
   if(!mTokenAllocator) {
     nsresult result=GetTokenizer(mTokenizer);
     if (NS_SUCCEEDED(result)) {

@@ -433,7 +433,7 @@ nsNodeInfoInner::GetHashValue(const void *key)
   if (key) {
     const nsNodeInfoInner *node = (const nsNodeInfoInner *)key;
 
-    // Is this an acceptable has value?
+    // Is this an acceptable hash value?
     return (PLHashNumber(NS_PTR_TO_INT32(node->mName)) & 0xffff) >> 8;
   }
 

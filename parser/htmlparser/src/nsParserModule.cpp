@@ -97,7 +97,9 @@ PR_STATIC_CALLBACK(nsresult)
 Initialize(nsIModule* aSelf)
 {
   if (!gInitialized) {
-    nsHTMLTags::AddRefTable();
+    nsresult rv = nsHTMLTags::AddRefTable();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsHTMLEntities::AddRefTable();
     InitializeElementTable();
     CNewlineToken::AllocNewline();

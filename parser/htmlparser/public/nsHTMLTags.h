@@ -39,9 +39,7 @@
 #ifndef nsHTMLTags_h___
 #define nsHTMLTags_h___
 
-class nsAString;
-class nsACString;
-class nsAFlatCString;
+#include "nsAReadableString.h"
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -57,7 +55,7 @@ enum nsHTMLTag {
 #include "nsHTMLTagList.h"
 
   /* The remaining enums are not for tags */
-  eHTMLTag_text,    eHTMLTag_whitespace, eHTMLTag_newline, 
+  eHTMLTag_text,    eHTMLTag_whitespace, eHTMLTag_newline,
   eHTMLTag_comment, eHTMLTag_entity,     eHTMLTag_doctypeDecl,
   eHTMLTag_markupDecl, eHTMLTag_instruction,
   eHTMLTag_userdefined
@@ -69,13 +67,12 @@ enum nsHTMLTag {
 
 class nsHTMLTags {
 public:
-  static void AddRefTable(void);
+  static nsresult AddRefTable(void);
   static void ReleaseTable(void);
 
-  static nsHTMLTag LookupTag(const nsAString& aTag);
-  static nsHTMLTag LookupTag(const nsACString& aTag);
-  static const nsAFlatCString& GetStringValue(nsHTMLTag aEnum);
-  static const char* GetCStringValue(nsHTMLTag aEnum);
+  static nsHTMLTag LookupTag(const nsAReadableString& aTagName);
+  static nsHTMLTag CaseSensitiveLookupTag(const PRUnichar* aTagName);
+  static const PRUnichar *GetStringValue(nsHTMLTag aEnum);
 };
 
 #define eHTMLTags nsHTMLTag
