@@ -90,6 +90,8 @@ GetCurrentContext() {
     return cx;
 }
 
+#if 0
+// unused.
 static JSContext *
 GetSafeContext() {
     // Get the "safe" JSContext: our JSContext of last resort
@@ -104,8 +106,7 @@ GetSafeContext() {
         return nsnull;
     return cx;
 }
-
-
+#endif
 
 static nsDOMProp 
 findDomProp(const char *propName, int n);
@@ -1229,28 +1230,95 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
 // Methods implementing nsIXPCSecurityManager //
 ////////////////////////////////////////////////
 
+#include "nsISecurityCheckedComponent.h"
+
+nsresult
+nsScriptSecurityManager::CheckXPCCapability(JSContext *aJSContext, const char *aCapability) 
+{
+    // Check for the carte blanche before anything else.
+    if (aCapability) {
+        if (PL_strcasecmp(aCapability, "AllAccess") == 0)
+            return NS_OK;
+        else if (PL_strcasecmp(aCapability, "NoAccess") != 0) {
+            PRBool canAccess;
+            if (NS_FAILED(IsCapabilityEnabled(aCapability, &canAccess)))
+                return NS_ERROR_FAILURE;
+            if (canAccess)
+                return NS_OK;
+        }
+    }
+
+    static const char msg[] = "Access to XPConnect service denied.";
+    JS_SetPendingException(aJSContext, 
+                           STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
+    return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
+}    
+
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext, 
                                           const nsIID &aIID, 
                                           nsISupports *aObj)
 {
-	if (aIID.Equals(NS_GET_IID(nsIXPCException)))
-		return NS_OK;		
-    return CheckXPCPermissions(aJSContext, aObj);
+    // XXX could un-special-case-this
+    if (aIID.Equals(NS_GET_IID(nsIXPCException)))
+        return NS_OK;		
+
+    nsresult rv;
+    rv = CheckXPCPermissions(aJSContext, aObj);
+    if (NS_SUCCEEDED(rv))
+        return rv;
+
+    // If check fails, QI to interface that lets scomponents advertise
+    // their own security requirements.
+    nsCOMPtr<nsISecurityCheckedComponent> checkedComponent =
+        do_QueryInterface(aObj, &rv);
+
+    nsXPIDLCString capability;
+    if (NS_SUCCEEDED(rv) && checkedComponent) {
+        checkedComponent->CanCreateWrapper((nsIID *)&aIID,
+                                           getter_Copies(capability));
+    }
+
+    return CheckXPCCapability(aJSContext, capability);
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateInstance(JSContext *aJSContext, 
                                            const nsCID &aCID)
 {
-    return CheckXPCPermissions(aJSContext, nsnull);
+    nsresult rv;
+    rv = CheckXPCPermissions(aJSContext, nsnull);
+    if (NS_SUCCEEDED(rv))
+        return rv;
+
+    static const char msg[] = "Access to XPConnect service denied.";
+    JS_SetPendingException(aJSContext, 
+                           STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
+    return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
 }
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CanGetService(JSContext *aJSContext, 
                                        const nsCID &aCID)
 {
-    return CheckXPCPermissions(aJSContext, nsnull);
+    nsresult rv;
+    rv = CheckXPCPermissions(aJSContext, nsnull);
+    if (NS_SUCCEEDED(rv))
+        return rv;
+
+    static const char msg[] = "Access to XPConnect service denied.";
+    JS_SetPendingException(aJSContext, 
+                           STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
+    return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
+}
+
+// Result of this function should not be freed.
+static const PRUnichar *
+JSIDToString(JSContext *aJSContext, const jsid id) {
+    jsval v;
+    JS_IdToValue(aJSContext, id, &v);
+    JSString *str = JS_ValueToString(aJSContext, v);
+    return NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
 }
 
 NS_IMETHODIMP
@@ -1261,7 +1329,24 @@ nsScriptSecurityManager::CanCallMethod(JSContext *aJSContext,
                                        PRUint16 aMethodIndex, 
                                        const jsid aName)
 {
-    return CheckXPCPermissions(aJSContext, aObj);
+    nsresult rv;
+    rv = CheckXPCPermissions(aJSContext, aObj);
+    if (NS_SUCCEEDED(rv))
+        return rv;
+
+    // If check fails, QI to interface that lets scomponents advertise
+    // their own security requirements.
+    nsCOMPtr<nsISecurityCheckedComponent> checkedComponent =
+        do_QueryInterface(aObj, &rv);
+
+    nsXPIDLCString capability;
+    if (NS_SUCCEEDED(rv) && checkedComponent) {
+        checkedComponent->CanCallMethod((const nsIID *)&aIID,
+                                             JSIDToString(aJSContext, aName),
+                                             getter_Copies(capability));
+    }
+
+    return CheckXPCCapability(aJSContext, capability);
 }
 
 NS_IMETHODIMP
@@ -1272,7 +1357,24 @@ nsScriptSecurityManager::CanGetProperty(JSContext *aJSContext,
                                         PRUint16 aMethodIndex, 
                                         const jsid aName)
 {
-    return CheckXPCPermissions(aJSContext, aObj);
+    nsresult rv;
+    rv = CheckXPCPermissions(aJSContext, aObj);
+    if (NS_SUCCEEDED(rv))
+        return rv;
+
+    // If check fails, QI to interface that lets scomponents advertise
+    // their own security requirements.
+    nsCOMPtr<nsISecurityCheckedComponent> checkedComponent =
+        do_QueryInterface(aObj, &rv);
+
+    nsXPIDLCString capability;
+    if (NS_SUCCEEDED(rv) && checkedComponent) {
+        checkedComponent->CanGetProperty((const nsIID *)&aIID,
+                                         JSIDToString(aJSContext, aName),
+                                         getter_Copies(capability));
+    }
+
+    return CheckXPCCapability(aJSContext, capability);
 }
 
 NS_IMETHODIMP
@@ -1283,7 +1385,24 @@ nsScriptSecurityManager::CanSetProperty(JSContext *aJSContext,
                                         PRUint16 aMethodIndex, 
                                         const jsid aName)
 {
-    return CheckXPCPermissions(aJSContext, aObj);
+    nsresult rv;
+    rv = CheckXPCPermissions(aJSContext, aObj);
+    if (NS_SUCCEEDED(rv))
+        return rv;
+
+    // If check fails, QI to interface that lets scomponents advertise
+    // their own security requirements.
+    nsCOMPtr<nsISecurityCheckedComponent> checkedComponent =
+        do_QueryInterface(aObj, &rv);
+
+    nsXPIDLCString capability;
+    if (NS_SUCCEEDED(rv) && checkedComponent) {
+        checkedComponent->CanSetProperty((const nsIID *)&aIID,
+                                         JSIDToString(aJSContext, aName),
+                                         getter_Copies(capability));
+    }
+
+    return CheckXPCCapability(aJSContext, capability);
 }
 
 ///////////////////
@@ -1355,7 +1474,6 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx,
     JSStackFrame *fp;
     return GetPrincipalAndFrame(cx, result, &fp);
 }
-
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj, 
@@ -1509,9 +1627,6 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext,
                     return NS_OK;
             }
         }
-		static const char msg[] = "Access denied to XPConnect service.";
-		JS_SetPendingException(aJSContext, 
-			                   STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
         return NS_ERROR_DOM_XPCONNECT_ACCESS_DENIED;
     }
     return NS_OK;
