@@ -172,8 +172,10 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    // Subclass frame
    fnwpDefFrame = WinSubclassWindow( mFrameWnd, fnwpFrame);
    WinSetWindowPtr( mFrameWnd, QWL_USER, this);
+#ifdef OLDCODE
    BOOL brc = (BOOL) WinSendMsg( mFrameWnd, WM_SETICON,
                                  MPFROMLONG( gWidgetModuleData->GetFrameIcon()), 0);
+#endif
 
    // make the client the client.
    WinSetWindowUShort( mWnd, QWS_ID, FID_CLIENT);
