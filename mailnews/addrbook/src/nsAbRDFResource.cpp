@@ -95,7 +95,7 @@ nsresult nsAbRDFResource::GetAbDatabase()
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsString file(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			file.Truncate(pos);
@@ -127,7 +127,7 @@ nsresult nsAbRDFResource::GetDatabaseFromFile(char* pDbFile)
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsString file(pDbFile);
+		nsString file; file.AssignWithConversion(pDbFile);
 		(*dbPath) += file;
 
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);

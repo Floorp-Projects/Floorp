@@ -186,8 +186,8 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 		return rv;
 
 	nsAutoString uri;
-	uri.Append(mURI);
-	uri.Append('/');
+	uri.AppendWithConversion(mURI);
+	uri.AppendWithConversion('/');
 
 	uri.Append(name);
 	char* uriStr = uri.ToNewCString();

@@ -168,7 +168,7 @@ nsAddbookProtocolHandler::GenerateHTMLOutputChannel( char *aHtmlOutput,
   if (!aHtmlOutput)
     return NS_ERROR_FAILURE;
 
-  rv = NS_NewStringInputStream(getter_AddRefs(s), aHtmlOutput);
+  rv = NS_NewStringInputStream(getter_AddRefs(s), NS_ConvertASCIItoUCS2(aHtmlOutput));
   if (NS_FAILED(rv)) 
     return rv;
   
@@ -279,18 +279,18 @@ nsAddbookProtocolHandler::AddIndividualUserAttribPair(nsString &aString, const c
 
   if (NS_SUCCEEDED(aCard->GetCardValue(aColumn, &aName)) && (aName) && (*aName))
   {
-    aString.Append("<tr>");
+    aString.AppendWithConversion("<tr>");
 
-    aString.Append("<td><b>");
+    aString.AppendWithConversion("<td><b>");
     // RICHIE - Should really convert this to some string bundled thing? 
-    aString.Append(aColumn);
-    aString.Append("</b></td>");
+    aString.AppendWithConversion(aColumn);
+    aString.AppendWithConversion("</b></td>");
 
-    aString.Append("<td>");
+    aString.AppendWithConversion("<td>");
     aString.Append(aName);
-    aString.Append("</td>");
+    aString.AppendWithConversion("</td>");
 
-    aString.Append("</tr>");
+    aString.AppendWithConversion("</tr>");
   }
 
   return NS_OK;
@@ -319,7 +319,7 @@ nsAddbookProtocolHandler::FindPossibleAbName(nsIAbCard  *aCard,
           char *val = (char *)valuelist->ElementAt(i);
           if ( (val) && (*val) )
           {
-            *retName = nsString(val).ToNewUnicode();
+            *retName = NS_ConvertASCIItoUCS2(val).ToNewUnicode();
             rv = NS_OK;
           }
         }
@@ -335,7 +335,7 @@ nsAddbookProtocolHandler::GeneratePrintOutput(nsIAddbookUrl *addbookUrl,
                                               char          **outBuf)
 {
   nsresult        rv = NS_OK;
-  nsString        workBuffer = "";
+  nsString        workBuffer;
   nsIAddrDatabase *aDatabase = nsnull;
  
   if (!outBuf)
@@ -458,23 +458,23 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
     return NS_ERROR_FAILURE;
 
   // Ok, build a little HTML for output...
-  workBuffer.Append("<HTML><BODY>");
-  workBuffer.Append("<CENTER>");
-  workBuffer.Append("<TABLE BORDER>");
+  workBuffer.AppendWithConversion("<HTML><BODY>");
+  workBuffer.AppendWithConversion("<CENTER>");
+  workBuffer.AppendWithConversion("<TABLE BORDER>");
 
   if (NS_SUCCEEDED(workCard->GetName(&aName)) && (aName))
   {
-    workBuffer.Append("<caption><b>");
+    workBuffer.AppendWithConversion("<caption><b>");
     workBuffer.Append(aName);
-    workBuffer.Append("</b></caption>");
+    workBuffer.AppendWithConversion("</b></caption>");
   }
 
   for (PRInt32 i=0; i<kMaxReportColumns; i++)
     AddIndividualUserAttribPair(workBuffer,  mReportColumns[i].abField, workCard);
 
-  workBuffer.Append("</TABLE>");
-  workBuffer.Append("<CENTER>");
-  workBuffer.Append("</BODY></HTML>");
+  workBuffer.AppendWithConversion("</TABLE>");
+  workBuffer.AppendWithConversion("<CENTER>");
+  workBuffer.AppendWithConversion("</BODY></HTML>");
   return rv;
 }
 
@@ -519,9 +519,9 @@ nsAddbookProtocolHandler::BuildAllHTML(nsIAddrDatabase *aDatabase, nsIAbDirector
   // Now, we need to generate some fun output!
   // 
   // Ok, build a little HTML for output...
-  workBuffer.Append("<HTML><BODY>");
-  workBuffer.Append("<CENTER>");
-  workBuffer.Append("<TABLE BORDER>");
+  workBuffer.AppendWithConversion("<HTML><BODY>");
+  workBuffer.AppendWithConversion("<CENTER>");
+  workBuffer.AppendWithConversion("<TABLE BORDER>");
 
   GenerateColumnHeadings(workBuffer);
 
@@ -546,9 +546,9 @@ nsAddbookProtocolHandler::BuildAllHTML(nsIAddrDatabase *aDatabase, nsIAbDirector
 
   // Finish up and get out!
   //
-  workBuffer.Append("</TABLE>");
-  workBuffer.Append("<CENTER>");
-  workBuffer.Append("</BODY></HTML>");
+  workBuffer.AppendWithConversion("</TABLE>");
+  workBuffer.AppendWithConversion("<CENTER>");
+  workBuffer.AppendWithConversion("</BODY></HTML>");
   return rv;
 }
 
@@ -568,14 +568,14 @@ TackOnColumn(nsIAbCard *aCard, const char *aColumn, nsString &aString)
 {
   PRUnichar     *aName = nsnull;
 
-  aString.Append("<td>");
+  aString.AppendWithConversion("<td>");
 
   if (NS_SUCCEEDED(aCard->GetCardValue(aColumn, &aName)) && (aName) && (*aName))
   {
     aString.Append(aName);
   }
 
-  aString.Append("</td>");
+  aString.AppendWithConversion("</td>");
   return NS_OK;
 }
 
@@ -594,22 +594,22 @@ nsAddbookProtocolHandler::CheckColumnValidity(nsIAbCard *aCard)
 NS_IMETHODIMP    
 nsAddbookProtocolHandler::GenerateColumnHeadings(nsString           &aString)
 {
-  aString.Append("<tr>");
+  aString.AppendWithConversion("<tr>");
 
   for (PRInt32 i=0; i<kMaxReportColumns; i++)
   {
     if (mReportColumns[i].includeIt)
     {
-      aString.Append("<td>");
-      aString.Append("<B>");
+      aString.AppendWithConversion("<td>");
+      aString.AppendWithConversion("<B>");
       // RICHIE - Should really convert this to some string bundled thing? 
-      aString.Append(mReportColumns[i].abField);
-      aString.Append("</B>");
-      aString.Append("</td>");
+      aString.AppendWithConversion(mReportColumns[i].abField);
+      aString.AppendWithConversion("</B>");
+      aString.AppendWithConversion("</td>");
     }
   }
 
-  aString.Append("</tr>");
+  aString.AppendWithConversion("</tr>");
   return NS_OK;
 }
 
@@ -617,7 +617,7 @@ NS_IMETHODIMP
 nsAddbookProtocolHandler::GenerateRowForCard(nsString           &aString, 
                                              nsIAbCard          *aCard)
 {
-  aString.Append("<tr>");
+  aString.AppendWithConversion("<tr>");
 
   for (PRInt32 i=0; i<kMaxReportColumns; i++)
   {
@@ -625,7 +625,7 @@ nsAddbookProtocolHandler::GenerateRowForCard(nsString           &aString,
       TackOnColumn(aCard, mReportColumns[i].abField, aString);
   }
 
-  aString.Append("</tr>");
+  aString.AppendWithConversion("</tr>");
   return NS_OK;
 }
 

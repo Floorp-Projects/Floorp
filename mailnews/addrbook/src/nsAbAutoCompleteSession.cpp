@@ -114,7 +114,7 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
             return;
 
         nsAutoString aStr = pNameStr;
-        aStr += '@';
+        aStr.AppendWithConversion('@');
         aStr += mDefaultDomain;
         fullAddrStr = aStr.ToNewUnicode();
     }
@@ -141,9 +141,9 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
     {
         //oops, parser problem! I will try to do my best...
         nsAutoString aStr = pNameStr;
-        aStr += " <";
+        aStr.AppendWithConversion(" <");
         aStr += pEmailStr;
-        aStr += ">";
+        aStr.AppendWithConversion(">");
         fullAddrStr = aStr.ToNewUnicode();
     }
     
@@ -282,7 +282,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, const PRUn
     nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
     if (NS_FAILED(rv)) return rv;
     
-    if (fileName != nsAutoString(kDirectoryDataSourceRoot))
+    if (!fileName.EqualsWithConversion(kDirectoryDataSourceRoot))
         rv = SearchCards(directory, searchStr, results);
     
     if (!searchSubDirectory)
@@ -306,8 +306,8 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, const PRUn
                         {
                             nsAutoString subFileName(fileName);
                             if (subFileName.Last() != '/')
-                                subFileName += "/";
-                            subFileName += server->fileName;
+                                subFileName.AppendWithConversion("/");
+                            subFileName.AppendWithConversion(server->fileName);
                             rv = SearchDirectory(subFileName, searchStr, results, PR_TRUE);
                         }
                     }
@@ -424,7 +424,7 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
     	rv = nsComponentManager::CreateInstance(kAutoCompleteResultsCID, nsnull, NS_GET_IID(nsIAutoCompleteResults), getter_AddRefs(results));
         if (NS_SUCCEEDED(rv))
         {
-            nsAutoString root = kDirectoryDataSourceRoot;
+            nsAutoString root; root.AssignWithConversion(kDirectoryDataSourceRoot);
             rv = SearchDirectory(root, uSearchString, results, PR_TRUE);
         }
     }

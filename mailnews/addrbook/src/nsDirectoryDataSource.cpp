@@ -527,7 +527,7 @@ nsresult nsAbDirectoryDataSource::createDirectoryUriNode(nsIAbDirectory *directo
   char *uri;
   nsresult rv = directory->GetDirUri(&uri);
   if (NS_FAILED(rv)) return rv;
-  nsString nameString(uri);
+  nsString nameString; nameString.AssignWithConversion(uri);
   createNode(nameString, target);
   nsAllocator::Free(uri);
   return NS_OK;

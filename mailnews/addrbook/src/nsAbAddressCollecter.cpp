@@ -137,7 +137,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 						}
 						else
 						{
-							nsAutoString senderFromEmail(curAddress);
+							nsAutoString senderFromEmail; senderFromEmail.AssignWithConversion(curAddress);
 							PRInt32 atSignIndex = senderFromEmail.FindChar('@');
 							if (atSignIndex > 0)
 							{
@@ -145,7 +145,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 								senderCard->SetDisplayName((PRUnichar*)senderFromEmail.GetUnicode());
 							}
 						}
-						nsAutoString email(curAddress);
+						nsAutoString email; email.AssignWithConversion(curAddress);
 						senderCard->SetPrimaryEmail((PRUnichar*)email.GetUnicode());
 						senderCard->AddCardToDatabase("abdirectory://history.mab");
 					}

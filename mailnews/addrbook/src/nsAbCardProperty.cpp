@@ -95,43 +95,6 @@ nsAbCardProperty::nsAbCardProperty(void)
 {
 	NS_INIT_REFCNT();
 
-	m_FirstName = "";
-	m_LastName = "";
-	m_DisplayName = "";
-	m_NickName = "";
-	m_PrimaryEmail = "";
-	m_SecondEmail = "";
-	m_WorkPhone = "";
-	m_HomePhone = "";
-	m_FaxNumber = "";
-	m_PagerNumber = "";
-	m_CellularNumber = "";
-
-	m_HomeAddress = "";
-	m_HomeAddress2 = "";
-	m_HomeCity = "";
-	m_HomeState = "";
-	m_HomeZipCode = "";
-	m_HomeCountry = "";
-	m_WorkAddress = "";
-	m_WorkAddress2 = "";
-	m_WorkCity = "";
-	m_WorkState = "";
-	m_WorkZipCode = "";
-	m_WorkCountry = "";
-	m_JobTitle = "";
-	m_Department = "";
-	m_Company = "";
-	m_WebPage1 = "";
-	m_WebPage2 = "";
-	m_BirthYear = "";
-	m_BirthMonth = "";
-	m_BirthDay = "";
-	m_Custom1 = "";
-	m_Custom2 = "";
-	m_Custom3 = "";
-	m_Custom4 = "";
-	m_Note = "";
 	m_LastModDate = 0;
 
 	m_bSendPlainText = PR_TRUE;
@@ -1218,13 +1181,13 @@ nsAbCardProperty::GetName(PRUnichar * *aName)
 				if (lastNameFirst == 1)
 				{
 					name = lastName;
-					name.Append(", ");
+					name.AppendWithConversion(", ");
 					name += firstName;
 				}
 				else
 				{
 					name = firstName;
-					name.Append(" ");
+					name.AppendWithConversion(" ");
 					name += lastName;
 				}
 			}
@@ -1275,7 +1238,7 @@ static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
 		*aPrintCardUrl = PR_smprintf("");
 		return NS_OK;
 	}
-	dirNameStr.ReplaceSubstring(" ", "%20");
+	dirNameStr.ReplaceSubstring(NS_ConvertASCIItoUCS2(" "), NS_ConvertASCIItoUCS2("%20"));
 
 	char *emailCharStr = emailStr.ToNewCString();
 	char *dirCharStr = dirNameStr.ToNewCString();

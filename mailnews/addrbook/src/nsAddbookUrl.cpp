@@ -241,7 +241,7 @@ nsresult nsAddbookUrl::ParseUrl()
   nsXPIDLCString aPath;
   m_baseURL->GetPath(getter_Copies(aPath));
   if (aPath)
-    mOperationPart = aPath;
+    mOperationPart.Assign(aPath);
 
   PRInt32 startOfSearchPart = mOperationPart.FindChar('?');
   if (startOfSearchPart > 0)

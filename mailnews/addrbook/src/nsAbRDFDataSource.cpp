@@ -72,7 +72,7 @@ void nsAbRDFDataSource::createNode(nsString& str, nsIRDFNode **node)
 void nsAbRDFDataSource::createNode(PRUint32 value, nsIRDFNode **node)
 {
 	char *valueStr = PR_smprintf("%d", value);
-	nsString str(valueStr);
+	nsString str; str.AssignWithConversion(valueStr);
 	createNode(str, node);
 	PR_smprintf_free(valueStr);
 }

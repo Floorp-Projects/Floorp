@@ -285,7 +285,7 @@ PRInt32 INTL_ConvertToUnicode(const char* aBuffer, const PRInt32 aLength,
 	NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 	if(NS_SUCCEEDED(res) && (nsnull != ccm)) 
 	{
-		nsString aCharset("UTF-8");
+		nsString aCharset; aCharset.AssignWithConversion("UTF-8");
 		nsIUnicodeDecoder* decoder = nsnull;
 		PRUnichar *unichars;
 		PRInt32 unicharLength;
@@ -332,7 +332,7 @@ PRInt32 INTL_ConvertFromUnicode(const void* uniBuffer, const PRInt32 uniLength, 
 	NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 	if(NS_SUCCEEDED(res) && (nsnull != ccm)) 
 	{
-		nsString aCharset("UTF-8");
+		nsString aCharset; aCharset.AssignWithConversion("UTF-8");
 		nsIUnicodeEncoder* encoder = nsnull;
 
 		// convert from unicode
@@ -414,7 +414,7 @@ static nsresult dir_ConvertToMabFileName()
 			// do other address book when convert from 4.5 to mork is done
 			if (server && server->position == 1 && server->fileName)
 			{
-				nsString name(server->fileName);
+				nsString name; name.AssignWithConversion(server->fileName);
 				PRInt32 pos = name.Find(ABFileName_kPreviousSuffix);
 				if (pos > 0)
 				{

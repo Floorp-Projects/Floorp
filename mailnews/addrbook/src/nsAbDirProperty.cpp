@@ -51,14 +51,11 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 
 nsAbDirProperty::nsAbDirProperty(void)
-  : m_DirName(""), m_LastModifiedDate(0),
+  : m_LastModifiedDate(0),
 	m_DbPath(nsnull), m_Server(nsnull)
 {
 	NS_INIT_REFCNT();
 
-	m_ListName = "";
-	m_ListNickName = "";
-	m_Description = "";
 	m_bIsMailList = PR_FALSE;
 }
 

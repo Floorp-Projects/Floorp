@@ -349,7 +349,7 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDataba
 		if(NS_SUCCEEDED(rv))
 			abSession->GetUserProfileDirectory(&dbPath);
 		
-		nsString file(&(uri[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsString file; file.AssignWithConversion(&(uri[PL_strlen(kDirectoryDataSourceRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			file.Truncate(pos);
@@ -436,7 +436,7 @@ nsresult AddressBookParser::ParseFile()
 	nsAutoString fileString;
 	if (mFileSpec) {
 		mFileSpec->GetLeafName(&leafName);
-		fileString = leafName;
+		fileString.AssignWithConversion(leafName);
 		// todo:  detect ldif / tab files a better way
 		if (-1 != fileString.Find(kTabExtension) || -1 != fileString.Find(kTxtExtension))
 			mFileType = TABFile;
@@ -1348,7 +1348,7 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 
 	// todo:  detect na2 files a better way
 	PRBool isNA2File = PR_FALSE;
-	nsAutoString fileString = (const char *) leafName;
+	nsAutoString fileString; fileString.AssignWithConversion((const char *) leafName);
 	if (-1 != fileString.Find(".na2")) {
 		isNA2File = PR_TRUE;
 	}

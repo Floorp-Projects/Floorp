@@ -198,7 +198,7 @@ NS_IMETHODIMP nsAbDirectory::GetChildNodes(nsIEnumerator* *result)
 
 				if (server->dirType == PABDirectory)
 				{
-					nsString name(server->fileName);
+					nsString name; name.AssignWithConversion(server->fileName);
 					PRInt32 pos = name.Find("na2");
 					if (pos >= 0) /* check: this is a 4.x file, remove when conversion is done */
 						continue;
@@ -233,7 +233,7 @@ NS_IMETHODIMP nsAbDirectory::GetChildNodes(nsIEnumerator* *result)
 						nsFileSpec* dbPath;
 						abSession->GetUserProfileDirectory(&dbPath);
 
-						nsString file(server->fileName);
+						nsString file; file.AssignWithConversion(server->fileName);
 						(*dbPath) += file;
 
 						NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
@@ -309,7 +309,7 @@ NS_IMETHODIMP nsAbDirectory::GetChildCards(nsIEnumerator* *result)
 {
 	if (mURI && mIsMailingList == -1)
 	{
-		nsString file(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
+		nsString file; file.AssignWithConversion(&(mURI[PL_strlen(kDirectoryDataSourceRoot)]));
 		PRInt32 pos = file.Find("/");
 		if (pos != -1)
 			mIsMailingList = 1;
@@ -385,7 +385,7 @@ NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **chil
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsAutoString uri(uriName);
+	nsAutoString uri; uri.AssignWithConversion(uriName);
 	char* uriStr = uri.ToNewCString();
 	if (uriStr == nsnull) 
 		return NS_ERROR_OUT_OF_MEMORY;

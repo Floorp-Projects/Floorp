@@ -2269,7 +2269,7 @@ nsresult nsAddrDatabase::GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken,
 		{
 			struct mdbYarn yarn;
 			cardCell->AliasYarn(GetEnv(), &yarn);
-			str.SetString((const char *) yarn.mYarn_Buf, yarn.mYarn_Fill);
+			str.AssignWithConversion((const char *) yarn.mYarn_Buf, yarn.mYarn_Fill);
 			cardCell->CutStrongRef(GetEnv()); // always release ref
 		}
 		else
