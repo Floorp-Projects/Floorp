@@ -15,25 +15,25 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef nsIEditFactory_h___
-#define nsIEditFactory_h___
+#ifndef nsTextEditFactory_h___
+#define nsTextEditFactory_h___
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
 
 /*
-EditFactory that can make an editor
+Factory that can make a text editor
 */
 
 /**
  *  This supplies the neccessary entrance to the edit module. it will return any 
  *  instantiations that we need.
  */
-class nsEditFactory;
+class nsTextEditFactory;
 
-nsresult GetEditFactory(nsIFactory **aFactory, const nsCID & aClass);
+extern nsresult GetTextEditFactory(nsIFactory **aFactory, const nsCID & aClass);
 
-class nsEditFactory : public nsIFactory {
+class nsTextEditFactory : public nsIFactory {
 public:
   ////////////////////////////////////////////////////////////////////////////
   // from nsISupports and AggregatedQueryInterface:
@@ -51,16 +51,16 @@ public:
 
 
   ////////////////////////////////////////////////////////////////////////////
-  // from nsEditFactory:
+  // from nsTextEditFactory:
 
-  virtual ~nsEditFactory(void);
+  virtual ~nsTextEditFactory(void);
 private:
-  nsEditFactory(const nsCID &aClass); //will fill the aFactory with the result from queryinterface
+  nsTextEditFactory(const nsCID &aClass); //will fill the aFactory with the result from queryinterface
 
-  /** getEditFactory
+  /** GetTextEditFactory
    *  creates an edit factory other CSID supported friend functions here.
    */
-  friend nsresult GetEditFactory(nsIFactory **, const nsCID & );
+  friend nsresult GetTextEditFactory(nsIFactory **, const nsCID & );
   const nsCID &mCID;
 };
 

@@ -21,9 +21,11 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=ender
 
 CPPSRCS =				\
-      editor.cpp			       \
-      editorInterfaces.cpp   \
+      nsEditor.cpp			     \
+      nsTextEditor.cpp       \
+      nsEditorEventListeners.cpp   \
       nsEditFactory.cpp      \
+      nsTextEditFactory.cpp  \
       EditTxn.cpp            \
       EditAggregateTxn.cpp   \
       ChangeAttributeTxn.cpp \
@@ -38,9 +40,11 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS =					\
-	.\$(OBJDIR)\editor.obj		          \
+	.\$(OBJDIR)\nsEditor.obj		        \
+  .\$(OBJDIR)\nsTextEditor.obj        \
+  .\$(OBJDIR)\nsEditorEventListeners.obj		\
 	.\$(OBJDIR)\nsEditFactory.obj		    \
-	.\$(OBJDIR)\editorInterfaces.obj		\
+  .\$(OBJDIR)\nsTextEditFactory.obj		\
   .\$(OBJDIR)\EditTxn.obj             \
   .\$(OBJDIR)\EditAggregateTxn.obj    \
   .\$(OBJDIR)\ChangeAttributeTxn.obj  \

@@ -18,7 +18,7 @@
 
 #include "ChangeAttributeTxn.h"
 #include "nsIDOMElement.h"
-#include "editor.h"
+#include "nsEditor.h"
 
 ChangeAttributeTxn::ChangeAttributeTxn()
   : EditTxn()

@@ -16,29 +16,29 @@
  * Reserved.
  */
 
-#include "nsEditFactory.h"
-#include "nsIEditor.h"
+#include "nsTextEditFactory.h"
+#include "nsITextEditor.h"
+#include "nsTextEditor.h"
 #include "nsEditor.h"
 #include "nsEditorCID.h"
 #include "nsRepository.h"
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIEditorIID,      NS_IEDITOR_IID);
-static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
-static NS_DEFINE_IID(kEditorCID,       NS_EDITOR_CID);
-
+static NS_DEFINE_IID(kITextEditorIID,  NS_ITEXTEDITOR_IID);
+static NS_DEFINE_IID(kTextEditorCID,   NS_TEXTEDITOR_CID);
+static NS_DEFINE_IID(kITextEditFactoryIID, NS_ITEXTEDITORFACTORY_IID);
 
 
 nsresult
-GetEditFactory(nsIFactory **aFactory, const nsCID & aClass)
+GetTextEditFactory(nsIFactory **aFactory, const nsCID & aClass)
 {
   static nsCOMPtr<nsIFactory>  g_pNSIFactory;
   PR_EnterMonitor(getEditorMonitor());
   nsresult result = NS_ERROR_FAILURE;
   if (!g_pNSIFactory)
   {
-    nsEditFactory *factory = new nsEditFactory(aClass);
+    nsTextEditFactory *factory = new nsTextEditFactory(aClass);
     g_pNSIFactory = factory;
     if (factory)
       result = NS_OK;
@@ -52,7 +52,7 @@ GetEditFactory(nsIFactory **aFactory, const nsCID & aClass)
 // from nsISupports 
 
 NS_METHOD
-nsEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
+nsTextEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
   if (nsnull == aInstancePtr) {
     NS_NOTREACHED("!nsEditor");
@@ -67,15 +67,15 @@ nsEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_NOINTERFACE; 
 }
 
-NS_IMPL_ADDREF(nsEditFactory)
-NS_IMPL_RELEASE(nsEditFactory)
+NS_IMPL_ADDREF(nsTextEditFactory)
+NS_IMPL_RELEASE(nsTextEditFactory)
 
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsIFactory:
 
 NS_METHOD
-nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsTextEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   *aResult  = nsnull;
   nsISupports *obj = nsnull;
@@ -85,10 +85,9 @@ nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult
     return NS_NOINTERFACE;   // XXX right error?
 
 
-  if (mCID.Equals(kEditorCID))
-    obj = (nsISupports *)new nsEditor();
+  if (mCID.Equals(kTextEditorCID))
+    obj = (nsISupports *)new nsTextEditor();
   //more class ids to support. here
-
 
   if (obj && NS_FAILED(obj->QueryInterface(aIID, (void**)aResult)) ) 
   {
@@ -101,7 +100,7 @@ nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult
 
 
 NS_METHOD
-nsEditFactory::LockFactory(PRBool aLock)
+nsTextEditFactory::LockFactory(PRBool aLock)
 {
   return NS_OK;
 }
@@ -109,15 +108,15 @@ nsEditFactory::LockFactory(PRBool aLock)
 
 
 ////////////////////////////////////////////////////////////////////////////
-// from nsEditFactory:
+// from nsTextEditFactory:
 
-nsEditFactory::nsEditFactory(const nsCID &aClass)
+nsTextEditFactory::nsTextEditFactory(const nsCID &aClass)
 :mCID(aClass)
 {
   NS_INIT_REFCNT();
 }
 
-nsEditFactory::~nsEditFactory()
+nsTextEditFactory::~nsTextEditFactory()
 {
   //nsRepository::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
 }
