@@ -230,13 +230,15 @@ nsXULTemplateBuilder::GetDatabase(nsIRDFCompositeDataSource** aResult)
 NS_IMETHODIMP
 nsXULTemplateBuilder::Rebuild()
 {
-    for (PRInt32 i = mListeners.Count() - 1; i >= 0; --i) {
+    PRInt32 i;
+
+    for (i = mListeners.Count() - 1; i >= 0; --i) {
         mListeners[i]->WillRebuild(this);
     }
 
     nsresult rv = RebuildAll();
 
-    for (PRInt32 i = mListeners.Count() - 1; i >= 0; --i) {
+    for (i = mListeners.Count() - 1; i >= 0; --i) {
         mListeners[i]->DidRebuild(this);
     }
 
