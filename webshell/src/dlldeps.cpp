@@ -20,7 +20,7 @@
  *   Scott Collins <scc@netscape.com>
  */
 
-#include "nsIWebshell.h"
+#include "nsIWebShell.h"
 
 void
 XXXNeverCalled()
