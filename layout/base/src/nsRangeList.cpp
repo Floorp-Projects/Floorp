@@ -592,7 +592,7 @@ getNextFrame(nsIFrame *aStart)
 {
   nsIFrame *result;
   nsIFrame *parent = aStart;
-  if (NS_SUCCEEDED(parent->FirstChild(nsnull, result)) && result){
+  if (NS_SUCCEEDED(parent->FirstChild(nsnull, &result)) && result){
     return result;
   }
   while(parent){
@@ -859,7 +859,7 @@ findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff)
   //if parent== content
   nsIFrame *child;
   nsIFrame *result;
-  if (NS_FAILED(aParent->FirstChild(nsnull, child)))
+  if (NS_FAILED(aParent->FirstChild(nsnull, &child)))
     return nsnull;
   do
   {

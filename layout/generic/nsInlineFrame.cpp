@@ -975,7 +975,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
     // It is possible that we are about to remove the last child of
     // the anonymous block. In this case we remove the anonymous block.
     nsIFrame* kids;
-    anonymousBlock->FirstChild(nsnull, kids);
+    anonymousBlock->FirstChild(nsnull, &kids);
     nsFrameList blockKids(kids);
     if (1 == blockKids.GetLength()) {
       // Remove the anonymous block
@@ -1046,7 +1046,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
             while (nsnull != anonymousBlock) {
               // Find the first inline before the last block
               nsIFrame* kids;
-              anonymousBlock->FirstChild(nsnull, kids);
+              anonymousBlock->FirstChild(nsnull, &kids);
               if (nsnull != kids) {
                 SectionData sd(kids);
                 if (sd.HasABlock()) {
@@ -1120,7 +1120,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
           PRBool done = PR_FALSE;
           while (!done && (nsnull != anonymousBlock)) {
             nsIFrame* kid;
-            anonymousBlock->FirstChild(nsnull, kid);
+            anonymousBlock->FirstChild(nsnull, &kid);
             while (nsnull != kid) {
               if (nsLineLayout::TreatFrameAsBlock(kid)) {
                 done = PR_TRUE;

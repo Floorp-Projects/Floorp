@@ -323,7 +323,7 @@ PRBool
 nsLabelFrame::FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aResultFrame)
 {
   nsIFrame* child = nsnull;
-  aParentFrame->FirstChild(nsnull, child);
+  aParentFrame->FirstChild(nsnull, &child);
   while (nsnull != child) {
     nsIFormControlFrame* fcFrame = nsnull;
     nsresult result = child->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);

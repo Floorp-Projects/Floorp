@@ -462,7 +462,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
     nsIFrame* innerFrame;
 
     if (NS_STYLE_DISPLAY_TABLE == parentDisplay->mDisplay) { // parent is an outer table
-      aParentFrame->FirstChild(nsnull, innerFrame);
+      aParentFrame->FirstChild(nsnull, &innerFrame);
       aNewCaptionFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
       innerFrame->SetNextSibling(aNewCaptionFrame);
       // the caller is responsible for calling SetInitialChildList on the outer, inner frames
@@ -1036,7 +1036,7 @@ nsCSSFrameConstructor::TableGetAsNonScrollFrame(nsIPresContext*       aPresConte
   }
   nsIFrame* result = aFrame;
   if (IsScrollable(aPresContext, aDisplay)) {
-    aFrame->FirstChild(nsnull, result);
+    aFrame->FirstChild(nsnull, &result);
   }
   return result;
 }
@@ -2484,7 +2484,7 @@ nsCSSFrameConstructor::GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame,
     if (NS_STYLE_DISPLAY_TABLE == currentParentDisplay->mDisplay) {
       if (NS_STYLE_DISPLAY_TABLE_CAPTION != aChildDisplayType) {
         nsIFrame *innerTableFrame = nsnull;
-        aCurrentParentFrame->FirstChild(nsnull, innerTableFrame);
+        aCurrentParentFrame->FirstChild(nsnull, &innerTableFrame);
         if (nsnull != innerTableFrame) {
           const nsStyleDisplay* innerTableDisplay;
           innerTableFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)innerTableDisplay);
@@ -2685,9 +2685,9 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPr
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
     if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
-      frame->FirstChild(nsnull, frame);
+      frame->FirstChild(nsnull, &frame);
     } else if (NS_STYLE_DISPLAY_TABLE == display->mDisplay) { // we got an outer table frame, need an inner
-      frame->FirstChild(nsnull, frame);                       // the inner frame is always the 1st child
+      frame->FirstChild(nsnull, &frame);                      // the inner frame is always the 1st child
     }    
   }
 
@@ -3321,8 +3321,8 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
     NS_RELEASE(sc);
 
     // XXX hack, skip the root and scrolling frames
-    frame->FirstChild(nsnull, frame);
-    frame->FirstChild(nsnull, frame);
+    frame->FirstChild(nsnull, &frame);
+    frame->FirstChild(nsnull, &frame);
     if (reframe) {
       NS_NOTYETIMPLEMENTED("frame change reflow");
     }
@@ -3484,7 +3484,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv)) {
       // Get the previous sibling frame
       nsIFrame*     firstChild;
-      parentFrame->FirstChild(nsnull, firstChild);
+      parentFrame->FirstChild(nsnull, &firstChild);
       nsFrameList   frameList(firstChild);
       nsIFrame*     prevSibling = frameList.GetPrevSiblingFor(aFrame);
 

@@ -616,11 +616,11 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   PRInt32 listIndex = 0;
   for (;;) {
     nsIFrame* kid;
-    GetAdditionalChildListName(listIndex++, listName);
+    GetAdditionalChildListName(listIndex++, &listName);
     if (nsnull == listName) {
       break;
     }
-    FirstChild(listName, kid);
+    FirstChild(listName, &kid);
     if (nsnull != kid) {
       IndentBy(out, aIndent);
       nsAutoString tmp;
@@ -667,43 +667,44 @@ nsBlockFrame::GetFrameName(nsString& aResult) const
 // Child frame enumeration
 
 NS_IMETHODIMP
-nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
+nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
+  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (nsnull == aListName) {
-    aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
+    *aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
     return NS_OK;
   }
   else if (aListName == nsLayoutAtoms::floaterList) {
-    aFirstChild = mFloaters.FirstChild();
+    *aFirstChild = mFloaters.FirstChild();
     return NS_OK;
   }
   else if (aListName == nsLayoutAtoms::bulletList) {
-    aFirstChild = mBullet;
+    *aFirstChild = mBullet;
     return NS_OK;
   }
-  aFirstChild = nsnull;
+  *aFirstChild = nsnull;
   return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
 nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom*& aListName) const
+                                         nsIAtom** aListName) const
 {
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   if (aIndex < 0) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsIAtom* atom = nsnull;
+  *aListName = nsnull;
   switch (aIndex) {
   case NS_BLOCK_FRAME_FLOATER_LIST_INDEX:
-    atom = nsLayoutAtoms::floaterList;
-    NS_ADDREF(atom);
+    *aListName = nsLayoutAtoms::floaterList;
+    NS_ADDREF(*aListName);
     break;
   case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
-    atom = nsLayoutAtoms::bulletList;
-    NS_ADDREF(atom);
+    *aListName = nsLayoutAtoms::bulletList;
+    NS_ADDREF(*aListName);
     break;
   }
-  aListName = atom;
   return NS_OK;
 }
 
@@ -2885,7 +2886,7 @@ FindFloatersIn(nsIFrame* aFrame, nsVoidArray*& aArray)
 
   if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
     nsIFrame* kid;
-    aFrame->FirstChild(nsnull, kid);
+    aFrame->FirstChild(nsnull, &kid);
     while (nsnull != kid) {
       nsresult rv = FindFloatersIn(kid, aArray);
       if (NS_OK != rv) {
@@ -3928,7 +3929,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
       // See if there are any non-zero sized child frames that precede
       // aFrame in the child list
       nsIFrame* child;
-      parent->FirstChild(nsnull, child);
+      parent->FirstChild(nsnull, &child);
       while ((nsnull != child) && (aFrame != child)) {
         nsSize  size;
 

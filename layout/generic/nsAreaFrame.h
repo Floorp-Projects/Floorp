@@ -61,9 +61,9 @@ public:
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
-                                        nsIAtom*& aListName) const;
+                                        nsIAtom** aListName) const;
 
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

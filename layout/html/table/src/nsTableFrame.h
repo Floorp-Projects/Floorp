@@ -137,11 +137,11 @@ public:
   /** return the first child belonging to the list aListName. 
     * @see nsIFrame::FirstChild
     */
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
 
   /** @see nsIFrame::GetAdditionalChildListName */
   NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom*& aListName) const;
+                                         nsIAtom** aListName) const;
 
   /** complete the append of aRowGroupFrame to the table
     * this builds the cell map by calling nsTableRowFrame::InitChildren

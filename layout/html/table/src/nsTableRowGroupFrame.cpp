@@ -254,7 +254,7 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
   nsRect kidRect;
   nsPoint tmp;
 
-  FirstChild(nsnull, kid);
+  FirstChild(nsnull, &kid);
   while (nsnull != kid) {
     kid->GetRect(kidRect);
     const nsStyleDisplay *childDisplay;
@@ -699,7 +699,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
         if (gsDebug) printf("TRGF CalcRowH: Step 2 for row %d (%p)...\n", rowIndex, rowFrame);
         // check this row for a cell with rowspans
         nsIFrame *cellFrame;
-        rowFrame->FirstChild(nsnull, cellFrame);
+        rowFrame->FirstChild(nsnull, &cellFrame);
         while (nsnull != cellFrame)
         {
           const nsStyleDisplay *childDisplay;
@@ -1229,7 +1229,7 @@ PRBool nsTableRowGroupFrame::NoRowsFollow()
         (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == sibDisplay->mDisplay))
     {
       nsIFrame *childFrame=nsnull;
-      nextSib->FirstChild(nsnull, childFrame);
+      nextSib->FirstChild(nsnull, &childFrame);
       while (nsnull!=childFrame)
       {
         const nsStyleDisplay *childDisplay;

@@ -114,26 +114,27 @@ nsAreaFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsAreaFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                        nsIAtom*& aListName) const
+                                        nsIAtom** aListName) const
 {
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   if (aIndex <= NS_BLOCK_FRAME_LAST_LIST_INDEX) {
     return nsBlockFrame::GetAdditionalChildListName(aIndex, aListName);
   }
   
-  nsIAtom* atom = nsnull;
+  *aListName = nsnull;
   if (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX == aIndex) {
-    atom = nsLayoutAtoms::absoluteList;
-    NS_ADDREF(atom);
+    *aListName = nsLayoutAtoms::absoluteList;
+    NS_ADDREF(*aListName);
   }
-  aListName = atom;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
+nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
+  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::absoluteList) {
-    aFirstChild = mAbsoluteFrames.FirstChild();
+    *aFirstChild = mAbsoluteFrames.FirstChild();
     return NS_OK;
   }
 

@@ -48,9 +48,9 @@ public:
                                  nsIFrame*       aChildList);
 
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
-                                        nsIAtom*& aListName) const;
+                                        nsIAtom** aListName) const;
 
-  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
 
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -120,27 +120,28 @@ ViewportFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 ViewportFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                          nsIAtom*& aListName) const
+                                          nsIAtom** aListName) const
 {
-  nsIAtom*  atom = nsnull;
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
+  *aListName = nsnull;
 
   if (aIndex < 0) {
     return NS_ERROR_INVALID_ARG;
 
   } else if (0 == aIndex) {
-    atom = nsLayoutAtoms::fixedList;
-    NS_ADDREF(atom);
+    *aListName = nsLayoutAtoms::fixedList;
+    NS_ADDREF(*aListName);
   }
 
-  aListName = atom;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ViewportFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
+ViewportFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
+  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::fixedList) {
-    aFirstChild = mFixedFrames.FirstChild();
+    *aFirstChild = mFixedFrames.FirstChild();
     return NS_OK;
   }
 

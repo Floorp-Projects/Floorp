@@ -895,14 +895,14 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const
 
   // The page sequence frame should be either the immediate child or
   // its child
-  mRootFrame->FirstChild(nsnull, child);
+  mRootFrame->FirstChild(nsnull, &child);
   if (nsnull != child) {
     if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
       aPageSequenceFrame = pageSequence;
       return NS_OK;
     }
   
-    child->FirstChild(nsnull, child);
+    child->FirstChild(nsnull, &child);
     if (nsnull != child) {
       if (NS_SUCCEEDED(child->QueryInterface(kIPageSequenceFrameIID, (void**)&pageSequence))) {
         aPageSequenceFrame = pageSequence;
@@ -1401,7 +1401,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
   PRInt32 listIndex = 0;
   do {
     nsIFrame* kid;
-    aFrame->FirstChild(listName, kid);
+    aFrame->FirstChild(listName, &kid);
     while (nsnull != kid) {
       nsIFrame* result = FindFrameWithContent(kid, aContent);
       if (nsnull != result) {
@@ -1411,7 +1411,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
       kid->GetNextSibling(kid);
     }
     NS_IF_RELEASE(listName);
-    aFrame->GetAdditionalChildListName(listIndex++, listName);
+    aFrame->GetAdditionalChildListName(listIndex++, &listName);
   } while(nsnull != listName);
 
   return nsnull;
@@ -1658,8 +1658,8 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
   PRInt32 listIndex = 0;
   do {
     nsIFrame* k1, *k2;
-    aA->FirstChild(listName, k1);
-    aB->FirstChild(listName, k2);
+    aA->FirstChild(listName, &k1);
+    aB->FirstChild(listName, &k2);
     PRInt32 l1 = nsContainerFrame::LengthOf(k1);
     PRInt32 l2 = nsContainerFrame::LengthOf(k2);
     if (l1 != l2) {
@@ -1746,8 +1746,8 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
 
     nsIAtom* listName1;
     nsIAtom* listName2;
-    aA->GetAdditionalChildListName(listIndex, listName1);
-    aB->GetAdditionalChildListName(listIndex, listName2);
+    aA->GetAdditionalChildListName(listIndex, &listName1);
+    aB->GetAdditionalChildListName(listIndex, &listName2);
     listIndex++;
     if (listName1 != listName2) {
       LogVerifyMessage(k1, k2, "child list names are not matched: ");

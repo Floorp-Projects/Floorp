@@ -188,7 +188,7 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   nsPoint tmp;
   *aFrame = nsnull;
 
-  mContentFrame->FirstChild(aList, kid);
+  mContentFrame->FirstChild(aList, &kid);
   while (nsnull != kid) {
     kid->GetRect(kidRect);
     if (kidRect.Contains(aPoint)) {
@@ -211,7 +211,7 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
     kid->GetNextSibling(kid);
   }
 
-  mContentFrame->FirstChild(aList, kid);
+  mContentFrame->FirstChild(aList, &kid);
   while (nsnull != kid) {
     nsFrameState state;
     kid->GetFrameState(state);
@@ -293,7 +293,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   }
 
-  mContentFrame->FirstChild(nsnull, childFrame);
+  mContentFrame->FirstChild(nsnull, &childFrame);
   PRInt32 numChildren = LengthOf(childFrame);
 
   aDesiredSize.width  += border.left+border.right;
@@ -313,7 +313,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   mContentFrame->SetRect(rect);
 
 
-  mContentFrame->FirstChild(nsnull, childFrame);
+  mContentFrame->FirstChild(nsnull, &childFrame);
   nsPoint offset(0,0);
   while (nsnull != childFrame) {  // reflow, place, size the children
     nsHTMLReflowState   reflowState(aPresContext, childFrame, aReflowState, maxSize);
@@ -362,7 +362,7 @@ nsListControlFrame::GetOptionFromChild(nsIFrame* aParentFrame)
   nsIFrame* kid;
   nsIFrame * frame = nsnull;
 
-  aParentFrame->FirstChild(nsnull, kid);
+  aParentFrame->FirstChild(nsnull, &kid);
   while (nsnull != kid) {
     nsIContent * content;
     kid->GetContent(&content);
@@ -428,7 +428,7 @@ PRInt32 nsListControlFrame::SetContentSelected(nsIFrame *    aHitFrame,
 {
   PRInt32 index   = 0;
   nsIFrame* kid;
-  mContentFrame->FirstChild(nsnull, kid);
+  mContentFrame->FirstChild(nsnull, &kid);
   while (nsnull != kid) {
     if (kid == aHitFrame) {
       NS_IF_RELEASE(aHitContent);
@@ -449,7 +449,7 @@ void nsListControlFrame::ClearSelection()
 {
   PRInt32 i = 0;
   nsIFrame* kid;
-  mContentFrame->FirstChild(nsnull, kid);
+  mContentFrame->FirstChild(nsnull, &kid);
   while (nsnull != kid) {
     nsIContent * content;
     kid->GetContent(&content);
@@ -482,7 +482,7 @@ void nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndInde
   PRInt32 i = 0;
   nsIFrame* kid;
   PRBool startInverting = PR_FALSE;
-  mContentFrame->FirstChild(nsnull, kid);
+  mContentFrame->FirstChild(nsnull, &kid);
   while (nsnull != kid) {
     nsIContent * content;
     kid->GetContent(&content);
@@ -1035,7 +1035,7 @@ nsListControlFrame::AboutToDropDown()
 {
   PRInt32 i = 0;
   nsIFrame* kid;
-  mContentFrame->FirstChild(nsnull, kid);
+  mContentFrame->FirstChild(nsnull, &kid);
   while (nsnull != kid) {
     nsIContent * content;
     kid->GetContent(&content);
@@ -1063,7 +1063,7 @@ nsListControlFrame::InitializeFromContent(PRBool aDoDisplay)
 
   i = 0;
   nsIFrame* kid;
-  mContentFrame->FirstChild(nsnull, kid);
+  mContentFrame->FirstChild(nsnull, &kid);
   while (nsnull != kid) {
     nsIContent * content;
     kid->GetContent(&content);
