@@ -900,6 +900,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
                                             nsnull,
                                             kIParserIID,
                                             getter_AddRefs(parser));
+    if (NS_FAILED(rv)) return rv;
 
     nsAutoString utf8("UTF-8");
     parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
