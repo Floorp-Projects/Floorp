@@ -334,11 +334,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   PRBool bHasProp;
   nsCOMPtr<nsIDOMNode> styleNode;
   IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
-  if (bHasProp &&
-      !(aValue && aValue->Equals(NS_LITERAL_STRING("-moz-editor-invert-value"))))
-  {
-    return NS_OK;
-  }
+  if (bHasProp) return NS_OK;
   
   // do we need to split the text node?
   PRUint32 textLen;
@@ -424,32 +420,10 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
       // children of the aNode
       res = RemoveStyleInside(tmp, aProperty, aAttribute, PR_TRUE);
       if (NS_FAILED(res)) return res;
-      nsCOMPtr<nsIDOMNode> parentNode;
-      res = tmp->GetParentNode(getter_AddRefs(parentNode));
+      PRInt32 count;
+      // then we add the css styles corresponding to the HTML style request
+      res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count);
       if (NS_FAILED(res)) return res;
-      PRBool isSet = PR_FALSE;
-      if (parentNode) {
-        // let's check if the parent element already has the style we want
-        nsAutoString parentValue;
-        mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(parentNode, aProperty, aAttribute,
-                                                           isSet, parentValue,
-                                                           COMPUTED_STYLE_TYPE);
-      }
-      if (isSet && !(aValue && aValue->Equals(NS_LITERAL_STRING("-moz-editor-invert-value")))) {
-        // the parent has the style we want to apply and we are not trying to remove this style
-        // from the selection
-        res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(element,
-                                                      aProperty,
-                                                      aAttribute,
-                                                      aValue);
-        if (NS_FAILED(res)) return res;
-        res = RemoveElementIfUselessSpan(element);
-      }
-      else {
-        PRInt32 count;
-        // add the css styles corresponding to the HTML style request
-        res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count);
-      }
       return res;
     }
   }
@@ -721,9 +695,21 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
                                                       aProperty,
                                                       aAttribute,
                                                       &propertyValue);
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
-        res = RemoveElementIfUselessSpan(element);
+        // remove the node if it is a span, if its style attribute is empty or absent,
+        // and if it does not have a class nor an id
+        nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
+        nsAutoString styleVal;
+        PRBool isStyleSet;
+        res = GetAttributeValue(elem,  NS_LITERAL_STRING("style"), styleVal, &isStyleSet);
         if (NS_FAILED(res)) return res;
+        if (NodeIsType(aNode, nsIEditProperty::span) && (!isStyleSet || (0 == styleVal.Length()))) {
+          PRBool hasClassOrId ;
+          res = mHTMLCSSUtils->HasClassOrID(elem, hasClassOrId);
+          if (!hasClassOrId) {
+            res = RemoveContainer(aNode);
+            if (NS_FAILED(res)) return res;
+          }
+        }
       }
     }
   }  
@@ -1836,30 +1822,3 @@ nsHTMLEditor::IsCSSEnabled(PRBool *aIsSet)
   return NS_OK;
 }
 
-nsresult
-nsHTMLEditor::RemoveElementIfUselessSpan(nsIDOMElement * aElement)
-{
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> node  = do_QueryInterface(aElement);
-
-  // early way out if node is not a span element
-  if (!NodeIsType(node, nsIEditProperty::span)) {
-    return NS_OK;
-  }
-
-  // remove the node if it is a span, if its style attribute is empty or absent,
-  // and if it does not have a class nor an id
-  nsAutoString styleVal;
-  PRBool isStyleSet;
-  nsresult res = GetAttributeValue(aElement,  NS_LITERAL_STRING("style"), styleVal, &isStyleSet);
-  if (NS_FAILED(res)) return res;
-  if (!isStyleSet || (0 == styleVal.Length())) {
-    PRBool hasClassOrId ;
-    res = mHTMLCSSUtils->HasClassOrID(aElement, hasClassOrId);
-    if (NS_FAILED(res)) return res;
-    if (!hasClassOrId) {
-      res = RemoveContainer(node);
-    }
-  }
-  return res;
-}

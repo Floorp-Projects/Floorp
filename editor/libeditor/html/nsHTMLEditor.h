@@ -719,8 +719,6 @@ protected:
                              PRBool *aAll,
                              nsAWritableString *outValue);
 
-  nsresult RemoveElementIfUselessSpan(nsIDOMElement * aElement);
-
 // Data members
 protected:
 
