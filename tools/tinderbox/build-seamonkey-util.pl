@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.243 $ ';
+$::UtilsVersion = '$Revision: 1.244 $ ';
 
 package TinderUtils;
 
@@ -782,6 +782,7 @@ sub BuildIt {
 
 
         my $build_status = 'none';
+        my $binary_url   = '';
 
         # Allow skipping of mozilla phase.
         unless ($Settings::SkipMozilla) {
@@ -800,8 +801,6 @@ sub BuildIt {
           # Create toplevel source directory.
           chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
           
-          my $build_status = 'none';
-          my $binary_url   = '';
           # Build it
           unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
             if ($Settings::OS =~ /^WIN/) {
