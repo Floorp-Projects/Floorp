@@ -63,7 +63,7 @@ public:
     NS_IMETHOD Resume(void);
 
     // nsIProtocolConnection methods:
-    NS_IMETHOD Open(nsIUrl* url, nsISupports* eventSink);
+    NS_IMETHOD Open(void);
     NS_IMETHOD GetContentType(char* *contentType);
     NS_IMETHOD GetInputStream(nsIInputStream* *result);
     NS_IMETHOD GetOutputStream(nsIOutputStream* *result);
@@ -88,17 +88,18 @@ public:
     nsFtpProtocolConnection();
     virtual ~nsFtpProtocolConnection();
 
-    nsresult Init(nsIUrl* url, nsISupports* eventSink);
+    nsresult Init(nsIUrl* url, nsISupports* eventSink, PLEventQueue* eventQueue);
 
 protected:
     nsIUrl*                 mUrl;
     nsIFtpEventSink*        mEventSink;
+    PLEventQueue*           mEventQueue;
     PRInt32                 mServerType;
     PRBool                  mPasv;
     PRBool                  mConnected;
     FTP_STATE               mState;
-    nsITransport*     mCPipe; // the command channel
-    nsITransport*     mDPipe; // the data channel
+    nsITransport*           mCPipe; // the command channel
+    nsITransport*           mDPipe; // the data channel
 };
 
 #endif /* nsFtpProtocolConnection_h___ */

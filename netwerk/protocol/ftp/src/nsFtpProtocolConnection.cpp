@@ -69,7 +69,9 @@ nsFtpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 }
 
 nsresult 
-nsFtpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink) {
+nsFtpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink,
+                              PLEventQueue* eventQueue)
+{
     nsresult rv;
 
     if (mConnected)
@@ -79,6 +81,8 @@ nsFtpProtocolConnection::Init(nsIUrl* url, nsISupports* eventSink) {
     NS_ADDREF(mUrl);
 
     rv = eventSink->QueryInterface(nsIFtpEventSink::GetIID(), (void**)&mEventSink);
+
+    mEventQueue = eventQueue;
 
     return rv;
 }
@@ -107,7 +111,7 @@ nsFtpProtocolConnection::Resume(void) {
 
 // establishes the connection and initiates the file transfer.
 NS_IMETHODIMP
-nsFtpProtocolConnection::Open(nsIUrl* url, nsISupports* eventSink) {
+nsFtpProtocolConnection::Open(void) {
     nsresult rv;
 
     mState = FTP_CONNECT;
