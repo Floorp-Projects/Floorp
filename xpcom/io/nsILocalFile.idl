@@ -98,13 +98,6 @@ interface nsILocalFile : nsIFile
      *  resolve symbolic links.  By default, this value will be false
      *  on all non unix systems.  On unix, this attribute is effectively
      *  a noop.  
-     *
-     *  Be aware that changing this attribute from true to false after
-     *  the nsILocalFile has been initialized may lead to errors.  This
-     *  could happen if there were resolved symlink in the initialized
-     *  path.  For example if you had /a/b/c where |b| was a symlink, 
-     *  and you change this attribute to false, the next usage would 
-     *  mostlikely fail.
      */
     attribute PRBool followLinks;  
 
