@@ -221,6 +221,7 @@ nsMenuPopupFrame::Init(nsIPresContext*  aPresContext,
   widgetData.mWindowType = eWindowType_popup;
   widgetData.mContentType = nsIDocShellTreeItem::typeChrome;
   widgetData.mBorderStyle = eBorderStyle_default;
+  widgetData.clipSiblings = PR_TRUE;
 
   nsCOMPtr<nsIContent> parentContent;
   aContent->GetParent(*getter_AddRefs(parentContent));
