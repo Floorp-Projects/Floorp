@@ -1429,8 +1429,8 @@ public class Interpreter extends LabelTable {
         }
             
         if (maxTryDepth != 0) {
-            // catchStack[2 * i]: catch data
-            // catchStack[2 * i + 1]: finally data
+            // catchStack[2 * i]: starting pc of catch block
+            // catchStack[2 * i + 1]: starting pc of finally block
             catchStack = new int[maxTryDepth * 2];
         }
         
@@ -2191,25 +2191,7 @@ public class Interpreter extends LabelTable {
                 pc++;
             }
             catch (Exception ex) {
-                final int ECMA = 0, SCRIPT = 1, OTHER = 2; 
-
-                int exceptionType;
-                Object errObj;
-                if (ex instanceof WrappedException)
-                    ex = (Exception) ((WrappedException)ex).unwrap();
-                if (ex instanceof EcmaError) {
-                    errObj = ((EcmaError)ex).getErrorObject();
-                    exceptionType = ECMA;
-                }
-                else if (ex instanceof RuntimeException) {
-                    errObj = ex;
-                    exceptionType = OTHER;
-                }
-                else {
-                    errObj = ScriptRuntime.
-                        unwrapJavaScriptException((JavaScriptException)ex);
-                    exceptionType = SCRIPT;
-                }
+                cx.interpreterSecurityDomain = null;
             
                 if (instructionThreshold != 0) {
                     if (instructionCount < 0) {
@@ -2219,47 +2201,74 @@ public class Interpreter extends LabelTable {
                     else {
                         // throw during any other operation
                         instructionCount += pc - pcPrevBranch;
+                        cx.instructionCount = instructionCount;
                     }
-                    if (instructionCount > instructionThreshold) {
-                        cx.observeInstructionCount(instructionCount);
-                        instructionCount = 0;
                     }
-                    cx.instructionCount = instructionCount;
+
+                final int SCRIPT_THROW = 0, ECMA = 1, OTHER = 2;
+
+                int exType;
+                Object errObj; // Object seen by catch
+                if (ex instanceof JavaScriptException) {
+                    errObj = ScriptRuntime.
+                        unwrapJavaScriptException((JavaScriptException)ex);
+                    exType = SCRIPT_THROW;
+                }
+                else if (ex instanceof EcmaError) {
+                    // an offical ECMA error object,
+                    errObj = ((EcmaError)ex).getErrorObject();
+                    exType = ECMA;
+                }
+                else {
+                    errObj = ex;
+                    exType = OTHER;
                 }
 
-                cx.interpreterSecurityDomain = null;
+                if (cx.debugger != null) {
+                    cx.debugger.handleExceptionThrown(cx, errObj);
+                }
 
                 boolean rethrow = true;
                 if (tryStackTop > 0) {
                     --tryStackTop;
-                    pc = catchStack[tryStackTop * 2];
                     scope = (Scriptable)stack[TRY_SCOPE_SHFT + tryStackTop];
-                    if (pc == 0) {
-                        if (exceptionType == ECMA || exceptionType == SCRIPT) {
-                            // Check for finally clause only for EcmaError and
-                            // JavaScriptException but not for arbitrary
-                            // RuntimeException
-                            pc = catchStack[tryStackTop * 2 + 1];
-                            if (exceptionType == SCRIPT) {
-                                errObj = ex;
-                            }
+                    if (exType == SCRIPT_THROW || exType == ECMA) {
+                        pc = catchStack[tryStackTop * 2];
+                        if (pc != 0) {
+                            // Has catch block
+                            rethrow = false;
                         }
                     }
+                    if (rethrow) {
+                        pc = catchStack[tryStackTop * 2 + 1];
                     if (pc != 0) {
+                            // has finally block
                         rethrow = false;
+                            errObj = ex;
                     }
+                }
                 }
 
                 if (rethrow) {
                     if (frame != null)
                         cx.popFrame();
-                    if (exceptionType == SCRIPT) throw (JavaScriptException)ex;
+                    if (exType == SCRIPT_THROW) throw (JavaScriptException)ex;
                     else throw (RuntimeException)ex;
                 }
             
                 // We caught an exception, 
-                // prepare stack and restore this function's security domain.
+
+                // Notify instruction observer if necessary
+                // and point pcPrevBranch to start of catch/finally block
+                if (instructionThreshold != 0) {
+                    if (instructionCount > instructionThreshold) {
+                        cx.observeInstructionCount(instructionCount);
+                        instructionCount = 0;
+                    }
+                }
                    pcPrevBranch = pc;
+
+                // prepare stack and restore this function's security domain.
                 stackTop = 0;
                 stack[0] = errObj;
                 cx.interpreterSecurityDomain = theData.securityDomain;
