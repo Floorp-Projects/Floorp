@@ -400,14 +400,37 @@ nsPrintJobCUPS::FinishSubmission()
     fclose(GetDestHandle());
     SetDestHandle(nsnull);
 
-    int result = (mCups.mCupsPrintFile)(mPrinterName.get(),
-            GetDestination().get(), "Mozilla print job", 0, nsnull);
+    nsCStringArray* printer = new nsCStringArray;
+    printer->ParseString(mPrinterName.get(),"/");
+
+    cups_dest_t *dests, *dest;
+    int num_dests = (mCups.mCupsGetDests)(&dests);
+    
+    if (printer->Count() == 1) {
+        dest = (mCups.mCupsGetDest)(printer->CStringAt(0)->get(), NULL, num_dests, dests);
+    } else {
+        dest = (mCups.mCupsGetDest)(printer->CStringAt(0)->get(), 
+                                    printer->CStringAt(1)->get(), num_dests, dests);
+    }
+
+    // Setting result just to get rid of compilation warning
+    int result=0;
+    if (dest != NULL) {
+        result = (mCups.mCupsPrintFile)(printer->CStringAt(0)->get(),
+                                            GetDestination().get(), "Mozilla print job", 
+                                            dest->num_options, dest->options);
+    }
+    delete printer;
+    (mCups.mCupsFreeDests)(num_dests, dests);
     unlink(GetDestination().get());
 
     // cupsPrintFile() result codes below 0x0300 indicate success.
     // Individual success codes are defined in the cups headers, but
     // we're not including those.
-    return (result < 0x0300) ? NS_OK : NS_ERROR_GFX_PRINTER_CMD_FAILURE;
+    if (dest == NULL)
+        return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+    else
+        return (result < 0x0300) ? NS_OK : NS_ERROR_GFX_PRINTER_CMD_FAILURE;
 }
 
 

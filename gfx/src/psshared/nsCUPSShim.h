@@ -62,6 +62,10 @@ typedef struct               /**** Destination ****/
     cups_option_t *options;    /* Options */
 } cups_dest_t;
 
+typedef cups_dest_t* (PR_CALLBACK *CupsGetDestType)(const char *printer,
+                                                    const char *instance,
+                                                    int num_dests, 
+                                                    cups_dest_t *dests);
 typedef int (PR_CALLBACK *CupsGetDestsType)(cups_dest_t **dests);
 typedef int (PR_CALLBACK *CupsFreeDestsType)(int         num_dests,
                                              cups_dest_t *dests);
@@ -99,6 +103,7 @@ class NS_PSSHARED nsCUPSShim {
         /* Function pointers for supported functions. These are only
          * valid after successful initialization.
          */
+        CupsGetDestType     mCupsGetDest;
         CupsGetDestsType    mCupsGetDests;
         CupsFreeDestsType   mCupsFreeDests;
         CupsPrintFileType   mCupsPrintFile;
