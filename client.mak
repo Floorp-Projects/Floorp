@@ -89,12 +89,13 @@ pull_nglayout:
 pull_client_source_product:
     @echo +++ client.mak: checking out the client with "$(CVS_BRANCH)"
     cd $(MOZ_SRC)\.
-    -cvs -q co $(CVS_BRANCH)      SeaMonkeyBrowser
+    -cvs -q co $(CVS_BRANCH) $(MOZ_TOP)/modules/softupdt     
 
 
-build_all:  build_nglayout \
-			build_dist  \
-			build_client
+build_all:  build_nglayout
+# since we only need to use nglayout right now (soon to be fixed)
+#			build_dist  \
+#			build_client
 
 build_nglayout: 
 	cd $(MOZ_SRC)\$(MOZ_TOP)
@@ -106,16 +107,7 @@ build_dist:
     $(NMAKE) -f makefile.win
 
 
-clobber_all:: clobber_moz clobber_nglayout
-
-clobber_moz:
-    cd $(MOZ_SRC)\$(MOZ_TOP)
-    $(NMAKE) -f makefile.win clobber_all
-    cd $(MOZ_SRC)\$(MOZ_TOP)\cmd\winfe\mkfiles32
-!if !defined(MOZ_MEDIUM)
-    cd $(MOZ_SRC)\$(MOZ_TOP)\netsite\ldap\libraries\msdos\winsock
-    $(NMAKE) -f nsldap.mak clobber_all
-!endif
+clobber_all:: clobber_nglayout
 
 clobber_nglayout:
 	cd $(MOZ_SRC)\$(MOZ_TOP)
