@@ -31,7 +31,7 @@
 class ifstream;
 #endif
 
-#define MAX_ID_LENGHT   256
+#define MAX_ID_LENGTH   256
 
 enum EIDLTokenType {
   EOF_TOKEN = -1,
@@ -170,7 +170,7 @@ private:
   Token *mCurrentToken;
   long mLineNumber;
   int mTokenPeeked;
-  char mTokenName[MAX_ID_LENGHT];
+  char mTokenName[MAX_ID_LENGTH];
 
 public:
             IdlScanner();

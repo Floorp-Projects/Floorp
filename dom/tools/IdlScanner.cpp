@@ -37,7 +37,7 @@ IdlScanner::IdlScanner()
   mCurrentToken = (Token*)0;
   mTokenPeeked = 0;
   mLineNumber = 1;
-  for (int i = 0; i < MAX_ID_LENGHT; i++) mTokenName[i] = 0;
+  for (int i = 0; i < MAX_ID_LENGTH; i++) mTokenName[i] = 0;
 }
 
 IdlScanner::~IdlScanner()
@@ -130,7 +130,7 @@ Token* IdlScanner::NextToken()
 
     int c = EatWhiteSpace();
     if (EOF != c) {
-      for (int i = 1; i < MAX_ID_LENGHT; i++) mTokenName[i] = 0;
+      for (int i = 1; i < MAX_ID_LENGTH; i++) mTokenName[i] = 0;
       mTokenName[0] = c;
 
       mCurrentToken->SetToken(ERROR_TOKEN);
