@@ -52,7 +52,7 @@ class SmoothScroll;
 class nsScrollPortView : public nsView, public nsIScrollableView
 {
 public:
-  nsScrollPortView();
+  nsScrollPortView(nsViewManager* aViewManager = nsnull);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
