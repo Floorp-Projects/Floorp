@@ -105,7 +105,12 @@ foreach my $field (@bug_fields) {
     $query .= SqlQuote($::FORM{$field}) . ",\n";
 }
 
-$query .= "now(), " . SqlQuote($::FORM{'comment'}) . " )\n";
+my $comment = $::FORM{'comment'};
+$comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
+$comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
+$comment = trim($comment);
+
+$query .= "now(), " . SqlQuote($comment) . " )\n";
 
 
 my %ccids;

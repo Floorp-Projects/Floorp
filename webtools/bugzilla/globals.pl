@@ -78,7 +78,13 @@ sub FetchOneColumn {
 
 sub AppendComment {
     my ($bugid,$who,$comment) = (@_);
-    $comment =~ s/\r\n/\n/;     # Get rid of windows-style line endings.
+    open(DEBUG, ">/tmp/debug");
+    print DEBUG "A $comment";
+    $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
+    print DEBUG "B $comment";
+    $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
+    print DEBUG "C $comment";
+    close DEBUG;
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
         return;
     }
