@@ -147,7 +147,7 @@ function editPage(url, launchWindow, delay)
     {
       // we have an empty window we can use
       if (emptyWindow.IsInHTMLSourceMode())
-        emptyWindow.FinishHTMLSource();
+        emptyWindow.SetEditMode(emptyWindow.PreviousNonSourceDisplayMode);
       emptyWindow.editorShell.LoadUrl(url);
       emptyWindow.focus();
       emptyWindow.SetSaveAndPublishUI(url);
