@@ -61,6 +61,7 @@ public:
   static nsIAtom* commentTagName;
   static nsIAtom* textTagName;
   static nsIAtom* viewportPseudo;
+  static nsIAtom* pagePseudo;
 
   // Alphabetical list of frame types
   static nsIAtom* areaFrame;

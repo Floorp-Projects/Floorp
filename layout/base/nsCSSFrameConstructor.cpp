@@ -1411,9 +1411,15 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
     // Initialize the page and force it to have a view. This makes printing of
     // the pages easier and faster.
     // XXX Use a PAGE style context...
-    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, viewportPseudoStyle);
+    nsCOMPtr<nsIStyleContext> pagePseudoStyle;
+
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pagePseudo,
+                                               viewportPseudoStyle, PR_FALSE,
+                                               getter_AddRefs(pagePseudoStyle));
+
+    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, pagePseudoStyle);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
-                                             viewportPseudoStyle, PR_TRUE);
+                                             pagePseudoStyle, PR_TRUE);
 
     // The eventual parent of the document element frame
     mDocElementContainingBlock = pageFrame;
