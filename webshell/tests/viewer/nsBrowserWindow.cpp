@@ -1995,6 +1995,8 @@ nsBrowserWindow::DoPaste()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
+
+#ifndef NEW_CLIPBOARD_SUPPORT
     nsISelectionMgr* selectionMgr;
     if (NS_SUCCEEDED(mAppShell->GetSelectionMgr(&selectionMgr)))
     {
@@ -2004,6 +2006,10 @@ nsBrowserWindow::DoPaste()
       printf("Would paste: '%s'\n", cstring);
       delete[] cstring;
     }
+#else
+    printf("nsBrowserWindow::DoPaste()\n");
+#endif
+
     NS_RELEASE(shell);
   }
 }
