@@ -248,6 +248,11 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
       view->SetContentTransparency(PR_TRUE);
     }
     break;
+
+  case nsImageNotification_kAborted:
+    // Update the image load status
+    mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_ERROR;
+    break;
   }
 }
 
