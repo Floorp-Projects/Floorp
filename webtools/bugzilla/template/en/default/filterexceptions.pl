@@ -101,7 +101,6 @@
                                                             IF sortvisible',
   'column.name', 
   'column.description',
-  'vis_bug_ids.push(bug.id)', 
   'bug.id', 
   'bug.count', 
   'bug.delta', 
@@ -524,6 +523,27 @@
 'admin/flag-type/list.html.tmpl' => [
   'type.id', 
   'type.flag_count', 
+],
+
+
+'admin/components/confirm-delete.html.tmpl' => [
+  'bug_count'
+],
+
+'admin/components/deleted.html.tmpl' => [
+  'deleted_bug_count'
+],
+
+'admin/components/edit.html.tmpl' => [
+  'bug_count'
+],
+
+'admin/components/list.html.tmpl' => [
+  'cgi.query_string'
+],
+
+'admin/components/select-product.html.tmpl' => [
+  'cgi.query_string'
 ],
 
 'account/login.html.tmpl' => [

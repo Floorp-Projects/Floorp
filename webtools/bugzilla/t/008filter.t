@@ -202,7 +202,7 @@ sub directive_ok {
     return 1 if $directive =~ /^(time2str|GetBugLink|url)\(/;
 
     # Safe Template Toolkit virtual methods
-    return 1 if $directive =~ /\.(size)$/;
+    return 1 if $directive =~ /\.((size)$|(push))/;
 
     # Special Template Toolkit loop variable
     return 1 if $directive =~ /^loop\.(index|count)$/;

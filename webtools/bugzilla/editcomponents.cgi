@@ -35,18 +35,11 @@ use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Series;
 
-# Shut up misguided -w warnings about "used only once".  For some reason,
-# "use vars" chokes on me when I try it here.
-
-sub sillyness {
-    my $zz;
-    $zz = $::buffer;
-}
-
-
-my $dobugcounts = (defined $::FORM{'dobugcounts'});
+use vars qw($template $vars);
 
 my $cgi = Bugzilla->cgi;
+
+my $showbugcounts = (defined $cgi->param('showbugcounts'));
 
 # TestProduct:    just returns if the specified product does exists
 # CheckProduct:   same check, optionally  emit an error text
@@ -60,7 +53,7 @@ sub TestProduct ($)
     # does the product exist?
     SendSQL("SELECT name
              FROM products
-             WHERE name=" . SqlQuote($prod));
+             WHERE name = " . SqlQuote($prod));
     return FetchOneColumn();
 }
 
@@ -70,127 +63,49 @@ sub CheckProduct ($)
 
     # do we have a product?
     unless ($prod) {
-        print "Sorry, you haven't specified a product.";
-        PutTrailer();
+        ThrowUserError('product_not_specified');    
         exit;
     }
 
     unless (TestProduct $prod) {
-        print "Sorry, product '$prod' does not exist.";
-        PutTrailer();
+        ThrowUserError('product_doesnt_exist',
+                       {'product' => $prod});
         exit;
     }
 }
 
 sub TestComponent ($$)
 {
-    my ($prod,$comp) = @_;
+    my ($prod, $comp) = @_;
 
-    # does the product exist?
+    # does the product/component combination exist?
     SendSQL("SELECT components.name
              FROM components, products
              WHERE products.id = components.product_id
-              AND products.name=" . SqlQuote($prod) . " AND components.name=" . SqlQuote($comp));
+             AND products.name = " . SqlQuote($prod) . "
+             AND components.name = " . SqlQuote($comp));
     return FetchOneColumn();
 }
 
 sub CheckComponent ($$)
 {
-    my ($prod,$comp) = @_;
+    my ($prod, $comp) = @_;
 
     # do we have the component?
     unless ($comp) {
-        print "Sorry, you haven't specified a component.";
-        PutTrailer();
+        ThrowUserError('component_not_specified');
         exit;
     }
 
     CheckProduct($prod);
 
-    unless (TestComponent $prod,$comp) {
-        print "Sorry, component '$comp' for product '$prod' does not exist.";
-        PutTrailer();
+    unless (TestComponent $prod, $comp) {
+        ThrowUserError('component_not_valid',
+                       {'product' => $prod,
+                        'name' => $comp});
         exit;
     }
 }
-
-
-#
-# Displays the form to edit component parameters
-#
-
-sub EmitFormElements ($$$$$)
-{
-    my ($product, $component, $initialownerid, $initialqacontactid, $description) = @_;
-
-    my ($initialowner, $initialqacontact) = ($initialownerid ? DBID_to_name ($initialownerid) : '',
-                                             $initialqacontactid ? DBID_to_name ($initialqacontactid) : '');
-
-    print "  <TH ALIGN=\"right\">Component:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=64 NAME=\"component\" VALUE=\"" .
-        value_quote($component) . "\">\n";
-    print "      <INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        value_quote($product) . "\"></TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Description:</TH>\n";
-    print "  <TD><TEXTAREA ROWS=4 COLS=64 WRAP=VIRTUAL NAME=\"description\">" .
-        value_quote($description) . "</TEXTAREA></TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Initial owner:</TH>\n";
-    print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"initialowner\" VALUE=\"" .
-        value_quote($initialowner) . "\"></TD>\n";
-
-    if (Param('useqacontact')) {
-        print "</TR><TR>\n";
-        print "  <TH ALIGN=\"right\">Initial QA contact:</TH>\n";
-        print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"initialqacontact\" VALUE=\"" .
-            value_quote($initialqacontact) . "\"></TD>\n";
-    }
-}
-
-
-#
-# Displays a text like "a.", "a or b.", "a, b or c.", "a, b, c or d."
-# 
-# XXX This implementation of PutTrailer outputs a default link back to the
-# query page instead of the index, which is inconsistent with other
-# PutTrailer() implementations.
-#
-
-sub PutTrailer (@)
-{
-    my (@links) = ("Back to the <A HREF=\"query.cgi\">query page</A>", @_);
-    SendSQL("UNLOCK TABLES");
-
-    my $count = $#links;
-    my $num = 0;
-    print "<P>\n";
-    if (!$dobugcounts) {
-        print qq{<a href="editcomponents.cgi?dobugcounts=1&$::buffer">};
-        print qq{Redisplay table with bug counts (slower)</a><p>\n};
-    }
-    foreach (@links) {
-        print $_;
-        if ($num == $count) {
-            print ".\n";
-        }
-        elsif ($num == $count-1) {
-            print " or ";
-        }
-        else {
-            print ", ";
-        }
-        $num++;
-    }
-    PutFooter();
-}
-
-
-
-
-
 
 
 #
@@ -202,10 +117,7 @@ Bugzilla->login(LOGIN_REQUIRED);
 print Bugzilla->cgi->header();
 
 unless (UserInGroup("editcomponents")) {
-    PutHeader("Not allowed");
-    print "Sorry, you aren't a member of the 'editcomponents' group.\n";
-    print "And so, you aren't allowed to add, modify or delete components.\n";
-    PutTrailer();
+    ThrowUserError('auth_cant_edit_components');    
     exit;
 }
 
@@ -213,15 +125,9 @@ unless (UserInGroup("editcomponents")) {
 #
 # often used variables
 #
-my $product   = trim($::FORM{product}   || '');
-my $component = trim($::FORM{component} || '');
-my $action    = trim($::FORM{action}    || '');
-my $localtrailer;
-if ($product) {
-    $localtrailer = "<A HREF=\"editcomponents.cgi?product=" . url_quote($product) . "\">edit</A> more components";
-} else {
-    $localtrailer = "<A HREF=\"editcomponents.cgi\">edit</A> more components";
-}
+my $product   = trim($cgi->param('product')   || '');
+my $component = trim($cgi->param('component') || '');
+my $action    = trim($cgi->param('action')    || '');
 
 
 
@@ -230,41 +136,40 @@ if ($product) {
 #
 
 unless ($product) {
-    PutHeader("Select product");
 
-    if ($dobugcounts){
-        SendSQL("SELECT products.name,products.description,COUNT(bug_id)
-             FROM products LEFT JOIN bugs ON products.id = bugs.product_id
-             GROUP BY products.name
-             ORDER BY products.name");
+    my @products = ();
+
+    if ($showbugcounts){
+        SendSQL("SELECT products.name, products.description, COUNT(bug_id)
+                 FROM products LEFT JOIN bugs ON products.id = bugs.product_id
+                 GROUP BY products.name
+                 ORDER BY products.name");
     } else {
-        SendSQL("SELECT products.name,products.description
-             FROM products 
-             ORDER BY products.name");
+        SendSQL("SELECT products.name, products.description
+                 FROM products 
+                 ORDER BY products.name");
     }
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH ALIGN=\"left\">Edit components of ...</TH>\n";
-    print "  <TH ALIGN=\"left\">Description</TH>\n";
-    if ($dobugcounts) {
-        print "  <TH ALIGN=\"left\">Bugs</TH>\n";
-    }
-    #print "  <TH ALIGN=\"left\">Edit</TH>\n";
-    print "</TR>";
-    while ( MoreSQLData() ) {
-        my ($product, $description, $bugs) = FetchSQLData();
-        $description ||= "<FONT COLOR=\"red\">missing</FONT>";
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "\"><B>$product</B></A></TD>\n";
-        print "  <TD VALIGN=\"top\">$description</TD>\n";
-        if ($dobugcounts) {
-            $bugs ||= "none";
-            print "  <TD VALIGN=\"top\">$bugs</TD>\n";
-        }
-        #print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=edit&product=", url_quote($product), "\">Edit</A></TD>\n";
-    }
-    print "</TR></TABLE>\n";
 
-    PutTrailer();
+    while ( MoreSQLData() ) {
+
+        my $prod = {};
+
+        my ($name, $description, $bug_count) = FetchSQLData();
+
+        $prod->{'name'} = $name;
+        $prod->{'description'} = $description;
+        $prod->{'bug_count'} = $bug_count;
+
+        push(@products, $prod);
+    }
+
+    $vars->{'showbugcounts'} = $showbugcounts;
+    $vars->{'products'} = \@products;
+    $template->process("admin/components/select-product.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
+
     exit;
 }
 
@@ -275,69 +180,53 @@ unless ($product) {
 #
 
 unless ($action) {
-    PutHeader("Select component of $product");
+
     CheckProduct($product);
     my $product_id = get_product_id($product);
+    my @components = ();
 
-    if ($dobugcounts) {
-        SendSQL("SELECT name,description,initialowner,initialqacontact,COUNT(bug_id)
-             FROM components LEFT JOIN bugs ON components.id = bugs.component_id
-             WHERE components.product_id=$product_id
-             GROUP BY name");
+    if ($showbugcounts) {
+        SendSQL("SELECT name,description, initialowner,
+                        initialqacontact, COUNT(bug_id)
+                 FROM components LEFT JOIN bugs ON 
+                      components.id = bugs.component_id
+                 WHERE components.product_id = $product_id
+                 GROUP BY name");
     } else {
-        SendSQL("SELECT name,description,initialowner,initialqacontact
-             FROM components 
-             WHERE product_id=$product_id
-             GROUP BY name");
+        SendSQL("SELECT name, description, initialowner, initialqacontact
+                 FROM components 
+                 WHERE product_id = $product_id
+                 GROUP BY name");
     }        
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH ALIGN=\"left\">Edit component ...</TH>\n";
-    print "  <TH ALIGN=\"left\">Description</TH>\n";
-    print "  <TH ALIGN=\"left\">Initial owner</TH>\n";
-    print "  <TH ALIGN=\"left\">Initial QA contact</TH>\n"
-        if Param('useqacontact');
-    print "  <TH ALIGN=\"left\">Bugs</TH>\n"
-        if $dobugcounts;
-    print "  <TH ALIGN=\"left\">Delete</TH>\n";
-    print "</TR>";
-    my @data;
+
     while (MoreSQLData()) {
-        push @data, [FetchSQLData()];
-    }
-    foreach (@data) {
-        my ($component,$desc,$initialownerid,$initialqacontactid, $bugs) = @$_;
 
-        $desc             ||= "<FONT COLOR=\"red\">missing</FONT>";
-        my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : "<FONT COLOR=\"red\">missing</FONT>";
-        my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : "<FONT COLOR=\"red\">missing</FONT>";
-        print "<TR>\n";
-        print "  <TD VALIGN=\"top\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "&component=", url_quote($component), "&action=edit\"><B>$component</B></A></TD>\n";
-        print "  <TD VALIGN=\"top\">$desc</TD>\n";
-        print "  <TD VALIGN=\"top\">$initialowner</TD>\n";
-        print "  <TD VALIGN=\"top\">$initialqacontact</TD>\n"
-                if Param('useqacontact');
-        if ($dobugcounts) {
-            $bugs ||= 'none';
-            print "  <TD VALIGN=\"top\">$bugs</TD>\n";
-        }
-        print "  <TD VALIGN=\"top\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "&component=", url_quote($component), "&action=del\"><B>Delete</B></A></TD>\n";
-        print "</TR>";
-    }
-    print "<TR>\n";
-    my $span = 3;
-    $span++ if Param('useqacontact');
-    $span++ if $dobugcounts;
-    print "  <TD VALIGN=\"top\" COLSPAN=$span>Add a new component</TD>\n";
-    print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><A HREF=\"editcomponents.cgi?product=", url_quote($product) . "&action=add\">Add</A></TD>\n";
-    print "</TR></TABLE>\n";
+        my $component = {};
+        my ($name, $desc, $initialownerid, $initialqacontactid, $bug_count)
+            = FetchSQLData();
 
-    PutTrailer();
+        $component->{'name'} = $name;
+        $component->{'description'} = $desc;
+        $component->{'initialowner'} = DBID_to_name($initialownerid)
+            if ($initialownerid);
+        $component->{'initialqacontact'} = DBID_to_name($initialqacontactid)
+            if ($initialqacontactid);
+        $component->{'bug_count'} = $bug_count;
+
+        push(@components, $component);
+
+    }
+
+    
+    $vars->{'showbugcounts'} = $showbugcounts;
+    $vars->{'product'} = $product;
+    $vars->{'components'} = \@components;
+    $template->process("admin/components/list.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
-
-
-$dobugcounts = 1;               # Stupid hack to force further PutTrailer()
-                                # calls to not offer a "bug count" option.
 
 
 #
@@ -347,26 +236,15 @@ $dobugcounts = 1;               # Stupid hack to force further PutTrailer()
 #
 
 if ($action eq 'add') {
-    PutHeader("Add component of $product");
+
     CheckProduct($product);
 
-    #print "This page lets you add a new product to bugzilla.\n";
+    $vars->{'product'} = $product;
+    $template->process("admin/components/create.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    print "<FORM METHOD=POST ACTION=editcomponents.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($product, '', 0, 0, '');
-
-    print "</TR></TABLE>\n<HR>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
-    print "<INPUT TYPE=HIDDEN NAME='open_name' VALUE='All Open'>\n";
-    print "<INPUT TYPE=HIDDEN NAME='closed_name' VALUE='All Closed'>\n";
-    print "</FORM>";
-
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
     exit;
 }
 
@@ -377,65 +255,59 @@ if ($action eq 'add') {
 #
 
 if ($action eq 'new') {
-    PutHeader("Adding new component of $product");
+
     CheckProduct($product);
     my $product_id = get_product_id($product);
+
 
     # Cleanups and valididy checks
 
     unless ($component) {
-        print "You must enter a name for the new component. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+        ThrowUserError('component_blank_name',
+                       {'name' => $component});
         exit;
     }
-    if (TestComponent($product,$component)) {
-        print "The component '$component' already exists. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+    if (TestComponent($product, $component)) {
+        ThrowUserError('component_already_exists',
+                       {'name' => $component});
         exit;
     }
 
     if (length($component) > 64) {
-        print "Sorry, the name of a component is limited to 64 characters.";
-        PutTrailer($localtrailer);
+        ThrowUserError('component_name_too_long',
+                       {'name' => $component});
         exit;
     }
 
-    my $description = trim($::FORM{description} || '');
+    my $description = trim($cgi->param('description') || '');
 
     if ($description eq '') {
-        print "You must enter a description for the component '$component'. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+        ThrowUserError('component_blank_description',
+                       {'name' => $component});
         exit;
     }
 
-    my $initialowner = trim($::FORM{initialowner} || '');
+    my $initialowner = trim($cgi->param('initialowner') || '');
 
     if ($initialowner eq '') {
-        print "You must enter an initial owner for the component '$component'. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+        ThrowUserError('component_need_initialowner',
+                       {'name' => $component});
         exit;
     }
 
     my $initialownerid = DBname_to_id ($initialowner);
     if (!$initialownerid) {
-        print "You must use an existing Bugzilla account as initial owner for the component
-'$component'. Please press\n";
-        print "<b>Back</b> and try again.\n";
-        PutTrailer($localtrailer);
+        ThrowUserError('component_need_valid_initialowner',
+                       {'name' => $component});
         exit;
-      }
+    }
 
-    my $initialqacontact = trim($::FORM{initialqacontact} || '');
+    my $initialqacontact = trim($cgi->param('initialqacontact') || '');
     my $initialqacontactid = DBname_to_id ($initialqacontact);
     if (Param('useqacontact')) {
         if (!$initialqacontactid && $initialqacontact ne '') {
-            print "You must use an existing Bugzilla account as initial QA contact for the component '$component'. Please press\n";
-            print "<b>Back</b> and try again.\n";
-            PutTrailer($localtrailer);
+            ThrowUserError('component_need_valid_initialqacontact',
+                           {'name' => $component});
             exit;
         }
     }
@@ -455,13 +327,14 @@ if ($action eq 'new') {
     GetVersionTable();
 
     my @series;
+
     my $prodcomp = "&product=$product&component=$component";
 
     # For localisation reasons, we get the title of the queries from the
     # submitted form.
     my $open_name = $cgi->param('open_name');
     my $closed_name = $cgi->param('closed_name');
-    my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
+    my @openedstatuses = OpenStates();
     my $statuses = join("&", map { "bug_status=$_" } @openedstatuses) . $prodcomp;
     my $resolved = "field0-0-0=resolution&type0-0-0=notequals&value0-0-0=---" . $prodcomp;
 
@@ -485,19 +358,12 @@ if ($action eq 'new') {
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
-    print "OK, done.<p>\n";
-    if ($product) {
-        PutTrailer("<a href=\"editcomponents.cgi?product=" .
-            url_quote($product) . "\">edit</a> more components",
-            "<a href=\"editcomponents.cgi?product=". url_quote($product) .
-            "&action=add\">add</a> another component",
-            "<a href=\"editproducts.cgi?action=add\">add</a> a new product");
-    } else {
-        PutTrailer("<a href=\"editcomponents.cgi\">edit</a> more components",
-            "<a href=\"editcomponents.cgi?action=add\">add</a>" .
-            "another component",
-            "<a href=\"editproducts.cgi?action=add\">add</a> a new product");
-    }
+    $vars->{'name'} = $component;
+    $vars->{'product'} = $product;
+    $template->process("admin/components/created.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -510,112 +376,55 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'del') {
-    PutHeader("Delete component of $product");
+
     CheckComponent($product, $component);
     my $component_id = get_component_id(get_product_id($product), $component);
 
     # display some data about the component
-    SendSQL("SELECT products.name,products.description,
-                products.milestoneurl,products.disallownew,
-                components.name,components.initialowner,
-                components.initialqacontact,components.description
+    SendSQL("SELECT products.name, products.description,
+                    products.milestoneurl, products.disallownew,
+                    components.name, components.initialowner,
+                    components.initialqacontact, components.description
              FROM products
              LEFT JOIN components ON products.id = components.product_id
              WHERE components.id = $component_id");
 
 
-    my ($product,$pdesc,$milestoneurl,$disallownew,
-        $component,$initialownerid,$initialqacontactid,$cdesc) = FetchSQLData();
+    my ($product, $product_description, $milestoneurl, $disallownew,
+        $component, $initialownerid, $initialqacontactid, $description) =
+            FetchSQLData();
 
-    my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : "<FONT COLOR=\"red\">missing</FONT>";
-    my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : "<FONT COLOR=\"red\">missing</FONT>";
-    my $milestonelink = $milestoneurl ? "<A HREF=\"$milestoneurl\">$milestoneurl</A>"
-                                      : "<FONT COLOR=\"red\">missing</FONT>";
-    $pdesc            ||= "<FONT COLOR=\"red\">missing</FONT>";
-    $disallownew        = $disallownew ? 'closed' : 'open';
-    $cdesc            ||= "<FONT COLOR=\"red\">missing</FONT>";
+
+    my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : '';
+    my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : '';
+    $milestoneurl        ||= '';
+    $product_description ||= '';
+    $disallownew         ||= 0;
+    $description         ||= '';
     
-    print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
-    print "  <TH VALIGN=\"top\" ALIGN=\"left\">Value</TH>\n";
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Component:</TD>\n";
-    print "  <TD VALIGN=\"top\">$component</TD>";
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Component description:</TD>\n";
-    print "  <TD VALIGN=\"top\">$cdesc</TD>";
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Initial owner:</TD>\n";
-    print "  <TD VALIGN=\"top\">$initialowner</TD>";
-
     if (Param('useqacontact')) {
-        print "</TR><TR>\n";
-        print "  <TD VALIGN=\"top\">Initial QA contact:</TD>\n";
-        print "  <TD VALIGN=\"top\">$initialqacontact</TD>";
+        $vars->{'initialqacontact'} = $initialqacontact;
     }
+
+    if (Param('usetargetmilestone')) {
+        $vars->{'milestoneurl'} = $milestoneurl;
+    }
+
     SendSQL("SELECT count(bug_id)
              FROM bugs
              WHERE component_id = $component_id");
+    $vars->{'bug_count'} = FetchOneColumn() || 0;
 
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Component of product:</TD>\n";
-    print "  <TD VALIGN=\"top\">$product</TD>\n";
+    $vars->{'name'} = $component;
+    $vars->{'description'} = $description;
+    $vars->{'initialowner'} = $initialowner;
+    $vars->{'product'} = $product;
+    $vars->{'product_description'} = $product_description;
+    $vars->{'disallownew'} = $disallownew;
+    $template->process("admin/components/confirm-delete.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Description:</TD>\n";
-    print "  <TD VALIGN=\"top\">$pdesc</TD>\n";
-
-    if (Param('usetargetmilestone')) {
-         print "</TR><TR>\n";
-         print "  <TD VALIGN=\"top\">Milestone URL:</TD>\n";
-         print "  <TD VALIGN=\"top\">$milestonelink</TD>\n";
-    }
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Closed for bugs:</TD>\n";
-    print "  <TD VALIGN=\"top\">$disallownew</TD>\n";
-
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">Bugs</TD>\n";
-    print "  <TD VALIGN=\"top\">";
-    my $bugs = FetchOneColumn();
-    print $bugs || 'none';
-
-
-    print "</TD>\n</TR></TABLE>";
-
-    print "<H2>Confirmation</H2>\n";
-
-    if ($bugs) {
-        if (!Param("allowbugdeletion")) {
-            print "Sorry, there are $bugs bugs outstanding for this component. 
-You must reassign those bugs to another component before you can delete this
-one.";
-            PutTrailer($localtrailer);
-            exit;
-        }
-        print "<TABLE BORDER=0 CELLPADDING=20 WIDTH=\"70%\" BGCOLOR=\"red\"><TR><TD>\n",
-              "There are bugs entered for this component!  When you delete this ",
-              "component, <B><BLINK>all</BLINK></B> stored bugs will be deleted, too. ",
-              "You could not even see the bug history for this component anymore!\n",
-              "</TD></TR></TABLE>\n";
-    }
-
-    print "<P>Do you really want to delete this component?<P>\n";
-
-    print "<FORM METHOD=POST ACTION=editcomponents.cgi>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Yes, delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"delete\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"product\" VALUE=\"" .
-        value_quote($product) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"component\" VALUE=\"" .
-        value_quote($component) . "\">\n";
-    print "</FORM>";
-
-    PutTrailer($localtrailer);
     exit;
 }
 
@@ -626,8 +435,8 @@ one.";
 #
 
 if ($action eq 'delete') {
-    PutHeader("Deleting component of $product");
-    CheckComponent($product,$component);
+
+    CheckComponent($product, $component);
     my $component_id = get_component_id(get_product_id($product),$component);
 
     # lock the tables before we start to change everything:
@@ -645,9 +454,11 @@ if ($action eq 'delete') {
     # in bugs_activies and attachments.
 
     if (Param("allowbugdeletion")) {
+        my $deleted_bug_count = 0;
+
         SendSQL("SELECT bug_id
-             FROM bugs
-             WHERE component_id=$component_id");
+                 FROM bugs
+                 WHERE component_id = $component_id");
         while (MoreSQLData()) {
             my $bugid = FetchOneColumn();
 
@@ -656,29 +467,36 @@ if ($action eq 'delete') {
             SendSQL("DELETE FROM bugs_activity WHERE bug_id=$bugid");
             SendSQL("DELETE FROM dependencies WHERE blocked=$bugid");
             PopGlobalSQLState();
-        }
-        print "Attachments, bug activity and dependencies deleted.<BR>\n";
 
+            $deleted_bug_count++;
+        }
+
+        $vars->{'deleted_bug_count'} = $deleted_bug_count;
 
         # Deleting the rest is easier:
 
         SendSQL("DELETE FROM bugs
                  WHERE component_id=$component_id");
-        print "Bugs deleted.<BR>\n";
     }
 
     SendSQL("DELETE FROM flaginclusions
              WHERE component_id=$component_id");
     SendSQL("DELETE FROM flagexclusions
              WHERE component_id=$component_id");
-    print "Flag inclusions and exclusions deleted.<BR>\n";
     
     SendSQL("DELETE FROM components
              WHERE id=$component_id");
-    print "Components deleted.<P>\n";
+
+    SendSQL("UNLOCK TABLES");
 
     unlink "$datadir/versioncache";
-    PutTrailer($localtrailer);
+
+    $vars->{'name'} = $component;
+    $vars->{'product'} = $product;
+    $template->process("admin/components/deleted.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -691,59 +509,40 @@ if ($action eq 'delete') {
 #
 
 if ($action eq 'edit') {
-    PutHeader("Edit component of $product");
-    CheckComponent($product,$component);
-    my $component_id = get_component_id(get_product_id($product),$component);
+
+    CheckComponent($product, $component);
+    my $component_id = get_component_id(get_product_id($product), $component);
 
     # get data of component
-    SendSQL("SELECT products.name,products.description,
-                products.milestoneurl,products.disallownew,
-                components.name,components.initialowner,
-                components.initialqacontact,components.description
-             FROM products LEFT JOIN components ON products.id = components.product_id
+    SendSQL("SELECT products.name,
+                    components.name, components.initialowner,
+                    components.initialqacontact, components.description
+             FROM products LEFT JOIN components ON 
+                  products.id = components.product_id
              WHERE components.id = $component_id");
 
-    my ($product,$pdesc,$milestoneurl,$disallownew,
-        $component,$initialownerid,$initialqacontactid,$cdesc) = FetchSQLData();
+    my ($product, $component, $initialownerid, $initialqacontactid,
+        $description) = FetchSQLData();
 
     my $initialowner = $initialownerid ? DBID_to_name ($initialownerid) : '';
     my $initialqacontact = $initialqacontactid ? DBID_to_name ($initialqacontactid) : '';
 
-    print "<FORM METHOD=POST ACTION=editcomponents.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
-
-    #+++ display product/product description
-
-    EmitFormElements($product, $component, $initialownerid, $initialqacontactid, $cdesc);
-
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Bugs:</TH>\n";
-    print "  <TD>";
     SendSQL("SELECT count(*)
              FROM bugs
-             WHERE component_id=$component_id");
-    my $bugs = '';
-    $bugs = FetchOneColumn() if MoreSQLData();
-    print $bugs || 'none';
+             WHERE component_id = $component_id");
 
-    print "</TD>\n</TR></TABLE>\n";
+    $vars->{'bug_count'} = FetchOneColumn() || 0;
 
-    print "<INPUT TYPE=HIDDEN NAME=\"componentold\" VALUE=\"" .
-        value_quote($component) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"descriptionold\" VALUE=\"" .
-        value_quote($cdesc) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"initialownerold\" VALUE=\"" .
-        value_quote($initialowner) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"initialqacontactold\" VALUE=\"" .
-        value_quote($initialqacontact) . "\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
+    $vars->{'name'} = $component;
+    $vars->{'description'} = $description;
+    $vars->{'initialowner'} = $initialowner;
+    $vars->{'initialqacontact'} = $initialqacontact;
+    $vars->{'product'} = $product;
 
-    print "</FORM>";
+    $template->process("admin/components/edit.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
     exit;
 }
 
@@ -754,19 +553,18 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update component of $product");
 
-    my $componentold        = trim($::FORM{componentold}        || '');
-    my $description         = trim($::FORM{description}         || '');
-    my $descriptionold      = trim($::FORM{descriptionold}      || '');
-    my $initialowner        = trim($::FORM{initialowner}        || '');
-    my $initialownerold     = trim($::FORM{initialownerold}     || '');
-    my $initialqacontact    = trim($::FORM{initialqacontact}    || '');
-    my $initialqacontactold = trim($::FORM{initialqacontactold} || '');
+    my $componentold        = trim($cgi->param('componentold')        || '');
+    my $description         = trim($cgi->param('description')         || '');
+    my $descriptionold      = trim($cgi->param('descriptionold')      || '');
+    my $initialowner        = trim($cgi->param('initialowner')        || '');
+    my $initialownerold     = trim($cgi->param('initialownerold')     || '');
+    my $initialqacontact    = trim($cgi->param('initialqacontact')    || '');
+    my $initialqacontactold = trim($cgi->param('initialqacontactold') || '');
 
     if (length($component) > 64) {
-        print "Sorry, the name of a component is limited to 64 characters.";
-        PutTrailer($localtrailer);
+        ThrowUserError('component_name_too_long',
+                       {'name' => $component});
         exit;
     }
 
@@ -774,67 +572,74 @@ if ($action eq 'update') {
     # them, be sure to test for WHERE='$component' or WHERE='$componentold'
 
     SendSQL("LOCK TABLES components WRITE, products READ, profiles READ");
-    CheckComponent($product,$componentold);
+    CheckComponent($product, $componentold);
     my $component_id = get_component_id(get_product_id($product),
                                         $componentold);
 
     if ($description ne $descriptionold) {
         unless ($description) {
-            print "Sorry, I can't delete the description.";
-            PutTrailer($localtrailer);
+            SendSQL("UNLOCK TABLES");
+            ThrowUserError('component_blank_description',
+                           {'name' => $componentold});
             exit;
         }
         SendSQL("UPDATE components
                  SET description=" . SqlQuote($description) . "
                  WHERE id=$component_id");
-        print "Updated description.<BR>\n";
+
+        $vars->{'updated_description'} = 1;
+        $vars->{'description'} = $description;
     }
 
 
     if ($initialowner ne $initialownerold) {
-        unless ($initialowner) {
-            print "Sorry, I can't delete the initial owner.";
-            PutTrailer($localtrailer);
-            exit;
-        }
 
         my $initialownerid = DBname_to_id($initialowner);
         unless ($initialownerid) {
-            print "Sorry, you must use an existing Bugzilla account as initial owner.";
-            PutTrailer($localtrailer);
+            SendSQL("UNLOCK TABLES");
+            ThrowUserError('component_need_valid_initialowner',
+                           {'name' => $componentold});
             exit;
         }
 
         SendSQL("UPDATE components
                  SET initialowner=" . SqlQuote($initialownerid) . "
                  WHERE id = $component_id");
-        print "Updated initial owner.<BR>\n";
+
+        $vars->{'updated_initialowner'} = 1;
+        $vars->{'initialowner'} = $initialowner;
+
     }
 
     if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
         my $initialqacontactid = DBname_to_id($initialqacontact);
         if (!$initialqacontactid && $initialqacontact ne '') {
-            print "Sorry, you must use an existing Bugzilla account as initial QA contact.";
-            PutTrailer($localtrailer);
+            SendSQL("UNLOCK TABLES");
+            ThrowUserError('component_need_valid_initialqacontact',
+                           {'name' => $componentold});
             exit;
         }
 
         SendSQL("UPDATE components
                  SET initialqacontact=" . SqlQuote($initialqacontactid) . "
                  WHERE id = $component_id");
-        print "Updated initial QA contact.<BR>\n";
+
+        $vars->{'updated_initialqacontact'} = 1;
+        $vars->{'initialqacontact'} = $initialqacontact;
     }
 
 
     if ($component ne $componentold) {
         unless ($component) {
-            print "Sorry, but a component must have a name.";
-            PutTrailer($localtrailer);
+            SendSQL("UNLOCK TABLES");
+            ThrowUserError('component_must_have_a_name',
+                           {'name' => $componentold});
             exit;
         }
-        if (TestComponent($product,$component)) {
-            print "Sorry, component name '$component' is already in use.";
-            PutTrailer($localtrailer);
+        if (TestComponent($product, $component)) {
+            SendSQL("UNLOCK TABLES");
+            ThrowUserError('component_already_exists',
+                           {'name' => $component});
             exit;
         }
 
@@ -842,10 +647,18 @@ if ($action eq 'update') {
                  "WHERE id=$component_id");
 
         unlink "$datadir/versioncache";
-        print "Updated component name.<BR>\n";
+        $vars->{'updated_name'} = 1;
+
     }
 
-    PutTrailer($localtrailer);
+    SendSQL("UNLOCK TABLES");
+
+    $vars->{'name'} = $component;
+    $vars->{'product'} = $product;
+    $template->process("admin/components/updated.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
@@ -854,7 +667,4 @@ if ($action eq 'update') {
 #
 # No valid action found
 #
-
-PutHeader("Error");
-print "I don't have a clue what you want.<BR>\n";
-
+ThrowUserError('component_no_action');

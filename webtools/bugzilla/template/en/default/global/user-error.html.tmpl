@@ -20,7 +20,7 @@
   #%]
 
 [%# INTERFACE:
-  # header_done: boolean. True if the header has already been printed.
+  # header_done: boolean. True if the Bugzilla header has already been printed.
   # error: string. The tag of the error, or the error message to be displayed
   # (deprecated). May contain HTML if it's an error message.
   #%]
@@ -141,6 +141,72 @@
   [% ELSIF error == "comment_too_long" %]
     [% title = "Comment Too Long" %]
     Comments cannot be longer than 65,535 characters.
+
+  [% ELSIF error == "auth_cant_edit_components" %]
+    [% title = "Access Denied" %]
+    Sorry, you aren't a member of the 'editcomponents' group, and so
+    you aren't allowed to add, modify or delete components.
+
+  [% ELSIF error == "component_already_exists" %]
+    [% title = "Component Already Exists" %]
+    A component with the name '[% name FILTER html %]' already exists.
+
+  [% ELSIF error == "component_blank_description" %]
+    [% title = "Blank Component Description Not Allowed" %]
+    You must enter a non-blank description for component '[% name FILTER html %]'.
+     
+  [% ELSIF error == "component_blank_name" %]
+    [% title = "Blank Component Name Not Allowed" %]
+    You must enter a name for this new component.
+
+  [% ELSIF error == "component_must_have_a_name" %]
+    [% title = "Blank Component Name Not Allowed" %]
+    You cannot delete the component name for component '[% name FILTER html %]'.
+     
+  [% ELSIF error == "component_cant_del_description" %]
+    [% title = "Blank Component Description Not Allowed" %]
+    You cannot delete the component description for 
+    component '[% name FILTER html %]'.
+
+  [% ELSIF error == "component_name_too_long" %]
+    [% title = "Component Name Is Too Long" %]
+    The name of a component is limited to 64 characters. 
+    '[% name FILTER html %]' is too long ([% name.size %] characters).
+
+  [% ELSIF error == "component_need_initialowner" %]
+    [% title = "Component Requires Initial Owner" %]
+    You must enter an initial owner for component '[% name FILTER html %]'.
+
+  [% ELSIF error == "component_need_valid_initialowner" %]
+    [% title = "Component Requires A Valid Initial Owner" %]
+    You must use an existing [% terms.Bugzilla %] account as initial owner for
+    component '[% name FILTER html %]'.
+
+  [% ELSIF error == "component_need_valid_initialqacontact" %]
+    [% title = "Component Requires A Valid Initial QA Contact" %]
+    You must use an existing [% terms.Bugzilla %] account as initial QA contact for
+    component '[% name FILTER html %]'.
+     
+  [% ELSIF error == "component_no_action" %]
+    [% title = "No valid action specified" %]
+    No valid action was specified when trying to edit components.
+
+  [% ELSIF error == "product_not_specified" %]
+    [% title = "No Product Specified" %]
+    No product specified when trying to edit components.
+
+  [% ELSIF error == "component_not_specified" %]
+    [% title = "No Component Specified" %]
+    No component specified when trying to edit components.
+
+  [% ELSIF error == "component_not_valid" %]
+    [% title = "Specified Component Does Not Exist" %]
+    The component '[% name FILTER html %]' for product 
+    '[% product FILTER html %]' does not exist.
+
+  [% ELSIF error == "product_doesnt_exist" %]
+    [% title = "Specified Product Does Not Exist" %]
+    The product '[% product FILTER html %]' does not exist.
 
   [% ELSIF error == "dependency_loop_multi" %]
     [% title = "Dependency Loop Detected" %]

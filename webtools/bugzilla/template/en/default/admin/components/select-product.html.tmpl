@@ -16,54 +16,70 @@
   # Copyright (C) 1998 Netscape Communications Corporation. All
   # Rights Reserved.
   #
-  # Contributor(s): Terry Weissman <terry@mozilla.org>
-  #                 Vlad Dascalu <jocuri@softhome.net>
-  #                 Jouni Heikniemi <jouni@heikniemi.net>
+  # Contributor(s): Gavin Shelley (bugzilla@chimpychompy.org)
+  #
   #%]
 
 [%# INTERFACE:
-  # keywords: array of hashes having the properties:
-  #   - id: number. The ID of the keyword.
-  #   - name: string. The name of the keyword.
-  #   - description: string. The description of the keyword.
-  #   - bug_count: number. The number of bugs with the keyword.
+  # products: array of hashes having the properties:
+  #   - name: string; The name of the product.
+  #   - description: string; The description of the product.
+  #   - bug_count: number; The number of bugs for the product (if 
+  #                showbugcounts defined).
+  #
+  # showbugcounts: if defined, then bug counts should be included in the table
   #%]
+
+[% USE Bugzilla %]
+[% cgi = Bugzilla.cgi %]
 
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
-  title = "Select keyword"
+  title = "Edit components for which product?"
 %]
+
+[% bug_count_contentlink = BLOCK %]buglist.cgi?component=%%name%%&amp;product=
+  [%- product FILTER url_quote %][% END %]
 
 [% columns = [
      { 
        name => "name"
-       heading => "Edit keyword..."
-       contentlink => "editkeywords.cgi?action=edit&amp;id=%%id%%" 
+       heading => "Edit components of..."
+       contentlink => "editcomponents.cgi?product=%%name%%" 
      },
      { 
        name => "description"
        heading => "Description" 
-     },
-     { 
-       name => "bug_count"
-       heading => "Bugs"
-       align => "right"
-     },
-     { 
-       heading => "Action" 
-       content => "Delete"
-       contentlink => "editkeywords.cgi?action=delete&amp;id=%%id%%"
+       allow_html_content => 1
      }
    ]
 %]
 
+[% IF showbugcounts %]
+
+[%  columns.push({
+      name => 'bug_count'
+      heading => "$terms.Bugs"
+      align => "right"
+      contentlink => bug_count_contentlink
+    }) %]
+
+[% END %]
+
 [% PROCESS admin/table.html.tmpl
      columns = columns
-     data = keywords
+     data = products
      footer = footer_row
 %]
 
-<p><a href="editkeywords.cgi?action=add">Add a new keyword</a></p>
+[% IF ! showbugcounts %]
+
+<p><a href="editcomponents.cgi?showbugcounts=1&amp;[% cgi.query_string %]">
+    Redisplay table with [% terms.bug %] counts (slower)</a></p>
+
+[% END %]
+
+<p>
 
 [% PROCESS global/footer.html.tmpl %]

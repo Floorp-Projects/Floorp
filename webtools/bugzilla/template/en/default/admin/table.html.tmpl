@@ -28,13 +28,15 @@
   #     name: Name of the field in the data param
   #     heading: The text to print at the header cell
   #     contentlink: URI to which the content of a data cell shall be linked to.
-  #                  Expressions of format %xxx% are replaced with value
+  #                  Expressions of format %%xxx%% are replaced with value
   #                  with the key xxx in data hash of the current row.
   #     content: If specified, the content of this variable is used
   #              instead of the data pulled from the current row. 
   #              NOTE: This value is not HTML filtered at output!
   #     align: left/center/right. Controls the horizontal alignment of the
   #            text in the column.
+  #     allow_html_content: if defined, then this column allows html content
+  #                         so it will not be filtered 
   #
   # data:
   #   array of hashes representing the data for the table.
@@ -65,9 +67,11 @@
       
         [% IF c.contentlink %]
           [% link_uri = c.contentlink %]
-          [% FOREACH m = link_uri.match('%(.+?)%'); %]
-            [% replacement_value = FILTER url_quote; row.$m; END %]
-            [% link_uri = link_uri.replace("%$m%", replacement_value) %]
+          [% FOREACH m = link_uri.match('%%(.+?)%%'); %]
+            [% IF row.$m %]
+              [% replacement_value = FILTER url_quote; row.$m; END %]
+              [% link_uri = link_uri.replace("%%$m%%", replacement_value) %]
+            [% END %]
           [% END %]
           <a href="[% link_uri %]">
         [% END %]
@@ -75,7 +79,11 @@
         [% IF c.content %] 
           [% c.content %]
         [% ELSE %]
-          [% row.${c.name} FILTER html %]
+          [% IF c.allow_html_content %]
+            [% row.${c.name} FILTER none %]
+          [% ELSE %]
+            [% row.${c.name} FILTER html %]
+          [% END %]
         [% END %]
         
         [% IF c.contentlink %]
@@ -86,6 +94,11 @@
     [% END %]
   </tr>
 [% END %]
+
+[% IF data.size == 0 %]
+  <tr><td colspan="[% columns.size %]" align="center"><i>&lt;none&gt;</i></td></tr>
+[% END %]
+
 
 [%###################  TABLE FOOTER   ######################%]
 
