@@ -45,6 +45,7 @@
 #include "nsILDAPConnection.h"
 #include "nsILDAPOperation.h"
 #include "nsILDAPMessageListener.h"
+#include "nsString.h"
 
 // 97a479d0-9a44-47c6-a17a-87f9b00294bb
 #define NS_LDAPOPERATION_CID \
@@ -96,7 +97,7 @@ class nsLDAPOperation : public nsILDAPOperation
     nsCOMPtr<nsILDAPConnection> mConnection; // connection this op is on
 
     LDAP *mConnectionHandle; // cache connection handle
-
+    nsCString mSavePassword;
     PRInt32 mMsgID;          // opaque handle to outbound message for this op
 };
 

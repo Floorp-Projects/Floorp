@@ -149,6 +149,16 @@ nsLDAPOperation::SimpleBind(const nsACString& passwd)
 {
     nsresult rv;
     nsCAutoString bindName;
+    PRBool originalMsgID = mMsgID;
+    // Ugly hack alert:
+    // the first time we get called with a passwd, remember it.
+    // Then, if we get called again w/o a password, use the 
+    // saved one. Getting called again means we're trying to
+    // fall back to VERSION2.
+    // Since LDAP operations are thrown away when done, it won't stay
+    // around in memory.
+    if (!passwd.IsEmpty())
+      mSavePassword = passwd;
 
     NS_PRECONDITION(mMessageListener != 0, "MessageListener not set");
 
@@ -160,8 +170,15 @@ nsLDAPOperation::SimpleBind(const nsACString& passwd)
            ("nsLDAPOperation::SimpleBind(): called; bindName = '%s'; ",
             bindName.get()));
 
+    // If this is a second try at binding, remove the operation from pending ops
+    // because msg id has changed...
+    if (originalMsgID)
+      NS_STATIC_CAST(nsLDAPConnection *, 
+                        NS_STATIC_CAST(nsILDAPConnection *, 
+                        mConnection.get()))->RemovePendingOperation(this);
+
     mMsgID = ldap_simple_bind(mConnectionHandle, bindName.get(),
-                              PromiseFlatCString(passwd).get());
+                              PromiseFlatCString(mSavePassword).get());
 
     if (mMsgID == -1) {
         const int lderrno = ldap_get_lderrno(mConnectionHandle, 0, 0);
@@ -189,7 +206,6 @@ nsLDAPOperation::SimpleBind(const nsACString& passwd)
   
     // make sure the connection knows where to call back once the messages
     // for this operation start coming in
-    //
     rv = NS_STATIC_CAST(nsLDAPConnection *, 
                         NS_STATIC_CAST(nsILDAPConnection *, 
                         mConnection.get()))->AddPendingOperation(this);
