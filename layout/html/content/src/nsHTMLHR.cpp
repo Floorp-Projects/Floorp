@@ -152,7 +152,13 @@ NS_IMETHODIMP
 nsHTMLHR::SetNoShade(PRBool aNoShade)
 {
   nsAutoString empty;
-  return mInner.SetAttr(nsHTMLAtoms::noshade, empty, eSetAttrNotify_Render);
+  if (aNoShade) {
+    return mInner.SetAttr(nsHTMLAtoms::noshade, empty, eSetAttrNotify_Render);
+  }
+  else {
+    mInner.UnsetAttribute(nsHTMLAtoms::noshade);
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP
