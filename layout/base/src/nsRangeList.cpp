@@ -507,6 +507,11 @@ nsRangeList::~nsRangeList()
     NS_IF_RELEASE(sCellAtom);
     NS_IF_RELEASE(sTbodyAtom);
   }
+  PRInt32 i;
+  for (i = 0;i<NUM_SELECTIONTYPES;i++){
+    if (mDomSelections[i])
+        delete mDomSelections[i];
+  }
   sInstanceCount--;
 }
 
