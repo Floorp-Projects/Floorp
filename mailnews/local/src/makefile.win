@@ -82,7 +82,7 @@ LCFLAGS = \
 include <$(DEPTH)\config\rules.mak>
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME)
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
