@@ -37,13 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMHistory.idl"
+#include "domstubs.idl"
 
 [scriptable, uuid(5fb96f46-1dd2-11b2-a5dc-998ca8636ea9)]
-interface nsIDOMNSHistory : nsIDOMHistory
+interface nsIDOMNSHistory : nsISupports
 {
-  /** go() can be called with either a string or a number argument
-   * from JS
+  /**
+   * go() can be called with an integer argument or no arguments (a
+   * nop) from JS
    */
   void                       go(/* ... */);
 };

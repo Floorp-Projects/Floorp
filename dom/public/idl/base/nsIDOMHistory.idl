@@ -50,7 +50,8 @@ interface nsIDOMHistory : nsISupports
 
   void                       back();
   void                       forward();
-  void                       goIndex(in long aDelta);
-  void                       goUri(in DOMString aUriSubstring);
+
+  // go() gets special treatment in nsIDOMNSHistory
+  [noscript] void            go(in long aDelta);
   DOMString                  item(in unsigned long index);
 };
