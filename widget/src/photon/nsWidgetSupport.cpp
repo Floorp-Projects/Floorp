@@ -17,7 +17,7 @@
  */
 
 
-#include "nsWidgetSupport.h"
+//#include "nsWidgetSupport.h"
 #include "nsRect.h"
 #include "nsITextAreaWidget.h"
 #include "nsIFileWidget.h"
@@ -41,12 +41,12 @@
 #include "nsITextWidget.h"
 
 
-
+#include "nsPhWidgetLog.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-//static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
+static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 //static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 //static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDialogIID, NS_IDIALOG_IID);
@@ -62,6 +62,8 @@ NS_CreateDialog(nsISupports* aParent,
           EVENT_CALLBACK aHandleEventFunction,
 	        const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateDialog\n"));
+
     nsIWidget* parent = nsnull;
     if (aParent != nsnull)
       aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -79,7 +81,7 @@ NS_CreateDialog(nsISupports* aParent,
     return NS_OK;
 }
 
-#if 0
+
 NS_WIDGET nsresult 
 NS_CreateButton(nsISupports* aParent, 
 								nsIButton* aButton, 
@@ -87,6 +89,8 @@ NS_CreateButton(nsISupports* aParent,
 								EVENT_CALLBACK aHandleEventFunction,
 								const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateButton\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -114,6 +118,8 @@ NS_CreateCheckButton(nsISupports* aParent,
 											  EVENT_CALLBACK aHandleEventFunction,
 											  const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateCheckButton\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -140,6 +146,8 @@ NS_CreateRadioButton( nsISupports* aParent,
 												EVENT_CALLBACK aHandleEventFunction,
 												const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateRadioButton\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -165,6 +173,8 @@ NS_CreateLabel( nsISupports* aParent,
 									EVENT_CALLBACK aHandleEventFunction,
 									const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateLabel\n"));
+
 	nsIWidget* parent = nsnull;
 	if (NS_OK == aParent->QueryInterface(kIWidgetIID,(void**)&parent))
 	{
@@ -190,6 +200,8 @@ NS_CreateTextAreaWidget(nsISupports* aParent,
 									EVENT_CALLBACK aHandleEventFunction,
 									const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateTextArea\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -220,6 +232,8 @@ NS_CreateTextWidget(nsISupports* aParent,
 									EVENT_CALLBACK aHandleEventFunction,
 									const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateTextWidget\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -251,6 +265,8 @@ NS_CreateScrollBar(nsISupports* aParent,
 									const nsRect& aRect, 
 									EVENT_CALLBACK aHandleEventFunction)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateScrollBar\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -279,6 +295,8 @@ NS_CreateListBox(nsISupports* aParent,
                   EVENT_CALLBACK aHandleEventFunction,
                   const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateListBox\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -310,6 +328,8 @@ NS_CreateComboBox(nsISupports* aParent,
                   EVENT_CALLBACK aHandleEventFunction,
                   const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateComboBox\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -341,6 +361,8 @@ NS_CreateTabWidget(nsISupports* aParent,
                   EVENT_CALLBACK aHandleEventFunction,
                   const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateTabWidget\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -368,13 +390,15 @@ NS_CreateTabWidget(nsISupports* aParent,
 
 
 
-extern NS_WIDGET nsresult 
+NS_WIDGET nsresult 
 NS_CreateTooltipWidget(nsISupports* aParent,	
                 nsITooltipWidget* aWidget, 
                 const nsRect& aRect, 
                 EVENT_CALLBACK aHandleEventFunction,
                 const nsFont* aFont)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_CreateTooltipWidget\n"));
+
 	nsIWidget* parent = nsnull;
 	if (aParent != nsnull)
     aParent->QueryInterface(kIWidgetIID,(void**)&parent);
@@ -397,11 +421,12 @@ NS_CreateTooltipWidget(nsISupports* aParent,
 
   return NS_OK;
 }
-#endif
 
-extern NS_WIDGET nsresult 
+
+NS_WIDGET nsresult 
 NS_ShowWidget(nsISupports* aWidget, PRBool aShow)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_ShowWidget\n"));
 
   nsIWidget* 	widget = nsnull;
 	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
@@ -412,9 +437,10 @@ NS_ShowWidget(nsISupports* aWidget, PRBool aShow)
   return NS_OK;
 }
 
-extern NS_WIDGET nsresult 
+NS_WIDGET nsresult 
 NS_MoveWidget(nsISupports* aWidget, PRUint32 aX, PRUint32 aY)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_MoveWidget\n"));
 
   nsIWidget* 	widget = nsnull;
 	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
@@ -424,9 +450,11 @@ NS_MoveWidget(nsISupports* aWidget, PRUint32 aX, PRUint32 aY)
   return NS_OK;
 }
 
-extern NS_WIDGET nsresult 
+NS_WIDGET nsresult 
 NS_EnableWidget(nsISupports* aWidget, PRBool aEnable)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_EnableWidget\n"));
+
 	void* 			result = nsnull;
 	nsIWidget* 	widget;
 	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget))
@@ -438,9 +466,10 @@ NS_EnableWidget(nsISupports* aWidget, PRBool aEnable)
 }
 
 
-extern NS_WIDGET nsresult 
+NS_WIDGET nsresult 
 NS_SetFocusToWidget(nsISupports* aWidget)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_SetFocusToWidget\n"));
 
   nsIWidget* 	widget = nsnull;
 	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
@@ -451,9 +480,11 @@ NS_SetFocusToWidget(nsISupports* aWidget)
 }
 
 
-extern NS_WIDGET nsresult 
+NS_WIDGET nsresult 
 NS_GetWidgetNativeData(nsISupports* aWidget, void** aNativeData)
 {
+PR_LOG(PhWidLog, PR_LOG_DEBUG, "nsWidgetSupport::NS_GetWidgetNativeData\n"));
+
 	void* 			result = nsnull;
 	nsIWidget* 	widget;
 	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget))
