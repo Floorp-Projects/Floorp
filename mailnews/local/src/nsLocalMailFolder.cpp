@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   jefft@netscape.com
+ *   putterman@netscape.com
+ *   bienvenu@netscape.com
+ *   warren@netscape.com
+ *   alecf@netscape.com
+ *   sspitzer@netscape.com
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -744,7 +750,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const char *newName)
+NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName)
 {
     nsCOMPtr<nsIFileSpec> oldPathSpec;
     nsCOMPtr<nsIFolder> parent;
@@ -774,21 +780,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const char *newName)
         parentFolder->PropagateDelete(this, PR_FALSE);
     }
 
-    nsCAutoString newNameStr = newName;
+    nsCAutoString newNameStr(aNewName);
     oldPathSpec->Rename(newNameStr.GetBuffer());
     newNameStr += ".msf";
     oldSummarySpec.Rename(newNameStr.GetBuffer());
     if (NS_SUCCEEDED(rv) && cnt > 0)
     {
-      newNameStr = newName;
-      newNameStr += ".sbd";
-      dirSpec.Rename(newNameStr.GetBuffer());
+      nsCAutoString newNameDirStr(aNewName);
+      newNameDirStr += ".sbd";
+      dirSpec.Rename(newNameDirStr.GetBuffer());
     }
     
     if (parentSupport)
     {
         nsCOMPtr<nsIMsgFolder> newFolder;
-        nsAutoString newFolderName = newName;
+        nsAutoString newFolderName(aNewName);
         parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
         nsCOMPtr<nsISupports> newFolderSupport = do_QueryInterface(newFolder);
         NotifyItemAdded(parentSupport, newFolderSupport, "folderView");

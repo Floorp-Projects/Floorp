@@ -102,7 +102,7 @@ public:
   NS_IMETHOD Compact();
   NS_IMETHOD EmptyTrash();
 	NS_IMETHOD Delete ();
-	NS_IMETHOD Rename (const char *newName);
+	NS_IMETHOD Rename (const PRUnichar *aNewName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
 	NS_IMETHOD GetPrettyName(PRUnichar** prettyName);	// Override of the base, for top-level mail folder
