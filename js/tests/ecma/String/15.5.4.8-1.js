@@ -37,8 +37,13 @@
     If the separator is not supplied, then the result array contains just one
     string, which is the string.
 
-    Author:             christine@netscape.com
-    Date:               12 november 1997
+    Author:    christine@netscape.com, pschwartau@netscape.com
+    Date:      12 November 1997
+    Modified:  14 July 2002
+    Reason:    See http://bugzilla.mozilla.org/show_bug.cgi?id=155289
+               ECMA-262 Ed.3  Section 15.5.4.14
+               The length property of the split method is 2
+*
 */
 
     var SECTION = "15.5.4.8-1";
@@ -55,9 +60,9 @@ function getTestCases() {
     var array = new Array();
     var item = 0;
 
-    array[item++] = new TestCase( SECTION,  "String.prototype.split.length",        1,          String.prototype.split.length );
+    array[item++] = new TestCase( SECTION,  "String.prototype.split.length",        2,          String.prototype.split.length );
     array[item++] = new TestCase( SECTION,  "delete String.prototype.split.length", false,      delete String.prototype.split.length );
-    array[item++] = new TestCase( SECTION,  "delete String.prototype.split.length; String.prototype.split.length", 1,      eval("delete String.prototype.split.length; String.prototype.split.length") );
+    array[item++] = new TestCase( SECTION,  "delete String.prototype.split.length; String.prototype.split.length", 2,      eval("delete String.prototype.split.length; String.prototype.split.length") );
 
     // test cases for when split is called with no arguments.
 
