@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2002/05/01 02:19:10 $ 
+# $Revision: 1.3 $ 
+# $Date: 2002/05/01 02:23:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -59,6 +59,8 @@ use FileStructure;
   HTMLPopUp::regenerate_HTML_pages();
 
     $out = <<EOF;
+Content-type: text/html
+
 <TITLE>tinderbox</TITLE>
 <META HTTP-EQUIV="Refresh" CONTENT="0; URL=$url">
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
