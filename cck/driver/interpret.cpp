@@ -8,6 +8,7 @@
 #include "SumDlg.h"
 #include "NewDialog.h"
 #include "NewConfigDialog.h"
+#include "PrefEditView.h"
 
 // The following is included to make 
 // the browse for a dir code compile
@@ -345,6 +346,8 @@ BOOL CInterpret::ShowSection(WIDGET *curWidget)
 	
 	return TRUE;
 }
+
+
 
 BOOL CInterpret::GetRegistryKey( HKEY key, const char *subkey, char *retdata )
 { 
@@ -1235,15 +1238,47 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 			else if (strcmp(pcmd, "ShowSection") == 0)
 			{
 				// ShowSection is a way to use a listbox to choose a subset of widgets to display.
-				// To use, create a listbox widget, and fill it will sectionnames.
+				// To use, create a listbox widget, and fill it with sectionnames.
 				// Set its onCommand=ShowSection.
 				// Then give the widgets you want in each section a "ShowInSection=sectionname". 
 				// When "sectionname" is selected in the listbox, all widgets with matching ShowInSection
 				// are shown, and all widgets with some other sectiion are hidden. Widgets without
 				// the ShowInSection attribute are left alone.
-					
 				ShowSection(curWidget);					
 			}
+			else if (strcmp(pcmd, "OpenPrefTreeItem") == 0)
+      {
+        WIDGET *w = findWidget(parms);
+        if (w->type == "PrefsTree")
+          ((CPrefEditView*)w->control)->DoOpenItem();
+
+        ((CPrefEditView*)w->control)->SetFocus();
+      }
+			else if (strcmp(pcmd, "FindPrefTreeItem") == 0)
+      {
+        WIDGET *w = findWidget(parms);
+        if (w->type == "PrefsTree")
+          ((CPrefEditView*)w->control)->DoFindFirst();
+
+        ((CPrefEditView*)w->control)->SetFocus();
+      }
+			else if (strcmp(pcmd, "FindNextPrefTreeItem") == 0)
+      {
+        WIDGET *w = findWidget(parms);
+        if (w->type == "PrefsTree")
+          ((CPrefEditView*)w->control)->DoFindNext();
+
+        ((CPrefEditView*)w->control)->SetFocus();
+      }
+			else if (strcmp(pcmd, "AddPrefTreeItem") == 0)
+      {
+        WIDGET *w = findWidget(parms);
+        if (w->type == "PrefsTree")
+          ((CPrefEditView*)w->control)->DoAdd();
+
+        ((CPrefEditView*)w->control)->SetFocus();
+      }
+
 		}
 		// This is an extra free...
 		//free(pcmd);

@@ -1,3 +1,5 @@
+
+// Includes
 #include "stdafx.h"
 #include <Winbase.h>
 #include <direct.h>
@@ -14,6 +16,10 @@
 #define MAX_SIZE 1024
 #define CRVALUE 0x0D
 #define BUF_SIZE 4096
+
+// for the xml parser used for PrefsTree
+#import "msxml.dll"
+using namespace MSXML;
 
 // Required disk space for Win build
 #define WDISK_SPACE 27577549
@@ -690,6 +696,122 @@ int ModifyHashedPref(CString HashedPrefsFile, CString PrefName, CString NewPrefV
 	return TRUE;
 }
 
+// XML DOM helper. Returns the value of a specified child element.
+CString GetElementValue(IXMLDOMElementPtr element, CString strTag)
+{
+  _variant_t value;
+
+  IXMLDOMNodeListPtr prefValNodes = element->getElementsByTagName(strTag.GetBuffer(0));
+  if (prefValNodes)
+  {
+    IXMLDOMNodePtr prefValNode = prefValNodes->Getitem(0);  // should be only one
+    if (prefValNode)
+    { 
+      if (prefValNode->childNodes->Getlength() > 0)
+        value = prefValNode->childNodes->Getitem(0)->GetnodeValue();  // get the text node child, which contains the text we want.
+    }
+  }
+
+  return (char*)_bstr_t(value);
+}
+
+// XML DOM helper. Returns the value of the specified attribute.
+CString GetAttribute(IXMLDOMElementPtr element, CString strAttributeName)
+{
+  _variant_t attribValue = element->getAttribute(strAttributeName.GetBuffer(0));
+
+  if (attribValue.vt == VT_NULL)
+    return "";
+  else
+    return (char*)_bstr_t(attribValue);
+}
+
+// This processes a prefs tree XML file, adding preferences to install files
+// as specified in the prefs tree XML file. See PrefsTree.html for file
+// format details.
+//
+// This function can easily be rewriten to parse the XML file by hand if it 
+// needs to be ported to a non-MS OS. The XML is pretty simple.
+BOOL ProcessPrefsTree(CString strPrefsTreeFile)
+{
+
+  // Create XML DOM instance.
+  IXMLDOMDocumentPtr prefXMLTree;
+  HRESULT hr = prefXMLTree.CreateInstance(__uuidof(DOMDocument));
+  if (FAILED(hr))
+  {
+    AfxMessageBox("Error creating MS XML DOM.", MB_OK);
+    return FALSE;
+  }
+
+  // Load the prefs metadata. This is a representation of the prefs tree as
+  // it should appear in the tree control.
+  if (prefXMLTree)
+  {
+    CString strPrefsFileURL;
+    strPrefsFileURL.Format("FILE://%s", strPrefsTreeFile);
+
+    if (!prefXMLTree->load(strPrefsFileURL.GetBuffer(0)))
+    {
+      CString strError;
+      strError.Format("Error loading preferences metadata %s.", strPrefsFileURL);
+      AfxMessageBox(strError, MB_OK);
+      prefXMLTree = NULL;
+      return FALSE;
+    }
+    if (prefXMLTree->parseError->errorCode != 0)
+    {
+      CString strError;
+      strError.Format("Bad XML in %s.", strPrefsFileURL);
+      AfxMessageBox(strError, MB_OK);
+      prefXMLTree = NULL;
+      return FALSE;
+    }
+  }
+
+  // Go through the list of prefs in the xml and write to prefs file for each one.
+  IXMLDOMNodeListPtr prefsList = prefXMLTree->getElementsByTagName("PREF");
+  for(int i = 0; i < prefsList->length; i++)
+  {
+    IXMLDOMElementPtr element = prefsList->Getitem(i);
+
+    CString strPrefName = GetAttribute(element, "prefname");
+    CString strPrefType = GetAttribute(element, "type");
+    CString strPrefValue = GetElementValue(element, "VALUE");
+    CString strLocked = GetElementValue(element, "LOCKED");
+    CString strInstallFile = GetElementValue(element, "INSTALLATIONFILE");
+    CString strPrefFile = GetElementValue(element, "PREFFILE");
+
+    if (strPrefName.IsEmpty() ||
+        strPrefType.IsEmpty() ||
+        strInstallFile.IsEmpty() ||
+        strPrefFile.IsEmpty() )
+        continue;
+
+    ExtractXPIFile(strInstallFile, strPrefFile);
+
+    BOOL bLocked = (strLocked == "true");
+
+    // Should go into a hashed file if prefs file is .cfg.
+    if (strPrefFile.Find(".cfg") > 0)
+    {
+      // hashed
+      ModifyHashedPref(strPrefFile, strPrefName, strPrefValue, strPrefType, bLocked); 
+
+    }
+    else
+    {
+      // not hashed
+      if ((strPrefType == "int") || (strPrefType == "bool") || (strPrefType == "choose"))
+        ModifyJS2(strPrefFile, strPrefName, strPrefValue, bLocked);
+
+      else  // string
+        ModifyJS(strPrefFile, strPrefName, strPrefValue, bLocked);
+
+    }
+  }
+  return TRUE;
+}
 
 
 int interpret(char *cmd)
@@ -870,7 +992,7 @@ int interpret(char *cmd)
 			ModifyHashedPref(xpifile,entity,newvalue, "string", bLockPref);
 		else if (strcmp(cmdname, "modifyHashedPrefInt") == 0)
 			ModifyHashedPref(xpifile,entity,newvalue, "int", bLockPref);
-		else if (strcmp(cmdname, "modifyHashedPrefInt") == 0)
+		else if (strcmp(cmdname, "modifyHashedPrefBool") == 0)
 			ModifyHashedPref(xpifile,entity,newvalue, "bool", bLockPref);
 		else if (strcmp(cmdname, "modifyJS") == 0)
 			ModifyJS(xpifile,entity,newvalue, bLockPref);
@@ -893,6 +1015,13 @@ int interpret(char *cmd)
 	else if (strcmp(cmdname, "wrapXPI") == 0)
 	{
 	}
+  else if (strcmp(cmdname, "processPrefsTree") == 0)
+  {
+
+  	char *prefsTreeFile	= strtok(NULL, ",)");
+    CString fileWithPath = configPath + "\\" + prefsTreeFile;
+    ProcessPrefsTree(fileWithPath);
+  }
 	else
 		return FALSE;//*** We have to handle this condition better.
 

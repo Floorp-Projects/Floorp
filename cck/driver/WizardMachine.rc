@@ -236,6 +236,67 @@ BEGIN
                     ES_READONLY | WS_VSCROLL,WS_EX_DLGMODALFRAME
 END
 
+IDD_EDITPREF DIALOG DISCARDABLE  0, 0, 294, 206
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Pref Properties"
+FONT 8, "MS Sans Serif"
+BEGIN
+    RTEXT           "Pref Name:",IDC_STATIC,15,18,68,8
+    LTEXT           "",IDC_PREFNAME,93,18,184,8
+    RTEXT           "Description:",IDC_STATIC,15,33,68,8
+    LTEXT           "",IDC_DESCRIPTION,93,33,184,45
+    RTEXT           "Pref Value:",IDC_STATIC,15,103,68,8
+    CONTROL         "",IDC_VALCHECK,"Button",BS_AUTOCHECKBOX | NOT 
+                    WS_VISIBLE | WS_TABSTOP,93,103,184,10
+    EDITTEXT        IDC_VALUE,93,100,184,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_VALLIST,93,100,184,67,CBS_DROPDOWNLIST | CBS_SORT | 
+                    NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    RTEXT           "Pref Lock:",IDC_STATIC,15,120,68,8
+    CONTROL         "Locked from user changes",IDC_LOCKED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,93,120,184,10
+    RTEXT           "Pref File:",IDC_STATIC,15,138,68,8
+    EDITTEXT        IDC_PREFFILE,93,135,184,14,ES_AUTOHSCROLL
+    RTEXT           "Installation Archive:",IDC_STATIC,15,156,68,8
+    EDITTEXT        IDC_INSTALLFILE,93,153,184,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,88,185,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,154,185,50,14
+    GROUPBOX        "About",IDC_STATIC,7,7,280,74
+    GROUPBOX        "Properties",IDC_STATIC,7,86,280,91
+END
+
+IDD_ADDPREF DIALOG DISCARDABLE  0, 0, 294, 165
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Pref"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "About",IDC_STATIC,7,10,280,126
+    RTEXT           "Pref Name:",IDC_STATIC,15,26,68,8
+    EDITTEXT        IDC_PREFNAME,93,22,184,14,ES_AUTOHSCROLL
+    RTEXT           "Description:",IDC_STATIC,15,43,68,8
+    EDITTEXT        IDC_PREFDESC,93,41,184,33,ES_AUTOHSCROLL
+    RTEXT           "Pref Type:",IDC_STATIC,15,86,68,8
+    GROUPBOX        "",IDC_PREFTYPEGROUP,94,79,183,47
+    CONTROL         "String",IDC_PREFTYPE_STRING,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,99,88,34,10
+    CONTROL         "Int",IDC_PREFTYPE_INT,"Button",BS_AUTORADIOBUTTON,99,99,
+                    24,10
+    CONTROL         "Bool",IDC_PREFTYPE_BOOL,"Button",BS_AUTORADIOBUTTON,99,
+                    110,30,10
+    DEFPUSHBUTTON   "OK",IDOK,91,144,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,152,144,50,14
+END
+
+IDD_FIND DIALOG DISCARDABLE  0, 0, 268, 47
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Fi&nd what:",IDC_STATIC,7,19,34,8
+    EDITTEXT        IDC_FIND,51,16,142,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,211,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,211,24,50,14
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -399,8 +460,75 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 264
     END
+
+    IDD_EDITPREF, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 287
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 199
+    END
+
+    IDD_ADDPREF, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 287
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 158
+    END
+
+    IDD_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 261
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 40
+    END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_TREEIMAGES          BITMAP  DISCARDABLE     "res\\bitmap1.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_POPUP_PREFTREE_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "PrefsTreeItemSubMenu"
+    BEGIN
+        MENUITEM "&Edit Pref",                  ID_EDITPREFITEM
+        MENUITEM "&Add Pref",                   ID_ADDPREF
+        MENUITEM SEPARATOR
+        MENUITEM "&Find Pref\tCtrl+F",          ID_FINDPREF
+        MENUITEM "Find &Next\tF3",              ID_FINDNEXTPREF
+    END
+    POPUP "PrefsTreeGroupSubMenu"
+    BEGIN
+        MENUITEM "&Add Pref",                   ID_ADDPREF
+        MENUITEM SEPARATOR
+        MENUITEM "&Find Pref\tCtrl+F",          ID_FINDPREF
+        MENUITEM "Find &Next Pref\tF3",         ID_FINDNEXTPREF
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_F3,          ID_FINDNEXTPREF,        VIRTKEY, NOINVERT
+END
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -38,6 +38,7 @@
 #include "PropSheet.h"
 #include "WizardUI.h"
 #include "Interpret.h"
+#include "PrefEditView.h"
 
 #include <direct.h>
 #include <sys/types.h>
@@ -438,6 +439,7 @@ void CWizardUI::EnableWidget(WIDGET *curWidget)
 	}
 }
 
+// Copy values from the widget object to the Windows control UI element.
 void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 {
 	int  selRv = CB_ERR;
@@ -566,6 +568,11 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 		if (selRv == CB_ERR)
 			selRv = ((CComboBox*)curWidget->control)->SetCurSel(0);
 	}
+
+  else if(curWidget->type == "PrefsTree")
+  {
+  }
+
 }
 
 void CWizardUI::CreateControls() 
@@ -778,8 +785,66 @@ void CWizardUI::CreateControls()
 		else if (widgetType == "ProgressBar") {
 			curWidget->control = new CProgressCtrl;
 			rv = ((CProgressCtrl*)curWidget->control)->Create(WS_TABSTOP, tmpRect, this, ID);
-		}
+		} 
+		else if (widgetType == "PrefsTree") {
+      /*  
+      A PrefsTree is a tree control for editing prefs. The ini file section should look like:
 
+        [Widget 1]
+        Type=PrefsTree
+        Name=PrefsTreeName
+        Attrib=MetaPrefs.xml
+        etc...
+
+      where...
+      Attrib is the xml file which describes the tree control layout. It should
+        not specifiy a path. If the file doesn't exist in the config directory,
+        the default in the app Root directory is used. Then it is saved in the
+        config directory with any modified pref values and used next time.
+        See PrefsTree.html for prefs file format details.
+
+      You can also create buttons to act on the prefs tree. For example, the 
+      following button open the selected pref for editing, or expands the 
+      group if a group is selected instead of a pref.
+
+        [Widget 4203]
+        Type=Button
+        Name=Button4203
+        Value=Open
+        onCommand=OpenPrefTreeItem(PrefsTreeName)
+        ...
+
+      The other commands are:
+        FindPrefTreeItem(PrefsTreeName)     to open the search dialog 
+        FindNextPrefTreeItem(PrefsTreeName) to find the next matching item
+        AddPrefTreeItem(PrefsTreeName)      to open the add pref dialog
+      
+
+      PrefsTree is a little different from other widgets, in that it's not derived from a control--it's a CView. 
+      Also, it doesn't have a ->value like some widgets do. So be careful.
+
+      */
+
+      // If the .XML file exists in the config directory, use it. Otherwise, use the
+      // default file found at the Root.
+			CString rootPath	= GetGlobal("Root");
+			CString configName	= GetGlobal("CustomizationList");
+			CString localPrefsFile = rootPath + "Configs\\" + configName + "\\" + curWidget->attrib;
+      CString prefsFile;
+      if (theApp.FileExists(localPrefsFile))
+        prefsFile = localPrefsFile;
+      else
+        prefsFile = rootPath + curWidget->attrib;
+
+			curWidget->control = new CPrefEditView(prefsFile);
+      
+      // Configure the PrefsTree with any existing globals
+      //((CPrefEditView*)curWidget->control)->SetPrefValues(curWidget->value);
+
+			rv = ((CPrefEditView*)curWidget->control)->Create(NULL, NULL, WS_BORDER, tmpRect, this, ID);
+
+      
+		}
 
 		if (!rv)
 		{
@@ -855,15 +920,18 @@ void CWizardUI::DestroyCurrentScreenWidgets()
 	{
 		curWidget = CurrentNode->pageWidgets[i];
 	
-		if (curWidget->control)
+		if (curWidget->control) 
 		{
 			BOOL retFalg = curWidget->control->DestroyWindow();
-			delete curWidget->control;
+      if  (curWidget->type != "PrefsTree")  // PrefsTree is a CView, not a control, and is destroyed automatically above
+			  delete curWidget->control;
 			curWidget->control = NULL;
 		}
 	}
 }
 
+
+// Copies values from the Windows controls to the widgets objects.
 CString CWizardUI::GetScreenValue(WIDGET *curWidget) 
 {
 	//
@@ -1076,6 +1144,12 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 			
 	}
 */
+
+  else if (widgetType == "PrefsTree")
+  {
+    //rv = ((CPrefEditView*)curWidget->control)->GetModifiedPrefs();
+  }
+
 	else
 		rv = curWidget->value; // !!! Fix this so we're not copying strings all the time
 								// Should be able to just pass in an "assign" boolean
@@ -1095,6 +1169,17 @@ void CWizardUI::UpdateGlobals()
 	{
 		curWidget = CurrentNode->pageWidgets[i];
 		curWidget->value = GetScreenValue(curWidget);
+
+    // Save the prefs tree in a file local to the config. This is 
+    // what gets read next time the prefs tree control is created.
+    if (curWidget->type == "PrefsTree")
+    {
+ 			CString rootPath	= GetGlobal("Root");
+			CString configName	= GetGlobal("CustomizationList");
+			CString localPrefsFile = rootPath + "Configs\\" + configName + "\\" + curWidget->attrib;
+
+      ((CPrefEditView*)curWidget->control)->DoSavePrefsTree(localPrefsFile);
+    }
 	}
 	IsNewValue = TRUE;
 }
