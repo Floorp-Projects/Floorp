@@ -83,6 +83,10 @@ public:
   static nsresult GetValue(nsIFrame* aChildFrame, nsString& aValue, nsIContent* aContent = 0);
   static void StyleChangeReflow(nsIPresContext* aPresContext,
                                 nsIFrame* aFrame);
+  void SetFlags(PRUint32 aFlags) {
+    mState &= ~NS_BLOCK_FLAGS_MASK;
+    mState |= aFlags;
+  }
 
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);

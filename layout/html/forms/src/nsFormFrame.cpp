@@ -442,7 +442,7 @@ nsFormFrame::OnRadioChecked(nsIPresContext* aPresContext, nsRadioControlFrame& a
 
 
 nsresult
-NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
@@ -452,6 +452,7 @@ NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  it->SetFlags(aFlags);
   *aNewFrame = it;
   return NS_OK;
 }
@@ -1122,7 +1123,7 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
 
             // End Content Disp
             rv = postDataFile->Write("\"" CRLF , wantbytes = PL_strlen("\"" CRLF), &gotbytes);
-            if (!(NS_SUCCEEDED(rv) && (wantbytes == gotbytes))) break;
+            if (NS_FAILED(rv) || (wantbytes != gotbytes)) break;
 
             // File inputs write Content-Type line
             if (NS_FORM_INPUT_FILE == type) {
