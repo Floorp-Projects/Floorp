@@ -47,6 +47,7 @@
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
 #include "nsITimer.h"
+#include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsCOMArray.h"
 
@@ -185,7 +186,7 @@ protected:
   void EnsureDocument(nsIPresShell* aPresShell);
   void EnsureDocument(nsIPresContext* aPresContext);
   void FlushPendingEvents(nsIPresContext* aPresContext);
-  nsIFocusController* GetFocusControllerForDocument(nsIDocument* aDocument);
+  already_AddRefed<nsIFocusController> GetFocusControllerForDocument(nsIDocument* aDocument);
 
   typedef enum {
     eAccessKeyProcessingNormal = 0,
