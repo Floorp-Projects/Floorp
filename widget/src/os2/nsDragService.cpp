@@ -124,9 +124,9 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
       nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
       if( urlObject )
       {
-        nsXPIDLString urlInfo;
+        nsAutoString urlInfo;
         nsAutoString linkName, url, holder;
-        urlObject->GetData ( getter_Copies(urlInfo) );
+        urlObject->GetData ( urlInfo );
         holder = urlInfo;
         PRInt32 lineIndex = holder.FindChar ('\n');
         if ( lineIndex != -1 )
