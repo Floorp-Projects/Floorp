@@ -23,6 +23,7 @@ CControlSiteIPFrame::CControlSiteIPFrame()
 	m_hwndFrame = NULL;
 }
 
+
 CControlSiteIPFrame::~CControlSiteIPFrame()
 {
 }
@@ -55,15 +56,18 @@ HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::GetBorder(/* [out] */ LPRECT lpre
 	return INPLACE_E_NOTOOLSPACE;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::RequestBorderSpace(/* [unique][in] */ LPCBORDERWIDTHS pborderwidths)
 {
 	return INPLACE_E_NOTOOLSPACE;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::SetBorderSpace(/* [unique][in] */ LPCBORDERWIDTHS pborderwidths)
 {
 	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::SetActiveObject(/* [unique][in] */ IOleInPlaceActiveObject __RPC_FAR *pActiveObject, /* [unique][string][in] */ LPCOLESTR pszObjName)
 {
@@ -79,25 +83,30 @@ HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::InsertMenus(/* [in] */ HMENU hmen
 	return S_OK;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::SetMenu(/* [in] */ HMENU hmenuShared, /* [in] */ HOLEMENU holemenu, /* [in] */ HWND hwndActiveObject)
 {
 	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::RemoveMenus(/* [in] */ HMENU hmenuShared)
 {
 	return S_OK;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::SetStatusText(/* [in] */ LPCOLESTR pszStatusText)
 {
 	return S_OK;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::EnableModeless(/* [in] */ BOOL fEnable)
 {
 	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CControlSiteIPFrame::TranslateAccelerator(/* [in] */ LPMSG lpmsg, /* [in] */ WORD wID)
 {

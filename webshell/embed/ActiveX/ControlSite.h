@@ -18,6 +18,20 @@
 #ifndef CONTROLSITE_H
 #define CONTROLSITE_H
 
+#define CCONTROLSITE_INTERFACES() \
+	COM_INTERFACE_ENTRY(IOleWindow) \
+	COM_INTERFACE_ENTRY(IOleClientSite) \
+	COM_INTERFACE_ENTRY(IOleInPlaceSite) \
+	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSite, IOleInPlaceSiteWindowless) \
+	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteEx, IOleInPlaceSiteWindowless) \
+	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteWindowless, IOleInPlaceSiteWindowless) \
+	COM_INTERFACE_ENTRY(IOleControlSite) \
+	COM_INTERFACE_ENTRY(IDispatch) \
+	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx) \
+	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink2, IAdviseSinkEx) \
+	COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx)
+
+
 class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 						public IOleClientSite,
 						public IOleInPlaceSiteWindowless,
@@ -99,17 +113,7 @@ public:
 	virtual ~CControlSite();
 
 BEGIN_COM_MAP(CControlSite)
-	COM_INTERFACE_ENTRY(IOleWindow)
-	COM_INTERFACE_ENTRY(IOleClientSite)
-	COM_INTERFACE_ENTRY(IOleInPlaceSite)
-	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSite, IOleInPlaceSiteWindowless)
-	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteEx, IOleInPlaceSiteWindowless)
-	COM_INTERFACE_ENTRY_IID(IID_IOleInPlaceSiteWindowless, IOleInPlaceSiteWindowless)
-	COM_INTERFACE_ENTRY(IOleControlSite)
-	COM_INTERFACE_ENTRY(IDispatch)
-	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx)
-	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink2, IAdviseSinkEx)
-	COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx)
+	CCONTROLSITE_INTERFACES()
 END_COM_MAP()
 
 	// List of controls
