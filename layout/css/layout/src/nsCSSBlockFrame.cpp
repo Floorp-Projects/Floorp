@@ -658,6 +658,16 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
   mY = 0;
   mUnconstrainedWidth = aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE;
   mUnconstrainedHeight = aReflowState.maxSize.height == NS_UNCONSTRAINEDSIZE;
+#ifdef NS_DEBUG
+  if (!mUnconstrainedWidth) {
+    NS_ASSERTION(aReflowState.maxSize.width < 1000000, "bad parent");
+  }
+#if XXX_not_yet
+  if (!mUnconstrainedHeight) {
+    NS_ASSERTION(aReflowState.maxSize.height < 1000000, "bad parent");
+  }
+#endif
+#endif
   mComputeMaxElementSize = aComputeMaxElementSize;
   if (mComputeMaxElementSize) {
     mMaxElementSize.width = 0;
@@ -1479,6 +1489,7 @@ nsCSSBlockFrame::FrameAppendedReflow(nsCSSBlockReflowState& aState)
       break;
     }
     nscoord xmost = firstDirtyLine->mBounds.XMost();
+NS_ASSERTION(xmost < 1000000, "bad line width");
     if (xmost > aState.mKidXMost) {
       aState.mKidXMost = xmost;
     }
@@ -2006,6 +2017,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       aState.mBlockMaxWidth = 0;
       while (nsnull != rsp) {
         if (NS_UNCONSTRAINEDSIZE != rsp->maxSize.width) {
+NS_ASSERTION(rsp->maxSize.width < 1000000, "whoops: bad parent");
           aState.mBlockMaxWidth = rsp->maxSize.width;
           const nsStyleSpacing* spacing = nsnull;
           rsp->frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
@@ -2129,6 +2141,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   aLine->mBounds.width = metrics.width;
   aLine->mBounds.height = metrics.height;
   nscoord xmost = aLine->mBounds.XMost();
+NS_ASSERTION(xmost < 1000000, "bad line width");
   if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
   }
@@ -2447,6 +2460,7 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
   }
 
   nscoord xmost = aLine->mBounds.XMost();
+NS_ASSERTION(xmost < 1000000, "bad line width");
   if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
   }
