@@ -1175,7 +1175,8 @@ nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
     if (NS_FAILED(rv))
         return rv;
     
-    *aLastModificationDate = mFileInfo64.modifyTime;
+    // microseconds -> milliseconds
+    *aLastModificationDate = mFileInfo64.modifyTime / PR_USEC_PER_MSEC;
     return NS_OK;
 }
 
@@ -1192,7 +1193,9 @@ nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
     if (NS_FAILED(rv))
         return rv;
     
-    *aLastModificationDate = mFileInfo64.modifyTime;
+    // microseconds -> milliseconds
+    *aLastModificationDate = mFileInfo64.modifyTime / PR_USEC_PER_MSEC;
+
     return NS_OK;
 }
 
@@ -1238,8 +1241,9 @@ nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
     FILETIME lft, ft;
     SYSTEMTIME st;
     PRExplodedTime pret;
-
-    PR_ExplodeTime(aLastModificationDate, PR_LocalTimeParameters, &pret);
+    
+    // PR_ExplodeTime expects usecs...
+    PR_ExplodeTime(aLastModificationDate * PR_USEC_PER_MSEC, PR_LocalTimeParameters, &pret);
     st.wYear            = pret.tm_year;    
     st.wMonth           = pret.tm_month + 1; // Convert start offset -- Win32: Jan=1; NSPR: Jan=0
     st.wDayOfWeek       = pret.tm_wday;    

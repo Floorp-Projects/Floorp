@@ -827,7 +827,8 @@ nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
         return NSRESULT_FOR_ERRNO();
     }
     // PRTime is a 64 bit value
-    *aLastModificationDate = info.modifyTime;
+    // microseconds -> milliseconds
+    *aLastModificationDate = info.modifyTime / PR_USEC_PER_MSEC;
     return NS_OK;
 }
 
@@ -843,7 +844,7 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
         // convert PRTime microsecs to unix seconds since the epoch
         double dTime;
         LL_L2D(dTime, aLastModificationDate);
-        ut.modtime = (time_t)( (PRUint32)(dTime * 1e-6 + 0.5) );
+        ut.modtime = (time_t)( (PRUint32)(dTime / PR_MSEC_PER_SEC) );
         result = utime(mPath, &ut);
     } else {
         result = utime(mPath, NULL);
@@ -860,6 +861,10 @@ nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDateOfLink)
     if (lstat(mPath, &sbuf) == -1)
         return NSRESULT_FOR_ERRNO();
     mLL_II2L(0, (PRUint32)sbuf.st_mtime, *aLastModificationDateOfLink);
+
+    // lstat returns st_mtime in seconds!
+    *aLastModificationDate *= PR_MSEC_PER_SEC;
+
     return NS_OK;
 }
 
