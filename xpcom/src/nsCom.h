@@ -26,16 +26,16 @@
 #ifdef _IMPL_NS_COM
 #ifdef XP_PC
 #define NS_COM _declspec(dllexport)
-#else  // !XP_PC
+#else  /* !XP_PC */
 #define NS_COM
-#endif // !XP_PC
-#else  // !_IMPL_NS_COM
+#endif /* !XP_PC */
+#else  /* !_IMPL_NS_COM */
 #ifdef XP_PC
 #define NS_COM _declspec(dllimport)
-#else  // !XP_PC
+#else  /* !XP_PC */
 #define NS_COM
-#endif // !XP_PC
-#endif // !_IMPL_NS_COM
+#endif /* !XP_PC */
+#endif /* !_IMPL_NS_COM */
 
 /*
  * DLL Export macro
@@ -54,7 +54,7 @@
 #define NS_METHOD_(type) type __stdcall
 #define NS_METHOD nsresult __stdcall
 
-#else  // !XP_PC
+#else  /* !XP_PC */
 
 #define NS_EXPORT
 #define NS_EXPORT_(type) type
@@ -67,7 +67,7 @@
 #define NS_METHOD_(type) type
 #define NS_METHOD nsresult
 
-#endif // !XP_PC
+#endif /* !XP_PC */
 
 #endif
 

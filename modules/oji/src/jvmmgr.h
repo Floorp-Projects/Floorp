@@ -19,7 +19,7 @@
 #ifndef jvmmgr_h___
 #define jvmmgr_h___
 
-#include "xp_core.h"    // include first because of Bool problem
+#include "xp_core.h"    /* include first because of Bool problem */
 #include "prtypes.h"
 #include "nsCom.h"
 #include "jni.h"
@@ -27,10 +27,10 @@
 struct nsJVMMgr;
 
 typedef enum nsJVMStatus {
-    nsJVMStatus_Enabled,  // but not Running
-    nsJVMStatus_Disabled, // explicitly disabled
-    nsJVMStatus_Running,  // enabled and started
-    nsJVMStatus_Failed    // enabled but failed to start
+    nsJVMStatus_Enabled,  /* but not Running */
+    nsJVMStatus_Disabled, /* explicitly disabled */
+    nsJVMStatus_Running,  /* enabled and started */
+    nsJVMStatus_Failed    /* enabled but failed to start */
 } nsJVMStatus;
 
 #ifdef __cplusplus
@@ -54,21 +54,19 @@ public:
 
     NS_DECL_AGGREGATED
     
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIJVMManager:
+    /* from nsIJVMManager: */
 
-    ////////////////////////////////////////////////////////////////////////////
-    // JVMMgr specific methods:
+    /* JVMMgr specific methods: */
 
-    // ====> From here on are things only called by the browser, not the plugin...
+    /* ====> From here on are things only called by the browser, not the plugin... */
 
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
     nsIJVMPlugin* GetJVMPlugin(void) { return fJVM; }
 
-    // Unlike the nsIJVMPlugin::StartupJVM, this version handles putting
-    // up any error dialog:
+    /* Unlike the nsIJVMPlugin::StartupJVM, this version handles putting
+     * up any error dialog: */
     nsJVMStatus StartupJVM(void);
     nsJVMStatus ShutdownJVM(PRBool fullShutdown = PR_FALSE);
     nsJVMStatus GetJVMStatus(void);
@@ -99,8 +97,9 @@ protected:
     nsVector*           fClassPathAdditions;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Symantec Debugger Stuff
+/*******************************************************************************
+ * Symantec Debugger Stuff
+ ******************************************************************************/
 
 class nsSymantecDebugManager : public nsISymantecDebugManager {
 public:
@@ -122,19 +121,19 @@ protected:
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// nsJVMPluginTagInfo: The browser makes one of these when it sees an APPLET or
-// appropriate OBJECT tag.
+/*******************************************************************************
+ * nsJVMPluginTagInfo: The browser makes one of these when it sees an APPLET or
+ * appropriate OBJECT tag.
+ ******************************************************************************/
 
 class nsJVMPluginTagInfo : public nsIJVMPluginTagInfo {
 public:
 
     NS_DECL_AGGREGATED
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIJVMPluginTagInfo:
+    /* from nsIJVMPluginTagInfo: */
 
-    // ====> These are usually only called by the plugin, not the browser...
+    /* ====> These are usually only called by the plugin, not the browser... */
 
     NS_IMETHOD
     GetCode(const char* *result);
@@ -151,10 +150,9 @@ public:
     NS_IMETHOD
     GetMayScript(PRBool *result);
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Methods specific to nsJVMPluginInstancePeer:
+    /* Methods specific to nsJVMPluginInstancePeer: */
     
-    // ====> From here on are things only called by the browser, not the plugin...
+    /* ====> From here on are things only called by the browser, not the plugin... */
 
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr,
@@ -165,16 +163,17 @@ protected:
     nsJVMPluginTagInfo(nsISupports* outer, nsIPluginTagInfo2* info);
     virtual ~nsJVMPluginTagInfo(void);
 
-    // Instance Variables:
+    /* Instance Variables: */
     nsIPluginTagInfo2*  fPluginTagInfo;
     char*               fSimulatedCodebase;
     char*               fSimulatedCode;
 };
 
-#endif // __cplusplus
+#endif /* __cplusplus */
 
-////////////////////////////////////////////////////////////////////////////////
-// Convenience Routines
+/*******************************************************************************
+ * Convenience Routines
+ ******************************************************************************/
 
 PR_BEGIN_EXTERN_C
 
@@ -227,5 +226,4 @@ JVM_ShutdownJVM(void);
 
 PR_END_EXTERN_C
 
-////////////////////////////////////////////////////////////////////////////////
 #endif /* jvmmgr_h___ */
