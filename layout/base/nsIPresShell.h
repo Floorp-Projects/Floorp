@@ -56,8 +56,10 @@ class nsILayoutHistoryState;
 
 typedef enum SelectionType{SELECTION_NORMAL = 0, 
                            SELECTION_SPELLCHECK, 
-                           SELECTION_IME_SOLID, 
-                           SELECTION_IME_DASHED, 
+                           SELECTION_IME_RAWINPUT, 
+                           SELECTION_IME_SELECTEDRAWTEXT, 
+                           SELECTION_IME_CONVERTEDTEXT, 
+                           SELECTION_IME_SELECTEDCONVERTEDTEXT, 
                            NUM_SELECTIONTYPES} SelectionType;
 
 typedef enum SelectionRegion{SELECTION_ANCHOR_REGION = 0, 

@@ -898,6 +898,9 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 
 // XXX letter-spacing
 // XXX word-spacing
+#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_MAC)
+#define USE_INVERT_FOR_SELECTION
+#endif
 
 void 
 nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
@@ -1012,7 +1015,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
 //
 // For platforms that dont implement InvertRect(), the selection will be 
 // a non-filled rectangle.
-#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_MAC)
+#ifdef USE_INVERT_FOR_SELECTION
               aRenderingContext.SetColor(NS_RGB(255,255,255));
               aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
 #else
@@ -1020,20 +1023,44 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
 #endif
                                 }break;
-          case SELECTION_SPELLCHECK:{
+           case SELECTION_SPELLCHECK:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(NS_RGB(255,0,0));
-              aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
+              aRenderingContext.FillRect(aX + startOffset, aY + baseline - offset, textWidth, size);
                                 }break;
-          case SELECTION_IME_SOLID:{
+          case SELECTION_IME_SELECTEDRAWTEXT:{
+#ifdef USE_INVERT_FOR_SELECTION
+              aRenderingContext.SetColor(NS_RGB(255,255,255));
+              aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
+#else
+              aRenderingContext.SetColor(NS_RGB(255,255,128));
+              aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
+#endif        
               aTextStyle.mNormalFont->GetUnderline(offset, size);
-              aRenderingContext.SetColor(NS_RGB(0,0,255));
-              aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
+              aRenderingContext.SetColor(NS_RGB(189,33,66));
+              aRenderingContext.FillRect(aX + startOffset+1, aY + baseline - offset+size, textWidth-2, size);
                                 }break;
-          case SELECTION_IME_DASHED:{
+          case SELECTION_IME_RAWINPUT:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
-              aRenderingContext.SetColor(NS_RGB(128,0,255));
-              aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
+              aRenderingContext.SetColor(NS_RGB(189,33,66));
+              aRenderingContext.FillRect(aX + startOffset+1, aY + baseline - offset+size, textWidth-2, size);
+                                }break;
+          case SELECTION_IME_SELECTEDCONVERTEDTEXT:{
+#ifdef USE_INVERT_FOR_SELECTION
+              aRenderingContext.SetColor(NS_RGB(255,255,255));
+              aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
+#else
+              aRenderingContext.SetColor(NS_RGB(255,255,128));
+              aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
+#endif        
+			  aTextStyle.mNormalFont->GetUnderline(offset, size);
+              aRenderingContext.SetColor(NS_RGB(189,33,66));
+              aRenderingContext.FillRect(aX + startOffset+1, aY + baseline - offset, textWidth-2, size*2);
+                                }break;
+          case SELECTION_IME_CONVERTEDTEXT:{
+              aTextStyle.mNormalFont->GetUnderline(offset, size);
+              aRenderingContext.SetColor(NS_RGB(189,33,66));
+              aRenderingContext.FillRect(aX + startOffset+1, aY + baseline - offset, textWidth-2, size*2);
                                 }break;
           default:
             NS_ASSERTION(0,"what type of selection do i not know about?");
