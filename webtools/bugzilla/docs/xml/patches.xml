@@ -307,7 +307,9 @@ grep (/$value/, @array);
       </para>
       <para>
         What appears below if a brief summary, please refer to the perl style
-        guide if you don't see your question covered here.
+        guide if you don't see your question covered here.  It is much better to submit
+	a patch which fails these criteria than no patch at all, but please try to meet
+	these minimum standards when submitting code to Bugzilla.
       </para>
       <itemizedlist>
         <listitem>
@@ -353,6 +355,17 @@ else
             </programlisting>
           </para>
         </listitem>
+
+	<listitem>
+	  <para>
+	    Cookies
+	  </para>
+	  <para>
+	    Bugzilla uses cookies to ease the user experience, but no new patches
+	    should <emphasis>require</emphasis> user-side cookies.
+	  </para>
+	</listitem>
+
         <listitem>
           <para>
             File Names
@@ -365,6 +378,17 @@ else
             can cause confusion in CVS and other mozilla.org utilities.
           </para>
         </listitem>
+
+	<listitem>
+	  <para>
+	    Javascript dependencies
+	  </para>
+	  <para>
+	    While Bugzilla uses Javascript to make the user experience easier, no patch
+	    to Bugzilla should <emphasis>require</emphasis> Javascript.
+	  </para>
+	</listitem>
+
 	<listitem>
 	  <para>
 	    Schema Changes
@@ -372,6 +396,16 @@ else
 	  <para>
 	    If you make schema changes, you should modify <filename>sanitycheck.cgi</filename>
 	    to support the new schema.  All referential columns should be checked.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
+	    Templatization
+	  </para>
+	  <para>
+	    Patches to Bugzilla need to support templates so they do not force user interface choices
+	    on Bugzilla administrators.
 	  </para>
 	</listitem>
 
@@ -389,6 +423,7 @@ else
              on the same screen as <computeroutput>my $ret = "";</computeroutput>.
           </para>
         </listitem>
+
         <listitem>
           <para>
             Cross Database Compatability
