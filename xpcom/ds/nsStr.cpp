@@ -285,7 +285,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRUint32 aCount){
  * @param   aDestOffset is where in aDest truncation is to occur
  */
 void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset){
-  if(aDestOffset<=aDest.mCapacity){
+  if(aDestOffset<aDest.mCapacity){
     aDest.mLength=aDestOffset;
     AddNullTerminator(aDest);
     NSSTR_SEEN(aDest);
