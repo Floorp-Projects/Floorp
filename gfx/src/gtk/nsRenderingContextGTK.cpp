@@ -1200,8 +1200,8 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
       PRUnichar c = aString[i];
       nsFontGTK* currFont = nsnull;
       nsFontGTK** font = metrics->mLoadedFonts;
-      nsFontGTK** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
-      while (font < end) {
+      nsFontGTK** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < lastFont) {
         if (FONT_HAS_GLYPH((*font)->mMap, c)) {
 	  currFont = *font;
 	  goto FoundFont; // for speed -- avoid "if" statement
