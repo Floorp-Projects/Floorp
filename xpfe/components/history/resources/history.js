@@ -109,6 +109,7 @@ function HistoryCommonInit()
         }
     } 
 
+    SortInNewDirection(find_sort_direction(find_sort_column()));
     gHistoryTree.treeBoxObject.view.selection.select(0);
 }
 
