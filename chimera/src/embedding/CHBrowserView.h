@@ -110,6 +110,8 @@ enum {
   NSWindow* mWindow;
   
   nsIDragHelperService* mDragHelper;
+  NSPoint               mLastTrackedLocation;
+  NSWindow*             mLastTrackedWindow;
 }
 
 // NSView overrides
