@@ -17,8 +17,8 @@
  */ 
 
 #include "nsDebug.h"
-#include "nsIDTDDebug.h"
-#include "CNavDTD.h"
+#include "nsIDTDDebug.h" 
+#include "CNavDTD.h" 
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
 #include "nsParser.h"

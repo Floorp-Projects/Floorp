@@ -40,22 +40,27 @@
 
   Simply put, we've built ourselves a little data structure that
   serves as a stack for htmltags (and associated bits). 
-  What's special is that if you #define _dynstack 1, the stack
+  What's special is that if you #define rickgdebug 1, the stack
   size can grow dynamically (like you'ld want in a release build.)
-  If you don't #define _dynstack 1, then the stack is a fixed size,
+  If you don't #define rickgdebug 1, then the stack is a fixed size,
   equal to the eStackSize enum. This makes debugging easier, because
   you can see the htmltags on the stack if its not dynamic.
  ***************************************************************/
 
 void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* aTitle);
 
-//#define _dynstack 1
-class nsTagStack {
-  enum {eStackSize=200};
+//#define rickgdebug 1
 
+class nsTagStack {
 public:
 
-            nsTagStack(int aDefaultSize=50);
+#ifdef rickgdebug
+  enum {eStackSize=200};
+#else
+  enum {eStackSize=30};
+#endif
+
+            nsTagStack(int aDefaultSize=eStackSize);
             ~nsTagStack();
   void      Push(eHTMLTags aTag);
   eHTMLTags Pop();
@@ -67,7 +72,7 @@ public:
   int         mSize;
   int         mCount;
 
-#ifdef _dynstack
+#ifndef rickgdebug
   eHTMLTags*  mTags;
   PRBool*     mBits;
 #else
@@ -86,7 +91,7 @@ public:
 
 class nsDTDContext {
 public:
-                nsDTDContext(int aDefaultSize=50);
+                nsDTDContext(int aDefaultSize=nsTagStack::eStackSize);
                 ~nsDTDContext();
   void          pushStyleStack(nsTagStack* aStack=0);
   nsTagStack*   popStyleStack();
