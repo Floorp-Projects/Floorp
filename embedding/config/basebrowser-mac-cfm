@@ -19,6 +19,7 @@ Essential Files:NSStdLib.shlb
 ; 
 Essential Files:JavaScript.shlb
 Essential Files:LiveConnect.shlb
+Components:JSLoader.shlb
 
 ; 
 ; DOM:
