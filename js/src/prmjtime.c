@@ -332,7 +332,6 @@ JSInt64
 PRMJ_DSTOffset(JSInt64 local_time)
 {
     JSInt64 us2s;
-    JSInt64 dlsOffset;
 #ifdef XP_MAC
     /*
      * Convert the local time passed in to Macintosh epoch seconds. Use UTC utilities to convert
@@ -344,6 +343,7 @@ PRMJ_DSTOffset(JSInt64 local_time)
     if ((utcSeconds - macLocalSeconds) == PRMJ_LocalGMTDifference())
         return 0;
     else {
+        JSInt64 dlsOffset;
     	JSLL_UI2L(us2s, PRMJ_USEC_PER_SEC);
     	JSLL_UI2L(dlsOffset, PRMJ_HOUR_SECONDS);
     	JSLL_MUL(dlsOffset, dlsOffset, us2s);
