@@ -26,6 +26,7 @@
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
+#include "nsINameSpaceManager.h"
 
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
@@ -48,15 +49,15 @@ nsXMLElement::nsXMLElement(nsIAtom *aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init((nsIContent *)(nsIXMLContent *)this, aTag);
-  mNameSpace = nsnull;
-  mNameSpaceId = gNameSpaceId_Unknown;
+  mNameSpacePrefix = nsnull;
+  mNameSpaceID = kNameSpaceID_None;
   mScriptObject = nsnull;
   mIsLink = PR_FALSE;
 }
  
 nsXMLElement::~nsXMLElement()
 {
-  NS_IF_RELEASE(mNameSpace);
+  NS_IF_RELEASE(mNameSpacePrefix);
 }
 
 NS_IMETHODIMP 
@@ -127,39 +128,39 @@ nsXMLElement::SetScriptObject(void *aScriptObject)
 }
 
 NS_IMETHODIMP 
-nsXMLElement::SetNameSpace(nsIAtom* aNameSpace)
+nsXMLElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
 {
-  NS_IF_RELEASE(mNameSpace);
+  NS_IF_RELEASE(mNameSpacePrefix);
 
-  mNameSpace = aNameSpace;
+  mNameSpacePrefix = aNameSpacePrefix;
 
-  NS_IF_ADDREF(mNameSpace);
+  NS_IF_ADDREF(mNameSpacePrefix);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsXMLElement::GetNameSpace(nsIAtom*& aNameSpace)
+nsXMLElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
 {
-  aNameSpace = mNameSpace;
+  aNameSpacePrefix = mNameSpacePrefix;
   
-  NS_IF_ADDREF(mNameSpace);
+  NS_IF_ADDREF(mNameSpacePrefix);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXMLElement::SetNameSpaceIdentifier(PRInt32 aNameSpaceId)
+nsXMLElement::SetNameSpaceID(PRInt32 aNameSpaceID)
 {
-  mNameSpaceId = aNameSpaceId;
+  mNameSpaceID = aNameSpaceID;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsXMLElement::GetNameSpaceIdentifier(PRInt32& aNameSpaceId)
+nsXMLElement::GetNameSpaceID(PRInt32& aNameSpaceID) const
 {
-  aNameSpaceId = mNameSpaceId;
+  aNameSpaceID = mNameSpaceID;
   
   return NS_OK;
 }
@@ -172,6 +173,8 @@ nsXMLElement::SetAttribute(const nsString& aName,
   // XXX It sucks that we have to do a couple of strcmps for
   // every attribute set. It might be a bit more expensive
   // to create an atom.
+  // XXX this is wrong anyway, the attributes need to use the 
+  // namespace ID, not the prefix
   if (aName.Equals("xml:link") && (aValue.Equals("simple"))) {
     mIsLink = PR_TRUE;
   }
@@ -274,6 +277,9 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   mInner.CopyInnerTo((nsIContent *)(nsIXMLContent *)this, &it->mInner);
+  it->mNameSpacePrefix = mNameSpacePrefix;
+  NS_IF_ADDREF(mNameSpacePrefix);
+  it->mNameSpaceID = mNameSpaceID;
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 

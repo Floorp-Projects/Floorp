@@ -26,12 +26,6 @@
 
 class nsIParser;
 
-typedef struct {
-  nsIAtom *mPrefix;
-  nsString *mURI;
-  PRInt32 mId;
-} nsXMLNameSpace;
-
 class nsXMLDocument : public nsMarkupDocument,
                       public nsIXMLDocument,
                       public nsIHTMLContentContainer
@@ -64,12 +58,6 @@ public:
   NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);
 
   // nsIXMLDocument interface
-  NS_IMETHOD RegisterNameSpace(nsIAtom *aPrefix, const nsString& aURI, 
-                               PRInt32& aNameSpaceId);
-
-  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceId, nsString& aURI);
-  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceId, nsIAtom*& aPrefix);
-
   NS_IMETHOD PrologElementAt(PRInt32 aOffset, nsIContent** aContent);
   NS_IMETHOD PrologCount(PRInt32* aCount);
   NS_IMETHOD AppendToProlog(nsIContent* aContent);
@@ -94,7 +82,6 @@ protected:
   nsVoidArray *mEpilog;
 
   nsIParser *mParser;
-  nsVoidArray *mNameSpaces;
 };
 
 

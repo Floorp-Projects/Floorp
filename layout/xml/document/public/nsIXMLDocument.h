@@ -24,7 +24,6 @@
 #include "nsString.h"
 
 class nsIAtom;
-class nsIHTMLStyleSheet;
 
 #define NS_IXMLDOCUMENT_IID \
  { 0xa6cf90ca, 0x15b3, 0x11d2, \
@@ -35,12 +34,6 @@ class nsIHTMLStyleSheet;
  */
 class nsIXMLDocument : public nsISupports {
 public:
-  NS_IMETHOD RegisterNameSpace(nsIAtom* aPrefix, const nsString& aURI, 
-			       PRInt32& aNameSpaceId)=0;
-
-  NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceId, nsString& aURI)=0;
-  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceId, nsIAtom*& aPrefix)=0;
-
   NS_IMETHOD PrologElementAt(PRInt32 aOffset, nsIContent** aContent)=0;
   NS_IMETHOD PrologCount(PRInt32* aCount)=0;
   NS_IMETHOD AppendToProlog(nsIContent* aContent)=0;
