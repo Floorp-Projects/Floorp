@@ -9,6 +9,17 @@ INCLUDE foo.html
 END
 
 #
+# Cookie- A test with cookie header
+#
+START /cookie
+INCLUDE generic.res
+Content-Type: text/html
+Set-Cookie: foo=bar
+CRLF
+A test with Set-Cookie header foo=bar
+END
+
+#
 # This is a simple multipart message example
 # for more complicated stuff try "complex"
 #
