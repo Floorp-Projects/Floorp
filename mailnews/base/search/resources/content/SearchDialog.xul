@@ -35,7 +35,7 @@ Rights Reserved.
     onload="searchOnLoad();"
     onunload="searchOnUnload();"
     title="&searchDialogTitle.label;"
-    width="620" height="470"
+    width="640" height="470"
     persist="screenX screenY width height"
     class="color-dialog"
     orient="vertical">
@@ -47,37 +47,45 @@ Rights Reserved.
   <script src="chrome://messenger/content/SearchDialog.js"/>
 
   <dummy class="usesMailWidgets"/>
-  <titledbox value="&conditions.label;" orient="vertical" class="dialog box-padded">
-
-    <box autostretch="never">
-      <text class="label" value="&searchHeading.label;"/>
-      <menulist id="searchableFolders" flex="2"
-                oncommand="onChooseFolder(event)"/>
-      <spring flex="1"/>
-        <checkbox id="checkSearchSubFolders" value="&searchSubfolders.label;"/>
-    </box>
-    <separator/>
-    <text class="label" value="&conditionDesc.label;"/>
-
-    <box flex="1">
-      <box id="searchTermListBox" flex="1"/>
-      <box orient="vertical">
-        <button value="&searchButton.label;" oncommand="onSearch(event)"/>
-        <button value="&resetButton.label;" oncommand="onReset(event)"/>
-        <spring flex="1"/>
-        <button value="&closeButton.label;" onclick="window.close();"/>
-        <separator class="thin"/>
-      </box>
-    </box>
-  </titledbox>
+  <box flex="1" orient="vertical">
     
-  <splitter id="searchfields-splitter" collapse="before" persist="state hidden"
-            autostretch="never" orient="vertical">
-    <grippy/>
-  </splitter>
-  
-  <tree id="threadTree" flex="1" style="height: 0px" context="threadPaneContext"/>
+    <titledbox value="&conditions.label;" orient="vertical" class="dialog box-padded" flex="1">
 
+      <box autostretch="never">
+        <text class="label" value="&searchHeading.label;"/>
+        <menulist id="searchableFolders" flex="2"
+                oncommand="onChooseFolder(event)"/>
+        <spring flex="1"/>
+          <checkbox id="checkSearchSubFolders" value="&searchSubfolders.label;" checked="true"/>
+      </box>
+      <separator/>
+      <text class="label" value="&conditionDesc.label;"/>
+
+      <box flex="1">
+        <box id="searchTermListBox" flex="1"/>
+        
+        <box orient="vertical">
+           <spring flex="1"/>
+           <button value="&searchButton.label;" oncommand="onSearch(event)"/>
+           <button value="&resetButton.label;" oncommand="onReset(event)"/>
+           <spring flex="1"/>
+         </box>
+      </box>
+    </titledbox>
+    
+    <splitter id="gray_horizontal_splitter" collapse="after"  persist="state"/>
+    
+    <titledbox value="&results.label;" orient="vertical" class="dialog box-padded" flex="1">
+       <box id="searchTermListBox" orient="vertical" flex="1">
+            <tree id="threadTree" flex="1" context="threadPaneContext"/>
+       </box>
+    </titledbox>
+    
+    <box autostretch="never" align="right">
+      <button value="&closeButton.label;" onclick="window.close();"/>
+    </box>
+  
+  </box>
   <statusbar id="status-bar"/>
   
 </window>
