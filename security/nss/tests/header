@@ -288,8 +288,11 @@ init_dirs()
     set_d2
 
     if [ -z "${BCDIST}" ] ; then
-        BCDIST=/h/hs-sca15c/export/builds/mccrel/nss/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
-        #BCDIST=${D1}/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+        #BCDIST=/h/hs-sca15c/export/builds/mccrel/nss/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+        BCDIST=${D1}/../${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+        if [ ! -d $BCDIST ] ; then
+            ask "Backward compatibility dierectory $BCDIST does not exist, continue" "y" "n" || Exit
+        fi
     fi
 
     UX_MASTERDIR=${D2}/${UX_MASTERBUILD}
@@ -338,6 +341,7 @@ debug_dirs()
     Debug "LOCALDIST_BIN $LOCALDIST_BIN"
     Debug "COMMON $COMMON"
     Debug "MOZILLA_ROOT $MOZILLA_ROOT"
+    Debug "BCDIST $BCDIST"
 }
 
 export_dirs()
