@@ -2973,11 +2973,11 @@ nsXULDocument::ResumeWalk()
     // Everything after this point we only want to do once we're
     // certain that we've been embedded in a presentation shell.
 
-    StartLayout();
-
     nsAutoString title;
     mRootContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, title);
     SetTitle(title);
+
+    StartLayout();
 
     if (mIsWritingFastLoad && IsChromeURI(mDocumentURI))
         gXULCache->WritePrototype(mMasterPrototype);
