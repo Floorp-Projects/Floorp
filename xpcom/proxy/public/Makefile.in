@@ -29,9 +29,11 @@ XPIDLSRCS =                        \
         nsIProxyCreateInstance.idl \
         $(NULL)
 
-EXPORTS     = nsProxyEvent.h        \
-          nsProxyObjectManager.h\
-          $(NULL)
+EXPORTS     =	\
+	nsProxyEvent.h        	\
+	nsProxyObjectManager.h	\
+	nsProxiedService.h	\
+	$(NULL)
 
 EXPORTS     := $(addprefix $(srcdir)/, $(EXPORTS))
 
