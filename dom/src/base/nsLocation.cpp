@@ -350,7 +350,7 @@ LocationImpl::SetHref(const nsString& aHref)
   if (NS_OK == result) {
     result = NS_NewURI(&oldUrl, oldHref);
     if (NS_OK == result) {
-      result = SetHrefWithBase(aHref, oldUrl, PR_TRUE);
+      result = SetHrefWithBase(aHref, oldUrl, PR_FALSE);
       NS_RELEASE(oldUrl);
     }
   }
@@ -623,7 +623,7 @@ LocationImpl::Replace(const nsString& aUrl)
   if (NS_OK == result) {
     result = NS_NewURI(&oldUrl, oldHref);
     if (NS_OK == result) {
-      result = SetHrefWithBase(aUrl, oldUrl, PR_FALSE);
+      result = SetHrefWithBase(aUrl, oldUrl, PR_TRUE);
       NS_RELEASE(oldUrl);
     }
   }
@@ -661,7 +661,7 @@ LocationImpl::Replace(JSContext *cx, jsval *argv, PRUint32 argc)
     result = GetSourceURL(cx, &base);
     
     if (NS_SUCCEEDED(result)) {
-      result = SetHrefWithBase(href, base, PR_FALSE);
+      result = SetHrefWithBase(href, base, PR_TRUE);
       NS_RELEASE(base);
     }
   }
@@ -801,7 +801,7 @@ LocationImpl::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval 
       result = GetSourceURL(aContext, &base);
       
       if (NS_SUCCEEDED(result)) {
-        result = SetHrefWithBase(href, base, PR_TRUE);
+        result = SetHrefWithBase(href, base, PR_FALSE);
         NS_RELEASE(base);
       }
     }
