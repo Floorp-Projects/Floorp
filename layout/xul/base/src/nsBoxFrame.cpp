@@ -45,33 +45,28 @@
 #include "nsGenericHTMLElement.h"
 #include "nsFrameNavigator.h"
 #include "nsCSSRendering.h"
-#include "nsIDOMMouseMotionListener.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMUIEvent.h"
-#include "nsIScrollableView.h"
 
-#define CONSTANT float(0.0)
+#define CONSTANT 0
 #define DEBUG_REFLOW 0
 #define DEBUG_REDRAW 0
 #define DEBUG_SPRING_SIZE 8
 #define DEBUG_BORDER_SIZE 2
 #define COIL_SIZE 8
 
+#define TEST_SANITY
+
 /**
  * Only created when the box is in debug mode
  */
-class nsBoxDebugInner: public nsIDOMMouseMotionListener
+class nsBoxDebugInner
 {
 public:
 
   nsBoxDebugInner(nsBoxFrame* aThis)
   {
     mOuter = aThis;
-    mRefCnt = 0;
   }
   virtual ~nsBoxDebugInner() {}
-
-   NS_DECL_ISUPPORTS
 
 public:
     nsCOMPtr<nsIStyleContext> mHorizontalDebugStyle;
@@ -81,44 +76,17 @@ public:
     float mP2t;
     static nsIFrame* mDebugChild;
     void GetValue(const nsSize& a, const nsSize& b, char* value);
-    void GetValue(float a, float b, char* value);
-    void DrawSpring( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize);
+    void GetValue(PRInt32 a, PRInt32 b, char* value);
+    void DrawSpring( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord springSize);
     void PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
     void DrawLine(nsIRenderingContext& aRenderingContext, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord width, nscoord height);
-
-    void AddListener();
-    void RemoveListener();
-
-    virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
-    virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
-    virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
     nsresult DisplayDebugInfoFor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
 };
-
-class nsHTMLInfo 
-{
-public:
-   nsHTMLInfo();
-   void Clear();
-
-   PRBool prefWidthIntrinsic;
-   PRBool prefHeightIntrinsic;
-};
-
-void nsHTMLInfo::Clear()
-{
-   prefWidthIntrinsic = PR_TRUE;
-   prefHeightIntrinsic = PR_TRUE;
-}
-
-nsHTMLInfo::nsHTMLInfo(): prefWidthIntrinsic(PR_TRUE), prefHeightIntrinsic(PR_TRUE)
-{
-}
 
 class nsInfoListImpl: public nsInfoList
 {
@@ -127,15 +95,21 @@ public:
     virtual ~nsInfoListImpl();
     virtual nsCalculatedBoxInfo* GetFirst();
     virtual nsCalculatedBoxInfo* GetLast();
-    virtual nsCalculatedBoxInfo* GetFirstCreateIfNeeded();
-    virtual nsCalculatedBoxInfo* GetNextCreateIfNeeded(nsCalculatedBoxInfo* info);
-    virtual void Clear();
     virtual PRInt32 GetCount();
-    virtual void CreateInfosFor(nsIFrame* aList, nsCalculatedBoxInfo*& first, nsCalculatedBoxInfo*& last);
-    virtual void RemoveAfter(nsCalculatedBoxInfo* aPrev);
-    virtual void Prepend(nsIFrame* aList);
-    virtual void Append(nsIFrame* aList);
-    virtual void InsertAfter(nsCalculatedBoxInfo* aPrev, nsIFrame* aList);
+
+    void Clear();
+    PRInt32 CreateInfosFor(nsIFrame* aList, nsCalculatedBoxInfo*& first, nsCalculatedBoxInfo*& last);
+    void RemoveAfter(nsCalculatedBoxInfo* aPrev);
+    void Remove(nsIFrame* aChild);
+    void Prepend(nsIFrame* aList);
+    void Append(nsIFrame* aList);
+    void Insert(nsIFrame* aPrevFrame, nsIFrame* aList);
+    void InsertAfter(nsCalculatedBoxInfo* aPrev, nsIFrame* aList);
+    void Init(nsIFrame* aList);
+    nsCalculatedBoxInfo* GetPrevious(nsIFrame* aChild);
+    nsCalculatedBoxInfo* GetInfo(nsIFrame* aChild);
+    void SanityCheck(nsFrameList& aFrameList);
+
 
     nsCalculatedBoxInfo* mFirst;
     nsCalculatedBoxInfo* mLast;
@@ -145,10 +119,10 @@ public:
 class nsCalculatedBoxInfoImpl: public nsCalculatedBoxInfo
 {
 public:
-    nsCalculatedBoxInfoImpl();
+    nsCalculatedBoxInfoImpl(nsIFrame* aFrame);
     virtual ~nsCalculatedBoxInfoImpl();
     nsCalculatedBoxInfoImpl(const nsBoxInfo& aInfo);
-    virtual void clear();
+    virtual void Clear();
 };
 
 /**
@@ -167,11 +141,7 @@ public:
 
   ~nsBoxFrameInner()
   {
-      if (mDebugInner) {
-          mDebugInner->RemoveListener();
-          NS_RELEASE(mDebugInner);
-          mDebugInner = nsnull;
-      }
+      delete mDebugInner;
       delete mInfoList;
   }
 
@@ -179,6 +149,7 @@ public:
   void AdjustChildren(nsIPresContext* aPresContext, nsBoxFrame* aBox);
   void UpdatePseudoElements(nsIPresContext* aPresContext);
   nsresult GetContentOf(nsIFrame* aFrame, nsIContent** aContent);
+  void SanityCheck();
 
     nsCOMPtr<nsISpaceManager> mSpaceManager; // We own this [OWNER].
     PRUint32 mFlags;
@@ -190,12 +161,6 @@ public:
 };
 
 nsIFrame* nsBoxDebugInner::mDebugChild = nsnull;
-
-static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-
-NS_IMPL_ISUPPORTS1(nsBoxDebugInner, nsIDOMMouseMotionListener)
-
 
 nsresult
 NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags )
@@ -226,6 +191,24 @@ nsBoxFrame::~nsBoxFrame()
 {
   delete mInner;
 }
+
+NS_IMETHODIMP
+nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                              nsIAtom*        aListName,
+                                              nsIFrame*       aChildList)
+{
+  mInner->SanityCheck();
+
+  nsresult r = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  
+  // initialize our list of infos.
+  mInner->mInfoList->Init(aChildList);
+
+  mInner->SanityCheck();
+
+  return r;
+}
+
 
 PRBool nsBoxFrame::IsHorizontal() const
 {
@@ -316,14 +299,12 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext*  aPresContext, nsIFrame* aFra
     // see if the width or height was specifically set
     if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
         aSize.prefSize.width = position->mWidth.GetCoordValue();
-        if (aSize.htmlInfo)
-           aSize.htmlInfo->prefWidthIntrinsic = PR_FALSE;
+        aSize.prefWidthIntrinsic = PR_FALSE;
     }
 
     if (position->mHeight.GetUnit() == eStyleUnit_Coord) {
         aSize.prefSize.height = position->mHeight.GetCoordValue();     
-        if (aSize.htmlInfo)
-           aSize.htmlInfo->prefHeightIntrinsic = PR_FALSE;
+        aSize.prefHeightIntrinsic = PR_FALSE;
     }
     
     // same for min size. Unfortunately min size is always set to 0. So for now
@@ -361,8 +342,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext*  aPresContext, nsIFrame* aFra
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
     {
         value.Trim("%");
-        // convert to a percent.
-        aSize.flex = value.ToFloat(&error);
+        aSize.flex = value.ToInteger(&error);
     }
 
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
@@ -394,7 +374,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext*  aPresContext, nsIFrame* aFra
 nsresult
 nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
 {
-  aSize.clear();
+  aSize.Clear();
 
   // see if the frame Innerements IBox interface
   
@@ -413,12 +393,6 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
  // start the preferred size as intrinsic
   aSize.prefSize.width = NS_INTRINSICSIZE;
   aSize.prefSize.height = NS_INTRINSICSIZE;
-
-  if (!aSize.htmlInfo)
-      aSize.htmlInfo = new nsHTMLInfo();
-  else {
-      aSize.htmlInfo->Clear();
-  }
 
   // redefine anything depending on css
   GetRedefinedMinPrefMax(aPresContext, aFrame, aSize);
@@ -491,6 +465,8 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+
+  mInner->SanityCheck();
 
   // If we have a space manager, then set it in the reflow state
   if (mInner->mSpaceManager) {
@@ -624,6 +600,8 @@ printf("\n");
 ListTag(stdout); printf(": reflow done\n");
 #endif
 
+  mInner->SanityCheck();
+
   return NS_OK;
 }
 
@@ -675,10 +653,11 @@ nsBoxFrame::FlowChildren(nsIPresContext*   aPresContext,
   {
     finished = PR_TRUE;
     nscoord count = 0;
-    nsIFrame* childFrame = mFrames.FirstChild(); 
     nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
-    while (nsnull != childFrame) 
+    while (nsnull != info) 
     {    
+        nsIFrame* childFrame = info->frame;
+
         NS_ASSERTION(info, "ERROR not info object!!");
 
         // if we reached the index that changed we are done.
@@ -695,9 +674,7 @@ nsBoxFrame::FlowChildren(nsIPresContext*   aPresContext,
         }
       
         
-      nsresult rv = childFrame->GetNextSibling(&childFrame);
-      info = mInner->mInfoList->GetNextCreateIfNeeded(info);
-      NS_ASSERTION(rv == NS_OK,"failed to get next child");
+      info = info->next;
       count++;
       reason = nextReason;
     }
@@ -911,19 +888,16 @@ nsBoxFrame::DidReflow(nsIPresContext* aPresContext,
   nsresult rv = nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
   NS_ASSERTION(rv == NS_OK,"DidReflow failed");
 
-  nsIFrame* childFrame = mFrames.FirstChild(); 
   nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
 
-  while (nsnull != childFrame) 
+  while (info) 
   {
     // make collapsed children not show up
     if (info->collapsed) {
-        CollapseChild(aPresContext, childFrame, PR_TRUE);
+        CollapseChild(aPresContext, info->frame, PR_TRUE);
     } 
 
-    rv = childFrame->GetNextSibling(&childFrame);
-    info = mInner->mInfoList->GetNextCreateIfNeeded(info);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    info = info->next;
   }
 
   return rv;
@@ -940,11 +914,12 @@ nsBoxFrame::PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect)
   nscoord x = boxRect.x;
   nscoord y = boxRect.y;
 
-  nsIFrame* childFrame = mFrames.FirstChild(); 
   nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
 
-  while (nsnull != childFrame) 
+  while (info) 
   {
+    nsIFrame* childFrame = info->frame;
+
     nsresult rv;
 
     // make collapsed children not show up
@@ -1004,10 +979,7 @@ nsBoxFrame::PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect)
       }
     }
 
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
-    info = mInner->mInfoList->GetNextCreateIfNeeded(info);
-
+    info = info->next;
   }
 
   return NS_OK;
@@ -1330,7 +1302,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
       else
           sizeRemaining = size.height;
 
-      float springConstantsRemaining = (float)0.0;
+      PRInt32 springConstantsRemaining = 0;
 
       nsCalculatedBoxInfo* info = first;
 
@@ -1342,19 +1314,21 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
           }
 
           // figure out the direction of the box and get the correct value either the width or height
-          nscoord& pref = GET_WIDTH(info->prefSize);
+          nscoord pref = GET_WIDTH(info->prefSize);
           // nscoord& max  = GET_WIDTH(spring.maxSize); // Not used.
-          nscoord& min  = GET_WIDTH(info->minSize);
+          nscoord min  = GET_WIDTH(info->minSize);
          
           GET_HEIGHT(info->calculatedSize) = GET_HEIGHT(size);
         
-          if (pref < min)
+          if (pref < min) {
               pref = min;
+              GET_WIDTH(info->prefSize) = min;
+          }
 
           if (info->sizeValid) { 
              sizeRemaining -= GET_WIDTH(info->calculatedSize);
           } else {
-            if (info->flex == 0.0)
+            if (info->flex == 0)
             {
               info->sizeValid = PR_TRUE;
               GET_WIDTH(info->calculatedSize) = pref;
@@ -1378,18 +1352,17 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
                  continue;
               }
 
-              nscoord& calculated = GET_WIDTH(info->calculatedSize);
-              nscoord& pref = GET_WIDTH(info->prefSize);
+              nscoord pref = GET_WIDTH(info->prefSize);
 
               if (!info->sizeValid) 
               {
                 // set the calculated size to be the preferred size
-                calculated = pref;
+                GET_WIDTH(info->calculatedSize) = pref;
                 info->sizeValid = PR_TRUE;
               }
 
               // changed the size returned to reflect
-              sz += calculated;
+              sz += GET_WIDTH(info->calculatedSize);
 
               info = info->next;
 
@@ -1408,15 +1381,15 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
                  continue;
               }
 
-              nscoord& pref = GET_WIDTH(info->prefSize);
-              nscoord& max  = GET_WIDTH(info->maxSize);
-              nscoord& min  = GET_WIDTH(info->minSize);
-              nscoord& calculated = GET_WIDTH(info->calculatedSize);
+              nscoord pref = GET_WIDTH(info->prefSize);
+              nscoord max  = GET_WIDTH(info->maxSize);
+              nscoord min  = GET_WIDTH(info->minSize);
+              nscoord calculated = GET_WIDTH(info->calculatedSize);
      
               if (info->sizeValid==PR_FALSE) {
-                  PRInt32 newSize = pref + NSToIntRound(sizeRemaining*(info->flex/springConstantsRemaining));
+                  PRInt32 newSize = pref + (sizeRemaining*info->flex/springConstantsRemaining);
                   if (newSize<=min) {
-                      calculated = min;
+                      GET_WIDTH(info->calculatedSize) = min;
                       springConstantsRemaining -= info->flex;
                       sizeRemaining += pref;
                       sizeRemaining -= calculated;
@@ -1425,7 +1398,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
                       limit = PR_TRUE;
                   }
                   else if (newSize>=max) {
-                      calculated = max;
+                      GET_WIDTH(info->calculatedSize) = max;
                       springConstantsRemaining -= info->flex;
                       sizeRemaining += pref;
                       sizeRemaining -= calculated;
@@ -1437,7 +1410,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
           }
       }
 
-      float stretchFactor = (springConstantsRemaining == 0.0) ? float(0.0) : sizeRemaining/springConstantsRemaining;
+      //PRInt32 stretchFactor = (springConstantsRemaining == 0) ? 0 : sizeRemaining/springConstantsRemaining;
 
         nscoord& s = GET_WIDTH(size);
         s = 0;
@@ -1450,15 +1423,18 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
                  continue;
             }
 
-             nscoord& pref = GET_WIDTH(info->prefSize);
-             nscoord& calculated = GET_WIDTH(info->calculatedSize);
+             nscoord pref = GET_WIDTH(info->prefSize);
   
             if (info->sizeValid==PR_FALSE) {
-                calculated = pref + NSToIntFloor(info->flex*stretchFactor);
+                if (springConstantsRemaining == 0) 
+                    GET_WIDTH(info->calculatedSize) = pref;
+                else
+                    GET_WIDTH(info->calculatedSize) = pref + info->flex*sizeRemaining/springConstantsRemaining;
+
                 info->sizeValid = PR_TRUE;
             }
 
-            s += calculated;
+            s += GET_WIDTH(info->calculatedSize);
             info = info->next;
         }
 }
@@ -1526,24 +1502,15 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
 {
-    nsIFrame* childFrame = mFrames.FirstChild(); 
-    nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
-    nsCalculatedBoxInfo* last = nsnull;
-    while (nsnull != childFrame) 
-    {        
-      if (childFrame == aOldFrame) {
-          mInner->mInfoList->RemoveAfter(last);         
-          break;
-      }
+    mInner->SanityCheck();
 
-      nsresult rv = childFrame->GetNextSibling(&childFrame);
-      last = info;
-      info = mInner->mInfoList->GetNextCreateIfNeeded(info);
-      NS_ASSERTION(rv == NS_OK,"failed to get next child");
-    }
+    // remove child from our info list
+    mInner->mInfoList->Remove(aOldFrame);
 
     // remove the child frame
     mFrames.DestroyFrame(aPresContext, aOldFrame);
+
+    mInner->SanityCheck();
 
     // mark us dirty and generate a reflow command
     return GenerateDirtyReflowCommand(aPresContext, aPresShell);
@@ -1556,71 +1523,21 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIFrame* aPrevFrame,
                             nsIFrame* aFrameList)
 {
-   // find the frame before this one
-   // if no previous frame then we are inserting in front
-   if (aPrevFrame == nsnull) {
-       // prepend them
-       mInner->mInfoList->Prepend(aFrameList);
-   } else {
-       nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
-       PRBool found = PR_FALSE;
+   mInner->SanityCheck();
 
-       // if there is a previous frame then find in and insert the children in
-       nsIFrame* childFrame = mFrames.FirstChild(); 
-       while (nsnull != childFrame) 
-       {        
-          if (childFrame == aPrevFrame) 
-          {
-              // insert insert after previous info
-               mInner->mInfoList->InsertAfter(info, aFrameList);
-               found = PR_TRUE;
-          }
+   // insert the frames to our info list
+   mInner->mInfoList->Insert(aPrevFrame, aFrameList);
 
-          nsresult rv = childFrame->GetNextSibling(&childFrame);
-          info = mInner->mInfoList->GetNextCreateIfNeeded(info);
-          NS_ASSERTION(rv == NS_OK,"failed to get next child");
-       }
-
-       NS_ASSERTION(found,"Could not find previous frame!!");
-   }       
-
+   // insert the frames in out regular frame list
    mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+
+   mInner->SanityCheck();
 
    // mark us dirty and generate a reflow command
    return GenerateDirtyReflowCommand(aPresContext, aPresShell);
    
 }
 
-NS_IMETHODIMP
-nsBoxFrame::ReplaceFrame(nsIPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aOldFrame,
-                      nsIFrame*       aNewFrame)
-{
-    nsIFrame* prevFrame = nsnull;
-    nsIFrame* childFrame = mFrames.FirstChild(); 
-    nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
-    while (nsnull != childFrame) 
-    {        
-      if (childFrame == aOldFrame) {
-          // clear its info so it is recomputed
-          info->clear();  
-          info->isIncremental = PR_FALSE;
-          break;
-      }
-
-      prevFrame = childFrame;
-      nsresult rv = childFrame->GetNextSibling(&childFrame);
-      info = mInner->mInfoList->GetNextCreateIfNeeded(info);
-      NS_ASSERTION(rv == NS_OK,"failed to get next child");
-    }
-    
-    mFrames.DestroyFrame(aPresContext, aOldFrame);
-    mFrames.InsertFrames(nsnull, prevFrame, aNewFrame);
-
-    return GenerateDirtyReflowCommand(aPresContext, aPresShell);
-}
 
 NS_IMETHODIMP
 nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
@@ -1628,11 +1545,16 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
-   // append them after
+   mInner->SanityCheck();
+
+    // append them after
    mInner->mInfoList->Append(aFrameList);
 
+   // append in regular frames
    mFrames.AppendFrames(nsnull, aFrameList); 
    
+   mInner->SanityCheck();
+
    // mark us dirty and generate a reflow command
    return GenerateDirtyReflowCommand(aPresContext, aPresShell);
 }
@@ -1665,18 +1587,14 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
 {
    nsresult rv;
 
-   aSize.clear();
+   aSize.Clear();
  
    // run through all the children and get there min, max, and preferred sizes
    // return us the size of the box
-   nscoord count = 0;
-   nsIFrame* childFrame = mFrames.FirstChild(); 
 
-   if (childFrame != nsnull) {
-       nsInfoListImpl* list = mInner->mInfoList;
-       nsCalculatedBoxInfo* info = list->GetFirstCreateIfNeeded();
+       nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
 
-       while (nsnull != childFrame) 
+       while (info) 
        {  
         // if a child needs recalculation then ask it for its size. Otherwise
         // just use the size we already have.
@@ -1684,7 +1602,7 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
         {
           // see if the child is collapsed
           const nsStyleDisplay* disp;
-          childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
+          info->frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
 
           // if collapsed then the child will have no size
           if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
@@ -1692,14 +1610,14 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
           else {
             // get the size of the child. This is the min, max, preferred, and spring constant
             // it does not include its border.
-            rv = GetChildBoxInfo(aPresContext, aReflowState, childFrame, *info);
+            rv = GetChildBoxInfo(aPresContext, aReflowState, info->frame, *info);
             NS_ASSERTION(rv == NS_OK,"failed to child box info");
             if (NS_FAILED(rv))
              return rv;
 
             // add in the child's margin and border/padding if there is one.
             const nsStyleSpacing* spacing;
-            rv = childFrame->GetStyleData(eStyleStruct_Spacing,
+            rv = info->frame->GetStyleData(eStyleStruct_Spacing,
                                           (const nsStyleStruct*&) spacing);
 
             NS_ASSERTION(rv == NS_OK,"failed to get spacing info");
@@ -1734,17 +1652,9 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
 
         AddChildSize(aSize, *info);
 
-        rv = childFrame->GetNextSibling(&childFrame);
-        NS_ASSERTION(rv == NS_OK,"failed to get next child");
-        if (NS_FAILED(rv))
-           return rv;
-
-        if (childFrame)
-           info = list->GetNextCreateIfNeeded(info);
-
-        count++;
-      }
-   }
+        info = info->next;
+       }
+   
   // add the insets into our size. This is merely some extra space subclasses like toolbars
   // can place around us. Toolbars use it to place extra control like grippies around things.
   nsMargin inset(0,0,0,0);
@@ -1793,37 +1703,27 @@ nsBoxFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflow
   nsIFrame* frame;
   aReflowState.reflowCommand->GetNext(frame);
 
-  nscoord count = 0;
-  nsIFrame* childFrame = mFrames.FirstChild(); 
-  if (childFrame) {
-      nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirstCreateIfNeeded();
+  nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
 
-      while (nsnull != childFrame) 
-      {
-        if (childFrame == frame) {
-            // clear the spring so it is recalculated on the flow
-            info->clear();
-            // can't use nsCOMPtr on non-refcounted things like frames
-            nsIBox* ibox;
-            if (NS_SUCCEEDED(childFrame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
-                ibox->Dirty(aPresContext, aReflowState, incrementalChild);
-            else 
-                incrementalChild = frame;
+  while (info) 
+  {
+    if (info->frame == frame) {
+        // clear the spring so it is recalculated on the flow
+        info->Clear();
+        // can't use nsCOMPtr on non-refcounted things like frames
+        nsIBox* ibox;
+        if (NS_SUCCEEDED(info->frame->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox)
+            ibox->Dirty(aPresContext, aReflowState, incrementalChild);
+        else 
+            incrementalChild = frame;
 
-            if (incrementalChild == childFrame) 
-                info->isIncremental = PR_TRUE;
-            
-            break;
-        }
+        if (incrementalChild == info->frame) 
+            info->isIncremental = PR_TRUE;
+        
+        break;
+    }
 
-        rv = childFrame->GetNextSibling(&childFrame);
-        info = mInner->mInfoList->GetNextCreateIfNeeded(info);
-        NS_ASSERTION(rv == NS_OK,"failed to get next child");
-        if (NS_FAILED(rv))
-          return rv;
-
-        count++;
-      }
+    info = info->next;
   }
 
   return rv;
@@ -1938,7 +1838,7 @@ nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext&
             springSize = debugBorder.left - onePixel*4;
         }
 
-        nsCalculatedBoxInfo* info = mOuter->mInner->mInfoList->GetFirst();
+        nsCalculatedBoxInfo* info = mOuter->GetInfoList()->GetFirst();
         while (info) {
             nsSize& size = info->calculatedSize;
             if (!info->collapsed) {
@@ -1973,7 +1873,7 @@ nsBoxDebugInner::FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nsc
 }
 
 void 
-nsBoxDebugInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
+nsBoxDebugInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
 {
         // PRBool h = mOuter->mHorizontal;
     
@@ -1996,7 +1896,7 @@ nsBoxDebugInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& a
 
         int halfCoilSize = coilSize/2;
 
-        if (flex == 0.0) {
+        if (flex == 0) {
             DrawLine(aRenderingContext, x,y + springSize/2, x + size, y + springSize/2);
         } else {
             for (int i=0; i < coils; i++)
@@ -2036,8 +1936,6 @@ nsBoxFrameInner::UpdatePseudoElements(nsIPresContext* aPresContext)
     if (hs && vs) {
         if (!mDebugInner) {
             mDebugInner = new nsBoxDebugInner(mOuter);
-            NS_ADDREF(mDebugInner);
-            mDebugInner->AddListener();
         }
         mDebugInner->mHorizontalDebugStyle = hs;
         mDebugInner->mVerticalDebugStyle = vs;
@@ -2045,8 +1943,7 @@ nsBoxFrameInner::UpdatePseudoElements(nsIPresContext* aPresContext)
     } else {
         if (mDebugInner) 
         {
-            mDebugInner->RemoveListener();
-            NS_RELEASE(mDebugInner);
+            delete mDebugInner;
             mDebugInner = nsnull;
         }
     }
@@ -2112,31 +2009,36 @@ nsBoxFrame::GetFrameName(nsString& aResult) const
   return NS_OK;
 }
 
-///static PRInt32 gBoxInfoCount = 0;
+//static PRInt32 gBoxInfoCount = 0;
 
-nsCalculatedBoxInfoImpl::nsCalculatedBoxInfoImpl()
+nsCalculatedBoxInfoImpl::nsCalculatedBoxInfoImpl(nsIFrame* aFrame)
 {
    //gBoxInfoCount++;
-   //printf("created Info=%d\n",gBoxInfoCount);
+  // printf("created Info=%d\n",gBoxInfoCount);
 
-   htmlInfo = nsnull;
-   clear();
-   next = nsnull;
-   isIncremental = PR_FALSE;
+    next = nsnull;
+    needsReflow = PR_TRUE;
+    needsRecalc = PR_TRUE;
+    collapsed = PR_FALSE;
+    calculatedSize.width = 0;
+    calculatedSize.height = 0;
+    sizeValid = PR_FALSE;
+    isIncremental = PR_FALSE;
+    frame = aFrame;
+    prefWidthIntrinsic = PR_TRUE;
+    prefHeightIntrinsic = PR_TRUE;
 }
 
 nsCalculatedBoxInfoImpl::~nsCalculatedBoxInfoImpl()
 {
-   delete htmlInfo;
-
-   //gBoxInfoCount--;
-   //printf("deleted Info=%d\n",gBoxInfoCount);
+ //  gBoxInfoCount--;
+  // printf("deleted Info=%d\n",gBoxInfoCount);
 }
 
 void 
-nsCalculatedBoxInfoImpl::clear()
+nsCalculatedBoxInfoImpl::Clear()
 {       
-    nsBoxInfo::clear();
+    nsBoxInfo::Clear();
 
     needsReflow = PR_TRUE;
     needsRecalc = PR_TRUE;
@@ -2147,8 +2049,9 @@ nsCalculatedBoxInfoImpl::clear()
 
     sizeValid = PR_FALSE;
 
-    if (htmlInfo)
-        htmlInfo->Clear();
+   prefWidthIntrinsic = PR_TRUE;
+   prefHeightIntrinsic = PR_TRUE;
+
 }
 
 NS_IMETHODIMP  
@@ -2183,31 +2086,9 @@ nsBoxDebugInner::GetValue(const nsSize& a, const nsSize& b, char* ch)
 }
 
 void
-nsBoxDebugInner::GetValue(float a, float b, char* ch) 
+nsBoxDebugInner::GetValue(PRInt32 a, PRInt32 b, char* ch) 
 {
-    sprintf(ch, "(%f)", a);             
-}
-
-void
-nsBoxDebugInner::AddListener()
-{
-  nsCOMPtr<nsIContent> content;
-  mOuter->mInner->GetContentOf(mOuter, getter_AddRefs(content));
-
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
-
-  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this), kIDOMMouseMotionListenerIID);
-}
-
-void
-nsBoxDebugInner::RemoveListener()
-{
-  nsCOMPtr<nsIContent> content;
-  mOuter->mInner->GetContentOf(mOuter, getter_AddRefs(content));
-
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
-
-  reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),kIDOMMouseMotionListenerIID);
+    sprintf(ch, "(%d)", a);             
 }
 
 nsresult
@@ -2218,6 +2099,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
     nscoord x = aPoint.x;
     nscoord y = aPoint.y;
 
+     /*
     // get it into our coordintate system by subtracting our parents offsets.
     nsIFrame* parent = mOuter;
     while(parent != nsnull)
@@ -2244,6 +2126,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
      y -= cr.y;
      parent->GetParent(&parent);
     }
+    */
 
     nsRect r(0,0,mOuter->mRect.width, mOuter->mRect.height);
     PRBool isHorizontal = mOuter->mInner->mHorizontal;
@@ -2252,11 +2135,11 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
         return NS_OK;
 
         int count = 0;
-        nsIFrame* childFrame = mOuter->mFrames.FirstChild(); 
-        nsCalculatedBoxInfo* info = mOuter->mInner->mInfoList->GetFirst();
+        nsCalculatedBoxInfo* info = mOuter->GetInfoList()->GetFirst();
 
-        while (nsnull != childFrame) 
+        while (info) 
         {    
+            nsIFrame* childFrame = info->frame;
             childFrame->GetRect(r);
 
             // if we are not in the child. But in the spring above the child.
@@ -2292,7 +2175,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                     printf("Tag='%s', id='%s' class='%s'\n", tagValue, idValue, kClassValue);
 
                     mDebugChild = childFrame;
-                    nsCalculatedBoxInfoImpl aSize;
+                    nsCalculatedBoxInfoImpl aSize(childFrame);
                     aSize.prefSize.width = NS_INTRINSICSIZE;
                     aSize.prefSize.height = NS_INTRINSICSIZE;
 
@@ -2305,7 +2188,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                     aSize.calculatedSize.width = NS_INTRINSICSIZE;
                     aSize.calculatedSize.height = NS_INTRINSICSIZE;
 
-                    aSize.flex = -1.0;
+                    aSize.flex = -1;
 
                   // add in the css min, max, pref
                     const nsStylePosition* position;
@@ -2356,7 +2239,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
                     {
                         value.Trim("%");
-                        aSize.flex = value.ToFloat(&error);
+                        aSize.flex = value.ToInteger(&error);
                     }
 
                     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
@@ -2403,10 +2286,6 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                     );
                 break;   
             }
-          nsresult rv = childFrame->GetNextSibling(&childFrame);
-          NS_ASSERTION(rv == NS_OK,"failed to get next child");
-          if (NS_FAILED(rv))
-              return rv;
 
           info = info->next;
           count++;
@@ -2427,198 +2306,6 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
     return rv;
 }
 
-nsresult
-nsBoxDebugInner::MouseMove(nsIDOMEvent* aMouseEvent)
-{
-/*
-          nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aMouseEvent));
-
-          PRInt32 xPx = 0;
-          PRInt32 yPx = 0;
-          uiEvent->GetClientX(&xPx);
-          uiEvent->GetClientY(&yPx);
-              
-           nscoord onePixel = NSIntPixelsToTwips(1, mP2t);
-           nscoord x = xPx*onePixel;
-           nscoord y = yPx*onePixel;
-
-           // get it into our coordintate system by subtracting our parents offsets.
-           nsIFrame* parent = mOuter;
-           while(parent != nsnull)
-           {
-              // if we hit a scrollable view make sure we take into account
-              // how much we are scrolled.
-              nsIScrollableView* scrollingView;
-              nsIView*           view;
-              parent->GetView(&view);
-              if (view) {
-                nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
-                if (NS_SUCCEEDED(result)) {
-                    nscoord xoff = 0;
-                    nscoord yoff = 0;
-                    scrollingView->GetScrollPosition(xoff, yoff);
-                    x += xoff;
-                    y += yoff;         
-                }
-              }
-       
-             nsRect r;
-             parent->GetRect(r);
-             x -= r.x;
-             y -= r.y;
-             parent->GetParent(&parent);
-           }
-
-        int count = 0;
-        nsIFrame* childFrame = mOuter->mFrames.FirstChild(); 
-        while (nsnull != childFrame) 
-        {    
-            nsRect r(0,0,0,0);
-            childFrame->GetRect(r);
-
-            // if we are not in the child. But in the spring above the child.
-            if (!r.Contains(x,y) && ((mOuter->mHorizontal && x >= r.x && x < r.x + r.width) ||
-                (!mOuter->mHorizontal && y >= r.y && y < r.y + r.height))) {
-
-                    // found it but we already showed it.
-                    if (mDebugChild == childFrame)
-                        return NS_OK;
-
-                    nsCOMPtr<nsIContent> content;
-                    mOuter->mInner->GetContentOf(childFrame, getter_AddRefs(content));
-
-                    nsString id;
-                    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-                    char idValue[100];
-                    id.ToCString(idValue,100);
-                       
-                    nsString kClass;
-                    content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, kClass);
-                    char kClassValue[100];
-                    kClass.ToCString(kClassValue,100);
-
-                    nsCOMPtr<nsIAtom> tag;
-                    content->GetTag(*getter_AddRefs(tag));
-                    nsString tagString;
-                    tag->ToString(tagString);
-                    char tagValue[100];
-                    tagString.ToCString(tagValue,100);
-
-                    printf("--------------------\n");
-                    printf("Tag='%s', id='%s' class='%s'\n", tagValue, idValue, kClassValue);
-
-                    mDebugChild = childFrame;
-                    nsCalculatedBoxInfo aSize;
-                    aSize.prefSize.width = NS_INTRINSICSIZE;
-                    aSize.prefSize.height = NS_INTRINSICSIZE;
-
-                    aSize.minSize.width = NS_INTRINSICSIZE;
-                    aSize.minSize.height = NS_INTRINSICSIZE;
-
-                    aSize.maxSize.width = NS_INTRINSICSIZE;
-                    aSize.maxSize.height = NS_INTRINSICSIZE;
-
-                    aSize.calculatedSize.width = NS_INTRINSICSIZE;
-                    aSize.calculatedSize.height = NS_INTRINSICSIZE;
-
-                    aSize.flex = -1.0;
-
-                  // add in the css min, max, pref
-                    const nsStylePosition* position;
-                    nsresult rv = childFrame->GetStyleData(eStyleStruct_Position,
-                                  (const nsStyleStruct*&) position);
-
-                    // see if the width or height was specifically set
-                    if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
-                        aSize.prefSize.width = position->mWidth.GetCoordValue();
-                    }
-
-                    if (position->mHeight.GetUnit() == eStyleUnit_Coord) {
-                        aSize.prefSize.height = position->mHeight.GetCoordValue();     
-                    }
-    
-                    // same for min size. Unfortunately min size is always set to 0. So for now
-                    // we will assume 0 means not set.
-                    if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
-                        nscoord min = position->mMinWidth.GetCoordValue();
-                        if (min != 0)
-                           aSize.minSize.width = min;
-                    }
-
-                    if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
-                        nscoord min = position->mMinHeight.GetCoordValue();
-                        if (min != 0)
-                           aSize.minSize.height = min;
-                    }
-
-                    // and max
-                    if (position->mMaxWidth.GetUnit() == eStyleUnit_Coord) {
-                        nscoord max = position->mMaxWidth.GetCoordValue();
-                        aSize.maxSize.width = max;
-                    }
-
-                    if (position->mMaxHeight.GetUnit() == eStyleUnit_Coord) {
-                        nscoord max = position->mMaxHeight.GetCoordValue();
-                        aSize.maxSize.height = max;
-                    }
-
-                    PRInt32 error;
-                    nsAutoString value;
-
-                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::flex, value))
-                    {
-                        value.Trim("%");
-                        // convert to a percent.
-                        aSize.flex = value.ToFloat(&error)/float(100.0);
-                    }
-
-                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
-                    {
-                        nsHTMLValue aResult;
-                        nsGenericHTMLElement::ParseValueOrPercent(value, aResult, eHTMLUnit_Pixel);
-                        aSize.prefSize.width = NSIntPixelsToTwips(aResult.GetPixelValue(), mP2t);
-                    }
-
-                    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value))
-                    {
-                        nsHTMLValue aResult;
-                        nsGenericHTMLElement::ParseValueOrPercent(value, aResult, eHTMLUnit_Pixel);
-                        aSize.prefSize.height = NSIntPixelsToTwips(aResult.GetPixelValue(), mP2t);
-                    }
-
-                    char min[100];
-                    char pref[100];
-                    char max[100];
-                    char calc[100];
-                    char flex[100];
-
-                    GetValue(mOuter->mSprings[count].minSize,  aSize.minSize, min);
-                    GetValue(mOuter->mSprings[count].prefSize, aSize.prefSize, pref);
-                    GetValue(mOuter->mSprings[count].maxSize, aSize.maxSize, max);
-                    GetValue(mOuter->mSprings[count].calculatedSize,  aSize.calculatedSize, calc);
-                    GetValue(mOuter->mSprings[count].flex,  aSize.flex, flex);
-
-
-                    printf("min%s, pref%s, max%s, actual%s, flex=%s\n", 
-                        min,
-                        pref,
-                        max,
-                        calc,
-                        flex
-                    );
-                    return NS_OK;
-                }
-          
-          nsresult rv = childFrame->GetNextSibling(&childFrame);
-          NS_ASSERTION(rv == NS_OK,"failed to get next child");
-          count++;
-        }
-
-       // mDebugChild = nsnull;
-*/
-        return NS_OK;
-}
-
 nsresult 
 nsBoxFrameInner::GetContentOf(nsIFrame* aFrame, nsIContent** aContent)
 {
@@ -2635,6 +2322,13 @@ nsBoxFrameInner::GetContentOf(nsIFrame* aFrame, nsIContent** aContent)
     return NS_OK;
 }
 
+void
+nsBoxFrameInner::SanityCheck()
+{ 
+#ifdef TEST_SANITY
+   mInfoList->SanityCheck(mOuter->mFrames);
+#endif
+}
 
 nsInfoListImpl::nsInfoListImpl():mFirst(nsnull),mLast(nsnull),mCount(0)
 {
@@ -2647,17 +2341,6 @@ nsInfoListImpl::~nsInfoListImpl()
 }
 
 nsCalculatedBoxInfo* 
-nsInfoListImpl::GetFirstCreateIfNeeded()
-{
-    if (mFirst == nsnull) {
-        mFirst = mLast = new nsCalculatedBoxInfoImpl();
-        mCount++;
-    }
-
-    return mFirst;
-}
-
-nsCalculatedBoxInfo* 
 nsInfoListImpl::GetFirst()
 {
     return mFirst;
@@ -2667,17 +2350,6 @@ nsCalculatedBoxInfo*
 nsInfoListImpl::GetLast()
 {
     return mLast;
-}
-
-nsCalculatedBoxInfo* 
-nsInfoListImpl::GetNextCreateIfNeeded(nsCalculatedBoxInfo* info)
-{
-    if (!info->next) {
-        info->next = mLast = new nsCalculatedBoxInfoImpl();
-        mCount++;
-    }
-
-    return info->next;
 }
 
 void
@@ -2700,36 +2372,114 @@ nsInfoListImpl::GetCount()
    return mCount;
 }
 
-void 
+PRInt32 
 nsInfoListImpl::CreateInfosFor(nsIFrame* aList, nsCalculatedBoxInfo*& first, nsCalculatedBoxInfo*& last)
 {
+    PRInt32 count = 0;
     if (aList) {
-       first = new nsCalculatedBoxInfoImpl();
+       first = new nsCalculatedBoxInfoImpl(aList);
+       count++;
        last = first;
        aList->GetNextSibling(&aList);
        while(aList) {
-         last->next = new nsCalculatedBoxInfoImpl();
+         last->next = new nsCalculatedBoxInfoImpl(aList);
+         count++;
          aList->GetNextSibling(&aList);       
          last = last->next;
        }
     }
+
+    return count;
+}
+
+nsCalculatedBoxInfo* 
+nsInfoListImpl::GetPrevious(nsIFrame* aFrame)
+{
+    if (aFrame == nsnull)
+        return nsnull;
+
+   // find the frame to remove
+    nsCalculatedBoxInfo* info = mFirst;
+    nsCalculatedBoxInfo* prev = nsnull;
+    while (info) 
+    {        
+      if (info->frame == aFrame) {
+          return prev;
+      }
+
+      prev = info;
+      info = info->next;
+    }
+
+    return nsnull;
+}
+
+nsCalculatedBoxInfo* 
+nsInfoListImpl::GetInfo(nsIFrame* aFrame)
+{
+    if (aFrame == nsnull)
+        return nsnull;
+
+   // find the frame to remove
+    nsCalculatedBoxInfo* info = mFirst;
+    while (info) 
+    {        
+      if (info->frame == aFrame) {
+          return info;
+      }
+
+      info = info->next;
+    }
+
+    return nsnull;
+}
+
+void
+nsInfoListImpl::Remove(nsIFrame* aFrame)
+{
+    // get the info before the frame
+    nsCalculatedBoxInfo* prevInfo = GetPrevious(aFrame);
+    RemoveAfter(prevInfo);        
+}
+
+void
+nsInfoListImpl::Insert(nsIFrame* aPrevFrame, nsIFrame* aFrameList)
+{
+   nsCalculatedBoxInfo* prevInfo = GetInfo(aPrevFrame);
+
+   // find the frame before this one
+   // if no previous frame then we are inserting in front
+   if (prevInfo == nsnull) {
+       // prepend them
+       Prepend(aFrameList);
+   } else {
+       // insert insert after previous info
+       InsertAfter(prevInfo, aFrameList);
+   }
 }
 
 void
 nsInfoListImpl::RemoveAfter(nsCalculatedBoxInfo* aPrevious)
 {
+    nsCalculatedBoxInfo* toDelete = nsnull;
+
     if (aPrevious == nsnull)
     {
         NS_ASSERTION(mFirst,"Can't find first child");
-        nsCalculatedBoxInfo* toDelete = mFirst;
+        toDelete = mFirst;
+        if (mLast == mFirst)
+            mLast = mFirst->next;
         mFirst = mFirst->next;
-        delete toDelete;
     } else {
-        nsCalculatedBoxInfo* toDelete = aPrevious->next;
+        toDelete = aPrevious->next;
         NS_ASSERTION(toDelete,"Can't find child to delete");
         aPrevious->next = toDelete->next;
-        delete toDelete;
+        if (mLast == toDelete)
+            mLast = aPrevious;
     }
+
+    delete toDelete;
+    mCount--;
 }
 
 void
@@ -2737,7 +2487,7 @@ nsInfoListImpl::Prepend(nsIFrame* aList)
 {
     nsCalculatedBoxInfo* first;
     nsCalculatedBoxInfo* last;
-    CreateInfosFor(aList, first, last);
+    mCount += CreateInfosFor(aList, first, last);
     if (!mFirst)
         mFirst = mLast = first;
     else {
@@ -2751,13 +2501,13 @@ nsInfoListImpl::Append(nsIFrame* aList)
 {
     nsCalculatedBoxInfo* first;
     nsCalculatedBoxInfo* last;
-    CreateInfosFor(aList, first, last);
-    if (!mFirst) {
-        mFirst = mLast = first;
-    } else {
+    mCount += CreateInfosFor(aList, first, last);
+    if (!mFirst) 
+        mFirst = first;
+    else 
         mLast->next = first;
-        mLast = last;
-    }
+    
+    mLast = last;
 }
 
 void 
@@ -2765,10 +2515,69 @@ nsInfoListImpl::InsertAfter(nsCalculatedBoxInfo* aPrev, nsIFrame* aList)
 {
     nsCalculatedBoxInfo* first;
     nsCalculatedBoxInfo* last;
-    CreateInfosFor(aList, first, last);
+    mCount += CreateInfosFor(aList, first, last);
     last->next = aPrev->next;
     aPrev->next = first;
+    if (aPrev == mLast)
+        mLast = last;
 }
+
+void 
+nsInfoListImpl::Init(nsIFrame* aList)
+{
+    Clear();
+    mCount += CreateInfosFor(aList, mFirst, mLast);
+}
+
+void
+nsInfoListImpl::SanityCheck(nsFrameList& aFrameList)
+{
+    // make sure the length match
+    PRInt32 length = aFrameList.GetLength();
+    NS_ASSERTION(length == mCount,"nsBox::ERROR!! Box info list count does not match frame count!!");
+
+    // make sure last makes sense
+    NS_ASSERTION(mLast == nsnull || mLast->next == nsnull,"nsBox::ERROR!! The last child is not really the last!!!");
+    nsIFrame* child = aFrameList.FirstChild();
+    nsCalculatedBoxInfo* info = mFirst;
+    PRInt32 count = 0;
+    while(child)
+    {
+       NS_ASSERTION(count <= mCount,"too many children!!!");
+       NS_ASSERTION(info->frame == child,"nsBox::ERROR!! box info list and child info lists don't match!!!"); 
+       info = info->next;
+       child->GetNextSibling(&child);
+       count++;
+    }
+}
+
+
+// ---- box info ------
+
+nsBoxInfo::nsBoxInfo():prefSize(0,0), minSize(0,0), flex(0), maxSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE)
+{ 
+}
+
+void 
+nsBoxInfo::Clear()
+{
+      prefSize.width = 0;
+      prefSize.height = 0;
+
+      minSize.width = 0;
+      minSize.height = 0;
+
+      flex = 0;
+
+      maxSize.width = NS_INTRINSICSIZE;
+      maxSize.height = NS_INTRINSICSIZE;
+}
+
+nsBoxInfo::~nsBoxInfo()
+{
+}
+
+
 
 
 

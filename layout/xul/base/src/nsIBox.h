@@ -45,26 +45,11 @@ public:
     nsSize prefSize;
     nsSize minSize;
     nsSize maxSize; 
+    PRInt32 flex;
 
-    float flex;
-
-    nsBoxInfo() { clear(); }
-
-    virtual void clear()
-    {
-      prefSize.width = 0;
-      prefSize.height = 0;
-
-      minSize.width = 0;
-      minSize.height = 0;
-
-      flex = 0.0;
-
-      maxSize.width = NS_INTRINSICSIZE;
-      maxSize.height = NS_INTRINSICSIZE;
-    }
-
-    virtual ~nsBoxInfo() {}
+    nsBoxInfo();
+    virtual void Clear();
+    virtual ~nsBoxInfo();
   
 };
 

@@ -51,7 +51,9 @@ public:
     PRBool isIncremental;
     nsHTMLInfo* htmlInfo;
     nsCalculatedBoxInfo* next;
-    virtual void clear()=0;
+    nsIFrame* frame;
+    PRBool prefWidthIntrinsic;
+    PRBool prefHeightIntrinsic;
 };
 
 class nsInfoList 
@@ -130,11 +132,10 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame,
-                          nsIFrame*       aNewFrame);
+  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList);
+
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
