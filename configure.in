@@ -164,6 +164,23 @@ else
   AC_MSG_RESULT(unknown)
 fi
 
+dnl Checks for specific (libc) global variables
+AC_MSG_CHECKING(for sys_errlist/sys_nerr)
+AC_CACHE_VAL(ac_cv_syserrlist,
+ [AC_TRY_COMPILE([#include <stdio.h>
+                  #include <errno.h>],
+                 [char *foo = sys_errlist[sys_nerr-1];],
+                 [ac_syserrlist=true],
+                 [ac_syserrlist=false])
+  ac_cv_syserrlist=$ac_syserrlist])
+ac_syserrlist=$ac_cv_syserrlist
+if test $ac_syserrlist = true ; then
+  AC_DEFINE(HAVE_SYSERRLIST)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi  
+
 dnl Checks for libraries.
 dnl ========================================================
 AC_CHECK_LIB(c, strcpy)
