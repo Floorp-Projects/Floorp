@@ -72,7 +72,6 @@ PRInt32      fTrackerRemoveListMax = 0;
 nsIContent * fTrackerContentArrayAddList[1024];
 PRInt32      fTrackerAddListMax = 0;
 
-nsIDocument      *gDoc = nsnull;
 
 // [HACK] Foward Declarations
 void ForceDrawFrame(nsFrame * aFrame);
@@ -80,8 +79,6 @@ void ForceDrawFrame(nsFrame * aFrame);
 static void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 #endif
 
-PRBool      nsFrame::mDoingSelection = PR_FALSE;
-PRBool      nsFrame::mDidDrag        = PR_FALSE;
 
 
 //----------------------------------------------------------------------
@@ -728,36 +725,32 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
+/*i have no idea why this is here keeping incase..
   if (DisplaySelection(aPresContext) == PR_FALSE) {
     if (aEvent->message != NS_MOUSE_LEFT_BUTTON_DOWN) {
       return NS_OK;
     }
   }
-
-  if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
-    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    } 
-    else if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
-               aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-      // no-op
-    } 
-    else {
-      return NS_OK;
-    }
-    if (SELECTION_DEBUG) printf("Message: %d-------------------------------------------------------------\n",aEvent->message);
-
-
-    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-      if (mDoingSelection) {
-        HandleRelease(aPresContext, aEvent, aEventStatus);
+*/
+  if (aEvent->message == NS_MOUSE_MOVE) {
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv)){
+      nsCOMPtr<nsIDOMSelection> selection;
+      if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
+        nsCOMPtr<nsIFrameSelection> frameselection;
+        frameselection = do_QueryInterface(selection);
+        if (frameselection) {
+          PRBool mouseDown = PR_FALSE;
+          if (NS_SUCCEEDED(frameselection->GetMouseDownState(&mouseDown)) && mouseDown){
+            HandleDrag(aPresContext, aEvent, aEventStatus);
+          }
+        }
       }
-    } else if (aEvent->message == NS_MOUSE_MOVE) {
-      mDidDrag = PR_TRUE;
-      HandleDrag(aPresContext, aEvent, aEventStatus);
-//DEBUG MJUDGE DEBUG MESSAGE FOR DRAGGING FROM SELECTION
-    } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-      HandlePress(aPresContext, aEvent, aEventStatus);
     }
+  } 
+  else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    HandlePress(aPresContext, aEvent, aEventStatus);
   }
 
   return NS_OK;
@@ -775,8 +768,6 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  mDoingSelection = PR_TRUE;
-  mDidDrag        = PR_FALSE;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
   nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
@@ -787,20 +778,18 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
       PRInt32 startPos = 0;
       PRUint32 contentOffset = 0;
       if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
-        nsIDOMSelection *selection = nsnull;
-        if (NS_SUCCEEDED(shell->GetSelection(&selection))){
-          nsIFrameSelection *frameselection = nsnull;
-          if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
+        nsCOMPtr<nsIDOMSelection> selection;
+        if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
+          nsCOMPtr<nsIFrameSelection> frameselection;
+          frameselection = do_QueryInterface(selection);
+          if (frameselection) {
             nsCOMPtr<nsIContent> content;
             rv = GetContent(getter_AddRefs(content));
             if (NS_SUCCEEDED( rv )){
-              frameselection->EnableFrameNotification(PR_FALSE);
+              frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
               frameselection->TakeFocus(content, startPos + contentOffset, inputEvent->isShift);
-              frameselection->EnableFrameNotification(PR_TRUE);//prevent cyclic call to reset selection.
             }
-            NS_RELEASE(frameselection);
           }
-          NS_RELEASE(selection);
         }
         //no release 
       }
@@ -818,8 +807,6 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  mDoingSelection = PR_TRUE;
-  mDidDrag        = PR_FALSE;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
@@ -836,9 +823,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
             nsCOMPtr<nsIContent> content;
             rv = GetContent(getter_AddRefs(content));
             if (NS_SUCCEEDED( rv )){
-              frameselection->EnableFrameNotification(PR_FALSE);
               frameselection->TakeFocus(content, startPos + contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
-              frameselection->EnableFrameNotification(PR_TRUE);//prevent cyclic call to reset selection.
             }
             NS_RELEASE(frameselection);
           }
@@ -855,8 +840,6 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext,
                                  nsGUIEvent*     aEvent,
                                  nsEventStatus&  aEventStatus)
 {
-  mDoingSelection = PR_FALSE;
-  NS_IF_RELEASE(gDoc);
   return NS_OK;
 }
 

@@ -350,12 +350,6 @@ protected:
   nsIFrame*        mNextSibling;  // singly linked list of frames
   nsFrameState     mState;
 
-  ///////////////////////////////////
-  // Important Selection Variables
-  ///////////////////////////////////
-  static PRBool     mDoingSelection;
-  static PRBool     mDidDrag;
-  static PRInt32    mStartPos;
 
   // Selection data is valid only from the Mouse Press to the Mouse Release
   ///////////////////////////////////
