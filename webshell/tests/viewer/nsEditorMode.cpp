@@ -100,6 +100,7 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
     return NS_ERROR_NULL_POINTER;
   } 
   gEditor->Init(aDOMDocument, aPresShell);
+  gEditor->EnableUndo(PR_TRUE);
 
   return result;
 }
