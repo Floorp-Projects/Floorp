@@ -36,7 +36,10 @@
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 #include "nsXMLTokenizer.h"
+
+#ifdef  EXPAT
 #include "nsExpatTokenizer.h"
+#endif
 
 #include "prenv.h"  //this is here for debug reasons...
 #include "prtypes.h"  //this is here for debug reasons...
@@ -329,6 +332,8 @@ nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
 nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
   if(!mTokenizer) {
     PRBool  theExpatState=PR_FALSE;
+
+#ifdef EXPAT
     char* theEnvString = PR_GetEnv("EXPAT");
     if(theEnvString){
       if(('1'==theEnvString[0]) || ('Y'==toupper(theEnvString[0]))) {
@@ -338,6 +343,9 @@ nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
     if(theExpatState)
       mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
     else mTokenizer=(nsHTMLTokenizer*)new nsXMLTokenizer();
+#else
+    mTokenizer=(nsHTMLTokenizer*)new nsXMLTokenizer();
+#endif
   }
   return mTokenizer;
 }
