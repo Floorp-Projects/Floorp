@@ -13,3 +13,4 @@ nsDirectoryServiceUtils.h
 nsStringIO.h
 nsAppDirectoryServiceDefs.h
 nsStreamUtils.h
+nsMultiplexInputStream.h
