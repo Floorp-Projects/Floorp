@@ -4572,14 +4572,10 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // the DOM computed style API.  We can get rid of this hack if we merge
   // the jsdom library with layout.
 
-  const nsStyleDisplay* display;
-  pctx->ResolveStyleContextAndGetStyleData(content, eStyleStruct_Display,
-                                           (const nsStyleStruct*&) display);
-  NS_ENSURE_TRUE(display, NS_ERROR_UNEXPECTED);
-
-  if (display->mBinding.IsEmpty()) {
+  nsAutoString bindingURL;
+  pctx->GetXBLBindingURL(content, bindingURL);
+  if (bindingURL.IsEmpty()) {
     // No binding, nothing left to do here.
-
     return NS_OK;
   }
 
@@ -4589,7 +4585,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
   NS_ENSURE_TRUE(xblService, NS_ERROR_NOT_AVAILABLE);
 
-  xblService->LoadBindings(content, display->mBinding, PR_FALSE,
+  xblService->LoadBindings(content, bindingURL, PR_FALSE,
                            getter_AddRefs(binding), &dummy);
 
   if (binding) {

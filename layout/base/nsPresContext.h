@@ -198,19 +198,6 @@ public:
                          nsStyleContext* aParentContext) = 0;
 
   /**
-   * Resolve the given style struct for a content node.
-   * This is probably NOT what you're looking for to find out the style
-   * properties of an element.  From inside layout, you should use the style
-   * context directly; from outside layout you should use GetStyleData
-   * for a frame or the DOM computed style interfaces for content nodes.
-   * aSID should be a nsStyleStructID but isn't due to include ordering
-   * problems.
-   */
-  NS_IMETHOD ResolveStyleContextAndGetStyleData(nsIContent* aContent,
-                                                int aSID,
-                                                const nsStyleStruct*& aStyleStruct) = 0;
-
-  /**
    * Resolve style for a non-element content node (i.e., one that is
    * guaranteed not to match any rules).  Eventually such nodes
    * shouldn't have style contexts at all, but this at least prevents
@@ -260,6 +247,13 @@ public:
   ProbePseudoStyleContextFor(nsIContent* aParentContent,
                              nsIAtom* aPseudoTag,
                              nsStyleContext* aParentContext) = 0;
+ 
+   /**
+    * Resolve a new style context for a content node and return the URL
+    * for its XBL binding, or the empty string if it has no binding
+    * specified in CSS.
+    */
+   NS_IMETHOD GetXBLBindingURL(nsIContent* aContent, nsAString& aResult) = 0;
 
   /** 
    * For a given frame tree, get a new style context that is the equivalent
