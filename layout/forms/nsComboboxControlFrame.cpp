@@ -2188,7 +2188,6 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
 
     // initialize the text frame
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDisplayContent));
     mTextFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
     mTextFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 
