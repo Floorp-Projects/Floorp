@@ -30,6 +30,7 @@
 #include "plhash.h"
 #include "prlog.h"
 #include "nsVoidArray.h"
+#include "nsIPref.h"
 
 #undef NOISY
 
@@ -973,7 +974,10 @@ PresShell::VerifyIncrementalReflow()
   }
   NS_ASSERTION(NS_OK == rv, "failed to create presentation context");
   nsIDeviceContext* dc = mPresContext->GetDeviceContext();
-  cx->Init(dc);
+  nsIPref* prefs; 
+  mPresContext->GetPrefs(prefs);
+  cx->Init(dc, prefs);
+  NS_IF_RELEASE(prefs);
   NS_RELEASE(dc);
 
   rv = CreateStyleSet(mDocument, &ss);
