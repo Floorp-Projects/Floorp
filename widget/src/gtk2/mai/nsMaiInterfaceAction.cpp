@@ -133,12 +133,101 @@ MaiInterfaceAction::GetName(gint aActionIndex)
 const gchar *
 MaiInterfaceAction::GetKeybinding(gint aActionIndex)
 {
+    //return all Keybindings including accesskey and shortcut
+    
     nsIAccessible *accessible = GetNSAccessible();
     g_return_val_if_fail(accessible != NULL, NULL);
 
-    /* this is not supported in nsIAccessible yet */
+    if (!mKeyBinding.IsEmpty())
+        return mKeyBinding.get();
 
-    return NULL;
+    nsAutoString allKeybinding;
+
+    //get accesskey
+    nsAutoString accessKey;
+    nsresult rv = accessible->GetAccKeyboardShortcut(accessKey);
+
+    if (NS_SUCCEEDED(rv) && !accessKey.IsEmpty()) {
+        nsCOMPtr<nsIAccessible> parentAccessible;
+        accessible->GetAccParent(getter_AddRefs(parentAccessible));
+        if (parentAccessible) {
+            PRUint32 role;
+            parentAccessible->GetAccRole(&role);
+
+            if (role == ATK_ROLE_MENU_BAR) {
+                //it is topmenu, change from "Alt+f" to "f;<Alt>f"
+                nsAutoString rightChar;
+                accessKey.Right(rightChar, 1);
+                allKeybinding = rightChar + NS_LITERAL_STRING(";<Alt>") +
+                                rightChar;
+            }
+            else if ((role == ATK_ROLE_MENU) || (role == ATK_ROLE_MENU_ITEM)) {
+                //it is submenu, change from "s" to "s;<Alt>fs"
+                nsAutoString allKey = accessKey;
+                nsCOMPtr<nsIAccessible> grandParentAcc = parentAccessible;
+
+                while ((grandParentAcc) && (role != ATK_ROLE_MENU_BAR)) {
+                    nsAutoString grandParentKey;
+                    grandParentAcc->GetAccKeyboardShortcut(grandParentKey);
+
+                    if (!grandParentKey.IsEmpty()) {
+                        nsAutoString rightChar;
+                        grandParentKey.Right(rightChar, 1);
+                        allKey = rightChar + allKey;
+                    }
+
+                    nsCOMPtr<nsIAccessible> tempAcc = grandParentAcc;
+                    tempAcc->GetAccParent(getter_AddRefs(grandParentAcc));
+                    if (grandParentAcc)
+                        grandParentAcc->GetAccRole(&role);
+                }
+                allKeybinding = accessKey + NS_LITERAL_STRING(";<Alt>") +
+                                allKey;
+            }
+        }
+        else {
+            //default process, rarely happens.
+            nsAutoString rightChar;
+            accessKey.Right(rightChar, 1);
+            allKeybinding = rightChar + NS_LITERAL_STRING(";<Alt>") + rightChar;
+        }
+    }
+    else  //don't have accesskey
+        allKeybinding = NS_LITERAL_STRING(";");
+
+    //get shortcut
+    nsAutoString keyBinding, subShortcut;
+    rv = accessible->GetAccKeybinding(keyBinding);
+
+    if (NS_SUCCEEDED(rv) && !keyBinding.IsEmpty()) {
+        //change the shortcut from "Ctrl+Shift+L" to "<Control><Shift>L"
+        PRInt32 oldPos, curPos=0;
+        while ((curPos != -1) && (curPos < (PRInt32)keyBinding.Length())) {
+            oldPos = curPos;
+            nsAutoString subString;
+            curPos = keyBinding.FindChar('+', oldPos);
+            if (curPos == -1) {
+                keyBinding.Mid(subString, oldPos, keyBinding.Length() - oldPos);
+                subShortcut += subString;
+            }
+            else {
+                keyBinding.Mid(subString, oldPos, curPos - oldPos);
+      
+                //change "Ctrl" to "Control"
+                if (subString.EqualsIgnoreCase("ctrl"))
+                    subString = NS_LITERAL_STRING("Control");
+      
+                subShortcut += NS_LITERAL_STRING("<") + subString +
+                               NS_LITERAL_STRING(">");
+                curPos++;
+            }
+        }
+    }
+
+    allKeybinding += NS_LITERAL_STRING(";") + subShortcut;
+    mKeyBinding = NS_ConvertUCS2toUTF8(allKeybinding);
+
+    return mKeyBinding.get();
 }
 
 gboolean

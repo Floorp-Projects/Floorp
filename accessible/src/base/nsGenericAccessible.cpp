@@ -128,6 +128,12 @@ NS_IMETHODIMP nsGenericAccessible::GetAccKeyboardShortcut(nsAString& _retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* DOMString getKeybinding (); */
+NS_IMETHODIMP nsGenericAccessible::GetAccKeybinding(nsAString& _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* unsigned long getAccRole (); */
 NS_IMETHODIMP nsGenericAccessible::GetAccRole(PRUint32 *_retval)
 {

@@ -44,6 +44,7 @@ interface nsIAccessible : nsISupports
 
   readonly attribute AString accDescription;
   readonly attribute AString accKeyboardShortcut;
+  readonly attribute AString accKeybinding;
 
   readonly attribute unsigned long accRole;
   readonly attribute unsigned long accState;
