@@ -26,6 +26,7 @@
 #include "nsIDOMDocument.h"
 
 class nsIDOMNode;
+class nsIDOMNodeList;
 
 #define NS_IDOMXULDOCUMENT_IID \
  { 0x17ddd8c0, 0xc5f8, 0x11d2, \
@@ -36,16 +37,20 @@ public:
   static const nsIID& IID() { static nsIID iid = NS_IDOMXULDOCUMENT_IID; return iid; }
 
   NS_IMETHOD    GetElementByID(const nsString& aId, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMXULDOCUMENT   \
   NS_IMETHOD    GetElementByID(const nsString& aId, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMXULDOCUMENT(_to)  \
   NS_IMETHOD    GetElementByID(const nsString& aId, nsIDOMNode** aReturn) { return _to##GetElementByID(aId, aReturn); }  \
+  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to##GetElementsByAttribute(aName, aValue, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULDocumentClass(nsIScriptContext *aContext, void **aPrototype);

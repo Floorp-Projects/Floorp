@@ -26,6 +26,7 @@
 #include "nsIDOMElement.h"
 
 class nsIDOMNode;
+class nsIDOMNodeList;
 
 #define NS_IDOMXULELEMENT_IID \
  { 0x574ed81, 0xc088, 0x11d2, \
@@ -40,6 +41,8 @@ public:
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode)=0;
 
   NS_IMETHOD    DoCommand()=0;
+
+  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
 };
 
 
@@ -47,6 +50,7 @@ public:
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode);  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode);  \
   NS_IMETHOD    DoCommand();  \
+  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
 
 
 
@@ -54,6 +58,7 @@ public:
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode) { return _to##AddBroadcastListener(aAttr, aNode); }  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMNode* aNode) { return _to##RemoveBroadcastListener(aAttr, aNode); }  \
   NS_IMETHOD    DoCommand() { return _to##DoCommand(); }  \
+  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to##GetElementsByAttribute(aName, aValue, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULElementClass(nsIScriptContext *aContext, void **aPrototype);
