@@ -680,6 +680,7 @@ sub MakeResourceAliases()
    {
 		my($messenger_dir) = "$resource_dir" . "mailnews:messenger:";
 		BuildFolderResourceAliases(":mozilla:mailnews:ui:messenger:resources:",				"$messenger_dir");	
+#		BuildFolderResourceAliases(":mozilla:mailnews:mime:emitters:xml:resources:",		"$messenger_dir");	
 		
 		my($compose_dir) = "$resource_dir" . "mailnews:compose:";
 		BuildFolderResourceAliases(":mozilla:mailnews:ui:compose:resources:",				"$compose_dir");	
@@ -835,17 +836,23 @@ sub BuildMailNewsProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
-	BuildOneProject(":mozilla:mailnews:base:util:macbuild:msgUtil.mcp",			"MsgUtil$D.lib", "MsgUtil.toc", 0, 0, 0);
+	BuildOneProject(":mozilla:mailnews:base:util:macbuild:msgUtil.mcp",					"MsgUtil$D.lib", "MsgUtil.toc", 0, 0, 0);
 
-	BuildOneProject(":mozilla:mailnews:base:macbuild:msgCore.mcp",				"mailnews$D.shlb", "mailnews.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:base:macbuild:msgCore.mcp",						"mailnews$D.shlb", "mailnews.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:mailnews:compose:macbuild:msgCompose.mcp",		"MsgCompose$D.shlb", "MsgCompose.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:compose:macbuild:msgCompose.mcp",				"MsgCompose$D.shlb", "MsgCompose.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",					"MsgDB$D.shlb", "MsgDB.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",							"MsgDB$D.shlb", "MsgDB.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",			"MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",					"MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",					"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",							"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:mime:emitters:html:macbuild:htmlEmitter.mcp",	"htmlEmitter$D.shlb", "htmlEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:mime:emitters:xml:macbuild:xmlEmitter.mcp",		"xmlEmitter$D.shlb", "xmlEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+	BuildOneProject(":mozilla:mailnews:mime:emitters:raw:macbuild:rawEmitter.mcp",		"rawEmitter$D.shlb", "rawEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 }
 
