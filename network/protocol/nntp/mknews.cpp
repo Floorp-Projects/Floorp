@@ -18,9 +18,10 @@
 
 /* Please leave outside of ifdef for windows precompiled headers */
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
+extern "C" {
 #include "mkutils.h"
 #include "netutils.h"
-
+}
 
 #ifdef MOZILLA_CLIENT
 
@@ -64,6 +65,7 @@
 #define XPCOM_XOVER
 #define XPCOM_NEWSPARSE
 #define XPCOM_NEWSHOST
+#define XPCOM_NEWSGROUP
 
 #ifdef XPCOM_XOVER
 #include "nsIMsgXOVERParser.h"
@@ -75,6 +77,10 @@
 
 #ifdef XPCOM_NEWSHOST
 #include "nsIMsgNewsHost.h"
+#endif
+
+#ifdef XPCOM_NEWSGROUP
+#include "nsIMsgNewsgroup.h"
 #endif
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
@@ -418,7 +424,12 @@ typedef struct _NewsConData {
     /* for group command */
     char   *path; /* message id */
 
+#ifdef XPCOM_NEWSGROUP
+    nsIMsgNewsgroup *newsgroup;
+#else
     char   *group_name;
+#endif
+  
     int32   first_art;
     int32   last_art;
     int32   first_possible_art;
@@ -657,7 +668,11 @@ net_display_html_error_state (ActiveEntry *ce)
 					MSG_MarkMessageKeyRead(ce->URL_s->msg_pane, cd->article_num, "");
 				}
 				PUTSTRING(cd->output_buffer);
-				PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE, "<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n", urlScheme, cd->control_con->hostname, cd->group_name, XP_GetString(MK_MSG_EXPIRE_NEWS_ARTICLES));
+
+                char *group_name;
+                cd->newsgroup->GetName(&group_name);
+				PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE, "<P> <A HREF=\"%s//%s/%s?list-ids\">%s</A> </P>\n", urlScheme, cd->control_con->hostname, group_name, XP_GetString(MK_MSG_EXPIRE_NEWS_ARTICLES));
+                PR_Free(group_name);
 				PUTSTRING(cd->output_buffer);
 			  }
 
@@ -786,15 +801,25 @@ net_news_response (ActiveEntry * ce)
 				  net_news_last_username_probably_valid = FALSE;
 				}
 				else {
+#ifdef XPCOM_NEWSGROUP
+                  cd->newsgroup->SetUsername(NULL);
+                  cd->newsgroup->SetPassword(NULL);
+#else
 				  MSG_SetNewsgroupUsername(cd->pane, NULL);
 				  MSG_SetNewsgroupPassword(cd->pane, NULL);
+#endif
 				}
 			}
 			else {
 			  net_news_last_username_probably_valid = FALSE;
 			  if (NNTP_PASSWORD_RESPONSE == cd->next_state_after_response) {
+#ifdef XPCOM_NEWSGROUP
+                  cd->newsgroup->SetUsername(NULL);
+                  cd->newsgroup->SetPassword(NULL);
+#else
 				MSG_SetNewsgroupUsername(cd->pane, NULL);
 				MSG_SetNewsgroupPassword(cd->pane, NULL);
+#endif
 			  }
 			}
 
@@ -881,7 +906,7 @@ net_nntp_send_mode_reader_response (ActiveEntry * ce)
 #ifdef XPCOM_NEWSHOST
     PRBool pushAuth;
     nsresult rv = cd->news_host->IsPushAuth(&pushAuth);
-    if (rv && pushAuth)
+    if (NS_SUCCEEDED(rv) && pushAuth)
 #else
 	if (MSG_GetNewsHostPushAuth(cd->host))
 #endif
@@ -1199,7 +1224,7 @@ PRIVATE int net_send_list_subscriptions (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
     
-#ifdef LATER
+#if 0
 #ifdef XPCOM_NEWSHOST
     nsresult rv;
     PRBool searchable=FALSE;
@@ -1256,7 +1281,7 @@ PRIVATE int net_send_list_subscriptions_response (ActiveEntry *ce)
 
 	if ('.' != line[0])
 	{
-#ifdef LATER
+#if 0
 		char *urlScheme;
 		HG56946
 		char *url = PR_smprintf ("%s//%s/%s", urlScheme, cd->control_con->hostname, line);
@@ -1286,15 +1311,28 @@ net_send_first_nntp_command (ActiveEntry *ce)
 
 	if (cd->type_wanted == ARTICLE_WANTED)
 	  {
+#ifdef XPCOM_NEWSGROUP
 		const char *group = 0;
+#endif
 		uint32 number = 0;
 
+#ifdef XPCOM_NEWSGROUP
+        nsresult rv;
+        nsIMsgNewsgroup *newsgroup;
+        rv = cd->news_host->GetNewsGroupAndNumberOfID(cd->path,
+                                                      &newsgroup, &number);
+#else
 		MSG_NewsGroupAndNumberOfID (cd->pane, cd->path,
 									&group, &number);
-		if (group && number)
+#endif
+		if (NS_SUCCEEDED(rv) && newsgroup && number)
 		  {
 			cd->article_num = number;
+#ifdef XPCOM_NEWSGROUP
+            cd->newsgroup = newsgroup;
+#else
 			StrAllocCopy (cd->group_name, group);
+#endif
 
 			if (cd->control_con->current_group && !PL_strcmp (cd->control_con->current_group, group))
 			  cd->next_state = NNTP_SEND_ARTICLE_NUMBER;
@@ -1413,10 +1451,18 @@ net_send_first_nntp_command (ActiveEntry *ce)
          * the rest of it is lost.
          */
         char * slash;
+#ifdef XPCOM_NEWSGROUP
+        char * group_name;
+        nsresult rv;
+#endif
 
         StrAllocCopy(command, "GROUP ");
-
+#ifdef XPCOM_NEWSGROUP
+        rv = cd->newsgroup->GetName(&group_name);
+        slash = PL_strchr(group_name, '/');
+#else
         slash = PL_strchr(cd->group_name, '/');  /* look for a slash */
+#endif
         cd->first_art = 0;
         cd->last_art = 0;
         if (slash)
@@ -1425,7 +1471,11 @@ net_send_first_nntp_command (ActiveEntry *ce)
             (void) sscanf(slash+1, "%d-%d", &cd->first_art, &cd->last_art);
           }
 
+#ifdef XPCOM_NEWSGROUP
+        StrAllocCopy (cd->control_con->current_group, group_name);
+#else
 		StrAllocCopy (cd->control_con->current_group, cd->group_name);
+#endif
         StrAllocCat(command, cd->control_con->current_group);
       }
 	else if (cd->type_wanted == SEARCH_WANTED)
@@ -1455,9 +1505,17 @@ net_send_first_nntp_command (ActiveEntry *ce)
 		}
 		else
 		{
+            nsresult rv;
+            char *group_name;
+            
 			/* for XPAT, we have to GROUP into the group before searching */
 			StrAllocCopy (command, "GROUP ");
+#ifdef XPCOM_NEWSGROUP
+            rv = cd->newsgroup->GetName(&group_name);
+            StrAllocCat (command, group_name);
+#else
 			StrAllocCat (command, cd->group_name);
+#endif
 			cd->next_state = NNTP_RESPONSE;
 			cd->next_state_after_response = NNTP_XPAT_SEND;
 		}
@@ -1502,10 +1560,11 @@ net_send_first_nntp_command (ActiveEntry *ce)
 	}
 	else if (cd->type_wanted == IDS_WANTED)
 	{
+#ifndef XPCOM_NEWSGROUP
         char *slash = PL_strchr(cd->group_name, '/');  /* look for a slash */
         if (slash)
             *slash = '\0';
-
+#endif
 		cd->next_state = NNTP_LIST_GROUP;
 		return 0;
 	}
@@ -1586,7 +1645,15 @@ net_send_group_for_article (ActiveEntry * ce)
 {
   NewsConData * cd = (NewsConData *)ce->con_data;
 
+#ifdef XPCOM_NEWSGROUP
+  nsresult rv;
+  PR_FREEIF(cd->control_con->current_group);
+  rv = cd->newsgroup->GetName(&cd->control_con->current_group);
+  PR_ASSERT(NS_SUCCEEEDED(rv));
+#else
   StrAllocCopy (cd->control_con->current_group, cd->group_name);
+#endif
+  
   PR_snprintf(cd->output_buffer, 
 			OUTPUT_BUFFER_SIZE, 
 			"GROUP %.512s" CRLF, 
@@ -1879,15 +1946,24 @@ net_news_begin_authorize(ActiveEntry * ce)
 		(!net_news_last_username_probably_valid ||
 		 (last_username_hostname && 
 		  PL_strcasecmp(last_username_hostname, cd->control_con->hostname)))) {
+#ifdef XPCOM_NEWSGROUP
+      cd->newsgroup->GetUsername(&username);
+#else
 	  username = HG63218 (MSG_GetNewsgroupUsername(cd->pane));
+#endif
 	  if (username && last_username &&
 		  !PL_strcmp (username, last_username) &&
 		  (cd->previous_response_code == MK_NNTP_RESPONSE_AUTHINFO_OK || 
 		   cd->previous_response_code == MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK ||
 		   cd->previous_response_code == MK_NNTP_RESPONSE_GROUP_SELECTED)) {
 		FREEIF (username);
+#ifdef XPCOM_NEWSGROUP
+        cd->newsgroup->SetUsername(NULL);
+        cd->newsgroup->SetPassword(NULL);
+#else
 		MSG_SetNewsgroupUsername(cd->pane, NULL);
 		MSG_SetNewsgroupPassword(cd->pane, NULL);
+#endif
 	  }
 	}
 #endif
@@ -1898,13 +1974,21 @@ net_news_begin_authorize(ActiveEntry * ce)
 	 * backend calls MSG_Master::FindNewsHost() to locate the folderInfo and setting 
 	 * the username/password to the newsgroup folderInfo
 	 */
+#ifdef XPCOM_NEWSGROUP
+      cd->newsgroup->GetUsername(&username);
+#else
 	  username = HG63218 (MSG_GetNewsgroupUsername(cd->pane));
+#endif
 	  if (username && *username)
 	  {
 		StrAllocCopy(last_username, username);
 		StrAllocCopy(last_username_hostname, cd->control_con->hostname);
 		/* use it for only once */
+#ifdef XPCOM_NEWSGROUP
+        cd->newsgroup->SetUsername(NULL);
+#else
 		MSG_SetNewsgroupUsername(cd->pane, NULL);
+#endif
 	  }
 	  else {
 		  /* empty username; free and clear it so it will work with
@@ -1978,9 +2062,17 @@ net_news_begin_authorize(ActiveEntry * ce)
 	}
 
 #ifdef CACHE_NEWSGRP_PASSWORD
+#ifdef XPCOM_NEWSGROUP
+    if (NS_SUCCEEDED(cd->newsgroup->GetUsername(&username)) {
+#else
 	if (cd->pane && !MSG_GetNewsgroupUsername(cd->pane)) {
+#endif
 	  munged_username = HG64643 (username);
+#ifdef XPCOM_NEWSGROUP
+      cd->newsgroup->SetUsername(munged_username);
+#else
 	  MSG_SetNewsgroupUsername(cd->pane, munged_username);
+#endif
 	  PR_FreeIF(munged_username);
 	}
 #endif
@@ -2047,9 +2139,15 @@ net_news_authorize_response(ActiveEntry * ce)
 
 		if (cd->pane)
 		{
+#ifdef XPCOM_NEWSGROUP
+            cd->newsgroup->GetPassword(&password);
+            password = HG63218 (password);
+            cd->newsgroup->SetPassword(NULL);
+#else
 			password = HG63218 (MSG_GetNewsgroupPassword(cd->pane));
 			/* use it only once */
 			MSG_SetNewsgroupPassword(cd->pane, NULL);
+#endif
 		}
 
         if (net_news_last_username_probably_valid 
@@ -2059,7 +2157,12 @@ net_news_authorize_response(ActiveEntry * ce)
           {
 #ifdef CACHE_NEWSGRP_PASSWORD
 			if (cd->pane)
+#ifdef XPCOM_NEWSGROUP
+            cd->newsgroup->GetPassword(&password);
+            password = HG63218 (password);
+#else
 				password = HG63218(MSG_GetNewsgroupPassword(cd->pane));
+#endif
 #else
             StrAllocCopy(password, last_password);
 #endif
@@ -2114,9 +2217,19 @@ net_news_authorize_response(ActiveEntry * ce)
 		}
 
 #ifdef CACHE_NEWSGRP_PASSWORD
+#ifdef XPCOM_NEWSGROUP
+        char *garbage_password;
+        nsresult rv;
+        rv = cd->newsgroup->GetPassword(&garbage_password);
+        if (!NS_SUCCEEDED(rv)) {
+          PR_Free(garbage_password);
+          munged_password = HG64643(password);
+          cd->newsgroup->SetPassword(munged_password);
+#else
 		if (cd->pane && !MSG_GetNewsgroupPassword(cd->pane)) {
 		  munged_password = HG64643(password);
 		  MSG_SetNewsgroupPassword(cd->pane, munged_password);
+#endif
 		  PR_FreeIF(munged_password);
 		}
 #endif
@@ -2144,7 +2257,11 @@ net_news_authorize_response(ActiveEntry * ce)
 									cd->response_txt ? cd->response_txt : "");
 #ifdef CACHE_NEWSGRP_PASSWORD
 		if (cd->pane)
+#ifdef XPCOM_NEWSGROUP
+          cd->newsgroup->SetUsername(NULL);
+#else
 		  MSG_SetNewsgroupUsername(cd->pane, NULL);
+#endif
 #endif
 		net_news_last_username_probably_valid = FALSE;
 
@@ -2202,7 +2319,11 @@ net_news_password_response(ActiveEntry * ce)
 									cd->response_txt ? cd->response_txt : "");
 #ifdef CACHE_NEWSGRP_PASSWORD
 		if (cd->pane)
+#ifdef XPCOM_NEWSGROUP
+          cd->newsgroup->SetPassword(NULL);
+#else
 		  MSG_SetNewsgroupPassword(cd->pane, NULL);
+#endif
 #endif
         return(MK_NNTP_AUTH_FAILED);
 	  }
@@ -2293,11 +2414,12 @@ net_process_newgroups (ActiveEntry *ce)
 #endif
 		{
 #ifdef XPCOM_NEWSHOST
-          cd->news_host->GetFirstGroupNeedingExtraInfo(&cd->group_name);
+          nsresult rv;
+          rv = cd->news_host->GetFirstGroupNeedingExtraInfo(&cd->newsgroup);
 #else
 			cd->group_name = MSG_GetFirstGroupNeedingExtraInfo(cd->host);
 #endif
-			if (cd->group_name)
+			if (NS_SUCCEEDED(rv) && cd->newsgroup)
 			{
 				cd->next_state = NNTP_LIST_XACTIVE;
 #ifdef DEBUG_bienvenu1
@@ -2521,10 +2643,15 @@ net_read_xover_begin (ActiveEntry *ce)
 	/* We now know there is a summary line there; make sure it has the
 	   right numbers in it. */
 #ifdef XPCOM_NEWSHOST
-    cd->news_host->DisplaySubscribedGroup(cd->group_name,
+    nsresult rv;
+    char *group_name;
+    cd->newsgroup->GetName(&group_name);
+    
+    cd->news_host->DisplaySubscribedGroup(group_name,
                                           cd->first_possible_art,
                                           cd->last_possible_art,
                                           count, TRUE);
+    PR_Free(group_name);
 #else
 	ce->status = MSG_DisplaySubscribedGroup(cd->pane,
 											cd->host,
@@ -2621,7 +2748,7 @@ net_figure_next_chunk(ActiveEntry *ce)
 	cd->article_num = cd->first_art;
 #ifdef XPCOM_XOVER
     rv = NS_NewMsgXOVERParser(&cd->xover_parser,
-                                   cd->news_host, cd->group_name,
+                                   cd->news_host, cd->newsgroup,
                                    cd->first_art, cd->last_art,
                                    cd->first_possible_art,
                                    cd->last_possible_art);
@@ -3679,10 +3806,20 @@ static int net_xpat_send (ActiveEntry *ce)
 static int net_list_pretty_names(ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
+
+#ifdef XPCOM_NEWSGROUP
+    char *group_name;
+    nsresult rv = cd->newsgroup->GetName(&group_name);
+#endif
 	PR_snprintf(cd->output_buffer, 
 			OUTPUT_BUFFER_SIZE, 
-			"LIST PRETTYNAMES %.512s" CRLF, 
-			cd->group_name ? cd->group_name : "");
+			"LIST PRETTYNAMES %.512s" CRLF,
+#ifdef XPCOM_NEWSGROUP
+            NS_SUCCEEDED(rv) ? group_name : "");
+#else
+		  	cd->group_name ? cd->group_name : "");
+#endif
+    
     ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 #ifdef DEBUG_bienvenu1
@@ -3762,10 +3899,20 @@ static int net_list_pretty_names_response(ActiveEntry *ce)
 static int net_list_xactive(ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
+    
+#ifdef XPCOM_NEWSGROUP
+    char *group_name;
+    nsresult rv = cd->newsgroup->GetName(&group_name);
+#endif
+    
 	PR_snprintf(cd->output_buffer, 
 			OUTPUT_BUFFER_SIZE, 
-			"LIST XACTIVE %.512s" CRLF, 
+			"LIST XACTIVE %.512s" CRLF,
+#ifdef XPCOM_NEWSGROUP
+            group_name);
+#else
 			cd->group_name);
+#endif
     ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
@@ -3864,16 +4011,22 @@ static int net_list_xactive_response(ActiveEntry *ce)
 			if (cd->type_wanted == NEW_GROUPS && MSG_QueryNewsExtension(cd->host, "XACTIVE"))
 #endif
 			{
-				char *old_group_name = cd->group_name;
-#ifdef XPCOM_NEWSHOST
-                cd->news_host->GetFirstGroupNeedingExtraInfo(&cd->group_name);
+#ifdef XPCOM_NEWSGROUP
+                nsIMsgNewsgroup* old_newsgroup = cd->newsgroup;
+                cd->news_host->GetFirstGroupNeedingExtraInfo(&cd->newsgroup);
+                if (old_newsgroup && cd->newsgroup &&
+                    old_newsgroup != cd->newsgroup)
+                /* make sure we're not stuck on the same group */
+                {
+                    NS_RELEASE(old_newsgroup);
 #else
+				char *old_group_name = cd->group_name;
 				cd->group_name = MSG_GetFirstGroupNeedingExtraInfo(cd->host);
-#endif
-				/* make sure we're not stuck on the same group... */
 				if (old_group_name && cd->group_name && PL_strcmp(old_group_name, cd->group_name))
+				/* make sure we're not stuck on the same group... */
 				{
 					PR_Free(old_group_name);
+#endif
 #ifdef DEBUG_bienvenu1
 					PR_LogPrint("listing xactive for %s\n", cd->group_name);
 #endif
@@ -3883,8 +4036,13 @@ static int net_list_xactive_response(ActiveEntry *ce)
 				}
 				else
 				{
+#ifdef XPCOM_NEWSGROUP
+                    NS_RELEASE(old_newsgroup);
+                    cd->newsgroup = NULL;
+#else
 					FREEIF(old_group_name);
 					cd->group_name = NULL;
+#endif
 				}
 			}
 #ifdef XPCOM_NEWSHOST
@@ -3909,15 +4067,23 @@ static int net_list_group(ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
     nsresult rv;
+#ifdef XPCOM_NEWSGROUP
+    char *group_name;
+    rv = cd->newsgroup->GetName(&group_name);
+#endif
     
 	PR_snprintf(cd->output_buffer, 
 			OUTPUT_BUFFER_SIZE, 
-			"listgroup %.512s" CRLF, 
+			"listgroup %.512s" CRLF,
+#ifdef XPCOM_NEWSGROUP
+                group_name);
+#else
 			cd->group_name);
+#endif
     
 #ifdef XPCOM_NEWSPARSE
     rv = NS_NewMsgNewsArticleList(&cd->article_list,
-                                  cd->news_host, cd->group_name);
+                                  cd->news_host, cd->newsgroup);
 #else
 	MSG_InitAddArticleKeyToGroup(cd->pane, cd->host, cd->group_name,
 							   &cd->newsgroup_parse_state);
@@ -4485,7 +4651,8 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
   memset(cd, 0, sizeof(NewsConData));
   ce->URL_s->content_length = 0;
   StrAllocCopy(cd->proxy_server, proxy_server);
-
+  
+#ifdef USE_PANES
   cd->pane = ce->URL_s->msg_pane;
   if (!cd->pane)
   {
@@ -4502,7 +4669,8 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
 	status = -1;				/* ### */
 	goto FAIL;
   }
-
+#endif
+  
 #ifdef DEBUG
   {
 	char urlDate[64];
@@ -4565,7 +4733,11 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
 	cancel_p = TRUE;
 
   StrAllocCopy(cd->path, message_id);
+#ifdef XPCOM_NEWSGROUP
+  cd->newsgroup->SetName(group);
+#else
   StrAllocCopy(cd->group_name, group);
+#endif
 
   /* make sure the user has a news host configured */
   
@@ -4701,14 +4873,22 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
 		if (userName)
 		{
 		    char *mungedUsername = HG64643(userName);
+#ifdef XPCOM_NEWSGROUP
+            cd->newsgroup->SetUsername(mungedUsername);
+#else
 			MSG_SetNewsgroupUsername(cd->pane, mungedUsername);
+#endif
 			PR_FREEIF(mungedUsername);
 			PR_Free(userName);
 		}
 		if (password)
 		{
 		    char *mungedPassword = HG64643(password);
+#ifdef XPCOM_NEWSGROUP
+            cd->newsgroup->SetPassword(mungedPassword);
+#else
 			MSG_SetNewsgroupPassword(cd->pane, mungedPassword);
+#endif
 			PR_FREEIF(mungedPassword);
 			PR_Free(password);
 		}
@@ -4731,9 +4911,14 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
   {
 		const char *group = 0;
 		uint32 number = 0;
+#ifdef XPCOM_NEWSGROUP
+        nsresult rv;
+        PRBool articleIsOffline;
+        rv =cd->newsgroup->IsOfflineArticle(number,&articleIsOffline);
+#else
 		XP_Bool articleIsOffline = MSG_IsOfflineArticle (cd->pane, cd->path, &group, &number);
-
-		if (NET_IsOffline() || articleIsOffline)
+#endif
+		if (NET_IsOffline() || (NS_SUCCEEDED(rv) && articleIsOffline))
 		{
 			ce->local_file = TRUE;
 			cd->articleIsOffline = articleIsOffline;
@@ -5329,11 +5514,7 @@ net_ProcessNews (ActiveEntry *ce)
 
             case NEWS_PROCESS_XOVER:
 		    case NEWS_PROCESS_BODIES:
-			    if (cd->group_name && PL_strstr (cd->group_name, ".emacs"))
-				  /* This is a joke!  Don't internationalize it... */
-			      NET_Progress(ce->window_id, "Garbage collecting...");
-			    else
-			      NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_SORT_ARTICLES));
+                NET_Progress(ce->window_id, XP_GetString(XP_PROGRESS_SORT_ARTICLES));
 				  ce->status = net_process_xover(ce);
                 break;
 
@@ -5568,7 +5749,6 @@ net_ProcessNews (ActiveEntry *ce)
 				else
 				{
 #ifdef XPCOM_NEWSPARSE
-                  nsresult rv;
                   /* XXX - state is stored in the MSG_Pane cd->pane */
                   NS_RELEASE(cd->article_list);
 #else
@@ -5589,7 +5769,11 @@ net_ProcessNews (ActiveEntry *ce)
             	if(cd->tcp_con_data)
                 	NET_FreeTCPConData(cd->tcp_con_data);
 
+#ifdef XPCOM_NEWSGROUP
+                NS_RELEASE(cd->newsgroup);
+#else
                 FREEIF(cd->group_name);
+#endif
 
 				FREEIF (cd->cancel_id);
 				FREEIF (cd->cancel_from);
