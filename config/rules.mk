@@ -423,7 +423,7 @@ endif
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
 #
-$(PROGRAM): $(PROGOBJS)
+$(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS)
 ifeq ($(OS_ARCH),OS2)
 	$(LINK) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS)  $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(DEF_FILE)
 else
