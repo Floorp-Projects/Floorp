@@ -43,6 +43,8 @@ CSRCS =             \
 	atomic.c		\
 	attach.c		\
 	bigfile.c		\
+	bigfile2.c		\
+	bigfile3.c		\
 	cleanup.c		\
 	cltsrv.c		\
 	concur.c	    \
