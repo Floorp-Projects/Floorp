@@ -364,7 +364,7 @@ bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
 
 [inspector]
-bin/components/inspector.so
+bin/components/libinspector.so
 bin/components/inspector.xpt
 bin/chrome/inspector.jar
 bin/defaults/pref/inspector.js
