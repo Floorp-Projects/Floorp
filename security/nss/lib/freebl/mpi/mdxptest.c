@@ -190,7 +190,8 @@ testModExp( const unsigned char *      modulusBytes,
     ** So, mp_clear will do the right thing below. 
     */
     if (mperr == MP_OKAY) {
-      mperr  = mp_read_unsigned_octets(&modulus,  modulusBytes,  modulus_len );
+      mperr  = mp_read_unsigned_octets(&modulus,  
+		modulusBytes + (sizeof default_n - modulus_len),  modulus_len );
       mperr += mp_read_unsigned_octets(&base,     input,         modulus_len );
       mp_set(&exponent, expo);
       if (mperr == MP_OKAY) {
@@ -235,7 +236,8 @@ doModExp(   const unsigned char *      modulusBytes,
     ** So, mp_clear will do the right thing below. 
     */
     if (mperr == MP_OKAY) {
-      mperr  = mp_read_unsigned_octets(&modulus,  modulusBytes,  modulus_len );
+      mperr  = mp_read_unsigned_octets(&modulus,  
+		modulusBytes + (sizeof default_n - modulus_len),  modulus_len );
       mperr += mp_read_unsigned_octets(&exponent, exponentBytes, modulus_len );
       mperr += mp_read_unsigned_octets(&base,     input,         modulus_len );
       if (mperr == MP_OKAY) {
@@ -275,15 +277,20 @@ main(int argc, char **argv)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    if (argc == 2) {
+    if (argc >= 2) {
 	iters = atol(argv[1]);
     }
 
+    if (argc >= 3) {
+	modulus_len = atol(argv[2]);
+    } else 
+	modulus_len = sizeof default_n;
+
     /* no library init function !? */
 
-    modulus_len = sizeof default_n;
     memset(buf, 0x41, sizeof buf);
 
+  if (iters < 2) {
     testNewFuncs( default_n, modulus_len);
     testNewFuncs( default_n+1, modulus_len - 1);
     testNewFuncs( default_n+2, modulus_len - 2);
@@ -304,7 +311,7 @@ main(int argc, char **argv)
     printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
     rv = testModExp(default_n, 3, buf, buf2, modulus_len);
     dumpBytes((unsigned char *)buf2, modulus_len);
-
+  }
     printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
     rv = doModExp(default_n, default_d, buf, buf2, modulus_len);
     if (rv != 0) {
