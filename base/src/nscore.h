@@ -64,7 +64,9 @@ typedef PRUcs2 PRUnichar;
 #else
 /* XXX do something useful? */
 #define NS_IMPORT
+#define NS_IMPORT_(type) type
 #define NS_EXPORT
+#define NS_EXPORT_(type) type
 #endif
 
 #ifdef _IMPL_NS_BASE
