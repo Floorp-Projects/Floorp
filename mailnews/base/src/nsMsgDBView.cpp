@@ -1600,10 +1600,20 @@ nsresult nsMsgDBView::SetReadByIndex(nsMsgViewIndex index, PRBool read)
 
 	if (!IsValidIndex(index))
 		return NS_MSG_INVALID_DBVIEW_INDEX;
-	if (read)
+	if (read) {
 		OrExtraFlag(index, MSG_FLAG_READ);
-	else
+        // MarkRead() will clear this flag in the db
+        // and then call OnKeyChange(), but
+        // because we are the instigator of the change
+        // we'll ignore the change.
+        //
+        // so we need to clear it in m_flags
+        // to keep the db and m_flags in sync
+		AndExtraFlag(index, ~MSG_FLAG_NEW);
+    }
+	else {
 		AndExtraFlag(index, ~MSG_FLAG_READ);
+    }
 
   nsCOMPtr <nsIMsgDatabase> dbToUse;
   rv = GetDBForViewIndex(index, getter_AddRefs(dbToUse));
