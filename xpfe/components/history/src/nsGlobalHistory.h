@@ -59,7 +59,6 @@
 #include "nsITimer.h"
 #include "nsIAutoCompleteSession.h"
 
-
 //----------------------------------------------------------------------
 //
 //  nsMdbTableEnumerator
@@ -109,60 +108,6 @@ class searchTerm;
 // Size of visit count boost to give to urls which are sites or paths
 #define AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST 5
 
-
-//----------------------------------------------------------------------
-// Perceptron definitions
-// XXX The class definitions need to go in a separate header file
-
-class nsPerceptron 
-{  
-private:
-  nsPerceptron();
-public:  
-  nsPerceptron(PRInt32 aNumFeatures);
-  ~nsPerceptron() 
-    { 
-      SaveWeights(); 
-      if ((mNumWeights > 0) && (mWeights != NULL))
-      {
-        delete [] mWeights;
-      }
-      mNumWeights = 0;
-    }
-
-  // Train the perceptron on an input instance.  This will cause it
-  // to update its weights so that its linear
-  virtual void Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput);
-  virtual void Test (PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput);  
-
-  void LoadWeights();
-  void SaveWeights();
-  
-
-protected:
-
-  PRFloat64* mWeights; // array of weights
-  PRInt32 mNumWeights;
-};
-
-class nsSigmoidPerceptron : public nsPerceptron
-{ 
-private:
-  nsSigmoidPerceptron();
-public:  
-  nsSigmoidPerceptron(PRInt32 aNumFeatures);
-  ~nsSigmoidPerceptron() {}
-
-  virtual void Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput);
-  virtual void Test(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput);
-
-private:
-  PRFloat64 Sigmoid(PRFloat64 aNum);
-}; 
-
-//----------------------------------------------------------------------
-
-
 //----------------------------------------------------------------------
 //
 // nsGlobalHistory
@@ -170,6 +115,7 @@ private:
 //   This class is the browser's implementation of the
 //   nsIGlobalHistory interface.
 //
+
 
 // Used to describe what prefixes shouldn't be cut from
 // history urls when doing an autocomplete url comparison.
@@ -321,21 +267,7 @@ protected:
   
   nsresult NotifyAssert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
   nsresult NotifyUnassert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
-  nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);  
-
-  // Autocomplete learning related
-  PRInt32 mDataCaptureMode;
-  PRInt32 mLearningMode;
-  // The learning engine used to learn a user's autocomplete behavior
-  nsSigmoidPerceptron* mAutoCompleteLearner;
-  PRFloat64* mACFeatures;    
-  nsresult FillInputFeatures(nsAString &aUrl, PRFloat64 *aFeatures);  
-  
-  // URL data capture related
-  FILE* mURLDataFile;
-  PRInt64 mURLID;
-  nsresult WriteURLData(nsAString& aURL, PRFloat64* aURLFeatures);
-  nsresult AssignUniqueURLID(nsIMdbRow *row);
+  nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);
 
   //
   // row-oriented stuff
@@ -360,16 +292,7 @@ protected:
   mdb_column kToken_HostnameColumn;
   mdb_column kToken_HiddenColumn;
   mdb_column kToken_TypedColumn;
-  
-  // Frequency-Recency metrics for url
-  mdb_column kToken_FRFastDecayColumn;
-  mdb_column kToken_FRSlowDecayColumn;
-  
-  // Unique ID of url.  Needed to identify urls output to 
-  // mURLDataFile when the data capture mode doesn't allow the
-  // url path to be output
-  mdb_column kToken_URLIDColumn;
-  
+
   // meta-data tokens
   mdb_column kToken_LastPageVisited;
 
@@ -379,7 +302,6 @@ protected:
   nsresult AddPageToDatabase(const char *aURL,
                              PRInt64 aDate);
   nsresult AddExistingPageToDatabase(nsIMdbRow *row,
-                                     const char *aURL,
                                      PRInt64 aDate,
                                      PRInt64 *aOldDate,
                                      PRInt32 *aOldCount);
@@ -393,20 +315,13 @@ protected:
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt32 aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const char *aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRUnichar *aValue);
-  nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRFloat64 aValue);
 
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAString& aResult);
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsACString& aResult);
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64* aResult);
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32* aResult);
-  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRFloat64* aResult);
-    
+
   nsresult FindRow(mdb_column aCol, const char *aURL, nsIMdbRow **aResult);
-
-
-  nsresult FindRow(mdb_column aCol, PRInt64 aValue, nsIMdbRow **aResult);
-  nsresult FindRowAndID(mdb_column aCol, const char *aURL, 
-                        nsIMdbRow **aResult, PRInt64 *aRowID);
 
   //
   // misc unrelated stuff

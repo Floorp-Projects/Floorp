@@ -86,9 +86,6 @@
 #include "nsIPrefBranchInternal.h"
 
 #include "nsIObserverService.h"
-#include "prdtoa.h"
-#include "nsIBookmarksService.h"
-#include <math.h>
 
 PRInt32 nsGlobalHistory::gRefCnt;
 nsIRDFService* nsGlobalHistory::gRDFService;
@@ -113,8 +110,6 @@ nsIPrefBranch* nsGlobalHistory::gPrefBranch = nsnull;
 #define PREF_BROWSER_STARTUP_PAGE               "startup.page"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
 #define PREF_AUTOCOMPLETE_ENABLED               "urlbar.autocomplete.enabled"
-#define PREF_AUTOCOMPLETE_LEARNING_MODE         "urlbar.autocomplete.learning.mode"
-#define PREF_HISTORY_DATACAPTURE_MODE           "history.url.datacapture.mode"
 
 #define FIND_BY_AGEINDAYS_PREFIX "find:datasource=history&match=AgeInDays&method="
 
@@ -126,189 +121,6 @@ nsIPrefBranch* nsGlobalHistory::gPrefBranch = nsnull;
 #define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
 
 #define MSECS_PER_DAY (PR_MSEC_PER_SEC * 60 * 60 * 24)
-
-// ---------------------------
-// Autocomplete learning modes
-// ---------------------------
-
-// No learning
-#define ACL_NONE                0
-// Only train the neural network.  No user visible changes.
-#define ACL_ENABLE_TRAINING     1
-// Train the neural network and show its recommendation to the user.
-#define ACL_AFFECT_URL_LIST     2
-
-// --------------------------
-// URL data capture modes
-// --------------------------
-
-// URL information is captured for all urls that are loaded by the user
-// as well as for all urls matched by the autocomplete search engine
-// when the user types a partial url in the urlbar.
-
-// No data capture
-#define UDC_NONE                     0
-// Capture url features only.  Don't store the url.  The url features are
-// numeric and the original url *cannot* be reconstructed from it.
-#define UDC_WITHOUT_URL_INFO  1
-// Capture url features and the url.
-#define UDC_WITH_URL_INFO     2
-
-// ---------------------------
-
-const PRInt32 AC_NUM_URL_FEATURES = 44;
-
-// This is the learning rate for the perceptron.  The range of values is [0, 1]
-// It is used in to update the internal weights of the perceptron.
-// The perceptron update rule is:
-//
-//   weight[i] = weight[i] + LEARN_RATE * ERROR * Input[i]
-// 
-// See http://diwww.epfl.ch/mantra/tutorial/english/perceptron/html/learning.html
-// for an explanation of the perceptron update rule.
-const PRFloat64 LEARN_RATE = 0.5;
-
-// The following 4 constants are explained in the big comment
-// before FillInputFeatures.
-const PRFloat64 HISTORY_FAST_DECAY_CONSTANT = 0.2;
-const PRFloat64 HISTORY_SLOW_DECAY_CONSTANT = 0.8;
-const PRFloat64 BOOKMARK_FAST_DECAY_CONSTANT = 0.2;
-const PRFloat64 BOOKMARK_SLOW_DECAY_CONSTANT = 0.8;
-
-const char* NS_AUTOCOMPLETE_WEIGHTS_FILE = "ac-weights.txt";
-
-//----------------------------------------------------------------------
-// Perceptron implementation
-// XXX The implementations need to be moved out to their own .cpp file
-
-// XXX This should move to an Init method so that error handling can happen.
-nsPerceptron::nsPerceptron(PRInt32 aNumFeatures)
-{  
-  mWeights = nsnull;
-  if (aNumFeatures > 0)
-  {
-    mWeights = new PRFloat64[aNumFeatures];
-  }
-
-  if (mWeights)
-  {
-    mNumWeights = aNumFeatures;
-    LoadWeights();
-  }
-}
-
-void
-nsPerceptron::Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput)
-{
-  double output = 0.0;
-  double delta = 0.0;
-
-  // Calculate output
-  Test(aInputs, aNumInputs, &output);
-
-  delta = (double) aTargetOutput - (double) output;
-
-  // Update weights based on delta
-  for (PRInt32 i = 0; i < mNumWeights; i++)
-  {
-    mWeights[i] += LEARN_RATE * delta * aInputs[i];
-  }
-}
-
-void
-nsPerceptron::Test(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput)
-{
-  *aOutput = 0;
-
-  // Calculate output
-  for (PRInt32 i = 0; i < aNumInputs; i++)
-  {
-    *aOutput += mWeights[i] * aInputs[i];
-  }
-}
-
-void
-nsPerceptron::LoadWeights()
-{
-  nsCOMPtr<nsIFile> file;
-  FILE* from = 0;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-
-  if (NS_SUCCEEDED(rv)) 
-  {
-    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
-    localFile->AppendNative(NS_LITERAL_CSTRING(NS_AUTOCOMPLETE_WEIGHTS_FILE));
-    localFile->OpenANSIFileDesc("r", &from);
-  }
-
-  if (from)
-  {
-    for (PRInt32 i = 0; i < mNumWeights; i++)
-    {    
-      fscanf(from, "%lf", mWeights[i]);
-    }
-    fclose(from);
-  }
-  else
-  {
-    // Initialize all weights to zero
-    for (PRInt32 i = 0; i < mNumWeights; i++)
-    {
-      mWeights[i] = 0;
-    }
-  }
-}
-
-void
-nsPerceptron::SaveWeights()
-{
-  nsCOMPtr<nsIFile> file;
-  FILE* to = 0;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-
-  if (NS_SUCCEEDED(rv)) 
-  {
-    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
-    localFile->AppendNative(NS_LITERAL_CSTRING("ac-weights.txt"));
-    localFile->OpenANSIFileDesc("w", &to);
-  }
-
-  if (to)
-  {
-    for (PRInt32 i = 0; i < mNumWeights; i++)
-    {
-      fprintf(to, "%.16lf\n", mWeights[i]);
-    }
-    fclose(to);
-  }
-}
-
-nsSigmoidPerceptron::nsSigmoidPerceptron(PRInt32 aNumFeatures)
-: nsPerceptron(aNumFeatures)
-{
-  // empty
-}
-
-void
-nsSigmoidPerceptron::Train(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64 aTargetOutput)
-{
-  nsPerceptron::Train(aInputs, aNumInputs, aTargetOutput);
-}
-
-void
-nsSigmoidPerceptron::Test(PRFloat64* aInputs, PRInt32 aNumInputs, PRFloat64* aOutput)
-{
-  nsPerceptron::Test(aInputs, aNumInputs, aOutput);
-  *aOutput = Sigmoid(*aOutput);
-}
-
-PRFloat64 nsSigmoidPerceptron::Sigmoid(PRFloat64 aNum)
-{
-  return (1.0 / (1.0 + exp(-aNum)));
-}
-
-
-//----------------------------------------------------------------------
 
 //----------------------------------------------------------------------
 //
@@ -504,7 +316,7 @@ nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
   // so we want to expire them asap.  (if they were valid, they'd
   // have been unhidden -- see AddExistingPageToDatabase)
   if (HasCell(mEnv, row, kToken_HiddenColumn) && HasCell(mEnv, row, kToken_TypedColumn))
-    return PR_TRUE;    
+    return PR_TRUE;
 
   PRInt64 lastVisitedTime;
   rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastVisitedTime);
@@ -760,15 +572,6 @@ nsGlobalHistory::~nsGlobalHistory()
   if (mExpireNowTimer)
     mExpireNowTimer->Cancel();
 
-  if (mURLDataFile)
-  {
-    fclose(mURLDataFile);
-  }
-
-  if (mACFeatures)
-  {
-    delete [] mACFeatures;
-  }
 }
 
 
@@ -852,7 +655,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     // update the database, and get the old info back
     PRInt64 oldDate;
     PRInt32 oldCount;
-    rv = AddExistingPageToDatabase(row, aURL, aDate, &oldDate, &oldCount);
+    rv = AddExistingPageToDatabase(row, aDate, &oldDate, &oldCount);
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddExistingPageToDatabase failed; see bug 88961");
     if (NS_FAILED(rv)) return rv;
     
@@ -902,7 +705,6 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
 
 nsresult
 nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
-                                           const char *aURL,
                                            PRInt64 aDate,
                                            PRInt64 *aOldDate,
                                            PRInt32 *aOldCount)
@@ -924,51 +726,10 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   rv = GetRowValue(row, kToken_VisitCountColumn, aOldCount);
   if (NS_FAILED(rv) || *aOldCount < 1)
     *aOldCount = 1;             // assume we've visited at least once
-  
+
   // ...now set the new date.
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_VisitCountColumn, (*aOldCount) + 1);
-
-  if (mLearningMode > ACL_NONE || mDataCaptureMode > UDC_NONE)
-  {
-    // Update the two Frequency-Recency metrics
-    PRFloat64 m;  
-    PRInt32 ageInDays = GetAgeInDays(NormalizeTime(GetNow()), *aOldDate);
-    rv = GetRowValue(row, kToken_FRFastDecayColumn, &m);
-    if (NS_FAILED(rv)) return rv;
-    m = 1.0 + (PRFloat64) (pow(HISTORY_FAST_DECAY_CONSTANT, (PRFloat64) ageInDays)) * m;
-    SetRowValue(row, kToken_FRFastDecayColumn, m);
-    rv = GetRowValue(row, kToken_FRSlowDecayColumn, &m);
-    if (NS_FAILED(rv)) return rv;
-    m = 1.0 + (PRFloat64) (pow(HISTORY_SLOW_DECAY_CONSTANT, (PRFloat64) ageInDays)) * m;
-    SetRowValue(row, kToken_FRSlowDecayColumn, m);
-  }
-
-  if (mDataCaptureMode > UDC_NONE && mURLDataFile)
-  {
-    fprintf(mURLDataFile, "<add-existing-url>\n");    
-    nsAutoString url = NS_ConvertUTF8toUCS2(aURL);
-    rv = FillInputFeatures(url, mACFeatures);
-    if (NS_SUCCEEDED(rv))
-      WriteURLData(url, mACFeatures);
-    fprintf(mURLDataFile, "</add-existing-url>\n");
-    fflush(mURLDataFile);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGlobalHistory::AssignUniqueURLID(nsIMdbRow *row)
-{
-  nsCOMPtr<nsIMdbRow> oldRow;
-  nsresult rv = NS_OK;    
-  mURLID = PR_Now();
-  while (NS_SUCCEEDED(rv))
-  {
-    rv = FindRow(kToken_URLIDColumn, ++mURLID, getter_AddRefs(oldRow));
-  }
-  SetRowValue(row, kToken_URLIDColumn, mURLID);
 
   return NS_OK;
 }
@@ -978,7 +739,7 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
                                       PRInt64 aDate,
                                       nsIMdbRow **aResult)
 {
-  mdb_err err;  
+  mdb_err err;
   
   // Create a new row
   mdbOid rowId;
@@ -999,25 +760,6 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   // Set the date.
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
-
-  if (mLearningMode > ACL_NONE || mDataCaptureMode > UDC_NONE)
-  {
-    // Initialize the Frequency-Recency metrics
-    SetRowValue(row, kToken_FRFastDecayColumn, (PRFloat64) 1.0);
-    SetRowValue(row, kToken_FRSlowDecayColumn, (PRFloat64) 1.0);
-  }
-
-  if (mDataCaptureMode > UDC_NONE && mURLDataFile)
-  {
-    fprintf(mURLDataFile, "<add-new-url>\n");    
-    nsAutoString url = NS_ConvertUTF8toUCS2(aURL);
-    nsresult rv;    
-    rv = FillInputFeatures(url, mACFeatures);
-    if (NS_SUCCEEDED(rv))
-      WriteURLData(url, mACFeatures);
-    fprintf(mURLDataFile, "</add-new-url>\n");
-    fflush(mURLDataFile);
-  }
 
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL), nsnull, nsnull);
@@ -1102,22 +844,6 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt32 aVa
 }
 
 nsresult
-nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRFloat64 aValue)
-{
-  mdb_err err;
-  
-  nsCAutoString buf; buf.AppendFloat(aValue);
-  mdbYarn yarn = { (void *)buf.get(), buf.Length(), buf.Length(), 0, 0, nsnull };
-
-  err = aRow->AddColumn(mEnv, aCol, &yarn);
-  
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  return NS_OK;
-  
-}
-
-nsresult
 nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
                              nsAString& aResult)
 {
@@ -1182,32 +908,6 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
   
   return NS_OK;
 }
-
-nsresult
-nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
-                             PRFloat64 *aResult)
-{
-  mdb_err err;
-  char *next = NULL;
-  nsresult rv = NS_OK;
-  
-  mdbYarn yarn;
-  err = aRow->AliasCellYarn(mEnv, aCol, &yarn);
-  if (err != 0) 
-    return NS_ERROR_FAILURE;
-
-  if (yarn.mYarn_Buf)
-  {
-    *aResult = PR_strtod((const char *)yarn.mYarn_Buf, &next);
-    if (next == yarn.mYarn_Buf)
-    {
-      rv = NS_ERROR_CANNOT_CONVERT_DATA;
-    }
-  }
-  
-  return rv;
-}
-
 
 nsresult
 nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
@@ -1554,7 +1254,7 @@ nsGlobalHistory::HidePage(const char *aURL)
 NS_IMETHODIMP
 nsGlobalHistory::MarkPageAsTyped(const char* aURL)
 {
-  nsCOMPtr<nsIMdbRow> row;  
+  nsCOMPtr<nsIMdbRow> row;
   nsresult rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
   if (NS_FAILED(rv)) {
     rv = AddPage(aURL);
@@ -1568,31 +1268,6 @@ nsGlobalHistory::MarkPageAsTyped(const char* aURL)
   // we'll unhide it in AddExistingPageToDatabase
   rv = SetRowValue(row, kToken_HiddenColumn, 1);
   if (NS_FAILED(rv)) return rv;
-
-  if (mDataCaptureMode > UDC_NONE && mURLDataFile)
-  {    
-    PRInt64 id;
-    nsCAutoString dateStr, IDStr;    
-    PRInt64ToChars(PR_Now(), dateStr);
-    GetRowValue(row, kToken_URLIDColumn, &id);
-
-    if (id == 0)
-    {
-      AssignUniqueURLID(row);
-      id = mURLID;
-    }
-
-    PRInt64ToChars(id, IDStr);
-    fprintf(mURLDataFile, "<typed-url id='%s' time='%s'", IDStr.get(), dateStr.get());
-
-    if (mDataCaptureMode == UDC_WITH_URL_INFO)
-    {
-      fprintf(mURLDataFile, " path='%s'", aURL);
-    }
-
-    fprintf(mURLDataFile, "/>\n");
-    fflush(mURLDataFile);
-  }
 
   return SetRowValue(row, kToken_TypedColumn, 1);
 }
@@ -2626,50 +2301,6 @@ nsGlobalHistory::Init()
 
   gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
   gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
-  gPrefBranch->GetIntPref(PREF_HISTORY_DATACAPTURE_MODE, &mDataCaptureMode);
-  gPrefBranch->GetIntPref(PREF_AUTOCOMPLETE_LEARNING_MODE, &mLearningMode);  
-
-  if (mDataCaptureMode > UDC_NONE)
-  {    
-    nsCOMPtr<nsIFile> file;  
-    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-
-    if (NS_SUCCEEDED(rv)) 
-    {
-      nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
-      localFile->AppendNative(NS_LITERAL_CSTRING("url-data.txt"));
-      localFile->OpenANSIFileDesc("a", &mURLDataFile);
-    }
-    else
-    {
-      // Disable data capture
-      mDataCaptureMode = UDC_NONE;
-    }
-  }
-  else
-  {
-    mURLDataFile = NULL;
-  }
-
-  if (mLearningMode > ACL_NONE || mDataCaptureMode > UDC_NONE)
-  {
-    // XXX Handle out of memory condition
-    mAutoCompleteLearner = new nsSigmoidPerceptron(AC_NUM_URL_FEATURES);
-    mACFeatures = new PRFloat64[AC_NUM_URL_FEATURES];
-
-    if (!mAutoCompleteLearner || !mACFeatures)
-    {
-      // Disable learning
-      mLearningMode = ACL_NONE;
-      mAutoCompleteLearner = nsnull;
-      mACFeatures = nsnull;
-    }
-  }
-  else
-  {
-    mACFeatures = NULL;
-  }
-
   nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(gPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
@@ -3048,20 +2679,8 @@ nsGlobalHistory::CreateTokens()
   err = mStore->StringToToken(mEnv, "Typed", &kToken_TypedColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
-  err = mStore->StringToToken(mEnv, "FRFastDecay", &kToken_FRFastDecayColumn);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  err = mStore->StringToToken(mEnv, "FRSlowDecay", &kToken_FRSlowDecayColumn);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  err = mStore->StringToToken(mEnv, "URLID", &kToken_URLIDColumn);
-  if (err != 0) return NS_ERROR_FAILURE;
-
   // meta-data tokens
   err = mStore->StringToToken(mEnv, "LastPageVisited", &kToken_LastPageVisited);
-  
-
-  
 
   return NS_OK;
 }
@@ -3216,56 +2835,9 @@ nsGlobalHistory::FindRow(mdb_column aCol,
   if (!hasRow) return NS_ERROR_NOT_AVAILABLE;
   
   *aResult = row;
-  NS_ADDREF(*aResult);
+  (*aResult)->AddRef();
   
   return NS_OK;
-}
-
-nsresult
-nsGlobalHistory::FindRow(mdb_column aCol,
-                         PRInt64 aValue, nsIMdbRow **aResult)
-{
-  if (! mStore)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  mdb_err err;
-  nsCAutoString val;
-  PRInt64ToChars(aValue, val);
-
-  mdbYarn yarn = { (void *)val.get(), val.Length(), val.Length(), 0, 0, nsnull };
-  
-  mdbOid rowId;
-  nsCOMPtr<nsIMdbRow> row;
-  err = mStore->FindRow(mEnv, kToken_HistoryRowScope,
-                        aCol, &yarn,
-                        &rowId, getter_AddRefs(row));
-
-
-  if (!row) return NS_ERROR_NOT_AVAILABLE;  
-  
-  // make sure it's actually stored in the main table
-  mdb_bool hasRow;
-  mTable->HasRow(mEnv, row, &hasRow);
-
-  if (!hasRow) return NS_ERROR_NOT_AVAILABLE;
-  
-  *aResult = row;
-  NS_ADDREF(*aResult);
-  
-  return NS_OK;
-}
-
-nsresult
-nsGlobalHistory::FindRowAndID(mdb_column aCol,const char *aValue, 
-                              nsIMdbRow **aResult, PRInt64 *aRowID)
-{
-  nsresult rv;
-  rv = FindRow(aCol, aValue, aResult);
-  if (NS_SUCCEEDED(rv))
-  {
-    rv = GetRowValue(*aResult, kToken_URLIDColumn, aRowID);
-  }
-  return rv;
 }
 
 PRBool
@@ -4410,556 +3982,12 @@ nsGlobalHistory::OnStopLookup()
   return NS_OK;
 }
 
-
-// The input features into the autocomplete perceptron are as follows:
-//
-//   Features 1  = Frequency and recency metric for page in history 
-//                 (domain = positive real numbers)
-//                 Value decays fast with age of page
-//                 Uses HISTORY_FAST_DECAY_CONSTANT
-//   Features 2 = Frequency and recency metric for page in history 
-//                 (high for newer, more accessed pages)
-//                 Value decays slowly with age of page
-//                 Uses HISTORY_SLOW_DECAY_CONSTANT
-//   Features 3 = Was the url typed by the user?
-//                 (domain = 0 or 1)
-//   Features 4 = Recency metric for page in bookmarks
-//                 (domain = real number between 0 and 1)
-//                 Value decays fast with age of bookmark
-//                 Uses BOOKMARKS_FAST_DECAY_CONSTANT
-//   Features 5 = Recency metric for page in bookmarks
-//                 (domain = real number between 0 and 1)
-//                 Value decays slowly with age of bookmark
-//                 Uses BOOKMARKS_SLOW_DECAY_CONSTANT
-//
-//  Features 1 and Feature 2 details:
-//
-//  As an example, say a page was first seen on Day 1 and accessed from then
-//  until today (Day 4) with the following schedule:
-//
-//  (Day 1, D times), (Day 2, C times), (Day 3, B times), (Day 4, A times)
-//
-//  Then, the frequency+recency metric calculation for the page will be:
-//
-//  FRMetric = A + (B * G) + (C * G^2) + (D * G^3)
-//
-//    where G is the decay constant that takes values between 0 and 1.
-//    Values close to 1 lead to slow decay with age.
-//    Values close to 0 lead to fast decay with age.
-//
-//  Feature 4 and Feature 5 only care about recency not frequency.
-//
-//  So, if a bookmark was added X days earlier,
-//
-//  Bookmark Feature Value = G^X.
-//
-//  where G is the decay constant that takes values between 0 and 1.
-//    Values close to 1 lead to slow decay with age.
-//    Values close to 0 lead to fast decay with age.
-//
-//  The rest of the url related features:
-//
-//  Feature 6: Whether url ends in .htm or .html
-//  Feature 7: Is it a .com URL?
-//  Feature 8: Is it a .edu URL?
-//  Feature 9: Is it a .org URL?
-//  Feature 10: Is it a .net URL?
-//  Feature 11: Is it a .gov URL?
-//  Feature 12: Does the URL end in a two letter country code?
-//  Feature 13: Does the URL contain a ~ ?
-//  Feature 14: Does the URL start with http:// ?
-//  Feature 15: Does the URL start with ftp:// ?
-//  Feature 16: Does the URL start with file:// ?
-//  Feature 17: Does the URL start with gopher:// ?
-//  Feature 18: Does the URL start with https:// ?
-//  Feature 19: Number of /s in the URL.
-//  Feature 20: Number of ?s in the URL.
-//  Feature 21: Number of &s in the URL.
-//  Feature 22: Number of =s in the URL.
-//  Feature 23: Number of #s in the URL.
-//  Feature 24: Number of +s in the URL.
-//  Feature 25: Number of .s in the URL.
-//  Feature 26: Number of numerical [0-9] characters in the URL
-//  Feature 27: Number of alphabetical [a-zA-Z] characters in the URL
-//  Feature 28: Number of non-alphanumeric, non-[/?&=#+.] characters in the URL
-//  Feature 29: Number of .s in the hostname
-//  Feature 30: Number of numerical [0-9] characters in the hostname
-//  Feature 31: Number of alphabetical [a-zA-Z] characters in the hostname
-//  Feature 32: Number of non-alphanumeric, non-[/?&=#+.] characters in the hostname
-//  Feature 33: Number of .s in the hostname if we omit initial "www." or "ftp." (if any)
-//  Feature 34: Number of .s in the hostname if we omit ending ".XX" country code (if any)
-//  Feature 35: Number of .s in the hostname if we omit ending initial "www." or "ftp"
-//              and ending ".XX" country code (if any)
-//  Feature 36: Number of characters in URL
-//  Feature 37: Number of characters in hostname
-//  Feature 38: Number of characters in hostname excluding initial "www." or "ftp."
-//  Feature 39: Number of characters in URL excluding hostname
-//  Feature 40: Number of characters in web page title
-//  Feature 41: Is this a google search url?
-//  Feature 42: Is this a netscape search url?
-//  Feature 43: Is this a yahoo search url?
-//  Feature 44: Dummy input hardcoded to 1
-
-nsresult
-nsGlobalHistory::FillInputFeatures(nsAString &aUrl,
-                                   PRFloat64 *aFeatures)
-{  
-  nsCOMPtr<nsIMdbRow> row;
-  nsresult rv = NS_OK;
-  PRInt32 ageInDays;
-  PRInt64 lastDate;
-  static nsCOMPtr<nsIBookmarksService> bs = 
-      do_GetService(NS_BOOKMARKS_SERVICE_CONTRACTID, &rv);  
-
-  // Calculate the input features for this training example.
-  rv = FindRow(kToken_URLColumn, NS_ConvertUCS2toUTF8(aUrl).get(), 
-               getter_AddRefs(row));
-  if (NS_FAILED(rv)) return rv;
-
-  // First, get the page in history related input features
-  rv = GetRowValue(row, kToken_FRFastDecayColumn, &aFeatures[0]);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastDate);
-  if (NS_FAILED(rv)) return rv;
-
-  ageInDays = GetAgeInDays(NormalizeTime(GetNow()), lastDate);
-
-  aFeatures[0] *= pow(HISTORY_FAST_DECAY_CONSTANT, (PRFloat64) ageInDays);
-
-  rv = GetRowValue(row, kToken_FRSlowDecayColumn, &aFeatures[1]);
-  if (NS_FAILED(rv)) return rv;
-
-  aFeatures[1] *= pow(HISTORY_SLOW_DECAY_CONSTANT, (PRFloat64) ageInDays);
-
-  aFeatures[2] = HasCell(mEnv, row, kToken_TypedColumn);
-  
-  // Second, calculate the bookmark related input features.
-  if (bs)
-  {
-    PRBool bookmarked;
-    rv = bs->IsBookmarked(NS_ConvertUCS2toUTF8(aUrl).get(), &bookmarked);
-    aFeatures[3] = aFeatures[4] = 0;
-    if (NS_SUCCEEDED(rv) && bookmarked)
-    {
-      PRInt64 addDate;
-      rv = bs->GetAddTime(NS_ConvertUCS2toUTF8(aUrl).get(), &addDate);
-      if (NS_SUCCEEDED(rv))
-      {
-        ageInDays = GetAgeInDays(NormalizeTime(GetNow()), addDate);
-        aFeatures[3] = pow(BOOKMARK_FAST_DECAY_CONSTANT, ageInDays);
-        aFeatures[4] = pow(BOOKMARK_SLOW_DECAY_CONSTANT, ageInDays);
-      }
-    }
-  }
-  
-  // Now, calculate a bunch of url related features
-  nsCOMPtr<nsIURI> uri;
-  nsCAutoString curl, chost, cpath;
-  rv = NS_NewURI(getter_AddRefs(uri), aUrl);
-  if (NS_SUCCEEDED(rv) && uri)
-  {
-    uri->GetSpec(curl);    
-    uri->GetHost(chost);
-    uri->GetPath(cpath);
-  }
-  nsAutoString url(NS_ConvertUTF8toUCS2(curl).get());
-  nsAutoString path(NS_ConvertUTF8toUCS2(cpath).get());
-  nsAutoString host(NS_ConvertUTF8toUCS2(chost).get());
-  ToLowerCase(url);  
-  ToLowerCase(host);
-  ToLowerCase(path);
-
-  // Feature 6: Whether url ends in .htm or .html    
-  nsAString::const_iterator start, end;
-
-  path.BeginReading(start);
-  path.EndReading(end);
-  aFeatures[5] = FindInReadable(NS_LITERAL_STRING(".htm"), start, end);
-  
-  // Feature 7: Is it a .com URL?
-  host.BeginReading(start);
-  host.EndReading(end);
-  aFeatures[6] = FindInReadable(NS_LITERAL_STRING(".com"), start, end);
-
-  // Feature 8: Is it a .edu URL?
-  host.BeginReading(start);
-  host.EndReading(end);
-  aFeatures[7] = FindInReadable(NS_LITERAL_STRING(".edu"), start, end);
-
-  // Feature 9: Is it a .org URL?
-  host.BeginReading(start);
-  host.EndReading(end);
-  aFeatures[8] = FindInReadable(NS_LITERAL_STRING(".org"), start, end);
-
-  // Feature 10: Is it a .net URL?
-  host.BeginReading(start);
-  host.EndReading(end);
-  aFeatures[9] = FindInReadable(NS_LITERAL_STRING(".net"), start, end);
-    
-  // Feature 11: Is it a .gov URL?
-  host.BeginReading(start);
-  host.EndReading(end);
-  aFeatures[10] = FindInReadable(NS_LITERAL_STRING(".gov"), start, end);
-  
-  // Feature 12: Does the URL contain a ~ ?
-  path.BeginReading(start);
-  path.EndReading(end);
-  aFeatures[11] = FindInReadable(NS_LITERAL_STRING("~"), start, end);
-  
-  // Feature 13: Does the URL start with http:// ?
-  PRBool isScheme;
-  aFeatures[12] = aFeatures[13] = aFeatures[14] = aFeatures[15] = aFeatures[16] = 0;
-  if (NS_SUCCEEDED(uri->SchemeIs("http", &isScheme)))
-  {
-    aFeatures[12] = isScheme;
-  }
-  // Feature 14: Does the URL start with ftp:// ?
-  else if (NS_SUCCEEDED(uri->SchemeIs("ftp", &isScheme)))
-  {    
-    aFeatures[13] = isScheme;
-  }
-  // Feature 15: Does the URL start with file:// ?
-  else if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)))
-  {      
-    aFeatures[14] = isScheme;
-  }  
-  // Feature 16: Does the URL start with gopher:// ?
-  else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isScheme)))
-  {    
-    aFeatures[15] = isScheme;
-  }
-  // Feature 17: Does the URL start with https:// ?
-  else if (NS_SUCCEEDED(uri->SchemeIs("https", &isScheme)))
-  {    
-    aFeatures[16] = isScheme;
-  }
-
-  // Feature 18: Does the URL end in a two letter country code?
-  aFeatures[17] = (host.RFindChar('.') == ((host.Length() - 1) - 2));
-
-  // Feature 19: Number of /s in the URL.
-  aFeatures[18] = 0;
-  // Feature 20: Number of ?s in the URL.
-  aFeatures[19] = 0;
-  // Feature 21: Number of &s in the URL.
-  aFeatures[20] = 0;
-  // Feature 22: Number of =s in the URL.
-  aFeatures[21] = 0;
-  // Feature 23: Number of #s in the URL.
-  aFeatures[22] = 0;
-  // Feature 24: Number of +s in the URL.
-  aFeatures[23] = 0;
-  // Feature 25: Number of .s in the URL.
-  aFeatures[24] = 0;
-  // Feature 26: Number of numerical [0-9] characters in the URL
-  aFeatures[25] = 0;
-  // Feature 27: Number of alphabetical [a-zA-Z] characters in the URL
-  aFeatures[26] = 0;
-  // Feature 28: Number of non-alphanumeric, non-[/?&=#+.] characters in the URL
-  aFeatures[27] = 0;
-
-  url.BeginReading(start);
-  url.EndReading(end);
-
-  PRUint32 size, i;
-  for ( ; start != end; start.advance(size)) 
-  {
-    const PRUnichar* buf = start.get();
-    size = start.size_forward();
-
-    // fragment at 'buf' is 'size' characters long
-    for (i = 0; i < size; *buf++, i++)
-    {
-      switch (*buf)
-      { 
-      case '/':
-        aFeatures[18]++;
-        break;
-
-      case '?':
-        aFeatures[19]++;
-        break;
-
-      case '&':
-        aFeatures[20]++;
-        break;
-
-      case '=':
-        aFeatures[21]++;
-        break;
-
-      case '#':
-        aFeatures[22]++;
-        break;
-
-      case '+':
-        aFeatures[23]++;
-        break;
-
-      case '.':
-        aFeatures[24]++;
-        break;
-
-      case '0': case '1': case '2': case '3': case '4': 
-      case '5': case '6': case '7': case '8': case '9':
-        aFeatures[25]++;
-        break;
-
-      default:
-        if (isalpha(*buf))        
-          aFeatures[26]++;
-        else
-          aFeatures[27]++;        
-      }
-    }
-  }
-
-  // Calculate a bunch of hostname related features.  
-
-  // Feature 29: Number of .s in the hostname
-  aFeatures[28] = 0;
-  // Feature 30: Number of numerical [0-9] characters in the hostname
-  aFeatures[29] = 0;
-  // Feature 31: Number of alphabetical [a-zA-Z] characters in the hostname
-  aFeatures[30] = 0;
-  // Feature 32: Number of non-alphanumeric, non-[.] characters in the hostname
-  aFeatures[31] = 0;
-
-  size = chost.Length();  
-  for (i = 0; i < size; i++)
-  {
-    switch (chost[i])
-    {                
-    case '.':
-      aFeatures[28]++;
-      break;
-
-    case '0': case '1': case '2': case '3': case '4': 
-    case '5': case '6': case '7': case '8': case '9':
-      aFeatures[29]++;
-      break;
-
-    default:
-      if (isalpha(chost[i]))       
-        aFeatures[30]++;
-      else
-        aFeatures[31]++;              
-    }
-  }
-
-  // Feature 33: Number of .s in the hostname if we omit initial "www." or "ftp." (if any)  
-  aFeatures[32] = aFeatures[28];
-  // Feature 34: Number of .s in the hostname if we omit ending ".XX" country code (if any)
-  aFeatures[33] = aFeatures[28];
-  // Feature 35: Number of .s in the hostname if we omit ending initial "www." or "ftp"
-  //             and ending ".XX" country code (if any)
-  aFeatures[34] = aFeatures[28];
-  // Feature 36: Number of characters in hostname
-  aFeatures[35] = chost.Length();
-  // Feature 37: Number of characters in hostname excluding initial "www." or "ftp."
-  aFeatures[36] = aFeatures[35];
-
-  if (chost.Find("www.") == 0 || chost.Find("ftp.") == 0)
-  {
-    aFeatures[32]--;
-    aFeatures[34]--;
-    aFeatures[36] -= 4;
-  }
-
-  if (chost.RFindChar('.') == ((chost.Length() - 1) - 2))
-  {
-    aFeatures[33]--;
-    aFeatures[34]--;
-  }
-
-  // Feature 38: Number of characters in URL
-  aFeatures[37] = url.Length();
-
-  // Feature 39: Number of characters in URL excluding hostname
-  aFeatures[38] = aFeatures[37] - aFeatures[35];
-
-  // Feature 40: Number of characters in web page title
-  nsAutoString title;
-  rv = GetRowValue(row, kToken_NameColumn, title);
-  if (NS_FAILED(rv)) return rv;
-  aFeatures[39] = title.Length();
-
-  // Feature 41: Is this a google search url?
-  url.BeginReading(start);
-  url.EndReading(end);
-  aFeatures[40] = FindInReadable(NS_LITERAL_STRING("http://www.google.com/search"), start, end);
-  
-  // Feature 42: Is this a netscape search url?
-  url.BeginReading(start);
-  url.EndReading(end);
-  aFeatures[41] = FindInReadable(NS_LITERAL_STRING("http://search.netscape.com/nscp_results.adp"), start, end);
-
-  // Feature 43: Is this a yahoo search url?
-  url.BeginReading(start);
-  url.EndReading(end);
-  aFeatures[42] = FindInReadable(NS_LITERAL_STRING("http://search.yahoo.com/bin/search"), start, end);
-  
-  //  Feature 44: This is a dummy input hardcoded to 1.  It allows
-  //  the perceptron to represent functions that do not pass through the
-  //  origin.
-  aFeatures[43] = 1;
-
-  return rv;
-}
-
-nsresult
-nsGlobalHistory::WriteURLData(nsAString& aURL, PRFloat64* aURLFeatures)
-{
-  nsCOMPtr<nsIMdbRow> row;
-  nsresult rv = NS_OK;
-  nsCAutoString dateStr, IDStr;
-  PRInt64 rowID;
-
-  if (!mURLDataFile || !aURLFeatures)
-    return NS_ERROR_FAILURE;
-
-  // Calculate the input features for this training example.
-  rv = FindRowAndID(kToken_URLColumn, NS_ConvertUCS2toUTF8(aURL).get(),
-                    getter_AddRefs(row), &rowID);
-  if (NS_FAILED(rv)) return rv;
-  
-  if (rowID == 0)
-  {
-    AssignUniqueURLID(row);
-    rowID = mURLID;
-  }
-
-  PRInt64ToChars(rowID, IDStr);
-  
-  fprintf(mURLDataFile, "<url id='%s'", IDStr.get());
-  if (mDataCaptureMode == UDC_WITH_URL_INFO)
-  {
-    fprintf(mURLDataFile, " path='%s'", NS_ConvertUCS2toUTF8(aURL).get());
-  }
-  PRInt64ToChars(PR_Now(), dateStr);
-  fprintf(mURLDataFile, " time='%s'>\n", dateStr.get());
-
-  PRInt32 i;
-  for (i = 0; i < AC_NUM_URL_FEATURES - 1; i++)
-  {
-    fprintf(mURLDataFile, "%f, ", aURLFeatures[i]);
-  }
-
-  fprintf(mURLDataFile, "%f\n</url>\n", aURLFeatures[i]);
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
                                 nsIAutoCompleteResults *previousSearchResult,
                                 nsIAutoCompleteListener *listener)
-{  
-  nsCOMPtr<nsISupportsArray> results;
-  nsCOMPtr<nsIAutoCompleteItem> item;
-  PRUint32 count = 0;
-  nsAutoString value;
-  PRBool found = PR_FALSE;
-  PRUint32 i;
-  nsresult rv = NS_OK;
-  
-  if (mLearningMode == ACL_NONE && mDataCaptureMode == UDC_NONE)
-    return rv;  
-
-  // See if searchString exists in the previous search results.
-  if (previousSearchResult)
-  {
-    rv = previousSearchResult->GetItems(getter_AddRefs(results));
-    if (NS_FAILED(rv)) return rv;
-
-    if (results)
-      results->Count(&count);
-  }
-
-  for (i = 0; i < count; i++) {
-    rv = results->GetElementAt(i, getter_AddRefs(item));
-    if (NS_FAILED(rv)) return rv;
-      
-    item->GetValue(value);
-    if (value.Equals(nsDependentString(searchString)))
-    {
-      found = PR_TRUE;
-      break;
-    }
-  }
-
-  // If searchString found in the previous search results, assume 
-  // that the user selected that url (searchString) from the previous 
-  // list of autocomplete results.  
-  if (found)
-  {        
-    // Train the sigmoid perceptron
-    previousSearchResult->GetItems(getter_AddRefs(results));
-    results->Count(&count);
-
-    if (mDataCaptureMode >= UDC_WITHOUT_URL_INFO && mURLDataFile)
-    {      
-      nsCAutoString nowStr;
-      nsCOMPtr<nsIMdbRow> row;
-      PRInt64 rowID;
-
-      PRInt64ToChars(PR_Now(), nowStr);      
-      fprintf(mURLDataFile, "<autocomplete time='%s'", nowStr.get());
-
-      if (mDataCaptureMode == UDC_WITH_URL_INFO)
-        fprintf(mURLDataFile, " url='%s'", NS_ConvertUCS2toUTF8(searchString).get());
-          
-      if (NS_SUCCEEDED(FindRowAndID(kToken_URLColumn, 
-                         NS_ConvertUCS2toUTF8(searchString).get(), 
-                         getter_AddRefs(row), &rowID)))
-      {
-        if (rowID == 0)
-        {
-          AssignUniqueURLID(row);
-          rowID = mURLID;
-        }
-        nsCAutoString IDStr;
-        PRInt64ToChars(rowID, IDStr);
-        fprintf(mURLDataFile, " url-id='%s'", IDStr.get());
-      }
-
-      fprintf(mURLDataFile, ">\n");
-    }
-
-    for (i = 0; i < count; i++)
-    {      
-      results->GetElementAt(i, getter_AddRefs(item));
-      item->GetValue(value);
-
-      rv = FillInputFeatures(value, mACFeatures);
-
-      if (NS_SUCCEEDED(rv) && mDataCaptureMode >= UDC_WITHOUT_URL_INFO)
-      {
-        WriteURLData(value, mACFeatures);
-      }
-      
-      if (NS_SUCCEEDED(rv) && mLearningMode >= ACL_ENABLE_TRAINING)
-      {
-        if (value.Equals(nsDependentString(searchString)))
-        {
-          mAutoCompleteLearner->Train(mACFeatures, AC_NUM_URL_FEATURES, 1);
-        }
-        else
-        {
-          mAutoCompleteLearner->Train(mACFeatures, AC_NUM_URL_FEATURES, 0);
-        }
-      }
-    }
-
-    if (mDataCaptureMode >= UDC_WITHOUT_URL_INFO && mURLDataFile)
-    {
-      fprintf(mURLDataFile, "</autocomplete>\n");
-      fflush(mURLDataFile);
-    }
-  }
-
-  return rv;
+{
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -5188,27 +4216,6 @@ nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL,
   return Substring(aHistoryURL, 0, aUserURL.Length()).Equals(aUserURL);
 }
 
-
-// Prefixes the comment field of the autocomplete item with an asterisk
-// if there is no asterisk there already.  This is a quick hack to show
-// that this item (url) was selected by the perceptron as one that is likely
-// to be selected by the user.
-static void
-PrefixItemWithAsterisk(nsIAutoCompleteItem *aItem)
-{
-  PRUnichar *comment;
-  nsAutoString commentStr;
-  NS_NAMED_LITERAL_STRING(asterisk, "*");
-
-  aItem->GetComment(&comment);
-  commentStr.Assign(comment);
-  if (!Substring(commentStr, 0, 1).Equals(asterisk))
-  {
-    aItem->SetComment(PromiseFlatString(asterisk + commentStr).get());
-  }
-  nsMemory::Free(comment);
-}
-
 int PR_CALLBACK 
 nsGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
                                             void *closureVoid) 
@@ -5243,35 +4250,6 @@ nsGlobalHistory::AutoCompleteSortComparison(const void *v1, const void *v2,
   nsAutoString url1, url2;
   item1->GetValue(url1);
   item2->GetValue(url2);
-
-  if (closure->history->mLearningMode == ACL_AFFECT_URL_LIST)
-  {
-    // If the sigmoid perceptron thinks that the user will select the url,
-    // prefix an asterisk to the comment title.
-    PRFloat64* features = closure->history->mACFeatures;
-    PRFloat64 output = 0;
-    nsresult rv = NS_OK;
-
-    rv = closure->history->FillInputFeatures(url1, &features[0]);
-    if (NS_SUCCEEDED(rv))
-    {
-      closure->history->mAutoCompleteLearner->Test(features, AC_NUM_URL_FEATURES, &output);
-      if (output >= 0.9)
-      {
-        PrefixItemWithAsterisk(item1);
-      }
-    }
-    
-    rv = closure->history->FillInputFeatures(url2, &features[0]);
-    if (NS_SUCCEEDED(rv))
-    {
-      closure->history->mAutoCompleteLearner->Test(features, AC_NUM_URL_FEATURES, &output);
-      if (output >= 0.9)
-      {
-        PrefixItemWithAsterisk(item2);
-      }
-    }
-  }
 
   // Favour websites and webpaths more than webpages by boosting 
   // their visit counts.  This assumes that URLs have been normalized, 
