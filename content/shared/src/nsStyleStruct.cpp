@@ -680,7 +680,7 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
 nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
 {
   if (mListStylePosition == aOther.mListStylePosition &&
-      EqualURIs(mListStyleImage, aOther.mListStyleImage) &&
+      EqualImages(mListStyleImage, aOther.mListStyleImage) &&
       mListStyleType == aOther.mListStyleType) {
     if (mImageRegion == aOther.mImageRegion)
       return NS_STYLE_HINT_NONE;
