@@ -641,7 +641,8 @@ function AddAttachment(attachment)
 		var row = document.createElement("treerow");
 		var cell = document.createElement("treecell");
 		
-		cell.setAttribute("value", attachment);
+		cell.setAttribute("value", unescape(attachment));	//use for display only
+		cell.setAttribute("attachment", attachment);		//full url stored here
 		row.appendChild(cell);
 		item.appendChild(row);
 		bucketBody.appendChild(item);
@@ -670,7 +671,7 @@ function GenerateAttachmentsString()
 				cell = row.childNodes[0];
 				if (cell)
 				{
-					text = cell.getAttribute("value");
+					text = cell.getAttribute("attachment");
 					if (text.length)
 					{
 						if (attachments == "")
