@@ -14,32 +14,33 @@
  
  * The Initial Developer of the Original Code is Netscape
  * Communications, Inc.  Portions created by Netscape are
- * Copyright (C) 2001, Mozilla.  All Rights Reserved.
+ * Copyright (C) 2001,2002 Mozilla.  All Rights Reserved.
  
  * Contributor(s):
  */
 
-/*
-nsIWindowWatcher is the keeper of Gecko/DOM Windows. It maintains
-maintains a traversable list of open top-level windows, and allows
-some operations on them.
+/**
+ * nsIWindowWatcher is the keeper of Gecko/DOM Windows. It maintains
+ * a list of open top-level windows, and allows some operations on them.
 
-Usage notes:
+ * Usage notes:
 
-  This component has an |activeWindow| property. Clients may expect
-this property to be always current, so to properly integrate this component
-the application will need to keep it current by setting the property
-as the active window changes.
-  This component does automatically keep an accurate list of extant
-windows; windows need not be added or removed by hand (and there's no
-interface for doing so).
-  Windows referenced will not be refcounted; the implementation will
-claim no ownership. Since it's the nature of this service to always
-hold a ("weak") reference to an open window, this requirement removes
-a potential reference loop.  It should be safe because it's a
-design requirement that clients explicitly maintain |activeWindow|,
-and that windows remove themselves from the service when they are closed.
-*/
+ *   This component has an |activeWindow| property. Clients may expect
+ * this property to be always current, so to properly integrate this component
+ * the application will need to keep it current by setting the property
+ * as the active window changes.
+ *   This component should not keep a (XPCOM) reference to any windows;
+ * the implementation will claim no ownership. Windows must notify
+ * this component when they are created or destroyed, so only a weak
+ * reference is kept. Note that there is no interface for such notifications
+ * (not a public one, anyway). This is taken care of both in Mozilla and
+ * by common embedding code. Embedding clients need do nothing special
+ * about that requirement.
+ *   This component must be initialized at application startup by calling
+ * setWindowCreator.
+ *
+ * @status FROZEN
+ */
 
 #include "nsISupports.idl"
 
