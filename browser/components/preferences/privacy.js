@@ -141,7 +141,7 @@ var gPrivacyPane = {
   writeCacheSizePref: function ()
   {
     var cacheSize = document.getElementById("cacheSize");
-    return cacheSize * 1000;
+    return cacheSize.value * 1000;
   },
   
   _sanitizer: null,
