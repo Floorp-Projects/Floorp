@@ -540,3 +540,21 @@ viewold.cgi		TCL.  Lets you choose an old bonsai hook to view.
 				toplevel.cgi
 			Calls:
 				toplevel.cgi treeid=
+
+
+	=================
+	Glossary of terms
+	=================
+
+Here are some funky terms you may find here and there:
+
+Hook			The 'hook' is actually the oldest part of the Bonsai
+			code.  The idea is, every so often (at Netscape, it was
+			every day), some build engineers will close the tree
+			and make sure that everything still builds properly.
+			If it doesn't, then the build engineers want to have a
+			list of people they can go beat up, this being the list
+			of people who changed the tree since the last time they
+			successfully built the tree.  Those people are "on the
+			hook"; they are held responsible for any probs that
+			arise.
