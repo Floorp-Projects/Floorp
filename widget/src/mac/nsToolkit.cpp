@@ -132,12 +132,8 @@ void nsMacNSPREventQueueHandler::ProcessPLEventQueue()
   mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
   if (queue)
   {
-    PRBool eventsPending = PR_FALSE;
-    if (NS_SUCCEEDED(queue->PendingEvents(&eventsPending)) && eventsPending)
-    {
-      nsresult rv = queue->ProcessPendingEvents();
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
-    }
+    nsresult rv = queue->ProcessPendingEvents();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
   }
 }
 
