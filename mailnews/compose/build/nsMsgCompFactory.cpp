@@ -58,6 +58,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSendLater);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgDraft)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuote);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuoteListener);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl);
 
 ////////////////////////////////////////////////////////////
@@ -86,6 +87,7 @@ static components_t components[] =
   { NS_SMTPSERVER_CID,        &nsSmtpServerConstructor, NS_SMTPSERVER_PROGID,    },
   { NS_SMTPURL_CID,           &nsSmtpUrlConstructor, NS_SMTPURL_PROGID, },
   { NS_MSGQUOTE_CID,          &nsMsgQuoteConstructor, NS_MSGQUOTE_PROGID, },
+  { NS_MSGQUOTELISTENER_CID,  &nsMsgQuoteListenerConstructor, "", }
 };
 
   
