@@ -552,8 +552,8 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
 
 
 
-nsresult
-NS_NewRDFDOMDataSource(nsISupports* aOuter,
+NS_METHOD
+nsRDFDOMDataSource::Create(nsISupports* aOuter,
                        const nsIID& iid,
                        void **result)
 {

@@ -18,35 +18,10 @@
  * Rights Reserved.
  */
 
-#include "nscore.h"
-#include "nsCOMPtr.h"
-#include "nsWeakPtr.h"
-#include "rdf.h"
-#include "nsRDFResource.h"
 #include "nsRDFDOMResourceFactory.h"
-#include "nsIDOMViewerElement.h"
-#include "nsIDOMNode.h"
-
-class nsRDFDOMViewerElement : nsRDFResource,
-                              nsIDOMViewerElement
-{
-public:
-  nsRDFDOMViewerElement();
-  virtual ~nsRDFDOMViewerElement();
-  
-  NS_DECL_ISUPPORTS_INHERITED
-  
-  NS_DECL_NSIDOMVIEWERELEMENT
-
-private:
-      // weak reference to DOM node
-      //nsWeakPtr mNode;
-      nsCOMPtr<nsIDOMNode> mNode;
-};
 
 nsRDFDOMViewerElement::nsRDFDOMViewerElement()
 {
-
 }
 
 nsRDFDOMViewerElement::~nsRDFDOMViewerElement()
@@ -78,8 +53,8 @@ nsRDFDOMViewerElement::GetNode(nsIDOMNode** node)
   return rv;
 }
   
-nsresult
-NS_NewRDFDOMResourceFactory(nsISupports* aOuter,
+NS_METHOD
+nsRDFDOMViewerElement::Create(nsISupports* aOuter,
                             const nsIID& iid,
                             void **result) {
   

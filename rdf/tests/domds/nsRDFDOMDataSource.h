@@ -162,6 +162,10 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
                   nsIRDFResource*, nsIRDFNode*)
         {return NS_ERROR_NOT_IMPLEMENTED;}
     
+  static NS_METHOD  Create(nsISupports* aOuter,
+                       const nsIID& iid,
+                       void **result);
+
  protected:
     char *mURI;
 
@@ -185,10 +189,5 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
     nsIRDFResource* kNC_Child;
     nsIRDFResource* kNC_DOMRoot;
 };
-
-nsresult
-NS_NewRDFDOMDataSource(nsISupports* aOuter,
-                       const nsIID& iid,
-                       void **result);
 
 #endif
