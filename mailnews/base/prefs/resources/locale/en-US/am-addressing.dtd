@@ -1,6 +1,6 @@
 <!-- extracted from am-addressing.xul -->
 
-<!ENTITY addressing.label          "Addressing &amp; Composition">
+<!ENTITY addressing.label          "Composition &amp; Addressing">
 <!ENTITY addressingGroupTitle.label "Addressing">
 <!ENTITY addressingText.label      "When looking up addresses:">
 <!-- LOCALIZATION NOTE (override.label) : do not translate "LDAP" in below line -->

@@ -47,23 +47,6 @@ Contributors:
   
   <separator class="thin"/>
   <groupbox>
-    <caption label="&addressingGroupTitle.label;"/>
-    <description>&addressingText.label;</description>
-	  <radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
-      <observes element="identity.overrideGlobalPref" attribute="disabled"/>
-      <radio id="useGlobalPref" value="0" label="&useGlobal.label;"/>
-      <hbox align="center">
-        <radio id="directories" value="1" label="&directories.label;"/>
-        <menulist id="directoriesList" wsm_persist="true" flex="1" width="&directoriesList.width;">
-          <menupopup onpopupshowing="createDirectoriesList(false);" id="directoriesListPopup"/>
-        </menulist>
-        <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>
-      </hbox>
-    </radiogroup>      
-  </groupbox>
-
-  <separator class="thin"/>
-  <groupbox>
     <caption label="&compositionGroupTitle.label;"/>
     <hbox align="center">
       <checkbox wsm_persist="true" id="identity.composeHtml" label="&useHtml.label;"
@@ -91,6 +74,23 @@ Contributors:
         </menupopup>
       </menulist>        
     </hbox>
+  </groupbox>
+  
+  <separator class="thin"/>
+  <groupbox>
+    <caption label="&addressingGroupTitle.label;"/>
+    <description>&addressingText.label;</description>
+    <radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
+      <observes element="identity.overrideGlobalPref" attribute="disabled"/>
+      <radio id="useGlobalPref" value="0" label="&useGlobal.label;"/>
+      <hbox align="center">
+        <radio id="directories" value="1" label="&directories.label;"/>
+        <menulist id="directoriesList" wsm_persist="true" flex="1" width="&directoriesList.width;">
+          <menupopup onpopupshowing="createDirectoriesList(false);" id="directoriesListPopup"/>
+        </menulist>
+        <button id="editButton" label="&editDirectories.label;" oncommand="onEditDirectories();"/>
+      </hbox>
+    </radiogroup>      
   </groupbox>
 
 </page>
