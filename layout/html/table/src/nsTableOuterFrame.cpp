@@ -111,6 +111,7 @@ NS_IMETHODIMP nsTableOuterFrame::Init(nsIPresContext& aPresContext, nsIFrame* aC
 
   // Set our internal member data
   mInnerTableFrame = mFirstChild;
+  //XXX this should go through the child list looking for a displaytype==caption
   if (2 == LengthOf(mFirstChild)) {
     mFirstChild->GetNextSibling(mCaptionFrame);
   }
@@ -289,7 +290,20 @@ nsresult nsTableOuterFrame::IR_TargetIsChild(nsIPresContext&        aPresContext
   else if (aNextFrame==mCaptionFrame)
     rv = IR_TargetIsCaptionFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
   else
-    rv = NS_ERROR_ILLEGAL_VALUE;
+  {
+    const nsStyleDisplay* nextDisplay;
+    aNextFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)nextDisplay);
+    if (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP==nextDisplay->mDisplay ||
+        NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP==nextDisplay->mDisplay ||
+        NS_STYLE_DISPLAY_TABLE_ROW_GROUP   ==nextDisplay->mDisplay ||
+        NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP==nextDisplay->mDisplay)
+      rv = IR_TargetIsInnerTableFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
+    else
+    {
+      NS_ASSERTION(PR_FALSE, "illegal next frame in incremental reflow.");
+      rv = NS_ERROR_ILLEGAL_VALUE;
+    }
+  }
   return rv;
 }
 
@@ -402,6 +416,7 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   return rv;
 }
 
+// IR_TargetIsMe is free to foward the request to the inner table frame 
 nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
                                           nsHTMLReflowMetrics&   aDesiredSize,
                                           OuterTableReflowState& aReflowState,
