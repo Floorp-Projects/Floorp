@@ -6,18 +6,13 @@ function toNavigator()
 
 function toMessengerWindow()
 {
-	// FIX ME - Really need to find the front most messenger window
-	//          and bring it all the way to the front
-	
-	window.open("chrome://messenger/content/", "messenger", "chrome");
+	toOpenWindowByType("mail:3pane", "chrome://messenger/content/");
 }
 
 
 function toAddressBook() 
 {
-	var wind = window.open("chrome://addressbook/content/addressbook.xul",
-						   "addressbook", "chrome");
-	return wind;
+	toOpenWindowByType("mail:addressbook", "chrome://addressbook/content/addressbook.xul");
 }
 
 function toHistory()
@@ -32,6 +27,20 @@ function toHistory()
     if (toolkitCore) {
       toolkitCore.ShowWindow("resource://res/samples/history.xul",window);
     }
+}
+
+function toOpenWindowByType( inType, uri )
+{
+	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+
+	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+
+	var topWindow = windowManagerInterface.GetMostRecentWindow( inType );
+	
+	if ( topWindow )
+		topWindow.focus();
+	else
+		window.open(uri, "_New", "chrome");
 }
 
 function CycleWindow( inType, inChromeURL )
