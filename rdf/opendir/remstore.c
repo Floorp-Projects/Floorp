@@ -177,6 +177,7 @@ getSlotValues (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  in
 
 void *
 nextValue (RDF_Cursor c) {
+  if (!c) return null;
   while (c->pdata != null) {
     Assertion as = (Assertion) c->pdata;
     if (((as->db == c->db) || (!c->db)) && (as->s == c->s) &&  (c->type == as->type)) {
@@ -192,7 +193,7 @@ nextValue (RDF_Cursor c) {
 void
 disposeCursor (RDF_Cursor c)
 {
-  freeMem(c);
+  if (c) freeMem(c);
 }
 
 

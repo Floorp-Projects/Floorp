@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
 #include "rdf-int.h"
 #include "gs.h"
 
@@ -164,7 +165,7 @@ RDF_Resource RDFGS_NextValue (RDF_Cursor c) {
     while (currentTTS) {
       if ((!c->s) || (c->s == currentTTS->label)) {
         RDF_Resource ans =currentTTS->target;
-        currentTTS = c->pdata = currentTTS->next;
+        c->pdata = currentTTS = currentTTS->next;
 		 if (!currentTTS)  c->pdata = currentTTS = ((TTS*)c->pdata1)[c->count++];   
         return ans;
       } 
