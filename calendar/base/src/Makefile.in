@@ -73,5 +73,5 @@ EXTRA_COMPONENTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-%.js: %.js.pre
-	cpp -P -undef $(DEFINES) $(ACDEFINES) $^ > $@
+#%.js: %.js.pre
+#	cpp -P -undef $(DEFINES) $(ACDEFINES) $^ > $@
