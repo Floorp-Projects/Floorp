@@ -69,6 +69,21 @@ nsInlineReflow::~nsInlineReflow()
 void
 nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+#ifdef NS_DEBUG
+  if ((aWidth > 100000) && (aWidth != NS_UNCONSTRAINEDSIZE)) {
+    mOuterFrame->ListTag(stdout);
+    printf(": Init: bad caller: width WAS %d(0x%x)\n",
+           aWidth, aWidth);
+    aWidth = NS_UNCONSTRAINEDSIZE;
+  }
+  if ((aHeight > 100000) && (aHeight != NS_UNCONSTRAINEDSIZE)) {
+    mOuterFrame->ListTag(stdout);
+    printf(": Init: bad caller: height WAS %d(0x%x)\n",
+           aHeight, aHeight);
+    aHeight = NS_UNCONSTRAINEDSIZE;
+  }
+#endif
+
   mLeftEdge = aX;
   mX = aX;
   if (NS_UNCONSTRAINEDSIZE == aWidth) {
@@ -101,6 +116,21 @@ nsInlineReflow::UpdateBand(nscoord aX, nscoord aY,
                            PRBool aPlacedLeftFloater)
 {
   NS_PRECONDITION(mX == mLeftEdge, "update-band called after place-frame");
+
+#ifdef NS_DEBUG
+  if ((aWidth > 100000) && (aWidth != NS_UNCONSTRAINEDSIZE)) {
+    mOuterFrame->ListTag(stdout);
+    printf(": UpdateBand: bad caller: width WAS %d(0x%x)\n",
+           aWidth, aWidth);
+    aWidth = NS_UNCONSTRAINEDSIZE;
+  }
+  if ((aHeight > 100000) && (aHeight != NS_UNCONSTRAINEDSIZE)) {
+    mOuterFrame->ListTag(stdout);
+    printf(": UpdateBand: bad caller: height WAS %d(0x%x)\n",
+           aHeight, aHeight);
+    aHeight = NS_UNCONSTRAINEDSIZE;
+  }
+#endif
 
   mLeftEdge = aX;
   mX = aX;
@@ -400,7 +430,7 @@ nsInlineReflow::ComputeAvailableSize()
     mFrameAvailSize.width = mOuterReflowState.maxSize.width;
     return PR_TRUE;
   }
-
+#if 0
   // Give up now if there is no chance. Note that we allow a reflow if
   // the available space is zero because that way things that end up
   // zero sized won't trigger a new line to be created. We also allow
@@ -410,6 +440,7 @@ nsInlineReflow::ComputeAvailableSize()
       ((mFrameAvailSize.width < 0) || (mFrameAvailSize.height < 0))) {
     return PR_FALSE;
   }
+#endif
   return PR_TRUE;
 }
 
@@ -573,12 +604,9 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
   // location.
   if ((0 == mFrameNum) ||
       (0 == mLineLayout.GetPlacedFrames()) ||
-      mOuterReflowState.mNoWrap) {
-    return PR_TRUE;
-  }
-
-  // If this frame is part of a non-breaking-unit then it fits
-  if (mInWord) {
+      mOuterReflowState.mNoWrap ||
+      mInWord ||
+      (0 == pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right)) {
     return PR_TRUE;
   }
 
