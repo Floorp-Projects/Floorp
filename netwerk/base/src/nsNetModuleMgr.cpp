@@ -34,7 +34,7 @@ nsNetModuleMgr* nsNetModuleMgr::gManager;
 //// nsISupports
 ///////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsNetModuleMgr, NS_GET_IID(nsINetModuleMgr));
+NS_IMPL_THREADSAFE_ISUPPORTS(nsNetModuleMgr, NS_GET_IID(nsINetModuleMgr));
 
 
 ///////////////////////////////////
@@ -51,7 +51,7 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
     // XXX QI the nsINetNotify interface passed in for the interfaces
     // XXX supported by the topic.
 
-    nsAutoLock lock(mLock);
+    nsAutoMonitor mon(mMonitor);
     nsNetModRegEntry *newEntry = new nsNetModRegEntry(aTopic, aNotify, &rv);
     if (!newEntry)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -92,7 +92,7 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
 NS_IMETHODIMP
 nsNetModuleMgr::UnregisterModule(const char *aTopic, nsINetNotify *aNotify) 
 {
-    nsAutoLock lock(mLock);
+    nsAutoMonitor mon(mMonitor);
 
     nsresult rv;
 
@@ -130,7 +130,7 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
     nsresult rv;
     // get all the entries for this topic
     
-    nsAutoLock lock(mLock);
+    nsAutoMonitor mon(mMonitor);
 
     PRUint32 cnt;
     rv = mEntries->Count(&cnt);
@@ -174,12 +174,13 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
 nsNetModuleMgr::nsNetModuleMgr() {
     NS_INIT_REFCNT();
     NS_NewISupportsArray(&mEntries);
-    mLock    = PR_NewLock();
+    mMonitor = nsAutoMonitor::NewMonitor("nsNetModuleMgr");
 }
 
 nsNetModuleMgr::~nsNetModuleMgr() {
     NS_IF_RELEASE(mEntries);
-    PR_DestroyLock(mLock);
+
+    nsAutoMonitor::DestroyMonitor(mMonitor);
     gManager = nsnull;
 }
 

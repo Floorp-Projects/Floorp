@@ -48,7 +48,7 @@ public:
 
 
     nsISupportsArray   *mEntries;
-    PRLock             *mLock;
+    PRMonitor*          mMonitor;
 };
 
 
