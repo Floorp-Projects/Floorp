@@ -81,11 +81,6 @@ public:
                                         nsIStyleContext** aStyleContext) const;
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext* aStyleContext);
-  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                      nsIStyleContext* aParentContext,
-                                      PRInt32 aParentChange,
-                                      nsStyleChangeList* aChangeList,
-                                      PRInt32* aLocalChange) ;
  
     // Overridden to capture events
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,

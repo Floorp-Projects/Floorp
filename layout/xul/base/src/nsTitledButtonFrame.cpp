@@ -1297,35 +1297,19 @@ nsTitledButtonFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 }
 
 //
-// ReResolveStyleContext
+// DidSetStyleContext
 //
-// When the style context changes, make sure that all of our styles are still up to date.
+// When the style context changes, make sure that all of our image is up to date.
 //
 NS_IMETHODIMP
-nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
-                                               PRInt32 aParentChange, nsStyleChangeList* aChangeList,
-                                               PRInt32* aLocalChange)
+nsTitledButtonFrame :: DidSetStyleContext( nsIPresContext* aPresContext )
 {
-  // this re-resolves |mStyleContext|, so it may change
-  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, aParentChange,
-                                               aChangeList, aLocalChange); 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (NS_COMFALSE != rv) {  // frame style changed
-    if (aLocalChange) {
-      aParentChange = *aLocalChange;  // tell children about or change
-    }
-  }
-  mRenderer->ReResolveStyles(*aPresContext, aParentChange, aChangeList, aLocalChange);
-
   // if list-style-image change we want to change the image
   UpdateImage(*aPresContext);
   
-  return rv;
+  return NS_OK;
   
-} // ReResolveStyleContext
+} // DidSetStyleContext
 
 void
 nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)

@@ -83,12 +83,6 @@ public:
                                         nsIStyleContext** aStyleContext) const;
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext* aStyleContext);
-  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
-                                      nsIStyleContext* aParentContext,
-                                      PRInt32 aParentChange,
-                                      nsStyleChangeList* aChangeList,
-                                      PRInt32* aLocalChange) ;
-
 
   virtual void animate();
 
@@ -124,13 +118,6 @@ protected:
   virtual PRUint8 GetBrightness(nscolor c);
   virtual nsRect TransformXtoY(const nsRect& rect);
   virtual nsRect TransformYtoX(const nsRect& rect);
-
-  virtual void RefreshStyleContext(nsIPresContext* aPresContext,
-                            nsIAtom *         aNewContentPseudo,
-                            nsCOMPtr<nsIStyleContext>* aCurrentStyle,
-                            nsIContent *      aContent,
-                            nsIStyleContext*  aParentStyle) ;
-
 
     // pass-by-value not allowed for a coordinator because it corresponds 1-to-1
     // with an element in the UI.
