@@ -3612,3 +3612,88 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
   
   return rv;
 }
+
+NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
+{
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIPrompt> prompt(do_GetService(kNetSupportDialogCID));
+  nsCOMPtr<nsIIOService> io(do_GetService(kIOServiceCID));
+  nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID));
+
+  if (!prompt || !io || !strings)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIURI> uri;
+  char *spec = nsnull;
+  nsILocale* locale = nsnull;
+
+  PRInt32 buttonPressed;
+  PRBool checkboxState = PR_FALSE;
+  
+  rv = io->NewURI(PLUGIN_PROPERTIES_URL, nsnull, getter_AddRefs(uri));
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = uri->GetSpec(&spec);
+  if (NS_FAILED(rv)) 
+  {
+    nsCRT::free(spec);
+    return rv;
+  }
+
+  rv = strings->CreateBundle(spec, locale, getter_AddRefs(bundle));
+  nsCRT::free(spec);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRUnichar *title = nsnull;
+  PRUnichar *message = nsnull;
+  PRUnichar *checkboxMessage = nsnull;
+
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginTitle"), 
+                                 &title);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginMessage"), 
+                                 &message);
+  if (NS_FAILED(rv))
+  {
+    nsMemory::Free((void *)title);
+    return rv;
+  }
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BadPluginCheckboxMessage"), 
+                                 &checkboxMessage);
+  if (NS_FAILED(rv))
+  {
+    nsMemory::Free((void *)title);
+    nsMemory::Free((void *)message);
+    return rv;
+  }
+
+  rv = prompt->UniversalDialog(nsnull, /* title message */
+                               title, /* title text in top line of window */
+                               message, /* this is the main message */
+                               checkboxMessage, /* This is the checkbox message */
+                               nsnull, /* first button text, becomes OK by default */
+                               nsnull, /* second button text, becomes CANCEL by default */
+                               nsnull, /* third button text */
+                               nsnull, /* fourth button text */
+                               nsnull, /* first edit field label */
+                               nsnull, /* second edit field label */
+                               nsnull, /* first edit field initial and final value */
+                               nsnull, /* second edit field initial and final value */
+                               nsnull,  /* icon: question mark by default */
+                               &checkboxState, /* initial and final value of checkbox */
+                               1, /* number of buttons */
+                               0, /* number of edit fields */
+                               0, /* is first edit field a password field */
+                               &buttonPressed);
+
+  nsMemory::Free((void *)title);
+  nsMemory::Free((void *)message);
+  nsMemory::Free((void *)checkboxMessage);
+  return rv;
+}

@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIStreamListener.h"
+#include "prlink.h"  // for PRLibrary
 
 class nsIPlugin;
 class nsIURI;
@@ -78,6 +79,9 @@ public:
 
   NS_IMETHOD
   StopPluginInstance(nsIPluginInstance* aInstance) = 0;
+
+  NS_IMETHOD
+  HandleBadPlugin(PRLibrary* aLibrary) = 0;
 };
 
 #endif // nsIPluginHost_h___
