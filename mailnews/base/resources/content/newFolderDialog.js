@@ -48,19 +48,17 @@ function onLoad()
   if (arguments.dualUseFolders) {
     dialog.folderType = FOLDERS | MESSAGES;
   } else {
+    window.resizeTo(250, 235);
+
     // set our folder type by calling the default selected type's oncommand
     var selectedFolderType = document.getElementById("folderGroup").selectedItem;
     eval(selectedFolderType.getAttribute("oncommand"));
 
     // show the section which allows us to select the folder type to create
     var newFolderTypeBox = document.getElementById("newFolderTypeBox");
-    newFolderTypeBox.setAttribute("hidden", "false");
+    newFolderTypeBox.removeAttribute("hidden");
   }
 
-  // XXX Ugly hack to make sizeToContent work, see bug 62987
-  window.resizeTo(0, 0);
-
-  window.sizeToContent();
   moveToAlertPosition();
   doEnabling();
   doSetOKCancel(onOK, onCancel);

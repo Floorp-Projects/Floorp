@@ -34,6 +34,7 @@
         title="&newFolderDialog.title;"
         align="vertical"
         class="dialog"
+        width="200" height="180"
         onload="onLoad();">
 
   <script type="text/javascript" src="chrome://global/content/strres.js"/>
@@ -54,7 +55,7 @@
     <text value="&description.label;" class="label" accesskey="&description.accesskey;" for="msgNewFolderPicker"/>
 
     <box align="horizontal">
-      <menu id="msgNewFolderPicker" oncommand="doEnabling(); window.sizeToContent();"/>
+      <menu id="msgNewFolderPicker" oncommand="doEnabling();" crop="right" flex="1"/>
       <spring flex="1"/>
     </box>
 

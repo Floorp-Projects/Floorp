@@ -97,11 +97,4 @@ function SetFolderPicker(uri,pickerID)
 
 	picker.setAttribute("value",selectedValue);
 	picker.setAttribute("uri",uri);
-
-	if (pickerID == "msgNewFolderPicker") {
-		// XXX Ugly hack to make sizeToContent work, see bug 62987
-		window.resizeTo(0,0);
-
-		window.sizeToContent();
-	}
 }
