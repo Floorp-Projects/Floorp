@@ -2178,7 +2178,11 @@ static nsresult UCS2toFS(const PRUnichar *aBuffer, char **aResult)
                                   aBuffer, -1,
                                   *aResult, chars, &defaultChar, NULL);
     if (chars == 0)
+    {
+        nsMemory::Free(*aResult);
+        *aResult = nsnull;
         return NS_ERROR_FAILURE;
+    }
     
     return NS_OK;
 }
@@ -2200,9 +2204,11 @@ static nsresult FStoUCS2(const char* aBuffer, PRUnichar **aResult)
     chars = ::MultiByteToWideChar(CP_ACP, 0,
                                   aBuffer, -1,
                                   *aResult, chars);
-    if (chars == 0)
+    if (chars == 0) {
+        nsMemory::Free(*aResult);
+        *aResult = nsnull;
         return NS_ERROR_FAILURE;
-    
+    }
     return NS_OK;
 }
 
