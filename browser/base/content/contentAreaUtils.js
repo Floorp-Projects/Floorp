@@ -197,8 +197,17 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
       return;
   
-    // var directory = fp.file.parent.QueryInterface(nsILocalFile);
-    // prefs.setComplexValue("dir", nsILocalFile, directory);
+    var useDownloadDir = false;
+    try {
+      useDownloadDir = prefs.getBoolPref("useDownloadDir");
+    }
+    catch(ex) {
+    }
+    
+    if (!useDownloadDir) {
+      var directory = fp.file.parent.QueryInterface(nsILocalFile);
+      prefs.setComplexValue("dir", nsILocalFile, directory);
+    }
     fp.file.leafName = validateFileName(fp.file.leafName);
     filterIndex = fp.filterIndex;
     file = fp.file;

@@ -27,7 +27,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["defaultDir", "useProgressDialogs", "openDownloadsSidebar"];
+    var _elementIDs = ["downloadDir", "defaultDir", "useProgressDialogs", "openDownloadsSidebar"];
     function selectFolder()
     { 
       const nsIFilePicker = Components.interfaces.nsIFilePicker;
@@ -59,13 +59,29 @@
         pref.setComplexValue("browser.download.dir", nsILocalFile, localFile)
       }
     }
+    function doEnabling(aSelectedItem)
+    {
+      var textbox = document.getElementById("defaultDir");
+      var button = document.getElementById("browse");
+      var disable = aSelectedItem.id == "dontUseIt";
+      textbox.disabled = disable;
+      button.disabled = disable;
+    }
+    
   ]]>
   </script>
 
   <groupbox orient="horizontal">
     <caption label="&defaultDir.label;"/>
-    <textbox id="defaultDir" flex="1" readonly="true" prefstring="browser.download.dir"/>
-    <button label="&browse.label;" oncommand="selectFolder();"/>
+    <radiogroup id="downloadDir" onselect="doEnabling(this.selectedItem);" flex="1"
+                preftype="bool" prefstring="browser.download.useDownloadDir">
+      <radio id="dontUseIt" label="&rememberLast.label;" value="false"/>
+      <hbox flex="1">
+        <radio id="useIt" label="&useDownloadDir.label;" value="true"/>
+        <textbox id="defaultDir" flex="1" readonly="true" prefstring="browser.download.dir"/>
+        <button id="browse" label="&browse.label;" oncommand="selectFolder();"/>
+      </hbox>
+    </radiogroup>
   </groupbox>
   <groupbox>
     <caption label="&whenStarting.label;"/>
