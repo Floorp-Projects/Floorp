@@ -88,7 +88,7 @@ GlobalWindowImpl::GlobalWindowImpl()
 GlobalWindowImpl::~GlobalWindowImpl() 
 {
   if (nsnull != mScriptObject) {
-    JS_RemoveRoot((JSContext *)mContext->GetNativeContext(), &mScriptObject);
+    mContext->RemoveReference(&mScriptObject, mScriptObject);
     mScriptObject = nsnull;
   }
   
@@ -169,8 +169,8 @@ GlobalWindowImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObje
   if (nsnull == mScriptObject) {
     res = NS_NewScriptWindow(aContext, (nsIDOMWindow*)this,
                              nsnull, &mScriptObject);
-    JS_AddNamedRoot((JSContext *)aContext->GetNativeContext(),
-                    &mScriptObject, "window_object");
+    aContext->AddNamedReference(&mScriptObject, mScriptObject, 
+                                "window_object");
   }
   
   *aScriptObject = mScriptObject;

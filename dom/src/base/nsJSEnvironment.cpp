@@ -145,6 +145,32 @@ nsresult nsJSContext::InitClasses()
   return res;
 }
 
+nsresult 
+nsJSContext::AddNamedReference(void *aSlot, 
+                               void *aScriptObject,
+                               const char *aName)
+{
+  if (::JS_AddNamedRoot(mContext, aSlot, aName)) {
+    return NS_OK;
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+nsresult 
+nsJSContext::RemoveReference(void *aSlot, void *aScriptObject)
+{
+  JSObject *obj = (JSObject *)aScriptObject;
+
+  if (::JS_RemoveRoot(mContext, aSlot)) {
+    return NS_OK;
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;
 
 nsJSEnvironment *

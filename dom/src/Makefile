@@ -17,6 +17,6 @@
 
 DEPTH=../..
 
-DIRS = base coreDOM html events build
+DIRS = base coreDOM html events jsurl build
 
 include $(DEPTH)/config/rules.mk

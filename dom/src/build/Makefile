@@ -30,7 +30,7 @@ REQUIRES=xpcom raptor
 CPPSRCS=dlldeps.cpp 
 
 INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
-	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I../base
+	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I../base -I$(PUBLIC)\jsurl
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)
@@ -46,6 +46,7 @@ EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/libjsdomcore_s.a			\
 	$(DIST)/lib/libjsdomevents_s.a			\
 	$(DIST)/lib/libjsdomhtml_s.a			\
+	$(DIST)/lib/libjsurl.a				\
 	$(LD_NONE)					\
 	$(DIST)/bin/libraptorbase.so			\
 	$(DIST)/bin/libgmbaseunix.so			\

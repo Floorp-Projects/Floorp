@@ -1,4 +1,4 @@
-#!nmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,9 +15,19 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
-IGNORE_MANIFEST=1
+DEPTH		= ../../..
 
-DIRS = base coreDOM html events jsurl build
+MODULE		= jsurl
+LIBRARY_NAME	= jsurl
 
-include <$(DEPTH)\config\rules.mak>
+CPPSRCS = \
+	mkmocha.cpp	\
+	$(NULL)
+
+EXPORTS= jsurl.h
+
+REQUIRES	= network nspr2 dbm util pref js java  \
+	security dom raptor netlib xpcom
+
+include $(DEPTH)/config/rules.mk
+
