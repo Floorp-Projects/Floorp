@@ -2156,7 +2156,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * expression statement as the script's result, despite the fact
              * that it appears useless to the compiler.
              */
-            useful = !cx->fp->fun || cx->fp->fun->native || cx->fp->special;
+            useful = !cx->fp->fun ||
+                     cx->fp->fun->native ||
+                     (cx->fp->flags & JSFRAME_SPECIAL);
             if (!useful) {
                 if (!CheckSideEffects(cx, &cg->treeContext, pn2, &useful))
                     return JS_FALSE;

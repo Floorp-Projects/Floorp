@@ -321,7 +321,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     int32 lineno;
     JSString *message, *filename;
 
-    if (!cx->fp->constructing) {
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         /*
          * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
          * called as functions, without operator new.  But as we do not give

@@ -190,7 +190,7 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
     if (!js_NewNumberValue(cx, d, &v))
 	return JS_FALSE;
-    if (!cx->fp->constructing) {
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
 	*rval = v;
 	return JS_TRUE;
     }

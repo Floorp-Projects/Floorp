@@ -3413,7 +3413,7 @@ JS_IsRunning(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx)
 {
-    return cx->fp && cx->fp->constructing;
+    return cx->fp && (cx->fp->flags & JSFRAME_CONSTRUCTING);
 }
 
 JS_FRIEND_API(JSBool)

@@ -59,6 +59,7 @@
 #include "jsstr.h"
 #include "jsexn.h"
 
+/* Generic function/call/arguments tinyids -- also reflected bit numbers. */
 enum {
     CALL_ARGUMENTS  = -1,       /* predefined arguments local variable */
     CALL_CALLEE     = -2,       /* reference to active function's object */
@@ -70,10 +71,15 @@ enum {
     FUN_CALLER      = -8        /* Function.prototype.caller, backward compat */
 };
 
-#undef TEST_BIT
-#undef SET_BIT
-#define TEST_BIT(tinyid, bitset)    ((bitset) & JS_BIT(-(tinyid) - 1))
-#define SET_BIT(tinyid, bitset)     ((bitset) |= JS_BIT(-(tinyid) - 1))
+#if JSFRAME_OVERRIDE_BITS < 8
+# error "not enough override bits in JSStackFrame.flags!"
+#endif
+
+#define TEST_OVERRIDE_BIT(fp, tinyid) \
+    ((fp)->flags & JS_BIT(JSFRAME_OVERRIDE_SHIFT - ((tinyid) + 1)))
+
+#define SET_OVERRIDE_BIT(fp, tinyid) \
+    ((fp)->flags |= JS_BIT(JSFRAME_OVERRIDE_SHIFT - ((tinyid) + 1)))
 
 #if JS_HAS_ARGS_OBJECT
 
@@ -82,7 +88,7 @@ js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp)
 {
     JSObject *argsobj;
 
-    if (TEST_BIT(CALL_ARGUMENTS, fp->overrides)) {
+    if (TEST_OVERRIDE_BIT(fp, CALL_ARGUMENTS)) {
         JS_ASSERT(fp->callobj);
         return OBJ_GET_PROPERTY(cx, fp->callobj,
                                 (jsid) cx->runtime->atomState.argumentsAtom,
@@ -165,7 +171,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
     JSObject *obj;
     uintN slot;
 
-    if (TEST_BIT(CALL_ARGUMENTS, fp->overrides)) {
+    if (TEST_OVERRIDE_BIT(fp, CALL_ARGUMENTS)) {
         JS_ASSERT(fp->callobj);
         if (!OBJ_GET_PROPERTY(cx, fp->callobj,
                               (jsid) cx->runtime->atomState.argumentsAtom,
@@ -194,7 +200,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id,
         }
     } else {
         if (id == (jsid) cx->runtime->atomState.lengthAtom) {
-            if (fp->argsobj && TEST_BIT(ARGS_LENGTH, fp->overrides))
+            if (fp->argsobj && TEST_OVERRIDE_BIT(fp, ARGS_LENGTH))
                 return OBJ_GET_PROPERTY(cx, fp->argsobj, id, vp);
             *vp = INT_TO_JSVAL((jsint) fp->argc);
         }
@@ -292,7 +298,7 @@ args_delProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch (slot) {
       case ARGS_CALLEE:
       case ARGS_LENGTH:
-        SET_BIT(slot, fp->overrides);
+        SET_OVERRIDE_BIT(fp, slot);
         break;
 
       default:
@@ -323,12 +329,12 @@ args_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     slot = JSVAL_TO_INT(id);
     switch (slot) {
       case ARGS_CALLEE:
-        if (!TEST_BIT(slot, fp->overrides))
+        if (!TEST_OVERRIDE_BIT(fp, slot))
             *vp = fp->argv ? fp->argv[-2] : OBJECT_TO_JSVAL(fp->fun->object);
         break;
 
       case ARGS_LENGTH:
-        if (!TEST_BIT(slot, fp->overrides))
+        if (!TEST_OVERRIDE_BIT(fp, slot))
             *vp = INT_TO_JSVAL((jsint)fp->argc);
         break;
 
@@ -361,7 +367,7 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch (slot) {
       case ARGS_CALLEE:
       case ARGS_LENGTH:
-        SET_BIT(slot, fp->overrides);
+        SET_OVERRIDE_BIT(fp, slot);
         break;
 
       default:
@@ -426,7 +432,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             }
         }
 
-        if (atom && !TEST_BIT(tinyid, fp->overrides)) {
+        if (atom && !TEST_OVERRIDE_BIT(fp, tinyid)) {
             if (!js_DefineProperty(cx, obj, (jsid) atom, value,
                                    args_getProperty, args_setProperty, 0,
                                    (JSProperty **) &sprop)) {
@@ -604,7 +610,7 @@ Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
-    if (!cx->fp->constructing) {
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         obj = js_NewObject(cx, &js_CallClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
@@ -636,7 +642,7 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     slot = JSVAL_TO_INT(id);
     switch (slot) {
       case CALL_ARGUMENTS:
-        if (!TEST_BIT(slot, fp->overrides)) {
+        if (!TEST_OVERRIDE_BIT(fp, slot)) {
             JSObject *argsobj = js_GetArgsObject(cx, fp);
             if (!argsobj)
                 return JS_FALSE;
@@ -645,12 +651,12 @@ call_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       case CALL_CALLEE:
-        if (!TEST_BIT(slot, fp->overrides))
+        if (!TEST_OVERRIDE_BIT(fp, slot))
             *vp = fp->argv ? fp->argv[-2] : OBJECT_TO_JSVAL(fp->fun->object);
         break;
 
       case FUN_CALL:
-        if (!TEST_BIT(slot, fp->overrides))
+        if (!TEST_OVERRIDE_BIT(fp, slot))
             *vp = OBJECT_TO_JSVAL(obj);
         break;
 
@@ -680,7 +686,7 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CALL_ARGUMENTS:
       case CALL_CALLEE:
       case FUN_CALL:
-        SET_BIT(slot, fp->overrides);
+        SET_OVERRIDE_BIT(fp, slot);
         break;
 
       default:
@@ -886,8 +892,10 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return JS_TRUE;
 
     /* Find fun's top-most activation record. */
-    for (fp = cx->fp; fp && (fp->fun != fun || fp->special); fp = fp->down)
+    for (fp = cx->fp; fp && (fp->fun != fun || (fp->flags & JSFRAME_SPECIAL));
+         fp = fp->down) {
         continue;
+    }
 
     switch (slot) {
       case CALL_ARGUMENTS:
@@ -1596,7 +1604,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsid oldArgId;
     JSBool ok;
 
-    if (cx->fp && !cx->fp->constructing) {
+    if (cx->fp && !(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;

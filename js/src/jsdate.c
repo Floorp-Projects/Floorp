@@ -1850,7 +1850,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsdouble d;
 
     /* Date called as function */
-    if (!cx->fp->constructing) {
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
 	int64 us, ms, us2ms;
 	jsdouble msec_time;
 

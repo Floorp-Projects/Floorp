@@ -2111,7 +2111,7 @@ String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
         str = cx->runtime->emptyString;
     }
-    if (!cx->fp->constructing) {
+    if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
         *rval = STRING_TO_JSVAL(str);
         return JS_TRUE;
     }

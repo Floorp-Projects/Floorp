@@ -65,10 +65,7 @@ struct JSStackFrame {
     jsval           *spbase;        /* operand stack base */
     uintN           sharpDepth;     /* array/object initializer depth */
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
-    JSPackedBool    constructing;   /* true if called via new operator */
-    uint8           overrides;      /* bit-set of overridden Call properties */
-    uint8           special;        /* special frame type flags, see below */
-    JSPackedBool    reserved;       /* reserved for future use */
+    uint32          flags;          /* frame flags -- see below */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
 };
 
@@ -76,11 +73,18 @@ typedef struct JSInlineFrame {
     JSStackFrame    frame;          /* base struct */
     void            *mark;          /* mark before inline frame */
     void            *hookData;      /* debugger call hook data */
+    JSVersion       callerVersion;  /* dynamic version of calling script */
 } JSInlineFrame;
 
-/* JS special stack frame flags. */
-#define JSFRAME_DEBUGGER    0x1     /* frame for JS_EvaluateInStackFrame */
-#define JSFRAME_EVAL        0x2     /* frame for obj_eval */
+/* JS stack frame flags. */
+#define JSFRAME_CONSTRUCTING   0x1  /* frame is for a constructor invocation */
+#define JSFRAME_ASSIGNING      0x2  /* a complex (not simplex JOF_ASSIGNING) op
+                                       is currently assigning to a property */
+#define JSFRAME_DEBUGGER       0x4  /* frame for JS_EvaluateInStackFrame */
+#define JSFRAME_EVAL           0x8  /* frame for obj_eval */
+#define JSFRAME_SPECIAL        0xc  /* special evaluation frame flags */
+#define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
+#define JSFRAME_OVERRIDE_BITS  8
 
 /*
  * Property cache for quickened get/set property opcodes.
@@ -233,8 +237,9 @@ extern JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, uintN flags);
 
 /*
- * Consolidated js_Invoke flags.  NB: JSINVOKE_CONSTRUCT must be 1 or JS_TRUE
- * (see js_Invoke's initialization of frame.constructing).
+ * Consolidated js_Invoke flags.  NB: JSINVOKE_CONSTRUCT must be the same bit
+ * as JSFRAME_CONSTRUCTING (see js_Invoke's initialization of frame.flags --
+ * there's a #error check to ensure this identity in jsinterp.c).
  */
 #define JSINVOKE_CONSTRUCT      0x1     /* construct object rather than call */
 #define JSINVOKE_INTERNAL       0x2     /* internal call, not from a script */
