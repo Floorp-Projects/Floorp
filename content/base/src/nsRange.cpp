@@ -64,6 +64,7 @@
 #include "nsScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
+#include "nsIHTMLDocument.h"
 
 #include "nsIJSContextStack.h"
 // XXX Temporary inclusion to deal with fragment parsing
@@ -2372,9 +2373,16 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
             }
           }
           
+          nsDTDMode mode = eDTDMode_autodetect;
+          nsCOMPtr<nsIDOMDocument> ownerDoc;
+          mStartParent->GetOwnerDocument(getter_AddRefs(ownerDoc));
+          nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(ownerDoc));
+          if (htmlDoc) {
+            htmlDoc->GetDTDMode(mode);
+          }
           result = parser->ParseFragment(aFragment, (void*)0,
                                          tagStack,
-                                         0, contentType);
+                                         0, contentType, mode);
 
           if (ContextStack) {
             JSContext *notused;

@@ -1358,7 +1358,10 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       // XXXVidur Make a copy and only check in the first 1k
       mParserContext->mScanner->Peek(theBuffer, 1024);
 
-      DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType,mParserContext->mMimeType);
+      if (eDTDMode_unknown == mParserContext->mDTDMode ||
+          eDTDMode_autodetect == mParserContext->mDTDMode) {
+        DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType,mParserContext->mMimeType);
+      }
 
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
         mParserContext->mDTD->WillBuildModel( *mParserContext,mSink);
@@ -1597,6 +1600,7 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVeri
     if(pc && theScanner) {
       pc->mMultipart=PR_TRUE;
       pc->mContextType=CParserContext::eCTURL;
+      pc->mDTDMode=aMode;
       PushContext(*pc);
       result=NS_OK;
     }
@@ -1632,6 +1636,7 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsAReadableString& aMimeT
     pc->mStreamListenerState=eOnStart;  
     pc->mMultipart=PR_FALSE;
     pc->mContextType=CParserContext::eCTStream;
+    pc->mDTDMode=aMode;
     mParserContext->mScanner->Eof();
     result=ResumeParse();
     pc=PopContext();
@@ -1721,6 +1726,7 @@ nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
 
         pc->mContextType=CParserContext::eCTString; 
         pc->SetMimeType(aMimeType);
+        pc->mDTDMode=aMode;
         mUnusedInput.Truncate(0); 
 
         //printf("Parse(string) iterate: %i",PR_FALSE); 
@@ -1779,7 +1785,7 @@ nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,
   //now it's time to try to build the model from this fragment
 
   mObserversEnabled = PR_FALSE; //disable observers for fragments
-  result = Parse(theContext + aSourceBuffer,(void*)&theContext,aMimeType,PR_FALSE,PR_TRUE);
+  result = Parse(theContext + aSourceBuffer,(void*)&theContext,aMimeType,PR_FALSE,PR_TRUE, aMode);
   mObserversEnabled = PR_TRUE; //now reenable.
 
   return result;
