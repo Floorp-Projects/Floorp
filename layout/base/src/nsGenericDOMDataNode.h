@@ -517,7 +517,8 @@ struct nsGenericDOMDataNode {
   }                                                               \
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult){                   \
     return mInner.IsOnlyWhitespace(aResult);                      \
-  }
+  }                                                               \
+  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone); 
 
 /**
  * This macro implements the portion of query interface that is

@@ -897,47 +897,67 @@ nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
 nsresult
 nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
 {
-  nsresult result = NS_OK;
-  nsIContent* newNode;
-  nsITextContent* text;
+  nsresult rv = NS_OK;
   nsAutoString cutText;
-  nsIContent* parentNode;
   PRUint32 length;
 
   GetLength(&length);
-  // Cut the second part out of the original text node
-  result = SubstringData(aOffset, length-aOffset, cutText);
-  if (NS_OK == result) {
-    result = DeleteData(aOffset, length-aOffset);
-    if (NS_OK == result) {
-      // Create a new text node and set its data to the
-      // string we just cut out
-      result = NS_NewTextNode(&newNode);
-      if (NS_OK == result) {
-        result = newNode->QueryInterface(kITextContentIID, (void**)&text);
-        if (NS_OK == result) {
-          text->SetText(cutText.GetUnicode(), cutText.Length(), PR_FALSE);
-          // Find the parent of the current node and insert the
-          // new text node as a child after the current node
-          GetParent(parentNode);
-          if (nsnull != parentNode) {
-            PRInt32 index;
-
-            result = parentNode->IndexOf(mContent, index);
-            if (NS_OK == result) {
-              result = parentNode->InsertChildAt(newNode, index+1, PR_TRUE);
-            }
-            NS_RELEASE(parentNode);
-          }
-          result = text->QueryInterface(kIDOMTextIID, (void**)aReturn);
-          NS_RELEASE(text);
-        }
-        NS_RELEASE(newNode);
-      }
-    }
+  if (aOffset > length) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  return result;
+  rv = SubstringData(aOffset, length-aOffset, cutText);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = DeleteData(aOffset, length-aOffset);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /*
+   * Use CloneContent() for creating the new node so that the new node is of
+   * same class as this node!
+   */
+
+  nsCOMPtr<nsITextContent> tmpContent(do_QueryInterface(mContent, &rv));
+  nsCOMPtr<nsITextContent> newContent;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  rv = tmpContent->CloneContent(PR_FALSE, getter_AddRefs(newContent));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+
+  nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(newContent, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = newNode->SetNodeValue(cutText);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIContent> parentNode;
+  GetParent(*getter_AddRefs(parentNode));
+
+  if (parentNode) {
+    PRInt32 index;
+    
+    rv = parentNode->IndexOf(mContent, index);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(newNode));
+      
+      rv = parentNode->InsertChildAt(content, index+1, PR_TRUE);
+    }
+  }
+  
+  return newNode->QueryInterface(kIDOMTextIID, (void**)aReturn);
 }
 
 //----------------------------------------------------------------------
