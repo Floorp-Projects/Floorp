@@ -460,26 +460,41 @@ eParseMode DetermineParseMode(nsParser& aParser) {
       theBufCopy.StripWhitespace();
       PRInt32 theSubIndex=theBufCopy.FindChar(kGreaterThan,theIndex+1);
       theBufCopy.Truncate(theSubIndex);
-      theSubIndex=theBufCopy.Find("HTML4.0",PR_TRUE,theIndex+8);
+      theSubIndex=theBufCopy.Find("-//W3C//DTD",PR_TRUE,theIndex+8);
       if(kNotFound<theSubIndex) {
-        if(theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex)>kNotFound)
-          return eParseMode_quirks;
-        else if((theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex)>kNotFound) ||
-                (theBufCopy.Find("LATIN1", PR_TRUE,theSubIndex) >kNotFound) ||
-                (theBufCopy.Find("SYMBOLS",PR_TRUE,theSubIndex) >kNotFound) ||
-                (theBufCopy.Find("SPECIAL",PR_TRUE,theSubIndex) >kNotFound))
-          return eParseMode_quirks; // XXX -HACK- Set the appropriate mode.
-        else
-          return eParseMode_noquirks;
-      }
-      theSubIndex=theBufCopy.Find("ISO/IEC15445:1999",PR_TRUE,theIndex+8);
-      if(kNotFound<theSubIndex) {
+        if(kNotFound<(theSubIndex=theBufCopy.Find("HTML4.0",PR_TRUE,theSubIndex+11))) {
+          PRUnichar num=theBufCopy.CharAt(theSubIndex+7);
+          if(num > '0' && num < '9') {
+            if(theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex+7)>kNotFound)
+              return eParseMode_noquirks; // XXX - investigate this more.
+          }
+          if((theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex+7)>kNotFound)||
+             (theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex+7)>kNotFound)    ||
+             (theBufCopy.Find("LATIN1", PR_TRUE,theSubIndex+7) >kNotFound)    ||
+             (theBufCopy.Find("SYMBOLS",PR_TRUE,theSubIndex+7) >kNotFound)    ||
+             (theBufCopy.Find("SPECIAL",PR_TRUE,theSubIndex+7) >kNotFound))
+            return eParseMode_quirks; // XXX -HACK- Set the appropriate mode.
+          else
+            return eParseMode_noquirks;
+        }else 
+        if(kNotFound<(theSubIndex=theBufCopy.Find("XHTML",PR_TRUE,theSubIndex+11))) {
+          if((theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex)>kNotFound)||
+             (theBufCopy.Find("STRICT",PR_TRUE,theSubIndex)   >kNotFound)   ||
+             (theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex) >kNotFound))
+            return eParseMode_noquirks;
+          else
+            return eParseMode_quirks;
+        }
+      }else
+      if(kNotFound<(theSubIndex=theBufCopy.Find("ISO/IEC15445:1999",PR_TRUE,theIndex+8))) {
         theSubIndex=theBufCopy.Find("HTML",PR_TRUE,theSubIndex+18);
         if(kNotFound==theSubIndex)
           theSubIndex=theBufCopy.Find("HYPERTEXTMARKUPLANGUAGE",PR_TRUE,theSubIndex+18);
         return eParseMode_noquirks;
       }
-    }
+    }else
+    if(kNotFound<(theIndex=theBufCopy.Find("?XML",PR_TRUE)))
+        return eParseMode_noquirks;
 
     theIndex=theBufCopy.Find("NOQUIRKS",PR_TRUE);
     if(kNotFound<theIndex) {

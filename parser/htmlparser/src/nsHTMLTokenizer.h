@@ -50,7 +50,7 @@
 
 CLASS_EXPORT_HTMLPARS nsHTMLTokenizer : public nsITokenizer {
 public:
-          nsHTMLTokenizer();
+          nsHTMLTokenizer(PRInt32 aParseMode=eParseMode_quirks);
   virtual ~nsHTMLTokenizer();
 
           NS_DECL_ISUPPORTS
@@ -68,6 +68,7 @@ public:
 	virtual PRInt32           GetCount(void);
 
   virtual void              PrependTokens(nsDeque& aDeque);
+  static  void              FreeTokenRecycler(void);
 
 protected:
 
@@ -88,6 +89,7 @@ protected:
 
   nsDeque mTokenDeque;
   PRBool  mDoXMLEmptyTags;
+  PRInt32 mParseMode;
 };
 
 extern NS_HTMLPARS nsresult NS_NewHTMLTokenizer(nsIDTD** aInstancePtrResult);

@@ -160,7 +160,7 @@ class CToken {
      * @param   aScanner -- input source where token should get data
      * @return  error code (0 means ok)
      */
-    virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner);
+    virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
 
     /**
      * Causes token to dump itself in debug form to given output stream

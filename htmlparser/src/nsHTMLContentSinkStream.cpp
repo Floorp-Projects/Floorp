@@ -1165,7 +1165,7 @@ nsHTMLContentSinkStream::AddComment(const nsIParserNode& aNode){
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
-  Write("<!--");
+  Write(aNode.GetText());
 
   return NS_OK;
 }

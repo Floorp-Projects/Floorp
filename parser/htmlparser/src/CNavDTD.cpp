@@ -408,7 +408,8 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
 
     START_TIMER();
 
-    CStartToken theToken(eHTMLTag_html);
+    nsAutoString theTagName("html");
+    CStartToken theToken(theTagName,eHTMLTag_html);
     HandleStartToken(&theToken);
 
     mSkipTarget=eHTMLTag_unknown;
@@ -1203,14 +1204,19 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
       if(nsHTMLElement::IsSectionTag(theChildTag)){
         switch(theChildTag){
           case eHTMLTag_body:
-           if(mHasOpenBody)
-              return OpenContainer(*theNode,PR_FALSE);
+            if(mHasOpenBody) {
+              result=OpenContainer(*theNode,PR_FALSE);
+              RecycleNode(theNode);
+              return result;
+            }
             break;
           case eHTMLTag_head:
             if(mHadBody || mHadFrameset) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,*theNode);
-              if(result == NS_OK)
+              if(result == NS_OK) {
+                RecycleNode(theNode);
                 return result;
+              }
             }
             break;
           default:
@@ -1430,20 +1436,19 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
           if((kNotFound==GetIndexOfChildOrSynonym(mBodyContext->mStack,theChildTag)) ||
              (!gHTMLElements[theChildTag].CanAutoCloseTag(mBodyContext->Last()))) {
             UpdateStyleStackForCloseTag(theChildTag,theChildTag);
-            if(gHTMLElements[theChildTag].IsMemberOf(kBlockEntity)) {
+            if(gHTMLElements[theChildTag].IsMemberOf(kBlockEntity) &&
+               mParseMode!=eParseMode_noquirks) {
               // Oh boy!! we found a "stray" block entity. Nav4.x and IE introduce line break in
               // such cases. So, let's simulate that effect for compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
-#if 0
-              mTokenizer->PushTokenFront(aToken); //put this end token back...
-              CHTMLToken* theToken = (CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theChildTag);
-              mTokenizer->PushTokenFront(theToken); //put this new token onto stack...
-#endif
-              CHTMLToken* theToken = (CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theChildTag);
-              result=HandleToken(theToken,mParser);
-
+              if(!CanOmit(mBodyContext->Last(),theChildTag)) {
+                mTokenizer->PushTokenFront(aToken); //put this end token back...
+                aToken->mRecycle=PR_FALSE; // make sure not to recycle this token because it's not used yet!!
+                CHTMLToken* theToken = (CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theChildTag);
+                mTokenizer->PushTokenFront(theToken); //put this new token onto stack...
+              }
             }
-            else return result;
+            return result;
           }
           if(result==NS_OK) {
             eHTMLTags theTarget=FindAutoCloseTargetForEndTag(theChildTag,mBodyContext->mStack);
@@ -1689,20 +1694,17 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
     WriteTokenToLog(aToken);
   #endif
 
-  CParserContext* pc=(mParser)? mParser->PeekContext():nsnull; 
-  if(pc) {
-    nsString& docTypeStr=aToken->GetStringValueXXX();
-    mLineNumber += (docTypeStr).CountChar(kNewLine);
-    docTypeStr.Trim("<!>");
-    nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+  nsString& docTypeStr=aToken->GetStringValueXXX();
+  mLineNumber += (docTypeStr).CountChar(kNewLine);
+  docTypeStr.Trim("<!>");
+  nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
 
-    STOP_TIMER();
+  STOP_TIMER();
+  
+  result = (mSink)? mSink->AddDocTypeDecl(theNode,mParseMode):NS_OK;
+  
+  START_TIMER();
 
-    result = (mSink)? mSink->AddDocTypeDecl(theNode, pc->mParseMode):NS_OK;
-
-    START_TIMER();
-
-  }
   return result;
 }
 
@@ -1858,7 +1860,8 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
         theTempTag=aChildTag;
         while(eHTMLTag_unknown!=aChildTag) {
           if(parentCanContain){
-            result=PR_TRUE;
+            if(!CanOmit(aParentTag,aChildTag))
+              result=PR_TRUE;
             break;
           }//if
           TagList* theTagList=gHTMLElements[aChildTag].GetRootTags();
@@ -2779,7 +2782,6 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
 
     PRBool done=PR_FALSE;
     nsCParserNode*  theNode=CreateNode();
-
     CTokenRecycler* theRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
 
     while(!done) {
@@ -2993,7 +2995,7 @@ nsITokenRecycler* CNavDTD::GetTokenRecycler(void){
  */
 nsITokenizer* CNavDTD::GetTokenizer(void) {
   if(!mTokenizer)
-    mTokenizer=new nsHTMLTokenizer();
+    mTokenizer=new nsHTMLTokenizer(mParseMode);
   return mTokenizer;
 }
 
