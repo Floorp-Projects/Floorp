@@ -181,17 +181,14 @@ nsHTTPChunkConv::OnDataAvailable (
 					{
                         if (mChunkBufferLength > 0)
                         {
-						    nsIInputStream * convertedStream = nsnull;
-						    nsIByteArrayInputStream * convertedStreamSup = nsnull;
-
-						    rv = NS_NewByteArrayInputStream (&convertedStreamSup, mChunkBuffer, mChunkBufferLength);
+						    nsCOMPtr<nsIByteArrayInputStream> convertedStreamSup;
+						    rv = NS_NewByteArrayInputStream (getter_AddRefs(convertedStreamSup), mChunkBuffer, mChunkBufferLength);
 						    if (NS_FAILED (rv)) 
 							    return rv;
 
                             mChunkBuffer = NULL;
 
-                		    rv = convertedStreamSup -> QueryInterface (NS_GET_IID (nsIInputStream), (void**)&convertedStream);
-		                    NS_RELEASE (convertedStreamSup);
+                		    nsCOMPtr<nsIInputStream> convertedStream = do_QueryInterface (convertedStreamSup, &rv);
  
 						    if (NS_FAILED (rv))
 							    return rv;
