@@ -554,8 +554,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
      */
     if (outerFun || cx->fp->scopeChain != parent || InWithStatement(tc))
         pn->pn_op = JSOP_CLOSURE;
-    else if (lambda)
-        pn->pn_op = JSOP_OBJECT;
+    else if (lambda || !fun->atom)
+        pn->pn_op = fun->atom ? JSOP_NAMEDFUNOBJ : JSOP_ANONFUNOBJ;
     else
 #endif
         pn->pn_op = JSOP_NOP;
