@@ -1500,6 +1500,7 @@ doContent(XML_Parser parser,
 	  }
 	  endElementHandler(handlerArg, tag->name.str);
 	  if (blocked) {
+           *eventPP = s = next; /* fix bug 119727 */
 	    return XML_ERROR_PARSER_BLOCKED;
 	  }
 	}

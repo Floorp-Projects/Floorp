@@ -378,15 +378,10 @@ nsExpatDriver::HandleStartElement(const PRUnichar *aValue,
   NS_ASSERTION(mSink, "content sink not found!");
 
   if (mSink){
-    nsresult result = mSink->HandleStartElement(aValue, aAtts, 
-                                                XML_GetSpecifiedAttributeCount(mExpatParser) / 2, 
-                                                XML_GetIdAttributeIndex(mExpatParser), 
-                                                XML_GetCurrentLineNumber(mExpatParser));
-    
-    if (result == NS_ERROR_HTMLPARSER_BLOCK) {
-      mInternalState = NS_ERROR_HTMLPARSER_BLOCK;
-      XML_BlockParser(mExpatParser);
-    }
+    mSink->HandleStartElement(aValue, aAtts, 
+                              XML_GetSpecifiedAttributeCount(mExpatParser) / 2, 
+                              XML_GetIdAttributeIndex(mExpatParser), 
+                              XML_GetCurrentLineNumber(mExpatParser));
   }
   return NS_OK;
 }
