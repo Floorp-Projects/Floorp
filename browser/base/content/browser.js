@@ -543,6 +543,11 @@ function delayedStartup()
 
 function Shutdown()
 {
+  var os = Components.classes["@mozilla.org/observer-service;1"]
+    .getService(Components.interfaces.nsIObserverService);
+  os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
+  os.removeObserver(gBrowser.browsers[0], "browser:purge-session-history");
+
 #ifdef MOZ_ENABLE_XREMOTE
   // remove remote support
   var remoteService;
@@ -550,9 +555,7 @@ function Shutdown()
                             .getService(Components.interfaces.nsIXRemoteService);
   remoteService.removeBrowserInstance(window);
 
-  var observerService = Components.classes["@mozilla.org/observer-service;1"]
-    .getService(Components.interfaces.nsIObserverService);
-  observerService.removeObserver(gTabOpenObserver, "open-new-tab-request");
+  os.removeObserver(gTabOpenObserver, "open-new-tab-request");
 #endif
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);

@@ -479,15 +479,21 @@
       <method name="destroy">
         <body>
           <![CDATA[
+          if (!this.hasAttribute("disablehistory")) {
+            var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+            os.removeObserver(this, "browser:purge-session-history", false);
+          }
+
           if (this.mDragDropHandler)
             this.mDragDropHandler.detach();
+          this.mDragDropHandler = null;
 
           this.detachFormFill();
           
           this.securityUI = null;
-          this.mDragDropHandler = null;
 
           this.removeEventListener("unload", this.onUnload, true);
+          this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
           ]]>
         </body>
       </method>
