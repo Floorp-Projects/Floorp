@@ -6,8 +6,8 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/24 14:52:11 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:17:39 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
@@ -41,11 +41,13 @@ package TinderDB::BasicTxtDB;
 
 # Tinderbox libraries
 
+use lib '#tinder_libdir#';
+
 use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.2 $ )[1];
+$VERSION = ( qw $Revision: 1.3 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
@@ -103,14 +105,18 @@ sub unlink_files {
   my ($self, $dir, @files) = @_;
 
   foreach $file (@files) {
+    $full_file = "$dir/$file";
 
-    unlink ("$dir/$file") ||
-      die("Could not remove filename: '$dir/$file': $!\n");
+    # This may be the output of a glob, make it taint safe.
+    $full_file = main::extract_filename_chars($full_file);
+
+    unlink ("$full_file") ||
+      die("Could not remove filename: '$full_file': $!\n");
 
     # since we have 'required' these files we need to forget that they
     # were loaded.
 
-    delete $INC{"$dir/$file"};
+    delete $INC{"$full_file"};
   }
 
   return ;  
@@ -197,8 +203,10 @@ sub loadtree_db {
 
   # ignore unlink errors, cleaning up the directory is not important. 
   
-  (scalar(@sorted_files)) &&
-    unlink(@sorted_files);
+  foreach $file (@sorted_files) {
+    $file = main::extract_filename_chars($file);
+    unlink($file);
+  }
 
   return ;
 }
