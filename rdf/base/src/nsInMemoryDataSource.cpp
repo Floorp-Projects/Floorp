@@ -1298,7 +1298,6 @@ rdf_ResourceEnumerator(PLHashEntry* he, PRIntn i, void* closure)
     nsIRDFResource* resource = 
         NS_CONST_CAST(nsIRDFResource*, NS_STATIC_CAST(const nsIRDFResource*, he->key));
 
-    NS_ADDREF(resource);
     resources->AppendElement(resource);
     return HT_ENUMERATE_NEXT;
 }
