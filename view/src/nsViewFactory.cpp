@@ -51,24 +51,13 @@
 #include "nsIModule.h"
 #include "nsIPref.h"
 
-static const char kUseNewViewManagerPref[] = "nglayout.debug.enable_scary_view_manager";
-
 #include "nsViewManager.h"
-#include "nsViewManager2.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager2)
 
 static NS_IMETHODIMP ViewManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  PRBool useNewViewManager = PR_TRUE;
-
-  nsCOMPtr<nsIPref> prefs( do_GetService(NS_PREF_CONTRACTID) );
-  if (prefs)
-    prefs->GetBoolPref(kUseNewViewManagerPref, &useNewViewManager);
-
-  return useNewViewManager ? nsViewManagerConstructor(aOuter, aIID, aResult)
-                           : nsViewManager2Constructor(aOuter, aIID, aResult);
+  return nsViewManagerConstructor(aOuter, aIID, aResult);
 }
 
 /* man, I'm going to hell for this, but they're not refcounted */
