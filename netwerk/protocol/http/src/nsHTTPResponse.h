@@ -24,8 +24,8 @@
 #include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
 #include "nsHTTPHeaderArray.h"
+#include "nsString.h"
 
-class nsIInputStream;
 
 /* 
     The nsHTTPResponse class is the response object created by the response
@@ -40,9 +40,8 @@ class nsHTTPResponse : public nsISupports
 {
 
 public:
-    // Constructor and destructor
-    nsHTTPResponse(nsIInputStream* i_InputStream);
-    virtual ~nsHTTPResponse();
+    // Constructor
+    nsHTTPResponse();
 
     // Methods from nsISupports
     NS_DECL_ISUPPORTS
@@ -55,25 +54,21 @@ public:
     nsresult            GetServer(char* *o_String);
     nsresult            SetServerVersion(const char* i_ServerVersion);
 
-    nsresult            GetInputStream(nsIInputStream* *o_Stream);
-
     nsresult            GetHeader(nsIAtom* i_Header, char* *o_Value);
     nsresult            SetHeader(nsIAtom* i_Header, const char* o_Value);
     nsresult            GetHeaderEnumerator(nsISimpleEnumerator** aResult);
 
-protected:
+    nsresult            SetStatus(PRInt32 i_Value) { mStatus = i_Value; return NS_OK;};
+    nsresult            SetStatusString(const char* i_Value);
 
-    NS_IMETHOD          SetStatus(PRInt32 i_Value) { mStatus = i_Value; return NS_OK;};
-    NS_IMETHOD          SetStatusString(const char* i_Value);
+protected:
+    virtual ~nsHTTPResponse();
 
     HTTPVersion                 mServerVersion;
-    char*                       mStatusString;
+    nsCString                   mStatusString;
     PRUint32                    mStatus;
-    nsIInputStream*             mInputStream;
 
     nsHTTPHeaderArray           mHeaders;
-
-    friend class nsHTTPResponseListener;
 };
 
 #endif /* _nsHTTPResponse_h_ */
