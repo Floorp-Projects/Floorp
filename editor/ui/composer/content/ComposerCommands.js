@@ -1762,7 +1762,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
           if (oldLocation == relatedFilesDirStr || IsUrlAboutBlank(oldLocation))
             relatedFilesDir = null;
           else
-            relatedFilesDir = tempLocalFile.parent;  // this is wrong if parent is the root!
+            relatedFilesDir = tempLocalFile.parent;
         }
         else
         {
