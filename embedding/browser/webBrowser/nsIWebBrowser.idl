@@ -1,0 +1,87 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+#include "nsIWebBrowserListener.idl"
+#include "nsIDocShell.idl"
+
+/**
+ * The nsIWebBrowser
+ */
+
+ /*
+ {69E5DF00-7B8B-11d3-AF61-00A024FFC08C} -
+ {69E5DF99-7B8B-11d3-AF61-00A024FFC08C} have been reserved for nsWebBrowser
+													Interfaces.
+
+ Currently Used:
+ {69E5DF00-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowser
+ {69E5DF01-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowserNav
+ {69E5DF02-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowserListener
+ {69E5DF03-7B8B-11d3-AF61-00A024FFC08C} - nsIWebBrowserApp
+ {69E5DF04-7B8B-11d3-AF61-00A024FFC08C} - nsIProgress
+ {69E5DF05-7B8B-11d3-AF61-00A024FFC08C} - nsIProgressListener
+ */
+
+[scriptable, uuid(69E5DF00-7B8B-11d3-AF61-00A024FFC08C)]
+interface nsIWebBrowser : nsISupports
+{
+	/*
+	Registers a webBrowserListener to receive queries for listener interfaces.
+	This allows an embedding app to hook itself up to handle various listeners
+	that nsWebBrowser supports throwing.  This process allows multiple people
+	to register a listeners of the nsWebBrowser.  Each one has the option
+	to handle only certain interfaces.  The callback process of
+	nsIWebBrowserListener allows us to dynamically add new listener interfaces
+	without having to add additional Add/RemoveFooListener().
+
+	@param listener - The listener interface to be called when a specific 
+		listener interface is needed.
+
+	@param cookie - This is an optional parameter to receieve a cookie to use
+			to unregister rather than the original interface pointer.  This may
+			be nsnull.
+
+	@return	NS_OK - Listener was registered successfully.
+				NS_ERROR_INVALID_ARG - The listener passed in was either nsnull, 
+						or was already registered with this progress interface.
+	 */
+	void addListener(in nsIWebBrowserListener listener, out long cookie);
+
+	/* 
+	Removes a previously registered webBrowserListener.
+		
+	@param listener - The listener interface previously registered with 
+			addListener() this may be nsnull if a valid cookie is provided.
+
+	@param cookie - A cookie that was returned from a previously called
+		addListener() call.  This may be nsnull if a valid listener interface
+		is passed in.
+
+	@return	NS_OK - Listener was successfully unregistered.
+				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
+					to a previously registered listener.
+	*/
+	void removeListener(in nsIWebBrowserListener listener, in long cookie);
+
+	readonly attribute nsIDocShell docShell;
+};
