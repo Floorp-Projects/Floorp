@@ -56,11 +56,21 @@ public:
   // nsTextEditRules action id's
   enum 
   {
+    // any editor that has a txn mgr
     kUndo            = 1000,
     kRedo            = 1001,
+    // text actions
     kInsertText      = 2000,
     kDeleteSelection = 2001,
-    kInsertBreak     = 2002
+    // html only action
+    kInsertBreak     = 3000,
+    kMakeList        = 3001,
+    kIndent          = 3002,
+    kOutdent         = 3003,
+    kAlign           = 3004,
+    kMakeHeader      = 3005,
+    kMakeAddress     = 3006,
+    kMakePRE         = 3007
   };
   
 protected:

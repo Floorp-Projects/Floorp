@@ -84,6 +84,20 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
       return WillInsertBreak(aSelection, aCancel);
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction, aCancel);
+    case kMakeList:
+      return WillMakeList(aSelection, aCancel);
+    case kIndent:
+      return WillIndent(aSelection, aCancel);
+    case kOutdent:
+      return WillOutdent(aSelection, aCancel);
+    case kAlign:
+      return WillAlign(aSelection, aCancel);
+    case kMakeHeader:
+      return WillMakeHeader(aSelection, aCancel);
+    case kMakeAddress:
+      return WillMakeAddress(aSelection, aCancel);
+    case kMakePRE:
+      return WillMakePRE(aSelection, aCancel);
   }
   return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel);
 }
@@ -412,6 +426,98 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
 
   return res;
 }  
+
+
+nsresult
+nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  
+  nsresult res = NS_OK;
+  
+  return res;
+}
+
+
+nsresult
+nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  
+  nsresult res = NS_OK;
+  
+  return res;
+}
+
+
+nsresult
+nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  
+  nsresult res = NS_OK;
+  
+  return res;
+}
+
+
+nsresult
+nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  
+  nsresult res = NS_OK;
+  
+  return res;
+}
+
+
+nsresult
+nsHTMLEditRules::WillMakeHeader(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  
+  nsresult res = NS_OK;
+  
+  return res;
+}
+
+
+nsresult
+nsHTMLEditRules::WillMakeAddress(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  
+  nsresult res = NS_OK;
+  
+  return res;
+}
+
+
+nsresult
+nsHTMLEditRules::WillMakePRE(nsIDOMSelection *aSelection, PRBool *aCancel)
+{
+  if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
+  // initialize out param
+  *aCancel = PR_FALSE;
+  
+  nsresult res = NS_OK;
+  
+  return res;
+}
+
 
 /********************************************************
  *  helper methods 

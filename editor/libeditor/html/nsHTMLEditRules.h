@@ -33,12 +33,6 @@ public:
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel);
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
-  // nsHTMLEditRules action id's
-  enum 
-  {
-    kInsertBreak = 3000
-  };
-  
 protected:
 
   enum IterDirection
@@ -56,6 +50,13 @@ protected:
                             TypeInState    typeInState);
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECollapsedSelectionAction aAction, PRBool *aCancel);
+  nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillAlign(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillMakeHeader(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillMakeAddress(nsIDOMSelection *aSelection, PRBool *aCancel);
+  nsresult WillMakePRE(nsIDOMSelection *aSelection, PRBool *aCancel);
 
   nsresult InsertTab(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
   nsresult InsertSpace(nsIDOMSelection *aSelection, PRBool *aCancel, PlaceholderTxn **aTxn, nsString *outString);
