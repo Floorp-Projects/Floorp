@@ -19,15 +19,11 @@
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsNetService.h"
-#include "nsFileTransportService.h"
+#include "nsHttpProtocolHandler.h"
 #include "nscore.h"
-#include "nsUrl.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
-static NS_DEFINE_CID(kFileTransportServiceCID,  NS_FILETRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kTypicalUrlCID,            NS_TYPICALURL_CID);
+static NS_DEFINE_CID(kHttpProtocolHandlerCID,   NS_HTTPPROTOCOLHANDLER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -79,37 +75,13 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
         return NS_ERROR_NULL_POINTER;
 
     nsISupports *inst = nsnull;
-    if (mClassID.Equals(kNetServiceCID)) {
+    if (mClassID.Equals(kHttpProtocolHandlerCID)) {
         if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
-        nsNetService* net = new nsNetService();
+        nsHttpProtocolHandler* net = new nsHttpProtocolHandler();
         if (net == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
-        rv = net->Init();
-        if (NS_FAILED(rv)) {
-            delete net;
-            return rv;
-        }
         inst = net;
-    }
-    else if (mClassID.Equals(kFileTransportServiceCID)) {
-        if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
-        nsFileTransportService* trans = new nsFileTransportService();
-        if (trans == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        rv = trans->Init();
-        if (NS_FAILED(rv)) {
-            delete trans;
-            return rv;
-        }
-        inst = trans;
-    }
-    else if (mClassID.Equals(kTypicalUrlCID)) {
-        nsUrl* url = new nsUrl(aOuter);
-        if (url == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        inst = url;
     }
     else {
         return NS_ERROR_NO_INTERFACE;
@@ -156,22 +128,12 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->RegisterComponent(kNetServiceCID,  
-                                    "Network Service",
-                                    "component://netscape/network/net-service",
+    rv = compMgr->RegisterComponent(kHttpProtocolHandlerCID,  
+                                    "HTTP Protocol Handler",
+                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "http",
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;;
 
-    rv = compMgr->RegisterComponent(kFileTransportServiceCID, 
-                                    "File Transport Service",
-                                    "component://netscape/network/file-transport-service",
-                                    aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;;
-
-    rv = compMgr->RegisterComponent(kTypicalUrlCID, 
-                                    "Typical URL Implementation",
-                                    "component://netscape/network/typcial-url",
-                                    aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
 
@@ -183,13 +145,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kNetServiceCID, aPath);
+    rv = compMgr->UnregisterComponent(kHttpProtocolHandlerCID, aPath);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kFileTransportServiceCID, aPath);
-    if (NS_FAILED(rv)) return rv;;
-
-    rv = compMgr->UnregisterComponent(kTypicalUrlCID, aPath);
     return rv;
 }
 

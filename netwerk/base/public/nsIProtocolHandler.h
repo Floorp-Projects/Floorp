@@ -22,6 +22,8 @@
 #include "nsISupports.h"
 
 class nsIConnectionGroup;
+class nsIUrl;
+class nsIProtocolConnection;
 
 #define NS_IPROTOCOLHANDLER_IID                      \
 { /* 5da8b1b0-ea35-11d2-931b-00104ba0fd40 */         \
@@ -50,13 +52,12 @@ public:
      * needed), this method just constructs a typical URL using the
      * component manager with kTypicalUrlCID.
      */
-    NS_IMETHOD NewUrl(nsIUrl* *result, 
-                      const char* aSpec,
-                      const nsIUrl* aBaseURL) = 0;
+    NS_IMETHOD NewUrl(const char* aSpec,
+                      nsIUrl* aBaseUrl,
+                      nsIUrl* *result) = 0;
 
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,
-                             nsIConnectionGroup* group,
                              nsIProtocolConnection* *result) = 0;
 };
 

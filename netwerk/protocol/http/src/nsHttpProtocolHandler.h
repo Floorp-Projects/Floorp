@@ -16,19 +16,28 @@
  * Reserved.
  */
 
-#ifndef nsNetService_h__
-#define nsNetService_h__
+#ifndef nsHttpProtocolHandler_h___
+#define nsHttpProtocolHandler_h___
 
-#include "nsINetService.h"
+#include "nsIProtocolHandler.h"
 
-class nsNetService : public nsINetService
+// XXX regenerate:
+#define NS_HTTPPROTOCOLHANDLER_CID                   \
+{ /* 59321440-f125-11d2-9322-000000000000 */         \
+    0x59321440,                                      \
+    0xf125,                                          \
+    0x11d2,                                          \
+    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
+}
+
+class nsHttpProtocolHandler : public nsIProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS
 
-    // nsINetService methods:
-    NS_IMETHOD GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result);
-    NS_IMETHOD NewConnectionGroup(nsIConnectionGroup* *result);
+    // nsIProtocolHandler methods:
+    NS_IMETHOD GetScheme(const char* *result);
+    NS_IMETHOD GetDefaultPort(PRInt32 *result);    
     NS_IMETHOD MakeAbsoluteUrl(const char* aSpec,
                                nsIUrl* aBaseUrl,
                                char* *result);
@@ -37,18 +46,14 @@ public:
                       nsIUrl* *result);
     NS_IMETHOD NewConnection(nsIUrl* url,
                              nsISupports* eventSink,
-                             nsIConnectionGroup* group,
                              nsIProtocolConnection* *result);
-    NS_IMETHOD HasActiveConnections();
 
-    // nsNetService methods:
-    nsNetService();
-    virtual ~nsNetService();
-
-    nsresult Init();
+    // nsHttpProtocolHandler methods:
+    nsHttpProtocolHandler();
+    virtual ~nsHttpProtocolHandler();
 
 protected:
-
+    
 };
 
-#endif // nsNetService_h__
+#endif /* nsHttpProtocolHandler_h___ */
