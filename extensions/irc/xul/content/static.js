@@ -1865,6 +1865,9 @@ function multilineInputMode (state)
         singleInputBox.setAttribute ("collapsed", "true");
         splitter.setAttribute ("collapsed", "false");
         multiInputBox.setAttribute ("collapsed", "false");
+        // muliInput should have the same direction as singleInput
+        var direction = window.getComputedStyle(singleInput, null).direction;
+        multiInput.style.direction = direction;
         client.input = multiInput;
     }
     else  /* turn off multiline input mode */
@@ -1876,6 +1879,9 @@ function multilineInputMode (state)
         splitter.setAttribute ("collapsed", "true");
         multiInputBox.setAttribute ("collapsed", "true");
         singleInputBox.setAttribute ("collapsed", "false");
+        // singleInput should have the same direction as multiInput
+        var direction = window.getComputedStyle(multiInput,'').direction;
+        singleInput.style.direction = direction;
         client.input = singleInput;
     }
 
@@ -2024,6 +2030,10 @@ function setCurrentObject (obj)
     if (client.PRINT_DIRECTION == 1)
         scrollDown(obj.frame, false);    
 
+    // Input area should have the same direction as the output area
+    var contentArea = client.currentObject.frame.contentDocument.body;
+    var direction = window.getComputedStyle(contentArea, null).direction;
+    client.input.style.direction = direction;
     client.input.focus();
 }
 

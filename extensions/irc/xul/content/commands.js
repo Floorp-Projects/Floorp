@@ -95,6 +95,7 @@ function initCommands()
          ["help",              cmdHelp,                            CMD_CONSOLE],
          ["hide-view",         cmdHideView,                        CMD_CONSOLE],
          ["ignore",            cmdIgnore,           CMD_NEED_NET | CMD_CONSOLE],
+         ["input-text-direction", cmdInputTextDirection,                     0],
          ["invite",            cmdInvite,           CMD_NEED_SRV | CMD_CONSOLE],
          ["join",              cmdJoin,             CMD_NEED_SRV | CMD_CONSOLE],
          ["join-charset",      cmdJoin,             CMD_NEED_SRV | CMD_CONSOLE],
@@ -136,6 +137,7 @@ function initCommands()
          ["sync-timestamps",   cmdSync,                                      0],
          ["sync-windows",      cmdSync,                                      0],
          ["testdisplay",       cmdTestDisplay,                     CMD_CONSOLE],
+         ["text-direction",    cmdTextDirection,                             0],
          ["timestamps",        cmdTimestamps,                      CMD_CONSOLE],
          ["timestamp-format",  cmdTimestampFormat,                 CMD_CONSOLE],
          ["toggle-ui",         cmdToggleUI,                        CMD_CONSOLE],
@@ -186,8 +188,14 @@ function initCommands()
          ["userlist",         "toggle-ui userlist",                CMD_CONSOLE],
          ["tabstrip",         "toggle-ui tabstrip",                CMD_CONSOLE],
          ["statusbar",        "toggle-ui status",                  CMD_CONSOLE],
-         ["header",           "toggle-ui header",                  CMD_CONSOLE]
-
+         ["header",           "toggle-ui header",                  CMD_CONSOLE],
+         
+         // text-direction aliases
+         ["rtl",              "text-direction rtl",                CMD_CONSOLE],
+         ["ltr",              "text-direction ltr",                CMD_CONSOLE],
+         ["toggle-text-dir",  "text-direction toggle",                       0],
+         ["irtl",             "input-text-direction rtl",          CMD_CONSOLE],
+         ["iltr",             "input-text-direction ltr",          CMD_CONSOLE]
         ];
 
     // set the stringbundle associated with these commands.
@@ -2698,5 +2706,49 @@ function cmdDCCDecline(e)
     // Oops, couldn't figure the user's requets out, so give them some help.
     display(getMsg(MSG_DCC_PENDING_MATCHES, [list.length]));
     display(MSG_DCC_MATCHES_HELP);
+    return true;
+}
+
+function cmdTextDirection(e)
+{
+    var direction;
+    
+    switch (e.dir)
+    {
+        case "toggle":
+            sourceObject = e.sourceObject.frame.contentDocument.body;
+            if (window.getComputedStyle(sourceObject, null).direction == "ltr")
+                direction = 'rtl';
+            else
+                direction = 'ltr';      
+            break;
+        case "rtl":
+            direction = 'rtl';
+            break;
+        default:
+            // that is "case "ltr":",
+            // but even if !e.dir OR e.dir is an invalid value -> set to default direction
+            direction = 'ltr';
+    }  
+    client.input.style.direction = direction;
+    e.sourceObject.frame.contentDocument.body.style.direction = direction;
+    
+    return true;
+}
+
+function cmdInputTextDirection(e)
+{
+    var direction;
+    
+    switch (e.dir)
+    {
+        case "rtl":
+            client.input.style.direction = 'rtl';
+            break
+        default:
+            // that is "case "ltr":", but even if !e.dir OR e.dir is an invalid value -> set to default direction
+            client.input.style.direction = 'ltr';
+    }
+
     return true;
 }

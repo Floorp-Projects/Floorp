@@ -296,7 +296,9 @@ function initMenus()
          ["-"],
          ["leave", {visibleif: "cx.TYPE == 'IRCChannel'"}],
          ["delete-view", {visibleif: "cx.TYPE != 'IRCChannel'"}],
-         ["disconnect"]
+         ["disconnect"],
+         ["-"],
+         ["toggle-text-dir"]
         ]
     };
 
@@ -312,7 +314,9 @@ function initMenus()
          ["-"],
          ["leave", {visibleif: "cx.TYPE == 'IRCChannel'"}],
          ["delete-view", {visibleif: "cx.TYPE != 'IRCChannel'"}],
-         ["disconnect"]
+         ["disconnect"],
+         ["-"],
+         ["toggle-text-dir"]
         ]
     };
 
