@@ -54,8 +54,6 @@ use SourceChecker;
 #
 $| = 1;
 
-print "Content-Type:text/html\n\n";
-
 my @src_roots = getRepositoryList();
 
 
@@ -65,6 +63,7 @@ my $filename = '';
 $filename = $::FORM{'file'} if defined($::FORM{'file'});
 if ($filename eq '') 
 {
+    print "Content-Type:text/html\n\n";
     &print_usage;
     exit;
 }
@@ -91,6 +90,7 @@ if (defined $root && $root ne '') {
     if (-d $root) {
         unshift(@src_roots, $root);
     } else {
+        print "Content-Type:text/html\n\n";
         &print_top;
         print "Error:  Root, $root, is not a directory.<BR><BR>\n";
         print "</BODY></HTML>\n";
@@ -113,6 +113,7 @@ foreach (@src_roots) {
     goto found_file if -r $rcs_filename;
 }
 # File not found
+print "Content-Type:text/html\n\n";
 &print_top;
 my $escaped_filename = html_quote($filename);
 print "Rcs file, $escaped_filename, does not exist.<BR><BR>\n";
@@ -131,6 +132,15 @@ my $rcs_path;
 $revision = &parse_cvs_file($rcs_filename);
 my $file_rev = $revision;
 
+my $start_rev;
+if ($browse_revtag eq 'HEAD') {
+    $start_rev = $::head_revision;  # $::head_revision is a global from cvsblame.pl
+} else {
+    $start_rev = map_tag_to_revision($browse_revtag);
+}
+print "Content-Type:text/html\n";
+print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$start_rev}), "GMT")."\n";
+print "\n";
 
 # Handle the "mark" argument
 #
@@ -254,12 +264,6 @@ print "$table_tag$table_header_tag";
 
 # Print each line of the revision, preceded by its annotation.
 #
-my $start_rev;
-if ($browse_revtag eq 'HEAD') {
-    $start_rev = $::head_revision;  # $::head_revision is a global from cvsblame.pl
-} else {
-    $start_rev = map_tag_to_revision($browse_revtag);
-}
 my $row_count = 0;
 my $max_rev_length = length($start_rev);
 my $max_author_length = 8;

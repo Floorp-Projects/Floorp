@@ -22,7 +22,6 @@
 #
 # Contributor(s): 
 
-
 #  Created: Steve Lamm <slamm@netscape.com>, 12-Sep-97.
 #  Modified: Marc Byrd <byrd@netscape.com> , 19971030.
 #
@@ -66,8 +65,6 @@ if ($ENV{REQUEST_METHOD} eq 'POST' and defined $::FORM{set_line}) {
     print "Set-Cookie: line_nums=$::FORM{set_line}; expires="
         . toGMTString(time + 86400 * 152) . "; path=/\n";
 }
-print "\n";
-
 
 # Some Globals
 #
@@ -96,6 +93,7 @@ my $filename = '';
 $filename = $::FORM{file} if defined $::FORM{file};
 if ($filename eq '') 
 {
+    print "\n";
     &print_usage;
     exit;
 }
@@ -120,6 +118,7 @@ if (defined $root and $root ne '') {
     if (-d $root) {
         unshift(@src_roots, $root);
     } else {
+        print "\n";
         &print_top;
         print "Error:  Root, $root, is not a directory.<BR><BR>\n";
         print "</BODY></HTML>\n";
@@ -143,6 +142,7 @@ foreach (@src_roots) {
 }
 
 unless ($found_rcs_file) {
+  print "\n";
   &print_top;
   my $escaped_filename = html_quote($filename);
   print "Rcs file, $escaped_filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
@@ -156,18 +156,27 @@ my $rcs_path;
 
 CheckHidden($rcs_filename);
 
-
 # Parse the rcs file ($::opt_rev is passed as a global)
 #
 $revision = &parse_cvs_file($rcs_filename);
 my $file_rev = $revision;
 
 my @text = &extract_revision($revision);
-die "$::progname: Internal consistency error" if $#text != $#::revision_map;
-
+if ($#text != $#::revision_map) {
+    print "\n";
+    die "$::progname: Internal consistency error"
+}
 
 # Raw data opt (so other scripts can parse and play with the data)
-&print_raw_data, exit if defined $::FORM{data};
+if (defined $::FORM{data}) {
+    print "\n";
+    &print_raw_data;
+    exit;
+}
+
+print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", str2time($::revision_ctime{$::opt_rev}), "GMT")."\n";
+print "\n"; 
+#ENDHEADERS!!
 
 # Handle the "line_nums" argument
 #

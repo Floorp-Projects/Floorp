@@ -53,7 +53,15 @@ sub sillyness {
     $zz = $::TreeList;
     $zz = $::file_description;
     $zz = $::principal_branch;
+    $zz = $::revision_ctime;
     $zz = %::timestamp;
+}
+
+my $request = new CGI;
+
+sub http_die {
+    print $request->header();
+    die (@_);
 }
 
 my $anchor_num = 0;
@@ -66,7 +74,7 @@ if ($bonsaidir eq '') {
     $bonsaidir = '.';
 }
 
-chdir $bonsaidir || die "Can't chdir to $bonsaidir";
+chdir $bonsaidir || http_die "Can't chdir to $bonsaidir";
 require 'CGI.pl';
 
 my $cocommand = Param('cocommand');
@@ -90,7 +98,6 @@ my $debug = 0;
 
 my $MAX_REVS = 8;
 
-
 #
 # Make sure both kinds of standard output go to STDOUT.
 # XXX dup stdout onto stderr and flush stdout after the following prints
@@ -102,270 +109,10 @@ my $MAX_REVS = 8;
 #      exit;
 #  }
 
-
-my $line_buffer;
-
-# Consume one token from the already opened RCSFILE filehandle.
-# Unescape string tokens, if necessary.
-sub get_token {
-    # Erase all-whitespace lines.
-    while ($line_buffer =~ /^$/) {
-        die ('Unexpected EOF') if eof(RCSFILE);
-        $line_buffer = <RCSFILE>;
-        $line_buffer =~ s/^\s+//; # Erase leading whitespace
-    }
-    
-    # A string of non-whitespace characters is a token ...
-    return $1 if ($line_buffer =~ s/^([^;@][^;\s]*)\s*//o);
-
-    # ...and so is a single semicolon ...
-    return ';' if ($line_buffer =~ s/^;\s*//o);
-
-    # ...or an RCS-encoded string that starts with an @ character.
-    $line_buffer =~ s/^@([^@]*)//o;
-    my $token = $1;
-
-    # Detect single @ character used to close RCS-encoded string.
-    while ($line_buffer !~ /^@[^@]*$/o) {
-        $token .= $line_buffer;
-        die ('Unexpected EOF') if eof(RCSFILE);
-        $line_buffer = <RCSFILE>;
-    }
-    
-    # Retain the remainder of the line after the terminating @ character.
-    ($line_buffer) = ($line_buffer =~ /^@\s*([^@]*)/o);
-    
-    # Undo escape-coding of @ characters.
-    $token =~ s/@@/@/og;
-        
-    return $token;
-}
-
-# Consume a token from RCS filehandle and ensure that it matches
-# the given string constant.
-sub match_token {
-    my ($match) = @_;
-
-    my ($token) = &get_token;
-    die ("Unexpected parsing error in RCS file.\n",
-          "Expected token: $match, but saw: $token\n")
-            if ($token ne $match);
-}
-
-# Push RCS token back into the input buffer.
-sub unget_token {
-    my ($token) = @_;
-    $line_buffer = "$token $line_buffer";
-}
-
-# Parses "administrative" header of RCS files, setting these globals:
-# 
-# $::head_revision           -- Revision for which cleartext is stored
-# $::principal_branch
-# $::file_description
-# %::revision_symbolic_name  -- maps from numerical revision # to symbolic tag
-# %::tag_revision            -- maps from symbolic tag to numerical revision #
-#
-sub parse_rcs_admin {
-    my ($token, $tag, $tag_name, $tag_revision);
-    my (@tags);
-
-    # Undefine variables, because we may have already read another RCS file
-    undef %::tag_revision;
-    undef %::revision_symbolic_name;
-
-    while (1) {
-        # Read initial token at beginning of line
-        $token = &get_token();
-
-        # We're done once we reach the description of the RCS tree
-        if ($token =~ /^\d/o) {
-            &unget_token($token);
-            return;
-        }
-        
-#       print "token: $token\n";
-
-        if ($token eq 'head') {
-            $::head_revision = &get_token;
-            &get_token;         # Eat semicolon
-        } elsif ($token eq 'branch') {
-            $::principal_branch = &get_token;
-            &get_token;         # Eat semicolon
-        } elsif ($token eq 'symbols') {
-
-            # Create an associate array that maps from tag name to
-            # revision number and vice-versa.
-            while (($tag = &get_token) ne ';') {
-                ($tag_name, $tag_revision) = split(':', $tag);
-                
-                $::tag_revision{$tag_name} = $tag_revision;
-                $::revision_symbolic_name{$tag_revision} = $tag_name;
-            }
-        } elsif ($token eq 'comment') {
-            $::file_description = &get_token;
-            &get_token;         # Eat semicolon
-
-        # Ignore all these other fields - We don't care about them.         
-        } elsif (($token eq 'locks')  ||
-                 ($token eq 'strict') ||
-                 ($token eq 'expand') ||
-                 ($token eq 'access')) {
-            (1) while (&get_token ne ';');
-        } else {
-            warn ("Unexpected RCS token: $token\n");
-        }
-    }
-
-    die('Unexpected EOF');
-}
-
-# Construct associative arrays that represent the topology of the RCS tree
-# and other arrays that contain info about individual revisions.
-#
-# The following associative arrays are created, keyed by revision number:
-#   %::revision_date     -- e.g. "96.02.23.00.21.52"
-#   %::timestamp         -- seconds since 12:00 AM, Jan 1, 1970 GMT
-#   %::revision_author   -- e.g. "tom"
-#   %::revision_branches -- descendant branch revisions, separated by spaces,
-#                         e.g. "1.21.4.1 1.21.2.6.1"
-#   %::prev_revision     -- revision number of previous *ancestor* in RCS tree.
-#                         Traversal of this array occurs in the direction
-#                         of the primordial (1.1) revision.
-#   %::prev_delta        -- revision number of previous revision which forms the
-#                         basis for the edit commands in this revision.
-#                         This causes the tree to be traversed towards the
-#                         trunk when on a branch, and towards the latest trunk
-#                         revision when on the trunk.
-#   %::next_delta        -- revision number of next "delta".  Inverts %::prev_delta.
-#
-# Also creates %::last_revision, keyed by a branch revision number, which
-# indicates the latest revision on a given branch,
-#   e.g. $::last_revision{"1.2.8"} == 1.2.8.5
-#
-sub parse_rcs_tree {
-    my($revision, $date, $author, $branches, $next);
-    my($branch, $is_trunk_revision);
-
-    # Undefine variables, because we may have already read another RCS file
-    undef %::revision_date;
-    undef %::timestamp;
-    undef %::revision_author;
-    undef %::revision_branches;
-    undef %::prev_revision;
-    undef %::prev_delta;
-    undef %::next_delta;
-    undef %::last_revision;
-
-    while (1) {
-        $revision = &get_token;
-
-        # End of RCS tree description ?
-        if ($revision eq 'desc') {
-            &unget_token($revision);
-            return;
-        }
-
-        $is_trunk_revision = ($revision =~ /^[0-9]+\.[0-9]+$/);
-        
-        $::tag_revision{$revision} = $revision;
-        ($branch) = $revision =~ /(.*)\.[0-9]+/o;
-        $::last_revision{$branch} = $revision;
-
-        # Parse date
-        &match_token('date');
-        $date = &get_token;
-        $::revision_date{$revision} = $date;
-        &match_token(';');
-        
-        # Convert date into timestamp
-#       @date_fields = reverse(split(/\./, $date));
-#       $date_fields[4]--;      # Month ranges from 0-11, not 1-12
-#       $::timestamp{$revision} = &timegm(@date_fields);
-
-        # Parse author
-        &match_token('author');
-        $author = &get_token;
-        $::revision_author{$revision} = $author;
-        &match_token(';');
-
-        # Parse state;
-        &match_token('state');
-        (1) while (&get_token ne ';');
-
-        # Parse branches
-        &match_token('branches');
-        $branches = '';
-        my $token;
-        while (($token = &get_token) ne ';') {
-            $::prev_revision{$token} = $revision;
-            $::prev_delta{$token} = $revision;
-            $branches .= "$token ";
-        }
-        $::revision_branches{$revision} = $branches;
-
-        # Parse revision of next delta in chain
-        &match_token('next');
-        $next = '';
-        if (($token = &get_token) ne ';') {
-            $next = $token;
-            &get_token;         # Eat semicolon
-            $::next_delta{$revision} = $next;
-            $::prev_delta{$next} = $revision;
-            if ($is_trunk_revision) {
-                $::prev_revision{$revision} = $next;
-            } else {
-                $::prev_revision{$next} = $revision;
-            }
-        }
-
-        if ($debug > 1) {
-            print "revision = $revision\n";
-            print "date     = $date\n";
-            print "author   = $author\n";
-            print "branches = $branches\n";
-            print "next     = $next\n\n";
-        }
-    }
-}
-
-# Reads and parses complete RCS file from already-opened RCSFILE descriptor.
-sub parse_rcs_file {
-    my ($file) = @_;
-    die("Couldn't open $file\n") if !open(RCSFILE, "< $file");
-    $line_buffer = '';
-    print "Reading RCS admin...\n" if ($debug);
-    &parse_rcs_admin();
-    print "Reading RCS revision tree topology...\n" if ($debug);
-    &parse_rcs_tree();
-    print "Done reading RCS file...\n" if ($debug);
-    close(RCSFILE);
-}
-
-# Map a tag to a numerical revision number.  The tag can be a symbolic
-# branch tag, a symbolic revision tag, or an ordinary numerical
-# revision number.
-sub map_tag_to_revision {
-    my($tag_or_revision) = @_;
-
-    my ($revision) = $::tag_revision{$tag_or_revision};
-    
-    # Is this a branch tag, e.g. xxx.yyy.0.zzz
-    if ($revision =~ /(.*)\.0\.([0-9]+)/o) {
-        my $branch = $1 . '.' . $2;
-        # Return latest revision on the branch, if any.
-        return $::last_revision{$branch} if (defined($::last_revision{$branch}));
-        return $1;              # No revisions on branch - return branch point
-    } else {
-        return $revision;
-    }
-}
-
+require 'cvsblame.pl';
 #
 # Print HTTP content-type header and the header-delimiting extra newline.
 #
-my $request = new CGI;
-print $request->header();
 
 my $request_method = $request->request_method(); # e.g., "GET", "POST", etc.
 my $script_name = $ENV{'SCRIPT_NAME'};
@@ -403,14 +150,14 @@ my $deletion_bg_color = 'LightGreen';
 my $diff_bg_color     = 'White';
 
 # Ensure that necessary arguments are present
-die("command not defined in URL\n") if $opt_command eq '';
-die("command $opt_command: subdir not defined\n") if $opt_subdir eq '';
+http_die("command not defined in URL\n") if $opt_command eq '';
+http_die("command $opt_command: subdir not defined\n") if $opt_subdir eq '';
 if ($opt_command eq 'DIFF'          ||
     $opt_command eq 'DIFF_FRAMESET' ||
     $opt_command eq 'DIFF_LINKS') {
-    die("command $opt_command: file not defined in URL\n") if $opt_file eq '';
-    die("command $opt_command: rev1 not defined in URL\n") if $opt_rev1 eq '';
-    die("command $opt_command: rev2 not defined in URL\n") if $opt_rev2 eq '';
+    http_die("command $opt_command: file not defined in URL\n") if $opt_file eq '';
+    http_die("command $opt_command: rev1 not defined in URL\n") if $opt_rev1 eq '';
+    http_die("command $opt_command: rev2 not defined in URL\n") if $opt_rev2 eq '';
 
 }
 
@@ -455,10 +202,20 @@ if (!$found) {
     exit;
 }
 
+sub http_lastmod {
+    &parse_cvs_file($dir.'/'.$opt_file.',v');
+    my $lm=str2time($::revision_ctime{$opt_rev1});
+    my $lm2=str2time($::revision_ctime{$opt_rev2});
+    $lm = $lm2 if $lm2 > $lm;
+    print "Last-Modified: ".time2str("%a, %d %b %Y %T %Z", $lm, "GMT")."\n";
+    print $request->header();
+    print "\n";
+}
+
 # Create top-level frameset document.
 sub do_diff_frameset {
     chdir($dir);
-
+http_lastmod;
     print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
     print "<FRAMESET ROWS='*,90' FRAMESPACING=0 BORDER=1>\n";
 
@@ -476,7 +233,7 @@ sub do_diff_frameset {
 
 # Create links to document created by DIFF command.
 sub do_diff_links {
-
+http_lastmod;
     print qq%
         <HEAD>
         <SCRIPT $::script_type><!--
@@ -615,7 +372,7 @@ sub guess_tab_width {
 
 # Create gdiff-like output.
 sub do_diff {
-
+http_lastmod;
     print "<HTML><HEAD>";
     print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
     print "</HEAD>";
@@ -637,6 +394,7 @@ sub do_diff {
 
 # Show specified CVS log entry.
 sub do_log {
+http_lastmod;
     print "<TITLE>$opt_file: $opt_rev CVS log entry</TITLE>\n";
     print '<PRE>';
 
@@ -713,7 +471,7 @@ sub do_directory {
         my $first_rev;
         if ($opt_branch) {
             $first_rev = &map_tag_to_revision($opt_branch);
-            die("$0: error: -r: No such revision: $opt_branch\n")
+            http_die("$0: error: -r: No such revision: $opt_branch\n")
                 if ($first_rev eq '');
         } else {
             $first_rev = $::head_revision;
