@@ -33,7 +33,7 @@
 >
 <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 <script type="application/x-javascript" src="chrome://pippki/content/pippki.js" />
-<script type="application/x-javascript" src="chrome://pippki/content/serverCrlExpired.js" />
+<script type="application/x-javascript" src="chrome://pippki/content/serverCrlNextupdate.js" />
 <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
 <keyset id="keys">
