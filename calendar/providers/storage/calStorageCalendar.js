@@ -376,7 +376,7 @@ calStorageCalendar.prototype = {
                 aListener.onOperationComplete (this,
                                                Components.results.NS_ERROR_FAILURE,
                                                aListener.DELETE,
-                                               aId,
+                                               null,
                                                "ID is null for deleteItem");
             return;
         }
@@ -404,7 +404,7 @@ calStorageCalendar.prototype = {
             aListener.onOperationComplete (this,
                                            Components.results.NS_ERROR_FAILURE,
                                            aListener.GET,
-                                           aID,
+                                           aId,
                                            "ID doesn't exist for getItem");
         }
 
@@ -422,7 +422,8 @@ calStorageCalendar.prototype = {
             return;
         }
 
-        aListener.onGetResult (Components.results.NS_OK,
+        aListener.onGetResult (this,
+                               Components.results.NS_OK,
                                item_iid, null,
                                1, [item]);
 
@@ -510,7 +511,7 @@ calStorageCalendar.prototype = {
 
             var items = null;
 
-            if (item.recurrenceInfo) {
+            if (asOccurrences && item.recurrenceInfo) {
                 iid = kCalIItemOccurrence;
                 items = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
             } else {
