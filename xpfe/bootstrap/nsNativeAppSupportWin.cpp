@@ -72,7 +72,6 @@
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
 #include "nsXPFEComponentsCID.h"
-#include "nsNativeCharsetUtils.h"
 
 struct JSContext;
 
