@@ -32,7 +32,7 @@ public:
   NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
                             const PRUnichar* aText2 , PRUint32 aTextLen2,
                             PRBool *oCanBreak);
-  NS_IMETHOD PostionToBoundary(const PRUnichar* aText1 , PRUint32 aTextLen1,
+  NS_IMETHOD FindWord(const PRUnichar* aText1 , PRUint32 aTextLen1,
                                       PRUint32 aOffset,
                                       PRUint32 *oWordBegin,
                                       PRUint32 *oWordEnd);
@@ -40,9 +40,10 @@ public:
   NS_IMETHOD FirstForwardBreak   (nsIBreakState* state) ; 
   NS_IMETHOD NextForwardBreak    (nsIBreakState* state) ; 
 
-#ifdef AFTER_DOGFOOD 
   NS_IMETHOD FirstBackwardBreak  (nsIBreakState* state) ; 
   NS_IMETHOD NextBackwardBreak   (nsIBreakState* state) ; 
+
+#ifdef AFTER_DOGFOOD 
   NS_IMETHOD FirstForwardConnect (nsIBreakState* state) ; 
   NS_IMETHOD NextForwardConnect  (nsIBreakState* state) ; 
   NS_IMETHOD FirstBackwardConnect(nsIBreakState* state) ; 
@@ -52,6 +53,7 @@ public:
 protected:
   PRUint8  GetClass(PRUnichar aChar);
   PRUint32 Next(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
+  PRUint32 Prev(const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos);
 
 
 };

@@ -372,7 +372,183 @@ extern "C" void NS_SetupRegistry()
 {
    nsRepository::RegisterFactory(kLWBrkCID,  LWBRK_DLL, PR_FALSE, PR_FALSE);
 }
+
+void   SamplePrintWordWithBreak();
+void   SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset);
+// Sample Code
+
+//                          012345678901234
+static const char wb0[] =  "T";
+static const char wb1[] =  "h";
+static const char wb2[] =  "is   is a int";
+static const char wb3[] =  "ernationali";
+static const char wb4[] =  "zation work.";
+
+static const char* wb[] = {wb0,wb1,wb2,wb3,wb4};
+void SampleWordBreakUsage()
+{
+   SamplePrintWordWithBreak();
+   SampleFindWordBreakFromPosition(0,0); // This
+   SampleFindWordBreakFromPosition(1,0); // This
+   SampleFindWordBreakFromPosition(2,0); // This
+   SampleFindWordBreakFromPosition(2,1); // This
+   SampleFindWordBreakFromPosition(2,9); // [space]
+   SampleFindWordBreakFromPosition(2,10); // internationalization
+   SampleFindWordBreakFromPosition(3,4);  // internationalization
+   SampleFindWordBreakFromPosition(3,8);  // internationalization
+   SampleFindWordBreakFromPosition(4,6);  // [space]
+   SampleFindWordBreakFromPosition(4,7);  // work
+}
  
+
+void SamplePrintWordWithBreak()
+{
+   PRUint32 numOfFragment = sizeof(wb) / sizeof(char*);
+   nsIWordBreakerFactory *t = NULL;
+
+   nsresult res = nsServiceManager::GetService(kLWBrkCID,
+                                kIWordBreakerFactory,
+                                (nsISupports**) &t);
+   nsIWordBreaker *wbk;
+
+   nsAutoString wb_arg("");
+   res = t->GetBreaker(wb_arg, &wbk);
+
+   nsAutoString result("");
+   nsAutoString tmp("");
+
+   for(PRUint32 i = 0; i < numOfFragment; i++)
+   {
+      nsAutoString fragText(wb[i]); 
+      nsBreakState bk(fragText.GetUnicode(), fragText.Length());
+
+      res = wbk->FirstForwardBreak(&bk);
+      PRUint32 start = 0;
+      for(PRUint32 j = 0; (! bk.IsDone()) ; wbk->NextForwardBreak(&bk), j++)
+      {
+            nsAutoString tmp("");
+            fragText.Mid(tmp, start, bk.Current() - start);
+            result.Append(tmp);
+            result.Append("^");
+            start = bk.Current();
+      }
+
+      nsAutoString tmp("");
+      fragText.Mid(tmp, start, fragText.Length() - start);
+      result.Append(tmp);
+
+
+      if( i != (numOfFragment -1 ))
+      {
+        nsAutoString nextFragText(wb[i+1]);
+ 
+        PRBool canBreak = PR_TRUE;
+        res = wbk->BreakInBetween( fragText.GetUnicode(), 
+                                  fragText.Length(),
+                                  nextFragText.GetUnicode(), 
+                                  nextFragText.Length(),
+                                  &canBreak
+                                );
+        if(canBreak)
+            result.Append("^");
+
+        fragText = nextFragText;
+      }
+   }
+   cout << "Output From  SamplePrintWordWithBreak() \n\n";
+   cout << "[" << result.ToNewCString() << "]\n";
+}
+
+void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
+{
+   PRUint32 numOfFragment = sizeof(wb) / sizeof(char*);
+   nsIWordBreakerFactory *t = NULL;
+
+   nsresult res = nsServiceManager::GetService(kLWBrkCID,
+                                kIWordBreakerFactory,
+                                (nsISupports**) &t);
+   nsIWordBreaker *wbk;
+
+   nsAutoString wb_arg("");
+   res = t->GetBreaker(wb_arg, &wbk);
+
+
+   nsAutoString fragText(wb[fragN]); 
+   
+   PRUint32 begin, end;
+
+
+   nsAutoString result("");
+   res = wbk->FindWord(fragText.GetUnicode(), fragText.Length(), 
+                          offset, &begin, &end);
+
+   PRBool canbreak;
+   fragText.Mid(result, begin, end-begin);
+
+   if((PRUint32)fragText.Length() == end) // if we hit the end of the fragment
+   {
+     nsAutoString curFragText = fragText;
+     for(PRUint32  p = fragN +1; p < numOfFragment ;p++)
+     {
+        nsAutoString nextFragText(wb[p]); 
+        res = wbk->BreakInBetween(curFragText.GetUnicode(), 
+                                  curFragText.Length(),
+                                  nextFragText.GetUnicode(), 
+                                  nextFragText.Length(),
+                                  &canbreak);
+        if(canbreak)
+           break;
+ 
+        PRUint32 b, e;
+        res = wbk->FindWord(nextFragText.GetUnicode(), nextFragText.Length(), 
+                          0, &b, &e);
+
+        nsAutoString tmp("");
+        nextFragText.Mid(tmp,b,e-b);
+        result.Append(tmp);
+
+        if((PRUint32)nextFragText.Length() != e)
+          break;
+
+        nextFragText = curFragText;
+     }
+   }
+   
+   if(0 == begin) // if we hit the beginning of the fragment
+   {
+     nsAutoString curFragText = fragText;
+     for(PRUint32  p = fragN ; p > 0 ;p--)
+     {
+        nsAutoString prevFragText(wb[p-1]); 
+        res = wbk->BreakInBetween(prevFragText.GetUnicode(), 
+                                  prevFragText.Length(),
+                                  curFragText.GetUnicode(), 
+                                  curFragText.Length(),
+                                  &canbreak);
+        if(canbreak)
+           break;
+ 
+        PRUint32 b, e;
+        res = wbk->FindWord(prevFragText.GetUnicode(), prevFragText.Length(), 
+                          prevFragText.Length(), &b, &e);
+
+        nsAutoString tmp("");
+        prevFragText.Mid(tmp,b,e-b);
+        result.Insert(tmp,0);
+
+        if(0 != b)
+          break;
+
+        prevFragText = curFragText;
+     }
+   }
+   
+   cout << "Output From  SamplePrintWordWithBreak() \n\n";
+   cout << "[" << result.ToNewCString() << "]\n";
+}
+
+// Main
+
 int main(int argc, char** argv) {
    
    NS_SetupRegistry();
@@ -380,11 +556,22 @@ int main(int argc, char** argv) {
    // --------------------------------------------
    cout << "Test Line Break\n";
 
-   PRBool ok ; 
-   ok =TestWordBreaker();
+   PRBool lbok ; 
+   PRBool wbok ; 
+   lbok =TestWordBreaker();
+   if(lbok)
+      cout <<  "Line Break Test\nOK\n";
+   else
+      cout <<  "Line Break Test\nFailed\n";
 
-   cout << "Test Word Break\n";
-   ok =TestLineBreaker();
+   wbok = TestLineBreaker();
+   if(wbok)
+      cout <<  "Word Break Test\nOK\n";
+   else
+      cout <<  "Word Break Test\nFailed\n";
+
+   SampleWordBreakUsage();
+   
 
    // --------------------------------------------
    cout << "Finish All The Test Cases\n";
@@ -395,9 +582,9 @@ int main(int argc, char** argv) {
       cout << "nsRepository failed\n";
    else
       cout << "nsRepository FreeLibraries Done\n";
-   if(ok)
-      cout <<  "Line Break Test\nOK\n";
+   if(lbok && wbok)
+      cout <<  "Line/Word Break Test\nOK\n";
    else
-      cout <<  "Line Break Test\nFailed\n";
+      cout <<  "Line/Word Break Test\nFailed\n";
    return 0;
 }
