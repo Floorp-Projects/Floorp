@@ -2187,9 +2187,8 @@ lo_FormatImage(MWContext *context, lo_DocState *state, PA_Tag *tag)
         if ((image->width == 0) || (image->height == 0))
             context->requires_reflow = PR_TRUE;
 	}
-        return;
  error:
-     ;
+     return;
         /* XXX free the image */
 }
 
