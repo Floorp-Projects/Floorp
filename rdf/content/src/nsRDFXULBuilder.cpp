@@ -295,6 +295,9 @@ public:
     PRBool
     IsHTMLElement(nsIContent* aElement);
 
+    PRBool
+    IsAttributeProperty(nsIRDFResource* aProperty);
+
     nsresult AddAttribute(nsIContent* aElement,
                           nsIRDFResource* aProperty,
                           nsIRDFNode* aValue);
@@ -934,7 +937,7 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xulbuilder on-assert: attempt to change tag type after-the-fact ignored"));
         }
-        else {
+        else if (IsAttributeProperty(aProperty)) {
             // Add the thing as a vanilla attribute to the element.
             rv = AddAttribute(element, aProperty, aTarget);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add attribute to the element");
@@ -1181,7 +1184,7 @@ RDFXULBuilderImpl::OnChange(nsIRDFResource* aSource,
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xulbuilder on-change: attempt to change tag type after-the-fact ignored"));
         }
-        else {
+        else if (IsAttributeProperty(aProperty)) {
             // Add the thing as a vanilla attribute to the element.
             rv = AddAttribute(element, aProperty, aNewTarget);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add attribute to the element");
@@ -1654,20 +1657,11 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property from cursor");
             if (NS_FAILED(rv)) return rv;
 
+            // Skip any properties that aren't meant to be added to
+            // the content model.
             nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
-            // These are special beacuse they're used to specify the tree
-            // structure of the XUL: ignore them b/c they're not attributes
-            if ((property.get() == kRDF_instanceOf) ||
-                (property.get() == kRDF_nextVal) ||
-                (property.get() == kRDF_type))
-                continue;
-
-            PRBool isOrdinal;
-            rv = gRDFContainerUtils->IsOrdinalProperty(property, &isOrdinal);
-            if (NS_FAILED(rv)) return rv;
-
-            if (isOrdinal)
+            if (! IsAttributeProperty(property))
                 continue;
 
             // For each property, get its value: this will be the value of
@@ -1835,33 +1829,23 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get property from cursor");
             if (NS_FAILED(rv)) return rv;
 
+            // Skip any properties that aren't meant to be added to
+            // the content model.
             nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
-            // These are special beacuse they're used to specify the tree
-            // structure of the XUL: ignore them b/c they're not attributes
-            if ((property.get() == kRDF_nextVal) ||
-                (property.get() == kRDF_type))
-                continue;
-
-            PRBool isOrdinal;
-            rv = gRDFContainerUtils->IsOrdinalProperty(property, &isOrdinal);
-            if (NS_FAILED(rv)) return rv;
-
-            if (isOrdinal)
+            if (! IsAttributeProperty(property))
                 continue;
 
             // For each property, set its value.
             nsCOMPtr<nsIRDFNode> value;
-            if (NS_FAILED(rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value)))) {
-                NS_ERROR("unable to get value for property");
-                return rv;
-            }
+            rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get value for property");
+            if (NS_FAILED(rv)) return rv;
 
             // Add the attribute to the newly constructed element
-            if (NS_FAILED(rv = AddAttribute(element, property, value))) {
-                NS_ERROR("unable to add attribute to element");
-                return rv;
-            }
+            rv = AddAttribute(element, property, value);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add attribute to element");
+            if (NS_FAILED(rv)) return rv;
         }
 
         // Set the XML tag info: namespace prefix and ID. We do this
@@ -1982,6 +1966,34 @@ RDFXULBuilderImpl::IsHTMLElement(nsIContent* aElement)
     }
 
     return (kNameSpaceID_HTML == nameSpaceID);
+}
+
+PRBool
+RDFXULBuilderImpl::IsAttributeProperty(nsIRDFResource* aProperty)
+{
+    // Return 'true' is the property should be added to the content
+    // model as an attribute.
+    NS_ASSERTION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return PR_FALSE;
+
+    // These are special beacuse they're used to specify the tree
+    // structure of the XUL: ignore them b/c they're not attributes
+    if ((aProperty == kRDF_nextVal) ||
+        (aProperty == kRDF_type) ||
+        (aProperty == kRDF_instanceOf))
+        return PR_FALSE;
+
+    nsresult rv;
+    PRBool isOrdinal;
+    rv = gRDFContainerUtils->IsOrdinalProperty(aProperty, &isOrdinal);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    if (isOrdinal)
+        return PR_FALSE;
+
+    return PR_TRUE;
 }
 
 nsresult
