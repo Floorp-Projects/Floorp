@@ -47,6 +47,7 @@
         <NC:wizardSkipPanels>true</NC:wizardSkipPanels>
         <NC:wizardShortName>AOL</NC:wizardShortName>
         <NC:wizardLongName>America Online</NC:wizardLongName>
+        <NC:wizardShow>true</NC:wizardShow>
         <NC:wizardPromote>true</NC:wizardPromote>
       </NC:nsIMsgAccount>
     </NC:providers>
