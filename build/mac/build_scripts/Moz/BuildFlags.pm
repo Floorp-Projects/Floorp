@@ -221,6 +221,7 @@ sub SetOptionDefines($)
   $optiondefines->{"carbon"}{"TARGET_CARBON"} = 1;
   $optiondefines->{"cache"}{"MOZ_NEW_CACHE"}  = 1;
   $optiondefines->{"soap"}{"MOZ_SOAP"}        = 1;
+  $optiondefines->{"ldap_experimental"}{"MOZ_LDAP_XPCOM_EXPERIMENTAL"} = 1;
 }
 
 

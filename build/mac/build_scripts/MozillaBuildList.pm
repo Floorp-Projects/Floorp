@@ -1615,8 +1615,15 @@ sub BuildExtensionsProjects()
     # LDAP Client
     if ($main::options{ldap})
     {
+        my($experi) = $main::options{ldap_experimental} ? " experi" : "";
+
         BuildOneProject(":mozilla:directory:c-sdk:ldap:libraries:macintosh:LDAPClient.mcp", "LDAPClient$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
-        BuildOneProject(":mozilla:directory:xpcom:macbuild:mozldap.mcp", "mozldap$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+        BuildOneProjectWithOutput(":mozilla:directory:xpcom:macbuild:mozldap.mcp", "mozldap$D.shlb$experi", "mozldap$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+        if ($main::options{ldap_experimental})
+        {
+            InstallResources(":mozilla:extensions:directory:xpcom:datasource:MANIFEST_COMPONENTS", "${dist_dir}Components");
+        }
     }
     
     # XML Extras
