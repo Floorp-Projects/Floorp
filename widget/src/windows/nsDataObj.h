@@ -60,7 +60,7 @@ class nsDataObj : public IDataObject
 		virtual HRESULT SetMetafilePict(FORMATETC&  FE, STGMEDIUM&  STM);
 
     // support for clipboard
-    void AddDataFlavor(const nsString & aDataFlavor, LPFORMATETC aFE);
+    void AddDataFlavor(const char* aDataFlavor, LPFORMATETC aFE);
     void SetTransferable(nsITransferable * aTransferable);
 
 		virtual HRESULT GetText(nsString * aDF, FORMATETC&  FE, STGMEDIUM&  STM);
