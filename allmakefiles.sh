@@ -240,8 +240,6 @@ layout/xul/content/src/Makefile
 # lib/liblayer/Makefile
 # lib/liblayer/include/Makefile
 # lib/liblayer/src/Makefile
-lib/libpwcac/Makefile
-lib/xp/Makefile
 modules/libimg/Makefile
 # modules/libimg/classes/Makefile
 # modules/libimg/classes/netscape/Makefile
