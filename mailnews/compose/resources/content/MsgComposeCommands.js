@@ -1879,8 +1879,18 @@ function LoadIdentity(startup)
                 // nsLDAPAutoCompleteSession use its default.
             }
 
+            // override autocomplete entry formatting?
+            //
+            try { 
+                session2.outputFormat = 
+                    prefs.CopyUnicodePref(autocompleteDirectory + 
+                                     ".autoComplete.outputFormat");
+            } catch (ex) {
+                // if this pref isn't there, no big deal.  just let
+                // nsLDAPAutoCompleteSession use its default.
+            }
+
             session2.filterTemplate = "cn=";
-            session2.outputFormat = "cn <mail>";
             session2.sizeLimit = 10;
         }
       }

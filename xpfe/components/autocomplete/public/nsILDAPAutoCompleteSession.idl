@@ -44,9 +44,16 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
     attribute wstring filterTemplate;
 
     /**
-     * A template for formatting the autocompletion results.  
-     * 
-     * XXX syntax to-be-determined
+     * A template string for formatting the autocompletion results.   
+     *
+     * Required attributes are delimited by curly braces, and optional 
+     * attributes are determined by brackets.  Backslash escapes any 
+     * character, including itself.  The default template is
+     * "[cn] <{mail}>", without the quotes.  This will generate autocomplete
+     * items of the form "John Doe <john.doe@foo.com>", or, if the cn is not
+     * found, " <john.doe@foo.com>".  This latter form is suboptimal, in that
+     * the space and angle brackets are a bit ugly, but should work.  See
+     * bug 81961.
      *
      * @exception NS_ERROR_NULL_POINTER     NULL pointer passed to getter
      * @exception NS_ERROR_OUT_OF_MEMORY    Getter couldn't allocate string

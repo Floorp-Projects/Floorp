@@ -29,6 +29,7 @@
 #include "nsILDAPURL.h"
 #include "nsString.h"
 #include "nsISupportsArray.h"
+#include "nsIConsoleService.h"
 
 // 964665d0-1dd1-11b2-aeae-897834fb00b9
 //
@@ -62,7 +63,7 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     nsCOMPtr<nsILDAPURL> mServerURL;        // URL for the directory to search
     PRInt32 mSizeLimit;                     // return at most this many entries
     PRUint32 mMinStringLength;              // strings < this size are ignored
-
+    
     // stopgap until nsLDAPService works
     nsresult InitConnection();             
 
@@ -71,6 +72,17 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
 
     // add to the results set
     nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage); 
+
+    // use outputFormat to generate an autocomplete value from attributes
+    nsresult GenerateAutoCompleteValue(nsILDAPMessage *aMessage, 
+                                       nsAWritableString &aValue);
+
+    // process a single attribute while parsing outputFormat
+    nsresult ProcessAttribute(nsReadingIterator<PRUnichar> & aIter,  
+                              nsReadingIterator<PRUnichar> & aIterEnd, 
+                              nsILDAPMessage *aMessage, PRBool aAttrRequired,
+                              nsCOMPtr<nsIConsoleService> & aConsoleSvc,
+                              nsAWritableString & aValue);
 
     // all done; call OnAutoComplete
     nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage); 
