@@ -32,7 +32,10 @@
  *       xsl:attribute-set itself
  *    -- Added call to handle attribute-set processing for xsl:copy
  *
- * $Id: XSLTProcessor.cpp,v 1.7 2000/04/13 09:39:28 kvisco%ziplink.net Exp $
+ * Nathan Pride, npride@wavo.com
+ *    -- fixed a document base issue
+ *
+ * $Id: XSLTProcessor.cpp,v 1.8 2000/04/20 10:14:05 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -45,7 +48,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2000/04/13 09:39:28 $
+ * @version $Revision: 1.8 $ $Date: 2000/04/20 10:14:05 $
 **/
 
 /**
@@ -66,7 +69,7 @@ XSLTProcessor::XSLTProcessor() {
 
     xslVersion.append("1.0");
     appName.append("TransforMiiX");
-    appVersion.append("1.0 [beta v20000412]");
+    appVersion.append("1.0 [beta v20000420]");
 
 
     //-- create XSL element types
@@ -397,51 +400,53 @@ void XSLTProcessor::processTopLevel
                     break;
                 }
    	        case XSLType::INCLUDE :
-		{
+		    {
 
                     String href = element->getAttribute(HREF_ATTR);
                     //-- Read in XSL document
 
                     if (ps->getInclude(href)) {
-		        String err("stylesheet already included: ");
+		                String err("stylesheet already included: ");
                         err.append(href);
                         notifyError(err, ErrorObserver::WARNING);
                         break;
-		    }
+		             }
 
                     //-- get document base
                     String documentBase;
                     String currentHref;
                     //ps->getDocumentHref(element->getOwnerDocument(),
-		    //		currentHref);
+		            //		currentHref);
                     if (currentHref.length() == 0) {
-		      documentBase.append(ps->getDocumentBase());
-		    }
+		                documentBase.append(ps->getDocumentBase());
+		            }
                     else {
-		      URIUtils::getDocumentBase(currentHref, documentBase);
-		    }
+                        //-- Fix for relative URIs (npride)
+                        documentBase.append(ps->getDocumentBase());
+                        documentBase.append('/');
+                        //-- End fix
+		                URIUtils::getDocumentBase(currentHref, documentBase);
+		            }
 
                     String errMsg;
-
-                    istream* xslInput
-		      = URIUtils::getInputStream(href,documentBase,errMsg);
-		    Document* xslDoc = 0;
+                    istream* xslInput = URIUtils::getInputStream(href,documentBase,errMsg);
+		            Document* xslDoc = 0;
                     XMLParser xmlParser;
-		    if ( xslInput ) {
-		        xslDoc = xmlParser.parse(*xslInput);
-		        delete xslInput;
-		    }
-		    if (!xslDoc) {
-		        String err("error including XSL stylesheet: ");
+		            if ( xslInput ) {
+		                xslDoc = xmlParser.parse(*xslInput);
+		                delete xslInput;
+		            }
+		            if (!xslDoc) {
+		                String err("error including XSL stylesheet: ");
                         err.append(href);
                         err.append("; ");
-			err.append(xmlParser.getErrorString());
-			notifyError(err);
-		    }
+			            err.append(xmlParser.getErrorString());
+			            notifyError(err);
+		            }
                     else {
-		        //-- add stylesheet to list of includes
-		        ps->addInclude(href, xslDoc);
-		        processTopLevel(xslDoc, ps);
+		                //-- add stylesheet to list of includes
+		                ps->addInclude(href, xslDoc);
+		                processTopLevel(xslDoc, ps);
                     }
                     break;
 
