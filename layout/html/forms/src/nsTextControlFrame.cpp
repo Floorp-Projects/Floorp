@@ -1586,26 +1586,6 @@ nsTextControlFrame::InitEditor()
   return NS_OK;
 }
 
-// XXXldb I'm not sure if we really want the 'text-decoration: inherit',
-// but it's needed to make 'text-decoration' "work" on text inputs.
-#define DIV_STRING \
-  "-moz-user-focus: none;" \
-  "border: 0px !important;" \
-  "padding: 0px;" \
-  "margin: 0px;" \
-  "text-decoration: inherit;" \
-  ""
-
-#define DIV_STRING_SINGLELINE \
-  "-moz-user-focus: none;" \
-  "white-space : nowrap;" \
-  "overflow: auto;" \
-  "border: 0px !important;" \
-  "padding: 0px;" \
-  "margin: 0px;" \
-  "text-decoration: inherit;" \
-  ""
-
 NS_IMETHODIMP
 nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                            nsISupportsArray& aChildList)
@@ -1672,17 +1652,22 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   // Set the neccessary style attributes on the text control.
 
-  if (IsSingleLineTextControl())
-    rv = divContent->SetAttr(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertASCIItoUCS2(DIV_STRING_SINGLELINE), PR_FALSE);
-  else {
-    nsAutoString divStr; divStr.AssignWithConversion(DIV_STRING);
+  rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::kClass,
+                           NS_LITERAL_STRING("anonymous-div"), PR_FALSE);
+
+  if (!IsSingleLineTextControl()) {
+    // We can't just inherit the overflow because setting visible overflow will
+    // crash when the number of lines exceeds the height of the textarea and
+    // setting -moz-hidden-unscrollable overflow (NS_STYLE_OVERFLOW_HIDDEN)
+    // doesn't paint the caret for some reason.
     const nsStyleDisplay* disp = GetStyleDisplay();
-    if (disp->mOverflow == NS_STYLE_OVERFLOW_SCROLL)
-      divStr += NS_LITERAL_STRING("overflow:scroll;");
-    else if (disp->mOverflow == NS_STYLE_OVERFLOW_HIDDEN)
-      divStr += NS_LITERAL_STRING("overflow:-moz-scrollbars-none;");
-    else divStr += NS_LITERAL_STRING("overflow:auto;");
-    rv = divContent->SetAttr(kNameSpaceID_None,nsHTMLAtoms::style, divStr, PR_FALSE);
+    if (disp->mOverflow != NS_STYLE_OVERFLOW_AUTO &&  // this is the default
+        disp->mOverflow != NS_STYLE_OVERFLOW_VISIBLE &&
+        disp->mOverflow != NS_STYLE_OVERFLOW_HIDDEN) {
+      rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
+                               NS_LITERAL_STRING("overflow: inherit;"),
+                               PR_FALSE);
+    }
   }
 
   if (NS_FAILED(rv))
