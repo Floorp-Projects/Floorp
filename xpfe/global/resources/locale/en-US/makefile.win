@@ -1,3 +1,4 @@
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,16 +18,26 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..\..\..\..
 
-include $(DEPTH)/config/autoconf.mk
+DIRS=win
 
-DIRS		= en-US
+include <$(DEPTH)\config\rules.mak>
 
-include $(topsrcdir)/config/rules.mk
+DISTBROWSER=$(DIST)\bin\chrome\global\locale\en-US
 
+
+install::
+	$(MAKE_INSTALL) globalOverlay.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) dialogOverlay.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) tasksOverlay.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) commonDialog.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) charsetOverlay.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) charsetDetectorsOverlay.dtd $(DISTBROWSER)
+  $(MAKE_INSTALL) wizardManager.properties $(DISTBROWSER)
+  $(MAKE_INSTALL) wizardOverlay.dtd $(DISTBROWSER)
+  $(MAKE_INSTALL) about.dtd $(DISTBROWSER)
+  
+clobber::
+  rm -f $(DIST)\bin\chrome\global\locale\en-US\*.*
