@@ -922,6 +922,13 @@ int main()
     JSBool success = JS_TRUE;
     MySecMan* sm = new MySecMan();
 
+    if(!sm)
+    {
+        success = JS_FALSE;
+        printf("failed to create SecurityManager!\n");
+        goto sm_test_done;
+    }
+
     rval = JSVAL_FALSE;
     JS_SetProperty(jscontext, glob, "failed", &rval);
     printf("Individual SecurityManager tests...\n");
