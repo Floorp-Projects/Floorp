@@ -48,6 +48,17 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
 
+PRUint16 g_AsciiMapping[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+};
+PRUint16 g_utGB2312Mapping[] = {
+#include "gb2312.ut"
+};
+PRUint16 g_ufGB2312Mapping[] = {
+#include "gb2312.uf"
+};
+
+
 typedef nsresult (* fpCreateInstance) (nsISupports **);
 
 struct FactoryData

@@ -22,22 +22,52 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_EUCTWMappingTable[] = {
+static PRUint16 g_ufCNS1MappingTable[] = {
 #include "cns_1.uf"
 };
+static PRUint16 g_ufCNS2MappingTable[] = {
+#include "cns_2.uf"
+};
 
-static PRInt16 g_EUCTWShiftTable[] =  {
-  2, uMultibytesCharset,  
-  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
+static PRUint16 g_ASCIIMappingTable[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
+};
+
+static PRInt16 g_ASCIIShiftTable[] =  {
+  0, u1ByteCharset,
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
+
+static PRInt16 g_CNS1ShiftTable[] =  {
+  0, u2BytesGRCharset,
+  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
+};
+
+static PRInt16 g_CNS2ShiftTable[] =  {
+  0, u2BytesGRPrefix8EA2Charset,
+  ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
+};
+
+
+static PRInt16 *g_EUCTWShiftTableSet [] = {
+  g_ASCIIShiftTable,
+  g_CNS1ShiftTable,
+  g_CNS2ShiftTable
+};
+
+static PRUint16 *g_EUCTWMappingTableSet [] ={
+  g_ASCIIMappingTable,
+  g_ufCNS1MappingTable,
+  g_ufCNS2MappingTable
 };
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToEUCTW [implementation]
 
 nsUnicodeToEUCTW::nsUnicodeToEUCTW() 
-: nsTableEncoderSupport((uShiftTable*) &g_EUCTWShiftTable, 
-                        (uMappingTable*) &g_EUCTWMappingTable)
+: nsMultiTableEncoderSupport( 3,
+                        (uShiftTable**) &g_EUCTWShiftTableSet, 
+                        (uMappingTable**) &g_EUCTWMappingTableSet)
 {
 }
 
@@ -58,6 +88,6 @@ NS_IMETHODIMP nsUnicodeToEUCTW::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
+  *aDestLength = 4 * aSrcLength;
+  return NS_OK;
 }

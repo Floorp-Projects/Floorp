@@ -55,6 +55,9 @@ NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
+  // in theory it should be 6, but since we do not handle 
+  // UCS4 and UTF-16 here. It is 3. We should change it to 6 when we
+  // support UCS4 or UTF-16
   *aDestLength = 3*aSrcLength;
   return NS_OK;
 }

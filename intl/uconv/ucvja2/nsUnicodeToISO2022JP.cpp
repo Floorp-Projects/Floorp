@@ -210,7 +210,9 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::GetMaxLength(const PRUnichar * aSrc,
                                                  PRInt32 * aDestLength)
 {
   // worst case
-  *aDestLength = 5*aSrcLength;
+  //  1  2 3  4  5  6  7 8
+  // ESC $ B XX XX ESC ( B
+  *aDestLength = 8*aSrcLength;
   return NS_OK;
 }
 

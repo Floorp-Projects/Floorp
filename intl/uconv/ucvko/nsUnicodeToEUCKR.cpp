@@ -18,26 +18,39 @@
  */
 
 #include "nsUnicodeToEUCKR.h"
+#include "nsUCvKODll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_EUCKRMappingTable[] = {
-#include "u20kscgl.uf"
+
+static PRUint16 gAsciiShiftTable[] =  {
+  0, u1ByteCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
 };
 
-static PRInt16 g_EUCKRShiftTable[] =  {
-  2, uMultibytesCharset,  
-  ShiftCell(u1ByteChar,   1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F),
-  ShiftCell(u2BytesChar,  2, 0xA1, 0xFE, 0xA1, 0x40, 0xFE, 0xFE)
+static PRUint16 gKSC5601ShiftTable[] =  {
+  0, u2BytesGRCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
+
+static PRUint16 *g_EUCKRMappingTable[2] = {
+  g_AsciiMapping,
+  g_ufKSC5601Mapping
+};
+
+static PRUint16 *g_EUCKRShiftTable[2] =  {
+  gAsciiShiftTable,
+  gKSC5601ShiftTable
 };
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToEUCKR [implementation]
 
 nsUnicodeToEUCKR::nsUnicodeToEUCKR() 
-: nsTableEncoderSupport((uShiftTable*) &g_EUCKRShiftTable, 
-                        (uMappingTable*) &g_EUCKRMappingTable)
+: nsMultiTableEncoderSupport(2,
+                        (uShiftTable**) g_EUCKRShiftTable, 
+                        (uMappingTable**) g_EUCKRMappingTable)
 {
 }
 
@@ -58,6 +71,6 @@ NS_IMETHODIMP nsUnicodeToEUCKR::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 aSrcLength,
                                               PRInt32 * aDestLength)
 {
-  *aDestLength = aSrcLength;
-  return NS_OK_UENC_EXACTLENGTH;
+  *aDestLength = aSrcLength * 2;
+  return NS_OK;
 }

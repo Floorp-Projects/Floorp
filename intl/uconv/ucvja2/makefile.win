@@ -30,6 +30,9 @@ CPPSRCS =				\
 	nsEUCJPToUnicode.cpp		\
 	nsISO2022JPToUnicode.cpp	\
 	nsUnicodeToEUCJP.cpp		\
+	nsUnicodeToJISx0201.cpp		\
+	nsUnicodeToJISx0208.cpp		\
+	nsUnicodeToJISx0212.cpp		\
 	nsUnicodeToISO2022JP.cpp	\
 	nsUCvJa2Support.cpp		\
 	nsUCVJA2Dll.cpp			\
@@ -39,6 +42,9 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsEUCJPToUnicode.obj	\
 	.\$(OBJDIR)\nsISO2022JPToUnicode.obj	\
 	.\$(OBJDIR)\nsUnicodeToEUCJP.obj	\
+	.\$(OBJDIR)\nsUnicodeToJISx0201.obj	\
+	.\$(OBJDIR)\nsUnicodeToJISx0208.obj	\
+	.\$(OBJDIR)\nsUnicodeToJISx0212.obj	\
 	.\$(OBJDIR)\nsUnicodeToISO2022JP.obj	\
 	.\$(OBJDIR)\nsUCvJa2Support.obj		\
 	.\$(OBJDIR)\nsUCVJA2Dll.obj 		\

@@ -18,19 +18,10 @@
  */
 
 #include "nsGB2312ToUnicode.h"
-
-
+#include "nsUCvCnDll.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
-
-static PRUint16 g_ASCIIMappingTable[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0x007F, 0x0000
-};
-static PRUint16 g_GB2312MappingTable[] = {
-#include "gb2312.ut"
-};
-
 
 static PRInt16 g_ASCIIShiftTable[] =  {
   0, u1ByteCharset,
@@ -48,8 +39,8 @@ static PRInt16 *g_GB2312ShiftTableSet [] = {
 };
 
 static PRUint16 *g_GB2312MappingTableSet [] ={
-  g_ASCIIMappingTable,
-  g_GB2312MappingTable
+  g_AsciiMapping,
+  g_utGB2312Mapping
 };
 
 static uRange g_GB2312Ranges[] = {
