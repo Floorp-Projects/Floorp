@@ -173,7 +173,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(IBAction)newTab:(id)aSender
 {
-  [[[mApplication mainWindow] windowController] newTab];
+  [[[mApplication mainWindow] windowController] newTab:YES];
 }
 
 -(IBAction)closeTab:(id)aSender

@@ -1007,7 +1007,7 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
           // We need to make a new tab.
           tabViewItem = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
           CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: tabViewItem andWindow: [aTabView window]] autorelease];
-          [tabViewItem setLabel: @"Untitled"];
+          [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
           [tabViewItem setView: newView];
           [aTabView addTabViewItem: tabViewItem];
         }

@@ -133,6 +133,7 @@ static NSArray* sToolbarDefaults = nil;
         mInitialized = NO;
         mMoveReentrant = NO;
         mShouldAutosave = YES;
+        mShouldLoadHomePage = YES;
         mChromeMask = 0;
         mContextMenuFlags = 0;
         mContextMenuEvent = nsnull;
@@ -152,6 +153,11 @@ static NSArray* sToolbarDefaults = nil;
 -(void)disableAutosave
 {
   mShouldAutosave = NO;
+}
+
+-(void)disableLoadPage
+{
+  mShouldLoadHomePage = NO;
 }
 
 - (void)windowWillClose:(NSNotification *)notification
@@ -240,10 +246,11 @@ static NSArray* sToolbarDefaults = nil;
 //  We now remove the IB tab, then add one of our own.
 
     [mTabBrowser removeTabViewItem:[mTabBrowser tabViewItemAtIndex:0]];
-    [self newTab];
+    [self newTab:mShouldLoadHomePage];
     
     if (mURL) {
-      [self loadURL: mURL];
+      if (mShouldLoadHomePage)
+        [self loadURL: mURL];
       [mURL release];
     }
     
@@ -855,20 +862,23 @@ static NSArray* sToolbarDefaults = nil;
     [[self window] display];
 }
 
--(void)newTab
+-(void)newTab:(BOOL)allowHomepage
 {
-    PRInt32 newTabPage = 0;
-    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-    pref->GetIntPref("browser.tabs.startPage", &newTabPage);
-
     NSTabViewItem* newTab = [[[NSTabViewItem alloc] initWithIdentifier: nil] autorelease];
     CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
 
-    [newTab setLabel: (newTabPage ? @"Loading..." : @"Untitled")];
+    PRInt32 newTabPage = 0;
+    if (allowHomepage) {
+      nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+      pref->GetIntPref("browser.tabs.startPage", &newTabPage);
+    }
+
+    [newTab setLabel: ((newTabPage == 1) ? NSLocalizedString(@"TabLoading", @"") : NSLocalizedString(@"UntitledPageTitle", @""))];
     [newTab setView: newView];
     [mTabBrowser addTabViewItem: newTab];
 
-    [[newView getBrowserView] loadURI: (newTabPage ? [[CHPreferenceManager sharedInstance] homePage: NO] : @"about:blank") flags:NSLoadFlagsNone];
+    if (allowHomepage)
+      [[newView getBrowserView] loadURI: ((newTabPage == 1) ? [[CHPreferenceManager sharedInstance] homePage: NO] : @"about:blank") flags:NSLoadFlagsNone];
 
     [mTabBrowser selectLastTabViewItem: self];
 
@@ -976,7 +986,7 @@ static NSArray* sToolbarDefaults = nil;
     CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: newTab andWindow: [mTabBrowser window]] autorelease];
     [newView setTab: newTab];
     
-    [newTab setLabel: @"Loading..."];
+    [newTab setLabel: NSLocalizedString(@"TabLoading", @"")];
     [newTab setView: newView];
 
     [[newView getBrowserView] loadURI:aURLSpec flags:NSLoadFlagsNone];

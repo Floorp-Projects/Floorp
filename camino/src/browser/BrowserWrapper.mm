@@ -56,7 +56,6 @@
 #include "nsIWebProgressListener.h"
 
 #define DOCUMENT_DONE_STRING @"Document: Done"
-#define LOADING_STRING @"Loading..."
 
 static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
@@ -231,11 +230,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   [progress setIndeterminate:YES];
   [progress startAnimation:self];
 
-  loadingStatus = LOADING_STRING;
+  loadingStatus = NSLocalizedString(@"TabLoading", @"");
   [status setStringValue:loadingStatus];
 
   mIsBusy = YES;
-  [mTab setLabel: LOADING_STRING];
+  [mTab setLabel: NSLocalizedString(@"TabLoading", @"")];
 
   if (mWindowController) {
     [mWindowController updateToolbarItems];
@@ -363,7 +362,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     }
     else {
       if (!title || [title isEqualToString:@""])
-        title = [NSString stringWithString:@"Untitled"];
+        title = [NSString stringWithString:NSLocalizedString(@"UntitledPageTitle", @"")];
       mTitle = [title retain];
     }
     if ( mIsPrimary )
@@ -374,7 +373,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   if (title && ![title isEqualToString:@""])
     [mTab setLabel:title];
   else
-    [mTab setLabel:@"Untitled"];
+    [mTab setLabel:NSLocalizedString(@"UntitledPageTitle", @"")];
 }
 
 //
@@ -514,6 +513,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   BrowserWindowController* controller = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
   [controller setChromeMask: aMask];
   [controller disableAutosave]; // The Web page opened this window, so we don't ever use its settings.
+  [controller disableLoadPage]; // don't load about:blank initially since this is a script-opened window
   [controller enterModalSession];
   [[[controller getBrowserWrapper] getBrowserView] setActive: YES];
   return [[controller getBrowserWrapper] getBrowserView];
