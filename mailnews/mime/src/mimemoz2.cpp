@@ -323,11 +323,10 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
 
     // okay, if the current recursive call only wants us to list external body attachments
     // then kick out of this method if we are an inlined part and our child class isn't an 
-    // external body!
+    // external body or an apple double attachment!
     
-    if (addExternalBodiesOnly && !mime_typep((MimeObject *)child, (MimeObjectClass *)&mimeExternalObjectClass) )
+    if (addExternalBodiesOnly && !mime_typep((MimeObject *)child, (MimeObjectClass *)&mimeExternalObjectClass) && !isAnAppleDoublePart )
         return NS_OK;
-
 
     if (!part) 
       return NS_ERROR_OUT_OF_MEMORY;
