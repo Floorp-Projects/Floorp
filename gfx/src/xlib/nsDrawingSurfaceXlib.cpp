@@ -79,6 +79,7 @@ nsDrawingSurfaceXlib::nsDrawingSurfaceXlib()
 
 nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()
 {
+  printf("nsDrawingSurfaceXlib::~nsDrawingSurfaceXlib()\n");
   if (mPixmap) {
     XFreePixmap(gDisplay, mPixmap);
   }
@@ -98,6 +99,7 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
                            void **aBits, PRInt32 *aStride,
                            PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
+  printf("nsDrawingSurfaceXlib::Lock()\n");
   if (mLocked)
   {
     NS_ASSERTION(0, "nested lock attempt");
@@ -128,6 +130,7 @@ nsDrawingSurfaceXlib::Lock(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP
 nsDrawingSurfaceXlib::Unlock(void)
 {
+  printf("nsDrawingSurfaceXlib::UnLock()\n");
   if (!mLocked) {
     NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
     return NS_ERROR_FAILURE;
