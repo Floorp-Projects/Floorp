@@ -1190,13 +1190,13 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
       nsCOMPtr<nsIAtom> attribute;
 
       // Figure out if this token contains a :. 
-      nsAutoString attr; attr.AssignWithConversion(token);
-      PRInt32 index = attr.Find(":", PR_TRUE);
+      nsAutoString attrTok; attrTok.AssignWithConversion(token);
+      PRInt32 index = attrTok.Find(":", PR_TRUE);
       if (index != -1) {
         // This attribute maps to something different.
         nsAutoString left, right;
-        attr.Left(left, index);
-        attr.Right(right, attr.Length()-index-1);
+        attrTok.Left(left, index);
+        attrTok.Right(right, attrTok.Length()-index-1);
 
         atom = getter_AddRefs(NS_NewAtom(left.GetUnicode()));
         attribute = getter_AddRefs(NS_NewAtom(right.GetUnicode()));
