@@ -1042,34 +1042,6 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     switch (op) {
                     default:
                         NOT_REACHED("bad unary op");
-                    case Increment: // defined in terms of '+'
-                        {
-                            pushValue(JSValue(1.0));
-                            if (executeOperator(Plus, v.getType(), Number_Type)) {
-                                // need to invoke
-                                pc = mCurModule->mCodeBase;
-                                endPC = mCurModule->mCodeBase + mCurModule->mLength;
-                                mLocals = new JSValue[mCurModule->mLocalsCount];
-                                mStack = new JSValue[mCurModule->mStackDepth];
-                                mStackMax = mCurModule->mStackDepth;
-                                mStackTop = 0;
-                            }
-                        }
-                        break;
-                    case Decrement: // defined in terms of '-'
-                        {
-                            pushValue(JSValue(1.0));
-                            if (executeOperator(Minus, v.getType(), Number_Type)) {
-                                // need to invoke
-                                pc = mCurModule->mCodeBase;
-                                endPC = mCurModule->mCodeBase + mCurModule->mLength;
-                                mLocals = new JSValue[mCurModule->mLocalsCount];
-                                mStack = new JSValue[mCurModule->mStackDepth];
-                                mStackMax = mCurModule->mStackDepth;
-                                mStackTop = 0;
-                            }
-                        }
-                        break;
                     case Negate:
                         {
                             popValue();

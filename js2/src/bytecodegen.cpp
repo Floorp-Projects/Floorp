@@ -1643,10 +1643,12 @@ BinaryOperator:
         }
 
     case ExprNode::preIncrement:
-        op = Increment;
+//        op = Increment;
+        op = Plus;
         goto PreXcrement;
     case ExprNode::preDecrement:
-        op = Decrement;
+//        op = Decrement;
+        op = Minus;
         goto PreXcrement;
 
 PreXcrement:
@@ -1663,15 +1665,14 @@ PreXcrement:
                 }
                 else
                     addOp(DupOp);
-                readRef->emitCodeSequence(this);
-                addOpStretchStack(DoUnaryOp, 1);
-                addByte(op);
             }
-            else {
-                readRef->emitCodeSequence(this);
-                addOpStretchStack(DoUnaryOp, 1);
-                addByte(op);
-            }
+            readRef->emitCodeSequence(this);
+            addOp(DoUnaryOp);       
+            addByte(Posate);
+            addOp(LoadConstantNumberOp);
+            addNumberRef(1.0);
+            addOp(DoOperatorOp);
+            addByte(op);
             writeRef->emitCodeSequence(this);
             delete readRef;
             delete writeRef;
@@ -1679,10 +1680,12 @@ PreXcrement:
         }
 
     case ExprNode::postIncrement:
-        op = Increment;
+//        op = Increment;
+        op = Plus;
         goto PostXcrement;
     case ExprNode::postDecrement:
-        op = Decrement;
+//        op = Decrement;
+        op = Minus;
         goto PostXcrement;
 
 PostXcrement:
@@ -1712,7 +1715,11 @@ PostXcrement:
                 readRef->emitCodeSequence(this);
                 addOp(DupOp);
             }
-            addOpStretchStack(DoUnaryOp, 1);
+            addOp(DoUnaryOp);       
+            addByte(Posate);
+            addOp(LoadConstantNumberOp);
+            addNumberRef(1.0);
+            addOp(DoOperatorOp);
             addByte(op);
             writeRef->emitCodeSequence(this);
             addOp(PopOp);     // because the SetXXX will propogate the new value
