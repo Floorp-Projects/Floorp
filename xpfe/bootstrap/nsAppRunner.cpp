@@ -1031,7 +1031,7 @@ static int
 SetupMallocTracing(int argc, char* argv[])
 {
 #ifdef NS_TRACE_MALLOC
-  int i;
+  int i, logfd = -1;
 
   /*
    * Look for the --trace-malloc <logfile> option early, to avoid missing
@@ -1042,10 +1042,9 @@ SetupMallocTracing(int argc, char* argv[])
   {
     if (PL_strcasecmp(argv[i], "--trace-malloc") == 0 && i < argc-1) {
       char *logfile;
-      int logfd, pipefds[2];
+      int pipefds[2];
 
       logfile = argv[i+1];
-      logfd = -1;
       switch (*logfile) {
         case '|':
           if (pipe(pipefds) == 0) {
@@ -1092,7 +1091,7 @@ SetupMallocTracing(int argc, char* argv[])
             fprintf(stderr,
                     "%s: can't pipe to trace-malloc child process %s: %s\n",
                     argv[0], logfile, strerror(errno));
-            return 1;
+            exit(1);
           }
           break;
 
@@ -1108,12 +1107,10 @@ SetupMallocTracing(int argc, char* argv[])
             fprintf(stderr,
                     "%s: can't create trace-malloc logfile %s: %s\n",
                     argv[0], logfile, strerror(errno));
-            return 1;
+            exit(1);
           }
           break;
       }
-
-      NS_TraceMallocStartup(logfd);
 
       /* Now remove --trace-malloc and its argument from argv. */
       for (argc -= 2; i < argc; i++)
@@ -1122,6 +1119,8 @@ SetupMallocTracing(int argc, char* argv[])
       break;
     }
   }
+
+  NS_TraceMallocStartup(logfd);
 #endif /* NS_TRACE_MALLOC */
 
   return argc;
