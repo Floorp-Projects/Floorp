@@ -65,7 +65,8 @@ struct RuleProcessorData {
                     nsRuleWalker* aRuleWalker,
                     nsCompatibility* aCompat = nsnull);
   
-  virtual ~RuleProcessorData();
+  // NOTE: not |virtual|
+  ~RuleProcessorData();
 
   void* operator new(size_t sz, nsIPresContext* aContext) {
     void* result = nsnull;
