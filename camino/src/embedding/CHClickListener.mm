@@ -52,7 +52,7 @@
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
@@ -129,7 +129,7 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
     // auto-enabling via NSMenuValidation.
     [menu setAutoenablesItems: NO];
 
-    nsCOMPtr<nsIDOMHTMLCollection> options;
+    nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
     sel->GetOptions(getter_AddRefs(options));
     PRUint32 count;
     options->GetLength(&count);
