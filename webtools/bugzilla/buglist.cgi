@@ -121,7 +121,7 @@ my $serverpush =
               || $::FORM{'serverpush'};
 
 my $order = $::FORM{'order'} || "";
-my $order_from_cookie = 0;  # True if $order set using $::COOKIE{'LASTORDER'}
+my $order_from_cookie = 0;  # True if $order set using the LASTORDER cookie
 
 # The params object to use for the actual query itself
 my $params;
@@ -129,13 +129,13 @@ my $params;
 # If the user is retrieving the last bug list they looked at, hack the buffer
 # storing the query string so that it looks like a query retrieving those bugs.
 if ($::FORM{'regetlastlist'}) {
-    $::COOKIE{'BUGLIST'} || ThrowUserError("missing_cookie");
+    $cgi->cookie('BUGLIST') || ThrowUserError("missing_cookie");
 
     $order = "reuse last sort" unless $order;
 
     # set up the params for this new query
     $params = new Bugzilla::CGI({
-                                 bug_id => [split(/:/, $::COOKIE{'BUGLIST'})],
+                                 bug_id => [split(/:/, $cgi->cookie('BUGLIST'))],
                                  order => $order,
                                 });
 }
@@ -195,7 +195,7 @@ sub iCalendarDateTime {
 sub LookupNamedQuery {
     my ($name) = @_;
     Bugzilla->login(LOGIN_REQUIRED);
-    my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+    my $userid = DBNameToIdAndCheck(Bugzilla->user->login);
     my $qname = SqlQuote($name);
     SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
     my $result = FetchOneColumn();
@@ -318,7 +318,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
     }
     elsif ($::FORM{'remaction'} eq "forget") {
         Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = DBNameToIdAndCheck(Bugzilla->user->login);
         my $qname = SqlQuote($::FORM{'namedcmd'});
         SendSQL("DELETE FROM namedqueries WHERE userid = $userid AND name = $qname");
 
@@ -338,7 +338,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
 elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     if ($::FORM{'remtype'} eq "asdefault") {
         Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = DBNameToIdAndCheck(Bugzilla->user->login);
         my $qname = SqlQuote($::defaultqueryname);
         my $qbuffer = SqlQuote($::buffer);
 
@@ -361,7 +361,7 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     }
     elsif ($::FORM{'remtype'} eq "asnamed") {
         Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        my $userid = DBNameToIdAndCheck(Bugzilla->user->login);
 
         my $name = trim($::FORM{'newqueryname'});
         $name || ThrowUserError("query_name_missing");
@@ -487,9 +487,9 @@ if (defined $params->param('columnlist')) {
         @displaycolumns = split(/[ ,]+/, $params->param('columnlist'));
     }
 }
-elsif (defined $::COOKIE{'COLUMNLIST'}) {
+elsif (defined $cgi->cookie('COLUMNLIST')) {
     # 2002-10-31 Rename column names (see bug 176461)
-    my $columnlist = $::COOKIE{'COLUMNLIST'};
+    my $columnlist = $cgi->cookie('COLUMNLIST');
     $columnlist =~ s/\bowner\b/assigned_to/;
     $columnlist =~ s/\bowner_realname\b/assigned_to_realname/;
     $columnlist =~ s/\bplatform\b/rep_platform/;
@@ -591,8 +591,8 @@ my @selectnames = map($columns->{$_}->{'name'}, @selectcolumns);
 ################################################################################
 
 # Add to the query some instructions for sorting the bug list.
-if ($::COOKIE{'LASTORDER'} && (!$order || $order =~ /^reuse/i)) {
-    $order = $::COOKIE{'LASTORDER'};
+if ($cgi->cookie('LASTORDER') && (!$order || $order =~ /^reuse/i)) {
+    $order = $cgi->cookie('LASTORDER');
     $order_from_cookie = 1;
 }
 
@@ -842,7 +842,7 @@ $vars->{'urlquerypart'} =~ s/(order|cmdtype)=[^&]*&?//g;
 $vars->{'order'} = $order;
 
 # The user's login account name (i.e. email address).
-my $login = $::COOKIE{'Bugzilla_login'};
+my $login = Bugzilla->user ? Bugzilla->user->login : "";
 
 $vars->{'caneditbugs'} = UserInGroup('editbugs');
 
@@ -862,7 +862,7 @@ if (scalar(@bugowners) > 1 && UserInGroup('editbugs')) {
 
 # Whether or not to split the column titles across two rows to make
 # the list more compact.
-$vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
+$vars->{'splitheader'} = $cgi->cookie('SPLITHEADER') ? 1 : 0;
 
 $vars->{'quip'} = GetQuip();
 $vars->{'currenttime'} = time();
