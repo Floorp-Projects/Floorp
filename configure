@@ -11795,7 +11795,7 @@ EOF
 fi
 
 case "$target_os" in
-    solaris*|linux*|msvc*|mksnt*|cygwin*|mingw*|os2*)
+    aix*|solaris*|linux*|msvc*|mksnt*|cygwin*|mingw*|os2*)
         MOZ_INSTALLER=1
         ;;
 esac
