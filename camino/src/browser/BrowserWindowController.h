@@ -96,6 +96,7 @@ typedef enum
 @class BrowserContentView;
 @class BrowserTabViewItem;
 @class AutoCompleteTextField;
+@class SearchTextField;
 
 @interface BrowserWindowController : NSWindowController<Find>
 {
@@ -125,6 +126,10 @@ typedef enum
   IBOutlet NSPopUpButton*       mAddBookmarkFolderField;
   IBOutlet NSButton*            mAddBookmarkCheckbox;
 
+  IBOutlet SearchTextField*     mSearchBar;
+  IBOutlet SearchTextField*     mSearchSheetTextField;
+  IBOutlet NSWindow*            mSearchSheetWindow;
+  
   // Context menu outlets.
   IBOutlet NSMenu*              mPageMenu;
   IBOutlet NSMenu*              mImageMenu;
@@ -207,6 +212,13 @@ typedef enum
 - (void)beginLocationSheet;
 - (IBAction)endLocationSheet:(id)sender;
 - (IBAction)cancelLocationSheet:(id)sender;
+
+- (void)performAppropriateSearchAction;
+- (void)focusSearchBar;
+- (void)beginSearchSheet;
+- (IBAction)endSearchSheet:(id)sender;
+- (IBAction)cancelSearchSheet:(id)sender;
+
 
 - (IBAction)cancelAddBookmarkSheet:(id)sender;
 - (IBAction)endAddBookmarkSheet:(id)sender;
@@ -331,6 +343,9 @@ typedef enum
 + (NSImage*) insecureIcon;
 + (NSImage*) secureIcon;
 + (NSImage*) brokenIcon;
+
+// cache the search engines and their search strings we parse from a plist
++ (NSDictionary *)searchURLDictionary;
 
 // cache the toolbar defaults we parse from a plist
 + (NSArray*) toolbarDefaults;

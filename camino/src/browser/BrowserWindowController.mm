@@ -49,6 +49,9 @@
 #import "PageProxyIcon.h"
 #import "AutoCompleteTextField.h"
 #import "BookmarksController.h"
+#import "SearchTextField.h"
+#import "SearchTextFieldCell.h"
+#import "STFPopUpButtonCell.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMDocument.h"
@@ -65,6 +68,7 @@
 #include "GeckoUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsNetUtil.h"
 
 #include "nsIClipboardCommands.h"
 #include "nsICommandManager.h"
@@ -355,7 +359,7 @@ static NSArray* sToolbarDefaults = nil;
   //  [mSidebarBrowserView windowClosed];
 
   [mProgress release];
-
+  [mSearchBar release];
   [self stopThrobber];
   [mThrobberImages release];
   [mURLFieldEditor release];
@@ -401,6 +405,24 @@ static NSArray* sToolbarDefaults = nil;
       [mStatus setDrawsBackground:YES];
     }
 
+    // Set up the toolbar's search text field
+    NSMutableArray *searchTitles =
+      [NSMutableArray arrayWithArray:[[[BrowserWindowController searchURLDictionary] allKeys] sortedArrayUsingSelector:@selector(compare:)]];
+
+    [searchTitles removeObject:@"PreferredSearchEngine"];
+
+    [mSearchBar addPopUpMenuItemsWithTitles:searchTitles];
+    [[[mSearchBar cell] popUpButtonCell] selectItemWithTitle:
+      [[BrowserWindowController searchURLDictionary] objectForKey:@"PreferredSearchEngine"]];
+
+    [mSearchBar retain];
+    [mSearchBar removeFromSuperview];
+
+    // Set the sheet's search text field
+    [mSearchSheetTextField addPopUpMenuItemsWithTitles:searchTitles];
+    [[[mSearchSheetTextField cell] popUpButtonCell] selectItemWithTitle:
+      [[BrowserWindowController searchURLDictionary] objectForKey:@"PreferredSearchEngine"]];    
+    
     // Get our saved dimensions.
     NSRect oldFrame = [[self window] frame];
     [[self window] setFrameUsingName: NavigatorWindowFrameSaveName];
@@ -659,174 +681,184 @@ static NSArray* sToolbarDefaults = nil;
       itemForItemIdentifier:(NSString *)itemIdent
   willBeInsertedIntoToolbar:(BOOL)willBeInserted
 {
-    NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdent] autorelease];
-    if ( [itemIdent isEqual:BackToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Back", @"Back")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
-        [toolbarItem setToolTip:NSLocalizedString(@"BackToolTip", @"Go back one page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"back"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(back:)];
-    }
-    else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
-        [toolbarItem setToolTip:NSLocalizedString(@"ForwardToolTip", @"Go forward one page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"forward"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(forward:)];
-    }
-    else if ( [itemIdent isEqual:ReloadToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Reload", @"Reload")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Reload Page", @"Reload Page")];
-        [toolbarItem setToolTip:NSLocalizedString(@"ReloadToolTip", @"Reload current page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"reload"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(reload:)];
-    }
-    else if ( [itemIdent isEqual:StopToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Stop", @"Stop")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Stop Loading", @"Stop Loading")];
-        [toolbarItem setToolTip:NSLocalizedString(@"StopToolTip", @"Stop loading this page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"stop"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(stop:)];
-    }
-    else if ( [itemIdent isEqual:HomeToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Home", @"Home")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Home", @"Go Home")];
-        [toolbarItem setToolTip:NSLocalizedString(@"HomeToolTip", @"Go to home page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"home"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(home:)];
-    }
-    else if ( [itemIdent isEqual:SidebarToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Sidebar", @"Sidebar")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Sidebar", @"Toggle Sidebar")];
-        [toolbarItem setToolTip:NSLocalizedString(@"SidebarToolTip", @"Show or hide the Sidebar")];
-        [toolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(toggleSidebar:)];
-    }
-    else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Search", @"Search")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Search", @"Search")];
-        [toolbarItem setToolTip:NSLocalizedString(@"SearchToolTip", @"Search the Internet")];
-        [toolbarItem setImage:[NSImage imageNamed:@"searchWeb.tif"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(performSearch:)];
-    }
-    else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:@""];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Progress", @"Progress")];
-        [toolbarItem setToolTip:NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil)];
-        [toolbarItem setImage:[NSImage imageNamed:@"throbber-01"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setTag:'Thrb'];
-        [toolbarItem setAction:@selector(clickThrobber:)];
-    }
-    else if ( [itemIdent isEqual:LocationToolbarItemIdentifier] )
-    {
-        NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
-        
-        [toolbarItem setLabel:NSLocalizedString(@"Location", @"Location")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", @"Location")];
-        [toolbarItem setView:mLocationToolbarView];
-        [toolbarItem setMinSize:NSMakeSize(128,20)];
-        [toolbarItem setMaxSize:NSMakeSize(2560,32)];
-        
-        [menuFormRep setTarget:self];
-        [menuFormRep setAction:@selector(performAppropriateLocationAction)];
-        [menuFormRep setTitle:[toolbarItem label]];
-        
-        [toolbarItem setMenuFormRepresentation:menuFormRep];
-    }
-    else if ( [itemIdent isEqual:PrintToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Print", @"Print")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Print", @"Print")];
-        [toolbarItem setToolTip:NSLocalizedString(@"PrintToolTip", @"Print this page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"print"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(printDocument:)];
-    }
-    else if ( [itemIdent isEqual:ViewSourceToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"View Source", @"View Source")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"View Page Source", @"View Page Source")];
-        [toolbarItem setToolTip:NSLocalizedString(@"ViewSourceToolTip", @"Display the HTML source of this page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"showsource"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(viewSource:)];
-    }
-    else if ( [itemIdent isEqual:BookmarkToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"Bookmark", @"Bookmark")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"Bookmark Page", @"Bookmark Page")];
-        [toolbarItem setToolTip:NSLocalizedString(@"BookmarkToolTip", @"Add this page to your bookmarks")];
-        [toolbarItem setImage:[NSImage imageNamed:@"add_to_bookmark.tif"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(bookmarkPage:)];
-    }
-    else if ( [itemIdent isEqual:TextBiggerToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
-        [toolbarItem setToolTip:NSLocalizedString(@"BigTextToolTip", @"Enlarge the text on this page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"textBigger.tif"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(biggerTextSize:)];
-    }
-    else if ( [itemIdent isEqual:TextSmallerToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
-        [toolbarItem setToolTip:NSLocalizedString(@"SmallTextToolTip", @"Shrink the text on this page")];
-        [toolbarItem setImage:[NSImage imageNamed:@"textSmaller.tif"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(smallerTextSize:)];
-    }
-    else if ( [itemIdent isEqual:NewTabToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"NewTab", @"New Tab")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"NewTab", @"New Tab")];
-        [toolbarItem setToolTip:NSLocalizedString(@"NewTabToolTip", @"Create a new tab")];
-        [toolbarItem setImage:[NSImage imageNamed:@"newTab.tif"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(newTab:)];
-    }
-    else if ( [itemIdent isEqual:CloseTabToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
-        [toolbarItem setToolTip:NSLocalizedString(@"CloseTabToolTip", @"Close the current tab")];
-        [toolbarItem setImage:[NSImage imageNamed:@"closeTab.tif"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(closeCurrentTab:)];
-    }
-    else if ( [itemIdent isEqual:SendURLToolbarItemIdentifier] )
-    {
-        [toolbarItem setLabel:NSLocalizedString(@"SendLink", @"Send Link")];
-        [toolbarItem setPaletteLabel:NSLocalizedString(@"SendLink", @"Send Link")];
-        [toolbarItem setToolTip:NSLocalizedString(@"SendLinkToolTip", @"Send current URL")];
-        [toolbarItem setImage:[NSImage imageNamed:@"sendLink.tif"]];
-        [toolbarItem setTarget:self];
-        [toolbarItem setAction:@selector(sendURL:)];
-    }
-    else
-    {
-        toolbarItem = nil;
-    }
-    
-    return toolbarItem;
+  NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdent] autorelease];
+  if ( [itemIdent isEqual:BackToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Back", @"Back")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
+    [toolbarItem setToolTip:NSLocalizedString(@"BackToolTip", @"Go back one page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"back"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(back:)];
+  }
+  else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
+    [toolbarItem setToolTip:NSLocalizedString(@"ForwardToolTip", @"Go forward one page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"forward"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(forward:)];
+  }
+  else if ( [itemIdent isEqual:ReloadToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Reload", @"Reload")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Reload Page", @"Reload Page")];
+    [toolbarItem setToolTip:NSLocalizedString(@"ReloadToolTip", @"Reload current page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"reload"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(reload:)];
+  }
+  else if ( [itemIdent isEqual:StopToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Stop", @"Stop")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Stop Loading", @"Stop Loading")];
+    [toolbarItem setToolTip:NSLocalizedString(@"StopToolTip", @"Stop loading this page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"stop"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(stop:)];
+  }
+  else if ( [itemIdent isEqual:HomeToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Home", @"Home")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Home", @"Go Home")];
+    [toolbarItem setToolTip:NSLocalizedString(@"HomeToolTip", @"Go to home page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"home"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(home:)];
+  }
+  else if ( [itemIdent isEqual:SidebarToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Sidebar", @"Sidebar")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Toggle Sidebar", @"Toggle Sidebar")];
+    [toolbarItem setToolTip:NSLocalizedString(@"SidebarToolTip", @"Show or hide the Sidebar")];
+    [toolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(toggleSidebar:)];
+  }
+  else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] )
+  {
+    NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
+
+    [toolbarItem setLabel:NSLocalizedString(@"Search", @"Search")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Search", @"Search")];
+    [toolbarItem setToolTip:NSLocalizedString(@"SearchToolTip", @"Search the Internet")];
+    [toolbarItem setView:mSearchBar];
+    [toolbarItem setMinSize:NSMakeSize(128, NSHeight([mSearchBar frame]))];
+    [toolbarItem setMaxSize:NSMakeSize(150, NSHeight([mSearchBar frame]))];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(performSearch:)];
+
+    [menuFormRep setTarget:self];
+    [menuFormRep setAction:@selector(beginSearchSheet)];
+    [menuFormRep setTitle:[toolbarItem label]];
+
+    [toolbarItem setMenuFormRepresentation:menuFormRep];
+  }
+  else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:@""];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Progress", @"Progress")];
+    [toolbarItem setToolTip:NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil)];
+    [toolbarItem setImage:[NSImage imageNamed:@"throbber-01"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setTag:'Thrb'];
+    [toolbarItem setAction:@selector(clickThrobber:)];
+  }
+  else if ( [itemIdent isEqual:LocationToolbarItemIdentifier] )
+  {
+    NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
+
+    [toolbarItem setLabel:NSLocalizedString(@"Location", @"Location")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Location", @"Location")];
+    [toolbarItem setView:mLocationToolbarView];
+    [toolbarItem setMinSize:NSMakeSize(128,20)];
+    [toolbarItem setMaxSize:NSMakeSize(2560,32)];
+
+    [menuFormRep setTarget:self];
+    [menuFormRep setAction:@selector(performAppropriateLocationAction)];
+    [menuFormRep setTitle:[toolbarItem label]];
+
+    [toolbarItem setMenuFormRepresentation:menuFormRep];
+  }
+  else if ( [itemIdent isEqual:PrintToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Print", @"Print")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Print", @"Print")];
+    [toolbarItem setToolTip:NSLocalizedString(@"PrintToolTip", @"Print this page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"print"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(printDocument:)];
+  }
+  else if ( [itemIdent isEqual:ViewSourceToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"View Source", @"View Source")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"View Page Source", @"View Page Source")];
+    [toolbarItem setToolTip:NSLocalizedString(@"ViewSourceToolTip", @"Display the HTML source of this page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"showsource"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(viewSource:)];
+  }
+  else if ( [itemIdent isEqual:BookmarkToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"Bookmark", @"Bookmark")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"Bookmark Page", @"Bookmark Page")];
+    [toolbarItem setToolTip:NSLocalizedString(@"BookmarkToolTip", @"Add this page to your bookmarks")];
+    [toolbarItem setImage:[NSImage imageNamed:@"add_to_bookmark.tif"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(bookmarkPage:)];
+  }
+  else if ( [itemIdent isEqual:TextBiggerToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
+    [toolbarItem setToolTip:NSLocalizedString(@"BigTextToolTip", @"Enlarge the text on this page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"textBigger.tif"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(biggerTextSize:)];
+  }
+  else if ( [itemIdent isEqual:TextSmallerToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
+    [toolbarItem setToolTip:NSLocalizedString(@"SmallTextToolTip", @"Shrink the text on this page")];
+    [toolbarItem setImage:[NSImage imageNamed:@"textSmaller.tif"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(smallerTextSize:)];
+  }
+  else if ( [itemIdent isEqual:NewTabToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"NewTab", @"New Tab")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"NewTab", @"New Tab")];
+    [toolbarItem setToolTip:NSLocalizedString(@"NewTabToolTip", @"Create a new tab")];
+    [toolbarItem setImage:[NSImage imageNamed:@"newTab.tif"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(newTab:)];
+  }
+  else if ( [itemIdent isEqual:CloseTabToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
+    [toolbarItem setToolTip:NSLocalizedString(@"CloseTabToolTip", @"Close the current tab")];
+    [toolbarItem setImage:[NSImage imageNamed:@"closeTab.tif"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(closeCurrentTab:)];
+  }
+  else if ( [itemIdent isEqual:SendURLToolbarItemIdentifier] )
+  {
+    [toolbarItem setLabel:NSLocalizedString(@"SendLink", @"Send Link")];
+    [toolbarItem setPaletteLabel:NSLocalizedString(@"SendLink", @"Send Link")];
+    [toolbarItem setToolTip:NSLocalizedString(@"SendLinkToolTip", @"Send current URL")];
+    [toolbarItem setImage:[NSImage imageNamed:@"sendLink.tif"]];
+    [toolbarItem setTarget:self];
+    [toolbarItem setAction:@selector(sendURL:)];
+  }
+  else
+  {
+    toolbarItem = nil;
+  }
+
+  return toolbarItem;
 }
 
 // This method handles the enabling/disabling of the toolbar buttons.
@@ -936,6 +968,59 @@ static NSArray* sToolbarDefaults = nil;
 {
   [mLocationSheetWindow orderOut:self];
   [NSApp endSheet:mLocationSheetWindow returnCode:0];
+}
+
+- (void)performAppropriateSearchAction
+{
+  NSToolbar *toolbar = [[self window] toolbar];
+  if ( [toolbar isVisible] )
+  {
+    if ( ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconAndLabel) ||
+         ([[[self window] toolbar] displayMode] == NSToolbarDisplayModeIconOnly) )
+    {
+      NSArray *itemsWeCanSee = [toolbar visibleItems];
+
+      for (unsigned int i = 0; i < [itemsWeCanSee count]; i++)
+      {
+        if ([[[itemsWeCanSee objectAtIndex:i] itemIdentifier] isEqual:SearchToolbarItemIdentifier])
+        {
+          [self focusSearchBar];
+          return;
+        }
+      }
+    }
+  }
+
+  [self beginSearchSheet];
+}
+
+- (void)focusSearchBar
+{
+  [[mBrowserView getBrowserView] setActive:NO];
+
+  [mSearchBar selectText:self];
+}
+
+- (void)beginSearchSheet
+{
+  [NSApp beginSheet:  mSearchSheetWindow
+     modalForWindow:  [self window]
+      modalDelegate:  nil
+     didEndSelector:  nil
+        contextInfo:  nil];
+}
+
+- (IBAction)endSearchSheet:(id)sender
+{
+  [mSearchSheetWindow orderOut:self];
+  [NSApp endSheet:mSearchSheetWindow returnCode:1];
+  [self performSearch:mSearchSheetTextField];
+}
+
+- (IBAction)cancelSearchSheet:(id)sender
+{
+  [mSearchSheetWindow orderOut:self];
+  [NSApp endSheet:mSearchSheetWindow returnCode:0];
 }
 
 -(IBAction)cancelAddBookmarkSheet:(id)sender
@@ -1072,7 +1157,72 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)performSearch:(id)aSender
 {
-  [mBrowserView loadURI:[[PreferenceManager sharedInstance] searchPage] referrer: nil flags:NSLoadFlagsNone activate:NO];
+  // If we have a valid SearchTextField, perform a search using its contents
+  if ([aSender isKindOfClass:[SearchTextField class]]) {
+    // Get the search URL from our dictionary of sites and search urls
+    NSMutableString *searchURL = [NSMutableString stringWithString:
+      [[BrowserWindowController searchURLDictionary] objectForKey:
+        [aSender titleOfSelectedPopUpItem]]];
+    NSString *currentURL = [[self getBrowserWrapper] getCurrentURLSpec];
+
+    const char *aURLSpec = [currentURL lossyCString];
+    NSString *aDomain;
+    nsIURI *aURI;
+
+    // If we have an about: type URL, remove " site:%d" from the search string
+    // This is a fix to deal with Google's Search this Site feature
+    // If other sites use %d to search the site, we'll have to have specific rules
+    // for those sites.
+
+    if ([currentURL hasPrefix:@"about:"]) {
+      NSRange domainStringRange = [searchURL rangeOfString:@" site:%d"
+                                                   options:NSBackwardsSearch];
+
+      if (NSEqualRanges(domainStringRange, NSMakeRange(NSNotFound, 0)) == NO)
+        [searchURL deleteCharactersInRange:domainStringRange];
+    }
+
+    // If they didn't type anything in the search field, visit the domain of
+    // the search site, i.e. www.google.com for the Google site
+    if ([[aSender stringValue] isEqualToString:@""]) {
+      aURLSpec = [searchURL lossyCString];
+
+      if (NS_NewURI(&aURI, aURLSpec, nsnull, nsnull) == NS_OK) {
+        nsCAutoString spec;
+        aURI->GetHost(spec);
+
+        aDomain = [NSString stringWithUTF8String:spec.get()];
+
+        [self loadURL:aDomain referrer:nil activate:NO];
+      }
+    } else {
+      aURLSpec = [[[self getBrowserWrapper] getCurrentURLSpec] lossyCString];
+
+      // Get the domain so that we can replace %d in our searchURL
+      if (NS_NewURI(&aURI, aURLSpec, nsnull, nsnull) == NS_OK) {
+        nsCAutoString spec;
+        aURI->GetHost(spec);
+
+        aDomain = [NSString stringWithUTF8String:spec.get()];
+      }
+
+      // Replace any occurence of %d in the search URL with the current domain
+      [searchURL replaceOccurrencesOfString:@"%d"
+                                 withString:aDomain
+                                    options:NSBackwardsSearch
+                                      range:NSMakeRange(0, [searchURL length])];
+
+      // Replace any occurence of %s in the search URL with the
+      // contents of the search text field
+      [searchURL replaceOccurrencesOfString:@"%s"
+                                 withString:[aSender stringValue]
+                                    options:NSBackwardsSearch
+                                      range:NSMakeRange(0, [searchURL length])];
+
+
+      [self loadURL:searchURL referrer:nil activate:NO];
+    }
+  }
 }
 
 - (IBAction)sendURL:(id)aSender
@@ -2117,6 +2267,20 @@ static NSArray* sToolbarDefaults = nil;
     sBrokenIcon = [[NSImage imageNamed:@"security_broken"] retain];
   return sBrokenIcon;
 }
+
+
++ (NSDictionary *)searchURLDictionary
+{
+  static NSDictionary *searchURLDictionary = nil;
+
+  if (searchURLDictionary == nil)
+    searchURLDictionary = [[NSDictionary alloc] initWithContentsOfFile:
+      [[NSBundle mainBundle] pathForResource:@"SearchURLList" ofType:@"plist"]];
+  
+  return searchURLDictionary;
+}
+
+
 
 - (void) focusChangedFrom:(NSResponder*) oldResponder to:(NSResponder*) newResponder
 {

@@ -9,9 +9,9 @@
 		<key>266</key>
 		<string>644 623 277 90 0 0 1600 1002 </string>
 		<key>29</key>
-		<string>191 773 433 44 0 0 1280 832 </string>
+		<string>133 689 433 44 0 0 1024 746 </string>
 		<key>494</key>
-		<string>569 607 185 78 0 0 1280 1002 </string>
+		<string>444 442 116 60 0 0 1024 746 </string>
 	</dict>
 	<key>IBFramework Version</key>
 	<string>291.0</string>
@@ -31,6 +31,10 @@
 	</dict>
 	<key>IBLastGroupID</key>
 	<string>2</string>
+	<key>IBOpenObjects</key>
+	<array>
+		<integer>29</integer>
+	</array>
 	<key>IBSystem Version</key>
 	<string>6I32</string>
 </dict>

@@ -582,17 +582,16 @@ const int kReuseWindowOnAE = 2;
 -(IBAction) doSearch:(id)aSender
 {
   NSWindow* browserWindow = [self getFrontmostBrowserWindow];
+
   if (browserWindow) {
     if (![browserWindow isMainWindow])
       [browserWindow makeKeyAndOrderFront:self];
-    
-    [[browserWindow windowController] performSearch: aSender];
-  }
-  else {
+  } else {
       [self newWindow:self];
       browserWindow = [self getFrontmostBrowserWindow];
-      [[browserWindow windowController] performSearch: aSender];
   }
+
+  [[browserWindow windowController] performAppropriateSearchAction];
 }
 
 -(IBAction) downloadsWindow:(id)aSender

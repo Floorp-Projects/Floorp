@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Google</key>
+	<string>http://www.google.com/search?q=%s</string>
+	<key>Google Images</key>
+	<string>http://images.google.com/images?q=%s</string>
+	<key>PreferredSearchEngine</key>
+	<string>Google</string>
+	<key>Search this Site</key>
+	<string>http://www.google.com/search?q=%s site:%d</string>
+</dict>
+</plist>

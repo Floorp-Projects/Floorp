@@ -86,6 +86,7 @@
                 bookmarkPage = id; 
                 cancelAddBookmarkSheet = id; 
                 cancelLocationSheet = id; 
+                cancelSearchSheet = id; 
                 closeCurrentTab = id; 
                 closeOtherTabs = id; 
                 closeSendersTab = id; 
@@ -94,6 +95,8 @@
                 copyLinkLocation = id; 
                 endAddBookmarkSheet = id; 
                 endLocationSheet = id; 
+                endSearchSheet = id; 
+                ensureBrowserVisible = id; 
                 forward = id; 
                 frameToNewTab = id; 
                 frameToNewWindow = id; 
@@ -153,6 +156,9 @@
                 mPersonalToolbar = BookmarksToolbar; 
                 mProgress = NSProgressIndicator; 
                 mProxyIcon = PageProxyIcon; 
+                mSearchBar = SearchTextField; 
+                mSearchSheetTextField = SearchTextField; 
+                mSearchSheetWindow = NSWindow; 
                 mSidebarBookmarksDataSource = BookmarksDataSource; 
                 mSidebarDrawer = NSDrawer; 
                 mSidebarSourceTabView = NSTabView; 
@@ -198,6 +204,7 @@
             SUPERCLASS = NSObject; 
         }, 
         {CLASS = RDFOutlineViewItem; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {CLASS = SearchTextField; LANGUAGE = ObjC; SUPERCLASS = NSTextField; }, 
         {CLASS = ThrobberHandler; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
     ); 
     IBVersion = 1; 
