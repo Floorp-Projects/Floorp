@@ -175,6 +175,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 					r.x, r.y,
 					r.width, r.height,
 					nsScrollPreference_kAuto, aAllowPlugins);
+	NG_ASSERT(rv == NS_OK);
 
 	// Create the container object
 	m_pWebShellContainer = new CWebShellContainer(this);
