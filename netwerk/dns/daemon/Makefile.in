@@ -32,7 +32,17 @@ CPPSRCS		= nsDnsAsyncLookup.cpp
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
+EXPORTS		= \
+		unix_dns.h \
+		$(NULL)
+
+LIBS		= \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D"GETHOSTBYNAME_DELAY=5" -DNO_SOCKS_NS_KLUDGE
+# DEFINES		+= -D"GETHOSTBYNAME_DELAY=5" -DNO_SOCKS_NS_KLUDGE
+DEFINES                 += -DNO_SOCKS_NS_KLUDGE
 
