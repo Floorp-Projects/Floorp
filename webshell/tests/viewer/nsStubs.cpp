@@ -6,7 +6,11 @@
 #include "xp_linebuf.h"
 #include "mkbuf.h"
 
-extern "C" XP_Bool ValidateDocData(MWContext *window_id) { return PR_TRUE; }
+extern "C" XP_Bool ValidateDocData(MWContext *window_id) 
+{ 
+  printf("ValidateDocData not implemented, stubbed in webshell/tests/viewer/nsStubs.cpp\n"); 
+  return PR_TRUE; 
+}
 
 /* dist/public/xp/xp_linebuf.h */
 int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
@@ -16,12 +20,22 @@ int XP_ReBuffer (const char *net_buffer, int32 net_buffer_size,
                         int32 (*per_buffer_fn) (char *buffer,
                                                 uint32 buffer_size,
                                                 void *closure),
-                        void *closure) { return(0); }
+                        void *closure) 
+{ 
+
+  printf("XP_ReBuffer not implemented, stubbed in webshell/tests/viewer/nsStubs.cpp\n"); 
+  return(0); 
+}
 
 
 
 /* mozilla/include/xp_trace.h */
 
-extern "C" void XP_Trace( const char *, ... ) { } 
+extern "C" void XP_Trace( const char *, ... ) 
+{ 
+  printf("XP_Trace not implemented, stubbed in webshell/tests/viewer/nsStubs.cpp\n"); 
+
+
+} 
 
 
