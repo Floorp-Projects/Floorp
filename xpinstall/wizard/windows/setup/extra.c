@@ -704,6 +704,24 @@ HRESULT Initialize(HINSTANCE hInstance)
       }
     }
   }
+  else
+  {
+    // we're not running in mmi mode (allow multiple instances of installer
+    // to run at the same time), we should look for and remove the dirs
+    // that are created in the mmi mode.
+    DWORD dwLen;
+    char tempDirToCleanup[MAX_BUF];
+    int i = 1;
+
+    lstrcpy(tempDirToCleanup, szTempDir);
+    dwLen = lstrlen(tempDirToCleanup);
+    itoa(i, (tempDirToCleanup + dwLen), 10);
+    for(i = 2; i <= 100 && (FileExists(tempDirToCleanup)); i++)
+    {
+      DirectoryRemove(tempDirToCleanup, TRUE);
+      itoa(i, (tempDirToCleanup + dwLen), 10);
+    }
+  }
 
   if(!FileExists(szTempDir))
   {
@@ -7268,7 +7286,7 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
   }
   else if(lstrcmpi(szVariable, "WIZTEMP") == 0)
   {
-    /* parse for the "c:\Temp" path */
+    /* parse for the "c:\Temp\ns_temp" path */
     lstrcpy(szVariable, szTempDir);
     if(szVariable[strlen(szVariable) - 1] == '\\')
       szVariable[strlen(szVariable) - 1] = '\0';
