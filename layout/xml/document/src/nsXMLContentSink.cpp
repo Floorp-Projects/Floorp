@@ -1074,40 +1074,87 @@ nsXMLContentSink::AddCDATASection(const nsIParserNode& aNode)
   return result;
 }
 
+// This method starts at aOffSet in aStr and tries to find aChar. It keeps 
+// skipping whitespace till it finds aChar or some other non-whitespace character.  If
+// it finds aChar, it returns aChar's offset.  If it finds some other non-whitespace character
+// or runs into the end of the string, it returns -1.
+static PRInt32
+FindWhileSkippingWhitespace(nsString& aStr, PRUnichar aChar, PRInt32 aOffset)
+{
+  PRInt32 i = aOffset;
+  PRUnichar ch = aStr.CharAt(i);
+  PRInt32 index = -1;
+
+  while (ch == '\n' || ch == '\t' || ch == '\r') {
+    ch = aStr.CharAt(++i);
+  }
+
+  if (ch == aChar)
+    index = i;
+
+  return index;
+}
 
 static nsresult
 GetQuotedAttributeValue(nsString& aSource,
                         const nsString& aAttribute,
                         nsString& aValue)
-{
-  PRInt32 offset;
-  PRInt32 endOffset = -1;
-  nsresult result = NS_OK;
+{  
+  PRInt32 startOfAttribute = 0;     // Index into aSource where the attribute name starts
+  PRInt32 startOfValue = 0;         // Index into aSource where the attribute value starts
+  PRInt32 posnOfValueDelimeter = 0; 
+  nsresult result = NS_ERROR_FAILURE;
 
-  offset = aSource.Find(aAttribute);
-  if (-1 != offset) {
-    offset = aSource.FindChar('=', PR_FALSE,offset);
-
-    PRUnichar next = aSource.CharAt(++offset);
-    if (kQuote == next) {
-      endOffset = aSource.FindChar(kQuote,PR_FALSE, ++offset);
-    }
-    else if (kApostrophe == next) {
-      endOffset = aSource.FindChar(kApostrophe, PR_FALSE,++offset);
-    }
-
-    if (-1 != endOffset) {
-      aSource.Mid(aValue, offset, endOffset-offset);
-    }
-    else {
-      // Mismatched quotes - return an error
-      result = NS_ERROR_FAILURE;
-    }
-  }
-  else {
-    aValue.Truncate();
-  }
-
+  // While there are more characters to look at
+  while (startOfAttribute != -1) {
+    // Find the attribute starting at offset
+    startOfAttribute = aSource.Find(aAttribute, PR_FALSE, startOfAttribute);
+    // If attribute found
+    if (startOfAttribute != -1) { 
+      // Find the '=' character while skipping whitespace      
+      startOfValue = FindWhileSkippingWhitespace(aSource, '=', startOfAttribute + aAttribute.Length());
+      // If '=' found
+      if (startOfValue != -1) {        
+        PRUnichar delimeter = kQuote;
+        // Find the quote or apostrophe while skipping whitespace
+        posnOfValueDelimeter = FindWhileSkippingWhitespace(aSource, kQuote, startOfValue + 1);
+        if (posnOfValueDelimeter == -1) {
+          posnOfValueDelimeter = FindWhileSkippingWhitespace(aSource, kApostrophe, startOfValue + 1);
+          delimeter = kApostrophe;
+        }        
+        // If quote or apostrophe found
+        if (posnOfValueDelimeter != -1) {
+          startOfValue = posnOfValueDelimeter + 1;
+          // Find the ending quote or apostrophe
+          posnOfValueDelimeter = aSource.FindChar(delimeter, PR_FALSE, startOfValue);
+          // If found
+          if (posnOfValueDelimeter != -1) {
+            // Set the value of the attibute and exit the loop            
+            // The attribute value starts at startOfValue and ends at (posnOfValueDelimeter - 1)
+            aSource.Mid(aValue, startOfValue, posnOfValueDelimeter - startOfValue);
+            result = NS_OK;
+            break;
+          }          
+          else {
+            // Try to find the attribute in the remainder of the string
+            startOfAttribute++;
+            continue;
+          } // Endif found  
+        }
+        else {
+          // Try to find the attribute in the remainder of the string
+          startOfAttribute++;
+          continue;
+        } // Endif quote or apostrophe found
+      } 
+      else {
+        // Try to find the attribute in the remainder of the string
+        startOfAttribute++;
+        continue;
+      } // Endif '=' found
+    } // Endif attribute found
+  } // End while
+  
   return result;
 }
 
@@ -1333,25 +1380,19 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
       if ((NS_OK != result) || (0 == href.Length())) {
         return result;
       }
-
       result = GetQuotedAttributeValue(text, "type", type);
-      if (NS_OK != result) {
-        return result;
+      if (NS_FAILED(result)) {
+        type="text/css";  // Default the type attribute to the mime type for CSS
       }
       result = GetQuotedAttributeValue(text, "title", title);
-      if (NS_OK != result) {
-        return result;
+      if (NS_SUCCEEDED(result)) {
+        title.CompressWhitespace();
       }
-      title.CompressWhitespace();
       result = GetQuotedAttributeValue(text, "media", media);
-      if (NS_OK != result) {
-        return result;
+      if (NS_SUCCEEDED(result)) {
+        media.ToLowerCase();
       }
-      media.ToLowerCase();
-      result = GetQuotedAttributeValue(text, "alternate", alternate);
-      if (NS_OK != result) {
-        return result;
-      }
+      result = GetQuotedAttributeValue(text, "alternate", alternate);      
 #ifndef XSL
       result = ProcessCSSStyleLink(node, href, alternate.Equals("yes"),
                                 title, type, media);
