@@ -20,6 +20,7 @@
    readonly attribute  DOMString            type;
             attribute  DOMString            useMap;
             attribute  DOMString            value;
+            attribute  DOMString			autocomplete;
    void                      blur();
    void                      focus();
    void                      select();

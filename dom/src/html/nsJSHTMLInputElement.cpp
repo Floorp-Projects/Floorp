@@ -61,7 +61,8 @@ enum HTMLInputElement_slots {
   HTMLINPUTELEMENT_TABINDEX = -15,
   HTMLINPUTELEMENT_TYPE = -16,
   HTMLINPUTELEMENT_USEMAP = -17,
-  HTMLINPUTELEMENT_VALUE = -18
+  HTMLINPUTELEMENT_VALUE = -18,
+  HTMLINPUTELEMENT_AUTOCOMPLETE = -19
 };
 
 /***********************************************************************/
@@ -375,6 +376,22 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case HTMLINPUTELEMENT_AUTOCOMPLETE:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.autocomplete", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsAutoString prop;
+        if (NS_OK == a->GetAutocomplete(prop)) {
+          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -655,7 +672,21 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
-      default:
+      case HTMLINPUTELEMENT_AUTOCOMPLETE:
+      {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.autocomplete", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
+        nsAutoString prop;
+        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
+      
+        a->SetAutocomplete(prop);
+        
+        break;
+      }
+       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
     NS_RELEASE(secMan);
@@ -911,6 +942,7 @@ static JSPropertySpec HTMLInputElementProperties[] =
   {"type",    HTMLINPUTELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"useMap",    HTMLINPUTELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"value",    HTMLINPUTELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {"autocomplete",    HTMLINPUTELEMENT_AUTOCOMPLETE,    JSPROP_ENUMERATE},
   {0}
 };
 
