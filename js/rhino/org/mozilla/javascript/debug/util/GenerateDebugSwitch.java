@@ -22,7 +22,7 @@
 * used by other classes to turn debug code on or off (at compile time)
 */
 
-public class GenerateDebugSwitchSourceFile
+public class GenerateDebugSwitch
 {
     public static void main(String[] args)
     {

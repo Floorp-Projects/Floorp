@@ -1666,9 +1666,9 @@ public final class Context {
     static {
         try {
             codegenClass = Class.forName(
-                "com.netscape.javascript.optimizer.Codegen");
+                "org.mozilla.javascript.optimizer.Codegen");
             Class nameHelperClass = Class.forName(
-                "com.netscape.javascript.optimizer.OptClassNameHelper");
+                "org.mozilla.javascript.optimizer.OptClassNameHelper");
             nameHelper = (ClassNameHelper)nameHelperClass.newInstance();
         } catch (ClassNotFoundException x) {
             // ...must be running lite, that's ok

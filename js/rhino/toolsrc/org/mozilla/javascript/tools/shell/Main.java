@@ -108,7 +108,7 @@ public class Main extends ScriptableObject {
 
                 try {
                     Class clazz = Class.forName(
-                        "com.netscape.jsdebugging.ifcui.launcher.rhino.LaunchNetscapeJavaScriptDebugger");
+                        "org.mozilla.jsdebugging.ifcui.launcher.rhino.LaunchNetscapeJavaScriptDebugger");
                     ILaunchableDebugger debugger =
                         (ILaunchableDebugger) clazz.newInstance();
                     debugger.launch(global.debug_dm, global.debug_stm, false);
