@@ -2145,9 +2145,9 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                   nsAutoString scheme;
                   urlSpec.Left(scheme, colon);
 
-                  nsAutoString dnsMsg(messageStr);
-                  dnsMsg.Insert(' ', 0);
-                  dnsMsg.Insert(scheme, 0);
+                  nsAutoString dnsMsg(scheme);
+                  dnsMsg.Append(' ');
+                  dnsMsg.Append(messageStr);
 
                   (void)mPrompter->Alert(dnsMsg.GetUnicode());
               } // end unknown protocol
@@ -3188,66 +3188,118 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus);
     }
 
-    if ( (mDocLoader == loader) && (aStatus == NS_ERROR_UNKNOWN_HOST) ) {
+    if (mDocLoader == loader && NS_FAILED(aStatus)) {
+        nsAutoString errorMsg;
         nsXPIDLCString host;
         rv = aURL->GetHost(getter_Copies(host));
         if (NS_FAILED(rv)) return rv;
 
-        CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
-        nsCAutoString hostStr(buf);
-        PRInt32 dotLoc = hostStr.FindChar('.');
+        // Doc failed to load because the host was not found.
+        if (aStatus == NS_ERROR_UNKNOWN_HOST) {
+            CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
+            nsCAutoString hostStr(buf);
+            PRInt32 dotLoc = hostStr.FindChar('.');
 
-        NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
-        PRBool keywordsEnabled = PR_FALSE;
-        rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
-        if (NS_FAILED(rv)) return rv;
+            // First see if we should throw it to the keyword server.
+            NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
+            PRBool keywordsEnabled = PR_FALSE;
+            rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
+            if (NS_FAILED(rv)) return rv;
 
-        if (keywordsEnabled && (-1 == dotLoc)) {
-            // only send non-qualified hosts to the keyword server
-            nsAutoString keywordSpec("keyword:");
-            keywordSpec.Append(host);
-            return LoadURL(keywordSpec.GetUnicode(), "view");
-        } // end keywordsEnabled
+            if (keywordsEnabled && (-1 == dotLoc)) {
+                // only send non-qualified hosts to the keyword server
+                nsAutoString keywordSpec("keyword:");
+                keywordSpec.Append(host);
+                return LoadURL(keywordSpec.GetUnicode(), "view");
+            } // end keywordsEnabled
 
-        nsCAutoString retryHost;
-        if (-1 == dotLoc) {
-            retryHost = "www.";
-            retryHost += hostStr;
-            retryHost += ".com";
-        } else {
-            PRInt32 hostLen = hostStr.Length();
-            if ( ((hostLen - dotLoc) == 3) || ((hostLen - dotLoc) == 4) ) {
+            // Try our www.*.com trick.
+            nsCAutoString retryHost;
+            if (-1 == dotLoc) {
                 retryHost = "www.";
                 retryHost += hostStr;
+                retryHost += ".com";
+            } else {
+                PRInt32 hostLen = hostStr.Length();
+                if ( ((hostLen - dotLoc) == 3) || ((hostLen - dotLoc) == 4) ) {
+                    retryHost = "www.";
+                    retryHost += hostStr;
+                }
             }
-        }
 
-        if (!retryHost.IsEmpty()) {
-            rv = aURL->SetHost(retryHost.GetBuffer());
+            if (!retryHost.IsEmpty()) {
+                rv = aURL->SetHost(retryHost.GetBuffer());
+                if (NS_FAILED(rv)) return rv;
+                nsXPIDLCString aSpec;
+                rv = aURL->GetSpec(getter_Copies(aSpec));
+                if (NS_FAILED(rv)) return rv;
+                nsAutoString newURL(aSpec);
+                // reload the url
+                return LoadURL(newURL.GetUnicode(), "view");
+            } // retry
+
+            // throw a DNS failure dialog
+            rv = InitDialogVars();
             if (NS_FAILED(rv)) return rv;
-            nsXPIDLCString aSpec;
-            rv = aURL->GetSpec(getter_Copies(aSpec));
+
+            nsXPIDLString messageStr;
+            nsAutoString name("dnsNotFound");
+            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
             if (NS_FAILED(rv)) return rv;
-            nsAutoString newURL(aSpec);
-            // reload the url
-            return LoadURL(newURL.GetUnicode(), "view");
-        } // retry
 
-        // throw a DNS failure dialog
-        rv = InitDialogVars();
-        if (NS_FAILED(rv)) return rv;
+            errorMsg = host;
+            errorMsg.Append(' ');
+            errorMsg.Append(messageStr);
 
-        nsXPIDLString messageStr;
-        nsAutoString name("dnsNotFound");
-        rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
-        if (NS_FAILED(rv)) return rv;
+            (void)mPrompter->Alert(errorMsg.GetUnicode());
+        } else // unknown host
 
-        nsAutoString dnsMsg(messageStr);
-        dnsMsg.Insert(' ', 0);
-        dnsMsg.Insert(host, 0);
+        // Doc failed to load because we couldn't connect to the server.
+        if (aStatus == NS_ERROR_CONNECTION_REFUSED) {
+            // throw a connection failure dialog
+            PRInt32 port = -1;
+            rv = aURL->GetPort(&port);
+            if (NS_FAILED(rv)) return rv;
+            
+            rv = InitDialogVars();
+            if (NS_FAILED(rv)) return rv;
 
-        (void)mPrompter->Alert(dnsMsg.GetUnicode());
-    } // unknown host
+            nsXPIDLString messageStr;
+            nsAutoString name("connectionFailure");
+            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+            if (NS_FAILED(rv)) return rv;
+
+            errorMsg = messageStr;
+            errorMsg.Append(' ');
+            errorMsg.Append(host);
+            if (port > 0) {
+                errorMsg.Append(':');
+                errorMsg.Append(port);
+            }
+            errorMsg.Append('.');
+
+            (void)mPrompter->Alert(errorMsg.GetUnicode());
+        } else // end NS_ERROR_CONNECTION_REFUSED
+
+        // Doc failed to load because the socket function timed out.
+        if (aStatus == NS_ERROR_NET_TIMEOUT) {
+            // throw a timeout dialog
+            rv = InitDialogVars();
+            if (NS_FAILED(rv)) return rv;
+
+            nsXPIDLString messageStr;
+            nsAutoString name("netTimeout");
+            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+            if (NS_FAILED(rv)) return rv;
+
+            errorMsg = messageStr;
+            errorMsg.Append(' ');
+            errorMsg.Append(host);
+            errorMsg.Append('.');
+
+            (void)mPrompter->Alert(errorMsg.GetUnicode());            
+        } // end NS_ERROR_NET_TIMEOUT
+    } // end mDocLoader == loader
   } //!mProcessedEndDocumentLoad
   else {
     rv = NS_OK;
