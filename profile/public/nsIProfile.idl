@@ -40,7 +40,7 @@ interface nsIFileSpec;
 #define NS_PROFILE_PROGID	\
 	"component://netscape/profile/manager"
 
-#define PREG_PREF	"netcenter.register"
+#define PREG_PREF	"browser.registration.enable"
 %}
 
 [ptr] native nsFileSpec(nsFileSpec);
