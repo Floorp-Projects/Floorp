@@ -32,7 +32,7 @@
       <checkbox id="hideTabBar" label="&hideTabBar.label;"
                 prefstring="browser.tabs.autoHide"/>
       <checkbox id="loadInBackground" label="&loadInBackground.label;"
-                prefstring="browser.tabs.loadInBackground"/>
+                prefstring="browser.tabs.loadInBackground" reversed="true"/>
       <checkbox id="useAutoScrolling" label="&useAutoScrolling.label;"
                 prefstring="general.autoScroll"/>
       <checkbox id="useSmoothScrolling" label="&useSmoothScrolling.label;"
