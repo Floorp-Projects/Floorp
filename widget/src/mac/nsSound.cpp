@@ -53,6 +53,8 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsICachingChannel.h"
 
+#include "nsIInternetConfigService.h"
+
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
@@ -67,8 +69,8 @@
 
 #pragma mark nsSoundRequest
 
-class nsSoundRequest :  public nsIStreamLoaderObserver,
-                        public nsITimerCallback
+// pure virtual base class for different types of sound requests
+class nsSoundRequest : public nsITimerCallback
 {
 public:
 
@@ -76,26 +78,82 @@ public:
   virtual           ~nsSoundRequest();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLOADEROBSERVER
 
-  nsresult          Init(nsISound* aSound, nsIURL *aURL);
-  nsresult          PlaySound();
-  
   // nsITimerCallback
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
-  
+  NS_IMETHOD_(void) Notify(nsITimer *timer) = 0;    // pure virtual
+
+  virtual nsresult  PlaySound() = 0;
 
   static nsSoundRequest*  GetFromISupports(nsISupports* inSupports);
 
 protected:
 
+  nsresult          Cleanup();
+
+protected:
+
+  nsCOMPtr<nsISound>  mSound;       // back ptr, owned and released when play done  
+  nsCOMPtr<nsITimer>  mTimer;
+};
+
+
+// concrete class for playing system sounds asynchronously
+class nsSystemSoundRequest : public nsSoundRequest
+{
+public:
+
+                    nsSystemSoundRequest();
+  virtual           ~nsSystemSoundRequest();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsITimerCallback
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
+
+  nsresult          Init(nsISound* aSound, ConstStr255Param aSoundName);
+  virtual nsresult  PlaySound();
+  
+protected:
+
+  static pascal void SoundCallback(SndChannelPtr chan, SndCommand *theCmd);
+
+  void               DonePlaying();
+
+protected:
+  
+  Handle            mSoundHandle;     // resource handle.
+  SndChannelPtr     mSndChannel;
+  SndCallBackUPP    mSoundCallback;
+  
+  Boolean           mSoundDone;
+};
+
+
+// concrete class for playing URL-based sounds asynchronously
+class nsMovieSoundRequest :   public nsSoundRequest,
+                              public nsIStreamLoaderObserver
+{
+public:
+
+                    nsMovieSoundRequest();
+  virtual           ~nsMovieSoundRequest();
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSISTREAMLOADEROBSERVER
+
+  // nsITimerCallback
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
+
+  nsresult          Init(nsISound* aSound, nsIURL *aURL);
+  virtual nsresult  PlaySound();
+  
+protected:
 
   OSType            GetFileFormat(const char* inData, long inDataSize, const nsACString& contentType);
   
   OSErr             ImportMovie(Handle inDataHandle, long inDataSize, const nsACString& contentType);
   PRBool            HaveQuickTime();
 
-  nsresult          Cleanup();
   void              DisposeMovieData();
   
   PRBool            IsAnyMoviePlaying();
@@ -131,11 +189,19 @@ SecondsFromPRTime(PRTime prTime)
   return seconds;
 }
 
+static void
+CopyCToPascalString(const char* inString, StringPtr outPString)
+{
+  SInt32   nameLen = strlen(inString) & 0xFF;    // max 255 chars
+  ::BlockMoveData(inString, &outPString[1], nameLen);
+  outPString[0] = nameLen;
+}
+
 #pragma mark -
 
 nsSound::nsSound()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 #ifdef SOUND_DEBUG
   printf("%%%%%%%% Made nsSound\n");
 #endif
@@ -158,9 +224,35 @@ nsSound::Beep()
 }
 
 NS_IMETHODIMP
-nsSound::PlaySystemSound(const char *aSoundAlias)
+nsSound::PlaySystemSound(const char *aSoundName)
 {
-  return Beep();
+  nsCOMPtr<nsISupports> requestSupports;
+  
+  nsSystemSoundRequest* soundRequest;
+  NS_NEWXPCOM(soundRequest, nsSystemSoundRequest);
+  if (!soundRequest)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  requestSupports = NS_STATIC_CAST(nsITimerCallback*, soundRequest);
+  
+  Str255  soundResource;
+  nsresult rv = GetSoundResourceName(aSoundName, soundResource);
+  if (NS_FAILED(rv))
+    return Beep();
+  
+  rv = soundRequest->Init(this, soundResource);
+  if (NS_FAILED(rv))
+    return Beep();
+
+  rv = AddRequest(requestSupports);
+  if (NS_FAILED(rv))
+    return Beep();
+  
+  rv = soundRequest->PlaySound();
+  if (NS_FAILED(rv))
+    return Beep();
+  
+  return NS_OK;
 }
 
 // this currently does no caching of the sound buffer. It should
@@ -177,17 +269,18 @@ nsSound::Play(nsIURL *aURL)
   if (requestSupports)
   {
     nsSoundRequest* cachedRequest = nsSoundRequest::GetFromISupports(requestSupports);
+    nsMovieSoundRequest* movieRequest = NS_STATIC_CAST(nsMovieSoundRequest*, cachedRequest);
     // if it was cached, start playing right away
-    cachedRequest->PlaySound();
+    movieRequest->PlaySound();
   }
   else
   {
-    nsSoundRequest* soundRequest;
-    NS_NEWXPCOM(soundRequest, nsSoundRequest);
+    nsMovieSoundRequest* soundRequest;
+    NS_NEWXPCOM(soundRequest, nsMovieSoundRequest);
     if (!soundRequest)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    requestSupports = NS_STATIC_CAST(nsIStreamLoaderObserver*, soundRequest);
+    requestSupports = NS_STATIC_CAST(nsITimerCallback*, soundRequest);
     nsresult  rv = soundRequest->Init(this, aURL);
     if (NS_FAILED(rv))
       return rv;
@@ -328,33 +421,246 @@ nsSound::PutSoundInCache(nsIChannel* inChannel, PRUint32 inDataSize, nsISupports
 }
 
 
+nsresult
+nsSound::GetSoundResourceName(const char* inSoundName, StringPtr outResourceName)
+{
+  nsresult rv = NS_OK;
+  
+  outResourceName[0] = 0;
+  
+  // if it's the special mail beep sound, get the real sound name from IC
+  if (nsCRT::strcmp("Mailbeep", inSoundName) == 0)
+  {
+    nsCOMPtr <nsIInternetConfigService> icService = do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsXPIDLCString  newMailSound;
+    rv = icService->GetString(nsIInternetConfigService::eICString_NewMailSoundName, getter_Copies(newMailSound));
+    if (NS_FAILED(rv))
+      return rv;
+      
+    CopyCToPascalString(newMailSound.get(), outResourceName);
+    return NS_OK;
+  }
+
+  // if the name is not "Mailbeep", treat it as the name of a system sound
+  CopyCToPascalString(inSoundName, outResourceName);
+  return NS_OK;
+}
+
+
 #pragma mark -
 
-
-NS_IMPL_ISUPPORTS2(nsSoundRequest, nsIStreamLoaderObserver, nsITimerCallback);
-
-////////////////////////////////////////////////////////////////////////
 nsSoundRequest::nsSoundRequest()
-: mMovie(nsnull)
-, mDataHandle(nsnull)
 {
-  NS_INIT_REFCNT();
-#ifdef SOUND_DEBUG
-  printf("%%%%%%%% Made nsSoundRequest\n");
-#endif
+  NS_INIT_ISUPPORTS();
 }
 
 nsSoundRequest::~nsSoundRequest()
 {
+}
+
+NS_IMPL_ISUPPORTS1(nsSoundRequest, nsITimerCallback);
+
+nsSoundRequest*
+nsSoundRequest::GetFromISupports(nsISupports* inSupports)
+{
+  if (!inSupports) return nsnull;
+  
+  // test to see if this is really a nsSoundRequest by trying a QI
+  nsCOMPtr<nsITimerCallback>  timerCallback = do_QueryInterface(inSupports);
+  if (!timerCallback) return nsnull;
+  
+  return NS_REINTERPRET_CAST(nsSoundRequest*, inSupports);
+}
+
+
+nsresult
+nsSoundRequest::Cleanup()
+{
+  nsresult rv = NS_OK;
+  
 #ifdef SOUND_DEBUG
-  printf("%%%%%%%% Deleted nsSoundRequest\n");
+  printf("Sound playback done\n");
+#endif
+  
+  // kill the timer
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nsnull;
+  }
+  
+  // remove from parent array. Use a deathGrip to ensure that it's OK
+  // to clear mSound.
+  nsCOMPtr<nsISupports>   deathGrip(this);
+  if (mSound.get())
+  {
+    nsSound*    macSound = NS_REINTERPRET_CAST(nsSound*, mSound.get());
+    rv = macSound->RemoveRequest(NS_STATIC_CAST(nsITimerCallback*, this));
+    mSound = nsnull;
+  }
+  
+  return rv;
+}
+
+
+#pragma mark -
+
+
+nsSystemSoundRequest::nsSystemSoundRequest()
+: mSoundHandle(nsnull)
+, mSndChannel(nsnull)
+, mSoundCallback(nsnull)
+, mSoundDone(false)
+{
+#ifdef SOUND_DEBUG
+  printf("%%%%%%%% Made nsSystemSoundRequest\n");
+#endif
+}
+
+nsSystemSoundRequest::~nsSystemSoundRequest()
+{
+  if (mSoundHandle) {
+    // unlock the sound resource handle and make it purgeable.
+    ::HUnlock(mSoundHandle);
+    ::HPurge(mSoundHandle);
+  }
+
+  if (mSndChannel)
+    ::SndDisposeChannel(mSndChannel, true);
+
+  if (mSoundCallback)
+    DisposeSndCallBackUPP(mSoundCallback);
+    
+#ifdef SOUND_DEBUG
+  printf("%%%%%%%% Deleted nsSystemSoundRequest\n");
+#endif
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsSystemSoundRequest, nsSoundRequest);
+
+nsresult
+nsSystemSoundRequest::Init(nsISound* aSound, ConstStr255Param aSoundName)
+{
+  mSound = aSound;
+
+  mSoundCallback = NewSndCallBackUPP(nsSystemSoundRequest::SoundCallback);
+  if (!mSoundCallback) return NS_ERROR_OUT_OF_MEMORY;
+  
+  mSoundHandle = ::GetNamedResource('snd ', aSoundName);
+  if (!mSoundHandle) return NS_ERROR_FAILURE;
+  
+  // make sure the resource is loaded
+  ::LoadResource(mSoundHandle);
+  if (!mSoundHandle || !*mSoundHandle) return NS_ERROR_FAILURE;
+  
+  // and lock it high
+  ::HLockHi(mSoundHandle);
+  
+  OSErr err = ::SndNewChannel(&mSndChannel, 0, 0, mSoundCallback);
+  if (err != noErr) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+nsresult
+nsSystemSoundRequest::PlaySound()
+{
+  NS_ASSERTION(mSndChannel && mSoundHandle, "Should have sound channel here");
+  if (!mSndChannel || !mSoundHandle) {
+    Cleanup();
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  
+  nsresult rv;
+  // set up a timer. This is used to sniff for mSoundDone (which is set by the channel callback).
+  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);    // release previous timer, if any
+  if (NS_FAILED(rv)) {
+    Cleanup();
+    return rv;
+  }
+
+  OSErr err = ::SndPlay(mSndChannel, (SndListHandle)mSoundHandle, true /* async */);
+  if (err != noErr) {
+     Cleanup();
+     return NS_ERROR_FAILURE;
+  }
+
+  // now queue up a sound completion command so we get a callback when
+  // the sound is done.
+  SndCommand    theCmd = { callBackCmd, 0, 0 };
+  theCmd.param2 = (long)this;
+  
+  err = ::SndDoCommand(mSndChannel, &theCmd, false);   // wait for the channel
+  if (err != noErr) {
+    Cleanup();
+    return NS_ERROR_FAILURE;
+  }
+  
+  const PRInt32   kSoundTimerInterval = 250;      // 250 milliseconds
+  rv = mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kSoundTimerInterval,
+          NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_PRECISE);
+  if (NS_FAILED(rv)) {
+    Cleanup();
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsSystemSoundRequest::Notify(nsITimer *timer)
+{
+  if (mSoundDone)
+  {
+    Cleanup();
+  }
+}
+
+
+// Note! Called at interrupt time
+void
+nsSystemSoundRequest::DonePlaying()
+{
+  mSoundDone = true;
+}
+
+/* static. Note! Called at interrupt time */
+pascal void
+nsSystemSoundRequest::SoundCallback(SndChannelPtr chan, SndCommand *theCmd)
+{
+  nsSystemSoundRequest*   soundRequest = NS_REINTERPRET_CAST(nsSystemSoundRequest*, theCmd->param2);
+  if (soundRequest)
+    soundRequest->DonePlaying();
+}
+
+
+#pragma mark -
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsMovieSoundRequest, nsSoundRequest, nsIStreamLoaderObserver);
+
+////////////////////////////////////////////////////////////////////////
+nsMovieSoundRequest::nsMovieSoundRequest()
+: mMovie(nsnull)
+, mDataHandle(nsnull)
+{
+#ifdef SOUND_DEBUG
+  printf("%%%%%%%% Made nsMovieSoundRequest\n");
+#endif
+}
+
+nsMovieSoundRequest::~nsMovieSoundRequest()
+{
+#ifdef SOUND_DEBUG
+  printf("%%%%%%%% Deleted nsMovieSoundRequest\n");
 #endif
   DisposeMovieData();
 }
 
 
 nsresult
-nsSoundRequest::Init(nsISound* aSound, nsIURL *aURL)
+nsMovieSoundRequest::Init(nsISound* aSound, nsIURL *aURL)
 {
   NS_ENSURE_ARG(aURL && aSound);
 
@@ -374,7 +680,7 @@ nsSoundRequest::Init(nsISound* aSound, nsIURL *aURL)
 }
 
 NS_IMETHODIMP
-nsSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
+nsMovieSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
                                         nsISupports *context,
                                         nsresult aStatus,
                                         PRUint32 stringLen,
@@ -401,7 +707,7 @@ nsSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
 
   ::BlockMoveData(stringData, *mDataHandle, stringLen);
 
-  NS_ASSERTION(mMovie == nsnull, "nsSoundRequest has a movie already");
+  NS_ASSERTION(mMovie == nsnull, "nsMovieSoundRequest has a movie already");
   
   err = ImportMovie(mDataHandle, stringLen, contentType);
   if (err != noErr) {
@@ -423,7 +729,7 @@ nsSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
 
 
 OSType
-nsSoundRequest::GetFileFormat(const char* inData, long inDataSize, const nsACString& contentType)
+nsMovieSoundRequest::GetFileFormat(const char* inData, long inDataSize, const nsACString& contentType)
 {
   OSType    fileFormat = kQTFileTypeMovie;    // Default to just treating it like a movie.
                                               // Hopefully QuickTime will be able to import it.
@@ -481,7 +787,7 @@ nsSoundRequest::GetFileFormat(const char* inData, long inDataSize, const nsACStr
 }
 
 nsresult
-nsSoundRequest::PlaySound()
+nsMovieSoundRequest::PlaySound()
 {
   nsresult rv;
 
@@ -543,11 +849,11 @@ nsSoundRequest::PlaySound()
 }
 
 NS_IMETHODIMP_(void)
-nsSoundRequest::Notify(nsITimer *timer)
+nsMovieSoundRequest::Notify(nsITimer *timer)
 {
   if (!mMovie)
   {
-    NS_ASSERTION(0, "nsSoundRequest has no movie in timer callback");
+    NS_ASSERTION(0, "nsMovieSoundRequest has no movie in timer callback");
     return;
   }
   
@@ -559,14 +865,14 @@ nsSoundRequest::Notify(nsITimer *timer)
 
   TaskActiveMovies(&moviesDone);
   
-  // we're done for now. Remember that this nsSoundRequest might be in the cache,
+  // we're done for now. Remember that this nsMovieSoundRequest might be in the cache,
   // so won't necessarily go away.
   if (moviesDone)
     Cleanup();
 }
 
 OSErr
-nsSoundRequest::ImportMovie(Handle inDataHandle, long inDataSize, const nsACString& contentType)
+nsMovieSoundRequest::ImportMovie(Handle inDataHandle, long inDataSize, const nsACString& contentType)
 {
   Handle                  dataRef = nil;
   OSErr                   err = noErr;
@@ -593,7 +899,7 @@ nsSoundRequest::ImportMovie(Handle inDataHandle, long inDataSize, const nsACStri
       goto bail;
     }
     
-    NS_ASSERTION(mMovie == nsnull, "nsSoundRequest already has movie");
+    NS_ASSERTION(mMovie == nsnull, "nsMovieSoundRequest already has movie");
     mMovie = ::NewMovie(0);
     if (!mMovie) {
       err = ::GetMoviesError();
@@ -636,36 +942,8 @@ nsSoundRequest::ImportMovie(Handle inDataHandle, long inDataSize, const nsACStri
   return err;
 }
 
-nsresult
-nsSoundRequest::Cleanup()
-{
-  nsresult rv = NS_OK;
-  
-#ifdef SOUND_DEBUG
-  printf("Movie playback done\n");
-#endif
-  
-  // kill the timer
-  if (mTimer) {
-    mTimer->Cancel();
-    mTimer = nsnull;
-  }
-    
-  NS_ASSERTION(mMovies.Count() == 0, "Should not have any movies running here");  
-
-  // remove from parent array. This could be the last ref, so we might be deleted here.
-  if (mSound.get())
-  {
-    nsSound*    macSound = NS_REINTERPRET_CAST(nsSound*, mSound.get());
-    rv = macSound->RemoveRequest(NS_STATIC_CAST(nsIStreamLoaderObserver*, this));
-    mSound = nsnull;
-  }
-  
-  return rv;
-}
-
 void
-nsSoundRequest::DisposeMovieData()
+nsMovieSoundRequest::DisposeMovieData()
 {
   for (PRInt32 i = 0; i < mMovies.Count(); i ++)
   {
@@ -688,7 +966,7 @@ nsSoundRequest::DisposeMovieData()
 
 
 PRBool
-nsSoundRequest::TaskOneMovie(Movie inMovie)    // return true if done
+nsMovieSoundRequest::TaskOneMovie(Movie inMovie)    // return true if done
 {
   PRBool    movieDone = PR_FALSE;
   
@@ -707,22 +985,8 @@ nsSoundRequest::TaskOneMovie(Movie inMovie)    // return true if done
   return movieDone;
 }
 
-nsSoundRequest*
-nsSoundRequest::GetFromISupports(nsISupports* inSupports)
-{
-  if (!inSupports) return nsnull;
-  
-  // test to see if this is really a nsSoundRequest by trying a QI to both
-  // interfaces we support
-  nsCOMPtr<nsIStreamLoaderObserver> loaderObserver  = do_QueryInterface(inSupports);
-  nsCOMPtr<nsITimerCallback>        timerCallback   = do_QueryInterface(inSupports);
-  if (!loaderObserver || !timerCallback) return nsnull;
-  
-  return NS_REINTERPRET_CAST(nsSoundRequest*, inSupports);
-}
-
 OSErr
-nsSoundRequest::TaskActiveMovies(PRBool *outAllMoviesDone)
+nsMovieSoundRequest::TaskActiveMovies(PRBool *outAllMoviesDone)
 {
   PRBool    allMoviesDone = PR_FALSE;
 
@@ -755,7 +1019,7 @@ nsSoundRequest::TaskActiveMovies(PRBool *outAllMoviesDone)
 
 
 PRBool
-nsSoundRequest::IsAnyMoviePlaying()
+nsMovieSoundRequest::IsAnyMoviePlaying()
 {
   if (!::IsMovieDone(mMovie))
     return PR_TRUE;
@@ -771,7 +1035,7 @@ nsSoundRequest::IsAnyMoviePlaying()
 }
 
 PRBool
-nsSoundRequest::HaveQuickTime()
+nsMovieSoundRequest::HaveQuickTime()
 {
   long  gestResult;
   OSErr err = Gestalt (gestaltQuickTime, &gestResult);

@@ -64,7 +64,11 @@ public:
 
 protected:
 
-  nsSupportsArray    mSoundRequests;    // array of outstanding/playing sounds
+  nsresult            GetSoundResourceName(const char* inSoundName, StringPtr outResourceName);
+
+protected:
+
+  nsSupportsArray     mSoundRequests;    // array of outstanding/playing sounds
 
 };
 
