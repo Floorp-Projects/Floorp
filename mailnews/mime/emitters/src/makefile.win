@@ -29,6 +29,7 @@ EXPORTS=	nsEmitterUtils.h	\
 			nsMimeRawEmitter.h	\
 			nsMimeXmlEmitter.h	\
 			nsMimeXULEmitter.h	\
+            nsMimeBaseEmitter.h \
 			$(NULL)
 
 ################################################################################
@@ -37,11 +38,12 @@ EXPORTS=	nsEmitterUtils.h	\
 LIBRARY_NAME=emitterutils_s
 
 
-CPP_OBJS=   .\$(OBJDIR)\nsEmitterUtils.obj		\
-			.\$(OBJDIR)\nsMimeRebuffer.obj		\
-			.\$(OBJDIR)\nsMimeHtmlEmitter.obj	\
-			.\$(OBJDIR)\nsMimeRawEmitter.obj	\
+CPP_OBJS=   .\$(OBJDIR)\nsMimeBaseEmitter.obj	\
 			.\$(OBJDIR)\nsMimeXmlEmitter.obj	\
+            .\$(OBJDIR)\nsMimeRawEmitter.obj	\
+            .\$(OBJDIR)\nsMimeHtmlEmitter.obj	\
+            .\$(OBJDIR)\nsEmitterUtils.obj		\
+			.\$(OBJDIR)\nsMimeRebuffer.obj		\
 			.\$(OBJDIR)\nsMimeXULEmitter.obj	\
 			$(NULL)
 

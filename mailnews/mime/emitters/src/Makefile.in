@@ -32,9 +32,11 @@ EXPORTS		= \
 		nsMimeXmlEmitter.h \
 		nsMimeRawEmitter.h \
 		nsMimeXULEmitter.h \
+		nsMimeBaseEmitter.h \
 		$(NULL)
 
 CPPSRCS		= \
+		nsMimeBaseEmitter.cpp \
 		nsEmitterUtils.cpp \
 		nsMimeRebuffer.cpp \
 		nsMimeRawEmitter.cpp \
