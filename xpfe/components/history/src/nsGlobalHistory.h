@@ -305,10 +305,12 @@ protected:
   //
   nsresult AddExistingPageToDatabase(nsIMdbRow *row,
                                      PRInt64 aDate,
+                                     const char *aReferrer,
                                      PRInt64 *aOldDate,
                                      PRInt32 *aOldCount);
   nsresult AddNewPageToDatabase(const char *aURL,
                                 PRInt64 aDate,
+                                const char *aReferrer,
                                 nsIMdbRow **aResult);
 
   nsresult RemovePageInternal(const char *aSpec);

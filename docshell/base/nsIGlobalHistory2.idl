@@ -45,7 +45,7 @@
 #include "nsISupports.idl"
 interface nsIURI;
 
-[scriptable, uuid(c4d143b7-22d7-4760-b9a0-ac942016f189)]
+[scriptable, uuid(cf777d42-1270-4b34-be7b-2931c93feda5)]
 interface nsIGlobalHistory2 : nsISupports
 {
     /**
@@ -56,12 +56,14 @@ interface nsIGlobalHistory2 : nsISupports
      *                  this is 'true' for the original URI which is
      *                  redirected.
      * @param aToplevel whether the URI is loaded in a top-level window
+     * @param aReferrer the URI of the referring page
      *
      * @note  Docshell will not filter out URI schemes like chrome: data:
      *        about: and view-source:.  Embedders should consider filtering out
-     *        these schemes and others, e.g. mailbox:
+     *        these schemes and others, e.g. mailbox: for the main URI and the
+     *        referrer.
      */
-    void addURI(in nsIURI aURI, in boolean aRedirect, in boolean aToplevel);
+    void addURI(in nsIURI aURI, in boolean aRedirect, in boolean aToplevel, in nsIURI aReferrer);
 
     /**
      * Checks to see whether the given URI is in history.

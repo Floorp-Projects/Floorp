@@ -68,7 +68,7 @@ function markLinkVisited(href, linkNode)
 
   var uri = makeURL(href);
   if (!globalHistory.isVisited(uri)) {
-    globalHistory.addURI(uri, false, true);
+    globalHistory.addURI(uri, false, true, null);
     var oldHref = linkNode.getAttribute("href");
     if (typeof oldHref == "string") {
       // Use setAttribute instead of direct assignment.

@@ -302,15 +302,17 @@ protected:
   // AddPage-oriented stuff
   //
   nsresult AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLevel,
-                             PRInt64 aLastVisitDate);
+                             PRInt64 aLastVisitDate, nsIURI * aReferrer);
   nsresult AddExistingPageToDatabase(nsIMdbRow *row,
                                      PRInt64 aDate,
+                                     nsIURI *aReferrer,
                                      PRInt64 *aOldDate,
                                      PRInt32 *aOldCount);
   nsresult AddNewPageToDatabase(nsIURI* aURI,
                                 PRInt64 aDate,
                                 PRBool aRedirect,
                                 PRBool aTopLevel,
+                                nsIURI *aReferrer,
                                 nsIMdbRow **aResult);
 
   nsresult RemovePageInternal(const char *aSpec);

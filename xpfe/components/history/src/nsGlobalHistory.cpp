@@ -587,7 +587,7 @@ NS_IMPL_ISUPPORTS7(nsGlobalHistory,
 
 
 NS_IMETHODIMP
-nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
+nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel, nsIURI *aReferrer)
 {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aURI);
@@ -635,6 +635,12 @@ nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
   rv = aURI->GetSpec(URISpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCAutoString referrerSpec;
+  if (aReferrer) {
+    rv = aReferrer->GetSpec(referrerSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   PRInt64 now = GetNow();
 
   // For notifying observers, later...
@@ -654,7 +660,7 @@ nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
     // update the database, and get the old info back
     PRInt64 oldDate;
     PRInt32 oldCount;
-    rv = AddExistingPageToDatabase(row, now, &oldDate, &oldCount);
+    rv = AddExistingPageToDatabase(row, now, referrerSpec.get(), &oldDate, &oldCount);
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddExistingPageToDatabase failed; see bug 88961");
     if (NS_FAILED(rv)) return rv;
     
@@ -683,7 +689,7 @@ nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
     
   }
   else {
-    rv = AddNewPageToDatabase(URISpec.get(), now, getter_AddRefs(row));
+    rv = AddNewPageToDatabase(URISpec.get(), now, referrerSpec.get(), getter_AddRefs(row));
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddNewPageToDatabase failed; see bug 88961");
     if (NS_FAILED(rv)) return rv;
     
@@ -739,10 +745,12 @@ nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
 nsresult
 nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
                                            PRInt64 aDate,
+                                           const char *aReferrer,
                                            PRInt64 *aOldDate,
                                            PRInt32 *aOldCount)
 {
   nsresult rv;
+  nsCAutoString oldReferrer;
   
   // if the page was typed, unhide it now because it's
   // known to be valid
@@ -763,12 +771,20 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_VisitCountColumn, (*aOldCount) + 1);
 
+  if (aReferrer && *aReferrer) {
+    rv = GetRowValue(row, kToken_ReferrerColumn, oldReferrer);
+    // No referrer? Now there is!
+    if (NS_FAILED(rv) || oldReferrer.IsEmpty())
+      SetRowValue(row, kToken_ReferrerColumn, aReferrer);
+  }
+
   return NS_OK;
 }
 
 nsresult
 nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
                                       PRInt64 aDate,
+                                      const char *aReferrer,
                                       nsIMdbRow **aResult)
 {
   mdb_err err;
@@ -792,6 +808,10 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   // Set the date.
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
+
+  // Set the referrer if there is one.
+  if (aReferrer && *aReferrer)
+    SetRowValue(row, kToken_ReferrerColumn, aReferrer);
 
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL), nsnull, nsnull);
@@ -1350,7 +1370,7 @@ nsGlobalHistory::HidePage(nsIURI *aURI)
   if (NS_FAILED(rv)) {
     // it hasn't been visited yet, but if one ever comes in, we need
     // to hide it when it is visited
-    rv = AddURI(aURI, PR_FALSE, PR_FALSE);
+    rv = AddURI(aURI, PR_FALSE, PR_FALSE, nsnull);
     if (NS_FAILED(rv)) return rv;
     
     rv = FindRow(kToken_URLColumn, URISpec.get(), getter_AddRefs(row));
@@ -1379,7 +1399,7 @@ nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
   if (NS_FAILED(rv)) {
-    rv = AddNewPageToDatabase(spec.get(), GetNow(), getter_AddRefs(row));
+    rv = AddNewPageToDatabase(spec.get(), GetNow(), nsnull, getter_AddRefs(row));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We don't know if this is a valid URI yet. Hide it until it finishes

@@ -283,7 +283,7 @@ protected:
     PRBool ShouldDiscardLayoutState(nsIHttpChannel * aChannel);
     
     // Global History
-    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect);
+    nsresult AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect, nsIURI * aReferrer);
 
     // Helper Routines
     NS_IMETHOD GetPromptAndStringBundle(nsIPrompt ** aPrompt,

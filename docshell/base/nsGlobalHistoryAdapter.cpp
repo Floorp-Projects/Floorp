@@ -139,7 +139,7 @@ NS_IMPL_ISUPPORTS1(nsGlobalHistoryAdapter, nsIGlobalHistory2)
 
 NS_IMETHODIMP
 nsGlobalHistoryAdapter::AddURI(nsIURI* aURI, PRBool aRedirect,
-                               PRBool aToplevel)
+                               PRBool aToplevel, nsIURI* aReferrer)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv;
