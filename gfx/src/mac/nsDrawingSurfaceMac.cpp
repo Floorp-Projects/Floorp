@@ -282,7 +282,6 @@ NS_IMETHODIMP nsDrawingSurfaceMac::Init(PRUint32 aDepth, PRUint32 aWidth, PRUint
 	const long kReserveHeapFreeSpace = (1024 * 1024);
 	const long kReserveHeapContigSpace	= (512 * 1024);
 
-  QDErr		err = noErr;
   long	  totalSpace, contiguousSpace;
   
   if (tryTempMemFirst)
