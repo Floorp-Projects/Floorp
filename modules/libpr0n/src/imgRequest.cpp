@@ -161,12 +161,13 @@ PRBool imgRequest::RemoveFromCache()
 
 #ifdef MOZ_NEW_CACHE
 
-  if (mCacheEntry)
+  if (mCacheEntry) {
     mCacheEntry->Doom();
-  else
+    mCacheEntry = nsnull;
+  } else {
     NS_WARNING("imgRequest::RemoveFromCache -- no entry!");
+  }
 
-  mCacheEntry = nsnull;
 #endif
 
   return PR_TRUE;
@@ -533,6 +534,9 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
   /* set our processing flag to false */
   mProcessing = PR_FALSE;
+
+  /* break the cycle from the cache entry. */
+  mCacheEntry = nsnull;
 
   switch(status) {
   case NS_BINDING_ABORTED:
