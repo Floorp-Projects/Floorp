@@ -66,6 +66,7 @@ CPPSRCS = \
         nsScreenManagerMac.cpp \
         nsPrintOptionsX.cpp \
         nsFontUtils.cpp \
+        nsNativeThemeMac.cpp \
         $(NULL)
 
 #       $(DIST)/lib/libimg_s.a \
