@@ -294,81 +294,83 @@ void *malloc(size_t blockSize)
 	newBlock = (whichAllocator->blockAllocRoutine)(blockSize, whichAllocator->root);
 
 	if ( newBlock == NULL )
+	{
+		/* if we don't have it, try allocating a new chunk */
+		if ( (whichAllocator->chunkAllocRoutine)( blockSize, whichAllocator->root ) != NULL )
 		{
-		/* we need to ensure no one else tries to flush cache's while we do */
-		/* This may mean that we allocate temp mem while flushing the cache that we would */
-		/* have had space for after the flush, but life sucks... */
-		
-		if ( gInsideCacheFlush == false )
-			{			
-			/* we didn't get it. Flush some caches and try again */
-			gInsideCacheFlush = true;
-			CallCacheFlushers ( blockSize );
-			gInsideCacheFlush = false;
-			
 			newBlock = (char *)(whichAllocator->blockAllocRoutine)(blockSize, whichAllocator->root);
-			}
-
-		/* if we still don't have it, try allocating a new chunk */
-		if ( newBlock == NULL )
-			{
-			if ( (whichAllocator->chunkAllocRoutine)( blockSize, whichAllocator->root ) != NULL )
-				{
-				newBlock = (char *)(whichAllocator->blockAllocRoutine)(blockSize, whichAllocator->root);
-				}
+		}
+		else
+		{
+			/* We're in deep doo-doo. We failed to allocate a new sub-heap, so let's */
+			/* flush everything that we can. */
+			/* We need to ensure no one else tries to flush cache's while we do */
+			/* This may mean that we allocate temp mem while flushing the cache that we would */
+			/* have had space for after the flush, but life sucks... */
 			
-			/*
-			 * If that fails, we may be able to succeed by choosing the next biggest block size.
-			 * We should signal the user that things are sucking though. We will never be able
-			 * to allocate a large block at this point. We might be able to get a small block.
-			 */
-			if ( newBlock == NULL )
-				{
-				if ( blockSize <= kMaxTableAllocatedBlockSize )
-					{
-					UInt32	allocatorIndex;
-					
-					allocatorIndex = ((blockSize + 3) >> 2);
-					
-					/* of course, this will only work for small blocks */
-					while ( ++allocatorIndex <= (( kMaxTableAllocatedBlockSize >> 2 ) + 1 ))
-						{
-						if ( allocatorIndex <= ( kMaxTableAllocatedBlockSize >> 2 ) )
-							{
-							/* try another small block allocator */
-							whichAllocator = &gFastMemSmallSizeAllocators[ allocatorIndex ];
-							}
-						else
-							{
-							/* try the large block allocator */
-							whichAllocator = &gFastMemSmallSizeAllocators[ 0 ];
-							}
-							
-						newBlock = (char *)(whichAllocator->blockAllocRoutine)(blockSize, whichAllocator->root);
-						if ( newBlock != NULL )
-							{
-							break;
-							}
-						}
-					}
+			if ( gInsideCacheFlush == false )
+			{			
+				/* Flush some caches and try again */
+				gInsideCacheFlush = true;
+				CallCacheFlushers ( blockSize );
+				gInsideCacheFlush = false;
 				
-				/* tell the FE */
-				CallFE_LowMemory();
-				}
-			
-			/* now, if we don't have any memory, then we really suck */
-			if ( newBlock == NULL )
-				{
-		#if DEBUG_HEAP_INTEGRITY
-				if (gOnMallocFailureReturnDEADBEEF)
-					{
-					return (void *)0xDEADBEEF;
-					}
-		#endif
-				return NULL;
-				}
+				/* We may have freed up some space, so let's try allocating again */
+				newBlock = (char *)(whichAllocator->blockAllocRoutine)(blockSize, whichAllocator->root);
 			}
 		}
+		
+		/*
+		 * If that fails, we may be able to succeed by choosing the next biggest block size.
+		 * We should signal the user that things are sucking though. We will never be able
+		 * to allocate a large block at this point. We might be able to get a small block.
+		 */
+		if ( newBlock == NULL )
+		{
+			if ( blockSize <= kMaxTableAllocatedBlockSize )
+			{
+				UInt32	allocatorIndex;
+				
+				allocatorIndex = ((blockSize + 3) >> 2);
+				
+				/* of course, this will only work for small blocks */
+				while ( ++allocatorIndex <= (( kMaxTableAllocatedBlockSize >> 2 ) + 1 ))
+				{
+					if ( allocatorIndex <= ( kMaxTableAllocatedBlockSize >> 2 ) )
+					{
+						/* try another small block allocator */
+						whichAllocator = &gFastMemSmallSizeAllocators[ allocatorIndex ];
+					}
+					else
+					{
+						/* try the large block allocator */
+						whichAllocator = &gFastMemSmallSizeAllocators[ 0 ];
+					}
+						
+					newBlock = (char *)(whichAllocator->blockAllocRoutine)(blockSize, whichAllocator->root);
+					if ( newBlock != NULL )
+					{
+						break;
+					}
+				}
+			}
+			
+			/* tell the FE */
+			CallFE_LowMemory();
+		}
+		
+		/* now, if we don't have any memory, then we really suck */
+		if ( newBlock == NULL )
+		{
+	#if DEBUG_HEAP_INTEGRITY
+			if (gOnMallocFailureReturnDEADBEEF)
+			{
+				return (void *)0xDEADBEEF;
+			}
+	#endif
+			return NULL;
+		}
+	}
 	
 	/* END REAL MALLOC CODE */
 

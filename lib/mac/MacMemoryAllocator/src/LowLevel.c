@@ -537,6 +537,17 @@ void CallPreAllocators(void)
 
 static MemoryCacheFlusherProc sGarbageCollectorCacheFlusher = NULL;
 
+/*	CallCacheFlushers is only called under extreme conditions now, when an attempt to
+	allocate a new sub-heap has failed.
+
+	The flush procs called here are set up in fredmem.cp:
+
+	InstallMemoryCacheFlusher(&ImageCacheMemoryFlusher);
+	InstallMemoryCacheFlusher(&NetlibCacheMemoryFlusher);
+	InstallMemoryCacheFlusher(&LayoutCacheMemoryFlusher);
+	InstallMemoryCacheFlusher(&LibNeoCacheMemoryFlusher);
+
+ */
 UInt8 CallCacheFlushers(size_t blockSize)
 {
 	MemoryCacheFlusherProcRec		*currentCacheFlusher = gFirstFlusher;
@@ -544,7 +555,8 @@ UInt8 CallCacheFlushers(size_t blockSize)
 
 	// we might want to remember which flusher was called last and start
 	// at the one after, to avoid always flushing the first one (image cache)
-	// first.
+	// first. But since this is a last-ditch effort to free memory, that's
+	// probably not worth it.
 	
 	while (currentCacheFlusher != NULL)
 	{
@@ -628,7 +640,7 @@ SubHeapAllocationChunk * AllocateSubHeap ( SubHeapAllocationRoot * root, Size he
 	if ( heapBlock != NULL )
 		{
 		heapBlock->root = root;
-		heapBlock->refCon = tempHandle;
+		heapBlock->refCon = tempHandle;			// so we can dispose the handle when we're done with the subheap
 		heapBlock->next = NULL;
 		heapBlock->usedBlocks = 0;
 		heapBlock->freeDescriptor.freeRoutine = NULL;
