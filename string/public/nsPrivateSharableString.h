@@ -41,6 +41,14 @@ class nsPrivateSharableString
     public:
       virtual const nsBufferHandle<CharT>*        GetBufferHandle() const;
       virtual const nsSharedBufferHandle<CharT>*  GetSharedBufferHandle() const;
+
+        /**
+         * |GetBufferHandle()| will return either |0|, |1|, or a reasonable pointer.
+         * The meaning of |0| is that the string points to a non-contiguous or else empty representation.
+         * The meaning of |1| is implementation dependant.
+         * Otherwise |GetBufferHandle()| returns a pointer to the single contiguous hunk of characters
+         * that makes up this string.
+         */
   };
 
 template <class CharT>
