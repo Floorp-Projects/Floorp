@@ -567,7 +567,7 @@ class NS_COM NS_ConvertUTF8toUCS2
 
       NS_ConvertUTF8toUCS2( const char* aCString, PRUint32 aLength )
         {
-          Init( Substring( aCString, aCString + aLength ) );
+          Init( nsDependentCString( aCString, aLength ) );
         }
 
     protected:
