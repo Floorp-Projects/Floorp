@@ -954,7 +954,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kInlineEntity|kPreformatted, (kSelf|kFlowEntity), kNone,	//I'm allowing WAY too much in here. Spec says inline.
+      /*parent,incl,exclgroups*/          kBlock|kPreformatted, (kSelf|kFlowEntity), kNone,	// Note: PRE is a block level element - bug 80009
       /*special props, prop-range*/       0, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gPreKids,eHTMLTag_unknown);
 

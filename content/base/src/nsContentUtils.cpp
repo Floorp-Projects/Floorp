@@ -228,22 +228,24 @@ class CopyNormalizeNewlines
     }
 
     PRUint32 write(const typename OutputIterator::value_type* aSource, PRUint32 aSourceLength) {
+      
+      const typename OutputIterator::value_type* done_writing = aSource + aSourceLength;
+      
       // If the last source buffer ended with a CR...
       if (mLastCharCR) {
         // ..and if the next one is a LF, then skip it since
         // we've already written out a newline
         if (aSourceLength && (*aSource == value_type('\n'))) {
-          aSource++;
+          ++aSource;
         }
         mLastCharCR = PR_FALSE;
       }
 
-      const typename OutputIterator::value_type* done_writing = aSource + aSourceLength;
       PRUint32 num_written = 0;
       while ( aSource < done_writing ) {
         if (*aSource == value_type('\r')) {
           mDestination->writechar('\n');
-          aSource++;
+          ++aSource;
           // If we've reached the end of the buffer, record
           // that we wrote out a CR
           if (aSource == done_writing) {
@@ -251,13 +253,13 @@ class CopyNormalizeNewlines
           }
           // If the next character is a LF, skip it
           else if (*aSource == value_type('\n')) {
-            aSource++;
+            ++aSource;
           }
         }
         else {
           mDestination->writechar(*aSource++);
         }
-        num_written++;
+        ++num_written;
       }
        
       mWritten += num_written;
