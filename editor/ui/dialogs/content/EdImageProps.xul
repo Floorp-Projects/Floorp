@@ -72,7 +72,7 @@
             onmouseup  = "doOverallEnabling()"
             onchange   = "doOverallEnabling()" />
           <!-- from EdDialogOverlay.xul -->
-          <button id="ChooseFile" tooltip="aTooltip" tooltiptext="&ChooseFile.tooltip;"/>
+          <button id="ChooseFile" />
         </row>
         <row>
           <text class = "label"
@@ -132,7 +132,6 @@
                 <text class = "label" 
                   id    = "widthLabel"
                   for   = "widthInput"
-                  tooltip="aTooltip" tooltiptext="&widthEditField.tooltip;"
                   value = "&widthEditField.label;" />
                 <textfield
                   id       = "widthInput" 
@@ -148,7 +147,6 @@
                 <text class = "label" 
                   id    = "heightLabel"
                   for   = "heightInput"
-                  tooltip="aTooltip" tooltiptext="&heightEditField.tooltip;"
                   value = "&heightEditField.label;" />
                 <textfield 
                   id       = "heightInput" 
@@ -179,7 +177,6 @@
               class   = "dialog"
               id      = "removeImageMap"
               oncommand = "removeImageMap()"
-              tooltip = "aTooltip" tooltiptext="&removeImageMapButton.tooltip;"
               value   = "&removeImageMapButton.label;"/>
           </box>
         </titledbox>
@@ -211,7 +208,6 @@
                 <text 
                   class = "label align-right" 
                   id    = "leftrightLabel"
-                  tooltip="aTooltip" tooltiptext="&leftRightEditField.tooltip;"
                   value = "&leftRightEditField.label;"/>
                 <textfield 
                   class     = "narrow"
@@ -227,7 +223,6 @@
                 <text 
                   class = "label align-right" 
                   id    = "topbottomLabel"
-                  tooltip="aTooltip" tooltiptext="&topBottomEditField.tooltip;"
                   value = "&topBottomEditField.label;"/>
                 <textfield 
                   class     = "narrow"
@@ -242,7 +237,6 @@
               <row valign="baseline" autostretch="never">
                 <text class = "label align-right" 
                   id    = "borderLabel"
-                  tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;"
                   value = "&borderEditField.label;"/>
                 <textfield
                   class     = "narrow"
