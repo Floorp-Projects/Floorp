@@ -52,6 +52,8 @@ final class NativeDate extends IdScriptableObject
 {
     private static final Object DATE_TAG = new Object();
 
+    private static final String js_NaN_date_str = "Invalid Date";
+
     static void init(Context cx, Scriptable scope, boolean sealed)
     {
         NativeDate obj = new NativeDate();
@@ -162,53 +164,68 @@ final class NativeDate extends IdScriptableObject
         int id = f.methodId();
         switch (id) {
           case ConstructorId_now:
-            return wrap_double(now());
+            return ScriptRuntime.wrapNumber(now());
 
-          case ConstructorId_parse: {
-            String dataStr = ScriptRuntime.toString(args, 0);
-            return wrap_double(date_parseString(dataStr));
-          }
+          case ConstructorId_parse:
+            {
+                String dataStr = ScriptRuntime.toString(args, 0);
+                return ScriptRuntime.wrapNumber(date_parseString(dataStr));
+            }
 
           case ConstructorId_UTC:
-            return wrap_double(jsStaticFunction_UTC(args));
+            return ScriptRuntime.wrapNumber(jsStaticFunction_UTC(args));
 
-          case Id_constructor: {
-            // if called as a function, just return a string
-            // representing the current time.
-            if (thisObj != null)
-                return date_format(now(), Id_toString);
-            return jsConstructor(args);
-          }
+          case Id_constructor:
+            {
+                // if called as a function, just return a string
+                // representing the current time.
+                if (thisObj != null)
+                    return date_format(now(), Id_toString);
+                return jsConstructor(args);
+            }
+        }
+
+        // The rest of Date.prototype methods require thisObj to be Date
+
+        if (!(thisObj instanceof NativeDate))
+            throw incompatibleCallError(f);
+        NativeDate realThis = (NativeDate)thisObj;
+        double t = realThis.date;
+
+        switch (id) {
 
           case Id_toString:
           case Id_toTimeString:
           case Id_toDateString:
-            return date_format(realThis(thisObj, f).date, id);
+            if (t == t) {
+                return date_format(t, id);
+            }
+            return js_NaN_date_str;
 
           case Id_toLocaleString:
           case Id_toLocaleTimeString:
           case Id_toLocaleDateString:
-            return toLocale_helper(realThis(thisObj, f).date, id);
-
-          case Id_toUTCString: {
-            double t = realThis(thisObj, f).date;
-            if (t == t) { return js_toUTCString(t); }
+            if (t == t) {
+                return toLocale_helper(t, id);
+            }
             return js_NaN_date_str;
-          }
 
-          case Id_toSource: {
-            double t = realThis(thisObj, f).date;
+          case Id_toUTCString:
+            if (t == t) {
+                return js_toUTCString(t);
+            }
+            return js_NaN_date_str;
+
+          case Id_toSource:
             return "(new Date("+ScriptRuntime.toString(t)+"))";
-          }
 
           case Id_valueOf:
           case Id_getTime:
-            return wrap_double(realThis(thisObj, f).date);
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_getYear:
           case Id_getFullYear:
-          case Id_getUTCFullYear: {
-            double t = realThis(thisObj, f).date;
+          case Id_getUTCFullYear:
             if (t == t) {
                 if (id != Id_getUTCFullYear) t = LocalTime(t);
                 t = YearFromTime(t);
@@ -222,93 +239,74 @@ final class NativeDate extends IdScriptableObject
                     }
                 }
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_getMonth:
-          case Id_getUTCMonth: {
-            double t = realThis(thisObj, f).date;
+          case Id_getUTCMonth:
             if (t == t) {
                 if (id == Id_getMonth) t = LocalTime(t);
                 t = MonthFromTime(t);
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_getDate:
-          case Id_getUTCDate: {
-            double t = realThis(thisObj, f).date;
+          case Id_getUTCDate:
             if (t == t) {
                 if (id == Id_getDate) t = LocalTime(t);
                 t = DateFromTime(t);
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_getDay:
-          case Id_getUTCDay: {
-            double t = realThis(thisObj, f).date;
+          case Id_getUTCDay:
             if (t == t) {
                 if (id == Id_getDay) t = LocalTime(t);
                 t = WeekDay(t);
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_getHours:
-          case Id_getUTCHours: {
-            double t = realThis(thisObj, f).date;
+          case Id_getUTCHours:
             if (t == t) {
                 if (id == Id_getHours) t = LocalTime(t);
                 t = HourFromTime(t);
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_getMinutes:
-          case Id_getUTCMinutes: {
-            double t = realThis(thisObj, f).date;
+          case Id_getUTCMinutes:
             if (t == t) {
                 if (id == Id_getMinutes) t = LocalTime(t);
                 t = MinFromTime(t);
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_getSeconds:
-          case Id_getUTCSeconds: {
-            double t = realThis(thisObj, f).date;
+          case Id_getUTCSeconds:
             if (t == t) {
                 if (id == Id_getSeconds) t = LocalTime(t);
                 t = SecFromTime(t);
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_getMilliseconds:
-          case Id_getUTCMilliseconds: {
-            double t = realThis(thisObj, f).date;
+          case Id_getUTCMilliseconds:
             if (t == t) {
                 if (id == Id_getMilliseconds) t = LocalTime(t);
                 t = msFromTime(t);
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
-          case Id_getTimezoneOffset: {
-            double t = realThis(thisObj, f).date;
+          case Id_getTimezoneOffset:
             if (t == t) {
                 t = (t - LocalTime(t)) / msPerMinute;
             }
-            return wrap_double(t);
-          }
+            return ScriptRuntime.wrapNumber(t);
 
-          case Id_setTime: {
-            NativeDate real = realThis(thisObj, f);
-            double t = ScriptRuntime.toNumber(args, 0);
-            real.date = TimeClip(t);
-            return wrap_double(real.date);
-          }
+          case Id_setTime:
+            t = TimeClip(ScriptRuntime.toNumber(args, 0));
+            realThis.date = t;
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_setMilliseconds:
           case Id_setUTCMilliseconds:
@@ -318,7 +316,9 @@ final class NativeDate extends IdScriptableObject
           case Id_setUTCMinutes:
           case Id_setHours:
           case Id_setUTCHours:
-            return wrap_double(realThis(thisObj, f).makeTime(args, id));
+            t = makeTime(t, args, id);
+            realThis.date = t;
+            return ScriptRuntime.wrapNumber(t);
 
           case Id_setDate:
           case Id_setUTCDate:
@@ -326,22 +326,39 @@ final class NativeDate extends IdScriptableObject
           case Id_setUTCMonth:
           case Id_setFullYear:
           case Id_setUTCFullYear:
-            return wrap_double(realThis(thisObj, f).makeDate(args, id));
+            t = makeDate(t, args, id);
+            realThis.date = t;
+            return ScriptRuntime.wrapNumber(t);
 
-          case Id_setYear: {
-            double year = ScriptRuntime.toNumber(args, 0);
-            return wrap_double(realThis(thisObj, f).js_setYear(year));
-          }
+          case Id_setYear:
+            {
+                double year = ScriptRuntime.toNumber(args, 0);
+
+                if (year != year || Double.isInfinite(year)) {
+                    t = ScriptRuntime.NaN;
+                } else {
+                    if (t != t) {
+                        t = 0;
+                    } else {
+                        t = LocalTime(t);
+                    }
+
+                    if (year >= 0 && year <= 99)
+                        year += 1900;
+
+                    double day = MakeDay(year, MonthFromTime(t),
+                                         DateFromTime(t));
+                    t = MakeDate(day, TimeWithinDay(t));
+                    t = internalUTC(t);
+                    t = TimeClip(t);
+                }
+            }
+            realThis.date = t;
+            return ScriptRuntime.wrapNumber(t);
 
           default: throw new IllegalArgumentException(String.valueOf(id));
         }
-    }
 
-    private static NativeDate realThis(Scriptable thisObj, IdFunctionObject f)
-    {
-        if (!(thisObj instanceof NativeDate))
-            throw incompatibleCallError(f);
-        return (NativeDate)thisObj;
     }
 
     /* ECMA helper functions */
@@ -978,9 +995,6 @@ final class NativeDate extends IdScriptableObject
 
     private static String date_format(double t, int methodId)
     {
-        if (t != t)
-            return js_NaN_date_str;
-
         StringBuffer result = new StringBuffer(60);
         double local = LocalTime(t);
 
@@ -1110,14 +1124,8 @@ final class NativeDate extends IdScriptableObject
         return obj;
     }
 
-    /* constants for toString, toUTCString */
-    private static final String js_NaN_date_str = "Invalid Date";
-
     private static String toLocale_helper(double t, int methodId)
     {
-        if (t != t)
-            return js_NaN_date_str;
-
         java.text.DateFormat formatter;
         switch (methodId) {
           case Id_toLocaleString:
@@ -1226,7 +1234,7 @@ final class NativeDate extends IdScriptableObject
         }
     }
 
-    private double makeTime(Object[] args, int methodId)
+    private static double makeTime(double date, Object[] args, int methodId)
     {
         int maxargs;
         boolean local = true;
@@ -1272,8 +1280,6 @@ final class NativeDate extends IdScriptableObject
         double time;
         double result;
 
-        double date = this.date;
-
         /* just return NaN if the date is already NaN */
         if (date != date)
             return date;
@@ -1294,8 +1300,7 @@ final class NativeDate extends IdScriptableObject
 
             // limit checks that happen in MakeTime in ECMA.
             if (conv[i] != conv[i] || Double.isInfinite(conv[i])) {
-                this.date = ScriptRuntime.NaN;
-                return this.date;
+                return ScriptRuntime.NaN;
             }
             conv[i] = ScriptRuntime.toInteger(conv[i]);
         }
@@ -1335,11 +1340,10 @@ final class NativeDate extends IdScriptableObject
             result = internalUTC(result);
         date = TimeClip(result);
 
-        this.date = date;
         return date;
     }
 
-    private double makeDate(Object[] args, int methodId)
+    private static double makeDate(double date, Object[] args, int methodId)
     {
         int maxargs;
         boolean local = true;
@@ -1376,8 +1380,6 @@ final class NativeDate extends IdScriptableObject
         double lorutime; /* local or UTC version of date */
         double result;
 
-        double date = this.date;
-
         /* See arg padding comment in makeTime.*/
         if (args.length == 0)
             args = ScriptRuntime.padArguments(args, 1);
@@ -1387,8 +1389,7 @@ final class NativeDate extends IdScriptableObject
 
             // limit checks that happen in MakeDate in ECMA.
             if (conv[i] != conv[i] || Double.isInfinite(conv[i])) {
-                this.date = ScriptRuntime.NaN;
-                return this.date;
+                return ScriptRuntime.NaN;
             }
             conv[i] = ScriptRuntime.toInteger(conv[i]);
         }
@@ -1434,32 +1435,7 @@ final class NativeDate extends IdScriptableObject
 
         date = TimeClip(result);
 
-        this.date = date;
         return date;
-    }
-
-    private double js_setYear(double year) {
-        double day, result;
-        if (year != year || Double.isInfinite(year)) {
-            this.date = ScriptRuntime.NaN;
-            return this.date;
-        }
-
-        if (this.date != this.date) {
-            this.date = 0;
-        } else {
-            this.date = LocalTime(this.date);
-        }
-
-        if (year >= 0 && year <= 99)
-            year += 1900;
-
-        day = MakeDay(year, MonthFromTime(this.date), DateFromTime(this.date));
-        result = MakeDate(day, TimeWithinDay(this.date));
-        result = internalUTC(result);
-
-        this.date = TimeClip(result);
-        return this.date;
     }
 
 // #string_id_map#
