@@ -1,13 +1,24 @@
-/**
- *
- *  @version 1.00 
- *  @author Raju Pallath
- *
- *  TESTID 
- * 
- *  Tests out the DocumentImpl->createAttribute() method.
- *
- */
+/*
+ The contents of this file are subject to the Mozilla Public
+ License Version 1.1 (the "License"); you may not use this file
+ except in compliance with the License. You may obtain a copy of
+ the License at http://www.mozilla.org/MPL/
+
+ Software distributed under the License is distributed on an "AS
+ IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ implied. See the License for the specific language governing
+ rights and limitations under the License.
+
+ The Original Code is mozilla.org code.
+
+ The Initial Developer of the Original Code is Sun Microsystems,
+ Inc. Portions created by Sun are
+ Copyright (C) 1999 Sun Microsystems, Inc. All
+ Rights Reserved.
+
+ Contributor(s):
+*/
+
 package org.mozilla.dom.test;
 
 import java.util.*;
@@ -67,6 +78,7 @@ public class DocumentImpl_createAttribute_String_1 extends BWBaseTest implements
       Document d = (Document)tobj;
       if (d != null)
       {
+        try {
              Attr da = d.createAttribute("dummyattr");
 	     if (da == null) {
                 TestLoader.logErrPrint("Document 'createAttribute(dummyattr)' is  NULL..");
@@ -74,6 +86,10 @@ public class DocumentImpl_createAttribute_String_1 extends BWBaseTest implements
              } else {
                 TestLoader.logErrPrint("Document 'createAttribute(dummyattr)' is NOT NULL..");
              }
+        } catch (DOMException e) {
+                TestLoader.logErrPrint("Caught DOMException");
+                return BWBaseTest.FAILED;
+        }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

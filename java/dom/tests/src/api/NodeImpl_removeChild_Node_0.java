@@ -1,12 +1,24 @@
-/**
- *
- *  @version 1.00 
- *  @author Raju Pallath
- *
- *  TESTID 
- * 
- *
- */
+/*
+ The contents of this file are subject to the Mozilla Public
+ License Version 1.1 (the "License"); you may not use this file
+ except in compliance with the License. You may obtain a copy of
+ the License at http://www.mozilla.org/MPL/
+
+ Software distributed under the License is distributed on an "AS
+ IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ implied. See the License for the specific language governing
+ rights and limitations under the License.
+
+ The Original Code is mozilla.org code.
+
+ The Initial Developer of the Original Code is Sun Microsystems,
+ Inc. Portions created by Sun are
+ Copyright (C) 1999 Sun Microsystems, Inc. All
+ Rights Reserved.
+
+ Contributor(s):
+*/
+
 package org.mozilla.dom.test;
 
 import java.util.*;
@@ -66,6 +78,7 @@ public class NodeImpl_removeChild_Node_0 extends BWBaseTest implements Execution
       Document d = (Document)tobj;
       if (d != null)
       {
+       try {
          String elname = "SCRIPT";
          Element e = d.createElement(elname);
          if (e == null)
@@ -102,6 +115,10 @@ public class NodeImpl_removeChild_Node_0 extends BWBaseTest implements Execution
             TestLoader.logErrPrint("Could not find Node " + nodename);
             return BWBaseTest.FAILED;
          }
+       } catch (DOMException e) {
+            TestLoader.logErrPrint("Caught DOMException");
+            return BWBaseTest.PASSED;
+       }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

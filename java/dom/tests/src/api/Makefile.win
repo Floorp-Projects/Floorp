@@ -1,3 +1,5 @@
+#!nmake
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -18,15 +20,12 @@
 # Contributor(s):
 
 
-HOMEDIR=../../
-SRCDIR=$(HOMEDIR)/src/api
-CLASSDIR=$(HOMEDIR)/classes
+HOMEDIR=..\..
+SRCDIR=$(HOMEDIR)\src\api
+CLASSDIR=$(HOMEDIR)\classes
 
 JAVAC=javac
-TESTPACKAGE=org/mozilla/dom/test
-
-all:  
-	$(JAVAC) -d $(CLASSDIR) $(JAVAFILES)
+TESTPACKAGE=org\mozilla\dom\test
 
 JAVAFILES= AttrImpl_getName.java \
 	AttrImpl_getSpecified.java \
@@ -185,8 +184,11 @@ JAVAFILES= AttrImpl_getName.java \
 	TextImpl_splitText_int_1.java \
 	TextImpl_splitText_int_2.java
 
+all:
+	@echo Building Java DOM API Tests ...
+	@$(JAVAC) -d $(CLASSDIR) $(JAVAFILES)
+	@echo done
+
+
 clean:
-	for i in ${JAVAFILES} ; do \
-		file=$$i; \
-		classfile=`echo $$file | sed 's/java/class/g'` ; \
-		/bin/rm $(CLASSDIR)/$(TESTPACKAGE)/$$classfile ; done
+	del /f/q $(CLASSDIR)\$(TESTPACKAGE)\*.class
