@@ -45,11 +45,13 @@ public:
   // sibling pointers.
   // XXX bad api - need nsresult in case we attempt to move out of the
   // flow and run out of memory
+#if 0
   PRBool MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
                             nsIFrame*              aFrame,
                             const nsStyleDisplay*  aDisplay,
                             const nsStylePosition* aPosition,
                             nsIFrame*&             aPlaceholderFrame);
+#endif
 
   /**
    * Helper method to create next-in-flows if necessary. If aFrame
