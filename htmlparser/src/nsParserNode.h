@@ -258,9 +258,9 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual nsresult ReleaseAll();
 
-    CToken*      mToken;
-    PRInt32      mUseCount;
     PRPackedBool mGenericState;  
+    PRInt32      mUseCount;
+    CToken*      mToken;
    
     nsTokenAllocator* mTokenAllocator;
 #ifdef HEAP_ALLOCATED_NODES

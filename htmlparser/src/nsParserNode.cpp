@@ -48,9 +48,7 @@
  *  Default Constructor
  */
 nsCParserNode::nsCParserNode()
-  : mToken(nsnull),
-    mUseCount(0),
-    mGenericState(PR_FALSE),
+  : mRefCnt(0), mGenericState(PR_FALSE), mUseCount(0), mToken(nsnull),
     mTokenAllocator(nsnull)
 {
   MOZ_COUNT_CTOR(nsCParserNode);
@@ -68,25 +66,23 @@ nsCParserNode::nsCParserNode()
  */
 nsCParserNode::nsCParserNode(CToken* aToken,
                              nsTokenAllocator* aTokenAllocator,
-                             nsNodeAllocator* aNodeAllocator): nsIParserNode() 
+                             nsNodeAllocator* aNodeAllocator)
+  : mRefCnt(0), mGenericState(PR_FALSE), mUseCount(0), mToken(aToken),
+    mTokenAllocator(aTokenAllocator)
 {
-  mRefCnt = 0;
   MOZ_COUNT_CTOR(nsCParserNode);
 
   static int theNodeCount = 0;
   ++theNodeCount;
-  mToken = aToken;
   IF_HOLD(mToken);
-  mTokenAllocator = aTokenAllocator;
-  mUseCount = 0;
-  mGenericState = PR_FALSE;
+
 #ifdef HEAP_ALLOCATED_NODES
   mNodeAllocator = aNodeAllocator;
 #endif
 }
 
 /**
- *  default destructor
+ *  destructor
  *  NOTE: We intentionally DONT recycle mToken here.
  *        It may get cached for use elsewhere
  *  @update  gess 3/25/98
