@@ -352,7 +352,6 @@ mozXMLTermShell::Exit()
                                                  NS_GET_IID(nsIAppShellService),
                                                  (nsISupports**)&appShell);
   if (NS_SUCCEEDED(result)) {
-    appShell->Shutdown();
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   } 
   return NS_OK;
