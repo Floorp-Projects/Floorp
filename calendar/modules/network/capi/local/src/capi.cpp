@@ -615,6 +615,11 @@ CAPIStatus CAPI_FetchEventsByID(
             }
             delete [] pCopy; pCopy = 0;
         }
+
+        /*
+         * Signal the end of transmission...
+         */
+        (*pStream->pfnRcvCallback)(pStream->userDataRcv,p,0,&iAmountHandled);
        
 
 FBID_EXIT:
