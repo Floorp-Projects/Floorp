@@ -23,6 +23,7 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowExtrasOverlay.xul"?>
 
