@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.com,v 1.2 2003/01/04 02:13:57 wtc%netscape.com Exp $"
+#ident	"$Id: Makefile.com,v 1.3 2003/02/08 06:32:06 sonja.mirtitsch%sun.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -16,11 +16,12 @@ endif
 
 PKGARCHIVE = $(dist_libdir)/pkgarchive
 DATAFILES = copyright
-FILES = $(DATAFILES) pkginfo
+FILES = $(DATAFILES) pkginfo prototype
 
 PACKAGE = $(shell basename `pwd`)
 
-PRODUCT_VERSION = $(MOD_VERSION).$(MOD_MINOR).$(MOD_PATCH)
+PRODUCT_VERSION =  $(MOD_MAJOR_VERSION).$(MOD_MINOR_VERSION).$(MOD_REVISION_VERSION)
+
 LN = /usr/bin/ln
 
 CLOBBERFILES = $(FILES)
