@@ -39,6 +39,7 @@
     <key id="key_newBlankPage"/>
 
     <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;" observes="Editor:Open" />
+    <key id="openremoteeditorkb" xulkey="true" key="&fileopenremote.keybinding;" onkeypress="EditorOpenRemote()" />
     <key id="savekb"        xulkey="true" key="&filesave.keybinding;" observes="Editor:Save"/>
     <key id="closekb"       xulkey="true" key="&fileclose.keybinding;" observes="Editor:Close" />
     <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" observes="Editor:Print" />
@@ -201,6 +202,7 @@
 				</menupopup>
 			</menu>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open"/>
+      <menuitem accesskey="&fileopenremote.accesskey;" value="&openremoteCmd.label;" key="openremoteeditorkb" oncommand="EditorOpenRemote()"/>
       <menuseparator />
       <menuitem accesskey="&fileclose.accesskey;"           key="closekb"        observes="Editor:Close"/>
       <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="Editor:Save"/>
