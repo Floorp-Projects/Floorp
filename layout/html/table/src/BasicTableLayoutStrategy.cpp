@@ -448,27 +448,6 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
   return PR_TRUE;
 }
 
-
-//XXX
- /**********************************************************************************
- Nav4 compatibility code:  if the inner table has a percent width and the outer
- table has an auto width, the parentWidth is the width the containing cell would be 
- without the inner table.
- We can't compute that here in the normal flow of control, because the parent table doesn't know 
- it's cells' sizes. 
- We can keep this logic as is, and do a second pass over the table
- looking for this case and patching it up (an n-squared algorithm in the worse case, though
- probably linear if we do things intelligently.  At best, it's another pass through the
- entire table and all the nested tables.
- OR
- We can write some new code that's smart enough to detect this case and skip over the cell 
- that contains the nested table.  We determine the column width normally (having skipped the cell),
- Then later in reflow, given the column widths, we can compute the cell width, and assign the 
- nested table its correct width.
- Problem with this:  what if the cell containing the nested table is the only cell in the column?
- **********************************************************************************/
-// end XXX
-
 PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(nsIPresContext* aPresContext,
                                                             const nsReflowState& aReflowState,
                                                             nscoord aAvailWidth,
