@@ -44,8 +44,8 @@ MAKE_OBJ_TYPE=DLL
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=zip$(MOZ_BITS)$(VERSION_NUMBER)
-MAPFILE=$(MOD_ZIP).map
+DLLNAME=$(MODULE)
+MAPFILE= $(DLLNAME).map
 
 #//------------------------------------------------------------------------
 #// 
@@ -77,8 +77,6 @@ OBJS=                                   \
 #//------------------------------------------------------------------------
 
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
-MAPFILE= $(MOD_ZIP).map
-
 
 #//------------------------------------------------------------------------
 #//
@@ -106,4 +104,6 @@ export:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
-    
+clobber::
+    $(RM) $(DIST)\bin\$(DLLNAME).dll
+    $(RM) $(DIST)\lib\$(DLLNAME).lib
