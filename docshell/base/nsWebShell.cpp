@@ -569,7 +569,11 @@ nsWebShell::LoadDocument(const char* aURL,
         if(eCharsetReloadRequested != mCharsetReloadState) 
         {
           mCharsetReloadState = eCharsetReloadRequested;
-          LoadURI(NS_ConvertASCIItoUCS2(aURL).get(), LOAD_FLAGS_NONE);
+          LoadURI(NS_ConvertASCIItoUCS2(aURL).get(),  // URI string
+                  LOAD_FLAGS_NONE,                    // Load flags
+                  nsnull,                             // Refering URI
+                  nsnull,                             // Post data stream
+                  nsnull);                            // Header stream
         }
       }
     }
@@ -991,7 +995,11 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
         keywordSpec.Append(NS_ConvertUTF8toUCS2(host));
 
-        return LoadURI(keywordSpec.get(), LOAD_FLAGS_NONE);
+        return LoadURI(keywordSpec.get(), // URI string
+                       LOAD_FLAGS_NONE,   // Load flags
+                       nsnull,            // Refering URI
+                       nsnull,            // Post data stream
+                       nsnull);           // Headers stream
       } // end keywordsEnabled
     }
 
@@ -1026,7 +1034,11 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         if (NS_FAILED(rv)) return rv;
 
         // reload the url
-        return LoadURI(NS_ConvertASCIItoUCS2(host).get(), LOAD_FLAGS_NONE);
+        return LoadURI(NS_ConvertASCIItoUCS2(host).get(), // URI string
+                       LOAD_FLAGS_NONE,                   // Load flags
+                       nsnull,                            // Refering URI
+                       nsnull,                            // Post data stream
+                       nsnull);                           // Header stream
       } // retry
     }
 

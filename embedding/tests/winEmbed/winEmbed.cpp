@@ -305,7 +305,10 @@ nsresult OpenWebPage(const char *url)
         chrome->GetWebBrowser(getter_AddRefs(newBrowser));
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
         return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
-            nsIWebNavigation::LOAD_FLAGS_NONE);
+                               nsIWebNavigation::LOAD_FLAGS_NONE,
+                               nsnull,
+                               nsnull,
+                               nsnull);
     }
 
     return rv;
@@ -641,7 +644,10 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     sizeof(szURL) / sizeof(szURL[0]) - 1);
                 webNavigation->LoadURI(
                     NS_ConvertASCIItoUCS2(szURL).get(),
-                    nsIWebNavigation::LOAD_FLAGS_NONE);
+                    nsIWebNavigation::LOAD_FLAGS_NONE,
+                    nsnull,
+                    nsnull,
+                    nsnull);
             }
             break;
 

@@ -535,7 +535,11 @@ nsMessenger::OpenURL(const char * url)
         nsAutoString urlStr; urlStr.AssignWithConversion(unescapedUrl);
         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
         if(webNav)
-          webNav->LoadURI(urlStr.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+          webNav->LoadURI(urlStr.get(),                       // URI string
+                          nsIWebNavigation::LOAD_FLAGS_NONE,  // Load flags
+                          nsnull,                             // Refering URI
+                          nsnull,                             // Post stream
+                          nsnull);                            // Extra headers
       }
       PL_strfree(unescapedUrl);
     }

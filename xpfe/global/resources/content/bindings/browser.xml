@@ -127,7 +127,7 @@
             if (!aURI)
               aURI = "about:blank";
 
-            this.webNavigation.loadURI(aURI, aFlags);
+            this.webNavigation.loadURI(aURI, aFlags, null, null, null);
           ]]>
         </body>
       </method>

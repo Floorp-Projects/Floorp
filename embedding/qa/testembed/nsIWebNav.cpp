@@ -313,8 +313,11 @@ void CNsIWebNav::LoadUriTest(char *theUrl, const unsigned long theFlag)
 	   break;
    }
 
-   rv =  qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
-						theFlag);
+   rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
+                          theFlag,
+                          nsnull,
+                          nsnull,
+                          nsnull);
    sprintf(theTotalString, "%s%s%s%s%s", "LoadURI(): ", theUrl, " w/ ", theFlagName, " test");
    RvTestResult(rv, theTotalString, 2);
 }
@@ -369,9 +372,12 @@ void CNsIWebNav::StopUriTest(char *theUrl)
 {
    char theTotalString[200];
 
-    qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
-						nsIWebNavigation::LOAD_FLAGS_NONE);
-   rv =  qaWebNav->Stop(nsIWebNavigation::STOP_ALL);
+   qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
+                     nsIWebNavigation::LOAD_FLAGS_NONE,
+                     nsnull,
+                     nsnull,
+                     nsnull);
+   rv = qaWebNav->Stop(nsIWebNavigation::STOP_ALL);
    sprintf(theTotalString, "%s%s%s", "Stop(): ", theUrl, " test");
    RvTestResult(rv, theTotalString, 2);
 }

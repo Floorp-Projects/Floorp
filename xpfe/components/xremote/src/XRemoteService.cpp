@@ -736,10 +736,14 @@ XRemoteService::OpenURL(nsCString &aArgument,
       return NS_ERROR_FAILURE;
     }
 
-    rv = webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
-      
+    rv = webNav->LoadURI(url.get(),
+                         nsIWebNavigation::LOAD_FLAGS_NONE,
+                         nsnull,
+                         nsnull,
+                         nsnull);
+
   }
-  
+
   return rv;
 }
 

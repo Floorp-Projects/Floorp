@@ -75,7 +75,7 @@ function viewSource(url)
 
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
   var viewSrcUrl = "view-source:" + url;
-  getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags);
+  getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
 
   //check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
   if (gPrefs) {

@@ -588,11 +588,19 @@ NS_IMETHODIMP nsWebBrowser::GoForward()
    return mDocShellAsNav->GoForward();
 }
 
-NS_IMETHODIMP nsWebBrowser::LoadURI(const PRUnichar* aURI, PRUint32 aLoadFlags)
+NS_IMETHODIMP nsWebBrowser::LoadURI(const PRUnichar* aURI,
+                                    PRUint32 aLoadFlags,
+                                    nsIURI* aReferingURI,
+                                    nsIInputStream* aPostDataStream,
+                                    nsIInputStream* aExtraHeaderStream)
 {
    NS_ENSURE_STATE(mDocShell);
 
-   return mDocShellAsNav->LoadURI(aURI, aLoadFlags);
+   return mDocShellAsNav->LoadURI(aURI,
+                                  aLoadFlags,
+                                  aReferingURI,
+                                  aPostDataStream,
+                                  aExtraHeaderStream);
 }
 
 NS_IMETHODIMP nsWebBrowser::Reload(PRUint32 aReloadFlags)
@@ -621,6 +629,13 @@ NS_IMETHODIMP nsWebBrowser::GetCurrentURI(nsIURI** aURI)
    NS_ENSURE_STATE(mDocShell);
 
    return mDocShellAsNav->GetCurrentURI(aURI);
+}
+
+NS_IMETHODIMP nsWebBrowser::GetReferingURI(nsIURI** aURI)
+{
+    NS_ENSURE_STATE(mDocShell);
+
+    return mDocShellAsNav->GetReferingURI(aURI);
 }
 
 NS_IMETHODIMP nsWebBrowser::SetSessionHistory(nsISHistory* aSessionHistory)
@@ -1737,6 +1752,7 @@ NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
 {
   return NS_OK;
 }
+
 
 /* helper function */
 nsresult nsWebBrowser::DoPrintOrPrintPreview(nsIDOMWindow *aDOMWindow, 

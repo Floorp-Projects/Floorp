@@ -675,7 +675,7 @@ nsCocoaBrowserListener::SetContainer(id <NSBrowserContainer> aContainer)
                 nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
   }
 
-  nsresult rv = nav->LoadURI(specStr, navFlags);
+  nsresult rv = nav->LoadURI(specStr, navFlags, nsnull, nsnull, nsnull);
   if (NS_FAILED(rv)) {
     // XXX need to throw
   }

@@ -238,7 +238,11 @@ static void MozLoadURL(PtMozillaWidget_t *moz, char *url)
 		return;
 
 	if (moz->MyBrowser->WebNavigation)
-		moz->MyBrowser->WebNavigation->LoadURI(NS_ConvertASCIItoUCS2(url).get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+		moz->MyBrowser->WebNavigation->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
+                                           nsIWebNavigation::LOAD_FLAGS_NONE,
+                                           nsnull,
+                                           nsnull,
+                                           nsnull);
 }
 
 // defaults
@@ -617,7 +621,7 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 
 		case Pt_ARG_MOZ_DOWNLOAD: {
 				moz->MyBrowser->WebBrowserContainer->mSkipOnState = 1; /* ignore nsIWebProgressListener's CWebBrowserContainer::OnStateChange() for a while */
-				moz->MyBrowser->WebNavigation->LoadURI( NS_ConvertASCIItoUCS2( (char*) argt->value ).get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+				moz->MyBrowser->WebNavigation->LoadURI( NS_ConvertASCIItoUCS2( (char*) argt->value ).get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
 
 				if( moz->download_dest ) free( moz->download_dest );
 				moz->download_dest = strdup( (char*)argt->len );

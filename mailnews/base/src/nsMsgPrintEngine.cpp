@@ -317,7 +317,11 @@ nsMsgPrintEngine::FireThatLoadOperation(nsString *uri)
   {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     if (webNav)
-      rv = webNav->LoadURI(uri->get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      rv = webNav->LoadURI(uri->get(),                        // URI string
+                           nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
+                           nsnull,                            // Refering URI
+                           nsnull,                            // Post data
+                           nsnull);                           // Extra headers
   }
 
   if (tString) nsCRT::free(tString);

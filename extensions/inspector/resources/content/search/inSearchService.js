@@ -172,7 +172,7 @@ inSearchService.prototype =
 
   loadModule: function(aURL)
   {
-    this.mWebNav.loadURI(aURL, nsIWebNavigation.LOAD_FLAGS_NONE);
+    this.mWebNav.loadURI(aURL, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
     this.mLoadingURL = aURL;
     /* 
     // This method of loading the xml doesn't work, but it should.  See bug 54237... 

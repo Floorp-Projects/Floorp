@@ -74,7 +74,7 @@ interface nsIDocShellLoadInfo : nsISupports
 	 */
 	 attribute nsISHEntry SHEntry;
 
-  attribute string target; // like _content, _blank etc
+  attribute wstring target; // like _content, _blank etc
 
     attribute nsIInputStream postDataStream;
 };

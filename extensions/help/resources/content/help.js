@@ -200,7 +200,7 @@ function getWebNavigation()
 function loadURI(aURI)
 {
   const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
-  getWebNavigation().loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE);
+  getWebNavigation().loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null ,null, null);
 }
 
 function goBack()

@@ -239,7 +239,8 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
-    result = aDocShell->LoadURI(uri, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
+    result = aDocShell->LoadURI(uri, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE,
+                                nsnull, nsnull, nsnull);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 

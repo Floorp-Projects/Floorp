@@ -633,9 +633,13 @@ NS_METHOD CBrowserShell::Reload()
 
 NS_METHOD CBrowserShell::LoadURL(const nsACString& urlText)
 {
-   nsAutoString unicodeURL;
-   CopyASCIItoUCS2(urlText, unicodeURL);
-   return mWebBrowserAsWebNav->LoadURI(unicodeURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+    nsAutoString unicodeURL;
+    CopyASCIItoUCS2(urlText, unicodeURL);
+    return mWebBrowserAsWebNav->LoadURI(unicodeURL.get(),
+                                        nsIWebNavigation::LOAD_FLAGS_NONE,
+                                        nsnull,
+                                        nsnull,
+                                        nsnull);
 }
 
 NS_METHOD CBrowserShell::GetCurrentURL(nsACString& urlText)

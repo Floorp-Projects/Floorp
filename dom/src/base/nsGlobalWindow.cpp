@@ -1941,9 +1941,16 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
   }
   else
     homeURL = url;
+
+  nsresult rv;
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(webNav->LoadURI(homeURL.get(), nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
+  rv = webNav->LoadURI(homeURL.get(), 
+                       nsIWebNavigation::LOAD_FLAGS_NONE,
+                       nsnull,
+                       nsnull,
+                       nsnull);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   return NS_OK;
 }
 

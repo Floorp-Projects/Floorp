@@ -339,7 +339,11 @@ extern "C" NS_EXPORT int DebugRobot(
       nsAutoString theSpec; theSpec.AssignWithConversion(spec);
       nsCRT::free(spec);
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-      webNav->LoadURI(theSpec.get(), nsIWebNavigation::LOAD_FLAGS_NONE);/* XXX hook up stream listener here! */
+      webNav->LoadURI(theSpec.get(),
+                      nsIWebNavigation::LOAD_FLAGS_NONE,
+                      nsnull,
+                      nsnull,
+                      nsnull);/* XXX hook up stream listener here! */
       while (!g_bReadyForNextUrl) {
         if (yieldProc != NULL) {
           (void)url->GetSpec(&spec);
