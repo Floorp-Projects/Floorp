@@ -1454,7 +1454,9 @@ NS_IMETHODIMP
 nsNntpService::GetCanGetIncomingMessages(PRBool *aCanGetIncomingMessages)
 {
     NS_ENSURE_ARG_POINTER(aCanGetIncomingMessages);
-    *aCanGetIncomingMessages = PR_TRUE;
+    // temporarily returns PR_FALSE because we don't yet support spam
+    // filtering in news.  this will change.
+    *aCanGetIncomingMessages = PR_FALSE;
     return NS_OK;
 } 
 
