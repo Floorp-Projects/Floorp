@@ -80,7 +80,7 @@ protected:
 	TPrPort*	mPrinterPort;
 #endif
 
-friend nsDeviceContextMac;
+friend class nsDeviceContextMac;
 };
 
 #endif
