@@ -198,13 +198,11 @@ nsBidi::nsBidi(PRUint32 aMaxLength, PRUint32 aMaxRunCount)
 nsBidi::~nsBidi()
 {
   Free();
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 void nsBidi::Init()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
   /* reset the object, all pointers NULL, all flags PR_FALSE, all sizes 0 */
   mLength = 0;
   mParaLevel = 0;

@@ -80,9 +80,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidi)
 // Since our class still refer to this two per dll global  leave it here untill
 // we change their code
 
-PRInt32 g_InstanceCount = 0;
-PRInt32 g_LockCount = 0;
-
 static nsModuleComponentInfo components[] =
 {
   { "Unichar Utility", NS_UNICHARUTIL_CID, 

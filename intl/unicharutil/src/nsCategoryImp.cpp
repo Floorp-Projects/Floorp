@@ -33,12 +33,10 @@ NS_IMPL_ISUPPORTS1(nsCategoryImp, nsIUGenCategory);
 nsCategoryImp::nsCategoryImp()
 {
    NS_INIT_REFCNT();
-   PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsCategoryImp::~nsCategoryImp()
 {
-   PR_AtomicDecrement(&g_InstanceCount);
 }
 
 nsresult nsCategoryImp::Get( PRUnichar aChar, nsUGenCategory* oResult)

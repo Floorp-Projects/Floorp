@@ -30,11 +30,9 @@
 nsLWBreakerFImp::nsLWBreakerFImp()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 nsLWBreakerFImp::~nsLWBreakerFImp()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);

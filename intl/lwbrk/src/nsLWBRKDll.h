@@ -25,10 +25,4 @@
 
 #include "prtypes.h"
 
-#define g_InstanceCount lwbrk_g_InstanceCount
-#define g_LockCount lwbrk_g_LockCount
-
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
-
 #endif /* nsLWBRKDll_h___ */

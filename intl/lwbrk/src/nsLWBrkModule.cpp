@@ -27,9 +27,6 @@
 #include "nsLWBreakerFImp.h"
 #include "nsLWBRKDll.h"
 
-PRInt32 g_InstanceCount = 0;
-PRInt32 g_LockCount = 0;
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLWBreakerFImp)
 
 static nsModuleComponentInfo components[] = {

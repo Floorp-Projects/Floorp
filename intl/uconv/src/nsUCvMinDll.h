@@ -25,7 +25,4 @@
 
 #include "prtypes.h"
 
-extern PRInt32 g_InstanceCount;
-extern PRInt32 g_LockCount;
-
 #endif /* nsUCvMinDll_h___ */

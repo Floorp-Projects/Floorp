@@ -117,7 +117,6 @@ nsNativeDetector::nsNativeDetector(PRUint32 aCodePage)
   mCodePage = aCodePage;
   mMultiLanguage = NULL;
   mMLangConvertCharset = NULL;
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 nsNativeDetector::~nsNativeDetector()
@@ -128,7 +127,6 @@ nsNativeDetector::~nsNativeDetector()
   if (NULL != mMLangConvertCharset)
     mMLangConvertCharset->Release();
   CoUninitialize();
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 NS_IMETHODIMP nsNativeDetector::Init(
@@ -208,7 +206,6 @@ nsNativeStringDetector::nsNativeStringDetector(PRUint32 aCodePage)
   NS_INIT_REFCNT();
   mCodePage = aCodePage;
   mMultiLanguage = NULL;
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 nsNativeStringDetector::~nsNativeStringDetector()
@@ -216,7 +213,6 @@ nsNativeStringDetector::~nsNativeStringDetector()
   if (NULL != mMultiLanguage)
     mMultiLanguage->Release();
   CoUninitialize();
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 //----------------------------------------------------------
@@ -265,10 +261,8 @@ public:
      NS_INIT_REFCNT();
      mCodePage = aCodePage;
      mStringBase = stringBase;
-     PR_AtomicIncrement(&g_InstanceCount);
    }
    virtual ~nsNativeDetectorFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
    }
 
    NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
@@ -309,10 +303,6 @@ NS_IMETHODIMP nsNativeDetectorFactory::CreateInstance(
 //--------------------------------------------------------------
 NS_IMETHODIMP nsNativeDetectorFactory::LockFactory(PRBool aLock)
 {
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
   return NS_OK;
 }
 

@@ -28,11 +28,9 @@
 nsSampleWordBreaker::nsSampleWordBreaker()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 nsSampleWordBreaker::~nsSampleWordBreaker()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_IMPL_ISUPPORTS1(nsSampleWordBreaker, nsIWordBreaker);

@@ -312,13 +312,11 @@ nsXPCOMDetector::nsXPCOMDetector(PRUint8 aItems, nsVerifier **aVer, nsEUCStatist
    : nsPSMDetector( aItems, aVer, aStatisticsSet)
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
   mObserver = nsnull;
 }
 //----------------------------------------------------------
 nsXPCOMDetector::~nsXPCOMDetector()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 NS_IMETHODIMP nsXPCOMDetector::Init(
@@ -361,12 +359,10 @@ nsXPCOMStringDetector::nsXPCOMStringDetector(PRUint8 aItems, nsVerifier** aVer, 
    : nsPSMDetector( aItems, aVer, aStatisticsSet)
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 nsXPCOMStringDetector::~nsXPCOMStringDetector()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 void nsXPCOMStringDetector::Report(const char* charset)

@@ -52,9 +52,6 @@
 #include "nsCharsetDetectionAdaptorCID.h"
 #include "nsDocumentCharsetInfoCID.h"
 
-PRInt32 g_InstanceCount = 0;
-PRInt32 g_LockCount = 0;
- 
 //#define INCLUDE_DBGDETECTOR
 #ifdef INCLUDE_DBGDETECTOR
 // for debuging only

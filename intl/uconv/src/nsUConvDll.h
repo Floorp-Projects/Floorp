@@ -25,9 +25,6 @@
 
 #include "nsISupports.h"
 
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
-
 // Factory methods
 
 NS_IMETHODIMP

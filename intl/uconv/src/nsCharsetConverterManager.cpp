@@ -176,14 +176,12 @@ nsCharsetConverterManager::nsCharsetConverterManager()
 :mDataBundle(NULL), mTitleBundle(NULL)
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 
 {
   NS_IF_RELEASE(mDataBundle);
   NS_IF_RELEASE(mTitleBundle);
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 nsresult nsCharsetConverterManager::RegisterConverterManagerData()

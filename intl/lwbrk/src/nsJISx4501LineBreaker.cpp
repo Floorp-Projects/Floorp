@@ -315,11 +315,9 @@ nsJISx4501LineBreaker::nsJISx4501LineBreaker(
 )
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 nsJISx4501LineBreaker::~nsJISx4501LineBreaker()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_IMPL_ISUPPORTS1(nsJISx4501LineBreaker, nsILineBreaker);

@@ -36,12 +36,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsDocumentCharsetInfo, nsIDocumentCharsetInfo);
 nsDocumentCharsetInfo::nsDocumentCharsetInfo() 
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsDocumentCharsetInfo::~nsDocumentCharsetInfo() 
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_IMETHODIMP nsDocumentCharsetInfo::SetForcedCharset(nsIAtom * aCharset)

@@ -430,12 +430,10 @@ nsCaseConversionImp2::nsCaseConversionImp2()
     gLowerMap = new nsCompressedMap(NS_REINTERPRET_CAST(PRUnichar*, &gToLower[0]), gToLowerItems);
   }
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsCaseConversionImp2::~nsCaseConversionImp2()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
   if (--gInit == 0) {
     delete gUpperMap;
     gUpperMap = nsnull;

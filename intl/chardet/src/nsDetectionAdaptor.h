@@ -30,8 +30,6 @@
 static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
 
 class CToken;
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
 
 //--------------------------------------------------------------
 class nsMyObserver : public nsICharsetDetectionObserver
@@ -43,7 +41,6 @@ class nsMyObserver : public nsICharsetDetectionObserver
    nsMyObserver( void )
    {
      NS_INIT_REFCNT();
-     PR_AtomicIncrement(& g_InstanceCount);
      mWebShellSvc = nsnull;
      mNotifyByReload = PR_FALSE;
      mWeakRefDocument = nsnull;
@@ -51,7 +48,6 @@ class nsMyObserver : public nsICharsetDetectionObserver
    }
    virtual  ~nsMyObserver( void )
    {
-     PR_AtomicDecrement(& g_InstanceCount);
      // do not release nor delete mWeakRefDocument
      // do not release nor delete mWeakRefParser
    }

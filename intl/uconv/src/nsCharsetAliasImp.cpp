@@ -63,13 +63,11 @@ NS_IMPL_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias);
 nsCharsetAlias2::nsCharsetAlias2()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
   mDelegate = nsnull; // delay the load of mDelegate untill we need it.
 }
 //--------------------------------------------------------------
 nsCharsetAlias2::~nsCharsetAlias2()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
   if(mDelegate)
      delete mDelegate;
 }

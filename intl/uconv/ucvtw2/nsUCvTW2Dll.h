@@ -25,9 +25,6 @@
 
 #include "prtypes.h"
 
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
-
 extern "C" PRUint16 g_ASCIIMappingTable[] ;
 extern "C" PRUint16 g_ufCNS1MappingTable[];
 extern "C" PRUint16 g_ufCNS2MappingTable[];

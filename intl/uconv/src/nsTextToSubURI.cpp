@@ -43,11 +43,9 @@ public:
 nsTextToSubURI::nsTextToSubURI()
 {
     NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_InstanceCount);
 }
 nsTextToSubURI::~nsTextToSubURI()
 {
-    PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_IMPL_ISUPPORTS1(nsTextToSubURI, nsITextToSubURI)

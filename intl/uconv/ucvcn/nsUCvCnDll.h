@@ -25,8 +25,5 @@
 
 #include "prtypes.h"
 
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
-
 #define g_AsciiMapping ucvcn_g_AsciiMapping
 #endif /* nsUCvCnDll_h___ */
