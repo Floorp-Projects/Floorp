@@ -346,10 +346,10 @@ public class JavaAdapter extends ScriptableObject {
             // If it is a wrapped type, cast to Wrapper and call unwrap()
             cfw.add(ByteCode.DUP);
             cfw.add(ByteCode.INSTANCEOF, "org/mozilla/javascript/Wrapper");
-            // skip 3 for IFEQ, 3 for CHECKCAST, and 3 for INVOKEVIRTUAL
-            cfw.add(ByteCode.IFEQ, 9); 
+            // skip 3 for IFEQ, 3 for CHECKCAST, and 5 for INVOKEINTERFACE
+            cfw.add(ByteCode.IFEQ, 11); 
             cfw.add(ByteCode.CHECKCAST, "org/mozilla/javascript/Wrapper");
-            cfw.add(ByteCode.INVOKEVIRTUAL,
+            cfw.add(ByteCode.INVOKEINTERFACE,
                     "org/mozilla/javascript/Wrapper", 
                     "unwrap", "()", "Ljava/lang/Object;");
             // Now cast to return type
