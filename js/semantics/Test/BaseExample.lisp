@@ -9,6 +9,8 @@
                        ((value $digit-value))))
               (($digit-value integer digit-value digit-char-36)))
        
+       (deftype semantic-exception (oneof syntax-error))
+       
        (%charclass :digit)
        
        (rule :digits ((decimal-value integer)
@@ -17,14 +19,14 @@
            (decimal-value (value :digit))
            ((base-value (base integer))
             (let ((d integer (value :digit)))
-              (if (< d base) d (bottom)))))
+              (if (< d base) d (throw (oneof syntax-error))))))
          (production :digits (:digits :digit) digits-rest
            (decimal-value (+ (* 10 (decimal-value :digits)) (value :digit)))
            ((base-value (base integer))
             (let ((d integer (value :digit)))
               (if (< d base)
                 (+ (* base ((base-value :digits) base)) d)
-                (bottom))))))
+                (throw (oneof syntax-error)))))))
        
        (rule :numeral ((value integer))
          (production :numeral (:digits) numeral-digits
@@ -34,7 +36,7 @@
             (let ((base integer (decimal-value :digits 2)))
               (if (and (>= base 2) (<= base 10))
                 ((base-value :digits 1) base)
-                (bottom))))))
+                (throw (oneof syntax-error)))))))
        (%print-actions)
        )))
   
