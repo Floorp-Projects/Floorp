@@ -492,11 +492,11 @@ char * wallet_GetString(char * szMessage) {
   if (dialog) {
     const nsString message = szMessage;
 #ifdef xxx
+    dialog->PromptPassword(message, password, &retval);
+#else
     /* temporary until PromptPassword is implemented */
     nsString username;
     dialog->PromptUserAndPassword(message, username, password, &retval);
-#else
-    dialog->PromptPassword(message, password, &retval);
 #endif
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
@@ -1689,195 +1689,6 @@ SI_InSequence(char* sequence, int number);
 extern char*
 SI_FindValueInArgs(nsAutoString results, char* name);
 
-#ifdef xxx
-extern void
-SI_MakeDialog(char* S);
-
-#define BUFLEN 50000
-
-void
-wallet_RequestToPrefill(XP_List * list, nsString url) {
-  char *buffer = (char*)PR_Malloc(BUFLEN);
-  PRInt32 g = 0;
-
-  /* generate initial section of html file */
-  g += PR_snprintf(buffer+g, BUFLEN-g,
-"<HTML>\n"
-"<HEAD>\n"
-"  <TITLE>Pre-Filling</TITLE>\n"
-"  <SCRIPT language=\"javascript\" src=\"WalletWindow.js\"></SCRIPT>\n"
-"  <SCRIPT>\n"
-"    index_frame = 0;\n"
-"    title_frame = 1;\n"
-"    list_frame = 2;\n"
-"    button_frame = 3;\n"
-"    var prefillList = [];\n"
-"\n"
-    );
-
-  /* start generating list of fillins */
-  char * heading = Wallet_Localize("FollowingItemsCanBePrefilledForYou");
-  g += PR_snprintf(buffer+g, BUFLEN-g,
-"    function loadFillins(){\n"
-"      top.frames[title_frame].document.open();\n"
-"      top.frames[title_frame].document.write\n"
-"        (\"&nbsp;%s\");\n"
-"      top.frames[title_frame].document.close();\n"
-"\n"
-"      top.frames[list_frame].document.open();\n"
-"      top.frames[list_frame].document.write(\n"
-"        \"<FORM name=fSelectFillin>\" +\n"
-"          \"<BR>\" +\n"
-"          \"<TABLE BORDER=0>\" +\n"
-"            \"<TR>\" +\n"
-"              \"<TD>\" +\n"
-"                \"<BR>\" \n"
-"      )\n",
-    heading);
-  PR_FREEIF(heading);
-
-  /* generate the html for the list of fillins */
-  g += PR_snprintf(buffer+g, BUFLEN-g,
-"      var count;\n"
-"      for (i=1; i<prefillList.length-2; i+=3) {\n"
-"        if(prefillList[i] != 0) {\n"
-"          count = prefillList[i];\n"
-"          top.frames[list_frame].document.write(\n"
-"                \"<TR>\" +\n"
-"                  \"<TD>\" + prefillList[i+1] + \":  </TD>\" +\n"
-"                  \"<TD>\" +\n"
-"                    \"<SELECT>\" \n"
-"          )\n"
-"          count--;\n"
-"        }\n"
-"        top.frames[list_frame].document.write(\n"
-"                      \"<OPTION VALUE=\\\"\"+prefillList[i+1]+\"\\\">\" +\n"
-"                        prefillList[i+2] +\n"
-"                      \"</OPTION>\" \n"
-"        )\n"
-"        if(count == 0) {\n"
-"          top.frames[list_frame].document.write(\n"
-"                      \"<OPTION VALUE=\\\"\"+prefillList[i+1]+\"\\\"></OPTION>\" +\n"
-"                    \"</SELECT><BR>\" +\n"
-"                  \"</TD>\" +\n"
-"                \"</TR>\" \n"
-"          )\n"
-"        }\n"
-"      }\n"
-"      top.frames[list_frame].document.write(\n"
-"              \"</TD>\" +\n"
-"            \"</TR>\" +\n"
-"          \"</TABLE>\" +\n"
-"        \"</FORM>\"\n"
-"      );\n"
-"      top.frames[list_frame].document.close();\n"
-"    };\n"
-"\n"
-    );
-
-/* generate rest of html */
-  char * skipMessage = Wallet_Localize("BypassThisScreen");
-  g += PR_snprintf(buffer+g, BUFLEN-g,
-"    function loadButtons(){\n"
-"      top.frames[button_frame].document.open();\n"
-"      top.frames[button_frame].document.write(\n"
-"        \"<FORM name=buttons>\" +\n"
-"          \"<BR>\" +\n"
-"          \"<INPUT type=CHECKBOX name=skip> %s\" +\n"
-"          \"<BR>\" +\n"
-"          \"<BR>\" +\n"
-"          \"<DIV align=center>\" +\n"
-"            \"<INPUT type=BUTTON value=OK width=80 onclick=parent.Save()>\" +\n"
-"            \" &nbsp;&nbsp;\" +\n"
-"            \"<INPUT type=BUTTON value=Cancel width=80 onclick=parent.DoCancel()>\" +\n"
-"          \"</DIV>\" +\n",
-      skipMessage);
-  PR_FREEIF(skipMessage);
-
-  /* generate remainder of html */
-  char * urlCString;
-  urlCString = url.ToNewCString();
-  g += PR_snprintf(buffer+g, BUFLEN-g,
-"          \"<INPUT TYPE=HIDDEN NAME=fillins VALUE=\\\" \\\" SIZE=-1>\" +\n"
-"          \"<INPUT TYPE=HIDDEN NAME=list VALUE=\\\" \\\" SIZE=-1>\" +\n"
-"          \"<INPUT TYPE=HIDDEN NAME=url VALUE=\\\" \\\" SIZE=-1>\" +\n"
-"        \"</FORM>\"\n"
-"      );\n"
-"      top.frames[button_frame].document.close();\n"
-"    }\n"
-"\n"
-"    function loadFrames(){\n"
-"      StartUp(\"Wallet\");\n"
-"      list = DoGetPrefillList();\n"
-"      BREAK = list[0];\n"
-"      prefillList = list.split(BREAK);\n"
-"      loadFillins();\n"
-"      loadButtons();\n"
-"    }\n"
-"\n"
-"    function Save(){\n"
-"      selname = top.frames[list_frame].document.fSelectFillin;\n"
-"      var list = top.frames[button_frame].document.buttons.list;\n"
-"      var url = top.frames[button_frame].document.buttons.url;\n"
-"      var skip = top.frames[button_frame].document.buttons.skip;\n"
-"      list.value = prefillList[prefillList.length-2];\n"
-"      url.value = \"prefillList[prefillList.length-1]\";\n"
-"      var fillins = top.frames[button_frame].document.buttons.fillins;\n"
-"      fillins.value = \"\";\n"
-"      for (i=0; i<selname.length; i++) {\n"
-"        fillins.value = fillins.value +\n"
-"          selname.elements[i].options[selname.elements[i].selectedIndex].value + \"%s\" +\n"
-"          selname.elements[i].options[selname.elements[i].selectedIndex].text + \"%s\";\n"
-"      }\n"
-"      var result = \"|list|\"+list.value+\"|fillins|\"+fillins.value;\n"
-"      result += \"|url|\"+url.value+\"|skip|\"+skip.checked+\"|\";\n"
-"      DoSave(result);\n"
-"    }\n"
-"\n"
-"  </SCRIPT>\n"
-"</HEAD>\n"
-"<FRAMESET ROWS = 25,25,*,75\n"
-"         BORDER=0\n"
-"         FRAMESPACING=0\n"
-"         onLoad=loadFrames()>\n"
-"  <FRAME SRC=about:blank\n"
-"        NAME=index_frame\n"
-"        SCROLLING=NO\n"
-"        MARGINWIDTH=1\n"
-"        MARGINHEIGHT=1\n"
-"        NORESIZE>\n"
-"  <FRAME SRC=about:blank\n"
-"        NAME=title_frame\n"
-"        SCROLLING=NO\n"
-"        MARGINWIDTH=1\n"
-"        MARGINHEIGHT=1\n"
-"        NORESIZE>\n"
-"    <FRAME SRC=about:blank\n"
-"          NAME=list_frame\n"
-"          SCROLLING=AUTO\n"
-"          MARGINWIDTH=0\n"
-"          MARGINHEIGHT=0\n"
-"          NORESIZE>\n"
-"  <FRAME SRC=about:blank\n"
-"        NAME=button_frame\n"
-"        SCROLLING=NO\n"
-"        MARGINWIDTH=1\n"
-"        MARGINHEIGHT=1\n"
-"        NORESIZE>\n"
-"</FRAMESET>\n"
-"\n"
-"<NOFRAMES>\n"
-"  <BODY> <BR> </BODY>\n"
-"</NOFRAMES>\n"
-"</HTML>\n",
-    SEPARATOR, SEPARATOR);
-  delete []urlCString;
-
-  SI_MakeDialog(buffer);
-  PR_FREEIF(buffer);
-}
-#endif
-
 #define WALLET_EDITOR_NAME "walleted.html"
 // bad!!! should pass the above URL as parameter to wallet_PostEdit
 #define BREAK '\001'
@@ -2421,9 +2232,6 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
     /* let user preview and verify the prefills first */
     wallet_list = wallet_PrefillElement_list;
     wallet_url = url;
-#ifdef xxx
-    wallet_RequestToPrefill(wallet_PrefillElement_list, url);
-#endif
 #ifdef DEBUG
 wallet_DumpStopwatch();
 wallet_ClearStopwatch();

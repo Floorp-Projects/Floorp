@@ -209,11 +209,11 @@ si_PromptPassword (char *szMessage) {
   if (dialog) {
     const nsString message = szMessage;
 #ifdef xxx
+    dialog->PromptPassword(message, password, &retval);
+#else
     /* temporary until PromptPassword is implemented */
     nsString username;
     dialog->PromptUserAndPassword(message, username, password, &retval);
-#else
-    dialog->PromptPassword(message, password, &retval);
 #endif
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
@@ -238,11 +238,11 @@ si_Prompt(char *szMessage, char* szDefaultUsername) {
   if (dialog) {
     const nsString message = szMessage;
 #ifdef xxx
+    dialog->Prompt(message, defaultUsername, username, &retval);
+#else
     /* temporary until Prompt is implemented */
     nsString password;
-    dialog->PromptUser(message, username, password, &retval);
-#else
-    dialog->Prompt(message, defaultUsername, username, &retval);
+    dialog->PromptUserAndPassword(message, username, password, &retval);
 #endif
   }
   nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
