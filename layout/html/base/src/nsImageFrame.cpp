@@ -963,7 +963,12 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   //  in Paginated mode, we need to have a constrained height, and have a height larger than our available height
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
-  if ((isPaginated) && 
+  PRUint32 loadStatus = imgIRequest::STATUS_NONE;
+  if (mLoads[0].mRequest) {
+    mLoads[0].mRequest->GetImageStatus(&loadStatus);
+  }
+  if (isPaginated &&
+      ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || mSizeConstrained) &&
       (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && 
       (aMetrics.height > aReflowState.availableHeight)) { 
     nsCOMPtr<nsIAtom> fType;
