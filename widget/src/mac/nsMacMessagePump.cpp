@@ -812,6 +812,8 @@ extern const PRInt16 kAppleMenuID;	// Danger Will Robinson!!! - this currently r
 			::OpenDeskAcc(daName);
 #endif
 			::SetPort(savePort);
+			HiliteMenu(0);
+			return;
 		}
 	}
 	// Note that we still give Raptor a shot at the event as it will eventually
