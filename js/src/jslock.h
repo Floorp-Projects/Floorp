@@ -117,7 +117,8 @@ typedef struct JSFatLockTable {
 
 #define SET_SCOPE_INFO(scope_,file_,line_)                                    \
     ((scope_)->ownercx ? (void)0 :                                            \
-     (JS_ASSERT((scope_)->u.count > 0 && (scope_)->u.count <= 4),             \
+     (JS_ASSERT((0 < (scope_)->u.count && (scope_)->u.count <= 4) ||          \
+                SCOPE_IS_SEALED(scope_)),                                     \
       (void)((scope_)->file[(scope_)->u.count-1] = (file_),                   \
              (scope_)->line[(scope_)->u.count-1] = (line_))))
 #endif /* DEBUG */
