@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brian Ryner <bryner@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -38,11 +39,6 @@
 #include "nsLookAndFeel.h"
 #include <gtk/gtkinvisible.h>
 
-#include "nsXPLookAndFeel.h"
-
-  // for |#ifdef DEBUG|
-#include "nsSize.h"
-
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
 
@@ -56,24 +52,19 @@ nscolor nsLookAndFeel::sButtonOuterLightBorder = 0;
 nscolor nsLookAndFeel::sButtonInnerDarkBorder = 0;
 PRBool nsLookAndFeel::sColorsInitialized = PR_FALSE;
 
-NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
-
 //-------------------------------------------------------------------------
 //
 // Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsLookAndFeel::nsLookAndFeel()
+nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
-  NS_INIT_REFCNT();
   mWidget = gtk_invisible_new();
   gtk_widget_ensure_style(mWidget);
   mStyle = gtk_widget_get_style(mWidget);
 
   if (!sColorsInitialized)
     InitColors();
-
-  (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
 
 nsLookAndFeel::~nsLookAndFeel()
@@ -82,17 +73,9 @@ nsLookAndFeel::~nsLookAndFeel()
   gtk_widget_unref(mWidget);
 }
 
-NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
+nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor& aColor)
 {
   nsresult res = NS_OK;
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetColor(aID, aColor);
-    if (NS_SUCCEEDED(res))
-      return res;
-    res = NS_OK;
-  }
-
   aColor = 0; // default color black
 
   switch (aID) {
@@ -280,13 +263,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
   nsresult res = NS_OK;
 
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetMetric(aID, aMetric);
-    if (NS_SUCCEEDED(res))
-      return res;
-    res = NS_OK;
-  }
+  res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  if (NS_SUCCEEDED(res))
+    return res;
+  res = NS_OK;
 
   switch (aID) {
   case eMetric_WindowTitleHeight:
@@ -394,14 +374,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
   nsresult res = NS_OK;
-
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetMetric(aID, aMetric);
-    if (NS_SUCCEEDED(res))
-      return res;
-    res = NS_OK;
-  }
+  res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  if (NS_SUCCEEDED(res))
+    return res;
+  res = NS_OK;
 
   switch (aID) {
   case eMetricFloat_TextFieldVerticalInsidePadding:
@@ -505,22 +481,3 @@ nsLookAndFeel::InitColors()
   gtk_widget_destroy(window);
 
 }
-
-#ifdef NS_DEBUG
-NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
-                                        const nsMetricNavFontID   aFontID, 
-                                        const PRInt32             aFontSize, 
-                                        nsSize &aSize)
-{
-  if (mXPLookAndFeel)
-  {
-    nsresult rv = mXPLookAndFeel->GetNavSize(aWidgetID, aFontID, aFontSize, aSize);
-    if (NS_SUCCEEDED(rv))
-      return rv;
-  }
-
-  aSize.width  = 0;
-  aSize.height = 0;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-#endif

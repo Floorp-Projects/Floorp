@@ -39,9 +39,13 @@
 #define __nsXPLookAndFeel
 
 #include "nsILookAndFeel.h"
-
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
+
+class nsIPref;
+
+#ifdef NS_DEBUG
+struct nsSize;
+#endif
 
 typedef enum {
   nsLookAndFeelTypeInt,
@@ -67,14 +71,13 @@ struct nsLookAndFeelFloatPref
   float floatVar;
 };
 
-struct nsLookAndFeelColorPref
-{
-  char* name;
-  nsILookAndFeel::nsColorID id;
-  PRPackedBool isSet;
-  nsLookAndFeelType type;
-  nscolor colorVar;
-};
+#define CACHE_BLOCK(x)     ((x) >> 5)
+#define CACHE_BIT(x)       (1 << ((x) & 31))
+
+#define COLOR_CACHE_SIZE   (CACHE_BLOCK(nsILookAndFeel::eColor_LAST_COLOR) + 1)
+#define IS_COLOR_CACHED(x) (CACHE_BIT(x) & nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)])
+#define CACHE_COLOR(x, y)  nsXPLookAndFeel::sCachedColors[(x)] = y; \
+              nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)] |= CACHE_BIT(x);
 
 class nsXPLookAndFeel: public nsILookAndFeel
 {
@@ -106,13 +109,17 @@ public:
 protected:
   nsresult InitFromPref(nsLookAndFeelIntPref* aPref, nsIPref* aPrefService);
   nsresult InitFromPref(nsLookAndFeelFloatPref* aPref, nsIPref* aPrefService);
-  nsresult InitFromPref(nsLookAndFeelColorPref* aPref, nsIPref* aPrefService);
+  nsresult InitColorFromPref(PRInt32 aIndex, nsIPref* aPrefService);
+  virtual nsresult NativeGetColor(const nsColorID aID, nscolor& aColor) = 0;
 
   static PRBool sInitialized;
-
   static nsLookAndFeelIntPref sIntPrefs[];
   static nsLookAndFeelFloatPref sFloatPrefs[];
-  static nsLookAndFeelColorPref sColorPrefs[];
+  static char* sColorPrefs[];
+  static PRInt32 sCachedColors[nsILookAndFeel::eColor_LAST_COLOR];
+  static PRInt32 sCachedColorBits[COLOR_CACHE_SIZE];
+
+  friend int colorPrefChanged(const char* aPref, void* aData);
 };
 
 extern nsresult NS_NewXPLookAndFeel(nsILookAndFeel**);

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -41,33 +41,20 @@
 #define INCL_WIN
 #include <os2.h>
 #include "nsLookAndFeel.h"
-#include "nsXPLookAndFeel.h"
 #include "nsFont.h"
 #include "nsSize.h"
  
-NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
-
-nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
+nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
-  NS_INIT_REFCNT();
-
-  (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
 
 nsLookAndFeel::~nsLookAndFeel()
 {
 }
 
-NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
+nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetColor(aID, aColor);
-    if (NS_SUCCEEDED(res))
-      return res;
-    res = NS_OK;
-  }
 
   int idx;
   switch (aID) {
@@ -225,15 +212,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
-  nsresult res = NS_OK;
-
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetMetric(aID, aMetric);
-    if (NS_SUCCEEDED(res))
+  nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  if (NS_SUCCEEDED(res))
       return res;
-    res = NS_OK;
-  }
+  res = NS_OK;
 
   switch (aID) {
     case eMetric_WindowTitleHeight:
@@ -325,15 +307,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
-  nsresult res = NS_OK;
-
-  if (mXPLookAndFeel)
-  {
-    res = mXPLookAndFeel->GetMetric(aID, aMetric);
-    if (NS_SUCCEEDED(res))
-      return res;
-    res = NS_OK;
-  }
+  nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
+  if (NS_SUCCEEDED(res))
+    return res;
+  res = NS_OK;
 
   switch (aID) {
     case eMetricFloat_TextFieldVerticalInsidePadding:
@@ -375,12 +352,10 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                                         const PRInt32             aFontSize, 
                                         nsSize &aSize)
 {
-  if (mXPLookAndFeel)
-  {
-    nsresult rv = mXPLookAndFeel->GetNavSize(aWidgetID, aFontID, aFontSize, aSize);
-    if (NS_SUCCEEDED(rv))
+  nsresult rv = nsXPLookAndFeel::GetNavSize(aWidgetID, aFontID, aFontSize,
+                                            aSize);
+  if (NS_SUCCEEDED(rv))
       return rv;
-  }
 
   aSize.width  = 0;
   aSize.height = 0;

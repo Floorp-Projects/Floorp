@@ -35,8 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+static int colorPrefChanged(const char* aPref, void* aData);
+
 #include "nsXPLookAndFeel.h"
 #include "nsIServiceManager.h"
+#include "nsIPref.h"
+
+#ifdef NS_DEBUG
+#include "nsSize.h"
+#endif
  
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -101,122 +108,71 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =
     PR_FALSE, nsLookAndFeelTypeFloat, 0 },
 };
 
-nsLookAndFeelColorPref nsXPLookAndFeel::sColorPrefs[] =
+
+// This array MUST be kept in the same order as the color list in nsILookAndFeel.h.
+
+char* nsXPLookAndFeel::sColorPrefs[] =
 {
-  { "ui.windowBackground",
-    eColor_WindowBackground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.windowForeground",
-    eColor_WindowForeground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.widgetBackground",
-    eColor_WidgetBackground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.widgetForeground",
-    eColor_WidgetForeground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.widgetSelectBackground",
-    eColor_WidgetSelectBackground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.widgetSelectForeground",
-    eColor_WidgetSelectForeground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.widget3DHighlight",
-    eColor_Widget3DHighlight, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.widget3DShadow",
-    eColor_Widget3DShadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.textBackground",
-    eColor_TextBackground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.textForeground",
-    eColor_TextForeground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.textSelectBackground",
-    eColor_TextSelectBackground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.textSelectForeground",
-    eColor_TextSelectForeground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.activeborder",
-    eColor_activeborder, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.activecaption",
-    eColor_activecaption, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.appworkspace",
-    eColor_appworkspace, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.background",
-    eColor_background, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.captiontext",
-    eColor_captiontext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.graytext",
-    eColor_graytext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.highlight",
-    eColor_highlight, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.highlighttext",
-    eColor_highlighttext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.inactiveborder",
-    eColor_inactiveborder, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.inactivecaption",
-    eColor_inactivecaption, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.inactivecaptiontext",
-    eColor_inactivecaptiontext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.infobackground",
-    eColor_infobackground, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.infotext",
-    eColor_infotext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.menu",
-    eColor_menu, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.menutext",
-    eColor_menutext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.scrollbar",
-    eColor_scrollbar, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.threedface",
-    eColor_threedface, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.buttonface",
-    eColor_buttonface, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.buttonhighlight",
-    eColor_buttonhighlight, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.threedhighlight",
-    eColor_threedhighlight, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.buttontext",
-    eColor_buttontext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.buttonshadow",
-    eColor_buttonshadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.threeddarkshadow",
-    eColor_threeddarkshadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.threedshadow",
-    eColor_threedshadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.threedlightshadow",
-    eColor_threedlightshadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.window",
-    eColor_window, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.windowframe",
-    eColor_windowframe, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.windowtext",
-    eColor_windowtext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-field",
-    eColor__moz_field, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-fieldtext",
-    eColor__moz_fieldtext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-dialog",
-    eColor__moz_dialog, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-dialogtext",
-    eColor__moz_dialogtext, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-dragtargetzone",
-    eColor__moz_dragtargetzone, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-mac-focusring",
-    eColor__moz_mac_focusring, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-mac-menuselect",
-    eColor__moz_mac_menuselect, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-mac-menushadow",
-    eColor__moz_mac_menushadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },
-  { "ui.-moz-mac-menutextselect",
-    eColor__moz_mac_menutextselect, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },     
-  { "ui.-moz-mac-accentlightesthighlight",
-    eColor__moz_mac_accentlightesthighlight, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },       
-  { "ui.-moz-mac-accentregularhighlight",
-    eColor__moz_mac_accentregularhighlight, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },  
-  { "ui.-moz-mac-accentface",
-    eColor__moz_mac_accentface, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },  
-  { "ui.-moz-mac-accentlightshadow",
-    eColor__moz_mac_accentlightshadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },  
-  { "ui.-moz-mac-accentregularshadow",
-    eColor__moz_mac_accentregularshadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },  
-  { "ui.-moz-mac-accentdarkshadow",
-    eColor__moz_mac_accentdarkshadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },  
-  { "ui.-moz-mac-accentdarkestshadow",
-    eColor__moz_mac_accentdarkestshadow, PR_FALSE, nsLookAndFeelTypeColor, (nscolor)0 },  
-        
+  "ui.windowBackground",
+  "ui.windowForeground",
+  "ui.widgetBackground",
+  "ui.widgetForeground",
+  "ui.widgetSelectBackground",
+  "ui.widgetSelectForeground",
+  "ui.widget3DHighlight",
+  "ui.widget3DShadow",
+  "ui.textBackground",
+  "ui.textForeground",
+  "ui.textSelectBackground",
+  "ui.textSelectForeground",
+  "ui.activeborder",
+  "ui.activecaption",
+  "ui.appworkspace",
+  "ui.background",
+  "ui.buttonface",
+  "ui.buttonhighlight",
+  "ui.buttonshadow",
+  "ui.buttontext",
+  "ui.captiontext",
+  "ui.graytext",
+  "ui.highlight",
+  "ui.highlighttext",
+  "ui.inactiveborder",
+  "ui.inactivecaption",
+  "ui.inactivecaptiontext",
+  "ui.infobackground",
+  "ui.infotext",
+  "ui.menu",
+  "ui.menutext",
+  "ui.scrollbar",
+  "ui.threeddarkshadow",
+  "ui.threedface",
+  "ui.threedhighlight",
+  "ui.threedlightshadow",
+  "ui.threedshadow",
+  "ui.window",
+  "ui.windowframe",
+  "ui.windowtext",
+  "ui.-moz-field",
+  "ui.-moz-fieldtext",
+  "ui.-moz-dialog",
+  "ui.-moz-dialogtext",
+  "ui.-moz-dragtargetzone",
+  "ui.-moz-mac-focusring",
+  "ui.-moz-mac-menuselect",
+  "ui.-moz-mac-menushadow",
+  "ui.-moz-mac-menutextselect",
+  "ui.-moz-mac-accentlightesthighlight",
+  "ui.-moz-mac-accentregularhighlight",
+  "ui.-moz-mac-accentface",
+  "ui.-moz-mac-accentlightshadow",
+  "ui.-moz-mac-accentregularshadow",
+  "ui.-moz-mac-accentdarkshadow",
+  "ui.-moz-mac-accentdarkestshadow"
 };
+
+PRInt32 nsXPLookAndFeel::sCachedColors[nsILookAndFeel::eColor_LAST_COLOR] = {0};
+PRInt32 nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
 PRBool nsXPLookAndFeel::sInitialized = PR_FALSE;
 
@@ -275,29 +231,21 @@ static int PR_CALLBACK floatPrefChanged (const char *newpref, void *data)
 
 static int PR_CALLBACK colorPrefChanged (const char *newpref, void *data)
 {
-  nsLookAndFeelColorPref* np = (nsLookAndFeelColorPref*)data;
-  if (np)
-  {
-    nsresult rv;
-    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
-    if (NS_SUCCEEDED(rv) && prefService)
-    {
-      char *colorStr = 0;
-      rv = prefService->CopyCharPref(np->name, &colorStr);
-      if (NS_SUCCEEDED(rv) && colorStr[0])
-      {
-        nsString colorNSStr; colorNSStr.AssignWithConversion(colorStr);
-        nscolor thecolor;
-        if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
-        {
-          np->isSet = PR_TRUE;
-          np->colorVar = (nscolor)thecolor;
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
+  if (NS_SUCCEEDED(rv) && prefService) {
+    nsXPIDLCString colorStr;
+    rv = prefService->CopyCharPref(newpref, getter_Copies(colorStr));
+    if (NS_SUCCEEDED(rv) && colorStr[0]) {
+      nscolor thecolor;
+      if (NS_SUCCEEDED(NS_ColorNameToRGB(NS_ConvertASCIItoUCS2(colorStr),
+                                         &thecolor))) {
+        PRInt32 id = (PRInt32) data;
+        CACHE_COLOR(id, thecolor);
 #ifdef DEBUG_akkana
-          printf("====== Changed color pref %s to 0x%lx\n",
-                 np->name, (long)np->colorVar);
+        printf("====== Changed color pref %s to 0x%lx\n",
+               newpref, thecolor);
 #endif
-        }
-        PL_strfree(colorStr);
       }
     }
   }
@@ -333,23 +281,22 @@ nsXPLookAndFeel::InitFromPref(nsLookAndFeelFloatPref* aPref, nsIPref* aPrefServi
 }
 
 nsresult
-nsXPLookAndFeel::InitFromPref(nsLookAndFeelColorPref* aPref, nsIPref* aPrefService)
+nsXPLookAndFeel::InitColorFromPref(PRInt32 i, nsIPref* aPrefService)
 {
   char *colorStr = 0;
-  nsresult rv = aPrefService->CopyCharPref(aPref->name, &colorStr);
+  nsresult rv = aPrefService->CopyCharPref(sColorPrefs[i], &colorStr);
   if (NS_SUCCEEDED(rv) && colorStr[0])
   {
     nsAutoString colorNSStr; colorNSStr.AssignWithConversion(colorStr);
     nscolor thecolor;
     if (NS_SUCCEEDED(NS_ColorNameToRGB(colorNSStr, &thecolor)))
     {
-      aPref->isSet = PR_TRUE;
-      aPref->colorVar = (nscolor)thecolor;
+      CACHE_COLOR(i, thecolor);
       PL_strfree(colorStr);
     }
   }
 
-  aPrefService->RegisterCallback(aPref->name, colorPrefChanged, aPref);
+  aPrefService->RegisterCallback(sColorPrefs[i], colorPrefChanged, (void*)i);
   return rv;
 }
 
@@ -378,8 +325,8 @@ nsXPLookAndFeel::Init()
   for (i = 0; i < ((sizeof (sFloatPrefs) / sizeof (*sFloatPrefs))); ++i)
     InitFromPref(&sFloatPrefs[i], prefService);
 
-  for (i = 0; i < ((sizeof (sColorPrefs) / sizeof (*sColorPrefs))); ++i)
-    InitFromPref(&sColorPrefs[i], prefService);
+  for (i = 0; i < (sizeof(sColorPrefs) / sizeof (*sColorPrefs)); ++i)
+    InitColorFromPref(i, prefService);
 }
 
 nsXPLookAndFeel::~nsXPLookAndFeel()
@@ -478,12 +425,15 @@ NS_IMETHODIMP nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   }
 #endif // DEBUG_SYSTEM_COLOR_USE
 
-  for (unsigned int i = 0; i < ((sizeof (sIntPrefs) / sizeof (*sIntPrefs))); ++i)
-    if (sColorPrefs[i].isSet && (sColorPrefs[i].id == aID))
-    {
-      aColor = sColorPrefs[i].colorVar;
-      return NS_OK;
-    }
+  if (IS_COLOR_CACHED(aID)) {
+    aColor = sCachedColors[aID];
+    return NS_OK;
+  }
+
+  if (NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
+    CACHE_COLOR(aID, aColor);
+    return NS_OK;
+  }
 
   return NS_ERROR_NOT_AVAILABLE;
 }
@@ -530,20 +480,8 @@ nsXPLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                             const PRInt32             aFontSize, 
                             nsSize &aSize)
 {
-  return NS_ERROR_NOT_AVAILABLE;
+  aSize.width  = 0;
+  aSize.height = 0;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
-
-nsresult
-NS_NewXPLookAndFeel(nsILookAndFeel** aXPLookAndFeel)
-{
-  if (!aXPLookAndFeel)
-    return NS_ERROR_INVALID_ARG;
-  *aXPLookAndFeel = new nsXPLookAndFeel;
-  if (!*aXPLookAndFeel)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aXPLookAndFeel);
-  return NS_OK;
-}
-
-
