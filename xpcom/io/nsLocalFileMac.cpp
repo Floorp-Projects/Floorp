@@ -1254,7 +1254,7 @@ nsLocalFile::SetLeafName(const char * aLeafName)
 			if (mAppendedPath.Length())
 			{	// Lop off the end of the appended path and replace it with the new leaf name
 				PRInt32 offset = mAppendedPath.RFindChar(':');
-				if (offset)
+				if (offset || ((!offset) && (1 < mAppendedPath.Length())))
 				{
 					mAppendedPath.Truncate(offset + 1);
 				}
