@@ -1718,7 +1718,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         if (slots != null) {
             int start = (index & 0x7fffffff) % slots.length;
             int i = start;
-            do {
+            for (;;) {
                 Slot slot = slots[i];
                 if (slot == null)
                     break;
@@ -1730,7 +1730,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 }
                 if (++i == slots.length)
                     i = 0;
-            } while (i != start);
+                if (i == start)
+                    throw new IllegalStateException();
+            }
         }
         return -1;
     }
@@ -1755,13 +1757,14 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     // Must be inside synchronized (this)
-    private Slot addSlotImpl(String id, int index, Slot newSlot) {
+    private Slot addSlotImpl(String id, int index, Slot newSlot)
+    {
         int start = (index & 0x7fffffff) % slots.length;
         int i = start;
-        do {
+        for (;;) {
             Slot slot = slots[i];
             if (slot == null || slot == REMOVED) {
-                if ((4 * (count+1)) > (3 * slots.length)) {
+                if ((4 * (count + 1)) > (3 * slots.length)) {
                     grow();
                     return addSlotImpl(id, index, newSlot);
                 }
@@ -1780,10 +1783,11 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
             if (++i == slots.length)
                 i = 0;
-        } while (i != start);
-        // Unreachable code
-        if (Context.check) Kit.codeBug();
-        return null;
+            if (i == start) {
+                // slots should never be full or bug in grow code
+                throw new IllegalStateException();
+            }
+        }
     }
 
     /**
@@ -1966,7 +1970,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         transient byte wasDeleted;
     }
 
-    static class GetterSlot extends Slot
+    private static class GetterSlot extends Slot
     {
         Object delegateTo;
         MemberBox getter;
