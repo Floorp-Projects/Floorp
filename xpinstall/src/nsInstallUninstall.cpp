@@ -92,16 +92,16 @@ void nsInstallUninstall::Abort()
 {
 }
 
-PRUnichar* nsInstallUninstall::toString()
+char* nsInstallUninstall::toString()
 {
-    PRUnichar* buffer = new PRUnichar[1024];
+    char* buffer = new char[1024];
     
     if (buffer == nsnull)
         return buffer;
     
-    PRUnichar* temp = (PRUnichar *)mUIName.ToNewCString();
+    char* temp = mUIName.ToNewCString();
     
-    sprintf( (char *)buffer, nsInstallResources::GetUninstallString(), (char *)temp);
+    sprintf( buffer, nsInstallResources::GetUninstallString(), temp);
     
     if (temp)
         delete [] temp;

@@ -714,10 +714,10 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         if (ie == NULL)
             continue;
     
-        PRUnichar *objString = ie->toString();
+        char *objString = ie->toString();
         
         if (mNotifier)
-            mNotifier->FinalizeProgress(objString,
+            mNotifier->FinalizeProgress(nsAutoString(objString).GetUnicode(),
                                         i, mInstalledFiles->GetSize());
 
         if (objString)
@@ -1685,12 +1685,12 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
 {
     PRInt32 error = nsInstall::SUCCESS;
 
-    PRUnichar *objString = ob->toString();
+    char *objString = ob->toString();
 
     // flash current item
 
     if (mNotifier)
-        mNotifier->ItemScheduled(objString);
+        mNotifier->ItemScheduled(nsAutoString(objString).GetUnicode());
 
 
     // do any unpacking or other set-up

@@ -100,11 +100,11 @@ PRInt32 nsWinRegItem::Complete()
 #define kSRV "Store Registry Value "
 #define kUNK "Unknown "
 
-PRUnichar* nsWinRegItem::toString()
+char* nsWinRegItem::toString()
 {
 	nsString* keyString = nsnull;
 	nsString* result    = nsnull;
-    PRUnichar*     resultCString = nsnull;
+    char*     resultCString = nsnull;
 
 	switch(mCommand)
 	{
@@ -136,7 +136,7 @@ PRUnichar* nsWinRegItem::toString()
     if (result)
     {
         result->Append(*keyString);
-        resultCString = (PRUnichar *)result->ToNewCString();
+        resultCString = result->ToNewCString();
     }
     
     if (keyString) delete keyString;

@@ -302,15 +302,15 @@ void nsInstallPatch::Abort()
     }
 }
 
-PRUnichar* nsInstallPatch::toString()
+char* nsInstallPatch::toString()
 {
-	PRUnichar* buffer = new PRUnichar[1024];
+	char* buffer = new char[1024];
     
     if (buffer == nsnull)
         return buffer;
 
     if (mTargetFile != nsnull) 
-        sprintf( (char *)buffer, nsInstallResources::GetPatchFileString(), mTargetFile->GetCString()); 
+        sprintf( buffer, nsInstallResources::GetPatchFileString(), mTargetFile->GetCString()); 
 
 	return buffer;
 }
