@@ -697,7 +697,9 @@ nsDocShell::LoadStream(nsIInputStream * aStream, nsIURI * aURI,
     // build up a channel for this stream.
     nsCOMPtr<nsIChannel> channel;
     NS_ENSURE_SUCCESS(NS_NewInputStreamChannel
-                      (getter_AddRefs(channel), uri, aStream, aContentType,
+                      (getter_AddRefs(channel), uri, aStream,
+                       nsDependentCString(aContentType),
+                       NS_LITERAL_CSTRING(""),
                        aContentLen), NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIURILoader>
@@ -3332,7 +3334,7 @@ nsDocShell::RefreshURI(nsIURI * aURI, PRInt32 aDelay, PRBool aRepeat, PRBool aMe
 
 nsresult
 nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
-                                      const nsAReadableString & aHeader)
+                                      const nsACString & aHeader)
 {
     // Refresh headers are parsed with the following format in mind
     // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
@@ -3373,10 +3375,10 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
 
     // when done, seconds is 0 or the given number of seconds
     //            uriAttrib is empty or the URI specified
-    nsAutoString uriAttrib;
+    nsCAutoString uriAttrib;
     PRInt32 seconds = 0;
 
-    nsReadingIterator < PRUnichar > iter, tokenStart, doneIterating;
+    nsACString::const_iterator iter, tokenStart, doneIterating;
 
     aHeader.BeginReading(iter);
     aHeader.EndReading(doneIterating);
@@ -3511,13 +3513,12 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
         if (NS_SUCCEEDED(rv)) {
             SetReferrerURI(referrer);
 
-            nsXPIDLCString refreshHeader;
-            rv = httpChannel->GetResponseHeader("refresh",
-                                                getter_Copies(refreshHeader));
+            nsCAutoString refreshHeader;
+            rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("refresh"),
+                                                refreshHeader);
 
-            if (refreshHeader)
-                rv = SetupRefreshURIFromHeader(mCurrentURI,
-                                                NS_ConvertUTF8toUCS2(refreshHeader));
+            if (!refreshHeader.IsEmpty())
+                rv = SetupRefreshURIFromHeader(mCurrentURI, refreshHeader);
         }
     }
     return rv;
@@ -4899,7 +4900,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
         // FINALLY: we can set the header!
         // 
 
-        rv = aChannel->SetRequestHeader(headerName.get(), headerValue.get());
+        rv = aChannel->SetRequestHeader(headerName, headerValue);
         if (NS_FAILED(rv)) {
             return NS_ERROR_NULL_POINTER;
         }

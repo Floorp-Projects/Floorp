@@ -26,7 +26,7 @@
 
 #include "nsHttpHeaderArray.h"
 #include "nsHttp.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpRequestHead represents the request line and headers from an HTTP
@@ -43,15 +43,15 @@ public:
     void SetVersion(nsHttpVersion version) { mVersion = version; }
     void SetRequestURI(const char *s) { mRequestURI.Adopt(s ? nsCRT::strdup(s) : 0); }
 
-    nsHttpHeaderArray &Headers()    { return mHeaders; }
-    nsHttpAtom         Method()     { return mMethod; }
-    nsHttpVersion      Version()    { return mVersion; }
-    const char        *RequestURI() { return mRequestURI; }
+    nsHttpHeaderArray    &Headers()    { return mHeaders; }
+    nsHttpAtom            Method()     { return mMethod; }
+    nsHttpVersion         Version()    { return mVersion; }
+    const nsAFlatCString &RequestURI() { return mRequestURI; }
 
-    const char *PeekHeader(nsHttpAtom h)            { return mHeaders.PeekHeader(h); }
-    nsresult SetHeader(nsHttpAtom h, const char *v) { return mHeaders.SetHeader(h, v); }
-    nsresult GetHeader(nsHttpAtom h, char **v)      { return mHeaders.GetHeader(h, v); }
-    void ClearHeaders()                             { mHeaders.Clear(); }
+    const char *PeekHeader(nsHttpAtom h)                  { return mHeaders.PeekHeader(h); }
+    nsresult SetHeader(nsHttpAtom h, const nsACString &v) { return mHeaders.SetHeader(h, v); }
+    nsresult GetHeader(nsHttpAtom h, nsACString &v)       { return mHeaders.GetHeader(h, v); }
+    void ClearHeaders()                                   { mHeaders.Clear(); }
 
     void Flatten(nsACString &, PRBool pruneProxyHeaders = PR_FALSE);
 
@@ -59,7 +59,7 @@ private:
     nsHttpHeaderArray mHeaders;
     nsHttpAtom        mMethod;
     nsHttpVersion     mVersion;
-    nsXPIDLCString    mRequestURI;
+    nsCString         mRequestURI;
 };
 
 #endif // nsHttpRequestHead_h__

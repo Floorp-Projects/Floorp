@@ -50,19 +50,20 @@ typedef unsigned long nsLoadFlags;
 interface nsIRequest : nsISupports
 {
     /**
-     * Returns the name of the request.  Often this is the URL of the request.
+     * The name of the request.  Often this is the URI of the request.
      */
-    readonly attribute wstring name;
+    readonly attribute AUTF8String name;
 
     /**
-     * Returns true if the request is pending (active).  Returns false 
-     * after completion or successful calling Cancel.  Suspended requests
-     * are still considered pending.
+     * @return TRUE if the request has yet to reach completion.
+     * @return FALSE if the request has reached completion (e.g., after
+     *   OnStopRequest has fired).
+     * Suspended requests are still considered pending.
      */
     boolean isPending();
 
     /**
-     * Returns any error status associated with the request.
+     * The error status associated with the request.
      */
     readonly attribute nsresult status;
 
@@ -72,33 +73,48 @@ interface nsIRequest : nsISupports
      * normally pass NS_BINDING_ABORTED, although other errors may also
      * be passed.  The error passed in will become the value of the 
      * status attribute.
+     *
+     * @param aStatus the reason for canceling this request.
+     *
+     * NOTE: most nsIRequest implementations expect aStatus to be a
+     * failure code; however, some implementations may allow aStatus to
+     * be a success code such as NS_OK.  In general, aStatus should be
+     * a failure code.
      */
-    void cancel(in nsresult status);
+    void cancel(in nsresult aStatus);
 
     /**
-     * Suspends the current requests.  This may have the effect of closing
+     * Suspends the current request.  This may have the effect of closing
      * any underlying transport (in order to free up resources), although
      * any open streams remain logically opened and will continue delivering
      * data when the transport is resumed. 
+     *
+     * NOTE: some implementations are unable to immediately suspend, and
+     * may continue to deliver events already posted to an event queue. In
+     * general, callers should be capable of handling events even after 
+     * suspending a request.
      */
     void suspend();
 
     /**
      * Resumes the current request.  This may have the effect of re-opening
      * any underlying transport and will resume the delivery of data to 
-     * any open streams. 
+     * any open streams.
      */
     void resume();
 
     /**
-     * Accesses the load group in which this request is currently a member.
+     * The load group of this request.  While pending, the request is a 
+     * member of the load group.  It is the responsibility of the request
+     * to implement this policy.
      */
     attribute nsILoadGroup loadGroup;
 
     /**
-     * Accesses the load flags for this request.  Bits 0-15 are defined (or
-     * reserved) by nsIRequest.  When added to a load group, this request's
-     * load flags are merged with the load flags of the load group.
+     * The load flags of this request.  Bits 0-15 are reserved.
+     *
+     * When added to a load group, this request's load flags are merged with
+     * the load flags of the load group.
      */
     attribute nsLoadFlags loadFlags;
 
@@ -174,7 +190,7 @@ interface nsIRequest : nsISupports
      *   for example, a HTTP response with a "Cache-control: no-cache" header.
      *   According to RFC2616, this response must be validated before it can
      *   be taken from a cache.  Breaking this requirement could result in 
-     *   incorrect and potentially unpleasant side-effects.
+     *   incorrect and potentially undesirable side-effects.
      */
     const unsigned long VALIDATE_ALWAYS           = 1 << 11;
     const unsigned long VALIDATE_NEVER            = 1 << 12;

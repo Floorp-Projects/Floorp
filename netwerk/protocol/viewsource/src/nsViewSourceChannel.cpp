@@ -104,7 +104,7 @@ nsViewSourceChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResu
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetName(PRUnichar* *result)
+nsViewSourceChannel::GetName(nsACString &result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -217,17 +217,18 @@ nsViewSourceChannel::SetLoadFlags(PRUint32 aLoadFlags)
 #define X_VIEW_SOURCE_PARAM "; x-view-type=view-source"
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetContentType(char* *aContentType) 
+nsViewSourceChannel::GetContentType(nsACString &aContentType) 
 {
-    NS_ENSURE_ARG_POINTER(aContentType);
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
-    if(mContentType.IsEmpty())
+    aContentType.Truncate();
+
+    if (mContentType.IsEmpty())
     {
         // Get the current content type
         nsresult rv;
-        nsXPIDLCString contentType;
-        rv = mChannel->GetContentType(getter_Copies(contentType));
+        nsCAutoString contentType;
+        rv = mChannel->GetContentType(contentType);
         if (NS_FAILED(rv)) return rv;
 
         // Tack on the view-source param to the content type
@@ -236,40 +237,25 @@ nsViewSourceChannel::GetContentType(char* *aContentType)
         // the x-view-type param we're indicating a custom preference
         // of how this should be displayed - viewsource or regular view
 
-        nsCAutoString viewSrcContentType;
-        viewSrcContentType.Append(contentType);
-        viewSrcContentType.Append(X_VIEW_SOURCE_PARAM);
+        contentType += NS_LITERAL_CSTRING(X_VIEW_SOURCE_PARAM);
 
         // At this stage the content-type string will be
         // of the form "text/html; x-view-type=view-source"
 
-        *aContentType = nsCRT::strdup(viewSrcContentType.get());
-
-        if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
-
-        mContentType = *aContentType;
-
-        return NS_OK;
+        mContentType = contentType;
     }
-    else
-    {
-        *aContentType = ToNewCString(mContentType);
 
-        if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
-
-        return NS_OK;
-    }
+    aContentType = mContentType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::SetContentType(const char *aContentType)
+nsViewSourceChannel::SetContentType(const nsACString &aContentType)
 {
-    NS_ENSURE_ARG(aContentType);
-
     // Our GetContentType() currently returns strings of the 
     // form "text/html; x-view-type=view-source"(see above)
     //
-    // However, during the parsing phase the parser calls our channels'
+    // However, during the parsing phase the parser calls our channel's
     // GetContentType(). Returing a string of the form given above
     // trips up the parser. In order to avoid messy changes and not to have
     // the parser depend on nsIViewSourceChannel Vidur proposed the 
@@ -281,13 +267,28 @@ nsViewSourceChannel::SetContentType(const char *aContentType)
     // After the viewer is created, nsLayoutDLF::CreateInstance()
     // calls this SetContentType() with the original content type.
     // When it's time for the parser to find out the content type it
-    // will call our channels' GetContentType() and it will get the 
+    // will call our channel's GetContentType() and it will get the 
     // original content type, such as, text/html and everything
     // is kosher from then on
 
     mContentType = aContentType;
-
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->GetContentCharset(aContentCharset);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+
+    return mChannel->SetContentCharset(aContentCharset);
 }
 
 NS_IMETHODIMP
@@ -364,9 +365,8 @@ nsViewSourceChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 
 // nsIViewSourceChannel methods
 NS_IMETHODIMP
-nsViewSourceChannel::GetOriginalContentType(char* *aContentType) 
+nsViewSourceChannel::GetOriginalContentType(nsACString &aContentType) 
 {
-    NS_ENSURE_ARG_POINTER(aContentType);
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
     return mChannel->GetContentType(aContentType);
@@ -379,7 +379,8 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
     if (mHttpChannel) {
       // we don't want view-source following Refresh: headers, so clear it
-      mHttpChannel->SetResponseHeader("Refresh", nsnull);
+      mHttpChannel->SetResponseHeader(NS_LITERAL_CSTRING("Refresh"),
+                                      NS_LITERAL_CSTRING(""));
     }
     return mListener->OnStartRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
                                                     this),

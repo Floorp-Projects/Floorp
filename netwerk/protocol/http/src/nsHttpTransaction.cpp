@@ -712,7 +712,7 @@ NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsHttpTransaction,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpTransaction::GetName(PRUnichar **aName)
+nsHttpTransaction::GetName(nsACString &aName)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

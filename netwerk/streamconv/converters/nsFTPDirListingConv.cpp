@@ -221,7 +221,8 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     rv = NS_NewInputStreamChannel(&mPartChannel,
                                   uri,
                                   nsnull,
-                                  APPLICATION_HTTP_INDEX_FORMAT,
+                                  NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT),
+                                  NS_LITERAL_CSTRING(""),
                                   -1);          // XXX fix contentLength
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;

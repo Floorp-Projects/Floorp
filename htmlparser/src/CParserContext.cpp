@@ -142,18 +142,18 @@ CParserContext::~CParserContext(){
  * Set's the mimetype for this context
  * @update	rickg 03.18.2000
  */
-void CParserContext::SetMimeType(nsAReadableString& aMimeType){
+void CParserContext::SetMimeType(const nsACString& aMimeType){
   mMimeType.Assign(aMimeType);
 
   mDocType=ePlainText;
 
-  if(mMimeType.EqualsWithConversion(kHTMLTextContentType))
+  if(mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType)))
     mDocType=eHTML_Strict;
-  else if (mMimeType.EqualsWithConversion(kXMLTextContentType) ||
-           mMimeType.EqualsWithConversion(kXMLApplicationContentType) ||
-           mMimeType.EqualsWithConversion(kXHTMLApplicationContentType) ||
-           mMimeType.EqualsWithConversion(kXULTextContentType) ||
-           mMimeType.EqualsWithConversion(kRDFTextContentType) ||
-           mMimeType.EqualsWithConversion(kXIFTextContentType))
+  else if (mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType)) ||
+           mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType)) ||
+           mMimeType.Equals(NS_LITERAL_CSTRING(kXHTMLApplicationContentType)) ||
+           mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType)) ||
+           mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)) ||
+           mMimeType.Equals(NS_LITERAL_CSTRING(kXIFTextContentType)))
     mDocType=eXML;
 }

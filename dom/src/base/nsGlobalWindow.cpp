@@ -4989,10 +4989,9 @@ NavigatorImpl::GetUserAgent(nsAWritableString& aUserAgent)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *ua = nsnull;
-    res = service->GetUserAgent(&ua);
-    aUserAgent = NS_ConvertASCIItoUCS2(ua);
-    Recycle(ua);
+    nsCAutoString ua;
+    res = service->GetUserAgent(ua);
+    CopyASCIItoUCS2(ua, aUserAgent);
   }
 
   return res;
@@ -5005,10 +5004,9 @@ NavigatorImpl::GetAppCodeName(nsAWritableString& aAppCodeName)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *appName = nsnull;
-    res = service->GetAppName(&appName);
-    aAppCodeName = NS_ConvertASCIItoUCS2(appName);
-    Recycle(appName);
+    nsCAutoString appName;
+    res = service->GetAppName(appName);
+    CopyASCIItoUCS2(appName, aAppCodeName);
   }
 
   return res;
@@ -5021,26 +5019,23 @@ NavigatorImpl::GetAppVersion(nsAWritableString& aAppVersion)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *str = nsnull;
-    res = service->GetAppVersion(&str);
-    aAppVersion = NS_ConvertASCIItoUCS2(str);
-    Recycle(str);
+    nsCAutoString str;
+    res = service->GetAppVersion(str);
+    CopyASCIItoUCS2(str, aAppVersion);
 
     aAppVersion.Append(NS_LITERAL_STRING(" ("));
-    res = service->GetPlatform(&str);
+    res = service->GetPlatform(str);
     if (NS_FAILED(res))
       return res;
 
     aAppVersion += NS_ConvertASCIItoUCS2(str);
-    Recycle(str);
 
     aAppVersion.Append(NS_LITERAL_STRING("; "));
-    res = service->GetLanguage(&str);
+    res = service->GetLanguage(str);
     if (NS_FAILED(res))
       return res;
 
     aAppVersion += NS_ConvertASCIItoUCS2(str);
-    Recycle(str);
 
     aAppVersion.Append(PRUnichar(')'));
   }
@@ -5062,10 +5057,9 @@ NavigatorImpl::GetLanguage(nsAWritableString& aLanguage)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *lang = nsnull;
-    res = service->GetLanguage(&lang);
-    aLanguage = NS_ConvertASCIItoUCS2(lang);
-    Recycle(lang);
+    nsCAutoString lang;
+    res = service->GetLanguage(lang);
+    CopyASCIItoUCS2(lang, aLanguage);
   }
 
   return res;
@@ -5091,10 +5085,9 @@ NavigatorImpl::GetPlatform(nsAWritableString& aPlatform)
     // XXX Communicator uses compiled-in build-time string defines
     // to indicate the platform it was compiled *for*, not what it is
     // currently running *on* which is what this does.
-    char *plat = nsnull;
-    res = service->GetOscpu(&plat);
-    aPlatform = NS_ConvertASCIItoUCS2(plat);
-    Recycle(plat);
+    nsCAutoString plat;
+    res = service->GetOscpu(plat);
+    CopyASCIItoUCS2(plat, aPlatform);
 #endif
   }
 
@@ -5108,10 +5101,9 @@ NavigatorImpl::GetOscpu(nsAWritableString& aOSCPU)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *oscpu = nsnull;
-    res = service->GetOscpu(&oscpu);
-    aOSCPU = NS_ConvertASCIItoUCS2(oscpu);
-    Recycle(oscpu);
+    nsCAutoString oscpu;
+    res = service->GetOscpu(oscpu);
+    CopyASCIItoUCS2(oscpu, aOSCPU);
   }
 
   return res;
@@ -5124,10 +5116,9 @@ NavigatorImpl::GetVendor(nsAWritableString& aVendor)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *vendor = nsnull;
-    res = service->GetVendor(&vendor);
-    aVendor = NS_ConvertASCIItoUCS2(vendor);
-    Recycle(vendor);
+    nsCAutoString vendor;
+    res = service->GetVendor(vendor);
+    CopyASCIItoUCS2(vendor, aVendor);
   }
 
   return res;
@@ -5141,10 +5132,9 @@ NavigatorImpl::GetVendorSub(nsAWritableString& aVendorSub)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *vendor = nsnull;
-    res = service->GetVendorSub(&vendor);
-    aVendorSub = NS_ConvertASCIItoUCS2(vendor);
-    Recycle(vendor);
+    nsCAutoString vendor;
+    res = service->GetVendorSub(vendor);
+    CopyASCIItoUCS2(vendor, aVendorSub);
   }
 
   return res;
@@ -5157,10 +5147,9 @@ NavigatorImpl::GetProduct(nsAWritableString& aProduct)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *product = nsnull;
-    res = service->GetProduct(&product);
-    aProduct = NS_ConvertASCIItoUCS2(product);
-    Recycle(product);
+    nsCAutoString product;
+    res = service->GetProduct(product);
+    CopyASCIItoUCS2(product, aProduct);
   }
 
   return res;
@@ -5173,10 +5162,9 @@ NavigatorImpl::GetProductSub(nsAWritableString& aProductSub)
   nsCOMPtr<nsIHttpProtocolHandler>
     service(do_GetService(kHTTPHandlerCID, &res));
   if (NS_SUCCEEDED(res) && service) {
-    char *productSub = nsnull;
-    res = service->GetProductSub(&productSub);
-    aProductSub = NS_ConvertASCIItoUCS2(productSub);
-    Recycle(productSub);
+    nsCAutoString productSub;
+    res = service->GetProductSub(productSub);
+    CopyASCIItoUCS2(productSub, aProductSub);
   }
 
   return res;

@@ -335,7 +335,13 @@ nsresult nsJSThunk::BringUpConsole()
 // nsIStreamIO implementation...
 //
 NS_IMETHODIMP
-nsJSThunk::Open(PRInt32 *contentLength)
+nsJSThunk::Open()
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsJSThunk::GetContentType(nsACString &aContentType)
 {
     //
     // At this point the script has already been evaluated...
@@ -343,20 +349,22 @@ nsJSThunk::Open(PRInt32 *contentLength)
     //
     // If the resultant script evaluation actually does return a value, we
     // treat it as html.
-    *contentLength = mLength;
-
+    //
+    aContentType = NS_LITERAL_CSTRING("text/html");
     return NS_OK;
 }
 
-
-NS_IMETHODIMP 
-nsJSThunk::GetContentType(char * *aContentType)
+NS_IMETHODIMP
+nsJSThunk::GetContentCharset(nsACString &aContentCharset)
 {
-    *aContentType = nsCRT::strdup("text/html");
-    
-    if (*aContentType == nsnull)
-        return  NS_ERROR_OUT_OF_MEMORY;
+    aContentCharset.Truncate();
+    return NS_OK;
+}
 
+NS_IMETHODIMP
+nsJSThunk::GetContentLength(PRInt32 *result)
+{
+    *result = mLength;
     return NS_OK;
 }
 
@@ -398,15 +406,9 @@ nsJSThunk::GetOutputStream(nsIOutputStream* *aOutputStream)
 }
 
 NS_IMETHODIMP
-nsJSThunk::GetName(char* *aName)
+nsJSThunk::GetName(nsACString &aName)
 {
-    nsCAutoString buf;
-
-    nsresult rv = mURI->GetSpec(buf);
-    if (NS_FAILED(rv)) return rv;
-
-    *aName = ToNewCString(buf);
-    return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mURI->GetSpec(aName);
 }
 
 
@@ -494,7 +496,7 @@ NS_INTERFACE_MAP_END
 //
 
 NS_IMETHODIMP
-nsJSChannel::GetName(PRUnichar * *aResult)
+nsJSChannel::GetName(nsACString &aResult)
 {
     return mStreamChannel->GetName(aResult);
 }
@@ -675,15 +677,27 @@ nsJSChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 }
 
 NS_IMETHODIMP
-nsJSChannel::GetContentType(char * *aContentType)
+nsJSChannel::GetContentType(nsACString &aContentType)
 {
     return mStreamChannel->GetContentType(aContentType);
 }
 
 NS_IMETHODIMP
-nsJSChannel::SetContentType(const char *aContentType)
+nsJSChannel::SetContentType(const nsACString &aContentType)
 {
     return mStreamChannel->SetContentType(aContentType);
+}
+
+NS_IMETHODIMP
+nsJSChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    return mStreamChannel->GetContentCharset(aContentCharset);
+}
+
+NS_IMETHODIMP
+nsJSChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    return mStreamChannel->SetContentCharset(aContentCharset);
 }
 
 NS_IMETHODIMP

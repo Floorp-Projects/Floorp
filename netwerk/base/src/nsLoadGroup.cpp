@@ -164,12 +164,12 @@ nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsLoadGroup::GetName(PRUnichar* *result)
+nsLoadGroup::GetName(nsACString &result)
 {
     // XXX is this the right "name" for a load group?
 
     if (!mDefaultLoadRequest) {
-        *result = nsnull;
+        result.Truncate();
         return NS_OK;
     }
     
@@ -230,10 +230,10 @@ nsLoadGroup::Cancel(nsresult status)
                 continue;
 
 #if defined(PR_LOGGING)
-            nsXPIDLString nameStr;
-            request->GetName(getter_Copies(nameStr));
+            nsCAutoString nameStr;
+            request->GetName(nameStr);
             LOG(("LOADGROUP [%x]: Canceling request %x %s.\n",
-                this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
+                this, request, nameStr.get()));
 #endif
 
             //
@@ -290,10 +290,10 @@ nsLoadGroup::Suspend()
             continue;
 
 #if defined(PR_LOGGING)
-        nsXPIDLString nameStr;
-        request->GetName(getter_Copies(nameStr));
+        nsCAutoString nameStr;
+        request->GetName(nameStr);
         LOG(("LOADGROUP [%x]: Suspending request %x %s.\n",
-            this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
+            this, request, nameStr.get()));
 #endif
 
         // Suspend the request...
@@ -332,10 +332,10 @@ nsLoadGroup::Resume()
             continue;
 
 #if defined(PR_LOGGING)
-        nsXPIDLString nameStr;
-        request->GetName(getter_Copies(nameStr));
+        nsCAutoString nameStr;
+        request->GetName(nameStr);
         LOG(("LOADGROUP [%x]: Resuming request %x %s.\n",
-            this, request, NS_ConvertUCS2toUTF8(nameStr).get()));
+            this, request, nameStr.get()));
 #endif
 
         // Resume the request...
@@ -409,10 +409,10 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 #if defined(PR_LOGGING)
     PRUint32 count = 0;
     (void)mRequests->Count(&count);
-    nsXPIDLString nameStr;
-    request->GetName(getter_Copies(nameStr));
+    nsCAutoString nameStr;
+    request->GetName(nameStr);
     LOG(("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
-        this, request, NS_ConvertUCS2toUTF8(nameStr).get(), count));
+        this, request, nameStr.get(), count));
 #endif /* PR_LOGGING */
 
     //
@@ -488,10 +488,10 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt, nsresult aSta
 #if defined(PR_LOGGING)
         PRUint32 count = 0;
         (void)mRequests->Count(&count);
-        nsXPIDLString nameStr;
-        request->GetName(getter_Copies(nameStr));
+        nsCAutoString nameStr;
+        request->GetName(nameStr);
         LOG(("LOADGROUP [%x]: Removing request %x %s status %x (count=%d).\n",
-            this, request, NS_ConvertUCS2toUTF8(nameStr).get(), aStatus, count-1));
+            this, request, nameStr.get(), aStatus, count-1));
 #endif
 
     //

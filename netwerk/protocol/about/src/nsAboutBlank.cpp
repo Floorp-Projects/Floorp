@@ -56,7 +56,9 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
     rv = NS_NewCStringInputStream(getter_AddRefs(in), nsDependentCString(kBlankPage));
     if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewInputStreamChannel(&channel, aURI, in, "text/html", 
+    rv = NS_NewInputStreamChannel(&channel, aURI, in,
+                                  NS_LITERAL_CSTRING("text/html"), 
+                                  NS_LITERAL_CSTRING(""), 
                                   strlen(kBlankPage));
     if (NS_FAILED(rv)) return rv;
 

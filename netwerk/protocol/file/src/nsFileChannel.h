@@ -92,6 +92,7 @@ protected:
     PRInt32                             mPerm;
     nsCOMPtr<nsITransport>              mFileTransport;
     nsCString                           mContentType;
+    nsCString                           mContentCharset;
     PRUint32                            mLoadFlags;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;

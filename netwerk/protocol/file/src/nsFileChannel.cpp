@@ -44,12 +44,11 @@
 #include "nsIServiceManager.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
-#include "netCore.h"
 #include "nsIFileTransportService.h"
 #include "nsIFile.h"
 #include "nsInt64.h"
 #include "nsMimeTypes.h"
-#include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "prio.h"	// Need to pick up def of PR_RDONLY
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -135,16 +134,11 @@ nsFileChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsFileChannel::GetName(PRUnichar* *result)
+nsFileChannel::GetName(nsACString &result)
 {
     if (mCurrentRequest)
         return mCurrentRequest->GetName(result);
-    nsresult rv;
-    nsCAutoString name;
-    rv = mURI->GetSpec(name);
-    if (NS_FAILED(rv)) return rv;
-    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(name));
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mURI->GetSpec(result);
 }
 
 NS_IMETHODIMP
@@ -321,45 +315,51 @@ nsFileChannel::SetLoadFlags(PRUint32 aLoadFlags)
 }
 
 NS_IMETHODIMP
-nsFileChannel::GetContentType(char * *aContentType)
+nsFileChannel::GetContentType(nsACString &aContentType)
 {
-    nsresult rv = NS_OK;
-
-    *aContentType = nsnull;
+    aContentType.Truncate();
     if (mContentType.IsEmpty()) {
         PRBool directory;
 		mFile->IsDirectory(&directory);
-		if (directory) {
-            mContentType = APPLICATION_HTTP_INDEX_FORMAT;
-        }
+		if (directory)
+            mContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
         else {
+            nsresult rv;
             nsCOMPtr<nsIMIMEService> MIMEService(do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
             if (NS_FAILED(rv)) return rv;
 
-            rv = MIMEService->GetTypeFromFile(mFile, aContentType);
-            if (NS_SUCCEEDED(rv)) {
-                mContentType = *aContentType;
-                return rv;
-            }
+            nsXPIDLCString mimeType;
+            rv = MIMEService->GetTypeFromFile(mFile, getter_Copies(mimeType));
+            if (NS_SUCCEEDED(rv))
+                mContentType = mimeType;
         }
 
-        if (mContentType.IsEmpty()) {
-            mContentType = UNKNOWN_CONTENT_TYPE;
-        }
+        if (mContentType.IsEmpty())
+            mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
     }
-    *aContentType = ToNewCString(mContentType);
-
-    if (!*aContentType) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        return NS_OK;
-    }
+    aContentType = mContentType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileChannel::SetContentType(const char *aContentType)
+nsFileChannel::SetContentType(const nsACString &aContentType)
 {
-    mContentType = aContentType;
+    // only modifies mContentCharset if a charset is parsed
+    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset = mContentCharset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    mContentCharset = aContentCharset;
     return NS_OK;
 }
 

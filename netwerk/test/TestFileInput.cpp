@@ -59,6 +59,7 @@
 #include "nsCOMPtr.h"
 #include <stdio.h>
 #include "nsInt64.h"
+#include "nsFileSpec.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);

@@ -72,7 +72,6 @@
 %{C++
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
-#include "nsAString.h"
 %}
 
 /**

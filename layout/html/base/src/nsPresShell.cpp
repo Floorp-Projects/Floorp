@@ -723,8 +723,8 @@ public:
   NS_DECL_ISUPPORTS
 
 	// nsIRequest
-  NS_IMETHOD GetName(PRUnichar* *result) { 
-    *result = ToNewUnicode(NS_LITERAL_STRING("about:layout-dummy-request"));
+  NS_IMETHOD GetName(nsACString &result) { 
+    result = NS_LITERAL_CSTRING("about:layout-dummy-request");
     return NS_OK;
   }
   NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
@@ -732,6 +732,10 @@ public:
   NS_IMETHOD Cancel(nsresult status);
   NS_IMETHOD Suspend(void) { return NS_OK; }
   NS_IMETHOD Resume(void)  { return NS_OK; }
+  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
+  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
+  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = nsIRequest::LOAD_NORMAL; return NS_OK; }
+  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
 
  	// nsIChannel
   NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
@@ -740,20 +744,17 @@ public:
   NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
   NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
-  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = nsIRequest::LOAD_NORMAL; return NS_OK; }
-  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
   NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
   NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
-  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
-  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
   NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
   NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
   NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { *aSecurityInfo = nsnull; return NS_OK; } 
-  NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; } 
-  NS_IMETHOD SetContentType(const char * aContentType) { return NS_OK; } 
+  NS_IMETHOD GetContentType(nsACString &aContentType) { aContentType.Truncate(); return NS_OK; } 
+  NS_IMETHOD SetContentType(const nsACString &aContentType) { return NS_OK; } 
+  NS_IMETHOD GetContentCharset(nsACString &aContentCharset) { aContentCharset.Truncate(); return NS_OK; } 
+  NS_IMETHOD SetContentCharset(const nsACString &aContentCharset) { return NS_OK; } 
   NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return NS_OK; }
   NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return NS_OK; }
-
 };
 
 PRInt32 DummyLayoutRequest::gRefCnt;
@@ -6575,8 +6576,7 @@ PresShell::AddDummyLayoutRequest(void)
     }
 
     if (loadGroup) {
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(mDummyLayoutRequest);
-      rv = channel->SetLoadGroup(loadGroup);
+      rv = mDummyLayoutRequest->SetLoadGroup(loadGroup);
       if (NS_FAILED(rv)) return rv;
       rv = loadGroup->AddRequest(mDummyLayoutRequest, nsnull);
       if (NS_FAILED(rv)) return rv;

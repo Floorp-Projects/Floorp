@@ -209,7 +209,9 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
   result = NS_NewInputStreamChannel(getter_AddRefs(mChannel),
                                     uri,
                                     inputStream,
-                                    contentType, contentLength);
+                                    nsDependentCString(contentType),
+                                    NS_LITERAL_CSTRING(""),
+                                    contentLength);
   if (NS_FAILED(result))
     return result;
 

@@ -2747,7 +2747,7 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
       }
       
       if (NS_SUCCEEDED(result)) {
-        nsAutoString contentType;
+        nsCAutoString contentType;
         nsIHTMLFragmentContentSink* sink;
         
         result = NS_NewHTMLFragmentContentSink(&sink);
@@ -2755,11 +2755,13 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
           parser->SetContentSink(sink);
           nsCOMPtr<nsIDOMNSDocument> domnsDocument(do_QueryInterface(document));
           if (domnsDocument) {
-            domnsDocument->GetContentType(contentType);
+            nsAutoString buf;
+            domnsDocument->GetContentType(buf);
+            CopyUCS2toASCII(buf, contentType);
           }
           else {
             // Who're we kidding. This only works for html.
-            contentType.Assign(NS_LITERAL_STRING("text/html"));
+            contentType = NS_LITERAL_CSTRING("text/html");
           }
 
           // If there's no JS or system JS running,

@@ -38,8 +38,8 @@ public:
 
     const char *PeekHeader(nsHttpAtom header);
 
-    nsresult SetHeader(nsHttpAtom header, const char *value);
-    nsresult GetHeader(nsHttpAtom header, char **value);
+    nsresult SetHeader(nsHttpAtom header, const nsACString &value);
+    nsresult GetHeader(nsHttpAtom header, nsACString &value);
 
     nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor);
 
@@ -58,7 +58,7 @@ public:
 private:
     struct nsEntry
     {
-        nsEntry(nsHttpAtom h, const char *v)
+        nsEntry(nsHttpAtom h, const nsACString &v)
             : header(h) { value = v; }
 
         nsHttpAtom header;

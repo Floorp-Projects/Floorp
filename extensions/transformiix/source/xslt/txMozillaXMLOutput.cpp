@@ -570,7 +570,7 @@ void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, nsAReadableString& a
     // For now we only handle "refresh". There's a longer list in
     // HTMLContentSink::ProcessHeaderData
     if (aHeader == txHTMLAtoms::refresh)
-        mRefreshString.Assign(aValue);
+        CopyUCS2toASCII(aValue, mRefreshString);
 }
 
 void txMozillaXMLOutput::wrapChildren(nsIDOMNode* aCurrentNode,

@@ -50,6 +50,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIStreamIO.h"
 #include "nsITransport.h"
+#include "nsString.h"
 
 class nsInputStreamIO : public nsIInputStreamIO
 {
@@ -65,9 +66,10 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-    char*                               mName;
+    nsCString                           mName;
     nsCOMPtr<nsIInputStream>            mInputStream;
-    char*                               mContentType;
+    nsCString                           mContentType;
+    nsCString                           mContentCharset;
     PRInt32                             mContentLength;
     nsresult                            mStatus;
 };
@@ -108,8 +110,8 @@ protected:
     nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
-    PRBool                              mOpened;
-    char*                               mContentType;
+    nsCString                           mContentType;
+    nsCString                           mContentCharset;
     PRInt32                             mContentLength;
     nsCOMPtr<nsIStreamIO>               mStreamIO;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;

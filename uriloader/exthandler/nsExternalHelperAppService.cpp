@@ -670,7 +670,6 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
 {
   if (!mTemporaryFilesList) return NS_OK;
 
-  nsresult rv = NS_OK;
   PRUint32 numEntries = 0;
   mTemporaryFilesList->Count(&numEntries);
   nsCOMPtr<nsISupports> element;
@@ -837,20 +836,20 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
    * user.  we shouldn't actually use that without their
    * permission...o.t. just use our temp file
    */
-  nsXPIDLCString disp;
+  nsCAutoString disp;
   nsresult rv = NS_OK;
   // First see whether this is an http channel
   nsCOMPtr<nsIHttpChannel> httpChannel( do_QueryInterface( aChannel ) );
   if ( httpChannel ) 
   {
-    rv = httpChannel->GetResponseHeader( "content-disposition", getter_Copies( disp ) );
+    rv = httpChannel->GetResponseHeader( NS_LITERAL_CSTRING("content-disposition"), disp );
   }
   if ( NS_FAILED(rv) || disp.IsEmpty() )
   {
     nsCOMPtr<nsIMultiPartChannel> multipartChannel( do_QueryInterface( aChannel ) );
     if ( multipartChannel )
     {
-      rv = multipartChannel->GetContentDisposition( getter_Copies( disp ) );
+      rv = multipartChannel->GetContentDisposition( disp );
     }
   }
   // content-disposition: has format:

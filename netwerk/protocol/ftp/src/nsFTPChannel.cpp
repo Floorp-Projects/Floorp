@@ -167,14 +167,9 @@ nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 // cross thread call.
 
 NS_IMETHODIMP
-nsFTPChannel::GetName(PRUnichar* *result)
+nsFTPChannel::GetName(nsACString &result)
 {
-    nsresult rv;
-    nsCAutoString urlStr;
-    rv = mURL->GetSpec(urlStr);
-    if (NS_FAILED(rv)) return rv;
-    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(urlStr));
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mURL->GetSpec(result);
 }
 
 NS_IMETHODIMP
@@ -411,40 +406,48 @@ nsFTPChannel::SetLoadFlags(PRUint32 aLoadFlags)
 // extension mapping.
 
 NS_IMETHODIMP
-nsFTPChannel::GetContentType(char* *aContentType) {
-    nsresult rv = NS_OK;
-
-    if (!aContentType) return NS_ERROR_NULL_POINTER;
-
+nsFTPChannel::GetContentType(nsACString &aContentType)
+{
     nsAutoLock lock(mLock);
-    *aContentType = nsnull;
-    if (mContentType.IsEmpty()) {
 
+    aContentType.Truncate();
+    if (mContentType.IsEmpty()) {
+        nsresult rv;
         nsCOMPtr<nsIMIMEService> MIMEService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
         if (NS_FAILED(rv)) return rv;
-        rv = MIMEService->GetTypeFromURI(mURL, aContentType);
-        if (NS_SUCCEEDED(rv)) {
-            mContentType = *aContentType;
-        } else {
-            mContentType = UNKNOWN_CONTENT_TYPE;
-            rv = NS_OK;
-        }
+        nsXPIDLCString mimeType;
+        rv = MIMEService->GetTypeFromURI(mURL, getter_Copies(mimeType));
+        if (NS_SUCCEEDED(rv))
+            mContentType = mimeType;
+        else
+            mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
     }
 
-    if (!*aContentType) {
-        *aContentType = ToNewCString(mContentType);
-    }
+    aContentType = mContentType;
 
-    if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", *aContentType));
-    return rv;
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", mContentType.get()));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::SetContentType(const char *aContentType)
+nsFTPChannel::SetContentType(const nsACString &aContentType)
 {
     nsAutoLock lock(mLock);
-    mContentType = aContentType;
+    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset = mContentCharset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    mContentCharset = aContentCharset;
     return NS_OK;
 }
 

@@ -54,6 +54,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsWeakReference.h"
 #include "nsIHttpChannel.h"
+#include "netCore.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -263,7 +264,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports
 nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * aCtxt)
 {
   nsresult rv;
-  nsXPIDLCString contentType;
+  nsCAutoString contentType;
   nsCOMPtr<nsISupports> originalWindowContext = m_originalContext; // local variable to keep track of this.
   nsCOMPtr<nsIStreamListener> contentStreamListener;
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
@@ -271,7 +272,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       return NS_ERROR_FAILURE;
   }
 
-  rv = aChannel->GetContentType(getter_Copies(contentType));
+  rv = aChannel->GetContentType(contentType);
   if (NS_FAILED(rv)) return rv;
 
    // go to the uri dispatcher and give them our stuff...
@@ -287,7 +288,8 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     //              content type.
     //
     PRBool abortDispatch = PR_FALSE;
-    rv = uriLoader->DispatchContent(contentType, mIsContentPreferred, 
+    rv = uriLoader->DispatchContent(contentType.get(),
+                                    mIsContentPreferred, 
                                     request, aCtxt, 
                                     m_contentListener, 
                                     m_originalContext,
@@ -306,7 +308,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
     //
     if (!contentListener) 
     {
-      rv = RetargetOutput(request, contentType, "*/*", nsnull);
+      rv = RetargetOutput(request, contentType.get(), "*/*", nsnull);
       if (m_targetStreamListener)
         return NS_OK;
     }
@@ -372,9 +374,9 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
         nsCOMPtr<nsIExternalHelperAppService> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID));
         if (helperAppService)
         {
-            rv = helperAppService->DoContent(contentType, uri, m_originalContext, &abortProcess, getter_AddRefs(contentStreamListener));
+            rv = helperAppService->DoContent(contentType.get(), uri, m_originalContext, &abortProcess, getter_AddRefs(contentStreamListener));
             if (NS_SUCCEEDED(rv) && contentStreamListener)
-              return RetargetOutput(request, contentType, contentType, contentStreamListener);
+              return RetargetOutput(request, contentType.get(), contentType.get(), contentStreamListener);
         }
         rv = NS_ERROR_FAILURE; // this will cause us to bring up the unknown content handler dialog.
       }
@@ -382,7 +384,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       // okay, all registered listeners have had a chance to handle this content...
       // did one of them give us a stream listener back? if so, let's start reading data
       // into it...
-      rv = RetargetOutput(request, contentType, desiredContentType, contentStreamListener);
+      rv = RetargetOutput(request, contentType.get(), desiredContentType, contentStreamListener);
       // Reinitialize the content listener in case this is a multipart stream.
       m_contentListener = do_GetInterface(m_originalContext);
     } 

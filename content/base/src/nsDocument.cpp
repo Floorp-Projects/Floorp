@@ -756,9 +756,10 @@ nsDocument::StartDocumentLoad(const char* aCommand,
   if (aReset)
     rv = Reset(aChannel, aLoadGroup);
 
-  nsXPIDLCString contentType;
-  if (NS_SUCCEEDED(aChannel->GetContentType(getter_Copies(contentType)))) {
-    nsXPIDLCString::const_iterator start, end, semicolon;
+  nsCAutoString contentType;
+  if (NS_SUCCEEDED(aChannel->GetContentType(contentType))) {
+    // XXX this is only necessary for viewsource:
+    nsACString::const_iterator start, end, semicolon;
     contentType.BeginReading(start);
     contentType.EndReading(end);
     semicolon = start;
@@ -769,10 +770,10 @@ nsDocument::StartDocumentLoad(const char* aCommand,
   PRBool have_contentLanguage = PR_FALSE;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel) {
-    nsXPIDLCString contentLanguage;
-    if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Language",
-                                                    getter_Copies(contentLanguage)))) {
-      mContentLanguage.AssignWithConversion(contentLanguage);
+    nsCAutoString contentLanguage;
+    if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Language"),
+                                                    contentLanguage))) {
+      CopyASCIItoUCS2(contentLanguage, mContentLanguage); // XXX what's wrong w/ ASCII?
       have_contentLanguage = PR_TRUE;
     }
   }

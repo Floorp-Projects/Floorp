@@ -137,7 +137,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRequest
-    NS_IMETHOD GetName(PRUnichar* *result) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD GetName(nsACString &result) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
     NS_IMETHOD GetStatus(nsresult *status) { *status = mStatus; return NS_OK; }
     NS_IMETHOD Cancel(nsresult status)  { mStatus = status; return NS_OK; }
@@ -342,16 +342,31 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::GetContentType(char * *aContentType)
+nsCachedChromeChannel::GetContentType(nsACString &aContentType)
 {
-    *aContentType = nsCRT::strdup("mozilla.application/cached-xul");
-    return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    aContentType = NS_LITERAL_CSTRING("mozilla.application/cached-xul");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::SetContentType(const char *aContentType)
+nsCachedChromeChannel::SetContentType(const nsACString &aContentType)
 {
     // Do not allow the content-type to be changed.
+    NS_NOTREACHED("don't do that");
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCachedChromeChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    // Do not allow the content charset to be changed.
     NS_NOTREACHED("don't do that");
     return NS_ERROR_FAILURE;
 }

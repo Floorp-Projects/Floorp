@@ -188,7 +188,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
   //  where <orig_type> can be text/html, text/xml etc.
   //
 
-  nsCAutoString strContentType; strContentType.Append(aContentType);
+  nsCAutoString strContentType(aContentType);
   PRInt32 idx = strContentType.Find("; x-view-type=view-source", PR_TRUE, 0, -1);
   if(idx != -1)
   { // Found "; x-view-type=view-source" param in content type. 
@@ -211,7 +211,7 @@ nsContentDLF::CreateInstance(const char* aCommand,
     // It's a view-source. Reset channel's content type to the original 
     // type so as not to choke the parser when it asks the channel 
     // for the content type during the parse phase
-    aChannel->SetContentType(aContentType);
+    aChannel->SetContentType(nsDependentCString(aContentType));
     aContentType=gHTMLTypes[0];    
   }
 

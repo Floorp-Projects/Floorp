@@ -705,8 +705,8 @@ PRBool nsBrowserContentHandler::NeedHomepageOverride(nsIPref *aPrefService)
       do_GetService("@mozilla.org/network/protocol;1?name=http", &rv));
   if (NS_FAILED(rv))
     return PR_TRUE;
-  nsXPIDLCString currMilestone;
-  httpHandler->GetMisc(getter_Copies(currMilestone));
+  nsCAutoString currMilestone;
+  httpHandler->GetMisc(currMilestone);
 
   // get saved milestone from user's prefs
   nsXPIDLCString savedMilestone;

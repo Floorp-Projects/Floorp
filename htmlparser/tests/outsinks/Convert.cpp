@@ -170,9 +170,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
   parser->RegisterDTD(dtd);
 
-  char* inTypeStr = ToNewCString(inType);
-  rv = parser->Parse(inString, 0, NS_ConvertASCIItoUCS2(inTypeStr), PR_FALSE, PR_TRUE);
-  delete[] inTypeStr;
+  rv = parser->Parse(inString, 0, NS_LossyConvertUCS2toASCII(inType), PR_FALSE, PR_TRUE);
   if (NS_FAILED(rv))
   {
     printf("Parse() failed! 0x%x\n", rv);

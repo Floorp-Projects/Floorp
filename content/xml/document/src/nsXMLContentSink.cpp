@@ -783,7 +783,7 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aV
 
     nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell);
     if (reefer) {
-      rv = reefer->SetupRefreshURIFromHeader(baseURI, aValue);
+      rv = reefer->SetupRefreshURIFromHeader(baseURI, NS_ConvertUCS2toUTF8(aValue));
       if (NS_FAILED(rv)) return rv;
     }
   } // END refresh

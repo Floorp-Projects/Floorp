@@ -88,7 +88,7 @@ public:
 
     // NS_DECL_NSISTREAMIO and nsIChannel both define (attribute string contentType)
 
-    NS_IMETHOD Open(PRInt32 *contentLength);
+    NS_IMETHOD Open();
     NS_IMETHOD Close(nsresult status); 
     NS_IMETHOD GetInputStream(nsIInputStream * *aInputStream);
     NS_IMETHOD GetOutputStream(nsIOutputStream * *aOutputStream); 
@@ -121,7 +121,8 @@ protected:
     nsCOMPtr<nsISupports>               mUserContext;
     nsCOMPtr<nsIStreamListener>         mUserListener;
 
-    char*                               mContentType;
+    nsCString                           mContentType;
+    nsCString                           mContentCharset;
     PRInt32                             mContentLength;
     nsCOMPtr<nsIURI>                    mJARBaseURI;
     nsCString                           mJAREntry;

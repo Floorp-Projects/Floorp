@@ -147,14 +147,9 @@ nsGopherChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsGopherChannel::GetName(PRUnichar* *result)
+nsGopherChannel::GetName(nsACString &result)
 {
-    nsString name;
-    name.AppendWithConversion(mHost);
-    name.Append(NS_LITERAL_STRING(":"));
-    name.AppendInt(mPort);
-    *result = ToNewUnicode(name);
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return mUrl->GetHostPort(result);
 }
 
 NS_IMETHODIMP
@@ -315,89 +310,101 @@ nsGopherChannel::SetLoadFlags(PRUint32 aLoadFlags)
 }
 
 NS_IMETHODIMP
-nsGopherChannel::GetContentType(char* *aContentType)
+nsGopherChannel::GetContentType(nsACString &aContentType)
 {
-    if (!aContentType) return NS_ERROR_NULL_POINTER;
-
     if (!mContentType.IsEmpty()) {
-        *aContentType = ToNewCString(mContentType);
+        aContentType = mContentType;
         return NS_OK;
     }
 
     switch(mType) {
     case '0':
-        *aContentType = nsCRT::strdup(TEXT_HTML);
+        aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
         break;
     case '1':
         switch (mListFormat) {
         case nsIDirectoryListing::FORMAT_RAW:
-            *aContentType = nsCRT::strdup("text/gopher-dir");
+            aContentType = NS_LITERAL_CSTRING("text/gopher-dir");
             break;
         default:
             NS_WARNING("Unknown directory type");
             // fall through
         case nsIDirectoryListing::FORMAT_HTML:
-            *aContentType = nsCRT::strdup(TEXT_HTML);
+            aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
             break;
         case nsIDirectoryListing::FORMAT_HTTP_INDEX:
-            *aContentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
+            aContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
             break;
         }
         break;
     case '2': // CSO search - unhandled, should not be selectable
-        *aContentType = nsCRT::strdup(TEXT_HTML);
+        aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
         break;
     case '3': // "Error" - should not be selectable
-        *aContentType = nsCRT::strdup(TEXT_HTML);
+        aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
         break;
     case '4': // "BinHexed Macintosh file"
-        *aContentType = nsCRT::strdup(APPLICATION_BINHEX);
+        aContentType = NS_LITERAL_CSTRING(APPLICATION_BINHEX);
         break;
     case '5':
         // "DOS binary archive of some sort" - is the mime-type correct?
-        *aContentType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
+        aContentType = NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM);
         break;
     case '6':
-        *aContentType = nsCRT::strdup(APPLICATION_UUENCODE);
+        aContentType = NS_LITERAL_CSTRING(APPLICATION_UUENCODE);
         break;
     case '7': // search - returns a directory listing
-        *aContentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
+        aContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
         break;
     case '8': // telnet - type doesn't make sense
-        *aContentType = nsCRT::strdup(TEXT_PLAIN);
+        aContentType = NS_LITERAL_CSTRING(TEXT_PLAIN);
         break;
     case '9': // "Binary file!"
-        *aContentType = nsCRT::strdup(APPLICATION_OCTET_STREAM);
+        aContentType = NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM);
         break;
     case 'g':
-        *aContentType = nsCRT::strdup(IMAGE_GIF);
+        aContentType = NS_LITERAL_CSTRING(IMAGE_GIF);
         break;
     case 'i': // info line- should not be selectable
-        *aContentType = nsCRT::strdup(TEXT_HTML);
+        aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
         break;
     case 'I':
-        *aContentType = nsCRT::strdup(IMAGE_GIF);
+        aContentType = NS_LITERAL_CSTRING(IMAGE_GIF);
         break;
     case 'T': // tn3270 - type doesn't make sense
-        *aContentType = nsCRT::strdup(TEXT_PLAIN);
+        aContentType = NS_LITERAL_CSTRING(TEXT_PLAIN);
         break;
     default:
         NS_WARNING("Unknown gopher type");
-        *aContentType = nsCRT::strdup(UNKNOWN_CONTENT_TYPE);
+        aContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
     }
-    if (!*aContentType)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     PR_LOG(gGopherLog,PR_LOG_DEBUG,
-           ("GetContentType returning %s\n",*aContentType));
+           ("GetContentType returning %s\n", PromiseFlatCString(aContentType).get()));
 
+    // XXX do we want to cache this result?
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherChannel::SetContentType(const char *aContentType)
+nsGopherChannel::SetContentType(const nsACString &aContentType)
 {
-    mContentType.Assign(aContentType);
+    // only changes mContentCharset if a charset is parsed
+    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset = mContentCharset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    mContentCharset = aContentCharset;
     return NS_OK;
 }
 

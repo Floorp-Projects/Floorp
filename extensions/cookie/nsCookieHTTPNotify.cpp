@@ -47,7 +47,8 @@
 #include "nsCookie.h"
 #include "nsIURL.h"
 #include "nsCRT.h"
-#include "nsXPIDLString.h"
+#include "nsLiteralString.h"
+#include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h" 
 #include "nsILoadGroup.h"
@@ -179,12 +180,12 @@ nsCookieHTTPNotify::OnModifyRequest(nsIHttpChannel *aHttpChannel)
     if (NS_FAILED(rv)) return rv;
 
     // Clear any existing Cookie request header
-    rv = aHttpChannel->SetRequestHeader("Cookie", nsnull);
+    rv = aHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"), NS_LITERAL_CSTRING(""));
     if (NS_FAILED(rv)) return rv;
 
     // Set the cookie into the request headers
     if (cookie && *cookie)
-        rv = aHttpChannel->SetRequestHeader("Cookie", cookie);
+        rv = aHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cookie"), nsDependentCString(cookie));
     nsMemory::Free((void *)cookie);
 
     return rv;
@@ -198,10 +199,10 @@ nsCookieHTTPNotify::OnExamineResponse(nsIHttpChannel *aHttpChannel)
     NS_ENSURE_ARG_POINTER(aHttpChannel);
 
     // Get the Cookie header
-    nsXPIDLCString cookieHeader;
-    rv = aHttpChannel->GetResponseHeader("Set-Cookie", getter_Copies(cookieHeader));
+    nsCAutoString cookieHeader;
+    rv = aHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Set-Cookie"), cookieHeader);
     if (NS_FAILED(rv)) return rv;
-    if (!cookieHeader) return NS_OK; // not an error, there's just no header.
+    if (cookieHeader.IsEmpty()) return NS_OK; // not an error, there's just no header.
 
     // Get the url
     nsCOMPtr<nsIURI> pURL;
@@ -235,8 +236,8 @@ nsCookieHTTPNotify::OnExamineResponse(nsIHttpChannel *aHttpChannel)
       pInterfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(pPrompter));
 
     // Get the expires
-    nsXPIDLCString dateHeader;
-    rv = aHttpChannel->GetResponseHeader("Date", getter_Copies(dateHeader));
+    nsCAutoString dateHeader;
+    rv = aHttpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Date"), dateHeader);
     // NS_ERROR_NOT_AVAILABLE is not a fatal error, other errors are
     if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE) return rv;
 
@@ -245,7 +246,7 @@ nsCookieHTTPNotify::OnExamineResponse(nsIHttpChannel *aHttpChannel)
     if (NS_FAILED(rv)) return rv;
 
     // Save the cookie
-    rv = mCookieService->SetCookieStringFromHttp(pURL, pFirstURL, pPrompter, cookieHeader, dateHeader, aHttpChannel);
+    rv = mCookieService->SetCookieStringFromHttp(pURL, pFirstURL, pPrompter, cookieHeader.get(), dateHeader.get(), aHttpChannel);
 
     return rv;
 }

@@ -55,8 +55,7 @@ interface nsIViewSourceChannel : nsIChannel
 	 * However, callers interested in finding out the original
 	 * content type can utilize this attribute
      */
-    readonly attribute string originalContentType;
-
+    readonly attribute ACString originalContentType;
 };
 
 

@@ -172,14 +172,24 @@ NS_IMETHODIMP nsExtProtocolChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::GetContentType(char * *aContentType)
+NS_IMETHODIMP nsExtProtocolChannel::GetContentType(nsACString &aContentType)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::SetContentType(const char *aContentType)
+NS_IMETHODIMP nsExtProtocolChannel::SetContentType(const nsACString &aContentType)
 {
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsExtProtocolChannel::GetContentCharset(nsACString &aContentCharset)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsExtProtocolChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::GetContentLength(PRInt32 * aContentLength)
@@ -211,7 +221,7 @@ NS_IMETHODIMP nsExtProtocolChannel::SetOwner(nsISupports * aPrincipal)
 // From nsIRequest
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsExtProtocolChannel::GetName(PRUnichar* *result)
+NS_IMETHODIMP nsExtProtocolChannel::GetName(nsACString &result)
 {
   NS_NOTREACHED("nsExtProtocolChannel::GetName");
   return NS_ERROR_NOT_IMPLEMENTED;

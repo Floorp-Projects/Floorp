@@ -146,24 +146,30 @@ nsDataChannel::ParseData() {
 
     if (comma == buffer) {
         // nothing but data
-        mContentType = "text/plain;charset=US-ASCII";
+        // XXX maybe we shouldn't include the charset in the content-type?!?
+        mContentType = NS_LITERAL_CSTRING("text/plain;charset=US-ASCII");
+        mContentCharset = NS_LITERAL_CSTRING("US-ASCII");
     } else {
         // everything else is content type
         char *semiColon = PL_strchr(buffer, ';');
         if (semiColon)
             *semiColon = '\0';
 
-        nsCAutoString cType(buffer);
-        ToLowerCase(cType);
-        mContentType = cType.get();
+        mContentType = buffer;
+        ToLowerCase(mContentType);
+
+        char *charset = PL_strcasestr(semiColon + 1, "charset=");
+        if (charset)
+            mContentCharset = charset + sizeof("charset=") - 1;
 
         if (semiColon)
             *semiColon = ';';
     }
+    mContentType.StripWhitespace();
+    mContentCharset.StripWhitespace();
 
     char *dataBuffer = nsnull;
     PRBool cleanup = PR_FALSE;
-    mContentType.StripWhitespace();
     if (!mContentType.Find("text") && !lBase64) {
         // it's text, don't compress spaces
         dataBuffer = comma+1;
@@ -245,12 +251,11 @@ nsDataChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 // nsIRequest methods:
 
 NS_IMETHODIMP
-nsDataChannel::GetName(PRUnichar* *result)
+nsDataChannel::GetName(nsACString &result)
 {
-    nsCAutoString name;
     if (mUrl)
-        mUrl->GetSpec(name);
-    *result = ToNewUnicode(NS_ConvertUTF8toUCS2(name));
+        return mUrl->GetSpec(result);
+    result.Truncate();
     return NS_OK;
 }
 
@@ -391,25 +396,31 @@ nsDataChannel::SetLoadFlags(PRUint32 aLoadFlags)
 }
 
 NS_IMETHODIMP
-nsDataChannel::GetContentType(char* *aContentType) {
-    // Parameter validation...
-    if (!aContentType) return NS_ERROR_NULL_POINTER;
-
-    if (mContentType.Length()) {
-        *aContentType = ToNewCString(mContentType);
-        if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        NS_ASSERTION(0, "data protocol should have content type by now");
-        return NS_ERROR_FAILURE;
-    }
-
+nsDataChannel::GetContentType(nsACString &aContentType)
+{
+    NS_ASSERTION(mContentType.Length() > 0, "data protocol should have content type by now");
+    aContentType = mContentType;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDataChannel::SetContentType(const char *aContentType)
+nsDataChannel::SetContentType(const nsACString &aContentType)
 {
     mContentType = aContentType;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetContentCharset(nsACString &aContentCharset)
+{
+    aContentCharset = mContentCharset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::SetContentCharset(const nsACString &aContentCharset)
+{
+    mContentCharset = aContentCharset;
     return NS_OK;
 }
 

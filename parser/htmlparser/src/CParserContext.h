@@ -77,7 +77,7 @@ public:
     CParserContext( const CParserContext& aContext);
     ~CParserContext();
 
-    void  SetMimeType(nsAReadableString& aMimeType);
+    void  SetMimeType(const nsACString& aMimeType);
 
     nsCOMPtr<nsIRequest> mRequest; // provided by necko to differnciate different input streams
                                    // why is mRequest strongly referenced? see bug 102376.
@@ -88,7 +88,7 @@ public:
     CParserContext*      mPrevContext;
     nsScanner*           mScanner;
     
-    nsAutoString         mMimeType;
+    nsCString            mMimeType;
     nsDTDMode            mDTDMode;
     
     eParserDocType       mDocType;

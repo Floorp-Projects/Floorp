@@ -502,14 +502,14 @@ nsHttpConnection::SetupSSLProxyConnect()
     if (val) {
         // all HTTP/1.1 requests must include a Host header (even though it
         // may seem redundant in this case; see bug 82388).
-        request.SetHeader(nsHttp::Host, val);
+        request.SetHeader(nsHttp::Host, nsDependentCString(val));
     }
 
     val = trans->RequestHead()->PeekHeader(nsHttp::Proxy_Authorization);
     if (val) {
         // we don't know for sure if this authorization is intended for the
         // SSL proxy, so we add it just in case.
-        request.SetHeader(nsHttp::Proxy_Authorization, val);
+        request.SetHeader(nsHttp::Proxy_Authorization, nsDependentCString(val));
     }
 
     buf.Truncate(0);

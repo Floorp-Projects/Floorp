@@ -104,7 +104,7 @@ enum eParserDocType {
 #define kCharsetFromAutoDetection       7
 #define kCharsetFromMetaTag             8
 #define kCharsetFromByteOrderMark       9
-#define kCharsetFromHTTPHeader         10 
+#define kCharsetFromChannel            10 
 #define kCharsetFromParentForced       11
 #define kCharsetFromUserForced         12
 #define kCharsetFromOtherComponent     13
@@ -230,8 +230,8 @@ class nsIParser : public nsISupports {
     virtual PRBool    IsComplete() =0;
     
     virtual nsresult  Parse(nsIURI* aURL,nsIRequestObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
-    virtual nsresult	Parse(nsIInputStream& aStream, const nsAReadableString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
-    virtual nsresult  Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsAReadableString& aContentType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
+    virtual nsresult  Parse(nsIInputStream& aStream, const nsACString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
+    virtual nsresult  Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsACString& aMimeType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     
     virtual nsresult  Terminate(void) = 0;
 
@@ -239,7 +239,7 @@ class nsIParser : public nsISupports {
                                     void* aKey,
                                     nsVoidArray& aTagStack,
                                     PRUint32 anInsertPos,
-                                    const nsAReadableString& aContentType,
+                                    const nsACString& aContentType,
                                     nsDTDMode aMode=eDTDMode_autodetect) = 0;
 
     /**

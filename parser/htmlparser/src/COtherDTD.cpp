@@ -294,7 +294,7 @@ COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
         if(BufferContainsHTML(aBuffer,theBufHasXML)){
           result = eValidDetect ;
           if(0==aParserContext.mMimeType.Length()) {
-            aParserContext.SetMimeType(NS_ConvertASCIItoUCS2(kHTMLTextContentType));
+            aParserContext.SetMimeType(NS_LITERAL_CSTRING(kHTMLTextContentType));
             if(!theBufHasXML) {
               switch(aParserContext.mDTDMode) {
                 case eDTDMode_strict:

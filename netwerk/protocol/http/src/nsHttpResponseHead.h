@@ -26,7 +26,7 @@
 
 #include "nsHttpHeaderArray.h"
 #include "nsHttp.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 //-----------------------------------------------------------------------------
 // nsHttpResponseHead represents the status line and headers from an HTTP
@@ -38,34 +38,32 @@ class nsHttpResponseHead
 public:
     nsHttpResponseHead() : mVersion(NS_HTTP_VERSION_1_1)
                          , mStatus(200)
-                         , mStatusText(nsnull)
                          , mContentLength(-1)
-                         , mContentType(nsnull)
-                         , mContentCharset(nsnull)
                          , mCacheControlNoStore(PR_FALSE)
                          , mCacheControlNoCache(PR_FALSE)
                          , mPragmaNoCache(PR_FALSE) {}
    ~nsHttpResponseHead() 
-   {
-	   Reset();
-   }
+    {
+        Reset();
+    }
     
-    nsHttpHeaderArray &Headers()        { return mHeaders; }
-    nsHttpVersion      Version()        { return mVersion; }
-    PRUint16           Status()         { return mStatus; }
-    const char        *StatusText()     { return mStatusText; }
-    PRInt32            ContentLength()  { return mContentLength; }
-    const char        *ContentType()    { return mContentType; }
-    const char        *ContentCharset() { return mContentCharset; }
-    PRBool             NoStore()        { return mCacheControlNoStore; }
-    PRBool             NoCache()        { return (mCacheControlNoCache || mPragmaNoCache); }
+    nsHttpHeaderArray    &Headers()        { return mHeaders; }
+    nsHttpVersion         Version()        { return mVersion; }
+    PRUint16              Status()         { return mStatus; }
+    const nsAFlatCString &StatusText()     { return mStatusText; }
+    PRInt32               ContentLength()  { return mContentLength; }
+    const nsAFlatCString &ContentType()    { return mContentType; }
+    const nsAFlatCString &ContentCharset() { return mContentCharset; }
+    PRBool                NoStore()        { return mCacheControlNoStore; }
+    PRBool                NoCache()        { return (mCacheControlNoCache || mPragmaNoCache); }
 
     const char *PeekHeader(nsHttpAtom h)            { return mHeaders.PeekHeader(h); }
-    nsresult SetHeader(nsHttpAtom h, const char *v);
-    nsresult GetHeader(nsHttpAtom h, char **v)      { return mHeaders.GetHeader(h, v); }
+    nsresult SetHeader(nsHttpAtom h, const nsACString &v);
+    nsresult GetHeader(nsHttpAtom h, nsACString &v) { return mHeaders.GetHeader(h, v); }
     void     ClearHeaders()                         { mHeaders.Clear(); }
 
-    void     SetContentType(const char *s) { CRTFREEIF(mContentType); mContentType = strdup_if(s); }
+    void     SetContentType(const nsACString &s)    { mContentType = s; }
+    void     SetContentCharset(const nsACString &s) { mContentCharset = s; }
     void     SetContentLength(PRInt32);
 
     // write out the response status line and headers as a single text block,
@@ -117,10 +115,10 @@ private:
     nsHttpHeaderArray mHeaders;
     nsHttpVersion     mVersion;
     PRUint16          mStatus;
-    char             *mStatusText;
+    nsCString         mStatusText;
     PRInt32           mContentLength;
-    char             *mContentType;
-    char             *mContentCharset;
+    nsCString         mContentType;
+    nsCString         mContentCharset;
     PRPackedBool      mCacheControlNoStore;
     PRPackedBool      mCacheControlNoCache;
     PRPackedBool      mPragmaNoCache;

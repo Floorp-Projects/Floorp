@@ -160,7 +160,10 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     }
 
     nsIChannel* channel;
-    rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/plain", size);
+    rv = NS_NewInputStreamChannel(&channel, aURI, inStr,
+                                  NS_LITERAL_CSTRING("text/plain"),
+                                  NS_LITERAL_CSTRING(""),
+                                  size);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

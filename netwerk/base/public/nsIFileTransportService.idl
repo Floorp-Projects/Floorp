@@ -36,9 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-%{C++
-#include "nsFileSpec.h"
-%}
 
 interface nsITransport;
 interface nsIEventSinkGetter;
@@ -56,9 +53,10 @@ interface nsIFileTransportService : nsISupports
 
     // This version can be used with an existing input stream to serve
     // as a data pump:
-    nsITransport createTransportFromStream(in string name,
+    nsITransport createTransportFromStream(in AUTF8String name,
                                            in nsIInputStream fromStream,
-                                           in string contentType,
+                                           in ACString contentType,
+                                           in ACString contentCharset,
                                            in long contentLength,
                                            in boolean closeStreamWhenDone);
 

@@ -94,7 +94,7 @@ private:
   nsresult GetURI(nsIURI **aURI);
   void RemoveFromCache();
   inline const char *GetMimeType() const {
-    return mContentType;
+    return mContentType.get();
   }
 
 public:
@@ -118,7 +118,7 @@ private:
   PRUint32 mImageStatus;
   PRUint32 mState;
 
-  char *mContentType;
+  nsCString mContentType;
 
   nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to this so long as we have observers */
 

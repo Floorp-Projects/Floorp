@@ -141,18 +141,16 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
 /**  nsIRequest / imgIRequest methods **/
 
 /* readonly attribute wstring name; */
-NS_IMETHODIMP imgRequestProxy::GetName(PRUnichar * *aName)
+NS_IMETHODIMP imgRequestProxy::GetName(nsACString &aName)
 {
-  nsCAutoString name;
+  aName.Truncate();
   if (mOwner) {
     nsCOMPtr<nsIURI> uri;
     mOwner->GetURI(getter_AddRefs(uri));
     if (uri)
-      uri->GetSpec(name);
+      uri->GetSpec(aName);
   }
-
-  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(name));
-  return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 /* boolean isPending (); */
@@ -358,9 +356,9 @@ void imgRequestProxy::OnStopDecode(nsresult status, const PRUnichar *statusArg)
 void imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
 #ifdef PR_LOGGING
-  nsXPIDLString name;
-  GetName(getter_Copies(name));
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", NS_ConvertUCS2toUTF8(name).get());
+  nsCAutoString name;
+  GetName(name);
+  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", name.get());
 #endif
 
   if (!mIsInLoadGroup && mLoadGroup) {
@@ -377,9 +375,9 @@ void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
     return;
 
 #ifdef PR_LOGGING
-  nsXPIDLString name;
-  GetName(getter_Copies(name));
-  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStopRequest", "name", NS_ConvertUCS2toUTF8(name).get());
+  nsCAutoString name;
+  GetName(name);
+  LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStopRequest", "name", name.get());
 #endif
 
   /* calling RemoveRequest may cause the document to finish loading,

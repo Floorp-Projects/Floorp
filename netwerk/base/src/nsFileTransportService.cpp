@@ -144,9 +144,10 @@ nsFileTransportService::CreateTransport(nsIFile* file,
 }
 
 NS_IMETHODIMP
-nsFileTransportService::CreateTransportFromStream(const char* name,
+nsFileTransportService::CreateTransportFromStream(const nsACString &name,
                                                   nsIInputStream *fromStream,
-                                                  const char* contentType,
+                                                  const nsACString &contentType,
+                                                  const nsACString &contentCharset,
                                                   PRInt32 contentLength,
                                                   PRBool closeStreamWhenDone,
                                                   nsITransport** result)
@@ -156,7 +157,9 @@ nsFileTransportService::CreateTransportFromStream(const char* name,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(this, name, fromStream, contentType, contentLength, closeStreamWhenDone);
+    rv = trans->Init(this, name, fromStream,
+                     contentType, contentCharset,
+                     contentLength, closeStreamWhenDone);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;

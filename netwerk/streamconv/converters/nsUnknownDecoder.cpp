@@ -484,7 +484,7 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
   if (NS_FAILED(rv)) return rv;
 
   // Set the new content type on the channel...
-  rv = channel->SetContentType(mContentType.get());
+  rv = channel->SetContentType(mContentType);
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to set content type on channel!");
   if (NS_FAILED(rv))

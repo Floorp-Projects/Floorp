@@ -89,9 +89,10 @@ public:
     nsresult Init(nsFileTransportService *aService, nsIFile* file,
                   PRInt32 ioFlags,
                   PRInt32 perm);
-    nsresult Init(nsFileTransportService *aService, const char* name, 
-                  nsIInputStream* fromStream,
-                  const char* contentType,
+    nsresult Init(nsFileTransportService *aService, const nsACString &name, 
+                  nsIInputStream *fromStream,
+                  const nsACString &contentType,
+                  const nsACString &contentCharset,
                   PRInt32 contentLength,
                   PRBool closeStreamWhenDone);
     nsresult Init(nsFileTransportService *aService, nsIStreamIO* io);

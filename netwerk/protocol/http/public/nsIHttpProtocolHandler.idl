@@ -30,51 +30,51 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
     /**
      * Get the HTTP advertised user agent string.
      */
-    readonly attribute string userAgent;
+    readonly attribute ACString userAgent;
 
     /**
      * Get the application name.
 	 *
      * @return The name of this application (eg. "Mozilla").
      */
-    readonly attribute string appName;
+    readonly attribute ACString appName;
 
     /**
      * Get the application version string.
      *
      * @return The complete version (major and minor) string. (eg. "5.0")
      */
-    readonly attribute string appVersion;
+    readonly attribute ACString appVersion;
 
     /**
      * @return The vendor name.
      */
-    attribute string vendor;
+    attribute ACString vendor;
 
     /**
      * @return The vendor sub string.
      */
-    attribute string vendorSub;
+    attribute ACString vendorSub;
     
     /**
      * @return The vendor comment.
      */
-    attribute string vendorComment;
+    attribute ACString vendorComment;
 
     /**
      * @return The product name.
      */
-    attribute string product;
+    attribute ACString product;
 
     /**
      * @return A product sub string.
      */
-    attribute string productSub;
+    attribute ACString productSub;
 
     /**
      * @return A product comment.
      */
-    attribute string productComment;
+    attribute ACString productComment;
 
     /**
      * Get the current platform.
@@ -82,26 +82,26 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
      * @return The platform this application is running on
      *		   (eg. "Windows", "Macintosh", "X11")
      */
-    readonly attribute string platform;
+    readonly attribute ACString platform;
 
     /**
      * Get the current oscpu.
      *
      * @return The oscpu this application is running on
      */
-    readonly attribute string oscpu;
+    readonly attribute ACString oscpu;
 
     /**
      * Get the translation of the application. The value for language
      * is usually a 2-letter code such as "en" and occasionally a 
      * five-character code to indicate a language subtype, such as "zh_CN". 
      */
-    attribute string language;
+    attribute ACString language;
 
     /**
      * Get/Set the application comment misc portion.
      */
-    attribute string misc;
+    attribute ACString misc;
 };
 
 %{C++

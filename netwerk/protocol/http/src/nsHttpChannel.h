@@ -145,7 +145,7 @@ private:
     nsHttpTransaction                *mPrevTransaction; // hard ref
     nsHttpConnectionInfo             *mConnectionInfo;  // hard ref
 
-    nsSharableCString                 mSpec; // ASCII encoded URL spec
+    nsCString                         mSpec; // ASCII encoded URL spec
 
     PRUint32                          mLoadFlags;
     PRUint32                          mStatus;

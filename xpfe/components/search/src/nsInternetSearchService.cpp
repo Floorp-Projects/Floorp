@@ -690,7 +690,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		if (!httpChannel)	return;
 
 		// rjc says: just check "HEAD" info for whether a search file has changed
-        httpChannel->SetRequestMethod("HEAD");
+        httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("HEAD"));
 		if (NS_SUCCEEDED(rv = channel->AsyncOpen(search, engineContext)))
 		{
 			search->busySchedule = PR_TRUE;
@@ -3714,7 +3714,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			nsCOMPtr<nsIHttpChannel> httpMultiChannel (do_QueryInterface(channel));
 			if (httpMultiChannel)
 			{
-                httpMultiChannel->SetRequestHeader("MultiSearch", "true");
+                httpMultiChannel->SetRequestHeader(NS_LITERAL_CSTRING("MultiSearch"),
+                                                   NS_LITERAL_CSTRING("true"));
 			}
 
 			// get it just from the cache if we can (do not validate)
@@ -3725,7 +3726,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 				if (httpChannel)
 				{
-				    httpChannel->SetRequestMethod("POST");
+				    httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
 				    
 				    // construct post data to send
 				    nsAutoString	postStr;
@@ -4657,12 +4658,10 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		// get last-modified & content-length info
 		nsCAutoString			lastModValue, contentLengthValue;
 
-        nsXPIDLCString val;
-        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Last-Modified", getter_Copies(val))))
-            lastModValue = val;
-        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Length", getter_Copies(val))))
-            contentLengthValue = val;
-        val.Adopt(0);
+        if (NS_FAILED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Last-Modified"), lastModValue)))
+            lastModValue.Truncate();
+        if (NS_FAILED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Length"), contentLengthValue)))
+            contentLengthValue.Truncate();
 
 		// should we fetch the entire file?
 		PRBool		updateSearchEngineFile = PR_FALSE;

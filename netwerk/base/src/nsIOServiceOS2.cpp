@@ -41,6 +41,7 @@
 #include "nsIOService.h"
 #include "nsEscape.h"
 #include "nsPrintfCString.h"
+#include "nsILocalFile.h"
 #include <os2.h>
 
 static int isleadbyte(int c);
@@ -80,7 +81,7 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
         PRBool dir;
         rv = aFile->IsDirectory(&dir);
         if (NS_FAILED(rv))
-            NS_WARNING(nsPrintfCString("Cannot tell if %s is a directory or file", escPath.get()).get());
+            NS_WARNING(nsPrintfCString(128, "Cannot tell if %s is a directory or file", escPath.get()).get());
         else if (dir) {
             // make sure we have a trailing slash
             escPath += "/";

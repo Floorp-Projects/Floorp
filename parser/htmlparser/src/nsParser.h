@@ -204,7 +204,7 @@ class nsParser : public nsIParser,
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream& aStream,const nsAReadableString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
+    virtual nsresult Parse(nsIInputStream& aStream,const nsACString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
 
     /**
      * @update	gess5/11/98
@@ -212,13 +212,13 @@ class nsParser : public nsIParser,
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsAReadableString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,nsDTDMode aMode=eDTDMode_autodetect);
+    virtual nsresult Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsACString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,nsDTDMode aMode=eDTDMode_autodetect);
 
     virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,
                                     void* aKey,
                                     nsVoidArray& aTagStack,
                                     PRUint32 anInsertPos,
-                                    const nsAReadableString& aContentType,
+                                    const nsACString& aContentType,
                                     nsDTDMode aMode=eDTDMode_autodetect);
 
 

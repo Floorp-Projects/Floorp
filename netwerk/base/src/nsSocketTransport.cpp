@@ -55,6 +55,7 @@
 #include "nsIProxyObjectManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsPrintfCString.h"
 #include "nsNetUtil.h"
 #include "nsISSLSocketControl.h"
 #include "nsITransportSecurityInfo.h"
@@ -1430,14 +1431,12 @@ nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
 //
 
 nsresult
-nsSocketTransport::GetName(PRUnichar **result)
+nsSocketTransport::GetName(nsACString &result)
 {
-    nsString name;
-    name.AppendWithConversion(mHostName);
-    name.Append(NS_LITERAL_STRING(":"));
-    name.AppendInt(mPort);
-    *result = ToNewUnicode(name);
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    result = nsDependentCString(mHostName)
+           + NS_LITERAL_CSTRING(":")
+           + nsPrintfCString("%d", mPort);
+    return NS_OK;
 }
 
 nsresult
@@ -2674,7 +2673,7 @@ nsSocketRequest::OnStop()
 }
 
 NS_IMETHODIMP
-nsSocketRequest::GetName(PRUnichar **aResult)
+nsSocketRequest::GetName(nsACString &aResult)
 {
     return mTransport ?
         mTransport->GetName(aResult) : NS_ERROR_NOT_INITIALIZED;

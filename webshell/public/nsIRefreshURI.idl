@@ -58,7 +58,7 @@ interface nsIRefreshURI : nsISupports {
       * @param aBaseURI base URI to resolve refresh uri with.
       * @param aHeader  The meta refresh header string.
       */
-    void setupRefreshURIFromHeader(in nsIURI aBaseURI, in AString aHeader);
+    void setupRefreshURIFromHeader(in nsIURI aBaseURI, in ACString aHeader);
       
     /**
       * Cancels all timer loads.

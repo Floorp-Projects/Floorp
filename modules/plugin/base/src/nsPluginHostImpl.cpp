@@ -1163,7 +1163,7 @@ public:
   SetPluginStreamListenerPeer(nsPluginStreamListenerPeer * aPluginStreamListenerPeer);
 
   void
-  MakeByteRangeString(nsByteRange* aRangeList, char** string, PRInt32 *numRequests);
+  MakeByteRangeString(nsByteRange* aRangeList, nsACString &string, PRInt32 *numRequests);
 
   void
   SetLocalCachedFile(const char* path);
@@ -1390,9 +1390,9 @@ nsPluginStreamInfo::GetURL(const char** result)
 
 ////////////////////////////////////////////////////////////////////////
 void
-nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, char** rangeRequest, PRInt32 *numRequests)
+nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, nsACString &rangeRequest, PRInt32 *numRequests)
 {
-  *rangeRequest = nsnull;
+  rangeRequest.Truncate();
   *numRequests  = 0;
   //the string should look like this: bytes=500-700,601-999
   if(!aRangeList)
@@ -1420,7 +1420,7 @@ nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, char** rangeReq
   // get rid of possible trailing comma
   string.Trim(",", PR_FALSE);
 
-  *rangeRequest = ToNewCString(string);
+  rangeRequest = string;
   *numRequests  = requestCnt;
   return;
 }
@@ -1446,17 +1446,15 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
   if(!httpChannel)
     return NS_ERROR_FAILURE;
 
-  char *rangeString;
+  nsCAutoString rangeString;
   PRInt32 numRequests;
 
-  MakeByteRangeString(rangeList, &rangeString, &numRequests);
+  MakeByteRangeString(rangeList, rangeString, &numRequests);
   
-  if(!rangeString)
+  if(rangeString.IsEmpty())
     return NS_ERROR_FAILURE;
 
-  httpChannel->SetRequestHeader("Range", rangeString);
-
-  nsMemory::Free(rangeString);
+  httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString);
 
   // instruct old stream listener to cancel the request on the next
   // attempt to write. 
@@ -1967,9 +1965,9 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
 
     // Now we look for a content-encoding header.  If we find one,
     // we can't use the cache as a file
-    nsXPIDLCString contentEncoding;
-    rv = httpChannel->GetResponseHeader("Content-Encoding",
-                                        getter_Copies(contentEncoding));
+    nsCAutoString contentEncoding;
+    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
+                                        contentEncoding);
     if (NS_SUCCEEDED(rv) &&
         !contentEncoding.Equals("identity",
                                 nsCaseInsensitiveCStringComparator())) {
@@ -1990,15 +1988,15 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
       NS_WARNING("No Cache Aval.  Some plugins wont work OR we don't have a URL");
   }
 
-  char* aContentType = nsnull;
-  rv = channel->GetContentType(&aContentType);
+  nsCAutoString aContentType;
+  rv = channel->GetContentType(aContentType);
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
 
-  if (nsnull != aContentType)
-    mPluginStreamInfo->SetContentType(aContentType);
+  if (!aContentType.IsEmpty())
+    mPluginStreamInfo->SetContentType(aContentType.get());
 
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
@@ -2006,7 +2004,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NOISY,
   ("nsPluginStreamListenerPeer::OnStartRequest this=%p request=%p mime=%s, url=%s\n",
-  this, request, aContentType, urlSpec.get()));
+  this, request, aContentType.get(), urlSpec.get()));
 
   PR_LogFlush();
 #endif
@@ -2020,7 +2018,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
   // which is called by InstantiateEmbededPlugin()
   // NOTE: we don't want to try again if we didn't get the MIME type this time
 
-  if ((nsnull == mInstance) && (nsnull != mOwner) && (nsnull != aContentType))
+  if ((nsnull == mInstance) && (nsnull != mOwner) && (!aContentType.IsEmpty()))
   {
     mOwner->GetInstance(mInstance);
     mOwner->GetWindow(window);
@@ -2031,9 +2029,9 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
       nsPluginMode mode;
       mOwner->GetMode(&mode);
       if (mode == nsPluginMode_Embedded)
-        rv = mHost->InstantiateEmbededPlugin(aContentType, aURL, mOwner);
+        rv = mHost->InstantiateEmbededPlugin(aContentType.get(), aURL, mOwner);
       else
-        rv = mHost->SetUpPluginInstance(aContentType, aURL, mOwner);
+        rv = mHost->SetUpPluginInstance(aContentType.get(), aURL, mOwner);
 
       if (NS_OK == rv)
       {
@@ -2053,8 +2051,6 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
       }
     }
   }
-
-  nsCRT::free(aContentType);
 
   //
   // Set up the stream listener...
@@ -2334,13 +2330,13 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
     mPluginStreamInfo->SetURL(urlString.get());
   
   // Set the content type to ensure we don't pass null to the plugin
-  nsXPIDLCString aContentType;
-  rv = channel->GetContentType(getter_Copies(aContentType));
+  nsCAutoString aContentType;
+  rv = channel->GetContentType(aContentType);
   if (NS_FAILED(rv)) 
     return rv;
 
-  if (aContentType)
-    mPluginStreamInfo->SetContentType(aContentType);
+  if (!aContentType.IsEmpty())
+    mPluginStreamInfo->SetContentType(aContentType.get());
 
   // set error status if stream failed so we notify the plugin
   if (mRequestFailed)
@@ -2415,10 +2411,10 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   mPluginStreamInfo->GetLength(&length);
   if ((length != -1) && httpChannel)
   {
-    nsXPIDLCString range;
-    if(NS_SUCCEEDED(httpChannel->GetResponseHeader("accept-ranges", getter_Copies(range))))
+    nsCAutoString range;
+    if(NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("accept-ranges"), range)))
     {
-      if (0 == PL_strcasecmp(range.get(), "bytes"))
+      if (range.Equals(NS_LITERAL_CSTRING("bytes"), nsCaseInsensitiveCStringComparator()))
         bSeekable = PR_TRUE;
     }
   }
@@ -2428,18 +2424,17 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   // get Last-Modified header for plugin info
   if (httpChannel) 
   {
-    char * lastModified = nsnull;
-    if (NS_SUCCEEDED(httpChannel->GetResponseHeader("last-modified", &lastModified)) &&
-        lastModified)
+    nsCAutoString lastModified;
+    if (NS_SUCCEEDED(httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"), lastModified)) &&
+        !lastModified.IsEmpty())
     {
       PRTime time64;
-      PR_ParseTimeString(lastModified, PR_TRUE, &time64);  //convert string time to interger time
+      PR_ParseTimeString(lastModified.get(), PR_TRUE, &time64);  //convert string time to interger time
  
       // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
       double fpTime;
       LL_L2D(fpTime, time64);
       mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
-      nsCRT::free(lastModified);
     }
   } 
 
@@ -2489,13 +2484,14 @@ nsPluginStreamListenerPeer::GetLoadGroup()
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsPluginStreamListenerPeer::VisitHeader(const char *header, const char *value)
+nsPluginStreamListenerPeer::VisitHeader(const nsACString &header, const nsACString &value)
 {
   nsCOMPtr<nsIHTTPHeaderListener> listener = do_QueryInterface(mPStreamListener);
   if (!listener)
     return NS_ERROR_FAILURE;
 
-  return listener->NewResponseHeader(header, value);
+  return listener->NewResponseHeader(PromiseFlatCString(header).get(),
+                                     PromiseFlatCString(value).get());
 }
 
 
@@ -2777,14 +2773,14 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   if (NS_FAILED(res)) 
     return res;
 
-  nsXPIDLCString uaString;
-  res = http->GetUserAgent(getter_Copies(uaString));
+  nsCAutoString uaString;
+  res = http->GetUserAgent(uaString);
 
   if (NS_SUCCEEDED(res)) 
   {
-    if(NS_RETURN_UASTRING_SIZE > PL_strlen(uaString))
+    if(NS_RETURN_UASTRING_SIZE > uaString.Length())
     {
-      PL_strcpy(resultString, uaString);
+      PL_strcpy(resultString, uaString.get());
       *retstring = resultString;
     }
     else
@@ -5713,7 +5709,7 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
     // FINALLY: we can set the header!
     // 
     
-    rv =aChannel->SetRequestHeader(headerName.get(), headerValue.get());
+    rv =aChannel->SetRequestHeader(headerName, headerValue);
     if (NS_FAILED(rv)) {
       rv = NS_ERROR_NULL_POINTER;
       return rv;
