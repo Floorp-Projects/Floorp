@@ -107,7 +107,6 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_gtk_GtkBrowser
     GtkWidget * window = (GtkWidget *) parent;
     
     gtk_widget_realize(GTK_WIDGET(window));
-    gtk_widget_set_uposition(window, screenWidth + 20, screenHeight + 20);
     gtk_widget_show(window);
 
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 

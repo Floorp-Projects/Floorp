@@ -42,7 +42,7 @@ import java.awt.Dimension;
 
  * There is one instance of GtkBrowserControlCanvas per top level awt Frame.
 
- * @version $Id: GtkBrowserControlCanvas.java,v 1.2 2002/10/01 00:39:21 edburns%acm.org Exp $
+ * @version $Id: GtkBrowserControlCanvas.java,v 1.3 2003/04/09 01:36:02 kyle.yuan%sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -57,7 +57,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
         GtkBrowserControlCanvas.loadMainDll();
     }
     
-    static private boolean firstTime = true;
+    private boolean firstTime = true;
     private int gtkWinID;
     private int gtkTopWindow;
     private int canvasWinID;
