@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: sdrtest.c,v 1.1 2000/06/23 22:25:22 thayes%netscape.com Exp $
+ * $Id: sdrtest.c,v 1.2 2000/09/16 00:53:08 thayes%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -167,6 +167,12 @@ main (int argc, char **argv)
 
     SECU_PKCS11Init(PR_FALSE);
     SEC_Init();
+
+    /* Initialize random number source: this uses only
+     * system information, but that is sufficient for
+     * testing the basic capabilities of SDR
+     */
+    RNG_SystemInfoForRNG();
 
     slot = PK11_GetInternalKeySlot();
     if (PK11_NeedUserInit(slot))
