@@ -236,7 +236,6 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     res = CreateTrailingBRIfNeeded();
     if (NS_FAILED(res)) return res;
     
-#ifdef IBMBIDI
     /* After inserting text the cursor Bidi level must be set to the level of the inserted text.
      * This is difficult, because we cannot know what the level is until after the Bidi algorithm
      * is applied to the whole paragraph.
@@ -250,7 +249,6 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
         shell->UndefineCaretBidiLevel();
       }
     }
-#endif
   }
   return res;
 }
@@ -862,12 +860,10 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     
     if (bCollapsed)
     {
-#ifdef IBMBIDI
       // Test for distance between caret and text that will be deleted
       res = CheckBidiLevelForDeletion(startNode, startOffset, aCollapsedAction, aCancel);
       if (NS_FAILED(res)) return res;
       if (*aCancel) return NS_OK;
-#endif // IBMBIDI
 
       nsCOMPtr<nsIDOMText> textNode;
       PRUint32 strLength;

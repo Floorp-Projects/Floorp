@@ -366,7 +366,6 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
     nsCOMPtr<nsISelectionController> selCon;
     mHTMLEditor->GetSelectionController(getter_AddRefs(selCon));
     if (selCon) selCon->SetCaretEnabled(PR_TRUE);
-#ifdef IBMBIDI
     /* After inserting text the cursor Bidi level must be set to the level of the inserted text.
      * This is difficult, because we cannot know what the level is until after the Bidi algorithm
      * is applied to the whole paragraph.
@@ -380,7 +379,6 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
         shell->UndefineCaretBidiLevel();
       }
     }
-#endif
   }
 
   return res;
@@ -1413,11 +1411,9 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         if (NS_FAILED(res)) return res;
       }
     }
-#ifdef IBMBIDI
     nsCOMPtr<nsISelection> selection(aSelection);
     nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
     selPriv->SetInterlinePosition(PR_FALSE);
-#endif
     if (curNode) aSelection->Collapse(curNode, curOffset);
     // manually update the doc changed range so that AfterEdit will clean up
     // the correct portion of the document.
@@ -1829,12 +1825,10 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     if (NS_FAILED(res)) return res;
     if (*aHandled) return NS_OK;
         
-#ifdef IBMBIDI
     // Test for distance between caret and text that will be deleted
     res = CheckBidiLevelForDeletion(startNode, startOffset, aAction, aCancel);
     if (NS_FAILED(res)) return res;
     if (*aCancel) return NS_OK;
-#endif // IBMBIDI
 
 
     // what's in the direction we are deleting?
