@@ -37,6 +37,7 @@ EXPORTS =		\
     nsFileStream.h      \
     nsIFileStream.h     \
     nsIStringStream.h   \
+    nsFileSpecStreaming.h \
     nsSpecialSystemDirectory.h \
     nsIObserverService.h    \
     nsIObserverList.h       \

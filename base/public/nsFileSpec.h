@@ -53,7 +53,7 @@
 //
 //              nsFilePath myPath("/Development/iotest.txt");
 //
-//              nsOutputFileStream testStream(myPath);
+//              nsOutputFileStream testStream(nsFileSpec(myPath));
 //              testStream << "Hello World" << nsEndl;
 //
 //      4.  Handy methods for manipulating file specifiers safely, e.g. MakeUnique(),
@@ -63,35 +63,35 @@
 //
 //          Examples:
 //
-//              Initialize a URL from a string without suffix
+//              Initialize a URL from a string
 //
 //                  nsFileURL fileURL("file:///Development/MPW/MPW%20Shell");
 //
-//              Initialize a Unix path from a URL
+//              Initialize a Unix-style path from a URL
 //
 //                  nsFilePath filePath(fileURL);
 //
-//              Initialize a native file spec from a URL
+//              Initialize a file spec from a URL
 //
 //                  nsFileSpec fileSpec(fileURL);
 //
-//              Make the spec unique (this one has no suffix).
+//              Make the spec unique.
 //
 //                  fileSpec.MakeUnique();
 //
-//              Assign the spec to a URL
+//              Assign the spec to a URL (causing conversion)
 //
 //                  fileURL = fileSpec;
 //
-//              Assign a unix path using a string with a suffix.
+//              Assign a unix path using a string
 //
 //                  filePath = "/Development/MPW/SysErrs.err";
 //
-//              Assign to a file spec using a unix path.
+//              Assign to a file spec using a unix path (causing conversion).
 //
 //                  fileSpec = filePath;
 //
-//              Make this unique (this one has a suffix).
+//              Make this unique.
 //
 //                  fileSpec.MakeUnique();
 //
@@ -102,10 +102,6 @@
 //          specify a file, because two volumes can have the same name.  This
 //          is solved by holding a "private" native file spec inside the
 //          nsFilePath and nsFileURL classes, which is used when appropriate.
-//
-//      Not yet done:
-//
-//          Equality operators... much more.
 //
 //========================================================================================
 
@@ -153,8 +149,9 @@
 //========================================================================================
 
 class nsFileSpec;             // Preferred.  For i/o use nsInputFileStream, nsOutputFileStream
-class nsFilePath;             // This can be passed to NSPR file I/O routines, if you must.
+class nsFilePath;
 class nsFileURL;
+class nsNSPRPath;             // This can be passed to NSPR file I/O routines, if you must.
 class nsPersistentFileDescriptor; // Used for storage across program launches.
 
 #define kFileURLPrefix "file://"
@@ -167,6 +164,7 @@ class nsIInputStream;
 class nsOutputFileStream;
 class nsInputFileStream;
 class nsOutputConsoleStream;
+
 class nsString;
 
 //========================================================================================
@@ -269,8 +267,12 @@ protected:
     void                         ReleaseData();
     void                         ReallocData(PRUint32 inLength);
 
-// DATA
+    //--------------------------------------------------
+    // Data
+    //--------------------------------------------------
+
 protected:
+
     struct Data {
         int         mRefCount;
         PRUint32    mLength;
@@ -289,8 +291,8 @@ class NS_BASE nsFileSpec
                                 nsFileSpec();
                                 
                                 // These two meathods take *native* file paths.
-        NS_EXPLICIT             nsFileSpec(const char* inString, PRBool inCreateDirs = PR_FALSE);
-        NS_EXPLICIT             nsFileSpec(const nsString& inString, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFileSpec(const char* inNativePath, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFileSpec(const nsString& inNativePath, PRBool inCreateDirs = PR_FALSE);
                                 
         
         NS_EXPLICIT             nsFileSpec(const nsFilePath& inPath);
@@ -300,10 +302,10 @@ class NS_BASE nsFileSpec
         virtual                 ~nsFileSpec();
 
                                 // These two operands take *native* file paths.
-        void                    operator = (const char* inPath);
-        void                    operator = (const nsString& inPath)
+        void                    operator = (const char* inNativePath);
+        void                    operator = (const nsString& inNativePath)
                                 {
-                                    const nsAutoCString path(inPath);
+                                    const nsAutoCString path(inNativePath);
                                     *this = path;
                                 }
 
@@ -317,14 +319,19 @@ class NS_BASE nsFileSpec
 
                                 operator const char* () const { return GetCString(); }
                                     // Same as GetCString (please read the comments).
+                                    // Do not try to free this!
+       const char*              GetNativePathCString() const { return GetCString(); }
+                                    // Same as GetCString (please read the comments).
+                                    // Do not try to free this!
        const char*              GetCString() const;
-                                    // This is the only conversion to const char*
-                                    // that is provided, and it allows the
+                                    // Returns a native path, and allows the
                                     // path to be "passed" to legacy code.  This practice
                                     // is VERY EVIL and should only be used to support legacy
                                     // code.  Using it guarantees bugs on Macintosh.
                                     // The path is cached and freed by the nsFileSpec destructor
-                                    // so do not delete (or free) it.
+                                    // so do not delete (or free) it. See also nsNSPRPath below,
+                                    // if you really must pass a string  to PR_OpenFile().
+                                    // Doing so will introduce two automatic bugs.
 
 #ifdef XP_MAC
         // For Macintosh people, this is meant to be useful in its own right as a C++ version
@@ -367,22 +374,15 @@ class NS_BASE nsFileSpec
                                 {
                                     #ifndef XP_MAC 
                                     if (mPath.IsEmpty() && NS_SUCCEEDED(mError)) 
-                                        ((nsFileSpec*)this)->mError = NS_FILE_FAILURE; 
+                                        ((nsFileSpec*)this)->mError = NS_ERROR_NOT_INITIALIZED; 
                                     #endif 
                                     return mError;
                                 }
         PRBool                  Failed() const { return (PRBool)NS_FAILED(Error()); }
 
-
-        friend                  NS_BASE nsOutputStream& operator << (
-                                    nsOutputStream& s,
-                                    const nsFileSpec& spec); // THIS IS FOR DEBUGGING ONLY.
-                                        // see PersistentFileDescriptor for the real deal.
-
-
-        //--------------------------------------------------
-        // Queries and path algebra.  These do not modify the disk.
-        //--------------------------------------------------
+    //--------------------------------------------------
+    // Queries and path algebra.  These do not modify the disk.
+    //--------------------------------------------------
 
         char*                   GetLeafName() const; // Allocated.  Use nsCRT::free().
         void                    SetLeafName(const char* inLeafName);
@@ -422,14 +422,14 @@ class NS_BASE nsFileSpec
         PRUint32                GetFileSize() const;
         PRUint32                GetDiskSpaceAvailable() const;
         
-        nsFileSpec              operator + (const char* inRelativePath) const;
-        nsFileSpec              operator + (const nsString& inRelativePath) const
+        nsFileSpec              operator + (const char* inRelativeUnixPath) const;
+        nsFileSpec              operator + (const nsString& inRelativeUnixPath) const
                                 {
                                     const nsAutoCString 
-                                      relativePath(inRelativePath);
+                                      relativePath(inRelativeUnixPath);
                                     return *this + relativePath;
                                 }
-        void                    operator += (const char* inRelativePath);
+        void                    operator += (const char* inRelativeUnixPath);
                                     // Concatenate the relative path to this directory.
                                     // Used for constructing the filespec of a descendant.
                                     // This must be a directory for this to work.  This differs
@@ -438,9 +438,9 @@ class NS_BASE nsFileSpec
                                     // away its leaf information, whereas this one assumes
                                     // this is a directory, and the relative path starts
                                     // "below" this.
-        void                    operator += (const nsString& inRelativePath)
+        void                    operator += (const nsString& inRelativeUnixPath)
                                 {
-                                    const nsAutoCString relativePath(inRelativePath);
+                                    const nsAutoCString relativePath(inRelativeUnixPath);
                                     *this += relativePath;
                                 }
 
@@ -458,9 +458,9 @@ class NS_BASE nsFileSpec
                                     // More stringent than Exists()
         PRBool                  Exists() const;
 
-        //--------------------------------------------------
-        // Creation and deletion of objects.  These can modify the disk.
-        //--------------------------------------------------
+    //--------------------------------------------------
+    // Creation and deletion of objects.  These can modify the disk.
+    //--------------------------------------------------
 
         void                    CreateDirectory(int mode = 0700 /* for unix */);
         void                    CreateDir(int mode = 0700) { CreateDirectory(mode); }
@@ -481,9 +481,9 @@ class NS_BASE nsFileSpec
                                     const nsAutoCString argsString(args);
                                     return Execute(argsString);
                                 }
-        //--------------------------------------------------
-        // Data
-        //--------------------------------------------------
+    //--------------------------------------------------
+    // Data
+    //--------------------------------------------------
 
     protected:
                                 friend class nsFilePath;
@@ -509,8 +509,8 @@ class NS_BASE nsFileURL
 {
     public:
                                 nsFileURL(const nsFileURL& inURL);
-        NS_EXPLICIT             nsFileURL(const char* inString, PRBool inCreateDirs = PR_FALSE);
-        NS_EXPLICIT             nsFileURL(const nsString& inString, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFileURL(const char* inURLString, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFileURL(const nsString& inURLString, PRBool inCreateDirs = PR_FALSE);
         NS_EXPLICIT             nsFileURL(const nsFilePath& inPath);
         NS_EXPLICIT             nsFileURL(const nsFileSpec& inPath);
         virtual                 ~nsFileURL();
@@ -520,10 +520,10 @@ class NS_BASE nsFileURL
                                     // but should not provide a conversion constructor.
 
         void                    operator = (const nsFileURL& inURL);
-        void                    operator = (const char* inString);
-        void                    operator = (const nsString& inString)
+        void                    operator = (const char* inURLString);
+        void                    operator = (const nsString& inURLString)
                                 {
-                                    const nsAutoCString string(inString);
+                                    const nsAutoCString string(inURLString);
                                     *this = string;
                                 }
         void                    operator = (const nsFilePath& inOther);
@@ -532,15 +532,19 @@ class NS_BASE nsFileURL
         void                    operator +=(const char* inRelativeUnixPath);
         nsFileURL               operator +(const char* inRelativeUnixPath) const;
                                 operator const char* () const { return (const char*)mURL; } // deprecated.
+        const char*             GetURLString() const { return (const char*)mURL; }
+        							// Not allocated, so don't free it.
         const char*             GetAsString() const { return (const char*)mURL; }
-
-        friend                  NS_BASE nsOutputStream& operator << (
-                                     nsOutputStream& s, const nsFileURL& spec);
+        							// Not allocated, so don't free it.
 
 #ifdef XP_MAC
                                 // Accessor to allow quick assignment to a mFileSpec
         const nsFileSpec&       GetFileSpec() const { return mFileSpec; }
 #endif
+
+    //--------------------------------------------------
+    // Data
+    //--------------------------------------------------
 
     protected:
                                 friend class nsFilePath; // to allow construction of nsFilePath
@@ -562,8 +566,8 @@ class NS_BASE nsFilePath
 {
     public:
                                 nsFilePath(const nsFilePath& inPath);
-        NS_EXPLICIT             nsFilePath(const char* inString, PRBool inCreateDirs = PR_FALSE);
-        NS_EXPLICIT             nsFilePath(const nsString& inString, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFilePath(const char* inUnixPathString, PRBool inCreateDirs = PR_FALSE);
+        NS_EXPLICIT             nsFilePath(const nsString& inUnixPathString, PRBool inCreateDirs = PR_FALSE);
         NS_EXPLICIT             nsFilePath(const nsFileURL& inURL);
         NS_EXPLICIT             nsFilePath(const nsFileSpec& inPath);
         virtual                 ~nsFilePath();
@@ -572,13 +576,13 @@ class NS_BASE nsFilePath
                                 operator const char* () const { return mPath; }
                                     // This will return a UNIX string.  If you
                                     // need a string that can be passed into
-                                    // NSPR, take a look at the nsprPath class.
+                                    // NSPR, take a look at the nsNSPRPath class.
 
         void                    operator = (const nsFilePath& inPath);
-        void                    operator = (const char* inString);
-        void                    operator = (const nsString& inString)
+        void                    operator = (const char* inUnixPathString);
+        void                    operator = (const nsString& inUnixPathString)
                                 {
-                                    const nsAutoCString string(inString);
+                                    const nsAutoCString string(inUnixPathString);
                                     *this = string;
                                 }
         void                    operator = (const nsFileURL& inURL);
@@ -592,6 +596,10 @@ class NS_BASE nsFilePath
                                 // Accessor to allow quick assignment to a mFileSpec
         const nsFileSpec&       GetFileSpec() const { return mFileSpec; }
 #endif
+
+    //--------------------------------------------------
+    // Data
+    //--------------------------------------------------
 
     private:
 
@@ -622,8 +630,11 @@ class NS_BASE nsPersistentFileDescriptor
         NS_EXPLICIT             nsPersistentFileDescriptor(const nsFileSpec& inPath);
         void					operator = (const nsFileSpec& inPath);
         
-    	nsresult                Read(nsIInputStream* aStream);
-    	nsresult                Write(nsIOutputStream* aStream);
+		// The following four functions are declared here (as friends). Their implementations
+		// are in mozilla/base/src/nsFileSpecStreaming.cpp.
+	
+    	friend nsresult         Read(nsIInputStream* aStream, nsPersistentFileDescriptor&);
+    	friend nsresult         Write(nsIOutputStream* aStream, const nsPersistentFileDescriptor&);
     	    // writes the data to a file
     	friend NS_BASE nsInputStream& operator >> (nsInputStream&, nsPersistentFileDescriptor&);
     		// reads the data from a file
@@ -631,10 +642,14 @@ class NS_BASE nsPersistentFileDescriptor
     	    // writes the data to a file
         friend class nsFileSpec;
 
-    private:
-
+        void                    GetData(nsSimpleCharString& outData) const;
+        void                    SetData(const nsSimpleCharString& inData);
         void                    GetData(nsSimpleCharString& outData, PRInt32& outSize) const;
         void                    SetData(const nsSimpleCharString& inData, PRInt32 inSize);
+
+    //--------------------------------------------------
+    // Data
+    //--------------------------------------------------
 
     protected:
 
@@ -654,7 +669,7 @@ class NS_BASE nsDirectoryIterator
 //
 //  or:
 //
-//       for (nsDirectoryIterator i(parentDir, PR_FALSE); i.Exists(); i--)
+//       for (nsDirectoryIterator i(parentDir, -1); i.Exists(); i--)
 //       {
 //              // do something with i.Spec()
 //       }
@@ -681,6 +696,17 @@ class NS_BASE nsDirectoryIterator
 	    nsFileSpec&             Spec() { return mCurrent; }
 	     
 	private:
+
+#if defined(XP_MAC)
+        OSErr                   SetToIndex();
+#endif
+
+    //--------------------------------------------------
+    // Data
+    //--------------------------------------------------
+
+	private:
+
 	    nsFileSpec              mCurrent;
 	    PRBool                  mExists;
 	      
@@ -689,35 +715,44 @@ class NS_BASE nsDirectoryIterator
 #elif defined(XP_PC)
         PRDir*                  mDir; // XXX why not use PRDir for Unix too?
 #elif defined(XP_MAC)
-        OSErr                   SetToIndex();
 	    short                   mIndex;
 	    short                   mMaxIndex;
 #endif
 }; // class nsDirectoryIterator
 
 //========================================================================================
-class NS_BASE nsprPath
+class NS_BASE nsNSPRPath
 //  This class will allow you to pass any one of the nsFile* classes directly into NSPR
 //  without the need to worry about whether you have the right kind of filepath or not.
 //  It will also take care of cleaning up any allocated memory. 
 //========================================================================================
 {
 public:
-    NS_EXPLICIT                  nsprPath(const nsFileSpec& other)
-                                     : mFilePath(other), modifiedNSPRPath(nsnull) {}
-    NS_EXPLICIT                  nsprPath(const nsFileURL&  other)
-                                     : mFilePath(other), modifiedNSPRPath(nsnull) {}
-    NS_EXPLICIT                  nsprPath(const nsFilePath& other)
-                                     : mFilePath(other), modifiedNSPRPath(nsnull) {}
+    NS_EXPLICIT                  nsNSPRPath(const nsFileSpec& inSpec)
+                                     : mFilePath(inSpec), modifiedNSPRPath(nsnull) {}
+    NS_EXPLICIT                  nsNSPRPath(const nsFileURL& inURL)
+                                     : mFilePath(inURL), modifiedNSPRPath(nsnull) {}
+    NS_EXPLICIT                  nsNSPRPath(const nsFilePath& inUnixPath)
+                                     : mFilePath(inUnixPath), modifiedNSPRPath(nsnull) {}
     
-    virtual                      ~nsprPath();    
+    virtual                      ~nsNSPRPath();    
  
                                  operator const char*() const;
-                                    // actually, can modify modifiedNSPRPath, but
-                                    // that's really just "mutable".
+                                    // Returns the path
+                                    // that NSPR file routines expect on each platform.
+                                    // Concerning constness, this can modify
+                                    // modifiedNSPRPath, but it's really just "mutable". 
+
+    //--------------------------------------------------
+    // Data
+    //--------------------------------------------------
+
 private:
-                                 nsFilePath mFilePath;
-                                 char* modifiedNSPRPath; // Currently used only on XP_PC                           
-}; // class nsprPath
+
+    nsFilePath                   mFilePath;
+    char*                        modifiedNSPRPath; // Currently used only on XP_PC                           
+}; // class nsNSPRPath
+
+typedef nsNSPRPath nsprPath; // old name.
 
 #endif //  _FILESPEC_H_

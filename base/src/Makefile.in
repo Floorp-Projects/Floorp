@@ -40,6 +40,7 @@ CPPSRCS =                       \
     nsDeque.cpp                 \
     nsEscape.cpp                \
     nsFileSpec.cpp              \
+    nsFileSpecStreaming.cpp     \
     nsFileStream.cpp            \
     nsIFileStream.cpp           \
     nsIStringStream.cpp         \

@@ -177,7 +177,7 @@ PRBool nsFileSpec::Exists() const
 //----------------------------------------------------------------------------------------
 {
 	struct stat st;
-	return !mPath.IsEmpty() && 0 == stat(nsprPath(*this), &st); 
+	return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st); 
 } // nsFileSpec::Exists
 
 //----------------------------------------------------------------------------------------
@@ -185,7 +185,7 @@ void nsFileSpec::GetModDate(TimeStamp& outStamp) const
 //----------------------------------------------------------------------------------------
 {
 	struct stat st;
-    if (!mPath.IsEmpty() && stat(nsprPath(*this), &st) == 0) 
+    if (!mPath.IsEmpty() && stat(nsNSPRPath(*this), &st) == 0) 
         outStamp = st.st_mtime; 
     else
         outStamp = 0;
@@ -196,7 +196,7 @@ PRUint32 nsFileSpec::GetFileSize() const
 //----------------------------------------------------------------------------------------
 {
 	struct stat st;
-    if (!mPath.IsEmpty() && stat(nsprPath(*this), &st) == 0) 
+    if (!mPath.IsEmpty() && stat(nsNSPRPath(*this), &st) == 0) 
         return (PRUint32)st.st_size; 
     return 0;
 } // nsFileSpec::GetFileSize
@@ -206,7 +206,7 @@ PRBool nsFileSpec::IsFile() const
 //----------------------------------------------------------------------------------------
 {
   struct stat st;
-  return !mPath.IsEmpty() && 0 == stat(nsprPath(*this), &st) && (_S_IFREG & st.st_mode);
+  return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st) && (_S_IFREG & st.st_mode);
 } // nsFileSpec::IsFile
 
 //----------------------------------------------------------------------------------------
@@ -214,7 +214,7 @@ PRBool nsFileSpec::IsDirectory() const
 //----------------------------------------------------------------------------------------
 {
 	struct stat st;
-	return !mPath.IsEmpty() && 0 == stat(nsprPath(*this), &st) && (_S_IFDIR & st.st_mode);
+	return !mPath.IsEmpty() && 0 == stat(nsNSPRPath(*this), &st) && (_S_IFDIR & st.st_mode);
 } // nsFileSpec::IsDirectory
 
 //----------------------------------------------------------------------------------------
@@ -253,7 +253,7 @@ void nsFileSpec::CreateDirectory(int /*mode*/)
 {
 	// Note that mPath is canonical!
 	if (!mPath.IsEmpty())
-	    mkdir(nsprPath(*this));
+	    mkdir(nsNSPRPath(*this));
 } // nsFileSpec::CreateDirectory
 
 //----------------------------------------------------------------------------------------
@@ -270,11 +270,11 @@ void nsFileSpec::Delete(PRBool inRecursive) const
                     child.Delete(inRecursive);
                 }		
         }
-	    rmdir(nsprPath(*this));
+	    rmdir(nsNSPRPath(*this));
     }
 	else if (!mPath.IsEmpty())
     {
-        remove(nsprPath(*this));
+        remove(nsNSPRPath(*this));
     }
 } // nsFileSpec::Delete
 
