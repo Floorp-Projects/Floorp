@@ -44,7 +44,6 @@ nsMsgWindow::nsMsgWindow()
 	NS_INIT_ISUPPORTS();
 	mRootWebShell = nsnull;
   mMessageWindowWebShell = nsnull;
-  Init();
 }
 
 nsMsgWindow::~nsMsgWindow()
