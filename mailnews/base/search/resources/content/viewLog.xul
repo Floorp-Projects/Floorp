@@ -24,10 +24,13 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/viewLog.dtd">
 
-<window id="viewLogWindow"
+<dialog id="viewLogWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad();"
         title="&viewLog.title;"
+        windowtype="mailnews:filterlog"
+        buttons="accept"
+        ondialogaccept="window.close()"
         persist="screenX screenY width height">
 
   <script type="application/x-javascript" src="chrome://messenger/content/viewLog.js"/>
@@ -49,4 +52,4 @@ Rights Reserved.
       <spacer height="10px"/>
     </vbox>
   </vbox>
-</window>
+</dialog>
