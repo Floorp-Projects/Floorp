@@ -395,7 +395,6 @@ endif
 
 ifdef NECKO
 DEFINES += -DNECKO
-DEFINES += -DNET_SOCKET_PROVIDER_BUILD
 endif
 
 ifdef MOZ_DARK
