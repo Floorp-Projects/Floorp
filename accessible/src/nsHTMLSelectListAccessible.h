@@ -69,6 +69,7 @@ public:
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
   NS_IMETHOD GetAccName(nsAWritableString& _retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
+  static nsresult GetFocusedOptionNode(nsIWeakReference *aPresShell, nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
 
 protected:
   

@@ -48,6 +48,7 @@
 #include "nsILink.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMHTMLOptionElement.h"
 
 // IFrame
 #include "nsIDocShell.h"
@@ -634,6 +635,24 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     if (link) {
       nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(shell));
       newAcc = new nsHTMLLinkAccessible(aNode, weakShell);
+    }
+  }
+
+  // ---- If <select> option, create select option accessible
+  if (!newAcc) {
+    nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(aNode));
+    if (optionElement) {
+      // nsHTMLSelectionOptionAccessible's must be created via the parent
+      nsCOMPtr<nsIDOMNode> parentNode;
+      aNode->GetParentNode(getter_AddRefs(parentNode));
+      if (parentNode) {
+        nsCOMPtr<nsIAccessible> parentAccessible;
+        GetAccessibleFor(parentNode, getter_AddRefs(parentAccessible));
+        if (parentAccessible) {
+          nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(shell));
+          newAcc = new nsHTMLSelectOptionAccessible(parentAccessible, aNode, weakShell);
+        }
+      }
     }
   }
 
