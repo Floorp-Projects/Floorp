@@ -29,7 +29,6 @@
 #include "nsNewsDatabase.h"
 #include "nsMsgDBCID.h"
 #include "nsNNTPNewsgroup.h"
-#include "nsCOMPtr.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsIMessage.h"
@@ -37,6 +36,11 @@
 #include "nsIPref.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "nsNntpService.h"
+#include "nsIChannel.h"
+#include "nsILoadGroup.h"
+
+#include "nsCOMPtr.h"
+
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
 
@@ -103,17 +107,50 @@ nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 // nsIMsgMessageService support
 ////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, nsIUrlListener *aUrlListener, nsIURI **aURL)
+NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAddDummyEnvelope, nsIUrlListener *aUrlListener, nsIURI **aURL)
 {
-	// unimplemented for news right now....if we feel it would be useful to 
-	// be able to spool a news article to disk then this is the method we need to implement.
+    nsresult rv = NS_OK;
+    if (!aMessageURI) 
+        return NS_ERROR_NULL_POINTER;
 
-  //
-  // Returning success causes us much grief with the editor because we wait until this is
-  // complete to do anything...so changing this to failure.
-  //
-	nsresult rv = NS_ERROR_FAILURE;
-	return rv;
+#ifdef DEBUG_NEWS
+    printf("nsNntpService::SaveMessageToDisk(%s,...)\n",aMessageURI);
+#endif
+
+    nsCAutoString uri(aMessageURI);
+    nsCAutoString newsgroupName;
+    nsMsgKey key = nsMsgKey_None;
+    
+    if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0)
+	    rv = ConvertNewsMessageURI2NewsURI(aMessageURI, uri, newsgroupName, &key);
+    else
+        return NS_ERROR_UNEXPECTED;
+
+    // now create a url with this uri spec
+    nsCOMPtr<nsIURI> myuri;
+
+    rv = ConstructNntpUrl(uri, newsgroupName, key, nsnull, aUrlListener, getter_AddRefs(myuri));
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(myuri);
+        nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(myuri);
+        nntpUrl->SetNewsAction(nsINntpUrl::ActionSaveMessageToDisk);
+        if (msgUrl)
+        {
+		    msgUrl->SetMessageFile(aFile);
+            msgUrl->SetAddDummyEnvelope(aAddDummyEnvelope);
+        }   
+    
+        RunNewsUrl(myuri, nsnull);
+    }
+
+    if (aURL)
+    {
+	    *aURL = myuri;
+	    NS_IF_ADDREF(*aURL);
+    }
+
+  return rv;
 }
 
 nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURI ** aURL)
@@ -132,18 +169,37 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
   nsCAutoString newsgroupName;
   nsMsgKey key = nsMsgKey_None;
     
-  if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0) {
+  if (PL_strncmp(aMessageURI, kNewsMessageRootURI, kNewsMessageRootURILen) == 0)
 	rv = ConvertNewsMessageURI2NewsURI(aMessageURI, uri, newsgroupName, &key);
-  }
-  else {
+  else
     return NS_ERROR_UNEXPECTED;
+
+  // now create a url with this uri spec
+  nsCOMPtr<nsIURI> myuri;
+
+  rv = ConstructNntpUrl(uri, newsgroupName, key, aDisplayConsumer, aUrlListener, getter_AddRefs(myuri));
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(myuri);
+    nntpUrl->SetNewsAction(nsINntpUrl::ActionDisplayArticle);
+
+    // now is where our behavior differs....if the consumer is the webshell then we want to 
+    // run the url in the webshell in order to display it. If it isn't a webshell then just
+    // run the news url like we would any other news url. 
+	  nsCOMPtr<nsIWebShell> webshell = do_QueryInterface(aDisplayConsumer, &rv);
+    if (NS_SUCCEEDED(rv) && webshell)
+	    rv = webshell->LoadURI(myuri, "view", nsnull, PR_TRUE);
+    else
+      RunNewsUrl(myuri, aDisplayConsumer);
   }
 
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (aURL)
+  {
+	  *aURL = myuri;
+	  NS_IF_ADDREF(*aURL);
   }
- 
-  return RunNewsUrl(uri, newsgroupName, key, aDisplayConsumer, aUrlListener, aURL);
+
+  return rv;
 }
 
 nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, nsCString &newsURI, nsCString &newsgroupName, nsMsgKey *key)
@@ -574,6 +630,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
   rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, nsINntpUrl::GetIID(), getter_AddRefs(nntpUrl));
   if (NS_FAILED(rv) || !nntpUrl) return rv;
 
+  nntpUrl->SetNewsAction(nsINntpUrl::ActionPostArticle);
+
   nsCAutoString host;
   rv = DetermineHostForPosting(host, newsgroupsNames);
   
@@ -631,13 +689,8 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *newsgrou
   return rv;
 }
 
-nsresult 
-nsNntpService::RunNewsUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener, nsIURI **_retval)
+nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener,  nsIURI ** aUrl)
 {
-#ifdef DEBUG_NEWS
-  printf("nsNntpService::RunNewsUrl(%s,%s,%u,...)\n", urlString, newsgroupName, key);
-#endif
-  
   nsCOMPtr <nsINntpUrl> nntpUrl;
   nsresult rv = NS_OK;
 
@@ -673,21 +726,25 @@ nsNntpService::RunNewsUrl(const char * urlString, const char * newsgroupName, ns
   if (aUrlListener) // register listener if there is one...
     mailnewsurl->RegisterListener(aUrlListener);
 
+  (*aUrl) = mailnewsurl;
+  NS_IF_ADDREF(*aUrl);
+  return rv;
+
+}
+
+nsresult 
+nsNntpService::RunNewsUrl(nsIURI * aUri, nsISupports * aConsumer)
+{
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
 
   nntpProtocol = new nsNNTPProtocol();
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
   
-  rv = nntpProtocol->Initialize(mailnewsurl);
+  nsresult rv = nntpProtocol->Initialize(aUri);
   if (NS_FAILED(rv)) return rv;
   
-  rv = nntpProtocol->LoadUrl(mailnewsurl, aConsumer);
-  if (NS_FAILED(rv)) return rv;
-  
-  if (_retval)
-	  nntpUrl->QueryInterface(nsIURI::GetIID(), (void **) _retval);
-	
+  rv = nntpProtocol->LoadUrl(aUri, aConsumer);
   return rv;
 }
 
@@ -706,8 +763,6 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   char * nntpHostName = nsnull;
   
   nsCOMPtr<nsIMsgIncomingServer> server;
-  nsCOMPtr<nsINntpUrl> nntpUrl;
-  
   server = do_QueryInterface(nntpServer);
   
   // convert normal host to nntp host.
@@ -749,11 +804,23 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
 	    uriStr.Right(newsgroupName, uriStr.Length() - atPos /* for "news://<username>" */ -1 /* for the @ */ - PL_strlen(nntpHostName) /* for the hostname */ -1 /* for the next slash */);
     }
     
-    rv = RunNewsUrl(uriStr, newsgroupName, nsMsgKey_None, nsnull, aUrlListener, _retval);
+	nsCOMPtr<nsIURI> aUrl;
+	rv = ConstructNntpUrl(uriStr, newsgroupName, nsMsgKey_None, nsnull, aUrlListener,  getter_AddRefs(aUrl));
+	if (NS_FAILED(rv)) return rv;
+	nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(aUrl);
+	if (nntpUrl)
+		nntpUrl->SetNewsAction(nsINntpUrl::ActionGetNewNews);
+    rv = RunNewsUrl(aUrl, nsnull);  
+	
+	if (_retval)
+	{
+		*_retval = aUrl;
+		NS_IF_ADDREF(*_retval);
+	}
   }
-  else {
+  else 
     rv = NS_ERROR_FAILURE;
-  }
+  
       
   NS_UNLOCK_INSTANCE();
   return rv;
@@ -821,8 +888,19 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
 #endif  
 
   nsCAutoString newsgroupNameStr(newsgroupname);
-  rv = RunNewsUrl(urlStr, newsgroupNameStr, key, aConsumer, aUrlListener, aURL);
+  nsCOMPtr<nsIURI> url;
+  rv = ConstructNntpUrl(urlStr, newsgroupNameStr, key, aConsumer, aUrlListener,  getter_AddRefs(url));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(url);
+  if (nntpUrl)
+	nntpUrl->SetNewsAction(nsINntpUrl::ActionCancelArticle);
+  rv = RunNewsUrl(url, aConsumer);  
 
+  if (aURL)
+  {
+	*aURL = url;
+	NS_IF_ADDREF(*aURL);
+  }
   return rv; 
 }
 
@@ -854,16 +932,36 @@ NS_IMETHODIMP nsNntpService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBa
 
 NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
-    *_retval = nsnull;
-	// i just haven't implemented this yet...I will be though....
-	return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv = NS_OK;
+
+	nsCOMPtr<nsINntpUrl> nntpUrl;
+	rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull, NS_GET_IID(nsINntpUrl), getter_AddRefs(nntpUrl));
+	if (NS_FAILED(rv)) return rv;
+	nntpUrl->SetNewsAction(nsINntpUrl::ActionDisplayArticle);
+
+	nntpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+
+	// don't worry this cast is really okay...there'a bug in XPIDL compiler that is preventing
+	// a "cont char *" in paramemter for uri SetSpec...
+	(*_retval)->SetSpec((char *) aSpec);
+	(*_retval)->SetPort(NEWS_PORT);
+	return rv;
 }
 
 NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
 {
-    *_retval = nsnull;
-	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
-	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
-	// the necko team in more detail later on.
-	return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv = NS_OK;
+	nsNNTPProtocol *nntpProtocol = new nsNNTPProtocol();
+	if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
+  
+	rv = nntpProtocol->Initialize(aURI);
+	nntpProtocol->SetLoadGroup(aGroup);
+	if (nntpProtocol)
+	{
+		rv = nntpProtocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+
+	return rv;
 }

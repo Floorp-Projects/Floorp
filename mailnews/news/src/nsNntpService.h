@@ -32,13 +32,17 @@ class nsIUrlListener;
 class nsNntpService : public nsINntpService, public nsIMsgMessageService, public nsIProtocolHandler
 {
 public:
+
   NS_DECL_NSINNTPSERVICE
   NS_DECL_NSIMSGMESSAGESERVICE
+
   NS_DECL_NSIPROTOCOLHANDLER
+  NS_DECL_ISUPPORTS  
   
   // nsNntpService
   nsNntpService();
   virtual ~nsNntpService();
+protected:
   nsresult ConvertNewsMessageURI2NewsURI(const char *messageURI,
                                          nsCString &newsURI,
                                          nsCString &newsgroupName,
@@ -47,7 +51,10 @@ public:
   nsresult DetermineHostForPosting(nsCString &host, const char *newsgroupNames);
   nsresult FindHostFromGroup(nsCString &host, nsCString &groupName);
   
-  NS_DECL_ISUPPORTS  
+  // a convience routine used to put together news urls.
+  nsresult ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsISupports * aConsumer, nsIUrlListener *aUrlListener,  nsIURI ** aUrl);
+  // a convience routine to run news urls
+  nsresult RunNewsUrl (nsIURI * aUrl, nsISupports * aConsumer);
 };
 
 #endif /* nsNntpService_h___ */
