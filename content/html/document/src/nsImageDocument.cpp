@@ -375,6 +375,7 @@ nsresult nsImageDocument::UpdateTitle( void )
 {
   nsString titleStr;
 
+#ifdef USE_EXTENSION_FOR_TYPE
   // XXX TEMPORARY XXX
   // We want to display the image type, however there is no way to right now
   // so instead we just get the image-extension
@@ -393,6 +394,8 @@ nsresult nsImageDocument::UpdateTitle( void )
     }
     NS_IF_RELEASE(pURL);
   }
+#endif
+
   // append the image information...
   titleStr.AppendWithConversion( " Image" );
   if (mImageRequest) {
