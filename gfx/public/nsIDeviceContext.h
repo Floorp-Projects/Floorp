@@ -138,6 +138,12 @@ typedef void * nsNativeDeviceContext;
 /* Cannot Print or Print Preview XUL Documents */
 #define NS_ERROR_GFX_PRINTER_NO_XUL \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+27)
+/* The toolkit no longer supports the Print Dialog (for embedders) */
+#define NS_ERROR_GFX_NO_PRINTDIALOG_IN_TOOLKIT \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+28)
+/* The was wasn't any Print Prompt service registered (this shouldn't happen) */
+#define NS_ERROR_GFX_NO_PRINTROMPTSERVICE \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+29)
 
 
 /**
@@ -462,6 +468,17 @@ public:
   NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                  nsIDeviceContext *&aContext) = 0;
 
+  /**
+   * This is enables the DeviceContext to anything it needs to do for Printing
+   * before Reflow and BeginDocument is where work can be done after reflow.
+   * @param aTitle - itle of Document
+   * @param aPrintToFileName - name of file to print to, if NULL then don't print to file
+   *
+   * @return error status
+   */
+  NS_IMETHOD PrepareDocument(PRUnichar * aTitle, 
+                             PRUnichar*  aPrintToFileName) = 0;
+
   //XXX need to work out re-entrancy issues for these APIs... MMP
   /**
    * Inform the output device that output of a document is beginning
@@ -469,9 +486,18 @@ public:
    * EndDocument().
    * XXX needs to take parameters so that feedback can be given to the
    * app regarding pagination progress and aborting print operations?
+   *
+   * @param aTitle - itle of Document
+   * @param aPrintToFileName - name of file to print to, if NULL then don't print to file
+   * @param aStartPage - starting page number (must be greater than zero)
+   * @param aEndPage - ending page number     (must be less than or equal to number of pages)
+   *
    * @return error status
    */
-  NS_IMETHOD BeginDocument(PRUnichar * aTitle) = 0;
+  NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
+                           PRUnichar*  aPrintToFileName,
+                           PRInt32     aStartPage, 
+                           PRInt32     aEndPage) = 0;
 
   /**
    * Inform the output device that output of a document is ending.

@@ -3405,4 +3405,13 @@ NS_IMETHODIMP nsBrowserWindow::EnsureWebBrowserChrome()
    return NS_OK;
 }
 
+nsresult nsBrowserWindow::GetWindow(nsIWidget** aWindow)
+{
+  if (aWindow && mWindow) {
+    *aWindow = mWindow.get();
+    NS_IF_ADDREF(*aWindow);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
 

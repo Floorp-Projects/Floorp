@@ -36,6 +36,7 @@ Contributor(s):
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="onLoad();"
   ondialogaccept="return onAccept();"
+  oncancel="return onCancel();"
   title="&printSetup.title;"
   persist="screenX screenY"
   screenX="24" screenY="24">

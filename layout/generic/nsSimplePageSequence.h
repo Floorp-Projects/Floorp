@@ -55,6 +55,8 @@ public:
   nsFont *    mHeadFootFont;
   PRUnichar * mPageNumFormat;
   PRUnichar * mPageNumAndTotalsFormat;
+  PRUnichar * mDocTitle;
+  PRUnichar * mDocURL;
 
   nsRect      mReflowRect;
   nsMargin    mReflowMargin;
@@ -99,7 +101,9 @@ public:
 
   // Async Printing
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
-                        nsIPrintSettings* aPrintSettings);
+                        nsIPrintSettings* aPrintSettings,
+                        PRUnichar*        aDocTitle,
+                        PRUnichar*        aDocURL);
   NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext);
   NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum);
   NS_IMETHOD GetNumPages(PRInt32* aNumPages);

@@ -41,7 +41,7 @@
 resource 'DITL' (128) {
 	{	/* array DITLarray: 6 elements */
 		/* [1] */
-		{16, 32, 33, 168},
+		{16, 32, 33, 178},
 		CheckBox {
 			enabled,
 			"Print Selection Only"

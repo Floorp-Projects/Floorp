@@ -37,15 +37,13 @@ REQUIRES	= xpcom \
 		  widget \
 		  view \
 		  util \
-		  dom \
 		  pref \
 		  uconv \
 		  unicharutil \
-		  windowwatcher \
 		  locale \
+		  necko \
 		  content \
 		  layout \
-		  necko \
 		  $(NULL)
 
 # Sun's Complex Text Layout support

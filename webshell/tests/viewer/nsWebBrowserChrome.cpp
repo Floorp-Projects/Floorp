@@ -323,8 +323,13 @@ NS_IMETHODIMP nsWebBrowserChrome::GetSiteWindow(void ** aParentNativeWindow)
 {
    NS_ENSURE_ARG_POINTER(aParentNativeWindow);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   if (mBrowserWindow) {
+     nsCOMPtr<nsIWidget> window;
+     mBrowserWindow->GetWindow(getter_AddRefs(window));
+     if (window) {
+       *aParentNativeWindow = window->GetNativeData(NS_NATIVE_WINDOW);
+     }
+   }
    return NS_OK;
 }
 

@@ -47,10 +47,7 @@
 #include "nsGfxCIID.h"
 #include "nsReadableutils.h"
 
-// Print Options
-#include "nsIPrintOptions.h"
 #include "nsString.h"
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 #define DOC_TITLE_LENGTH      64
 
@@ -755,7 +752,7 @@ static void DisplayLastError()
 #endif
 
 
-NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
+NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
 {
   nsresult rv = NS_ERROR_GFX_PRINTER_STARTDOC;
 
@@ -771,21 +768,9 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
     char *title = GetACPString(titleStr);
 
     char* docName = nsnull;
-    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-    if (printService) {
-      PRBool printToFile = PR_FALSE;
-      printService->GetPrintToFile(&printToFile);
-      if (printToFile) {
-        PRUnichar* uStr;
-        printService->GetToFileName(&uStr);
-        if (uStr != nsnull) {
-          nsAutoString str(uStr);
-          if (str.Length() > 0) {
-            docName = ToNewCString(str);
-          }
-          nsMemory::Free(uStr);
-        }
-      }
+    nsAutoString str(aPrintToFileName);
+    if (str.Length() > 0) {
+      docName = ToNewCString(str);
     }
     docinfo.cbSize = sizeof(docinfo);
     docinfo.lpszDocName = title != nsnull?title:"Mozilla Document";

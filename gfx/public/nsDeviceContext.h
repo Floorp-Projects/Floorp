@@ -131,6 +131,8 @@ public:
 
   NS_IMETHOD GetPaletteInfo(nsPaletteInfo& aPaletteInfo);
 
+  NS_IMETHOD PrepareDocument(PRUnichar * aTitle, 
+                             PRUnichar*  aPrintToFileName) { return NS_OK; }
   NS_IMETHOD AbortDocument(void) { return NS_OK; }
 
 #ifdef NS_PRINT_PREVIEW

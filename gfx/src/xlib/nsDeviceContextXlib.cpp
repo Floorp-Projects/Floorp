@@ -460,7 +460,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDeviceContextFor(nsIDeviceContextSpec *aDe
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP nsDeviceContextXlib::BeginDocument(PRUnichar * aTitle)
+NS_IMETHODIMP nsDeviceContextXlib::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::BeginDocument()\n"));
   return NS_OK;
