@@ -239,7 +239,7 @@
     </toolbar>
   </toolbox>
   
-  <tree id="bookmarksTree" class="bookmarks-window-tree" context="bmContext" ref="NC:BookmarksRoot"
+  <tree id="bookmarksTree" class="bookmarks-window-tree" ref="NC:BookmarksRoot"
         datasources="rdf:bookmarks rdf:localsearch rdf:internetsearch"
         multiple="true" flags="dont-test-empty"
         ondragover="nsDragAndDrop.dragOver(event, bookmarksDNDObserver);"
@@ -383,7 +383,7 @@
       </treerow>
     </treehead>
 
-    <treechildren flex="1" id="treechildren-bookmarks" 
+    <treechildren flex="1" id="treechildren-bookmarks" context="bmContext"
                   onclick="gBookmarksShell.treeOpen(event);"/>
   </tree>
     
