@@ -129,6 +129,14 @@ nsMemoryCacheDevice::GetDeviceID()
 }
 
 
+inline void
+nsMemoryCacheDevice::EnsureEvictionLists()
+{
+    if (!mEvictionList)
+        CreateEvictionLists();
+}
+
+
 nsCacheEntry *
 nsMemoryCacheDevice::FindEntry(nsCString * key)
 {
@@ -473,13 +481,6 @@ nsMemoryCacheDevice::SetCapacity(PRInt32  capacity)
     PRInt32 hardLimit = capacity * 1024;  // convert k into bytes
     PRInt32 softLimit = (hardLimit * 9) / 10;
     AdjustMemoryLimits(softLimit, hardLimit);
-}
-
-inline void
-nsMemoryCacheDevice::EnsureEvictionLists()
-{
-    if (!mEvictionList)
-        CreateEvictionLists();
 }
 
 void
