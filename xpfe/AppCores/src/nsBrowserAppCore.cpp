@@ -57,6 +57,9 @@
 #include "nsICmdLineService.h"
 #include "nsIGlobalHistory.h"
 
+#include "nsIRelatedLinksDataSource.h"
+#include "nsIDOMXULDocument.h"
+
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsFileSpec.h"  // needed for nsAutoCString
@@ -800,6 +803,51 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
         } while (0);
         delete[] urlSpec;
     }
+
+    // Update Related Links
+    if (mWebShell)
+    {
+    	nsCOMPtr<nsIScriptContextOwner>	newContextOwner;
+    	newContextOwner = do_QueryInterface(mWebShell);
+    	if (newContextOwner)
+    	{
+    		nsCOMPtr<nsIScriptGlobalObject>	newGlobalObject;
+    		nsresult			rv;
+    		if (NS_SUCCEEDED(rv = newContextOwner->GetScriptGlobalObject(getter_AddRefs(newGlobalObject))))
+    		{
+    			if (newGlobalObject)
+			{
+				nsCOMPtr<nsIDOMWindow>	aDOMWindow;
+				aDOMWindow = do_QueryInterface(newGlobalObject);
+				if (aDOMWindow)
+				{
+					nsCOMPtr<nsIDOMDocument>	aDOMDocument;
+					if (NS_SUCCEEDED(rv = aDOMWindow->GetDocument(getter_AddRefs(aDOMDocument))))
+					{
+						nsCOMPtr<nsIDOMXULDocument>	xulDoc( do_QueryInterface(aDOMDocument) );
+						if (xulDoc)
+						{
+							nsCOMPtr<nsIRDFService>		rdfService;
+							if (NS_SUCCEEDED(rv = xulDoc->GetRdf(getter_AddRefs(rdfService))))
+							{
+								nsCOMPtr<nsIRDFDataSource>	relatedLinksDS;
+								if (NS_SUCCEEDED(rv = rdfService->GetDataSource("rdf:relatedlinks", getter_AddRefs(relatedLinksDS))))
+								{
+									nsCOMPtr<nsIRDFRelatedLinksDataSource>	rl(do_QueryInterface(relatedLinksDS));
+									if (rl)
+									{
+										rl->SetRelatedLinksURL(spec);
+									}
+								}
+							}
+						}
+					}
+				}
+    			}
+    		}
+    	}
+    }
+    
      // Stop the throbber and set the urlbar string
     setAttribute( mWebShell, "urlbar", "value", spec );
     setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
