@@ -126,7 +126,7 @@
   #define explicit
 #endif
 
-#ifndef HAVE_CPP_BOOL
+#ifdef HAVE_CPP_BOOL
 	typedef bool NSCAP_BOOL;
 #else
 	typedef PRBool NSCAP_BOOL;
