@@ -190,10 +190,9 @@ NS_IMETHODIMP nsAbDirectory::GetChildNodes(nsIEnumerator* *result)
 					if (childDir)
 					{
 						PRUnichar *unichars = nsnull;
-						PRInt32 unicharLength = 0;
 						PRInt32 descLength = PL_strlen(server->description);
 						INTL_ConvertToUnicode((const char *)server->description, 
-							descLength, (void**)&unichars, &unicharLength);
+							descLength, (void**)&unichars);
 						childDir->SetDirName(unichars);
 						childDir->SetServer(server);
 						PR_FREEIF(unichars);

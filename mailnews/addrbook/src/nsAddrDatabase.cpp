@@ -3028,8 +3028,7 @@ nsresult nsAddrDatabase::AddLowercaseColumn
 	if (utf8String)
 	{
 		PRUnichar *unicodeStr = nsnull;
-		PRInt32 unicharLength = 0;
-		INTL_ConvertToUnicode((const char *)utf8String, nsCRT::strlen(utf8String), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)utf8String, nsCRT::strlen(utf8String), (void**)&unicodeStr);
 		if (unicodeStr)
 		{
 			nsAutoString newUnicodeString(unicodeStr);
@@ -3055,13 +3054,12 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
     nsAutoString tempString;
 	char *tempCString = nsnull;
 	PRUnichar *unicodeStr = nsnull;
-	PRInt32 unicharLength = 0;
 
 	err = GetStringColumn(cardRow, m_FirstNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetFirstName(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3071,7 +3069,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetLastName(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3081,7 +3079,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetDisplayName(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3091,7 +3089,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetNickName(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3101,7 +3099,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetPrimaryEmail(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3111,7 +3109,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetSecondEmail(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3126,7 +3124,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWorkPhone(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3136,7 +3134,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetHomePhone(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3146,7 +3144,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetFaxNumber(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3156,7 +3154,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetPagerNumber(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3166,7 +3164,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetCellularNumber(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3176,7 +3174,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetHomeAddress(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3186,7 +3184,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetHomeAddress2(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3196,7 +3194,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetHomeCity(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3206,7 +3204,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetHomeState(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3216,7 +3214,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetHomeZipCode(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3226,7 +3224,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetHomeCountry(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3236,7 +3234,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWorkAddress(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3246,7 +3244,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWorkAddress2(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3256,7 +3254,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWorkCity(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3266,7 +3264,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWorkState(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3276,7 +3274,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWorkZipCode(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3286,7 +3284,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWorkCountry(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3296,7 +3294,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetJobTitle(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3306,7 +3304,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetDepartment(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3316,7 +3314,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetCompany(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3326,7 +3324,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWebPage1(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3336,7 +3334,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetWebPage2(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3346,7 +3344,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetBirthYear(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3356,7 +3354,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetBirthMonth(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3366,7 +3364,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetBirthDay(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3376,7 +3374,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetCustom1(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3386,7 +3384,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetCustom2(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3396,7 +3394,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetCustom3(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3406,7 +3404,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetCustom4(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3416,7 +3414,7 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newCard->SetNotes(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3444,7 +3442,7 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listR
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		listCard->SetDisplayName(unicodeStr);
 		listCard->SetLastName(unicodeStr);
 		nsMemory::Free(tempCString);
@@ -3454,7 +3452,7 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listR
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		listCard->SetNickName(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3463,7 +3461,7 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listR
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		listCard->SetNotes(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3484,13 +3482,12 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
     nsAutoString tempString;
 	char *tempCString = nsnull;
 	PRUnichar *unicodeStr = nsnull;
-	PRInt32 unicharLength = 0;
 
 	err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newList->SetListName(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3499,7 +3496,7 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newList->SetListNickName(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -3508,7 +3505,7 @@ nsresult nsAddrDatabase::GetListFromDB(nsIAbDirectory *newList, nsIMdbRow* listR
 	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
-		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)tempCString, nsCRT::strlen(tempCString), (void**)&unicodeStr);
 		newList->SetDescription(unicodeStr);
 		nsMemory::Free(tempCString);
 		PR_Free(unicodeStr);
@@ -4025,8 +4022,7 @@ nsresult nsAddrDatabase::GetRowForEmailAddress(const char *emailAddress, nsIMdbR
 {
 	nsresult result = NS_ERROR_FAILURE;
 	PRUnichar *unicodeStr = nsnull;
-	PRInt32 unicharLength = 0;
-	INTL_ConvertToUnicode((const char *)emailAddress, nsCRT::strlen(emailAddress), (void**)&unicodeStr, &unicharLength);
+	INTL_ConvertToUnicode((const char *)emailAddress, nsCRT::strlen(emailAddress), (void**)&unicodeStr);
 	if (unicodeStr)
 	{
 		nsAutoString newUnicodeString(unicodeStr);

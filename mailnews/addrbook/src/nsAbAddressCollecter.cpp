@@ -253,20 +253,19 @@ nsresult nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char
 	char *firstName = nsnull;
 	char *lastName = nsnull;
 	PRUnichar *unicodeStr = nsnull;
-	PRInt32 unicharLength = 0;
 
 
-	INTL_ConvertToUnicode((const char *)fullName, nsCRT::strlen(fullName), (void**)&unicodeStr, &unicharLength);
+	INTL_ConvertToUnicode((const char *)fullName, nsCRT::strlen(fullName), (void**)&unicodeStr);
 	senderCard->SetDisplayName(unicodeStr);
 	PR_Free(unicodeStr);
 	nsresult rv = SplitFullName (fullName, &firstName, &lastName);
 	if (NS_SUCCEEDED(rv))
 	{
-		INTL_ConvertToUnicode((const char *)firstName, nsCRT::strlen(firstName), (void**)&unicodeStr, &unicharLength);
+		INTL_ConvertToUnicode((const char *)firstName, nsCRT::strlen(firstName), (void**)&unicodeStr);
 		senderCard->SetFirstName(unicodeStr);
 		PR_Free(unicodeStr);
         if (lastName) {
-            INTL_ConvertToUnicode((const char *)lastName, nsCRT::strlen(lastName), (void**)&unicodeStr, &unicharLength);
+            INTL_ConvertToUnicode((const char *)lastName, nsCRT::strlen(lastName), (void**)&unicodeStr);
             senderCard->SetLastName(unicodeStr);
             PR_Free(unicodeStr);
         }

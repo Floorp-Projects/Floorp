@@ -141,8 +141,7 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
       if (fullAddress && *fullAddress)
       {
         /* We need to convert back the result from UTF-8 to Unicode */
-        PRInt32 strLen;
-        INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&fullAddrStr, &strLen);
+        INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&fullAddrStr);
         PR_Free(fullAddress);
       }
       Recycle(utf8Name);
