@@ -2711,7 +2711,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     JSScript *script;
     JSOp op;
     const JSCodeSpec *cs;
-    uint32 format, mode;
+    uint32 format, mode, type;
     intN depth;
     jssrcnote *sn;
     uintN len, off;
@@ -2846,7 +2846,17 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
             return NULL;
         memcpy(tmp, begin, len * sizeof(jsbytecode));
         if (mode == JOF_NAME) {
-            tmp[0] = JSOP_NAME;
+            /*
+             * JOF_NAME does not imply JOF_CONST, so we must check for the
+             * QARG and QVAR format types and translate those to JSOP_GETARG
+             * or JSOP_GETVAR appropriately, instead of JSOP_NAME.
+             */
+            type = format & JOF_TYPEMASK;
+            tmp[0] = (type == JOF_QARG)
+                     ? JSOP_GETARG
+                     : (type == JOF_QVAR)
+                     ? JSOP_GETVAR
+                     : JSOP_NAME;
         } else {
             /*
              * We must replace the faulting pc's bytecode with a corresponding
