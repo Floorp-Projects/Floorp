@@ -3940,11 +3940,13 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
   PRUint32 count;
   nsAutoString  buffer;
   nsCSSValueList* contentValue = contentData.mContent;
-  // "normal" and "initial" both mean no content
-  if (contentValue &&
-      contentValue->mValue.GetUnit() != eCSSUnit_Normal &&
-      contentValue->mValue.GetUnit() != eCSSUnit_Initial) {
-    if (eCSSUnit_Inherit == contentValue->mValue.GetUnit()) {
+  if (contentValue) {
+    if (eCSSUnit_Normal == contentValue->mValue.GetUnit() ||
+        eCSSUnit_Initial == contentValue->mValue.GetUnit()) {
+      // "normal" and "initial" both mean no content
+      content->AllocateContents(0);
+    }
+    else if (eCSSUnit_Inherit == contentValue->mValue.GetUnit()) {
       inherited = PR_TRUE;
       count = parentContent->ContentCount();
       if (NS_SUCCEEDED(content->AllocateContents(count))) {
@@ -4013,19 +4015,20 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
   // counter-increment: [string [int]]+, none, inherit
   nsCSSCounterData* ourIncrement = contentData.mCounterIncrement;
   if (ourIncrement) {
-    PRInt32 increment;
-    if (eCSSUnit_Inherit == ourIncrement->mCounter.GetUnit()) {
+    if (eCSSUnit_None == ourIncrement->mCounter.GetUnit() ||
+        eCSSUnit_Initial == ourIncrement->mCounter.GetUnit()) {
+      content->AllocateCounterIncrements(0);
+    }
+    else if (eCSSUnit_Inherit == ourIncrement->mCounter.GetUnit()) {
       inherited = PR_TRUE;
       count = parentContent->CounterIncrementCount();
       if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
+        PRInt32 increment;
         while (0 < count--) {
           parentContent->GetCounterIncrementAt(count, buffer, increment);
           content->SetCounterIncrementAt(count, buffer, increment);
         }
       }
-    }
-    else if (eCSSUnit_None == ourIncrement->mCounter.GetUnit()) {
-      content->AllocateCounterIncrements(0);
     }
     else if (eCSSUnit_String == ourIncrement->mCounter.GetUnit()) {
       count = 0;
@@ -4036,6 +4039,7 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
       if (NS_SUCCEEDED(content->AllocateCounterIncrements(count))) {
         count = 0;
         ourIncrement = contentData.mCounterIncrement;
+        PRInt32 increment;
         while (ourIncrement) {
           if (eCSSUnit_Integer == ourIncrement->mValue.GetUnit()) {
             increment = ourIncrement->mValue.GetIntValue();
@@ -4054,19 +4058,20 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
   // counter-reset: [string [int]]+, none, inherit
   nsCSSCounterData* ourReset = contentData.mCounterReset;
   if (ourReset) {
-    PRInt32 reset;
-    if (eCSSUnit_Inherit == ourReset->mCounter.GetUnit()) {
+    if (eCSSUnit_None == ourReset->mCounter.GetUnit() ||
+        eCSSUnit_Initial == ourReset->mCounter.GetUnit()) {
+      content->AllocateCounterResets(0);
+    }
+    else if (eCSSUnit_Inherit == ourReset->mCounter.GetUnit()) {
       inherited = PR_TRUE;
       count = parentContent->CounterResetCount();
       if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
+        PRInt32 reset;
         while (0 < count--) {
           parentContent->GetCounterResetAt(count, buffer, reset);
           content->SetCounterResetAt(count, buffer, reset);
         }
       }
-    }
-    else if (eCSSUnit_None == ourReset->mCounter.GetUnit()) {
-      content->AllocateCounterResets(0);
     }
     else if (eCSSUnit_String == ourReset->mCounter.GetUnit()) {
       count = 0;
@@ -4077,6 +4082,7 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
       if (NS_SUCCEEDED(content->AllocateCounterResets(count))) {
         count = 0;
         ourReset = contentData.mCounterReset;
+        PRInt32 reset;
         while (ourReset) {
           if (eCSSUnit_Integer == ourReset->mValue.GetUnit()) {
             reset = ourReset->mValue.GetIntValue();
