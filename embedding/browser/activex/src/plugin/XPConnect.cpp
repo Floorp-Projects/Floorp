@@ -49,8 +49,13 @@
 #include "nsMemory.h"
 
 #include "nsIAtom.h"
+
+#include "nsIDOMDocument.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
+
 #include "nsIEventListenerManager.h"
 #include "nsGUIEvent.h"
 
@@ -704,38 +709,98 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
 
     nsCOMPtr<nsIDOMElement> element;
     NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMElement, (void *) &element);
-    if (element)
+    if (!element)
     {
-        // TODO Turn VARIANT args into js objects
+        NS_ASSERTION(element, "can't get the object element");
+        return S_OK;
+    }
+    nsAutoString id;
+    if (NS_FAILED(element->GetAttribute(NS_LITERAL_STRING("id"), id)) ||
+        id.IsEmpty())
+    {
+        // Object has no name so it can't fire events
+        return S_OK;
+    }
 
-        nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(element);
-        if (eventReceiver)
+    // TODO Turn VARIANT args into js objects
+
+    // Fire event to DOM 2 event listeners
+
+    nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(element);
+    if (eventReceiver)
+    {
+        // Get the event manager
+        nsCOMPtr<nsIEventListenerManager> eventManager;
+        eventReceiver->GetListenerManager(getter_AddRefs(eventManager));
+        if (eventManager)
         {
-            // Get the event manager
-            nsCOMPtr<nsIEventListenerManager> eventManager;
-            eventReceiver->GetListenerManager(getter_AddRefs(eventManager));
-            if (eventManager)
-            {
-                nsAutoString keyName(bstrName.m_str);
-                nsStringKey key(keyName);
-                nsEvent event;
-                event.message = NS_USER_DEFINED_EVENT;
-                event.userType = &key;
+            nsAutoString keyName(bstrName.m_str);
+            nsStringKey key(keyName);
+            nsEvent event;
+            event.message = NS_USER_DEFINED_EVENT;
+            event.userType = &key;
 
-                // Fire the event!
-                nsCOMPtr<nsIDOMEvent> domEvent;
-                nsEventStatus eventStatus;
-                nsresult rv = eventManager->HandleEvent(nsnull, &event, getter_AddRefs(domEvent),
-                    eventReceiver, NS_EVENT_FLAG_INIT, &eventStatus);
+            // Fire the event!
+            nsCOMPtr<nsIDOMEvent> domEvent;
+            nsEventStatus eventStatus;
+            nsresult rv = eventManager->HandleEvent(nsnull, &event, getter_AddRefs(domEvent),
+                eventReceiver, NS_EVENT_FLAG_INIT, &eventStatus);
+        }
+    }
+
+    // Loop through all script tags looking for event handlers
+
+    nsCOMPtr<nsIDOMDocument> doc;
+    NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMDocument, (void *)&doc);
+    if (doc)
+    {
+        nsCOMPtr<nsIDOMNodeList> scriptList;
+        doc->GetElementsByTagName(NS_LITERAL_STRING("script"), getter_AddRefs(scriptList));
+        if (scriptList)
+        {
+            PRUint32 length = 0;
+            scriptList->GetLength(&length);
+            for (PRUint32 i = 0; i < length; i++)
+            {
+                nsCOMPtr<nsIDOMNode> node;
+                scriptList->Item(i, getter_AddRefs(node));
+                if (!node)
+                {
+                    continue;
+                }
+                nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+                if (!element)
+                {
+                    continue;
+                }
+
+                // Get the <script FOR="foo" EVENT="bar"> attributes
+                nsAutoString forAttr;
+                nsAutoString eventAttr;
+                if (NS_FAILED(element->GetAttribute(NS_LITERAL_STRING("for"), forAttr)) ||
+                    forAttr.IsEmpty() ||
+                    NS_FAILED(element->GetAttribute(NS_LITERAL_STRING("event"), eventAttr)) ||
+                    eventAttr.IsEmpty())
+                {
+                    continue;
+                }
+
+                if (!forAttr.Equals(id)) // TODO compare no case?
+                {
+                    // Someone elses event
+                    continue;
+                }
+
+                // TODO fire the event
             }
         }
-
-        // TODO Turn js objects back into VARIANTS specifying VT_BYREF
-
-        // TODO Turn js return code into VARIANT
-
-        // TODO handle js exception and fill in exception info (do we care?)
     }
+
+    // TODO Turn js objects for out params back into VARIANTS
+
+    // TODO Turn js return code into VARIANT
+
+    // TODO handle js exception and fill in exception info (do we care?)
 
     if (pExcepInfo)
     {
