@@ -587,7 +587,7 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kContextAtom);
         NS_IF_RELEASE(kTooltipAtom);
         NS_IF_RELEASE(kObservesAtom);
-        NS_IF_RELEASE(kXULContentsGenerated);
+        NS_IF_RELEASE(kXULContentsGeneratedAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -2282,7 +2282,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
             nsAutoString str;
             aName->ToString(str);
-            if (xulListener->ObservingAttribute(attribute) && 
+            if (xulListener->ObservingAttribute(str) && 
                (aName != kXULContentsGeneratedAtom && aName != kIdAtom)) {
                 // XXX Should have a function that knows which attributes are special.
                 // Unset the attribute in the broadcast listener.
