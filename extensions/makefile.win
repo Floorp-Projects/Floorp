@@ -22,10 +22,6 @@
 DEPTH=..
 include <$(DEPTH)/config/config.mak>
 
-!ifdef NECKO
-DIRS = wallet pics cookie
-!else
-DIRS = wallet pics
-!endif
+DIRS = wallet pics cookie irc
 
 include <$(DEPTH)\config\rules.mak>
