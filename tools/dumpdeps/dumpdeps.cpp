@@ -1,3 +1,25 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Adam Lock <adamlock@netscape.com>
+ */
+
 // BEGIN WINDOWS SPECIFIC
 #include <windows.h>
 // END WINDOWS SPECIFIC
@@ -10,19 +32,15 @@
 #include <vector>
 #include <string>
 
-#include "nsIComponentManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 
 #include "nsID.h"
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
-#include "nsIAllocator.h"
 #include "nsIRegistry.h"
 #include "nsILocalFile.h"
 
 extern "C" NS_EXPORT nsresult NS_RegistryGetFactory(nsIFactory** aFactory);
-
 
 inline wchar_t * A2W(const char *lpa, wchar_t *lpw,int nChars)
 {
@@ -69,22 +87,19 @@ struct library
 	}
 };
 
-// These should really be std::map types but aren't
+// These should really be std::map types to aid searching but aren't
 std::vector<factory> listCLSIDs;
 std::vector<progid2cid> listProgIDs;
-
-
-std::vector<std::string> listFullPathComponents;
 std::vector<library> listComponents;
 
-int ReadFileToBuffer(const char *szFile, char **ppszBuffer, long *pnBufferSize);
+// Function declarations
+PRBool ReadFileToBuffer(const char *szFile, char **ppszBuffer, long *pnBufferSize);
 int ScanBuffer(const char *pszBuffer, long nBufferSize, const void *szPattern, long nPatternSize);
 nsresult ReadComponentRegistry();
 void OutputCID(const nsID &cid);
 void OutputProgId(const char *szProgID);
 void OutputLibrary(const char *szLibrary);
 PRBool LibraryImplementsCID(const char *szLibrary, const nsID &cid);
-PRBool LibraryImplementsProgId(const char *szLibrary, const char *szProgId);
 
 int main(int argc, char *argv[])
 {
@@ -107,15 +122,14 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Error: Could not create object to represent mozbindirectory - is the path correct?\n");
 		return 1;
 	}
-
 	NS_InitXPCOM(&mServiceManager, pBinDirPath);
 	NS_RELEASE(pBinDirPath);
 
+	// Read the component registry to fill the arrays with CLSIDs
 	ReadComponentRegistry();
 	
+	// Locate all libraries and add them to the components list
 // BEGIN WINDOWS SPECIFIC
-	// Build a list of components assuming them to have been passed as
-	// command line arguments.
 	for (int n = 0; n < 2; n++)
 	{
 		// Windows specific paths
@@ -142,23 +156,13 @@ int main(int argc, char *argv[])
 	}
 // END WINDOWS SPECIFIC
 
-	// Open the component manager
-
-    nsIComponentManager* cm = nsnull;
-    nsresult rv = NS_GetGlobalComponentManager(&cm);
-	if (cm == nsnull)
-	{
-		return 1;
-	}
-
 	// Enumerate through all libraries looking for dependencies
-
 	std::vector<library>::const_iterator i;
 	for (i = listComponents.begin(); i != listComponents.end(); i++)
 	{
 		char *pszBuffer = NULL;
 		long nBufferSize = 0;
-		if (ReadFileToBuffer((*i).mFullPath.c_str(), &pszBuffer, &nBufferSize) == 0)
+		if (ReadFileToBuffer((*i).mFullPath.c_str(), &pszBuffer, &nBufferSize))
 		{
 			printf("Library \"%s\"\n", (*i).mFullPath.c_str());
 
@@ -230,7 +234,8 @@ int main(int argc, char *argv[])
 }
 
 
-int ReadFileToBuffer(const char *szFile, char **ppszBuffer, long *pnBufferSize)
+// Reads a file into a big buffer and returns it
+PRBool ReadFileToBuffer(const char *szFile, char **ppszBuffer, long *pnBufferSize)
 {
 	// Allocate a memory buffer to slurp up the whole file
 	struct _stat srcStat;
@@ -240,14 +245,14 @@ int ReadFileToBuffer(const char *szFile, char **ppszBuffer, long *pnBufferSize)
 	if (pszBuffer == NULL)
 	{
 		printf("Error: Could not allocate buffer for file \"%s\"\n", szFile);
-		return 1;
+		return PR_FALSE;
 	}
 	FILE *fSrc = fopen(szFile, "rb");
 	if (fSrc == NULL)
 	{
 		printf("Error: Could not open file \"%s\"\n", szFile);
 		delete []pszBuffer;
-		return 1;
+		return PR_FALSE;
 	}
 	size_t sizeSrc = srcStat.st_size;
 	size_t sizeRead = 0;
@@ -260,15 +265,16 @@ int ReadFileToBuffer(const char *szFile, char **ppszBuffer, long *pnBufferSize)
 	{
 		printf("Error: Could not read all of file \"%s\"\n", szFile);
 		delete []pszBuffer;
-		return 1;
+		return PR_FALSE;
 	}
 
 	*ppszBuffer = pszBuffer;
 	*pnBufferSize = sizeRead;
 
-	return 0;
+	return PR_TRUE;
 }
 
+// Searchs for the specified pattern in the buffer
 int ScanBuffer(const char *pszBuffer, long nBufferSize, const void *szPattern, long nPatternSize)
 {
 	// Scan through buffer, one byte at a time doing a memcmp against the
@@ -283,7 +289,7 @@ int ScanBuffer(const char *pszBuffer, long nBufferSize, const void *szPattern, l
 	return 0;
 }
 
-
+// Prints a CID with the ProgId and library if they are there too.
 void OutputCID(const nsID &cid)
 {
 	std::vector<progid2cid>::const_iterator i;
@@ -307,7 +313,7 @@ void OutputCID(const nsID &cid)
 	printf("    CLSID = %s\n", cid.ToString());
 }
 
-
+// Outputs the ProgId with the CID and library if they are there too.
 void OutputProgId(const char *szProgID)
 {
 	std::vector<progid2cid>::const_iterator i;
@@ -331,13 +337,14 @@ void OutputProgId(const char *szProgID)
 	printf("    ProgID \"%s\"\n", szProgID);
 }
 
-
+// Outputs a library name
 void OutputLibrary(const char *szLibrary)
 {
-	printf("    DLL    \"%s\"\n", szLibrary);
+	printf("    DLL \"%s\"\n", szLibrary);
 }
 
 
+// Tests whether a library implements the specified CID
 PRBool LibraryImplementsCID(const char *szLibrary, const nsID &cid)
 {
 	// Search for CID - vector should really be a map, but it isn't
@@ -354,12 +361,6 @@ PRBool LibraryImplementsCID(const char *szLibrary, const nsID &cid)
 			return PR_FALSE;
 		}
 	}
-	return PR_FALSE;
-}
-
-PRBool LibraryImplementsProgId(const char *szLibrary, const char *szProgId)
-{
-	// Search for CID - vector should really be a map, but it isn't for now
 	return PR_FALSE;
 }
 
