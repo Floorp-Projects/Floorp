@@ -2132,7 +2132,7 @@ public class Interpreter
         String[] strings = idata.itsStringTable;
         int pc = 0;
 
-        int pcPrevBranch = pc;
+        int pcPrevBranch = 0;
         final int instructionThreshold = cx.instructionThreshold;
         // During function call this will be set to -1 so catch can properly
         // adjust it
@@ -2142,6 +2142,7 @@ public class Interpreter
         final int INVOCATION_COST = 100;
 
         Loop: for (;;) {
+            int pcJump;
             try {
                 int op = 0xFF & iCode[pc++];
                 switch (op) {
@@ -2154,7 +2155,7 @@ public class Interpreter
         // simplify logic.
         if (javaException == null) Kit.codeBug();
 
-        int pcNew = -1;
+        pcJump = -1;
         boolean doCatch = false;
         int handlerOffset = getExceptionHandler(idata.itsExceptionTable,
                                                 exceptionPC);
@@ -2184,16 +2185,16 @@ public class Interpreter
                 if (exType == SCRIPT_CAN_CATCH) {
                     // Allow JS to catch only JavaScriptException and
                     // EcmaError
-                    pcNew = idata.itsExceptionTable[handlerOffset
-                                                    + EXCEPTION_CATCH_SLOT];
-                    if (pcNew >= 0) {
+                    pcJump = idata.itsExceptionTable[handlerOffset
+                                                     + EXCEPTION_CATCH_SLOT];
+                    if (pcJump >= 0) {
                         // Has catch block
                         doCatch = true;
                     }
                 }
-                if (pcNew < 0) {
-                    pcNew = idata.itsExceptionTable[handlerOffset
-                                                    + EXCEPTION_FINALLY_SLOT];
+                if (pcJump < 0) {
+                    pcJump = idata.itsExceptionTable[handlerOffset
+                                                     + EXCEPTION_FINALLY_SLOT];
                 }
             }
         }
@@ -2202,7 +2203,7 @@ public class Interpreter
             debuggerFrame.onExceptionThrown(cx, javaException);
         }
 
-        if (pcNew < 0) {
+        if (pcJump < 0) {
             break Loop;
         }
 
@@ -2233,17 +2234,8 @@ public class Interpreter
         // clear exception
         javaException = null;
 
-        // Notify instruction observer if necessary
-        // and point pc and pcPrevBranch to start of catch/finally block
-        if (instructionThreshold != 0) {
-            if (instructionCount > instructionThreshold) {
-                // Note: this can throw Error
-                cx.observeInstructionCount(instructionCount);
-                instructionCount = 0;
-            }
-        }
-        pcPrevBranch = pc = pcNew;
-        continue Loop;
+        // go to generic jump code
+        break;
     }
     case Token.THROW: {
         Object value = stack[stackTop];
@@ -2251,19 +2243,7 @@ public class Interpreter
         --stackTop;
 
         int sourceLine = getShort(iCode, pc);
-        javaException = new JavaScriptException(value, idata.itsSourceFile,
-                                                sourceLine);
-        exceptionPC = pc - 1;
-
-        if (instructionThreshold != 0) {
-            instructionCount += pc - pcPrevBranch;
-            if (instructionCount > instructionThreshold) {
-                cx.observeInstructionCount(instructionCount);
-                instructionCount = 0;
-            }
-        }
-        pcPrevBranch = pc = getJavaCatchPC(iCode);
-        continue Loop;
+        throw new JavaScriptException(value, idata.itsSourceFile, sourceLine);
     }
     case Token.GE : {
         --stackTop;
@@ -2372,100 +2352,57 @@ public class Interpreter
     case Token.IFNE : {
         boolean valBln = stack_boolean(stack, sDbl, stackTop);
         --stackTop;
-        if (!valBln) {
-            if (instructionThreshold != 0) {
-                instructionCount += pc + 2 - pcPrevBranch;
-                if (instructionCount > instructionThreshold) {
-                    cx.observeInstructionCount(instructionCount);
-                    instructionCount = 0;
-                }
-            }
-            pcPrevBranch = pc = getTarget(iCode, pc);
+        if (valBln) {
+            pc += 2;
             continue Loop;
         }
-        pc += 2;
-        continue Loop;
+        pcJump = getTarget(iCode, pc);
+        break;
     }
     case Token.IFEQ : {
         boolean valBln = stack_boolean(stack, sDbl, stackTop);
         --stackTop;
-        if (valBln) {
-            if (instructionThreshold != 0) {
-                instructionCount += pc + 2 - pcPrevBranch;
-                if (instructionCount > instructionThreshold) {
-                    cx.observeInstructionCount(instructionCount);
-                    instructionCount = 0;
-                }
-            }
-            pcPrevBranch = pc = getTarget(iCode, pc);
+        if (!valBln) {
+            pc += 2;
             continue Loop;
         }
-        pc += 2;
-        continue Loop;
+        pcJump = getTarget(iCode, pc);
+        break;
     }
     case Icode_IFEQ_POP : {
         boolean valBln = stack_boolean(stack, sDbl, stackTop);
         --stackTop;
-        if (valBln) {
-            if (instructionThreshold != 0) {
-                instructionCount += pc + 2 - pcPrevBranch;
-                if (instructionCount > instructionThreshold) {
-                    cx.observeInstructionCount(instructionCount);
-                    instructionCount = 0;
-                }
-            }
-            pcPrevBranch = pc = getTarget(iCode, pc);
-            stack[stackTop--] = null;
+        if (!valBln) {
+            pc += 2;
             continue Loop;
         }
-        pc += 2;
-        continue Loop;
+        stack[stackTop] = null;
+        --stackTop;
+        pcJump = getTarget(iCode, pc);
+        break;
     }
     case Token.GOTO :
-        if (instructionThreshold != 0) {
-            instructionCount += pc + 2 - pcPrevBranch;
-            if (instructionCount > instructionThreshold) {
-                cx.observeInstructionCount(instructionCount);
-                instructionCount = 0;
-            }
-        }
-        pcPrevBranch = pc = getTarget(iCode, pc);
-        continue Loop;
+        pcJump = getTarget(iCode, pc);
+        break;
     case Icode_GOSUB :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = pc + 2;
-        if (instructionThreshold != 0) {
-            instructionCount += pc + 2 - pcPrevBranch;
-            if (instructionCount > instructionThreshold) {
-                cx.observeInstructionCount(instructionCount);
-                instructionCount = 0;
-            }
-        }
-        pcPrevBranch = pc = getTarget(iCode, pc);
-        continue Loop;
+        pcJump = getTarget(iCode, pc);
+        break;
     case Icode_RETSUB : {
         int slot = (iCode[pc] & 0xFF);
-        if (instructionThreshold != 0) {
-            instructionCount += pc + 1 - pcPrevBranch;
-            if (instructionCount > instructionThreshold) {
-                cx.observeInstructionCount(instructionCount);
-                instructionCount = 0;
-            }
-        }
-        int newPC;
         Object value = stack[LOCAL_SHFT + slot];
         if (value != DBL_MRK) {
             // Invocation from exception handler, restore object to rethrow
             javaException = (Throwable)value;
             exceptionPC = pc - 1;
-            newPC = getJavaCatchPC(iCode);
+            pcJump = getJavaCatchPC(iCode);
         } else {
             // Normal return from GOSUB
-            newPC = (int)sDbl[LOCAL_SHFT + slot];
+            pcJump = (int)sDbl[LOCAL_SHFT + slot];
         }
-        pcPrevBranch = pc = newPC;
-        continue Loop;
+        break;
     }
     case Token.POP :
         stack[stackTop] = null;
@@ -3112,8 +3049,22 @@ public class Interpreter
         throw new RuntimeException("Unknown icode : "+op+" @ pc : "+(pc-1));
     }
                 }  // end of interpreter switch
+
+                // This should be reachable only for jump implementation
+                if (instructionThreshold != 0) {
+                    instructionCount += pc - pcPrevBranch;
+                    if (instructionCount > instructionThreshold) {
+                        cx.observeInstructionCount(instructionCount);
+                        instructionCount = 0;
+                    }
+                    pcPrevBranch = pcJump;
+                }
+                pc = pcJump;
+                continue Loop;
+
             }  // end of interpreter try
             catch (Throwable ex) {
+                pcJump = getJavaCatchPC(iCode);
                 if (instructionThreshold != 0) {
                     if (instructionCount < 0) {
                         // throw during function call
@@ -3123,11 +3074,12 @@ public class Interpreter
                         instructionCount += pc - pcPrevBranch;
                         cx.instructionCount = instructionCount;
                     }
+                    pcPrevBranch = pcJump;
                 }
 
                 javaException = ex;
-                exceptionPC = pc;
-                pc = getJavaCatchPC(iCode);
+                exceptionPC = pc - 1;
+                pc = pcJump;
                 continue Loop;
             }
         } // end of interpreter loop
