@@ -56,8 +56,3 @@ nsCP855ToUnicode::nsCP855ToUnicode()
 {
 }
 
-nsresult nsCP855ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsCP855ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

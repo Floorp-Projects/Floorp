@@ -53,11 +53,6 @@ public:
    */
   nsUnicodeToCP857();
 
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
-
 protected:
 
   //--------------------------------------------------------------------
