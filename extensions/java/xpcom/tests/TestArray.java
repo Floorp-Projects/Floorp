@@ -166,6 +166,7 @@ public class TestArray {
     System.gc();
     dumpArray(array, 0, null, 0);
 
+    localFile = null;
     componentManager = null;
     System.gc();
     GeckoEmbed.termEmbedding();
