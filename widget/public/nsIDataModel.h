@@ -38,10 +38,8 @@ public:
 	NS_IMETHOD SetDMWidget(nsIDMWidget* pWidget) = 0;
 
 	// Methods to query the data model for property values for an entire widget.
-	NS_IMETHOD GetStringPropertyValue(PRBool& answer,
-					       			  const nsString& property, const nsString& value) = 0;
-	NS_IMETHOD GetIntPropertyValue(PRBool& answer,
-								   const nsString& property, int& value) = 0;
+	NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& property) = 0;
+	NS_IMETHOD GetIntPropertyValue(int& value, const nsString& property) = 0;
 };
 
 #endif /* nsIDataModel_h___ */

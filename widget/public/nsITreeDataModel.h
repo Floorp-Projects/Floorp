@@ -36,13 +36,12 @@ class nsITreeDataModel : public nsIDataModel
 public:
 	// Column APIs
 	NS_IMETHOD GetVisibleColumnCount(int& count) = 0;
-	NS_IMETHOD GetNthColumn(nsITreeColumn** pColumn, int n) = 0;
+	NS_IMETHOD GetNthColumn(nsITreeColumn*& pColumn, int n) = 0;
 	
 	// TreeItem APIs
 	NS_IMETHOD GetFirstVisibleItemIndex(int& index) = 0;
-	NS_IMETHOD GetNthTreeItem(nsITreeItem** pItem, int n) = 0;
-	NS_IMETHOD GetItemTextForColumn(nsITreeItem* pItem, nsITreeColumn* pColumn, 
-									nsString& nodeText) = 0;
+	NS_IMETHOD GetNthTreeItem(nsITreeItem*& pItem, int n) = 0;
+	NS_IMETHOD GetItemTextForColumn(nsString& nodeText, nsITreeItem* pItem, nsITreeColumn* pColumn) = 0;
 };
 
 #endif /* nsITreeDataModel_h___ */

@@ -34,17 +34,14 @@ class nsIDMItem : public nsISupports
 {
 public:
 	// Inspectors
-	NS_IMETHOD GetIconImage(nsIImage** pImage, nsIImageGroup* pGroup) = 0;
+	NS_IMETHOD GetIconImage(nsIImage*& pImage, nsIImageGroup* pGroup) = 0;
 	NS_IMETHOD IsExpanded(PRBool& answer) = 0;
 	
 	// Setters
 
 	// Methods to query the data model for a specific item displayed within the widget.
-	NS_IMETHOD GetStringPropertyValue(PRBool& answer, const nsString& itemProperty,
-								      nsString& value) = 0;
-	NS_IMETHOD GetIntPropertyValue(PRBool& answer, const nsString& itemProperty,
-								      int& value) = 0;
-	
+	NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) = 0;
+	NS_IMETHOD GetIntPropertyValue(int& value, const nsString& itemProperty) = 0;
 };
 
 #endif /* nsIDMItem_h___ */
