@@ -232,13 +232,21 @@ nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
 {
   nsCSSFrameType frameType;
 
+  // Get the frame state
+  nsFrameState  frameState;
+  aFrame->GetFrameState(&frameState);
+  
   // Section 9.7 of the CSS2 spec indicates that absolute position
   // takes precedence over float which takes precedence over display.
-  if (aPosition->IsAbsolutelyPositioned()) {
-    frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
-  }
-  else if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
-    frameType = NS_CSS_FRAME_TYPE_FLOATING;
+  // Make sure the frame was actually moved out of the flow, and don't
+  // just assume what the style says
+  if (frameState & NS_FRAME_OUT_OF_FLOW) {
+    if (aPosition->IsAbsolutelyPositioned()) {
+      frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
+    }
+    else if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
+      frameType = NS_CSS_FRAME_TYPE_FLOATING;
+    }
   }
   else {
     switch (aDisplay->mDisplay) {
@@ -279,8 +287,6 @@ nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
   }
 
   // See if the frame is replaced
-  nsFrameState  frameState;
-  aFrame->GetFrameState(&frameState);
   if (frameState & NS_FRAME_REPLACED_ELEMENT) {
     frameType = NS_FRAME_REPLACED(frameType);
   }
