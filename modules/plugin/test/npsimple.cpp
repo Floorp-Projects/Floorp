@@ -163,10 +163,6 @@ public:
     NS_IMETHOD
     GetValue(nsPluginVariable variable, void *value);
 
-    // (Corresponds to NPP_SetValue.)
-    NS_IMETHOD
-    SetValue(nsPluginVariable variable, void *value);
-
     // The old NPP_New call has been factored into two plugin instance methods:
     //
     // CreateInstance -- called once, after the plugin instance is created. This 
@@ -265,6 +261,9 @@ public:
     NS_IMETHOD
     URLNotify(const char* url, const char* target,
               nsPluginReason reason, void* notifyData);
+
+    NS_IMETHOD
+    GetValue(nsPluginInstanceVariable variable, void *value);
 
     ////////////////////////////////////////////////////////////////////////////
     // SimplePluginInstance specific methods:
@@ -502,12 +501,6 @@ SimplePlugin::GetValue(nsPluginVariable variable, void *value)
         err = NS_ERROR_FAILURE;
 
     return err;
-}
-
-NS_METHOD
-SimplePlugin::SetValue(nsPluginVariable variable, void *value)
-{
-    return NS_OK;
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -785,6 +778,12 @@ SimplePluginInstance::URLNotify(const char* url, const char* target,
                                 nsPluginReason reason, void* notifyData)
 {
     // Not used in the Simple plugin
+    return NS_OK;
+}
+
+NS_METHOD
+SimplePluginInstance::GetValue(nsPluginInstanceVariable variable, void *value)
+{
     return NS_OK;
 }
 

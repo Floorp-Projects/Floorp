@@ -150,12 +150,14 @@ nsPluginManager::GetValue(nsPluginManagerVariable variable, void *value)
     return fromNPError[err];
 }
 
+#if 0
 NS_METHOD
 nsPluginManager::SetValue(nsPluginManagerVariable variable, void *value)
 {
     NPError err = npn_setvalue(NULL, (NPPVariable)variable, value);
     return fromNPError[err];
 }
+#endif
 
 NS_METHOD
 nsPluginManager::ReloadPlugins(PRBool reloadPages)
@@ -493,43 +495,49 @@ DestroyGetURLEvent(PLEvent* event)
 }
 
 NS_METHOD
-nsPluginManager::GetURL(nsISupports* peer, const char* url, const char* target,
+nsPluginManager::GetURL(nsISupports* pinst, const char* url, const char* target,
                         void* notifyData, const char* altHost,
                         const char* referrer, PRBool forceJSEnabled)
 {
     NPError rslt = NPERR_INVALID_PARAM;
-    nsPluginInstancePeer* instPeer = NULL;
-    if (peer->QueryInterface(kPluginInstancePeerCID, (void**)&instPeer) == NS_OK) {
-        if (PR_CurrentThread() == mozilla_thread) {
-            NPP npp = instPeer->GetNPP();
-            rslt = np_geturlinternal(npp,
-                                     url,
-                                     target,
-                                     altHost,
-                                     referrer,
-                                     forceJSEnabled,
-                                     notifyData != NULL,
-                                     notifyData);
-        }
-        else {
-            GetURLEvent* e = PR_NEW(GetURLEvent);
-            if (e == NULL) {
-                rslt = NPERR_OUT_OF_MEMORY_ERROR;
+    nsIPluginInstance* inst = NULL;
+    if (pinst->QueryInterface(kIPluginInstanceIID, (void**)&inst) == NS_OK) {
+        // Warning: Casting to our implementation type of plugin instance peer here:
+        nsPluginInstancePeer* peer;
+        nsresult err = inst->GetPeer((nsIPluginInstancePeer**)&peer);
+        if (err == NS_OK) {
+            if (PR_CurrentThread() == mozilla_thread) {
+                NPP npp = peer->GetNPP();
+                rslt = np_geturlinternal(npp,
+                                         url,
+                                         target,
+                                         altHost,
+                                         referrer,
+                                         forceJSEnabled,
+                                         notifyData != NULL,
+                                         notifyData);
             }
             else {
-                PL_InitEvent(&e->event, NULL, HandleGetURLEvent, DestroyGetURLEvent);
-                e->peer = instPeer;
-                e->url = url;
-                e->target = target;
-                e->notifyData = notifyData;
-                e->altHost = altHost;
-                e->referrer = referrer;
-                e->forceJSEnabled = forceJSEnabled;
-                /*rslt = (NPError)*/PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
-                rslt = NPERR_NO_ERROR;  /* XXX irix c++ compiler doesn't like the above cast */
+                GetURLEvent* e = PR_NEW(GetURLEvent);
+                if (e == NULL) {
+                    rslt = NPERR_OUT_OF_MEMORY_ERROR;
+                }
+                else {
+                    PL_InitEvent(&e->event, NULL, HandleGetURLEvent, DestroyGetURLEvent);
+                    e->peer = peer;
+                    e->url = url;
+                    e->target = target;
+                    e->notifyData = notifyData;
+                    e->altHost = altHost;
+                    e->referrer = referrer;
+                    e->forceJSEnabled = forceJSEnabled;
+                    /*rslt = (NPError)*/PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
+                    rslt = NPERR_NO_ERROR;  /* XXX irix c++ compiler doesn't like the above cast */
+                }
             }
+            peer->Release();
         }
-        instPeer->Release();
+        inst->Release();
     }
     return fromNPError[rslt];
 }
@@ -578,7 +586,7 @@ DestroyPostURLEvent(PLEvent* event)
 }
 
 NS_METHOD
-nsPluginManager::PostURL(nsISupports* peer, const char* url, const char* target,
+nsPluginManager::PostURL(nsISupports* pinst, const char* url, const char* target,
                          PRUint32 postDataLen, const char* postData,
                          PRBool isFile, void* notifyData,
                          const char* altHost, const char* referrer,
@@ -586,47 +594,53 @@ nsPluginManager::PostURL(nsISupports* peer, const char* url, const char* target,
                          PRUint32 postHeadersLen, const char* postHeaders)
 {
     NPError rslt = NPERR_INVALID_PARAM;
-    nsPluginInstancePeer* instPeer = NULL;
-    if (peer->QueryInterface(kPluginInstancePeerCID, (void**)&instPeer) == NS_OK) {
-        if (PR_CurrentThread() == mozilla_thread) {
-            NPP npp = instPeer->GetNPP();
-            PR_ASSERT(postHeaders == NULL); // XXX need to deal with postHeaders
-            rslt = np_posturlinternal(npp,
-                                      url, 
-                                      target,
-                                      altHost,
-                                      referrer,
-                                      forceJSEnabled,
-                                      postDataLen,
-                                      postData,
-                                      isFile,
-                                      notifyData != NULL,
-                                      notifyData);
-        }
-        else {
-            PostURLEvent* e = PR_NEW(PostURLEvent);
-            if (e == NULL) {
-                rslt = NPERR_OUT_OF_MEMORY_ERROR;
+    nsIPluginInstance* inst = NULL;
+    if (pinst->QueryInterface(kIPluginInstanceIID, (void**)&inst) == NS_OK) {
+        // Warning: Casting to our implementation type of plugin instance peer here:
+        nsPluginInstancePeer* peer;
+        nsresult err = inst->GetPeer((nsIPluginInstancePeer**)&peer);
+        if (err == NS_OK) {
+            if (PR_CurrentThread() == mozilla_thread) {
+                NPP npp = peer->GetNPP();
+                PR_ASSERT(postHeaders == NULL); // XXX need to deal with postHeaders
+                rslt = np_posturlinternal(npp,
+                                          url, 
+                                          target,
+                                          altHost,
+                                          referrer,
+                                          forceJSEnabled,
+                                          postDataLen,
+                                          postData,
+                                          isFile,
+                                          notifyData != NULL,
+                                          notifyData);
             }
             else {
-                PL_InitEvent(&e->event, NULL, HandlePostURLEvent, DestroyPostURLEvent);
-                e->peer = instPeer;
-                e->url = url;
-                e->target = target;
-                e->notifyData = notifyData;
-                e->altHost = altHost;
-                e->referrer = referrer;
-                e->forceJSEnabled = forceJSEnabled;
-                e->postDataLen = postDataLen;
-                e->postData = postData;
-                e->isFile = isFile;
-                e->postHeadersLen = postHeadersLen;
-                e->postHeaders = postHeaders;
-                /*rslt = (NPError)*/PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
-                rslt = NPERR_NO_ERROR;  /* XXX irix c++ compiler doesn't like the above cast */
+                PostURLEvent* e = PR_NEW(PostURLEvent);
+                if (e == NULL) {
+                    rslt = NPERR_OUT_OF_MEMORY_ERROR;
+                }
+                else {
+                    PL_InitEvent(&e->event, NULL, HandlePostURLEvent, DestroyPostURLEvent);
+                    e->peer = peer;
+                    e->url = url;
+                    e->target = target;
+                    e->notifyData = notifyData;
+                    e->altHost = altHost;
+                    e->referrer = referrer;
+                    e->forceJSEnabled = forceJSEnabled;
+                    e->postDataLen = postDataLen;
+                    e->postData = postData;
+                    e->isFile = isFile;
+                    e->postHeadersLen = postHeadersLen;
+                    e->postHeaders = postHeaders;
+                    /*rslt = (NPError)*/PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
+                    rslt = NPERR_NO_ERROR;  /* XXX irix c++ compiler doesn't like the above cast */
+                }
             }
+            peer->Release();
         }
-        instPeer->Release();
+        inst->Release();
     }
     return fromNPError[rslt];
 }
@@ -805,12 +819,14 @@ nsPluginInstancePeer::GetValue(nsPluginInstancePeerVariable variable, void *valu
     return fromNPError[err];
 }
 
+#if 0
 NS_METHOD
 nsPluginInstancePeer::SetValue(nsPluginInstancePeerVariable variable, void *value)
 {
     NPError err = npn_setvalue(fNPP, (NPPVariable)variable, value);
     return fromNPError[err];
 }
+#endif
 
 NS_METHOD
 nsPluginInstancePeer::GetMIMEType(nsMIMEType *result)
@@ -844,6 +860,17 @@ nsPluginInstancePeer::ShowStatus(const char* message)
 {
     npn_status(fNPP, message);
     return NS_OK;
+}
+
+NS_METHOD
+nsPluginInstancePeer::SetWindowSize(PRUint32 width, PRUint32 height)
+{
+    NPError err;
+    NPSize size;
+    size.width = width;
+    size.height = height;
+    err = npn_SetWindowSize((np_instance*)fNPP->ndata, &size);
+    return fromNPError[err];
 }
 
 NS_METHOD

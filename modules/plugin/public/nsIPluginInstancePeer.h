@@ -67,18 +67,6 @@ public:
     GetValue(nsPluginInstancePeerVariable variable, void *value) = 0;
 
     /**
-     * Sets the value of a variable associated with the plugin manager.
-     *
-     * (Corresponds to NPN_SetValue.)
-     *
-     * @param variable - the plugin manager variable to get
-     * @param value - the address of the value to store
-     * @result - NS_OK if this operation was successful
-     */
-    NS_IMETHOD
-    SetValue(nsPluginInstancePeerVariable variable, void *value) = 0;
-
-    /**
      * Returns the MIME type of the plugin instance. 
      *
      * (Corresponds to NPP_New's MIMEType argument.)
@@ -128,6 +116,16 @@ public:
      */
     NS_IMETHOD
     ShowStatus(const char* message) = 0;
+
+    /**
+     * Set the desired size of the window in which the plugin instance lives.
+     *
+     * @param width - new window width
+     * @param height - new window height
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    SetWindowSize(PRUint32 width, PRUint32 height) = 0;
 
 };
 
