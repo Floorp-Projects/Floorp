@@ -417,7 +417,8 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
               // test link state
               nsILinkHandler* linkHandler;
 
-              if (NS_OK == aPresContext->GetLinkHandler(&linkHandler)) {
+              if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
+                  (nsnull != linkHandler)) {
                 nsAutoString base, href;  // XXX base??
                 htmlContent->GetAttribute("href", href);
 
