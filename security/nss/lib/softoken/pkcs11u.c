@@ -2474,6 +2474,8 @@ pk11_XORHash(unsigned char *key, unsigned char *dbkey, int len)
 {
    int i;
 
+   PORT_Memset(key, 0, 4);
+
    for (i=0; i < len-4; i += 4) {
 	key[0] ^= dbkey[i];
 	key[1] ^= dbkey[i+1];
