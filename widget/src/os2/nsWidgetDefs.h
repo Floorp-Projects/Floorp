@@ -33,8 +33,13 @@
 #define INCL_WINSTDFILE
 #define INCL_DOSERRORS
 #include <os2.h>
-#include <uconv.h>  // Rather not have to include these two, but need types...
-#include <unikbd.h> // 
+
+// TODO: The following two headers are required for their typedefs, although it
+//  would be best to only include <uconv.h>.  For EMX, we actually want to
+//  include 'uniapi.h', but that results in an error without the #define
+#include <uconv.h>
+#define UNICHAR_TYPE_DEFINED    // work around for EMX multiple typedef issue
+#include <unikbd.h> 
 
 #ifndef MAX_PATH
 #define MAX_PATH CCHMAXPATH
