@@ -476,7 +476,7 @@ nsDirectoryService::~nsDirectoryService()
 
 }
 
-NS_IMPL_ISUPPORTS3(nsDirectoryService, nsIProperties, nsIDirectoryService, nsIDirectoryServiceProvider)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsDirectoryService, nsIProperties, nsIDirectoryService, nsIDirectoryServiceProvider)
 
 
 NS_IMETHODIMP
