@@ -1,5 +1,5 @@
 #include "nsIStreamConverter.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIFactory.h"
 
 /* This file defines stream converter components, and their accompanying factory class.
@@ -37,8 +37,8 @@ public:
 
     // member data
     nsIStreamListener *mListener;
-    nsString2 fromType;
-    nsString2 toType;
+    nsString fromType;
+    nsString toType;
 };
 
 //////////////////////////////////////////////////

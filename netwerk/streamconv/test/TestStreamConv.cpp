@@ -257,8 +257,8 @@ main(int argc, char* argv[])
     NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsString2 fromStr("multipart/x-mixed-replace");
-    nsString2 toStr  ("text/html");
+    nsString fromStr("multipart/x-mixed-replace");
+    nsString toStr  ("text/html");
 
 #ifdef ASYNC_TEST
     // ASYNCRONOUS conversion

@@ -39,7 +39,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 
 int urlLoaded;
