@@ -309,15 +309,12 @@ function Shutdown()
     }
   }
 
-  function Translate(src, dest, engine)
+  function Translate()
   {
-	var service = "http://levis.alis.com:8080";
-	service += "?AlisSourceLang=" + src;
-	service += "&AlisTargetLang=" + dest;
-	service += "&AlisMTEngine=" + engine;
+	var service = "http://cgi.netscape.com/cgi-bin/translate.cgi?AlisUI=simple_frames/ns_home";
 
-	// if we're already viewing a translated page, the just get the
-	// last argument (which we expect to always be "AlisMTEngine")
+	// if we're already viewing a translated page, then just get the
+	// last argument (which we expect to always be "AlisTargetURI")
 	var targetURI = window.content.location.href;
 	var targetURIIndex = targetURI.indexOf("AlisTargetURI=");
 	if (targetURIIndex >= 0)

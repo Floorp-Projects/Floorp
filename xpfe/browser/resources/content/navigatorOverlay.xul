@@ -215,54 +215,8 @@ Contributor(s): ______________________________________. -->
         oncommand="BrowserViewSource();"/>
       <menuitem value="&pageInfoCmd.label;" oncommand="BrowserReload();"/>
       <menuseparator />
-      <menu value="&translateMenu.label;">
-        <menupopup>
-          <menuitem value="&translateEngtoFrenCmd.label;"
-            oncommand="Translate('en', 'fr', 'SSI');"/>
-          <menuitem value="&translateEngtoGermCmd.label;" 
-            oncommand="Translate('en', 'de', 'SSI');"/>
-          <menuitem value="&translateEngtoItalianCmd.label;"
-            oncommand="Translate('en', 'it', 'SSI');"/>
-          <menuitem value="&translateEngtoJapaneseCmd.label;" 
-            oncommand="Translate('en', 'ja', 'Neocortech');"/>
-          <menuitem value="&translateEngtoPortCmd.label;"
-            oncommand="Translate('en', 'po', 'SSI');"/>
-          <menuitem value="&translateEngtoSpanCmd.label;"
-            oncommand="Translate('en', 'es', 'SSI');"/>
-          <menuseparator />
-          <menuitem value="&translateFrentoEngCmd.label; "
-            oncommand="Translate('fr', 'en', 'SSI');"/>
-          <menuitem value="&translateFrentoGermCmd.label;"
-            oncommand="Translate('fr', 'de', 'SSI');"/>
-          <menuitem value="&translateFrentoSpanCmd.label;"
-            oncommand="Translate('fr', 'es', 'SSI');"/>
-          <menuseparator />
-          <menuitem value="&translateGermtoEngCmd.label;"
-            oncommand="Translate('de', 'en', 'SSI');"/>
-          <menuitem value="&translateGermtoFrenCmd.label;"
-            oncommand="Translate('de', 'fr', 'SSI');"/>
-          <menuitem value="&translateGermtoSpanCmd.label;"
-            oncommand="Translate('de', 'es', 'SSI');"/>
-          <menuseparator />
-          <menuitem value="&translateItaliantoEngCmd.label;"
-            oncommand="Translate('it', 'en', 'SSI');"/>
-          <menuseparator />
-          <menuitem value="&tanslateJapanesetoEngCmd.label;"
-            oncommand="Translate('ja', 'en', 'SSI');"/>
-          <menuseparator />
-          <menuitem value="&translatePorttoEngCmd.label;"
-            oncommand="Translate('po', 'en', 'SSI');"/>
-          <menuseparator />
-          <menuitem value="&tanslateSpantoEngCmd.label;"
-            oncommand="Translate('es', 'en', 'SSI');"/>
-          <menuitem value="&translateSpantoFrenCmd.label;"
-            oncommand="Translate('es', 'fr', 'SSI');"/>
-          <menuitem value="&translateSpantoGermCmd.label;"
-            oncommand="Translate('es', 'de', 'SSI');"/>
-        </menupopup>
-      </menu>
-
-                  <menuseparator />
+      <menuitem value="&translateMenu.label;" oncommand="Translate();"/>
+      <menuseparator />
 <!-- Deprecated BEGIN
                 <menu value="&dcharMenu.label;">
                      <menupopup>
