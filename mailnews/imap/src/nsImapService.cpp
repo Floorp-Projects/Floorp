@@ -3232,7 +3232,7 @@ nsImapService::UnsubscribeFolder(nsIEventQueue* eventQueue,
 }
 
 NS_IMETHODIMP
-nsImapService::DownloadMessagesForOffline(const char *messageIds, nsIMsgFolder *aFolder, nsIMsgWindow *aMsgWindow)
+nsImapService::DownloadMessagesForOffline(const char *messageIds, nsIMsgFolder *aFolder, nsIUrlListener *aUrlListener, nsIMsgWindow *aMsgWindow)
 {
   NS_ENSURE_ARG_POINTER(aFolder);
   NS_ENSURE_ARG_POINTER(messageIds);
@@ -3247,11 +3247,19 @@ nsImapService::DownloadMessagesForOffline(const char *messageIds, nsIMsgFolder *
   {
       if (NS_SUCCEEDED(rv))
       {
+        nsCOMPtr <nsIURI> runningURI;
         // need to pass in stream listener in order to get the channel created correctly
         nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(aFolder, &rv));
         nsCOMPtr<nsIStreamListener> folderStreamListener(do_QueryInterface(aFolder, &rv));
         rv = FetchMessage(imapUrl, nsImapUrl::nsImapMsgFetch,aFolder, imapMessageSink, 
-                            aMsgWindow, nsnull, folderStreamListener, messageIds, PR_TRUE);
+                            aMsgWindow, getter_AddRefs(runningURI), folderStreamListener, messageIds, PR_TRUE);
+        if (runningURI && aUrlListener)
+        {
+          nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(runningURI));
+
+          if (msgurl)
+            msgurl->RegisterListener(aUrlListener);
+        }
       }
   }
   return rv;

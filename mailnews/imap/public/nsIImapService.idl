@@ -175,7 +175,7 @@ interface nsIImapService : nsISupports
                              in nsISupports aCopyState);
   
   void downloadMessagesForOffline(in string aMessageIds, in nsIMsgFolder aSrcFolder,
-                      in nsIMsgWindow   aMsgWindow);
+                      in nsIUrlListener aListener, in nsIMsgWindow   aMsgWindow);
   nsIURI moveFolder(in nsIEventQueue aClientEventQueue, 
                     in nsIMsgFolder aSrcFolder,
                     in nsIMsgFolder aDstFolder,
