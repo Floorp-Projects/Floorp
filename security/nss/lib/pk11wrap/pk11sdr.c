@@ -275,7 +275,7 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
 
   /* Decode the incoming data */
   memset(&sdrResult, 0, sizeof sdrResult);
-  rv = SEC_ASN1DecodeItem(arena, &sdrResult, template, data);
+  rv = SEC_QuickDERDecodeItem(arena, &sdrResult, template, data);
   if (rv != SECSuccess) goto loser;  /* Invalid format */
 
   /* Find the slot and key for the given keyid */

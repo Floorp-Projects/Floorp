@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: keydb.c,v 1.38 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: keydb.c,v 1.39 2004/06/05 00:50:32 jpierre%netscape.com Exp $ */
 
 #include "lowkeyi.h"
 #include "seccomon.h"
@@ -1917,10 +1917,13 @@ seckey_decrypt_private_key(NSSLOWKEYEncryptedPrivateKeyInfo *epki,
 
     if(dest != NULL)
     {
+        SECItem newPrivateKey;
+        SECItem newAlgParms;
+
         SEC_PRINT("seckey_decrypt_private_key()", "PrivateKeyInfo", -1,
 		  dest);
 
-	rv = SEC_ASN1DecodeItem(temparena, pki, 
+	rv = SEC_QuickDERDecodeItem(temparena, pki, 
 	    nsslowkey_PrivateKeyInfoTemplate, dest);
 	if(rv == SECSuccess)
 	{
@@ -1929,29 +1932,37 @@ seckey_decrypt_private_key(NSSLOWKEYEncryptedPrivateKeyInfo *epki,
 	      case SEC_OID_PKCS1_RSA_ENCRYPTION:
 		pk->keyType = NSSLOWKEYRSAKey;
 		prepare_low_rsa_priv_key_for_asn1(pk);
-		rv = SEC_ASN1DecodeItem(permarena, pk,
+                if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
+                    &pki->privateKey) ) break;
+		rv = SEC_QuickDERDecodeItem(permarena, pk,
 					nsslowkey_RSAPrivateKeyTemplate,
-					&pki->privateKey);
+					&newPrivateKey);
 		break;
 	      case SEC_OID_ANSIX9_DSA_SIGNATURE:
 		pk->keyType = NSSLOWKEYDSAKey;
 		prepare_low_dsa_priv_key_for_asn1(pk);
-		rv = SEC_ASN1DecodeItem(permarena, pk,
+                if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
+                    &pki->privateKey) ) break;
+		rv = SEC_QuickDERDecodeItem(permarena, pk,
 					nsslowkey_DSAPrivateKeyTemplate,
-					&pki->privateKey);
+					&newPrivateKey);
 		if (rv != SECSuccess)
 		    goto loser;
 		prepare_low_pqg_params_for_asn1(&pk->u.dsa.params);
-		rv = SEC_ASN1DecodeItem(permarena, &pk->u.dsa.params,
+                if (SECSuccess != SECITEM_CopyItem(permarena, &newAlgParms,
+                    &pki->algorithm.parameters) ) break;
+		rv = SEC_QuickDERDecodeItem(permarena, &pk->u.dsa.params,
 					nsslowkey_PQGParamsTemplate,
-					&pki->algorithm.parameters);
+					&newAlgParms);
 		break;
 	      case SEC_OID_X942_DIFFIE_HELMAN_KEY:
 		pk->keyType = NSSLOWKEYDHKey;
 		prepare_low_dh_priv_key_for_asn1(pk);
-		rv = SEC_ASN1DecodeItem(permarena, pk,
+                if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
+                    &pki->privateKey) ) break;
+		rv = SEC_QuickDERDecodeItem(permarena, pk,
 					nsslowkey_DHPrivateKeyTemplate,
-					&pki->privateKey);
+					&newPrivateKey);
 		break;
 #ifdef NSS_ENABLE_ECC
 	      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
@@ -1961,9 +1972,11 @@ seckey_decrypt_private_key(NSSLOWKEYEncryptedPrivateKeyInfo *epki,
 		fordebug = &pki->privateKey;
 		SEC_PRINT("seckey_decrypt_private_key()", "PrivateKey", 
 			  pk->keyType, fordebug);
-		rv = SEC_ASN1DecodeItem(permarena, pk,
+                if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
+                    &pki->privateKey) ) break;
+		rv = SEC_QuickDERDecodeItem(permarena, pk,
 					nsslowkey_ECPrivateKeyTemplate,
-					&pki->privateKey);
+					&newPrivateKey);
 		if (rv != SECSuccess)
 		    goto loser;
 
@@ -2059,7 +2072,7 @@ seckey_decode_encrypted_private_key(NSSLOWKEYDBKey *dbkey, SECItem *pwitem)
 	goto loser;
     }
 
-    rv = SEC_ASN1DecodeItem(temparena, epki,
+    rv = SEC_QuickDERDecodeItem(temparena, epki,
 			    nsslowkey_EncryptedPrivateKeyInfoTemplate,
 			    &(dbkey->derPK)); 
     if(rv != SECSuccess) {
