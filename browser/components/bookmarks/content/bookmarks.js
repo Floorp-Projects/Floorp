@@ -1179,20 +1179,13 @@ var BookmarksUtils = {
 
   isSelectionValidForInsertion: function (aSelection, aTarget, aAction)
   {
-    var isValid = new Array(aSelection.length);
-    for (var i=0; i<aSelection.length; ++i)
-      isValid[i] = false;
-    if (!BookmarksUtils.isValidTargetContainer(aTarget.parent, aSelection))
+    if (!BookmarksUtils.isValidTargetContainer(aTarget.parent, aSelection)) {
+      var isValid = new Array(aSelection.length);
+      for (var i=0; i<aSelection.length; ++i)
+        isValid[i] = false;
       return isValid;
-    for (i=0; i<aSelection.length; ++i) {
-      if (!aSelection.isValid[i])
-        continue;
-      if (!BookmarksUtils.isChildOfContainer(aSelection.item[i], aTarget.parent) ||
-          aAction == "move" && aSelection.parent[i] == aTarget.parent            ||
-          aSelection.isContainer[i])
-        isValid[i] = true;
     }
-    return isValid;
+    return aSelection.isValid;
   },
 
   isSelectionValidForDeletion: function (aSelection)
