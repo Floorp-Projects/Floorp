@@ -944,7 +944,7 @@ int StartIB(CString parms, WIDGET *curWidget)
     {
         CString templeft = userAgent.Left(5);
         if ((templeft.CompareNoCase("CCK -")) != 0)
-            userAgent = "CCK -" + userAgent;
+            userAgent = "CK-" + userAgent;
     }
     SetGlobal("OrganizationName",userAgent);
 
