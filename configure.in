@@ -992,8 +992,6 @@ dom/src/events/Makefile
 dom/src/html/Makefile
 dom/src/jsurl/Makefile
 dom/tools/Makefile
-editor/Makefile
-editor/public/Makefile
 gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
@@ -1163,7 +1161,9 @@ xpfe/xpviewer/src/Makefile
 xpfe/xpviewer/public/Makefile"
 
 EDITOR_MAKEFILES="
+editor/Makefile
 editor/core/Makefile
+editor/public/Makefile"
 
 MAKEFILES="$NG_MAKEFILES"
 
