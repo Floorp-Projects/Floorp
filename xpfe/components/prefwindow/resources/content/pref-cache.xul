@@ -19,6 +19,8 @@
    Rights Reserved.
    
    Contributor(s): 
+        Diego Biurrun   <diego@biurrun.de>
+                - added disk cache folder choice
   -->
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
@@ -76,6 +78,17 @@
                   id="clearDiskCache"
                   prefstring="pref.advanced.cache.disable_button.clear_disk"/>
         </row>
+        <row align="center">
+          <label value="&diskCacheFolder.label;"/>
+          <hbox align="center">
+            <textbox id="browserCacheDiskCacheFolder" readonly="true"/>
+          </hbox>
+          <button label="&chooseDiskCacheFolder.label;" accesskey="&chooseDiskCacheFolder.accesskey;"
+                  oncommand="prefCacheSelectFolder();" id="chooseDiskCacheFolder"/>
+        </row>
+
+    <description>&diskCacheFolderExplanation;</description>
+
       </rows>
     </grid>
 
