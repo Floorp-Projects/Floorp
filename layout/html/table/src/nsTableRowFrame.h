@@ -160,7 +160,7 @@ public:
                       nsTableFrame*     aTableFrame = nsnull,
                       nsTableCellFrame* aCellFrame  = nsnull);
 
-  void ResetTallestCell();
+  void ResetTallestCell(nscoord aRowStyleHeight);
 
   // calculate the tallest child when the previous tallest child gets shorter
   void CalcTallestCell();
