@@ -57,6 +57,7 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
@@ -1054,7 +1055,7 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia,
         if (! first) {
           aMedia.AppendWithConversion(',');
         }
-        mToken.mIdent.ToLowerCase();  // case insensitive from CSS - must be lower cased
+        ToLowerCase(mToken.mIdent);  // case insensitive from CSS - must be lower cased
         if (aMediaAtoms) {
           nsIAtom* medium = NS_NewAtom(mToken.mIdent);
           aMediaAtoms->AppendElement(medium);
@@ -1237,7 +1238,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(PRInt32& aErrorCode,
 
   if (eCSSToken_Ident == mToken.mType) {
     prefix = mToken.mIdent;
-    prefix.ToLowerCase(); // always case insensitive, since stays within CSS
+    ToLowerCase(prefix); // always case insensitive, since stays within CSS
     if (! GetToken(aErrorCode, PR_TRUE)) {
       REPORT_UNEXPECTED_EOF();
       return PR_FALSE;
@@ -1775,7 +1776,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
           aSelector.SetTag(mToken.mIdent);
         }
         else {
-          mToken.mIdent.ToLowerCase(buffer);
+          ToLowerCase(mToken.mIdent, buffer);
           aSelector.SetTag(buffer);
         }
       }
@@ -1819,7 +1820,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       PRInt32 nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpace) {
         nsIAtom* prefix;
-        buffer.ToLowerCase(); // always case insensitive, since stays within CSS
+        ToLowerCase(buffer); // always case insensitive, since stays within CSS
         prefix = NS_NewAtom(buffer);
         mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
         NS_IF_RELEASE(prefix);
@@ -1842,7 +1843,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
           aSelector.SetTag(mToken.mIdent);
         }
         else {
-          mToken.mIdent.ToLowerCase(buffer);
+          ToLowerCase(mToken.mIdent, buffer);
           aSelector.SetTag(buffer);
         }
       }
@@ -1874,7 +1875,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
         aSelector.SetTag(buffer);
       }
       else {
-        buffer.ToLowerCase();
+        ToLowerCase(buffer);
         aSelector.SetTag(buffer);
       }
       aDataMask |= SEL_MASK_ELEM;
@@ -1900,7 +1901,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
         aSelector.SetTag(mToken.mIdent);
       }
       else {
-        mToken.mIdent.ToLowerCase(buffer);
+        ToLowerCase(mToken.mIdent, buffer);
         aSelector.SetTag(buffer);
       }
     }
@@ -2007,7 +2008,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
       nameSpaceID = kNameSpaceID_Unknown;
       if (mNameSpace) {
         nsIAtom* prefix;
-        attr.ToLowerCase(); // always case insensitive, since stays within CSS
+        ToLowerCase(attr); // always case insensitive, since stays within CSS
         prefix = NS_NewAtom(attr);
         mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
         NS_IF_RELEASE(prefix);
@@ -2043,7 +2044,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
   }
 
   if (! mCaseSensitive) {
-    attr.ToLowerCase();
+    ToLowerCase(attr);
   }
   if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
     REPORT_UNEXPECTED_EOF();
@@ -2165,7 +2166,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
   buffer.Truncate();
   buffer.AppendWithConversion(':');
   buffer.Append(mToken.mIdent);
-  buffer.ToLowerCase();
+  ToLowerCase(buffer);
   nsIAtom* pseudo = NS_NewAtom(buffer);
 
   if (eCSSToken_Ident != mToken.mType) {  // malformed selector
@@ -3138,7 +3139,7 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
           PRInt32 nameSpaceID = kNameSpaceID_Unknown;
           if (mNameSpace) {
             nsIAtom* prefix;
-            holdIdent.ToLowerCase(); // always case insensitive, since stays within CSS
+            ToLowerCase(holdIdent); // always case insensitive, since stays within CSS
             prefix = NS_NewAtom(holdIdent);
             mNameSpace->FindNameSpaceID(prefix, nameSpaceID);
             NS_IF_RELEASE(prefix);
@@ -3156,7 +3157,7 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
               attr.Append(mToken.mIdent);
             } else {
               nsAutoString buffer;
-              mToken.mIdent.ToLowerCase(buffer);
+              ToLowerCase(mToken.mIdent, buffer);
               attr.Append(buffer);
             }
           }
@@ -3170,7 +3171,7 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
             attr = holdIdent;
           }
           else {
-            holdIdent.ToLowerCase(attr);
+            ToLowerCase(holdIdent, attr);
           }
         }
       }
@@ -3202,7 +3203,7 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
             attr.Append(mToken.mIdent);
           } else {
             nsAutoString buffer;
-            mToken.mIdent.ToLowerCase(buffer);
+            ToLowerCase(mToken.mIdent, buffer);
             attr.Append(buffer);
           }
         }

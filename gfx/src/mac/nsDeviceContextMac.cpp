@@ -66,6 +66,7 @@
 #include "nsIScreenManager.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 
 PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
@@ -761,8 +762,8 @@ FontNameKey::FontNameKey(const nsString& aString)
 PRUint32 FontNameKey::HashCode(void) const
 {
   nsString str;
-  mString.ToLowerCase(str);
-	return nsCRT::HashCode(str.get());
+  ToLowerCase(mString, str);
+  return nsCRT::HashCode(str.get());
 }
 
 PRBool FontNameKey::Equals(const nsHashKey *aKey) const

@@ -175,6 +175,13 @@ NS_COM void ToUpperCase( nsACString& );
 NS_COM void ToLowerCase( nsACString& );
 
   /**
+   * Converts case from string aSource to aDest.
+   */
+NS_COM void ToUpperCase( const nsACString& aSource, nsACString& aDest );
+
+NS_COM void ToLowerCase( const nsACString& aSource, nsACString& aDest );
+
+  /**
    * Finds the leftmost occurance of |aPattern|, if any in the range |aSearchStart|..|aSearchEnd|.
    *
    * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to

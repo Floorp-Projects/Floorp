@@ -340,7 +340,7 @@ IsASCII( const nsAString& aString )
 
 
   /**
-   * A character sink for case conversion.
+   * A character sink for in-place case conversion.
    */
 class ConvertToUpperCase
   {
@@ -373,6 +373,51 @@ ToUpperCase( nsACString& aCString )
 
 
   /**
+   * A character sink for copying with case conversion.
+   */
+class CopyToUpperCase
+  {
+    public:
+      typedef char value_type;
+
+      CopyToUpperCase( nsACString::iterator& aDestIter )
+        : mIter(aDestIter)
+        {
+        }
+
+      PRUint32
+      write( const char* aSource, PRUint32 aSourceLength )
+        {
+          PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+          char* cp = mIter.get();
+          const char* end = aSource + len;
+          while (aSource != end) {
+            char ch = *aSource;
+            if ((ch >= 'a') && (ch <= 'z'))
+              *cp = ch - ('a' - 'A');
+            ++aSource;
+            ++cp;
+          }
+          mIter.advance(len);
+          return len;
+        }
+
+    protected:
+      nsACString::iterator& mIter;
+  };
+
+NS_COM
+void
+ToUpperCase( const nsACString& aSource, nsACString& aDest )
+  {
+    nsACString::const_iterator fromBegin, fromEnd;
+    nsACString::iterator toBegin;
+    aDest.SetLength(aSource.Length());
+    CopyToUpperCase converter(aDest.BeginWriting(toBegin));
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
+  }
+
+  /**
    * A character sink for case conversion.
    */
 class ConvertToLowerCase
@@ -402,6 +447,51 @@ ToLowerCase( nsACString& aCString )
     nsACString::iterator fromBegin, fromEnd;
     ConvertToLowerCase converter;
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
+  }
+
+  /**
+   * A character sink for copying with case conversion.
+   */
+class CopyToLowerCase
+  {
+    public:
+      typedef char value_type;
+
+      CopyToLowerCase( nsACString::iterator& aDestIter )
+        : mIter(aDestIter)
+        {
+        }
+
+      PRUint32
+      write( const char* aSource, PRUint32 aSourceLength )
+        {
+          PRUint32 len = PR_MIN(PRUint32(mIter.size_forward()), aSourceLength);
+          char* cp = mIter.get();
+          const char* end = aSource + len;
+          while (aSource != end) {
+            char ch = *aSource;
+            if ((ch >= 'A') && (ch <= 'Z'))
+              *cp = ch + ('a' - 'A');
+            ++aSource;
+            ++cp;
+          }
+          mIter.advance(len);
+          return len;
+        }
+
+    protected:
+      nsACString::iterator& mIter;
+  };
+
+NS_COM
+void
+ToLowerCase( const nsACString& aSource, nsACString& aDest )
+  {
+    nsACString::const_iterator fromBegin, fromEnd;
+    nsACString::iterator toBegin;
+    aDest.SetLength(aSource.Length());
+    CopyToLowerCase converter(aDest.BeginWriting(toBegin));
+    copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
 template <class StringT, class IteratorT, class Comparator>

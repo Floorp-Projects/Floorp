@@ -26,6 +26,8 @@
 //#if 0
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
+void ToLowerCase( const nsAString& aSource, nsAString& aDest );
+void ToUpperCase( const nsAString& aSource, nsAString& aDest );
 
 PRBool CaseInsensitiveFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
 
