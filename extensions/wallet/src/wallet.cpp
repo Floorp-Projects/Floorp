@@ -34,9 +34,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIURL.h"
 
-#include "prthread.h"
 #include "xp_list.h"
-#include "xp_mem.h"
 #include "prefapi.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
@@ -333,11 +331,11 @@ PRBool FE_Confirm(char * szMessage) {
   for (;;) {
     c = getchar();
     if (tolower(c) == 'y') {
-      result = JS_TRUE;
+      result = PR_TRUE;
       break;
     }
     if (tolower(c) == 'n') {
-      result = JS_FALSE;
+      result = PR_FALSE;
       break;
     }
   }
@@ -927,13 +925,13 @@ wallet_FetchFromNetCenter(char* from, char* to) {
     nsresult rv = nsServiceManager::GetService(kNetServiceCID,
                                                kINetServiceIID,
                                                (nsISupports **)&inet);
-    if (NS_OK == rv) {
+    if (NS_SUCCEEDED(rv)) {
 
       /* open network stream */
       nsIInputStream* newStream;
       nsIInputStream* *aNewStream = &newStream;
       rv = inet->OpenBlockingStream(url, nsnull, aNewStream);
-      if (NS_OK == rv) {
+      if (NS_SUCCEEDED(rv)) {
 
         /* open output file */
         nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
@@ -1077,7 +1075,7 @@ wallet_GetSelectIndex(
   selectElement->GetLength(&length);
   nsIDOMHTMLCollection * options;
   result = selectElement->GetOptions(&options);
-  if ((NS_OK == result) && (nsnull != options)) {
+  if ((NS_SUCCEEDED(result)) && (nsnull != options)) {
     PRUint32 numOptions;
     options->GetLength(&numOptions);
     for (PRUint32 optionX = 0; optionX < numOptions; optionX++) {
@@ -1086,7 +1084,7 @@ wallet_GetSelectIndex(
       if (nsnull != optionNode) {
         nsIDOMHTMLOptionElement* optionElement = nsnull;
         result = optionNode->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&optionElement);
-        if ((NS_OK == result) && (nsnull != optionElement)) {
+        if ((NS_SUCCEEDED(result)) && (nsnull != optionElement)) {
           nsAutoString optionValue;
           nsAutoString optionText;
           optionElement->GetValue(optionValue);
@@ -1119,13 +1117,13 @@ wallet_GetPrefills(
 
   /* get prefills for input element */
   result = elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
-  if ((NS_OK == result) && (nsnull != inputElement)) {
+  if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
     nsAutoString type;
     result = inputElement->GetType(type);
-    if ((NS_OK == result) && ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+    if ((NS_SUCCEEDED(result)) && ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
       nsAutoString field;
       result = inputElement->GetName(field);
-      if (NS_OK == result) {
+      if (NS_SUCCEEDED(result)) {
         nsAutoString schema;
         nsAutoString value;
         XP_List* itemList;
@@ -1148,10 +1146,10 @@ wallet_GetPrefills(
 
   /* get prefills for dropdown list */
   result = elementNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
-  if ((NS_OK == result) && (nsnull != selectElement)) {
+  if ((NS_SUCCEEDED(result)) && (nsnull != selectElement)) {
     nsAutoString field;
     result = selectElement->GetName(field);
-    if (NS_OK == result) {
+    if (NS_SUCCEEDED(result)) {
       nsAutoString schema;
       nsAutoString value;
       XP_List* itemList;
@@ -1159,7 +1157,7 @@ wallet_GetPrefills(
         if (value != "") {
           /* no synonym list, just one value to try */
           result = wallet_GetSelectIndex(selectElement, value, selectIndex);
-          if (-1 != result) {
+          if (NS_SUCCEEDED(result)) {
             /* value matched one of the values in the drop-down list */
             valuePtr = new nsAutoString(value);
             schemaPtr = new nsAutoString(schema);
@@ -1170,7 +1168,7 @@ wallet_GetPrefills(
           /* synonym list exists, try each value */
           while (wallet_ReadFromSublist(value, itemList) == 0) {
             result = wallet_GetSelectIndex(selectElement, value, selectIndex);
-            if (-1 != result) {
+            if (NS_SUCCEEDED(result)) {
               /* value matched one of the values in the drop-down list */
               valuePtr = new nsAutoString(value);
               schemaPtr = new nsAutoString(schema);
@@ -1402,7 +1400,7 @@ wallet_RequestToPrefillDone(XPDialogState* state, char** argv, int argc,
         } else {
           nsresult result;
           result = wallet_GetSelectIndex(ptr->selectElement, *next, ptr->selectIndex);
-          if (-1 != result) {
+          if (NS_SUCCEEDED(result)) {
             ptr->selectElement->SetSelectedIndex(ptr->selectIndex);
           } else {
             ptr->selectElement->SetSelectedIndex(0);
@@ -1428,7 +1426,7 @@ static XPDialogInfo dialogInfo = {
 
 void
 wallet_RequestToPrefill(XP_List * list) {
-  char *buffer = (char*)XP_ALLOC(BUFLEN);
+  char *buffer = (char*)PR_Malloc(BUFLEN);
   char *buffer2 = 0;
   PRInt32 g = 0;
 
@@ -1628,12 +1626,12 @@ wallet_RequestToPrefill(XP_List * list) {
   FLUSH_BUFFER
 
   /* free buffer since it is no longer needed */
-  XP_FREEIF(buffer);
+  PR_FREEIF(buffer);
 
   /* put html just generated into strings->arg[0] and invoke HTML dialog */
   if (buffer2) {
     XP_CopyDialogString(strings, 0, buffer2);
-    XP_FREE(buffer2);
+    PR_Free(buffer2);
     buffer2 = NULL;
   }
   XP_MakeHTMLDialog(NULL, &dialogInfo, 0, strings, NULL, PR_FALSE);
@@ -1661,7 +1659,7 @@ wallet_PostEdit() {
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&netservice);
-  if ((NS_OK == res) && (nsnull != netservice)) {
+  if ((NS_SUCCEEDED(res)) && (nsnull != netservice)) {
     const nsAutoString walletEditor = nsAutoString(WALLET_EDITOR_URL);
     if (!NS_FAILED(NS_NewURL(&url, walletEditor))) {
       res = netservice->GetCookieString(url, *nsCookie);
@@ -1735,7 +1733,7 @@ WLLT_PreEdit(nsIURL* url) {
   res = nsServiceManager::GetService(kNetServiceCID,
                                      kINetServiceIID,
                                      (nsISupports **)&netservice);
-  if ((NS_OK == res) && (nsnull != netservice)) {
+  if ((NS_SUCCEEDED(res)) && (nsnull != netservice)) {
     wallet_Initialize();
     nsAutoString * cookie = new nsAutoString("SchemaToValue=");
     *cookie += BREAK;
@@ -1790,7 +1788,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
       nsresult result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
-      if ((NS_OK == result) && (nsnull != htmldoc)) {
+      if ((NS_SUCCEEDED(result)) && (nsnull != htmldoc)) {
         nsIDOMHTMLCollection* forms = nsnull;
         htmldoc->GetForms(&forms);
         if (nsnull != forms) {
@@ -1802,10 +1800,10 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
             if (nsnull != formNode) {
               nsIDOMHTMLFormElement* formElement = nsnull;
               result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
-              if ((NS_OK == result) && (nsnull != formElement)) {
+              if ((NS_SUCCEEDED(result)) && (nsnull != formElement)) {
                 nsIDOMHTMLCollection* elements = nsnull;
                 result = formElement->GetElements(&elements);
-                if ((NS_OK == result) && (nsnull != elements)) {
+                if ((NS_SUCCEEDED(result)) && (nsnull != elements)) {
                   /* got to the form elements at long last */
                   PRUint32 numElements;
                   elements->GetLength(&numElements);
