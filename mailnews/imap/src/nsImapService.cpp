@@ -72,28 +72,20 @@ NS_IMETHODIMP nsImapService::SelectFolder(PLEventQueue * aClientEventQueue, nsII
 										  nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 
+
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
 	
 	nsIImapProtocol * protocolInstance = nsnull;
-	nsresult rv = CreateImapConnection(aClientEventQueue, &protocolInstance);
 	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
 
-	if (NS_SUCCEEDED(rv) && protocolInstance)
-	{
-		// now we need to create an imap url to load into the connection. The url needs to represent a select folder action.
-		rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                            nsIImapUrl::GetIID(), (void **)
-                                            &imapUrl);
-	}
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
-		nsString2 urlSpec(eOneByte);
-
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
 		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
-		rv = CreateStartOfImapUrl(*imapUrl, urlSpec);
 		if (NS_SUCCEEDED(rv))
 		{
 			// ### FIXME - hardcode selection of the inbox
@@ -122,29 +114,21 @@ NS_IMETHODIMP nsImapService::LiteSelectFolder(PLEventQueue * aClientEventQueue, 
 	// just create a connection and process the request.
 	
 	nsIImapProtocol * protocolInstance = nsnull;
-	nsresult rv = CreateImapConnection(aClientEventQueue, &protocolInstance);
 	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
 
-	if (NS_SUCCEEDED(rv) && protocolInstance)
-	{
-		// now we need to create an imap url to load into the connection. The url needs to represent a select folder action.
-		rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                            nsIImapUrl::GetIID(), (void **)
-                                            &imapUrl);
-	}
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
-		nsString2 urlSpec(eOneByte);
 
-		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
+		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapLiteSelectFolder);
 		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
-		rv = CreateStartOfImapUrl(*imapUrl, urlSpec);
 		if (NS_SUCCEEDED(rv))
 		{
 			char hierarchySeparator = '/';
-			// ### FIXME - hardcode selection of the inbox
 			urlSpec.Append("/liteselect>");
 			urlSpec.Append(hierarchySeparator);
+			// ### FIXME - hardcode selection of the inbox - should get folder name from folder
 			urlSpec.Append("Inbox");
 			rv = imapUrl->SetSpec(urlSpec.GetBuffer());
 		} // if we got a host name
@@ -157,6 +141,88 @@ NS_IMETHODIMP nsImapService::LiteSelectFolder(PLEventQueue * aClientEventQueue, 
 			NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	} // if we have a url to run....
 
+	return rv;
+}
+
+static const char *sequenceString = "SEQUENCE";
+static const char *uidString = "UID";
+
+/* fetching RFC822 messages */
+/* imap4://HOST>fetch><UID/SEQUENCE>>MAILBOXPATH>x */
+/*   'x' is the message UID or sequence number list */
+/* will set the 'SEEN' flag */
+NS_IMETHODIMP nsImapService::FetchMessage(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder, 
+												nsIUrlListener * aUrlListener, nsIURL ** aURL,
+												const char *messageIdentifierList,
+												PRBool messageIdsAreUID)
+{
+	static const char *formatString = "fetch>%s>%c%s>%s";
+
+
+	// create a protocol instance to handle the request.
+	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+	// just create a connection and process the request.
+	
+	nsIImapProtocol * protocolInstance = nsnull;
+	nsIImapUrl * imapUrl = nsnull;
+	nsString2 urlSpec(eOneByte);
+
+	nsresult rv = GetImapConnectionAndUrl(aClientEventQueue, imapUrl, protocolInstance, urlSpec);
+	if (NS_SUCCEEDED(rv) && imapUrl)
+	{
+
+		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapMsgFetch);
+		rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+		if (NS_SUCCEEDED(rv))
+		{
+			nsString2 urlSpec(eOneByte);
+			char hierarchySeparator = '/'; // ### fixme - should get from folder
+
+			rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
+			rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
+			rv = CreateStartOfImapUrl(*imapUrl, urlSpec);
+			if (NS_SUCCEEDED(rv))
+			{
+				urlSpec.Append("/fetch>");
+				urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+				urlSpec.Append(">");
+				urlSpec.Append(hierarchySeparator);
+				urlSpec.Append("Inbox>");
+				urlSpec.Append(messageIdentifierList);
+				rv = imapUrl->SetSpec(urlSpec.GetBuffer());
+			}
+			imapUrl->RegisterListener(aUrlListener);  // register listener if there is one.
+			protocolInstance->LoadUrl(imapUrl, nsnull);
+			if (aURL)
+				*aURL = imapUrl; 
+			else
+				NS_RELEASE(imapUrl); // release our ref count from the create instance call...
+		}
+	}
+	return rv;
+}
+// utility function to handle basic setup - will probably change when the real connection stuff is done.
+nsresult nsImapService::GetImapConnectionAndUrl(PLEventQueue * aClientEventQueue, nsIImapUrl  * &imapUrl, 
+												nsIImapProtocol * &protocolInstance, nsString2 &urlSpec)
+{
+	// create a protocol instance to handle the request.
+	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
+	// just create a connection and process the request.
+	
+	nsresult rv = CreateImapConnection(aClientEventQueue, &protocolInstance);
+
+	if (NS_SUCCEEDED(rv) && protocolInstance)
+	{
+		// now we need to create an imap url to load into the connection. The url needs to represent a select folder action.
+		rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
+                                            nsIImapUrl::GetIID(), (void **)
+                                            &imapUrl);
+		if (NS_SUCCEEDED(rv) && imapUrl)
+			rv = CreateStartOfImapUrl(*imapUrl, urlSpec);
+		else
+			NS_RELEASE(protocolInstance);
+	}
 	return rv;
 }
 
@@ -185,6 +251,26 @@ nsresult nsImapService::CreateStartOfImapUrl(nsIImapUrl &imapUrl, nsString2 &url
 }
 
 #ifdef HAVE_PORT
+
+/* fetching the headers of RFC822 messages */
+/* imap4://HOST>header><UID/SEQUENCE>>MAILBOXPATH>x */
+/*   'x' is the message UID or sequence number list */
+/* will not affect the 'SEEN' flag */
+char *CreateImapMessageHeaderUrl(const char *imapHost,
+								 const char *mailbox,
+								 char hierarchySeparator,
+								 const char *messageIdentifierList,
+								 XP_Bool messageIdsAreUID)
+{
+	static const char *formatString = "header>%s>%c%s>%s";
+
+	char *returnString = createStartOfIMAPurl(imapHost, XP_STRLEN(formatString) + XP_STRLEN(sequenceString) + XP_STRLEN(mailbox) + XP_STRLEN(messageIdentifierList));
+	if (returnString)
+		sprintf(returnString + XP_STRLEN(returnString), formatString, messageIdsAreUID ? uidString : sequenceString, hierarchySeparator, mailbox, messageIdentifierList);
+   /* Reviewed 4.51 safe use of sprintf */
+        	
+	return returnString;
+}
 
 /* Noop, used to reset timer or download new headers for a selected folder */
 char *CreateImapMailboxNoopUrl(const char *imapHost, 

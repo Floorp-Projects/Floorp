@@ -43,11 +43,18 @@ public:
 	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink *, nsIUrlListener * aUrlListener, nsIURL ** aURL);	
 	NS_IMETHOD LiteSelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
 											  nsIUrlListener * aUrlListener, nsIURL ** aURL);
+	NS_IMETHOD FetchMessage(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder, 
+												nsIUrlListener * aUrlListener, nsIURL ** aURL,
+												const char *messageIdentifierList,
+												PRBool messageIdsAreUID);
 	////////////////////////////////////////////////////////////////////////////////////////
-	// End support of nsISmtpService interface 
+	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
+	nsresult GetImapConnectionAndUrl(PLEventQueue * aClientEventQueue, nsIImapUrl  * &imapUrl, 
+		nsIImapProtocol * &protocolInstance, nsString2 &urlSpec);
 	nsresult CreateStartOfImapUrl(nsIImapUrl &imapUrl, nsString2 &urlString);
 	nsIImapHostSessionList * m_sessionList; // the one and only list of all host sessions...
 

@@ -255,6 +255,7 @@ public:
 	nsresult OnIdentityCheck();
 	nsresult OnTestUrlParsing();
 	nsresult OnSelectFolder();
+	nsresult OnFetchMessage();
 	nsresult OnExit(); 
 protected:
 	char m_command[500];	// command to run
@@ -1267,6 +1268,9 @@ nsresult nsIMAP4TestDriver::ReadAndDispatchCommand()
 	case 4: 
 		status = OnSelectFolder();
 		break;
+	case 5:
+		status = OnFetchMessage();
+		break;
 	default:
 		status = OnExit();
 		break;
@@ -1392,6 +1396,34 @@ nsresult nsIMAP4TestDriver::OnSelectFolder()
 
 	return rv;
 }
+
+nsresult nsIMAP4TestDriver::OnFetchMessage()
+{
+	// go get the imap service and ask it to load a message
+
+	nsresult rv = NS_OK;
+	char	uidString[200];
+
+	PL_strcpy(uidString, "1");
+	// prompt for the command to run ....
+	printf("Enter UID(s) of message(s) to fetch [%s]: ", uidString);
+	scanf("%[^\n]", uidString);
+
+
+	nsIImapService * imapService = nsnull;
+	rv = nsServiceManager::GetService(kCImapService, nsIImapService::GetIID(), (nsISupports **) &imapService);
+
+	if (NS_SUCCEEDED(rv) && imapService)
+	{
+		rv = imapService->FetchMessage(m_eventQueue, this /* imap folder sink */, this /* url listener */, nsnull,
+			uidString, PR_TRUE);
+		nsServiceManager::ReleaseService(kCImapService, imapService);
+		m_runningURL = PR_TRUE; // we are now running a url...
+	}
+
+	return rv;
+}
+
 
 nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 {

@@ -69,7 +69,15 @@ public:
 	// mscott -- eventually this function will take in the account (identity/incoming server) associated with 
 	// the request
 	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapUrl, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+	NS_IMETHOD LiteSelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
+											  nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
+	NS_IMETHOD FetchMessage(PLEventQueue * aClientEventQueue, 
+												nsIImapMailFolderSink * aImapMailFolder, 
+												nsIUrlListener * aUrlListener, nsIURL ** aURL,
+												const char *messageIdentifierList,
+												PRBool messageIdsAreUID) = 0;
 };
+
 
 #endif /* nsIImapService_h___ */
