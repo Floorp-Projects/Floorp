@@ -66,7 +66,12 @@
 #include "ctype.h" 
 #include "errno.h" 
 #include "string.h" 
+#ifdef HAVE_MEMORY_H
 #include "memory.h" 
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>  /* for SEEK_SET, SEEK_END */
+#endif
 
 #ifndef MORK_ALONE
 #include "nsDebug.h" 
