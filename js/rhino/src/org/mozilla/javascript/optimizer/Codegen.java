@@ -679,7 +679,7 @@ public class Codegen extends Interpreter {
         //     }
         //     return ENCODED.substring(start, end);
         // }
-        cfw.startMethod("getEncodedSource", "()Ljava/lang/Object;",
+        cfw.startMethod("getEncodedSource", "()Ljava/lang/String;",
                         ClassFileWriter.ACC_PUBLIC);
 
         cfw.addPush(encodedSource);

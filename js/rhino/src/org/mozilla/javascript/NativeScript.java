@@ -114,7 +114,7 @@ public class NativeScript extends NativeFunction implements Script
         return 0;
     }
 
-    public Object getEncodedSource()
+    public String getEncodedSource()
     {
         if (script instanceof NativeFunction) {
             return ((NativeFunction)script).getEncodedSource();

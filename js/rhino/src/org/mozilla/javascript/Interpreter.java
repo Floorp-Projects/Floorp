@@ -1602,7 +1602,7 @@ public class Interpreter
         return idata.itsSourceFile;
     }
 
-    static Object getEncodedSource(InterpreterData idata)
+    static String getEncodedSource(InterpreterData idata)
     {
         if (idata.encodedSource == null) {
             return null;

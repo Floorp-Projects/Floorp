@@ -62,7 +62,7 @@ final class InterpretedScript extends NativeFunction implements Script
                                      this, itsData);
     }
 
-    public Object getEncodedSource()
+    public String getEncodedSource()
     {
         return Interpreter.getEncodedSource(itsData);
     }

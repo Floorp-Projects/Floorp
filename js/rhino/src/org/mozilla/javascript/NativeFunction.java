@@ -76,7 +76,7 @@ public class NativeFunction extends BaseFunction
      */
     public final String decompile(Context cx, int indent, boolean justbody)
     {
-        Object encodedSource = getEncodedSource();
+        String encodedSource = getEncodedSource();
         if (encodedSource == null) {
             return super.decompile(cx, indent, justbody);
         } else {
@@ -115,7 +115,7 @@ public class NativeFunction extends BaseFunction
     /**
      * Get encoded source string.
      */
-    public Object getEncodedSource()
+    public String getEncodedSource()
     {
         return null;
     }
