@@ -160,9 +160,9 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
       editTxn->QueryInterface(nsIAbsorbingTransaction::GetIID(), getter_AddRefs(plcTxn));
       if (plcTxn)
       {
-        nsIAtom *atom;
-        plcTxn->GetTxnName(&atom);
-        if (atom && (atom == mName.get()))
+        nsCOMPtr<nsIAtom> atom;
+        plcTxn->GetTxnName(getter_AddRefs(atom));
+        if (atom && (atom == mName))
         {
           nsCOMPtr<nsIDOMNode> otherTxnStartNode;
           PRInt32 otherTxnStartOffset;
@@ -177,7 +177,6 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
             *aDidMerge = PR_TRUE;
           }
         }
-        NS_IF_RELEASE(atom);
       }
     }
   }
