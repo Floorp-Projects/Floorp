@@ -1661,6 +1661,8 @@ NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
   // first, special cases
   if (nameStr.Length() == 0)
     return NS_OK;
+  if (nameStr.EqualsIgnoreCase("_blank"))
+    return NS_OK;
   if (nameStr.EqualsIgnoreCase("_content"))
     return GetContentWebShell(&aResult);
 
