@@ -140,11 +140,10 @@
     {
       background-image    : url(chrome://global/skin/progressmeter-busy.gif);
     }
-  
-  progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar
-    {
-      display             : none;
-    }
+ 
+  progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar {
+      visibility: collapse;
+  }
 
   progressmeter 
     {
