@@ -44,12 +44,13 @@
 	        String *bstr = toString(b);
                 String *c = new String(*astr);
                 *c += *bstr;
-	        push(STRING_TO_JS2VAL(c));
+                retval = STRING_TO_JS2VAL(c);
+	        push(retval);
 	    }
 	    else {
                 float64 anum = toNumber(a);
                 float64 bnum = toNumber(b);
-                pushNumber(anum + bnum);
+                retval = pushNumber(anum + bnum);
 	    } 
         }
         break;

@@ -82,7 +82,7 @@ public:
 
     size_t errorPos();
 
-    void pushNumber(float64 x);
+    js2val pushNumber(float64 x);
 
 #define MAX_EXEC_STACK (20)
 

@@ -125,13 +125,16 @@ float64 *JS2Engine::newDoubleValue(float64 x)
 
 // if the argument can be stored as an integer value, do so
 // otherwise get a double value
-void JS2Engine::pushNumber(float64 x)
+js2val JS2Engine::pushNumber(float64 x)
 {
     uint32 i;
+    js2val retval;
     if (JSDOUBLE_IS_INT(x, i) && INT_FITS_IN_JS2VAL(i))
-        push(INT_TO_JS2VAL(i));
+        retval = INT_TO_JS2VAL(i);
     else
-        push(DOUBLE_TO_JS2VAL(newDoubleValue(x)));
+        retval = DOUBLE_TO_JS2VAL(newDoubleValue(x));
+    push(retval);
+    return retval;
 }
 
 // Convert an integer to a string

@@ -178,6 +178,18 @@ namespace MetaData {
             break;
         case StmtNode::Use:
             {
+                UseStmtNode *u = checked_cast<UseStmtNode *>(p);
+                ExprList *eList = u->namespaces;
+                while (eList) {
+                    js2val av = EvalExpression(env, CompilePhase, eList->expr);
+                    if (JS2VAL_IS_NULL(av) || !JS2VAL_IS_OBJECT(av))
+                        reportError(Exception::badValueError, "Namespace expected in use directive", p->pos);
+                    JS2Object *obj = JS2VAL_TO_OBJECT(av);
+                    if ((obj->kind != AttributeObjectKind) || (checked_cast<Attribute *>(obj)->attrKind != Attribute::NamespaceAttr))
+                        reportError(Exception::badValueError, "Namespace expected in use directive", p->pos);
+                    cxt->openNamespaces.push_back(checked_cast<Namespace *>(obj));                    
+                    eList = eList->next;
+                }
             }
             break;
         }   // switch (p->getKind())
@@ -253,14 +265,6 @@ namespace MetaData {
             break;
         case StmtNode::Use:
             {
-                UseStmtNode *u = checked_cast<UseStmtNode *>(p);
-                ExprList *eList = u->namespaces;
-                while (eList) {
-                    Reference *r = EvalExprNode(env, phase, eList->expr);
-                    if (r) r->emitReadBytecode(bCon, p->pos);
-                    bCon->emitOp(eUse, p->pos);
-                    eList = eList->next;
-                }
             }
             break;
         default:
@@ -585,8 +589,8 @@ namespace MetaData {
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 Reference *lVal = EvalExprNode(env, phase, b->op1);
-                Reference *rVal = EvalExprNode(env, phase, b->op2);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+                Reference *rVal = EvalExprNode(env, phase, b->op2);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(ePlus, p->pos);
             }
@@ -628,6 +632,7 @@ namespace MetaData {
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
                 returnRef = new LexicalReference(i->name, cxt.strict);
+                ((LexicalReference *)returnRef)->variableMultiname->addNamespace(cxt);
                 ((LexicalReference *)returnRef)->emitBindBytecode(bCon, p->pos);
             }
             break;
