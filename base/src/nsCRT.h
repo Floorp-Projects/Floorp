@@ -102,6 +102,8 @@ public:
   static PRInt32 strncasecmp(const PRUnichar* s1, const char* s2,
                              PRInt32 aMaxLen);
 
+  // Note: uses new[] to allocate memory, so you must use delete[] to
+  // free the memory
   static PRUnichar* strdup(const PRUnichar* str);
 
   /// Compute a hashcode for a ucs2 string
