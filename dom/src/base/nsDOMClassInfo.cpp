@@ -283,6 +283,8 @@ nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLFormControlCollection,
                            nsFormControlListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLGenericCollection, nsHTMLCollectionSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
 
   // HTML element classes
   NS_DEFINE_CLASSINFO_DATA(HTMLAnchorElement, nsElementSH,
