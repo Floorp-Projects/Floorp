@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.6 2001/01/05 01:38:26 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.7 2001/01/13 01:52:56 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -138,7 +138,6 @@ typedef struct sslSecurityInfoStr       sslSecurityInfo;
 typedef struct sslSessionIDStr          sslSessionID;
 typedef struct sslSocketStr             sslSocket;
 typedef struct sslSocketOpsStr          sslSocketOps;
-typedef struct sslSocksInfoStr          sslSocksInfo;
 
 typedef struct ssl3StateStr             ssl3State;
 typedef struct ssl3CertNodeStr          ssl3CertNode;
@@ -273,9 +272,6 @@ struct sslSocketStr {
     SSL3ProtocolVersion version;
     SSL3ProtocolVersion clientHelloVersion; /* version sent in client hello. */
 
-    /* Non-zero if socks is enabled */
-    sslSocksInfo *   socks;
-
     /* Non-zero if security is enabled */
     sslSecurityInfo *sec;
 
@@ -292,11 +288,8 @@ struct sslSocketStr {
     sslBuffer        saveBuf;				/*xmitBufLock*/
     sslBuffer        pendingBuf;			/*xmitBufLock*/
 
-    /* the following 3 variables are only used with socks or other proxies. */
-    PRIPv6Addr       peer;	/* Target server IP address */
-    int              port;	/* Target server port number. */
+    /* the following variable is only used with socks or other proxies. */
     char *           peerID;	/* String uniquely identifies target server. */
-    /* End of socks variables. */
 
     ssl3State *      ssl3;
     unsigned char *  cipherSpecs;
@@ -1017,10 +1010,6 @@ extern int         ssl2_StartGatherBytes(sslSocket *ss, sslGather *gs,
 extern SECStatus   ssl_CreateSecurityInfo(sslSocket *ss);
 extern SECStatus   ssl_CopySecurityInfo(sslSocket *ss, sslSocket *os);
 extern void        ssl_DestroySecurityInfo(sslSecurityInfo *sec);
-
-extern SECStatus   ssl_CreateSocksInfo(sslSocket *ss);
-extern SECStatus   ssl_CopySocksInfo(sslSocket *ss, sslSocket *os);
-extern void        ssl_DestroySocksInfo(sslSocksInfo *si);
 
 extern sslSocket * ssl_DupSocket(sslSocket *old);
 
