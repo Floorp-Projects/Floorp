@@ -87,7 +87,8 @@ public:
   typedef enum {
     eLeft,
     eCenter,
-    eRight
+    eRight,
+    eJustify
   } EAlignment;
   
   /* ------------ Document info methods -------------- */

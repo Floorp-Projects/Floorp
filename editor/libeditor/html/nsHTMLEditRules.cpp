@@ -488,6 +488,7 @@ nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
   // this routine assumes that alignment is done ONLY via divs
   
   // default alignment is left
+  aMixed = PR_FALSE;
   aAlign = nsIHTMLEditor::eLeft;
   
   // get selection
@@ -546,6 +547,8 @@ nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
             aAlign = nsIHTMLEditor::eCenter;
           else if (typeAttrVal.EqualsWithConversion("right"))
             aAlign = nsIHTMLEditor::eRight;
+          else if (typeAttrVal.EqualsWithConversion("justify"))
+            aAlign = nsIHTMLEditor::eJustify;
           else
             aAlign = nsIHTMLEditor::eLeft;
           return res;
