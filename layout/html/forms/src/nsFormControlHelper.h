@@ -73,33 +73,6 @@ enum nsMouseState {
   eMouseUp
 };
 
-struct nsInputDimensionSpec
-{
-  nsIAtom*  mColSizeAttr;            // attribute used to determine width
-  PRBool    mColSizeAttrInPixels;    // is attribute value in pixels (otherwise num chars)
-  nsIAtom*  mColValueAttr;           // attribute used to get value to determine size
-                                     //    if not determined above
-  nsString* mColDefaultValue;        // default value if not determined above
-  nscoord   mColDefaultSize;         // default width if not determined above
-  PRBool    mColDefaultSizeInPixels; // is default width in pixels (otherswise num chars)
-  nsIAtom*  mRowSizeAttr;            // attribute used to determine height
-  nscoord   mRowDefaultSize;         // default height if not determined above
-
-  nsInputDimensionSpec(nsIAtom* aColSizeAttr, PRBool aColSizeAttrInPixels, 
-                       nsIAtom* aColValueAttr, nsString* aColDefaultValue,
-                       nscoord aColDefaultSize, PRBool aColDefaultSizeInPixels,
-                       nsIAtom* aRowSizeAttr, nscoord aRowDefaultSize)
-                       : mColSizeAttr(aColSizeAttr), mColSizeAttrInPixels(aColSizeAttrInPixels),
-                         mColValueAttr(aColValueAttr), 
-                         mColDefaultValue(aColDefaultValue), mColDefaultSize(aColDefaultSize),
-                         mColDefaultSizeInPixels(aColDefaultSizeInPixels),
-                         mRowSizeAttr(aRowSizeAttr), mRowDefaultSize(aRowDefaultSize)
-  {
-  }
-
-};
-
-
 
 /** 
   * nsFormControlHelper is the base class for frames of form controls. It
@@ -111,17 +84,6 @@ class nsFormControlHelper
 
 public:
   
-
-  static nscoord CalculateSize (nsIPresContext*       aPresContext, 
-                                nsIRenderingContext*  aRendContext,
-                                nsIFormControlFrame*  aFrame,
-                                const nsSize&         aCSSSize, 
-                                nsInputDimensionSpec& aDimensionSpec, 
-                                nsSize&               aDesiredSize,
-                                nsSize&               aMinSize, 
-                                PRBool&               aWidthExplicit, 
-                                PRBool&               aHeightExplicit, 
-                                nscoord&              aRowSize);
 
   static nscoord GetTextSize(nsIPresContext* aContext, nsIFormControlFrame* aFrame,
                              const nsString& aString, nsSize& aSize,
@@ -141,13 +103,6 @@ public:
   static nsresult GetFrameFontFM(nsIPresContext* aPresContext, 
                                  nsIFormControlFrame * aFrame,
                                  nsIFontMetrics** aFontMet);
-
-  static nscoord CalcNavQuirkSizing(nsIPresContext*      aPresContext, 
-                                    nsIRenderingContext* aRendContext,
-                                    nsIFontMetrics*      aFontMet, 
-                                    nsIFormControlFrame* aFrame,
-                                    nsInputDimensionSpec& aSpec,
-                                    nsSize&              aSize);
 
   static void ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame);
 

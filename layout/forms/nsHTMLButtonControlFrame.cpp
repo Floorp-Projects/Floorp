@@ -204,23 +204,6 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetAccessible(nsIAccessible** aAccessibl
 #endif
 
 
-void
-nsHTMLButtonControlFrame::GetDefaultLabel(nsString& aString) 
-{
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_BUTTON_BUTTON == type) {
-    aString.Assign(NS_LITERAL_STRING("Button"));
-  } 
-  else if (NS_FORM_BUTTON_RESET == type) {
-    aString.Assign(NS_LITERAL_STRING("Reset"));
-  } 
-  else if (NS_FORM_BUTTON_SUBMIT == type) {
-    aString.Assign(NS_LITERAL_STRING("Submit"));
-  } 
-}
-
-
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetType(PRInt32* aType) const
 {

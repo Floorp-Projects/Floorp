@@ -95,14 +95,6 @@ public:
                             nsIContent *      aContent,
                             nsIFrame**        aFrame);
 
-protected:
-  NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
-                                                   const nsHTMLReflowState& aSuggestedReflowState);
-  NS_IMETHOD DoNavQuirksReflow(nsIPresContext*          aPresContext, 
-                               nsHTMLReflowMetrics&     aDesiredSize,
-                               const nsHTMLReflowState& aReflowState, 
-                               nsReflowStatus&          aStatus);
-  NS_IMETHOD GetDefaultLabel(nsString& aLabel);
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
@@ -110,10 +102,21 @@ protected:
                               PRInt32         aModType, 
                               PRInt32         aHint);
 
+protected:
+  NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
+                                                   const nsHTMLReflowState& aSuggestedReflowState);
+  nsresult DoNavQuirksReflow(nsIPresContext*          aPresContext, 
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState, 
+                             nsReflowStatus&          aStatus);
+  void CalcNavQuirkSizing(nsIPresContext* aPresContext,
+                          nsIRenderingContext* aRendContext,
+                          nsString&       aValue,
+                          nsSize&         aSize);
 
-  virtual PRBool IsReset(PRInt32 type);
-  virtual PRBool IsSubmit(PRInt32 type);
-  virtual PRBool IsBrowse(PRInt32 type); // Browse button of file input
+  nsresult GetDefaultLabel(nsString& aLabel);
+
+  PRBool IsFileBrowseButton(PRInt32 type); // Browse button of file input
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
@@ -122,8 +125,6 @@ private:
   nscoord mSuggestedWidth;
   nscoord mSuggestedHeight;
   nsCOMPtr<nsITextContent> mTextContent;
-
-  PRBool mDefaultValueWasChanged;
 };
 
 

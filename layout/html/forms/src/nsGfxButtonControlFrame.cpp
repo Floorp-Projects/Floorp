@@ -65,7 +65,6 @@ nsGfxButtonControlFrame::nsGfxButtonControlFrame()
 {
   mSuggestedWidth  = kSuggestedNotSet;
   mSuggestedHeight = kSuggestedNotSet;
-  mDefaultValueWasChanged = PR_FALSE;
 }
 
 nsresult
@@ -92,26 +91,6 @@ nsGfxButtonControlFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
-PRBool
-nsGfxButtonControlFrame::IsReset(PRInt32 type)
-{
-  if (NS_FORM_INPUT_RESET == type) {
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
-}
-
-PRBool
-nsGfxButtonControlFrame::IsSubmit(PRInt32 type)
-{
-  if (NS_FORM_INPUT_SUBMIT == type) {
-    return PR_TRUE;
-  } else {
-    return PR_FALSE;
-  }
-}
-                              
 // Special check for the browse button of a file input.
 //
 // Since this is actually type "NS_FORM_INPUT_BUTTON", we
@@ -120,7 +99,7 @@ nsGfxButtonControlFrame::IsSubmit(PRInt32 type)
 // (a) type is NS_FORM_BROWSE or
 // (b) type is NS_FORM_INPUT_BUTTON and our parent is a file input
 PRBool
-nsGfxButtonControlFrame::IsBrowse(PRInt32 type)
+nsGfxButtonControlFrame::IsFileBrowseButton(PRInt32 type)
 {
   PRBool rv = PR_FALSE;
   if (NS_FORM_BROWSE == type) {
@@ -192,7 +171,7 @@ nsGfxButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetri
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+nsresult 
 nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext, 
                                            nsHTMLReflowMetrics&     aDesiredSize,
                                            const nsHTMLReflowState& aReflowState, 
@@ -233,12 +212,8 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
       value.Assign(NS_LITERAL_STRING("  "));
     }
 
-    nsInputDimensionSpec btnSpec(NULL, PR_FALSE, nsnull, 
-                                  &value,0, 
-                                  PR_FALSE, NULL, 1);
-    nsFormControlHelper::CalcNavQuirkSizing(aPresContext, aReflowState.rendContext, 
-                                            fontMet, (nsIFormControlFrame*)this, 
-                                            btnSpec, desiredSize);
+    CalcNavQuirkSizing(aPresContext, aReflowState.rendContext, value,
+                       desiredSize);
 
     // Note: The Quirks sizing includes a 2px border in its calculation of "desiredSize"
     // So we must subtract off the 2 pixel border.
@@ -481,20 +456,20 @@ else {
 // However, since html.css is not internationalized, we now grab the default
 // label from a string bundle as is done for all other UI strings.
 // See bug 16999 for further details.
-NS_IMETHODIMP
+nsresult
 nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString) 
 {
   const char * propname = nsFormControlHelper::GetHTMLPropertiesFileName();
   nsresult rv = NS_OK;
   PRInt32 type;
   GetType(&type);
-  if (IsReset(type)) {
+  if (type == NS_FORM_INPUT_RESET) {
     rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Reset").get(), aString);
   } 
-  else if (IsSubmit(type)) {
+  else if (type == NS_FORM_INPUT_SUBMIT) {
     rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Submit").get(), aString);
   } 
-  else if (IsBrowse(type)) {
+  else if (IsFileBrowseButton(type)) {
     rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Browse").get(), aString);
   }
   else {
@@ -525,7 +500,6 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     } else {
       rv = NS_ERROR_UNEXPECTED;
     }
-    mDefaultValueWasChanged = PR_TRUE;
 
   // defer to HTMLButtonControlFrame
   } else {
@@ -614,6 +588,29 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
+}
+
+void 
+nsGfxButtonControlFrame::CalcNavQuirkSizing(nsIPresContext* aPresContext, 
+                                            nsIRenderingContext* aRendContext,
+                                            nsString&       aLabel,
+                                            nsSize&         aSize)
+{
+  float p2t;
+  float t2p;
+  aPresContext->GetPixelsToTwips(&p2t);
+  aPresContext->GetTwipsToPixels(&t2p);
+
+  // Get text size, round to nearest pixel, multiply by 3/2
+  // XXX this algorithm seems suspect: rounding before multiply can't be good,
+  //     and 3/2 seems ... arbitrary
+  nsFormControlHelper::GetTextSize(aPresContext, this,
+                                   aLabel, aSize,
+                                   aRendContext);
+  aSize.width  = NSToCoordRound(aSize.width * t2p);
+  aSize.height = NSToCoordRound(aSize.height * t2p);
+  aSize.width  = NSIntPixelsToTwips(3 * aSize.width / 2, p2t);
+  aSize.height = NSIntPixelsToTwips(3 * aSize.height / 2, p2t);
 }
 
 NS_IMETHODIMP 
