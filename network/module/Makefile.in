@@ -28,7 +28,6 @@ LIBRARY_NAME	= netlib
 CPPSRCS			= \
 			  nsNetService.cpp    \
 			  nsNetThread.cpp     \
-			  nsRelatedLinks.cpp  \
 			  nsNetStream.cpp     \
 			  nsNetStreamLoader.cpp \
 			  nsHttpUrl.cpp       \
