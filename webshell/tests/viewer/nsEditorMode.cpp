@@ -88,11 +88,11 @@ static nsresult PrintEditorOutput(nsIHTMLEditor* editor, PRInt32 aCommandID)
 	switch (aCommandID)
 	{
       case VIEWER_DISPLAYTEXT:
-        gEditor->OutputText(outString);
+        gEditor->OutputTextToString(outString);
         break;
         
       case VIEWER_DISPLAYHTML:
-        gEditor->OutputHTML(outString);
+        gEditor->OutputHTMLToString(outString);
         break;
 	}
 
