@@ -648,7 +648,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
   nsCOMPtr<nsIDocument> pageDoc(do_QueryInterface(htmlDoc));
   if (pageDoc)
   {
-    nsIURI* url = pageDoc->GetDocumentURL();
+    nsIURI* url = pageDoc->GetDocumentURI();
     nsCAutoString spec;
     url->GetSpec(spec);
     *outHrefString = [NSString stringWithUTF8String:spec.get()];
