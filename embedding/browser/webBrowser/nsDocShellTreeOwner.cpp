@@ -632,6 +632,20 @@ NS_IMETHODIMP nsDocShellTreeOwner::SetEnabled(PRBool aEnabled)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsDocShellTreeOwner::GetBlurSuppression(PRBool *aBlurSuppression)
+{
+  NS_ENSURE_ARG_POINTER(aBlurSuppression);
+  *aBlurSuppression = PR_FALSE;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocShellTreeOwner::SetBlurSuppression(PRBool aBlurSuppression)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsDocShellTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
     return NS_ERROR_NULL_POINTER;

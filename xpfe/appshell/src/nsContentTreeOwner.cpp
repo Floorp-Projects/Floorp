@@ -560,6 +560,16 @@ NS_IMETHODIMP nsContentTreeOwner::SetEnabled(PRBool aEnable)
    return mXULWindow->SetEnabled(aEnable);
 }
 
+NS_IMETHODIMP nsContentTreeOwner::GetBlurSuppression(PRBool *aBlurSuppression)
+{
+  return mXULWindow->GetBlurSuppression(aBlurSuppression);
+}
+
+NS_IMETHODIMP nsContentTreeOwner::SetBlurSuppression(PRBool aBlurSuppression)
+{
+  return mXULWindow->SetBlurSuppression(aBlurSuppression);
+}
+
 NS_IMETHODIMP nsContentTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);

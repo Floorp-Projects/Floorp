@@ -125,6 +125,7 @@ protected:
    PRPackedBool            mIsHiddenWindow;
    PRUint32                mZlevel;
    PRUint32                mContextFlags;
+   PRUint32                mBlurSuppressionLevel;
 };
 
 // nsContentShellInfo

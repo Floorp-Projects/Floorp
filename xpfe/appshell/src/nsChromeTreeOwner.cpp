@@ -370,6 +370,16 @@ NS_IMETHODIMP nsChromeTreeOwner::SetEnabled(PRBool aEnable)
    return mXULWindow->SetEnabled(aEnable);
 }
 
+NS_IMETHODIMP nsChromeTreeOwner::GetBlurSuppression(PRBool *aBlurSuppression)
+{
+  return mXULWindow->GetBlurSuppression(aBlurSuppression);
+}
+
+NS_IMETHODIMP nsChromeTreeOwner::SetBlurSuppression(PRBool aBlurSuppression)
+{
+  return mXULWindow->SetBlurSuppression(aBlurSuppression);
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::GetMainWidget(nsIWidget** aMainWidget)
 {
    NS_ENSURE_ARG_POINTER(aMainWidget);
