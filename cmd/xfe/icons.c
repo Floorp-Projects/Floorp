@@ -1301,127 +1301,12 @@ fe_init_gopher_icons (MWContext *c)
 
 #ifdef EDITOR
 
-#if 0
-static void
-fe_init_editor_icons_notext(MWContext* c)
-{
-  Pixel  bg2 = 0;
-  static Bool done = False;
-
-  if (done)
-    return;
-
-  XtVaGetValues (CONTEXT_DATA (c)->top_area, XmNbackground, &bg2, 0);
-
-  fe_make_icon (c, bg2, IL_EDITOR_NEW,		/* 23FEB96RCJ */
-		"ed_new",
-		ed_new.width, ed_new.height,
-		ed_new.mono_bits, ed_new.color_bits, ed_new.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_NEW_GREY,		/* 23FEB96RCJ */
-		"ed_new.i",
-		ed_new_i.width, ed_new_i.height,
-		ed_new_i.mono_bits, ed_new_i.color_bits, ed_new_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_OPEN,
-		"ed_open",
-		ed_open.width, ed_open.height,
-		ed_open.mono_bits, ed_open.color_bits, ed_open.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_OPEN_GREY,
-		"ed_open.i",
-		ed_open_i.width, ed_open_i.height,
-		ed_open_i.mono_bits, ed_open_i.color_bits, ed_open_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_SAVE,	
-		"ed_save",
-		ed_save.width, ed_save.height,
-		ed_save.mono_bits, ed_save.color_bits, ed_save.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_SAVE_GREY,
-		"ed_save.i",
-		ed_save_i.width, ed_save_i.height,
-		ed_save_i.mono_bits, ed_save_i.color_bits, ed_save_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_BROWSE,	
-		"ed_browse",
-		ed_browse.width, ed_browse.height,
-		ed_browse.mono_bits, ed_browse.color_bits, ed_browse.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_BROWSE_GREY,
-		"ed_browse.i",
-		ed_browse_i.width, ed_browse_i.height,
-		ed_browse_i.mono_bits, ed_browse_i.color_bits, ed_browse_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_CUT,
-		"ed_cut",
-		ed_cut.width, ed_cut.height,
-		ed_cut.mono_bits, ed_cut.color_bits, ed_cut.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_CUT_GREY,
-		"ed_cut.i",
-		ed_cut_i.width, ed_cut_i.height,
-		ed_cut_i.mono_bits, ed_cut_i.color_bits, ed_cut_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_COPY,
-		"ed_copy",
-		ed_copy.width, ed_copy.height,
-		ed_copy.mono_bits, ed_copy.color_bits, ed_copy.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_COPY_GREY,
-		"ed_copy.i",
-		ed_copy_i.width, ed_copy_i.height,
-		ed_copy_i.mono_bits, ed_copy_i.color_bits, ed_copy_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PASTE,
-		"ed_paste",
-		ed_paste.width, ed_paste.height,
-		ed_paste.mono_bits, ed_paste.color_bits, ed_paste.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PASTE_GREY,
-		"ed_paste.i",
-		ed_paste_i.width, ed_paste_i.height,
-		ed_paste_i.mono_bits, ed_paste_i.color_bits, ed_paste_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PRINT,
-		"ed_print",
-		ed_print.width, ed_print.height,
-		ed_print.mono_bits, ed_print.color_bits, ed_print_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PRINT_GREY,
-		"ed_print.i",
-		ed_print_i.width, ed_print_i.height,
-		ed_print_i.mono_bits, ed_print_i.color_bits, ed_print_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_FIND,
-		"ed_find",
-		ed_find.width, ed_find.height,
-		ed_find.mono_bits, ed_find.color_bits, ed_find.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_FIND_GREY,
-		"ed_find.i",
-		ed_find_i.width, ed_find_i.height,
-		ed_find_i.mono_bits, ed_find_i.color_bits, ed_find_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PUBLISH,
-		"ed_publish",
-		ed_publish.width, ed_publish.height, 
-		ed_publish.mono_bits, ed_publish.color_bits, ed_publish.mask_bits); 
-  fe_make_icon (c, bg2, IL_EDITOR_PUBLISH_GREY,
-		"ed_publish.i",
-		ed_publish_i.width, ed_publish_i.height, 
-		ed_publish_i.mono_bits, ed_publish_i.color_bits, ed_publish_i.mask_bits); 
-  
-  fe_make_icon (c, bg2, IL_ICON_BACK_GREY,
-		NULL,
-		TB_Back_i.width, TB_Back_i.height,
-		TB_Back_i.mono_bits, TB_Back_i.color_bits,
-                TB_Back_i.mask_bits);
-  fe_make_icon (c, bg2, IL_ICON_LOAD_GREY,
-		NULL,
-		TB_LoadImages_i.width, TB_LoadImages_i.height,
-		TB_LoadImages_i.mono_bits, TB_LoadImages_i.color_bits,
-		TB_LoadImages_i.mask_bits);
-  fe_make_icon (c, bg2, IL_ICON_FWD_GREY,
-		NULL,
-		TB_Forward_i.width, TB_Forward_i.height,
-		TB_Forward_i.mono_bits, TB_Forward_i.color_bits,
-                TB_Forward_i.mask_bits);
-  fe_make_icon (c, bg2, IL_ICON_STOP_GREY,
-		NULL,
-		TB_Stop_i.width, TB_Stop_i.height,
-		TB_Stop_i.mono_bits, TB_Stop_i.color_bits, TB_Stop_i.mask_bits);
-  done = True;
-}
-#endif /*0*/
 
 static void fe_init_align_icons(MWContext* c) /* added 14MAR96RCJ */
 {
   Pixel  bg2 = 0;
 
-  XtVaGetValues (CONTEXT_DATA (c)->top_area, XmNbackground, &bg2, 0);
+/*  XtVaGetValues (CONTEXT_DATA (c)->top_area, XmNbackground, &bg2, 0);*/
 
   fe_make_icon (c, bg2, IL_ALIGN4_RAISED,
 		"ImgB2B_r",
@@ -1459,245 +1344,6 @@ static void fe_init_align_icons(MWContext* c) /* added 14MAR96RCJ */
 		ImgT2T_r.mono_bits, ImgT2T_r.color_bits, ImgT2T_r.mask_bits);
 
 } /* end fe_init_align_icons 14MAR96RCJ */
-
-static void
-fe_init_editor_icons_withtext(MWContext* c)
-{
-  Pixel  bg2 = 0;
-  static Bool done = False;
-
-  if (done)
-    return;
-
-  XtVaGetValues (CONTEXT_DATA (c)->top_area, XmNbackground, &bg2, 0);
-/*
-  fe_make_icon (c, bg2, IL_EDITOR_NEW_PT,
-		"ed_new.pt",
-		ed_new_pt.width, ed_new_pt.height,
-		ed_new_pt.mono_bits, ed_new_pt.color_bits,
-                ed_new_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_OPEN_PT,
-		"ed_open.pt",
-		ed_open_pt.width, ed_open_pt.height,
-		ed_open_pt.mono_bits, ed_open_pt.color_bits,
-                ed_open_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_SAVE_PT,
-		"ed_save.pt",
-		ed_save_pt.width, ed_save_pt.height,
-		ed_save_pt.mono_bits, ed_save_pt.color_bits,
-                ed_save_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_BROWSE_PT,
-		"ed_browse.pt",
-		ed_browse_pt.width, ed_browse_pt.height,
-		ed_browse_pt.mono_bits, ed_browse_pt.color_bits,
-                ed_browse_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_CUT_PT,
-		"ed_cut.pt",
-		ed_cut_pt.width, ed_cut_pt.height,
-		ed_cut_pt.mono_bits, ed_cut_pt.color_bits,
-                ed_cut_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_COPY_PT,
-		"ed_copy.pt",
-		ed_copy_pt.width, ed_copy_pt.height,
-		ed_copy_pt.mono_bits, ed_copy_pt.color_bits,
-                ed_copy_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PASTE_PT,
-		"ed_paste.pt",
-		ed_paste_pt.width, ed_paste_pt.height,
-		ed_paste_pt.mono_bits, ed_paste_pt.color_bits,
-                ed_paste_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PRINT_PT,
-		"ed_print.pt",
-		ed_print_pt.width, ed_print_pt.height,
-		ed_print_pt.mono_bits, ed_print_pt.color_bits,
-                ed_print_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_FIND_PT,
-		"ed_find.pt",
-		ed_find_pt.width, ed_find_pt.height,
-		ed_find_pt.mono_bits, ed_find_pt.color_bits,
-                ed_find_pt.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PUBLISH_PT,
-		"ed_publish.pt",
-		ed_publish_pt.width, ed_publish_pt.height, 
-		ed_publish_pt.mono_bits, ed_publish_pt.color_bits,
-                ed_publish_pt.mask_bits); 
-
-  fe_make_icon (c, bg2, IL_EDITOR_NEW_PT_GREY,
-		"ed_new.pt",
-		ed_new_pt_i.width, ed_new_pt_i.height,
-		ed_new_pt_i.mono_bits, ed_new_pt_i.color_bits,
-                ed_new_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_OPEN_PT_GREY,
-		"ed_open.pt",
-		ed_open_pt_i.width, ed_open_pt_i.height,
-		ed_open_pt_i.mono_bits, ed_open_pt_i.color_bits,
-                ed_open_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_SAVE_PT_GREY,
-		"ed_save.pt",
-		ed_save_pt_i.width, ed_save_pt_i.height,
-		ed_save_pt_i.mono_bits, ed_save_pt_i.color_bits,
-                ed_save_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_BROWSE_PT_GREY,
-		"ed_browse.pt",
-		ed_browse_pt_i.width, ed_browse_pt_i.height,
-		ed_browse_pt_i.mono_bits, ed_browse_pt_i.color_bits,
-                ed_browse_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_CUT_PT_GREY,
-		"ed_cut.pt",
-		ed_cut_pt_i.width, ed_cut_pt_i.height,
-		ed_cut_pt_i.mono_bits, ed_cut_pt_i.color_bits,
-                ed_cut_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_COPY_PT_GREY,
-		"ed_copy.pt",
-		ed_copy_pt_i.width, ed_copy_pt_i.height,
-		ed_copy_pt_i.mono_bits, ed_copy_pt_i.color_bits,
-                ed_copy_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PASTE_PT_GREY,
-		"ed_paste.pt",
-		ed_paste_pt_i.width, ed_paste_pt_i.height,
-		ed_paste_pt_i.mono_bits, ed_paste_pt_i.color_bits,
-                ed_paste_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PRINT_PT_GREY,
-		"ed_print.pt",
-		ed_print_pt_i.width, ed_print_pt_i.height,
-		ed_print_pt_i.mono_bits, ed_print_pt_i.color_bits,
-                ed_print_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_FIND_PT_GREY,
-		"ed_find.pt",
-		ed_find_pt_i.width, ed_find_pt_i.height,
-		ed_find_pt_i.mono_bits, ed_find_pt_i.color_bits,
-                ed_find_pt_i.mask_bits);
-  fe_make_icon (c, bg2, IL_EDITOR_PUBLISH_PT_GREY,
-		"ed_publish.pt",
-		ed_publish_pt_i.width, ed_publish_pt_i.height, 
-		ed_publish_pt_i.mono_bits, ed_publish_pt_i.color_bits,
-                ed_publish_pt_i.mask_bits); 
-  fe_make_icon (c, bg2, IL_ICON_BACK_GREY, 
-		NULL, 
-		TB_Back_i.width, TB_Back_i.height, 
-		TB_Back_i.mono_bits, TB_Back_i.color_bits,
-                TB_Back_i.mask_bits); 
-  fe_make_icon (c, bg2, IL_ICON_LOAD_GREY, 
-		NULL, 
-		TB_LoadImages_i.width, TB_LoadImages_i.height,
-		TB_LoadImages_i.mono_bits, TB_LoadImages_i.color_bits,
-		TB_LoadImages_i.mask_bits);
-  fe_make_icon (c, bg2, IL_ICON_FWD_GREY,
-		NULL,
-		TB_Forward_i.width, TB_Forward_i.height,
-		TB_Forward_i.mono_bits, TB_Forward_i.color_bits,
-                TB_Forward_i.mask_bits);
-  fe_make_icon (c, bg2, IL_ICON_STOP_GREY,
-		NULL,
-		TB_Stop_i.width, TB_Stop_i.height,
-		TB_Stop_i.mono_bits, TB_Stop_i.color_bits, TB_Stop_i.mask_bits);
-*/
-  done = True;
-}
-
-static void
-fe_init_editor_icons_other(MWContext* c)
-{
-  Pixel  bg2 = 0;
-  static Bool done = False;
-
-  if (done)
-    return;
-
-  XtVaGetValues (CONTEXT_DATA (c)->top_area, XmNbackground, &bg2, 0);
-
-  done = True;
-/*  
-  fe_make_icon(c, bg2, IL_EDITOR_BOLD,
-	       "ed_bold",
-	       ed_bold.width, ed_bold.height,
-	       ed_bold.mono_bits, ed_bold.color_bits, ed_bold.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_BULLET,
-	       "ed_bullet",
-	       ed_bullet.width, ed_bullet.height,
-	       ed_bullet.mono_bits, ed_bullet.color_bits, ed_bullet.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_CENTER,
-	       "ed_center",
-	       ed_center.width, ed_center.height,
-	       ed_center.mono_bits, ed_center.color_bits, ed_center.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_CLEAR,
-	       "ed_clear",
-	       ed_clear.width, ed_clear.height,
-	       ed_clear.mono_bits, ed_clear.color_bits, ed_clear.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_COLOR,
-	       "ed_color",
-	       ed_color.width, ed_color.height,
-	       ed_color.mono_bits, ed_color.color_bits, ed_color.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_FIXED,
-	       "ed_fixed",
-	       ed_fixed.width, ed_fixed.height,
-	       ed_fixed.mono_bits, ed_fixed.color_bits, ed_fixed.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_GROW,
-	       "ed_grow",
-	       ed_grow.width, ed_grow.height,
-	       ed_grow.mono_bits, ed_grow.color_bits, ed_grow.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_GROW_GREY,
-	       "ed_grow.i",
-	       ed_grow_i.width, ed_grow_i.height,
-	       ed_grow_i.mono_bits, ed_grow_i.color_bits, ed_grow_i.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_HRULE,
-	       "ed_hrule",
-	       ed_hrule.width, ed_hrule.height,
-	       ed_hrule.mono_bits, ed_hrule.color_bits, ed_hrule.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_IMAGE,
-	       "ed_image",
-	       ed_image.width, ed_image.height,
-	       ed_image.mono_bits, ed_image.color_bits, ed_image.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_INDENT,
-	       "ed_indent",
-	       ed_indent.width, ed_indent.height,
-	       ed_indent.mono_bits, ed_indent.color_bits, ed_indent.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_ITALIC,
-	       "ed_italic",
-	       ed_italic.width, ed_italic.height,
-	       ed_italic.mono_bits, ed_italic.color_bits, ed_italic.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_LEFT,
-	       "ed_left",
-	       ed_left.width, ed_left.height,
-	       ed_left.mono_bits, ed_left.color_bits, ed_left.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_LINK,
-	       "ed_link",
-	       ed_link.width, ed_link.height,
-	       ed_link.mono_bits, ed_link.color_bits, ed_link.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_NUMBER,
-	       "ed_number",
-	       ed_number.width, ed_number.height,
-	       ed_number.mono_bits, ed_number.color_bits, ed_number.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_OUTDENT,
-	       "ed_outdent",
-	       ed_outdent.width, ed_outdent.height,
-	       ed_outdent.mono_bits, ed_outdent.color_bits, ed_outdent.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_PROPS,
-	       "ed_props",
-	       ed_props.width, ed_props.height,
-	       ed_props.mono_bits, ed_props.color_bits, ed_props.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_RIGHT,
-	       "ed_right",
-	       ed_right.width, ed_right.height,
-	       ed_right.mono_bits, ed_right.color_bits, ed_right.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_SHRINK,
-	       "ed_shrink",
-	       ed_shrink.width, ed_shrink.height,
-	       ed_shrink.mono_bits, ed_shrink.color_bits, ed_shrink.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_SHRINK_GREY,
-	       "ed_shrink.i",
-	       ed_shrink_i.width, ed_shrink_i.height,
-	       ed_shrink_i.mono_bits, ed_shrink_i.color_bits, ed_shrink_i.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_TARGET,
-	       "ed_target",
-	       ed_target.width, ed_target.height,
-	       ed_target.mono_bits, ed_target.color_bits, ed_target.mask_bits);
-  fe_make_icon(c, bg2, IL_EDITOR_TABLE,
-	       "ed_table",
-	       ed_table.width, ed_table.height,
-	       ed_table.mono_bits, ed_table.color_bits, ed_table.mask_bits);
-*/
-}
 
 /*
  *    Icons used on the page.
@@ -1778,8 +1424,6 @@ fe_init_sa_icons (MWContext *c)
   if (done) return;
   done = True;
 
-/*  XtVaGetValues (CONTEXT_DATA (c)->top_area, XmNbackground, &bg, 0); */
-
   fe_make_icon (c, bg, IL_SA_SIGNED,
 		"A_Signed",
 		A_Signed.width, A_Signed.height,
@@ -1846,8 +1490,6 @@ fe_init_msg_icons (MWContext *c)
   static Bool done = False;
   if (done) return;
   done = True;
-
-/*  XtVaGetValues (CONTEXT_DATA (c)->top_area, XmNbackground, &bg, 0); */
 
   fe_make_icon (c, bg, IL_MSG_ATTACH,
 		"M_ToggleAttach",
@@ -1981,102 +1623,21 @@ fe_SecurityPixmap (MWContext *context, Dimension *w, Dimension *h,
 }
 #endif /* ! NO_SECURITY */
 
-Pixmap
-fe_ToolbarPixmapByName(MWContext *context, char *pixmap_name,
-		       Boolean disabled_p, Boolean urls_p)
-{
-  Boolean both_p = CONTEXT_DATA (context)->show_toolbar_text_p;
 
-  /* this function should only be used for the Mail window. */
-  XP_ASSERT(context->type == MWContextMail);
-
-  if (!strcmp(pixmap_name, "getNewMail"))
-    return fe_icons[disabled_p && both_p ? IL_MSG_GET_MAIL_PT_GREY:
-		   disabled_p ? IL_MSG_GET_MAIL_GREY :
-		   both_p ? IL_MSG_GET_MAIL_PT :
-		   IL_MSG_GET_MAIL].pixmap;
-  else if (!strcmp(pixmap_name, "deleteMessage"))
-    return fe_icons[disabled_p && both_p ? IL_MSG_DELETE_PT_GREY :
-		   disabled_p ? IL_MSG_DELETE_GREY :
-		   both_p ? IL_MSG_DELETE_PT :
-		   IL_MSG_DELETE].pixmap;
-  else if (!strcmp(pixmap_name, "mailNew"))
-    return fe_icons[disabled_p && both_p ? IL_MSG_NEW_MSG_PT_GREY :
-		   disabled_p ? IL_MSG_NEW_MSG_GREY :
-		   both_p ? IL_MSG_NEW_MSG_PT :
-		   IL_MSG_NEW_MSG].pixmap;
-  else if (!strcmp(pixmap_name, "replyToSender"))
-    return fe_icons[disabled_p && both_p ?
-		   IL_MSG_REPLY_TO_SENDER_PT_GREY :
-		   disabled_p ? IL_MSG_REPLY_TO_SENDER_GREY :
-		   both_p ? IL_MSG_REPLY_TO_SENDER_PT :
-		   IL_MSG_REPLY_TO_SENDER].pixmap;
-  else if (!strcmp(pixmap_name, "replyToAll"))
-    return fe_icons[disabled_p && both_p ?
-		   IL_MSG_REPLY_TO_ALL_PT_GREY :
-		   disabled_p ? IL_MSG_REPLY_TO_ALL_GREY :
-		   both_p ? IL_MSG_REPLY_TO_ALL_PT :
-		   IL_MSG_REPLY_TO_ALL].pixmap;
-  else if (!strcmp(pixmap_name, "forwardMessage"))
-    return fe_icons[disabled_p && both_p ?
-		   IL_MSG_FORWARD_MSG_PT_GREY :
-		   disabled_p ? IL_MSG_FORWARD_MSG_GREY :
-		   both_p ? IL_MSG_FORWARD_MSG_PT :
-		   IL_MSG_FORWARD_MSG].pixmap;
-  else if (!strcmp(pixmap_name, "abort"))
-    return fe_icons[disabled_p && both_p ? IL_ICON_STOP_PT_GREY :
-		   disabled_p ? IL_ICON_STOP_GREY :
-		   both_p ? IL_ICON_STOP_PT :
-		   IL_ICON_STOP].pixmap;
-  else if (!strcmp(pixmap_name, "postNew"))
-    return fe_icons[disabled_p && both_p ? IL_MSG_NEW_POST_PT_GREY:
-		   disabled_p ? IL_MSG_NEW_POST_GREY :
-		   both_p ? IL_MSG_NEW_POST_PT :
-		   IL_MSG_NEW_POST].pixmap;
-  else if (!strcmp(pixmap_name, "send"))
-    return fe_icons[disabled_p && both_p ? IL_COMPOSE_SEND_PT_GREY :
-		   disabled_p ? IL_COMPOSE_SEND_GREY :
-		   both_p ? IL_COMPOSE_SEND_PT :
-		   IL_COMPOSE_SEND].pixmap;
-  else if (!strcmp(pixmap_name, "previousMessage"))
-    return fe_icons[disabled_p && both_p ?
-		   IL_MSG_PREV_UNREAD_PT_GREY :
-		   disabled_p ? IL_MSG_PREV_UNREAD_GREY :
-		   both_p ? IL_MSG_PREV_UNREAD_PT :
-		   IL_MSG_PREV_UNREAD].pixmap;
-  else if (!strcmp(pixmap_name, "nextMessage"))
-    return fe_icons[disabled_p && both_p ?
-		   IL_MSG_NEXT_UNREAD_PT_GREY :
-		   disabled_p ? IL_MSG_NEXT_UNREAD_GREY :
-		   both_p ? IL_MSG_NEXT_UNREAD_PT :
-		   IL_MSG_NEXT_UNREAD].pixmap;
-  else if (!strcmp(pixmap_name, "previousUnreadMessage"))
-    return fe_icons[disabled_p && both_p ?
-		   IL_MSG_PREV_UNREAD_PT_GREY :
-		   disabled_p ? IL_MSG_PREV_UNREAD_GREY :
-		   both_p ? IL_MSG_PREV_UNREAD_PT :
-		   IL_MSG_PREV_UNREAD].pixmap;
-  else if (!strcmp(pixmap_name, "nextUnreadMessage"))
-    return fe_icons[disabled_p && both_p ?
-		   IL_MSG_NEXT_UNREAD_PT_GREY :
-		   disabled_p ? IL_MSG_NEXT_UNREAD_GREY :
-		   both_p ? IL_MSG_NEXT_UNREAD_PT :
-		   IL_MSG_NEXT_UNREAD].pixmap;
-  else XP_ASSERT(0);
-  return 0;	/* XXX ??? */
-}
-
+#ifdef EDITOR
 Pixmap
 fe_ToolbarPixmap (MWContext *context, int i, Boolean disabled_p,
 		  Boolean urls_p)
 {
-  Boolean both_p = CONTEXT_DATA (context)->show_toolbar_text_p;
+  Boolean both_p;
   int offset;
   int grey_offset;
   int pt_offset;
-#ifdef EDITOR
   static align_icons_done=0; 	/* added 14MAR96RCJ */
-#endif
+  int32 toolbar_style;
+
+  PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
+  both_p = (toolbar_style == BROWSER_TOOLBAR_ICONS_AND_TEXT);
 
   if (urls_p)
     return (fe_icons [IL_ICON_TOUR + i].pixmap);
@@ -2085,23 +1646,12 @@ fe_ToolbarPixmap (MWContext *context, int i, Boolean disabled_p,
   grey_offset = (disabled_p ? 1 : 0);
   pt_offset = (both_p ? 1: 0);
 
-  switch (context->type)
+  if (context->type == MWContextEditor)
     {
-#ifdef EDITOR
-    case MWContextEditor:
-#if 0
-      if (both_p)
-	fe_init_editor_icons_withtext(context);
-      else
-	fe_init_editor_icons_notext(context);
-#endif /*0*/
-
-      fe_init_editor_icons_other(context);
-
       if (i < 10)
-	i = gold_editor_map[(4*i) + grey_offset + (2*pt_offset)];
+          i = gold_editor_map[(4*i) + grey_offset + (2*pt_offset)];
       else if (i < 23) 
-	i = IL_EDITOR_OTHER_GROUP + (2*(i - 10)) + grey_offset;
+          i = IL_EDITOR_OTHER_GROUP + (2*(i - 10)) + grey_offset;
       else if (i>=IL_ALIGN1_RAISED && i <= IL_ALIGN7_DEPRESSED) {
            if (!align_icons_done) {
                fe_init_align_icons(context);
@@ -2112,198 +1662,10 @@ fe_ToolbarPixmap (MWContext *context, int i, Boolean disabled_p,
 	i = IL_EDITOR_BULLET + (2*(i - 23)) + grey_offset;
 
       return fe_icons[i].pixmap;
-      /*NOTREACHED*/
-      break;
-    case MWContextBrowser:
-      return fe_icons[gold_browser_map[(4*i) + grey_offset + (2*pt_offset)]].pixmap;
-      /*NOTREACHED*/
-      break;
-#else
-    case MWContextMailMsg:
-      switch (i)
-	{
-	case 0: return fe_icons[disabled_p && both_p ? IL_MSG_NEW_MSG_PT_GREY :
-			       disabled_p ? IL_MSG_NEW_MSG_GREY :
-			       both_p ? IL_MSG_NEW_MSG_PT :
-			       IL_MSG_NEW_MSG].pixmap;
-	case 1: return fe_icons[disabled_p && both_p ?
-			       IL_MSG_REPLY_TO_SENDER_PT_GREY :
-			       disabled_p ? IL_MSG_REPLY_TO_SENDER_GREY :
-			       both_p ? IL_MSG_REPLY_TO_SENDER_PT :
-			       IL_MSG_REPLY_TO_SENDER].pixmap;
-	case 2: return fe_icons[disabled_p && both_p ?
-			       IL_MSG_REPLY_TO_ALL_PT_GREY :
-			       disabled_p ? IL_MSG_REPLY_TO_ALL_GREY :
-			       both_p ? IL_MSG_REPLY_TO_ALL_PT :
-			       IL_MSG_REPLY_TO_ALL].pixmap;
-	case 3: return fe_icons[disabled_p && both_p ?
-			       IL_MSG_FORWARD_MSG_PT_GREY :
-			       disabled_p ? IL_MSG_FORWARD_MSG_GREY :
-			       both_p ? IL_MSG_FORWARD_MSG_PT :
-			       IL_MSG_FORWARD_MSG].pixmap;
-	case 4: return fe_icons[disabled_p && both_p ?
-			       IL_MSG_NEXT_UNREAD_PT_GREY :
-			       disabled_p ? IL_MSG_NEXT_UNREAD_GREY :
-			       both_p ? IL_MSG_NEXT_UNREAD_PT :
-			       IL_MSG_NEXT_UNREAD].pixmap;
-	case 5: return fe_icons[disabled_p && both_p ?
-			       IL_MSG_PREV_UNREAD_PT_GREY :
-			       disabled_p ? IL_MSG_PREV_UNREAD_GREY :
-			       both_p ? IL_MSG_PREV_UNREAD_PT :
-			       IL_MSG_PREV_UNREAD].pixmap;
-	case 6: return fe_icons[disabled_p && both_p ? IL_MSG_DELETE_PT_GREY :
-			       disabled_p ? IL_MSG_DELETE_GREY :
-			       both_p ? IL_MSG_DELETE_PT :
-			       IL_MSG_DELETE].pixmap;
-	case 7: return fe_icons[disabled_p && both_p ? IL_ICON_STOP_PT_GREY :
-				disabled_p ? IL_ICON_STOP_GREY :
-				both_p ? IL_ICON_STOP_PT :
-				IL_ICON_STOP].pixmap;
-	}
-    case MWContextNewsMsg:	 /* ### wrong */
-
-    case MWContextBrowser:
-      return fe_icons [offset + (i*2) + (disabled_p ? 1 : 0)].pixmap;
-      break;
-#endif
-    case MWContextMail:
-      switch (i)
-	{
-	case 0: return fe_icons[disabled_p && both_p ? IL_MSG_GET_MAIL_PT_GREY:
-			        disabled_p ? IL_MSG_GET_MAIL_GREY :
-			        both_p ? IL_MSG_GET_MAIL_PT :
-				IL_MSG_GET_MAIL].pixmap;
-	case 1: return fe_icons[disabled_p && both_p ? IL_MSG_NEW_MSG_PT_GREY :
-			       disabled_p ? IL_MSG_NEW_MSG_GREY :
-			       both_p ? IL_MSG_NEW_MSG_PT :
-			       IL_MSG_NEW_MSG].pixmap;
-	case 2: return fe_icons[disabled_p && both_p ? IL_MSG_DELETE_PT_GREY :
-				disabled_p ? IL_MSG_DELETE_GREY :
-				both_p ? IL_MSG_DELETE_PT :
-				IL_MSG_DELETE].pixmap;
-				/* change this one to 4 when the security button
-				   gets put in. */
-	case 3: return fe_icons[disabled_p && both_p ? IL_ICON_STOP_PT_GREY :
-				disabled_p ? IL_ICON_STOP_GREY :
-				both_p ? IL_ICON_STOP_PT :
-				IL_ICON_STOP].pixmap;
-	default: fe_perror (context, "internal error: bogus mail icon accessed"); break;
-	}
-      break;
-    case MWContextNews:
-      switch (i)
-	{
-	case 0: return fe_icons[disabled_p && both_p ? IL_MSG_NEW_POST_PT_GREY:
-				disabled_p ? IL_MSG_NEW_POST_GREY :
-				both_p ? IL_MSG_NEW_POST_PT :
-				IL_MSG_NEW_POST].pixmap;
-	case 1: return fe_icons[disabled_p && both_p ? IL_MSG_NEW_MSG_PT_GREY :
-				disabled_p ? IL_MSG_NEW_MSG_GREY :
-				both_p ? IL_MSG_NEW_MSG_PT :
-				IL_MSG_NEW_MSG].pixmap;
-	case 2: return fe_icons[disabled_p && both_p ?
-			         IL_MSG_REPLY_TO_SENDER_PT_GREY :
-				disabled_p ? IL_MSG_REPLY_TO_SENDER_GREY :
-				both_p ? IL_MSG_REPLY_TO_SENDER_PT :
-				IL_MSG_REPLY_TO_SENDER].pixmap;
-	case 3: return fe_icons[disabled_p && both_p ? IL_MSG_FOLLOWUP_PT_GREY:
-				disabled_p ? IL_MSG_FOLLOWUP_GREY :
-				both_p ? IL_MSG_FOLLOWUP_PT :
-				IL_MSG_FOLLOWUP].pixmap;
-	case 4: return fe_icons[disabled_p && both_p ?
-			         IL_MSG_FOLLOWUP_AND_REPLY_PT_GREY :
-				disabled_p ? IL_MSG_FOLLOWUP_AND_REPLY_GREY :
-				both_p ? IL_MSG_FOLLOWUP_AND_REPLY_PT :
-				IL_MSG_FOLLOWUP_AND_REPLY].pixmap;
-	case 5: return fe_icons[disabled_p && both_p ?
-			         IL_MSG_FORWARD_MSG_PT_GREY :
-				disabled_p ? IL_MSG_FORWARD_MSG_GREY :
-				both_p ? IL_MSG_FORWARD_MSG_PT :
-				IL_MSG_FORWARD_MSG].pixmap;
-	case 6: return fe_icons[disabled_p && both_p ?
-				  IL_MSG_PREV_UNREAD_PT_GREY :
-				disabled_p ? IL_MSG_PREV_UNREAD_GREY :
-				both_p ? IL_MSG_PREV_UNREAD_PT :
-				IL_MSG_PREV_UNREAD].pixmap;
-	case 7: return fe_icons[disabled_p && both_p ?
-			         IL_MSG_NEXT_UNREAD_PT_GREY :
-				disabled_p ? IL_MSG_NEXT_UNREAD_GREY :
-				both_p ? IL_MSG_NEXT_UNREAD_PT :
-				IL_MSG_NEXT_UNREAD].pixmap;
-	case 8: return fe_icons[disabled_p && both_p ?
-			         IL_MSG_MARK_THREAD_READ_PT_GREY :
-				disabled_p ? IL_MSG_MARK_THREAD_READ_GREY :
-				both_p ? IL_MSG_MARK_THREAD_READ_PT :
-				IL_MSG_MARK_THREAD_READ].pixmap;
-	case 9: return fe_icons[disabled_p && both_p ?
-			         IL_MSG_MARK_ALL_READ_PT_GREY :
-				disabled_p ? IL_MSG_MARK_ALL_READ_GREY :
-				both_p ? IL_MSG_MARK_ALL_READ_PT :
-				IL_MSG_MARK_ALL_READ].pixmap;
-	case 10:return fe_icons[disabled_p && both_p ? IL_ICON_PRINT_PT_GREY :
-				disabled_p ? IL_ICON_PRINT_GREY :
-				both_p ? IL_ICON_PRINT_PT :
-				IL_ICON_PRINT].pixmap;
-	case 11:return fe_icons[disabled_p && both_p ? IL_ICON_STOP_PT_GREY :
-				disabled_p ? IL_ICON_STOP_GREY :
-				both_p ? IL_ICON_STOP_PT :
-				IL_ICON_STOP].pixmap;
-/*	default: abort (); */
-	default: fe_perror (context, "internal error: bogus news icon accessed"); break;
-	}
-      break;
-
-    case MWContextMessageComposition:
-      switch (i)
-	{
-	/* sendOrSendLater */
-	case 0:
-	    if (fe_globalPrefs.queue_for_later_p)
-		/* SendLater */
-		return fe_icons[disabled_p && both_p ? IL_COMPOSE_SENDLATER_PT_GREY :
-				disabled_p ? IL_COMPOSE_SENDLATER_GREY :
-				both_p ? IL_COMPOSE_SENDLATER_PT :
-				IL_COMPOSE_SENDLATER].pixmap;
-	    else
-		/* Send */
-		return fe_icons[disabled_p && both_p ? IL_COMPOSE_SEND_PT_GREY :
-				disabled_p ? IL_COMPOSE_SEND_GREY :
-				both_p ? IL_COMPOSE_SEND_PT :
-				IL_COMPOSE_SEND].pixmap;
-	/* Quote */
-	case 1:return fe_icons[disabled_p && both_p ? IL_COMPOSE_QUOTE_PT_GREY :
-				disabled_p ? IL_COMPOSE_QUOTE_GREY :
-				both_p ? IL_COMPOSE_QUOTE_PT :
-				IL_COMPOSE_QUOTE].pixmap;
-	/* Attach */
-	case 2:return fe_icons[disabled_p &&
-				both_p ? IL_COMPOSE_ATTACH_PT_GREY :
-				disabled_p ? IL_COMPOSE_ATTACH_GREY :
-				both_p ? IL_COMPOSE_ATTACH_PT :
-				IL_COMPOSE_ATTACH].pixmap;
-	/* AddressBook */
-	case 3:return fe_icons[disabled_p &&
-				both_p ? IL_COMPOSE_ADDRESSBOOK_PT_GREY :
-				disabled_p ? IL_COMPOSE_ADDRESSBOOK_GREY :
-				both_p ? IL_COMPOSE_ADDRESSBOOK_PT :
-				IL_COMPOSE_ADDRESSBOOK].pixmap;
-	/* Stop */
-	case 4:return fe_icons[disabled_p && both_p ? IL_ICON_STOP_PT_GREY :
-				disabled_p ? IL_ICON_STOP_GREY :
-				both_p ? IL_ICON_STOP_PT :
-				IL_ICON_STOP].pixmap;
-	default: fe_perror (context, "internal error: bogus compose icon accessed"); break;
-	}
-      break;
-
-
-
-    default:
-      abort ();
-      break;
     }
   return 0;
 }
+#endif /*EDITOR*/
 
 
 void
