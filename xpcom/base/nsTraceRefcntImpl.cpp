@@ -450,8 +450,6 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type, FILE* out)
   nsresult rv = NS_OK;
 #ifdef NS_BUILD_REFCNT_LOGGING
   if (gBloatLog == nsnull || gBloatView == nsnull) {
-    fprintf(stdout, "Must define environmental variable " \
-            "XPCOM_MEM_BLOAT_LOG\n");
     return NS_ERROR_FAILURE;
   }
   if (out == nsnull) {
