@@ -15,39 +15,44 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #ifndef nsIApplicationShell_h___
 #define nsIApplicationShell_h___
 
-#include "nsISupports.h"
-#include "nsshell.h"
 #include "nscore.h"
-
+#include "nsshell.h"
+#include "nsISupports.h"
 #include "nsIShellInstance.h"
 
 #define NS_IAPPLICATIONSHELL_IID      \
  { 0xaf9a93e0, 0xdebc, 0x11d1, \
    {0x92, 0x44, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
 
-//2293d960-deff-11d1-9244-00805f8a7ab6
 #define NS_IAPPLICATIONSHELL_CID      \
  { 0x2293d960, 0xdeff, 0x11d1, \
    {0x92, 0x44, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
 
 
-// All Applications must implement this C interface
 extern "C" nsresult NS_RegisterApplicationShellFactory();
 
-// Interface to the application shell.
-class nsIApplicationShell : public nsISupports {
+// Application Shell Interface
+class nsIApplicationShell : public nsISupports 
+{
 public:
-  // Create a native window for this web widget; may be called once
+
+  /**
+   * Initialize the ApplicationShell
+   * @result The result of the initialization, NS_OK if no errors
+   */
   NS_IMETHOD Init() = 0;
 
+  /**
+   * Start the Shell's Event Loop.  
+   * @result The result of the event loop execution, NS_Ok if appropriate Exit Message occured
+   */
   NS_IMETHOD Run() = 0;
 
 
 };
-
-extern NS_SHELL nsresult NS_NewApplicationShell(nsIApplicationShell** aInstancePtrResult);
 
 #endif /* nsIApplicationShell_h___ */
