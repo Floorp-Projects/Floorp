@@ -518,7 +518,7 @@ MsgAppCoreViewAllMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return JS_FALSE;
     }
 
-		NS_RELEASE(db);
+		NS_IF_RELEASE(db);
   }
   else {
     JS_ReportError(cx, "Function CopyMessages requires 1 parameter");
@@ -556,7 +556,7 @@ MsgAppCoreViewUnreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
       return JS_FALSE;
     }
 
-		NS_RELEASE(db);
+		NS_IF_RELEASE(db);
   }
   else {
     JS_ReportError(cx, "Function ViewUnreadMessages requires 1 parameter");
