@@ -56,7 +56,7 @@
 #include "nsHTTPRequest.h"
 #include "nsIWebFilters.h"
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include <sys/utsname.h>
 #endif /* XP_UNIX */
 
@@ -589,23 +589,23 @@ nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
 }
 
 nsHTTPHandler::nsHTTPHandler():
-    mAcceptLanguages  (nsnull),
-    mAcceptEncodings  (nsnull),
-	mHttpVersion      (HTTP_ONE_ONE),
-    mCapabilities     (DEFAULT_ALLOWED_CAPABILITIES ),
-    mKeepAliveTimeout (DEFAULT_KEEP_ALIVE_TIMEOUT),
-    mMaxConnections   (MAX_NUMBER_OF_OPEN_TRANSPORTS),
-    mReferrerLevel  (0),
-    mRequestTimeout (DEFAULT_HTTP_REQUEST_TIMEOUT),
-    mConnectTimeout (DEFAULT_HTTP_CONNECT_TIMEOUT),
-    mMaxAllowedKeepAlives (DEFAULT_MAX_ALLOWED_KEEPALIVES),
-    mMaxAllowedKeepAlivesPerServer (DEFAULT_MAX_ALLOWED_KEEPALIVES_PER_SERVER),
-    mProxySSLConnectAllowed (PR_FALSE),
-    mPipelineFirstRequest   (PR_FALSE),
-    mPipelineMaxRequests    (DEFAULT_PIPELINE_MAX_REQUESTS)
+    mAcceptLanguages(nsnull),
+    mAcceptEncodings(nsnull),
+    mHttpVersion(HTTP_ONE_ONE),
+    mCapabilities(DEFAULT_ALLOWED_CAPABILITIES ),
+    mKeepAliveTimeout(DEFAULT_KEEP_ALIVE_TIMEOUT),
+    mMaxConnections(MAX_NUMBER_OF_OPEN_TRANSPORTS),
+    mMaxAllowedKeepAlives(DEFAULT_MAX_ALLOWED_KEEPALIVES),
+    mMaxAllowedKeepAlivesPerServer(DEFAULT_MAX_ALLOWED_KEEPALIVES_PER_SERVER),
+    mPipelineFirstRequest(PR_FALSE),
+    mPipelineMaxRequests(DEFAULT_PIPELINE_MAX_REQUESTS),
+    mReferrerLevel(0),
+    mRequestTimeout(DEFAULT_HTTP_REQUEST_TIMEOUT),
+    mConnectTimeout(DEFAULT_HTTP_CONNECT_TIMEOUT),
+    mProxySSLConnectAllowed(PR_FALSE)
 {
-    NS_INIT_REFCNT ();
-    SetAcceptEncodings (DEFAULT_ACCEPT_ENCODINGS);
+    NS_INIT_REFCNT();
+    SetAcceptEncodings(DEFAULT_ACCEPT_ENCODINGS);
 }
 
 #define UA_PREF_PREFIX "general.useragent."
@@ -689,7 +689,9 @@ nsHTTPHandler::InitUserAgentComponents()
     mAppPlatform = "Macintosh";
 #elif defined (XP_UNIX)
     mAppPlatform = "X11";
-#else
+#elif defined(XP_BEOS)
+    mAppPlatform = "BeOS";
+#elif defined(XP_MAC)
     mAppPlatform = "Macintosh";
 #endif
 
@@ -732,7 +734,7 @@ nsHTTPHandler::InitUserAgentComponents()
                 mAppOSCPU = "Win95";
         }
     }
-#elif defined (XP_UNIX)
+#elif defined (XP_UNIX) || defined (XP_BEOS)
     struct utsname name;
     
     int ret = uname(&name);
@@ -745,8 +747,6 @@ nsHTTPHandler::InitUserAgentComponents()
     }
 #elif defined (XP_MAC)
     mAppOSCPU = "PPC";
-#elif defined (XP_BEOS)
-    mAppOSCPU = "BeOS";
 #endif
 
     // Finally, build up the user agent string.
@@ -1462,7 +1462,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     if ( (bChangedAll)|| !PL_strcmp(pref, UA_PREF_PREFIX "locale") ) {// general.useragent.locale
         // 55156: re-Gather locale.
         nsXPIDLString uval;
-        nsresult rv = NS_OK;
         rv = mPrefs->GetLocalizedUnicharPref(UA_PREF_PREFIX "locale", 
                                              getter_Copies(uval));
         if (NS_SUCCEEDED(rv)) {
@@ -1479,7 +1478,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     // general.useragent.misc
     if ((bChangedAll) || !PL_strcmp(pref, UA_PREF_PREFIX "misc")) {
         nsXPIDLCString uval;
-        nsresult rv = NS_OK;
         rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "misc",
                                   getter_Copies(uval));
         if (NS_SUCCEEDED(rv)) {
