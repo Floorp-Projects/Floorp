@@ -48,6 +48,7 @@
 
 // From asswert.cpp
 #define _assert		mozce_assert
+#define assert		mozce_assert
 
 // From direct.cpp
 #define mkdir		mozce_mkdir
@@ -86,6 +87,7 @@
 #define _mbspbrk	mozce_mbspbrk
 #define _mbsrchr	mozce_mbsrchr
 #define _mbschr		mozce_mbschr
+#define _mbctolower tolower 
 
 // From process.cpp
 #define abort		mozce_abort
@@ -119,6 +121,7 @@
 #define stricmp     _stricmp
 #define strcmpi     _stricmp
 #define strnicmp    _strnicmp
+
 
 // From string.cpp
 #define strerror	mozce_strerror
@@ -285,11 +288,11 @@
 #define FindFirstFile              FindFirstFileW
 #define FindNextFile               FindNextFileW
 
-/*
+
 #define GetProp                   mozce_GetPropA
 #define SetProp                   mozce_SetPropA
 #define RemoveProp                mozce_RemovePropA
-*/
+
 
 // From win32w.cpp
 #define GetCurrentDirectory       mozce_GetCurrentDirectoryW
@@ -438,7 +441,7 @@ extern "C" {
   MOZCE_SHUNT_API BOOL mozce_CreateDirectoryA(LPCSTR lpPathName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
   MOZCE_SHUNT_API BOOL mozce_RemoveDirectoryA(LPCSTR lpPathName);
   MOZCE_SHUNT_API BOOL mozce_CreateProcessA(LPCSTR pszImageName, LPCSTR pszCmdLine, LPSECURITY_ATTRIBUTES psaProcess, LPSECURITY_ATTRIBUTES psaThread, BOOL fInheritHandles, DWORD fdwCreate, LPVOID pvEnvironment, LPSTR pszCurDir, LPSTARTUPINFO psiStartInfo, LPPROCESS_INFORMATION pProcInfo);
-  MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOptions, const LPRECT inRect, LPCSTR inString, UINT inCount, const LPINT inDx);
+  MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOptions, LPCRECT inRect, LPCSTR inString, UINT inCount, const LPINT inDx);
   MOZCE_SHUNT_API BOOL mozce_GetClassInfoA(HINSTANCE hInstance, LPCSTR lpClassName, LPWNDCLASS lpWndClass);
   MOZCE_SHUNT_API int mozce_GetClassNameA(HWND hWnd, LPTSTR lpClassName, int nMaxCount);
   MOZCE_SHUNT_API BOOL mozce_GetFileVersionInfoA(LPSTR inFilename, DWORD inHandle, DWORD inLen, LPVOID outData);

@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE MIPSII_FP) Debug"
@@ -121,7 +121,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE MIPSII) Release"
@@ -156,7 +156,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE MIPSII) Debug"
@@ -191,7 +191,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPS
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE SH4) Release"
@@ -226,7 +226,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE SH4) Debug"
@@ -261,7 +261,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH4
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE SH3) Release"
@@ -296,7 +296,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE SH3) Debug"
@@ -331,7 +331,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:SH3 /align:4096
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE MIPSIV) Release"
@@ -366,7 +366,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE MIPSIV) Debug"
@@ -401,7 +401,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE emulator) Release"
@@ -436,7 +436,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE emulator) Debug"
@@ -471,7 +471,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4I) Release"
@@ -506,7 +506,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4I) Debug"
@@ -541,7 +541,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:THUMB
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE MIPSIV_FP) Release"
@@ -576,7 +576,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE MIPSIV_FP) Debug"
@@ -611,7 +611,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /MACHINE:MIPSFPU
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4) Release"
@@ -646,7 +646,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4) Debug"
@@ -681,7 +681,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
-# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
+# ADD LINK32 commctrl.lib coredll.lib /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"$(CENoDefaultLib)" /subsystem:$(CESubsystem) /align:"4096" /MACHINE:ARM
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE x86) Release"
@@ -716,7 +716,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
 # SUBTRACT LINK32 /map
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE x86) Debug"
@@ -751,7 +751,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
-# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x10000,0x1000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
+# ADD LINK32 commctrl.lib coredll.lib $(CEx86Corelibc) /nologo /base:"0x00100000" /stack:0x1000000 /entry:"_DllMainCRTStartup" /dll /pdb:none /debug /nodefaultlib:"OLDNAMES.lib" /nodefaultlib:$(CENoDefaultLib) /subsystem:$(CESubsystem) /MACHINE:IX86
 # SUBTRACT LINK32 /map
 
 !ENDIF 
@@ -1780,9 +1780,7 @@ DEP_CPP_PROCE=\
 DEP_CPP_PROCE=\
 	"..\include\mozce_defs.h"\
 	"..\mozce_internal.h"\
-	
-NODEP_CPP_PROCE=\
-	".\funcs.h"\
+	{$(INCLUDE)}"kfuncs.h"\
 	
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4I) Release"
@@ -1838,9 +1836,7 @@ DEP_CPP_PROCE=\
 DEP_CPP_PROCE=\
 	"..\include\mozce_defs.h"\
 	"..\mozce_internal.h"\
-	
-NODEP_CPP_PROCE=\
-	".\funcs.h"\
+	{$(INCLUDE)}"kfuncs.h"\
 	
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE x86) Release"
@@ -2128,11 +2124,9 @@ DEP_CPP_STAT_=\
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE emulator) Debug"
 
 DEP_CPP_STAT_=\
+	"..\include\mozce_defs.h"\
 	"..\include\time_conversions.h"\
-	
-NODEP_CPP_STAT_=\
-	"..\include\moz_shunt_ppc2002.h"\
-	"..\include\moz_shunt_ppc2002_exdispid.h"\
+	"..\mozce_internal.h"\
 	
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4I) Release"
@@ -2186,11 +2180,9 @@ DEP_CPP_STAT_=\
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4) Debug"
 
 DEP_CPP_STAT_=\
+	"..\include\mozce_defs.h"\
 	"..\include\time_conversions.h"\
-	
-NODEP_CPP_STAT_=\
-	"..\include\moz_shunt_ppc2002.h"\
-	"..\include\moz_shunt_ppc2002_exdispid.h"\
+	"..\mozce_internal.h"\
 	
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE x86) Release"
@@ -2772,11 +2764,9 @@ DEP_CPP_TIME_=\
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE emulator) Debug"
 
 DEP_CPP_TIME_=\
+	"..\include\mozce_defs.h"\
 	"..\include\time_conversions.h"\
-	
-NODEP_CPP_TIME_=\
-	"..\include\moz_shunt_ppc2002.h"\
-	"..\include\moz_shunt_ppc2002_exdispid.h"\
+	"..\mozce_internal.h"\
 	
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4I) Release"
@@ -2830,11 +2820,9 @@ DEP_CPP_TIME_=\
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4) Debug"
 
 DEP_CPP_TIME_=\
+	"..\include\mozce_defs.h"\
 	"..\include\time_conversions.h"\
-	
-NODEP_CPP_TIME_=\
-	"..\include\moz_shunt_ppc2002.h"\
-	"..\include\moz_shunt_ppc2002_exdispid.h"\
+	"..\mozce_internal.h"\
 	
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE x86) Release"
@@ -3124,9 +3112,7 @@ DEP_CPP_WIN32=\
 DEP_CPP_WIN32=\
 	"..\include\mozce_defs.h"\
 	"..\mozce_internal.h"\
-	
-NODEP_CPP_WIN32=\
-	".\funcs.h"\
+	{$(INCLUDE)}"kfuncs.h"\
 	
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE ARMV4I) Release"
@@ -3182,9 +3168,7 @@ DEP_CPP_WIN32=\
 DEP_CPP_WIN32=\
 	"..\include\mozce_defs.h"\
 	"..\mozce_internal.h"\
-	
-NODEP_CPP_WIN32=\
-	".\funcs.h"\
+	{$(INCLUDE)}"kfuncs.h"\
 	
 
 !ELSEIF  "$(CFG)" == "shunt - Win32 (WCE x86) Release"

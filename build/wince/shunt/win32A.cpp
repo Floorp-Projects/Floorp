@@ -80,7 +80,7 @@ MOZCE_SHUNT_API BOOL mozce_CreateDirectoryA(LPCSTR lpPathName, LPSECURITY_ATTRIB
     BOOL retval = FALSE;
     TCHAR wideStr[MAX_PATH];
 
-    if(a2w_buffer(lpPathName, -1, wideStr, charcount(wideStr)))
+    if(a2w_buffer(lpPathName, -1, wideStr, MAX_PATH))
     {
         retval = CreateDirectoryW(wideStr, lpSecurityAttributes);
     }
@@ -97,7 +97,7 @@ MOZCE_SHUNT_API BOOL mozce_RemoveDirectoryA(LPCSTR lpPathName)
     BOOL retval = FALSE;
     TCHAR wideStr[MAX_PATH];
 
-    if(a2w_buffer(lpPathName, -1, wideStr, charcount(wideStr)))
+    if(a2w_buffer(lpPathName, -1, wideStr, MAX_PATH))
     {
         retval = RemoveDirectoryW(wideStr);
     }
@@ -113,7 +113,7 @@ MOZCE_SHUNT_API BOOL mozce_DeleteFileA(LPCSTR lpFileName)
     BOOL retval = FALSE;
     TCHAR wideStr[MAX_PATH];
 
-    if(a2w_buffer(lpFileName, -1, wideStr, charcount(wideStr)))
+    if(a2w_buffer(lpFileName, -1, wideStr, MAX_PATH))
     {
         retval = DeleteFileW(wideStr);
     }
@@ -129,8 +129,8 @@ MOZCE_SHUNT_API BOOL mozce_MoveFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFile
     BOOL retval = FALSE;
     TCHAR wideStr[2][MAX_PATH];
 
-    if(a2w_buffer(lpExistingFileName, -1, wideStr[0], charcount(wideStr[0])) &&
-       a2w_buffer(lpNewFileName, -1, wideStr[1], charcount(wideStr[1])))
+    if(a2w_buffer(lpExistingFileName, -1, wideStr[0], MAX_PATH) &&
+       a2w_buffer(lpNewFileName, -1, wideStr[1], MAX_PATH))
     {
         retval = MoveFileW(wideStr[0], wideStr[1]);
     }
@@ -147,10 +147,8 @@ MOZCE_SHUNT_API BOOL mozce_CopyFileA(LPCSTR lpExistingFileName, LPCSTR lpNewFile
     BOOL retval = FALSE;
     TCHAR wideStr[2][MAX_PATH];
 
-    if(
-        a2w_buffer(lpExistingFileName, -1, wideStr[0], charcount(wideStr[0])) &&
-        a2w_buffer(lpNewFileName, -1, wideStr[1], charcount(wideStr[1]))
-        )
+    if(a2w_buffer(lpExistingFileName, -1, wideStr[0], MAX_PATH) &&
+       a2w_buffer(lpNewFileName, -1, wideStr[1], MAX_PATH))
     {
         retval = CopyFileW(wideStr[0], wideStr[1], bFailIfExists);
     }
@@ -167,7 +165,7 @@ MOZCE_SHUNT_API HANDLE mozce_CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAcces
     HANDLE retval = INVALID_HANDLE_VALUE;
     TCHAR wideStr[MAX_PATH];
 
-    if(a2w_buffer(lpFileName, -1, wideStr, charcount(wideStr)))
+    if(a2w_buffer(lpFileName, -1, wideStr, MAX_PATH))
     {
         retval = CreateFileW(wideStr, 
                              dwDesiredAccess, 
@@ -190,7 +188,7 @@ MOZCE_SHUNT_API DWORD mozce_GetFileAttributesA(LPCSTR lpFileName)
     DWORD retval = (DWORD)-1;
     TCHAR wideStr[MAX_PATH];
 
-    if(a2w_buffer(lpFileName, -1, wideStr, charcount(wideStr)))
+    if(a2w_buffer(lpFileName, -1, wideStr, MAX_PATH))
     {
         retval = GetFileAttributesW(wideStr);
     }
@@ -207,7 +205,7 @@ MOZCE_SHUNT_API BOOL mozce_CreateProcessA(LPCSTR pszImageName, LPCSTR pszCmdLine
     BOOL retval = FALSE;
     TCHAR pszImageNameW[MAX_PATH];
 
-    if(a2w_buffer(pszImageName, -1, pszImageNameW, charcount(pszImageNameW)))
+    if(a2w_buffer(pszImageName, -1, pszImageNameW, MAX_PATH))
     {
         LPTSTR pszCmdLineW = NULL;
 
@@ -525,30 +523,45 @@ MOZCE_SHUNT_API HDC mozce_CreateDCA2(LPCSTR inDriver, LPCSTR inDevice, LPCSTR in
 MOZCE_SHUNT_API BOOL mozce_GetTextExtentExPointA(HDC inDC, char* inStr, int inLen, int inMaxExtent, LPINT outFit, LPINT outDx, LPSIZE inSize)
 {
 #ifdef DEBUG
-    printf("mozce_GetTextExtentExPointA called\n");
+  printf("mozce_GetTextExtentExPointA called (%d)\n", inLen);
 #endif
 
+  if (inLen == 0)
+      return FALSE;
+
+  wchar_t *ws = NULL;
+  BOOL res;
+
+  ws = (wchar_t *) malloc(inLen * 2);
+
+  MultiByteToWideChar(CP_ACP, 0, 
+		      inStr, inLen, 
+		      ws, inLen);
+  
+  res = GetTextExtentExPointW(inDC, ws, inLen, inMaxExtent, outFit,
+			      outDx, inSize);
+
+  free(ws);
+  return res;
+
+#if 0
     BOOL retval = FALSE;
 
     if (!inStr)
         return retval;
 
-    if(inLen == -1)
-        inLen = strlen(inStr);
+    inStr[inLen] = '\0';
 
-	inStr[inLen] = '\0';
-
-    int wLen = 0;
-    LPTSTR wStr = a2w_malloc(inStr, inLen, &wLen);
+    LPTSTR wStr = a2w_malloc(inStr, inLen, NULL);
 
     if(NULL != wStr)
     {
-        retval = GetTextExtentExPointW(inDC, wStr, wLen, inMaxExtent, outFit, outDx, inSize);
-
+        retval = GetTextExtentExPointW(inDC, wStr, inLen, inMaxExtent, outFit, outDx, inSize);
         free(wStr);
     }
 
     return retval;
+#endif
 }
 
 
@@ -670,7 +683,7 @@ MOZCE_SHUNT_API BOOL mozce_GetFileVersionInfoA(LPSTR inFilename, DWORD inHandle,
     BOOL retval = FALSE;
     TCHAR wPath[MAX_PATH];
 
-    if(0 != a2w_buffer(inFilename, -1, wPath, charcount(wPath)))
+    if(0 != a2w_buffer(inFilename, -1, wPath, MAX_PATH))
     {
         retval = GetFileVersionInfo(wPath, inHandle, inLen, outData);
     }
@@ -688,7 +701,7 @@ MOZCE_SHUNT_API DWORD mozce_GetFileVersionInfoSizeA(LPSTR inFilename, LPDWORD ou
 
     TCHAR wPath[MAX_PATH];
 
-    if(0 != a2w_buffer(inFilename, -1, wPath, charcount(wPath)))
+    if(0 != a2w_buffer(inFilename, -1, wPath, MAX_PATH))
     {
         retval = GetFileVersionInfoSize(wPath, outHandle);
     }
@@ -1263,7 +1276,7 @@ MOZCE_SHUNT_API HMODULE mozce_GetModuleHandleA(const char *lpName)
         return GetModuleHandleW(NULL);
 
     TCHAR wideStr[MAX_PATH];
-    if(a2w_buffer(lpName, -1, wideStr, charcount(wideStr)))
+    if(a2w_buffer(lpName, -1, wideStr, MAX_PATH))
         return GetModuleHandleW(wideStr);
 
     return NULL;
@@ -1277,11 +1290,18 @@ MOZCE_SHUNT_API HICON mozce_LoadIconA(HINSTANCE hInstance, LPCSTR lpIconName)
 
     HICON hi = NULL;
 
-    TCHAR wideStr[MAX_PATH];
-    if(a2w_buffer(lpIconName, -1, wideStr, charcount(wideStr)))
+    if (! IS_INTRESOURCE(lpIconName))
     {
-        hi = LoadIconW(hInstance, wideStr);
+
+        TCHAR wideStr[MAX_PATH];
+        if(a2w_buffer(lpIconName, -1, wideStr, MAX_PATH))
+        {
+            hi = LoadIconW(hInstance, wideStr);
+        }
     }
+    else
+        hi = LoadIconW(hInstance, (const unsigned short*) lpIconName);
+
     return hi;
 }
 
@@ -1579,18 +1599,18 @@ MOZCE_SHUNT_API HFONT mozce_CreateFontIndirectA(CONST LOGFONTA* lplf)
     LOGFONTW lfw;
     HFONT hFont;
     
-    lfw.lfHeight = lplf->lfHeight;
-    lfw.lfWidth = lplf->lfWidth;
-    lfw.lfEscapement = lplf->lfEscapement;
-    lfw.lfOrientation = lplf->lfOrientation;
-    lfw.lfWeight = lplf->lfWeight;
-    lfw.lfItalic = lplf->lfItalic;
-    lfw.lfUnderline = lplf->lfUnderline;
-    lfw.lfStrikeOut = lplf->lfStrikeOut;
-    lfw.lfCharSet = lplf->lfCharSet;
-    lfw.lfOutPrecision = lplf->lfOutPrecision;
-    lfw.lfClipPrecision = lplf->lfClipPrecision;
-    lfw.lfQuality = lplf->lfQuality;
+    lfw.lfHeight         = lplf->lfHeight;
+    lfw.lfWidth          = lplf->lfWidth;
+    lfw.lfEscapement     = lplf->lfEscapement;
+    lfw.lfOrientation    = lplf->lfOrientation;
+    lfw.lfWeight         = lplf->lfWeight;
+    lfw.lfItalic         = lplf->lfItalic;
+    lfw.lfUnderline      = lplf->lfUnderline;
+    lfw.lfStrikeOut      = lplf->lfStrikeOut;
+    lfw.lfCharSet        = lplf->lfCharSet;
+    lfw.lfOutPrecision   = lplf->lfOutPrecision;
+    lfw.lfClipPrecision  = lplf->lfClipPrecision;
+    lfw.lfQuality        = lplf->lfQuality;
     lfw.lfPitchAndFamily = lplf->lfPitchAndFamily;
     
     a2w_buffer(lplf->lfFaceName, -1, lfw.lfFaceName, LF_FACESIZE);
@@ -1618,21 +1638,24 @@ MOZCE_SHUNT_API int mozce_GetTextFaceA(HDC hdc, int nCount, LPSTR lpFaceName)
     printf("mozce_GetTextFaceA called\n");
 #endif
     
+    if (!lpFaceName)
+        return GetTextFaceW(hdc, 0, NULL);
 
-    if (lpFaceName)
-        lpFaceName[0] = NULL;
- 
-    int res;
-    
     TCHAR* wBuffer = (TCHAR*) malloc(sizeof(TCHAR) * (nCount+1));
 
     if (!wBuffer)
         return GDI_ERROR;
 
-    res = GetTextFaceW(hdc, nCount, wBuffer);
+    int res = GetTextFaceW(hdc, nCount, wBuffer);
     if(res != GDI_ERROR && res != 0 && lpFaceName) 
     {
-        w2a_buffer(wBuffer, -1, lpFaceName, nCount);
+        int result = w2a_buffer(wBuffer, -1, lpFaceName, nCount);
+        if (result == 0)
+            res = result;
+
+#ifdef DEBUG
+        printf("textface: %s\n", lpFaceName);
+#endif
     }
     
     free(wBuffer);
@@ -1642,13 +1665,19 @@ MOZCE_SHUNT_API int mozce_GetTextFaceA(HDC hdc, int nCount, LPSTR lpFaceName)
 MOZCE_SHUNT_API BOOL mozce_GetTextMetricsA(HDC hdc, LPTEXTMETRICA lptma)
 {
 #ifdef DEBUG
-    printf("mozce_GetTextMetrics called\n");
+    printf("mozce_GetTextMetricsA called\n");
 #endif
+
+    if (!lptma)
+        return 0;
 
     TEXTMETRICW tmw;
     BOOL res;
     
     res = GetTextMetricsW(hdc, &tmw);
+    
+    if (res==0)
+        return res;
     
     lptma->tmHeight = tmw.tmHeight;
     lptma->tmAscent = tmw.tmAscent;
