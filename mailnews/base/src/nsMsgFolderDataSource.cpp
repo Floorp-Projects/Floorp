@@ -804,7 +804,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createFolderChildNode(folder, target);
 	else if ((kNC_MessageChild == property))
 		rv = createFolderMessageNode(folder, target);
- 
+
+  if (NS_FAILED(rv)) return NS_RDF_NO_VALUE;
   return rv;
 }
 
@@ -874,6 +875,7 @@ nsMsgFolderDataSource::createFolderServerTypeNode(nsIMsgFolder* folder,
 
   nsXPIDLCString serverType;
   rv = server->GetType(getter_Copies(serverType));
+  if (NS_FAILED(rv)) return rv;
 
   createNode(serverType, target, getRDFService());
   return NS_OK;
