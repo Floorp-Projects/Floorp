@@ -53,6 +53,7 @@ static nsHashtable* gFontMetricsCache = nsnull;
 static nsCString **gFontNames = nsnull;
 static FontDetails *gFontDetails = nsnull;
 static int gnFonts = 0;
+static nsIPref* gPref = nsnull;
 
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
@@ -88,9 +89,13 @@ nsFontMetricsPh::nsFontMetricsPh()
 	mAveCharWidth = 0;
 }
 
-static void InitGlobals()
+static nsresult InitGlobals()
 {
+  nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**) &gPref);
+  if (!gPref) return NS_ERROR_FAILURE;
+
 	gFontMetricsCache = new nsHashtable();
+	return NS_OK;
 }
 
 #if 0
@@ -142,8 +147,10 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 	nsresult      result;
 	PhRect_t      extent;
 
-	if( !gFontMetricsCache )
-		InitGlobals( );
+	if( !gFontMetricsCache ) {
+		nsresult res = InitGlobals( );
+		if( NS_FAILED(res) ) return res;
+		}
 	
 	mFont = new nsFont(aFont);
 	mLangGroup = aLangGroup;
@@ -171,33 +178,20 @@ printf( "\n\n\t\t\tIn nsFontMetricsPh::Init str=%s\n", str );
 	sprintf( prop, "font.name.%s.%s", str, cstring );
 
 	char *font_default = NULL;
-	nsIPref* prefs = nsnull;
-	nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**) &prefs);
-	if (prefs)
-	  {
-		  prefs->CopyCharPref( prop, &font_default );
-		  if( font_default )
-			{
-				//delete [] str;
-				free (str);
-			/* font_default was allocated. in CopyCharPref. */
-				str = font_default;
-			}
-	  }
-	NS_IF_RELEASE(prefs);
-
-	float scale = 1.0;
+	gPref->CopyCharPref( prop, &font_default );
+	if( font_default )
+		{
+		free (str);
+		/* font_default was allocated. in CopyCharPref. */
+		str = font_default;
+		}
 
 	float app2dev;
 	mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-	mDeviceContext->GetCanonicalPixelScale(scale);
 
-	PRInt32 sizePoints = NSToIntRound(app2dev * mFont->size * 0.8);
+	PRInt32 sizePoints = NSToIntRound( app2dev * mFont->size * 0.74 );
 	
-	char NSFontSuffix[5];
 	char NSFullFontName[MAX_FONT_TAG];
-
-	NSFontSuffix[0] = nsnull;
 
 	unsigned int uiFlags = 0L;
 
@@ -215,9 +209,9 @@ printf( "\n\n\t\t\tIn nsFontMetricsPh::Init str=%s\n", str );
 #ifdef DEBUG_Adrian
 printf( "!!!!!!!!!!!! PfGenerateFontName failed\n" );
 #endif
-		  PfGenerateFontName( "Helvetica", uiFlags, sizePoints, (char *)NSFullFontName );
+		  PfGenerateFontName( "TextFont", uiFlags, sizePoints, (char *)NSFullFontName );
 	  }
- 
+
 	/* Once the Photon Font String is built get the attributes */
 	FontQueryInfo *node;
 
@@ -278,7 +272,6 @@ printf( "\tCall PfLoadMetrics for NSFullFontName=%s\n", NSFullFontName );
 	   free (mFontHandle);
 	mFontHandle = strdup(NSFullFontName);
 
-	//delete [] str;
 	free (str);
 	return NS_OK;
 }
@@ -418,9 +411,8 @@ NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const 
 
 					int total = 0;
 					for(i=0;i<gnFonts;i++) {
-						if( stricmp( gFontDetails[i].desc, "Verdana" ) )
-							gFontNames[total++] = new nsCString(gFontDetails[i].desc);
-							}
+						gFontNames[total++] = new nsCString(gFontDetails[i].desc);
+						}
 					gnFonts = total;
 				  }
 
@@ -459,11 +451,7 @@ NS_IMETHODIMP
    nsFontEnumeratorPh::HaveFontFor(const char* aLangGroup, PRBool* aResult)
 {
 	NS_ENSURE_ARG_POINTER(aResult);
-	*aResult = PR_FALSE;
-	NS_ENSURE_ARG_POINTER(aLangGroup);
-
 	*aResult = PR_TRUE; // always return true for now.
-	// Finish me - ftang
 	return NS_OK;
 }
 

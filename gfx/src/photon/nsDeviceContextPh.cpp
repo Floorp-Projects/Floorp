@@ -336,11 +336,6 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence( const nsString& aFontName
 printf( "\tCheckFontExistence for fontName=%s\n", fontName );
 #endif
 
-		if( !stricmp( fontName, "Verdana" ) ) {
-			delete [] fontName;
-			return NS_ERROR_FAILURE;
-			}
-
 		nsCStringKey key( fontName );
 		if( !mFontLoadCache ) mFontLoadCache = new nsHashtable();
 		else {
