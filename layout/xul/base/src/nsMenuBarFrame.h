@@ -68,6 +68,7 @@ public:
   NS_IMETHOD IsActive() { return mIsActive; };
 
   NS_IMETHOD IsOpen();
+  NS_IMETHOD KillPendingTimers();
 
   // Closes up the chain of open cascaded menus.
   NS_IMETHOD DismissChain();

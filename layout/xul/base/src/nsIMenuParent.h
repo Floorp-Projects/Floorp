@@ -49,6 +49,7 @@ public:
 
   NS_IMETHOD DismissChain() = 0;
   NS_IMETHOD HideChain() = 0;
+  NS_IMETHOD KillPendingTimers() = 0;
 
   NS_IMETHOD CreateDismissalListener() = 0;
 

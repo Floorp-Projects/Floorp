@@ -333,8 +333,17 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
       }
     }
     else
-      if ( !IsOpen() )
+      if ( !IsOpen() ) {
+        // one of our siblings is probably open and even possibly waiting
+        // for its close timer to fire. Tell our parent to close it down. Not
+        // doing this before its timer fires will cause the rollup state to
+        // get very confused.
+        if ( mMenuParent )
+          mMenuParent->KillPendingTimers();
+
+        // safe to open up
         OpenMenu(PR_TRUE);
+      }
   }
   else if ( aEvent->message == NS_MOUSE_RIGHT_BUTTON_UP && mMenuParent && !IsDisabled()) {
     // if this menu is a context menu it accepts right-clicks...fire away!

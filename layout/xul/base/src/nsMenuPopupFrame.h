@@ -82,6 +82,8 @@ public:
   // Hides the chain of cascaded menus without closing them up.
   NS_IMETHOD HideChain();
 
+  NS_IMETHOD KillPendingTimers();
+
   NS_IMETHOD InstallKeyboardNavigator();
   NS_IMETHOD RemoveKeyboardNavigator();
 

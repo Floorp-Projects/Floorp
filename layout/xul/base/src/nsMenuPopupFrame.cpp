@@ -1422,3 +1422,12 @@ nsMenuPopupFrame::KillCloseTimer()
   }
   return NS_OK;
 }
+
+
+
+NS_IMETHODIMP
+nsMenuPopupFrame :: KillPendingTimers ( )
+{
+  return KillCloseTimer();
+
+} // KillPendingTimers
