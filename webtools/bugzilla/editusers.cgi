@@ -142,7 +142,6 @@ sub EmitFormElements ($$$$$$$)
             "WHERE bit & $opblessgroupset != 0 AND isbuggroup " .
             "ORDER BY name");
     print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
-    my $curgrouptype = 1;
     if (MoreSQLData()) {
         if ($editall) {
           print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
@@ -169,7 +168,6 @@ sub EmitFormElements ($$$$$$$)
             "WHERE bit & $opblessgroupset != 0 AND !isbuggroup " .
             "ORDER BY name");
     print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD><TABLE><TR>";
-    my $curgrouptype = 1;
     if (MoreSQLData()) {
         if ($editall) {
           print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
