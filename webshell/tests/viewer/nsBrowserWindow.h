@@ -24,6 +24,7 @@
 #include "nsINetSupport.h"
 #include "nsIWebShell.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIDocumentLoaderObserver.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
@@ -48,6 +49,7 @@ class nsIPresContext;
 class nsIPresShell;
 class nsIPref;
 class nsIContentConnector;
+class nsWebCrawler;
 
 #define SAMPLES_BASE_URL "resource:/res/samples"
 
@@ -127,6 +129,7 @@ public:
                                      nsString &aPassword);
 
   // nsBrowserWindow
+  void SetWebCrawler(nsWebCrawler* aWebCrawler);
   virtual nsresult CreateMenuBar(PRInt32 aWidth) = 0;
   virtual nsresult CreateToolBar(PRInt32 aWidth);
   virtual nsresult CreateStatusBar(PRInt32 aWidth);
@@ -207,6 +210,7 @@ public:
   }
 
   nsViewerApp* mApp;
+  nsWebCrawler* mWebCrawler;
 
   PRUint32 mChromeMask;
   nsString mTitle;
