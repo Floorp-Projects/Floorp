@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-   
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
 <window title="LDAP Manager Prototype"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
+
   <tree datasources="rdf:ldap"
         flex="2" id="testTree" ref="ldap://memberdir.netscape.com:389/ou=member_directory,o=netcenter.com??one?(sn=Rasputin)">
 

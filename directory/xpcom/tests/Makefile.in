@@ -28,12 +28,5 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdfldapds
 
-CHROME_DIR = packages/core
-CHROME_CONTENT_DIR = communicator/content/ldapviewer
-
-CHROME_CONTENT = \
-		example.xul \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
