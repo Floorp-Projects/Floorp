@@ -24,43 +24,43 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // NS_WITH_PROXIED_SERVICE: macro to make using services that need to be proxied
-//									 before using them easier. 
+//                                   before using them easier. 
 // Now you can replace this:
 // {
-//		nsresult rv;
-//		NS_WITH_SERVICE(nsIMyService, pIMyService, kMyServiceCID, &rv);
-//		if(NS_FAILED(rv))
-//			return;
-//		NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
-//		if(NS_FAILED(rv))
-//			return;
-//		nsIMyService pIProxiedObject = NULL;
-//		rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, 
-//																nsIMyService::GetIID(), 
-//																pIMyService, PROXY_SYNC,
-//																(void**)&pIProxiedObject);
-//		pIProxiedObject->DoIt(...);  // Executed on same thread as pIProxyQueue
-//		...
-//		pIProxiedObject->Release();  // Must be done as not managed for you.
-//		}
-//	with this:
-//		{
-//		nsresult rv;
-//		NS_WITH_PROXIED_SERVICE(nsIMyService, pIMyService, kMyServiceCID, 
-//										pIProxyQueue, &rv);
-//		if(NS_FAILED(rv))
-//			return;
-//		pIMyService->DoIt(...);  // Executed on the same thread as pIProxyQueue
-//		}
+//      nsresult rv;
+//      NS_WITH_SERVICE(nsIMyService, pIMyService, kMyServiceCID, &rv);
+//      if(NS_FAILED(rv))
+//          return;
+//      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
+//      if(NS_FAILED(rv))
+//          return;
+//      nsIMyService pIProxiedObject = NULL;
+//      rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue, 
+//                                                              nsIMyService::GetIID(), 
+//                                                              pIMyService, PROXY_SYNC,
+//                                                              (void**)&pIProxiedObject);
+//      pIProxiedObject->DoIt(...);  // Executed on same thread as pIProxyQueue
+//      ...
+//      pIProxiedObject->Release();  // Must be done as not managed for you.
+//      }
+//  with this:
+//      {
+//      nsresult rv;
+//      NS_WITH_PROXIED_SERVICE(nsIMyService, pIMyService, kMyServiceCID, 
+//                                      pIProxyQueue, &rv);
+//      if(NS_FAILED(rv))
+//          return;
+//      pIMyService->DoIt(...);  // Executed on the same thread as pIProxyQueue
+//      }
 // and the automatic destructor will take care of releasing the service and
 // the proxied object for you. 
 // 
 // Note that this macro requires you to link with the xpcom DLL to pick up the
 // static member functions from nsServiceManager.
 
-#define NS_WITH_PROXIED_SERVICE(T, var, cid, Q, rvAddr)		\
-	nsProxiedService _serv##var(cid, T::GetIID(), Q, rvAddr);			\
-	T* var = (T*)(nsISupports*)_serv##var;
+#define NS_WITH_PROXIED_SERVICE(T, var, cid, Q, rvAddr)     \
+    nsProxiedService _serv##var(cid, T::GetIID(), Q, rvAddr);           \
+    T* var = (T*)(nsISupports*)_serv##var;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsProxiedService
@@ -69,60 +69,60 @@
 class nsProxiedService : public nsService
 {
 protected:
-	nsISupports* mProxiedService;
+    nsISupports* mProxiedService;
 public:
   nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
-			nsIEventQueue* pIProxyQueue, nsresult*rv): nsService(aClass, aIID, rv),
-			mProxiedService(nsnull)
-	{
-	static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+            nsIEventQueue* pIProxyQueue, nsresult*rv): nsService(aClass, aIID, rv),
+            mProxiedService(nsnull)
+    {
+    static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
-	if(NS_FAILED(*rv))
-		return;
-	NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
-						kProxyObjectManagerCID, rv);
-	if(NS_FAILED(*rv))
-		{
-		nsServiceManager::ReleaseService(mCID, mService);
-		mService = nsnull;
-		return;
-		}
+    if(NS_FAILED(*rv))
+        return;
+    NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
+                        kProxyObjectManagerCID, rv);
+    if(NS_FAILED(*rv))
+        {
+        nsServiceManager::ReleaseService(mCID, mService);
+        mService = nsnull;
+        return;
+        }
 
-	*rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue,
-															aIID,
-															mService,
-															PROXY_SYNC,
-															(void**)&mProxiedService);
-	if(NS_FAILED(*rv))
-		{
-		nsServiceManager::ReleaseService(mCID, mService);
-		mService = nsnull;
-		return;
-		}
-	}
-	
-	~nsProxiedService()
-		{
-		if(mProxiedService)
-			NS_RELEASE(mProxiedService);
-		// Base class will free mService
-		}
+    *rv = pIProxyObjectManager->GetProxyObject(pIProxyQueue,
+                                               aIID,
+                                               mService,
+                                               PROXY_SYNC,
+                                               (void**)&mProxiedService);
+    if(NS_FAILED(*rv))
+        {
+        nsServiceManager::ReleaseService(mCID, mService);
+        mService = nsnull;
+        return;
+        }
+    }
+    
+    ~nsProxiedService()
+        {
+        if(mProxiedService)
+            NS_RELEASE(mProxiedService);
+        // Base class will free mService
+        }
 
-	nsISupports* operator->() const
-		{
-		NS_PRECONDITION(mProxiedService != 0, "Your code should test the error result from the constructor.");
-		return mProxiedService;
-		}
+    nsISupports* operator->() const
+        {
+        NS_PRECONDITION(mProxiedService != 0, "Your code should test the error result from the constructor.");
+        return mProxiedService;
+        }
 
-	PRBool operator==(const nsISupports* other)
-		{
-		return ((mProxiedService == other) || (mService == other));
-		}
+    PRBool operator==(const nsISupports* other)
+        {
+        return ((mProxiedService == other) || (mService == other));
+        }
 
-	operator nsISupports*() const
-		{
-		return mProxiedService;
-		}
+    operator nsISupports*() const
+        {
+        return mProxiedService;
+        }
 };
 
 
