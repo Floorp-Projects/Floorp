@@ -252,8 +252,8 @@ void nsCSSScanner::OutputError()
     nsresult rv;
     PRUnichar *error = ToNewUnicode(mError);
     rv = errorObject->Init(error,
-                           NS_ConvertASCIItoUCS2(mFileName.get()).GetUnicode(),
-                           NS_LITERAL_STRING(""),
+                           NS_ConvertASCIItoUCS2(mFileName.get()).get(),
+                           NS_LITERAL_STRING("").get(),
                            mErrorLineNumber,
                            mErrorColNumber,
                            0,
