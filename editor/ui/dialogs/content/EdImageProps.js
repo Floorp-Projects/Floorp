@@ -793,3 +793,14 @@ function onImageCancel()
   CancelTimer();
   onCancel();
 }
+
+function onAlignFocus()
+{
+  dialog.alignText.setAttribute("focused", "true");
+}
+
+function onAlignBlur()
+{
+  dialog.alignText.removeAttribute("focused");
+}
+
