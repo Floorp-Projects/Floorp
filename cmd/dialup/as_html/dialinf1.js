@@ -21,7 +21,26 @@
 
 function go(msg)
 {
-	return(true);
+	var theFile = parent.parent.globals.getAcctSetupFilename(self);
+	var onestepMode = parent.parent.globals.GetNameValuePair(theFile, "Mode Selection", "OneStepMode");
+	var retval = false;
+
+	if (msg == "2step")
+	{
+		if (onestepMode == "no" || onestepMode == "" || onestepMode == null)
+		{
+			retval = true;
+		}
+	}
+	else if (msg == "1step")
+	{
+		if (onestepMode == "yes")
+		{
+			retval = true;
+		}
+	}	
+	
+	return retval;
 }
 
 
