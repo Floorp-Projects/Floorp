@@ -54,6 +54,7 @@ JAVA_SRCS = \
 	TestArray.java \
 	TestProps.java \
 	TestQI.java \
+	TestJavaProxy.java \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

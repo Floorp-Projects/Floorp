@@ -35,31 +35,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsJavaXPTCStubWeakRef_h_
-#define _nsJavaXPTCStubWeakRef_h_
+import org.mozilla.xpcom.*;
+import java.io.File;
 
-#include "jni.h"
-#include "nsIWeakReference.h"
-
-
-class nsJavaXPTCStub;
 
 /**
- * This class represents an XPCOM weak reference to a Java object.
+ * Tests that if calls to XPCOM functions return the same object, then
+ * the Javaconnect interface creates the proper Java proxies.
+ * <p>
+ * The XPCOM call to <code>nsISupports supp = entries.getNext()</code> returns
+ * an object, for which we create an <code>nsISupports</code> Java proxy.  Then,
+ * the XPCOM call to <code>supp.queryInterface(nsIFile.NS_IFILE_IID)</code>
+ * will return the same object (same address).  Javaconnect needs to be smart
+ * enough to create a new <code>nsIFile</code> proxy, rather than reusing the
+ * <code>nsISupports</code> one that was previously created.
+ * </p>
  */
-class nsJavaXPTCStubWeakRef : public nsIWeakReference
-{
-public:
-  nsJavaXPTCStubWeakRef(JNIEnv* env, jobject aJavaObject,
-                        nsJavaXPTCStub* aXPTCStub);
-  virtual ~nsJavaXPTCStubWeakRef();
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEAKREFERENCE
+public class TestJavaProxy {
+	public static void main(String [] args) throws Exception {
+		System.loadLibrary("javaxpcom");
 
-protected:
-  JNIEnv*         mJavaEnv;
-  jweak           mWeakRef;
-  nsJavaXPTCStub* mXPTCStub;
-};
+		String mozillaPath = System.getProperty("MOZILLA_FIVE_HOME");
+		if (mozillaPath == null) {
+			throw new RuntimeException("MOZILLA_FIVE_HOME system property not set.");
+		}
 
-#endif // _nsJavaXPTCStubWeakRef_h_
+		File localFile = new File(mozillaPath);
+		XPCOM.initXPCOM(localFile, null);
+
+		nsILocalFile directory = XPCOM.newLocalFile("/usr", false);
+		nsISimpleEnumerator entries = (nsISimpleEnumerator) directory.getDirectoryEntries();
+		while (entries.hasMoreElements()) {
+			nsISupports supp = entries.getNext();
+			nsIFile file = (nsIFile) supp.queryInterface(nsIFile.NS_IFILE_IID);
+			System.out.println(file.getPath());
+		}
+
+		XPCOM.shutdownXPCOM(null);
+	}
+}
