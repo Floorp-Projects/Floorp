@@ -235,6 +235,7 @@ public:
 	nsresult OnGet();
 	nsresult OnIdentityCheck();
 	nsresult OnTestUrlParsing();
+	nsresult OnSelectFolder();
 	nsresult OnExit(); 
 protected:
 	char m_command[500];	// command to run
@@ -812,6 +813,9 @@ nsresult nsIMAP4TestDriver::ReadAndDispatchCommand()
 	case 3:
 		status = OnTestUrlParsing();
 		break;
+	case 4: 
+		status = OnSelectFolder();
+		break;
 	default:
 		status = OnExit();
 		break;
@@ -827,6 +831,7 @@ nsresult nsIMAP4TestDriver::ListCommands()
 	printf("1) Run IMAP Command. \n");
 	printf("2) Check identity information.\n");
 	printf("3) Test url parsing. \n");
+	printf("4) Select Folder. \n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }
@@ -917,6 +922,26 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
 
 	return result;
 }
+
+nsresult nsIMAP4TestDriver::OnSelectFolder()
+{
+	// go get the imap service and ask it to select a folder
+	// mscott - i may want to cache this in the test harness class
+	// since we'll be using it for pretty much all the commands
+
+	nsIImapService * imapService = nsnull;
+	nsresult rv = nsServiceManager::GetService(kCImapService, nsIImapService::GetIID(), (nsISupports **) &imapService);
+
+	if (NS_SUCCEEDED(rv) && imapService)
+	{
+		rv = imapService->SelectFolder(m_eventQueue, this /* imap folder sink */, this /* url listener */, nsnull);
+		nsServiceManager::ReleaseService(kCImapService, imapService);
+		m_runningURL = PR_TRUE; // we are now running a url...
+	}
+
+	return rv;
+}
+
 nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 {
 	nsresult rv = NS_OK;
