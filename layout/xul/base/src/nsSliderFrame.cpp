@@ -859,9 +859,6 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              nsFramePaintLayer aWhichLayer,
                                              nsIFrame**     aFrame)
 {
-  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
-    return NS_ERROR_FAILURE;
-
   // This is EVIL, we shouldn't be messing with GetFrameForPoint just to get
   // thumb mouse drag events to arrive at the slider!
   if (isDraggingThumb())
@@ -871,15 +868,11 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  if (!mRect.Contains(aPoint))
-    return NS_ERROR_FAILURE;
-
-
   if (NS_SUCCEEDED(nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame)))
     return NS_OK;
 
   // always return us (if visible)
-  if (GetStyleVisibility()->IsVisible()) {
+  if (mRect.Contains(aPoint) && GetStyleVisibility()->IsVisible()) {
     *aFrame = this;
     return NS_OK;
   }

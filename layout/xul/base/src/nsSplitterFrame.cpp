@@ -449,28 +449,24 @@ NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              nsFramePaintLayer aWhichLayer,    
                                              nsIFrame**     aFrame)
 {   
-  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND))
-    return NS_ERROR_FAILURE;
-
   // if the mouse is captured always return us as the frame.
   if (mInner->mDragging)
   {
     // XXX It's probably better not to check visibility here, right?
     *aFrame = this;
     return NS_OK;
-  } else {
-
-      if (!mRect.Contains(aPoint))
-         return NS_ERROR_FAILURE;
-
-      nsresult rv = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
-      if (rv == NS_ERROR_FAILURE) {
-        *aFrame = this;
-        rv = NS_OK;
-      } 
-
-      return rv;
   }
+
+  nsresult rv = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+
+  if (NS_FAILED(rv) &&
+      aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&
+      mRect.Contains(aPoint)) {
+    *aFrame = this;
+    rv = NS_OK;
+  } 
+
+  return rv;
 }
 
 NS_IMETHODIMP
