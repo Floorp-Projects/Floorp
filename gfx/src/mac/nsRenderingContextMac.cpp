@@ -67,6 +67,9 @@ nsRenderingContextMac::nsRenderingContextMac()
   
 	mChanges					= kEverythingChanged;
   mLineStyle = nsLineStyle_kSolid;
+#ifdef IBMBIDI
+  mRightToLeftText = PR_FALSE;
+#endif
 }
 
 
@@ -548,7 +551,11 @@ NS_IMETHODIMP nsRenderingContextMac::GetHints(PRUint32& aResult)
 	// QuickDraw is prefered over to ATSUI for drawing 7-bit text
 	// (it's not 8-bit: the name of the constant is misleading)
 	result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
-
+#ifdef IBMBIDI
+  // QuickDraw can handle arabic and hebrew drawing
+  result |= NS_RENDERING_HINT_BIDI_REORDERING;
+  result |= NS_RENDERING_HINT_ARABIC_SHAPING;
+#endif
 	aResult = result;
 	return NS_OK;
 }
@@ -1257,7 +1264,11 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(const PRUnichar *aString, PRUint32
 	if (nsnull == mGS->mFontMetrics)
  		return NS_ERROR_NULL_POINTER;
 
+#ifdef IBMBIDI
+	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort, mRightToLeftText);
+#else
 	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
+#endif
 	if (NS_SUCCEEDED(rv))
     	rv = mUnicodeRenderingToolkit.GetWidth(aString, aLength, aWidth, aFontID);
     
@@ -1335,8 +1346,12 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint
 	
 	if (nsnull == mGS->mFontMetrics)
 		return NS_ERROR_NULL_POINTER;
-	
+
+#ifdef IBMBIDI	
+	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort,mRightToLeftText);
+#else
 	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
+#endif
 	if (NS_SUCCEEDED(rv))
 		rv = mUnicodeRenderingToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
 
@@ -1483,4 +1498,16 @@ nsRenderingContextMac::GetBoundingMetrics(const PRUnichar*   aString,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 #endif /* MOZ_MATHML */
+
+
+#ifdef IBMBIDI
+NS_IMETHODIMP
+nsRenderingContextMac::SetRightToLeftText(PRBool aIsRTL)
+{
+  mRightToLeftText = aIsRTL;
+	return NS_OK;
+}
+#endif
+

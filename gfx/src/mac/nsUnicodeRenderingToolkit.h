@@ -36,7 +36,11 @@ public:
 	nsUnicodeRenderingToolkit() {};
 	virtual ~nsUnicodeRenderingToolkit() {};
 
+#ifdef IBMBIDI
+  NS_IMETHOD PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort, PRBool aRightToLeftText);
+#else
   NS_IMETHOD PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort);
+#endif
   NS_IMETHOD GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth,
                       PRInt32 *aFontID);
   NS_IMETHOD DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY,
@@ -84,6 +88,9 @@ private:
 	GrafPtr					mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
 	nsATSUIToolkit			mATSUIToolkit;
 	nsCOMPtr<nsISaveAsCharset> mTrans;
+#ifdef IBMBIDI
+	PRBool mRightToLeftText;
+#endif
 
 };
 #endif /* nsUnicodeRenderingToolkit_h__ */

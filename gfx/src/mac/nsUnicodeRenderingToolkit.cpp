@@ -1153,6 +1153,7 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
 	
   if (aSpacing)
   {
+    // fix me ftang -  handle (mRightToLeftText) here
     for (i = 0; i < aLength; )
     {
       PRUint32 drawLen;
@@ -1186,32 +1187,63 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
     thisFont = fontmap->GetFontID(aString[0]);
     PRUint32 start;
 
-    for (i = 1, start = 0; i < aLength; i++)
-    {
-    	PRUnichar uch = aString[i];
-    	if(! IS_FORMAT_CONTROL_CHARS(uch))
-    	{
-    		nextFont = fontmap->GetFontID(uch);
-    		if (thisFont != nextFont) 
-        {
-          // start new font run...
-          PRInt32 transformedX = currentX, ignoreY = 0;
-          mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
-          
-          res = DrawTextSegment(aString + start, i - start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
-    	  	if (NS_FAILED(res))
-    	 		  return res;
-    	 		
-    		  currentX += NSToCoordRound(float(thisWidth) * mP2T);
-    		  start = i;
-    		  thisFont = nextFont;
-    		}
-    	}
-    }
+    if (mRightToLeftText) {
+      // right to left
+	    for (i = 1, start = 0; i < aLength; i++)
+	    {
+	      PRUnichar  uch = aString[aLength - i - 1];
+	    	if(! IS_FORMAT_CONTROL_CHARS(uch))
+	    	{
+	    		nextFont = fontmap->GetFontID(uch);
+	    		if (thisFont != nextFont) 
+	        {
+	          // start new font run...
+	          PRInt32 transformedX = currentX, ignoreY = 0;
+	          mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
+	          
+            res = DrawTextSegment(aString + aLength - i, i-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+	    	  	if (NS_FAILED(res))
+	    	 		  return res;
+	    	 		
+	    		  currentX += NSToCoordRound(float(thisWidth) * mP2T);
+	    		  start = i;
+	    		  thisFont = nextFont;
+	    		}
+	    	}
+	    }
 
-    PRInt32 transformedX = currentX, ignoreY = 0;
-    mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
-    res = DrawTextSegment(aString+start, aLength-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+	    PRInt32 transformedX = currentX, ignoreY = 0;
+	    mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
+      res = DrawTextSegment(aString , aLength-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+    } else { 
+      // normal left to right
+	    for (i = 1, start = 0; i < aLength; i++)
+	    {
+	    	PRUnichar uch = aString[i];
+	    	if(! IS_FORMAT_CONTROL_CHARS(uch))
+	    	{
+	    		nextFont = fontmap->GetFontID(uch);
+	    		if (thisFont != nextFont) 
+	        {
+	          // start new font run...
+	          PRInt32 transformedX = currentX, ignoreY = 0;
+	          mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
+	          
+            res = DrawTextSegment(aString + start, i - start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+	    	  	if (NS_FAILED(res))
+	    	 		  return res;
+	    	 		
+	    		  currentX += NSToCoordRound(float(thisWidth) * mP2T);
+	    		  start = i;
+	    		  thisFont = nextFont;
+	    		}
+	    	}
+	    }
+
+	    PRInt32 transformedX = currentX, ignoreY = 0;
+	    mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
+      res = DrawTextSegment(aString+start, aLength-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+    }
     if (NS_FAILED(res))
       return res;
   }
@@ -1221,11 +1253,20 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
 
 
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsUnicodeRenderingToolkit :: PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort)
+NS_IMETHODIMP nsUnicodeRenderingToolkit :: PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, 
+#ifdef IBMBIDI
+GrafPtr aPort, PRBool aRightToLeftText
+#else
+GrafPtr aPort
+#endif
+)
 {
 	mP2T = aP2T;
 	mContext = aContext;
 	mGS = aGS;
 	mPort = aPort;
+#ifdef IBMBIDI
+	mRightToLeftText = aRightToLeftText;
+#endif
 	return NS_OK;
 }
