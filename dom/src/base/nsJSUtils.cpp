@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * This is not a generated file. It contains common utility functions 
+ * This is not a generated file. It contains common utility functions
  * invoked from the JavaScript code generated from IDL interfaces.
  * The goal of the utility functions is to cut down on the size of
  * the generated code itself.
@@ -91,7 +91,7 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
   return JS_FALSE;
 }
 
-void 
+void
 nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext,
                                 jsval* aReturn)
 {
@@ -131,7 +131,7 @@ nsJSUtils::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
   return JS_FALSE;
 }
 
-void 
+void
 nsJSUtils::ConvertJSValToString(nsAString& aString, JSContext* aContext,
                                 jsval aValue)
 {
@@ -158,11 +158,11 @@ nsJSUtils::ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
     ::JS_ReportError(aContext, "Parameter must be an integer");
     return JS_FALSE;
   }
-  
+
   return JS_TRUE;
 }
 
-nsresult 
+nsresult
 nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
                                  nsIScriptGlobalObject** aNativeGlobal)
 {
@@ -195,21 +195,21 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
   return CallQueryInterface(native, aNativeGlobal);
 }
 
-nsresult 
+nsresult
 nsJSUtils::GetStaticScriptContext(JSContext* aContext, JSObject* aObj,
                                   nsIScriptContext** aScriptContext)
 {
   nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
   GetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
-  if (!nativeGlobal)    
+  if (!nativeGlobal)
     return NS_ERROR_FAILURE;
   nsIScriptContext* scriptContext = nsnull;
   nativeGlobal->GetContext(&scriptContext);
   *aScriptContext = scriptContext;
   return scriptContext ? NS_OK : NS_ERROR_FAILURE;
-}  
+}
 
-nsresult 
+nsresult
 nsJSUtils::GetDynamicScriptGlobal(JSContext* aContext,
                                   nsIScriptGlobalObject** aNativeGlobal)
 {
@@ -218,9 +218,9 @@ nsJSUtils::GetDynamicScriptGlobal(JSContext* aContext,
   if (!scriptCX)
     return NS_ERROR_FAILURE;
   return scriptCX->GetGlobalObject(aNativeGlobal);
-}  
+}
 
-nsresult 
+nsresult
 nsJSUtils::GetDynamicScriptContext(JSContext *aContext,
                                    nsIScriptContext** aScriptContext)
 {
