@@ -69,7 +69,7 @@ $(MIDL_GENERATED_FILES): done_gen
 
 done_gen: ISimpleDOMNode.idl
 	$(RM) $(SRCDIR_CSRCS)
-	$(MIDL) $(srcdir)/ISimpleDOMNode.idl
+	"$(MIDL)" $(srcdir)/ISimpleDOMNode.idl
 	cp ISimpleDOMNode.h ../..
 	cp ISimpleDOMNode_i.c ../../ISimpleDOMNode_iid.h
 	touch $@
