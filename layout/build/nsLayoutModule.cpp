@@ -339,6 +339,8 @@ static Components gComponents[] = {
     NS_DOC_ENCODER_PROGID_BASE "text/plain", },
   { "XIF document encoder", NS_TEXT_ENCODER_CID,
     NS_DOC_ENCODER_PROGID_BASE "text/xif", },
+
+  { "XBL Service", NS_XBLSERVICE_CID, "component://netscape/xbl" },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

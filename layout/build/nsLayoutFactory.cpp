@@ -54,6 +54,8 @@
 #include "nsCOMPtr.h"
 #include "nsIFrameSelection.h"
 
+#include "nsIXBLService.h"
+
 class nsIDocumentLoaderFactory;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -87,6 +89,8 @@ static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
+static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
+
 extern nsresult NS_NewRangeList(nsIFrameSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
@@ -100,6 +104,8 @@ extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 extern nsresult NS_NewHTMLElementFactory(nsIHTMLElementFactory** aResult);
 extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
 extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
+
+extern nsresult NS_NewXBLService(nsIXBLService** aResult);
 
 //----------------------------------------------------------------------
 
@@ -324,6 +330,13 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewTextEncoder((nsIDocumentEncoder**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewTextEncoder", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXBLServiceCID)) {
+    res = NS_NewXBLService((nsIXBLService**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXBLService", res);
       return res;
     }
   }
