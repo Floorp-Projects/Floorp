@@ -85,7 +85,6 @@ namespace JSClasses {
             : JSType(name, superClass), mSuperClass(superClass), mSlotCount(0)
         {
             mScope = new JSScope(scope);
-            setProperty(widenCString("methods"), JSValue(mScope));
         }
         
         JSClass* getSuperClass()
@@ -152,8 +151,12 @@ namespace JSClasses {
         
         JSInstance(JSClass* thisClass)
         {
+            // slot 0 is always the class.
             mSlots[0] = thisClass;
+            // initialize rest of slots with undefined.
             std::uninitialized_fill(&mSlots[1], &mSlots[1] + thisClass->getSlotCount(), JSValue());
+            // for grins, use the prototype link to access methods.
+            setPrototype(thisClass->getScope());
         }
         
         JSClass* getClass()
