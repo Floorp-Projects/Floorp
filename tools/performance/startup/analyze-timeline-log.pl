@@ -28,12 +28,11 @@ while (<>)
         if (!-f $url) {
             push @nonexistentfiles, $url;
         } else {
-            if (exists($seen{$url})) {
-                $seen{$url}++;
+            $seen{$url}++;
+            if ($seen{$url} > 1) {
                 $extnumdups{$e}++;
                 next;
             }
-            $seen{$url}++;
             push @allurls, $url;
             if (exists $ext{$e}) {
                 $ext{$e} .= "---";
@@ -47,12 +46,11 @@ while (<>)
     if (/jar:/) {
         $url = getjarurl($_);
         $e = getext($url);
-        if (exists($seen{$url})) {
-            $seen{$url}++;
+        $seen{$url}++;
+        if ($seen{$url} > 1) {
             $extnumdups{$e}++;
             next;
         }
-        $seen{$url}++;
         push @allurls, $url;
         if (exists $ext{$e}) {
             $ext{$e} .= "---";
@@ -98,7 +96,7 @@ foreach $e (@extsorted)
     foreach $i (split("---", $ext{$e})) {
         printf "%2d. %s", $n++,  $i;
         if ($seen{$i} > 1) {
-            printf " [%d]", $seen{$i};
+            printf " [%d]", $seen{$i}-1;
         }
         printf "\n";
     }
