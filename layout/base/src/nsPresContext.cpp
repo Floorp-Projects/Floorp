@@ -67,6 +67,9 @@
 #include "nsXPIDLString.h"
 
 #include "prprf.h"
+#include "nsContentPolicyUtils.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMDocument.h"
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
@@ -1473,10 +1476,50 @@ nsPresContext::LoadImage(const nsString& aURL,
 {
   // look and see if we have a loader for the target frame.
 
+  nsresult rv;
+
   nsVoidKey key(aTargetFrame);
   nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, mImageLoaders.Get(&key)); // addrefs
 
+  nsCOMPtr<nsIDocument> doc;
+  rv = mShell->GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIURI> baseURI;
+  doc->GetBaseURL(*getter_AddRefs(baseURI));
+
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), aURL, baseURI);
+
   if (!loader) {
+    nsCOMPtr<nsIContent> content;
+    aTargetFrame->GetContent(getter_AddRefs(content));
+
+    // Check with the content-policy things to make sure this load is permitted.
+    nsresult rv;
+    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(content));
+
+    if (!element) // this would seem bad(tm)
+      return NS_ERROR_FAILURE;
+
+    if (content) {
+      nsCOMPtr<nsIDocument> document;
+      rv = content->GetDocument(*getter_AddRefs(document));
+      if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsIScriptGlobalObject> globalScript;
+      rv = document->GetScriptGlobalObject(getter_AddRefs(globalScript));
+      if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalScript));
+
+      PRBool shouldLoad = PR_TRUE;
+      rv = NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
+                                     uri, element, domWin, &shouldLoad);
+      if (NS_SUCCEEDED(rv) && !shouldLoad)
+        return NS_ERROR_FAILURE;
+    }
+
     nsImageLoader *newLoader = new nsImageLoader();
     if (!newLoader)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1502,7 +1545,7 @@ nsPresContext::LoadImage(const nsString& aURL,
     aTargetFrame->SetFrameState(state);
   }
 
-  loader->Load(aURL);
+  loader->Load(uri);
 
   loader->GetRequest(aRequest);
 

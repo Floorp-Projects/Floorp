@@ -25,8 +25,7 @@
 
 class nsIPresContext;
 class nsIFrame;
-
-#include "nsString.h"
+class nsIURI;
 
 #include "imgIRequest.h"
 #include "nsCOMPtr.h"
@@ -42,7 +41,7 @@ public:
   NS_DECL_IMGICONTAINEROBSERVER
 
   void Init(nsIFrame *aFrame, nsIPresContext *aPresContext);
-  nsresult Load(const nsAReadableString &aURI);
+  nsresult Load(nsIURI *aURI);
 
   void Destroy();
 
