@@ -36,6 +36,7 @@ CPPSRCS		= \
 		nsAboutBloat.cpp \
 		nsAboutCache.cpp \
 		nsAboutCacheEntry.cpp \
+               nsAboutConfig.cpp \
 	        nsAboutRedirector.cpp \
 		$(NULL)
 

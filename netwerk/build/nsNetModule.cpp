@@ -222,6 +222,7 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 #include "nsAboutBlank.h"
 #include "nsAboutBloat.h"
 #include "nsAboutCache.h"
+#include "nsAboutConfig.h"
 #include "nsAboutRedirector.h"
 #include "nsKeywordProtocolHandler.h"
 
@@ -951,6 +952,11 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_BLOAT_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "bloat", 
       nsAboutBloat::Create
+    },
+    { "about:config",
+      NS_ABOUT_CONFIG_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "config",
+      nsAboutConfig::Create
     },
     { "about:credits",
       NS_ABOUT_REDIRECTOR_MODULE_CID,
