@@ -91,7 +91,6 @@ typedef struct _nsMiniFontMetrics
   USHORT  fsType;
   USHORT  fsDefn;
   USHORT  fsSelection;
-  PANOSE  panose;
  #ifdef DEBUG_pedemont
   LONG    lMatch;
  #endif 

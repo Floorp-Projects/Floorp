@@ -227,15 +227,15 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
   int unirc = ::UniUconvFromUcs( *pConverter, &ucsString, &ucsLen,
                                  (void**) &tmp, &cplen, &cSubs);
 
-  if( unirc == UCONV_E2BIG) // k3w1
+  if( unirc != ULS_SUCCESS )
+    return 0;
+
+  if( unirc == UCONV_E2BIG)
   {
     // terminate output string (truncating)
     *(szBuffer + ulSize - 1) = '\0';
   }
-  else if( unirc != ULS_SUCCESS)
-  {
-     PR_LogPrint("very bad");
-  }
+
   return ulSize - cplen;
 }
 
@@ -305,16 +305,16 @@ int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnich
   int unirc = ::UniUconvToUcs( *pConverter, (void**)&ucsString, &ucsLen,
                                NS_REINTERPRET_CAST(UniChar**, &tmp),
                                &cplen, &cSubs);
+                               
+  if( unirc != ULS_SUCCESS )
+    return 0;
 
-  if( unirc == UCONV_E2BIG) // k3w1
+  if( unirc == UCONV_E2BIG)
   {
     // terminate output string (truncating)
     *(szBuffer + ulSize - 1) = '\0';
   }
-  else if( unirc != ULS_SUCCESS)
-  {
-     PR_LogPrint("very bad");
-  }
+
   return ulSize - cplen;
 }
 
