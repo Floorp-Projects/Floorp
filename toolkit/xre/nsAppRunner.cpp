@@ -1795,7 +1795,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData& aAppData)
 #if defined(MOZ_WIDGET_GTK)
   gtk_set_locale();
 #endif
-  gtk_init(&arc, &argv);
+  gtk_init(&argc, &argv);
 #endif /* MOZ_WIDGET_GTK || MOZ_WIDGET_GTK2 */
 
 #ifdef _BUILD_STATIC_BIN
