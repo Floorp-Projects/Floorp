@@ -21,8 +21,6 @@
   # editusers:                is viewing user member of editusers?
   # editcomponents:           is viewing user member of editcomponents?
   # otheruser:                Bugzilla::User object of the viewed user.
-  # groups:                   array of Group names the viewed user is a member
-  #                           of.
   # product_responsibilities: list of hashes, one entry per Bugzilla component.
   #                           productname:      Name of the product.
   #                           componentname:    Name of the component.
@@ -78,8 +76,8 @@
     <td>
       [% IF groups.size %]
         <ul>
-          [% FOREACH group = groups %]
-            <li>[% group.name FILTER html %]</li>
+          [% FOREACH group = otheruser.groups.keys %]
+            <li>[% group FILTER html %]</li>
           [% END %]
         </ul>
       [% ELSE %]
@@ -96,7 +94,7 @@
             <li>
               [% andstring = '' %]
               [% FOREACH responsibility = ['initialowner', 'initialqacontact'] %]
-                [% IF component.$responsibility == userid %]
+                [% IF component.$responsibility == otheruser.id %]
                   [% andstring %] [% responsibilityterms.$responsibility %]
                   [% andstring = ' and ' %]
                 [% END %]

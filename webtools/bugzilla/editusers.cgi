@@ -23,19 +23,21 @@ require "globals.pl";
 
 use vars qw( $vars );
 
+use Bugzilla;
 use Bugzilla::User;
+use Bugzilla::Config;
 use Bugzilla::Constants;
 use Bugzilla::Auth;
+use Bugzilla::Util;
 
 Bugzilla->login(LOGIN_REQUIRED);
 
-my $cgi       = Bugzilla->cgi();
-my $template  = Bugzilla->template();
+my $cgi       = Bugzilla->cgi;
+my $template  = Bugzilla->template;
 my $dbh       = Bugzilla->dbh;
-my $user      = Bugzilla->user();
-my $userid    = $user->id();
-my $editusers = UserInGroup('editusers');
-my $action    = $cgi->param('action') || 'search';
+my $user      = Bugzilla->user;
+my $userid    = $user->id;
+my $editusers = $user->in_group('editusers');
 
 # Reject access if there is no sense in continuing.
 $editusers
@@ -47,6 +49,19 @@ $editusers
 
 print Bugzilla->cgi->header();
 
+# Common CGI params
+my $action       = $cgi->param('action') || 'search';
+my $login        = $cgi->param('login');
+my $password     = $cgi->param('password');
+my $groupid      = $cgi->param('groupid');
+my $otherUser    = new Bugzilla::User($cgi->param('userid'));
+my $realname     = trim($cgi->param('name')         || '');
+my $disabledtext = trim($cgi->param('disabledtext') || '');
+
+# Directly from common CGI params derived values
+my $otherUserID = $otherUser->id();
+
+# Prefill template vars with data used in all or nearly all templates
 $vars->{'editusers'} = $editusers;
 mirrorListSelectionValues();
 
@@ -62,7 +77,6 @@ if ($action eq 'search') {
     my $matchstr      = $cgi->param('matchstr');
     my $matchtype     = $cgi->param('matchtype');
     my $grouprestrict = $cgi->param('grouprestrict') || '0';
-    my $groupid       = $cgi->param('groupid');
     my $query = 'SELECT DISTINCT userid, login_name, realname, disabledtext ' .
                 'FROM profiles';
     my @bindValues;
@@ -136,13 +150,6 @@ if ($action eq 'search') {
                                                   action => "add",
                                                   object => "users"});
 
-    my $login = $cgi->param('login');
-    my $password = $cgi->param('password');
-
-    # Cleanups
-    my $realname = trim($cgi->param('name') || '');
-    my $disabledtext = trim($cgi->param('disabledtext') || '');
-
     # Lock tables during the check+creation session.
     $dbh->bz_lock_tables('profiles WRITE',
                          'profiles_activity WRITE',
@@ -175,9 +182,8 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'edit') {
-    my $otherUser = new Bugzilla::User($cgi->param('userid'))
+    $otherUser 
         || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
-    my $otherUserID = $otherUser->id();
 
     canSeeUser($otherUserID)
         || ThrowUserError('auth_failure', {reason => "not_visible",
@@ -191,9 +197,8 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'update') {
-    my $otherUser = new Bugzilla::User($cgi->param('userid'))
+    $otherUser
         || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
-    my $otherUserID = $otherUser->id();
     my $logoutNeeded = 0;
     my @changedFields;
 
@@ -215,13 +220,10 @@ if ($action eq 'search') {
                                            object => "user"});
 
     # Cleanups
-    my $login           = trim($cgi->param('login')           || '');
-    my $loginold        =      $cgi->param('loginold')        || '';
-    my $realname        = trim($cgi->param('name')            || '');
-    my $realnameold     =      $cgi->param('nameold')         || '';
-    my $password        =      $cgi->param('password')        || '';
-    my $disabledtext    = trim($cgi->param('disabledtext')    || '');
-    my $disabledtextold =      $cgi->param('disabledtextold') || '';
+    my $loginold        = $cgi->param('loginold')        || '';
+    my $realnameold     = $cgi->param('nameold')         || '';
+    my $password        = $cgi->param('password')        || '';
+    my $disabledtextold = $cgi->param('disabledtextold') || '';
 
     # Update profiles table entry; silently skip doing this if the user
     # is not authorized.
@@ -272,7 +274,7 @@ if ($action eq 'search') {
                      join(' = ?,', @changedFields).' = ? ' .
                      'WHERE userid = ?',
                      undef, @values);
-            # FIXME: should create profiles_activity entries.
+            # XXX: should create profiles_activity entries.
         }
     }
 
@@ -301,8 +303,8 @@ if ($action eq 'search') {
 
     # Regard only groups the user is allowed to bless and skip all others
     # silently.
-    # FIXME: checking for existence of each user_group_map entry
-    #        would allow to display a friendlier error message on page reloads.
+    # XXX: checking for existence of each user_group_map entry
+    #      would allow to display a friendlier error message on page reloads.
     foreach (@{groupsUserMayBless($user, 'id')}) {
         my $id = $$_{'id'};
 
@@ -355,11 +357,11 @@ if ($action eq 'search') {
         $dbh->do('UPDATE profiles SET refreshed_when=? WHERE userid = ?',
                  undef, ('1900-01-01 00:00:00', $otherUserID));
     }
-    # FIXME: should create profiles_activity entries for blesser changes.
+    # XXX: should create profiles_activity entries for blesser changes.
 
     $dbh->bz_unlock_tables();
 
-    # FIXME: userDataToVars may be off when editing ourselves.
+    # XXX: userDataToVars may be off when editing ourselves.
     userDataToVars($otherUserID);
 
     $vars->{'message'} = 'account_updated';
@@ -374,9 +376,8 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'del') {
-    my $otherUser = new Bugzilla::User($cgi->param('userid'))
+    $otherUser
         || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
-    my $otherUserID = $otherUser->id();
 
     Param('allowuserdeletion') || ThrowUserError('users_deletion_disabled');
     $editusers || ThrowUserError('auth_failure', {group  => "editusers",
@@ -415,15 +416,6 @@ if ($action eq 'search') {
     $vars->{'flags'}{'setter'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM flags WHERE setter_id = ?',
         undef, $otherUserID);
-    $vars->{'groups'} = $dbh->selectall_arrayref(
-        qq{SELECT name
-           FROM groups, user_group_map
-           WHERE id = group_id
-           AND user_id = ?
-           AND isbless = 0
-           ORDER BY name
-          },
-        {'Slice' => {}}, $otherUserID);
     $vars->{'longdescs'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM longdescs WHERE who = ?',
         undef, $otherUserID);
@@ -461,15 +453,14 @@ if ($action eq 'search') {
 
 ###########################################################################
 } elsif ($action eq 'delete') {
-    my $otherUser = new Bugzilla::User($cgi->param('userid'))
+    $otherUser
         || ThrowCodeError('invalid_user_id', {'userid' => $cgi->param('userid')});
-    my $otherUserID = $otherUser->id();
     my $otherUserLogin = $otherUser->login();
 
     # Lock tables during the check+removal session.
-    # FIXME: if there was some change on these tables after the deletion
-    #        confirmation checks, we may do something here we haven't warned
-    #        about.
+    # XXX: if there was some change on these tables after the deletion
+    #      confirmation checks, we may do something here we haven't warned
+    #      about.
     $dbh->bz_lock_tables('products READ',
                          'components READ',
                          'logincookies WRITE',

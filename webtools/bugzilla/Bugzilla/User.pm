@@ -149,6 +149,8 @@ sub id { $_[0]->{id}; }
 sub login { $_[0]->{login}; }
 sub email { $_[0]->{login} . Param('emailsuffix'); }
 sub name { $_[0]->{name}; }
+sub disabledtext { $_[0]->{'disabledtext'}; }
+sub is_disabled { $_[0]->disabledtext ? 1 : 0; }
 sub showmybugslink { $_[0]->{showmybugslink}; }
 
 sub set_flags {
@@ -1277,6 +1279,9 @@ Params: $username (scalar, string) - The login name for the new user.
                                      generated.
         $disabledtext (scalar, string) - Optional. The disable text for the new
                                          user; if not given, it will be empty.
+                                         If given, the user will be disabled,
+                                         meaning the account will be
+                                         unavailable for login.
 
 Returns: The password for this user, in plain text, so it can be included
          in an e-mail sent to the user.
