@@ -67,6 +67,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
 
     virtual PRBool      	Show();
     NS_IMETHOD            GetFile(nsString& aFile);
+    NS_IMETHOD            GetFile(nsFileSpec& aFile);
     NS_IMETHOD            SetDefaultString(nsString& aString);
     NS_IMETHOD           	SetFilterList(PRUint32 aNumberOfFilters,
                                           const nsString aTitles[],

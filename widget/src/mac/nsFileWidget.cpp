@@ -227,6 +227,11 @@ NS_IMETHODIMP  nsFileWidget::GetFile(nsString& aFile)
   return NS_OK;
 }
 
+NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
+{
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Get the file + path
