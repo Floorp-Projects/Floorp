@@ -1,5 +1,5 @@
 <!ENTITY messengerWindow.title "Mail &amp; Newsgroups">
-<!ENTITY titleModifier.label "&brandShortName;">
+<!ENTITY titledefault.label    "&brandShortName;">
 <!ENTITY titleSeparator.label " - ">
 
 <!-- menu items:  the . means that the menu item isn't implemented yet -->
