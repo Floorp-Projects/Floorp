@@ -160,7 +160,7 @@ char *MSG_EscapeSearchUrl (const char *nntpCommand)
 class nsNntpTestDriver
 {
 public:
-	nsNntpTestDriver(nsINetService * pService);
+	nsNntpTestDriver(nsINetService * pService, PLEventQueue *queue);
 	virtual ~nsNntpTestDriver();
 
 	// run driver initializes the instance, lists the commands, runs the command and when
@@ -185,6 +185,7 @@ public:
 	nsresult OnReadNewsRC();
 	nsresult OnExit(); 
 protected:
+    PLEventQueue *m_eventQueue;
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[500];	// string representing the current url being run. Includes host AND command specific data.
 	char m_userData[250];	// generic string buffer for storing the current user entered data...
@@ -203,13 +204,15 @@ protected:
 	PRBool m_protocolInitialized; 
 };
 
-nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService)
+nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
+                                   PLEventQueue *queue)
 {
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
 	m_url = nsnull;
 	m_protocolInitialized = PR_FALSE;
 	m_runningURL = PR_TRUE;
+    m_eventQueue = queue;
 	
 	InitializeTestDriver(); // prompts user for initialization information...
 	
@@ -238,6 +241,7 @@ nsresult nsNntpTestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
 
+
 	while (m_runningURL)
 	{
 		// if we haven't gotten started (and created a protocol) or
@@ -247,6 +251,11 @@ nsresult nsNntpTestDriver::RunDriver()
 		{
 			status = ReadAndDispatchCommand();	
 		}  // if running url
+#ifdef XP_UNIX
+        printf("ProcessPendingEvents..");
+        PL_ProcessPendingEvents(m_eventQueue);
+        printf("done.\n");
+#endif
 #ifdef XP_PC	
 		MSG msg;
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
@@ -408,7 +417,7 @@ nsresult nsNntpTestDriver::OnExit()
 nsresult nsNntpTestDriver::OnListAllGroups()
 {
 	nsresult rv = NS_OK; 
-
+    printf("Listing all groups..\n");
 	// no prompt for url data....just append a '*' to the url data and run it...
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
@@ -640,6 +649,7 @@ nsresult nsNntpTestDriver::OnReadNewsRC()
 int main()
 {
 	nsINetService * pNetService;
+    PLEventQueue *queue;
     nsresult result;
     nsIURL * pURL = NULL;
 
@@ -664,12 +674,19 @@ int main()
 		return 1;
 	}
 
+    result =
+        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+    if (NS_FAILED(result) || !queue) {
+        printf("unable to get event queue.\n");
+        return 1;
+    }
+    
 	// now register a mime converter....
     //	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_NGLAYOUT, NULL, MIME_MessageConverter);
     //	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_CACHE_AND_NGLAYOUT, NULL, MIME_MessageConverter);
 
 	// okay, everything is set up, now we just need to create a test driver and run it...
-	nsNntpTestDriver * driver = new nsNntpTestDriver(pNetService);
+	nsNntpTestDriver * driver = new nsNntpTestDriver(pNetService,queue);
 	if (driver)
 	{
 		driver->RunDriver();
