@@ -1910,6 +1910,7 @@ nsAutoString::nsAutoString()
   mStr = mBuf;
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
+  mStr[0] = 0;
 }
 
 /*-------------------------------------------------------
